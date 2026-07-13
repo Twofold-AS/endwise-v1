@@ -1,0 +1,22 @@
+# Kun for lokal dev (techstack §2 Fundament). Prod-DB er Neon (EU).
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: endwise-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: endwise
+      POSTGRES_PASSWORD: endwise
+      POSTGRES_DB: endwise
+    ports:
+      - "5432:5432"
+    volumes:
+      - endwise-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U endwise"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  endwise-pgdata:

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Endwise — Roadmap & status</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens (identisk med prototypen) ===== */
+:root {
+  --accent: #EE2924; --accent-hover: #D41E1A; --accent-pressed: #B31612;
+  --accent-soft: rgba(238,41,36,.08); --accent-ring: rgba(238,41,36,.22); --accent-fg: #fff;
+  --ok: #0A8F5C; --ok-soft: rgba(10,143,92,.10);
+  --warn: #B06A00; --warn-soft: rgba(176,106,0,.10);
+  --danger: #C8332B; --danger-soft: rgba(200,51,43,.10);
+  --info: #1E5BD6; --info-soft: rgba(30,91,214,.10);
+  --font-sans: "Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --font-mono: "JetBrains Mono","IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r-xs:4px; --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:999px;
+  --t-fast:120ms cubic-bezier(.2,.8,.2,1); --t-base:200ms cubic-bezier(.2,.8,.2,1);
+}
+:root, [data-theme="light"] {
+  --bg:#F6F6F4; --bg-elev:#FFF; --bg-sunk:#EFEFEC;
+  --bg-hover:rgba(17,17,17,.04); --bg-active:rgba(17,17,17,.07);
+  --fg:#111; --fg-muted:#5A5A58; --fg-subtle:#8A8A86; --fg-invert:#FFF;
+  --line:#E4E3DE; --line-strong:#CECDC7; --line-soft:#EEEDE8;
+  --shadow-sm:0 1px 2px rgba(17,17,17,.04),0 0 0 1px rgba(17,17,17,.04);
+  --shadow-md:0 4px 12px rgba(17,17,17,.06),0 1px 2px rgba(17,17,17,.04);
+  --shadow-lg:0 24px 48px -12px rgba(17,17,17,.18),0 0 0 1px rgba(17,17,17,.04);
+}
+[data-theme="dark"] {
+  --bg:#121212; --bg-elev:#1B1B1A; --bg-sunk:#0E0E0E;
+  --bg-hover:rgba(255,255,255,.05); --bg-active:rgba(255,255,255,.09);
+  --fg:#F2F2F0; --fg-muted:#A9A9A4; --fg-subtle:#7C7C78; --fg-invert:#111;
+  --line:#2A2A28; --line-strong:#3C3C39; --line-soft:#222220;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 4px 12px rgba(0,0,0,.45);
+  --shadow-lg:0 24px 48px -12px rgba(0,0,0,.6);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--fg); font-family:var(--font-sans); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+button { font:inherit; color:inherit; background:none; border:none; cursor:pointer; }
+input { font:inherit; }
+
+/* ===== Chrome ===== */
+.chrome { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 20px; background:var(--bg-elev); border-bottom:1px solid var(--line); }
+.chrome__brand { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.08em; font-size:13px; }
+.chrome__mark { width:28px; height:28px; border-radius:8px; background:var(--accent); color:#fff; display:grid; place-items:center; font-weight:800; font-size:15px; }
+.chrome__divider { width:1px; height:18px; background:var(--line-strong); }
+.chrome__version { font-family:var(--font-mono); font-size:11px; font-weight:400; letter-spacing:.04em; color:var(--fg-subtle); }
+.chrome__right { display:flex; align-items:center; gap:10px; }
+.theme-toggle { display:flex; border:1px solid var(--line); border-radius:var(--r-pill); overflow:hidden; }
+.theme-toggle button { padding:5px 10px; font-size:12px; color:var(--fg-subtle); transition:var(--t-fast); }
+.theme-toggle button[aria-pressed="true"] { background:var(--bg-sunk); color:var(--fg); }
+.swatches { display:flex; gap:6px; }
+.swatch { width:20px; height:20px; border-radius:6px; border:2px solid transparent; }
+.swatch[aria-pressed="true"] { border-color:var(--fg); }
+
+/* ===== Layout ===== */
+.page { max-width:1080px; margin:0 auto; padding:28px 20px 100px; }
+.eyebrow { font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); font-weight:700; }
+h1 { font-size:28px; letter-spacing:-.02em; margin:6px 0 4px; }
+.lede { color:var(--fg-muted); max-width:640px; }
+
+/* ===== Summary KPIs ===== */
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin:22px 0; }
+.kpi { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-lg); padding:14px 16px; box-shadow:var(--shadow-sm); }
+.kpi .num { font-family:var(--font-mono); font-size:24px; font-weight:700; letter-spacing:-.02em; }
+.kpi .lbl { font-size:11.5px; color:var(--fg-muted); margin-top:2px; }
+.kpi.k-done .num { color:var(--ok); } .kpi.k-prog .num { color:var(--info); }
+.kpi.k-block .num { color:var(--danger); } .kpi.k-gap .num { color:var(--warn); }
+
+.totalbar { height:8px; border-radius:var(--r-pill); background:var(--bg-sunk); overflow:hidden; display:flex; margin:4px 0 24px; border:1px solid var(--line); }
+.totalbar i { display:block; height:100%; }
+.totalbar .b-done { background:var(--ok); } .totalbar .b-prog { background:var(--info); }
+.totalbar .b-block { background:var(--danger); }
+
+/* ===== Filters ===== */
+.filterbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:20px; position:sticky; top:53px; z-index:40; background:var(--bg); padding:10px 0; }
+.chip { padding:5px 12px; border:1px solid var(--line); border-radius:var(--r-pill); font-size:12px; color:var(--fg-muted); background:var(--bg-elev); transition:var(--t-fast); }
+.chip:hover { background:var(--bg-hover); }
+.chip[aria-pressed="true"] { background:var(--fg); color:var(--fg-invert); border-color:var(--fg); }
+.search { flex:1; min-width:160px; max-width:280px; padding:6px 12px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--bg-elev); color:var(--fg); font-size:12.5px; }
+.search:focus { outline:2px solid var(--accent-ring); border-color:var(--accent); }
+.fdiv { width:1px; height:20px; background:var(--line-strong); margin:0 2px; }
+
+/* ===== Phase ===== */
+.phase { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--r-xl); margin-bottom:16px; overflow:hidden; box-shadow:var(--shadow-sm); }
+.phase__head { display:flex; align-items:center; gap:14px; padding:14px 18px; cursor:pointer; user-select:none; }
+.phase__head:hover { background:var(--bg-hover); }
+.phase__num { font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:var(--r-sm); padding:3px 8px; white-space:nowrap; }
+.phase__title { font-weight:700; font-size:15px; flex:1; }
+.phase__title .tgt { font-weight:400; font-size:12px; color:var(--fg-subtle); margin-left:8px; }
+.phase__pct { font-family:var(--font-mono); font-size:12px; color:var(--fg-muted); white-space:nowrap; }
+.phase__bar { width:120px; height:6px; border-radius:var(--r-pill); background:var(--bg-sunk); overflow:hidden; display:flex; }
+.phase__bar i { height:100%; } .phase__bar .b-done { background:var(--ok); } .phase__bar .b-prog { background:var(--info); }
+.phase__chev { color:var(--fg-subtle); transition:var(--t-base); }
+.phase.is-open .phase__chev { transform:rotate(90deg); }
+.phase__body { display:none; border-top:1px solid var(--line); }
+.phase.is-open .phase__body { display:block; }
+
+/* ===== Item rows ===== */
+.item { display:grid; grid-template-columns:64px 1fr auto auto auto; gap:12px; align-items:center; padding:10px 18px; border-bottom:1px solid var(--line-soft); transition:var(--t-fast); }
+.item:last-child { border-bottom:none; }
+.item:hover { background:var(--bg-hover); }
+.item__id { font-family:var(--font-mono); font-size:11px; color:var(--fg-subtle); }
+.item__title { font-size:13.5px; }
+.item__title .dep { display:block; font-size:11px; color:var(--fg-subtle); margin-top:1px; }
+.area { font-size:10.5px; font-family:var(--font-mono); letter-spacing:.03em; color:var(--fg-muted); background:var(--bg-sunk); border:1px solid var(--line); border-radius:var(--r-sm); padding:2px 7px; white-space:nowrap; }
+.badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; border-radius:var(--r-pill); padding:3px 10px; white-space:nowrap; }
+.badge .dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+.b-ui-proto { color:var(--ok); background:var(--ok-soft); }
+.b-ui-partial { color:var(--warn); background:var(--warn-soft); }
+.b-ui-missing { color:var(--danger); background:var(--danger-soft); }
+.b-ui-na { color:var(--fg-subtle); background:var(--bg-sunk); }
+.sec-tag { font-size:10px; font-family:var(--font-mono); letter-spacing:.02em; color:var(--danger); background:var(--danger-soft); border:1px solid var(--danger); border-radius:var(--r-sm); padding:2px 7px; white-space:nowrap; cursor:help; }
+.item.has-sec { box-shadow:inset 3px 0 0 var(--danger); }
+.secbar-wrap { background:var(--danger-soft); border:1px solid var(--danger); border-radius:var(--r-lg); padding:14px 16px; margin:0 0 20px; }
+.secbar-wrap h3 { font-size:12px; font-family:var(--font-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--danger); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.secbar-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+.secphase { display:flex; align-items:center; gap:8px; font-size:11.5px; }
+.secphase .pn { font-family:var(--font-mono); font-weight:700; color:var(--danger); min-width:28px; }
+.secphase .cnt { color:var(--fg-muted); }
+.secphase .mini { flex:1; height:5px; border-radius:var(--r-pill); background:var(--bg-sunk); overflow:hidden; }
+.secphase .mini i { display:block; height:100%; background:var(--danger); }
+.st { cursor:pointer; border:1px solid transparent; transition:var(--t-fast); }
+.st:hover { border-color:currentColor; }
+.st-done { color:var(--ok); background:var(--ok-soft); }
+.st-progress { color:var(--info); background:var(--info-soft); }
+.st-planned { color:var(--fg-muted); background:var(--bg-sunk); }
+.st-blocked { color:var(--danger); background:var(--danger-soft); }
+
+.legend { display:flex; flex-wrap:wrap; gap:14px; font-size:11.5px; color:var(--fg-muted); margin:8px 0 20px; }
+.legend b { font-weight:600; color:var(--fg); }
+.hint { font-size:12px; color:var(--fg-subtle); margin-bottom:18px; }
+.hint code { font-family:var(--font-mono); background:var(--bg-sunk); padding:1px 5px; border-radius:4px; font-size:11px; }
+
+.actions { display:flex; gap:8px; margin:20px 0; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--bg-elev); font-size:12.5px; font-weight:600; transition:var(--t-fast); }
+.btn:hover { background:var(--bg-hover); }
+.btn.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-fg); }
+.btn.primary:hover { background:var(--accent-hover); }
+
+@media (max-width:720px){
+  .item { grid-template-columns:1fr auto; }
+  .item__id,.area { display:none; }
+  .item__title { grid-column:1; }
+}
+</style>
+</head>
+<body data-theme="light">
+
+<header class="chrome">
+  <div class="chrome__brand">
+    <div class="chrome__mark">E</div>
+    <span>ENDWISE</span>
+    <span class="chrome__divider"></span>
+    <span class="chrome__version">ROADMAP · BYGGEPLAN v1.6-sec · SIKKERHETSSPOR AKTIVT · VERCEL · juli 2026</span>
+  </div>
+  <div class="chrome__right">
+    <div class="swatches" id="swatches"></div>
+    <div class="theme-toggle">
+      <button id="thLight" aria-pressed="true" onclick="setTheme('light')">Lys</button>
+      <button id="thDark" aria-pressed="false" onclick="setTheme('dark')">Mørk</button>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+  <div class="eyebrow">Byggeplan · digital status</div>
+  <h1>Endwise roadmap</h1>
+  <p class="lede">Én kilde til sannhet for hva som er gjort og hva som mangler. Klikk på en status-badge for å endre den (lagres lokalt) — bruk «Eksporter status» for å skrive endringene tilbake i fila/repo. <b>v1.1:</b> leveransen er delt i <b>Spor A</b> (backend + mekaniker-PWA, bygges nå) og <b>Spor B</b> (kunde- og adminflater, etterpå) — bruk spor-filteret.</p>
+
+  <div class="kpis" id="kpis"></div>
+  <div class="totalbar" id="totalbar"></div>
+  <div class="secbar-wrap"><h3>🔒 Sikkerhetsspor — CWE/OWASP gjennom hele utviklingen</h3><div class="secbar-grid" id="secbar"></div></div>
+
+  <div class="legend">
+    <span><b>UI-status:</b></span>
+    <span class="badge b-ui-proto"><span class="dot"></span>I prototype</span>
+    <span class="badge b-ui-partial"><span class="dot"></span>Delvis</span>
+    <span class="badge b-ui-missing"><span class="dot"></span>Mangler UI</span>
+    <span class="badge b-ui-na"><span class="dot"></span>Ikke UI</span>
+    <span style="margin-left:8px"><b>Sikkerhet:</b></span>
+    <span class="sec-tag">CWE/OWASP</span> <span style="color:var(--fg-subtle)">= punkt med eksplisitt sikkerhetskrav (rød kant)</span>
+    <span style="margin-left:8px"><b>Bygg-status:</b></span>
+    <span class="badge st-done"><span class="dot"></span>Ferdig</span>
+    <span class="badge st-progress"><span class="dot"></span>Pågår</span>
+    <span class="badge st-planned"><span class="dot"></span>Planlagt</span>
+    <span class="badge st-blocked"><span class="dot"></span>Blokkert</span>
+  </div>
+
+  <div class="filterbar">
+    <input class="search" id="q" placeholder="Søk ID eller tittel…" oninput="render()">
+    <span class="fdiv"></span>
+    <button class="chip" data-f="status" data-v="all" aria-pressed="true" onclick="setFilter(this)">Alle</button>
+    <button class="chip" data-f="status" data-v="done" onclick="setFilter(this)">Ferdig</button>
+    <button class="chip" data-f="status" data-v="progress" onclick="setFilter(this)">Pågår</button>
+    <button class="chip" data-f="status" data-v="planned" onclick="setFilter(this)">Planlagt</button>
+    <button class="chip" data-f="status" data-v="blocked" onclick="setFilter(this)">Blokkert</button>
+    <span class="fdiv"></span>
+    <button class="chip" data-f="uigap" data-v="gap" onclick="toggleGap(this)">Kun UI-gap</button>
+    <button class="chip" data-f="seconly" data-v="sec" onclick="toggleSec(this)" style="border-color:var(--danger);color:var(--danger)">🔒 Kun sikkerhet</button>
+    <span class="fdiv"></span>
+    <button class="chip" data-f="spor" data-v="all" aria-pressed="true" onclick="setFilter(this)">Spor A+B</button>
+    <button class="chip" data-f="spor" data-v="A" onclick="setFilter(this)">Spor A · backend+mekaniker</button>
+    <button class="chip" data-f="spor" data-v="B" onclick="setFilter(this)">Spor B · kunde/admin</button>
+    <span class="fdiv"></span>
+    <button class="chip" data-f="area" data-v="all" aria-pressed="true" onclick="setFilter(this)">Alle områder</button>
+    <button class="chip" data-f="area" data-v="backend" onclick="setFilter(this)">backend</button>
+    <button class="chip" data-f="area" data-v="widget" onclick="setFilter(this)">widget</button>
+    <button class="chip" data-f="area" data-v="admin" onclick="setFilter(this)">admin</button>
+    <button class="chip" data-f="area" data-v="pwa" onclick="setFilter(this)">pwa</button>
+    <button class="chip" data-f="area" data-v="plugin" onclick="setFilter(this)">plugin</button>
+    <button class="chip" data-f="area" data-v="infra" onclick="setFilter(this)">infra</button>
+    <button class="chip" data-f="area" data-v="integrasjon" onclick="setFilter(this)">integrasjon</button>
+    <button class="chip" data-f="area" data-v="design" onclick="setFilter(this)">design</button>
+  </div>
+
+  <div id="phases"></div>
+
+  <div class="actions">
+    <button class="btn primary" onclick="exportStatus()">Eksporter status (JSON → utklippstavle)</button>
+    <button class="btn" onclick="resetLocal()">Nullstill lokale endringer</button>
+    <button class="btn" onclick="document.querySelectorAll('.phase').forEach(p=>p.classList.add('is-open'))">Åpne alle</button>
+    <button class="btn" onclick="document.querySelectorAll('.phase').forEach(p=>p.classList.remove('is-open'))">Lukk alle</button>
+  </div>
+  <p class="hint">Kanonisk status ligger i <code>const ROADMAP</code> i denne fila. Klikk-endringer er lokale overstyringer (localStorage) til de eksporteres og committes. ID-ene matcher <code>endwise-byggeplan-total.md</code> 1:1.</p>
+</div>
+
+<script>
+/* =====================================================================
+   ROADMAP — ÉN KILDE TIL SANNHET.
+   status: planned | progress | done | blocked
+   ui:     proto (finnes i prototypen) | partial | missing | na
+   area:   backend | widget | admin | pwa | plugin | infra | integrasjon | design
+===================================================================== */
+const ROADMAP = [
+{ phase:"F0", title:"Fundament", target:"Uke 1–3", items:[
+  { id:"F0-01", t:"Monorepo: Turborepo + pnpm workspaces + Biome", area:"infra", ui:"na", status:"done" },
+  { id:"F0-02", t:"Hono + tRPC v11 app-skjelett (apps/api) etter TheFold-mønster — Hono for offentlig REST (widget/Quick/webhooks), tRPC for admin/PWA. Moduler som packages med F0-06-grensesnittene", area:"backend", ui:"na", status:"done" },
+  { id:"F0-03", t:"Postgres 16 på Neon EU + RLS-mønster + Drizzle schema/migrasjoner. Neon-branch per PR = preview-miljøer med ekte DB", area:"backend", ui:"na", status:"progress" },
+  { id:"F0-04", t:"Entitlements: tenant_modules-tabell (plan→modul, DB-styrt) + Vercel Flags SDK for release-toggles — erstatter Unleash", area:"backend", ui:"na", status:"progress" },
+  { id:"F0-05", t:"Eventbus: typet emitter i packages/events + event-katalog (rammeverk-uavhengig)", area:"backend", ui:"na", status:"done" },
+  { id:"F0-06", t:"Modul-grensesnitt: MechanicMatcher, AIProvider, IntegrationProvider, NotificationChannel", area:"backend", ui:"na", status:"done" },
+  { id:"F0-07", t:"Vercel-prosjekter (web/api/stream) i fra1 EU + Container-oppsett (Dockerfile.vercel-mønsteret fra TheFold) + miljøer dev/preview/prod", area:"infra", ui:"na", status:"blocked" },
+  { id:"F0-08", t:"Backup: Neon PITR + ukentlig restore-test (beholdes!) + snapshot-eksport til R2 for leverandør-uavhengighet", area:"infra", ui:"na", status:"blocked" },
+  { id:"F0-09", t:"Vercel Firewall (WAF, rate-limit, DDoS) + R2-bøtter (beholdes for assets)", area:"infra", ui:"na", status:"blocked" },
+  { id:"F0-10", t:"CI/CD: Vercel Git-integrasjon (preview per PR + Neon-branch) + GitHub Actions for test/lint", area:"infra", ui:"na", status:"progress" },
+  { id:"F0-11", t:"@endwise/widget-tokens: token-pakke ekstrahert fra prototype (lys/mørk/aksent)", area:"design", ui:"proto", status:"progress" },
+  { id:"F0-12", t:"@endwise/ui v0: primitiver fra komponentgalleriet (Btn, Badge, Chip, Card, Input, Icon…)", area:"design", ui:"proto", status:"progress" },
+  { id:"F0-13", t:"Kø/varige jobber: Vercel Workflows (durable functions) + Vercel Cron — ADR-003 AVGJORT v1.5 (én-leverandør). QStash/BullMQ ut. DLQ/retry som Workflows-steg. Bonus: samme åpne Workflow-SDK Eve bygger på", area:"backend", ui:"na", status:"done" },
+  { id:"F0-14", t:"Observability: Sentry + Vercel Observability + OpenTelemetry", area:"infra", ui:"na", status:"progress" },
+  { id:"F0-15", t:"Sikkerhetsgate i CI (v1.3, utvidet v1.6): CodeQL/Semgrep mappet til CWE-ID-er (null åpne) + OWASP Dependency-Check/pnpm audit + ASVS L2-PR-mal for auth/betaling/tenant-grenser + ZAP baseline mot preview + rød-team-evals (LLM Top 10). Ekstern pentest før GA. Mål: ASVS L2 (L3 for auth+betaling)", area:"infra", ui:"na", status:"progress" },
+]},
+{ phase:"F1", title:"Auth, tenant og brukere", target:"Uke 3–6", items:[
+  { id:"F1-01", t:"OTP-backend: Better-Auth phone-number-plugin med Twilio Verify-sender + rate-limits + cooldown (ADR-002)", area:"backend", ui:"na", status:"planned" },
+  { id:"F1-02", t:"Login/OTP-UI — Spor A: kun mekaniker-PWA; widget/admin-login i Spor B. MANGLER i prototype", area:"design", ui:"missing", status:"planned" },
+  { id:"F1-03", t:"Sesjonshåndtering: Better-Auth 1.x (organizations-plugin = tenant-medlemskap, revoke-alle verifiseres i spike). Lucia-planen er fallback ved rød spike", area:"backend", ui:"na", status:"planned" },
+  { id:"F1-04", t:"Tenant-opprettelse, isolasjon og per-tenant config", area:"backend", ui:"na", status:"planned" },
+  { id:"F1-05", t:"RBAC: customer / dealer_admin / dealer_staff / endwise_admin", area:"backend", ui:"na", status:"planned" },
+  { id:"F1-06", t:"Audit-grunnlag: append-only logg av kritiske operasjoner", area:"backend", ui:"na", status:"planned" },
+  { id:"F1-07", t:"Endwise-admin (intern) v0 — Spor A: minimal (tenants, mekanikere, entitlements) + onboarding-wizard MED forhandlerens egen Quick API-nøkkel (envelope-kryptert, validert med testkall mot Quick før aktivering); Spor B: full + BULK-ONBOARDING for 250+. MANGLER UI", area:"admin", ui:"missing", status:"planned" },
+  { id:"F1-08", t:"RLS-tester: automatiserte cross-tenant-angrep i CI — TheFolds tenant-isolasjonssuite som fundament, utvidet til DB-lag inkl. Better-Auth-tabellene", area:"backend", ui:"na", status:"planned" },
+  { id:"F1-09", t:"ADR-002-spike (NY i v1.2, 1 dag): Better-Auth vs Lucia — phone-OTP-flyt, RLS-samspill på Better-Auth-tabeller, revoke-alle-krav", area:"backend", ui:"na", status:"planned" },
+  { id:"F1-10", t:"Forhandler første-innlogging (NY i v1.6, Spor B): vi oppretter kontoen → invitasjon via Resend (engangslenke) → TVUNGET passordbytte → profiloppsett (kontakt, forhandlerinfo-bekreftelse) → passkey-tilbud. Better-Auth admin-created-user-mønster", area:"backend", ui:"missing", status:"planned" },
+  { id:"F1-11", t:"OBLIGATORISK e-post-2FA (NY v1.6-sec, Spor A): passord + engangskode via Resend for HVER forhandler/admin — ingen bypass, ingen «husk enhet» (CWE-308/620, OWASP A07/ASVS L2). Sesjons-ID roteres ved 2FA-fullføring (CWE-384)", area:"backend", ui:"missing", status:"planned" },
+  { id:"F1-12", t:"Sesjons-timeout (NY v1.6-sec, Spor A): 60 min inaktivitet → serverside-invalidering (sliding-vindu, ikke bare klient-timer) + absolutt maks-levetid (CWE-613, ASVS 3.3). Auto-utlogging håndhevet i backend", area:"backend", ui:"na", status:"planned" },
+]},
+{ phase:"F2", title:"Kjernedata", target:"Uke 5–8", items:[
+  { id:"F2-01", t:"Kjøretøyregister CRUD (MC/båt/ATV, regnr, kobling kunde)", area:"backend", ui:"na", status:"planned" },
+  { id:"F2-02", t:"Kjøretøy-side i admin — placeholder i prototype, må designes", area:"admin", ui:"missing", status:"planned" },
+  { id:"F2-03", t:"Modellbildebibliotek: R2-lagring, admin-godkjenning, srcset-pipeline, fallback-silhuetter", area:"backend", ui:"partial", status:"planned" },
+  { id:"F2-04", t:"Tjenestekatalog CRUD (versjonert, skills, varighet)", area:"backend", ui:"na", status:"planned" },
+  { id:"F2-05", t:"Tjenester-side i admin — placeholder i prototype, må designes", area:"admin", ui:"missing", status:"planned" },
+  { id:"F2-06", t:"Kunderegister CRUD + notater + historikk", area:"backend", ui:"na", status:"planned" },
+  { id:"F2-07", t:"Kunder-side i admin — placeholder i prototype, må designes", area:"admin", ui:"missing", status:"planned" },
+  { id:"F2-08", t:"Vegvesen-oppslag: regnr → merke/modell/årsmodell/EU-frist (Autosys)", area:"integrasjon", ui:"partial", status:"planned" },
+]},
+{ phase:"F3", title:"Booking-motor + mekaniker", target:"Uke 7–12", items:[
+  { id:"F3-01", t:"Booking Engine: lifecycle draft→completed, slot-lock via pg_advisory_xact_lock (transaksjons-skopet — påkrevd med Neon-pooling), konfliktdeteksjon, idempotency keys", area:"backend", ui:"proto", status:"planned" },
+  { id:"F3-02", t:"Regelbasert mekaniker-matching (skills, sert., load, prioritetsregler) — Spor B: i Spor A tildeles mekaniker fra Quick eller manuelt via API", area:"backend", ui:"partial", status:"planned" },
+  { id:"F3-03", t:"Kalender-API (dag/uke, per mekaniker/samlet)", area:"backend", ui:"na", status:"planned" },
+  { id:"F3-04", t:"Varslingsmodul (Twilio + BullMQ) — Spor A: avvik-varsel til selger via SMS/e-post; kunde-SMS (bekreftelse/påminnelse) i Spor B", area:"backend", ui:"na", status:"planned" },
+  { id:"F3-05", t:"DealerOverview: KPI-er, kapasitetsbar, dagens bookinger", area:"admin", ui:"proto", status:"planned" },
+  { id:"F3-06", t:"DealerBookings: tabell + filterbar + statusbadges", area:"admin", ui:"proto", status:"planned" },
+  { id:"F3-07", t:"DealerCalendar: dag/uke-visning med job-blocks", area:"admin", ui:"proto", status:"planned" },
+  { id:"F3-08", t:"DealerMechanics: mekanikerliste m/ load-bars, skills, sertifisering", area:"admin", ui:"proto", status:"planned" },
+  { id:"F3-09", t:"NewBookingOverlay: manuell booking (kunde, tjeneste, mekaniker, slot)", area:"admin", ui:"proto", status:"planned" },
+  { id:"F3-10", t:"BookingDetailOverlay: rolle-bevisst detalj (dealer/mekaniker)", area:"admin", ui:"proto", status:"planned" },
+  { id:"F3-11", t:"Intern booking-inntak (NY i v1.1): admin-API uten UI + seed/CLI — fallback-kilde for pilot hvis Quick-tilgang drøyer", area:"backend", ui:"na", status:"planned" },
+]},
+{ phase:"F4", title:"Kundewidget basis (Framer Plugin)", target:"Uke 10–15", items:[
+  { id:"F4-01", t:"Framer Plugin-skall: pairing (OTP/QR), plugin storage, tenant-config UI", area:"plugin", ui:"missing", status:"planned" },
+  { id:"F4-02", t:"Widget-auth: PUBLISHABLE tenant-nøkkel (trygg i publisert side) → /widget/init med origin-validering mot registrerte domener → kortlevd JWT. Secret-nøkler ALDRI i Framer (CWE-798/522)", area:"backend", ui:"na", status:"planned" },
+  { id:"F4-03", t:"Code Component: EndwiseBooking — wizard 5 steg mot ekte API", area:"widget", ui:"proto", status:"planned" },
+  { id:"F4-04", t:"StepVehicle: kjøretøytype + regnr + auto-oppslag", area:"widget", ui:"proto", status:"planned" },
+  { id:"F4-05", t:"StepProblem: symptom-grid + fritekst + manuelt tjenestevalg", area:"widget", ui:"proto", status:"planned" },
+  { id:"F4-06", t:"StepReco: anbefalt tjeneste + «vis alle»", area:"widget", ui:"proto", status:"planned" },
+  { id:"F4-07", t:"StepTime: dato-strip + slot-grid mot ledighets-API", area:"widget", ui:"proto", status:"planned" },
+  { id:"F4-08", t:"StepConfirm: oppsummering + SMS-bekreftelse", area:"widget", ui:"proto", status:"planned" },
+  { id:"F4-09", t:"Property Controls: mode, farger, preselect, tekster", area:"plugin", ui:"partial", status:"planned" },
+  { id:"F4-10", t:"Token-theming i widget: tenant-default + per-instans override (Tweaks-mønsteret)", area:"widget", ui:"partial", status:"planned" },
+  { id:"F4-11", t:"Code File API-synk: versjonering av komponenter ut til forhandler-prosjekter", area:"plugin", ui:"na", status:"planned" },
+  { id:"F4-12", t:"Multi-tenant MCP-server (NY i v1.3): ÉN server, 250+ tenant-skopede nøkler (envelope-krypto + RLS) — Framer 3.0-agenter bygger forhandlersider med kun egen tenants data (config, tjenester, åpningstider, brand-tokens). Plugin-pairing = nøkkelutstedelse", area:"plugin", ui:"na", status:"planned" },
+  { id:"F4-13", t:"Widget-arkitektur (NY i v1.3): tynt skall i Framer (publishable key + forhandler-ID via Property Controls) + versjonert runtime fra CDN/R2 — én deploy oppdaterer alle 250+ sider; per-tenant versjonspinning + canary-utrulling", area:"widget", ui:"na", status:"planned" },
+  { id:"F4-14", t:"Hendelses-instrumentering (NY i v1.6): klikk, funnel-steg, chat-telling, drop-off i widget + dashboards — pseudonymisert, cookieless, per tenant, dokumentert i TIA. Grunnlaget for F11-analyse OG A/B (F11-03)", area:"widget", ui:"na", status:"planned" },
+]},
+{ phase:"F5", title:"Adminpanel basis (komplettering)", target:"Uke 13–18", items:[
+  { id:"F5-01", t:"Next.js 15 admin-skall + sidebar-nav (3 grupper, 11 punkter)", area:"admin", ui:"proto", status:"planned" },
+  { id:"F5-02", t:"Kunder-side: liste, detalj, kjøretøy, historikk, notater", area:"admin", ui:"missing", status:"planned" },
+  { id:"F5-03", t:"Kjøretøy-side: register, modellbilder, EU/garanti-status", area:"admin", ui:"missing", status:"planned" },
+  { id:"F5-04", t:"Tjenester-side: katalogredigering, versjonering, prising", area:"admin", ui:"missing", status:"planned" },
+  { id:"F5-05", t:"Aktivitetslogg-viewer: filtrerbar audit-logg per tenant", area:"admin", ui:"missing", status:"planned" },
+  { id:"F5-06", t:"Empty states, error states, loading skeletons — finnes IKKE i prototype", area:"design", ui:"missing", status:"planned" },
+  { id:"F5-07", t:"Responsiv admin (tablet-støtte) — prototype er desktop-only", area:"admin", ui:"missing", status:"planned" },
+  { id:"F5-08", t:"Notifikasjonssenter i admin (bell + dropdown)", area:"admin", ui:"proto", status:"planned" },
+  { id:"F5-09", t:"Stripe Billing → entitlements (NY i v1.3): webhook abonnement→tenant_modules-flip + «Moduler»-side i admin der forhandler ser/kjøper/aktiverer nye løsninger — dette ER oppdaterings-flaten på Endwise.no", area:"admin", ui:"missing", status:"planned" },
+  { id:"F5-10", t:"Dashboard-designsystem (NY i v1.5): shadcn + AI Elements + dither-kit AKTIVT på forhandler- og admin-dashboard + matrix-loaders (AI-tenking per SSE-event) + beUI-loader + slot-text KPI + container queries for dock-layout. Ett designsystem, to shells (admin/forhandler)", area:"design", ui:"missing", status:"planned" },
+  { id:"F5-11", t:"Support-kanal forhandler↔Endwise (NY i v1.5): innboks i Endwise-admin + support-endwise-agent som førstelinje m/ eskalering til menneske — samme meldingssystem og SSE som F6-01/02", area:"admin", ui:"missing", status:"planned" },
+]},
+{ phase:"F6", title:"Meldinger, AI-diagnose og Min side", target:"Uke 16–24", items:[
+  { id:"F6-01", t:"MELDINGSSYSTEM: tråder kunde↔forhandler↔mekaniker, unread-telling — STOR TECH-GAP, kreves av prototypen", area:"backend", ui:"proto", status:"planned" },
+  { id:"F6-02", t:"Sanntidskanal: PORT av TheFold apps/stream (Hono + Postgres LISTEN/NOTIFY, heartbeat ~15s, Last-Event-ID-reconnect, caps re-dimensjonert for Endwise-volum). Redis pub/sub som eskaleringsvei — FLYTTET INN I SPOR A (v1.2)", area:"backend", ui:"na", status:"planned" },
+  { id:"F6-03", t:"Handlingsknapper i chat («Endre til 24. april») → strukturerte booking-mutasjoner", area:"backend", ui:"proto", status:"planned" },
+  { id:"F6-04", t:"AI-diagnose backend: AIProvider, confidence-score, logging, token-tak per tenant", area:"backend", ui:"proto", status:"planned" },
+  { id:"F6-05", t:"AI-eskaleringspipeline: terskel → eskaleringskø → varsel til forhandler → menneskelig overtakelse", area:"backend", ui:"proto", status:"planned" },
+  { id:"F6-06", t:"DealerAI-side: live samtaleliste, konfidens, «Overstyr», «Opprett booking manuelt»", area:"admin", ui:"proto", status:"planned" },
+  { id:"F6-07", t:"Min side (KundeBento): garasje, servicemåler, EU-frist, garanti, km-sparkline", area:"widget", ui:"proto", status:"planned" },
+  { id:"F6-08", t:"Mine bookinger: 3-kolonne med tidslinje + chat-tråd", area:"widget", ui:"proto", status:"planned" },
+  { id:"F6-09", t:"AiChatCard i bento (kundens AI-assistent)", area:"widget", ui:"proto", status:"planned" },
+  { id:"F6-10", t:"DealerMap i bento — VELG kartleverandør (Leaflet+OSM anbefalt for GDPR)", area:"widget", ui:"proto", status:"planned" },
+  { id:"F6-11", t:"NotificationsOverlay + ProfileMenu i kunde-flaten", area:"widget", ui:"proto", status:"planned" },
+  { id:"F6-12", t:"Web Push-varsler — Spor A: mekaniker (ny jobb, planendring, avvik-kvittering); kunde i Spor B", area:"backend", ui:"na", status:"planned" },
+  { id:"F6-13", t:"Agent-fundament: TheFold-runtime portet (TYNN master-løkke LUKKET for endring, kategori-lås, loop-orchestrator, budgets) + packages/agents/-konvensjon + auto-registry m/ entitlement-gating + hooks/. Chat-runtime: Vercel AI SDK + Chat SDK. To-lags AI — aldri i booking-stien", area:"backend", ui:"na", status:"planned" },
+  { id:"F6-14", t:"Guardrails-pakke (v1.5, mappet til OWASP LLM Top 10 i v1.6): L1 data-scoping (RLS+entitlement+kategori-lås → LLM02/06), L2 låst constitution (LLM01), L3 output-pipeline (PII-redaksjon, tema-gate, konfidens→eskalering → LLM02), L4 injection-vern (tool-output=data → LLM01), L5 audit + rød-team-evals i CI. Budsjett-gate → LLM10", area:"backend", ui:"na", status:"planned" },
+]},
+{ phase:"F7", title:"Mekaniker mobilpanel (PWA)", target:"Uke 22–28", items:[
+  { id:"F7-01", t:"PWA-skall: app-shell, manifest, bottom-nav 5 faner", area:"pwa", ui:"proto", status:"planned" },
+  { id:"F7-02", t:"I dag-visning: jobbkort kronologisk + unread", area:"pwa", ui:"proto", status:"planned" },
+  { id:"F7-03", t:"Timeplan-visning", area:"pwa", ui:"proto", status:"planned" },
+  { id:"F7-04", t:"Jobber + fullskjerm-detalj med statusflyt start/pause/fullfør", area:"pwa", ui:"proto", status:"planned" },
+  { id:"F7-05", t:"Avviksmelding → varsel til selger i sanntid", area:"pwa", ui:"partial", status:"planned" },
+  { id:"F7-06", t:"Varsler-fane + Profil-fane", area:"pwa", ui:"proto", status:"planned" },
+  { id:"F7-07", t:"Service Worker: offline-cache av dagens jobber", area:"pwa", ui:"na", status:"planned" },
+]},
+{ phase:"F8", title:"Integrasjoner", target:"Uke 26–34", items:[
+  { id:"F8-01", t:"Quick ERP-adapter: pull/push, kalendersynk, health, DLQ + retry — FLYTTET FREM i Spor A: booking-kilde og forhandlerens vindu (status pushes tilbake til Quick)", area:"integrasjon", ui:"proto", status:"planned" },
+  { id:"F8-02", t:"Integrasjoner-side: kort (Quick/CRM/betaling) + synklogg-tabell", area:"admin", ui:"proto", status:"planned" },
+  { id:"F8-03", t:"CRM-adapter (Lime CRM først — vist i prototype)", area:"integrasjon", ui:"proto", status:"planned" },
+  { id:"F8-04", t:"ADR-001: betalingsleverandør — prototype viser Nets Easy, tech-stack sier Stripe+Vipps. MÅ AVKLARES · v1.3: TILTET mot Stripe+Vipps (Stripe alt valgt for SaaS-fakturering — kompetansen er betalt)", area:"integrasjon", ui:"proto", status:"blocked" },
+  { id:"F8-05", t:"Betalings-checkout i widget (forskudd) — MANGLER UI", area:"widget", ui:"missing", status:"planned" },
+  { id:"F8-06", t:"Outbound webhooks: signering, SSRF-vern, retry + config-UI (mangler)", area:"integrasjon", ui:"missing", status:"planned" },
+  { id:"F8-07", t:"Quick-agent / forhandler-assistent: FØRSTE agent i packages/agents/-konvensjonen (krever F6-13) — quick-toolkit + kategori-lås, writes bak human-approve. Beviser hele spawn-løypa: mappe → registry → entitlement → dock", area:"backend", ui:"missing", status:"planned" },
+  { id:"F8-08", t:"Composio-broker (NY i v1.3, UTSATT til konkret behov): long-tail OAuth per forhandler — første case: forhandlers egen Google Calendar-synk. Kjerneadaptere (Quick/Vegvesen/Finn/Lime) forblir egne", area:"integrasjon", ui:"missing", status:"planned" },
+  { id:"F8-09", t:"Framer-agent — EGET PRODUKT (NY i v1.5): External Agent CLI i Vercel Container; forhandler endrer hovednettsiden via chat — branch, diff, godkjenning. Egen entitlement. Isolert kjøring, aldri delt state mellom tenants", area:"integrasjon", ui:"missing", status:"planned" },
+]},
+{ phase:"F9", title:"Markedsføring", target:"Uke 32–38", items:[
+  { id:"F9-01", t:"Transaksjonell e-post via Resend (erstatter Postmark) i NotificationChannel — inkl. Better-Auth-eposter (magic link/verifisering). DPA + EU-region inn i TIA-notatet", area:"backend", ui:"na", status:"planned" },
+  { id:"F9-02", t:"Nyhetsbrev-modul på Resend Broadcasts (audiences/utsending/statistikk som API) — vi bygger kun editor + segment-UI oppå. Bak Stripe-entitlement (F5-09). MANGLER UI", area:"admin", ui:"missing", status:"planned" },
+  { id:"F9-03", t:"Påmeldingswidget (Framer-komponent) — MANGLER UI", area:"widget", ui:"missing", status:"planned" },
+]},
+{ phase:"F10", title:"Salg", target:"Uke 36–42", items:[
+  { id:"F10-01", t:"Finn.no-modul: publiser kjøretøy, status, oppdater/fjern — MANGLER UI", area:"integrasjon", ui:"missing", status:"planned" },
+  { id:"F10-02", t:"Medusa-nettbutikk for deler/tilbehør (egen «Yamaha Nettbutikk»-skisse finnes) · v1.6: Domain SDK for custom domene per forhandler-butikk (riktig hjem for den — flyttet fra F12-02). KOMMER HELT TIL SLUTT", area:"integrasjon", ui:"partial", status:"planned" },
+]},
+{ phase:"F11", title:"Avansert", target:"Uke 40–48", items:[
+  { id:"F11-01", t:"Rapporter/analyse i forhandler-portal: EGEN data — funnel, chatter, klikk, drop-off, konvertering (fra F4-14) + date-range, segmentering, eksport — placeholder i prototype", area:"admin", ui:"missing", status:"planned" },
+  { id:"F11-02", t:"SLA-monitorering + varsling ved brudd — MANGLER UI", area:"backend", ui:"missing", status:"planned" },
+  { id:"F11-03", t:"A/B-test på widget-flyt via Vercel Flags SDK-varianter per forhandler-segment (infra fra F0-04) — MANGLER UI", area:"backend", ui:"missing", status:"planned" },
+  { id:"F11-04", t:"MCP-server for Framer-plugin: strukturerte widgetendringer via AI", area:"plugin", ui:"na", status:"planned" },
+  { id:"F11-05", t:"Plattform-analyse i Endwise-admin (NY i v1.6, VÅRT verktøy): tvers-tenant oversikt — bruk, chatter, konvertering, hvor kunder stopper, hvilke forhandlere som trenger hjelp", area:"admin", ui:"missing", status:"planned" },
+  { id:"F11-06", t:"AI-innsikt — BETALT MODUL (NY i v1.6): rapport-analytiker-agenten analyserer forhandlerens EGEN data (F4-14/F11-01) → konkrete anbefalinger for bedre resultater. Bak analytics_pro-entitlement (Stripe). L1-guardrail: kun egen tenants data, aldri sammenligning som lekker andres tall", area:"backend", ui:"missing", status:"planned" },
+]},
+{ phase:"F12", title:"Enterprise", target:"Uke 46–54", items:[
+  { id:"F12-01", t:"Passkey/WebAuthn via Better-Auth passkey-plugin (følger nesten gratis med ADR-002) — MANGLER UI", area:"backend", ui:"missing", status:"planned" },
+  { id:"F12-02", t:"White-label: token-config per tenant (Tweaks-panelet er beviset på mekanismen)", area:"design", ui:"partial", status:"planned" },
+  { id:"F12-03", t:"Immutable audit-lagring + SSO + IP-whitelisting", area:"backend", ui:"missing", status:"planned" },
+  { id:"F12-04", t:"GDPR self-service: «Eksporter mine data» + sletting — MANGLER UI", area:"backend", ui:"missing", status:"planned" },
+]},
+];
+
+/* ===== State ===== */
+const LS = { theme:"endwise:theme", accent:"endwise:accent", overrides:"endwise:rm-overrides" };
+
+/* Spor A = backend + mekaniker-PWA (bygges først). Alt annet = Spor B. */
+const SPOR_A = new Set([
+ "F0-01","F0-02","F0-03","F0-04","F0-05","F0-06","F0-07","F0-08","F0-09","F0-10","F0-11","F0-12","F0-13","F0-14","F0-15",
+ "F1-01","F1-02","F1-03","F1-04","F1-05","F1-06","F1-07","F1-08","F1-09","F1-11","F1-12",
+ "F2-01","F2-04","F2-06",
+ "F3-01","F3-03","F3-04","F3-11",
+ "F6-02","F6-12",
+ "F7-01","F7-02","F7-03","F7-04","F7-05","F7-06","F7-07",
+ "F8-01"
+]);
+const sporOf = it => SPOR_A.has(it.id) ? "A" : "B";
+
+/* ===== Sikkerhetsspor: punkt-ID → CWE/OWASP-tagg (kilde: endwise-sikkerhet-cwe-owasp.md) ===== */
+const SEC = {
+ "F0-03":"CWE-89/639 · A01/A03", "F0-09":"CWE-307 · A07", "F0-14":"CWE-209/532 · A09",
+ "F0-15":"OWASP ASVS L2 · CI-gate", "F1-01":"CWE-307 · A07", "F1-03":"CWE-384/613/352 · A07",
+ "F1-04":"CWE-522 · A02", "F1-05":"CWE-306/863 · A01", "F1-06":"CWE-778 · A09",
+ "F1-07":"CWE-798/522 · A02", "F1-08":"CWE-639/284 · A01", "F1-09":"CWE-16 · konfig",
+ "F1-10":"CWE-640/521 · A07", "F1-11":"CWE-308/620 · A07/ASVS-L2", "F1-12":"CWE-613 · ASVS-3.3",
+ "F2-03":"CWE-22/434 · A04", "F4-02":"CWE-798/1021 · A02/A05", "F4-13":"CWE-79 · A03",
+ "F4-14":"personvern · TIA", "F5-09":"CWE-345 · A02", "F5-10":"CWE-79/1104 · A03",
+ "F6-04":"LLM01/02", "F6-05":"LLM06", "F6-14":"OWASP LLM Top 10 (L1–L5)",
+ "F8-01":"CWE-311/312 · A02", "F8-06":"CWE-918 · A10", "F8-09":"CWE-94/918/1336 · A10",
+ "F11-06":"LLM02 · L1-scope", "F12-03":"CWE-778 · A09/SSO",
+};
+const hasSec = it => !!SEC[it.id];
+const ACCENTS = [
+  { hex:"#EE2924", hover:"#D41E1A", pressed:"#B31612", label:"Yamaha Red" },
+  { hex:"#E63946", hover:"#CC2D39", pressed:"#B31E2A", label:"Scarlet" },
+  { hex:"#C8102E", hover:"#A30D25", pressed:"#85091E", label:"Crimson" },
+  { hex:"#FF5A4C", hover:"#EB4638", pressed:"#CC382B", label:"Coral" },
+];
+let filters = { status:"all", area:"all", gap:false, spor:"all", sec:false };
+let overrides = JSON.parse(localStorage.getItem(LS.overrides) || "{}");
+const openPhases = new Set(["F0"]);
+
+function effStatus(it){ return overrides[it.id] || it.status; }
+
+/* ===== Theme & accent ===== */
+function setTheme(t){
+  document.body.setAttribute("data-theme", t);
+  localStorage.setItem(LS.theme, t);
+  document.getElementById("thLight").setAttribute("aria-pressed", t==="light");
+  document.getElementById("thDark").setAttribute("aria-pressed", t==="dark");
+}
+function setAccent(hex){
+  const a = ACCENTS.find(x=>x.hex===hex) || ACCENTS[0];
+  const r = document.documentElement.style;
+  r.setProperty("--accent", a.hex); r.setProperty("--accent-hover", a.hover); r.setProperty("--accent-pressed", a.pressed);
+  r.setProperty("--accent-soft", a.hex+"14"); r.setProperty("--accent-ring", a.hex+"38");
+  localStorage.setItem(LS.accent, hex);
+  renderSwatches(hex);
+}
+function renderSwatches(active){
+  document.getElementById("swatches").innerHTML = ACCENTS.map(a=>
+    `<button class="swatch" style="background:${a.hex}" title="${a.label}" aria-pressed="${a.hex===active}" onclick="setAccent('${a.hex}')"></button>`).join("");
+}
+
+/* ===== Filters ===== */
+function setFilter(btn){
+  const f = btn.dataset.f, v = btn.dataset.v;
+  filters[f] = v;
+  document.querySelectorAll(`.chip[data-f="${f}"]`).forEach(b=>b.setAttribute("aria-pressed", b===btn));
+  render();
+}
+function toggleGap(btn){
+  filters.gap = !filters.gap;
+  btn.setAttribute("aria-pressed", filters.gap);
+  render();
+}
+function toggleSec(btn){
+  filters.sec = !filters.sec;
+  btn.setAttribute("aria-pressed", filters.sec);
+  render();
+}
+
+/* ===== Status cycle ===== */
+const CYCLE = ["planned","progress","done","blocked"];
+function cycleStatus(id){
+  const it = ROADMAP.flatMap(p=>p.items).find(i=>i.id===id);
+  const cur = effStatus(it);
+  const next = CYCLE[(CYCLE.indexOf(cur)+1)%CYCLE.length];
+  if (next === it.status) delete overrides[id]; else overrides[id] = next;
+  localStorage.setItem(LS.overrides, JSON.stringify(overrides));
+  render();
+}
+
+/* ===== Render ===== */
+const UI_LBL = { proto:"I prototype", partial:"Delvis", missing:"Mangler UI", na:"Ikke UI" };
+const ST_LBL = { done:"Ferdig", progress:"Pågår", planned:"Planlagt", blocked:"Blokkert" };
+
+function matches(it){
+  const s = effStatus(it);
+  if (filters.status !== "all" && s !== filters.status) return false;
+  if (filters.area !== "all" && it.area !== filters.area) return false;
+  if (filters.spor !== "all" && sporOf(it) !== filters.spor) return false;
+  if (filters.sec && !hasSec(it)) return false;
+  if (filters.gap && !(it.ui === "missing" || it.ui === "partial")) return false;
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  if (q && !(it.id.toLowerCase().includes(q) || it.t.toLowerCase().includes(q))) return false;
+  return true;
+}
+
+function render(){
+  const all = ROADMAP.flatMap(p=>p.items);
+  const c = { done:0, progress:0, planned:0, blocked:0 };
+  all.forEach(i=>c[effStatus(i)]++);
+  const gaps = all.filter(i=>i.ui==="missing").length;
+  const total = all.length;
+  const aItems = all.filter(i=>SPOR_A.has(i.id));
+  const aDone = aItems.filter(i=>effStatus(i)==="done").length;
+  const secItems = all.filter(hasSec);
+  const secDone = secItems.filter(i=>effStatus(i)==="done").length;
+
+  // Sikkerhetsspor per fase
+  document.getElementById("secbar").innerHTML = ROADMAP.map(p=>{
+    const s = p.items.filter(hasSec);
+    if (!s.length) return "";
+    const d = s.filter(i=>effStatus(i)==="done").length;
+    return `<div class="secphase"><span class="pn">${p.phase}</span><span class="mini"><i style="width:${d/s.length*100}%"></i></span><span class="cnt">${d}/${s.length}</span></div>`;
+  }).join("");
+
+  document.getElementById("kpis").innerHTML = `
+    <div class="kpi"><div class="num">${total}</div><div class="lbl">Totalt antall punkter</div></div>
+    <div class="kpi" style="border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-ring)"><div class="num" style="color:var(--accent)">${aDone}/${aItems.length}</div><div class="lbl">Spor A ferdig (bygges nå)</div></div>
+    <div class="kpi k-done"><div class="num">${c.done}</div><div class="lbl">Ferdig</div></div>
+    <div class="kpi k-prog"><div class="num">${c.progress}</div><div class="lbl">Pågår</div></div>
+    <div class="kpi"><div class="num">${c.planned}</div><div class="lbl">Planlagt</div></div>
+    <div class="kpi k-block"><div class="num">${c.blocked}</div><div class="lbl">Blokkert</div></div>
+    <div class="kpi k-gap"><div class="num">${gaps}</div><div class="lbl">Mangler UI-design</div></div>
+    <div class="kpi" style="border-color:var(--danger)"><div class="num" style="color:var(--danger)">${secDone}/${secItems.length}</div><div class="lbl">🔒 Sikkerhetspunkter sikret</div></div>`;
+
+  document.getElementById("totalbar").innerHTML =
+    `<i class="b-done" style="width:${c.done/total*100}%"></i>
+     <i class="b-prog" style="width:${c.progress/total*100}%"></i>
+     <i class="b-block" style="width:${c.blocked/total*100}%"></i>`;
+
+  document.getElementById("phases").innerHTML = ROADMAP.map(p=>{
+    const items = p.items.filter(matches);
+    const pc = { done:0, progress:0 };
+    p.items.forEach(i=>{ const s = effStatus(i); if (pc[s] !== undefined) pc[s]++; });
+    const pct = Math.round(pc.done/p.items.length*100);
+    if (!items.length && (filters.status!=="all"||filters.area!=="all"||filters.gap||filters.sec||filters.spor!=="all"||document.getElementById("q").value)) return "";
+    const isOpen = openPhases.has(p.phase);
+    return `<div class="phase ${isOpen?"is-open":""}" data-phase="${p.phase}">
+      <div class="phase__head" onclick="togglePhase('${p.phase}')">
+        <span class="phase__num">${p.phase}</span>
+        <span class="phase__title">${p.title}<span class="tgt">${p.target} · ${p.items.length} punkter</span></span>
+        <span class="phase__bar"><i class="b-done" style="width:${pc.done/p.items.length*100}%"></i><i class="b-prog" style="width:${pc.progress/p.items.length*100}%"></i></span>
+        <span class="phase__pct">${pct}%</span>
+        <span class="phase__chev">›</span>
+      </div>
+      <div class="phase__body">${items.map(it=>{
+        const s = effStatus(it);
+        return `<div class="item ${hasSec(it)?"has-sec":""}">
+          <span class="item__id">${it.id}</span>
+          <span class="item__title">${it.t}${hasSec(it)?` <span class="sec-tag" title="Sikkerhetskrav — se endwise-sikkerhet-cwe-owasp.md">🔒 ${SEC[it.id]}</span>`:""}</span>
+          <span class="area" style="${sporOf(it)==="A"?"color:var(--accent);border-color:var(--accent);background:var(--accent-soft)":""}">${sporOf(it)} · ${it.area}</span>
+          <span class="badge b-ui-${it.ui}"><span class="dot"></span>${UI_LBL[it.ui]}</span>
+          <button class="badge st st-${s}" onclick="cycleStatus('${it.id}')" title="Klikk for å endre status"><span class="dot"></span>${ST_LBL[s]}${overrides[it.id]?" *":""}</button>
+        </div>`;
+      }).join("") || `<div class="item"><span></span><span class="item__title" style="color:var(--fg-subtle)">Ingen treff i denne fasen.</span></div>`}</div>
+    </div>`;
+  }).join("");
+}
+function togglePhase(id){
+  if (openPhases.has(id)) openPhases.delete(id); else openPhases.add(id);
+  document.querySelector(`.phase[data-phase="${id}"]`)?.classList.toggle("is-open");
+}
+
+/* ===== Export / reset ===== */
+function exportStatus(){
+  const out = {};
+  ROADMAP.flatMap(p=>p.items).forEach(i=>out[i.id]=effStatus(i));
+  const json = JSON.stringify(out, null, 2);
+  navigator.clipboard.writeText(json).then(()=>alert("Status kopiert til utklippstavle.\nLim inn i repo / oppdater ROADMAP-konstanten og commit."));
+}
+function resetLocal(){
+  overrides = {}; localStorage.removeItem(LS.overrides); render();
+}
+
+/* ===== Init ===== */
+setTheme(localStorage.getItem(LS.theme) || "light");
+setAccent(localStorage.getItem(LS.accent) || "#EE2924");
+render();
+</script>
+</body>
+</html>

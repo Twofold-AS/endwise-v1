@@ -1,0 +1,73 @@
+# F0-15 — Sikkerhetsgate i CI (v1.3, utvidet v1.6)
+# Mål: ASVS L2 (L3 for auth + betaling). Null åpne CWE-funn.
+name: Security gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  codeql:
+    name: CodeQL (CWE-mappet)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+      - uses: github/codeql-action/analyze@v3
+
+  semgrep:
+    name: Semgrep (OWASP + CWE)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - run: semgrep ci --config p/owasp-top-ten --config p/typescript --config p/secrets --sarif --output semgrep.sarif || true
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+  dependencies:
+    name: Dependency-Check (pnpm audit + OWASP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: pnpm audit (fail på high/critical)
+        run: pnpm audit --audit-level high
+      - name: OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: endwise
+          path: "."
+          format: SARIF
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/dependency-check-report.sarif
+
+  zap-baseline:
+    name: ZAP baseline mot preview
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: ZAP baseline
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          # Settes når Vercel-preview-URL er tilgjengelig (F0-07/F0-10)
+          target: ${{ vars.PREVIEW_URL || 'https://example.invalid' }}
+          fail_action: false

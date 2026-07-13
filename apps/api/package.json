@@ -1,0 +1,28 @@
+{
+  "name": "@endwise/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --experimental-strip-types src/dev.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@endwise/db": "workspace:*",
+    "@endwise/events": "workspace:*",
+    "@endwise/modules": "workspace:*",
+    "@hono/zod-validator": "^0.8.0",
+    "@trpc/server": "^11.18.0",
+    "hono": "^4.12.30",
+    "workflow": "^4.6.0",
+    "zod": "^4.4.3",
+    "@hono/node-server": "^2.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}

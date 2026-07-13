@@ -1,0 +1,19 @@
+/* F0-12 — Tailwind 4 @theme-broen: designtokens (F0-11) blir Tailwind-utilities. */
+@import '@endwise/widget-tokens/tokens.css';
+
+@theme {
+  --color-bg: var(--ew-bg);
+  --color-surface: var(--ew-surface);
+  --color-border: var(--ew-border);
+  --color-fg: var(--ew-fg);
+  --color-fg-muted: var(--ew-fg-muted);
+  --color-accent: var(--ew-accent);
+  --color-accent-fg: var(--ew-accent-fg);
+
+  --radius-sm: var(--ew-radius-sm);
+  --radius-md: var(--ew-radius-md);
+  --radius-lg: var(--ew-radius-lg);
+
+  --font-sans: var(--ew-font-sans);
+  --font-mono: var(--ew-font-mono);
+}

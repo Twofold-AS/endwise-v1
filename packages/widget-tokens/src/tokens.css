@@ -1,0 +1,44 @@
+/*
+ * F0-11 — @endwise/widget-tokens (lys/mørk/aksent).
+ *
+ * STATUS: STRUKTUR PÅ PLASS, VERDIER IKKE EKSTRAHERT.
+ * Roadmap sier «ekstrahert fra prototype». Prototypen finnes ikke i dette repoet
+ * ennå — verdiene under er nøytrale plassholdere som IKKE er designbeslutninger.
+ * Når prototypen legges inn: erstatt verdiene, ikke navnene.
+ *
+ * Tailwind 4 leser disse via @theme (se packages/ui).
+ */
+:root,
+[data-theme='light'] {
+  --ew-bg: #ffffff;
+  --ew-surface: #f6f6f7;
+  --ew-border: #e4e4e7;
+  --ew-fg: #18181b;
+  --ew-fg-muted: #71717a;
+  --ew-accent: #18181b;
+  --ew-accent-fg: #ffffff;
+
+  --ew-radius-sm: 4px;
+  --ew-radius-md: 8px;
+  --ew-radius-lg: 12px;
+
+  --ew-space-1: 4px;
+  --ew-space-2: 8px;
+  --ew-space-3: 12px;
+  --ew-space-4: 16px;
+  --ew-space-6: 24px;
+  --ew-space-8: 32px;
+
+  --ew-font-sans: ui-sans-serif, system-ui, sans-serif;
+  --ew-font-mono: ui-monospace, SFMono-Regular, monospace;
+}
+
+[data-theme='dark'] {
+  --ew-bg: #0b0b0c;
+  --ew-surface: #161618;
+  --ew-border: #27272a;
+  --ew-fg: #fafafa;
+  --ew-fg-muted: #a1a1aa;
+  --ew-accent: #fafafa;
+  --ew-accent-fg: #0b0b0c;
+}

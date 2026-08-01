@@ -4,25 +4,38 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch --experimental-strip-types src/dev.ts",
+    "dev": "node --env-file-if-exists=../../.env --watch --experimental-strip-types src/dev.ts",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@endwise/agent-runtime": "workspace:*",
+    "@endwise/agents": "workspace:*",
+    "@endwise/auth": "workspace:*",
     "@endwise/db": "workspace:*",
     "@endwise/events": "workspace:*",
+    "@endwise/guardrails": "workspace:*",
     "@endwise/modules": "workspace:*",
+    "@endwise/providers": "workspace:*",
+    "@endwise/toolkit-quick": "workspace:*",
+    "@endwise/toolkit-resend": "workspace:*",
+    "@endwise/toolkit-twilio": "workspace:*",
+    "@endwise/toolkit-vegvesen": "workspace:*",
+    "@hono/node-server": "^2.0.8",
     "@hono/zod-validator": "^0.8.0",
     "@trpc/server": "^11.18.0",
     "hono": "^4.12.30",
+    "stripe": "^19.1.0",
     "workflow": "^4.6.0",
-    "zod": "^4.4.3",
-    "@hono/node-server": "^2.0.8"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
+  },
+  "exports": {
+    "./router": "./src/trpc/router.ts"
   }
 }

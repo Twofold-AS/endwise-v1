@@ -5,7 +5,7 @@ export default function Page() {
     <main className="mx-auto max-w-2xl p-8">
       <div className="mb-6 flex items-center gap-3">
         <h1 className="text-2xl font-semibold">Endwise</h1>
-        <Badge tone="outline">F0 · Fundament</Badge>
+        <Badge variant="outline">F0 · Fundament</Badge>
       </div>
       <Card>
         <CardTitle>Fundamentet står</CardTitle>

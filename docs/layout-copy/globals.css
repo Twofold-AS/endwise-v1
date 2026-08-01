@@ -1,0 +1,899 @@
+@import "tailwindcss";
+
+/* TheFold V2 brand-pack — sourced from docs/ui-spec
+ *   (1e9a8b0e-TheFoldAppShellstandalone.html). This file is the SINGLE source
+ *   of truth for tokens (the old apps/web/src/lib/branding.json mirror was
+ *   stale and has been deleted — see docs/design-tokens.md).
+ *
+ * Layered as:
+ *   1. --brand-* raw tokens (single source of truth, swap here to re-skin)
+ *   2. shadcn/ui semantic tokens (--background, --card, etc.) mapped onto
+ *      brand tokens for the dark theme. Light theme stays as the
+ *      shadcn New York neutral palette so future light-toggle work has
+ *      somewhere to land.
+ *   3. @theme inline exposes both raw + semantic tokens as Tailwind 4
+ *      utilities (bg-brand-card, text-brand-text-dim, etc.).
+ *
+ * Dark theme is default per docs/ui-plan.md § 1.7.
+ */
+
+@custom-variant dark (&:is(.dark *));
+
+/* Departure Mono — woff2 hosted from apps/web/public/fonts/. Reserved
+ * exclusively for the topbar wordmark + Talk welcome-h1 (per user
+ * directive). font-display: swap means body copy falls back to the sans
+ * stack with no visible jank if the file is missing during a fresh
+ * install. */
+@font-face {
+  font-family: "Departure Mono";
+  src: url("/fonts/DepartureMono_Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ── Brand-pack raw tokens (dark-mode values; the only theme we ship today).
+   * F1.6a (2026-06-04): blue-tinted values neutralised to pure black + grey.
+   * Page + topbar are #000000 so the topbar BETA pill (F1.6d) can sit
+   * transparent on top. Card layers keep a slight grey lift so they
+   * read as elevation, no more blue hue. */
+  --brand-page: #000000;
+  --brand-topbar: #000000;
+  --brand-card: #151515;
+  --brand-card-2: #1a1a1a;
+  --brand-row-hover: #1d1d1d;
+  --brand-row-active: #232323;
+  --brand-border: rgba(255, 255, 255, 0.06);
+  --brand-border-strong: rgba(255, 255, 255, 0.1);
+  /* Bundle3-#8: pushed the whole text ramp toward pure white — the old
+   * 0.62/0.4/0.28 greys read as washed-out. Kept a faint hierarchy so
+   * secondary text is still distinguishable, but everything is now clearly
+   * white. muted-foreground maps to --brand-text-dim, so most "grey" copy
+   * lifts with it. */
+  --brand-text: rgba(255, 255, 255, 1);
+  --brand-text-dim: rgba(255, 255, 255, 0.88);
+  --brand-text-faint: rgba(255, 255, 255, 0.72);
+  --brand-text-ghost: rgba(255, 255, 255, 0.55);
+  /* Plan 3 (2026-06-06): the accent is no longer blue. oklch hue-250 blue
+   * neutralised to white so every `var(--brand-accent)` site (icon highlights,
+   * fill buttons w/ black text, focus rings, progress dots) reads as a clean
+   * monochrome accent on the dark theme. -dim is a low-alpha white tint for
+   * subtle accent backgrounds. */
+  --brand-accent: rgba(255, 255, 255, 0.92);
+  --brand-accent-dim: rgba(255, 255, 255, 0.14);
+  --brand-warn: oklch(76% 0.14 75);
+  --brand-danger: oklch(64% 0.18 25);
+  --brand-success: oklch(70% 0.12 150);
+
+  /* ── Design system (Plan 1, 2026-06-06) — cream/ink light language that the
+   * UI is migrating to. Everything new builds on these. */
+
+  /* Surface stack (cream) */
+  --cream-50: #fbfbf8;
+  --cream-100: #f8f8f6;
+  --cream-200: #f5f5f2;
+  --cream-300: #e7e7e3;
+
+  /* Ink (text on cream) */
+  --ink-strong: rgba(38, 35, 35, 0.9);
+  --ink: rgba(38, 35, 35, 0.7);
+  --ink-muted: rgba(38, 35, 35, 0.5);
+  --ink-faint: rgba(38, 35, 35, 0.4);
+
+  /* Shadow recipes */
+  --shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.03), 0 9px 8px
+    rgba(0, 0, 0, 0.02), inset 0 2px 0 #fff;
+  /* Flat card (text fields): the card ring + top-highlight, no drop shadow.
+   * (--shadow-card-flat wasn't enumerated in the plan; derived from card.) */
+  --shadow-card-flat: 0 0 0 1px rgba(0, 0, 0, 0.08), inset 0 1px 0 #fff;
+  --shadow-icon-inset: inset 5px 5px 6px #eeeeeb, inset -5px -5px 6px #fcfcf9;
+  --shadow-btn-dark:
+    0 0 0 1px rgba(64, 64, 64, 0.12), 0 2px 8px rgba(0, 0, 0, 0.03),
+    0 3px 4px rgba(0, 0, 0, 0.16), inset 0 2px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -0.5px 2px rgba(0, 0, 0, 0.25);
+  --shadow-btn-light: 0 1px 1px rgba(0, 0, 0, 0.24), inset 0 2px 0 #fff, 0 0 0 1px var(--cream-300);
+  --shadow-pill: 0 0.225px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 1px 1px
+    rgba(255, 255, 255, 0.6), inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+
+  /* Radius — single canonical semantic scale (px). The Tailwind rounded-*
+   * utilities expose these via @theme inline below, and components reference the
+   * same var() directly. Replaces the old --r-* scale (2026-06-29 cleanup):
+   *   --r-btn / --r-default (8px) → --radius-lg, --r-card (12px) → --radius-xl,
+   *   --r-pill (100px) → --radius-pill, --r-sm (4px, unused) dropped.
+   * shadcn's singular --radius (parked light theme + sonner) is kept separately. */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 100px;
+
+  /* ── Surface tokens. F2.8 retunes them from the F1.6b opaque
+   * elevation look to a frosted-glass language: translucent dark
+   * backgrounds (so the body background.png reads faintly through the
+   * card when paired with backdrop-blur), hairline translucent-white
+   * borders, and a soft drop shadow for lift. The alpha stays high
+   * enough (~0.72) that white body text remains legible regardless of
+   * what's behind the card. Pair the bg with `.glass-card` (or an inline
+   * backdrop-filter) on free-floating cards to get the blur. */
+  /* Bundle-1 (2026-06-06): lightened from the F2.8 near-black slab
+   * (rgba(20,20,20,0.72)) — it read too heavy over the light background.png.
+   * Raising the grey base (20→36/46) + lowering alpha lets the bg breathe
+   * through while white --brand-text (0.92) stays legible. The elevated
+   * variant (popovers/dialogs) keeps a touch more opacity for text that sits
+   * over busy content behind it. */
+  --surface-border: rgba(255, 255, 255, 0.14);
+  --surface-border-strong: rgba(255, 255, 255, 0.2);
+  --surface-bg: rgba(36, 36, 42, 0.6);
+  --surface-bg-elevated: rgba(46, 46, 54, 0.72);
+  --surface-radius: 8px;
+  --surface-blur: 14px;
+  --surface-shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+
+  /* ── Light theme — shadcn New York neutral palette (kept for V3 toggle) */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+
+  /* Brand typography stacks.
+   *
+   * --font-heading is opt-in via the .font-brand-heading utility — it
+   * is NOT applied to every h1/h2 automatically. Per the user's spec
+   * Departure Mono is reserved for the topbar wordmark "TheFold" and
+   * the welcome-h1 on /talk; everything else stays on the sans stack.
+   *
+   * --font-mono leads with JetBrains Mono but that file is NOT bundled, so in
+   * practice it resolves to the system mono fallbacks (ui-monospace / SF Mono /
+   * Consolas). Kept as the single mono token (the Tailwind `font-mono` utility +
+   * the Saturn icon read it); wire JetBrains Mono via next/font if we ever want
+   * the exact face. Departure Mono is *not* in the mono chain (no code-font
+   * license for it). */
+  /* 2026-06-07: Google Sans is the primary body font, loaded via a <link> in
+   * layout.tsx (it isn't on the next/font/google list). --font-sans leads with
+   * it; system-ui/sans-serif catch the load window. */
+  --font-google-sans: "Google Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-google-sans);
+  --font-heading: "Departure Mono", ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Bundle C: spec-named alias for the Departure Mono wordmark stack. */
+  --font-departure: "Departure Mono", ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  /* ── Brand + recessed/raised (Bundle A, 2026-06-07) ──────────────────
+   * The CoFounder-style standardised effect: recessed (inset) for surfaces,
+   * raised (outset cream pill) for active states.
+   *
+   * --accent-cream is the brand cream accent (#FAE8C9) — the outset .raised
+   * pill, active tab/segment, links. It is a SEPARATE token from shadcn's
+   * `--accent` on purpose: 2026-06-29 cleanup split them so the bare CSS var
+   * `--accent` now matches the Tailwind `bg-accent` utility (both = grey
+   * --brand-row-hover; see `.dark` + --color-accent in @theme). Anything that
+   * wants the cream fill must say `--accent-cream`, not `--accent`. */
+  --accent-cream: #fae8c9;
+  --bg: #fbfbf8;
+  --text-primary: #202020;
+  --link: var(--accent-cream);
+
+  --space-base: 4px;
+
+  --shadow-recessed:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.05), inset 0 -1px 1px rgba(255, 255, 255, 0.85),
+    inset 0 2px 3px rgba(0, 0, 0, 0.045), 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 2px 2px rgba(255, 255, 255, 0.85);
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+
+  /* Stronger pop-out (CoFounder-button depth): layered outer shadow + white
+   * top inset highlight + hairline ring. Used by sidebar + chatinput card. */
+  --shadow-elevated:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.06), 0 12px 24px rgba(0, 0, 0, 0.04),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark theme — semantic shadcn tokens mapped onto the brand-pack so every
+ * existing shadcn component (Card, Dialog, Popover, etc.) automatically
+ * picks up the brand palette without code changes. Hand-styled pieces
+ * (sidebar, topbar, talk-card) read the --brand-* tokens directly. */
+.dark {
+  --background: var(--brand-page);
+  --foreground: var(--brand-text);
+  --card: var(--brand-card);
+  --card-foreground: var(--brand-text);
+  --popover: var(--brand-card);
+  --popover-foreground: var(--brand-text);
+  --primary: var(--brand-accent);
+  --primary-foreground: var(--brand-page);
+  --secondary: var(--brand-card-2);
+  --secondary-foreground: var(--brand-text);
+  --muted: var(--brand-card-2);
+  --muted-foreground: var(--brand-text-dim);
+  /* 2026-06-29: the bare --accent var is aligned with the Tailwind `bg-accent`
+   * utility — both resolve to grey --brand-row-hover. The cream brand accent
+   * lives in --accent-cream (set in :root) and is read by .raised / Tabs. */
+  --accent: var(--brand-row-hover);
+  --destructive: var(--brand-danger);
+  --destructive-foreground: var(--brand-text);
+  --border: var(--brand-border);
+  --input: var(--brand-border-strong);
+  --ring: var(--brand-accent);
+}
+
+/* Light theme (Batch 8 #5). The V3 toggle: <html class="light"> instead of
+ * "dark". shadcn semantic tokens fall back to the :root New-York-neutral light
+ * palette automatically (no .dark override in play), so here we only remap the
+ * hand-styled BRAND tokens (--brand-*, --surface-*) that :root otherwise pins to
+ * the dark brand-pack, plus color-scheme for native form controls. The
+ * ember-glow tokens (--tf-glow-*) live at :root level and are deliberately NOT
+ * touched — the accent is preserved identically in both themes. */
+.light {
+  color-scheme: light;
+  --brand-page: var(--cream-50);
+  --brand-topbar: var(--cream-50);
+  --brand-card: #ffffff;
+  --brand-card-2: var(--cream-100);
+  --brand-row-hover: var(--cream-200);
+  --brand-row-active: var(--cream-300);
+  --brand-border: rgba(0, 0, 0, 0.08);
+  --brand-border-strong: rgba(0, 0, 0, 0.12);
+  --brand-text: var(--ink-strong);
+  --brand-text-dim: var(--ink);
+  --brand-text-faint: var(--ink-muted);
+  --brand-text-ghost: var(--ink-faint);
+  --brand-accent: rgba(38, 35, 35, 0.9);
+  --brand-accent-dim: rgba(38, 35, 35, 0.08);
+  /* Glass surfaces flip to light translucent so cards read as elevation on the
+   * cream backdrop instead of dark slabs. */
+  --surface-border: rgba(0, 0, 0, 0.08);
+  --surface-border-strong: rgba(0, 0, 0, 0.12);
+  --surface-bg: rgba(255, 255, 255, 0.72);
+  --surface-bg-elevated: rgba(255, 255, 255, 0.85);
+  --surface-shadow: 0 10px 34px rgba(0, 0, 0, 0.12);
+}
+
+@theme inline {
+  /* shadcn semantic tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  /* Bundle A: decoupled from --accent (now brand cream) — keep shadcn hovers
+   * on the existing grey row-hover + white text. */
+  --color-accent: var(--brand-row-hover);
+  --color-accent-foreground: var(--brand-text);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand tokens exposed as bg-brand-*, text-brand-*, border-brand-* */
+  --color-brand-page: var(--brand-page);
+  --color-brand-topbar: var(--brand-topbar);
+  --color-brand-card: var(--brand-card);
+  --color-brand-card-2: var(--brand-card-2);
+  --color-brand-row-hover: var(--brand-row-hover);
+  --color-brand-row-active: var(--brand-row-active);
+  --color-brand-border: var(--brand-border);
+  --color-brand-border-strong: var(--brand-border-strong);
+  --color-brand-text: var(--brand-text);
+  --color-brand-text-dim: var(--brand-text-dim);
+  --color-brand-text-faint: var(--brand-text-faint);
+  --color-brand-text-ghost: var(--brand-text-ghost);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-dim: var(--brand-accent-dim);
+  --color-brand-warn: var(--brand-warn);
+  --color-brand-danger: var(--brand-danger);
+  --color-brand-success: var(--brand-success);
+
+  /* F1.6b surface tokens exposed as bg-surface, border-surface etc. */
+  --color-surface-bg: var(--surface-bg);
+  --color-surface-bg-elevated: var(--surface-bg-elevated);
+  --color-surface-border: var(--surface-border);
+  --color-surface-border-strong: var(--surface-border-strong);
+
+  /* Design-system cream/ink (Plan 1) — bg-cream-200, text-ink, text-ink-strong… */
+  --color-cream-50: var(--cream-50);
+  --color-cream-100: var(--cream-100);
+  --color-cream-200: var(--cream-200);
+  --color-cream-300: var(--cream-300);
+  --color-ink-strong: var(--ink-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  /* Expose the canonical :root radius scale to Tailwind rounded-* utilities
+   * (same var()-passthrough pattern as the fonts below). */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-pill: var(--radius-pill);
+
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
+  --font-mono: var(--font-mono);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  /* 2026-06-07: the page backdrop is the ColorBends + DotField stack (fixed
+   * -z-10 in layout.tsx). <html> is a near-black #120F17 base shown behind
+   * ColorBends (which renders with `transparent`). <body> stays transparent so
+   * the canvases show through. */
+  html {
+    background-color: #120f17;
+    /* Reserve the scrollbar's track width at all times so content doesn't shift
+     * sideways when a scrollbar appears/disappears (e.g. a chat that grows past
+     * one viewport, a list that finishes loading). `stable` keeps the gutter on
+     * the page root site-wide; individual scroll panes opt in via .scrollbar-stable. */
+    scrollbar-gutter: stable;
+  }
+
+  /* Light theme: swap the near-black canvas base for cream so the decorative
+   * ColorBends/DotField backdrop doesn't read as a dark slab under it. */
+  html.light {
+    background-color: var(--cream-50);
+  }
+
+  body {
+    /* Transparent so the ColorBends/DotField backdrop shows through. */
+    background-color: transparent;
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    /* Google Sans default body weight (2026-06-07). */
+    font-weight: 400;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Opt-in heading-font utility. ONLY applied via the
+   * .font-brand-heading class on the topbar wordmark + welcome-h1.
+   * All other h1/h2/h3 stay on --font-sans. */
+  .font-brand-heading {
+    font-family: var(--font-heading);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+    font-feature-settings: normal;
+    letter-spacing: 0;
+  }
+
+  /* Pixel-perfect rendering for pixel art (hero, glyph) */
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  /* Scrollbar — matches HTML spec */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Free-floating text on the page background (Home + agent idle headlines).
+   * The background is the LIGHT pixel-art background.png again (ColorBends
+   * dropped), so this is near-black with a soft light halo so it stays legible
+   * over both the pale sky and the green grass — the DotField overlay is mostly
+   * transparent, so the light image is what shows behind this text. Text INSIDE
+   * the frosted .glass-card surfaces keeps using the white --brand-text. */
+  .text-on-bg {
+    color: #14171a;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.55), 0 0 1px rgba(255, 255, 255, 0.8);
+  }
+
+  /* Engraved / inset (letterpress) text — looks pressed INTO the background.
+   * Semi-transparent fill so the backdrop shows through the letters, a soft
+   * light highlight BELOW and a dark shadow ABOVE to read as carved-in. Tuned
+   * for the colourful Grainient backdrop. (Daily quote.) */
+  .text-engraved {
+    color: rgba(255, 255, 255, 0.42);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.28), 0 -1px 1px rgba(0, 0, 0, 0.55);
+  }
+
+  /* F2.8: frosted-glass card. Pairs with --surface-bg (translucent) to
+   * blur whatever sits behind the card (the body background.png on free-
+   * floating screens). Used on the Talk-card + ChatInput composer and the
+   * sidebar wrappers — all glass is CSS backdrop-filter; the liquid-glass-
+   * react experiment (F2.7) was dropped after it broke the sidebar. Webkit
+   * prefix for Safari. */
+  .glass-card {
+    -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(118%);
+    backdrop-filter: blur(var(--surface-blur)) saturate(118%);
+    box-shadow: var(--surface-shadow);
+  }
+
+  /* Bundle A: standardised recessed/raised effect (CoFounder style).
+   * .recessed = inset surface (chat-input, segmented-control track).
+   * .raised   = outset cream pill (active tab/segment, toggled state). */
+  .recessed {
+    box-shadow: var(--shadow-recessed);
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+  }
+  .raised {
+    box-shadow: var(--shadow-raised);
+    border-radius: var(--radius-lg);
+    background: var(--accent-cream);
+  }
+  /* Stronger pop-out than .raised — for whole cards (sidebar, chatinput). */
+  .elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  /* CoFounder transparent glass surface — for whole containers (sidebar,
+   * chatinput) over the dark ColorBends/DotField backdrop. Content on it must
+   * be WHITE (ink would be invisible). Pairs with Button variant="glass". */
+  .glass-surface {
+    background: rgba(255, 255, 255, 0.1);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2), 0 12px 24px
+      rgba(0, 0, 0, 0.15);
+  }
+
+  /* Full-width content panel for list/settings screens. Rounded ONLY top-left,
+   * bleeds off the RIGHT edge and all the way to the BOTTOM of the screen
+   * (negative right/bottom margins cancel the shell's 8px gutters). Bug-5:
+   * lots of air on the TOP and LEFT (push it clearly away from the topbar +
+   * sidebar), NO bottom gap. Frosted glass like the rest. */
+  /* Plan 5 (2026-06-06): clean slate. The frosted-glass wrapper (bg, blur,
+   * border, radius, margin bleed) is gone — pages now render raw content with
+   * no panel chrome. The classes stay as no-ops so the ~8 call-sites keep
+   * compiling; their own Tailwind layout utilities (flex/min-h-0/overflow)
+   * still apply. */
+  .content-panel {
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .content-panel-inner {
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Opt-in: reserve the scrollbar gutter on an inner scroll pane so its content
+   * keeps a stable width whether or not the scrollbar is showing. Apply to any
+   * `overflow-y-auto` container whose content toggles overflow at runtime (chat
+   * streams, agent lists, the calendar grid, settings panes) so rows/bubbles
+   * don't jump horizontally on the frame the scrollbar appears. */
+  .scrollbar-stable {
+    scrollbar-gutter: stable;
+  }
+
+  /* Opt-in: hide the scrollbar but keep scrolling. Used on the sidebar
+   * (paired with a gradient fade-shader that appears when content
+   * overflows). */
+  .no-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Edge legacy / IE */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ── Unified content-page styling ───────────────────────────────────────────
+ * The list/detail pages (Chats, Projects, Tasks, Settings) sit on the dark
+ * ColorBends backdrop now, so their text is WHITE. These rules are intentionally
+ * UNLAYERED so they win over Tailwind's layered utilities (text-muted-foreground
+ * etc.) without editing every element. (2026-06-09: flipped ink → white.) */
+.content-panel-inner {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+}
+.content-panel {
+  color: rgba(255, 255, 255, 0.88);
+}
+.content-panel h1 {
+  color: #ffffff;
+}
+.content-panel .text-foreground {
+  color: #ffffff;
+}
+.content-panel .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* Raise-on-hover/selected — a subtle glass highlight for content rows + cards on
+ * the dark backdrop. Set data-selected="true" for a persistent raised state. */
+.raise-on-hover {
+  border-radius: var(--radius-lg);
+  transition: box-shadow 150ms ease, background 150ms ease;
+}
+.raise-on-hover:hover,
+.raise-on-hover[data-selected="true"] {
+  box-shadow: var(--shadow-raised);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Bundle C: light recessed popovers (e.g. the settings/profile menu) need a
+ * LIGHT item-hover — the shadcn default focus:bg-accent maps to the dark
+ * --brand-row-hover, which would be a dark slab on the cream surface. Unlayered
+ * so it wins over the Tailwind utility. */
+.recessed [role="menuitem"]:focus,
+.recessed [role="menuitem"][data-highlighted] {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--ink-strong);
+}
+/* Menu-item icons default to muted-foreground (white) — ink them on the light
+ * recessed popover so they're visible. */
+.recessed [role="menuitem"] svg {
+  color: var(--ink-muted);
+}
+
+/* Brand-spec animations — pulled in from the HTML spec so any screen
+ * needing a live-run shimmer, awaiting-answer pulse, or panel slide-in
+ * just adds the matching utility class. */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.shimmer-bar {
+  background: linear-gradient(90deg, transparent 0%, var(--brand-accent) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.4s ease-in-out infinite;
+}
+
+/* Text-shimmer for active agents (sidebar live-run rows). Replaces the
+ * standalone shimmer-bar block per 2026-05-12 user spec — motion lives
+ * on the workflow name + task text itself instead of a separate bar.
+ *
+ * Implementation: a wide linear gradient is background-clipped to the
+ * text glyphs, then we slide background-position so the highlight
+ * sweeps across the letters. The base colour stays --brand-text so the
+ * text stays legible at the gradient's troughs. */
+.shimmer-text {
+  /* Plan 4 (2026-06-06): canonical shimmer utility (110deg sweep, 200%
+   * background, shimmer-move @2s — the build-plan recipe). The sweep colour is
+   * driven by --shimmer-base/--shimmer-peak so one class works on both themes:
+   *   - default = white shine, for the dark app shell (sidebar live-run rows,
+   *     ChatInput active-tool label). Preserves Bundle4-#12 "no blue" intent.
+   *   - .shimmer-text-ink = ink shine, the exact dark values from the plan,
+   *     for the cream design-system surfaces being migrated to. */
+  --shimmer-base: rgba(255, 255, 255, 0.45);
+  --shimmer-peak: rgba(255, 255, 255, 1);
+  background: linear-gradient(
+    110deg,
+    var(--shimmer-base) 30%,
+    var(--shimmer-peak) 50%,
+    var(--shimmer-base) 70%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-move 2s linear infinite;
+}
+/* Ink variant for cream surfaces — SELF-CONTAINED (2026-06-07) so it shimmers
+ * when used alone (`class="shimmer-text-ink"`), not only when paired with
+ * .shimmer-text. Dark sweep so "Task"/"Plan" etc. are visible on cream. */
+.shimmer-text-ink {
+  background: linear-gradient(
+    110deg,
+    var(--ink-faint) 30%,
+    var(--ink-strong) 50%,
+    var(--ink-faint) 70%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-move 2s linear infinite;
+}
+@keyframes shimmer-move {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── TheFold-glow — gradient-glow tint for the @dotmatrix SSE loaders (UI-M1).
+ * Replaces the loaders' flat white with a colour that MORPHS over time, mirroring
+ * TheFold's signature color-morph idiom (the .shimmer-text sweep @2s linear) so
+ * the loaders breathe like today's Saturn/shimmer motion. Mechanism: DotMatrixBase
+ * passes `color: currentColor` to every dot, so animating `color` on this wrapper
+ * morphs all active dots in unison WHILE each loader's own per-dot opacity
+ * animation keeps running.
+ *
+ * PERF (UI-M1 lag-fix 2026-06-27): the base class animates ONLY `color` — one
+ * cheap paint per frame. It deliberately carries NO `filter`. A drop-shadow here
+ * re-rasterises the entire 25-dot subtree EVERY frame: the filter's input pixels
+ * change as `color` morphs, so the browser re-runs the blur each frame. Multiplied
+ * by the many glow wrappers the sandbox renders at once, that was the dominant
+ * source of dropped frames. The halo is now an OPT-IN `.thefold-glow--halo`
+ * modifier used only for sandbox previews — never on production loaders.
+ *
+ * Colour stops (--tf-glow-a/--tf-glow-b) + halo (--tf-glow-halo) stay CSS vars so
+ * the sandbox (/dev/sandbox/dot-matrix) can flip candidate palettes without a
+ * rebuild. Fallbacks are a monochrome white breathe; the production default is
+ * locked to amber in :root below. */
+:root {
+  /* AMBER — locked production default (UI-M1 sign-off 2026-06-27). Warm amber
+   * morphing to ember-red; the only two warm brand hues. The 4 alternative
+   * palettes (mono/aurora/mint/prism) live on only as dev-time overrides in the
+   * /dev/sandbox/dot-matrix gallery. */
+  --tf-glow-a: rgba(255, 210, 122, 0.95);
+  --tf-glow-b: rgba(255, 122, 107, 0.95);
+  --tf-glow-halo: 4px;
+}
+@keyframes thefold-glow-morph {
+  0% {
+    color: var(--tf-glow-a, rgba(255, 255, 255, 0.95));
+  }
+  50% {
+    color: var(--tf-glow-b, rgba(255, 255, 255, 0.5));
+  }
+  100% {
+    color: var(--tf-glow-a, rgba(255, 255, 255, 0.95));
+  }
+}
+.thefold-glow {
+  color: var(--tf-glow-a, rgba(255, 255, 255, 0.95));
+  animation: thefold-glow-morph 2s linear infinite;
+}
+/* Opt-in halo — SANDBOX PREVIEW ONLY. drop-shadow re-rasterises per frame while
+ * `color` morphs (see PERF note above), so it must never ship on prod loaders. */
+.thefold-glow--halo {
+  filter: drop-shadow(0 0 var(--tf-glow-halo, 2px) var(--tf-glow-b, rgba(255, 255, 255, 0.5)));
+}
+@media (prefers-reduced-motion: reduce) {
+  .thefold-glow {
+    animation: none;
+    color: var(--tf-glow-a, rgba(255, 255, 255, 0.95));
+  }
+}
+
+/* ember-pulse — the "mic is live" dot in voice mode (ADR-062). Pulses the warm
+ * ember-red brand hue (--tf-glow-b) so a live microphone reads at a glance. Like
+ * .thefold-glow it honours reduced-motion (steady dot, no pulse). */
+@keyframes ember-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--tf-glow-b, rgba(255, 122, 107, 0.9));
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(255, 122, 107, 0);
+    opacity: 0.65;
+  }
+}
+.ember-pulse {
+  background: var(--tf-glow-b, rgba(255, 122, 107, 0.95));
+  animation: ember-pulse 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ember-pulse {
+    animation: none;
+  }
+}
+/* Mic affordance warms to the ember brand hue on hover/focus (ADR-062). */
+.dock-mic:hover,
+.dock-mic:focus-visible {
+  color: var(--tf-glow-b, rgba(255, 122, 107, 0.95));
+  border-color: var(--tf-glow-b, rgba(255, 122, 107, 0.95));
+}
+
+/* ember-glow — favourited model cards + stars in /settings/ai-models (R-2).
+ * A steady warm amber→ember ring (no per-frame animation, so it's cheap to
+ * apply across a whole card grid). The star variant adds a soft drop-shadow and
+ * the amber fill so a favourite reads at a glance. */
+.ember-glow {
+  box-shadow: 0 0 0 1px var(--tf-glow-a, rgba(255, 210, 122, 0.6)), 0 0 16px -3px
+    var(--tf-glow-b, rgba(255, 122, 107, 0.6));
+}
+.ember-glow-star {
+  color: var(--tf-glow-a, rgba(255, 210, 122, 0.95));
+  filter: drop-shadow(0 0 4px var(--tf-glow-b, rgba(255, 122, 107, 0.7)));
+}
+
+/* provider-circle — the "living" circular provider selector in
+ * /settings/ai-models (ADR-059 revamp). Connected providers breathe a subtle
+ * amber ember-ring (provider-ring-pulse); not-connected ones sit dimmed with a
+ * flat grey ring. Hover intensifies the ring + lifts/scales the circle. The
+ * travelling border-beam (connected) is layered on by the component. Reduced
+ * motion drops the pulse and the hover scale — steady ring, no transform. */
+@keyframes provider-ring-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--tf-glow-a) 55%, transparent), 0 0 0 0
+      transparent;
+  }
+  50% {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--tf-glow-a) 70%, transparent), 0 0 16px -2px
+      var(--tf-glow-b, rgba(255, 122, 107, 0.55));
+  }
+}
+.provider-circle {
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out, filter 180ms ease-out;
+}
+.provider-circle--connected {
+  animation: provider-ring-pulse 2.6s ease-in-out infinite;
+}
+.provider-circle--disconnected {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  filter: grayscale(0.45) opacity(0.72);
+}
+.provider-circle:hover {
+  transform: translateY(-2px) scale(1.05);
+  filter: none;
+  box-shadow: 0 0 0 1px var(--tf-glow-a, rgba(255, 210, 122, 0.9)), 0 0 22px -2px
+    var(--tf-glow-b, rgba(255, 122, 107, 0.75));
+}
+/* Active (expanded) circle sits steady — the panel is where focus goes. */
+.provider-circle--active,
+.provider-circle--active:hover {
+  transform: none;
+  box-shadow: 0 0 0 1px var(--tf-glow-a, rgba(255, 210, 122, 0.9)), 0 0 26px -4px
+    var(--tf-glow-b, rgba(255, 122, 107, 0.7));
+}
+@media (prefers-reduced-motion: reduce) {
+  .provider-circle {
+    transition: none;
+  }
+  .provider-circle--connected {
+    animation: none;
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--tf-glow-a) 60%, transparent);
+  }
+  .provider-circle:hover {
+    transform: none;
+  }
+}
+
+/* tf-beam-legacy — the retired from-scratch pure-CSS beam (a MagicUI clone).
+ * Production now uses the real `border-beam` package via TheFoldBeam
+ * (components/ui/thefold-beam.tsx); these rules survive ONLY to power the
+ * side-by-side reference in dev/sandbox/border-beam (LegacyBorderBeam). Do not
+ * use in app code. The travelling gradient square rides a rect offset-path; one
+ * keyframe sweeps offset-distance 0→100%. */
+@keyframes tf-beam-legacy {
+  to {
+    offset-distance: 100%;
+  }
+}
+/* Class names are `tf-beam-legacy*`, NOT `border-beam*`: tailwind-merge reads a
+ * `border-…` token as a border utility and would strip the base class when it's
+ * composed with the `--static` modifier via cn(). */
+.tf-beam-legacy {
+  offset-distance: 0%;
+  animation-name: tf-beam-legacy;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+/* Reduced-motion / static: drop the travelling square and reveal the frame's
+ * masked border band as a steady amber ring, so the accent still reads "active"
+ * without any per-frame motion. --border-beam-from is set on the frame element. */
+.tf-beam-legacy--static {
+  display: none;
+}
+.tf-beam-legacy-frame:has(> .tf-beam-legacy--static) {
+  border-color: color-mix(in oklab, var(--border-beam-from, var(--tf-glow-a)) 60%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tf-beam-legacy {
+    display: none;
+  }
+  .tf-beam-legacy-frame {
+    border-color: color-mix(in oklab, var(--border-beam-from, var(--tf-glow-a)) 60%, transparent);
+  }
+}
+
+/* Talk-card content transition between tabs (UI sprint Fase 1.1).
+ * Applied via key={activeTab} on the content wrapper so React re-
+ * mounts on tab-switch; the fade-in animation runs on mount. The
+ * implicit unmount/mount gap covers the spec's ~30ms "empty card"
+ * frame. */
+@keyframes tab-fadein {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.tab-fadein {
+  animation: tab-fadein 240ms ease-out;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+.pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes dd-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.dd-enter {
+  animation: dd-in 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: top right;
+}
+
+@keyframes panel-in {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.panel-enter {
+  animation: panel-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}

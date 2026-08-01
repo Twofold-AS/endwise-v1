@@ -13,6 +13,27 @@ jobs:
   verify:
     name: Lint · Typecheck · Test
     runs-on: ubuntu-latest
+
+    # F1-08: tenant-isolasjonssuiten trenger en ekte Postgres. Uten DB hopper
+    # testene over seg selv — og en grønn CI ville vært en løgn.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: endwise
+          POSTGRES_PASSWORD: endwise
+          POSTGRES_DB: endwise
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U endwise"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://endwise:endwise@localhost:5432/endwise
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,4 +47,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      - name: Migrer database (RLS + policyer)
+        run: pnpm db:migrate
       - run: pnpm test

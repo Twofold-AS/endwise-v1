@@ -1,11 +1,22 @@
+# Avhengigheter / bygg
 node_modules/
 .next/
 dist/
+build/
 .turbo/
 coverage/
 *.tsbuildinfo
+*.log
+
+# Miljøvariabler — ALT unntatt eksempelet (hemmeligheter skal aldri i git)
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# Vercel / OS
 .vercel/
 .DS_Store
+
+# pnpm-probefiler + tmp-rester (Windows)
+_tmp_*
+*.tmptest

@@ -3,8 +3,25 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
-  "dependencies": { "@endwise/modules": "workspace:*" },
-  "devDependencies": { "typescript": "^5.9.3", "vitest": "^4.1.10" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-sdk/fireworks": "^3.0.10",
+    "@ai-sdk/mistral": "^4.0.10",
+    "@ai-sdk/provider": "^4.0.3",
+    "@endwise/db": "workspace:*",
+    "@endwise/guardrails": "workspace:*",
+    "@endwise/modules": "workspace:*",
+    "ai": "^7.0.26"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10",
+    "@types/node": "^24.10.1"
+  }
 }

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1784054575022,
+      "tag": "0000_uneven_expediter",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784350974739,
+      "tag": "0001_glossy_the_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785524551446,
+      "tag": "0002_married_thor",
+      "breakpoints": true
+    }
+  ]
+}

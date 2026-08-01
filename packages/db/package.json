@@ -12,13 +12,17 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run",
+    "db:grants": "node --env-file-if-exists=../../.env --experimental-strip-types scripts/grants.ts",
+    "db:setup": "pnpm db:migrate && pnpm db:grants"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0",
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.22.0"
   },
   "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.31.10",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"

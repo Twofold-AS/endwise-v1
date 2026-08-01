@@ -1,27 +1,63 @@
 /*
- * F0-11 — @endwise/widget-tokens (lys/mørk/aksent).
+ * F0-11 — @endwise/widget-tokens (mørk/lys/aksent + typografi).
  *
- * STATUS: STRUKTUR PÅ PLASS, VERDIER IKKE EKSTRAHERT.
- * Roadmap sier «ekstrahert fra prototype». Prototypen finnes ikke i dette repoet
- * ennå — verdiene under er nøytrale plassholdere som IKKE er designbeslutninger.
- * Når prototypen legges inn: erstatt verdiene, ikke navnene.
+ * STATUS: VERDIER SATT (15.07.2026) · PALETT RETTET MOT FASIT (16.07.2026).
+ * Fasit er TheFold V2 sitt EKTE app-shell (`TheFold/Dev/v2` →
+ * `apps/web/src/app/(main)/_shell/app-shell.tsx`, `C`-paletten) — IKKE
+ * `globals.css`-brand-tokenene vi kopierte sist (de var legacy #000/#151515).
+ * Den ekte flaten er varmere grå: #1a1a1a flater, #141414 kort, #262626 kant.
+ * Merkevare-aksenten er VÅR grønne #1ED27D (TheFold brukte en provisorisk blå).
  *
- * Tailwind 4 leser disse via @theme (se packages/ui).
+ *   - Aksent  #1ED27D  = logofargen (apps/web/public/logo/logo.svg). Låst.
+ *   - Mørkt   default  = <html data-theme="dark"> i apps/web/app/layout.tsx.
+ *   - Lyst    toggle   = data-theme="light" (cream/ink).
+ *   - Font    sans     = Google Sans Flex (OFL) via next/font (--font-google-sans-flex).
+ *   - Font    mono     = JetBrains Mono (OFL) via next/font (--font-jetbrains-mono).
+ *
+ * Tailwind 4 leser disse via @theme (se packages/ui/src/theme.css). Bytt VERDIER
+ * her, ikke navn — og ikke i theme.css. Dette er den ene sannheten for farge/font.
  */
+
+/* ── MØRKT (default) — TheFold V2 «C»-palett, grønn aksent ───────────────── */
 :root,
-[data-theme='light'] {
-  --ew-bg: #ffffff;
-  --ew-surface: #f6f6f7;
-  --ew-border: #e4e4e7;
-  --ew-fg: #18181b;
-  --ew-fg-muted: #71717a;
-  --ew-accent: #18181b;
-  --ew-accent-fg: #ffffff;
+[data-theme="dark"] {
+  color-scheme: dark;
 
-  --ew-radius-sm: 4px;
-  --ew-radius-md: 8px;
-  --ew-radius-lg: 12px;
+  /* Flater — bg = topbar = sidebar = content (#1a1a1a); kort løftes til #141414 */
+  --ew-bg: #1a1a1a; /* side, topbar, sidebar */
+  --ew-surface: #141414; /* kort-flate */
+  --ew-surface-2: #262626; /* hover/active/bevel — samme tone som kanten */
+  --ew-border: #262626; /* hårlinjer (solid, som TheFold) */
+  --ew-border-strong: #2f2f2f;
 
+  /* Tekst-rampe (TheFold: hvit / #a1a1a1 / #7e7e7e) */
+  --ew-fg: #ffffff;
+  --ew-fg-muted: #a1a1a1; /* sekundær + ikonfarge */
+  --ew-fg-faint: #7e7e7e; /* seksjonsetiketter / dim */
+
+  /* Aksent — GRØNN #1ED27D (vår, erstatter TheFolds provisoriske blå #3b82f6) */
+  --ew-accent: #1ed27d;
+  --ew-accent-fg: #05130b; /* mørk tekst oppå grønt */
+  --ew-accent-dim: rgba(30, 210, 125, 0.14);
+
+  /* Semantiske statusfarger */
+  --ew-warn: oklch(76% 0.14 75);
+  --ew-danger: oklch(64% 0.18 25);
+  --ew-success: oklch(70% 0.12 150);
+
+  /* Overflate/panel-token (brukes ikke lenger til glass-rail — solid nå) */
+  --ew-glass-bg: #1a1a1a;
+  --ew-glass-border: #262626;
+  --ew-glass-blur: 0px;
+
+  /* Radius — TheFolds skala (kort 12, knapp/nav 8, badge 6) */
+  --ew-radius-sm: 3px;
+  --ew-radius-md: 6px;
+  --ew-radius-lg: 8px;
+  --ew-radius-xl: 12px;
+  --ew-radius-pill: 100px;
+
+  /* Spacing (base 4px) */
   --ew-space-1: 4px;
   --ew-space-2: 8px;
   --ew-space-3: 12px;
@@ -29,16 +65,33 @@
   --ew-space-6: 24px;
   --ew-space-8: 32px;
 
-  --ew-font-sans: ui-sans-serif, system-ui, sans-serif;
-  --ew-font-mono: ui-monospace, SFMono-Regular, monospace;
+  /* Typografi — next/font-variabler med systemfallback (se app/layout.tsx) */
+  --ew-font-sans:
+    var(--font-google-sans-flex, ui-sans-serif), system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --ew-font-mono:
+    var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
 }
 
-[data-theme='dark'] {
-  --ew-bg: #0b0b0c;
-  --ew-surface: #161618;
-  --ew-border: #27272a;
-  --ew-fg: #fafafa;
-  --ew-fg-muted: #a1a1aa;
-  --ew-accent: #fafafa;
-  --ew-accent-fg: #0b0b0c;
+/* ── LYST (toggle) — cream/ink, aksenten holdes grønn ───────────────────── */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --ew-bg: #fbfbf8;
+  --ew-surface: #ffffff;
+  --ew-surface-2: #f0f0ec;
+  --ew-border: #e4e4e0;
+  --ew-border-strong: #d8d8d2;
+
+  --ew-fg: rgba(38, 35, 35, 0.9);
+  --ew-fg-muted: rgba(38, 35, 35, 0.5);
+  --ew-fg-faint: rgba(38, 35, 35, 0.4);
+
+  --ew-accent: #1ed27d;
+  --ew-accent-fg: #05130b;
+  --ew-accent-dim: rgba(30, 210, 125, 0.12);
+
+  --ew-glass-bg: #ffffff;
+  --ew-glass-border: #e4e4e0;
 }

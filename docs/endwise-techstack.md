@@ -25,12 +25,14 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 | BullMQ 5 + Redis (kø) | **Vercel Workflows + Vercel Cron** | Durable functions dekker jobbene; samme åpne Workflow-SDK som Eve; ingen egen Redis å drifte |
 | QStash (vurdert) | **Vercel Workflows** | ADR-003 avgjort til Vercel-native |
 | Trigger.dev | **Vercel Workflows** (inline der mulig) | TheFold bypasset selv Trigger.dev; unødvendig lag |
-| Unleash (feature flags) | **Vercel Flags SDK + Edge Config** + `tenant_modules` (entitlements i DB) | To behov: entitlements = DB-data, release-toggles = Flags SDK |
+| Unleash (feature flags) | **DB-basert feature-flags** (`feature_flags`-tabell, admin-styrt) + `tenant_modules` (entitlements i DB) | To behov: entitlements = DB-data, release-toggles = DB-flagg. Vercel Edge Config (betalt lagring) droppet 16.07.2026 |
 | Cloudflare WAF/rate-limit | **Vercel Firewall** | Cloudflare foran Vercel = dobbel proxy; unngås |
 | WAL-G backup | **Neon PITR** + ukentlig restore-test + snapshot til objektlager | Managed Postgres gir point-in-time gratis |
 | Encore.ts | **Hono + tRPC** | Aldri implementert; erstattet før byggestart |
 | Lucia (hånd-rullet auth) | **Better-Auth 1.x** | Produksjonsbevist i TheFold; organizations + passkey + phone-OTP innebygd |
 | Postmark (e-post) | **Resend** | Transaksjonelt + Broadcasts (nyhetsbrev) hos én leverandør |
+| OpenAI (LLM) | **Fireworks** | Leverandørvalg. Hele poenget med modellkatalogen + AIProvider-abstraksjonen er at dette koster én fil. Brukergodkjent 14.07.2026 |
+| Recharts (charts) | **dither-kit** | Dobbelt chart-lag ga to visuelle språk. dither-kit dekker alle chart-typene OG signatur-estetikken. Brukergodkjent 14.07.2026 — se `docs/roadmap-endringer.md` |
 
 **Redis:** ikke lenger påkrevd. Pub/sub-behovet dekkes av Postgres LISTEN/NOTIFY (SSE-tjenesten). Legges kun til (Upstash) hvis app-nivå rate-limiting senere trenger det.
 
@@ -51,7 +53,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **Vercel Workflows** — varige jobber, retries, DLQ-mønster (ADR-003)
 - **Vercel Cron** — planlagte oppgaver (cleanup, synk, SLA-sjekk, e-post-drypp)
 - **Vercel Firewall** — WAF, rate-limiting, DDoS
-- **Vercel Flags SDK + Edge Config** — release-toggles, kill-switch, canary, A/B
+- **DB-basert feature-flags** (`feature_flags` i Postgres, admin-styrt, gratis) — release-toggles, kill-switch, canary, A/B. *(Vercel Edge Config droppet 16.07.2026 — betalt lagring; `flags`-SDK var gratis, men vi eier nå kilden selv.)*
 - **Vercel Observability** — + Sentry + OpenTelemetry
 
 ### Frontend — `apps/web` (begge dashboards + mekaniker-PWA)
@@ -63,7 +65,9 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **matrix-loaders** (portet fra TheFold) — «AI tenker»-animasjon per SSE-event; **beUI**-loader der det passer
 - **slot-text** — rullende KPI-siffer
 - **Container queries** (`@container`) — dock-layout responderer på plassen den får, ikke viewport
-- **lucide-react** (ikoner), **Recharts** (charts; sparklines som egen SVG)
+- **lucide-react** (ikoner) — eneste ikonbibliotek
+- **beUI** (shadcn-registry `@beui`) — tilstands-komponenter (`StatefulButton`) + kanoniske bevegelses-tokens (`lib/ease.ts`)
+- **Charts: dither-kit er eneste chart-motor** (områder, linjer, søyler, pai, radar, sparklines). ~~Recharts~~ er ute — se «Døde valg» §1 (brukergodkjent 14.07.2026)
 - **cuelume** (mikro-lyder) — valgfri polish, av som default
 
 ### Backend — `apps/api`
@@ -84,7 +88,17 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **Agent = mappe** (`packages/agents/<navn>/`: `agent.ts` + `instructions.md` + `skills/`), auto-registrert, entitlement-gated
 - **Modellkatalog med roller** (fast/standard/hard/embed/realtime) — **ingen hardkodede modeller**; tenant/plan mapper rolle→modell
 - **AIProvider** (tynt lag) for latency-sensitive enkeltkall (diagnose, streaming)
-- **OpenAI** primær; leverandører bak abstraksjon (mulig å bytte)
+- **TO LLM-LEVERANDØRER, delt etter DATAKLASSE** (brukergodkjent 14.07.2026 — se `docs/personvern/`):
+  - **Mistral (EU)** — `@ai-sdk/mistral`. **Alt som ser sluttkundens fritekst.** EU-endepunkt (`https://api.mistral.ai/v1`) er hardkodet som eneste lovlige; Mistrals US-endepunkt er **sperret i kode** (`assertEuEndpoint`)
+  - **Fireworks (global)** — `@ai-sdk/fireworks`. Kun agenter som ser **tenant-skopede driftsdata**
+  - **Regelen håndheves i kode, ikke i dokumentasjon:** hver agent erklærer `dataClass`, hver provider erklærer `region`, og `spawnAgent()` nekter å starte en `customer_freetext`-agent mot en ikke-EU-leverandør. En feilkonfigurasjon her er et personvernbrudd, ikke en bug
+  - **Scope-gate (F14-05):** Mistral Moderations (`mistral-moderation-2603`) klassifiserer kundens fritekst **i EU** før den når hoved-modellen. Kategoriene `health`, `pii`, `law`, `selfharm` → eskaler til menneske (F6-05)
+- **Fireworks — SERVERLESS** (`@ai-sdk/fireworks`), ikke dedicated/on-demand. Leverandører bak abstraksjon (mulig å bytte). ~~OpenAI~~ er ute — se «Døde valg» §1 (brukergodkjent 14.07.2026)
+  - **Tool calling støttes på serverless** (OpenAI-kompatibel `tools`-spesifikasjon), men **kun på modeller som er merket `supportsTools`** — sjekk feltet før en modell velges til en agent-rolle
+  - Fireworks anbefaler **lav temperatur (0.0–0.3)** ved tool calling for å unngå hallusinerte parametre
+  - Serverless-begrensninger som gjelder oss: **harde rate limits**, **smalere modellutvalg** enn on-demand, **delt kapasitet** (latens varierer med last), og **ingen egne modeller**
+  - ⚠️ **Serverless har ingen region-pinning.** On-demand kan settes til `--region EUROPE`; serverless kan ikke. Det er en GDPR-avveining vi må ta bevisst — se §5
+- **Ingen hardkodede modell-ID-er.** Modellkatalogen leser `FIREWORKS_MODEL_<ROLLE>` fra miljøet
 - **Fusion / Council** (OpenRouter) for planlegging/resonnering — opt-in, «lei først, eie senere»; aldri i booking-stien
 - **Guardrails L1–L5** (`packages/guardrails`) — se sikkerhetsdokumentet
 
@@ -96,7 +110,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - Branch-per-PR = preview-miljøer med ekte DB
 
 ### Auth — `packages/auth`
-- **Better-Auth 1.x** — organizations (multi-tenant), passkey (WebAuthn), phone-number-plugin
+- **Better-Auth 1.x** — organizations (multi-tenant), phone-number-plugin, twoFactor (e-post-OTP). Passkey (WebAuthn) er MIDLERTIDIG UTSATT (17.07.2026): `@better-auth/passkey` dro inn et foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt brukte den. Pakke + plugin fjernet, `passkey`-tabellen beholdt dormant. Reaktiveres når WebAuthn-flyten bygges. Se roadmap-endringer.md.
 - **Obligatorisk e-post-2FA** for hver forhandler/admin (ingen bypass)
 - **60-min idle-timeout** (serverside sliding-vindu) + absolutt maks-levetid
 - **Twilio Verify** som OTP-sender
@@ -190,12 +204,17 @@ endwise/
 | **Resend** | E-post | Transaksjonelt + Broadcasts (nyhetsbrev) + auth-eposter |
 | **Twilio** | SMS / OTP | Verify som 2FA/OTP-sender |
 | **Stripe** | SaaS-fakturering | Abonnement → entitlements (`tenant_modules`) |
+| **Vercel Web Analytics** | Besøksstatistikk (NY 16.07.2026) | Cookieless/anonymisert (hash nullstilles daglig, ingen krysssporing). KUN på deploy — ikke localhost. Underdatabehandler (GDPR-veikart §8b) |
 | **Quick API** | Datafundament | Varelager, bookinger, kunder — Endwise synker og speiler («Quick Lite») |
 | **Vegvesen/Autosys** | Kjøretøyoppslag | Regnr → modell/EU-frist |
 | **Finn.no, Lime CRM** | Salg / CRM | Egne adaptere |
 | **Framer 3.0** | Widget-distribusjon + hovedside-agent | Plugin (widgets) + External Agent (sideendring via chat) |
 | **Composio** | Long-tail OAuth | Utsatt til konkret behov (f.eks. forhandlers Google Calendar) |
-| **OpenAI / OpenRouter** | LLM | Bak modellkatalog; OpenRouter for Fusion |
+| **Mistral (EU)** | LLM | **Kundevendt.** All sluttkunde-fritekst. EU-hosting som standard; US-endepunktet er sperret i kode. Moderations-API-et driver scope-gaten (F14-05) |
+| **Fireworks (serverless)** | LLM | **Intern drift.** Bak modellkatalog (`FIREWORKS_API_KEY` + `FIREWORKS_MODEL_*`). Per token, harde rate limits, ingen region-pinning |
+| **OpenRouter** | LLM | Kun for Fusion/Council (planlegging) — aldri i booking-stien |
+
+**⚠️ Åpent punkt — GDPR og Fireworks serverless:** hele arkitekturen ellers er EU-bundet (Vercel fra1, Neon EU). Fireworks **serverless** tilbyr ikke region-valg — det gjør bare on-demand-deployments (`--region EUROPE`). Så lenge agentene kun får se tenant-skopede driftsdata (bookinger, tjenester), er eksponeringen begrenset, men den er ikke null. Skal kundedata eller fritekst fra kunder inn i prompten, må dette avklares — enten med DPA/SCC, eller ved å flytte til on-demand i EU-regionen. **Eier er informert (14.07.2026).**
 
 **Betaling sluttkunde→forhandler (forskudd i widget):** ADR-001 fortsatt åpen — Nets Easy vs Stripe+Vipps, tiltet mot Stripe+Vipps siden Stripe alt er valgt for fakturering.
 
@@ -203,7 +222,7 @@ endwise/
 
 ## 6. Hva vi bevisst IKKE bruker
 
-Hetzner · Coolify · Traefik · NestJS · Encore · BullMQ · QStash · Trigger.dev · Redis (som fast avhengighet) · Unleash · Cloudflare WAF · WAL-G · Lucia · Postmark · Composio Sandbox/e2b (Endwise-agenter kjører ikke vilkårlig kode; Framer-agenten bruker Vercel Container).
+Hetzner · Coolify · Traefik · NestJS · Encore · BullMQ · QStash · Trigger.dev · Redis (som fast avhengighet) · Unleash · Cloudflare WAF · WAL-G · Lucia · Postmark · Recharts · Vercel Edge Config (betalt flagg-lagring — DB-basert flagg valgt) · OpenAI (som LLM-leverandør — Fireworks serverless er valgt) · Composio Sandbox/e2b (Endwise-agenter kjører ikke vilkårlig kode; Framer-agenten bruker Vercel Container).
 
 Ser du noen av disse i repoet, er det en rest som skal fjernes.
 

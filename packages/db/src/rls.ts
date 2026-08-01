@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { pgPolicy } from 'drizzle-orm/pg-core';
 import type { PgColumn } from 'drizzle-orm/pg-core';
+import { pgPolicy } from 'drizzle-orm/pg-core';
 import { authenticatedRole } from './roles.ts';
 
 /**
@@ -12,8 +12,17 @@ import { authenticatedRole } from './roles.ts';
  */
 export const APP_TENANT_SETTING = 'app.tenant_id';
 
-/** Gjeldende tenant fra session-variabelen. NULL => ingen rader synlige. */
-export const currentTenantId = sql`current_setting(${sql.raw(`'${APP_TENANT_SETTING}'`)}, true)::uuid`;
+/**
+ * Gjeldende tenant fra session-variabelen. NULL => ingen rader synlige.
+ *
+ * `nullif(..., '')` er IKKE kosmetikk. Etter at en transaksjon med
+ * `set_config(..., is_local => true)` er avsluttet, tilbakestiller Postgres
+ * GUC-en til TOM STRENG — ikke til NULL. Uten nullif ville neste spørring på
+ * den gjenbrukte pool-forbindelsen kaste
+ * `invalid input syntax for type uuid: ""` i stedet for å returnere null rader.
+ * Funnet av F1-08-testene mot en ekte database.
+ */
+export const currentTenantId = sql`nullif(current_setting(${sql.raw(`'${APP_TENANT_SETTING}'`)}, true), '')::uuid`;
 
 /**
  * Standard tenant-isolasjonspolicy. Brukes på hver tenant-skopet tabell:

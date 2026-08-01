@@ -2,7 +2,9 @@
   "name": "endwise",
   "private": true,
   "packageManager": "pnpm@11.12.0",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -10,9 +12,14 @@
     "format": "biome check --write .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
     "db:generate": "pnpm --filter @endwise/db db:generate",
     "db:migrate": "pnpm --filter @endwise/db db:migrate",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "db:setup": "pnpm --filter @endwise/db db:setup",
+    "db:grants": "pnpm --filter @endwise/db db:grants",
+    "db:seed": "node --env-file-if-exists=.env --experimental-strip-types apps/api/scripts/seed.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.3",

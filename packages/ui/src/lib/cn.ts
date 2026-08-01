@@ -1,6 +1,5 @@
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-export function cn(...inputs: ClassValue[]): string {
-  return twMerge(clsx(inputs));
-}
+/**
+ * `cn()` bor i lib/utils.ts (shadcn-konvensjonen — det er dit registry-pakkene
+ * skriver den). Denne fila finnes bare for bakoverkompatible importer.
+ */
+export { cn } from './utils.ts';

@@ -3,7 +3,25 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
-  "devDependencies": { "typescript": "^5.9.3", "vitest": "^4.1.10" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "db:auth-schema": "better-auth generate --config auth-cli.config.ts --output ../db/src/schema/auth.ts -y"
+  },
+  "dependencies": {
+    "@endwise/db": "workspace:*",
+    "better-auth": "^1.6.23",
+    "resend": "^6.17.2",
+    "twilio": "^6.0.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@better-auth/cli": "^1.4.21",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
 }

@@ -1,0 +1,38 @@
+# Kryssplattform-normalisering. Tvinger LF i arbeidstreet på ALLE tekstfiler,
+# uavhengig av `core.autocrlf` på Windows. Hindrer CRLF i shebang (#!/bin/sh\r)
+# som bryter shell-/hook-/script-filer — rotårsaken til «cannot spawn hook».
+* text=auto eol=lf
+
+# Eksplisitt LF på script-/config-/kode-filer (belte + bukseseler).
+*.sh    text eol=lf
+*.bash  text eol=lf
+*.mjs   text eol=lf
+*.cjs   text eol=lf
+*.js    text eol=lf
+*.jsx   text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.json  text eol=lf
+*.jsonc text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.css   text eol=lf
+*.html  text eol=lf
+*.md    text eol=lf
+*.sql   text eol=lf
+*.svg   text eol=lf
+lefthook.yml text eol=lf
+.husky/* text eol=lf
+
+# Binærfiler — la git være i fred (ingen eol-konvertering).
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary
+*.pdf  binary

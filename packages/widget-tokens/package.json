@@ -7,6 +7,12 @@
     ".": "./src/index.ts",
     "./tokens.css": "./src/tokens.css"
   },
-  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
-  "devDependencies": { "typescript": "^5.9.3", "vitest": "^4.1.10" }
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
 }

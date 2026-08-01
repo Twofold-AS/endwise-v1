@@ -1,19 +1,94 @@
-/* F0-12 — Tailwind 4 @theme-broen: designtokens (F0-11) blir Tailwind-utilities. */
-@import '@endwise/widget-tokens/tokens.css';
+/*
+ * F0-12 — Tailwind 4 @theme-broen.
+ * To lag, bevisst adskilt:
+ *   1) Endwise-tokens (F0-11)  — --ew-*  (mørk/lys/aksent, fra TheFold-base)
+ *   2) shadcn/ui-semantikk     — --primary, --ring, --destructive …
+ * shadcn-komponentene leser (2). Vi lar (2) peke inn i (1), slik at det finnes
+ * ÉN sannhet for farge: widget-tokens. Bytt verdiene der, ikke her.
+ */
+@import "@endwise/widget-tokens/tokens.css";
 
-@theme {
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  /* shadcn/ui-semantikk -> Endwise-tokens */
+  --background: var(--ew-bg);
+  --foreground: var(--ew-fg);
+  --card: var(--ew-surface);
+  --card-foreground: var(--ew-fg);
+  --popover: var(--ew-surface-2);
+  --popover-foreground: var(--ew-fg);
+  --primary: var(--ew-accent);
+  --primary-foreground: var(--ew-accent-fg);
+  --secondary: var(--ew-surface-2);
+  --secondary-foreground: var(--ew-fg);
+  --muted: var(--ew-surface-2);
+  --muted-foreground: var(--ew-fg-muted);
+  --accent: var(--ew-surface-2);
+  --accent-foreground: var(--ew-fg);
+  --destructive: var(--ew-danger);
+  --destructive-foreground: var(--ew-fg);
+  --border: var(--ew-border);
+  --input: var(--ew-border-strong);
+  --ring: var(--ew-accent);
+  --radius: var(--ew-radius-md);
+}
+
+@theme inline {
+  /* Endwise-tokens */
   --color-bg: var(--ew-bg);
   --color-surface: var(--ew-surface);
-  --color-border: var(--ew-border);
+  --color-surface-2: var(--ew-surface-2);
   --color-fg: var(--ew-fg);
   --color-fg-muted: var(--ew-fg-muted);
-  --color-accent: var(--ew-accent);
+  --color-fg-faint: var(--ew-fg-faint);
+  --color-border-strong: var(--ew-border-strong);
+  --color-accent-cream: var(--ew-accent);
+  --color-accent-dim: var(--ew-accent-dim);
+  --color-warn: var(--ew-warn);
+  --color-danger: var(--ew-danger);
+  --color-success: var(--ew-success);
+  --color-glass: var(--ew-glass-bg);
+  --color-glass-border: var(--ew-glass-border);
+
+  /* shadcn-tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-accent-fg: var(--ew-accent-fg);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
   --radius-sm: var(--ew-radius-sm);
   --radius-md: var(--ew-radius-md);
   --radius-lg: var(--ew-radius-lg);
+  --radius-xl: var(--ew-radius-xl);
+  --radius-pill: var(--ew-radius-pill);
 
   --font-sans: var(--ew-font-sans);
   --font-mono: var(--ew-font-mono);
+}
+
+/*
+ * Logo-farging per tema. Mørkt tema: logoen inverteres til hvit (som TheFold),
+ * siden den grønne #1ED27D-logoen mot svart topbar ville konkurrert med den
+ * grønne aksenten ellers på skjermen. Lyst tema: logoen vises i sin naturlige
+ * grønne farge (ingen filter).
+ */
+[data-theme="dark"] .logo-invert {
+  filter: brightness(0) invert(1);
 }

@@ -1,0 +1,43 @@
+/**
+ * Kuratert ikon-barrel — re-eksporterer den TILLATTE lucide-react-mengden.
+ * `lucide-react` er UI-PAKKER.md §5 «eneste ikonbibliotek». Trenger du et ikon
+ * som ikke står her: legg det til i lista.
+ */
+export {
+  Activity,
+  ArrowUpRight,
+  Bell,
+  Blocks,
+  CalendarCheck,
+  CalendarDays,
+  Car,
+  Check,
+  ChevronRight,
+  CircleUser,
+  CreditCard,
+  Gauge,
+  LayoutDashboard,
+  LifeBuoy,
+  Lock,
+  type LucideIcon,
+  Mail,
+  Megaphone,
+  MessageSquare,
+  Moon,
+  Newspaper,
+  PanelLeft,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  Tags,
+  TrendingDown,
+  TrendingUp,
+  TriangleAlert,
+  Upload,
+  Users,
+  Wrench,
+} from 'lucide-react';

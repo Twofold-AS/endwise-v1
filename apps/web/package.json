@@ -11,12 +11,18 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@endwise/api": "workspace:*",
     "@endwise/ui": "workspace:*",
     "@endwise/widget-tokens": "workspace:*",
-    "@flags-sdk/edge-config": "^0.2.0",
     "@sentry/nextjs": "^10.65.0",
+    "@tanstack/react-query": "^5.80.3",
+    "@trpc/client": "^11.18.0",
+    "@trpc/react-query": "^11.18.0",
+    "@trpc/server": "^11.18.0",
     "@vercel/otel": "^2.0.0",
-    "flags": "^4.2.0",
+    "better-auth": "^1.6.23",
+    "maplibre-gl": "^5.19.0",
+    "motion": "^12.42.2",
     "next": "16.2.10",
     "react": "19.2.7",
     "react-dom": "19.2.7"

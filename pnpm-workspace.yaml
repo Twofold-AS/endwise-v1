@@ -1,5 +1,23 @@
 packages:
   - "apps/*"
   - "packages/*"
-  - "packages/tools/*"
+  - "packages/tools/toolkits/*"
   - "framer-plugin"
+
+# drizzle-orm låst til én versjon: better-auth@1.6.23 krever ^0.45.2, mens
+# @better-auth/cli@1.4.21 (dev-codegen) drar inn better-auth@1.4.21 som peer-er
+# drizzle >=0.41.0. Uten override resolverte treet et fantom-0.41.0 ved siden av
+# vår 0.45.2 (packages/db) → «unmet peer drizzle-orm@^0.45.2: found 0.41.0».
+# 0.45.2 tilfredsstiller BEGGE (^0.45.2 og >=0.41.0). pnpm 11 leser overrides her,
+# ikke lenger i package.json.
+overrides:
+  drizzle-orm: 0.45.2
+
+allowBuilds:
+  '@prisma/client': set this to true or false
+  '@sentry/cli': set this to true or false
+  '@swc/core': set this to true or false
+  better-sqlite3: set this to true or false
+  cbor-extract: set this to true or false
+
+minimumReleaseAge: 0

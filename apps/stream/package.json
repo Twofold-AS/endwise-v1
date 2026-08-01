@@ -4,12 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch --experimental-strip-types src/dev.ts",
+    "dev": "node --env-file-if-exists=../../.env --watch --experimental-strip-types src/dev.ts",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@endwise/auth": "workspace:*",
+    "@endwise/db": "workspace:*",
+    "@endwise/modules": "workspace:*",
     "@hono/node-server": "^2.0.8",
     "hono": "^4.12.30"
   },

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Endwise">
+  <rect width="512" height="512" fill="#1ED27D"/>
+  <!-- Safe zone: mark holdt innenfor sentrale 60% for maskable-crop. -->
+  <path d="M256 160l84 48v96l-84 48-84-48v-96z" fill="none" stroke="#04140b" stroke-width="22" stroke-linejoin="round"/>
+  <path d="M220 236h72M220 268h72M220 300h44" stroke="#04140b" stroke-width="20" stroke-linecap="round"/>
+</svg>

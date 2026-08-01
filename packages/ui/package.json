@@ -5,18 +5,33 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./theme.css": "./src/theme.css"
+    "./theme.css": "./src/theme.css",
+    "./components/*": "./src/components/*.tsx",
+    "./lib/*": "./src/lib/*.ts",
+    "./hooks/*": "./src/hooks/*.ts"
   },
-  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
   "dependencies": {
     "@endwise/widget-tokens": "workspace:*",
+    "@types/d3-scale": "^4.0.9",
+    "@types/d3-shape": "^3.1.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "d3-scale": "^4.0.2",
+    "d3-shape": "^3.2.0",
     "lucide-react": "^0.548.0",
+    "motion": "^12.42.2",
+    "radix-ui": "^1.6.2",
     "tailwind-merge": "^3.4.0"
   },
-  "peerDependencies": { "react": "^19.2.0" },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
   "devDependencies": {
+    "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "react": "^19.2.7",
     "typescript": "^5.9.3",

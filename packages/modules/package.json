@@ -5,9 +5,31 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contracts": "./src/contracts/index.ts"
+    "./contracts": "./src/contracts/index.ts",
+    "./booking": "./src/booking/index.ts",
+    "./matching": "./src/matching/index.ts",
+    "./notifications": "./src/notifications/index.ts",
+    "./quick": "./src/quick/index.ts",
+    "./competence": "./src/competence/index.ts",
+    "./stream": "./src/stream/index.ts",
+    "./messages": "./src/messages/index.ts",
+    "./erasure": "./src/erasure/index.ts",
+    "./retention": "./src/retention/index.ts",
+    "./billing": "./src/billing/index.ts",
+    "./widget": "./src/widget/index.ts"
   },
-  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run --passWithNoTests" },
-  "dependencies": { "@endwise/events": "workspace:*" },
-  "devDependencies": { "typescript": "^5.9.3", "vitest": "^4.1.10" }
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@endwise/db": "workspace:*",
+    "@endwise/events": "workspace:*",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10",
+    "@types/pg": "^8.20.0"
+  }
 }

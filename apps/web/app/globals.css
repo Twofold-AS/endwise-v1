@@ -1,2 +1,21 @@
-@import 'tailwindcss';
-@import '@endwise/ui/theme.css';
+@import "tailwindcss";
+@import "@endwise/ui/theme.css";
+
+/*
+ * Tailwind v4 skanner som standard IKKE workspace-pakker (de ligger via
+ * node_modules). Uten dette ble utility-klasser som brukes KUN inne i
+ * `@endwise/ui` (f.eks. dither-kit sin `h-full`, `overflow-visible`,
+ * `fill-current`, `stroke-border`) aldri generert — så chart-containerne
+ * kollapset til 0 høyde og dither ble usynlig. `@source` scanner UI-pakkens
+ * kildekode så alle klasser den bruker faktisk finnes i CSS-en.
+ */
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+
+/* Skjult scrollbar for sidebar-rail-en (beholder scroll, fjerner sporet). */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

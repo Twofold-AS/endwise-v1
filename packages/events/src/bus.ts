@@ -1,8 +1,6 @@
 import type { EndwiseEvent, EventMeta, EventName, EventPayload } from './catalog.ts';
 
-export type EventHandler<N extends EventName> = (
-  event: EndwiseEvent<N>,
-) => void | Promise<void>;
+export type EventHandler<N extends EventName> = (event: EndwiseEvent<N>) => void | Promise<void>;
 
 export interface EventBus {
   on<N extends EventName>(name: N, handler: EventHandler<N>): () => void;

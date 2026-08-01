@@ -17,7 +17,13 @@ Disse reglene er bindende for ALT arbeid i Endwise-prosjektet. Les dem før hver
 - Bruk context7 MCP (`resolve-library-id` → `query-docs`) for **hver** teknologi før den tas i bruk.
 - Ikke stol på hukommelsen for API-er, versjoner eller konfigurasjonsformat.
 
-## 4. Rapport etter hver arbeidsøkt (på norsk)
+## 4. UI bygges av eksterne pakker — les `docs/UI-PAKKER.md` FØR du lager UI
+- Endwise bruker i hovedsak komponenter, loaders og charts fra **eksterne pakker** (shadcn/ui, dither-kit, beUI, matrix-loaders), ikke egenbygde primitiver.
+- **Før** du skriver en UI-komponent: les `docs/UI-PAKKER.md`. Dekker en pakke behovet — bruk den. Mangler komponenten, men pakken har den — hent den inn.
+- Egen kode skrives **kun** når ingen pakke dekker behovet, og da noteres begrunnelsen i `docs/UI-PAKKER.md` §7.
+- Tas en ny UI-pakke inn: **oppdater `docs/UI-PAKKER.md`** i samme økt (hva, hvordan installert, versjon/commit-pin, lisens, hvor den ligger).
+
+## 5. Rapport etter hver arbeidsøkt (på norsk)
 Hver økt avsluttes med en rapport som inneholder:
 1. **Hva er gjort** (per roadmap-ID)
 2. **Hva gikk galt** (feil, blokkeringer) — eller eksplisitt bekreftelse på at alt gikk som planlagt

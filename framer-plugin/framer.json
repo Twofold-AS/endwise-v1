@@ -1,0 +1,7 @@
+{
+  "id": "endwise-booking",
+  "name": "Endwise Booking",
+  "modes": ["canvas"],
+  "main": "index.html",
+  "icon": "/icon.png"
+}

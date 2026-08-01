@@ -23,12 +23,8 @@ export const tenantModules = pgTable(
     enabled: boolean('enabled').notNull().default(true),
     /** Planen som ga tilgangen (audit-spor mot Stripe). */
     plan: text('plan'),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .default(sql`now()`),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
-      .notNull()
-      .default(sql`now()`),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`),
   },
   (t) => [
     primaryKey({ columns: [t.tenantId, t.moduleKey] }),

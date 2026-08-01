@@ -1,0 +1,32 @@
+import type { AgentDefinition } from '@endwise/agent-runtime';
+import { driftInnsiktAgent } from './drift-innsikt/agent.ts';
+import { kundeSupportAgent } from './kunde-support/agent.ts';
+
+/**
+ * Agent-registeret. «Agent = mappe» (techstack §2).
+ *
+ * Legg merke til `dataClass` på hver agent — den avgjør hvilken leverandør
+ * agenten kan kjøre på (F14). Det er ikke en kommentar; `spawnAgent()` nekter å
+ * starte en `customer_freetext`-agent mot en ikke-EU-leverandør.
+ */
+const AGENTS: Record<string, AgentDefinition> = {
+  [kundeSupportAgent.name]: kundeSupportAgent,
+  [driftInnsiktAgent.name]: driftInnsiktAgent,
+};
+
+export class UnknownAgentError extends Error {
+  readonly code = 'UNKNOWN_AGENT';
+  constructor(name: string) {
+    super(`Ukjent agent: ${name}`);
+  }
+}
+
+export function getAgent(name: string): AgentDefinition {
+  const agent = AGENTS[name];
+  if (!agent) throw new UnknownAgentError(name);
+  return agent;
+}
+
+export function listAgents(): AgentDefinition[] {
+  return Object.values(AGENTS);
+}

@@ -19,8 +19,11 @@ export interface Entitlements {
 
 export class EntitlementError extends Error {
   readonly code = 'ENTITLEMENT_REQUIRED';
-  constructor(readonly moduleKey: ModuleKey) {
+  // Eksplisitt felt (ikke TS parameter property) — strip-only-trygt, se scope-gate.ts.
+  readonly moduleKey: ModuleKey;
+  constructor(moduleKey: ModuleKey) {
     super(`Tenant mangler entitlement for modul "${moduleKey}"`);
+    this.moduleKey = moduleKey;
   }
 }
 

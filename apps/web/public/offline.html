@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline — Endwise</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #151515;
+        color: #fafafa;
+        font-family: system-ui, -apple-system, sans-serif;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .card {
+        padding: 24px;
+        max-width: 320px;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #f59e0b;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 12px 0 6px;
+      }
+      p {
+        color: #a1a1a1;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      button {
+        margin-top: 16px;
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: none;
+        background: #1ed27d;
+        color: #04140b;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div><span class="dot"></span><strong>Offline</strong></div>
+      <h1>Ingen nettforbindelse</h1>
+      <p>
+        Du er uten dekning akkurat nå. Dagens jobber du allerede har åpnet er lagret. Statusendringer
+        du gjør legges i kø og sendes når du er tilbake på nett.
+      </p>
+      <button onclick="location.reload()">Prøv igjen</button>
+    </div>
+  </body>
+</html>

@@ -20,19 +20,22 @@ export function SseStatusPill({ state = 'live' }: { state?: SseState }) {
   const isLive = state === 'live';
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-pill border border-border bg-surface/40 px-2.5 py-1 text-[11px] font-medium text-fg-muted"
+      className="inline-flex h-badge items-center gap-1.5 rounded-pill border border-border bg-surface-2 px-2.5 font-medium text-[11px] text-fg-muted"
       title={`Datastrøm: ${LABEL[state]}`}
     >
       <span className="relative flex size-2 items-center justify-center">
         {isLive && (
-          <span className="absolute inline-flex size-2 animate-ping rounded-full bg-primary/70 motion-reduce:hidden" />
+          <span
+            className="absolute inline-flex size-2 animate-ping rounded-full motion-reduce:hidden"
+            style={{ background: 'var(--ew-accent-strong)', opacity: 0.7 }}
+          />
         )}
         <span
           className="relative inline-flex size-2 rounded-full"
-          style={{ background: isLive ? 'var(--ew-accent)' : 'var(--ew-fg-faint)' }}
+          style={{ background: isLive ? 'var(--ew-accent-strong)' : 'var(--ew-fg-muted)' }}
         />
       </span>
-      <Activity size={12} className="text-fg-faint" aria-hidden />
+      <Activity size={12} className="text-fg-muted" aria-hidden />
       {LABEL[state]}
     </span>
   );

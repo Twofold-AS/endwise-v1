@@ -19,7 +19,8 @@
     "prepare": "lefthook install",
     "db:setup": "pnpm --filter @endwise/db db:setup",
     "db:grants": "pnpm --filter @endwise/db db:grants",
-    "db:seed": "node --env-file-if-exists=.env --experimental-strip-types apps/api/scripts/seed.ts"
+    "db:seed": "node --env-file-if-exists=.env --experimental-strip-types apps/api/scripts/seed.ts",
+    "stripe:setup": "node --env-file-if-exists=.env --experimental-strip-types apps/api/scripts/stripe-setup.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.3",

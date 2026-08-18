@@ -4,7 +4,11 @@ import { assertAllowedQuickUrl, createQuickClient, QuickSsrfError } from '@endwi
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { runQuickCustomerPull } from '../../lib/quick-pull.ts';
-import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { moduleAdminProcedure, moduleProcedure, router } from '../init.ts';
+
+/** ⛔ F0-16 — MODUL-GATE: `quick`. ERP-integrasjonen er et betalt tillegg. */
+const quickProcedure = moduleProcedure('quick');
+const quickAdminProcedure = moduleAdminProcedure('quick');
 
 /**
  * F8-01 / F8-02 — Quick-integrasjon (QuickLite).
@@ -29,12 +33,10 @@ import { adminProcedure, protectedProcedure, router } from '../init.ts';
  */
 export const quickRouter = router({
   /** Ikke-hemmelig konfig-visning (baseUrl, om token finnes, synk-status). */
-  config: protectedProcedure.query(({ ctx }) =>
-    createQuickConfigService(ctx.db).getView(ctx.tenantId),
-  ),
+  config: quickProcedure.query(({ ctx }) => createQuickConfigService(ctx.db).getView(ctx.tenantId)),
 
   /** Lagre baseUrl (+ evt. token). Token er valgfri ved oppdatering av baseUrl. */
-  setConfig: adminProcedure
+  setConfig: quickAdminProcedure
     .input(
       z.object({
         baseUrl: z.string().url(),
@@ -66,7 +68,7 @@ export const quickRouter = router({
     }),
 
   /** «Test tilkobling»: ett `client/info`-kall mot forhandlerens Quick-instans. */
-  testConnection: adminProcedure.mutation(async ({ ctx }) => {
+  testConnection: quickAdminProcedure.mutation(async ({ ctx }) => {
     const svc = createQuickConfigService(ctx.db);
     const cfg = await svc.getDecrypted(ctx.tenantId);
     if (!cfg) {
@@ -91,7 +93,7 @@ export const quickRouter = router({
    * «Hent nå» — manuell PULL (Quick → Endwise), samme overwrite-semantikk som
    * den planlagte cron-pullen. `full` tvinger full re-synk (ellers delta).
    */
-  pullNow: adminProcedure
+  pullNow: quickAdminProcedure
     .input(z.object({ full: z.boolean().optional() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -120,7 +122,7 @@ export const quickRouter = router({
    * minimert (vi vil ikke overkjøre Quick-data). Flaten er reservert og eksplisitt
    * gated slik at push aldri kan bli en bieffekt av pull-synken.
    */
-  pushNow: adminProcedure.mutation(() => {
+  pushNow: quickAdminProcedure.mutation(() => {
     throw new TRPCError({
       code: 'NOT_IMPLEMENTED',
       message:

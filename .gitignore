@@ -20,3 +20,8 @@ coverage/
 # pnpm-probefiler + tmp-rester (Windows)
 _tmp_*
 *.tmptest
+
+# Claude Code sine midlertidige worktrees. Disse er GITLINKS (mode 160000) —
+# committes de, får neste maskin to ødelagte submodul-referanser uten
+# .gitmodules. De hører til verktøyet, ikke til prosjektet.
+.claude/worktrees/

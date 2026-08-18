@@ -1,0 +1,1 @@
+CREATE POLICY "tenants_platform_admin_read" ON "tenants" AS PERMISSIVE FOR SELECT TO "authenticated" USING (current_setting('app.platform_admin', true) = 'on');

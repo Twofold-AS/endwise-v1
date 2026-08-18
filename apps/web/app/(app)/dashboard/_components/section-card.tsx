@@ -21,10 +21,10 @@ export function SectionCard({
   return (
     <section className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
       {(title || action) && (
-        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <header className="flex items-center justify-between gap-3 border-border border-b px-4 py-3">
           <div className="min-w-0">
-            {title && <h2 className="truncate text-sm font-semibold text-fg">{title}</h2>}
-            {subtitle && <p className="truncate text-xs text-fg-muted">{subtitle}</p>}
+            {title && <h2 className="truncate text-title text-fg">{title}</h2>}
+            {subtitle && <p className="truncate text-[12px] text-fg-muted">{subtitle}</p>}
           </div>
           {action}
         </header>

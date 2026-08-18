@@ -1,15 +1,26 @@
-import { createBillingService, planForPriceId } from '@endwise/modules/billing';
+import { createBillingService, subscriptionFromPriceIds } from '@endwise/modules/billing';
 import { Hono } from 'hono';
 import { createAppContext } from '../context.ts';
 import { getStripe, stripeConfigured } from '../lib/stripe.ts';
 
 /**
- * F5-09 — Stripe-webhook for abonnement-livssyklus. Signaturverifisert
- * (constructEvent). Finner tenant via `tenant_id` i abonnementets metadata (satt
- * ved checkout) → oppdaterer entitlements via billing-tjenesten (withTenant/RLS).
- * Ingen kryss-tenant-oppslag.
+ * F5-09 / F5-32 — Stripe-webhook for abonnement-livssyklus.
  *
- * Krever STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET. Uten dem: 503 (mock-modus).
+ * ⛔ **DETTE ER DEN ENESTE VEIEN ENTITLEMENTS FLIPPES.** Ingen klient-rute
+ * skriver `tenant_modules` — modultilgang er en konsekvens av en verifisert
+ * betaling, aldri av et knappetrykk. `checkout` returnerer bare en URL.
+ *
+ * **Signaturverifisering er PÅ:** `constructEvent(body, sig, whsec)` på rå
+ * body. Feiler den, svarer vi 400 og rører ingenting. Uten
+ * STRIPE_WEBHOOK_SECRET svarer ruta 503 — den feiler LUKKET, ikke åpent.
+ *
+ * Tenant finnes via `tenant_id` i abonnementets metadata (satt ved checkout),
+ * ikke via kryss-tenant-oppslag. Alt skrives gjennom withTenant → RLS.
+ *
+ * ── Nivå + tillegg (07.08.2026) ───────────────────────────────────────────
+ * Et abonnement har nå FLERE subscription items: ett for nivået og ett per
+ * tillegg. Vi leser derfor ALLE price-IDene, ikke bare `items.data[0]` — den
+ * gamle koden ville stille mistet hvert eneste tillegg.
  */
 
 // Minimal, versjonsrobust form (unngår Stripe API-versjons-typedrift).
@@ -51,17 +62,29 @@ export const stripeWebhook = new Hono().post('/', async (c) => {
         const sub = event.data.object as SubLike;
         const tenantId = sub.metadata?.tenant_id;
         if (!tenantId) break;
-        const plan = planForPriceId(sub.items.data[0]?.price?.id);
-        if (plan) {
-          await billing.applyPlan(tenantId, plan.key, {
-            status: sub.status,
-            stripeCustomerId: customerIdOf(sub.customer),
-            stripeSubscriptionId: sub.id,
-            currentPeriodEnd: sub.current_period_end
-              ? new Date(sub.current_period_end * 1000)
-              : null,
-          });
+
+        // ⚠️ ALLE items, ikke bare den første: nivået er ett item, hvert
+        // tillegg sitt eget. `items.data[0]` ville mistet tilleggene stille.
+        const priceIds = sub.items.data.map((i) => i.price?.id);
+        const { tier, tillegg } = subscriptionFromPriceIds(priceIds);
+
+        if (tier) {
+          await billing.applySubscription(
+            tenantId,
+            tier.key,
+            tillegg.map((t) => t.key),
+            {
+              status: sub.status,
+              stripeCustomerId: customerIdOf(sub.customer),
+              stripeSubscriptionId: sub.id,
+              currentPeriodEnd: sub.current_period_end
+                ? new Date(sub.current_period_end * 1000)
+                : null,
+            },
+          );
         } else {
+          // Kjenner vi ikke igjen nivået, rører vi IKKE modulene. Å nulle dem
+          // fordi en price-ID manglet i .env ville stengt et betalende verksted.
           await billing.setStatus(tenantId, sub.status);
         }
         break;
@@ -74,6 +97,9 @@ export const stripeWebhook = new Hono().post('/', async (c) => {
       case 'invoice.payment_failed': {
         const inv = event.data.object as InvoiceLike;
         const tenantId = inv.subscription_details?.metadata?.tenant_id ?? inv.metadata?.tenant_id;
+        // ⚠️ Kun status. Modulene står PÅ — nåden er 14 dager
+        // (PAST_DUE_NADE_DAGER), og frysejobben er ikke bygget (F5-32).
+        // Basis berøres uansett aldri: den har ingen gate.
         if (tenantId) await billing.setStatus(tenantId, 'past_due');
         break;
       }

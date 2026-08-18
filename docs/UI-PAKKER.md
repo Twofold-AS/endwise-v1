@@ -16,11 +16,35 @@
 > ### ⚠️ Tailwind-gotcha (16.07.2026)
 > `apps/web` MÅ ha `@source "../../../packages/ui/src/**/*.{ts,tsx}"` i `globals.css`. Tailwind v4
 > skanner ikke workspace-pakker automatisk — uten dette genereres ikke klasser som brukes KUN inne i
-> `@endwise/ui` (f.eks. dither-kit sin `h-full`/`fill-current`/`stroke-border`), og komponentene
-> kollapser/mister styling. Dette var rotårsaken til at dither var «usynlig». Gjelder ENHVER ny app
-> som konsumerer `@endwise/ui`.
+> `@endwise/ui` (f.eks. `h-full`, `fill-current`, `stroke-border`), og komponentene kollapser/mister
+> styling. Gjelder ENHVER ny app som konsumerer `@endwise/ui` — også etter at dither-kit ble fjernet,
+> siden shadcn/beUI-komponentene har samme problem.
 
-**Sist oppdatert:** 15. juli 2026 (admin-shell + oversikt bygget · token-verdier satt: mørkt default + grønn aksent · dither-kit AKTIVT på admin-dashboard)
+> ### ⚠️ matrix-loaders-gotcha (03.08.2026)
+> `apps/web/app/globals.css` MÅ ha `@import "@endwise/ui/matrix-loaders.css";`. Loaderne er **ren
+> CSS-animasjon** — komponentene setter bare klasser (`.dmx-root`, `.dmx-dot`) og CSS-variabler,
+> mens keyframene bor i pakkens egen `styles.css`. Uten importen rendrer alle 93 loaderne som en
+> stillestående prikkerute: ingen feilmelding, ingenting i typecheck, ingenting i `next build` —
+> bare noe som ser ødelagt ut. Samme familie som Tailwind-gotchaen over. Gjelder ENHVER ny app.
+> Eksporten `./matrix-loaders.css` ble lagt til i `packages/ui/package.json` samtidig.
+
+> ### 🔴 EIERENS DESIGN-PRINSIPPER HAR FORRANG (03.08.2026, aksent endret 06.08)
+> ⚠️ **AKSENTEN ER SVART, IKKE GRØNN** (fra 06.08.2026, «foreløpig»). Grønnen ble
+> brukt så bredt at den sluttet å være en aksent. `--ew-accent`/`-strong` er
+> `#111111` i lyst tema og `#ffffff` i mørkt; switch-track følger aksenten.
+> Suksess-grønnen (`--ew-success`) er BEHOLDT — den er informasjon, ikke merkevare.
+> «New»-badgen er RØD. Logogrønnen `#1ED27D` er urørt (bor i logo.svg).
+> Inter · titler 16/20 Medium · labels 13/16 Medium · brødtekst 14 Regular · knapper 32px/10px ·
+> rader 40px (data) og 44px (stores) · badge 20px/6px (farge fra aksent-tokenene) ·
+> switch 24×14/10px (track følger aksenten) · tekst `#333333`/`#777777` · **LYST TEMA STANDARD** (`#ffffff`, sidebar
+> `#fafafa`, valgt `#ededed`) · mørkt som toggle (`#171717`/`#1a1a1a`/`#292929`).
+> **Full tabell + hva som er utledet: §6 «Design-prinsipper fra eier».** Kolliderer noe i denne
+> fila med den seksjonen, er det den seksjonen som gjelder.
+
+**Sist oppdatert:** 7. august 2026 (dev-mode + forhandler-oppretting bygget — F5-26…F5-29; ingen nye UI-pakker, alt på shadcn/beUI som før: `Switch`, `StatefulButton`, `DropdownMenu`, `Badge`. Sidebar-mønsteret delt i to: **flyout for handlinger, inline utfolding for destinasjoner**) · 6. august 2026 (⚠️ **aksent grønn → svart** i token-laget · felles flyout-mønster m/ stiplet header-divider · ⭐ **F5-20 i gang** — 26 egne SVG-ikoner koblet inn via codegen · shell-justeringer: kollapsbar sidebar, tips-kort, bevel-handlinger · Analyse omformet: periodevelger, nye kort, paigraf · `Pie`/`Cell` eksponert) · 5. august 2026 (⭐ **Recharts inn som chart-motor** — brukergodkjent §2-beslutning; Analyse F5-18 bygget ferdig med søyle-, linje- og arealgrafer) · 4. august 2026 (sidebar-først shell bygget — F5-13: `dropdown-menu` + `dialog` hentet inn, ⌘K-palett på `Dialog` i stedet for `command`/cmdk) · 3. august 2026 (eierens design-prinsipper innført: Inter + lyst tema standard +
+mål-tokens · matrix-loaders TATT I BRUK første gang på AI-diagnose · StatefulButton i 2FA-innlogging
+og trådsvar · SSE-klient wiret · `Switch` hentet inn · ⛔ **dither-kit FJERNET fra UI-et og fra
+barrel-eksporten**)
 
 ---
 
@@ -30,7 +54,7 @@
 |---|---|---|
 | **Tokens** | `@endwise/widget-tokens` | Farge, radius, spacing, typografi — én sannhet |
 | **Struktur** | shadcn/ui | Knapper, tabeller, dialoger, skjema, sidebar |
-| **Data** | dither-kit | Charts + sparklines i signatur-estetikken |
+| **Data** | Recharts (shadcn Chart-mønster) | Søyle-, linje- og arealgrafer. Kun rene typer — se §2 |
 | **Bevegelse (tilstand)** | beUI | Knapper/kontroller som endrer tilstand (idle → loading → success) |
 | **Bevegelse (venting)** | matrix-loaders | «AI tenker»-animasjoner, én loader per SSE-event |
 
@@ -50,60 +74,119 @@ peker inn i `--ew-*`-tokens. **Ingen komponent hardkoder farge.**
 | **Versjon** | CLI 4.13.0 · style `new-york` · baseColor `neutral` |
 | **Lisens** | MIT |
 | **Runtime-avhengighet** | `radix-ui` ^1.6.2, `class-variance-authority`, `clsx`, `tailwind-merge` |
-| **Hentet inn** | `button`, `badge` (shadcn Badge — erstattet primitiv-Badgen; `NewBadge`-wrapper i app-shellet) |
+| **Hentet inn** | `dropdown-menu` + `dialog` (04.08.2026 — kontekstbytte i sidebaren og ⌘K-paletten; skrevet etter shadcn-oppskriften på `radix-ui`, registry-CLI ikke tilgjengelig i miljøet), `button`, `badge` (shadcn Badge — erstattet primitiv-Badgen; `NewBadge`-wrapper i app-shellet), **`cuelume`** (08.08.2026 — varslingslyder, MIT, 0 avhengigheter, Web Audio; brukergodkjent §2. KUN innkommende meldinger; `bind()` brukes bevisst IKKE, se §8), **`switch`** (03.08.2026 — skrevet etter shadcn-oppskriften på `radix-ui`s `Switch`, som allerede var en avhengighet; registry-CLI var ikke tilgjengelig i miljøet) |
 | **Kan hentes** | Hele katalogen — `table`, `dialog`, `sidebar`, `form`, `select`, `command`, `sheet`, `tabs`, `calendar` … |
+| **⚠️ Avvik fra oppstrøms** | `button` og `badge` er tilpasset eierens mål (§6). Alt annet urørt |
 
 ---
 
-## 2. dither-kit — datavisualisering
+## 2. Recharts — datavisualisering (ENESTE CHART-MOTOR fra 05.08.2026)
 
 | | |
 |---|---|
-| **Brukes til** | Alle charts og sparklines. Signatur-estetikken på forhandler- og admin-dashboard |
-| **Installasjon** | Egen CLI: `npx @dither-kit/cli add <navn> --dir packages/ui` (source-mode) |
-| **Ligger i** | `packages/ui/src/components/dither-kit/` (22 filer) |
-| **Konfig / pin** | `packages/ui/dither-kit.json` (lockfile) · CLI `0.1.1` · registry `https://tripwire.sh` |
-| **Lisens** | Se oppstrøms (tripwire.sh / `@dither-kit/cli`) |
-| **Runtime-avhengighet** | `motion`, `d3-scale`, `d3-shape`, `clsx`, `tailwind-merge` |
-| **Hentet inn** | **ALT** (40 filer): `area-chart` (`AreaChart`, `LineChart`, `Area`, `Line`, `Sparkline`) · `bar-chart` (`BarChart`, `Bar`) · `pie-chart` (`PieChart`, `Pie`) · `radar-chart` (`RadarChart`, `Radar`) · delene `Grid`, `XAxis`, `YAxis`, `Legend`, `Tooltip`, `Dot`, `ActiveDot` · standalone `DitherAvatar`, `DitherButton`, `DitherGradient` |
-| **Status** | ✅ **ENESTE CHART-MOTOR.** Recharts er ute av techstacken (§1 «Døde valg», brukergodkjent 14.07.2026) |
-| **I bruk** | Admin-oversikten (`apps/web/app/(app)/dashboard`): `AreaChart` (stablet, `bloom="aura"`) som bærende element, `Sparkline` som KPI-kortbakgrunn og som rad-trend i forhandlerlista |
+| **Brukes til** | Alle grafer. I dag: Analyse (F5-18) |
+| **Installasjon** | `pnpm --filter @endwise/ui add recharts` · versjon `^3.10.1` |
+| **Ligger i** | `packages/ui/src/components/chart.tsx` (shadcns Chart-mønster) |
+| **Lisens** | MIT |
+| **Runtime-avhengighet** | `recharts` i **både** `packages/ui` og `apps/web`. ⚠️ Samme felle som `motion` (§6): Next transpilerer UI-kildekoden i APPENS resolusjonskontekst, så pakken må være løsbar derfra |
+| **Hentet inn** | `ChartContainer`, `ChartTooltip`, `ChartTooltipContent`, `ChartLegend`, `ChartLegendContent`, `CHART_COLORS`, `ChartConfig` + primitivene `BarChart`/`Bar`, `LineChart`/`Line`, `AreaChart`/`Area`, `XAxis`, `YAxis`, `CartesianGrid`, `ResponsiveContainer` |
+| **Status** | ✅ Brukergodkjent §2-beslutning 05.08.2026. Erstatter tomrommet dither-kit etterlot |
 
-**API:** recharts-stil — `data`-array + `config`-objekt som mapper serie → label + farge.
+### ⛔ Kun rene graftyper — dette er en regel, ikke en preferanse
+
+**Eksponert:** søyle · linje · areal · **pai** (lagt til 06.08.2026 på eiers bestilling — til
+fordelingen av trafikkilder, som er nettopp det pai er god til: andel av en helhet).
+**Ikke eksponert:** radar, scatter, treemap, sankey, funnel, radialbar.
+
+De er ikke fjernet fra pakken — de er utelatt fra barrel-en i `chart.tsx`. Målgruppen er en
+ikke-teknisk forhandler som vil vite om det går bra, ikke en dataanalytiker. **En eksportert
+komponent er en komponent noen tar i bruk.** Trenger du en av dem, er det en samtale, ikke en
+import.
+
+Samme grunn til at det ikke er glød, 3D-isometri, crosshatch eller animasjon:
+`isAnimationActive={false}` er standard i alle kallsteder. En graf som beveger seg mens du leser
+den, er vanskeligere å lese.
+
+### Fargene er CSS-variabler, ikke props
+
+Recharts tar farger som props (`fill`, `stroke`). Skriver du en hex der, snur ikke grafen med
+lys/mørk-toggelen. Derfor: `ChartContainer` skriver ut `--color-<serie>` per graf fra `config`,
+og seriene sier `fill="var(--color-fullfort)"`.
 
 ```tsx
-<AreaChart data={data} config={config} bloom="aura">
-  <XAxis dataKey="month" /><YAxis />
-  <Legend isClickable /><Tooltip labelKey="month" />
-  <Area dataKey="bookinger" variant="gradient" />
-</AreaChart>
+const CFG: ChartConfig = {
+  fullfort: { label: 'Fullførte saker', color: CHART_COLORS.accent },
+  avlyst:   { label: 'Avlyste',         color: CHART_COLORS.muted },
+};
+
+<ChartContainer config={CFG} className="aspect-auto h-52 w-full">
+  <BarChart data={data}>
+    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+    <XAxis dataKey="dag" tickLine={false} axisLine={false} />
+    <YAxis tickLine={false} axisLine={false} />
+    <ChartTooltip content={<ChartTooltipContent config={CFG} />} />
+    <Bar dataKey="fullfort" fill="var(--color-fullfort)" isAnimationActive={false} />
+  </BarChart>
+</ChartContainer>
 ```
 
-- `variant`: `gradient | dotted | hatched | solid`
-- `color`: green · blue · purple · pink · orange · red · grey
-- `bloom`: `off | low | high | aura`
+`CHART_COLORS` peker inn i token-laget: `accent` → `--ew-accent-strong`, `blue` →
+`--ew-switch-track-on`, `warn`, `danger`, `muted`. **Verifisert:** `--color-fullfort` løser til
+`#15b042` i lyst tema og `#1ed27d` i mørkt, uten en eneste betinget farge i kallstedet.
 
-**Dosering (se `docs/notater/UI-forslag.md` v2):** **symmetrisk.** Forhandler og admin får samme
-dither-behandling — samme motor, samme tetthet. Dither er ikke pynt på toppen av UI-et; det ER
-UI-et der data vises. Unntaket er mekaniker-PWA (F7): der bærer `matrix-loaders` uttrykket i
-bevegelse i stedet.
+### Regelen som overlevde dither-fjerningen
 
-**To harde regler som følger med:**
-1. **≤ 8 samtidige canvas per skjerm**, og flater utenfor viewport pauses (`IntersectionObserver`).
-   Hver dither-flate er en RAF-løkke.
-2. **Dither bærer aldri informasjon alene.** Tetthet forsterker; tallet/ordet står alltid i
-   klartekst. Slår du av alle flatene, skal skjermen fortsatt være fullt brukbar.
+> **Visualiseringen bærer aldri informasjon alene.** Tallet/ordet står alltid i klartekst.
 
-**API-detaljer som ikke er åpenbare** (funnet ved kompilering — ikke gjett):
-- `<PieChart>` krever `dataKey` **og** `nameKey` på chart-nivå; `<Pie>` tar kun `variant`.
-- `<RadarChart>` krever `nameKey`; `<Radar>` tar `dataKey`.
-- Alle chartene krever `children` — de er komposisjons-API-er, ikke enkeltkomponenter.
-- `<Sparkline data={number[]} color=… variant=… bloom=… />` er tynn-wrapperen for det
-  dekorative tilfellet (ingen akser/tooltip). `config` bygges internt fra `color`.
+Analyse har derfor fire nøkkeltall i klartekst **over** grafene. Slår du av alle grafene, skal
+skjermen fortsatt være brukbar.
+
+### ⚠️ Recharts v3 SSR-rendrer ikke SVG-en
+
+`renderToStaticMarkup` gir kun `<div class="recharts-wrapper">` — selve SVG-en tegnes først etter
+montering, når `ResponsiveContainer` har målt bredden via `ResizeObserver`. Konsekvenser:
+
+1. **Ingen graf i prerendret HTML.** Forventet, ikke en feil.
+2. **En graf i en skjult container (`display:none`, uåpnet fane) tegner ingenting** før den vises,
+   fordi `ResizeObserver` ikke fyrer i et skjult dokument. Husk det hvis grafer legges i faner.
 
 ---
 
-## 3. beUI — bevegelse og tilstand
+## 3. dither-kit — ⛔ FJERNET FRA UI-ET (03.08.2026)
+
+> ### Ikke bruk denne pakken uten ny beskjed fra eier.
+>
+> **Eier ba 03.08.2026 om at dither-kit fjernes fra UI-et.** All bruk i `apps/web` er borte, og
+> komponentene er **ikke lenger eksportert** fra `@endwise/ui` — de kan ikke importeres.
+> Skriver du `import { AreaChart } from '@endwise/ui'`, får du nå **Recharts'** AreaChart (§2),
+> ikke dither-kits. Det er med vilje: navnet peker på den motoren som faktisk er i bruk.
+
+**Hva som ble fjernet, og hva som erstattet det:**
+
+| Var | Er nå |
+|---|---|
+| `AreaChart` (booking-flyt, 30 d) på `/dashboard` og `/admin` | `BookingsTable` — totaler per serie + tabell dag for dag |
+| `AreaChart` (MRR, 12 mnd) på `/admin` | `RevenueTable` — MRR nå + vekst + tabell med endring per måned |
+| `Sparkline` som KPI-kortbakgrunn | Ingenting. Kortet står, tallet bærer |
+| `Sparkline` som rad-trend i forhandlerlista | Ingenting. Tallene sto allerede ved siden av |
+| `DitherGradient` i `SupportCard`-headeren | Rolig aksentflate (`bg-accent-soft`) med ikonet |
+| `DitherAvatar` i meldingstråden | `CircleUser`-ikon, samme som sidebarens profilrad |
+
+**Merk:** tabellene på `/dashboard` og `/admin` ble IKKE gjort om til grafer da Recharts kom inn.
+De er fine som de er — en tabell med eksakte dagstall er mer nyttig for en verkstedeier enn en
+kurve. Grafer der de gir noe: Analyse.
+
+### Hva som IKKE er gjort
+
+- **Filene er ikke slettet.** `packages/ui/src/components/dither-kit/` (40 filer) og
+  `packages/ui/dither-kit.json` ligger urørt.
+- **Reversering** er én blokk: eksport-listen ligger utkommentert i `index.ts`. ⚠️ Den vil nå
+  **kollidere** med Recharts-eksportene (`AreaChart`, `Area`, `Bar`, `Line`, `XAxis` …). Skal
+  dither tilbake, må ett av settene aliaseres.
+
+---
+
+## 4. beUI — bevegelse og tilstand
 
 | | |
 |---|---|
@@ -132,9 +215,14 @@ er kun en re-eksport for bakoverkompatibilitet.
 Nav-lenker og rene handlingsknapper (f.eks. «Ny booking»-lenka på oversikten) bruker shadcn
 `Button` — ikke StatefulButton — nettopp fordi de ikke endrer tilstand.
 
+**I bruk (03.08.2026):** innlogging + 2FA-bekreftelse (`/signin`, F1-11) · svar i meldingstråd
+(`/innboks/[id]`, F6-01) · «Kjør»-knappen i AI-konsollen (`/integrasjoner/ai`, F6-04). Alle tre
+endrer tilstand på serveren; «Send ny kode»-lenka på 2FA-steget gjør det også, men er bevisst en
+tekstlenke fordi den er en *sekundær utvei*, ikke skjemaets handling.
+
 ---
 
-## 4. matrix-loaders — venting
+## 5. matrix-loaders — venting
 
 | | |
 |---|---|
@@ -145,108 +233,224 @@ Nav-lenker og rene handlingsknapper (f.eks. «Ny booking»-lenka på oversikten)
 | **Ligger i** | `packages/ui/src/vendor/matrix-loaders/` (124 filer) |
 | **Lisens** | ⚠️ **Egendefinert proprietær.** Kommersiell bruk tillatt. **Forbudt** å publisere komponentene som frittstående/del av et annet komponentbibliotek. Derfor ligger de under `vendor/`, og `@endwise/ui` er `private: true`. Se `VENDOR.md` i mappa |
 | **Hentet inn** | ✅ **HELE SETTET — 93 loadere**, alle re-eksportert fra `@endwise/ui`: `DotMatrixIcon` · `DotmSquare1–23` · `DotmCircular1–20` · `DotmTriangle1–20` · `DotmHex1–10` · `Dotm3x3`-familien (glyph-spin, diagonal-wave, path-wave) |
+| **CSS** | ⚠️ **Påkrevd:** `@import "@endwise/ui/matrix-loaders.css";` i appens `globals.css`. Se gotchaen øverst i fila |
+| **I bruk** | AI-diagnose (`/integrasjoner/ai`, F6-04): én loader per SSE-fase — `DotmCircular1` (starter) · `DotmHex1` (tenker) · `DotmSquare1` (henter data) |
 | **Oppdatering** | Hent på nytt fra oppstrøms og bytt ut mappa. **Ikke rediger filene.** |
+
+**Farge:** bruk `color="var(--ew-accent)"` — **ikke** `colorPreset`. Presetene (`solid-mint`,
+`grad-sunset` …) er hardkodede farger/gradienter fra oppstrøms og bryter «ingen komponent
+hardkoder farge». `color` tar en vilkårlig CSS-farge og defaulter til `currentColor`.
+
+**Loaderen bærer aldri informasjon alene** — samme regel som §2 arvet fra dither-tiden. Fasen står alltid i
+klartekst ved siden av: «Assistenten tenker …», ikke bare en animasjon.
 
 ---
 
-## 5. Fundament
+## 6. Fundament
 
 | Pakke | Rolle |
 |---|---|
 | `@endwise/widget-tokens` | `--ew-*`-tokens (mørk/lys/aksent). ✅ **Verdier satt 15.07.2026** (F0-11): mørkt tema som default (TheFold-base — svart side, `#151515` surface), grønn `#1ED27D` aksent, lyst tema beholdt som toggle. Nye tokens: `surface-2`, `border-strong`, `fg-faint`, `accent-dim`, `warn/danger/success`, `glass-*`, `radius-xl/pill` |
 | Tailwind CSS 4 | `@theme inline` i `packages/ui/src/theme.css` |
 | `radix-ui` | Primitivene shadcn bygger på |
-| `lucide-react` | Ikoner. **Eneste ikonbibliotek**. Apper importerer via den kuraterte barrel-en `@endwise/ui/icons.ts` (re-eksport) — ikke `lucide-react` direkte |
+| `lucide-react` | Ikoner. **Eneste ikonbibliotek**. Apper importerer via den kuraterte barrel-en `@endwise/ui/icons.ts` — aldri `lucide-react` direkte. ⚠️ **Fra 06.08.2026 er barrel-en delt:** 26 ikoner kommer fra EGNE SVG-er i `src/assets/icons/` via `scripts/build-icons.ts` → `icons.generated.ts` (F5-20); resten fra lucide inntil egne finnes. `createLucideIcon` gjør at typen er identisk, så ingen kallsteder merker forskjellen. Regenerer: `pnpm --filter @endwise/ui build:icons` |
 | `maplibre-gl` | Kart/globe-motor (open-source, ingen API-nøkkel, mørk innebygd). Brukt til «Live besøkende»-globen på Marked. I mapcn-ånd (mapcn = shadcn-wrapper over MapLibre); mapcn.dev var utilgjengelig ved bygging, så vi bruker MapLibre GL direkte. Kilde: github.com/AnmolSaini16/mapcn · maplibre.org. Lisens: MapLibre GL = **BSD-3-Clause**, mapcn = MIT |
 | `motion` | Animasjonsmotor (delt av beUI + dither-kit). ⚠️ Må også deklareres i **hver app** som bruker `@endwise/ui` (f.eks. `apps/web`) — Next transpilerer UI-kildekoden i appens resolusjonskontekst, så `motion/react` må være løsbar derfra. Lagt inn i `apps/web` 16.07.2026 |
 
-### 🎨 Merkevare-aksent + palett — SATT (15.07.2026)
+### 🎨 DESIGN-PRINSIPPER FRA EIER — GJELDER HELE UI-ET (03.08.2026)
 
-**Logofargen er `#1ED27D`** (grønn), hentet fra `apps/web/public/logo/logo.svg` (`fill="#1ED27D"`).
-Den er **merkevare-aksenten**: `--ew-accent`.
+> **Disse verdiene har FORRANG over resten av denne fila der de kolliderer.**
+> De er ikke et forslag. Alt under er gitt av eier; det som er utledet av meg er
+> merket eksplisitt i `packages/widget-tokens/src/tokens.css`.
 
-**Mapping mot dither-kit:** dither-kits `green`-seed er `[40, 210, 110]` = `#28D26E`. Logoen er
-`[30, 210, 125]` = `#1ED27D`. **Praktisk talt samme smaragdgrønn** (begge G=210) — forskjellen er
-knapt synlig. To valg når dither-flatene skal fargelegges:
+| Rolle | Verdi | Token / utility |
+|---|---|---|
+| **Font** | Inter (SIL OFL) | `--ew-font-sans` |
+| **Titler** | 16px / 20px linjehøyde / Medium (500) | `text-title` |
+| **Labels** | 13px / 16px / Medium (500) | `text-label` |
+| **Brødtekst** | 14px / Regular (400) | `text-body` |
+| **Knapper** | 32px høyde · 10px radius | `h-control` · `rounded-control` |
+| **Datarad** | 40px | `h-row` |
+| **«Stores»-rad** | 44px | `h-row-store` |
+| **Badge** | 20px høyde · 6px radius · fyll `#CAFACE` · tekst `#15B042` | `h-badge` · `rounded-badge` · `bg-accent-soft` · `text-accent-strong` (eller shadcn `<Badge>`) |
+| **Switch** | 24×14px track · 10px thumb · track-på `#0077E6` | `<Switch>` · `--ew-switch-*` |
+| **Tekst** | `#333333` default · `#777777` subtle | `text-fg` · `text-fg-muted` |
+| **Lyst (STANDARD)** | bakgrunn `#ffffff` · sidebar `#fafafa` · valgt i sidebar `#ededed` | `bg-bg` · `bg-sidebar` · `bg-sidebar-active` |
+| **Mørkt (toggle)** | bakgrunn `#171717` · sidebar `#1a1a1a` · valgt i sidebar `#292929` | samme tokens, `[data-theme="dark"]` |
 
-1. **Bruk `color="green"`** direkte — nær nok, null ekstra arbeid. **Valgt** (admin-oversikten
-   bruker `color="green"`).
-2. **Overstyr `green`-seedet** i `palette.ts` til logoens `[30, 210, 125]` for eksakt
-   merkevare-match. Gjøres kun hvis pixel-perfekt betyr noe. *(Merk: `palette.ts` er dither-kit sin
-   vendorkode — en overstyring skal noteres i §7 med begrunnelse.)*
+**Lyst tema er nå standard** (`<html data-theme="light">`). Mørkt ligger komplett ved siden av og
+nås med `<ThemeToggle>`. Begge palettene bor i `packages/widget-tokens/src/tokens.css`.
 
-✅ **Oppdatert 15.07.2026:** hele grunnpaletten er nå satt (ikke bare aksenten). Base er TheFold V2 sitt EKTE app-shell (`(main)/_shell/app-shell.tsx`, `C`-paletten, rettet 16.07):
-flater `#1a1a1a`, kort `#141414`, kant/active `#262626` — med grønn `#1ED27D` som aksent i stedet for TheFolds provisoriske blå.
-Mørkt er default (`<html data-theme="dark">`), lyst er en toggle. Verdiene bor i
-`packages/widget-tokens/src/tokens.css`; shadcn-semantikken mappes i `packages/ui/src/theme.css`.
-Typografi er nå satt — se «✍️ Typografi» rett under.
+**Tre tekst-utilities, ikke ni.** `text-title` / `text-label` / `text-body` bærer størrelse,
+linjehøyde **og** vekt. Det finnes derfor ikke en variant der noen glemte vekten. Bruk dem — ikke
+`text-sm`/`font-semibold`-kombinasjoner. Til meta/tidspunkt brukes `text-[12px]` (se «Hull» under).
+
+**Tre komponenter avviker nå bevisst fra oppstrøms**, fordi en spec som må huskes ved hvert
+kallsted er en spec som brytes ved den femte bruken:
+
+| Fil | Avvik |
+|---|---|
+| `components/button.tsx` (shadcn) | `rounded-control` + `text-label` + `h-control` i stedet for `rounded-md`/`text-sm`/`h-9` |
+| `components/motion/button/base.tsx` (beUI) | `SIZE_CLASS` gir 32px + 10px radius i stedet for beUIs 40px pill |
+| `components/badge.tsx` (shadcn) | 20px høyde + 6px radius; `default`-varianten er spec-fargene |
+
+`shadcn add` kan fortsatt brukes for NYE komponenter — kun disse tre er rørt.
+
+#### ⚠️ Hull i spesifikasjonen — mine valg, lette å overstyre
+
+1. **Bare to tekstfarger er spesifisert.** `--ew-fg-faint` er derfor **aliasert** til subtle
+   (`#777777`) i stedet for at jeg fant på et tredje nivå. Vil du ha tre, sett verdien i
+   `tokens.css` — ingen komponent trenger å endres.
+2. **Ingen meta-størrelse under 13px er spesifisert.** Tidspunkt, hjelpetekst og
+   sekundærforklaringer bruker `text-[12px]`. Skal de være 13px, er det ett søk-og-erstatt.
+3. **Hårlinjer, hover-flate, kortflate og hele den mørke tekstrampen** er utledet. Se
+   «UTLEDET»-merkingen i `tokens.css`.
+4. **`Titler 16/20px`** er lest som *størrelse/linjehøyde*, ikke som to titteltrinn. Sier du at det
+   var to trinn (16px H2, 20px H1), er det én linje i `theme.css`.
 
 ---
 
-### ✍️ Typografi — SATT (15.07.2026, oppdatert med Google Sans Flex)
+### 🎨 Merkevare-aksent
 
-**Brukeren ba først om «Google Sans», så om «Google Sans Flex».** Begge verifisert mot kilden
-(Google Fonts metadata-endepunkt, `fonts.google.com/metadata/fonts/…`):
+**Logofargen er `#1ED27D`** (`apps/web/public/logo/logo.svg`). Den er `--ew-accent` og brukes som
+**fyll** — knapper, logo, aksentflater.
 
-- **Google Sans** (uten «Flex») = Googles **proprietære merkevarefont**, ikke i OFL-katalogen,
-  ikke i `next/font/google`. **Ikke brukt** (lisensrisiko for tredjepart).
-- **Google Sans Flex** = «neste generasjon av Googles merkevare-typesnitt», men publisert som
-  **`"license": "ofl"` / `"isOpenSource": true`** — altså **SIL Open Font License**, fritt
-  embeddbar for kommersiell tredjepartsbruk. **Dette er det vi bruker.** ✅
+⚠️ **Den kan aldri være tekst i lyst tema.** `#1ED27D` mot hvitt gir ~1.8:1 kontrast. Til aksent
+som tekst/ikon finnes `--ew-accent-strong` = **`#15B042`** — eierens egen badge-tekstfarge. To
+tokens, to jobber. I mørkt tema er de samme farge, fordi grønt er lesbart der.
 
-**Valg: `Google Sans Flex` (SIL OFL)** — variabel font (akser: vekt, bredde, optisk størrelse,
-helning, runde terminaler). Lastes via **`next/font/google`** (finnes i Next 16-katalogen) —
-selvhostet ved build, ingen FOUT/layout-shift, ingen runtime-kall til Google. Mono: **`JetBrains
-Mono`** (OFL, next/font).
+`--ew-accent-soft` = **`#CAFACE`** er aksentfylt flate (badge, egne meldingsbobler, uleste-teller).
+
+matrix-loaders fargelegges med `color="var(--ew-accent-strong)"` (se §4) — aldri med `colorPreset`,
+som er hardkodede farger fra oppstrøms.
+
+---
+
+### ✍️ Typografi — INTER (03.08.2026)
+
+**Erstatter Google Sans Flex** (som erstattet Plus Jakarta Sans). Historikken står i
+`docs/roadmap-endringer.md`; dette er gjeldende.
 
 | | |
 |---|---|
-| **Sans** | Google Sans Flex · **variabel** (wght 1–1000, hele aksen) · subsets `latin` + `latin-ext` (æøå ✓) |
+| **Sans** | **Inter** · variabel · subsets `latin` + `latin-ext` (æøå ✓) |
 | **Mono** | JetBrains Mono · vekter 400/500/600 · tall/tabeller (`tabular-nums`) |
-| **Lisens** | **SIL Open Font License (OFL)** — verifisert 15.07.2026 (`license: "ofl"`, `isOpenSource: true`) |
-| **Kilde** | Google Fonts. Satt opp i `apps/web/app/layout.tsx` via `next/font/google` (selvhostet, ikke runtime-import) |
-| **Variabler** | `--font-google-sans-flex`, `--font-jetbrains-mono` (på `<html>`) → `--ew-font-sans/-mono` → shadcn `--font-sans/-mono` |
+| **Lisens** | **SIL Open Font License (OFL)** — begge |
+| **Kilde** | Google Fonts via **`next/font/google`** i `apps/web/app/layout.tsx` — selvhostet ved build, ingen FOUT/layout-shift, ingen runtime-kall til Google |
+| **Variabler** | `--font-inter`, `--font-jetbrains-mono` (på `<html>`) → `--ew-font-sans/-mono` → shadcn `--font-sans/-mono` |
 
-**Typeskala** (rolle → Tailwind-utility → px/vekt). Fastsatt her; komponentene følger den:
+Inter har ekte fallback-metrics i next/font-katalogen og trenger derfor **ikke**
+`adjustFontFallback: false`, slik Google Sans Flex gjorde.
 
-| Rolle | Utility | Størrelse | Vekt |
+**Typeskala** — bor i `packages/ui/src/theme.css` som `@theme`-verdier, ikke som løse utilities:
+
+| Rolle | Utility | Størrelse / linjehøyde | Vekt |
 |---|---|---|---|
-| Display / KPI-tall | `text-2xl` | 24px | 600 |
-| Sidetittel (H1) | `text-xl` | 20px | 600 |
-| Seksjonstittel (H2) | `text-sm` | 14px | 600 |
-| Brødtekst | `text-sm` | 14px | 400 |
-| Sekundær / etikett | `text-xs` | 12px | 500 |
-| Mikro / meta | `text-[11px]` | 11px | 500 |
+| Tittel (H1/H2) | `text-title` | 16 / 20 | 500 |
+| Label, nav, knapp | `text-label` | 13 / 16 | 500 |
+| Brødtekst | `text-body` | 14 / 20 | 400 |
+| Meta *(utledet)* | `text-[12px]` | 12 | 400 |
 
-> Fonten er variabel, så alle vektene i skalaen dekkes av én fil. Bytte av font senere = kun
-> `layout.tsx` + de to `--ew-font-*`-verdiene; resten av skalaen står.
+> Bytte av font senere = kun `layout.tsx` + `--ew-font-sans`; hele skalaen står.
 
-## 6. I techstacken, men ikke hentet inn ennå
+## 7. I techstacken, men ikke hentet inn ennå
 
 Ikke skriv egne erstatninger for disse — hent dem når skjermen som trenger dem bygges.
 
 | Pakke | Til hva | Hentes i |
 |---|---|---|
 | `slot-text` | Rullende KPI-siffer | F3-05 (DealerOverview). KPI-tallene på admin-oversikten er i klartekst inntil videre |
-| `ai-elements` | Conversation, Message, PromptInput, Plan, Task, Voice | F6-13 (agent-fundament) |
-| `cuelume` | Mikro-lyder. Valgfri polish, **av som default** | Når som helst |
+| `ai-elements` | Conversation, Message, PromptInput, Plan, Task, Voice | ⚠️ **OVERLAPPER NÅ MED §9** (12.08.2026). Chat-flaten ble bygget på shadcn sine `message`/`message-scroller`/`questionnaire` etter eierens beskrivelse, så `Conversation`/`Message`/`PromptInput` er allerede dekket. Igjen står `Plan`, `Task` og `Voice`. **Å ta inn `ai-elements` nå ville gitt to meldingskomponenter side om side** — det er en techstack-avklaring (§2), ikke noe som skal skje i forbifarten |
 
-> ❌ **Recharts er FJERNET fra techstacken** (14.07.2026, brukergodkjent). dither-kit dekker alle
+> ❌ **Recharts er FJERNET fra techstacken** (14.07.2026, brukergodkjent) — begrunnelsen var at
+> dither-kit dekket alle chart-typene. ⚠️ **Etter 03.08.2026 er dither-kit ute av UI-et (§2), så det
+> finnes ingen chart-motor.** Skal charts tilbake, må valget tas på nytt — det er en techstack-sak.
 > chart-typene. Ser du `recharts` i en import, er det en feil som skal rettes.
 
 ---
 
-## 7. Egenskrevet — og hvorfor
+## 8. Egenskrevet — og hvorfor
 
 Kun disse. Hver enkelt har en grunn.
 
 | Komponent | Hvorfor ikke en pakke? |
 |---|---|
 | `Btn`, `Badge`, `Chip`, `Card`, `Input` (`packages/ui/src/primitives/`) | Roadmap **F0-12** navngir dem eksplisitt som «primitiver fra komponentgalleriet». De er tynne skall over token-laget. **Når prototypen er inne bør de revurderes** — dekker shadcn dem, skal de bort |
-| Admin-shell + oversikt-komposisjoner (`apps/web/app/(app)/…`: `TopBar` (m/ topbar-nav), `Sidebar`, `SupportCard` + `BevelButton`/`BEVEL` (TheFold-kortstil), `SectionCard`, `KpiCard`, `BookingsArea`, `DealerList`; `_shell/nav.ts`, `_lib/use-org-role.ts` rollegate) | **Ikke** gjenbrukbare primitiver — de er app-nivå *komposisjoner* av eksisterende pakker (shadcn `Button` + `@endwise/ui`-ikoner + dither-kit + tokens). De hører til `apps/web`, ikke `@endwise/ui`, så de står her kun for sporbarhet. Ingen ny pakke tatt inn |
+| `LydProvider` / `useLyd` (`apps/web/app/(app)/_lib/lyd.tsx`) og `ProfilKort` (`_shell/profil-kort.tsx`) | **Ingen ny UI-pakke** — `cuelume` er en LYD-motor, ikke komponenter, så av/på-knappen måtte bygges. Den er bevisst IKKE shadcn `Switch`: eier ba om «meget tydelig av/på», og en 20px switch i en tabellrad er det motsatte. Knappen er en full-bredde `button` på token-laget (`rounded-xl`, `border-2`, `bg-accent-soft`) med ikon, status i klartekst («Varslingslyder er PÅ») OG en visuell bryter — tre signaler, ikke ett. ⛔ `bind()` fra cuelume brukes ikke: automatiske hover-/klikklyder over hele panelet er nettopp det som får folk til å skru av lyden helt, og da mister de varselet som betyr noe |
+| `KanalMerke` / `KanalLinje` (`apps/web/app/(app)/innboks/_kanal.tsx`) | **Ingen ny pakke.** Kanal-indikatoren er sammensatt av det vi allerede har: badge-tokenene fra §5 (`h-badge` · `rounded-badge` · `bg-accent-soft`/`bg-warn-soft`/`bg-surface-2`) og ikoner fra `@endwise/ui`-barrelen (`Phone`, `Mail`, `MessageSquare`, `Globe`). shadcn `Badge` dekker ikke ikon + kanaltone + `title`-setning i ett, og resten av innboksen bruker allerede inline token-badger (`KIND_TONE`) — å blande to badge-mønstre i samme liste ville sett ut som to systemer. Kanalen bæres av IKONET, ikke fargen, så indikatoren fungerer også for fargeblinde |
+| Admin-shell + oversikt-komposisjoner (`apps/web/app/(app)/…`: `TopBar` (m/ topbar-nav), `Sidebar`, `SupportCard` + `BevelButton`/`BEVEL` (TheFold-kortstil), `SectionCard`, `KpiCard`, `BookingsTable`, `RevenueTable`, `DealerList`; `_shell/nav.ts`, `_lib/use-org-role.ts` rollegate) | **Ikke** gjenbrukbare primitiver — de er app-nivå *komposisjoner* av eksisterende pakker (shadcn `Button` + `@endwise/ui`-ikoner + tokens). `BookingsTable`/`RevenueTable` er vanlige `<table>`-er skrevet 03.08.2026 da dither-grafene ble fjernet — shadcn `table` kan hentes inn og erstatte dem når noen orker. De hører til `apps/web`, ikke `@endwise/ui`, så de står her kun for sporbarhet. Ingen ny pakke tatt inn |
+| Sidebar-først shellet (`apps/web/app/(app)/_shell/`: `nav.ts`, `sidebar.tsx`, `top-bar.tsx`, `context-switcher.tsx`, `command-palette.tsx`) + destinasjonene `saker/`, `samarbeid/`, `analyse/`, `endwise/`, `innstillinger/*` | App-nivå **komposisjoner** (F5-13). Bygget av `@endwise/ui`-komponenter: `DropdownMenu`, `Dialog`, `Switch`, `Badge`, `BevelButton` + ikon-barrel. **⌘K-paletten er egenskrevet** fordi shadcns `command` krever `cmdk` — ny pakke = §2-endring, ikke godkjent. Paletten er ~60 linjer filtrering over `nav.ts`; `cmdk` kan erstatte den senere uten at kallstedene endres |
+| Meldings- og AI-flatene (`apps/web/app/(app)/`: `innboks/page.tsx` + `innboks/[id]/page.tsx` + `_lib.ts`, `integrasjoner/ai/page.tsx`, `_lib/use-event-stream.ts`) | App-nivå **komposisjoner**, ikke primitiver: shadcn/beUI-knapper + matrix-loaders + `@endwise/ui`-ikoner + `CardShell`/`CardMedia`. `use-event-stream.ts` er en **datahook**, ikke UI — SSE-klienten finnes ikke i noen pakke. Ingen ny pakke tatt inn |
 | Kundewidget (`@endwise/widget-ui`: `EndwiseWidget` + `BookingPanel` + `mountEndwiseWidget`, F4-03) | **Frittstående, cross-origin embed** på forhandlerens (Framer-)nettside — den kan IKKE dra inn appens shadcn/Tailwind/dither-kit (ingen delt build, ingen `@source`-skanning på tredjepartssider). Derfor bevisst **avhengighetslett**: inline styles som leser `@endwise/widget-tokens` sine `--ew-*`-CSS-variabler (samme token-sannhet som resten). React er eneste runtime-avhengighet (peer). [ART50-UI]-opplysningen er egen markup her fordi widgeten ikke deler DOM/pakke med `@endwise/ui`. Nye deps: `react`/`react-dom` (widget-ui, peer), `framer-plugin`/`vite` (framer-plugin) |
+
+| `Bildefelt` på markedssiden (`apps/web/app/page.tsx`, F5-35) | **Ingen ny pakke, og ingen pakke å hente.** Et bilde på en markedsside er `next/image` + token-laget — shadcn har ingen media-komponent, beUI er bevegelse og matrix-loaders er venting. Komponenten er ~20 linjer: `fill` + `object-cover` i en `aspect-[16/9]`/`aspect-[21/9]`-boks med `rounded-xl border-border bg-surface-2`. Den finnes kun for å holde de fire bildene identiske — et `sizes` som er feil ett sted laster dobbelt så store filer på mobil uten at noe ser galt ut. ⛔ Ingen tekst oppå bilde, med vilje: da måtte kontrasten holdt mot BEGGE temaene og mot et motiv som er lyst i midten |
 
 Legger du til en rad her, skal den ha en setning som forklarer hvorfor ingen pakke holdt.
 
 `@endwise/ui/icons.ts` er en **re-eksport** av en kuratert lucide-mengde — ikke egen kode, kun en
 barrel så apper slipper å ta inn `lucide-react` direkte (og ingen kan smugle inn et annet ikonsett).
+
+---
+
+## 9. shadcn/ui — CHAT (hentet 12.08.2026, F6-18)
+
+AI-chat-flaten. Hentet med `npx shadcn@latest view <navn>` og lagt i
+`packages/ui/src/components/`, samme framgangsmåte som `dropdown-menu` og `dialog`.
+
+| Komponent | Kilde | Avhengighet |
+|---|---|---|
+| `message.tsx` | ✅ Registeret, tilnærmet urørt | **Ingen** — ren struktur + CSS |
+| `message-scroller.tsx` | ✅ Registeret, tilpasset | `@shadcn/react` |
+| `questionnaire.tsx` | ⚠️ **Ikke i registeret** — stil-skall skrevet av oss | `@shadcn/react` |
+| `tool-part.tsx` | ✍️ Egenskrevet — shadcn har ingen | Ingen |
+
+### Nye pakker (§2-endring, brukergodkjent 12.08.2026)
+
+| Pakke | Størrelse | Lisens | Hvorfor |
+|---|---|---|---|
+| `@shadcn/react` | 56 kB, **0 deps** | MIT | Bærer oppførselen i scroller + questionnaire |
+| `@ai-sdk/react` | 305 kB | Apache-2.0 | `useChat`. Samme familie som `ai@7` vi alt har |
+| `@shadcn/helpers` | 48 kB | MIT | `createChat()` — forhåndsskrevne demo-strømmer |
+
+⛔ **Ingen Vercel AI Gateway.** Modellrutingen går som før gjennom
+`resolveModelProvider(dataClass)`: kundevendt → Mistral (EU), internt → Fireworks.
+
+### ⚠️ Tre avvik du må kjenne til
+
+1. **Fire utility-klasser er fjernet fra `MessageScrollerViewport`** —
+   `scroll-fade-b`, `scrollbar-thin`, `scrollbar-gutter-stable` og
+   `data-autoscrolling:scrollbar-none`. De er shadcns egne og finnes ikke i vårt
+   Tailwind-oppsett; beholdt ville de vært klasser som ikke gjør noe. Trenger vi
+   dem, defineres de i `theme.css` som ekte utilities.
+
+2. **`questionnaire` ligger ikke i det offentlige registeret.**
+   `/r/styles/new-york-v4/questionnaire.json` → 404 (verifisert 12.08.2026); bare
+   dokumentasjonssidene finnes. Oppførselen kommer fra `@shadcn/react`, så fila
+   vår er **kun stil på et ekte shadcn-primitiv**. Blir komponenten publisert
+   senere: **bytt den ut**, ikke vedlikehold vår videre.
+
+3. **`MessageBubble` er ikke fra oppstrøms.** shadcn lar deg style
+   `MessageContent` fritt, men da ville hvert kallsted gjentatt bakgrunn, radius
+   og maksbredde — og den femte kopien ville sett litt annerledes ut.
+
+### Hvorfor `tool-part.tsx` er egenskrevet
+
+shadcn har ingen tool-part-komponent i registeret. Mønsteret finnes i
+`chatbot-template` som **eksempelkode**, ikke som en installerbar komponent.
+Fila er ~90 linjer stil over AI SDK sin `ToolUIPart`-tilstandsmaskin.
+
+⚠️ **Tilstandsnavnene speiles ett-til-ett** (`input-streaming` →
+`input-available` → `approval-requested` → `approval-responded` →
+`output-available` / `output-error` / `output-denied`). En egen norsk
+enum ville betydd at en ny SDK-tilstand stille falt ut av UI-et.
+
+⛔ `output` rendres alltid som tekst, aldri som HTML — verktøy-output er data fra
+en modell og en database, og behandles som utrygt (guardrail L4, F6-14).
+
+### Godkjenn-før-agenten-skriver
+
+`ToolPartGodkjenning` er der spørsmålet stilles — **ikke der sperren ligger**.
+Sperren er `needsApproval: true` på verktøyet på serveren; AI SDK holder kallet
+tilbake til svaret kommer. «Avvis» er like framtredende som «Godkjenn»: et
+godkjenn-steg der det ene valget er en gråtone er ikke et valg, det er en
+bekreftelsesdialog.

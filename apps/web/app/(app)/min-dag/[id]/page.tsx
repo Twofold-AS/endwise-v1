@@ -1,20 +1,23 @@
 'use client';
 
-import { Bell, Car } from '@endwise/ui';
+import { Bell, Car, ClockArrowUp, Timer } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { useOnline } from '../../_lib/use-online';
 import {
   enqueueTransition,
   flushTransitions,
   pendingCount,
   subscribeQueue,
 } from '../../_lib/offline-queue';
+import { useOnline } from '../../_lib/use-online';
 import { BevelButton, CardShell } from '../../_shell/cards';
 import { estMinutes, fmtTime, STATUS_LABEL } from '../_status';
+
+/** PROTOTYPE: valgene mekanikeren kan be om. Ingen backend bak dem. */
+const EXTRA_TIME = [15, 30, 60] as const;
 
 // Sjekkliste er mock (tjeneste-sjekkliste-backend kommer); resten er ekte booking-data.
 const CHECKLIST = [
@@ -47,6 +50,10 @@ export default function JobbDetaljPage() {
   const [queued, setQueued] = useState(0);
   const [deviationOpen, setDeviationOpen] = useState(false);
   const [deviationText, setDeviationText] = useState('');
+  // PROTOTYPE: «Be om mer tid». Lokal tilstand, ingen server.
+  const [timeOpen, setTimeOpen] = useState(false);
+  const [extraMinutes, setExtraMinutes] = useState<number>(30);
+  const [timeSent, setTimeSent] = useState(false);
 
   // Hold kø-telleren i sync + flush når nettet kommer tilbake.
   useEffect(() => {
@@ -99,9 +106,15 @@ export default function JobbDetaljPage() {
 
   function sendDeviation() {
     const message = deviationText.trim();
-    if (!message) return;
+    // ⚠️ En GUARD, ikke `job!.id` og ikke `job?.id`.
+    //
+    // `job!.id` var en påstand linteren med rette klaget på. Men
+    // autofiksen til `job?.id` var verre enn problemet: da ville
+    // `bookingId` blitt `undefined`, og en manglende jobb hadde blitt en
+    // uforståelig serverfeil i stedet for et klikk som ikke gjør noe.
+    if (!message || !job) return;
     deviation.mutate(
-      { bookingId: job!.id, message },
+      { bookingId: job.id, message },
       {
         onSuccess: () => {
           setDeviationText('');
@@ -143,7 +156,89 @@ export default function JobbDetaljPage() {
           Ferdig
         </BevelButton>
       </div>
-      {transition.error && online && <p className="text-danger text-xs">{transition.error.message}</p>}
+      {transition.error && online && (
+        <p className="text-danger text-xs">{transition.error.message}</p>
+      )}
+
+      {/* ── PROTOTYPE: «Be om mer tid» ──────────────────────────────────
+          Mekanikeren oppdager underveis at jobben er større enn avtalt. I dag
+          er alternativene å ringe selgeren eller å bare bruke tiden — begge
+          gjør at kalenderen lyver resten av dagen.
+
+          ⚠️ PROTOTYPE-NIVÅ. Ingen backend: ingen rute tar imot en
+          tidsforespørsel, ingen kalender flyttes, ingen kunde varsles. Dette
+          viser MØNSTERET — knapp, valg av lengde, kvittering — så det kan
+          vurderes før det bygges. Bygges for alvor: egen mutasjon som varsler
+          selger (F3-04) og foreslår ny slutt-tid i kalenderen (F3-07). */}
+      <div className="flex flex-col gap-2">
+        {!timeOpen ? (
+          <button
+            type="button"
+            onClick={() => setTimeOpen(true)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-card font-medium text-fg text-sm active:bg-surface-2"
+          >
+            <Timer size={16} /> Be om mer tid
+          </button>
+        ) : (
+          <CardShell>
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-3">
+              <div className="flex items-center gap-2">
+                <ClockArrowUp size={16} className="shrink-0 text-fg-muted" />
+                <p className="text-label text-fg">Hvor mye mer trenger du?</p>
+                <span className="ml-auto inline-flex h-badge items-center rounded-badge bg-warn-soft px-2 font-medium text-[11px] text-warn">
+                  Prototype
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {EXTRA_TIME.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setExtraMinutes(m)}
+                    aria-pressed={extraMinutes === m}
+                    className={`h-10 min-w-16 rounded-md border px-3 font-medium text-sm transition-colors ${
+                      extraMinutes === m
+                        ? 'border-border-strong bg-sidebar-active text-fg'
+                        : 'border-border bg-bg text-fg-muted'
+                    }`}
+                  >
+                    +{m} min
+                  </button>
+                ))}
+              </div>
+
+              {timeSent ? (
+                <p className="text-[12px] text-success">
+                  Forespørsel om {extraMinutes} min sendt til selger ✓ (simulert)
+                </p>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTimeSent(true)}
+                    className="h-10 flex-1 rounded-md bg-primary font-medium text-primary-foreground text-sm"
+                  >
+                    Send forespørsel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTimeOpen(false)}
+                    className="h-10 rounded-md border border-border bg-card px-4 text-fg text-sm"
+                  >
+                    Avbryt
+                  </button>
+                </div>
+              )}
+
+              <p className="text-[11px] text-fg-muted leading-relaxed">
+                Prototype — ingenting sendes. Ekte flyt: selger får varsel (F3-04) og kan godkjenne,
+                så flyttes slutt-tiden i kalenderen (F3-07).
+              </p>
+            </div>
+          </CardShell>
+        )}
+      </div>
 
       {/* F7-05 — Meld avvik → sanntidsvarsel til selger. */}
       <div className="flex flex-col gap-2">
@@ -157,7 +252,7 @@ export default function JobbDetaljPage() {
           </button>
         ) : (
           <CardShell>
-            <div className="flex flex-col gap-2 rounded-lg bg-[#0e0e0e] p-3">
+            <div className="flex flex-col gap-2 rounded-lg bg-inset p-3">
               <textarea
                 value={deviationText}
                 onChange={(e) => setDeviationText(e.target.value)}
@@ -182,7 +277,9 @@ export default function JobbDetaljPage() {
                   Avbryt
                 </button>
               </div>
-              {deviation.isSuccess && <p className="text-primary text-xs">Avvik sendt til selger ✓</p>}
+              {deviation.isSuccess && (
+                <p className="text-primary text-xs">Avvik sendt til selger ✓</p>
+              )}
               {deviation.error && <p className="text-danger text-xs">{deviation.error.message}</p>}
             </div>
           </CardShell>
@@ -191,7 +288,7 @@ export default function JobbDetaljPage() {
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <CardShell>
-          <div className="flex flex-col gap-2 rounded-lg bg-[#0e0e0e] p-4">
+          <div className="flex flex-col gap-2 rounded-lg bg-inset p-4">
             <p className="font-semibold text-[13px] text-fg">Detaljer</p>
             <dl className="flex flex-col gap-1 text-[13px]">
               <Row label="Kunde" value={job.customerName ?? '—'} />
@@ -206,7 +303,7 @@ export default function JobbDetaljPage() {
         </CardShell>
 
         <CardShell>
-          <div className="flex flex-col gap-2 rounded-lg bg-[#0e0e0e] p-4">
+          <div className="flex flex-col gap-2 rounded-lg bg-inset p-4">
             <p className="font-semibold text-[13px] text-fg">Tjeneste-sjekkliste</p>
             <ul className="flex flex-col gap-1.5">
               {CHECKLIST.map((c) => (

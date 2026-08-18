@@ -1,106 +1,430 @@
 'use client';
 
-import { CircleUser, type LucideIcon, Settings } from '@endwise/ui';
+import {
+  ChevronDown,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuHeader,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  LogOut,
+  type LucideIcon,
+  Zap,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
+import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
-import { NewBadge, SupportCard } from './cards';
-import { itemsForRole, resolveActiveSectionKey, sectionsForRole } from './nav';
+import { BEVEL, NewBadge } from './cards';
+import { ContextSwitcher } from './context-switcher';
+import {
+  type ContextKey,
+  childrenForRole,
+  contextForPath,
+  contextsForRole,
+  isItemActive,
+  itemsForRole,
+  type NavItem,
+  navForContext,
+  QUICK_ACTIONS,
+  settingsForContext,
+} from './nav';
+import { useSidebarState } from './sidebar-state';
+import { TipCard } from './tip-card';
+
+const ROLE_LABEL: Record<string, string> = {
+  dealer_admin: 'Forhandler-admin',
+  dealer_staff: 'Ansatt',
+  endwise_admin: 'Endwise-admin',
+  customer: 'Kunde',
+};
+
+/** Nav-ikoner 16px. */
+const IKON = 16;
 
 /**
- * Sidebar — NIVÅ 2: underpunktene (rollefiltrert) for aktiv seksjon. Bunn:
- * Support-kort + profilrad med innlogget bruker/rolle + logg ut.
+ * F5-13 — DEN DOMINERENDE SIDEBAREN.
+ *
+ * Header på nøyaktig 56px med `border-b`, samme høyde som topbaren, så
+ * skillelinjene møtes på én y-verdi tvers over skjermen.
+ *
+ * ── Kollapset tilstand ─────────────────────────────────────────────────────
+ * Knappen bor i topbaren (ved siden av breadcrumben), tilstanden i
+ * `sidebar-state.tsx`. Kollapset viser headeren KUN merkeboksen, og nav-radene
+ * blir ikon-only med `title` som fallback. Ingen tekst som brekker, ingen
+ * ellipse — bare ikonene.
+ *
+ * ── To mønstre, med vilje (07.08.2026) ─────────────────────────────────────
+ * **Flyout ut til siden** er for HANDLINGER: «Handlinger» og «Settings». Korte
+ * lister du plukker fra og lukker igjen.
+ *
+ * **Inline utfolding** er for DESTINASJONER: Saker, Kunder, Analyse,
+ * AI-verktøy. De hører til strukturen du navigerer i, og skal ikke skjule
+ * hvor du står. Se `NavRow`.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session } = useSession();
-  const { role, isMechanic } = useOrgRole();
+  const { role, isMechanic, tenantName, devMode, canSwitchDemo } = useOrgRole();
+  const { collapsed } = useSidebarState();
 
-  const visible = sectionsForRole(role, isMechanic);
-  const activeKey = resolveActiveSectionKey(pathname);
-  const section = visible.find((s) => s.key === activeKey) ?? visible[0];
-  const items = section ? itemsForRole(section, role) : [];
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const pathContext = contextForPath(pathname);
+  const [chosen, setChosen] = useState<ContextKey | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathContext ER hele avhengigheten; setChosen er stabil
+  useEffect(() => {
+    setChosen(null);
+  }, [pathContext]);
+  const context = chosen ?? pathContext;
 
+  const contexts = contextsForRole(role, isMechanic, devMode);
+  const items = itemsForRole(navForContext(context), role);
+  // Settings-blokka er ulik per kontekst: forhandlerens konfigurasjon i
+  // forhandler-konteksten, dev-mode-bryteren i Endwise-admin. `null` i resten.
+  const settingsNav = settingsForContext(context);
+
+  const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: Boolean(role) });
+  const unread = useMemo(
+    () => (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0),
+    [threads.data],
+  );
+
+  // ⌘K åpner quick actions.
+  const [quickOpen, setQuickOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setQuickOpen((o) => !o);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  /**
+   * ⚠️ **HARD navigasjon, ikke `router.push`** (rettet 09.08.2026).
+   *
+   * `router.push` beholder dokumentet — og dermed hele React Query-cachen med
+   * forrige brukers kunder, meldinger og team. Logger noen andre inn på samme
+   * maskin, ser de et glimt av data de ikke har tilgang til før de nye
+   * spørringene lander. RLS hindrer at de HENTER noe nytt; den kan ikke tømme
+   * en cache som allerede ligger i minnet.
+   *
+   * En full sidelast river ned alt. Samme grep som innlogging og
+   * kontekstbytte bruker, av samme grunn.
+   */
   async function logout() {
     await authClient.signOut();
-    router.push('/signin' as Route);
+    window.location.assign('/signin');
   }
 
-  return (
-    <aside className="flex w-[216px] shrink-0 flex-col border-r border-border bg-bg px-3 py-4">
-      {section && (
-        <>
-          <p className="px-2.5 pb-1.5 font-medium text-fg-faint text-xs">{section.label}</p>
-          <nav aria-label={`${section.label} — underpunkter`} className="flex flex-col gap-0.5">
-            {items.map((item) => (
-              <Row
-                key={item.href}
-                icon={item.icon}
-                label={item.label}
-                href={item.href}
-                active={isActive(item.href)}
-                isNew={item.isNew}
-              />
-            ))}
-          </nav>
-        </>
-      )}
+  const search = searchParams?.toString() ?? '';
+  const settingsAktiv = settingsNav ? isItemActive(settingsNav, pathname) : false;
 
-      <div className="mt-auto flex flex-col gap-3 pt-4">
-        {!isMechanic && <SupportCard />}
-        <div className="flex items-center gap-2">
-          <CircleUser size={22} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-          <div className="flex min-w-0 flex-1 flex-col leading-tight">
-            <span className="truncate text-[13px] text-fg">
-              {session?.user?.name ?? 'Ikke innlogget'}
-            </span>
-            <span className="truncate text-[11px] text-fg-faint">{role ?? '—'}</span>
+  return (
+    <aside
+      className={`flex shrink-0 flex-col border-border border-r bg-sidebar transition-[width] duration-150 ${
+        collapsed ? 'w-[76px]' : 'w-[248px]'
+      }`}
+    >
+      {/* ── Header: 56px + border-b ──────────────────────────────────── */}
+      <div
+        className={`flex h-14 shrink-0 items-center border-border border-b ${
+          collapsed ? 'justify-center px-2' : 'px-3'
+        }`}
+      >
+        {/* F5-26: `dealerName` er ekte navn fra `tenants.name`. Placeholderen
+            «Endwise-forhandler» sto hardkodet her fram til 07.08.2026 — den var
+            ikke bare stygg, den var en påstand om hvor du er logget inn. */}
+        <ContextSwitcher
+          contexts={contexts}
+          active={context}
+          collapsed={collapsed}
+          dealerName={tenantName ?? '—'}
+          userName={session?.user?.name ?? 'Ikke innlogget'}
+          roleLabel={ROLE_LABEL[role ?? ''] ?? '—'}
+          canSwitchDemo={canSwitchDemo}
+          onSelect={setChosen}
+        />
+      </div>
+
+      {/* ── Innhold ──────────────────────────────────────────────────── */}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-3">
+        {context === 'forhandler' && (
+          <DropdownMenu open={quickOpen} onOpenChange={setQuickOpen}>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                style={BEVEL}
+                title={collapsed ? 'Handlinger (⌘K)' : undefined}
+                className={`flex h-control w-full items-center gap-2 rounded-control text-label transition hover:brightness-[0.98] focus-visible:outline-2 focus-visible:outline-ring ${
+                  collapsed ? 'justify-center px-0' : 'px-2.5'
+                }`}
+              >
+                <Zap size={IKON} strokeWidth={1.75} className="shrink-0 text-accent-strong" />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">Handlinger</span>
+                    <kbd className="rounded-badge border border-border/60 px-1.5 font-mono text-[11px] text-fg-muted">
+                      ⌘K
+                    </kbd>
+                  </>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" align="start" sideOffset={16} className="z-50">
+              <DropdownMenuHeader>Handlinger</DropdownMenuHeader>
+              {QUICK_ACTIONS.map((a) => (
+                <DropdownMenuItem key={a.href} onSelect={() => router.push(a.href as Route)}>
+                  <a.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+                  <span className="flex-1">{a.label}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        <nav
+          aria-label="Hovednavigasjon"
+          className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
+        >
+          {items.map((item) => (
+            <NavRow
+              key={item.key}
+              item={item}
+              pathname={pathname}
+              search={search}
+              role={role}
+              unread={unread}
+              collapsed={collapsed}
+            />
+          ))}
+          {items.length === 0 && !collapsed && (
+            <p className="px-2.5 py-6 text-[12px] text-fg-muted leading-relaxed">
+              {context === 'butikk'
+                ? 'Butikk er ikke designet ennå. Konteksten står her som en plassholder — ingen kulisse som later som den virker.'
+                : 'Tom foreløpig. Endwise-internt innhold bygges gradvis; dagens /admin-sider er urørt, men bevisst ikke dratt inn hit.'}
+            </p>
+          )}
+        </nav>
+
+        {/* ── Bunn: tips-kort → divider → Settings-flyout ─────────────── */}
+        {settingsNav && (
+          <div className="flex flex-col gap-3">
+            {/* Tips-kortet forklarer FORHANDLERENS begreper. I Endwise-admin
+                ville det vært å forklare oss selv vårt eget produkt. */}
+            {!collapsed && context === 'forhandler' && <TipCard />}
+
+            {/* Går helt ut i kantene — `-mx-3` opphever kolonnens padding. */}
+            <div className="-mx-3 h-px bg-border" />
+
+            {/* Settings er IKKE en side lenger (06.08.2026) — den er en flyout,
+                som alle andre punkter med underpunkter. Logg ut ligger nederst
+                i den, skilt med en egen linje: det er den ene handlingen i menyen
+                som ikke fører deg til en side. */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  title={collapsed ? settingsNav.label : undefined}
+                  className={`flex h-control w-full items-center gap-2.5 rounded-control text-label transition-colors ${
+                    collapsed ? 'justify-center px-0' : 'px-2.5'
+                  } ${settingsAktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-sidebar-active/60'}`}
+                >
+                  <Ikon icon={settingsNav.icon} active={settingsAktiv} />
+                  {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="end" sideOffset={16} className="z-50">
+                <DropdownMenuHeader>{settingsNav.label}</DropdownMenuHeader>
+                {childrenForRole(settingsNav, role).map((c) => (
+                  <DropdownMenuItem key={c.href} onSelect={() => router.push(c.href as Route)}>
+                    {c.icon && (
+                      <c.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+                    )}
+                    <span className="flex-1">{c.label}</span>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={logout}>
+                  <LogOut size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+                  <span className="flex-1">Logg ut</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <button
-            type="button"
-            onClick={logout}
-            aria-label="Logg ut"
-            title="Logg ut"
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
-          >
-            <Settings size={16} strokeWidth={1.75} />
-          </button>
-        </div>
+        )}
       </div>
     </aside>
   );
 }
 
-function Row({
-  icon: Icon,
-  label,
-  href,
-  active,
-  isNew,
+/** Er dette underpunktet det aktive? Query teller når underpunktet bærer query. */
+function isChildActive(href: string, pathname: string, search: string): boolean {
+  const [cPath, cQuery] = href.split('?');
+  if (cQuery) return pathname === cPath && search.includes(cQuery);
+  return pathname === cPath && !search.includes('visning=');
+}
+
+/**
+ * Én nav-rad, 32px.
+ *
+ * ── Underpunkter er INLINE igjen (07.08.2026, eiers beslutning) ────────────
+ * Flyout ut til siden var riktig for **handlinger** (Handlinger, Settings) —
+ * korte lister du plukker fra og lukker. Det var feil for **destinasjoner**:
+ * en flyout skjuler hvor du er, og du mister følelsen av hvor i navet du står.
+ *
+ * Derfor: rader med underpunkter folder seg ut UNDER seg selv i selve
+ * sidebaren. Raden er en knapp som åpner/lukker; underpunktene er lenkene.
+ * Åpen som standard når raden er aktiv, så du alltid ser deg selv i strukturen.
+ *
+ * ⚠️ **Ett unntak, av nødvendighet:** i kollapset sidebar (76px) er det ingen
+ * bredde å folde ut i. Der faller raden tilbake til flyouten. Alternativet
+ * ville vært å skjule underpunktene helt, og da er de utilgjengelige.
+ */
+function NavRow({
+  item,
+  pathname,
+  search,
+  role,
+  unread,
+  collapsed,
 }: {
-  icon: LucideIcon;
-  label: string;
-  href: string;
-  active: boolean;
-  isNew?: boolean;
+  item: NavItem;
+  pathname: string;
+  search: string;
+  role: string | null;
+  unread: number;
+  collapsed: boolean;
 }) {
+  const router = useRouter();
+  const active = isItemActive(item, pathname);
+  const children = childrenForRole(item, role as never);
+  const count = item.badge === 'unread' ? unread : 0;
+
+  // Åpen når raden er aktiv — men brukeren kan overstyre begge veier, og
+  // navigerer de videre innenfor samme punkt, blir det som de satte det.
+  const [open, setOpen] = useState(active);
+  useEffect(() => {
+    if (active) setOpen(true);
+  }, [active]);
+
+  const innhold = (
+    <>
+      <Ikon icon={item.icon} active={active} />
+      {!collapsed && (
+        <>
+          <span className="flex-1 truncate text-left">{item.label}</span>
+          {item.isNew && <NewBadge />}
+          {count > 0 && (
+            <span className="inline-flex h-badge items-center rounded-badge bg-accent-soft px-1.5 font-medium text-[11px] text-accent-strong tabular-nums">
+              {count}
+              <span className="sr-only"> uleste</span>
+            </span>
+          )}
+          {/* ⚠️ Pil-plassen er ALLTID her, også når raden ikke har underpunkter.
+              Før lå chevronen utenfor `innhold` og kun på rader med barn — da
+              havnet «New» 14px lenger inn på Innboks/Saker enn på Samarbeid, og
+              badgene sto ikke på linje. En tom, like brei plassholder koster
+              ingenting og gjør kolonnen rett. */}
+          <span className="grid w-3.5 shrink-0 place-items-center" aria-hidden>
+            {children.length > 0 && (
+              <ChevronDown size={14} strokeWidth={1.75} className="text-fg-muted" />
+            )}
+          </span>
+        </>
+      )}
+    </>
+  );
+
+  const radKlasse = `flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors ${
+    collapsed ? 'justify-center px-0' : 'px-2.5'
+  } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`;
+
+  if (children.length === 0) {
+    return (
+      <Link
+        href={item.href as Route}
+        aria-current={active ? 'page' : undefined}
+        title={collapsed ? item.label : undefined}
+        className={radKlasse}
+      >
+        {innhold}
+      </Link>
+    );
+  }
+
+  // Kollapset: ingen plass til inline. Flyout er fallback, ikke mønsteret.
+  if (collapsed) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button type="button" title={item.label} className={radKlasse}>
+            {innhold}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start" sideOffset={16} className="z-50">
+          <DropdownMenuHeader>{item.label}</DropdownMenuHeader>
+          {children.map((c) => (
+            <DropdownMenuItem key={c.href} onSelect={() => router.push(c.href as Route)}>
+              {c.icon && (
+                <c.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+              )}
+              <span className="flex-1">{c.label}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
   return (
-    <Link
-      href={href as Route}
-      aria-current={active ? 'page' : undefined}
-      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] leading-none transition-colors ${
-        active ? 'bg-surface-2 text-fg' : 'text-fg hover:bg-surface-2'
-      }`}
-    >
-      <span className="inline-flex text-fg-muted">
-        <Icon size={13} strokeWidth={1.75} />
-      </span>
-      <span className="flex-1 truncate">{label}</span>
-      {isNew && <NewBadge />}
-    </Link>
+    <div className="flex flex-col">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className={radKlasse}
+      >
+        {innhold}
+      </button>
+
+      {open && (
+        <div className="mt-0.5 flex flex-col gap-0.5 pb-1 pl-[26px]">
+          {children.map((c) => {
+            const childActive = isChildActive(c.href, pathname, search);
+            return (
+              <Link
+                key={c.href}
+                href={c.href as Route}
+                aria-current={childActive ? 'page' : undefined}
+                className={`flex h-8 items-center gap-2 rounded-control px-2 text-label transition-colors ${
+                  childActive
+                    ? 'bg-sidebar-active text-fg'
+                    : 'text-fg-muted hover:bg-sidebar-active/60 hover:text-fg'
+                }`}
+              >
+                {c.icon && <c.icon size={14} strokeWidth={1.75} className="shrink-0" />}
+                <span className="flex-1 truncate">{c.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Ikon({ icon: I, active }: { icon: LucideIcon; active: boolean }) {
+  return (
+    <span className={`inline-flex shrink-0 ${active ? 'text-fg' : 'text-fg-muted'}`}>
+      <I size={IKON} strokeWidth={1.75} />
+    </span>
   );
 }

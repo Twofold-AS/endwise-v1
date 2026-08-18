@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createDb, type Database, schema, sql, withTenant } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createBillingService, NotEntitledError } from '../src/billing/index.ts';
+import { modulesForSubscription } from '../src/billing/plans.ts';
 
 /**
  * F5-09 — Abonnement/entitlements: cross-tenant-angrep + entitlement-gate.
@@ -29,10 +30,10 @@ describeDb('F5-09: abonnement — isolasjon + entitlement-gate', () => {
     // B har et abonnement + en modul.
     await owner
       .insert(schema.billingCustomers)
-      .values({ tenantId: tenantB, planKey: 'proff', status: 'active' });
+      .values({ tenantId: tenantB, planKey: 'pro', status: 'active' });
     await owner
       .insert(schema.tenantModules)
-      .values({ tenantId: tenantB, moduleKey: 'ai-providers', enabled: true, plan: 'proff' });
+      .values({ tenantId: tenantB, moduleKey: 'ai-providers', enabled: true, plan: 'pro' });
   });
 
   afterAll(async () => {
@@ -66,20 +67,35 @@ describeDb('F5-09: abonnement — isolasjon + entitlement-gate', () => {
     ).rejects.toThrow();
   });
 
-  it('applyPlan(A) gir A sine moduler uten å røre B', async () => {
-    await createBillingService(app).applyPlan(tenantA, 'basis', { status: 'active' });
+  /**
+   * ⚠️ Oppdatert 08.08.2026 til nivåene fra Stripe-katalogen (START/PRO/
+   * ENTERPRISE). Testen sto igjen på `basis`/`proff` og forventet
+   * `['booking','messages','vegvesen']` — modeller fra før F0-16-skillet, der
+   * basisflatene også hadde rader i `tenant_modules`. Nå er basis definert ved
+   * at den IKKE har noen rad, så en plan som ikke finnes gir tom liste, og
+   * testen feilet på riktig grunnlag: den beskrev et produkt vi ikke selger.
+   *
+   * Forventningen er bevisst knyttet til `modulesForSubscription`, ikke til en
+   * håndskrevet liste: legges en modul til i START skal testen følge med, ikke
+   * begynne å lyve.
+   */
+  it('applySubscription(A) gir A sine moduler uten å røre B', async () => {
+    await createBillingService(app).applySubscription(tenantA, 'start', [], { status: 'active' });
     const aState = await createBillingService(app).getState(tenantA);
-    expect(aState.planKey).toBe('basis');
-    expect(aState.modules.map((m) => m.key).sort()).toEqual(['booking', 'messages', 'vegvesen']);
-    // B har fortsatt proff + ai-providers.
+    expect(aState.planKey).toBe('start');
+    expect(aState.modules.map((m) => m.key).sort()).toEqual(
+      [...modulesForSubscription('start')].sort(),
+    );
+    // B har fortsatt pro + ai-providers.
     const bState = await createBillingService(app).getState(tenantB);
-    expect(bState.planKey).toBe('proff');
+    expect(bState.planKey).toBe('pro');
     expect(bState.modules.some((m) => m.key === 'ai-providers')).toBe(true);
   });
 
   it('entitled modul kan skrus av/på av forhandleren selv', async () => {
-    await createBillingService(app).setModuleEnabled(tenantA, 'vegvesen', false);
+    // `widget` er i START — altså noe A faktisk ER entitled til.
+    await createBillingService(app).setModuleEnabled(tenantA, 'widget', false);
     const state = await createBillingService(app).getState(tenantA);
-    expect(state.modules.find((m) => m.key === 'vegvesen')?.enabled).toBe(false);
+    expect(state.modules.find((m) => m.key === 'widget')?.enabled).toBe(false);
   });
 });

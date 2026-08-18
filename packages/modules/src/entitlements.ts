@@ -8,6 +8,71 @@
  */
 export type ModuleKey = string;
 
+/**
+ * F0-16 — BASIS vs. TILLEGG. **Dette skillet er en sikkerhetsgrense, ikke en
+ * prisliste.**
+ *
+ * ── BASIS: ingen gate, ingen rad i `tenant_modules` ────────────────────────
+ * Et verksted uten booking, innboks, kunder eller LAGER er ikke et verksted.
+ * Disse rutene er `protectedProcedure`/`adminProcedure` og skal **aldri** få en
+ * `moduleProcedure`. At noe er gratis er ikke en forglemmelse — det er
+ * beslutningen.
+ *
+ * ⚠️ Listen er dokumentasjon, ikke håndheving: basis er definert ved at ingen
+ * gate finnes. Den står her så neste person ser hva som med vilje er utenfor.
+ */
+export const BASIS_MODULES = [
+  'booking', // Verkstedet, Saker, Kalender
+  'messages', // Innboks
+  'customers', // Kunder og kjøretøy
+  'inventory', // Lager (F2-09) — kjerne, ikke tillegg
+  'support', // Helpdesk
+  'settings', // Settings
+] as const;
+
+/**
+ * ── TILLEGG: krever en rad i `tenant_modules` med `enabled = true` ─────────
+ * Hver nøkkel her MÅ ha en `moduleProcedure(...)` på rutene sine. En nøkkel som
+ * står her uten gate er nøyaktig funnet CWE-862 beskrev: en modul vi selger uten
+ * at noen dør er låst.
+ */
+export const ADDON_MODULES = [
+  // ── Låses opp av NIVÅENE (start/pro/enterprise) ──
+  'widget', // Bookingwidget (START)
+  'resend', // Transaksjons-e-post (START)
+  'ai-support', // AI-assistent og -diagnose (PRO)
+  'ai-diagnose',
+  'ai-providers',
+  'quick', // Quick ERP-synk (PRO)
+  'vegvesen', // Regnr-oppslag (PRO)
+  'smart-hverdag', // Push, handlingsknapper, kalender, nettbrett, passkey (PRO)
+  'twilio', // SMS (PRO)
+  'ai-nettside', // AI-verktøy › Nettside (ENTERPRISE)
+  'ai-innsikt', // AI-verktøy › Innsikt (ENTERPRISE)
+  'quick-agent', // Agent mot Quick (ENTERPRISE)
+  'crm-lime', // Lime CRM (ENTERPRISE)
+  'webhooks', // Utgående webhooks (ENTERPRISE)
+
+  // ── Valgfrie TILLEGG, én pris = én nøkkel ──
+  'erp',
+  'white-label',
+  'sso',
+  'nyhetsbrev',
+  'finn',
+  'shop', // ⛔ blokkert — venter på Medusa-beslutning (F10-03)
+  'rapporter', // 🕓 ikke bygget
+  'analyse-pro', // 🕓 ikke bygget
+  'betaling-widget', // 🕓 ikke bygget (F8-05)
+  'samarbeid', // 🕓 backend finnes ikke (F5-17)
+] as const;
+
+export type AddonModule = (typeof ADDON_MODULES)[number];
+
+/** Er nøkkelen et betalt tillegg? Ukjente nøkler behandles som tillegg — fail-safe. */
+export function isAddon(key: ModuleKey): boolean {
+  return !(BASIS_MODULES as readonly string[]).includes(key);
+}
+
 export interface EntitlementsSource {
   listModules(tenantId: string): Promise<ModuleKey[]>;
 }

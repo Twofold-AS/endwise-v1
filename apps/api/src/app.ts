@@ -1,13 +1,16 @@
-import { createAuth } from '@endwise/auth';
+import { createAuth, TwoFactorRequiredError } from '@endwise/auth';
+import { TRPCError } from '@trpc/server';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import { createRequestContext } from './context.ts';
+import { chat } from './routes/chat.ts';
 import { cronCleanup } from './routes/cron/cleanup.ts';
 import { cronQuickPull } from './routes/cron/quick-pull.ts';
 import { cronRetention } from './routes/cron/retention.ts';
 import { health } from './routes/health.ts';
+import { invitasjon } from './routes/invitasjon.ts';
 import { stripeWebhook } from './routes/stripe-webhook.ts';
 import { widget } from './routes/widget/index.ts';
 import { appRouter } from './trpc/router.ts';
@@ -37,6 +40,14 @@ app.route('/cron/retention', cronRetention);
 app.route('/cron/quick-pull', cronQuickPull);
 // F4: OFFENTLIG kundewidget (publishable key + origin + kortlevd token, ikke sesjon).
 app.route('/widget', widget);
+// F6-18 — strømmende AI-chat for `useChat`. Sesjonsbasert, tenant-scopet,
+// modell valgt av agentens dataklasse. ⛔ Ikke Vercel AI Gateway.
+app.route('/chat', chat);
+// F1-10 — OFFENTLIG invitasjonsflate. Ingen sesjon: den som åpner lenka har
+// ingen konto ennå. Hemmeligheten ligger i tokenet, ikke i en cookie.
+// ⚠️ FLERTALL med vilje: SIDEN ligger på /invitasjon/[token] i Next. Delte de
+// sti, ville Next servert HTML der klienten venter JSON.
+app.route('/invitasjoner', invitasjon);
 
 // Interne flater (tRPC v11) — montert på Hono via fetch-adapteret
 app.all('/trpc/*', (c) =>
@@ -44,7 +55,24 @@ app.all('/trpc/*', (c) =>
     endpoint: '/trpc',
     req: c.req.raw,
     router: appRouter,
-    createContext: () => createRequestContext(c.req.raw.headers),
+    /**
+     * ⛔ F1-11 — `TwoFactorRequiredError` oversettes til en EGEN feilkode, ikke
+     * til 401. Forskjellen betyr noe for brukeren: 401 sender hen til
+     * innloggingsskjermen hen nettopp kom fra (og der virker passordet, så
+     * løkka går rundt), mens `TWO_FACTOR_REQUIRED` forteller klienten at det er
+     * OPPSETT som mangler. Uten dette skillet ville tvungen enrollment blitt en
+     * uendelig innloggingsløkke uten forklaring.
+     */
+    createContext: async () => {
+      try {
+        return await createRequestContext(c.req.raw.headers);
+      } catch (error) {
+        if (error instanceof TwoFactorRequiredError) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: error.code, cause: error });
+        }
+        throw error;
+      }
+    },
   }),
 );
 

@@ -43,11 +43,16 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
     "border border-border bg-transparent text-foreground hover:bg-primary/5",
 };
 
+// ⚠️ ENDRET FRA OPPSTRØMS (03.08.2026) — eierens designprinsipper:
+// knapper er 32px høye med 10px radius, ikke beUIs 40px pill. Satt her, i
+// komponenten, i stedet for som overstyring på hvert kallsted: en spec som må
+// huskes ved hver bruk, er en spec som brytes ved den femte bruken.
+// Se docs/UI-PAKKER.md §3.
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-xs gap-1.5 rounded-full",
-  md: "h-10 px-5 text-sm gap-2 rounded-full",
-  lg: "h-12 px-6 text-base gap-2 rounded-full",
-  icon: "h-8 w-8 rounded-lg",
+  sm: "h-7 px-2.5 text-label gap-1.5 rounded-control",
+  md: "h-control px-3.5 text-label gap-2 rounded-control",
+  lg: "h-row px-4 text-body gap-2 rounded-control",
+  icon: "size-control rounded-control",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

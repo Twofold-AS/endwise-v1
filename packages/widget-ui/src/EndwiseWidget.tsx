@@ -107,17 +107,34 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
               fontSize: 13,
             }}
           >
-            {t === 'chat' ? (locale === 'no' ? 'Chat' : 'Chat') : locale === 'no' ? 'Book time' : 'Book'}
+            {t === 'chat'
+              ? locale === 'no'
+                ? 'Chat'
+                : 'Chat'
+              : locale === 'no'
+                ? 'Book time'
+                : 'Book'}
           </button>
         ))}
       </div>
 
       {tab === 'chat' ? (
         <div style={{ display: 'flex', flexDirection: 'column', height: 380 }}>
-          <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: 12,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
             {messages.length === 0 && (
               <p style={{ fontSize: 13, color: 'var(--ew-fg-muted, #a1a1a1)' }}>
-                {locale === 'no' ? 'Spør oss om verkstedtjenester, priser eller ledig tid.' : 'Ask us about services, prices or availability.'}
+                {locale === 'no'
+                  ? 'Spør oss om verkstedtjenester, priser eller ledig tid.'
+                  : 'Ask us about services, prices or availability.'}
               </p>
             )}
             {messages.map((m, i) => (
@@ -138,7 +155,14 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 8, padding: 12, borderTop: '1px solid var(--ew-border, #262626)' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              padding: 12,
+              borderTop: '1px solid var(--ew-border, #262626)',
+            }}
+          >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -229,12 +253,19 @@ function BookingPanel({
   if (done) {
     return (
       <div style={{ padding: 16, fontSize: 14 }}>
-        ✅ {locale === 'no' ? 'Forespørsel sendt! Vi bekrefter på SMS.' : 'Request sent! We confirm by SMS.'}
+        ✅{' '}
+        {locale === 'no'
+          ? 'Forespørsel sendt! Vi bekrefter på SMS.'
+          : 'Request sent! We confirm by SMS.'}
       </div>
     );
   }
 
-  const label: CSSProperties = { fontSize: 12, color: 'var(--ew-fg-muted, #a1a1a1)', marginBottom: 4 };
+  const label: CSSProperties = {
+    fontSize: 12,
+    color: 'var(--ew-fg-muted, #a1a1a1)',
+    marginBottom: 4,
+  };
   const field: CSSProperties = {
     width: '100%',
     padding: '8px 10px',
@@ -326,7 +357,9 @@ function BookingPanel({
         </>
       )}
 
-      {error && <p style={{ color: 'var(--ew-danger, #f87171)', fontSize: 12, marginTop: 8 }}>{error}</p>}
+      {error && (
+        <p style={{ color: 'var(--ew-danger, #f87171)', fontSize: 12, marginTop: 8 }}>{error}</p>
+      )}
     </div>
   );
 }

@@ -1,5 +1,13 @@
 @import "tailwindcss";
 @import "@endwise/ui/theme.css";
+/*
+ * matrix-loaders (UI-PAKKER.md §4) er ren CSS-animasjon: komponentene setter
+ * bare klasser og CSS-variabler, keyframene bor i pakkens egen `styles.css`.
+ * Uten denne importen rendrer alle 93 loaderne som en stillestående prikkerute
+ * — ingen feilmelding, bare noe som ser ødelagt ut. Samme familie av felle som
+ * @source-fiksen under. Tatt i bruk første gang på AI-diagnose (F6-04).
+ */
+@import "@endwise/ui/matrix-loaders.css";
 
 /*
  * Tailwind v4 skanner som standard IKKE workspace-pakker (de ligger via

@@ -19,6 +19,10 @@ export class NotAParticipantError extends Error {
  * Bare RLS ville gitt hver ansatt tilgang til hver kundes samtale i huset.
  * Det er ikke en tenant-lekkasje, men det er fortsatt en lekkasje.
  */
+/** Kanalene en melding kan komme inn / gå ut på. Speiler `message_channel`. */
+export type MessageChannel = 'app' | 'sms' | 'email' | 'web';
+export type MessageDirection = 'inbound' | 'outbound';
+
 export function createMessagesModule(db: Database) {
   async function assertParticipant(
     tx: Parameters<Parameters<Database['transaction']>[0]>[0],
@@ -44,6 +48,10 @@ export function createMessagesModule(db: Database) {
       kind: 'customer_dealer' | 'mechanic_dealer' | 'dealer_admin';
       subject?: string;
       participantIds: string[];
+      /** Trådens primærkanal = svarkanalen. Default `app` (skrevet i Endwise). */
+      channel?: MessageChannel;
+      /** Kundens e-post/telefon i den eksterne kanalen. Kroken F6-16 henger på. */
+      externalRef?: string | null;
     }) {
       return withTenant(db, input.tenantId, async (tx) => {
         const [thread] = await tx
@@ -52,6 +60,8 @@ export function createMessagesModule(db: Database) {
             tenantId: input.tenantId,
             kind: input.kind,
             subject: input.subject ?? null,
+            channel: input.channel ?? 'app',
+            externalRef: input.externalRef ?? null,
           })
           .returning();
         if (!thread) throw new Error('Tråden ble ikke opprettet');
@@ -78,6 +88,19 @@ export function createMessagesModule(db: Database) {
       threadId: string;
       authorId: string;
       body: string;
+      /**
+       * Hvor meldingen kom inn / gikk ut.
+       *
+       * ⚠️ Default er `app`, ikke trådens kanal. En melding skrevet i panelet
+       * ER en app-melding, også i en e-posttråd — helt til utsendingen faktisk
+       * skjer over e-post (F6-16). Å arve trådens kanal her ville betydd at
+       * indikatoren løy om noe som ennå ikke er sendt.
+       */
+      channel?: MessageChannel;
+      direction?: MessageDirection;
+      /** Leverandørens ID. Idempotensnøkkel for innkommende webhooks (F6-16). */
+      externalId?: string | null;
+      externalRef?: string | null;
     }) {
       const message = await withTenant(db, input.tenantId, async (tx) => {
         await assertParticipant(tx, input.threadId, input.authorId);
@@ -89,6 +112,10 @@ export function createMessagesModule(db: Database) {
             threadId: input.threadId,
             authorId: input.authorId,
             body: input.body,
+            channel: input.channel ?? 'app',
+            direction: input.direction ?? 'outbound',
+            externalId: input.externalId ?? null,
+            externalRef: input.externalRef ?? null,
           })
           .returning();
         if (!created) throw new Error('Meldingen ble ikke skrevet');
@@ -145,6 +172,20 @@ export function createMessagesModule(db: Database) {
             kind: schema.threads.kind,
             subject: schema.threads.subject,
             lastMessageAt: schema.threads.lastMessageAt,
+            /** Svarkanalen. Se `messageChannelEnum`. */
+            channel: schema.threads.channel,
+            /**
+             * Kanalen SISTE melding kom på — ikke nødvendigvis trådens egen.
+             *
+             * Forskjellen er hele poenget for den som sitter i innboksen: en
+             * e-posttråd der siste melding kom som SMS betyr at kunden byttet
+             * vei, og at svaret kanskje bør følge etter.
+             */
+            sisteKanal: sql<string>`coalesce((
+              select m.channel from messages m
+              where m.thread_id = ${schema.threads.id}
+              order by m.created_at desc limit 1
+            ), ${schema.threads.channel})`,
             unread: sql<number>`(
               select count(*)::int from messages m
               where m.thread_id = ${schema.threads.id}
@@ -152,6 +193,22 @@ export function createMessagesModule(db: Database) {
                 and (${schema.threadParticipants.lastReadAt} is null
                      or m.created_at > ${schema.threadParticipants.lastReadAt})
             )`,
+            /**
+             * Hvem ELLERS er i tråden? (lagt til 08.08.2026 for F6-01)
+             *
+             * Innboksen viste «Samtale · Kunde» fordi den ikke hadde noe annet
+             * enn emnet å skrive. Motpartene er det innboksen egentlig sorterer
+             * etter i hodet på den som leser: du husker Kari, ikke emnefeltet.
+             *
+             * Bare IDer her — navnene slås opp av `directory.participants`, som
+             * er den ene ruta som har lov til å oversette en ID til et navn.
+             */
+            motparter: sql<string[]>`coalesce((
+              select array_agg(tp.participant_id)
+              from thread_participants tp
+              where tp.thread_id = ${schema.threads.id}
+                and tp.participant_id <> ${participantId}
+            ), '{}')`,
           })
           .from(schema.threads)
           .innerJoin(

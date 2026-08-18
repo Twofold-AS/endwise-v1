@@ -75,3 +75,86 @@ $$;
 -- App-rollen får LOV til å be om redaksjon — men ikke å gjøre den selv.
 -- (Funksjonen kjører som eier; app-rollen har fortsatt ingen UPDATE på audit_log.)
 grant execute on function redact_audit_log(text) to authenticated;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- F1-10 — Invitasjonsoppslag FØR vi vet hvilken forhandler det gjelder.
+--
+-- ── PROBLEMET ───────────────────────────────────────────────────────────────
+--
+-- `invitations` har RLS + FORCE RLS, tenant-isolert som alt annet. Det er
+-- riktig for lederens liste. Men den som ÅPNER en invitasjonslenke har ingen
+-- sesjon og ingen tenant — og `app.tenant_id` er derfor ikke satt.
+--
+-- Verifisert 16.08.2026: en unscopet `select` som app-rollen returnerer 0 rader.
+-- Policyen sammenligner mot `nullif(current_setting('app.tenant_id', true), '')`,
+-- som uten kontekst blir NULL, og `tenant_id = NULL` er aldri sant. Uten denne
+-- funksjonen ville hver eneste invitasjon sett ut som «ukjent token».
+--
+-- ── LØSNINGEN ───────────────────────────────────────────────────────────────
+--
+-- Ett smalt, kontrollert unntak. Funksjonen:
+--   * tar HASHEN, aldri tokenet. Kallstedet hasher; databasen ser aldri
+--     hemmeligheten, heller ikke i en logget spørring.
+--   * returnerer KUN de feltene godta-stien trenger. Ikke e-post til andre
+--     invitasjoner, ikke hvem som inviterte, ikke noe å iterere over.
+--   * returnerer kun ÅPNE invitasjoner. Utløpt, brukt eller tilbakekalt gir
+--     null — avvisningen ligger i SQL-en, ikke i en if-setning noen kan glemme.
+--   * kan ikke brukes til å ramse opp noe: uten en gyldig 256-bits hash finnes
+--     det ingen inngang. Det er et oppslag, ikke en spørring.
+--
+-- Den er altså ikke «RLS av» — den er «ett spørsmål, ett svar, og bare hvis du
+-- allerede kjenner hemmeligheten».
+
+create or replace function lookup_open_invitation(p_token_hash text)
+returns table (
+  id           uuid,
+  tenant_id    uuid,
+  email        text,
+  job_function text,
+  role         text,
+  expires_at   timestamptz
+)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select i.id, i.tenant_id, i.email, i.job_function::text, i.role, i.expires_at
+    from invitations i
+   where i.token_hash = p_token_hash
+     and i.accepted_at is null
+     and i.revoked_at  is null
+     and i.expires_at  > now()
+   limit 1;
+$$;
+
+-- ⛔ Merking av en invitasjon som BRUKT. Samme unntak, samme grunn: den som
+-- godtar har ingen tenant-kontekst ennå.
+--
+-- Engangs-garantien ligger HER, i `where accepted_at is null`. To samtidige
+-- forsøk på samme token gir én rad tilbake til den ene og null til den andre —
+-- databasen avgjør, ikke rekkefølgen på to HTTP-kall.
+create or replace function consume_invitation(p_token_hash text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_id uuid;
+begin
+  update invitations
+     set accepted_at = now()
+   where token_hash = p_token_hash
+     and accepted_at is null
+     and revoked_at  is null
+     and expires_at  > now()
+  returning id into v_id;
+
+  return v_id;  -- null = fantes ikke, var brukt, tilbakekalt eller utløpt
+end;
+$$;
+
+grant execute on function lookup_open_invitation(text) to authenticated;
+grant execute on function consume_invitation(text) to authenticated;

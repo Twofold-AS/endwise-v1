@@ -1,8 +1,7 @@
-import { and, desc, eq, gte, ilike, lte, or, schema, withTenant } from '@endwise/db';
+import { and, desc, eq, gt, gte, ilike, lt, lte, or, schema, withTenant } from '@endwise/db';
 import {
   createBooking,
   InvalidTransitionError,
-  listBookings,
   SlotConflictError,
   transitionBooking,
 } from '@endwise/modules/booking';
@@ -174,7 +173,20 @@ export const bookingsRouter = router({
     }),
   ),
 
-  /** F3-03 — Kalender-API (rå rader i et tidsvindu). */
+  /**
+   * F3-03 / F3-07 — Kalender: bookinger som OVERLAPPER et tidsvindu.
+   *
+   * ⚠️ **Beriket fra 08.08.2026.** Ruta returnerte tidligere rå
+   * `bookings`-rader (`listBookings` i booking-motoren). Det holdt for et API,
+   * men ikke for en kalender: en kloss uten regnr, tjeneste og mekaniker er et
+   * farget rektangel. Nå brukes samme `enrichedColumns` som `list`, så begge
+   * visningene av samme data faktisk viser det samme.
+   *
+   * Overlapp-vinduet er `startsAt < to AND endsAt > from` — ikke `startsAt`
+   * mellom fra og til. En jobb som begynte i går kl. 16 og varer til i dag skal
+   * være med i dagens kalender; ellers forsvinner den nettopp den dagen den er
+   * i veien.
+   */
   calendar: protectedProcedure
     .input(
       z.object({
@@ -183,5 +195,27 @@ export const bookingsRouter = router({
         mechanicId: z.uuid().optional(),
       }),
     )
-    .query(({ ctx, input }) => listBookings(ctx.db, ctx.tenantId, input)),
+    .query(({ ctx, input }) =>
+      withTenant(ctx.db, ctx.tenantId, (tx) =>
+        tx
+          .select(enrichedColumns)
+          .from(schema.bookings)
+          .leftJoin(schema.customers, eq(schema.customers.id, schema.bookings.customerId))
+          .leftJoin(schema.vehicles, eq(schema.vehicles.id, schema.bookings.vehicleId))
+          .innerJoin(schema.mechanics, eq(schema.mechanics.id, schema.bookings.mechanicId))
+          .innerJoin(
+            schema.serviceVersions,
+            eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
+          )
+          .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
+          .where(
+            and(
+              lt(schema.bookings.startsAt, input.to),
+              gt(schema.bookings.endsAt, input.from),
+              input.mechanicId ? eq(schema.bookings.mechanicId, input.mechanicId) : undefined,
+            ),
+          )
+          .orderBy(schema.bookings.startsAt),
+      ),
+    ),
 });

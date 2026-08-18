@@ -88,7 +88,7 @@ export default function QuickPage() {
 
       {/* Konfig-kort */}
       <CardShell>
-        <div className="flex flex-1 flex-col gap-4 rounded-lg bg-[#0e0e0e] p-5">
+        <div className="flex flex-1 flex-col gap-4 rounded-lg bg-inset p-5">
           <div className="flex flex-col gap-1">
             <span className="font-semibold text-[13px] text-fg">Tilkobling</span>
             <p className="text-[12px] text-fg-faint leading-snug">
@@ -161,7 +161,7 @@ export default function QuickPage() {
 
       {/* Pull-kort (Quick → Endwise) — dominerer */}
       <CardShell>
-        <div className="flex flex-1 flex-col gap-3 rounded-lg bg-[#0e0e0e] p-5">
+        <div className="flex flex-1 flex-col gap-3 rounded-lg bg-inset p-5">
           <div className="flex items-center gap-2">
             <RefreshCw size={15} className="text-primary" />
             <span className="font-semibold text-[13px] text-fg">Hent fra Quick (pull)</span>
@@ -221,7 +221,7 @@ export default function QuickPage() {
 
       {/* Push-kort (Endwise → Quick) — bevisst, adskilt, kommer */}
       <CardShell>
-        <div className="flex flex-1 flex-col gap-3 rounded-lg bg-[#0e0e0e] p-5">
+        <div className="flex flex-1 flex-col gap-3 rounded-lg bg-inset p-5">
           <div className="flex items-center gap-2">
             <Upload size={15} className="text-fg-muted" />
             <span className="font-semibold text-[13px] text-fg">Send til Quick (push)</span>
@@ -269,7 +269,7 @@ function ConflictsCard({
 }) {
   return (
     <CardShell>
-      <div className="flex flex-1 flex-col gap-3 rounded-lg bg-[#0e0e0e] p-5">
+      <div className="flex flex-1 flex-col gap-3 rounded-lg bg-inset p-5">
         <div className="flex items-center gap-2">
           <TriangleAlert size={15} className="text-danger" />
           <span className="font-semibold text-[13px] text-fg">Synk-konflikter</span>

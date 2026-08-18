@@ -37,7 +37,9 @@ describe('widget-token (HS256)', () => {
 
   it('alg=none-forsøk avvises', () => {
     const head = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
-    const body = Buffer.from(JSON.stringify({ tid: 'a', cid: 'c', exp: 9e9 })).toString('base64url');
+    const body = Buffer.from(JSON.stringify({ tid: 'a', cid: 'c', exp: 9e9 })).toString(
+      'base64url',
+    );
     expect(() => verifyWidgetToken(`${head}.${body}.`, secret)).toThrow(WidgetTokenError);
   });
 });

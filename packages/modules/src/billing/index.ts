@@ -1,15 +1,47 @@
 import { and, type Database, eq, schema, sql, withTenant } from '@endwise/db';
 import type { ModuleKey } from '../entitlements.ts';
-import { modulesForPlan } from './plans.ts';
+import { modulesForSubscription } from './plans.ts';
 
+export * from './katalog.ts';
 export * from './plans.ts';
 
 export type BillingState = {
+  /** Nivået: start | pro | enterprise. */
   planKey: string | null;
   status: string;
   currentPeriodEnd: Date | null;
-  /** Moduler tenanten HAR (fra plan), med av/på-tilstand. */
+  /** Moduler tenanten HAR (nivå + tillegg), med av/på-tilstand. */
   modules: { key: ModuleKey; enabled: boolean }[];
+};
+
+/**
+ * F5-32 — **14 DAGERS NÅDE ved mislykket betaling.** Eiers beslutning 07.08.2026.
+ *
+ * Basis fortsetter ALLTID — Verkstedet, Saker, Kunder, Lager, Innboks, Helpdesk
+ * og Settings har ingen gate og berøres ikke. Det er TILLEGGENE som fryses, og
+ * først etter 14 dager i `past_due`.
+ *
+ * Å stenge et verksted midt i arbeidsdagen fordi et kort utløp er dårlig
+ * produkt; 14 dager rekker for et nytt kort, og er kort nok til at det ikke blir
+ * gratis drift.
+ *
+ * ⚠️ **Parameteren er satt, jobben er ikke bygget.** Ingenting fryser noe i dag
+ * — se `erUtenforNade()` og F5-32. Cron-steget kommer senere.
+ */
+export const PAST_DUE_NADE_DAGER = 14;
+
+/** Har nåden løpt ut? Ren funksjon — ingen leser den ennå (F5-32). */
+export function erUtenforNade(pastDueSince: Date | null, naa: Date): boolean {
+  if (!pastDueSince) return false;
+  return (naa.getTime() - pastDueSince.getTime()) / 86_400_000 > PAST_DUE_NADE_DAGER;
+}
+
+/** Stripe-feltene webhooken pakker ut og sender videre. */
+export type AbonnementOpts = {
+  status?: string;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  currentPeriodEnd?: Date | null;
 };
 
 export class NotEntitledError extends Error {
@@ -52,21 +84,28 @@ export function createBillingService(db: Database) {
     },
 
     /**
-     * Sett tenantens plan → synk entitlements. Moduler i planen sikres (enabled
-     * beholdes hvis raden finnes); moduler UTENFOR planen fjernes (nedgradering).
-     * Kalles fra webhooken når abonnementet endres.
+     * Sett tenantens NIVÅ + TILLEGG → synk entitlements.
+     *
+     * ⚠️ **Kalles KUN fra den signaturverifiserte Stripe-webhooken.** Ingen
+     * klient-sti når hit; entitlements er en konsekvens av en betaling, ikke av
+     * et knappetrykk.
+     *
+     * ── Nedgradering: `enabled = false`, ikke DELETE (endret 07.08.2026) ──
+     * Tidligere slettet denne rader for moduler utenfor planen. Det var feil på
+     * to måter: (1) dataene modulen eier blir stående uansett, så sletting av
+     * entitlementet skjuler bare at forhandleren HAR hatt den, og (2) kommer de
+     * tilbake, mistet vi historikken om hva de en gang betalte for.
+     *
+     * Nå deaktiveres raden i stedet. `moduleProcedure` leser `enabled = true`,
+     * så virkningen er identisk — men den er reversibel og etterlater et spor.
      */
-    async applyPlan(
+    async applySubscription(
       tenantId: string,
       planKey: string,
-      opts: {
-        status?: string;
-        stripeCustomerId?: string | null;
-        stripeSubscriptionId?: string | null;
-        currentPeriodEnd?: Date | null;
-      } = {},
+      tilleggKeys: readonly string[] = [],
+      opts: AbonnementOpts = {},
     ): Promise<void> {
-      const wanted = modulesForPlan(planKey);
+      const wanted = modulesForSubscription(planKey, tilleggKeys);
       await withTenant(db, tenantId, async (tx) => {
         await tx
           .insert(schema.billingCustomers)
@@ -96,25 +135,34 @@ export function createBillingService(db: Database) {
             },
           });
 
-        // Sikre planens moduler (behold enabled hvis finnes).
+        // Aktiver alt abonnementet gir. `enabled: true` settes eksplisitt —
+        // en tidligere nedgradert modul skal skrus PÅ igjen ved oppgradering.
         for (const key of wanted) {
           await tx
             .insert(schema.tenantModules)
-            .values({ tenantId, moduleKey: key, plan: planKey })
+            .values({ tenantId, moduleKey: key, plan: planKey, enabled: true })
             .onConflictDoUpdate({
               target: [schema.tenantModules.tenantId, schema.tenantModules.moduleKey],
-              set: { plan: planKey, updatedAt: sql`now()` },
+              set: { plan: planKey, enabled: true, updatedAt: sql`now()` },
             });
         }
-        // Fjern moduler som ikke lenger er i planen (nedgradering).
+        // Nedgradering: deaktiver, ikke slett. Se doc-kommentaren over.
         for (const m of await tx
           .select({ key: schema.tenantModules.moduleKey })
           .from(schema.tenantModules)) {
           if (!wanted.includes(m.key)) {
-            await tx.delete(schema.tenantModules).where(eq(schema.tenantModules.moduleKey, m.key));
+            await tx
+              .update(schema.tenantModules)
+              .set({ enabled: false, updatedAt: sql`now()` })
+              .where(eq(schema.tenantModules.moduleKey, m.key));
           }
         }
       });
+    },
+
+    /** @deprecated Bruk `applySubscription` — den tar også tillegg. */
+    async applyPlan(tenantId: string, planKey: string, opts: AbonnementOpts = {}): Promise<void> {
+      await this.applySubscription(tenantId, planKey, [], opts);
     },
 
     /** Marker status (f.eks. past_due/canceled) uten å endre plan-moduler. */

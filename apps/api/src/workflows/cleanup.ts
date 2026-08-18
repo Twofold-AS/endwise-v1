@@ -1,3 +1,4 @@
+import { countSessions, createDb, purgeExpiredSessions } from '@endwise/db';
 import { FatalError, RetryableError } from 'workflow';
 
 /**
@@ -11,15 +12,43 @@ import { FatalError, RetryableError } from 'workflow';
  *   FatalError     = permanent feil    -> til DLQ-steget, ingen retry
  */
 
+/**
+ * F1-11/F1-12 — sletter DØDE sesjonsrader.
+ *
+ * ⚠️ Dette er hygiene, ikke en sikkerhetsmekanisme. En utløpt rad gir ingen
+ * tilgang — `requireSession` avviser den lenge før den slettes her. Uten jobben
+ * hoper de seg bare opp: dev-basen hadde 85 rader der samtlige var utløpt.
+ *
+ * ⛔ Sletter KUN rader som allerede er døde (passert idle-vindu eller absolutt
+ * maks-levetid). Den rører aldri en levende sesjon — en «opprydding» som
+ * logger ut folk midt i arbeidsdagen er et driftsavbrudd, ikke vedlikehold.
+ *
+ * ⚠️ `olderThanDays` gjelder IKKE her, med vilje: en sesjon som utløp for ti
+ * minutter siden er like død som en fra i fjor, og å beholde den i 30 dager
+ * ville bare vært å ta vare på IP-adresser og user-agents lenger enn nødvendig
+ * (F14-03, dataminimering). Parameteren styrer de andre oppryddingene.
+ */
 async function purgeExpiredRows(olderThanDays: number): Promise<number> {
   'use step';
   if (olderThanDays < 1) {
     throw new FatalError('olderThanDays må være >= 1');
   }
   try {
-    // TODO(F1+): faktisk sletting via @endwise/db når tabellene finnes.
-    return 0;
+    const url = process.env.APP_DATABASE_URL ?? process.env.DATABASE_URL;
+    if (!url) throw new FatalError('APP_DATABASE_URL (eller DATABASE_URL) mangler');
+
+    const db = createDb(url);
+    const for_ = await countSessions(db);
+    const slettet = await purgeExpiredSessions(db);
+    console.info(
+      `[cleanup] sesjoner: ${for_.totalt} totalt, ${for_.utlopte} utløpt → slettet ${slettet}`,
+    );
+
+    // TODO(F1+): øvrige tabeller kobles på her etter hvert som de får
+    // retensjonsregler. Sesjonene er den første som faktisk hopet seg opp.
+    return slettet;
   } catch (error) {
+    if (error instanceof FatalError) throw error;
     throw new RetryableError(`Opprydding feilet: ${String(error)}`, { retryAfter: '5m' });
   }
 }

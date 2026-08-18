@@ -1,4 +1,5 @@
 export * from './agent.ts';
+export * from './chat.ts';
 export * from './context.ts';
 export * from './escalation.ts';
 export * from './loop.ts';

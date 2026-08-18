@@ -35,7 +35,7 @@ export default function VarslerPage() {
 
       {expiring.map((c) => (
         <CardShell key={c.skillKey}>
-          <div className="flex items-start gap-3 rounded-lg bg-[#0e0e0e] p-4">
+          <div className="flex items-start gap-3 rounded-lg bg-inset p-4">
             <ShieldCheck size={16} className="mt-0.5 shrink-0 text-warn" />
             <div>
               <p className="font-semibold text-[13px] text-fg">Sertifisering utløper snart</p>
@@ -53,7 +53,7 @@ export default function VarslerPage() {
       {active.map((j) => (
         <Link key={j.id} href={`/min-dag/${j.id}` as Route} className="block">
           <CardShell>
-            <div className="flex items-start gap-3 rounded-lg bg-[#0e0e0e] p-4">
+            <div className="flex items-start gap-3 rounded-lg bg-inset p-4">
               <Car size={16} className="mt-0.5 shrink-0 text-primary" />
               <div>
                 <p className="font-semibold text-[13px] text-fg">Jobb pågår</p>

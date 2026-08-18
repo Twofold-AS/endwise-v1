@@ -1,7 +1,7 @@
 /*
  * F0-12 — Tailwind 4 @theme-broen.
  * To lag, bevisst adskilt:
- *   1) Endwise-tokens (F0-11)  — --ew-*  (mørk/lys/aksent, fra TheFold-base)
+ *   1) Endwise-tokens (F0-11)  — --ew-*  (lys/mørk/aksent/mål, fra eierens spec)
  *   2) shadcn/ui-semantikk     — --primary, --ring, --destructive …
  * shadcn-komponentene leser (2). Vi lar (2) peke inn i (1), slik at det finnes
  * ÉN sannhet for farge: widget-tokens. Bytt verdiene der, ikke her.
@@ -16,7 +16,7 @@
   --foreground: var(--ew-fg);
   --card: var(--ew-surface);
   --card-foreground: var(--ew-fg);
-  --popover: var(--ew-surface-2);
+  --popover: var(--ew-surface);
   --popover-foreground: var(--ew-fg);
   --primary: var(--ew-accent);
   --primary-foreground: var(--ew-accent-fg);
@@ -27,29 +27,37 @@
   --accent: var(--ew-surface-2);
   --accent-foreground: var(--ew-fg);
   --destructive: var(--ew-danger);
-  --destructive-foreground: var(--ew-fg);
+  --destructive-foreground: var(--ew-bg);
   --border: var(--ew-border);
   --input: var(--ew-border-strong);
-  --ring: var(--ew-accent);
-  --radius: var(--ew-radius-md);
+  --ring: var(--ew-accent-strong);
+  --radius: var(--ew-radius-control);
 }
 
 @theme inline {
-  /* Endwise-tokens */
+  /* ── Farge ─────────────────────────────────────────────────────────────── */
   --color-bg: var(--ew-bg);
+  --color-sidebar: var(--ew-sidebar);
+  --color-sidebar-active: var(--ew-sidebar-active);
   --color-surface: var(--ew-surface);
   --color-surface-2: var(--ew-surface-2);
+  --color-inset: var(--ew-inset);
   --color-fg: var(--ew-fg);
   --color-fg-muted: var(--ew-fg-muted);
   --color-fg-faint: var(--ew-fg-faint);
   --color-border-strong: var(--ew-border-strong);
-  --color-accent-cream: var(--ew-accent);
+  --color-accent-strong: var(--ew-accent-strong);
+  --color-accent-soft: var(--ew-accent-soft);
   --color-accent-dim: var(--ew-accent-dim);
   --color-warn: var(--ew-warn);
+  --color-warn-soft: var(--ew-warn-soft);
   --color-danger: var(--ew-danger);
+  --color-danger-soft: var(--ew-danger-soft);
   --color-success: var(--ew-success);
+  --color-success-soft: var(--ew-success-soft);
   --color-glass: var(--ew-glass-bg);
   --color-glass-border: var(--ew-glass-border);
+  --color-switch-on: var(--ew-switch-track-on);
 
   /* shadcn-tokens */
   --color-background: var(--background);
@@ -73,22 +81,74 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  /* ── Radius ────────────────────────────────────────────────────────────── */
   --radius-sm: var(--ew-radius-sm);
   --radius-md: var(--ew-radius-md);
   --radius-lg: var(--ew-radius-lg);
   --radius-xl: var(--ew-radius-xl);
   --radius-pill: var(--ew-radius-pill);
+  --radius-control: var(--ew-radius-control); /* 10px — knapper */
+  --radius-badge: var(--ew-badge-radius); /* 6px */
+
+  /* ── Mål (eierens spec) ────────────────────────────────────────────────── */
+  --spacing-control: var(--ew-control-h); /* h-control  → 32px */
+  --spacing-row: var(--ew-row-h); /* h-row      → 40px */
+  --spacing-row-store: var(--ew-row-h-store); /* h-row-store → 44px */
+  --spacing-badge: var(--ew-badge-h); /* h-badge    → 20px */
+
+  /*
+   * ── Typeskala ─────────────────────────────────────────────────────────────
+   * Tre roller, ikke ni. Størrelse, linjehøyde OG vekt er bakt inn i utilityen,
+   * slik at `text-title` alltid er 16/20/500 — det finnes ikke en variant der
+   * noen glemte vekten. Linjehøyden på brødtekst (20px) er den ene utledede
+   * verdien; de øvrige er gitt.
+   */
+  --text-title: 16px;
+  --text-title--line-height: 20px;
+  --text-title--font-weight: 500;
+  --text-label: 13px;
+  --text-label--line-height: 16px;
+  --text-label--font-weight: 500;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-body--font-weight: 400;
 
   --font-sans: var(--ew-font-sans);
   --font-mono: var(--ew-font-mono);
 }
 
 /*
- * Logo-farging per tema. Mørkt tema: logoen inverteres til hvit (som TheFold),
- * siden den grønne #1ED27D-logoen mot svart topbar ville konkurrert med den
- * grønne aksenten ellers på skjermen. Lyst tema: logoen vises i sin naturlige
- * grønne farge (ingen filter).
+ * Badge — eierens spec, som én klasse i stedet for seks utilities gjentatt
+ * overalt. 20px høyde, 6px radius, #CAFACE fyll, #15B042 tekst.
+ */
+@utility badge-spec {
+  display: inline-flex;
+  align-items: center;
+  height: var(--ew-badge-h);
+  padding-inline: 8px;
+  border-radius: var(--ew-badge-radius);
+  background: var(--ew-accent-soft);
+  color: var(--ew-accent-strong);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/*
+ * Logo-farging per tema. Lyst tema (standard): logoen står i sin naturlige
+ * grønne farge. Mørkt tema: inverteres til hvit, ellers konkurrerer den med
+ * den grønne aksenten ellers på skjermen.
  */
 [data-theme="dark"] .logo-invert {
+  filter: brightness(0) invert(1);
+}
+
+/*
+ * Logoen i sidebarens merkeboks. Boksen er ALLTID svart — i begge temaer — så
+ * logoen skal alltid være hvit. Derfor en egen klasse og ikke `.logo-invert`,
+ * som er tema-betinget. Kilden `logo.svg` er svart (F5-21); dette snur den.
+ */
+.logo-on-dark {
   filter: brightness(0) invert(1);
 }

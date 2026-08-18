@@ -19,13 +19,18 @@ import { PwaRegister } from './pwa-register';
  * F7-01 — Mekanikerens mobil-shell: bottom-nav med 5 faner + offline-banner.
  * Erstatter admin-sidebaren for `dealer_staff`-mekanikere (mobil-først). Store
  * trykkmål, ingen tabeller. Rollegatingen skjer i (app)/layout; her er UI-et.
+ *
+ * ⚠️ Siste fane heter «Meg» (F7-06, 07.08.2026), ikke «Profil». Den er
+ * mekanikerens PERSONLIGE flate — tema, varsler, egen profil og sikkerhet — og
+ * har ingenting med forhandlerens Settings å gjøre. Navnet er valgt for å gjøre
+ * det skillet tydelig også for den som bare ser bunnmenyen.
  */
 const TABS: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: '/min-dag' as Route, label: 'I dag', icon: CalendarCheck },
   { href: '/min-dag/timeplan' as Route, label: 'Timeplan', icon: CalendarDays },
   { href: '/min-dag/varsler' as Route, label: 'Varsler', icon: Bell },
   { href: '/min-dag/kompetanse' as Route, label: 'Kompetanse', icon: ShieldCheck },
-  { href: '/min-dag/profil' as Route, label: 'Profil', icon: CircleUser },
+  { href: '/min-dag/meg' as Route, label: 'Meg', icon: CircleUser },
 ];
 
 export function MobileShell({ children }: { children: ReactNode }) {

@@ -53,6 +53,13 @@ describeDb('booking-motor (F3-01)', () => {
     await owner.delete(schema.serviceVersions).where(sql`tenant_id = ${tenantId}`);
     await owner.delete(schema.services).where(sql`tenant_id = ${tenantId}`);
     await owner.delete(schema.mechanics).where(sql`tenant_id = ${tenantId}`);
+    /**
+     * ⚠️ Revisjonsloggen må ryddes FØR tenanten. Booking-overgangene skriver
+     * `audit_log`-rader (F0-13) med en FK til `tenants`, så en `delete from
+     * tenants` uten dette feiler på fremmednøkkelen — og det er FK-en som gjør
+     * jobben sin: en revisjonslogg skal ikke kunne bli foreldreløs i stillhet.
+     */
+    await owner.delete(schema.auditLog).where(sql`tenant_id = ${tenantId}`);
     await owner.delete(schema.tenants).where(sql`id = ${tenantId}`);
   });
 

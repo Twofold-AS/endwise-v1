@@ -1,7 +1,7 @@
 import { signWidgetToken } from '@endwise/modules/widget';
 import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { widgetAuth, type WidgetVars } from '../src/lib/widget-auth.ts';
+import { type WidgetVars, widgetAuth } from '../src/lib/widget-auth.ts';
 
 /**
  * F4-02 — Widget-auth-middleware. In-memory Hono (`app.request`), ingen Docker.

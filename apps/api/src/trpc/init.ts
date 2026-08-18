@@ -1,3 +1,5 @@
+import { and, eq, schema, withTenant } from '@endwise/db';
+import type { AddonModule } from '@endwise/modules';
 import { initTRPC, TRPCError } from '@trpc/server';
 import type { AppContext } from '../context.ts';
 
@@ -34,6 +36,98 @@ export const adminProcedure = protectedProcedure.use(function isAdmin(opts) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: `Rollen «${ctx.role}» kan ikke endre dette`,
+    });
+  }
+  return opts.next({ ctx });
+});
+
+/**
+ * F5-26 — STRENGERE ENN `adminProcedure`, og det er hele poenget.
+ *
+ * `adminProcedure` slipper inn **både** `dealer_admin` og `endwise_admin`. Det
+ * er riktig for «styr ditt eget verksted». Det er feil for alt som gjelder
+ * PLATTFORMEN: opprette forhandlere, skru på dev-mode, endre globale flagg.
+ * En forhandler skal ikke kunne opprette forhandlere.
+ *
+ * Fram til nå har hver slik rute gjentatt `if (ctx.role !== 'endwise_admin')`
+ * inne i seg selv (se `flags.setGlobal`). Det virker, men en sjekk som må
+ * huskes er en sjekk som en dag glemmes. Her er den en type-grense i stedet.
+ */
+/**
+ * F0-16 — MODUL-GATEN. **Dette lukker CWE-862 (Missing Authorization).**
+ *
+ * RLS svarer på «hvilken tenants rader?». Den vet ingenting om betaling. Fram
+ * til nå håndhevet vi entitlements KUN på AI-agent-stien (`assertEntitled` i
+ * agent-runtime) — ingen tRPC-prosedyre sjekket modul. En `dealer_admin` uten
+ * Butikk- eller Quick-modulen fikk svar ved å kalle ruten direkte; UI-et skjulte
+ * bare knappen, og en gjemt knapp er ikke en sperre.
+ *
+ * ── Tre lag, og de feiler ULIKT ───────────────────────────────────────────
+ *
+ *   1. **Entitlement** — `tenant_modules` har nøkkelen med `enabled = true`.
+ *      Leses fra DB gjennom `withTenant`, **aldri fra klienten**.
+ *   2. **Rolle** — `protectedProcedure` under; skriveruter legger
+ *      `adminProcedure` på toppen. Å ha kjøpt en modul er ikke det samme som å
+ *      ha lov til å endre den.
+ *   3. **Skop** — `ctx.tenantId` kommer fra sesjonen (`assertMember`), og
+ *      spørringen kjører i `withTenant`. Ingen rute tar imot en tenant-id.
+ *
+ * ⚠️ **Fail-safe: feiler oppslaget, er svaret NEI.** En tom modulliste er
+ * trygg; en antatt-full er det ikke. Samme mønster som `agent.ts` allerede
+ * bruker med sin `.catch(() => [])`.
+ *
+ * ⛔ **Legg ALDRI denne på en basis-rute.** Verkstedet, Innboks, Saker, Kunder,
+ * Lager, Helpdesk og Settings er kjerne — se `BASIS_MODULES` i
+ * `packages/modules/src/entitlements.ts`. Et verksted som ikke får se sitt eget
+ * lager fordi et kort utløp, er et produkt som har misforstått seg selv.
+ */
+export function moduleProcedure(moduleKey: AddonModule) {
+  return protectedProcedure.use(async function hasModule(opts) {
+    const { ctx } = opts;
+
+    const moduler = await withTenant(ctx.db, ctx.tenantId as string, (tx) =>
+      tx
+        .select({ key: schema.tenantModules.moduleKey })
+        .from(schema.tenantModules)
+        .where(
+          and(
+            eq(schema.tenantModules.tenantId, ctx.tenantId as string),
+            eq(schema.tenantModules.enabled, true),
+          ),
+        ),
+    ).catch(() => [] as Array<{ key: string }>);
+
+    if (!moduler.some((m) => m.key === moduleKey)) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: `Modulen «${moduleKey}» er ikke aktiv for denne forhandleren`,
+      });
+    }
+
+    return opts.next({ ctx });
+  });
+}
+
+/** Modul-gate + admin-rolle. For skriveruter i en betalt modul. */
+export function moduleAdminProcedure(moduleKey: AddonModule) {
+  return moduleProcedure(moduleKey).use(function isAdminToo(opts) {
+    const { ctx } = opts;
+    if (ctx.role !== 'dealer_admin' && ctx.role !== 'endwise_admin') {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: `Rollen «${ctx.role}» kan ikke endre dette`,
+      });
+    }
+    return opts.next({ ctx });
+  });
+}
+
+export const endwiseAdminProcedure = protectedProcedure.use(function isEndwiseAdmin(opts) {
+  const { ctx } = opts;
+  if (ctx.role !== 'endwise_admin') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Kun Endwise-admin',
     });
   }
   return opts.next({ ctx });

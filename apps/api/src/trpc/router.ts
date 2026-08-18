@@ -5,15 +5,22 @@ import { bookingsRouter } from './routers/bookings.ts';
 import { competenceRouter } from './routers/competence.ts';
 import { conflictsRouter } from './routers/conflicts.ts';
 import { customersRouter } from './routers/customers.ts';
+import { directoryRouter } from './routers/directory.ts';
 import { flagsRouter } from './routers/flags.ts';
+import { inboxContextRouter } from './routers/inbox-context.ts';
+import { inventoryRouter } from './routers/inventory.ts';
+import { invitasjonerRouter } from './routers/invitasjoner.ts';
 import { lookupRouter } from './routers/lookup.ts';
 import { mechanicRouter } from './routers/mechanic.ts';
 import { mechanicsRouter } from './routers/mechanics.ts';
 import { messagesRouter } from './routers/messages.ts';
 import { personvernRouter } from './routers/personvern.ts';
+import { profileRouter } from './routers/profile.ts';
 import { quickRouter } from './routers/quick.ts';
 import { servicesRouter } from './routers/services.ts';
 import { sessionRouter } from './routers/session.ts';
+import { teamRouter } from './routers/team.ts';
+import { tenantsRouter } from './routers/tenants.ts';
 import { vehiclesRouter } from './routers/vehicles.ts';
 import { widgetRouter } from './routers/widget.ts';
 
@@ -24,8 +31,16 @@ export const appRouter = router({
   billing: billingRouter,
   mechanic: mechanicRouter,
   session: sessionRouter,
+  tenants: tenantsRouter,
   customers: customersRouter,
+  directory: directoryRouter,
+  profile: profileRouter,
+  inboxContext: inboxContextRouter,
+  // F1-10 — lederens side av invitasjonsflyten.
+  invitasjoner: invitasjonerRouter,
+  team: teamRouter,
   flags: flagsRouter,
+  inventory: inventoryRouter,
   vehicles: vehiclesRouter,
   services: servicesRouter,
   lookup: lookupRouter,

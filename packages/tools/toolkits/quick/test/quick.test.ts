@@ -52,7 +52,14 @@ describe('customer/batch auth', () => {
   it('token sendes som Authorization: Token token=<token>', async () => {
     const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({}));
     await createQuickClient(cfg).clientInfo();
-    const headers = (spy.mock.calls[0]?.[1] as RequestInit).headers as Record<string, string>;
+    // ⚠️ Sjekk FØR dereferering. `spy.mock.calls[0]?.[1]` kan være undefined,
+    // og et cast skjuler det bare til det smeller med «cannot read headers of
+    // undefined» — en feilmelding som ikke sier at kallet aldri skjedde.
+    const kall = spy.mock.calls[0];
+    // `throw`, ikke `expect(...).toBeDefined()`: en assertion smalner ikke
+    // typen, så neste linje ville fortsatt vært et usikkert oppslag.
+    if (!kall) throw new Error('fetch ble aldri kalt');
+    const headers = (kall[1] as RequestInit).headers as Record<string, string>;
     expect(headers.Authorization).toBe('Token token=tkn');
     expect(spy.mock.calls[0]?.[0]).toBe('https://q3.quick.no/Test_Public/api/v2/client/info');
   });

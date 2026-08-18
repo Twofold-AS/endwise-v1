@@ -1,96 +1,309 @@
 'use client';
 
-import { Badge, Check, CreditCard } from '@endwise/ui';
-import { BevelButton, CardShell, NewBadge } from '../_shell/cards';
-import { MOCK_SUB, PLANS_UI } from './_data';
+import {
+  Badge,
+  Check,
+  CircleAlert,
+  CreditCard,
+  Lock,
+  StatefulButton,
+  TriangleAlert,
+} from '@endwise/ui';
+import { Suspense, useState } from 'react';
+import { trpc } from '@/lib/trpc';
+import { useOrgRole } from '../_lib/use-org-role';
+import { CardShell } from '../_shell/cards';
 
 /**
- * Forhandler → Abonnement (selvbetjent). Forhandler-admin ser planer, velger/
- * oppgraderer, administrerer i Stripe Customer Portal, ser status. Planen gir
- * entitlements (F5-09 → F0-04) som styrer integrasjonene (se /integrasjoner).
+ * F5-09 / F5-32 — ABONNEMENT. Velg nivå + valgfrie tillegg → Stripe checkout.
  *
- * MOCK: knappene wires til `trpc.billing.checkout` / `.portal` når web-klienten
- * er på plass. Vi utfører ALDRI trekk selv — forhandleren fullfører hos Stripe.
+ * ⛔ **Vi utfører aldri et trekk.** Knappen henter en URL fra Stripe som
+ * forhandleren selv fullfører der. Og entitlements flippes ikke av denne siden i
+ * det hele tatt — kun av den signaturverifiserte webhooken. Det er derfor du
+ * ikke ser modulene endre seg før du kommer tilbake.
+ *
+ * ⚠️ Denne flaten er IKKE modul-gated (F0-16), og det er et bevisst valg: en
+ * forhandler som har mistet en modul må kunne kjøpe seg ut av det. En
+ * abonnementsside bak en abonnementssperre er en felle.
  */
-export default function AbonnementPage() {
+const kr = (ore: number) => (ore / 100).toLocaleString('nb-NO');
+
+const STATUS_TEKST: Record<string, string> = {
+  none: 'Ikke startet',
+  active: 'Aktivt',
+  trialing: 'Prøveperiode',
+  past_due: 'Betaling mislyktes',
+  canceled: 'Avsluttet',
+};
+
+function AbonnementInner() {
+  const { isAdmin } = useOrgRole();
+  const utils = trpc.useUtils();
+
+  const nivaaer = trpc.billing.plans.useQuery();
+  const tillegg = trpc.billing.tillegg.useQuery();
+  const abonnement = trpc.billing.subscription.useQuery();
+  const naade = trpc.billing.naadeDager.useQuery();
+
+  const [valgtNivaa, setValgtNivaa] = useState<string | null>(null);
+  const [valgteTillegg, setValgteTillegg] = useState<string[]>([]);
+
+  const checkout = trpc.billing.checkout.useMutation({
+    onSuccess: (r) => {
+      if (r.url) window.location.assign(r.url);
+    },
+  });
+  const portal = trpc.billing.portal.useMutation({
+    onSuccess: (r) => {
+      if (r.url) window.location.assign(r.url);
+    },
+  });
+  const mock = trpc.billing.applyPlanMock.useMutation({
+    onSuccess: () => {
+      void utils.billing.invalidate();
+      void utils.session.invalidate();
+    },
+  });
+
+  const aktivtNivaa = abonnement.data?.planKey ?? null;
+  const status = abonnement.data?.status ?? 'none';
+  const nivaa = valgtNivaa ?? aktivtNivaa ?? 'pro';
+
+  const sum =
+    (nivaaer.data?.find((n) => n.key === nivaa)?.priceMonthlyMinor ?? 0) +
+    valgteTillegg.reduce(
+      (s, k) => s + (tillegg.data?.find((t) => t.key === k)?.priceMonthlyMinor ?? 0),
+      0,
+    );
+
+  function veksle(key: string) {
+    setValgteTillegg((v) => (v.includes(key) ? v.filter((x) => x !== key) : [...v, key]));
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-6 px-8 py-7">
-      <div className="flex items-center gap-2">
-        <CreditCard size={18} className="text-primary" />
-        <h1 className="font-semibold text-fg text-xl tracking-tight">Abonnement</h1>
-        <NewBadge />
-        <span className="ml-auto text-fg-faint text-xs">
-          Mock til Stripe er koblet (F5-09) · trekkes ALDRI av oss
-        </span>
+      <div>
+        <h1 className="sr-only">Abonnement</h1>
+        <p className="text-title text-fg">Abonnement</p>
+        <p className="text-body text-fg-muted">
+          Flat pris per verksted. Ubegrenset antall brukere. Alle priser eks. mva.
+        </p>
       </div>
 
-      {/* Gjeldende status */}
-      <CardShell>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg bg-[#0e0e0e] px-4 py-3 text-sm">
-          <span className="text-fg-muted">
-            Nåværende plan:{' '}
-            <span className="font-semibold text-fg capitalize">{MOCK_SUB.planKey}</span>
+      {/* ── Status ─────────────────────────────────────────────────────── */}
+      <CardShell className="p-4">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <span className="text-label text-fg">
+            Status:{' '}
+            <span className={status === 'past_due' ? 'text-danger' : 'text-fg-muted'}>
+              {STATUS_TEKST[status] ?? status}
+            </span>
           </span>
-          <span className="text-fg-muted">
-            Status: <span className="font-medium text-success">{MOCK_SUB.status}</span>
-          </span>
-          <span className="text-fg-muted">
-            Neste trekk: <span className="text-fg">{MOCK_SUB.currentPeriodEnd}</span>
-          </span>
-          <div className="ml-auto">
-            <BevelButton>Administrer i Stripe</BevelButton>
-          </div>
+          {aktivtNivaa && (
+            <span className="text-label text-fg">
+              Nivå: <span className="text-fg-muted">{aktivtNivaa}</span>
+            </span>
+          )}
+          {isAdmin && abonnement.data?.planKey && (
+            <button
+              type="button"
+              onClick={() => portal.mutate({ returnUrl: window.location.href })}
+              className="ml-auto h-control rounded-control border border-border px-3 text-label text-fg transition-colors hover:bg-surface-2"
+            >
+              Administrer hos Stripe
+            </button>
+          )}
         </div>
+
+        {status === 'past_due' && (
+          <p className="mt-3 flex items-start gap-2 text-body text-danger">
+            <TriangleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+            Betalingen gikk ikke gjennom. Verkstedet, Saker, Kunder og Lager fortsetter som normalt
+            — tilleggene fryses først etter {naade.data ?? 14} dager.
+          </p>
+        )}
       </CardShell>
 
-      {/* Planer */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {PLANS_UI.map((plan) => {
-          const current = plan.key === MOCK_SUB.planKey;
-          return (
-            <CardShell key={plan.key}>
-              <div className="flex flex-1 flex-col gap-3 rounded-lg bg-[#0e0e0e] p-4">
-                <div className="flex items-baseline justify-between">
-                  <span className="font-semibold text-base text-fg capitalize">{plan.name}</span>
-                  {current && (
-                    <Badge
-                      variant="outline"
-                      className="border-success/25 bg-success/12 text-[10px] text-success"
-                    >
-                      Aktiv
-                    </Badge>
-                  )}
+      {/* ── Nivåene ────────────────────────────────────────────────────── */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-title text-fg">Velg nivå</h2>
+        <div className="grid gap-3 lg:grid-cols-3">
+          {nivaaer.data?.map((n) => {
+            const valgt = nivaa === n.key;
+            return (
+              <button
+                key={n.key}
+                type="button"
+                onClick={() => setValgtNivaa(n.key)}
+                aria-pressed={valgt}
+                className={`flex flex-col gap-3 rounded-xl border p-5 text-left transition-colors ${
+                  valgt ? 'border-fg bg-sidebar-active' : 'border-border hover:bg-surface-2'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-title text-fg">{n.name}</span>
+                  {aktivtNivaa === n.key && <Badge variant="secondary">Nåværende</Badge>}
                 </div>
-                <div className="font-semibold text-fg text-xl tabular-nums">
-                  {plan.priceMonthly}
-                </div>
-                <ul className="flex flex-col gap-1.5 text-fg-muted text-xs">
-                  {plan.modules.map((m) => (
-                    <li key={m} className="flex items-center gap-1.5">
-                      <Check size={13} className="shrink-0 text-success" />
-                      {m}
+                <p className="font-medium text-[26px] text-fg leading-none tabular-nums">
+                  {kr(n.priceMonthlyMinor)}
+                  <span className="ml-1 font-normal text-[13px] text-fg-muted">kr/mnd</span>
+                </p>
+                <p className="text-[12px] text-fg-muted">{n.pitch}</p>
+                <ul className="flex flex-col gap-1.5">
+                  {n.hoydepunkter.map((h) => (
+                    <li key={h} className="flex items-start gap-2 text-[12px] text-fg">
+                      <Check size={14} strokeWidth={2} className="mt-0.5 shrink-0 text-success" />
+                      {h}
                     </li>
                   ))}
                 </ul>
-              </div>
-              <div className="px-1.5 pt-2 pb-1">
-                {current ? (
-                  <span className="inline-flex rounded-lg border border-border px-3 py-1.5 text-fg-faint text-xs">
-                    Nåværende plan
-                  </span>
-                ) : (
-                  <BevelButton className="w-full">Velg {plan.name}</BevelButton>
-                )}
-              </div>
-            </CardShell>
-          );
-        })}
-      </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
-      <p className="text-fg-faint text-xs">
-        Fakturaer og betalingsmetode administreres i Stripe Customer Portal. Recurring (månedlig)
-        abonnement; du fullfører selv checkout — vi trekker aldri på dine vegne.
-      </p>
+      {/* ── Tillegg ────────────────────────────────────────────────────── */}
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-title text-fg">Valgfrie tillegg</h2>
+          <p className="text-[12px] text-fg-muted">
+            Kan legges på ethvert nivå. Hvert tillegg er sin egen linje på fakturaen.
+          </p>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {tillegg.data?.map((t) => {
+            const valgt = valgteTillegg.includes(t.key);
+            const laast = !t.kjopbar;
+            return (
+              <div
+                key={t.key}
+                className={`flex items-start gap-3 rounded-control border p-3 ${
+                  valgt ? 'border-fg bg-sidebar-active' : 'border-border'
+                } ${laast ? 'opacity-70' : ''}`}
+              >
+                {laast ? (
+                  <Lock size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
+                ) : (
+                  <input
+                    type="checkbox"
+                    id={`tillegg-${t.key}`}
+                    checked={valgt}
+                    onChange={() => veksle(t.key)}
+                    className="mt-0.5 size-4 shrink-0 accent-black"
+                  />
+                )}
+                <label
+                  htmlFor={laast ? undefined : `tillegg-${t.key}`}
+                  className={`flex min-w-0 flex-1 flex-col ${laast ? '' : 'cursor-pointer'}`}
+                >
+                  <span className="flex items-center gap-2 text-label text-fg">
+                    {t.name}
+                    {t.status === 'coming' && <Badge variant="secondary">Kommer</Badge>}
+                    {t.status === 'blocked' && <Badge variant="secondary">På vent</Badge>}
+                  </span>
+                  <span className="text-[12px] text-fg-muted">{t.desc}</span>
+                  {/* Ærlig om HVORFOR den er låst — ikke bare at den er det. */}
+                  {laast && t.merknad && (
+                    <span className="mt-1 text-[11px] text-fg-muted italic">{t.merknad}</span>
+                  )}
+                </label>
+                <span className="shrink-0 text-label text-fg tabular-nums">
+                  {kr(t.priceMonthlyMinor)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Sum + handling ─────────────────────────────────────────────── */}
+      <CardShell className="p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-label text-fg-muted">Totalt per måned, eks. mva</p>
+            <p className="font-medium text-[28px] text-fg leading-none tabular-nums">
+              {kr(sum)} <span className="font-normal text-[14px] text-fg-muted">kr</span>
+            </p>
+          </div>
+
+          {isAdmin ? (
+            <StatefulButton
+              disabled={checkout.isPending}
+              onClick={() =>
+                checkout.mutate({
+                  planKey: nivaa,
+                  tillegg: valgteTillegg,
+                  returnUrl: window.location.href,
+                })
+              }
+              state={checkout.isPending ? 'loading' : checkout.isError ? 'error' : 'idle'}
+              loadingText="Åpner Stripe…"
+              errorText="Kunne ikke starte"
+              icon={<CreditCard size={15} />}
+            >
+              Gå til betaling
+            </StatefulButton>
+          ) : (
+            <p className="text-[12px] text-fg-muted">Kun forhandler-admin kan endre abonnement.</p>
+          )}
+        </div>
+
+        {checkout.error && (
+          <p className="mt-3 flex items-start gap-2 text-body text-danger">
+            <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+            {checkout.error.message}
+          </p>
+        )}
+
+        <p className="mt-3 text-[12px] text-fg-muted leading-relaxed">
+          Betalingen fullføres hos Stripe — vi trekker aldri selv. Modulene skrus på når Stripe har
+          bekreftet betalingen, ikke når du trykker her.
+        </p>
+      </CardShell>
+
+      {/* ── Dev: simuler webhooken ─────────────────────────────────────── */}
+      {process.env.NODE_ENV !== 'production' && isAdmin && (
+        <CardShell className="p-4">
+          <p className="text-label text-fg">Dev: simuler at webhooken har provisjonert</p>
+          <p className="mt-1 text-[12px] text-fg-muted">
+            Stripe-webhooken krever en offentlig URL. Denne knappen gjør det webhooken ville gjort,
+            så onboarding kan testes uten tunnel. Finnes ikke i produksjon.
+          </p>
+          <div className="mt-3 flex justify-end">
+            <StatefulButton
+              disabled={mock.isPending}
+              onClick={() => mock.mutate({ planKey: nivaa, tillegg: valgteTillegg })}
+              state={
+                mock.isPending
+                  ? 'loading'
+                  : mock.isError
+                    ? 'error'
+                    : mock.isSuccess
+                      ? 'success'
+                      : 'idle'
+              }
+              loadingText="Provisjonerer…"
+              successText="Provisjonert"
+              errorText="Feilet"
+            >
+              Aktiver {nivaa} lokalt
+            </StatefulButton>
+          </div>
+          {mock.error && <p className="mt-2 text-body text-danger">{mock.error.message}</p>}
+        </CardShell>
+      )}
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster abonnement …</div>}
+    >
+      <AbonnementInner />
+    </Suspense>
   );
 }

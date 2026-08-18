@@ -1,0 +1,1 @@
+ALTER TABLE "user_preferences" ADD COLUMN "inbox_details_open" boolean DEFAULT true NOT NULL;

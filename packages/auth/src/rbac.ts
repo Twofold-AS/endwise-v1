@@ -15,6 +15,19 @@ export const statement = {
   entitlement: ['read', 'manage'],
   member: ['read', 'invite', 'manage'],
   audit: ['read'],
+  /**
+   * F2-09 — Lager. KJERNE (ingen modul-gate), men ikke fritt fram for alle
+   * roller: «alle forhandlere» er modul-nivå, ikke rolle-nivå.
+   *
+   *   read   — se deler og beholdning
+   *   move   — ta ut / registrere inn / reservere (dagens arbeid)
+   *   manage — korrigere beholdning, nedskrive, endre lokasjoner og kostpris
+   *
+   * Skillet som betyr noe: en ansatt skal kunne TA UT en del uten å kunne
+   * JUSTERE beholdningen. Uttak er sporbart mot en jobb; en justering er et
+   * tall noen bestemte, og den skal en admin stå bak.
+   */
+  inventory: ['read', 'move', 'manage'],
 } as const;
 
 export const ac = createAccessControl(statement);
@@ -30,6 +43,8 @@ export const dealerStaff = ac.newRole({
   mechanic: ['read', 'assign'],
   customer: ['read'],
   service: ['read'],
+  // Tar ut deler til jobber, men korrigerer ikke beholdningen.
+  inventory: ['read', 'move'],
 });
 
 /** Forhandler-admin: full kontroll i EGEN tenant. */
@@ -42,6 +57,7 @@ export const dealerAdmin = ac.newRole({
   entitlement: ['read'],
   member: ['read', 'invite', 'manage'],
   audit: ['read'],
+  inventory: ['read', 'move', 'manage'],
 });
 
 /** Endwise-admin (oss). Eneste rolle som kan endre entitlements. */
@@ -54,6 +70,7 @@ export const endwiseAdmin = ac.newRole({
   entitlement: ['read', 'manage'],
   member: ['read', 'invite', 'manage'],
   audit: ['read'],
+  inventory: ['read', 'move', 'manage'],
 });
 
 export const roles = {

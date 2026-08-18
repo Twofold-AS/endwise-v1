@@ -33,9 +33,9 @@ export interface CreateBookingInput {
  * Advisory-lås per (tenant, mekaniker).
  *
  * `pg_advisory_xact_lock` — TRANSAKSJONS-skopet, ikke session-skopet. Det er
- * ikke en detalj: med Neons pooler gjenbrukes forbindelser på tvers av
- * forespørsler, og en session-lås ville overlevd transaksjonen og fulgt med
- * neste låner av forbindelsen. Transaksjonslåsen slippes av COMMIT/ROLLBACK,
+ * ikke en detalj: går man gjennom en connection pooler (pgbouncer o.l.)
+ * gjenbrukes forbindelser på tvers av forespørsler, og en session-lås ville
+ * overlevd transaksjonen og fulgt med neste låner av forbindelsen. Transaksjonslåsen slippes av COMMIT/ROLLBACK,
  * uansett hva som skjer.
  *
  * To bigint-nøkler = (hashtext(tenant), hashtext(mekaniker)). To forhandlere

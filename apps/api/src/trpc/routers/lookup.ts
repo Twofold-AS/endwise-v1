@@ -2,7 +2,13 @@ import { eq, schema, withTenant } from '@endwise/db';
 import { createVegvesenClient } from '@endwise/toolkit-vegvesen';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { protectedProcedure, router } from '../init.ts';
+import { moduleProcedure, router } from '../init.ts';
+
+/**
+ * ⛔ F0-16 — MODUL-GATE: `vegvesen`. Hvert oppslag er et kall mot Autosys som
+ * KOSTER — å la ruta stå åpen var både et entitlement-hull og en regning.
+ */
+const vegvesenProcedure = moduleProcedure('vegvesen');
 
 /**
  * F2-08 — Vegvesen-oppslag: regnr → merke/modell/årsmodell/EU-frist.
@@ -12,7 +18,7 @@ import { protectedProcedure, router } from '../init.ts';
  * og `lookupAt` forteller når. Vi later aldri som at det er vår sannhet.
  */
 export const lookupRouter = router({
-  vehicleByRegNumber: protectedProcedure
+  vehicleByRegNumber: vegvesenProcedure
     .input(z.object({ regNumber: z.string().min(2).max(10) }))
     .query(async ({ input }) => {
       const apiKey = process.env.VEGVESEN_API_KEY;
@@ -26,7 +32,7 @@ export const lookupRouter = router({
     }),
 
   /** Slår opp OG speiler treffet inn på kjøretøyet. */
-  refreshVehicle: protectedProcedure
+  refreshVehicle: vegvesenProcedure
     .input(z.object({ vehicleId: z.uuid(), regNumber: z.string().min(2).max(10) }))
     .mutation(async ({ ctx, input }) => {
       const apiKey = process.env.VEGVESEN_API_KEY;

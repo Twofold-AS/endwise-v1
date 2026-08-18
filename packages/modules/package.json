@@ -16,7 +16,9 @@
     "./erasure": "./src/erasure/index.ts",
     "./retention": "./src/retention/index.ts",
     "./billing": "./src/billing/index.ts",
-    "./widget": "./src/widget/index.ts"
+    "./widget": "./src/widget/index.ts",
+    "./profil": "./src/profil/index.ts",
+    "./invitasjoner": "./src/invitasjoner/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

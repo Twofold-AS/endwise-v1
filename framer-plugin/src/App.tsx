@@ -41,7 +41,11 @@ export function App() {
       </label>
       <label>
         API-base
-        <input value={apiBase} onChange={(e) => setApiBase(e.target.value)} style={{ width: '100%' }} />
+        <input
+          value={apiBase}
+          onChange={(e) => setApiBase(e.target.value)}
+          style={{ width: '100%' }}
+        />
       </label>
       <button type="button" onClick={save} disabled={!publishableKey.startsWith('pk_')}>
         Lagre

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
   "root": true,
   "vcs": {
     "enabled": true,
@@ -15,8 +15,12 @@
       "!**/.turbo",
       "!**/drizzle",
       "!docs",
+      "!apps/web/public",
       "!packages/ui/src/components/dither-kit",
       "!packages/ui/src/vendor",
+      "!packages/ui/src/assets/icons",
+      "!packages/ui/src/assets/icons-v2",
+      "!packages/ui/src/icons.generated.ts",
       "!packages/ui/src/components/motion",
       "!packages/ui/src/lib/ease.ts",
       "!packages/ui/src/lib/hooks"
@@ -46,6 +50,14 @@
       "style": {
         "useConst": "error",
         "noParameterAssign": "error"
+      },
+      "a11y": {
+        "noLabelWithoutControl": {
+          "level": "error",
+          "options": {
+            "inputComponents": ["Input", "QuestionnaireInput"]
+          }
+        }
       }
     }
   },

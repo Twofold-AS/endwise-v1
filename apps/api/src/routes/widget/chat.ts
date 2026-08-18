@@ -5,8 +5,8 @@ import {
   createGuardrails,
   createPseudonymizer,
   createScopeGate,
-  maskMessages,
   type Moderator,
+  maskMessages,
 } from '@endwise/guardrails';
 import {
   createRateLimiter,
@@ -59,7 +59,11 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
     provider = resolveModelProvider('customer_freetext');
   } catch {
     return c.json(
-      { disclosure, escalated: true, reply: 'AI-assistenten er ikke tilgjengelig nå. En medarbeider tar over.' },
+      {
+        disclosure,
+        escalated: true,
+        reply: 'AI-assistenten er ikke tilgjengelig nå. En medarbeider tar over.',
+      },
       503,
     );
   }

@@ -1,0 +1,146 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+
+/**
+ * F6-02 — Klientsiden av sanntidskanalen.
+ *
+ * `apps/stream` har vært ferdig lenge; det som manglet var noen som lyttet.
+ * Hooken er bevisst tynn: den gjør ÉN ting — leverer eventer og en ærlig
+ * tilkoblingsstatus. Den holder ikke på domenetilstand.
+ *
+ * **Payloaden brukes aldri som innhold.** Serveren sender med vilje bare
+ * «hva skjedde + hvilken subjectId» — selve meldingen hentes gjennom tRPC, og
+ * dermed gjennom RLS. Derfor er mønsteret i kallstedene alltid:
+ * *event → invalidate query → hent på nytt*, aldri *event → skriv rett i UI*.
+ * Et UI som stoler på pushet innhold, viser til slutt noe RLS aldri godkjente.
+ */
+export type StreamStatus = 'connecting' | 'live' | 'idle';
+
+export interface StreamEvent {
+  /** Event-typen, f.eks. `message.created`, `thread.escalated`, `agent.token`. */
+  type: string;
+  /** Tråden/objektet eventet gjelder. Null for tenant-brede eventer. */
+  subjectId: string | null;
+  /** Resten av serverens payload. Metadata — ALDRI sannheten om innholdet. */
+  data: Record<string, unknown>;
+}
+
+/** Eventtypene vi faktisk lytter på. `heartbeat`/`ready` er transport, ikke domene. */
+const DOMAIN_EVENTS = [
+  'message.created',
+  'thread.escalated',
+  'agent.start',
+  'agent.token',
+  'agent.tool_call',
+  'agent.tool_result',
+  'agent.done',
+  'agent.error',
+] as const;
+
+/* ════════════════════════════════════════════════════════════════════════
+ * ÉN DELT TILKOBLING PER FANE (refaktorert 08.08.2026)
+ * ════════════════════════════════════════════════════════════════════════
+ *
+ * ⚠️ Hooken åpnet tidligere en EGEN `EventSource` per kallsted. Med én lytter
+ * i appen gikk det bra. Da varslingslyden (F5-19) skulle lytte app-bredt, ble
+ * det plutselig to per fane — og serveren har et tak:
+ * `MAX_CONNECTIONS_PER_USER = 5` (`packages/modules/src/stream/`). To vinduer
+ * × to lyttere = fire, tre vinduer = seks, og den sjette får 429. Nøyaktig det
+ * scenarioet en toparts-test i to nettleservinduer er.
+ *
+ * Nå deler alle kallsteder ÉN strøm: første abonnent åpner den, siste lukker
+ * den. Det er både billigere og mer korrekt — avspilling siden `Last-Event-ID`
+ * skjer én gang, ikke én gang per komponent som tilfeldigvis lyttet.
+ */
+type Abonnent = {
+  onEvent: (event: StreamEvent) => void;
+  onStatus: (status: StreamStatus) => void;
+};
+
+let kilde: EventSource | null = null;
+let sisteStatus: StreamStatus = 'idle';
+const abonnenter = new Set<Abonnent>();
+
+function settStatus(status: StreamStatus) {
+  sisteStatus = status;
+  for (const a of abonnenter) a.onStatus(status);
+}
+
+function apne() {
+  if (kilde) return;
+  settStatus('connecting');
+  // Same-origin (Next rewrite → apps/stream). EventSource sender sesjons-
+  // cookien selv; ingen token i URL-en.
+  const source = new EventSource('/stream/sse');
+  kilde = source;
+
+  for (const type of DOMAIN_EVENTS) {
+    source.addEventListener(type, (event: MessageEvent<string>) => {
+      let parsed: Record<string, unknown> = {};
+      try {
+        parsed = JSON.parse(event.data) as Record<string, unknown>;
+      } catch {
+        // En enkelt uparsbar payload skal ikke rive ned strømmen — samme
+        // holdning som serveren har til én feilet levering.
+        return;
+      }
+      const { subjectId, ...rest } = parsed;
+      const ut: StreamEvent = {
+        type,
+        subjectId: typeof subjectId === 'string' ? subjectId : null,
+        data: rest,
+      };
+      // Kopi av settet: en abonnent som melder seg av inne i sin egen callback
+      // skal ikke endre det vi itererer over.
+      for (const a of [...abonnenter]) a.onEvent(ut);
+    });
+  }
+
+  source.addEventListener('ready', () => settStatus('live'));
+  source.addEventListener('heartbeat', () => settStatus('live'));
+  source.onopen = () => settStatus('live');
+  // EventSource kobler til igjen selv. `connecting` er ærligere enn `idle`:
+  // den sier «ikke oppe nå», ikke «gitt opp».
+  source.onerror = () => settStatus('connecting');
+}
+
+function lukkHvisTom() {
+  if (abonnenter.size > 0 || !kilde) return;
+  kilde.close();
+  kilde = null;
+  settStatus('idle');
+}
+
+export function useEventStream(onEvent: (event: StreamEvent) => void, enabled = true) {
+  const [status, setStatus] = useState<StreamStatus>('idle');
+
+  // Callbacken holdes i en ref slik at en ny inline-funksjon per render ikke
+  // river ned og gjenoppretter SSE-forbindelsen. Reconnect er dyrt: hver
+  // gjenoppkobling spiller av alt siden Last-Event-ID.
+  const handler = useRef(onEvent);
+  handler.current = onEvent;
+
+  useEffect(() => {
+    if (!enabled) {
+      setStatus('idle');
+      return;
+    }
+
+    const abonnent: Abonnent = {
+      onEvent: (event) => handler.current(event),
+      onStatus: setStatus,
+    };
+    abonnenter.add(abonnent);
+    apne();
+    setStatus(sisteStatus);
+
+    return () => {
+      abonnenter.delete(abonnent);
+      lukkHvisTom();
+      setStatus('idle');
+    };
+  }, [enabled]);
+
+  return status;
+}

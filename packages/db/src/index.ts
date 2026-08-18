@@ -2,6 +2,7 @@ export * from './client.ts';
 export * from './crypto.ts';
 export * from './operators.ts';
 export * from './queries/membership.ts';
+export * from './queries/sessions.ts';
 export * from './rls.ts';
 export * from './roles.ts';
 /**
@@ -30,6 +31,7 @@ export type {
   NewMechanicSkill,
   NewMessage,
   NewNotification,
+  NewPart,
   NewService,
   NewServiceVersion,
   NewSkill,
@@ -41,13 +43,19 @@ export type {
   NewVehicle,
   NewWidgetKey,
   Notification,
+  Part,
   Service,
   ServiceVersion,
   Skill,
   SkillLevel,
+  StockLevel,
+  StockLocation,
+  StockMovement,
+  StockMovementKind,
   StreamEvent,
   SyncConflict,
   Tenant,
+  TenantKind,
   TenantModule,
   Thread,
   ThreadParticipant,
@@ -55,6 +63,7 @@ export type {
   WidgetKey,
 } from './schema/index.ts';
 export * as schema from './schema/index.ts';
-
 /** Kanalnavnet SSE-tjenesten LISTENer på (F6-02). */
 export { STREAM_CHANNEL } from './schema/stream-events.ts';
+/** F5-27 — verdiliste (ikke bare typen), brukes til validering i tRPC. */
+export { TENANT_KINDS } from './schema/tenants.ts';

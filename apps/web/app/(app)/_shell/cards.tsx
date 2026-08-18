@@ -1,18 +1,21 @@
 'use client';
 
-import { Badge, DitherGradient, LifeBuoy } from '@endwise/ui';
+import { Badge, LifeBuoy } from '@endwise/ui';
 import type { CSSProperties, ReactNode } from 'react';
 
 /**
- * BEVEL — TheFold V2 sin hevede 3D-knappeflate (#262626-face med lys topp-kant).
+ * BEVEL — den hevede knappeflaten. Leser nå token-laget i stedet for TheFolds
+ * mørke `#262626`, så den snur med temaet: hvit flate med myk topp-høylys i
+ * lyst, mørk grå i mørkt. Verdiene bor i `widget-tokens`, ikke her.
  */
 export const BEVEL: CSSProperties = {
-  background: '#262626',
-  border: '1px solid #2f2f2f',
-  boxShadow:
-    '0 0 0 1px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.28), inset 0 2px 0 rgba(255,255,255,0.14), inset 0 -0.5px 2px rgba(0,0,0,0.3)',
+  background: 'var(--ew-bevel-face)',
+  border: '1px solid var(--ew-bevel-border)',
+  boxShadow: 'var(--ew-bevel-shadow)',
+  color: 'var(--ew-bevel-fg)',
 };
 
+/** Knapp: 32px høyde, 10px radius (eierens spec). */
 export function BevelButton({
   children,
   onClick,
@@ -27,7 +30,7 @@ export function BevelButton({
       type="button"
       onClick={onClick}
       style={BEVEL}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 font-medium text-[12px] text-white leading-none transition hover:brightness-110 ${className ?? ''}`}
+      className={`inline-flex h-control items-center justify-center gap-1.5 rounded-control px-3 text-label transition hover:brightness-[0.98] ${className ?? ''}`}
     >
       {children}
     </button>
@@ -35,15 +38,15 @@ export function BevelButton({
 }
 
 /**
- * NewBadge — gjenbrukbar «New»-merkelapp (shadcn Badge). Rød gjennomsiktig
- * bakgrunn + rød tekst, som spesifisert. Legges på nye nav-punkter/knapper.
+ * NewBadge — «New»-merkelapp. Beholder badge-FORMEN (20px høyde, 6px radius),
+ * men bruker RØD farge (eiers beslutning 06.08.2026).
+ *
+ * Formen er felles, fargen er signalet: «nytt» skal fange blikket, og etter at
+ * aksenten ble svart ville en aksentfarget badge forsvunnet i resten av UI-et.
  */
 export function NewBadge({ className }: { className?: string }) {
   return (
-    <Badge
-      variant="outline"
-      className={`h-4 border-danger/25 bg-danger/12 px-1.5 py-0 text-[10px] text-danger leading-none ${className ?? ''}`}
-    >
+    <Badge variant="destructive" className={className}>
       New
     </Badge>
   );
@@ -64,12 +67,15 @@ export function CardShell({ children, className }: { children: ReactNode; classN
   );
 }
 
-/** CardMedia — indre innholdspanel (radius 8, mørk inset-flate). Innhold ØVERST. */
+/**
+ * CardMedia — indre innholdspanel (radius 8, inset-flate). Innhold ØVERST.
+ * Inset-kanten er en ekte hårlinje fra token-laget nå, ikke et hvitt overlegg
+ * — et 4 % hvitt overlegg er usynlig mot en hvit flate.
+ */
 export function CardMedia({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-lg bg-[#0e0e0e] ${className ?? ''}`}
-      style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.04)' }}
+      className={`relative overflow-hidden rounded-lg border border-border bg-inset ${className ?? ''}`}
     >
       {children}
     </div>
@@ -77,22 +83,24 @@ export function CardMedia({ children, className }: { children: ReactNode; classN
 }
 
 /**
- * SupportCard — split-card for Support-kanalen (F5-11) i TheFolds kortstil:
- * dither-gradient-header (innhold øverst) → tekst + bevel-knapp under.
+ * SupportCard — split-card for Support-kanalen (F5-11): mediepanel øverst →
+ * tekst + bevel-knapp under.
+ *
+ * ⚠️ 03.08.2026: `DitherGradient` fjernet (dither-kit ut av UI-et). Panelet er
+ * nå en rolig aksentflate med ikonet — kortet står, effekten er borte.
  */
 export function SupportCard() {
   return (
     <CardShell>
-      <CardMedia className="h-24">
-        <DitherGradient from="green" direction="up" bloom="aura" />
-        <div className="absolute inset-0 grid place-items-center text-white">
-          <LifeBuoy size={30} strokeWidth={1.75} />
+      <CardMedia className="h-24 bg-accent-soft">
+        <div className="absolute inset-0 grid place-items-center text-accent-strong">
+          <LifeBuoy size={28} strokeWidth={1.75} />
         </div>
       </CardMedia>
       <div className="flex flex-col gap-2 px-1.5 pt-2 pb-1">
-        <div className="flex flex-col gap-0.5">
-          <div className="font-semibold text-[13px] text-fg">Support</div>
-          <div className="text-[12px] text-fg-faint leading-snug">
+        <div className="flex flex-col gap-1">
+          <div className="text-label text-fg">Support</div>
+          <div className="text-[12px] text-fg-muted leading-snug">
             Direkte linje til Endwise — spør oss, meld feil, få hjelp.
           </div>
         </div>

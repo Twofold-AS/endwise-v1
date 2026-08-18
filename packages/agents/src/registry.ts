@@ -1,4 +1,5 @@
 import type { AgentDefinition } from '@endwise/agent-runtime';
+import { aiDiagnoseAgent } from './ai-diagnose/agent.ts';
 import { driftInnsiktAgent } from './drift-innsikt/agent.ts';
 import { kundeSupportAgent } from './kunde-support/agent.ts';
 
@@ -12,6 +13,8 @@ import { kundeSupportAgent } from './kunde-support/agent.ts';
 const AGENTS: Record<string, AgentDefinition> = {
   [kundeSupportAgent.name]: kundeSupportAgent,
   [driftInnsiktAgent.name]: driftInnsiktAgent,
+  // F6-04 — første agent på chat-flaten (F6-18). customer_freetext ⇒ Mistral EU.
+  [aiDiagnoseAgent.name]: aiDiagnoseAgent,
 };
 
 export class UnknownAgentError extends Error {

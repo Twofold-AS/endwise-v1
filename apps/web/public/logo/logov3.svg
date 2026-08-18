@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 488" width="390" height="488" fill="none">
+  <g transform="translate(390,0) rotate(90)" fill="#000000">
+    <path d="M 0,0 L 98,0 L 98,147 L 195,244 L 195,390 L 98,390 L 98,147 L 0,147 Z"></path>
+
+    <path d="M 195,0 L 293,0 L 293,246 L 390,343 L 390,100 L 488,198 L 488,390 L 293,390 L 293,246 L 195,148 Z"></path>
+
+  </g>
+</svg>

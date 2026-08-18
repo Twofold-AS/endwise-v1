@@ -1,31 +1,26 @@
 import type { Metadata, Viewport } from 'next';
-import { Google_Sans_Flex, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { Providers } from './providers';
 import './globals.css';
 
 /*
- * Typografi. Brukeren ba om «Google Sans Flex». Lisens verifisert 15.07.2026 mot
- * kilden (Google Fonts metadata-endepunkt): "license": "ofl", "isOpenSource":
- * true. Det er altså SIL Open Font License — fritt embeddbar for kommersiell
- * tredjepartsbruk, i motsetning til den proprietære «Google Sans».
+ * Typografi — INTER (eierens designprinsipper, 03.08.2026). Erstatter Google
+ * Sans Flex. Inter er SIL Open Font License, variabel (hele wght-aksen), og
+ * finnes i next/font-katalogen med ekte fallback-metrics — derfor trenger den
+ * ikke `adjustFontFallback: false` slik forgjengeren gjorde.
  *
- * Google Sans Flex er «neste generasjon av Googles merkevare-typesnitt» (variabel
- * font: akser for vekt, bredde, optisk størrelse, helning + runde terminaler).
- * Lastes via next/font/google (finnes i Next 16-katalogen) — selvhostet ved
- * build, ingen FOUT/layout-shift, ingen runtime-kall til Google.
+ * Selvhostet ved build: ingen FOUT, ingen layout-shift, ingen runtime-kall til
+ * Google. Mono: JetBrains Mono (OFL) — beholdt for tall og tabeller.
  *
- * Variabel font: vi pinner ikke diskrete vekter — hele wght-aksen (1–1000) er
- * tilgjengelig, så typeskalaens 400/500/600/700 dekkes. Mono: JetBrains Mono (OFL).
+ * Skalaen (16/20 titler, 13/16 labels, 14 brødtekst) bor i
+ * `packages/ui/src/theme.css` som `text-title`/`text-label`/`text-body` — ikke
+ * her, og ikke som løse utilities i komponentene.
  */
-const sans = Google_Sans_Flex({
+const sans = Inter({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-google-sans-flex',
+  variable: '--font-inter',
   display: 'swap',
-  // Next klarer ikke regne ut fallback-metrics for denne (ny variabel merkevare-
-  // font uten metrics i katalogen) → «Failed to find font override values».
-  // Vi slår av auto-justeringen; --ew-font-sans har allerede en systemfallback.
-  adjustFontFallback: false,
 });
 
 const mono = JetBrains_Mono({
@@ -44,16 +39,19 @@ export const metadata: Metadata = {
 
 // F7-01 — PWA-tema (Next 14+: themeColor hører til viewport, ikke metadata).
 export const viewport: Viewport = {
-  themeColor: '#1ED27D',
-  colorScheme: 'dark',
+  themeColor: '#ffffff',
+  colorScheme: 'light',
 };
 
-// Mørkt tema er standard (brukerbeslutning 2026-07-15). Lyst tema er en toggle
-// via <ThemeToggle>, som flipper data-theme til "light" på <html>.
+/*
+ * LYST TEMA ER STANDARD (eierens designprinsipper, 03.08.2026 — snudd fra mørkt
+ * default som gjaldt fra 15.07). Mørkt ligger klart som `data-theme="dark"` og
+ * nås via <ThemeToggle>; begge palettene bor i widget-tokens.
+ */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="nb" data-theme="dark" className={`${sans.variable} ${mono.variable}`}>
-      <body className="bg-bg text-fg font-sans antialiased">
+    <html lang="nb" data-theme="light" className={`${sans.variable} ${mono.variable}`}>
+      <body className="bg-bg font-sans text-body text-fg antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -18,26 +18,104 @@ export {
 export { Badge, type BadgeProps, badgeVariants } from './components/badge.tsx';
 // ─── shadcn/ui — struktur ───────────────────────────────────────────────
 export { Button, buttonVariants } from './components/button.tsx';
-export { Area, type AreaProps, Line } from './components/dither-kit/area.tsx';
-// ─── dither-kit — ENESTE chart-motor (techstack §1: Recharts er ute) ────
-export { AreaChart, type AreaChartProps, LineChart } from './components/dither-kit/area-chart.tsx';
-// dither-kit standalone
-export { DitherAvatar } from './components/dither-kit/avatar.tsx';
-export { Bar } from './components/dither-kit/bar.tsx';
-export { BarChart } from './components/dither-kit/bar-chart.tsx';
-export { DitherButton } from './components/dither-kit/button.tsx';
-export { ActiveDot, Dot } from './components/dither-kit/dot.tsx';
-export { DitherGradient } from './components/dither-kit/gradient.tsx';
-export { Grid } from './components/dither-kit/grid.tsx';
-export { Legend } from './components/dither-kit/legend.tsx';
-export { Pie } from './components/dither-kit/pie.tsx';
-export { PieChart } from './components/dither-kit/pie-chart.tsx';
-export { Radar } from './components/dither-kit/radar.tsx';
-export { RadarChart } from './components/dither-kit/radar-chart.tsx';
-export { Sparkline, type SparklineProps } from './components/dither-kit/sparkline.tsx';
-export { Tooltip } from './components/dither-kit/tooltip.tsx';
-export { XAxis } from './components/dither-kit/x-axis.tsx';
-export { YAxis } from './components/dither-kit/y-axis.tsx';
+// ─── Recharts via shadcn Chart-mønsteret — ENESTE chart-motor (UI-PAKKER §2) ──
+export {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  CHART_COLORS,
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from './components/chart.tsx';
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogTitle,
+  DialogTrigger,
+} from './components/dialog.tsx';
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuHeader,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './components/dropdown-menu.tsx';
+// ─── shadcn/ui — CHAT (UI-PAKKER §9). Hentet 12.08.2026. ────────────────
+export {
+  Message,
+  MessageAvatar,
+  MessageBubble,
+  MessageContent,
+  MessageFooter,
+  MessageGroup,
+  MessageHeader,
+} from './components/message.tsx';
+export {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+  useMessageScroller,
+  useMessageScrollerScrollable,
+  useMessageScrollerVisibility,
+} from './components/message-scroller.tsx';
+/* ─── dither-kit — IKKE EKSPORTERT (03.08.2026) ──────────────────────────────
+ *
+ * Eier ba om at dither-kit fjernes fra UI-et. All bruk er borte fra `apps/web`
+ * (grafer → tabeller, avatar → profil-ikon, gradient-header → rolig aksentflate).
+ *
+ * Hvorfor eksporten er tatt bort og ikke bare bruken: barrel-en drar hele
+ * modulgrafen inn i klient-bundelen selv når ingen komponent bruker den. Målt:
+ * dither-kit-koden lå fortsatt i bundelen etter at siste bruk var fjernet.
+ * Å eksportere noe ingen skal bruke er å sende det til hver eneste besøkende.
+ *
+ * ⚠️ **Filene er IKKE slettet** (`src/components/dither-kit/`, 40 filer), og
+ * dither-kit står fortsatt i techstacken som chart-motor. Skal det reverseres:
+ * lim tilbake blokka under. Skal det ut for godt, er det en TECHSTACK-endring
+ * (§1/§2) — da må det avklares hva som tegner charts i stedet.
+ *
+ * export { Area, type AreaProps, Line } from './components/dither-kit/area.tsx';
+ * export { AreaChart, type AreaChartProps, LineChart } from './components/dither-kit/area-chart.tsx';
+ * export { DitherAvatar } from './components/dither-kit/avatar.tsx';
+ * export { Bar } from './components/dither-kit/bar.tsx';
+ * export { BarChart } from './components/dither-kit/bar-chart.tsx';
+ * export { DitherButton } from './components/dither-kit/button.tsx';
+ * export { ActiveDot, Dot } from './components/dither-kit/dot.tsx';
+ * export { DitherGradient } from './components/dither-kit/gradient.tsx';
+ * export { Grid } from './components/dither-kit/grid.tsx';
+ * export { Legend } from './components/dither-kit/legend.tsx';
+ * export { Pie } from './components/dither-kit/pie.tsx';
+ * export { PieChart } from './components/dither-kit/pie-chart.tsx';
+ * export { Radar } from './components/dither-kit/radar.tsx';
+ * export { RadarChart } from './components/dither-kit/radar-chart.tsx';
+ * export { Sparkline, type SparklineProps } from './components/dither-kit/sparkline.tsx';
+ * export { Tooltip } from './components/dither-kit/tooltip.tsx';
+ * export { XAxis } from './components/dither-kit/x-axis.tsx';
+ * export { YAxis } from './components/dither-kit/y-axis.tsx';
+ * ───────────────────────────────────────────────────────────────────────────── */
 export type { ButtonProps as MotionButtonProps } from './components/motion/button/base.tsx';
 // ─── beUI — tilstand og bevegelse ───────────────────────────────────────
 export { Button as MotionButton } from './components/motion/button/base.tsx';
@@ -46,6 +124,31 @@ export {
   StatefulButton,
   type StatefulButtonProps,
 } from './components/motion/button/stateful.tsx';
+export {
+  Questionnaire,
+  QuestionnaireActions,
+  QuestionnaireChoice,
+  QuestionnaireChoiceInput,
+  QuestionnaireChoiceLabel,
+  QuestionnaireChoices,
+  QuestionnaireDescription,
+  QuestionnaireError,
+  QuestionnaireInput,
+  QuestionnaireItem,
+  QuestionnaireNext,
+  QuestionnairePrevious,
+  QuestionnaireProgress,
+  QuestionnaireSkip,
+  QuestionnaireSubmit,
+  QuestionnaireTitle,
+} from './components/questionnaire.tsx';
+export { Switch } from './components/switch.tsx';
+export {
+  ToolPart,
+  ToolPartDetalj,
+  ToolPartGodkjenning,
+  type ToolPartStatus,
+} from './components/tool-part.tsx';
 // ─── lucide-react — eneste ikonbibliotek (kuratert barrel) ──────────────
 export * from './icons.ts';
 /** Kanoniske bevegelses-tokens (SPRING_PRESS, SPRING_SWAP, EASE_OUT …). Ikke funn opp egne. */

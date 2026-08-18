@@ -17,7 +17,7 @@ export default function MinKompetansePage() {
       </div>
 
       <CardShell>
-        <div className="rounded-lg bg-[#0e0e0e]">
+        <div className="rounded-lg bg-inset">
           <ul className="divide-y divide-border">
             {rows.length === 0 && (
               <li className="px-4 py-3 text-fg-faint text-sm">Ingen registrerte ferdigheter.</li>

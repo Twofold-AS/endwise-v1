@@ -22,8 +22,15 @@ const INJECTION_PATTERNS = [
   /(reveal|vis meg|skriv ut)[\s\S]{0,20}(prompt|instruks)/i,
 ];
 
-/** L4 — ting som aldri skal ut av en agent, uansett hvor pent den blir spurt. */
-const SECRET_PATTERNS: Array<[RegExp, string]> = [
+/**
+ * L4 — ting som aldri skal ut av en agent, uansett hvor pent den blir spurt.
+ *
+ * ⚠️ Eksportert fordi den strømmende varianten (`stream-redact.ts`) MÅ bruke
+ * nøyaktig samme liste. To lister ville før eller siden blitt ulike, og da ville
+ * det som er filtrert i et vanlig svar sluppet gjennom i et strømmet — altså
+ * verst tenkelige utfall: en sperre som virker i testen og ikke i praksis.
+ */
+export const SECRET_PATTERNS: Array<[RegExp, string]> = [
   [/\b(sk|fw)[-_][A-Za-z0-9]{16,}\b/g, '[API-NØKKEL FJERNET]'],
   [/\bpostgres(ql)?:\/\/[^\s]+/gi, '[DB-URL FJERNET]'],
   [/\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\./g, '[TOKEN FJERNET]'],

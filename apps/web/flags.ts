@@ -15,12 +15,24 @@
  * wired (samme forutsetning som data-sidene). Inntil da bruker flate-kode disse
  * TRYGGE default-verdiene. Nøkkel-registeret her er kontrakten.
  */
-export const FLAG_KEYS = ['kill-switch'] as const;
+export const FLAG_KEYS = ['kill-switch', 'dev-mode'] as const;
 export type FlagKey = (typeof FLAG_KEYS)[number];
 
-/** Fail-safe defaults når backend ikke er tilgjengelig. */
+/**
+ * Fail-safe defaults når backend ikke er tilgjengelig.
+ *
+ * ⚠️ **`dev-mode` MÅ være `false` her.** Er API-et nede, er dev-mode av — aldri
+ * motsatt. En fail-OPEN default på denne nøkkelen ville gjort et driftsavbrudd
+ * til en tilgangsutvidelse.
+ *
+ * Og flagget er uansett bare den FØRSTE av tre betingelser: serveren krever i
+ * tillegg `endwise_admin` og `tenants.kind = 'demo'`. Se
+ * `apps/api/src/trpc/dev-mode.ts`. Denne fila kan ikke gi noen tilgang; den
+ * kan bare skjule noe.
+ */
 export const FLAG_DEFAULTS: Record<FlagKey, boolean> = {
   'kill-switch': false,
+  'dev-mode': false,
 };
 
 export function flagDefault(key: FlagKey): boolean {

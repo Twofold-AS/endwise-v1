@@ -30,7 +30,7 @@ export default function ProfilPage() {
       </div>
 
       <CardShell>
-        <div className="flex flex-col gap-3 rounded-lg bg-[#0e0e0e] p-5">
+        <div className="flex flex-col gap-3 rounded-lg bg-inset p-5">
           <div className="flex items-center gap-3">
             <div className="grid size-12 place-items-center rounded-full bg-primary/15 font-semibold text-lg text-primary">
               {(m?.name ?? '?').slice(0, 1).toUpperCase()}

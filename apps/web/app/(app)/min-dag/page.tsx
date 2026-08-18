@@ -51,7 +51,7 @@ export default function MinDagPage() {
         {jobs.map((job, i) => (
           <Link key={job.id} href={`/min-dag/${job.id}` as Route} className="block">
             <CardShell>
-              <div className="flex items-center gap-4 rounded-lg bg-[#0e0e0e] p-4">
+              <div className="flex items-center gap-4 rounded-lg bg-inset p-4">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 font-semibold text-fg text-sm tabular-nums">
                   {i + 1}
                 </div>

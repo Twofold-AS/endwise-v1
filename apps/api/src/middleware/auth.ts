@@ -22,7 +22,7 @@ export interface AuthVars {
  */
 export function authMiddleware(auth: Auth, ctx: AppContext) {
   return createMiddleware<{ Variables: AuthVars }>(async (c, next) => {
-    const { user, session } = await requireSession(auth, c.req.raw.headers);
+    const { user, session } = await requireSession(auth, ctx.db, c.req.raw.headers);
 
     const requested = c.req.header('x-tenant-id') ?? session.activeOrganizationId;
     if (!requested) return c.json({ error: 'Ingen aktiv tenant' }, 400);

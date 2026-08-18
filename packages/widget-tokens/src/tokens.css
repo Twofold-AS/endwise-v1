@@ -1,56 +1,161 @@
 /*
- * F0-11 — @endwise/widget-tokens (mørk/lys/aksent + typografi).
+ * F0-11 — @endwise/widget-tokens.
  *
- * STATUS: VERDIER SATT (15.07.2026) · PALETT RETTET MOT FASIT (16.07.2026).
- * Fasit er TheFold V2 sitt EKTE app-shell (`TheFold/Dev/v2` →
- * `apps/web/src/app/(main)/_shell/app-shell.tsx`, `C`-paletten) — IKKE
- * `globals.css`-brand-tokenene vi kopierte sist (de var legacy #000/#151515).
- * Den ekte flaten er varmere grå: #1a1a1a flater, #141414 kort, #262626 kant.
- * Merkevare-aksenten er VÅR grønne #1ED27D (TheFold brukte en provisorisk blå).
+ * STATUS: DESIGN-PRINSIPPER FRA EIER (03.08.2026). **LYST TEMA ER STANDARD.**
  *
- *   - Aksent  #1ED27D  = logofargen (apps/web/public/logo/logo.svg). Låst.
- *   - Mørkt   default  = <html data-theme="dark"> i apps/web/app/layout.tsx.
- *   - Lyst    toggle   = data-theme="light" (cream/ink).
- *   - Font    sans     = Google Sans Flex (OFL) via next/font (--font-google-sans-flex).
- *   - Font    mono     = JetBrains Mono (OFL) via next/font (--font-jetbrains-mono).
+ * Verdiene under er gitt av eier og har FORRANG over UI-PAKKER.md der de
+ * kolliderer (UI-PAKKER §5 er oppdatert tilsvarende). Snu det ikke tilbake uten
+ * ny beskjed — dette er ikke et forslag, det er spesifikasjonen.
  *
- * Tailwind 4 leser disse via @theme (se packages/ui/src/theme.css). Bytt VERDIER
+ *   Typografi   Inter. Titler 16/20 Medium · labels 13/16 Medium · brødtekst 14 Regular
+ *   Knapper     32px høyde, 10px radius
+ *   Rader       40px (data) · 44px («stores»)
+ *   Badge       20px høyde, 6px radius  (fyll/tekst var #CAFACE/#15B042 —
+ *                                        endret til aksent-tokenene 06.08.2026)
+ *   Switch      24×14px, 10px thumb      (track-på var #0077E6 — følger nå aksenten)
+ *   Tekst       #333333 default · #777777 subtle
+ *   Lyst        bakgrunn #ffffff · sidebar #fafafa · valgt i sidebar #ededed
+ *   Mørkt       bakgrunn #171717 · sidebar #1a1a1a · valgt i sidebar #292929
+ *
+ * ── Hva som er GITT og hva som er UTLEDET ──────────────────────────────────
+ * Alt over er gitt. Verdier merket «utledet» under er MINE, fordi UI-et trenger
+ * dem og spesifikasjonen ikke nevner dem (hårlinjer, hover-flate, kortflate,
+ * mørk tekstrampe). De er markert eksplisitt, slik at de er lette å overstyre.
+ *
+ * Merk: spesifikasjonen har NØYAKTIG TO tekstfarger. `--ew-fg-faint` er derfor
+ * aliasert til subtle (#777777) i stedet for at jeg fant på en tredje. Vil du ha
+ * et tredje nivå, sett verdien her — ingen komponent trenger å endres.
+ *
+ * Tailwind 4 leser disse via @theme (packages/ui/src/theme.css). Bytt VERDIER
  * her, ikke navn — og ikke i theme.css. Dette er den ene sannheten for farge/font.
  */
 
-/* ── MØRKT (default) — TheFold V2 «C»-palett, grønn aksent ───────────────── */
+/* ══ LYST (STANDARD) ══════════════════════════════════════════════════════ */
 :root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Flater — GITT */
+  --ew-bg: #ffffff; /* generell bakgrunn */
+  --ew-sidebar: #fafafa; /* sidebar-kolonnen */
+  --ew-sidebar-active: #ededed; /* valgt element i sidebar */
+
+  /* Flater — UTLEDET */
+  --ew-surface: #ffffff; /* kortflate (flush med siden; kanten bærer) */
+  --ew-surface-2: #f5f5f5; /* hover — ett hakk før `sidebar-active` */
+  --ew-inset: #fafafa; /* indre panel i kort (CardMedia) */
+  --ew-border: #e5e5e5; /* hårlinjer */
+  --ew-border-strong: #d4d4d4; /* input-kant / fokusert kant */
+
+  /* Tekst — GITT (to farger, ikke tre) */
+  --ew-fg: #333333;
+  --ew-fg-muted: #777777;
+  --ew-fg-faint: #777777; /* alias — se filkommentaren */
+
+  /* ⚠️ AKSENT ER SVART FRA 06.08.2026 (eierens beslutning, «foreløpig»).
+     Grønnen ble brukt så bredt at den sluttet å bety noe — den var ikke lenger
+     en aksent, den var bakgrunnsstøy. Svart gjør at det som FAKTISK er grønt
+     (suksess, positiv endring) leses som informasjon igjen.
+
+     Logogrønnen #1ED27D er IKKE rørt: den bor i apps/web/public/logo/logo.svg
+     og i merkeboksen, ikke i disse tokenene. Skal grønnen tilbake som aksent,
+     er det disse fire linjene som endres — ingen komponenter. */
+  --ew-accent: #111111; /* fyll (primærknapp, aktiv markør) */
+  --ew-accent-strong: #111111; /* aksent som TEKST og ikon */
+  --ew-accent-fg: #ffffff; /* tekst oppå --ew-accent */
+  --ew-accent-soft: #ededed; /* aksentfylt flate (badge, egen boble) */
+  --ew-accent-dim: rgba(17, 17, 17, 0.08);
+
+  /* Semantiske statusfarger — UTLEDET, justert for lys bakgrunn */
+  --ew-warn: #b45309;
+  --ew-warn-soft: #fef3c7;
+  --ew-danger: #c8332b;
+  --ew-danger-soft: #fdecea;
+  /* ⚠️ Suksess-grønnen er BEHOLDT, selv om aksenten ble svart. Den er
+     informasjon (+12 %, «Region OK»), ikke merkevare — og nå som den er den
+     eneste grønnen på skjermen, betyr den endelig noe. */
+  --ew-success: #15b042;
+  --ew-success-soft: #caface;
+
+  /* Bevel (TheFold-knappeflaten) — lys variant */
+  /* Bevel-flaten er IKKE ren hvit i lyst tema (endret 06.08.2026): en hvit
+     knapp på #fafafa-sidebaren leste som et hull, ikke som en hevet flate.
+     #f2f2f2 gir samme relieff som den mørke varianten. */
+  --ew-bevel-face: #f2f2f2;
+  --ew-bevel-border: #e0e0e0;
+  --ew-bevel-shadow: 0 1px 2px rgba(17, 17, 17, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --ew-bevel-fg: #333333;
+
+  --ew-glass-bg: #ffffff;
+  --ew-glass-border: #e5e5e5;
+  --ew-glass-blur: 0px;
+}
+
+/* ══ MØRKT (toggle) ═══════════════════════════════════════════════════════ */
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Flater — bg = topbar = sidebar = content (#1a1a1a); kort løftes til #141414 */
-  --ew-bg: #1a1a1a; /* side, topbar, sidebar */
-  --ew-surface: #141414; /* kort-flate */
-  --ew-surface-2: #262626; /* hover/active/bevel — samme tone som kanten */
-  --ew-border: #262626; /* hårlinjer (solid, som TheFold) */
-  --ew-border-strong: #2f2f2f;
+  /* Flater — GITT */
+  --ew-bg: #171717;
+  --ew-sidebar: #1a1a1a;
+  --ew-sidebar-active: #292929;
 
-  /* Tekst-rampe (TheFold: hvit / #a1a1a1 / #7e7e7e) */
-  --ew-fg: #ffffff;
-  --ew-fg-muted: #a1a1a1; /* sekundær + ikonfarge */
-  --ew-fg-faint: #7e7e7e; /* seksjonsetiketter / dim */
+  /* Flater — UTLEDET */
+  --ew-surface: #1f1f1f;
+  --ew-surface-2: #292929; /* samme tone som valgt element — én hover-sannhet */
+  --ew-inset: #141414;
+  --ew-border: #2a2a2a;
+  --ew-border-strong: #363636;
 
-  /* Aksent — GRØNN #1ED27D (vår, erstatter TheFolds provisoriske blå #3b82f6) */
-  --ew-accent: #1ed27d;
-  --ew-accent-fg: #05130b; /* mørk tekst oppå grønt */
-  --ew-accent-dim: rgba(30, 210, 125, 0.14);
+  /* Tekst — UTLEDET. #333333/#777777 er lyst-tema-verdier og ville vært
+     uleselige her; rampen er speilet med samme to-nivå-struktur. */
+  --ew-fg: #ededed;
+  --ew-fg-muted: #8f8f8f;
+  --ew-fg-faint: #8f8f8f;
 
-  /* Semantiske statusfarger */
-  --ew-warn: oklch(76% 0.14 75);
-  --ew-danger: oklch(64% 0.18 25);
-  --ew-success: oklch(70% 0.12 150);
+  /* ⚠️ I mørkt tema er «svart aksent» HVIT. En svart aksent på #171717 ville
+     vært usynlig — det er ikke en farge, det er et hull. Inversjonen holder
+     både kontrasten og betydningen: aksenten er den nøytrale, sterkeste tonen
+     i temaet. Endret 06.08.2026 sammen med den lyse. */
+  --ew-accent: #ffffff;
+  --ew-accent-strong: #ffffff;
+  --ew-accent-fg: #111111;
+  --ew-accent-soft: rgba(255, 255, 255, 0.12);
+  --ew-accent-dim: rgba(255, 255, 255, 0.1);
 
-  /* Overflate/panel-token (brukes ikke lenger til glass-rail — solid nå) */
+  --ew-warn: #e0a04a;
+  --ew-warn-soft: rgba(224, 160, 74, 0.14);
+  --ew-danger: #e5695f;
+  --ew-danger-soft: rgba(229, 105, 95, 0.14);
+  --ew-success: #1ed27d;
+  --ew-success-soft: rgba(30, 210, 125, 0.16);
+
+  --ew-bevel-face: #292929;
+  --ew-bevel-border: #363636;
+  --ew-bevel-shadow: 0 2px 6px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --ew-bevel-fg: #ededed;
+
   --ew-glass-bg: #1a1a1a;
-  --ew-glass-border: #262626;
-  --ew-glass-blur: 0px;
+  --ew-glass-border: #2a2a2a;
+}
 
-  /* Radius — TheFolds skala (kort 12, knapp/nav 8, badge 6) */
+/* ══ FORM OG MÅL — temauavhengig ══════════════════════════════════════════ */
+:root {
+  /* Kontrollhøyder og radier — GITT */
+  --ew-control-h: 32px; /* knapper, inputs, selects */
+  --ew-radius-control: 10px; /* knapper */
+  --ew-row-h: 40px; /* datarad */
+  --ew-row-h-store: 44px; /* «stores»-rad */
+  --ew-badge-h: 20px;
+  --ew-badge-radius: 6px;
+  --ew-switch-w: 24px;
+  --ew-switch-h: 14px;
+  --ew-switch-thumb: 10px;
+  /* Følger aksenten (svart i lyst, hvit i mørkt) — eierens beslutning
+     06.08.2026. Var #0077E6. */
+  --ew-switch-track-on: var(--ew-accent);
+
+  /* Øvrig radius-skala */
   --ew-radius-sm: 3px;
   --ew-radius-md: 6px;
   --ew-radius-lg: 8px;
@@ -65,33 +170,11 @@
   --ew-space-6: 24px;
   --ew-space-8: 32px;
 
-  /* Typografi — next/font-variabler med systemfallback (se app/layout.tsx) */
+  /* Typografi — Inter (GITT). next/font-variabel m/ systemfallback. */
   --ew-font-sans:
-    var(--font-google-sans-flex, ui-sans-serif), system-ui, -apple-system, "Segoe UI", Roboto,
+    var(--font-inter, "Inter"), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
   --ew-font-mono:
     var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, Consolas,
     monospace;
-}
-
-/* ── LYST (toggle) — cream/ink, aksenten holdes grønn ───────────────────── */
-[data-theme="light"] {
-  color-scheme: light;
-
-  --ew-bg: #fbfbf8;
-  --ew-surface: #ffffff;
-  --ew-surface-2: #f0f0ec;
-  --ew-border: #e4e4e0;
-  --ew-border-strong: #d8d8d2;
-
-  --ew-fg: rgba(38, 35, 35, 0.9);
-  --ew-fg-muted: rgba(38, 35, 35, 0.5);
-  --ew-fg-faint: rgba(38, 35, 35, 0.4);
-
-  --ew-accent: #1ed27d;
-  --ew-accent-fg: #05130b;
-  --ew-accent-dim: rgba(30, 210, 125, 0.12);
-
-  --ew-glass-bg: #ffffff;
-  --ew-glass-border: #e4e4e0;
 }

@@ -69,7 +69,7 @@ export default function TimeplanPage() {
         {jobs.map((job) => (
           <Link key={job.id} href={`/min-dag/${job.id}` as Route} className="block">
             <CardShell>
-              <div className="flex items-center gap-3 rounded-lg bg-[#0e0e0e] p-3.5">
+              <div className="flex items-center gap-3 rounded-lg bg-inset p-3.5">
                 <div className="w-14 shrink-0 text-center font-semibold text-[13px] text-primary tabular-nums">
                   {fmtTime(job.startsAt)}
                 </div>
@@ -81,8 +81,8 @@ export default function TimeplanPage() {
                     </span>
                   </div>
                   <p className="truncate text-fg-faint text-xs">
-                    {job.customerName ?? 'Ukjent kunde'} · est. {estMinutes(job.startsAt, job.endsAt)}{' '}
-                    min
+                    {job.customerName ?? 'Ukjent kunde'} · est.{' '}
+                    {estMinutes(job.startsAt, job.endsAt)} min
                   </p>
                 </div>
                 <span className="shrink-0 rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-fg-muted">

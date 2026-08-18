@@ -8,16 +8,35 @@ import type { OrgRole } from '../_shell/nav';
  * F1-05 — Ekte rolle fra sesjonen: Better-Auth sier innlogget/ikke, og
  * `trpc.session.me` gir org-rollen + om brukeren er mekaniker (mekaniker-profil).
  * Klient-side gating er kosmetikk; server håndhever via adminProcedure/RLS.
+ *
+ * ── Utvidet 07.08.2026 (F5-26/F5-27) ───────────────────────────────────────
+ * `tenantName` erstatter «Endwise-forhandler»-placeholderen i sidebaren.
+ * `devMode` er de tre betingelsene fra `apps/api/src/trpc/dev-mode.ts`, allerede
+ * resolvert på serveren — klienten regner ikke ut noe selv, den viser bare svaret.
  */
 export function useOrgRole(): {
   userId: string | null;
   role: OrgRole | null;
+  tenantName: string | null;
+  tenantKind: 'live' | 'demo';
   isMechanic: boolean;
   isDealerAdmin: boolean;
   isEndwiseAdmin: boolean;
   isAdmin: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** ⚠️ Kosmetikk. Sperren er server-side på hver skrivesti. */
+  devMode: boolean;
+  /**
+   * Kan brukeren BYTTE til en demo-tenant? Bevisst svakere enn `devMode`.
+   *
+   * Full dev-mode krever at du allerede ER i en demo-tenant — men da ville
+   * bytteren som får deg DIT vært gjemt bak seg selv. Derfor holder det med
+   * flagg + endwise_admin for å se lista. Det gir ingen tilgang: ruta bak den
+   * er `endwiseAdminProcedure` og returnerer kun tenants du allerede er
+   * medlem av.
+   */
+  canSwitchDemo: boolean;
 } {
   const { data: session, isPending } = useSession();
   const authed = Boolean(session?.user);
@@ -26,11 +45,15 @@ export function useOrgRole(): {
   return {
     userId: me.data?.userId ?? null,
     role,
+    tenantName: me.data?.tenantName ?? null,
+    tenantKind: (me.data?.tenantKind as 'live' | 'demo' | undefined) ?? 'live',
     isMechanic: me.data?.isMechanic ?? false,
     isDealerAdmin: role === 'dealer_admin' || role === 'endwise_admin',
     isEndwiseAdmin: role === 'endwise_admin',
     isAdmin: role === 'dealer_admin' || role === 'endwise_admin',
     isAuthenticated: authed,
     isLoading: isPending || (authed && me.isLoading),
+    devMode: me.data?.devMode?.enabled ?? false,
+    canSwitchDemo: (me.data?.devMode?.flagOn ?? false) && role === 'endwise_admin',
   };
 }

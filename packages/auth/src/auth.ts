@@ -3,6 +3,7 @@ import { createDb } from '@endwise/db';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { organization, phoneNumber, twoFactor } from 'better-auth/plugins';
+import { devTrustedOrigins } from './dev-origins.ts';
 import { authEnv } from './env.ts';
 import { ac, roles } from './rbac.ts';
 import { sendTwoFactorOtp } from './senders/resend.ts';
@@ -29,6 +30,23 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
 
     database: drizzleAdapter(db, { provider: 'pg' }),
 
+    /**
+     * Origin-sjekken er PÅ og skal være det — men i dev er `localhost`,
+     * `127.0.0.1` OG maskinens LAN-adresse samme maskin, mens bare den ene står
+     * i `BETTER_AUTH_URL`. Åpner du appen på `http://127.0.0.1:3000` eller fra
+     * telefonen på `http://192.168.x.x:3000`, blir hvert eneste auth-kall
+     * avvist med `403 Invalid origin`, uten at noe i UI-et antyder at adressen
+     * i adressefeltet er problemet.
+     *
+     * LAN-adressene leses fra maskinens egne nettverksgrensesnitt ved oppstart
+     * (`devTrustedOrigins`) — ikke fra en env-variabel som blir feil neste gang
+     * ruteren deler ut en ny IP.
+     *
+     * ⚠️ Kun i dev. I produksjon er `baseURL` fasiten, og en ekstra betrodd
+     * origin der ville vært et hull, ikke en bekvemmelighet.
+     */
+    ...(process.env.NODE_ENV === 'production' ? {} : { trustedOrigins: devTrustedOrigins() }),
+
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
@@ -53,9 +71,24 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
       },
     },
 
-    // F1-01: rate-limit + cooldown på OTP-stiene.
+    /**
+     * F1-01: rate-limit + cooldown på OTP-stiene.
+     *
+     * ⚠️ **AV I DEV fra 07.08.2026 — og det var ikke en svekkelse, det var en fiks.**
+     *
+     * Better-Auth slår rate-limit av i dev som standard. Vi hadde overstyrt det
+     * med `enabled: true`, og kombinert med bøtte-problemet under (se
+     * `ipAddress`) betydde det at **alle klienter delte ÉN teller på 5 innlogginger
+     * per minutt**. Fem forsøk fra hvem som helst — en feiltastet passord, en
+     * refresh, et testskript — låste ute alle andre i 60 sekunder, med
+     * «Too many requests» som eneste spor. Det var det som gjorde at innlogging
+     * med demo-brukeren sluttet å virke.
+     *
+     * Grensene er UENDRET i produksjon. Vil du teste dem lokalt:
+     * `AUTH_RATE_LIMIT=1 pnpm dev`.
+     */
     rateLimit: {
-      enabled: true,
+      enabled: process.env.NODE_ENV === 'production' || process.env.AUTH_RATE_LIMIT === '1',
       window: 60,
       max: 60,
       customRules: {
@@ -102,6 +135,30 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
     advanced: {
       cookiePrefix: 'endwise',
       useSecureCookies: process.env.NODE_ENV === 'production',
+
+      /**
+       * ⚠️ F1-01 — HVEM rate-limiten teller på. Dette er en sikkerhetsfiks,
+       * ikke en konfigurasjonsdetalj.
+       *
+       * Better-Auth stoler IKKE på `x-forwarded-for` som standard — den kan
+       * settes av klienten selv. Uten en betrodd kilde til IP faller den
+       * tilbake på **én delt bøtte for alle** (nøkkelen `no-trusted-ip`), og
+       * logger en advarsel de fleste aldri ser. Konsekvensen er at rate-limiten
+       * snur seg: i stedet for å beskytte mot brute force blir den et
+       * tilgjengelighetsangrep, der én klient kan låse ute samtlige brukere.
+       *
+       * Derfor navngis headerne eksplisitt. `x-vercel-forwarded-for` settes av
+       * Vercels edge og kan ikke forfalskes av klienten; `x-real-ip` er
+       * reserven. **Ikke** `x-forwarded-for` — den er klientkontrollerbar, og
+       * da ville per-IP-bøttene vært trivielle å omgå.
+       *
+       * ⚠️ **Må verifiseres ved første deploy (F13):** logger Better-Auth
+       * fortsatt «could not determine a client IP», er vi tilbake i den delte
+       * bøtta og headernavnet er feil for plattformen.
+       */
+      ipAddress: {
+        ipAddressHeaders: ['x-vercel-forwarded-for', 'x-real-ip'],
+      },
       database: {
         // Id-generering (F1). VIKTIG: `generateId: 'uuid'` fungerer IKKE med
         // Postgres-adapteren — da delegerer Better-Auth uuid-genereringen til en

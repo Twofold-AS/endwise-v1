@@ -40,55 +40,11 @@ export const PLANS_UI: PlanUI[] = [
 
 export const MOCK_SUB = { planKey: 'pluss', status: 'active', currentPeriodEnd: '01.08.2026' };
 
-export type IntegrationUI = {
-  key: string;
-  name: string;
-  desc: string;
-  entitled: boolean;
-  enabled: boolean;
-  minPlan: string;
-};
-
-// entitled = planen gir tilgang; enabled = forhandleren har skrudd den på.
-export const INTEGRATIONS_UI: IntegrationUI[] = [
-  {
-    key: 'vegvesen',
-    name: 'Vegvesen',
-    desc: 'Regnr → merke/modell/EU-frist (Autosys)',
-    entitled: true,
-    enabled: true,
-    minPlan: 'Basis',
-  },
-  {
-    key: 'quick',
-    name: 'Quick',
-    desc: 'Import av bookinger fra Quick',
-    entitled: true,
-    enabled: false,
-    minPlan: 'Pluss',
-  },
-  {
-    key: 'twilio',
-    name: 'Twilio (SMS)',
-    desc: 'SMS-varsler til kunder',
-    entitled: true,
-    enabled: true,
-    minPlan: 'Pluss',
-  },
-  {
-    key: 'resend',
-    name: 'Resend (e-post)',
-    desc: 'Transaksjons-e-post + nyhetsbrev',
-    entitled: true,
-    enabled: true,
-    minPlan: 'Pluss',
-  },
-  {
-    key: 'ai-providers',
-    name: 'AI-leverandører',
-    desc: 'Fireworks + Mistral (AI-agenter)',
-    entitled: false,
-    enabled: false,
-    minPlan: 'Proff',
-  },
-];
+/*
+ * ⚠️ `INTEGRATIONS_UI` FJERNET 09.08.2026.
+ *
+ * Den var hardkodet mock-data med av/på-brytere som kun levde i `useState`.
+ * Integrasjonsfanen leser nå `billing.katalog` — ekte `tenant_modules` og
+ * ekte priser fra Stripe-katalogen — og har ingen brytere i det hele tatt.
+ * Se `packages/modules/src/billing/katalog.ts`.
+ */

@@ -5,6 +5,7 @@ import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
 import { schema, withTenant } from '@endwise/db';
 import { tool } from 'ai';
 import { z } from 'zod';
+import { lagerVerktoy } from './lager-verktoy.ts';
 
 const instructions = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), 'instructions.md'),
@@ -41,6 +42,10 @@ export const driftInnsiktAgent: AgentDefinition = {
             tx.select().from(schema.bookings).limit(limit),
           ),
       }),
+
+      // F6-15 — Lager, KUN LESING og med felt-allowlist (ingen kostpris).
+      // Se lager-verktoy.ts for de tre grensene og hvorfor de står der.
+      ...lagerVerktoy(context),
 
       mekanikere: tool({
         description: 'Mekanikerne hos forhandleren, med kapasitet.',

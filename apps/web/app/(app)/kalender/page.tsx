@@ -1,5 +1,7 @@
-import { Placeholder } from '../_components/placeholder';
+import type { Route } from 'next';
+import { redirect } from 'next/navigation';
 
-export default function Page() {
-  return <Placeholder title="Kalender" phase="F3-07" />;
+/** F5-15 — Kalenderen er en VISNING inne i Saker, ikke en egen destinasjon. */
+export default function KalenderRedirect() {
+  redirect('/saker?visning=kalender' as Route);
 }

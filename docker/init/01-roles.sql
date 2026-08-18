@@ -1,6 +1,7 @@
 -- Kjøres én gang når Postgres-containeren initialiseres (tomt volum).
 --
--- Speiler Neon-oppsettet: appen kobler seg til med en rolle som IKKE eier
+-- Speiler prod-oppsettet (Scaleway Managed PostgreSQL): appen kobler seg til
+-- med en rolle som IKKE eier
 -- tabellene, slik at RLS faktisk gjelder for den. Eieren (`endwise`) brukes
 -- bare til migrasjoner og seeding — for eieren er RLS usynlig.
 --

@@ -5,59 +5,235 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Offline — Endwise</title>
     <style>
+      /*
+       * F7-01 — Offline-fallback for mekaniker-PWA-en.
+       *
+       * ⚠️ Denne fila kan IKKE importere `theme.css` eller `tokens.css`: den
+       * serveres av service workeren når nettet er borte, uten app-bundelen.
+       * Verdiene under er derfor KOPIERT fra
+       * `packages/widget-tokens/src/tokens.css` — endres tokenene der, må de
+       * endres her. Det er den eneste duplikasjonen i token-laget, og den står
+       * her fordi alternativet (ingen stil i det hele tatt) er verre.
+       *
+       * Begge temaer via `prefers-color-scheme` — offline-skjermen kan ikke
+       * lese `data-theme` fra appen, siden appen ikke kjører.
+       */
+      :root {
+        --ew-bg: #ffffff;
+        --ew-surface: #ffffff;
+        --ew-inset: #fafafa;
+        --ew-border: #e5e5e5;
+        --ew-fg: #333333;
+        --ew-fg-muted: #777777;
+        --ew-danger: #c8332b;
+        --ew-danger-soft: #fdecea;
+        --ew-accent: #111111;
+        --ew-accent-fg: #ffffff;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ew-bg: #171717;
+          --ew-surface: #1f1f1f;
+          --ew-inset: #1a1a1a;
+          --ew-border: #2a2a2a;
+          --ew-fg: #ededed;
+          --ew-fg-muted: #8f8f8f;
+          --ew-danger: #e5695f;
+          --ew-danger-soft: rgba(229, 105, 95, 0.14);
+          --ew-accent: #ffffff;
+          --ew-accent-fg: #111111;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       html,
       body {
         margin: 0;
-        height: 100%;
-        background: #151515;
-        color: #fafafa;
-        font-family: system-ui, -apple-system, sans-serif;
+        min-height: 100%;
+        background: var(--ew-bg);
+        color: var(--ew-fg);
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
         display: grid;
         place-items: center;
-        text-align: center;
-      }
-      .card {
         padding: 24px;
-        max-width: 320px;
+        padding-bottom: calc(24px + env(safe-area-inset-bottom));
       }
-      .dot {
-        width: 10px;
-        height: 10px;
+
+      .kort {
+        width: 100%;
+        max-width: 380px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 16px;
+      }
+
+      /* Merkeboks: liten, svart, hvit logo — i BEGGE temaer, som i sidebaren. */
+      .merke {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: #000;
+      }
+      .merke svg {
+        width: 22px;
+        height: auto;
+        /* Logoen er tegnet i #0b0b0b — gjør den hvit mot den svarte boksen. */
+        filter: brightness(0) invert(1);
+      }
+
+      /* Offline-status: RØD (--ew-danger), ikke den gamle gule prikken.
+         Rødt er statusen, ikke en dekorasjon — derfor bærer både prikken,
+         teksten og flaten samme token. */
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: var(--ew-danger-soft);
+        color: var(--ew-danger);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1;
+      }
+      .prikk {
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
-        background: #f59e0b;
-        display: inline-block;
-        margin-right: 6px;
+        background: var(--ew-danger);
+        flex: none;
       }
+
+      .ikon {
+        color: var(--ew-fg-muted);
+        margin-top: 4px;
+      }
+
       h1 {
-        font-size: 18px;
-        margin: 12px 0 6px;
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 1.25;
+        margin: 0;
+        color: var(--ew-fg);
       }
+
       p {
-        color: #a1a1a1;
+        margin: 0;
+        color: var(--ew-fg-muted);
         font-size: 14px;
-        line-height: 1.5;
+        line-height: 1.55;
       }
+
+      .kø {
+        width: 100%;
+        margin-top: 4px;
+        padding: 12px 14px;
+        border: 1px solid var(--ew-border);
+        border-radius: 10px;
+        background: var(--ew-inset);
+        color: var(--ew-fg-muted);
+        font-size: 13px;
+        line-height: 1.5;
+        text-align: left;
+      }
+      .kø strong {
+        color: var(--ew-fg);
+        font-weight: 500;
+      }
+
       button {
-        margin-top: 16px;
-        padding: 10px 18px;
-        border-radius: 8px;
+        margin-top: 4px;
+        height: 40px;
+        padding: 0 20px;
         border: none;
-        background: #1ed27d;
-        color: #04140b;
-        font-weight: 600;
+        border-radius: 10px;
+        background: var(--ew-accent);
+        color: var(--ew-accent-fg);
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 500;
         cursor: pointer;
+      }
+      button:hover {
+        filter: brightness(1.15);
+      }
+      button:focus-visible {
+        outline: 2px solid var(--ew-fg);
+        outline-offset: 2px;
       }
     </style>
   </head>
   <body>
-    <div class="card">
-      <div><span class="dot"></span><strong>Offline</strong></div>
+    <main class="kort">
+      <!-- Logoen er INLINE, ikke <img src="/logo/logo.svg">. Den ligger ikke i
+           service workerens PRECACHE, så en referanse ville vært et tomt felt
+           nøyaktig når skjermen trengs. -->
+      <span class="merke" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 222 134" role="img" aria-label="Endwise">
+          <g fill="#0b0b0b">
+            <path d="M0,0 L23,0 C40,0.5 52,9 62,28 L96,94 Q90,112 84,134 L72,134 C50,86 13,9 0,0 Z" />
+            <path
+              d="M73.5,0 L96.5,0 C113.5,0.5 125.5,9 135.5,28 L169.5,94 C182,113 200,120 218,123 L218,134 L145.5,134 C123.5,86 86.5,9 73.5,0 Z"
+            />
+            <path d="M154,0 C159,2 168,13 171,34 C178,21 190,7 206,0 Z" />
+            <path d="M170,53 C175,55 184,66 187,87 C194,74 206,60 222,53 Z" />
+          </g>
+        </svg>
+      </span>
+
+      <span class="status"><span class="prikk"></span>Offline</span>
+
+      <!-- wifi-off (lucide). Inline av samme grunn som logoen. -->
+      <svg
+        class="ikon"
+        xmlns="http://www.w3.org/2000/svg"
+        width="40"
+        height="40"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        role="img"
+        aria-label="Uten nettforbindelse"
+      >
+        <path d="M12 20h.01" />
+        <path d="M8.5 16.429a5 5 0 0 1 7 0" />
+        <path d="M5 12.859a10 10 0 0 1 5.17-2.69" />
+        <path d="M19 12.859a10 10 0 0 0-2.007-1.523" />
+        <path d="M2 8.82a15 15 0 0 1 4.177-2.643" />
+        <path d="M22 8.82a15 15 0 0 0-11.288-3.764" />
+        <path d="m2 2 20 20" />
+      </svg>
+
       <h1>Ingen nettforbindelse</h1>
-      <p>
-        Du er uten dekning akkurat nå. Dagens jobber du allerede har åpnet er lagret. Statusendringer
-        du gjør legges i kø og sendes når du er tilbake på nett.
-      </p>
-      <button onclick="location.reload()">Prøv igjen</button>
-    </div>
+
+      <p>Du er uten dekning akkurat nå.</p>
+
+      <div class="kø">
+        <strong>Jobbene du allerede har åpnet er lagret.</strong> Statusendringer du gjør legges i
+        kø og sendes automatisk når du er tilbake på nett.
+      </div>
+
+      <button type="button" onclick="location.reload()">Prøv igjen</button>
+    </main>
   </body>
 </html>

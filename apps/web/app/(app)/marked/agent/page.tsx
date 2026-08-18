@@ -51,7 +51,7 @@ export default function FramerAgentPage() {
       </div>
 
       <CardShell className="min-h-0 flex-1">
-        <div className="flex min-h-[320px] flex-1 flex-col gap-3 overflow-y-auto rounded-lg bg-[#0e0e0e] p-4">
+        <div className="flex min-h-[320px] flex-1 flex-col gap-3 overflow-y-auto rounded-lg bg-inset p-4">
           {messages.length === 0 ? (
             <p className="m-auto max-w-sm text-center text-fg-faint text-sm">
               Be agenten bygge eller endre en forhandlerside i Framer — f.eks. «lag en landingsside
@@ -79,7 +79,7 @@ export default function FramerAgentPage() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Skriv til Framer-agenten…"
-            className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border border-border bg-[#0e0e0e] px-3 py-2 text-[13px] text-fg outline-none placeholder:text-fg-faint"
+            className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border border-border bg-inset px-3 py-2 text-[13px] text-fg outline-none placeholder:text-fg-faint"
           />
           <BevelButton onClick={send}>Send</BevelButton>
         </form>

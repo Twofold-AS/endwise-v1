@@ -1,7 +1,8 @@
 /**
  * Seed/mock-data for admin-oversikten. Deterministisk (ingen Math.random) så
  * server- og klient-render matcher. Byttes mot ekte tRPC-spørringer (F3-05/F5)
- * senere — visualiseringene under er allerede ekte dither-kit.
+ * senere. Feltet `spark`/`color` på KPI-ene er ubrukt etter at dither-kit ble
+ * fjernet 03.08.2026 — beholdt inntil videre så seed-formen ikke må skrives om.
  */
 
 export type DayRow = {
@@ -11,7 +12,7 @@ export type DayRow = {
   avlyst: number;
 };
 
-// 30 dager booking-flyt — bærer hoved-arealgrafen.
+// 30 dager booking-flyt — vises som tabell (BookingsTable).
 export const BOOKINGS_30D: DayRow[] = Array.from({ length: 30 }, (_, i) => {
   const wave = Math.sin(i / 3.2) * 4 + Math.cos(i / 1.7) * 2;
   const weekend = i % 7 === 5 || i % 7 === 6;

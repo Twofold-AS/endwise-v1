@@ -2,8 +2,17 @@ pre-commit:
   parallel: true
   commands:
     biome:
+      # ⚠️ HELE repoet, ikke {staged_files}.
+      #
+      # Med filliste feilet hooken på "The command line is too long" så snart
+      # en commit ble stor nok (Windows kutter ved ~8191 tegn — 400 filer holder
+      # lenge). Feilen kom ikke som en lint-feil, men som en hook som bare
+      # stoppet, og den ville dukket opp igjen ved neste store commit.
+      #
+      # Biome bruker under et halvt sekund på hele treet, så det koster
+      # ingenting å slippe grensen helt. Ekskluderingene ligger i biome.json.
       glob: "*.{js,ts,jsx,tsx,json,jsonc,css}"
-      run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
+      run: pnpm biome check --write .
       stage_fixed: true
     typecheck:
       run: pnpm turbo run typecheck

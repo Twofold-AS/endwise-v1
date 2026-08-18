@@ -1,5 +1,6 @@
 # Lokal utvikling (techstack §2 Fundament: "Docker Compose — kun for lokal dev").
-# Prod-DB blir Neon (EU) når vi kobler på deploy. Se docs/roadmap-endringer.md.
+# Prod-DB blir Scaleway Managed PostgreSQL (Frankrike, EU) — besluttet
+# 09.08.2026. Se docs/deploy-plan.md.
 services:
   postgres:
     image: pgvector/pgvector:pg16

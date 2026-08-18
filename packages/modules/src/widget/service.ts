@@ -79,7 +79,7 @@ export function createWidgetKeyService(db: Database) {
      * vilje (vi kjenner ikke tenant ennå). Returnerer null hvis ukjent/inaktiv.
      */
     async resolveByPublishableKey(publishableKey: string): Promise<WidgetKeyResolution | null> {
-      if (!publishableKey || !publishableKey.startsWith('pk_')) return null;
+      if (!publishableKey?.startsWith('pk_')) return null;
       const [row] = await db
         .select({
           tenantId: schema.widgetKeys.tenantId,
@@ -89,7 +89,7 @@ export function createWidgetKeyService(db: Database) {
         .from(schema.widgetKeys)
         .where(eq(schema.widgetKeys.publishableKey, publishableKey))
         .limit(1);
-      if (!row || !row.active) return null;
+      if (!row?.active) return null;
       return { tenantId: row.tenantId, allowedOrigins: row.allowedOrigins, active: row.active };
     },
   };
@@ -118,9 +118,7 @@ export function createWidgetPublicService(db: Database) {
           })
           .from(schema.serviceVersions)
           .innerJoin(schema.services, eq(schema.serviceVersions.serviceId, schema.services.id))
-          .where(
-            and(eq(schema.services.active, true), isNull(schema.serviceVersions.validTo)),
-          );
+          .where(and(eq(schema.services.active, true), isNull(schema.serviceVersions.validTo)));
         return rows.map((r) => ({ ...r, vehicleType: String(r.vehicleType) }));
       });
     },

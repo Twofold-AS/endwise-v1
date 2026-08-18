@@ -1,14 +1,17 @@
 'use client';
 
-import { Sparkline, TrendingDown, TrendingUp } from '@endwise/ui';
-import { CardMedia, CardShell } from '../../_shell/cards';
+import { TrendingDown, TrendingUp } from '@endwise/ui';
+import { CardShell } from '../../_shell/cards';
 import type { Kpi } from '../_data';
 
 /**
- * KPI-kort i TheFolds kortstil: dither-visualiseringen ØVERST i et indre panel
- * (dobbel kant via CardShell+CardMedia), tall/etikett i EGEN tekstdel UNDER —
- * ikke tekst oppå canvas. (UI-PAKKER: dither bærer aldri info alene — tallet
- * står i klartekst uansett.)
+ * KPI-kort. **Ingen graf** — dither-kit ble fjernet fra UI-et 03.08.2026
+ * (eierens beslutning). Kortet står, tallet bærer.
+ *
+ * Regelen fra før var at grafen aldri skulle bære informasjon alene; tallet
+ * skulle alltid stå i klartekst. Derfor kostet det ingenting å ta bort grafen —
+ * all informasjon var allerede i teksten. Det er også hele beviset på at regelen
+ * var riktig.
  */
 export function KpiCard({ kpi }: { kpi: Kpi }) {
   const TrendIcon = kpi.trend === 'up' ? TrendingUp : TrendingDown;
@@ -16,18 +19,12 @@ export function KpiCard({ kpi }: { kpi: Kpi }) {
 
   return (
     <CardShell>
-      {/* Innhold: dither-graf i indre panel (øverst). */}
-      <CardMedia className="h-20">
-        <Sparkline data={kpi.spark} color={kpi.color} variant="gradient" bloom="aura" animate />
-      </CardMedia>
-
-      {/* Tekstdel (under). */}
-      <div className="flex flex-col gap-0.5 px-1.5 pt-2 pb-1">
-        <p className="font-medium text-fg-muted text-xs">{kpi.label}</p>
+      <div className="flex flex-col gap-2 p-3">
+        <p className="text-label text-fg-muted">{kpi.label}</p>
         <div className="flex items-end justify-between gap-2">
-          <p className="font-semibold text-2xl text-fg tabular-nums tracking-tight">{kpi.value}</p>
-          <p className={`inline-flex items-center gap-1 pb-1 font-medium text-xs ${trendColor}`}>
-            <TrendIcon size={13} aria-hidden />
+          <p className="font-medium text-[24px] text-fg leading-none tabular-nums">{kpi.value}</p>
+          <p className={`inline-flex items-center gap-1 text-label ${trendColor}`}>
+            <TrendIcon size={14} aria-hidden />
             {kpi.delta}
           </p>
         </div>

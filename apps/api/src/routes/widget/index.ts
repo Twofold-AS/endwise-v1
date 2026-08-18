@@ -10,7 +10,13 @@ import {
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createAppContext } from '../../context.ts';
-import { clientIp, widgetAuth, widgetCors, widgetTokenSecret, type WidgetVars } from '../../lib/widget-auth.ts';
+import {
+  clientIp,
+  type WidgetVars,
+  widgetAuth,
+  widgetCors,
+  widgetTokenSecret,
+} from '../../lib/widget-auth.ts';
 import { widgetChat } from './chat.ts';
 
 /**

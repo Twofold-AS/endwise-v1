@@ -25,7 +25,7 @@ export default function NyhetsbrevPage() {
       </div>
 
       <CardShell>
-        <div className="flex flex-col gap-3 rounded-lg bg-[#0e0e0e] p-4">
+        <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
           <label className="flex flex-col gap-1 text-fg-muted text-xs">
             Mottakersegment
             <select

@@ -1,6 +1,11 @@
 import { and, type Database, eq, isNull, schema, sql, withTenant } from '@endwise/db';
 import { createBooking } from '../booking/engine.ts';
-import { computeFreeSlots } from './availability.ts';
+import {
+  computeFreeSlots,
+  isOfferedSlot,
+  WIDGET_SLOT_STEP_MINUTES,
+  widgetWorkingDay,
+} from './availability.ts';
 import { generatePublishableKey } from './keys.ts';
 import { normalizeOrigin } from './origin.ts';
 
@@ -195,6 +200,20 @@ export function createWidgetPublicService(db: Database) {
         idempotencyKey: string;
       },
     ): Promise<{ bookingId: string; status: string }> {
+      // F4-20 — klienten kan sende tjeneste B + et slot regnet ut for A.
+      // Avvis før vi lager kunde: start må finnes i tilgjengeligheten for VERSJONEN.
+      const { dayStart, dayEnd } = widgetWorkingDay(input.startsAt);
+      const offered = await createWidgetPublicService(db).availableSlots(tenantId, {
+        serviceVersionId: input.serviceVersionId,
+        dayStart,
+        dayEnd,
+        stepMinutes: WIDGET_SLOT_STEP_MINUTES,
+        notBefore: new Date(),
+      });
+      if (!isOfferedSlot(input.startsAt, offered)) {
+        throw new WidgetBookingError('Valgt tid er ikke ledig for denne tjenesten');
+      }
+
       // 1) Prep i RLS-transaksjon: varighet, mekanikervalg, opprett kunde (deres egne data).
       const prep = await withTenant(db, tenantId, async (tx) => {
         const [ver] = await tx

@@ -37,6 +37,38 @@ export interface FreeSlotQuery {
 
 const MS_PER_MIN = 60_000;
 
+/** F4-07/F4-20 — samme arbeidsdag og rutenett som `/widget/availability`. */
+export const WIDGET_DAY_OPEN_HOUR = 8;
+export const WIDGET_DAY_CLOSE_HOUR = 16;
+export const WIDGET_SLOT_STEP_MINUTES = 30;
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+/** Lokal `YYYY-MM-DD` for en Date, eller slipp gjennom en allerede gyldig datostreng. */
+export function widgetDayKey(from: Date | string): string {
+  if (typeof from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(from)) return from;
+  const d = from instanceof Date ? from : new Date(from);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+/** Arbeidsdag 08–16 lokal tid — samme parser som widget-ruten. */
+export function widgetWorkingDay(from: Date | string): { dayStart: Date; dayEnd: Date } {
+  const key = widgetDayKey(from);
+  return {
+    dayStart: new Date(`${key}T${pad2(WIDGET_DAY_OPEN_HOUR)}:00:00`),
+    dayEnd: new Date(`${key}T${pad2(WIDGET_DAY_CLOSE_HOUR)}:00:00`),
+  };
+}
+
+/** Om `startsAt` er et av de tilbudte tidspunktene (samme millisekund). */
+export function isOfferedSlot(startsAt: Date, slots: readonly Date[]): boolean {
+  const t = startsAt.getTime();
+  if (Number.isNaN(t)) return false;
+  return slots.some((s) => s.getTime() === t);
+}
+
 function overlaps(s: number, e: number, b: BusyInterval): boolean {
   // Halvåpne intervaller: [s,e) mot [b.start,b.end).
   return s < b.end.getTime() && e > b.start.getTime();

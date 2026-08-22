@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeFreeSlots } from '../src/widget/availability.ts';
+import { computeFreeSlots, isOfferedSlot, widgetWorkingDay } from '../src/widget/availability.ts';
 import { normalizeOrigin, originAllowed } from '../src/widget/origin.ts';
 import { createRateLimiter } from '../src/widget/rate-limit.ts';
 import { signWidgetToken, verifyWidgetToken, WidgetTokenError } from '../src/widget/token.ts';
@@ -119,5 +119,41 @@ describe('computeFreeSlots', () => {
       notBefore: day(10),
     });
     expect(Math.min(...slots.map((s) => s.getUTCHours()))).toBe(10);
+  });
+
+  it('F4-20: start som passer 30 min passer ikke 180 min samme dag', () => {
+    const dayStart = new Date('2026-09-15T08:00:00');
+    const dayEnd = new Date('2026-09-15T16:00:00');
+    const late = new Date('2026-09-15T15:30:00');
+    const short = computeFreeSlots({
+      dayStart,
+      dayEnd,
+      durationMinutes: 30,
+      stepMinutes: 30,
+      busy: [],
+    });
+    const long = computeFreeSlots({
+      dayStart,
+      dayEnd,
+      durationMinutes: 180,
+      stepMinutes: 30,
+      busy: [],
+    });
+    expect(isOfferedSlot(late, short)).toBe(true);
+    expect(isOfferedSlot(late, long)).toBe(false);
+  });
+
+  it('isOfferedSlot krever samme millisekund', () => {
+    const slot = new Date('2026-09-15T09:00:00');
+    expect(isOfferedSlot(slot, [slot])).toBe(true);
+    expect(isOfferedSlot(new Date('2026-09-15T09:00:01'), [slot])).toBe(false);
+  });
+});
+
+describe('widgetWorkingDay', () => {
+  it('parser YYYY-MM-DD som lokal 08–16', () => {
+    const { dayStart, dayEnd } = widgetWorkingDay('2026-09-15');
+    expect(dayStart).toEqual(new Date('2026-09-15T08:00:00'));
+    expect(dayEnd).toEqual(new Date('2026-09-15T16:00:00'));
   });
 });

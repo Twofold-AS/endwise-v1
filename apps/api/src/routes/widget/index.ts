@@ -5,7 +5,9 @@ import {
   createWidgetPublicService,
   originAllowed,
   signWidgetToken,
+  WIDGET_SLOT_STEP_MINUTES,
   WidgetBookingError,
+  widgetWorkingDay,
 } from '@endwise/modules/widget';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -102,13 +104,12 @@ app.get('/availability', async (c) => {
   if (!q.success) return c.json({ error: 'Ugyldige parametre' }, 400);
 
   // Arbeidsdag 08–16 lokal (forenklet; ekte åpningstider er F5/senere).
-  const dayStart = new Date(`${q.data.date}T08:00:00`);
-  const dayEnd = new Date(`${q.data.date}T16:00:00`);
+  const { dayStart, dayEnd } = widgetWorkingDay(q.data.date);
   const slots = await createWidgetPublicService(lazyDb()).availableSlots(tenantId, {
     serviceVersionId: q.data.serviceVersionId,
     dayStart,
     dayEnd,
-    stepMinutes: 30,
+    stepMinutes: WIDGET_SLOT_STEP_MINUTES,
     notBefore: new Date(),
   });
   return c.json({ slots: slots.map((s) => s.toISOString()) });

@@ -2,9 +2,11 @@
 
 import { Lock, Mail, ShieldCheck, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
+import Link from 'next/link';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { authClient, signIn } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
+import { Field, INPUT, PassordFelt } from '../_auth/felter';
 
 /**
  * F1-02 / F1-11 — Innlogging i TO STEG: passord → engangskode på e-post.
@@ -192,7 +194,15 @@ export default function SignInPage() {
 
     if (await sendCode()) {
       setStep('otp');
-      setNotice(`Engangskode sendt til ${email}.`);
+      /**
+       * ⚠️ INGEN notis her (fjernet 20.08.2026). Overskriften på steg 2 sier
+       * allerede «Vi sendte en 6-sifret kode til {e-post}» — en liten linje
+       * under knappen som gjentar det samme, er den samme opplysningen to
+       * ganger på én skjerm.
+       *
+       * Notisen beholdes for «Send ny kode», der den sier noe NYTT: at den
+       * handlingen du nettopp gjorde faktisk skjedde. Se `onResend`.
+       */
       setBusy('idle');
     } else {
       setBusy('error');
@@ -254,19 +264,28 @@ export default function SignInPage() {
                   placeholder="deg@twofold.no"
                 />
               </Field>
-              <Field id="signin-password" label="Passord">
-                <input
-                  id="signin-password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(ev) => setPassword(ev.target.value)}
-                  className={INPUT}
-                  placeholder="••••••••••••"
-                />
-              </Field>
+              {/* F1-18 — avsløringsknappen gjør lime-artefaktet synlig; se
+                  `_auth/felter.tsx` for hvorfor det er en sikkerhetsdetalj og
+                  ikke pynt. */}
+              <PassordFelt
+                id="signin-password"
+                label="Passord"
+                value={password}
+                onChange={setPassword}
+                autoComplete="current-password"
+              />
               {error && <p className="text-[12px] text-danger">{error}</p>}
+              {/* F1-15 — veien ut for den som ikke kommer inn. Sto tomt her
+                  fram til 22.08.2026: `/min-dag/meg` henviste til «Glemt
+                  passord» mens lenka ikke fantes noe sted. */}
+              <p className="text-[12px]">
+                <Link
+                  href="/glemt-passord"
+                  className="text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
+                >
+                  Glemt passord?
+                </Link>
+              </p>
             </div>
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton
@@ -369,17 +388,9 @@ export default function SignInPage() {
   );
 }
 
-/** Input = kontrollhøyde 32px, radius 10px, brødtekst (eierens spec). */
-const INPUT =
-  'h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring';
-
-function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-label text-fg-muted">
-        {label}
-      </label>
-      {children}
-    </div>
-  );
-}
+/**
+ * ⚠️ `Field` og `INPUT` lå HER fram til 22.08.2026 og er flyttet til
+ * `app/_auth/felter.tsx`. `/glemt-passord` og `/nytt-passord` bruker de samme
+ * feltene, og tre kopier av en inputstil blir tre ulike inputstiler ved neste
+ * justering av eierens kontrollspec.
+ */

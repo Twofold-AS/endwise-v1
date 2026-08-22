@@ -1,7 +1,27 @@
-import { createMessagesModule, NotAParticipantError } from '@endwise/modules/messages';
+import { sendInboxMessage } from '@endwise/auth';
+import {
+  createMessagesModule,
+  NotAParticipantError,
+  type UtgaaendeEpost,
+} from '@endwise/modules/messages';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
+
+/**
+ * F6-26 — den konkrete e-postkanalen for utgående meldinger.
+ *
+ * ⚠️ `undefined` når `RESEND_API_KEY` mangler, og det er meningen. Modulen
+ * markerer da meldingen `failed` med «E-postkanalen er ikke konfigurert» i
+ * stedet for å late som den gikk. Lokalt uten Resend ser man altså at den ikke
+ * ble sendt — som er sannheten.
+ */
+const epostkanal: UtgaaendeEpost | undefined = process.env.RESEND_API_KEY
+  ? { send: (input) => sendInboxMessage(input) }
+  : undefined;
+
+const meldinger = (db: Parameters<typeof createMessagesModule>[0]) =>
+  createMessagesModule(db, { epost: epostkanal });
 
 /**
  * F6-01 — Meldinger.
@@ -18,18 +38,14 @@ function toTRPCError(error: unknown): never {
 
 export const messagesRouter = router({
   listThreads: protectedProcedure.query(({ ctx }) =>
-    createMessagesModule(ctx.db).listThreads(ctx.tenantId, ctx.userId),
+    meldinger(ctx.db).listThreads(ctx.tenantId, ctx.userId),
   ),
 
   listMessages: protectedProcedure
     .input(z.object({ threadId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       try {
-        return await createMessagesModule(ctx.db).listMessages(
-          ctx.tenantId,
-          input.threadId,
-          ctx.userId,
-        );
+        return await meldinger(ctx.db).listMessages(ctx.tenantId, input.threadId, ctx.userId);
       } catch (error) {
         return toTRPCError(error);
       }
@@ -61,7 +77,7 @@ export const messagesRouter = router({
       }),
     )
     .mutation(({ ctx, input }) =>
-      createMessagesModule(ctx.db).createThread({
+      meldinger(ctx.db).createThread({
         tenantId: ctx.tenantId,
         kind: input.kind,
         subject: input.subject,
@@ -76,7 +92,7 @@ export const messagesRouter = router({
     .input(z.object({ threadId: z.uuid(), body: z.string().min(1).max(4000) }))
     .mutation(async ({ ctx, input }) => {
       try {
-        return await createMessagesModule(ctx.db).postMessage({
+        return await meldinger(ctx.db).postMessage({
           tenantId: ctx.tenantId,
           threadId: input.threadId,
           authorId: ctx.userId,
@@ -87,15 +103,32 @@ export const messagesRouter = router({
       }
     }),
 
+  /**
+   * F6-26 — send en melding som feilet på nytt.
+   *
+   * ⚠️ Ingen `channel` eller mottaker fra input: alt hentes fra raden og
+   * tråden. Ellers kunne en deltaker sendt hvilken som helst melding til
+   * hvilken som helst adresse ved å oppgi den selv.
+   */
+  resend: protectedProcedure
+    .input(z.object({ messageId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await meldinger(ctx.db).resendMessage({
+          tenantId: ctx.tenantId,
+          messageId: input.messageId,
+          readerId: ctx.userId,
+        });
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
+
   markRead: protectedProcedure
     .input(z.object({ threadId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        return await createMessagesModule(ctx.db).markRead(
-          ctx.tenantId,
-          input.threadId,
-          ctx.userId,
-        );
+        return await meldinger(ctx.db).markRead(ctx.tenantId, input.threadId, ctx.userId);
       } catch (error) {
         return toTRPCError(error);
       }

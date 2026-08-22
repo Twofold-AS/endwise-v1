@@ -85,6 +85,34 @@
       "when": 1786915029306,
       "tag": "0011_slow_archangel",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1787257176113,
+      "tag": "0012_brief_shotgun",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1787275574959,
+      "tag": "0013_third_the_watchers",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1787280635329,
+      "tag": "0014_nice_killraven",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1787405303940,
+      "tag": "0015_yummy_rhodey",
+      "breakpoints": true
     }
   ]
 }

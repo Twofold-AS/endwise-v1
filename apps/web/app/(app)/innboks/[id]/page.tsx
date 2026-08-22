@@ -1,9 +1,13 @@
 'use client';
 
 import {
+  Avatar,
+  type AvatarValg,
+  CircleAlert,
   CircleUser,
   HumanHandoverNotice,
   MessageSquare,
+  RefreshCw,
   Sparkles,
   StatefulButton,
 } from '@endwise/ui';
@@ -57,6 +61,17 @@ export default function TrådPage() {
 
   const markRead = trpc.messages.markRead.useMutation({
     onSuccess: () => utils.messages.listThreads.invalidate(),
+  });
+  /**
+   * F6-26 — send en melding som ikke gikk fram, på nytt.
+   *
+   * ⚠️ Serveren avviser en melding som allerede står som `sent`, så et
+   * dobbeltklikk her kan ikke bli to e-poster hos kunden. Knappen er likevel
+   * deaktivert mens den går — ikke for sikkerhets skyld, men fordi en knapp som
+   * ikke reagerer på trykk ser ødelagt ut.
+   */
+  const resend = trpc.messages.resend.useMutation({
+    onSuccess: () => utils.messages.listMessages.invalidate({ threadId }),
   });
   const post = trpc.messages.post.useMutation({
     onSuccess: () => {
@@ -177,13 +192,16 @@ export default function TrådPage() {
     <div className="mx-auto flex h-full w-full max-w-[820px] flex-col gap-4 px-8 py-7">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <Link
-            href={'/innboks' as Route}
-            className="text-[12px] text-fg-muted transition-colors hover:text-fg"
-          >
-            ← Meldinger
-          </Link>
-          <h1 className="mt-1 truncate text-title text-fg">
+          {/**
+           * F5-14 — ⛔ «← Meldinger» sto her fram til 20.08.2026 og er fjernet.
+           *
+           * Innboksen har tre kolonner, og `layout.tsx` holder samtalelista
+           * MONTERT på tvers av trådbytter. Lista står altså allerede til
+           * venstre mens du leser tråden. En knapp som «tar deg tilbake» til
+           * noe du aldri forlot, er ikke navigasjon — den er en påstand om at
+           * du er et annet sted enn du er.
+           */}
+          <h1 className="truncate text-title text-fg">
             {thread
               ? threadHeading(
                   thread.subject,
@@ -269,10 +287,20 @@ export default function TrådPage() {
                   author={authorLabel(m.authorId, me.data?.userId, navn.data)}
                   rolle={navn.data?.[m.authorId]?.rolle}
                   authorId={m.authorId}
+                  seed={navn.data?.[m.authorId]?.seed ?? null}
+                  avatar={navn.data?.[m.authorId]?.avatar ?? null}
                   body={m.body}
                   at={m.createdAt}
                   kanal={tilKanal(m.channel)}
                   utenfor={m.direction === 'inbound'}
+                  levering={m.deliveryStatus}
+                  leveringsfeil={m.deliveryError}
+                  paaNytt={
+                    m.deliveryStatus === 'failed'
+                      ? () => resend.mutate({ messageId: m.id })
+                      : undefined
+                  }
+                  sender={resend.isPending && resend.variables?.messageId === m.id}
                 />
               </div>
             );
@@ -332,10 +360,16 @@ function Message({
   author,
   rolle,
   authorId,
+  seed,
+  avatar,
   body,
   at,
   kanal,
   utenfor,
+  levering,
+  leveringsfeil,
+  paaNytt,
+  sender,
 }: {
   mine: boolean;
   agent: boolean;
@@ -344,21 +378,35 @@ function Message({
   authorId: string;
   /** Hvor meldingen kom inn / gikk ut. */
   kanal: Kanal;
+  /**
+   * ⛔ Seeden til avataren — fra SERVEREN, ikke `authorId`. Null når vi ikke
+   * kjenner personen; da tegnes det nøytrale ikonet, ikke et gjettet ansikt.
+   */
+  seed: string | null;
+  avatar: AvatarValg | null;
   /** `direction === 'inbound'` — den kom UTENFRA, ikke fra oss. */
   utenfor: boolean;
   body: string;
   at: Date | string;
+  /** F6-26 — leveringsstatus for ekstern kanal. `null` = ingen levering gjelder. */
+  levering: 'pending' | 'sending' | 'sent' | 'failed' | null;
+  leveringsfeil: string | null;
+  /** Satt kun når meldingen KAN sendes på nytt, altså når den har feilet. */
+  paaNytt?: () => void;
+  sender: boolean;
 }) {
-  // Initialer er stabile per PERSON, ikke per ID — det er nettopp det den gamle
-  // dither-avataren gjorde, bare uten at man kunne lese hvem det var.
-  const initialer = rolle
-    ? author
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((d) => d[0])
-        .join('')
-        .toUpperCase()
-    : null;
+  /**
+   * F6-19 — initialene er borte, avataren er tilbake.
+   *
+   * Fram til 20.08.2026 sto det to bokstaver her. De var lesbare, men to
+   * mekanikere som begge forkortes «MH» fikk nøyaktig samme rute — og da bærer
+   * ruta ingen informasjon. Blobatar gir formen tilbake, og navnet står
+   * fortsatt rett ved siden av, så lesbarheten vi vant i august er i behold.
+   *
+   * ⚠️ Krever BEGGE deler: en rolle (personen hører til tenanten) og en seed
+   * fra serveren. Mangler én av dem, er det nøytrale ikonet riktig svar.
+   */
+  const kjent = Boolean(rolle && seed);
 
   return (
     <div className={`flex gap-2.5 ${mine ? 'flex-row-reverse' : ''}`}>
@@ -374,13 +422,14 @@ function Message({
           <span className="grid size-7 place-items-center rounded-control bg-accent-soft font-medium text-[11px] text-accent-strong">
             Du
           </span>
-        ) : initialer ? (
-          <span
-            title={author}
-            className="grid size-7 place-items-center rounded-control bg-surface-2 font-medium text-[11px] text-fg-muted"
-          >
-            {initialer}
-          </span>
+        ) : kjent && seed ? (
+          /* ⚠️ `hover` og ikke `alltid`: en tråd har mange meldinger, og
+             tretti ansikter som puster samtidig er nettopp den veggen av
+             bevegelse biblioteket selv advarer mot. Amplituden er 0 til du
+             peker — da rører ETT ansikt seg.
+             ⚠️ Vanlig JS-kommentar, ikke {/* … *​/}: vi står i en ternær
+             uttrykksposisjon, ikke blant JSX-barn. */
+          <Avatar seed={seed} valg={avatar} navn={author} size={28} bevegelse="hover" />
         ) : (
           <span className="grid size-7 place-items-center rounded-control bg-surface-2 text-fg-muted">
             <CircleUser size={16} />
@@ -416,6 +465,40 @@ function Message({
         >
           {body}
         </p>
+
+        {/**
+         * F6-26 — LEVERINGSSTATUS.
+         *
+         * ⛔ Vises bevisst IKKE når statusen er `sent`. Kanalmerket over sier
+         * allerede at dette gikk på e-post, og en «Sendt»-hake på hver eneste
+         * rad ville gjort den varselet under usynlig — det er nettopp den som
+         * må fanges. Stillhet betyr «gikk fint»; alt annet får plass.
+         */}
+        {levering === 'failed' && (
+          <div className="flex w-full flex-col gap-1.5 rounded-control border border-danger/25 bg-danger-soft px-2.5 py-2">
+            <span className="flex items-start gap-1.5 text-[12px] text-danger">
+              <CircleAlert size={13} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+              <span>
+                <b>Ikke levert.</b> Meldingen står i tråden, men e-posten gikk ikke ut.
+                {leveringsfeil ? ` ${leveringsfeil}` : ''}
+              </span>
+            </span>
+            {paaNytt && (
+              <button
+                type="button"
+                onClick={paaNytt}
+                disabled={sender}
+                className="inline-flex h-7 w-fit items-center gap-1.5 rounded-control border border-danger/30 px-2 text-[12px] text-danger transition-colors hover:bg-danger/10 disabled:opacity-60"
+              >
+                <RefreshCw size={12} strokeWidth={1.75} className={sender ? 'animate-spin' : ''} />
+                {sender ? 'Sender …' : 'Send på nytt'}
+              </button>
+            )}
+          </div>
+        )}
+        {(levering === 'pending' || levering === 'sending') && (
+          <span className="text-[12px] text-fg-muted">Sender e-post …</span>
+        )}
       </div>
     </div>
   );

@@ -59,6 +59,35 @@ export const messageChannelEnum = pgEnum('message_channel', ['app', 'sms', 'emai
  */
 export const messageDirectionEnum = pgEnum('message_direction', ['inbound', 'outbound']);
 
+/**
+ * F6-26 — LEVERINGSSTATUS for en utgående melding på en ekstern kanal.
+ *
+ * ⛔ **Hele grunnen til at dette er en kolonne og ikke utledet:** meldingsraden
+ * skrives FØR utsendingen forsøkes, fordi det brukeren skrev aldri skal gå tapt
+ * i en nettverksfeil. Uten et statusfelt ville raden i tråden vært visuelt
+ * identisk enten e-posten gikk eller ikke — og en melding som ser sendt ut,
+ * men aldri gikk, er verre enn en synlig feil. Selgeren tror kunden er varslet.
+ *
+ *   pending  — skrevet, ikke forsøkt sendt ennå
+ *   sending  — vi har tatt eierskap og holder på. Se merknaden under.
+ *   sent     — leverandøren har tatt imot den (`external_id` er satt)
+ *   failed   — forsøket feilet. `delivery_error` sier hvorfor. Kan sendes på nytt
+ *
+ * ⚠️ `sending` finnes fordi alternativet er verre. Setter man `sent` FØR kallet
+ * (som `notifications`-dispatcheren i F3-04 gjør), vil en krasj midt i kallet
+ * etterlate en rad som påstår at den gikk. Med `sending` er en strandet rad
+ * synlig som strandet, og kan plukkes opp igjen — den lyver ikke.
+ *
+ * NULL = ingen ekstern levering gjelder. Det er normaltilstanden: en
+ * `app`-melding leveres ved å ligge i basen, og har ingenting å rapportere.
+ */
+export const messageDeliveryEnum = pgEnum('message_delivery', [
+  'pending',
+  'sending',
+  'sent',
+  'failed',
+]);
+
 export const threads = pgTable(
   'threads',
   {
@@ -162,6 +191,16 @@ export const messages = pgTable(
     externalId: text('external_id'),
     /** Motpartens adresse i den eksterne kanalen (e-post/telefon). Persondata. */
     externalRef: text('external_ref'),
+    /**
+     * F6-26 — se `messageDeliveryEnum`. NULL for app-meldinger.
+     *
+     * ⚠️ Dette feltet ER idempotensvakten. Utsendingen tar eierskap med en
+     * betinget `UPDATE … WHERE delivery_status IN ('pending','failed')`; treffer
+     * den null rader, holder noen andre allerede på, og vi sender ikke.
+     */
+    deliveryStatus: messageDeliveryEnum('delivery_status'),
+    /** Hvorfor det feilet. Vises til brukeren — hold den lesbar. */
+    deliveryError: text('delivery_error'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
   },
   (t) => [

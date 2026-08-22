@@ -177,13 +177,27 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
                   className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
                 />
               </label>
-              {/* ⚠️ Ærlig forbehold. Kanalen LAGRES, men ingenting sendes ut
-                  over den ennå — utsendingen er F6-16. Å la være å si det ville
-                  vært å love en SMS som aldri går. */}
+              {/**
+               * ⚠️ Teksten er OPPDATERT 22.08.2026, ikke fjernet. Utgående
+               * e-post virker nå (F6-26), men SMS gjør det ikke, og innkommende
+               * gjør det ikke for noen av dem (F6-27). Et forbehold som ble
+               * stående uendret ville løyet motsatt vei — «ingenting sendes» er
+               * like galt som «alt virker» når bare halvparten stemmer.
+               */}
               <p className="flex items-start gap-1.5 text-[11px] text-fg-muted leading-relaxed">
                 <CircleAlert size={13} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-                Kanalen lagres og vises i innboksen, men utsending over SMS/e-post er ikke koblet på
-                ennå (F6-16). Meldingene blir liggende i Endwise til den er det.
+                {kanal === 'email' ? (
+                  <span>
+                    Meldinger du skriver i denne tråden <b>sendes som e-post</b> til adressen over.
+                    Kundens svar kommer ikke inn i Endwise ennå (F6-27) — svar går til din egen
+                    e-post, så du ser dem der.
+                  </span>
+                ) : (
+                  <span>
+                    Kanalen lagres og vises i innboksen, men utsending over {KANAL[kanal].label} er
+                    ikke koblet på ennå. Meldingene blir liggende i Endwise til den er det.
+                  </span>
+                )}
               </p>
             </>
           )}

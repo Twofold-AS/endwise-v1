@@ -28,6 +28,16 @@
 > bare noe som ser ødelagt ut. Samme familie som Tailwind-gotchaen over. Gjelder ENHVER ny app.
 > Eksporten `./matrix-loaders.css` ble lagt til i `packages/ui/package.json` samtidig.
 
+> ### ⚠️ REVERSERT: «New» er RØD igjen (20.08.2026)
+> Mellom 20.08 morgen og 20.08 kveld var «New»-badgen på hjelpeartikler grønn, etter bestilling.
+> **Det er omgjort på eiers eget initiativ samme dag** — §6 gjelder uten unntak: «New» er RØD,
+> overalt. Begrunnelsen som ble skrevet for grønt (uleste meldinger venter på handling, en ny
+> artikkel gjør ikke det) holdt ikke i praksis: etter at aksenten ble svart, er rødt det eneste
+> som faktisk fanger blikket i sidebaren. Noten står her og ikke slettet, så neste person slipper
+> å ta samme runde en gang til.
+>
+> Uleste MELDINGER beholder aksentfargen. De to tallene skal fortsatt kunne skilles.
+
 > ### 🔴 EIERENS DESIGN-PRINSIPPER HAR FORRANG (03.08.2026, aksent endret 06.08)
 > ⚠️ **AKSENTEN ER SVART, IKKE GRØNN** (fra 06.08.2026, «foreløpig»). Grønnen ble
 > brukt så bredt at den sluttet å være en aksent. `--ew-accent`/`-strong` er
@@ -41,7 +51,7 @@
 > **Full tabell + hva som er utledet: §6 «Design-prinsipper fra eier».** Kolliderer noe i denne
 > fila med den seksjonen, er det den seksjonen som gjelder.
 
-**Sist oppdatert:** 7. august 2026 (dev-mode + forhandler-oppretting bygget — F5-26…F5-29; ingen nye UI-pakker, alt på shadcn/beUI som før: `Switch`, `StatefulButton`, `DropdownMenu`, `Badge`. Sidebar-mønsteret delt i to: **flyout for handlinger, inline utfolding for destinasjoner**) · 6. august 2026 (⚠️ **aksent grønn → svart** i token-laget · felles flyout-mønster m/ stiplet header-divider · ⭐ **F5-20 i gang** — 26 egne SVG-ikoner koblet inn via codegen · shell-justeringer: kollapsbar sidebar, tips-kort, bevel-handlinger · Analyse omformet: periodevelger, nye kort, paigraf · `Pie`/`Cell` eksponert) · 5. august 2026 (⭐ **Recharts inn som chart-motor** — brukergodkjent §2-beslutning; Analyse F5-18 bygget ferdig med søyle-, linje- og arealgrafer) · 4. august 2026 (sidebar-først shell bygget — F5-13: `dropdown-menu` + `dialog` hentet inn, ⌘K-palett på `Dialog` i stedet for `command`/cmdk) · 3. august 2026 (eierens design-prinsipper innført: Inter + lyst tema standard +
+**Sist oppdatert:** 20. august 2026 (bevegelse skrudd på selektivt — påkrevd `bevegelse`-prop på `Avatar`, tre verdier, se §10 · ⭐ **blobatar inn som avatarpakke** — F6-19, brukergodkjent §2-beslutning; se §10. Seed = stabil ID, aldri navn · tjenestekatalogen F2-05/F5-04 — ingen ny pakke, ren komposisjon; se §8. ⚠️ Første sted i appen med ekte radioknapper i stedet for pille-gruppe, fordi det er et skjemafelt og ikke et filter) · 7. august 2026 (dev-mode + forhandler-oppretting bygget — F5-26…F5-29; ingen nye UI-pakker, alt på shadcn/beUI som før: `Switch`, `StatefulButton`, `DropdownMenu`, `Badge`. Sidebar-mønsteret delt i to: **flyout for handlinger, inline utfolding for destinasjoner**) · 6. august 2026 (⚠️ **aksent grønn → svart** i token-laget · felles flyout-mønster m/ stiplet header-divider · ⭐ **F5-20 i gang** — 26 egne SVG-ikoner koblet inn via codegen · shell-justeringer: kollapsbar sidebar, tips-kort, bevel-handlinger · Analyse omformet: periodevelger, nye kort, paigraf · `Pie`/`Cell` eksponert) · 5. august 2026 (⭐ **Recharts inn som chart-motor** — brukergodkjent §2-beslutning; Analyse F5-18 bygget ferdig med søyle-, linje- og arealgrafer) · 4. august 2026 (sidebar-først shell bygget — F5-13: `dropdown-menu` + `dialog` hentet inn, ⌘K-palett på `Dialog` i stedet for `command`/cmdk) · 3. august 2026 (eierens design-prinsipper innført: Inter + lyst tema standard +
 mål-tokens · matrix-loaders TATT I BRUK første gang på AI-diagnose · StatefulButton i 2FA-innlogging
 og trådsvar · SSE-klient wiret · `Switch` hentet inn · ⛔ **dither-kit FJERNET fra UI-et og fra
 barrel-eksporten**)
@@ -57,6 +67,7 @@ barrel-eksporten**)
 | **Data** | Recharts (shadcn Chart-mønster) | Søyle-, linje- og arealgrafer. Kun rene typer — se §2 |
 | **Bevegelse (tilstand)** | beUI | Knapper/kontroller som endrer tilstand (idle → loading → success) |
 | **Bevegelse (venting)** | matrix-loaders | «AI tenker»-animasjoner, én loader per SSE-event |
+| **Identitet** | blobatar | Deterministiske ansikter på personer. Kun admin-flater — se §10 |
 
 Alt renner gjennom `packages/ui/src/theme.css`: shadcn-semantikk (`--primary`, `--border` …)
 peker inn i `--ew-*`-tokens. **Ingen komponent hardkoder farge.**
@@ -385,6 +396,10 @@ Kun disse. Hver enkelt har en grunn.
 
 | `Bildefelt` på markedssiden (`apps/web/app/page.tsx`, F5-35) | **Ingen ny pakke, og ingen pakke å hente.** Et bilde på en markedsside er `next/image` + token-laget — shadcn har ingen media-komponent, beUI er bevegelse og matrix-loaders er venting. Komponenten er ~20 linjer: `fill` + `object-cover` i en `aspect-[16/9]`/`aspect-[21/9]`-boks med `rounded-xl border-border bg-surface-2`. Den finnes kun for å holde de fire bildene identiske — et `sizes` som er feil ett sted laster dobbelt så store filer på mobil uten at noe ser galt ut. ⛔ Ingen tekst oppå bilde, med vilje: da måtte kontrasten holdt mot BEGGE temaene og mot et motiv som er lyst i midten |
 
+| Tjenestekatalogen (`apps/web/app/(app)/innstillinger/tjenestekatalog/`: `page.tsx`, `_felter.tsx`, `_ny-tjeneste.tsx`, `_tjeneste-kort.tsx`, `_felles.ts`) | App-nivå **komposisjon** (F2-05/F5-04), ingen ny pakke. Bygget av `StatefulButton` (beUI), `CardShell` og ikon-barrelen, med de samme input-klassene som `kunder/_ny-kunde.tsx` — feltene er kopiert i klassestreng, ikke i komponent, fordi shadcn `form`/`input` ikke er hentet inn og resten av appen ikke bruker dem. ⚠️ Kjøretøytype-velgeren er **ekte `<input type="radio">`** og ikke pille-knapper med `role="radio"`, som ellers i appen: pillene andre steder er FILTRE (tablist er riktig der), denne er et skjemafelt, og biome avviste `role="radio"` med rette. Utseendet er likt. `_felter.tsx` finnes for at «opprett» og «ny versjon» skal dele ÉN definisjon av versjonsfeltene — to skjemaer for samme fire kolonner ville før eller siden fått ulik validering |
+
+| Auth-feltene (`apps/web/app/_auth/felter.tsx`: `Field`, `INPUT`, `PassordFelt`, F1-15/F1-16/F1-18) | **Ingen ny pakke.** `packages/ui` HAR en `Input`-primitiv, men den er `h-10`/`rounded-md` mens de uinnloggede skjermene bruker eierens kontrollspec (`h-control` 32px, `rounded-control` 10px) — å endre den delte primitiven for å treffe innloggingen ville flyttet spec-en for alle andre kallsteder. Klassestrengen lå allerede i `signin/page.tsx`; den er løftet ut ett hakk så `/glemt-passord` og `/nytt-passord` arver den i stedet for å kopiere den. **`PassordFelt` (vis/skjul, F1-18) er egenskrevet fordi shadcn/ui ikke har en passordvariant** — der er passordfelt bare `Input type="password"`. ⚠️ Knappen er en sikkerhetsdetalj, ikke pynt: `/signin` sin feilmelding må i dag be folk «skrive passordet for hånd» fordi et limt inn mellomrom er usynlig bak prikkene. `tabIndex={-1}` med vilje — den skal ikke ligge mellom passordfeltet og «Logg inn». Nye ikoner i barrelen: `Eye`, `EyeOff` |
+
 Legger du til en rad her, skal den ha en setning som forklarer hvorfor ingen pakke holdt.
 
 `@endwise/ui/icons.ts` er en **re-eksport** av en kuratert lucide-mengde — ikke egen kode, kun en
@@ -454,3 +469,94 @@ Sperren er `needsApproval: true` på verktøyet på serveren; AI SDK holder kall
 tilbake til svaret kommer. «Avvis» er like framtredende som «Godkjenn»: et
 godkjenn-steg der det ene valget er en gråtone er ikke et valg, det er en
 bekreftelsesdialog.
+
+---
+
+## 10. blobatar — avatarer (hentet 20.08.2026, F6-19)
+
+| | |
+|---|---|
+| **Brukes til** | Deterministiske ansikter på PERSONER i admin-flatene |
+| **Installasjon** | `pnpm --filter @endwise/ui add blobatar @blobatar/react` · versjon `^2.3.1` |
+| **Ligger i** | `packages/ui/src/components/avatar.tsx` (wrapper `Avatar`) |
+| **Lisens** | MIT |
+| **Runtime-avhengighet** | `blobatar` + `@blobatar/react` i **både** `packages/ui` og `apps/web`. ⚠️ Samme felle som `motion` (§6) og `recharts` (§2): Next transpilerer UI-kildekoden i APPENS resolusjonskontekst |
+| **Egne avhengigheter** | **Null.** `@blobatar/react` har kun peers (`blobatar` 2.x, `react` >=18) |
+| **Status** | ✅ Brukergodkjent §2-beslutning 20.08.2026 |
+
+### Hva som faktisk er tatt i bruk
+
+`<Blobatar name size hue tone traits normalize title alt />` — statisk modus, som rendrer
+**ett `<img>`** med en percent-enkodet data-URI. Ingenting hentes over nett; hele SVG-en regnes ut
+i nettleseren.
+
+⛔ **Ikke tatt i bruk, med vilje:**
+
+| Funksjon | Hvorfor ikke |
+|---|---|
+| `expression` (poses) | Et ansikt som skifter uttrykk i en arbeidsinnboks påstår noe om personens humør som vi ikke vet noe om |
+| `background` | Plata er vår (`bg-surface-2` + `rounded-control`), så token-laget eier lys/mørk. Stilen har uansett backdrop av som standard |
+| `palette` | Ville omgått bibliotekets kontrastgaranti — den er eksplisitt dokumentert som «overridden colors bypass the contrast guarantee» |
+
+### Bevegelse: `animate` er PÅ, men selektivt (20.08.2026)
+
+`Avatar` har en **påkrevd** `bevegelse`-prop med tre verdier. Den er påkrevd med vilje: animasjon
+koster ulikt på ulike flater, og med en default ville valget vært noe man arver uten å tenke — en
+liste med 200 rader ville en dag fått animasjon fordi ingen skrev noe. Samme argument som
+`requireSession(db)` fører for sitt påkrevde db-argument. **Nå nekter TypeScript å kompilere til
+noen har tatt stilling.**
+
+| Verdi | Rendring | Brukes på |
+|---|---|---|
+| `stille` | ett `<img>` | Samtalelista · kundelista · de 24 valgknappene i profilen |
+| `hover` | inline SVG, amplitude 0 til `:hover` | Meldingene i tråden · Detaljer-panelet · kundekortet · brukerraden i sidebaren |
+| `alltid` | inline SVG, alltid i bevegelse | **Kun** forhåndsvisningen i Settings › Profil |
+
+`hover` er ikke en halvveis `alltid` — det er bibliotekets eget standpunkt: «ambient motion seen
+constantly is motion worth removing», og «animates one blobatar at a time», som er både det
+estetiske og det ytelsesmessige svaret. En tråd med tretti meldinger står helt i ro til du peker på
+et ansikt.
+
+`alltid` er dokumentert som unntaket for «the single-blobatar case — a profile header». Det er
+nøyaktig profil-forhåndsvisningen: der ER bevegelsen innholdet, siden du står og ser på ansiktet
+mens du endrer det. **Bruk den ikke på noe som kan opptre i flertall.**
+
+⚠️ **`@import "blobatar/motion.css";` i `apps/web/app/globals.css` er PÅKREVD** for begge de
+animerte modusene. Samme familie som matrix-loaders-gotchaen i toppen av denne fila: uten importen
+er det ingen feilmelding, ingenting i typecheck og ingenting i byggesteget — bare avatarer som står
+stille der de skulle puste.
+
+Gratis fra biblioteket: `prefers-reduced-motion: reduce` slår av all animasjon, og på enheter uten
+ekte hover pauses `hover`-modus helt. Ingen av delene håndteres av oss.
+
+### ⛔ Seeden er en ID, aldri et navn
+
+`Avatar` tar `seed` (ID) og `navn` (kun `title`/`alt`). Retter noen «Kari Nordmman» → «Kari
+Nordmann», skal ikke kunden bytte ansikt; og to kunder som begge heter «Ola Hansen» skal ikke dele
+det. **Serveren bestemmer seeden** (`directory.participants.seed`): kunde → `customers.id`,
+mekaniker → `mechanics.id`, ansatt → `user.id`. Ellers ville samme menneske hatt ett ansikt i
+innboksen og et annet på kundekortet.
+
+`normalize={false}` er satt: biblioteket trimmer og lowercaser navnet sitt som standard, hvilket er
+riktig når seeden ER et navn. Vår seed er en UUID vi eier selv.
+
+### Redigerbart: tre ting av 39
+
+Pakken eksponerer 39 trait-nøkler (`eye.gap`, `body.rot`, `freckles.size`, `gaze.x`,
+`motion.saccadePhase` …), hver som en 0–1-posisjon. **Form, farge og tone** er redigerbare i
+Settings › Profil. Resten er finjustering av et 28-pikslers ikon — en glidebryter for øyeavstand
+gir en forhandler en ny måte å bruke tid på, og en kollega ingen mulighet til å se forskjell.
+
+⚠️ Vi lagrer **formnavnet**, ikke 0–1-tallet: tallbåndene er frosset per major i blobatar, men et
+band kan flytte seg i neste major, og da ville et lagret tall stille gitt en annen form. Navn kan
+remappes. Kartleggingen navn → band ligger i `avatar.tsx`; vokabularet speiles i
+`@endwise/modules/profil` (zod) og i en CHECK-constraint i basen.
+
+### Hvor den brukes
+
+Innboksens samtaleliste · meldingene i tråden · Detaljer-panelet (kunde og mekaniker) ·
+kundelista · kundekortet · **brukerraden nederst i sidebaren** · forhåndsvisningen i
+Settings › Profil.
+
+⛔ **Ikke** på kjøretøy (F2-03 eier modellbilder med ekte silhuetter), **ikke** på forhandleren som
+organisasjon (den er ikke en person), **ikke** i widgeten eller på kundevendte flater.

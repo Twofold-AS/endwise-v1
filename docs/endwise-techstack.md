@@ -70,6 +70,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **beUI** (shadcn-registry `@beui`) — tilstands-komponenter (`StatefulButton`) + kanoniske bevegelses-tokens (`lib/ease.ts`)
 - **Charts: Recharts er eneste chart-motor** (05.08.2026, brukergodkjent §2-beslutning). Hentet inn shadcn-stil i `packages/ui/src/components/chart.tsx` — appene importerer aldri `recharts` direkte. **Kun søyle, linje og areal** er eksponert; pai/radar/scatter er bevisst utelatt. Fargene er CSS-variabler mot `--ew-*`-tokenene, så grafene snur med lys/mørk. ~~dither-kit~~ er ute av UI-et (03.08.2026)
 - **cuelume** (mikro-lyder) — valgfri polish, av som default
+- **blobatar** + **@blobatar/react** (avatarer, 20.08.2026, brukergodkjent §2-beslutning). MIT, ~4,4 kB, **null avhengigheter**, alt genereres klientside — ingen avatar-URL, ingen tredjepartsforespørsel, ingenting som forlater maskinen. Deterministiske geometriske ansikter fra en streng. ⛔ **Seeden er alltid en stabil ID** (`customers.id`, `mechanics.id`, `user.id`), aldri et navn: en rettet skrivefeil skal ikke bytte ansikt på noen. Hentet inn bak `Avatar` i `packages/ui/src/components/avatar.tsx` — appene importerer aldri pakken direkte, samme regel som for Recharts og lucide. **Kun personer, ikke kjøretøy** (modellbilder er F2-03 med ekte silhuetter) og **kun admin-flatene** — widget og kundevendte flater er utenfor. Detaljer i `docs/UI-PAKKER.md` §10
 
 ### Backend — `apps/api`
 - **Hono** — offentlig REST (widget, Quick-webhooks, innkommende webhooks)

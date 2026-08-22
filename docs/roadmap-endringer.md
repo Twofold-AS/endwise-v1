@@ -3759,3 +3759,979 @@ Mot ekte database: modules **120**, db **49**, auth **16**, api **63**. typechec
 Ende-til-ende mot ekte API: hele kjeden fra lenke → konto → medlemskap → innlogging bekreftet.
 
 ---
+
+## 2026-08-20 — Statusrydding i F2: to punkter var allerede levert, ett var forvekslet
+
+**Godkjent av:** Mikkis (eksplisitt oppgave)
+**Type:** statuskorreksjon — ingen kode endret, ingen techstack-endring
+
+F2-02, F2-05 og F2-07 sto alle tre som `planned` / `ui: missing` med identisk ordlyd —
+«placeholder i prototype, må designes». De var skrevet før F5 fantes og aldri rørt siden.
+Gjennomgang mot `apps/web` viser at to av dem er bygget for tolv dager siden, og at det tredje
+er noe annet enn det ser ut som.
+
+| ID | Var | Er | Hvorfor |
+|---|---|---|---|
+| F2-02 Kjøretøy-side | `planned` / missing | **`done`** / built | Bygget 08.08 under F5-03 |
+| F2-07 Kunder-side | `planned` / missing | **`done`** / built | Bygget 08.08 under F5-02 |
+| F2-05 Tjenester-side | `planned` / missing | `planned` / missing (presisert) | Ikke bygget — se under |
+
+### F2-02 og F2-07: dekket, verifisert mot ekte ruter
+
+`/kjoretoy` + `/kjoretoy/[id]` og `/kunder` + `/kunder/[id]` finnes, med søk, filtre, detaljkort
+og ekte tRPC-kall (`vehicles.list`/`byId`, `customers.list`/`byId`) — ikke mock. F2 sitt
+backend-punkt og F5 sitt UI-punkt beskrev samme flate fra hver sin side; F5 ble oppdatert, F2 ble
+stående.
+
+⚠️ **Modellbilder er fortsatt ikke bygget.** De eies av F2-03, som forblir `planned`. Garanti-status
+finnes ikke i datamodellen. Begge deler står allerede som eksplisitt avvik i F5-03, og F2-02 er
+lukket med samme forbehold — ikke som om alt i den opprinnelige ordlyden er levert.
+
+### ⛔ F2-05: ikke dekket — ruta `/tjenester` er en annen tjeneste
+
+Dette er kjernen i ryddingen. Det finnes en «Tjenester & priser»-flate, den ligger i nav-en under
+Settings, og den er **ikke** denne. `/tjenester` viser hva forhandleren betaler ENDWISE
+(billing-katalogen, F5-33-aksen). `/innstillinger/tjenester` er en ren `redirect()` dit.
+
+Forhandlerens EGEN katalog — EU-kontroll, Liten service, med varighet, skills og pris mot
+KUNDE — har verken flate eller nav-oppføring. Det er samme flate som **F5-04**, som allerede ble
+presisert 09.08 med nøyaktig dette skillet. F2-05 og F5-04 er altså ett arbeid, ikke to.
+
+**Backend er ferdig og står ubrukt:** `servicesRouter` har `list`, `create`, `update` og
+`deactivate`. Kun `list` kalles fra UI — som nedtrekk i `/bookinger/ny`. De tre skrivende
+prosedyrene har null kallsteder.
+
+### ⚠️ Sidefunn, ikke rettet
+
+1. **To kodekommentarer peker på feil F-kode.** `apps/web/app/(app)/tjenester/page.tsx` er merket
+   «F5-04 / F5-19», og redirect-en i `innstillinger/tjenester/page.tsx` sier «implementasjonen
+   ligger fortsatt på /tjenester (F5-04)». Etter presiseringen 09.08 er begge F5-33. Kommentarene
+   er nettopp det som gjorde forvekslingen lett å gjøre.
+2. **`ui:"full"` og `ui:"done"` finnes ikke i `UI_LBL`.** Vokabularet i roadmap-fila er
+   `built | proto | partial | missing | na`, men 12 punkter bruker `full` og 6 bruker `done` —
+   de rendrer badge-teksten `undefined` og mangler CSS-regel (`b-ui-full` / `b-ui-done`). F5-02 og
+   F5-03 er blant dem. Denne ryddingen brukte derfor `built` og innførte ikke flere. Krever en
+   beslutning: er `full` ment å være et nivå over `built`, eller skal de 18 punktene normaliseres?
+
+### Verifisert
+
+`const ROADMAP` parser rent: **180 punkter, 180 unike ID-er, 0 duplikater.**
+F2 er nå 7 `done` / 2 `planned`. Totalt: 65 done · 31 progress · 79 planned · 5 blocked.
+
+---
+
+## 2026-08-20 (b) — ui-vokabularet normalisert + tjenestekatalogen bygget (F2-05 + F5-04)
+
+**Godkjent av:** Mikkis (eksplisitt oppgave, to punkter)
+
+### 1. `ui:"full"` og `ui:"done"` → `built` (18 punkter)
+
+`UI_LBL` i roadmap-fila kjenner fem verdier: `built | proto | partial | missing | na`. 12 punkter
+brukte `full` og 6 brukte `done`. De rendret badge-teksten `undefined` og hadde ingen CSS-regel
+(`b-ui-full` / `b-ui-done` finnes ikke). F5-02 og F5-03 var blant dem.
+
+**Eiers beslutning:** normaliser til `built`, ikke utvid vokabularet. Ferdige punkter skal si at de
+er ferdige — poenget er oversikt, ikke gradering. Alle 180 punkter validerer nå mot `UI_LBL`.
+
+### 2. F2-05 + F5-04 → `done`: forhandlerens egen tjenestekatalog
+
+Ny rute **`/innstillinger/tjenestekatalog`** — den roadmapen selv foreslo i F5-04.
+
+| Valg | Hvorfor |
+|---|---|
+| **Under Settings** | F5-19: all konfigurasjon samlet. En prisliste settes sjelden og gjelder til noen endrer den — den er ikke dagens arbeid. |
+| **Egen rute, ikke `/tjenester`** | `/tjenester` er F5-33: hva forhandleren betaler ENDWISE. Motsatt pengeforhold. |
+| **Kryssreferanse begge veier** | Forvekslingen er selve grunnen til at punktet lå ubygget i fire måneder mens backend var ferdig. |
+| **«Ny versjon», ikke «Lagre»** | `update` lukker gjeldende versjon med `validTo` og skriver en ny rad. «Lagre» ville løyet om hva som skjer. |
+| **Ferdigheter fra registeret** | `service_versions.skills` peker på `skills.key` (F3-12). Fritekst = skrivefeil = tjeneste ingen mekaniker matcher, uten feilmelding. |
+| **Tomt prisfelt ≠ 0 kr** | `price_minor` er nullbar med vilje: «på forespørsel». 0 ville sagt at EU-kontrollen er gratis. |
+
+### ⛔ SIKKERHETSFUNN: prislista sto åpen for alle ansatte
+
+`services.create`, `update` og `deactivate` lå på `protectedProcedure`. Så lenge de ikke hadde ett
+eneste kallsted var det uten praktisk konsekvens. I det katalogflaten ga dem en knapp, betydde det
+at **enhver dealer_staff med en sesjon kunne endre prisen kunden betaler.**
+
+RLS svarer på «hvilken tenants rader», ikke «har denne personen lov» — samme argument som
+`adminProcedure` selv fører for kompetanse (F3-12). De tre er hevet til `adminProcedure`.
+**Lesing er bevisst fortsatt åpen for staff:** de må kunne svare på hva en EU-kontroll koster.
+
+### ⚠️ Tre prosedyrer lagt til utover de fire som fantes
+
+Oppgaven sa «mot de fire prosedyrene som allerede finnes». Tre måtte likevel til, hver med en grunn:
+
+1. **`reactivate`** — uten den er `deactivate` en enveisdør fra UI-et: tjenesten faller ut av `list`
+   og eneste vei tilbake er et manuelt UPDATE i basen. Å sende en knapp som er uopprettelig er verre
+   enn å legge til seks linjer.
+2. **`versions`** (lesing) — uten den er «versjonering» bare et tall i UI-et. Et versjonsnummer man
+   ikke kan slå opp beviser ingenting for en forhandler som lurer på hvorfor fjorårets faktura sier
+   noe annet enn prislista i dag.
+3. **`list({ inkluderInaktive })`** — katalogen er det eneste stedet en deaktivert tjeneste skal
+   være synlig. Standard er usann, så booking-motoren og `/bookinger/ny` er uendret.
+
+### ⚠️ Rettet kodekommentar
+
+`innstillinger/tjenester/page.tsx` sa «implementasjonen ligger fortsatt på /tjenester (F5-04)».
+Det var feil, og feilen var ikke ufarlig — den er en av grunnene til at punktet sto som «må
+designes» mens backend var ferdig.
+
+### Verifisert
+
+Mot ekte database: **api 76** (7 filer/63 tester → 8/76 — 13 nye), modules **120**, db **49**,
+auth **19**, agents **17**. typecheck 22/22 · biome rent · `next build` ✅ 52 ruter, med
+`/innstillinger/tjenestekatalog` i tabellen. Roadmap: 180 punkter, 180 unike, 0 ukjente ui-verdier.
+
+⚠️ **Ikke visuelt bekreftet.** Nettleserpanelet i dette miljøet komposierer ikke (viewport 0×0,
+tom side) — samme begrensning som 05.08-rapporten beskrev. Sidene svarer 200 og SSR-HTML-en
+inneholder overskrift, ingress og kryssreferanse, men jeg har ikke SETT flaten tegnet.
+Kjør `pnpm dev` og åpne `/innstillinger/tjenestekatalog` for visuell bekreftelse.
+
+⚠️ **context7 (CLAUDE.md §3) var ikke tilgjengelig** — MCP-serveren er ikke koblet til i denne
+sesjonen. Ingen ny teknologi eller pakke er tatt i bruk; mønstrene er lest ut av eksisterende kode.
+
+---
+
+## 2026-08-20 (c) — blobatar inn som avatarpakke (nytt punkt F6-19) + knapperydding i innboksen (F5-14)
+
+**Godkjent av:** Mikkis (eksplisitt bestilling)
+**Type:** **§2-endring** — ny UI-pakke. Nytt roadmap-punkt, siden avatarer ikke fantes i planen.
+
+### Pakken
+
+`blobatar` + `@blobatar/react` `^2.3.1` · MIT · ~4,4 kB · **null egne avhengigheter** ·
+alt genereres klientside. Ingen avatar-URL, ingen tredjepartsforespørsel, ingenting som forlater
+maskinen. Hentet inn bak `Avatar` i `packages/ui/src/components/avatar.tsx` — appene importerer
+aldri pakken direkte, samme regel som for Recharts og lucide. Dokumentert i UI-PAKKER §10 og
+techstack §2.
+
+### Nytt punkt: F6-19 — avatarer på personer
+
+Innboksens samtaleliste · meldingene i tråden · Detaljer-panelet (kunde og mekaniker) ·
+kundelista · kundekortet · redigering i Settings › Profil.
+
+⛔ Kun **personer** (kjøretøy eies av F2-03, med ekte silhuetter), kun **admin-flater**
+(ikke widget, ikke kundevendt).
+
+### De fem valgene som betydde noe
+
+| Valg | Hvorfor |
+|---|---|
+| **Seed = stabil ID, aldri navn** | En rettet skrivefeil skal ikke bytte ansikt på noen, og to «Ola Hansen» skal ikke dele et |
+| **SERVEREN bestemmer seeden** | `participants.seed`: kunde→`customers.id`, mekaniker→`mechanics.id`, ansatt→`user.id`. Deltaker-IDen i en melding er en Better-Auth-bruker, men kundekortet kjenner bare `customers.id` — valgte klienten selv, ville samme menneske hatt to ansikter |
+| **Valgene i `user_preferences`** | Global per bruker, uten RLS — samme begrunnelse skjemaet gir for varslingslyder: ansiktet ditt er en egenskap ved DEG, ikke ved arbeidsplassen. Kallenavn er det motsatte og bor tenant-skopet |
+| **Tre navngitte kolonner, ikke jsonb** | En rå `TraitOverrides`-map ville latt klienten pinne hvilken som helst av 39 nøkler, `motion.*` og `gaze.*` inkludert. Serveren eier vokabularet |
+| **Vi lagrer formNAVNET, ikke 0–1-tallet** | Tallbåndene er frosset per major, men et band kan flytte seg i neste — da ville en lagret `0.95` stille blitt en annen form på alle ansikter |
+
+**Redigerbart: tre ting av 39.** Form (10 silhuetter), farge og tone (6 forfattede svatsjer).
+Resten er finjustering av et 28-pikslers ikon: en glidebryter for øyeavstand gir en forhandler noe
+å bruke tid på og en kollega ingen mulighet til å se forskjell.
+
+**Ikke tatt i bruk:** `animate` (bytter fra ett `<img>` til inline SVG med ~et dusin noder per
+avatar — pakken advarer selv mot det i lange lister, og innboksen ER den lista), `expression`
+(et ansikt som skifter humør i en arbeidsinnboks påstår noe vi ikke vet), `background` (plata er
+vår, så token-laget eier lys/mørk), `palette` (ville omgått bibliotekets kontrastgaranti).
+
+### F5-14 — knapperydding i innboksen
+
+| Fjernet/flyttet | Hvorfor |
+|---|---|
+| «← Meldinger» i trådhodet | `layout.tsx` holder samtalelista MONTERT. En knapp tilbake til noe du aldri forlot er ikke navigasjon — den er en påstand om at du er et annet sted enn du er |
+| ⛔ «Flere filtre»-trakten | **Hadde ingen `onClick`.** Tooltip, hover-tilstand, gjorde ingenting — samme slag som den døde «Ny kunde»-knappen (F5-02). En knapp som ikke virker lærer folk at knappene her ikke er til å stole på |
+| «Ny samtale» flyttet | Lå KUN på `/innboks`, altså den ene skjermen der man ikke leser en tråd. Nå i sidebar-hodet, der lista står, tilgjengelig hele tiden |
+| Én tomromsbeskjed, ikke to | «Velg en samtale i lista til venstre» sto i ingressen, og «Ingen samtale valgt» 60 piksler under |
+
+### Verifisert
+
+Mot ekte database: **api 87** (var 76 — 11 nye avatartester), **ui 14** (var 0 — ny suite),
+modules 120 · db 49 · auth 19 · agents 17. typecheck 22/22 · `next build` ✅ · biome rent på
+egne filer (3 pre-eksisterende funn i repoet står igjen).
+
+⭐ **Båndkartet er testet mot biblioteket selv.** `FORM_BAND` er ti tall lest ut av blobatars
+vektede `BANDS` og midtpunktsregnet for hånd — den eneste delen av dette som kunne vært stille
+feil. `_layout()` rapporterer hvilken form biblioteket faktisk valgte; alle ti treffer, på tre
+ulike seeds. Testen er også versjonsvakten: bumper noen til 3.x, flytter båndene seg, og da blir
+det rødt før noen ser det i innboksen.
+
+Migrasjon `0012_brief_shotgun.sql`: tre nullbare kolonner + tre CHECK-constraints på
+`user_preferences`. Kjørt mot lokal base, `db:grants` etterpå.
+
+### ⚠️ Ikke verifisert
+
+**Visuelt.** Nettleserpanelet i dette miljøet nekter å navigere (viewport 0×0, «navigation denied»)
+— samme begrensning som 05.08 og tidligere i dag. Rutene svarer 200, dev-serverloggen har ingen
+render-feil fra denne koden, og alle fire Tailwind-klassene fra `avatar.tsx` er verifisert til
+stede i bygget CSS (`@source`-fella fra UI-PAKKER §1 er altså unngått). Men **jeg har ikke sett en
+avatar tegnet.** Kjør `pnpm dev` og åpne `/innboks`.
+
+**context7 (CLAUDE.md §3)** var ikke tilgjengelig. For en HELT NY pakke er det verre enn sist, så
+API-et er lest fra pakkens egne `.d.ts`-filer og kildekode i `node_modules` — en autoritativ kilde,
+men ikke den regelen ber om.
+
+### ⚠️ Miljøstøy verdt å vite om
+
+`pnpm install` feilet gjentatte ganger med `EBUSY` på symlinker i `node_modules` — noe på maskinen
+(Visual Studio-indeksering eller antivirus) holder mapper mens pnpm lenker. Det etterlot treet
+inkonsistent en periode (`better-auth`, `workflow` og `twilio` uoppløselige). Løste seg etter
+gjentatte `pnpm install`. Hvis det skjer igjen: lukk IDE-en før install.
+
+---
+
+## 2026-08-20 (d) — Bevegelse selektivt + brukerrad i sidebar-bunnen (F6-19, F5-13)
+
+**Godkjent av:** Mikkis (eksplisitt bestilling)
+
+### 1. `animate` på, men per bruksted — og valget kan ikke glemmes
+
+`Avatar` har fått en **påkrevd** `bevegelse`-prop med tre verdier:
+
+| Verdi | Rendring | Hvor |
+|---|---|---|
+| `stille` | ett `<img>` | Samtalelista · kundelista · de 24 valgknappene i profilen |
+| `hover` | inline SVG, amplitude 0 til `:hover` | Meldingene i tråden · Detaljer-panelet · kundekortet · brukerraden |
+| `alltid` | inline SVG, alltid i bevegelse | **Kun** forhåndsvisningen i Settings › Profil |
+
+**Påkrevd, ikke default.** En default er noe man arver uten å tenke, og da ville en liste med 200
+rader en dag fått animasjon fordi ingen skrev noe. Samme argument som `requireSession(db)` fører
+for sitt påkrevde db-argument. Da propen ble påkrevd, flagget TypeScript nøyaktig de elleve
+kallstedene som fantes — det er slik listen over ble til, ikke ved å lete.
+
+**`hover` er bibliotekets eget standpunkt**, ikke en halvveis løsning: «ambient motion seen
+constantly is motion worth removing» og «animates one blobatar at a time». En tråd med tretti
+meldinger står helt i ro til du peker på ett ansikt. **`alltid`** er dokumentert som unntaket for
+«the single-blobatar case — a profile header», som er presis beskrivelse av profil-forhåndsvisningen:
+der ER bevegelsen innholdet, siden du står og ser på ansiktet mens du endrer det.
+
+⚠️ `@import "blobatar/motion.css";` lagt i `globals.css`, ved siden av matrix-loaders-importen og
+av samme grunn: uten den er det ingen feilmelding, ingenting i typecheck og ingenting i bygget —
+bare ansikter som står stille. Verifisert at keyframene (`mo-breathe`, `mo-bob`, `mo-blink`,
+`mo-saccade`), klassen `mo-always` og `prefers-reduced-motion`-vakten alle ligger i den bygde
+produksjons-CSS-en.
+
+### 2. Brukerraden nederst i sidebaren
+
+Avatar + navn + rolle, under Settings. Toppen (kontekstbytteren) svarer nå på **hvor du er**
+(forhandler + visning), bunnen på **hvem du er** — andre linje i toppen sa `{userName} · {roleLabel}`
+og ville ellers gjentatt navnet to steder i samme kolonne.
+
+### ⛔ Chevronen åpner en EKTE meny — den navigerer ikke
+
+Bestillingen var «dropdown-ikon, klikk går til profilen». **Chevronen er problemet:** en nedoverpil
+lover en meny. Går den rett til en side, har kontrollen sagt én ting og gjort en annen — samme
+slag som «Flere filtre»-trakten uten `onClick` som ble fjernet tidligere samme dag. Repoet har
+allerede formulert regelen selv, i `context-switcher.tsx`: **«En pil som ikke leder noe sted er
+verre enn ingen pil.»**
+
+Valget ble derfor en ekte meny, fordi det allerede fantes to ting som hører hjemme der:
+
+- **Profil** — destinasjonen som ble bedt om, navngitt og ett klikk unna.
+- **Logg ut** — flyttet fra bunnen av Settings-flyouten, der kommentaren selv innrømmet at den var
+  «den ene handlingen i menyen som ikke fører deg til en side». Å logge ut handler om PERSONEN.
+
+Resultatet er en ryddigere deling enn før: **Settings er rene destinasjoner** (og «Profil» er
+fjernet derfra, som bestilt), brukerraden er de to tingene som gjelder deg.
+
+⚠️ Kostnaden er ett klikk ekstra til profilen. Vil eier heller ha direkte navigasjon, er den
+ærlige varianten å bytte chevronen mot `ChevronRight` eller `UserCog` — ett ikon å endre. Det som
+ikke bør stå, er en nedoverpil som navigerer.
+
+### Verifisert
+
+typecheck 22/22 · api 87 · ui 14 · modules 120 · db 49 · auth 19 · `next build` ✅ · biome rent på
+egne filer. Roadmap: 181 punkter, 181 unike, 0 ukjente ui-verdier.
+
+⚠️ **Fortsatt ikke visuelt bekreftet** — nettleserpanelet nekter å navigere til localhost i dette
+miljøet. Bevegelsen er nettopp det som må ses med øyet: at tråden er rolig til man peker, og at
+profil-forhåndsvisningen lever. Kjør `pnpm dev`.
+
+---
+
+## 2026-08-20 (e) — Helpdesk med artikler, datadrevet sidebar-slider, brukermeny og profil-rute
+
+**Godkjent av:** Mikkis (eksplisitt bestilling, fire punkter)
+
+### 1. Helpdesk: artikkelbase (F5-23 → `progress`)
+
+To nye tabeller, begge **GLOBALE uten RLS** — og det er et valg: en hjelpeartikkel er Endwise sitt
+innhold og er nøyaktig lik for alle 250 verksteder. Ga vi den `tenant_id`, måtte vi enten kopiert
+hver artikkel 250 ganger eller skrevet en policy som slipper alle gjennom, altså RLS som ikke
+isolerer noe. Samme resonnement som `user_preferences`.
+
+⛔ **Skriving er `endwiseAdminProcedure`, ikke `adminProcedure`.** Forskjellen er hele poenget: en
+`dealer_admin` er admin i sitt eget verksted, og `adminProcedure` ville sluppet dem inn til å
+skrive innhold som dukker opp i 249 andres sidebar.
+
+**«Ulest» er fraværet av en lest-rad**, ikke et flagg. En ny artikkel er dermed automatisk ulest
+for alle uten at publiseringen skriver 250 rader, og en slettet bruker etterlater ingen tellefeil.
+Merkingen skjer når artikkelen ÅPNES — vi vet ikke om noen har lest teksten, og å late som ville
+gitt en teller som lyver.
+
+6 basisartikler i seeden, idempotent på slug. Grønn badge med antall uleste på nav-raden.
+
+### 2. Sidebar-slideren: fast høyde, ekte data (F5-13)
+
+Den gamle hadde fri høyde og fire hardkodede tips av ulik lengde som byttet hvert 9. sekund. Siden
+kortet ligger NEDERST i kolonnen, dyttet den navigasjonen over seg opp og ned mens man jobbet.
+Høyden er nå låst i én konstant, bildet har fast forhold og teksten klippes.
+
+Innholdet er de 4 nyeste publiserte artiklene. Ny utforming etter bestilling: grønn «New» øverst
+(kun når den er ulest for DEG), overskrift med linje under, pil, bilde under. Lenker til artikkelen
+og til helpdesken.
+
+### 3. Brukerraden og profil-ruta (F6-19)
+
+Popupen åpner nå med samme `side`/`align`/`sideOffset` som Settings-flyouten rett over. To menyer 40
+piksler fra hverandre som spretter ut hver sin vei, leses som to ulike mekanismer.
+
+**Profilen flyttet til `/profil`** — den nås fra brukerraden, ikke fra Settings, og
+`/innstillinger/profil` var en URL som påsto at siden er en underside av konfigurasjon. Gammel sti
+redirecter (bokmerker skal ikke råtne av en flytting vi selv valgte). «Min profil» er samtidig
+fjernet fra Endwise-Settings — brukerraden finnes i alle kontekster.
+
+### 4. Endwise-admin skriver artiklene
+
+Ny flate på `/endwise/helpdesk`: overskrift (samme som vises i slideren — ett felt, ikke to som kan
+drifte), ingress, brødtekst, bildevalg og publisert/kladd.
+
+### ⛔ 5. BILDEOPPLASTING ER IKKE BYGGET — nytt punkt F5-36, `blocked`
+
+Bestillingen var «legge inn bildene som skal brukes». Den halvdelen er **blokkert på en
+stackbeslutning, ikke på arbeid**: `packages/uploads` er en tom plassholder, og repoet har tre
+ulike svar på hvor filer skal ligge — techstack §4 sier Vercel Blob, F2-03 sier R2, F13-03 flyttet
+topologien til Vercel + Scaleway. CLAUDE.md §2 sier stopp og spør; jeg har stoppet.
+
+Inntil valget er tatt, velger admin bildet fra de fire som ligger i `apps/web/public/images/`.
+Serveren validerer mot en allowlist, så en URL til en tredjepart ikke kan skrives inn i et
+tekstfelt. `helpdesk_articles.image` er `text` og tar imot en URL uendret den dagen opplasting
+finnes. **Samme avklaring låser opp F2-03 (modellbilder).**
+
+### ⚠️ Designavvik som er dokumentert, ikke skjult
+
+Eier ba om GRØNN «New»-badge. UI-PAKKER §6 sier at New-badgen er RØD. Avviket er notert øverst i
+UI-PAKKER med begrunnelsen: uleste meldinger venter på handling, en ny artikkel gjør ikke det, og
+to tall i samme kolonne skal ikke se like presserende ut.
+
+### Verifisert
+
+Mot ekte database: **api 101** (var 87 — 14 nye helpdesk-tester), ui 14, modules 120, db 49,
+auth 19. typecheck 22/22 · `next build` ✅ med `/support`, `/support/[slug]`, `/profil`,
+`/endwise/helpdesk` · biome rent på egne filer · migrasjon `0013_third_the_watchers.sql` kjørt +
+`db:grants` · seed kjørt (6 artikler) · roadmap 182 punkter, 182 unike, 0 ukjente ui-verdier.
+
+Testene dekker blant annet: dealer_admin og dealer_staff avvist på opprett/oppdater/kladdeliste ·
+bilde utenfor allowlisten avvist · kladder usynlige også via `bySlug` · `markerLest` gjelder kun
+deg, ikke kollegaen · dobbel lesning teller ikke dobbelt · `markerLest` tar ingen `userId` fra
+input · slug endres aldri ved oppdatering (lenka skal overleve).
+
+⚠️ **Fortsatt ikke visuelt bekreftet** — nettleserpanelet nekter å navigere til localhost.
+
+---
+
+## 2026-08-20 (f) — Roadmapen omorganisert etter KATEGORI (fasene beholdt) + F2-03/F5-36 ryddet
+
+**Godkjent av:** Mikkis (eksplisitt bestilling: «mye rare kategorier», «du må ikke fjerne noe»)
+
+### Hva som ble gjort
+
+Roadmapen grupperes nå etter **hva noe er og hvem det er for**, ikke etter fase. Fasene er
+**ikke fjernet** — de er en bryter unna, og hver rad bærer fasen sin som en chip.
+
+| # | Kategori | Punkter |
+|---|---|---|
+| 1 | **Dashboard** → Forhandler (35) · Mekaniker (8) · Endwise-admin (7) | 50 |
+| 2 | **Kundeflater** → Bookingwidget (11) · Min side (5) · Offentlige sider (2) | 18 |
+| 3 | Framer & plugin | 7 |
+| 4 | Sikkerhet & tilgang | 19 |
+| 5 | Personvern & etterlevelse (portvakt) | 22 |
+| 6 | Kjernedata & booking | 12 |
+| 7 | Meldinger & AI | 13 |
+| 8 | Integrasjoner | 13 |
+| 9 | Design & UI-fundament | 9 |
+| 10 | Plattform & drift | 19 |
+
+### ⛔ Sporbarheten: ingen nye IDer
+
+**F-IDene er uendret.** De er referert fra kodekommentarer, denne fila og rapportene i
+`docs/rapporter/`, og en omnummerering ville gjort hver eneste av dem død. Kategorien er et
+**felt** på punktet (`kat`, og `sub` der kategorien har underkategorier), ikke en ny
+nummerering. Null referanser brutt.
+
+### Hvordan «når» ble bevart
+
+Fasene bar tidsinformasjonen. Tre grep holder den i live:
+
+1. `ROADMAP`-strukturen er **urørt** — fortsatt gruppert på fase i dataene.
+2. Bryteren «Etter fase (F0–F14)» gir den gamle visningen, identisk.
+3. Hver rad har en **fase-chip** med tooltip («Fase F2 — Kjernedata (Uke 5–8)»), så tidsaksen
+   følger med inn i kategorivisningen.
+
+### 27 punkter omskrevet fra vagt til konkret
+
+Eiers eksempel var F0-04, som sto som «entitlements + feature-flags». Den sier nå hva de to
+bryterne faktisk er, hvem som skriver dem, og hva som gjenstår. Mønsteret for alle omskrivinger:
+**FLATE** (hvilken rute) · **BYGGES** (hva som lages) · **TRENGS** (hva som mangler først).
+
+Tyngdepunktet er Dashboard, som bestilt: F3-05, F3-06, F3-08, F3-10, F5-05, F5-07, F5-08, F6-06,
+F11-01, F1-07. Dessuten hele Min side (F6-07…F6-11), widget-stegene (F4-04/05/06/10) og
+plattformpunktene F0-04/05/06, F0-14, F11-02, F12-04.
+
+⚠️ **155 punkter er ikke omskrevet.** De var enten allerede konkrete (alt med BYGGET/FERDIG-tekst)
+eller korte og entydige. Å skrive om alle ville vært mye endring for lite gevinst.
+
+### Rydding bestilt i samme omgang
+
+- **F2-03**: «R2-lagring» → **Vercel Blob**. Ordlyden var foreldet fra før techstack v2.0.
+- **F5-36**: `blocked` → **`planned`**. Den sto som blokkert på et §2-valg som viste seg å være
+  tatt for lengst — se gjennomgangen i rapporten fra samme dag.
+
+### Verifisert
+
+**182 punkter før, 182 etter. 182 unike IDer.** Begge visningene rendrer alle 182 — kjørt i en
+ekte nettleser mot en lokal statisk server, ikke bare påstått: 182 rader og 182 fase-chips i
+kategorivisning, 182 rader og 15 fasegrupper etter bryterklikk, og 182 igjen ved retur.
+Dekningen av kategorikartet er assert-et (0 punkter uten kategori, 0 ukjente IDer i kartet).
+
+Status etter: 68 done · 32 progress · 77 planned · 5 blocked.
+(`blocked` falt fra 6 til 5 fordi F5-36 ble `planned`.)
+
+---
+
+## 2026-08-20 (g) — To bugs fikset · badge rød igjen · accordion · humør på avataren
+
+**Godkjent av:** Mikkis (eksplisitt bestilling, fem punkter)
+
+### ⛔ 1. BUG: mørkt tema overlevde ikke en refresh
+
+**Rotårsak:** `layout.tsx` har `data-theme="light"` hardkodet på `<html>`, og BEGGE
+tema-bryterne (shellets `ThemeToggle` og profilsidas egen kopi) skrev bare
+`document.documentElement.dataset.theme` — **de lagret ingenting**. Bryteren virket; den glemte.
+At logikken lå to steder er den andre halvdelen: to kopier av samme regel kan bare bli enige ved
+et sammentreff.
+
+**Fiks:** `_lib/tema.ts` eier lagring og bytte (én kopi). Oppstart eies av et **inline-skript i
+`<head>`**, ikke en `useEffect` — en effekt kjører etter første maling, så brukeren ville sett et
+hvitt glimt før det ble mørkt, på hver navigasjon.
+
+⭐ **Verifisert i ekte nettleser:** etter full sidelast står `data-theme="dark"` og
+`getComputedStyle(body).backgroundColor` er `rgb(23, 23, 23)` — spec-fargen `#171717`.
+
+### ⛔ 2. BUG: visningsnavn oppdaterte ikke sidebaren
+
+**Rotårsak:** navnet hadde **to hjem**. `profile.setName` skriver `user.name` i basen og
+invaliderer `profile.meg` + `session.me` — men sidebaren leste `session?.user?.name` fra
+**Better-Auths** klientsesjon, en helt annen cache som ingen rørte.
+
+**Fiks:** fjernet det ene hjemmet i stedet for å legge til enda en oppfriskning som noen glemmer
+neste gang. `session.me` returnerer nå `navn`, `useOrgRole` eksponerer det, og sidebaren leser
+derfra. Invalideringen som allerede fantes gjør resten.
+
+Låst i to tester: `session.me` gir eget navn, og `setName` slår gjennom umiddelbart — for MEG,
+ikke for naboen.
+
+### 3. «New» er rød igjen
+
+Grønn-unntaket fra tidligere samme dag er **reversert**, og noten i UI-PAKKER er omskrevet så den
+ikke blir liggende og lyve. Helpdesk-raden sier nå **«New» + antall**; Innboks beholder tallet
+alene og aksentfargen, så de to tellerne fortsatt er til å skille.
+
+⛔ **Fem `isNew: true` fjernet fra nav-radene.** Et merke som står på fem av elleve rader i
+månedsvis slutter å bety «nytt» og begynner å bety «bakgrunn». Feltet står igjen i typen, fordi
+mekanismen er riktig når noe FAKTISK er nytt.
+
+### 4. Accordion i sidebaren — én åpen om gangen
+
+Tilstanden **måtte** flyttes ut av `NavRow`: en rad som bare kjenner seg selv kan ikke vite at en
+annen skal lukkes. Den bor nå i `Sidebar` som `apentPunkt`.
+
+⛔ Animasjonen er `grid-template-rows: 0fr → 1fr`, ikke `max-height`. En gjettet maks-høyde
+klipper den siste raden når den er for lav, og henger i lufta når den er for høy. `0fr → 1fr` lar
+nettleseren regne ut den ekte høyden uansett antall underpunkter.
+
+⚠️ Setteren sendes inn rå i stedet for pakket i en pil-funksjon per rad — `useState`-settere er
+stabile, så effekten som åpner aktiv rad kan ha en ærlig avhengighetsliste i stedet for en
+undertrykt lint-advarsel.
+
+### 5. Avataren i sidebar-hjørnet animerer alltid
+
+Kostnadsargumentet mot `alltid` handler om ANTALL. Her er det én avatar, din egen, på samme sted
+uansett side — ingen liste å beskytte.
+
+### 6. Profil-editoren: fire nedtrekk, og humør
+
+Skjemaet viste 24 knapper samtidig; med humør ville det blitt 34. Nå er hver egenskap ett nedtrekk
+som viser det valgte og åpner en liste. **Forhåndsvisningene er beholdt** — det var hele poenget
+med rutenettene. Rekkefølge som bestilt: form → farge → humør → tone.
+
+**Humør** er ti kuraterte positurer. ⚠️ `sad`, `mad`, `sick` og `scared` finnes i biblioteket, men
+er utelatt: et humør du setter én gang og glemmer er noe annet enn et humør du føler, og et ansikt
+som ser sint eller sykt ut ved siden av navnet ditt HVER dag sier noe du neppe mente.
+
+⚠️ Innvendingen jeg selv reiste mot uttrykk gjaldt at SYSTEMET skulle sette dem. Dette er det
+motsatte: brukerens eget valg om sitt eget ansikt.
+
+Uttrykk rendres også statisk, så et valgt humør synes i lister uten at vi slår på bevegelse der.
+Bare selve overgangen mellom to humør krever animasjon — derfor `hover` på humør-radene i lista,
+så du ser forskjellen før du velger.
+
+Migrasjon `0014_nice_killraven.sql`: `avatar_humor` + CHECK.
+
+### Verifisert
+
+api **101 → 106** · ui 14 · modules 120 · db 49 · auth 19 · typecheck 22/22 · `next build` ✅ ·
+biome rent på egne filer.
+
+⚠️ **Ikke visuelt bekreftet:** accordion-animasjonen, nedtrekkene og humør-morfingen. Temaet er
+verifisert i nettleser; resten krever innlogging jeg ikke har (2FA), så jeg har verifisert
+server-siden og typene.
+
+---
+
+## 2026-08-20 (h) — Roadmapen forenklet: én oppgavelinje per punkt, 7 kontroller i stedet for 35
+
+**Godkjent av:** Mikkis («fremdeles veldig rotete», «mange unødvendige knapper», «man må jobbe med
+å forstå hva som egentlig er oppgaven bak»)
+
+⚠️ **Dette er en korreksjon av forrige omgang, ikke en videreføring.** Da roadmapen sist skulle bli
+lettere å lese, la jeg til en akse til (kategorier) og skrev om 27 punkter til FLATE/BYGGES/TRENGS
+— altså MER struktur og MER tekst. Kategoriene var riktige; teksten og kontrollene gikk feil vei.
+
+### 1. Hvert punkt har fått en oppgavelinje
+
+Nytt felt `o` på alle 182 punkter: **én linje som sier hva som skal gjøres**, formulert som en
+oppgave. Median 46 tegn.
+
+| Før | Etter |
+|---|---|
+| «SIDEBAR-FØRST SHELL (NY 03.08.2026, eierens redesign) — ÉN dominerende sidebar topp→bunn overtar for topbaren. Topbar reduseres til KUN breadcrumb …» (fortsetter i 6 linjer) | **«Bygg sidebar-først-shellet med kontekstbytte»** |
+| «TO BRYTERE SOM OFTE FORVEKSLES: har forhandleren KJØPT noe, og har VI rullet det ut. ENTITLEMENTS = tenant_modules …» | **«Styr kjøpte moduler og feature-flagg fra databasen»** |
+
+⛔ **Ingen tekst er slettet.** Den opprinnelige `t` ligger urørt og vises når man åpner raden.
+Datoer, begrunnelser og ⚠️/⛔-notater hører hjemme der — ikke i det man møter først.
+
+### 2. Raden: fra åtte elementer til tre
+
+**Før:** ID · avsnittslang tittel · 🔒-merke · detaljknapp · fase-chip · «spor · område»-chip ·
+UI-badge · status-knapp.
+
+**Etter:** en **farget prikk** (status), **ID**, **oppgaven**. Hele raden er knappen som åpner
+utdypingen.
+
+Statusen kan fortsatt endres — knappen ligger i utdypingen, ikke på raden. Eksportflyten er
+uendret.
+
+### 3. Verktøylinja: 35 → 7 kontroller
+
+Fjernet: åtte KPI-kort · fremdriftsbar · sikkerhetsspor per fase · firedelt fargeforklaring ·
+9 område-knapper · 3 spor-knapper · «Kun UI-gap» · «🔒 Kun sikkerhet» · 5 status-knapper ·
+«Åpne alle»/«Lukk alle».
+
+Igjen står: **søk**, **ett statusfilter** (nedtrekk), **to grupperingsknapper**, og
+eksport/nullstill/lukk-alle.
+
+⛔ **Ingenting av det som ble fjernet var data.** Område, spor, UI-status og sikkerhetsmerke ligger
+fortsatt på hvert punkt og vises i utdypingen. Det var visningen som var for mye.
+
+Én oppsummeringslinje erstatter de åtte kortene: «68 ferdig · 32 pågår · 77 ikke startet ·
+5 blokkert av 182».
+
+### Verifisert i ekte nettleser
+
+Servert lokalt og kjørt: **182 rader i begge grupperinger**, 0 mangler. **7 kontroller** totalt
+(mot ~35). Raden for F5-13 leser «Pågår · F5-13 · Bygg sidebar-først-shellet med kontekstbytte» og
+har fire barn-elementer. Utdypingen viser status, fase med tidsrom, UI-status og område.
+
+Filtrene testet: «ikke startet» → 77 · «ferdig» → 68 · søk «widget» → 25 · «F14» → 26 ·
+«pseudonymiser» → 3 (ordet finnes bare i den fulle teksten, så søket dekker begge).
+
+Data: 182 punkter, 182 unike IDer, 0 uten oppgavelinje, 0 uten kategori, 0 ukjente ui-verdier.
+Status uendret: 68 / 32 / 77 / 5.
+
+---
+
+## 2026-08-20 (i) — BUG: grå tekst på svarte knapper · dobbeltekst ved 2FA fjernet
+
+**Godkjent av:** Mikkis (eksplisitt feilmelding)
+
+### ⛔ 1. Grå tekst på svarte knapper — rotårsaken var `cn()`
+
+**Symptom:** «Logg inn», «Lagre» og flere knapper hadde grå tekst på svart bakgrunn. I mørkt tema
+lysegrå på hvitt, altså nesten usynlig.
+
+**Ikke** et token-problem — token-kjeden var riktig hele veien:
+`--ew-accent: #111` → `--primary` → `bg-primary`, og `--ew-accent-fg: #fff` → `--primary-foreground`
+→ `text-primary-foreground`. Begge komponentene setter riktig par.
+
+**Rotårsak: `cn()` kastet fargeklassen.** Vi har tre EGNE font-størrelser i `theme.css` —
+`text-title`, `text-label`, `text-body` (eierens §6). Stock tailwind-merge kjenner dem ikke, og
+antar at `text-label` konflikter med `text-primary-foreground` fordi begge starter med `text-`.
+Den beholder den siste og kaster den første.
+
+**Rekkefølgen avgjorde hvilken halvdel som forsvant:**
+
+| Komponent | Rekkefølge | Hva som røk |
+|---|---|---|
+| beUI `Button` (Logg inn, Lagre, Send, Opprett) | variant → size | **fargen** — teksten arvet `--ew-fg` |
+| shadcn `Button` | base → variant | **størrelsen** — mindre synlig, like galt |
+
+Det er derfor det så ut som «flere knapper rundt om» og ikke som én ødelagt knapp: **alt** som går
+gjennom `cn()` var rammet.
+
+**Fiks:** `extendTailwindMerge` registrerer de tre som ekte font-størrelser, så de kun konflikter
+med hverandre. Én endring, alle knapper.
+
+⭐ **Målt i ekte nettleser, før og etter (mørkt tema):**
+
+| | Tekst | Bakgrunn | Kontrast |
+|---|---|---|---|
+| Før | `#ededed` | `#ffffff` | ~1,1:1 — praktisk talt usynlig |
+| Etter | `#111111` | `#ffffff` | **18,9:1** |
+
+Lyst tema er utledet fra token-verdiene, som jeg leste live i samme nettleser
+(`--primary: #111`, `--ew-accent-fg: #fff`) → hvit på svart, samme 18,9:1.
+
+**Låst i fem tester** (`packages/ui/test/cn-merge.test.ts`), inkludert to som sjekker at
+konfliktdeteksjonen fortsatt VIRKER — fiksen måtte ikke bli «slå av konflikter for `text-*`».
+
+⚠️ Legger noen til en ny `--text-*` i `theme.css`, må den registreres i `cn()` også. Står som
+advarsel i fila.
+
+### 2. Dobbel tekst ved 2FA
+
+Steg 2 sa det samme to ganger: overskriften «Vi sendte en 6-sifret kode til {e-post}» og en liten
+linje under knappen, «Engangskode sendt til {e-post}.»
+
+⚠️ Den lille linja er ikke bare fjernet — den brukes også som **kvittering for «Send ny kode»**, og
+å slette elementet ville tatt bort den eneste tilbakemeldingen på at gjensendingen faktisk skjedde.
+
+Løsningen er å ikke SETTE notisen ved første sending (overskriften dekker det), og beholde den for
+gjensending, der den sier noe nytt: «Ny engangskode sendt.»
+
+### Verifisert
+
+typecheck 22/22 · api 106 · **ui 14 → 19** · modules 120 · db 49 · auth 19 · `next build` ✅ ·
+biome rent på egne filer.
+
+---
+
+## 2026-08-20 (j) — Logoen ut av merkeboksen i sidebar-toppen (F5-13)
+
+**Godkjent av:** Mikkis (eksplisitt bestilling, med presisering)
+
+**Komponent:** `apps/web/app/(app)/_shell/context-switcher.tsx` — logoen i sidebarens header,
+ved siden av kontekstbytteren.
+
+### Hva som var galt
+
+Logoen lå i en 36px svart rute og ble tegnet **18px bred** inni den. Med SVG-ens eget forhold
+(222:134) ble logoen dermed ca. **18 × 11 px** — det var RUTA som matchet navneblokka ved siden av,
+ikke logoen.
+
+### Hva som er gjort
+
+Ruta er fjernet. Logoen står nå rett på sidebarbakgrunnen, med høyde lik navneblokka.
+
+⭐ **Høyden er MÅLT, ikke gjettet.** Navneblokka («Verksted A» 13/16 + «Forhandler» 12/20) er
+nøyaktig **36px**. Logoen er derfor 36px høy, og 60px bred av forholdet.
+
+Kollapset sidebar (76px, 8px padding hver side = 60px å gå på) bruker 26px høyde → 43px bredde.
+36px ville gitt 60px på millimeteren.
+
+### ⛔ Konsekvensen som ikke var åpenbar
+
+Logoen måtte bytte fra `logo-on-dark` til `logo-invert`.
+
+`.logo-on-dark` snur logoen hvit **uansett tema** — riktig så lenge den lå på en alltid-svart rute.
+Uten ruta sitter den på sidebarbakgrunnen, og med den gamle klassen ville logoen vært **hvit på
+hvitt i lyst tema**. Det er nøyaktig feilen F5-21 fantes for å rette.
+
+`.logo-on-dark` beholdes — markedssiden (`/`) og veikartet bruker den fortsatt, der boksene står.
+
+### Verifisert i ekte nettleser
+
+Navneblokka målt til 36px (16 + 20). Logoen rendrer 60 × 36. Filteret er `none` i lyst tema og
+`brightness(0) invert(1)` i mørkt — altså svart på lyst, hvit på mørkt, som den skal.
+
+typecheck 22/22 · `next build` ✅ · biome rent på egne filer.
+
+⚠️ **Ikke sett i sidebaren selv** — den krever innlogging. Målingene er gjort ved å rendre samme
+markup med appens CSS på `/signin`.
+
+---
+
+## 2026-08-20 (k) — Brukerraden: logout-ikon i stedet for meny · Profil tilbake i Settings
+
+**Godkjent av:** Mikkis (eksplisitt beslutning — reverserer valget tidligere samme dag)
+
+| | Før (tidligere i dag) | Nå |
+|---|---|---|
+| Brukerraden | chevron → meny med Profil + Logg ut | **logout-ikon**, logger ut direkte |
+| Profil | brukerraden | **Settings-flyouten**, i begge kontekster |
+| URL | `/profil` | **`/innstillinger/profil`** |
+
+⛔ **Redirecten er SNUDD, ikke duplisert.** `/innstillinger/profil → /profil` sto der fra i
+morges; hadde den blitt stående ved siden av den nye, ville det blitt en løkke. Nå peker kun
+`/profil → /innstillinger/profil`. Verifisert mot kjørende server: `/profil` gir 1 redirect og
+lander på 200; `/innstillinger/profil` svarer direkte uten redirect.
+
+**Ingen bekreftelsesdialog på utlogging.** Handlingen er reversibel — ingenting går tapt, og veien
+tilbake er å logge inn. En «er du sikker?» på noe reversibelt er friksjon uten gevinst, og lærer
+folk å klikke bort dialoger. Feilklikk dempes i stedet av at knappen er liten, står ytterst, har
+`title`/`aria-label` i klartekst og blir rød på hover.
+
+⚠️ **Raden er ikke lenger klikkbar som helhet.** Da Profil lå bak den hadde den et sted å gå; nå
+har den ikke det, og en rad som ser trykkbar ut uten å være det er verre enn ren visning.
+
+⚠️ **Kollapset sidebar:** der er det ikke plass til både avatar og knapp, så avataren ER
+utloggingsknappen. Ellers ville utlogging vært utilgjengelig uten å utvide sidebaren først.
+
+**Verifisert:** typecheck 22/22 · api 106 · ui 19 · modules 120 · db 49 · auth 19 ·
+`next build` ✅ · redirect-kjeden testet over HTTP.
+
+---
+
+## 2026-08-21 — Designaudit mot Checklist Design → 45 nye punkter
+
+**Godkjent av:** Mikkis (eksplisitt bestilling: kjør skillen, del store punkter i flere små)
+**Kode endret:** ingen. Kun `docs/endwise-roadmap.html`.
+
+Kjørte `checklist-design` i **audit**-modus mot 17 sjekklister som faktisk matcher Endwise-flatene
+(av 125 bundlede). Auditen er gjort mot **koden**, ikke mot skjerm — se forbeholdet nederst.
+
+| Sjekkliste | Nye punkter |
+|---|---|
+| Login · 2FA · Settings · Account (Web app) | F1-15 … F1-25 (11) |
+| Multi-step form · Showing input error (widget) | F4-16 … F4-22 (7) |
+| Data Table · Single Item Detail · User Management · Help Center · Empty State | F5-37 … F5-55 (19) |
+| Chat (Web app) | F6-20 … F6-25 (6) |
+| Dashboard (Mobile app) | F7-08, F7-09 (2) |
+
+⛔ **Tre funn er ekte feil, ikke bare mangler:**
+
+1. **Ingen «Glemt passord» finnes** (F1-15/F1-16). `forgetPassword`/`resetPassword` har null
+   kallsteder i repoet — og `/min-dag/meg` peker likevel brukeren mot den lenka.
+2. **To flater påstår noe usant** (F1-19). `/innstillinger/profil` sier at 2FA-håndheving
+   «ikke håndheves server-side»; det landet 12.08.2026.
+3. **Widgeten kan booke feil tjeneste** (F4-20). `chosen` nullstilles kun i `loadSlots()`, så
+   bytter kunden tjeneste etter å ha valgt tid, sendes ny `serviceVersionId` med gammelt slot.
+
+**Ingen eksisterende punkter er fjernet eller endret.** Der auditen traff noe som allerede var
+dekket — varselsenteret (F5-08), aktivitetsloggen (F5-05), tomme tilstander (F5-06), bildeopplast
+til hjelpeartikler (F5-36) — ble det **ikke** laget nye punkter, kun kryssreferanser i teksten.
+
+**Verifisert:** 182 → **227 punkter, 227 unike, 0 duplikater**. Ingen gammel ID mistet
+(sammenlignet før/etter i samme kjøring). 0 ukjente `ui`-, `status`- eller `kat`-verdier.
+Oppgavelinjenes lengde: min 25 · median 45 · maks 61 tegn. Script-blokken parser rent.
+
+⚠️ **Ikke visuelt verifisert.** Nettleserpanelet svarer på DOM (`navOk: true`, `get_page_text` og
+`read_page` virker), men **kan ikke ta skjermbilder** i dette miljøet («the Browser pane is not
+displayed»). Flatene bak innlogging er dessuten ikke besøkt — auditen leser ikke inn i produktet
+med noens passord. Alt som handler om utseende — kontrast, hierarki, spacing, om noe leser dårlig
+på 20px — er derfor **ikke vurdert**, og ingen av de 45 punktene bygger på en påstand om utseende.
+F7-09 er ført opp som en eksplisitt verifiseringsoppgave nettopp av den grunnen.
+
+---
+
+## 2026-08-22 — Passordreset (F1-15, F1-16) + F1-18 og F1-19
+
+**Godkjent av:** Mikkis (eksplisitt bestilling: «kjør passordreset»)
+**Status:** F1-15 · F1-16 · F1-18 · F1-19 → `done`. Roadmap: 227 punkter, 227 unike, uendret antall.
+
+Stien fra «Glemt passord?» til satt nytt passord finnes nå. `forgetPassword`/`resetPassword` hadde
+null kallsteder; det var UI-et og herdingen som manglet, ikke funksjonaliteten.
+
+### Sikkerhetsvalgene
+
+| Egenskap | Valg | Better-Auths default |
+|---|---|---|
+| Token-levetid | **30 min** | 1 time |
+| Engangsbruk | konsumeres i transaksjon, utløpt token brennes også | (samme) |
+| Enumerering | identisk svar for kjent/ukjent — **også når sending feiler** | (samme) |
+| Rate limit, be om lenke | **5 per 15 min/IP** | 3 per **minutt** = 180/t |
+| Rate limit, sett passord | **10 per 15 min/IP** | 60/min |
+| Sesjoner ved bytte | **alle rives** | ⛔ **`false`** |
+
+⛔ **En reset gir ingen sesjon.** `/reset-password` setter ingen cookie (lest i
+`dist/api/routes/password.mjs` v1.6.23 og verifisert mot ekte endepunkt). Brukeren må logge inn
+etterpå, og da gjelder F1-11 fullt ut. Resetten er altså ikke en vei rundt tofaktor.
+
+⚠️ **Sendingen kan IKKE feile lukket — og det er riktig.** Better-Auth kaller senderen via
+`runInBackgroundOrAwait`, etter at 200 er sendt. Målt 22.08.2026: med en Resend-nøkkel som ikke får
+sende fra `endwise.no` svarte ruta 200 mens loggen viste «Failed to run background task». Å la
+feilen slå gjennom ville vært et **enumereringshull**, siden sending bare skjer for adresser som
+finnes. Prisen er at et ødelagt e-postoppsett er usynlig for brukeren — derfor må levering
+overvåkes (F0-14), ikke oppdages av den som ikke kommer inn.
+
+⚠️ **Ikke løst, og skal ikke se ut som løst:** andre faktor er en kode på e-post, og resetlenka går
+til samme innboks. Den som eier innboksen får begge. Reset arver dette av e-post-2FA — F1-21
+(gjenopprettingskoder) og F1-24 (autentikator-app) er svaret.
+
+### Herdingen er en test, ikke en kommentar
+
+`packages/auth/src/password-reset.ts` holder grensene som data, og `passordResetHull()` er sperren.
+Skrur noen av `revokeSessionsOnPasswordReset`, forlenger tokenet eller fjerner en rate-limit-regel,
+blir det **rødt i `passord-reset.test.ts`** i stedet for stille i produksjon. Fire av de fem
+innstillingene har en utrygg default hos Better-Auth — det er nettopp derfor de står fast.
+
+**Verifisert:** 18 nye tester (10 mot ekte database) · typecheck 22/22 · `next build` ✅ ·
+biome rent · alle suiter grønne · resetflyten kjørt over HTTP mot dev-serveren (identisk svar for
+kjent/ukjent adresse, TTL målt til 1800 s, ugyldig token → 400).
+
+⚠️ **Lokalt:** `skalLeggesILogg()` krever at `RESEND_API_KEY` MANGLER. Står det en nøkkel i `.env`
+som ikke kan sende fra `endwise.no`, får du verken e-post eller logglinje. Fjern nøkkelen for å
+teste flyten i dev.
+
+---
+
+## 2026-08-22 (b) — Resend-feilen funnet + logo i auth-e-postene
+
+**Godkjent av:** Mikkis (eksplisitt bestilling)
+**Roadmap:** ingen statusendring. F1-11 og F1-16 utvidet med e-postinnhold.
+
+### ⛔ Rotårsak: avsenderdomenet var apex, ikke subdomenet
+
+`RESEND_FROM` sto som `Endwise <no-reply@endwise.no>`. Domenet som faktisk er verifisert i Resend
+heter **`no-reply.endwise.no`** — et *subdomene*. Bekreftet mot `GET /domains`
+(status `verified`, region `eu-west-1`), og målt begge veier:
+
+| from | svar |
+|---|---|
+| `no-reply@endwise.no` | **403** `validation_error` — «The endwise.no domain is not verified» |
+| `no-reply@no-reply.endwise.no` | **200**, `last_event: delivered` |
+
+De to strengene ser nesten like ut, og feilen rammet **alle** auth-e-poster samtidig: engangskode,
+passordreset og invitasjon. Rettet i `.env`, `.env.example` og i fallback-verdien i `env.ts`.
+
+⚠️ **Sidefunn:** fallbacken brukte `??`, som bare slår inn på `null`/`undefined`. En tom
+`RESEND_FROM=""` — nøyaktig det `.env.example` leverer for de andre nøklene — ga altså en tom
+avsender i stedet for standardverdien. Endret til `||`. Fanget av en test, ikke av øyet.
+
+⚠️ Feilmeldingen bar bare `message`. Nå bæres `name` og statuskoden også: «domenet er ikke
+verifisert» og «nøkkelen mangler send-rettighet» er to helt ulike fikser med nokså lik ordlyd.
+
+### Logoen: PNG som inline `cid:`-vedlegg
+
+| Vurdert | Utfall |
+|---|---|
+| SVG | ⛔ Gmail, Outlook og Apple Mail rendrer den ikke |
+| `data:`-URI i `<img src>` | ⛔ **Gmail og Outlook fjerner den** — «inline base64» virker ikke i markupen |
+| Hostet PNG på URL | ⛔ Krever offentlig domene; `BETTER_AUTH_URL` er localhost til F13 |
+| **PNG som inline vedlegg med `contentId`, referert `cid:`** | ✅ Valgt |
+
+Base64-strengen er altså innholdet i et **vedlegg**, ikke en `src`-verdi — det er forskjellen på
+at logoen vises og at den ikke gjør det. 798 byte PNG (1,0 kB base64), generert fra `logo.svg` av
+`scripts/lag-logo-png.js` med `sharp` fra pnpm-storen. **Ingen ny avhengighet** — skriptet kjøres
+for hånd, resultatet er en committet fil.
+
+**Mørk modus:** logoen er hvit og ligger på sin **egen mørke flate** med `bgcolor="#0b0b0b"` som
+attributt på en `<td>`. `prefers-color-scheme` er upålitelig i e-post, så løsningen er å ikke være
+avhengig av den: uansett om klienten inverterer resten, ligger logoen på en kjent bakgrunn.
+`alt="Endwise"` for dem som blokkerer bilder, og `width`/`height` så layouten ikke hopper.
+
+Ren tekst sendes alltid ved siden av HTML-en — en engangskode som bare finnes i markupen, finnes
+ikke for den som leser i ren tekst. Koden står også i emnefeltet, så den kan leses fra varselet.
+
+**Verifisert:** ekte OTP sendt gjennom `sendTwoFactorOtp` → **`last_event: delivered`**, `cid:`
+intakt i det Resend lagret, ingen `data:`-URI, tekstdel til stede. 17 nye tester
+(`epost-innhold.test.ts`). typecheck 22/22 · biome rent · auth-suiten 54/54.
+
+---
+
+## 2026-08-22 (c) — 404 på alle sider: dev-serveren, ikke koden
+
+**Ingen kodeendring.** Feilsøking + oppstartsrutine.
+
+`localhost:3000` ga ikke svar på noen rute. Første måling var `000` (connection refused) på
+samtlige stier — altså **ingen server**, ikke en 404 fra Next.
+
+⛔ **Årsak: Next 16 tillater ÉN dev-server per katalog.** Ligger det igjen en `next dev`-prosess
+(eller en halvdød en etter en krasj), feiler `@endwise/web:dev` med
+
+```
+⨯ Another next dev server is already running.
+- PID: <n>   Run taskkill /PID <n> /F to stop it.
+```
+
+mens **alle de andre appene starter helt fint** — api (:3001), stream (:3002), framer-agent
+(:3003), framer-plugin (:5173). Turbo rapporterer `Failed: @endwise/web#dev` langt oppe i en logg
+som ellers ser sunn ut, og resultatet er at bare web mangler. Derav «alt gir 404».
+
+**Rutine når det skjer:**
+```
+Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
+  Where-Object { $_.CommandLine -like "*next*dev*" } |
+  ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+pnpm dev
+```
+
+**Verifisert etter restart:** `/`, `/signin`, `/dashboard`, `/kunder`, `/innboks`, `/tjenester`,
+`/min-dag`, `/glemt-passord`, `/nytt-passord?token=…` → **alle 200**. API `/health` 200.
+`/dashboard` redirecter korrekt til `/signin`, og «Glemt passord?»-lenka rendrer.
+
+⚠️ **Ikke en regresjon fra passordreset-arbeidet.** De nye rutene ligger som egne mapper under
+`app/` (`glemt-passord`, `nytt-passord`) og `app/_auth/` er en privat mappe utenfor routingen.
+Ingen `middleware.ts`, ingen `not-found.tsx`, ingen route group rørt. Alle ruter svarer 200 på en
+ren oppstart — også de gamle.
+
+---
+
+## 2026-08-22 (d) — Utgående e-post fra innboksen (F6-26) + F6-16 delt i tre
+
+**Godkjent av:** Mikkis (eksplisitt bestilling)
+**Roadmap:** F6-26 `done` (NY) · F6-27 `planned` (NY) · F6-28 `planned` (NY) · F6-16 omskrevet
+
+### ⛔ Kanalvalget var metadata — nå er det transport
+
+`messages.post` tok ikke engang imot en kanal, og `sendEmail` hadde tre kallsteder i hele repoet,
+alle i auth-pakken. En tråd merket `email` fikk et konvoluttikon og sendte ingenting.
+
+**Bygget:** `postMessage` leser trådens kanal i SAMME transaksjon som innsettingen og dispatcher
+når den er `email`, med `threads.external_ref` som mottaker. Leverandørens ID lagres i
+`external_id`. Kanalen på raden settes til `email` **kun når noe faktisk gikk ut** — kan den ikke
+sendes, er den en app-melding, og badgen sier det samme som virkeligheten.
+
+### Når sendingen feiler
+
+Ny kolonne `messages.delivery_status` (`pending|sending|sent|failed`) + `delivery_error`
+(migrasjon 0015). Meldingen skrives **før** utsendingen forsøkes — det brukeren skrev skal aldri
+gå tapt i en nettverksfeil — og statusen sier hva som skjedde med den. Feilet levering vises som
+«Ikke levert» med feilteksten og en «Send på nytt»-knapp i tråden.
+
+⚠️ **`sending` finnes fordi alternativet er verre.** F3-04-dispatcheren setter `sent` FØR kallet;
+en krasj midt i kallet etterlater da en rad som påstår at den gikk. Her er en strandet rad synlig
+som strandet.
+
+**Idempotensvakt:** betinget `UPDATE … SET delivery_status='sending' WHERE delivery_status IN
+('pending','failed')`. Treffer den null rader, holder noen andre på. `sent` kan aldri plukkes opp
+igjen. Testet med tre samtidige `resendMessage` → **én** e-post.
+
+### Kunden kan ikke svare ennå
+
+`replyTo` settes til **den ansatte som skrev meldingen**, så svaret havner i hens vanlige
+jobb-innboks. Ikke et provisorium: det er riktig oppførsel til F6-27 finnes, og da byttes adressen
+til trådens egen. E-posten sier det i klartekst. Samme mal og logo som OTP og passordreset.
+
+### ⚠️ Situasjonen endret seg under arbeidet
+
+Om morgenen var KUN `no-reply.endwise.no` verifisert i Resend, og apex-domenet ga 403 — det var
+hele OTP-feilen. **Senere samme dag ble `endwise.no` også verifisert**, og `.env` er satt tilbake
+til `noreply@endwise.no`. Begge virker nå.
+
+Konstanten `RESEND_VERIFISERT_DOMENE` (entall) er derfor erstattet av `RESEND_VERIFISERTE_DOMENER`
+— en **eksakt liste**, ikke ett domene med en subdomene-regel. Resend verifiserer hvert domene for
+seg, så en `endsWith`-regel ville påstått at `post.endwise.no` er godkjent fordi `endwise.no` er
+det, og den e-posten ville 403-et i produksjon.
+
+`toolkit-resend` sin fallback er rettet på samme måte som auth-pakkens (`||` ikke `??`, verifisert
+domene), og en test feiler hvis de to duplikatene glir fra hverandre.
+
+### F6-16 delt
+
+Punktet dekket tre ulike arbeider under ett. Nå: **F6-26** utgående e-post (bygget) · **F6-27**
+innkommende e-post (svaradresse per tråd er den ekte beslutningen der) · **F6-28** utgående SMS ·
+**F6-16** beholder ID-en og dekker innkommende SMS.
+
+**Verifisert:** 227 → **230 punkter, 230 unike**, ingen gammel ID mistet, 0 ukjente enum-verdier.
+⭐ Ekte e-post sendt gjennom hele kodestien → `last_event: delivered`, `cid:`-logo intakt,
+`reply_to` satt, tekstdel til stede. 11 nye tester i `apps/api/test/utgaaende-epost.test.ts`.
+typecheck 22/22 · biome rent · api-suiten **117** · alle suiter grønne.
+
+---

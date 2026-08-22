@@ -84,7 +84,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     rules: {
       '*.md': {
-        type: 'text',
+        // Next 16.2.10 (Vercel preview) godtar `raw`, ikke `text`.
+        type: 'raw',
       },
     },
   },

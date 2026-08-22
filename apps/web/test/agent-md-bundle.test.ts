@@ -14,7 +14,7 @@ const config = readFileSync(
 
 describe('Next bundler inliner agent-instruksjoner (F13-03)', () => {
   it('Turbopack behandler .md som tekststreng', () => {
-    expect(config).toMatch(/['"]\*\.md['"]\s*:\s*\{[^}]*type:\s*['"](?:text|raw)['"]/);
+    expect(config).toMatch(/['"]\*\.md['"]\s*:\s*\{[^}]*type:\s*['"]raw['"]/);
   });
 
   it('webpack behandler .md som asset/source', () => {

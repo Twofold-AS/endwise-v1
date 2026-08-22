@@ -1,17 +1,14 @@
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+/// <reference path="../md.d.ts" />
 import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
 import { schema, withTenant } from '@endwise/db';
 import { tool } from 'ai';
 import { z } from 'zod';
+import instructions from './instructions.md?raw';
 
 /** Instruksjonen bor i `instructions.md` — ikke i en TS-streng. Den skal kunne
- *  redigeres av et menneske uten å røre kode (techstack §2: «agent = mappe»). */
-const instructions = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'instructions.md'),
-  'utf8',
-);
+ *  redigeres av et menneske uten å røre kode (techstack §2: «agent = mappe»).
+ *  Importeres som modulstreng så Next/Vercel inliner den; `readFileSync` mot
+ *  `import.meta.url` peker på `/var/task/...` som ikke finnes i bunten. */
 
 /**
  * F6-13 — Kunde-support-agenten (techstack §3, kanal «kunde ↔ forhandler»).

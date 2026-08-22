@@ -1,16 +1,10 @@
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+/// <reference path="../md.d.ts" />
 import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
 import { schema, withTenant } from '@endwise/db';
 import { tool } from 'ai';
 import { z } from 'zod';
+import instructions from './instructions.md?raw';
 import { lagerVerktoy } from './lager-verktoy.ts';
-
-const instructions = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'instructions.md'),
-  'utf8',
-);
 
 /**
  * F14 — Drifts-agenten. Kontrasten til kunde-support.

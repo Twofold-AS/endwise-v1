@@ -76,6 +76,26 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [...streamRewrites(process.env)];
   },
+  // F13-03 — agent-instruksjonene (instructions.md ved siden av agent.ts)
+  // må inn i JS-bunten. readFileSync + import.meta.url peker på
+  // /var/task/packages/agents/src/.../instructions.md, som Turbopack/NFT
+  // ikke kopierer. Da krasjer modulevalueringen av @endwise/agents og
+  // dermed HELE tRPC-routerens import (også session.me).
+  turbopack: {
+    rules: {
+      '*.md': {
+        // Next 16.2.10 (Vercel preview) godtar `raw`, ikke `text`.
+        type: 'raw',
+      },
+    },
+  },
+  webpack(config) {
+    config.module.rules.push({
+      test: /\.md$/,
+      type: 'asset/source',
+    });
+    return config;
+  },
   experimental: {
     // React 19.2 native View Transitions (techstack §2 Frontend)
     viewTransition: true,

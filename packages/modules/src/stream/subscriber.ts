@@ -1,4 +1,4 @@
-import { STREAM_CHANNEL } from '@endwise/db';
+import { pgConnectionConfig, STREAM_CHANNEL } from '@endwise/db';
 import { Client } from 'pg';
 
 export interface StreamSignal {
@@ -29,7 +29,7 @@ export function createStreamSubscriber(connectionString: string) {
   async function connect(): Promise<void> {
     if (stopped) return;
 
-    client = new Client({ connectionString });
+    client = new Client(pgConnectionConfig(connectionString));
 
     client.on('notification', (msg) => {
       if (msg.channel !== STREAM_CHANNEL || !msg.payload) return;

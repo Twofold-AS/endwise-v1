@@ -37,6 +37,13 @@
     "vitest": "^4.1.10"
   },
   "exports": {
-    "./router": "./src/trpc/router.ts"
+    "./router": "./src/trpc/router.ts",
+    "./app": "./src/app.ts",
+    "./http": "./src/http.ts",
+    "./http/trpc": "./src/http/trpc.ts",
+    "./http/auth": "./src/http/auth.ts",
+    "./http/health": "./src/http/health.ts",
+    "./http/hono": "./src/http/hono.ts",
+    "./http/stripe-webhook": "./src/http/stripe-webhook.ts"
   }
 }

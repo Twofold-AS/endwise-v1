@@ -1,8 +1,8 @@
 # F13 — Deploy-plan: to leverandører, Vercel + Scaleway
 
-**Status:** PLAN. Topologien er **besluttet av eier 09.08.2026**; selve deployen
-er ikke bygget.
-**Sist oppdatert:** 9. august 2026
+**Status:** PLAN (topologi) + **API-porten bygget 22.08.2026** (F13-03 del).
+Scaleway-delen er ikke bygget.
+**Sist oppdatert:** 22. august 2026
 **Verifisert mot koden**, ikke mot hukommelse.
 
 ---
@@ -47,8 +47,8 @@ altså å betale i kode for å spare i leverandørliste.
 
 | App | Teknologi | Hvordan den startes | Byggetrinn? |
 |---|---|---|---|
-| `apps/web` | Next.js 16 | `next dev` / `next build` | Ja |
-| `apps/api` | Hono + tRPC | `node --experimental-strip-types src/dev.ts` | **Nei** — `build` er `tsc --noEmit` |
+| `apps/web` | Next.js 16 + porterte API-ruter | `next dev` / `next build` | Ja |
+| `apps/api` | Hono + tRPC **som bibliotek** | `node --experimental-strip-types src/dev.ts` (valgfri lokal `serve()`) | **Nei** — `build` er `tsc --noEmit` |
 | `apps/stream` | Hono + SSE | samme | **Nei** |
 | `apps/framer-agent` | Hono | samme | **Nei** |
 
@@ -59,16 +59,23 @@ fra `@hono/node-server` binder en port — en **langlevd prosessmodell**.
 Alle tre har `vercel.json` med `regions: ["fra1"]`, men **ingen** har en
 Vercel-entrypoint. Filene er en intensjon, ikke et fungerende oppsett.
 
-**Nettleseren snakker kun med `apps/web`.** Videresending i `next.config.ts`:
+**Nettleseren snakker kun med `apps/web`.** Fra 22.08.2026 er API-et *i* web:
 
 ```
-/api/auth/* → API_INTERNAL_URL      (default http://localhost:3001)
-/trpc/*     → API_INTERNAL_URL
-/stream/*   → STREAM_INTERNAL_URL   (default http://localhost:3002)
+/api/auth/*  Next route handler  →  @endwise/api handleAuth
+/trpc/*      Next route handler  →  @endwise/api handleTrpc
+/widget/*    Next route handler  →  Hono via handleHono
+/stripe/webhook  Next route handler  →  raw req.text()
+/cron/*      Next route handler  →  Hono via handleHono
+/health      Next route handler  →  handleHealth
+/chat/*      Next route handler  →  Hono via handleHono
+/invitasjoner/*  Next route handler  →  Hono via handleHono
+/stream/*    rewrite → STREAM_INTERNAL_URL  (default http://localhost:3002)
 ```
 
-Server-side proxy, ikke klient-side. Bevist: `Set-Cookie` overlever gjennom
-rewriten, og `/trpc` + `/stream/health` svarer korrekt gjennom port 3000 alene.
+`API_INTERNAL_URL` brukes ikke. `Set-Cookie` fra Better-Auth går same-origin
+rett til nettleseren. `/stream/health` svarer fortsatt gjennom port 3000 via
+rewriten.
 
 ---
 
@@ -278,9 +285,9 @@ så sesjonscookien følger med uten CORS og uten token i URL.
    Neon-styrte roller. Mot en vanlig Postgres må dette trolig endres, ellers kan
    drizzle prøve å administrere `authenticated`-rollen. **Testes mot en
    engangsdatabase før produksjon** — ikke endres blindt.
-3. **Port `apps/api` inn i Next.** Én rute om gangen, med tester som følger med:
-   `/trpc` → `/api/auth` → `/widget` → `/stripe/webhook` (⚠️ rå body) →
-   `/cron/*`.
+3. **✅ Port `apps/api` inn i Next (22.08.2026).** `/trpc` → `/api/auth` →
+   `/widget` → `/stripe/webhook` (rå `req.text()`) → `/cron/*` → `/health` →
+   `/chat/*` → `/invitasjoner/*`. Cron i `apps/web/vercel.json`.
 4. **Deploy web til Vercel.** Alle variabler fra `.env.example`, Production og
    Preview hver for seg. ⚠️ **Ulike Stripe-nøkler** — preview på live-nøkler tar
    ekte penger.

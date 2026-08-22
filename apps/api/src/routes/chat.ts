@@ -17,20 +17,11 @@ import { createRequestContext } from '../context.ts';
 /**
  * F6-18 — STRØMMENDE CHAT-ENDEPUNKT for `useChat`.
  *
- * ── ⚠️ Hvorfor denne ligger i apps/api og ikke som en Next route handler ──
- * Oppgaven sa «route handler». Den ligger likevel her, og grunnen er
- * arkitektonisk, ikke en preferanse: **`apps/web` har med vilje ingen
- * databasetilgang** (se `docs/arkitektur.md`). Alt som rører data går gjennom
- * `apps/api`. En chat-rute i web ville trengt DB, Better-Auth-sesjonen OG
- * agent-runtimen — altså nøyaktig det laget vi har holdt ute av web for å ha
- * ETT sted å sikre dataene.
- *
- * For nettleseren er forskjellen null: `/chat/*` rewrites til apps/api i
- * `next.config.ts`, samme grep som `/trpc/*` og `/api/auth/*`. `useChat` peker
- * på `/chat/<agent>` og ser en same-origin-adresse.
- *
- * ⚠️ Når `apps/api` porteres inn i Next (F13-03), flytter denne med resten —
- * og da BLIR den en route handler, uten at klienten merker noe.
+ * ── F13-03 — servert som Next route handler, logikken bor her ──────────
+ * `apps/web/app/chat/[agent]/route.ts` kaller `handleHono` → denne flaten.
+ * Klienten (`useChat` / `DefaultChatTransport`) peker på `/chat/<agent>`
+ * same-origin. Biblioteket (`@endwise/api`) eier DB, sesjon og agent-runtime
+ * — UI-et i web rører fortsatt ikke dataene direkte.
  *
  * ── ⛔ Ingen Vercel AI Gateway ───────────────────────────────────────────
  * Modellen kommer fra `resolveModelProvider(agent.dataClass)`. For AI-diagnose

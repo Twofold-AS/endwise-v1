@@ -33,8 +33,8 @@ import { type FormEvent, useMemo, useState } from 'react';
  * F6-18 — CHAT-FLATEN. Én komponent, to bruk: ekte agent og demo-strøm.
  *
  * ── ⛔ Ingen Vercel AI Gateway ───────────────────────────────────────────
- * `DefaultChatTransport` peker på `/chat/<agent>`, som rewrites til
- * `apps/api` (`next.config.ts`). Der velges modellen av agentens dataklasse:
+ * `DefaultChatTransport` peker på `/chat/<agent>` (Next route handler, F13-03).
+ * Der velges modellen av agentens dataklasse:
  * AI-diagnose er `customer_freetext` ⇒ **Mistral, EU**. Klienten kan ikke be om
  * en annen modell — det finnes ikke et felt for det.
  *

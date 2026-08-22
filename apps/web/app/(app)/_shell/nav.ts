@@ -12,6 +12,7 @@ import {
   ClipboardList,
   CreditCard,
   FilePlus,
+  Flag,
   Globe,
   Handshake,
   HardHat,
@@ -378,6 +379,17 @@ export const ENDWISE_NAV: NavItem[] = [
     label: 'Hjelpeartikler',
     icon: LifeBuoy,
     href: '/endwise/helpdesk',
+    roles: ENDWISE,
+  },
+  /**
+   * F0-04 — release-toggles, IKKE entitlements. Kjøpte moduler skrives av
+   * Stripe og bor ikke her. Plattformhandling: kun endwise_admin.
+   */
+  {
+    key: 'endwise-flagg',
+    label: 'Feature-flags',
+    icon: Flag,
+    href: '/endwise/flagg',
     roles: ENDWISE,
   },
 ];

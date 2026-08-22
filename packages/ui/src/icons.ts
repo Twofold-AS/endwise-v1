@@ -44,6 +44,7 @@ export {
   // så kontrollen er egenskrevet i `app/_auth/felter.tsx`. Se UI-PAKKER §8.
   Eye,
   EyeOff,
+  Flag,
   Gauge,
   HardHat,
   LifeBuoy,

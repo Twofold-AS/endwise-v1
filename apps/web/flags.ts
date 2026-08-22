@@ -19,6 +19,13 @@ export const FLAG_KEYS = ['kill-switch', 'dev-mode'] as const;
 export type FlagKey = (typeof FLAG_KEYS)[number];
 
 /**
+ * CWE-20 — nøkkel-kontrakten. Serveren (`flagKeySchema` i flags-ruteren)
+ * bruker nøyaktig det samme. En sjekk som bare bor i UI-et er ingen sjekk.
+ */
+export const FLAG_KEY_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const FLAG_KEY_MAX = 64;
+
+/**
  * Fail-safe defaults når backend ikke er tilgjengelig.
  *
  * ⚠️ **`dev-mode` MÅ være `false` her.** Er API-et nede, er dev-mode av — aldri

@@ -85,7 +85,7 @@ describe('F1-17 / F1-20: delt flate', () => {
 });
 
 describe('F1-25: oppsettsiden gjenbruker innloggingens byggeklosser', () => {
-  it('importerer StatefulButton, Field, INPUT og PassordFelt — ikke rå input/button', () => {
+  it('importerer StatefulButton og PassordFelt fra /signin sine byggeklosser', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const kilde = readFileSync(resolve(her, '../../../apps/web/app/2fa-oppsett/page.tsx'), 'utf8');
     expect(kilde).toMatch(/StatefulButton/);

@@ -102,7 +102,7 @@ export function ByttPassordSkjema() {
 }
 
 function feilmelding(error: { status?: number; code?: string; message?: string }): string {
-  if (error.code === 'INVALID_PASSWORD' || error.status === 400) {
+  if (error.code === 'INVALID_PASSWORD') {
     return 'Feil gjeldende passord.';
   }
   return error.message ?? 'Kunne ikke bytte passordet.';

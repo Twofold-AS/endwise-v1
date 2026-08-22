@@ -1,6 +1,6 @@
 # Endwise — arkitektur
 
-**Sist oppdatert:** 9. august 2026 (to-leverandør-topologi besluttet)
+**Sist oppdatert:** 22. august 2026 (F13-03: `apps/api` portet inn i Next)
 **Formål:** én oversikt over hva hver del gjør, og hvordan de henger sammen.
 Skrevet så en ikke-utvikler kan lese hoveddelene.
 
@@ -11,18 +11,19 @@ koden som har rett — og da skal dette dokumentet rettes.
 
 ## Kortversjonen
 
-Endwise består av **fire kjørende tjenester**, ett **delt kodebibliotek**, og
-**én database**.
+Endwise består av **tre kjørende tjenester i prod** (web+api er samme
+Vercel-prosjekt), ett **delt kodebibliotek**, og **én database**.
 
 | Del | Hva den gjør | Port lokalt |
 |---|---|---|
-| `apps/web` | Alt du ser: forhandlerpanel, mekaniker-app, offentlige sider | 3000 |
-| `apps/api` | All logikk og alle databasekall | 3001 |
+| `apps/web` | Alt du ser + API-et som Next route handlers (`/trpc`, `/api/auth`, …) | 3000 |
+| `apps/api` | Bibliotek: `appRouter`, Better-Auth-handler, Hono-flater. `serve()` kun lokal dev | 3001 (valgfri) |
 | `apps/stream` | Sanntid: «det kom en ny melding» | 3002 |
 | `apps/framer-agent` | Skall for Framer-agenten (F8-09/F13-04, ikke bygget ennå) | 3003 |
 
-Nettleseren snakker **kun** med `apps/web`. Web videresender internt til `api`
-og `stream`. Det er derfor du aldri ser port 3001 eller 3002 i adressefeltet.
+Nettleseren snakker **kun** med `apps/web`. Auth og tRPC lever same-origin i
+web. Bare SSE videresendes til `apps/stream`. Du ser aldri port 3001 eller
+3002 i adressefeltet.
 
 ---
 
@@ -39,24 +40,25 @@ Next.js 16 (App Router, React 19). Inneholder tre ulike verdener i samme app:
   (PWA) med offline-støtte.
 - **Offentlige sider** — `/` (landingsside), `/veikart`, `/signin`.
 
-⚠️ **Web har ingen egen database-tilgang.** Alt går gjennom `apps/api`. Det er
-med vilje: én vei inn til dataene betyr ett sted å sikre dem.
+⚠️ **UI-et har ingen egen database-tilgang.** Datakall går gjennom
+`@endwise/api` (`appRouter` og Hono-rutene). Fra F13-03 kjører det biblioteket
+*inne i* `apps/web` som route handlers — samme kode, samme RLS, ingen annen
+prosess på Vercel.
 
-**Videresending (rewrites) i `next.config.ts`** — nettleseren tror alt ligger på
-samme adresse:
+**Videresending (rewrites) i `next.config.ts`** — bare SSE går ut av appen:
 
 ```
-/api/auth/*  →  apps/api    (innlogging)
-/trpc/*      →  apps/api    (all datatrafikk)
-/stream/*    →  apps/stream (sanntid)
+/stream/*    →  STREAM_INTERNAL_URL  (apps/stream / senere Scaleway)
 ```
 
-Grunnen til at dette ikke bare er «pent»: same-origin betyr at sesjonscookien
-sendes med automatisk, uten CORS og uten at en tilgangstoken må ligge i en URL.
+`/api/auth/*`, `/trpc/*`, `/chat/*`, `/invitasjoner/*`, `/widget/*`,
+`/stripe/webhook`, `/cron/*` og `/health` er Next route handlers. Same-origin
+betyr at sesjonscookien sendes med automatisk, uten CORS og uten at en
+tilgangstoken må ligge i en URL.
 
-### `apps/api` — logikken
+### `apps/api` — logikken (bibliotek)
 
-Hono (webserver) + tRPC v11 (typet API). Eier:
+Hono + tRPC v11, importert av `apps/web`. Eier:
 
 - **Innlogging** — hele `/api/auth/*` håndteres av Better-Auth
 - **Alle datakall** — `/trpc/*`, ~25 routere (bookinger, kunder, kjøretøy,
@@ -232,13 +234,13 @@ Eksempel: forhandleren åpner kundelista.
 
 ```
 1. Nettleser          GET /kunder                      → apps/web
-2. apps/web           kaller /trpc/customers.list      → videresendes internt
-3. apps/api           sesjonscookie → hvem er du?
+2. apps/web           kaller /trpc/customers.list      → egen route handler
+3. @endwise/api       sesjonscookie → hvem er du?
                       assertMember → er du medlem her?
                       rolle + modulsjekk
 4. withTenant()       setter forhandler-ID for transaksjonen
 5. Postgres           RLS filtrerer bort alt som ikke er din forhandler
-6. Svar tilbake       api → web → nettleser
+6. Svar tilbake       route handler → nettleser
 ```
 
 Fem sperrer før en rad forlater databasen. Hver av dem fanger en **annen** feil,
@@ -294,8 +296,8 @@ leverandør. Full begrunnelse og skaleringssti i `docs/deploy-plan.md`.
 
 Se **`docs/deploy-plan.md`** for hele analysen. Kortversjonen:
 
-- `apps/web` er Vercel-klar i dag.
-- `apps/api` **portes inn i Next** som route handlers. `API_INTERNAL_URL` utgår.
+- `apps/web` er Vercel-klar, og `apps/api` **er portet inn** som route handlers.
+  `API_INTERNAL_URL` utgår.
 - `apps/stream` kjører som **Scaleway Serverless Container med minst én
   instans** — langlevde tilkoblinger og en permanent databaseforbindelse er det
   motsatte av det Vercel serverless er god på.

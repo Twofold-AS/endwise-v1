@@ -48,7 +48,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **Docker Compose** — kun for lokal dev (Postgres + ev. Redis lokalt)
 
 ### Hosting & kjøring — Vercel
-- **Vercel fra1 (EU-region)** for GDPR — `apps/web`, `apps/api`, `apps/stream`
+- **Vercel fra1 (EU-region)** for GDPR — `apps/web` (med `apps/api` portet inn som route handlers, F13-03). `apps/stream` på Scaleway Serverless Container (ikke Vercel serverless)
 - **Scaleway Serverless Container** — `apps/framer-agent` (⚠️ ENDRET 11.08.2026, eierbeslutning: var *Vercel Container* + *Framer External Agent CLI*. Nå **Framers offisielle Server API**, som ikke trenger shell — men fortsatt en levende prosess, fordi en redigeringsøkt er stateful. Samme leverandør som `apps/stream`. Se F8-09/F13-04 + `docs/deploy-plan.md`)
 - **Vercel Workflows** — varige jobber, retries, DLQ-mønster (ADR-003)
 - **Vercel Cron** — planlagte oppgaver (cleanup, synk, SLA-sjekk, e-post-drypp)

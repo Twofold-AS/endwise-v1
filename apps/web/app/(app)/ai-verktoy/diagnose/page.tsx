@@ -8,7 +8,7 @@ import { CardShell } from '../../_shell/cards';
  * F6-04 + F6-18 — AI-DIAGNOSE, den EKTE chat-flaten.
  *
  * ⚠️ Dette er den eneste chat-flaten i produktet som faktisk snakker med en
- * modell. Den går mot `/chat/ai-diagnose` → `apps/api` → vår agent-runtime.
+ * modell. Den går mot `/chat/ai-diagnose` (Next route handler) → agent-runtime.
  * Sammenlign med `/ai-verktoy/nettside`, som er en demo-strøm og sier det.
  *
  * ── Hvorfor akkurat denne agenten først ──────────────────────────────────

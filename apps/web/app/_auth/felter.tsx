@@ -53,7 +53,7 @@ export function Field({
  * hvis nettleseren fylte det ut for deg.» Den finnes fordi et passord limt
  * inn fra en melding eller et dokument nesten alltid drar med seg et
  * mellomrom, feltet viser bare prikker, og Better-Auth svarer da nøyaktig
- * samme 401 som ved feil passord (se `feilmelding()` i `signin/page.tsx`).
+ * samme 401 som ved feil passord (se `feilmelding()` i `signin/signin-skjema.tsx`).
  * Koden trimmer det bort, men brukeren får aldri VITE at det var det.
  *
  * En avsløringsknapp gjør akkurat den feilen synlig — og den er dobbelt så

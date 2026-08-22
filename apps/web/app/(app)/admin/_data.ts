@@ -5,8 +5,9 @@ import type { Kpi } from '../dashboard/_data';
  * tvers av forhandlere. IKKE en enkelt forhandlers side.
  *
  * MOCK: Web Analytics (krever Vercel-deploy) + Stripe-inntekt (krever nøkler).
- * EKTE STRUKTUR: booking-aggregat har backend (bookings-ruteren) — seed til
- * tRPC-klienten wires.
+ * Tallene er placeholder — ikke live penger. Siden er server-gatet
+ * (`admin/layout.tsx` → `krevEndwiseAdminSide`); de skal ikke prerendres
+ * for anonyme. EKTE STRUKTUR: booking-aggregat har backend.
  */
 
 // ── Inntekt (Stripe) — MOCK til Stripe er koblet ────────────────────────────

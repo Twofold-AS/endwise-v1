@@ -44,6 +44,7 @@
     "./http/auth": "./src/http/auth.ts",
     "./http/health": "./src/http/health.ts",
     "./http/hono": "./src/http/hono.ts",
-    "./http/stripe-webhook": "./src/http/stripe-webhook.ts"
+    "./http/stripe-webhook": "./src/http/stripe-webhook.ts",
+    "./context": "./src/context.ts"
   }
 }

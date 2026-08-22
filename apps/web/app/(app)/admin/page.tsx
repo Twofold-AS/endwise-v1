@@ -25,11 +25,11 @@ export default function EndwiseOverviewPage() {
         </p>
       </div>
 
-      {/* Inntekt (Stripe) — MOCK */}
+      {/* Inntekt (Stripe) — MOCK. Ikke live penger. */}
       <Group
-        title="Inntekt (Stripe)"
+        title="Inntekt (Stripe) — mocktall"
         badge
-        note="Mock til Stripe er koblet (F5-09). Betalings-underdatabehandler: se GDPR-veikart §8b / F14-19."
+        note="Ikke ekte penger. Placeholder-tall, ikke live Stripe-omsetning. Ekte billing er F5-09."
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {REVENUE_KPIS.map((k) => (

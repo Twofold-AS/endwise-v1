@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./bytt-passord": "./src/bytt-passord.ts",
+    "./to-faktor-oppsett": "./src/to-faktor-oppsett.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

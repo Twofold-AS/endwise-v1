@@ -2,8 +2,6 @@
 
 import {
   Bell,
-  KeyRound,
-  Lock,
   LogOut,
   type LucideIcon,
   Mail,
@@ -21,6 +19,7 @@ import { signOut, useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
 import { ProfilKort } from '../../_shell/profil-kort';
+import { ToFaktorRad } from '../../_shell/to-faktor-rad';
 
 /**
  * F7-06 — «MEG». Mekanikerens personlige fane, nederst i bunnmenyen.
@@ -157,31 +156,14 @@ export default function MegPage() {
             Sikkerhet
           </p>
 
-          {/* F1-15 — teksten her henviste til «Glemt passord» i fire måneder
-              før lenka fantes (funnet i designauditen 21.08.2026). Nå finnes
-              den, og raden peker rett på den i stedet for å beskrive en vei
-              brukeren selv må lete seg fram til. */}
-          <Rad
-            icon={KeyRound}
-            tittel="Passord"
-            verdi={
-              <a
-                href="/glemt-passord"
-                className="underline underline-offset-2 transition-colors hover:text-fg"
-              >
-                Bytt passord med e-postlenke
-              </a>
-            }
-          />
-          <Rad
-            icon={Lock}
-            tittel="To-faktor"
-            verdi={
+          {/* F1-17 — bytte med gjeldende passord bor i ProfilKort over.
+              F1-20 — samme statusrad som Settings › Profil, med lenke til
+              /2fa-oppsett. Resetlenka står under passordskjemaet. */}
+          <ToFaktorRad
+            enabled={
               session?.user && 'twoFactorEnabled' in session.user
                 ? (session.user as { twoFactorEnabled?: boolean }).twoFactorEnabled
-                  ? 'På — engangskode på e-post'
-                  : 'Av'
-                : '—'
+                : undefined
             }
           />
         </div>
@@ -249,27 +231,6 @@ function Hurtigbryter({
         <span className="truncate text-[12px] text-fg-muted">{hint}</span>
       </span>
       <Switch checked={checked} onCheckedChange={onChange} aria-labelledby={`bryter-${id}`} />
-    </div>
-  );
-}
-
-function Rad({
-  icon: Icon,
-  tittel,
-  verdi,
-}: {
-  icon: LucideIcon;
-  tittel: string;
-  /** ReactNode og ikke `string`: passordraden bærer en lenke (F1-15). */
-  verdi: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <Icon size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
-      <div className="flex min-w-0 flex-col">
-        <span className="text-label text-fg">{tittel}</span>
-        <span className="text-[12px] text-fg-muted">{verdi}</span>
-      </div>
     </div>
   );
 }

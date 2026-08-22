@@ -1,21 +1,20 @@
 'use client';
 
-import { KeyRound, Lock, Moon, ShieldCheck, Sun } from '@endwise/ui';
+import { Moon, Sun } from '@endwise/ui';
 import { useEffect, useState } from 'react';
+import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { lesTema, settTema, type Tema } from '../../_lib/tema';
-import { CardShell } from '../../_shell/cards';
 import { ProfilKort } from '../../_shell/profil-kort';
+import { ToFaktorRad } from '../../_shell/to-faktor-rad';
 import { AvatarVelger } from './_avatar-velger';
 
 /**
- * F5-19 — Settings › Profil. Egen bruker, sikkerhet og tema.
+ * F5-19 / F1-17 / F1-20 — Settings › Profil. Egen bruker, sikkerhet og tema.
  *
- * ⚠️ 2FA-påslag (F1-11) er IKKE bygget her ennå. Innloggingsflyten med
- * engangskode finnes, men `ROLES_REQUIRING_2FA` håndheves ingen steder og
- * seed-brukerne har `twoFactorEnabled: false` — så steg 2 vises aldri.
- * Det står i klartekst under i stedet for å bli skjult bak en bryter som ikke
- * gjør noe.
+ * Passordbytte (F1-17) bor i `ProfilKort` — samme komponent som mekanikerens
+ * «Meg». 2FA-status (F1-20) leser `session.user.twoFactorEnabled` og peker
+ * til `/2fa-oppsett`. Slå-av er F1-22 og er ikke her.
  */
 export default function ProfilPage() {
   /**
@@ -31,6 +30,11 @@ export default function ProfilPage() {
    * herfra, og to kilder til samme seed er to steder den kan bli feil.
    */
   const me = trpc.session.me.useQuery();
+  const { data: session } = useSession();
+  const twoFactorEnabled =
+    session?.user && 'twoFactorEnabled' in session.user
+      ? (session.user as { twoFactorEnabled?: boolean }).twoFactorEnabled
+      : undefined;
 
   useEffect(() => {
     setTheme(lesTema());
@@ -72,42 +76,10 @@ export default function ProfilPage() {
           </button>
         </div>
 
-        {/* F1-15/F1-16 — sto som «Endring er ikke bygget ennå» fram til
-            22.08.2026. Nå finnes resetflyten.
-            ⚠️ Dette er RESET, ikke «bytt passord med det gamle som bevis» —
-            den er F1-17 og hører hjemme i samme rad når den bygges. Teksten
-            sier derfor hva som faktisk skjer: en lenke på e-post. */}
-        <div className="flex h-row-store items-center gap-3 border-border border-t bg-bg px-4">
-          <Lock size={16} className="shrink-0 text-fg-muted" />
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="text-label text-fg">Passord</span>
-            <span className="text-[12px] text-fg-muted">
-              Byttes med en lenke på e-post. Du blir logget ut på alle enheter.
-            </span>
-          </div>
-          <a
-            href="/glemt-passord"
-            className="inline-flex h-control shrink-0 items-center gap-2 rounded-control border border-border px-3 text-fg text-label transition-colors hover:bg-surface-2"
-          >
-            <KeyRound size={15} strokeWidth={1.75} />
-            Bytt passord
-          </a>
+        <div className="border-border border-t">
+          <ToFaktorRad enabled={twoFactorEnabled} />
         </div>
       </div>
-
-      <CardShell className="p-4">
-        <div className="flex items-start gap-3">
-          <ShieldCheck size={16} className="mt-0.5 shrink-0 text-warn" />
-          <div className="flex flex-col gap-1">
-            <p className="text-label text-fg">Tofaktor (F1-11) — påslag mangler</p>
-            <p className="text-[12px] text-fg-muted leading-relaxed">
-              Innloggingen har steg 2 med engangskode på e-post, men det finnes ingen flate for å
-              slå 2FA <b>på</b>, og <code>ROLES_REQUIRING_2FA</code> håndheves ikke server-side. En
-              forhandler eller admin uten 2FA logger derfor inn med bare passord.
-            </p>
-          </div>
-        </div>
-      </CardShell>
     </div>
   );
 }

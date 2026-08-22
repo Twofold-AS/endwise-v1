@@ -2,24 +2,28 @@
 
 import { Button, Moon, Sun } from '@endwise/ui';
 import { useEffect, useState } from 'react';
+import { lesTema, settTema, type Tema } from '../_lib/tema';
 
 /**
  * Tema-toggle. LYST er standard (satt på <html data-theme="light"> i
- * app/layout.tsx); denne flipper mellom "light" og "dark" ved å skrive
- * data-theme på <html>. Ingen egen fjær/animasjon — ren tilstandsbytte.
+ * app/layout.tsx); denne flipper mellom "light" og "dark".
+ *
+ * ⚠️ **RETTET 20.08.2026.** Denne skrev tidligere rett på
+ * `document.documentElement.dataset.theme` og lagret ingenting — så mørkt tema
+ * forsvant ved hver refresh. Lagring og bytte bor nå i `_lib/tema.ts`, og
+ * oppstart i et inline-skript i layouten. Se den fila for hele historien.
  */
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('light');
+  const [theme, setTheme] = useState<Tema>('light');
 
   // Les faktisk tilstand etter mount (unngår hydrerings-mismatch).
   useEffect(() => {
-    const current = document.documentElement.dataset.theme;
-    if (current === 'light' || current === 'dark') setTheme(current);
+    setTheme(lesTema());
   }, []);
 
   function toggle() {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
+    const next: Tema = theme === 'dark' ? 'light' : 'dark';
+    settTema(next);
     setTheme(next);
   }
 

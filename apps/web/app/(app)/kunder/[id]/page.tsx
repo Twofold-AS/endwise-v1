@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Avatar,
   Car,
   ChevronRight,
   CircleAlert,
@@ -82,9 +83,10 @@ export default function KundekortPage() {
     <div className="mx-auto flex w-full max-w-[900px] flex-col gap-5 px-8 py-7">
       {/* ── Hvem ─────────────────────────────────────────────────────── */}
       <div className="flex items-start gap-4">
-        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-accent-soft font-medium text-accent-strong text-lg">
-          {k.name.slice(0, 1).toUpperCase()}
-        </span>
+        {/* F6-19 — seeden er `customers.id`, samme som innboksen og
+            detaljpanelet. Ikke navnet: retter noen en skrivefeil i navnet,
+            skal ikke kunden bytte ansikt. */}
+        <Avatar seed={k.id} navn={k.name} size={48} bevegelse="hover" />
         <div className="min-w-0 flex-1">
           <h1 className="sr-only">Kunde · {k.name}</h1>
           <p className="flex items-center gap-2 text-title text-fg">

@@ -1,5 +1,11 @@
 import { and, eq, schema, withTenant } from '@endwise/db';
-import { kanHaKallenavn } from '@endwise/modules/profil';
+import {
+  AVATAR_FORMER,
+  AVATAR_HUMOR,
+  AVATAR_TONER,
+  kanHaKallenavn,
+  lesAvatar,
+} from '@endwise/modules/profil';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
@@ -29,6 +35,10 @@ export const profileRouter = router({
       .select({
         notificationSounds: schema.userPreferences.notificationSounds,
         inboxDetailsOpen: schema.userPreferences.inboxDetailsOpen,
+        avatarShape: schema.userPreferences.avatarShape,
+        avatarHumor: schema.userPreferences.avatarHumor,
+        avatarHue: schema.userPreferences.avatarHue,
+        avatarTone: schema.userPreferences.avatarTone,
       })
       .from(schema.userPreferences)
       .where(eq(schema.userPreferences.userId, ctx.userId));
@@ -55,6 +65,14 @@ export const profileRouter = router({
       detaljpanel: pref?.inboxDetailsOpen ?? true,
       /** Skal kallenavn-feltet i det hele tatt vises? Serveren bestemmer. */
       kanHaKallenavn: kanHaKallenavn(ctx.role),
+      /**
+       * F6-19 — avatarvalgene. Null overalt = alt utledes fra seeden.
+       *
+       * ⚠️ Seeden returneres bevisst IKKE herfra: den er `ctx.userId`, som
+       * klienten allerede har fra `session.me`. To kilder til samme seed er
+       * to steder den kan bli feil.
+       */
+      avatar: lesAvatar(pref ?? null),
     };
   }),
 
@@ -125,6 +143,58 @@ export const profileRouter = router({
           set: { inboxDetailsOpen: input.apen, updatedAt: new Date() },
         });
       return { apen: input.apen };
+    }),
+
+  /**
+   * F6-19 — EGEN AVATAR: form, farge og tone.
+   *
+   * ⛔ Tre navngitte felt, ikke blobatars rå `traits`-map. Tok ruta imot en fri
+   * `Record<string, number>`, ville KLIENTEN bestemt hvilke egenskaper som kan
+   * pinnes — også `motion.*` og `gaze.*`, som ingen har bedt om å styre, og
+   * som vi da ville lagret uten å vite hva betyr. Serveren eier vokabularet.
+   *
+   * `null` er en meningsbærende verdi og ikke «ikke oppgitt»: den betyr
+   * «la seeden bestemme denne ene tingen». Derfor `.nullable()` og ikke
+   * `.optional()` — et utelatt felt ville ikke kunne skille «rør ikke» fra
+   * «tilbakestill».
+   *
+   * ⚠️ Ingen `userId` i input. Samme regel som resten av fila.
+   */
+  setAvatar: protectedProcedure
+    .input(
+      z.object({
+        form: z.enum(AVATAR_FORMER).nullable(),
+        humor: z.enum(AVATAR_HUMOR).nullable(),
+        farge: z.number().int().min(0).max(359).nullable(),
+        tone: z
+          .number()
+          .int()
+          .min(0)
+          .max(AVATAR_TONER - 1)
+          .nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .insert(schema.userPreferences)
+        .values({
+          userId: ctx.userId,
+          avatarShape: input.form,
+          avatarHumor: input.humor,
+          avatarHue: input.farge,
+          avatarTone: input.tone,
+        })
+        .onConflictDoUpdate({
+          target: schema.userPreferences.userId,
+          set: {
+            avatarShape: input.form,
+            avatarHumor: input.humor,
+            avatarHue: input.farge,
+            avatarTone: input.tone,
+            updatedAt: new Date(),
+          },
+        });
+      return input;
     }),
 
   /** Varslingslyder av/på. Global for brukeren — ikke per forhandler. */

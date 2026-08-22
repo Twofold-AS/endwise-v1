@@ -157,10 +157,21 @@ export default function MegPage() {
             Sikkerhet
           </p>
 
+          {/* F1-15 — teksten her henviste til «Glemt passord» i fire måneder
+              før lenka fantes (funnet i designauditen 21.08.2026). Nå finnes
+              den, og raden peker rett på den i stedet for å beskrive en vei
+              brukeren selv må lete seg fram til. */}
           <Rad
             icon={KeyRound}
             tittel="Passord"
-            verdi="Endres ved å logge ut og velge «Glemt passord»"
+            verdi={
+              <a
+                href="/glemt-passord"
+                className="underline underline-offset-2 transition-colors hover:text-fg"
+              >
+                Bytt passord med e-postlenke
+              </a>
+            }
           />
           <Rad
             icon={Lock}
@@ -242,7 +253,16 @@ function Hurtigbryter({
   );
 }
 
-function Rad({ icon: Icon, tittel, verdi }: { icon: LucideIcon; tittel: string; verdi: string }) {
+function Rad({
+  icon: Icon,
+  tittel,
+  verdi,
+}: {
+  icon: LucideIcon;
+  tittel: string;
+  /** ReactNode og ikke `string`: passordraden bærer en lenke (F1-15). */
+  verdi: React.ReactNode;
+}) {
   return (
     <div className="flex items-start gap-3">
       <Icon size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />

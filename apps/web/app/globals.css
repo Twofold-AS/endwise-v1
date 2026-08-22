@@ -8,6 +8,18 @@
  * @source-fiksen under. Tatt i bruk første gang på AI-diagnose (F6-04).
  */
 @import "@endwise/ui/matrix-loaders.css";
+/**
+ * F6-19 — blobatars bevegelseslag. ⚠️ Samme familie som gotchaen over: uten
+ * denne importen er det INGEN feilmelding, ingenting i typecheck og ingenting i
+ * byggesteget — bare avatarer som står stille der de skulle puste. Keyframene
+ * (mo-breathe, mo-bob, mo-blink, mo-saccade) bor i pakkens egen fil;
+ * komponenten setter bare klassene og CSS-variablene.
+ *
+ * Lastes for hver side som rendrer en Avatar, også der ingen animeres. Fila er
+ * ren CSS uten selektorer som treffer noe annet, og et betinget CSS-lag ville
+ * kostet mer i kompleksitet enn det sparer i bytes.
+ */
+@import "blobatar/motion.css";
 
 /*
  * Tailwind v4 skanner som standard IKKE workspace-pakker (de ligger via

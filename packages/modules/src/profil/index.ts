@@ -159,3 +159,111 @@ export const TILDELBARE_FUNKSJONER: Jobbfunksjon[] = ['selger', 'support', 'meka
 export function kanTildeles(funksjon: string): funksjon is Jobbfunksjon {
   return (TILDELBARE_FUNKSJONER as string[]).includes(funksjon);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AVATAR (blobatar) — hva serveren godtar at en bruker velger.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Silhuettene blobatar kan tegne. **Speiler `AVATAR_FORMER` i
+ * `packages/db/src/schema/profiles.ts`**, som igjen speiler bibliotekets eget
+ * ti-form-vokabular (`blobatar/src/styles/blob.ts`).
+ *
+ * ⛔ Rekkefølgen er likegyldig her — vi lagrer navnet, ikke indeksen. Det er
+ * med vilje: blobatar fryser tallbåndene per major, men et band kan flytte seg
+ * i neste major, og da ville et lagret tall stille gitt en annen form.
+ */
+export const AVATAR_FORMER = [
+  'round',
+  'organic',
+  'boxy',
+  'capsule',
+  'nub',
+  'cloud',
+  'droplet',
+  'hexagon',
+  'sun',
+  'triangle',
+] as const;
+
+export type AvatarForm = (typeof AVATAR_FORMER)[number];
+
+/**
+ * Humørene. **Speiler `AVATAR_HUMOR` i `packages/db/src/schema/profiles.ts`**,
+ * som igjen speiler blobatars `expression`-eksporter. Kuratert utvalg — se
+ * begrunnelsen i skjemaet for hvorfor sad/mad/sick/scared ikke er med.
+ */
+export const AVATAR_HUMOR = [
+  'idle',
+  'happy',
+  'wink',
+  'smug',
+  'sleepy',
+  'thinking',
+  'surprised',
+  'unsure',
+  'love',
+  'shy',
+] as const;
+
+export type AvatarHumor = (typeof AVATAR_HUMOR)[number];
+
+/** Antall forfattede fargesvatsjer i blobatar (`TONES` i `color.ts`). */
+export const AVATAR_TONER = 6;
+
+/**
+ * Én brukers avatarvalg. Null overalt = alt utledes fra seeden.
+ *
+ * ⚠️ Tre navngitte felt, ikke blobatars rå `TraitOverrides`. En fri trait-map
+ * fra klienten ville betydd at KLIENTEN bestemmer hvilke egenskaper som kan
+ * pinnes — inkludert `motion.*` og `gaze.*`, som ingen har bedt om å styre.
+ */
+export type AvatarValg = {
+  form: AvatarForm | null;
+  /** ⚠️ Utledes ALDRI av seeden. Null = nøytralt ansikt. */
+  humor: AvatarHumor | null;
+  /** Grader, 0–359. */
+  farge: number | null;
+  /** Indeks i svatsjsettet, 0–5. */
+  tone: number | null;
+};
+
+export const TOM_AVATAR: AvatarValg = { form: null, humor: null, farge: null, tone: null };
+
+/** Er strengen en form vi kjenner? Brukes av ruta før skriving. */
+export function erAvatarForm(v: unknown): v is AvatarForm {
+  return typeof v === 'string' && (AVATAR_FORMER as readonly string[]).includes(v);
+}
+
+export function erAvatarHumor(v: unknown): v is AvatarHumor {
+  return typeof v === 'string' && (AVATAR_HUMOR as readonly string[]).includes(v);
+}
+
+/**
+ * Normaliser en rad fra `user_preferences` til `AvatarValg`.
+ *
+ * ⚠️ Ukjente verdier faller til null i stedet for å bli sendt videre. Raden kan
+ * være skrevet av en eldre versjon, eller for hånd i basen; en form vi ikke
+ * kjenner skal gi ansiktet fra seeden, ikke en tom SVG.
+ */
+export function lesAvatar(
+  rad:
+    | {
+        avatarShape?: string | null;
+        avatarHumor?: string | null;
+        avatarHue?: number | null;
+        avatarTone?: number | null;
+      }
+    | null
+    | undefined,
+): AvatarValg {
+  if (!rad) return TOM_AVATAR;
+  const farge = rad.avatarHue;
+  const tone = rad.avatarTone;
+  return {
+    form: erAvatarForm(rad.avatarShape) ? rad.avatarShape : null,
+    humor: erAvatarHumor(rad.avatarHumor) ? rad.avatarHumor : null,
+    farge: typeof farge === 'number' && farge >= 0 && farge <= 359 ? farge : null,
+    tone: typeof tone === 'number' && tone >= 0 && tone < AVATAR_TONER ? tone : null,
+  };
+}

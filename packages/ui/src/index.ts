@@ -15,6 +15,12 @@ export {
   HumanHandoverNotice,
 } from './compliance/ai-disclosure.tsx';
 // ─── Endwise-primitiver (F0-12) ─────────────────────────────────────────
+export {
+  Avatar,
+  type AvatarBevegelse,
+  type AvatarProps,
+  type AvatarValg,
+} from './components/avatar.tsx';
 export { Badge, type BadgeProps, badgeVariants } from './components/badge.tsx';
 // ─── shadcn/ui — struktur ───────────────────────────────────────────────
 export { Button, buttonVariants } from './components/button.tsx';

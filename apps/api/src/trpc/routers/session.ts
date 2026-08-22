@@ -77,9 +77,28 @@ export const sessionRouter = router({
         harMekanikerprofil: Boolean(mech),
       });
 
+      /**
+       * ⚠️ RETTET 20.08.2026 — brukerens EGET navn.
+       *
+       * Sidebaren leste tidligere navnet fra Better-Auth sin klientsesjon,
+       * mens `profile.setName` skriver til `user.name` i basen. To hjem for
+       * samme opplysning: lagring virket, men sidebaren viste det gamle navnet
+       * til neste fulle sidelast, fordi ingenting oppdaterte Better-Auth-cachen.
+       *
+       * Løsningen er å fjerne det ene hjemmet, ikke å legge til enda en
+       * oppfriskning som noen glemmer neste gang. Navnet kommer nå herfra, og
+       * `profile.setName` invaliderer allerede denne ruta.
+       */
+      const [bruker] = await ctx.db
+        .select({ name: schema.user.name })
+        .from(schema.user)
+        .where(eq(schema.user.id, ctx.userId));
+
       return {
         userId: ctx.userId,
         tenantId: ctx.tenantId,
+        /** Ditt eget visningsnavn. ⛔ Ikke kallenavn — se `internNavn`. */
+        navn: bruker?.name ?? '',
         jobbfunksjon,
         landing: landingForJobbfunksjon(jobbfunksjon),
         tenantName: tenant?.name ?? null,

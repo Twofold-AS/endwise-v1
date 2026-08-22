@@ -6,9 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuHeader,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-  LogOut,
   type LucideIcon,
   Zap,
 } from '@endwise/ui';
@@ -19,6 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
+import { BrukerRad } from './bruker-rad';
 import { BEVEL, NewBadge } from './cards';
 import { ContextSwitcher } from './context-switcher';
 import {
@@ -71,7 +70,7 @@ export function Sidebar() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session } = useSession();
-  const { role, isMechanic, tenantName, devMode, canSwitchDemo } = useOrgRole();
+  const { navn, role, isMechanic, tenantName, devMode, canSwitchDemo } = useOrgRole();
   const { collapsed } = useSidebarState();
 
   const pathContext = contextForPath(pathname);
@@ -89,6 +88,28 @@ export function Sidebar() {
   const settingsNav = settingsForContext(context);
 
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: Boolean(role) });
+  /**
+   * F5-23 — uleste hjelpeartikler. Egen, billig telling: badgen står på en rad
+   * som rendres på hver side, og å hente 50 artikler for å telle dem ville vært
+   * å laste innholdet for å vise et tall.
+   */
+  const helpdeskUlest = trpc.helpdesk.ulesteAntall.useQuery(undefined, {
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+
+  /**
+   * F5-13 — ⛔ ÉN ÅPEN OM GANGEN (accordion, 20.08.2026).
+   *
+   * ⚠️ Tilstanden MÅTTE flyttes hit. Hver `NavRow` hadde sin egen `open`, og
+   * en rad som bare kjenner seg selv kan ikke vite at en annen skal lukkes —
+   * derfor sto Kunder og Saker åpne samtidig og dyttet resten nedover.
+   *
+   * `null` = ingen åpen. Klikk på den åpne lukker den (samme knapp, begge
+   * veier) — samme mønster som part-filtrene i innboksen bruker.
+   */
+  const [apentPunkt, setApentPunkt] = useState<string | null>(null);
+
   const unread = useMemo(
     () => (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0),
     [threads.data],
@@ -147,8 +168,6 @@ export function Sidebar() {
           active={context}
           collapsed={collapsed}
           dealerName={tenantName ?? '—'}
-          userName={session?.user?.name ?? 'Ikke innlogget'}
-          roleLabel={ROLE_LABEL[role ?? ''] ?? '—'}
           canSwitchDemo={canSwitchDemo}
           onSelect={setChosen}
         />
@@ -202,7 +221,10 @@ export function Sidebar() {
               search={search}
               role={role}
               unread={unread}
+              helpdesk={helpdeskUlest.data ?? 0}
               collapsed={collapsed}
+              apen={apentPunkt === item.key}
+              settApent={setApentPunkt}
             />
           ))}
           {items.length === 0 && !collapsed && (
@@ -214,7 +236,7 @@ export function Sidebar() {
           )}
         </nav>
 
-        {/* ── Bunn: tips-kort → divider → Settings-flyout ─────────────── */}
+        {/* ── Bunn: tips-kort → divider → Settings → DEG ──────────────── */}
         {settingsNav && (
           <div className="flex flex-col gap-3">
             {/* Tips-kortet forklarer FORHANDLERENS begreper. I Endwise-admin
@@ -251,13 +273,25 @@ export function Sidebar() {
                     <span className="flex-1">{c.label}</span>
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={logout}>
-                  <LogOut size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                  <span className="flex-1">Logg ut</span>
-                </DropdownMenuItem>
+                {/* ⚠️ «Logg ut» lå her fram til 20.08.2026, med en kommentar som
+                    innrømmet at den var den ene handlingen i menyen som ikke
+                    førte til en side. Den hører til PERSONEN, ikke til
+                    konfigurasjonen, og bor nå i brukerraden under. Settings er
+                    dermed rene destinasjoner. Det samme er «Profil» — se
+                    nav.ts. */}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* ── Deg. Nederst, under Settings, som bestilt ─────────────── */}
+            <BrukerRad
+              /* ⛔ `navn` fra session.me, ikke `session.user.name` fra
+                 Better-Auth: den siste oppdateres ikke når du lagrer et nytt
+                 navn på profilen. Se routers/session.ts. */
+              navn={navn ?? session?.user?.name ?? 'Ikke innlogget'}
+              rolle={ROLE_LABEL[role ?? ''] ?? '—'}
+              collapsed={collapsed}
+              onLoggUt={logout}
+            />
           </div>
         )}
       </div>
@@ -294,26 +328,51 @@ function NavRow({
   search,
   role,
   unread,
+  helpdesk,
   collapsed,
+  apen,
+  settApent,
 }: {
   item: NavItem;
   pathname: string;
   search: string;
   role: string | null;
   unread: number;
+  helpdesk: number;
   collapsed: boolean;
+  apen: boolean;
+  /**
+   * ⚠️ Setteren sendes inn RÅ, ikke pakket i en pil-funksjon per rad.
+   * `useState`-settere er stabile mellom renders; en `(pa) => set(...)` ville
+   * fått ny identitet hver render, og da måtte effekten under enten utelate den
+   * fra avhengighetene (og bli undertrykt) eller kjøre i loop. Her er
+   * avhengighetslista ærlig.
+   */
+  settApent: (key: string | null) => void;
 }) {
   const router = useRouter();
   const active = isItemActive(item, pathname);
   const children = childrenForRole(item, role as never);
-  const count = item.badge === 'unread' ? unread : 0;
+  const count = item.badge === 'unread' ? unread : item.badge === 'helpdesk' ? helpdesk : 0;
+  /**
+   * ⚠️ **RØD for helpdesk** (rettet 20.08.2026), aksent for meldinger.
+   *
+   * Denne var kortvarig grønn. Det brøt med UI-PAKKER §6, som sier at «New» er
+   * RØD — og etter at aksenten ble svart, er rødt det eneste som faktisk fanger
+   * blikket i denne kolonnen. Uleste meldinger beholder aksentfargen, så de to
+   * tallene fortsatt er til å skille fra hverandre.
+   */
+  const badgeKlasse =
+    item.badge === 'helpdesk' ? 'bg-danger-soft text-danger' : 'bg-accent-soft text-accent-strong';
 
-  // Åpen når raden er aktiv — men brukeren kan overstyre begge veier, og
-  // navigerer de videre innenfor samme punkt, blir det som de satte det.
-  const [open, setOpen] = useState(active);
+  /**
+   * ⚠️ Aktiv rad åpner seg selv — men bare når den BLIR aktiv, ikke ved hver
+   * render. Uten `active` i avhengighetslista ville et klikk på en annen rad
+   * blitt overstyrt tilbake med én gang, og accordionen aldri fått lukke noe.
+   */
   useEffect(() => {
-    if (active) setOpen(true);
-  }, [active]);
+    if (active) settApent(item.key);
+  }, [active, item.key, settApent]);
 
   const innhold = (
     <>
@@ -323,9 +382,17 @@ function NavRow({
           <span className="flex-1 truncate text-left">{item.label}</span>
           {item.isNew && <NewBadge />}
           {count > 0 && (
-            <span className="inline-flex h-badge items-center rounded-badge bg-accent-soft px-1.5 font-medium text-[11px] text-accent-strong tabular-nums">
-              {count}
-              <span className="sr-only"> uleste</span>
+            <span
+              className={`inline-flex h-badge items-center gap-1 rounded-badge px-1.5 font-medium text-[11px] ${badgeKlasse}`}
+            >
+              {/* Helpdesk sier «New 3» — ordet forteller HVA tallet er. På
+                  Innboks er tallet alene nok: en teller ved siden av «Innboks»
+                  kan bare bety uleste. */}
+              {item.badge === 'helpdesk' && <span>New</span>}
+              <span className="tabular-nums">{count}</span>
+              <span className="sr-only">
+                {item.badge === 'helpdesk' ? ' nye artikler' : ' uleste'}
+              </span>
             </span>
           )}
           {/* ⚠️ Pil-plassen er ALLTID her, også når raden ikke har underpunkter.
@@ -335,7 +402,13 @@ function NavRow({
               ingenting og gjør kolonnen rett. */}
           <span className="grid w-3.5 shrink-0 place-items-center" aria-hidden>
             {children.length > 0 && (
-              <ChevronDown size={14} strokeWidth={1.75} className="text-fg-muted" />
+              /* Snur med samme varighet som utfoldingen, så pilen og innholdet
+                 beveger seg som én ting. */
+              <ChevronDown
+                size={14}
+                strokeWidth={1.75}
+                className={`text-fg-muted transition-transform duration-200 ${apen ? 'rotate-180' : ''}`}
+              />
             )}
           </span>
         </>
@@ -388,35 +461,59 @@ function NavRow({
     <div className="flex flex-col">
       <button
         type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        aria-expanded={apen}
+        onClick={() => settApent(apen ? null : item.key)}
         className={radKlasse}
       >
         {innhold}
       </button>
 
-      {open && (
-        <div className="mt-0.5 flex flex-col gap-0.5 pb-1 pl-[26px]">
-          {children.map((c) => {
-            const childActive = isChildActive(c.href, pathname, search);
-            return (
-              <Link
-                key={c.href}
-                href={c.href as Route}
-                aria-current={childActive ? 'page' : undefined}
-                className={`flex h-8 items-center gap-2 rounded-control px-2 text-label transition-colors ${
-                  childActive
-                    ? 'bg-sidebar-active text-fg'
-                    : 'text-fg-muted hover:bg-sidebar-active/60 hover:text-fg'
-                }`}
-              >
-                {c.icon && <c.icon size={14} strokeWidth={1.75} className="shrink-0" />}
-                <span className="flex-1 truncate">{c.label}</span>
-              </Link>
-            );
-          })}
+      {/**
+       * ⛔ `grid-template-rows: 0fr → 1fr` og ikke `max-height`.
+       *
+       * En høydeanimasjon trenger et tall å gå MOT, og `height:auto` kan ikke
+       * animeres. Den vanlige omgåelsen er `max-height: 500px`, men da må man
+       * gjette en høyde: gjetter man for lavt, klippes den siste raden bort;
+       * gjetter man for høyt, henger animasjonen i lufta før den starter fordi
+       * den bruker like lang tid på piksler som ikke finnes.
+       *
+       * `0fr → 1fr` lar nettleseren regne ut den EKTE høyden, uansett hvor
+       * mange underpunkter raden har. Barnet må ha `min-h-0` og
+       * `overflow-hidden`, ellers nekter griden å krympe under innholdet.
+       *
+       * ⚠️ `aria-hidden` når lukket: innholdet er fortsatt i DOM-en (det er det
+       * som gjør animasjonen mulig), og uten dette ville en skjermleser lest opp
+       * underpunkter som ikke er synlige.
+       */}
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+          apen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
+        aria-hidden={!apen}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="mt-0.5 flex flex-col gap-0.5 pb-1 pl-[26px]">
+            {children.map((c) => {
+              const childActive = isChildActive(c.href, pathname, search);
+              return (
+                <Link
+                  key={c.href}
+                  href={c.href as Route}
+                  aria-current={childActive ? 'page' : undefined}
+                  className={`flex h-8 items-center gap-2 rounded-control px-2 text-label transition-colors ${
+                    childActive
+                      ? 'bg-sidebar-active text-fg'
+                      : 'text-fg-muted hover:bg-sidebar-active/60 hover:text-fg'
+                  }`}
+                >
+                  {c.icon && <c.icon size={14} strokeWidth={1.75} className="shrink-0" />}
+                  <span className="flex-1 truncate">{c.label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

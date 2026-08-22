@@ -46,8 +46,6 @@ export function ContextSwitcher({
   contexts,
   active,
   dealerName,
-  userName,
-  roleLabel,
   collapsed,
   canSwitchDemo = false,
   onSelect,
@@ -56,8 +54,6 @@ export function ContextSwitcher({
   active: ContextKey;
   collapsed: boolean;
   dealerName: string;
-  userName: string;
-  roleLabel: string;
   canSwitchDemo?: boolean;
   onSelect: (key: ContextKey) => void;
 }) {
@@ -84,28 +80,51 @@ export function ContextSwitcher({
     window.location.assign('/dashboard');
   }
 
+  /**
+   * ⚠️ **Andre linje sa `{userName} · {roleLabel}` fram til 20.08.2026.**
+   *
+   * Personen flyttet til bunnen av sidebaren (F6-19), og da ville et navn her
+   * vært det samme navnet to steder i samme kolonne. Nå deler de to radene
+   * spørsmålet mellom seg: toppen svarer på **hvor du er** — hvilken forhandler
+   * og hvilken visning — og bunnen på **hvem du er**.
+   */
   const navn = (
     <span className="flex min-w-0 flex-1 flex-col text-left">
       <span className="truncate text-label text-fg">{dealerName}</span>
-      <span className="truncate text-[12px] text-fg-muted">
-        {userName} · {roleLabel}
-      </span>
+      <span className="truncate text-[12px] text-fg-muted">{current.label}</span>
     </span>
   );
 
-  /** Merkeboks: liten, svart, hvit logo. Samme i lyst og mørkt. */
+  /**
+   * Logoen — UTEN merkeboks (endret 20.08.2026, eiers ønske).
+   *
+   * ⚠️ Før lå logoen i en 36px svart rute og ble tegnet 18px bred inni den, som
+   * med SVG-ens forhold 222:134 ga en logo på ca. 18 × 11 px. Det var RUTA som
+   * matchet navneblokka ved siden av, ikke logoen.
+   *
+   * Høyden var kort innom 36px (lik navneblokka), men ble halvert til 18px på
+   * eiers ønske — 36 ble for dominerende ved siden av teksten. Bredden følger
+   * alltid av forholdet, så logoen aldri strekkes.
+   *
+   * ⛔ `logo-invert` og IKKE `logo-on-dark`. Den forrige er tema-betinget; den
+   * siste snur logoen hvit UANSETT, som var riktig så lenge den lå på en
+   * alltid-svart rute. Uten ruta sitter logoen rett på sidebarbakgrunnen — og
+   * med `logo-on-dark` ville den vært hvit på hvitt i lyst tema. Det er
+   * nøyaktig feilen F5-21 fantes for å rette.
+   *
+   * Kollapset variant er halvert i samme forhold (13px → 22px bred), så de to
+   * tilstandene fortsatt ser ut som samme logo i to størrelser.
+   */
+  const logoHoyde = collapsed ? 13 : 18;
   const logo = (
-    <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-black">
-      <Image
-        src="/logo/logo.svg"
-        alt="Endwise"
-        width={18}
-        height={18}
-        priority
-        className="logo-on-dark"
-        style={{ height: 'auto' }}
-      />
-    </span>
+    <Image
+      src="/logo/logo.svg"
+      alt="Endwise"
+      width={Math.round((logoHoyde * 222) / 134)}
+      height={logoHoyde}
+      priority
+      className="logo-invert shrink-0"
+    />
   );
 
   /**
@@ -142,7 +161,7 @@ export function ContextSwitcher({
               type="button"
               title={`Bytt visning — nå: ${current.label}`}
               aria-label={`Bytt visning — nå: ${current.label}`}
-              className="rounded-[10px] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-ring"
+              className="rounded-control p-1 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-ring"
             >
               {logo}
             </button>

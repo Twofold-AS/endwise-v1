@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createAuth, createTenant } from '@endwise/auth';
 import { and, createDb, eq, isNull, schema } from '@endwise/db';
 import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
+import { seedHelpdesk } from './seed-helpdesk.ts';
 
 /**
  * DEV-SEED — demo-kontoer + tenant A-data. IKKE for produksjon.
@@ -1314,6 +1315,13 @@ async function main() {
     KJORETOY.length,
     TJENESTER.length,
     nyeBookinger,
+  );
+
+  /* ══ F5-23 — helpdesk-artiklene. GLOBALE, ikke per forhandler. ═══════ */
+  const antallArtikler = await seedHelpdesk(db);
+  console.info(
+    '\n📚 Helpdesk: %s artikler (globale — samme for alle forhandlere).',
+    antallArtikler,
   );
   process.exit(0);
 }

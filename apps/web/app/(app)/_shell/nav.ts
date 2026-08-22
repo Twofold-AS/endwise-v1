@@ -69,11 +69,28 @@ export type NavItem = {
   icon: LucideIcon;
   href: string;
   roles: OrgRole[];
+  /**
+   * ⚠️ Ingen nav-rader bruker denne per 20.08.2026 — eier ba om at «New» ble
+   * fjernet fra sidebaren. Fem rader hadde den, og et merke som står på fem av
+   * elleve rader i månedsvis slutter å bety «nytt» og begynner å bety
+   * «bakgrunn». Feltet står igjen fordi mekanismen er riktig når noe FAKTISK er
+   * nytt — men da skal det tas av igjen.
+   *
+   * ⛔ Det eneste «New» i sidebaren nå er helpdesk-badgen, og den er datadrevet:
+   * den forsvinner av seg selv når du har lest artiklene.
+   */
   isNew?: boolean;
   /** Viser dropdown-pil og folder ut underpunktene. */
   children?: NavChild[];
-  /** Bærer et tall på nav-raden (uleste meldinger). */
-  badge?: 'unread';
+  /**
+   * Bærer et tall på nav-raden.
+   *
+   * `unread`   — uleste meldinger (Innboks). Aksentfarget.
+   * `helpdesk` — uleste hjelpeartikler. ⚠️ GRØNN, ikke aksent: en ny artikkel
+   *   er informasjon, ikke noe som venter på at du gjør noe. To ulike tall i
+   *   samme kolonne skal ikke se like presserende ut.
+   */
+  badge?: 'unread' | 'helpdesk';
 };
 
 const DRIFT: OrgRole[] = ['dealer_staff', 'dealer_admin', 'endwise_admin'];
@@ -171,7 +188,6 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/innboks',
     roles: DRIFT,
     badge: 'unread',
-    isNew: true,
     // ⚠️ Ingen `children` lenger (05.08.2026). Kanalfiltrene Kunder/Intern/
     // Endwise bor nå i innboksens EGEN sidebar inne i innholdsområdet — se
     // `innboks/_inbox-sidebar.tsx`. Å ha dem begge steder ville betydd to
@@ -183,7 +199,6 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: ClipboardList,
     href: '/saker',
     roles: DRIFT,
-    isNew: true,
     children: [
       { label: 'Avtaler', href: '/saker', icon: ClipboardList },
       { label: 'Kalender', href: '/saker?visning=kalender', icon: CalendarDays },
@@ -206,7 +221,6 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Handshake,
     href: '/samarbeid',
     roles: ADMIN_OF_TENANT,
-    isNew: true,
   },
   {
     key: 'analyse',
@@ -214,7 +228,6 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: ChartLine,
     href: '/analyse',
     roles: ADMIN_OF_TENANT,
-    isNew: true,
     children: [
       { label: 'Rapporter', href: '/analyse', icon: ChartColumn },
       { label: 'Direkte data', href: '/analyse?visning=direkte', icon: Globe },
@@ -229,7 +242,6 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Brain,
     href: '/ai-innsikt',
     roles: ADMIN_OF_TENANT,
-    isNew: true,
     children: [
       { label: 'Innsikt', href: '/ai-innsikt', icon: Sparkles },
       // F6-18 — den ENESTE chat-flaten som faktisk snakker med en modell.
@@ -244,6 +256,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: LifeBuoy,
     href: '/support',
     roles: DRIFT,
+    badge: 'helpdesk',
   },
 ];
 
@@ -264,7 +277,25 @@ export const SETTINGS_NAV: NavItem = {
       icon: Receipt,
       roles: ADMIN_OF_TENANT,
     },
+    /**
+     * F2-05/F5-04 — forhandlerens EGEN katalog. ⚠️ Ligger med vilje rett under
+     * raden over, som er det motsatte pengeforholdet: den viser hva forhandleren
+     * betaler OSS, denne hva KUNDEN betaler forhandleren. De to ble forvekslet
+     * helt til 20.08.2026, og to nabo-rader med tydelig ulike navn er billigere
+     * enn nok en runde med den forvekslingen.
+     *
+     * Ingen `roles`: raden arver destinasjonens DRIFT, så en dealer_staff ser
+     * katalogen — han må kunne svare på hva en EU-kontroll koster. Skriving er
+     * `adminProcedure` server-side.
+     */
+    { label: 'Tjenestekatalog', href: '/innstillinger/tjenestekatalog', icon: Wrench },
     { label: 'Integrasjoner', href: '/integrasjoner', icon: Blocks, roles: ADMIN_OF_TENANT },
+    /**
+     * ⚠️ Profil ble kortvarig flyttet UT herfra 20.08.2026 (til brukerraden),
+     * og TILBAKE igjen samme dag på eiers beslutning. Brukerraden er nå ren
+     * visning med en utloggingsknapp, så Settings er igjen den eneste veien
+     * til profilen — og URL-en (`/innstillinger/profil`) matcher plasseringen.
+     */
     { label: 'Profil', href: '/innstillinger/profil', icon: UserCog },
   ],
 };
@@ -337,6 +368,18 @@ export const ENDWISE_NAV: NavItem[] = [
     href: '/endwise/forhandlere',
     roles: ENDWISE,
   },
+  /**
+   * F5-23 — hjelpeartiklene skrives HER, ikke i forhandlerens Settings.
+   * En publisert artikkel dukker opp i sidebaren hos alle 250 verksteder; det
+   * er en plattformhandling, som dev-mode-bryteren ved siden av.
+   */
+  {
+    key: 'endwise-helpdesk',
+    label: 'Hjelpeartikler',
+    icon: LifeBuoy,
+    href: '/endwise/helpdesk',
+    roles: ENDWISE,
+  },
 ];
 
 /**
@@ -351,6 +394,7 @@ export const ENDWISE_SETTINGS_NAV: NavItem = {
   roles: ENDWISE,
   children: [
     { label: 'Dev-mode', href: '/endwise/innstillinger', icon: Zap },
+    /** Samme side som forhandlerens Settings › Profil — profilen er global. */
     { label: 'Min profil', href: '/innstillinger/profil', icon: UserCog },
   ],
 };
@@ -493,6 +537,10 @@ export const PARKED_LABEL: Record<string, string> = {
   '/mekanikere/kompetanse': 'Team & tilgang · Kompetanse',
   '/mekanikere/kapasitet': 'Team & tilgang · Kapasitet',
   '/tjenester': 'Tjenester & priser',
+  '/innstillinger/profil': 'Innstillinger · Profil',
+  '/support': 'Helpdesk',
+  '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
+  '/innstillinger/tjenestekatalog': 'Innstillinger · Tjenestekatalog',
   '/butikk': 'Butikk (ikke designet ennå)',
   '/lager/deler': 'Lager · Deler',
   '/lager/lokasjoner': 'Lager · Lokasjoner',

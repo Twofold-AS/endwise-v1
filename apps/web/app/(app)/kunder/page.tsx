@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, ChevronRight, Mail, Phone, Search, Users } from '@endwise/ui';
+import { Avatar, Car, ChevronRight, Mail, Phone, Search, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -117,9 +117,8 @@ function KunderInner() {
                   i > 0 ? 'border-border border-t' : ''
                 }`}
               >
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-soft font-medium text-[12px] text-accent-strong">
-                  {k.name.slice(0, 1).toUpperCase()}
-                </span>
+                {/* Samme seed som kundekortet raden lenker til. */}
+                <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
 
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="flex items-center gap-2 truncate text-label text-fg">

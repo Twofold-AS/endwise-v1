@@ -48,9 +48,35 @@ export const viewport: Viewport = {
  * default som gjaldt fra 15.07). Mørkt ligger klart som `data-theme="dark"` og
  * nås via <ThemeToggle>; begge palettene bor i widget-tokens.
  */
+
+/**
+ * ⛔ TEMAET MÅ SETTES FØR FØRSTE MALING — derfor et inline-skript og ikke en
+ * React-effekt.
+ *
+ * ⚠️ Dette er fiksen på en ekte bug (20.08.2026): mørkt tema overlevde ikke en
+ * refresh. `data-theme="light"` under er serverens gjetning, og den er riktig
+ * for en ny bruker — men bryterne lagret ingenting, så HVER sidelast satte alle
+ * tilbake til lyst.
+ *
+ * En `useEffect` ville rettet attributtet, men først etter at siden var malt:
+ * brukeren ville sett et hvitt glimt før det ble mørkt igjen, på hver eneste
+ * navigasjon. Et blokkerende skript i `<head>` kjører før noe tegnes.
+ *
+ * `try/catch` fordi localStorage kaster i privat modus i enkelte nettlesere —
+ * og et tema som kaster ville tatt ned hele sida før den rakk å vises.
+ * Nøkkelen er den samme som i `_lib/tema.ts`; endres den ett sted, må den
+ * endres begge.
+ */
+const TEMA_SKRIPT = `try{var t=localStorage.getItem("endwise:tema");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(e){}`;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="nb" data-theme="light" className={`${sans.variable} ${mono.variable}`}>
+      <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: konstant streng,
+            ingen brukerdata — og den MÅ kjøre før maling, se kommentaren over. */}
+        <script dangerouslySetInnerHTML={{ __html: TEMA_SKRIPT }} />
+      </head>
       <body className="bg-bg font-sans text-body text-fg antialiased">
         <Providers>{children}</Providers>
       </body>

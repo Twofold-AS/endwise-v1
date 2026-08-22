@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageSquare, MessageSquarePlus, Sparkles, TriangleAlert } from '@endwise/ui';
+import { MessageSquare, Sparkles, TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -64,23 +64,15 @@ function MeldingerPageInner() {
 
   return (
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-8 py-7">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-title text-fg">Innboks</h1>
-          <p className="text-body text-fg-muted">
-            Velg en samtale i lista til venstre for å svare.
-          </p>
-        </div>
-        {!nySamtale && (
-          <button
-            type="button"
-            onClick={() => router.replace('/innboks?ny=1' as Route)}
-            className="flex h-control shrink-0 items-center gap-2 rounded-control border border-border px-3 text-label text-fg transition-colors hover:bg-surface-2"
-          >
-            <MessageSquarePlus size={16} strokeWidth={1.75} className="text-fg-muted" />
-            Ny samtale
-          </button>
-        )}
+      {/**
+       * F5-14 — «Ny samtale»-knappen sto her fram til 20.08.2026 og er flyttet
+       * til innboks-sidebarens header. Den lå på den ENESTE skjermen der man
+       * ikke leser en tråd — altså ikke der man er når man vil starte en ny.
+       * Nå står den der lista står, og er tilgjengelig hele tiden.
+       */}
+      <div>
+        <h1 className="text-title text-fg">Innboks</h1>
+        <p className="text-body text-fg-muted">Velg en samtale i lista til venstre for å svare.</p>
       </div>
 
       {nySamtale && <NySamtale onLukk={() => router.replace('/innboks' as Route)} />}
@@ -120,11 +112,16 @@ function MeldingerPageInner() {
         </section>
       )}
 
+      {/**
+       * ⚠️ Her sto «Ingen samtale valgt» i tillegg til ingressen over, som
+       * allerede sier «Velg en samtale i lista til venstre». To tomromsbeskjeder
+       * om samme tomrom, 60 piksler fra hverandre. Igjen står forklaringen som
+       * faktisk lærer bort noe — hva de tre partene ER.
+       */}
       <div className="flex flex-col items-center gap-2 py-20 text-center">
         <MessageSquare size={24} className="text-fg-muted" />
-        <p className="text-body text-fg-muted">Ingen samtale valgt</p>
         <p className="max-w-sm text-[12px] text-fg-muted leading-relaxed">
-          Kanalene Kunder, Intern og Endwise filtrerer lista til venstre. Alle tre er samme
+          Partene Kunder, Intern og Endwise filtrerer lista til venstre. Alle tre er samme
           trådmodell — bare tre ulike deltakerpar.
         </p>
       </div>

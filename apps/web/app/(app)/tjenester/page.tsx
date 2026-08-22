@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, CreditCard, Sparkles } from '@endwise/ui';
+import { ArrowUpRight, CircleAlert, CreditCard, Sparkles } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { RouterOutput } from '@/lib/trpc';
@@ -161,6 +161,17 @@ export default function TjenesterPage() {
           knappetekst="Foreslå en funksjon"
         />
       </section>
+
+      {/* ⚠️ Kryssreferanse lagt inn 20.08.2026 (F2-05). Denne siden og
+          Tjenestekatalogen er to ULIKE pengeforhold, og de ble forvekslet — også
+          i kodekommentarene. Lenka står begge veier. */}
+      <Link
+        href={'/innstillinger/tjenestekatalog' as Route}
+        className="inline-flex items-center gap-1.5 text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
+      >
+        Ser du etter tjenestene KUNDEN bestiller hos dere? Det er Tjenestekatalogen
+        <ArrowUpRight size={13} strokeWidth={1.75} />
+      </Link>
     </div>
   );
 }

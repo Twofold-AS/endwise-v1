@@ -7,6 +7,7 @@ export * from './competence.ts';
 export * from './customers.ts';
 export * from './erasure.ts';
 export * from './feature-flags.ts';
+export * from './helpdesk.ts';
 export * from './integration-config.ts';
 export * from './inventory.ts';
 export * from './invitations.ts';

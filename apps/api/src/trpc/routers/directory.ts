@@ -1,5 +1,5 @@
 import { and, eq, inArray, schema, withTenant } from '@endwise/db';
-import { visningsnavn } from '@endwise/modules/profil';
+import { type AvatarValg, lesAvatar, TOM_AVATAR, visningsnavn } from '@endwise/modules/profil';
 import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
 
@@ -54,7 +54,26 @@ export const directoryRouter = router({
       const unike = [...new Set(input.ids)].filter(Boolean);
       if (unike.length === 0) return {};
 
-      const ut: Record<string, { navn: string; rolle: 'ansatt' | 'mekaniker' | 'kunde' }> = {};
+      /**
+       * F6-19 — `seed` og `avatar` er med fra 20.08.2026.
+       *
+       * ⛔ **`seed` er ikke det samme som nøkkelen.** Nøkkelen er deltaker-IDen
+       * meldingen bærer (en Better-Auth-bruker); seeden er personens STABILE
+       * identitet i denne tenanten — `customers.id`, `mechanics.id` eller
+       * `user.id`. Forskjellen betyr noe: kundekortet (F5-02) kjenner bare
+       * `customers.id`, og hadde innboksen seedet på bruker-IDen ville samme
+       * menneske hatt to ansikter på to flater. Serveren bestemmer seeden ett
+       * sted, så flatene ikke kan bli uenige.
+       */
+      const ut: Record<
+        string,
+        {
+          navn: string;
+          rolle: 'ansatt' | 'mekaniker' | 'kunde';
+          seed: string;
+          avatar: AvatarValg;
+        }
+      > = {};
 
       /**
        * Kallenavn hentes KUN når intern visning er eksplisitt bedt om. Ikke
@@ -91,7 +110,11 @@ export const directoryRouter = router({
       // ── 1. Mekanikere og kunder: tenant-skopet av RLS. ────────────────
       const { mekanikere, kunder } = await withTenant(ctx.db, ctx.tenantId, async (tx) => {
         const mekanikere = await tx
-          .select({ userId: schema.mechanics.userId, name: schema.mechanics.name })
+          .select({
+            userId: schema.mechanics.userId,
+            id: schema.mechanics.id,
+            name: schema.mechanics.name,
+          })
           .from(schema.mechanics)
           .where(
             and(
@@ -100,7 +123,11 @@ export const directoryRouter = router({
             ),
           );
         const kunder = await tx
-          .select({ userId: schema.customers.userId, name: schema.customers.name })
+          .select({
+            userId: schema.customers.userId,
+            id: schema.customers.id,
+            name: schema.customers.name,
+          })
           .from(schema.customers)
           .where(
             and(
@@ -113,11 +140,22 @@ export const directoryRouter = router({
 
       // ⛔ Kunder får ALLTID ekte navn — `vis(..., true)`. En kunde er ikke en
       // kollega, og har uansett ikke noe kallenavn hos oss.
-      for (const k of kunder) if (k.userId) ut[k.userId] = { navn: k.name, rolle: 'kunde' };
+      for (const k of kunder) {
+        if (k.userId) {
+          ut[k.userId] = { navn: k.name, rolle: 'kunde', seed: k.id, avatar: TOM_AVATAR };
+        }
+      }
       // Mekaniker vinner over kunde: er du begge deler i samme verksted, er det
       // som ansatt du skriver i innboksen.
       for (const m of mekanikere) {
-        if (m.userId) ut[m.userId] = { navn: vis(m.userId, m.name), rolle: 'mekaniker' };
+        if (m.userId) {
+          ut[m.userId] = {
+            navn: vis(m.userId, m.name),
+            rolle: 'mekaniker',
+            seed: m.id,
+            avatar: TOM_AVATAR,
+          };
+        }
       }
 
       /**
@@ -135,7 +173,41 @@ export const directoryRouter = router({
 
       for (const a of ansatte) {
         // Mekaniker-navnet er mer presist i verkstedssammenheng; ikke overskriv.
-        if (!ut[a.id]) ut[a.id] = { navn: vis(a.id, a.name), rolle: 'ansatt' };
+        if (!ut[a.id]) {
+          ut[a.id] = { navn: vis(a.id, a.name), rolle: 'ansatt', seed: a.id, avatar: TOM_AVATAR };
+        }
+      }
+
+      /**
+       * ── 3. Avatarvalg ────────────────────────────────────────────────
+       *
+       * ⛔ `user_preferences` har **ingen RLS** (global tabell, se skjemaet), så
+       * isolasjonen må komme fra spørringen. Den kommer den fra her: vi slår opp
+       * KUN IDer som allerede står i `ut`, altså IDer stegene over har bekreftet
+       * hører til denne tenanten. En ID vi ikke klarte å navngi, spør vi heller
+       * ikke om et ansikt for.
+       *
+       * ⚠️ Kunder får sjelden eller aldri en rad her — de fleste har ingen
+       * innlogging å sette et valg fra. Da står `TOM_AVATAR`, og ansiktet
+       * kommer i sin helhet fra seeden. Det er riktig, ikke en mangel.
+       */
+      const kjente = Object.keys(ut);
+      if (kjente.length > 0) {
+        const valg = await ctx.db
+          .select({
+            userId: schema.userPreferences.userId,
+            avatarShape: schema.userPreferences.avatarShape,
+            avatarHumor: schema.userPreferences.avatarHumor,
+            avatarHue: schema.userPreferences.avatarHue,
+            avatarTone: schema.userPreferences.avatarTone,
+          })
+          .from(schema.userPreferences)
+          .where(inArray(schema.userPreferences.userId, kjente))
+          .catch(() => []);
+        for (const v of valg) {
+          const rad = ut[v.userId];
+          if (rad) rad.avatar = lesAvatar(v);
+        }
       }
 
       return ut;

@@ -39,6 +39,11 @@ export {
   ChevronRight,
   Command,
   ExternalLink,
+  // F1-18 — vis/skjul passord. Ingen UI-pakke i §-kartet dekker et
+  // passordfelt med avsløringsknapp (shadcn har `Input`, ikke en variant),
+  // så kontrollen er egenskrevet i `app/_auth/felter.tsx`. Se UI-PAKKER §8.
+  Eye,
+  EyeOff,
   Gauge,
   HardHat,
   LifeBuoy,

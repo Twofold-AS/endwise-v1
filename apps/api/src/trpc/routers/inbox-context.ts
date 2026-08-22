@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gte, inArray, lt, schema, withTenant } from '@endwise/db';
 import { createBillingService } from '@endwise/modules/billing';
-import { visningForTraadtype, visningsnavn } from '@endwise/modules/profil';
+import { lesAvatar, TOM_AVATAR, visningForTraadtype, visningsnavn } from '@endwise/modules/profil';
 import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
 
@@ -179,9 +179,35 @@ export const inboxContextRouter = router({
            * regne det om til en prosent ville gitt tallet en presisjon det ikke
            * har.
            */
+          /**
+           * F6-19 — mekanikerens egne avatarvalg.
+           *
+           * ⚠️ Uten dette ville panelet tegnet ansiktet fra seeden mens tråden
+           * ved siden av tegnet det mekanikeren faktisk har valgt — samme
+           * person, to ansikter, 300 piksler fra hverandre.
+           *
+           * ⛔ `user_preferences` har ingen RLS. Isolasjonen kommer fra at
+           * `mek` allerede ER hentet tenant-skopet: vi slår opp valgene til den
+           * mekanikeren, ikke til en ID fra klienten.
+           */
+          const [avatarRad] = mek.userId
+            ? await ctx.db
+                .select({
+                  avatarShape: schema.userPreferences.avatarShape,
+                  avatarHumor: schema.userPreferences.avatarHumor,
+                  avatarHue: schema.userPreferences.avatarHue,
+                  avatarTone: schema.userPreferences.avatarTone,
+                })
+                .from(schema.userPreferences)
+                .where(eq(schema.userPreferences.userId, mek.userId))
+                .catch(() => [])
+            : [];
+
           return {
             type: 'mekaniker' as const,
             mekanikerId: mek.id,
+            /** ⛔ Seeden er `mechanics.id` — samme som innboksen bruker. */
+            avatar: mek.userId ? lesAvatar(avatarRad ?? null) : TOM_AVATAR,
             /** Internt visningsnavn — kallenavn hvis satt. Se over. */
             navn: visningsnavn(
               { navn: mek.name, kallenavn: profil?.nickname ?? null },

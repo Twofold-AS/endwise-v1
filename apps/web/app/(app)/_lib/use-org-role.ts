@@ -16,6 +16,12 @@ import type { OrgRole } from '../_shell/nav';
  */
 export function useOrgRole(): {
   userId: string | null;
+  /**
+   * ⚠️ Fra `session.me`, IKKE fra Better-Auth-sesjonen. Se kommentaren i
+   * `routers/session.ts`: navnet hadde to hjem, og sidebaren leste det som
+   * ikke ble oppdatert ved lagring.
+   */
+  navn: string | null;
   role: OrgRole | null;
   tenantName: string | null;
   tenantKind: 'live' | 'demo';
@@ -44,6 +50,7 @@ export function useOrgRole(): {
   const role = (me.data?.role as OrgRole | null | undefined) ?? null;
   return {
     userId: me.data?.userId ?? null,
+    navn: me.data?.navn || null,
     role,
     tenantName: me.data?.tenantName ?? null,
     tenantKind: (me.data?.tenantKind as 'live' | 'demo' | undefined) ?? 'live',

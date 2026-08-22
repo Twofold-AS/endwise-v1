@@ -25,3 +25,7 @@ _tmp_*
 # committes de, får neste maskin to ødelagte submodul-referanser uten
 # .gitmodules. De hører til verktøyet, ikke til prosjektet.
 .claude/worktrees/
+
+# Visual Studio sin lokale arbeidsmappe (binære indeksfiler, ~4 MB).
+# Maskinspesifikk — hører til IDE-en, ikke til prosjektet.
+.vs/

@@ -1,6 +1,15 @@
 'use client';
 
-import { Funnel, LifeBuoy, type LucideIcon, MessageSquare, Users, Wrench } from '@endwise/ui';
+import {
+  Avatar,
+  type AvatarValg,
+  LifeBuoy,
+  type LucideIcon,
+  MessageSquare,
+  MessageSquarePlus,
+  Users,
+  Wrench,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -99,6 +108,9 @@ export function InboxSidebar() {
         ulest: t.ulest,
         kanal: t.kanal,
         sisteKanal: t.sisteKanal,
+        /* Eksempelrader har ingen ekte person. Seeden er trådens mock-id, så
+           ansiktene i det minste er stabile mellom rendringer. */
+        motpart: { seed: t.id, navn: t.avsender, avatar: null as AvatarValg | null },
         mock: true,
       }));
     }
@@ -124,6 +136,24 @@ export function InboxSidebar() {
         // Ekte kanaldata fra `threads.channel` / siste meldings `channel`.
         kanal: tilKanal(t.channel),
         sisteKanal: tilKanal(t.sisteKanal),
+        /**
+         * F6-19 — ansiktet på raden.
+         *
+         * ⚠️ En tråd kan ha flere motparter, men raden har plass til ÉN. Vi tar
+         * den første som verken er deg selv eller en agent — samme person
+         * `threadHeading()` navngir raden etter, så bilde og navn ikke peker på
+         * hver sin deltaker.
+         *
+         * ⛔ Seeden kommer fra SERVEREN (`participants.seed`), ikke fra
+         * deltaker-IDen: for en kunde er den `customers.id`, som er den samme
+         * seeden kundekortet bruker. Ellers ville samme menneske hatt to
+         * ansikter på to flater.
+         */
+        motpart: motpartFor(
+          t.motparter ?? [],
+          visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
+          me.data?.userId,
+        ),
         mock: false,
       }));
   }, [brukerMock, ekte, part, navnIntern.data, navnOffisiell.data, me.data?.userId]);
@@ -161,14 +191,28 @@ export function InboxSidebar() {
             );
           })}
           <span className="mx-1 h-4 w-px bg-border" />
-          <button
-            type="button"
-            title="Flere filtre"
-            aria-label="Flere filtre"
+          {/**
+           * F5-14 — her sto en «Flere filtre»-trakt fram til 20.08.2026.
+           *
+           * ⛔ **Den hadde ingen `onClick`.** Den så ut som en kontroll, den
+           * hadde tooltip og hover-tilstand, og den gjorde ingenting — samme
+           * slag som «Ny kunde»-knappen som pekte på en side som ikke leste
+           * parameteren (F5-02). En knapp som ikke virker lærer folk at
+           * knappene her ikke er til å stole på, og den koster mer enn den
+           * plassen den tar.
+           *
+           * «Ny samtale» har tatt plassen. Den lå tidligere KUN på
+           * `/innboks`-siden, altså akkurat der man ikke er når man leser en
+           * tråd og vil starte en ny. Nå står den der lista står, alltid.
+           */}
+          <Link
+            href={'/innboks?ny=1' as Route}
+            title="Ny samtale"
+            aria-label="Ny samtale"
             className="flex size-7 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active/60 hover:text-fg"
           >
-            <Funnel size={16} strokeWidth={1.75} />
-          </button>
+            <MessageSquarePlus size={16} strokeWidth={1.75} />
+          </Link>
         </div>
       </div>
 
@@ -207,6 +251,28 @@ export function InboxSidebar() {
   );
 }
 
+/**
+ * Hvem raden skal vise ansiktet til.
+ *
+ * Null når tråden bare har deg selv og agenter i seg — da tegnes ingen avatar
+ * i stedet for en tilfeldig plassholder. Et ansikt som ikke står for noen, er
+ * verre enn ingen ansikt.
+ */
+function motpartFor(
+  motparter: string[],
+  navn: Record<string, { navn: string; seed: string; avatar: AvatarValg }> | undefined,
+  megId: string | undefined,
+): { seed: string; navn: string; avatar: AvatarValg | null } | null {
+  for (const id of motparter) {
+    if (!id || id === megId || id.startsWith('agent:')) continue;
+    const treff = navn?.[id];
+    // ⚠️ Ukjent ID: vi har ingen seed vi kan stole på (deltaker-IDen er IKKE
+    // seeden), så da tegnes ingenting. Se `directory.participants`.
+    if (treff) return { seed: treff.seed, navn: treff.navn, avatar: treff.avatar };
+  }
+  return null;
+}
+
 /** Én samtale i lista: kanal, referanse, tidspunkt, avsender, utdrag og part. */
 function SamtaleKort({
   rad,
@@ -221,6 +287,7 @@ function SamtaleKort({
     ulest: number;
     kanal: Kanal;
     sisteKanal: Kanal;
+    motpart: { seed: string; navn: string; avatar: AvatarValg | null } | null;
     mock: boolean;
   };
   aktiv: boolean;
@@ -240,6 +307,21 @@ function SamtaleKort({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* F6-19 — ansiktet står FØR navnet: øyet kjenner igjen en form
+            raskere enn det leser en streng, og lista skannes mer enn den
+            leses. `navn` tom = dekorativ, siden navnet står rett ved siden av
+            og en skjermleser ellers ville lest det to ganger. */}
+        {rad.motpart && (
+          <Avatar
+            seed={rad.motpart.seed}
+            valg={rad.motpart.avatar}
+            size={20}
+            navn=""
+            /* ⛔ Lista. Ett `<img>` per rad, ingen bevegelse. Dette er flaten
+               hele `bevegelse`-propen finnes for å beskytte. */
+            bevegelse="stille"
+          />
+        )}
         <span className={`truncate text-label ${rad.ulest > 0 ? 'text-fg' : 'text-fg-muted'}`}>
           {rad.avsender}
         </span>

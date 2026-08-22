@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Avatar,
   Car,
   ChevronRight,
   CircleAlert,
@@ -10,7 +11,6 @@ import {
   MessageSquare,
   PanelRightClose,
   Timer,
-  Wrench,
   X,
 } from '@endwise/ui';
 import type { Route } from 'next';
@@ -210,9 +210,9 @@ function Kundekontekst({ data }: { data: KundeData }) {
       {/* Identitet */}
       <Link href={`/kunder/${k.id}` as Route} className="group block">
         <div className="flex items-center gap-3 rounded-control border border-border bg-bg p-3 transition-colors group-hover:bg-surface-2">
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft font-medium text-accent-strong">
-            {k.navn.slice(0, 1).toUpperCase()}
-          </span>
+          {/* F6-19 — seeden er `customers.id`, nøyaktig samme som innboks-
+              lista og kundekortet bruker. Én person, ett ansikt, tre flater. */}
+          <Avatar seed={k.id} navn={k.navn} size={36} bevegelse="hover" />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="flex items-center gap-1.5 truncate text-label text-fg">
               {k.navn}
@@ -362,9 +362,16 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
   return (
     <>
       <div className="flex items-center gap-3 rounded-control border border-border bg-bg p-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-control bg-surface-2 text-fg-muted">
-          <Wrench size={17} strokeWidth={1.75} />
-        </span>
+        {/* ⚠️ Skiftenøkkelen sto her og sa «en mekaniker», ikke «HVILKEN
+            mekaniker». Seeden er `mechanics.id`; valgene kommer fra serveren
+            slik at ansiktet er det samme som i tråden ved siden av. */}
+        <Avatar
+          seed={data.mekanikerId}
+          valg={data.avatar}
+          navn={data.navn}
+          size={36}
+          bevegelse="hover"
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-label text-fg">{data.navn}</span>
           <span className="flex items-center gap-1.5 text-[12px] text-fg-muted">

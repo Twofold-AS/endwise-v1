@@ -1,7 +1,9 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   index,
+  integer,
   pgEnum,
   pgTable,
   primaryKey,
@@ -40,27 +42,134 @@ import { tenants } from './tenants.ts';
  * `routers/profile.ts`. Ser du en spørring her med en ID fra klienten, er det
  * en feil, ikke en variant.
  */
-export const userPreferences = pgTable('user_preferences', {
-  userId: text('user_id')
-    .primaryKey()
-    .references(() => user.id, { onDelete: 'cascade' }),
-  /**
-   * Varslingslyder (cuelume). **Standard PÅ** — en lyd du ikke visste fantes er
-   * mindre irriterende enn en varsling du aldri hørte. Av-knappen er derfor
-   * tydelig, ikke gjemt.
-   */
-  notificationSounds: boolean('notification_sounds').notNull().default(true),
-  /**
-   * F6-17 — Er «Detaljer»-panelet i innboksen åpent? **Standard PÅ.**
-   *
-   * Ligger her og ikke i `localStorage` fordi det er en arbeidsvane, ikke en
-   * nettleserinnstilling: åpner du innboksen på verkstedets maskin i dag og på
-   * din egen i morgen, skal panelet stå som du forlot det. En preferanse som
-   * bare finnes på én maskin er en preferanse man må sette to ganger.
-   */
-  inboxDetailsOpen: boolean('inbox_details_open').notNull().default(true),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`),
-});
+/**
+ * ⛔ AVATAR-FORMENE. Blobatars egen ti-form-vokabular (`styles/blob.ts`).
+ *
+ * Vi lagrer **navnet**, aldri 0–1-tallet biblioteket leser. Tallbåndene er
+ * frosset per major i blobatar, men et band kan flytte seg i neste major — og
+ * da ville en lagret `0.95` stille blitt en annen form på alle ansikter. Et
+ * navn kan remappes; et tall kan bare være feil.
+ *
+ * ⚠️ Lista finnes tre steder med vilje: her (CHECK i basen), i
+ * `@endwise/modules/profil/avatar` (zod) og i `@endwise/ui` (navn → tallbånd).
+ * apps/web har ikke @endwise/modules som avhengighet — det er server-laget —
+ * så speilingen følger samme mønster som booking-statusene i `_status.ts`.
+ * CHECK-en er tredjeparten: driver de fra hverandre, blir det en hard feil ved
+ * skriving, ikke et ansikt som stille ble feil.
+ */
+/**
+ * ⛔ HUMØRENE. Blobatars egne `expression`-navn (`blobatar/expression`).
+ *
+ * ⚠️ Et KURATERT utvalg, ikke alle fjorten. Biblioteket har også `sad`,
+ * `mad`, `sick` og `scared` — utelatt med vilje. Et humør du setter én gang
+ * og glemmer, er noe annet enn et humør du føler: et ansikt som ser sint eller
+ * sykt ut ved siden av navnet ditt i kollegaens innboks HVER dag, sier noe du
+ * sannsynligvis ikke mente å si.
+ *
+ * `idle` er standard og emitterer nøyaktig samme markup som å ikke sette noe.
+ */
+export const AVATAR_HUMOR = [
+  'idle',
+  'happy',
+  'wink',
+  'smug',
+  'sleepy',
+  'thinking',
+  'surprised',
+  'unsure',
+  'love',
+  'shy',
+] as const;
+
+export const AVATAR_FORMER = [
+  'round',
+  'organic',
+  'boxy',
+  'capsule',
+  'nub',
+  'cloud',
+  'droplet',
+  'hexagon',
+  'sun',
+  'triangle',
+] as const;
+
+export const userPreferences = pgTable(
+  'user_preferences',
+  {
+    userId: text('user_id')
+      .primaryKey()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    /**
+     * Varslingslyder (cuelume). **Standard PÅ** — en lyd du ikke visste fantes er
+     * mindre irriterende enn en varsling du aldri hørte. Av-knappen er derfor
+     * tydelig, ikke gjemt.
+     */
+    notificationSounds: boolean('notification_sounds').notNull().default(true),
+    /**
+     * F6-17 — Er «Detaljer»-panelet i innboksen åpent? **Standard PÅ.**
+     *
+     * Ligger her og ikke i `localStorage` fordi det er en arbeidsvane, ikke en
+     * nettleserinnstilling: åpner du innboksen på verkstedets maskin i dag og på
+     * din egen i morgen, skal panelet stå som du forlot det. En preferanse som
+     * bare finnes på én maskin er en preferanse man må sette to ganger.
+     */
+    inboxDetailsOpen: boolean('inbox_details_open').notNull().default(true),
+
+    /**
+     * ── AVATAR (blobatar). Alle tre er NULL = «utled alt fra seeden». ────────
+     *
+     * ⚠️ Avataren er en egenskap ved MENNESKET, ikke ved arbeidsplassen — samme
+     * begrunnelse som varslingslyder rett over. Bytter du forhandler, tar du
+     * ansiktet ditt med deg. Derfor her og ikke i `member_profiles`.
+     *
+     * ⛔ Tre navngitte kolonner, ikke en `jsonb` med blobatars `TraitOverrides`.
+     * En rå trait-map ville latt klienten pinne HVILKEN SOM HELST nøkkel —
+     * `motion.*`, `gaze.*`, `freckles.size` — og da bestemmer klienten
+     * vokabularet. Her bestemmer serveren det, og alt vi ikke navngir kommer
+     * fortsatt fra seeden.
+     */
+    /** Silhuett. Null = per seed. Se `AVATAR_FORMER`. */
+    avatarShape: text('avatar_shape'),
+    /** Fargetone i grader, 0–359. Null = per seed. */
+    avatarHue: integer('avatar_hue'),
+    /** Indeks i blobatars seks forfattede svatsjer, 0–5. Null = per seed. */
+    avatarTone: integer('avatar_tone'),
+    /**
+     * Humør — en positur avataren HOLDER. Null = `idle`.
+     *
+     * ⚠️ I motsetning til form, farge og tone utledes dette ALDRI av seeden. Et
+     * ansikt får ikke et tilfeldig humør fordi IDen tilsier det; enten har du
+     * valgt et, eller så er det nøytralt.
+     */
+    avatarHumor: text('avatar_humor'),
+
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`),
+  },
+  (t) => [
+    /**
+     * ⛔ Det tredje laget. Ruta validerer med zod, men en CHECK i basen er det
+     * eneste som overlever at noen senere skriver en rute som glemmer regelen —
+     * samme mønster som invitasjonenes rolle-CHECK (F1-10).
+     */
+    check(
+      'user_preferences_avatar_shape_check',
+      sql`${t.avatarShape} is null or ${t.avatarShape} in ('round','organic','boxy','capsule','nub','cloud','droplet','hexagon','sun','triangle')`,
+    ),
+    check(
+      'user_preferences_avatar_hue_check',
+      sql`${t.avatarHue} is null or (${t.avatarHue} >= 0 and ${t.avatarHue} <= 359)`,
+    ),
+    check(
+      'user_preferences_avatar_humor_check',
+      sql`${t.avatarHumor} is null or ${t.avatarHumor} in ('idle','happy','wink','smug','sleepy','thinking','surprised','unsure','love','shy')`,
+    ),
+    check(
+      'user_preferences_avatar_tone_check',
+      sql`${t.avatarTone} is null or (${t.avatarTone} >= 0 and ${t.avatarTone} <= 5)`,
+    ),
+  ],
+);
 
 /**
  * F1-14 — JOBBFUNKSJON. Den ANDRE dimensjonen.

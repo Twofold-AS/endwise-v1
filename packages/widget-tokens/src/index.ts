@@ -1,6 +1,7 @@
 /**
  * F0-11 — Token-kontrakten i TS (navnene er kanoniske, verdiene bor i tokens.css).
- * Verdier satt 15.07.2026: mørkt default (TheFold-base), grønn #1ED27D aksent. Se tokens.css.
+ * Verdier bor i tokens.css. Standard er lyst tema, aksent #111111 (svart).
+ * Logogrønnen #1ED27D er merkevare i logo.svg, ikke UI-aksent.
  */
 export const tokenNames = [
   'ew-bg',

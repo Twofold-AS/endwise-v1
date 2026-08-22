@@ -30,33 +30,89 @@ export interface CreateBookingInput {
 }
 
 /**
- * Advisory-lås per (tenant, mekaniker).
+ * Advisory-låser — TRANSAKSJONS-skopet (`pg_advisory_xact_lock`), ikke session.
+ * Går man gjennom en pooler (pgbouncer) gjenbrukes forbindelser; en session-lås
+ * ville fulgt med neste låner. Transaksjonslåsen slippes av COMMIT/ROLLBACK.
  *
- * `pg_advisory_xact_lock` — TRANSAKSJONS-skopet, ikke session-skopet. Det er
- * ikke en detalj: går man gjennom en connection pooler (pgbouncer o.l.)
- * gjenbrukes forbindelser på tvers av forespørsler, og en session-lås ville
- * overlevd transaksjonen og fulgt med neste låner av forbindelsen. Transaksjonslåsen slippes av COMMIT/ROLLBACK,
- * uansett hva som skjer.
- *
- * To bigint-nøkler = (hashtext(tenant), hashtext(mekaniker)). To forhandlere
- * kan booke samtidig; to samtidige bookinger på SAMME mekaniker serialiseres.
+ * To bigint-nøkler = (hashtext(tenant), hashtext(ressurs)).
+ * Rekkefølge ALLTID: shop først, deretter mekaniker — ellers deadlock.
  */
-function lockMechanic(tenantId: string, mechanicId: string) {
+export type TenantTx = Parameters<Parameters<Database['transaction']>[0]>[0];
+
+/** Shop-lås: serialiserer kapasitets-sjekk + skriving for hele verkstedet. */
+export function lockShopSlots(tenantId: string) {
+  return sql`select pg_advisory_xact_lock(hashtext(${tenantId}), hashtext('booking-slots'))`;
+}
+
+export function lockMechanic(tenantId: string, mechanicId: string) {
   return sql`select pg_advisory_xact_lock(hashtext(${tenantId}), hashtext(${mechanicId}))`;
+}
+
+/**
+ * F3-01 — skriv booking. Kalleren MÅ holde shop-lås + mekaniker-lås i SAMME
+ * `withTenant`-transaksjon. Idempotens + kapasitet mot mekanikerens `capacity`.
+ */
+export async function writeBooking(tx: TenantTx, input: CreateBookingInput) {
+  if (input.idempotencyKey) {
+    const [existing] = await tx
+      .select()
+      .from(schema.bookings)
+      .where(eq(schema.bookings.idempotencyKey, input.idempotencyKey))
+      .limit(1);
+    if (existing) return existing;
+  }
+
+  const [mech] = await tx
+    .select({ capacity: schema.mechanics.capacity })
+    .from(schema.mechanics)
+    .where(eq(schema.mechanics.id, input.mechanicId))
+    .limit(1);
+  const cap = mech?.capacity ?? 1;
+
+  const overlapping = await tx
+    .select({ id: schema.bookings.id })
+    .from(schema.bookings)
+    .where(
+      and(
+        eq(schema.bookings.mechanicId, input.mechanicId),
+        inArray(schema.bookings.status, [...OCCUPYING_STATUSES]),
+        // Overlapp: [a,b) og [c,d) krysser hvis a < d og c < b.
+        sql`${schema.bookings.startsAt} < ${input.endsAt.toISOString()}`,
+        sql`${schema.bookings.endsAt} > ${input.startsAt.toISOString()}`,
+      ),
+    );
+
+  if (overlapping.length >= cap) throw new SlotConflictError(input.mechanicId);
+
+  const [created] = await tx
+    .insert(schema.bookings)
+    .values({
+      tenantId: input.tenantId,
+      mechanicId: input.mechanicId,
+      serviceVersionId: input.serviceVersionId,
+      customerId: input.customerId ?? null,
+      vehicleId: input.vehicleId ?? null,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      idempotencyKey: input.idempotencyKey ?? null,
+      source: input.source ?? 'admin',
+      notes: input.notes ?? null,
+      status: 'draft',
+    })
+    .returning();
+
+  if (!created) throw new Error('Booking ble ikke opprettet');
+  return created;
 }
 
 /**
  * F3-01 — Booking-motoren.
  *
  * Rekkefølgen inne i transaksjonen er hele beskyttelsen:
- *   1. LÅS mekanikeren (advisory, transaksjons-skopet)
+ *   1. LÅS verkstedet (shop-kapasitet) deretter mekanikeren
  *   2. sjekk idempotensnøkkel — allerede booket? returner den samme
- *   3. sjekk overlapp — noen andre i slotet?
+ *   3. sjekk overlapp mot mekanikerens kapasitet
  *   4. skriv
- *
- * Uten steg 1 er steg 3 verdiløs: to samtidige forespørsler ville begge sett
- * «ledig» og begge skrevet. Det er nettopp dobbeltbookingen som ødelegger en
- * verkstedsdag.
  */
 export async function createBooking(db: Database, input: CreateBookingInput) {
   if (input.endsAt <= input.startsAt) {
@@ -64,55 +120,9 @@ export async function createBooking(db: Database, input: CreateBookingInput) {
   }
 
   return withTenant(db, input.tenantId, async (tx) => {
+    await tx.execute(lockShopSlots(input.tenantId));
     await tx.execute(lockMechanic(input.tenantId, input.mechanicId));
-
-    if (input.idempotencyKey) {
-      const [existing] = await tx
-        .select()
-        .from(schema.bookings)
-        .where(eq(schema.bookings.idempotencyKey, input.idempotencyKey))
-        .limit(1);
-      // Samme nøkkel = samme forespørsel. Returner det som allerede ble laget.
-      if (existing) return existing;
-    }
-
-    const [conflict] = await tx
-      .select({ id: schema.bookings.id })
-      .from(schema.bookings)
-      .where(
-        and(
-          eq(schema.bookings.mechanicId, input.mechanicId),
-          inArray(schema.bookings.status, [...OCCUPYING_STATUSES]),
-          // Overlapp: [a,b) og [c,d) krysser hvis a < d og c < b.
-          // Halvåpne intervaller — en jobb som slutter 10:00 og en som starter
-          // 10:00 er IKKE en konflikt.
-          sql`${schema.bookings.startsAt} < ${input.endsAt.toISOString()}`,
-          sql`${schema.bookings.endsAt} > ${input.startsAt.toISOString()}`,
-        ),
-      )
-      .limit(1);
-
-    if (conflict) throw new SlotConflictError(input.mechanicId);
-
-    const [created] = await tx
-      .insert(schema.bookings)
-      .values({
-        tenantId: input.tenantId,
-        mechanicId: input.mechanicId,
-        serviceVersionId: input.serviceVersionId,
-        customerId: input.customerId ?? null,
-        vehicleId: input.vehicleId ?? null,
-        startsAt: input.startsAt,
-        endsAt: input.endsAt,
-        idempotencyKey: input.idempotencyKey ?? null,
-        source: input.source ?? 'admin',
-        notes: input.notes ?? null,
-        status: 'draft',
-      })
-      .returning();
-
-    if (!created) throw new Error('Booking ble ikke opprettet');
-    return created;
+    return writeBooking(tx, input);
   });
 }
 

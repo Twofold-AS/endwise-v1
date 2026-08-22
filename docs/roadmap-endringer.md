@@ -4735,3 +4735,24 @@ innkommende e-post (svaradresse per tråd er den ekte beslutningen der) · **F6-
 typecheck 22/22 · biome rent · api-suiten **117** · alle suiter grønne.
 
 ---
+
+## 2026-08-22 — F4-20: valgt tid nullstilles + server-vakt
+
+**Godkjent av:** Mikkis (P0-bestilling)
+**Endring:** `F4-20` `planned` → `done` (ui `missing` → `built`).
+
+Hypotesen stemte: `chosen` ble bare tømt inne i `loadSlots()`, som bare kjører på «Vis ledige
+tider». Klienten nullstiller nå `chosen` og `slots` i `onChange` på både tjeneste-select og
+datofelt. Serveren avviser en start som ikke finnes i tilgjengeligheten for den
+`serviceVersionId` — samme 08–16 / 30-min rutenett som `/widget/availability`.
+
+Samme PR: widget-fallbacks og `apps/web/app/manifest.ts` flyttet fra mørk `#151515` + grønn
+`#1ED27D` til lyst `#ffffff` + svart aksent `#111111`. Ingen roadmap-rød, ingen grønn
+primærknapp. Stale «grønn aksent»-kommentarer i `widget-tokens` og `UI-PAKKER.md` rettet.
+
+**Hva dette IKKE er:** Medusa, Composio, SMS-fakturering, prisendringer.
+
+Etter sikkerhetsgjennomgang (Mons): tilgjengelighet + aggregat-kapasitet inne i samme
+tenant-tx og shop-lås som skrivingen (CWE-367/841). Arbeidsdag låst til Europe/Oslo.
+
+---

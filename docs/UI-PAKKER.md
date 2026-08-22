@@ -51,7 +51,7 @@
 > **Full tabell + hva som er utledet: §6 «Design-prinsipper fra eier».** Kolliderer noe i denne
 > fila med den seksjonen, er det den seksjonen som gjelder.
 
-**Sist oppdatert:** 20. august 2026 (bevegelse skrudd på selektivt — påkrevd `bevegelse`-prop på `Avatar`, tre verdier, se §10 · ⭐ **blobatar inn som avatarpakke** — F6-19, brukergodkjent §2-beslutning; se §10. Seed = stabil ID, aldri navn · tjenestekatalogen F2-05/F5-04 — ingen ny pakke, ren komposisjon; se §8. ⚠️ Første sted i appen med ekte radioknapper i stedet for pille-gruppe, fordi det er et skjemafelt og ikke et filter) · 7. august 2026 (dev-mode + forhandler-oppretting bygget — F5-26…F5-29; ingen nye UI-pakker, alt på shadcn/beUI som før: `Switch`, `StatefulButton`, `DropdownMenu`, `Badge`. Sidebar-mønsteret delt i to: **flyout for handlinger, inline utfolding for destinasjoner**) · 6. august 2026 (⚠️ **aksent grønn → svart** i token-laget · felles flyout-mønster m/ stiplet header-divider · ⭐ **F5-20 i gang** — 26 egne SVG-ikoner koblet inn via codegen · shell-justeringer: kollapsbar sidebar, tips-kort, bevel-handlinger · Analyse omformet: periodevelger, nye kort, paigraf · `Pie`/`Cell` eksponert) · 5. august 2026 (⭐ **Recharts inn som chart-motor** — brukergodkjent §2-beslutning; Analyse F5-18 bygget ferdig med søyle-, linje- og arealgrafer) · 4. august 2026 (sidebar-først shell bygget — F5-13: `dropdown-menu` + `dialog` hentet inn, ⌘K-palett på `Dialog` i stedet for `command`/cmdk) · 3. august 2026 (eierens design-prinsipper innført: Inter + lyst tema standard +
+**Sist oppdatert:** 22. august 2026 (widget-fallbacks + PWA-manifest følger lyst tema og svart aksent `#111` — F4-20; stale «grønn aksent»-kommentarer rettet) · 20. august 2026 (bevegelse skrudd på selektivt — påkrevd `bevegelse`-prop på `Avatar`, tre verdier, se §10 · ⭐ **blobatar inn som avatarpakke** — F6-19, brukergodkjent §2-beslutning; se §10. Seed = stabil ID, aldri navn · tjenestekatalogen F2-05/F5-04 — ingen ny pakke, ren komposisjon; se §8. ⚠️ Første sted i appen med ekte radioknapper i stedet for pille-gruppe, fordi det er et skjemafelt og ikke et filter) · 7. august 2026 (dev-mode + forhandler-oppretting bygget — F5-26…F5-29; ingen nye UI-pakker, alt på shadcn/beUI som før: `Switch`, `StatefulButton`, `DropdownMenu`, `Badge`. Sidebar-mønsteret delt i to: **flyout for handlinger, inline utfolding for destinasjoner**) · 6. august 2026 (⚠️ **aksent grønn → svart** i token-laget · felles flyout-mønster m/ stiplet header-divider · ⭐ **F5-20 i gang** — 26 egne SVG-ikoner koblet inn via codegen · shell-justeringer: kollapsbar sidebar, tips-kort, bevel-handlinger · Analyse omformet: periodevelger, nye kort, paigraf · `Pie`/`Cell` eksponert) · 5. august 2026 (⭐ **Recharts inn som chart-motor** — brukergodkjent §2-beslutning; Analyse F5-18 bygget ferdig med søyle-, linje- og arealgrafer) · 4. august 2026 (sidebar-først shell bygget — F5-13: `dropdown-menu` + `dialog` hentet inn, ⌘K-palett på `Dialog` i stedet for `command`/cmdk) · 3. august 2026 (eierens design-prinsipper innført: Inter + lyst tema standard +
 mål-tokens · matrix-loaders TATT I BRUK første gang på AI-diagnose · StatefulButton i 2FA-innlogging
 og trådsvar · SSE-klient wiret · `Switch` hentet inn · ⛔ **dither-kit FJERNET fra UI-et og fra
 barrel-eksporten**)
@@ -261,7 +261,7 @@ klartekst ved siden av: «Assistenten tenker …», ikke bare en animasjon.
 
 | Pakke | Rolle |
 |---|---|
-| `@endwise/widget-tokens` | `--ew-*`-tokens (mørk/lys/aksent). ✅ **Verdier satt 15.07.2026** (F0-11): mørkt tema som default (TheFold-base — svart side, `#151515` surface), grønn `#1ED27D` aksent, lyst tema beholdt som toggle. Nye tokens: `surface-2`, `border-strong`, `fg-faint`, `accent-dim`, `warn/danger/success`, `glass-*`, `radius-xl/pill` |
+| `@endwise/widget-tokens` | `--ew-*`-tokens (lys/mørk/aksent). ✅ **Lyst tema er standard** (eier 03.08.2026); aksent er **svart `#111111`** i lyst og **hvit** i mørkt (06.08.2026). Logogrønnen `#1ED27D` er merkevare i logo.svg, ikke knappfarge. Nye tokens: `surface-2`, `border-strong`, `fg-faint`, `accent-dim`, `warn/danger/success`, `glass-*`, `radius-xl/pill` |
 | Tailwind CSS 4 | `@theme inline` i `packages/ui/src/theme.css` |
 | `radix-ui` | Primitivene shadcn bygger på |
 | `lucide-react` | Ikoner. **Eneste ikonbibliotek**. Apper importerer via den kuraterte barrel-en `@endwise/ui/icons.ts` — aldri `lucide-react` direkte. ⚠️ **Fra 06.08.2026 er barrel-en delt:** 26 ikoner kommer fra EGNE SVG-er i `src/assets/icons/` via `scripts/build-icons.ts` → `icons.generated.ts` (F5-20); resten fra lucide inntil egne finnes. `createLucideIcon` gjør at typen er identisk, så ingen kallsteder merker forskjellen. Regenerer: `pnpm --filter @endwise/ui build:icons` |
@@ -323,14 +323,13 @@ kallsted er en spec som brytes ved den femte bruken:
 
 ### 🎨 Merkevare-aksent
 
-**Logofargen er `#1ED27D`** (`apps/web/public/logo/logo.svg`). Den er `--ew-accent` og brukes som
-**fyll** — knapper, logo, aksentflater.
+**Logofargen er `#1ED27D`** (`apps/web/public/logo/logo.svg`). Den er merkevare i logoen,
+ikke UI-aksent. `--ew-accent` er **`#111111`** i lyst tema og **`#ffffff`** i mørkt
+(eierbeslutning 06.08.2026). Primærknapper bruker svart/hvit — ikke grønn, og ikke
+roadmap-rød `#EE2924`.
 
-⚠️ **Den kan aldri være tekst i lyst tema.** `#1ED27D` mot hvitt gir ~1.8:1 kontrast. Til aksent
-som tekst/ikon finnes `--ew-accent-strong` = **`#15B042`** — eierens egen badge-tekstfarge. To
-tokens, to jobber. I mørkt tema er de samme farge, fordi grønt er lesbart der.
-
-`--ew-accent-soft` = **`#CAFACE`** er aksentfylt flate (badge, egne meldingsbobler, uleste-teller).
+`--ew-success` (`#15B042` / `#1ED27D` i mørkt) er informasjon, ikke knappfarge.
+`--ew-accent-soft` = **`#ededed`** i lyst tema (aksentfylt flate).
 
 matrix-loaders fargelegges med `color="var(--ew-accent-strong)"` (se §4) — aldri med `colorPreset`,
 som er hardkodede farger fra oppstrøms.

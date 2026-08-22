@@ -1,16 +1,10 @@
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+/// <reference path="../md.d.ts" />
 import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import { createMessagesModule } from '@endwise/modules';
 import { tool } from 'ai';
 import { z } from 'zod';
-
-const instructions = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'instructions.md'),
-  'utf8',
-);
+import instructions from './instructions.md?raw';
 
 /**
  * F6-04 — AI-DIAGNOSE. Den første agenten som kjører på chat-flaten (F6-18).

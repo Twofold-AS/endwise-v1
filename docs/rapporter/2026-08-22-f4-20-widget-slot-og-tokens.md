@@ -17,9 +17,22 @@ nedtrekk til B → «Send» sendte `serviceVersionId` for B sammen med et slot r
 `chosen` + `slots`. Navn/telefon/send skjules fordi de er gated på `chosen`.
 
 **Server:** `createBookingRequest` slår opp ledige tider for den `serviceVersionId` (samme
-arbeidsdag 08–16 og 30-min rutenett som `/widget/availability`) og kaster
-`WidgetBookingError` hvis starten ikke er blant dem. Sjekken skjer før kunden opprettes.
-Klienten er ikke eneste vakt.
+arbeidsdag 08–16 Europe/Oslo og 30-min rutenett som `/widget/availability`) og kaster
+`WidgetBookingError` hvis starten ikke er blant dem. Klienten er ikke eneste vakt.
+
+### Sikkerhetsgjennomgang (Mons) — 22.08 kveld
+
+**CWE-367 TOCTOU:** Tilgjengelighet og kapasitet sjekkes nå i SAMME `withTenant`-transaksjon
+som skrivingen, etter `lockShopSlots` (deretter mekaniker-lås, samme rekkefølge som
+`createBooking`). Ingen les-utenfor-lås-og-skriv-etterpå.
+
+**CWE-841:** Shop-kapasitet er `sum(mechanics.capacity)` + opptatte intervaller, ikke
+`mechanics limit(1)`. Mekaniker velges med `pickMechanicWithRoom` (første med gjenstående
+personlig kapasitet). `writeBooking` teller overlapp mot mekanikerens `capacity`.
+
+**Tidssone:** Arbeidsdagen er Europe/Oslo, ikke process-lokal tid. Tester for sommer/vinter
+og «15:30 UTC ≠ 15:30 Oslo» kjører alltid (ingen skip). Reject-when-full og no-race er
+enhetstester + DB-tester (DB skippes bare uten `DATABASE_URL`/`APP_DATABASE_URL`).
 
 ### Token-fallbacks og PWA-manifest
 

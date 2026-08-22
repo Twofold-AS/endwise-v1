@@ -103,7 +103,7 @@ app.get('/availability', async (c) => {
     .safeParse({ serviceVersionId: c.req.query('serviceVersionId'), date: c.req.query('date') });
   if (!q.success) return c.json({ error: 'Ugyldige parametre' }, 400);
 
-  // Arbeidsdag 08–16 lokal (forenklet; ekte åpningstider er F5/senere).
+  // Arbeidsdag 08–16 Europe/Oslo (forenklet; ekte åpningstider er F5/senere).
   const { dayStart, dayEnd } = widgetWorkingDay(q.data.date);
   const slots = await createWidgetPublicService(lazyDb()).availableSlots(tenantId, {
     serviceVersionId: q.data.serviceVersionId,

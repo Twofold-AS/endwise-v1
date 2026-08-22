@@ -1,13 +1,24 @@
 import { and, type Database, eq, isNull, schema, sql, withTenant } from '@endwise/db';
-import { createBooking } from '../booking/engine.ts';
 import {
+  lockMechanic,
+  lockShopSlots,
+  SlotConflictError,
+  type TenantTx,
+  writeBooking,
+} from '../booking/engine.ts';
+import {
+  type AssignedBusyInterval,
   computeFreeSlots,
   isOfferedSlot,
+  pickMechanicWithRoom,
   WIDGET_SLOT_STEP_MINUTES,
   widgetWorkingDay,
 } from './availability.ts';
 import { generatePublishableKey } from './keys.ts';
 import { normalizeOrigin } from './origin.ts';
+
+/** Samme levende statuser som `/widget/availability` — completed frigir slotet. */
+const WIDGET_OCCUPYING = sql`${schema.bookings.status} in ('confirmed','in_progress','draft')`;
 
 /** Ikke-hemmelig view av en widget-nøkkel (trygt til admin-UI). */
 export interface WidgetKeyView {
@@ -108,6 +119,55 @@ export type WidgetKeyService = ReturnType<typeof createWidgetKeyService>;
  * se ledige tider, opprette EN booking-forespørsel for SIN egen henvendelse.
  * Ingen lister over andres kunder/kjøretøy/bookinger forlater serveren.
  */
+/**
+ * Shop-snapshot inne i en allerede åpen tenant-tx (CWE-367: ikke et eget kall
+ * utenfor låsen). Kapasitet = sum(mechanics.capacity), ikke én rad.
+ */
+async function shopSlotSnapshot(
+  tx: TenantTx,
+  input: { serviceVersionId: string; dayStart: Date; dayEnd: Date },
+): Promise<{
+  durationMinutes: number;
+  capacity: number;
+  busy: AssignedBusyInterval[];
+  mechanics: { id: string; capacity: number }[];
+} | null> {
+  const [ver] = await tx
+    .select({ durationMinutes: schema.serviceVersions.durationMinutes })
+    .from(schema.serviceVersions)
+    .where(eq(schema.serviceVersions.id, input.serviceVersionId))
+    .limit(1);
+  if (!ver) return null;
+
+  const mechanics = await tx
+    .select({ id: schema.mechanics.id, capacity: schema.mechanics.capacity })
+    .from(schema.mechanics)
+    .where(eq(schema.mechanics.active, true));
+  const capacity = mechanics.reduce((n, m) => n + m.capacity, 0);
+
+  const busy = await tx
+    .select({
+      start: schema.bookings.startsAt,
+      end: schema.bookings.endsAt,
+      mechanicId: schema.bookings.mechanicId,
+    })
+    .from(schema.bookings)
+    .where(
+      and(
+        WIDGET_OCCUPYING,
+        sql`${schema.bookings.startsAt} < ${input.dayEnd.toISOString()}`,
+        sql`${schema.bookings.endsAt} > ${input.dayStart.toISOString()}`,
+      ),
+    );
+
+  return {
+    durationMinutes: ver.durationMinutes,
+    capacity,
+    busy,
+    mechanics,
+  };
+}
+
 export function createWidgetPublicService(db: Database) {
   return {
     /** Aktive tjenester med gjeldende versjon. Kun public-safe felt (ikke skills). */
@@ -144,40 +204,15 @@ export function createWidgetPublicService(db: Database) {
       },
     ): Promise<Date[]> {
       return withTenant(db, tenantId, async (tx) => {
-        const [ver] = await tx
-          .select({ durationMinutes: schema.serviceVersions.durationMinutes })
-          .from(schema.serviceVersions)
-          .where(eq(schema.serviceVersions.id, input.serviceVersionId))
-          .limit(1);
-        if (!ver) return [];
-
-        // Kapasitet = antall aktive mekanikere (samtidige jobber). Aggregat, ikke liste.
-        const [cap] = await tx
-          .select({ n: sql<number>`coalesce(sum(${schema.mechanics.capacity}), 0)::int` })
-          .from(schema.mechanics)
-          .where(eq(schema.mechanics.active, true));
-        const capacity = cap?.n ?? 0;
-        if (capacity === 0) return [];
-
-        // Opptatt-intervaller i vinduet — KUN tider, ingen kunde/booking-ID.
-        const busy = await tx
-          .select({ start: schema.bookings.startsAt, end: schema.bookings.endsAt })
-          .from(schema.bookings)
-          .where(
-            and(
-              sql`${schema.bookings.status} in ('confirmed','in_progress','draft')`,
-              sql`${schema.bookings.startsAt} < ${input.dayEnd}`,
-              sql`${schema.bookings.endsAt} > ${input.dayStart}`,
-            ),
-          );
-
+        const snap = await shopSlotSnapshot(tx, input);
+        if (!snap || snap.capacity <= 0) return [];
         return computeFreeSlots({
           dayStart: input.dayStart,
           dayEnd: input.dayEnd,
-          durationMinutes: ver.durationMinutes,
-          stepMinutes: input.stepMinutes ?? 30,
-          capacity,
-          busy: busy.map((b) => ({ start: b.start, end: b.end })),
+          durationMinutes: snap.durationMinutes,
+          stepMinutes: input.stepMinutes ?? WIDGET_SLOT_STEP_MINUTES,
+          capacity: snap.capacity,
+          busy: snap.busy,
           notBefore: input.notBefore,
         });
       });
@@ -200,35 +235,48 @@ export function createWidgetPublicService(db: Database) {
         idempotencyKey: string;
       },
     ): Promise<{ bookingId: string; status: string }> {
-      // F4-20 — klienten kan sende tjeneste B + et slot regnet ut for A.
-      // Avvis før vi lager kunde: start må finnes i tilgjengeligheten for VERSJONEN.
-      const { dayStart, dayEnd } = widgetWorkingDay(input.startsAt);
-      const offered = await createWidgetPublicService(db).availableSlots(tenantId, {
-        serviceVersionId: input.serviceVersionId,
-        dayStart,
-        dayEnd,
-        stepMinutes: WIDGET_SLOT_STEP_MINUTES,
-        notBefore: new Date(),
-      });
-      if (!isOfferedSlot(input.startsAt, offered)) {
-        throw new WidgetBookingError('Valgt tid er ikke ledig for denne tjenesten');
-      }
+      /**
+       * CWE-367 — ÉN tenant-tx: shop-lås → tilgjengelighet (aggregat) →
+       * mekaniker med rom → skriv. Ikke les utenfor withTenant og skriv etterpå.
+       */
+      return withTenant(db, tenantId, async (tx) => {
+        await tx.execute(lockShopSlots(tenantId));
 
-      // 1) Prep i RLS-transaksjon: varighet, mekanikervalg, opprett kunde (deres egne data).
-      const prep = await withTenant(db, tenantId, async (tx) => {
-        const [ver] = await tx
-          .select({ durationMinutes: schema.serviceVersions.durationMinutes })
-          .from(schema.serviceVersions)
-          .where(eq(schema.serviceVersions.id, input.serviceVersionId))
-          .limit(1);
-        if (!ver) return null;
+        if (input.idempotencyKey) {
+          const [existing] = await tx
+            .select({ id: schema.bookings.id, status: schema.bookings.status })
+            .from(schema.bookings)
+            .where(eq(schema.bookings.idempotencyKey, input.idempotencyKey))
+            .limit(1);
+          if (existing) return { bookingId: existing.id, status: existing.status };
+        }
 
-        const [mech] = await tx
-          .select({ id: schema.mechanics.id })
-          .from(schema.mechanics)
-          .where(eq(schema.mechanics.active, true))
-          .limit(1);
-        if (!mech) return null;
+        const { dayStart, dayEnd } = widgetWorkingDay(input.startsAt);
+        const snap = await shopSlotSnapshot(tx, {
+          serviceVersionId: input.serviceVersionId,
+          dayStart,
+          dayEnd,
+        });
+        if (!snap) throw new WidgetBookingError('Fant ikke tjeneste eller ledig mekaniker');
+
+        const offered = computeFreeSlots({
+          dayStart,
+          dayEnd,
+          durationMinutes: snap.durationMinutes,
+          stepMinutes: WIDGET_SLOT_STEP_MINUTES,
+          capacity: snap.capacity,
+          busy: snap.busy,
+          notBefore: new Date(),
+        });
+        if (!isOfferedSlot(input.startsAt, offered)) {
+          throw new WidgetBookingError('Valgt tid er ikke ledig for denne tjenesten');
+        }
+
+        const endsAt = new Date(input.startsAt.getTime() + snap.durationMinutes * 60_000);
+        const mechanicId = pickMechanicWithRoom(snap.mechanics, snap.busy, input.startsAt, endsAt);
+        if (!mechanicId) throw new WidgetBookingError('Fant ikke tjeneste eller ledig mekaniker');
+
+        await tx.execute(lockMechanic(tenantId, mechanicId));
 
         const [cust] = await tx
           .insert(schema.customers)
@@ -241,28 +289,31 @@ export function createWidgetPublicService(db: Database) {
           })
           .returning({ id: schema.customers.id });
 
-        return { durationMinutes: ver.durationMinutes, mechanicId: mech.id, customerId: cust.id };
-      });
-      if (!prep) throw new WidgetBookingError('Fant ikke tjeneste eller ledig mekaniker');
+        const noteParts = [
+          input.regNumber ? `Regnr: ${input.regNumber}` : null,
+          input.notes,
+        ].filter(Boolean);
 
-      const endsAt = new Date(input.startsAt.getTime() + prep.durationMinutes * 60_000);
-      const noteParts = [input.regNumber ? `Regnr: ${input.regNumber}` : null, input.notes].filter(
-        Boolean,
-      );
-
-      // 2) Booking via slot-lock-motoren (egen transaksjon m/ advisory-lås + idempotens).
-      const booking = await createBooking(db, {
-        tenantId,
-        mechanicId: prep.mechanicId,
-        serviceVersionId: input.serviceVersionId,
-        startsAt: input.startsAt,
-        endsAt,
-        customerId: prep.customerId,
-        source: 'widget',
-        notes: noteParts.length > 0 ? noteParts.join(' · ') : undefined,
-        idempotencyKey: input.idempotencyKey,
+        try {
+          const booking = await writeBooking(tx, {
+            tenantId,
+            mechanicId,
+            serviceVersionId: input.serviceVersionId,
+            startsAt: input.startsAt,
+            endsAt,
+            customerId: cust.id,
+            source: 'widget',
+            notes: noteParts.length > 0 ? noteParts.join(' · ') : undefined,
+            idempotencyKey: input.idempotencyKey,
+          });
+          return { bookingId: booking.id, status: booking.status };
+        } catch (error) {
+          if (error instanceof SlotConflictError) {
+            throw new WidgetBookingError('Valgt tid er ikke ledig for denne tjenesten');
+          }
+          throw error;
+        }
       });
-      return { bookingId: booking.id, status: booking.status };
     },
   };
 }

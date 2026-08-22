@@ -1,31 +1,36 @@
 import { randomUUID } from 'node:crypto';
 import { createDb, type Database, schema, sql } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { widgetWorkingDay } from '../src/widget/availability.ts';
+import { createBooking } from '../src/booking/engine.ts';
+import { widgetWallTime, widgetWorkingDay } from '../src/widget/availability.ts';
 import { createWidgetPublicService, WidgetBookingError } from '../src/widget/service.ts';
 
 /**
- * F4-20 — serveren avviser en start som ikke finnes i tilgjengeligheten
- * for den serviceVersionId. Klienten er ikke eneste vakt.
+ * F4-20 + CWE-367/841 — serveren avviser start utenfor tilgjengelighet,
+ * avviser når shopen er full, og serialiserer siste slot (ingen race).
  *
- * Krever Docker-Postgres + `pnpm db:setup`. Skippes uten begge env-URL-ene.
+ * Krever Docker-Postgres + `pnpm db:setup`. Skippes uten begge env-URL-ene
+ * (ikke for å skjule tidssone — den dekkes av widget-security, som alltid kjører).
  */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
 const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;
 
-describeDb('widget booking-forespørsel (F4-20)', () => {
+describeDb('widget booking-forespørsel (F4-20 + kapasitet)', () => {
   let owner: Database;
   let app: Database;
   const tenantId = randomUUID();
-  const mechanicId = randomUUID();
+  const mechanicA = randomUUID();
+  const mechanicB = randomUUID();
   const shortServiceId = randomUUID();
   const longServiceId = randomUUID();
   const shortVersionId = randomUUID();
   const longVersionId = randomUUID();
   const day = '2026-09-15';
-  const lateStart = new Date(`${day}T15:30:00`);
-  const validStart = new Date(`${day}T09:00:00`);
+  const lateStart = widgetWallTime(day, 15, 30);
+  const validStart = widgetWallTime(day, 9, 0);
+  const fullStart = widgetWallTime(day, 10, 0);
+  const raceStart = widgetWallTime(day, 11, 0);
 
   beforeAll(async () => {
     owner = createDb(OWNER_URL as string);
@@ -34,7 +39,10 @@ describeDb('widget booking-forespørsel (F4-20)', () => {
     await owner
       .insert(schema.tenants)
       .values({ id: tenantId, name: 'Widget-verksted', slug: `w-${tenantId.slice(0, 8)}` });
-    await owner.insert(schema.mechanics).values({ id: mechanicId, tenantId, name: 'Kari' });
+    await owner.insert(schema.mechanics).values([
+      { id: mechanicA, tenantId, name: 'Kari' },
+      { id: mechanicB, tenantId, name: 'Ola' },
+    ]);
     await owner.insert(schema.services).values([
       { id: shortServiceId, tenantId, name: 'Dekkskift', vehicleType: 'mc' },
       { id: longServiceId, tenantId, name: 'Stor service', vehicleType: 'mc' },
@@ -74,14 +82,14 @@ describeDb('widget booking-forespørsel (F4-20)', () => {
     await expect(
       svc.createBookingRequest(tenantId, {
         serviceVersionId: shortVersionId,
-        startsAt: new Date(`${day}T08:15:00`),
+        startsAt: widgetWallTime(day, 8, 15),
         customer,
         idempotencyKey: randomUUID(),
       }),
     ).rejects.toThrow(WidgetBookingError);
   });
 
-  it('avviser 15:30 på 180-min tjeneste (passer 30-min)', async () => {
+  it('avviser 15:30 Oslo på 180-min tjeneste (passer 30-min)', async () => {
     const svc = createWidgetPublicService(app);
     const { dayStart, dayEnd } = widgetWorkingDay(day);
     const shortSlots = await svc.availableSlots(tenantId, {
@@ -114,5 +122,92 @@ describeDb('widget booking-forespørsel (F4-20)', () => {
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     );
     expect(result.status).toBe('draft');
+  });
+
+  it('CWE-841: avviser når shopen er full (begge mekanikere booket)', async () => {
+    const endsAt = new Date(fullStart.getTime() + 30 * 60_000);
+    await createBooking(app, {
+      tenantId,
+      mechanicId: mechanicA,
+      serviceVersionId: shortVersionId,
+      startsAt: fullStart,
+      endsAt,
+      idempotencyKey: randomUUID(),
+    });
+    await createBooking(app, {
+      tenantId,
+      mechanicId: mechanicB,
+      serviceVersionId: shortVersionId,
+      startsAt: fullStart,
+      endsAt,
+      idempotencyKey: randomUUID(),
+    });
+
+    await expect(
+      createWidgetPublicService(app).createBookingRequest(tenantId, {
+        serviceVersionId: shortVersionId,
+        startsAt: fullStart,
+        customer,
+        idempotencyKey: randomUUID(),
+      }),
+    ).rejects.toThrow(/ikke ledig/i);
+  });
+
+  it('CWE-367: to parallelle widget-bookinger på siste slot → nøyaktig én vinner', async () => {
+    const endsAt = new Date(raceStart.getTime() + 30 * 60_000);
+    await createBooking(app, {
+      tenantId,
+      mechanicId: mechanicA,
+      serviceVersionId: shortVersionId,
+      startsAt: raceStart,
+      endsAt,
+      idempotencyKey: randomUUID(),
+    });
+
+    const svc = createWidgetPublicService(app);
+    const results = await Promise.allSettled([
+      svc.createBookingRequest(tenantId, {
+        serviceVersionId: shortVersionId,
+        startsAt: raceStart,
+        customer: { name: 'A', phone: '40000001' },
+        idempotencyKey: randomUUID(),
+      }),
+      svc.createBookingRequest(tenantId, {
+        serviceVersionId: shortVersionId,
+        startsAt: raceStart,
+        customer: { name: 'B', phone: '40000002' },
+        idempotencyKey: randomUUID(),
+      }),
+    ]);
+
+    const ok = results.filter((r) => r.status === 'fulfilled');
+    const failed = results.filter((r) => r.status === 'rejected');
+    expect(ok).toHaveLength(1);
+    expect(failed).toHaveLength(1);
+    expect((failed[0] as PromiseRejectedResult).reason).toBeInstanceOf(WidgetBookingError);
+  });
+
+  it('CWE-841: to mekanikere, to samtidige bookinger på ledig slot → begge får plass', async () => {
+    const start = widgetWallTime(day, 13, 0);
+    const svc = createWidgetPublicService(app);
+    const results = await Promise.allSettled([
+      svc.createBookingRequest(tenantId, {
+        serviceVersionId: shortVersionId,
+        startsAt: start,
+        customer: { name: 'C', phone: '40000003' },
+        idempotencyKey: randomUUID(),
+      }),
+      svc.createBookingRequest(tenantId, {
+        serviceVersionId: shortVersionId,
+        startsAt: start,
+        customer: { name: 'D', phone: '40000004' },
+        idempotencyKey: randomUUID(),
+      }),
+    ]);
+
+    const ok = results.filter((r) => r.status === 'fulfilled');
+    expect(ok).toHaveLength(2);
+    const ids = ok.map((r) => (r as PromiseFulfilledResult<{ bookingId: string }>).value.bookingId);
+    expect(new Set(ids).size).toBe(2);
   });
 });

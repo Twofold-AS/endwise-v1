@@ -4752,4 +4752,7 @@ primærknapp. Stale «grønn aksent»-kommentarer i `widget-tokens` og `UI-PAKKE
 
 **Hva dette IKKE er:** Medusa, Composio, SMS-fakturering, prisendringer.
 
+Etter sikkerhetsgjennomgang (Mons): tilgjengelighet + aggregat-kapasitet inne i samme
+tenant-tx og shop-lås som skrivingen (CWE-367/841). Arbeidsdag låst til Europe/Oslo.
+
 ---

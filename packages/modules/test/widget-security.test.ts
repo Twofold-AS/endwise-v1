@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { computeFreeSlots, isOfferedSlot, widgetWorkingDay } from '../src/widget/availability.ts';
+import {
+  computeFreeSlots,
+  isOfferedSlot,
+  pickMechanicWithRoom,
+  widgetDayKey,
+  widgetWallTime,
+  widgetWorkingDay,
+} from '../src/widget/availability.ts';
 import { normalizeOrigin, originAllowed } from '../src/widget/origin.ts';
 import { createRateLimiter } from '../src/widget/rate-limit.ts';
 import { signWidgetToken, verifyWidgetToken, WidgetTokenError } from '../src/widget/token.ts';
@@ -121,10 +128,9 @@ describe('computeFreeSlots', () => {
     expect(Math.min(...slots.map((s) => s.getUTCHours()))).toBe(10);
   });
 
-  it('F4-20: start som passer 30 min passer ikke 180 min samme dag', () => {
-    const dayStart = new Date('2026-09-15T08:00:00');
-    const dayEnd = new Date('2026-09-15T16:00:00');
-    const late = new Date('2026-09-15T15:30:00');
+  it('F4-20: start som passer 30 min passer ikke 180 min samme dag (Oslo)', () => {
+    const { dayStart, dayEnd } = widgetWorkingDay('2026-09-15');
+    const late = widgetWallTime('2026-09-15', 15, 30);
     const short = computeFreeSlots({
       dayStart,
       dayEnd,
@@ -144,16 +150,103 @@ describe('computeFreeSlots', () => {
   });
 
   it('isOfferedSlot krever samme millisekund', () => {
-    const slot = new Date('2026-09-15T09:00:00');
+    const slot = widgetWallTime('2026-09-15', 9, 0);
     expect(isOfferedSlot(slot, [slot])).toBe(true);
-    expect(isOfferedSlot(new Date('2026-09-15T09:00:01'), [slot])).toBe(false);
+    expect(isOfferedSlot(new Date(slot.getTime() + 1000), [slot])).toBe(false);
+  });
+
+  it('avviser når shop-kapasiteten er full', () => {
+    const dayStart = new Date(Date.UTC(2026, 8, 15, 6, 0));
+    const dayEnd = new Date(Date.UTC(2026, 8, 15, 14, 0));
+    const slot = new Date(Date.UTC(2026, 8, 15, 7, 0));
+    const full = computeFreeSlots({
+      dayStart,
+      dayEnd,
+      durationMinutes: 60,
+      stepMinutes: 60,
+      capacity: 2,
+      busy: [
+        { start: slot, end: new Date(slot.getTime() + 60_000 * 60) },
+        { start: slot, end: new Date(slot.getTime() + 60_000 * 60) },
+      ],
+    });
+    expect(isOfferedSlot(slot, full)).toBe(false);
+  });
+
+  it('kapasitet 0 (ingen mekanikere) gir ingen slots', () => {
+    expect(
+      computeFreeSlots({
+        dayStart: new Date(Date.UTC(2026, 8, 15, 6)),
+        dayEnd: new Date(Date.UTC(2026, 8, 15, 14)),
+        durationMinutes: 60,
+        stepMinutes: 60,
+        capacity: 0,
+        busy: [],
+      }),
+    ).toEqual([]);
   });
 });
 
-describe('widgetWorkingDay', () => {
-  it('parser YYYY-MM-DD som lokal 08–16', () => {
+describe('widgetWorkingDay (Europe/Oslo)', () => {
+  it('sommer: 08–16 Oslo er 06:00–14:00 UTC', () => {
     const { dayStart, dayEnd } = widgetWorkingDay('2026-09-15');
-    expect(dayStart).toEqual(new Date('2026-09-15T08:00:00'));
-    expect(dayEnd).toEqual(new Date('2026-09-15T16:00:00'));
+    expect(dayStart.toISOString()).toBe('2026-09-15T06:00:00.000Z');
+    expect(dayEnd.toISOString()).toBe('2026-09-15T14:00:00.000Z');
+  });
+
+  it('vinter: 08–16 Oslo er 07:00–15:00 UTC', () => {
+    const { dayStart, dayEnd } = widgetWorkingDay('2026-01-15');
+    expect(dayStart.toISOString()).toBe('2026-01-15T07:00:00.000Z');
+    expect(dayEnd.toISOString()).toBe('2026-01-15T15:00:00.000Z');
+  });
+
+  it('15:30 UTC i september er 17:30 Oslo — ikke et tilbudt slot', () => {
+    const utc = new Date('2026-09-15T15:30:00.000Z');
+    expect(widgetDayKey(utc)).toBe('2026-09-15');
+    const { dayStart, dayEnd } = widgetWorkingDay(utc);
+    const slots = computeFreeSlots({
+      dayStart,
+      dayEnd,
+      durationMinutes: 30,
+      stepMinutes: 30,
+      busy: [],
+    });
+    expect(isOfferedSlot(utc, slots)).toBe(false);
+    expect(isOfferedSlot(widgetWallTime('2026-09-15', 15, 30), slots)).toBe(true);
+  });
+});
+
+describe('pickMechanicWithRoom (CWE-841)', () => {
+  const start = new Date('2026-09-15T07:00:00.000Z');
+  const end = new Date('2026-09-15T08:00:00.000Z');
+
+  it('hopper over mekanikeren som er full, tar den med rom', () => {
+    const id = pickMechanicWithRoom(
+      [
+        { id: 'aaaa', capacity: 1 },
+        { id: 'bbbb', capacity: 1 },
+      ],
+      [{ mechanicId: 'aaaa', start, end }],
+      start,
+      end,
+    );
+    expect(id).toBe('bbbb');
+  });
+
+  it('returnerer null når hele shopen er full', () => {
+    expect(
+      pickMechanicWithRoom(
+        [
+          { id: 'aaaa', capacity: 1 },
+          { id: 'bbbb', capacity: 1 },
+        ],
+        [
+          { mechanicId: 'aaaa', start, end },
+          { mechanicId: 'bbbb', start, end },
+        ],
+        start,
+        end,
+      ),
+    ).toBeNull();
   });
 });

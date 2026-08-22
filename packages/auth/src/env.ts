@@ -1,3 +1,5 @@
+import { authPublicUrl } from './auth-origins.ts';
+
 function required(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Miljøvariabel mangler: ${name}`);
@@ -57,8 +59,12 @@ export const authEnv = {
   get secret() {
     return required('BETTER_AUTH_SECRET');
   },
+  /**
+   * Offentlig URL for denne kjøringen. Preview bruker `VERCEL_URL`,
+   * ikke produksjons-`BETTER_AUTH_URL` — se `authPublicUrl`.
+   */
   get baseUrl() {
-    return required('BETTER_AUTH_URL');
+    return authPublicUrl();
   },
   get twilio() {
     return {

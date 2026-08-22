@@ -1,5 +1,7 @@
 export * from './auth.ts';
+export { authPublicUrl, authTrustedOrigins, PRODUKT_ORIGINS } from './auth-origins.ts';
 export {
+  authEnv,
   avsenderDomene,
   avsenderErVerifisert,
   RESEND_STANDARD_DOMENE,

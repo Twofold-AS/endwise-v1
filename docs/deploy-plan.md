@@ -268,7 +268,7 @@ Scaleway (Frankrike, EU)  ├─ Managed PostgreSQL   ← RLS + FORCE RLS
 | `STREAM_INTERNAL_URL` | Scaleway container-URL, per miljø |
 | `DATABASE_URL` / `APP_DATABASE_URL` | Scaleway Managed PostgreSQL (eier + app-rolle) |
 | `ENDWISE_KEK` | Flyttes til Scaleway Key Manager (F1-13, egen sak) |
-| `BETTER_AUTH_URL` | Prod-domenet |
+| `BETTER_AUTH_URL` | **Production:** `https://endwise.no`. **Preview:** ikke sett til prod-domenet — koden bruker `https://${VERCEL_URL}` |
 
 `/stream/*`-rewriten **beholdes**: nettleseren skal fortsatt kjenne ett domene,
 så sesjonscookien følger med uten CORS og uten token i URL.

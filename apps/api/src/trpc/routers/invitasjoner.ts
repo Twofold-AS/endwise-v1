@@ -1,4 +1,4 @@
-import { sendInvitation } from '@endwise/auth';
+import { authEnv, sendInvitation } from '@endwise/auth';
 import { eq, schema, withTenant } from '@endwise/db';
 import { createInvitasjonsmodul, InvitasjonUgyldigError } from '@endwise/modules/invitasjoner';
 import { kanEndreJobbfunksjon } from '@endwise/modules/profil';
@@ -85,7 +85,7 @@ export const invitasjonerRouter = router({
           .limit(1),
       );
 
-      const base = process.env.BETTER_AUTH_URL ?? 'http://localhost:3000';
+      const base = authEnv.baseUrl;
       const lenke = `${base.replace(/\/$/, '')}/invitasjon/${resultat.token}`;
 
       /**

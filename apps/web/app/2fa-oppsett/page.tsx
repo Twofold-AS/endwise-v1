@@ -1,12 +1,16 @@
 'use client';
 
+import { etter2faBekreftet, fortsettEtter2faKvittering } from '@endwise/auth/to-faktor-oppsett';
+import { Lock, Mail, ShieldCheck, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
+import { Field, INPUT, PassordFelt } from '../_auth/felter';
 
 /**
- * F1-11 — TVUNGEN 2FA-ENROLLMENT.
+ * F1-11 / F1-23 / F1-25 — TVUNGEN 2FA-ENROLLMENT, stylet som `/signin`.
  *
  * ── ⚠️ Hvorfor denne ruta ligger UTENFOR `(app)` ─────────────────────────
  * Fra 12.08.2026 håndheves 2FA server-side: en `dealer_admin` / `dealer_staff` /
@@ -25,18 +29,21 @@ import { authClient } from '@/lib/auth-client';
  *   2. `sendOtp()`              → koden sendes (i dev: til api-loggen).
  *   3. `verifyOtp({ code })`    → NÅ settes `twoFactorEnabled = true`.
  *   4. `revokeOtherSessions()`  → ⛔ se under.
+ *   5. `steg = 'ferdig'`        → F1-23: vis kvittering. Ikke naviger ennå.
  *
  * ⚠️ **Steg 4 er nå ET EKSTRA LAG, ikke selve sperren.** Fra 16.08.2026 river
  * en databasetrigger (`endwise_2fa_session_cutoff`, migrasjon `0010`) alle
  * sesjoner i det `two_factor_enabled` settes — uansett hvor det skjer, også ved
  * et rått `UPDATE` i basen. Den er sperren.
  *
- * Kallet beholdes likevel: det koster ett API-kall, og det dekker et miljø der
- * migrasjonene skulle ligge etter. Feiler det, er det ikke lenger kritisk —
- * derfor `.catch()` med en advarsel i stedet for en blokkering.
+ * ── F1-23 ────────────────────────────────────────────────────────────────
+ * Tidligere kalte denne sida `window.location.assign('/dashboard')` i samme
+ * tick som `steg = 'ferdig'`. Tilstanden rakk aldri å rendre. Nå viser vi
+ * kvitteringen, og hard navigasjon skjer først på «Fortsett».
  *
- * ⚠️ **Bevisst UDESIGNET.** Dette er en sikkerhetsfiks, ikke UI-arbeid. Siden
- * bruker samme nakne stil som `/signin` og skal styles sammen med den senere.
+ * ── F1-25 ────────────────────────────────────────────────────────────────
+ * Samme byggeklosser som `/signin`: `StatefulButton`, `Field`, `INPUT`,
+ * `PassordFelt`. Ingen nye primitiver.
  */
 export default function ToFaktorOppsettPage() {
   const router = useRouter();
@@ -44,41 +51,47 @@ export default function ToFaktorOppsettPage() {
   const [passord, setPassord] = useState('');
   const [kode, setKode] = useState('');
   const [feil, setFeil] = useState<string | null>(null);
-  const [venter, setVenter] = useState(false);
+  const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const codeRef = useRef<HTMLInputElement>(null);
 
   async function startOppsett(event: FormEvent) {
     event.preventDefault();
     setFeil(null);
-    setVenter(true);
+    setBusy('loading');
     try {
       // Feiler denne med «allerede aktivert», er hemmeligheten alt laget —
       // da går vi rett videre til koden i stedet for å stoppe brukeren.
-      const res = await authClient.twoFactor.enable({ password: passord });
+      const res = await authClient.twoFactor.enable({ password: passord.trim() });
       if (res.error && !/already/i.test(res.error.message ?? '')) {
         setFeil(res.error.message ?? 'Kunne ikke starte oppsettet.');
+        setBusy('error');
         return;
       }
       const sendt = await authClient.twoFactor.sendOtp();
       if (sendt.error) {
         setFeil(sendt.error.message ?? 'Kunne ikke sende engangskode.');
+        setBusy('error');
         return;
       }
+      setBusy('idle');
       setSteg('kode');
     } catch (error) {
       setFeil((error as Error).message);
-    } finally {
-      setVenter(false);
+      setBusy('error');
     }
   }
 
   async function bekreft(event: FormEvent) {
     event.preventDefault();
     setFeil(null);
-    setVenter(true);
+    setBusy('loading');
     try {
       const res = await authClient.twoFactor.verifyOtp({ code: kode.trim() });
       if (res.error) {
         setFeil(res.error.message ?? 'Feil kode.');
+        setBusy('error');
+        setKode('');
+        codeRef.current?.focus();
         return;
       }
 
@@ -89,94 +102,156 @@ export default function ToFaktorOppsettPage() {
         console.warn('[2fa] revokeOtherSessions feilet — gamle sesjoner kan leve videre');
       });
 
-      setSteg('ferdig');
-      // Hard navigasjon: samme lærdom som dobbel-login-bugen. Klient-storen
-      // har en utdatert sesjon, og en myk navigasjon ville lest den.
-      window.location.assign('/dashboard');
+      // F1-23: KVITTERING. `etter2faBekreftet()` returnerer steg=ferdig og
+      // navigerTil=null — med vilje. location.assign hører til Fortsett.
+      const neste = etter2faBekreftet();
+      setSteg(neste.steg);
+      setBusy('success');
     } catch (error) {
       setFeil((error as Error).message);
-    } finally {
-      setVenter(false);
+      setBusy('error');
     }
   }
 
+  function fortsett() {
+    const { destinasjon } = fortsettEtter2faKvittering();
+    // Hard navigasjon: samme lærdom som dobbel-login-bugen. Klient-storen
+    // har en utdatert sesjon, og en myk navigasjon ville lest den.
+    window.location.assign(destinasjon);
+  }
+
+  const tittel =
+    steg === 'ferdig'
+      ? 'Tofaktor er slått på'
+      : steg === 'kode'
+        ? 'Bekreft med engangskode'
+        : 'Sett opp tofaktor';
+  const ingress =
+    steg === 'ferdig'
+      ? 'Neste innlogging spør om en engangskode på e-post. Det er beviset på at det gikk bra.'
+      : steg === 'kode'
+        ? 'Vi sendte en 6-sifret kode til e-postadressen din. Den varer i noen minutter.'
+        : 'Rollen din krever tofaktor-autentisering. Du må sette det opp før du kommer videre.';
+
   return (
-    <main className="min-h-screen bg-bg text-fg">
-      <div className="mx-auto flex w-full max-w-[420px] flex-col gap-6 px-6 py-16 sm:py-24">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-semibold text-fg text-xl tracking-tight">Sett opp tofaktor</h1>
-          <p className="text-body text-fg-muted leading-relaxed">
-            Rollen din krever tofaktor-autentisering. Du må sette det opp før du kommer videre.
-          </p>
+    <main className="flex min-h-screen items-center justify-center bg-bg px-4 text-fg">
+      <div className="w-full max-w-sm">
+        <div className="mb-6 flex flex-col items-center gap-3">
+          <Image src="/logo/logo.svg" alt="Endwise" width={44} height={44} priority />
+          <h1 className="text-title text-fg">{tittel}</h1>
+          <p className="text-center text-body text-fg-muted">{ingress}</p>
         </div>
 
         {steg === 'passord' ? (
-          <form onSubmit={startOppsett} className="flex flex-col gap-3">
-            <label htmlFor="tfa-passord" className="text-label text-fg">
-              Bekreft passordet ditt
-            </label>
-            <input
-              id="tfa-passord"
-              type="password"
-              autoComplete="current-password"
-              value={passord}
-              onChange={(e) => setPassord(e.target.value)}
-              required
-              className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            />
-            <button
-              type="submit"
-              disabled={venter || !passord}
-              className="inline-flex h-control items-center justify-center rounded-control bg-fg px-4 text-label text-bg disabled:opacity-40"
-            >
-              {venter ? 'Sender kode …' : 'Send meg en engangskode'}
-            </button>
+          <form
+            onSubmit={startOppsett}
+            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
+          >
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
+              <PassordFelt
+                id="tfa-passord"
+                label="Bekreft passordet ditt"
+                value={passord}
+                onChange={setPassord}
+                autoComplete="current-password"
+              />
+              {feil && <p className="text-[12px] text-danger">{feil}</p>}
+            </div>
+            <div className="px-1.5 pt-1 pb-1">
+              <StatefulButton
+                type="submit"
+                state={busy}
+                className="w-full"
+                loadingText="Sender kode …"
+                successText="Sendt"
+                errorText="Prøv igjen"
+                icon={<Lock size={15} />}
+              >
+                Send meg en engangskode
+              </StatefulButton>
+            </div>
           </form>
         ) : null}
 
         {steg === 'kode' ? (
-          <form onSubmit={bekreft} className="flex flex-col gap-3">
-            <label htmlFor="tfa-kode" className="text-label text-fg">
-              Engangskode
-            </label>
-            <input
-              id="tfa-kode"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={kode}
-              onChange={(e) => setKode(e.target.value)}
-              required
-              className="h-control rounded-control border border-border bg-bg px-3 font-mono text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            />
-            <p className="text-[12px] text-fg-muted leading-relaxed">
-              Koden er sendt til e-postadressen din. Kjører du lokalt uten Resend, står den i
-              api-loggen i terminalen.
-            </p>
-            <button
-              type="submit"
-              disabled={venter || !kode.trim()}
-              className="inline-flex h-control items-center justify-center rounded-control bg-fg px-4 text-label text-bg disabled:opacity-40"
-            >
-              {venter ? 'Bekrefter …' : 'Bekreft og fullfør'}
-            </button>
+          <form
+            onSubmit={bekreft}
+            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
+          >
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
+              <Field id="tfa-kode" label="Engangskode">
+                <input
+                  id="tfa-kode"
+                  ref={codeRef}
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  required
+                  value={kode}
+                  onChange={(ev) => setKode(ev.target.value.replace(/\D/g, ''))}
+                  className={`${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`}
+                  placeholder="••••••"
+                />
+              </Field>
+              {feil && <p className="text-[12px] text-danger">{feil}</p>}
+              <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
+                <Mail size={13} className="mt-px shrink-0" />
+                <span>Kjører du lokalt uten Resend, står koden i api-loggen i terminalen.</span>
+              </p>
+            </div>
+            <div className="px-1.5 pt-1 pb-1">
+              <StatefulButton
+                type="submit"
+                state={busy}
+                className="w-full"
+                loadingText="Bekrefter …"
+                successText="Bekreftet"
+                errorText="Feil kode"
+                icon={<ShieldCheck size={15} />}
+              >
+                Bekreft og fullfør
+              </StatefulButton>
+            </div>
           </form>
         ) : null}
 
-        {feil ? (
-          <p role="alert" className="text-body text-destructive">
-            {feil}
-          </p>
+        {steg === 'ferdig' ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
+              <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
+                <ShieldCheck size={13} className="mt-px shrink-0" />
+                <span>
+                  Tofaktor er på. Neste innlogging krever passord og engangskode — det finnes ingen
+                  «husk denne enheten».
+                </span>
+              </p>
+            </div>
+            <div className="px-1.5 pt-1 pb-1">
+              <button
+                type="button"
+                onClick={fortsett}
+                className="inline-flex h-control w-full items-center justify-center rounded-control bg-fg px-4 text-bg text-label"
+              >
+                Fortsett
+              </button>
+            </div>
+          </div>
         ) : null}
 
-        <button
-          type="button"
-          onClick={() => {
-            void authClient.signOut().finally(() => router.replace('/signin' as Route));
-          }}
-          className="self-start text-[12px] text-fg-muted underline underline-offset-2 hover:text-fg"
-        >
-          Logg ut
-        </button>
+        {steg !== 'ferdig' ? (
+          <p className="mt-4 text-center text-[12px] text-fg-muted">
+            <button
+              type="button"
+              onClick={() => {
+                void authClient.signOut().finally(() => router.replace('/signin' as Route));
+              }}
+              className="underline underline-offset-2 hover:text-fg"
+            >
+              Logg ut
+            </button>
+          </p>
+        ) : null}
       </div>
     </main>
   );

@@ -4,6 +4,7 @@ import { BellRing, CircleAlert, CircleUser, StatefulButton, Volume2, VolumeX } f
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../_lib/lyd';
+import { ByttPassordSkjema } from './bytt-passord';
 import { CardShell } from './cards';
 
 /**
@@ -284,6 +285,11 @@ export function ProfilKort() {
           </CardShell>
         </section>
       )}
+
+      {/* F1-17 — bytt passord med gjeldende som bevis. Samme kort på
+          Settings › Profil og mekanikerens «Meg». Resetlenka står under
+          skjemaet for den som ikke husker det gamle. */}
+      <ByttPassordSkjema />
     </div>
   );
 }

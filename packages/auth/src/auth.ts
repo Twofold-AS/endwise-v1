@@ -3,6 +3,14 @@ import { createDb } from '@endwise/db';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { organization, phoneNumber, twoFactor } from 'better-auth/plugins';
+import {
+  BYTT_PASSORD_RATE_GRENSE,
+  BYTT_PASSORD_STI,
+  KREDENTIAL_MUTASJON_RATE_GRENSE,
+  TO_FAKTOR_DISABLE_STI,
+  TO_FAKTOR_ENABLE_STI,
+} from './bytt-passord.ts';
+import { byttPassordEtterHook, byttPassordForHook } from './bytt-passord-server.ts';
 import { devTrustedOrigins } from './dev-origins.ts';
 import { authEnv } from './env.ts';
 import {
@@ -54,6 +62,18 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
      * origin der ville vært et hull, ikke en bekvemmelighet.
      */
     ...(process.env.NODE_ENV === 'production' ? {} : { trustedOrigins: devTrustedOrigins() }),
+
+    /**
+     * F1-17 — CWE-613 / CWE-209. Better-Auths `/change-password` behandler
+     * `revokeOtherSessions` som valgfri request-body (default `false`) og
+     * svarer `INVALID_PASSWORD` når det gjeldende passordet er feil.
+     * Hookene tvinger revoke og mapper auth-feil til én generisk kode.
+     * `byttPassordHull()` er testen som gjør et bortfall her til rødt.
+     */
+    hooks: {
+      before: byttPassordForHook,
+      after: byttPassordEtterHook,
+    },
 
     emailAndPassword: {
       enabled: true,
@@ -196,6 +216,16 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
          */
         [RESET_BE_OM_STI]: { ...RESET_BE_OM_GRENSE },
         [RESET_SETT_STI]: { ...RESET_SETT_GRENSE },
+
+        /**
+         * F1-17 — CWE-307. Better-Auth har ingen egen standardregel for
+         * `/change-password`. Uten denne oppføringen arver stien den slakke
+         * globalen (60/min) og blir et orakel for gjetting av gjeldende
+         * passord. `enable`/`disable` sjekker passord på samme måte.
+         */
+        [BYTT_PASSORD_STI]: { ...BYTT_PASSORD_RATE_GRENSE },
+        [TO_FAKTOR_ENABLE_STI]: { ...KREDENTIAL_MUTASJON_RATE_GRENSE },
+        [TO_FAKTOR_DISABLE_STI]: { ...KREDENTIAL_MUTASJON_RATE_GRENSE },
       },
       storage: 'database',
     },

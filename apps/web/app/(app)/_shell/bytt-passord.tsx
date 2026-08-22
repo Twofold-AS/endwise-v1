@@ -1,6 +1,10 @@
 'use client';
 
-import { byttPassordKall, validerByttPassord } from '@endwise/auth/bytt-passord';
+import {
+  BYTT_PASSORD_GENERISK_MELDING,
+  byttPassordKall,
+  validerByttPassord,
+} from '@endwise/auth/bytt-passord';
 import { KeyRound, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
@@ -14,8 +18,8 @@ import { CardShell } from './cards';
  * `ProfilKort`. To kopier ville fått hver sin validering.
  *
  * Better-Auth `changePassword` krever gjeldende passord. `revokeOtherSessions`
- * er låst til true i `byttPassordKall` — default false ville latt en stjålet
- * sesjon overleve byttet.
+ * er låst til true i `byttPassordKall`, og serveren tvinger det samme i
+ * `hooks.before` — klientflagget alene er ikke sperren (CWE-613).
  */
 export function ByttPassordSkjema() {
   const [gjeldende, setGjeldende] = useState('');
@@ -39,7 +43,7 @@ export function ByttPassordSkjema() {
     const res = await authClient.changePassword(byttPassordKall(sjekk));
     if (res.error) {
       setBusy('error');
-      setFeil(feilmelding(res.error));
+      setFeil(BYTT_PASSORD_GENERISK_MELDING);
       return;
     }
 
@@ -99,11 +103,4 @@ export function ByttPassordSkjema() {
       </CardShell>
     </section>
   );
-}
-
-function feilmelding(error: { status?: number; code?: string; message?: string }): string {
-  if (error.code === 'INVALID_PASSWORD') {
-    return 'Feil gjeldende passord.';
-  }
-  return error.message ?? 'Kunne ikke bytte passordet.';
 }

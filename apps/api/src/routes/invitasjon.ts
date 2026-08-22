@@ -28,10 +28,16 @@ import { createAppContext } from '../context.ts';
  */
 export const invitasjon = new Hono();
 
-const ctx = createAppContext();
+/**
+ * ⚠️ Lat DB. `createAppContext()` kaster uten DATABASE_URL — det må ikke
+ * skje ved import, ellers feiler `next build` på Vercel (F13-03).
+ */
+function db() {
+  return createAppContext().db;
+}
 let authInstance: ReturnType<typeof createAuth> | undefined;
 const getAuth = () => {
-  authInstance ??= createAuth(ctx.db);
+  authInstance ??= createAuth(db());
   return authInstance;
 };
 
@@ -43,7 +49,7 @@ const getAuth = () => {
  * som inviterte, ikke tenant-ID, ikke noe om andre ansatte.
  */
 invitasjon.get('/:token', async (c) => {
-  const modul = createInvitasjonsmodul(ctx.db);
+  const modul = createInvitasjonsmodul(db());
   const inv = await modul.finnApen(c.req.param('token'));
   if (!inv) {
     return c.json({ gyldig: false, grunn: 'Invitasjonen er ugyldig, brukt eller utløpt.' }, 404);
@@ -59,7 +65,7 @@ invitasjon.get('/:token', async (c) => {
    * Tenanten er kjent fra invitasjonsraden, så konteksten kan settes trygt —
    * den kommer fra tokenet, ikke fra forespørselen.
    */
-  const [forhandler] = await withTenant(ctx.db, inv.tenantId, (tx) =>
+  const [forhandler] = await withTenant(db(), inv.tenantId, (tx) =>
     tx
       .select({ navn: schema.tenants.name })
       .from(schema.tenants)
@@ -68,7 +74,7 @@ invitasjon.get('/:token', async (c) => {
   );
 
   // Finnes brukeren fra før? Da skal skjemaet be om samtykke, ikke om passord.
-  const [eksisterende] = await ctx.db
+  const [eksisterende] = await db()
     .select({ id: schema.user.id })
     .from(schema.user)
     .where(eq(schema.user.email, inv.epost))
@@ -112,13 +118,13 @@ invitasjon.post('/godta', async (c) => {
     return c.json({ error: 'Ugyldig forespørsel. Navn kreves, passord minst 12 tegn.' }, 400);
   }
 
-  const modul = createInvitasjonsmodul(ctx.db);
+  const modul = createInvitasjonsmodul(db());
   const inv = await modul.finnApen(parsed.data.token);
   if (!inv) {
     return c.json({ error: 'Invitasjonen er ugyldig, brukt eller utløpt.' }, 410);
   }
 
-  const [eksisterende] = await ctx.db
+  const [eksisterende] = await db()
     .select({ id: schema.user.id })
     .from(schema.user)
     .where(eq(schema.user.email, inv.epost))
@@ -146,7 +152,7 @@ invitasjon.post('/godta', async (c) => {
           name: parsed.data.navn,
         },
       });
-      const [ny] = await ctx.db
+      const [ny] = await db()
         .select({ id: schema.user.id })
         .from(schema.user)
         .where(eq(schema.user.email, inv.epost))
@@ -164,14 +170,11 @@ invitasjon.post('/godta', async (c) => {
        * som krever 2FA (F1-11), og skal gjennom oppsettet selv. Å sette den her
        * ville gitt en konto som består 2FA-gaten uten at noen kode er tastet.
        */
-      await ctx.db
-        .update(schema.user)
-        .set({ emailVerified: true })
-        .where(eq(schema.user.id, userId));
+      await db().update(schema.user).set({ emailVerified: true }).where(eq(schema.user.id, userId));
     }
 
     // ── 4. Medlemskap + profil, i tenanten fra RADEN. ──────────────────
-    const [alleredeMedlem] = await ctx.db
+    const [alleredeMedlem] = await db()
       .select({ id: schema.member.id })
       .from(schema.member)
       .where(
@@ -183,18 +186,20 @@ invitasjon.post('/godta', async (c) => {
       .limit(1);
 
     if (!alleredeMedlem) {
-      await ctx.db.insert(schema.member).values({
-        id: randomUUID(),
-        organizationId: inv.tenantId,
-        userId: userId as string,
-        // ⛔ Fra raden, aldri fra forespørselen. Låst til dealer_staff av en
-        // CHECK-constraint i basen.
-        role: inv.rolle,
-        createdAt: new Date(),
-      });
+      await db()
+        .insert(schema.member)
+        .values({
+          id: randomUUID(),
+          organizationId: inv.tenantId,
+          userId: userId as string,
+          // ⛔ Fra raden, aldri fra forespørselen. Låst til dealer_staff av en
+          // CHECK-constraint i basen.
+          role: inv.rolle,
+          createdAt: new Date(),
+        });
     }
 
-    await withTenant(ctx.db, inv.tenantId, (tx) =>
+    await withTenant(db(), inv.tenantId, (tx) =>
       tx
         .insert(schema.memberProfiles)
         .values({

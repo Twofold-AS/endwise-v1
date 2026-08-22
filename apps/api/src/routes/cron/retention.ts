@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import { cronAuth } from '../../lib/cron-auth.ts';
 
 /**
- * F14-03 — Automatisk sletting, kjørt av Vercel Cron (se apps/api/vercel.json).
+ * F14-03 — Automatisk sletting, kjørt av Vercel Cron (se apps/web/vercel.json).
  *
  * Itererer over tenants og rydder hver for seg gjennom `withTenant` → RLS.
  * Jobben har ingen global slette-tilgang; den kan ikke, ved en feil, tømme

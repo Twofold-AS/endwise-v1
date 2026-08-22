@@ -3,7 +3,7 @@ import { cronAuth } from '../../lib/cron-auth.ts';
 import { nightlyCleanupWorkflow } from '../../workflows/cleanup.ts';
 
 /**
- * Vercel Cron treffer denne (se apps/api/vercel.json). Cron starter workflowen;
+ * Vercel Cron treffer denne (se apps/web/vercel.json). Cron starter workflowen;
  * selve arbeidet er durable og lever videre uavhengig av request-livssyklusen.
  *
  * CWE-306: `cronAuth`-middleware feiler LUKKET (503 uten CRON_SECRET, 401 ved feil

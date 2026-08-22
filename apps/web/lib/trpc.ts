@@ -2,7 +2,7 @@ import type { AppRouter } from '@endwise/api/router';
 import { createTRPCReact } from '@trpc/react-query';
 import type { inferRouterOutputs } from '@trpc/server';
 
-/** F1 — tRPC v11 React-klient mot apps/api (typet av AppRouter). */
+/** F1 / F13-03 — tRPC v11 React-klient mot `/trpc` i Next (typet av AppRouter). */
 export const trpc = createTRPCReact<AppRouter>();
 
 /**

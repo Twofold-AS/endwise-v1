@@ -11,7 +11,7 @@ import {
   Switch,
 } from '@endwise/ui';
 import { useEffect, useMemo, useState } from 'react';
-import { FLAG_DEFAULTS, FLAG_KEYS } from '@/flags';
+import { FLAG_DEFAULTS, FLAG_KEY_MAX, FLAG_KEY_PATTERN, FLAG_KEYS } from '@/flags';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
@@ -32,8 +32,6 @@ import { CardShell } from '../../_shell/cards';
 type Plattform = RouterOutput['flags']['listPlatform'];
 type Flagg = Plattform['globals'][number];
 type TenantRad = Plattform['tenants'][number];
-
-const NOKKEL = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const KJENTE_FORKLARINGER: Record<string, string> = {
   'kill-switch': 'Plattform-kill-switch. Kan ikke overstyres per forhandler.',
@@ -88,7 +86,8 @@ export default function EndwiseFlaggPage() {
     fjernOverride.error ??
     opprett.error;
 
-  const nokkelOk = NOKKEL.test(nyNokkel.trim());
+  const trimmet = nyNokkel.trim();
+  const nokkelOk = FLAG_KEY_PATTERN.test(trimmet) && trimmet.length <= FLAG_KEY_MAX;
 
   if (plattform.isError && !plattform.data) {
     return (
@@ -254,6 +253,7 @@ export default function EndwiseFlaggPage() {
               <input
                 value={nyNokkel}
                 onChange={(e) => setNyNokkel(e.target.value)}
+                maxLength={FLAG_KEY_MAX}
                 placeholder="canary-booking"
                 className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
               />

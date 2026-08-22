@@ -7,7 +7,10 @@ import { appRouter } from '../src/trpc/router.ts';
  * ⚠️ Vi sjekker feil-KODEN, ikke meldingsteksten. Meldingene er norske og skal
  * kunne skrives om uten at en sikkerhetstest brekker.
  */
-async function forventer(kall: Promise<unknown>, code: 'FORBIDDEN' | 'NOT_FOUND' | 'UNAUTHORIZED') {
+async function forventer(
+  kall: Promise<unknown>,
+  code: 'FORBIDDEN' | 'NOT_FOUND' | 'UNAUTHORIZED' | 'BAD_REQUEST',
+) {
   await expect(kall).rejects.toMatchObject({ code });
 }
 
@@ -67,6 +70,7 @@ describeDb('F0-04 — feature-flags-admin', () => {
   });
 
   afterAll(async () => {
+    await owner.delete(schema.auditLog).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
     await owner
       .delete(schema.featureFlagOverrides)
       .where(sql`tenant_id in (${tenantA}, ${tenantB})`);
@@ -129,6 +133,27 @@ describeDb('F0-04 — feature-flags-admin', () => {
   });
 
   /* ══ Fail-closed ═══════════════════════════════════════════════════════ */
+
+  it('⛔ ANGREP: ugyldig nøkkel avvises på serveren (CWE-20), ikke bare i UI', async () => {
+    const ugyldige = ['Bad Key', 'HAS_UNDER', 'ÆØÅ', '-leading', 'trailing-', 'a/b', '../x'];
+    for (const key of ugyldige) {
+      await forventer(somEndwiseI(tenantA).flags.setGlobal({ key, enabled: true }), 'BAD_REQUEST');
+      await forventer(somEndwiseI(tenantA).flags.upsert({ key }), 'BAD_REQUEST');
+      await forventer(
+        somEndwiseI(tenantA).flags.setTenantOverride({
+          tenantId: tenantB,
+          key,
+          enabled: true,
+        }),
+        'BAD_REQUEST',
+      );
+    }
+    const etter = await owner
+      .select({ key: schema.featureFlags.key })
+      .from(schema.featureFlags)
+      .where(sql`key in ('Bad Key', 'HAS_UNDER', 'ÆØÅ', '-leading', 'trailing-', 'a/b', '../x')`);
+    expect(etter).toEqual([]);
+  });
 
   it('ukjent tenant og ukjent flagg avvises — ingen rad opprettes i blinde', async () => {
     await forventer(
@@ -198,5 +223,77 @@ describeDb('F0-04 — feature-flags-admin', () => {
   it('list (egen tenant) viser ikke den andre tenantens overstyring', async () => {
     const listeB = await somForhandlerI(tenantB).flags.list();
     expect(listeB.overrides.some((o) => o.flagKey === flagg)).toBe(false);
+  });
+
+  /* ══ CWE-778: ingen stille privilegieendring ═══════════════════════════ */
+
+  it('setGlobal skriver audit med actor, nøkkel, gammel og ny verdi', async () => {
+    await owner.delete(schema.auditLog).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
+    await somEndwiseI(tenantA).flags.setGlobal({ key: flagg, enabled: false });
+    const rader = await owner
+      .select()
+      .from(schema.auditLog)
+      .where(
+        sql`tenant_id = ${tenantA} and action = 'feature_flag.set_global' and subject_id = ${flagg}`,
+      );
+    expect(rader).toHaveLength(1);
+    expect(rader[0]?.actor).toBe(`ff-endwise_admin-${tenantA.slice(0, 8)}`);
+    expect(rader[0]?.metadata).toMatchObject({
+      key: flagg,
+      old: true,
+      new: false,
+      scope: 'global',
+    });
+    expect(rader[0]?.occurredAt).toBeInstanceOf(Date);
+  });
+
+  it('setTenantOverride logger i MÅL-tenanten, ikke actor-tenanten', async () => {
+    await owner.delete(schema.auditLog).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
+    await somEndwiseI(tenantA).flags.setTenantOverride({
+      tenantId: tenantB,
+      key: flagg,
+      enabled: true,
+    });
+    const iB = await owner
+      .select()
+      .from(schema.auditLog)
+      .where(sql`tenant_id = ${tenantB} and action = 'feature_flag.set_override'`);
+    const iA = await owner
+      .select()
+      .from(schema.auditLog)
+      .where(sql`tenant_id = ${tenantA} and action = 'feature_flag.set_override'`);
+    expect(iB).toHaveLength(1);
+    expect(iA).toHaveLength(0);
+    expect(iB[0]?.actor).toBe(`ff-endwise_admin-${tenantA.slice(0, 8)}`);
+    expect(iB[0]?.metadata).toMatchObject({
+      key: flagg,
+      new: true,
+      targetTenantId: tenantB,
+      actorTenantId: tenantA,
+    });
+  });
+
+  it('clearTenantOverride logger gammel override og new=null', async () => {
+    await owner.delete(schema.auditLog).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
+    await somEndwiseI(tenantA).flags.clearTenantOverride({ tenantId: tenantB, key: flagg });
+    const rader = await owner
+      .select()
+      .from(schema.auditLog)
+      .where(sql`tenant_id = ${tenantB} and action = 'feature_flag.clear_override'`);
+    expect(rader).toHaveLength(1);
+    expect(rader[0]?.metadata).toMatchObject({ key: flagg, old: true, new: null });
+  });
+
+  it('avvist kall skriver ingen audit-rad', async () => {
+    await owner.delete(schema.auditLog).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
+    await forventer(
+      somForhandlerI(tenantA).flags.setGlobal({ key: flagg, enabled: true }),
+      'FORBIDDEN',
+    );
+    const rader = await owner
+      .select()
+      .from(schema.auditLog)
+      .where(sql`tenant_id in (${tenantA}, ${tenantB})`);
+    expect(rader).toEqual([]);
   });
 });

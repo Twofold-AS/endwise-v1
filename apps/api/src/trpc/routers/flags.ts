@@ -22,6 +22,17 @@ import { adminProcedure, endwiseAdminProcedure, protectedProcedure, router } fro
  */
 const IKKE_OVERSTYRBAR: readonly string[] = [DEV_MODE_FLAG, 'kill-switch'];
 
+/**
+ * CWE-20 — samme regel som klienten (`FLAG_KEY_PATTERN` i apps/web/flags.ts).
+ * En fri `z.string().min(1)` ville latt et rått tRPC-kall omgå UI-regexen.
+ */
+const FLAG_KEY_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const flagKeySchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(FLAG_KEY_PATTERN, 'Kun små bokstaver, tall og bindestrek');
+
 function assertOverstyrbar(key: string) {
   if (IKKE_OVERSTYRBAR.includes(key)) {
     throw new TRPCError({
@@ -29,6 +40,37 @@ function assertOverstyrbar(key: string) {
       message: `Flagget «${key}» kan ikke overstyres per forhandler`,
     });
   }
+}
+
+/**
+ * CWE-778 — append-only spor i samme transaksjon som mutasjonen.
+ * `audit_log` har INSERT+SELECT, ingen UPDATE/DELETE. RLS krever at
+ * `tenant_id` er den `withTenant` nettopp satte.
+ */
+async function skrivFlagAudit(
+  tx: Parameters<Parameters<typeof withTenant>[2]>[0],
+  input: {
+    tenantId: string;
+    actor: string;
+    action:
+      | 'feature_flag.upsert'
+      | 'feature_flag.set_global'
+      | 'feature_flag.set_override'
+      | 'feature_flag.clear_override';
+    key: string;
+    old: unknown;
+    neu: unknown;
+    extra?: Record<string, unknown>;
+  },
+) {
+  await tx.insert(schema.auditLog).values({
+    tenantId: input.tenantId,
+    actor: input.actor,
+    action: input.action,
+    subjectType: 'feature_flag',
+    subjectId: input.key,
+    metadata: { key: input.key, old: input.old, new: input.neu, ...input.extra },
+  });
 }
 
 /**
@@ -83,32 +125,62 @@ export const flagsRouter = router({
 
   /** Opprett/beskriv et flagg. `endwiseAdminProcedure` = sperren er i typen. */
   upsert: endwiseAdminProcedure
-    .input(z.object({ key: z.string().min(1), description: z.string().optional() }))
+    .input(z.object({ key: flagKeySchema, description: z.string().optional() }))
     .mutation(({ ctx, input }) => {
-      return withTenant(ctx.db, ctx.tenantId, (tx) =>
-        tx
+      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [forrige] = await tx
+          .select({ description: schema.featureFlags.description })
+          .from(schema.featureFlags)
+          .where(eq(schema.featureFlags.key, input.key));
+
+        await tx
           .insert(schema.featureFlags)
           .values({ key: input.key, description: input.description })
           .onConflictDoUpdate({
             target: schema.featureFlags.key,
             set: { description: input.description, updatedAt: sql`now()` },
-          }),
-      );
+          });
+
+        await skrivFlagAudit(tx, {
+          tenantId: ctx.tenantId,
+          actor: ctx.userId,
+          action: 'feature_flag.upsert',
+          key: input.key,
+          old: forrige?.description ?? null,
+          neu: input.description ?? null,
+          extra: { scope: 'global' },
+        });
+      });
     }),
 
   /** Slå et flagg av/på GLOBALT. Dev-mode-bryteren i admin går hit. */
   setGlobal: endwiseAdminProcedure
-    .input(z.object({ key: z.string().min(1), enabled: z.boolean() }))
+    .input(z.object({ key: flagKeySchema, enabled: z.boolean() }))
     .mutation(({ ctx, input }) => {
-      return withTenant(ctx.db, ctx.tenantId, (tx) =>
-        tx
+      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [forrige] = await tx
+          .select({ enabled: schema.featureFlags.enabled })
+          .from(schema.featureFlags)
+          .where(eq(schema.featureFlags.key, input.key));
+
+        await tx
           .insert(schema.featureFlags)
           .values({ key: input.key, enabled: input.enabled })
           .onConflictDoUpdate({
             target: schema.featureFlags.key,
             set: { enabled: input.enabled, updatedAt: sql`now()` },
-          }),
-      );
+          });
+
+        await skrivFlagAudit(tx, {
+          tenantId: ctx.tenantId,
+          actor: ctx.userId,
+          action: 'feature_flag.set_global',
+          key: input.key,
+          old: forrige?.enabled ?? null,
+          neu: input.enabled,
+          extra: { scope: 'global' },
+        });
+      });
     }),
 
   /**
@@ -119,18 +191,33 @@ export const flagsRouter = router({
    * ikke en sperre, det er en gjemt knapp.
    */
   setOverride: adminProcedure
-    .input(z.object({ key: z.string().min(1), enabled: z.boolean() }))
+    .input(z.object({ key: flagKeySchema, enabled: z.boolean() }))
     .mutation(({ ctx, input }) => {
       assertOverstyrbar(input.key);
-      return withTenant(ctx.db, ctx.tenantId, (tx) =>
-        tx
+      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [forrige] = await tx
+          .select({ enabled: schema.featureFlagOverrides.enabled })
+          .from(schema.featureFlagOverrides)
+          .where(eq(schema.featureFlagOverrides.flagKey, input.key));
+
+        await tx
           .insert(schema.featureFlagOverrides)
           .values({ flagKey: input.key, tenantId: ctx.tenantId, enabled: input.enabled })
           .onConflictDoUpdate({
             target: [schema.featureFlagOverrides.flagKey, schema.featureFlagOverrides.tenantId],
             set: { enabled: input.enabled, updatedAt: sql`now()` },
-          }),
-      );
+          });
+
+        await skrivFlagAudit(tx, {
+          tenantId: ctx.tenantId,
+          actor: ctx.userId,
+          action: 'feature_flag.set_override',
+          key: input.key,
+          old: forrige?.enabled ?? null,
+          neu: input.enabled,
+          extra: { targetTenantId: ctx.tenantId },
+        });
+      });
     }),
 
   /**
@@ -193,7 +280,7 @@ export const flagsRouter = router({
     .input(
       z.object({
         tenantId: z.uuid(),
-        key: z.string().min(1),
+        key: flagKeySchema,
         enabled: z.boolean(),
       }),
     )
@@ -221,8 +308,13 @@ export const flagsRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
       }
 
-      return withTenant(ctx.db, input.tenantId, (tx) =>
-        tx
+      return withTenant(ctx.db, input.tenantId, async (tx) => {
+        const [forrige] = await tx
+          .select({ enabled: schema.featureFlagOverrides.enabled })
+          .from(schema.featureFlagOverrides)
+          .where(eq(schema.featureFlagOverrides.flagKey, input.key));
+
+        await tx
           .insert(schema.featureFlagOverrides)
           .values({
             flagKey: input.key,
@@ -232,13 +324,23 @@ export const flagsRouter = router({
           .onConflictDoUpdate({
             target: [schema.featureFlagOverrides.flagKey, schema.featureFlagOverrides.tenantId],
             set: { enabled: input.enabled, updatedAt: sql`now()` },
-          }),
-      );
+          });
+
+        await skrivFlagAudit(tx, {
+          tenantId: input.tenantId,
+          actor: ctx.userId,
+          action: 'feature_flag.set_override',
+          key: input.key,
+          old: forrige?.enabled ?? null,
+          neu: input.enabled,
+          extra: { targetTenantId: input.tenantId, actorTenantId: ctx.tenantId },
+        });
+      });
     }),
 
   /** Fjern per-tenant overstyring, så tenanten arver det globale flagget. */
   clearTenantOverride: endwiseAdminProcedure
-    .input(z.object({ tenantId: z.uuid(), key: z.string().min(1) }))
+    .input(z.object({ tenantId: z.uuid(), key: flagKeySchema }))
     .mutation(async ({ ctx, input }) => {
       const [tenant] = await withPlatformAdmin(ctx.db, (tx) =>
         tx
@@ -250,15 +352,29 @@ export const flagsRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
       }
 
-      return withTenant(ctx.db, input.tenantId, (tx) =>
-        tx
+      return withTenant(ctx.db, input.tenantId, async (tx) => {
+        const slettet = await tx
           .delete(schema.featureFlagOverrides)
           .where(
             and(
               eq(schema.featureFlagOverrides.flagKey, input.key),
               eq(schema.featureFlagOverrides.tenantId, input.tenantId),
             ),
-          ),
-      );
+          )
+          .returning({ enabled: schema.featureFlagOverrides.enabled });
+
+        const forrige = slettet[0];
+        if (!forrige) return;
+
+        await skrivFlagAudit(tx, {
+          tenantId: input.tenantId,
+          actor: ctx.userId,
+          action: 'feature_flag.clear_override',
+          key: input.key,
+          old: forrige.enabled,
+          neu: null,
+          extra: { targetTenantId: input.tenantId, actorTenantId: ctx.tenantId },
+        });
+      });
     }),
 });

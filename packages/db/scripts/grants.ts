@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Pool } from 'pg';
+import { pgConnectionConfig } from '../src/client.ts';
 
 /** Kjører sql/grants.sql som eier. Idempotent — kan kjøres om igjen. */
 const url = process.env.DATABASE_URL;
@@ -15,7 +16,7 @@ const grants = readFileSync(join(here, '..', 'sql', 'grants.sql'), 'utf8');
 // F14-16: redact_audit_log() er SECURITY DEFINER og MÅ opprettes av eieren.
 const functions = readFileSync(join(here, '..', 'sql', 'functions.sql'), 'utf8');
 
-const pool = new Pool({ connectionString: url });
+const pool = new Pool(pgConnectionConfig(url));
 await pool.query(grants);
 await pool.query(functions);
 await pool.end();

@@ -6,6 +6,8 @@ export default defineConfig({
     // packages/modules (der motoren bor). Fila her er en rest som skal slettes.
     include: [
       'test/crypto.test.ts',
+      // F13-01 — Vercel/Scaleway TLS: sslmode=require vs. egen CA.
+      'test/pg-ssl.test.ts',
       'test/tenant-isolation.test.ts',
       'test/f2-isolation.test.ts',
       'test/quick-isolation.test.ts',

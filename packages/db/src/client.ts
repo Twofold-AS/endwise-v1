@@ -6,6 +6,63 @@ import * as schema from './schema/index.ts';
 
 export type Database = ReturnType<typeof createDb>;
 
+const LOCAL_DB_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+
+export type PgConnectionConfig = {
+  connectionString: string;
+  ssl?: { rejectUnauthorized: false };
+};
+
+function hostnameFromConnectionString(connectionString: string): string | null {
+  try {
+    const host = new URL(connectionString).hostname.toLowerCase();
+    return host.replace(/^\[(.*)\]$/, '$1');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * node-postgres overskriver `ssl` når connection-stringen inneholder
+ * `sslmode` / `sslrootcert` / `sslcert` / `sslkey`. Fjern dem slik at
+ * `{ rejectUnauthorized: false }` faktisk gjelder (Scaleway-CA på Vercel).
+ */
+function withoutPgSslQueryParams(connectionString: string): string {
+  try {
+    const url = new URL(connectionString);
+    url.searchParams.delete('sslmode');
+    url.searchParams.delete('sslrootcert');
+    url.searchParams.delete('sslcert');
+    url.searchParams.delete('sslkey');
+    return url.toString();
+  } catch {
+    return connectionString;
+  }
+}
+
+/**
+ * F13-01 — TLS mot Scaleway Managed PostgreSQL.
+ *
+ * Scaleway public TLS bruker egen CA. `sslmode=require` i URL-en behandles
+ * av node-postgres som verify-full, og Node kaster
+ * `DEPTH_ZERO_SELF_SIGNED_CERT` fra Vercel. Ingen Scaleway-CA i repoet.
+ *
+ * Fjern host: TLS på, uten CA-sjekk. Localhost/Docker: urørt — Docker-Postgres
+ * har typisk ikke TLS, og workarounen ville krevd SSL mot 127.0.0.1.
+ * TLS skrus aldri av (`ssl: false`).
+ */
+export function pgConnectionConfig(connectionString: string): PgConnectionConfig {
+  const host = hostnameFromConnectionString(connectionString);
+  if (host !== null && LOCAL_DB_HOSTS.has(host)) {
+    return { connectionString };
+  }
+
+  return {
+    connectionString: withoutPgSslQueryParams(connectionString),
+    ssl: { rejectUnauthorized: false },
+  };
+}
+
 /**
  * Driver: node-postgres (`pg`) over vanlig TCP.
  *
@@ -20,7 +77,7 @@ export type Database = ReturnType<typeof createDb>;
  * fulgt med neste låner. Transaksjonslåsen slippes av COMMIT/ROLLBACK uansett.
  */
 export function createDb(connectionString: string) {
-  const pool = new Pool({ connectionString });
+  const pool = new Pool(pgConnectionConfig(connectionString));
   return drizzle({ client: pool, schema, casing: 'snake_case' });
 }
 

@@ -3,6 +3,7 @@ import { createDb } from '@endwise/db';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { organization, phoneNumber, twoFactor } from 'better-auth/plugins';
+import { authTrustedOrigins } from './auth-origins.ts';
 import {
   BYTT_PASSORD_RATE_GRENSE,
   BYTT_PASSORD_STI,
@@ -11,7 +12,6 @@ import {
   TO_FAKTOR_ENABLE_STI,
 } from './bytt-passord.ts';
 import { byttPassordEtterHook, byttPassordForHook } from './bytt-passord-server.ts';
-import { devTrustedOrigins } from './dev-origins.ts';
 import { authEnv } from './env.ts';
 import {
   NYTT_PASSORD_STI,
@@ -58,10 +58,13 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
      * (`devTrustedOrigins`) — ikke fra en env-variabel som blir feil neste gang
      * ruteren deler ut en ny IP.
      *
-     * ⚠️ Kun i dev. I produksjon er `baseURL` fasiten, og en ekstra betrodd
-     * origin der ville vært et hull, ikke en bekvemmelighet.
+     * ⚠️ LAN/localhost bare når `NODE_ENV !== 'production'`. På Vercel kjører
+     * både preview og prod med `NODE_ENV=production`, så lista MÅ også inneholde
+     * navngitte verter der: `endwise.no` / `www.endwise.no` + `VERCEL_URL` /
+     * `VERCEL_BRANCH_URL` / `VERCEL_PROJECT_PRODUCTION_URL`. Ingen `*.vercel.app`.
+     * Se `authTrustedOrigins`.
      */
-    ...(process.env.NODE_ENV === 'production' ? {} : { trustedOrigins: devTrustedOrigins() }),
+    trustedOrigins: authTrustedOrigins(),
 
     /**
      * F1-17 — CWE-613 / CWE-209. Better-Auths `/change-password` behandler

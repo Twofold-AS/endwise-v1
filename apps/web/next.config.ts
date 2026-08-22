@@ -1,6 +1,7 @@
 import { networkInterfaces } from 'node:os';
 import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
+import { streamRewrites } from './lib/rewrites.ts';
 
 /**
  * Maskinens private IPv4-adresser — for `allowedDevOrigins` under.
@@ -43,31 +44,37 @@ const nextConfig: NextConfig = {
    */
   allowedDevOrigins: lokaleIPv4(),
   // Workspace-pakkene distribueres som TS-kilde — Next transpilerer dem.
-  transpilePackages: ['@endwise/ui', '@endwise/widget-tokens'],
+  // F13-03: `@endwise/api` (og avhengighetene) kjøres INNE i web, ikke via rewrite.
+  transpilePackages: [
+    '@endwise/api',
+    '@endwise/ui',
+    '@endwise/widget-tokens',
+    '@endwise/auth',
+    '@endwise/db',
+    '@endwise/events',
+    '@endwise/modules',
+    '@endwise/agent-runtime',
+    '@endwise/agents',
+    '@endwise/guardrails',
+    '@endwise/providers',
+    '@endwise/toolkit-quick',
+    '@endwise/toolkit-resend',
+    '@endwise/toolkit-twilio',
+    '@endwise/toolkit-vegvesen',
+  ],
+  // `pg` har native optional deps — ikke bundle i serverless-funksjonen.
+  serverExternalPackages: ['pg'],
   typedRoutes: true,
-  // F1 — proxy Better-Auth (/api/auth/*) og tRPC (/trpc/*) til apps/api (:3001).
-  // Same-origin i nettleseren → sesjonscookie deles uten CORS-krøll.
+  // F13-03 — auth/tRPC/chat/invitasjoner er Next route handlers (same-origin).
+  // Bare SSE (`apps/stream`) proxes fortsatt; den hører ikke hjemme på Vercel
+  // serverless (permanent LISTEN + 30 min tilkoblinger).
   //
-  // F6-02 — samme grep for SSE-strømmen (apps/stream, :3002). `EventSource` kan
-  // ikke sette headere og sender kun cookies same-origin; uten denne rewriten
-  // ville sanntidskanalen enten vært uautentisert eller krevd CORS + token i URL.
-  // En sesjonstoken i en query-parameter havner i hver eneste tilgangslogg.
+  // F6-02 — `EventSource` kan ikke sette headere og sender kun cookies
+  // same-origin; uten denne rewriten ville sanntidskanalen enten vært
+  // uautentisert eller krevd CORS + token i URL. En sesjonstoken i en
+  // query-parameter havner i hver eneste tilgangslogg.
   async rewrites() {
-    const api = process.env.API_INTERNAL_URL ?? 'http://localhost:3001';
-    const stream = process.env.STREAM_INTERNAL_URL ?? 'http://localhost:3002';
-    return [
-      { source: '/api/auth/:path*', destination: `${api}/api/auth/:path*` },
-      { source: '/trpc/:path*', destination: `${api}/trpc/:path*` },
-      // F6-18 — strømmende AI-chat for `useChat`. Samme grunn som over: den
-      // skal se same-origin ut, så sesjonscookien følger med uten CORS.
-      // ⚠️ Next streamer denne videre; rewrites buffrer ikke.
-      { source: '/chat/:path*', destination: `${api}/chat/:path*` },
-      // F1-10 — OFFENTLIG invitasjons-API i apps/api.
-      // ⚠️ FLERTALL med vilje: SIDEN ligger på `/invitasjon/[token]` i Next.
-      // Delte de sti, ville Next servert sin egen HTML der klienten venter JSON.
-      { source: '/invitasjoner/:path*', destination: `${api}/invitasjoner/:path*` },
-      { source: '/stream/:path*', destination: `${stream}/:path*` },
-    ];
+    return [...streamRewrites(process.env)];
   },
   experimental: {
     // React 19.2 native View Transitions (techstack §2 Frontend)

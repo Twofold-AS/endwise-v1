@@ -6,8 +6,8 @@ import { type ReactNode, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 
 /**
- * F1 — tRPC + React Query-provider. `/trpc` proxes til apps/api (same-origin).
- * `credentials: 'include'` sender sesjonscookien med.
+ * F1 / F13-03 — tRPC + React Query-provider. `/trpc` er en Next route handler
+ * (same-origin). `credentials: 'include'` sender sesjonscookien med.
  */
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());

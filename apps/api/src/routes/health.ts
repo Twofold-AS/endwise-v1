@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
+import { handleHealth } from '../http/health.ts';
 
-export const health = new Hono().get('/', (c) =>
-  c.json({ ok: true, service: 'api', at: new Date().toISOString() }),
-);
+export const health = new Hono().get('/', () => handleHealth());

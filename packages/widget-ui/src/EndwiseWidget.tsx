@@ -1,10 +1,12 @@
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import { resetBookingChoice } from './booking-choice.ts';
 import {
   type ChatReply,
   createWidgetClient,
   WIDGET_DISCLOSURE_TEXT,
   type WidgetService,
 } from './client.ts';
+import { WIDGET_FALLBACK as fb } from './widget-fallbacks.ts';
 
 /**
  * F4-03 — Embeddbar kundewidget: art. 50-merking + AI-chat + booking-flyt.
@@ -21,15 +23,16 @@ export interface EndwiseWidgetProps {
 
 const box: CSSProperties = {
   fontFamily: 'var(--ew-font-sans, system-ui, sans-serif)',
-  background: 'var(--ew-bg, #151515)',
-  color: 'var(--ew-fg, #fafafa)',
-  border: '1px solid var(--ew-border, #262626)',
+  background: `var(--ew-bg, ${fb.bg})`,
+  color: `var(--ew-fg, ${fb.fg})`,
+  border: `1px solid var(--ew-border, ${fb.border})`,
   borderRadius: 'var(--ew-radius-lg, 12px)',
   width: '100%',
   maxWidth: 420,
   overflow: 'hidden',
 };
-const accent = 'var(--ew-accent, #1ed27d)';
+const accent = `var(--ew-accent, ${fb.accent})`;
+const accentFg = `var(--ew-accent-fg, ${fb.accentFg})`;
 
 export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: EndwiseWidgetProps) {
   const clientRef = useRef(createWidgetClient({ apiBase, publishableKey }));
@@ -79,9 +82,9 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
           padding: '10px 12px',
           fontSize: 12,
           lineHeight: 1.4,
-          background: 'var(--ew-surface, #1a1a1a)',
-          borderBottom: '1px solid var(--ew-border, #262626)',
-          color: 'var(--ew-fg-muted, #a1a1a1)',
+          background: `var(--ew-surface, ${fb.surface})`,
+          borderBottom: `1px solid var(--ew-border, ${fb.border})`,
+          color: `var(--ew-fg-muted, ${fb.fgMuted})`,
         }}
       >
         <span aria-hidden="true">🤖</span>
@@ -89,7 +92,7 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
       </div>
 
       {/* Faner */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--ew-border, #262626)' }}>
+      <div style={{ display: 'flex', borderBottom: `1px solid var(--ew-border, ${fb.border})` }}>
         {(['chat', 'booking'] as const).map((t) => (
           <button
             type="button"
@@ -101,7 +104,7 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
               background: 'transparent',
               border: 'none',
               borderBottom: tab === t ? `2px solid ${accent}` : '2px solid transparent',
-              color: tab === t ? 'var(--ew-fg, #fafafa)' : 'var(--ew-fg-muted, #a1a1a1)',
+              color: tab === t ? `var(--ew-fg, ${fb.fg})` : `var(--ew-fg-muted, ${fb.fgMuted})`,
               cursor: 'pointer',
               fontWeight: 600,
               fontSize: 13,
@@ -131,7 +134,7 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
             }}
           >
             {messages.length === 0 && (
-              <p style={{ fontSize: 13, color: 'var(--ew-fg-muted, #a1a1a1)' }}>
+              <p style={{ fontSize: 13, color: `var(--ew-fg-muted, ${fb.fgMuted})` }}>
                 {locale === 'no'
                   ? 'Spør oss om verkstedtjenester, priser eller ledig tid.'
                   : 'Ask us about services, prices or availability.'}
@@ -147,8 +150,8 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
                   padding: '8px 10px',
                   borderRadius: 10,
                   fontSize: 13,
-                  background: m.from === 'you' ? accent : 'var(--ew-surface, #1a1a1a)',
-                  color: m.from === 'you' ? '#04140b' : 'var(--ew-fg, #fafafa)',
+                  background: m.from === 'you' ? accent : `var(--ew-surface, ${fb.surface})`,
+                  color: m.from === 'you' ? accentFg : `var(--ew-fg, ${fb.fg})`,
                 }}
               >
                 {m.text}
@@ -160,7 +163,7 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
               display: 'flex',
               gap: 8,
               padding: 12,
-              borderTop: '1px solid var(--ew-border, #262626)',
+              borderTop: `1px solid var(--ew-border, ${fb.border})`,
             }}
           >
             <input
@@ -172,9 +175,9 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
                 flex: 1,
                 padding: '8px 10px',
                 borderRadius: 8,
-                border: '1px solid var(--ew-border, #262626)',
-                background: 'var(--ew-bg, #151515)',
-                color: 'var(--ew-fg, #fafafa)',
+                border: `1px solid var(--ew-border, ${fb.border})`,
+                background: `var(--ew-bg, ${fb.bg})`,
+                color: `var(--ew-fg, ${fb.fg})`,
                 fontSize: 13,
               }}
             />
@@ -187,7 +190,7 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
                 borderRadius: 8,
                 border: 'none',
                 background: accent,
-                color: '#04140b',
+                color: accentFg,
                 fontWeight: 600,
                 cursor: 'pointer',
                 opacity: busy ? 0.5 : 1,
@@ -263,16 +266,16 @@ function BookingPanel({
 
   const label: CSSProperties = {
     fontSize: 12,
-    color: 'var(--ew-fg-muted, #a1a1a1)',
+    color: `var(--ew-fg-muted, ${fb.fgMuted})`,
     marginBottom: 4,
   };
   const field: CSSProperties = {
     width: '100%',
     padding: '8px 10px',
     borderRadius: 8,
-    border: '1px solid var(--ew-border, #262626)',
-    background: 'var(--ew-bg, #151515)',
-    color: 'var(--ew-fg, #fafafa)',
+    border: `1px solid var(--ew-border, ${fb.border})`,
+    background: `var(--ew-bg, ${fb.bg})`,
+    color: `var(--ew-fg, ${fb.fg})`,
     fontSize: 13,
     marginBottom: 10,
   };
@@ -282,7 +285,12 @@ function BookingPanel({
       <div style={label}>{locale === 'no' ? 'Tjeneste' : 'Service'}</div>
       <select
         value={serviceVersionId}
-        onChange={(e) => setServiceVersionId(e.target.value)}
+        onChange={(e) => {
+          setServiceVersionId(e.target.value);
+          const cleared = resetBookingChoice();
+          setSlots(cleared.slots);
+          setChosen(cleared.chosen);
+        }}
         style={field}
       >
         <option value="">{locale === 'no' ? 'Velg…' : 'Choose…'}</option>
@@ -294,12 +302,22 @@ function BookingPanel({
       </select>
 
       <div style={label}>{locale === 'no' ? 'Dato' : 'Date'}</div>
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={field} />
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => {
+          setDate(e.target.value);
+          const cleared = resetBookingChoice();
+          setSlots(cleared.slots);
+          setChosen(cleared.chosen);
+        }}
+        style={field}
+      />
       <button
         type="button"
         onClick={loadSlots}
         disabled={!serviceVersionId}
-        style={{ ...field, cursor: 'pointer', background: 'var(--ew-surface, #1a1a1a)' }}
+        style={{ ...field, cursor: 'pointer', background: `var(--ew-surface, ${fb.surface})` }}
       >
         {locale === 'no' ? 'Vis ledige tider' : 'Show times'}
       </button>
@@ -314,9 +332,9 @@ function BookingPanel({
               style={{
                 padding: '6px 8px',
                 borderRadius: 8,
-                border: `1px solid ${chosen === s ? accent : 'var(--ew-border, #262626)'}`,
+                border: `1px solid ${chosen === s ? accent : `var(--ew-border, ${fb.border})`}`,
                 background: chosen === s ? accent : 'transparent',
-                color: chosen === s ? '#04140b' : 'var(--ew-fg, #fafafa)',
+                color: chosen === s ? accentFg : `var(--ew-fg, ${fb.fg})`,
                 fontSize: 12,
                 cursor: 'pointer',
               }}
@@ -346,7 +364,7 @@ function BookingPanel({
               borderRadius: 8,
               border: 'none',
               background: accent,
-              color: '#04140b',
+              color: accentFg,
               fontWeight: 600,
               cursor: 'pointer',
               opacity: name && phone ? 1 : 0.5,

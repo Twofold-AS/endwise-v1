@@ -1,10 +1,12 @@
 'use client';
 
-import { Lock, StatefulButton } from '@endwise/ui';
+import { Lock, Mail, ShieldCheck, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
+import { trpc } from '@/lib/trpc';
 import { Field, INPUT, PassordFelt } from '../../_auth/felter';
+import { destinasjonEtterInvite, trengerKodeSteg } from '../_landing';
 
 /**
  * F1-10 / F5-26 — INVITEE-SIDEN. Første møte med Endwise.
@@ -15,12 +17,15 @@ import { Field, INPUT, PassordFelt } from '../../_auth/felter';
  * fullført 2FA. Denne siden snakker derfor kun med to offentlige endepunkter:
  * `/invitasjoner/*` (vår egen) og `/api/auth/*` (Better-Auth).
  *
- * ── Kjeden ───────────────────────────────────────────────────────────────
- *   1. HER: sett/bytt passord (eier alltid; ny ansatt alltid)
- *   2. Better-Auth: logg inn
- *   3. `/2fa-oppsett` (F1-11)
- *   4. Eier: `/oppstart` (visningsnavn, valgfrie tillegg, team).
- *      Ansatt: lander i funksjonens visning. ⛔ Ingen plan-velger her.
+ * ── Kjeden (samme skall, første klikk) ──────────────────────────────────
+ *   A. HER: sett/bytt passord
+ *   B. 2FA hvis rollen krever det — kode i SAMME chrome, ikke «logg inn igjen»
+ *   C. Eier: `/oppstart`. Ansatt: `session.me.landing`.
+ *
+ * ⛔ Fersk invitee (`kreverPassord`) sendes ALDRI til `/signin`.
+ * ⛔ Hard navigasjon (`location.assign`) — myk klientnavigasjon er dobbel-login-bugen.
+ * Aktiv organisasjon settes FØR navigasjon, ellers er dashbordet tomt til
+ * neste innlogging.
  *
  * ── Chrome ───────────────────────────────────────────────────────────────
  * Samme skall som `/signin` og `/2fa-oppsett`: sentrert `max-w-sm`, logo
@@ -47,14 +52,18 @@ const FUNKSJONSTEKST: Record<string, string> = {
 
 export default function InvitasjonPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
+  const utils = trpc.useUtils();
 
   const [inv, setInv] = useState<Invitasjon | null>(null);
   const [laster, setLaster] = useState(true);
   const [feil, setFeil] = useState<string | null>(null);
   const [navn, setNavn] = useState('');
   const [passord, setPassord] = useState('');
+  const [kode, setKode] = useState('');
   const [sender, setSender] = useState(false);
   const [ferdig, setFerdig] = useState(false);
+  const [steg, setSteg] = useState<'skjema' | 'kode'>('skjema');
+  const codeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let avbrutt = false;
@@ -78,6 +87,44 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
       avbrutt = true;
     };
   }, [token]);
+
+  useEffect(() => {
+    if (steg === 'kode') codeRef.current?.focus();
+  }, [steg]);
+
+  async function aktiverOrg() {
+    const orgs = await authClient.organization.list();
+    const first = orgs.data?.[0];
+    if (first) await authClient.organization.setActive({ organizationId: first.id });
+  }
+
+  async function land(kind: Invitasjon['kind']) {
+    await aktiverOrg();
+    if (kind === 'owner') {
+      window.location.assign(destinasjonEtterInvite('owner'));
+      return;
+    }
+    const landing = await utils.session.me
+      .fetch()
+      .then((me) => me.landing)
+      .catch(() => '/dashboard');
+    window.location.assign(destinasjonEtterInvite('staff', landing));
+  }
+
+  async function startKodeSteg(passordForEnable: string) {
+    const enable = await authClient.twoFactor.enable({ password: passordForEnable });
+    if (enable.error && !/already/i.test(enable.error.message ?? '')) {
+      setFeil(enable.error.message ?? 'Kunne ikke starte tofaktor.');
+      return false;
+    }
+    const sendt = await authClient.twoFactor.sendOtp();
+    if (sendt.error) {
+      setFeil(sendt.error.message ?? 'Kunne ikke sende engangskode.');
+      return false;
+    }
+    setSteg('kode');
+    return true;
+  }
 
   async function godta(event: React.FormEvent) {
     event.preventDefault();
@@ -113,13 +160,59 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         password: trimmedPassord,
       });
       if (inn.error) {
-        window.location.assign('/signin');
+        setFeil(inn.error.message ?? 'Klarte ikke logge inn. Prøv igjen fra denne siden.');
+        setFerdig(false);
         return;
       }
 
-      window.location.assign('/2fa-oppsett');
+      const redirect =
+        (inn.data as { twoFactorRedirect?: boolean } | null)?.twoFactorRedirect === true;
+      if (trengerKodeSteg({ twoFactorRedirect: redirect })) {
+        const sendt = await authClient.twoFactor.sendOtp();
+        if (sendt.error) {
+          setFeil(sendt.error.message ?? 'Kunne ikke sende engangskode.');
+          setFerdig(false);
+          return;
+        }
+        setSteg('kode');
+        setFerdig(false);
+        return;
+      }
+
+      if (await startKodeSteg(trimmedPassord)) {
+        setFerdig(false);
+        return;
+      }
+      setFerdig(false);
     } catch (error) {
       setFeil((error as Error).message);
+      setFerdig(false);
+    } finally {
+      setSender(false);
+    }
+  }
+
+  async function bekreftKode(event: React.FormEvent) {
+    event.preventDefault();
+    if (!inv) return;
+    setFeil(null);
+    setSender(true);
+    try {
+      const res = await authClient.twoFactor.verifyOtp({ code: kode.trim() });
+      if (res.error) {
+        setFeil(res.error.message ?? 'Feil kode.');
+        setKode('');
+        codeRef.current?.focus();
+        return;
+      }
+      await land(inv.kind);
+    } catch (error) {
+      const melding = error instanceof Error ? error.message : String(error);
+      if (trengerKodeSteg({ feil: melding })) {
+        setFeil('Tofaktor kreves. Skriv koden vi sendte.');
+        return;
+      }
+      setFeil(melding);
     } finally {
       setSender(false);
     }
@@ -128,14 +221,18 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const rolle =
     inv?.kind === 'owner' ? 'eier' : (FUNKSJONSTEKST[inv?.funksjon ?? ''] ?? inv?.funksjon);
   const tittel = inv
-    ? `Velkommen til ${inv.forhandler}`
+    ? steg === 'kode'
+      ? 'Bekreft med engangskode'
+      : `Velkommen til ${inv.forhandler}`
     : laster
       ? 'Invitasjon'
       : 'Invitasjonen virker ikke';
   const undertekst = inv
-    ? inv.kind === 'owner'
-      ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
-      : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
+    ? steg === 'kode'
+      ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
+      : inv.kind === 'owner'
+        ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
+        : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
     : laster
       ? null
       : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be om en ny hvis du trenger det.';
@@ -180,7 +277,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
           </div>
         ) : null}
 
-        {inv ? (
+        {inv && steg === 'skjema' ? (
           <form
             onSubmit={(e) => void godta(e)}
             className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
@@ -238,6 +335,54 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                 }
               >
                 Fortsett
+              </StatefulButton>
+            </div>
+          </form>
+        ) : null}
+
+        {inv && steg === 'kode' ? (
+          <form
+            onSubmit={(e) => void bekreftKode(e)}
+            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
+          >
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
+              <Field id="inv-otp" label="Engangskode">
+                <input
+                  id="inv-otp"
+                  ref={codeRef}
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  required
+                  value={kode}
+                  onChange={(e) => setKode(e.target.value.replace(/\D/g, ''))}
+                  className={`${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`}
+                  placeholder="••••••"
+                />
+              </Field>
+              {feil ? (
+                <p role="alert" className="text-[12px] text-danger">
+                  {feil}
+                </p>
+              ) : null}
+              <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
+                <Mail size={13} className="mt-px shrink-0" />
+                <span>Kjører du lokalt uten Resend, står koden i api-loggen i terminalen.</span>
+              </p>
+            </div>
+            <div className="px-1.5 pt-1 pb-1">
+              <StatefulButton
+                type="submit"
+                state={sender ? 'loading' : 'idle'}
+                className="w-full"
+                loadingText="Bekrefter …"
+                successText="Bekreftet"
+                errorText="Feil kode"
+                icon={<ShieldCheck size={15} />}
+                disabled={sender || kode.length < 6}
+              >
+                Bekreft
               </StatefulButton>
             </div>
           </form>

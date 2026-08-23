@@ -1,10 +1,11 @@
 'use client';
 
 /**
- * F5-26 — Nivå + faste/valgfrie tillegg.
+ * F5-26 / F5-32 — Nivå + tillegg utenfor pakken.
  *
  * TIERS/TILLEGG er kilden. Ingen hardkodede nøkler. shop vises
- * aldri. SMS er tillegg på alle nivåer (pass-through, ingen månedsavgift).
+ * aldri. SMS (twilio) er tillegg på alle nivåer, men ALDRI en avkrysning
+ * som planmodul — pass-through per melding, ingen månedsavgift.
  */
 export type Nivaa = {
   key: string;
@@ -24,7 +25,9 @@ export type Tillegg = {
 
 export function tilleggForNivaa(nivaa: Nivaa | undefined, tillegg: Tillegg[]): Tillegg[] {
   const inkludert = new Set(nivaa?.modules ?? []);
-  return tillegg.filter((t) => t.module !== 'shop' && !inkludert.has(t.module));
+  return tillegg.filter(
+    (t) => t.module !== 'shop' && t.module !== 'twilio' && !inkludert.has(t.module),
+  );
 }
 
 export function tilleggNokler(
@@ -51,20 +54,19 @@ export function NivaaValg({
   valgt: string;
   onChange: (key: string) => void;
 }) {
+  const valgtNivaa = nivaa.find((n) => n.key === valgt);
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-label text-fg">Nivå</legend>
-      <p className="text-[12px] text-fg-muted leading-relaxed">
-        Velg én pakke. Tillegg som allerede ligger i pakken vises ikke.
-      </p>
-      <div className="grid gap-2">
+      <p className="text-[12px] text-fg-muted leading-relaxed">Velg én pakke.</p>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {nivaa.map((n) => {
           const aktiv = valgt === n.key;
           return (
             <label
               key={n.key}
               className={`flex cursor-pointer flex-col gap-1 rounded-xl border px-3 py-3 ${
-                aktiv ? 'border-fg bg-surface-2' : 'border-border'
+                aktiv ? 'border-fg bg-accent-soft' : 'border-border'
               }`}
             >
               <span className="flex items-center gap-2">
@@ -96,81 +98,56 @@ export function NivaaValg({
           );
         })}
       </div>
+      {valgtNivaa ? (
+        <p className="text-[12px] text-fg-muted leading-relaxed">
+          Tillegg under er utenom pakken. Det som følger med {valgtNivaa.name} er allerede
+          inkludert.
+        </p>
+      ) : null}
     </fieldset>
   );
 }
 
 export function TilleggListe({
   tillegg,
-  included,
-  optional,
-  onToggleIncluded,
-  onToggleOptional,
+  valgte,
+  nivaaNavn,
+  onToggle,
 }: {
   tillegg: Tillegg[];
-  included: Set<string>;
-  optional: Set<string>;
-  onToggleIncluded: (key: string) => void;
-  onToggleOptional: (key: string) => void;
+  valgte: Set<string>;
+  nivaaNavn: string;
+  onToggle: (key: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-4">
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-label text-fg">Faste tillegg</legend>
-        <p className="text-[12px] text-fg-muted leading-relaxed">
-          Kryss av det som skal ligge i pakken utover nivået. Tillegg som allerede ligger i pakken
-          vises ikke.
-        </p>
-        {tillegg.length === 0 ? (
-          <p className="text-[12px] text-fg-muted">
-            Ingen faste tillegg å legge til på dette nivået.
-          </p>
-        ) : (
-          <div className="grid gap-1.5 sm:grid-cols-2">
-            {tillegg.map((t) => (
-              <label key={`fast-${t.key}`} className="flex items-start gap-2 text-body text-fg">
-                <input
-                  type="checkbox"
-                  checked={included.has(t.key)}
-                  onChange={() => onToggleIncluded(t.key)}
-                  className="mt-0.5 size-4 accent-[#111]"
-                />
-                <span>
-                  {t.name}
-                  <span className="block text-[12px] text-fg-muted">{t.desc}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
-      </fieldset>
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-label text-fg">Valgfritt i veiviseren</legend>
-        <p className="text-[12px] text-fg-muted leading-relaxed">
-          Eieren kan slå disse på under oppstart. Ikke hele katalogen — bare det du åpner.
-        </p>
-        {tillegg.length === 0 ? (
-          <p className="text-[12px] text-fg-muted">Ingen valgfrie tillegg på dette nivået.</p>
-        ) : (
-          <div className="grid gap-1.5 sm:grid-cols-2">
-            {tillegg.map((t) => (
-              <label key={`valg-${t.key}`} className="flex items-start gap-2 text-body text-fg">
-                <input
-                  type="checkbox"
-                  checked={optional.has(t.key)}
-                  disabled={included.has(t.key)}
-                  onChange={() => onToggleOptional(t.key)}
-                  className="mt-0.5 size-4 accent-[#111]"
-                />
-                <span>
-                  {t.name}
-                  <span className="block text-[12px] text-fg-muted">{t.desc}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
-      </fieldset>
-    </div>
+    <fieldset className="flex flex-col gap-2">
+      <legend className="text-label text-fg">Tillegg som ikke ligger i {nivaaNavn}</legend>
+      <p className="text-[12px] text-fg-muted leading-relaxed">Eieren ser bare disse i oppstart.</p>
+      {tillegg.length === 0 ? (
+        <p className="text-[12px] text-fg-muted">Ingen tillegg utenom {nivaaNavn}.</p>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-border">
+          {tillegg.map((t, i) => (
+            <label
+              key={t.key}
+              className={`flex h-row items-center gap-3 bg-bg px-4 text-body text-fg ${
+                i > 0 ? 'border-border border-t' : ''
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={valgte.has(t.key)}
+                onChange={() => onToggle(t.key)}
+                className="size-4 accent-[#111]"
+              />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-label">{t.name}</span>
+                <span className="truncate text-[12px] text-fg-muted">{t.desc}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
+    </fieldset>
   );
 }

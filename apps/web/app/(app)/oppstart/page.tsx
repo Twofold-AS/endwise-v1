@@ -1,20 +1,18 @@
 'use client';
 
 import { Inbox, StatefulButton, Store, Wrench } from '@endwise/ui';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { AvatarVelger, TOMT } from '../_avatar/avatar-velger';
 import { CardShell } from '../_shell/cards';
 
 /**
  * F5-26 — EIER-VEIVISER. Etter passord (invite) og tvungen 2FA.
  *
- * 0. Visningsnavn
- * 1. Avatar
- * 2. Valgfrie tillegg — KUN nøkler admin merket optional
- * 3. Team — staff-invitasjoner. Aldri leder/dealer_admin
+ * Visningsnavn → (Tillegg bare hvis admin åpnet optional) → Team.
+ * ⛔ Ingen avatar-steg. Tomt tilleggssteg vises ikke.
  */
 type Funksjon = 'selger' | 'support' | 'mekaniker';
+type StegId = 'navn' | 'tillegg' | 'team';
 
 const FUNKSJONER: { verdi: Funksjon; label: string; hint: string; Icon: typeof Store }[] = [
   { verdi: 'selger', label: 'Selger', hint: 'Lander på dashbordet', Icon: Store },
@@ -22,18 +20,14 @@ const FUNKSJONER: { verdi: Funksjon; label: string; hint: string; Icon: typeof S
   { verdi: 'mekaniker', label: 'Mekaniker', hint: 'Lander på Min dag', Icon: Wrench },
 ];
 
-const STEG = ['Visningsnavn', 'Avatar', 'Tillegg', 'Team'] as const;
-
 export default function OppstartPage() {
   const utils = trpc.useUtils();
   const status = trpc.onboarding.status.useQuery();
-  const meg = trpc.session.me.useQuery();
   const fullfor = trpc.onboarding.fullfor.useMutation();
   const inviter = trpc.invitasjoner.opprett.useMutation();
   const apne = trpc.invitasjoner.list.useQuery();
-  const settAvatar = trpc.profile.setAvatar.useMutation();
 
-  const [steg, setSteg] = useState(0);
+  const [steg, setSteg] = useState<StegId>('navn');
   const [navn, setNavn] = useState<string | null>(null);
   const [extras, setExtras] = useState<Set<string>>(new Set());
   const [epost, setEpost] = useState('');
@@ -43,6 +37,13 @@ export default function OppstartPage() {
 
   const visningsnavn = navn ?? status.data?.visningsnavn ?? '';
   const nivaaNavn = status.data?.nivaa.name ?? 'Start';
+  const harTillegg = (status.data?.optional.length ?? 0) > 0;
+  const stegRad = useMemo<Array<{ id: StegId; tittel: string }>>(() => {
+    const rad: Array<{ id: StegId; tittel: string }> = [{ id: 'navn', tittel: 'Visningsnavn' }];
+    if (harTillegg) rad.push({ id: 'tillegg', tittel: 'Tillegg' });
+    rad.push({ id: 'team', tittel: 'Team' });
+    return rad;
+  }, [harTillegg]);
 
   function toggle(key: string) {
     setExtras((forrige) => {
@@ -51,6 +52,14 @@ export default function OppstartPage() {
       else neste.add(key);
       return neste;
     });
+  }
+
+  function etterNavn() {
+    setSteg(harTillegg ? 'tillegg' : 'team');
+  }
+
+  function tilbakeFraTeam() {
+    setSteg(harTillegg ? 'tillegg' : 'navn');
   }
 
   async function sendAnsatt(event: FormEvent) {
@@ -80,16 +89,6 @@ export default function OppstartPage() {
       });
       void utils.session.me.invalidate();
       window.location.assign('/dashboard');
-    } catch (error) {
-      setFeil((error as Error).message);
-    }
-  }
-
-  async function hoppOverAvatar() {
-    setFeil(null);
-    try {
-      await settAvatar.mutateAsync(TOMT);
-      setSteg(2);
     } catch (error) {
       setFeil((error as Error).message);
     }
@@ -133,28 +132,30 @@ export default function OppstartPage() {
       <div>
         <h1 className="text-title text-fg">Velkommen til Endwise</h1>
         <p className="text-body text-fg-muted">
-          Fire steg: visningsnavn, avatar, tillegg som er åpnet for dere, og teamet.
+          {harTillegg
+            ? 'Visningsnavn, tillegg som er åpnet for dere, og teamet.'
+            : 'Visningsnavn og teamet.'}
         </p>
       </div>
 
       <ol className="flex gap-2">
-        {STEG.map((tittel, i) => (
+        {stegRad.map((s, i) => (
           <li
-            key={tittel}
+            key={s.id}
             className={`flex-1 rounded-control px-2 py-1.5 text-center text-[12px] ${
-              i === steg
+              s.id === steg
                 ? 'bg-fg text-bg'
-                : i < steg
+                : stegRad.findIndex((x) => x.id === steg) > i
                   ? 'bg-accent-soft text-fg'
                   : 'bg-surface-2 text-fg-muted'
             }`}
           >
-            {i + 1}. {tittel}
+            {s.tittel}
           </li>
         ))}
       </ol>
 
-      {steg === 0 ? (
+      {steg === 'navn' ? (
         <CardShell className="flex flex-col gap-4 p-5">
           <div>
             <p className="text-label text-fg">Visningsnavn</p>
@@ -175,7 +176,7 @@ export default function OppstartPage() {
             <button
               type="button"
               disabled={visningsnavn.trim().length < 2}
-              onClick={() => setSteg(1)}
+              onClick={etterNavn}
               className="inline-flex h-control items-center rounded-control bg-fg px-4 text-bg text-label disabled:opacity-40"
             >
               Neste
@@ -184,44 +185,7 @@ export default function OppstartPage() {
         </CardShell>
       ) : null}
 
-      {steg === 1 ? (
-        <CardShell className="flex flex-col gap-4 p-5">
-          <div>
-            <p className="text-label text-fg">Avatar</p>
-            <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-              Vises for teamet. Hopper du over, utledes ansiktet fra navnet.
-            </p>
-          </div>
-          <AvatarVelger seed={meg.data?.userId ?? null} utenKort visLagre={false} />
-          <div className="flex justify-between">
-            <button
-              type="button"
-              onClick={() => setSteg(0)}
-              className="text-[12px] text-fg-muted underline-offset-2 hover:underline"
-            >
-              Tilbake
-            </button>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => void hoppOverAvatar()}
-                className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg"
-              >
-                Hopp over
-              </button>
-              <button
-                type="button"
-                onClick={() => setSteg(2)}
-                className="inline-flex h-control items-center rounded-control bg-fg px-4 text-bg text-label"
-              >
-                Neste
-              </button>
-            </div>
-          </div>
-        </CardShell>
-      ) : null}
-
-      {steg === 2 ? (
+      {steg === 'tillegg' && harTillegg ? (
         <CardShell className="flex flex-col gap-4 p-5">
           <div>
             <p className="text-label text-fg">Tillegg</p>
@@ -229,36 +193,32 @@ export default function OppstartPage() {
               Pakken din er {nivaaNavn}. Disse kan du slå på.
             </p>
           </div>
-          {(status.data?.optional.length ?? 0) === 0 ? (
-            <p className="text-[12px] text-fg-muted">Ingen valgfrie tillegg. Du kan gå videre.</p>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              {status.data?.optional.map((m) => (
-                <label key={m.key} className="flex items-center gap-2 text-body text-fg">
-                  <input
-                    type="checkbox"
-                    checked={extras.has(m.key) || m.enabled}
-                    disabled={m.enabled}
-                    onChange={() => toggle(m.key)}
-                    className="size-4 accent-[#111]"
-                  />
-                  {m.label}
-                </label>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-col gap-1.5">
+            {status.data?.optional.map((m) => (
+              <label key={m.key} className="flex h-row items-center gap-2 text-body text-fg">
+                <input
+                  type="checkbox"
+                  checked={extras.has(m.key) || m.enabled}
+                  disabled={m.enabled}
+                  onChange={() => toggle(m.key)}
+                  className="size-4 accent-[#111]"
+                />
+                {m.label}
+              </label>
+            ))}
+          </div>
 
           <div className="flex justify-between">
             <button
               type="button"
-              onClick={() => setSteg(1)}
+              onClick={() => setSteg('navn')}
               className="text-[12px] text-fg-muted underline-offset-2 hover:underline"
             >
               Tilbake
             </button>
             <button
               type="button"
-              onClick={() => setSteg(3)}
+              onClick={() => setSteg('team')}
               className="inline-flex h-control items-center rounded-control bg-fg px-4 text-bg text-label"
             >
               Neste
@@ -267,7 +227,7 @@ export default function OppstartPage() {
         </CardShell>
       ) : null}
 
-      {steg === 3 ? (
+      {steg === 'team' ? (
         <CardShell className="flex flex-col gap-4 p-5">
           <div>
             <p className="text-label text-fg">Inviter teamet</p>
@@ -342,7 +302,7 @@ export default function OppstartPage() {
           <div className="flex justify-between">
             <button
               type="button"
-              onClick={() => setSteg(2)}
+              onClick={tilbakeFraTeam}
               className="text-[12px] text-fg-muted underline-offset-2 hover:underline"
             >
               Tilbake

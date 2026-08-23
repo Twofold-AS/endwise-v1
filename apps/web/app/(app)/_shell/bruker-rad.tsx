@@ -44,17 +44,15 @@ export function BrukerRad({
 
   const avatar = seed ? (
     /**
-     * ⛔ `alltid` — den andre i appen, ved siden av profil-forhåndsvisningen.
-     * Kostnadsargumentet mot `alltid` handler om ANTALL: inline SVG med ~et
-     * dusin noder er dyrt i en liste med 200 rader. Her er det ÉN, den er din
-     * egen, og den står på samme sted uansett hvilken side du er på.
+     * ⛔ `hover` her, `stille` i lister. Humør er alltid happy — ett ansikt
+     * per person, seeden er user.id.
      */
     <Avatar
       seed={seed}
-      valg={profil.data?.avatar}
+      valg={profil.data?.avatar ? { ...profil.data.avatar, humor: 'happy' } : { humor: 'happy' }}
       navn=""
       size={collapsed ? 28 : 26}
-      bevegelse="alltid"
+      bevegelse="hover"
     />
   ) : (
     <span className="inline-grid size-[26px] shrink-0 place-items-center rounded-control bg-surface-2 text-fg-muted">

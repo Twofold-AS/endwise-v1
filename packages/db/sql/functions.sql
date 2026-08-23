@@ -278,18 +278,17 @@ begin
      set tenant_id = v_endwise
    where tenant_id = p_tenant_id;
 
-  -- F14-16: erasure_requests slettes aldri (beviset må overleve). Samme FK.
-  -- CWE-359/863/284: flytt til Endwise-tenanten uten å vise den opprinnelige
-  -- request-UUID-en eller rå subject/bestiller-ID i Endwise-kontekst.
-  -- Schemaet sier subjektet skal være en hash; md5 av UUID er nok til å
-  -- bevise «denne ble slettet» uten å lekke forhandlerens identifikatorer.
-  -- Rapportens requestId fjernes. Nytt id = ny kvittering hos oss, ikke
-  -- den kunden fikk mens forhandleren levde (den relasjonen er borte).
+  -- F14-16: erasure_requests slettes ALDRI (art. 5(2)-beviset må overleve
+  -- forhandlerslett). Samme ON DELETE RESTRICT mot tenants.
+  -- CWE-359/863/284: flytt til Endwise, roter id, hash identifikatorene.
+  -- Ingen server-pepper i repoet. md5 er deterministisk og rainbow-bart;
+  -- sha256(verdi || slettet tenant_id) er ikke-reversibel og tenant-bundet.
+  -- Rå ID-er lagres ikke etter flytt. requestId strippes fra report.
   update erasure_requests
      set id           = gen_random_uuid(),
          tenant_id    = v_endwise,
-         subject_id   = md5(subject_id),
-         requested_by = md5(requested_by),
+         subject_id   = encode(sha256(convert_to(subject_id || p_tenant_id::text, 'UTF8')), 'hex'),
+         requested_by = encode(sha256(convert_to(requested_by || p_tenant_id::text, 'UTF8')), 'hex'),
          report       = (coalesce(report, '{}'::jsonb) - 'requestId')
                         || jsonb_build_object(
                              'relocated', true,

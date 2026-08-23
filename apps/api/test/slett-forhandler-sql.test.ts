@@ -86,12 +86,17 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     }
   });
 
-  it('flyttet erasure_request bytter UUID og hashe subjekt/bestiller (CWE-359)', () => {
+  it('flyttet erasure_request bytter UUID og hasher subjekt/bestiller med sha256 (CWE-359)', () => {
     expect(slettSql).toMatch(/update erasure_requests/);
     expect(slettSql).toMatch(/id\s*=\s*gen_random_uuid\(\)/);
-    expect(slettSql).toMatch(/md5\(subject_id\)/);
-    expect(slettSql).toMatch(/md5\(requested_by\)/);
+    expect(slettSql).not.toMatch(/md5\s*\(\s*subject_id\s*\)/);
+    expect(slettSql).not.toMatch(/md5\s*\(\s*requested_by\s*\)/);
+    expect(slettSql).toMatch(/encode\s*\(\s*sha256\s*\(/);
+    expect(slettSql).toMatch(/subject_id\s*\|\|[\s\S]{0,40}p_tenant_id/);
+    expect(slettSql).toMatch(/requested_by\s*\|\|[\s\S]{0,40}p_tenant_id/);
+    expect(slettSql).toMatch(/slettes ALDRI|slettes aldri/);
     expect(slettSql).toMatch(/request_id_rotated/);
+    expect(slettSql).not.toMatch(/delete from erasure_requests/i);
   });
 
   it('tenants.slett mapper Postgres-cause til TRPCError', () => {

@@ -1,10 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   destinasjonEtterInvite,
   destinasjonNarSesjonFeiler,
+  feilKlasseUtenHemmelighet,
+  krevRevokeAndreSesjoner,
+  REVOKE_ANDRE_SESJONER_UI,
   trengerKodeSteg,
 } from '../app/invitasjon/_landing.ts';
 
@@ -67,6 +70,52 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(land).toMatch(/destinasjonEtterInvite\(/);
     expect(land).toMatch(/TWO_FACTOR_REQUIRED|feil/);
     expect(land).not.toMatch(/catch\s*\(\s*\)\s*=>\s*['"]\/dashboard['"]/);
+    expect(land).toMatch(/krevRevokeAndreSesjoner/);
+    expect(land).not.toMatch(/\.catch\(\s*\(\)\s*=>\s*undefined\s*\)/);
+    expect(land).not.toMatch(/likevel videre/);
+  });
+
+  it('revoke-feil etter brukt OTP kan prøves igjen uten ny verifyOtp', () => {
+    const start = kilde.indexOf('async function bekreftKode');
+    const bekreft = kilde.slice(start, kilde.indexOf('const rolle', start));
+    expect(bekreft).toMatch(/otpFerdigRef|otpBekreftet/);
+    expect(bekreft).toMatch(/verifyOtp/);
+    expect(bekreft).toMatch(/land\(/);
+  });
+
+  it('revokeOtherSessions etter invite-OTP feiler lukket — klasse logges, ingen token', async () => {
+    expect(feilKlasseUtenHemmelighet(new TypeError('boom'))).toBe('TypeError');
+    expect(feilKlasseUtenHemmelighet({ name: 'APIError', message: 'token=abc' })).toBe('APIError');
+    expect(REVOKE_ANDRE_SESJONER_UI).not.toMatch(/token/i);
+
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await expect(
+      krevRevokeAndreSesjoner(async () => ({ error: { name: 'APIError' } }), 'invite'),
+    ).rejects.toThrow(REVOKE_ANDRE_SESJONER_UI);
+    expect(warn).toHaveBeenCalledWith('[invite] revokeOtherSessions feilet', 'APIError');
+
+    await expect(
+      krevRevokeAndreSesjoner(async () => ({ error: { code: 'UNAUTHORIZED' } }), 'invite'),
+    ).rejects.toThrow(REVOKE_ANDRE_SESJONER_UI);
+    expect(warn).toHaveBeenCalledWith('[invite] revokeOtherSessions feilet', 'UNAUTHORIZED');
+
+    await expect(
+      krevRevokeAndreSesjoner(async () => ({ error: 'APIError' }), 'invite'),
+    ).rejects.toThrow(REVOKE_ANDRE_SESJONER_UI);
+    expect(warn).toHaveBeenCalledWith('[invite] revokeOtherSessions feilet', 'APIError');
+
+    await expect(
+      krevRevokeAndreSesjoner(async () => {
+        throw Object.assign(new Error('session token=hemmelig'), { name: 'FetchError' });
+      }, 'invite'),
+    ).rejects.toThrow(REVOKE_ANDRE_SESJONER_UI);
+    expect(warn).toHaveBeenCalledWith('[invite] revokeOtherSessions feilet', 'FetchError');
+    expect(JSON.stringify(warn.mock.calls)).not.toMatch(/hemmelig|token=/i);
+
+    await expect(
+      krevRevokeAndreSesjoner(async () => ({ error: null }), 'invite'),
+    ).resolves.toBeUndefined();
+    warn.mockRestore();
   });
 });
 

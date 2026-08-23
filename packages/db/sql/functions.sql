@@ -105,6 +105,20 @@ grant execute on function redact_audit_log(text) to authenticated;
 --
 -- Den er altså ikke «RLS av» — den er «ett spørsmål, ett svar, og bare hvis du
 -- allerede kjenner hemmeligheten».
+--
+-- ── ⚠️ FORCE RLS + eier som IKKE er superuser (Scaleway, 23.08.2026) ────
+--
+-- SECURITY DEFINER kjører som tabelleieren. Lokalt er Docker-eieren superuser
+-- og bypasser RLS, så testdataen så grønn ut. I prod er eieren `endwise` uten
+-- BYPASSRLS, og `FORCE ROW LEVEL SECURITY` (grants.sql) gjelder også eieren.
+-- Tenant-policyen er `TO authenticated` og krever `app.tenant_id`. Resultatet
+-- uten unntak: 0 rader — samme 404 som et ugyldig token.
+--
+-- `row_security=off` hjelper ikke: den GUC-en kaster hvis en policy VILLE
+-- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
+-- `tenants_platform_admin_read`: en smal policy som slår inn når
+-- `app.invitation_hash` er satt (se grants.sql), og funksjonen setter den
+-- transaksjons-lokalt FØR den leser. Uten GUC ser eieren fortsatt 0 rader.
 
 drop function if exists lookup_open_invitation(text);
 
@@ -118,18 +132,21 @@ returns table (
   kind         text,
   expires_at   timestamptz
 )
-language sql
+language plpgsql
 security definer
 set search_path = public
-stable
 as $$
-  select i.id, i.tenant_id, i.email, i.job_function::text, i.role, i.kind, i.expires_at
-    from invitations i
-   where i.token_hash = p_token_hash
-     and i.accepted_at is null
-     and i.revoked_at  is null
-     and i.expires_at  > now()
-   limit 1;
+begin
+  perform set_config('app.invitation_hash', p_token_hash, true);
+  return query
+    select i.id, i.tenant_id, i.email, i.job_function::text, i.role, i.kind, i.expires_at
+      from invitations i
+     where i.token_hash = p_token_hash
+       and i.accepted_at is null
+       and i.revoked_at  is null
+       and i.expires_at  > now()
+     limit 1;
+end;
 $$;
 
 -- ⛔ Merking av en invitasjon som BRUKT. Samme unntak, samme grunn: den som
@@ -147,6 +164,7 @@ as $$
 declare
   v_id uuid;
 begin
+  perform set_config('app.invitation_hash', p_token_hash, true);
   update invitations
      set accepted_at = now()
    where token_hash = p_token_hash

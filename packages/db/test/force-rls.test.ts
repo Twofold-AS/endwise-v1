@@ -95,6 +95,16 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     ).toEqual([]);
   });
 
+  it('③b invitations_open_by_hash finnes (F1-10 FORCE RLS-unntak)', async () => {
+    const res = await app.execute(sql`
+      select polname, polcmd, polpermissive
+      from pg_policy
+      where polrelid = 'public.invitations'::regclass
+        and polname = 'invitations_open_by_hash'
+    `);
+    expect(res.rows, 'Mangler invitations_open_by_hash. Kjør `pnpm db:grants`.').toHaveLength(1);
+  });
+
   it('④ kjernetabellene har RLS påslått i det hele tatt', async () => {
     const res = await app.execute(sql`
       select c.relname as tabell, c.relrowsecurity as rls

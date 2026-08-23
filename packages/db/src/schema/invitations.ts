@@ -23,6 +23,12 @@ import { tenants } from './tenants.ts';
  * Endwise-admins forhandler-onboarding. Staff-ruten kan ikke velge owner.
  * `endwise_admin` som rolle finnes fortsatt ikke her.
  *
+ * ── Offentlig oppslag ────────────────────────────────────────────────────
+ * Tenant-policyen over holder lederens liste. Den som åpner lenka har ingen
+ * tenant. Unntaket er `lookup_open_invitation` / `invitations_open_by_hash`
+ * i `sql/functions.sql` + `sql/grants.sql` — ikke en Drizzle-policy her,
+ * fordi den må gjelde DEFINER-eieren (TO PUBLIC), ikke bare `authenticated`.
+ *
  * ── Livssyklus ───────────────────────────────────────────────────────────
  * Åpen  = `accepted_at IS NULL AND revoked_at IS NULL AND expires_at > now()`
  * Brukt = `accepted_at` satt. **Engangs**: godta-stien skriver den i samme

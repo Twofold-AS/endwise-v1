@@ -63,3 +63,23 @@ begin
 exception when insufficient_privilege then
   raise notice '[force-rls] mangler rettighet til å sette nobypassrls — verifiseres av testen';
 end $$;
+
+-- ============================================================================
+-- F1-10 — hash-oppslag under FORCE RLS (23.08.2026)
+-- ============================================================================
+-- SECURITY DEFINER på lookup/consume kjører som eieren. Med FORCE RLS har
+-- eieren INGEN tenant-policy (den er TO authenticated), så uten dette unntaket
+-- er hver åpen invitasjon usynlig — prod-404 med samme kropp som «ugyldig
+-- token». Policyen slår bare inn når funksjonen har satt `app.invitation_hash`
+-- (is_local). Uten GUC: 0 rader, også for eieren. Samme mønster som
+-- `tenants_platform_admin_read`.
+--
+-- TO PUBLIC med vilje: DEFINER-eieren er ikke `authenticated`. TO authenticated
+-- alene ville latt hullet stå.
+drop policy if exists invitations_open_by_hash on invitations;
+create policy invitations_open_by_hash on invitations
+  as permissive
+  for all
+  to public
+  using (token_hash = nullif(current_setting('app.invitation_hash', true), ''))
+  with check (token_hash = nullif(current_setting('app.invitation_hash', true), ''));

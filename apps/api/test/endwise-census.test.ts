@@ -20,7 +20,7 @@ async function forventer(
   await expect(kall).rejects.toMatchObject({ code });
 }
 
-const fakeCtx = (role: 'endwise_admin' | 'dealer_admin' | 'dealer_staff') =>
+const fakeCtx = (role: 'endwise_admin' | 'endwise_support' | 'dealer_admin' | 'dealer_staff') =>
   ({
     db: {} as never,
     events: { publish: async () => {} } as never,
@@ -44,6 +44,25 @@ describe('F1-07 — census rolle-sperre', () => {
       appRouter.createCaller(fakeCtx('dealer_admin')).tenants.listModules(),
       'FORBIDDEN',
     );
+  });
+
+  it('endwise_support kan lese census, men ikke listModules', async () => {
+    const caller = appRouter.createCaller(fakeCtx('endwise_support'));
+    expect(typeof caller.tenants.census).toBe('function');
+    await forventer(caller.tenants.listModules(), 'FORBIDDEN');
+  });
+
+  it('census-SQL ekskluderer platform-tenant', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { dirname, resolve } = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const kilde = readFileSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), '../src/trpc/routers/tenants.ts'),
+      'utf8',
+    );
+    expect(kilde).toMatch(/kind} <> 'platform'/);
+    expect(kilde).toMatch(/slug} <> 'endwise'/);
+    expect(kilde).toMatch(/!erPlattformTenant/);
   });
 
   it('⛔ ANGREP: dealer_staff kan ikke listModules', async () => {
@@ -173,7 +192,7 @@ describeDb('F1-07 — Endwise-admin census (Postgres)', () => {
 
     const [tenants] = await owner
       .select({
-        totalt: sql<number>`count(*)::int`,
+        totalt: sql<number>`count(*) filter (where ${schema.tenants.kind} <> 'platform' and ${schema.tenants.slug} <> 'endwise')::int`,
         live: sql<number>`count(*) filter (where ${schema.tenants.kind} = 'live')::int`,
         demo: sql<number>`count(*) filter (where ${schema.tenants.kind} = 'demo')::int`,
       })

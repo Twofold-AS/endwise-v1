@@ -28,6 +28,10 @@ describe('endwiseAdminUtfall', () => {
   it('endwise_admin med sesjon → ok', () => {
     expect(endwiseAdminUtfall({ userId: 'u1', role: 'endwise_admin' })).toBe('ok');
   });
+
+  it('endwise_support med sesjon → ok (innboks + Se verkstedet)', () => {
+    expect(endwiseAdminUtfall({ userId: 'u1', role: 'endwise_support' })).toBe('ok');
+  });
 });
 
 describe('F1-26: server-gate på /admin og /endwise', () => {

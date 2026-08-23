@@ -98,7 +98,8 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
    */
   async function finishSignIn() {
     const orgs = await authClient.organization.list();
-    const first = orgs.data?.[0];
+    const platform = orgs.data?.find((o) => o.slug === 'endwise');
+    const first = platform ?? orgs.data?.[0];
     if (first) await authClient.organization.setActive({ organizationId: first.id });
     setBusy('success');
 

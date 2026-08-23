@@ -20,10 +20,16 @@ import {
   utvidPakke,
 } from '@endwise/modules';
 import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
+import { erPlattformTenant } from '@endwise/modules/plattform';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { resolveDevMode } from '../dev-mode.ts';
-import { endwiseAdminProcedure, protectedProcedure, router } from '../init.ts';
+import {
+  endwiseAdminProcedure,
+  endwiseSupportProcedure,
+  protectedProcedure,
+  router,
+} from '../init.ts';
 import { hashSlettKode, lagSlettKode, slettKodeErGyldig } from '../slett-otp.ts';
 import { loggSlettPostgresFeil, mapSlettPostgresFeil } from '../slett-postgres.ts';
 
@@ -96,11 +102,11 @@ function avvisEkstraTillegg(keys: readonly string[], tierKey: string): string[] 
   return unike;
 }
 
-function krevIkkeEndwise(slug: string, handling: string): void {
-  if (erEndwiseSlug(slug)) {
+function krevIkkeEndwise(tenant: { slug: string; kind?: string | null }, handling: string): void {
+  if (erPlattformTenant(tenant) || erEndwiseSlug(tenant.slug)) {
     throw new TRPCError({
       code: 'FORBIDDEN',
-      message: `Du kan ikke ${handling} Endwise-tenanten.`,
+      message: `Du kan ikke ${handling} Endwise-plattformen.`,
     });
   }
 }
@@ -112,7 +118,7 @@ async function lesTenant(
   id: string;
   name: string;
   slug: string;
-  kind: 'live' | 'demo';
+  kind: 'live' | 'demo' | 'platform';
   plan: string | null;
 } | null> {
   const [tenant] = await withPlatformAdmin(db, (tx) =>
@@ -264,7 +270,7 @@ export const tenantsRouter = router({
    * Feltene er minimale — navn, slug, kind, dato. Ingen forhandlerdata, ingen
    * kunde-PII.
    */
-  list: endwiseAdminProcedure.query(async ({ ctx }) => {
+  list: endwiseSupportProcedure.query(async ({ ctx }) => {
     const rader = await withPlatformAdmin(ctx.db, (tx) =>
       tx
         .select({
@@ -279,19 +285,21 @@ export const tenantsRouter = router({
         .orderBy(desc(schema.tenants.createdAt)),
     );
     return Promise.all(
-      rader.map(async (t) => {
-        const eier = await eierInfo(ctx.db, t.id).catch(() => ({
-          eierEpost: null as string | null,
-          eierInviteUbrukt: false,
-        }));
-        return {
-          ...t,
-          plan: erTierKey(t.plan) ? t.plan : null,
-          erEndwise: erEndwiseSlug(t.slug),
-          eierEpost: eier.eierEpost,
-          eierInviteUbrukt: eier.eierInviteUbrukt,
-        };
-      }),
+      rader
+        .filter((t) => !erPlattformTenant(t))
+        .map(async (t) => {
+          const eier = await eierInfo(ctx.db, t.id).catch(() => ({
+            eierEpost: null as string | null,
+            eierInviteUbrukt: false,
+          }));
+          return {
+            ...t,
+            plan: erTierKey(t.plan) ? t.plan : null,
+            erEndwise: erEndwiseSlug(t.slug),
+            eierEpost: eier.eierEpost,
+            eierInviteUbrukt: eier.eierInviteUbrukt,
+          };
+        }),
     );
   }),
 
@@ -304,11 +312,11 @@ export const tenantsRouter = router({
    * Bookinger telles IKKE: `withPlatformAdmin` åpner bare `tenants`, og en
    * runde `withTenant` per forhandler er ikke billig. Tom telling er ærlig.
    */
-  census: endwiseAdminProcedure.query(async ({ ctx }) => {
+  census: endwiseSupportProcedure.query(async ({ ctx }) => {
     const [tenants] = await withPlatformAdmin(ctx.db, (tx) =>
       tx
         .select({
-          totalt: sql<number>`count(*)::int`,
+          totalt: sql<number>`count(*) filter (where ${schema.tenants.kind} <> 'platform' and ${schema.tenants.slug} <> 'endwise')::int`,
           live: sql<number>`count(*) filter (where ${schema.tenants.kind} = 'live')::int`,
           demo: sql<number>`count(*) filter (where ${schema.tenants.kind} = 'demo')::int`,
         })
@@ -363,7 +371,7 @@ export const tenantsRouter = router({
       }>;
     }> = [];
 
-    for (const t of tenants) {
+    for (const t of tenants.filter((rad) => !erPlattformTenant(rad))) {
       const modules = await withTenant(ctx.db, t.id, (tx) =>
         tx
           .select({
@@ -564,7 +572,7 @@ export const tenantsRouter = router({
       if (!tenant) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
       }
-      krevIkkeEndwise(tenant.slug, 'endre pakken til');
+      krevIkkeEndwise(tenant, 'endre pakken til');
 
       return withTenant(ctx.db, input.tenantId, async (tx) => {
         const eksisterende = await tx
@@ -709,7 +717,7 @@ export const tenantsRouter = router({
       if (!tenant) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
       }
-      krevIkkeEndwise(tenant.slug, 'sende invitasjon på nytt til');
+      krevIkkeEndwise(tenant, 'sende invitasjon på nytt til');
 
       const eier = await eierInfo(ctx.db, input.tenantId);
       if (!eier.eierInviteUbrukt) {
@@ -752,7 +760,7 @@ export const tenantsRouter = router({
       if (!tenant) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
       }
-      krevIkkeEndwise(tenant.slug, 'endre');
+      krevIkkeEndwise(tenant, 'endre');
       if (erEndwiseSlug(input.slug)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
@@ -827,7 +835,7 @@ export const tenantsRouter = router({
       if (!tenant) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
       }
-      krevIkkeEndwise(tenant.slug, 'slette');
+      krevIkkeEndwise(tenant, 'slette');
       if (input.tenantId === ctx.tenantId) {
         throw new TRPCError({
           code: 'FORBIDDEN',
@@ -873,7 +881,7 @@ export const tenantsRouter = router({
       if (!tenant) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
       }
-      krevIkkeEndwise(tenant.slug, 'slette');
+      krevIkkeEndwise(tenant, 'slette');
       if (input.tenantId === ctx.tenantId) {
         throw new TRPCError({
           code: 'FORBIDDEN',

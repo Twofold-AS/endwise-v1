@@ -16,9 +16,10 @@ import { authenticatedRole } from '../roles.ts';
  * Feltet er en SIKKERHETSBETINGELSE, ikke en etikett. Det er tredje lag i
  * dev-mode-gaten (F5-28 ①): flagg PÅ **og** rolle `endwise_admin` **og**
  * `kind = 'demo'`. Fail-safe: default er `live`, så en tenant som ikke sier
- * noe, er ekte.
+ * noe, er ekte. `platform` er Endwise selv (slug `endwise`) — aldri en
+ * forhandler, aldri pakke, aldri i forhandlerlista.
  */
-export const TENANT_KINDS = ['live', 'demo'] as const;
+export const TENANT_KINDS = ['live', 'demo', 'platform'] as const;
 export type TenantKind = (typeof TENANT_KINDS)[number];
 
 export const tenants = pgTable(

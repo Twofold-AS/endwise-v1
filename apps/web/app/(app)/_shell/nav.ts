@@ -36,7 +36,12 @@ import {
   Zap,
 } from '@endwise/ui';
 
-export type OrgRole = 'customer' | 'dealer_staff' | 'dealer_admin' | 'endwise_admin';
+export type OrgRole =
+  | 'customer'
+  | 'dealer_staff'
+  | 'dealer_admin'
+  | 'endwise_admin'
+  | 'endwise_support';
 
 /**
  * F5-13 — SIDEBAR-FØRST NAVIGASJON.
@@ -92,11 +97,13 @@ export type NavItem = {
    *   samme kolonne skal ikke se like presserende ut.
    */
   badge?: 'unread' | 'helpdesk';
+  countKey?: 'kunder' | 'intern' | 'endwise';
 };
 
-const DRIFT: OrgRole[] = ['dealer_staff', 'dealer_admin', 'endwise_admin'];
+const DRIFT: OrgRole[] = ['dealer_staff', 'dealer_admin', 'endwise_admin', 'endwise_support'];
 const ADMIN_OF_TENANT: OrgRole[] = ['dealer_admin', 'endwise_admin'];
-const ENDWISE: OrgRole[] = ['endwise_admin'];
+const ENDWISE: OrgRole[] = ['endwise_admin', 'endwise_support'];
+const ENDWISE_STYRING: OrgRole[] = ['endwise_admin'];
 
 /* ══ KONTEKSTER ═══════════════════════════════════════════════════════════
  * Tre kontekster i ÉN sidebar — dropdownen i toppen bytter hvilken som vises.
@@ -163,8 +170,8 @@ export const CONTEXTS: AppContext[] = [
   },
   {
     key: 'endwise',
-    label: 'Endwise-admin',
-    hint: 'Oversikt og forhandlere',
+    label: 'Endwise',
+    hint: 'Forhandlere, innboks, flagg',
     icon: ShieldCheck,
     roles: ENDWISE,
     landing: '/endwise',
@@ -380,6 +387,14 @@ export const ENDWISE_NAV: NavItem[] = [
     href: '/endwise/innboks',
     roles: ENDWISE,
     badge: 'unread',
+    countKey: 'endwise',
+  },
+  {
+    key: 'endwise-team',
+    label: 'Team',
+    icon: Users,
+    href: '/endwise/team',
+    roles: ENDWISE_STYRING,
   },
   {
     key: 'endwise-forhandlere',
@@ -398,7 +413,7 @@ export const ENDWISE_NAV: NavItem[] = [
     label: 'Hjelpeartikler',
     icon: LifeBuoy,
     href: '/endwise/helpdesk',
-    roles: ENDWISE,
+    roles: ENDWISE_STYRING,
   },
   /**
    * F0-04 — release-toggles, IKKE entitlements. Kjøpte moduler skrives av
@@ -409,7 +424,7 @@ export const ENDWISE_NAV: NavItem[] = [
     label: 'Feature-flags',
     icon: Flag,
     href: '/endwise/flagg',
-    roles: ENDWISE,
+    roles: ENDWISE_STYRING,
   },
 ];
 
@@ -424,7 +439,8 @@ export const ENDWISE_SETTINGS_NAV: NavItem = {
   href: '/endwise/innstillinger',
   roles: ENDWISE,
   children: [
-    { label: 'Dev-mode', href: '/endwise/innstillinger', icon: Zap },
+    { label: 'Dev-mode', href: '/endwise/innstillinger', icon: Zap, roles: ENDWISE_STYRING },
+    { label: 'Team', href: '/endwise/team', icon: Users, roles: ENDWISE_STYRING },
     /** Samme side som forhandlerens Settings › Profil — profilen er global. */
     { label: 'Min profil', href: '/innstillinger/profil', icon: UserCog },
   ],
@@ -516,7 +532,8 @@ export function contextForPath(pathname: string): ContextKey {
 export function landingForRole(role: OrgRole | null, isMechanic: boolean): string {
   // Samme «ren mekaniker»-regel som i (app)/layout.tsx: en admin som OGSÅ har
   // mekaniker-profil skal lande på sitt eget dashboard, ikke i mekanikerflaten.
-  const kunMekaniker = isMechanic && role !== 'dealer_admin' && role !== 'endwise_admin';
+  if (role === 'endwise_admin' || role === 'endwise_support') return '/endwise';
+  const kunMekaniker = isMechanic && role !== 'dealer_admin';
   if (kunMekaniker) return '/min-dag';
   return '/dashboard';
 }
@@ -531,6 +548,10 @@ export function breadcrumbFor(
   search: string,
   context: ContextKey,
 ): { label: string; href?: string }[] {
+  if (pathname.startsWith('/endwise/verksted/')) {
+    const rest = pathname.replace(/^\/endwise\/verksted\/[^/]+/, '') || '/dashboard';
+    return breadcrumbFor(rest, search, 'forhandler');
+  }
   const settings = settingsForContext(context);
   const all = [...navForContext(context), ...(settings ? [settings] : [])];
   const item = all.find((i) => isItemActive(i, pathname));

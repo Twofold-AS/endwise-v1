@@ -124,13 +124,14 @@ drop function if exists lookup_open_invitation(text);
 
 create or replace function lookup_open_invitation(p_token_hash text)
 returns table (
-  id           uuid,
-  tenant_id    uuid,
-  email        text,
-  job_function text,
-  role         text,
-  kind         text,
-  expires_at   timestamptz
+  id             uuid,
+  tenant_id      uuid,
+  email          text,
+  job_function   text,
+  role           text,
+  kind           text,
+  platform_level text,
+  expires_at     timestamptz
 )
 language plpgsql
 security definer
@@ -139,7 +140,7 @@ as $$
 begin
   perform set_config('app.invitation_hash', p_token_hash, true);
   return query
-    select i.id, i.tenant_id, i.email, i.job_function::text, i.role, i.kind, i.expires_at
+    select i.id, i.tenant_id, i.email, i.job_function::text, i.role, i.kind, i.platform_level, i.expires_at
       from invitations i
      where i.token_hash = p_token_hash
        and i.accepted_at is null

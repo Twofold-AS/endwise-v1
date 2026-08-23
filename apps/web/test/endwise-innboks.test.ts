@@ -71,13 +71,14 @@ describe('F5-11: /endwise/innboks gjenbruker innboks-chrome med modus=endwise', 
     expect(sidebar).toMatch(/Når et verksted skriver til Endwise, lander det her\./);
   });
 
-  it('detaljpanelet viser forhandler + Se verkstedet Kommer, uten setActive', () => {
+  it('detaljpanelet viser forhandler + Se verkstedet som URL, uten setActive', () => {
     const detaljer = les('../app/(app)/innboks/_detaljer.tsx');
     const slot = les('../app/(app)/innboks/_detaljer-slot.tsx');
     const samlet = utenKommentarer(`${detaljer}\n${slot}`);
     expect(samlet).toMatch(/Se verkstedet/);
-    expect(samlet).toMatch(/Kommer/);
+    expect(samlet).toMatch(/\/endwise\/verksted\/\$\{slug\}/);
     expect(samlet).toMatch(/\/endwise\/forhandlere/);
+    expect(samlet).not.toMatch(/Kommer/);
     expect(samlet).not.toMatch(/setActive|impersonat/i);
   });
 });

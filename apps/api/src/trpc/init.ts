@@ -132,3 +132,31 @@ export const endwiseAdminProcedure = protectedProcedure.use(function isEndwiseAd
   }
   return opts.next({ ctx });
 });
+
+/**
+ * Plattform-team: eier, administrator og support.
+ * ⛔ Ikke dealer_staff «support». Ikke dealer_admin.
+ */
+export const endwiseSupportProcedure = protectedProcedure.use(function isEndwiseTeam(opts) {
+  const { ctx } = opts;
+  if (ctx.role !== 'endwise_admin' && ctx.role !== 'endwise_support') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Kun Endwise-team',
+    });
+  }
+  return opts.next({ ctx });
+});
+
+/**
+ * Se verkstedet: kun LESING. Mutations 403. Data via slug, ikke sesjon-tenant.
+ */
+export const endwiseInspectProcedure = endwiseSupportProcedure.use(function kunLesing(opts) {
+  if (opts.type === 'mutation') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Kun lesing',
+    });
+  }
+  return opts.next({ ctx: opts.ctx });
+});

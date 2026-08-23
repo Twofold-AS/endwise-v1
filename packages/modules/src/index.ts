@@ -7,6 +7,7 @@ export * from './erasure/index.ts';
 export * from './matching/index.ts';
 export * from './messages/index.ts';
 export * from './notifications/index.ts';
+export * from './plattform/index.ts';
 export * from './quick/index.ts';
 export * from './retention/index.ts';
 export * from './stream/index.ts';

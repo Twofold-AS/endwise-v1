@@ -495,7 +495,7 @@ const STATUS_TEKST: Record<string, string> = {
 
 /**
  * F5-11 — Endwise-admin ser forhandleren, ikke kundekortet.
- * «Se verkstedet» er bevisst disabled: impersonering kommer senere (Mons).
+ * «Se verkstedet» er URL-lesing under /endwise/verksted/[slug] — ikke setActive.
  */
 export function EndwiseForhandlerDetaljer({ navn, slug }: { navn: string; slug: string }) {
   return (
@@ -510,15 +510,12 @@ export function EndwiseForhandlerDetaljer({ navn, slug }: { navn: string; slug: 
       >
         Alle forhandlere
       </Link>
-      <label className="flex flex-col gap-1.5">
-        <span className="text-label text-fg">Se verkstedet</span>
-        <input
-          disabled
-          value="Kommer"
-          readOnly
-          className="h-control rounded-control border border-border bg-surface-2 px-2.5 text-body text-fg-muted"
-        />
-      </label>
+      <Link
+        href={`/endwise/verksted/${slug}/dashboard?fra=innboks` as Route}
+        className="flex h-control items-center justify-center rounded-control border border-border bg-bg px-2.5 text-label text-fg transition-colors hover:bg-sidebar-active"
+      >
+        Se verkstedet
+      </Link>
     </>
   );
 }

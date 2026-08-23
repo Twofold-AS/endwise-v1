@@ -1,4 +1,5 @@
 import { and, eq, schema, withTenant } from '@endwise/db';
+import { erPlattformTenant, landingForPlatform } from '@endwise/modules/plattform';
 import { landingForJobbfunksjon, resolveJobbfunksjon, visningsnavn } from '@endwise/modules/profil';
 import { resolveDevMode } from '../dev-mode.ts';
 import { protectedProcedure, router } from '../init.ts';
@@ -33,6 +34,7 @@ export const sessionRouter = router({
       const [tenant] = await tx
         .select({
           name: schema.tenants.name,
+          slug: schema.tenants.slug,
           kind: schema.tenants.kind,
           onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
         })
@@ -100,16 +102,62 @@ export const sessionRouter = router({
         .from(schema.user)
         .where(eq(schema.user.id, ctx.userId));
 
+      const medlemskap = await ctx.db
+        .select({
+          id: schema.organization.id,
+          name: schema.organization.name,
+          slug: schema.organization.slug,
+          role: schema.member.role,
+        })
+        .from(schema.member)
+        .innerJoin(schema.organization, eq(schema.organization.id, schema.member.organizationId))
+        .where(eq(schema.member.userId, ctx.userId));
+
+      const plattformOrg = medlemskap.find((m) => erPlattformTenant({ slug: m.slug }));
+      const verkstederRaa = medlemskap.filter((m) => !erPlattformTenant({ slug: m.slug }));
+      const verksteder = await Promise.all(
+        verkstederRaa.map(async (v) => {
+          const [mek] = await withTenant(ctx.db, v.id, (tx) =>
+            tx
+              .select({ id: schema.mechanics.id })
+              .from(schema.mechanics)
+              .where(eq(schema.mechanics.userId, ctx.userId))
+              .limit(1),
+          ).catch(() => [null]);
+          return {
+            id: v.id,
+            name: v.name,
+            slug: v.slug,
+            role: v.role,
+            isMechanic: Boolean(mek),
+          };
+        }),
+      );
+
+      const erPlattform = erPlattformTenant({
+        slug: tenant?.slug,
+        kind: tenant?.kind,
+      });
+      const landing = erPlattform
+        ? (landingForPlatform(ctx.role) ?? '/endwise')
+        : needsOnboarding
+          ? '/oppstart'
+          : landingForJobbfunksjon(jobbfunksjon);
+
       return {
         userId: ctx.userId,
         tenantId: ctx.tenantId,
         /** Ditt eget visningsnavn. ⛔ Ikke kallenavn — se `internNavn`. */
         navn: bruker?.name ?? '',
         jobbfunksjon,
-        landing: needsOnboarding ? '/oppstart' : landingForJobbfunksjon(jobbfunksjon),
-        needsOnboarding,
+        landing,
+        needsOnboarding: erPlattform ? false : needsOnboarding,
         tenantName: tenant?.name ?? null,
+        tenantSlug: tenant?.slug ?? null,
         tenantKind: tenant?.kind ?? 'live',
+        erPlattform,
+        plattformTenantId: plattformOrg?.id ?? null,
+        verksteder,
         role: ctx.role,
         isMechanic: Boolean(mech),
         mechanicId: mech?.id ?? null,

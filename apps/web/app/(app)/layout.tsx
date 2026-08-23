@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
 import { LydProvider } from './_lib/lyd';
+import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
 import { MobileShell } from './_shell/mobile-shell';
 import { PwaRegister } from './_shell/pwa-register';
@@ -38,7 +39,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? '';
   const { data: session, isPending } = useSession();
-  const { isMechanic, isAdmin, isLoading, needsOnboarding } = useOrgRole();
+  const { isMechanic, isAdmin, isLoading, needsOnboarding, erPlattform } = useOrgRole();
+  const [plattformVarsel, setPlattformVarsel] = useState<string | null>(null);
 
   /** Har mekaniker-profil OG ingen admin-rolle → mekanikerflaten er hele appen. */
   const kunMekaniker = isMechanic && !isAdmin;
@@ -101,6 +103,23 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [isLoading, needsOnboarding, pathname, router]);
 
+  useEffect(() => {
+    if (isLoading || !erPlattform) return;
+    if (erForhandlerRutePaaPlattform(pathname)) {
+      setPlattformVarsel(plattformToast());
+      router.replace('/endwise?varsel=plattform' as Route);
+    }
+  }, [isLoading, erPlattform, pathname, router]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: les query på nytt etter redirect
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('varsel') === 'plattform') {
+      setPlattformVarsel(plattformToast());
+    }
+  }, [pathname]);
+
   // F7-01 — Mekanikeren får mobil-shell (bottom-nav), ikke admin-sidebaren.
   // Server håndhever grensen (RLS + adminProcedure); dette er UI-formen.
   // F5-19 — Lyd gjelder BEGGE shellene. Mekanikeren er den som oftest har
@@ -156,7 +175,21 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <Suspense fallback={<div className="h-14 shrink-0 border-border border-b bg-bg" />}>
               <TopBar />
             </Suspense>
-            <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
+            <main className="min-w-0 flex-1 overflow-y-auto">
+              {plattformVarsel ? (
+                <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
+                  <p className="text-label">{plattformVarsel}</p>
+                  <button
+                    type="button"
+                    className="text-[12px] underline-offset-2 hover:underline"
+                    onClick={() => setPlattformVarsel(null)}
+                  >
+                    Lukk
+                  </button>
+                </div>
+              ) : null}
+              {children}
+            </main>
           </div>
         </div>
       </SidebarStateProvider>

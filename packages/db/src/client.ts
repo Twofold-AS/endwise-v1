@@ -136,3 +136,24 @@ export async function withPlatformAdmin<T>(
     return fn(tx);
   });
 }
+
+/**
+ * Read-only inspeksjon av ÉN forhandler. Brukes av Se verkstedet.
+ *
+ * Setter `app.tenant_id` til den forhandleren (eksisterende RLS) og
+ * `SET TRANSACTION READ ONLY` så en skriving feiler i databasen — ikke bare
+ * i applikasjonen. Kalles KUN fra `endwiseInspectProcedure`.
+ *
+ * ⛔ Dette er IKKE impersonering. Sesjonens aktive org forblir plattformen.
+ */
+export async function withPlatformInspect<T>(
+  db: Database,
+  tenantId: string,
+  fn: (tx: Parameters<Parameters<Database['transaction']>[0]>[0]) => Promise<T>,
+): Promise<T> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`set transaction read only`);
+    await tx.execute(sql`select set_config(${APP_TENANT_SETTING}, ${tenantId}, true)`);
+    return fn(tx);
+  });
+}

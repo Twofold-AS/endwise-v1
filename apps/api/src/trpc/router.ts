@@ -17,6 +17,7 @@ import { mechanicsRouter } from './routers/mechanics.ts';
 import { messagesRouter } from './routers/messages.ts';
 import { onboardingRouter } from './routers/onboarding.ts';
 import { personvernRouter } from './routers/personvern.ts';
+import { platformTeamRouter } from './routers/platform-team.ts';
 import { profileRouter } from './routers/profile.ts';
 import { quickRouter } from './routers/quick.ts';
 import { servicesRouter } from './routers/services.ts';
@@ -24,6 +25,7 @@ import { sessionRouter } from './routers/session.ts';
 import { teamRouter } from './routers/team.ts';
 import { tenantsRouter } from './routers/tenants.ts';
 import { vehiclesRouter } from './routers/vehicles.ts';
+import { verkstedRouter } from './routers/verksted.ts';
 import { widgetRouter } from './routers/widget.ts';
 
 export const appRouter = router({
@@ -42,6 +44,8 @@ export const appRouter = router({
   invitasjoner: invitasjonerRouter,
   onboarding: onboardingRouter,
   team: teamRouter,
+  platformTeam: platformTeamRouter,
+  verksted: verkstedRouter,
   flags: flagsRouter,
   inventory: inventoryRouter,
   vehicles: vehiclesRouter,

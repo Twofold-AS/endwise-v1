@@ -31,6 +31,7 @@ describe('F1-11: regelen (uten database)', () => {
       'dealer_admin',
       'dealer_staff',
       'endwise_admin',
+      'endwise_support',
     ]);
     expect(roleRequires2FA('customer')).toBe(false);
   });

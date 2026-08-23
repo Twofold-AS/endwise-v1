@@ -19,6 +19,8 @@ export default defineConfig({
   dialect: 'postgresql',
   // Host + ssl (rejectUnauthorized:false). Ikke url+sslmode — drizzle-kit
   // 0.31 godtar ikke url+ssl, og Scaleway-CA gir da exit 1 uten SQL-ERROR.
+  // `pnpm db:migrate` bruker scripts/migrate.ts (samme Pool som appen),
+  // ikke `drizzle-kit migrate` (hanji gjemmer feil; ssl:{} mot localhost).
   dbCredentials: databaseUrl ? drizzleKitPgCredentials(databaseUrl) : { url: '' },
   // RLS-policyer og roller er en del av skjemaet (F0-03).
   entities: {

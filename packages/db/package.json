@@ -9,7 +9,7 @@
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "pnpm db:repair-0020 && drizzle-kit migrate",
+    "db:migrate": "pnpm db:repair-0020 && node --env-file-if-exists=../../.env --experimental-strip-types scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

@@ -105,6 +105,15 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(m0022).not.toMatch(/not pg_has_role\(current_user/);
   });
 
+  it('db:migrate bruker scripts/migrate.ts (ikke drizzle-kit spinner som gjemmer feil)', () => {
+    const pkg = readFileSync(resolve(her, '../../../packages/db/package.json'), 'utf8');
+    const migrate = readFileSync(resolve(her, '../../../packages/db/scripts/migrate.ts'), 'utf8');
+    expect(pkg).toMatch(/scripts\/migrate\.ts/);
+    expect(pkg).not.toMatch(/drizzle-kit migrate/);
+    expect(migrate).toMatch(/pgConnectionConfig/);
+    expect(migrate).toMatch(/migrate ferdig/);
+  });
+
   it('WITH CHECK på slett-UPDATE tillater bare slett-GUC eller Endwise-tenant — ikke true', () => {
     expect(grants).not.toMatch(/with check \(true\)/i);
 

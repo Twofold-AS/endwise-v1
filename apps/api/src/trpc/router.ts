@@ -15,6 +15,7 @@ import { lookupRouter } from './routers/lookup.ts';
 import { mechanicRouter } from './routers/mechanic.ts';
 import { mechanicsRouter } from './routers/mechanics.ts';
 import { messagesRouter } from './routers/messages.ts';
+import { onboardingRouter } from './routers/onboarding.ts';
 import { personvernRouter } from './routers/personvern.ts';
 import { profileRouter } from './routers/profile.ts';
 import { quickRouter } from './routers/quick.ts';
@@ -39,6 +40,7 @@ export const appRouter = router({
   inboxContext: inboxContextRouter,
   // F1-10 — lederens side av invitasjonsflyten.
   invitasjoner: invitasjonerRouter,
+  onboarding: onboardingRouter,
   team: teamRouter,
   flags: flagsRouter,
   inventory: inventoryRouter,

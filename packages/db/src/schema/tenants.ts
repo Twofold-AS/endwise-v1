@@ -28,6 +28,12 @@ export const tenants = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull().unique(),
     kind: text('kind', { enum: TENANT_KINDS }).notNull().default('live'),
+    /**
+     * F5-26 — eier-veiviser. Null = dealer_admin må gjennom /oppstart
+     * (visningsnavn, valgfrie tillegg, team). Eksisterende tenants ble
+     * tilbakevirkende satt i migrasjon 0017.
+     */
+    onboardingCompletedAt: timestamp('onboarding_completed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`),
   },

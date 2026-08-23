@@ -68,9 +68,82 @@ export const ADDON_MODULES = [
 
 export type AddonModule = (typeof ADDON_MODULES)[number];
 
+/**
+ * Nøkkler admin IKKE kan krysse av eller sende inn på create/setModules.
+ *
+ *  · `shop` — Nettbutikk er blokkert / ikke til salgs (F10-03, 690).
+ *  · `twilio` — SMS er pass-through per bookingmelding, ikke et av/på-tillegg
+ *    med modulpris. Ingen 149-kvote her.
+ *
+ * De blir stående i `ADDON_MODULES` (gaten / PRO-bundle), men er ikke
+ * tildelbare feature-toggles.
+ */
+export const IKKE_TILDELBARE_ADDON = ['shop', 'twilio'] as const;
+export type IkkeTildelbarAddon = (typeof IKKE_TILDELBARE_ADDON)[number];
+export type TildelbarAddon = Exclude<AddonModule, IkkeTildelbarAddon>;
+
+const ADDON_SET = new Set<string>(ADDON_MODULES);
+const IKKE_TILDELBAR_SET = new Set<string>(IKKE_TILDELBARE_ADDON);
+
 /** Er nøkkelen et betalt tillegg? Ukjente nøkler behandles som tillegg — fail-safe. */
 export function isAddon(key: ModuleKey): boolean {
   return !(BASIS_MODULES as readonly string[]).includes(key);
+}
+
+export function erBlokertTildeling(key: string): key is IkkeTildelbarAddon {
+  return IKKE_TILDELBAR_SET.has(key);
+}
+
+/**
+ * Nøkkler Endwise-admin kan tildele ved onboarding. Ukjente, basis,
+ * `shop` og `twilio` avvises — en skriveflate skal ikke være fail-open.
+ */
+export function erTildelbarAddon(key: string): key is TildelbarAddon {
+  return ADDON_SET.has(key) && !erBlokertTildeling(key);
+}
+
+export function filtrerAddonNokler(keys: readonly string[]): TildelbarAddon[] {
+  const sett = new Set<TildelbarAddon>();
+  for (const k of keys) {
+    if (erTildelbarAddon(k)) sett.add(k);
+  }
+  return [...sett];
+}
+
+/** Norske etiketter til admin-avkrysning. Basis vises aldri her. */
+export const ADDON_LABELS: Record<AddonModule, string> = {
+  widget: 'Bookingwidget',
+  resend: 'Transaksjons-e-post',
+  'ai-support': 'AI-støtte',
+  'ai-diagnose': 'AI-diagnose',
+  'ai-providers': 'AI-leverandører',
+  quick: 'Quick ERP',
+  vegvesen: 'Vegvesen-oppslag',
+  'smart-hverdag': 'Smart hverdag',
+  twilio: 'SMS',
+  'ai-nettside': 'AI-nettside',
+  'ai-innsikt': 'AI-innsikt',
+  'quick-agent': 'Quick-agent',
+  'crm-lime': 'Lime CRM',
+  webhooks: 'Webhooks',
+  erp: 'ERP-modul',
+  'white-label': 'White-label',
+  sso: 'SSO',
+  nyhetsbrev: 'Nyhetsbrev',
+  finn: 'Finn.no',
+  shop: 'Nettbutikk',
+  rapporter: 'Rapporter',
+  'analyse-pro': 'Analyse',
+  'betaling-widget': 'Betaling i widget',
+  samarbeid: 'Samarbeid',
+};
+
+/** Admin-katalog: ADDON minus shop minus twilio. Basis er aldri med. */
+export function addonKatalog(): Array<{ key: TildelbarAddon; label: string }> {
+  return ADDON_MODULES.filter(erTildelbarAddon).map((key) => ({
+    key,
+    label: ADDON_LABELS[key],
+  }));
 }
 
 export interface EntitlementsSource {

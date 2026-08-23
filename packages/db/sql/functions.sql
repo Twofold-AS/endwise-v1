@@ -106,6 +106,8 @@ grant execute on function redact_audit_log(text) to authenticated;
 -- Den er altså ikke «RLS av» — den er «ett spørsmål, ett svar, og bare hvis du
 -- allerede kjenner hemmeligheten».
 
+drop function if exists lookup_open_invitation(text);
+
 create or replace function lookup_open_invitation(p_token_hash text)
 returns table (
   id           uuid,
@@ -113,6 +115,7 @@ returns table (
   email        text,
   job_function text,
   role         text,
+  kind         text,
   expires_at   timestamptz
 )
 language sql
@@ -120,7 +123,7 @@ security definer
 set search_path = public
 stable
 as $$
-  select i.id, i.tenant_id, i.email, i.job_function::text, i.role, i.expires_at
+  select i.id, i.tenant_id, i.email, i.job_function::text, i.role, i.kind, i.expires_at
     from invitations i
    where i.token_hash = p_token_hash
      and i.accepted_at is null

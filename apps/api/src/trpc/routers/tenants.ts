@@ -1,5 +1,20 @@
-import { createAuth, createTenant } from '@endwise/auth';
-import { asc, desc, eq, schema, sql, withPlatformAdmin, withTenant } from '@endwise/db';
+import {
+  authEnv,
+  createAuth,
+  createTenant,
+  createTenantShell,
+  sendInvitation,
+} from '@endwise/auth';
+import { and, asc, desc, eq, schema, sql, withPlatformAdmin, withTenant } from '@endwise/db';
+import {
+  type AddonModule,
+  addonKatalog,
+  BASIS_MODULES,
+  erBlokertTildeling,
+  erTildelbarAddon,
+  filtrerAddonNokler,
+} from '@endwise/modules';
+import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { resolveDevMode } from '../dev-mode.ts';
@@ -29,10 +44,109 @@ const slugSchema = z
  *
  * ⚠️ F0-16: **tom med vilje.** Basis (Verkstedet, Innboks, Saker, Kunder, Lager,
  * Helpdesk, Settings) har ingen gate og trenger ingen rad her — en ny forhandler
- * kan drive verkstedet fra dag én. Tillegg kommer med abonnementet (F5-32),
- * ikke med opprettelsen. Entitlements er en salgsbeslutning, ikke en default.
+ * kan drive verkstedet fra dag én. Tillegg velges av Endwise-admin ved
+ * opprettelse (og kan redigeres senere). Stripe (F5-32) skriver fortsatt ved
+ * kjøp. Default her er tom — admin krysser av, forhandleren velger aldri.
  */
 const START_MODULER: string[] = [];
+
+const BLOKKERT_MELDING: Record<string, string> = {
+  shop: 'Nettbutikk (shop) er blokkert og ikke til salgs.',
+  twilio: 'SMS er ikke et tillegg — pass-through per melding, ingen modulpris.',
+};
+
+/** Zod-lag: avvis shop/twilio før mutasjonen kjører. */
+const tildelbareModulerSchema = z
+  .array(z.string().min(1).max(64))
+  .max(40)
+  .superRefine((keys, ctx) => {
+    for (const key of keys) {
+      if (erBlokertTildeling(key)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: BLOKKERT_MELDING[key] ?? `Kan ikke tildeles: ${key}`,
+        });
+      }
+    }
+  });
+
+function avvisBasisModuler(keys: readonly string[]): AddonModule[] {
+  const basis = keys.filter((k) => (BASIS_MODULES as readonly string[]).includes(k));
+  if (basis.length) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Basis-moduler kan ikke tildeles: ${basis.join(', ')}. De er alltid på.`,
+    });
+  }
+  const blokkert = keys.filter(erBlokertTildeling);
+  if (blokkert.length) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: blokkert.map((k) => BLOKKERT_MELDING[k] ?? `Kan ikke tildeles: ${k}`).join(' '),
+    });
+  }
+  const ukjente = keys.filter((k) => !erTildelbarAddon(k));
+  if (ukjente.length) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Ukjent tilleggsnøkkel: ${ukjente.join(', ')}`,
+    });
+  }
+  return filtrerAddonNokler(keys);
+}
+
+async function skrivEntitlementAudit(
+  tx: Parameters<Parameters<typeof withTenant>[2]>[0],
+  input: {
+    tenantId: string;
+    actor: string;
+    action: 'entitlement.granted' | 'entitlement.revoked' | 'tenant.created';
+    subjectId: string;
+    metadata?: Record<string, unknown>;
+  },
+) {
+  await tx.insert(schema.auditLog).values({
+    tenantId: input.tenantId,
+    actor: input.actor,
+    action: input.action,
+    subjectType: input.action === 'tenant.created' ? 'tenant' : 'tenant_module',
+    subjectId: input.subjectId,
+    metadata: input.metadata ?? {},
+  });
+}
+
+async function sendEierLenke(input: {
+  db: Parameters<typeof withTenant>[0];
+  tenantId: string;
+  epost: string;
+  invitedBy: string;
+  forhandler: string;
+}) {
+  const modul = createInvitasjonsmodul(input.db);
+  await modul.tilbakekallApneEier(input.tenantId, input.epost);
+  const { invitasjon, token } = await modul.opprettEier({
+    tenantId: input.tenantId,
+    epost: input.epost,
+    invitedBy: input.invitedBy,
+  });
+  const base = authEnv.baseUrl;
+  const lenke = `${base.replace(/\/$/, '')}/invitasjon/${token}`;
+  let sendt = true;
+  try {
+    await sendInvitation({
+      to: invitasjon.epost,
+      lenke,
+      forhandler: input.forhandler,
+      funksjon: 'eier',
+      utloper: invitasjon.utloper,
+      kind: 'owner',
+    });
+  } catch (error) {
+    sendt = false;
+    console.error(`[eier-invitasjon] e-post feilet: ${(error as Error).message}`);
+  }
+  return { id: invitasjon.id, epost: invitasjon.epost, utloper: invitasjon.utloper, sendt };
+}
 
 export const tenantsRouter = router({
   /**
@@ -117,11 +231,11 @@ export const tenantsRouter = router({
   }),
 
   /**
-   * F1-07 / F0-04 — READ-ONLY entitlements per forhandler.
+   * F1-07 / F0-04 — entitlements per forhandler (lesing).
    *
    * `tenant_modules` har RLS. `withPlatformAdmin` åpner den ikke. Vi lister
    * tenants via platform-admin, og leser modulene i hver tenants egen
-   * `withTenant` — samme mønster som `myDemoTenants`. Ingen skriving.
+   * `withTenant`. Skriving er `setModules` (endwise_admin).
    */
   listModules: endwiseAdminProcedure.query(async ({ ctx }) => {
     const tenants = await withPlatformAdmin(ctx.db, (tx) =>
@@ -141,7 +255,12 @@ export const tenantsRouter = router({
       name: string;
       slug: string;
       kind: (typeof tenants)[number]['kind'];
-      modules: Array<{ moduleKey: string; enabled: boolean; plan: string | null }>;
+      modules: Array<{
+        moduleKey: string;
+        enabled: boolean;
+        plan: string | null;
+        source: string;
+      }>;
     }> = [];
 
     for (const t of tenants) {
@@ -151,25 +270,38 @@ export const tenantsRouter = router({
             moduleKey: schema.tenantModules.moduleKey,
             enabled: schema.tenantModules.enabled,
             plan: schema.tenantModules.plan,
+            source: schema.tenantModules.source,
           })
           .from(schema.tenantModules)
           .where(eq(schema.tenantModules.tenantId, t.id)),
-      ).catch(() => [] as Array<{ moduleKey: string; enabled: boolean; plan: string | null }>);
+      ).catch(
+        () =>
+          [] as Array<{
+            moduleKey: string;
+            enabled: boolean;
+            plan: string | null;
+            source: string;
+          }>,
+      );
       rader.push({ ...t, modules });
     }
 
     return rader;
   }),
 
+  /** Tillegg Endwise-admin kan krysse av. Basis er ikke med. */
+  addonKatalog: endwiseAdminProcedure.query(() => addonKatalog()),
+
   /**
-   * Opprett en forhandler. Eieren må FINNES fra før — vi setter aldri passord
-   * for andre. `ownerEmail` slås opp; finnes brukeren ikke, er svaret nei og
-   * ikke «da lager vi en».
+   * Opprett en forhandler + eier-invitasjon.
    *
-   * RLS-fella ved insert er håndtert i `createTenant` (packages/auth) — den
-   * setter `app.tenant_id` til den NYE id-en før skriving, så `withCheck`
-   * passerer uten at policyen svekkes.
-   */
+   * Admin setter aldri passord. Finnes e-posten, blir brukeren `dealer_admin`
+   * med en gang og får likevel en sett/bytt-passord-lenke. Finnes den ikke,
+   * opprettes tenanten uten eier, og invitee lager kontoen selv.
+   *
+ * Admin setter pakken (`modules` = inkludert) og hva eieren *kan* legge til
+ * i veiviseren (`optional`). `START_MODULER` er tom; shop/twilio avvises.
+ */
   create: endwiseAdminProcedure
     .input(
       z.object({
@@ -177,9 +309,15 @@ export const tenantsRouter = router({
         slug: slugSchema,
         ownerEmail: z.email(),
         kind: z.enum(['live', 'demo']).default('live'),
+        modules: tildelbareModulerSchema.default([]),
+        optional: tildelbareModulerSchema.default([]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const included = avvisBasisModuler(input.modules);
+      const optional = avvisBasisModuler(input.optional).filter((k) => !included.includes(k));
+      const epost = input.ownerEmail.trim().toLowerCase();
+
       const [eksisterende] = await ctx.db
         .select({ id: schema.tenants.id })
         .from(schema.tenants)
@@ -191,27 +329,300 @@ export const tenantsRouter = router({
         });
       }
 
-      const [eier] = await ctx.db
-        .select({ id: schema.user.id })
-        .from(schema.user)
-        .where(eq(schema.user.email, input.ownerEmail));
-      if (!eier) {
+      const [orgSlug] = await ctx.db
+        .select({ id: schema.organization.id })
+        .from(schema.organization)
+        .where(eq(schema.organization.slug, input.slug));
+      if (orgSlug) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Fant ingen bruker med e-post ${input.ownerEmail}. Brukeren må registrere seg først — vi oppretter ikke kontoer på andres vegne.`,
+          code: 'CONFLICT',
+          message: `Slug «${input.slug}» er allerede i bruk`,
         });
       }
 
-      const auth = createAuth(ctx.db);
-      const { tenantId } = await createTenant(auth, ctx.db, {
-        name: input.name,
-        slug: input.slug,
-        ownerUserId: eier.id,
-        modules: START_MODULER,
-        kind: input.kind,
+      const [eier] = await ctx.db
+        .select({ id: schema.user.id })
+        .from(schema.user)
+        .where(sql`lower(${schema.user.email}) = ${epost}`);
+
+      const moduler = included.length ? included : START_MODULER;
+      let tenantId: string;
+      if (eier) {
+        const auth = createAuth(ctx.db);
+        ({ tenantId } = await createTenant(auth, ctx.db, {
+          name: input.name,
+          slug: input.slug,
+          ownerUserId: eier.id,
+          modules: moduler,
+          optionalModules: optional,
+          plan: 'endwise',
+          kind: input.kind,
+          onboardingCompleted: false,
+        }));
+      } else {
+        ({ tenantId } = await createTenantShell(ctx.db, {
+          name: input.name,
+          slug: input.slug,
+          modules: moduler,
+          optionalModules: optional,
+          plan: 'endwise',
+          kind: input.kind,
+        }));
+      }
+
+      await withTenant(ctx.db, tenantId, async (tx) => {
+        await skrivEntitlementAudit(tx, {
+          tenantId,
+          actor: ctx.userId,
+          action: 'tenant.created',
+          subjectId: tenantId,
+          metadata: {
+            slug: input.slug,
+            kind: input.kind,
+            modules: moduler,
+            optional,
+            ownerEmail: epost,
+          },
+        });
+        for (const key of moduler) {
+          await skrivEntitlementAudit(tx, {
+            tenantId,
+            actor: ctx.userId,
+            action: 'entitlement.granted',
+            subjectId: key,
+            metadata: { moduleKey: key, plan: 'endwise', at: 'create' },
+          });
+        }
       });
 
-      return { tenantId, name: input.name, slug: input.slug, kind: input.kind };
+      const invite = await sendEierLenke({
+        db: ctx.db,
+        tenantId,
+        epost,
+        invitedBy: ctx.userId,
+        forhandler: input.name,
+      });
+
+      return {
+        tenantId,
+        name: input.name,
+        slug: input.slug,
+        kind: input.kind,
+        existingUser: Boolean(eier),
+        invite,
+      };
+    }),
+
+  /**
+   * F0-04 / F5-26 — Endwise-admin skriver `tenant_modules`.
+   *
+   * Mikael overstyrer «Stripe-only write» for tildeling. `moduleProcedure`
+   * håndhever fortsatt nøklene. `dealer_admin` får FORBIDDEN (denne ruta er
+   * `endwiseAdminProcedure`). Hver endring logges (CWE-778).
+   */
+  setModules: endwiseAdminProcedure
+    .input(
+      z.object({
+        tenantId: z.uuid(),
+        modules: tildelbareModulerSchema,
+        optional: tildelbareModulerSchema.default([]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const included = new Set(avvisBasisModuler(input.modules));
+      const optional = new Set(
+        avvisBasisModuler(input.optional).filter((k) => !included.has(k)),
+      );
+
+      const [tenant] = await withPlatformAdmin(ctx.db, (tx) =>
+        tx
+          .select({ id: schema.tenants.id })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.id, input.tenantId)),
+      );
+      if (!tenant) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+      }
+
+      return withTenant(ctx.db, input.tenantId, async (tx) => {
+        const eksisterende = await tx
+          .select({
+            moduleKey: schema.tenantModules.moduleKey,
+            enabled: schema.tenantModules.enabled,
+            source: schema.tenantModules.source,
+          })
+          .from(schema.tenantModules)
+          .where(eq(schema.tenantModules.tenantId, input.tenantId));
+
+        const granted: string[] = [];
+        const revoked: string[] = [];
+
+        for (const key of included) {
+          const rad = eksisterende.find((r) => r.moduleKey === key);
+          if (!rad) {
+            await tx.insert(schema.tenantModules).values({
+              tenantId: input.tenantId,
+              moduleKey: key,
+              enabled: true,
+              source: 'included',
+              plan: 'endwise',
+            });
+            granted.push(key);
+          } else if (!rad.enabled || rad.source !== 'included') {
+            await tx
+              .update(schema.tenantModules)
+              .set({
+                enabled: true,
+                source: 'included',
+                plan: 'endwise',
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(schema.tenantModules.tenantId, input.tenantId),
+                  eq(schema.tenantModules.moduleKey, key),
+                ),
+              );
+            if (!rad.enabled) granted.push(key);
+          }
+        }
+
+        for (const key of optional) {
+          const rad = eksisterende.find((r) => r.moduleKey === key);
+          if (!rad) {
+            await tx.insert(schema.tenantModules).values({
+              tenantId: input.tenantId,
+              moduleKey: key,
+              enabled: false,
+              source: 'optional',
+              plan: 'endwise',
+            });
+          } else if (rad.source === 'included') {
+            await tx
+              .update(schema.tenantModules)
+              .set({
+                enabled: rad.enabled,
+                source: rad.enabled ? 'dealer' : 'optional',
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(schema.tenantModules.tenantId, input.tenantId),
+                  eq(schema.tenantModules.moduleKey, key),
+                ),
+              );
+          }
+        }
+
+        for (const rad of eksisterende) {
+          if (rad.source === 'stripe') continue;
+          if (!erTildelbarAddon(rad.moduleKey)) continue;
+          if (included.has(rad.moduleKey as AddonModule)) continue;
+          if (optional.has(rad.moduleKey as AddonModule)) continue;
+          if (!rad.enabled) {
+            if (rad.source === 'optional') {
+              await tx
+                .delete(schema.tenantModules)
+                .where(
+                  and(
+                    eq(schema.tenantModules.tenantId, input.tenantId),
+                    eq(schema.tenantModules.moduleKey, rad.moduleKey),
+                  ),
+                );
+            }
+            continue;
+          }
+          await tx
+            .update(schema.tenantModules)
+            .set({ enabled: false, updatedAt: new Date() })
+            .where(
+              and(
+                eq(schema.tenantModules.tenantId, input.tenantId),
+                eq(schema.tenantModules.moduleKey, rad.moduleKey),
+              ),
+            );
+          revoked.push(rad.moduleKey);
+        }
+
+        for (const key of granted) {
+          await skrivEntitlementAudit(tx, {
+            tenantId: input.tenantId,
+            actor: ctx.userId,
+            action: 'entitlement.granted',
+            subjectId: key,
+            metadata: { moduleKey: key, plan: 'endwise', at: 'setModules', source: 'included' },
+          });
+        }
+        for (const key of revoked) {
+          await skrivEntitlementAudit(tx, {
+            tenantId: input.tenantId,
+            actor: ctx.userId,
+            action: 'entitlement.revoked',
+            subjectId: key,
+            metadata: { moduleKey: key, at: 'setModules' },
+          });
+        }
+
+        return {
+          tenantId: input.tenantId,
+          granted,
+          revoked,
+          modules: [...included],
+          optional: [...optional],
+        };
+      });
+    }),
+
+  /** Send eier-invitasjonen på nytt. Nytt token, gammelt åpent token dør. */
+  resendOwnerInvite: endwiseAdminProcedure
+    .input(z.object({ tenantId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [tenant] = await withPlatformAdmin(ctx.db, (tx) =>
+        tx
+          .select({ id: schema.tenants.id, name: schema.tenants.name })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.id, input.tenantId)),
+      );
+      if (!tenant) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+      }
+
+      const modul = createInvitasjonsmodul(ctx.db);
+      const siste = await modul.sisteEierInvitasjon(input.tenantId);
+      let epost = siste?.epost;
+      if (!epost) {
+        const [medlem] = await ctx.db
+          .select({ userId: schema.member.userId })
+          .from(schema.member)
+          .where(
+            and(
+              eq(schema.member.organizationId, input.tenantId),
+              eq(schema.member.role, 'dealer_admin'),
+            ),
+          )
+          .limit(1);
+        if (medlem) {
+          const [bruker] = await ctx.db
+            .select({ email: schema.user.email })
+            .from(schema.user)
+            .where(eq(schema.user.id, medlem.userId));
+          epost = bruker?.email;
+        }
+      }
+      if (!epost) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Fant ingen eier-e-post å sende til. Opprett forhandleren på nytt.',
+        });
+      }
+
+      return sendEierLenke({
+        db: ctx.db,
+        tenantId: input.tenantId,
+        epost,
+        invitedBy: ctx.userId,
+        forhandler: tenant.name,
+      });
     }),
 
   /** Er dev-mode faktisk på for meg? Tre betingelser — se `dev-mode.ts`. */

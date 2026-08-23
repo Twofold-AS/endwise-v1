@@ -31,9 +31,16 @@ export const sessionRouter = router({
         .where(eq(schema.mechanics.userId, ctx.userId));
 
       const [tenant] = await tx
-        .select({ name: schema.tenants.name, kind: schema.tenants.kind })
+        .select({
+          name: schema.tenants.name,
+          kind: schema.tenants.kind,
+          onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
+        })
         .from(schema.tenants)
         .where(eq(schema.tenants.id, ctx.tenantId));
+
+      const needsOnboarding =
+        ctx.role === 'dealer_admin' && !tenant?.onboardingCompletedAt;
 
       /**
        * F7-06 — Eget kallenavn. Mekanikervisningen er per definisjon INTERN,
@@ -100,7 +107,8 @@ export const sessionRouter = router({
         /** Ditt eget visningsnavn. ⛔ Ikke kallenavn — se `internNavn`. */
         navn: bruker?.name ?? '',
         jobbfunksjon,
-        landing: landingForJobbfunksjon(jobbfunksjon),
+        landing: needsOnboarding ? '/oppstart' : landingForJobbfunksjon(jobbfunksjon),
+        needsOnboarding,
         tenantName: tenant?.name ?? null,
         tenantKind: tenant?.kind ?? 'live',
         role: ctx.role,

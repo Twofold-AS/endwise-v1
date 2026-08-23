@@ -43,6 +43,7 @@ export function useOrgRole(): {
    * medlem av.
    */
   canSwitchDemo: boolean;
+  needsOnboarding: boolean;
 } {
   const { data: session, isPending } = useSession();
   const authed = Boolean(session?.user);
@@ -62,5 +63,6 @@ export function useOrgRole(): {
     isLoading: isPending || (authed && me.isLoading),
     devMode: me.data?.devMode?.enabled ?? false,
     canSwitchDemo: (me.data?.devMode?.flagOn ?? false) && role === 'endwise_admin',
+    needsOnboarding: me.data?.needsOnboarding ?? false,
   };
 }

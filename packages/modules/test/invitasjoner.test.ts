@@ -80,6 +80,7 @@ describeDb('F1-10: invitasjoner mot database', () => {
     expect(token).toBeTruthy();
     expect(invitasjon.epost).toBe('ny.ansatt@verksted.no');
     expect(invitasjon.rolle).toBe('dealer_staff');
+    expect(invitasjon.kind).toBe('staff');
 
     // ⛔ Raden skal inneholde hashen, ikke tokenet.
     const [rad] = await withTenant(db, tenantA, (tx) =>
@@ -108,11 +109,56 @@ describeDb('F1-10: invitasjoner mot database', () => {
    * ⛔ DATABASEN er siste skanse. Selv om noen skriver en ny rute som glemmer
    * modulens validering, skal en `dealer_admin`-invitasjon avvises.
    */
-  it('⛔ CHECK-constraint avviser en rolle som ikke er dealer_staff', async () => {
+  it('⛔ CHECK-constraint avviser en rolle som ikke er dealer_staff på staff-sporet', async () => {
     await expect(
       db.execute(
         sql`insert into invitations (tenant_id, email, token_hash, job_function, role, invited_by, expires_at)
             values (${tenantA}, 'hacker@x.no', ${randomUUID()}, 'selger', 'dealer_admin', ${leder}, now() + interval '7 days')`,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('⛔ staff-sporet kan fortsatt ikke settes til kind=owner via opprett', async () => {
+    const { invitasjon } = await modul().opprett({
+      tenantId: tenantA,
+      epost: 'ikke-eier@verksted.no',
+      funksjon: 'selger',
+      invitedBy: leder,
+    });
+    expect(invitasjon.kind).toBe('staff');
+    expect(invitasjon.rolle).toBe('dealer_staff');
+  });
+
+  it('eier-sporet oppretter dealer_admin + leder uten å svekke staff-CHECken', async () => {
+    const { invitasjon, token } = await modul().opprettEier({
+      tenantId: tenantA,
+      epost: 'Eier@Verksted.no',
+      invitedBy: leder,
+    });
+    expect(invitasjon.kind).toBe('owner');
+    expect(invitasjon.rolle).toBe('dealer_admin');
+    expect(invitasjon.funksjon).toBe('leder');
+    expect(token).toBeTruthy();
+
+    const funnet = await modul().finnApen(token);
+    expect(funnet?.kind).toBe('owner');
+    expect(funnet?.rolle).toBe('dealer_admin');
+  });
+
+  it('⛔ rå INSERT med kind=staff og dealer_admin avvises fortsatt', async () => {
+    await expect(
+      db.execute(
+        sql`insert into invitations (tenant_id, email, token_hash, job_function, kind, role, invited_by, expires_at)
+            values (${tenantA}, 'staff-admin@x.no', ${randomUUID()}, 'selger', 'staff', 'dealer_admin', ${leder}, now() + interval '7 days')`,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('⛔ rå INSERT med kind=owner og dealer_staff avvises', async () => {
+    await expect(
+      db.execute(
+        sql`insert into invitations (tenant_id, email, token_hash, job_function, kind, role, invited_by, expires_at)
+            values (${tenantA}, 'owner-staff@x.no', ${randomUUID()}, 'leder', 'owner', 'dealer_staff', ${leder}, now() + interval '7 days')`,
       ),
     ).rejects.toThrow();
   });
@@ -201,6 +247,16 @@ describeDb('F1-10: invitasjoner mot database', () => {
     expect(await modul().tilbakekall(tenantB, invitasjon.id)).toBe(false);
     // Og invitasjonen er urørt — den virker fortsatt for den den gjelder.
     expect(await modul().finnApen(token)).not.toBeNull();
+  });
+
+  it('eier-invitasjon vises ikke i staff-lista', async () => {
+    await modul().opprettEier({
+      tenantId: tenantA,
+      epost: 'skjult-eier@verksted.no',
+      invitedBy: leder,
+    });
+    const liste = await modul().listApne(tenantA);
+    expect(liste.map((i) => i.epost)).not.toContain('skjult-eier@verksted.no');
   });
 
   it('⛔ ANGREP: tenant B ser ikke tenant A sine invitasjoner i lista', async () => {

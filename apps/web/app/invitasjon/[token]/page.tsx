@@ -4,41 +4,37 @@ import { use, useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 
 /**
- * F1-10 — INVITEE-SIDEN. Første møte med Endwise.
+ * F1-10 / F5-26 — INVITEE-SIDEN. Første møte med Endwise.
  *
  * ── ⚠️ Hvorfor denne ligger UTENFOR `(app)` ──────────────────────────────
  * Den som åpner lenka har ingen konto, ingen sesjon og ingen forhandler. Hele
  * `(app)` henter data over tRPC, som krever begge deler — og fra F1-11 også
  * fullført 2FA. Denne siden snakker derfor kun med to offentlige endepunkter:
- * `/invitasjoner/*` (vår egen) og `/api/auth/*` (Better-Auth). ⚠️ FLERTALL i
- * API-stien: SIDEN eier `/invitasjon/[token]`, så de kan ikke dele sti.
+ * `/invitasjoner/*` (vår egen) og `/api/auth/*` (Better-Auth).
  *
- * ── Kjeden, og hvem som eier hvert ledd ──────────────────────────────────
- *   1. HER: bekreft invitasjonen, sett navn + passord   → konto + medlemskap
- *   2. Better-Auth: logg inn med det nye passordet      → sesjon
- *   3. `/2fa-oppsett` (F1-11): tvungen tofaktor         → dealer_staff KREVER 2FA
- *   4. `/` ruter videre til funksjonens landing (F1-14) → selger/support/mekaniker
- *
- * ⚠️ Steg 3 hoppes ikke over. `dealer_staff` står i `ROLES_REQUIRING_2FA`, så
- * serveren avviser sesjonen uansett hva denne siden gjør. Vi sender dem dit
- * med vilje, slik at de ikke møter en vegg de ikke forstår.
- *
- * ⚠️ **Bevisst udesignet**, som `/signin` og `/2fa-oppsett`. Dette er en
- * sikkerhets- og flytoppgave; uttrykket settes når eier styler innloggingen.
+ * ── Kjeden ───────────────────────────────────────────────────────────────
+ *   1. HER: sett/bytt passord (eier alltid; ny ansatt alltid)
+ *   2. Better-Auth: logg inn
+ *   3. `/2fa-oppsett` (F1-11)
+ *   4. Eier: `/oppstart` (visningsnavn, valgfrie tillegg, team).
+ *      Ansatt: lander i funksjonens visning. ⛔ Ingen plan-velger her.
  */
 type Invitasjon = {
   gyldig: true;
   epost: string;
   funksjon: string;
+  kind: 'staff' | 'owner';
   forhandler: string;
   utloper: string;
   harKonto: boolean;
+  kreverPassord: boolean;
 };
 
 const FUNKSJONSTEKST: Record<string, string> = {
   selger: 'selger',
   support: 'support',
   mekaniker: 'mekaniker',
+  leder: 'eier',
 };
 
 export default function InvitasjonPage({ params }: { params: Promise<{ token: string }> }) {
@@ -86,7 +82,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         body: JSON.stringify({
           token,
           navn: navn.trim(),
-          ...(inv.harKonto ? {} : { passord }),
+          ...(inv.kreverPassord ? { passord } : {}),
         }),
       });
       const data = await res.json();
@@ -95,12 +91,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         return;
       }
 
-      /**
-       * Har hen alt en konto, kan vi ikke logge inn på hens vegne — vi har
-       * ikke passordet. Da sendes hen til innlogging, som nå vet om det nye
-       * medlemskapet.
-       */
-      if (inv.harKonto) {
+      if (!inv.kreverPassord) {
         window.location.assign('/signin');
         return;
       }
@@ -111,8 +102,6 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         return;
       }
 
-      // ⛔ Rett til 2FA-oppsett. `dealer_staff` krever tofaktor (F1-11), så
-      // uten dette ville hen landet på en side der alt feiler.
       window.location.assign('/2fa-oppsett');
     } catch (error) {
       setFeil((error as Error).message);
@@ -120,6 +109,9 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
       setSender(false);
     }
   }
+
+  const rolle =
+    inv?.kind === 'owner' ? 'eier' : (FUNKSJONSTEKST[inv?.funksjon ?? ''] ?? inv?.funksjon);
 
   return (
     <main className="min-h-screen bg-bg text-fg">
@@ -133,8 +125,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
             </h1>
             <p className="text-body text-fg-muted leading-relaxed">{feil}</p>
             <p className="text-[12px] text-fg-muted leading-relaxed">
-              Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be lederen din
-              om en ny.
+              Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be om en ny.
             </p>
           </div>
         ) : null}
@@ -146,8 +137,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                 Velkommen til {inv.forhandler}
               </h1>
               <p className="text-body text-fg-muted leading-relaxed">
-                Du er invitert som <b>{FUNKSJONSTEKST[inv.funksjon] ?? inv.funksjon}</b>. Kontoen
-                knyttes til <b>{inv.epost}</b>.
+                Du er invitert som <b>{rolle}</b>. Kontoen knyttes til <b>{inv.epost}</b>.
               </p>
             </div>
 
@@ -167,15 +157,10 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                 />
               </div>
 
-              {inv.harKonto ? (
-                <p className="text-[12px] text-fg-muted leading-relaxed">
-                  Du har allerede en Endwise-konto på denne e-posten. Vi legger deg til hos{' '}
-                  {inv.forhandler} — logg inn med passordet du har fra før.
-                </p>
-              ) : (
+              {inv.kreverPassord ? (
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="inv-passord" className="text-label text-fg">
-                    Velg et passord
+                    {inv.harKonto ? 'Sett eller bytt passord' : 'Velg et passord'}
                   </label>
                   <input
                     id="inv-passord"
@@ -188,15 +173,20 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                     className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                   />
                   <p className="text-[12px] text-fg-muted">
-                    Minst 12 tegn. Etterpå setter du opp tofaktor — det er påkrevd for alle ansatte.
+                    Minst 12 tegn. Etterpå setter du opp tofaktor — det er påkrevd.
                   </p>
                 </div>
+              ) : (
+                <p className="text-[12px] text-fg-muted leading-relaxed">
+                  Du har allerede en Endwise-konto på denne e-posten. Vi legger deg til hos{' '}
+                  {inv.forhandler} — logg inn med passordet du har fra før.
+                </p>
               )}
 
               <button
                 type="submit"
                 disabled={
-                  sender || navn.trim().length < 2 || (!inv.harKonto && passord.length < 12)
+                  sender || navn.trim().length < 2 || (inv.kreverPassord && passord.length < 12)
                 }
                 className="inline-flex h-control items-center justify-center rounded-control bg-fg px-4 text-label text-bg disabled:opacity-40"
               >

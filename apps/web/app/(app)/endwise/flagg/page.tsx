@@ -23,8 +23,9 @@ import { KjopteModulerTabell } from '../_kjopte-moduler';
  * ── To brytere som ofte forveksles ────────────────────────────────────────
  * Denne siden er RELEASE-TOGGLES: har VI rullet ut en funksjon, globalt eller
  * per forhandler. Det er IKKE entitlements. Hva forhandleren har KJØPT bor i
- * `tenant_modules`, skrives KUN av Stripe-webhooken, og håndheves av
- * `moduleProcedure`. Begge må si ja. En bryter her åpner ikke en ubetalt modul.
+ * `tenant_modules`. Stripe-webhooken (F5-32) skriver ved kjøp; Endwise-admin
+ * kan tildele tillegg ved onboarding og her under. `moduleProcedure` håndhever.
+ * En bryter her åpner ikke en ubetalt modul.
  *
  * Sperren er `endwiseAdminProcedure` på listPlatform/setGlobal/setTenantOverride
  * — at siden ligger under /endwise er kosmetikk.
@@ -124,17 +125,17 @@ export default function EndwiseFlaggPage() {
             tekst="feature_flags + feature_flag_overrides. Globalt eller per forhandler. Styres her. Sperren er server-side."
           />
           <Skille
-            tittel="Entitlements — ikke her"
-            tekst="tenant_modules. Hva forhandleren har betalt for. Skrives kun av Stripe-webhooken. Håndheves av moduleProcedure. Tabellen under er read-only."
+            tittel="Entitlements — tabellen under"
+            tekst="tenant_modules. Hva forhandleren har fått tildelt (admin ved onboarding) eller kjøpt (Stripe). Håndheves av moduleProcedure. Feature-flags selger ikke en modul."
           />
         </div>
       </CardShell>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-title text-fg">Kjøpte moduler (read-only)</h2>
+        <h2 className="text-title text-fg">Kjøpte og tildelte tillegg</h2>
         <p className="text-[12px] text-fg-muted leading-relaxed">
-          Hva forhandleren faktisk har betalt for. Feature-flags kan ikke skru dette på. Skrivesti:
-          Stripe (F5-32).
+          Hva forhandleren har fått. Feature-flags kan ikke skru dette på. Endwise-admin kan tildele
+          tillegg her; Stripe (F5-32) skriver ved kjøp. Basis er alltid på.
         </p>
         <KjopteModulerTabell
           rader={entitlements.data}

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { check, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { tenantPolicy } from '../rls.ts';
 import { jobFunctionEnum } from './profiles.ts';
 import { tenants } from './tenants.ts';
@@ -17,12 +17,11 @@ import { tenants } from './tenants.ts';
  * 256 bit kryptografisk tilfeldig, så det finnes ingen ordbok å angripe det
  * med. Bcrypt-runder ville bare gjort oppslaget tregt uten å gjøre det tryggere.
  *
- * ── ⛔ Rollen står IKKE i tabellen som fritt felt ────────────────────────
- * `role` er låst til `dealer_staff` av en CHECK-constraint i migrasjonen. En
- * invitasjon skal aldri kunne bli en vei til `dealer_admin` eller
- * `endwise_admin` — heller ikke om noen senere skriver en rute som glemmer å
- * validere. Kolonnen finnes likevel, fordi et framtidig admin-invitasjonsspor
- * skal måtte endre en CHECK bevisst, ikke bare sende en annen streng.
+ * ── ⛔ To spor, to CHECKer ───────────────────────────────────────────────
+ * `kind = staff` er låst til `dealer_staff` + tildelbar funksjon (ikke `leder`).
+ * `kind = owner` er det bevisste unntaket: `dealer_admin` + `leder`, brukt av
+ * Endwise-admins forhandler-onboarding. Staff-ruten kan ikke velge owner.
+ * `endwise_admin` som rolle finnes fortsatt ikke her.
  *
  * ── Livssyklus ───────────────────────────────────────────────────────────
  * Åpen  = `accepted_at IS NULL AND revoked_at IS NULL AND expires_at > now()`
@@ -47,12 +46,17 @@ export const invitations = pgTable(
     tokenHash: text('token_hash').notNull(),
 
     /**
-     * Jobbfunksjonen den ansatte får (F1-14). Kun tildelbare verdier —
-     * `leder` avvises i modulen, fordi lederrollen følger av tilgangsnivået.
+     * `staff` (F1-10) eller `owner` (F5-26 eier-invite). Default staff så
+     * gamle rader og glemte inserts holder staff-CHECken.
+     */
+    kind: text('kind').notNull().default('staff'),
+
+    /**
+     * Jobbfunksjonen. Staff: selger/support/mekaniker. Owner: `leder`.
      */
     jobFunction: jobFunctionEnum('job_function').notNull(),
 
-    /** ⛔ Låst til `dealer_staff` av CHECK-constraint. Se filhodet. */
+    /** ⛔ Låst av CHECK mot `kind`. Se filhodet. */
     role: text('role').notNull().default('dealer_staff'),
 
     /** Hvem som inviterte. Til sporbarhet i lista og i revisjon. */
@@ -73,6 +77,14 @@ export const invitations = pgTable(
     uniqueIndex('invitations_token_hash_uidx').on(t.tokenHash),
     index('invitations_tenant_email_idx').on(t.tenantId, t.email),
     tenantPolicy('invitations', t.tenantId),
+    check(
+      'invitations_role_by_kind',
+      sql`(${t.kind} = 'staff' AND ${t.role} = 'dealer_staff') OR (${t.kind} = 'owner' AND ${t.role} = 'dealer_admin')`,
+    ),
+    check(
+      'invitations_function_by_kind',
+      sql`(${t.kind} = 'staff' AND ${t.jobFunction} IN ('selger', 'support', 'mekaniker')) OR (${t.kind} = 'owner' AND ${t.jobFunction} = 'leder')`,
+    ),
   ],
 ).enableRLS();
 

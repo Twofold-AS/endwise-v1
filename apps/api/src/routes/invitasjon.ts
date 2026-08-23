@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { createAuth } from '@endwise/auth';
+import { createAuth, settPassordUtenSesjon } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
 import { Hono } from 'hono';
@@ -84,9 +84,11 @@ invitasjon.get('/:token', async (c) => {
     gyldig: true,
     epost: inv.epost,
     funksjon: inv.funksjon,
+    kind: inv.kind,
     forhandler: forhandler?.navn ?? 'Endwise',
     utloper: inv.utloper,
     harKonto: Boolean(eksisterende),
+    kreverPassord: inv.kind === 'owner' || !eksisterende,
   });
 });
 
@@ -130,8 +132,17 @@ invitasjon.post('/godta', async (c) => {
     .where(eq(schema.user.email, inv.epost))
     .limit(1);
 
-  if (!eksisterende && !parsed.data.passord) {
-    return c.json({ error: 'Passord kreves for en ny konto.' }, 400);
+  const kreverPassord = inv.kind === 'owner' || !eksisterende;
+  if (kreverPassord && !parsed.data.passord) {
+    return c.json(
+      {
+        error:
+          inv.kind === 'owner'
+            ? 'Sett eller bytt passord (minst 12 tegn).'
+            : 'Passord kreves for en ny konto.',
+      },
+      400,
+    );
   }
 
   // ── 3. Forbruk. Etter denne linja er tokenet dødt. ────────────────────
@@ -171,6 +182,12 @@ invitasjon.post('/godta', async (c) => {
        * ville gitt en konto som består 2FA-gaten uten at noen kode er tastet.
        */
       await db().update(schema.user).set({ emailVerified: true }).where(eq(schema.user.id, userId));
+    } else if (inv.kind === 'owner' && parsed.data.passord) {
+      await settPassordUtenSesjon(db(), userId, parsed.data.passord);
+      await db()
+        .update(schema.user)
+        .set({ name: parsed.data.navn, emailVerified: true })
+        .where(eq(schema.user.id, userId));
     }
 
     // ── 4. Medlemskap + profil, i tenanten fra RADEN. ──────────────────
@@ -192,8 +209,8 @@ invitasjon.post('/godta', async (c) => {
           id: randomUUID(),
           organizationId: inv.tenantId,
           userId: userId as string,
-          // ⛔ Fra raden, aldri fra forespørselen. Låst til dealer_staff av en
-          // CHECK-constraint i basen.
+          // ⛔ Fra raden, aldri fra forespørselen. Staff er dealer_staff;
+          // owner-sporet kan være dealer_admin — CHECKen skiller på kind.
           role: inv.rolle,
           createdAt: new Date(),
         });

@@ -38,7 +38,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? '';
   const { data: session, isPending } = useSession();
-  const { isMechanic, isAdmin, isLoading } = useOrgRole();
+  const { isMechanic, isAdmin, isLoading, needsOnboarding } = useOrgRole();
 
   /** Har mekaniker-profil OG ingen admin-rolle → mekanikerflaten er hele appen. */
   const kunMekaniker = isMechanic && !isAdmin;
@@ -93,6 +93,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       router.replace('/min-dag' as Route);
     }
   }, [isLoading, kunMekaniker, pathname, router]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (needsOnboarding && !pathname.startsWith('/oppstart')) {
+      router.replace('/oppstart' as Route);
+    }
+  }, [isLoading, needsOnboarding, pathname, router]);
 
   // F7-01 — Mekanikeren får mobil-shell (bottom-nav), ikke admin-sidebaren.
   // Server håndhever grensen (RLS + adminProcedure); dette er UI-formen.

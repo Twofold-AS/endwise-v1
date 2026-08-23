@@ -21,6 +21,16 @@ export const tenantModules = pgTable(
     /** Modulnøkkel, f.eks. 'booking', 'messages', 'ai-diagnose'. */
     moduleKey: text('module_key').notNull(),
     enabled: boolean('enabled').notNull().default(true),
+    /**
+     * Hvem som tildelte nøkkelen.
+     *  · included — Endwise-admin-pakke, på før eieren kommer
+     *  · optional — admin lot eieren velge i veiviseren (av til hen slår på)
+     *  · dealer   — eieren slo på et optional-tillegg
+     *  · stripe   — webhook (F5-32)
+     */
+    source: text('source', { enum: ['included', 'optional', 'dealer', 'stripe'] })
+      .notNull()
+      .default('included'),
     /** Planen som ga tilgangen (audit-spor mot Stripe). */
     plan: text('plan'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),

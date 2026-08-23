@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   and,
   type Database,
@@ -27,6 +28,15 @@ export interface CreateTenantInput {
   plan?: string;
   /** F5-27: `demo` = dev-mode-tenant. Default `live` — fail-safe. */
   kind?: TenantKind;
+  /**
+   * Valgfrie tillegg eieren kan slå på i veiviseren. Skrives som
+   * `source=optional`, `enabled=false`. Overlap med `modules` droppes.
+   */
+  optionalModules?: string[];
+  /**
+   * Seed og gamle kall: ferdig onboarding. Invite-only create sender `false`.
+   */
+  onboardingCompleted?: boolean;
 }
 
 /**
@@ -98,20 +108,71 @@ export async function createTenant(
       name: input.name,
       slug: input.slug,
       kind: input.kind ?? 'live',
+      onboardingCompletedAt: input.onboardingCompleted === false ? null : new Date(),
     });
 
-    if (input.modules?.length) {
-      await tx.insert(schema.tenantModules).values(
-        input.modules.map((moduleKey) => ({
-          tenantId,
-          moduleKey,
-          plan: input.plan ?? null,
-        })),
-      );
-    }
+    const rader = pakkeRader(tenantId, input);
+    if (rader.length) await tx.insert(schema.tenantModules).values(rader);
   });
 
   return { tenantId };
+}
+
+/**
+ * F5-26 — Tenant UTEN eier-bruker. Brukes når e-posten ikke finnes ennå:
+ * admin setter aldri passord, så vi kan ikke kalle `createOrganization`
+ * med en userId. Organisasjon + tenants-rad + ev. tillegg skrives her;
+ * eier-invitasjonen lager medlemskapet når invitee setter passordet.
+ */
+export async function createTenantShell(
+  db: Database,
+  input: Omit<CreateTenantInput, 'ownerUserId'>,
+): Promise<{ tenantId: string }> {
+  const tenantId = randomUUID();
+
+  await db.insert(schema.organization).values({
+    id: tenantId,
+    name: input.name,
+    slug: input.slug,
+    createdAt: new Date(),
+  });
+
+  await withTenant(db, tenantId, async (tx) => {
+    await tx.insert(schema.tenants).values({
+      id: tenantId,
+      name: input.name,
+      slug: input.slug,
+      kind: input.kind ?? 'live',
+      onboardingCompletedAt: null,
+    });
+
+    const rader = pakkeRader(tenantId, input);
+    if (rader.length) await tx.insert(schema.tenantModules).values(rader);
+  });
+
+  return { tenantId };
+}
+
+function pakkeRader(tenantId: string, input: Pick<CreateTenantInput, 'modules' | 'optionalModules' | 'plan'>) {
+  const included = [...new Set(input.modules ?? [])];
+  const optional = [...new Set(input.optionalModules ?? [])].filter((k) => !included.includes(k));
+  const plan = input.plan ?? 'endwise';
+  return [
+    ...included.map((moduleKey) => ({
+      tenantId,
+      moduleKey,
+      enabled: true,
+      source: 'included' as const,
+      plan,
+    })),
+    ...optional.map((moduleKey) => ({
+      tenantId,
+      moduleKey,
+      enabled: false,
+      source: 'optional' as const,
+      plan,
+    })),
+  ];
 }
 
 export class TenantAccessError extends Error {

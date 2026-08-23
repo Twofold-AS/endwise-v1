@@ -46,6 +46,25 @@ describe('F1-26: server-gate på /admin og /endwise', () => {
     expect(kilde).toMatch(/force-dynamic/);
   });
 
+  it('/endwise er live oversikt, ikke redirect og ikke mock Stripe', () => {
+    const kilde = readFileSync(resolve(her, '../app/(app)/endwise/page.tsx'), 'utf8');
+    expect(kilde).not.toMatch(/redirect\(/);
+    expect(kilde).toMatch(/tenants\.census/);
+    expect(kilde).not.toMatch(/148 ?500|148500|MRR|REVENUE_KPIS/);
+  });
+
+  it('Endwise-landing er /endwise, og forhandler-nav har ingen Admin-tab', () => {
+    const nav = readFileSync(resolve(her, '../app/(app)/_shell/nav.ts'), 'utf8');
+    expect(nav).toMatch(/landing:\s*'\/endwise'/);
+    expect(nav).toMatch(/key:\s*'endwise-oversikt'/);
+    const forhandlerBlokk = nav.slice(
+      nav.indexOf('export const FORHANDLER_NAV'),
+      nav.indexOf('/* ══ ENDWISE-ADMIN'),
+    );
+    expect(forhandlerBlokk).not.toMatch(/href:\s*'\/admin'/);
+    expect(forhandlerBlokk).not.toMatch(/label:\s*'Admin'/);
+  });
+
   it('gaten går gjennom createRequestContext / requireSession — ikke et nytt auth-system', () => {
     const kilde = readFileSync(resolve(her, '../lib/endwise-admin-gate.ts'), 'utf8');
     expect(kilde).toMatch(/createRequestContext/);

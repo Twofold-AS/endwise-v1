@@ -15,6 +15,7 @@ import { FLAG_DEFAULTS, FLAG_KEY_MAX, FLAG_KEY_PATTERN, FLAG_KEYS } from '@/flag
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import { KjopteModulerTabell } from '../_kjopte-moduler';
 
 /**
  * F0-04 — FEATURE-FLAGS i Endwise-admin.
@@ -42,6 +43,7 @@ const KJENTE_FORKLARINGER: Record<string, string> = {
 export default function EndwiseFlaggPage() {
   const utils = trpc.useUtils();
   const plattform = trpc.flags.listPlatform.useQuery(undefined, { retry: false });
+  const entitlements = trpc.tenants.listModules.useQuery(undefined, { retry: false });
 
   const [valgtTenant, setValgtTenant] = useState<string>('');
   const [nyNokkel, setNyNokkel] = useState('');
@@ -106,8 +108,8 @@ export default function EndwiseFlaggPage() {
         <h1 className="sr-only">Endwise-admin · Feature-flags</h1>
         <p className="text-title text-fg">Feature-flags</p>
         <p className="text-body text-fg-muted">
-          Release-toggles — om <b>vi</b> har rullet ut en funksjon. Ikke det samme som kjøpte
-          moduler.
+          Release-toggles — om <b>vi</b> har rullet ut en funksjon. De to plattformnøklene
+          (dev-mode, kill-switch) er bevisst få. En bryter her selger ikke en modul.
         </p>
       </div>
 
@@ -123,10 +125,23 @@ export default function EndwiseFlaggPage() {
           />
           <Skille
             tittel="Entitlements — ikke her"
-            tekst="tenant_modules. Hva forhandleren har betalt for. Skrives kun av Stripe-webhooken. Håndheves av moduleProcedure."
+            tekst="tenant_modules. Hva forhandleren har betalt for. Skrives kun av Stripe-webhooken. Håndheves av moduleProcedure. Tabellen under er read-only."
           />
         </div>
       </CardShell>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-title text-fg">Kjøpte moduler (read-only)</h2>
+        <p className="text-[12px] text-fg-muted leading-relaxed">
+          Hva forhandleren faktisk har betalt for. Feature-flags kan ikke skru dette på. Skrivesti:
+          Stripe (F5-32).
+        </p>
+        <KjopteModulerTabell
+          rader={entitlements.data}
+          laster={entitlements.isLoading}
+          feil={entitlements.error?.message}
+        />
+      </section>
 
       {feil && (
         <p className="flex items-start gap-2 text-body text-danger">

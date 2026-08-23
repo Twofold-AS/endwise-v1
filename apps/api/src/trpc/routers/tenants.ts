@@ -1,5 +1,5 @@
 import { createAuth, createTenant } from '@endwise/auth';
-import { desc, eq, schema, withPlatformAdmin, withTenant } from '@endwise/db';
+import { asc, desc, eq, schema, sql, withPlatformAdmin, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { resolveDevMode } from '../dev-mode.ts';
@@ -83,6 +83,83 @@ export const tenantsRouter = router({
         .orderBy(desc(schema.tenants.createdAt)),
     ),
   ),
+
+  /**
+   * F1-07 — Live plattformtall. Ingen Stripe, ingen mock.
+   *
+   *  · `tenants` via `withPlatformAdmin` (den ene lovlige kryss-tenant-lesningen)
+   *  · `user` og `member` har bevisst ingen RLS (Better-Auth, ADR-002)
+   *
+   * Bookinger telles IKKE: `withPlatformAdmin` åpner bare `tenants`, og en
+   * runde `withTenant` per forhandler er ikke billig. Tom telling er ærlig.
+   */
+  census: endwiseAdminProcedure.query(async ({ ctx }) => {
+    const [tenants] = await withPlatformAdmin(ctx.db, (tx) =>
+      tx
+        .select({
+          totalt: sql<number>`count(*)::int`,
+          live: sql<number>`count(*) filter (where ${schema.tenants.kind} = 'live')::int`,
+          demo: sql<number>`count(*) filter (where ${schema.tenants.kind} = 'demo')::int`,
+        })
+        .from(schema.tenants),
+    );
+
+    const [brukere] = await ctx.db.select({ n: sql<number>`count(*)::int` }).from(schema.user);
+    const [medlemskap] = await ctx.db.select({ n: sql<number>`count(*)::int` }).from(schema.member);
+
+    return {
+      forhandlere: tenants?.totalt ?? 0,
+      forhandlereLive: tenants?.live ?? 0,
+      forhandlereDemo: tenants?.demo ?? 0,
+      brukere: brukere?.n ?? 0,
+      medlemskap: medlemskap?.n ?? 0,
+    };
+  }),
+
+  /**
+   * F1-07 / F0-04 — READ-ONLY entitlements per forhandler.
+   *
+   * `tenant_modules` har RLS. `withPlatformAdmin` åpner den ikke. Vi lister
+   * tenants via platform-admin, og leser modulene i hver tenants egen
+   * `withTenant` — samme mønster som `myDemoTenants`. Ingen skriving.
+   */
+  listModules: endwiseAdminProcedure.query(async ({ ctx }) => {
+    const tenants = await withPlatformAdmin(ctx.db, (tx) =>
+      tx
+        .select({
+          id: schema.tenants.id,
+          name: schema.tenants.name,
+          slug: schema.tenants.slug,
+          kind: schema.tenants.kind,
+        })
+        .from(schema.tenants)
+        .orderBy(asc(schema.tenants.name)),
+    );
+
+    const rader: Array<{
+      id: string;
+      name: string;
+      slug: string;
+      kind: (typeof tenants)[number]['kind'];
+      modules: Array<{ moduleKey: string; enabled: boolean; plan: string | null }>;
+    }> = [];
+
+    for (const t of tenants) {
+      const modules = await withTenant(ctx.db, t.id, (tx) =>
+        tx
+          .select({
+            moduleKey: schema.tenantModules.moduleKey,
+            enabled: schema.tenantModules.enabled,
+            plan: schema.tenantModules.plan,
+          })
+          .from(schema.tenantModules)
+          .where(eq(schema.tenantModules.tenantId, t.id)),
+      ).catch(() => [] as Array<{ moduleKey: string; enabled: boolean; plan: string | null }>);
+      rader.push({ ...t, modules });
+    }
+
+    return rader;
+  }),
 
   /**
    * Opprett en forhandler. Eieren må FINNES fra før — vi setter aldri passord

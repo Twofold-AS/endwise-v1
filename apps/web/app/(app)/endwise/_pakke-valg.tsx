@@ -4,8 +4,8 @@
  * F5-26 / F5-32 — Nivå + tillegg utenfor pakken.
  *
  * TIERS/TILLEGG er kilden. Ingen hardkodede nøkler. shop vises
- * aldri. SMS (twilio) er tillegg på alle nivåer, men ALDRI en avkrysning
- * som planmodul — pass-through per melding, ingen månedsavgift.
+ * aldri. SMS (twilio) er et avkrysnings-tillegg på alle nivåer —
+ * ikke en planmodul, pass-through per melding, 0 kr/mnd.
  */
 export type Nivaa = {
   key: string;
@@ -25,9 +25,7 @@ export type Tillegg = {
 
 export function tilleggForNivaa(nivaa: Nivaa | undefined, tillegg: Tillegg[]): Tillegg[] {
   const inkludert = new Set(nivaa?.modules ?? []);
-  return tillegg.filter(
-    (t) => t.module !== 'shop' && t.module !== 'twilio' && !inkludert.has(t.module),
-  );
+  return tillegg.filter((t) => t.module !== 'shop' && !inkludert.has(t.module));
 }
 
 export function tilleggNokler(

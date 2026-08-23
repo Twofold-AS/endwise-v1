@@ -64,11 +64,11 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).not.toMatch(/SMS ligger i Pro-bundelen/);
   });
 
-  it('pakkevalget skjuler shop og SMS-avkrysning', () => {
+  it('pakkevalget skjuler shop, men viser SMS som avkrysnings-tillegg', () => {
     expect(pakke).toMatch(/t\.module !== 'shop'/);
-    expect(pakke).toMatch(/t\.module !== 'twilio'/);
+    expect(pakke).not.toMatch(/t\.module !== 'twilio'/);
     expect(pakke).not.toMatch(/SMS ligger i Pro-bundelen/);
-    expect(pakke).toMatch(/SMS \(twilio\) er tillegg på alle nivåer/);
+    expect(pakke).toMatch(/SMS \(twilio\) er et avkrysnings-tillegg/);
   });
 
   it('resend og slett er skjult på Endwise-tenanten', () => {

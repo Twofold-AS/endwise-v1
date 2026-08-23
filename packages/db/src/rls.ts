@@ -13,6 +13,12 @@ import { authenticatedRole } from './roles.ts';
 export const APP_TENANT_SETTING = 'app.tenant_id';
 
 /**
+ * Se verkstedet — smal GUC. Verdi er forhandlerens UUID, ikke `'on'`.
+ * Aldri bytt `app.tenant_id` for inspect: da åpner FORCE RLS hele tenanten.
+ */
+export const APP_INSPECT_SETTING = 'app.platform_inspect';
+
+/**
  * Gjeldende tenant fra session-variabelen. NULL => ingen rader synlige.
  *
  * `nullif(..., '')` er IKKE kosmetikk. Etter at en transaksjon med
@@ -23,6 +29,21 @@ export const APP_TENANT_SETTING = 'app.tenant_id';
  * Funnet av F1-08-testene mot en ekte database.
  */
 export const currentTenantId = sql`nullif(current_setting(${sql.raw(`'${APP_TENANT_SETTING}'`)}, true), '')::uuid`;
+
+export const currentInspectTenantId = sql`nullif(current_setting(${sql.raw(`'${APP_INSPECT_SETTING}'`)}, true), '')::uuid`;
+
+/**
+ * SELECT-only inspect-policy bundet til `app.platform_inspect`.
+ * Ingen skriving. Ikke bruk på `customers` — kolonne-RLS kan ikke skjule e-post/telefon.
+ */
+export function inspectSelectPolicy(tableName: string, tenantIdColumn: PgColumn) {
+  return pgPolicy(`${tableName}_platform_inspect_read`, {
+    as: 'permissive',
+    for: 'select',
+    to: authenticatedRole,
+    using: sql`${tenantIdColumn} = ${currentInspectTenantId}`,
+  });
+}
 
 /**
  * Standard tenant-isolasjonspolicy. Brukes på hver tenant-skopet tabell:

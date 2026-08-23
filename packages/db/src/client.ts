@@ -64,6 +64,26 @@ export function pgConnectionConfig(connectionString: string): PgConnectionConfig
 }
 
 /**
+ * drizzle-kit 0.31: `url` + `ssl` er ikke lov sammen (kun `url`, eller
+ * host/user/database + `ssl`). Scaleway-CA krever rejectUnauthorized:false,
+ * ellers blir `drizzle-kit migrate` exit 1 med bare SSL-advarsler.
+ */
+export function drizzleKitPgCredentials(connectionString: string) {
+  const pg = pgConnectionConfig(connectionString);
+  const url = new URL(pg.connectionString);
+  const host = url.hostname.replace(/^\[(.*)\]$/, '$1');
+  const database = decodeURIComponent(url.pathname.replace(/^\//, '')) || 'postgres';
+  return {
+    host,
+    port: url.port ? Number(url.port) : 5432,
+    user: decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+    database,
+    ...(pg.ssl ? { ssl: pg.ssl } : {}),
+  };
+}
+
+/**
  * Driver: node-postgres (`pg`) over vanlig TCP.
  *
  * Vanlig TCP fungerer mot både Docker-basen vi utvikler mot og Scaleway
@@ -140,11 +160,12 @@ export async function withPlatformAdmin<T>(
 /**
  * Read-only inspeksjon av ÉN forhandler. Brukes av Se verkstedet.
  *
- * Setter `app.tenant_id` til den forhandleren (eksisterende RLS) og
- * `SET TRANSACTION READ ONLY` så en skriving feiler i databasen — ikke bare
- * i applikasjonen. Kalles KUN fra `endwiseInspectProcedure`.
+ * Setter `app.platform_inspect` til forhandlerens UUID og
+ * `SET TRANSACTION READ ONLY`. Kalles KUN fra `endwiseInspectProcedure`.
  *
- * ⛔ Dette er IKKE impersonering. Sesjonens aktive org forblir plattformen.
+ * ⛔ Ikke tenant-GUC-en — det ville åpnet FORCE RLS for hele tenanten
+ * (kunder e-post/telefon, alle tråder, integrasjonstokens).
+ * ⛔ Ikke impersonering. Sesjonens aktive org forblir plattformen.
  */
 export async function withPlatformInspect<T>(
   db: Database,
@@ -153,7 +174,7 @@ export async function withPlatformInspect<T>(
 ): Promise<T> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`set transaction read only`);
-    await tx.execute(sql`select set_config(${APP_TENANT_SETTING}, ${tenantId}, true)`);
+    await tx.execute(sql`select set_config('app.platform_inspect', ${tenantId}, true)`);
     return fn(tx);
   });
 }

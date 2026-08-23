@@ -20,7 +20,37 @@ export const QUICK_READ_ONLY_PROBE_PATH = '/api/v2/client/info';
 export const QUICK_PROBE_USER_AGENT = 'Endwise/1 QuickProbe';
 
 const DEFAULT_TIMEOUT_MS = 15_000;
-const MAX_RESPONSE_BYTES = 25_000_000;
+export const MAX_RESPONSE_BYTES = 256_000;
+
+async function lesSvarCapped(response: Response, max: number): Promise<string> {
+  const contentLength = Number(response.headers.get('content-length') ?? '0');
+  if (contentLength > max) {
+    throw new QuickError('Quick-svar for stort');
+  }
+  if (!response.body) {
+    throw new QuickError('Uventet svar fra Quick (ikke JSON)');
+  }
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      await reader.cancel();
+      throw new QuickError('Quick-svar for stort');
+    }
+    chunks.push(value);
+  }
+  const merged = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(merged);
+}
 
 export type QuickProbeConfig = {
   baseUrl: string;
@@ -69,15 +99,11 @@ export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void
     throw new QuickError(`Quick svarte ${response.status}`, response.status);
   }
 
-  const contentLength = Number(response.headers.get('content-length') ?? '0');
-  if (contentLength > MAX_RESPONSE_BYTES) {
-    throw new QuickError('Quick-svar for stort');
-  }
-
   let json: unknown;
   try {
-    json = await response.json();
-  } catch {
+    json = JSON.parse(await lesSvarCapped(response, MAX_RESPONSE_BYTES));
+  } catch (error) {
+    if (error instanceof QuickError) throw error;
     throw new QuickError('Uventet svar fra Quick (ikke JSON)');
   }
   try {

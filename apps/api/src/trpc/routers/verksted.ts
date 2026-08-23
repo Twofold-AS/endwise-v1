@@ -96,21 +96,9 @@ export const verkstedRouter = router({
 
   kunder: endwiseInspectProcedure.input(slugInput).query(async ({ ctx, input }) => {
     const t = await finnForhandler(ctx.db, input.slug);
-    return withPlatformInspect(ctx.db, t.id, async (tx) => {
-      const rader = await tx
-        .select({
-          id: schema.customers.id,
-          name: schema.customers.name,
-          email: schema.customers.email,
-          phone: schema.customers.phone,
-          source: schema.customers.source,
-        })
-        .from(schema.customers)
-        .where(eq(schema.customers.tenantId, t.id))
-        .orderBy(schema.customers.name)
-        .limit(200);
-      return { tenant: t, rader };
-    });
+    // Ingen customers-policy under inspect — e-post/telefon er persondata
+    // støtte ikke trenger. Tom liste, ikke withTenant/withPlatformInspect-dump.
+    return { tenant: t, rader: [] as Array<{ id: string; name: string }> };
   }),
 
   kjoretoy: endwiseInspectProcedure.input(slugInput).query(async ({ ctx, input }) => {
@@ -145,7 +133,7 @@ export const verkstedRouter = router({
           channel: schema.threads.channel,
         })
         .from(schema.threads)
-        .where(eq(schema.threads.tenantId, t.id))
+        .where(and(eq(schema.threads.tenantId, t.id), eq(schema.threads.kind, 'dealer_admin')))
         .orderBy(desc(schema.threads.lastMessageAt))
         .limit(100);
       return { tenant: t, rader };
@@ -164,7 +152,13 @@ export const verkstedRouter = router({
             kind: schema.threads.kind,
           })
           .from(schema.threads)
-          .where(and(eq(schema.threads.id, input.threadId), eq(schema.threads.tenantId, t.id)));
+          .where(
+            and(
+              eq(schema.threads.id, input.threadId),
+              eq(schema.threads.tenantId, t.id),
+              eq(schema.threads.kind, 'dealer_admin'),
+            ),
+          );
         if (!traad) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke tråden.' });
         }

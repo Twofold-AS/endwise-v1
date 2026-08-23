@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { boolean, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { tenantPolicy } from '../rls.ts';
+import { inspectSelectPolicy, tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
 /**
@@ -28,6 +28,7 @@ export const mechanics = pgTable(
   (t) => [
     index('mechanics_tenant_active_idx').on(t.tenantId, t.active),
     tenantPolicy('mechanics', t.tenantId),
+    inspectSelectPolicy('mechanics', t.tenantId),
   ],
 ).enableRLS();
 

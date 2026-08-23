@@ -9,7 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { tenantPolicy } from '../rls.ts';
+import { inspectSelectPolicy, tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 import { vehicleTypeEnum } from './vehicles.ts';
 
@@ -37,6 +37,7 @@ export const services = pgTable(
   (t) => [
     index('services_tenant_active_idx').on(t.tenantId, t.active),
     tenantPolicy('services', t.tenantId),
+    inspectSelectPolicy('services', t.tenantId),
   ],
 ).enableRLS();
 
@@ -69,6 +70,7 @@ export const serviceVersions = pgTable(
     uniqueIndex('service_versions_service_version_uidx').on(t.serviceId, t.version),
     index('service_versions_current_idx').on(t.serviceId, t.validTo),
     tenantPolicy('service_versions', t.tenantId),
+    inspectSelectPolicy('service_versions', t.tenantId),
   ],
 ).enableRLS();
 

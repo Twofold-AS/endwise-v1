@@ -1,4 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createDb, type Database, eq, schema, sql, withTenant } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -33,6 +36,15 @@ describe('F1-10: token og validering (uten database)', () => {
 
   it('e-post normaliseres, så «Ola@X.no» og «ola@x.no» er samme person', () => {
     expect(normaliserEpost('  Ola@Verksted.NO ')).toBe('ola@verksted.no');
+  });
+
+  it('CHECK binder platform_level ↔ role (endwise_admin↔administrator)', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const kilde = readFileSync(resolve(her, '../../db/src/schema/invitations.ts'), 'utf8');
+    expect(kilde).toMatch(
+      /endwise_admin[\s\S]{0,200}administrator|administrator[\s\S]{0,200}endwise_admin/,
+    );
+    expect(kilde).toMatch(/endwise_support[\s\S]{0,80}support|support[\s\S]{0,80}endwise_support/);
   });
 });
 

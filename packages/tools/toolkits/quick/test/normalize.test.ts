@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeQuickBaseUrl, normalizeQuickToken } from '../src/normalize.ts';
+import {
+  MAX_QUICK_TOKEN_LENGTH,
+  normalizeQuickBaseUrl,
+  normalizeQuickToken,
+} from '../src/normalize.ts';
 
 /**
  * F1-07 — forhandler limer ofte inn Help/swagger-URL og
@@ -48,5 +52,13 @@ describe('normalizeQuickToken', () => {
   it('tom wrapper blir tom — ikke «Token token=» mot Quick', () => {
     expect(normalizeQuickToken('Token token=')).toBe('');
     expect(normalizeQuickToken('token=')).toBe('');
+  });
+
+  it('avviser token over maks lengde (ingen avkorting av nøkkel)', () => {
+    expect(MAX_QUICK_TOKEN_LENGTH).toBeLessThanOrEqual(512);
+    expect(normalizeQuickToken('a'.repeat(MAX_QUICK_TOKEN_LENGTH))).toHaveLength(
+      MAX_QUICK_TOKEN_LENGTH,
+    );
+    expect(normalizeQuickToken('a'.repeat(MAX_QUICK_TOKEN_LENGTH + 1))).toBe('');
   });
 });

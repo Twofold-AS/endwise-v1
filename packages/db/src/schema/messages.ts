@@ -143,6 +143,12 @@ export const threads = pgTable(
       to: authenticatedRole,
       using: sql`current_setting('app.platform_admin', true) = 'on' AND ${t.kind} = 'dealer_admin'`,
     }),
+    pgPolicy('threads_platform_inspect_read', {
+      as: 'permissive',
+      for: 'select',
+      to: authenticatedRole,
+      using: sql`${t.tenantId} = nullif(current_setting('app.platform_inspect', true), '')::uuid AND ${t.kind} = 'dealer_admin'`,
+    }),
   ],
 ).enableRLS();
 
@@ -178,6 +184,16 @@ export const threadParticipants = pgTable(
       to: authenticatedRole,
       using: sql`current_setting('app.platform_admin', true) = 'on' AND EXISTS (
         SELECT 1 FROM threads th WHERE th.id = ${t.threadId} AND th.kind = 'dealer_admin'
+        AND th.tenant_id = ${t.tenantId}
+      )`,
+    }),
+    pgPolicy('thread_participants_platform_inspect_read', {
+      as: 'permissive',
+      for: 'select',
+      to: authenticatedRole,
+      using: sql`${t.tenantId} = nullif(current_setting('app.platform_inspect', true), '')::uuid AND EXISTS (
+        SELECT 1 FROM threads th WHERE th.id = ${t.threadId} AND th.kind = 'dealer_admin'
+        AND th.tenant_id = ${t.tenantId}
       )`,
     }),
   ],
@@ -234,6 +250,16 @@ export const messages = pgTable(
       to: authenticatedRole,
       using: sql`current_setting('app.platform_admin', true) = 'on' AND EXISTS (
         SELECT 1 FROM threads th WHERE th.id = ${t.threadId} AND th.kind = 'dealer_admin'
+        AND th.tenant_id = ${t.tenantId}
+      )`,
+    }),
+    pgPolicy('messages_platform_inspect_read', {
+      as: 'permissive',
+      for: 'select',
+      to: authenticatedRole,
+      using: sql`${t.tenantId} = nullif(current_setting('app.platform_inspect', true), '')::uuid AND EXISTS (
+        SELECT 1 FROM threads th WHERE th.id = ${t.threadId} AND th.kind = 'dealer_admin'
+        AND th.tenant_id = ${t.tenantId}
       )`,
     }),
   ],

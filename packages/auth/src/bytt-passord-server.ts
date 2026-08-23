@@ -9,6 +9,7 @@ import {
   TO_FAKTOR_DISABLE_STI,
   TO_FAKTOR_ENABLE_STI,
 } from './bytt-passord.ts';
+import { eierLasForHook } from './eier-las-server.ts';
 import { skriv2faDisableAudit } from './to-faktor-server.ts';
 
 /**
@@ -59,6 +60,7 @@ function brukerIdFraHook(ctx: {
  */
 export const byttPassordForHook = merket(
   createAuthMiddleware(async (ctx) => {
+    await eierLasForHook(ctx);
     if (ctx.path === TO_FAKTOR_DISABLE_STI) {
       const password = passordFraBody(ctx.body);
       if (password === undefined || password.trim().length === 0) {

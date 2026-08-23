@@ -98,6 +98,10 @@ export const invitations = pgTable(
       'invitations_function_by_kind',
       sql`(${t.kind} = 'staff' AND ${t.jobFunction} IN ('selger', 'support', 'mekaniker')) OR (${t.kind} = 'owner' AND ${t.jobFunction} = 'leder') OR (${t.kind} = 'platform' AND ${t.jobFunction} IS NULL AND ${t.platformLevel} IN ('administrator', 'support'))`,
     ),
+    check(
+      'invitations_platform_level_role',
+      sql`(${t.kind} <> 'platform') OR ((${t.role} = 'endwise_admin' AND ${t.platformLevel} = 'administrator') OR (${t.role} = 'endwise_support' AND ${t.platformLevel} = 'support'))`,
+    ),
   ],
 ).enableRLS();
 

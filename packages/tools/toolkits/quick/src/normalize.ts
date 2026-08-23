@@ -23,6 +23,9 @@ export function normalizeQuickBaseUrl(raw: string): string {
   return `${url.origin}/${slug}`;
 }
 
+/** Maks lengde på ApiV2-nøkkel etter normalisering. Over = avvis (tom). */
+export const MAX_QUICK_TOKEN_LENGTH = 512;
+
 /**
  * Trim og strip `Token token=` / `token=` slik at Authorization ikke blir
  * `Token token=Token token=…`.
@@ -40,5 +43,6 @@ export function normalizeQuickToken(raw: string): string {
     if (next === token) break;
     token = next;
   }
+  if (token.length > MAX_QUICK_TOKEN_LENGTH) return '';
   return token;
 }

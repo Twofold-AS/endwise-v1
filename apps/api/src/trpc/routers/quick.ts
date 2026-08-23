@@ -125,7 +125,7 @@ export const quickRouter = router({
       await svc.recordSync(ctx.tenantId, { status: 'ok', detail: 'Tilkobling OK' });
       return { ok: true as const, checkedAt };
     } catch (error) {
-      const detail = (error as Error).message;
+      const detail = quickProbeUserMessage(error);
       await svc.recordSync(ctx.tenantId, { status: 'error', detail });
       return { ok: false as const, checkedAt, detail };
     }

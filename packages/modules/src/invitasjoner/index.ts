@@ -1,6 +1,10 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { and, type Database, desc, eq, isNull, schema, sql, withTenant } from '@endwise/db';
-import { type InviterbartPlatformNiva, rolleForPlatformNiva } from '../plattform/index.ts';
+import {
+  erPlattformTenant,
+  type InviterbartPlatformNiva,
+  rolleForPlatformNiva,
+} from '../plattform/index.ts';
 import { type Jobbfunksjon, kanTildeles, TILDELBARE_FUNKSJONER } from '../profil/index.ts';
 
 /**
@@ -211,6 +215,17 @@ export function createInvitasjonsmodul(db: Database) {
       const utloper = new Date(
         Date.now() + (input.gyldighetDager ?? INVITASJON_GYLDIGHET_DAGER) * 24 * 60 * 60 * 1000,
       );
+
+      const [tenant] = await withTenant(db, input.tenantId, (tx) =>
+        tx
+          .select({ kind: schema.tenants.kind, slug: schema.tenants.slug })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.id, input.tenantId))
+          .limit(1),
+      );
+      if (!tenant || !erPlattformTenant(tenant)) {
+        throw new InvitasjonUgyldigError('Plattform-invitasjon krever Endwise-org.');
+      }
 
       const [rad] = await withTenant(db, input.tenantId, (tx) =>
         tx

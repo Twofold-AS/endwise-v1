@@ -6,6 +6,7 @@ import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import { HELPDESK_MIN, hjelpeartikkelLagreHint } from './lagre-hint';
 
 /**
  * F5-23 / F1-07 — ENDWISE-ADMIN: skriv hjelpeartikler.
@@ -103,11 +104,8 @@ export default function EndwiseHelpdeskPage() {
     else if (aktiv) oppdater.mutate({ id: aktiv.id, ...felt });
   }
 
-  const kanLagre =
-    skjema.title.trim().length >= 3 &&
-    skjema.summary.trim().length >= 10 &&
-    skjema.body.trim().length >= 10 &&
-    !lagrer;
+  const lagreHint = hjelpeartikkelLagreHint(skjema);
+  const kanLagre = !lagreHint && !lagrer;
 
   if (alle.isError) {
     return (
@@ -165,7 +163,12 @@ export default function EndwiseHelpdeskPage() {
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Ingress</span>
+            <span className="flex items-baseline justify-between gap-2">
+              <span className="text-label text-fg">Ingress</span>
+              <span className="text-[12px] text-fg-muted tabular-nums">
+                {skjema.summary.trim().length}/{HELPDESK_MIN.summary}
+              </span>
+            </span>
             <textarea
               value={skjema.summary}
               onChange={(e) => setSkjema((s) => ({ ...s, summary: e.target.value }))}
@@ -246,25 +249,34 @@ export default function EndwiseHelpdeskPage() {
             </p>
           )}
 
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setRedigerer(null)}
-              className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-            >
-              Avbryt
-            </button>
-            <StatefulButton
-              type="button"
-              onClick={lagre}
-              disabled={!kanLagre}
-              state={lagrer ? 'loading' : feil ? 'error' : 'idle'}
-              loadingText="Lagrer…"
-              successText="Lagret"
-              errorText="Feilet"
-            >
-              {redigerer === 'ny' ? 'Opprett' : 'Lagre'}
-            </StatefulButton>
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRedigerer(null)}
+                className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
+              >
+                Avbryt
+              </button>
+              <StatefulButton
+                type="button"
+                onClick={lagre}
+                disabled={!kanLagre}
+                title={lagreHint ?? undefined}
+                aria-describedby={lagreHint ? 'helpdesk-lagre-hint' : undefined}
+                state={lagrer ? 'loading' : feil ? 'error' : 'idle'}
+                loadingText="Lagrer…"
+                successText="Lagret"
+                errorText="Feilet"
+              >
+                {redigerer === 'ny' ? 'Opprett' : 'Lagre'}
+              </StatefulButton>
+            </div>
+            {lagreHint ? (
+              <p id="helpdesk-lagre-hint" className="text-[12px] text-fg-muted">
+                {lagreHint}
+              </p>
+            ) : null}
           </div>
         </CardShell>
       )}

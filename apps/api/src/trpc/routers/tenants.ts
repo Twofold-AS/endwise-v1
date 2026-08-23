@@ -25,6 +25,7 @@ import { z } from 'zod';
 import { resolveDevMode } from '../dev-mode.ts';
 import { endwiseAdminProcedure, protectedProcedure, router } from '../init.ts';
 import { hashSlettKode, lagSlettKode, slettKodeErGyldig } from '../slett-otp.ts';
+import { loggSlettPostgresFeil, mapSlettPostgresFeil } from '../slett-postgres.ts';
 
 /**
  * F5-26 / F5-27 — FORHANDLER-OPPRETTING OG DEMO-TENANTS.
@@ -929,9 +930,14 @@ export const tenantsRouter = router({
         });
       });
 
-      await withPlatformAdmin(ctx.db, async (tx) => {
-        await tx.execute(sql`select slett_forhandler(${input.tenantId}::uuid)`);
-      });
+      try {
+        await withPlatformAdmin(ctx.db, async (tx) => {
+          await tx.execute(sql`select slett_forhandler(${input.tenantId}::uuid)`);
+        });
+      } catch (error) {
+        loggSlettPostgresFeil(input.tenantId, error);
+        throw mapSlettPostgresFeil(error);
+      }
 
       await ctx.db
         .delete(schema.tenantDeleteChallenges)

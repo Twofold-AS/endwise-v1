@@ -211,6 +211,95 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
     expect(audit.some((a) => a.action === 'tenant.deleted')).toBe(true);
   });
 
+  it('slett redigerer audit_log (ikke hard-slett) og rører ikke user', async () => {
+    const slug = `slett-audit-${randomUUID().slice(0, 8)}`;
+    const opprettet = await somEndwise().tenants.create({
+      name: 'Slett audit AS',
+      slug,
+      ownerEmail: `audit.${slug}@verksted.test`,
+      kind: 'demo',
+      tier: 'start',
+    });
+
+    const piiId = randomUUID();
+    const userId = `slett-usr-${opprettet.tenantId.slice(0, 8)}`;
+    await owner.insert(schema.user).values({
+      id: userId,
+      name: 'Skal overleve',
+      email: `lever.${slug}@verksted.test`,
+      emailVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    await owner.insert(schema.member).values({
+      id: `mem-${userId}`,
+      organizationId: opprettet.tenantId,
+      userId,
+      role: 'dealer_staff',
+      createdAt: new Date(),
+    });
+    await owner.insert(schema.auditLog).values({
+      id: piiId,
+      tenantId: opprettet.tenantId,
+      actor: 'kunde@test.no',
+      action: 'test.pii',
+      subjectType: 'customer',
+      subjectId: 'cust-skal-redigeres',
+      metadata: { telefon: '99999999' },
+      ipAddress: '203.0.113.9',
+    });
+
+    await owner.insert(schema.tenantDeleteChallenges).values({
+      tenantId: opprettet.tenantId,
+      requestedBy: adminUser,
+      codeHash: hashSlettKode('123456'),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    await somEndwise().tenants.slett({
+      tenantId: opprettet.tenantId,
+      slug,
+      kode: '123456',
+    });
+
+    const [borte] = await owner
+      .select({ id: schema.tenants.id })
+      .from(schema.tenants)
+      .where(eq(schema.tenants.id, opprettet.tenantId));
+    expect(borte).toBeUndefined();
+
+    const [bruker] = await owner
+      .select({ id: schema.user.id, email: schema.user.email })
+      .from(schema.user)
+      .where(eq(schema.user.id, userId));
+    expect(bruker?.email).toBe(`lever.${slug}@verksted.test`);
+    await owner.delete(schema.user).where(eq(schema.user.id, userId));
+
+    const [kjede] = await owner
+      .select({
+        tenantId: schema.auditLog.tenantId,
+        actor: schema.auditLog.actor,
+        subjectId: schema.auditLog.subjectId,
+        metadata: schema.auditLog.metadata,
+        ipAddress: schema.auditLog.ipAddress,
+      })
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.id, piiId));
+    expect(kjede).toBeDefined();
+    expect(kjede?.tenantId).toBe(endwiseId);
+    expect(kjede?.actor).toBe('[REDAKTERT]');
+    expect(kjede?.subjectId).toBe('[REDAKTERT]');
+    expect(kjede?.metadata).toEqual({ redacted: true });
+    expect(kjede?.ipAddress).toBeNull();
+
+    await owner.delete(schema.auditLog).where(eq(schema.auditLog.id, piiId));
+    await owner
+      .delete(schema.auditLog)
+      .where(
+        sql`tenant_id = ${endwiseId} and action = 'audit.redacted' and metadata->>'reason' = 'slett_forhandler'`,
+      );
+  });
+
   it('kan ikke slette tenanten du selv er i', async () => {
     const [meg] = await owner
       .select({ slug: schema.tenants.slug })

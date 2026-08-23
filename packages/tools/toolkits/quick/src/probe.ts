@@ -37,7 +37,10 @@ export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void
   if (!token) throw new QuickError(QUICK_PROBE_USER_MESSAGES.noToken);
 
   const validated = assertAllowedQuickUrl(baseUrl);
-  const base = `${validated.origin}${validated.pathname}`.replace(/\/+$/, '');
+  // Aldri .../api/v2/api/v2/client/info — en limt /api/v2-suffix 500-er hos Quick.
+  const base = `${validated.origin}${validated.pathname}`
+    .replace(/\/+$/, '')
+    .replace(/\/api\/v2$/i, '');
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   let response: Response;

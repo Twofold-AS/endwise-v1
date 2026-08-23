@@ -12,6 +12,8 @@ export const QUICK_PROBE_USER_MESSAGES = {
   timeout: 'Tidsavbrudd mot Quick. Ingenting er lagret.',
   unreachable: 'Nådde ikke Quick. Ingenting er lagret.',
   unexpected: 'Uventet svar fra Quick. Ingenting er lagret.',
+  http500:
+    'Quick svarte 500 på client/info — ikke en avvist nøkkel. Sjekk at base-URL er https://q3.quick.no/<slug> uten /api/v2 og uten /Help.',
 } as const;
 
 export function quickProbeUserMessage(error: unknown): string {
@@ -19,6 +21,9 @@ export function quickProbeUserMessage(error: unknown): string {
   if (error instanceof QuickAuthError) return QUICK_PROBE_USER_MESSAGES.rejected;
   if (error instanceof QuickError) {
     if (error.status === 401 || error.status === 403) return QUICK_PROBE_USER_MESSAGES.rejected;
+    if (error.status === 500 || /svarte 500\b/.test(error.message)) {
+      return QUICK_PROBE_USER_MESSAGES.http500;
+    }
     const msg = error.message;
     if (/tidsavbrudd/i.test(msg)) return QUICK_PROBE_USER_MESSAGES.timeout;
     if (/nådde ikke/i.test(msg)) return QUICK_PROBE_USER_MESSAGES.unreachable;

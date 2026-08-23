@@ -124,6 +124,10 @@ describe('F1-07 — aktiver Quick først etter vellykket GET', () => {
     expect(quickProbeUserMessage(new QuickError('Uventet svarformat fra Quick'))).toBe(
       QUICK_PROBE_USER_MESSAGES.unexpected,
     );
+    expect(quickProbeUserMessage(new QuickError('Quick svarte 500', 500))).toBe(
+      QUICK_PROBE_USER_MESSAGES.http500,
+    );
+    expect(QUICK_PROBE_USER_MESSAGES.http500).not.toBe(QUICK_PROBE_USER_MESSAGES.rejected);
     expect(QUICK_PROBE_USER_MESSAGES.rejected).not.toBe(QUICK_PROBE_USER_MESSAGES.timeout);
     expect(QUICK_PROBE_USER_MESSAGES.timeout).not.toBe(QUICK_PROBE_USER_MESSAGES.unreachable);
     expect(QUICK_PROBE_USER_MESSAGES.unreachable).not.toBe(QUICK_PROBE_USER_MESSAGES.unexpected);

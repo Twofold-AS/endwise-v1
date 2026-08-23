@@ -65,7 +65,9 @@ export function createQuickClient(config: QuickConfig) {
   // QuickSsrfError hvis den peker et ulovlig sted. Normaliserer samtidig.
   const validated = assertAllowedQuickUrl(normalizeQuickBaseUrl(config.baseUrl));
   const token = normalizeQuickToken(config.token);
-  const base = `${validated.origin}${validated.pathname}`.replace(/\/+$/, '');
+  const base = `${validated.origin}${validated.pathname}`
+    .replace(/\/+$/, '')
+    .replace(/\/api\/v2$/i, '');
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   async function request<T>(path: string, schema: { parse: (v: unknown) => T }): Promise<T> {

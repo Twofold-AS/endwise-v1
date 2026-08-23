@@ -2,11 +2,13 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { QuickAuthError, QuickError } from '../src/errors.ts';
 import {
   probeQuickReadOnly,
   QUICK_READ_ONLY_PROBE_METHOD,
   QUICK_READ_ONLY_PROBE_PATH,
 } from '../src/probe.ts';
+import { QUICK_PROBE_USER_MESSAGES, quickProbeUserMessage } from '../src/probe-error.ts';
 
 const cfg = { baseUrl: 'https://q3.quick.no/Test_Public', token: 'fake-apiv2-ikke-ekte' };
 
@@ -31,6 +33,34 @@ describe('F1-07 — GET-only Quick-probe', () => {
     expect(['POST', 'PUT', 'PATCH', 'DELETE']).not.toContain(init.method);
     expect(String(kall[0])).toBe('https://q3.quick.no/Test_Public/api/v2/client/info');
     expect(String(kall[0])).toContain(QUICK_READ_ONLY_PROBE_PATH);
+  });
+
+  it('baseUrl som slutter på /api/v2 treffer ikke /api/v2/api/v2/client/info', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({}));
+    await probeQuickReadOnly({
+      ...cfg,
+      baseUrl: 'https://q3.quick.no/ProdShared008/api/v2',
+    });
+    const url = String(spy.mock.calls[0]?.[0]);
+    expect(url).toBe('https://q3.quick.no/ProdShared008/api/v2/client/info');
+    expect(url).not.toContain('/api/v2/api/v2/');
+  });
+
+  it('HTTP 500 fra Quick er ikke auth-feil', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({}, 500));
+    await expect(probeQuickReadOnly(cfg)).rejects.toBeInstanceOf(QuickError);
+    await expect(probeQuickReadOnly(cfg)).rejects.not.toBeInstanceOf(QuickAuthError);
+    try {
+      await probeQuickReadOnly(cfg);
+      throw new Error('forventet avvisning');
+    } catch (error) {
+      expect(error).toBeInstanceOf(QuickError);
+      expect(error).not.toBeInstanceOf(QuickAuthError);
+      expect((error as QuickError).status).toBe(500);
+      const msg = quickProbeUserMessage(error);
+      expect(msg).toBe(QUICK_PROBE_USER_MESSAGES.http500);
+      expect(msg).not.toBe(QUICK_PROBE_USER_MESSAGES.rejected);
+    }
   });
 
   it('Help/swagger-URL treffer origin + slug, ikke docs-stien', async () => {

@@ -30,11 +30,21 @@ describe('quickProbeUserMessage — distinkte BAD_REQUEST, ingen rå fetch-cause
     expect(QUICK_PROBE_USER_MESSAGES.unreachable).toMatch(/nådde ikke Quick/i);
   });
 
-  it('uventet JSON/status → uventet svar', () => {
+  it('HTTP 500 er ikke avvist nøkkel — egen melding om client/info og base-URL', () => {
+    const msg = quickProbeUserMessage(new QuickError('Quick svarte 500', 500));
+    expect(msg).toBe(QUICK_PROBE_USER_MESSAGES.http500);
+    expect(msg).toBe(
+      'Quick svarte 500 på client/info — ikke en avvist nøkkel. Sjekk at base-URL er https://q3.quick.no/<slug> uten /api/v2 og uten /Help.',
+    );
+    expect(msg).not.toBe(QUICK_PROBE_USER_MESSAGES.rejected);
+    expect(msg).not.toMatch(/avviste nøkkelen/i);
+  });
+
+  it('uventet JSON/status → uventet svar (ikke 500)', () => {
     expect(quickProbeUserMessage(new QuickError('Uventet svar fra Quick (ikke JSON)'))).toBe(
       QUICK_PROBE_USER_MESSAGES.unexpected,
     );
-    expect(quickProbeUserMessage(new QuickError('Quick svarte 500', 500))).toBe(
+    expect(quickProbeUserMessage(new QuickError('Quick svarte 502', 502))).toBe(
       QUICK_PROBE_USER_MESSAGES.unexpected,
     );
     expect(QUICK_PROBE_USER_MESSAGES.unexpected).toMatch(/uventet svar/i);
@@ -64,10 +74,11 @@ describe('quickProbeUserMessage — distinkte BAD_REQUEST, ingen rå fetch-cause
       QUICK_PROBE_USER_MESSAGES.timeout,
       QUICK_PROBE_USER_MESSAGES.unreachable,
       QUICK_PROBE_USER_MESSAGES.unexpected,
+      QUICK_PROBE_USER_MESSAGES.http500,
       QUICK_PROBE_USER_MESSAGES.noToken,
       QUICK_PROBE_USER_MESSAGES.noUrl,
     ]);
-    expect(distinct.size).toBe(6);
+    expect(distinct.size).toBe(7);
   });
 
   it('SSRF-melding beholdes (allerede trygg, uten intern host)', () => {

@@ -239,3 +239,53 @@ describe('engangskode-e-posten', () => {
     vi.doUnmock('resend');
   });
 });
+
+describe('invitasjons-e-posten (F1-10)', () => {
+  async function last() {
+    vi.resetModules();
+    return import('../src/senders/resend.ts');
+  }
+
+  beforeEach(() => {
+    process.env.NODE_ENV = 'test';
+    process.env.RESEND_API_KEY = 'test-nokkel';
+    process.env.RESEND_FROM = 'Endwise <no-reply@no-reply.endwise.no>';
+  });
+
+  it('sender HTML med cid-logo og knappen «Åpne invitasjonen»', async () => {
+    const sendt: Record<string, unknown>[] = [];
+    vi.doMock('resend', () => ({
+      Resend: class {
+        emails = {
+          send: async (payload: Record<string, unknown>) => {
+            sendt.push(payload);
+            return { data: { id: 'x' }, error: null };
+          },
+        };
+      },
+    }));
+
+    const { sendInvitation } = await last();
+    await sendInvitation({
+      to: 'ny@verksted.test',
+      lenke: 'https://endwise.no/invitasjon/eksempel',
+      forhandler: 'Verksted A',
+      funksjon: 'support',
+      utloper: new Date('2026-09-01T12:00:00Z'),
+    });
+
+    expect(sendt).toHaveLength(1);
+    const p = sendt[0] as { text: string; html: string; subject: string; attachments?: unknown[] };
+    expect(p.subject).toBe('Du er invitert til Verksted A i Endwise');
+    expect(p.text).toContain('https://endwise.no/invitasjon/eksempel');
+    expect(p.html).toContain('Åpne invitasjonen');
+    expect(p.html).toContain(`src="cid:${LOGO_EPOST_CID}"`);
+    expect(p.html).not.toContain('src="data:');
+    expect(p.attachments).toHaveLength(1);
+    expect(p.attachments?.[0]).toMatchObject({
+      contentId: LOGO_EPOST_CID,
+      contentType: 'image/png',
+    });
+    vi.doUnmock('resend');
+  });
+});

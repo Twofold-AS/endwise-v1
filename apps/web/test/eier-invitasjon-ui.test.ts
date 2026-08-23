@@ -22,6 +22,26 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(kilde).not.toMatch(/addonKatalog|setModules/);
   });
 
+  it('kloner /signin-chromet — logo, kort, StatefulButton, auth-felt', () => {
+    expect(kilde).toMatch(/from '@endwise\/ui'/);
+    expect(kilde).toMatch(/StatefulButton/);
+    expect(kilde).toMatch(/Field, INPUT, PassordFelt/);
+    expect(kilde).toMatch(/\/logo\/logo\.svg/);
+    expect(kilde).toMatch(/max-w-sm/);
+    expect(kilde).toMatch(/rounded-xl border border-border bg-card p-\[5px\]/);
+    expect(kilde).toMatch(/bg-inset p-4/);
+    expect(kilde).toMatch(/Henter invitasjonen…/);
+    expect(kilde).toMatch(/Oppretter …/);
+    expect(kilde).toMatch(/Opprettet/);
+    expect(kilde).toMatch(/<Lock /);
+    expect(kilde).toMatch(/Du er invitert som eier/);
+    expect(kilde).toMatch(/Invitasjonen virker ikke/);
+    expect(kilde).toMatch(/utløper etter sju dager/);
+    expect(kilde).not.toMatch(/max-w-\[440px\]/);
+    expect(kilde).not.toMatch(/py-16/);
+    expect(kilde).not.toMatch(/['"]shop['"]|['"]twilio['"]|Admin-tab|\/admin/);
+  });
+
   it('forhandlere-siden skiller pakke og valgfritt', () => {
     expect(forhandlere).toMatch(/I pakken \(fast\)/);
     expect(forhandlere).toMatch(/Kan velges i veiviseren/);

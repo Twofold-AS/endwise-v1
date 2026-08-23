@@ -323,17 +323,21 @@ export async function sendInvitation(input: {
     return;
   }
 
+  const subject = eier
+    ? `Du er invitert som eier av ${input.forhandler} i Endwise`
+    : `Du er invitert til ${input.forhandler} i Endwise`;
+  const ingress = eier
+    ? `${input.forhandler} er opprettet i Endwise, og du er invitert som eier.`
+    : `${input.forhandler} har invitert deg til Endwise som ${input.funksjon}.`;
+  const fotnote = `Lenken er personlig, kan brukes én gang, og er gyldig til ${dato}. Har du ikke ventet denne invitasjonen, kan du se bort fra e-posten.`;
+
   await sendEmail({
     to: input.to,
-    subject: eier
-      ? `Du er invitert som eier av ${input.forhandler} i Endwise`
-      : `Du er invitert til ${input.forhandler} i Endwise`,
+    subject,
     text: [
       `Hei!`,
       ``,
-      eier
-        ? `${input.forhandler} er opprettet i Endwise, og du er invitert som eier.`
-        : `${input.forhandler} har invitert deg til Endwise som ${input.funksjon}.`,
+      ingress,
       ``,
       `Åpne lenken for å sette eller bytte passordet ditt:`,
       input.lenke,
@@ -342,6 +346,12 @@ export async function sendInvitation(input: {
       ``,
       `Har du ikke ventet denne invitasjonen, kan du se bort fra e-posten.`,
     ].join('\n'),
+    html: byggEpostHtml({
+      tittel: subject,
+      ingress,
+      innhold: knapp(input.lenke, 'Åpne invitasjonen'),
+      fotnote,
+    }),
   });
 }
 

@@ -1,7 +1,10 @@
 'use client';
 
+import { Lock, StatefulButton } from '@endwise/ui';
+import Image from 'next/image';
 import { use, useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
+import { Field, INPUT, PassordFelt } from '../../_auth/felter';
 
 /**
  * F1-10 / F5-26 — INVITEE-SIDEN. Første møte med Endwise.
@@ -18,6 +21,11 @@ import { authClient } from '@/lib/auth-client';
  *   3. `/2fa-oppsett` (F1-11)
  *   4. Eier: `/oppstart` (visningsnavn, valgfrie tillegg, team).
  *      Ansatt: lander i funksjonens visning. ⛔ Ingen plan-velger her.
+ *
+ * ── Chrome ───────────────────────────────────────────────────────────────
+ * Samme skall som `/signin` og `/2fa-oppsett`: sentrert `max-w-sm`, logo
+ * 44×44, kort `p-[5px]` + inset, `Field` / `PassordFelt` / `StatefulButton`.
+ * Ingen ny pakke. Ingen butikk- eller SMS-modul. Ingen egen admin-fane.
  */
 type Invitasjon = {
   gyldig: true;
@@ -46,6 +54,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const [navn, setNavn] = useState('');
   const [passord, setPassord] = useState('');
   const [sender, setSender] = useState(false);
+  const [ferdig, setFerdig] = useState(false);
 
   useEffect(() => {
     let avbrutt = false;
@@ -76,13 +85,14 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     setFeil(null);
     setSender(true);
     try {
+      const trimmedPassord = passord.trim();
       const res = await fetch('/invitasjoner/godta', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           token,
           navn: navn.trim(),
-          ...(inv.kreverPassord ? { passord } : {}),
+          ...(inv.kreverPassord ? { passord: trimmedPassord } : {}),
         }),
       });
       const data = await res.json();
@@ -91,12 +101,17 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         return;
       }
 
+      setFerdig(true);
+
       if (!inv.kreverPassord) {
         window.location.assign('/signin');
         return;
       }
 
-      const inn = await authClient.signIn.email({ email: inv.epost, password: passord });
+      const inn = await authClient.signIn.email({
+        email: inv.epost,
+        password: trimmedPassord,
+      });
       if (inn.error) {
         window.location.assign('/signin');
         return;
@@ -112,40 +127,66 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
 
   const rolle =
     inv?.kind === 'owner' ? 'eier' : (FUNKSJONSTEKST[inv?.funksjon ?? ''] ?? inv?.funksjon);
+  const tittel = inv
+    ? `Velkommen til ${inv.forhandler}`
+    : laster
+      ? 'Invitasjon'
+      : 'Invitasjonen virker ikke';
+  const undertekst = inv
+    ? inv.kind === 'owner'
+      ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
+      : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
+    : laster
+      ? null
+      : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be om en ny hvis du trenger det.';
+
+  const knappetilstand = ferdig ? 'success' : sender ? 'loading' : 'idle';
 
   return (
-    <main className="min-h-screen bg-bg text-fg">
-      <div className="mx-auto flex w-full max-w-[440px] flex-col gap-6 px-6 py-16 sm:py-24">
-        {laster ? <p className="text-body text-fg-muted">Henter invitasjonen …</p> : null}
+    <main className="flex min-h-screen items-center justify-center bg-bg px-4 text-fg">
+      <div className="w-full max-w-sm">
+        <div className="mb-6 flex flex-col items-center gap-3">
+          <Image src="/logo/logo.svg" alt="Endwise" width={44} height={44} priority />
+          <h1 className="text-title text-fg">{tittel}</h1>
+          {undertekst ? <p className="text-center text-body text-fg-muted">{undertekst}</p> : null}
+        </div>
 
-        {!laster && feil && !inv ? (
-          <div className="flex flex-col gap-3">
-            <h1 className="font-semibold text-fg text-xl tracking-tight">
-              Invitasjonen virker ikke
-            </h1>
-            <p className="text-body text-fg-muted leading-relaxed">{feil}</p>
-            <p className="text-[12px] text-fg-muted leading-relaxed">
-              Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be om en ny.
-            </p>
+        {laster ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
+              <p className="text-[12px] text-fg-muted">Henter invitasjonen…</p>
+            </div>
+            <div className="px-1.5 pt-1 pb-1">
+              <StatefulButton
+                type="button"
+                state="loading"
+                className="w-full"
+                loadingText="Henter invitasjonen…"
+                successText="Opprettet"
+                icon={<Lock size={15} />}
+                disabled
+              >
+                Fortsett
+              </StatefulButton>
+            </div>
+          </div>
+        ) : null}
+
+        {!laster && !inv ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
+              {feil ? <p className="text-[12px] text-fg-muted leading-relaxed">{feil}</p> : null}
+            </div>
           </div>
         ) : null}
 
         {inv ? (
-          <>
-            <div className="flex flex-col gap-2">
-              <h1 className="font-semibold text-fg text-xl tracking-tight">
-                Velkommen til {inv.forhandler}
-              </h1>
-              <p className="text-body text-fg-muted leading-relaxed">
-                Du er invitert som <b>{rolle}</b>. Kontoen knyttes til <b>{inv.epost}</b>.
-              </p>
-            </div>
-
-            <form onSubmit={godta} className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="inv-navn" className="text-label text-fg">
-                  Hva heter du?
-                </label>
+          <form
+            onSubmit={(e) => void godta(e)}
+            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
+          >
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
+              <Field id="inv-navn" label="Hva heter du?">
                 <input
                   id="inv-navn"
                   autoComplete="name"
@@ -153,29 +194,20 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                   minLength={2}
                   value={navn}
                   onChange={(e) => setNavn(e.target.value)}
-                  className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className={INPUT}
                 />
-              </div>
+              </Field>
 
               {inv.kreverPassord ? (
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="inv-passord" className="text-label text-fg">
-                    {inv.harKonto ? 'Sett eller bytt passord' : 'Velg et passord'}
-                  </label>
-                  <input
-                    id="inv-passord"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    minLength={12}
-                    value={passord}
-                    onChange={(e) => setPassord(e.target.value)}
-                    className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                  />
-                  <p className="text-[12px] text-fg-muted">
-                    Minst 12 tegn. Etterpå setter du opp tofaktor — det er påkrevd.
-                  </p>
-                </div>
+                <PassordFelt
+                  id="inv-passord"
+                  label={inv.harKonto ? 'Sett eller bytt passord' : 'Velg et passord'}
+                  value={passord}
+                  onChange={setPassord}
+                  autoComplete="new-password"
+                  minLength={12}
+                  beskrivelse="Minst 12 tegn. Etterpå setter du opp tofaktor — det er påkrevd."
+                />
               ) : (
                 <p className="text-[12px] text-fg-muted leading-relaxed">
                   Du har allerede en Endwise-konto på denne e-posten. Vi legger deg til hos{' '}
@@ -183,23 +215,32 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                 </p>
               )}
 
-              <button
-                type="submit"
-                disabled={
-                  sender || navn.trim().length < 2 || (inv.kreverPassord && passord.length < 12)
-                }
-                className="inline-flex h-control items-center justify-center rounded-control bg-fg px-4 text-label text-bg disabled:opacity-40"
-              >
-                {sender ? 'Oppretter …' : 'Fortsett'}
-              </button>
-
               {feil ? (
-                <p role="alert" className="text-body text-destructive">
+                <p role="alert" className="text-[12px] text-danger">
                   {feil}
                 </p>
               ) : null}
-            </form>
-          </>
+            </div>
+            <div className="px-1.5 pt-1 pb-1">
+              <StatefulButton
+                type="submit"
+                state={knappetilstand}
+                className="w-full"
+                loadingText="Oppretter …"
+                successText="Opprettet"
+                errorText="Prøv igjen"
+                icon={<Lock size={15} />}
+                disabled={
+                  sender ||
+                  ferdig ||
+                  navn.trim().length < 2 ||
+                  (inv.kreverPassord && passord.length < 12)
+                }
+              >
+                Fortsett
+              </StatefulButton>
+            </div>
+          </form>
         ) : null}
       </div>
     </main>

@@ -80,6 +80,7 @@ export function PassordFelt({
   placeholder = '••••••••••••',
   required = true,
   autoFocus = false,
+  minLength,
   beskrivelse,
 }: {
   id: string;
@@ -90,6 +91,7 @@ export function PassordFelt({
   placeholder?: string;
   required?: boolean;
   autoFocus?: boolean;
+  minLength?: number;
   beskrivelse?: string;
 }) {
   const [synlig, setSynlig] = useState(false);
@@ -103,6 +105,7 @@ export function PassordFelt({
           type={synlig ? 'text' : 'password'}
           autoComplete={autoComplete}
           required={required}
+          minLength={minLength}
           // biome-ignore lint/a11y/noAutofocus: fokus på det ene feltet skjermen finnes for
           autoFocus={autoFocus}
           value={value}

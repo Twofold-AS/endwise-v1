@@ -4,7 +4,7 @@ import { Avatar, Check, ChevronDown, CircleAlert, RefreshCw, StatefulButton } fr
 import { useEffect, useRef, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
-import { CardShell } from '../../_shell/cards';
+import { CardShell } from '../_shell/cards';
 
 /**
  * F6-19 — EGEN AVATAR: form, farge, humør og tone.
@@ -80,9 +80,17 @@ const HUMOR: { key: Humor; label: string; hint: string }[] = [
 /** De seks svatsjene, i bibliotekets rekkefølge (`TONES` i `color.ts`). */
 const TONER = ['Pastell', 'Blek', 'Mid', 'Dyp', 'Lys', 'Blekk'];
 
-const TOMT: Valg = { form: null, humor: null, farge: null, tone: null };
+export const TOMT: Valg = { form: null, humor: null, farge: null, tone: null };
 
-export function AvatarVelger({ seed }: { seed: string | null }) {
+export function AvatarVelger({
+  seed,
+  utenKort = false,
+  visLagre = true,
+}: {
+  seed: string | null;
+  utenKort?: boolean;
+  visLagre?: boolean;
+}) {
   const utils = trpc.useUtils();
   const meg = trpc.profile.meg.useQuery(undefined, { retry: false });
 
@@ -103,6 +111,11 @@ export function AvatarVelger({ seed }: { seed: string | null }) {
     },
   });
 
+  function velg(neste: Valg) {
+    setValg(neste);
+    if (!visLagre) lagre.mutate(neste);
+  }
+
   if (!seed) return null;
 
   const endret =
@@ -116,8 +129,8 @@ export function AvatarVelger({ seed }: { seed: string | null }) {
   const fargeLabel = FARGER.find((f) => f.grader === valg.farge)?.label;
   const toneLabel = valg.tone === null ? undefined : TONER[valg.tone];
 
-  return (
-    <CardShell className="flex flex-col gap-4 p-5">
+  const innhold = (
+    <>
       <div className="flex items-start gap-4">
         {/**
          * ⛔ `alltid` — bevegelsen ER innholdet her. Du står og ser på ansiktet
@@ -140,127 +153,135 @@ export function AvatarVelger({ seed }: { seed: string | null }) {
         </div>
       </div>
 
-      <Nedtrekk
-        id="form"
-        tittel="Form"
-        valgtLabel={formLabel}
-        apen={apen === 'form'}
-        onToggle={() => setApen(apen === 'form' ? null : 'form')}
-        forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
-        onNullstill={() => setValg((v) => ({ ...v, form: null }))}
-      >
-        {FORMER.map((f) => (
-          <Rad
-            key={f.key}
-            valgt={valg.form === f.key}
-            label={f.label}
-            onClick={() => {
-              setValg((v) => ({ ...v, form: f.key }));
-              setApen(null);
-            }}
-          >
-            <Avatar
-              seed={seed}
-              valg={{ ...valg, form: f.key }}
-              navn=""
-              size={24}
-              bevegelse="stille"
-            />
-          </Rad>
-        ))}
-      </Nedtrekk>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Nedtrekk
+          id="form"
+          tittel="Form"
+          valgtLabel={formLabel}
+          apen={apen === 'form'}
+          onToggle={() => setApen(apen === 'form' ? null : 'form')}
+          forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
+          onNullstill={() => velg({ ...valg, form: null })}
+        >
+          {FORMER.map((f) => (
+            <Rad
+              key={f.key}
+              valgt={valg.form === f.key}
+              label={f.label}
+              onClick={() => {
+                velg({ ...valg, form: f.key });
+                setApen(null);
+              }}
+            >
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, form: f.key }}
+                navn=""
+                size={24}
+                bevegelse="stille"
+              />
+            </Rad>
+          ))}
+        </Nedtrekk>
 
-      <Nedtrekk
-        id="farge"
-        tittel="Farge"
-        valgtLabel={fargeLabel}
-        apen={apen === 'farge'}
-        onToggle={() => setApen(apen === 'farge' ? null : 'farge')}
-        forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
-        onNullstill={() => setValg((v) => ({ ...v, farge: null }))}
-      >
-        {FARGER.map((f) => (
-          <Rad
-            key={f.grader}
-            valgt={valg.farge === f.grader}
-            label={f.label}
-            onClick={() => {
-              setValg((v) => ({ ...v, farge: f.grader }));
-              setApen(null);
-            }}
-          >
-            <Avatar
-              seed={seed}
-              valg={{ ...valg, farge: f.grader }}
-              navn=""
-              size={24}
-              bevegelse="stille"
-            />
-          </Rad>
-        ))}
-      </Nedtrekk>
+        <Nedtrekk
+          id="farge"
+          tittel="Farge"
+          valgtLabel={fargeLabel}
+          apen={apen === 'farge'}
+          onToggle={() => setApen(apen === 'farge' ? null : 'farge')}
+          forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
+          onNullstill={() => velg({ ...valg, farge: null })}
+        >
+          {FARGER.map((f) => (
+            <Rad
+              key={f.grader}
+              valgt={valg.farge === f.grader}
+              label={f.label}
+              onClick={() => {
+                velg({ ...valg, farge: f.grader });
+                setApen(null);
+              }}
+            >
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, farge: f.grader }}
+                navn=""
+                size={24}
+                bevegelse="stille"
+              />
+            </Rad>
+          ))}
+        </Nedtrekk>
 
-      <Nedtrekk
-        id="humor"
-        tittel="Humør"
-        valgtLabel={humorLabel}
-        apen={apen === 'humor'}
-        onToggle={() => setApen(apen === 'humor' ? null : 'humor')}
-        forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
-        onNullstill={() => setValg((v) => ({ ...v, humor: null }))}
-        hint="Positurer avataren holder. Overgangen mellom dem vises der ansiktet animeres."
-      >
-        {HUMOR.map((h) => (
-          <Rad
-            key={h.key}
-            valgt={valg.humor === h.key}
-            label={h.label}
-            hint={h.hint}
-            onClick={() => {
-              setValg((v) => ({ ...v, humor: h.key }));
-              setApen(null);
-            }}
-          >
-            {/**
-             * ⚠️ `hover` og ikke `stille` KUN her: et humør er en positur, og
-             * flere av dem skiller seg lite på 24px i stillbilde. Peker du på
-             * raden, morfer den — så du ser forskjellen før du velger. Lista er
-             * ti rader og åpen om gangen, ikke to hundre.
-             */}
-            <Avatar
-              seed={seed}
-              valg={{ ...valg, humor: h.key }}
-              navn=""
-              size={24}
-              bevegelse="hover"
-            />
-          </Rad>
-        ))}
-      </Nedtrekk>
+        <Nedtrekk
+          id="humor"
+          tittel="Humør"
+          valgtLabel={humorLabel}
+          apen={apen === 'humor'}
+          onToggle={() => setApen(apen === 'humor' ? null : 'humor')}
+          forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
+          onNullstill={() => velg({ ...valg, humor: null })}
+          hint="Positurer avataren holder. Overgangen mellom dem vises der ansiktet animeres."
+        >
+          {HUMOR.map((h) => (
+            <Rad
+              key={h.key}
+              valgt={valg.humor === h.key}
+              label={h.label}
+              hint={h.hint}
+              onClick={() => {
+                velg({ ...valg, humor: h.key });
+                setApen(null);
+              }}
+            >
+              {/**
+               * ⚠️ `hover` og ikke `stille` KUN her: et humør er en positur, og
+               * flere av dem skiller seg lite på 24px i stillbilde. Peker du på
+               * raden, morfer den — så du ser forskjellen før du velger. Lista er
+               * ti rader og åpen om gangen, ikke to hundre.
+               */}
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, humor: h.key }}
+                navn=""
+                size={24}
+                bevegelse="hover"
+              />
+            </Rad>
+          ))}
+        </Nedtrekk>
 
-      <Nedtrekk
-        id="tone"
-        tittel="Tone"
-        valgtLabel={toneLabel}
-        apen={apen === 'tone'}
-        onToggle={() => setApen(apen === 'tone' ? null : 'tone')}
-        forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
-        onNullstill={() => setValg((v) => ({ ...v, tone: null }))}
-      >
-        {TONER.map((t, i) => (
-          <Rad
-            key={t}
-            valgt={valg.tone === i}
-            label={t}
-            onClick={() => {
-              setValg((v) => ({ ...v, tone: i }));
-              setApen(null);
-            }}
-          >
-            <Avatar seed={seed} valg={{ ...valg, tone: i }} navn="" size={24} bevegelse="stille" />
-          </Rad>
-        ))}
-      </Nedtrekk>
+        <Nedtrekk
+          id="tone"
+          tittel="Tone"
+          valgtLabel={toneLabel}
+          apen={apen === 'tone'}
+          onToggle={() => setApen(apen === 'tone' ? null : 'tone')}
+          forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
+          onNullstill={() => velg({ ...valg, tone: null })}
+        >
+          {TONER.map((t, i) => (
+            <Rad
+              key={t}
+              valgt={valg.tone === i}
+              label={t}
+              onClick={() => {
+                velg({ ...valg, tone: i });
+                setApen(null);
+              }}
+            >
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, tone: i }}
+                navn=""
+                size={24}
+                bevegelse="stille"
+              />
+            </Rad>
+          ))}
+        </Nedtrekk>
+      </div>
 
       {lagre.error && (
         <p className="flex items-start gap-2 text-body text-danger">
@@ -269,37 +290,44 @@ export function AvatarVelger({ seed }: { seed: string | null }) {
         </p>
       )}
 
-      <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => setValg(TOMT)}
-          className="inline-flex h-control items-center gap-1.5 rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-        >
-          <RefreshCw size={14} strokeWidth={1.75} />
-          Alt per navn
-        </button>
-        <StatefulButton
-          type="button"
-          onClick={() => lagre.mutate(valg)}
-          disabled={!endret || lagre.isPending}
-          state={
-            lagre.isPending
-              ? 'loading'
-              : lagre.isError
-                ? 'error'
-                : lagre.isSuccess
-                  ? 'success'
-                  : 'idle'
-          }
-          loadingText="Lagrer…"
-          successText="Lagret"
-          errorText="Feilet"
-        >
-          Lagre avatar
-        </StatefulButton>
-      </div>
-    </CardShell>
+      {visLagre ? (
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => velg(TOMT)}
+            className="inline-flex h-control items-center gap-1.5 rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
+          >
+            <RefreshCw size={14} strokeWidth={1.75} />
+            Alt per navn
+          </button>
+          <StatefulButton
+            type="button"
+            onClick={() => lagre.mutate(valg)}
+            disabled={!endret || lagre.isPending}
+            state={
+              lagre.isPending
+                ? 'loading'
+                : lagre.isError
+                  ? 'error'
+                  : lagre.isSuccess
+                    ? 'success'
+                    : 'idle'
+            }
+            loadingText="Lagrer…"
+            successText="Lagret"
+            errorText="Feilet"
+          >
+            Lagre avatar
+          </StatefulButton>
+        </div>
+      ) : null}
+    </>
   );
+
+  if (utenKort) {
+    return <div className="flex flex-col gap-4">{innhold}</div>;
+  }
+  return <CardShell className="flex flex-col gap-4 p-5">{innhold}</CardShell>;
 }
 
 /**
@@ -333,7 +361,7 @@ function Nedtrekk({
   const listeRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={`flex flex-col gap-1.5 ${apen ? 'col-span-full' : ''}`}>
       <div className="flex items-baseline gap-2">
         <span className="text-label text-fg">{tittel}</span>
         {/* «Per navn» er en ekte, valgbar tilstand — ikke fravær av et valg. */}

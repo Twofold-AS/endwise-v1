@@ -1,18 +1,18 @@
 'use client';
 
-import { Inbox, Store, Wrench } from '@endwise/ui';
+import { Inbox, StatefulButton, Store, Wrench } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { AvatarVelger, TOMT } from '../_avatar/avatar-velger';
 import { CardShell } from '../_shell/cards';
 
 /**
  * F5-26 — EIER-VEIVISER. Etter passord (invite) og tvungen 2FA.
  *
- * 1. Visningsnavn
- * 2. Valgfrie tillegg — KUN nøkler admin merket optional. Ikke hele katalogen.
- * 3. Team — staff-invitasjoner (F1-10). Aldri leder/dealer_admin.
- *
- * Inkludert pakke er allerede skrevet. Hopper du over tillegg, står den.
+ * 0. Visningsnavn
+ * 1. Avatar
+ * 2. Valgfrie tillegg — KUN nøkler admin merket optional
+ * 3. Team — staff-invitasjoner. Aldri leder/dealer_admin
  */
 type Funksjon = 'selger' | 'support' | 'mekaniker';
 
@@ -22,14 +22,16 @@ const FUNKSJONER: { verdi: Funksjon; label: string; hint: string; Icon: typeof S
   { verdi: 'mekaniker', label: 'Mekaniker', hint: 'Lander på Min dag', Icon: Wrench },
 ];
 
-const STEG = ['Visningsnavn', 'Tillegg', 'Team'] as const;
+const STEG = ['Visningsnavn', 'Avatar', 'Tillegg', 'Team'] as const;
 
 export default function OppstartPage() {
   const utils = trpc.useUtils();
   const status = trpc.onboarding.status.useQuery();
+  const meg = trpc.session.me.useQuery();
   const fullfor = trpc.onboarding.fullfor.useMutation();
   const inviter = trpc.invitasjoner.opprett.useMutation();
   const apne = trpc.invitasjoner.list.useQuery();
+  const settAvatar = trpc.profile.setAvatar.useMutation();
 
   const [steg, setSteg] = useState(0);
   const [navn, setNavn] = useState<string | null>(null);
@@ -40,6 +42,7 @@ export default function OppstartPage() {
   const [kvittering, setKvittering] = useState<string | null>(null);
 
   const visningsnavn = navn ?? status.data?.visningsnavn ?? '';
+  const nivaaNavn = status.data?.nivaa.name ?? 'Start';
 
   function toggle(key: string) {
     setExtras((forrige) => {
@@ -82,12 +85,32 @@ export default function OppstartPage() {
     }
   }
 
+  async function hoppOverAvatar() {
+    setFeil(null);
+    try {
+      await settAvatar.mutateAsync(TOMT);
+      setSteg(2);
+    } catch (error) {
+      setFeil((error as Error).message);
+    }
+  }
+
   if (status.isLoading) {
-    return <p className="px-8 py-10 text-body text-fg-muted">Laster oppstarten …</p>;
+    return (
+      <div className="mx-auto flex max-w-[640px] flex-col gap-5 px-8 py-7">
+        <CardShell className="p-8">
+          <p className="text-body text-fg-muted">Vi henter oppstarten…</p>
+        </CardShell>
+      </div>
+    );
   }
   if (status.isError) {
     return (
-      <p className="px-8 py-10 text-body text-danger">{status.error.message}</p>
+      <div className="mx-auto flex max-w-[640px] flex-col gap-5 px-8 py-7">
+        <CardShell className="p-8">
+          <p className="text-body text-danger">{status.error.message}</p>
+        </CardShell>
+      </div>
     );
   }
   if (status.data?.complete) {
@@ -110,8 +133,7 @@ export default function OppstartPage() {
       <div>
         <h1 className="text-title text-fg">Velkommen til Endwise</h1>
         <p className="text-body text-fg-muted">
-          Tre steg: hvordan verkstedet vises, eventuelle tillegg Mikael åpnet for dere, og
-          hvem som skal med på laget.
+          Fire steg: visningsnavn, avatar, tillegg som er åpnet for dere, og teamet.
         </p>
       </div>
 
@@ -137,7 +159,7 @@ export default function OppstartPage() {
           <div>
             <p className="text-label text-fg">Visningsnavn</p>
             <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-              Slik navnet vises i sidebaren og for teamet. Du styrer det — ikke vi.
+              Slik navnet vises i sidebaren og for teamet.
             </p>
           </div>
           <label className="flex flex-col gap-1.5">
@@ -165,31 +187,50 @@ export default function OppstartPage() {
       {steg === 1 ? (
         <CardShell className="flex flex-col gap-4 p-5">
           <div>
-            <p className="text-label text-fg">Tillegg i pakken</p>
+            <p className="text-label text-fg">Avatar</p>
             <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-              Dette har du allerede. Basis (Verkstedet, Innboks, Saker …) er alltid på.
+              Vises for teamet. Hopper du over, utledes ansiktet fra navnet.
             </p>
           </div>
-          {(status.data?.included.length ?? 0) === 0 ? (
-            <p className="text-[12px] text-fg-muted">Ingen ekstra tillegg i den faste pakken.</p>
-          ) : (
-            <ul className="flex flex-col gap-1">
-              {status.data?.included.map((m) => (
-                <li key={m.key} className="text-body text-fg">
-                  {m.label}
-                </li>
-              ))}
-            </ul>
-          )}
+          <AvatarVelger seed={meg.data?.userId ?? null} utenKort visLagre={false} />
+          <div className="flex justify-between">
+            <button
+              type="button"
+              onClick={() => setSteg(0)}
+              className="text-[12px] text-fg-muted underline-offset-2 hover:underline"
+            >
+              Tilbake
+            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => void hoppOverAvatar()}
+                className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg"
+              >
+                Hopp over
+              </button>
+              <button
+                type="button"
+                onClick={() => setSteg(2)}
+                className="inline-flex h-control items-center rounded-control bg-fg px-4 text-bg text-label"
+              >
+                Neste
+              </button>
+            </div>
+          </div>
+        </CardShell>
+      ) : null}
 
-          <div className="border-border border-t pt-3">
-            <p className="text-label text-fg">Valgfritt — bare det som er åpnet for dere</p>
+      {steg === 2 ? (
+        <CardShell className="flex flex-col gap-4 p-5">
+          <div>
+            <p className="text-label text-fg">Tillegg</p>
             <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-              Du handler ikke fra hele katalogen. Nettbutikk og SMS er ikke tillegg.
+              Pakken din er {nivaaNavn}. Disse kan du slå på.
             </p>
           </div>
           {(status.data?.optional.length ?? 0) === 0 ? (
-            <p className="text-[12px] text-fg-muted">Ingen valgfrie tillegg i denne pakken.</p>
+            <p className="text-[12px] text-fg-muted">Ingen valgfrie tillegg. Du kan gå videre.</p>
           ) : (
             <div className="flex flex-col gap-1.5">
               {status.data?.optional.map((m) => (
@@ -210,14 +251,14 @@ export default function OppstartPage() {
           <div className="flex justify-between">
             <button
               type="button"
-              onClick={() => setSteg(0)}
+              onClick={() => setSteg(1)}
               className="text-[12px] text-fg-muted underline-offset-2 hover:underline"
             >
               Tilbake
             </button>
             <button
               type="button"
-              onClick={() => setSteg(2)}
+              onClick={() => setSteg(3)}
               className="inline-flex h-control items-center rounded-control bg-fg px-4 text-bg text-label"
             >
               Neste
@@ -226,13 +267,13 @@ export default function OppstartPage() {
         </CardShell>
       ) : null}
 
-      {steg === 2 ? (
+      {steg === 3 ? (
         <CardShell className="flex flex-col gap-4 p-5">
           <div>
             <p className="text-label text-fg">Inviter teamet</p>
             <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-              Selgere, support og mekanikere. De blir ansatte — aldri leder. De setter passord
-              selv via e-postlenka.
+              Selgere, support og mekanikere. De blir ansatte — aldri leder. De setter passord selv
+              via e-postlenka.
             </p>
           </div>
 
@@ -274,13 +315,15 @@ export default function OppstartPage() {
                 })}
               </div>
             </fieldset>
-            <button
+            <StatefulButton
               type="submit"
               disabled={inviter.isPending || !epost.trim()}
-              className="inline-flex h-control w-fit items-center rounded-control border border-border px-4 text-label text-fg disabled:opacity-40"
+              state={inviter.isPending ? 'loading' : inviter.isSuccess ? 'success' : 'idle'}
+              loadingText="Sender…"
+              successText="Sendt"
             >
-              {inviter.isPending ? 'Sender …' : 'Send invitasjon'}
-            </button>
+              Send invitasjon
+            </StatefulButton>
           </form>
 
           {kvittering ? <p className="text-[12px] text-fg-muted">{kvittering}</p> : null}
@@ -299,19 +342,20 @@ export default function OppstartPage() {
           <div className="flex justify-between">
             <button
               type="button"
-              onClick={() => setSteg(1)}
+              onClick={() => setSteg(2)}
               className="text-[12px] text-fg-muted underline-offset-2 hover:underline"
             >
               Tilbake
             </button>
-            <button
+            <StatefulButton
               type="button"
               disabled={fullfor.isPending || visningsnavn.trim().length < 2}
+              state={fullfor.isPending ? 'loading' : 'idle'}
+              loadingText="Lagrer…"
               onClick={() => void avslutt()}
-              className="inline-flex h-control items-center rounded-control bg-fg px-4 text-bg text-label disabled:opacity-40"
             >
-              {fullfor.isPending ? 'Lagrer …' : 'Fullfør og gå inn'}
-            </button>
+              Fullfør og gå inn
+            </StatefulButton>
           </div>
         </CardShell>
       ) : null}

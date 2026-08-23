@@ -69,7 +69,8 @@ const TREDJEPART: Omit<Katalogpost, 'kilde' | 'prisMinor' | 'inkludertI' | 'stat
   {
     key: 'twilio',
     navn: 'Twilio',
-    beskrivelse: 'SMS til kunder — bekreftelser, påminnelser og avviksvarsler.',
+    beskrivelse:
+      'SMS til kunder — pass-through per bookingmelding. Tillegg på alle nivåer, ingen månedsavgift.',
     leverandor: 'Twilio',
   },
   {

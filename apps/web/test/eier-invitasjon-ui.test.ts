@@ -14,6 +14,8 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     'utf8',
   );
   const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/page.tsx'), 'utf8');
+  const avatar = readFileSync(resolve(her, '../app/(app)/_avatar/avatar-velger.tsx'), 'utf8');
+  const pakke = readFileSync(resolve(her, '../app/(app)/endwise/_pakke-valg.tsx'), 'utf8');
 
   it('godta-siden ber om passord og har ingen tilleggs-UI', () => {
     expect(kilde).toMatch(/Sett eller bytt passord|Velg et passord/);
@@ -42,25 +44,64 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(kilde).not.toMatch(/['"]shop['"]|['"]twilio['"]|Admin-tab|\/admin/);
   });
 
-  it('forhandlere-siden skiller pakke og valgfritt', () => {
-    expect(forhandlere).toMatch(/I pakken \(fast\)/);
-    expect(forhandlere).toMatch(/Kan velges i veiviseren/);
-    expect(forhandlere).toMatch(/addonKatalog/);
-    expect(forhandlere).toMatch(/setModules/);
+  it('forhandlere-siden bruker nivå + tillegg og skjuler Endwise-handlinger', () => {
+    expect(forhandlere).toMatch(/NivaaValg/);
+    expect(forhandlere).toMatch(/TilleggListe/);
+    expect(forhandlere).toMatch(/Endre pakke/);
+    expect(forhandlere).toMatch(/pakkeKatalog/);
+    expect(forhandlere).toMatch(/tenants\.update/);
+    expect(forhandlere).toMatch(/sendSlettKode/);
+    expect(forhandlere).toMatch(/Slett forhandleren/);
+    expect(forhandlere).toMatch(/Eieren setter\s+passord og 2FA selv — du setter det aldri/);
+    expect(forhandlere).toMatch(/Velg én pakke/);
     expect(forhandlere).toMatch(/Send invitasjon på nytt/);
-    expect(forhandlere).toMatch(/setter passord selv/);
+    expect(forhandlere).toMatch(/t\.erEndwise/);
+    expect(forhandlere).toMatch(/!t\.erEndwise/);
+    expect(forhandlere).toMatch(/eierInviteUbrukt/);
     expect(forhandlere).not.toMatch(/href:\s*['"]\/registrer['"]|href=['"]\/registrer['"]/);
-    expect(forhandlere).not.toMatch(/['"]shop['"]|['"]twilio['"]/);
+    expect(forhandlere).not.toMatch(/['"]shop['"]/);
+    expect(forhandlere).not.toMatch(/SMS ligger i Pro-bundelen/);
   });
 
-  it('eier-veiviseren har visningsnavn, valgfrie tillegg og team', () => {
+  it('pakkevalget skjuler shop, men ikke SMS som Pro-bundle', () => {
+    expect(pakke).toMatch(/t\.module !== 'shop'/);
+    expect(pakke).not.toMatch(/t\.module !== 'twilio'/);
+    expect(pakke).not.toMatch(/SMS ligger i Pro-bundelen/);
+    expect(pakke).toMatch(/SMS er tillegg på alle nivåer/);
+  });
+
+  it('resend og slett er skjult på Endwise-tenanten', () => {
+    expect(forhandlere).toMatch(/Badge variant="secondary">Endwise/);
+    expect(forhandlere).toMatch(/\{!t\.erEndwise \? \(/);
+    expect(forhandlere).toMatch(/t\.eierInviteUbrukt \? \(/);
+  });
+
+  it('eier-veiviseren har fire steg uten Mikael', () => {
     expect(oppstart).toMatch(/Visningsnavn/);
-    expect(oppstart).toMatch(/Valgfritt/);
+    expect(oppstart).toMatch(/Avatar/);
+    expect(oppstart).toMatch(/Tillegg/);
+    expect(oppstart).toMatch(/Team/);
+    expect(oppstart).toMatch(/Pakken din er/);
+    expect(oppstart).toMatch(/Ingen valgfrie tillegg\. Du kan gå videre/);
     expect(oppstart).toMatch(/Inviter teamet/);
     expect(oppstart).toMatch(/invitasjoner\.opprett/);
     expect(oppstart).toMatch(/selger|mekaniker/);
+    expect(oppstart).toMatch(/AvatarVelger/);
+    expect(oppstart).toMatch(/StatefulButton/);
+    expect(oppstart).toMatch(/Vi henter oppstarten/);
+    expect(oppstart).not.toMatch(/Laster oppstarten/);
+    expect(oppstart).not.toMatch(/Mikael/);
     expect(oppstart).not.toMatch(/['"]shop['"]|['"]twilio['"]/);
     expect(oppstart).not.toMatch(/setModules/);
+  });
+
+  it('avatar-nedtrekkene ligger vannrett og ett åpent om gangen', () => {
+    expect(avatar).toMatch(/grid grid-cols-2 gap-3 lg:grid-cols-4/);
+    expect(avatar).toMatch(/col-span-full/);
+    expect(avatar).toMatch(/id="form"/);
+    expect(avatar).toMatch(/id="farge"/);
+    expect(avatar).toMatch(/id="humor"/);
+    expect(avatar).toMatch(/id="tone"/);
   });
 
   it('ingen offentlig /registrer-side', () => {

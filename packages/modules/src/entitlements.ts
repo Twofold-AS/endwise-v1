@@ -46,7 +46,6 @@ export const ADDON_MODULES = [
   'quick', // Quick ERP-synk (PRO)
   'vegvesen', // Regnr-oppslag (PRO)
   'smart-hverdag', // Push, handlingsknapper, kalender, nettbrett, passkey (PRO)
-  'twilio', // SMS (PRO)
   'ai-nettside', // AI-verktøy › Nettside (ENTERPRISE)
   'ai-innsikt', // AI-verktøy › Innsikt (ENTERPRISE)
   'quick-agent', // Agent mot Quick (ENTERPRISE)
@@ -54,6 +53,7 @@ export const ADDON_MODULES = [
   'webhooks', // Utgående webhooks (ENTERPRISE)
 
   // ── Valgfrie TILLEGG, én pris = én nøkkel ──
+  'twilio', // SMS — pass-through-tillegg, alle nivåer, aldri planmodul
   'erp',
   'white-label',
   'sso',
@@ -72,13 +72,11 @@ export type AddonModule = (typeof ADDON_MODULES)[number];
  * Nøkkler admin IKKE kan krysse av eller sende inn på create/setModules.
  *
  *  · `shop` — Nettbutikk er blokkert / ikke til salgs (F10-03, 690).
- *  · `twilio` — SMS er pass-through per bookingmelding, ikke et av/på-tillegg
- *    med modulpris. Ingen 149-kvote her.
  *
- * De blir stående i `ADDON_MODULES` (gaten / PRO-bundle), men er ikke
- * tildelbare feature-toggles.
+ * SMS (`twilio`) er tildelbart tillegg på alle nivåer — pass-through per
+ * bookingmelding, ingen månedsavgift.
  */
-export const IKKE_TILDELBARE_ADDON = ['shop', 'twilio'] as const;
+export const IKKE_TILDELBARE_ADDON = ['shop'] as const;
 export type IkkeTildelbarAddon = (typeof IKKE_TILDELBARE_ADDON)[number];
 export type TildelbarAddon = Exclude<AddonModule, IkkeTildelbarAddon>;
 
@@ -95,8 +93,8 @@ export function erBlokertTildeling(key: string): key is IkkeTildelbarAddon {
 }
 
 /**
- * Nøkkler Endwise-admin kan tildele ved onboarding. Ukjente, basis,
- * `shop` og `twilio` avvises — en skriveflate skal ikke være fail-open.
+ * Nøkkler Endwise-admin kan tildele ved onboarding. Ukjente, basis og
+ * `shop` avvises — en skriveflate skal ikke være fail-open.
  */
 export function erTildelbarAddon(key: string): key is TildelbarAddon {
   return ADDON_SET.has(key) && !erBlokertTildeling(key);
@@ -138,7 +136,7 @@ export const ADDON_LABELS: Record<AddonModule, string> = {
   samarbeid: 'Samarbeid',
 };
 
-/** Admin-katalog: ADDON minus shop minus twilio. Basis er aldri med. */
+/** Admin-katalog: ADDON minus shop. Basis er aldri med. SMS er med. */
 export function addonKatalog(): Array<{ key: TildelbarAddon; label: string }> {
   return ADDON_MODULES.filter(erTildelbarAddon).map((key) => ({
     key,

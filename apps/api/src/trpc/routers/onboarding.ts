@@ -1,5 +1,11 @@
 import { and, eq, schema, withTenant } from '@endwise/db';
-import { ADDON_LABELS, erBlokertTildeling, erTildelbarAddon } from '@endwise/modules';
+import {
+  ADDON_LABELS,
+  erBlokertTildeling,
+  erTierKey,
+  erTildelbarAddon,
+  tierByKey,
+} from '@endwise/modules';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, router } from '../init.ts';
@@ -13,7 +19,8 @@ import { adminProcedure, router } from '../init.ts';
  *   · slå på nøkler admin merket `source=optional` for DENNE tenanten
  *   · kun mens onboarding ikke er fullført
  *
- * shop/twilio avvises selv om noen skulle ha rotet dem inn som optional.
+ * shop avvises selv om noen skulle ha rotet den inn som optional.
+ * SMS kan slås på hvis admin åpnet den som optional.
  * Team-invitasjoner går via `invitasjoner.opprett` (F1-10 staff-CHECK).
  */
 
@@ -25,10 +32,7 @@ const extrasSchema = z
       if (erBlokertTildeling(key)) {
         ctx.addIssue({
           code: 'custom',
-          message:
-            key === 'shop'
-              ? 'Nettbutikk (shop) er blokkert og ikke til salgs.'
-              : 'SMS er ikke et tillegg — pass-through per melding, ingen modulpris.',
+          message: 'Nettbutikk (shop) er blokkert og ikke til salgs.',
         });
       }
     }
@@ -40,6 +44,7 @@ export const onboardingRouter = router({
       const [tenant] = await tx
         .select({
           name: schema.tenants.name,
+          plan: schema.tenants.plan,
           onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
         })
         .from(schema.tenants)
@@ -57,14 +62,23 @@ export const onboardingRouter = router({
       const etikett = (key: string) =>
         key in ADDON_LABELS ? ADDON_LABELS[key as keyof typeof ADDON_LABELS] : key;
 
+      const planKey = erTierKey(tenant?.plan) ? tenant.plan : 'start';
+      const nivaa = { key: planKey, name: tierByKey(planKey)?.name ?? 'Start' };
+      const includedKeys = new Set(
+        rader.filter((r) => r.source === 'included' && r.enabled).map((r) => r.moduleKey),
+      );
+
       return {
         complete: Boolean(tenant?.onboardingCompletedAt),
         visningsnavn: tenant?.name ?? '',
+        nivaa,
         included: rader
           .filter((r) => r.source === 'included' && r.enabled)
           .map((r) => ({ key: r.moduleKey, label: etikett(r.moduleKey) })),
         optional: rader
           .filter((r) => r.source === 'optional' || r.source === 'dealer')
+          .filter((r) => !erBlokertTildeling(r.moduleKey))
+          .filter((r) => !includedKeys.has(r.moduleKey))
           .map((r) => ({
             key: r.moduleKey,
             label: etikett(r.moduleKey),
@@ -132,7 +146,9 @@ export const onboardingRouter = router({
           .where(eq(schema.tenantModules.tenantId, ctx.tenantId));
 
         const optionalNokler = new Set(
-          tillatt.filter((r) => r.source === 'optional' || r.source === 'dealer').map((r) => r.moduleKey),
+          tillatt
+            .filter((r) => r.source === 'optional' || r.source === 'dealer')
+            .map((r) => r.moduleKey),
         );
 
         const ulovlige = extras.filter((k) => !optionalNokler.has(k));

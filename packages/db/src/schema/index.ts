@@ -18,6 +18,7 @@ export * from './profiles.ts';
 export * from './services.ts';
 export * from './stream-events.ts';
 export * from './sync-conflicts.ts';
+export * from './tenant-delete-challenges.ts';
 export * from './tenant-modules.ts';
 export * from './tenants.ts';
 export * from './vehicles.ts';

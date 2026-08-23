@@ -34,6 +34,11 @@ export const tenants = pgTable(
      * tilbakevirkende satt i migrasjon 0017.
      */
     onboardingCompletedAt: timestamp('onboarding_completed_at', { withTimezone: true }),
+    /**
+     * Valgt TIERS-nøkkel (start | pro | enterprise). Kilden er
+     * `packages/modules/src/billing/plans.ts` — aldri hardkodede nøkler.
+     */
+    plan: text('plan'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`),
   },

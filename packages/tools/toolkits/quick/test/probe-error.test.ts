@@ -30,12 +30,10 @@ describe('quickProbeUserMessage — distinkte BAD_REQUEST, ingen rå fetch-cause
     expect(QUICK_PROBE_USER_MESSAGES.unreachable).toMatch(/nådde ikke Quick/i);
   });
 
-  it('HTTP 500 er ikke avvist nøkkel — egen melding om client/info og base-URL', () => {
+  it('HTTP 500 er IP-lås/Vercel — ikke avvist nøkkel', () => {
     const msg = quickProbeUserMessage(new QuickError('Quick svarte 500', 500));
     expect(msg).toBe(QUICK_PROBE_USER_MESSAGES.http500);
-    expect(msg).toBe(
-      'Quick svarte 500 på client/info — ikke en avvist nøkkel. Sjekk at base-URL er https://q3.quick.no/<slug> uten /api/v2 og uten /Help.',
-    );
+    expect(msg).toBe('Quick svarte 500 (ofte IP-lås mot Vercel, ikke feil nøkkel)');
     expect(msg).not.toBe(QUICK_PROBE_USER_MESSAGES.rejected);
     expect(msg).not.toMatch(/avviste nøkkelen/i);
   });

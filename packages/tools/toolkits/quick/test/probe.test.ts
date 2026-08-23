@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { QuickAuthError, QuickError } from '../src/errors.ts';
 import {
   probeQuickReadOnly,
+  QUICK_PROBE_USER_AGENT,
   QUICK_READ_ONLY_PROBE_METHOD,
   QUICK_READ_ONLY_PROBE_PATH,
 } from '../src/probe.ts';
@@ -33,6 +34,11 @@ describe('F1-07 — GET-only Quick-probe', () => {
     expect(['POST', 'PUT', 'PATCH', 'DELETE']).not.toContain(init.method);
     expect(String(kall[0])).toBe('https://q3.quick.no/Test_Public/api/v2/client/info');
     expect(String(kall[0])).toContain(QUICK_READ_ONLY_PROBE_PATH);
+    expect(init.redirect).toBe('error');
+    const headers = (init.headers ?? {}) as Record<string, string>;
+    expect(headers['User-Agent']).toBe(QUICK_PROBE_USER_AGENT);
+    expect(headers['User-Agent']).toBe('Endwise/1 QuickProbe');
+    expect(headers.Accept).toBe('application/json');
   });
 
   it('baseUrl som slutter på /api/v2 treffer ikke /api/v2/api/v2/client/info', async () => {
@@ -97,5 +103,7 @@ describe('F1-07 — GET-only Quick-probe', () => {
     expect(kilde).not.toMatch(/['"]DELETE['"]/);
     expect(kilde).not.toMatch(/pullNow|pushNow|customer\/batch/);
     expect(kilde).not.toMatch(/fake-apiv2-ikke-ekte|ProdShared008\/[A-Za-z0-9]{8,}/);
+    expect(kilde).not.toMatch(/console\.(log|info|debug|error|warn)/);
+    expect(kilde).not.toMatch(/Yamaha Bergen/);
   });
 });

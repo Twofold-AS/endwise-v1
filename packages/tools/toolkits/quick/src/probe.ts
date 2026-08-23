@@ -16,6 +16,8 @@ import { assertAllowedQuickUrl } from './url-guard.ts';
 export const QUICK_READ_ONLY_PROBE_METHOD = 'GET';
 /** Relativt til instansens baseUrl (uten trailing slash). */
 export const QUICK_READ_ONLY_PROBE_PATH = '/api/v2/client/info';
+/** Stabil UA — Quick kan 500-e Vercel-egress uten kjent klient. */
+export const QUICK_PROBE_USER_AGENT = 'Endwise/1 QuickProbe';
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 const MAX_RESPONSE_BYTES = 25_000_000;
@@ -50,6 +52,7 @@ export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void
       headers: {
         Authorization: `Token token=${token}`,
         Accept: 'application/json',
+        'User-Agent': QUICK_PROBE_USER_AGENT,
       },
       redirect: 'error',
       signal: AbortSignal.timeout(timeoutMs),

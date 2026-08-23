@@ -7,7 +7,7 @@ import {
 } from '@endwise/modules/messages';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { endwiseAdminProcedure, protectedProcedure, router } from '../init.ts';
+import { endwiseSupportProcedure, protectedProcedure, router } from '../init.ts';
 
 /**
  * F6-26 — den konkrete e-postkanalen for utgående meldinger.
@@ -142,14 +142,14 @@ export const messagesRouter = router({
    * F5-11 — Innboks for Endwise-admin: dealer_admin-tråder fra ALLE forhandlere.
    *
    * ⛔ Ikke `listThreads`. Den er tenant-skopet og skal forbli det.
-   * Sperren er `endwiseAdminProcedure`. Lesing går via `withPlatformAdmin`
+   * Sperren er `endwiseSupportProcedure` (admin + plattform-support). Lesing går via `withPlatformAdmin`
    * + SELECT-only RLS på kind = dealer_admin.
    */
-  listPlatformSupport: endwiseAdminProcedure.query(({ ctx }) =>
+  listPlatformSupport: endwiseSupportProcedure.query(({ ctx }) =>
     meldinger(ctx.db).listPlatformSupportThreads(ctx.userId),
   ),
 
-  listPlatformSupportMessages: endwiseAdminProcedure
+  listPlatformSupportMessages: endwiseSupportProcedure
     .input(z.object({ threadId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       try {
@@ -159,7 +159,7 @@ export const messagesRouter = router({
       }
     }),
 
-  postPlatformSupport: endwiseAdminProcedure
+  postPlatformSupport: endwiseSupportProcedure
     .input(z.object({ threadId: z.uuid(), body: z.string().min(1).max(4000) }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -173,7 +173,7 @@ export const messagesRouter = router({
       }
     }),
 
-  markPlatformSupportRead: endwiseAdminProcedure
+  markPlatformSupportRead: endwiseSupportProcedure
     .input(z.object({ threadId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       try {

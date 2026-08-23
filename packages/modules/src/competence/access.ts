@@ -9,7 +9,12 @@
  * `dealer_staff` og `customer` kan LESE (staff må se hvem som kan hva for å
  * booke manuelt), men aldri skrive.
  */
-export type CompetenceRole = 'customer' | 'dealer_staff' | 'dealer_admin' | 'endwise_admin';
+export type CompetenceRole =
+  | 'customer'
+  | 'dealer_staff'
+  | 'dealer_admin'
+  | 'endwise_admin'
+  | 'endwise_support';
 
 const CAN_WRITE: readonly CompetenceRole[] = ['dealer_admin', 'endwise_admin'];
 const CAN_READ: readonly CompetenceRole[] = ['dealer_staff', 'dealer_admin', 'endwise_admin'];

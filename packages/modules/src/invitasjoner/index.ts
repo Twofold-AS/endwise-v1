@@ -1,5 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { and, type Database, desc, eq, isNull, schema, sql, withTenant } from '@endwise/db';
+import { type InviterbartPlatformNiva, rolleForPlatformNiva } from '../plattform/index.ts';
 import { type Jobbfunksjon, kanTildeles, TILDELBARE_FUNKSJONER } from '../profil/index.ts';
 
 /**
@@ -23,7 +24,7 @@ import { type Jobbfunksjon, kanTildeles, TILDELBARE_FUNKSJONER } from '../profil
  * (`opprettEier`) er et eget kall som setter `kind = owner` bevisst.
  */
 
-export type Invitasjonskind = 'staff' | 'owner';
+export type Invitasjonskind = 'staff' | 'owner' | 'platform';
 
 /** 7 dager. Lenge nok til en ferieuke, kort nok til at en glemt e-post dør. */
 export const INVITASJON_GYLDIGHET_DAGER = 7;
@@ -63,10 +64,19 @@ export interface ApenInvitasjon {
   id: string;
   tenantId: string;
   epost: string;
-  funksjon: Jobbfunksjon;
+  funksjon: Jobbfunksjon | null;
   rolle: string;
   kind: Invitasjonskind;
+  platformLevel: InviterbartPlatformNiva | null;
   utloper: Date;
+}
+
+export interface NyPlatformInvitasjon {
+  tenantId: string;
+  epost: string;
+  niva: InviterbartPlatformNiva;
+  invitedBy: string;
+  gyldighetDager?: number;
 }
 
 export interface NyEierInvitasjon {
@@ -127,6 +137,7 @@ export function createInvitasjonsmodul(db: Database) {
           funksjon: rad.jobFunction as Jobbfunksjon,
           rolle: rad.role,
           kind: 'staff',
+          platformLevel: null,
           utloper: rad.expiresAt,
         },
       };
@@ -175,9 +186,87 @@ export function createInvitasjonsmodul(db: Database) {
           funksjon: 'leder',
           rolle: rad.role,
           kind: 'owner',
+          platformLevel: null,
           utloper: rad.expiresAt,
         },
       };
+    },
+
+    /**
+     * Plattform-team. Eget spor — aldri F1-10-funksjon, aldri eier.
+     * Kopi: «Du er invitert til Endwise-support» / «… som administrator».
+     */
+    async opprettPlatform(
+      input: NyPlatformInvitasjon,
+    ): Promise<{ invitasjon: ApenInvitasjon; token: string }> {
+      if (input.niva !== 'administrator' && input.niva !== 'support') {
+        throw new InvitasjonUgyldigError(
+          'Plattform-invitasjon kan bare være administrator eller support.',
+        );
+      }
+      const epost = normaliserEpost(input.epost);
+      if (!epost.includes('@')) throw new InvitasjonUgyldigError('Ugyldig e-postadresse.');
+
+      const token = randomBytes(TOKEN_BYTES).toString('base64url');
+      const utloper = new Date(
+        Date.now() + (input.gyldighetDager ?? INVITASJON_GYLDIGHET_DAGER) * 24 * 60 * 60 * 1000,
+      );
+
+      const [rad] = await withTenant(db, input.tenantId, (tx) =>
+        tx
+          .insert(schema.invitations)
+          .values({
+            tenantId: input.tenantId,
+            email: epost,
+            tokenHash: hashInvitasjonstoken(token),
+            kind: 'platform',
+            jobFunction: null,
+            platformLevel: input.niva,
+            role: rolleForPlatformNiva(input.niva),
+            invitedBy: input.invitedBy,
+            expiresAt: utloper,
+          })
+          .returning(),
+      );
+      if (!rad) throw new Error('Plattform-invitasjonen ble ikke opprettet');
+
+      return {
+        token,
+        invitasjon: {
+          id: rad.id,
+          tenantId: rad.tenantId,
+          epost: rad.email,
+          funksjon: null,
+          rolle: rad.role,
+          kind: 'platform',
+          platformLevel: input.niva,
+          utloper: rad.expiresAt,
+        },
+      };
+    },
+
+    async listApnePlatform(tenantId: string) {
+      return withTenant(db, tenantId, (tx) =>
+        tx
+          .select({
+            id: schema.invitations.id,
+            epost: schema.invitations.email,
+            niva: schema.invitations.platformLevel,
+            utloper: schema.invitations.expiresAt,
+            opprettet: schema.invitations.createdAt,
+            invitertAv: schema.invitations.invitedBy,
+          })
+          .from(schema.invitations)
+          .where(
+            and(
+              eq(schema.invitations.tenantId, tenantId),
+              eq(schema.invitations.kind, 'platform'),
+              isNull(schema.invitations.acceptedAt),
+              isNull(schema.invitations.revokedAt),
+            ),
+          )
+          .orderBy(desc(schema.invitations.createdAt)),
+      );
     },
 
     /**
@@ -282,7 +371,7 @@ export function createInvitasjonsmodul(db: Database) {
       if (!token) return null;
       const hash = hashInvitasjonstoken(token);
       const res = await db.execute(
-        sql`select id, tenant_id, email, job_function, role, kind, expires_at
+        sql`select id, tenant_id, email, job_function, role, kind, platform_level, expires_at
               from lookup_open_invitation(${hash})`,
       );
       const rad = (res.rows ?? res)[0] as
@@ -290,24 +379,34 @@ export function createInvitasjonsmodul(db: Database) {
             id: string;
             tenant_id: string;
             email: string;
-            job_function: string;
+            job_function: string | null;
             role: string;
             kind?: string;
+            platform_level?: string | null;
             expires_at: string | Date;
           }
         | undefined;
       if (!rad) return null;
 
       const kind: Invitasjonskind =
-        rad.kind === 'owner' || rad.role === 'dealer_admin' ? 'owner' : 'staff';
+        rad.kind === 'platform'
+          ? 'platform'
+          : rad.kind === 'owner' || rad.role === 'dealer_admin'
+            ? 'owner'
+            : 'staff';
+      const platformLevel =
+        rad.platform_level === 'administrator' || rad.platform_level === 'support'
+          ? rad.platform_level
+          : null;
 
       return {
         id: rad.id,
         tenantId: rad.tenant_id,
         epost: rad.email,
-        funksjon: rad.job_function as Jobbfunksjon,
+        funksjon: (rad.job_function as Jobbfunksjon | null) ?? null,
         rolle: rad.role,
         kind,
+        platformLevel,
         utloper: new Date(rad.expires_at),
       };
     },

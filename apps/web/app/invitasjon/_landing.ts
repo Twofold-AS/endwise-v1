@@ -8,11 +8,12 @@
  * Uferdig 2FA har ingen autorisert tRPC-sesjon — dashbordet laster ingenting.
  */
 export function destinasjonEtterInvite(
-  kind: 'owner' | 'staff',
+  kind: 'owner' | 'staff' | 'platform',
   landing?: string | null,
   feil?: string | null,
 ): string {
   if (feil?.includes('TWO_FACTOR_REQUIRED')) return '/2fa-oppsett';
+  if (kind === 'platform') return '/endwise';
   if (kind === 'owner') return '/oppstart';
   if (landing?.startsWith('/') && !landing.startsWith('//')) return landing;
   return '/dashboard';

@@ -24,10 +24,22 @@ export function useOrgRole(): {
   navn: string | null;
   role: OrgRole | null;
   tenantName: string | null;
-  tenantKind: 'live' | 'demo';
+  tenantKind: 'live' | 'demo' | 'platform';
+  tenantSlug: string | null;
+  erPlattform: boolean;
+  plattformTenantId: string | null;
+  verksteder: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    role: string;
+    isMechanic: boolean;
+  }>;
   isMechanic: boolean;
   isDealerAdmin: boolean;
   isEndwiseAdmin: boolean;
+  isEndwiseSupport: boolean;
+  isEndwiseTeam: boolean;
   isAdmin: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -54,11 +66,17 @@ export function useOrgRole(): {
     navn: me.data?.navn || null,
     role,
     tenantName: me.data?.tenantName ?? null,
-    tenantKind: (me.data?.tenantKind as 'live' | 'demo' | undefined) ?? 'live',
+    tenantKind: (me.data?.tenantKind as 'live' | 'demo' | 'platform' | undefined) ?? 'live',
+    tenantSlug: me.data?.tenantSlug ?? null,
+    erPlattform: me.data?.erPlattform ?? false,
+    plattformTenantId: me.data?.plattformTenantId ?? null,
+    verksteder: me.data?.verksteder ?? [],
     isMechanic: me.data?.isMechanic ?? false,
     isDealerAdmin: role === 'dealer_admin' || role === 'endwise_admin',
     isEndwiseAdmin: role === 'endwise_admin',
-    isAdmin: role === 'dealer_admin' || role === 'endwise_admin',
+    isEndwiseSupport: role === 'endwise_support',
+    isEndwiseTeam: role === 'endwise_admin' || role === 'endwise_support',
+    isAdmin: role === 'dealer_admin' || role === 'endwise_admin' || role === 'endwise_support',
     isAuthenticated: authed,
     isLoading: isPending || (authed && me.isLoading),
     devMode: me.data?.devMode?.enabled ?? false,

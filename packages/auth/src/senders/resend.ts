@@ -299,8 +299,9 @@ export async function sendInvitation(input: {
   forhandler: string;
   funksjon: string;
   utloper: Date;
-  /** `owner` = forhandler-eier (F5-26). Default staff (F1-10). */
-  kind?: 'staff' | 'owner';
+  /** `owner` = forhandler-eier. `platform` = Endwise-team. Default staff. */
+  kind?: 'staff' | 'owner' | 'platform';
+  platformLevel?: 'administrator' | 'support';
 }): Promise<void> {
   const dato = input.utloper.toLocaleDateString('nb-NO', {
     day: 'numeric',
@@ -308,7 +309,15 @@ export async function sendInvitation(input: {
     year: 'numeric',
   });
   const eier = input.kind === 'owner';
-  const rolle = eier ? 'eier' : input.funksjon;
+  const platform = input.kind === 'platform';
+  const platformAdmin = platform && input.platformLevel === 'administrator';
+  const rolle = eier
+    ? 'eier'
+    : platformAdmin
+      ? 'administrator'
+      : platform
+        ? 'support'
+        : input.funksjon;
 
   if (skalLeggesILogg()) {
     devRamme(
@@ -323,12 +332,20 @@ export async function sendInvitation(input: {
     return;
   }
 
-  const subject = eier
-    ? `Du er invitert som eier av ${input.forhandler} i Endwise`
-    : `Du er invitert til ${input.forhandler} i Endwise`;
-  const ingress = eier
-    ? `${input.forhandler} er opprettet i Endwise, og du er invitert som eier.`
-    : `${input.forhandler} har invitert deg til Endwise som ${input.funksjon}.`;
+  const subject = platform
+    ? platformAdmin
+      ? 'Du er invitert til Endwise-support som administrator'
+      : 'Du er invitert til Endwise-support'
+    : eier
+      ? `Du er invitert som eier av ${input.forhandler} i Endwise`
+      : `Du er invitert til ${input.forhandler} i Endwise`;
+  const ingress = platform
+    ? platformAdmin
+      ? 'Du er invitert til Endwise-support som administrator.'
+      : 'Du er invitert til Endwise-support.'
+    : eier
+      ? `${input.forhandler} er opprettet i Endwise, og du er invitert som eier.`
+      : `${input.forhandler} har invitert deg til Endwise som ${input.funksjon}.`;
   const fotnote = `Lenken er personlig, kan brukes én gang, og er gyldig til ${dato}. Har du ikke ventet denne invitasjonen, kan du se bort fra e-posten.`;
 
   await sendEmail({

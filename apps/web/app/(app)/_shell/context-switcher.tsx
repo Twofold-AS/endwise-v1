@@ -20,27 +20,22 @@ import { type AppContext, CONTEXTS, type ContextKey } from './nav';
 
 type Valg = AppContext & { disabled?: boolean; disabledHint?: string };
 
+export type VerkstedMedlemskap = {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+  isMechanic?: boolean;
+};
+
 /**
- * F5-13 / F5-28 — Merkeboks + kontekst-dropdown i sidebarens header.
+ * F5-13 / F5-28 — Merkeboks + kontekst-dropdown.
  *
- * Logoen ligger i en egen liten svart boks — i BEGGE temaer. Den er en
- * merkemarkør, ikke en flate som skal snu med resten av UI-et.
+ * Når aktiv org er plattform-tenanten: header Endwise + Plattform.
+ * Dropdown viser bare Endwise. Ekte verksted-medlemskap kommer ETTER
+ * «Dine verksteder» — det er ekte medlemskap, ikke Se verkstedet.
  *
- * ── Hva dropdownen faktisk gjør, og hva den IKKE gjør ─────────────────────
- * Øverste seksjon bytter **visning** innenfor samme tenant. Ingen tilgang
- * endres; det er de samme rettighetene, andre nav-rader.
- *
- * Nederste seksjon (kun i dev-mode) bytter **tenant**, og det er en helt annen
- * sak. Den går gjennom Better-Auths `organization.setActive`, som validerer
- * medlemskapet på nytt server-side — vi sender aldri en tenant-id vi har funnet
- * på. Lista kommer fra `tenants.myDemoTenants`, som kun returnerer demo-tenants
- * du ALLEREDE er medlem av.
- *
- * ⛔ **Ingen auto-innmelding.** Å bytte til en tenant man ikke er medlem av er
- * ikke en funksjon som mangler — det er funksjonen vi med vilje ikke bygger.
- *
- * ⚠️ Alt her er kosmetikk. RLS + `assertMember` + `endwiseAdminProcedure` er
- * de ekte sperrene; dette skjuler bare valg man uansett ville fått 403 på.
+ * I Se verkstedet (inspect): bare «Tilbake til Endwise». Ingen setActive.
  */
 export function ContextSwitcher({
   contexts,
@@ -48,6 +43,11 @@ export function ContextSwitcher({
   dealerName,
   collapsed,
   canSwitchDemo = false,
+  erPlattform = false,
+  inspect = false,
+  inspectTilbakeHref = '/endwise',
+  verksteder = [],
+  plattformTenantId = null,
   onSelect,
 }: {
   contexts: Valg[];
@@ -55,66 +55,34 @@ export function ContextSwitcher({
   collapsed: boolean;
   dealerName: string;
   canSwitchDemo?: boolean;
+  erPlattform?: boolean;
+  inspect?: boolean;
+  inspectTilbakeHref?: string;
+  verksteder?: VerkstedMedlemskap[];
+  plattformTenantId?: string | null;
   onSelect: (key: ContextKey) => void;
 }) {
   const router = useRouter();
   const current = CONTEXTS.find((c) => c.key === active) ?? CONTEXTS[0];
-  const canSwitch = contexts.length > 1;
+  const demoTenants = trpc.tenants.myDemoTenants.useQuery(undefined, {
+    enabled: canSwitchDemo && !inspect,
+  });
 
-  /**
-   * ⚠️ Gated på `canSwitchDemo` (flagg + endwise_admin), IKKE på full dev-mode.
-   * Full dev-mode krever `tenants.kind = 'demo'` — og da ville bytteren som
-   * får deg INN i en demo-tenant vært gjemt bak seg selv. Høna og egget.
-   *
-   * Det svekker ingenting: ruta er `endwiseAdminProcedure` og returnerer kun
-   * tenants du allerede er medlem av. `enabled` sparer et kall, den beskytter
-   * ingenting.
-   */
-  const demoTenants = trpc.tenants.myDemoTenants.useQuery(undefined, { enabled: canSwitchDemo });
-
-  async function byttTenant(tenantId: string) {
-    // Better-Auth validerer medlemskapet. Vi ber om et bytte; vi utfører det ikke.
+  async function byttTenant(tenantId: string, landing: string) {
     await authClient.organization.setActive({ organizationId: tenantId });
-    // Hard reload: tRPC-cachen er full av forrige tenants data, og en
-    // invalidering som glemmer én query ville vist to tenants samtidig.
-    window.location.assign('/dashboard');
+    window.location.assign(landing);
   }
 
-  /**
-   * ⚠️ **Andre linje sa `{userName} · {roleLabel}` fram til 20.08.2026.**
-   *
-   * Personen flyttet til bunnen av sidebaren (F6-19), og da ville et navn her
-   * vært det samme navnet to steder i samme kolonne. Nå deler de to radene
-   * spørsmålet mellom seg: toppen svarer på **hvor du er** — hvilken forhandler
-   * og hvilken visning — og bunnen på **hvem du er**.
-   */
+  const headerNavn = inspect ? dealerName : erPlattform ? 'Endwise' : dealerName;
+  const headerUnder = inspect ? 'Kun lesing' : erPlattform ? 'Plattform' : current.label;
+
   const navn = (
     <span className="flex min-w-0 flex-1 flex-col text-left">
-      <span className="truncate text-label text-fg">{dealerName}</span>
-      <span className="truncate text-[12px] text-fg-muted">{current.label}</span>
+      <span className="truncate text-label text-fg">{headerNavn}</span>
+      <span className="truncate text-[12px] text-fg-muted">{headerUnder}</span>
     </span>
   );
 
-  /**
-   * Logoen — UTEN merkeboks (endret 20.08.2026, eiers ønske).
-   *
-   * ⚠️ Før lå logoen i en 36px svart rute og ble tegnet 18px bred inni den, som
-   * med SVG-ens forhold 222:134 ga en logo på ca. 18 × 11 px. Det var RUTA som
-   * matchet navneblokka ved siden av, ikke logoen.
-   *
-   * Høyden var kort innom 36px (lik navneblokka), men ble halvert til 18px på
-   * eiers ønske — 36 ble for dominerende ved siden av teksten. Bredden følger
-   * alltid av forholdet, så logoen aldri strekkes.
-   *
-   * ⛔ `logo-invert` og IKKE `logo-on-dark`. Den forrige er tema-betinget; den
-   * siste snur logoen hvit UANSETT, som var riktig så lenge den lå på en
-   * alltid-svart rute. Uten ruta sitter logoen rett på sidebarbakgrunnen — og
-   * med `logo-on-dark` ville den vært hvit på hvitt i lyst tema. Det er
-   * nøyaktig feilen F5-21 fantes for å rette.
-   *
-   * Kollapset variant er halvert i samme forhold (13px → 22px bred), så de to
-   * tilstandene fortsatt ser ut som samme logo i to størrelser.
-   */
   const logoHoyde = collapsed ? 13 : 18;
   const logo = (
     <Image
@@ -127,11 +95,17 @@ export function ContextSwitcher({
     />
   );
 
-  /**
-   * Én kontekst = ingen dropdown. En pil som ikke leder noe sted er verre enn
-   * ingen pil.
-   */
-  if (!canSwitch) {
+  const visningsvalg = erPlattform
+    ? contexts.filter((c) => c.key === 'endwise')
+    : contexts.filter((c) => !(erPlattform && c.key !== 'endwise'));
+
+  const kanSwitch =
+    inspect ||
+    visningsvalg.length > 1 ||
+    verksteder.length > 0 ||
+    Boolean(plattformTenantId && !erPlattform);
+
+  if (!kanSwitch) {
     return (
       <div className={`flex items-center gap-2 ${collapsed ? '' : 'min-w-0 flex-1'}`}>
         {logo}
@@ -145,22 +119,24 @@ export function ContextSwitcher({
       {!collapsed && logo}
 
       <DropdownMenu>
-        {/*
-          ⚠️ **Kollapset sidebar hadde INGEN velger** (rettet 09.08.2026).
-          Koden gjorde `collapsed ? null : ...`, så logoboksen ble stående igjen
-          som ren dekorasjon — og både visningsbytte og demo-tenant-bytte var
-          utilgjengelig helt til du utvidet sidebaren igjen. En kontroll som
-          forsvinner er verre enn en som er trang: du vet ikke at den fantes.
-
-          Nå er logoboksen SELV triggeren når sidebaren er smal. Menyen under er
-          den samme; det er bare knappen som endrer form.
-        */}
         <DropdownMenuTrigger asChild>
           {collapsed ? (
             <button
               type="button"
-              title={`Bytt visning — nå: ${current.label}`}
-              aria-label={`Bytt visning — nå: ${current.label}`}
+              title={
+                inspect
+                  ? 'Tilbake til Endwise'
+                  : erPlattform
+                    ? 'Bytt visning — Plattform'
+                    : `Bytt visning — nå: ${current.label}`
+              }
+              aria-label={
+                inspect
+                  ? 'Tilbake til Endwise'
+                  : erPlattform
+                    ? 'Bytt visning — Plattform'
+                    : `Bytt visning — nå: ${current.label}`
+              }
               className="rounded-control p-1 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-ring"
             >
               {logo}
@@ -168,59 +144,118 @@ export function ContextSwitcher({
           ) : (
             <button
               type="button"
-              aria-label={`Bytt visning — nå: ${current.label}`}
+              aria-label={
+                inspect
+                  ? 'Tilbake til Endwise'
+                  : erPlattform
+                    ? 'Bytt visning — Plattform'
+                    : `Bytt visning — nå: ${current.label}`
+              }
               className="flex min-w-0 flex-1 items-center gap-1 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-sidebar-active focus-visible:outline-2 focus-visible:outline-ring"
             >
               {navn}
-              {/* 14px = 2px mindre enn nav-ikonene, og peker alltid ned. */}
               <ChevronDown size={14} className="shrink-0 text-fg-muted" />
             </button>
           )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" sideOffset={6} className="min-w-[248px]">
-          <DropdownMenuHeader>Visning</DropdownMenuHeader>
-          {contexts.map((c) => (
-            <DropdownMenuItem
-              key={c.key}
-              disabled={c.disabled}
-              onSelect={() => {
-                if (c.disabled) return;
-                onSelect(c.key);
-                router.push(c.landing as Route);
-              }}
-              className={`h-row-store ${c.key === active ? 'bg-sidebar-active' : ''}`}
-            >
-              <c.icon size={16} className="shrink-0 text-fg-muted" />
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-label text-fg">{c.label}</span>
-                {/* F5-29: låste valg forklarer seg selv. Å la mekaniker-
-                      visningen bare FORSVINNE var grunnen til at den ikke lot
-                      seg finne — den var der hele tiden, uten dør. */}
-                <span className="truncate text-[12px] text-fg-muted">
-                  {c.disabled ? c.disabledHint : c.hint}
-                </span>
-              </span>
-              {c.disabled ? (
-                <Lock size={14} className="shrink-0 text-fg-muted" aria-hidden />
-              ) : (
-                c.key === active && <Check size={16} className="shrink-0 text-accent-strong" />
-              )}
-            </DropdownMenuItem>
-          ))}
-
-          {/* ── Dev-mode: bytt DEMO-TENANT (ikke bare visning) ────────── */}
-          {canSwitchDemo && (demoTenants.data?.length ?? 0) > 0 && (
+          {inspect ? (
             <>
-              <DropdownMenuSeparator />
-              <DropdownMenuHeader>Demo-tenants (dev-mode)</DropdownMenuHeader>
-              {demoTenants.data?.map((t) => (
-                <DropdownMenuItem key={t.id} onSelect={() => void byttTenant(t.id)}>
+              <DropdownMenuHeader>Visning</DropdownMenuHeader>
+              <DropdownMenuItem
+                onSelect={() => {
+                  router.push(inspectTilbakeHref as Route);
+                }}
+              >
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-label text-fg">Tilbake til Endwise</span>
+                  <span className="truncate text-[12px] text-fg-muted">Forlater lesing</span>
+                </span>
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuHeader>Visning</DropdownMenuHeader>
+              {visningsvalg.map((c) => (
+                <DropdownMenuItem
+                  key={c.key}
+                  disabled={c.disabled}
+                  onSelect={() => {
+                    if (c.disabled) return;
+                    if (c.key === 'endwise' && plattformTenantId && !erPlattform) {
+                      void byttTenant(plattformTenantId, '/endwise');
+                      return;
+                    }
+                    onSelect(c.key);
+                    router.push(c.landing as Route);
+                  }}
+                  className={`h-row-store ${c.key === active ? 'bg-sidebar-active' : ''}`}
+                >
+                  <c.icon size={16} className="shrink-0 text-fg-muted" />
                   <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-label text-fg">{t.name}</span>
-                    <span className="truncate text-[12px] text-fg-muted">{t.slug}</span>
+                    <span className="truncate text-label text-fg">{c.label}</span>
+                    <span className="truncate text-[12px] text-fg-muted">
+                      {c.disabled ? c.disabledHint : c.hint}
+                    </span>
                   </span>
+                  {c.disabled ? (
+                    <Lock size={14} className="shrink-0 text-fg-muted" aria-hidden />
+                  ) : (
+                    c.key === active && <Check size={16} className="shrink-0 text-accent-strong" />
+                  )}
                 </DropdownMenuItem>
               ))}
+
+              {erPlattform && verksteder.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuHeader>Dine verksteder</DropdownMenuHeader>
+                  {verksteder.flatMap((v) => {
+                    const rader = [
+                      { key: `${v.id}-forhandler`, label: 'Forhandler', landing: '/dashboard' },
+                      { key: `${v.id}-lager`, label: 'Lager', landing: '/lager' },
+                    ];
+                    if (v.isMechanic) {
+                      rader.splice(1, 0, {
+                        key: `${v.id}-mekaniker`,
+                        label: 'Mekaniker',
+                        landing: '/min-dag',
+                      });
+                    }
+                    return rader.map((r) => (
+                      <DropdownMenuItem
+                        key={r.key}
+                        onSelect={() => {
+                          void byttTenant(v.id, r.landing);
+                        }}
+                      >
+                        <span className="flex min-w-0 flex-1 flex-col">
+                          <span className="truncate text-label text-fg">{r.label}</span>
+                          <span className="truncate text-[12px] text-fg-muted">{v.name}</span>
+                        </span>
+                      </DropdownMenuItem>
+                    ));
+                  })}
+                </>
+              )}
+
+              {canSwitchDemo && (demoTenants.data?.length ?? 0) > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuHeader>Demo-tenants (dev-mode)</DropdownMenuHeader>
+                  {demoTenants.data?.map((t) => (
+                    <DropdownMenuItem
+                      key={t.id}
+                      onSelect={() => void byttTenant(t.id, '/dashboard')}
+                    >
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-label text-fg">{t.name}</span>
+                        <span className="truncate text-[12px] text-fg-muted">{t.slug}</span>
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
             </>
           )}
         </DropdownMenuContent>

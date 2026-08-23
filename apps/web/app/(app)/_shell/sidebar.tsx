@@ -16,6 +16,12 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
+import {
+  isVerkstedInspectPath,
+  remapHrefTilInspect,
+  tilbakeHref,
+  verkstedSlugFromPath,
+} from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
 import { BEVEL, NewBadge } from './cards';
@@ -25,6 +31,7 @@ import {
   childrenForRole,
   contextForPath,
   contextsForRole,
+  FORHANDLER_NAV,
   isItemActive,
   itemsForRole,
   type NavItem,
@@ -39,6 +46,7 @@ const ROLE_LABEL: Record<string, string> = {
   dealer_admin: 'Forhandler-admin',
   dealer_staff: 'Ansatt',
   endwise_admin: 'Endwise-admin',
+  endwise_support: 'Endwise-support',
   customer: 'Kunde',
 };
 
@@ -70,7 +78,21 @@ export function Sidebar() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session } = useSession();
-  const { navn, role, isMechanic, tenantName, devMode, canSwitchDemo } = useOrgRole();
+  const {
+    navn,
+    role,
+    isMechanic,
+    tenantName,
+    devMode,
+    canSwitchDemo,
+    erPlattform,
+    verksteder,
+    plattformTenantId,
+  } = useOrgRole();
+  const inspect = isVerkstedInspectPath(pathname);
+  const inspectSlug = verkstedSlugFromPath(pathname);
+  const fra = searchParams?.get('fra') ?? null;
+  const inspectTilbake = tilbakeHref(fra);
   const { collapsed } = useSidebarState();
 
   const pathContext = contextForPath(pathname);
@@ -81,17 +103,24 @@ export function Sidebar() {
   }, [pathContext]);
   const context = chosen ?? pathContext;
 
-  const contexts = contextsForRole(role, isMechanic, devMode);
-  const items = itemsForRole(navForContext(context), role);
+  const contexts = erPlattform
+    ? contextsForRole(role, isMechanic, false).filter((c) => c.key === 'endwise')
+    : contextsForRole(role, isMechanic, devMode);
+  const rawItems = inspect
+    ? itemsForRole(FORHANDLER_NAV, 'dealer_admin').map((item) =>
+        remapNav(item, inspectSlug ?? '', fra),
+      )
+    : itemsForRole(navForContext(context), role);
+  const items = rawItems;
   // Settings-blokka er ulik per kontekst: forhandlerens konfigurasjon i
   // forhandler-konteksten, dev-mode-bryteren i Endwise-admin. `null` i resten.
-  const settingsNav = settingsForContext(context);
+  const settingsNav = inspect ? null : settingsForContext(context);
 
   const threads = trpc.messages.listThreads.useQuery(undefined, {
-    enabled: Boolean(role) && context !== 'endwise',
+    enabled: Boolean(role) && context !== 'endwise' && !inspect,
   });
   const support = trpc.messages.listPlatformSupport.useQuery(undefined, {
-    enabled: Boolean(role) && context === 'endwise',
+    enabled: Boolean(role) && context === 'endwise' && !inspect,
     retry: false,
   });
   /**
@@ -173,17 +202,22 @@ export function Sidebar() {
             ikke bare stygg, den var en påstand om hvor du er logget inn. */}
         <ContextSwitcher
           contexts={contexts}
-          active={context}
+          active={inspect ? 'forhandler' : context}
           collapsed={collapsed}
           dealerName={tenantName ?? '—'}
-          canSwitchDemo={canSwitchDemo}
+          canSwitchDemo={canSwitchDemo && !inspect && !erPlattform}
+          erPlattform={erPlattform}
+          inspect={inspect}
+          inspectTilbakeHref={inspectTilbake}
+          verksteder={verksteder}
+          plattformTenantId={plattformTenantId}
           onSelect={setChosen}
         />
       </div>
 
       {/* ── Innhold ──────────────────────────────────────────────────── */}
       <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-3">
-        {context === 'forhandler' && (
+        {context === 'forhandler' && !inspect && (
           <DropdownMenu open={quickOpen} onOpenChange={setQuickOpen}>
             <DropdownMenuTrigger asChild>
               <button
@@ -524,6 +558,22 @@ function NavRow({
       </div>
     </div>
   );
+}
+
+function medFra(href: string, fra: string | null): string {
+  if (!fra) return href;
+  return `${href}${href.includes('?') ? '&' : '?'}fra=${encodeURIComponent(fra)}`;
+}
+
+function remapNav(item: NavItem, slug: string, fra: string | null): NavItem {
+  return {
+    ...item,
+    href: medFra(remapHrefTilInspect(item.href, slug), fra),
+    children: item.children?.map((c) => ({
+      ...c,
+      href: medFra(remapHrefTilInspect(c.href, slug), fra),
+    })),
+  };
 }
 
 function Ikon({ icon: I, active }: { icon: LucideIcon; active: boolean }) {

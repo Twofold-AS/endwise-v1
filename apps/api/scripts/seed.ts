@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createAuth, createTenant } from '@endwise/auth';
-import { and, createDb, eq, isNull, schema } from '@endwise/db';
+import { and, createDb, eq, isNull, schema, withTenant } from '@endwise/db';
 import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
 import { seedHelpdesk } from './seed-helpdesk.ts';
 
@@ -93,6 +93,68 @@ async function ensureTenant(
   return tenantId;
 }
 
+/**
+ * Endwise-plattformen. Ikke en forhandler, ingen pakke, ingen Stripe.
+ * Eier = første endwise_admin (Mikael).
+ */
+async function ensurePlatformTenant(ownerUserId: string): Promise<string> {
+  const [existing] = await db
+    .select()
+    .from(schema.tenants)
+    .where(eq(schema.tenants.slug, 'endwise'));
+  if (existing) {
+    await db
+      .update(schema.tenants)
+      .set({ kind: 'platform', plan: null, name: 'Endwise' })
+      .where(eq(schema.tenants.id, existing.id));
+    await db.delete(schema.tenantModules).where(eq(schema.tenantModules.tenantId, existing.id));
+    await setMemberRole(existing.id, ownerUserId, 'endwise_admin');
+    return existing.id;
+  }
+
+  const [org] = await db
+    .select()
+    .from(schema.organization)
+    .where(eq(schema.organization.slug, 'endwise'));
+  if (org) {
+    await withTenant(db, org.id, async (tx) => {
+      await tx
+        .insert(schema.tenants)
+        .values({
+          id: org.id,
+          name: 'Endwise',
+          slug: 'endwise',
+          kind: 'platform',
+          plan: null,
+          onboardingCompletedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: schema.tenants.id,
+          set: { kind: 'platform', plan: null, name: 'Endwise' },
+        });
+    });
+    await db.delete(schema.tenantModules).where(eq(schema.tenantModules.tenantId, org.id));
+    await setMemberRole(org.id, ownerUserId, 'endwise_admin');
+    return org.id;
+  }
+
+  const { tenantId } = await createTenant(auth, db, {
+    name: 'Endwise',
+    slug: 'endwise',
+    ownerUserId,
+    kind: 'platform',
+    modules: [],
+    onboardingCompleted: true,
+  });
+  await db
+    .update(schema.tenants)
+    .set({ kind: 'platform', plan: null, name: 'Endwise' })
+    .where(eq(schema.tenants.id, tenantId));
+  await db.delete(schema.tenantModules).where(eq(schema.tenantModules.tenantId, tenantId));
+  await setMemberRole(tenantId, ownerUserId, 'endwise_admin');
+  return tenantId;
+}
+
 async function setMemberRole(orgId: string, userId: string, role: string): Promise<void> {
   await db
     .delete(schema.member)
@@ -117,6 +179,10 @@ async function main() {
   // F1-14 — én per jobbfunksjon, så landingsvisningen kan testes for hånd.
   const selgerA = await ensureUser('selger-a@verksted.test', 'Silje Selger (Verksted A)');
   const supportA = await ensureUser('support-a@verksted.test', 'Sara Support (Verksted A)');
+  const platformSupport = await ensureUser('support@endwise.test', 'Endwise Support');
+
+  const platformTenant = await ensurePlatformTenant(endwiseAdmin);
+  await setMemberRole(platformTenant, platformSupport, 'endwise_support');
 
   /**
    * ⚠️ F0-16: kun TILLEGG her. 'booking' og 'messages' er fjernet — de er basis
@@ -1259,11 +1325,14 @@ async function main() {
   }
 
   console.info('\n✅ Seed ferdig. Demo-kontoer (passord: %s):', PASSWORD);
-  console.info('  endwise_admin  mikkis@twofold.no        (Verksted A)');
-  console.info('  dealer_admin   admin-a@verksted.test    (Verksted A)');
-  console.info('  dealer_staff   ansatt-a@verksted.test   (Verksted A)');
-  console.info('  mekaniker      mekaniker-a@verksted.test (Verksted A)');
-  console.info('  dealer_admin   admin-b@verksted.test    (Verksted B)');
+  console.info('  endwise_admin   mikkis@twofold.no         (plattform Endwise · eier)');
+  console.info(
+    '  endwise_support support@endwise.test      (plattform · kun innboks + Se verkstedet)',
+  );
+  console.info('  dealer_admin    admin-a@verksted.test     (Verksted A)');
+  console.info('  dealer_staff    ansatt-a@verksted.test    (Verksted A)');
+  console.info('  mekaniker       mekaniker-a@verksted.test (Verksted A)');
+  console.info('  dealer_admin    admin-b@verksted.test     (Verksted B)');
   console.info('\n👔 Jobbfunksjoner i Verksted A (alle dealer_staff — samme tilgang):');
   console.info('  selger     selger-a@verksted.test    → lander på /dashboard');
   console.info('  support    support-a@verksted.test   → lander på /innboks');

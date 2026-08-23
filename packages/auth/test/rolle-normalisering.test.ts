@@ -33,7 +33,13 @@ const OWNER_URL = process.env.DATABASE_URL;
 const describeDb = OWNER_URL && process.env.BETTER_AUTH_SECRET ? describe : describe.skip;
 
 /** De eneste rollene resten av systemet forstår. Speiler `OrgRole` i nav.ts. */
-const KJENTE_ROLLER = ['customer', 'dealer_staff', 'dealer_admin', 'endwise_admin'];
+const KJENTE_ROLLER = [
+  'customer',
+  'dealer_staff',
+  'dealer_admin',
+  'endwise_admin',
+  'endwise_support',
+];
 
 describeDb('F1-04: createTenant normaliserer eierens rolle', () => {
   let owner: Database;

@@ -19,7 +19,7 @@ export function endwiseAdminUtfall(input: {
 }): EndwiseAdminUtfall {
   if (input.twoFactorRequired) return 'two_factor';
   if (!input.userId) return 'signin';
-  if (input.role !== 'endwise_admin') return 'forbidden';
+  if (input.role !== 'endwise_admin' && input.role !== 'endwise_support') return 'forbidden';
   return 'ok';
 }
 

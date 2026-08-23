@@ -2,9 +2,10 @@ import { createAccessControl } from 'better-auth/plugins/access';
 
 /**
  * F1-05 — RBAC.
- * Fire roller (roadmap F1-05). `customer` er sluttkunden (widget/Min side) og har
+ * Fem roller. `customer` er sluttkunden (widget/Min side) og har
  * bevisst ingen rettigheter i forhandlerens data — kun sine egne bookinger, som
- * uansett er RLS-skjermet.
+ * uansett er RLS-skjermet. `endwise_support` er plattform-team, ikke
+ * forhandlerens jobbfunksjon «support».
  */
 export const statement = {
   booking: ['create', 'read', 'update', 'cancel'],
@@ -73,11 +74,28 @@ export const endwiseAdmin = ac.newRole({
   inventory: ['read', 'move', 'manage'],
 });
 
+/**
+ * Plattform-support. Innboks + Se verkstedet (lesing). Ikke flagg, ikke
+ * slett forhandler, ikke team. ⛔ Ikke dealer_staff «support».
+ */
+export const endwiseSupport = ac.newRole({
+  booking: ['read'],
+  mechanic: ['read'],
+  customer: ['read'],
+  service: ['read'],
+  tenant: ['read'],
+  entitlement: ['read'],
+  member: ['read'],
+  audit: ['read'],
+  inventory: ['read'],
+});
+
 export const roles = {
   customer,
   dealer_staff: dealerStaff,
   dealer_admin: dealerAdmin,
   endwise_admin: endwiseAdmin,
+  endwise_support: endwiseSupport,
 } as const;
 
 export type Role = keyof typeof roles;
@@ -87,4 +105,5 @@ export const ROLES_REQUIRING_2FA: readonly Role[] = [
   'dealer_admin',
   'dealer_staff',
   'endwise_admin',
+  'endwise_support',
 ];

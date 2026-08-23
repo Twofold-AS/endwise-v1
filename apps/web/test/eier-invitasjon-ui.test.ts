@@ -71,10 +71,12 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(pakke).toMatch(/SMS \(twilio\) er et avkrysnings-tillegg/);
   });
 
-  it('resend og slett er skjult på Endwise-tenanten', () => {
-    expect(forhandlere).toMatch(/Badge variant="secondary">Endwise/);
-    expect(forhandlere).toMatch(/\{!t\.erEndwise \? \(/);
+  it('resend og slett er skjult på Endwise, Se verkstedet er URL-lesing', () => {
+    expect(forhandlere).toMatch(/Se verkstedet/);
+    expect(forhandlere).toMatch(/\/endwise\/verksted\/\$\{t\.slug\}/);
+    expect(forhandlere).toMatch(/!t\.erEndwise/);
     expect(forhandlere).toMatch(/t\.eierInviteUbrukt \? \(/);
+    expect(forhandlere).not.toMatch(/setActive|impersonat/i);
   });
 
   it('eier-veiviseren er visningsnavn · team uten avatar', () => {

@@ -35,8 +35,9 @@ import { destinasjonEtterInvite, krevRevokeAndreSesjoner, trengerKodeSteg } from
 type Invitasjon = {
   gyldig: true;
   epost: string;
-  funksjon: string;
-  kind: 'staff' | 'owner';
+  funksjon: string | null;
+  kind: 'staff' | 'owner' | 'platform';
+  platformLevel?: 'administrator' | 'support' | null;
   forhandler: string;
   utloper: string;
   harKonto: boolean;
@@ -95,7 +96,8 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
 
   async function aktiverOrg() {
     const orgs = await authClient.organization.list();
-    const first = orgs.data?.[0];
+    const platform = orgs.data?.find((o) => o.slug === 'endwise');
+    const first = platform ?? orgs.data?.[0];
     if (first) await authClient.organization.setActive({ organizationId: first.id });
   }
 
@@ -225,20 +227,32 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   }
 
   const rolle =
-    inv?.kind === 'owner' ? 'eier' : (FUNKSJONSTEKST[inv?.funksjon ?? ''] ?? inv?.funksjon);
+    inv?.kind === 'owner'
+      ? 'eier'
+      : inv?.kind === 'platform'
+        ? inv.platformLevel === 'administrator'
+          ? 'administrator'
+          : 'support'
+        : (FUNKSJONSTEKST[inv?.funksjon ?? ''] ?? inv?.funksjon);
   const tittel = inv
     ? steg === 'kode'
       ? 'Bekreft med engangskode'
-      : `Velkommen til ${inv.forhandler}`
+      : inv.kind === 'platform'
+        ? 'Velkommen til Endwise'
+        : `Velkommen til ${inv.forhandler}`
     : laster
       ? 'Invitasjon'
       : 'Invitasjonen virker ikke';
   const undertekst = inv
     ? steg === 'kode'
       ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
-      : inv.kind === 'owner'
-        ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
-        : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
+      : inv.kind === 'platform'
+        ? inv.platformLevel === 'administrator'
+          ? `Du er invitert til Endwise-support som administrator. Kontoen knyttes til ${inv.epost}.`
+          : `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
+        : inv.kind === 'owner'
+          ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
+          : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
     : laster
       ? null
       : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be om en ny hvis du trenger det.';

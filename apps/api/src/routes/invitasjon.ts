@@ -85,7 +85,8 @@ invitasjon.get('/:token', async (c) => {
     epost: inv.epost,
     funksjon: inv.funksjon,
     kind: inv.kind,
-    forhandler: forhandler?.navn ?? 'Endwise',
+    platformLevel: inv.platformLevel,
+    forhandler: inv.kind === 'platform' ? 'Endwise' : (forhandler?.navn ?? 'Endwise'),
     utloper: inv.utloper,
     harKonto: Boolean(eksisterende),
     kreverPassord: inv.kind === 'owner' || !eksisterende,
@@ -216,19 +217,21 @@ invitasjon.post('/godta', async (c) => {
         });
     }
 
-    await withTenant(db(), inv.tenantId, (tx) =>
-      tx
-        .insert(schema.memberProfiles)
-        .values({
-          tenantId: inv.tenantId,
-          userId: userId as string,
-          jobFunction: inv.funksjon,
-        })
-        .onConflictDoUpdate({
-          target: [schema.memberProfiles.tenantId, schema.memberProfiles.userId],
-          set: { jobFunction: inv.funksjon, updatedAt: new Date() },
-        }),
-    );
+    if (inv.kind !== 'platform' && inv.funksjon) {
+      await withTenant(db(), inv.tenantId, (tx) =>
+        tx
+          .insert(schema.memberProfiles)
+          .values({
+            tenantId: inv.tenantId,
+            userId: userId as string,
+            jobFunction: inv.funksjon,
+          })
+          .onConflictDoUpdate({
+            target: [schema.memberProfiles.tenantId, schema.memberProfiles.userId],
+            set: { jobFunction: inv.funksjon, updatedAt: new Date() },
+          }),
+      );
+    }
 
     return c.json({
       ok: true,

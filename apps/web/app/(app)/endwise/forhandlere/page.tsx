@@ -11,9 +11,12 @@ import {
   Plus,
   StatefulButton,
 } from '@endwise/ui';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { type FormEvent, useMemo, useState } from 'react';
 import { Field, INPUT } from '@/app/_auth/felter';
 import { trpc } from '@/lib/trpc';
+import { useOrgRole } from '../../_lib/use-org-role';
 import { CardShell } from '../../_shell/cards';
 import { NivaaValg, TilleggListe, tilleggForNivaa, tilleggNokler } from '../_pakke-valg';
 
@@ -27,10 +30,11 @@ import { NivaaValg, TilleggListe, tilleggForNivaa, tilleggNokler } from '../_pak
 type SlettSteg = 'advarsel' | 'bekreft';
 
 export default function ForhandlerePage() {
+  const { isEndwiseAdmin } = useOrgRole();
   const utils = trpc.useUtils();
   const liste = trpc.tenants.list.useQuery();
-  const katalog = trpc.tenants.pakkeKatalog.useQuery();
-  const entitlements = trpc.tenants.listModules.useQuery();
+  const katalog = trpc.tenants.pakkeKatalog.useQuery(undefined, { enabled: isEndwiseAdmin });
+  const entitlements = trpc.tenants.listModules.useQuery(undefined, { enabled: isEndwiseAdmin });
 
   const [navn, setNavn] = useState('');
   const [slug, setSlug] = useState('');
@@ -163,108 +167,111 @@ export default function ForhandlerePage() {
         <h1 className="sr-only">Forhandlere</h1>
         <p className="text-title text-fg">Forhandlere</p>
         <p className="text-body text-fg-muted">
-          Invite-only. Velg én pakke. Tillegg under er utenom pakken. Eieren setter passord og 2FA
-          selv — du setter det aldri.
+          {isEndwiseAdmin
+            ? 'Invite-only. Velg én pakke. Tillegg under er utenom pakken. Eieren setter passord og 2FA selv — du setter det aldri.'
+            : 'Kun lesing. Åpne et verksted uten å bytte organisasjon.'}
         </p>
       </div>
 
-      <CardShell className="p-5">
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <p className="flex items-center gap-2 text-label text-fg">
-            <Plus size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-            Ny forhandler
-          </p>
+      {isEndwiseAdmin ? (
+        <CardShell className="p-5">
+          <form onSubmit={submit} className="flex flex-col gap-4">
+            <p className="flex items-center gap-2 text-label text-fg">
+              <Plus size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+              Ny forhandler
+            </p>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Felt
+                label="Navn"
+                hint="Ekte forhandlernavn — vises i deres sidebar"
+                value={navn}
+                onChange={navnEndret}
+                placeholder="Sørlandet MC-verksted"
+                required
+              />
+              <Felt
+                label="Slug"
+                hint="Små bokstaver, tall og bindestrek. Havner i URL-er."
+                value={slug}
+                onChange={setSlug}
+                placeholder="sorlandet-mc"
+                required
+              />
+            </div>
+
             <Felt
-              label="Navn"
-              hint="Ekte forhandlernavn — vises i deres sidebar"
-              value={navn}
-              onChange={navnEndret}
-              placeholder="Sørlandet MC-verksted"
+              label="E-post til eier"
+              hint="Finnes e-posten ikke, sender vi en invitasjon. Eieren setter passord selv."
+              value={epost}
+              onChange={setEpost}
+              placeholder="eier@verksted.no"
+              type="email"
               required
             />
-            <Felt
-              label="Slug"
-              hint="Små bokstaver, tall og bindestrek. Havner i URL-er."
-              value={slug}
-              onChange={setSlug}
-              placeholder="sorlandet-mc"
-              required
-            />
-          </div>
 
-          <Felt
-            label="E-post til eier"
-            hint="Finnes e-posten ikke, sender vi en invitasjon. Eieren setter passord selv."
-            value={epost}
-            onChange={setEpost}
-            placeholder="eier@verksted.no"
-            type="email"
-            required
-          />
-
-          <label className="flex items-center gap-2.5 text-label text-fg">
-            <input
-              type="checkbox"
-              checked={demo}
-              onChange={(e) => setDemo(e.target.checked)}
-              className="size-4 accent-[#111]"
-            />
-            <span className="flex flex-col">
-              Demo-tenant
-              <span className="text-[12px] text-fg-muted">
-                Kun for dev-mode. Ekte forhandlere skal aldri være demo.
+            <label className="flex items-center gap-2.5 text-label text-fg">
+              <input
+                type="checkbox"
+                checked={demo}
+                onChange={(e) => setDemo(e.target.checked)}
+                className="size-4 accent-[#111]"
+              />
+              <span className="flex flex-col">
+                Demo-tenant
+                <span className="text-[12px] text-fg-muted">
+                  Kun for dev-mode. Ekte forhandlere skal aldri være demo.
+                </span>
               </span>
-            </span>
-          </label>
+            </label>
 
-          <NivaaValg nivaa={nivaaListe} valgt={nivaa} onChange={byttNivaa} />
-          <TilleggListe
-            tillegg={tillegg}
-            valgte={valgfrie}
-            nivaaNavn={valgtNivaa?.name ?? 'Start'}
-            onToggle={(key) => toggle(valgfrie, setValgfrie, key)}
-          />
+            <NivaaValg nivaa={nivaaListe} valgt={nivaa} onChange={byttNivaa} />
+            <TilleggListe
+              tillegg={tillegg}
+              valgte={valgfrie}
+              nivaaNavn={valgtNivaa?.name ?? 'Start'}
+              onToggle={(key) => toggle(valgfrie, setValgfrie, key)}
+            />
 
-          {opprett.error && (
-            <p className="flex items-start gap-2 text-body text-danger">
-              <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-              {opprett.error.message}
-            </p>
-          )}
-          {opprett.isSuccess && (
-            <p className="text-body text-success">
-              Opprettet «{opprett.data?.name}». Invitasjon sendt til {opprett.data?.invite.epost}
-              {opprett.data?.invite.sendt
-                ? ''
-                : ' — sendingen feilet, bruk Send invitasjon på nytt'}
-              . Eieren setter passord, 2FA og går gjennom veiviseren.
-            </p>
-          )}
+            {opprett.error && (
+              <p className="flex items-start gap-2 text-body text-danger">
+                <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+                {opprett.error.message}
+              </p>
+            )}
+            {opprett.isSuccess && (
+              <p className="text-body text-success">
+                Opprettet «{opprett.data?.name}». Invitasjon sendt til {opprett.data?.invite.epost}
+                {opprett.data?.invite.sendt
+                  ? ''
+                  : ' — sendingen feilet, bruk Send invitasjon på nytt'}
+                . Eieren setter passord, 2FA og går gjennom veiviseren.
+              </p>
+            )}
 
-          <div className="flex justify-end">
-            <StatefulButton
-              type="submit"
-              disabled={opprett.isPending || !navn || !slug || !epost || !nivaa}
-              state={
-                opprett.isPending
-                  ? 'loading'
-                  : opprett.isError
-                    ? 'error'
-                    : opprett.isSuccess
-                      ? 'success'
-                      : 'idle'
-              }
-              loadingText="Oppretter…"
-              successText="Opprettet"
-              errorText="Feilet"
-            >
-              Opprett og inviter
-            </StatefulButton>
-          </div>
-        </form>
-      </CardShell>
+            <div className="flex justify-end">
+              <StatefulButton
+                type="submit"
+                disabled={opprett.isPending || !navn || !slug || !epost || !nivaa}
+                state={
+                  opprett.isPending
+                    ? 'loading'
+                    : opprett.isError
+                      ? 'error'
+                      : opprett.isSuccess
+                        ? 'success'
+                        : 'idle'
+                }
+                loadingText="Oppretter…"
+                successText="Opprettet"
+                errorText="Feilet"
+              >
+                Opprett og inviter
+              </StatefulButton>
+            </div>
+          </form>
+        </CardShell>
+      ) : null}
 
       <section className="flex flex-col gap-2">
         <h2 className="text-title text-fg">Alle forhandlere</h2>
@@ -303,12 +310,15 @@ export default function ForhandlerePage() {
                       <span className="truncate text-label text-fg">{t.name}</span>
                       <span className="truncate text-[12px] text-fg-muted">{t.slug}</span>
                     </div>
-                    {t.erEndwise ? <Badge variant="secondary">Endwise</Badge> : null}
-                    {t.kind === 'demo' && !t.erEndwise ? (
-                      <Badge variant="secondary">Demo</Badge>
-                    ) : null}
-                    {planNavn && !t.erEndwise ? <Badge variant="outline">{planNavn}</Badge> : null}
-                    {!t.erEndwise ? (
+                    {t.kind === 'demo' ? <Badge variant="secondary">Demo</Badge> : null}
+                    {planNavn ? <Badge variant="outline">{planNavn}</Badge> : null}
+                    <Link
+                      href={`/endwise/verksted/${t.slug}/dashboard?fra=forhandlere` as Route}
+                      className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline"
+                    >
+                      Se verkstedet
+                    </Link>
+                    {isEndwiseAdmin && !t.erEndwise ? (
                       <>
                         <button
                           type="button"
@@ -353,6 +363,7 @@ export default function ForhandlerePage() {
                   </div>
                   {(pakke.included.length > 0 || pakke.optional.length > 0) &&
                   !apen &&
+                  isEndwiseAdmin &&
                   !t.erEndwise ? (
                     <div className="flex flex-wrap gap-1 pl-8">
                       {pakke.included.map((k) => (
@@ -367,7 +378,7 @@ export default function ForhandlerePage() {
                       ))}
                     </div>
                   ) : null}
-                  {endrer === t.id && !t.erEndwise ? (
+                  {endrer === t.id && isEndwiseAdmin && !t.erEndwise ? (
                     <EndreForhandler
                       navn={t.name}
                       slug={t.slug}
@@ -385,7 +396,7 @@ export default function ForhandlerePage() {
                       }
                     />
                   ) : null}
-                  {apen && !t.erEndwise ? (
+                  {apen && isEndwiseAdmin && !t.erEndwise ? (
                     <ModulRediger
                       key={`${t.id}:${t.plan ?? 'start'}:${pakke.included.join(',')}:${pakke.optional.join(',')}`}
                       plan={t.plan ?? 'start'}

@@ -21,7 +21,8 @@ import { tenants } from './tenants.ts';
  * `kind = staff` er låst til `dealer_staff` + tildelbar funksjon (ikke `leder`).
  * `kind = owner` er det bevisste unntaket: `dealer_admin` + `leder`, brukt av
  * Endwise-admins forhandler-onboarding. Staff-ruten kan ikke velge owner.
- * `endwise_admin` som rolle finnes fortsatt ikke her.
+ * `kind = platform` er Endwise-team (administrator | support). Aldri F1-10-
+ * funksjoner, aldri «eier». `endwise_support` er en annen rolle enn dealer support.
  *
  * ── Offentlig oppslag ────────────────────────────────────────────────────
  * Tenant-policyen over holder lederens liste. Den som åpner lenka har ingen
@@ -52,15 +53,21 @@ export const invitations = pgTable(
     tokenHash: text('token_hash').notNull(),
 
     /**
-     * `staff` (F1-10) eller `owner` (F5-26 eier-invite). Default staff så
-     * gamle rader og glemte inserts holder staff-CHECken.
+     * `staff` (F1-10), `owner` (F5-26 eier-invite) eller `platform`
+     * (Endwise-team). Default staff så gamle rader holder staff-CHECken.
      */
     kind: text('kind').notNull().default('staff'),
 
     /**
      * Jobbfunksjonen. Staff: selger/support/mekaniker. Owner: `leder`.
+     * Platform: NULL — F1-10-funksjoner brukes aldri på plattform-org.
      */
-    jobFunction: jobFunctionEnum('job_function').notNull(),
+    jobFunction: jobFunctionEnum('job_function'),
+
+    /**
+     * Bare `kind = platform`. Administrator eller support — aldri eier.
+     */
+    platformLevel: text('platform_level'),
 
     /** ⛔ Låst av CHECK mot `kind`. Se filhodet. */
     role: text('role').notNull().default('dealer_staff'),
@@ -85,11 +92,11 @@ export const invitations = pgTable(
     tenantPolicy('invitations', t.tenantId),
     check(
       'invitations_role_by_kind',
-      sql`(${t.kind} = 'staff' AND ${t.role} = 'dealer_staff') OR (${t.kind} = 'owner' AND ${t.role} = 'dealer_admin')`,
+      sql`(${t.kind} = 'staff' AND ${t.role} = 'dealer_staff') OR (${t.kind} = 'owner' AND ${t.role} = 'dealer_admin') OR (${t.kind} = 'platform' AND ${t.role} IN ('endwise_admin', 'endwise_support'))`,
     ),
     check(
       'invitations_function_by_kind',
-      sql`(${t.kind} = 'staff' AND ${t.jobFunction} IN ('selger', 'support', 'mekaniker')) OR (${t.kind} = 'owner' AND ${t.jobFunction} = 'leder')`,
+      sql`(${t.kind} = 'staff' AND ${t.jobFunction} IN ('selger', 'support', 'mekaniker')) OR (${t.kind} = 'owner' AND ${t.jobFunction} = 'leder') OR (${t.kind} = 'platform' AND ${t.jobFunction} IS NULL AND ${t.platformLevel} IN ('administrator', 'support'))`,
     ),
   ],
 ).enableRLS();

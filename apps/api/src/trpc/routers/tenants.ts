@@ -10,6 +10,7 @@ import {
   type AddonModule,
   addonKatalog,
   BASIS_MODULES,
+  erBlokertTildeling,
   erTildelbarAddon,
   filtrerAddonNokler,
 } from '@endwise/modules';
@@ -49,12 +50,39 @@ const slugSchema = z
  */
 const START_MODULER: string[] = [];
 
+const BLOKKERT_MELDING: Record<string, string> = {
+  shop: 'Nettbutikk (shop) er blokkert og ikke til salgs.',
+  twilio: 'SMS er ikke et tillegg — pass-through per melding, ingen modulpris.',
+};
+
+/** Zod-lag: avvis shop/twilio før mutasjonen kjører. */
+const tildelbareModulerSchema = z
+  .array(z.string().min(1).max(64))
+  .max(40)
+  .superRefine((keys, ctx) => {
+    for (const key of keys) {
+      if (erBlokertTildeling(key)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: BLOKKERT_MELDING[key] ?? `Kan ikke tildeles: ${key}`,
+        });
+      }
+    }
+  });
+
 function avvisBasisModuler(keys: readonly string[]): AddonModule[] {
   const basis = keys.filter((k) => (BASIS_MODULES as readonly string[]).includes(k));
   if (basis.length) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: `Basis-moduler kan ikke tildeles: ${basis.join(', ')}. De er alltid på.`,
+    });
+  }
+  const blokkert = keys.filter(erBlokertTildeling);
+  if (blokkert.length) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: blokkert.map((k) => BLOKKERT_MELDING[k] ?? `Kan ikke tildeles: ${k}`).join(' '),
     });
   }
   const ukjente = keys.filter((k) => !erTildelbarAddon(k));
@@ -267,7 +295,7 @@ export const tenantsRouter = router({
         slug: slugSchema,
         ownerEmail: z.email(),
         kind: z.enum(['live', 'demo']).default('live'),
-        modules: z.array(z.string().min(1).max(64)).max(40).default([]),
+        modules: tildelbareModulerSchema.default([]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -371,7 +399,7 @@ export const tenantsRouter = router({
     .input(
       z.object({
         tenantId: z.uuid(),
-        modules: z.array(z.string().min(1).max(64)).max(40),
+        modules: tildelbareModulerSchema,
       }),
     )
     .mutation(async ({ ctx, input }) => {

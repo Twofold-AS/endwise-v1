@@ -68,9 +68,57 @@ describe('F5-26 — dealer kan ikke tildele egne moduler', () => {
           name: 'Ulovlig AS',
           slug: 'ulovlig-as',
           ownerEmail: 'tyv@x.no',
-          modules: ['shop'],
+          modules: ['ai-support'],
         }),
       'FORBIDDEN',
+    );
+  });
+});
+
+describe('F5-26 — shop og twilio kan ikke tildeles', () => {
+  const admin = () =>
+    appRouter.createCaller(
+      ctx({} as never, 'endwise_admin', '00000000-0000-0000-0000-000000000001'),
+    );
+
+  it('create avviser shop', async () => {
+    await forventer(
+      admin().tenants.create({
+        name: 'Shop nei',
+        slug: 'shop-nei',
+        ownerEmail: 'shop@x.no',
+        modules: ['shop'],
+      }),
+      'BAD_REQUEST',
+    );
+  });
+
+  it('create avviser twilio (SMS er ikke et tillegg)', async () => {
+    await forventer(
+      admin().tenants.create({
+        name: 'Sms nei',
+        slug: 'sms-nei',
+        ownerEmail: 'sms@x.no',
+        modules: ['twilio'],
+      }),
+      'BAD_REQUEST',
+    );
+  });
+
+  it('setModules avviser shop og twilio', async () => {
+    await forventer(
+      admin().tenants.setModules({
+        tenantId: '00000000-0000-0000-0000-000000000001',
+        modules: ['shop'],
+      }),
+      'BAD_REQUEST',
+    );
+    await forventer(
+      admin().tenants.setModules({
+        tenantId: '00000000-0000-0000-0000-000000000001',
+        modules: ['twilio'],
+      }),
+      'BAD_REQUEST',
     );
   });
 });
@@ -187,7 +235,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       slug,
       ownerEmail: epost,
       kind: 'demo',
-      modules: ['shop'],
+      modules: ['vegvesen'],
     });
     tenantIds.push(opprettet.tenantId);
 
@@ -258,7 +306,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     await forventer(
       appRouter
         .createCaller(ctx(app, 'dealer_admin', opprettet.tenantId, 'dealer-i-tenant'))
-        .tenants.setModules({ tenantId: opprettet.tenantId, modules: ['shop'] }),
+        .tenants.setModules({ tenantId: opprettet.tenantId, modules: ['ai-support'] }),
       'FORBIDDEN',
     );
 

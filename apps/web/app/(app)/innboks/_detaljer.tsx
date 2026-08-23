@@ -497,13 +497,7 @@ const STATUS_TEKST: Record<string, string> = {
  * F5-11 — Endwise-admin ser forhandleren, ikke kundekortet.
  * «Se verkstedet» er bevisst disabled: impersonering kommer senere (Mons).
  */
-export function EndwiseForhandlerDetaljer({
-  navn,
-  slug,
-}: {
-  navn: string;
-  slug: string;
-}) {
+export function EndwiseForhandlerDetaljer({ navn, slug }: { navn: string; slug: string }) {
   return (
     <>
       <div className="flex flex-col gap-1 rounded-control border border-border bg-bg p-3">

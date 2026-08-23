@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { DetaljerSlot } from './_detaljer-slot';
 import { InboxSidebar } from './_inbox-sidebar';
-import { InboxModusProvider, type InboxModus } from './_modus';
+import { type InboxModus, InboxModusProvider } from './_modus';
 
 /**
  * F5-11 / F5-14 — innboksens tre kolonner. Gjenbrukt av /innboks og

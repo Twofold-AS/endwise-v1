@@ -60,10 +60,7 @@ export default function TrådPage() {
     enabled: endwise,
     retry: false,
   });
-  const dealerMessages = trpc.messages.listMessages.useQuery(
-    { threadId },
-    { enabled: !endwise },
-  );
+  const dealerMessages = trpc.messages.listMessages.useQuery({ threadId }, { enabled: !endwise });
   const platformMessages = trpc.messages.listPlatformSupportMessages.useQuery(
     { threadId },
     { enabled: endwise, retry: false },
@@ -257,8 +254,7 @@ export default function TrådPage() {
                 jeg med» er halve spørsmålet når du åpner en tråd. */}
             {thread && 'motparter' in thread && thread.subject?.trim() && motparter.length > 0 && (
               <span className="min-w-0 truncate text-[12px] text-fg-muted">
-                ·{' '}
-                {threadHeading(null, thread.kind, motparter, navn.data, me.data?.userId)}
+                · {threadHeading(null, thread.kind, motparter, navn.data, me.data?.userId)}
               </span>
             )}
           </div>

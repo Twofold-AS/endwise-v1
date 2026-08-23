@@ -17,18 +17,22 @@ import type { ThreadKind } from './_lib';
  *
  * «Annen samtale» folder ut Intern/Kunde — bevisst gjemt.
  */
-const ANDRE_PARTER: { key: Exclude<ThreadKind, 'dealer_admin'>; label: string; icon: LucideIcon }[] =
-  [
-    { key: 'mechanic_dealer', label: 'Intern', icon: Wrench },
-    { key: 'customer_dealer', label: 'Kunde', icon: Users },
-  ];
+const ANDRE_PARTER: {
+  key: Exclude<ThreadKind, 'dealer_admin'>;
+  label: string;
+  icon: LucideIcon;
+}[] = [
+  { key: 'mechanic_dealer', label: 'Intern', icon: Wrench },
+  { key: 'customer_dealer', label: 'Kunde', icon: Users },
+];
 
 export function NySamtale({ onLukk }: { onLukk: () => void }) {
   const router = useRouter();
   const utils = trpc.useUtils();
 
   const [annen, setAnnen] = useState(false);
-  const [annenKind, setAnnenKind] = useState<Exclude<ThreadKind, 'dealer_admin'>>('mechanic_dealer');
+  const [annenKind, setAnnenKind] =
+    useState<Exclude<ThreadKind, 'dealer_admin'>>('mechanic_dealer');
 
   const opprett = trpc.messages.createThread.useMutation({
     onSuccess: (tråd) => {

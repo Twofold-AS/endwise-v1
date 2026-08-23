@@ -326,10 +326,11 @@ function SupportKort({
         {ulest && (
           <span
             className="size-2 shrink-0 rounded-full bg-accent-strong"
-            aria-label="Ulest"
             title="Ulest"
+            aria-hidden
           />
         )}
+        {ulest && <span className="sr-only">Ulest</span>}
         <span className="shrink-0 text-[11px] text-fg-muted tabular-nums">{nar}</span>
       </div>
       {utdrag && <p className="truncate text-[12px] text-fg-muted">{utdrag}</p>}

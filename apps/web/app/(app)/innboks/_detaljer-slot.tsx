@@ -102,7 +102,10 @@ export function DetaljerSlot() {
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
           {supportTrad ? (
-            <EndwiseForhandlerDetaljer navn={supportTrad.tenantName} slug={supportTrad.tenantSlug} />
+            <EndwiseForhandlerDetaljer
+              navn={supportTrad.tenantName}
+              slug={supportTrad.tenantSlug}
+            />
           ) : (
             <p className="px-1 py-6 text-center text-[12px] text-fg-muted">Henter kontekst …</p>
           )}

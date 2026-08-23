@@ -569,9 +569,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
         const [traad] = await tx
           .select({ id: schema.threads.id })
           .from(schema.threads)
-          .where(
-            and(eq(schema.threads.id, threadId), eq(schema.threads.kind, 'dealer_admin')),
-          );
+          .where(and(eq(schema.threads.id, threadId), eq(schema.threads.kind, 'dealer_admin')));
         if (!traad) throw new PlatformSupportNotFoundError(threadId);
         return tx
           .select()
@@ -586,11 +584,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
      * skriving via `withTenant` på DEN tenanten — så forhandleren ser svaret
      * i sin Endwise-kanal. Ingen ny tråd, ingen Endwise-tenant.
      */
-    async postPlatformSupportReply(input: {
-      threadId: string;
-      authorId: string;
-      body: string;
-    }) {
+    async postPlatformSupportReply(input: { threadId: string; authorId: string; body: string }) {
       const traad = await withPlatformAdmin(db, async (tx) => {
         const [rad] = await tx
           .select({

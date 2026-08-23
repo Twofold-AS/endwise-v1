@@ -27,8 +27,8 @@ import { BrukerRad } from './bruker-rad';
 import { BEVEL, NewBadge } from './cards';
 import { ContextSwitcher } from './context-switcher';
 import {
-  type ContextKey,
   CONTEXTS,
+  type ContextKey,
   childrenForRole,
   contextForPath,
   contextsForRole,

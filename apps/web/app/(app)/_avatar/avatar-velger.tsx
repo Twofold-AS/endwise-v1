@@ -77,8 +77,8 @@ export function AvatarVelger({ seed }: { seed: string | null }) {
         <div className="min-w-0 flex-1">
           <p className="text-label text-fg">Avataren din</p>
           <p className="text-[12px] text-fg-muted leading-relaxed">
-            Ett ansikt, knyttet til kontoen din. Humøret er alltid blidt. Velg
-            form under, eller trekk en ny tilfeldig.
+            Ett ansikt, knyttet til kontoen din. Humøret er alltid blidt. Velg form under, eller
+            trekk en ny tilfeldig.
           </p>
         </div>
         <button

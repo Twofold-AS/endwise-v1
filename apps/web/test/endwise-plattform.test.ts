@@ -37,9 +37,9 @@ describe('plattform-org i Bytt visning', () => {
   });
 
   it('Forhandlere-inspect bruker router.push, ikke setActive', () => {
-    const start = switcher.indexOf('Forhandlere');
+    const start = switcher.indexOf('>Forhandlere<');
     expect(start).toBeGreaterThan(-1);
-    const inspectBlokk = switcher.slice(start, switcher.indexOf('Dine verksteder'));
+    const inspectBlokk = switcher.slice(start, switcher.indexOf('>Dine verksteder<'));
     expect(inspectBlokk).toMatch(/router\.push/);
     expect(inspectBlokk).toMatch(/endwise\/verksted/);
     expect(inspectBlokk).not.toMatch(/setActive|byttTenant/);

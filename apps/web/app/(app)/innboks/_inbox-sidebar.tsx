@@ -20,8 +20,8 @@ import {
   fmtWhen,
   KIND_LABEL,
   KIND_TONE,
-  type ThreadKind,
   supportRadTittel,
+  type ThreadKind,
   threadHeading,
   visningForTraadtype,
 } from './_lib';

@@ -650,12 +650,9 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       }
 
       return rader.map((t) => {
-        const motparter = deltakere
-          .filter((d) => d.threadId === t.id)
-          .map((d) => d.participantId);
+        const motparter = deltakere.filter((d) => d.threadId === t.id).map((d) => d.participantId);
         const navn = navnPerTenant.get(t.tenantId);
-        const kontaktNavn =
-          motparter.map((id) => navn?.get(id)).find((n) => n && n.trim()) ?? null;
+        const kontaktNavn = motparter.map((id) => navn?.get(id)).find((n) => n?.trim()) ?? null;
         return { ...t, kontaktNavn, motparter };
       });
     },

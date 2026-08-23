@@ -22,7 +22,7 @@ Priser 4490/8490/12490 urørt. shop fortsatt blokkert. SMS vis/skjul urørt.
 Alt gikk som planlagt. Ingen blokkering. Context7 MCP var utilgjengelig (trenger auth); Better-Auth `revokeOtherSessions` er samme kall som `/2fa-oppsett`.
 
 ## 3. Hvilke fikser ble gjort
-Se §1. Tester: `slett-forhandler-sql.test.ts` (SQL-kontrakt), `uiux-p0.test.ts` (landing/revoke), integrasjon i `forhandler-slett.test.ts` (skip uten DATABASE_URL).
+Se §1. Kommentar i `withPlatformAdmin()` oppdatert så den ikke lenger sier at slett-policyene ignorerer `platform_admin`. Tester: `slett-forhandler-sql.test.ts` (SQL-kontrakt), `uiux-p0.test.ts` (landing/revoke), integrasjon i `forhandler-slett.test.ts` (skip uten DATABASE_URL).
 
 ## 4. Neste steg
 - Mikael kjører **`pnpm db:setup`** på Scaleway etter merge (grants + functions, ingen ny Drizzle-migrasjon).

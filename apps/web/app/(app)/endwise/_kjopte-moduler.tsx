@@ -153,8 +153,7 @@ function FlaggPakke({
   onLagre: (tier: 'start' | 'pro' | 'enterprise', included: string[], optional: string[]) => void;
 }) {
   const [valgt, setValgt] = useState(plan);
-  const [fast, setFast] = useState(() => new Set(included));
-  const [valg, setValg] = useState(() => new Set(optional));
+  const [valg, setValg] = useState(() => new Set([...optional, ...included]));
   const valgtNivaa = nivaa.find((n) => n.key === valgt);
   const synlige = tilleggForNivaa(valgtNivaa, tillegg);
 
@@ -162,7 +161,6 @@ function FlaggPakke({
     const neste = nivaa.find((n) => n.key === key);
     const lovlige = new Set(tilleggForNivaa(neste, tillegg).map((t) => t.key));
     setValgt(key);
-    setFast(new Set([...fast].filter((k) => lovlige.has(k))));
     setValg(new Set([...valg].filter((k) => lovlige.has(k))));
   }
 
@@ -171,15 +169,9 @@ function FlaggPakke({
       <NivaaValg nivaa={nivaa} valgt={valgt} onChange={byttNivaa} />
       <TilleggListe
         tillegg={synlige}
-        included={fast}
-        optional={valg}
-        onToggleIncluded={(key) => {
-          const neste = new Set(fast);
-          if (neste.has(key)) neste.delete(key);
-          else neste.add(key);
-          setFast(neste);
-        }}
-        onToggleOptional={(key) => {
+        valgte={valg}
+        nivaaNavn={valgtNivaa?.name ?? 'Start'}
+        onToggle={(key) => {
           const neste = new Set(valg);
           if (neste.has(key)) neste.delete(key);
           else neste.add(key);
@@ -192,13 +184,7 @@ function FlaggPakke({
           disabled={pending}
           state={pending ? 'loading' : 'idle'}
           loadingText="Lagrer…"
-          onClick={() =>
-            onLagre(
-              valgt as 'start' | 'pro' | 'enterprise',
-              [...fast],
-              [...valg].filter((k) => !fast.has(k)),
-            )
-          }
+          onClick={() => onLagre(valgt as 'start' | 'pro' | 'enterprise', [], [...valg])}
         >
           Lagre pakke
         </StatefulButton>

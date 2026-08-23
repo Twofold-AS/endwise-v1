@@ -19,7 +19,8 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
 
   it('godta-siden ber om passord og har ingen tilleggs-UI', () => {
     expect(kilde).toMatch(/Sett eller bytt passord|Velg et passord/);
-    expect(kilde).toMatch(/2fa-oppsett/);
+    expect(kilde).toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
+    expect(kilde).toMatch(/Bekrefter …/);
     expect(kilde).not.toMatch(/ADDON_MODULES|tenant_modules|Velg moduler|planvelger|abonnement/);
     expect(kilde).not.toMatch(/addonKatalog|setModules/);
   });
@@ -52,7 +53,7 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).toMatch(/tenants\.update/);
     expect(forhandlere).toMatch(/sendSlettKode/);
     expect(forhandlere).toMatch(/Slett forhandleren/);
-    expect(forhandlere).toMatch(/Eieren setter\s+passord og 2FA selv — du setter det aldri/);
+    expect(forhandlere).toMatch(/Eieren setter\s+passord og 2FA\s+selv — du setter det aldri/);
     expect(forhandlere).toMatch(/Velg én pakke/);
     expect(forhandlere).toMatch(/Send invitasjon på nytt/);
     expect(forhandlere).toMatch(/t\.erEndwise/);
@@ -63,11 +64,11 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).not.toMatch(/SMS ligger i Pro-bundelen/);
   });
 
-  it('pakkevalget skjuler shop, men ikke SMS som Pro-bundle', () => {
+  it('pakkevalget skjuler shop og SMS-avkrysning', () => {
     expect(pakke).toMatch(/t\.module !== 'shop'/);
-    expect(pakke).not.toMatch(/t\.module !== 'twilio'/);
+    expect(pakke).toMatch(/t\.module !== 'twilio'/);
     expect(pakke).not.toMatch(/SMS ligger i Pro-bundelen/);
-    expect(pakke).toMatch(/SMS er tillegg på alle nivåer/);
+    expect(pakke).toMatch(/SMS \(twilio\) er tillegg på alle nivåer/);
   });
 
   it('resend og slett er skjult på Endwise-tenanten', () => {
@@ -76,32 +77,28 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).toMatch(/t\.eierInviteUbrukt \? \(/);
   });
 
-  it('eier-veiviseren har fire steg uten Mikael', () => {
+  it('eier-veiviseren er visningsnavn · team uten avatar', () => {
     expect(oppstart).toMatch(/Visningsnavn/);
-    expect(oppstart).toMatch(/Avatar/);
-    expect(oppstart).toMatch(/Tillegg/);
     expect(oppstart).toMatch(/Team/);
     expect(oppstart).toMatch(/Pakken din er/);
-    expect(oppstart).toMatch(/Ingen valgfrie tillegg\. Du kan gå videre/);
+    expect(oppstart).toMatch(/optional\.length/);
     expect(oppstart).toMatch(/Inviter teamet/);
     expect(oppstart).toMatch(/invitasjoner\.opprett/);
     expect(oppstart).toMatch(/selger|mekaniker/);
-    expect(oppstart).toMatch(/AvatarVelger/);
     expect(oppstart).toMatch(/StatefulButton/);
     expect(oppstart).toMatch(/Vi henter oppstarten/);
+    expect(oppstart).not.toMatch(/AvatarVelger/);
     expect(oppstart).not.toMatch(/Laster oppstarten/);
     expect(oppstart).not.toMatch(/Mikael/);
     expect(oppstart).not.toMatch(/['"]shop['"]|['"]twilio['"]/);
     expect(oppstart).not.toMatch(/setModules/);
   });
 
-  it('avatar-nedtrekkene ligger vannrett og ett åpent om gangen', () => {
-    expect(avatar).toMatch(/grid grid-cols-2 gap-3 lg:grid-cols-4/);
-    expect(avatar).toMatch(/col-span-full/);
-    expect(avatar).toMatch(/id="form"/);
-    expect(avatar).toMatch(/id="farge"/);
-    expect(avatar).toMatch(/id="humor"/);
-    expect(avatar).toMatch(/id="tone"/);
+  it('avatar-velgeren er ett ansikt med Ny tilfeldig, ikke fire nedtrekk', () => {
+    expect(avatar).toMatch(/Ny tilfeldig/);
+    expect(avatar).toMatch(/humor:\s*['"]happy['"]/);
+    expect(avatar).not.toMatch(/function Nedtrekk/);
+    expect(avatar).not.toMatch(/id="humor"/);
   });
 
   it('ingen offentlig /registrer-side', () => {

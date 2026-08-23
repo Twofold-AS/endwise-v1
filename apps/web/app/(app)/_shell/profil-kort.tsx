@@ -1,6 +1,14 @@
 'use client';
 
-import { BellRing, CircleAlert, CircleUser, StatefulButton, Volume2, VolumeX } from '@endwise/ui';
+import {
+  BellRing,
+  CircleAlert,
+  CircleUser,
+  StatefulButton,
+  Switch,
+  Volume2,
+  VolumeX,
+} from '@endwise/ui';
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../_lib/lyd';
@@ -103,79 +111,34 @@ export function ProfilKort() {
         </div>
       </CardShell>
 
-      {/* ══ VARSLINGSLYDER — den store, tydelige bryteren ══════════════ */}
+      {/* ══ VARSLINGSLYDER — samme radmønster som Settings › Varsler ══ */}
       <section className="flex flex-col gap-2">
         <h2 className="text-label text-fg">Varslingslyder</h2>
-        {/*
-          ⚠️ Bevisst STOR og full bredde, ikke en liten switch i en tabellrad.
-          Eier ba om «meget tydelig av/på» — og det er riktig krav: en lyd som
-          spiller uten at du vet hvor den kommer fra, og som du ikke finner
-          bryteren til, er verre enn ingen lyd.
-        */}
-        <button
-          type="button"
-          onClick={() => settLyd.mutate({ pa: !lydPa })}
-          disabled={settLyd.isPending}
-          aria-pressed={lydPa}
-          className={`flex w-full items-center gap-4 rounded-xl border-2 px-4 py-4 text-left transition-colors ${
-            lydPa
-              ? 'border-accent-strong bg-accent-soft'
-              : 'border-border bg-surface-2 hover:border-border-strong'
-          }`}
-        >
-          <span
-            className={`grid size-11 shrink-0 place-items-center rounded-control ${
-              lydPa ? 'bg-bg text-accent-strong' : 'bg-bg text-fg-muted'
-            }`}
-          >
+        <div className="overflow-hidden rounded-xl border border-border">
+          <div className="flex h-row-store items-center gap-3 bg-bg px-4">
             {lydPa ? (
-              <Volume2 size={20} strokeWidth={1.75} />
+              <Volume2 size={16} className="shrink-0 text-fg-muted" />
             ) : (
-              <VolumeX size={20} strokeWidth={1.75} />
+              <VolumeX size={16} className="shrink-0 text-fg-muted" />
             )}
-          </span>
-
-          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className={`text-label ${lydPa ? 'text-accent-strong' : 'text-fg'}`}>
-              Varslingslyder er {lydPa ? 'PÅ' : 'AV'}
-            </span>
-            <span className="text-[12px] text-fg-muted">
-              {lydPa
-                ? 'En kort lyd når det kommer en ny melding. Trykk for å skru av.'
-                : 'Ingen lyd ved nye meldinger. Trykk for å skru på.'}
-            </span>
-          </span>
-
-          {/* Selve bryteren. Ren CSS på token-laget — samme høyde som `h-control`. */}
-          <span
-            aria-hidden
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-              lydPa ? 'bg-accent-strong' : 'bg-border-strong'
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 size-5 rounded-full bg-bg transition-all ${
-                lydPa ? 'left-[22px]' : 'left-0.5'
-              }`}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-label text-fg">Varslingslyder</span>
+              <span className="text-[12px] text-fg-muted">Kort lyd ved ny melding</span>
+            </div>
+            <Switch
+              checked={lydPa}
+              disabled={settLyd.isPending}
+              onCheckedChange={(pa) => settLyd.mutate({ pa })}
+              aria-label={`Varslingslyder ${lydPa ? 'PÅ' : 'AV'}`}
             />
-          </span>
-        </button>
+          </div>
+        </div>
 
         <p className="flex items-start gap-1.5 text-[11px] text-fg-muted leading-relaxed">
           <BellRing size={13} strokeWidth={1.75} className="mt-0.5 shrink-0" />
           Gjelder deg, på alle forhandlere du er medlem av. Lyden spilles kun for meldinger fra
           andre — aldri for dine egne.
         </p>
-
-        {lyd.pa && (
-          <button
-            type="button"
-            onClick={() => lyd.test()}
-            className="self-start text-[12px] text-fg-muted underline underline-offset-2 hover:text-fg"
-          >
-            Spill prøvelyd
-          </button>
-        )}
       </section>
 
       {/* ── Visningsnavn ─────────────────────────────────────────────── */}

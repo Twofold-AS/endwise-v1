@@ -118,6 +118,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
         const melding = error instanceof Error ? error.message : String(error);
         return melding.includes('TWO_FACTOR_REQUIRED') ? '/2fa-oppsett' : '/dashboard';
       });
+    // session.me.landing er /oppstart for eier som ikke har fullført veiviseren.
 
     /**
      * ⚠️ **HARD navigasjon, ikke `router.push`. Dette var DOBBEL-LOGIN-BUGEN.**

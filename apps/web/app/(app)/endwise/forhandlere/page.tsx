@@ -37,7 +37,6 @@ export default function ForhandlerePage() {
   const [epost, setEpost] = useState('');
   const [demo, setDemo] = useState(false);
   const [nivaa, setNivaa] = useState('start');
-  const [valgte, setValgte] = useState<Set<string>>(new Set());
   const [valgfrie, setValgfrie] = useState<Set<string>>(new Set());
   const [redigerer, setRedigerer] = useState<string | null>(null);
   const [endrer, setEndrer] = useState<string | null>(null);
@@ -88,7 +87,6 @@ export default function ForhandlerePage() {
       setSlug('');
       setEpost('');
       setNivaa('start');
-      setValgte(new Set());
       setValgfrie(new Set());
     },
   });
@@ -132,7 +130,6 @@ export default function ForhandlerePage() {
     const neste = nivaaListe.find((n) => n.key === key);
     const lovlige = new Set(tilleggForNivaa(neste, katalog.data?.tillegg ?? []).map((t) => t.key));
     setNivaa(key);
-    setValgte(new Set([...valgte].filter((k) => lovlige.has(k))));
     setValgfrie(new Set([...valgfrie].filter((k) => lovlige.has(k))));
   }
 
@@ -151,8 +148,8 @@ export default function ForhandlerePage() {
       ownerEmail: epost.trim(),
       kind: demo ? 'demo' : 'live',
       tier: nivaa as 'start' | 'pro' | 'enterprise',
-      included: [...valgte],
-      optional: [...valgfrie].filter((k) => !valgte.has(k)),
+      included: [],
+      optional: [...valgfrie],
     });
   }
 
@@ -166,8 +163,8 @@ export default function ForhandlerePage() {
         <h1 className="sr-only">Forhandlere</h1>
         <p className="text-title text-fg">Forhandlere</p>
         <p className="text-body text-fg-muted">
-          Invite-only. Velg én pakke. Tillegg som allerede ligger i pakken vises ikke. Eieren setter
-          passord og 2FA selv — du setter det aldri.
+          Invite-only. Velg én pakke. Tillegg under er utenom pakken. Eieren setter passord og 2FA
+          selv — du setter det aldri.
         </p>
       </div>
 
@@ -225,10 +222,9 @@ export default function ForhandlerePage() {
           <NivaaValg nivaa={nivaaListe} valgt={nivaa} onChange={byttNivaa} />
           <TilleggListe
             tillegg={tillegg}
-            included={valgte}
-            optional={valgfrie}
-            onToggleIncluded={(key) => toggle(valgte, setValgte, key)}
-            onToggleOptional={(key) => toggle(valgfrie, setValgfrie, key)}
+            valgte={valgfrie}
+            nivaaNavn={valgtNivaa?.name ?? 'Start'}
+            onToggle={(key) => toggle(valgfrie, setValgfrie, key)}
           />
 
           {opprett.error && (
@@ -642,8 +638,7 @@ function ModulRediger({
   onLagre: (tier: 'start' | 'pro' | 'enterprise', included: string[], optional: string[]) => void;
 }) {
   const [valgt, setValgt] = useState(plan);
-  const [fast, setFast] = useState(() => new Set(included));
-  const [valg, setValg] = useState(() => new Set(optional));
+  const [valg, setValg] = useState(() => new Set([...optional, ...included]));
   const valgtNivaa = nivaa.find((n) => n.key === valgt);
   const synlige = tilleggForNivaa(valgtNivaa, tillegg);
 
@@ -651,7 +646,6 @@ function ModulRediger({
     const neste = nivaa.find((n) => n.key === key);
     const lovlige = new Set(tilleggForNivaa(neste, tillegg).map((t) => t.key));
     setValgt(key);
-    setFast(new Set([...fast].filter((k) => lovlige.has(k))));
     setValg(new Set([...valg].filter((k) => lovlige.has(k))));
   }
 
@@ -660,15 +654,9 @@ function ModulRediger({
       <NivaaValg nivaa={nivaa} valgt={valgt} onChange={byttNivaa} />
       <TilleggListe
         tillegg={synlige}
-        included={fast}
-        optional={valg}
-        onToggleIncluded={(key) => {
-          const neste = new Set(fast);
-          if (neste.has(key)) neste.delete(key);
-          else neste.add(key);
-          setFast(neste);
-        }}
-        onToggleOptional={(key) => {
+        valgte={valg}
+        nivaaNavn={valgtNivaa?.name ?? 'Start'}
+        onToggle={(key) => {
           const neste = new Set(valg);
           if (neste.has(key)) neste.delete(key);
           else neste.add(key);
@@ -681,13 +669,7 @@ function ModulRediger({
           disabled={pending}
           state={pending ? 'loading' : 'idle'}
           loadingText="Lagrer…"
-          onClick={() =>
-            onLagre(
-              valgt as 'start' | 'pro' | 'enterprise',
-              [...fast],
-              [...valg].filter((k) => !fast.has(k)),
-            )
-          }
+          onClick={() => onLagre(valgt as 'start' | 'pro' | 'enterprise', [], [...valg])}
         >
           Lagre pakke
         </StatefulButton>

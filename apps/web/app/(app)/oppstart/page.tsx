@@ -1,6 +1,6 @@
 'use client';
 
-import { Inbox, Store, Wrench, StatefulButton } from '@endwise/ui';
+import { Inbox, StatefulButton, Store, Wrench } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { AvatarVelger, TOMT } from '../_avatar/avatar-velger';
@@ -272,8 +272,8 @@ export default function OppstartPage() {
           <div>
             <p className="text-label text-fg">Inviter teamet</p>
             <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-              Selgere, support og mekanikere. De blir ansatte — aldri leder. De setter passord
-              selv via e-postlenka.
+              Selgere, support og mekanikere. De blir ansatte — aldri leder. De setter passord selv
+              via e-postlenka.
             </p>
           </div>
 

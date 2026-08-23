@@ -51,7 +51,7 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).toMatch(/tenants\.update/);
     expect(forhandlere).toMatch(/sendSlettKode/);
     expect(forhandlere).toMatch(/Slett forhandleren/);
-    expect(forhandlere).toMatch(/Eieren setter passord og 2FA selv — du setter det aldri/);
+    expect(forhandlere).toMatch(/Eieren setter\s+passord og 2FA selv — du setter det aldri/);
     expect(forhandlere).toMatch(/Velg én pakke/);
     expect(forhandlere).toMatch(/Send invitasjon på nytt/);
     expect(forhandlere).toMatch(/t\.erEndwise/);

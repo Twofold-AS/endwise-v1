@@ -2,8 +2,8 @@ import { and, eq, schema, withTenant } from '@endwise/db';
 import {
   ADDON_LABELS,
   erBlokertTildeling,
-  erTildelbarAddon,
   erTierKey,
+  erTildelbarAddon,
   tierByKey,
 } from '@endwise/modules';
 import { TRPCError } from '@trpc/server';
@@ -148,7 +148,9 @@ export const onboardingRouter = router({
           .where(eq(schema.tenantModules.tenantId, ctx.tenantId));
 
         const optionalNokler = new Set(
-          tillatt.filter((r) => r.source === 'optional' || r.source === 'dealer').map((r) => r.moduleKey),
+          tillatt
+            .filter((r) => r.source === 'optional' || r.source === 'dealer')
+            .map((r) => r.moduleKey),
         );
 
         const ulovlige = extras.filter((k) => !optionalNokler.has(k));

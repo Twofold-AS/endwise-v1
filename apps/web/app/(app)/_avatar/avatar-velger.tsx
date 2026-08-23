@@ -154,127 +154,133 @@ export function AvatarVelger({
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <Nedtrekk
-        id="form"
-        tittel="Form"
-        valgtLabel={formLabel}
-        apen={apen === 'form'}
-        onToggle={() => setApen(apen === 'form' ? null : 'form')}
-        forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
-        onNullstill={() => velg({ ...valg, form: null })}
-      >
-        {FORMER.map((f) => (
-          <Rad
-            key={f.key}
-            valgt={valg.form === f.key}
-            label={f.label}
-            onClick={() => {
-              velg({ ...valg, form: f.key });
-              setApen(null);
-            }}
-          >
-            <Avatar
-              seed={seed}
-              valg={{ ...valg, form: f.key }}
-              navn=""
-              size={24}
-              bevegelse="stille"
-            />
-          </Rad>
-        ))}
-      </Nedtrekk>
+        <Nedtrekk
+          id="form"
+          tittel="Form"
+          valgtLabel={formLabel}
+          apen={apen === 'form'}
+          onToggle={() => setApen(apen === 'form' ? null : 'form')}
+          forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
+          onNullstill={() => velg({ ...valg, form: null })}
+        >
+          {FORMER.map((f) => (
+            <Rad
+              key={f.key}
+              valgt={valg.form === f.key}
+              label={f.label}
+              onClick={() => {
+                velg({ ...valg, form: f.key });
+                setApen(null);
+              }}
+            >
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, form: f.key }}
+                navn=""
+                size={24}
+                bevegelse="stille"
+              />
+            </Rad>
+          ))}
+        </Nedtrekk>
 
-      <Nedtrekk
-        id="farge"
-        tittel="Farge"
-        valgtLabel={fargeLabel}
-        apen={apen === 'farge'}
-        onToggle={() => setApen(apen === 'farge' ? null : 'farge')}
-        forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
-        onNullstill={() => velg({ ...valg, farge: null })}
-      >
-        {FARGER.map((f) => (
-          <Rad
-            key={f.grader}
-            valgt={valg.farge === f.grader}
-            label={f.label}
-            onClick={() => {
-              velg({ ...valg, farge: f.grader });
-              setApen(null);
-            }}
-          >
-            <Avatar
-              seed={seed}
-              valg={{ ...valg, farge: f.grader }}
-              navn=""
-              size={24}
-              bevegelse="stille"
-            />
-          </Rad>
-        ))}
-      </Nedtrekk>
+        <Nedtrekk
+          id="farge"
+          tittel="Farge"
+          valgtLabel={fargeLabel}
+          apen={apen === 'farge'}
+          onToggle={() => setApen(apen === 'farge' ? null : 'farge')}
+          forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
+          onNullstill={() => velg({ ...valg, farge: null })}
+        >
+          {FARGER.map((f) => (
+            <Rad
+              key={f.grader}
+              valgt={valg.farge === f.grader}
+              label={f.label}
+              onClick={() => {
+                velg({ ...valg, farge: f.grader });
+                setApen(null);
+              }}
+            >
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, farge: f.grader }}
+                navn=""
+                size={24}
+                bevegelse="stille"
+              />
+            </Rad>
+          ))}
+        </Nedtrekk>
 
-      <Nedtrekk
-        id="humor"
-        tittel="Humør"
-        valgtLabel={humorLabel}
-        apen={apen === 'humor'}
-        onToggle={() => setApen(apen === 'humor' ? null : 'humor')}
-        forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
-        onNullstill={() => velg({ ...valg, humor: null })}
-        hint="Positurer avataren holder. Overgangen mellom dem vises der ansiktet animeres."
-      >
-        {HUMOR.map((h) => (
-          <Rad
-            key={h.key}
-            valgt={valg.humor === h.key}
-            label={h.label}
-            hint={h.hint}
-            onClick={() => {
-              velg({ ...valg, humor: h.key });
-              setApen(null);
-            }}
-          >
-            {/**
-             * ⚠️ `hover` og ikke `stille` KUN her: et humør er en positur, og
-             * flere av dem skiller seg lite på 24px i stillbilde. Peker du på
-             * raden, morfer den — så du ser forskjellen før du velger. Lista er
-             * ti rader og åpen om gangen, ikke to hundre.
-             */}
-            <Avatar
-              seed={seed}
-              valg={{ ...valg, humor: h.key }}
-              navn=""
-              size={24}
-              bevegelse="hover"
-            />
-          </Rad>
-        ))}
-      </Nedtrekk>
+        <Nedtrekk
+          id="humor"
+          tittel="Humør"
+          valgtLabel={humorLabel}
+          apen={apen === 'humor'}
+          onToggle={() => setApen(apen === 'humor' ? null : 'humor')}
+          forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
+          onNullstill={() => velg({ ...valg, humor: null })}
+          hint="Positurer avataren holder. Overgangen mellom dem vises der ansiktet animeres."
+        >
+          {HUMOR.map((h) => (
+            <Rad
+              key={h.key}
+              valgt={valg.humor === h.key}
+              label={h.label}
+              hint={h.hint}
+              onClick={() => {
+                velg({ ...valg, humor: h.key });
+                setApen(null);
+              }}
+            >
+              {/**
+               * ⚠️ `hover` og ikke `stille` KUN her: et humør er en positur, og
+               * flere av dem skiller seg lite på 24px i stillbilde. Peker du på
+               * raden, morfer den — så du ser forskjellen før du velger. Lista er
+               * ti rader og åpen om gangen, ikke to hundre.
+               */}
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, humor: h.key }}
+                navn=""
+                size={24}
+                bevegelse="hover"
+              />
+            </Rad>
+          ))}
+        </Nedtrekk>
 
-      <Nedtrekk
-        id="tone"
-        tittel="Tone"
-        valgtLabel={toneLabel}
-        apen={apen === 'tone'}
-        onToggle={() => setApen(apen === 'tone' ? null : 'tone')}
-        forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
-        onNullstill={() => velg({ ...valg, tone: null })}
-      >
-        {TONER.map((t, i) => (
-          <Rad
-            key={t}
-            valgt={valg.tone === i}
-            label={t}
-            onClick={() => {
-              velg({ ...valg, tone: i });
-              setApen(null);
-            }}
-          >
-            <Avatar seed={seed} valg={{ ...valg, tone: i }} navn="" size={24} bevegelse="stille" />
-          </Rad>
-        ))}
-      </Nedtrekk>
+        <Nedtrekk
+          id="tone"
+          tittel="Tone"
+          valgtLabel={toneLabel}
+          apen={apen === 'tone'}
+          onToggle={() => setApen(apen === 'tone' ? null : 'tone')}
+          forhandsvisning={<Avatar seed={seed} valg={valg} navn="" size={22} bevegelse="stille" />}
+          onNullstill={() => velg({ ...valg, tone: null })}
+        >
+          {TONER.map((t, i) => (
+            <Rad
+              key={t}
+              valgt={valg.tone === i}
+              label={t}
+              onClick={() => {
+                velg({ ...valg, tone: i });
+                setApen(null);
+              }}
+            >
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, tone: i }}
+                navn=""
+                size={24}
+                bevegelse="stille"
+              />
+            </Rad>
+          ))}
+        </Nedtrekk>
       </div>
 
       {lagre.error && (
@@ -285,35 +291,35 @@ export function AvatarVelger({
       )}
 
       {visLagre ? (
-      <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => velg(TOMT)}
-          className="inline-flex h-control items-center gap-1.5 rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-        >
-          <RefreshCw size={14} strokeWidth={1.75} />
-          Alt per navn
-        </button>
-        <StatefulButton
-          type="button"
-          onClick={() => lagre.mutate(valg)}
-          disabled={!endret || lagre.isPending}
-          state={
-            lagre.isPending
-              ? 'loading'
-              : lagre.isError
-                ? 'error'
-                : lagre.isSuccess
-                  ? 'success'
-                  : 'idle'
-          }
-          loadingText="Lagrer…"
-          successText="Lagret"
-          errorText="Feilet"
-        >
-          Lagre avatar
-        </StatefulButton>
-      </div>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => velg(TOMT)}
+            className="inline-flex h-control items-center gap-1.5 rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
+          >
+            <RefreshCw size={14} strokeWidth={1.75} />
+            Alt per navn
+          </button>
+          <StatefulButton
+            type="button"
+            onClick={() => lagre.mutate(valg)}
+            disabled={!endret || lagre.isPending}
+            state={
+              lagre.isPending
+                ? 'loading'
+                : lagre.isError
+                  ? 'error'
+                  : lagre.isSuccess
+                    ? 'success'
+                    : 'idle'
+            }
+            loadingText="Lagrer…"
+            successText="Lagret"
+            errorText="Feilet"
+          >
+            Lagre avatar
+          </StatefulButton>
+        </div>
       ) : null}
     </>
   );

@@ -24,7 +24,9 @@ export type Tillegg = {
 
 export function tilleggForNivaa(nivaa: Nivaa | undefined, tillegg: Tillegg[]): Tillegg[] {
   const inkludert = new Set(nivaa?.modules ?? []);
-  return tillegg.filter((t) => t.module !== 'shop' && t.module !== 'twilio' && !inkludert.has(t.module));
+  return tillegg.filter(
+    (t) => t.module !== 'shop' && t.module !== 'twilio' && !inkludert.has(t.module),
+  );
 }
 
 export function tilleggNokler(
@@ -78,7 +80,9 @@ export function NivaaValg({
                   required
                 />
                 <span className="text-label text-fg">{n.name}</span>
-                <span className="ml-auto text-[12px] text-fg-muted">{pris(n.priceMonthlyMinor)} kr/mnd</span>
+                <span className="ml-auto text-[12px] text-fg-muted">
+                  {pris(n.priceMonthlyMinor)} kr/mnd
+                </span>
               </span>
               <span className="pl-6 text-[12px] text-fg-muted leading-relaxed">{n.pitch}</span>
               {aktiv ? (
@@ -116,11 +120,13 @@ export function TilleggListe({
       <fieldset className="flex flex-col gap-2">
         <legend className="text-label text-fg">Faste tillegg</legend>
         <p className="text-[12px] text-fg-muted leading-relaxed">
-          Kryss av det som skal ligge i pakken utover nivået. Tillegg som allerede
-          ligger i pakken vises ikke.
+          Kryss av det som skal ligge i pakken utover nivået. Tillegg som allerede ligger i pakken
+          vises ikke.
         </p>
         {tillegg.length === 0 ? (
-          <p className="text-[12px] text-fg-muted">Ingen faste tillegg å legge til på dette nivået.</p>
+          <p className="text-[12px] text-fg-muted">
+            Ingen faste tillegg å legge til på dette nivået.
+          </p>
         ) : (
           <div className="grid gap-1.5 sm:grid-cols-2">
             {tillegg.map((t) => (

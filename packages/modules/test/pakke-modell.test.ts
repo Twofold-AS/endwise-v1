@@ -47,13 +47,11 @@ describe('F5-26 — pakkemodell (nivå + TILLEGG)', () => {
   });
 
   it('veiviser-extras utelater included-tier-moduler og shop/twilio', () => {
-    const { included, optional, tier } = utvidPakke('pro', ['white-label'], [
-      'white-label',
-      'sso',
-      'shop',
-      'twilio',
-      'rapporter',
-    ]);
+    const { included, optional, tier } = utvidPakke(
+      'pro',
+      ['white-label'],
+      ['white-label', 'sso', 'shop', 'twilio', 'rapporter'],
+    );
 
     expect(tier.key).toBe('pro');
     expect(included).toContain('twilio');
@@ -80,8 +78,8 @@ describe('F5-26 — pakkemodell (nivå + TILLEGG)', () => {
     expect(kat.nivaa[0]?.priceMonthlyMinor).toBe(449_000);
     expect(kat.tillegg.map((t) => t.key)).not.toContain('shop');
     expect(kat.tillegg.map((t) => t.module)).not.toContain('twilio');
-    expect(kat.tillegg.every((t) => TILLEGG.find((x) => x.key === t.key)?.status === 'available')).toBe(
-      true,
-    );
+    expect(
+      kat.tillegg.every((t) => TILLEGG.find((x) => x.key === t.key)?.status === 'available'),
+    ).toBe(true);
   });
 });

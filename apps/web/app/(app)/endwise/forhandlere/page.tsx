@@ -15,12 +15,7 @@ import { type FormEvent, useMemo, useState } from 'react';
 import { Field, INPUT } from '@/app/_auth/felter';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
-import {
-  NivaaValg,
-  TilleggListe,
-  tilleggForNivaa,
-  tilleggNokler,
-} from '../_pakke-valg';
+import { NivaaValg, TilleggListe, tilleggForNivaa, tilleggNokler } from '../_pakke-valg';
 
 /**
  * F5-26 — FORHANDLERE. Invite-only onboarding.
@@ -171,8 +166,8 @@ export default function ForhandlerePage() {
         <h1 className="sr-only">Forhandlere</h1>
         <p className="text-title text-fg">Forhandlere</p>
         <p className="text-body text-fg-muted">
-          Invite-only. Velg én pakke. Tillegg som allerede ligger i pakken vises
-          ikke. Eieren setter passord og 2FA selv — du setter det aldri.
+          Invite-only. Velg én pakke. Tillegg som allerede ligger i pakken vises ikke. Eieren setter
+          passord og 2FA selv — du setter det aldri.
         </p>
       </div>
 
@@ -245,8 +240,10 @@ export default function ForhandlerePage() {
           {opprett.isSuccess && (
             <p className="text-body text-success">
               Opprettet «{opprett.data?.name}». Invitasjon sendt til {opprett.data?.invite.epost}
-              {opprett.data?.invite.sendt ? '' : ' — sendingen feilet, bruk Send invitasjon på nytt'}.
-              Eieren setter passord, 2FA og går gjennom veiviseren.
+              {opprett.data?.invite.sendt
+                ? ''
+                : ' — sendingen feilet, bruk Send invitasjon på nytt'}
+              . Eieren setter passord, 2FA og går gjennom veiviseren.
             </p>
           )}
 
@@ -311,7 +308,9 @@ export default function ForhandlerePage() {
                       <span className="truncate text-[12px] text-fg-muted">{t.slug}</span>
                     </div>
                     {t.erEndwise ? <Badge variant="secondary">Endwise</Badge> : null}
-                    {t.kind === 'demo' && !t.erEndwise ? <Badge variant="secondary">Demo</Badge> : null}
+                    {t.kind === 'demo' && !t.erEndwise ? (
+                      <Badge variant="secondary">Demo</Badge>
+                    ) : null}
                     {planNavn && !t.erEndwise ? <Badge variant="outline">{planNavn}</Badge> : null}
                     {!t.erEndwise ? (
                       <>
@@ -356,7 +355,9 @@ export default function ForhandlerePage() {
                       </>
                     ) : null}
                   </div>
-                  {(pakke.included.length > 0 || pakke.optional.length > 0) && !apen && !t.erEndwise ? (
+                  {(pakke.included.length > 0 || pakke.optional.length > 0) &&
+                  !apen &&
+                  !t.erEndwise ? (
                     <div className="flex flex-wrap gap-1 pl-8">
                       {pakke.included.map((k) => (
                         <Badge key={k} variant="secondary">
@@ -439,9 +440,8 @@ export default function ForhandlerePage() {
             <div className="flex flex-col gap-4">
               <DialogTitle className="text-title text-fg">Slett {slettRad.name}?</DialogTitle>
               <DialogDescription className="text-body text-fg-muted">
-                Dette sletter forhandleren, ansatte, saker og kundedata hos oss. Det kan
-                ikke angres. Du kan ikke slette ved et uhell — neste steg krever slug og
-                en engangskode.
+                Dette sletter forhandleren, ansatte, saker og kundedata hos oss. Det kan ikke
+                angres. Du kan ikke slette ved et uhell — neste steg krever slug og en engangskode.
               </DialogDescription>
               <div className="flex justify-end gap-2">
                 <button
@@ -494,7 +494,13 @@ export default function ForhandlerePage() {
                 <StatefulButton
                   type="button"
                   disabled={sendSlettKode.isPending}
-                  state={sendSlettKode.isPending ? 'loading' : sendSlettKode.isSuccess ? 'success' : 'idle'}
+                  state={
+                    sendSlettKode.isPending
+                      ? 'loading'
+                      : sendSlettKode.isSuccess
+                        ? 'success'
+                        : 'idle'
+                  }
                   loadingText="Sender kode…"
                   successText="Kode sendt"
                   onClick={() => sendSlettKode.mutate({ tenantId: slettRad.id })}
@@ -583,8 +589,8 @@ function EndreForhandler({
         placeholder={slug}
       />
       <p className="text-[12px] text-fg-muted">
-        Eier: {eierEpost ?? 'ingen e-post'} — du bytter den aldri her. Bruk Send
-        invitasjon på nytt om lenka er ubrukt.
+        Eier: {eierEpost ?? 'ingen e-post'} — du bytter den aldri her. Bruk Send invitasjon på nytt
+        om lenka er ubrukt.
       </p>
       <label className="flex items-center gap-2.5 text-label text-fg">
         <input

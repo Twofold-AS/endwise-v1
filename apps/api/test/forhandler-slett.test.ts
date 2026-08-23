@@ -4,10 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 import { hashSlettKode } from '../src/trpc/slett-otp.ts';
 
-async function forventer(
-  kall: Promise<unknown>,
-  code: 'FORBIDDEN' | 'NOT_FOUND' | 'BAD_REQUEST',
-) {
+async function forventer(kall: Promise<unknown>, code: 'FORBIDDEN' | 'NOT_FOUND' | 'BAD_REQUEST') {
   await expect(kall).rejects.toMatchObject({ code });
 }
 
@@ -82,7 +79,9 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
 
   afterAll(async () => {
     for (const id of tenantIds) {
-      await owner.delete(schema.tenantDeleteChallenges).where(eq(schema.tenantDeleteChallenges.tenantId, id));
+      await owner
+        .delete(schema.tenantDeleteChallenges)
+        .where(eq(schema.tenantDeleteChallenges.tenantId, id));
       await owner.delete(schema.auditLog).where(sql`tenant_id = ${id}`);
       await owner.delete(schema.invitations).where(eq(schema.invitations.tenantId, id));
       await owner.delete(schema.memberProfiles).where(sql`tenant_id = ${id}`);
@@ -240,9 +239,7 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
     });
     tenantIds.push(opprettet.tenantId);
 
-    const eier = appRouter.createCaller(
-      ctx(app, 'dealer_admin', opprettet.tenantId, adminUser),
-    );
+    const eier = appRouter.createCaller(ctx(app, 'dealer_admin', opprettet.tenantId, adminUser));
     const status = await eier.onboarding.status();
     const extras = status.optional.map((m) => m.key);
 

@@ -383,7 +383,12 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       .select({ key: schema.tenantModules.moduleKey, enabled: schema.tenantModules.enabled })
       .from(schema.tenantModules)
       .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
-    expect(mods.filter((m) => m.enabled).map((m) => m.key).sort()).toEqual(['resend', 'widget']);
+    expect(
+      mods
+        .filter((m) => m.enabled)
+        .map((m) => m.key)
+        .sort(),
+    ).toEqual(['resend', 'widget']);
   });
 
   it('endwise_admin kan redigere tillegg senere, og det audit-logges', async () => {

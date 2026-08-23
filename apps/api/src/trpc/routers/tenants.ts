@@ -14,9 +14,7 @@ import {
   erBlokertTildeling,
   erEndwiseSlug,
   erGyldigEkstraTillegg,
-  erTildelbarAddon,
   erTierKey,
-  filtrerAddonNokler,
   pakkeKatalog,
   TIER_KEYS,
   utvidPakke,
@@ -98,31 +96,6 @@ function avvisEkstraTillegg(keys: readonly string[], tierKey: string): string[] 
   return unike;
 }
 
-function avvisBasisModuler(keys: readonly string[]): string[] {
-  const basis = keys.filter((k) => (BASIS_MODULES as readonly string[]).includes(k));
-  if (basis.length) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: `Basis-moduler kan ikke tildeles: ${basis.join(', ')}. De er alltid på.`,
-    });
-  }
-  const blokkert = keys.filter(erBlokertTildeling);
-  if (blokkert.length) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: blokkert.map((k) => BLOKKERT_MELDING[k] ?? `Kan ikke tildeles: ${k}`).join(' '),
-    });
-  }
-  const ukjente = keys.filter((k) => !erTildelbarAddon(k));
-  if (ukjente.length) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: `Ukjent tilleggsnøkkel: ${ukjente.join(', ')}`,
-    });
-  }
-  return filtrerAddonNokler(keys);
-}
-
 function krevIkkeEndwise(slug: string, handling: string): void {
   if (erEndwiseSlug(slug)) {
     throw new TRPCError({
@@ -187,10 +160,7 @@ async function eierInfo(
   return { eierEpost: epost, eierInviteUbrukt: ubrukt };
 }
 
-async function adminEpost(
-  db: Parameters<typeof withTenant>[0],
-  userId: string,
-): Promise<string> {
+async function adminEpost(db: Parameters<typeof withTenant>[0], userId: string): Promise<string> {
   const [bruker] = await db
     .select({ email: schema.user.email })
     .from(schema.user)
@@ -437,9 +407,9 @@ export const tenantsRouter = router({
    * med en gang og får likevel en sett/bytt-passord-lenke. Finnes den ikke,
    * opprettes tenanten uten eier, og invitee lager kontoen selv.
    *
- * Admin setter pakken (`modules` = inkludert) og hva eieren *kan* legge til
- * i veiviseren (`optional`). `START_MODULER` er tom; shop/twilio avvises.
- */
+   * Admin setter pakken (`modules` = inkludert) og hva eieren *kan* legge til
+   * i veiviseren (`optional`). `START_MODULER` er tom; shop/twilio avvises.
+   */
   create: endwiseAdminProcedure
     .input(
       z.object({

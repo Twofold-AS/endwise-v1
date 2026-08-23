@@ -157,8 +157,8 @@ export default function MegPage() {
           </p>
 
           {/* F1-17 — bytte med gjeldende passord bor i ProfilKort over.
-              F1-20 — samme statusrad som Settings › Profil, med lenke til
-              /2fa-oppsett. Resetlenka står under passordskjemaet. */}
+              F1-20 / F1-22 — samme statusrad som Settings › Profil.
+              Slå-av krever gjeldende passord. Resetlenka står under passordskjemaet. */}
           <ToFaktorRad
             enabled={
               session?.user && 'twoFactorEnabled' in session.user

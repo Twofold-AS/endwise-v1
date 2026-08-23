@@ -229,7 +229,9 @@ describe('F1-17: herdingskravene', () => {
   it('auth.ts bruker de navngitte hookene — ikke en anonym wrapper', () => {
     const opts = byggAuth().options;
     expect(opts.hooks?.before).toBe(byttPassordForHook);
-    expect(opts.hooks?.after).toBe(byttPassordEtterHook);
+    expect((opts.hooks?.after as { endwiseId?: string } | undefined)?.endwiseId).toBe(
+      BYTT_PASSORD_ETTER_HOOK_ID,
+    );
     expect(byttPassordForHook.endwiseId).toBe(BYTT_PASSORD_FOR_HOOK_ID);
     expect(byttPassordEtterHook.endwiseId).toBe(BYTT_PASSORD_ETTER_HOOK_ID);
   });

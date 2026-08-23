@@ -24,7 +24,7 @@ import { destinasjonNarSesjonFeiler } from '../invitasjon/_landing';
  * Sesjons-ID-en roteres av two-factor-pluginen når koden godtas (CWE-384) —
  * server-side, ikke noe denne siden gjør eller kan slå av.
  */
-type Step = 'credentials' | 'otp';
+type Step = 'credentials' | 'otp' | 'gjenoppretting';
 
 /** Kodens levetid før «Send ny kode» blir tilgjengelig igjen. */
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -74,7 +74,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
   }, [cooldown]);
 
   useEffect(() => {
-    if (step === 'otp') codeRef.current?.focus();
+    if (step === 'otp' || step === 'gjenoppretting') codeRef.current?.focus();
   }, [step]);
 
   /**
@@ -213,7 +213,10 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     setBusy('loading');
     setError(null);
 
-    const res = await authClient.twoFactor.verifyOtp({ code: code.trim() });
+    const res =
+      step === 'gjenoppretting'
+        ? await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
+        : await authClient.twoFactor.verifyOtp({ code: code.trim() });
     if (res.error) {
       setError(res.error.message ?? 'Feil eller utløpt kode');
       setBusy('error');
@@ -236,12 +239,18 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
         <div className="mb-6 flex flex-col items-center gap-3">
           <Image src="/logo/logo.svg" alt="Endwise" width={44} height={44} priority />
           <h1 className="text-title text-fg">
-            {step === 'credentials' ? 'Logg inn på Endwise' : 'Bekreft med engangskode'}
+            {step === 'credentials'
+              ? 'Logg inn på Endwise'
+              : step === 'gjenoppretting'
+                ? 'Bruk gjenopprettingskode'
+                : 'Bekreft med engangskode'}
           </h1>
           <p className="text-center text-body text-fg-muted">
             {step === 'credentials'
               ? 'Passord først, deretter en engangskode på e-post.'
-              : `Vi sendte en 6-sifret kode til ${email}. Den varer i noen minutter.`}
+              : step === 'gjenoppretting'
+                ? 'En av kodene du lastet ned da du satte opp tofaktor. Hver kode kan brukes én gang.'
+                : `Vi sendte en 6-sifret kode til ${email}. Den varer i noen minutter.`}
           </p>
         </div>
 
@@ -306,34 +315,61 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
             className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
           >
             <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              <Field id="signin-otp" label="Engangskode">
+              <Field
+                id="signin-otp"
+                label={step === 'gjenoppretting' ? 'Gjenopprettingskode' : 'Engangskode'}
+              >
                 <input
                   id="signin-otp"
                   ref={codeRef}
-                  // `one-time-code` lar iOS/Android tilby koden fra varselet.
-                  autoComplete="one-time-code"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
+                  autoComplete={step === 'gjenoppretting' ? 'off' : 'one-time-code'}
+                  inputMode={step === 'gjenoppretting' ? 'text' : 'numeric'}
+                  pattern={step === 'gjenoppretting' ? undefined : '[0-9]*'}
+                  maxLength={step === 'gjenoppretting' ? 16 : 6}
                   required
                   value={code}
-                  onChange={(ev) => setCode(ev.target.value.replace(/\D/g, ''))}
-                  className={`${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`}
-                  placeholder="••••••"
+                  onChange={(ev) =>
+                    setCode(
+                      step === 'gjenoppretting'
+                        ? ev.target.value.trim()
+                        : ev.target.value.replace(/\D/g, ''),
+                    )
+                  }
+                  className={
+                    step === 'gjenoppretting'
+                      ? `${INPUT} text-center font-mono text-[16px] tabular-nums`
+                      : `${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`
+                  }
+                  placeholder={step === 'gjenoppretting' ? 'xxxxx-xxxxx' : '••••••'}
                   aria-describedby="otp-help"
                 />
               </Field>
               {notice && !error && <p className="text-[12px] text-fg-muted">{notice}</p>}
               {error && <p className="text-[12px] text-danger">{error}</p>}
               <div className="flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={onResend}
-                  disabled={cooldown > 0}
-                  className="text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg disabled:cursor-not-allowed disabled:text-fg-muted disabled:no-underline disabled:opacity-60"
-                >
-                  {cooldown > 0 ? `Send ny kode om ${cooldown} s` : 'Send ny kode'}
-                </button>
+                {step === 'gjenoppretting' ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep('otp');
+                      setCode('');
+                      setError(null);
+                      setBusy('idle');
+                    }}
+                    className="text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
+                  >
+                    Tilbake til e-postkode
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onResend}
+                    disabled={cooldown > 0}
+                    className="text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg disabled:cursor-not-allowed disabled:text-fg-muted disabled:no-underline disabled:opacity-60"
+                  >
+                    {cooldown > 0 ? `Send ny kode om ${cooldown} s` : 'Send ny kode'}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -348,6 +384,21 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
                   Bytt konto
                 </button>
               </div>
+              {step === 'otp' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('gjenoppretting');
+                    setCode('');
+                    setError(null);
+                    setNotice(null);
+                    setBusy('idle');
+                  }}
+                  className="text-left text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
+                >
+                  Bruk gjenopprettingskode
+                </button>
+              ) : null}
             </div>
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton
@@ -365,15 +416,16 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
           </form>
         )}
 
-        {step === 'otp' ? (
+        {step === 'otp' || step === 'gjenoppretting' ? (
           <p
             id="otp-help"
             className="mt-4 flex items-start gap-2 text-center text-[12px] text-fg-muted leading-relaxed"
           >
             <Mail size={13} className="mt-px shrink-0" />
             <span className="text-left">
-              Koden gjelder kun denne innloggingen. Endwise har ingen «husk denne enheten» — hver
-              innlogging for forhandler og admin krever ny kode.
+              {step === 'gjenoppretting'
+                ? 'Gjenopprettingskoden erstatter e-postkoden denne gangen. Den forbrukes og kan ikke brukes igjen.'
+                : 'Koden gjelder kun denne innloggingen. Endwise har ingen «husk denne enheten» — hver innlogging for forhandler og admin krever ny kode.'}
             </span>
           </p>
         ) : (

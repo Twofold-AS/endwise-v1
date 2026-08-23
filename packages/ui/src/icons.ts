@@ -38,6 +38,8 @@ export {
   ChartColumn,
   ChevronRight,
   Command,
+  Copy,
+  Download,
   ExternalLink,
   // F1-18 — vis/skjul passord. Ingen UI-pakke i §-kartet dekker et
   // passordfelt med avsløringsknapp (shadcn har `Input`, ikke en variant),

@@ -11,7 +11,7 @@ import {
   TO_FAKTOR_DISABLE_STI,
   TO_FAKTOR_ENABLE_STI,
 } from './bytt-passord.ts';
-import { byttPassordEtterHook, byttPassordForHook } from './bytt-passord-server.ts';
+import { byttPassordForHook, createByttPassordEtterHook } from './bytt-passord-server.ts';
 import { authEnv } from './env.ts';
 import {
   NYTT_PASSORD_STI,
@@ -75,7 +75,7 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
      */
     hooks: {
       before: byttPassordForHook,
-      after: byttPassordEtterHook,
+      after: createByttPassordEtterHook(db),
     },
 
     emailAndPassword: {

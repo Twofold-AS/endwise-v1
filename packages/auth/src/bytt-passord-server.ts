@@ -1,3 +1,4 @@
+import type { Database } from '@endwise/db';
 import { APIError, createAuthMiddleware, isAPIError } from 'better-auth/api';
 import {
   BYTT_PASSORD_ETTER_HOOK_ID,
@@ -8,6 +9,7 @@ import {
   TO_FAKTOR_DISABLE_STI,
   TO_FAKTOR_ENABLE_STI,
 } from './bytt-passord.ts';
+import { skriv2faDisableAudit } from './to-faktor-server.ts';
 
 /**
  * F1-17 — serverhookene for bytt-passord og like kredential-mutasjoner.
@@ -33,16 +35,37 @@ function feilkodeFraReturned(returned: unknown): string | undefined {
   return undefined;
 }
 
+function passordFraBody(body: unknown): string | undefined {
+  if (typeof body !== 'object' || body === null) return undefined;
+  if (!('password' in body)) return undefined;
+  const verdi = (body as { password?: unknown }).password;
+  return typeof verdi === 'string' ? verdi : undefined;
+}
+
+function brukerIdFraHook(ctx: {
+  context: { session?: { user?: { id?: unknown } } };
+}): string | undefined {
+  const id = ctx.context.session?.user?.id;
+  return typeof id === 'string' ? id : undefined;
+}
+
 /**
  * CWE-613 — tvinger `revokeOtherSessions: true` på `/change-password`
  * FØR Better-Auths handler kjører.
  *
- * Handleren sletter da alle sesjoner og lager en ny for denne enheten.
- * En request som utelater flagget, eller setter det til `false`, får
- * samme utfall som vår egen klient.
+ * F1-22 — nekter `/two-factor/disable` uten passord. Better-Auth krever
+ * det allerede for credential-kontoer; hooken er sperren mot en fremtid
+ * der et klientflagg eller `allowPasswordless` ville sluppet gjennom.
  */
 export const byttPassordForHook = merket(
   createAuthMiddleware(async (ctx) => {
+    if (ctx.path === TO_FAKTOR_DISABLE_STI) {
+      const password = passordFraBody(ctx.body);
+      if (password === undefined || password.trim().length === 0) {
+        throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
+      }
+      return;
+    }
     if (ctx.path !== BYTT_PASSORD_STI) return;
     const body = ctx.body;
     if (typeof body !== 'object' || body === null) return;
@@ -63,12 +86,30 @@ export const byttPassordForHook = merket(
  * auth-feil i API-svaret. Valideringsfeil på det NYE passordet
  * (`PASSWORD_TOO_SHORT` / `PASSWORD_TOO_LONG`) får stå: de lekker ikke
  * om det gamle var riktig.
+ *
+ * På `/two-factor/disable` skriver en vellykket avslutting til
+ * audit_log (F1-22). `db` er den samme instansen `createAuth` fikk —
+ * ikke en ny pool mot env.
  */
-export const byttPassordEtterHook = merket(
-  createAuthMiddleware(async (ctx) => {
-    if (!KREDENTIAL_STIER.has(ctx.path)) return;
-    if (!erSkjultAuthFeilkode(feilkodeFraReturned(ctx.context.returned))) return;
-    throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
-  }),
-  BYTT_PASSORD_ETTER_HOOK_ID,
-);
+export function createByttPassordEtterHook(db?: Database) {
+  return merket(
+    createAuthMiddleware(async (ctx) => {
+      if (!KREDENTIAL_STIER.has(ctx.path)) return;
+      if (erSkjultAuthFeilkode(feilkodeFraReturned(ctx.context.returned))) {
+        throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
+      }
+      if (ctx.path !== TO_FAKTOR_DISABLE_STI || !db) return;
+      if (isAPIError(ctx.context.returned)) return;
+      const userId = brukerIdFraHook(ctx);
+      if (!userId) return;
+      try {
+        await skriv2faDisableAudit(db, userId);
+      } catch (error) {
+        console.error('[auth] 2FA-disable: audit_log ble ikke skrevet', error);
+      }
+    }),
+    BYTT_PASSORD_ETTER_HOOK_ID,
+  );
+}
+
+export const byttPassordEtterHook = createByttPassordEtterHook();

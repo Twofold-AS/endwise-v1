@@ -493,6 +493,42 @@ const STATUS_TEKST: Record<string, string> = {
   incomplete: 'Ikke fullført',
 };
 
+/**
+ * F5-11 — Endwise-admin ser forhandleren, ikke kundekortet.
+ * «Se verkstedet» er bevisst disabled: impersonering kommer senere (Mons).
+ */
+export function EndwiseForhandlerDetaljer({
+  navn,
+  slug,
+}: {
+  navn: string;
+  slug: string;
+}) {
+  return (
+    <>
+      <div className="flex flex-col gap-1 rounded-control border border-border bg-bg p-3">
+        <p className="truncate text-label text-fg">{navn}</p>
+        <p className="truncate font-mono text-[12px] text-fg-muted">{slug}</p>
+      </div>
+      <Link
+        href={'/endwise/forhandlere' as Route}
+        className="mx-1 inline-flex items-center gap-1.5 text-[12px] text-fg-muted transition-colors hover:text-fg"
+      >
+        Alle forhandlere
+      </Link>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-label text-fg">Se verkstedet</span>
+        <input
+          disabled
+          value="Kommer"
+          readOnly
+          className="h-control rounded-control border border-border bg-surface-2 px-2.5 text-body text-fg-muted"
+        />
+      </label>
+    </>
+  );
+}
+
 function Kontokontekst({ data }: { data: KontoData }) {
   return (
     <>

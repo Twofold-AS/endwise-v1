@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   index,
   pgEnum,
+  pgPolicy,
   pgTable,
   primaryKey,
   text,
@@ -10,6 +11,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { tenantPolicy } from '../rls.ts';
+import { authenticatedRole } from '../roles.ts';
 import { tenants } from './tenants.ts';
 
 /**
@@ -130,6 +132,17 @@ export const threads = pgTable(
     // indeksoppslag, ikke en scan over alle trådene til forhandleren.
     index('threads_tenant_channel_ref_idx').on(t.tenantId, t.channel, t.externalRef),
     tenantPolicy('threads', t.tenantId),
+    /**
+     * F5-11 — SELECT-only for Endwise-admin. `withPlatformAdmin` åpner denne.
+     * ⛔ Kun `dealer_admin` (forhandler↔Endwise). customer_dealer og
+     * mechanic_dealer forblir usynlige — det er samtaler vi ikke skal lese.
+     */
+    pgPolicy('threads_platform_admin_support_read', {
+      as: 'permissive',
+      for: 'select',
+      to: authenticatedRole,
+      using: sql`current_setting('app.platform_admin', true) = 'on' AND ${t.kind} = 'dealer_admin'`,
+    }),
   ],
 ).enableRLS();
 
@@ -159,6 +172,14 @@ export const threadParticipants = pgTable(
     primaryKey({ columns: [t.threadId, t.participantId] }),
     index('thread_participants_participant_idx').on(t.tenantId, t.participantId),
     tenantPolicy('thread_participants', t.tenantId),
+    pgPolicy('thread_participants_platform_admin_support_read', {
+      as: 'permissive',
+      for: 'select',
+      to: authenticatedRole,
+      using: sql`current_setting('app.platform_admin', true) = 'on' AND EXISTS (
+        SELECT 1 FROM threads th WHERE th.id = ${t.threadId} AND th.kind = 'dealer_admin'
+      )`,
+    }),
   ],
 ).enableRLS();
 
@@ -207,6 +228,14 @@ export const messages = pgTable(
     index('messages_thread_created_idx').on(t.threadId, t.createdAt),
     uniqueIndex('messages_tenant_external_uidx').on(t.tenantId, t.externalId),
     tenantPolicy('messages', t.tenantId),
+    pgPolicy('messages_platform_admin_support_read', {
+      as: 'permissive',
+      for: 'select',
+      to: authenticatedRole,
+      using: sql`current_setting('app.platform_admin', true) = 'on' AND EXISTS (
+        SELECT 1 FROM threads th WHERE th.id = ${t.threadId} AND th.kind = 'dealer_admin'
+      )`,
+    }),
   ],
 ).enableRLS();
 

@@ -25,6 +25,7 @@ import {
   visningForTraadtype,
 } from './_lib';
 import { MOCK_TRADER } from './_mock';
+import { useInboxModus } from './_modus';
 
 /**
  * F6-01 / F5-14 — INNBOKSENS EGEN SIDEBAR.
@@ -52,12 +53,18 @@ const PARTER: { key: 'alle' | ThreadKind; label: string; icon?: LucideIcon }[] =
 export function InboxSidebar() {
   const params = useParams<{ id?: string }>();
   const aktivId = params?.id;
+  const modus = useInboxModus();
+  const endwise = modus === 'endwise';
   const [part, setPart] = useState<'alle' | ThreadKind>('alle');
 
   const me = trpc.session.me.useQuery();
-  const threads = trpc.messages.listThreads.useQuery();
+  const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
+  const support = trpc.messages.listPlatformSupport.useQuery(undefined, {
+    enabled: endwise,
+    retry: false,
+  });
   const ekte = threads.data ?? [];
-  const brukerMock = !threads.isLoading && ekte.length === 0;
+  const brukerMock = !endwise && !threads.isLoading && ekte.length === 0;
 
   /**
    * Navnene på alle motparter i innboksen.
@@ -160,6 +167,42 @@ export function InboxSidebar() {
 
   const aktivLabel = PARTER.find((p) => p.key === part)?.label ?? 'Alle';
 
+  if (endwise) {
+    const henvendelser = support.data ?? [];
+    return (
+      <aside className="flex w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
+        <div className="flex h-14 shrink-0 items-center border-border border-b px-3">
+          <h2 className="min-w-0 truncate text-title text-fg">Innboks</h2>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
+          {support.isLoading ? (
+            <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster henvendelser …</p>
+          ) : henvendelser.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
+              <MessageSquare size={20} className="text-fg-muted" />
+              <p className="text-label text-fg">Ingen henvendelser ennå</p>
+              <p className="text-[12px] text-fg-muted leading-relaxed">
+                Når et verksted skriver til Endwise, lander det her.
+              </p>
+            </div>
+          ) : (
+            henvendelser.map((t) => (
+              <Link key={t.id} href={`/endwise/innboks/${t.id}` as Route} className="block">
+                <SupportKort
+                  navn={t.tenantName}
+                  utdrag={t.sisteTekst?.trim() || t.subject?.trim() || ''}
+                  ulest={Boolean(t.unread)}
+                  aktiv={t.id === aktivId}
+                  nar={fmtWhen(t.lastMessageAt)}
+                />
+              </Link>
+            ))
+          )}
+        </div>
+      </aside>
+    );
+  }
+
   return (
     <aside className="flex w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
       {/* ── Header: 56px + border-b, på linje med topbaren ─────────────── */}
@@ -258,6 +301,42 @@ export function InboxSidebar() {
  * i stedet for en tilfeldig plassholder. Et ansikt som ikke står for noen, er
  * verre enn ingen ansikt.
  */
+/** F5-11 — rad i Endwise-innboksen: forhandlernavn først, sist melding muted. */
+function SupportKort({
+  navn,
+  utdrag,
+  ulest,
+  aktiv,
+  nar,
+}: {
+  navn: string;
+  utdrag: string;
+  ulest: boolean;
+  aktiv: boolean;
+  nar: string;
+}) {
+  return (
+    <div
+      className={`flex flex-col gap-1 rounded-control border px-3 py-2.5 transition-colors ${
+        aktiv ? 'border-border-strong bg-sidebar-active' : 'border-border bg-bg hover:bg-surface-2'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <span className="min-w-0 flex-1 truncate text-label text-fg">{navn}</span>
+        {ulest && (
+          <span
+            className="size-2 shrink-0 rounded-full bg-accent-strong"
+            aria-label="Ulest"
+            title="Ulest"
+          />
+        )}
+        <span className="shrink-0 text-[11px] text-fg-muted tabular-nums">{nar}</span>
+      </div>
+      {utdrag && <p className="truncate text-[12px] text-fg-muted">{utdrag}</p>}
+    </div>
+  );
+}
+
 function motpartFor(
   motparter: string[],
   navn: Record<string, { navn: string; seed: string; avatar: AvatarValg }> | undefined,

@@ -1,10 +1,27 @@
-import { and, type Database, desc, eq, schema, sql, withTenant } from '@endwise/db';
+import {
+  and,
+  type Database,
+  desc,
+  eq,
+  schema,
+  sql,
+  withPlatformAdmin,
+  withTenant,
+} from '@endwise/db';
 import { publishEvent } from '../stream/publisher.ts';
 
 export class NotAParticipantError extends Error {
   readonly code = 'NOT_A_PARTICIPANT';
   constructor(participantId: string, threadId: string) {
     super(`${participantId} er ikke deltaker i tråd ${threadId}`);
+  }
+}
+
+/** F5-11 — tråden finnes ikke, eller er ikke forhandler↔Endwise. */
+export class PlatformSupportNotFoundError extends Error {
+  readonly code = 'PLATFORM_SUPPORT_NOT_FOUND';
+  constructor(threadId: string) {
+    super(`Fant ikke support-tråd ${threadId}`);
   }
 }
 
@@ -502,6 +519,118 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             ),
           );
       });
+    },
+
+    /**
+     * F5-11 — alle forhandler↔Endwise-tråder, på tvers av tenants.
+     *
+     * Kjører under `withPlatformAdmin`. RLS slipper KUN `dealer_admin` gjennom.
+     * Deltakelse kreves ikke — Endwise er mottakeren, ikke en forhåndsvalgt
+     * deltaker. `listThreads` er urørt.
+     */
+    async listPlatformSupportThreads(readerId: string) {
+      return withPlatformAdmin(db, (tx) =>
+        tx
+          .select({
+            id: schema.threads.id,
+            tenantId: schema.threads.tenantId,
+            tenantName: schema.tenants.name,
+            tenantSlug: schema.tenants.slug,
+            kind: schema.threads.kind,
+            subject: schema.threads.subject,
+            lastMessageAt: schema.threads.lastMessageAt,
+            channel: schema.threads.channel,
+            sisteTekst: sql<string>`coalesce((
+              select m.body from messages m
+              where m.thread_id = ${schema.threads.id}
+              order by m.created_at desc limit 1
+            ), ${schema.threads.subject}, '')`,
+            unread: sql<boolean>`coalesce((
+              select m.author_id <> ${readerId}
+                and (tp.last_read_at is null or m.created_at > tp.last_read_at)
+              from messages m
+              left join thread_participants tp
+                on tp.thread_id = ${schema.threads.id}
+               and tp.participant_id = ${readerId}
+              where m.thread_id = ${schema.threads.id}
+              order by m.created_at desc
+              limit 1
+            ), false)`,
+          })
+          .from(schema.threads)
+          .innerJoin(schema.tenants, eq(schema.tenants.id, schema.threads.tenantId))
+          .where(eq(schema.threads.kind, 'dealer_admin'))
+          .orderBy(desc(schema.threads.lastMessageAt)),
+      );
+    },
+
+    async listPlatformSupportMessages(threadId: string) {
+      return withPlatformAdmin(db, async (tx) => {
+        const [traad] = await tx
+          .select({ id: schema.threads.id })
+          .from(schema.threads)
+          .where(
+            and(eq(schema.threads.id, threadId), eq(schema.threads.kind, 'dealer_admin')),
+          );
+        if (!traad) throw new PlatformSupportNotFoundError(threadId);
+        return tx
+          .select()
+          .from(schema.messages)
+          .where(eq(schema.messages.threadId, threadId))
+          .orderBy(schema.messages.createdAt);
+      });
+    },
+
+    /**
+     * Svar i forhandlerens tråd. Oppslag via platform-admin (kind-sjekk),
+     * skriving via `withTenant` på DEN tenanten — så forhandleren ser svaret
+     * i sin Endwise-kanal. Ingen ny tråd, ingen Endwise-tenant.
+     */
+    async postPlatformSupportReply(input: {
+      threadId: string;
+      authorId: string;
+      body: string;
+    }) {
+      const traad = await withPlatformAdmin(db, async (tx) => {
+        const [rad] = await tx
+          .select({
+            id: schema.threads.id,
+            tenantId: schema.threads.tenantId,
+          })
+          .from(schema.threads)
+          .where(
+            and(eq(schema.threads.id, input.threadId), eq(schema.threads.kind, 'dealer_admin')),
+          );
+        return rad ?? null;
+      });
+      if (!traad) throw new PlatformSupportNotFoundError(input.threadId);
+
+      await this.addParticipants(traad.tenantId, traad.id, [input.authorId]);
+      return this.postMessage({
+        tenantId: traad.tenantId,
+        threadId: traad.id,
+        authorId: input.authorId,
+        body: input.body,
+      });
+    },
+
+    async markPlatformSupportRead(input: { threadId: string; readerId: string }) {
+      const traad = await withPlatformAdmin(db, async (tx) => {
+        const [rad] = await tx
+          .select({
+            id: schema.threads.id,
+            tenantId: schema.threads.tenantId,
+          })
+          .from(schema.threads)
+          .where(
+            and(eq(schema.threads.id, input.threadId), eq(schema.threads.kind, 'dealer_admin')),
+          );
+        return rad ?? null;
+      });
+      if (!traad) throw new PlatformSupportNotFoundError(input.threadId);
+
+      await this.addParticipants(traad.tenantId, traad.id, [input.readerId]);
+      return this.markRead(traad.tenantId, traad.id, input.readerId);
     },
   };
 }

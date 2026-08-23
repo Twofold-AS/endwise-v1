@@ -4,6 +4,7 @@ import {
   Building2,
   CircleAlert,
   Flag,
+  Inbox,
   LayoutDashboard,
   LifeBuoy,
   Settings,
@@ -23,10 +24,17 @@ import { KjopteModulerTabell } from './_kjopte-moduler';
  * fra Postgres (`tenants.census`), ikke mock inntektstall. Sperren er
  * `krevEndwiseAdminSide` i layout + `endwiseAdminProcedure` på rutene.
  *
- * Bookinger telles ikke: platform-admin-GUC-en åpner bare `tenants`.
+ * Bookinger telles ikke: platform-admin-GUC-en åpner `tenants` og
+ * SELECT på dealer_admin-tråder (F5-11), ikke bookinger.
  */
 
 const LENKER = [
+  {
+    href: '/endwise/innboks' as Route,
+    tittel: 'Innboks',
+    tekst: 'Henvendelser fra verkstedene.',
+    icon: Inbox,
+  },
   {
     href: '/endwise/forhandlere' as Route,
     tittel: 'Forhandlere',

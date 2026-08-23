@@ -1,10 +1,11 @@
 'use client';
 
-import { PanelRightOpen } from '@endwise/ui';
+import { PanelRightClose, PanelRightOpen, X } from '@endwise/ui';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { DetaljerPanel } from './_detaljer';
+import { DetaljerPanel, EndwiseForhandlerDetaljer } from './_detaljer';
+import { useInboxModus } from './_modus';
 
 /**
  * F6-17 — Plassen «Detaljer»-panelet bor på, og bryteren som styrer det.
@@ -30,6 +31,13 @@ import { DetaljerPanel } from './_detaljer';
 export function DetaljerSlot() {
   const params = useParams<{ id?: string }>();
   const threadId = params?.id;
+  const modus = useInboxModus();
+  const endwise = modus === 'endwise';
+  const support = trpc.messages.listPlatformSupport.useQuery(undefined, {
+    enabled: endwise && Boolean(threadId),
+    retry: false,
+  });
+  const supportTrad = (support.data ?? []).find((t) => t.id === threadId);
 
   const meg = trpc.profile.meg.useQuery(undefined, { retry: false });
   const lagre = trpc.profile.setInboxDetails.useMutation();
@@ -70,6 +78,36 @@ export function DetaljerSlot() {
           </button>
         </div>
       </div>
+    );
+  }
+
+  if (endwise) {
+    return (
+      <aside
+        className="fixed top-0 right-0 bottom-0 z-40 flex w-[320px] shrink-0 flex-col border-border border-l bg-sidebar xl:static xl:z-auto"
+        aria-label="Detaljer om samtalen"
+      >
+        <div className="flex h-14 shrink-0 items-center gap-2 border-border border-b px-3">
+          <h2 className="mr-auto min-w-0 truncate text-title text-fg">Detaljer</h2>
+          <button
+            type="button"
+            onClick={() => sett(false)}
+            title="Skjul detaljer"
+            aria-label="Skjul detaljer"
+            className="flex size-7 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active/60 hover:text-fg"
+          >
+            <PanelRightClose size={16} strokeWidth={1.75} className="hidden xl:block" />
+            <X size={16} strokeWidth={1.75} className="xl:hidden" />
+          </button>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
+          {supportTrad ? (
+            <EndwiseForhandlerDetaljer navn={supportTrad.tenantName} slug={supportTrad.tenantSlug} />
+          ) : (
+            <p className="px-1 py-6 text-center text-[12px] text-fg-muted">Henter kontekst …</p>
+          )}
+        </div>
+      </aside>
     );
   }
 

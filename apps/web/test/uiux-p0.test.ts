@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { destinasjonEtterInvite, trengerKodeSteg } from '../app/invitasjon/_landing.ts';
+import {
+  destinasjonEtterInvite,
+  destinasjonNarSesjonFeiler,
+  trengerKodeSteg,
+} from '../app/invitasjon/_landing.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -24,6 +28,15 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(trengerKodeSteg({})).toBe(false);
   });
 
+  it('TWO_FACTOR_REQUIRED lander på /2fa-oppsett — aldri dashboard eller /oppstart', () => {
+    expect(destinasjonEtterInvite('owner', '/oppstart', 'TWO_FACTOR_REQUIRED')).toBe(
+      '/2fa-oppsett',
+    );
+    expect(destinasjonEtterInvite('staff', '/innboks', 'TWO_FACTOR_REQUIRED')).toBe('/2fa-oppsett');
+    expect(destinasjonEtterInvite('staff', null, 'TWO_FACTOR_REQUIRED')).toBe('/2fa-oppsett');
+    expect(destinasjonEtterInvite('staff', '/dashboard', 'annen feil')).toBe('/dashboard');
+  });
+
   it('fersk invitee går aldri til /signin etter godta + passord', () => {
     expect(kilde).toMatch(/destinasjonEtterInvite/);
     expect(kilde).toMatch(/location\.assign/);
@@ -33,6 +46,27 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(kilde).not.toMatch(/router\.push/);
     // kreverPassord:false (eksisterende konto) får /signin — det er OK.
     expect(kilde).toMatch(/kreverPassord[\s\S]*\/signin/);
+  });
+
+  it('eksisterende konto (/signin) og / sender uferdig 2FA til /2fa-oppsett', () => {
+    expect(destinasjonNarSesjonFeiler(new Error('TWO_FACTOR_REQUIRED'))).toBe('/2fa-oppsett');
+    expect(destinasjonNarSesjonFeiler(new Error('nettverk nede'))).toBe('/dashboard');
+    const signin = readFileSync(resolve(her, '../app/signin/signin-skjema.tsx'), 'utf8');
+    const rot = readFileSync(resolve(her, '../app/page.tsx'), 'utf8');
+    expect(signin).toMatch(/destinasjonNarSesjonFeiler/);
+    expect(rot).toMatch(/destinasjonNarSesjonFeiler/);
+    expect(signin).not.toMatch(/catch[\s\S]{0,180}\/dashboard['"]/);
+  });
+
+  it('etter OTP rives andre sesjoner, og land() sender 2FA-feil til destinasjonEtterInvite', () => {
+    expect(kilde).toMatch(/revokeOtherSessions\s*\(/);
+    expect(kilde).not.toMatch(/console\.(log|info|debug)\([^)]*token/i);
+    const landStart = kilde.indexOf('async function land');
+    const landSlutt = kilde.indexOf('async function startKodeSteg', landStart);
+    const land = kilde.slice(landStart, landSlutt);
+    expect(land).toMatch(/destinasjonEtterInvite\(/);
+    expect(land).toMatch(/TWO_FACTOR_REQUIRED|feil/);
+    expect(land).not.toMatch(/catch\s*\(\s*\)\s*=>\s*['"]\/dashboard['"]/);
   });
 });
 

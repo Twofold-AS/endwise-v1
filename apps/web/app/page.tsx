@@ -11,6 +11,7 @@ import bildeHero from '@/public/images/hero.jpg';
 import bildeVerdi from '@/public/images/img_1.jpg';
 import bildeSammenheng from '@/public/images/img_2.jpg';
 import bildeAvslutning from '@/public/images/img_3.jpg';
+import { destinasjonNarSesjonFeiler } from './invitasjon/_landing';
 
 /**
  * BASE-RUTEN «/» — offentlig landingsside.
@@ -164,10 +165,7 @@ export default function BasePage() {
       const landing = await utils.session.me
         .fetch()
         .then((me) => me.landing)
-        .catch((error: unknown) => {
-          const melding = error instanceof Error ? error.message : String(error);
-          return melding.includes('TWO_FACTOR_REQUIRED') ? '/2fa-oppsett' : '/dashboard';
-        });
+        .catch((error: unknown) => destinasjonNarSesjonFeiler(error));
       if (avbrutt) return;
       router.replace((landing ?? '/dashboard') as Route);
     })();

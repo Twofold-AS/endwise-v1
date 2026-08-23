@@ -21,6 +21,12 @@ export const erasureStatusEnum = pgEnum('erasure_status', [
  *
  * Den inneholder derfor ingen personopplysninger utover en **hash** av
  * subjektet, og en rapport over hva som ble slettet — ikke hva som sto der.
+ *
+ * Når en forhandler slettes (`slett_forhandler`), flyttes raden til
+ * Endwise-tenanten så RESTRICT-FK slipper. Da **roteres `id`** og
+ * `subject_id` / `requested_by` hashes (md5) — Endwise-admin skal ikke
+ * arve en annen forhandlers request-UUID eller rå identifikatorer
+ * (CWE-359/863/284). Beviset overlever; identifikatorene gjør det ikke.
  */
 export const erasureRequests = pgTable(
   'erasure_requests',

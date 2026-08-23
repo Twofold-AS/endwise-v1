@@ -7,6 +7,7 @@ import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'rea
 import { authClient, signIn } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { Field, INPUT, PassordFelt } from '../_auth/felter';
+import { destinasjonNarSesjonFeiler } from '../invitasjon/_landing';
 
 /**
  * F1-02 / F1-11 — Innlogging i TO STEG: passord → engangskode på e-post.
@@ -114,10 +115,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     const landing = await utils.session.me
       .fetch()
       .then((me) => me.landing)
-      .catch((error: unknown) => {
-        const melding = error instanceof Error ? error.message : String(error);
-        return melding.includes('TWO_FACTOR_REQUIRED') ? '/2fa-oppsett' : '/dashboard';
-      });
+      .catch((error: unknown) => destinasjonNarSesjonFeiler(error));
     // session.me.landing er /oppstart for eier som ikke har fullført veiviseren.
 
     /**

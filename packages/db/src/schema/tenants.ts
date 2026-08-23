@@ -77,6 +77,12 @@ export const tenants = pgTable(
       to: authenticatedRole,
       using: sql`current_setting('app.platform_admin', true) = 'on'`,
     }),
+    /**
+     * GDPR-slett (`slett_forhandler`) kjører som eier under FORCE RLS.
+     * Unntakene (`tenants_platform_admin_read_owner`, `tenants_slett_forhandler`)
+     * ligger i `sql/grants.sql` — TO PUBLIC + GUC, samme mønster som
+     * `invitations_open_by_hash`. Ikke her: Drizzle-policyer er TO authenticated.
+     */
   ],
 ).enableRLS();
 

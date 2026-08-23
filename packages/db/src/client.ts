@@ -116,8 +116,9 @@ export async function withTenant<T>(
  *      bare mekanismen som lar den gjøre jobben uten at RLS skrus av.
  *   2. Policyen er `for: 'select'` uten `withCheck`. **Skriving på tvers av
  *      tenants er fortsatt umulig**, også for oss.
- *   3. Den gjelder KUN `tenants`-tabellen. Ingen annen policy ser på denne
- *      GUC-en, så den kan ikke åpne kunde-, booking- eller meldingsdata.
+ *   3. Den gjelder KUN `tenants`-tabellen for authenticated. `slett_forhandler`
+ *      har egne TO PUBLIC-policyer på `app.slett_tenant_id` (ikke denne GUC-en)
+ *      og krever at kalleren ikke er `authenticated` — app-trafikk åpnes ikke.
  *
  * Alternativet — å koble til som DB-eier for akkurat denne spørringen — ville
  * omgått RLS fullstendig og gjort den ene lesestien til den ene uten isolasjon.

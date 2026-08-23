@@ -189,6 +189,33 @@ grant execute on function consume_invitation(text) to authenticated;
 --
 -- ⛔ Aldri Endwise-tenanten (slug = endwise).
 -- ⛔ Sletter ikke user-rader (never delete self).
+--
+-- ── ⚠️ FORCE RLS + eier som IKKE er superuser (Scaleway, 23.08.2026) ────
+--
+-- Samme klasse som `lookup_open_invitation` (PR #11). SECURITY DEFINER kjører
+-- som tabelleieren. Lokalt er Docker-eieren superuser og bypasser RLS, så
+-- `SELECT slug` og `DELETE` så grønne ut. I prod er eieren `endwise` uten
+-- BYPASSRLS, og FORCE RLS gjelder også eieren. Policyene er `TO authenticated`
+-- — eieren er det ikke. Resultat uten unntak:
+--   1. `SELECT slug FROM tenants` → 0 rader → raise «finnes ikke»
+--      (dette var 500-en på endwise.no 23.08.2026, commit 17ec774).
+--   2. DELETE på RLS-tabeller treffer default-deny: 0 rader, STILLE
+--      (ikke insufficient_privilege — se tenant-isolation.test.ts).
+--   3. `audit_log` og `erasure_requests` har ON DELETE RESTRICT mot tenants.
+--      Hard-slett av audit_log er forbudt (F1-06). Uten å flytte kjedene
+--      feiler `DELETE FROM tenants` med foreign_key_violation.
+--
+-- `row_security=off` er IKKE fiksen: den GUC-en kaster hvis en policy VILLE
+-- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
+-- `invitations_open_by_hash`: funksjonen setter `app.slett_tenant_id`
+-- transaksjons-lokalt, og grants.sql har smale TO PUBLIC-policyer på den
+-- GUC-en. `app.platform_admin` brukes KUN til SELECT på tenants (samme
+-- lesehull som `tenants_platform_admin_read`) — aldri DELETE. Uten GUC ser
+-- eieren fortsatt 0 rader.
+--
+-- CI kan ikke simulere «FORCE RLS + ikke-superuser eier» uten å flytte
+-- eierskap på alle tabeller. Kontraktstestene i
+-- apps/api/test/slett-forhandler-sql.test.ts + force-rls.test.ts er stand-in.
 
 create or replace function slett_forhandler(p_tenant_id uuid)
 returns void
@@ -199,12 +226,17 @@ as $$
 declare
   r record;
   v_slug text;
+  v_endwise uuid;
+  v_redacted integer;
   v_progress boolean;
   i integer;
 begin
   if current_setting('app.platform_admin', true) is distinct from 'on' then
     raise exception 'slett_forhandler: krever platform_admin';
   end if;
+
+  -- Transaksjons-lokalt. TO PUBLIC-policyene i grants.sql ser kun DENNE id-en.
+  perform set_config('app.slett_tenant_id', p_tenant_id::text, true);
 
   select slug into v_slug from tenants where id = p_tenant_id;
   if v_slug is null then
@@ -214,7 +246,45 @@ begin
     raise exception 'slett_forhandler: kan ikke slette Endwise-tenanten';
   end if;
 
+  select id into v_endwise from tenants where slug = 'endwise';
+  if v_endwise is null then
+    raise exception 'slett_forhandler: Endwise-tenanten mangler (kan ikke flytte audit-kjeden)';
+  end if;
+
+  -- F1-06: aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
+  -- redact_audit_log — den leser app.tenant_id og har ingen UPDATE-policy for
+  -- eieren under FORCE RLS), skriv spor, flytt kjeden til Endwise så
+  -- ON DELETE RESTRICT slipper tenants-raden.
+  update audit_log
+     set actor      = '[REDAKTERT]',
+         subject_id = '[REDAKTERT]',
+         metadata   = jsonb_build_object('redacted', true),
+         ip_address = null
+   where tenant_id = p_tenant_id
+     and actor <> '[REDAKTERT]';
+  get diagnostics v_redacted = row_count;
+
+  insert into audit_log (tenant_id, actor, action, subject_type, subject_id, metadata)
+  values (
+    p_tenant_id,
+    'system:erasure',
+    'audit.redacted',
+    'erasure',
+    null,
+    jsonb_build_object('rows_redacted', v_redacted, 'reason', 'slett_forhandler')
+  );
+
+  update audit_log
+     set tenant_id = v_endwise
+   where tenant_id = p_tenant_id;
+
+  -- F14-16: erasure_requests slettes aldri (beviset må overleve). Samme FK.
+  update erasure_requests
+     set tenant_id = v_endwise
+   where tenant_id = p_tenant_id;
+
   -- Barn først. Looper til FK-rekkefølgen slipper gjennom.
+  -- Kun foreign_key_violation svelges — RLS/privilegier skal synes.
   for i in 1..12 loop
     v_progress := false;
     for r in
@@ -226,7 +296,7 @@ begin
          and c.relkind = 'r'
          and a.attname = 'tenant_id'
          and not a.attisdropped
-         and c.relname <> 'tenants'
+         and c.relname not in ('tenants', 'audit_log', 'erasure_requests')
     loop
       begin
         execute format('delete from %I where tenant_id = $1', r.tbl) using p_tenant_id;
@@ -249,6 +319,8 @@ begin
   if exists (select 1 from tenants where id = p_tenant_id) then
     raise exception 'slett_forhandler: tenanten ble ikke slettet';
   end if;
+
+  perform set_config('app.slett_tenant_id', '', true);
 end;
 $$;
 

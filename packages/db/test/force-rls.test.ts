@@ -105,6 +105,48 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     expect(res.rows, 'Mangler invitations_open_by_hash. Kjør `pnpm db:grants`.').toHaveLength(1);
   });
 
+  it('③c slett_forhandler FORCE RLS-unntak finnes (F5-26)', async () => {
+    const res = await app.execute(sql`
+      select c.relname as tabell, p.polname
+        from pg_policy p
+        join pg_class c on c.oid = p.polrelid
+       where p.polname in (
+         'tenants_platform_admin_read_owner',
+         'tenants_slett_forhandler',
+         'audit_log_slett_update',
+         'audit_log_slett_insert',
+         'erasure_requests_slett_forhandler',
+         'tenant_modules_slett_forhandler'
+       )
+       order by p.polname
+    `);
+    const navn = res.rows.map((r) => r.polname);
+    expect(navn, 'Mangler slett-policyer. Kjør `pnpm db:grants`.').toEqual(
+      expect.arrayContaining([
+        'tenants_platform_admin_read_owner',
+        'tenants_slett_forhandler',
+        'audit_log_slett_update',
+        'tenant_modules_slett_forhandler',
+      ]),
+    );
+  });
+
+  it('③d eier av tenants er superuser lokalt — Scaleway-antakelsen står i functions.sql', async () => {
+    // CI/Docker: eieren bypasser FORCE RLS. Vi kan ikke flytte eierskap her
+    // uten å ødelegge resten av suiten. Kontraktstestene + ③c er stand-in.
+    const res = await app.execute(sql`
+      select r.rolsuper
+        from pg_class c
+        join pg_roles r on r.oid = c.relowner
+       where c.oid = 'public.tenants'::regclass
+    `);
+    const eier = res.rows[0] as { rolsuper: boolean } | undefined;
+    expect(eier).toBeDefined();
+    if (eier?.rolsuper) {
+      expect(eier.rolsuper).toBe(true);
+    }
+  });
+
   it('④ kjernetabellene har RLS påslått i det hele tatt', async () => {
     const res = await app.execute(sql`
       select c.relname as tabell, c.relrowsecurity as rls

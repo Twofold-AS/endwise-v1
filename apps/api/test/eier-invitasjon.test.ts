@@ -105,6 +105,41 @@ describe('F5-26 — shop og twilio kan ikke tildeles', () => {
     );
   });
 
+  it('create.optional avviser shop og twilio', async () => {
+    await forventer(
+      admin().tenants.create({
+        name: 'Opt shop',
+        slug: 'opt-shop',
+        ownerEmail: 'opt@x.no',
+        optional: ['shop'],
+      }),
+      'BAD_REQUEST',
+    );
+    await forventer(
+      admin().tenants.create({
+        name: 'Opt sms',
+        slug: 'opt-sms',
+        ownerEmail: 'optsms@x.no',
+        optional: ['twilio'],
+      }),
+      'BAD_REQUEST',
+    );
+  });
+
+  it('onboarding.fullfor avviser shop/twilio i extras', async () => {
+    const eier = appRouter.createCaller(
+      ctx({} as never, 'dealer_admin', '00000000-0000-0000-0000-000000000001'),
+    );
+    await forventer(
+      eier.onboarding.fullfor({ visningsnavn: 'Test AS', extras: ['shop'] }),
+      'BAD_REQUEST',
+    );
+    await forventer(
+      eier.onboarding.fullfor({ visningsnavn: 'Test AS', extras: ['twilio'] }),
+      'BAD_REQUEST',
+    );
+  });
+
   it('setModules avviser shop og twilio', async () => {
     await forventer(
       admin().tenants.setModules({
@@ -180,6 +215,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       ownerEmail: epost,
       kind: 'demo',
       modules: ['quick', 'vegvesen', 'ai-support'],
+      optional: ['white-label'],
     });
     tenantIds.push(res.tenantId);
 
@@ -203,8 +239,18 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       .select({ key: schema.tenantModules.moduleKey, enabled: schema.tenantModules.enabled })
       .from(schema.tenantModules)
       .where(eq(schema.tenantModules.tenantId, res.tenantId));
-    expect(mods.map((m) => m.key).sort()).toEqual(['ai-support', 'quick', 'vegvesen']);
-    expect(mods.every((m) => m.enabled)).toBe(true);
+    expect(mods.filter((m) => m.enabled).map((m) => m.key).sort()).toEqual([
+      'ai-support',
+      'quick',
+      'vegvesen',
+    ]);
+    expect(mods.find((m) => m.key === 'white-label')?.enabled).toBe(false);
+
+    const [tenant] = await owner
+      .select({ ferdig: schema.tenants.onboardingCompletedAt })
+      .from(schema.tenants)
+      .where(eq(schema.tenants.id, res.tenantId));
+    expect(tenant?.ferdig).toBeNull();
 
     const audit = await owner
       .select({ action: schema.auditLog.action })
@@ -341,5 +387,106 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
     expect(mods.find((m) => m.key === 'vegvesen')?.enabled).toBe(true);
     expect(mods.find((m) => m.key === 'quick')?.enabled).toBe(false);
+  });
+
+  it('veiviser: visningsnavn, hopp over extras beholder pakke, extras avviser fremmed nøkkel', async () => {
+    const slug = `wiz-${randomUUID().slice(0, 8)}`;
+    const opprettet = await somEndwise().tenants.create({
+      name: 'Wizard AS',
+      slug,
+      ownerEmail: `wiz.${slug}@verksted.test`,
+      kind: 'demo',
+      modules: ['quick'],
+      optional: ['vegvesen'],
+    });
+    tenantIds.push(opprettet.tenantId);
+
+    const eier = appRouter.createCaller(
+      ctx(app, 'dealer_admin', opprettet.tenantId, adminUser),
+    );
+
+    await forventer(
+      eier.onboarding.fullfor({ visningsnavn: 'Nytt navn AS', extras: ['ai-support'] }),
+      'BAD_REQUEST',
+    );
+
+    const hopp = await eier.onboarding.fullfor({
+      visningsnavn: 'Nytt visningsnavn AS',
+      extras: [],
+    });
+    expect(hopp.visningsnavn).toBe('Nytt visningsnavn AS');
+    expect(hopp.granted).toEqual([]);
+
+    const [tenant] = await owner
+      .select({
+        name: schema.tenants.name,
+        ferdig: schema.tenants.onboardingCompletedAt,
+      })
+      .from(schema.tenants)
+      .where(eq(schema.tenants.id, opprettet.tenantId));
+    expect(tenant?.name).toBe('Nytt visningsnavn AS');
+    expect(tenant?.ferdig).toBeTruthy();
+
+    const mods = await owner
+      .select({
+        key: schema.tenantModules.moduleKey,
+        enabled: schema.tenantModules.enabled,
+        source: schema.tenantModules.source,
+      })
+      .from(schema.tenantModules)
+      .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
+    expect(mods.find((m) => m.key === 'quick')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'vegvesen')?.enabled).toBe(false);
+  });
+
+  it('veiviser: extras slår på optional, staff-invite kan ikke bli dealer_admin', async () => {
+    const slug = `wiz2-${randomUUID().slice(0, 8)}`;
+    const opprettet = await somEndwise().tenants.create({
+      name: 'Wizard to',
+      slug,
+      ownerEmail: `wiz2.${slug}@verksted.test`,
+      kind: 'demo',
+      modules: ['quick'],
+      optional: ['vegvesen'],
+    });
+    tenantIds.push(opprettet.tenantId);
+
+    const eier = appRouter.createCaller(
+      ctx(app, 'dealer_admin', opprettet.tenantId, adminUser),
+    );
+
+    await expect(
+      eier.invitasjoner.opprett({ epost: 'sjef@x.no', funksjon: 'leder' as never }),
+    ).rejects.toThrow();
+
+    const staff = await eier.invitasjoner.opprett({
+      epost: `selger.${slug}@verksted.test`,
+      funksjon: 'selger',
+    });
+    expect(staff.funksjon).toBe('selger');
+    const [inv] = await owner
+      .select({ role: schema.invitations.role, kind: schema.invitations.kind })
+      .from(schema.invitations)
+      .where(eq(schema.invitations.id, staff.id));
+    expect(inv?.role).toBe('dealer_staff');
+    expect(inv?.kind).toBe('staff');
+
+    const ferdig = await eier.onboarding.fullfor({
+      visningsnavn: 'Wizard to AS',
+      extras: ['vegvesen'],
+    });
+    expect(ferdig.granted).toEqual(['vegvesen']);
+
+    const mods = await owner
+      .select({
+        key: schema.tenantModules.moduleKey,
+        enabled: schema.tenantModules.enabled,
+        source: schema.tenantModules.source,
+      })
+      .from(schema.tenantModules)
+      .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
+    expect(mods.find((m) => m.key === 'vegvesen')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'vegvesen')?.source).toBe('dealer');
+    expect(mods.find((m) => m.key === 'quick')?.enabled).toBe(true);
   });
 });

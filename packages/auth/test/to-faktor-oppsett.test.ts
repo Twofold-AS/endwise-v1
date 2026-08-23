@@ -41,6 +41,13 @@ describe('F1-23: kvittering før navigasjon', () => {
     expect(fortsettEtter2faKvittering()).toEqual({ destinasjon: '/dashboard' });
   });
 
+  it('Fortsett kan følge session.me.landing (eier-veiviser)', () => {
+    expect(fortsettEtter2faKvittering('/oppstart')).toEqual({ destinasjon: '/oppstart' });
+    expect(fortsettEtter2faKvittering('https://evil.example')).toEqual({
+      destinasjon: '/dashboard',
+    });
+  });
+
   it('⛔ sida kaller ikke location.assign i samme tick som steg=ferdig', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const kilde = readFileSync(resolve(her, '../../../apps/web/app/2fa-oppsett/page.tsx'), 'utf8');

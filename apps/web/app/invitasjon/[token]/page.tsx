@@ -16,7 +16,8 @@ import { authClient } from '@/lib/auth-client';
  *   1. HER: sett/bytt passord (eier alltid; ny ansatt alltid)
  *   2. Better-Auth: logg inn
  *   3. `/2fa-oppsett` (F1-11)
- *   4. Land i tenanten. ⛔ Ingen modulvelger, ingen plan-veiviser.
+ *   4. Eier: `/oppstart` (visningsnavn, valgfrie tillegg, team).
+ *      Ansatt: lander i funksjonens visning. ⛔ Ingen plan-velger her.
  */
 type Invitasjon = {
   gyldig: true;

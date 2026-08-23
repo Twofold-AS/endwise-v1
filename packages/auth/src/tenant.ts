@@ -28,6 +28,15 @@ export interface CreateTenantInput {
   plan?: string;
   /** F5-27: `demo` = dev-mode-tenant. Default `live` — fail-safe. */
   kind?: TenantKind;
+  /**
+   * Valgfrie tillegg eieren kan slå på i veiviseren. Skrives som
+   * `source=optional`, `enabled=false`. Overlap med `modules` droppes.
+   */
+  optionalModules?: string[];
+  /**
+   * Seed og gamle kall: ferdig onboarding. Invite-only create sender `false`.
+   */
+  onboardingCompleted?: boolean;
 }
 
 /**
@@ -99,17 +108,11 @@ export async function createTenant(
       name: input.name,
       slug: input.slug,
       kind: input.kind ?? 'live',
+      onboardingCompletedAt: input.onboardingCompleted === false ? null : new Date(),
     });
 
-    if (input.modules?.length) {
-      await tx.insert(schema.tenantModules).values(
-        input.modules.map((moduleKey) => ({
-          tenantId,
-          moduleKey,
-          plan: input.plan ?? null,
-        })),
-      );
-    }
+    const rader = pakkeRader(tenantId, input);
+    if (rader.length) await tx.insert(schema.tenantModules).values(rader);
   });
 
   return { tenantId };
@@ -140,20 +143,36 @@ export async function createTenantShell(
       name: input.name,
       slug: input.slug,
       kind: input.kind ?? 'live',
+      onboardingCompletedAt: null,
     });
 
-    if (input.modules?.length) {
-      await tx.insert(schema.tenantModules).values(
-        input.modules.map((moduleKey) => ({
-          tenantId,
-          moduleKey,
-          plan: input.plan ?? 'endwise',
-        })),
-      );
-    }
+    const rader = pakkeRader(tenantId, input);
+    if (rader.length) await tx.insert(schema.tenantModules).values(rader);
   });
 
   return { tenantId };
+}
+
+function pakkeRader(tenantId: string, input: Pick<CreateTenantInput, 'modules' | 'optionalModules' | 'plan'>) {
+  const included = [...new Set(input.modules ?? [])];
+  const optional = [...new Set(input.optionalModules ?? [])].filter((k) => !included.includes(k));
+  const plan = input.plan ?? 'endwise';
+  return [
+    ...included.map((moduleKey) => ({
+      tenantId,
+      moduleKey,
+      enabled: true,
+      source: 'included' as const,
+      plan,
+    })),
+    ...optional.map((moduleKey) => ({
+      tenantId,
+      moduleKey,
+      enabled: false,
+      source: 'optional' as const,
+      plan,
+    })),
+  ];
 }
 
 export class TenantAccessError extends Error {

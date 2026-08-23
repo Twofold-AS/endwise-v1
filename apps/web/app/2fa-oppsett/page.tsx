@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
+import { trpc } from '@/lib/trpc';
 import { Field, INPUT, PassordFelt } from '../_auth/felter';
 
 /**
@@ -47,6 +48,7 @@ import { Field, INPUT, PassordFelt } from '../_auth/felter';
  */
 export default function ToFaktorOppsettPage() {
   const router = useRouter();
+  const utils = trpc.useUtils();
   const [steg, setSteg] = useState<'passord' | 'kode' | 'ferdig'>('passord');
   const [passord, setPassord] = useState('');
   const [kode, setKode] = useState('');
@@ -114,10 +116,16 @@ export default function ToFaktorOppsettPage() {
   }
 
   function fortsett() {
-    const { destinasjon } = fortsettEtter2faKvittering();
-    // Hard navigasjon: samme lærdom som dobbel-login-bugen. Klient-storen
-    // har en utdatert sesjon, og en myk navigasjon ville lest den.
-    window.location.assign(destinasjon);
+    void utils.session.me
+      .fetch()
+      .then((me) => {
+        const { destinasjon } = fortsettEtter2faKvittering(me.landing);
+        window.location.assign(destinasjon);
+      })
+      .catch(() => {
+        const { destinasjon } = fortsettEtter2faKvittering();
+        window.location.assign(destinasjon);
+      });
   }
 
   const tittel =

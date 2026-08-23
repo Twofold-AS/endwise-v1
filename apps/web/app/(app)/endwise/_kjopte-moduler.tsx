@@ -11,7 +11,7 @@ type Katalog = RouterOutput['tenants']['addonKatalog'];
 
 /**
  * F1-07 / F0-04 / F5-26 — `tenant_modules` per forhandler.
- * Endwise-admin kan tildele tillegg. Stripe (F5-32) skriver fortsatt ved kjøp.
+ * Endwise-admin setter pakke (fast) og valgfrie tillegg. Stripe skriver ved kjøp.
  * `moduleProcedure` håndhever. `dealer_admin` får FORBIDDEN på skriving.
  */
 export function KjopteModulerTabell({
@@ -55,7 +55,10 @@ export function KjopteModulerTabell({
     <div className="flex flex-col gap-2">
       <div className="overflow-hidden rounded-xl border border-border">
         {rader.map((t, i) => {
-          const pa = t.modules.filter((m) => m.enabled);
+          const pa = t.modules.filter((m) => m.enabled && m.source !== 'optional');
+          const optional = t.modules
+            .filter((m) => m.source === 'optional' || m.source === 'dealer')
+            .map((m) => m.moduleKey);
           const vis = apen === t.id;
           return (
             <div
@@ -93,11 +96,14 @@ export function KjopteModulerTabell({
               </div>
               {vis ? (
                 <ModulAvkrysning
-                  key={`${t.id}:${pa.map((m) => m.moduleKey).join(',')}`}
+                  key={`${t.id}:${pa.map((m) => m.moduleKey).join(',')}:${optional.join(',')}`}
                   katalog={katalog.data ?? []}
-                  valgte={pa.map((m) => m.moduleKey)}
+                  included={pa.map((m) => m.moduleKey)}
+                  optional={optional}
                   pending={sett.isPending}
-                  onLagre={(modules) => sett.mutate({ tenantId: t.id, modules })}
+                  onLagre={(modules, opt) =>
+                    sett.mutate({ tenantId: t.id, modules, optional: opt })
+                  }
                 />
               ) : null}
             </div>
@@ -111,27 +117,53 @@ export function KjopteModulerTabell({
 
 function ModulAvkrysning({
   katalog,
-  valgte,
+  included,
+  optional,
   pending,
   onLagre,
 }: {
   katalog: Katalog;
-  valgte: string[];
+  included: string[];
+  optional: string[];
   pending: boolean;
-  onLagre: (modules: string[]) => void;
+  onLagre: (modules: string[], optional: string[]) => void;
 }) {
-  const [lokalt, setLokalt] = useState(() => new Set(valgte));
+  const [fast, setFast] = useState(() => new Set(included));
+  const [valg, setValg] = useState(() => new Set(optional));
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
+      <p className="text-[12px] text-fg-muted">I pakken</p>
       <div className="grid gap-1.5 sm:grid-cols-2">
         {katalog.map((m) => (
-          <label key={m.key} className="flex items-center gap-2 text-body text-fg">
+          <label key={`inc-${m.key}`} className="flex items-center gap-2 text-body text-fg">
             <input
               type="checkbox"
-              checked={lokalt.has(m.key)}
+              checked={fast.has(m.key)}
               onChange={() => {
-                setLokalt((forrige) => {
+                setFast((forrige) => {
+                  const neste = new Set(forrige);
+                  if (neste.has(m.key)) neste.delete(m.key);
+                  else neste.add(m.key);
+                  return neste;
+                });
+              }}
+              className="size-4 accent-[#111]"
+            />
+            {m.label}
+          </label>
+        ))}
+      </div>
+      <p className="text-[12px] text-fg-muted">Kan velges i veiviseren</p>
+      <div className="grid gap-1.5 sm:grid-cols-2">
+        {katalog.map((m) => (
+          <label key={`opt-${m.key}`} className="flex items-center gap-2 text-body text-fg">
+            <input
+              type="checkbox"
+              checked={valg.has(m.key)}
+              disabled={fast.has(m.key)}
+              onChange={() => {
+                setValg((forrige) => {
                   const neste = new Set(forrige);
                   if (neste.has(m.key)) neste.delete(m.key);
                   else neste.add(m.key);
@@ -150,9 +182,9 @@ function ModulAvkrysning({
           disabled={pending}
           state={pending ? 'loading' : 'idle'}
           loadingText="Lagrer…"
-          onClick={() => onLagre([...lokalt])}
+          onClick={() => onLagre([...fast], [...valg].filter((k) => !fast.has(k)))}
         >
-          Lagre tillegg
+          Lagre pakke
         </StatefulButton>
       </div>
     </div>

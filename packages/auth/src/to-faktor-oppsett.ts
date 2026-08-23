@@ -22,7 +22,10 @@ export function etter2faBekreftet(): Etter2faBekreftet {
 }
 
 /** Hard navigasjon — samme lærdom som dobbel-login-bugen på `/signin`. */
-export function fortsettEtter2faKvittering(): { destinasjon: '/dashboard' } {
+export function fortsettEtter2faKvittering(landing?: string | null): { destinasjon: string } {
+  if (landing && landing.startsWith('/') && !landing.startsWith('//')) {
+    return { destinasjon: landing };
+  }
   return { destinasjon: '/dashboard' };
 }
 

@@ -255,7 +255,12 @@ export const tenantsRouter = router({
       name: string;
       slug: string;
       kind: (typeof tenants)[number]['kind'];
-      modules: Array<{ moduleKey: string; enabled: boolean; plan: string | null }>;
+      modules: Array<{
+        moduleKey: string;
+        enabled: boolean;
+        plan: string | null;
+        source: string;
+      }>;
     }> = [];
 
     for (const t of tenants) {
@@ -265,10 +270,19 @@ export const tenantsRouter = router({
             moduleKey: schema.tenantModules.moduleKey,
             enabled: schema.tenantModules.enabled,
             plan: schema.tenantModules.plan,
+            source: schema.tenantModules.source,
           })
           .from(schema.tenantModules)
           .where(eq(schema.tenantModules.tenantId, t.id)),
-      ).catch(() => [] as Array<{ moduleKey: string; enabled: boolean; plan: string | null }>);
+      ).catch(
+        () =>
+          [] as Array<{
+            moduleKey: string;
+            enabled: boolean;
+            plan: string | null;
+            source: string;
+          }>,
+      );
       rader.push({ ...t, modules });
     }
 
@@ -285,9 +299,9 @@ export const tenantsRouter = router({
    * med en gang og får likevel en sett/bytt-passord-lenke. Finnes den ikke,
    * opprettes tenanten uten eier, og invitee lager kontoen selv.
    *
-   * Tillegg kommer fra admin — aldri fra en veiviser hos forhandleren.
-   * `START_MODULER` er tom; bare ADDON-nøkler skrives til `tenant_modules`.
-   */
+ * Admin setter pakken (`modules` = inkludert) og hva eieren *kan* legge til
+ * i veiviseren (`optional`). `START_MODULER` er tom; shop/twilio avvises.
+ */
   create: endwiseAdminProcedure
     .input(
       z.object({
@@ -296,10 +310,12 @@ export const tenantsRouter = router({
         ownerEmail: z.email(),
         kind: z.enum(['live', 'demo']).default('live'),
         modules: tildelbareModulerSchema.default([]),
+        optional: tildelbareModulerSchema.default([]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const addons = avvisBasisModuler(input.modules);
+      const included = avvisBasisModuler(input.modules);
+      const optional = avvisBasisModuler(input.optional).filter((k) => !included.includes(k));
       const epost = input.ownerEmail.trim().toLowerCase();
 
       const [eksisterende] = await ctx.db
@@ -329,7 +345,7 @@ export const tenantsRouter = router({
         .from(schema.user)
         .where(sql`lower(${schema.user.email}) = ${epost}`);
 
-      const moduler = addons.length ? addons : START_MODULER;
+      const moduler = included.length ? included : START_MODULER;
       let tenantId: string;
       if (eier) {
         const auth = createAuth(ctx.db);
@@ -338,14 +354,17 @@ export const tenantsRouter = router({
           slug: input.slug,
           ownerUserId: eier.id,
           modules: moduler,
+          optionalModules: optional,
           plan: 'endwise',
           kind: input.kind,
+          onboardingCompleted: false,
         }));
       } else {
         ({ tenantId } = await createTenantShell(ctx.db, {
           name: input.name,
           slug: input.slug,
           modules: moduler,
+          optionalModules: optional,
           plan: 'endwise',
           kind: input.kind,
         }));
@@ -357,7 +376,13 @@ export const tenantsRouter = router({
           actor: ctx.userId,
           action: 'tenant.created',
           subjectId: tenantId,
-          metadata: { slug: input.slug, kind: input.kind, modules: moduler, ownerEmail: epost },
+          metadata: {
+            slug: input.slug,
+            kind: input.kind,
+            modules: moduler,
+            optional,
+            ownerEmail: epost,
+          },
         });
         for (const key of moduler) {
           await skrivEntitlementAudit(tx, {
@@ -400,10 +425,14 @@ export const tenantsRouter = router({
       z.object({
         tenantId: z.uuid(),
         modules: tildelbareModulerSchema,
+        optional: tildelbareModulerSchema.default([]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const ønsket = new Set(avvisBasisModuler(input.modules));
+      const included = new Set(avvisBasisModuler(input.modules));
+      const optional = new Set(
+        avvisBasisModuler(input.optional).filter((k) => !included.has(k)),
+      );
 
       const [tenant] = await withPlatformAdmin(ctx.db, (tx) =>
         tx
@@ -420,6 +449,7 @@ export const tenantsRouter = router({
           .select({
             moduleKey: schema.tenantModules.moduleKey,
             enabled: schema.tenantModules.enabled,
+            source: schema.tenantModules.source,
           })
           .from(schema.tenantModules)
           .where(eq(schema.tenantModules.tenantId, input.tenantId));
@@ -427,33 +457,81 @@ export const tenantsRouter = router({
         const granted: string[] = [];
         const revoked: string[] = [];
 
-        for (const key of ønsket) {
+        for (const key of included) {
           const rad = eksisterende.find((r) => r.moduleKey === key);
           if (!rad) {
             await tx.insert(schema.tenantModules).values({
               tenantId: input.tenantId,
               moduleKey: key,
               enabled: true,
+              source: 'included',
               plan: 'endwise',
             });
             granted.push(key);
-          } else if (!rad.enabled) {
+          } else if (!rad.enabled || rad.source !== 'included') {
             await tx
               .update(schema.tenantModules)
-              .set({ enabled: true, plan: 'endwise', updatedAt: new Date() })
+              .set({
+                enabled: true,
+                source: 'included',
+                plan: 'endwise',
+                updatedAt: new Date(),
+              })
               .where(
                 and(
                   eq(schema.tenantModules.tenantId, input.tenantId),
                   eq(schema.tenantModules.moduleKey, key),
                 ),
               );
-            granted.push(key);
+            if (!rad.enabled) granted.push(key);
+          }
+        }
+
+        for (const key of optional) {
+          const rad = eksisterende.find((r) => r.moduleKey === key);
+          if (!rad) {
+            await tx.insert(schema.tenantModules).values({
+              tenantId: input.tenantId,
+              moduleKey: key,
+              enabled: false,
+              source: 'optional',
+              plan: 'endwise',
+            });
+          } else if (rad.source === 'included') {
+            await tx
+              .update(schema.tenantModules)
+              .set({
+                enabled: rad.enabled,
+                source: rad.enabled ? 'dealer' : 'optional',
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(schema.tenantModules.tenantId, input.tenantId),
+                  eq(schema.tenantModules.moduleKey, key),
+                ),
+              );
           }
         }
 
         for (const rad of eksisterende) {
-          if (!rad.enabled || ønsket.has(rad.moduleKey as AddonModule)) continue;
+          if (rad.source === 'stripe') continue;
           if (!erTildelbarAddon(rad.moduleKey)) continue;
+          if (included.has(rad.moduleKey as AddonModule)) continue;
+          if (optional.has(rad.moduleKey as AddonModule)) continue;
+          if (!rad.enabled) {
+            if (rad.source === 'optional') {
+              await tx
+                .delete(schema.tenantModules)
+                .where(
+                  and(
+                    eq(schema.tenantModules.tenantId, input.tenantId),
+                    eq(schema.tenantModules.moduleKey, rad.moduleKey),
+                  ),
+                );
+            }
+            continue;
+          }
           await tx
             .update(schema.tenantModules)
             .set({ enabled: false, updatedAt: new Date() })
@@ -472,7 +550,7 @@ export const tenantsRouter = router({
             actor: ctx.userId,
             action: 'entitlement.granted',
             subjectId: key,
-            metadata: { moduleKey: key, plan: 'endwise', at: 'setModules' },
+            metadata: { moduleKey: key, plan: 'endwise', at: 'setModules', source: 'included' },
           });
         }
         for (const key of revoked) {
@@ -485,7 +563,13 @@ export const tenantsRouter = router({
           });
         }
 
-        return { tenantId: input.tenantId, granted, revoked, modules: [...ønsket] };
+        return {
+          tenantId: input.tenantId,
+          granted,
+          revoked,
+          modules: [...included],
+          optional: [...optional],
+        };
       });
     }),
 

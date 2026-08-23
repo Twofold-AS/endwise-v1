@@ -4,8 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F5-26 — invitee-siden har ingen modul-/planvelger.
- * Admin tildeler tillegg. Eieren setter bare passord.
+ * F5-26 — passord-siden har ingen modulvelger. Veiviseren kommer etter 2FA.
  */
 describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
   const her = dirname(fileURLToPath(import.meta.url));
@@ -14,6 +13,7 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     resolve(her, '../app/(app)/endwise/forhandlere/page.tsx'),
     'utf8',
   );
+  const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/page.tsx'), 'utf8');
 
   it('godta-siden ber om passord og har ingen tilleggs-UI', () => {
     expect(kilde).toMatch(/Sett eller bytt passord|Velg et passord/);
@@ -22,14 +22,25 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(kilde).not.toMatch(/addonKatalog|setModules/);
   });
 
-  it('forhandlere-siden er der admin krysser av tillegg', () => {
-    expect(forhandlere).toMatch(/Betalte tillegg/);
+  it('forhandlere-siden skiller pakke og valgfritt', () => {
+    expect(forhandlere).toMatch(/I pakken \(fast\)/);
+    expect(forhandlere).toMatch(/Kan velges i veiviseren/);
     expect(forhandlere).toMatch(/addonKatalog/);
     expect(forhandlere).toMatch(/setModules/);
     expect(forhandlere).toMatch(/Send invitasjon på nytt/);
     expect(forhandlere).toMatch(/setter passord selv/);
     expect(forhandlere).not.toMatch(/href:\s*['"]\/registrer['"]|href=['"]\/registrer['"]/);
-    expect(forhandlere).not.toMatch(/['"]shop['"]|['"]twilio['"]|Nettbutikk/);
+    expect(forhandlere).not.toMatch(/['"]shop['"]|['"]twilio['"]/);
+  });
+
+  it('eier-veiviseren har visningsnavn, valgfrie tillegg og team', () => {
+    expect(oppstart).toMatch(/Visningsnavn/);
+    expect(oppstart).toMatch(/Valgfritt/);
+    expect(oppstart).toMatch(/Inviter teamet/);
+    expect(oppstart).toMatch(/invitasjoner\.opprett/);
+    expect(oppstart).toMatch(/selger|mekaniker/);
+    expect(oppstart).not.toMatch(/['"]shop['"]|['"]twilio['"]/);
+    expect(oppstart).not.toMatch(/setModules/);
   });
 
   it('ingen offentlig /registrer-side', () => {

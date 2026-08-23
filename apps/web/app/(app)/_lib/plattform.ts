@@ -29,6 +29,15 @@ export function plattformToast(): string {
   return 'Endwise er plattformen, ikke et verksted.';
 }
 
+/** UI: kind=platform ELLER slug=endwise — ikke vent på at setup har satt kind. */
+export function erPlattformIUi(input: {
+  erPlattform?: boolean;
+  slug?: string | null;
+  kind?: string | null;
+}): boolean {
+  return Boolean(input.erPlattform) || input.kind === 'platform' || input.slug === 'endwise';
+}
+
 export function erForhandlerRutePaaPlattform(pathname: string): boolean {
   if (pathname.startsWith('/endwise')) return false;
   if (pathname.startsWith('/innstillinger/profil')) return false;

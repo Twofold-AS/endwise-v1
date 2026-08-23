@@ -97,12 +97,17 @@ create policy invitations_open_by_hash_update on invitations
 -- tenant-policy (de er TO authenticated). Uten dette unntaket er
 -- `SELECT slug` 0 rader («finnes ikke») og DELETE på RLS-tabeller 0 rader.
 --
--- TO PUBLIC med vilje: DEFINER-eieren er ikke `authenticated`.
--- Hver slett-policy krever ALLE tre: `app.platform_admin = on`,
--- `app.slett_tenant_id` (funksjonen setter is_local) OG
--- `NOT pg_has_role(authenticated)`. App-rollen kan kalle set_config, så
--- GUC-er alene må ikke åpne slett for vanlig trafikk. `platform_admin`
--- alene åpner SELECT på tenants og dealer_admin-tråder (F5-11).
+-- TO PUBLIC med vilje: DEFINER kjører som tabelleieren.
+--
+-- ⛔ Rotårsak (Scaleway, 23.08.2026): `NOT pg_has_role(current_user,
+-- 'authenticated', 'member')` matcher ALDRI eieren. Den som CREATE ROLE
+-- authenticated er ADMIN av rollen, så pg_has_role(...) er TRUE. Resultat:
+-- tom SELECT på `slug` → «finnes ikke». PERMISSIVE OR er ikke et hull —
+-- `tenants_slett_forhandler_select` er bundet til slett-GUC.
+--
+-- Predikatet er `current_user IS DISTINCT FROM 'authenticated'` OG
+-- `… FROM 'endwise_app'`: app-rollen (med eller uten SET ROLE) kan sette
+-- GUC-er, men skal ikke bruke eier-policyene. Eieren `endwise` matcher.
 
 drop policy if exists tenants_platform_admin_read_owner on tenants;
 create policy tenants_platform_admin_read_owner on tenants
@@ -111,7 +116,20 @@ create policy tenants_platform_admin_read_owner on tenants
   to public
   using (
     current_setting('app.platform_admin', true) = 'on'
-    and not pg_has_role(current_user, 'authenticated', 'member')
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+  );
+
+drop policy if exists tenants_slett_forhandler_select on tenants;
+create policy tenants_slett_forhandler_select on tenants
+  as permissive
+  for select
+  to public
+  using (
+    current_setting('app.platform_admin', true) = 'on'
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
   );
 
 drop policy if exists tenants_slett_forhandler on tenants;
@@ -121,7 +139,8 @@ create policy tenants_slett_forhandler on tenants
   to public
   using (
     current_setting('app.platform_admin', true) = 'on'
-    and not pg_has_role(current_user, 'authenticated', 'member')
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
     and id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
   );
 
@@ -135,12 +154,14 @@ create policy audit_log_slett_update on audit_log
   to public
   using (
     current_setting('app.platform_admin', true) = 'on'
-    and not pg_has_role(current_user, 'authenticated', 'member')
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
     and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
   )
   with check (
     current_setting('app.platform_admin', true) = 'on'
-    and not pg_has_role(current_user, 'authenticated', 'member')
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
     and (
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
       or tenant_id = (select id from tenants where slug = 'endwise')
@@ -154,7 +175,8 @@ create policy audit_log_slett_insert on audit_log
   to public
   with check (
     current_setting('app.platform_admin', true) = 'on'
-    and not pg_has_role(current_user, 'authenticated', 'member')
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
     and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
   );
 
@@ -165,12 +187,14 @@ create policy erasure_requests_slett_forhandler on erasure_requests
   to public
   using (
     current_setting('app.platform_admin', true) = 'on'
-    and not pg_has_role(current_user, 'authenticated', 'member')
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
     and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
   )
   with check (
     current_setting('app.platform_admin', true) = 'on'
-    and not pg_has_role(current_user, 'authenticated', 'member')
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
     and (
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
       or tenant_id = (select id from tenants where slug = 'endwise')
@@ -203,7 +227,8 @@ begin
           as permissive for delete to public
           using (
             current_setting('app.platform_admin', true) = 'on'
-            and not pg_has_role(current_user, 'authenticated', 'member')
+            and current_user is distinct from 'authenticated'
+            and current_user is distinct from 'endwise_app'
             and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
           )
       $sql$,

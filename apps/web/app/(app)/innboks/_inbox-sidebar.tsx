@@ -21,6 +21,7 @@ import {
   KIND_LABEL,
   KIND_TONE,
   type ThreadKind,
+  supportRadTittel,
   threadHeading,
   visningForTraadtype,
 } from './_lib';
@@ -189,7 +190,7 @@ export function InboxSidebar() {
             henvendelser.map((t) => (
               <Link key={t.id} href={`/endwise/innboks/${t.id}` as Route} className="block">
                 <SupportKort
-                  navn={t.tenantName}
+                  navn={supportRadTittel(t.kontaktNavn, t.tenantName)}
                   utdrag={t.sisteTekst?.trim() || t.subject?.trim() || ''}
                   ulest={Boolean(t.unread)}
                   aktiv={t.id === aktivId}

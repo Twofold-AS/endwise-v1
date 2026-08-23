@@ -113,6 +113,7 @@ export const sessionRouter = router({
         .innerJoin(schema.organization, eq(schema.organization.id, schema.member.organizationId))
         .where(eq(schema.member.userId, ctx.userId));
 
+      const aktivOrg = medlemskap.find((m) => m.id === ctx.tenantId);
       const plattformOrg = medlemskap.find((m) => erPlattformTenant({ slug: m.slug }));
       const verkstederRaa = medlemskap.filter((m) => !erPlattformTenant({ slug: m.slug }));
       const verksteder = await Promise.all(
@@ -135,7 +136,7 @@ export const sessionRouter = router({
       );
 
       const erPlattform = erPlattformTenant({
-        slug: tenant?.slug,
+        slug: tenant?.slug ?? aktivOrg?.slug,
         kind: tenant?.kind,
       });
       const landing = erPlattform
@@ -153,8 +154,9 @@ export const sessionRouter = router({
         landing,
         needsOnboarding: erPlattform ? false : needsOnboarding,
         tenantName: tenant?.name ?? null,
-        tenantSlug: tenant?.slug ?? null,
+        tenantSlug: tenant?.slug ?? aktivOrg?.slug ?? null,
         tenantKind: tenant?.kind ?? 'live',
+        aktivOrgSlug: aktivOrg?.slug ?? null,
         erPlattform,
         plattformTenantId: plattformOrg?.id ?? null,
         verksteder,

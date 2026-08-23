@@ -32,8 +32,9 @@ export type VerkstedMedlemskap = {
  * F5-13 / F5-28 — Merkeboks + kontekst-dropdown.
  *
  * Når aktiv org er plattform-tenanten: header Endwise + Plattform.
- * Dropdown viser bare Endwise. Ekte verksted-medlemskap kommer ETTER
- * «Dine verksteder» — det er ekte medlemskap, ikke Se verkstedet.
+ * Dropdown viser bare Endwise. «Forhandlere» er inspect-URL
+ * (`/endwise/verksted/[slug]`), aldri setActive. Ekte verksted-medlemskap
+ * kommer ETTER «Dine verksteder» — det er ekte medlemskap, ikke Se verkstedet.
  *
  * I Se verkstedet (inspect): bare «Tilbake til Endwise». Ingen setActive.
  */
@@ -66,6 +67,10 @@ export function ContextSwitcher({
   const current = CONTEXTS.find((c) => c.key === active) ?? CONTEXTS[0];
   const demoTenants = trpc.tenants.myDemoTenants.useQuery(undefined, {
     enabled: canSwitchDemo && !inspect,
+  });
+  const alleForhandlere = trpc.tenants.list.useQuery(undefined, {
+    enabled: erPlattform && !inspect,
+    retry: false,
   });
 
   async function byttTenant(tenantId: string, landing: string) {
@@ -103,6 +108,7 @@ export function ContextSwitcher({
     inspect ||
     visningsvalg.length > 1 ||
     verksteder.length > 0 ||
+    (erPlattform && (alleForhandlere.data?.length ?? 0) > 0) ||
     Boolean(plattformTenantId && !erPlattform);
 
   if (!kanSwitch) {
@@ -205,6 +211,30 @@ export function ContextSwitcher({
                   )}
                 </DropdownMenuItem>
               ))}
+
+              {erPlattform && (alleForhandlere.data?.length ?? 0) > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuHeader>Forhandlere</DropdownMenuHeader>
+                  {alleForhandlere.data?.map((t) => (
+                    <DropdownMenuItem
+                      key={t.id}
+                      onSelect={() => {
+                        router.push(
+                          `/endwise/verksted/${t.slug}/dashboard?fra=forhandlere` as Route,
+                        );
+                      }}
+                    >
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-label text-fg">{t.name}</span>
+                        <span className="truncate text-[12px] text-fg-muted">
+                          Kun lesing · {t.slug}
+                        </span>
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
 
               {erPlattform && verksteder.length > 0 && (
                 <>

@@ -73,11 +73,12 @@ export function AvatarVelger({ seed }: { seed: string | null }) {
   return (
     <CardShell className="flex flex-col gap-4 p-5">
       <div className="flex items-center gap-4">
-        <Avatar seed={seed} valg={medHappy(valg)} navn="" size={48} bevegelse="hover" />
+        <Avatar seed={seed} valg={medHappy(valg)} navn="" size={48} bevegelse="alltid" />
         <div className="min-w-0 flex-1">
           <p className="text-label text-fg">Avataren din</p>
           <p className="text-[12px] text-fg-muted leading-relaxed">
-            Ett ansikt, knyttet til kontoen din. Humøret er alltid blidt.
+            Ett ansikt, knyttet til kontoen din. Humøret er alltid blidt. Velg
+            form under, eller trekk en ny tilfeldig.
           </p>
         </div>
         <button
@@ -89,6 +90,38 @@ export function AvatarVelger({ seed }: { seed: string | null }) {
           <RefreshCw size={14} strokeWidth={1.75} />
           Ny tilfeldig
         </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {FORMER.map((form) => {
+          const aktiv = valg.form === form;
+          return (
+            <button
+              key={form}
+              type="button"
+              disabled={lagre.isPending}
+              onClick={() => {
+                const neste = medHappy({ ...valg, form });
+                setValg(neste);
+                lagre.mutate(neste);
+              }}
+              title={form}
+              aria-label={`Velg form ${form}`}
+              aria-pressed={aktiv}
+              className={`rounded-control p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50 ${
+                aktiv ? 'bg-sidebar-active ring-1 ring-border-strong' : 'hover:bg-surface-2'
+              }`}
+            >
+              <Avatar
+                seed={seed}
+                valg={medHappy({ ...valg, form })}
+                navn=""
+                size={32}
+                bevegelse="stille"
+              />
+            </button>
+          );
+        })}
       </div>
 
       {lagre.error ? (

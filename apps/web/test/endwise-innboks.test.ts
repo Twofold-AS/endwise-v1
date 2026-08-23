@@ -71,6 +71,17 @@ describe('F5-11: /endwise/innboks gjenbruker innboks-chrome med modus=endwise', 
     expect(sidebar).toMatch(/Når et verksted skriver til Endwise, lander det her\./);
   });
 
+  it('liste og trådhode viser personnavn + forhandlernavn, aldri tom avsender', () => {
+    const sidebar = les('../app/(app)/innboks/_inbox-sidebar.tsx');
+    const trad = les('../app/(app)/innboks/[id]/page.tsx');
+    const lib = les('../app/(app)/innboks/_lib.ts');
+    expect(lib).toMatch(/export function supportRadTittel/);
+    expect(sidebar).toMatch(/supportRadTittel/);
+    expect(sidebar).toMatch(/kontaktNavn/);
+    expect(trad).toMatch(/supportRadTittel|kontaktNavn/);
+    expect(trad).toMatch(/authorNavn/);
+  });
+
   it('detaljpanelet viser forhandler + Se verkstedet som URL, uten setActive', () => {
     const detaljer = les('../app/(app)/innboks/_detaljer.tsx');
     const slot = les('../app/(app)/innboks/_detaljer-slot.tsx');

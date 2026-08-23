@@ -44,15 +44,15 @@ export function BrukerRad({
 
   const avatar = seed ? (
     /**
-     * ⛔ `hover` her, `stille` i lister. Humør er alltid happy — ett ansikt
-     * per person, seeden er user.id.
+     * ⛔ `alltid` her: én avatar i sidebaren, bevegelsen ER innholdet.
+     * Humør er alltid happy — ett ansikt per person, seeden er user.id.
      */
     <Avatar
       seed={seed}
       valg={profil.data?.avatar ? { ...profil.data.avatar, humor: 'happy' } : { humor: 'happy' }}
       navn=""
       size={collapsed ? 28 : 26}
-      bevegelse="hover"
+      bevegelse="alltid"
     />
   ) : (
     <span className="inline-grid size-[26px] shrink-0 place-items-center rounded-control bg-surface-2 text-fg-muted">

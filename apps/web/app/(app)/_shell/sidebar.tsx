@@ -28,6 +28,7 @@ import { BEVEL, NewBadge } from './cards';
 import { ContextSwitcher } from './context-switcher';
 import {
   type ContextKey,
+  CONTEXTS,
   childrenForRole,
   contextForPath,
   contextsForRole,
@@ -101,16 +102,25 @@ export function Sidebar() {
   useEffect(() => {
     setChosen(null);
   }, [pathContext]);
-  const context = chosen ?? pathContext;
-
+  /**
+   * slug=endwise / kind=platform er plattform — også før setup har satt
+   * Better Auth-rollen til endwise_admin. Ikke vis Forhandler/Lager fordi
+   * rollen fortsatt er dealer_admin.
+   */
+  const context = inspect ? 'forhandler' : erPlattform ? 'endwise' : (chosen ?? pathContext);
   const contexts = erPlattform
-    ? contextsForRole(role, isMechanic, false).filter((c) => c.key === 'endwise')
+    ? CONTEXTS.filter((c) => c.key === 'endwise')
     : contextsForRole(role, isMechanic, devMode);
+  const navRolle = erPlattform
+    ? role === 'endwise_support'
+      ? 'endwise_support'
+      : 'endwise_admin'
+    : role;
   const rawItems = inspect
     ? itemsForRole(FORHANDLER_NAV, 'dealer_admin').map((item) =>
         remapNav(item, inspectSlug ?? '', fra),
       )
-    : itemsForRole(navForContext(context), role);
+    : itemsForRole(navForContext(context), navRolle);
   const items = rawItems;
   // Settings-blokka er ulik per kontekst: forhandlerens konfigurasjon i
   // forhandler-konteksten, dev-mode-bryteren i Endwise-admin. `null` i resten.

@@ -197,7 +197,8 @@ grant execute on function consume_invitation(text) to authenticated;
 -- som tabelleieren. Lokalt er Docker-eieren superuser og bypasser RLS, så
 -- `SELECT slug` og `DELETE` så grønne ut. I prod er eieren `endwise` uten
 -- BYPASSRLS, og FORCE RLS gjelder også eieren. Policyene er `TO authenticated`
--- — eieren er det ikke. Resultat uten unntak:
+-- — eieren er det ikke. `NOT pg_has_role(authenticated)` er FEIL predikat:
+-- eieren som CREATE ROLE authenticated ER medlem (ADMIN). Resultat uten unntak:
 --   1. `SELECT slug FROM tenants` → 0 rader → raise «finnes ikke»
 --      (dette var 500-en på endwise.no 23.08.2026, commit 17ec774).
 --   2. DELETE på RLS-tabeller treffer default-deny: 0 rader, STILLE
@@ -210,8 +211,10 @@ grant execute on function consume_invitation(text) to authenticated;
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
 -- `invitations_open_by_hash`: funksjonen setter `app.slett_tenant_id`
 -- transaksjons-lokalt, og grants.sql har smale TO PUBLIC-policyer som
--- krever platform_admin + slett-GUC + ikke-authenticated. App-rollen
--- kan sette GUC-er, men `NOT pg_has_role(authenticated)` stenger den.
+-- krever platform_admin + slett-GUC + current_user <> authenticated
+-- / endwise_app. `NOT pg_has_role(authenticated)` er FEIL predikat:
+-- eieren som CREATE ROLE authenticated ER medlem (ADMIN) → tom SELECT.
+-- App-rollen kan sette GUC-er, men matcher ikke eier-policyene.
 -- Uten GUC ser eieren fortsatt 0 rader.
 --
 -- CI kan ikke simulere «FORCE RLS + ikke-superuser eier» uten å flytte

@@ -114,6 +114,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
        where p.polname in (
          'tenants_platform_admin_read_owner',
          'tenants_slett_forhandler',
+         'tenants_slett_forhandler_select',
          'audit_log_slett_update',
          'audit_log_slett_insert',
          'erasure_requests_slett_forhandler',
@@ -126,6 +127,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       expect.arrayContaining([
         'tenants_platform_admin_read_owner',
         'tenants_slett_forhandler',
+        'tenants_slett_forhandler_select',
         'audit_log_slett_update',
         'tenant_modules_slett_forhandler',
       ]),

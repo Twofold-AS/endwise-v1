@@ -28,7 +28,9 @@ import {
   isAgent,
   KIND_LABEL,
   KIND_TONE,
+  type Navnekart,
   ROLLE_LABEL,
+  supportRadTittel,
   threadHeading,
   visningForTraadtype,
 } from '../_lib';
@@ -139,8 +141,25 @@ export default function TrådPage() {
 
   const navn = trpc.directory.participants.useQuery(
     { ids: deltakerIder, visning },
-    { enabled: deltakerIder.length > 0, staleTime: 5 * 60_000 },
+    { enabled: !endwise && deltakerIder.length > 0, staleTime: 5 * 60_000 },
   );
+
+  const platformNavn = useMemo(() => {
+    if (!endwise) return undefined;
+    const kart: Navnekart = {};
+    for (const m of rows) {
+      if ('authorNavn' in m && typeof m.authorNavn === 'string' && m.authorNavn.trim()) {
+        kart[m.authorId] = { navn: m.authorNavn, rolle: 'ansatt' };
+      }
+    }
+    if (thread && 'kontaktNavn' in thread && thread.kontaktNavn) {
+      const id = 'motparter' in thread ? thread.motparter?.[0] : undefined;
+      if (id && !kart[id]) kart[id] = { navn: thread.kontaktNavn, rolle: 'ansatt' };
+    }
+    return kart;
+  }, [endwise, rows, thread]);
+
+  const navnKart = endwise ? platformNavn : navn.data;
 
   // Sanntid: bare for DENNE tråden. Eventet er varselklokka; innholdet hentes
   // gjennom tRPC (og dermed RLS).
@@ -222,13 +241,16 @@ export default function TrådPage() {
            */}
           <h1 className="truncate text-title text-fg">
             {endwise && thread && 'tenantName' in thread
-              ? thread.tenantName
+              ? supportRadTittel(
+                  'kontaktNavn' in thread ? thread.kontaktNavn : null,
+                  thread.tenantName,
+                )
               : thread && 'motparter' in thread
                 ? threadHeading(
                     thread.subject,
                     thread.kind,
                     thread.motparter ?? [],
-                    navn.data,
+                    navnKart,
                     me.data?.userId,
                   )
                 : 'Samtale'}
@@ -254,7 +276,7 @@ export default function TrådPage() {
                 jeg med» er halve spørsmålet når du åpner en tråd. */}
             {thread && 'motparter' in thread && thread.subject?.trim() && motparter.length > 0 && (
               <span className="min-w-0 truncate text-[12px] text-fg-muted">
-                · {threadHeading(null, thread.kind, motparter, navn.data, me.data?.userId)}
+                · {threadHeading(null, thread.kind, motparter, navnKart, me.data?.userId)}
               </span>
             )}
           </div>
@@ -301,8 +323,8 @@ export default function TrådPage() {
                 <Message
                   mine={mine}
                   agent={isAgent(m.authorId)}
-                  author={authorLabel(m.authorId, me.data?.userId, navn.data)}
-                  rolle={navn.data?.[m.authorId]?.rolle}
+                  author={authorLabel(m.authorId, me.data?.userId, navnKart)}
+                  rolle={navnKart?.[m.authorId]?.rolle}
                   authorId={m.authorId}
                   seed={navn.data?.[m.authorId]?.seed ?? null}
                   avatar={navn.data?.[m.authorId]?.avatar ?? null}

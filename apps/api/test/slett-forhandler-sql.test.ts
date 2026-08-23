@@ -45,16 +45,27 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(slettSql).toMatch(/row_security=off/);
   });
 
-  it('TO PUBLIC slett-policyer krever platform_admin OG slett_tenant_id OG ikke-authenticated', () => {
+  it('TO PUBLIC slett-policyer krever platform_admin, slett_tenant_id og current_user <> authenticated', () => {
+    /**
+     * Rotårsak (Scaleway): eieren som CREATE ROLE authenticated er ADMIN
+     * av rollen. `pg_has_role(current_user, 'authenticated', 'member')`
+     * er da TRUE for DEFINER-eieren → SELECT-policyen matcher aldri →
+     * tom SELECT → «finnes ikke». PERMISSIVE OR er ikke et hull:
+     * `tenants_slett_forhandler_select` er bundet til slett-GUC.
+     */
     expect(grants).toMatch(/tenants_platform_admin_read_owner/);
     expect(grants).toMatch(/tenants_slett_forhandler/);
+    expect(grants).toMatch(/tenants_slett_forhandler_select/);
     expect(grants).toMatch(/audit_log_slett_update/);
     expect(grants).toMatch(/app\.slett_tenant_id/);
     expect(grants).toMatch(/to public/i);
-    expect(grants).toMatch(/not pg_has_role\(current_user, 'authenticated', 'member'\)/);
+    expect(grants).toMatch(/current_user is distinct from 'authenticated'/);
+    expect(grants).toMatch(/current_user is distinct from 'endwise_app'/);
+    expect(grants).not.toMatch(/not pg_has_role\(current_user, 'authenticated', 'member'\)/);
 
     const slettPolicyer = [
       'tenants_slett_forhandler',
+      'tenants_slett_forhandler_select',
       'audit_log_slett_update',
       'audit_log_slett_insert',
       'erasure_requests_slett_forhandler',
@@ -62,16 +73,36 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     for (const navn of slettPolicyer) {
       const start = grants.indexOf(`create policy ${navn}`);
       expect(start, navn).toBeGreaterThan(-1);
-      const kropp = grants.slice(start, start + 900);
+      const kropp = grants.slice(start, start + 1100);
       expect(kropp, navn).toMatch(/app\.platform_admin/);
-      expect(kropp, navn).toMatch(/not pg_has_role\(current_user, 'authenticated', 'member'\)/);
+      expect(kropp, navn).toMatch(/current_user is distinct from 'authenticated'/);
+      expect(kropp, navn).toMatch(/current_user is distinct from 'endwise_app'/);
       expect(kropp, navn).toMatch(/app\.slett_tenant_id/);
     }
 
     const dynamisk = grants.slice(grants.indexOf('create policy %I on public.%I'));
     expect(dynamisk).toMatch(/app\.platform_admin/);
     expect(dynamisk).toMatch(/app\.slett_tenant_id/);
-    expect(dynamisk).toMatch(/not pg_has_role\(current_user, 'authenticated', 'member'\)/);
+    expect(dynamisk).toMatch(/current_user is distinct from 'authenticated'/);
+    expect(dynamisk).toMatch(/current_user is distinct from 'endwise_app'/);
+  });
+
+  it('0022 tetter eier-SELECT uten å svekke RLS (idempotent)', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const m0022 = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/0022_slett_forhandler_eier_select.sql'),
+      'utf8',
+    );
+    const journal = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/meta/_journal.json'),
+      'utf8',
+    );
+    expect(journal).toMatch(/0022_slett_forhandler_eier_select/);
+    expect(m0022).toMatch(/drop policy if exists tenants_slett_forhandler_select/i);
+    expect(m0022).toMatch(/create policy tenants_slett_forhandler_select/i);
+    expect(m0022).toMatch(/current_user is distinct from 'authenticated'/i);
+    expect(m0022).toMatch(/app\.slett_tenant_id/);
+    expect(m0022).not.toMatch(/not pg_has_role\(current_user/);
   });
 
   it('WITH CHECK på slett-UPDATE tillater bare slett-GUC eller Endwise-tenant — ikke true', () => {

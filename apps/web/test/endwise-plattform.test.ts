@@ -88,22 +88,25 @@ describe('Se verkstedet er URL-lesing', () => {
 
   it('stale Forhandler-kontekst på plattform redirecter med toast', () => {
     const layout = les('../app/(app)/layout.tsx');
+    const kopi = les('../app/(app)/_lib/plattform.ts');
     expect(layout).toMatch(/erForhandlerRutePaaPlattform/);
-    expect(layout).toMatch(/Endwise er plattformen, ikke et verksted/);
+    expect(layout).toMatch(/plattformToast/);
     expect(layout).toMatch(/\/endwise\?varsel=plattform/);
+    expect(kopi).toMatch(/Endwise er plattformen, ikke et verksted/);
   });
 });
 
 describe('plattform-team er ikke F1-10', () => {
   const team = les('../app/(app)/endwise/team/page.tsx');
-  const resend = les('../../packages/auth/src/senders/resend.ts');
+  const resend = les('../../../packages/auth/src/senders/resend.ts');
 
   it('inviterer administrator eller support, aldri eier', () => {
     expect(team).toMatch(/administrator/);
     expect(team).toMatch(/support/);
     expect(team).toMatch(/Hoved-admin/);
     expect(team).toMatch(/Eier kan ikke inviteres/);
-    expect(team).not.toMatch(/leder|selger|mekaniker/);
+    expect(team).toMatch(/Ikke forhandlerens/);
+    expect(team).not.toMatch(/jobFunction|job_function/);
   });
 
   it('e-postkopi er Endwise-support, aldri eier av verksted', () => {

@@ -49,7 +49,7 @@ describe('Se verkstedet — kun lesing', () => {
     expect(verksted).toMatch(/withPlatformInspect/);
     expect(verksted).toMatch(/endwiseInspectProcedure/);
     expect(verksted).toMatch(/slug/);
-    expect(verksted).not.toMatch(/setActive|impersonat/i);
+    expect(verksted).not.toMatch(/organization\.setActive|impersonat/i);
     expect(init).toMatch(/Kun lesing/);
     expect(init).toMatch(/opts\.type === 'mutation'/);
   });

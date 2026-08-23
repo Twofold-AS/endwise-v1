@@ -156,7 +156,10 @@ export async function createTenantShell(
   return { tenantId };
 }
 
-function pakkeRader(tenantId: string, input: Pick<CreateTenantInput, 'modules' | 'optionalModules' | 'plan'>) {
+function pakkeRader(
+  tenantId: string,
+  input: Pick<CreateTenantInput, 'modules' | 'optionalModules' | 'plan'>,
+) {
   const included = [...new Set(input.modules ?? [])];
   const optional = [...new Set(input.optionalModules ?? [])].filter((k) => !included.includes(k));
   const plan = input.plan ?? 'endwise';

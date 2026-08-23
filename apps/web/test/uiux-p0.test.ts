@@ -88,13 +88,13 @@ describe('P0: pakkevelger er Stripe-raden', () => {
     'utf8',
   );
 
-  it('nivåkort er tre kolonner; tillegg skjuler shop og SMS', () => {
+  it('nivåkort er tre kolonner; tillegg skjuler shop, men ikke SMS', () => {
     expect(pakke).toMatch(/md:grid-cols-3/);
     expect(pakke).toMatch(/bg-accent-soft/);
     expect(pakke).toMatch(/Tillegg som ikke ligger i/);
     expect(pakke).toMatch(/Eieren ser bare disse i oppstart/);
     expect(pakke).toMatch(/t\.module !== 'shop'/);
-    expect(pakke).toMatch(/t\.module !== 'twilio'/);
+    expect(pakke).not.toMatch(/t\.module !== 'twilio'/);
     expect(forhandlere).toMatch(/NivaaValg/);
     expect(forhandlere).toMatch(/TilleggListe/);
     expect(forhandlere).toMatch(/optional:\s*\[\.\.\./);

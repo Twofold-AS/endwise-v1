@@ -39,8 +39,7 @@ export const sessionRouter = router({
         .from(schema.tenants)
         .where(eq(schema.tenants.id, ctx.tenantId));
 
-      const needsOnboarding =
-        ctx.role === 'dealer_admin' && !tenant?.onboardingCompletedAt;
+      const needsOnboarding = ctx.role === 'dealer_admin' && !tenant?.onboardingCompletedAt;
 
       /**
        * F7-06 — Eget kallenavn. Mekanikervisningen er per definisjon INTERN,

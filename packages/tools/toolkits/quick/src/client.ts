@@ -1,10 +1,10 @@
 import type { IntegrationHealth, IntegrationProvider } from '@endwise/modules';
 import { QuickAuthError, QuickError } from './errors.ts';
+import { probeQuickReadOnly } from './probe.ts';
 import {
   type QuickCustomer,
   type QuickCustomerBatch,
   type QuickCustomerRecord,
-  quickClientInfo,
   quickCustomerBatch,
 } from './schema.ts';
 import { assertAllowedQuickUrl } from './url-guard.ts';
@@ -70,6 +70,7 @@ export function createQuickClient(config: QuickConfig) {
     let response: Response;
     try {
       response = await fetch(`${base}${API_PREFIX}${path}`, {
+        method: 'GET',
         headers: {
           Authorization: `Token token=${config.token}`,
           Accept: 'application/json',
@@ -113,11 +114,16 @@ export function createQuickClient(config: QuickConfig) {
 
   return {
     /**
-     * `client/info` — brukes som tilkoblingstest. Et 200 beviser at baseUrl +
-     * token virker. Kaster QuickAuthError ved 401/403.
+     * `client/info` — GET-only tilkoblingstest (F1-07-proben). Et 200 beviser
+     * at baseUrl + token virker. Kaster QuickAuthError ved 401/403.
      */
     async clientInfo() {
-      return request(`/client/info`, quickClientInfo);
+      await probeQuickReadOnly({
+        baseUrl: config.baseUrl,
+        token: config.token,
+        timeoutMs,
+      });
+      return {};
     },
 
     /** Én side kunder fra `customer/batch`. */

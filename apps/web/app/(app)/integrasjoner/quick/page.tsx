@@ -93,7 +93,8 @@ export default function QuickPage() {
             <span className="font-semibold text-[13px] text-fg">Tilkobling</span>
             <p className="text-[12px] text-fg-faint leading-snug">
               Per forhandler: egen Quick-instans + eget ApiV2-token (lages i Quick3 under Client
-              Configuration → Security → Access Token, type ApiV2).
+              Configuration → Security → Access Token, type ApiV2). Nøkkelen testes med et lesekall
+              (GET) mot Quick før den lagres. Vi lagrer aldri klartekst.
             </p>
           </div>
 
@@ -135,7 +136,7 @@ export default function QuickPage() {
               disabled={!canSave || save.isPending}
               className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
-              {save.isPending ? 'Lagrer…' : 'Lagre'}
+              {save.isPending ? 'Tester og lagrer…' : 'Test og lagre'}
             </button>
 
             <button

@@ -13,8 +13,8 @@ import { ToFaktorRad } from '../../_shell/to-faktor-rad';
  * F5-19 / F1-17 / F1-20 — Settings › Profil. Egen bruker, sikkerhet og tema.
  *
  * Passordbytte (F1-17) bor i `ProfilKort` — samme komponent som mekanikerens
- * «Meg». 2FA-status (F1-20) leser `session.user.twoFactorEnabled` og peker
- * til `/2fa-oppsett`. Slå-av er F1-22 og er ikke her.
+ * «Meg». 2FA-status (F1-20) leser `session.user.twoFactorEnabled`. Slå-av
+ * (F1-22) krever gjeldende passord i `ToFaktorRad`.
  */
 export default function ProfilPage() {
   /**

@@ -64,7 +64,7 @@ const VARER: Vare[] = [
     envNokkel: t.stripePriceEnv,
     lookupKey: `endwise_tier_${t.key}_mnd`,
   })),
-  ...TILLEGG.map((t) => ({
+  ...TILLEGG.filter((t) => t.priceMonthlyMinor > 0).map((t) => ({
     navn: `Endwise tillegg: ${t.name}`,
     beskrivelse: t.desc,
     oreMnd: t.priceMonthlyMinor,

@@ -3,8 +3,8 @@
 /**
  * F5-26 — Nivå + faste/valgfrie tillegg.
  *
- * TIERS/TILLEGG er kilden. Ingen hardkodede nøkler. shop og twilio vises
- * aldri som avkrysning — SMS ligger i Pro-bundelen.
+ * TIERS/TILLEGG er kilden. Ingen hardkodede nøkler. shop vises
+ * aldri. SMS er tillegg på alle nivåer (pass-through, ingen månedsavgift).
  */
 export type Nivaa = {
   key: string;
@@ -24,9 +24,7 @@ export type Tillegg = {
 
 export function tilleggForNivaa(nivaa: Nivaa | undefined, tillegg: Tillegg[]): Tillegg[] {
   const inkludert = new Set(nivaa?.modules ?? []);
-  return tillegg.filter(
-    (t) => t.module !== 'shop' && t.module !== 'twilio' && !inkludert.has(t.module),
-  );
+  return tillegg.filter((t) => t.module !== 'shop' && !inkludert.has(t.module));
 }
 
 export function tilleggNokler(

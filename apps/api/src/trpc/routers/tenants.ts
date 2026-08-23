@@ -48,13 +48,12 @@ const slugSchema = z
 /**
  * Ekstra TILLEGG utenom nivået. Tom med vilje — Start/Pro/Enterprise
  * kommer fra TIERS. Admin krysser bare av det som ikke allerede ligger i
- * pakken. shop/twilio er aldri ekstra.
+ * pakken. shop er aldri ekstra. SMS (twilio) er tillegg på alle nivåer.
  */
 const START_MODULER: string[] = [];
 
 const BLOKKERT_MELDING: Record<string, string> = {
   shop: 'Nettbutikk (shop) er blokkert og ikke til salgs.',
-  twilio: 'SMS er ikke et tillegg — pass-through per melding, ingen modulpris.',
 };
 
 const ekstraTilleggSchema = z.array(z.string().min(1).max(64)).max(40);
@@ -79,7 +78,7 @@ function avvisEkstraTillegg(keys: readonly string[], tierKey: string): string[] 
       message: `Basis-moduler kan ikke tildeles: ${basis.join(', ')}. De er alltid på.`,
     });
   }
-  const blokkert = unike.filter((k) => erBlokertTildeling(k) || k === 'shop' || k === 'twilio');
+  const blokkert = unike.filter((k) => erBlokertTildeling(k) || k === 'shop');
   if (blokkert.length) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -407,8 +406,8 @@ export const tenantsRouter = router({
    * med en gang og får likevel en sett/bytt-passord-lenke. Finnes den ikke,
    * opprettes tenanten uten eier, og invitee lager kontoen selv.
    *
-   * Admin setter pakken (`modules` = inkludert) og hva eieren *kan* legge til
-   * i veiviseren (`optional`). `START_MODULER` er tom; shop/twilio avvises.
+   * Admin setter pakken (`included`) og hva eieren *kan* legge til
+   * i veiviseren (`optional`). `START_MODULER` er tom; shop avvises.
    */
   create: endwiseAdminProcedure
     .input(

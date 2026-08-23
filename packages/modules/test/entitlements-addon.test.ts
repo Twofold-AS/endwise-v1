@@ -18,36 +18,36 @@ describe('F0-16 / F5-26 — tillegg vs. basis', () => {
     }
   });
 
-  it('shop og twilio er i ADDON_MODULES men ikke tildelbare', () => {
+  it('shop er blokkert; SMS (twilio) er tildelbart tillegg', () => {
     expect(ADDON_MODULES).toContain('shop');
     expect(ADDON_MODULES).toContain('twilio');
-    expect(IKKE_TILDELBARE_ADDON).toEqual(['shop', 'twilio']);
+    expect(IKKE_TILDELBARE_ADDON).toEqual(['shop']);
     expect(erTildelbarAddon('shop')).toBe(false);
-    expect(erTildelbarAddon('twilio')).toBe(false);
+    expect(erTildelbarAddon('twilio')).toBe(true);
     expect(erBlokertTildeling('shop')).toBe(true);
-    expect(erBlokertTildeling('twilio')).toBe(true);
+    expect(erBlokertTildeling('twilio')).toBe(false);
     expect(erTildelbarAddon('ai-support')).toBe(true);
     expect(erTildelbarAddon('vegvesen')).toBe(true);
   });
 
-  it('filtrerAddonNokler dropper basis, ukjente, shop og twilio', () => {
+  it('filtrerAddonNokler dropper basis, ukjente og shop — beholder SMS', () => {
     expect(
       filtrerAddonNokler(['booking', 'quick', 'finnes-ikke', 'shop', 'twilio', 'vegvesen']),
-    ).toEqual(['quick', 'vegvesen']);
+    ).toEqual(['quick', 'twilio', 'vegvesen']);
   });
 
-  it('katalogen er ADDON minus shop minus twilio, med norske etiketter', () => {
+  it('katalogen er ADDON minus shop, med norske etiketter', () => {
     const kat = addonKatalog();
     const keys = kat.map((k) => k.key);
     expect(keys).not.toContain('shop');
-    expect(keys).not.toContain('twilio');
+    expect(keys).toContain('twilio');
     expect(keys).not.toContain('booking');
     expect(keys).toContain('ai-support');
     expect(keys).toContain('vegvesen');
     expect(keys).toContain('quick');
     expect(keys.every((k) => ADDON_MODULES.includes(k))).toBe(true);
     expect(kat.every((k) => k.label.length > 0)).toBe(true);
-    expect(kat.some((k) => /sms/i.test(k.label))).toBe(false);
+    expect(kat.some((k) => k.label === 'SMS')).toBe(true);
     expect(kat.some((k) => k.label === 'Nettbutikk')).toBe(false);
   });
 });

@@ -81,7 +81,6 @@ const PRO_MODULER: ModuleKey[] = [
   'quick', // Quick ERP-synk (F8-01)
   'vegvesen', // Regnr-oppslag (F2-08)
   'smart-hverdag', // Push, handlingsknapper, kalender, nettbrett, passkey
-  'twilio', // SMS
 ];
 
 const ENTERPRISE_MODULER: ModuleKey[] = [
@@ -124,7 +123,6 @@ export const TIERS: Tier[] = [
       'Quick ERP-synk',
       'Vegvesen-oppslag på regnr',
       'Smart hverdag: push, handlingsknapper, kalender, nettbrett, passkey',
-      'SMS til kunder',
     ],
     modules: PRO_MODULER,
     kvoter: { sms: 1000, aiDiagnoser: 500, nettsideEndringer: 0 },
@@ -220,6 +218,15 @@ export const TILLEGG: Tillegg[] = [
     status: 'available',
   },
   {
+    key: 'twilio',
+    name: 'SMS',
+    desc: 'Pass-through per bookingmelding. Ingen månedsavgift.',
+    priceMonthlyMinor: 0,
+    stripePriceEnv: 'STRIPE_PRICE_SMS',
+    module: 'twilio',
+    status: 'available',
+  },
+  {
     key: 'shop',
     name: 'Nettbutikk',
     desc: 'Salg av deler og tilbehør på nett.',
@@ -312,17 +319,13 @@ export function kjopbareTillegg(): Tillegg[] {
  *
  *  · `status === 'available'`
  *  · modulen ligger IKKE allerede i `TIERS[nivaa].modules`
- *  · aldri shop (blocked) og aldri twilio (SMS er i Pro-bundelen, ikke et avkrysningsfelt)
+ *  · aldri shop (blocked). SMS er tillegg på alle nivåer, aldri planmodul.
  *  · coming/blocked skjules
  */
 export function tilgjengeligeTilleggForNivaa(tierKey: string | null | undefined): Tillegg[] {
   const inkludert = new Set<ModuleKey>(tierByKey(tierKey)?.modules ?? []);
   return TILLEGG.filter(
-    (t) =>
-      t.status === 'available' &&
-      t.module !== 'shop' &&
-      t.module !== 'twilio' &&
-      !inkludert.has(t.module),
+    (t) => t.status === 'available' && t.module !== 'shop' && !inkludert.has(t.module),
   );
 }
 
@@ -336,9 +339,9 @@ export function erGyldigEkstraTillegg(
 /**
  * Pakke → `tenant_modules`.
  *
- *  · included = nivåets bundle (kan inneholde twilio) + avkryssede TILLEGG-nøkler
+ *  · included = nivåets bundle (uten SMS) + avkryssede TILLEGG-nøkler
  *  · optional = samme katalog minus de som er merket included
- *  · shop kommer aldri med
+ *  · shop kommer aldri med; twilio bare hvis det er krysset av som tillegg
  */
 export function utvidPakke(
   tierKey: string,

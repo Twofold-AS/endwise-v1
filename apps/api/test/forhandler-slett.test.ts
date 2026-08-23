@@ -226,7 +226,7 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
     );
   });
 
-  it('extras-steget utelater included-tier-moduler, shop og twilio', async () => {
+  it('extras-steget utelater included-tier-moduler og shop — SMS bare hvis åpnet', async () => {
     const slug = `extras-${randomUUID().slice(0, 8)}`;
     const opprettet = await somEndwise().tenants.create({
       name: 'Extras AS',
@@ -252,8 +252,27 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
     expect(extras).not.toContain('ai-support');
     expect(extras).not.toContain('vegvesen');
     expect(status.included.map((m) => m.key)).toEqual(
-      expect.arrayContaining(['twilio', 'quick', 'white-label']),
+      expect.arrayContaining(['quick', 'white-label']),
     );
+    expect(status.included.map((m) => m.key)).not.toContain('twilio');
     expect(status.included.map((m) => m.key)).not.toContain('shop');
+  });
+
+  it('SMS kan inkluderes som tillegg på Pro uten å ligge i nivået', async () => {
+    const slug = `sms-${randomUUID().slice(0, 8)}`;
+    const opprettet = await somEndwise().tenants.create({
+      name: 'Sms AS',
+      slug,
+      ownerEmail: `sms.${slug}@verksted.test`,
+      kind: 'demo',
+      tier: 'pro',
+      included: ['twilio'],
+    });
+    tenantIds.push(opprettet.tenantId);
+
+    const eier = appRouter.createCaller(ctx(app, 'dealer_admin', opprettet.tenantId, adminUser));
+    const status = await eier.onboarding.status();
+    expect(status.included.map((m) => m.key)).toContain('twilio');
+    expect(status.optional.map((m) => m.key)).not.toContain('twilio');
   });
 });

@@ -19,7 +19,8 @@ import { adminProcedure, router } from '../init.ts';
  *   · slå på nøkler admin merket `source=optional` for DENNE tenanten
  *   · kun mens onboarding ikke er fullført
  *
- * shop/twilio avvises selv om noen skulle ha rotet dem inn som optional.
+ * shop avvises selv om noen skulle ha rotet den inn som optional.
+ * SMS kan slås på hvis admin åpnet den som optional.
  * Team-invitasjoner går via `invitasjoner.opprett` (F1-10 staff-CHECK).
  */
 
@@ -31,10 +32,7 @@ const extrasSchema = z
       if (erBlokertTildeling(key)) {
         ctx.addIssue({
           code: 'custom',
-          message:
-            key === 'shop'
-              ? 'Nettbutikk (shop) er blokkert og ikke til salgs.'
-              : 'SMS er ikke et tillegg — pass-through per melding, ingen modulpris.',
+          message: 'Nettbutikk (shop) er blokkert og ikke til salgs.',
         });
       }
     }

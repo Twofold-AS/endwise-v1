@@ -5,7 +5,7 @@
 **F5-26** (forhandlere + slett + pakkemodell)
 
 - Erstattet to flate addon-lister med `NivaaValg` (radio fra `TIERS`) og `TilleggListe` (kun `TILLEGG` med `status === 'available'` som ikke allerede ligger i valgt nivå).
-- Standardnivå Start. Prisene 4 490 / 8 490 / 12 490 urørt. Shop skjult. Twilio skrives i Pro/Enterprise-bundelen, aldri som avkrysning.
+- Standardnivå Start. Prisene 4 490 / 8 490 / 12 490 urørt. Shop skjult. SMS er pass-through-tillegg på alle nivåer (ingen månedsavgift), aldri planmodul.
 - Endwise-tenanten (`slug === 'endwise'`): merke «Endwise», ingen ny invitasjon, ingen slett, ingen pakke-rediger.
 - Radhandlinger: Endre (navn/slug/demo, eier-epost vises bare), Endre pakke, Send invitasjon på nytt (kun ubrukt eier-invite), Slett.
 - GDPR-slett i to steg (`advarsel` | `bekreft`): slug + 6-sifret kode til innlogget admin. Backend avviser uten gyldig kode og slug. Aldri Endwise, aldri egen tenant.
@@ -26,14 +26,14 @@
 
 ## 2. Hva gikk galt
 
-Alt gikk som planlagt. Context7 MCP var ikke tilgjengelig (auth); API-ene fulgte eksisterende tRPC/Zod-mønstre i repoet. Invitasjons-godta, OTP-e-postmaler og Bekrefter-spinner er urørt (annet PR).
+Første runde skrev SMS inn i Pro-bundelen (feil mot Jens Martins fasit). Rettet: `twilio` er ute av `PRO_MODULER`, inn i `TILLEGG` som pass-through på alle nivåer. Context7 MCP var ikke tilgjengelig (auth); API-ene fulgte eksisterende tRPC/Zod-mønstre i repoet. Invitasjons-godta, OTP-e-postmaler og Bekrefter-spinner er urørt (annet PR).
 
 ## 3. Hvilke fikser ble gjort
 
-- `create`/`setModules` tar `tier` + TILLEGG-nøkler og utvider via `utvidPakke` (twilio i Pro, aldri shop).
+- `create`/`setModules` tar `tier` + TILLEGG-nøkler og utvider via `utvidPakke` (SMS som tillegg på alle nivåer, aldri shop, aldri i Pro-bundelen).
 - `dealer_admin` er fortsatt FORBIDDEN på `tenants.setModules` / `tenants.create`.
 - Slett-OTP hashes; `slett_forhandler` er `SECURITY DEFINER` og krever `app.platform_admin`.
-- Tester: kan ikke slette Endwise; slett uten slug/kode avvises; extras utelater included/shop/twilio; resend skjult på Endwise.
+- Tester: kan ikke slette Endwise; slett uten slug/kode avvises; extras utelater included/shop; SMS bare hvis admin åpnet den; resend skjult på Endwise.
 
 ## 4. Neste fase / neste steg
 

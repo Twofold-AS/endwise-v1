@@ -76,7 +76,7 @@ describe('F5-26 — dealer kan ikke tildele egne moduler', () => {
   });
 });
 
-describe('F5-26 — shop og twilio kan ikke tildeles', () => {
+describe('F5-26 — shop kan ikke tildeles', () => {
   const admin = () =>
     appRouter.createCaller(
       ctx({} as never, 'endwise_admin', '00000000-0000-0000-0000-000000000001'),
@@ -94,19 +94,7 @@ describe('F5-26 — shop og twilio kan ikke tildeles', () => {
     );
   });
 
-  it('create avviser twilio (SMS er ikke et tillegg)', async () => {
-    await forventer(
-      admin().tenants.create({
-        name: 'Sms nei',
-        slug: 'sms-nei',
-        ownerEmail: 'sms@x.no',
-        modules: ['twilio'],
-      }),
-      'BAD_REQUEST',
-    );
-  });
-
-  it('create.optional avviser shop og twilio', async () => {
+  it('create.optional avviser shop', async () => {
     await forventer(
       admin().tenants.create({
         name: 'Opt shop',
@@ -116,18 +104,9 @@ describe('F5-26 — shop og twilio kan ikke tildeles', () => {
       }),
       'BAD_REQUEST',
     );
-    await forventer(
-      admin().tenants.create({
-        name: 'Opt sms',
-        slug: 'opt-sms',
-        ownerEmail: 'optsms@x.no',
-        optional: ['twilio'],
-      }),
-      'BAD_REQUEST',
-    );
   });
 
-  it('onboarding.fullfor avviser shop/twilio i extras', async () => {
+  it('onboarding.fullfor avviser shop i extras', async () => {
     const eier = appRouter.createCaller(
       ctx({} as never, 'dealer_admin', '00000000-0000-0000-0000-000000000001'),
     );
@@ -135,24 +114,13 @@ describe('F5-26 — shop og twilio kan ikke tildeles', () => {
       eier.onboarding.fullfor({ visningsnavn: 'Test AS', extras: ['shop'] }),
       'BAD_REQUEST',
     );
-    await forventer(
-      eier.onboarding.fullfor({ visningsnavn: 'Test AS', extras: ['twilio'] }),
-      'BAD_REQUEST',
-    );
   });
 
-  it('setModules avviser shop og twilio', async () => {
+  it('setModules avviser shop', async () => {
     await forventer(
       admin().tenants.setModules({
         tenantId: '00000000-0000-0000-0000-000000000001',
         modules: ['shop'],
-      }),
-      'BAD_REQUEST',
-    );
-    await forventer(
-      admin().tenants.setModules({
-        tenantId: '00000000-0000-0000-0000-000000000001',
-        modules: ['twilio'],
       }),
       'BAD_REQUEST',
     );
@@ -249,7 +217,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
         .map((m) => m.key)
         .sort(),
     ).toEqual([...pro, 'white-label'].sort());
-    expect(mods.find((m) => m.key === 'twilio')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'twilio')).toBeUndefined();
     expect(mods.find((m) => m.key === 'shop')).toBeUndefined();
     expect(mods.find((m) => m.key === 'sso')?.enabled).toBe(false);
 
@@ -407,7 +375,8 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       tier: 'start',
     });
     expect(etter.plan).toBe('start');
-    expect(etter.revoked).toEqual(expect.arrayContaining(['quick', 'twilio', 'vegvesen']));
+    expect(etter.revoked).toEqual(expect.arrayContaining(['quick', 'vegvesen']));
+    expect(etter.revoked).not.toContain('twilio');
     expect(etter.granted).not.toContain('shop');
 
     const mods = await owner
@@ -416,7 +385,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
     expect(mods.find((m) => m.key === 'widget')?.enabled).toBe(true);
     expect(mods.find((m) => m.key === 'quick')?.enabled).toBe(false);
-    expect(mods.find((m) => m.key === 'twilio')?.enabled).toBe(false);
+    expect(mods.find((m) => m.key === 'twilio')).toBeUndefined();
     expect(mods.find((m) => m.key === 'shop')).toBeUndefined();
   });
 
@@ -474,7 +443,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       .from(schema.tenantModules)
       .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
     expect(mods.find((m) => m.key === 'quick')?.enabled).toBe(true);
-    expect(mods.find((m) => m.key === 'twilio')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'twilio')).toBeUndefined();
     expect(mods.find((m) => m.key === 'white-label')?.enabled).toBe(false);
     expect(mods.find((m) => m.key === 'shop')).toBeUndefined();
   });

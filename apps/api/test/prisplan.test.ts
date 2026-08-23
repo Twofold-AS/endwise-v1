@@ -44,6 +44,8 @@ describe('F5-32 — priskatalogen (ren)', () => {
     const [start, pro, ent] = TIERS;
     for (const m of start.modules) expect(pro.modules).toContain(m);
     for (const m of pro.modules) expect(ent.modules).toContain(m);
+    expect(pro.modules).not.toContain('twilio');
+    expect(ent.modules).not.toContain('twilio');
   });
 
   it('⛔ HVER modulnøkkel i katalogen er en KJENT tilleggsnøkkel', () => {
@@ -72,6 +74,8 @@ describe('F5-32 — priskatalogen (ren)', () => {
     expect(kjopbare).not.toContain('samarbeid'); // coming
     expect(kjopbare).toContain('white-label');
     expect(kjopbare).toContain('nyhetsbrev');
+    expect(kjopbare).toContain('twilio');
+    expect(TILLEGG.find((t) => t.key === 'twilio')?.priceMonthlyMinor).toBe(0);
   });
 
   it('modulesForSubscription slår sammen nivå + tillegg uten duplikater', () => {

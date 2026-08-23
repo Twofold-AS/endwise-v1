@@ -17,7 +17,7 @@
 
 ### 0020 lookup / CHECK / hash (CWE-284, DEFINER)
 - 0020-fila urørt. 0021: `DROP FUNCTION lookup_open_invitation(text)` deretter CREATE med `platform_level`.
-- `db:repair-0020` før migrate, så en halvveis/feilet 0020 (CREATE OR REPLACE RETURNS) kan kjøres om.
+- `db:migrate` = `db:repair-0020` + drizzle-kit: DROPper `lookup_open_invitation` **før** 0020 kjøres, så CREATE OR REPLACE ikke dør på ny RETURNS. 0021 DROPper og CREATE-er på nytt. `drizzle.config.ts` bruker host+`ssl: { rejectUnauthorized: false }` (Scaleway-CA) — url+sslmode alene ga exit 1 med bare SSL-advarsler.
 - CHECK `invitations_platform_level_role`: `endwise_admin`↔`administrator`, `endwise_support`↔`support`.
 - Hash-policy er SELECT + UPDATE, ikke FOR ALL (`grants.sql` + 0021).
 - Godta krever `kind === 'platform'` ⇒ `erPlattformTenant`. Samme sjekk i `opprettPlatform`.
@@ -44,5 +44,5 @@ Se §1. Kontraktstester i `packages/db/test/mons-p0-kontrakt.test.ts` og oppdate
 
 ## 4. Neste steg
 - Etter merge: **`pnpm db:setup`** mot sesjonens `DATABASE_URL` (Scaleway), **ikke** Docker.
-  Migrasjoner: `0021_mons_p0_sikkerhet` (plus `db:repair-0020` som DROP-er `lookup_open_invitation` før migrate).
+  Det er `db:migrate` (DROP lookup + 0020 + **0021_mons_p0_sikkerhet**) og `db:grants`. Ingen rå SQL.
 - GJENSTÅR på F5-11: `support-endwise-agent` som førstelinje.

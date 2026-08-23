@@ -107,6 +107,22 @@ describe('0020-reparasjon i 0021 (CREATE OR REPLACE RETURNS)', () => {
     expect(journal).toMatch(/0020_platform_org/);
     expect(m0020).toMatch(/CREATE OR REPLACE FUNCTION lookup_open_invitation/);
   });
+
+  it('db:migrate DROPper lookup FØR drizzle-kit (ellers dør 0020 og 0021 nås aldri)', () => {
+    const pkg = les('../package.json');
+    expect(pkg).toMatch(/db:repair-0020|lookup_open_invitation/);
+    const migrate = JSON.parse(pkg).scripts['db:migrate'] as string;
+    expect(migrate).toMatch(/repair-0020|migrate\.ts/);
+  });
+
+  it('0021 GRANTer EXECUTE kun til authenticated', () => {
+    expect(m0021).toMatch(
+      /GRANT EXECUTE ON FUNCTION lookup_open_invitation\(text\) TO authenticated/i,
+    );
+    expect(m0021).not.toMatch(
+      /GRANT EXECUTE ON FUNCTION lookup_open_invitation\(text\) TO PUBLIC/i,
+    );
+  });
 });
 
 describe('invitations_open_by_hash er ikke FOR ALL (CWE-284)', () => {

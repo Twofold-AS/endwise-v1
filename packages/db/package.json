@@ -9,13 +9,13 @@
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "pnpm db:repair-0020 && drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:grants": "node --env-file-if-exists=../../.env --experimental-strip-types scripts/grants.ts",
     "db:repair-0020": "node --env-file-if-exists=../../.env --experimental-strip-types scripts/repair-0020.ts",
-    "db:setup": "pnpm db:repair-0020 && pnpm db:migrate && pnpm db:grants"
+    "db:setup": "pnpm db:migrate && pnpm db:grants"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

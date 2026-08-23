@@ -64,6 +64,26 @@ export function pgConnectionConfig(connectionString: string): PgConnectionConfig
 }
 
 /**
+ * drizzle-kit 0.31: `url` + `ssl` er ikke lov sammen (kun `url`, eller
+ * host/user/database + `ssl`). Scaleway-CA krever rejectUnauthorized:false,
+ * ellers blir `drizzle-kit migrate` exit 1 med bare SSL-advarsler.
+ */
+export function drizzleKitPgCredentials(connectionString: string) {
+  const pg = pgConnectionConfig(connectionString);
+  const url = new URL(pg.connectionString);
+  const host = url.hostname.replace(/^\[(.*)\]$/, '$1');
+  const database = decodeURIComponent(url.pathname.replace(/^\//, '')) || 'postgres';
+  return {
+    host,
+    port: url.port ? Number(url.port) : 5432,
+    user: decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+    database,
+    ...(pg.ssl ? { ssl: pg.ssl } : {}),
+  };
+}
+
+/**
  * Driver: node-postgres (`pg`) over vanlig TCP.
  *
  * Vanlig TCP fungerer mot både Docker-basen vi utvikler mot og Scaleway

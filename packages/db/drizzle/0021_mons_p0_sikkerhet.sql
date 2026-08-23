@@ -4,6 +4,8 @@
  *  · Tettere 0019: messages/participants bundet til thread.tenant_id.
  *  · Inspect-GUC app.platform_inspect (UUID) — SELECT-only, ikke customers.
  *  · 0020-reparasjon: DROP lookup_open_invitation før CREATE (RETURNS).
+ *    db:migrate DROPper funksjonen FØR drizzle-kit, så 0020 ikke dør
+ *    på CREATE OR REPLACE (Scaleway: 0020 sannsynligvis ikke i journal).
  *  · CHECK platform_level ↔ role.
  *  · invitations_open_by_hash er SELECT + UPDATE, ikke FOR ALL.
  *  · Trigger mot demote/slett av første endwise_admin på org slug=endwise.
@@ -42,6 +44,7 @@ CREATE POLICY "thread_participants_platform_inspect_read" ON "thread_participant
   SELECT 1 FROM threads th WHERE th.id = "thread_id" AND th.kind = 'dealer_admin' AND th.tenant_id = thread_participants.tenant_id
 ));--> statement-breakpoint
 
+ALTER TABLE "invitations" ADD COLUMN IF NOT EXISTS "platform_level" text;--> statement-breakpoint
 DROP FUNCTION IF EXISTS lookup_open_invitation(text);--> statement-breakpoint
 CREATE FUNCTION lookup_open_invitation(p_token_hash text)
 RETURNS TABLE (
@@ -70,6 +73,7 @@ BEGIN
      LIMIT 1;
 END;
 $$;--> statement-breakpoint
+REVOKE ALL ON FUNCTION lookup_open_invitation(text) FROM PUBLIC;--> statement-breakpoint
 GRANT EXECUTE ON FUNCTION lookup_open_invitation(text) TO authenticated;--> statement-breakpoint
 
 ALTER TABLE "invitations" DROP CONSTRAINT IF EXISTS "invitations_platform_level_role";--> statement-breakpoint

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createDb, type Database, eq, schema, sql } from '@endwise/db';
 import { ADDON_MODULES, BASIS_MODULES } from '@endwise/modules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { handleHono } from '../src/http/hono.ts';
 import { invitasjon } from '../src/routes/invitasjon.ts';
 import { appRouter } from '../src/trpc/router.ts';
 
@@ -239,11 +240,12 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       .select({ key: schema.tenantModules.moduleKey, enabled: schema.tenantModules.enabled })
       .from(schema.tenantModules)
       .where(eq(schema.tenantModules.tenantId, res.tenantId));
-    expect(mods.filter((m) => m.enabled).map((m) => m.key).sort()).toEqual([
-      'ai-support',
-      'quick',
-      'vegvesen',
-    ]);
+    expect(
+      mods
+        .filter((m) => m.enabled)
+        .map((m) => m.key)
+        .sort(),
+    ).toEqual(['ai-support', 'quick', 'vegvesen']);
     expect(mods.find((m) => m.key === 'white-label')?.enabled).toBe(false);
 
     const [tenant] = await owner
@@ -309,6 +311,13 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     expect(peekBody.kind).toBe('owner');
     expect(peekBody.kreverPassord).toBe(true);
 
+    // Samme sti som siden (`/invitasjoner/:token`), ikke sub-appen på `/:token`.
+    const viaSide = await handleHono(
+      new Request(`http://endwise.test/invitasjoner/${encodeURIComponent(token)}`),
+    );
+    expect(viaSide.status).toBe(200);
+    expect(await viaSide.json()).toMatchObject({ gyldig: true, kind: 'owner' });
+
     const passord = 'eier-passord-12';
     const godta = await invitasjon.request('/godta', {
       method: 'POST',
@@ -335,6 +344,14 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
 
     const brukt = await invitasjon.request(`/${token}`);
     expect(brukt.status).toBe(404);
+    const bruktViaSide = await handleHono(
+      new Request(`http://endwise.test/invitasjoner/${encodeURIComponent(token)}`),
+    );
+    expect(bruktViaSide.status).toBe(404);
+    expect(await bruktViaSide.json()).toEqual({
+      gyldig: false,
+      grunn: 'Invitasjonen er ugyldig, brukt eller utløpt.',
+    });
   });
 
   it('dealer_admin i den nye tenanten kan ikke grant-e egne moduler', async () => {
@@ -401,9 +418,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     });
     tenantIds.push(opprettet.tenantId);
 
-    const eier = appRouter.createCaller(
-      ctx(app, 'dealer_admin', opprettet.tenantId, adminUser),
-    );
+    const eier = appRouter.createCaller(ctx(app, 'dealer_admin', opprettet.tenantId, adminUser));
 
     await forventer(
       eier.onboarding.fullfor({ visningsnavn: 'Nytt navn AS', extras: ['ai-support'] }),
@@ -451,9 +466,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     });
     tenantIds.push(opprettet.tenantId);
 
-    const eier = appRouter.createCaller(
-      ctx(app, 'dealer_admin', opprettet.tenantId, adminUser),
-    );
+    const eier = appRouter.createCaller(ctx(app, 'dealer_admin', opprettet.tenantId, adminUser));
 
     await expect(
       eier.invitasjoner.opprett({ epost: 'sjef@x.no', funksjon: 'leder' as never }),

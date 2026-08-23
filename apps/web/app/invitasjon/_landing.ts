@@ -56,8 +56,10 @@ type AuthKlientFeil = { name?: string; code?: string };
 function authKlientFeil(res: unknown): AuthKlientFeil | null {
   if (!res || typeof res !== 'object' || !('error' in res)) return null;
   const err = res.error;
-  if (!err || typeof err !== 'object') return null;
-  return err as AuthKlientFeil;
+  if (err == null) return null;
+  if (typeof err === 'string' && err.length > 0) return { name: err };
+  if (typeof err === 'object') return err as AuthKlientFeil;
+  return { name: 'AuthClientError' };
 }
 
 function klasseFraAuthFeil(error: AuthKlientFeil): string {

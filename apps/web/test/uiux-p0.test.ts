@@ -75,6 +75,14 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(land).not.toMatch(/likevel videre/);
   });
 
+  it('revoke-feil etter brukt OTP kan prøves igjen uten ny verifyOtp', () => {
+    const start = kilde.indexOf('async function bekreftKode');
+    const bekreft = kilde.slice(start, kilde.indexOf('const rolle', start));
+    expect(bekreft).toMatch(/otpFerdigRef|otpBekreftet/);
+    expect(bekreft).toMatch(/verifyOtp/);
+    expect(bekreft).toMatch(/land\(/);
+  });
+
   it('revokeOtherSessions etter invite-OTP feiler lukket — klasse logges, ingen token', async () => {
     expect(feilKlasseUtenHemmelighet(new TypeError('boom'))).toBe('TypeError');
     expect(feilKlasseUtenHemmelighet({ name: 'APIError', message: 'token=abc' })).toBe('APIError');
@@ -90,6 +98,11 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
       krevRevokeAndreSesjoner(async () => ({ error: { code: 'UNAUTHORIZED' } }), 'invite'),
     ).rejects.toThrow(REVOKE_ANDRE_SESJONER_UI);
     expect(warn).toHaveBeenCalledWith('[invite] revokeOtherSessions feilet', 'UNAUTHORIZED');
+
+    await expect(
+      krevRevokeAndreSesjoner(async () => ({ error: 'APIError' }), 'invite'),
+    ).rejects.toThrow(REVOKE_ANDRE_SESJONER_UI);
+    expect(warn).toHaveBeenCalledWith('[invite] revokeOtherSessions feilet', 'APIError');
 
     await expect(
       krevRevokeAndreSesjoner(async () => {

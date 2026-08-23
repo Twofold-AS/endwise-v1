@@ -64,6 +64,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const [ferdig, setFerdig] = useState(false);
   const [steg, setSteg] = useState<'skjema' | 'kode'>('skjema');
   const codeRef = useRef<HTMLInputElement>(null);
+  const otpFerdigRef = useRef(false);
 
   useEffect(() => {
     let avbrutt = false;
@@ -200,12 +201,15 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     setFeil(null);
     setSender(true);
     try {
-      const res = await authClient.twoFactor.verifyOtp({ code: kode.trim() });
-      if (res.error) {
-        setFeil(res.error.message ?? 'Feil kode.');
-        setKode('');
-        codeRef.current?.focus();
-        return;
+      if (!otpFerdigRef.current) {
+        const res = await authClient.twoFactor.verifyOtp({ code: kode.trim() });
+        if (res.error) {
+          setFeil(res.error.message ?? 'Feil kode.');
+          setKode('');
+          codeRef.current?.focus();
+          return;
+        }
+        otpFerdigRef.current = true;
       }
       await land(inv.kind);
     } catch (error) {

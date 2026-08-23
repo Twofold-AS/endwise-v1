@@ -12,6 +12,7 @@
 ### invite-OTP `revokeOtherSessions` (F1-10)
 - `land()` svelget feil i `.catch(() => undefined)` («likevel videre»).
 - `krevRevokeAndreSesjoner` logger bare feilklasse (ingen token) og kaster en trygg UI-feil. `bekreftKode` viser den på invitasjonssiden — fail closed.
+- Hvis OTP er brukt og revoke feiler, kan «Bekreft» kjøre `land()` på nytt uten ny `verifyOtp` (ref `otpFerdigRef`).
 - `destinasjonEtterInvite` uendret: `TWO_FACTOR_REQUIRED` → `/2fa-oppsett`, eier → `/oppstart`, staff → `session.me.landing`.
 
 Priser 4490/8490/12490 urørt. shop fortsatt blokkert. SMS-tillegg på alle nivåer urørt. Ingen Admin-fane.

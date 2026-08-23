@@ -44,7 +44,9 @@ export const auditLog = pgTable(
       to: authenticatedRole,
       withCheck: sql`${t.tenantId} = ${currentTenantId}`,
     }),
-    // Ingen UPDATE- eller DELETE-policy. Det ER append-only-garantien.
+    // Ingen UPDATE- eller DELETE-policy for authenticated. Det ER
+    // append-only-garantien. `slett_forhandler` redigerer via TO PUBLIC-
+    // policyer i sql/grants.sql (GUC + ikke-authenticated), aldri her.
   ],
 ).enableRLS();
 

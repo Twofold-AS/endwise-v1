@@ -68,9 +68,59 @@ export const ADDON_MODULES = [
 
 export type AddonModule = (typeof ADDON_MODULES)[number];
 
+const ADDON_SET = new Set<string>(ADDON_MODULES);
+
 /** Er nøkkelen et betalt tillegg? Ukjente nøkler behandles som tillegg — fail-safe. */
 export function isAddon(key: ModuleKey): boolean {
   return !(BASIS_MODULES as readonly string[]).includes(key);
+}
+
+/**
+ * Nøkkler Endwise-admin kan tildele ved onboarding. Ukjente og basis
+ * avvises — en skriveflate skal ikke være fail-open.
+ */
+export function erTildelbarAddon(key: string): key is AddonModule {
+  return ADDON_SET.has(key);
+}
+
+export function filtrerAddonNokler(keys: readonly string[]): AddonModule[] {
+  const sett = new Set<AddonModule>();
+  for (const k of keys) {
+    if (erTildelbarAddon(k)) sett.add(k);
+  }
+  return [...sett];
+}
+
+/** Norske etiketter til admin-avkrysning. Basis vises aldri her. */
+export const ADDON_LABELS: Record<AddonModule, string> = {
+  widget: 'Bookingwidget',
+  resend: 'Transaksjons-e-post',
+  'ai-support': 'AI-støtte',
+  'ai-diagnose': 'AI-diagnose',
+  'ai-providers': 'AI-leverandører',
+  quick: 'Quick ERP',
+  vegvesen: 'Vegvesen-oppslag',
+  'smart-hverdag': 'Smart hverdag',
+  twilio: 'SMS',
+  'ai-nettside': 'AI-nettside',
+  'ai-innsikt': 'AI-innsikt',
+  'quick-agent': 'Quick-agent',
+  'crm-lime': 'Lime CRM',
+  webhooks: 'Webhooks',
+  erp: 'ERP-modul',
+  'white-label': 'White-label',
+  sso: 'SSO',
+  nyhetsbrev: 'Nyhetsbrev',
+  finn: 'Finn.no',
+  shop: 'Nettbutikk',
+  rapporter: 'Rapporter',
+  'analyse-pro': 'Analyse',
+  'betaling-widget': 'Betaling i widget',
+  samarbeid: 'Samarbeid',
+};
+
+export function addonKatalog(): Array<{ key: AddonModule; label: string }> {
+  return ADDON_MODULES.map((key) => ({ key, label: ADDON_LABELS[key] }));
 }
 
 export interface EntitlementsSource {

@@ -1,31 +1,40 @@
 'use client';
 
 import { Badge, Building2, CircleAlert, Plus, StatefulButton } from '@endwise/ui';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
 
 /**
- * F5-26 — FORHANDLERE. Endwise-admins første flate, og byggesteg 1: det er
- * herfra en tenant opprettes.
+ * F5-26 — FORHANDLERE. Invite-only onboarding.
  *
- * ⛔ **Vi oppretter ikke kontoer på andres vegne.** Eieren må være en bruker
- * som allerede finnes; skjemaet tar e-post og slår den opp. Alternativet —
- * å la admin sette passord for andre — er en dev-snartvei fra seeden som ikke
- * hører hjemme i en flate.
- *
- * Sperren er `endwiseAdminProcedure` server-side, ikke at siden ligger under
- * en kontekst en forhandler ikke ser.
+ * Admin oppretter forhandleren (navn, slug, eier-e-post, live/demo) og
+ * krysser av hvilke TILLEGG tenanten får. Eieren setter passord selv via
+ * invitasjonslenka. Ingen offentlig /registrer. Ingen modulvelger hos eier.
  */
 export default function ForhandlerePage() {
   const utils = trpc.useUtils();
   const liste = trpc.tenants.list.useQuery();
+  const katalog = trpc.tenants.addonKatalog.useQuery();
+  const entitlements = trpc.tenants.listModules.useQuery();
   const opprett = trpc.tenants.create.useMutation({
     onSuccess: () => {
-      utils.tenants.list.invalidate();
+      void utils.tenants.list.invalidate();
+      void utils.tenants.listModules.invalidate();
       setNavn('');
       setSlug('');
       setEpost('');
+      setValgte(new Set());
+    },
+  });
+  const sendPaNytt = trpc.tenants.resendOwnerInvite.useMutation({
+    onSuccess: () => {
+      void utils.tenants.list.invalidate();
+    },
+  });
+  const settModuler = trpc.tenants.setModules.useMutation({
+    onSuccess: () => {
+      void utils.tenants.listModules.invalidate();
     },
   });
 
@@ -33,12 +42,33 @@ export default function ForhandlerePage() {
   const [slug, setSlug] = useState('');
   const [epost, setEpost] = useState('');
   const [demo, setDemo] = useState(false);
+  const [valgte, setValgte] = useState<Set<string>>(new Set());
+  const [redigerer, setRedigerer] = useState<string | null>(null);
 
-  /** Foreslår slug fra navnet, men overstyrer aldri det brukeren har skrevet. */
+  const entitlementsKart = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const t of entitlements.data ?? []) {
+      m.set(
+        t.id,
+        t.modules.filter((x) => x.enabled).map((x) => x.moduleKey),
+      );
+    }
+    return m;
+  }, [entitlements.data]);
+
   function navnEndret(v: string) {
     const forrigeForslag = foreslåSlug(navn);
     setNavn(v);
     if (slug === '' || slug === forrigeForslag) setSlug(foreslåSlug(v));
+  }
+
+  function toggle(key: string) {
+    setValgte((forrige) => {
+      const neste = new Set(forrige);
+      if (neste.has(key)) neste.delete(key);
+      else neste.add(key);
+      return neste;
+    });
   }
 
   function submit(e: FormEvent) {
@@ -48,6 +78,7 @@ export default function ForhandlerePage() {
       slug: slug.trim(),
       ownerEmail: epost.trim(),
       kind: demo ? 'demo' : 'live',
+      modules: [...valgte],
     });
   }
 
@@ -57,11 +88,11 @@ export default function ForhandlerePage() {
         <h1 className="sr-only">Forhandlere</h1>
         <p className="text-title text-fg">Forhandlere</p>
         <p className="text-body text-fg-muted">
-          Hver forhandler er en tenant. Navnet du setter her er det som vises i deres sidebar.
+          Invite-only. Du oppretter forhandleren og tildeler tillegg. Eieren setter passord selv —
+          du setter det aldri.
         </p>
       </div>
 
-      {/* ── Opprett ────────────────────────────────────────────────────── */}
       <CardShell className="p-5">
         <form onSubmit={submit} className="flex flex-col gap-4">
           <p className="flex items-center gap-2 text-label text-fg">
@@ -90,7 +121,7 @@ export default function ForhandlerePage() {
 
           <Felt
             label="E-post til eier"
-            hint="Brukeren må finnes fra før. Vi oppretter ikke kontoer på andres vegne."
+            hint="Finnes e-posten ikke, sender vi en invitasjon. Eieren setter passord selv."
             value={epost}
             onChange={setEpost}
             placeholder="eier@verksted.no"
@@ -103,7 +134,7 @@ export default function ForhandlerePage() {
               type="checkbox"
               checked={demo}
               onChange={(e) => setDemo(e.target.checked)}
-              className="size-4 accent-black"
+              className="size-4 accent-[#111]"
             />
             <span className="flex flex-col">
               Demo-tenant
@@ -113,6 +144,30 @@ export default function ForhandlerePage() {
             </span>
           </label>
 
+          <fieldset className="flex flex-col gap-2">
+            <legend className="text-label text-fg">Betalte tillegg</legend>
+            <p className="text-[12px] text-fg-muted leading-relaxed">
+              Basis (Verkstedet, Innboks, Saker, Kunder, Lager, Helpdesk, Settings) er alltid på.
+              Bare tillegg krysses av her. Forhandleren velger ikke selv.
+            </p>
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {(katalog.data ?? []).map((m) => (
+                <label key={m.key} className="flex items-center gap-2 text-body text-fg">
+                  <input
+                    type="checkbox"
+                    checked={valgte.has(m.key)}
+                    onChange={() => toggle(m.key)}
+                    className="size-4 accent-[#111]"
+                  />
+                  <span>
+                    {m.label}
+                    <span className="ml-1 text-[12px] text-fg-muted">{m.key}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           {opprett.error && (
             <p className="flex items-start gap-2 text-body text-danger">
               <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
@@ -121,7 +176,9 @@ export default function ForhandlerePage() {
           )}
           {opprett.isSuccess && (
             <p className="text-body text-success">
-              Opprettet «{opprett.data?.name}». Eieren er nå dealer_admin i den.
+              Opprettet «{opprett.data?.name}». Invitasjon sendt til {opprett.data?.invite.epost}
+              {opprett.data?.invite.sendt ? '' : ' — sendingen feilet, bruk Send på nytt'}. Eieren
+              setter passord via lenka.
             </p>
           )}
 
@@ -142,13 +199,12 @@ export default function ForhandlerePage() {
               successText="Opprettet"
               errorText="Feilet"
             >
-              Opprett forhandler
+              Opprett og inviter
             </StatefulButton>
           </div>
         </form>
       </CardShell>
 
-      {/* ── Liste ──────────────────────────────────────────────────────── */}
       <section className="flex flex-col gap-2">
         <h2 className="text-title text-fg">Alle forhandlere</h2>
 
@@ -165,24 +221,125 @@ export default function ForhandlerePage() {
           </CardShell>
         ) : (
           <div className="overflow-hidden rounded-xl border border-border">
-            {liste.data?.map((t, i) => (
-              <div
-                key={t.id}
-                className={`flex h-row-store items-center gap-4 bg-bg px-4 ${
-                  i > 0 ? 'border-border border-t' : ''
-                }`}
-              >
-                <Building2 size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-label text-fg">{t.name}</span>
-                  <span className="truncate text-[12px] text-fg-muted">{t.slug}</span>
+            {liste.data?.map((t, i) => {
+              const pa = entitlementsKart.get(t.id) ?? [];
+              const apen = redigerer === t.id;
+              return (
+                <div
+                  key={t.id}
+                  className={`flex flex-col gap-3 bg-bg px-4 py-3 ${
+                    i > 0 ? 'border-border border-t' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <Building2 size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="truncate text-label text-fg">{t.name}</span>
+                      <span className="truncate text-[12px] text-fg-muted">{t.slug}</span>
+                    </div>
+                    {t.kind === 'demo' && <Badge variant="secondary">Demo</Badge>}
+                    <button
+                      type="button"
+                      onClick={() => setRedigerer(apen ? null : t.id)}
+                      className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline"
+                    >
+                      {apen ? 'Lukk' : 'Tillegg'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={sendPaNytt.isPending}
+                      onClick={() => sendPaNytt.mutate({ tenantId: t.id })}
+                      className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline disabled:opacity-50"
+                    >
+                      Send invitasjon på nytt
+                    </button>
+                  </div>
+                  {pa.length > 0 && !apen ? (
+                    <div className="flex flex-wrap gap-1 pl-8">
+                      {pa.map((k) => (
+                        <Badge key={k} variant="secondary">
+                          {k}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : null}
+                  {apen ? (
+                    <ModulRediger
+                      key={`${t.id}:${pa.join(',')}`}
+                      valgte={pa}
+                      katalog={katalog.data ?? []}
+                      pending={settModuler.isPending}
+                      onLagre={(modules) => settModuler.mutate({ tenantId: t.id, modules })}
+                    />
+                  ) : null}
                 </div>
-                {t.kind === 'demo' && <Badge variant="secondary">Demo</Badge>}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
+        {sendPaNytt.isSuccess && (
+          <p className="text-body text-success">
+            Invitasjon sendt til {sendPaNytt.data.epost}
+            {sendPaNytt.data.sendt ? '.' : ' — sendingen feilet.'}
+          </p>
+        )}
+        {sendPaNytt.isError && (
+          <p className="text-body text-danger">{sendPaNytt.error.message}</p>
+        )}
+        {settModuler.isError && (
+          <p className="text-body text-danger">{settModuler.error.message}</p>
+        )}
       </section>
+    </div>
+  );
+}
+
+function ModulRediger({
+  valgte,
+  katalog,
+  pending,
+  onLagre,
+}: {
+  valgte: string[];
+  katalog: Array<{ key: string; label: string }>;
+  pending: boolean;
+  onLagre: (modules: string[]) => void;
+}) {
+  const [lokalt, setLokalt] = useState(() => new Set(valgte));
+
+  return (
+    <div className="flex flex-col gap-2 pl-8">
+      <div className="grid gap-1.5 sm:grid-cols-2">
+        {katalog.map((m) => (
+          <label key={m.key} className="flex items-center gap-2 text-body text-fg">
+            <input
+              type="checkbox"
+              checked={lokalt.has(m.key)}
+              onChange={() => {
+                setLokalt((forrige) => {
+                  const neste = new Set(forrige);
+                  if (neste.has(m.key)) neste.delete(m.key);
+                  else neste.add(m.key);
+                  return neste;
+                });
+              }}
+              className="size-4 accent-[#111]"
+            />
+            {m.label}
+          </label>
+        ))}
+      </div>
+      <div className="flex justify-end">
+        <StatefulButton
+          type="button"
+          disabled={pending}
+          state={pending ? 'loading' : 'idle'}
+          loadingText="Lagrer…"
+          onClick={() => onLagre([...lokalt])}
+        >
+          Lagre tillegg
+        </StatefulButton>
+      </div>
     </div>
   );
 }

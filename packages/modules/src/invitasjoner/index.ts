@@ -17,11 +17,13 @@ import { type Jobbfunksjon, kanTildeles, TILDELBARE_FUNKSJONER } from '../profil
  * `lookup_open_invitation` / `consume_invitation` er SECURITY DEFINER-funksjoner
  * som gjør nøyaktig ett oppslag på hash. Se `packages/db/sql/functions.sql`.
  *
- * ── ⛔ Rollen kan aldri bli mer enn `dealer_staff` ───────────────────────
- * Tre lag: denne modulen validerer, ruta er `adminProcedure`, og en
- * CHECK-constraint i basen avviser alt annet. Det siste laget er det eneste som
- * overlever at noen skriver en ny rute som glemmer regelen.
+ * ── ⛔ Staff-sporet kan aldri bli mer enn `dealer_staff` ─────────────────
+ * Tre lag på `opprett`: denne funksjonen validerer, ruta er `adminProcedure`,
+ * og CHECKen (`kind = staff` → `dealer_staff`, ikke `leder`). Owner-sporet
+ * (`opprettEier`) er et eget kall som setter `kind = owner` bevisst.
  */
+
+export type Invitasjonskind = 'staff' | 'owner';
 
 /** 7 dager. Lenge nok til en ferieuke, kort nok til at en glemt e-post dør. */
 export const INVITASJON_GYLDIGHET_DAGER = 7;
@@ -63,7 +65,15 @@ export interface ApenInvitasjon {
   epost: string;
   funksjon: Jobbfunksjon;
   rolle: string;
+  kind: Invitasjonskind;
   utloper: Date;
+}
+
+export interface NyEierInvitasjon {
+  tenantId: string;
+  epost: string;
+  invitedBy: string;
+  gyldighetDager?: number;
 }
 
 export function createInvitasjonsmodul(db: Database) {
@@ -98,7 +108,8 @@ export function createInvitasjonsmodul(db: Database) {
             email: epost,
             tokenHash: hashInvitasjonstoken(token),
             jobFunction: input.funksjon,
-            // ⛔ Aldri fra input. Rollen er låst — se filhodet.
+            // ⛔ Aldri fra input. Staff-sporet er låst — se filhodet.
+            kind: 'staff',
             role: 'dealer_staff',
             invitedBy: input.invitedBy,
             expiresAt: utloper,
@@ -115,9 +126,99 @@ export function createInvitasjonsmodul(db: Database) {
           epost: rad.email,
           funksjon: rad.jobFunction as Jobbfunksjon,
           rolle: rad.role,
+          kind: 'staff',
           utloper: rad.expiresAt,
         },
       };
+    },
+
+    /**
+     * F5-26 — EIER-INVITASJON. Eget spor, ikke en parameter på `opprett`.
+     *
+     * ⛔ `leder` / `dealer_admin` settes her, aldri fra klienten. Staff-CHECken
+     * står urørt: `opprett` kan fortsatt ikke lage dette.
+     */
+    async opprettEier(input: NyEierInvitasjon): Promise<{ invitasjon: ApenInvitasjon; token: string }> {
+      const epost = normaliserEpost(input.epost);
+      if (!epost.includes('@')) throw new InvitasjonUgyldigError('Ugyldig e-postadresse.');
+
+      const token = randomBytes(TOKEN_BYTES).toString('base64url');
+      const utloper = new Date(
+        Date.now() + (input.gyldighetDager ?? INVITASJON_GYLDIGHET_DAGER) * 24 * 60 * 60 * 1000,
+      );
+
+      const [rad] = await withTenant(db, input.tenantId, (tx) =>
+        tx
+          .insert(schema.invitations)
+          .values({
+            tenantId: input.tenantId,
+            email: epost,
+            tokenHash: hashInvitasjonstoken(token),
+            kind: 'owner',
+            jobFunction: 'leder',
+            role: 'dealer_admin',
+            invitedBy: input.invitedBy,
+            expiresAt: utloper,
+          })
+          .returning(),
+      );
+      if (!rad) throw new Error('Eier-invitasjonen ble ikke opprettet');
+
+      return {
+        token,
+        invitasjon: {
+          id: rad.id,
+          tenantId: rad.tenantId,
+          epost: rad.email,
+          funksjon: 'leder',
+          rolle: rad.role,
+          kind: 'owner',
+          utloper: rad.expiresAt,
+        },
+      };
+    },
+
+    /**
+     * Tilbakekall åpne eier-invitasjoner for en e-post (eller alle) i tenanten.
+     * Brukes før ny utsending, så det ikke ligger flere gyldige eier-lenker.
+     */
+    async tilbakekallApneEier(tenantId: string, epost?: string): Promise<number> {
+      const rader = await withTenant(db, tenantId, (tx) =>
+        tx
+          .update(schema.invitations)
+          .set({ revokedAt: new Date() })
+          .where(
+            and(
+              eq(schema.invitations.tenantId, tenantId),
+              eq(schema.invitations.kind, 'owner'),
+              isNull(schema.invitations.acceptedAt),
+              isNull(schema.invitations.revokedAt),
+              epost ? eq(schema.invitations.email, normaliserEpost(epost)) : sql`true`,
+            ),
+          )
+          .returning({ id: schema.invitations.id }),
+      );
+      return rader.length;
+    },
+
+    async sisteEierInvitasjon(tenantId: string) {
+      const [rad] = await withTenant(db, tenantId, (tx) =>
+        tx
+          .select({
+            id: schema.invitations.id,
+            epost: schema.invitations.email,
+            utloper: schema.invitations.expiresAt,
+            akseptert: schema.invitations.acceptedAt,
+            trukket: schema.invitations.revokedAt,
+          })
+          .from(schema.invitations)
+          .where(
+            and(eq(schema.invitations.tenantId, tenantId), eq(schema.invitations.kind, 'owner')),
+          )
+          .orderBy(desc(schema.invitations.createdAt))
+          .limit(1),
+      );
+      return rad ?? null;
     },
 
     /** Åpne invitasjoner for lederens liste. Tenant-skopet av RLS. */
@@ -136,6 +237,7 @@ export function createInvitasjonsmodul(db: Database) {
           .where(
             and(
               eq(schema.invitations.tenantId, tenantId),
+              eq(schema.invitations.kind, 'staff'),
               isNull(schema.invitations.acceptedAt),
               isNull(schema.invitations.revokedAt),
             ),
@@ -178,7 +280,7 @@ export function createInvitasjonsmodul(db: Database) {
       if (!token) return null;
       const hash = hashInvitasjonstoken(token);
       const res = await db.execute(
-        sql`select id, tenant_id, email, job_function, role, expires_at
+        sql`select id, tenant_id, email, job_function, role, kind, expires_at
               from lookup_open_invitation(${hash})`,
       );
       const rad = (res.rows ?? res)[0] as
@@ -188,10 +290,13 @@ export function createInvitasjonsmodul(db: Database) {
             email: string;
             job_function: string;
             role: string;
+            kind?: string;
             expires_at: string | Date;
           }
         | undefined;
       if (!rad) return null;
+
+      const kind: Invitasjonskind = rad.kind === 'owner' || rad.role === 'dealer_admin' ? 'owner' : 'staff';
 
       return {
         id: rad.id,
@@ -199,6 +304,7 @@ export function createInvitasjonsmodul(db: Database) {
         epost: rad.email,
         funksjon: rad.job_function as Jobbfunksjon,
         rolle: rad.role,
+        kind,
         utloper: new Date(rad.expires_at),
       };
     },

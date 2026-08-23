@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   and,
   type Database,
@@ -106,6 +107,47 @@ export async function createTenant(
           tenantId,
           moduleKey,
           plan: input.plan ?? null,
+        })),
+      );
+    }
+  });
+
+  return { tenantId };
+}
+
+/**
+ * F5-26 — Tenant UTEN eier-bruker. Brukes når e-posten ikke finnes ennå:
+ * admin setter aldri passord, så vi kan ikke kalle `createOrganization`
+ * med en userId. Organisasjon + tenants-rad + ev. tillegg skrives her;
+ * eier-invitasjonen lager medlemskapet når invitee setter passordet.
+ */
+export async function createTenantShell(
+  db: Database,
+  input: Omit<CreateTenantInput, 'ownerUserId'>,
+): Promise<{ tenantId: string }> {
+  const tenantId = randomUUID();
+
+  await db.insert(schema.organization).values({
+    id: tenantId,
+    name: input.name,
+    slug: input.slug,
+    createdAt: new Date(),
+  });
+
+  await withTenant(db, tenantId, async (tx) => {
+    await tx.insert(schema.tenants).values({
+      id: tenantId,
+      name: input.name,
+      slug: input.slug,
+      kind: input.kind ?? 'live',
+    });
+
+    if (input.modules?.length) {
+      await tx.insert(schema.tenantModules).values(
+        input.modules.map((moduleKey) => ({
+          tenantId,
+          moduleKey,
+          plan: input.plan ?? 'endwise',
         })),
       );
     }

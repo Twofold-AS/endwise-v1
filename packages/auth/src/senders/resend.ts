@@ -299,19 +299,23 @@ export async function sendInvitation(input: {
   forhandler: string;
   funksjon: string;
   utloper: Date;
+  /** `owner` = forhandler-eier (F5-26). Default staff (F1-10). */
+  kind?: 'staff' | 'owner';
 }): Promise<void> {
   const dato = input.utloper.toLocaleDateString('nb-NO', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
+  const eier = input.kind === 'owner';
+  const rolle = eier ? 'eier' : input.funksjon;
 
   if (skalLeggesILogg()) {
     devRamme(
       'INVITASJON (KUN DEV — Resend er ikke konfigurert)',
       [
         ['Til:', input.to],
-        ['Rolle:', `${input.forhandler} · ${input.funksjon}`],
+        ['Rolle:', `${input.forhandler} · ${rolle}`],
         ['Lenke:', input.lenke],
       ],
       `Gyldig til ${dato}.`,
@@ -321,13 +325,17 @@ export async function sendInvitation(input: {
 
   await sendEmail({
     to: input.to,
-    subject: `Du er invitert til ${input.forhandler} i Endwise`,
+    subject: eier
+      ? `Du er invitert som eier av ${input.forhandler} i Endwise`
+      : `Du er invitert til ${input.forhandler} i Endwise`,
     text: [
       `Hei!`,
       ``,
-      `${input.forhandler} har invitert deg til Endwise som ${input.funksjon}.`,
+      eier
+        ? `${input.forhandler} er opprettet i Endwise, og du er invitert som eier.`
+        : `${input.forhandler} har invitert deg til Endwise som ${input.funksjon}.`,
       ``,
-      `Åpne lenken for å sette opp kontoen din:`,
+      `Åpne lenken for å sette eller bytte passordet ditt:`,
       input.lenke,
       ``,
       `Lenken er personlig, kan brukes én gang, og er gyldig til ${dato}.`,

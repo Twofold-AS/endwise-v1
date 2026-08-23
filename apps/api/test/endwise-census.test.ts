@@ -10,8 +10,8 @@ import { appRouter } from '../src/trpc/router.ts';
  * (`tenant_modules`). Sperren er `endwiseAdminProcedure`, ikke at knappen
  * ligger under /endwise. En `dealer_admin` skal få FORBIDDEN — også på lesing.
  *
- * ⛔ Ingen skrivesti: denne flaten kan ikke selge eller skru på betalte
- * moduler. Det er Stripe-webhooken (F5-32).
+ * Skrivesti for entitlements er `tenants.setModules` (endwise_admin) og
+ * Stripe-webhooken (F5-32). dealer_admin får FORBIDDEN.
  */
 async function forventer(
   kall: Promise<unknown>,
@@ -53,18 +53,16 @@ describe('F1-07 — census rolle-sperre', () => {
     );
   });
 
-  it('har ingen skrivesti for entitlements på tenants-ruteren', async () => {
+  it('setModules finnes, men dealer_admin får FORBIDDEN', async () => {
     const tenants = appRouter.createCaller(fakeCtx('endwise_admin')).tenants;
-    expect(typeof tenants.census).toBe('function');
-    expect(typeof tenants.listModules).toBe('function');
-    const skriv = tenants as unknown as {
-      setModules?: () => Promise<unknown>;
-      enableModule?: () => Promise<unknown>;
-      grantModule?: () => Promise<unknown>;
-    };
-    await forventer(skriv.setModules?.() ?? Promise.reject({ code: 'NOT_FOUND' }), 'NOT_FOUND');
-    await forventer(skriv.enableModule?.() ?? Promise.reject({ code: 'NOT_FOUND' }), 'NOT_FOUND');
-    await forventer(skriv.grantModule?.() ?? Promise.reject({ code: 'NOT_FOUND' }), 'NOT_FOUND');
+    expect(typeof tenants.setModules).toBe('function');
+    await forventer(
+      appRouter.createCaller(fakeCtx('dealer_admin')).tenants.setModules({
+        tenantId: '00000000-0000-0000-0000-000000000001',
+        modules: ['quick'],
+      }),
+      'FORBIDDEN',
+    );
   });
 });
 

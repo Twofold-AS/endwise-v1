@@ -1,4 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createDb, type Database, schema, sql } from '@endwise/db';
 import { createMessagesModule } from '@endwise/modules/messages';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -31,6 +34,18 @@ const fakeCtx = (role: 'endwise_admin' | 'dealer_admin' | 'dealer_staff') =>
     userId: `mps-fake-${role}`,
     role,
   }) as never;
+
+describe('F5-11 — siste melding og svar-sti (CWE-200 / CWE-284)', () => {
+  it('last-message-subquery binder messages.tenant_id til trådens tenant', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const kilde = readFileSync(
+      resolve(her, '../../../packages/modules/src/messages/threads.ts'),
+      'utf8',
+    );
+    expect(kilde).toMatch(/m\.tenant_id = \$\{schema\.threads\.tenantId\}/);
+    expect(kilde).toMatch(/auditLog|platform\.support\.reply/);
+  });
+});
 
 describe('F5-11 — platform-support-ruter er endwiseAdminProcedure', () => {
   it('⛔ ANGREP: dealer_admin får FORBIDDEN på listPlatformSupport', async () => {

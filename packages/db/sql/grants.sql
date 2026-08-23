@@ -1,4 +1,4 @@
--- Kjøres ETTER migrasjoner: `pnpm db:setup` (= db:migrate && db:grants).
+-- Kjøres ETTER migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
 --
 -- Migrasjonen lager tabellene (som eier) og rollen `authenticated`.
 -- Her kobles app-brukeren til rollen, og rollen får lov til å PRØVE å røre
@@ -77,9 +77,15 @@ end $$;
 -- TO PUBLIC med vilje: DEFINER-eieren er ikke `authenticated`. TO authenticated
 -- alene ville latt hullet stå.
 drop policy if exists invitations_open_by_hash on invitations;
+drop policy if exists invitations_open_by_hash_update on invitations;
 create policy invitations_open_by_hash on invitations
   as permissive
-  for all
+  for select
+  to public
+  using (token_hash = nullif(current_setting('app.invitation_hash', true), ''));
+create policy invitations_open_by_hash_update on invitations
+  as permissive
+  for update
   to public
   using (token_hash = nullif(current_setting('app.invitation_hash', true), ''))
   with check (token_hash = nullif(current_setting('app.invitation_hash', true), ''));

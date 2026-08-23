@@ -93,6 +93,21 @@ describe('F1-07 — GET-only Quick-probe', () => {
     expect(headers.Authorization).not.toContain('Token token=Token token=');
   });
 
+  it('avviser svar større enn MAX_RESPONSE_BYTES uten å parse JSON', async () => {
+    const { MAX_RESPONSE_BYTES } = await import('../src/probe.ts');
+    expect(MAX_RESPONSE_BYTES).toBe(256_000);
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('x'.repeat(MAX_RESPONSE_BYTES + 1), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+          'content-length': String(MAX_RESPONSE_BYTES + 1),
+        },
+      }),
+    );
+    await expect(probeQuickReadOnly(cfg)).rejects.toThrow(/for stort/i);
+  });
+
   it('kildekoden til proben inneholder ingen skriveverb mot Quick', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const kilde = readFileSync(resolve(her, '../src/probe.ts'), 'utf8');

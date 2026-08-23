@@ -88,5 +88,15 @@ describe('FORCE RLS-unntaket for invitasjonsoppslag', () => {
     const sql = readFileSync(resolve(her, '../../../packages/db/sql/grants.sql'), 'utf8');
     expect(sql).toMatch(/invitations_open_by_hash/);
     expect(sql).toMatch(/app\.invitation_hash/);
+    const start = sql.indexOf('create policy invitations_open_by_hash');
+    expect(start).toBeGreaterThan(-1);
+    const kropp = sql.slice(start, start + 1600);
+    expect(kropp).not.toMatch(/for all/i);
+  });
+
+  it('godta avviser platform-invitasjon mot en forhandler-tenant', () => {
+    const rute = readFileSync(resolve(her, '../src/routes/invitasjon.ts'), 'utf8');
+    expect(rute).toMatch(/kind === 'platform'|kind === "platform"/);
+    expect(rute).toMatch(/erPlattformTenant/);
   });
 });

@@ -148,6 +148,13 @@
       "when": 1787510000000,
       "tag": "0020_platform_org",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1787520000000,
+      "tag": "0021_mons_p0_sikkerhet",
+      "breakpoints": true
     }
   ]
 }

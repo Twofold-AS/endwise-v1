@@ -12,7 +12,7 @@ export const QUICK_PROBE_USER_MESSAGES = {
   timeout: 'Tidsavbrudd mot Quick. Ingenting er lagret.',
   unreachable: 'Nådde ikke Quick. Ingenting er lagret.',
   unexpected: 'Uventet svar fra Quick. Ingenting er lagret.',
-  http500: 'Quick svarte 500 (ofte IP-lås mot Vercel, ikke feil nøkkel)',
+  http500: 'Quick svarte 500. Ingenting er lagret.',
 } as const;
 
 export function quickProbeUserMessage(error: unknown): string {

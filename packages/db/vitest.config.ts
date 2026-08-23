@@ -21,6 +21,9 @@ export default defineConfig({
       // F1-11 — angrepstest: pre-2FA-sesjoner river seg selv ved påslag,
       // også når 2FA settes med rå SQL utenom applikasjonen.
       'test/2fa-session-cutoff.test.ts',
+      // Mons P0 — inspect-GUC, 0021, hash-policy, eier-trigger.
+      'test/mons-p0-kontrakt.test.ts',
+      'test/platform-inspect.test.ts',
     ],
     // RLS-testene deler DB-tilstand — serielt, ikke parallelt.
     fileParallelism: false,

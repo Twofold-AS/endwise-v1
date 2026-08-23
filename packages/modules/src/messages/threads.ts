@@ -543,6 +543,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             sisteTekst: sql<string>`coalesce((
               select m.body from messages m
               where m.thread_id = ${schema.threads.id}
+                and m.tenant_id = ${schema.threads.tenantId}
               order by m.created_at desc limit 1
             ), ${schema.threads.subject}, '')`,
             unread: sql<boolean>`coalesce((
@@ -553,6 +554,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
                 on tp.thread_id = ${schema.threads.id}
                and tp.participant_id = ${readerId}
               where m.thread_id = ${schema.threads.id}
+                and m.tenant_id = ${schema.threads.tenantId}
               order by m.created_at desc
               limit 1
             ), false)`,
@@ -567,14 +569,19 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
     async listPlatformSupportMessages(threadId: string) {
       return withPlatformAdmin(db, async (tx) => {
         const [traad] = await tx
-          .select({ id: schema.threads.id })
+          .select({ id: schema.threads.id, tenantId: schema.threads.tenantId })
           .from(schema.threads)
           .where(and(eq(schema.threads.id, threadId), eq(schema.threads.kind, 'dealer_admin')));
         if (!traad) throw new PlatformSupportNotFoundError(threadId);
         return tx
           .select()
           .from(schema.messages)
-          .where(eq(schema.messages.threadId, threadId))
+          .where(
+            and(
+              eq(schema.messages.threadId, threadId),
+              eq(schema.messages.tenantId, traad.tenantId),
+            ),
+          )
           .orderBy(schema.messages.createdAt);
       });
     },
@@ -600,12 +607,23 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       if (!traad) throw new PlatformSupportNotFoundError(input.threadId);
 
       await this.addParticipants(traad.tenantId, traad.id, [input.authorId]);
-      return this.postMessage({
+      const message = await this.postMessage({
         tenantId: traad.tenantId,
         threadId: traad.id,
         authorId: input.authorId,
         body: input.body,
       });
+      await withTenant(db, traad.tenantId, (tx) =>
+        tx.insert(schema.auditLog).values({
+          tenantId: traad.tenantId,
+          actor: input.authorId,
+          action: 'platform.support.reply',
+          subjectType: 'thread',
+          subjectId: traad.id,
+          metadata: { messageId: message.id },
+        }),
+      );
+      return message;
     },
 
     async markPlatformSupportRead(input: { threadId: string; readerId: string }) {

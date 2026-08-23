@@ -68,6 +68,12 @@ describe('plattform-org i Bytt visning', () => {
 });
 
 describe('Se verkstedet er URL-lesing', () => {
+  it('kunder-siden viser ikke e-post/telefon', () => {
+    const kunder = les('../app/(app)/endwise/verksted/[slug]/kunder/page.tsx');
+    expect(kunder).not.toMatch(/k\.email|k\.phone/);
+    expect(kunder).toMatch(/e-post|telefon|persondata/i);
+  });
+
   it('layout har advarselsbanner og ingen setActive', () => {
     const layout = utenKommentarer(les('../app/(app)/endwise/verksted/[slug]/layout.tsx'));
     expect(layout).toMatch(/bg-warn-soft/);

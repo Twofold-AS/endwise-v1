@@ -50,7 +50,17 @@ describe('Se verkstedet — kun lesing', () => {
     expect(verksted).toMatch(/endwiseInspectProcedure/);
     expect(verksted).toMatch(/slug/);
     expect(verksted).not.toMatch(/organization\.setActive|impersonat/i);
+    expect(verksted).not.toMatch(/withTenant\(/);
     expect(init).toMatch(/Kun lesing/);
     expect(init).toMatch(/opts\.type === 'mutation'/);
+  });
+
+  it('inspect dumper ikke kundens e-post/telefon og ikke customer_dealer-tråder', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const verksted = readFileSync(resolve(her, '../src/trpc/routers/verksted.ts'), 'utf8');
+    expect(verksted).not.toMatch(/schema\.customers\.email/);
+    expect(verksted).not.toMatch(/schema\.customers\.phone/);
+    expect(verksted).toMatch(/dealer_admin/);
+    expect(verksted).toMatch(/eq\(schema\.threads\.kind,\s*'dealer_admin'\)/);
   });
 });

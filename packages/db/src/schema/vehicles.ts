@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { date, index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { tenantPolicy } from '../rls.ts';
+import { inspectSelectPolicy, tenantPolicy } from '../rls.ts';
 import { customers } from './customers.ts';
 import { tenants } from './tenants.ts';
 
@@ -45,6 +45,7 @@ export const vehicles = pgTable(
     index('vehicles_tenant_reg_idx').on(t.tenantId, t.regNumber),
     index('vehicles_customer_idx').on(t.customerId),
     tenantPolicy('vehicles', t.tenantId),
+    inspectSelectPolicy('vehicles', t.tenantId),
   ],
 ).enableRLS();
 

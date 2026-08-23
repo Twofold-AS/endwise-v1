@@ -132,4 +132,17 @@ describe('F1-07 — aktiver Quick først etter vellykket GET', () => {
     expect(QUICK_PROBE_USER_MESSAGES.timeout).not.toBe(QUICK_PROBE_USER_MESSAGES.unreachable);
     expect(QUICK_PROBE_USER_MESSAGES.unreachable).not.toBe(QUICK_PROBE_USER_MESSAGES.unexpected);
   });
+
+  it('testConnection persisterer kun quickProbeUserMessage — ikke error.message', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const quick = readFileSync(resolve(her, '../src/trpc/routers/quick.ts'), 'utf8');
+    const probe = readFileSync(
+      resolve(her, '../../../packages/tools/toolkits/quick/src/probe.ts'),
+      'utf8',
+    );
+    expect(quick).toMatch(/recordSync/);
+    expect(quick).toContain('quickProbeUserMessage(error)');
+    expect(quick).not.toMatch(/const detail = \(error as Error\)\.message/);
+    expect(probe).toMatch(/MAX_RESPONSE_BYTES\s*=\s*256_000/);
+  });
 });

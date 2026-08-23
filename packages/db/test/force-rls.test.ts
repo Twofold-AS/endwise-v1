@@ -103,6 +103,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         and polname = 'invitations_open_by_hash'
     `);
     expect(res.rows, 'Mangler invitations_open_by_hash. Kjør `pnpm db:grants`.').toHaveLength(1);
+    expect(res.rows[0]?.polcmd, 'Hash-policyen skal være SELECT, ikke FOR ALL.').toBe('r');
   });
 
   it('③c slett_forhandler FORCE RLS-unntak finnes (F5-26)', async () => {

@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { tenantPolicy } from '../rls.ts';
+import { inspectSelectPolicy, tenantPolicy } from '../rls.ts';
 import { customers } from './customers.ts';
 import { mechanics } from './mechanics.ts';
 import { serviceVersions } from './services.ts';
@@ -67,6 +67,7 @@ export const bookings = pgTable(
     index('bookings_mechanic_window_idx').on(t.mechanicId, t.startsAt, t.endsAt),
     index('bookings_tenant_starts_idx').on(t.tenantId, t.startsAt),
     tenantPolicy('bookings', t.tenantId),
+    inspectSelectPolicy('bookings', t.tenantId),
   ],
 ).enableRLS();
 

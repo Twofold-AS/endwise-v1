@@ -30,10 +30,11 @@ describe('quickProbeUserMessage — distinkte BAD_REQUEST, ingen rå fetch-cause
     expect(QUICK_PROBE_USER_MESSAGES.unreachable).toMatch(/nådde ikke Quick/i);
   });
 
-  it('HTTP 500 er IP-lås/Vercel — ikke avvist nøkkel', () => {
+  it('HTTP 500 er egen melding — uten Vercel/allowlist i klienttekst', () => {
     const msg = quickProbeUserMessage(new QuickError('Quick svarte 500', 500));
     expect(msg).toBe(QUICK_PROBE_USER_MESSAGES.http500);
-    expect(msg).toBe('Quick svarte 500 (ofte IP-lås mot Vercel, ikke feil nøkkel)');
+    expect(msg).toMatch(/Quick svarte 500/i);
+    expect(msg).not.toMatch(/Vercel|allowlist|IP-lås|IP-las/i);
     expect(msg).not.toBe(QUICK_PROBE_USER_MESSAGES.rejected);
     expect(msg).not.toMatch(/avviste nøkkelen/i);
   });

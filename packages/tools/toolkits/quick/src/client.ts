@@ -1,5 +1,6 @@
 import type { IntegrationHealth, IntegrationProvider } from '@endwise/modules';
 import { QuickAuthError, QuickError } from './errors.ts';
+import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
 import { probeQuickReadOnly } from './probe.ts';
 import {
   type QuickCustomer,
@@ -62,8 +63,11 @@ export interface CustomerBatchParams {
 export function createQuickClient(config: QuickConfig) {
   // CWE-918: valider baseUrl mot SSRF-vernet ALLEREDE her (før noe kall) — kaster
   // QuickSsrfError hvis den peker et ulovlig sted. Normaliserer samtidig.
-  const validated = assertAllowedQuickUrl(config.baseUrl);
-  const base = `${validated.origin}${validated.pathname}`.replace(/\/+$/, '');
+  const validated = assertAllowedQuickUrl(normalizeQuickBaseUrl(config.baseUrl));
+  const token = normalizeQuickToken(config.token);
+  const base = `${validated.origin}${validated.pathname}`
+    .replace(/\/+$/, '')
+    .replace(/\/api\/v2$/i, '');
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   async function request<T>(path: string, schema: { parse: (v: unknown) => T }): Promise<T> {
@@ -72,7 +76,7 @@ export function createQuickClient(config: QuickConfig) {
       response = await fetch(`${base}${API_PREFIX}${path}`, {
         method: 'GET',
         headers: {
-          Authorization: `Token token=${config.token}`,
+          Authorization: `Token token=${token}`,
           Accept: 'application/json',
         },
         // CWE-918: ikke følg 3xx til en ny host (redirect-SSRF-bypass).

@@ -7,7 +7,14 @@ import {
   tierByKey,
 } from '@endwise/modules';
 import { createQuickConfigService } from '@endwise/modules/quick';
-import { assertAllowedQuickUrl, probeQuickReadOnly, QuickSsrfError } from '@endwise/toolkit-quick';
+import {
+  assertAllowedQuickUrl,
+  normalizeQuickBaseUrl,
+  normalizeQuickToken,
+  probeQuickReadOnly,
+  QuickSsrfError,
+  quickProbeUserMessage,
+} from '@endwise/toolkit-quick';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { aktiverQuickEtterGet, quickNokkelMangler } from '../../lib/quick-activate.ts';
@@ -103,7 +110,7 @@ export const onboardingRouter = router({
         /** Forhandlerens egen Quick-nøkkel. Påkrevd når extras inneholder `quick`. */
         quick: z
           .object({
-            baseUrl: z.string().url(),
+            baseUrl: z.string().trim().url(),
             token: z.string().min(1).max(512),
           })
           .optional(),
@@ -135,8 +142,10 @@ export const onboardingRouter = router({
       }
 
       if (extras.includes('quick') && input.quick) {
+        const baseUrl = normalizeQuickBaseUrl(input.quick.baseUrl);
+        const token = normalizeQuickToken(input.quick.token);
         try {
-          assertAllowedQuickUrl(input.quick.baseUrl);
+          assertAllowedQuickUrl(baseUrl);
         } catch (error) {
           if (error instanceof QuickSsrfError) {
             throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
@@ -151,14 +160,11 @@ export const onboardingRouter = router({
         }
         try {
           // GET først — ingen persist her. Persist skjer etter at extras er tillatt.
-          await probeQuickReadOnly(input.quick);
+          await probeQuickReadOnly({ baseUrl, token });
         } catch (error) {
-          if (error instanceof QuickSsrfError) {
-            throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
-          }
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: 'Quick avviste nøkkelen. Ingenting er lagret, og Quick er ikke slått på.',
+            message: quickProbeUserMessage(error),
           });
         }
       }

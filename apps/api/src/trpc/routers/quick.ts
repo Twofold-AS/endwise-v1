@@ -1,6 +1,14 @@
 import { envelopeCryptoConfigured } from '@endwise/db';
 import { createQuickConfigService } from '@endwise/modules/quick';
-import { assertAllowedQuickUrl, probeQuickReadOnly, QuickSsrfError } from '@endwise/toolkit-quick';
+import {
+  assertAllowedQuickUrl,
+  normalizeQuickBaseUrl,
+  normalizeQuickToken,
+  probeQuickReadOnly,
+  QUICK_PROBE_USER_MESSAGES,
+  QuickSsrfError,
+  quickProbeUserMessage,
+} from '@endwise/toolkit-quick';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { aktiverQuickEtterGet } from '../../lib/quick-activate.ts';
@@ -41,15 +49,22 @@ export const quickRouter = router({
   setConfig: quickAdminProcedure
     .input(
       z.object({
-        baseUrl: z.string().url(),
+        baseUrl: z.string().trim().url(),
         // Tomt token = «behold eksisterende» (send undefined videre).
         token: z.string().min(1).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const baseUrl = normalizeQuickBaseUrl(input.baseUrl);
+      if (!baseUrl) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: QUICK_PROBE_USER_MESSAGES.noUrl,
+        });
+      }
       // CWE-918: valider baseUrl mot SSRF-vernet FØR lagring (ikke bare i klienten).
       try {
-        assertAllowedQuickUrl(input.baseUrl);
+        assertAllowedQuickUrl(baseUrl);
       } catch (error) {
         if (error instanceof QuickSsrfError) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
@@ -58,11 +73,18 @@ export const quickRouter = router({
       }
       const svc = createQuickConfigService(ctx.db);
       const existing = await svc.getDecrypted(ctx.tenantId);
-      const token = input.token ?? existing?.token;
+      const incoming = input.token === undefined ? undefined : normalizeQuickToken(input.token);
+      if (input.token !== undefined && !incoming) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: QUICK_PROBE_USER_MESSAGES.noToken,
+        });
+      }
+      const token = incoming ?? (existing?.token ? normalizeQuickToken(existing.token) : undefined);
       if (!token) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'ApiV2-nøkkel mangler. Den testes med et lesekall før den lagres.',
+          message: QUICK_PROBE_USER_MESSAGES.noToken,
         });
       }
       if (!envelopeCryptoConfigured()) {
@@ -75,16 +97,13 @@ export const quickRouter = router({
         await aktiverQuickEtterGet({
           probe: (cfg) => probeQuickReadOnly(cfg),
           persist: (cfg) => svc.set(ctx.tenantId, cfg),
-          baseUrl: input.baseUrl,
+          baseUrl,
           token,
         });
       } catch (error) {
-        if (error instanceof QuickSsrfError) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
-        }
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Quick avviste nøkkelen. Ingenting er lagret.',
+          message: quickProbeUserMessage(error),
         });
       }
       return { ok: true };

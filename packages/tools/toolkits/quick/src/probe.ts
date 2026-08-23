@@ -1,4 +1,6 @@
 import { QuickAuthError, QuickError } from './errors.ts';
+import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
+import { QUICK_PROBE_USER_MESSAGES } from './probe-error.ts';
 import { quickClientInfo } from './schema.ts';
 import { assertAllowedQuickUrl } from './url-guard.ts';
 
@@ -14,6 +16,8 @@ import { assertAllowedQuickUrl } from './url-guard.ts';
 export const QUICK_READ_ONLY_PROBE_METHOD = 'GET';
 /** Relativt til instansens baseUrl (uten trailing slash). */
 export const QUICK_READ_ONLY_PROBE_PATH = '/api/v2/client/info';
+/** Stabil UA — Quick kan 500-e Vercel-egress uten kjent klient. */
+export const QUICK_PROBE_USER_AGENT = 'Endwise/1 QuickProbe';
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 const MAX_RESPONSE_BYTES = 25_000_000;
@@ -29,8 +33,16 @@ export type QuickProbeConfig = {
  * eller uventet svar. Returnerer void — innholdet brukes ikke til synk.
  */
 export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void> {
-  const validated = assertAllowedQuickUrl(config.baseUrl);
-  const base = `${validated.origin}${validated.pathname}`.replace(/\/+$/, '');
+  const baseUrl = normalizeQuickBaseUrl(config.baseUrl);
+  const token = normalizeQuickToken(config.token);
+  if (!baseUrl) throw new QuickError(QUICK_PROBE_USER_MESSAGES.noUrl);
+  if (!token) throw new QuickError(QUICK_PROBE_USER_MESSAGES.noToken);
+
+  const validated = assertAllowedQuickUrl(baseUrl);
+  // Aldri .../api/v2/api/v2/client/info — en limt /api/v2-suffix 500-er hos Quick.
+  const base = `${validated.origin}${validated.pathname}`
+    .replace(/\/+$/, '')
+    .replace(/\/api\/v2$/i, '');
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   let response: Response;
@@ -38,8 +50,9 @@ export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void
     response = await fetch(`${base}${QUICK_READ_ONLY_PROBE_PATH}`, {
       method: QUICK_READ_ONLY_PROBE_METHOD,
       headers: {
-        Authorization: `Token token=${config.token}`,
+        Authorization: `Token token=${token}`,
         Accept: 'application/json',
+        'User-Agent': QUICK_PROBE_USER_AGENT,
       },
       redirect: 'error',
       signal: AbortSignal.timeout(timeoutMs),

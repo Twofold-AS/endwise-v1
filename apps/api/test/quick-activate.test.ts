@@ -2,6 +2,12 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decryptSecret, encryptSecret } from '@endwise/db';
+import {
+  QUICK_PROBE_USER_MESSAGES,
+  QuickAuthError,
+  QuickError,
+  quickProbeUserMessage,
+} from '@endwise/toolkit-quick';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { aktiverQuickEtterGet } from '../src/lib/quick-activate.ts';
 
@@ -85,5 +91,45 @@ describe('F1-07 — aktiver Quick først etter vellykket GET', () => {
     expect(`${activate}\n${quick}\n${onboard}`).not.toMatch(
       /ENDWISE_KEK\s*=\s*['"][A-Za-z0-9+/=]{20,}/,
     );
+    expect(quick).toMatch(/quickProbeUserMessage/);
+    expect(quick).not.toMatch(
+      /catch \(error\) \{\s*if \(error instanceof QuickSsrfError\)[\s\S]*Quick avviste nøkkelen\. Ingenting er lagret\./,
+    );
+  });
+
+  it('persist får origin+slug og nøkkel uten Token token=-wrapper', async () => {
+    const persist = vi.fn();
+    await aktiverQuickEtterGet({
+      probe: async () => undefined,
+      persist,
+      baseUrl: 'https://q3.quick.no/ProdShared008/Help/Api/GET-api-v2-client-info',
+      token: 'Token token=fake-apiv2-ikke-ekte',
+    });
+    expect(persist).toHaveBeenCalledWith({
+      baseUrl: 'https://q3.quick.no/ProdShared008',
+      token: FAKE_TOKEN,
+    });
+  });
+
+  it('setConfig-mapping skiller 401, timeout, unreachable og uventet svar', () => {
+    expect(quickProbeUserMessage(new QuickAuthError('x', 401))).toBe(
+      QUICK_PROBE_USER_MESSAGES.rejected,
+    );
+    expect(quickProbeUserMessage(new QuickError('Tidsavbrudd mot Quick'))).toBe(
+      QUICK_PROBE_USER_MESSAGES.timeout,
+    );
+    expect(quickProbeUserMessage(new QuickError('Nådde ikke Quick'))).toBe(
+      QUICK_PROBE_USER_MESSAGES.unreachable,
+    );
+    expect(quickProbeUserMessage(new QuickError('Uventet svarformat fra Quick'))).toBe(
+      QUICK_PROBE_USER_MESSAGES.unexpected,
+    );
+    expect(quickProbeUserMessage(new QuickError('Quick svarte 500', 500))).toBe(
+      QUICK_PROBE_USER_MESSAGES.http500,
+    );
+    expect(QUICK_PROBE_USER_MESSAGES.http500).not.toBe(QUICK_PROBE_USER_MESSAGES.rejected);
+    expect(QUICK_PROBE_USER_MESSAGES.rejected).not.toBe(QUICK_PROBE_USER_MESSAGES.timeout);
+    expect(QUICK_PROBE_USER_MESSAGES.timeout).not.toBe(QUICK_PROBE_USER_MESSAGES.unreachable);
+    expect(QUICK_PROBE_USER_MESSAGES.unreachable).not.toBe(QUICK_PROBE_USER_MESSAGES.unexpected);
   });
 });

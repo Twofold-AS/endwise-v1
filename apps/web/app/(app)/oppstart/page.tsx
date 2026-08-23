@@ -30,6 +30,8 @@ export default function OppstartPage() {
   const [steg, setSteg] = useState<StegId>('navn');
   const [navn, setNavn] = useState<string | null>(null);
   const [extras, setExtras] = useState<Set<string>>(new Set());
+  const [quickBaseUrl, setQuickBaseUrl] = useState('');
+  const [quickToken, setQuickToken] = useState('');
   const [epost, setEpost] = useState('');
   const [funksjon, setFunksjon] = useState<Funksjon>('selger');
   const [feil, setFeil] = useState<string | null>(null);
@@ -48,11 +50,19 @@ export default function OppstartPage() {
   function toggle(key: string) {
     setExtras((forrige) => {
       const neste = new Set(forrige);
-      if (neste.has(key)) neste.delete(key);
-      else neste.add(key);
+      if (neste.has(key)) {
+        neste.delete(key);
+        if (key === 'quick') {
+          setQuickBaseUrl('');
+          setQuickToken('');
+        }
+      } else neste.add(key);
       return neste;
     });
   }
+
+  const quickValgt = extras.has('quick');
+  const quickKlar = !quickValgt || (quickBaseUrl.trim().length > 0 && quickToken.trim().length > 0);
 
   function etterNavn() {
     setSteg(harTillegg ? 'tillegg' : 'team');
@@ -86,6 +96,9 @@ export default function OppstartPage() {
       await fullfor.mutateAsync({
         visningsnavn: visningsnavn.trim(),
         extras: [...extras],
+        ...(quickValgt
+          ? { quick: { baseUrl: quickBaseUrl.trim(), token: quickToken.trim() } }
+          : {}),
       });
       void utils.session.me.invalidate();
       window.location.assign('/dashboard');
@@ -195,16 +208,47 @@ export default function OppstartPage() {
           </div>
           <div className="flex flex-col gap-1.5">
             {status.data?.optional.map((m) => (
-              <label key={m.key} className="flex h-row items-center gap-2 text-body text-fg">
-                <input
-                  type="checkbox"
-                  checked={extras.has(m.key) || m.enabled}
-                  disabled={m.enabled}
-                  onChange={() => toggle(m.key)}
-                  className="size-4 accent-[#111]"
-                />
-                {m.label}
-              </label>
+              <div key={m.key} className="flex flex-col gap-2">
+                <label className="flex h-row items-center gap-2 text-body text-fg">
+                  <input
+                    type="checkbox"
+                    checked={extras.has(m.key) || m.enabled}
+                    disabled={m.enabled}
+                    onChange={() => toggle(m.key)}
+                    className="size-4 accent-[#111]"
+                  />
+                  {m.label}
+                </label>
+                {m.key === 'quick' && (extras.has('quick') || m.enabled) ? (
+                  <div className="mb-2 ml-6 flex flex-col gap-2">
+                    <p className="text-[12px] text-fg-muted leading-relaxed">
+                      Verkstedets egen ApiV2-nøkkel. Vi tester den med et lesekall (GET) mot Quick
+                      før Quick slås på. Nøkkelen lagres kryptert — aldri i klartekst.
+                    </p>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-label text-fg">Quick base-URL</span>
+                      <input
+                        value={quickBaseUrl}
+                        onChange={(e) => setQuickBaseUrl(e.target.value)}
+                        placeholder="https://q3.quick.no/…"
+                        spellCheck={false}
+                        className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-fg"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-label text-fg">ApiV2-nøkkel</span>
+                      <input
+                        type="password"
+                        value={quickToken}
+                        onChange={(e) => setQuickToken(e.target.value)}
+                        autoComplete="off"
+                        spellCheck={false}
+                        className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-fg"
+                      />
+                    </label>
+                  </div>
+                ) : null}
+              </div>
             ))}
           </div>
 
@@ -309,7 +353,7 @@ export default function OppstartPage() {
             </button>
             <StatefulButton
               type="button"
-              disabled={fullfor.isPending || visningsnavn.trim().length < 2}
+              disabled={fullfor.isPending || visningsnavn.trim().length < 2 || !quickKlar}
               state={fullfor.isPending ? 'loading' : 'idle'}
               loadingText="Lagrer…"
               onClick={() => void avslutt()}

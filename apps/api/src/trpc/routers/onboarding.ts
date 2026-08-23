@@ -1,4 +1,4 @@
-import { and, eq, schema, withTenant } from '@endwise/db';
+import { and, envelopeCryptoConfigured, eq, schema, withTenant } from '@endwise/db';
 import {
   ADDON_LABELS,
   erBlokertTildeling,
@@ -6,8 +6,11 @@ import {
   erTildelbarAddon,
   tierByKey,
 } from '@endwise/modules';
+import { createQuickConfigService } from '@endwise/modules/quick';
+import { assertAllowedQuickUrl, probeQuickReadOnly, QuickSsrfError } from '@endwise/toolkit-quick';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import { aktiverQuickEtterGet, quickNokkelMangler } from '../../lib/quick-activate.ts';
 import { adminProcedure, router } from '../init.ts';
 
 /**
@@ -97,6 +100,13 @@ export const onboardingRouter = router({
       z.object({
         visningsnavn: z.string().min(2).max(120),
         extras: extrasSchema.default([]),
+        /** Forhandlerens egen Quick-nøkkel. Påkrevd når extras inneholder `quick`. */
+        quick: z
+          .object({
+            baseUrl: z.string().url(),
+            token: z.string().min(1).max(512),
+          })
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -113,6 +123,42 @@ export const onboardingRouter = router({
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: `Kan ikke tildeles: ${key}`,
+          });
+        }
+      }
+
+      if (quickNokkelMangler(extras, input.quick)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Quick krever base-URL og ApiV2-nøkkel. Nøkkelen testes før den slås på.',
+        });
+      }
+
+      if (extras.includes('quick') && input.quick) {
+        try {
+          assertAllowedQuickUrl(input.quick.baseUrl);
+        } catch (error) {
+          if (error instanceof QuickSsrfError) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+          }
+          throw error;
+        }
+        if (!envelopeCryptoConfigured()) {
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message: 'ENDWISE_KEK mangler — kan ikke kryptere Quick-token.',
+          });
+        }
+        try {
+          // GET først — ingen persist her. Persist skjer etter at extras er tillatt.
+          await probeQuickReadOnly(input.quick);
+        } catch (error) {
+          if (error instanceof QuickSsrfError) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+          }
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Quick avviste nøkkelen. Ingenting er lagret, og Quick er ikke slått på.',
           });
         }
       }
@@ -156,6 +202,15 @@ export const onboardingRouter = router({
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: `Tillegget er ikke åpnet for dere: ${ulovlige.join(', ')}`,
+          });
+        }
+
+        if (extras.includes('quick') && input.quick) {
+          await aktiverQuickEtterGet({
+            probe: async () => undefined,
+            persist: (cfg) => createQuickConfigService(ctx.db).set(ctx.tenantId, cfg),
+            baseUrl: input.quick.baseUrl,
+            token: input.quick.token,
           });
         }
 

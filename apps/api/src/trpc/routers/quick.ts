@@ -1,8 +1,9 @@
 import { envelopeCryptoConfigured } from '@endwise/db';
 import { createQuickConfigService } from '@endwise/modules/quick';
-import { assertAllowedQuickUrl, createQuickClient, QuickSsrfError } from '@endwise/toolkit-quick';
+import { assertAllowedQuickUrl, probeQuickReadOnly, QuickSsrfError } from '@endwise/toolkit-quick';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import { aktiverQuickEtterGet } from '../../lib/quick-activate.ts';
 import { runQuickCustomerPull } from '../../lib/quick-pull.ts';
 import { moduleAdminProcedure, moduleProcedure, router } from '../init.ts';
 
@@ -25,8 +26,9 @@ const quickAdminProcedure = moduleAdminProcedure('quick');
  * ALT går via `createQuickConfigService` → `withTenant` → RLS. Tokenet lagres
  * envelope-kryptert og forlater ALDRI serveren (getView returnerer kun `hasToken`).
  *
- * Vi hamrer ALDRI Quick: `testConnection` er ett `client/info`-kall, `pullNow` er
- * en moderat paginert delta-pull (changedAfterDate = sist hentet).
+ * Vi hamrer ALDRI Quick: `testConnection` / `setConfig` er ett GET `client/info`,
+ * `pullNow` er en moderat paginert delta-pull (changedAfterDate = sist hentet).
+ * setConfig persisterer IKKE nøkkelen med mindre GET-proben svarte.
  *
  * TODO (venter på ApiV2-token + token-gatet swagger): booking-, delelager- og
  * salgs-synk, samt selve PUSH-implementasjonen. Kun kunde-PULL nå.
@@ -54,20 +56,41 @@ export const quickRouter = router({
         }
         throw error;
       }
-      if (input.token !== undefined && !envelopeCryptoConfigured()) {
+      const svc = createQuickConfigService(ctx.db);
+      const existing = await svc.getDecrypted(ctx.tenantId);
+      const token = input.token ?? existing?.token;
+      if (!token) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'ApiV2-nøkkel mangler. Den testes med et lesekall før den lagres.',
+        });
+      }
+      if (!envelopeCryptoConfigured()) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
           message: 'ENDWISE_KEK mangler — kan ikke kryptere Quick-token.',
         });
       }
-      await createQuickConfigService(ctx.db).set(ctx.tenantId, {
-        baseUrl: input.baseUrl,
-        token: input.token,
-      });
+      try {
+        await aktiverQuickEtterGet({
+          probe: (cfg) => probeQuickReadOnly(cfg),
+          persist: (cfg) => svc.set(ctx.tenantId, cfg),
+          baseUrl: input.baseUrl,
+          token,
+        });
+      } catch (error) {
+        if (error instanceof QuickSsrfError) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+        }
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Quick avviste nøkkelen. Ingenting er lagret.',
+        });
+      }
       return { ok: true };
     }),
 
-  /** «Test tilkobling»: ett `client/info`-kall mot forhandlerens Quick-instans. */
+  /** «Test tilkobling»: ett GET `client/info` mot forhandlerens Quick-instans. */
   testConnection: quickAdminProcedure.mutation(async ({ ctx }) => {
     const svc = createQuickConfigService(ctx.db);
     const cfg = await svc.getDecrypted(ctx.tenantId);
@@ -79,7 +102,7 @@ export const quickRouter = router({
     }
     const checkedAt = new Date().toISOString();
     try {
-      await createQuickClient(cfg).clientInfo();
+      await probeQuickReadOnly(cfg);
       await svc.recordSync(ctx.tenantId, { status: 'ok', detail: 'Tilkobling OK' });
       return { ok: true as const, checkedAt };
     } catch (error) {

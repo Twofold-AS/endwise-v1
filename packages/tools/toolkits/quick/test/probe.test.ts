@@ -33,6 +33,30 @@ describe('F1-07 — GET-only Quick-probe', () => {
     expect(String(kall[0])).toContain(QUICK_READ_ONLY_PROBE_PATH);
   });
 
+  it('Help/swagger-URL treffer origin + slug, ikke docs-stien', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({}));
+    await probeQuickReadOnly({
+      ...cfg,
+      baseUrl: 'https://q3.quick.no/ProdShared008/Help/Api/GET-api-v2-client-info',
+    });
+    expect(String(spy.mock.calls[0]?.[0])).toBe(
+      'https://q3.quick.no/ProdShared008/api/v2/client/info',
+    );
+  });
+
+  it('striper Token token=-wrapper før Authorization', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({}));
+    await probeQuickReadOnly({
+      ...cfg,
+      token: 'Token token=fake-apiv2-ikke-ekte',
+    });
+    const kall = spy.mock.calls[0];
+    if (!kall) throw new Error('fetch ble aldri kalt');
+    const headers = (kall[1] as RequestInit).headers as Record<string, string>;
+    expect(headers.Authorization).toBe('Token token=fake-apiv2-ikke-ekte');
+    expect(headers.Authorization).not.toContain('Token token=Token token=');
+  });
+
   it('kildekoden til proben inneholder ingen skriveverb mot Quick', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const kilde = readFileSync(resolve(her, '../src/probe.ts'), 'utf8');

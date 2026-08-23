@@ -3,7 +3,10 @@
  *
  * Rekkefølge er hele poenget: probe → persist → (valgfritt) enable.
  * Feiler proben, kalles verken persist eller enable. Tokenet logges ikke.
+ * Persist får normalisert URL (origin + shop-slug) og nøkkel uten wrapper.
  */
+
+import { normalizeQuickBaseUrl, normalizeQuickToken } from '@endwise/toolkit-quick';
 
 export type QuickNokkel = { baseUrl: string; token: string };
 
@@ -22,7 +25,9 @@ export async function aktiverQuickEtterGet(opts: {
   baseUrl: string;
   token: string;
 }): Promise<void> {
-  await opts.probe({ baseUrl: opts.baseUrl, token: opts.token });
-  await opts.persist({ baseUrl: opts.baseUrl, token: opts.token });
+  const baseUrl = normalizeQuickBaseUrl(opts.baseUrl);
+  const token = normalizeQuickToken(opts.token);
+  await opts.probe({ baseUrl, token });
+  await opts.persist({ baseUrl, token });
   await opts.enableModule?.();
 }

@@ -1,4 +1,6 @@
 import { QuickAuthError, QuickError } from './errors.ts';
+import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
+import { QUICK_PROBE_USER_MESSAGES } from './probe-error.ts';
 import { quickClientInfo } from './schema.ts';
 import { assertAllowedQuickUrl } from './url-guard.ts';
 
@@ -29,7 +31,12 @@ export type QuickProbeConfig = {
  * eller uventet svar. Returnerer void — innholdet brukes ikke til synk.
  */
 export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void> {
-  const validated = assertAllowedQuickUrl(config.baseUrl);
+  const baseUrl = normalizeQuickBaseUrl(config.baseUrl);
+  const token = normalizeQuickToken(config.token);
+  if (!baseUrl) throw new QuickError(QUICK_PROBE_USER_MESSAGES.noUrl);
+  if (!token) throw new QuickError(QUICK_PROBE_USER_MESSAGES.noToken);
+
+  const validated = assertAllowedQuickUrl(baseUrl);
   const base = `${validated.origin}${validated.pathname}`.replace(/\/+$/, '');
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
@@ -38,7 +45,7 @@ export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void
     response = await fetch(`${base}${QUICK_READ_ONLY_PROBE_PATH}`, {
       method: QUICK_READ_ONLY_PROBE_METHOD,
       headers: {
-        Authorization: `Token token=${config.token}`,
+        Authorization: `Token token=${token}`,
         Accept: 'application/json',
       },
       redirect: 'error',

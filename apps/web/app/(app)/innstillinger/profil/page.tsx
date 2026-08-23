@@ -7,7 +7,7 @@ import { trpc } from '@/lib/trpc';
 import { lesTema, settTema, type Tema } from '../../_lib/tema';
 import { ProfilKort } from '../../_shell/profil-kort';
 import { ToFaktorRad } from '../../_shell/to-faktor-rad';
-import { AvatarVelger } from './_avatar-velger';
+import { AvatarVelger } from '../../_avatar/avatar-velger';
 
 /**
  * F5-19 / F1-17 / F1-20 — Settings › Profil. Egen bruker, sikkerhet og tema.

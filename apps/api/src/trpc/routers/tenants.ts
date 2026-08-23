@@ -4,21 +4,29 @@ import {
   createTenant,
   createTenantShell,
   sendInvitation,
+  sendTwoFactorOtp,
 } from '@endwise/auth';
 import { and, asc, desc, eq, schema, sql, withPlatformAdmin, withTenant } from '@endwise/db';
 import {
-  type AddonModule,
   addonKatalog,
   BASIS_MODULES,
+  ENDWISE_SLUG,
   erBlokertTildeling,
+  erEndwiseSlug,
+  erGyldigEkstraTillegg,
   erTildelbarAddon,
+  erTierKey,
   filtrerAddonNokler,
+  pakkeKatalog,
+  TIER_KEYS,
+  utvidPakke,
 } from '@endwise/modules';
 import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { resolveDevMode } from '../dev-mode.ts';
 import { endwiseAdminProcedure, protectedProcedure, router } from '../init.ts';
+import { hashSlettKode, lagSlettKode, slettKodeErGyldig } from '../slett-otp.ts';
 
 /**
  * F5-26 / F5-27 — FORHANDLER-OPPRETTING OG DEMO-TENANTS.
@@ -40,13 +48,9 @@ const slugSchema = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Kun små bokstaver, tall og bindestrek');
 
 /**
- * TILLEGGENE en ny forhandler starter med.
- *
- * ⚠️ F0-16: **tom med vilje.** Basis (Verkstedet, Innboks, Saker, Kunder, Lager,
- * Helpdesk, Settings) har ingen gate og trenger ingen rad her — en ny forhandler
- * kan drive verkstedet fra dag én. Tillegg velges av Endwise-admin ved
- * opprettelse (og kan redigeres senere). Stripe (F5-32) skriver fortsatt ved
- * kjøp. Default her er tom — admin krysser av, forhandleren velger aldri.
+ * Ekstra TILLEGG utenom nivået. Tom med vilje — Start/Pro/Enterprise
+ * kommer fra TIERS. Admin krysser bare av det som ikke allerede ligger i
+ * pakken. shop/twilio er aldri ekstra.
  */
 const START_MODULER: string[] = [];
 
@@ -55,22 +59,46 @@ const BLOKKERT_MELDING: Record<string, string> = {
   twilio: 'SMS er ikke et tillegg — pass-through per melding, ingen modulpris.',
 };
 
-/** Zod-lag: avvis shop/twilio før mutasjonen kjører. */
-const tildelbareModulerSchema = z
-  .array(z.string().min(1).max(64))
-  .max(40)
-  .superRefine((keys, ctx) => {
-    for (const key of keys) {
-      if (erBlokertTildeling(key)) {
-        ctx.addIssue({
-          code: 'custom',
-          message: BLOKKERT_MELDING[key] ?? `Kan ikke tildeles: ${key}`,
-        });
-      }
-    }
-  });
+const ekstraTilleggSchema = z.array(z.string().min(1).max(64)).max(40);
 
-function avvisBasisModuler(keys: readonly string[]): AddonModule[] {
+const tildelbareModulerSchema = ekstraTilleggSchema.superRefine((keys, ctx) => {
+  for (const key of keys) {
+    if (erBlokertTildeling(key)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: BLOKKERT_MELDING[key] ?? `Kan ikke tildeles: ${key}`,
+      });
+    }
+  }
+});
+
+function avvisEkstraTillegg(keys: readonly string[], tierKey: string): string[] {
+  const unike = [...new Set(keys)];
+  const basis = unike.filter((k) => (BASIS_MODULES as readonly string[]).includes(k));
+  if (basis.length) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Basis-moduler kan ikke tildeles: ${basis.join(', ')}. De er alltid på.`,
+    });
+  }
+  const blokkert = unike.filter((k) => erBlokertTildeling(k) || k === 'shop' || k === 'twilio');
+  if (blokkert.length) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: blokkert.map((k) => BLOKKERT_MELDING[k] ?? `Kan ikke tildeles: ${k}`).join(' '),
+    });
+  }
+  const ugyldige = unike.filter((k) => !erGyldigEkstraTillegg(k, tierKey));
+  if (ugyldige.length) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Tillegget hører ikke til dette nivået: ${ugyldige.join(', ')}`,
+    });
+  }
+  return unike;
+}
+
+function avvisBasisModuler(keys: readonly string[]): string[] {
   const basis = keys.filter((k) => (BASIS_MODULES as readonly string[]).includes(k));
   if (basis.length) {
     throw new TRPCError({
@@ -95,12 +123,95 @@ function avvisBasisModuler(keys: readonly string[]): AddonModule[] {
   return filtrerAddonNokler(keys);
 }
 
+function krevIkkeEndwise(slug: string, handling: string): void {
+  if (erEndwiseSlug(slug)) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: `Du kan ikke ${handling} Endwise-tenanten.`,
+    });
+  }
+}
+
+async function lesTenant(
+  db: Parameters<typeof withPlatformAdmin>[0],
+  tenantId: string,
+): Promise<{
+  id: string;
+  name: string;
+  slug: string;
+  kind: 'live' | 'demo';
+  plan: string | null;
+} | null> {
+  const [tenant] = await withPlatformAdmin(db, (tx) =>
+    tx
+      .select({
+        id: schema.tenants.id,
+        name: schema.tenants.name,
+        slug: schema.tenants.slug,
+        kind: schema.tenants.kind,
+        plan: schema.tenants.plan,
+      })
+      .from(schema.tenants)
+      .where(eq(schema.tenants.id, tenantId)),
+  );
+  return tenant ?? null;
+}
+
+async function eierInfo(
+  db: Parameters<typeof withTenant>[0],
+  tenantId: string,
+): Promise<{ eierEpost: string | null; eierInviteUbrukt: boolean }> {
+  const modul = createInvitasjonsmodul(db);
+  const siste = await modul.sisteEierInvitasjon(tenantId);
+  const naa = Date.now();
+  const ubrukt = Boolean(
+    siste && !siste.akseptert && !siste.trukket && siste.utloper.getTime() > naa,
+  );
+  let epost = siste?.epost ?? null;
+  if (!epost) {
+    const [medlem] = await db
+      .select({ userId: schema.member.userId })
+      .from(schema.member)
+      .where(
+        and(eq(schema.member.organizationId, tenantId), eq(schema.member.role, 'dealer_admin')),
+      )
+      .limit(1);
+    if (medlem) {
+      const [bruker] = await db
+        .select({ email: schema.user.email })
+        .from(schema.user)
+        .where(eq(schema.user.id, medlem.userId));
+      epost = bruker?.email ?? null;
+    }
+  }
+  return { eierEpost: epost, eierInviteUbrukt: ubrukt };
+}
+
+async function adminEpost(
+  db: Parameters<typeof withTenant>[0],
+  userId: string,
+): Promise<string> {
+  const [bruker] = await db
+    .select({ email: schema.user.email })
+    .from(schema.user)
+    .where(eq(schema.user.id, userId));
+  if (!bruker?.email) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke e-posten din.' });
+  }
+  return bruker.email;
+}
+
 async function skrivEntitlementAudit(
   tx: Parameters<Parameters<typeof withTenant>[2]>[0],
   input: {
     tenantId: string;
     actor: string;
-    action: 'entitlement.granted' | 'entitlement.revoked' | 'tenant.created';
+    action:
+      | 'entitlement.granted'
+      | 'entitlement.revoked'
+      | 'tenant.created'
+      | 'tenant.updated'
+      | 'tenant.deleted';
     subjectId: string;
     metadata?: Record<string, unknown>;
   },
@@ -109,7 +220,7 @@ async function skrivEntitlementAudit(
     tenantId: input.tenantId,
     actor: input.actor,
     action: input.action,
-    subjectType: input.action === 'tenant.created' ? 'tenant' : 'tenant_module',
+    subjectType: input.action.startsWith('tenant.') ? 'tenant' : 'tenant_module',
     subjectId: input.subjectId,
     metadata: input.metadata ?? {},
   });
@@ -183,20 +294,36 @@ export const tenantsRouter = router({
    * Feltene er minimale — navn, slug, kind, dato. Ingen forhandlerdata, ingen
    * kunde-PII.
    */
-  list: endwiseAdminProcedure.query(({ ctx }) =>
-    withPlatformAdmin(ctx.db, (tx) =>
+  list: endwiseAdminProcedure.query(async ({ ctx }) => {
+    const rader = await withPlatformAdmin(ctx.db, (tx) =>
       tx
         .select({
           id: schema.tenants.id,
           name: schema.tenants.name,
           slug: schema.tenants.slug,
           kind: schema.tenants.kind,
+          plan: schema.tenants.plan,
           createdAt: schema.tenants.createdAt,
         })
         .from(schema.tenants)
         .orderBy(desc(schema.tenants.createdAt)),
-    ),
-  ),
+    );
+    return Promise.all(
+      rader.map(async (t) => {
+        const eier = await eierInfo(ctx.db, t.id).catch(() => ({
+          eierEpost: null as string | null,
+          eierInviteUbrukt: false,
+        }));
+        return {
+          ...t,
+          plan: erTierKey(t.plan) ? t.plan : null,
+          erEndwise: erEndwiseSlug(t.slug),
+          eierEpost: eier.eierEpost,
+          eierInviteUbrukt: eier.eierInviteUbrukt,
+        };
+      }),
+    );
+  }),
 
   /**
    * F1-07 — Live plattformtall. Ingen Stripe, ingen mock.
@@ -245,6 +372,7 @@ export const tenantsRouter = router({
           name: schema.tenants.name,
           slug: schema.tenants.slug,
           kind: schema.tenants.kind,
+          plan: schema.tenants.plan,
         })
         .from(schema.tenants)
         .orderBy(asc(schema.tenants.name)),
@@ -255,6 +383,8 @@ export const tenantsRouter = router({
       name: string;
       slug: string;
       kind: (typeof tenants)[number]['kind'];
+      plan: 'start' | 'pro' | 'enterprise' | null;
+      erEndwise: boolean;
       modules: Array<{
         moduleKey: string;
         enabled: boolean;
@@ -283,7 +413,12 @@ export const tenantsRouter = router({
             source: string;
           }>,
       );
-      rader.push({ ...t, modules });
+      rader.push({
+        ...t,
+        plan: erTierKey(t.plan) ? t.plan : null,
+        erEndwise: erEndwiseSlug(t.slug),
+        modules,
+      });
     }
 
     return rader;
@@ -291,6 +426,9 @@ export const tenantsRouter = router({
 
   /** Tillegg Endwise-admin kan krysse av. Basis er ikke med. */
   addonKatalog: endwiseAdminProcedure.query(() => addonKatalog()),
+
+  /** Nivå + TILLEGG. TIERS/TILLEGG er kilden — ingen hardkodede nøkler. */
+  pakkeKatalog: endwiseAdminProcedure.query(() => pakkeKatalog()),
 
   /**
    * Opprett en forhandler + eier-invitasjon.
@@ -309,13 +447,25 @@ export const tenantsRouter = router({
         slug: slugSchema,
         ownerEmail: z.email(),
         kind: z.enum(['live', 'demo']).default('live'),
-        modules: tildelbareModulerSchema.default([]),
-        optional: tildelbareModulerSchema.default([]),
+        tier: z.enum(TIER_KEYS).default('start'),
+        included: ekstraTilleggSchema.default([]),
+        optional: ekstraTilleggSchema.default([]),
+        /** @deprecated Bruk `included` (TILLEGG-nøkler) + `tier`. */
+        modules: tildelbareModulerSchema.optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const included = avvisBasisModuler(input.modules);
-      const optional = avvisBasisModuler(input.optional).filter((k) => !included.includes(k));
+      if (erEndwiseSlug(input.slug)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `Slug «${ENDWISE_SLUG}» er reservert for plattformen.`,
+        });
+      }
+      const extraIncluded = avvisEkstraTillegg(input.included, input.tier);
+      const extraOptional = avvisEkstraTillegg(input.optional, input.tier);
+      const pakke = utvidPakke(input.tier, extraIncluded, extraOptional);
+      const included = pakke.included;
+      const optional = pakke.optional;
       const epost = input.ownerEmail.trim().toLowerCase();
 
       const [eksisterende] = await ctx.db
@@ -355,7 +505,7 @@ export const tenantsRouter = router({
           ownerUserId: eier.id,
           modules: moduler,
           optionalModules: optional,
-          plan: 'endwise',
+          plan: input.tier,
           kind: input.kind,
           onboardingCompleted: false,
         }));
@@ -365,7 +515,7 @@ export const tenantsRouter = router({
           slug: input.slug,
           modules: moduler,
           optionalModules: optional,
-          plan: 'endwise',
+          plan: input.tier,
           kind: input.kind,
         }));
       }
@@ -379,6 +529,7 @@ export const tenantsRouter = router({
           metadata: {
             slug: input.slug,
             kind: input.kind,
+            plan: input.tier,
             modules: moduler,
             optional,
             ownerEmail: epost,
@@ -390,7 +541,7 @@ export const tenantsRouter = router({
             actor: ctx.userId,
             action: 'entitlement.granted',
             subjectId: key,
-            metadata: { moduleKey: key, plan: 'endwise', at: 'create' },
+            metadata: { moduleKey: key, plan: input.tier, at: 'create' },
           });
         }
       });
@@ -408,6 +559,7 @@ export const tenantsRouter = router({
         name: input.name,
         slug: input.slug,
         kind: input.kind,
+        plan: input.tier,
         existingUser: Boolean(eier),
         invite,
       };
@@ -424,25 +576,25 @@ export const tenantsRouter = router({
     .input(
       z.object({
         tenantId: z.uuid(),
-        modules: tildelbareModulerSchema,
-        optional: tildelbareModulerSchema.default([]),
+        tier: z.enum(TIER_KEYS).default('start'),
+        included: ekstraTilleggSchema.default([]),
+        optional: ekstraTilleggSchema.default([]),
+        /** @deprecated Bruk `included` + `tier`. Beholdt så gamle kall feiler pent. */
+        modules: tildelbareModulerSchema.optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const included = new Set(avvisBasisModuler(input.modules));
-      const optional = new Set(
-        avvisBasisModuler(input.optional).filter((k) => !included.has(k)),
-      );
+      const extraIncluded = avvisEkstraTillegg(input.included, input.tier);
+      const extraOptional = avvisEkstraTillegg(input.optional, input.tier);
+      const pakke = utvidPakke(input.tier, extraIncluded, extraOptional);
+      const included = new Set(pakke.included);
+      const optional = new Set(pakke.optional);
 
-      const [tenant] = await withPlatformAdmin(ctx.db, (tx) =>
-        tx
-          .select({ id: schema.tenants.id })
-          .from(schema.tenants)
-          .where(eq(schema.tenants.id, input.tenantId)),
-      );
+      const tenant = await lesTenant(ctx.db, input.tenantId);
       if (!tenant) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
       }
+      krevIkkeEndwise(tenant.slug, 'endre pakken til');
 
       return withTenant(ctx.db, input.tenantId, async (tx) => {
         const eksisterende = await tx
@@ -465,7 +617,7 @@ export const tenantsRouter = router({
               moduleKey: key,
               enabled: true,
               source: 'included',
-              plan: 'endwise',
+              plan: input.tier,
             });
             granted.push(key);
           } else if (!rad.enabled || rad.source !== 'included') {
@@ -474,7 +626,7 @@ export const tenantsRouter = router({
               .set({
                 enabled: true,
                 source: 'included',
-                plan: 'endwise',
+                plan: input.tier,
                 updatedAt: new Date(),
               })
               .where(
@@ -495,7 +647,7 @@ export const tenantsRouter = router({
               moduleKey: key,
               enabled: false,
               source: 'optional',
-              plan: 'endwise',
+              plan: input.tier,
             });
           } else if (rad.source === 'included') {
             await tx
@@ -514,11 +666,16 @@ export const tenantsRouter = router({
           }
         }
 
+        await tx
+          .update(schema.tenants)
+          .set({ plan: input.tier, updatedAt: new Date() })
+          .where(eq(schema.tenants.id, input.tenantId));
+
         for (const rad of eksisterende) {
           if (rad.source === 'stripe') continue;
-          if (!erTildelbarAddon(rad.moduleKey)) continue;
-          if (included.has(rad.moduleKey as AddonModule)) continue;
-          if (optional.has(rad.moduleKey as AddonModule)) continue;
+          if (rad.moduleKey === 'shop') continue;
+          if (included.has(rad.moduleKey)) continue;
+          if (optional.has(rad.moduleKey)) continue;
           if (!rad.enabled) {
             if (rad.source === 'optional') {
               await tx
@@ -550,7 +707,7 @@ export const tenantsRouter = router({
             actor: ctx.userId,
             action: 'entitlement.granted',
             subjectId: key,
-            metadata: { moduleKey: key, plan: 'endwise', at: 'setModules', source: 'included' },
+            metadata: { moduleKey: key, plan: input.tier, at: 'setModules', source: 'included' },
           });
         }
         for (const key of revoked) {
@@ -567,6 +724,7 @@ export const tenantsRouter = router({
           tenantId: input.tenantId,
           granted,
           revoked,
+          plan: input.tier,
           modules: [...included],
           optional: [...optional],
         };
@@ -577,39 +735,20 @@ export const tenantsRouter = router({
   resendOwnerInvite: endwiseAdminProcedure
     .input(z.object({ tenantId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const [tenant] = await withPlatformAdmin(ctx.db, (tx) =>
-        tx
-          .select({ id: schema.tenants.id, name: schema.tenants.name })
-          .from(schema.tenants)
-          .where(eq(schema.tenants.id, input.tenantId)),
-      );
+      const tenant = await lesTenant(ctx.db, input.tenantId);
       if (!tenant) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
       }
+      krevIkkeEndwise(tenant.slug, 'sende invitasjon på nytt til');
 
-      const modul = createInvitasjonsmodul(ctx.db);
-      const siste = await modul.sisteEierInvitasjon(input.tenantId);
-      let epost = siste?.epost;
-      if (!epost) {
-        const [medlem] = await ctx.db
-          .select({ userId: schema.member.userId })
-          .from(schema.member)
-          .where(
-            and(
-              eq(schema.member.organizationId, input.tenantId),
-              eq(schema.member.role, 'dealer_admin'),
-            ),
-          )
-          .limit(1);
-        if (medlem) {
-          const [bruker] = await ctx.db
-            .select({ email: schema.user.email })
-            .from(schema.user)
-            .where(eq(schema.user.id, medlem.userId));
-          epost = bruker?.email;
-        }
+      const eier = await eierInfo(ctx.db, input.tenantId);
+      if (!eier.eierInviteUbrukt) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Invitasjonen er allerede brukt. Du sender den aldri på nytt da.',
+        });
       }
-      if (!epost) {
+      if (!eier.eierEpost) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Fant ingen eier-e-post å sende til. Opprett forhandleren på nytt.',
@@ -619,10 +758,218 @@ export const tenantsRouter = router({
       return sendEierLenke({
         db: ctx.db,
         tenantId: input.tenantId,
-        epost,
+        epost: eier.eierEpost,
         invitedBy: ctx.userId,
         forhandler: tenant.name,
       });
+    }),
+
+  /**
+   * Endre navn, slug og demo-merke. Eier-e-post vises / sendes på nytt —
+   * den byttes aldri stille her.
+   */
+  update: endwiseAdminProcedure
+    .input(
+      z.object({
+        tenantId: z.uuid(),
+        name: z.string().min(2).max(120),
+        slug: slugSchema,
+        kind: z.enum(['live', 'demo']).default('live'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const tenant = await lesTenant(ctx.db, input.tenantId);
+      if (!tenant) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+      }
+      krevIkkeEndwise(tenant.slug, 'endre');
+      if (erEndwiseSlug(input.slug)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `Slug «${ENDWISE_SLUG}» er reservert for plattformen.`,
+        });
+      }
+
+      if (input.slug !== tenant.slug) {
+        const [slugOpptatt] = await ctx.db
+          .select({ id: schema.tenants.id })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.slug, input.slug));
+        if (slugOpptatt) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: `Slug «${input.slug}» er allerede i bruk`,
+          });
+        }
+        const [orgSlug] = await ctx.db
+          .select({ id: schema.organization.id })
+          .from(schema.organization)
+          .where(eq(schema.organization.slug, input.slug));
+        if (orgSlug && orgSlug.id !== input.tenantId) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: `Slug «${input.slug}» er allerede i bruk`,
+          });
+        }
+      }
+
+      await withTenant(ctx.db, input.tenantId, async (tx) => {
+        await tx
+          .update(schema.tenants)
+          .set({
+            name: input.name,
+            slug: input.slug,
+            kind: input.kind,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.tenants.id, input.tenantId));
+        await tx
+          .update(schema.organization)
+          .set({ name: input.name, slug: input.slug })
+          .where(eq(schema.organization.id, input.tenantId));
+        await skrivEntitlementAudit(tx, {
+          tenantId: input.tenantId,
+          actor: ctx.userId,
+          action: 'tenant.updated',
+          subjectId: input.tenantId,
+          metadata: {
+            name: input.name,
+            slug: input.slug,
+            kind: input.kind,
+            forrigeSlug: tenant.slug,
+          },
+        });
+      });
+
+      return {
+        tenantId: input.tenantId,
+        name: input.name,
+        slug: input.slug,
+        kind: input.kind,
+      };
+    }),
+
+  /** Engangskode til innlogget admin. Backend avviser slett uten gyldig kode. */
+  sendSlettKode: endwiseAdminProcedure
+    .input(z.object({ tenantId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const tenant = await lesTenant(ctx.db, input.tenantId);
+      if (!tenant) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+      }
+      krevIkkeEndwise(tenant.slug, 'slette');
+      if (input.tenantId === ctx.tenantId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Du kan ikke slette tenanten du er logget inn i.',
+        });
+      }
+
+      const epost = await adminEpost(ctx.db, ctx.userId);
+      const kode = lagSlettKode();
+      const utloper = new Date(Date.now() + 5 * 60 * 1000);
+      await ctx.db
+        .delete(schema.tenantDeleteChallenges)
+        .where(
+          and(
+            eq(schema.tenantDeleteChallenges.tenantId, input.tenantId),
+            eq(schema.tenantDeleteChallenges.requestedBy, ctx.userId),
+          ),
+        );
+      await ctx.db.insert(schema.tenantDeleteChallenges).values({
+        tenantId: input.tenantId,
+        requestedBy: ctx.userId,
+        codeHash: hashSlettKode(kode),
+        expiresAt: utloper,
+      });
+      await sendTwoFactorOtp(epost, kode);
+      return { epost, utloper };
+    }),
+
+  /**
+   * GDPR-slett. Krever slug (eksakt, trimmet) + gyldig 6-sifret kode.
+   * Aldri Endwise-tenanten. Aldri tenanten du selv er i.
+   */
+  slett: endwiseAdminProcedure
+    .input(
+      z.object({
+        tenantId: z.uuid(),
+        slug: z.string().min(1).max(48),
+        kode: z.string().min(1).max(16),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const tenant = await lesTenant(ctx.db, input.tenantId);
+      if (!tenant) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+      }
+      krevIkkeEndwise(tenant.slug, 'slette');
+      if (input.tenantId === ctx.tenantId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Du kan ikke slette tenanten du er logget inn i.',
+        });
+      }
+      if (input.slug.trim() !== tenant.slug) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Slug stemmer ikke. Du sletter ikke ${tenant.name}.`,
+        });
+      }
+      if (!/^\d{6}$/.test(input.kode.trim())) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Koden må være seks siffer.',
+        });
+      }
+
+      const [utfordring] = await ctx.db
+        .select({
+          id: schema.tenantDeleteChallenges.id,
+          codeHash: schema.tenantDeleteChallenges.codeHash,
+          expiresAt: schema.tenantDeleteChallenges.expiresAt,
+        })
+        .from(schema.tenantDeleteChallenges)
+        .where(
+          and(
+            eq(schema.tenantDeleteChallenges.tenantId, input.tenantId),
+            eq(schema.tenantDeleteChallenges.requestedBy, ctx.userId),
+          ),
+        )
+        .limit(1);
+      if (!utfordring || utfordring.expiresAt.getTime() <= Date.now()) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Koden er ugyldig eller utløpt. Send en ny kode.',
+        });
+      }
+      if (!slettKodeErGyldig(input.kode, utfordring.codeHash)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Koden er ugyldig eller utløpt. Send en ny kode.',
+        });
+      }
+
+      await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        await skrivEntitlementAudit(tx, {
+          tenantId: ctx.tenantId,
+          actor: ctx.userId,
+          action: 'tenant.deleted',
+          subjectId: input.tenantId,
+          metadata: { slug: tenant.slug, name: tenant.name },
+        });
+      });
+
+      await withPlatformAdmin(ctx.db, async (tx) => {
+        await tx.execute(sql`select slett_forhandler(${input.tenantId}::uuid)`);
+      });
+
+      await ctx.db
+        .delete(schema.tenantDeleteChallenges)
+        .where(eq(schema.tenantDeleteChallenges.tenantId, input.tenantId))
+        .catch(() => undefined);
+
+      return { tenantId: input.tenantId, name: tenant.name, slug: tenant.slug };
     }),
 
   /** Er dev-mode faktisk på for meg? Tre betingelser — se `dev-mode.ts`. */

@@ -179,3 +179,77 @@ $$;
 
 grant execute on function lookup_open_invitation(text) to authenticated;
 grant execute on function consume_invitation(text) to authenticated;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- F5-26 — GDPR-slett av en forhandler. App-rollen kan ikke slette audit_log
+-- (append-only) eller tenants-raden mens restrict-FKer lever. Funksjonen
+-- kjører som eier, men KREVER at `app.platform_admin` er satt i samme
+-- transaksjon — samme GUC som withPlatformAdmin().
+--
+-- ⛔ Aldri Endwise-tenanten (slug = endwise).
+-- ⛔ Sletter ikke user-rader (never delete self).
+
+create or replace function slett_forhandler(p_tenant_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  r record;
+  v_slug text;
+  v_progress boolean;
+  i integer;
+begin
+  if current_setting('app.platform_admin', true) is distinct from 'on' then
+    raise exception 'slett_forhandler: krever platform_admin';
+  end if;
+
+  select slug into v_slug from tenants where id = p_tenant_id;
+  if v_slug is null then
+    raise exception 'slett_forhandler: finnes ikke';
+  end if;
+  if v_slug = 'endwise' then
+    raise exception 'slett_forhandler: kan ikke slette Endwise-tenanten';
+  end if;
+
+  -- Barn først. Looper til FK-rekkefølgen slipper gjennom.
+  for i in 1..12 loop
+    v_progress := false;
+    for r in
+      select c.relname as tbl
+        from pg_class c
+        join pg_namespace n on n.oid = c.relnamespace
+        join pg_attribute a on a.attrelid = c.oid
+       where n.nspname = 'public'
+         and c.relkind = 'r'
+         and a.attname = 'tenant_id'
+         and not a.attisdropped
+         and c.relname <> 'tenants'
+    loop
+      begin
+        execute format('delete from %I where tenant_id = $1', r.tbl) using p_tenant_id;
+        if found then
+          v_progress := true;
+        end if;
+      exception when foreign_key_violation then
+        null;
+      end;
+    end loop;
+    exit when not v_progress;
+  end loop;
+
+  delete from tenant_delete_challenges where tenant_id = p_tenant_id;
+  delete from member where organization_id = p_tenant_id::text;
+  delete from invitation where organization_id = p_tenant_id::text;
+  delete from organization where id = p_tenant_id::text;
+  delete from tenants where id = p_tenant_id;
+
+  if exists (select 1 from tenants where id = p_tenant_id) then
+    raise exception 'slett_forhandler: tenanten ble ikke slettet';
+  end if;
+end;
+$$;
+
+grant execute on function slett_forhandler(uuid) to authenticated;

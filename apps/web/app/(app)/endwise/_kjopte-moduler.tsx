@@ -5,14 +5,13 @@ import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
+import { NivaaValg, TilleggListe, tilleggForNivaa, tilleggNokler } from './_pakke-valg';
 
 type Rad = RouterOutput['tenants']['listModules'][number];
-type Katalog = RouterOutput['tenants']['addonKatalog'];
 
 /**
  * F1-07 / F0-04 / F5-26 — `tenant_modules` per forhandler.
- * Endwise-admin setter pakke (fast) og valgfrie tillegg. Stripe skriver ved kjøp.
- * `moduleProcedure` håndhever. `dealer_admin` får FORBIDDEN på skriving.
+ * Samme nivå + tillegg som /endwise/forhandlere. Endwise-tenanten redigeres ikke.
  */
 export function KjopteModulerTabell({
   rader,
@@ -24,7 +23,7 @@ export function KjopteModulerTabell({
   feil?: string;
 }) {
   const utils = trpc.useUtils();
-  const katalog = trpc.tenants.addonKatalog.useQuery();
+  const katalog = trpc.tenants.pakkeKatalog.useQuery();
   const sett = trpc.tenants.setModules.useMutation({
     onSuccess: () => {
       void utils.tenants.listModules.invalidate();
@@ -51,15 +50,31 @@ export function KjopteModulerTabell({
     );
   }
 
+  const nivaa = katalog.data?.nivaa ?? [];
+  const tillegg = katalog.data?.tillegg ?? [];
+
   return (
     <div className="flex flex-col gap-2">
       <div className="overflow-hidden rounded-xl border border-border">
         {rader.map((t, i) => {
-          const pa = t.modules.filter((m) => m.enabled && m.source !== 'optional');
-          const optional = t.modules
-            .filter((m) => m.source === 'optional' || m.source === 'dealer')
-            .map((m) => m.moduleKey);
+          const plan = t.plan ?? 'start';
+          const nivaaRad = nivaa.find((n) => n.key === plan);
+          const included = tilleggNokler(
+            t.modules
+              .filter((m) => m.enabled && m.source !== 'optional' && m.source !== 'dealer')
+              .map((m) => m.moduleKey),
+            tillegg,
+            nivaaRad,
+          );
+          const optional = tilleggNokler(
+            t.modules
+              .filter((m) => m.source === 'optional' || m.source === 'dealer')
+              .map((m) => m.moduleKey),
+            tillegg,
+            nivaaRad,
+          );
           const vis = apen === t.id;
+          const pa = t.modules.filter((m) => m.enabled && m.source !== 'optional');
           return (
             <div
               key={t.id}
@@ -76,7 +91,8 @@ export function KjopteModulerTabell({
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {pa.length === 0 ? (
+                  {t.erEndwise ? <Badge variant="secondary">Endwise</Badge> : null}
+                  {pa.length === 0 && !t.erEndwise ? (
                     <span className="text-[12px] text-fg-muted">Ingen tillegg</span>
                   ) : (
                     pa.map((m) => (
@@ -86,23 +102,27 @@ export function KjopteModulerTabell({
                     ))
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setApen(vis ? null : t.id)}
-                  className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline"
-                >
-                  {vis ? 'Lukk' : 'Endre'}
-                </button>
+                {!t.erEndwise ? (
+                  <button
+                    type="button"
+                    onClick={() => setApen(vis ? null : t.id)}
+                    className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline"
+                  >
+                    {vis ? 'Lukk' : 'Endre pakke'}
+                  </button>
+                ) : null}
               </div>
-              {vis ? (
-                <ModulAvkrysning
-                  key={`${t.id}:${pa.map((m) => m.moduleKey).join(',')}:${optional.join(',')}`}
-                  katalog={katalog.data ?? []}
-                  included={pa.map((m) => m.moduleKey)}
+              {vis && !t.erEndwise ? (
+                <FlaggPakke
+                  key={`${t.id}:${plan}:${included.join(',')}:${optional.join(',')}`}
+                  plan={plan}
+                  included={included}
                   optional={optional}
+                  nivaa={nivaa}
+                  tillegg={tillegg}
                   pending={sett.isPending}
-                  onLagre={(modules, opt) =>
-                    sett.mutate({ tenantId: t.id, modules, optional: opt })
+                  onLagre={(tier, inc, opt) =>
+                    sett.mutate({ tenantId: t.id, tier, included: inc, optional: opt })
                   }
                 />
               ) : null}
@@ -115,74 +135,70 @@ export function KjopteModulerTabell({
   );
 }
 
-function ModulAvkrysning({
-  katalog,
+function FlaggPakke({
+  plan,
   included,
   optional,
+  nivaa,
+  tillegg,
   pending,
   onLagre,
 }: {
-  katalog: Katalog;
+  plan: string;
   included: string[];
   optional: string[];
+  nivaa: NonNullable<RouterOutput['tenants']['pakkeKatalog']>['nivaa'];
+  tillegg: NonNullable<RouterOutput['tenants']['pakkeKatalog']>['tillegg'];
   pending: boolean;
-  onLagre: (modules: string[], optional: string[]) => void;
+  onLagre: (tier: 'start' | 'pro' | 'enterprise', included: string[], optional: string[]) => void;
 }) {
+  const [valgt, setValgt] = useState(plan);
   const [fast, setFast] = useState(() => new Set(included));
   const [valg, setValg] = useState(() => new Set(optional));
+  const valgtNivaa = nivaa.find((n) => n.key === valgt);
+  const synlige = tilleggForNivaa(valgtNivaa, tillegg);
+
+  function byttNivaa(key: string) {
+    const neste = nivaa.find((n) => n.key === key);
+    const lovlige = new Set(tilleggForNivaa(neste, tillegg).map((t) => t.key));
+    setValgt(key);
+    setFast(new Set([...fast].filter((k) => lovlige.has(k))));
+    setValg(new Set([...valg].filter((k) => lovlige.has(k))));
+  }
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[12px] text-fg-muted">I pakken</p>
-      <div className="grid gap-1.5 sm:grid-cols-2">
-        {katalog.map((m) => (
-          <label key={`inc-${m.key}`} className="flex items-center gap-2 text-body text-fg">
-            <input
-              type="checkbox"
-              checked={fast.has(m.key)}
-              onChange={() => {
-                setFast((forrige) => {
-                  const neste = new Set(forrige);
-                  if (neste.has(m.key)) neste.delete(m.key);
-                  else neste.add(m.key);
-                  return neste;
-                });
-              }}
-              className="size-4 accent-[#111]"
-            />
-            {m.label}
-          </label>
-        ))}
-      </div>
-      <p className="text-[12px] text-fg-muted">Kan velges i veiviseren</p>
-      <div className="grid gap-1.5 sm:grid-cols-2">
-        {katalog.map((m) => (
-          <label key={`opt-${m.key}`} className="flex items-center gap-2 text-body text-fg">
-            <input
-              type="checkbox"
-              checked={valg.has(m.key)}
-              disabled={fast.has(m.key)}
-              onChange={() => {
-                setValg((forrige) => {
-                  const neste = new Set(forrige);
-                  if (neste.has(m.key)) neste.delete(m.key);
-                  else neste.add(m.key);
-                  return neste;
-                });
-              }}
-              className="size-4 accent-[#111]"
-            />
-            {m.label}
-          </label>
-        ))}
-      </div>
+      <NivaaValg nivaa={nivaa} valgt={valgt} onChange={byttNivaa} />
+      <TilleggListe
+        tillegg={synlige}
+        included={fast}
+        optional={valg}
+        onToggleIncluded={(key) => {
+          const neste = new Set(fast);
+          if (neste.has(key)) neste.delete(key);
+          else neste.add(key);
+          setFast(neste);
+        }}
+        onToggleOptional={(key) => {
+          const neste = new Set(valg);
+          if (neste.has(key)) neste.delete(key);
+          else neste.add(key);
+          setValg(neste);
+        }}
+      />
       <div className="flex justify-end">
         <StatefulButton
           type="button"
           disabled={pending}
           state={pending ? 'loading' : 'idle'}
           loadingText="Lagrer…"
-          onClick={() => onLagre([...fast], [...valg].filter((k) => !fast.has(k)))}
+          onClick={() =>
+            onLagre(
+              valgt as 'start' | 'pro' | 'enterprise',
+              [...fast],
+              [...valg].filter((k) => !fast.has(k)),
+            )
+          }
         >
           Lagre pakke
         </StatefulButton>

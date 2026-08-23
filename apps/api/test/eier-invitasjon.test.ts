@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createDb, type Database, eq, schema, sql } from '@endwise/db';
-import { ADDON_MODULES, BASIS_MODULES } from '@endwise/modules';
+import { ADDON_MODULES, BASIS_MODULES, TIERS } from '@endwise/modules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { handleHono } from '../src/http/hono.ts';
 import { invitasjon } from '../src/routes/invitasjon.ts';
@@ -215,14 +215,16 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       slug,
       ownerEmail: epost,
       kind: 'demo',
-      modules: ['quick', 'vegvesen', 'ai-support'],
-      optional: ['white-label'],
+      tier: 'pro',
+      included: ['white-label'],
+      optional: ['sso'],
     });
     tenantIds.push(res.tenantId);
 
     expect(res.existingUser).toBe(false);
     expect(res.invite.epost).toBe(epost);
     expect(res.invite.id).toBeTruthy();
+    expect(res.plan).toBe('pro');
 
     const [bruker] = await owner
       .select({ id: schema.user.id })
@@ -240,26 +242,30 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       .select({ key: schema.tenantModules.moduleKey, enabled: schema.tenantModules.enabled })
       .from(schema.tenantModules)
       .where(eq(schema.tenantModules.tenantId, res.tenantId));
+    const pro = TIERS.find((t) => t.key === 'pro')?.modules ?? [];
     expect(
       mods
         .filter((m) => m.enabled)
         .map((m) => m.key)
         .sort(),
-    ).toEqual(['ai-support', 'quick', 'vegvesen']);
-    expect(mods.find((m) => m.key === 'white-label')?.enabled).toBe(false);
+    ).toEqual([...pro, 'white-label'].sort());
+    expect(mods.find((m) => m.key === 'twilio')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'shop')).toBeUndefined();
+    expect(mods.find((m) => m.key === 'sso')?.enabled).toBe(false);
 
     const [tenant] = await owner
-      .select({ ferdig: schema.tenants.onboardingCompletedAt })
+      .select({ ferdig: schema.tenants.onboardingCompletedAt, plan: schema.tenants.plan })
       .from(schema.tenants)
       .where(eq(schema.tenants.id, res.tenantId));
     expect(tenant?.ferdig).toBeNull();
+    expect(tenant?.plan).toBe('pro');
 
     const audit = await owner
       .select({ action: schema.auditLog.action })
       .from(schema.auditLog)
       .where(eq(schema.auditLog.tenantId, res.tenantId));
     expect(audit.some((a) => a.action === 'tenant.created')).toBe(true);
-    expect(audit.filter((a) => a.action === 'entitlement.granted')).toHaveLength(3);
+    expect(audit.filter((a) => a.action === 'entitlement.granted')).toHaveLength(pro.length + 1);
   });
 
   it('avviser basis-moduler på create', async () => {
@@ -283,7 +289,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       slug,
       ownerEmail: epost,
       kind: 'demo',
-      modules: ['vegvesen'],
+      tier: 'start',
     });
     tenantIds.push(opprettet.tenantId);
 
@@ -362,7 +368,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       slug,
       ownerEmail: epost,
       kind: 'demo',
-      modules: ['quick'],
+      tier: 'start',
     });
     tenantIds.push(opprettet.tenantId);
 
@@ -374,10 +380,10 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     );
 
     const mods = await owner
-      .select({ key: schema.tenantModules.moduleKey })
+      .select({ key: schema.tenantModules.moduleKey, enabled: schema.tenantModules.enabled })
       .from(schema.tenantModules)
       .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
-    expect(mods.map((m) => m.key)).toEqual(['quick']);
+    expect(mods.filter((m) => m.enabled).map((m) => m.key).sort()).toEqual(['resend', 'widget']);
   });
 
   it('endwise_admin kan redigere tillegg senere, og det audit-logges', async () => {
@@ -387,23 +393,26 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       slug,
       ownerEmail: `edit.${slug}@verksted.test`,
       kind: 'demo',
-      modules: ['quick'],
+      tier: 'pro',
     });
     tenantIds.push(opprettet.tenantId);
 
     const etter = await somEndwise().tenants.setModules({
       tenantId: opprettet.tenantId,
-      modules: ['vegvesen'],
+      tier: 'start',
     });
-    expect(etter.granted).toEqual(['vegvesen']);
-    expect(etter.revoked).toEqual(['quick']);
+    expect(etter.plan).toBe('start');
+    expect(etter.revoked).toEqual(expect.arrayContaining(['quick', 'twilio', 'vegvesen']));
+    expect(etter.granted).not.toContain('shop');
 
     const mods = await owner
       .select({ key: schema.tenantModules.moduleKey, enabled: schema.tenantModules.enabled })
       .from(schema.tenantModules)
       .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
-    expect(mods.find((m) => m.key === 'vegvesen')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'widget')?.enabled).toBe(true);
     expect(mods.find((m) => m.key === 'quick')?.enabled).toBe(false);
+    expect(mods.find((m) => m.key === 'twilio')?.enabled).toBe(false);
+    expect(mods.find((m) => m.key === 'shop')).toBeUndefined();
   });
 
   it('veiviser: visningsnavn, hopp over extras beholder pakke, extras avviser fremmed nøkkel', async () => {
@@ -413,12 +422,21 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       slug,
       ownerEmail: `wiz.${slug}@verksted.test`,
       kind: 'demo',
-      modules: ['quick'],
-      optional: ['vegvesen'],
+      tier: 'pro',
+      optional: ['white-label'],
     });
     tenantIds.push(opprettet.tenantId);
 
     const eier = appRouter.createCaller(ctx(app, 'dealer_admin', opprettet.tenantId, adminUser));
+
+    const status = await eier.onboarding.status();
+    expect(status.nivaa).toEqual({ key: 'pro', name: 'Pro' });
+    expect(status.optional.map((m) => m.key)).toEqual(['white-label']);
+    expect(status.optional.map((m) => m.key)).not.toContain('shop');
+    expect(status.optional.map((m) => m.key)).not.toContain('twilio');
+    expect(status.optional.map((m) => m.key)).not.toEqual(
+      expect.arrayContaining(['quick', 'ai-support', 'vegvesen']),
+    );
 
     await forventer(
       eier.onboarding.fullfor({ visningsnavn: 'Nytt navn AS', extras: ['ai-support'] }),
@@ -451,7 +469,9 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       .from(schema.tenantModules)
       .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
     expect(mods.find((m) => m.key === 'quick')?.enabled).toBe(true);
-    expect(mods.find((m) => m.key === 'vegvesen')?.enabled).toBe(false);
+    expect(mods.find((m) => m.key === 'twilio')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'white-label')?.enabled).toBe(false);
+    expect(mods.find((m) => m.key === 'shop')).toBeUndefined();
   });
 
   it('veiviser: extras slår på optional, staff-invite kan ikke bli dealer_admin', async () => {
@@ -461,8 +481,8 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       slug,
       ownerEmail: `wiz2.${slug}@verksted.test`,
       kind: 'demo',
-      modules: ['quick'],
-      optional: ['vegvesen'],
+      tier: 'start',
+      optional: ['white-label'],
     });
     tenantIds.push(opprettet.tenantId);
 
@@ -486,9 +506,9 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
 
     const ferdig = await eier.onboarding.fullfor({
       visningsnavn: 'Wizard to AS',
-      extras: ['vegvesen'],
+      extras: ['white-label'],
     });
-    expect(ferdig.granted).toEqual(['vegvesen']);
+    expect(ferdig.granted).toEqual(['white-label']);
 
     const mods = await owner
       .select({
@@ -498,8 +518,10 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       })
       .from(schema.tenantModules)
       .where(eq(schema.tenantModules.tenantId, opprettet.tenantId));
-    expect(mods.find((m) => m.key === 'vegvesen')?.enabled).toBe(true);
-    expect(mods.find((m) => m.key === 'vegvesen')?.source).toBe('dealer');
-    expect(mods.find((m) => m.key === 'quick')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'white-label')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'white-label')?.source).toBe('dealer');
+    expect(mods.find((m) => m.key === 'widget')?.enabled).toBe(true);
+    expect(mods.find((m) => m.key === 'twilio')).toBeUndefined();
+    expect(mods.find((m) => m.key === 'shop')).toBeUndefined();
   });
 });

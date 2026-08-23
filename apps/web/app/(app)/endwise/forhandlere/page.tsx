@@ -1,22 +1,90 @@
 'use client';
 
-import { Badge, Building2, CircleAlert, Plus, StatefulButton } from '@endwise/ui';
+import {
+  Badge,
+  Building2,
+  CircleAlert,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  Plus,
+  StatefulButton,
+} from '@endwise/ui';
 import { type FormEvent, useMemo, useState } from 'react';
+import { Field, INPUT } from '@/app/_auth/felter';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import {
+  NivaaValg,
+  TilleggListe,
+  tilleggForNivaa,
+  tilleggNokler,
+} from '../_pakke-valg';
 
 /**
  * F5-26 — FORHANDLERE. Invite-only onboarding.
  *
- * Admin oppretter forhandleren og setter pakken: faste tillegg + hva eieren
- * kan velge i veiviseren. Eieren setter passord, 2FA, deretter veiviser.
- * Ingen offentlig registrering. Nettbutikk og SMS er ikke på listene.
+ * Admin velger ett nivå (TIERS) og krysser av TILLEGG som ikke allerede
+ * ligger i pakken. Eieren setter passord, 2FA og går gjennom veiviseren.
+ * Endwise-tenanten kan ikke inviteres på nytt, slettes eller få ny pakke.
  */
+type SlettSteg = 'advarsel' | 'bekreft';
+
 export default function ForhandlerePage() {
   const utils = trpc.useUtils();
   const liste = trpc.tenants.list.useQuery();
-  const katalog = trpc.tenants.addonKatalog.useQuery();
+  const katalog = trpc.tenants.pakkeKatalog.useQuery();
   const entitlements = trpc.tenants.listModules.useQuery();
+
+  const [navn, setNavn] = useState('');
+  const [slug, setSlug] = useState('');
+  const [epost, setEpost] = useState('');
+  const [demo, setDemo] = useState(false);
+  const [nivaa, setNivaa] = useState('start');
+  const [valgte, setValgte] = useState<Set<string>>(new Set());
+  const [valgfrie, setValgfrie] = useState<Set<string>>(new Set());
+  const [redigerer, setRedigerer] = useState<string | null>(null);
+  const [endrer, setEndrer] = useState<string | null>(null);
+  const [slettMal, setSlettMal] = useState<string | null>(null);
+  const [slettSteg, setSlettSteg] = useState<SlettSteg>('advarsel');
+  const [slettSlug, setSlettSlug] = useState('');
+  const [slettKode, setSlettKode] = useState('');
+  const [slettMelding, setSlettMelding] = useState<string | null>(null);
+
+  const nivaaListe = katalog.data?.nivaa ?? [];
+  const valgtNivaa = nivaaListe.find((n) => n.key === nivaa);
+  const tillegg = useMemo(
+    () => tilleggForNivaa(valgtNivaa, katalog.data?.tillegg ?? []),
+    [valgtNivaa, katalog.data?.tillegg],
+  );
+
+  const entitlementsKart = useMemo(() => {
+    const m = new Map<string, { included: string[]; optional: string[]; plan: string | null }>();
+    for (const t of entitlements.data ?? []) {
+      const plan = t.plan ?? 'start';
+      const nivaaRad = nivaaListe.find((n) => n.key === plan);
+      m.set(t.id, {
+        plan,
+        included: tilleggNokler(
+          t.modules
+            .filter((x) => x.enabled && (x.source === 'included' || x.source === 'stripe'))
+            .map((x) => x.moduleKey),
+          katalog.data?.tillegg ?? [],
+          nivaaRad,
+        ),
+        optional: tilleggNokler(
+          t.modules
+            .filter((x) => x.source === 'optional' || x.source === 'dealer')
+            .map((x) => x.moduleKey),
+          katalog.data?.tillegg ?? [],
+          nivaaRad,
+        ),
+      });
+    }
+    return m;
+  }, [entitlements.data, katalog.data?.tillegg, nivaaListe]);
+
   const opprett = trpc.tenants.create.useMutation({
     onSuccess: () => {
       void utils.tenants.list.invalidate();
@@ -24,8 +92,15 @@ export default function ForhandlerePage() {
       setNavn('');
       setSlug('');
       setEpost('');
+      setNivaa('start');
       setValgte(new Set());
       setValgfrie(new Set());
+    },
+  });
+  const oppdater = trpc.tenants.update.useMutation({
+    onSuccess: () => {
+      void utils.tenants.list.invalidate();
+      setEndrer(null);
     },
   });
   const sendPaNytt = trpc.tenants.resendOwnerInvite.useMutation({
@@ -36,36 +111,34 @@ export default function ForhandlerePage() {
   const settModuler = trpc.tenants.setModules.useMutation({
     onSuccess: () => {
       void utils.tenants.listModules.invalidate();
+      void utils.tenants.list.invalidate();
     },
   });
-
-  const [navn, setNavn] = useState('');
-  const [slug, setSlug] = useState('');
-  const [epost, setEpost] = useState('');
-  const [demo, setDemo] = useState(false);
-  const [valgte, setValgte] = useState<Set<string>>(new Set());
-  const [valgfrie, setValgfrie] = useState<Set<string>>(new Set());
-  const [redigerer, setRedigerer] = useState<string | null>(null);
-
-  const entitlementsKart = useMemo(() => {
-    const m = new Map<string, { included: string[]; optional: string[] }>();
-    for (const t of entitlements.data ?? []) {
-      m.set(t.id, {
-        included: t.modules
-          .filter((x) => x.enabled && (x.source === 'included' || x.source === 'stripe'))
-          .map((x) => x.moduleKey),
-        optional: t.modules
-          .filter((x) => x.source === 'optional' || x.source === 'dealer')
-          .map((x) => x.moduleKey),
-      });
-    }
-    return m;
-  }, [entitlements.data]);
+  const sendSlettKode = trpc.tenants.sendSlettKode.useMutation();
+  const slett = trpc.tenants.slett.useMutation({
+    onSuccess: (data) => {
+      void utils.tenants.list.invalidate();
+      void utils.tenants.listModules.invalidate();
+      setSlettMal(null);
+      setSlettSteg('advarsel');
+      setSlettSlug('');
+      setSlettKode('');
+      setSlettMelding(`«${data.name}» er slettet.`);
+    },
+  });
 
   function navnEndret(v: string) {
     const forrigeForslag = foreslåSlug(navn);
     setNavn(v);
     if (slug === '' || slug === forrigeForslag) setSlug(foreslåSlug(v));
+  }
+
+  function byttNivaa(key: string) {
+    const neste = nivaaListe.find((n) => n.key === key);
+    const lovlige = new Set(tilleggForNivaa(neste, katalog.data?.tillegg ?? []).map((t) => t.key));
+    setNivaa(key);
+    setValgte(new Set([...valgte].filter((k) => lovlige.has(k))));
+    setValgfrie(new Set([...valgfrie].filter((k) => lovlige.has(k))));
   }
 
   function toggle(sett: Set<string>, setSett: (n: Set<string>) => void, key: string) {
@@ -82,10 +155,15 @@ export default function ForhandlerePage() {
       slug: slug.trim(),
       ownerEmail: epost.trim(),
       kind: demo ? 'demo' : 'live',
-      modules: [...valgte],
+      tier: nivaa as 'start' | 'pro' | 'enterprise',
+      included: [...valgte],
       optional: [...valgfrie].filter((k) => !valgte.has(k)),
     });
   }
+
+  const slettRad = liste.data?.find((t) => t.id === slettMal);
+  const slugTreffer = Boolean(slettRad && slettSlug.trim() === slettRad.slug);
+  const kodeKlar = /^\d{6}$/.test(slettKode.trim());
 
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
@@ -93,8 +171,8 @@ export default function ForhandlerePage() {
         <h1 className="sr-only">Forhandlere</h1>
         <p className="text-title text-fg">Forhandlere</p>
         <p className="text-body text-fg-muted">
-          Invite-only. Du setter pakken (faste tillegg) og hva eieren kan legge til i
-          veiviseren. Eieren setter passord og 2FA selv — du setter det aldri.
+          Invite-only. Velg én pakke. Tillegg som allerede ligger i pakken vises
+          ikke. Eieren setter passord og 2FA selv — du setter det aldri.
         </p>
       </div>
 
@@ -149,20 +227,13 @@ export default function ForhandlerePage() {
             </span>
           </label>
 
-          <AddonGruppe
-            tittel="I pakken (fast)"
-            hint="Tildeles før eieren kommer. Basis er alltid på. Nettbutikk og SMS står ikke her."
-            katalog={katalog.data ?? []}
-            valgte={valgte}
-            onToggle={(key) => toggle(valgte, setValgte, key)}
-          />
-          <AddonGruppe
-            tittel="Kan velges i veiviseren"
-            hint="Eieren kan slå disse på under oppstart. Ikke hele katalogen — bare det du åpner."
-            katalog={katalog.data ?? []}
-            valgte={valgfrie}
-            disabled={valgte}
-            onToggle={(key) => toggle(valgfrie, setValgfrie, key)}
+          <NivaaValg nivaa={nivaaListe} valgt={nivaa} onChange={byttNivaa} />
+          <TilleggListe
+            tillegg={tillegg}
+            included={valgte}
+            optional={valgfrie}
+            onToggleIncluded={(key) => toggle(valgte, setValgte, key)}
+            onToggleOptional={(key) => toggle(valgfrie, setValgfrie, key)}
           />
 
           {opprett.error && (
@@ -174,15 +245,15 @@ export default function ForhandlerePage() {
           {opprett.isSuccess && (
             <p className="text-body text-success">
               Opprettet «{opprett.data?.name}». Invitasjon sendt til {opprett.data?.invite.epost}
-              {opprett.data?.invite.sendt ? '' : ' — sendingen feilet, bruk Send på nytt'}. Eieren
-              setter passord, 2FA og går gjennom veiviseren.
+              {opprett.data?.invite.sendt ? '' : ' — sendingen feilet, bruk Send invitasjon på nytt'}.
+              Eieren setter passord, 2FA og går gjennom veiviseren.
             </p>
           )}
 
           <div className="flex justify-end">
             <StatefulButton
               type="submit"
-              disabled={opprett.isPending || !navn || !slug || !epost}
+              disabled={opprett.isPending || !navn || !slug || !epost || !nivaa}
               state={
                 opprett.isPending
                   ? 'loading'
@@ -219,9 +290,13 @@ export default function ForhandlerePage() {
         ) : (
           <div className="overflow-hidden rounded-xl border border-border">
             {liste.data?.map((t, i) => {
-              const pakke = entitlementsKart.get(t.id) ?? { included: [], optional: [] };
-              const pa = pakke.included;
+              const pakke = entitlementsKart.get(t.id) ?? {
+                included: [],
+                optional: [],
+                plan: t.plan,
+              };
               const apen = redigerer === t.id;
+              const planNavn = nivaaListe.find((n) => n.key === (t.plan ?? pakke.plan))?.name;
               return (
                 <div
                   key={t.id}
@@ -229,32 +304,61 @@ export default function ForhandlerePage() {
                     i > 0 ? 'border-border border-t' : ''
                   }`}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-3">
                     <Building2 size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <span className="truncate text-label text-fg">{t.name}</span>
                       <span className="truncate text-[12px] text-fg-muted">{t.slug}</span>
                     </div>
-                    {t.kind === 'demo' && <Badge variant="secondary">Demo</Badge>}
-                    <button
-                      type="button"
-                      onClick={() => setRedigerer(apen ? null : t.id)}
-                      className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline"
-                    >
-                      {apen ? 'Lukk' : 'Tillegg'}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={sendPaNytt.isPending}
-                      onClick={() => sendPaNytt.mutate({ tenantId: t.id })}
-                      className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline disabled:opacity-50"
-                    >
-                      Send invitasjon på nytt
-                    </button>
+                    {t.erEndwise ? <Badge variant="secondary">Endwise</Badge> : null}
+                    {t.kind === 'demo' && !t.erEndwise ? <Badge variant="secondary">Demo</Badge> : null}
+                    {planNavn && !t.erEndwise ? <Badge variant="outline">{planNavn}</Badge> : null}
+                    {!t.erEndwise ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setEndrer(endrer === t.id ? null : t.id)}
+                          className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline"
+                        >
+                          {endrer === t.id ? 'Lukk' : 'Endre'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRedigerer(apen ? null : t.id)}
+                          className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline"
+                        >
+                          {apen ? 'Lukk pakke' : 'Endre pakke'}
+                        </button>
+                        {t.eierInviteUbrukt ? (
+                          <button
+                            type="button"
+                            disabled={sendPaNytt.isPending}
+                            onClick={() => sendPaNytt.mutate({ tenantId: t.id })}
+                            className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline disabled:opacity-50"
+                          >
+                            Send invitasjon på nytt
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSlettMal(t.id);
+                            setSlettSteg('advarsel');
+                            setSlettSlug('');
+                            setSlettKode('');
+                            sendSlettKode.reset();
+                            slett.reset();
+                          }}
+                          className="text-[12px] text-danger underline-offset-2 hover:underline"
+                        >
+                          Slett
+                        </button>
+                      </>
+                    ) : null}
                   </div>
-                  {(pa.length > 0 || pakke.optional.length > 0) && !apen ? (
+                  {(pakke.included.length > 0 || pakke.optional.length > 0) && !apen && !t.erEndwise ? (
                     <div className="flex flex-wrap gap-1 pl-8">
-                      {pa.map((k) => (
+                      {pakke.included.map((k) => (
                         <Badge key={k} variant="secondary">
                           {k}
                         </Badge>
@@ -266,15 +370,35 @@ export default function ForhandlerePage() {
                       ))}
                     </div>
                   ) : null}
-                  {apen ? (
+                  {endrer === t.id && !t.erEndwise ? (
+                    <EndreForhandler
+                      navn={t.name}
+                      slug={t.slug}
+                      eierEpost={t.eierEpost}
+                      demo={t.kind === 'demo'}
+                      pending={oppdater.isPending}
+                      feil={oppdater.error?.message}
+                      onLagre={(felt) =>
+                        oppdater.mutate({
+                          tenantId: t.id,
+                          name: felt.navn,
+                          slug: felt.slug,
+                          kind: felt.demo ? 'demo' : 'live',
+                        })
+                      }
+                    />
+                  ) : null}
+                  {apen && !t.erEndwise ? (
                     <ModulRediger
-                      key={`${t.id}:${pa.join(',')}:${pakke.optional.join(',')}`}
-                      included={pa}
+                      key={`${t.id}:${t.plan ?? 'start'}:${pakke.included.join(',')}:${pakke.optional.join(',')}`}
+                      plan={t.plan ?? 'start'}
+                      included={pakke.included}
                       optional={pakke.optional}
-                      katalog={katalog.data ?? []}
+                      nivaa={nivaaListe}
+                      tillegg={katalog.data?.tillegg ?? []}
                       pending={settModuler.isPending}
-                      onLagre={(modules, optional) =>
-                        settModuler.mutate({ tenantId: t.id, modules, optional })
+                      onLagre={(tier, included, optional) =>
+                        settModuler.mutate({ tenantId: t.id, tier, included, optional })
                       }
                     />
                   ) : null}
@@ -283,6 +407,7 @@ export default function ForhandlerePage() {
             })}
           </div>
         )}
+        {slettMelding ? <p className="text-body text-success">{slettMelding}</p> : null}
         {sendPaNytt.isSuccess && (
           <p className="text-body text-success">
             Invitasjon sendt til {sendPaNytt.data.epost}
@@ -293,88 +418,251 @@ export default function ForhandlerePage() {
         {settModuler.isError && (
           <p className="text-body text-danger">{settModuler.error.message}</p>
         )}
+        {oppdater.isError && endrer === null ? (
+          <p className="text-body text-danger">{oppdater.error.message}</p>
+        ) : null}
       </section>
+
+      <Dialog
+        open={Boolean(slettRad)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSlettMal(null);
+            setSlettSteg('advarsel');
+            setSlettSlug('');
+            setSlettKode('');
+          }
+        }}
+      >
+        <DialogContent className="left-1/2 top-1/2 w-[min(480px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-5">
+          {slettRad && slettSteg === 'advarsel' ? (
+            <div className="flex flex-col gap-4">
+              <DialogTitle className="text-title text-fg">Slett {slettRad.name}?</DialogTitle>
+              <DialogDescription className="text-body text-fg-muted">
+                Dette sletter forhandleren, ansatte, saker og kundedata hos oss. Det kan
+                ikke angres. Du kan ikke slette ved et uhell — neste steg krever slug og
+                en engangskode.
+              </DialogDescription>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSlettMal(null)}
+                  className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg"
+                >
+                  Avbryt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSlettSteg('bekreft')}
+                  className="inline-flex h-control items-center rounded-control bg-danger px-4 text-label text-white"
+                >
+                  Fortsett
+                </button>
+              </div>
+            </div>
+          ) : null}
+          {slettRad && slettSteg === 'bekreft' ? (
+            <div className="flex flex-col gap-4">
+              <DialogTitle className="text-title text-fg">Slett {slettRad.name}?</DialogTitle>
+              <DialogDescription className="text-body text-fg-muted">
+                Skriv slug-en nøyaktig, og bekreft med engangskoden vi sender til deg.
+              </DialogDescription>
+              <Felt
+                label="Slug"
+                hint={
+                  slugTreffer || slettSlug.trim() === ''
+                    ? 'Må stemme nøyaktig med den lagrede slug-en.'
+                    : `Slug stemmer ikke. Du sletter ikke ${slettRad.name}.`
+                }
+                value={slettSlug}
+                onChange={setSlettSlug}
+                placeholder={slettRad.slug}
+                autoComplete="off"
+              />
+              <Field id="slett-otp" label="Engangskode">
+                <input
+                  id="slett-otp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={slettKode}
+                  onChange={(e) => setSlettKode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className={`${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`}
+                />
+              </Field>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatefulButton
+                  type="button"
+                  disabled={sendSlettKode.isPending}
+                  state={sendSlettKode.isPending ? 'loading' : sendSlettKode.isSuccess ? 'success' : 'idle'}
+                  loadingText="Sender kode…"
+                  successText="Kode sendt"
+                  onClick={() => sendSlettKode.mutate({ tenantId: slettRad.id })}
+                >
+                  Send kode
+                </StatefulButton>
+                {sendSlettKode.isSuccess ? (
+                  <p className="text-[12px] text-fg-muted">
+                    Vi har sendt en kode til {sendSlettKode.data.epost}.
+                  </p>
+                ) : null}
+              </div>
+              {sendSlettKode.error ? (
+                <p className="text-body text-danger">{sendSlettKode.error.message}</p>
+              ) : null}
+              {slett.error ? <p className="text-body text-danger">{slett.error.message}</p> : null}
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSlettMal(null)}
+                  className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg"
+                >
+                  Avbryt
+                </button>
+                <StatefulButton
+                  type="button"
+                  disabled={!slugTreffer || !kodeKlar || slett.isPending}
+                  state={slett.isPending ? 'loading' : slett.isError ? 'error' : 'idle'}
+                  loadingText="Sletter…"
+                  errorText="Feilet"
+                  className="bg-danger text-white hover:bg-danger/90"
+                  onClick={() =>
+                    slett.mutate({
+                      tenantId: slettRad.id,
+                      slug: slettSlug.trim(),
+                      kode: slettKode.trim(),
+                    })
+                  }
+                >
+                  Slett forhandleren
+                </StatefulButton>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function AddonGruppe({
-  tittel,
-  hint,
-  katalog,
-  valgte,
-  disabled,
-  onToggle,
+function EndreForhandler({
+  navn,
+  slug,
+  eierEpost,
+  demo,
+  pending,
+  feil,
+  onLagre,
 }: {
-  tittel: string;
-  hint: string;
-  katalog: Array<{ key: string; label: string }>;
-  valgte: Set<string>;
-  disabled?: Set<string>;
-  onToggle: (key: string) => void;
+  navn: string;
+  slug: string;
+  eierEpost: string | null;
+  demo: boolean;
+  pending: boolean;
+  feil?: string;
+  onLagre: (felt: { navn: string; slug: string; demo: boolean }) => void;
 }) {
+  const [navnFelt, setNavnFelt] = useState(navn);
+  const [slugFelt, setSlugFelt] = useState(slug);
+  const [demoFelt, setDemoFelt] = useState(demo);
+
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="text-label text-fg">{tittel}</legend>
-      <p className="text-[12px] text-fg-muted leading-relaxed">{hint}</p>
-      <div className="grid gap-1.5 sm:grid-cols-2">
-        {katalog.map((m) => (
-          <label key={m.key} className="flex items-center gap-2 text-body text-fg">
-            <input
-              type="checkbox"
-              checked={valgte.has(m.key)}
-              disabled={disabled?.has(m.key)}
-              onChange={() => onToggle(m.key)}
-              className="size-4 accent-[#111]"
-            />
-            <span>
-              {m.label}
-              <span className="ml-1 text-[12px] text-fg-muted">{m.key}</span>
-            </span>
-          </label>
-        ))}
+    <div className="flex flex-col gap-3 pl-8">
+      <Felt
+        label="Navn"
+        hint="Vises i sidebaren hos forhandleren."
+        value={navnFelt}
+        onChange={setNavnFelt}
+        placeholder={navn}
+      />
+      <Felt
+        label="Slug"
+        hint="Endrer du slug, endres URL-er som peker hit. Gammelt slugs virker ikke lenger."
+        value={slugFelt}
+        onChange={setSlugFelt}
+        placeholder={slug}
+      />
+      <p className="text-[12px] text-fg-muted">
+        Eier: {eierEpost ?? 'ingen e-post'} — du bytter den aldri her. Bruk Send
+        invitasjon på nytt om lenka er ubrukt.
+      </p>
+      <label className="flex items-center gap-2.5 text-label text-fg">
+        <input
+          type="checkbox"
+          checked={demoFelt}
+          onChange={(e) => setDemoFelt(e.target.checked)}
+          className="size-4 accent-[#111]"
+        />
+        Demo-tenant
+      </label>
+      {feil ? <p className="text-body text-danger">{feil}</p> : null}
+      <div className="flex justify-end">
+        <StatefulButton
+          type="button"
+          disabled={pending || navnFelt.trim().length < 2 || slugFelt.trim().length < 2}
+          state={pending ? 'loading' : 'idle'}
+          loadingText="Lagrer…"
+          onClick={() => onLagre({ navn: navnFelt.trim(), slug: slugFelt.trim(), demo: demoFelt })}
+        >
+          Lagre
+        </StatefulButton>
       </div>
-    </fieldset>
+    </div>
   );
 }
 
 function ModulRediger({
+  plan,
   included,
   optional,
-  katalog,
+  nivaa,
+  tillegg,
   pending,
   onLagre,
 }: {
+  plan: string;
   included: string[];
   optional: string[];
-  katalog: Array<{ key: string; label: string }>;
+  nivaa: Array<{
+    key: string;
+    name: string;
+    priceMonthlyMinor: number;
+    pitch: string;
+    hoydepunkter: string[];
+    modules: string[];
+  }>;
+  tillegg: Array<{ key: string; name: string; desc: string; module: string }>;
   pending: boolean;
-  onLagre: (modules: string[], optional: string[]) => void;
+  onLagre: (tier: 'start' | 'pro' | 'enterprise', included: string[], optional: string[]) => void;
 }) {
+  const [valgt, setValgt] = useState(plan);
   const [fast, setFast] = useState(() => new Set(included));
   const [valg, setValg] = useState(() => new Set(optional));
+  const valgtNivaa = nivaa.find((n) => n.key === valgt);
+  const synlige = tilleggForNivaa(valgtNivaa, tillegg);
+
+  function byttNivaa(key: string) {
+    const neste = nivaa.find((n) => n.key === key);
+    const lovlige = new Set(tilleggForNivaa(neste, tillegg).map((t) => t.key));
+    setValgt(key);
+    setFast(new Set([...fast].filter((k) => lovlige.has(k))));
+    setValg(new Set([...valg].filter((k) => lovlige.has(k))));
+  }
 
   return (
     <div className="flex flex-col gap-3 pl-8">
-      <AddonGruppe
-        tittel="I pakken (fast)"
-        hint="Alltid på for denne forhandleren."
-        katalog={katalog}
-        valgte={fast}
-        onToggle={(key) => {
+      <NivaaValg nivaa={nivaa} valgt={valgt} onChange={byttNivaa} />
+      <TilleggListe
+        tillegg={synlige}
+        included={fast}
+        optional={valg}
+        onToggleIncluded={(key) => {
           const neste = new Set(fast);
           if (neste.has(key)) neste.delete(key);
           else neste.add(key);
           setFast(neste);
         }}
-      />
-      <AddonGruppe
-        tittel="Kan velges i veiviseren"
-        hint="Eieren kan slå på disse."
-        katalog={katalog}
-        valgte={valg}
-        disabled={fast}
-        onToggle={(key) => {
+        onToggleOptional={(key) => {
           const neste = new Set(valg);
           if (neste.has(key)) neste.delete(key);
           else neste.add(key);
@@ -387,7 +675,13 @@ function ModulRediger({
           disabled={pending}
           state={pending ? 'loading' : 'idle'}
           loadingText="Lagrer…"
-          onClick={() => onLagre([...fast], [...valg].filter((k) => !fast.has(k)))}
+          onClick={() =>
+            onLagre(
+              valgt as 'start' | 'pro' | 'enterprise',
+              [...fast],
+              [...valg].filter((k) => !fast.has(k)),
+            )
+          }
         >
           Lagre pakke
         </StatefulButton>
@@ -413,6 +707,7 @@ function Felt({
   placeholder,
   type = 'text',
   required,
+  autoComplete,
 }: {
   label: string;
   hint: string;
@@ -421,6 +716,7 @@ function Felt({
   placeholder: string;
   type?: string;
   required?: boolean;
+  autoComplete?: string;
 }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -430,6 +726,7 @@ function Felt({
         value={value}
         required={required}
         placeholder={placeholder}
+        autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
         className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
       />

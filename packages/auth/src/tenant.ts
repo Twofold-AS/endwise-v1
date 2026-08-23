@@ -25,6 +25,7 @@ export interface CreateTenantInput {
   ownerUserId: string;
   /** Moduler tenanten starter med (entitlements, F0-04). */
   modules?: string[];
+  /** TIERS-nøkkel (start | pro | enterprise). */
   plan?: string;
   /** F5-27: `demo` = dev-mode-tenant. Default `live` — fail-safe. */
   kind?: TenantKind;
@@ -108,6 +109,7 @@ export async function createTenant(
       name: input.name,
       slug: input.slug,
       kind: input.kind ?? 'live',
+      plan: input.plan ?? null,
       onboardingCompletedAt: input.onboardingCompleted === false ? null : new Date(),
     });
 
@@ -143,6 +145,7 @@ export async function createTenantShell(
       name: input.name,
       slug: input.slug,
       kind: input.kind ?? 'live',
+      plan: input.plan ?? null,
       onboardingCompletedAt: null,
     });
 

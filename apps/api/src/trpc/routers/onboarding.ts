@@ -1,5 +1,11 @@
 import { and, eq, schema, withTenant } from '@endwise/db';
-import { ADDON_LABELS, erBlokertTildeling, erTildelbarAddon } from '@endwise/modules';
+import {
+  ADDON_LABELS,
+  erBlokertTildeling,
+  erTildelbarAddon,
+  erTierKey,
+  tierByKey,
+} from '@endwise/modules';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, router } from '../init.ts';
@@ -40,6 +46,7 @@ export const onboardingRouter = router({
       const [tenant] = await tx
         .select({
           name: schema.tenants.name,
+          plan: schema.tenants.plan,
           onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
         })
         .from(schema.tenants)
@@ -57,14 +64,23 @@ export const onboardingRouter = router({
       const etikett = (key: string) =>
         key in ADDON_LABELS ? ADDON_LABELS[key as keyof typeof ADDON_LABELS] : key;
 
+      const planKey = erTierKey(tenant?.plan) ? tenant.plan : 'start';
+      const nivaa = { key: planKey, name: tierByKey(planKey)?.name ?? 'Start' };
+      const includedKeys = new Set(
+        rader.filter((r) => r.source === 'included' && r.enabled).map((r) => r.moduleKey),
+      );
+
       return {
         complete: Boolean(tenant?.onboardingCompletedAt),
         visningsnavn: tenant?.name ?? '',
+        nivaa,
         included: rader
           .filter((r) => r.source === 'included' && r.enabled)
           .map((r) => ({ key: r.moduleKey, label: etikett(r.moduleKey) })),
         optional: rader
           .filter((r) => r.source === 'optional' || r.source === 'dealer')
+          .filter((r) => !erBlokertTildeling(r.moduleKey))
+          .filter((r) => !includedKeys.has(r.moduleKey))
           .map((r) => ({
             key: r.moduleKey,
             label: etikett(r.moduleKey),

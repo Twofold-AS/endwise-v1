@@ -279,6 +279,19 @@ export const TILLEGG: Tillegg[] = [
  */
 export const IKKE_I_SALG = ['kryssforhandler-historikk'] as const;
 
+/** Plattform-tenanten. Aldri slett, aldri inviter på nytt, aldri pakke-rediger. */
+export const ENDWISE_SLUG = 'endwise';
+
+export function erEndwiseSlug(slug: string | null | undefined): boolean {
+  return slug === ENDWISE_SLUG;
+}
+
+export const TIER_KEYS = ['start', 'pro', 'enterprise'] as const;
+
+export function erTierKey(key: string | null | undefined): key is TierKey {
+  return key === 'start' || key === 'pro' || key === 'enterprise';
+}
+
 /* ══ Oppslag ═════════════════════════════════════════════════════════════ */
 
 export function tierByKey(key: string | null | undefined): Tier | undefined {
@@ -292,6 +305,95 @@ export function tilleggByKey(key: string | null | undefined): Tillegg | undefine
 /** Tillegg som faktisk kan kjøpes. Brukes både i UI og server-side i checkout. */
 export function kjopbareTillegg(): Tillegg[] {
   return TILLEGG.filter((t) => t.status === 'available');
+}
+
+/**
+ * Faste/valgfrie tillegg for et valgt nivå.
+ *
+ *  · `status === 'available'`
+ *  · modulen ligger IKKE allerede i `TIERS[nivaa].modules`
+ *  · aldri shop (blocked) og aldri twilio (SMS er i Pro-bundelen, ikke et avkrysningsfelt)
+ *  · coming/blocked skjules
+ */
+export function tilgjengeligeTilleggForNivaa(tierKey: string | null | undefined): Tillegg[] {
+  const inkludert = new Set<ModuleKey>(tierByKey(tierKey)?.modules ?? []);
+  return TILLEGG.filter(
+    (t) =>
+      t.status === 'available' &&
+      t.module !== 'shop' &&
+      t.module !== 'twilio' &&
+      !inkludert.has(t.module),
+  );
+}
+
+export function erGyldigEkstraTillegg(
+  key: string,
+  tierKey: string | null | undefined,
+): Tillegg | undefined {
+  return tilgjengeligeTilleggForNivaa(tierKey).find((t) => t.key === key);
+}
+
+/**
+ * Pakke → `tenant_modules`.
+ *
+ *  · included = nivåets bundle (kan inneholde twilio) + avkryssede TILLEGG-nøkler
+ *  · optional = samme katalog minus de som er merket included
+ *  · shop kommer aldri med
+ */
+export function utvidPakke(
+  tierKey: string,
+  includedTilleggKeys: readonly string[] = [],
+  optionalTilleggKeys: readonly string[] = [],
+): { tier: Tier; included: ModuleKey[]; optional: ModuleKey[] } {
+  const tier = tierByKey(tierKey);
+  if (!tier) {
+    throw new Error(`Ukjent nivå: ${tierKey}`);
+  }
+  const gyldige = tilgjengeligeTilleggForNivaa(tier.key);
+  const gyldigSett = new Set(gyldige.map((t) => t.key));
+  const includedKeys = [...new Set(includedTilleggKeys)].filter((k) => gyldigSett.has(k));
+  const includedExtras = includedKeys
+    .map((k) => tilleggByKey(k)?.module)
+    .filter((m): m is ModuleKey => Boolean(m));
+  const optional = [...new Set(optionalTilleggKeys)]
+    .filter((k) => gyldigSett.has(k) && !includedKeys.includes(k))
+    .map((k) => tilleggByKey(k)?.module)
+    .filter((m): m is ModuleKey => Boolean(m));
+  return {
+    tier,
+    included: [...tier.modules, ...includedExtras],
+    optional,
+  };
+}
+
+/** Offentlig katalog til Endwise-admin (ingen Stripe-hemmeligheter). */
+export function pakkeKatalog(): {
+  nivaa: Array<{
+    key: TierKey;
+    name: string;
+    priceMonthlyMinor: number;
+    pitch: string;
+    hoydepunkter: string[];
+    modules: ModuleKey[];
+  }>;
+  tillegg: Array<{ key: string; name: string; desc: string; module: ModuleKey }>;
+} {
+  return {
+    nivaa: TIERS.map((t) => ({
+      key: t.key,
+      name: t.name,
+      priceMonthlyMinor: t.priceMonthlyMinor,
+      pitch: t.pitch,
+      hoydepunkter: t.hoydepunkter,
+      modules: t.modules,
+    })),
+    tillegg: TILLEGG.filter((t) => t.status === 'available' && t.module !== 'shop').map((t) => ({
+      key: t.key,
+      name: t.name,
+      desc: t.desc,
+      module: t.module,
+    })),
+  };
 }
 
 /** Modulene et abonnement gir: nivåets bundle + hvert valgt tillegg. */

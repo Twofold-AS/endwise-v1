@@ -6,7 +6,7 @@ import { use, useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { Field, INPUT, PassordFelt } from '../../_auth/felter';
-import { destinasjonEtterInvite, trengerKodeSteg } from '../_landing';
+import { destinasjonEtterInvite, krevRevokeAndreSesjoner, trengerKodeSteg } from '../_landing';
 
 /**
  * F1-10 / F5-26 — INVITEE-SIDEN. Første møte med Endwise.
@@ -100,8 +100,9 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
 
   async function land(kind: Invitasjon['kind']) {
     // CWE-613: sesjonen etter passord+OTP erstatter gamle sesjoner.
-    // Token logges ikke. Feiler ryddingen, skal brukeren likevel videre.
-    await authClient.revokeOtherSessions().catch(() => undefined);
+    // Token logges ikke. Feiler revoke, feiler lukket — gamle sesjoner
+    // skal ikke bli stille igjen. destinasjonEtterInvite rører 2FA-feil.
+    await krevRevokeAndreSesjoner(() => authClient.revokeOtherSessions(), 'invite');
     await aktiverOrg();
     try {
       const me = await utils.session.me.fetch();

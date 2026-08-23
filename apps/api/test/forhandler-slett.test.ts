@@ -342,6 +342,13 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
       .where(eq(schema.erasureRequests.id, originalId));
     expect(gammel).toBeUndefined();
 
+    const forventetSubject = createHash('sha256')
+      .update(subjectId + opprettet.tenantId, 'utf8')
+      .digest('hex');
+    const forventetBestiller = createHash('sha256')
+      .update(requestedBy + opprettet.tenantId, 'utf8')
+      .digest('hex');
+
     const [flyttet] = await owner
       .select({
         id: schema.erasureRequests.id,
@@ -352,13 +359,15 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
       })
       .from(schema.erasureRequests)
       .where(
-        sql`tenant_id = ${endwiseId} and report->>'reason' = 'slett_forhandler' and subject_id = md5(${subjectId})`,
+        sql`tenant_id = ${endwiseId} and report->>'reason' = 'slett_forhandler' and subject_id = ${forventetSubject}`,
       );
     expect(flyttet).toBeDefined();
     expect(flyttet?.id).not.toBe(originalId);
     expect(flyttet?.tenantId).toBe(endwiseId);
-    expect(flyttet?.subjectId).toBe(createHash('md5').update(subjectId).digest('hex'));
-    expect(flyttet?.requestedBy).toBe(createHash('md5').update(requestedBy).digest('hex'));
+    expect(flyttet?.subjectId).toBe(forventetSubject);
+    expect(flyttet?.requestedBy).toBe(forventetBestiller);
+    expect(flyttet?.subjectId).not.toBe(subjectId);
+    expect(flyttet?.requestedBy).not.toBe(requestedBy);
     expect(flyttet?.report).not.toHaveProperty('requestId');
     expect(flyttet?.report).toMatchObject({
       relocated: true,

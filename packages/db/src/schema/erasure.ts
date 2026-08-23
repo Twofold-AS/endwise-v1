@@ -24,9 +24,11 @@ export const erasureStatusEnum = pgEnum('erasure_status', [
  *
  * Når en forhandler slettes (`slett_forhandler`), flyttes raden til
  * Endwise-tenanten så RESTRICT-FK slipper. Da **roteres `id`** og
- * `subject_id` / `requested_by` hashes (md5) — Endwise-admin skal ikke
- * arve en annen forhandlers request-UUID eller rå identifikatorer
- * (CWE-359/863/284). Beviset overlever; identifikatorene gjør det ikke.
+ * `subject_id` / `requested_by` hashes med sha256(verdi || tenant_id)
+ * — Endwise-admin skal ikke arve en annen forhandlers request-UUID
+ * eller rå identifikatorer (CWE-359/863/284). Ingen server-pepper i
+ * repoet; tenant_id binder hashen. Raden slettes aldri. Beviset
+ * overlever; identifikatorene gjør det ikke.
  */
 export const erasureRequests = pgTable(
   'erasure_requests',

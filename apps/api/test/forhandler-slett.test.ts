@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { createDb, type Database, eq, schema, sql } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
@@ -298,6 +298,77 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
       .where(
         sql`tenant_id = ${endwiseId} and action = 'audit.redacted' and metadata->>'reason' = 'slett_forhandler'`,
       );
+  });
+
+  it('slett roterer erasure_requests-id og hasher identifikatorer i Endwise-kontekst', async () => {
+    const slug = `slett-erasure-${randomUUID().slice(0, 8)}`;
+    const opprettet = await somEndwise().tenants.create({
+      name: 'Slett erasure AS',
+      slug,
+      ownerEmail: `erasure.${slug}@verksted.test`,
+      kind: 'demo',
+      tier: 'start',
+    });
+
+    const originalId = randomUUID();
+    const subjectId = `cust-${opprettet.tenantId.slice(0, 8)}`;
+    const requestedBy = `user-${opprettet.tenantId.slice(0, 8)}`;
+    await owner.insert(schema.erasureRequests).values({
+      id: originalId,
+      tenantId: opprettet.tenantId,
+      subjectType: 'customer',
+      subjectId,
+      requestedBy,
+      status: 'completed',
+      report: { requestId: originalId, purged: { customers: 1 } },
+    });
+
+    await owner.insert(schema.tenantDeleteChallenges).values({
+      tenantId: opprettet.tenantId,
+      requestedBy: adminUser,
+      codeHash: hashSlettKode('123456'),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    await somEndwise().tenants.slett({
+      tenantId: opprettet.tenantId,
+      slug,
+      kode: '123456',
+    });
+
+    const [gammel] = await owner
+      .select({ id: schema.erasureRequests.id })
+      .from(schema.erasureRequests)
+      .where(eq(schema.erasureRequests.id, originalId));
+    expect(gammel).toBeUndefined();
+
+    const [flyttet] = await owner
+      .select({
+        id: schema.erasureRequests.id,
+        tenantId: schema.erasureRequests.tenantId,
+        subjectId: schema.erasureRequests.subjectId,
+        requestedBy: schema.erasureRequests.requestedBy,
+        report: schema.erasureRequests.report,
+      })
+      .from(schema.erasureRequests)
+      .where(
+        sql`tenant_id = ${endwiseId} and report->>'reason' = 'slett_forhandler' and subject_id = md5(${subjectId})`,
+      );
+    expect(flyttet).toBeDefined();
+    expect(flyttet?.id).not.toBe(originalId);
+    expect(flyttet?.tenantId).toBe(endwiseId);
+    expect(flyttet?.subjectId).toBe(createHash('md5').update(subjectId).digest('hex'));
+    expect(flyttet?.requestedBy).toBe(createHash('md5').update(requestedBy).digest('hex'));
+    expect(flyttet?.report).not.toHaveProperty('requestId');
+    expect(flyttet?.report).toMatchObject({
+      relocated: true,
+      request_id_rotated: true,
+      purged: { customers: 1 },
+    });
+
+    if (flyttet) {
+      await owner.delete(schema.erasureRequests).where(eq(schema.erasureRequests.id, flyttet.id));
+    }
   });
 
   it('kan ikke slette tenanten du selv er i', async () => {

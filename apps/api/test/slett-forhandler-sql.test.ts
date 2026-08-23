@@ -45,16 +45,53 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(slettSql).toMatch(/row_security=off/);
   });
 
-  it('grants.sql har TO PUBLIC-policyer gated på GUC, ikke platform_admin-DELETE', () => {
+  it('TO PUBLIC slett-policyer krever platform_admin OG slett_tenant_id OG ikke-authenticated', () => {
     expect(grants).toMatch(/tenants_platform_admin_read_owner/);
     expect(grants).toMatch(/tenants_slett_forhandler/);
     expect(grants).toMatch(/audit_log_slett_update/);
     expect(grants).toMatch(/app\.slett_tenant_id/);
     expect(grants).toMatch(/to public/i);
     expect(grants).toMatch(/not pg_has_role\(current_user, 'authenticated', 'member'\)/);
-    expect(grants).not.toMatch(
-      /create policy \S+_slett_forhandler[\s\S]{0,200}for delete[\s\S]{0,200}platform_admin/,
-    );
+
+    const slettPolicyer = [
+      'tenants_slett_forhandler',
+      'audit_log_slett_update',
+      'audit_log_slett_insert',
+      'erasure_requests_slett_forhandler',
+    ];
+    for (const navn of slettPolicyer) {
+      const start = grants.indexOf(`create policy ${navn}`);
+      expect(start, navn).toBeGreaterThan(-1);
+      const kropp = grants.slice(start, start + 900);
+      expect(kropp, navn).toMatch(/app\.platform_admin/);
+      expect(kropp, navn).toMatch(/not pg_has_role\(current_user, 'authenticated', 'member'\)/);
+      expect(kropp, navn).toMatch(/app\.slett_tenant_id/);
+    }
+
+    const dynamisk = grants.slice(grants.indexOf('create policy %I on public.%I'));
+    expect(dynamisk).toMatch(/app\.platform_admin/);
+    expect(dynamisk).toMatch(/app\.slett_tenant_id/);
+    expect(dynamisk).toMatch(/not pg_has_role\(current_user, 'authenticated', 'member'\)/);
+  });
+
+  it('WITH CHECK på slett-UPDATE tillater bare slett-GUC eller Endwise-tenant — ikke true', () => {
+    expect(grants).not.toMatch(/with check \(true\)/i);
+
+    for (const navn of ['audit_log_slett_update', 'erasure_requests_slett_forhandler']) {
+      const start = grants.indexOf(`create policy ${navn}`);
+      const kropp = grants.slice(start, start + 1100);
+      expect(kropp, navn).toMatch(/with check \(/);
+      expect(kropp, navn).toMatch(/app\.slett_tenant_id/);
+      expect(kropp, navn).toMatch(/slug = 'endwise'/);
+    }
+  });
+
+  it('flyttet erasure_request bytter UUID og hashe subjekt/bestiller (CWE-359)', () => {
+    expect(slettSql).toMatch(/update erasure_requests/);
+    expect(slettSql).toMatch(/id\s*=\s*gen_random_uuid\(\)/);
+    expect(slettSql).toMatch(/md5\(subject_id\)/);
+    expect(slettSql).toMatch(/md5\(requested_by\)/);
+    expect(slettSql).toMatch(/request_id_rotated/);
   });
 
   it('tenants.slett mapper Postgres-cause til TRPCError', () => {

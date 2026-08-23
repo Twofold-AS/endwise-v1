@@ -99,16 +99,17 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   }
 
   async function land(kind: Invitasjon['kind']) {
+    // CWE-613: sesjonen etter passord+OTP erstatter gamle sesjoner.
+    // Token logges ikke. Feiler ryddingen, skal brukeren likevel videre.
+    await authClient.revokeOtherSessions().catch(() => undefined);
     await aktiverOrg();
-    if (kind === 'owner') {
-      window.location.assign(destinasjonEtterInvite('owner'));
-      return;
+    try {
+      const me = await utils.session.me.fetch();
+      window.location.assign(destinasjonEtterInvite(kind, me.landing));
+    } catch (error) {
+      const feil = error instanceof Error ? error.message : String(error);
+      window.location.assign(destinasjonEtterInvite(kind, null, feil));
     }
-    const landing = await utils.session.me
-      .fetch()
-      .then((me) => me.landing)
-      .catch(() => '/dashboard');
-    window.location.assign(destinasjonEtterInvite('staff', landing));
   }
 
   async function startKodeSteg(passordForEnable: string) {

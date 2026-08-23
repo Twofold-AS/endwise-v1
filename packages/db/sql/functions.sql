@@ -208,10 +208,10 @@ grant execute on function consume_invitation(text) to authenticated;
 -- `row_security=off` er IKKE fiksen: den GUC-en kaster hvis en policy VILLE
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
 -- `invitations_open_by_hash`: funksjonen setter `app.slett_tenant_id`
--- transaksjons-lokalt, og grants.sql har smale TO PUBLIC-policyer på den
--- GUC-en. `app.platform_admin` brukes KUN til SELECT på tenants (samme
--- lesehull som `tenants_platform_admin_read`) — aldri DELETE. Uten GUC ser
--- eieren fortsatt 0 rader.
+-- transaksjons-lokalt, og grants.sql har smale TO PUBLIC-policyer som
+-- krever platform_admin + slett-GUC + ikke-authenticated. App-rollen
+-- kan sette GUC-er, men `NOT pg_has_role(authenticated)` stenger den.
+-- Uten GUC ser eieren fortsatt 0 rader.
 --
 -- CI kan ikke simulere «FORCE RLS + ikke-superuser eier» uten å flytte
 -- eierskap på alle tabeller. Kontraktstestene i
@@ -279,8 +279,23 @@ begin
    where tenant_id = p_tenant_id;
 
   -- F14-16: erasure_requests slettes aldri (beviset må overleve). Samme FK.
+  -- CWE-359/863/284: flytt til Endwise-tenanten uten å vise den opprinnelige
+  -- request-UUID-en eller rå subject/bestiller-ID i Endwise-kontekst.
+  -- Schemaet sier subjektet skal være en hash; md5 av UUID er nok til å
+  -- bevise «denne ble slettet» uten å lekke forhandlerens identifikatorer.
+  -- Rapportens requestId fjernes. Nytt id = ny kvittering hos oss, ikke
+  -- den kunden fikk mens forhandleren levde (den relasjonen er borte).
   update erasure_requests
-     set tenant_id = v_endwise
+     set id           = gen_random_uuid(),
+         tenant_id    = v_endwise,
+         subject_id   = md5(subject_id),
+         requested_by = md5(requested_by),
+         report       = (coalesce(report, '{}'::jsonb) - 'requestId')
+                        || jsonb_build_object(
+                             'relocated', true,
+                             'reason', 'slett_forhandler',
+                             'request_id_rotated', true
+                           )
    where tenant_id = p_tenant_id;
 
   -- Barn først. Looper til FK-rekkefølgen slipper gjennom.

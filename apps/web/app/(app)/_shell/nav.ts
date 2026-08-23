@@ -164,10 +164,10 @@ export const CONTEXTS: AppContext[] = [
   {
     key: 'endwise',
     label: 'Endwise-admin',
-    hint: 'Forhandlere og plattform',
+    hint: 'Oversikt og forhandlere',
     icon: ShieldCheck,
     roles: ENDWISE,
-    landing: '/endwise/forhandlere',
+    landing: '/endwise',
   },
 ];
 
@@ -363,6 +363,13 @@ export const LAGER_NAV: NavItem[] = [
  */
 export const ENDWISE_NAV: NavItem[] = [
   {
+    key: 'endwise-oversikt',
+    label: 'Oversikt',
+    icon: LayoutDashboard,
+    href: '/endwise',
+    roles: ENDWISE,
+  },
+  {
     key: 'endwise-forhandlere',
     label: 'Forhandlere',
     icon: Building2,
@@ -473,7 +480,12 @@ function pathOf(href: string): string {
 /** Er denne destinasjonen den aktive? */
 export function isItemActive(item: NavItem, pathname: string): boolean {
   const hrefs = [item.href, ...(item.children?.map((c) => c.href) ?? [])].map(pathOf);
-  return hrefs.some((h) => pathname === h || pathname.startsWith(`${h}/`));
+  return hrefs.some((h) => {
+    if (pathname === h) return true;
+    // /endwise er oversikt — ikke prefix for /endwise/forhandlere.
+    if (h === '/endwise') return false;
+    return pathname.startsWith(`${h}/`);
+  });
 }
 
 /**

@@ -87,7 +87,13 @@ export function Sidebar() {
   // forhandler-konteksten, dev-mode-bryteren i Endwise-admin. `null` i resten.
   const settingsNav = settingsForContext(context);
 
-  const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: Boolean(role) });
+  const threads = trpc.messages.listThreads.useQuery(undefined, {
+    enabled: Boolean(role) && context !== 'endwise',
+  });
+  const support = trpc.messages.listPlatformSupport.useQuery(undefined, {
+    enabled: Boolean(role) && context === 'endwise',
+    retry: false,
+  });
   /**
    * F5-23 — uleste hjelpeartikler. Egen, billig telling: badgen står på en rad
    * som rendres på hver side, og å hente 50 artikler for å telle dem ville vært
@@ -110,10 +116,12 @@ export function Sidebar() {
    */
   const [apentPunkt, setApentPunkt] = useState<string | null>(null);
 
-  const unread = useMemo(
-    () => (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0),
-    [threads.data],
-  );
+  const unread = useMemo(() => {
+    if (context === 'endwise') {
+      return (support.data ?? []).filter((t) => t.unread).length;
+    }
+    return (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0);
+  }, [context, support.data, threads.data]);
 
   // ⌘K åpner quick actions.
   const [quickOpen, setQuickOpen] = useState(false);

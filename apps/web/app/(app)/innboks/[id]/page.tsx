@@ -32,6 +32,7 @@ import {
   threadHeading,
   visningForTraadtype,
 } from '../_lib';
+import { useInboxModus } from '../_modus';
 
 /**
  * F6-01 — Tråden. F6-05 — overtakelsen fra AI, i SAMME tråd.
@@ -50,18 +51,34 @@ export default function TrådPage() {
   const threadId = params.id;
   const utils = trpc.useUtils();
   const lyd = useLyd();
+  const modus = useInboxModus();
+  const endwise = modus === 'endwise';
 
   const me = trpc.session.me.useQuery();
-  const threads = trpc.messages.listThreads.useQuery();
-  const messages = trpc.messages.listMessages.useQuery({ threadId });
+  const dealerThreads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
+  const platformThreads = trpc.messages.listPlatformSupport.useQuery(undefined, {
+    enabled: endwise,
+    retry: false,
+  });
+  const dealerMessages = trpc.messages.listMessages.useQuery({ threadId }, { enabled: !endwise });
+  const platformMessages = trpc.messages.listPlatformSupportMessages.useQuery(
+    { threadId },
+    { enabled: endwise, retry: false },
+  );
+  const threads = endwise ? platformThreads : dealerThreads;
+  const messages = endwise ? platformMessages : dealerMessages;
 
   const [body, setBody] = useState('');
   const [justEscalated, setJustEscalated] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const markRead = trpc.messages.markRead.useMutation({
+  const markReadDealer = trpc.messages.markRead.useMutation({
     onSuccess: () => utils.messages.listThreads.invalidate(),
   });
+  const markReadPlatform = trpc.messages.markPlatformSupportRead.useMutation({
+    onSuccess: () => utils.messages.listPlatformSupport.invalidate(),
+  });
+  const markRead = endwise ? markReadPlatform : markReadDealer;
   /**
    * F6-26 — send en melding som ikke gikk fram, på nytt.
    *
@@ -73,26 +90,25 @@ export default function TrådPage() {
   const resend = trpc.messages.resend.useMutation({
     onSuccess: () => utils.messages.listMessages.invalidate({ threadId }),
   });
-  const post = trpc.messages.post.useMutation({
+  const postDealer = trpc.messages.post.useMutation({
     onSuccess: () => {
       setBody('');
       utils.messages.listMessages.invalidate({ threadId });
       utils.messages.listThreads.invalidate();
-      /**
-       * ⚠️ **Avsenderens KVITTERING, ikke et varsel.**
-       *
-       * Serveren hopper over forfatteren når den publiserer `message.created`
-       * (du skal ikke varsles om din egen melding), så uten denne linja hørte
-       * avsenderen ingenting i det hele tatt. Lyden er svakere enn varselet:
-       * du vet at du trykket send — du vet ikke at det kom noe.
-       *
-       * Ligger på `onSuccess`, ikke i `onSubmit`. En lyd som spiller før
-       * serveren har svart, kvitterer for noe som kanskje ikke skjedde.
-       */
       lyd.sendt();
     },
     onError: () => lyd.feil(),
   });
+  const postPlatform = trpc.messages.postPlatformSupport.useMutation({
+    onSuccess: () => {
+      setBody('');
+      utils.messages.listPlatformSupportMessages.invalidate({ threadId });
+      utils.messages.listPlatformSupport.invalidate();
+      lyd.sendt();
+    },
+    onError: () => lyd.feil(),
+  });
+  const post = endwise ? postPlatform : postDealer;
 
   const thread = (threads.data ?? []).find((t) => t.id === threadId);
   const rows = useMemo(() => messages.data ?? [], [messages.data]);
@@ -104,10 +120,11 @@ export default function TrådPage() {
    * kunne navngi tråden, og en forfatter som siden er tatt ut av tråden skal
    * ikke miste navnet sitt bakover i historikken.
    */
+  const motparter = thread && 'motparter' in thread ? (thread.motparter ?? []) : [];
   const deltakerIder = useMemo(() => {
-    const alle = [...rows.map((m) => m.authorId), ...(thread?.motparter ?? [])];
+    const alle = [...rows.map((m) => m.authorId), ...motparter];
     return [...new Set(alle)].filter((id) => id && !isAgent(id));
-  }, [rows, thread?.motparter]);
+  }, [rows, motparter]);
 
   /**
    * ⛔ Kallenavn KUN i interne tråder. Én tråd på skjermen = én visning, så her
@@ -131,14 +148,16 @@ export default function TrådPage() {
     (event: { type: string; subjectId: string | null }) => {
       if (event.subjectId !== threadId) return;
       if (event.type === 'message.created') {
-        void utils.messages.listMessages.invalidate({ threadId });
+        if (endwise) void utils.messages.listPlatformSupportMessages.invalidate({ threadId });
+        else void utils.messages.listMessages.invalidate({ threadId });
       }
       if (event.type === 'thread.escalated') {
         setJustEscalated(true);
-        void utils.messages.listMessages.invalidate({ threadId });
+        if (endwise) void utils.messages.listPlatformSupportMessages.invalidate({ threadId });
+        else void utils.messages.listMessages.invalidate({ threadId });
       }
     },
-    [threadId, utils],
+    [threadId, utils, endwise],
   );
   // Sanntid kjører fortsatt — men uten statuspille. Eiers beslutning
   // 06.08.2026: statusmerker («Sanntid», «Live», «Aktive») er pynt som
@@ -178,7 +197,7 @@ export default function TrådPage() {
         <CardShell className="p-6">
           <p className="text-body text-danger">Kunne ikke åpne tråden: {messages.error.message}</p>
           <Link
-            href={'/innboks' as Route}
+            href={(endwise ? '/endwise/innboks' : '/innboks') as Route}
             className="mt-3 text-accent-strong text-body hover:underline"
           >
             ← Tilbake til innboksen
@@ -202,21 +221,26 @@ export default function TrådPage() {
            * du er et annet sted enn du er.
            */}
           <h1 className="truncate text-title text-fg">
-            {thread
-              ? threadHeading(
-                  thread.subject,
-                  thread.kind,
-                  thread.motparter ?? [],
-                  navn.data,
-                  me.data?.userId,
-                )
-              : 'Samtale'}
+            {endwise && thread && 'tenantName' in thread
+              ? thread.tenantName
+              : thread && 'motparter' in thread
+                ? threadHeading(
+                    thread.subject,
+                    thread.kind,
+                    thread.motparter ?? [],
+                    navn.data,
+                    me.data?.userId,
+                  )
+                : 'Samtale'}
           </h1>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {/* Kanalen står i HODET, ikke nede ved svarfeltet: den skal være
                 lest før man begynner å skrive, ikke etterpå. */}
             {thread && (
-              <KanalLinje traad={tilKanal(thread.channel)} siste={tilKanal(thread.sisteKanal)} />
+              <KanalLinje
+                traad={tilKanal(thread.channel)}
+                siste={tilKanal('sisteKanal' in thread ? thread.sisteKanal : thread.channel)}
+              />
             )}
             {thread && (
               <span
@@ -228,16 +252,9 @@ export default function TrådPage() {
             <span className="text-[12px] text-fg-muted">{rows.length} meldinger</span>
             {/* Med emne står motpartene ellers ingen steder — og «hvem snakker
                 jeg med» er halve spørsmålet når du åpner en tråd. */}
-            {thread?.subject?.trim() && (thread.motparter?.length ?? 0) > 0 && (
+            {thread && 'motparter' in thread && thread.subject?.trim() && motparter.length > 0 && (
               <span className="min-w-0 truncate text-[12px] text-fg-muted">
-                ·{' '}
-                {threadHeading(
-                  null,
-                  thread.kind,
-                  thread.motparter ?? [],
-                  navn.data,
-                  me.data?.userId,
-                )}
+                · {threadHeading(null, thread.kind, motparter, navn.data, me.data?.userId)}
               </span>
             )}
           </div>

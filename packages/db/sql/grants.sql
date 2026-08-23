@@ -96,7 +96,7 @@ create policy invitations_open_by_hash on invitations
 -- `app.slett_tenant_id` (funksjonen setter is_local) OG
 -- `NOT pg_has_role(authenticated)`. App-rollen kan kalle set_config, så
 -- GUC-er alene må ikke åpne slett for vanlig trafikk. `platform_admin`
--- alene åpner fortsatt KUN SELECT på tenants (`tenants_platform_admin_read`).
+-- alene åpner SELECT på tenants og dealer_admin-tråder (F5-11).
 
 drop policy if exists tenants_platform_admin_read_owner on tenants;
 create policy tenants_platform_admin_read_owner on tenants

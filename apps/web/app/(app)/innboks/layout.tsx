@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { DetaljerSlot } from './_detaljer-slot';
-import { InboxSidebar } from './_inbox-sidebar';
+import { InboxChrome } from './_chrome';
 
 /**
  * F6-01 / F6-17 — Innboksen har TRE kolonner: samtalelista (hvilken samtale),
@@ -20,11 +19,5 @@ import { InboxSidebar } from './_inbox-sidebar';
  * lesbar lenger. Se `_detaljer.tsx`.
  */
 export default function MeldingerLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex h-full min-h-0">
-      <InboxSidebar />
-      <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
-      <DetaljerSlot />
-    </div>
-  );
+  return <InboxChrome modus="forhandler">{children}</InboxChrome>;
 }

@@ -369,6 +369,18 @@ export const ENDWISE_NAV: NavItem[] = [
     href: '/endwise',
     roles: ENDWISE,
   },
+  /**
+   * F5-11 — forhandler↔Endwise. Ikke en Admin-tab, ikke butikk.
+   * Lista er `listPlatformSupport` (dealer_admin på tvers av tenants).
+   */
+  {
+    key: 'endwise-innboks',
+    label: 'Innboks',
+    icon: Inbox,
+    href: '/endwise/innboks',
+    roles: ENDWISE,
+    badge: 'unread',
+  },
   {
     key: 'endwise-forhandlere',
     label: 'Forhandlere',

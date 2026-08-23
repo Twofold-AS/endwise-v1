@@ -2,11 +2,12 @@ import { sendInboxMessage } from '@endwise/auth';
 import {
   createMessagesModule,
   NotAParticipantError,
+  PlatformSupportNotFoundError,
   type UtgaaendeEpost,
 } from '@endwise/modules/messages';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { protectedProcedure, router } from '../init.ts';
+import { endwiseAdminProcedure, protectedProcedure, router } from '../init.ts';
 
 /**
  * F6-26 — den konkrete e-postkanalen for utgående meldinger.
@@ -32,6 +33,9 @@ const meldinger = (db: Parameters<typeof createMessagesModule>[0]) =>
 function toTRPCError(error: unknown): never {
   if (error instanceof NotAParticipantError) {
     throw new TRPCError({ code: 'FORBIDDEN', message: error.message, cause: error });
+  }
+  if (error instanceof PlatformSupportNotFoundError) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: error.message, cause: error });
   }
   throw error;
 }
@@ -129,6 +133,54 @@ export const messagesRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         return await meldinger(ctx.db).markRead(ctx.tenantId, input.threadId, ctx.userId);
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
+
+  /**
+   * F5-11 — Innboks for Endwise-admin: dealer_admin-tråder fra ALLE forhandlere.
+   *
+   * ⛔ Ikke `listThreads`. Den er tenant-skopet og skal forbli det.
+   * Sperren er `endwiseAdminProcedure`. Lesing går via `withPlatformAdmin`
+   * + SELECT-only RLS på kind = dealer_admin.
+   */
+  listPlatformSupport: endwiseAdminProcedure.query(({ ctx }) =>
+    meldinger(ctx.db).listPlatformSupportThreads(ctx.userId),
+  ),
+
+  listPlatformSupportMessages: endwiseAdminProcedure
+    .input(z.object({ threadId: z.uuid() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        return await meldinger(ctx.db).listPlatformSupportMessages(input.threadId);
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
+
+  postPlatformSupport: endwiseAdminProcedure
+    .input(z.object({ threadId: z.uuid(), body: z.string().min(1).max(4000) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await meldinger(ctx.db).postPlatformSupportReply({
+          threadId: input.threadId,
+          authorId: ctx.userId,
+          body: input.body,
+        });
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
+
+  markPlatformSupportRead: endwiseAdminProcedure
+    .input(z.object({ threadId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await meldinger(ctx.db).markPlatformSupportRead({
+          threadId: input.threadId,
+          readerId: ctx.userId,
+        });
       } catch (error) {
         return toTRPCError(error);
       }

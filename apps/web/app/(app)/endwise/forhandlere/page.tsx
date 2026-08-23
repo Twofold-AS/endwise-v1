@@ -10,7 +10,7 @@ import { CardShell } from '../../_shell/cards';
  *
  * Admin oppretter forhandleren (navn, slug, eier-e-post, live/demo) og
  * krysser av hvilke TILLEGG tenanten får. Eieren setter passord selv via
- * invitasjonslenka. Ingen offentlig /registrer. Ingen modulvelger hos eier.
+ * invitasjonslenka. Ingen offentlig registreringsside. Ingen modulvelger hos eier.
  */
 export default function ForhandlerePage() {
   const utils = trpc.useUtils();
@@ -283,9 +283,7 @@ export default function ForhandlerePage() {
             {sendPaNytt.data.sendt ? '.' : ' — sendingen feilet.'}
           </p>
         )}
-        {sendPaNytt.isError && (
-          <p className="text-body text-danger">{sendPaNytt.error.message}</p>
-        )}
+        {sendPaNytt.isError && <p className="text-body text-danger">{sendPaNytt.error.message}</p>}
         {settModuler.isError && (
           <p className="text-body text-danger">{settModuler.error.message}</p>
         )}

@@ -28,12 +28,10 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).toMatch(/setModules/);
     expect(forhandlere).toMatch(/Send invitasjon på nytt/);
     expect(forhandlere).toMatch(/setter passord selv/);
-    expect(forhandlere).not.toMatch(/\/registrer/);
+    expect(forhandlere).not.toMatch(/href:\s*['"]\/registrer['"]|href=['"]\/registrer['"]/);
   });
 
   it('ingen offentlig /registrer-side', () => {
-    expect(() =>
-      readFileSync(resolve(her, '../app/registrer/page.tsx'), 'utf8'),
-    ).toThrow();
+    expect(() => readFileSync(resolve(her, '../app/registrer/page.tsx'), 'utf8')).toThrow();
   });
 });

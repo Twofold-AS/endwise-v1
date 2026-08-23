@@ -134,8 +134,8 @@ export default function EndwiseFlaggPage() {
       <section className="flex flex-col gap-2">
         <h2 className="text-title text-fg">Kjøpte og tildelte tillegg</h2>
         <p className="text-[12px] text-fg-muted leading-relaxed">
-          Hva forhandleren har fått. Feature-flags kan ikke skru dette på. Endwise-admin kan
-          tildele tillegg her; Stripe (F5-32) skriver ved kjøp. Basis er alltid på.
+          Hva forhandleren har fått. Feature-flags kan ikke skru dette på. Endwise-admin kan tildele
+          tillegg her; Stripe (F5-32) skriver ved kjøp. Basis er alltid på.
         </p>
         <KjopteModulerTabell
           rader={entitlements.data}

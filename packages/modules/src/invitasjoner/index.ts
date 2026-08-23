@@ -138,7 +138,9 @@ export function createInvitasjonsmodul(db: Database) {
      * ⛔ `leder` / `dealer_admin` settes her, aldri fra klienten. Staff-CHECken
      * står urørt: `opprett` kan fortsatt ikke lage dette.
      */
-    async opprettEier(input: NyEierInvitasjon): Promise<{ invitasjon: ApenInvitasjon; token: string }> {
+    async opprettEier(
+      input: NyEierInvitasjon,
+    ): Promise<{ invitasjon: ApenInvitasjon; token: string }> {
       const epost = normaliserEpost(input.epost);
       if (!epost.includes('@')) throw new InvitasjonUgyldigError('Ugyldig e-postadresse.');
 
@@ -296,7 +298,8 @@ export function createInvitasjonsmodul(db: Database) {
         | undefined;
       if (!rad) return null;
 
-      const kind: Invitasjonskind = rad.kind === 'owner' || rad.role === 'dealer_admin' ? 'owner' : 'staff';
+      const kind: Invitasjonskind =
+        rad.kind === 'owner' || rad.role === 'dealer_admin' ? 'owner' : 'staff';
 
       return {
         id: rad.id,

@@ -1,9 +1,15 @@
-import { authEnv, createAuth, createTenant, createTenantShell, sendInvitation } from '@endwise/auth';
+import {
+  authEnv,
+  createAuth,
+  createTenant,
+  createTenantShell,
+  sendInvitation,
+} from '@endwise/auth';
 import { and, asc, desc, eq, schema, sql, withPlatformAdmin, withTenant } from '@endwise/db';
 import {
+  type AddonModule,
   addonKatalog,
   BASIS_MODULES,
-  type AddonModule,
   erTildelbarAddon,
   filtrerAddonNokler,
 } from '@endwise/modules';

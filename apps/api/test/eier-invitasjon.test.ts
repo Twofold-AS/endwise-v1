@@ -51,9 +51,7 @@ describe('F5-26 — dealer kan ikke tildele egne moduler', () => {
   it('⛔ ANGREP: dealer_admin får FORBIDDEN på setModules', async () => {
     await forventer(
       appRouter
-        .createCaller(
-          ctx({} as never, 'dealer_admin', '00000000-0000-0000-0000-000000000001'),
-        )
+        .createCaller(ctx({} as never, 'dealer_admin', '00000000-0000-0000-0000-000000000001'))
         .tenants.setModules({
           tenantId: '00000000-0000-0000-0000-000000000001',
           modules: ['quick'],
@@ -65,9 +63,7 @@ describe('F5-26 — dealer kan ikke tildele egne moduler', () => {
   it('⛔ ANGREP: dealer_admin får FORBIDDEN på create', async () => {
     await forventer(
       appRouter
-        .createCaller(
-          ctx({} as never, 'dealer_admin', '00000000-0000-0000-0000-000000000001'),
-        )
+        .createCaller(ctx({} as never, 'dealer_admin', '00000000-0000-0000-0000-000000000001'))
         .tenants.create({
           name: 'Ulovlig AS',
           slug: 'ulovlig-as',

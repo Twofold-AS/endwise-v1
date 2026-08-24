@@ -1,5 +1,6 @@
 -- Kjøres ETTER migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
--- Siste slett-relaterte migrasjon: 0024_slett_forhandler_barn (SELECT + ROW_COUNT).
+-- Siste slett-relaterte migrasjon: 0025_slett_forhandler_endwise_guc (DROP+CREATE).
+-- 0024 CREATE OR REPLACE samme signatur — journal hopper over den som allerede kjørt.
 -- 0023_quick_lager la Quick-GUID på parts/stock_locations.
 --
 -- Migrasjonen lager tabellene (som eier) og rollen `authenticated`.
@@ -166,7 +167,7 @@ create policy audit_log_slett_update on audit_log
     and current_user is distinct from 'endwise_app'
     and (
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
-      or tenant_id = (select id from tenants where slug = 'endwise')
+      or tenant_id = nullif(current_setting('app.slett_endwise_id', true), '')::uuid
     )
   );
 
@@ -181,7 +182,7 @@ create policy audit_log_slett_insert on audit_log
     and current_user is distinct from 'endwise_app'
     and (
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
-      or tenant_id = (select id from tenants where slug = 'endwise')
+      or tenant_id = nullif(current_setting('app.slett_endwise_id', true), '')::uuid
     )
   );
 
@@ -194,7 +195,10 @@ create policy audit_log_slett_select on audit_log
     current_setting('app.platform_admin', true) = 'on'
     and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
-    and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
+    and (
+      tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
+      or tenant_id = nullif(current_setting('app.slett_endwise_id', true), '')::uuid
+    )
   );
 
 drop policy if exists erasure_requests_slett_forhandler on erasure_requests;
@@ -214,7 +218,7 @@ create policy erasure_requests_slett_forhandler on erasure_requests
     and current_user is distinct from 'endwise_app'
     and (
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
-      or tenant_id = (select id from tenants where slug = 'endwise')
+      or tenant_id = nullif(current_setting('app.slett_endwise_id', true), '')::uuid
     )
   );
 
@@ -227,7 +231,10 @@ create policy erasure_requests_slett_select on erasure_requests
     current_setting('app.platform_admin', true) = 'on'
     and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
-    and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
+    and (
+      tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
+      or tenant_id = nullif(current_setting('app.slett_endwise_id', true), '')::uuid
+    )
   );
 
 -- DELETE på øvrige RLS-tabeller med tenant_id. Dynamisk: nye tabeller dekkes

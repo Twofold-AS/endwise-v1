@@ -130,7 +130,8 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
       const kropp = grants.slice(start, start + 1100);
       expect(kropp, navn).toMatch(/with check \(/);
       expect(kropp, navn).toMatch(/app\.slett_tenant_id/);
-      expect(kropp, navn).toMatch(/slug = 'endwise'/);
+      expect(kropp, navn).toMatch(/app\.slett_endwise_id/);
+      expect(kropp, navn).not.toMatch(/slug = 'endwise'/);
     }
   });
 
@@ -209,5 +210,79 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(m0024).toMatch(/get diagnostics/i);
     expect(m0024).toMatch(/create or replace function slett_forhandler/i);
     expect(m0024).not.toMatch(/delete from audit_log/i);
+  });
+
+  /**
+   * Prod 24.08.2026, dpl_98PMuhbM77R4SZJiEPPryVBafJ4X, cdg1, 235 ms,
+   * requestId sdwsb-1787599245213-412242917e8b, trace ebf4fcc558a3a1a2dd3e58dcd874dabb.
+   * HTTP 412 ETTER at Mikael kjørte `pnpm db:setup` (0023/0024).
+   *
+   * 0024 brukte CREATE OR REPLACE med samme signatur. Drizzle-journalen
+   * hopper over 0024 når den allerede er merket kjørt — body kan ligge igjen
+   * fra før SELECT-policyene / Endwise-INSERT. functions.sql OR REPLACE
+   * alene er ikke en verifiserbar «body ble byttet». 0025 DROPper først.
+   *
+   * Samtidig kodefeil i 0024 selv om body VAR ny: INSERT/UPDATE WITH CHECK
+   * mot Endwise gikk via `select id from tenants where slug = 'endwise'`
+   * under tenants-RLS. Ny rad etter tenant_id-flytt matcher ikke
+   * audit_log_slett_select (bare slett-GUC). app.slett_endwise_id er GUC,
+   * ikke subquery.
+   */
+  it('0025 DROPper slett_forhandler før CREATE (ikke bare OR REPLACE)', () => {
+    const m0025 = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/0025_slett_forhandler_endwise_guc.sql'),
+      'utf8',
+    );
+    const journal = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/meta/_journal.json'),
+      'utf8',
+    );
+    expect(journal).toMatch(/0025_slett_forhandler_endwise_guc/);
+    expect(m0025).toMatch(/drop function if exists slett_forhandler\s*\(\s*uuid\s*\)/i);
+    expect(m0025).toMatch(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i);
+    const dropAt = m0025.search(/drop function if exists slett_forhandler/i);
+    const createAt = m0025.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i);
+    expect(dropAt).toBeGreaterThan(-1);
+    expect(createAt).toBeGreaterThan(dropAt);
+    expect(m0025).not.toMatch(/delete from audit_log/i);
+  });
+
+  it('functions.sql DROPper slett_forhandler før CREATE og merker rev=0025', () => {
+    const dropAt = functions.search(/drop function if exists slett_forhandler\s*\(\s*uuid\s*\)/i);
+    const createAt = functions.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i);
+    expect(dropAt).toBeGreaterThan(-1);
+    expect(createAt).toBeGreaterThan(dropAt);
+    expect(slettSql).toMatch(/slett_forhandler_rev=0025/);
+    expect(slettSql).toMatch(/set_config\('app\.slett_endwise_id'/);
+  });
+
+  it('audit/erasure slett-policyer bruker slett_endwise_id, ikke tenants-subquery', () => {
+    expect(grants).toMatch(/app\.slett_endwise_id/);
+    for (const navn of [
+      'audit_log_slett_update',
+      'audit_log_slett_insert',
+      'audit_log_slett_select',
+      'erasure_requests_slett_forhandler',
+      'erasure_requests_slett_select',
+    ]) {
+      const start = grants.indexOf(`create policy ${navn}`);
+      expect(start, navn).toBeGreaterThan(-1);
+      const kropp = grants.slice(start, start + 1400);
+      expect(kropp, navn).toMatch(/app\.slett_endwise_id/);
+      expect(kropp, navn).not.toMatch(/slug = 'endwise'/);
+    }
+  });
+
+  it('slett-barn sjekker EXISTS på gjenværende rader, ikke bare FK ved DELETE', () => {
+    const barn = slettSql.slice(slettSql.indexOf('Barn først'));
+    expect(barn).toMatch(/exists\s*\(\s*select 1 from %I where tenant_id/i);
+    expect(barn).toMatch(/member where organization_id/);
+    expect(barn).toMatch(/constraint_name/i);
+  });
+
+  it('db:grants feiler hvis slett_forhandler ikke er rev 0025', () => {
+    const grantsTs = readFileSync(resolve(her, '../../../packages/db/scripts/grants.ts'), 'utf8');
+    expect(grantsTs).toMatch(/slett_forhandler_rev=0025/);
+    expect(grantsTs).toMatch(/process\.exit\(1\)/);
   });
 });

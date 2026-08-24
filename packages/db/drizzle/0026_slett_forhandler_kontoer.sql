@@ -19,7 +19,9 @@
  *
  * Engangs-reparasjon (0025-leftovers i prod): DML nederst i DENNE
  * migrasjonen, én gang som eier ved migrate — ikke i slett_forhandler.
- * Konservativt: kun "user" uten member-rad.
+ * Bundet: memberless `"user"` som HAR en session.active_organization_id
+ * som ikke finnes i organization (0025-formen). Mid-signup / pending
+ * invite uten slik sesjon røres ikke (CWE-212/359/284).
  * Etter db:setup: loggen MÅ si slett_forhandler rev=0026.
  * audit_log hard-slettes aldri. Endwise-tenant og Endwise-brukere slettes aldri.
  */
@@ -241,6 +243,9 @@ begin
      );
 
   -- Beholdte brukere kan fortsatt ha sesjon mot død org.
+  -- 0025-leftovers (memberless + session mot manglende org) ryddes KUN
+  -- som én-gangs DML nederst i DENNE migrasjonen — ikke i funksjonen.
+  -- Funksjonen forblir scoped (`any(v_org_user_ids)`).
   delete from session where active_organization_id = p_tenant_id::text;
 
   if exists (select 1 from member where organization_id = p_tenant_id::text) then
@@ -284,13 +289,33 @@ grant execute on function slett_forhandler(uuid) to authenticated;
 --> statement-breakpoint
 
 -- Engangs-reparasjon (prod 24.08.2026): 0025 slettet forhandler uten "user".
--- Kjører ÉN gang ved migrate som eier — ikke i slett_forhandler (CWE-212/359/284).
--- Konservativt: kun "user" uten member-rad. CASCADE river session/account/
--- two_factor/passkey. verification har ingen user-FK.
+-- Kjører ÉN gang ved migrate som eier — ikke i slett_forhandler.
+-- Bundet til 0025-formen: zero member-rader OG minst én session der
+-- active_organization_id IS NOT NULL og ikke finnes i organization.
+-- Mid-signup / pending invite (ingen slik sesjon) røres IKKE (CWE-212/359/284).
+-- CASCADE river session/account/two_factor/passkey. verification har ingen user-FK.
 delete from verification v
  using "user" u
  where v.identifier = u.email
-   and not exists (select 1 from member m where m.user_id = u.id);
+   and not exists (select 1 from member m where m.user_id = u.id)
+   and exists (
+     select 1 from session s
+      where s.user_id = u.id
+        and s.active_organization_id is not null
+        and not exists (
+          select 1 from organization o
+           where o.id = s.active_organization_id
+        )
+   );
 
 delete from "user" u
- where not exists (select 1 from member m where m.user_id = u.id);
+ where not exists (select 1 from member m where m.user_id = u.id)
+   and exists (
+     select 1 from session s
+      where s.user_id = u.id
+        and s.active_organization_id is not null
+        and not exists (
+          select 1 from organization o
+           where o.id = s.active_organization_id
+        )
+   );

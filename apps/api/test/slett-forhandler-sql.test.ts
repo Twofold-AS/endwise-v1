@@ -294,6 +294,21 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     for (const m of fnDeletes) {
       expect(m[0]).toMatch(/any\s*\(\s*v_org_user_ids/i);
     }
+    const dml = m0026.slice(grantAt);
+    expect(dml).toMatch(/\bsession\b/);
+    expect(dml).toMatch(/\borganization\b/);
+    expect(dml).toMatch(/active_organization_id/);
+    expect(dml).toMatch(/not exists\s*\(\s*select 1 from organization/i);
+    const dmlDeletes = [...dml.matchAll(/delete from (?:verification|"user")[^;]*/gi)];
+    expect(dmlDeletes.length).toBeGreaterThanOrEqual(2);
+    for (const m of dmlDeletes) {
+      expect(m[0]).toMatch(/\bsession\b/);
+      expect(m[0]).toMatch(/\borganization\b/);
+      expect(m[0]).toMatch(/active_organization_id/);
+      expect(m[0]).not.toMatch(
+        /delete from "user" u\s+where not exists \(select 1 from member m where m\.user_id = u\.id\)\s*$/i,
+      );
+    }
   });
 
   it('functions.sql DROPper slett_forhandler før CREATE og merker rev=0026', () => {
@@ -303,6 +318,9 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(createAt).toBeGreaterThan(dropAt);
     expect(slettSql).toMatch(/slett_forhandler_rev=0026/);
     expect(slettSql).toMatch(/set_config\('app\.slett_endwise_id'/);
+    expect(slettSql).toMatch(/u\.id = any\s*\(\s*v_org_user_ids\s*\)/);
+    expect(slettSql).not.toMatch(/active_organization_id is not null/);
+    expect(slettSql).not.toMatch(/delete from "user" u\s+where not exists \(select 1 from member/i);
   });
 
   it('audit/erasure slett-policyer bruker slett_endwise_id, ikke tenants-subquery', () => {

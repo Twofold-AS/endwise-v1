@@ -234,8 +234,9 @@ grant execute on function consume_invitation(text) to authenticated;
 --      statement). CASCADE river session/account/two_factor/passkey.
 --      Beholdt (annen org, inkl. Endwise): sesjon mot død org fjernes.
 --      Ingen global slett av memberless users i funksjonen (CWE-212/359/284).
---      0025-leftovers: engangs-DML i migrasjon 0026 (én gang ved migrate),
---      ikke i funksjonen. verification for de innsamlede e-postene.
+--      0025-leftovers: engangs-DML KUN i migrasjon 0026, bundet til session
+--      mot manglende organization — ikke alle memberless. Ikke i funksjonen
+--      (grants.ts re-applier functions.sql).
 --
 -- `row_security=off` er IKKE fiksen: den GUC-en kaster hvis en policy VILLE
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
@@ -468,6 +469,9 @@ begin
      );
 
   -- Beholdte brukere kan fortsatt ha sesjon mot død org.
+  -- 0025-leftovers (memberless + session mot manglende org) ryddes KUN
+  -- som én-gangs DML i 0026-migrasjonen — ikke her. Funksjonen forblir
+  -- scoped (`any(v_org_user_ids)`). grants.ts re-applier denne fila.
   delete from session where active_organization_id = p_tenant_id::text;
 
   if exists (select 1 from member where organization_id = p_tenant_id::text) then

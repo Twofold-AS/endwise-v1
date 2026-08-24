@@ -5,6 +5,13 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-08-24 — F5-26 0026 slett dealer-kontoer etter forhandlerslett
+
+**Type:** produksjonsfiks (ikke ny flate). F5-26 forblir `done`.
+**Endring:** Nytt steg under F5-26: 0026 sletter dealer-only Better-Auth-`user` scoped til orgen som slettes (`ANY(v_org_user_ids)` + NOT EXISTS member). 0025-leftovers som engangs-DML bundet til session mot manglende `organization` (ikke alle memberless).
+
+---
+
 ## 2026-08-24 — F5-26 0025 DROP+CREATE slett_forhandler (412 etter db:setup)
 
 **Type:** produksjonsfiks (ikke ny flate). F5-26 forblir `done`.

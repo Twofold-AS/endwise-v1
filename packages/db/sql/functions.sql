@@ -189,7 +189,10 @@ grant execute on function consume_invitation(text) to authenticated;
 -- transaksjon — samme GUC som withPlatformAdmin().
 --
 -- ⛔ Aldri Endwise-tenanten (slug = endwise).
--- ⛔ Sletter ikke user-rader (never delete self).
+-- Dealer-only "user"-rader SLETTES (prod 24.08.2026: innlogging overlevde
+-- forhandlerslett). Beholdes kun ved gjenværende member-rad (annen org,
+-- inkl. Endwise). "Never delete self" = acting admin har Endwise-medlemskap
+-- — ikke e-post-unntak. Auth-tabeller har INGEN RLS (ADR-002).
 --
 -- ── ⚠️ FORCE RLS + eier som IKKE er superuser (Scaleway, 23.08.2026) ────
 --
@@ -223,6 +226,17 @@ grant execute on function consume_invitation(text) to authenticated;
 --      0025: DROP FUNCTION + CREATE, `app.slett_endwise_id` (ingen subquery),
 --      SELECT ser begge GUCer, EXISTS på gjenværende rader, stacked
 --      constraint_name hvis DELETE tenants likevel treffer RESTRICT.
+-- 6. Prod 24.08.2026 ETTER 0025: slett lyktes, men dealer-brukere kunne
+--      fortsatt logge inn (tomt skall, ingen org/member). 0025 slettet
+--      member/invitation/organization, ikke "user" (passordhash, 2FA,
+--      passkey, sesjon ble igjen). 0026 sletter dealer-only "user" SCOPET til user_id samlet fra DENNE
+--      orgen (`u.id = any (v_org_user_ids)` + NOT EXISTS member i SAMME
+--      statement). CASCADE river session/account/two_factor/passkey.
+--      Beholdt (annen org, inkl. Endwise): sesjon mot død org fjernes.
+--      Ingen global slett av memberless users i funksjonen (CWE-212/359/284).
+--      0025-leftovers: engangs-DML KUN i migrasjon 0026, bundet til session
+--      mot manglende organization — ikke alle memberless. Ikke i funksjonen
+--      (grants.ts re-applier functions.sql).
 --
 -- `row_security=off` er IKKE fiksen: den GUC-en kaster hvis en policy VILLE
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
@@ -259,8 +273,9 @@ declare
   v_constraint text;
   v_tbl_err text;
   i integer;
+  v_org_user_ids text[];
 begin
-  -- slett_forhandler_rev=0025
+  -- slett_forhandler_rev=0026
   if current_setting('app.platform_admin', true) is distinct from 'on' then
     raise exception 'slett_forhandler: krever platform_admin';
   end if;
@@ -415,10 +430,49 @@ begin
       using errcode = '23503';
   end if;
 
+  -- Samle forhandlerens brukere FØR member-slett. Dealer-only kontoer
+  -- skal dø med forhandleren. "Never delete self" verner acting admin
+  -- og Endwise-brukere — de har member-rad i Endwise-org og beholdes.
+  v_org_user_ids := array(
+    select distinct m.user_id
+      from member m
+     where m.organization_id = p_tenant_id::text
+  );
+
   delete from tenant_delete_challenges where tenant_id = p_tenant_id;
   delete from member where organization_id = p_tenant_id::text;
   delete from invitation where organization_id = p_tenant_id::text;
   delete from organization where id = p_tenant_id::text;
+
+  -- Dealer-only: SCOPET til innsamlede id-er. Samme statement krever
+  -- NOT EXISTS member (Endwise-/tverr-org beholdes — de har member-rad).
+  -- CWE-212/359/284: ALDRI globalt «slett alle uten member» her.
+  -- Auth-tabellene har INGEN RLS (ADR-002); DEFINER kan slette uten slett-GUC.
+  delete from verification v
+   using "user" u
+   where v.identifier = u.email
+     and u.id = any (v_org_user_ids)
+     and not exists (select 1 from member m where m.user_id = u.id)
+     and not exists (
+       select 1 from member m
+        where m.user_id = u.id
+          and m.organization_id = v_endwise::text
+     );
+
+  delete from "user" u
+   where u.id = any (v_org_user_ids)
+     and not exists (select 1 from member m where m.user_id = u.id)
+     and not exists (
+       select 1 from member m
+        where m.user_id = u.id
+          and m.organization_id = v_endwise::text
+     );
+
+  -- Beholdte brukere kan fortsatt ha sesjon mot død org.
+  -- 0025-leftovers (memberless + session mot manglende org) ryddes KUN
+  -- som én-gangs DML i 0026-migrasjonen — ikke her. Funksjonen forblir
+  -- scoped (`any(v_org_user_ids)`). grants.ts re-applier denne fila.
+  delete from session where active_organization_id = p_tenant_id::text;
 
   if exists (select 1 from member where organization_id = p_tenant_id::text) then
     raise exception 'slett_forhandler: gjenværende koblinger i member'
@@ -430,6 +484,10 @@ begin
   end if;
   if exists (select 1 from organization where id = p_tenant_id::text) then
     raise exception 'slett_forhandler: gjenværende koblinger i organization'
+      using errcode = '23503';
+  end if;
+  if exists (select 1 from session where active_organization_id = p_tenant_id::text) then
+    raise exception 'slett_forhandler: gjenværende koblinger i session'
       using errcode = '23503';
   end if;
 

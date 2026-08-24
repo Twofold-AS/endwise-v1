@@ -19,7 +19,7 @@ Fikset i `slett_forhandler` + grants + migrasjon **0024_slett_forhandler_barn**:
 - `audit.redacted` skrives på Endwise-tenanten (ikke slett-målet)
 - `GET DIAGNOSTICS ROW_COUNT` i stedet for `FOUND` etter `EXECUTE`
 - ærlig 412 med tabellnavn hvis noe faktisk gjenstår
-- `audit_log` hard-slettes aldri; `user` slettes aldri; slug `endwise` nektes
+- `audit_log` hard-slettes aldri; slug `endwise` nektes. **0026** sletter dealer-only `"user"` — se `2026-08-24-slett-forhandler-kontoer.md`.
 
 Etter merge: **`pnpm db:setup`** på Scaleway (`db:migrate` kjører 0024; `db:grants` kjører grants + functions).
 

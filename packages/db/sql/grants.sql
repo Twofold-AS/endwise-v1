@@ -1,5 +1,6 @@
 -- Kjøres ETTER migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
--- Siste slett-relaterte migrasjon: 0025_slett_forhandler_endwise_guc (DROP+CREATE).
+-- Siste slett-relaterte migrasjon: 0026_slett_forhandler_kontoer (DROP+CREATE).
+-- 0025 DROP+CREATE + app.slett_endwise_id (policyer her speiler 0025).
 -- 0024 CREATE OR REPLACE samme signatur — journal hopper over den som allerede kjørt.
 -- 0023_quick_lager la Quick-GUID på parts/stock_locations.
 --

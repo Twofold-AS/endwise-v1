@@ -32,12 +32,24 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(slettSql).toMatch(/\[REDAKTERT\]/);
   });
 
-  it('sletter ikke user-rader og nekter slug endwise', () => {
+  it('sletter dealer-only user-rader og nekter slug endwise', () => {
     expect(slettSql).toMatch(/kan ikke slette Endwise-tenanten/);
-    expect(slettSql).not.toMatch(/delete from ["']?user["']?/i);
+    expect(slettSql).toMatch(/u\.id = any\s*\(\s*v_org_user_ids\s*\)/);
+    expect(slettSql).toMatch(/delete from verification/);
+    expect(slettSql).toMatch(/delete from session where active_organization_id/);
+    expect(slettSql).toMatch(/organization_id = v_endwise::text/);
     expect(slettSql).toMatch(/delete from member where organization_id/);
     expect(slettSql).toMatch(/delete from invitation where organization_id/);
     expect(slettSql).toMatch(/delete from organization where id/);
+    expect(slettSql).not.toMatch(/enable row level security/i);
+    const kropp = slettSql.slice(
+      slettSql.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i),
+    );
+    const userDeletes = [...kropp.matchAll(/delete from "user"[^;]*/gi)];
+    expect(userDeletes.length).toBeGreaterThan(0);
+    for (const m of userDeletes) {
+      expect(m[0]).toMatch(/any\s*\(\s*v_org_user_ids/i);
+    }
   });
 
   it('dokumenterer Docker-superuser vs Scaleway (som lookup_open_invitation)', () => {
@@ -247,13 +259,68 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(m0025).not.toMatch(/delete from audit_log/i);
   });
 
-  it('functions.sql DROPper slett_forhandler før CREATE og merker rev=0025', () => {
+  it('0026 DROPper slett_forhandler før CREATE og sletter dealer-only user', () => {
+    const m0026 = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/0026_slett_forhandler_kontoer.sql'),
+      'utf8',
+    );
+    const journal = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/meta/_journal.json'),
+      'utf8',
+    );
+    expect(journal).toMatch(/0026_slett_forhandler_kontoer/);
+    expect(m0026).toMatch(/drop function if exists slett_forhandler\s*\(\s*uuid\s*\)/i);
+    expect(m0026).toMatch(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i);
+    const dropAt = m0026.search(/drop function if exists slett_forhandler/i);
+    const createAt = m0026.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i);
+    expect(dropAt).toBeGreaterThan(-1);
+    expect(createAt).toBeGreaterThan(dropAt);
+    expect(m0026).toMatch(/slett_forhandler_rev=0026/);
+    expect(m0026).toMatch(/set_config\('app\.slett_endwise_id'/);
+    expect(m0026).toMatch(/u\.id = any\s*\(\s*v_org_user_ids\s*\)/);
+    expect(m0026).toMatch(/Engangs-reparasjon/);
+    expect(m0026).not.toMatch(/delete from audit_log/i);
+    expect(m0026).not.toMatch(/enable row level security/i);
+    const grantAt = m0026.search(/grant execute on function slett_forhandler/i);
+    const oneshotAt = m0026.search(/0025 slettet forhandler uten "user"/);
+    expect(grantAt).toBeGreaterThan(-1);
+    expect(oneshotAt).toBeGreaterThan(grantAt);
+    const fnKropp = m0026.slice(
+      m0026.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i),
+      grantAt,
+    );
+    const fnDeletes = [...fnKropp.matchAll(/delete from "user"[^;]*/gi)];
+    expect(fnDeletes.length).toBeGreaterThan(0);
+    for (const m of fnDeletes) {
+      expect(m[0]).toMatch(/any\s*\(\s*v_org_user_ids/i);
+    }
+    const dml = m0026.slice(grantAt);
+    expect(dml).toMatch(/\bsession\b/);
+    expect(dml).toMatch(/\borganization\b/);
+    expect(dml).toMatch(/active_organization_id/);
+    expect(dml).toMatch(/not exists\s*\(\s*select 1 from organization/i);
+    const dmlDeletes = [...dml.matchAll(/delete from (?:verification|"user")[^;]*/gi)];
+    expect(dmlDeletes.length).toBeGreaterThanOrEqual(2);
+    for (const m of dmlDeletes) {
+      expect(m[0]).toMatch(/\bsession\b/);
+      expect(m[0]).toMatch(/\borganization\b/);
+      expect(m[0]).toMatch(/active_organization_id/);
+      expect(m[0]).not.toMatch(
+        /delete from "user" u\s+where not exists \(select 1 from member m where m\.user_id = u\.id\)\s*$/i,
+      );
+    }
+  });
+
+  it('functions.sql DROPper slett_forhandler før CREATE og merker rev=0026', () => {
     const dropAt = functions.search(/drop function if exists slett_forhandler\s*\(\s*uuid\s*\)/i);
     const createAt = functions.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i);
     expect(dropAt).toBeGreaterThan(-1);
     expect(createAt).toBeGreaterThan(dropAt);
-    expect(slettSql).toMatch(/slett_forhandler_rev=0025/);
+    expect(slettSql).toMatch(/slett_forhandler_rev=0026/);
     expect(slettSql).toMatch(/set_config\('app\.slett_endwise_id'/);
+    expect(slettSql).toMatch(/u\.id = any\s*\(\s*v_org_user_ids\s*\)/);
+    expect(slettSql).not.toMatch(/active_organization_id is not null/);
+    expect(slettSql).not.toMatch(/delete from "user" u\s+where not exists \(select 1 from member/i);
   });
 
   it('audit/erasure slett-policyer bruker slett_endwise_id, ikke tenants-subquery', () => {
@@ -280,9 +347,22 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(barn).toMatch(/constraint_name/i);
   });
 
-  it('db:grants feiler hvis slett_forhandler ikke er rev 0025', () => {
+  it('db:grants feiler hvis slett_forhandler ikke er rev 0026', () => {
     const grantsTs = readFileSync(resolve(her, '../../../packages/db/scripts/grants.ts'), 'utf8');
-    expect(grantsTs).toMatch(/slett_forhandler_rev=0025/);
+    expect(grantsTs).toMatch(/slett_forhandler_rev=0026/);
     expect(grantsTs).toMatch(/process\.exit\(1\)/);
+    expect(grantsTs).toMatch(/grants \+ funksjoner kjørt \(slett_forhandler rev=0026\)/);
+    /**
+     * pg_get_function_identity_arguments(oid) for
+     * `slett_forhandler(p_tenant_id uuid)` returnerer `p_tenant_id uuid`,
+     * ikke `uuid`. En eksakt `= 'uuid'`-filter gir 0 rader og exit 1
+     * selv når prosrc har rev-markøren (falsk negativ etter DROP+CREATE).
+     */
+    expect(grantsTs).not.toMatch(
+      /pg_get_function_identity_arguments\s*\(\s*p\.oid\s*\)\s*=\s*'uuid'/,
+    );
+    expect(grantsTs).toMatch(/\bexists\s*\(/i);
+    expect(grantsTs).toMatch(/pg_get_function_identity_arguments/);
+    expect(grantsTs).toMatch(/left\s*\(\s*p\.prosrc/i);
   });
 });

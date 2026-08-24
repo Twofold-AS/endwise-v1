@@ -312,7 +312,7 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
       );
   });
 
-  it('slett redigerer audit_log (ikke hard-slett) og rører ikke user', async () => {
+  it('slett redigerer audit_log (ikke hard-slett) og fjerner dealer-only user', async () => {
     const slug = `slett-audit-${randomUUID().slice(0, 8)}`;
     const opprettet = await somEndwise().tenants.create({
       name: 'Slett audit AS',
@@ -326,8 +326,8 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
     const userId = `slett-usr-${opprettet.tenantId.slice(0, 8)}`;
     await owner.insert(schema.user).values({
       id: userId,
-      name: 'Skal overleve',
-      email: `lever.${slug}@verksted.test`,
+      name: 'Dealer only',
+      email: `dealer-audit.${slug}@verksted.test`,
       emailVerified: false,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -373,8 +373,7 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
       .select({ id: schema.user.id, email: schema.user.email })
       .from(schema.user)
       .where(eq(schema.user.id, userId));
-    expect(bruker?.email).toBe(`lever.${slug}@verksted.test`);
-    await owner.delete(schema.user).where(eq(schema.user.id, userId));
+    expect(bruker).toBeUndefined();
 
     const [kjede] = await owner
       .select({
@@ -394,6 +393,220 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
     expect(kjede?.ipAddress).toBeNull();
 
     await owner.delete(schema.auditLog).where(eq(schema.auditLog.id, piiId));
+    await owner
+      .delete(schema.auditLog)
+      .where(
+        sql`tenant_id = ${endwiseId} and action = 'audit.redacted' and metadata->>'reason' = 'slett_forhandler'`,
+      );
+  });
+
+  it('slett fjerner dealer-konto (session/account/epost) og beholder Endwise-medlem', async () => {
+    expect(endwiseId).toBeTruthy();
+    const slug = `slett-konto-${randomUUID().slice(0, 8)}`;
+    const opprettet = await somEndwise().tenants.create({
+      name: 'Slett konto AS',
+      slug,
+      ownerEmail: `konto.${slug}@verksted.test`,
+      kind: 'demo',
+      tier: 'start',
+    });
+    const tid = opprettet.tenantId;
+    const naa = Date.now();
+
+    const [endwiseOrg] = await owner
+      .select({ id: schema.organization.id })
+      .from(schema.organization)
+      .where(eq(schema.organization.id, endwiseId as string));
+    if (!endwiseOrg) {
+      await owner.insert(schema.organization).values({
+        id: endwiseId as string,
+        name: 'Endwise',
+        slug: 'endwise',
+        createdAt: new Date(),
+      });
+    }
+
+    const dealerId = `dealer-${tid.slice(0, 8)}`;
+    const dealerEpost = `dealer.${slug}@verksted.test`;
+    await owner.insert(schema.user).values({
+      id: dealerId,
+      name: 'Dealer only',
+      email: dealerEpost,
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    await owner.insert(schema.member).values({
+      id: `mem-${dealerId}`,
+      organizationId: tid,
+      userId: dealerId,
+      role: 'dealer_staff',
+      createdAt: new Date(),
+    });
+    await owner.insert(schema.account).values({
+      id: `acc-${dealerId}`,
+      accountId: dealerId,
+      providerId: 'credential',
+      userId: dealerId,
+      password: 'hash-skal-slettes',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    await owner.insert(schema.session).values({
+      id: `ses-${dealerId}`,
+      token: `tok-${dealerId}`,
+      userId: dealerId,
+      activeOrganizationId: tid,
+      createdAt: new Date(naa),
+      updatedAt: new Date(naa),
+      expiresAt: new Date(naa + 60 * 60 * 1000),
+    });
+    await owner.insert(schema.verification).values({
+      id: `ver-${dealerId}`,
+      identifier: dealerEpost,
+      value: 'reset-skal-slettes',
+      expiresAt: new Date(naa + 30 * 60 * 1000),
+    });
+
+    const dualId = `dual-${tid.slice(0, 8)}`;
+    const dualEpost = `dual.${slug}@endwise.test`;
+    await owner.insert(schema.user).values({
+      id: dualId,
+      name: 'Også Endwise',
+      email: dualEpost,
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    await owner.insert(schema.member).values([
+      {
+        id: `mem-d-${dualId}`,
+        organizationId: tid,
+        userId: dualId,
+        role: 'dealer_staff',
+        createdAt: new Date(),
+      },
+      {
+        id: `mem-e-${dualId}`,
+        organizationId: endwiseId as string,
+        userId: dualId,
+        role: 'endwise_admin',
+        createdAt: new Date(),
+      },
+    ]);
+    await owner.insert(schema.session).values([
+      {
+        id: `ses-dead-${dualId}`,
+        token: `tok-dead-${dualId}`,
+        userId: dualId,
+        activeOrganizationId: tid,
+        createdAt: new Date(naa),
+        updatedAt: new Date(naa),
+        expiresAt: new Date(naa + 60 * 60 * 1000),
+      },
+      {
+        id: `ses-live-${dualId}`,
+        token: `tok-live-${dualId}`,
+        userId: dualId,
+        activeOrganizationId: endwiseId as string,
+        createdAt: new Date(naa),
+        updatedAt: new Date(naa),
+        expiresAt: new Date(naa + 60 * 60 * 1000),
+      },
+    ]);
+
+    const unrelatedId = `utenfor-${tid.slice(0, 8)}`;
+    const unrelatedEpost = `utenfor.${slug}@verksted.test`;
+    await owner.insert(schema.user).values({
+      id: unrelatedId,
+      name: 'Ikke i slettet org',
+      email: unrelatedEpost,
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    await owner.insert(schema.account).values({
+      id: `acc-${unrelatedId}`,
+      accountId: unrelatedId,
+      providerId: 'credential',
+      userId: unrelatedId,
+      password: 'hash-utenfor',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await owner.insert(schema.tenantDeleteChallenges).values({
+      tenantId: tid,
+      requestedBy: adminUser,
+      codeHash: hashSlettKode('123456'),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    await somEndwise().tenants.slett({ tenantId: tid, slug, kode: '123456' });
+
+    const [dealerBruker] = await owner
+      .select({ id: schema.user.id })
+      .from(schema.user)
+      .where(eq(schema.user.id, dealerId));
+    expect(dealerBruker).toBeUndefined();
+
+    const [dealerEpostRad] = await owner
+      .select({ id: schema.user.id })
+      .from(schema.user)
+      .where(eq(schema.user.email, dealerEpost));
+    expect(dealerEpostRad).toBeUndefined();
+
+    const [dealerSesjon] = await owner
+      .select({ id: schema.session.id })
+      .from(schema.session)
+      .where(eq(schema.session.userId, dealerId));
+    expect(dealerSesjon).toBeUndefined();
+
+    const [dealerKonto] = await owner
+      .select({ id: schema.account.id })
+      .from(schema.account)
+      .where(eq(schema.account.userId, dealerId));
+    expect(dealerKonto).toBeUndefined();
+
+    const [dealerVerify] = await owner
+      .select({ id: schema.verification.id })
+      .from(schema.verification)
+      .where(eq(schema.verification.identifier, dealerEpost));
+    expect(dealerVerify).toBeUndefined();
+
+    const [dualBruker] = await owner
+      .select({ id: schema.user.id, email: schema.user.email })
+      .from(schema.user)
+      .where(eq(schema.user.id, dualId));
+    expect(dualBruker?.email).toBe(dualEpost);
+
+    const dualSesjoner = await owner
+      .select({
+        id: schema.session.id,
+        activeOrganizationId: schema.session.activeOrganizationId,
+      })
+      .from(schema.session)
+      .where(eq(schema.session.userId, dualId));
+    expect(dualSesjoner.map((s) => s.id)).toEqual([`ses-live-${dualId}`]);
+    expect(dualSesjoner[0]?.activeOrganizationId).toBe(endwiseId);
+
+    const [endwiseMedlem] = await owner
+      .select({ id: schema.member.id })
+      .from(schema.member)
+      .where(sql`user_id = ${dualId} and organization_id = ${endwiseId}`);
+    expect(endwiseMedlem).toBeDefined();
+
+    const [utenforSlett] = await owner
+      .select({ id: schema.user.id })
+      .from(schema.user)
+      .where(eq(schema.user.id, unrelatedId));
+    expect(utenforSlett).toBeDefined();
+
+    await owner.delete(schema.account).where(eq(schema.account.userId, unrelatedId));
+    await owner.delete(schema.user).where(eq(schema.user.id, unrelatedId));
+    await owner.delete(schema.session).where(eq(schema.session.userId, dualId));
+    await owner.delete(schema.member).where(eq(schema.member.userId, dualId));
+    await owner.delete(schema.user).where(eq(schema.user.id, dualId));
     await owner
       .delete(schema.auditLog)
       .where(

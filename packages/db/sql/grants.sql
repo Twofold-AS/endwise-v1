@@ -1,5 +1,6 @@
 -- Kjøres ETTER migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
--- Siste lager-relaterte migrasjon: 0023_quick_lager (Quick-GUID på parts/stock_locations).
+-- Siste slett-relaterte migrasjon: 0024_slett_forhandler_barn (SELECT + ROW_COUNT).
+-- 0023_quick_lager la Quick-GUID på parts/stock_locations.
 --
 -- Migrasjonen lager tabellene (som eier) og rollen `authenticated`.
 -- Her kobles app-brukeren til rollen, og rollen får lov til å PRØVE å røre
@@ -178,6 +179,21 @@ create policy audit_log_slett_insert on audit_log
     current_setting('app.platform_admin', true) = 'on'
     and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
+    and (
+      tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
+      or tenant_id = (select id from tenants where slug = 'endwise')
+    )
+  );
+
+drop policy if exists audit_log_slett_select on audit_log;
+create policy audit_log_slett_select on audit_log
+  as permissive
+  for select
+  to public
+  using (
+    current_setting('app.platform_admin', true) = 'on'
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
     and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
   );
 
@@ -202,6 +218,18 @@ create policy erasure_requests_slett_forhandler on erasure_requests
     )
   );
 
+drop policy if exists erasure_requests_slett_select on erasure_requests;
+create policy erasure_requests_slett_select on erasure_requests
+  as permissive
+  for select
+  to public
+  using (
+    current_setting('app.platform_admin', true) = 'on'
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
+  );
+
 -- DELETE på øvrige RLS-tabeller med tenant_id. Dynamisk: nye tabeller dekkes
 -- neste `pnpm db:grants`. Hopper over audit_log / erasure_requests / tenants
 -- (håndteres over). Tabeller UTEN RLS (tenant_delete_challenges) trenger
@@ -222,6 +250,7 @@ begin
        and c.relname not in ('tenants', 'audit_log', 'erasure_requests')
   loop
     execute format('drop policy if exists %I on public.%I', r.relname || '_slett_forhandler', r.relname);
+    execute format('drop policy if exists %I on public.%I', r.relname || '_slett_forhandler_select', r.relname);
     execute format(
       $sql$
         create policy %I on public.%I
@@ -234,6 +263,20 @@ begin
           )
       $sql$,
       r.relname || '_slett_forhandler',
+      r.relname
+    );
+    execute format(
+      $sql$
+        create policy %I on public.%I
+          as permissive for select to public
+          using (
+            current_setting('app.platform_admin', true) = 'on'
+            and current_user is distinct from 'authenticated'
+            and current_user is distinct from 'endwise_app'
+            and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
+          )
+      $sql$,
+      r.relname || '_slett_forhandler_select',
       r.relname
     );
   end loop;

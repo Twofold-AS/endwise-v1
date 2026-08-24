@@ -67,10 +67,16 @@ export function mapSlettPostgresFeil(error: unknown): TRPCError {
       message: 'Databasen avviste slettingen (RLS). Kjør pnpm db:setup på Scaleway.',
     });
   }
-  if (sqlstate === '23503' || /foreign key/i.test(msg)) {
+  if (sqlstate === '23503' || /foreign key/i.test(msg) || /gjenværende koblinger/i.test(msg)) {
+    const tabellFraConstraint = pg.constraint?.replace(/_tenant_id_tenants_id_fk$/, '') ?? '';
+    const tabellFraMelding =
+      msg.match(/gjenværende koblinger i (.+)$/i)?.[1]?.replace(/\.$/, '') ?? '';
+    const tabell = tabellFraMelding || tabellFraConstraint;
     return new TRPCError({
       code: 'PRECONDITION_FAILED',
-      message: 'Slettingen stoppet på gjenværende koblinger i databasen.',
+      message: tabell
+        ? `Slettingen stoppet på gjenværende koblinger i databasen (${tabell}).`
+        : 'Slettingen stoppet på gjenværende koblinger i databasen.',
     });
   }
 

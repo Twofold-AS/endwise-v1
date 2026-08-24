@@ -117,7 +117,9 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'tenants_slett_forhandler_select',
          'audit_log_slett_update',
          'audit_log_slett_insert',
+         'audit_log_slett_select',
          'erasure_requests_slett_forhandler',
+         'erasure_requests_slett_select',
          'tenant_modules_slett_forhandler'
        )
        order by p.polname
@@ -129,6 +131,8 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         'tenants_slett_forhandler',
         'tenants_slett_forhandler_select',
         'audit_log_slett_update',
+        'audit_log_slett_select',
+        'erasure_requests_slett_select',
         'tenant_modules_slett_forhandler',
       ]),
     );

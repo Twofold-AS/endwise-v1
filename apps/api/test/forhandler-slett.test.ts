@@ -211,6 +211,107 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
     expect(audit.some((a) => a.action === 'tenant.deleted')).toBe(true);
   });
 
+  it('slett fjerner Quick-lager og kunder, flytter audit_log, dropper org', async () => {
+    const slug = `slett-quick-${randomUUID().slice(0, 8)}`;
+    const opprettet = await somEndwise().tenants.create({
+      name: 'Slett Quick AS',
+      slug,
+      ownerEmail: `quick.${slug}@verksted.test`,
+      kind: 'demo',
+      tier: 'start',
+    });
+    const tid = opprettet.tenantId;
+
+    const [lokasjon] = await owner
+      .insert(schema.stockLocations)
+      .values({
+        tenantId: tid,
+        code: 'A-01',
+        name: 'Hylle A',
+        quickGuid: `loc-${tid.slice(0, 8)}`,
+      })
+      .returning({ id: schema.stockLocations.id });
+    const [del] = await owner
+      .insert(schema.parts)
+      .values({
+        tenantId: tid,
+        sku: 'BRK-412',
+        name: 'Bremsekloss',
+        source: 'quick',
+        quickGuid: `part-${tid.slice(0, 8)}`,
+      })
+      .returning({ id: schema.parts.id });
+    await owner.insert(schema.stockLevels).values({
+      tenantId: tid,
+      partId: del?.id as string,
+      locationId: lokasjon?.id as string,
+      onHand: 12,
+      reserved: 1,
+    });
+    await owner.insert(schema.customers).values({
+      tenantId: tid,
+      name: 'Quick-kunde',
+      source: 'quick',
+      quickGuid: `cust-${tid.slice(0, 8)}`,
+    });
+    const auditId = randomUUID();
+    await owner.insert(schema.auditLog).values({
+      id: auditId,
+      tenantId: tid,
+      actor: 'quick-pull',
+      action: 'quick.pulled',
+      subjectType: 'parts',
+      subjectId: del?.id,
+    });
+
+    await owner.insert(schema.tenantDeleteChallenges).values({
+      tenantId: tid,
+      requestedBy: adminUser,
+      codeHash: hashSlettKode('123456'),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    await somEndwise().tenants.slett({ tenantId: tid, slug, kode: '123456' });
+
+    const [borte] = await owner
+      .select({ id: schema.tenants.id })
+      .from(schema.tenants)
+      .where(eq(schema.tenants.id, tid));
+    expect(borte).toBeUndefined();
+
+    const [org] = await owner
+      .select({ id: schema.organization.id })
+      .from(schema.organization)
+      .where(eq(schema.organization.id, tid));
+    expect(org).toBeUndefined();
+
+    const [delIgjen] = await owner
+      .select({ id: schema.parts.id })
+      .from(schema.parts)
+      .where(eq(schema.parts.id, del?.id as string));
+    expect(delIgjen).toBeUndefined();
+
+    const [kundeIgjen] = await owner
+      .select({ id: schema.customers.id })
+      .from(schema.customers)
+      .where(sql`tenant_id = ${tid}`);
+    expect(kundeIgjen).toBeUndefined();
+
+    const [kjede] = await owner
+      .select({ tenantId: schema.auditLog.tenantId, actor: schema.auditLog.actor })
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.id, auditId));
+    expect(kjede).toBeDefined();
+    expect(kjede?.tenantId).toBe(endwiseId);
+    expect(kjede?.actor).toBe('[REDAKTERT]');
+    await owner.delete(schema.auditLog).where(eq(schema.auditLog.id, auditId));
+    await owner
+      .delete(schema.auditLog)
+      .where(
+        sql`tenant_id = ${endwiseId} and action = 'audit.redacted' and metadata->>'reason' = 'slett_forhandler'`,
+      );
+  });
+
   it('slett redigerer audit_log (ikke hard-slett) og rører ikke user', async () => {
     const slug = `slett-audit-${randomUUID().slice(0, 8)}`;
     const opprettet = await somEndwise().tenants.create({

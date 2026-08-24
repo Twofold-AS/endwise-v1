@@ -82,7 +82,7 @@ export type NavItem = {
    * «bakgrunn». Feltet står igjen fordi mekanismen er riktig når noe FAKTISK er
    * nytt — men da skal det tas av igjen.
    *
-   * ⛔ Det eneste «New» i sidebaren nå er helpdesk-badgen, og den er datadrevet:
+   * ⛔ Det eneste «Ny» i sidebaren nå er helpdesk-merket, og den er datadrevet:
    * den forsvinner av seg selv når du har lest artiklene.
    */
   isNew?: boolean;
@@ -91,10 +91,9 @@ export type NavItem = {
   /**
    * Bærer et tall på nav-raden.
    *
-   * `unread`   — uleste meldinger (Innboks). Aksentfarget.
-   * `helpdesk` — uleste hjelpeartikler. ⚠️ GRØNN, ikke aksent: en ny artikkel
-   *   er informasjon, ikke noe som venter på at du gjør noe. To ulike tall i
-   *   samme kolonne skal ikke se like presserende ut.
+   * `unread`   — uleste meldinger (Innboks). Rød sirkel, hvitt siffer.
+   * `helpdesk` — uleste hjelpeartikler. Samme røde sirkel — Mikael 24.08.2026.
+   *   «Ny»-tekstbadgen er et annet merke (nye flater/artikler), ikke telleren.
    */
   badge?: 'unread' | 'helpdesk';
   countKey?: 'kunder' | 'intern' | 'endwise';

@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { CountBadge } from '../_shell/cards';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
 import {
   fmtWhen,
@@ -406,12 +407,7 @@ function SamtaleKort({
         <span className={`truncate text-label ${rad.ulest > 0 ? 'text-fg' : 'text-fg-muted'}`}>
           {rad.avsender}
         </span>
-        {rad.ulest > 0 && (
-          <span className="ml-auto inline-flex h-badge shrink-0 items-center rounded-badge bg-accent-soft px-1.5 font-medium text-[11px] text-accent-strong tabular-nums">
-            {rad.ulest}
-            <span className="sr-only"> uleste</span>
-          </span>
-        )}
+        <CountBadge count={rad.ulest} label="uleste" className="ml-auto" />
       </div>
 
       {rad.utdrag && (

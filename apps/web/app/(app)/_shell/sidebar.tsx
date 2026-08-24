@@ -24,7 +24,7 @@ import {
 } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
-import { BEVEL, NewBadge } from './cards';
+import { BEVEL, CountBadge, NewBadge } from './cards';
 import { ContextSwitcher } from './context-switcher';
 import {
   CONTEXTS,
@@ -406,16 +406,6 @@ function NavRow({
   const active = isItemActive(item, pathname);
   const children = childrenForRole(item, role as never);
   const count = item.badge === 'unread' ? unread : item.badge === 'helpdesk' ? helpdesk : 0;
-  /**
-   * ⚠️ **RØD for helpdesk** (rettet 20.08.2026), aksent for meldinger.
-   *
-   * Denne var kortvarig grønn. Det brøt med UI-PAKKER §6, som sier at «New» er
-   * RØD — og etter at aksenten ble svart, er rødt det eneste som faktisk fanger
-   * blikket i denne kolonnen. Uleste meldinger beholder aksentfargen, så de to
-   * tallene fortsatt er til å skille fra hverandre.
-   */
-  const badgeKlasse =
-    item.badge === 'helpdesk' ? 'bg-danger-soft text-danger' : 'bg-accent-soft text-accent-strong';
 
   /**
    * ⚠️ Aktiv rad åpner seg selv — men bare når den BLIR aktiv, ikke ved hver
@@ -433,23 +423,10 @@ function NavRow({
         <>
           <span className="flex-1 truncate text-left">{item.label}</span>
           {item.isNew && <NewBadge />}
-          {count > 0 && (
-            <span
-              className={`inline-flex h-badge items-center gap-1 rounded-badge px-1.5 font-medium text-[11px] ${badgeKlasse}`}
-            >
-              {/* Helpdesk sier «New 3» — ordet forteller HVA tallet er. På
-                  Innboks er tallet alene nok: en teller ved siden av «Innboks»
-                  kan bare bety uleste. */}
-              {item.badge === 'helpdesk' && <span>New</span>}
-              <span className="tabular-nums">{count}</span>
-              <span className="sr-only">
-                {item.badge === 'helpdesk' ? ' nye artikler' : ' uleste'}
-              </span>
-            </span>
-          )}
+          <CountBadge count={count} label={item.badge === 'helpdesk' ? 'nye artikler' : 'uleste'} />
           {/* ⚠️ Pil-plassen er ALLTID her, også når raden ikke har underpunkter.
               Før lå chevronen utenfor `innhold` og kun på rader med barn — da
-              havnet «New» 14px lenger inn på Innboks/Saker enn på Samarbeid, og
+              havnet «Ny» 14px lenger inn på Innboks/Saker enn på Samarbeid, og
               badgene sto ikke på linje. En tom, like brei plassholder koster
               ingenting og gjør kolonnen rett. */}
           <span className="grid w-3.5 shrink-0 place-items-center" aria-hidden>

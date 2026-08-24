@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { NewBadge } from './cards';
 
 /**
  * F5-23 — NYTT FRA HELPDESKEN. Slideren nederst i sidebaren.
@@ -84,15 +85,11 @@ export function TipCard() {
     >
       <Link href={`/support/${a.slug}` as Route} className="group flex min-h-0 flex-1 flex-col">
         <div className="flex flex-col gap-1.5 px-3 pt-3">
-          {/* ⚠️ RØD (rettet 20.08.2026). Var kortvarig grønn; det brøt med
-              UI-PAKKER §6, og etter at aksenten ble svart er rødt det eneste
-              som faktisk fanger blikket. Vises kun når artikkelen er ulest for
-              DEG — et merke alle alltid ser, betyr ingenting. */}
+          {/* ⚠️ «Ny»-tekstbadge når artikkelen er ulest for DEG — et merke
+              alle alltid ser, betyr ingenting. Telleren i navet er CountBadge. */}
           <span className="flex items-center gap-2">
             {a.ulest ? (
-              <span className="inline-flex h-badge shrink-0 items-center rounded-badge bg-danger-soft px-1.5 font-medium text-[11px] text-danger">
-                New
-              </span>
+              <NewBadge />
             ) : (
               <span className="text-[11px] text-fg-muted">Fra helpdesken</span>
             )}

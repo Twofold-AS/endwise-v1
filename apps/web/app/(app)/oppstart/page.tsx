@@ -2,6 +2,7 @@
 
 import { Inbox, StatefulButton, Store, Wrench } from '@endwise/ui';
 import { type FormEvent, useMemo, useState } from 'react';
+import { persistAfterBrowserQuickProbe } from '@/lib/quick-browser-probe';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
 
@@ -93,13 +94,22 @@ export default function OppstartPage() {
   async function avslutt() {
     setFeil(null);
     try {
-      await fullfor.mutateAsync({
+      const payload = {
         visningsnavn: visningsnavn.trim(),
         extras: [...extras],
         ...(quickValgt
           ? { quick: { baseUrl: quickBaseUrl.trim(), token: quickToken.trim() } }
           : {}),
-      });
+      };
+      if (quickValgt) {
+        await persistAfterBrowserQuickProbe({
+          baseUrl: quickBaseUrl.trim(),
+          token: quickToken.trim(),
+          persist: () => fullfor.mutateAsync(payload),
+        });
+      } else {
+        await fullfor.mutateAsync(payload);
+      }
       void utils.session.me.invalidate();
       window.location.assign('/dashboard');
     } catch (error) {
@@ -222,8 +232,9 @@ export default function OppstartPage() {
                 {m.key === 'quick' && (extras.has('quick') || m.enabled) ? (
                   <div className="mb-2 ml-6 flex flex-col gap-2">
                     <p className="text-[12px] text-fg-muted leading-relaxed">
-                      Verkstedets egen ApiV2-nøkkel. Vi tester den med et lesekall (GET) mot Quick
-                      før Quick slås på. Nøkkelen lagres kryptert — aldri i klartekst.
+                      Verkstedets egen ApiV2-nøkkel. Vi tester den med et lesekall (GET) fra denne
+                      maskinen mot Quick før Quick slås på. Nøkkelen lagres kryptert — aldri i
+                      klartekst.
                     </p>
                     <label className="flex flex-col gap-1.5">
                       <span className="text-label text-fg">Quick base-URL</span>

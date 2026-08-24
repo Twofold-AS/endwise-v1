@@ -2,6 +2,7 @@
 
 import { Blocks, Input, Lock, RefreshCw, ShieldCheck, TriangleAlert, Upload } from '@endwise/ui';
 import { useState } from 'react';
+import { persistAfterBrowserQuickProbe, probeQuickFromBrowser } from '@/lib/quick-browser-probe';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { CardShell } from '../../_shell/cards';
@@ -16,6 +17,9 @@ import { CardShell } from '../../_shell/cards';
  *
  * Tokenet lagres envelope-kryptert og vises ALDRI tilbake. Kun forhandler-admin
  * kan endre — server håndhever via adminProcedure + RLS; dette er kosmetisk gating.
+ *
+ * F1-07: live GET `client/info` kjører i nettleseren (forhandlerens IP) før
+ * setConfig. Serveren sender ikke tokenet til Quick ved lagring.
  */
 export default function QuickPage() {
   const { isAdmin, isLoading: roleLoading } = useOrgRole();
@@ -25,6 +29,8 @@ export default function QuickPage() {
   const [baseUrl, setBaseUrl] = useState('');
   const [token, setToken] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [lokalFeil, setLokalFeil] = useState<string | null>(null);
+  const [browserTest, setBrowserTest] = useState<{ ok: boolean; text: string } | null>(null);
 
   // Prefyll baseUrl fra lagret config (til brukeren rører feltet).
   const savedBaseUrl = config.data?.baseUrl ?? '';
@@ -34,6 +40,7 @@ export default function QuickPage() {
     onSuccess: () => {
       setToken('');
       setDirty(false);
+      setLokalFeil(null);
       utils.quick.config.invalidate();
     },
   });
@@ -53,15 +60,44 @@ export default function QuickPage() {
 
   const openConflicts = conflicts.data ?? [];
   const hasToken = config.data?.hasToken ?? false;
-  const canSave =
-    isAdmin && baseUrlValue.trim().length > 0 && (hasToken || token.trim().length > 0);
+  const canSave = isAdmin && baseUrlValue.trim().length > 0 && token.trim().length > 0;
   const configured = Boolean(savedBaseUrl) && hasToken;
+  const busy = save.isPending;
 
-  function onSave() {
-    save.mutate({
-      baseUrl: baseUrlValue.trim(),
-      token: token.trim() ? token.trim() : undefined,
-    });
+  async function onSave() {
+    setLokalFeil(null);
+    setBrowserTest(null);
+    try {
+      await persistAfterBrowserQuickProbe({
+        baseUrl: baseUrlValue.trim(),
+        token: token.trim(),
+        persist: () =>
+          save.mutateAsync({
+            baseUrl: baseUrlValue.trim(),
+            token: token.trim(),
+          }),
+      });
+    } catch (error) {
+      setLokalFeil((error as Error).message);
+    }
+  }
+
+  async function onTest() {
+    setLokalFeil(null);
+    setBrowserTest(null);
+    if (token.trim()) {
+      try {
+        await probeQuickFromBrowser({
+          baseUrl: baseUrlValue.trim(),
+          token: token.trim(),
+        });
+        setBrowserTest({ ok: true, text: 'Tilkobling OK' });
+      } catch (error) {
+        setBrowserTest({ ok: false, text: (error as Error).message });
+      }
+      return;
+    }
+    test.mutate();
   }
 
   return (
@@ -94,7 +130,7 @@ export default function QuickPage() {
             <p className="text-[12px] text-fg-faint leading-snug">
               Per forhandler: egen Quick-instans + eget ApiV2-token (lages i Quick3 under Client
               Configuration → Security → Access Token, type ApiV2). Nøkkelen testes med et lesekall
-              (GET) mot Quick før den lagres. Vi lagrer aldri klartekst.
+              (GET) fra denne maskinen mot Quick før den lagres. Vi lagrer aldri klartekst.
             </p>
           </div>
 
@@ -122,7 +158,7 @@ export default function QuickPage() {
               onChange={(e) => setToken(e.target.value)}
               disabled={!isAdmin}
               placeholder={
-                hasToken ? '•••••••• (la stå tomt for å beholde)' : 'Lim inn ApiV2-token'
+                hasToken ? 'Lim inn nøkkelen for å teste fra denne maskinen' : 'Lim inn ApiV2-token'
               }
               spellCheck={false}
               autoComplete="off"
@@ -132,17 +168,17 @@ export default function QuickPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={onSave}
-              disabled={!canSave || save.isPending}
+              onClick={() => void onSave()}
+              disabled={!canSave || busy}
               className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
-              {save.isPending ? 'Tester og lagrer…' : 'Test og lagre'}
+              {busy ? 'Tester og lagrer…' : 'Test og lagre'}
             </button>
 
             <button
               type="button"
-              onClick={() => test.mutate()}
-              disabled={!isAdmin || !configured || test.isPending}
+              onClick={() => void onTest()}
+              disabled={!isAdmin || (!configured && !token.trim()) || test.isPending}
               className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-4 font-medium text-fg text-sm transition-colors hover:bg-surface-2 disabled:opacity-40"
             >
               <ShieldCheck size={15} />
@@ -150,13 +186,16 @@ export default function QuickPage() {
             </button>
           </div>
 
-          {test.data && (
+          {browserTest && <StatusLine ok={browserTest.ok} text={browserTest.text} />}
+          {test.data && !browserTest && (
             <StatusLine
               ok={test.data.ok}
               text={test.data.ok ? 'Tilkobling OK' : `Feilet: ${test.data.detail ?? 'ukjent'}`}
             />
           )}
-          {save.isError && <StatusLine ok={false} text={save.error.message} />}
+          {(lokalFeil || save.isError) && (
+            <StatusLine ok={false} text={lokalFeil ?? save.error?.message ?? ''} />
+          )}
         </div>
       </CardShell>
 

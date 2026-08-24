@@ -33,5 +33,7 @@ export function quickProbeUserMessage(error: unknown): string {
   if (error instanceof Error && error.name === 'TimeoutError') {
     return QUICK_PROBE_USER_MESSAGES.timeout;
   }
+  // Nettleser-CORS / Failed to fetch — ikke nøkkelavvisning, ingen intern host.
+  if (error instanceof TypeError) return QUICK_PROBE_USER_MESSAGES.unreachable;
   return QUICK_PROBE_USER_MESSAGES.unexpected;
 }

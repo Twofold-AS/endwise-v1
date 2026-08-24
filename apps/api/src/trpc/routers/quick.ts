@@ -34,9 +34,12 @@ const quickAdminProcedure = moduleAdminProcedure('quick');
  * ALT går via `createQuickConfigService` → `withTenant` → RLS. Tokenet lagres
  * envelope-kryptert og forlater ALDRI serveren (getView returnerer kun `hasToken`).
  *
- * Vi hamrer ALDRI Quick: `testConnection` / `setConfig` er ett GET `client/info`,
- * `pullNow` er en moderat paginert delta-pull (changedAfterDate = sist hentet).
- * setConfig persisterer IKKE nøkkelen med mindre GET-proben svarte.
+ * Vi hamrer ALDRI Quick: `testConnection` er residual server-GET `client/info`
+ * (Vercel fra1 — HTTP 500 mappes ikke som ugyldig nøkkel). `setConfig` sender
+ * IKKE tokenet til Quick; live GET kjører i forhandlerens nettleser før denne
+ * mutasjonen kalles. `pullNow` er en moderat paginert delta-pull.
+ * setConfig persisterer IKKE nøkkelen med mindre nettleser-proben svarte
+ * (UI-kontrakt) — her persisteres kun etter SSRF/URL/token-validering.
  *
  * TODO (venter på ApiV2-token + token-gatet swagger): booking-, delelager- og
  * salgs-synk, samt selve PUSH-implementasjonen. Kun kunde-PULL nå.
@@ -93,9 +96,11 @@ export const quickRouter = router({
           message: 'ENDWISE_KEK mangler — kan ikke kryptere Quick-token.',
         });
       }
+      // Live GET mot Quick kjører i nettleseren (dealer-IP). Vercel fra1
+      // 500-er mot allowlist — vi sender ikke tokenet til Quick herfra.
       try {
         await aktiverQuickEtterGet({
-          probe: (cfg) => probeQuickReadOnly(cfg),
+          probe: async () => undefined,
           persist: (cfg) => svc.set(ctx.tenantId, cfg),
           baseUrl,
           token,
@@ -109,7 +114,10 @@ export const quickRouter = router({
       return { ok: true };
     }),
 
-  /** «Test tilkobling»: ett GET `client/info` mot forhandlerens Quick-instans. */
+  /**
+   * Residual server-GET (lagret token, ingen nøkkel i skjemaet). HTTP 500 er
+   * ikke auth — mappes via quickProbeUserMessage, uten Vercel/allowlist-tekst.
+   */
   testConnection: quickAdminProcedure.mutation(async ({ ctx }) => {
     const svc = createQuickConfigService(ctx.db);
     const cfg = await svc.getDecrypted(ctx.tenantId);

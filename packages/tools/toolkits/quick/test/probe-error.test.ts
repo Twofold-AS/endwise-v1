@@ -60,6 +60,13 @@ describe('quickProbeUserMessage — distinkte BAD_REQUEST, ingen rå fetch-cause
     expect(QUICK_PROBE_USER_MESSAGES.noUrl).toMatch(/URL mangler/i);
   });
 
+  it('TypeError (CORS / Failed to fetch) er unreachable — ikke nøkkelavvisning', () => {
+    const cors = quickProbeUserMessage(new TypeError('Failed to fetch'));
+    expect(cors).toBe(QUICK_PROBE_USER_MESSAGES.unreachable);
+    expect(cors).not.toBe(QUICK_PROBE_USER_MESSAGES.rejected);
+    expect(cors).not.toMatch(/Vercel|allowlist|CORS|IP-lås/i);
+  });
+
   it('lekker aldri rå fetch-cause (host/IP) og kollapser ikke alt til 401-setningen', () => {
     const raw = new Error('fetch failed: https://169.254.169.254/latest/meta-data/ ECONNREFUSED');
     const msg = quickProbeUserMessage(raw);

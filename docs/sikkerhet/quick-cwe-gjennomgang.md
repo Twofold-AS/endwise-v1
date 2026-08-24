@@ -27,6 +27,11 @@ til den viktigste trusselen — dette er delt Endwise-infra, ikke tenant-scopet.
 
 ## Restrisiko (dokumentert, ikke fikset)
 
+- **F1-07 live probe (24.08.2026):** `setConfig` / `onboarding.fullfor` kaller ikke Quick
+  fra Vercel. Live GET `client/info` kjører i forhandlerens nettleser (Quick CORS:
+  `Access-Control-Allow-Origin: *`, `Authorization` i allow-headers). Residual
+  `testConnection` og pull går fortsatt fra fra1 og kan 500 mot Quick allowlist —
+  500 mappes ikke som ugyldig nøkkel.
 - **DNS-rebinding** mot `*.quick.no`: allowlisten er domene-basert; et angrep der Quicks DNS
   resolver til en intern IP krever kompromittert Quick-DNS — utenfor dealer-admin-trusselmodellen.
   `redirect: 'error'` stopper 3xx-omdirigering. Full binding krever IP-pinning ved connect (ikke

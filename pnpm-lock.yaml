@@ -158,6 +158,9 @@ importers:
       '@endwise/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@endwise/toolkit-quick':
+        specifier: workspace:*
+        version: link:../../packages/tools/toolkits/quick
       '@endwise/ui':
         specifier: workspace:*
         version: link:../../packages/ui

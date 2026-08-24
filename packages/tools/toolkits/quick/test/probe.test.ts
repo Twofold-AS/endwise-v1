@@ -39,6 +39,19 @@ describe('F1-07 — GET-only Quick-probe', () => {
     expect(headers['User-Agent']).toBe(QUICK_PROBE_USER_AGENT);
     expect(headers['User-Agent']).toBe('Endwise/1 QuickProbe');
     expect(headers.Accept).toBe('application/json');
+    expect(headers.Authorization).toBe('Token token=fake-apiv2-ikke-ekte');
+  });
+
+  it('nettleser-probe utelater User-Agent (forbidden + CORS allow-headers)', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({}));
+    await probeQuickReadOnly({ ...cfg, includeUserAgent: false });
+    const kall = spy.mock.calls[0];
+    if (!kall) throw new Error('fetch ble aldri kalt');
+    const headers = (kall[1] as RequestInit).headers as Record<string, string>;
+    expect(headers['User-Agent']).toBeUndefined();
+    expect(headers.Authorization).toBe('Token token=fake-apiv2-ikke-ekte');
+    expect(headers.Accept).toBe('application/json');
+    expect((kall[1] as RequestInit).credentials).toBe('omit');
   });
 
   it('baseUrl som slutter på /api/v2 treffer ikke /api/v2/api/v2/client/info', async () => {

@@ -11,9 +11,8 @@ import {
   assertAllowedQuickUrl,
   normalizeQuickBaseUrl,
   normalizeQuickToken,
-  probeQuickReadOnly,
+  QUICK_PROBE_USER_MESSAGES,
   QuickSsrfError,
-  quickProbeUserMessage,
 } from '@endwise/toolkit-quick';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -144,6 +143,18 @@ export const onboardingRouter = router({
       if (extras.includes('quick') && input.quick) {
         const baseUrl = normalizeQuickBaseUrl(input.quick.baseUrl);
         const token = normalizeQuickToken(input.quick.token);
+        if (!baseUrl) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: QUICK_PROBE_USER_MESSAGES.noUrl,
+          });
+        }
+        if (!token) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: QUICK_PROBE_USER_MESSAGES.noToken,
+          });
+        }
         try {
           assertAllowedQuickUrl(baseUrl);
         } catch (error) {
@@ -158,15 +169,8 @@ export const onboardingRouter = router({
             message: 'ENDWISE_KEK mangler — kan ikke kryptere Quick-token.',
           });
         }
-        try {
-          // GET først — ingen persist her. Persist skjer etter at extras er tillatt.
-          await probeQuickReadOnly({ baseUrl, token });
-        } catch (error) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: quickProbeUserMessage(error),
-          });
-        }
+        // Live GET mot Quick kjører i nettleseren før fullfor kalles.
+        // Ingen server-GET her — tokenet sendes ikke til Quick fra Vercel.
       }
 
       return withTenant(ctx.db, ctx.tenantId, async (tx) => {

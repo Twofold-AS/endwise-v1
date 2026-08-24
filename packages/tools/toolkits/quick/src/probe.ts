@@ -11,12 +11,25 @@ import { assertAllowedQuickUrl } from './url-guard.ts';
  * Ingen POST/PUT/PATCH/DELETE. Ingen pull/push. Ingen synk.
  *
  * Tokenet sendes som `Authorization` og logges ALDRI her.
+ *
+ * Live onboarding-probe (`setConfig` / `onboarding.fullfor`) kjører i
+ * NETTLESEREN (forhandlerens IP). Verifisert 24.08.2026 mot q3.quick.no:
+ *   Access-Control-Allow-Origin: *
+ *   Access-Control-Allow-Methods: GET,PUT,POST,DELETE,OPTIONS
+ *   Access-Control-Allow-Headers: Content-Type, Authorization
+ * Nettleseren kan derfor GET-e direkte. User-Agent er et forbidden header
+ * i fetch og står ikke i CORS allow-headers — utelates i nettleseren
+ * (nettleserens egen UA går med). Server-residual (testConnection, pull)
+ * sender fortsatt `Endwise/1 QuickProbe`.
+ *
+ * apps/api er portet inn i Next på Vercel fra1 — det finnes ingen Scaleway-
+ * hop for denne GET-en. Same-origin rewrite ville fortsatt gått ut fra fra1.
  */
 
 export const QUICK_READ_ONLY_PROBE_METHOD = 'GET';
 /** Relativt til instansens baseUrl (uten trailing slash). */
 export const QUICK_READ_ONLY_PROBE_PATH = '/api/v2/client/info';
-/** Stabil UA — Quick kan 500-e Vercel-egress uten kjent klient. */
+/** Stabil UA — kun server-residual. Nettleser-fetch kan ikke sette UA. */
 export const QUICK_PROBE_USER_AGENT = 'Endwise/1 QuickProbe';
 
 const DEFAULT_TIMEOUT_MS = 15_000;
@@ -56,11 +69,43 @@ export type QuickProbeConfig = {
   baseUrl: string;
   token: string;
   timeoutMs?: number;
+  /**
+   * Server-residual setter UA. Nettleser-proben MÅ være false: User-Agent er
+   * forbidden i fetch, og Quick CORS tillater bare Content-Type + Authorization.
+   */
+  includeUserAgent?: boolean;
 };
+
+export function quickProbeTargetUrl(baseUrl: string): string {
+  const normalized = normalizeQuickBaseUrl(baseUrl);
+  if (!normalized) throw new QuickError(QUICK_PROBE_USER_MESSAGES.noUrl);
+  const validated = assertAllowedQuickUrl(normalized);
+  const base = `${validated.origin}${validated.pathname}`
+    .replace(/\/+$/, '')
+    .replace(/\/api\/v2$/i, '');
+  return `${base}${QUICK_READ_ONLY_PROBE_PATH}`;
+}
+
+export function quickProbeHeaders(
+  token: string,
+  opts?: { includeUserAgent?: boolean },
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    Authorization: `Token token=${token}`,
+    Accept: 'application/json',
+  };
+  if (opts?.includeUserAgent !== false) {
+    headers['User-Agent'] = QUICK_PROBE_USER_AGENT;
+  }
+  return headers;
+}
 
 /**
  * Ett lesekall. Kaster ved 401/403, nettverksfeil, SSRF-ulovlig URL
  * eller uventet svar. Returnerer void — innholdet brukes ikke til synk.
+ *
+ * Default inkluderer User-Agent (server-residual). Sett
+ * `includeUserAgent: false` fra nettleseren.
  */
 export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void> {
   const baseUrl = normalizeQuickBaseUrl(config.baseUrl);
@@ -68,23 +113,17 @@ export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void
   if (!baseUrl) throw new QuickError(QUICK_PROBE_USER_MESSAGES.noUrl);
   if (!token) throw new QuickError(QUICK_PROBE_USER_MESSAGES.noToken);
 
-  const validated = assertAllowedQuickUrl(baseUrl);
-  // Aldri .../api/v2/api/v2/client/info — en limt /api/v2-suffix 500-er hos Quick.
-  const base = `${validated.origin}${validated.pathname}`
-    .replace(/\/+$/, '')
-    .replace(/\/api\/v2$/i, '');
+  const url = quickProbeTargetUrl(baseUrl);
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const includeUserAgent = config.includeUserAgent !== false;
 
   let response: Response;
   try {
-    response = await fetch(`${base}${QUICK_READ_ONLY_PROBE_PATH}`, {
+    response = await fetch(url, {
       method: QUICK_READ_ONLY_PROBE_METHOD,
-      headers: {
-        Authorization: `Token token=${token}`,
-        Accept: 'application/json',
-        'User-Agent': QUICK_PROBE_USER_AGENT,
-      },
+      headers: quickProbeHeaders(token, { includeUserAgent }),
       redirect: 'error',
+      credentials: 'omit',
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (cause) {

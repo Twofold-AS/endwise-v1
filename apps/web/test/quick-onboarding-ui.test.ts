@@ -15,6 +15,8 @@ describe('F1-07: Quick-nøkkel i eksisterende chrome', () => {
   it('/oppstart ber om Quick-nøkkel når tillegget er valgt — på norsk', () => {
     expect(oppstart).toMatch(/ApiV2/);
     expect(oppstart).toMatch(/lesekall|GET/);
+    expect(oppstart).toMatch(/fra denne\s+maskinen/);
+    expect(oppstart).toMatch(/persistAfterBrowserQuickProbe/);
     expect(oppstart).toMatch(/kryptert|klartekst/);
     expect(oppstart).toMatch(/quick:\s*\{/);
     expect(oppstart).toMatch(/m\.key === ['"]quick['"]/);
@@ -23,12 +25,14 @@ describe('F1-07: Quick-nøkkel i eksisterende chrome', () => {
     expect(oppstart).not.toMatch(/4490|8490|12490/);
   });
 
-  it('/integrasjoner/quick tester før lagring og viser aldri nøkkelen tilbake', () => {
-    expect(quick).toMatch(/Test og lagre|testes med et lesekall/);
+  it('/integrasjoner/quick tester fra denne maskinen før lagring og viser aldri nøkkelen tilbake', () => {
+    expect(quick).toMatch(/persistAfterBrowserQuickProbe/);
+    expect(quick).toMatch(/fra denne maskinen/);
     expect(quick).toMatch(/type="password"/);
     expect(quick).toMatch(/setConfig/);
     expect(quick).not.toMatch(/onClick=\{\(\) => pull\.mutate\(\{\}\)\}[\s\S]{0,80}onSave/);
     expect(quick).not.toMatch(/console\.(log|info|debug)\([^)]*token/i);
+    expect(quick).not.toMatch(/Vercel|allowlist|IP-lås|Static IP/i);
   });
 
   it('ingen ny Admin-fane i forhandler-sidebaren', () => {

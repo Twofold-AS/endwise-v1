@@ -28,7 +28,7 @@ import { QuickSsrfError } from './errors.ts';
 const DEFAULT_ALLOWED_SUFFIXES = ['quick.no'];
 
 function allowedSuffixes(): string[] {
-  const raw = process.env.QUICK_ALLOWED_HOST_SUFFIXES;
+  const raw = typeof process !== 'undefined' ? process.env.QUICK_ALLOWED_HOST_SUFFIXES : undefined;
   if (!raw) return DEFAULT_ALLOWED_SUFFIXES;
   const list = raw
     .split(',')

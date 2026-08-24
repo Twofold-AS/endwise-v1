@@ -13,6 +13,7 @@ import { aktiverQuickEtterGet } from '../src/lib/quick-activate.ts';
 
 /**
  * F1-07 — forhandlerens EGEN Quick-nøkkel: GET-probe FØR persist/aktivering.
+ * Live GET kjører i nettleseren (dealer-IP). Server persisterer uten å kalle Quick.
  * Testdata er oppdiktet — aldri en ekte ApiV2-nøkkel.
  */
 const FAKE_TOKEN = 'fake-apiv2-ikke-ekte';
@@ -73,6 +74,18 @@ describe('F1-07 — aktiver Quick først etter vellykket GET', () => {
       resolve(her, '../../../packages/tools/toolkits/quick/src/probe.ts'),
       'utf8',
     );
+    const webQuick = readFileSync(
+      resolve(her, '../../../apps/web/app/(app)/integrasjoner/quick/page.tsx'),
+      'utf8',
+    );
+    const webOppstart = readFileSync(
+      resolve(her, '../../../apps/web/app/(app)/oppstart/page.tsx'),
+      'utf8',
+    );
+    const webProbe = readFileSync(
+      resolve(her, '../../../apps/web/lib/quick-browser-probe.ts'),
+      'utf8',
+    );
 
     expect(activate).toMatch(/await opts\.probe\(/);
     const probeIdx = activate.indexOf('await opts.probe(');
@@ -80,10 +93,24 @@ describe('F1-07 — aktiver Quick først etter vellykket GET', () => {
     expect(probeIdx).toBeGreaterThan(-1);
     expect(persistIdx).toBeGreaterThan(probeIdx);
 
-    expect(quick).toMatch(/aktiverQuickEtterGet|probeQuickReadOnly/);
+    // Live GET er i nettleseren — setConfig/fullfor må IKKE hente Quick fra Vercel.
     expect(quick).toMatch(/setConfig/);
-    expect(onboard).toMatch(/aktiverQuickEtterGet|probeQuickReadOnly/);
+    expect(quick).toMatch(/probe: async \(\) => undefined/);
+    expect(quick).not.toMatch(/probe: \(cfg\) => probeQuickReadOnly/);
+    const setConfigBlokk = quick.slice(
+      quick.indexOf('setConfig:'),
+      quick.indexOf('testConnection:'),
+    );
+    expect(setConfigBlokk).not.toMatch(/probeQuickReadOnly/);
+    expect(setConfigBlokk).not.toMatch(/client\/info/);
+    expect(onboard).toMatch(/aktiverQuickEtterGet/);
+    expect(onboard).not.toMatch(/probeQuickReadOnly/);
     expect(onboard).toMatch(/extras\.includes\(['"]quick['"]\)|extras\.includes\("quick"\)/);
+
+    expect(webProbe).toMatch(/includeUserAgent:\s*false/);
+    expect(webProbe).toMatch(/persistAfterBrowserQuickProbe/);
+    expect(webQuick).toMatch(/persistAfterBrowserQuickProbe/);
+    expect(webOppstart).toMatch(/persistAfterBrowserQuickProbe/);
 
     expect(probe).toMatch(/['"]GET['"]/);
     expect(probe).not.toMatch(/['"]POST['"]|['"]PUT['"]|['"]PATCH['"]|['"]DELETE['"]/);
@@ -92,6 +119,8 @@ describe('F1-07 — aktiver Quick først etter vellykket GET', () => {
       /ENDWISE_KEK\s*=\s*['"][A-Za-z0-9+/=]{20,}/,
     );
     expect(quick).toMatch(/quickProbeUserMessage/);
+    expect(`${webQuick}\n${webOppstart}`).not.toMatch(/Vercel|allowlist|IP-lås|Static IP/i);
+    expect(QUICK_PROBE_USER_MESSAGES.http500).not.toMatch(/Vercel|allowlist|IP-lås|Static IP/i);
     expect(quick).not.toMatch(
       /catch \(error\) \{\s*if \(error instanceof QuickSsrfError\)[\s\S]*Quick avviste nøkkelen\. Ingenting er lagret\./,
     );

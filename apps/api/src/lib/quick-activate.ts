@@ -4,6 +4,11 @@
  * Rekkefølge er hele poenget: probe → persist → (valgfritt) enable.
  * Feiler proben, kalles verken persist eller enable. Tokenet logges ikke.
  * Persist får normalisert URL (origin + shop-slug) og nøkkel uten wrapper.
+ *
+ * Live GET mot Quick kjører i nettleseren (dealer-IP). Server-kallstedene
+ * (`setConfig`, `onboarding.fullfor`) sender inn en no-op probe — de må ikke
+ * GET-e Quick fra Vercel fra1. Persist skjer likevel kun etter at UI har
+ * fått 200 fra browser-proben.
  */
 
 import { normalizeQuickBaseUrl, normalizeQuickToken } from '@endwise/toolkit-quick';

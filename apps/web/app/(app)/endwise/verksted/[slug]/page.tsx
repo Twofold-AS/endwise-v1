@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 
 export default async function VerkstedInspectIndex({
@@ -9,6 +10,9 @@ export default async function VerkstedInspectIndex({
 }) {
   const { slug } = await params;
   const { fra } = await searchParams;
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    redirect('/endwise' as Route);
+  }
   const q = fra ? `?fra=${encodeURIComponent(fra)}` : '';
-  redirect(`/endwise/verksted/${slug}/dashboard${q}`);
+  redirect(`/endwise/verksted/${slug}/dashboard${q}` as Route);
 }

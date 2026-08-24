@@ -3,11 +3,13 @@ import {
   type Database,
   desc,
   eq,
+  inArray,
   schema,
   sql,
   withPlatformAdmin,
   withTenant,
 } from '@endwise/db';
+import { visningsnavn } from '../profil/index.ts';
 import { publishEvent } from '../stream/publisher.ts';
 
 export class NotAParticipantError extends Error {
@@ -15,6 +17,62 @@ export class NotAParticipantError extends Error {
   constructor(participantId: string, threadId: string) {
     super(`${participantId} er ikke deltaker i tråd ${threadId}`);
   }
+}
+
+/**
+ * Visningsnavn for dealer↔Endwise. Kun medlemmer av forhandler-org eller
+ * Endwise-org — ikke kunder (ingen PII-orakel).
+ */
+async function navnForDealerOgEndwise(
+  db: Database,
+  tenantId: string,
+  userIds: string[],
+): Promise<Map<string, string>> {
+  const unike = [...new Set(userIds)].filter((id) => id && !id.startsWith('agent:'));
+  const ut = new Map<string, string>();
+  if (unike.length === 0) return ut;
+
+  const [ew] = await db
+    .select({ id: schema.organization.id })
+    .from(schema.organization)
+    .where(eq(schema.organization.slug, 'endwise'))
+    .limit(1);
+  const orgIds = [tenantId, ew?.id].filter((id): id is string => Boolean(id));
+
+  const ansatte = await db
+    .select({ id: schema.user.id, name: schema.user.name })
+    .from(schema.user)
+    .innerJoin(schema.member, eq(schema.member.userId, schema.user.id))
+    .where(and(inArray(schema.member.organizationId, orgIds), inArray(schema.user.id, unike)));
+
+  const kallenavn = new Map<string, string>();
+  for (const orgId of orgIds) {
+    const rader = await withTenant(db, orgId, (tx) =>
+      tx
+        .select({
+          userId: schema.memberProfiles.userId,
+          nickname: schema.memberProfiles.nickname,
+        })
+        .from(schema.memberProfiles)
+        .where(
+          and(
+            eq(schema.memberProfiles.tenantId, orgId),
+            inArray(schema.memberProfiles.userId, unike),
+          ),
+        ),
+    ).catch(() => []);
+    for (const r of rader) if (r.nickname) kallenavn.set(r.userId, r.nickname);
+  }
+
+  for (const a of ansatte) {
+    if (ut.has(a.id)) continue;
+    const vis = visningsnavn(
+      { navn: a.name ?? '', kallenavn: kallenavn.get(a.id) ?? null },
+      'intern',
+    );
+    if (vis.trim()) ut.set(a.id, vis);
+  }
+  return ut;
 }
 
 /** F5-11 — tråden finnes ikke, eller er ikke forhandler↔Endwise. */
@@ -529,7 +587,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
      * deltaker. `listThreads` er urørt.
      */
     async listPlatformSupportThreads(readerId: string) {
-      return withPlatformAdmin(db, (tx) =>
+      const rader = await withPlatformAdmin(db, (tx) =>
         tx
           .select({
             id: schema.threads.id,
@@ -564,16 +622,49 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
           .where(eq(schema.threads.kind, 'dealer_admin'))
           .orderBy(desc(schema.threads.lastMessageAt)),
       );
+
+      if (rader.length === 0) return [];
+
+      const tradIder = rader.map((t) => t.id);
+      const deltakere = await withPlatformAdmin(db, (tx) =>
+        tx
+          .select({
+            threadId: schema.threadParticipants.threadId,
+            tenantId: schema.threadParticipants.tenantId,
+            participantId: schema.threadParticipants.participantId,
+          })
+          .from(schema.threadParticipants)
+          .where(inArray(schema.threadParticipants.threadId, tradIder)),
+      );
+
+      const idsPerTenant = new Map<string, string[]>();
+      for (const d of deltakere) {
+        const liste = idsPerTenant.get(d.tenantId) ?? [];
+        liste.push(d.participantId);
+        idsPerTenant.set(d.tenantId, liste);
+      }
+
+      const navnPerTenant = new Map<string, Map<string, string>>();
+      for (const [tenantId, ids] of idsPerTenant) {
+        navnPerTenant.set(tenantId, await navnForDealerOgEndwise(db, tenantId, ids));
+      }
+
+      return rader.map((t) => {
+        const motparter = deltakere.filter((d) => d.threadId === t.id).map((d) => d.participantId);
+        const navn = navnPerTenant.get(t.tenantId);
+        const kontaktNavn = motparter.map((id) => navn?.get(id)).find((n) => n?.trim()) ?? null;
+        return { ...t, kontaktNavn, motparter };
+      });
     },
 
     async listPlatformSupportMessages(threadId: string) {
-      return withPlatformAdmin(db, async (tx) => {
+      const lest = await withPlatformAdmin(db, async (tx) => {
         const [traad] = await tx
           .select({ id: schema.threads.id, tenantId: schema.threads.tenantId })
           .from(schema.threads)
           .where(and(eq(schema.threads.id, threadId), eq(schema.threads.kind, 'dealer_admin')));
-        if (!traad) throw new PlatformSupportNotFoundError(threadId);
-        return tx
+        if (!traad) return null;
+        const meldinger = await tx
           .select()
           .from(schema.messages)
           .where(
@@ -583,7 +674,18 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             ),
           )
           .orderBy(schema.messages.createdAt);
+        return { traad, meldinger };
       });
+      if (!lest) throw new PlatformSupportNotFoundError(threadId);
+      const navn = await navnForDealerOgEndwise(
+        db,
+        lest.traad.tenantId,
+        lest.meldinger.map((m) => m.authorId),
+      );
+      return lest.meldinger.map((m) => ({
+        ...m,
+        authorNavn: navn.get(m.authorId) ?? null,
+      }));
     },
 
     /**

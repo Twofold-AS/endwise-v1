@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { erPlattformIUi } from '../app/(app)/_lib/plattform.ts';
 
 /**
  * Endwise som plattform-org + Se verkstedet (URL, ikke setActive).
@@ -26,10 +27,27 @@ describe('plattform-org i Bytt visning', () => {
     expect(switcher).not.toMatch(/nå: Forhandler/);
   });
 
-  it('på plattform vises bare Endwise, deretter Dine verksteder', () => {
+  it('på plattform vises bare Endwise — aldri Forhandler/Lager/Butikk som sesjonsbytte', () => {
     expect(switcher).toMatch(/c\.key === 'endwise'/);
+    expect(switcher).toMatch(/visningsvalg = erPlattform/);
+    expect(switcher).toMatch(/Forhandlere/);
     expect(switcher).toMatch(/Dine verksteder/);
-    expect(switcher).toMatch(/Forhandler/);
+    expect(switcher).toMatch(/tenants\.list/);
+    expect(switcher).toMatch(/\/endwise\/verksted\/\$\{/);
+  });
+
+  it('Forhandlere-inspect bruker router.push, ikke setActive', () => {
+    const start = switcher.indexOf('>Forhandlere<');
+    expect(start).toBeGreaterThan(-1);
+    const inspectBlokk = switcher.slice(start, switcher.indexOf('>Dine verksteder<'));
+    expect(inspectBlokk).toMatch(/router\.push/);
+    expect(inspectBlokk).toMatch(/endwise\/verksted/);
+    expect(inspectBlokk).not.toMatch(/setActive|byttTenant/);
+  });
+
+  it('Dine verksteder + setActive kun for ekte verksted-medlemskap', () => {
+    expect(switcher).toMatch(/erPlattform && verksteder\.length > 0/);
+    expect(switcher).toMatch(/byttTenant\(v\.id/);
   });
 
   it('inspect-modus er Tilbake til Endwise via router.push, ikke setActive', () => {
@@ -95,10 +113,27 @@ describe('Se verkstedet er URL-lesing', () => {
   it('stale Forhandler-kontekst på plattform redirecter med toast', () => {
     const layout = les('../app/(app)/layout.tsx');
     const kopi = les('../app/(app)/_lib/plattform.ts');
+    const rolle = les('../app/(app)/_lib/use-org-role.ts');
     expect(layout).toMatch(/erForhandlerRutePaaPlattform/);
     expect(layout).toMatch(/plattformToast/);
     expect(layout).toMatch(/\/endwise\?varsel=plattform/);
     expect(kopi).toMatch(/Endwise er plattformen, ikke et verksted/);
+    expect(rolle).toMatch(/slug === 'endwise'|erPlattformIUi/);
+  });
+
+  it('slug=endwise er plattform i UI uten å vente på kind=platform', () => {
+    expect(erPlattformIUi({ slug: 'endwise', kind: 'live' })).toBe(true);
+    expect(erPlattformIUi({ kind: 'platform', slug: 'annet' })).toBe(true);
+    expect(erPlattformIUi({ erPlattform: true })).toBe(true);
+    expect(erPlattformIUi({ slug: 'yamaha-bergen', kind: 'live' })).toBe(false);
+  });
+
+  it('sidebar tvinger Endwise-nav på plattform — også når rollen er dealer_admin', () => {
+    const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
+    expect(sidebar).toMatch(/CONTEXTS\.filter\(\(c\) => c\.key === 'endwise'\)/);
+    expect(sidebar).toMatch(/erPlattform \? 'endwise'/);
+    expect(sidebar).toMatch(/endwise_admin/);
+    expect(sidebar).not.toMatch(/contextsForRole\(role, isMechanic, false\)\.filter/);
   });
 });
 

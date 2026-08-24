@@ -141,10 +141,17 @@ describe('P0: avatar er én blobatar, alltid happy', () => {
     expect(avatar).toMatch(/Ny tilfeldig/);
     expect(avatar).toMatch(/humor:\s*['"]happy['"]/);
     expect(avatar).toMatch(/size=\{48\}/);
-    expect(avatar).toMatch(/bevegelse="hover"/);
+    expect(avatar).toMatch(/bevegelse="alltid"/);
+    expect(avatar).toMatch(/FORMER\.map/);
     expect(avatar).not.toMatch(/function Nedtrekk/);
     expect(avatar).not.toMatch(/id="humor"/);
     expect(avatar).not.toMatch(/grid grid-cols-2 gap-3 lg:grid-cols-4/);
+  });
+
+  it('sidebar-avataren smiler og beveger seg hele tiden', () => {
+    const rad = readFileSync(resolve(her, '../app/(app)/_shell/bruker-rad.tsx'), 'utf8');
+    expect(rad).toMatch(/bevegelse="alltid"/);
+    expect(rad).toMatch(/humor:\s*['"]happy['"]/);
   });
 });
 

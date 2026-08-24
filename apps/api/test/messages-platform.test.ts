@@ -44,6 +44,10 @@ describe('F5-11 — siste melding og svar-sti (CWE-200 / CWE-284)', () => {
     );
     expect(kilde).toMatch(/m\.tenant_id = \$\{schema\.threads\.tenantId\}/);
     expect(kilde).toMatch(/auditLog|platform\.support\.reply/);
+    expect(kilde).toMatch(/kontaktNavn/);
+    expect(kilde).toMatch(/authorNavn/);
+    expect(kilde).toMatch(/navnForDealerOgEndwise/);
+    expect(kilde).toMatch(/visningsnavn/);
   });
 });
 

@@ -3,6 +3,7 @@
 import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import type { OrgRole } from '../_shell/nav';
+import { erPlattformIUi } from './plattform';
 
 /**
  * F1-05 — Ekte rolle fra sesjonen: Better-Auth sier innlogget/ikke, og
@@ -68,7 +69,11 @@ export function useOrgRole(): {
     tenantName: me.data?.tenantName ?? null,
     tenantKind: (me.data?.tenantKind as 'live' | 'demo' | 'platform' | undefined) ?? 'live',
     tenantSlug: me.data?.tenantSlug ?? null,
-    erPlattform: me.data?.erPlattform ?? false,
+    erPlattform: erPlattformIUi({
+      erPlattform: me.data?.erPlattform,
+      slug: me.data?.tenantSlug ?? me.data?.aktivOrgSlug,
+      kind: me.data?.tenantKind,
+    }),
     plattformTenantId: me.data?.plattformTenantId ?? null,
     verksteder: me.data?.verksteder ?? [],
     isMechanic: me.data?.isMechanic ?? false,

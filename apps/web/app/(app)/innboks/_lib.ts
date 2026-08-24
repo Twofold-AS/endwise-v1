@@ -56,6 +56,19 @@ export const ROLLE_LABEL: Record<string, string> = {
  * Da er en stabil, kort referanse riktigere enn et gjettet navn — og langt
  * riktigere enn å skjule at det står noen der.
  */
+/**
+ * Tittel på dealer↔Endwise-rad/tråd. Person + forhandler, aldri tom.
+ */
+export function supportRadTittel(
+  kontaktNavn: string | null | undefined,
+  tenantName: string | null | undefined,
+): string {
+  const person = kontaktNavn?.trim();
+  const dealer = tenantName?.trim();
+  if (person && dealer && person !== dealer) return `${person} · ${dealer}`;
+  return person || dealer || 'Endwise-samtale';
+}
+
 export function authorLabel(
   authorId: string,
   meId: string | null | undefined,

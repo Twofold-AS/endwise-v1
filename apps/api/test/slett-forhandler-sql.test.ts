@@ -42,7 +42,9 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(slettSql).toMatch(/delete from invitation where organization_id/);
     expect(slettSql).toMatch(/delete from organization where id/);
     expect(slettSql).not.toMatch(/enable row level security/i);
-    const kropp = slettSql.slice(slettSql.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i));
+    const kropp = slettSql.slice(
+      slettSql.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i),
+    );
     const userDeletes = [...kropp.matchAll(/delete from "user"[^;]*/gi)];
     expect(userDeletes.length).toBeGreaterThan(0);
     for (const m of userDeletes) {

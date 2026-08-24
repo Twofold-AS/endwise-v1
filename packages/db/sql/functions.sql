@@ -249,9 +249,11 @@ begin
     raise exception 'slett_forhandler: krever platform_admin';
   end if;
 
-  -- Transaksjons-lokalt. TO PUBLIC-policyene i grants.sql ser kun DENNE id-en.
-  -- app.tenant_id også: eieren er ADMIN av authenticated, så TO authenticated
-  -- SELECT gjelder DEFINER. Uten tenant-GUC ser UPDATE 0 rader.
+  -- Transaksjons-lokalt. TO PUBLIC-policyene i grants.sql ser kun DENNE id-en
+  -- (platform_admin + slett-GUC + current_user <> authenticated/endwise_app).
+  -- Det ER låsen. app.tenant_id er kun belte: eieren er ADMIN av authenticated,
+  -- så TO authenticated SELECT gjelder DEFINER. Uten tenant-GUC ser UPDATE 0 rader.
+  -- Ikke bytt app.tenant_id utenfor denne funksjonen (FORCE RLS åpner FOR ALL).
   perform set_config('app.slett_tenant_id', p_tenant_id::text, true);
   perform set_config('app.tenant_id', p_tenant_id::text, true);
 

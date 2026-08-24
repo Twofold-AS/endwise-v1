@@ -1,4 +1,5 @@
 -- Kjøres ETTER migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
+-- Siste lager-relaterte migrasjon: 0023_quick_lager (Quick-GUID på parts/stock_locations).
 --
 -- Migrasjonen lager tabellene (som eier) og rollen `authenticated`.
 -- Her kobles app-brukeren til rollen, og rollen får lov til å PRØVE å røre

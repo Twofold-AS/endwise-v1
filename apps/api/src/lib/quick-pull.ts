@@ -2,28 +2,37 @@ import type { Database } from '@endwise/db';
 import {
   createQuickConfigService,
   type QuickCustomerUpsert,
+  type QuickPartUpsert,
+  type QuickStockUpsert,
+  stockFromItemOnHand,
   syncQuickCustomers,
+  syncQuickParts,
 } from '@endwise/modules/quick';
-import { createQuickClient, mapQuickCustomer } from '@endwise/toolkit-quick';
+import {
+  createQuickClient,
+  mapQuickCustomer,
+  mapQuickItem,
+  mapQuickStockEntry,
+  QuickError,
+} from '@endwise/toolkit-quick';
 
 /**
- * F8-01 — Delt Quick-PULL-orkestrator (Quick → Endwise).
+ * F8-01 / F1-07 — Delt Quick-PULL-orkestrator (Quick → Endwise).
  *
  * Brukes av BÅDE `quick.pullNow` (tRPC, manuell «Hent nå») og cron-jobben
  * (`/cron/quick-pull`, 08:00/16:00 Oslo). Én kilde, samme semantikk.
  *
  * SEMANTIKK: Quick er fakta. Pull OVERSKRIVER våre lokale felt for radene Quick
- * returnerer (se syncQuickCustomers — onConflictDoUpdate setter name/email/phone).
- * Lokale-KUN-felt (userId/Min-side-kobling, kundenotater) røres ALDRI.
+ * returnerer. GET-only mot Quick. Tokenet forlater aldri serveren.
  *
- * DELTA vs FULL: uten `full` sendes `changedAfterDate = lastSyncedAt`, så vi kun
- * henter det som er endret siden sist (vi hamrer ALDRI Quick). Første pull (ingen
- * lastSyncedAt) er naturlig full. `full: true` tvinger full re-synk (ignorerer
- * markøren) — til førstegangs- eller forsonings-synk.
+ * DELTA vs FULL: uten `full` sendes `changedAfterDate = lastSyncedAt`.
  */
 export interface QuickPullResult {
   ran: boolean;
   upserted?: number;
+  customers?: number;
+  parts?: number;
+  stock?: number;
   batches?: number;
   /** Antall felt-konflikter oppdaget i denne pullen (lagt i konflikt-køen). */
   conflicts?: number;
@@ -34,7 +43,7 @@ export interface QuickPullResult {
 export async function runQuickCustomerPull(
   db: Database,
   tenantId: string,
-  opts: { full?: boolean } = {},
+  opts: { full?: boolean; actorUserId?: string | null } = {},
 ): Promise<QuickPullResult> {
   const svc = createQuickConfigService(db);
   const cfg = await svc.getDecrypted(tenantId);
@@ -47,21 +56,61 @@ export async function runQuickCustomerPull(
   const changedAfterDate = opts.full ? undefined : view.lastSyncedAt?.toISOString();
   const client = createQuickClient(cfg);
 
-  async function* upserts(): AsyncGenerator<QuickCustomerUpsert> {
+  async function* customerUpserts(): AsyncGenerator<QuickCustomerUpsert> {
     for await (const raw of client.iterateCustomers({ changedAfterDate })) {
       yield mapQuickCustomer(raw);
     }
   }
 
+  const itemOnHandFallback: QuickStockUpsert[] = [];
+
+  async function* partUpserts(): AsyncGenerator<QuickPartUpsert> {
+    for await (const raw of client.iterateItems({ changedAfterDate })) {
+      const mapped = mapQuickItem(raw);
+      const fallback = stockFromItemOnHand(mapped);
+      if (fallback) itemOnHandFallback.push(fallback);
+      yield mapped;
+    }
+  }
+
+  async function* stockUpserts(): AsyncGenerator<QuickStockUpsert> {
+    let any = false;
+    try {
+      for await (const raw of client.iterateStockEntries({ changedAfterDate })) {
+        any = true;
+        const mapped = mapQuickStockEntry(raw);
+        if (mapped.itemQuickGuid) yield mapped;
+      }
+    } catch (error) {
+      // Ukjent/ikke-aktivert stockentry-sti → bruk inStock på varen. 500 ≠ 404.
+      if (!(error instanceof QuickError && error.status === 404)) throw error;
+    }
+    if (!any) {
+      for (const row of itemOnHandFallback) yield row;
+    }
+  }
+
   try {
-    const { upserted, batches, conflicts } = await syncQuickCustomers(db, tenantId, upserts());
-    const conflictNote = conflicts > 0 ? ` · ${conflicts} konflikt(er)` : '';
+    const customers = await syncQuickCustomers(db, tenantId, customerUpserts());
+    const lager = await syncQuickParts(db, tenantId, partUpserts(), stockUpserts(), {
+      actorUserId: opts.actorUserId,
+    });
+    const batches = customers.batches + lager.batches;
+    const conflictNote = customers.conflicts > 0 ? ` · ${customers.conflicts} konflikt(er)` : '';
     await svc.recordSync(tenantId, {
       status: 'ok',
-      detail: `${upserted} kunde(r) hentet i ${batches} batch(er)${conflictNote}`,
+      detail: `${customers.upserted} kunde(r), ${lager.parts} del(er), ${lager.stock} lagerlinje(r) i ${batches} batch(er)${conflictNote}`,
       syncedAt: startedAt,
     });
-    return { ran: true, upserted, batches, conflicts };
+    return {
+      ran: true,
+      upserted: customers.upserted,
+      customers: customers.upserted,
+      parts: lager.parts,
+      stock: lager.stock,
+      batches,
+      conflicts: customers.conflicts,
+    };
   } catch (error) {
     const detail = (error as Error).message;
     await svc.recordSync(tenantId, { status: 'error', detail });

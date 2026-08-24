@@ -1,4 +1,5 @@
 import type { IntegrationHealth, IntegrationProvider } from '@endwise/modules';
+import { nextBatchOffset } from './batch.ts';
 import { QuickAuthError, QuickError } from './errors.ts';
 import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
 import { probeQuickReadOnly } from './probe.ts';
@@ -6,7 +7,15 @@ import {
   type QuickCustomer,
   type QuickCustomerBatch,
   type QuickCustomerRecord,
+  type QuickItem,
+  type QuickItemBatch,
+  type QuickItemRecord,
+  type QuickStockEntry,
+  type QuickStockEntryBatch,
+  type QuickStockRecord,
   quickCustomerBatch,
+  quickItemBatch,
+  quickStockEntryBatch,
 } from './schema.ts';
 import { assertAllowedQuickUrl } from './url-guard.ts';
 
@@ -57,8 +66,8 @@ export interface CustomerBatchParams {
  *
  * QuickLite-tanken: vi speiler Quick-data lokalt så verkstedet jobber i Endwise
  * (mobil-først), og dytter endringer TILBAKE til Quick. Denne klienten dekker
- * PULL-siden for kunder + tilkoblingstest. Booking/delelager/salg (pull OG push)
- * er TODO til vi har en ApiV2-token og kan lese den token-gatede swaggeren.
+ * PULL-siden for kunder, deler (item/batch) og beholdning (stockentry/batch).
+ * GET-only. Booking/salg + PUSH er TODO.
  */
 export function createQuickClient(config: QuickConfig) {
   // CWE-918: valider baseUrl mot SSRF-vernet ALLEREDE her (før noe kall) — kaster
@@ -116,6 +125,26 @@ export function createQuickClient(config: QuickConfig) {
     }
   }
 
+  async function* iteratePaged<T>(
+    fetchPage: (offset: number) => Promise<{ totalCount: number; offset: number; results: T[] }>,
+  ): AsyncGenerator<T> {
+    let offset = 0;
+    let yielded = 0;
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const batch = await fetchPage(offset);
+      for (const row of batch.results) {
+        if (yielded >= MAX_ROWS_PER_SYNC) {
+          throw new QuickError('Quick returnerte flere rader enn taket tillater');
+        }
+        yielded += 1;
+        yield row;
+      }
+      const next = nextBatchOffset(batch);
+      if (next === null) break;
+      offset = next;
+    }
+  }
+
   return {
     /**
      * `client/info` — GET-only tilkoblingstest (F1-07-proben). Et 200 beviser
@@ -141,10 +170,31 @@ export function createQuickClient(config: QuickConfig) {
       return request(`/customer/batch?${q}`, quickCustomerBatch);
     },
 
+    /** Én side varer fra `item/batch` (GET-only). */
+    async itemBatch(
+      params: { limit?: number; offset?: number; changedAfterDate?: string } = {},
+    ): Promise<QuickItemBatch> {
+      const q = new URLSearchParams();
+      q.set('limit', String(params.limit ?? DEFAULT_PAGE_SIZE));
+      q.set('offset', String(params.offset ?? 0));
+      if (params.changedAfterDate) q.set('changedAfterDate', params.changedAfterDate);
+      return request(`/item/batch?${q}`, quickItemBatch);
+    },
+
+    /** Én side lagerlinjer fra `stockentry/batch` (GET-only). */
+    async stockEntryBatch(
+      params: { limit?: number; offset?: number; changedAfterDate?: string } = {},
+    ): Promise<QuickStockEntryBatch> {
+      const q = new URLSearchParams();
+      q.set('limit', String(params.limit ?? DEFAULT_PAGE_SIZE));
+      q.set('offset', String(params.offset ?? 0));
+      if (params.changedAfterDate) q.set('changedAfterDate', params.changedAfterDate);
+      return request(`/stockentry/batch?${q}`, quickStockEntryBatch);
+    },
+
     /**
-     * Inkrementell, paginert henting: går side for side (offset += limit) til
-     * `offset >= totalCount`. Yielder én kunde av gangen. `changedAfterDate`
-     * gjør den til en delta-synk.
+     * Inkrementell, paginert henting: går side for side
+     * (`offset += results.length`) til `offset >= totalCount`.
      *
      * CWE-770: harde tak (`MAX_PAGES`, `MAX_ROWS_PER_SYNC`) hindrer at en
      * uendelig/fiendtlig `totalCount` eller en Quick som aldri paginerer ferdig
@@ -154,27 +204,33 @@ export function createQuickClient(config: QuickConfig) {
       params: Omit<CustomerBatchParams, 'offset'> & { pageSize?: number } = {},
     ): AsyncGenerator<QuickCustomer> {
       const limit = params.pageSize ?? params.limit ?? DEFAULT_PAGE_SIZE;
-      let offset = 0;
-      let yielded = 0;
-      for (let page = 0; page < MAX_PAGES; page++) {
-        const batch = await this.customerBatch({
+      yield* iteratePaged((offset) =>
+        this.customerBatch({
           limit,
           offset,
           changedAfterDate: params.changedAfterDate,
           customerTypeGuid: params.customerTypeGuid,
           expansions: params.expansions,
-        });
-        for (const c of batch.results) {
-          if (yielded >= MAX_ROWS_PER_SYNC) {
-            throw new QuickError('Quick returnerte flere rader enn taket tillater');
-          }
-          yielded += 1;
-          yield c;
-        }
+        }),
+      );
+    },
 
-        offset += batch.results.length || limit;
-        if (batch.results.length === 0 || offset >= batch.totalCount) break;
-      }
+    async *iterateItems(
+      params: { pageSize?: number; changedAfterDate?: string } = {},
+    ): AsyncGenerator<QuickItem> {
+      const limit = params.pageSize ?? DEFAULT_PAGE_SIZE;
+      yield* iteratePaged((offset) =>
+        this.itemBatch({ limit, offset, changedAfterDate: params.changedAfterDate }),
+      );
+    },
+
+    async *iterateStockEntries(
+      params: { pageSize?: number; changedAfterDate?: string } = {},
+    ): AsyncGenerator<QuickStockEntry> {
+      const limit = params.pageSize ?? DEFAULT_PAGE_SIZE;
+      yield* iteratePaged((offset) =>
+        this.stockEntryBatch({ limit, offset, changedAfterDate: params.changedAfterDate }),
+      );
     },
   };
 }
@@ -197,6 +253,55 @@ export function mapQuickCustomer(raw: QuickCustomer): QuickCustomerRecord {
   const email = raw.email ?? contact?.email ?? null;
   const phone = raw.phone ?? contact?.mobile ?? contact?.phone ?? null;
   return { quickGuid: raw.guid, name, email: email || null, phone: phone || null };
+}
+
+function nokToMinor(n: number | undefined): number | null {
+  if (n == null || !Number.isFinite(n)) return null;
+  return Math.round(n * 100);
+}
+
+function nonNegInt(n: number | undefined): number | null {
+  if (n == null || !Number.isFinite(n)) return null;
+  return Math.max(0, Math.round(n));
+}
+
+/** Mapper en Quick-vare til lager-raden (parts). */
+export function mapQuickItem(raw: QuickItem): QuickItemRecord {
+  const sku = (raw.itemCode ?? raw.code ?? raw.number ?? raw.guid).trim() || raw.guid;
+  const name = ((raw.name ?? raw.itemName ?? sku) || 'Ukjent del').trim();
+  const unit = ((raw.unit ?? raw.unitCode) || 'stk').trim() || 'stk';
+  const inactive =
+    raw.isInactive === true ||
+    raw.inactive === true ||
+    raw.discontinued === true ||
+    raw.active === false;
+  return {
+    quickGuid: raw.guid,
+    sku,
+    name,
+    unit,
+    costMinor: nokToMinor(raw.costPrice ?? raw.cost),
+    active: !inactive,
+    onHand: nonNegInt(raw.inStock ?? raw.stock),
+  };
+}
+
+/** Mapper en Quick-lagerlinje til stock_levels (+ lokasjon). */
+export function mapQuickStockEntry(raw: QuickStockEntry): QuickStockRecord {
+  const itemQuickGuid = (raw.itemGuid ?? raw.item?.guid ?? '').trim();
+  const locationCode =
+    (raw.stockLocationCode ?? raw.warehouseCode ?? raw.locationCode)?.trim() || 'QUICK';
+  const locationName =
+    (raw.stockLocationName ?? raw.warehouseName ?? raw.locationName)?.trim() || locationCode;
+  const locationQuickGuid = raw.stockLocationGuid ?? raw.warehouseGuid ?? raw.locationGuid ?? null;
+  return {
+    quickGuid: raw.guid,
+    itemQuickGuid,
+    onHand: nonNegInt(raw.quantity ?? raw.inStock ?? raw.stock ?? raw.amount) ?? 0,
+    locationQuickGuid: locationQuickGuid || null,
+    locationCode,
+    locationName,
+  };
 }
 
 /**

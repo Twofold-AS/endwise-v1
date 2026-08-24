@@ -25,21 +25,23 @@ const quickAdminProcedure = moduleAdminProcedure('quick');
  * SYNK-MODELL (retningsavklart): Quick er FAKTA (source of truth).
  *   - PULL (Quick → Endwise) DOMINERER: `pullNow` (manuell «Hent nå») + cron
  *     08:00/16:00 Oslo (se apps/api/vercel.json + routes/cron/quick-pull.ts).
- *     Overskriver våre felt for radene Quick returnerer.
+ *     Overskriver våre felt for radene Quick returnerer. Henter kunder OG
+ *     deler/lager (GET item/batch + stockentry/batch) inn i Postgres.
  *   - PUSH (Endwise → Quick) er MINIMERT og ALDRI automatisk: kun bak en
  *     eksplisitt knapp (`pushNow`). Aldri en bieffekt av synk. Ikke implementert
- *     ennå (mangler ApiV2-token) — men flaten er reservert og tydelig gated.
+ *     ennå — men flaten er reservert og tydelig gated.
  *
  * Sikkerhet: skriveflatene er `adminProcedure` (kun dealer_admin/endwise_admin).
  * ALT går via `createQuickConfigService` → `withTenant` → RLS. Tokenet lagres
  * envelope-kryptert og forlater ALDRI serveren (getView returnerer kun `hasToken`).
+ * Ingen proxy (Fixie/Scaleway VM). Vercel Static IPs er infrastruktur.
  *
  * Vi hamrer ALDRI Quick: `testConnection` / `setConfig` er ett GET `client/info`,
  * `pullNow` er en moderat paginert delta-pull (changedAfterDate = sist hentet).
  * setConfig persisterer IKKE nøkkelen med mindre GET-proben svarte.
  *
- * TODO (venter på ApiV2-token + token-gatet swagger): booking-, delelager- og
- * salgs-synk, samt selve PUSH-implementasjonen. Kun kunde-PULL nå.
+ * TODO: booking/salg-synk, PUSH-impl, kalendersynk, DLQ/retry. Mekaniker
+ * plukk-fra-jobb er neste (lager er P0).
  */
 export const quickRouter = router({
   /** Ikke-hemmelig konfig-visning (baseUrl, om token finnes, synk-status). */
@@ -139,13 +141,19 @@ export const quickRouter = router({
     .input(z.object({ full: z.boolean().optional() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const res = await runQuickCustomerPull(ctx.db, ctx.tenantId, { full: input.full });
+        const res = await runQuickCustomerPull(ctx.db, ctx.tenantId, {
+          full: input.full,
+          actorUserId: ctx.userId,
+        });
         if (!res.ran) {
           throw new TRPCError({ code: 'PRECONDITION_FAILED', message: res.reason });
         }
         return {
           ok: true as const,
           upserted: res.upserted ?? 0,
+          customers: res.customers ?? res.upserted ?? 0,
+          parts: res.parts ?? 0,
+          stock: res.stock ?? 0,
           batches: res.batches ?? 0,
           conflicts: res.conflicts ?? 0,
         };

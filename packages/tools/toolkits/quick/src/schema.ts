@@ -15,7 +15,12 @@ import { z } from 'zod';
  *   GET /api/v2/client/info
  * Kjente, ikke kartlagte: /client/bankaccounts, /client/feesettings,
  *   /common/language|country|paymentterm.
- * IKKE kartlagt ennå (venter på token): booking, delelager, salg.
+ * Delelager (GET-only, 24.08.2026): Quick3-release notes lister *item*-endepunkt
+ * (sortering ItemCode/ItemName) og GET stock entry by guid, pluss «batch of X»
+ * som standard. Samme batch-JSON som customer. Stier:
+ *   GET /api/v2/item/batch
+ *   GET /api/v2/stockentry/batch
+ * Ingen POST/PUT/PATCH/DELETE mot Quick i pull.
  */
 
 /**
@@ -85,4 +90,100 @@ export interface QuickCustomerRecord {
   name: string;
   email: string | null;
   phone: string | null;
+}
+
+/**
+ * En vare/del fra `item/batch`. BEKREFTET fra Quick-release notes: ItemCode,
+ * ItemName. `guid` følger customer-mønsteret. Resten er `.loose()`.
+ */
+export const quickItem = z
+  .object({
+    guid: z.string(),
+    itemCode: z.string().optional(),
+    code: z.string().optional(),
+    number: z.string().optional(),
+    name: z.string().optional(),
+    itemName: z.string().optional(),
+    unit: z.string().optional(),
+    unitCode: z.string().optional(),
+    costPrice: z.number().optional(),
+    cost: z.number().optional(),
+    inStock: z.number().optional(),
+    stock: z.number().optional(),
+    isInactive: z.boolean().optional(),
+    inactive: z.boolean().optional(),
+    discontinued: z.boolean().optional(),
+    active: z.boolean().optional(),
+  })
+  .loose();
+
+export type QuickItem = z.infer<typeof quickItem>;
+
+export const quickItemBatch = z
+  .object({
+    totalCount: z.number(),
+    limit: z.number(),
+    offset: z.number(),
+    results: z.array(quickItem),
+  })
+  .loose();
+
+export type QuickItemBatch = z.infer<typeof quickItemBatch>;
+
+/**
+ * En lagerlinje fra `stockentry/batch`. Feltnavn er USIKRE (flere varianter
+ * forsøkes i mapping) — samme strategi som contactPersons på kunde.
+ */
+export const quickStockEntry = z
+  .object({
+    guid: z.string(),
+    itemGuid: z.string().optional(),
+    item: z.object({ guid: z.string().optional() }).loose().optional(),
+    quantity: z.number().optional(),
+    inStock: z.number().optional(),
+    stock: z.number().optional(),
+    amount: z.number().optional(),
+    stockLocationGuid: z.string().optional(),
+    warehouseGuid: z.string().optional(),
+    locationGuid: z.string().optional(),
+    stockLocationCode: z.string().optional(),
+    warehouseCode: z.string().optional(),
+    locationCode: z.string().optional(),
+    stockLocationName: z.string().optional(),
+    warehouseName: z.string().optional(),
+    locationName: z.string().optional(),
+  })
+  .loose();
+
+export type QuickStockEntry = z.infer<typeof quickStockEntry>;
+
+export const quickStockEntryBatch = z
+  .object({
+    totalCount: z.number(),
+    limit: z.number(),
+    offset: z.number(),
+    results: z.array(quickStockEntry),
+  })
+  .loose();
+
+export type QuickStockEntryBatch = z.infer<typeof quickStockEntryBatch>;
+
+export interface QuickItemRecord {
+  quickGuid: string;
+  sku: string;
+  name: string;
+  unit: string;
+  costMinor: number | null;
+  active: boolean;
+  /** Fallback når stockentry mangler. Null = ikke oppgitt på varen. */
+  onHand: number | null;
+}
+
+export interface QuickStockRecord {
+  quickGuid: string;
+  itemQuickGuid: string;
+  onHand: number;
+  locationQuickGuid: string | null;
+  locationCode: string;
+  locationName: string;
 }

@@ -31,6 +31,17 @@ describe('F1-07: Quick-nøkkel i eksisterende chrome', () => {
     expect(quick).not.toMatch(/console\.(log|info|debug)\([^)]*token/i);
   });
 
+  it('/integrasjoner/quick har Hent nå og synkstatus for kunder og deler', () => {
+    expect(quick).toMatch(/Hent nå/);
+    expect(quick).toMatch(/kunder og deler/);
+    expect(quick).toMatch(/Sist hentet/);
+    expect(quick).toMatch(/Siste utfall/);
+    expect(quick).toMatch(/pullNow|pull\.mutate/);
+    expect(quick).not.toMatch(/FIXIE|Scaleway VM|HTTPS_PROXY/);
+    expect(quick).not.toMatch(/fetch\([^)]*client\/info/);
+    expect(quick).not.toMatch(/Authorization:\s*Token/);
+  });
+
   it('ingen ny Admin-fane i forhandler-sidebaren', () => {
     expect(sidebar).not.toMatch(/href:\s*['"]\/admin['"]/);
     expect(sidebar).not.toMatch(/tittel:\s*['"]Admin['"]/);

@@ -172,8 +172,10 @@ export default function QuickPage() {
           </div>
           <p className="text-[12px] text-fg-faint leading-snug">
             Automatisk <span className="text-fg">08:00 og 16:00</span> (norsk tid, kun i
-            produksjon). Quick vinner: hentede felt overskriver våre. Lokale-kun-felt (Min
-            side-kobling, notater) bevares. Lokalt kjører pull kun manuelt.
+            produksjon). Quick vinner: hentede felt overskriver våre. Henter{' '}
+            <span className="text-fg">kunder og deler/lager</span> inn i Postgres (ikke filer).
+            Reservasjoner i Endwise beholdes. Lokale-kun-felt (Min side-kobling, notater) bevares.
+            Lokalt kjører pull kun manuelt.
           </p>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -193,8 +195,8 @@ export default function QuickPage() {
               ok={pull.data.conflicts === 0}
               text={
                 pull.data.conflicts > 0
-                  ? `Hentet ${pull.data.upserted} kunde(r) · ${pull.data.conflicts} konflikt(er) å løse under.`
-                  : `Hentet ${pull.data.upserted} kunde(r).`
+                  ? `Hentet ${pull.data.customers} kunde(r) og ${pull.data.parts} del(er) · ${pull.data.conflicts} konflikt(er) å løse under.`
+                  : `Hentet ${pull.data.customers} kunde(r) og ${pull.data.parts} del(er) · ${pull.data.stock} lagerlinje(r).`
               }
             />
           )}

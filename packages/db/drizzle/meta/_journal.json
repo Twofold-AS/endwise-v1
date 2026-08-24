@@ -162,6 +162,13 @@
       "when": 1787530000000,
       "tag": "0022_slett_forhandler_eier_select",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1787588000000,
+      "tag": "0023_quick_lager",
+      "breakpoints": true
     }
   ]
 }

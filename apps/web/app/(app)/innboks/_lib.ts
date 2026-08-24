@@ -100,10 +100,19 @@ export function supportRadTittel(
   return tenantName?.trim() || 'Endwise-samtale';
 }
 
-/** Trådhode / chat: personen du snakker med. Aldri den generiske «Ansatt». */
-export function supportTradTittel(kontaktNavn: string | null | undefined): string {
-  const person = kontaktNavn?.trim();
-  if (person && person !== 'Ansatt') return person;
+/**
+ * Trådhode / chatboks: personen du snakker med, pluss ekte rolle.
+ * Aldri den generiske «Ansatt» som navn eller rolle.
+ */
+export function supportTradTittel(
+  kontaktNavn: string | null | undefined,
+  rolle?: string | null,
+): string {
+  const person = kontaktNavn?.trim() && kontaktNavn.trim() !== 'Ansatt' ? kontaktNavn.trim() : null;
+  const etikett = supportRolleEtikett(rolle);
+  if (person && etikett) return `${person} · ${etikett}`;
+  if (person) return person;
+  if (etikett) return etikett;
   return 'Endwise-samtale';
 }
 
@@ -117,6 +126,21 @@ export function forsteMotpartNavn(
     if (!id || id === meId || isAgent(id)) continue;
     const vis = navn?.[id]?.navn?.trim();
     if (vis && vis !== 'Ansatt') return vis;
+  }
+  return null;
+}
+
+/** Rollen til samme motpart som `forsteMotpartNavn`. */
+export function forsteMotpartRolle(
+  motparter: string[],
+  navn: Navnekart | undefined,
+  meId: string | null | undefined,
+): string | null {
+  for (const id of motparter) {
+    if (!id || id === meId || isAgent(id)) continue;
+    const vis = navn?.[id]?.navn?.trim();
+    if (vis && vis !== 'Ansatt') return navn?.[id]?.rolle ?? null;
+    if (supportRolleEtikett(navn?.[id]?.rolle)) return navn?.[id]?.rolle ?? null;
   }
   return null;
 }

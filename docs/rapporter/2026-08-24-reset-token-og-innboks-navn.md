@@ -10,7 +10,7 @@
 | ID | Hva |
 |---|---|
 | **F1-16** | `/nytt-passord` viser skjemaet etter ekte e-postklikk. Tokenet overlever at query-strengen strykes. |
-| **F5-11** | Endwise-innboks: listerad = kun forhandler-/verkstednavn. Tråd = personens visningsnavn. Rolle = Forhandler-admin / Endwise-admin / Endwise-support — aldri «Ansatt». |
+| **F5-11** | Endwise-innboks: listerad = kun forhandler-/verkstednavn. Chatboks = visningsnavn **pluss** ekte rolle (Forhandler-admin / Endwise-admin / Endwise-support). Aldri «Ansatt». |
 
 ### Filer
 
@@ -31,7 +31,7 @@ Ingen migrasjon. Ingen Admin-tab, ingen butikk, ingen `setActive`.
 ## 3. Hvilke fikser ble gjort
 
 1. Behold første ikke-tomme token i state. Strip query etter lesing. Godta Better Auths `token` / `token_hash` / `hash` / `error`. Ingen token i logg. Ingen verify-orakel.
-2. Liste vs tråd delt. Rolleetikett bare for de tre navngitte rollene. `directory.participants` og platform-støtte returnerer ekte `member.role`.
+2. Liste vs tråd delt. Chatboksen viser `navn · rolle` i hodet og rollemerke på hver melding. Rolleetikett bare for de tre navngitte rollene. `directory.participants` og platform-støtte returnerer ekte `member.role`.
 
 `sendResetPassword` satte allerede `?token=` — uendret, låst i test.
 

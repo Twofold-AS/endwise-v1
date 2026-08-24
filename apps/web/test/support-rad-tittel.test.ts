@@ -25,6 +25,15 @@ describe('supportTradTittel — chat/trådhode', () => {
     expect(supportTradTittel('  ')).toBe('Endwise-samtale');
     expect(supportTradTittel(null)).toBe('Endwise-samtale');
   });
+
+  it('setter visningsnavn PLUSS ekte rolle i chatboksen, aldri Ansatt', () => {
+    expect(supportTradTittel('Kari', 'dealer_admin')).toBe('Kari · Forhandler-admin');
+    expect(supportTradTittel('Mikael', 'endwise_admin')).toBe('Mikael · Endwise-admin');
+    expect(supportTradTittel('Liv', 'endwise_support')).toBe('Liv · Endwise-support');
+    expect(supportTradTittel('Kari', 'ansatt')).toBe('Kari');
+    expect(supportTradTittel('Kari', 'dealer_staff')).toBe('Kari');
+    expect(supportTradTittel('Ansatt', 'dealer_admin')).toBe('Forhandler-admin');
+  });
 });
 
 describe('supportRolleEtikett', () => {

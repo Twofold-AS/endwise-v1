@@ -80,9 +80,11 @@ describe('F5-11: /endwise/innboks gjenbruker innboks-chrome med modus=endwise', 
     expect(lib).toMatch(/export function supportRolleEtikett/);
     expect(sidebar).toMatch(/supportRadTittel/);
     expect(sidebar).toMatch(/tenantName/);
-    expect(trad).toMatch(/supportTradTittel/);
+    expect(trad).toMatch(/supportTradTittel\(/);
+    expect(trad).toMatch(/kontaktRolle|tradRolle/);
     expect(trad).toMatch(/authorNavn/);
-    expect(trad).toMatch(/supportRolleEtikett/);
+    expect(trad).toMatch(/authorRolle|supportRolleEtikett/);
+    expect(trad).toMatch(/rolleEtikett && \(/);
     expect(trad).not.toMatch(/rolle:\s*['"]ansatt['"]/);
   });
 

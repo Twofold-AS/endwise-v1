@@ -27,6 +27,7 @@ import {
   fmtDayHeading,
   fmtTime,
   forsteMotpartNavn,
+  forsteMotpartRolle,
   isAgent,
   KIND_LABEL,
   KIND_TONE,
@@ -218,11 +219,28 @@ export default function TrådPage() {
     post.mutate({ threadId, body: text });
   }
 
+  const motpartId =
+    thread && 'motparter' in thread
+      ? thread.motparter?.find((id: string) => id && id !== me.data?.userId)
+      : undefined;
+  const tradRolle =
+    thread && 'kontaktRolle' in thread && typeof thread.kontaktRolle === 'string'
+      ? thread.kontaktRolle
+      : thread && thread.kind === 'dealer_admin' && 'motparter' in thread
+        ? forsteMotpartRolle(thread.motparter ?? [], navnKart, me.data?.userId)
+        : motpartId
+          ? navnKart?.[motpartId]?.rolle
+          : undefined;
+  const tradRolleEtikett = thread?.kind === 'dealer_admin' ? supportRolleEtikett(tradRolle) : null;
+
   const tradTittel =
     endwise && thread && 'kontaktNavn' in thread
-      ? supportTradTittel(thread.kontaktNavn)
+      ? supportTradTittel(thread.kontaktNavn, tradRolle)
       : thread && thread.kind === 'dealer_admin' && 'motparter' in thread
-        ? supportTradTittel(forsteMotpartNavn(thread.motparter ?? [], navnKart, me.data?.userId))
+        ? supportTradTittel(
+            forsteMotpartNavn(thread.motparter ?? [], navnKart, me.data?.userId),
+            tradRolle,
+          )
         : thread && 'motparter' in thread
           ? threadHeading(
               thread.subject,
@@ -232,18 +250,6 @@ export default function TrådPage() {
               me.data?.userId,
             )
           : 'Samtale';
-
-  const motpartId =
-    thread && 'motparter' in thread
-      ? thread.motparter?.find((id: string) => id && id !== me.data?.userId)
-      : undefined;
-  const tradRolle =
-    thread && 'kontaktRolle' in thread && typeof thread.kontaktRolle === 'string'
-      ? thread.kontaktRolle
-      : motpartId
-        ? navnKart?.[motpartId]?.rolle
-        : undefined;
-  const tradRolleEtikett = thread?.kind === 'dealer_admin' ? supportRolleEtikett(tradRolle) : null;
 
   if (messages.isLoading) {
     return <div className="px-8 py-7 text-body text-fg-muted">Laster tråd …</div>;
@@ -517,7 +523,7 @@ function Message({
           <span className="text-[12px] text-fg-muted">{author}</span>
           {/* Rollen står bare på andre enn deg selv: «Kunde» eller «Mekaniker»
               endrer hvordan svaret skal formuleres. */}
-          {rolleEtikett && !mine && (
+          {rolleEtikett && (
             <span className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
               {rolleEtikett}
             </span>

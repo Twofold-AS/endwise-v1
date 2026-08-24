@@ -68,7 +68,9 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
       'tenants_slett_forhandler_select',
       'audit_log_slett_update',
       'audit_log_slett_insert',
+      'audit_log_slett_select',
       'erasure_requests_slett_forhandler',
+      'erasure_requests_slett_select',
     ];
     for (const navn of slettPolicyer) {
       const start = grants.indexOf(`create policy ${navn}`);
@@ -85,6 +87,8 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(dynamisk).toMatch(/app\.slett_tenant_id/);
     expect(dynamisk).toMatch(/current_user is distinct from 'authenticated'/);
     expect(dynamisk).toMatch(/current_user is distinct from 'endwise_app'/);
+    expect(dynamisk).toMatch(/for select/);
+    expect(dynamisk).toMatch(/_slett_forhandler_select/);
   });
 
   it('0022 tetter eier-SELECT uten å svekke RLS (idempotent)', () => {
@@ -117,7 +121,11 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
   it('WITH CHECK på slett-UPDATE tillater bare slett-GUC eller Endwise-tenant — ikke true', () => {
     expect(grants).not.toMatch(/with check \(true\)/i);
 
-    for (const navn of ['audit_log_slett_update', 'erasure_requests_slett_forhandler']) {
+    for (const navn of [
+      'audit_log_slett_update',
+      'audit_log_slett_insert',
+      'erasure_requests_slett_forhandler',
+    ]) {
       const start = grants.indexOf(`create policy ${navn}`);
       const kropp = grants.slice(start, start + 1100);
       expect(kropp, navn).toMatch(/with check \(/);
@@ -142,5 +150,64 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
   it('tenants.slett mapper Postgres-cause til TRPCError', () => {
     expect(tenantsRouter).toMatch(/mapSlettPostgresFeil/);
     expect(tenantsRouter).toMatch(/loggSlettPostgresFeil/);
+  });
+
+  /**
+   * Prod 24.08.2026, dpl_H7AceMM6rtzDMdE3DqXBXTfY8nCt, trace 80eab6c:
+   * HTTP 412, SQLSTATE 23503, constraint audit_log_tenant_id_tenants_id_fk.
+   *
+   * Eieren som CREATE ROLE authenticated ER ADMIN → TO authenticated
+   * SELECT-policyer gjelder DEFINER. withPlatformAdmin setter ikke
+   * app.tenant_id → SELECT 0 rader → UPDATE flytter 0 audit-rader
+   * (stille) → INSERT audit.redacted blir værende på forhandleren →
+   * DELETE tenants treffer RESTRICT.
+   */
+  it('setter app.tenant_id i tillegg til slett-GUC (eier er ADMIN av authenticated)', () => {
+    expect(slettSql).toMatch(/set_config\('app\.slett_tenant_id'/);
+    expect(slettSql).toMatch(/set_config\('app\.tenant_id'/);
+  });
+
+  it('TO PUBLIC SELECT på audit_log og erasure_requests under slett (FORCE RLS)', () => {
+    expect(grants).toMatch(/create policy audit_log_slett_select/);
+    expect(grants).toMatch(/create policy erasure_requests_slett_select/);
+    for (const navn of ['audit_log_slett_select', 'erasure_requests_slett_select']) {
+      const start = grants.indexOf(`create policy ${navn}`);
+      expect(start, navn).toBeGreaterThan(-1);
+      const kropp = grants.slice(start, start + 1100);
+      expect(kropp, navn).toMatch(/for select/);
+      expect(kropp, navn).toMatch(/app\.platform_admin/);
+      expect(kropp, navn).toMatch(/app\.slett_tenant_id/);
+      expect(kropp, navn).toMatch(/current_user is distinct from 'authenticated'/);
+    }
+  });
+
+  it('EXECUTE-slett bruker ROW_COUNT, ikke FOUND (EXECUTE setter ikke FOUND)', () => {
+    const barn = slettSql.slice(slettSql.indexOf('Barn først'));
+    expect(barn).toMatch(/get diagnostics \w+ = row_count/i);
+    expect(barn).not.toMatch(/if found then/);
+    expect(barn).toMatch(/parts|stock_levels|customers|tenant_id/);
+  });
+
+  it('skriver audit.redacted på Endwise-tenanten, ikke på slett-målet', () => {
+    expect(slettSql).toMatch(/insert into audit_log/);
+    const insert = slettSql.slice(slettSql.indexOf('insert into audit_log'));
+    expect(insert.slice(0, 500)).toMatch(/v_endwise/);
+    expect(insert.slice(0, 400)).not.toMatch(/p_tenant_id,/);
+  });
+
+  it('0024 tetter slett-SELECT + ROW_COUNT (idempotent)', () => {
+    const m0024 = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/0024_slett_forhandler_barn.sql'),
+      'utf8',
+    );
+    const journal = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/meta/_journal.json'),
+      'utf8',
+    );
+    expect(journal).toMatch(/0024_slett_forhandler_barn/);
+    expect(m0024).toMatch(/create policy audit_log_slett_select/i);
+    expect(m0024).toMatch(/get diagnostics/i);
+    expect(m0024).toMatch(/create or replace function slett_forhandler/i);
+    expect(m0024).not.toMatch(/delete from audit_log/i);
   });
 });

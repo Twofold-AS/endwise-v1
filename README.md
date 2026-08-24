@@ -39,7 +39,10 @@ pnpm db:up               # = docker compose up -d
 #    (integration_config, sync_conflicts, widget_keys + customers-kolonner) er ikke
 #    committet som sporet migrasjon ennå, så drizzle-kit må generere dem hos deg.
 pnpm db:generate         # produserer migrasjons-SQL fra src/schema
-pnpm db:setup            # = db:migrate && db:grants (roller/rettigheter)
+pnpm db:setup            # = db:migrate && db:grants
+                         # migrate: skjema + 0024 slett_forhandler (CREATE OR REPLACE)
+                         # grants: sql/grants.sql (RLS/FORCE + slett-SELECT) og
+                         #         sql/functions.sql (slett_forhandler på nytt)
 
 # 5. Demo-data (tenant A/B + kontoer + dagens bookinger)
 pnpm db:seed

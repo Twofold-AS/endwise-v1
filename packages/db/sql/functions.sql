@@ -206,6 +206,14 @@ grant execute on function consume_invitation(text) to authenticated;
 --   3. `audit_log` og `erasure_requests` har ON DELETE RESTRICT mot tenants.
 --      Hard-slett av audit_log er forbudt (F1-06). Uten å flytte kjedene
 --      feiler `DELETE FROM tenants` med foreign_key_violation.
+-- 4. Prod 24.08.2026 (412, SQLSTATE 23503, audit_log_tenant_id_tenants_id_fk):
+--      eieren ER ADMIN av `authenticated`, så TO authenticated SELECT gjelder
+--      DEFINER. `withPlatformAdmin` setter ikke `app.tenant_id` → SELECT 0
+--      rader → UPDATE flytter 0 audit-rader (stille) → INSERT audit.redacted
+--      blir værende på forhandleren. FORCE RLS + RESTRICT = 412.
+--      Fikset: sett `app.tenant_id`, TO PUBLIC SELECT-policyer, skriv spor
+--      på Endwise (ikke slett-målet), ROW_COUNT etter EXECUTE (FOUND settes
+--      ikke av EXECUTE — barn-løkka hoppet over parts/stock/customers).
 --
 -- `row_security=off` er IKKE fiksen: den GUC-en kaster hvis en policy VILLE
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
@@ -233,6 +241,8 @@ declare
   v_endwise uuid;
   v_redacted integer;
   v_progress boolean;
+  v_count integer;
+  v_left text;
   i integer;
 begin
   if current_setting('app.platform_admin', true) is distinct from 'on' then
@@ -240,7 +250,10 @@ begin
   end if;
 
   -- Transaksjons-lokalt. TO PUBLIC-policyene i grants.sql ser kun DENNE id-en.
+  -- app.tenant_id også: eieren er ADMIN av authenticated, så TO authenticated
+  -- SELECT gjelder DEFINER. Uten tenant-GUC ser UPDATE 0 rader.
   perform set_config('app.slett_tenant_id', p_tenant_id::text, true);
+  perform set_config('app.tenant_id', p_tenant_id::text, true);
 
   select slug into v_slug from tenants where id = p_tenant_id;
   if v_slug is null then
@@ -257,8 +270,8 @@ begin
 
   -- F1-06: aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
   -- redact_audit_log — den leser app.tenant_id og har ingen UPDATE-policy for
-  -- eieren under FORCE RLS), skriv spor, flytt kjeden til Endwise så
-  -- ON DELETE RESTRICT slipper tenants-raden.
+  -- eieren under FORCE RLS), flytt kjeden til Endwise så ON DELETE RESTRICT
+  -- slipper tenants-raden, skriv spor PÅ Endwise (ikke på slett-målet).
   update audit_log
      set actor      = '[REDAKTERT]',
          subject_id = '[REDAKTERT]',
@@ -268,19 +281,19 @@ begin
      and actor <> '[REDAKTERT]';
   get diagnostics v_redacted = row_count;
 
+  update audit_log
+     set tenant_id = v_endwise
+   where tenant_id = p_tenant_id;
+
   insert into audit_log (tenant_id, actor, action, subject_type, subject_id, metadata)
   values (
-    p_tenant_id,
+    v_endwise,
     'system:erasure',
     'audit.redacted',
     'erasure',
     null,
     jsonb_build_object('rows_redacted', v_redacted, 'reason', 'slett_forhandler')
   );
-
-  update audit_log
-     set tenant_id = v_endwise
-   where tenant_id = p_tenant_id;
 
   -- F14-16: erasure_requests slettes ALDRI (art. 5(2)-beviset må overleve
   -- forhandlerslett). Samme ON DELETE RESTRICT mot tenants.
@@ -301,9 +314,19 @@ begin
                            )
    where tenant_id = p_tenant_id;
 
-  -- Barn først. Looper til FK-rekkefølgen slipper gjennom.
-  -- Kun foreign_key_violation svelges — RLS/privilegier skal synes.
-  for i in 1..12 loop
+  if exists (select 1 from audit_log where tenant_id = p_tenant_id) then
+    raise exception 'slett_forhandler: gjenværende koblinger i audit_log'
+      using errcode = '23503';
+  end if;
+  if exists (select 1 from erasure_requests where tenant_id = p_tenant_id) then
+    raise exception 'slett_forhandler: gjenværende koblinger i erasure_requests'
+      using errcode = '23503';
+  end if;
+
+  -- Barn først (parts/stock_levels/customers inkludert). Looper til
+  -- FK-rekkefølgen slipper gjennom. EXECUTE setter ikke FOUND — ROW_COUNT.
+  -- Kun foreign_key_violation svelges i runden — RLS/privilegier skal synes.
+  for i in 1..24 loop
     v_progress := false;
     for r in
       select c.relname as tbl
@@ -318,7 +341,8 @@ begin
     loop
       begin
         execute format('delete from %I where tenant_id = $1', r.tbl) using p_tenant_id;
-        if found then
+        get diagnostics v_count = row_count;
+        if v_count > 0 then
           v_progress := true;
         end if;
       exception when foreign_key_violation then
@@ -327,6 +351,29 @@ begin
     end loop;
     exit when not v_progress;
   end loop;
+
+  v_left := '';
+  for r in
+    select c.relname as tbl
+      from pg_class c
+      join pg_namespace n on n.oid = c.relnamespace
+      join pg_attribute a on a.attrelid = c.oid
+     where n.nspname = 'public'
+       and c.relkind = 'r'
+       and a.attname = 'tenant_id'
+       and not a.attisdropped
+       and c.relname not in ('tenants', 'audit_log', 'erasure_requests')
+  loop
+    begin
+      execute format('delete from %I where tenant_id = $1', r.tbl) using p_tenant_id;
+    exception when foreign_key_violation then
+      v_left := v_left || r.tbl || ', ';
+    end;
+  end loop;
+  if v_left <> '' then
+    raise exception 'slett_forhandler: gjenværende koblinger i %', rtrim(v_left, ', ')
+      using errcode = '23503';
+  end if;
 
   delete from tenant_delete_challenges where tenant_id = p_tenant_id;
   delete from member where organization_id = p_tenant_id::text;
@@ -339,6 +386,7 @@ begin
   end if;
 
   perform set_config('app.slett_tenant_id', '', true);
+  perform set_config('app.tenant_id', '', true);
 end;
 $$;
 

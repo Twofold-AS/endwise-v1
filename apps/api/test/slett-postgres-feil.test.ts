@@ -74,6 +74,19 @@ describe('mapSlettPostgresFeil', () => {
     );
     expect(feil.code).toBe('PRECONDITION_FAILED');
     expect(feil.message).toMatch(/koblinger/);
+    expect(feil.message).toMatch(/audit_log/);
+  });
+
+  it('slett_forhandler-melding om gjenværende tabeller er 412, ikke 500', () => {
+    const feil = mapSlettPostgresFeil(
+      drizzlePakket({
+        code: 'P0001',
+        message: 'slett_forhandler: gjenværende koblinger i parts, stock_levels',
+      }),
+    );
+    expect(feil.code).toBe('PRECONDITION_FAILED');
+    expect(feil.message).toMatch(/parts/);
+    expect(feil.message).not.toMatch(/Failed query/);
   });
 
   it('viser Postgres-teksten til admin, aldri Drizzle-skallet', () => {

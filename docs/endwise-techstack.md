@@ -20,7 +20,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 
 | ❌ Forkastet (gammel plan) | ✅ Gjelder nå | Hvorfor byttet |
 |---|---|---|
-| Hetzner Cloud + Coolify + Traefik | **Vercel** (fra1 EU) | Egress-argumentet falt bort (Framer hoster widget, R2/Blob tar assets); én-leverandør; TheFold-deploy gjenbrukes |
+| Hetzner Cloud + Coolify + Traefik | **Vercel** (cdg1 Paris EU) | Egress-argumentet falt bort (Framer hoster widget, R2/Blob tar assets); én-leverandør; TheFold-deploy gjenbrukes |
 | NestJS | **Hono + tRPC v11** | Hono for offentlig REST, tRPC for interne flater; modulær monolitt består som packages |
 | BullMQ 5 + Redis (kø) | **Vercel Workflows + Vercel Cron** | Durable functions dekker jobbene; samme åpne Workflow-SDK som Eve; ingen egen Redis å drifte |
 | QStash (vurdert) | **Vercel Workflows** | ADR-003 avgjort til Vercel-native |
@@ -48,7 +48,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **Docker Compose** — kun for lokal dev (Postgres + ev. Redis lokalt)
 
 ### Hosting & kjøring — Vercel
-- **Vercel fra1 (EU-region)** for GDPR — `apps/web` (med `apps/api` portet inn som route handlers, F13-03). `apps/stream` på Scaleway Serverless Container (ikke Vercel serverless)
+- **Vercel cdg1 (Paris, EU-region)** for GDPR + Quick Static IP (`51.44.143.46`) — `apps/web` (med `apps/api` portet inn som route handlers, F13-03). `apps/stream` på Scaleway Serverless Container (ikke Vercel serverless)
 - **Scaleway Serverless Container** — `apps/framer-agent` (⚠️ ENDRET 11.08.2026, eierbeslutning: var *Vercel Container* + *Framer External Agent CLI*. Nå **Framers offisielle Server API**, som ikke trenger shell — men fortsatt en levende prosess, fordi en redigeringsøkt er stateful. Samme leverandør som `apps/stream`. Se F8-09/F13-04 + `docs/deploy-plan.md`)
 - **Vercel Workflows** — varige jobber, retries, DLQ-mønster (ADR-003)
 - **Vercel Cron** — planlagte oppgaver (cleanup, synk, SLA-sjekk, e-post-drypp)
@@ -218,7 +218,7 @@ endwise/
 | **Fireworks (serverless)** | LLM | **Intern drift.** Bak modellkatalog (`FIREWORKS_API_KEY` + `FIREWORKS_MODEL_*`). Per token, harde rate limits, ingen region-pinning |
 | **OpenRouter** | LLM | Kun for Fusion/Council (planlegging) — aldri i booking-stien |
 
-**⚠️ Åpent punkt — GDPR og Fireworks serverless:** hele arkitekturen ellers er EU-bundet (Vercel fra1, Scaleway Frankrike). Fireworks **serverless** tilbyr ikke region-valg — det gjør bare on-demand-deployments (`--region EUROPE`). Så lenge agentene kun får se tenant-skopede driftsdata (bookinger, tjenester), er eksponeringen begrenset, men den er ikke null. Skal kundedata eller fritekst fra kunder inn i prompten, må dette avklares — enten med DPA/SCC, eller ved å flytte til on-demand i EU-regionen. **Eier er informert (14.07.2026).**
+**⚠️ Åpent punkt — GDPR og Fireworks serverless:** hele arkitekturen ellers er EU-bundet (Vercel cdg1 Paris, Scaleway Frankrike). Fireworks **serverless** tilbyr ikke region-valg — det gjør bare on-demand-deployments (`--region EUROPE`). Så lenge agentene kun får se tenant-skopede driftsdata (bookinger, tjenester), er eksponeringen begrenset, men den er ikke null. Skal kundedata eller fritekst fra kunder inn i prompten, må dette avklares — enten med DPA/SCC, eller ved å flytte til on-demand i EU-regionen. **Eier er informert (14.07.2026).**
 
 **Betaling sluttkunde→forhandler (forskudd i widget):** ADR-001 fortsatt åpen — Nets Easy vs Stripe+Vipps, tiltet mot Stripe+Vipps siden Stripe alt er valgt for fakturering.
 

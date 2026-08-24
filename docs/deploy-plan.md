@@ -13,7 +13,7 @@ Scaleway-delen er ikke bygget.
 
 | | Leverandør | Hva |
 |---|---|---|
-| **Compute** | **Vercel** (fra1, EU) | `apps/web` + `apps/api` portet inn som Next route handlers |
+| **Compute** | **Vercel** (cdg1, Paris EU) | `apps/web` + `apps/api` portet inn som Next route handlers |
 | **Data** | **Scaleway** (Frankrike, EU) | Managed PostgreSQL · Serverless Container for `apps/stream` · Key Manager |
 
 ⚠️ **Neon er droppet.** To grunner, og den andre er den tekniske:
@@ -56,7 +56,7 @@ altså å betale i kode for å spare i leverandørliste.
 kjøres fra TypeScript-kilde med Nodes `--experimental-strip-types`, og `serve()`
 fra `@hono/node-server` binder en port — en **langlevd prosessmodell**.
 
-Alle tre har `vercel.json` med `regions: ["fra1"]`, men **ingen** har en
+Alle tre har `vercel.json` med `regions: ["cdg1"]`, men **ingen** har en
 Vercel-entrypoint. Filene er en intensjon, ikke et fungerende oppsett.
 
 **Nettleseren snakker kun med `apps/web`.** Fra 22.08.2026 er API-et *i* web:
@@ -250,7 +250,7 @@ ville fått gjennom RLS.
 ## Anbefalt topologi
 
 ```
-Vercel (fra1, EU)         apps/web + tRPC/auth/widget/stripe/cron
+Vercel (cdg1, Paris EU)   apps/web + tRPC/auth/widget/stripe/cron
                           som Next route handlers
                               ↓ (samme origin, ingen proxy)
                               ↓

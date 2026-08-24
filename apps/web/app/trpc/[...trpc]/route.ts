@@ -6,7 +6,7 @@ import { handleTrpc } from '@endwise/api/http/trpc';
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const preferredRegion = 'fra1';
+export const preferredRegion = 'cdg1';
 
 export function GET(req: Request) {
   return handleTrpc(req);

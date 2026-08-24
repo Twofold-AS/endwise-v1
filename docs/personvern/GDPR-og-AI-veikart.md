@@ -458,7 +458,7 @@ underdatabehandlere.
 
 | Underdatabehandler | Formål | Data | Lokasjon | Overføringsgrunnlag |
 |---|---|---|---|---|
-| **Vercel** (hosting, kjøring, Workflows, Cron, Blob) | App-hosting + varige jobber | All app-data i transitt/kjøring | US-selskap, EU-region (fra1) | SCC / DPF |
+| **Vercel** (hosting, kjøring, Workflows, Cron, Blob) | App-hosting + varige jobber | All app-data i transitt/kjøring | US-selskap, EU-region (cdg1 Paris) | SCC / DPF |
 | **Vercel Web Analytics** 🆕 | Anonym besøksstatistikk | Cookieless, aggregert; hash nullstilles daglig, ingen krysssporing. Ingen PII | Vercel (US/EU) | SCC. **Kun på deploy** (virker ikke på localhost) |
 | **Neon** | Postgres-database (EU) | All tenant-/kundedata | EU-region | DPA |
 | **Resend** | Transaksjons-e-post + nyhetsbrev | E-postadresser + innhold | US | DPA + SCC |

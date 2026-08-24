@@ -8,7 +8,7 @@ import { handleStripeWebhookRaw } from '@endwise/api/http/stripe-webhook';
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const preferredRegion = 'fra1';
+export const preferredRegion = 'cdg1';
 
 export async function POST(req: Request) {
   const rawBody = await req.text();

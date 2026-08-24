@@ -183,6 +183,13 @@
       "when": 1787610000000,
       "tag": "0025_slett_forhandler_endwise_guc",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1787625000000,
+      "tag": "0026_slett_forhandler_kontoer",
+      "breakpoints": true
     }
   ]
 }

@@ -189,7 +189,10 @@ grant execute on function consume_invitation(text) to authenticated;
 -- transaksjon — samme GUC som withPlatformAdmin().
 --
 -- ⛔ Aldri Endwise-tenanten (slug = endwise).
--- ⛔ Sletter ikke user-rader (never delete self).
+-- Dealer-only "user"-rader SLETTES (prod 24.08.2026: innlogging overlevde
+-- forhandlerslett). Beholdes kun ved gjenværende member-rad (annen org,
+-- inkl. Endwise). "Never delete self" = acting admin har Endwise-medlemskap
+-- — ikke e-post-unntak. Auth-tabeller har INGEN RLS (ADR-002).
 --
 -- ── ⚠️ FORCE RLS + eier som IKKE er superuser (Scaleway, 23.08.2026) ────
 --
@@ -223,6 +226,14 @@ grant execute on function consume_invitation(text) to authenticated;
 --      0025: DROP FUNCTION + CREATE, `app.slett_endwise_id` (ingen subquery),
 --      SELECT ser begge GUCer, EXISTS på gjenværende rader, stacked
 --      constraint_name hvis DELETE tenants likevel treffer RESTRICT.
+-- 6. Prod 24.08.2026 ETTER 0025: slett lyktes, men dealer-brukere kunne
+--      fortsatt logge inn (tomt skall, ingen org/member). 0025 slettet
+--      member/invitation/organization, ikke "user" (passordhash, 2FA,
+--      passkey, sesjon ble igjen). 0026 sletter dealer-only "user" etter
+--      member-slett; CASCADE river session/account/two_factor/passkey.
+--      Beholdt (annen org, inkl. Endwise): sesjon mot død org fjernes.
+--      Engangs-reparasjon: "user" uten member-rad (allerede-foreldreløse
+--      i prod etter 0025). verification har ingen user-FK — slettes på e-post.
 --
 -- `row_security=off` er IKKE fiksen: den GUC-en kaster hvis en policy VILLE
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
@@ -259,8 +270,11 @@ declare
   v_constraint text;
   v_tbl_err text;
   i integer;
+  v_org_user_ids text[];
+  v_uid text;
+  v_email text;
 begin
-  -- slett_forhandler_rev=0025
+  -- slett_forhandler_rev=0026
   if current_setting('app.platform_admin', true) is distinct from 'on' then
     raise exception 'slett_forhandler: krever platform_admin';
   end if;
@@ -415,10 +429,77 @@ begin
       using errcode = '23503';
   end if;
 
+  -- Samle forhandlerens brukere FØR member-slett. Dealer-only kontoer
+  -- skal dø med forhandleren. "Never delete self" verner acting admin
+  -- og Endwise-brukere — de har member-rad i Endwise-org og beholdes.
+  v_org_user_ids := array(
+    select distinct m.user_id
+      from member m
+     where m.organization_id = p_tenant_id::text
+  );
+
   delete from tenant_delete_challenges where tenant_id = p_tenant_id;
   delete from member where organization_id = p_tenant_id::text;
   delete from invitation where organization_id = p_tenant_id::text;
   delete from organization where id = p_tenant_id::text;
+
+  -- Per innsamlet bruker: slett "user" kun uten gjenværende member-rader
+  -- og uten Endwise-org-medlemskap. CASCADE river session/account/
+  -- two_factor/passkey. Beholdte: fjern sesjon som peker på død org.
+  -- Auth-tabellene har INGEN RLS (ADR-002); DEFINER kan slette uten slett-GUC.
+  if cardinality(v_org_user_ids) > 0 then
+    foreach v_uid in array v_org_user_ids loop
+      if exists (
+        select 1 from member m
+         where m.user_id = v_uid
+           and m.organization_id = v_endwise::text
+      ) then
+        delete from session
+         where user_id = v_uid
+           and active_organization_id = p_tenant_id::text;
+        continue;
+      end if;
+
+      if exists (select 1 from member m where m.user_id = v_uid) then
+        delete from session
+         where user_id = v_uid
+           and active_organization_id = p_tenant_id::text;
+        continue;
+      end if;
+
+      v_email := null;
+      select email into v_email from "user" where id = v_uid;
+      delete from "user" where id = v_uid;
+      if v_email is not null then
+        delete from verification where identifier = v_email;
+      end if;
+    end loop;
+  end if;
+
+  -- Engangs-reparasjon (prod 24.08.2026): forhandlere ble slettet mens
+  -- user-rader ble igjen (0025 slettet ikke "user"). Slett brukere uten
+  -- member-rad. Konservativt — rører ikke den som fortsatt har medlemskap
+  -- (inkl. Endwise). Kun her: platform_admin + slett-GUC allerede satt.
+  delete from verification v
+   using "user" u
+   where v.identifier = u.email
+     and not exists (select 1 from member m where m.user_id = u.id)
+     and not exists (
+       select 1 from member m
+        where m.user_id = u.id
+          and m.organization_id = v_endwise::text
+     );
+
+  delete from "user" u
+   where not exists (select 1 from member m where m.user_id = u.id)
+     and not exists (
+       select 1 from member m
+        where m.user_id = u.id
+          and m.organization_id = v_endwise::text
+     );
+
+  -- Beholdte brukere kan fortsatt ha sesjon mot død org.
+  delete from session where active_organization_id = p_tenant_id::text;
 
   if exists (select 1 from member where organization_id = p_tenant_id::text) then
     raise exception 'slett_forhandler: gjenværende koblinger i member'
@@ -430,6 +511,10 @@ begin
   end if;
   if exists (select 1 from organization where id = p_tenant_id::text) then
     raise exception 'slett_forhandler: gjenværende koblinger i organization'
+      using errcode = '23503';
+  end if;
+  if exists (select 1 from session where active_organization_id = p_tenant_id::text) then
+    raise exception 'slett_forhandler: gjenværende koblinger i session'
       using errcode = '23503';
   end if;
 

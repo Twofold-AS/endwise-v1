@@ -24,9 +24,11 @@ export function KjopteModulerTabell({
 }) {
   const utils = trpc.useUtils();
   const katalog = trpc.tenants.pakkeKatalog.useQuery();
+  const [lagretId, setLagretId] = useState<string | null>(null);
   const sett = trpc.tenants.setModules.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       void utils.tenants.listModules.invalidate();
+      setLagretId(data.tenantId);
     },
   });
   const [apen, setApen] = useState<string | null>(null);
@@ -121,6 +123,7 @@ export function KjopteModulerTabell({
                   nivaa={nivaa}
                   tillegg={tillegg}
                   pending={sett.isPending}
+                  lagret={lagretId === t.id}
                   onLagre={(tier, inc, opt) =>
                     sett.mutate({ tenantId: t.id, tier, included: inc, optional: opt })
                   }
@@ -142,6 +145,7 @@ function FlaggPakke({
   nivaa,
   tillegg,
   pending,
+  lagret,
   onLagre,
 }: {
   plan: string;
@@ -150,6 +154,7 @@ function FlaggPakke({
   nivaa: NonNullable<RouterOutput['tenants']['pakkeKatalog']>['nivaa'];
   tillegg: NonNullable<RouterOutput['tenants']['pakkeKatalog']>['tillegg'];
   pending: boolean;
+  lagret: boolean;
   onLagre: (tier: 'start' | 'pro' | 'enterprise', included: string[], optional: string[]) => void;
 }) {
   const [valgt, setValgt] = useState(plan);
@@ -178,12 +183,14 @@ function FlaggPakke({
           setValg(neste);
         }}
       />
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {lagret ? <p className="text-[12px] text-success">Pakken er lagret.</p> : null}
         <StatefulButton
           type="button"
           disabled={pending}
-          state={pending ? 'loading' : 'idle'}
+          state={pending ? 'loading' : lagret ? 'success' : 'idle'}
           loadingText="Lagrer…"
+          successText="Lagret"
           onClick={() => onLagre(valgt as 'start' | 'pro' | 'enterprise', [], [...valg])}
         >
           Lagre pakke

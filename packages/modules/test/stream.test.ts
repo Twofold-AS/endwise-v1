@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   ConnectionCapError,
   createConnectionRegistry,
+  headEventId,
   MAX_CONNECTIONS_PER_USER,
   publishEvent,
   readEventsSince,
@@ -42,6 +43,15 @@ describeDb('SSE-fundament (F6-02)', () => {
       await owner.delete(schema.streamEvents).where(sql`tenant_id = ${t}`);
       await owner.delete(schema.tenants).where(sql`id = ${t}`);
     }
+  });
+
+  it('høyeste id er start-cursor, ikke avspilling av historikk', async () => {
+    const first = await publishEvent(app, { tenantId: tenantA, type: 'h1', payload: {} });
+    await publishEvent(app, { tenantId: tenantA, type: 'h2', payload: {} });
+    const head = await headEventId(app, tenantA);
+    expect(head).toBeGreaterThanOrEqual(first.id);
+    const missed = await readEventsSince(app, tenantA, head, brukerA);
+    expect(missed).toEqual([]);
   });
 
   it('publiserer et event og gir det en monoton id', async () => {

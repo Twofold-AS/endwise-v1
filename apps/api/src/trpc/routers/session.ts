@@ -71,6 +71,11 @@ export const sessionRouter = router({
         .from(schema.userPreferences)
         .where(eq(schema.userPreferences.userId, ctx.userId));
 
+      const moduler = await tx
+        .select({ key: schema.tenantModules.moduleKey })
+        .from(schema.tenantModules)
+        .where(eq(schema.tenantModules.enabled, true));
+
       /**
        * F1-14 — JOBBFUNKSJON + hvor brukeren skal lande.
        *
@@ -173,6 +178,8 @@ export const sessionRouter = router({
         ),
         /** Ingen rad = aldri rørt = standard PÅ. */
         varslingslyder: pref?.notificationSounds ?? true,
+        /** Aktive tillegg (`tenant_modules.enabled`). Basis-moduler står ikke her. */
+        moduler: moduler.map((m) => m.key),
         devMode,
       };
     });

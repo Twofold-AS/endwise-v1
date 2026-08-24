@@ -86,6 +86,12 @@ export default function QuickPage() {
         </div>
       )}
 
+      {config.isError ? (
+        <CardShell className="p-5">
+          <p className="text-body text-danger">{config.error.message}</p>
+        </CardShell>
+      ) : null}
+
       {/* Konfig-kort */}
       <CardShell>
         <div className="flex flex-1 flex-col gap-4 rounded-lg bg-inset p-5">

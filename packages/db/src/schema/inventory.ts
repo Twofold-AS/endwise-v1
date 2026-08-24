@@ -77,11 +77,21 @@ export const parts = pgTable(
     /** Varsle når samlet beholdning faller under dette. Null = ikke varsle. */
     minStock: integer('min_stock'),
     active: boolean('active').notNull().default(true),
+    /**
+     * F8-01 / F1-07 — Hvor delen kom fra: 'endwise' (opprettet her) eller 'quick'
+     * (speilet fra forhandlerens Quick). Default 'endwise'.
+     */
+    source: text('source').notNull().default('endwise'),
+    /**
+     * F8-01 — Quick sin vare-GUID. Idempotent upsert. Null for deler født i Endwise.
+     */
+    quickGuid: text('quick_guid'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`),
   },
   (t) => [
     uniqueIndex('parts_tenant_sku_uq').on(t.tenantId, t.sku),
+    uniqueIndex('parts_tenant_quick_guid_uidx').on(t.tenantId, t.quickGuid),
     index('parts_tenant_active_idx').on(t.tenantId, t.active),
     tenantPolicy('parts', t.tenantId),
   ],
@@ -100,11 +110,14 @@ export const stockLocations = pgTable(
     /** Kort kode brukt i hverdagen: «A-03», «BIL-1». */
     code: text('code').notNull(),
     name: text('name').notNull(),
+    /** Quick sin lokasjons-GUID. Null for lokasjoner født i Endwise. */
+    quickGuid: text('quick_guid'),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
   },
   (t) => [
     uniqueIndex('stock_locations_tenant_code_uq').on(t.tenantId, t.code),
+    uniqueIndex('stock_locations_tenant_quick_guid_uidx').on(t.tenantId, t.quickGuid),
     tenantPolicy('stock_locations', t.tenantId),
   ],
 ).enableRLS();

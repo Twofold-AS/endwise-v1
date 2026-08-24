@@ -515,22 +515,22 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
       },
     ]);
 
-    const orphanId = `orphan-${tid.slice(0, 8)}`;
-    const orphanEpost = `orphan.${slug}@verksted.test`;
+    const unrelatedId = `utenfor-${tid.slice(0, 8)}`;
+    const unrelatedEpost = `utenfor.${slug}@verksted.test`;
     await owner.insert(schema.user).values({
-      id: orphanId,
-      name: 'Foreldreløs etter 0025',
-      email: orphanEpost,
+      id: unrelatedId,
+      name: 'Ikke i slettet org',
+      email: unrelatedEpost,
       emailVerified: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
     await owner.insert(schema.account).values({
-      id: `acc-${orphanId}`,
-      accountId: orphanId,
+      id: `acc-${unrelatedId}`,
+      accountId: unrelatedId,
       providerId: 'credential',
-      userId: orphanId,
-      password: 'hash-foreldrelos',
+      userId: unrelatedId,
+      password: 'hash-utenfor',
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -596,12 +596,14 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
       .where(sql`user_id = ${dualId} and organization_id = ${endwiseId}`);
     expect(endwiseMedlem).toBeDefined();
 
-    const [orphanBruker] = await owner
+    const [utenforSlett] = await owner
       .select({ id: schema.user.id })
       .from(schema.user)
-      .where(eq(schema.user.id, orphanId));
-    expect(orphanBruker).toBeUndefined();
+      .where(eq(schema.user.id, unrelatedId));
+    expect(utenforSlett).toBeDefined();
 
+    await owner.delete(schema.account).where(eq(schema.account.userId, unrelatedId));
+    await owner.delete(schema.user).where(eq(schema.user.id, unrelatedId));
     await owner.delete(schema.session).where(eq(schema.session.userId, dualId));
     await owner.delete(schema.member).where(eq(schema.member.userId, dualId));
     await owner.delete(schema.user).where(eq(schema.user.id, dualId));

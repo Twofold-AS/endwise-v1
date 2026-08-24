@@ -34,7 +34,7 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
 
   it('sletter dealer-only user-rader og nekter slug endwise', () => {
     expect(slettSql).toMatch(/kan ikke slette Endwise-tenanten/);
-    expect(slettSql).toMatch(/delete from "user"/);
+    expect(slettSql).toMatch(/u\.id = any\s*\(\s*v_org_user_ids\s*\)/);
     expect(slettSql).toMatch(/delete from verification/);
     expect(slettSql).toMatch(/delete from session where active_organization_id/);
     expect(slettSql).toMatch(/organization_id = v_endwise::text/);
@@ -42,6 +42,12 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(slettSql).toMatch(/delete from invitation where organization_id/);
     expect(slettSql).toMatch(/delete from organization where id/);
     expect(slettSql).not.toMatch(/enable row level security/i);
+    const kropp = slettSql.slice(slettSql.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i));
+    const userDeletes = [...kropp.matchAll(/delete from "user"[^;]*/gi)];
+    expect(userDeletes.length).toBeGreaterThan(0);
+    for (const m of userDeletes) {
+      expect(m[0]).toMatch(/any\s*\(\s*v_org_user_ids/i);
+    }
   });
 
   it('dokumenterer Docker-superuser vs Scaleway (som lookup_open_invitation)', () => {
@@ -269,10 +275,23 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(createAt).toBeGreaterThan(dropAt);
     expect(m0026).toMatch(/slett_forhandler_rev=0026/);
     expect(m0026).toMatch(/set_config\('app\.slett_endwise_id'/);
-    expect(m0026).toMatch(/delete from "user"/);
+    expect(m0026).toMatch(/u\.id = any\s*\(\s*v_org_user_ids\s*\)/);
     expect(m0026).toMatch(/Engangs-reparasjon/);
     expect(m0026).not.toMatch(/delete from audit_log/i);
     expect(m0026).not.toMatch(/enable row level security/i);
+    const grantAt = m0026.search(/grant execute on function slett_forhandler/i);
+    const oneshotAt = m0026.search(/0025 slettet forhandler uten "user"/);
+    expect(grantAt).toBeGreaterThan(-1);
+    expect(oneshotAt).toBeGreaterThan(grantAt);
+    const fnKropp = m0026.slice(
+      m0026.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i),
+      grantAt,
+    );
+    const fnDeletes = [...fnKropp.matchAll(/delete from "user"[^;]*/gi)];
+    expect(fnDeletes.length).toBeGreaterThan(0);
+    for (const m of fnDeletes) {
+      expect(m[0]).toMatch(/any\s*\(\s*v_org_user_ids/i);
+    }
   });
 
   it('functions.sql DROPper slett_forhandler før CREATE og merker rev=0026', () => {

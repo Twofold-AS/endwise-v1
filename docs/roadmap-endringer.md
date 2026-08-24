@@ -8,7 +8,7 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 ## 2026-08-24 — F5-26 0026 slett dealer-kontoer etter forhandlerslett
 
 **Type:** produksjonsfiks (ikke ny flate). F5-26 forblir `done`.
-**Endring:** Nytt steg under F5-26: 0026 sletter dealer-only Better-Auth-`user` (session/account/2FA/passkey via CASCADE) etter `slett_forhandler`. Endwise-medlemmer beholdes. Engangs-reparasjon av allerede-foreldreløse kontoer i prod.
+**Endring:** Nytt steg under F5-26: 0026 sletter dealer-only Better-Auth-`user` scoped til orgen som slettes (`ANY(v_org_user_ids)` + NOT EXISTS member). Endwise-medlemmer beholdes. 0025-leftovers som engangs-DML i migrasjonen, ikke i funksjonen (CWE-212/359/284).
 
 ---
 

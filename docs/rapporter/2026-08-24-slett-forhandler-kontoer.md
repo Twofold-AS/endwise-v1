@@ -1,7 +1,7 @@
 # Rapport — 24.08.2026 — orphan Better-Auth-innlogging etter forhandlerslett (F5-26)
 
-**Roadmap:** F5-26 (`done`) — nytt steg 0026
-**Godkjenning:** produksjonsfeil på endwise.no (ikke ny flate). Produktansvarlig (Mikael): når en forhandler slettes, skal kontoene dø med den.
+**Roadmap:** F5-26 (`done`) — steg 0026
+**Godkjenning:** produksjonsfeil på endwise.no. Produktansvarlig (Mikael): når en forhandler slettes, skal kontoene dø med den. Mons NO-GO på global DELETE (CWE-212/359/284).
 
 ---
 
@@ -9,45 +9,39 @@
 
 | ID | Hva |
 |---|---|
-| **F5-26** | Etter 0025 lyktes `tenants.slett` / `slett_forhandler(uuid)`, men dealer-brukere kunne fortsatt logge inn. De så et tomt skall (ingen org/member). Innloggingen må feile (ukjent e-post/passord). |
+| **F5-26** | Etter 0025 lyktes `tenants.slett`, men dealer-brukere kunne fortsatt logge inn. 0026 sletter dealer-only `"user"` SCOPET til orgen som slettes. |
 
-Rotårsak (verifisert i SQL, ikke gjettet mot prod-DB):
+Rotårsak: `slett_forhandler` slettet `member` / `invitation` / `organization`, ikke `"user"`.
 
-`slett_forhandler` slettet `member` / `invitation` / `organization`, men **ikke** `"user"`. Kommentarene sa «Sletter ikke user-rader (never delete self)» — det var ment å verne **acting platform-admin** og Endwise-brukere, ikke dealer-ansatte. Passordhash (i `account`), 2FA, passkey og sesjon ble igjen via CASCADE-FK som aldri ble utløst.
-
-Fikset i migrasjon **0026_slett_forhandler_kontoer**:
-- `DROP FUNCTION slett_forhandler(uuid)` før `CREATE` (samme mønster som 0025)
+Fikset i **0026_slett_forhandler_kontoer**:
+- `DROP FUNCTION` + `CREATE` med `-- slett_forhandler_rev=0026`
 - Samle `user_id` **før** member-slett
-- Slett `"user"` kun når null gjenværende `member`-rader og ikke Endwise-org-medlem
-- Beholdt (annen org): `DELETE FROM session WHERE active_organization_id = slettet org`
-- `verification` på slettet e-post
-- Assert: ingen `member` for orgen, ingen `session.active_organization_id` mot død org
-- Engangs-reparasjon: `"user"` uten member-rad (allerede-foreldreløse i prod)
-- `app.slett_endwise_id` og FORCE RLS-policyer fra 0025 **urørt**
-- Ingen RLS på auth-tabeller (ADR-002)
-- `db:grants` **exit 1** uten `slett_forhandler_rev=0026`; sjekken matcher proname+prosrc (godtar identity `uuid` og `p_tenant_id uuid`)
-
-Etter merge: **`pnpm db:setup`** på Scaleway. Loggen **MÅ** si `slett_forhandler rev=0026`. Deretter slett forhandleren på `/endwise/forhandlere` — allerede-slettede forhandleres foreldreløse kontoer ryddes i samme funksjonskjøring.
-
-PR #33 (kun 0025-rev-sjekk / identity-args) dekkes her og kan lukkes.
+- Slett `"user"` / `verification` med `u.id = any (v_org_user_ids)` **og** `NOT EXISTS member` i **samme** statement (Endwise-medlemmer har member-rad og beholdes)
+- Beholdt: `DELETE FROM session WHERE active_organization_id = slettet org`
+- **Ingen global DELETE i funksjonen** (CWE-212/359/284)
+- 0025-leftovers: engangs-DML **nederst i migrasjonen** (én gang som eier ved migrate), ikke i `slett_forhandler`. Konservativt: kun `"user"` uten member-rad
+- `app.slett_endwise_id` og FORCE RLS fra 0025 **urørt**. Ingen RLS på auth-tabeller (ADR-002)
+- `db:grants`: EXISTS + `slett_forhandler_rev=0026`, ikke `identity = 'uuid'`
 
 ---
 
 ## 2. Hva gikk galt
 
-0025 tetter 412/RLS, men slettet aldri Better-Auth-identiteten. Context.dev MCP krevde auth og ble ikke brukt. Ingen avvik fra techstack. Auth-tabeller fikk ikke RLS.
+Første utkast av 0026 hadde to globale `DELETE` (verification + `"user"` where NOT EXISTS member) inne i funksjonen. Hver `tenants.slett` ville tørket **alle** memberless Better-Auth-brukere (mid-signup, pending invite). Mons NO-GO. Fikset: scoped `ANY(v_org_user_ids)`; leftovers kun som migrasjons-DML.
+
+Context.dev MCP krevde auth og ble ikke brukt. Ingen avvik fra techstack.
 
 ---
 
 ## 3. Hvilke fikser ble gjort
 
-1. 0026 DROP+CREATE av `slett_forhandler` med dealer-only user-slett.
-2. `functions.sql` speilet (grants.ts overskriver etter migrate).
-3. `db:grants` krever rev=0026 uten `identity = 'uuid'`-falsk negativ.
-4. Tester: dealer-only borte (user/session/account/epost); Endwise-medlem beholdt.
+1. Fjernet globale DELETE fra `slett_forhandler`.
+2. Scoped `delete from "user"` / `verification` til `any (v_org_user_ids)` + NOT EXISTS member.
+3. Engangs-DML for 0025-leftovers flyttet til 0026-migrasjonen (etter GRANT).
+4. Testen som forventet at en urelatert orphan forsvant ved slett, er snudd: hen overlever. Dealer-only i **denne** orgen er borte; Endwise dual-member beholdt.
 
 ---
 
 ## 4. Neste fase / neste steg
 
-Mikael kjører **`pnpm db:setup`** mot Scaleway etter merge. Loggen skal inneholde `slett_forhandler rev=0026`. Deretter slett en forhandler (eller kjør slett på en ny/eksisterende) så engangs-reparasjonen tar de allerede-foreldreløse kontoene. F1-07/F8-01 forblir `progress`.
+Mons tre punkter: ingen global DELETE i funksjonen; scoped `ANY(v_org_user_ids)`; leftovers kun i migrasjons-DML. F1-07/F8-01 forblir `progress`.

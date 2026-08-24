@@ -229,11 +229,13 @@ grant execute on function consume_invitation(text) to authenticated;
 -- 6. Prod 24.08.2026 ETTER 0025: slett lyktes, men dealer-brukere kunne
 --      fortsatt logge inn (tomt skall, ingen org/member). 0025 slettet
 --      member/invitation/organization, ikke "user" (passordhash, 2FA,
---      passkey, sesjon ble igjen). 0026 sletter dealer-only "user" etter
---      member-slett; CASCADE river session/account/two_factor/passkey.
+--      passkey, sesjon ble igjen). 0026 sletter dealer-only "user" SCOPET til user_id samlet fra DENNE
+--      orgen (`u.id = any (v_org_user_ids)` + NOT EXISTS member i SAMME
+--      statement). CASCADE river session/account/two_factor/passkey.
 --      Beholdt (annen org, inkl. Endwise): sesjon mot død org fjernes.
---      Engangs-reparasjon: "user" uten member-rad (allerede-foreldreløse
---      i prod etter 0025). verification har ingen user-FK — slettes på e-post.
+--      Ingen global slett av memberless users i funksjonen (CWE-212/359/284).
+--      0025-leftovers: engangs-DML i migrasjon 0026 (én gang ved migrate),
+--      ikke i funksjonen. verification for de innsamlede e-postene.
 --
 -- `row_security=off` er IKKE fiksen: den GUC-en kaster hvis en policy VILLE
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
@@ -271,8 +273,6 @@ declare
   v_tbl_err text;
   i integer;
   v_org_user_ids text[];
-  v_uid text;
-  v_email text;
 begin
   -- slett_forhandler_rev=0026
   if current_setting('app.platform_admin', true) is distinct from 'on' then
@@ -443,46 +443,14 @@ begin
   delete from invitation where organization_id = p_tenant_id::text;
   delete from organization where id = p_tenant_id::text;
 
-  -- Per innsamlet bruker: slett "user" kun uten gjenværende member-rader
-  -- og uten Endwise-org-medlemskap. CASCADE river session/account/
-  -- two_factor/passkey. Beholdte: fjern sesjon som peker på død org.
+  -- Dealer-only: SCOPET til innsamlede id-er. Samme statement krever
+  -- NOT EXISTS member (Endwise-/tverr-org beholdes — de har member-rad).
+  -- CWE-212/359/284: ALDRI globalt «slett alle uten member» her.
   -- Auth-tabellene har INGEN RLS (ADR-002); DEFINER kan slette uten slett-GUC.
-  if cardinality(v_org_user_ids) > 0 then
-    foreach v_uid in array v_org_user_ids loop
-      if exists (
-        select 1 from member m
-         where m.user_id = v_uid
-           and m.organization_id = v_endwise::text
-      ) then
-        delete from session
-         where user_id = v_uid
-           and active_organization_id = p_tenant_id::text;
-        continue;
-      end if;
-
-      if exists (select 1 from member m where m.user_id = v_uid) then
-        delete from session
-         where user_id = v_uid
-           and active_organization_id = p_tenant_id::text;
-        continue;
-      end if;
-
-      v_email := null;
-      select email into v_email from "user" where id = v_uid;
-      delete from "user" where id = v_uid;
-      if v_email is not null then
-        delete from verification where identifier = v_email;
-      end if;
-    end loop;
-  end if;
-
-  -- Engangs-reparasjon (prod 24.08.2026): forhandlere ble slettet mens
-  -- user-rader ble igjen (0025 slettet ikke "user"). Slett brukere uten
-  -- member-rad. Konservativt — rører ikke den som fortsatt har medlemskap
-  -- (inkl. Endwise). Kun her: platform_admin + slett-GUC allerede satt.
   delete from verification v
    using "user" u
    where v.identifier = u.email
+     and u.id = any (v_org_user_ids)
      and not exists (select 1 from member m where m.user_id = u.id)
      and not exists (
        select 1 from member m
@@ -491,7 +459,8 @@ begin
      );
 
   delete from "user" u
-   where not exists (select 1 from member m where m.user_id = u.id)
+   where u.id = any (v_org_user_ids)
+     and not exists (select 1 from member m where m.user_id = u.id)
      and not exists (
        select 1 from member m
         where m.user_id = u.id

@@ -48,14 +48,18 @@ describe('NewBadge er norsk «Ny»-tekstbadge', () => {
 
 describe('CountBadge er rød sirkel med hvitt siffer', () => {
   const cards = utenKommentarer(les('../app/(app)/_shell/cards.tsx'));
+  const countBlokk = cards.slice(
+    cards.indexOf('export function CountBadge'),
+    cards.indexOf('export function CardShell'),
+  );
 
   it('skjuler 0, er sirkel, bruker danger-token og hvit tekst', () => {
-    expect(cards).toMatch(/if \(count <= 0\) return null/);
-    expect(cards).toMatch(/rounded-full/);
-    expect(cards).toMatch(/bg-danger/);
-    expect(cards).toMatch(/text-white/);
-    expect(cards).not.toMatch(/bg-accent-soft/);
-    expect(cards).not.toMatch(/bg-success/);
+    expect(countBlokk).toMatch(/if \(count <= 0\) return null/);
+    expect(countBlokk).toMatch(/rounded-full/);
+    expect(countBlokk).toMatch(/bg-danger/);
+    expect(countBlokk).toMatch(/text-white/);
+    expect(countBlokk).not.toMatch(/bg-accent-soft/);
+    expect(countBlokk).not.toMatch(/bg-success/);
   });
 
   it('nav, innboks og helpdesk-header bruker CountBadge — ikke grå pille', () => {

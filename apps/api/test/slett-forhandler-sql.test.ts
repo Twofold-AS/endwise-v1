@@ -284,5 +284,18 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     const grantsTs = readFileSync(resolve(her, '../../../packages/db/scripts/grants.ts'), 'utf8');
     expect(grantsTs).toMatch(/slett_forhandler_rev=0025/);
     expect(grantsTs).toMatch(/process\.exit\(1\)/);
+    expect(grantsTs).toMatch(/grants \+ funksjoner kjørt \(slett_forhandler rev=0025\)/);
+    /**
+     * pg_get_function_identity_arguments(oid) for
+     * `slett_forhandler(p_tenant_id uuid)` returnerer `p_tenant_id uuid`,
+     * ikke `uuid`. En eksakt `= 'uuid'`-filter gir 0 rader og exit 1
+     * selv når prosrc har rev-markøren (falsk negativ etter DROP+CREATE).
+     */
+    expect(grantsTs).not.toMatch(
+      /pg_get_function_identity_arguments\s*\(\s*p\.oid\s*\)\s*=\s*'uuid'/,
+    );
+    expect(grantsTs).toMatch(/\bexists\s*\(/i);
+    expect(grantsTs).toMatch(/pg_get_function_identity_arguments/);
+    expect(grantsTs).toMatch(/left\s*\(\s*p\.prosrc/i);
   });
 });

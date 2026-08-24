@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { type FormEvent, Suspense, useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { PassordFelt } from '../_auth/felter';
+import { beholdForsteToken, lesResetToken, resetLenkeFeil } from './reset-token';
 
 /**
  * F1-16 — sett nytt passord. Andre halvdel av flyten som starter i
@@ -22,8 +23,9 @@ import { PassordFelt } from '../_auth/felter';
  * `history.replaceState` stryker query-strengen etter at vi har lest den.
  * Tokenet er en engangsnøkkel til kontoen, og så lenge det står i URL-en
  * ligger det i nettleserhistorikken, i alt som deler skjerm, og i `Referer`
- * på enhver utgående forespørsel siden måtte gjøre. Det koster én linje å
- * ikke la det bli liggende.
+ * på enhver utgående forespørsel siden måtte gjøre. Det første ikke-tomme
+ * tokenet beholdes i state — `useSearchParams` som blir tom etter strip
+ * skal ikke tømme det (se `reset-token.ts`).
  *
  * ⛔ Vi verifiserer IKKE tokenet ved sidelast. Et «sjekk om det er gyldig»-
  * kall ville vært et gratis orakel for å teste tokens uten å bruke dem opp.
@@ -41,10 +43,13 @@ function NyttPassordInner() {
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   useEffect(() => {
-    setToken(params?.get('token') ?? null);
+    const neste = lesResetToken(params);
+    const feil = resetLenkeFeil(params);
+    // Første ikke-tomme token vinner. Etter replaceState er params tom —
+    // da skal vi IKKE gjøre setToken(null) og miste skjemaet.
+    setToken((forrige) => beholdForsteToken(forrige, neste));
     setKlar(true);
-    // Se filkommentaren: ut av adressefeltet så snart vi har lest det.
-    if (params?.get('token')) {
+    if (neste || feil) {
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, [params]);

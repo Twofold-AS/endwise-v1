@@ -23,13 +23,15 @@ export class NotAParticipantError extends Error {
  * Visningsnavn for dealer↔Endwise. Kun medlemmer av forhandler-org eller
  * Endwise-org — ikke kunder (ingen PII-orakel).
  */
+type SupportNavn = { navn: string; rolle: string | null };
+
 async function navnForDealerOgEndwise(
   db: Database,
   tenantId: string,
   userIds: string[],
-): Promise<Map<string, string>> {
+): Promise<Map<string, SupportNavn>> {
   const unike = [...new Set(userIds)].filter((id) => id && !id.startsWith('agent:'));
-  const ut = new Map<string, string>();
+  const ut = new Map<string, SupportNavn>();
   if (unike.length === 0) return ut;
 
   const [ew] = await db
@@ -40,7 +42,7 @@ async function navnForDealerOgEndwise(
   const orgIds = [tenantId, ew?.id].filter((id): id is string => Boolean(id));
 
   const ansatte = await db
-    .select({ id: schema.user.id, name: schema.user.name })
+    .select({ id: schema.user.id, name: schema.user.name, role: schema.member.role })
     .from(schema.user)
     .innerJoin(schema.member, eq(schema.member.userId, schema.user.id))
     .where(and(inArray(schema.member.organizationId, orgIds), inArray(schema.user.id, unike)));
@@ -70,7 +72,7 @@ async function navnForDealerOgEndwise(
       { navn: a.name ?? '', kallenavn: kallenavn.get(a.id) ?? null },
       'intern',
     );
-    if (vis.trim()) ut.set(a.id, vis);
+    if (vis.trim()) ut.set(a.id, { navn: vis, rolle: a.role ?? null });
   }
   return ut;
 }
@@ -442,14 +444,30 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
 
     /** Meldingene i en tråd. Krever deltakelse. */
     async listMessages(tenantId: string, threadId: string, readerId: string) {
-      return withTenant(db, tenantId, async (tx) => {
+      const { rader, kind } = await withTenant(db, tenantId, async (tx) => {
         await assertParticipant(tx, threadId, readerId);
-        return tx
+        const [traad] = await tx
+          .select({ kind: schema.threads.kind })
+          .from(schema.threads)
+          .where(eq(schema.threads.id, threadId));
+        const rader = await tx
           .select()
           .from(schema.messages)
           .where(eq(schema.messages.threadId, threadId))
           .orderBy(schema.messages.createdAt);
+        return { rader, kind: traad?.kind ?? null };
       });
+      if (kind !== 'dealer_admin') return rader;
+      const navn = await navnForDealerOgEndwise(
+        db,
+        tenantId,
+        rader.map((m) => m.authorId),
+      );
+      return rader.map((m) => ({
+        ...m,
+        authorNavn: navn.get(m.authorId)?.navn ?? null,
+        authorRolle: navn.get(m.authorId)?.rolle ?? null,
+      }));
     },
 
     /** Innboksen: mine tråder + uleste-telling. */
@@ -644,7 +662,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
         idsPerTenant.set(d.tenantId, liste);
       }
 
-      const navnPerTenant = new Map<string, Map<string, string>>();
+      const navnPerTenant = new Map<string, Map<string, SupportNavn>>();
       for (const [tenantId, ids] of idsPerTenant) {
         navnPerTenant.set(tenantId, await navnForDealerOgEndwise(db, tenantId, ids));
       }
@@ -652,8 +670,13 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       return rader.map((t) => {
         const motparter = deltakere.filter((d) => d.threadId === t.id).map((d) => d.participantId);
         const navn = navnPerTenant.get(t.tenantId);
-        const kontaktNavn = motparter.map((id) => navn?.get(id)).find((n) => n?.trim()) ?? null;
-        return { ...t, kontaktNavn, motparter };
+        const kontakt = motparter.map((id) => navn?.get(id)).find((n) => n?.navn.trim());
+        return {
+          ...t,
+          kontaktNavn: kontakt?.navn ?? null,
+          kontaktRolle: kontakt?.rolle ?? null,
+          motparter,
+        };
       });
     },
 
@@ -684,7 +707,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       );
       return lest.meldinger.map((m) => ({
         ...m,
-        authorNavn: navn.get(m.authorId) ?? null,
+        authorNavn: navn.get(m.authorId)?.navn ?? null,
+        authorRolle: navn.get(m.authorId)?.rolle ?? null,
       }));
     },
 

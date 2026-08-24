@@ -5,6 +5,13 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-08-24 — F5-26 0025 DROP+CREATE slett_forhandler (412 etter db:setup)
+
+**Type:** produksjonsfiks (ikke ny flate). F5-26 forblir `done`.
+**Endring:** Nytt steg under F5-26: 0025 DROPper `slett_forhandler` før CREATE, `app.slett_endwise_id`, ærlig 412 med tabellnavn. `audit_log` append-only.
+
+---
+
 ## 2026-07-14 — Deploy utsatt: ny fase F13
 
 **Godkjent av:** Mikkis

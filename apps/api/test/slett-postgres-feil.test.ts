@@ -89,6 +89,17 @@ describe('mapSlettPostgresFeil', () => {
     expect(feil.message).not.toMatch(/Failed query/);
   });
 
+  it('ærlig 412 navngir member når org-kobling gjenstår', () => {
+    const feil = mapSlettPostgresFeil(
+      drizzlePakket({
+        code: '23503',
+        message: 'slett_forhandler: gjenværende koblinger i member',
+      }),
+    );
+    expect(feil.code).toBe('PRECONDITION_FAILED');
+    expect(feil.message).toMatch(/member/);
+  });
+
   it('viser Postgres-teksten til admin, aldri Drizzle-skallet', () => {
     const medCause = mapSlettPostgresFeil(
       drizzlePakket({ code: 'P0001', message: 'slett_forhandler: tenanten ble ikke slettet' }),

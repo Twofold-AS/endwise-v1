@@ -211,9 +211,18 @@ grant execute on function consume_invitation(text) to authenticated;
 --      DEFINER. `withPlatformAdmin` setter ikke `app.tenant_id` → SELECT 0
 --      rader → UPDATE flytter 0 audit-rader (stille) → INSERT audit.redacted
 --      blir værende på forhandleren. FORCE RLS + RESTRICT = 412.
---      Fikset: sett `app.tenant_id`, TO PUBLIC SELECT-policyer, skriv spor
---      på Endwise (ikke slett-målet), ROW_COUNT etter EXECUTE (FOUND settes
---      ikke av EXECUTE — barn-løkka hoppet over parts/stock/customers).
+--      Fikset i 0024: sett `app.tenant_id`, TO PUBLIC SELECT-policyer, skriv
+--      spor på Endwise, ROW_COUNT etter EXECUTE.
+-- 5. Prod 24.08.2026 ETTER `pnpm db:setup` (dpl_98PMuhbM77R4SZJiEPPryVBafJ4X,
+--      cdg1, requestId sdwsb-1787599245213-412242917e8b): 412 igjen.
+--      0024 var CREATE OR REPLACE samme signatur — drizzle-journal hopper
+--      over den som allerede er merket kjørt, så body/policy kan ligge igjen
+--      fra før. INSERT/UPDATE WITH CHECK mot Endwise gikk via
+--      `select id from tenants where slug = 'endwise'` under tenants-RLS;
+--      ny audit-rad etter flytt matcher ikke SELECT som bare ser slett-GUC.
+--      0025: DROP FUNCTION + CREATE, `app.slett_endwise_id` (ingen subquery),
+--      SELECT ser begge GUCer, EXISTS på gjenværende rader, stacked
+--      constraint_name hvis DELETE tenants likevel treffer RESTRICT.
 --
 -- `row_security=off` er IKKE fiksen: den GUC-en kaster hvis en policy VILLE
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
@@ -229,7 +238,9 @@ grant execute on function consume_invitation(text) to authenticated;
 -- eierskap på alle tabeller. Kontraktstestene i
 -- apps/api/test/slett-forhandler-sql.test.ts + force-rls.test.ts er stand-in.
 
-create or replace function slett_forhandler(p_tenant_id uuid)
+drop function if exists slett_forhandler(uuid);
+
+create function slett_forhandler(p_tenant_id uuid)
 returns void
 language plpgsql
 security definer
@@ -243,8 +254,13 @@ declare
   v_progress boolean;
   v_count integer;
   v_left text;
+  v_exists boolean;
+  v_name text;
+  v_constraint text;
+  v_tbl_err text;
   i integer;
 begin
+  -- slett_forhandler_rev=0025
   if current_setting('app.platform_admin', true) is distinct from 'on' then
     raise exception 'slett_forhandler: krever platform_admin';
   end if;
@@ -252,6 +268,8 @@ begin
   -- Transaksjons-lokalt. TO PUBLIC-policyene i grants.sql ser kun DENNE id-en.
   -- app.tenant_id også: eieren er ADMIN av authenticated, så TO authenticated
   -- SELECT gjelder DEFINER. Uten tenant-GUC ser UPDATE 0 rader.
+  -- app.slett_endwise_id: WITH CHECK/INSERT/SELECT etter flytt, uten subquery
+  -- mot tenants (RLS på slug='endwise' kan gi NULL → 42501 eller stille 0).
   perform set_config('app.slett_tenant_id', p_tenant_id::text, true);
   perform set_config('app.tenant_id', p_tenant_id::text, true);
 
@@ -267,6 +285,7 @@ begin
   if v_endwise is null then
     raise exception 'slett_forhandler: Endwise-tenanten mangler (kan ikke flytte audit-kjeden)';
   end if;
+  perform set_config('app.slett_endwise_id', v_endwise::text, true);
 
   -- F1-06: aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
   -- redact_audit_log — den leser app.tenant_id og har ingen UPDATE-policy for
@@ -323,9 +342,25 @@ begin
       using errcode = '23503';
   end if;
 
-  -- Barn først (parts/stock_levels/customers inkludert). Looper til
-  -- FK-rekkefølgen slipper gjennom. EXECUTE setter ikke FOUND — ROW_COUNT.
-  -- Kun foreign_key_violation svelges i runden — RLS/privilegier skal synes.
+  -- Barn først (parts/stock_levels/customers inkludert). Kjent FK-rekkefølge
+  -- før den dynamiske løkka. EXECUTE setter ikke FOUND — ROW_COUNT.
+  -- Kun foreign_key_violation / undefined_table svelges i runden.
+  foreach v_name in array array[
+    'stock_movements', 'stock_levels', 'parts', 'stock_locations',
+    'messages', 'thread_participants', 'threads', 'stream_events', 'notifications',
+    'customer_notes', 'bookings', 'vehicles', 'customers',
+    'mechanic_skills', 'mechanics', 'skills', 'service_versions', 'services',
+    'member_profiles', 'invitations', 'widget_keys', 'integration_config',
+    'sync_conflicts', 'tenant_modules', 'billing_customers', 'feature_flag_overrides'
+  ] loop
+    begin
+      execute format('delete from %I where tenant_id = $1', v_name) using p_tenant_id;
+    exception
+      when undefined_table then null;
+      when foreign_key_violation then null;
+    end;
+  end loop;
+
   for i in 1..24 loop
     v_progress := false;
     for r in
@@ -367,8 +402,13 @@ begin
     begin
       execute format('delete from %I where tenant_id = $1', r.tbl) using p_tenant_id;
     exception when foreign_key_violation then
-      v_left := v_left || r.tbl || ', ';
+      null;
     end;
+    execute format('select exists (select 1 from %I where tenant_id = $1)', r.tbl)
+      into v_exists using p_tenant_id;
+    if v_exists then
+      v_left := v_left || r.tbl || ', ';
+    end if;
   end loop;
   if v_left <> '' then
     raise exception 'slett_forhandler: gjenværende koblinger i %', rtrim(v_left, ', ')
@@ -379,13 +419,35 @@ begin
   delete from member where organization_id = p_tenant_id::text;
   delete from invitation where organization_id = p_tenant_id::text;
   delete from organization where id = p_tenant_id::text;
-  delete from tenants where id = p_tenant_id;
+
+  if exists (select 1 from member where organization_id = p_tenant_id::text) then
+    raise exception 'slett_forhandler: gjenværende koblinger i member'
+      using errcode = '23503';
+  end if;
+  if exists (select 1 from invitation where organization_id = p_tenant_id::text) then
+    raise exception 'slett_forhandler: gjenværende koblinger i invitation'
+      using errcode = '23503';
+  end if;
+  if exists (select 1 from organization where id = p_tenant_id::text) then
+    raise exception 'slett_forhandler: gjenværende koblinger i organization'
+      using errcode = '23503';
+  end if;
+
+  begin
+    delete from tenants where id = p_tenant_id;
+  exception when foreign_key_violation then
+    get stacked diagnostics v_constraint = constraint_name, v_tbl_err = table_name;
+    raise exception 'slett_forhandler: gjenværende koblinger i %',
+      coalesce(nullif(v_tbl_err, ''), v_constraint)
+      using errcode = '23503';
+  end;
 
   if exists (select 1 from tenants where id = p_tenant_id) then
     raise exception 'slett_forhandler: tenanten ble ikke slettet';
   end if;
 
   perform set_config('app.slett_tenant_id', '', true);
+  perform set_config('app.slett_endwise_id', '', true);
   perform set_config('app.tenant_id', '', true);
 end;
 $$;

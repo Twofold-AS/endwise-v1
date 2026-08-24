@@ -35,14 +35,47 @@ export function agentName(authorId: string): string {
   return authorId.slice(AGENT_PREFIX.length);
 }
 
-/** Svarformen fra `directory.participants`. */
-export type Navnekart = Record<string, { navn: string; rolle: 'ansatt' | 'mekaniker' | 'kunde' }>;
+/** Svarformen fra `directory.participants` + platform-støtte. */
+export type DeltakerRolle =
+  | 'ansatt'
+  | 'mekaniker'
+  | 'kunde'
+  | 'dealer_admin'
+  | 'dealer_staff'
+  | 'endwise_admin'
+  | 'endwise_support';
+
+export type Navnekart = Record<string, { navn: string; rolle: DeltakerRolle }>;
 
 export const ROLLE_LABEL: Record<string, string> = {
-  ansatt: 'Ansatt',
+  dealer_admin: 'Forhandler-admin',
+  endwise_admin: 'Endwise-admin',
+  endwise_support: 'Endwise-support',
   mekaniker: 'Mekaniker',
   kunde: 'Kunde',
 };
+
+/** Rolle i dealer↔Endwise-tråd. Aldri en bar «Ansatt». */
+export function supportRolleEtikett(rolle: string | null | undefined): string | null {
+  if (rolle === 'dealer_admin') return 'Forhandler-admin';
+  if (rolle === 'endwise_admin') return 'Endwise-admin';
+  if (rolle === 'endwise_support') return 'Endwise-support';
+  return null;
+}
+
+export function tilDeltakerRolle(rolle: string | null | undefined): DeltakerRolle {
+  if (
+    rolle === 'mekaniker' ||
+    rolle === 'kunde' ||
+    rolle === 'dealer_admin' ||
+    rolle === 'dealer_staff' ||
+    rolle === 'endwise_admin' ||
+    rolle === 'endwise_support'
+  ) {
+    return rolle;
+  }
+  return 'ansatt';
+}
 
 /**
  * Hvem skrev dette?
@@ -57,16 +90,59 @@ export const ROLLE_LABEL: Record<string, string> = {
  * riktigere enn å skjule at det står noen der.
  */
 /**
- * Tittel på dealer↔Endwise-rad/tråd. Person + forhandler, aldri tom.
+ * Listerad i dealer↔Endwise-innboksen: KUN verksted-/forhandlernavn.
+ * Personen hører hjemme i tråden, ikke på raden.
  */
 export function supportRadTittel(
-  kontaktNavn: string | null | undefined,
+  _kontaktNavn: string | null | undefined,
   tenantName: string | null | undefined,
 ): string {
-  const person = kontaktNavn?.trim();
-  const dealer = tenantName?.trim();
-  if (person && dealer && person !== dealer) return `${person} · ${dealer}`;
-  return person || dealer || 'Endwise-samtale';
+  return tenantName?.trim() || 'Endwise-samtale';
+}
+
+/**
+ * Trådhode / chatboks: personen du snakker med, pluss ekte rolle.
+ * Aldri den generiske «Ansatt» som navn eller rolle.
+ */
+export function supportTradTittel(
+  kontaktNavn: string | null | undefined,
+  rolle?: string | null,
+): string {
+  const person = kontaktNavn?.trim() && kontaktNavn.trim() !== 'Ansatt' ? kontaktNavn.trim() : null;
+  const etikett = supportRolleEtikett(rolle);
+  if (person && etikett) return `${person} · ${etikett}`;
+  if (person) return person;
+  if (etikett) return etikett;
+  return 'Endwise-samtale';
+}
+
+/** Første motpart med ekte visningsnavn — ikke «Ansatt», ikke deg. */
+export function forsteMotpartNavn(
+  motparter: string[],
+  navn: Navnekart | undefined,
+  meId: string | null | undefined,
+): string | null {
+  for (const id of motparter) {
+    if (!id || id === meId || isAgent(id)) continue;
+    const vis = navn?.[id]?.navn?.trim();
+    if (vis && vis !== 'Ansatt') return vis;
+  }
+  return null;
+}
+
+/** Rollen til samme motpart som `forsteMotpartNavn`. */
+export function forsteMotpartRolle(
+  motparter: string[],
+  navn: Navnekart | undefined,
+  meId: string | null | undefined,
+): string | null {
+  for (const id of motparter) {
+    if (!id || id === meId || isAgent(id)) continue;
+    const vis = navn?.[id]?.navn?.trim();
+    if (vis && vis !== 'Ansatt') return navn?.[id]?.rolle ?? null;
+    if (supportRolleEtikett(navn?.[id]?.rolle)) return navn?.[id]?.rolle ?? null;
+  }
+  return null;
 }
 
 export function authorLabel(
@@ -76,7 +152,9 @@ export function authorLabel(
 ): string {
   if (meId && authorId === meId) return 'Deg';
   if (isAgent(authorId)) return 'Assistent (AI)';
-  return navn?.[authorId]?.navn ?? `Deltaker ${authorId.slice(0, 6)}`;
+  const vis = navn?.[authorId]?.navn?.trim();
+  if (vis && vis !== 'Ansatt') return vis;
+  return `Deltaker ${authorId.slice(0, 6)}`;
 }
 
 /**

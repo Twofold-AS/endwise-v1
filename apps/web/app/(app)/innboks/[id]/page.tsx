@@ -23,15 +23,20 @@ import { type Kanal, KanalLinje, KanalMerke, tilKanal } from '../_kanal';
 import {
   agentName,
   authorLabel,
+  type DeltakerRolle,
   fmtDayHeading,
   fmtTime,
+  forsteMotpartNavn,
+  forsteMotpartRolle,
   isAgent,
   KIND_LABEL,
   KIND_TONE,
   type Navnekart,
   ROLLE_LABEL,
-  supportRadTittel,
+  supportRolleEtikett,
+  supportTradTittel,
   threadHeading,
+  tilDeltakerRolle,
   visningForTraadtype,
 } from '../_lib';
 import { useInboxModus } from '../_modus';
@@ -144,22 +149,29 @@ export default function TrådPage() {
     { enabled: !endwise && deltakerIder.length > 0, staleTime: 5 * 60_000 },
   );
 
-  const platformNavn = useMemo(() => {
-    if (!endwise) return undefined;
+  const meldingNavn = useMemo(() => {
     const kart: Navnekart = {};
     for (const m of rows) {
       if ('authorNavn' in m && typeof m.authorNavn === 'string' && m.authorNavn.trim()) {
-        kart[m.authorId] = { navn: m.authorNavn, rolle: 'ansatt' };
+        const rolle =
+          'authorRolle' in m && typeof m.authorRolle === 'string' ? m.authorRolle : null;
+        kart[m.authorId] = { navn: m.authorNavn, rolle: tilDeltakerRolle(rolle) };
       }
     }
     if (thread && 'kontaktNavn' in thread && thread.kontaktNavn) {
       const id = 'motparter' in thread ? thread.motparter?.[0] : undefined;
-      if (id && !kart[id]) kart[id] = { navn: thread.kontaktNavn, rolle: 'ansatt' };
+      const rolle =
+        thread && 'kontaktRolle' in thread && typeof thread.kontaktRolle === 'string'
+          ? thread.kontaktRolle
+          : null;
+      if (id && !kart[id]) {
+        kart[id] = { navn: thread.kontaktNavn, rolle: tilDeltakerRolle(rolle) };
+      }
     }
     return kart;
-  }, [endwise, rows, thread]);
+  }, [rows, thread]);
 
-  const navnKart = endwise ? platformNavn : navn.data;
+  const navnKart = { ...(navn.data ?? {}), ...meldingNavn };
 
   // Sanntid: bare for DENNE tråden. Eventet er varselklokka; innholdet hentes
   // gjennom tRPC (og dermed RLS).
@@ -207,6 +219,38 @@ export default function TrådPage() {
     post.mutate({ threadId, body: text });
   }
 
+  const motpartId =
+    thread && 'motparter' in thread
+      ? thread.motparter?.find((id: string) => id && id !== me.data?.userId)
+      : undefined;
+  const tradRolle =
+    thread && 'kontaktRolle' in thread && typeof thread.kontaktRolle === 'string'
+      ? thread.kontaktRolle
+      : thread && thread.kind === 'dealer_admin' && 'motparter' in thread
+        ? forsteMotpartRolle(thread.motparter ?? [], navnKart, me.data?.userId)
+        : motpartId
+          ? navnKart?.[motpartId]?.rolle
+          : undefined;
+  const tradRolleEtikett = thread?.kind === 'dealer_admin' ? supportRolleEtikett(tradRolle) : null;
+
+  const tradTittel =
+    endwise && thread && 'kontaktNavn' in thread
+      ? supportTradTittel(thread.kontaktNavn, tradRolle)
+      : thread && thread.kind === 'dealer_admin' && 'motparter' in thread
+        ? supportTradTittel(
+            forsteMotpartNavn(thread.motparter ?? [], navnKart, me.data?.userId),
+            tradRolle,
+          )
+        : thread && 'motparter' in thread
+          ? threadHeading(
+              thread.subject,
+              thread.kind,
+              thread.motparter ?? [],
+              navnKart,
+              me.data?.userId,
+            )
+          : 'Samtale';
+
   if (messages.isLoading) {
     return <div className="px-8 py-7 text-body text-fg-muted">Laster tråd …</div>;
   }
@@ -239,22 +283,7 @@ export default function TrådPage() {
            * noe du aldri forlot, er ikke navigasjon — den er en påstand om at
            * du er et annet sted enn du er.
            */}
-          <h1 className="truncate text-title text-fg">
-            {endwise && thread && 'tenantName' in thread
-              ? supportRadTittel(
-                  'kontaktNavn' in thread ? thread.kontaktNavn : null,
-                  thread.tenantName,
-                )
-              : thread && 'motparter' in thread
-                ? threadHeading(
-                    thread.subject,
-                    thread.kind,
-                    thread.motparter ?? [],
-                    navnKart,
-                    me.data?.userId,
-                  )
-                : 'Samtale'}
-          </h1>
+          <h1 className="truncate text-title text-fg">{tradTittel}</h1>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {/* Kanalen står i HODET, ikke nede ved svarfeltet: den skal være
                 lest før man begynner å skrive, ikke etterpå. */}
@@ -266,9 +295,13 @@ export default function TrådPage() {
             )}
             {thread && (
               <span
-                className={`inline-flex h-badge items-center rounded-badge px-2 font-medium text-[11px] ${KIND_TONE[thread.kind] ?? 'bg-surface-2 text-fg-muted'}`}
+                className={`inline-flex h-badge items-center rounded-badge px-2 font-medium text-[11px] ${
+                  tradRolleEtikett
+                    ? 'bg-surface-2 text-fg-muted'
+                    : (KIND_TONE[thread.kind] ?? 'bg-surface-2 text-fg-muted')
+                }`}
               >
-                {KIND_LABEL[thread.kind] ?? thread.kind}
+                {tradRolleEtikett ?? KIND_LABEL[thread.kind] ?? thread.kind}
               </span>
             )}
             <span className="text-[12px] text-fg-muted">{rows.length} meldinger</span>
@@ -325,6 +358,13 @@ export default function TrådPage() {
                   agent={isAgent(m.authorId)}
                   author={authorLabel(m.authorId, me.data?.userId, navnKart)}
                   rolle={navnKart?.[m.authorId]?.rolle}
+                  rolleEtikett={
+                    supportRolleEtikett(navnKart?.[m.authorId]?.rolle) ??
+                    (navnKart?.[m.authorId]?.rolle === 'mekaniker' ||
+                    navnKart?.[m.authorId]?.rolle === 'kunde'
+                      ? (ROLLE_LABEL[navnKart[m.authorId]?.rolle ?? ''] ?? null)
+                      : null)
+                  }
                   authorId={m.authorId}
                   seed={navn.data?.[m.authorId]?.seed ?? null}
                   avatar={navn.data?.[m.authorId]?.avatar ?? null}
@@ -398,6 +438,7 @@ function Message({
   agent,
   author,
   rolle,
+  rolleEtikett,
   authorId,
   seed,
   avatar,
@@ -413,7 +454,9 @@ function Message({
   mine: boolean;
   agent: boolean;
   author: string;
-  rolle?: 'ansatt' | 'mekaniker' | 'kunde';
+  rolle?: DeltakerRolle;
+  /** Vist merke. Tom = ingen rolle (aldri «Ansatt»). */
+  rolleEtikett?: string | null;
   authorId: string;
   /** Hvor meldingen kom inn / gikk ut. */
   kanal: Kanal;
@@ -480,9 +523,9 @@ function Message({
           <span className="text-[12px] text-fg-muted">{author}</span>
           {/* Rollen står bare på andre enn deg selv: «Kunde» eller «Mekaniker»
               endrer hvordan svaret skal formuleres. */}
-          {rolle && !mine && (
+          {rolleEtikett && (
             <span className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
-              {ROLLE_LABEL[rolle] ?? rolle}
+              {rolleEtikett}
             </span>
           )}
           {/* Bare når kanalen er noe ANNET enn app — se doc over. */}

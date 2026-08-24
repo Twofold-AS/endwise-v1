@@ -71,15 +71,21 @@ describe('F5-11: /endwise/innboks gjenbruker innboks-chrome med modus=endwise', 
     expect(sidebar).toMatch(/Når et verksted skriver til Endwise, lander det her\./);
   });
 
-  it('liste og trådhode viser personnavn + forhandlernavn, aldri tom avsender', () => {
+  it('liste viser forhandlernavn; tråd viser person, aldri Ansatt som navn', () => {
     const sidebar = les('../app/(app)/innboks/_inbox-sidebar.tsx');
     const trad = les('../app/(app)/innboks/[id]/page.tsx');
     const lib = les('../app/(app)/innboks/_lib.ts');
     expect(lib).toMatch(/export function supportRadTittel/);
+    expect(lib).toMatch(/export function supportTradTittel/);
+    expect(lib).toMatch(/export function supportRolleEtikett/);
     expect(sidebar).toMatch(/supportRadTittel/);
-    expect(sidebar).toMatch(/kontaktNavn/);
-    expect(trad).toMatch(/supportRadTittel|kontaktNavn/);
+    expect(sidebar).toMatch(/tenantName/);
+    expect(trad).toMatch(/supportTradTittel\(/);
+    expect(trad).toMatch(/kontaktRolle|tradRolle/);
     expect(trad).toMatch(/authorNavn/);
+    expect(trad).toMatch(/authorRolle|supportRolleEtikett/);
+    expect(trad).toMatch(/rolleEtikett && \(/);
+    expect(trad).not.toMatch(/rolle:\s*['"]ansatt['"]/);
   });
 
   it('detaljpanelet viser forhandler + Se verkstedet som URL, uten setActive', () => {

@@ -69,7 +69,14 @@ export const directoryRouter = router({
         string,
         {
           navn: string;
-          rolle: 'ansatt' | 'mekaniker' | 'kunde';
+          rolle:
+            | 'ansatt'
+            | 'mekaniker'
+            | 'kunde'
+            | 'dealer_admin'
+            | 'dealer_staff'
+            | 'endwise_admin'
+            | 'endwise_support';
           seed: string;
           avatar: AvatarValg;
         }
@@ -166,7 +173,7 @@ export const directoryRouter = router({
        * første filteret ville dette vært navneorakelet beskrevet over.
        */
       const ansatte = await ctx.db
-        .select({ id: schema.user.id, name: schema.user.name })
+        .select({ id: schema.user.id, name: schema.user.name, role: schema.member.role })
         .from(schema.user)
         .innerJoin(schema.member, eq(schema.member.userId, schema.user.id))
         .where(and(eq(schema.member.organizationId, ctx.tenantId), inArray(schema.user.id, unike)));
@@ -174,7 +181,14 @@ export const directoryRouter = router({
       for (const a of ansatte) {
         // Mekaniker-navnet er mer presist i verkstedssammenheng; ikke overskriv.
         if (!ut[a.id]) {
-          ut[a.id] = { navn: vis(a.id, a.name), rolle: 'ansatt', seed: a.id, avatar: TOM_AVATAR };
+          const rolle =
+            a.role === 'dealer_admin' ||
+            a.role === 'endwise_admin' ||
+            a.role === 'endwise_support' ||
+            a.role === 'dealer_staff'
+              ? a.role
+              : ('ansatt' as const);
+          ut[a.id] = { navn: vis(a.id, a.name), rolle, seed: a.id, avatar: TOM_AVATAR };
         }
       }
 

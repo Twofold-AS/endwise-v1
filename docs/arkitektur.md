@@ -204,7 +204,7 @@ innloggingen skjer før noen forhandler er valgt. Grensen går i stedet på
 
 | Tjeneste | Brukes til | Kritisk? |
 |---|---|---|
-| **Vercel** (fra1, EU) | ⭐ **All compute:** `apps/web`, med `apps/api` portet inn som route handlers | Ja |
+| **Vercel** (cdg1, Paris EU) | ⭐ **All compute:** `apps/web`, med `apps/api` portet inn som route handlers | Ja |
 | **Scaleway** (Frankrike, EU) | ⭐ **All data:** Managed PostgreSQL · Serverless Container for `apps/stream` · Key Manager | Ja |
 | **Stripe** | Abonnement og betaling. **Webhooken er det eneste som skrur på moduler** | Ja, for salg |
 | **Resend** | E-post: engangskoder ved innlogging, bekreftelser, nyhetsbrev | Ja — innlogging med 2FA feiler uten |
@@ -276,7 +276,7 @@ noe man selv nettopp gjorde. Derfor har avsenderen en egen kvitteringslyd.
 **To leverandører. Vercel er compute, Scaleway er data.**
 
 ```
-Vercel (fra1, EU)         apps/web + api som Next route handlers
+Vercel (cdg1, Paris EU)   apps/web + api som Next route handlers
                               ↓ samme origin
 Scaleway (Frankrike, EU)  ├─ Managed PostgreSQL   ← all lagring, RLS
                           │      ↑ LISTEN/NOTIFY

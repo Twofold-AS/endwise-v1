@@ -10,7 +10,7 @@ import { krevEndwiseAdminSide } from '@/lib/endwise-admin-gate';
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const preferredRegion = 'fra1';
+export const preferredRegion = 'cdg1';
 
 export default async function EndwiseLayout({ children }: { children: ReactNode }) {
   await krevEndwiseAdminSide();

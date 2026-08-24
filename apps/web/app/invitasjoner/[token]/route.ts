@@ -7,7 +7,7 @@ import { handleHono } from '@endwise/api/http/hono';
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const preferredRegion = 'fra1';
+export const preferredRegion = 'cdg1';
 
 export function GET(req: Request) {
   return handleHono(req);

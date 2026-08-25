@@ -388,7 +388,10 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
               ) : null}
               <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
                 <Mail size={13} className="mt-px shrink-0" />
-                <span>Kjører du lokalt uten Resend, står koden i api-loggen i terminalen.</span>
+                <span>
+                  Vi har sendt en engangskode til e-posten din. Sjekk søppelposten om den ikke
+                  dukker opp.
+                </span>
               </p>
             </div>
             <div className="px-1.5 pt-1 pb-1">

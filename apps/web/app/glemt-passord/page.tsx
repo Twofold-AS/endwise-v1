@@ -75,8 +75,7 @@ export default function GlemtPassordPage() {
                 </span>
               </p>
               <p className="text-[12px] text-fg-muted leading-relaxed">
-                Kommer det ingenting? Sjekk søppelposten, og at adressen var riktig skrevet. Kjører
-                du lokalt uten Resend, står lenken i api-loggen i terminalen.
+                Kommer det ingenting? Sjekk søppelposten, og at adressen var riktig skrevet.
               </p>
             </div>
           </div>

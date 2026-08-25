@@ -984,91 +984,108 @@ export const tenantsRouter = router({
    * greit for noe som kan kalles fra en innlogget flate — da ville
    * demo-knappen vært den ene skrivestien i systemet uten isolasjon.
    *
-   * At det går gjennom vanlige veier er dessuten poenget med demo-data: den
-   * skal bevise at rutene virker. Hardkodet demo-UI beviser ingenting.
+   * `tenantId` er valgfri: uten den brukes sesjonens tenant. Endwise-admin
+   * sitter vanligvis i plattform-tenanten, så knappen må kunne peke på en
+   * annen demo-tenant. Live-tenants nektes alltid.
    *
    * Idempotent: kaller du to ganger, får du ikke to sett.
    */
-  seedDemo: endwiseAdminProcedure.mutation(async ({ ctx }) => {
-    const dev = await resolveDevMode(ctx);
-    if (!dev.enabled) {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: dev.isDemoTenant
-          ? 'Dev-mode er ikke på'
-          : 'Denne tenanten er ikke en demo-tenant (kind ≠ demo)',
+  seedDemo: endwiseAdminProcedure
+    .input(z.object({ tenantId: z.uuid().optional() }).optional())
+    .mutation(async ({ ctx, input }) => {
+      const dev = await resolveDevMode(ctx);
+      if (!dev.flagOn) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Dev-mode-flagget er ikke på',
+        });
+      }
+
+      const targetId = input?.tenantId ?? ctx.tenantId;
+      if (!targetId) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Mangler tenant' });
+      }
+
+      const tenant = await lesTenant(ctx.db, targetId);
+      if (!tenant) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+      }
+      if (tenant.kind !== 'demo') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Denne tenanten er ikke en demo-tenant (kind ≠ demo)',
+        });
+      }
+
+      return withTenant(ctx.db, targetId, async (tx) => {
+        // ① Mekaniker-profil på MEG. Dette er hele grunnen til at mekaniker-
+        //    konteksten er usynlig for en admin: `isMechanic` krever en rad her.
+        //    Vi jukser ikke med gaten — vi oppretter dataene gaten spør etter.
+        const [minMek] = await tx
+          .select({ id: schema.mechanics.id })
+          .from(schema.mechanics)
+          .where(eq(schema.mechanics.userId, ctx.userId as string));
+
+        let mechanicId = minMek?.id;
+        if (!mechanicId) {
+          const [ny] = await tx
+            .insert(schema.mechanics)
+            .values({
+              tenantId: targetId,
+              userId: ctx.userId as string,
+              name: 'Demo-mekaniker (deg)',
+              capacity: 2,
+            })
+            .returning({ id: schema.mechanics.id });
+          mechanicId = ny?.id;
+        }
+
+        // ② En tjeneste, så bookinger har noe å peke på.
+        const [finnesTjeneste] = await tx
+          .select({ id: schema.services.id })
+          .from(schema.services)
+          .where(eq(schema.services.tenantId, targetId));
+
+        let serviceId = finnesTjeneste?.id;
+        if (!serviceId) {
+          const [ny] = await tx
+            .insert(schema.services)
+            .values({
+              tenantId: targetId,
+              name: 'EU-kontroll MC (demo)',
+              // Endwise er MC/båt/ATV — ikke bil. Se vehicleTypeEnum.
+              vehicleType: 'mc',
+            })
+            .returning({ id: schema.services.id });
+          serviceId = ny?.id;
+        }
+
+        // ③ En kunde og et kjøretøy.
+        const [finnesKunde] = await tx
+          .select({ id: schema.customers.id })
+          .from(schema.customers)
+          .where(eq(schema.customers.tenantId, targetId));
+
+        let customerId = finnesKunde?.id;
+        if (!customerId) {
+          const [ny] = await tx
+            .insert(schema.customers)
+            .values({
+              tenantId: targetId,
+              name: 'Demo Demosen',
+              email: 'demo@example.invalid',
+            })
+            .returning({ id: schema.customers.id });
+          customerId = ny?.id;
+        }
+
+        return {
+          mechanicId: mechanicId ?? null,
+          serviceId: serviceId ?? null,
+          customerId: customerId ?? null,
+        };
       });
-    }
-
-    return withTenant(ctx.db, ctx.tenantId as string, async (tx) => {
-      // ① Mekaniker-profil på MEG. Dette er hele grunnen til at mekaniker-
-      //    konteksten er usynlig for en admin: `isMechanic` krever en rad her.
-      //    Vi jukser ikke med gaten — vi oppretter dataene gaten spør etter.
-      const [minMek] = await tx
-        .select({ id: schema.mechanics.id })
-        .from(schema.mechanics)
-        .where(eq(schema.mechanics.userId, ctx.userId as string));
-
-      let mechanicId = minMek?.id;
-      if (!mechanicId) {
-        const [ny] = await tx
-          .insert(schema.mechanics)
-          .values({
-            tenantId: ctx.tenantId as string,
-            userId: ctx.userId as string,
-            name: 'Demo-mekaniker (deg)',
-            capacity: 2,
-          })
-          .returning({ id: schema.mechanics.id });
-        mechanicId = ny?.id;
-      }
-
-      // ② En tjeneste, så bookinger har noe å peke på.
-      const [finnesTjeneste] = await tx
-        .select({ id: schema.services.id })
-        .from(schema.services)
-        .where(eq(schema.services.tenantId, ctx.tenantId as string));
-
-      let serviceId = finnesTjeneste?.id;
-      if (!serviceId) {
-        const [ny] = await tx
-          .insert(schema.services)
-          .values({
-            tenantId: ctx.tenantId as string,
-            name: 'EU-kontroll MC (demo)',
-            // Endwise er MC/båt/ATV — ikke bil. Se vehicleTypeEnum.
-            vehicleType: 'mc',
-          })
-          .returning({ id: schema.services.id });
-        serviceId = ny?.id;
-      }
-
-      // ③ En kunde og et kjøretøy.
-      const [finnesKunde] = await tx
-        .select({ id: schema.customers.id })
-        .from(schema.customers)
-        .where(eq(schema.customers.tenantId, ctx.tenantId as string));
-
-      let customerId = finnesKunde?.id;
-      if (!customerId) {
-        const [ny] = await tx
-          .insert(schema.customers)
-          .values({
-            tenantId: ctx.tenantId as string,
-            name: 'Demo Demosen',
-            email: 'demo@example.invalid',
-          })
-          .returning({ id: schema.customers.id });
-        customerId = ny?.id;
-      }
-
-      return {
-        mechanicId: mechanicId ?? null,
-        serviceId: serviceId ?? null,
-        customerId: customerId ?? null,
-      };
-    });
-  }),
+    }),
 
   /**
    * F5-28 ③ — Demo-tenants jeg ER MEDLEM AV.

@@ -6,8 +6,8 @@ import {
   LifeBuoy,
   type LucideIcon,
   StatefulButton,
-  Store,
   Users,
+  Wrench,
 } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
@@ -19,19 +19,19 @@ import { useInboxModus } from './_modus';
 /**
  * F5-14 / F6-01 — «NY SAMTALE» som e-post: mottakerliste, ikke en hub.
  *
- * Én stor pille med nøyaktig tre piller inni (Mikael 25.08.2026):
+ * Én stor pille med nøyaktig tre piller inni (Jonas + Mikael 25.08.2026):
  *   Kunde   → customers.list · customer_dealer
- *   Intern  → directory.colleagues (kontoret: selger/admin — ikke gulvet)
+ *   Intern  → mechanics.list · mechanic_dealer (verkstedsgulvet — mekanikerne bor her)
  *   Support → dealer_admin / Endwise (het «Skriv til Endwise»)
  *
  * Support er default og primær (fylt bg-fg). De to andre er outline.
- * Ingen bruker-ID-felt. Ingen Mekaniker-pille.
+ * Ingen bruker-ID-felt. Ingen fjerde Mekaniker-pille.
  */
 type Pille = 'kunde' | 'intern' | 'support';
 
 const PILLER: { key: Pille; label: string; icon: LucideIcon }[] = [
   { key: 'kunde', label: 'Kunde', icon: Users },
-  { key: 'intern', label: 'Intern', icon: Store },
+  { key: 'intern', label: 'Intern', icon: Wrench },
   { key: 'support', label: 'Support', icon: LifeBuoy },
 ];
 
@@ -65,7 +65,7 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
     { limit: 200, sorter: 'navn' },
     { enabled: !endwise && pille === 'kunde' },
   );
-  const kolleger = trpc.directory.colleagues.useQuery(undefined, {
+  const mekanikere = trpc.mechanics.list.useQuery(undefined, {
     enabled: !endwise && pille === 'intern',
   });
   const forhandlere = trpc.tenants.list.useQuery(undefined, {
@@ -127,22 +127,23 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
         .filter(treffer);
     }
 
-    return (kolleger.data ?? [])
-      .filter((k) => k.userId !== me.data?.userId)
-      .map((k) => ({
-        id: k.userId,
-        userId: k.userId,
-        navn: k.navn,
-        undertekst: internEtikett(k.funksjon, k.rolle),
+    return (mekanikere.data ?? [])
+      .filter((m) => m.active !== false)
+      .filter((m) => !m.userId || m.userId !== me.data?.userId)
+      .map((m) => ({
+        id: m.id,
+        navn: m.name,
+        userId: m.userId ?? undefined,
       }))
+      .sort((a, b) => a.navn.localeCompare(b.navn, 'nb'))
       .filter(treffer);
-  }, [endwise, pille, sok, kunder.data, kolleger.data, forhandlere.data, me.data?.userId]);
+  }, [endwise, pille, sok, kunder.data, mekanikere.data, forhandlere.data, me.data?.userId]);
 
   const mottaker = !endwise && pille === 'support' ? ENDWISE_MOTTAKER : valgt;
 
   const laster =
     (pille === 'kunde' && !endwise && kunder.isLoading) ||
-    (pille === 'intern' && !endwise && kolleger.isLoading) ||
+    (pille === 'intern' && !endwise && mekanikere.isLoading) ||
     (pille === 'support' && endwise && forhandlere.isLoading);
 
   const jobber = opprett.isPending || post.isPending || opprettPlattform.isPending;
@@ -356,20 +357,11 @@ function pilleKlasse(aktiv: boolean, primær: boolean): string {
   return 'border border-transparent text-fg-muted hover:text-fg';
 }
 
-function internEtikett(funksjon: string, rolle: string): string | undefined {
-  if (funksjon === 'leder' || rolle === 'dealer_admin') return 'Leder';
-  if (funksjon === 'selger') return 'Selger';
-  if (funksjon === 'support') return 'Support';
-  if (rolle === 'endwise_admin') return 'Admin';
-  if (rolle === 'endwise_support') return 'Support';
-  return undefined;
-}
-
 function tommelding(pille: Pille, endwise: boolean): string {
   if (endwise && pille !== 'support') {
     return 'Denne innboksen er forhandler-support. Kunder og intern-team ligger hos verkstedet.';
   }
   if (pille === 'kunde') return 'Ingen kunder å skrive til ennå.';
-  if (pille === 'intern') return 'Ingen kollegaer på kontoret å skrive til ennå.';
+  if (pille === 'intern') return 'Ingen på verkstedsgulvet å skrive til ennå.';
   return 'Ingen forhandlere å skrive til ennå.';
 }

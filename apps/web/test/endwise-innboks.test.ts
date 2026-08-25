@@ -120,7 +120,9 @@ describe('F5-14: Ny samtale — Kunde · Intern · Support', () => {
     expect(kilde).toMatch(/kind:\s*['"]customer_dealer['"]/);
     expect(kilde).toMatch(/channel:\s*['"]app['"]/);
     expect(kilde).toMatch(/customers\.list/);
-    expect(kilde).toMatch(/directory\.colleagues/);
+    expect(kilde).toMatch(/mechanics\.list/);
+    expect(kilde).toMatch(/verkstedsgulvet/);
+    expect(kilde).not.toMatch(/directory\.colleagues/);
     expect(kilde).not.toMatch(/bruker-ID|Deltakere \(bruker-ID|participantIds:\s*\[.*input/i);
     expect(kilde).not.toMatch(/['"]sms['"]|['"]email['"]/);
   });

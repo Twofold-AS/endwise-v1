@@ -1,5 +1,6 @@
 import type { Database } from '@endwise/db';
-import { APIError, createAuthMiddleware, isAPIError } from 'better-auth/api';
+import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from 'better-auth/api';
+import { BYTT_EPOST_STI } from './bytt-epost.ts';
 import {
   BYTT_PASSORD_ETTER_HOOK_ID,
   BYTT_PASSORD_FOR_HOOK_ID,
@@ -20,7 +21,12 @@ import { skriv2faDisableAudit } from './to-faktor-server.ts';
  * bundle.
  */
 
-const KREDENTIAL_STIER = new Set([BYTT_PASSORD_STI, TO_FAKTOR_ENABLE_STI, TO_FAKTOR_DISABLE_STI]);
+const KREDENTIAL_STIER = new Set([
+  BYTT_PASSORD_STI,
+  TO_FAKTOR_ENABLE_STI,
+  TO_FAKTOR_DISABLE_STI,
+  BYTT_EPOST_STI,
+]);
 
 function merket<T extends object>(fn: T, id: string): T & { endwiseId: string } {
   return Object.assign(fn, { endwiseId: id });
@@ -61,10 +67,38 @@ function brukerIdFraHook(ctx: {
 export const byttPassordForHook = merket(
   createAuthMiddleware(async (ctx) => {
     await eierLasForHook(ctx);
-    if (ctx.path === TO_FAKTOR_DISABLE_STI) {
+    if (ctx.path === TO_FAKTOR_DISABLE_STI || ctx.path === BYTT_EPOST_STI) {
       const password = passordFraBody(ctx.body);
       if (password === undefined || password.trim().length === 0) {
         throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
+      }
+      if (ctx.path === BYTT_EPOST_STI) {
+        /**
+         * Session-middleware på `/change-email` kjører ETTER hooks.before.
+         * Uten `getSessionFromCtx` her er `ctx.context.session` tom, og
+         * `checkPassword` hoppes over — da holder det med en åpen sesjon
+         * pluss en vilkårlig passordstreng.
+         */
+        const session = await getSessionFromCtx(ctx);
+        const userId = session?.user?.id;
+        const check = (
+          ctx as {
+            context?: {
+              password?: { checkPassword?: (id: string, c: unknown) => Promise<unknown> };
+            };
+          }
+        ).context?.password?.checkPassword;
+        if (typeof userId !== 'string' || typeof check !== 'function') {
+          throw new APIError('UNAUTHORIZED', { message: 'Unauthorized', code: 'UNAUTHORIZED' });
+        }
+        try {
+          await check(userId, ctx);
+        } catch (error) {
+          if (erSkjultAuthFeilkode(feilkodeFraReturned(error))) {
+            throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
+          }
+          throw error;
+        }
       }
       return;
     }

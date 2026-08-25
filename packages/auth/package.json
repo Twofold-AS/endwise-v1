@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./bytt-passord": "./src/bytt-passord.ts",
+    "./bytt-epost": "./src/bytt-epost.ts",
     "./to-faktor-oppsett": "./src/to-faktor-oppsett.ts"
   },
   "scripts": {

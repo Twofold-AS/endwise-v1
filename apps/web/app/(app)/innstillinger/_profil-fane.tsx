@@ -6,6 +6,7 @@ import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { AvatarVelger } from '../_avatar/avatar-velger';
 import { lesTema, settTema, type Tema } from '../_lib/tema';
+import { ByttEpostSkjema } from '../_shell/bytt-epost';
 import { ByttPassordSkjema } from '../_shell/bytt-passord';
 import { KallenavnSeksjon, VarslingslyderRad, VisningsnavnFelt } from '../_shell/profil-kort';
 import { ToFaktorRad } from '../_shell/to-faktor-rad';
@@ -53,10 +54,14 @@ export function ProfilFane() {
               aria-label="E-post"
               className="h-control w-full rounded-control border border-border bg-surface-2 px-2.5 text-body text-fg-muted outline-none"
             />
-            <p className="mt-2 text-[11px] text-fg-muted">E-post endres ikke herfra.</p>
+            <p className="mt-2 text-[11px] text-fg-muted">
+              Byttes i to steg under — ikke med ett klikk.
+            </p>
           </div>
         </div>
       </AvatarVelger>
+
+      <ByttEpostSkjema gjeldende={meg.data?.epost ?? ''} />
 
       <KallenavnSeksjon />
 

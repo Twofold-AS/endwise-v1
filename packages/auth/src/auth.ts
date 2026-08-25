@@ -4,6 +4,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { organization, phoneNumber, twoFactor } from 'better-auth/plugins';
 import { authTrustedOrigins } from './auth-origins.ts';
+import { BEKREFT_EPOST_STI, BYTT_EPOST_RATE_GRENSE, BYTT_EPOST_STI } from './bytt-epost.ts';
 import {
   BYTT_PASSORD_RATE_GRENSE,
   BYTT_PASSORD_STI,
@@ -22,7 +23,12 @@ import {
   RESET_SETT_STI,
 } from './password-reset.ts';
 import { ac, roles } from './rbac.ts';
-import { sendPasswordReset, sendTwoFactorOtp } from './senders/resend.ts';
+import {
+  sendByttEpostBekreftelse,
+  sendByttEpostNyAdresse,
+  sendPasswordReset,
+  sendTwoFactorOtp,
+} from './senders/resend.ts';
 import { sendPhoneOtp, verifyPhoneOtp } from './senders/twilio.ts';
 import {
   ABSOLUTE_MAX_LIFETIME_SECONDS,
@@ -164,6 +170,43 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
       },
     },
 
+    /**
+     * F1-27 — BYTT E-POST i to steg. Av som default i Better-Auth.
+     *
+     * `updateEmailWithoutVerification` settes IKKE. Med den på ville en
+     * uverifisert konto byttet adresse i samme klikk som forespørselen.
+     * `sendChangeEmailConfirmation` er bekreftelsen fra adressen brukeren
+     * HAR — uten den kan en stjålet sesjon peke kontoen mot en fremmed innboks.
+     */
+    user: {
+      changeEmail: {
+        enabled: true,
+        sendChangeEmailConfirmation: async ({ user, newEmail, token }) => {
+          const lenke = new URL(BEKREFT_EPOST_STI, authEnv.baseUrl);
+          lenke.searchParams.set('token', token);
+          await sendByttEpostBekreftelse({
+            to: user.email,
+            nyEpost: newEmail,
+            lenke: lenke.toString(),
+          });
+        },
+      },
+    },
+
+    /**
+     * Påkrevd av changeEmail (F1-27). `sendOnSignUp: false` — vi endrer ikke
+     * invitasjonsflyten, som allerede setter `emailVerified` (F1-10).
+     */
+    emailVerification: {
+      sendOnSignUp: false,
+      expiresIn: 1_800,
+      sendVerificationEmail: async ({ user, token }) => {
+        const lenke = new URL(BEKREFT_EPOST_STI, authEnv.baseUrl);
+        lenke.searchParams.set('token', token);
+        await sendByttEpostNyAdresse({ to: user.email, lenke: lenke.toString() });
+      },
+    },
+
     session: {
       // F1-12: glidende 60-min idle-vindu, serverside.
       expiresIn: IDLE_TIMEOUT_SECONDS,
@@ -229,6 +272,7 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
         [BYTT_PASSORD_STI]: { ...BYTT_PASSORD_RATE_GRENSE },
         [TO_FAKTOR_ENABLE_STI]: { ...KREDENTIAL_MUTASJON_RATE_GRENSE },
         [TO_FAKTOR_DISABLE_STI]: { ...KREDENTIAL_MUTASJON_RATE_GRENSE },
+        [BYTT_EPOST_STI]: { ...BYTT_EPOST_RATE_GRENSE },
       },
       storage: 'database',
     },

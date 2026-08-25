@@ -1,4 +1,5 @@
 import { eq, schema, withTenant } from '@endwise/db';
+import { hentVegvesenApiNokkel } from '@endwise/modules/vegvesen';
 import { createVegvesenClient } from '@endwise/toolkit-vegvesen';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -13,19 +14,19 @@ const vegvesenProcedure = moduleProcedure('vegvesen');
 /**
  * F2-08 — Vegvesen-oppslag: regnr → merke/modell/årsmodell/EU-frist.
  *
- * Nøkkelen er per tenant (envelope-kryptert, F1-07) — her leses den fra miljøet
- * til den er på plass i DB. Oppslaget er et SPEIL: vi lagrer det Vegvesenet sier,
- * og `lookupAt` forteller når. Vi later aldri som at det er vår sannhet.
+ * Nøkkelen er per tenant (envelope-kryptert, F1-07) med env som reserve.
+ * Oppslaget er et SPEIL: vi lagrer det Vegvesenet sier, og `lookupAt`
+ * forteller når. Vi later aldri som at det er vår sannhet. Nøkkelen logges ikke.
  */
 export const lookupRouter = router({
   vehicleByRegNumber: vegvesenProcedure
     .input(z.object({ regNumber: z.string().min(2).max(10) }))
-    .query(async ({ input }) => {
-      const apiKey = process.env.VEGVESEN_API_KEY;
+    .query(async ({ ctx, input }) => {
+      const apiKey = await hentVegvesenApiNokkel(ctx.db, ctx.tenantId);
       if (!apiKey) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'VEGVESEN_API_KEY mangler',
+          message: 'Vegvesen-nøkkel mangler. Legg den inn under Innstillinger › Koblinger.',
         });
       }
       return createVegvesenClient({ apiKey }).lookupByRegNumber(input.regNumber);
@@ -35,9 +36,12 @@ export const lookupRouter = router({
   refreshVehicle: vegvesenProcedure
     .input(z.object({ vehicleId: z.uuid(), regNumber: z.string().min(2).max(10) }))
     .mutation(async ({ ctx, input }) => {
-      const apiKey = process.env.VEGVESEN_API_KEY;
+      const apiKey = await hentVegvesenApiNokkel(ctx.db, ctx.tenantId);
       if (!apiKey) {
-        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'VEGVESEN_API_KEY mangler' });
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Vegvesen-nøkkel mangler. Legg den inn under Innstillinger › Koblinger.',
+        });
       }
 
       const data = await createVegvesenClient({ apiKey }).lookupByRegNumber(input.regNumber);

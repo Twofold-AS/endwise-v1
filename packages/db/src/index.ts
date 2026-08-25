@@ -5,8 +5,14 @@ export * from './queries/membership.ts';
 export * from './queries/sessions.ts';
 export * from './rls.ts';
 export * from './roles.ts';
-/** F5-23 — den MIDLERTIDIGE bilde-allowlisten. Se schema/helpdesk.ts. */
-export { HELPDESK_BILDER } from './schema/helpdesk.ts';
+/** F5-23 / F5-51 — bilde-allowlist og faste artikkelkategorier. */
+export {
+  HELPDESK_BILDER,
+  HELPDESK_KATEGORI_DEFAULT,
+  HELPDESK_KATEGORI_LABEL,
+  HELPDESK_KATEGORIER,
+} from './schema/helpdesk.ts';
+export type { HelpdeskKategori } from './schema/helpdesk.ts';
 /**
  * Domenetypene eksporteres flatt i tillegg til `schema`-navnerommet, slik at
  * andre pakker kan skrive `import type { BookingStatus } from '@endwise/db'`

@@ -4,8 +4,16 @@ import { ArrowUpRight, CircleQuestionMark, LifeBuoy } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell, CountBadge, NewBadge } from '../_shell/cards';
+import {
+  filtrerHelpdesk,
+  HELPDESK_KATEGORI_LABEL,
+  HELPDESK_KATEGORIER,
+  type HelpdeskKategori,
+  helpdeskKategoriLabel,
+} from './_kategorier';
 
 /**
  * F5-23 — HELPDESK: artikkellista.
@@ -29,7 +37,9 @@ function dato(d: Date | string): string {
 
 export default function HelpdeskPage() {
   const artikler = trpc.helpdesk.list.useQuery({ limit: 50 });
-  const rader = artikler.data ?? [];
+  const [kategori, setKategori] = useState<HelpdeskKategori | 'alle'>('alle');
+  const alle = artikler.data ?? [];
+  const rader = useMemo(() => filtrerHelpdesk(alle, kategori), [alle, kategori]);
   const uleste = rader.filter((a) => a.ulest).length;
 
   return (
@@ -44,14 +54,46 @@ export default function HelpdeskPage() {
         </p>
       </div>
 
+      <div role="tablist" aria-label="Kategori" className="flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={kategori === 'alle'}
+          onClick={() => setKategori('alle')}
+          className={`inline-flex h-7 items-center rounded-pill px-3 text-label transition-colors ${
+            kategori === 'alle' ? 'bg-fg text-bg' : 'bg-surface-2 text-fg-muted hover:text-fg'
+          }`}
+        >
+          Alle
+        </button>
+        {HELPDESK_KATEGORIER.map((k) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={kategori === k}
+            onClick={() => setKategori(k)}
+            className={`inline-flex h-7 items-center rounded-pill px-3 text-label transition-colors ${
+              kategori === k ? 'bg-fg text-bg' : 'bg-surface-2 text-fg-muted hover:text-fg'
+            }`}
+          >
+            {HELPDESK_KATEGORI_LABEL[k]}
+          </button>
+        ))}
+      </div>
+
       {artikler.isLoading ? (
         <p className="py-12 text-center text-body text-fg-muted">Laster artikler …</p>
       ) : rader.length === 0 ? (
         <CardShell className="p-12 text-center">
           <CircleQuestionMark size={24} className="mx-auto text-fg-muted" />
-          <p className="mt-2 text-label text-fg">Ingen hjelpeartikler ennå</p>
+          <p className="mt-2 text-label text-fg">
+            {alle.length === 0 ? 'Ingen hjelpeartikler ennå' : 'Ingen artikler i denne kategorien'}
+          </p>
           <p className="mx-auto mt-1 max-w-md text-[12px] text-fg-muted leading-relaxed">
-            Endwise skriver artiklene. Kommer det noe nytt, dukker det opp her og i sidebaren.
+            {alle.length === 0
+              ? 'Endwise skriver artiklene. Kommer det noe nytt, dukker det opp her og i sidebaren.'
+              : 'Prøv en annen kategori, eller velg Alle.'}
           </p>
         </CardShell>
       ) : (
@@ -73,6 +115,9 @@ export default function HelpdeskPage() {
                   </div>
                 )}
                 <div className="flex flex-1 flex-col gap-1.5 p-3">
+                  <span className="text-[11px] text-fg-muted">
+                    {helpdeskKategoriLabel(a.category)}
+                  </span>
                   <span className="flex items-start gap-2">
                     <span className="min-w-0 flex-1 text-label text-fg">{a.title}</span>
                     {a.ulest && <NewBadge />}

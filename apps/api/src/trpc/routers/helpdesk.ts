@@ -1,4 +1,15 @@
-import { and, asc, desc, eq, HELPDESK_BILDER, isNull, schema, sql } from '@endwise/db';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  HELPDESK_BILDER,
+  HELPDESK_KATEGORI_DEFAULT,
+  HELPDESK_KATEGORIER,
+  isNull,
+  schema,
+  sql,
+} from '@endwise/db';
 import { z } from 'zod';
 import { endwiseAdminProcedure, protectedProcedure, router } from '../init.ts';
 
@@ -36,6 +47,7 @@ const artikkelFelter = {
    */
   image: z.enum(HELPDESK_BILDER).nullable(),
   published: z.boolean(),
+  category: z.enum(HELPDESK_KATEGORIER).default(HELPDESK_KATEGORI_DEFAULT),
 };
 
 /** «Slik fungerer innboksen» → «slik-fungerer-innboksen». */
@@ -68,6 +80,7 @@ export const helpdeskRouter = router({
           slug: schema.helpdeskArticles.slug,
           title: schema.helpdeskArticles.title,
           summary: schema.helpdeskArticles.summary,
+          category: schema.helpdeskArticles.category,
           image: schema.helpdeskArticles.image,
           publishedAt: schema.helpdeskArticles.publishedAt,
           /**
@@ -186,6 +199,7 @@ export const helpdeskRouter = router({
           body: input.body,
           image: input.image,
           published: input.published,
+          category: input.category,
         })
         .returning();
       return rad;
@@ -208,6 +222,7 @@ export const helpdeskRouter = router({
           body: input.body,
           image: input.image,
           published: input.published,
+          category: input.category,
           updatedAt: new Date(),
         })
         .where(eq(schema.helpdeskArticles.id, input.id))

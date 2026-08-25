@@ -1,5 +1,7 @@
 /*
- * 0027 — F3-09 / P3: flere tjenester på én jobb.
+ * 0028 — F3-09 / P3: flere tjenester på én jobb.
+ *
+ * 0027 er helpdesk-kategori (#49). Denne fila er booking_services.
  *
  * `bookings.service_version_id` står (første/primære tjeneste).
  * `booking_services` er linjene. Eksisterende jobber backfilles 1:1.

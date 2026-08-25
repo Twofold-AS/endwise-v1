@@ -12,13 +12,14 @@ function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
 
-describe('0027 booking_services-kontrakt', () => {
-  const sql = les('../drizzle/0027_booking_services.sql');
+describe('0028 booking_services-kontrakt', () => {
+  const sql = les('../drizzle/0028_booking_services.sql');
   const schema = les('../src/schema/bookings.ts');
   const journal = les('../drizzle/meta/_journal.json');
 
-  it('journal har 0027_booking_services', () => {
-    expect(journal).toMatch(/0027_booking_services/);
+  it('journal har 0028_booking_services, ikke 0027', () => {
+    expect(journal).toMatch(/0028_booking_services/);
+    expect(journal).not.toMatch(/0027_booking_services/);
   });
 
   it('tabellen har tenant-isolasjon og inspect-SELECT', () => {

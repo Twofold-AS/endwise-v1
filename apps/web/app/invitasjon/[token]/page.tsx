@@ -6,6 +6,8 @@ import { use, useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { Field, INPUT, PassordFelt } from '../../_auth/felter';
+import { fullforAvatarValg } from '../../(app)/_avatar/avatar-valg';
+import { AvatarVelger } from '../../(app)/_avatar/avatar-velger';
 import { destinasjonEtterInvite, krevRevokeAndreSesjoner, trengerKodeSteg } from '../_landing';
 
 /**
@@ -63,7 +65,10 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const [kode, setKode] = useState('');
   const [sender, setSender] = useState(false);
   const [ferdig, setFerdig] = useState(false);
-  const [steg, setSteg] = useState<'skjema' | 'kode'>('skjema');
+  const [steg, setSteg] = useState<'skjema' | 'kode' | 'avatar'>('skjema');
+  const meg = trpc.profile.meg.useQuery(undefined, { retry: false, enabled: steg === 'avatar' });
+  const me = trpc.session.me.useQuery(undefined, { retry: false, enabled: steg === 'avatar' });
+  const settAvatar = trpc.profile.setAvatar.useMutation();
   const codeRef = useRef<HTMLInputElement>(null);
   const otpFerdigRef = useRef(false);
 
@@ -213,7 +218,11 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         }
         otpFerdigRef.current = true;
       }
-      await land(inv.kind);
+      if (inv.kind === 'owner') {
+        await land(inv.kind);
+        return;
+      }
+      setSteg('avatar');
     } catch (error) {
       const melding = error instanceof Error ? error.message : String(error);
       if (trengerKodeSteg({ feil: melding })) {
@@ -221,6 +230,28 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         return;
       }
       setFeil(melding);
+    } finally {
+      setSender(false);
+    }
+  }
+
+  async function fullforAvatar() {
+    if (!inv) return;
+    setFeil(null);
+    setSender(true);
+    try {
+      const neste = fullforAvatarValg(meg.data?.avatar);
+      if (
+        neste.form !== (meg.data?.avatar?.form ?? null) ||
+        neste.humor !== (meg.data?.avatar?.humor ?? null) ||
+        neste.farge !== (meg.data?.avatar?.farge ?? null) ||
+        neste.tone !== (meg.data?.avatar?.tone ?? null)
+      ) {
+        await settAvatar.mutateAsync(neste);
+      }
+      await land(inv.kind);
+    } catch (error) {
+      setFeil((error as Error).message);
     } finally {
       setSender(false);
     }
@@ -235,24 +266,28 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
           : 'support'
         : (FUNKSJONSTEKST[inv?.funksjon ?? ''] ?? inv?.funksjon);
   const tittel = inv
-    ? steg === 'kode'
-      ? 'Bekreft med engangskode'
-      : inv.kind === 'platform'
-        ? 'Velkommen til Endwise'
-        : `Velkommen til ${inv.forhandler}`
+    ? steg === 'avatar'
+      ? 'Velg avataren din'
+      : steg === 'kode'
+        ? 'Bekreft med engangskode'
+        : inv.kind === 'platform'
+          ? 'Velkommen til Endwise'
+          : `Velkommen til ${inv.forhandler}`
     : laster
       ? 'Invitasjon'
       : 'Invitasjonen virker ikke';
   const undertekst = inv
-    ? steg === 'kode'
-      ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
-      : inv.kind === 'platform'
-        ? inv.platformLevel === 'administrator'
-          ? `Du er invitert til Endwise-support som administrator. Kontoen knyttes til ${inv.epost}.`
-          : `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
-        : inv.kind === 'owner'
-          ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
-          : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
+    ? steg === 'avatar'
+      ? 'Form, farge og humør. Du kan endre det senere i profilen.'
+      : steg === 'kode'
+        ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
+        : inv.kind === 'platform'
+          ? inv.platformLevel === 'administrator'
+            ? `Du er invitert til Endwise-support som administrator. Kontoen knyttes til ${inv.epost}.`
+            : `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
+          : inv.kind === 'owner'
+            ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
+            : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
     : laster
       ? null
       : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be om en ny hvis du trenger det.';
@@ -261,7 +296,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg px-4 text-fg">
-      <div className="w-full max-w-sm">
+      <div className={`w-full ${steg === 'avatar' ? 'max-w-lg' : 'max-w-sm'}`}>
         <div className="mb-6 flex flex-col items-center gap-3">
           <Image src="/logo/logo.svg" alt="Endwise" width={44} height={44} priority />
           <h1 className="text-title text-fg">{tittel}</h1>
@@ -409,6 +444,40 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
               </StatefulButton>
             </div>
           </form>
+        ) : null}
+
+        {inv && steg === 'avatar' ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
+              <AvatarVelger seed={me.data?.userId ?? null} utenKort />
+              {feil ? (
+                <p role="alert" className="text-[12px] text-danger">
+                  {feil}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex flex-col gap-2 px-1.5 pt-1 pb-1">
+              <StatefulButton
+                type="button"
+                state={sender ? 'loading' : 'idle'}
+                className="w-full"
+                loadingText="Lagrer…"
+                successText="Lagret"
+                disabled={sender}
+                onClick={() => void fullforAvatar()}
+              >
+                Fortsett
+              </StatefulButton>
+              <button
+                type="button"
+                disabled={sender}
+                onClick={() => void fullforAvatar()}
+                className="text-center text-[12px] text-fg-muted underline-offset-2 hover:underline disabled:opacity-40"
+              >
+                Hopp over
+              </button>
+            </div>
+          </div>
         ) : null}
       </div>
     </main>

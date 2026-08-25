@@ -148,10 +148,11 @@ describe('P0: avatar-velger uten fire nedtrekk (humør er låst opp)', () => {
     expect(avatar).not.toMatch(/grid grid-cols-2 gap-3 lg:grid-cols-4/);
   });
 
-  it('sidebar-avataren smiler og beveger seg hele tiden', () => {
+  it('sidebar-avataren beveger seg hele tiden og viser valgt humor', () => {
     const rad = readFileSync(resolve(her, '../app/(app)/_shell/bruker-rad.tsx'), 'utf8');
     expect(rad).toMatch(/bevegelse="alltid"/);
-    expect(rad).toMatch(/humor:\s*['"]happy['"]/);
+    expect(rad).toMatch(/valg=\{profil\.data\?\.avatar\}/);
+    expect(rad).not.toMatch(/humor:\s*['"]happy['"]/);
   });
 });
 

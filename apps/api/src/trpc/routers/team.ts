@@ -1,14 +1,25 @@
-import { and, eq, inArray, schema, withTenant } from '@endwise/db';
+import { and, eq, gte, inArray, lt, schema, withTenant } from '@endwise/db';
 import {
   type Jobbfunksjon,
   kanEndreJobbfunksjon,
   kanTildeles,
+  lesAvatar,
+  mekanikerStatusVisning,
   resolveJobbfunksjon,
+  tellerSomBelastning,
   TILDELBARE_FUNKSJONER,
 } from '@endwise/modules/profil';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, router } from '../init.ts';
+
+function dagensVindu(): { fra: Date; til: Date } {
+  const fra = new Date();
+  fra.setHours(0, 0, 0, 0);
+  const til = new Date(fra);
+  til.setDate(til.getDate() + 1);
+  return { fra, til };
+}
 
 /**
  * F1-14 — TEAM & TILGANG: hvem jobber her, og hva gjør de?
@@ -49,33 +60,106 @@ export const teamRouter = router({
     const ider = medlemmer.map((m) => m.userId);
 
     // Profiler + mekanikerprofiler, tenant-skopet av RLS.
-    const { profiler, mekanikere } = await withTenant(ctx.db, ctx.tenantId, async (tx) => {
-      const profiler = await tx
-        .select({
-          userId: schema.memberProfiles.userId,
-          jobFunction: schema.memberProfiles.jobFunction,
-          nickname: schema.memberProfiles.nickname,
-        })
-        .from(schema.memberProfiles)
-        .where(
-          and(
-            eq(schema.memberProfiles.tenantId, ctx.tenantId),
-            inArray(schema.memberProfiles.userId, ider),
-          ),
-        );
-      const mekanikere = await tx
-        .select({ userId: schema.mechanics.userId })
-        .from(schema.mechanics)
-        .where(eq(schema.mechanics.tenantId, ctx.tenantId));
-      return { profiler, mekanikere };
-    }).catch(() => ({ profiler: [], mekanikere: [] }));
+    const { profiler, mekanikere, jobberPerMek } = await withTenant(
+      ctx.db,
+      ctx.tenantId,
+      async (tx) => {
+        const profiler = await tx
+          .select({
+            userId: schema.memberProfiles.userId,
+            jobFunction: schema.memberProfiles.jobFunction,
+            nickname: schema.memberProfiles.nickname,
+          })
+          .from(schema.memberProfiles)
+          .where(
+            and(
+              eq(schema.memberProfiles.tenantId, ctx.tenantId),
+              inArray(schema.memberProfiles.userId, ider),
+            ),
+          );
+        const mekanikere = await tx
+          .select({
+            id: schema.mechanics.id,
+            userId: schema.mechanics.userId,
+            active: schema.mechanics.active,
+            capacity: schema.mechanics.capacity,
+          })
+          .from(schema.mechanics)
+          .where(eq(schema.mechanics.tenantId, ctx.tenantId));
+
+        const jobberPerMek = new Map<string, number>();
+        const mekIder = mekanikere.map((m) => m.id);
+        if (mekIder.length > 0) {
+          const { fra, til } = dagensVindu();
+          const jobber = await tx
+            .select({
+              mechanicId: schema.bookings.mechanicId,
+              status: schema.bookings.status,
+            })
+            .from(schema.bookings)
+            .where(
+              and(
+                inArray(schema.bookings.mechanicId, mekIder),
+                gte(schema.bookings.startsAt, fra),
+                lt(schema.bookings.startsAt, til),
+              ),
+            );
+          for (const j of jobber) {
+            if (!j.mechanicId || !tellerSomBelastning(j.status)) continue;
+            jobberPerMek.set(j.mechanicId, (jobberPerMek.get(j.mechanicId) ?? 0) + 1);
+          }
+        }
+        return { profiler, mekanikere, jobberPerMek };
+      },
+    ).catch(() => ({
+      profiler: [] as {
+        userId: string;
+        jobFunction: string | null;
+        nickname: string | null;
+      }[],
+      mekanikere: [] as {
+        id: string;
+        userId: string | null;
+        active: boolean;
+        capacity: number;
+      }[],
+      jobberPerMek: new Map<string, number>(),
+    }));
+
+    /**
+     * F6-19 — `user_preferences` har ingen RLS. Isolasjonen kommer av at
+     * `ider` allerede er tenant-skopet via `member.organization_id`.
+     */
+    const avatarRader = await ctx.db
+      .select({
+        userId: schema.userPreferences.userId,
+        avatarShape: schema.userPreferences.avatarShape,
+        avatarHumor: schema.userPreferences.avatarHumor,
+        avatarHue: schema.userPreferences.avatarHue,
+        avatarTone: schema.userPreferences.avatarTone,
+      })
+      .from(schema.userPreferences)
+      .where(inArray(schema.userPreferences.userId, ider))
+      .catch(() => []);
 
     const profilPer = new Map(profiler.map((p) => [p.userId, p]));
-    const erMekaniker = new Set(mekanikere.map((m) => m.userId).filter(Boolean) as string[]);
+    const avatarPer = new Map(avatarRader.map((r) => [r.userId, r]));
+    const mekPerBruker = new Map(
+      mekanikere.filter((m) => m.userId).map((m) => [m.userId as string, m]),
+    );
+    const erMekaniker = new Set(mekPerBruker.keys());
 
     return medlemmer
       .map((m) => {
         const p = profilPer.get(m.userId);
+        const mek = mekPerBruker.get(m.userId);
+        const vis = mek
+          ? mekanikerStatusVisning({
+              aktiv: mek.active,
+              jobberIDag: jobberPerMek.get(mek.id) ?? 0,
+              kapasitet: mek.capacity,
+            })
+          : { status: null, statusHumor: null, statusLabel: null };
         return {
           userId: m.userId,
           navn: m.navn,
@@ -93,6 +177,12 @@ export const teamRouter = router({
           harMekanikerprofil: erMekaniker.has(m.userId),
           /** ⛔ Ledere kan ikke få tildelt funksjon — den følger av rollen. */
           kanEndres: !kanEndreJobbfunksjon(m.rolle),
+          /**
+           * Seed for ansatte er `user.id`. Mekanikerlista (`/mekanikere`)
+           * seeder på `mechanics.id` — to flater, to IDer, med vilje.
+           */
+          avatar: lesAvatar(avatarPer.get(m.userId) ?? null),
+          ...vis,
         };
       })
       .sort((a, b) => a.navn.localeCompare(b.navn, 'nb'));

@@ -17,7 +17,7 @@ const STATUS_PRIKK: Record<string, string> = {
   ledig: 'bg-success',
   på_jobb: 'bg-warn',
   opptatt: 'bg-warn',
-  ikke_tilgjengelig: 'bg-fg-muted',
+  fri: 'bg-fg-muted',
 };
 
 export default function MekanikerePage() {

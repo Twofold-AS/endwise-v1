@@ -268,7 +268,7 @@ export function lesAvatar(
   };
 }
 
-export type { MekanikerStatus } from './status-humor.ts';
+export type { MekanikerStatus, StatusHumor } from './status-humor.ts';
 export {
   MEKANIKER_STATUS_HUMOR,
   MEKANIKER_STATUS_LABEL,
@@ -276,4 +276,5 @@ export {
   STATUS_TELLENDE_BOOKING,
   tellerSomBelastning,
   utledMekanikerStatus,
+  visningsHumor,
 } from './status-humor.ts';

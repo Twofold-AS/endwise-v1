@@ -34,7 +34,7 @@ export default function ProfilPage() {
             {m ? (
               <Avatar
                 seed={m.id}
-                valg={{ ...m.avatar, humor: m.statusHumor }}
+                valg={m.avatar}
                 navn={m.name}
                 size={48}
                 bevegelse="hover"

@@ -59,7 +59,7 @@
 > **Full tabell + hva som er utledet: §6 «Design-prinsipper fra eier».** Kolliderer noe i denne
 > fila med den seksjonen, er det den seksjonen som gjelder.
 
-**Sist oppdatert:** 24. august 2026 (F6-19: uttrykk låst opp i `AvatarVelger` + status-humor på mekanikerflaten — ingen ny pakke) · 24. august 2026 («Ny»-badge + rød `CountBadge`-sirkel — ingen ny pakke) · 23. august 2026 (sidebar-avatar `alltid` + formvalg i Profil — ingen ny pakke) · 23. august 2026 (plattform-org + Se verkstedet + `/endwise/team` — ingen ny pakke, shadcn/beUI-komposisjon) · 23. august 2026 (F1-21/F1-22: gjenopprettingskoder + passord før 2FA av — ingen ny pakke) · 23. august 2026 (SMS-avkrysning synlig i Ny forhandler/Endre pakke — Jens overstyrer UI/UX P0 som skjulte den; shop forblir skjult) · 23. august 2026 (UI/UX P0: invite+2FA i samme skall, `/oppstart` uten avatar, `AvatarVelger` = 48px + Ny tilfeldig / always happy, varslingslyder som Switch-rad, pakkevelger 3 kolonner) · 23. august 2026 (F5-26: nivå+tillegg, `/oppstart`, `AvatarVelger` i `_avatar/` — ingen ny pakke, ingen cmdk) · 22. august 2026 (widget-fallbacks + PWA-manifest følger lyst tema og svart aksent `#111` — F4-20; stale «grønn aksent»-kommentarer rettet) · 20. august 2026 (bevegelse skrudd på selektivt — påkrevd `bevegelse`-prop på `Avatar`, tre verdier, se §10 · ⭐ **blobatar inn som avatarpakke** — F6-19, brukergodkjent §2-beslutning; se §10. Seed = stabil ID, aldri navn · tjenestekatalogen F2-05/F5-04 — ingen ny pakke, ren komposisjon; se §8. ⚠️ Første sted i appen med ekte radioknapper i stedet for pille-gruppe, fordi det er et skjemafelt og ikke et filter) · 7. august 2026 (dev-mode + forhandler-oppretting bygget — F5-26…F5-29; ingen nye UI-pakker, alt på shadcn/beUI som før: `Switch`, `StatefulButton`, `DropdownMenu`, `Badge`. Sidebar-mønsteret delt i to: **flyout for handlinger, inline utfolding for destinasjoner**) · 6. august 2026 (⚠️ **aksent grønn → svart** i token-laget · felles flyout-mønster m/ stiplet header-divider · ⭐ **F5-20 i gang** — 26 egne SVG-ikoner koblet inn via codegen · shell-justeringer: kollapsbar sidebar, tips-kort, bevel-handlinger · Analyse omformet: periodevelger, nye kort, paigraf · `Pie`/`Cell` eksponert) · 5. august 2026 (⭐ **Recharts inn som chart-motor** — brukergodkjent §2-beslutning; Analyse F5-18 bygget ferdig med søyle-, linje- og arealgrafer) · 4. august 2026 (sidebar-først shell bygget — F5-13: `dropdown-menu` + `dialog` hentet inn, ⌘K-palett på `Dialog` i stedet for `command`/cmdk) · 3. august 2026 (eierens design-prinsipper innført: Inter + lyst tema standard +
+**Sist oppdatert:** 25. august 2026 (F6-19: status-humor på Team › Funksjoner + `/mekanikere`; fri→idle; sidebar/profil viser valgt humor — ingen ny pakke) · 24. august 2026 (F6-19: uttrykk låst opp i `AvatarVelger` + status-humor på mekanikerflaten — ingen ny pakke) · 24. august 2026 («Ny»-badge + rød `CountBadge`-sirkel — ingen ny pakke) · 23. august 2026 (sidebar-avatar `alltid` + formvalg i Profil — ingen ny pakke) · 23. august 2026 (plattform-org + Se verkstedet + `/endwise/team` — ingen ny pakke, shadcn/beUI-komposisjon) · 23. august 2026 (F1-21/F1-22: gjenopprettingskoder + passord før 2FA av — ingen ny pakke) · 23. august 2026 (SMS-avkrysning synlig i Ny forhandler/Endre pakke — Jens overstyrer UI/UX P0 som skjulte den; shop forblir skjult) · 23. august 2026 (UI/UX P0: invite+2FA i samme skall, `/oppstart` uten avatar, `AvatarVelger` = 48px + Ny tilfeldig / always happy, varslingslyder som Switch-rad, pakkevelger 3 kolonner) · 23. august 2026 (F5-26: nivå+tillegg, `/oppstart`, `AvatarVelger` i `_avatar/` — ingen ny pakke, ingen cmdk) · 22. august 2026 (widget-fallbacks + PWA-manifest følger lyst tema og svart aksent `#111` — F4-20; stale «grønn aksent»-kommentarer rettet) · 20. august 2026 (bevegelse skrudd på selektivt — påkrevd `bevegelse`-prop på `Avatar`, tre verdier, se §10 · ⭐ **blobatar inn som avatarpakke** — F6-19, brukergodkjent §2-beslutning; se §10. Seed = stabil ID, aldri navn · tjenestekatalogen F2-05/F5-04 — ingen ny pakke, ren komposisjon; se §8. ⚠️ Første sted i appen med ekte radioknapper i stedet for pille-gruppe, fordi det er et skjemafelt og ikke et filter) · 7. august 2026 (dev-mode + forhandler-oppretting bygget — F5-26…F5-29; ingen nye UI-pakker, alt på shadcn/beUI som før: `Switch`, `StatefulButton`, `DropdownMenu`, `Badge`. Sidebar-mønsteret delt i to: **flyout for handlinger, inline utfolding for destinasjoner**) · 6. august 2026 (⚠️ **aksent grønn → svart** i token-laget · felles flyout-mønster m/ stiplet header-divider · ⭐ **F5-20 i gang** — 26 egne SVG-ikoner koblet inn via codegen · shell-justeringer: kollapsbar sidebar, tips-kort, bevel-handlinger · Analyse omformet: periodevelger, nye kort, paigraf · `Pie`/`Cell` eksponert) · 5. august 2026 (⭐ **Recharts inn som chart-motor** — brukergodkjent §2-beslutning; Analyse F5-18 bygget ferdig med søyle-, linje- og arealgrafer) · 4. august 2026 (sidebar-først shell bygget — F5-13: `dropdown-menu` + `dialog` hentet inn, ⌘K-palett på `Dialog` i stedet for `command`/cmdk) · 3. august 2026 (eierens design-prinsipper innført: Inter + lyst tema standard +
 mål-tokens · matrix-loaders TATT I BRUK første gang på AI-diagnose · StatefulButton i 2FA-innlogging
 og trådsvar · SSE-klient wiret · `Switch` hentet inn · ⛔ **dither-kit FJERNET fra UI-et og fra
 barrel-eksporten**)
@@ -559,12 +559,13 @@ Pakken eksponerer 39 trait-nøkler. **Vi pinner ikke fire lister.** Ett ansikt p
 (seed = `user.id`). Form, farge, tone **og uttrykk** er seed-default til noen velger i
 Settings › Profil (10 form-knapper + 10 uttrykk, 48px, `bevegelse="alltid"`) eller trykker
 «Ny tilfeldig». Humør er **ikke lenger låst til happy** — velgeren viser bibliotekets ti
-kuraterte `expression`-eksporter. Sidebaren tvinger fortsatt happy (urørt flate).
+kuraterte `expression`-eksporter. Sidebaren og profilen viser det valgte uttrykket.
 Ikke på widget/kunde.
 
-⚠️ På mekanikerflaten (`/mekanikere`, Meg, Detaljer) overstyrer **status** kun `humor`
-(ledig → happy, på jobb/opptatt → thinking, inaktiv → sleepy). Identitet og det lagrede
-uttrykket i velgeren er urørt. Tilgjengelighetstekst står ved siden av.
+⚠️ På mekaniker-/ansattlista (`/mekanikere`, Team › Funksjoner) og Detaljer-panelet
+overstyrer **status** kun `humor` (ledig → happy, på jobb/opptatt → thinking,
+fri → idle — ikke sleepy). Identitet og det lagrede uttrykket i velgeren, sidebaren
+og profilen er urørt. Tilgjengelighetstekst står ved siden av.
 
 ⚠️ Vi lagrer **formnavnet**, ikke 0–1-tallet: tallbåndene er frosset per major i blobatar, men et
 band kan flytte seg i neste major, og da ville et lagret tall stille gitt en annen form. Navn kan
@@ -575,7 +576,8 @@ remappes. Kartleggingen navn → band ligger i `avatar.tsx`; vokabularet speiles
 
 Innboksens samtaleliste · meldingene i tråden · Detaljer-panelet (kunde og mekaniker) ·
 kundelista · kundekortet · **brukerraden nederst i sidebaren** · forhåndsvisningen i
-Settings › Profil · **mekanikerlista** (`/mekanikere`) · mekanikerens Meg/Profil.
+Settings › Profil · **mekanikerlista** (`/mekanikere`) · **Team › Funksjoner** ·
+mekanikerens Meg/Profil.
 
 ⛔ **Ikke** på kjøretøy (F2-03 eier modellbilder med ekte silhuetter), **ikke** på forhandleren som
 organisasjon (den er ikke en person), **ikke** i widgeten eller på kundevendte flater.

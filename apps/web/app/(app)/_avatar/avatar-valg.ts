@@ -4,7 +4,7 @@
  * brukeren velger uttrykk, og «Ny tilfeldig» trekker blant alle ti.
  *
  * ⛔ `sad` / `mad` / `sick` / `scared` finnes i blobatar, men er ikke i
- * vokabularet vi lagrer. Status-visningen mapper mot happy/thinking/sleepy.
+ * vokabularet vi lagrer. Status-visningen mapper mot happy/thinking/idle.
  */
 
 export const FORMER = [

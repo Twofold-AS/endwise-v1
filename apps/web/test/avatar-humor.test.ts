@@ -30,10 +30,12 @@ describe('AvatarVelger — happy-låsen er borte', () => {
     expect(velger).not.toMatch(/grid grid-cols-2 gap-3 lg:grid-cols-4/);
   });
 
-  it('sidebar er urørt — den smiler fortsatt (annen flate)', () => {
+  it('sidebar viser valgt humor — ikke tvunget happy, ikke jobbstatus', () => {
     const rad = readFileSync(resolve(her, '../app/(app)/_shell/bruker-rad.tsx'), 'utf8');
     expect(rad).toMatch(/bevegelse="alltid"/);
-    expect(rad).toMatch(/humor:\s*['"]happy['"]/);
+    expect(rad).toMatch(/valg=\{profil\.data\?\.avatar\}/);
+    expect(rad).not.toMatch(/humor:\s*['"]happy['"]/);
+    expect(rad).not.toMatch(/statusHumor/);
   });
 });
 

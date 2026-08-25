@@ -13,6 +13,7 @@ import {
   CreditCard,
   FilePlus,
   Flag,
+  Gauge,
   Globe,
   Handshake,
   HardHat,
@@ -265,6 +266,45 @@ export const FORHANDLER_NAV: NavItem[] = [
     roles: DRIFT,
     badge: 'helpdesk',
   },
+  {
+    /**
+     * 25.08.2026 (Mikael): Team er egen destinasjon — samme label som
+     * Endwise-admin. Ikke nederst i Settings-flyouten, og ikke en fane på
+     * `/innstillinger`. Inline barn, samme mønster som Saker/Kunder.
+     *
+     * Ruter som allerede fantes: `/innstillinger/team` (F1-10/F5-19),
+     * `/innstillinger/tjenestekatalog` (F2-05/F5-04), og de tre
+     * mekaniker-sidene team-siden allerede peker på. Ingen ny rute-skog.
+     */
+    key: 'team',
+    label: 'Team',
+    icon: Users,
+    href: '/innstillinger/team',
+    roles: DRIFT,
+    children: [
+      {
+        label: 'Team & tilgang',
+        href: '/innstillinger/team',
+        icon: UserCog,
+        roles: ADMIN_OF_TENANT,
+      },
+      /**
+       * F2-05/F5-04 — forhandlerens EGEN katalog (hva KUNDEN betaler).
+       * Tjenester & priser i Settings er det motsatte pengeforholdet
+       * (hva forhandleren betaler oss). De to ble forvekslet helt til
+       * 20.08.2026; ulike destinasjoner med ulike navn er billigere enn
+       * nok en runde med den forvekslingen.
+       *
+       * Ingen `roles`: raden arver destinasjonens DRIFT, så en dealer_staff
+       * ser katalogen — han må kunne svare på hva en EU-kontroll koster.
+       * Skriving er `adminProcedure` server-side.
+       */
+      { label: 'Tjenestekatalog', href: '/innstillinger/tjenestekatalog', icon: Wrench },
+      { label: 'Mekanikere', href: '/mekanikere', icon: HardHat, roles: ADMIN_OF_TENANT },
+      { label: 'Kompetanse', href: '/mekanikere/kompetanse', icon: Tags, roles: ADMIN_OF_TENANT },
+      { label: 'Kapasitet', href: '/mekanikere/kapasitet', icon: Gauge, roles: ADMIN_OF_TENANT },
+    ],
+  },
 ];
 
 /** Forankret nederst — visuelt skilt fra hovednavet. */
@@ -277,25 +317,12 @@ export const SETTINGS_NAV: NavItem = {
   children: [
     { label: 'Abonnement', href: '/abonnement', icon: CreditCard, roles: ADMIN_OF_TENANT },
     { label: 'Varsler', href: '/innstillinger/varsler', icon: Bell },
-    { label: 'Team & tilgang', href: '/innstillinger/team', icon: UserCog, roles: ADMIN_OF_TENANT },
     {
       label: 'Tjenester & priser',
       href: '/innstillinger/tjenester',
       icon: Receipt,
       roles: ADMIN_OF_TENANT,
     },
-    /**
-     * F2-05/F5-04 — forhandlerens EGEN katalog. ⚠️ Ligger med vilje rett under
-     * raden over, som er det motsatte pengeforholdet: den viser hva forhandleren
-     * betaler OSS, denne hva KUNDEN betaler forhandleren. De to ble forvekslet
-     * helt til 20.08.2026, og to nabo-rader med tydelig ulike navn er billigere
-     * enn nok en runde med den forvekslingen.
-     *
-     * Ingen `roles`: raden arver destinasjonens DRIFT, så en dealer_staff ser
-     * katalogen — han må kunne svare på hva en EU-kontroll koster. Skriving er
-     * `adminProcedure` server-side.
-     */
-    { label: 'Tjenestekatalog', href: '/innstillinger/tjenestekatalog', icon: Wrench },
     { label: 'Integrasjoner', href: '/integrasjoner', icon: Blocks, roles: ADMIN_OF_TENANT },
     /**
      * ⚠️ Profil ble kortvarig flyttet UT herfra 20.08.2026 (til brukerraden),
@@ -439,7 +466,6 @@ export const ENDWISE_SETTINGS_NAV: NavItem = {
   roles: ENDWISE,
   children: [
     { label: 'Dev-mode', href: '/endwise/innstillinger', icon: Zap, roles: ENDWISE_STYRING },
-    { label: 'Team', href: '/endwise/team', icon: Users, roles: ENDWISE_STYRING },
     /** Samme side som forhandlerens Settings › Profil — profilen er global. */
     { label: 'Min profil', href: '/innstillinger/profil', icon: UserCog },
   ],
@@ -510,7 +536,9 @@ export function isItemActive(item: NavItem, pathname: string): boolean {
   return hrefs.some((h) => {
     if (pathname === h) return true;
     // /endwise er oversikt — ikke prefix for /endwise/forhandlere.
-    if (h === '/endwise') return false;
+    // /innstillinger er Settings-huben — ikke prefix for Team-undersider
+    // som /innstillinger/team etter at Team ble egen destinasjon.
+    if (h === '/endwise' || h === '/innstillinger') return false;
     return pathname.startsWith(`${h}/`);
   });
 }
@@ -561,11 +589,18 @@ export function breadcrumbFor(
   // Undervisning: match først på query (?kanal=/?visning=), så på sti. Et
   // underpunkt med query må matche BÅDE sti og query — ellers ville «Liste»
   // (uten query) alltid vunnet over «Kalender» på samme sti.
-  const child = (item.children ?? []).find((c) => {
-    const [cPath, cQuery] = c.href.split('?');
-    if (cQuery) return pathname === cPath && search.includes(cQuery);
-    return pathname === cPath || pathname.startsWith(`${cPath}/`);
-  });
+  const barn = item.children ?? [];
+  const child =
+    barn.find((c) => {
+      const [cPath, cQuery] = c.href.split('?');
+      if (cQuery) return pathname === cPath && search.includes(cQuery);
+      return pathname === cPath;
+    }) ??
+    barn.find((c) => {
+      const [cPath, cQuery] = c.href.split('?');
+      if (cQuery) return false;
+      return pathname.startsWith(`${cPath}/`);
+    });
   if (child && child.label !== item.label) crumbs.push({ label: child.label });
 
   return crumbs;
@@ -589,14 +624,14 @@ export const PARKED_LABEL: Record<string, string> = {
   '/admin/logg': 'Parkert · Aktivitetslogg',
   '/bookinger': 'Saker (gammel sti)',
   '/kalender': 'Saker · Kalender (gammel sti)',
-  '/mekanikere': 'Team & tilgang · Mekanikere',
-  '/mekanikere/kompetanse': 'Team & tilgang · Kompetanse',
-  '/mekanikere/kapasitet': 'Team & tilgang · Kapasitet',
+  '/mekanikere': 'Team · Mekanikere',
+  '/mekanikere/kompetanse': 'Team · Kompetanse',
+  '/mekanikere/kapasitet': 'Team · Kapasitet',
   '/tjenester': 'Tjenester & priser',
   '/innstillinger/profil': 'Innstillinger · Profil',
   '/support': 'Helpdesk',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
-  '/innstillinger/tjenestekatalog': 'Innstillinger · Tjenestekatalog',
+  '/innstillinger/tjenestekatalog': 'Team · Tjenestekatalog',
   '/butikk': 'Butikk (ikke designet ennå)',
   '/lager/deler': 'Lager · Deler',
   '/lager/lokasjoner': 'Lager · Lokasjoner',

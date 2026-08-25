@@ -1,178 +1,375 @@
 'use client';
 
-import { CircleAlert, LifeBuoy, type LucideIcon, StatefulButton, Users, Wrench } from '@endwise/ui';
+import {
+  Building2,
+  CircleAlert,
+  LifeBuoy,
+  type LucideIcon,
+  StatefulButton,
+  Store,
+  Users,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
-import type { ThreadKind } from './_lib';
+import { useInboxModus } from './_modus';
 
 /**
- * F6-01 / F5-14 — «NY SAMTALE».
+ * F5-14 / F6-01 — «NY SAMTALE» som e-post: mottakerliste, ikke en hub.
  *
- * Primærstien er ÉN knapp: «Skriv til Endwise». Ingen part-velger, ingen
- * kanal, ingen bruker-ID. En 50-åring på verkstedet skal ikke kunne sende
- * til feil sted. Emnet skrives i tråden etter at den er åpnet.
+ * Én stor pille med nøyaktig tre piller inni (Mikael 25.08.2026):
+ *   Kunde   → customers.list · customer_dealer
+ *   Intern  → directory.colleagues (kontoret: selger/admin — ikke gulvet)
+ *   Support → dealer_admin / Endwise (het «Skriv til Endwise»)
  *
- * «Annen samtale» folder ut Intern/Kunde — bevisst gjemt.
+ * Support er default og primær (fylt bg-fg). De to andre er outline.
+ * Ingen bruker-ID-felt. Ingen Mekaniker-pille.
  */
-const ANDRE_PARTER: {
-  key: Exclude<ThreadKind, 'dealer_admin'>;
-  label: string;
-  icon: LucideIcon;
-}[] = [
-  { key: 'mechanic_dealer', label: 'Intern', icon: Wrench },
-  { key: 'customer_dealer', label: 'Kunde', icon: Users },
+type Pille = 'kunde' | 'intern' | 'support';
+
+const PILLER: { key: Pille; label: string; icon: LucideIcon }[] = [
+  { key: 'kunde', label: 'Kunde', icon: Users },
+  { key: 'intern', label: 'Intern', icon: Store },
+  { key: 'support', label: 'Support', icon: LifeBuoy },
 ];
+
+type Mottaker = {
+  id: string;
+  navn: string;
+  /** Better-Auth-ID når mottakeren kan nås i appen. Aldri vist. */
+  userId?: string;
+  undertekst?: string;
+};
+
+const ENDWISE_MOTTAKER: Mottaker = {
+  id: 'endwise',
+  navn: 'Endwise',
+  undertekst: 'Support',
+};
 
 export function NySamtale({ onLukk }: { onLukk: () => void }) {
   const router = useRouter();
   const utils = trpc.useUtils();
+  const endwise = useInboxModus() === 'endwise';
+  const me = trpc.session.me.useQuery();
 
-  const [annen, setAnnen] = useState(false);
-  const [annenKind, setAnnenKind] =
-    useState<Exclude<ThreadKind, 'dealer_admin'>>('mechanic_dealer');
+  const [pille, setPille] = useState<Pille>('support');
+  const [sok, setSok] = useState('');
+  const [valgt, setValgt] = useState<Mottaker | null>(endwise ? null : ENDWISE_MOTTAKER);
+  const [emne, setEmne] = useState('');
+  const [tekst, setTekst] = useState('');
+
+  const kunder = trpc.customers.list.useQuery(
+    { limit: 200, sorter: 'navn' },
+    { enabled: !endwise && pille === 'kunde' },
+  );
+  const kolleger = trpc.directory.colleagues.useQuery(undefined, {
+    enabled: !endwise && pille === 'intern',
+  });
+  const forhandlere = trpc.tenants.list.useQuery(undefined, {
+    enabled: endwise && pille === 'support',
+  });
+
+  const post = trpc.messages.post.useMutation({
+    onSuccess: (_, vars) => {
+      void utils.messages.listThreads.invalidate();
+      void utils.messages.listPlatformSupport.invalidate();
+      const dest = endwise ? `/endwise/innboks/${vars.threadId}` : `/innboks/${vars.threadId}`;
+      router.replace(dest as Route);
+    },
+  });
 
   const opprett = trpc.messages.createThread.useMutation({
     onSuccess: (tråd) => {
-      void utils.messages.listThreads.invalidate();
       const id = (tråd as { id?: string } | null)?.id;
-      if (id) router.replace(`/innboks/${id}` as Route);
+      if (!id) return;
+      post.mutate({ threadId: id, body: tekst.trim() });
+    },
+  });
+
+  const opprettPlattform = trpc.messages.createPlatformSupportThread.useMutation({
+    onSuccess: (tråd) => {
+      void utils.messages.listPlatformSupport.invalidate();
+      const id = (tråd as { id?: string } | null)?.id;
+      if (id) router.replace(`/endwise/innboks/${id}` as Route);
       else onLukk();
     },
   });
 
-  function skrivTilEndwise() {
-    opprett.mutate({
-      kind: 'dealer_admin',
-      channel: 'app',
-      subject: 'Hjelp',
-      participantIds: [],
-    });
+  const liste: Mottaker[] = useMemo(() => {
+    const q = sok.trim().toLowerCase();
+    const treffer = (m: Mottaker) =>
+      !q || m.navn.toLowerCase().includes(q) || (m.undertekst?.toLowerCase().includes(q) ?? false);
+
+    if (endwise) {
+      if (pille !== 'support') return [];
+      return (forhandlere.data ?? [])
+        .map((t) => ({
+          id: t.id,
+          navn: t.name,
+          undertekst: t.kind === 'demo' ? 'Demo' : undefined,
+        }))
+        .filter(treffer);
+    }
+
+    if (pille === 'support') return [ENDWISE_MOTTAKER].filter(treffer);
+
+    if (pille === 'kunde') {
+      return (kunder.data ?? [])
+        .map((k) => ({
+          id: k.id,
+          navn: k.name,
+          userId: k.userId ?? undefined,
+          undertekst: k.email || k.phone || undefined,
+        }))
+        .filter(treffer);
+    }
+
+    return (kolleger.data ?? [])
+      .filter((k) => k.userId !== me.data?.userId)
+      .map((k) => ({
+        id: k.userId,
+        userId: k.userId,
+        navn: k.navn,
+        undertekst: internEtikett(k.funksjon, k.rolle),
+      }))
+      .filter(treffer);
+  }, [endwise, pille, sok, kunder.data, kolleger.data, forhandlere.data, me.data?.userId]);
+
+  const mottaker = !endwise && pille === 'support' ? ENDWISE_MOTTAKER : valgt;
+
+  const laster =
+    (pille === 'kunde' && !endwise && kunder.isLoading) ||
+    (pille === 'intern' && !endwise && kolleger.isLoading) ||
+    (pille === 'support' && endwise && forhandlere.isLoading);
+
+  const jobber = opprett.isPending || post.isPending || opprettPlattform.isPending;
+  const feil = opprett.error ?? post.error ?? opprettPlattform.error;
+
+  function velgPille(neste: Pille) {
+    setPille(neste);
+    setSok('');
+    setValgt(!endwise && neste === 'support' ? ENDWISE_MOTTAKER : null);
   }
 
-  function startAnnen(e: FormEvent) {
+  function send(e: FormEvent) {
     e.preventDefault();
+    const body = tekst.trim();
+    if (!body || !mottaker) return;
+
+    if (endwise) {
+      opprettPlattform.mutate({
+        tenantId: mottaker.id,
+        subject: emne.trim() || undefined,
+        body,
+      });
+      return;
+    }
+
+    if (pille === 'support') {
+      opprett.mutate({
+        kind: 'dealer_admin',
+        channel: 'app',
+        subject: emne.trim() || 'Hjelp',
+        participantIds: [],
+      });
+      return;
+    }
+
+    if (pille === 'kunde') {
+      opprett.mutate({
+        kind: 'customer_dealer',
+        channel: 'app',
+        subject: emne.trim() || mottaker.navn,
+        participantIds: mottaker.userId ? [mottaker.userId] : [],
+      });
+      return;
+    }
+
     opprett.mutate({
-      kind: annenKind,
+      kind: 'mechanic_dealer',
       channel: 'app',
-      participantIds: [],
+      subject: emne.trim() || undefined,
+      participantIds: mottaker.userId ? [mottaker.userId] : [],
     });
   }
 
   return (
     <CardShell className="p-5">
-      <div className="flex flex-col gap-4">
-        <div>
-          <p className="text-label text-fg">Ny samtale</p>
-          <p className="text-[12px] text-fg-muted">
-            Har du et spørsmål til oss? Trykk — du trenger ikke velge noe.
+      <form onSubmit={send} className="flex flex-col gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-label text-fg">Ny samtale</p>
+            <p className="text-[12px] text-fg-muted">
+              Velg mottaker i lista — som en e-post, ikke en hub.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onLukk}
+            className="h-control shrink-0 rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
+          >
+            Avbryt
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <p className="text-label text-fg-muted">Til</p>
+          <p className="h-control rounded-control border border-border bg-surface-2 px-3 text-body text-fg leading-8">
+            {mottaker ? mottaker.navn : 'Velg i lista under'}
           </p>
         </div>
 
-        <StatefulButton
-          type="button"
-          className="w-full"
-          icon={<LifeBuoy size={16} strokeWidth={1.75} />}
-          disabled={opprett.isPending}
-          onClick={skrivTilEndwise}
-          state={
-            opprett.isPending
-              ? 'loading'
-              : opprett.isError
-                ? 'error'
-                : opprett.isSuccess
-                  ? 'success'
-                  : 'idle'
-          }
-          loadingText="Åpner …"
-          successText="Åpnet"
-          errorText="Klarte ikke starte samtalen. Prøv igjen."
+        <div
+          role="tablist"
+          aria-label="Filtrer mottakere"
+          className="flex rounded-pill border border-border bg-surface-2 p-1"
         >
-          Skriv til Endwise
-        </StatefulButton>
+          {PILLER.map((p) => {
+            const aktiv = pille === p.key;
+            const primær = p.key === 'support';
+            return (
+              <button
+                key={p.key}
+                type="button"
+                role="tab"
+                aria-selected={aktiv}
+                onClick={() => velgPille(p.key)}
+                className={`flex min-w-0 items-center justify-center gap-1.5 rounded-pill px-2.5 py-1.5 text-label transition-colors ${
+                  primær ? 'flex-[1.2]' : 'flex-1'
+                } ${pilleKlasse(aktiv, primær)}`}
+              >
+                <p.icon size={14} strokeWidth={1.75} className="shrink-0" />
+                <span className="truncate">{p.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-        <p className="text-[12px] text-fg-muted leading-relaxed">
-          Meldingen går til Endwise-support. Ikke til kunder eller kollegaer.
-        </p>
+        <div className="flex flex-col gap-2">
+          <input
+            type="search"
+            value={sok}
+            onChange={(e) => setSok(e.target.value)}
+            placeholder="Søk i lista"
+            aria-label="Søk i mottakerlista"
+            className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-ring"
+          />
 
-        {opprett.error && !annen && (
+          <div className="max-h-56 overflow-y-auto rounded-control border border-border">
+            {laster ? (
+              <p className="px-3 py-6 text-center text-[12px] text-fg-muted">Laster …</p>
+            ) : liste.length === 0 ? (
+              <p className="px-3 py-6 text-center text-[12px] text-fg-muted leading-relaxed">
+                {tommelding(pille, endwise)}
+              </p>
+            ) : (
+              <ul className="flex flex-col p-1">
+                {liste.map((m) => {
+                  const aktiv = mottaker?.id === m.id;
+                  return (
+                    <li key={m.id}>
+                      <button
+                        type="button"
+                        onClick={() => setValgt(m)}
+                        aria-pressed={aktiv}
+                        className={`flex w-full items-center gap-2 rounded-control px-3 py-2 text-left transition-colors ${
+                          aktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+                        }`}
+                      >
+                        {pille === 'support' && endwise ? (
+                          <Building2
+                            size={16}
+                            strokeWidth={1.75}
+                            className="shrink-0 text-fg-muted"
+                          />
+                        ) : null}
+                        <span className="min-w-0 flex-1 truncate text-label">{m.navn}</span>
+                        {m.undertekst && (
+                          <span className="max-w-[40%] shrink-0 truncate text-[11px] text-fg-muted">
+                            {m.undertekst}
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-label text-fg-muted">Emne</span>
+          <input
+            value={emne}
+            onChange={(e) => setEmne(e.target.value)}
+            maxLength={140}
+            placeholder="Valgfritt"
+            className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-ring"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-label text-fg-muted">Melding</span>
+          <textarea
+            value={tekst}
+            onChange={(e) => setTekst(e.target.value)}
+            rows={4}
+            maxLength={4000}
+            required
+            placeholder="Skriv meldingen …"
+            className="min-h-[96px] resize-y rounded-control border border-border bg-bg px-3 py-2 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-ring"
+          />
+        </label>
+
+        {feil && (
           <p className="flex items-start gap-2 text-body text-danger">
             <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-            Klarte ikke starte samtalen. Prøv igjen.
+            {feil.message}
           </p>
         )}
 
-        <button
-          type="button"
-          onClick={() => setAnnen((v) => !v)}
-          className="self-start text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline"
-        >
-          Annen samtale
-        </button>
-
-        {annen && (
-          <form onSubmit={startAnnen} className="flex flex-col gap-3 border-border border-t pt-3">
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-label text-fg">Hvem er samtalen med?</legend>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {ANDRE_PARTER.map((p) => (
-                  <button
-                    key={p.key}
-                    type="button"
-                    onClick={() => setAnnenKind(p.key)}
-                    aria-pressed={annenKind === p.key}
-                    className={`flex items-center gap-2 rounded-control border px-3 py-2.5 text-left text-label transition-colors ${
-                      annenKind === p.key
-                        ? 'border-fg bg-sidebar-active'
-                        : 'border-border hover:bg-surface-2'
-                    }`}
-                  >
-                    <p.icon size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
-            {opprett.error && (
-              <p className="flex items-start gap-2 text-body text-danger">
-                <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-                {opprett.error.message}
-              </p>
-            )}
-
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={onLukk}
-                className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-              >
-                Avbryt
-              </button>
-              <StatefulButton
-                type="submit"
-                disabled={opprett.isPending}
-                state={
-                  opprett.isPending
-                    ? 'loading'
-                    : opprett.isError
-                      ? 'error'
-                      : opprett.isSuccess
-                        ? 'success'
-                        : 'idle'
-                }
-                loadingText="Oppretter…"
-                successText="Opprettet"
-                errorText="Feilet"
-              >
-                Start samtale
-              </StatefulButton>
-            </div>
-          </form>
-        )}
-      </div>
+        <div className="flex justify-end">
+          <StatefulButton
+            type="submit"
+            disabled={jobber || !mottaker || !tekst.trim()}
+            state={jobber ? 'loading' : feil ? 'error' : 'idle'}
+            loadingText="Sender…"
+            errorText="Feilet"
+          >
+            Send
+          </StatefulButton>
+        </div>
+      </form>
     </CardShell>
   );
+}
+
+/** Support = fylt bg-fg. Kunde/Intern = outline, også når de er valgt. */
+function pilleKlasse(aktiv: boolean, primær: boolean): string {
+  if (primær && aktiv) return 'bg-fg text-bg';
+  if (primær) return 'text-fg-muted hover:text-fg';
+  if (aktiv) return 'border border-fg bg-bg text-fg';
+  return 'border border-transparent text-fg-muted hover:text-fg';
+}
+
+function internEtikett(funksjon: string, rolle: string): string | undefined {
+  if (funksjon === 'leder' || rolle === 'dealer_admin') return 'Leder';
+  if (funksjon === 'selger') return 'Selger';
+  if (funksjon === 'support') return 'Support';
+  if (rolle === 'endwise_admin') return 'Admin';
+  if (rolle === 'endwise_support') return 'Support';
+  return undefined;
+}
+
+function tommelding(pille: Pille, endwise: boolean): string {
+  if (endwise && pille !== 'support') {
+    return 'Denne innboksen er forhandler-support. Kunder og intern-team ligger hos verkstedet.';
+  }
+  if (pille === 'kunde') return 'Ingen kunder å skrive til ennå.';
+  if (pille === 'intern') return 'Ingen kollegaer på kontoret å skrive til ennå.';
+  return 'Ingen forhandlere å skrive til ennå.';
 }

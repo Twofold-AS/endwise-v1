@@ -9,6 +9,7 @@ import {
   withPlatformAdmin,
   withTenant,
 } from '@endwise/db';
+import { erPlattformTenant } from '../plattform/index.ts';
 import { visningsnavn } from '../profil/index.ts';
 import { publishEvent } from '../stream/publisher.ts';
 
@@ -82,6 +83,22 @@ export class PlatformSupportNotFoundError extends Error {
   readonly code = 'PLATFORM_SUPPORT_NOT_FOUND';
   constructor(threadId: string) {
     super(`Fant ikke support-tråd ${threadId}`);
+  }
+}
+
+/** F5-11 — Endwise kan bare starte support-tråd hos en ekte forhandler. */
+export class PlatformSupportInvalidTenantError extends Error {
+  readonly code = 'PLATFORM_SUPPORT_INVALID_TENANT';
+  constructor() {
+    super('Support-tråd kan bare startes hos en forhandler, ikke på plattformen.');
+  }
+}
+
+/** F5-11 — uten leder i forhandler-orga lander ikke tråden i deres innboks. */
+export class PlatformSupportNoDealerAdminError extends Error {
+  readonly code = 'PLATFORM_SUPPORT_NO_DEALER_ADMIN';
+  constructor() {
+    super('Forhandleren har ingen leder å sende til ennå.');
   }
 }
 
@@ -769,6 +786,76 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
 
       await this.addParticipants(traad.tenantId, traad.id, [input.readerId]);
       return this.markRead(traad.tenantId, traad.id, input.readerId);
+    },
+
+    /**
+     * F5-11 — Endwise starter en dealer_admin-tråd HOS forhandleren.
+     *
+     * Samme skrive-sti som `postPlatformSupportReply`: oppslag via
+     * platform-admin, insert via `withTenant` på DEN tenanten. Uten leder
+     * som deltaker ville forhandleren aldri sett tråden (`listThreads`
+     * krever deltakelse; `listPlatformSupport` gjør det ikke).
+     */
+    async createPlatformSupportThread(input: {
+      tenantId: string;
+      authorId: string;
+      subject?: string;
+      body: string;
+    }) {
+      const tenant = await withPlatformAdmin(db, async (tx) => {
+        const [rad] = await tx
+          .select({
+            id: schema.tenants.id,
+            name: schema.tenants.name,
+            slug: schema.tenants.slug,
+            kind: schema.tenants.kind,
+          })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.id, input.tenantId));
+        return rad ?? null;
+      });
+      if (!tenant || erPlattformTenant(tenant)) {
+        throw new PlatformSupportInvalidTenantError();
+      }
+
+      const ledere = await db
+        .select({ userId: schema.member.userId })
+        .from(schema.member)
+        .where(
+          and(
+            eq(schema.member.organizationId, input.tenantId),
+            eq(schema.member.role, 'dealer_admin'),
+          ),
+        );
+      if (ledere.length === 0) throw new PlatformSupportNoDealerAdminError();
+
+      const thread = await this.createThread({
+        tenantId: input.tenantId,
+        kind: 'dealer_admin',
+        subject: input.subject?.trim() || 'Henvendelse',
+        channel: 'app',
+        participantIds: [...new Set([...ledere.map((l) => l.userId), input.authorId])],
+      });
+
+      await this.postMessage({
+        tenantId: input.tenantId,
+        threadId: thread.id,
+        authorId: input.authorId,
+        body: input.body,
+      });
+
+      await withTenant(db, input.tenantId, (tx) =>
+        tx.insert(schema.auditLog).values({
+          tenantId: input.tenantId,
+          actor: input.authorId,
+          action: 'platform.support.create',
+          subjectType: 'thread',
+          subjectId: thread.id,
+          metadata: { tenantName: tenant.name },
+        }),
+      );
+
+      return thread;
     },
   };
 }

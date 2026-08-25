@@ -3,6 +3,7 @@
 import {
   Avatar,
   type AvatarValg,
+  Button,
   LifeBuoy,
   type LucideIcon,
   MessageSquare,
@@ -156,6 +157,9 @@ export function InboxSidebar() {
         <div className="flex h-14 shrink-0 items-center border-border border-b px-3">
           <h2 className="min-w-0 truncate text-title text-fg">Innboks</h2>
         </div>
+        <div className="shrink-0 border-border border-b p-2">
+          <NySamtaleLenke href={'/endwise/innboks?ny=1' as Route} />
+        </div>
         <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
           {support.isLoading ? (
             <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster henvendelser …</p>
@@ -215,30 +219,15 @@ export function InboxSidebar() {
               </button>
             );
           })}
-          <span className="mx-1 h-4 w-px bg-border" />
-          {/**
-           * F5-14 — her sto en «Flere filtre»-trakt fram til 20.08.2026.
-           *
-           * ⛔ **Den hadde ingen `onClick`.** Den så ut som en kontroll, den
-           * hadde tooltip og hover-tilstand, og den gjorde ingenting — samme
-           * slag som «Ny kunde»-knappen som pekte på en side som ikke leste
-           * parameteren (F5-02). En knapp som ikke virker lærer folk at
-           * knappene her ikke er til å stole på, og den koster mer enn den
-           * plassen den tar.
-           *
-           * «Ny samtale» har tatt plassen. Den lå tidligere KUN på
-           * `/innboks`-siden, altså akkurat der man ikke er når man leser en
-           * tråd og vil starte en ny. Nå står den der lista står, alltid.
-           */}
-          <Link
-            href={'/innboks?ny=1' as Route}
-            title="Ny samtale"
-            aria-label="Ny samtale"
-            className="flex size-7 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active/60 hover:text-fg"
-          >
-            <MessageSquarePlus size={16} strokeWidth={1.75} />
-          </Link>
         </div>
+      </div>
+      {/**
+       * F5-14 — «Ny samtale» sto som et 28px ikon i headeren. For utydelig
+       * hos både forhandler og Endwise-admin (Mikael 25.08.2026). Full bredde
+       * med synlig tekst, samme sted lista står, begge innbokser.
+       */}
+      <div className="shrink-0 border-border border-b p-2">
+        <NySamtaleLenke href={'/innboks?ny=1' as Route} />
       </div>
 
       {/* ── Samtalene ──────────────────────────────────────────────────── */}
@@ -402,5 +391,17 @@ function SamtaleKort({
         )}
       </div>
     </div>
+  );
+}
+
+/** Tydelig compose-knapp. Ikon alene i headeren var for lett å overse. */
+function NySamtaleLenke({ href }: { href: Route }) {
+  return (
+    <Button asChild className="w-full">
+      <Link href={href}>
+        <MessageSquarePlus size={16} strokeWidth={1.75} />
+        Ny samtale
+      </Link>
+    </Button>
   );
 }

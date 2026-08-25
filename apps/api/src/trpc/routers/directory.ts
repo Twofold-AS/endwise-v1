@@ -1,5 +1,12 @@
 import { and, eq, inArray, schema, withTenant } from '@endwise/db';
-import { type AvatarValg, lesAvatar, TOM_AVATAR, visningsnavn } from '@endwise/modules/profil';
+import {
+  type AvatarValg,
+  type Jobbfunksjon,
+  lesAvatar,
+  resolveJobbfunksjon,
+  TOM_AVATAR,
+  visningsnavn,
+} from '@endwise/modules/profil';
 import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
 
@@ -231,4 +238,77 @@ export const directoryRouter = router({
 
       return ut;
     }),
+
+  /**
+   * F5-14 — kollegaliste til «Ny samtale» (Intern-pillen).
+   *
+   * Kontoret, ikke verkstedsgulvet: mekanikere (jobbfunksjon eller
+   * `mechanics`-rad) er ute. `participants` slår opp KJENTE IDer; denne
+   * gir den omvendte lista. Samme isolasjon: `organization_id = tenant`.
+   * Ingen e-post — `team.list` er `adminProcedure` nettopp fordi den
+   * bærer kontaktinfo. Her får innloggede i tenanten navn + funksjon.
+   */
+  colleagues: protectedProcedure.query(async ({ ctx }) => {
+    const medlemmer = await ctx.db
+      .select({
+        userId: schema.member.userId,
+        navn: schema.user.name,
+        rolle: schema.member.role,
+      })
+      .from(schema.member)
+      .innerJoin(schema.user, eq(schema.user.id, schema.member.userId))
+      .where(eq(schema.member.organizationId, ctx.tenantId));
+
+    if (medlemmer.length === 0) return [];
+    const ider = medlemmer.map((m) => m.userId);
+
+    const { profiler, mekanikere } = await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+      const profiler = await tx
+        .select({
+          userId: schema.memberProfiles.userId,
+          nickname: schema.memberProfiles.nickname,
+          jobFunction: schema.memberProfiles.jobFunction,
+        })
+        .from(schema.memberProfiles)
+        .where(
+          and(
+            eq(schema.memberProfiles.tenantId, ctx.tenantId),
+            inArray(schema.memberProfiles.userId, ider),
+          ),
+        );
+      const mekanikere = await tx
+        .select({ userId: schema.mechanics.userId })
+        .from(schema.mechanics)
+        .where(eq(schema.mechanics.tenantId, ctx.tenantId));
+      return { profiler, mekanikere };
+    }).catch(() => ({
+      profiler: [] as Array<{
+        userId: string;
+        nickname: string | null;
+        jobFunction: string | null;
+      }>,
+      mekanikere: [] as Array<{ userId: string | null }>,
+    }));
+
+    const profilPer = new Map(profiler.map((p) => [p.userId, p]));
+    const erMekaniker = new Set(mekanikere.map((m) => m.userId).filter(Boolean) as string[]);
+
+    return medlemmer
+      .map((m) => {
+        const p = profilPer.get(m.userId);
+        const funksjon = resolveJobbfunksjon({
+          rolle: m.rolle,
+          lagret: (p?.jobFunction as Jobbfunksjon | null) ?? null,
+          harMekanikerprofil: erMekaniker.has(m.userId),
+        });
+        return {
+          userId: m.userId,
+          navn: visningsnavn({ navn: m.navn, kallenavn: p?.nickname ?? null }, 'intern'),
+          rolle: m.rolle,
+          funksjon,
+        };
+      })
+      .filter((m) => m.funksjon !== 'mekaniker')
+      .sort((a, b) => a.navn.localeCompare(b.navn, 'nb'));
+  }),
 });

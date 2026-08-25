@@ -67,6 +67,16 @@ describe('F5-11 — platform-support-ruter er endwiseAdminProcedure', () => {
       'FORBIDDEN',
     );
   });
+
+  it('⛔ ANGREP: dealer_admin får FORBIDDEN på createPlatformSupportThread', async () => {
+    await forventer(
+      appRouter.createCaller(fakeCtx('dealer_admin')).messages.createPlatformSupportThread({
+        tenantId: '00000000-0000-0000-0000-000000000001',
+        body: 'hei',
+      }),
+      'FORBIDDEN',
+    );
+  });
 });
 
 describeDb('F5-11 — kryss-tenant dealer_admin-tråder', () => {
@@ -215,6 +225,110 @@ describeDb('F5-11 — kryss-tenant dealer_admin-tråder', () => {
         body: 'kapret',
       }),
       'NOT_FOUND',
+    );
+  });
+});
+
+describeDb('F5-11 — createPlatformSupportThread skriver hos forhandleren', () => {
+  let owner: Database;
+  let app: Database;
+  const tenantA = randomUUID();
+  const endwiseTenant = randomUUID();
+  const lederA = `cps-leder-${tenantA.slice(0, 8)}`;
+  const endwise = `cps-ew-${endwiseTenant.slice(0, 8)}`;
+
+  const ctx = (role: 'endwise_admin' | 'dealer_admin', tenantId: string, userId: string) =>
+    ({
+      db: app,
+      events: { publish: async () => {} } as never,
+      tenantId,
+      userId,
+      role,
+    }) as never;
+
+  beforeAll(async () => {
+    owner = createDb(OWNER_URL as string);
+    app = createDb(APP_URL as string);
+    await owner.insert(schema.tenants).values([
+      { id: tenantA, name: 'CPS Verksted', slug: `cps-a-${tenantA.slice(0, 8)}` },
+      {
+        id: endwiseTenant,
+        name: 'Endwise CPS',
+        slug: `cps-ew-${endwiseTenant.slice(0, 8)}`,
+        kind: 'platform',
+      },
+    ]);
+    await owner.insert(schema.organization).values([
+      {
+        id: tenantA,
+        name: 'CPS Verksted',
+        slug: `cps-a-${tenantA.slice(0, 8)}`,
+        createdAt: new Date(),
+      },
+      {
+        id: endwiseTenant,
+        name: 'Endwise',
+        slug: `cps-ew-${endwiseTenant.slice(0, 8)}`,
+        createdAt: new Date(),
+      },
+    ]);
+    await owner.insert(schema.user).values([
+      { id: lederA, name: 'Leder CPS', email: `${lederA}@test.no`, emailVerified: true },
+      { id: endwise, name: 'Endwise Admin', email: `${endwise}@test.no`, emailVerified: true },
+    ]);
+    await owner.insert(schema.member).values([
+      {
+        id: randomUUID(),
+        organizationId: tenantA,
+        userId: lederA,
+        role: 'dealer_admin',
+        createdAt: new Date(),
+      },
+    ]);
+  });
+
+  afterAll(async () => {
+    for (const t of [tenantA, endwiseTenant]) {
+      await owner.delete(schema.streamEvents).where(sql`tenant_id = ${t}`);
+      await owner.delete(schema.auditLog).where(sql`tenant_id = ${t}`);
+      await owner.delete(schema.messages).where(sql`tenant_id = ${t}`);
+      await owner.delete(schema.threadParticipants).where(sql`tenant_id = ${t}`);
+      await owner.delete(schema.threads).where(sql`tenant_id = ${t}`);
+    }
+    await owner.delete(schema.member).where(sql`organization_id in (${tenantA}, ${endwiseTenant})`);
+    await owner.delete(schema.organization).where(sql`id in (${tenantA}, ${endwiseTenant})`);
+    await owner.delete(schema.user).where(sql`id in (${lederA}, ${endwise})`);
+    await owner.delete(schema.tenants).where(sql`id in (${tenantA}, ${endwiseTenant})`);
+  });
+
+  it('Endwise oppretter tråd hos forhandleren; lederen ser den', async () => {
+    const somEndwise = () => appRouter.createCaller(ctx('endwise_admin', endwiseTenant, endwise));
+    const somLeder = () => appRouter.createCaller(ctx('dealer_admin', tenantA, lederA));
+
+    const tråd = await somEndwise().messages.createPlatformSupportThread({
+      tenantId: tenantA,
+      subject: 'Vi tar kontakt',
+      body: 'Hei, vi ser på saken.',
+    });
+    expect(tråd.tenantId).toBe(tenantA);
+    expect(tråd.kind).toBe('dealer_admin');
+
+    const hosForhandler = await somLeder().messages.listThreads();
+    expect(hosForhandler.some((t) => t.id === tråd.id)).toBe(true);
+
+    const meldinger = await somLeder().messages.listMessages({ threadId: tråd.id });
+    expect(meldinger.some((m) => m.body === 'Hei, vi ser på saken.')).toBe(true);
+  });
+
+  it('⛔ ANGREP: kan ikke starte support-tråd på plattform-tenanten', async () => {
+    await forventer(
+      appRouter
+        .createCaller(ctx('endwise_admin', endwiseTenant, endwise))
+        .messages.createPlatformSupportThread({
+          tenantId: endwiseTenant,
+          body: 'nei',
+        }),
+      'BAD_REQUEST',
     );
   });
 });

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F5-11 / F5-14 — Innboks i Endwise-admin + forhandlerens «Skriv til Endwise».
+ * F5-11 / F5-14 — Innboks i Endwise-admin + forhandlerens Ny samtale.
  *
  * Låst kopi og navigasjon. Sperren er tRPC (`endwiseAdminProcedure`), ikke at
  * knappen ligger under /endwise.
@@ -100,27 +100,51 @@ describe('F5-11: /endwise/innboks gjenbruker innboks-chrome med modus=endwise', 
   });
 });
 
-describe('F5-14: Ny samtale — Skriv til Endwise er den åpenbare veien', () => {
+describe('F5-14: Ny samtale — Kunde · Intern · Support', () => {
   const kilde = utenKommentarer(les('../app/(app)/innboks/_ny-samtale.tsx'));
 
-  it('første skjerm er én fullbredde Skriv til Endwise-knapp med låst kopi', () => {
-    expect(kilde).toMatch(/Skriv til Endwise/);
-    expect(kilde).toMatch(/Åpner …/);
-    expect(kilde).toMatch(/Har du et spørsmål til oss\? Trykk — du trenger ikke velge noe\./);
-    expect(kilde).toMatch(/Meldingen går til Endwise-support\. Ikke til kunder eller kollegaer\./);
-    expect(kilde).toMatch(/Klarte ikke starte samtalen\. Prøv igjen\./);
-    expect(kilde).toMatch(/LifeBuoy/);
-    expect(kilde).toMatch(/w-full|className="[^"]*w-full/);
+  it('har nøyaktig tre piller i låst rekkefølge, Support er default og primær', () => {
+    const piller = [...kilde.matchAll(/key:\s*'(\w+)',\s*label:\s*'([^']+)'/g)].map((m) => m[1]);
+    expect(piller).toEqual(['kunde', 'intern', 'support']);
+    expect(kilde).toMatch(/label:\s*'Kunde'/);
+    expect(kilde).toMatch(/label:\s*'Intern'/);
+    expect(kilde).toMatch(/label:\s*'Support'/);
+    expect(kilde).toMatch(/useState<Pille>\('support'\)/);
+    expect(kilde).toMatch(/bg-fg text-bg/);
+    expect(kilde).not.toMatch(/Mekaniker|Skriv til Endwise|Annen samtale/);
   });
 
-  it('oppretter dealer_admin / app uten deltakere eller SMS/e-post på primærstien', () => {
+  it('Support = dealer_admin, Intern = mechanic_dealer, Kunde = customer_dealer — uten bruker-ID-felt', () => {
     expect(kilde).toMatch(/kind:\s*['"]dealer_admin['"]/);
+    expect(kilde).toMatch(/kind:\s*['"]mechanic_dealer['"]/);
+    expect(kilde).toMatch(/kind:\s*['"]customer_dealer['"]/);
     expect(kilde).toMatch(/channel:\s*['"]app['"]/);
-    expect(kilde).toMatch(/participantIds:\s*\[\s*\]/);
-    expect(kilde).toMatch(/Annen samtale/);
-    // Bruker-ID-liming og SMS/e-post skal ikke ligge i den første skjermen.
-    const primaer = kilde.slice(0, kilde.indexOf('Annen samtale'));
-    expect(primaer).not.toMatch(/bruker-ID|Deltakere \(bruker-ID/);
-    expect(primaer).not.toMatch(/['"]sms['"]|['"]email['"]/);
+    expect(kilde).toMatch(/customers\.list/);
+    expect(kilde).toMatch(/mechanics\.list/);
+    expect(kilde).toMatch(/verkstedsgulvet/);
+    expect(kilde).not.toMatch(/directory\.colleagues/);
+    expect(kilde).not.toMatch(/bruker-ID|Deltakere \(bruker-ID|participantIds:\s*\[.*input/i);
+    expect(kilde).not.toMatch(/['"]sms['"]|['"]email['"]/);
+  });
+
+  it('Endwise-admin starter tråd hos forhandler, ikke i egen tenant', () => {
+    expect(kilde).toMatch(/createPlatformSupportThread/);
+    expect(kilde).toMatch(/tenants\.list/);
+  });
+});
+
+describe('F5-14: Ny samtale-knappen er synlig i begge innbokser', () => {
+  it('forhandler- og Endwise-sidebar har merket Ny samtale, ikke bare et ikon', () => {
+    const sidebar = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
+    expect(sidebar).toMatch(/Ny samtale/);
+    expect(sidebar).toMatch(/\/innboks\?ny=1/);
+    expect(sidebar).toMatch(/\/endwise\/innboks\?ny=1/);
+    expect(sidebar).toMatch(/NySamtaleLenke/);
+  });
+
+  it('Endwise-innboksen leser ?ny=1', () => {
+    const side = utenKommentarer(les('../app/(app)/endwise/innboks/page.tsx'));
+    expect(side).toMatch(/ny['"]?\s*===?\s*['"]1['"]|get\(['"]ny['"]\)/);
+    expect(side).toMatch(/NySamtale/);
   });
 });

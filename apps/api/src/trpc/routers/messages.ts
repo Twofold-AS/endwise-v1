@@ -2,6 +2,8 @@ import { sendInboxMessage } from '@endwise/auth';
 import {
   createMessagesModule,
   NotAParticipantError,
+  PlatformSupportInvalidTenantError,
+  PlatformSupportNoDealerAdminError,
   PlatformSupportNotFoundError,
   type UtgaaendeEpost,
 } from '@endwise/modules/messages';
@@ -36,6 +38,12 @@ function toTRPCError(error: unknown): never {
   }
   if (error instanceof PlatformSupportNotFoundError) {
     throw new TRPCError({ code: 'NOT_FOUND', message: error.message, cause: error });
+  }
+  if (error instanceof PlatformSupportInvalidTenantError) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
+  }
+  if (error instanceof PlatformSupportNoDealerAdminError) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
   }
   throw error;
 }
@@ -180,6 +188,32 @@ export const messagesRouter = router({
         return await meldinger(ctx.db).markPlatformSupportRead({
           threadId: input.threadId,
           readerId: ctx.userId,
+        });
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
+
+  /**
+   * F5-11 — Ny samtale fra Endwise-innboksen. Skriver på forhandler-tenanten.
+   * ⛔ Ingen tenant-id fra sesjonen; målet kommer fra input og sjekkes mot
+   * plattform-lista. dealer_admin/dealer_staff får FORBIDDEN her.
+   */
+  createPlatformSupportThread: endwiseSupportProcedure
+    .input(
+      z.object({
+        tenantId: z.uuid(),
+        subject: z.string().max(140).optional(),
+        body: z.string().min(1).max(4000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await meldinger(ctx.db).createPlatformSupportThread({
+          tenantId: input.tenantId,
+          authorId: ctx.userId,
+          subject: input.subject,
+          body: input.body,
         });
       } catch (error) {
         return toTRPCError(error);

@@ -200,7 +200,10 @@ describe('ops/quick-connect-proxy — dest-lås + secret-auth', () => {
 
 describe('ops/quick-connect-proxy.service — Node/V8 + MDWE', () => {
   const unit = readFileSync(
-    join(dirname(fileURLToPath(import.meta.url)), '../../../../../ops/quick-connect-proxy/quick-connect-proxy.service'),
+    join(
+      dirname(fileURLToPath(import.meta.url)),
+      '../../../../../ops/quick-connect-proxy/quick-connect-proxy.service',
+    ),
     'utf8',
   );
 

@@ -5,10 +5,11 @@ import {
   mekanikerStatusVisning,
   TOM_AVATAR,
   tellerSomBelastning,
+  updateMechanicCapacity,
   visningsnavn,
 } from '@endwise/modules/profil';
 import { z } from 'zod';
-import { protectedProcedure, router } from '../init.ts';
+import { adminProcedure, protectedProcedure, router } from '../init.ts';
 
 function dagensVindu(): { fra: Date; til: Date } {
   const fra = new Date();
@@ -138,6 +139,19 @@ export const mechanicsRouter = router({
         return created;
       }),
     ),
+
+  /**
+   * Timeplan — samtidig kapasitet. Samme felt mekanikeren ser som «N av
+   * kapasitet» på Min dag. Skriving er leder-arbeid (adminProcedure).
+   */
+  updateCapacity: adminProcedure
+    .input(
+      z.object({
+        mechanicId: z.uuid(),
+        capacity: z.number().int().min(1).max(10),
+      }),
+    )
+    .mutation(({ ctx, input }) => updateMechanicCapacity(ctx.db, ctx.tenantId, input)),
 
   /**
    * F3-02 — Hvem kan ta denne jobben?

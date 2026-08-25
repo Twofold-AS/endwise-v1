@@ -1,5 +1,291 @@
-import { Placeholder } from '../../_components/placeholder';
+'use client';
 
-export default function Page() {
-  return <Placeholder title="Timeplan" phase="F3-02" />;
+import { Avatar, CalendarDays, Car, CircleAlert, Gauge, StatefulButton } from '@endwise/ui';
+import type { Route } from 'next';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import type { RouterOutput } from '@/lib/trpc';
+import { trpc } from '@/lib/trpc';
+import { useOrgRole } from '../../_lib/use-org-role';
+import { CardShell } from '../../_shell/cards';
+import { Feil, Laster, Tomt } from '../../kunder/_delt';
+import { estMinutes, fmtTime, STATUS_LABEL } from '../../min-dag/_status';
+import { FELT } from '../kompetanse/_niva';
+
+const TELLER_STATUS = new Set(['draft', 'confirmed', 'in_progress']);
+
+const STATUS_PRIKK: Record<string, string> = {
+  ledig: 'bg-success',
+  på_jobb: 'bg-warn',
+  opptatt: 'bg-warn',
+  fri: 'bg-fg-muted',
+};
+
+/** Samme 7-dagers stripe som mekanikerens Timeplan («Min dag»). */
+function dagListe(): { iso: string; label: string; weekday: string }[] {
+  const out: { iso: string; label: string; weekday: string }[] = [];
+  const base = new Date();
+  base.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(base);
+    d.setDate(d.getDate() + i);
+    out.push({
+      iso: d.toISOString(),
+      label: d.toLocaleDateString('nb-NO', { day: '2-digit', month: 'short' }),
+      weekday: d.toLocaleDateString('nb-NO', { weekday: 'short' }),
+    });
+  }
+  return out;
+}
+
+function dagsvindu(iso: string): { from: Date; to: Date } {
+  const from = new Date(iso);
+  from.setHours(0, 0, 0, 0);
+  const to = new Date(from);
+  to.setDate(to.getDate() + 1);
+  return { from, to };
+}
+
+/**
+ * F3-08 / F7-03 — Ansatte › Timeplan.
+ *
+ * Ikke en annen modell enn mekanikerens Timeplan: kapasitet bor på
+ * `mechanics.capacity`, jobbene er bookinger for valgt dag. Lederen justerer
+ * hvor mange jobber mekanikeren kan ha samtidig.
+ */
+export default function TimeplanPage() {
+  const { isAdmin } = useOrgRole();
+  const dager = useMemo(() => dagListe(), []);
+  const [valgt, setValgt] = useState(dager[0]?.iso ?? new Date().toISOString());
+  const vindu = dagsvindu(valgt);
+
+  const mekanikere = trpc.mechanics.oversikt.useQuery();
+  const kalender = trpc.bookings.calendar.useQuery({ from: vindu.from, to: vindu.to });
+
+  const feil = mekanikere.error ?? kalender.error;
+  const laster = mekanikere.isLoading || kalender.isLoading;
+
+  const jobberPer = new Map<string, NonNullable<typeof kalender.data>>();
+  for (const jobb of kalender.data ?? []) {
+    if (!jobb.mechanicId) continue;
+    const liste = jobberPer.get(jobb.mechanicId) ?? [];
+    liste.push(jobb);
+    jobberPer.set(jobb.mechanicId, liste);
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
+      <div>
+        <h1 className="sr-only">Timeplan</h1>
+        <p className="flex items-center gap-2 text-title text-fg">
+          <CalendarDays size={18} strokeWidth={1.75} className="text-fg-muted" />
+          Timeplan
+        </p>
+        <p className="text-body text-fg-muted">
+          Kapasitet og jobber per mekaniker. Samme dag-stripe som på Timeplan under Min dag.
+        </p>
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {dager.map((d) => {
+          const aktiv = d.iso === valgt;
+          return (
+            <button
+              type="button"
+              key={d.iso}
+              onClick={() => setValgt(d.iso)}
+              className={`flex min-w-[56px] shrink-0 flex-col items-center gap-0.5 rounded-xl border px-3 py-2 ${
+                aktiv
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-card text-fg-muted'
+              }`}
+            >
+              <span className="text-[10px] uppercase">{d.weekday}</span>
+              <span className="font-semibold text-[13px]">{d.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {laster ? (
+        <Laster />
+      ) : feil ? (
+        <Feil melding={feil.message} />
+      ) : (mekanikere.data?.length ?? 0) === 0 ? (
+        <Tomt
+          tittel="Ingen mekanikere ennå"
+          hint="Mekanikere opprettes når noen får jobbfunksjonen mekaniker, eller synkes inn."
+        />
+      ) : (
+        <div className="flex flex-col gap-2">
+          {mekanikere.data?.map((m) => (
+            <MekanikerTimeplan
+              key={m.id}
+              mekaniker={m}
+              jobber={jobberPer.get(m.id) ?? []}
+              kanEndre={isAdmin}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type Mekaniker = RouterOutput['mechanics']['oversikt'][number];
+type Jobb = RouterOutput['bookings']['calendar'][number];
+
+function MekanikerTimeplan({
+  mekaniker,
+  jobber,
+  kanEndre,
+}: {
+  mekaniker: Mekaniker;
+  jobber: Jobb[];
+  kanEndre: boolean;
+}) {
+  const utils = trpc.useUtils();
+  const [kapasitet, setKapasitet] = useState(String(mekaniker.capacity));
+  const [redigerer, setRedigerer] = useState(false);
+
+  const last = jobber.filter((j) => TELLER_STATUS.has(j.status)).length;
+
+  const lagre = trpc.mechanics.updateCapacity.useMutation({
+    onSuccess: () => {
+      void utils.mechanics.oversikt.invalidate();
+      void utils.mechanics.list.invalidate();
+      setRedigerer(false);
+    },
+  });
+
+  const tall = Number(kapasitet);
+  const gyldig = Number.isInteger(tall) && tall >= 1 && tall <= 10;
+
+  return (
+    <CardShell>
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+        <Avatar
+          seed={mekaniker.id}
+          valg={{ ...mekaniker.avatar, humor: mekaniker.statusHumor }}
+          navn={mekaniker.name}
+          size={32}
+          bevegelse="stille"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-label text-fg">{mekaniker.name}</p>
+          <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
+            <span
+              aria-hidden
+              className={`inline-block size-2 rounded-full ${STATUS_PRIKK[mekaniker.status] ?? 'bg-fg-muted'}`}
+            />
+            {mekaniker.statusLabel}
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1 text-[12px] text-fg-muted tabular-nums">
+          <Gauge size={13} strokeWidth={1.75} />
+          {last} av {mekaniker.capacity} i dag
+        </span>
+        {kanEndre && !redigerer && (
+          <button
+            type="button"
+            onClick={() => {
+              setKapasitet(String(mekaniker.capacity));
+              setRedigerer(true);
+            }}
+            className="h-control rounded-control border border-border px-2.5 text-label text-fg hover:bg-surface-2"
+          >
+            Rediger kapasitet
+          </button>
+        )}
+      </div>
+
+      {redigerer && (
+        <form
+          className="flex flex-col gap-3 border-border border-t px-4 py-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!gyldig) return;
+            lagre.mutate({ mechanicId: mekaniker.id, capacity: tall });
+          }}
+        >
+          <label className="flex max-w-xs flex-col gap-1.5">
+            <span className="text-label text-fg">Samtidige jobber</span>
+            <input
+              inputMode="numeric"
+              value={kapasitet}
+              onChange={(e) => setKapasitet(e.target.value)}
+              className={FELT}
+            />
+            <span className="text-[12px] text-fg-muted">
+              1 = én om gangen. Styrer matching og ledige tider i widgeten.
+            </span>
+          </label>
+          {lagre.isError && (
+            <p className="flex items-start gap-2 text-body text-danger">
+              <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+              {lagre.error.message}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setRedigerer(false)}
+              className="h-control rounded-control px-3 text-label text-fg-muted hover:text-fg"
+            >
+              Avbryt
+            </button>
+            <StatefulButton
+              type="submit"
+              disabled={!gyldig || lagre.isPending}
+              state={
+                lagre.isPending
+                  ? 'loading'
+                  : lagre.isSuccess
+                    ? 'success'
+                    : lagre.isError
+                      ? 'error'
+                      : 'idle'
+              }
+              loadingText="Lagrer…"
+              successText="Lagret"
+              errorText="Feilet"
+            >
+              Lagre
+            </StatefulButton>
+          </div>
+        </form>
+      )}
+
+      <div className="flex flex-col gap-2 border-border border-t px-4 py-3">
+        {jobber.length === 0 ? (
+          <p className="text-fg-faint text-sm">Ingen jobber denne dagen.</p>
+        ) : (
+          jobber.map((job) => (
+            <Link key={job.id} href={`/bookinger/${job.id}` as Route} className="block">
+              <div className="flex items-center gap-3 rounded-lg bg-inset p-3">
+                <div className="w-14 shrink-0 text-center font-semibold text-[13px] text-primary tabular-nums">
+                  {fmtTime(job.startsAt)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <Car size={13} className="shrink-0 text-fg-muted" />
+                    <span className="truncate font-semibold text-[13px] text-fg">
+                      {job.regNumber ?? 'Ukjent regnr'}
+                    </span>
+                  </div>
+                  <p className="truncate text-fg-faint text-xs">
+                    {job.customerName ?? 'Ukjent kunde'} · est.{' '}
+                    {estMinutes(job.startsAt, job.endsAt)} min
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-fg-muted">
+                  {STATUS_LABEL[job.status] ?? job.status}
+                </span>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+    </CardShell>
+  );
 }

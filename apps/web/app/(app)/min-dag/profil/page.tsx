@@ -32,13 +32,7 @@ export default function ProfilPage() {
         <div className="flex flex-col gap-3 rounded-lg bg-inset p-5">
           <div className="flex items-center gap-3">
             {m ? (
-              <Avatar
-                seed={m.id}
-                valg={m.avatar}
-                navn={m.name}
-                size={48}
-                bevegelse="hover"
-              />
+              <Avatar seed={m.id} valg={m.avatar} navn={m.name} size={48} bevegelse="hover" />
             ) : (
               <span className="grid size-12 place-items-center rounded-control bg-surface-2" />
             )}

@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { type AddressInfo, createConnection, createServer } from 'node:net';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createQuickConnectProxy } from '../../../../../ops/quick-connect-proxy/proxy.mjs';
 
@@ -192,5 +195,30 @@ describe('ops/quick-connect-proxy — dest-lås + secret-auth', () => {
     }
     expect(lines.some((l) => l.includes('CONNECT evil.example:443 403'))).toBe(true);
     expect(lines.some((l) => l.includes('CONNECT q3.quick.no:443 407'))).toBe(true);
+  });
+});
+
+describe('ops/quick-connect-proxy.service — Node/V8 + MDWE', () => {
+  const unit = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../../../../../ops/quick-connect-proxy/quick-connect-proxy.service'),
+    'utf8',
+  );
+
+  it('har ikke MemoryDenyWriteExecute=yes (V8 JIT trenger kjørbare sider)', () => {
+    expect(unit).not.toMatch(/^\s*MemoryDenyWriteExecute\s*=\s*yes\s*$/m);
+    expect(unit).toMatch(/Node\/V8.*MemoryDenyWriteExecute/);
+  });
+
+  it('beholder øvrig systemd-herding', () => {
+    expect(unit).toMatch(/^\s*NoNewPrivileges=yes\s*$/m);
+    expect(unit).toMatch(/^\s*PrivateTmp=yes\s*$/m);
+    expect(unit).toMatch(/^\s*ProtectSystem=strict\s*$/m);
+    expect(unit).toMatch(/^\s*ProtectHome=yes\s*$/m);
+    expect(unit).toMatch(/^\s*ProtectKernelTunables=yes\s*$/m);
+    expect(unit).toMatch(/^\s*ProtectControlGroups=yes\s*$/m);
+    expect(unit).toMatch(/^\s*RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX\s*$/m);
+    expect(unit).toMatch(/^\s*RestrictNamespaces=yes\s*$/m);
+    expect(unit).toMatch(/^\s*LockPersonality=yes\s*$/m);
+    expect(unit).toMatch(/^\s*SystemCallArchitectures=native\s*$/m);
   });
 });

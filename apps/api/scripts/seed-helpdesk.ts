@@ -1,4 +1,4 @@
-import { type Database, schema } from '@endwise/db';
+import { type Database, type HelpdeskKategori, schema } from '@endwise/db';
 
 /**
  * F5-23 — BASISARTIKLENE i helpdesken.
@@ -24,6 +24,7 @@ type Artikkel = {
   summary: string;
   body: string;
   image: string;
+  category: HelpdeskKategori;
   dagerSiden: number;
 };
 
@@ -36,6 +37,7 @@ const ARTIKLER: Artikkel[] = [
     title: 'Kom i gang med innboksen',
     summary: 'Kunder, mekanikere og Endwise i samme innboks — tre parter, samme trådmodell.',
     image: '/images/img_1.jpg',
+    category: 'brukerguide',
     dagerSiden: 1,
     body: avsnitt(
       'Innboksen samler tre typer samtaler på ett sted: med KUNDER, INTERNT med mekanikerne dine, og med ENDWISE. Knappene øverst i samtalelista filtrerer mellom dem. Trykker du på den som allerede er valgt, går du tilbake til «Alle».',
@@ -50,6 +52,7 @@ const ARTIKLER: Artikkel[] = [
     summary:
       'Prisene dine er versjonert. Endrer du en pris i dag, står fjorårets faktura fortsatt riktig.',
     image: '/images/img_2.jpg',
+    category: 'booking',
     dagerSiden: 3,
     body: avsnitt(
       'Tjenestekatalogen ligger under Innstillinger og inneholder tjenestene KUNDEN kan bestille hos deg: EU-kontroll, liten service, og det du ellers tilbyr. Hver tjeneste har en varighet, en pris og eventuelle ferdigheter jobben krever.',
@@ -65,6 +68,7 @@ const ARTIKLER: Artikkel[] = [
     summary:
       'Alle forhandlerkontoer krever engangskode i tillegg til passord. Det finnes ingen «husk denne enheten».',
     image: '/images/img_3.jpg',
+    category: 'brukerguide',
     dagerSiden: 6,
     body: avsnitt(
       'Alle som jobber i et verksted — leder, selger, support og mekaniker — logger inn med passord OG en engangskode på e-post. Kun sluttkunder er unntatt.',
@@ -79,6 +83,7 @@ const ARTIKLER: Artikkel[] = [
     summary:
       'Send en engangslenke fra Team & tilgang. Den ansatte setter passord selv, og går rett gjennom tofaktor.',
     image: '/images/hero.jpg',
+    category: 'brukerguide',
     dagerSiden: 9,
     body: avsnitt(
       'Under Innstillinger › Team & tilgang inviterer du en ny ansatt med e-post og jobbfunksjon. Lenka som sendes er personlig, gyldig i sju dager, og kan bare brukes én gang.',
@@ -93,6 +98,7 @@ const ARTIKLER: Artikkel[] = [
     summary:
       'Tilgjengelig = på lager minus reservert. Det er tallet som gjelder når du lover en kunde en dato.',
     image: '/images/img_1.jpg',
+    category: 'lager',
     dagerSiden: 13,
     body: avsnitt(
       'Lageret er en egen kontekst i menyen øverst til venstre, med deler, lokasjoner og bevegelser. Det er kjernefunksjonalitet — alle forhandlere har det, uavhengig av abonnement.',
@@ -107,6 +113,7 @@ const ARTIKLER: Artikkel[] = [
     summary:
       'Ansiktet ved siden av navnet ditt lages av kontoen din. Du kan endre form, farge og tone.',
     image: '/images/img_2.jpg',
+    category: 'brukerguide',
     dagerSiden: 16,
     body: avsnitt(
       'Alle personer i Endwise får et lite geometrisk ansikt ved siden av navnet — i innboksen, på kundekortet og nederst i sidebaren. Det er ikke et bilde du laster opp; det regnes ut fra kontoen din, og blir det samme hver gang.',
@@ -128,6 +135,7 @@ export async function seedHelpdesk(db: Database): Promise<number> {
         summary: a.summary,
         body: a.body,
         image: a.image,
+        category: a.category,
         published: true,
         publishedAt: publisert,
         sortOrder: ARTIKLER.length - i,
@@ -139,6 +147,7 @@ export async function seedHelpdesk(db: Database): Promise<number> {
           summary: a.summary,
           body: a.body,
           image: a.image,
+          category: a.category,
           publishedAt: publisert,
           sortOrder: ARTIKLER.length - i,
           updatedAt: new Date(),

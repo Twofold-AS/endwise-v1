@@ -220,4 +220,56 @@ describeDb('F5-23 — helpdesk', () => {
       }),
     ).rejects.toThrow(/Kun Endwise-admin|FORBIDDEN/i);
   });
+
+  /* ══ F5-51 — KATEGORIER ═══════════════════════════════════════════════ */
+
+  it('tar Brukerguide og Oppdateringer, og de eksisterende kategoriene', async () => {
+    const guide = await somEndwise().helpdesk.opprett({
+      title: 'Brukerguide-kategori',
+      summary: 'Artikkel merket som brukerguide i testen.',
+      body: 'Skal ligge i brukerguide.',
+      image: null,
+      published: true,
+      category: 'brukerguide',
+    });
+    const oppd = await somEndwise().helpdesk.opprett({
+      title: 'Oppdateringer-kategori',
+      summary: 'Artikkel merket som oppdateringer i testen.',
+      body: 'Skal ligge i oppdateringer.',
+      image: null,
+      published: true,
+      category: 'oppdateringer',
+    });
+    const lager = await somEndwise().helpdesk.opprett({
+      title: 'Lager-kategori',
+      summary: 'Eksisterende kategori skal fortsatt virke.',
+      body: 'Skal ligge i lager.',
+      image: null,
+      published: true,
+      category: 'lager',
+    });
+    if (guide) slugger.push(guide.slug);
+    if (oppd) slugger.push(oppd.slug);
+    if (lager) slugger.push(lager.slug);
+    expect(guide?.category).toBe('brukerguide');
+    expect(oppd?.category).toBe('oppdateringer');
+    expect(lager?.category).toBe('lager');
+
+    const liste = await somForhandler().helpdesk.list({ limit: 50 });
+    expect(liste.find((a) => a.id === guide?.id)?.category).toBe('brukerguide');
+    expect(liste.find((a) => a.id === oppd?.id)?.category).toBe('oppdateringer');
+  });
+
+  it('ANGREP: ukjent kategori avvises', async () => {
+    await expect(
+      somEndwise().helpdesk.opprett({
+        title: 'Ukjent kategori',
+        summary: 'Skal feile på enum, ikke lagres.',
+        body: 'Skal feile på enum, ikke lagres.',
+        image: null,
+        published: true,
+        category: 'admin-hemmelig' as never,
+      }),
+    ).rejects.toThrow();
+  });
 });

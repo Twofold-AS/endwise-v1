@@ -6,6 +6,13 @@ import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import {
+  HELPDESK_KATEGORI_DEFAULT,
+  HELPDESK_KATEGORI_LABEL,
+  HELPDESK_KATEGORIER,
+  helpdeskKategoriLabel,
+  type HelpdeskKategori,
+} from '../../support/_kategorier';
 import { HELPDESK_MIN, hjelpeartikkelLagreHint } from './lagre-hint';
 
 /**
@@ -39,6 +46,7 @@ const TOMT = {
   body: '',
   image: BILDER[0] as string | null,
   published: false,
+  category: HELPDESK_KATEGORI_DEFAULT as HelpdeskKategori,
 };
 
 type Skjema = typeof TOMT;
@@ -85,6 +93,7 @@ export default function EndwiseHelpdeskPage() {
         body: a.body,
         image: a.image,
         published: a.published,
+        category: (a.category as HelpdeskKategori) ?? HELPDESK_KATEGORI_DEFAULT,
       });
     } else {
       setRedigerer('ny');
@@ -99,6 +108,7 @@ export default function EndwiseHelpdeskPage() {
       body: skjema.body.trim(),
       image: (skjema.image ?? null) as never,
       published: skjema.published,
+      category: skjema.category,
     };
     if (redigerer === 'ny') opprett.mutate(felt);
     else if (aktiv) oppdater.mutate({ id: aktiv.id, ...felt });
@@ -178,6 +188,30 @@ export default function EndwiseHelpdeskPage() {
               className="rounded-control border border-border bg-bg px-2.5 py-2 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
             />
           </label>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="text-label text-fg">Kategori</span>
+            <div className="flex flex-wrap gap-1.5">
+              {HELPDESK_KATEGORIER.map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={skjema.category === k}
+                  onClick={() => setSkjema((s) => ({ ...s, category: k }))}
+                  className={`inline-flex h-7 items-center rounded-pill px-3 text-label transition-colors ${
+                    skjema.category === k
+                      ? 'bg-fg text-bg'
+                      : 'bg-surface-2 text-fg-muted hover:text-fg'
+                  }`}
+                >
+                  {HELPDESK_KATEGORI_LABEL[k]}
+                </button>
+              ))}
+            </div>
+            <span className="text-[12px] text-fg-muted">
+              Vises som filter hos forhandleren. Brukerguide og Oppdateringer er egne innganger.
+            </span>
+          </div>
 
           <label className="flex flex-col gap-1.5">
             <span className="text-label text-fg">Brødtekst</span>
@@ -301,7 +335,9 @@ export default function EndwiseHelpdeskPage() {
               </span>
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="truncate text-label text-fg">{a.title}</span>
-                <span className="truncate text-[12px] text-fg-muted">{a.summary}</span>
+                <span className="truncate text-[12px] text-fg-muted">
+                  {helpdeskKategoriLabel(a.category)} · {a.summary}
+                </span>
               </span>
               <span
                 className={`inline-flex h-badge shrink-0 items-center rounded-badge px-1.5 text-[11px] ${

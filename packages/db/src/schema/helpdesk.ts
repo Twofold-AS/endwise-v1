@@ -52,6 +52,37 @@ export const HELPDESK_BILDER = [
   '/images/img_3.jpg',
 ] as const;
 
+/**
+ * F5-51 — faste kategorier. Forhandlerens språk, ikke fasene våre.
+ *
+ * Eksisterende (roadmap): booking · kunder · lager · integrasjoner · fakturering.
+ * Lagt til 25.08.2026 (Slack #endwise-v1): Brukerguide · Oppdateringer.
+ * ⛔ Ikke fritekst — en ny nøkkel her er en produktbeslutning.
+ */
+export const HELPDESK_KATEGORIER = [
+  'brukerguide',
+  'oppdateringer',
+  'booking',
+  'kunder',
+  'lager',
+  'integrasjoner',
+  'fakturering',
+] as const;
+
+export type HelpdeskKategori = (typeof HELPDESK_KATEGORIER)[number];
+
+export const HELPDESK_KATEGORI_LABEL: Record<HelpdeskKategori, string> = {
+  brukerguide: 'Brukerguide',
+  oppdateringer: 'Oppdateringer',
+  booking: 'Booking',
+  kunder: 'Kunder',
+  lager: 'Lager',
+  integrasjoner: 'Integrasjoner',
+  fakturering: 'Fakturering',
+};
+
+export const HELPDESK_KATEGORI_DEFAULT: HelpdeskKategori = 'brukerguide';
+
 export const helpdeskArticles = pgTable(
   'helpdesk_articles',
   {
@@ -62,6 +93,11 @@ export const helpdeskArticles = pgTable(
     title: text('title').notNull(),
     /** Kort ingress. Brukes i lista og i slideren — derfor kort, ikke valgfri. */
     summary: text('summary').notNull(),
+    /**
+     * Fast enum (HELPDESK_KATEGORIER). Default brukerguide så gamle rader
+     * lander i en ekte kategori, ikke i «ukjent».
+     */
+    category: text('category').notNull().default('brukerguide'),
     body: text('body').notNull(),
     /** Sti eller URL. Null = artikkelen vises uten bilde, ikke med et tomt felt. */
     image: text('image'),

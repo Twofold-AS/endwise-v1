@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { and, eq, gte, inArray, lt, schema, withTenant } from '@endwise/db';
 import {
   type Jobbfunksjon,
@@ -12,6 +13,13 @@ import {
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, router } from '../init.ts';
+
+/** Ikke-ruterbar adresse når lederen ikke oppgir e-post. Aldri send dit. */
+const UTEN_INNLOGGING_SUFFIKS = '@uten-innlogging.invalid';
+
+function erUtenInnloggingEpost(epost: string): boolean {
+  return epost.endsWith(UTEN_INNLOGGING_SUFFIKS);
+}
 
 function dagensVindu(): { fra: Date; til: Date } {
   const fra = new Date();
@@ -142,8 +150,22 @@ export const teamRouter = router({
       .where(inArray(schema.userPreferences.userId, ider))
       .catch(() => []);
 
+    /**
+     * Innlogging krever credential-konto (passord). Lokal oppretting uten
+     * invitasjon lager aldri den raden — personen vises i teamet, men kan
+     * ikke logge inn. Invitasjonsstien (F1-10) er uendret.
+     */
+    const kontoer = await ctx.db
+      .select({ userId: schema.account.userId })
+      .from(schema.account)
+      .where(
+        and(inArray(schema.account.userId, ider), eq(schema.account.providerId, 'credential')),
+      )
+      .catch(() => []);
+
     const profilPer = new Map(profiler.map((p) => [p.userId, p]));
     const avatarPer = new Map(avatarRader.map((r) => [r.userId, r]));
+    const medInnlogging = new Set(kontoer.map((k) => k.userId));
     const mekPerBruker = new Map(
       mekanikere.filter((m) => m.userId).map((m) => [m.userId as string, m]),
     );
@@ -163,7 +185,8 @@ export const teamRouter = router({
         return {
           userId: m.userId,
           navn: m.navn,
-          epost: m.epost,
+          epost: erUtenInnloggingEpost(m.epost) ? '' : m.epost,
+          kanLoggeInn: medInnlogging.has(m.userId),
           rolle: m.rolle,
           /** ⚠️ Kallenavn er INTERNT. Team & tilgang er en intern flate. */
           kallenavn: p?.nickname ?? null,
@@ -259,5 +282,106 @@ export const teamRouter = router({
           }),
       );
       return { userId: input.userId, funksjon: input.funksjon };
+    }),
+
+  /**
+   * F1-10 tillegg — LEGG TIL ANSATT UTEN INVITASJON.
+   *
+   * Verkstedet som ikke trenger mekaniker-PWA (eller som vil ha navnet i
+   * forhandlervisningen før noen logger inn) må kunne opprette selger /
+   * support / mekaniker lokalt. Ingen e-post sendes. Ingen invitasjonsrad.
+   * Ingen passord — admin setter aldri passord for andre (samme regel som
+   * F1-10). Personen vises i teamet; innlogging skjer bare via invitasjon.
+   *
+   * ⛔ Rollen er alltid `dealer_staff`. `leder` avvises. Tenant kommer fra
+   * sesjonen. Eksisterende e-post avvises — da skal invitasjonsstien brukes.
+   */
+  opprettUtenInvitasjon: adminProcedure
+    .input(
+      z.object({
+        navn: z.string().trim().min(1).max(160),
+        epost: z.email().max(200).optional(),
+        funksjon: z.enum(['selger', 'support', 'mekaniker']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!kanEndreJobbfunksjon(ctx.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare forhandlerens leder kan legge til ansatte.',
+        });
+      }
+      if (!kanTildeles(input.funksjon)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Funksjonen «${input.funksjon}» kan ikke tildeles.`,
+        });
+      }
+
+      const oppgitt = input.epost?.trim().toLowerCase();
+      const epost = oppgitt || `u-${randomUUID()}${UTEN_INNLOGGING_SUFFIKS}`;
+
+      if (oppgitt) {
+        const [finnes] = await ctx.db
+          .select({ id: schema.user.id })
+          .from(schema.user)
+          .where(eq(schema.user.email, oppgitt))
+          .limit(1);
+        if (finnes) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message:
+              'E-posten er allerede i bruk. Inviter personen hvis hen skal logge inn, eller bruk en annen adresse.',
+          });
+        }
+      }
+
+      const userId = randomUUID();
+
+      try {
+        await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          await tx.insert(schema.user).values({
+            id: userId,
+            name: input.navn,
+            email: epost,
+            emailVerified: false,
+            twoFactorEnabled: false,
+          });
+          await tx.insert(schema.member).values({
+            id: randomUUID(),
+            organizationId: ctx.tenantId,
+            userId,
+            role: 'dealer_staff',
+            createdAt: new Date(),
+          });
+          await tx.insert(schema.memberProfiles).values({
+            tenantId: ctx.tenantId,
+            userId,
+            jobFunction: input.funksjon,
+          });
+          if (input.funksjon === 'mekaniker') {
+            await tx.insert(schema.mechanics).values({
+              tenantId: ctx.tenantId,
+              userId,
+              name: input.navn,
+              capacity: 1,
+            });
+          }
+        });
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Klarte ikke legge til den ansatte. Prøv igjen, eller bruk en annen e-post.',
+        });
+      }
+
+      return {
+        userId,
+        navn: input.navn,
+        epost: oppgitt ?? '',
+        funksjon: input.funksjon,
+        kanLoggeInn: false,
+      };
     }),
 });

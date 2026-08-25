@@ -5,6 +5,13 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-08-25 — F1-07/F8-01 systemd MDWE fjernet fra CONNECT-proxy
+
+**Type:** produksjonsfiks (ikke ny flate). F1-07 og F8-01 forblir `progress`.
+**Endring:** `ops/quick-connect-proxy/quick-connect-proxy.service` uten `MemoryDenyWriteExecute`. Node/V8 JIT kan ikke kjøre med MDWE (status=5/TRAP, «MemoryChunk allocation failed during deserialization»). Øvrig systemd-herding uendret.
+
+---
+
 ## 2026-08-24 — F5-26 0026 slett dealer-kontoer etter forhandlerslett
 
 **Type:** produksjonsfiks (ikke ny flate). F5-26 forblir `done`.

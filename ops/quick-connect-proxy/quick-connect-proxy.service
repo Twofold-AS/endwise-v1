@@ -22,7 +22,7 @@ ProtectControlGroups=yes
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 RestrictNamespaces=yes
 LockPersonality=yes
-MemoryDenyWriteExecute=yes
+# Node/V8 kan ikke kjøre med MemoryDenyWriteExecute — JIT trenger kjørbare sider.
 SystemCallArchitectures=native
 # Access-log = stdout (timestamp, CONNECT-host, status). Journald.
 StandardOutput=journal

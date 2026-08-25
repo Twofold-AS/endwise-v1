@@ -140,7 +140,8 @@ describe('P0: avatar er én blobatar, alltid happy', () => {
     expect(profil).toMatch(/AvatarVelger/);
     expect(avatar).toMatch(/Ny tilfeldig/);
     expect(avatar).toMatch(/humor:\s*['"]happy['"]/);
-    expect(avatar).toMatch(/size=\{48\}/);
+    expect(avatar).toMatch(/size = 48/);
+    expect(avatar).toMatch(/size=\{size\}/);
     expect(avatar).toMatch(/bevegelse="alltid"/);
     expect(avatar).toMatch(/FORMER\.map/);
     expect(avatar).not.toMatch(/function Nedtrekk/);

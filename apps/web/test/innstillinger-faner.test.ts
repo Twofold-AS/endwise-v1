@@ -114,6 +114,21 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(profilFane).not.toMatch(/Search settings|Pinned|PRO-badge/i);
   });
 
+  it('profil-raden har avatar til venstre for visningsnavn|e-post, formvelger foldet', () => {
+    expect(profilFane).toMatch(/size=\{56\}/);
+    expect(profilFane).toMatch(/foldFormer/);
+    expect(profilFane).toMatch(/VisningsnavnFelt/);
+    expect(profilFane).toMatch(/readOnly/);
+    expect(profilFane).toMatch(/<AvatarVelger[\s\S]*?<\/AvatarVelger>/);
+    expect(profilFane).not.toMatch(/<AvatarVelger[^>]*\/>/);
+    expect(profilFane).toMatch(/sm:grid-cols-2/);
+    const avatar = les('../app/(app)/_avatar/avatar-velger.tsx');
+    expect(avatar).toMatch(/flex flex-row items-start gap-4/);
+    expect(avatar).toMatch(/<details/);
+    expect(avatar).toMatch(/Endre form/);
+    expect(avatar).not.toMatch(/from '@\/components\/ui\/collapsible'/);
+  });
+
   it('ingen sticky Save-bar, ingen grønn switch/save, ingen nested Settings', () => {
     expect(skall).not.toMatch(/sticky/);
     expect(skall).not.toMatch(/bg-success|bg-green|#1ED27D|#22c55e/);

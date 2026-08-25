@@ -7,17 +7,15 @@ import { trpc } from '@/lib/trpc';
 import { AvatarVelger } from '../_avatar/avatar-velger';
 import { lesTema, settTema, type Tema } from '../_lib/tema';
 import { ByttPassordSkjema } from '../_shell/bytt-passord';
-import { CardShell } from '../_shell/cards';
 import { KallenavnSeksjon, VarslingslyderRad, VisningsnavnFelt } from '../_shell/profil-kort';
 import { ToFaktorRad } from '../_shell/to-faktor-rad';
 
 /**
  * F5-19 / F1-17 / F1-20 — Settings › Profil, landet i pille-fanen.
  *
- * Layout (låst 24.08.2026): blobatar øverst, felt i to kolonner (visningsnavn
- * + e-post — vi har ikke fornavn/etternavn), deretter seksjoner, Switch-rader
- * for tema og varslingslyder, så sikkerhet via eksisterende ByttPassordSkjema
- * og ToFaktorRad. Ingen filopplasting av avatar.
+ * Layout (Jonas, 24.08.2026): blobatar 56px TIL VENSTRE, visningsnavn | e-post
+ * i to kolonner til høyre. Formvelgeren er foldet under. Ingen filopplasting.
+ * Felt-Lagre beholdes, ingen sticky Save. Vi har ikke fornavn/etternavn.
  */
 export function ProfilFane() {
   const [theme, setTheme] = useState<Tema>('light');
@@ -41,24 +39,24 @@ export function ProfilFane() {
 
   return (
     <div className="flex flex-col gap-5">
-      <AvatarVelger seed={me.data?.userId ?? null} />
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <CardShell className="p-4">
-          <p className="mb-2 text-label text-fg">Visningsnavn</p>
-          <VisningsnavnFelt />
-        </CardShell>
-        <CardShell className="p-4">
-          <p className="mb-2 text-label text-fg">E-post</p>
-          <input
-            value={meg.data?.epost ?? ''}
-            readOnly
-            aria-label="E-post"
-            className="h-control w-full rounded-control border border-border bg-surface-2 px-2.5 text-body text-fg-muted outline-none"
-          />
-          <p className="mt-2 text-[11px] text-fg-muted">E-post endres ikke herfra.</p>
-        </CardShell>
-      </div>
+      <AvatarVelger seed={me.data?.userId ?? null} size={56} foldFormer>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-label text-fg">Visningsnavn</p>
+            <VisningsnavnFelt />
+          </div>
+          <div>
+            <p className="mb-2 text-label text-fg">E-post</p>
+            <input
+              value={meg.data?.epost ?? ''}
+              readOnly
+              aria-label="E-post"
+              className="h-control w-full rounded-control border border-border bg-surface-2 px-2.5 text-body text-fg-muted outline-none"
+            />
+            <p className="mt-2 text-[11px] text-fg-muted">E-post endres ikke herfra.</p>
+          </div>
+        </div>
+      </AvatarVelger>
 
       <KallenavnSeksjon />
 

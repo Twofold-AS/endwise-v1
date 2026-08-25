@@ -3,6 +3,7 @@
 import { Check, CircleAlert, Lock, ShieldCheck, StatefulButton, Switch, Zap } from '@endwise/ui';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useOrgRole } from '../../_lib/use-org-role';
 import { CardShell } from '../../_shell/cards';
 
 /**
@@ -18,6 +19,7 @@ import { CardShell } from '../../_shell/cards';
  * plattform-tenanten, så «seed denne sesjonen» ville vært en død knapp.
  */
 export default function EndwiseInnstillingerPage() {
+  const { isEndwiseAdmin } = useOrgRole();
   const utils = trpc.useUtils();
   const dev = trpc.tenants.devMode.useQuery();
   const meg = trpc.tenants.current.useQuery();
@@ -41,7 +43,7 @@ export default function EndwiseInnstillingerPage() {
   const aktivId =
     valgtId || (meg.data?.kind === 'demo' ? meg.data.id : '') || demoTenants[0]?.id || '';
   const valgt = demoTenants.find((t) => t.id === aktivId) ?? null;
-  const kanSeede = flagOn && Boolean(valgt);
+  const kanSeede = isEndwiseAdmin && flagOn && Boolean(valgt);
 
   return (
     <div className="mx-auto flex w-full max-w-[880px] flex-col gap-5 px-8 py-7">
@@ -68,7 +70,7 @@ export default function EndwiseInnstillingerPage() {
           </div>
           <Switch
             checked={flagOn}
-            disabled={settGlobal.isPending || dev.isLoading}
+            disabled={!isEndwiseAdmin || settGlobal.isPending || dev.isLoading}
             onCheckedChange={(v) => settGlobal.mutate({ key: 'dev-mode', enabled: v })}
             aria-label="Dev-mode"
           />
@@ -139,7 +141,11 @@ export default function EndwiseInnstillingerPage() {
           <code>withTenant</code>, ikke som DB-eier. Ekte forhandlere (live) seedes aldri herfra.
         </p>
 
-        {!flagOn ? (
+        {!isEndwiseAdmin ? (
+          <p className="mt-3 text-body text-fg-muted">
+            Kun Endwise-admin kan fylle en demo-tenant. Støtte ser gaten, men seeder ikke.
+          </p>
+        ) : !flagOn ? (
           <p className="mt-3 text-body text-fg-muted">
             Slå på dev-mode-flagget over først. Uten flagget gjør knappen ingenting.
           </p>

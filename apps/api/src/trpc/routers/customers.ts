@@ -51,6 +51,8 @@ export const customersRouter = router({
             phone: schema.customers.phone,
             source: schema.customers.source,
             createdAt: schema.customers.createdAt,
+            /** Tråddeltaker når kunden har «Min side». Aldri vist i UI. */
+            userId: schema.customers.userId,
             // Antall kjøretøy rett i lista — «har denne kunden en MC hos oss?»
             // er spørsmålet man stiller før man klikker.
             antallKjoretoy: sql<number>`(

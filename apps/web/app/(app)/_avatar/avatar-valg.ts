@@ -103,7 +103,7 @@ export function tilfeldigAvatarValg(
  * Delvis utfylt uten humør får et tilfeldig humør — resten røres ikke.
  */
 export function fullforAvatarValg(valg: AvatarVelgerValg | null | undefined): AvatarVelgerValg {
-  if (erTomAvatarValg(valg)) return tilfeldigAvatarValg();
+  if (!valg || erTomAvatarValg(valg)) return tilfeldigAvatarValg();
   if (valg.humor == null) return { ...valg, humor: tilfeldigHumor() };
   return valg;
 }

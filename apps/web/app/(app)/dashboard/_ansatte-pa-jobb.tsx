@@ -90,9 +90,7 @@ export function AnsattePaJobb({
                         className={`inline-block size-2 rounded-full ${STATUS_PRIKK[m.status] ?? 'bg-fg-muted'}`}
                       />
                       {m.statusLabel}
-                      {sak
-                        ? ` · ${fmtServices(sak)} ${fmtTime(sak.startsAt)}`
-                        : ' · Ingen sak nå'}
+                      {sak ? ` · ${fmtServices(sak)} ${fmtTime(sak.startsAt)}` : ' · Ingen sak nå'}
                     </span>
                   </span>
                 </summary>

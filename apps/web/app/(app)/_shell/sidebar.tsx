@@ -416,6 +416,28 @@ function NavRow({
     if (active) settApent(item.key);
   }, [active, item.key, settApent]);
 
+  const harBarn = children.length > 0;
+  const teller = (
+    <CountBadge count={count} label={item.badge === 'helpdesk' ? 'nye artikler' : 'uleste'} />
+  );
+  /* Pil-plassen er ALLTID 14px når den vises — så dropdown-radene holder
+     chevronen helt til høyre. På rader UTEN barn (Innboks, Helpdesk) sitter
+     CountBadge i det sporet i stedet for å ligge 14px inn. Tom plassholder
+     beholdes når telleren er 0, så «Ny» ikke hopper mot kanten. */
+  const chevronPlass = (
+    <span className="grid w-3.5 shrink-0 place-items-center" aria-hidden>
+      {harBarn && (
+        /* Snur med samme varighet som utfoldingen, så pilen og innholdet
+           beveger seg som én ting. */
+        <ChevronDown
+          size={14}
+          strokeWidth={1.75}
+          className={`text-fg-muted transition-transform duration-200 ${apen ? 'rotate-180' : ''}`}
+        />
+      )}
+    </span>
+  );
+
   const innhold = (
     <>
       <Ikon icon={item.icon} active={active} />
@@ -423,23 +445,16 @@ function NavRow({
         <>
           <span className="flex-1 truncate text-left">{item.label}</span>
           {item.isNew && <NewBadge />}
-          <CountBadge count={count} label={item.badge === 'helpdesk' ? 'nye artikler' : 'uleste'} />
-          {/* ⚠️ Pil-plassen er ALLTID her, også når raden ikke har underpunkter.
-              Før lå chevronen utenfor `innhold` og kun på rader med barn — da
-              havnet «Ny» 14px lenger inn på Innboks/Saker enn på Samarbeid, og
-              badgene sto ikke på linje. En tom, like brei plassholder koster
-              ingenting og gjør kolonnen rett. */}
-          <span className="grid w-3.5 shrink-0 place-items-center" aria-hidden>
-            {children.length > 0 && (
-              /* Snur med samme varighet som utfoldingen, så pilen og innholdet
-                 beveger seg som én ting. */
-              <ChevronDown
-                size={14}
-                strokeWidth={1.75}
-                className={`text-fg-muted transition-transform duration-200 ${apen ? 'rotate-180' : ''}`}
-              />
-            )}
-          </span>
+          {harBarn ? (
+            <>
+              {teller}
+              {chevronPlass}
+            </>
+          ) : count > 0 ? (
+            teller
+          ) : (
+            chevronPlass
+          )}
         </>
       )}
     </>

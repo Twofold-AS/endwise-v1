@@ -118,6 +118,20 @@ export function LiveSync({ children }: { children: ReactNode }) {
     setCursor(head.data.lastEventId);
   }, [cursor, head.data?.lastEventId]);
 
+  /**
+   * Helpdesk-artikler er globale og har ingen SSE i PR #36 LiveSync
+   * (`message.created` / `tenant.modules.changed`). Window-focus er
+   * oppfriskningen, så Ny og slideren ikke sitter på stale 5-min cache.
+   */
+  useEffect(() => {
+    const oppfrisk = () => {
+      void utils.helpdesk.list.invalidate();
+      void utils.helpdesk.ulesteAntall.invalidate();
+    };
+    window.addEventListener('focus', oppfrisk);
+    return () => window.removeEventListener('focus', oppfrisk);
+  }, [utils]);
+
   const poll = trpc.stream.since.useQuery(
     { lastEventId: cursor ?? 0 },
     {

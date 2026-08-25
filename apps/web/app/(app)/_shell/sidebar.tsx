@@ -138,11 +138,12 @@ export function Sidebar() {
   /**
    * F5-23 — uleste hjelpeartikler. Egen, billig telling: badgen står på en rad
    * som rendres på hver side, og å hente 50 artikler for å telle dem ville vært
-   * å laste innholdet for å vise et tall.
+   * å laste innholdet for å vise et tall. Ingen lang staleTime: Ny og slideren
+   * skal treffe nye artikler ved window-focus.
    */
   const helpdeskUlest = trpc.helpdesk.ulesteAntall.useQuery(undefined, {
-    staleTime: 5 * 60_000,
     retry: false,
+    refetchOnWindowFocus: true,
   });
 
   /**

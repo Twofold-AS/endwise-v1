@@ -1,33 +1,45 @@
 'use client';
 
-import { ArrowUpRight } from '@endwise/ui';
+import { ArrowUpRight, ChevronDown, X } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { NewBadge } from './cards';
+import {
+  HELPDESK_SLIDER_MINIMER_KEY,
+  harNyUlestArtikkel,
+  lesLagretMinimer,
+  sliderStartMinimer,
+} from './helpdesk-slider';
 
 /**
  * F5-23 — NYTT FRA HELPDESKEN. Slideren nederst i sidebaren.
  *
- * ── ⛔ FAST HØYDE, og det er hele grunnen til at den ble skrevet om ───────
+ * ── ⛔ FAST HØYDE når den er UTVIDET ──────────────────────────────────────
  * Fram til 20.08.2026 var kortet et fritt `flex flex-col` med fire hardkodede
  * tips av ulik lengde. Hvert niende sekund byttet teksten, høyden endret seg —
  * og siden kortet ligger NEDERST i en kolonne, dyttet det alt over seg opp og
  * ned mens man jobbet. En slider som flytter på navigasjonen er verre enn
  * ingen slider.
  *
- * Nå er høyden låst i `HOYDE`, bildet har fast forhold, og teksten klippes med
- * `line-clamp`. Fire artikler med ulik tittellengde gir nøyaktig samme boks.
+ * Utvidet er høyden låst i `HOYDE`, bildet har fast forhold, og teksten
+ * klippes med `line-clamp`. Brukeren kan minimere (X) til en kompakt bar;
+ * det er lov å krympe da. Karusellen skal bare ikke hoppe hvert 9. sekund.
  *
  * ── Drevet av data, ikke av en liste i denne fila ─────────────────────────
  * Innholdet er de fire NYESTE publiserte artiklene fra helpdesken. Skriver
- * Endwise-admin en ny artikkel, dukker den opp her uten at noen rører kode —
- * som var hele poenget med å slutte å hardkode tipsene.
+ * Endwise-admin en ny artikkel, dukker den opp her uten at noen rører kode.
  *
- * ⚠️ Rendres på HVER side (sidebaren er i layouten), så spørringen har lang
- * `staleTime`. Fire titler trenger ikke være ferske på sekundet.
+ * ── Ny tvinger åpen ──────────────────────────────────────────────────────
+ * Ulest artikkel ved lasting = full slider, også hvis localStorage sier
+ * minimert. Brukeren kan likevel lukke. En ny ulest (ny id, eller ulest
+ * none→some etter query-oppdatering) åpner igjen.
+ *
+ * ⚠️ Ingen 5-min `staleTime`. Sidebaren ligger på hver side, men nye
+ * artikler skal treffe ved window-focus. PR #36 LiveSync har ingen
+ * helpdesk-SSE (kun inbox/entitlements) — vi finner ikke opp en ny buss.
  */
 const INTERVAL_MS = 9000;
 
@@ -40,11 +52,45 @@ const HOYDE = 208;
 export function TipCard() {
   const artikler = trpc.helpdesk.list.useQuery(
     { limit: 4 },
-    { staleTime: 5 * 60_000, retry: false },
+    { retry: false, refetchOnWindowFocus: true },
   );
   const rader = artikler.data ?? [];
+  const harUlest = rader.some((r) => r.ulest === true);
 
   const [i, setI] = useState(0);
+  const [minimer, setMinimer] = useState(false);
+  const forrige = useRef<{ id: string; ulest: boolean }[] | null>(null);
+
+  useEffect(() => {
+    if (!artikler.isSuccess) return;
+    const snap = (artikler.data ?? []).map((r) => ({ id: r.id, ulest: r.ulest === true }));
+    if (forrige.current == null) {
+      let lagret = false;
+      try {
+        lagret = lesLagretMinimer(window.localStorage.getItem(HELPDESK_SLIDER_MINIMER_KEY));
+      } catch {
+        /* localStorage kan være sperret */
+      }
+      setMinimer(
+        sliderStartMinimer(
+          lagret,
+          snap.some((r) => r.ulest),
+        ),
+      );
+    } else if (harNyUlestArtikkel(forrige.current, snap)) {
+      setMinimer(false);
+    }
+    forrige.current = snap;
+  }, [artikler.isSuccess, artikler.data]);
+
+  function settMinimer(neste: boolean) {
+    setMinimer(neste);
+    try {
+      window.localStorage.setItem(HELPDESK_SLIDER_MINIMER_KEY, neste ? '1' : '0');
+    } catch {
+      /* localStorage kan være sperret */
+    }
+  }
 
   /* Lista kan krympe (en artikkel avpubliseres) mens indeksen står igjen. */
   useEffect(() => {
@@ -52,11 +98,12 @@ export function TipCard() {
   }, [i, rader.length]);
 
   useEffect(() => {
+    if (minimer) return;
     if (rader.length < 2) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const t = setInterval(() => setI((n) => (n + 1) % rader.length), INTERVAL_MS);
     return () => clearInterval(t);
-  }, [rader.length]);
+  }, [rader.length, minimer]);
 
   /**
    * ⚠️ Plassen holdes av med én gang, også mens det lastes og hvis det ikke
@@ -75,16 +122,45 @@ export function TipCard() {
     );
   }
 
+  if (minimer) {
+    const a = rader[Math.min(i, rader.length - 1)];
+    return (
+      <button
+        type="button"
+        aria-label="Utvid helpdesk-slider"
+        title="Utvid helpdesk-slider"
+        onClick={() => settMinimer(false)}
+        className="flex h-row-store w-full min-w-0 items-center gap-2 rounded-xl border border-border bg-bg px-3 text-left transition-colors hover:bg-sidebar-active focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        <span className="min-w-0 flex-1 truncate text-[11px] text-fg-muted">
+          {a?.title ?? 'Fra helpdesken'}
+        </span>
+        {harUlest ? <NewBadge /> : null}
+        <ChevronDown size={14} className="shrink-0 text-fg-muted" aria-hidden />
+      </button>
+    );
+  }
+
   const a = rader[Math.min(i, rader.length - 1)];
   if (!a) return null;
 
   return (
     <div
       style={{ height: HOYDE }}
-      className="flex flex-col overflow-hidden rounded-xl border border-border bg-bg"
+      className="relative flex flex-col overflow-hidden rounded-xl border border-border bg-bg"
     >
+      <button
+        type="button"
+        aria-label="Minimer helpdesk-slider"
+        title="Minimer helpdesk-slider"
+        className="absolute top-1.5 right-1.5 z-10 inline-flex size-6 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active hover:text-fg focus-visible:outline-2 focus-visible:outline-ring"
+        onClick={() => settMinimer(true)}
+      >
+        <X size={14} strokeWidth={1.75} />
+      </button>
+
       <Link href={`/support/${a.slug}` as Route} className="group flex min-h-0 flex-1 flex-col">
-        <div className="flex flex-col gap-1.5 px-3 pt-3">
+        <div className="flex flex-col gap-1.5 px-3 pt-3 pr-8">
           {/* ⚠️ «Ny»-tekstbadge når artikkelen er ulest for DEG — et merke
               alle alltid ser, betyr ingenting. Telleren i navet er CountBadge. */}
           <span className="flex items-center gap-2">

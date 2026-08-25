@@ -1,22 +1,17 @@
 /**
  * F5-19 — Innstillinger som én flate med pille-faner.
  *
- * Fanerekkefølgen er låst (Mikael, 24.08.2026): Profil · Team & tilgang ·
- * Integrasjoner · Abonnement · Varsler · Tjenester & priser.
+ * Fanerekkefølge (25.08.2026): Profil · Integrasjoner · Abonnement ·
+ * Varsler · Tjenester & priser.
  *
- * Admin-faner skjules for ikke-admin, samme filter som den gamle hubben
- * (`adminOnly` + `useOrgRole().isAdmin`). «Bytt konto / mekaniker» er IKKE
- * en fane — visningsbytte bor i sidebar-headeren.
+ * Team & tilgang er IKKE en fane — #41 la Team i sidebaren
+ * (`/innstillinger/team`). Admin-faner skjules for ikke-admin, samme filter
+ * som den gamle hubben (`adminOnly` + `useOrgRole().isAdmin`).
+ * «Bytt konto / mekaniker» er IKKE en fane — visningsbytte bor i
+ * sidebar-headeren.
  */
 
-export const FANE_IDS = [
-  'profil',
-  'team',
-  'integrasjoner',
-  'abonnement',
-  'varsler',
-  'tjenester',
-] as const;
+export const FANE_IDS = ['profil', 'integrasjoner', 'abonnement', 'varsler', 'tjenester'] as const;
 
 export type FaneId = (typeof FANE_IDS)[number];
 
@@ -32,13 +27,6 @@ export const FANER: readonly FaneDef[] = [
     id: 'profil',
     label: 'Profil',
     ingress: 'Navn, avatar, varslingslyder, sikkerhet og utseende.',
-  },
-  {
-    id: 'team',
-    label: 'Team & tilgang',
-    ingress:
-      'Hvem jobber her, hva de har tilgang til, og hva de gjør. Tilgang håndheves server-side (RBAC, F1-05); funksjon styrer landingsvisning, ikke rettigheter.',
-    adminOnly: true,
   },
   {
     id: 'integrasjoner',
@@ -100,10 +88,11 @@ export function innstillingerHref(fane: FaneId): string {
 /**
  * Alias-stier som skal lande på samme skall. Brukes av sidene selv (startFane)
  * og av tester — ikke av sidebaren, som beholder de gamle href-ene.
+ *
+ * `/innstillinger/team` er IKKE alias: Team er egen sidebar-destinasjon (#41).
  */
 export const FANE_ALIAS: Readonly<Record<string, FaneId>> = {
   '/innstillinger/profil': 'profil',
-  '/innstillinger/team': 'team',
   '/innstillinger/varsler': 'varsler',
   '/innstillinger/tjenester': 'tjenester',
   '/abonnement': 'abonnement',

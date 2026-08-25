@@ -5,50 +5,24 @@ import { type ReactNode, useEffect, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
+import { FORMER, HUMOR, tilfeldigAvatarValg } from './avatar-valg';
 
 /**
- * F6-19 — ÉN blobatar per person.
+ * F6-19 — Blobatar-velger.
  *
- * Seed = `user.id`. Humør er ALLTID happy. Form, farge og tone kommer fra
- * seeden (null = bibliotekets default) til noen persisterer — da tilfeldig,
- * eller via «Ny tilfeldig». Ingen nedtrekk, ingen andre uttrykk.
+ * Seed = `user.id`. Form, farge, tone og uttrykk kommer fra seeden (null =
+ * bibliotekets default) til noen persisterer — da via knappene, eller
+ * «Ny tilfeldig». Humør er låst opp: brukeren velger blant bibliotekets
+ * kuraterte uttrykk. Ingen fil-opplasting, ingen nedtrekk.
  *
- * Settings › Profil (24.08.2026, Jonas): ansiktet står TIL VENSTRE for
- * visningsnavn|e-post (`children`), 56px. Formvelgeren er foldet under så
- * Profil ikke vokser — blobatar-PR kommer med flere uttrykk. shadcn
- * Collapsible er ikke hentet: ett fold, native `<details>`.
+ * Settings › Profil (Jonas): ansiktet står TIL VENSTRE for visningsnavn|e-post
+ * (`children`), 56px. Form- og uttrykk-velgeren er foldet under så Profil
+ * ikke vokser. shadcn Collapsible er ikke hentet: ett fold, native `<details>`.
  */
 
 type Valg = RouterOutput['profile']['meg']['avatar'];
-type Form = NonNullable<Valg['form']>;
 
-const FORMER: Form[] = [
-  'round',
-  'organic',
-  'boxy',
-  'capsule',
-  'nub',
-  'cloud',
-  'droplet',
-  'hexagon',
-  'sun',
-  'triangle',
-];
-
-const FARGER = [20, 60, 110, 150, 195, 250, 300, 340];
-
-export function tilfeldigAvatarValg(): Valg {
-  return {
-    form: FORMER[Math.floor(Math.random() * FORMER.length)] ?? 'round',
-    humor: 'happy',
-    farge: FARGER[Math.floor(Math.random() * FARGER.length)] ?? 20,
-    tone: Math.floor(Math.random() * 6),
-  };
-}
-
-function medHappy(valg: Valg): Valg {
-  return { ...valg, humor: 'happy' };
-}
+export { tilfeldigAvatarValg };
 
 export function AvatarVelger({
   seed,
@@ -65,15 +39,15 @@ export function AvatarVelger({
 }) {
   const utils = trpc.useUtils();
   const meg = trpc.profile.meg.useQuery(undefined, { retry: false });
-  const [valg, setValg] = useState<Valg>({ form: null, humor: 'happy', farge: null, tone: null });
+  const [valg, setValg] = useState<Valg>({ form: null, humor: null, farge: null, tone: null });
 
   useEffect(() => {
-    if (meg.data?.avatar) setValg(medHappy(meg.data.avatar));
+    if (meg.data?.avatar) setValg(meg.data.avatar);
   }, [meg.data?.avatar]);
 
   const lagre = trpc.profile.setAvatar.useMutation({
     onSuccess: (neste) => {
-      setValg(medHappy(neste));
+      setValg(neste);
       void utils.profile.meg.invalidate();
       void utils.directory.participants.invalidate();
     },
@@ -100,36 +74,82 @@ export function AvatarVelger({
   );
 
   const former = (
-    <div className="flex flex-wrap gap-2">
-      {FORMER.map((form) => {
-        const aktiv = valg.form === form;
-        return (
-          <button
-            key={form}
-            type="button"
-            disabled={lagre.isPending}
-            onClick={() => {
-              const neste = medHappy({ ...valg, form });
-              setValg(neste);
-              lagre.mutate(neste);
-            }}
-            title={form}
-            aria-label={`Velg form ${form}`}
-            aria-pressed={aktiv}
-            className={`rounded-control p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50 ${
-              aktiv ? 'bg-sidebar-active ring-1 ring-border-strong' : 'hover:bg-surface-2'
-            }`}
-          >
-            <Avatar
-              seed={seed}
-              valg={medHappy({ ...valg, form })}
-              navn=""
-              size={32}
-              bevegelse="stille"
-            />
-          </button>
-        );
-      })}
+    <div>
+      <p className="mb-2 text-label text-fg">Form</p>
+      <div className="flex flex-wrap gap-2">
+        {FORMER.map((form) => {
+          const aktiv = valg.form === form;
+          return (
+            <button
+              key={form}
+              type="button"
+              disabled={lagre.isPending}
+              onClick={() => {
+                const neste = { ...valg, form };
+                setValg(neste);
+                lagre.mutate(neste);
+              }}
+              title={form}
+              aria-label={`Velg form ${form}`}
+              aria-pressed={aktiv}
+              className={`rounded-control p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50 ${
+                aktiv ? 'bg-sidebar-active ring-1 ring-border-strong' : 'hover:bg-surface-2'
+              }`}
+            >
+              <Avatar seed={seed} valg={{ ...valg, form }} navn="" size={32} bevegelse="stille" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const uttrykk = (
+    <div>
+      <p className="mb-2 text-label text-fg">Uttrykk</p>
+      <div className="flex flex-wrap gap-2">
+        {HUMOR.map((h) => {
+          const aktiv = valg.humor === h.key;
+          return (
+            <button
+              key={h.key}
+              type="button"
+              disabled={lagre.isPending}
+              onClick={() => {
+                const neste = { ...valg, humor: h.key };
+                setValg(neste);
+                lagre.mutate(neste);
+              }}
+              title={h.label}
+              aria-label={`Velg uttrykk ${h.label}`}
+              aria-pressed={aktiv}
+              className={`rounded-control p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50 ${
+                aktiv ? 'bg-sidebar-active ring-1 ring-border-strong' : 'hover:bg-surface-2'
+              }`}
+            >
+              {/* hover: flere positurer skiller seg lite på 32px i stillbilde. */}
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, humor: h.key }}
+                navn=""
+                size={32}
+                bevegelse="hover"
+              />
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-[12px] text-fg-muted">
+        {HUMOR.find((h) => h.key === valg.humor)?.label ??
+          'Ikke valgt — nøytralt til du velger et uttrykk.'}
+      </p>
+    </div>
+  );
+
+  const velgere = (
+    <div className="flex flex-col gap-3">
+      {former}
+      {uttrykk}
     </div>
   );
 
@@ -138,7 +158,7 @@ export function AvatarVelger({
       <div className="flex flex-row items-start gap-4">
         <Avatar
           seed={seed}
-          valg={medHappy(valg)}
+          valg={valg}
           navn=""
           size={size}
           bevegelse="alltid"
@@ -151,8 +171,8 @@ export function AvatarVelger({
             <div className="min-w-0 flex-1">
               <p className="text-label text-fg">Avataren din</p>
               <p className="text-[12px] text-fg-muted leading-relaxed">
-                Ett ansikt, knyttet til kontoen din. Humøret er alltid blidt. Velg form under, eller
-                trekk en ny tilfeldig.
+                Ett ansikt, knyttet til kontoen din. Velg form og uttrykk, eller trekk en ny
+                tilfeldig.
               </p>
             </div>
             {nyTilfeldigKnapp}
@@ -168,17 +188,17 @@ export function AvatarVelger({
               strokeWidth={1.75}
               className="shrink-0 transition-transform group-open:rotate-180"
             />
-            Endre form
+            Endre form og uttrykk
           </summary>
           <div className="mt-3 flex flex-col gap-3">
             {children ? (
               <div className="flex flex-wrap items-center gap-2">{nyTilfeldigKnapp}</div>
             ) : null}
-            {former}
+            {velgere}
           </div>
         </details>
       ) : (
-        former
+        velgere
       )}
 
       {lagre.error ? (

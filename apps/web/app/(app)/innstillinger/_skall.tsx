@@ -10,15 +10,15 @@ import { IntegrasjonerInnhold } from '../integrasjoner/_innhold';
 import { TjenesterInnhold } from '../tjenester/_innhold';
 import { type FaneId, innstillingerHref, parseFane, synligeFaner } from './_faner';
 import { ProfilFane } from './_profil-fane';
-import { TeamInnhold } from './team/_innhold';
 import { VarslerInnhold } from './varsler/_innhold';
 
 /**
  * F5-19 — Innstillinger som én flate. Pille-faner øverst, aktiv fane INNE på
  * siden. Ingen hub-kort, ingen nested Settings i sidebaren, ingen Admin-fane.
+ * Team er sidebar-destinasjon (#41), ikke en fane her.
  *
- * Fane-state bor i `?fane=`. Gamle URL-er renderer dette skallet med
- * `startFane`, så bokmerker og sidebar-lenker overlever.
+ * Fane-state bor i `?fane=`. Gamle Settings-URL-er renderer dette skallet
+ * med `startFane`. `/innstillinger/team` er Team-siden, ikke et alias.
  */
 export function InnstillingerSkall({ startFane }: { startFane?: FaneId }) {
   return (
@@ -84,8 +84,6 @@ function FaneInnhold({ fane }: { fane: FaneId }) {
   switch (fane) {
     case 'profil':
       return <ProfilFane />;
-    case 'team':
-      return <TeamInnhold />;
     case 'integrasjoner':
       return <IntegrasjonerInnhold />;
     case 'abonnement':

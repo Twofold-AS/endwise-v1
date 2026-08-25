@@ -36,8 +36,8 @@ export function IntegrasjonerInnhold() {
   }
 
   const alle = katalog.data?.tredjepart ?? [];
-  const mine = alle.filter((i) => i.har);
-  const kanFaas = alle.filter((i) => !i.har);
+  const mine = alle.filter((i) => i.aktiv);
+  const kanFaas = alle.filter((i) => !i.aktiv);
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,7 +88,7 @@ export function IntegrasjonerInnhold() {
 }
 
 function Rad({ post, forste }: { post: Post; forste: boolean }) {
-  const oppsett = post.har ? OPPSETT[post.key] : undefined;
+  const oppsett = post.aktiv ? OPPSETT[post.key] : undefined;
 
   return (
     <div
@@ -142,7 +142,7 @@ function Rad({ post, forste }: { post: Post; forste: boolean }) {
             Oppsett
             <ExternalLink size={13} strokeWidth={1.75} />
           </a>
-        ) : post.har ? (
+        ) : post.aktiv ? (
           <span className="text-[12px] text-fg-muted">Ingen oppsett nødvendig</span>
         ) : (
           <Etterspor

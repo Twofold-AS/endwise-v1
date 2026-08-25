@@ -73,6 +73,9 @@ describe('plattform-org i Bytt visning', () => {
     expect(forhandlere).toBeGreaterThan(team);
     expect(blokk).toMatch(/href:\s*'\/endwise\/team'/);
     expect(nav).not.toMatch(/label:\s*'Admin'/);
+    const settings = nav.slice(slutt, nav.indexOf('export function contextsForRole'));
+    const utenKommentar = settings.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+    expect(utenKommentar).not.toMatch(/label:\s*'Team'/);
   });
 
   it('plattform-roller lander på /endwise, aldri /dashboard', () => {

@@ -71,8 +71,8 @@ const IKON = 16;
  * lister du plukker fra og lukker igjen.
  *
  * **Inline utfolding** er for DESTINASJONER: Saker, Kunder, Analyse,
- * AI-verktøy. De hører til strukturen du navigerer i, og skal ikke skjule
- * hvor du står. Se `NavRow`.
+ * AI-verktøy, Team. De hører til strukturen du navigerer i, og skal ikke
+ * skjule hvor du står. Se `NavRow`.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';

@@ -49,6 +49,7 @@ export default function ForhandlerePage() {
   const [slettSlug, setSlettSlug] = useState('');
   const [slettKode, setSlettKode] = useState('');
   const [slettMelding, setSlettMelding] = useState<string | null>(null);
+  const [pakkeLagretId, setPakkeLagretId] = useState<string | null>(null);
 
   const nivaaListe = katalog.data?.nivaa ?? [];
   const valgtNivaa = nivaaListe.find((n) => n.key === nivaa);
@@ -106,9 +107,10 @@ export default function ForhandlerePage() {
     },
   });
   const settModuler = trpc.tenants.setModules.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       void utils.tenants.listModules.invalidate();
       void utils.tenants.list.invalidate();
+      setPakkeLagretId(data.tenantId);
     },
   });
   const sendSlettKode = trpc.tenants.sendSlettKode.useMutation();
@@ -220,7 +222,8 @@ export default function ForhandlerePage() {
               <span className="flex flex-col">
                 Demo-tenant
                 <span className="text-[12px] text-fg-muted">
-                  Kun for dev-mode. Ekte forhandlere skal aldri være demo.
+                  Merking for intern testing. Fyller ikke dummy-data — det gjør Seed demo-data under
+                  Innstillinger, og bare for demo-tenants. Ekte forhandlere skal være live.
                 </span>
               </span>
             </label>
@@ -405,6 +408,7 @@ export default function ForhandlerePage() {
                       nivaa={nivaaListe}
                       tillegg={katalog.data?.tillegg ?? []}
                       pending={settModuler.isPending}
+                      lagret={pakkeLagretId === t.id}
                       onLagre={(tier, included, optional) =>
                         settModuler.mutate({ tenantId: t.id, tier, included, optional })
                       }
@@ -631,6 +635,7 @@ function ModulRediger({
   nivaa,
   tillegg,
   pending,
+  lagret,
   onLagre,
 }: {
   plan: string;
@@ -646,6 +651,7 @@ function ModulRediger({
   }>;
   tillegg: Array<{ key: string; name: string; desc: string; module: string }>;
   pending: boolean;
+  lagret: boolean;
   onLagre: (tier: 'start' | 'pro' | 'enterprise', included: string[], optional: string[]) => void;
 }) {
   const [valgt, setValgt] = useState(plan);
@@ -674,12 +680,14 @@ function ModulRediger({
           setValg(neste);
         }}
       />
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {lagret ? <p className="text-[12px] text-success">Pakken er lagret.</p> : null}
         <StatefulButton
           type="button"
           disabled={pending}
-          state={pending ? 'loading' : 'idle'}
+          state={pending ? 'loading' : lagret ? 'success' : 'idle'}
           loadingText="Lagrer…"
+          successText="Lagret"
           onClick={() => onLagre(valgt as 'start' | 'pro' | 'enterprise', [], [...valg])}
         >
           Lagre pakke

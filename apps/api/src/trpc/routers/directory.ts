@@ -57,6 +57,11 @@ export const directoryRouter = router({
       /**
        * F6-19 — `seed` og `avatar` er med fra 20.08.2026.
        *
+       * ⛔ Status-humor bor IKKE her. Innboksens samtaleliste og tråd har
+       * ingen statuslabel ved ansiktet — uttrykket skal ikke være eneste
+       * signal. Status vises på `/mekanikere`, Team › Funksjoner og
+       * Detaljer-panelet, der den norske teksten står ved siden av.
+       *
        * ⛔ **`seed` er ikke det samme som nøkkelen.** Nøkkelen er deltaker-IDen
        * meldingen bærer (en Better-Auth-bruker); seeden er personens STABILE
        * identitet i denne tenanten — `customers.id`, `mechanics.id` eller

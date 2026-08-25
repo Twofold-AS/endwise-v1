@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, lt, schema, sql, withTenant } from '@endwise/db';
+import { lesAvatar, mekanikerStatusVisning, tellerSomBelastning } from '@endwise/modules/profil';
 import { publishEvent } from '@endwise/modules/stream';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -25,7 +26,43 @@ export const mechanicRouter = router({
         .select()
         .from(schema.mechanics)
         .where(eq(schema.mechanics.userId, ctx.userId));
-      return m ?? null;
+      if (!m) return null;
+
+      const { from, to } = dayWindow();
+      const dagens = await tx
+        .select({ status: schema.bookings.status })
+        .from(schema.bookings)
+        .where(
+          and(
+            eq(schema.bookings.mechanicId, m.id),
+            gte(schema.bookings.startsAt, from),
+            lt(schema.bookings.startsAt, to),
+          ),
+        );
+      const jobberIDag = dagens.filter((j) => tellerSomBelastning(j.status)).length;
+      const vis = mekanikerStatusVisning({
+        aktiv: m.active,
+        jobberIDag,
+        kapasitet: m.capacity,
+      });
+
+      const [avatarRad] = await ctx.db
+        .select({
+          avatarShape: schema.userPreferences.avatarShape,
+          avatarHumor: schema.userPreferences.avatarHumor,
+          avatarHue: schema.userPreferences.avatarHue,
+          avatarTone: schema.userPreferences.avatarTone,
+        })
+        .from(schema.userPreferences)
+        .where(eq(schema.userPreferences.userId, ctx.userId))
+        .catch(() => []);
+
+      return {
+        ...m,
+        avatar: lesAvatar(avatarRad ?? null),
+        jobberIDag,
+        ...vis,
+      };
     }),
   ),
 

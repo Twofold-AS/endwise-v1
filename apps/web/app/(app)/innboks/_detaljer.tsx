@@ -367,7 +367,7 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
             slik at ansiktet er det samme som i tråden ved siden av. */}
         <Avatar
           seed={data.mekanikerId}
-          valg={data.avatar}
+          valg={{ ...data.avatar, humor: data.statusHumor }}
           navn={data.navn}
           size={36}
           bevegelse="hover"
@@ -379,7 +379,7 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
               aria-hidden
               className={`inline-block size-2 rounded-full ${data.aktiv ? 'bg-success' : 'bg-fg-muted'}`}
             />
-            {data.aktiv ? 'Tilgjengelig' : 'Ikke tilgjengelig'}
+            {data.statusLabel}
           </span>
         </div>
       </div>

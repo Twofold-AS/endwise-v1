@@ -37,12 +37,11 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(page).not.toMatch(/>Settings</);
   });
 
-  it('har liggende pille-faner med låst rekkefølge', () => {
+  it('har liggende pille-faner uten Team (Team bor i sidebaren)', () => {
     expect(skall).toMatch(/role="tablist"/);
     expect(skall).toMatch(/rounded-pill/);
     expect([...FANE_IDS]).toEqual([
       'profil',
-      'team',
       'integrasjoner',
       'abonnement',
       'varsler',
@@ -50,17 +49,19 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     ]);
     expect(FANER.map((f) => f.label)).toEqual([
       'Profil',
-      'Team & tilgang',
       'Integrasjoner',
       'Abonnement',
       'Varsler',
       'Tjenester & priser',
     ]);
+    expect(FANER.map((f) => f.id)).not.toContain('team');
+    expect(FANER.map((f) => f.label)).not.toContain('Team & tilgang');
+    expect(skall).not.toMatch(/TeamInnhold/);
   });
 
-  it('admin-faner er de samme som i den gamle hubben', () => {
+  it('admin-faner er de samme som i Settings-flyouten (uten Team)', () => {
     const admin = FANER.filter((f) => f.adminOnly).map((f) => f.id);
-    expect(admin).toEqual(['team', 'integrasjoner', 'abonnement', 'tjenester']);
+    expect(admin).toEqual(['integrasjoner', 'abonnement', 'tjenester']);
     expect(synligeFaner(false).map((f) => f.id)).toEqual(['profil', 'varsler']);
     expect(synligeFaner(true).map((f) => f.id)).toEqual([...FANE_IDS]);
   });
@@ -73,11 +74,11 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(FANER.map((f) => f.id)).not.toContain('admin');
   });
 
-  it('kanonisk fane-URL er ?fane=, og gamle stier er alias', () => {
+  it('kanonisk fane-URL er ?fane=, og gamle stier er alias — unntatt Team', () => {
     expect(innstillingerHref('profil')).toBe('/innstillinger?fane=profil');
     expect(innstillingerHref('abonnement')).toBe('/innstillinger?fane=abonnement');
     expect(FANE_ALIAS['/innstillinger/profil']).toBe('profil');
-    expect(FANE_ALIAS['/innstillinger/team']).toBe('team');
+    expect(FANE_ALIAS['/innstillinger/team']).toBeUndefined();
     expect(FANE_ALIAS['/innstillinger/varsler']).toBe('varsler');
     expect(FANE_ALIAS['/innstillinger/tjenester']).toBe('tjenester');
     expect(FANE_ALIAS['/abonnement']).toBe('abonnement');
@@ -88,15 +89,16 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(parseFane(null, false)).toBe('profil');
     expect(parseFane('ukjent', true)).toBe('profil');
     expect(parseFane('team', false)).toBe('profil');
-    expect(parseFane('team', true)).toBe('team');
+    expect(parseFane('team', true)).toBe('profil');
     expect(parseFane('varsler', false)).toBe('varsler');
     expect(parseFane(null, false, 'abonnement')).toBe('profil');
     expect(parseFane(null, true, 'abonnement')).toBe('abonnement');
   });
 
-  it('gamle sider renderer skallet med riktig startFane', () => {
+  it('gamle sider renderer skallet, Team-siden er egen destinasjon', () => {
     expect(les('../app/(app)/innstillinger/profil/page.tsx')).toMatch(/startFane="profil"/);
-    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/startFane="team"/);
+    expect(les('../app/(app)/innstillinger/team/page.tsx')).not.toMatch(/InnstillingerSkall/);
+    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/Team & tilgang/);
     expect(les('../app/(app)/innstillinger/varsler/page.tsx')).toMatch(/startFane="varsler"/);
     expect(les('../app/(app)/innstillinger/tjenester/page.tsx')).toMatch(/startFane="tjenester"/);
     expect(les('../app/(app)/abonnement/page.tsx')).toMatch(/startFane="abonnement"/);
@@ -114,7 +116,7 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(profilFane).not.toMatch(/Search settings|Pinned|PRO-badge/i);
   });
 
-  it('profil-raden har avatar til venstre for visningsnavn|e-post, formvelger foldet', () => {
+  it('profil-raden har avatar til venstre for visningsnavn|e-post, velger foldet', () => {
     expect(profilFane).toMatch(/size=\{56\}/);
     expect(profilFane).toMatch(/foldFormer/);
     expect(profilFane).toMatch(/VisningsnavnFelt/);
@@ -125,11 +127,13 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     const avatar = les('../app/(app)/_avatar/avatar-velger.tsx');
     expect(avatar).toMatch(/flex flex-row items-start gap-4/);
     expect(avatar).toMatch(/<details/);
-    expect(avatar).toMatch(/Endre form/);
+    expect(avatar).toMatch(/Endre form og uttrykk/);
+    expect(avatar).toMatch(/HUMOR\.map/);
+    expect(avatar).not.toMatch(/function medHappy/);
     expect(avatar).not.toMatch(/from '@\/components\/ui\/collapsible'/);
   });
 
-  it('ingen sticky Save-bar, ingen grønn switch/save, ingen nested Settings', () => {
+  it('ingen sticky Save-bar, ingen grønn switch/save, Team ligger i sidebaren', () => {
     expect(skall).not.toMatch(/sticky/);
     expect(skall).not.toMatch(/bg-success|bg-green|#1ED27D|#22c55e/);
     expect(page).not.toMatch(/Search settings/);
@@ -141,10 +145,12 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(settings).toMatch(/href: '\/innstillinger'/);
     expect(settings).toMatch(/href: '\/abonnement'/);
     expect(settings).toMatch(/href: '\/innstillinger\/varsler'/);
-    expect(settings).toMatch(/href: '\/innstillinger\/team'/);
+    expect(settings).not.toMatch(/label: 'Team & tilgang'/);
     expect(settings).toMatch(/href: '\/innstillinger\/tjenester'/);
     expect(settings).toMatch(/href: '\/integrasjoner'/);
     expect(settings).toMatch(/href: '\/innstillinger\/profil'/);
     expect(settings).not.toMatch(/label: 'Admin'/);
+    expect(nav).toMatch(/key: 'team'/);
+    expect(nav).toMatch(/href: '\/innstillinger\/team'/);
   });
 });

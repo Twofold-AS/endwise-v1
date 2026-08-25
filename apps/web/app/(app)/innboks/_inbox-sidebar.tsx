@@ -26,7 +26,6 @@ import {
   threadHeading,
   visningForTraadtype,
 } from './_lib';
-import { MOCK_TRADER } from './_mock';
 import { useInboxModus } from './_modus';
 
 /**
@@ -66,7 +65,6 @@ export function InboxSidebar() {
     retry: false,
   });
   const ekte = threads.data ?? [];
-  const brukerMock = !endwise && !threads.isLoading && ekte.length === 0;
 
   /**
    * Navnene på alle motparter i innboksen.
@@ -106,23 +104,6 @@ export function InboxSidebar() {
   );
 
   const rader = useMemo(() => {
-    if (brukerMock) {
-      return MOCK_TRADER.filter((t) => part === 'alle' || t.kind === part).map((t) => ({
-        id: t.id,
-        ref: t.ref,
-        kind: t.kind,
-        avsender: t.avsender,
-        utdrag: t.utdrag,
-        nar: t.nar,
-        ulest: t.ulest,
-        kanal: t.kanal,
-        sisteKanal: t.sisteKanal,
-        /* Eksempelrader har ingen ekte person. Seeden er trådens mock-id, så
-           ansiktene i det minste er stabile mellom rendringer. */
-        motpart: { seed: t.id, navn: t.avsender, avatar: null as AvatarValg | null },
-        mock: true,
-      }));
-    }
     return ekte
       .filter((t) => part === 'alle' || t.kind === part)
       .map((t) => ({
@@ -163,9 +144,8 @@ export function InboxSidebar() {
           visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
           me.data?.userId,
         ),
-        mock: false,
       }));
-  }, [brukerMock, ekte, part, navnIntern.data, navnOffisiell.data, me.data?.userId]);
+  }, [ekte, part, navnIntern.data, navnOffisiell.data, me.data?.userId]);
 
   const aktivLabel = PARTER.find((p) => p.key === part)?.label ?? 'Alle';
 
@@ -268,28 +248,19 @@ export function InboxSidebar() {
         ) : rader.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
             <MessageSquare size={20} className="text-fg-muted" />
-            <p className="text-[12px] text-fg-muted">Ingen samtaler for denne parten.</p>
+            <p className="text-label text-fg">Ingen samtaler</p>
+            <p className="text-[12px] text-fg-muted">
+              {part === 'alle'
+                ? 'Innboksen er tom. Nye henvendelser lander her.'
+                : 'Ingen samtaler for denne parten.'}
+            </p>
           </div>
         ) : (
-          // Mock-radene lenker ingen steder — det finnes ingen tråd å åpne.
-          rader.map((t) =>
-            t.mock ? (
-              <div key={t.id} aria-disabled className="cursor-default opacity-90">
-                <SamtaleKort rad={t} aktiv={false} />
-              </div>
-            ) : (
-              <Link key={t.id} href={`/innboks/${t.id}` as Route} className="block">
-                <SamtaleKort rad={t} aktiv={t.id === aktivId} />
-              </Link>
-            ),
-          )
-        )}
-
-        {brukerMock && (
-          <p className="px-2 pt-2 pb-1 text-[11px] text-fg-muted leading-relaxed">
-            Innboksen er tom, så eksempelsamtaler vises for å illustrere formen. De er ikke
-            klikkbare.
-          </p>
+          rader.map((t) => (
+            <Link key={t.id} href={`/innboks/${t.id}` as Route} className="block">
+              <SamtaleKort rad={t} aktiv={t.id === aktivId} />
+            </Link>
+          ))
         )}
       </div>
     </aside>
@@ -370,7 +341,6 @@ function SamtaleKort({
     kanal: Kanal;
     sisteKanal: Kanal;
     motpart: { seed: string; navn: string; avatar: AvatarValg | null } | null;
-    mock: boolean;
   };
   aktiv: boolean;
 }) {
@@ -428,11 +398,6 @@ function SamtaleKort({
           <span className="inline-flex h-badge items-center gap-1 rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
             svar som
             <KanalMerke kanal={rad.kanal} kunIkon />
-          </span>
-        )}
-        {rad.mock && (
-          <span className="inline-flex h-badge items-center rounded-badge bg-warn-soft px-1.5 font-medium text-[11px] text-warn">
-            Eksempel
           </span>
         )}
       </div>

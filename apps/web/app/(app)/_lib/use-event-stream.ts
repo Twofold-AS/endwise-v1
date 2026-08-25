@@ -1,6 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import {
+  LAST_EVENT_STORAGE_KEY,
+  LIVE_DOMAIN_EVENTS,
+  nextLastEventId,
+  parseLastEventId,
+  streamSseUrl,
+} from './live-event';
 
 /**
  * F6-02 — Klientsiden av sanntidskanalen.
@@ -18,6 +25,8 @@ import { useEffect, useRef, useState } from 'react';
 export type StreamStatus = 'connecting' | 'live' | 'idle';
 
 export interface StreamEvent {
+  /** SSE `id:` — brukes som Last-Event-ID ved reconnect. */
+  id?: string | null;
   /** Event-typen, f.eks. `message.created`, `thread.escalated`, `agent.token`. */
   type: string;
   /** Tråden/objektet eventet gjelder. Null for tenant-brede eventer. */
@@ -25,18 +34,6 @@ export interface StreamEvent {
   /** Resten av serverens payload. Metadata — ALDRI sannheten om innholdet. */
   data: Record<string, unknown>;
 }
-
-/** Eventtypene vi faktisk lytter på. `heartbeat`/`ready` er transport, ikke domene. */
-const DOMAIN_EVENTS = [
-  'message.created',
-  'thread.escalated',
-  'agent.start',
-  'agent.token',
-  'agent.tool_call',
-  'agent.tool_result',
-  'agent.done',
-  'agent.error',
-] as const;
 
 /* ════════════════════════════════════════════════════════════════════════
  * ÉN DELT TILKOBLING PER FANE (refaktorert 08.08.2026)
@@ -67,15 +64,34 @@ function settStatus(status: StreamStatus) {
   for (const a of abonnenter) a.onStatus(status);
 }
 
+function lagretLastEventId(): number {
+  try {
+    return parseLastEventId(sessionStorage.getItem(LAST_EVENT_STORAGE_KEY));
+  } catch {
+    return 0;
+  }
+}
+
+function huskLastEventId(id: string | null) {
+  if (!id) return;
+  try {
+    const next = nextLastEventId(lagretLastEventId(), id);
+    sessionStorage.setItem(LAST_EVENT_STORAGE_KEY, String(next));
+  } catch {
+    /* privat modus / utilgjengelig storage */
+  }
+}
+
 function apne() {
   if (kilde) return;
   settStatus('connecting');
   // Same-origin (Next rewrite → apps/stream). EventSource sender sesjons-
-  // cookien selv; ingen token i URL-en.
-  const source = new EventSource('/stream/sse');
+  // cookien selv; ingen token i URL-en. lastEventId i query er for NYE
+  // EventSource-instanser (browseren husker Last-Event-ID bare på den gamle).
+  const source = new EventSource(streamSseUrl(lagretLastEventId()));
   kilde = source;
 
-  for (const type of DOMAIN_EVENTS) {
+  for (const type of LIVE_DOMAIN_EVENTS) {
     source.addEventListener(type, (event: MessageEvent<string>) => {
       let parsed: Record<string, unknown> = {};
       try {
@@ -86,7 +102,10 @@ function apne() {
         return;
       }
       const { subjectId, ...rest } = parsed;
+      const id = event.lastEventId || null;
+      huskLastEventId(id);
       const ut: StreamEvent = {
+        id,
         type,
         subjectId: typeof subjectId === 'string' ? subjectId : null,
         data: rest,

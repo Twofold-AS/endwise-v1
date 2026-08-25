@@ -37,6 +37,7 @@ describeDb('F5-09: abonnement — isolasjon + entitlement-gate', () => {
   });
 
   afterAll(async () => {
+    await owner.delete(schema.streamEvents).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
     await owner.delete(schema.tenantModules).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
     await owner.delete(schema.billingCustomers).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
     await owner.delete(schema.tenants).where(sql`id in (${tenantA}, ${tenantB})`);

@@ -810,10 +810,9 @@ async function main() {
    * Beholdningen bygges av BEVEGELSER, ikke ved å sette et tall: det er slik
    * den fungerer i drift, og da tester seeden faktisk regnestykket.
    *
-   * ⚠️ Kjøres for HVER demo-tenant brukeren er medlem av — ikke bare Verksted A.
-   * Hvilken tenant man lander i ved innlogging avgjøres av Better-Auths
-   * organisasjonsliste, og en tom Lager-fane fordi man havnet i «feil» demo
-   * ville sett ut som en feil i Lager.
+   * ⚠️ Kjøres bare for de kjente seed-tenantene (Verksted A/B). En forhandler
+   * opprettet fra Endwise-admin skal ikke få lager-demo bare fordi noen
+   * kjørte `pnpm db:seed`.
    */
   /** Tillegg demo-tenantene får. Speiler «proff» + de som ikke selges ennå. */
   const ALLE_TILLEGG = [
@@ -987,15 +986,12 @@ async function main() {
     }
   }
 
-  // Alle demo-tenants hovedbrukeren er medlem av — inkludert demo-tenants
-  // opprettet fra Endwise-admin-flaten, ikke bare de to seeden lager selv.
-  const minesOrger = await db
-    .select({ orgId: schema.member.organizationId })
-    .from(schema.member)
-    .where(eq(schema.member.userId, endwiseAdmin));
+  // Kun de to kjente seed-tenantene. Forhandlere opprettet i Endwise-admin
+  // skal forbli tomme — selv om de er merket demo og admin er medlem.
+  const SEED_DEMO_SLUGS = ['verksted-a', 'verksted-b'] as const;
   let lagerTenants = 0;
-  for (const { orgId } of minesOrger) {
-    const [t] = await db.select().from(schema.tenants).where(eq(schema.tenants.id, orgId));
+  for (const slug of SEED_DEMO_SLUGS) {
+    const [t] = await db.select().from(schema.tenants).where(eq(schema.tenants.slug, slug));
     if (t?.kind !== 'demo') continue;
 
     /* ⚠️ **LÅST-INNE-BUGEN (fikset 09.08.2026).**

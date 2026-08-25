@@ -72,7 +72,7 @@ export function createStreamApp(options: { databaseUrl: string; listenUrl?: stri
       throw error;
     }
 
-    const lastEventId = Number(c.req.header('Last-Event-ID') ?? 0);
+    const lastEventId = Number(c.req.header('Last-Event-ID') || c.req.query('lastEventId') || 0);
 
     return streamSSE(c, async (stream) => {
       let closed = false;

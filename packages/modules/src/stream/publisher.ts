@@ -77,6 +77,21 @@ export async function readEventsSince(
   );
 }
 
+/**
+ * Høyeste event-id tenanten kan se. Klienten bruker den som start-cursor
+ * slik at en poll-reserve ikke spiller av historikk og fyrer gamle lyder.
+ */
+export async function headEventId(db: Database, tenantId: string): Promise<number> {
+  const [row] = await withTenant(db, tenantId, (tx) =>
+    tx
+      .select({
+        id: sql<number>`coalesce(max(${schema.streamEvents.id}), 0)`,
+      })
+      .from(schema.streamEvents),
+  );
+  return Number(row?.id ?? 0);
+}
+
 /** Eventer eldre enn N dager ryddes av cron (F0-13). Loggen er en buffer, ikke et arkiv. */
 export async function pruneEvents(db: Database, tenantId: string, olderThanDays = 7) {
   return withTenant(db, tenantId, (tx) =>

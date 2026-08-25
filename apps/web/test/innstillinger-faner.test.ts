@@ -53,7 +53,7 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     ]);
     expect(FANER.map((f) => f.label)).toEqual([
       'Profil',
-      'Integrasjoner',
+      'Koblinger',
       'Abonnement',
       'Varsler',
       'Tjenester & priser',
@@ -166,5 +166,6 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(settings).not.toMatch(/label: 'Admin'/);
     expect(nav).toMatch(/key: 'team'/);
     expect(nav).toMatch(/href: '\/innstillinger\/team'/);
+    expect(nav).toMatch(/label: 'Ansatte'/);
   });
 });

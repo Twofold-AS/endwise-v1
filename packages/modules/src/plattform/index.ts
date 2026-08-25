@@ -132,7 +132,7 @@ export function tilbakeHref(fra: string | null | undefined): string {
 /** Skrivehandlinger som skal være disabled i Se verkstedet. */
 export const LESING_HANDLINGER = [
   'Ny booking',
-  'Ny sak',
+  'Ny jobb',
   'Ny melding',
   'Ny kunde',
   'Send',

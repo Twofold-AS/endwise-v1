@@ -80,7 +80,7 @@ export default function ArtikkelPage() {
         href={'/support' as Route}
         className="text-[12px] text-fg-muted transition-colors hover:text-fg"
       >
-        ← Helpdesk
+        ← Hjelp
       </Link>
 
       <div>

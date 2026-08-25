@@ -37,7 +37,7 @@ export default function LokasjonerPage() {
   return (
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-8 py-7">
       <Sidehode
-        tittel="Lokasjoner"
+        tittel="Plass"
         undertittel="Hvor delene fysisk ligger. Koden er den du bruker i hverdagen."
       />
 

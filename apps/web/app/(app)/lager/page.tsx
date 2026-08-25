@@ -29,7 +29,7 @@ export default function LagerOversiktPage() {
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
       <Sidehode
         tittel="Lager"
-        undertittel="Deler, beholdning og bevegelser. Kjerne — ikke et tillegg."
+        undertittel="Deler, beholdning og inn og ut. Kjerne — ikke et tillegg."
       />
 
       {oppsummering.isError ? (
@@ -58,7 +58,7 @@ export default function LagerOversiktPage() {
           />
           <Teller
             icon={MapPin}
-            label="Lokasjoner"
+            label="Plass"
             verdi={s?.antallLokasjoner}
             laster={oppsummering.isLoading}
           />

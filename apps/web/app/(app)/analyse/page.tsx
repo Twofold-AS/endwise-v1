@@ -92,7 +92,7 @@ function AnalysePageInner() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
-      <h1 className="sr-only">Analyse</h1>
+      <h1 className="sr-only">Rapporter</h1>
 
       {/* ⚠️ Ingen fane-velger for Rapporter/Direkte data (fjernet 06.08.2026).
           Sidebaren eier navigasjonen — en tab-rad som gjør det samme er to

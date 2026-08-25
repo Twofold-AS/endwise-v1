@@ -13,7 +13,7 @@ export default function MinKompetansePage() {
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-4 px-6 py-7">
       <div className="flex items-center gap-2">
         <ShieldCheck size={18} className="text-primary" />
-        <h1 className="font-semibold text-fg text-xl tracking-tight">Min kompetanse</h1>
+        <h1 className="font-semibold text-fg text-xl tracking-tight">Kompetanse</h1>
       </div>
 
       <CardShell>

@@ -1,12 +1,12 @@
 /**
  * F5-19 — Innstillinger som én flate med pille-faner.
  *
- * Fanerekkefølge (25.08.2026): Profil · Integrasjoner · Abonnement ·
+ * Fanerekkefølge (25.08.2026): Profil · Koblinger · Abonnement ·
  * Varsler · Tjenester & priser.
  *
  * Team er IKKE en fane — #41 la destinasjonen i sidebaren
- * (`/innstillinger/team`), 25.08 omdøpt til Organisasjon. Admin-faner
- * skjules for ikke-admin, og hele dealer-huben (Abonnement, Integrasjoner,
+ * (`/innstillinger/team`), 25.08 omdøpt til Ansatte. Admin-faner
+ * skjules for ikke-admin, og hele dealer-huben (Abonnement, Koblinger,
  * Varsler, Tjenester & priser) skjules for Endwise-plattform. «Bytt konto /
  * mekaniker» er IKKE en fane — visningsbytte bor i sidebar-headeren.
  */
@@ -30,7 +30,7 @@ export const FANER: readonly FaneDef[] = [
   },
   {
     id: 'integrasjoner',
-    label: 'Integrasjoner',
+    label: 'Koblinger',
     ingress:
       'Verktøy fra andre leverandører som Endwise snakker med. Endwise-egne funksjoner ligger under Tjenester & priser.',
     adminOnly: true,
@@ -50,7 +50,7 @@ export const FANER: readonly FaneDef[] = [
     id: 'tjenester',
     label: 'Tjenester & priser',
     ingress:
-      'Funksjonene Endwise har bygget, og hva de koster. Andres verktøy ligger under Integrasjoner.',
+      'Funksjonene Endwise har bygget, og hva de koster. Andres verktøy ligger under Koblinger.',
     adminOnly: true,
   },
 ];

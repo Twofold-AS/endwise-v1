@@ -126,7 +126,7 @@ export function BevegelseDialog({
             </select>
             {(lokasjoner.data?.length ?? 0) === 0 && !lokasjoner.isLoading && (
               <span className="text-[12px] text-warn">
-                Ingen lokasjoner ennå — opprett én under Lokasjoner først.
+                Ingen lokasjoner ennå — opprett én under Plass først.
               </span>
             )}
           </label>

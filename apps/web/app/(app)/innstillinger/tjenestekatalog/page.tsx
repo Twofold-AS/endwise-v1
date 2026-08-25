@@ -55,10 +55,10 @@ export default function TjenestekatalogPage() {
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
       <div>
-        <h1 className="sr-only">Tjenestekatalog</h1>
+        <h1 className="sr-only">Prisliste</h1>
         <p className="flex items-center gap-2 text-title text-fg">
           <Wrench size={18} strokeWidth={1.75} className="text-fg-muted" />
-          Tjenestekatalog
+          Prisliste
         </p>
         <p className="text-body text-fg-muted">
           Tjenestene kunden kan bestille hos dere, med varighet, pris og hvilke ferdigheter jobben

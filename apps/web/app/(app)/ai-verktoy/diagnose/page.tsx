@@ -25,7 +25,7 @@ export default function AiDiagnosePage() {
   return (
     <div className="mx-auto flex min-h-0 w-full max-w-[880px] flex-1 flex-col gap-5 px-8 py-7">
       <div>
-        <h1 className="sr-only">AI-verktøy · Diagnose</h1>
+        <h1 className="sr-only">Diagnose</h1>
         <p className="flex items-center gap-2 text-title text-fg">
           <Sparkles size={18} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
           Diagnose

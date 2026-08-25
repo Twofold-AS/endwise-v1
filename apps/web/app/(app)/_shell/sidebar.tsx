@@ -70,11 +70,11 @@ const IKON = 16;
  * **Flyout ut til siden** er for HANDLINGER: «Handlinger» (⌘K). Korte
  * lister du plukker fra og lukker igjen.
  *
- * **Inline utfolding** er for DESTINASJONER: Saker, Kunder, Analyse,
- * AI-verktøy, Organisasjon. De hører til strukturen du navigerer i, og skal
+ * **Inline utfolding** er for DESTINASJONER: Jobber, Kunder, Rapporter,
+ * Ansatte. De hører til strukturen du navigerer i, og skal
  * ikke skjule hvor du står. Se `NavRow`.
  *
- * Settings er destinasjon (Link til profil), ikke flyout.
+ * Innstillinger er destinasjon (Link til profil), ikke flyout.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -315,7 +315,7 @@ export function Sidebar() {
               {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
             </Link>
 
-            {/* ── Deg. Nederst, under Settings, som bestilt ─────────────── */}
+            {/* ── Deg. Nederst, under Innstillinger, som bestilt ─────────────── */}
             <BrukerRad
               /* ⛔ `navn` fra session.me, ikke `session.user.name` fra
                  Better-Auth: den siste oppdateres ikke når du lagrer et nytt
@@ -402,7 +402,7 @@ function NavRow({
     <CountBadge count={count} label={item.badge === 'helpdesk' ? 'nye artikler' : 'uleste'} />
   );
   /* Pil-plassen er ALLTID 14px når den vises — så dropdown-radene holder
-     chevronen helt til høyre. På rader UTEN barn (Innboks, Helpdesk) sitter
+     chevronen helt til høyre. På rader UTEN barn (Innboks, Hjelp) sitter
      CountBadge i det sporet i stedet for å ligge 14px inn. Tom plassholder
      beholdes når telleren er 0, så «Ny» ikke hopper mot kanten. */
   const chevronPlass = (

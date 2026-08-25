@@ -29,5 +29,8 @@ Context7 MCP var ikke tilgjengelig; Better-Auth 1.6.23 ble lest fra installert p
 - Bekreftelsessiden kaller `verifyEmail` uten `callbackURL`, så Better-Auth ikke redirecter vekk fra forklaringen.
 
 ## 4. Neste fase / neste steg
+- PR: https://github.com/Twofold-AS/endwise-v1/pull/55 (ikke merget).
+- Enhetstester kjørt lokalt: bytt-epost 12 pass / 4 skip (DB), vegvesen-config 3 pass / 2 skip (DB), vegvesen-nokkel 3 pass, bytt-epost-ui + innstillinger-faner 15 pass, bytt-passord + 2FA-av 21 pass / 6 skip.
+- Typecheck OK for auth, modules, api, web.
 - F1-24 (autentikator-app) står fortsatt planned.
 - Kunde-e-postbytte (Slack: «både ansatte og kunder») er ikke med — customer-create eies av annen agent.

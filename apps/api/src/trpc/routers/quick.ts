@@ -34,7 +34,8 @@ const quickAdminProcedure = moduleAdminProcedure('quick');
  * Sikkerhet: skriveflatene er `adminProcedure` (kun dealer_admin/endwise_admin).
  * ALT går via `createQuickConfigService` → `withTenant` → RLS. Tokenet lagres
  * envelope-kryptert og forlater ALDRI serveren (getView returnerer kun `hasToken`).
- * Ingen proxy (Fixie/Scaleway VM). Vercel Static IPs er infrastruktur.
+ * Valgfri egress: QUICK_GATEWAY_URL (tynn live-gateway) eller QUICK_HTTPS_PROXY
+ * (CONNECT). Uset = direkte fetch. Vercel Static IPs er infrastruktur.
  *
  * Vi hamrer ALDRI Quick: `testConnection` / `setConfig` er ett GET `client/info`,
  * `pullNow` er en moderat paginert delta-pull (changedAfterDate = sist hentet).

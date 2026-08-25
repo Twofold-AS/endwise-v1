@@ -205,7 +205,7 @@ describe('ops/quick-connect-proxy.service — Node/V8 + MDWE', () => {
   );
 
   it('har ikke MemoryDenyWriteExecute=yes (V8 JIT trenger kjørbare sider)', () => {
-    expect(unit).not.toMatch(/^\s*MemoryDenyWriteExecute\s*=\s*yes\s*$/m);
+    expect(unit).not.toMatch(/^\s*MemoryDenyWriteExecute\s*=/m);
     expect(unit).toMatch(/Node\/V8.*MemoryDenyWriteExecute/);
   });
 

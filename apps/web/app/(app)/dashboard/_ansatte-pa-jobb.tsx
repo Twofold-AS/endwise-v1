@@ -5,7 +5,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { CardShell } from '../_shell/cards';
-import { fmtTime, STATUS_LABEL } from '../bookinger/_status';
+import { fmtServices, fmtTime, STATUS_LABEL } from '../bookinger/_status';
 import { aktivJobb, ansattePaJobb, dagensJobber } from './_pa-jobb';
 
 const STATUS_PRIKK: Record<string, string> = {
@@ -30,6 +30,7 @@ type Booking = {
   startsAt: Date | string;
   endsAt: Date | string;
   serviceName?: string | null;
+  serviceNames?: readonly (string | null)[] | null;
   regNumber?: string | null;
 };
 
@@ -90,7 +91,7 @@ export function AnsattePaJobb({
                       />
                       {m.statusLabel}
                       {sak
-                        ? ` · ${sak.serviceName ?? 'Sak'} ${fmtTime(sak.startsAt)}`
+                        ? ` · ${fmtServices(sak)} ${fmtTime(sak.startsAt)}`
                         : ' · Ingen sak nå'}
                     </span>
                   </span>
@@ -108,7 +109,7 @@ export function AnsattePaJobb({
                           >
                             <span className="tabular-nums">{fmtTime(j.startsAt)}</span>
                             <span className="min-w-0 flex-1 truncate">
-                              {j.regNumber ?? 'Uten regnr'} · {j.serviceName ?? 'Tjeneste'}
+                              {j.regNumber ?? 'Uten regnr'} · {fmtServices(j)}
                             </span>
                             <span className="shrink-0 text-fg-muted">
                               {STATUS_LABEL[j.status] ?? j.status}

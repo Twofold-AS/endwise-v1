@@ -11,6 +11,7 @@ import {
   ALL_STATUSES,
   fmtDateTime,
   fmtMinor,
+  fmtServices,
   STATUS_LABEL,
   STATUS_TONE,
 } from '../bookinger/_status';
@@ -196,7 +197,7 @@ function SakerPageInner() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-[12px] text-fg-muted">
-                    <span className="truncate">{b.serviceName ?? 'Tjeneste'}</span>
+                    <span className="truncate">{fmtServices(b)}</span>
                     <span>·</span>
                     <Wrench size={14} className="shrink-0" />
                     <span className="truncate">{mechName.get(b.mechanicId) ?? b.mechanicName}</span>

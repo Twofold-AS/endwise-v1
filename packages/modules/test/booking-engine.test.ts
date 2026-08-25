@@ -20,6 +20,8 @@ describeDb('booking-motor (F3-01)', () => {
   const otherMechanicId = randomUUID();
   const serviceId = randomUUID();
   const versionId = randomUUID();
+  const extraServiceId = randomUUID();
+  const extraVersionId = randomUUID();
 
   const start = new Date('2026-08-03T09:00:00Z');
   const end = new Date('2026-08-03T10:00:00Z');
@@ -46,9 +48,21 @@ describeDb('booking-motor (F3-01)', () => {
       durationMinutes: 60,
       skills: ['mc-eu'],
     });
+    await owner
+      .insert(schema.services)
+      .values({ id: extraServiceId, tenantId, name: 'Oljeskift', vehicleType: 'mc' });
+    await owner.insert(schema.serviceVersions).values({
+      id: extraVersionId,
+      tenantId,
+      serviceId: extraServiceId,
+      version: 1,
+      durationMinutes: 30,
+      skills: ['olje'],
+    });
   });
 
   afterAll(async () => {
+    await owner.delete(schema.bookingServices).where(sql`tenant_id = ${tenantId}`);
     await owner.delete(schema.bookings).where(sql`tenant_id = ${tenantId}`);
     await owner.delete(schema.serviceVersions).where(sql`tenant_id = ${tenantId}`);
     await owner.delete(schema.services).where(sql`tenant_id = ${tenantId}`);
@@ -183,5 +197,38 @@ describeDb('booking-motor (F3-01)', () => {
 
     const second = await createBooking(app, { ...base(), ...slot, idempotencyKey: randomUUID() });
     expect(second.id).not.toBe(first.id);
+  });
+
+  it('FLERE TJENESTER: én jobb får to linjer, primær står på bookingen', async () => {
+    const booking = await createBooking(app, {
+      ...base(),
+      extraServiceVersionIds: [extraVersionId],
+      startsAt: new Date('2026-08-09T09:00:00Z'),
+      endsAt: new Date('2026-08-09T10:30:00Z'),
+      idempotencyKey: randomUUID(),
+    });
+    expect(booking.serviceVersionId).toBe(versionId);
+
+    const lines = await owner
+      .select()
+      .from(schema.bookingServices)
+      .where(sql`booking_id = ${booking.id}`);
+    expect(lines).toHaveLength(2);
+    expect(lines.map((l) => l.serviceVersionId).sort()).toEqual([versionId, extraVersionId].sort());
+    expect(lines.reduce((sum, l) => sum + l.durationMinutes, 0)).toBe(90);
+  });
+
+  it('MANUELL VARIGHET: durationMinutes styrer slot, ikke katalogdefault', async () => {
+    const start = new Date('2026-08-10T09:00:00Z');
+    const booking = await createBooking(app, {
+      ...base(),
+      extraServiceVersionIds: [extraVersionId],
+      startsAt: start,
+      endsAt: new Date('2026-08-10T10:00:00Z'),
+      durationMinutes: 75,
+      idempotencyKey: randomUUID(),
+    });
+    expect(booking.endsAt.getTime() - booking.startsAt.getTime()).toBe(75 * 60_000);
+    expect(booking.endsAt.toISOString()).toBe('2026-08-10T10:15:00.000Z');
   });
 });

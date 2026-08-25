@@ -24,6 +24,8 @@ export default defineConfig({
       // Mons P0 — inspect-GUC, 0021, hash-policy, eier-trigger.
       'test/mons-p0-kontrakt.test.ts',
       'test/platform-inspect.test.ts',
+      // F3-09 / P3 — booking_services RLS + backfill-kontrakt.
+      'test/booking-services-kontrakt.test.ts',
     ],
     // RLS-testene deler DB-tilstand — serielt, ikke parallelt.
     fileParallelism: false,

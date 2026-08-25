@@ -1,8 +1,25 @@
-import { and, desc, eq, gt, gte, ilike, lt, lte, or, schema, withTenant } from '@endwise/db';
+import {
+  and,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  inArray,
+  lt,
+  lte,
+  or,
+  schema,
+  withTenant,
+} from '@endwise/db';
 import {
   createBooking,
+  formatServiceNames,
   InvalidTransitionError,
+  MAX_DURATION_MINUTES,
+  MIN_DURATION_MINUTES,
   SlotConflictError,
+  type TenantTx,
   transitionBooking,
 } from '@endwise/modules/booking';
 import { TRPCError } from '@trpc/server';
@@ -52,15 +69,101 @@ const enrichedColumns = {
   priceMinor: schema.serviceVersions.priceMinor,
 } as const;
 
+type JobLine = {
+  serviceVersionId: string;
+  name: string | null;
+  version: number;
+  durationMinutes: number;
+  priceMinor: number | null;
+};
+
+async function attachJobLines<
+  T extends {
+    id: string;
+    serviceName: string | null;
+    serviceVersionId: string;
+    serviceVersion: number;
+    durationMinutes: number;
+    priceMinor: number | null;
+  },
+>(tx: TenantTx, rows: T[]) {
+  if (rows.length === 0) return [];
+  const lines = await tx
+    .select({
+      bookingId: schema.bookingServices.bookingId,
+      serviceVersionId: schema.bookingServices.serviceVersionId,
+      durationMinutes: schema.bookingServices.durationMinutes,
+      name: schema.services.name,
+      version: schema.serviceVersions.version,
+      priceMinor: schema.serviceVersions.priceMinor,
+    })
+    .from(schema.bookingServices)
+    .innerJoin(
+      schema.serviceVersions,
+      eq(schema.serviceVersions.id, schema.bookingServices.serviceVersionId),
+    )
+    .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
+    .where(
+      inArray(
+        schema.bookingServices.bookingId,
+        rows.map((r) => r.id),
+      ),
+    )
+    .orderBy(schema.bookingServices.sortOrder);
+
+  const byBooking = new Map<string, JobLine[]>();
+  for (const line of lines) {
+    const list = byBooking.get(line.bookingId) ?? [];
+    list.push({
+      serviceVersionId: line.serviceVersionId,
+      name: line.name,
+      version: line.version,
+      durationMinutes: line.durationMinutes,
+      priceMinor: line.priceMinor,
+    });
+    byBooking.set(line.bookingId, list);
+  }
+
+  return rows.map((r) => {
+    const services: JobLine[] =
+      byBooking.get(r.id) ??
+      (r.serviceVersionId
+        ? [
+            {
+              serviceVersionId: r.serviceVersionId,
+              name: r.serviceName,
+              version: r.serviceVersion,
+              durationMinutes: r.durationMinutes,
+              priceMinor: r.priceMinor,
+            },
+          ]
+        : []);
+    const names = services.map((s) => s.name).filter((n): n is string => Boolean(n));
+    return {
+      ...r,
+      services,
+      serviceNames: names,
+      serviceName: formatServiceNames(names.length > 0 ? names : [r.serviceName]),
+    };
+  });
+}
+
 export const bookingsRouter = router({
-  /** F3-11 — Internt booking-inntak: admin-API. Nå også «Ny booking»-flyten. */
+  /** F3-11 / F3-09 — Internt jobb-inntak. Flere tjenester + manuell varighet. */
   create: protectedProcedure
     .input(
       z.object({
         mechanicId: z.uuid(),
         serviceVersionId: z.uuid(),
+        extraServiceVersionIds: z.array(z.uuid()).max(20).default([]),
         startsAt: z.coerce.date(),
         endsAt: z.coerce.date(),
+        durationMinutes: z
+          .number()
+          .int()
+          .min(MIN_DURATION_MINUTES)
+          .max(MAX_DURATION_MINUTES)
+          .optional(),
         customerId: z.uuid().optional(),
         vehicleId: z.uuid().optional(),
         notes: z.string().optional(),
@@ -105,7 +208,7 @@ export const bookingsRouter = router({
         .default({ limit: 100 }),
     )
     .query(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, (tx) => {
+      withTenant(ctx.db, ctx.tenantId, async (tx) => {
         const conditions = [];
         if (input.status) conditions.push(eq(schema.bookings.status, input.status));
         if (input.mechanicId) conditions.push(eq(schema.bookings.mechanicId, input.mechanicId));
@@ -120,7 +223,7 @@ export const bookingsRouter = router({
           );
           if (term) conditions.push(term);
         }
-        return tx
+        const rows = await tx
           .select(enrichedColumns)
           .from(schema.bookings)
           .leftJoin(schema.customers, eq(schema.customers.id, schema.bookings.customerId))
@@ -134,6 +237,7 @@ export const bookingsRouter = router({
           .where(conditions.length ? and(...conditions) : undefined)
           .orderBy(desc(schema.bookings.startsAt))
           .limit(input.limit);
+        return attachJobLines(tx, rows);
       }),
     ),
 
@@ -154,6 +258,8 @@ export const bookingsRouter = router({
         .where(eq(schema.bookings.id, input.id))
         .limit(1);
       if (!booking) return null;
+      const [enriched] = await attachJobLines(tx, [booking]);
+      if (!enriched) return null;
 
       const history = await tx
         .select({
@@ -169,7 +275,7 @@ export const bookingsRouter = router({
         )
         .orderBy(desc(schema.auditLog.occurredAt));
 
-      return { ...booking, history };
+      return { ...enriched, history };
     }),
   ),
 
@@ -196,8 +302,8 @@ export const bookingsRouter = router({
       }),
     )
     .query(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, (tx) =>
-        tx
+      withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const rows = await tx
           .select(enrichedColumns)
           .from(schema.bookings)
           .leftJoin(schema.customers, eq(schema.customers.id, schema.bookings.customerId))
@@ -215,7 +321,8 @@ export const bookingsRouter = router({
               input.mechanicId ? eq(schema.bookings.mechanicId, input.mechanicId) : undefined,
             ),
           )
-          .orderBy(schema.bookings.startsAt),
-      ),
+          .orderBy(schema.bookings.startsAt);
+        return attachJobLines(tx, rows);
+      }),
     ),
 });

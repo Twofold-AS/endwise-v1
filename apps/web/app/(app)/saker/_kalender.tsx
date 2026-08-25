@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
-import { STATUS_TONE } from '../bookinger/_status';
+import { fmtServices, STATUS_TONE } from '../bookinger/_status';
 
 /**
  * F3-07 — KALENDERVISNING. Dag og uke, jobbklosser plassert etter klokkeslett.
@@ -289,6 +289,7 @@ function Kloss({
     status: string;
     regNumber: string | null;
     serviceName: string | null;
+    serviceNames?: readonly (string | null)[] | null;
     mechanicName: string | null;
   };
   kolIndex: number;
@@ -314,7 +315,7 @@ function Kloss({
       className={`absolute right-1 left-1 overflow-hidden rounded-control border border-border px-2 py-1 transition-colors hover:border-border-strong ${
         STATUS_TONE[booking.status] ?? 'bg-surface-2 text-fg'
       }`}
-      title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} · ${booking.serviceName ?? 'Tjeneste'}${booking.mechanicName ? ` · ${booking.mechanicName}` : ''}`}
+      title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} · ${fmtServices(booking)}${booking.mechanicName ? ` · ${booking.mechanicName}` : ''}`}
       // Sørger for at senere klosser tegnes over tidligere ved overlapp.
       data-kol={kolIndex}
     >
@@ -324,7 +325,7 @@ function Kloss({
       </div>
       {height > 34 && (
         <div className="truncate text-[11px] opacity-80">
-          {booking.serviceName ?? 'Tjeneste'}
+          {fmtServices(booking)}
           {booking.mechanicName ? ` · ${booking.mechanicName}` : ''}
         </div>
       )}

@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { inspectSelectPolicy, tenantPolicy } from '../rls.ts';
 import { customers } from './customers.ts';
 import { mechanics } from './mechanics.ts';
@@ -71,6 +80,40 @@ export const bookings = pgTable(
   ],
 ).enableRLS();
 
+/**
+ * F3-09 / P3 — flere tjenester på én jobb.
+ *
+ * `bookings.service_version_id` er første/primære tjeneste (bakoverkompatibel
+ * liste/kalender). Alle valgte tjenester, inkludert den primære, bor her.
+ * `duration_minutes` er katalogtid på avtaletidspunktet — slot-lengden eies
+ * av `bookings.starts_at`/`ends_at` (manuell varighet).
+ */
+export const bookingServices = pgTable(
+  'booking_services',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    bookingId: uuid('booking_id')
+      .notNull()
+      .references(() => bookings.id, { onDelete: 'cascade' }),
+    serviceVersionId: uuid('service_version_id')
+      .notNull()
+      .references(() => serviceVersions.id, { onDelete: 'restrict' }),
+    durationMinutes: integer('duration_minutes').notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (t) => [
+    uniqueIndex('booking_services_booking_version_uidx').on(t.bookingId, t.serviceVersionId),
+    index('booking_services_booking_idx').on(t.bookingId, t.sortOrder),
+    tenantPolicy('booking_services', t.tenantId),
+    inspectSelectPolicy('booking_services', t.tenantId),
+  ],
+).enableRLS();
+
 export type Booking = typeof bookings.$inferSelect;
 export type NewBooking = typeof bookings.$inferInsert;
 export type BookingStatus = (typeof bookingStatusEnum.enumValues)[number];
+export type BookingService = typeof bookingServices.$inferSelect;
+export type NewBookingService = typeof bookingServices.$inferInsert;

@@ -197,6 +197,13 @@
       "when": 1787690000000,
       "tag": "0027_helpdesk_kategori",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1787700000000,
+      "tag": "0028_booking_services",
+      "breakpoints": true
     }
   ]
 }

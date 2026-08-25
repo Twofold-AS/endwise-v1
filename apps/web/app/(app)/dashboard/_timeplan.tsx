@@ -5,7 +5,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { CardShell } from '../_shell/cards';
-import { STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
+import { fmtServices, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
 import {
   dagensSaker,
   timeplanKloss,
@@ -23,6 +23,7 @@ type Booking = {
   endsAt: Date | string;
   regNumber?: string | null;
   serviceName?: string | null;
+  serviceNames?: readonly (string | null)[] | null;
   mechanicId: string | null;
   mechanicName?: string | null;
 };
@@ -116,7 +117,7 @@ export function Timeplan({
                     </div>
                     {height > 32 && (
                       <div className="truncate text-[11px] opacity-80">
-                        {b.serviceName ?? 'Tjeneste'}
+                        {fmtServices(b)}
                         {navn ? ` · ${navn}` : ''}
                         {' · '}
                         {STATUS_LABEL[b.status] ?? b.status}

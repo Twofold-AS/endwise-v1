@@ -119,16 +119,18 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
   });
 });
 
-describe('P0: /oppstart er visningsnavn · team (tillegg bare hvis åpnet)', () => {
+describe('P0: /oppstart er visningsnavn · avatar · team (tillegg bare hvis åpnet)', () => {
   const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/page.tsx'), 'utf8');
 
-  it('har ikke avatar-steg og hopper over tomt tilleggssteg', () => {
+  it('har avatar-steg med farge og humør, og hopper over tomt tilleggssteg', () => {
     expect(oppstart).toMatch(/Visningsnavn/);
+    expect(oppstart).toMatch(/Avatar/);
     expect(oppstart).toMatch(/Team/);
     expect(oppstart).toMatch(/optional\.length/);
-    expect(oppstart).not.toMatch(/AvatarVelger/);
+    expect(oppstart).toMatch(/AvatarVelger/);
+    expect(oppstart).toMatch(/fullforAvatarValg/);
     expect(oppstart).not.toMatch(/STEG = \['Visningsnavn', 'Avatar'/);
-    expect(oppstart).not.toMatch(/Hopp over/);
+    expect(oppstart).not.toMatch(/utledes ansiktet fra navnet/);
   });
 });
 
@@ -144,6 +146,8 @@ describe('P0: avatar-velger uten fire nedtrekk (humør er låst opp)', () => {
     expect(avatar).toMatch(/size=\{size\}/);
     expect(avatar).toMatch(/bevegelse="alltid"/);
     expect(avatar).toMatch(/FORMER\.map/);
+    expect(avatar).toMatch(/FARGER\.map/);
+    expect(avatar).toMatch(/TONER\.map/);
     expect(avatar).not.toMatch(/function Nedtrekk/);
     expect(avatar).not.toMatch(/id="humor"/);
     expect(avatar).not.toMatch(/grid grid-cols-2 gap-3 lg:grid-cols-4/);

@@ -14,7 +14,7 @@ import { ToFaktorRad } from '../_shell/to-faktor-rad';
  * F5-19 / F1-17 / F1-20 — Settings › Profil, landet i pille-fanen.
  *
  * Layout (Jonas): blobatar 56px TIL VENSTRE, visningsnavn | e-post i to
- * kolonner til høyre. Form- og uttrykk-velgeren (#37) er foldet under.
+ * kolonner til høyre. Form-, farge- og uttrykk-velgeren er foldet under.
  * Ingen filopplasting. Felt-Lagre beholdes, ingen sticky Save.
  */
 export function ProfilFane() {

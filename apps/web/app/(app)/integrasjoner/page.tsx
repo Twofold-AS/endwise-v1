@@ -58,8 +58,8 @@ export default function IntegrasjonerPage() {
   }
 
   const alle = katalog.data?.tredjepart ?? [];
-  const mine = alle.filter((i) => i.har);
-  const kanFaas = alle.filter((i) => !i.har);
+  const mine = alle.filter((i) => i.aktiv);
+  const kanFaas = alle.filter((i) => !i.aktiv);
 
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-6 px-8 py-7">
@@ -124,7 +124,7 @@ export default function IntegrasjonerPage() {
 }
 
 function Rad({ post, forste }: { post: Post; forste: boolean }) {
-  const oppsett = post.har ? OPPSETT[post.key] : undefined;
+  const oppsett = post.aktiv ? OPPSETT[post.key] : undefined;
 
   return (
     <div
@@ -139,7 +139,7 @@ function Rad({ post, forste }: { post: Post; forste: boolean }) {
       <div className="flex min-w-[220px] flex-1 flex-col gap-0.5">
         <span className="flex flex-wrap items-center gap-2 text-label text-fg">
           {post.navn}
-          {post.har && (
+          {post.aktiv && (
             <span
               className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-[11px] ${
                 post.aktiv ? 'bg-accent-soft text-accent-strong' : 'bg-surface-2 text-fg-muted'
@@ -180,7 +180,7 @@ function Rad({ post, forste }: { post: Post; forste: boolean }) {
             Oppsett
             <ExternalLink size={13} strokeWidth={1.75} />
           </a>
-        ) : post.har ? (
+        ) : post.aktiv ? (
           <span className="text-[12px] text-fg-muted">Ingen oppsett nødvendig</span>
         ) : (
           <Etterspor

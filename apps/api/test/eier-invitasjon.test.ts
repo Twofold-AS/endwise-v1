@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createDb, type Database, eq, schema, sql } from '@endwise/db';
-import { ADDON_MODULES, BASIS_MODULES, TIERS } from '@endwise/modules';
+import { ADDON_MODULES, BASIS_MODULES, readEventsSince, TIERS } from '@endwise/modules';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { handleHono } from '../src/http/hono.ts';
 import { invitasjon } from '../src/routes/invitasjon.ts';
@@ -45,6 +45,15 @@ describe('F5-26 — START_MODULER og katalog', () => {
     for (const b of BASIS_MODULES) {
       expect(ADDON_MODULES).not.toContain(b);
     }
+  });
+
+  it('setModules publiserer tenant.modules.changed til hele tenanten', async () => {
+    const kilde = await import('node:fs').then((fs) =>
+      fs.readFileSync(new URL('../src/trpc/routers/tenants.ts', import.meta.url), 'utf8'),
+    );
+    expect(kilde).toMatch(/publishEvent/);
+    expect(kilde).toMatch(/tenant\.modules\.changed/);
+    expect(kilde).toMatch(/audienceId:\s*null/);
   });
 });
 
@@ -158,6 +167,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
   afterAll(async () => {
     for (const id of tenantIds) {
       await owner.delete(schema.auditLog).where(sql`tenant_id = ${id}`);
+      await owner.delete(schema.streamEvents).where(sql`tenant_id = ${id}`);
       await owner.delete(schema.invitations).where(eq(schema.invitations.tenantId, id));
       await owner.delete(schema.memberProfiles).where(sql`tenant_id = ${id}`);
       await owner.delete(schema.tenantModules).where(sql`tenant_id = ${id}`);
@@ -387,6 +397,9 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     expect(mods.find((m) => m.key === 'quick')?.enabled).toBe(false);
     expect(mods.find((m) => m.key === 'twilio')).toBeUndefined();
     expect(mods.find((m) => m.key === 'shop')).toBeUndefined();
+
+    const events = await readEventsSince(app, opprettet.tenantId, 0, adminUser);
+    expect(events.some((e) => e.type === 'tenant.modules.changed')).toBe(true);
   });
 
   it('veiviser: visningsnavn, hopp over extras beholder pakke, extras avviser fremmed nøkkel', async () => {

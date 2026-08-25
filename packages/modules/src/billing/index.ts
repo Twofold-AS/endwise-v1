@@ -1,5 +1,6 @@
 import { and, type Database, eq, schema, sql, withTenant } from '@endwise/db';
 import type { ModuleKey } from '../entitlements.ts';
+import { publishEvent } from '../stream/publisher.ts';
 import { modulesForSubscription } from './plans.ts';
 
 export * from './katalog.ts';
@@ -157,6 +158,14 @@ export function createBillingService(db: Database) {
               .where(eq(schema.tenantModules.moduleKey, m.key));
           }
         }
+      });
+
+      await publishEvent(db, {
+        tenantId,
+        type: 'tenant.modules.changed',
+        subjectId: tenantId,
+        audienceId: null,
+        payload: { tenantId, planKey, modules: wanted },
       });
     },
 

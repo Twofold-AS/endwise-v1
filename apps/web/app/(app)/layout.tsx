@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
+import { LiveSync } from './_lib/live-sync';
 import { LydProvider } from './_lib/lyd';
 import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
@@ -128,7 +129,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   if (kunMekaniker) {
     return (
       <LydProvider>
-        <MobileShell>{children}</MobileShell>
+        <LiveSync>
+          <MobileShell>{children}</MobileShell>
+        </LiveSync>
       </LydProvider>
     );
   }
@@ -163,36 +166,38 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    */
   return (
     <LydProvider>
-      <SidebarStateProvider>
-        <PwaRegister />
-        <div className="flex h-screen w-screen overflow-hidden bg-bg text-fg">
-          <Suspense
-            fallback={<div className="w-[248px] shrink-0 border-border border-r bg-sidebar" />}
-          >
-            <Sidebar />
-          </Suspense>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <Suspense fallback={<div className="h-14 shrink-0 border-border border-b bg-bg" />}>
-              <TopBar />
+      <LiveSync>
+        <SidebarStateProvider>
+          <PwaRegister />
+          <div className="flex h-screen w-screen overflow-hidden bg-bg text-fg">
+            <Suspense
+              fallback={<div className="w-[248px] shrink-0 border-border border-r bg-sidebar" />}
+            >
+              <Sidebar />
             </Suspense>
-            <main className="min-w-0 flex-1 overflow-y-auto">
-              {plattformVarsel ? (
-                <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
-                  <p className="text-label">{plattformVarsel}</p>
-                  <button
-                    type="button"
-                    className="text-[12px] underline-offset-2 hover:underline"
-                    onClick={() => setPlattformVarsel(null)}
-                  >
-                    Lukk
-                  </button>
-                </div>
-              ) : null}
-              {children}
-            </main>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <Suspense fallback={<div className="h-14 shrink-0 border-border border-b bg-bg" />}>
+                <TopBar />
+              </Suspense>
+              <main className="min-w-0 flex-1 overflow-y-auto">
+                {plattformVarsel ? (
+                  <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
+                    <p className="text-label">{plattformVarsel}</p>
+                    <button
+                      type="button"
+                      className="text-[12px] underline-offset-2 hover:underline"
+                      onClick={() => setPlattformVarsel(null)}
+                    >
+                      Lukk
+                    </button>
+                  </div>
+                ) : null}
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
-      </SidebarStateProvider>
+        </SidebarStateProvider>
+      </LiveSync>
     </LydProvider>
   );
 }

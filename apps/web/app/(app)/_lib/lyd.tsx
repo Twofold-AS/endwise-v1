@@ -3,7 +3,6 @@
 import { play, setEnabled, setVolume } from 'cuelume';
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useRef } from 'react';
 import { trpc } from '@/lib/trpc';
-import { useEventStream } from './use-event-stream';
 
 /**
  * F5-19 — VARSLINGSLYDER (cuelume, MIT, brukergodkjent §2-avhengighet).
@@ -177,23 +176,10 @@ export function LydProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /**
-   * ⚠️ Lyden lytter APP-BREDT, ikke bare i innboksen. Det er hele poenget: en
-   * melding som kommer inn mens du står på Saker eller Lager er nettopp den du
-   * ellers ikke oppdager. Deler den samme SSE-tilkoblingen som alt annet — se
-   * `use-event-stream.ts`.
-   *
-   * ⛔ Serveren sender ikke event for dine EGNE meldinger (`postMessage` hopper
-   * over forfatteren), så dette fyrer kun for mottakeren. Avsenderens
-   * kvittering er `sendt()`, som kalles fra svarfeltet.
+   * Inbound-lyd fyrer fra `LiveSync` via `nyMelding()`. Avsenderens kvittering
+   * er fortsatt `sendt()` fra svarfeltet — serveren hopper over forfatteren i
+   * `message.created`, så avsenderen skal ikke høre varselet.
    */
-  const onEvent = useCallback(
-    (event: { type: string }) => {
-      if (event.type === 'message.created') spill('arrival');
-    },
-    [spill],
-  );
-  useEventStream(onEvent);
-
   const verdi: Lydkontekst = {
     pa,
     nyMelding: useCallback(() => spill('arrival'), [spill]),

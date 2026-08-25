@@ -16,6 +16,7 @@ import {
   erGyldigEkstraTillegg,
   erTierKey,
   pakkeKatalog,
+  publishEvent,
   TIER_KEYS,
   utvidPakke,
 } from '@endwise/modules';
@@ -574,7 +575,7 @@ export const tenantsRouter = router({
       }
       krevIkkeEndwise(tenant, 'endre pakken til');
 
-      return withTenant(ctx.db, input.tenantId, async (tx) => {
+      const result = await withTenant(ctx.db, input.tenantId, async (tx) => {
         const eksisterende = await tx
           .select({
             moduleKey: schema.tenantModules.moduleKey,
@@ -707,6 +708,22 @@ export const tenantsRouter = router({
           optional: [...optional],
         };
       });
+
+      await publishEvent(ctx.db, {
+        tenantId: input.tenantId,
+        type: 'tenant.modules.changed',
+        subjectId: input.tenantId,
+        audienceId: null,
+        payload: {
+          tenantId: result.tenantId,
+          plan: result.plan,
+          granted: result.granted,
+          revoked: result.revoked,
+          modules: result.modules,
+        },
+      });
+
+      return result;
     }),
 
   /** Send eier-invitasjonen på nytt. Nytt token, gammelt åpent token dør. */

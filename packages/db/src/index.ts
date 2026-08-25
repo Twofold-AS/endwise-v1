@@ -15,6 +15,7 @@ export { HELPDESK_BILDER } from './schema/helpdesk.ts';
 export type {
   AuditEntry,
   Booking,
+  BookingService,
   BookingStatus,
   Customer,
   CustomerNote,
@@ -25,6 +26,7 @@ export type {
   Message,
   NewAuditEntry,
   NewBooking,
+  NewBookingService,
   NewCustomer,
   NewCustomerNote,
   NewErasureRequest,

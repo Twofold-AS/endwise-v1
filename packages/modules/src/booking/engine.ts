@@ -1,5 +1,12 @@
 import { and, type Database, eq, inArray, schema, sql, withTenant } from '@endwise/db';
 import { assertTransition, OCCUPYING_STATUSES } from './lifecycle.ts';
+import {
+  endsAtFromDuration,
+  MAX_DURATION_MINUTES,
+  MIN_DURATION_MINUTES,
+  resolveServiceVersionIds,
+  resolveSlotMinutes,
+} from './lines.ts';
 
 export class SlotConflictError extends Error {
   readonly code = 'SLOT_CONFLICT';
@@ -19,8 +26,15 @@ export interface CreateBookingInput {
   tenantId: string;
   mechanicId: string;
   serviceVersionId: string;
+  /** Øvrige tjenesteversjoner på samme jobb. Primær skal ikke gjentas. */
+  extraServiceVersionIds?: string[];
   startsAt: Date;
   endsAt: Date;
+  /**
+   * Manuell slot-lengde i minutter. Når satt, overstyrer `endsAt`
+   * (`startsAt + durationMinutes`). Katalogen er default i UI-et.
+   */
+  durationMinutes?: number | null;
   customerId?: string | null;
   vehicleId?: string | null;
   source?: string;
@@ -101,7 +115,34 @@ export async function writeBooking(tx: TenantTx, input: CreateBookingInput) {
     })
     .returning();
 
-  if (!created) throw new Error('Booking ble ikke opprettet');
+  if (!created) throw new Error('Jobben ble ikke opprettet');
+
+  const versionIds = resolveServiceVersionIds(
+    input.serviceVersionId,
+    input.extraServiceVersionIds ?? [],
+  );
+  const versions = await tx
+    .select({
+      id: schema.serviceVersions.id,
+      durationMinutes: schema.serviceVersions.durationMinutes,
+    })
+    .from(schema.serviceVersions)
+    .where(inArray(schema.serviceVersions.id, versionIds));
+  if (versions.length !== versionIds.length) {
+    throw new Error('En eller flere tjenester finnes ikke');
+  }
+  const durationById = new Map(versions.map((v) => [v.id, v.durationMinutes]));
+
+  await tx.insert(schema.bookingServices).values(
+    versionIds.map((serviceVersionId, sortOrder) => ({
+      tenantId: input.tenantId,
+      bookingId: created.id,
+      serviceVersionId,
+      durationMinutes: durationById.get(serviceVersionId) ?? 0,
+      sortOrder,
+    })),
+  );
+
   return created;
 }
 
@@ -115,14 +156,25 @@ export async function writeBooking(tx: TenantTx, input: CreateBookingInput) {
  *   4. skriv
  */
 export async function createBooking(db: Database, input: CreateBookingInput) {
-  if (input.endsAt <= input.startsAt) {
+  const slotMinutes =
+    input.durationMinutes != null
+      ? resolveSlotMinutes(0, input.durationMinutes)
+      : Math.round((input.endsAt.getTime() - input.startsAt.getTime()) / 60_000);
+  if (slotMinutes < MIN_DURATION_MINUTES || slotMinutes > MAX_DURATION_MINUTES) {
+    throw new Error(
+      `Varighet må være mellom ${MIN_DURATION_MINUTES} og ${MAX_DURATION_MINUTES} minutter`,
+    );
+  }
+  const endsAt =
+    input.durationMinutes != null ? endsAtFromDuration(input.startsAt, slotMinutes) : input.endsAt;
+  if (endsAt <= input.startsAt) {
     throw new Error('endsAt må være etter startsAt');
   }
 
   return withTenant(db, input.tenantId, async (tx) => {
     await tx.execute(lockShopSlots(input.tenantId));
     await tx.execute(lockMechanic(input.tenantId, input.mechanicId));
-    return writeBooking(tx, input);
+    return writeBooking(tx, { ...input, endsAt, durationMinutes: slotMinutes });
   });
 }
 

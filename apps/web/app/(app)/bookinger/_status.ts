@@ -83,3 +83,13 @@ export function fmtMinor(minor: number | null | undefined): string {
   if (minor == null) return '—';
   return `${(minor / 100).toLocaleString('nb-NO', { maximumFractionDigits: 0 })} kr`;
 }
+
+/** Flere tjenester på én jobb: «EU-kontroll + oljeskift». */
+export function fmtServices(b: {
+  serviceNames?: readonly (string | null)[] | null;
+  serviceName?: string | null;
+}): string {
+  const names = (b.serviceNames ?? []).filter((n): n is string => Boolean(n?.trim()));
+  if (names.length > 0) return names.join(' + ');
+  return b.serviceName ?? 'Tjeneste';
+}

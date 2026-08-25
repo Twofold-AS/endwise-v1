@@ -9,8 +9,10 @@ import { BevelButton } from '../../_shell/cards';
 import {
   ALLOWED_TRANSITIONS,
   type BookingStatus,
+  estMinutes,
   fmtDateTime,
   fmtMinor,
+  fmtServices,
   fmtTime,
   STATUS_LABEL,
   STATUS_TONE,
@@ -98,14 +100,27 @@ export default function BookingDetaljPage() {
         <Fact icon={<Wrench size={15} />} label="Mekaniker" value={b.mechanicName ?? '—'} />
         <Fact
           icon={<CreditCard size={15} />}
-          label="Tjeneste"
+          label={b.services && b.services.length > 1 ? 'Tjenester' : 'Tjeneste'}
           value={
-            b.serviceName
-              ? `${b.serviceName}${b.serviceVersion ? ` · v${b.serviceVersion}` : ''}`
-              : '—'
+            b.services && b.services.length > 0
+              ? b.services
+                  .map(
+                    (s) =>
+                      `${s.name ?? 'Tjeneste'}${s.version ? ` · v${s.version}` : ''} (${s.durationMinutes} min)`,
+                  )
+                  .join(' + ')
+              : fmtServices(b)
           }
         />
-        <Fact icon={<CreditCard size={15} />} label="Pris" value={fmtMinor(b.priceMinor)} />
+        <Fact
+          icon={<CreditCard size={15} />}
+          label="Pris"
+          value={fmtMinor(
+            b.services && b.services.length > 0
+              ? b.services.reduce((sum, s) => sum + (s.priceMinor ?? 0), 0) || null
+              : b.priceMinor,
+          )}
+        />
         <Fact
           icon={<Car size={15} />}
           label="Kjøretøy"
@@ -114,7 +129,7 @@ export default function BookingDetaljPage() {
         <Fact
           icon={<Activity size={15} />}
           label="Tid"
-          value={`${fmtDateTime(b.startsAt)} – ${fmtTime(b.endsAt)}`}
+          value={`${fmtDateTime(b.startsAt)} – ${fmtTime(b.endsAt)} (${estMinutes(b.startsAt, b.endsAt)} min)`}
         />
       </div>
 
@@ -172,8 +187,8 @@ function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; va
 
 function BackLink() {
   return (
-    <Link href={'/bookinger' as Route} className="text-fg-faint text-xs hover:text-fg">
-      ← Bookinger
+    <Link href={'/saker' as Route} className="text-fg-faint text-xs hover:text-fg">
+      ← Jobber
     </Link>
   );
 }

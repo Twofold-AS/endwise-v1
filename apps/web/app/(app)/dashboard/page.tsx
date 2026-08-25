@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
-import { fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
+import { fmtServices, fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
 
 /**
  * VERKSTEDET (F3-05/F5-01) — forhandlerens landingsside.
@@ -118,7 +118,7 @@ export default function VerkstedetPage() {
                       {b.regNumber ?? 'Uten regnr'}
                     </span>
                     <span className="truncate text-[12px] text-fg-muted">
-                      {b.serviceName ?? 'Tjeneste'} · {mekName.get(b.mechanicId) ?? b.mechanicName}
+                      {fmtServices(b)} · {mekName.get(b.mechanicId) ?? b.mechanicName}
                     </span>
                   </div>
                   <span

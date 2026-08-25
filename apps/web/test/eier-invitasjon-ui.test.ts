@@ -34,6 +34,9 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(kilde).toMatch(/rounded-xl border border-border bg-card p-\[5px\]/);
     expect(kilde).toMatch(/bg-inset p-4/);
     expect(kilde).toMatch(/Henter invitasjonen…/);
+    expect(kilde).toMatch(/Klarte ikke hente invitasjonen\. Prøv igjen\./);
+    expect(kilde).toMatch(/fetch\(`\/invitasjoner\/\$\{encodeURIComponent\(token\)\}`\)/);
+    expect(kilde).not.toMatch(/fetch\(`\/invitasjon\/\$\{/);
     expect(kilde).toMatch(/Oppretter …/);
     expect(kilde).toMatch(/Opprettet/);
     expect(kilde).toMatch(/<Lock /);

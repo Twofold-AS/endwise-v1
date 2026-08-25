@@ -108,11 +108,31 @@ describe('0020-reparasjon i 0021 (CREATE OR REPLACE RETURNS)', () => {
     expect(m0020).toMatch(/CREATE OR REPLACE FUNCTION lookup_open_invitation/);
   });
 
-  it('db:migrate DROPper lookup FØR drizzle-kit (ellers dør 0020 og 0021 nås aldri)', () => {
+  it('db:migrate kjører repair-0020 FØR drizzle-kit (ellers dør 0020 på RETURNS)', () => {
     const pkg = les('../package.json');
     expect(pkg).toMatch(/db:repair-0020|lookup_open_invitation/);
     const migrate = JSON.parse(pkg).scripts['db:migrate'] as string;
     expect(migrate).toMatch(/repair-0020|migrate\.ts/);
+  });
+
+  it('repair-0020 DROPper ikke en ferdig 0021-funksjon (prod 42883)', () => {
+    const repair = les('../scripts/repair-0020.ts');
+    expect(repair).toMatch(/hopper over DROP/);
+    expect(repair).toMatch(/app\.invitation_hash/);
+    expect(repair).toMatch(/platform_level/);
+    expect(repair).toMatch(/pg_get_function_result/);
+    expect(repair).toMatch(/drop function if exists lookup_open_invitation\(text\)/i);
+  });
+
+  it('db:grants feiler hvis lookup_open_invitation mangler kolonnene siden velger', () => {
+    const grantsTs = les('../scripts/grants.ts');
+    expect(grantsTs).toMatch(/lookup_open_invitation/);
+    expect(grantsTs).toMatch(/app\.invitation_hash/);
+    expect(grantsTs).toMatch(/platform_level/);
+    expect(grantsTs).toMatch(/job_function/);
+    expect(grantsTs).toMatch(/expires_at/);
+    expect(grantsTs).toMatch(/lookup_open_invitation \+ slett_forhandler rev=0026/);
+    expect(grantsTs).toMatch(/process\.exit\(1\)/);
   });
 
   it('0021 GRANTer EXECUTE kun til authenticated', () => {
@@ -121,6 +141,16 @@ describe('0020-reparasjon i 0021 (CREATE OR REPLACE RETURNS)', () => {
     );
     expect(m0021).not.toMatch(
       /GRANT EXECUTE ON FUNCTION lookup_open_invitation\(text\) TO PUBLIC/i,
+    );
+  });
+
+  it('functions.sql REVOKE-er PUBLIC og GRANTer authenticated (samme som 0021)', () => {
+    const grant = functions.search(/grant execute on function lookup_open_invitation\(text\) to authenticated/i);
+    const revoke = functions.search(/revoke all on function lookup_open_invitation\(text\) from public/i);
+    expect(revoke).toBeGreaterThan(-1);
+    expect(grant).toBeGreaterThan(revoke);
+    expect(functions).not.toMatch(
+      /grant execute on function lookup_open_invitation\(text\) to public/i,
     );
   });
 });

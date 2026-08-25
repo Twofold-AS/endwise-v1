@@ -40,6 +40,14 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(destinasjonEtterInvite('staff', '/dashboard', 'annen feil')).toBe('/dashboard');
   });
 
+  it('hent-feil (42883 / ikke-JSON) viser «Klarte ikke hente», API er flertall', () => {
+    expect(kilde).toMatch(/fetch\(`\/invitasjoner\/\$\{encodeURIComponent\(token\)\}`\)/);
+    expect(kilde).toMatch(/res\.json\(\)\.catch\(\(\) => null\)/);
+    expect(kilde).toMatch(/Klarte ikke hente invitasjonen\. Prøv igjen\./);
+    expect(kilde).toMatch(/Invitasjonen er ugyldig, brukt eller utløpt\./);
+    expect(kilde).not.toMatch(/fetch\(`\/invitasjon\/\$\{/);
+  });
+
   it('fersk invitee går aldri til /signin etter godta + passord', () => {
     expect(kilde).toMatch(/destinasjonEtterInvite/);
     expect(kilde).toMatch(/location\.assign/);

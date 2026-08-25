@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { erPlattformIUi } from '../app/(app)/_lib/plattform.ts';
+import { erForhandlerRutePaaPlattform, erPlattformIUi } from '../app/(app)/_lib/plattform.ts';
 
 /**
  * Endwise som plattform-org + Se verkstedet (URL, ikke setActive).
@@ -131,6 +131,18 @@ describe('Se verkstedet er URL-lesing', () => {
     expect(layout).toMatch(/\/endwise\?varsel=plattform/);
     expect(kopi).toMatch(/Endwise er plattformen, ikke et verksted/);
     expect(rolle).toMatch(/slug === 'endwise'|erPlattformIUi/);
+  });
+
+  it('Abonnement og Tjenester & priser er ikke nåbare dealer-faktureringssider på plattform', () => {
+    expect(erForhandlerRutePaaPlattform('/abonnement')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/tjenester')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/innstillinger/tjenester')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/innstillinger', 'fane=abonnement')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/innstillinger', 'fane=tjenester')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/innstillinger')).toBe(false);
+    expect(erForhandlerRutePaaPlattform('/innstillinger/profil')).toBe(false);
+    const layout = les('../app/(app)/layout.tsx');
+    expect(layout).toMatch(/erForhandlerRutePaaPlattform\(pathname,/);
   });
 
   it('slug=endwise er plattform i UI uten å vente på kind=platform', () => {

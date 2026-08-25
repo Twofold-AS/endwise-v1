@@ -145,11 +145,18 @@ export const LESING_HANDLINGER = [
 
 export const LESING_TITLE = 'Kun lesing';
 
-export function erForhandlerRutePaaPlattform(pathname: string): boolean {
+export function erForhandlerRutePaaPlattform(pathname: string, search = ''): boolean {
   if (pathname.startsWith('/endwise')) return false;
   // Settings-flaten (`/innstillinger` + profil-aliaset) er egen bruker, ikke
-  // forhandler-konfig. Øvrige `/innstillinger/*` (team, tjenestekatalog …)
-  // er verksted og skal vekk.
+  // forhandler-konfig — unntatt dealer-fakturering (Abonnement / Tjenester &
+  // priser). Gamle URL-er dit skal vekk, ikke lande som verksted-betaling.
+  const fane = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search).get('fane');
+  if (
+    (pathname === '/innstillinger' || pathname.startsWith('/innstillinger/profil')) &&
+    (fane === 'abonnement' || fane === 'tjenester')
+  ) {
+    return true;
+  }
   if (pathname === '/innstillinger') return false;
   if (pathname.startsWith('/innstillinger/profil')) return false;
   if (pathname.startsWith('/2fa')) return false;
@@ -170,6 +177,7 @@ export function erForhandlerRutePaaPlattform(pathname: string): boolean {
     pathname.startsWith('/butikk') ||
     pathname.startsWith('/bookinger') ||
     pathname.startsWith('/abonnement') ||
+    pathname.startsWith('/tjenester') ||
     pathname.startsWith('/innstillinger') ||
     pathname.startsWith('/integrasjoner') ||
     pathname.startsWith('/mekanikere')

@@ -82,6 +82,13 @@ describe('landing og kopi', () => {
     expect(erForhandlerRutePaaPlattform('/innstillinger/profil')).toBe(false);
     expect(erForhandlerRutePaaPlattform('/innstillinger/team')).toBe(true);
     expect(erForhandlerRutePaaPlattform('/innstillinger/tjenestekatalog')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/abonnement')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/tjenester')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/innstillinger/tjenester')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/innstillinger', 'fane=abonnement')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/innstillinger', 'fane=tjenester')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/innstillinger', 'fane=profil')).toBe(false);
+    expect(erForhandlerRutePaaPlattform('/innstillinger/profil', 'fane=abonnement')).toBe(true);
   });
 });
 

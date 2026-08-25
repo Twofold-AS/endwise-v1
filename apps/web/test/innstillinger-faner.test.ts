@@ -103,6 +103,13 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(parseFane('varsler', true, 'profil', false)).toBe('profil');
   });
 
+  it('gamle Abonnement- og Tjenester-URL-er er dealer-ruter som plattform redirecter vekk', () => {
+    const kopi = les('../app/(app)/_lib/plattform.ts');
+    expect(kopi).toMatch(/pathname\.startsWith\('\/tjenester'\)/);
+    expect(kopi).toMatch(/fane === 'abonnement' \|\| fane === 'tjenester'/);
+    expect(les('../app/(app)/layout.tsx')).toMatch(/erForhandlerRutePaaPlattform\(pathname,/);
+  });
+
   it('gamle sider renderer skallet, Team-siden er egen destinasjon', () => {
     expect(les('../app/(app)/innstillinger/profil/page.tsx')).toMatch(/startFane="profil"/);
     expect(les('../app/(app)/innstillinger/team/page.tsx')).not.toMatch(/InnstillingerSkall/);

@@ -76,11 +76,20 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     let avbrutt = false;
     void (async () => {
       try {
+        // Flertall: API-et. Entall `/invitasjon/:token` er DENNE siden.
         const res = await fetch(`/invitasjoner/${encodeURIComponent(token)}`);
-        const data = await res.json();
+        const data = (await res.json().catch(() => null)) as
+          | (Invitasjon & { gyldig?: boolean; grunn?: string })
+          | { gyldig?: boolean; grunn?: string }
+          | null;
         if (avbrutt) return;
         if (!res.ok || !data?.gyldig) {
-          setFeil(data?.grunn ?? 'Invitasjonen er ugyldig, brukt eller utløpt.');
+          setFeil(
+            (typeof data?.grunn === 'string' && data.grunn) ||
+              (res.ok
+                ? 'Invitasjonen er ugyldig, brukt eller utløpt.'
+                : 'Klarte ikke hente invitasjonen. Prøv igjen.'),
+          );
         } else {
           setInv(data as Invitasjon);
         }

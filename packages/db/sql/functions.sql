@@ -120,6 +120,8 @@ grant execute on function redact_audit_log(text) to authenticated;
 -- `app.invitation_hash` er satt (se grants.sql), og funksjonen setter den
 -- transaksjons-lokalt FØR den leser. Uten GUC ser eieren fortsatt 0 rader.
 
+-- DROP først: CREATE OR REPLACE kan ikke bytte RETURNS (0020/PR #24).
+-- Idempotent — `pnpm db:grants` kan kjøres om igjen på Scaleway (0026).
 drop function if exists lookup_open_invitation(text);
 
 create or replace function lookup_open_invitation(p_token_hash text)
@@ -138,6 +140,7 @@ security definer
 set search_path = public
 as $$
 begin
+  -- lookup_open_invitation_rev=0021
   perform set_config('app.invitation_hash', p_token_hash, true);
   return query
     select i.id, i.tenant_id, i.email, i.job_function::text, i.role, i.kind, i.platform_level, i.expires_at
@@ -178,6 +181,8 @@ begin
 end;
 $$;
 
+revoke all on function lookup_open_invitation(text) from public;
+revoke all on function consume_invitation(text) from public;
 grant execute on function lookup_open_invitation(text) to authenticated;
 grant execute on function consume_invitation(text) to authenticated;
 

@@ -5,6 +5,13 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-08-25 — F1-10 lookup_open_invitation 42883 på Scaleway
+
+**Type:** produksjonsfiks (ikke ny flate). F1-10 forblir `done`.
+**Endring:** Nytt steg under F1-10: `repair-0020` droppet funksjonen på hver migrate etter at 0021 var kjørt; `db:grants` (CREATE i functions.sql) hadde aldri fullført på Scaleway. Ingen 0027 — funksjonen ligger i 0020/0021. `db:grants` er idempotent CREATE + exit 1 hvis kontrakten mangler.
+
+---
+
 ## 2026-08-25 — P3: lokal kunde + ansatt uten invitasjon (F5-55, F1-10)
 
 **Type:** produksjonsfiks / manglende inngang. Ingen techstack-endring.

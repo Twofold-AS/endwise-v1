@@ -95,6 +95,25 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     ).toEqual([]);
   });
 
+  it('③e lookup_open_invitation finnes med invitation_hash (F1-10)', async () => {
+    const res = await app.execute(sql`
+      select p.proname,
+             pg_get_function_identity_arguments(p.oid) as identity,
+             pg_get_function_result(p.oid) as result,
+             p.prosrc
+        from pg_proc p
+        join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public'
+         and p.proname = 'lookup_open_invitation'
+    `);
+    expect(res.rows, 'Mangler lookup_open_invitation. Kjør `pnpm db:grants`.').toHaveLength(1);
+    expect(String(res.rows[0]?.identity)).toMatch(/text/);
+    expect(String(res.rows[0]?.prosrc)).toMatch(/app\.invitation_hash/);
+    expect(String(res.rows[0]?.result)).toMatch(/platform_level/);
+    expect(String(res.rows[0]?.result)).toMatch(/job_function/);
+    expect(String(res.rows[0]?.result)).toMatch(/expires_at/);
+  });
+
   it('③b invitations_open_by_hash finnes (F1-10 FORCE RLS-unntak)', async () => {
     const res = await app.execute(sql`
       select polname, polcmd, polpermissive

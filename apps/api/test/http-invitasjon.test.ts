@@ -24,6 +24,7 @@ vi.mock('@endwise/modules/invitasjoner', async (importOriginal) => {
 });
 
 import { handleHono } from '../src/http/hono.ts';
+import { INVITASJON_HENT_FEILET } from '../src/routes/invitasjon.ts';
 
 /**
  * F1-10 / F13-03 — siden henter `GET /invitasjoner/:token` (flertall).
@@ -74,6 +75,41 @@ describe('handleHono /invitasjoner (F1-10 side-sti)', () => {
     expect(await res.text()).toBe('404 Not Found');
     expect(stubs.finnApen).not.toHaveBeenCalled();
   });
+
+  it('GET 42883 (mangler lookup) gir JSON med hent-feil — ikke HTML, ikke 404-ugyldig', async () => {
+    const err = new Error('Failed query: select id from lookup_open_invitation($1)\nparams: :hash');
+    (err as Error & { cause: { code: string; message: string } }).cause = {
+      code: '42883',
+      message: 'function lookup_open_invitation(unknown) does not exist',
+    };
+    stubs.finnApen.mockRejectedValue(err);
+    const res = await handleHono(new Request('http://endwise.test/invitasjoner/ekte-token'));
+    expect(res.status).toBe(500);
+    expect(res.headers.get('content-type')).toMatch(/json/);
+    expect(await res.json()).toEqual({
+      gyldig: false,
+      grunn: INVITASJON_HENT_FEILET,
+    });
+    expect(INVITASJON_HENT_FEILET).toMatch(/Klarte ikke hente invitasjonen/);
+  });
+
+  it('POST 42883 gir JSON error, ikke Hono-tekst 500', async () => {
+    const err = new Error('Failed query: select consume_invitation($1)');
+    (err as Error & { cause: { code: string; message: string } }).cause = {
+      code: '42883',
+      message: 'function lookup_open_invitation(unknown) does not exist',
+    };
+    stubs.finnApen.mockRejectedValue(err);
+    const res = await handleHono(
+      new Request('http://endwise.test/invitasjoner/godta', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token: 'ekte-token-xx', navn: 'Kari Nordmann' }),
+      }),
+    );
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: INVITASJON_HENT_FEILET });
+  });
 });
 
 describe('FORCE RLS-unntaket for invitasjonsoppslag', () => {
@@ -82,6 +118,7 @@ describe('FORCE RLS-unntaket for invitasjonsoppslag', () => {
     expect(sql).toMatch(/set_config\('app\.invitation_hash'/);
     expect(sql).toMatch(/lookup_open_invitation/);
     expect(sql).toMatch(/consume_invitation/);
+    expect(sql).toMatch(/lookup_open_invitation_rev=0021/);
   });
 
   it('grants.sql har den smale hash-policyen (samme mønster som platform_admin)', () => {

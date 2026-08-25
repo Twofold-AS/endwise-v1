@@ -79,7 +79,7 @@ describe('Bug B: pakkebytte bekreftes og oppfrisker forhandleren', () => {
   });
 
   it('Oppsett-lenke vises bare for aktive tillegg — ikke etter nedgradering', () => {
-    const side = utenKommentarer(les('../app/(app)/integrasjoner/page.tsx'));
+    const side = utenKommentarer(les('../app/(app)/integrasjoner/_innhold.tsx'));
     expect(side).toMatch(/post\.aktiv/);
     expect(side).not.toMatch(/const oppsett = post\.har \? OPPSETT/);
   });

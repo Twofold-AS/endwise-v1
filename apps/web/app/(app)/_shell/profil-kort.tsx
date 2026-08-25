@@ -22,52 +22,13 @@ import { CardShell } from './cards';
  * Settings › Profil og i mekanikerens «Meg»-fane. To kopier ville før eller
  * siden fått hver sin variant av av/på-knappen, og da er det ikke lenger den
  * samme innstillingen — bare to som ser like ut.
+ *
+ * Settings-fanen (24.08.2026) komponerer de eksporterte delene i et annet
+ * skall (blobatar øverst, to kolonner, Switch-rader). «Meg» bruker
+ * `ProfilKort` uendret.
  */
 export function ProfilKort() {
-  const utils = trpc.useUtils();
-  const lyd = useLyd();
   const meg = trpc.profile.meg.useQuery();
-
-  const [navn, setNavn] = useState('');
-  const [kallenavn, setKallenavn] = useState('');
-
-  // Skjemaet fylles fra serveren ÉN gang per lasting. Skriver brukeren i
-  // feltet mens en refetch lander, skal det ikke bli overskrevet under fingrene.
-  useEffect(() => {
-    if (meg.data) {
-      setNavn(meg.data.navn);
-      setKallenavn(meg.data.kallenavn ?? '');
-    }
-  }, [meg.data]);
-
-  const lagreNavn = trpc.profile.setName.useMutation({
-    onSuccess: () => {
-      void utils.profile.meg.invalidate();
-      void utils.session.me.invalidate();
-      lyd.suksess();
-    },
-    onError: () => lyd.feil(),
-  });
-
-  const lagreKallenavn = trpc.profile.setNickname.useMutation({
-    onSuccess: () => {
-      void utils.profile.meg.invalidate();
-      void utils.session.me.invalidate();
-      void utils.directory.participants.invalidate();
-      lyd.suksess();
-    },
-    onError: () => lyd.feil(),
-  });
-
-  const settLyd = trpc.profile.setNotificationSounds.useMutation({
-    onSuccess: (res) => {
-      void utils.profile.meg.invalidate();
-      void utils.session.me.invalidate();
-      // Prøvelyd KUN når den skrus PÅ. En bekreftelseslyd på «av» ville vært
-      // en vits på brukerens bekostning.
-      if (res.pa) lyd.test();
-    },
-  });
 
   if (meg.isLoading) {
     return <p className="px-1 py-6 text-body text-fg-muted">Laster profil …</p>;
@@ -84,23 +45,9 @@ export function ProfilKort() {
   }
 
   const d = meg.data;
-  const lydPa = d.varslingslyder;
-
-  function submitNavn(e: FormEvent) {
-    e.preventDefault();
-    const v = navn.trim();
-    if (v.length < 2 || v === d.navn) return;
-    lagreNavn.mutate({ navn: v });
-  }
-
-  function submitKallenavn(e: FormEvent) {
-    e.preventDefault();
-    lagreKallenavn.mutate({ kallenavn: kallenavn.trim() });
-  }
 
   return (
     <div className="flex flex-col gap-5">
-      {/* ── Hvem du er ───────────────────────────────────────────────── */}
       <CardShell>
         <div className="flex items-center gap-3 p-4">
           <CircleUser size={24} className="shrink-0 text-fg-muted" />
@@ -111,29 +58,11 @@ export function ProfilKort() {
         </div>
       </CardShell>
 
-      {/* ══ VARSLINGSLYDER — samme radmønster som Settings › Varsler ══ */}
       <section className="flex flex-col gap-2">
         <h2 className="text-label text-fg">Varslingslyder</h2>
         <div className="overflow-hidden rounded-xl border border-border">
-          <div className="flex h-row-store items-center gap-3 bg-bg px-4">
-            {lydPa ? (
-              <Volume2 size={16} className="shrink-0 text-fg-muted" />
-            ) : (
-              <VolumeX size={16} className="shrink-0 text-fg-muted" />
-            )}
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="text-label text-fg">Varslingslyder</span>
-              <span className="text-[12px] text-fg-muted">Kort lyd ved ny melding</span>
-            </div>
-            <Switch
-              checked={lydPa}
-              disabled={settLyd.isPending}
-              onCheckedChange={(pa) => settLyd.mutate({ pa })}
-              aria-label={`Varslingslyder ${lydPa ? 'PÅ' : 'AV'}`}
-            />
-          </div>
+          <VarslingslyderRad />
         </div>
-
         <p className="flex items-start gap-1.5 text-[11px] text-fg-muted leading-relaxed">
           <BellRing size={13} strokeWidth={1.75} className="mt-0.5 shrink-0" />
           Gjelder deg, på alle forhandlere du er medlem av. Lyden spilles kun for meldinger fra
@@ -141,118 +70,213 @@ export function ProfilKort() {
         </p>
       </section>
 
-      {/* ── Visningsnavn ─────────────────────────────────────────────── */}
+      <VisningsnavnSeksjon />
+      <KallenavnSeksjon />
+      <ByttPassordSkjema />
+    </div>
+  );
+}
+
+/** Bryter-rad. Samme mønster som Settings › Varsler (`h-row-store`). */
+export function VarslingslyderRad() {
+  const utils = trpc.useUtils();
+  const lyd = useLyd();
+  const meg = trpc.profile.meg.useQuery();
+  const settLyd = trpc.profile.setNotificationSounds.useMutation({
+    onSuccess: (res) => {
+      void utils.profile.meg.invalidate();
+      void utils.session.me.invalidate();
+      if (res.pa) lyd.test();
+    },
+  });
+
+  const lydPa = meg.data?.varslingslyder ?? true;
+
+  return (
+    <div className="flex h-row-store items-center gap-3 bg-bg px-4">
+      {lydPa ? (
+        <Volume2 size={16} className="shrink-0 text-fg-muted" />
+      ) : (
+        <VolumeX size={16} className="shrink-0 text-fg-muted" />
+      )}
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-label text-fg">Varslingslyder</span>
+        <span className="text-[12px] text-fg-muted">Kort lyd ved ny melding</span>
+      </div>
+      <Switch
+        checked={lydPa}
+        disabled={settLyd.isPending || meg.isLoading}
+        onCheckedChange={(pa) => settLyd.mutate({ pa })}
+        aria-label={`Varslingslyder ${lydPa ? 'PÅ' : 'AV'}`}
+      />
+    </div>
+  );
+}
+
+export function VisningsnavnSeksjon() {
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-label text-fg">Visningsnavn</h2>
+      <CardShell className="p-4">
+        <VisningsnavnFelt />
+      </CardShell>
+    </section>
+  );
+}
+
+export function VisningsnavnFelt() {
+  const utils = trpc.useUtils();
+  const lyd = useLyd();
+  const meg = trpc.profile.meg.useQuery();
+  const [navn, setNavn] = useState('');
+
+  useEffect(() => {
+    if (meg.data) setNavn(meg.data.navn);
+  }, [meg.data]);
+
+  const lagreNavn = trpc.profile.setName.useMutation({
+    onSuccess: () => {
+      void utils.profile.meg.invalidate();
+      void utils.session.me.invalidate();
+      lyd.suksess();
+    },
+    onError: () => lyd.feil(),
+  });
+
+  const d = meg.data;
+
+  function submitNavn(e: FormEvent) {
+    e.preventDefault();
+    const v = navn.trim();
+    if (!d || v.length < 2 || v === d.navn) return;
+    lagreNavn.mutate({ navn: v });
+  }
+
+  return (
+    <>
+      <form onSubmit={submitNavn} className="flex items-start gap-2">
+        <input
+          value={navn}
+          onChange={(e) => setNavn(e.target.value)}
+          minLength={2}
+          maxLength={80}
+          aria-label="Visningsnavn"
+          className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none focus-visible:border-fg"
+        />
+        <StatefulButton
+          type="submit"
+          disabled={!d || navn.trim().length < 2 || navn.trim() === d.navn || lagreNavn.isPending}
+          state={
+            lagreNavn.isPending
+              ? 'loading'
+              : lagreNavn.isError
+                ? 'error'
+                : lagreNavn.isSuccess
+                  ? 'success'
+                  : 'idle'
+          }
+          loadingText="Lagrer…"
+          successText="Lagret"
+          errorText="Feilet"
+        >
+          Lagre
+        </StatefulButton>
+      </form>
+      {lagreNavn.error && <p className="mt-2 text-body text-danger">{lagreNavn.error.message}</p>}
+      <p className="mt-2 text-[11px] text-fg-muted">
+        Dette er navnet andre ser. Det gjelder overalt — også hos andre forhandlere du er medlem av.
+      </p>
+    </>
+  );
+}
+
+export function KallenavnSeksjon() {
+  const utils = trpc.useUtils();
+  const lyd = useLyd();
+  const meg = trpc.profile.meg.useQuery();
+  const [kallenavn, setKallenavn] = useState('');
+
+  useEffect(() => {
+    if (meg.data) setKallenavn(meg.data.kallenavn ?? '');
+  }, [meg.data]);
+
+  const lagreKallenavn = trpc.profile.setNickname.useMutation({
+    onSuccess: () => {
+      void utils.profile.meg.invalidate();
+      void utils.session.me.invalidate();
+      void utils.directory.participants.invalidate();
+      lyd.suksess();
+    },
+    onError: () => lyd.feil(),
+  });
+
+  const d = meg.data;
+  if (!d) return null;
+
+  function submitKallenavn(e: FormEvent) {
+    e.preventDefault();
+    lagreKallenavn.mutate({ kallenavn: kallenavn.trim() });
+  }
+
+  if (!d.kanHaKallenavn) {
+    return (
       <section className="flex flex-col gap-2">
-        <h2 className="text-label text-fg">Visningsnavn</h2>
-        <CardShell className="p-4">
-          <form onSubmit={submitNavn} className="flex items-start gap-2">
-            <input
-              value={navn}
-              onChange={(e) => setNavn(e.target.value)}
-              minLength={2}
-              maxLength={80}
-              aria-label="Visningsnavn"
-              className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none focus-visible:border-fg"
-            />
-            <StatefulButton
-              type="submit"
-              disabled={navn.trim().length < 2 || navn.trim() === d.navn || lagreNavn.isPending}
-              state={
-                lagreNavn.isPending
-                  ? 'loading'
-                  : lagreNavn.isError
-                    ? 'error'
-                    : lagreNavn.isSuccess
-                      ? 'success'
-                      : 'idle'
-              }
-              loadingText="Lagrer…"
-              successText="Lagret"
-              errorText="Feilet"
-            >
-              Lagre
-            </StatefulButton>
-          </form>
-          {lagreNavn.error && (
-            <p className="mt-2 text-body text-danger">{lagreNavn.error.message}</p>
-          )}
-          <p className="mt-2 text-[11px] text-fg-muted">
-            Dette er navnet andre ser. Det gjelder overalt — også hos andre forhandlere du er medlem
-            av.
+        <h2 className="text-label text-fg">Kallenavn</h2>
+        <CardShell className="flex items-start gap-3 p-4">
+          <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
+          <p className="text-[12px] text-fg-muted leading-relaxed">
+            Kallenavn er for private profiler — mekanikere og ansatte. Denne kontoen er
+            forhandlerens offisielle konto, og den skal alltid opptre med sitt ekte navn.
           </p>
         </CardShell>
       </section>
+    );
+  }
 
-      {/* ══ KALLENAVN — kun for private/ansatt-profiler ════════════════ */}
-      {d.kanHaKallenavn ? (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-label text-fg">Kallenavn</h2>
-          <CardShell className="p-4">
-            <form onSubmit={submitKallenavn} className="flex items-start gap-2">
-              <input
-                value={kallenavn}
-                onChange={(e) => setKallenavn(e.target.value)}
-                maxLength={24}
-                placeholder="F.eks. «Skiftenøkkelen»"
-                aria-label="Kallenavn"
-                className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
-              />
-              <StatefulButton
-                type="submit"
-                disabled={lagreKallenavn.isPending || kallenavn.trim() === (d.kallenavn ?? '')}
-                state={
-                  lagreKallenavn.isPending
-                    ? 'loading'
-                    : lagreKallenavn.isError
-                      ? 'error'
-                      : lagreKallenavn.isSuccess
-                        ? 'success'
-                        : 'idle'
-                }
-                loadingText="Lagrer…"
-                successText="Lagret"
-                errorText="Feilet"
-              >
-                Lagre
-              </StatefulButton>
-            </form>
-            {lagreKallenavn.error && (
-              <p className="mt-2 text-body text-danger">{lagreKallenavn.error.message}</p>
-            )}
-
-            {/* ⛔ Grensen står i klartekst. Ikke fordi brukeren har lyst til å
-                bryte den, men fordi hun skal vite hvor den går før hun skriver
-                noe hun ikke vil at en kunde skal se — og så oppdager at det
-                var trygt likevel. */}
-            <div className="mt-3 flex items-start gap-2 rounded-control bg-surface-2 p-3">
-              <CircleAlert size={14} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
-              <p className="text-[11px] text-fg-muted leading-relaxed">
-                Kallenavnet vises <strong className="text-fg">kun internt</strong> — i intern chat
-                og i mekanikervisningen. Mot kunder brukes alltid det ekte navnet ditt. La feltet
-                stå tomt for å fjerne kallenavnet.
-              </p>
-            </div>
-          </CardShell>
-        </section>
-      ) : (
-        /* Admin-kontoer får ikke feltet — og får vite hvorfor, i stedet for at
-           det bare mangler. Et fravær uten forklaring leses som en feil. */
-        <section className="flex flex-col gap-2">
-          <h2 className="text-label text-fg">Kallenavn</h2>
-          <CardShell className="flex items-start gap-3 p-4">
-            <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
-            <p className="text-[12px] text-fg-muted leading-relaxed">
-              Kallenavn er for private profiler — mekanikere og ansatte. Denne kontoen er
-              forhandlerens offisielle konto, og den skal alltid opptre med sitt ekte navn.
-            </p>
-          </CardShell>
-        </section>
-      )}
-
-      {/* F1-17 — bytt passord med gjeldende som bevis. Samme kort på
-          Settings › Profil og mekanikerens «Meg». Resetlenka står under
-          skjemaet for den som ikke husker det gamle. */}
-      <ByttPassordSkjema />
-    </div>
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-label text-fg">Kallenavn</h2>
+      <CardShell className="p-4">
+        <form onSubmit={submitKallenavn} className="flex items-start gap-2">
+          <input
+            value={kallenavn}
+            onChange={(e) => setKallenavn(e.target.value)}
+            maxLength={24}
+            placeholder="F.eks. «Skiftenøkkelen»"
+            aria-label="Kallenavn"
+            className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+          />
+          <StatefulButton
+            type="submit"
+            disabled={lagreKallenavn.isPending || kallenavn.trim() === (d.kallenavn ?? '')}
+            state={
+              lagreKallenavn.isPending
+                ? 'loading'
+                : lagreKallenavn.isError
+                  ? 'error'
+                  : lagreKallenavn.isSuccess
+                    ? 'success'
+                    : 'idle'
+            }
+            loadingText="Lagrer…"
+            successText="Lagret"
+            errorText="Feilet"
+          >
+            Lagre
+          </StatefulButton>
+        </form>
+        {lagreKallenavn.error && (
+          <p className="mt-2 text-body text-danger">{lagreKallenavn.error.message}</p>
+        )}
+        <div className="mt-3 flex items-start gap-2 rounded-control bg-surface-2 p-3">
+          <CircleAlert size={14} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
+          <p className="text-[11px] text-fg-muted leading-relaxed">
+            Kallenavnet vises <strong className="text-fg">kun internt</strong> — i intern chat og i
+            mekanikervisningen. Mot kunder brukes alltid det ekte navnet ditt. La feltet stå tomt
+            for å fjerne kallenavnet.
+          </p>
+        </div>
+      </CardShell>
+    </section>
   );
 }

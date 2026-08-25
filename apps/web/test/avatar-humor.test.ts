@@ -23,7 +23,8 @@ describe('AvatarVelger — happy-låsen er borte', () => {
   it('viser bibliotekets uttrykk som valg, uten de fire P0-nedtrekkene', () => {
     expect(velger).toMatch(/HUMOR\.map/);
     expect(velger).toMatch(/Ny tilfeldig/);
-    expect(velger).toMatch(/size=\{48\}/);
+    expect(velger).toMatch(/size = 48/);
+    expect(velger).toMatch(/size=\{size\}/);
     expect(velger).toMatch(/bevegelse="alltid"/);
     expect(velger).not.toMatch(/function Nedtrekk/);
     expect(velger).not.toMatch(/id="humor"/);

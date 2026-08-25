@@ -147,6 +147,10 @@ export const LESING_TITLE = 'Kun lesing';
 
 export function erForhandlerRutePaaPlattform(pathname: string): boolean {
   if (pathname.startsWith('/endwise')) return false;
+  // Settings-flaten (`/innstillinger` + profil-aliaset) er egen bruker, ikke
+  // forhandler-konfig. Øvrige `/innstillinger/*` (team, tjenestekatalog …)
+  // er verksted og skal vekk.
+  if (pathname === '/innstillinger') return false;
   if (pathname.startsWith('/innstillinger/profil')) return false;
   if (pathname.startsWith('/2fa')) return false;
   if (pathname.startsWith('/oppstart')) return false;

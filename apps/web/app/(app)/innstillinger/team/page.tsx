@@ -8,10 +8,8 @@ import { Funksjoner } from './_funksjoner';
 import { Inviter } from './_inviter';
 
 /**
- * F5-19 — Settings › Team & tilgang.
- *
- * Mekanikerne ER teamet, så mekaniker-administrasjonen bor her og ikke som en
- * egen nav-seksjon (eiers beslutning 04.08.2026). Sidene under er uendret —
+ * F5-13 / F5-19 — Team & tilgang. Egen sidebar-destinasjon (#41), ikke
+ * Settings-fane. Mekaniker-administrasjonen bor her. Sidene under er uendret —
  * dette er inngangen, ikke en omskriving.
  */
 const RADER: { icon: LucideIcon; title: string; body: string; href: string }[] = [

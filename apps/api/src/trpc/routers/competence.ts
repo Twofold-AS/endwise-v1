@@ -41,6 +41,10 @@ export const competenceRouter = router({
       createCompetenceRegistry(ctx.db).listMechanicSkills(ctx.tenantId, input.mechanicId),
     ),
 
+  listAllMechanicSkills: protectedProcedure.query(({ ctx }) =>
+    createCompetenceRegistry(ctx.db).listAllMechanicSkills(ctx.tenantId),
+  ),
+
   setMechanicSkill: adminProcedure
     .input(
       z.object({

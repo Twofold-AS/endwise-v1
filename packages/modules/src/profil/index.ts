@@ -268,6 +268,8 @@ export function lesAvatar(
   };
 }
 
+export { updateMechanicCapacity } from './capacity.ts';
+
 export type { MekanikerStatus, StatusHumor } from './status-humor.ts';
 export {
   MEKANIKER_STATUS_HUMOR,

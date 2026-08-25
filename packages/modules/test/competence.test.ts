@@ -164,6 +164,14 @@ describeDb('kompetanseregister (F3-12)', () => {
     expect(result.map((c) => c.mechanicId)).not.toContain(mekanikerA);
   });
 
+  it('listAllMechanicSkills returnerer bare egen tenant', async () => {
+    const registry = createCompetenceRegistry(app);
+    const alle = await registry.listAllMechanicSkills(tenantA);
+    expect(alle.every((r) => r.tenantId === tenantA)).toBe(true);
+    expect(alle.some((r) => r.mechanicId === mekanikerA)).toBe(true);
+    expect(alle.some((r) => r.mechanicId === mekanikerB)).toBe(false);
+  });
+
   it('sertifiseringer som utløper snart kan hentes ut (varsel i F3-04)', async () => {
     const registry = createCompetenceRegistry(app);
     await registry.setMechanicSkill(tenantA, 'dealer_admin', {

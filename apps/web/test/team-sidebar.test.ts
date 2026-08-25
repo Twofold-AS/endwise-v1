@@ -45,7 +45,10 @@ describe('Team i sidebar — Endwise-admin', () => {
 
   it('ENDWISE_SETTINGS_NAV har ikke Team — destinasjonen bor i sidebaren', () => {
     const settings = utenKommentarer(
-      nav.slice(nav.indexOf('export const ENDWISE_SETTINGS_NAV'), nav.indexOf('export function contextsForRole')),
+      nav.slice(
+        nav.indexOf('export const ENDWISE_SETTINGS_NAV'),
+        nav.indexOf('export function contextsForRole'),
+      ),
     );
     expect(settings).not.toMatch(/label:\s*'Team'/);
     expect(settings).toMatch(/label:\s*'Dev-mode'/);
@@ -87,8 +90,9 @@ describe('Team i sidebar — forhandler', () => {
   it('Team & tilgang er ADMIN_OF_TENANT; Tjenestekatalog er synlig for DRIFT', () => {
     const team = FORHANDLER_NAV.find((i) => i.key === 'team');
     expect(team).toBeDefined();
-    const tilgang = childrenForRole(team!, 'dealer_admin').map((c) => c.label);
-    const staff = childrenForRole(team!, 'dealer_staff').map((c) => c.label);
+    if (!team) throw new Error('FORHANDLER_NAV mangler Team');
+    const tilgang = childrenForRole(team, 'dealer_admin').map((c) => c.label);
+    const staff = childrenForRole(team, 'dealer_staff').map((c) => c.label);
     expect(tilgang).toContain('Team & tilgang');
     expect(tilgang).toContain('Tjenestekatalog');
     expect(tilgang).toContain('Mekanikere');
@@ -119,9 +123,11 @@ describe('Team i sidebar — forhandler', () => {
 });
 
 describe('Team vs Settings — aktiv rad og breadcrumb', () => {
-  const team = FORHANDLER_NAV.find((i) => i.key === 'team')!;
+  const team = FORHANDLER_NAV.find((i) => i.key === 'team');
 
   it('Team-ruter aktiverer Team, ikke Settings', () => {
+    expect(team).toBeDefined();
+    if (!team) throw new Error('FORHANDLER_NAV mangler Team');
     expect(isItemActive(team, '/innstillinger/team')).toBe(true);
     expect(isItemActive(team, '/innstillinger/tjenestekatalog')).toBe(true);
     expect(isItemActive(team, '/mekanikere')).toBe(true);
@@ -132,6 +138,8 @@ describe('Team vs Settings — aktiv rad og breadcrumb', () => {
   });
 
   it('gjenværende Settings-barn aktiverer Settings, ikke Team', () => {
+    expect(team).toBeDefined();
+    if (!team) throw new Error('FORHANDLER_NAV mangler Team');
     expect(isItemActive(SETTINGS_NAV, '/innstillinger')).toBe(true);
     expect(isItemActive(SETTINGS_NAV, '/innstillinger/varsler')).toBe(true);
     expect(isItemActive(SETTINGS_NAV, '/innstillinger/profil')).toBe(true);

@@ -3,8 +3,8 @@
 import { Inbox, StatefulButton, Store, Wrench } from '@endwise/ui';
 import { type FormEvent, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { AvatarVelger } from '../_avatar/avatar-velger';
 import { fullforAvatarValg } from '../_avatar/avatar-valg';
+import { AvatarVelger } from '../_avatar/avatar-velger';
 import { CardShell } from '../_shell/cards';
 
 /**

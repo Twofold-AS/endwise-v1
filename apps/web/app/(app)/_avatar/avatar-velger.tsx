@@ -5,7 +5,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
-import { FARGER, FORMER, HUMOR, tilfeldigAvatarValg, TONER } from './avatar-valg';
+import { FARGER, FORMER, HUMOR, TONER, tilfeldigAvatarValg } from './avatar-valg';
 
 /**
  * F6-19 — Blobatar-velger.
@@ -21,7 +21,7 @@ import { FARGER, FORMER, HUMOR, tilfeldigAvatarValg, TONER } from './avatar-valg
 
 type Valg = RouterOutput['profile']['meg']['avatar'];
 
-export { fullforAvatarValg, tilfeldigAvatarValg, TOM_AVATAR_VALG } from './avatar-valg';
+export { fullforAvatarValg, TOM_AVATAR_VALG, tilfeldigAvatarValg } from './avatar-valg';
 
 export function AvatarVelger({
   seed,
@@ -201,7 +201,13 @@ export function AvatarVelger({
                 aktiv ? 'bg-sidebar-active ring-1 ring-border-strong' : 'hover:bg-surface-2'
               }`}
             >
-              <Avatar seed={seed} valg={{ ...valg, tone: i }} navn="" size={32} bevegelse="stille" />
+              <Avatar
+                seed={seed}
+                valg={{ ...valg, tone: i }}
+                navn=""
+                size={32}
+                bevegelse="stille"
+              />
             </button>
           );
         })}

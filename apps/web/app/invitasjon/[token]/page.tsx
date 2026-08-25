@@ -6,8 +6,8 @@ import { use, useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { Field, INPUT, PassordFelt } from '../../_auth/felter';
-import { AvatarVelger } from '../../(app)/_avatar/avatar-velger';
 import { fullforAvatarValg } from '../../(app)/_avatar/avatar-valg';
+import { AvatarVelger } from '../../(app)/_avatar/avatar-velger';
 import { destinasjonEtterInvite, krevRevokeAndreSesjoner, trengerKodeSteg } from '../_landing';
 
 /**
@@ -269,10 +269,10 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     ? steg === 'avatar'
       ? 'Velg avataren din'
       : steg === 'kode'
-      ? 'Bekreft med engangskode'
-      : inv.kind === 'platform'
-        ? 'Velkommen til Endwise'
-        : `Velkommen til ${inv.forhandler}`
+        ? 'Bekreft med engangskode'
+        : inv.kind === 'platform'
+          ? 'Velkommen til Endwise'
+          : `Velkommen til ${inv.forhandler}`
     : laster
       ? 'Invitasjon'
       : 'Invitasjonen virker ikke';
@@ -280,14 +280,14 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     ? steg === 'avatar'
       ? 'Form, farge og humør. Du kan endre det senere i profilen.'
       : steg === 'kode'
-      ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
-      : inv.kind === 'platform'
-        ? inv.platformLevel === 'administrator'
-          ? `Du er invitert til Endwise-support som administrator. Kontoen knyttes til ${inv.epost}.`
-          : `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
-        : inv.kind === 'owner'
-          ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
-          : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
+        ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
+        : inv.kind === 'platform'
+          ? inv.platformLevel === 'administrator'
+            ? `Du er invitert til Endwise-support som administrator. Kontoen knyttes til ${inv.epost}.`
+            : `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
+          : inv.kind === 'owner'
+            ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
+            : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
     : laster
       ? null
       : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be om en ny hvis du trenger det.';

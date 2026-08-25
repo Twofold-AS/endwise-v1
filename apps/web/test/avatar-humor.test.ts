@@ -6,8 +6,8 @@ import {
   FARGER,
   fullforAvatarValg,
   HUMOR,
-  tilfeldigAvatarValg,
   TOM_AVATAR_VALG,
+  tilfeldigAvatarValg,
 } from '../app/(app)/_avatar/avatar-valg.ts';
 
 /**

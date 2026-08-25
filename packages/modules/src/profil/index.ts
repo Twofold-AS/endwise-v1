@@ -267,3 +267,14 @@ export function lesAvatar(
     tone: typeof tone === 'number' && tone >= 0 && tone < AVATAR_TONER ? tone : null,
   };
 }
+
+export type { MekanikerStatus, StatusHumor } from './status-humor.ts';
+export {
+  MEKANIKER_STATUS_HUMOR,
+  MEKANIKER_STATUS_LABEL,
+  mekanikerStatusVisning,
+  STATUS_TELLENDE_BOOKING,
+  tellerSomBelastning,
+  utledMekanikerStatus,
+  visningsHumor,
+} from './status-humor.ts';

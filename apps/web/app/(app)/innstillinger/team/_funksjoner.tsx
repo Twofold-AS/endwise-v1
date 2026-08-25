@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Avatar,
   CircleAlert,
   CircleUser,
   Inbox,
@@ -127,9 +128,19 @@ export function Funksjoner() {
               }`}
             >
               <div className="flex min-w-0 flex-1 items-center gap-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-2 font-medium text-[12px] text-fg-muted">
-                  {r.navn.slice(0, 1).toUpperCase()}
-                </span>
+                {/*
+                  F6-19 — seed er user.id (ansattflate). Status overstyrer
+                  KUN humor når personen har mekanikerprofil; ellers det
+                  lagrede uttrykket. Norsk label står under — uttrykket er
+                  ikke eneste signal.
+                */}
+                <Avatar
+                  seed={r.userId}
+                  valg={{ ...r.avatar, humor: r.statusHumor ?? r.avatar.humor }}
+                  navn={r.navn}
+                  size={32}
+                  bevegelse="stille"
+                />
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <span className="truncate text-label text-fg">
                     {r.navn}
@@ -141,6 +152,21 @@ export function Funksjoner() {
                     )}
                   </span>
                   <span className="truncate text-[12px] text-fg-muted">{r.epost}</span>
+                  {r.statusLabel && (
+                    <span className="flex items-center gap-1.5 text-[12px] text-fg-muted">
+                      <span
+                        aria-hidden
+                        className={`inline-block size-2 rounded-full ${
+                          r.status === 'ledig'
+                            ? 'bg-success'
+                            : r.status === 'fri'
+                              ? 'bg-fg-muted'
+                              : 'bg-warn'
+                        }`}
+                      />
+                      {r.statusLabel}
+                    </span>
+                  )}
                 </div>
               </div>
 

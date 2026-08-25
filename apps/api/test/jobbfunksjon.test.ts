@@ -224,6 +224,16 @@ describeDb('F1-14 — jobbfunksjon', () => {
     expect(per.get(SUPPORT)?.funksjon).toBe('support');
     expect(per.get(SUPPORT)?.kanEndres).toBe(true);
     expect(per.get(MEKANIKER)?.harMekanikerprofil).toBe(true);
+    expect(per.get(MEKANIKER)?.status).toBe('ledig');
+    expect(per.get(MEKANIKER)?.statusHumor).toBe('happy');
+    expect(per.get(MEKANIKER)?.statusLabel).toBe('Ledig');
+    expect(per.get(SELGER)?.status).toBeNull();
+    expect(per.get(SELGER)?.avatar).toEqual({
+      form: null,
+      humor: null,
+      farge: null,
+      tone: null,
+    });
     // Naboen skal ALDRI dukke opp i vår liste.
     expect(per.has(FREMMED)).toBe(false);
   });

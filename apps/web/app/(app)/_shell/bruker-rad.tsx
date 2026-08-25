@@ -45,11 +45,12 @@ export function BrukerRad({
   const avatar = seed ? (
     /**
      * ⛔ `alltid` her: én avatar i sidebaren, bevegelsen ER innholdet.
-     * Humør er alltid happy — ett ansikt per person, seeden er user.id.
+     * Humøret er det brukeren valgte — status hører til listene, ikke hit.
+     * Seeden er user.id.
      */
     <Avatar
       seed={seed}
-      valg={profil.data?.avatar ? { ...profil.data.avatar, humor: 'happy' } : { humor: 'happy' }}
+      valg={profil.data?.avatar}
       navn=""
       size={collapsed ? 28 : 26}
       bevegelse="alltid"

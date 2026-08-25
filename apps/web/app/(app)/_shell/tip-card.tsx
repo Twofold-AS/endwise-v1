@@ -147,36 +147,43 @@ export function TipCard() {
   return (
     <div
       style={{ height: HOYDE }}
-      className="flex flex-col overflow-hidden rounded-xl border border-border bg-bg"
+      className="relative flex flex-col overflow-hidden rounded-xl border border-border bg-bg"
     >
-      <div className="flex items-center gap-2 px-3 pt-3">
-        {/* ⚠️ «Ny»-tekstbadge når artikkelen er ulest for DEG — et merke
-            alle alltid ser, betyr ingenting. Telleren i navet er CountBadge. */}
-        {a.ulest ? <NewBadge /> : <span className="text-[11px] text-fg-muted">Fra helpdesken</span>}
-        <button
-          type="button"
-          aria-label="Minimer helpdesk-slider"
-          title="Minimer helpdesk-slider"
-          className="ml-auto inline-flex size-6 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active hover:text-fg focus-visible:outline-2 focus-visible:outline-ring"
-          onClick={() => settMinimer(true)}
-        >
-          <X size={14} strokeWidth={1.75} />
-        </button>
-      </div>
+      <button
+        type="button"
+        aria-label="Minimer helpdesk-slider"
+        title="Minimer helpdesk-slider"
+        className="absolute top-1.5 right-1.5 z-10 inline-flex size-6 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active hover:text-fg focus-visible:outline-2 focus-visible:outline-ring"
+        onClick={() => settMinimer(true)}
+      >
+        <X size={14} strokeWidth={1.75} />
+      </button>
 
       <Link href={`/support/${a.slug}` as Route} className="group flex min-h-0 flex-1 flex-col">
-        {/* Overskrift med linje under teksten, og pil som sier at den kan
-            leses. Pilen flytter seg litt på hover — den eneste bevegelsen i
-            kortet som ikke er tidsstyrt. */}
-        <span className="flex items-start gap-1.5 border-border border-b px-3 pt-1.5 pb-1.5">
-          <span className="line-clamp-2 min-w-0 flex-1 text-label text-fg">{a.title}</span>
-          <ArrowUpRight
-            size={14}
-            strokeWidth={1.75}
-            className="mt-0.5 shrink-0 text-fg-muted transition-transform group-hover:translate-x-0.5"
-            aria-hidden
-          />
-        </span>
+        <div className="flex flex-col gap-1.5 px-3 pt-3 pr-8">
+          {/* ⚠️ «Ny»-tekstbadge når artikkelen er ulest for DEG — et merke
+              alle alltid ser, betyr ingenting. Telleren i navet er CountBadge. */}
+          <span className="flex items-center gap-2">
+            {a.ulest ? (
+              <NewBadge />
+            ) : (
+              <span className="text-[11px] text-fg-muted">Fra helpdesken</span>
+            )}
+          </span>
+
+          {/* Overskrift med linje under teksten, og pil som sier at den kan
+              leses. Pilen flytter seg litt på hover — den eneste bevegelsen i
+              kortet som ikke er tidsstyrt. */}
+          <span className="flex items-start gap-1.5 border-border border-b pb-1.5">
+            <span className="line-clamp-2 min-w-0 flex-1 text-label text-fg">{a.title}</span>
+            <ArrowUpRight
+              size={14}
+              strokeWidth={1.75}
+              className="mt-0.5 shrink-0 text-fg-muted transition-transform group-hover:translate-x-0.5"
+              aria-hidden
+            />
+          </span>
+        </div>
 
         {/* Bildet under, fast forhold. `sizes` er sidebarbredden minus padding
             — et for stort tall her laster dobbelt så store filer uten at noe

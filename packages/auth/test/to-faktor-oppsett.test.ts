@@ -199,7 +199,7 @@ describe('F1-17 / F1-20: delt flate', () => {
 
   it('forhandlerens profil leser session.user.twoFactorEnabled og viser ToFaktorRad', () => {
     const kilde = readFileSync(
-      resolve(her, '../../../apps/web/app/(app)/innstillinger/profil/page.tsx'),
+      resolve(her, '../../../apps/web/app/(app)/innstillinger/_profil-fane.tsx'),
       'utf8',
     );
     expect(kilde).toMatch(/ToFaktorRad/);

@@ -78,6 +78,10 @@ describe('landing og kopi', () => {
     expect(erForhandlerRutePaaPlattform('/dashboard')).toBe(true);
     expect(erForhandlerRutePaaPlattform('/endwise')).toBe(false);
     expect(erForhandlerRutePaaPlattform('/endwise/verksted/yamaha/dashboard')).toBe(false);
+    expect(erForhandlerRutePaaPlattform('/innstillinger')).toBe(false);
+    expect(erForhandlerRutePaaPlattform('/innstillinger/profil')).toBe(false);
+    expect(erForhandlerRutePaaPlattform('/innstillinger/team')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/innstillinger/tjenestekatalog')).toBe(true);
   });
 });
 

@@ -134,7 +134,7 @@ describe('P0: /oppstart er visningsnavn · team (tillegg bare hvis åpnet)', () 
 
 describe('P0: avatar er én blobatar, alltid happy', () => {
   const avatar = readFileSync(resolve(her, '../app/(app)/_avatar/avatar-velger.tsx'), 'utf8');
-  const profil = readFileSync(resolve(her, '../app/(app)/innstillinger/profil/page.tsx'), 'utf8');
+  const profil = readFileSync(resolve(her, '../app/(app)/innstillinger/_profil-fane.tsx'), 'utf8');
 
   it('profil har velger uten fire nedtrekk', () => {
     expect(profil).toMatch(/AvatarVelger/);

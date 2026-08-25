@@ -592,17 +592,18 @@ const ROADMAP = [
       src:["docs/UI-PAKKER.md §2 (ingen chart-motor)","apps/web/app/(app)/marked/live/"]
     } },
 
-  { id:"F5-19", o:"Samle all konfigurasjon i Settings", kat:"dashboard", sub:"forhandler", t:"SETTINGS-destinasjon (NY 03.08.2026, forankret nederst i sidebaren): ALL konfigurasjon samlet med klare underseksjoner — Abonnement (F5-09), Varsler, Team & tilgang, Integrasjoner, Profil, samt kontobytte forhandler/mekaniker. BYGGET 04.08.2026: oversiktsside + Varsler (skall m/ Switch), Team & tilgang (mekanikere/kompetanse/kapasitet), Profil (tema + 2FA-status), Tjenester/Abonnement/Integrasjoner via redirect. ⭐ UTVIDET 08.08.2026 — Profil: <b>endre eget visningsnavn</b>, <b>kallenavn</b> (kun private profiler) og <b>varslingslyder av/på</b> (cuelume). Bryteren er full bredde med status i klartekst, ikke en liten switch — den skal være åpenbar å finne og skru av. Samme komponent (<code>_shell/profil-kort.tsx</code>) brukes i mekanikerens «Meg»-fane, så innstillingen finnes ÉN gang i koden. PRINSIPP: konfigurasjon i Settings, filtrering på sidene",
-    area:"admin", ui:"built", status:"progress",
+  { id:"F5-19", o:"Samle all konfigurasjon i Settings", kat:"dashboard", sub:"forhandler", t:"SETTINGS-destinasjon (NY 03.08.2026, forankret nederst i sidebaren): ALL konfigurasjon samlet. ⭐ <b>24.08.2026 — én flate med liggende pille-faner</b> (Mikael GO): hub-kortene som sendte deg vekk er borte. Fanerekkefølge Profil · Team &amp; tilgang · Integrasjoner · Abonnement · Varsler · Tjenester &amp; priser. Aktiv fane vises INNE på siden. Admin-faner skjules for ikke-admin. Gamle URL-er (`/innstillinger/profil`, `/team`, `/varsler`, `/tjenester`, `/abonnement`, `/integrasjoner`) renderer samme skall. Tittel «Innstillinger». ⛔ Ikke en fane: kontobytte (Bytt visning i sidebar-header), Admin, Search settings, timezone/språk. Blobatar beholdt (ingen filopplasting). BYGGET 04.08.2026: oversikt + Varsler/Team/Profil. ⭐ UTVIDET 08.08.2026 — visningsnavn, kallenavn, varslingslyder (cuelume). `ProfilKort`-delene gjenbrukes i mekanikerens «Meg». PRINSIPP: konfigurasjon i Settings, filtrering på sidene",
+    area:"admin", ui:"built", status:"done",
     detail:{
-      lead:"Prinsippet er det viktigste i kortet: <b>konfigurasjon i Settings, filtrering på sidene.</b> Et filter som bor i innstillingene er et filter ingen finner, og en innstilling som bor på en liste er en innstilling noen endrer ved et uhell.",
+      lead:"Prinsippet er det viktigste i kortet: <b>konfigurasjon i Settings, filtrering på sidene.</b> Et filter som bor i innstillingene er et filter ingen finner, og en innstilling som bor på en liste er en innstilling noen endrer ved et uhell. 24.08.2026: underseksjonene er pille-faner på <code>/innstillinger</code>, ikke en 2-kolonne lenkehub.",
       steps:[
-        { t:"Abonnement", d:"Dagens /abonnement + F5-09 «Moduler»-siden (kjøp/aktiver løsninger). Stripe → entitlements." },
-        { t:"Varsler", d:"Kanaler og preferanser (Twilio/Resend, F3-04). ⚠️ Notifikasjons-SENTERET (F5-08, bell + dropdown) er en flate, ikke konfig — det hører ikke hjemme her. Se den åpne avklaringen i F5-13." },
-        { t:"Team &amp; tilgang", d:"Brukere, roller (F1-05), invitasjoner (F1-10). <b>Anbefalt hjem for /mekanikere + /mekanikere/kompetanse (F3-12) + /mekanikere/kapasitet</b> — mekanikerne ER teamet. Krever eiers ja (åpent punkt i F5-13)." },
-        { t:"Integrasjoner", d:"Dagens /integrasjoner/* uendret: Vegvesen, Quick, Twilio, Resend. AI-leverandørene flyttes til AI-innsikt (F5-22), ikke hit." },
-        { t:"Profil", d:"Egen bruker, passord, 2FA (F1-11 — påslagsflaten som mangler i dag), tema-toggle (lys/mørk)." },
-        { t:"Kontobytte forhandler/mekaniker", d:"Speiler kontekst-dropdownen i toppen. To innganger til samme bytte er bevisst: den i toppen er hurtig, den her er den man finner når man leter." }
+        { t:"Pille-faner på /innstillinger", d:"Én flate, <code>?fane=</code> som kanonisk state. Ingen nested Settings i sidebaren. Ingen sticky Save-bar — hvert skjema lagrer som før." },
+        { t:"Abonnement", d:"Dagens innhold (F5-09) landet i fanen. Sidebar-lenken <code>/abonnement</code> renderer samme skall." },
+        { t:"Varsler", d:"Kanaler og preferanser (Twilio/Resend, F3-04). ⚠️ Notifikasjons-SENTERET (F5-08, bell + dropdown) er en flate, ikke konfig — det hører ikke hjemme her. Valgene lagres ikke ennå (mangler rute)." },
+        { t:"Team &amp; tilgang", d:"Brukere, roller (F1-05), invitasjoner (F1-10). Mekanikere / kompetanse / kapasitet som rader herfra." },
+        { t:"Integrasjoner", d:"Dagens /integrasjoner-oversikt i fanen. Undersider (Quick, Twilio, Resend, Vegvesen) uendret." },
+        { t:"Profil", d:"Blobatar øverst (AvatarVelger, always-happy). Felt i to kolonner: visningsnavn + e-post (fornavn/etternavn finnes ikke hos oss). Switch-rader for tema og varslingslyder. Sikkerhet via ByttPassordSkjema / ToFaktorRad." },
+        { t:"Kontobytte forhandler/mekaniker", d:"⛔ IKKE en fane (24.08.2026). Hub-kortet er fjernet. Byttet bor i «Bytt visning» i sidebar-headeren." }
       ],
       src:["apps/web/app/(app)/innstillinger/","apps/web/app/(app)/abonnement/","apps/web/app/(app)/integrasjoner/"]
     } },

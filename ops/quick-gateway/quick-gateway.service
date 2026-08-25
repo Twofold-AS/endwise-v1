@@ -1,0 +1,34 @@
+[Unit]
+Description=Endwise Quick live-gateway (q3.quick.no allowlist)
+Documentation=file:///opt/endwise/quick-gateway/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=endwise-gateway
+Group=endwise-gateway
+EnvironmentFile=/etc/endwise/quick-gateway.env
+ExecStart=/usr/bin/node /opt/endwise/quick-gateway/gateway.mjs
+Restart=on-failure
+RestartSec=2
+# Mons 26.08.2026: delt secret (ikke Vercel-IP). Ingen Quick-token på disk.
+# MemoryDenyWriteExecute=yes er BEVISST UTENFOR — den krasjet Node på denne boksen.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+ReadOnlyPaths=/etc/endwise
+# Logg = stdout (status + varighet). Journald. Ingen body/headers.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=quick-gateway
+
+[Install]
+WantedBy=multi-user.target

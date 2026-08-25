@@ -145,8 +145,12 @@ describe('0020-reparasjon i 0021 (CREATE OR REPLACE RETURNS)', () => {
   });
 
   it('functions.sql REVOKE-er PUBLIC og GRANTer authenticated (samme som 0021)', () => {
-    const grant = functions.search(/grant execute on function lookup_open_invitation\(text\) to authenticated/i);
-    const revoke = functions.search(/revoke all on function lookup_open_invitation\(text\) from public/i);
+    const grant = functions.search(
+      /grant execute on function lookup_open_invitation\(text\) to authenticated/i,
+    );
+    const revoke = functions.search(
+      /revoke all on function lookup_open_invitation\(text\) from public/i,
+    );
     expect(revoke).toBeGreaterThan(-1);
     expect(grant).toBeGreaterThan(revoke);
     expect(functions).not.toMatch(

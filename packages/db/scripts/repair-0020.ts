@@ -43,9 +43,7 @@ const kontrakt = await pool.query<{ ok: boolean }>(`
 
 if (kontrakt.rows[0]?.ok === true) {
   await pool.end();
-  console.info(
-    '[db] repair-0020: lookup_open_invitation allerede på plass — hopper over DROP',
-  );
+  console.info('[db] repair-0020: lookup_open_invitation allerede på plass — hopper over DROP');
 } else {
   await pool.query('drop function if exists lookup_open_invitation(text)');
   await pool.end();

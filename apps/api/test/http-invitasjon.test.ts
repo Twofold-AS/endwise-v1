@@ -77,9 +77,7 @@ describe('handleHono /invitasjoner (F1-10 side-sti)', () => {
   });
 
   it('GET 42883 (mangler lookup) gir JSON med hent-feil — ikke HTML, ikke 404-ugyldig', async () => {
-    const err = new Error(
-      'Failed query: select id from lookup_open_invitation($1)\nparams: :hash',
-    );
+    const err = new Error('Failed query: select id from lookup_open_invitation($1)\nparams: :hash');
     (err as Error & { cause: { code: string; message: string } }).cause = {
       code: '42883',
       message: 'function lookup_open_invitation(unknown) does not exist',

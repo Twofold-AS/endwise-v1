@@ -108,6 +108,4 @@ if (lookup.rows[0]?.ok !== true) {
 }
 
 await pool.end();
-console.info(
-  '[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0026)',
-);
+console.info('[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0026)');

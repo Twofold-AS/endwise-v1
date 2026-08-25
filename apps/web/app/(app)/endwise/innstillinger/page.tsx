@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, CircleAlert, Lock, ShieldCheck, StatefulButton, Switch, Zap } from '@endwise/ui';
+import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
 
@@ -12,11 +13,15 @@ import { CardShell } from '../../_shell/cards';
  * Siden viser hele gaten åpent i stedet for bare av/på. Det er med vilje —
  * en sikkerhetsmekanisme man ikke kan se tilstanden til, er en man ender opp
  * med å gjette på.
+ *
+ * Seed-knappen peker på en valgt demo-tenant. Endwise-admin sitter i
+ * plattform-tenanten, så «seed denne sesjonen» ville vært en død knapp.
  */
 export default function EndwiseInnstillingerPage() {
   const utils = trpc.useUtils();
   const dev = trpc.tenants.devMode.useQuery();
   const meg = trpc.tenants.current.useQuery();
+  const liste = trpc.tenants.list.useQuery();
 
   const settGlobal = trpc.flags.setGlobal.useMutation({
     onSuccess: () => {
@@ -28,6 +33,15 @@ export default function EndwiseInnstillingerPage() {
 
   const status = dev.data;
   const flagOn = status?.flagOn ?? false;
+  const demoTenants = useMemo(
+    () => (liste.data ?? []).filter((t) => t.kind === 'demo'),
+    [liste.data],
+  );
+  const [valgtId, setValgtId] = useState<string>('');
+  const aktivId =
+    valgtId || (meg.data?.kind === 'demo' ? meg.data.id : '') || demoTenants[0]?.id || '';
+  const valgt = demoTenants.find((t) => t.id === aktivId) ?? null;
+  const kanSeede = flagOn && Boolean(valgt);
 
   return (
     <div className="mx-auto flex w-full max-w-[880px] flex-col gap-5 px-8 py-7">
@@ -95,8 +109,8 @@ export default function EndwiseInnstillingerPage() {
             tittel="Tenanten er en demo-tenant"
             forklaring={
               meg.data
-                ? `Du er i «${meg.data.name}» (kind: ${meg.data.kind}).`
-                : 'tenants.kind må være demo.'
+                ? `Du er i «${meg.data.name}» (kind: ${meg.data.kind}). Seed under peker på en valgt demo-tenant, ikke nødvendigvis denne.`
+                : 'tenants.kind må være demo for at dev-mode skal slå inn i sesjonen.'
             }
           />
         </div>
@@ -111,24 +125,45 @@ export default function EndwiseInnstillingerPage() {
           ) : (
             <Lock size={16} strokeWidth={1.75} className="shrink-0" />
           )}
-          {status?.enabled ? 'Dev-mode er AKTIV' : 'Dev-mode er av'}
+          {status?.enabled
+            ? 'Dev-mode er AKTIV i denne sesjonen'
+            : 'Dev-mode er av i denne sesjonen'}
         </div>
       </CardShell>
 
       {/* ── Demo-data ──────────────────────────────────────────────────── */}
       <CardShell className="p-5">
-        <p className="text-label text-fg">Fyll denne demo-tenanten med data</p>
+        <p className="text-label text-fg">Fyll en demo-tenant med data</p>
         <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-          Oppretter mekaniker-profil på deg, en tjeneste og en kunde —{' '}
-          <b>
-            gjennom vanlige tRPC-ruter med <code>withTenant</code>
-          </b>
-          , ikke som DB-eier. Det er tregere enn en eier-seed, og det er poenget: da tester den
-          faktisk at rutene virker.
-          <br />
-          Mekaniker-profilen er dessuten det som gjør «Mekaniker» valgbar i kontekst-dropdownen. Vi
-          jukser ikke med gaten — vi oppretter dataene gaten spør etter.
+          Oppretter mekaniker-profil, en tjeneste og en kunde — gjennom vanlige tRPC-ruter med{' '}
+          <code>withTenant</code>, ikke som DB-eier. Ekte forhandlere (live) seedes aldri herfra.
         </p>
+
+        {!flagOn ? (
+          <p className="mt-3 text-body text-fg-muted">
+            Slå på dev-mode-flagget over først. Uten flagget gjør knappen ingenting.
+          </p>
+        ) : demoTenants.length === 0 ? (
+          <p className="mt-3 text-body text-fg-muted">
+            Ingen demo-tenant. Merk en forhandler som demo på Forhandlere, eller opprett en ny med
+            avkrysningen. Live-forhandlere skal være tomme.
+          </p>
+        ) : (
+          <label className="mt-4 flex flex-col gap-1.5">
+            <span className="text-label text-fg">Demo-tenant</span>
+            <select
+              value={aktivId}
+              onChange={(e) => setValgtId(e.target.value)}
+              className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none focus-visible:border-fg"
+            >
+              {demoTenants.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.slug})
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         {seed.error && (
           <p className="mt-3 flex items-start gap-2 text-body text-danger">
@@ -136,32 +171,34 @@ export default function EndwiseInnstillingerPage() {
             {seed.error.message}
           </p>
         )}
-        {seed.isSuccess && (
+        {seed.isSuccess && valgt ? (
           <p className="mt-3 text-body text-success">
-            Ferdig. Last siden på nytt — mekaniker-visningen skal nå være valgbar.
+            Ferdig. «{valgt.name}» har mekaniker, tjeneste og kunde.
           </p>
-        )}
+        ) : null}
 
-        <div className="mt-4 flex justify-end">
-          <StatefulButton
-            disabled={!status?.enabled || seed.isPending}
-            onClick={() => seed.mutate()}
-            state={
-              seed.isPending
-                ? 'loading'
-                : seed.isError
-                  ? 'error'
-                  : seed.isSuccess
-                    ? 'success'
-                    : 'idle'
-            }
-            loadingText="Seeder…"
-            successText="Ferdig"
-            errorText="Feilet"
-          >
-            Seed demo-data
-          </StatefulButton>
-        </div>
+        {kanSeede ? (
+          <div className="mt-4 flex justify-end">
+            <StatefulButton
+              disabled={seed.isPending}
+              onClick={() => seed.mutate({ tenantId: valgt?.id })}
+              state={
+                seed.isPending
+                  ? 'loading'
+                  : seed.isError
+                    ? 'error'
+                    : seed.isSuccess
+                      ? 'success'
+                      : 'idle'
+              }
+              loadingText="Seeder…"
+              successText="Ferdig"
+              errorText="Feilet"
+            >
+              Seed demo-data
+            </StatefulButton>
+          </div>
+        ) : null}
       </CardShell>
     </div>
   );

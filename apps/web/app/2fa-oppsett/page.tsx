@@ -48,7 +48,7 @@ import { Field, INPUT, PassordFelt } from '../_auth/felter';
  * ── Rekkefølgen, og hvorfor den er slik ──────────────────────────────────
  *   1. `enable({ password })`   → lager hemmeligheten OG backupCodes. Flagget
  *                                 settes IKKE ennå. Kodene fanges her.
- *   2. `sendOtp()`              → koden sendes (i dev: til api-loggen).
+ *   2. `sendOtp()`              → koden sendes via Resend (dev uten nøkkel: serverlogg).
  *   3. `verifyOtp({ code })`    → NÅ settes `twoFactorEnabled = true`.
  *   4. `revokeOtherSessions()`  → ⛔ se under.
  *   5. `steg = 'koder'`         → F1-21: vis kodene. Kan ikke gå videre uten
@@ -304,7 +304,10 @@ export default function ToFaktorOppsettPage() {
               {feil && <p className="text-[12px] text-danger">{feil}</p>}
               <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
                 <Mail size={13} className="mt-px shrink-0" />
-                <span>Kjører du lokalt uten Resend, står koden i api-loggen i terminalen.</span>
+                <span>
+                  Vi har sendt en engangskode til e-posten din. Sjekk søppelposten om den ikke
+                  dukker opp.
+                </span>
               </p>
             </div>
             <div className="px-1.5 pt-1 pb-1">

@@ -220,7 +220,8 @@ export default function ForhandlerePage() {
               <span className="flex flex-col">
                 Demo-tenant
                 <span className="text-[12px] text-fg-muted">
-                  Kun for dev-mode. Ekte forhandlere skal aldri være demo.
+                  Merking for intern testing. Fyller ikke dummy-data — det gjør Seed demo-data under
+                  Innstillinger, og bare for demo-tenants. Ekte forhandlere skal være live.
                 </span>
               </span>
             </label>

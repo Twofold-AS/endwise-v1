@@ -158,9 +158,7 @@ export const teamRouter = router({
     const kontoer = await ctx.db
       .select({ userId: schema.account.userId })
       .from(schema.account)
-      .where(
-        and(inArray(schema.account.userId, ider), eq(schema.account.providerId, 'credential')),
-      )
+      .where(and(inArray(schema.account.userId, ider), eq(schema.account.providerId, 'credential')))
       .catch(() => []);
 
     const profilPer = new Map(profiler.map((p) => [p.userId, p]));

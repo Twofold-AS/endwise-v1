@@ -151,7 +151,10 @@ export function Funksjoner() {
                       <span className="ml-1.5 text-[12px] text-fg-muted">«{r.kallenavn}»</span>
                     )}
                   </span>
-                  <span className="truncate text-[12px] text-fg-muted">{r.epost}</span>
+                  <span className="truncate text-[12px] text-fg-muted">
+                    {r.epost || 'Ingen e-post'}
+                    {!r.kanLoggeInn ? ' · uten innlogging' : ''}
+                  </span>
                   {r.statusLabel && (
                     <span className="flex items-center gap-1.5 text-[12px] text-fg-muted">
                       <span

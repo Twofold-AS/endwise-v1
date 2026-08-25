@@ -46,6 +46,13 @@ describe('F1-10: token og validering (uten database)', () => {
     );
     expect(kilde).toMatch(/endwise_support[\s\S]{0,80}support|support[\s\S]{0,80}endwise_support/);
   });
+
+  it('oppslaget caster hashen til text (unngår lookup_open_invitation(unknown))', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const kilde = readFileSync(resolve(her, '../src/invitasjoner/index.ts'), 'utf8');
+    expect(kilde).toMatch(/lookup_open_invitation\(\$\{hash\}::text\)/);
+    expect(kilde).toMatch(/consume_invitation\(\$\{hash\}::text\)/);
+  });
 });
 
 const OWNER_URL = process.env.DATABASE_URL;

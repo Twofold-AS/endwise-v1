@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { CardShell } from '../../_shell/cards';
 import { Funksjoner } from './_funksjoner';
 import { Inviter } from './_inviter';
+import { LeggTilUtenInvitasjon } from './_legg-til';
 
 /**
  * F5-13 / F5-19 — Team. Egen sidebar-destinasjon under Ansatte (#41),
@@ -40,11 +41,14 @@ export default function TeamPage() {
         <h1 className="text-title text-fg">Team</h1>
         <p className="text-body text-fg-muted">
           Hvem jobber her, hva de har tilgang til, og hva de gjør. Tilgang håndheves server-side
-          (RBAC, F1-05); funksjon styrer landingsvisning, ikke rettigheter.
+          (RBAC, F1-05); funksjon styrer landingsvisning, ikke rettigheter. Invitasjon gir
+          innlogging. «Legg til uten invitasjon» gir bare navnet i forhandlervisningen.
         </p>
       </div>
 
       <Inviter />
+
+      <LeggTilUtenInvitasjon />
 
       <Funksjoner />
 

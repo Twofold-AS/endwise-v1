@@ -10,6 +10,8 @@ export {
 export * from './password-reset.ts';
 export * from './rbac.ts';
 export {
+  sendByttEpostBekreftelse,
+  sendByttEpostNyAdresse,
   sendEmail,
   sendInboxMessage,
   sendInvitation,

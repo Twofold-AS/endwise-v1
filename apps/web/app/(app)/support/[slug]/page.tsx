@@ -8,6 +8,7 @@ import { useParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import { helpdeskKategoriLabel } from '../_kategorier';
 
 /**
  * F5-23 — ÉN HJELPEARTIKKEL.
@@ -84,6 +85,7 @@ export default function ArtikkelPage() {
       </Link>
 
       <div>
+        <p className="text-[11px] text-fg-muted">{helpdeskKategoriLabel(a.category)}</p>
         <h1 className="text-title text-fg">{a.title}</h1>
         <p className="mt-1 text-body text-fg-muted">{a.summary}</p>
         <p className="mt-1 text-[11px] text-fg-muted">

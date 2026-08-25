@@ -392,6 +392,99 @@ export async function sendInvitation(input: {
  *
  * Teksten sier det også i klartekst, for den som leser før hen trykker svar.
  */
+/**
+ * F1-27 — BEKREFTELSE PÅ E-POSTBYTTE.
+ *
+ * To brev, to mottakere, samme hemmelighetsregel som resetlenka:
+ *   · `sendByttEpostBekreftelse` går til adressen brukeren HAR. Uten den
+ *     kan en stjålet sesjon peke kontoen mot en fremmed innboks.
+ *   · `sendByttEpostNyAdresse` går til den NYE adressen etter at eieren
+ *     har godkjent. Først når DEN lenka åpnes, skrives e-posten.
+ *
+ * ⚠️ Lenka INNEHOLDER tokenet. I loggen kun når vi ikke er i prod OG Resend
+ * mangler. Tokenet skal aldri logges noe annet sted.
+ */
+export async function sendByttEpostBekreftelse(input: {
+  to: string;
+  nyEpost: string;
+  lenke: string;
+}): Promise<void> {
+  if (skalLeggesILogg()) {
+    devRamme(
+      'E-POSTBYTTE · BEKREFT FRA GAMMEL ADRESSE (KUN DEV)',
+      [
+        ['Til:', input.to],
+        ['Ny:', input.nyEpost],
+        ['Lenke:', input.lenke],
+      ],
+      'E-posten er uendret til lenken åpnes.',
+    );
+    return;
+  }
+
+  const fotnote =
+    'Har du ikke bedt om å bytte e-post, kan noen ha passordet ditt. Bytt det med én gang, og se bort fra lenken — adressen din er uendret.';
+
+  await sendEmail({
+    to: input.to,
+    subject: 'Bekreft at du vil bytte e-post i Endwise',
+    text: [
+      'Hei!',
+      '',
+      `Noen har bedt om å bytte e-posten på Endwise-kontoen din til ${input.nyEpost}.`,
+      '',
+      'Åpne lenken for å godkjenne byttet. E-posten din er uendret til du gjør det:',
+      input.lenke,
+      '',
+      fotnote,
+    ].join('\n'),
+    html: byggEpostHtml({
+      tittel: 'Bekreft e-postbytte',
+      ingress: `Noen har bedt om å bytte e-posten din til ${input.nyEpost}. Adressen er uendret til du åpner lenken.`,
+      innhold: knapp(input.lenke, 'Bekreft e-postbytte'),
+      fotnote,
+    }),
+  });
+}
+
+export async function sendByttEpostNyAdresse(input: { to: string; lenke: string }): Promise<void> {
+  if (skalLeggesILogg()) {
+    devRamme(
+      'E-POSTBYTTE · BEKREFT NY ADRESSE (KUN DEV)',
+      [
+        ['Til:', input.to],
+        ['Lenke:', input.lenke],
+      ],
+      'E-posten byttes først når denne lenken åpnes.',
+    );
+    return;
+  }
+
+  const fotnote =
+    'Har du ikke bedt om denne e-posten, kan du se bort fra den. Ingen konto er knyttet til adressen ennå.';
+
+  await sendEmail({
+    to: input.to,
+    subject: 'Bekreft den nye e-postadressen din i Endwise',
+    text: [
+      'Hei!',
+      '',
+      'Du har bedt om å bruke denne adressen på Endwise-kontoen din.',
+      '',
+      'Åpne lenken for å fullføre byttet:',
+      input.lenke,
+      '',
+      fotnote,
+    ].join('\n'),
+    html: byggEpostHtml({
+      tittel: 'Bekreft ny e-post',
+      ingress: 'Åpne lenken for å knytte denne adressen til Endwise-kontoen din.',
+      innhold: knapp(input.lenke, 'Bekreft ny e-post'),
+      fotnote,
+    }),
+  });
+}
+
 export async function sendInboxMessage(input: {
   /** Kundens adresse — `threads.external_ref`. */
   to: string;

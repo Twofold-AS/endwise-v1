@@ -6,6 +6,7 @@ import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { AvatarVelger } from '../_avatar/avatar-velger';
 import { lesTema, settTema, type Tema } from '../_lib/tema';
+import { ByttEpostSkjema } from '../_shell/bytt-epost';
 import { ByttPassordSkjema } from '../_shell/bytt-passord';
 import { KallenavnSeksjon, VarslingslyderRad, VisningsnavnFelt } from '../_shell/profil-kort';
 import { ToFaktorRad } from '../_shell/to-faktor-rad';
@@ -14,7 +15,7 @@ import { ToFaktorRad } from '../_shell/to-faktor-rad';
  * F5-19 / F1-17 / F1-20 — Settings › Profil, landet i pille-fanen.
  *
  * Layout (Jonas): blobatar 56px TIL VENSTRE, visningsnavn | e-post i to
- * kolonner til høyre. Form- og uttrykk-velgeren (#37) er foldet under.
+ * kolonner til høyre. Form-, farge- og uttrykk-velgeren er foldet under.
  * Ingen filopplasting. Felt-Lagre beholdes, ingen sticky Save.
  */
 export function ProfilFane() {
@@ -53,10 +54,14 @@ export function ProfilFane() {
               aria-label="E-post"
               className="h-control w-full rounded-control border border-border bg-surface-2 px-2.5 text-body text-fg-muted outline-none"
             />
-            <p className="mt-2 text-[11px] text-fg-muted">E-post endres ikke herfra.</p>
+            <p className="mt-2 text-[11px] text-fg-muted">
+              Byttes i to steg under — ikke med ett klikk.
+            </p>
           </div>
         </div>
       </AvatarVelger>
+
+      <ByttEpostSkjema gjeldende={meg.data?.epost ?? ''} />
 
       <KallenavnSeksjon />
 

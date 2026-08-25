@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import * as expressions from 'blobatar/expression';
 import { describe, expect, it } from 'vitest';
 
@@ -31,5 +32,13 @@ describe('blobatar/expression — bibliotekets ekte uttrykk', () => {
     expect(expressions).toHaveProperty('mad');
     expect(expressions).toHaveProperty('sick');
     expect(expressions).toHaveProperty('scared');
+  });
+});
+
+describe('Avatar — tomt humør er idle, ikke happy', () => {
+  it('faller til idle når humor mangler', () => {
+    const kilde = readFileSync(new URL('../src/components/avatar.tsx', import.meta.url), 'utf8');
+    expect(kilde).toMatch(/HUMOR\[\(valg\?\.humor as keyof typeof HUMOR\) \|\| 'idle'\]/);
+    expect(kilde).not.toMatch(/humor:\s*['"]happy['"]/);
   });
 });

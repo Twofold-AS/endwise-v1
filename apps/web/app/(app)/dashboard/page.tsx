@@ -6,7 +6,9 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
-import { fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
+import { fmtServices, fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
+import { AnsattePaJobb } from './_ansatte-pa-jobb';
+import { Timeplan } from './_timeplan';
 
 /**
  * VERKSTEDET (F3-05/F5-01) — forhandlerens landingsside.
@@ -28,6 +30,7 @@ import { fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
 export default function VerkstedetPage() {
   const bookings = trpc.bookings.list.useQuery({ limit: 100 });
   const mechanics = trpc.mechanics.list.useQuery();
+  const oversikt = trpc.mechanics.oversikt.useQuery();
 
   const { idag, paagaar, ferdigIdag, rader } = useMemo(() => {
     const alle = bookings.data ?? [];
@@ -74,6 +77,19 @@ export default function VerkstedetPage() {
         />
       </div>
 
+      <AnsattePaJobb
+        mekanikere={oversikt.data}
+        jobber={bookings.data}
+        laster={oversikt.isLoading}
+      />
+
+      <Timeplan
+        jobber={bookings.data}
+        mekName={mekName}
+        laster={bookings.isLoading}
+        feil={bookings.isError ? bookings.error.message : undefined}
+      />
+
       {/* Dagens saker — ekte rader. */}
       <section className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-3">
@@ -118,7 +134,7 @@ export default function VerkstedetPage() {
                       {b.regNumber ?? 'Uten regnr'}
                     </span>
                     <span className="truncate text-[12px] text-fg-muted">
-                      {b.serviceName ?? 'Tjeneste'} · {mekName.get(b.mechanicId) ?? b.mechanicName}
+                      {fmtServices(b)} · {mekName.get(b.mechanicId) ?? b.mechanicName}
                     </span>
                   </div>
                   <span

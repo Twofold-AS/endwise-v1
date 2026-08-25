@@ -41,12 +41,20 @@ pnpm db:up               # = docker compose up -d
 pnpm db:generate         # produserer migrasjons-SQL fra src/schema
 pnpm db:setup            # = db:migrate && db:grants
                          # migrate: skjema + 0026 DROP+CREATE slett_forhandler (kontoer)
-                         # grants: sql/grants.sql (RLS/FORCE + slett-SELECT) og
-                         #         sql/functions.sql (DROP+CREATE slett_forhandler)
-                         # MÅ skrive: [db] grants + funksjoner kjørt (slett_forhandler rev=0026)
-                         # Mangler rev=0026: db:grants exit 1 — funksjonen ble ikke byttet.
-                         # Verifiser: select prosrc from pg_proc where proname = 'slett_forhandler'
+                         # grants: sql/grants.sql (RLS/FORCE + hash-policy) og
+                         #         sql/functions.sql (DROP+CREATE lookup_open_invitation
+                         #         + slett_forhandler)
+                         # MÅ skrive: [db] grants + funksjoner kjørt
+                         #            (lookup_open_invitation + slett_forhandler rev=0026)
+                         # Mangler funksjon: db:grants exit 1.
+                         # Verifiser: select prosrc from pg_proc
+                         #            where proname = 'lookup_open_invitation'
+                         #            må inneholde app.invitation_hash
+                         #            select prosrc from pg_proc where proname = 'slett_forhandler'
                          #            må inneholde slett_forhandler_rev=0026 og app.slett_endwise_id
+                         #
+                         # Scaleway allerede på 0026: `pnpm db:grants` alene holder
+                         # (ingen ny migrasjon). DATABASE_URL = eier, ikke app-rollen.
 
 # 5. Demo-data (tenant A/B + kontoer + dagens bookinger)
 pnpm db:seed

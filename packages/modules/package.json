@@ -17,6 +17,7 @@
     "./retention": "./src/retention/index.ts",
     "./billing": "./src/billing/index.ts",
     "./widget": "./src/widget/index.ts",
+    "./vegvesen": "./src/vegvesen/index.ts",
     "./profil": "./src/profil/index.ts",
     "./invitasjoner": "./src/invitasjoner/index.ts",
     "./plattform": "./src/plattform/index.ts"

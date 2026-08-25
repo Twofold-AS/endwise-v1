@@ -154,7 +154,12 @@ export function Avatar({ seed, bevegelse, navn, size = 28, valg, className }: Av
   const felles = {
     name: seed,
     size,
-    expression: (valg?.humor && HUMOR[valg.humor as keyof typeof HUMOR]) || undefined,
+    /**
+     * Null/ukjent humor er `idle` (nøytralt), aldri bibliotekets happy-pose.
+     * Idle er byte-identisk med å utelate expression — men vi sender den
+     * eksplisitt så et tomt valg ikke kan leses som «alltid blid».
+     */
+    expression: HUMOR[(valg?.humor as keyof typeof HUMOR) || 'idle'] ?? idle,
     hue: typeof valg?.farge === 'number' ? valg.farge : undefined,
     tone,
     traits: form === undefined ? undefined : { shape: form },

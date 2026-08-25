@@ -34,6 +34,9 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(kilde).toMatch(/rounded-xl border border-border bg-card p-\[5px\]/);
     expect(kilde).toMatch(/bg-inset p-4/);
     expect(kilde).toMatch(/Henter invitasjonen…/);
+    expect(kilde).toMatch(/Klarte ikke hente invitasjonen\. Prøv igjen\./);
+    expect(kilde).toMatch(/fetch\(`\/invitasjoner\/\$\{encodeURIComponent\(token\)\}`\)/);
+    expect(kilde).not.toMatch(/fetch\(`\/invitasjon\/\$\{/);
     expect(kilde).toMatch(/Oppretter …/);
     expect(kilde).toMatch(/Opprettet/);
     expect(kilde).toMatch(/<Lock /);
@@ -79,8 +82,10 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).not.toMatch(/setActive|impersonat/i);
   });
 
-  it('eier-veiviseren er visningsnavn · team uten avatar', () => {
+  it('eier-veiviseren er visningsnavn · avatar · team', () => {
     expect(oppstart).toMatch(/Visningsnavn/);
+    expect(oppstart).toMatch(/AvatarVelger/);
+    expect(oppstart).toMatch(/fullforAvatarValg/);
     expect(oppstart).toMatch(/Team/);
     expect(oppstart).toMatch(/Pakken din er/);
     expect(oppstart).toMatch(/optional\.length/);
@@ -89,18 +94,28 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(oppstart).toMatch(/selger|mekaniker/);
     expect(oppstart).toMatch(/StatefulButton/);
     expect(oppstart).toMatch(/Vi henter oppstarten/);
-    expect(oppstart).not.toMatch(/AvatarVelger/);
     expect(oppstart).not.toMatch(/Laster oppstarten/);
     expect(oppstart).not.toMatch(/Mikael/);
     expect(oppstart).not.toMatch(/['"]shop['"]|['"]twilio['"]/);
     expect(oppstart).not.toMatch(/setModules/);
   });
 
-  it('avatar-velgeren er ett ansikt med Ny tilfeldig og uttrykk, ikke fire nedtrekk', () => {
+  it('avatar-velgeren er ett ansikt med Ny tilfeldig, farge og humør — ikke fire nedtrekk', () => {
     expect(avatar).toMatch(/Ny tilfeldig/);
     expect(avatar).toMatch(/HUMOR\.map/);
+    expect(avatar).toMatch(/FARGER\.map/);
+    expect(avatar).toMatch(/TONER\.map/);
     expect(avatar).not.toMatch(/function Nedtrekk/);
     expect(avatar).not.toMatch(/id="humor"/);
+  });
+
+  it('ansatt-invite har avatar-steg etter 2FA, eier går til oppstart', () => {
+    expect(kilde).toMatch(/steg === 'avatar'/);
+    expect(kilde).toMatch(/Velg avataren din/);
+    expect(kilde).toMatch(/fullforAvatarValg/);
+    expect(kilde).toMatch(/inv\.kind === 'owner'/);
+    expect(kilde).toMatch(/setSteg\('avatar'\)/);
+    expect(kilde).toMatch(/AvatarVelger/);
   });
 
   it('ingen offentlig /registrer-side', () => {

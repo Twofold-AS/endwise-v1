@@ -57,5 +57,55 @@ if (rev.rows[0]?.ok !== true) {
   process.exit(1);
 }
 
+// F1-10 — samme klasse som slett_forhandler: functions.sql DROP+CREATE, men
+// prod 25.08.2026 hadde 42883 fordi repair-0020 droppet og grants aldri
+// fullførte. Exit 1 hvis lookup mangler kolonnene siden velger, eller
+// invitation_hash-GUC-en (FORCE RLS-unntaket fra PR #11).
+const lookup = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'lookup_open_invitation'
+       and pg_get_function_identity_arguments(p.oid) in ('text', 'p_token_hash text')
+       and strpos(p.prosrc, 'app.invitation_hash') > 0
+       and strpos(pg_get_function_result(p.oid), 'id') > 0
+       and strpos(pg_get_function_result(p.oid), 'tenant_id') > 0
+       and strpos(pg_get_function_result(p.oid), 'email') > 0
+       and strpos(pg_get_function_result(p.oid), 'job_function') > 0
+       and strpos(pg_get_function_result(p.oid), 'role') > 0
+       and strpos(pg_get_function_result(p.oid), 'kind') > 0
+       and strpos(pg_get_function_result(p.oid), 'platform_level') > 0
+       and strpos(pg_get_function_result(p.oid), 'expires_at') > 0
+  ) as ok
+`);
+if (lookup.rows[0]?.ok !== true) {
+  const funnet = await pool.query<{ identity: string; result: string; snippet: string }>(`
+    select pg_get_function_identity_arguments(p.oid) as identity,
+           pg_get_function_result(p.oid) as result,
+           left(p.prosrc, 240) as snippet
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'lookup_open_invitation'
+  `);
+  console.error(
+    '[db] lookup_open_invitation mangler eller har feil kontrakt (DROP+CREATE feilet). ' +
+      'Kjør `pnpm db:grants` på nytt mot Scaleway-eieren.',
+  );
+  if (funnet.rows.length === 0) {
+    console.error('[db] public.lookup_open_invitation finnes ikke.');
+  } else {
+    for (const rad of funnet.rows) {
+      console.error(
+        `[db] funnet lookup_open_invitation(${rad.identity}) → ${rad.result}: ${rad.snippet}`,
+      );
+    }
+  }
+  await pool.end();
+  process.exit(1);
+}
+
 await pool.end();
-console.info('[db] grants + funksjoner kjørt (slett_forhandler rev=0026)');
+console.info('[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0026)');

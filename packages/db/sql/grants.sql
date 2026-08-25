@@ -1,5 +1,7 @@
 -- Kjøres ETTER migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
 -- Siste slett-relaterte migrasjon: 0026_slett_forhandler_kontoer (DROP+CREATE).
+-- lookup_open_invitation: CREATE ligger i 0020/0021 + sql/functions.sql (ingen 0027).
+-- Scaleway på 0026: `pnpm db:grants` alene gjenoppretter funksjonen (idempotent).
 -- 0025 DROP+CREATE + app.slett_endwise_id (policyer her speiler 0025).
 -- 0024 CREATE OR REPLACE samme signatur — journal hopper over den som allerede kjørt.
 -- 0023_quick_lager la Quick-GUID på parts/stock_locations.

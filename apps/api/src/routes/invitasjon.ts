@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { createAuth, settPassordUtenSesjon } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
-import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
+import { type ApenInvitasjon, createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
 import { erPlattformTenant } from '@endwise/modules/plattform';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createAppContext } from '../context.ts';
+import { lesPostgresCause } from '../trpc/slett-postgres.ts';
 
 /**
  * F1-10 — DEN OFFENTLIGE SIDEN av invitasjonsflyten.
@@ -29,6 +30,22 @@ import { createAppContext } from '../context.ts';
  */
 export const invitasjon = new Hono();
 
+/** Samme setning som siden viser når JSON-parse / nett feiler. Ikke 404-ugyldig. */
+export const INVITASJON_HENT_FEILET = 'Klarte ikke hente invitasjonen. Prøv igjen.';
+
+function oppslagFeilet(error: unknown): boolean {
+  const pg = lesPostgresCause(error);
+  return pg.code === '42883' || /function .* does not exist/i.test(pg.message ?? '');
+}
+
+function loggOppslagFeil(error: unknown): void {
+  const pg = lesPostgresCause(error);
+  console.error('[invitasjon] oppslag feilet', {
+    code: pg.code,
+    missingFunction: oppslagFeilet(error),
+  });
+}
+
 /**
  * ⚠️ Lat DB. `createAppContext()` kaster uten DATABASE_URL — det må ikke
  * skje ved import, ellers feiler `next build` på Vercel (F13-03).
@@ -51,7 +68,13 @@ const getAuth = () => {
  */
 invitasjon.get('/:token', async (c) => {
   const modul = createInvitasjonsmodul(db());
-  const inv = await modul.finnApen(c.req.param('token'));
+  let inv: ApenInvitasjon | null;
+  try {
+    inv = await modul.finnApen(c.req.param('token'));
+  } catch (error) {
+    loggOppslagFeil(error);
+    return c.json({ gyldig: false, grunn: INVITASJON_HENT_FEILET }, 500);
+  }
   if (!inv) {
     return c.json({ gyldig: false, grunn: 'Invitasjonen er ugyldig, brukt eller utløpt.' }, 404);
   }
@@ -123,7 +146,13 @@ invitasjon.post('/godta', async (c) => {
   }
 
   const modul = createInvitasjonsmodul(db());
-  const inv = await modul.finnApen(parsed.data.token);
+  let inv: ApenInvitasjon | null;
+  try {
+    inv = await modul.finnApen(parsed.data.token);
+  } catch (error) {
+    loggOppslagFeil(error);
+    return c.json({ error: INVITASJON_HENT_FEILET }, 500);
+  }
   if (!inv) {
     return c.json({ error: 'Invitasjonen er ugyldig, brukt eller utløpt.' }, 410);
   }

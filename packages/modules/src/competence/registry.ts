@@ -72,6 +72,11 @@ export function createCompetenceRegistry(db: Database) {
       );
     },
 
+    /** Alle kompetanserader i tenanten — lista på Ansatte › Kompetanse. */
+    async listAllMechanicSkills(tenantId: string) {
+      return withTenant(db, tenantId, (tx) => tx.select().from(schema.mechanicSkills));
+    },
+
     /**
      * Setter kompetanse. Upsert — forhandleren justerer nivå og fornyer
      * sertifisering på samme rad, i stedet for å samle duplikater.

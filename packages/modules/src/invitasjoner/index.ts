@@ -387,7 +387,7 @@ export function createInvitasjonsmodul(db: Database) {
       const hash = hashInvitasjonstoken(token);
       const res = await db.execute(
         sql`select id, tenant_id, email, job_function, role, kind, platform_level, expires_at
-              from lookup_open_invitation(${hash})`,
+              from lookup_open_invitation(${hash}::text)`,
       );
       const rad = (res.rows ?? res)[0] as
         | {
@@ -436,7 +436,7 @@ export function createInvitasjonsmodul(db: Database) {
      */
     async forbruk(token: string): Promise<string | null> {
       const hash = hashInvitasjonstoken(token);
-      const res = await db.execute(sql`select consume_invitation(${hash}) as id`);
+      const res = await db.execute(sql`select consume_invitation(${hash}::text) as id`);
       const rad = (res.rows ?? res)[0] as { id: string | null } | undefined;
       return rad?.id ?? null;
     },

@@ -136,6 +136,7 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(profilFane).toMatch(/size=\{56\}/);
     expect(profilFane).toMatch(/foldFormer/);
     expect(profilFane).toMatch(/VisningsnavnFelt/);
+    expect(profilFane).toMatch(/ByttEpostSkjema/);
     expect(profilFane).toMatch(/readOnly/);
     expect(profilFane).toMatch(/<AvatarVelger[\s\S]*?<\/AvatarVelger>/);
     expect(profilFane).not.toMatch(/<AvatarVelger[^>]*\/>/);
@@ -143,7 +144,7 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     const avatar = les('../app/(app)/_avatar/avatar-velger.tsx');
     expect(avatar).toMatch(/flex flex-row items-start gap-4/);
     expect(avatar).toMatch(/<details/);
-    expect(avatar).toMatch(/Endre form og uttrykk/);
+    expect(avatar).toMatch(/Endre form, farge og uttrykk/);
     expect(avatar).toMatch(/HUMOR\.map/);
     expect(avatar).not.toMatch(/function medHappy/);
     expect(avatar).not.toMatch(/from '@\/components\/ui\/collapsible'/);

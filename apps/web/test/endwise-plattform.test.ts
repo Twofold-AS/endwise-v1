@@ -27,12 +27,13 @@ describe('plattform-org i Bytt visning', () => {
     expect(switcher).not.toMatch(/nå: Forhandler/);
   });
 
-  it('visningsvelgeren har X som minimerer til pille, persistert i localStorage', () => {
-    expect(switcher).toMatch(/Minimer visningsvelger/);
-    expect(switcher).toMatch(/Utvid visningsvelger/);
-    expect(switcher).toMatch(/endwise\.visningsvelger\.minimer/);
-    expect(switcher).toMatch(/rounded-pill/);
-    expect(switcher).toMatch(/localStorage/);
+  it('visningsvelgeren er logo + navn + chevron — uten X, pille eller localStorage', () => {
+    expect(switcher).toMatch(/ChevronDown/);
+    expect(switcher).toMatch(/headerNavn/);
+    expect(switcher).not.toMatch(/Minimer visningsvelger/);
+    expect(switcher).not.toMatch(/Utvid visningsvelger/);
+    expect(switcher).not.toMatch(/endwise\.visningsvelger\.minimer/);
+    expect(switcher).not.toMatch(/localStorage/);
     expect(switcher).not.toMatch(/label:\s*'Admin'/);
   });
 

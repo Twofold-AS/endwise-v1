@@ -78,6 +78,15 @@ describe('Bug B: pakkebytte bekreftes og oppfrisker forhandleren', () => {
     expect(sync).toMatch(/entitlements/);
   });
 
+  it('LiveSync invaliderer helpdesk ved window-focus — ingen egen helpdesk-SSE', () => {
+    const sync = utenKommentarer(les('../app/(app)/_lib/live-sync.tsx'));
+    const live = les('../app/(app)/_lib/live-event.ts');
+    expect(sync).toMatch(/helpdesk\.list/);
+    expect(sync).toMatch(/helpdesk\.ulesteAntall/);
+    expect(sync).toMatch(/addEventListener\('focus'/);
+    expect(live).not.toMatch(/helpdesk/);
+  });
+
   it('Oppsett-lenke vises bare for aktive tillegg — ikke etter nedgradering', () => {
     const side = utenKommentarer(les('../app/(app)/integrasjoner/_innhold.tsx'));
     expect(side).toMatch(/post\.aktiv/);

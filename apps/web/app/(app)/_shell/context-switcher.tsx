@@ -10,12 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Lock,
-  X,
 } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { type AppContext, CONTEXTS, type ContextKey } from './nav';
@@ -30,8 +28,6 @@ export type VerkstedMedlemskap = {
   isMechanic?: boolean;
 };
 
-const MINIMER_KEY = 'endwise.visningsvelger.minimer';
-
 /**
  * F5-13 / F5-28 — Merkeboks + kontekst-dropdown.
  *
@@ -42,8 +38,8 @@ const MINIMER_KEY = 'endwise.visningsvelger.minimer';
  *
  * I Se verkstedet (inspect): bare «Tilbake til Endwise». Ingen setActive.
  *
- * 25.08.2026 (Mikael): X i hjørnet av den utvidede visningsvelgeren minimerer
- * til en pille. Pillen utvider igjen. localStorage. Ikke full dismiss.
+ * Minimer (X → pille) hører IKKE hjemme her. Det ligger på helpdesk-slideren
+ * (`TipCard`, F5-23).
  */
 export function ContextSwitcher({
   contexts,
@@ -72,7 +68,6 @@ export function ContextSwitcher({
 }) {
   const router = useRouter();
   const current = CONTEXTS.find((c) => c.key === active) ?? CONTEXTS[0];
-  const [minimer, setMinimer] = useState(false);
   const demoTenants = trpc.tenants.myDemoTenants.useQuery(undefined, {
     enabled: canSwitchDemo && !inspect,
   });
@@ -80,23 +75,6 @@ export function ContextSwitcher({
     enabled: erPlattform && !inspect,
     retry: false,
   });
-
-  useEffect(() => {
-    try {
-      setMinimer(window.localStorage.getItem(MINIMER_KEY) === '1');
-    } catch {
-      /* localStorage kan være sperret */
-    }
-  }, []);
-
-  function settMinimer(neste: boolean) {
-    setMinimer(neste);
-    try {
-      window.localStorage.setItem(MINIMER_KEY, neste ? '1' : '0');
-    } catch {
-      /* localStorage kan være sperret */
-    }
-  }
 
   async function byttTenant(tenantId: string, landing: string) {
     await authClient.organization.setActive({ organizationId: tenantId });
@@ -145,23 +123,6 @@ export function ContextSwitcher({
     );
   }
 
-  if (!collapsed && minimer) {
-    return (
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        {logo}
-        <button
-          type="button"
-          aria-label="Utvid visningsvelger"
-          title={`Utvid visningsvelger — nå: ${headerUnder}`}
-          onClick={() => settMinimer(false)}
-          className="inline-flex h-control min-w-0 items-center rounded-pill border border-border bg-bg px-3 text-label text-fg transition-colors hover:bg-sidebar-active focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          <span className="truncate">{headerUnder}</span>
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className={`flex items-center gap-2 ${collapsed ? '' : 'min-w-0 flex-1'}`}>
       {!collapsed && logo}
@@ -206,13 +167,10 @@ export function ContextSwitcher({
             </button>
           )}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" sideOffset={6} className="relative min-w-[248px]">
+        <DropdownMenuContent align="start" sideOffset={6} className="min-w-[248px]">
           {inspect ? (
             <>
-              <div className="relative pr-8">
-                <DropdownMenuHeader>Visning</DropdownMenuHeader>
-                <MinimerKnapp onMinimer={() => settMinimer(true)} />
-              </div>
+              <DropdownMenuHeader>Visning</DropdownMenuHeader>
               <DropdownMenuItem
                 onSelect={() => {
                   router.push(inspectTilbakeHref as Route);
@@ -226,10 +184,7 @@ export function ContextSwitcher({
             </>
           ) : (
             <>
-              <div className="relative pr-8">
-                <DropdownMenuHeader>Visning</DropdownMenuHeader>
-                <MinimerKnapp onMinimer={() => settMinimer(true)} />
-              </div>
+              <DropdownMenuHeader>Visning</DropdownMenuHeader>
               {visningsvalg.map((c) => (
                 <DropdownMenuItem
                   key={c.key}
@@ -338,36 +293,6 @@ export function ContextSwitcher({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-      {!collapsed && (
-        <button
-          type="button"
-          aria-label="Minimer visningsvelger"
-          title="Minimer visningsvelger"
-          className="inline-flex size-6 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active hover:text-fg focus-visible:outline-2 focus-visible:outline-ring"
-          onClick={() => settMinimer(true)}
-        >
-          <X size={14} strokeWidth={1.75} />
-        </button>
-      )}
     </div>
-  );
-}
-
-function MinimerKnapp({ onMinimer }: { onMinimer: () => void }) {
-  return (
-    <button
-      type="button"
-      aria-label="Minimer visningsvelger"
-      title="Minimer visningsvelger"
-      className="absolute top-1 right-1 inline-flex size-6 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active hover:text-fg focus-visible:outline-2 focus-visible:outline-ring"
-      onPointerDown={(e) => e.preventDefault()}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onMinimer();
-      }}
-    >
-      <X size={14} strokeWidth={1.75} />
-    </button>
   );
 }

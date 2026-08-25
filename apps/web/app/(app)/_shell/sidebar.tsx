@@ -66,13 +66,15 @@ const IKON = 16;
  * blir ikon-only med `title` som fallback. Ingen tekst som brekker, ingen
  * ellipse — bare ikonene.
  *
- * ── To mønstre, med vilje (07.08.2026) ─────────────────────────────────────
- * **Flyout ut til siden** er for HANDLINGER: «Handlinger» og «Settings». Korte
+ * ── To mønstre, med vilje (07.08.2026, Settings 25.08) ─────────────────────
+ * **Flyout ut til siden** er for HANDLINGER: «Handlinger» (⌘K). Korte
  * lister du plukker fra og lukker igjen.
  *
  * **Inline utfolding** er for DESTINASJONER: Saker, Kunder, Analyse,
- * AI-verktøy, Team. De hører til strukturen du navigerer i, og skal ikke
- * skjule hvor du står. Se `NavRow`.
+ * AI-verktøy, Organisasjon. De hører til strukturen du navigerer i, og skal
+ * ikke skjule hvor du står. Se `NavRow`.
+ *
+ * Settings er destinasjon (Link til profil), ikke flyout.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -298,41 +300,20 @@ export function Sidebar() {
             {/* Går helt ut i kantene — `-mx-3` opphever kolonnens padding. */}
             <div className="-mx-3 h-px bg-border" />
 
-            {/* Settings er IKKE en side lenger (06.08.2026) — den er en flyout,
-                som alle andre punkter med underpunkter. Logg ut ligger nederst
-                i den, skilt med en egen linje: det er den ene handlingen i menyen
-                som ikke fører deg til en side. */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  title={collapsed ? settingsNav.label : undefined}
-                  className={`flex h-control w-full items-center gap-2.5 rounded-control text-label transition-colors ${
-                    collapsed ? 'justify-center px-0' : 'px-2.5'
-                  } ${settingsAktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-sidebar-active/60'}`}
-                >
-                  <Ikon icon={settingsNav.icon} active={settingsAktiv} />
-                  {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" align="end" sideOffset={16} className="z-50">
-                <DropdownMenuHeader>{settingsNav.label}</DropdownMenuHeader>
-                {childrenForRole(settingsNav, role).map((c) => (
-                  <DropdownMenuItem key={c.href} onSelect={() => router.push(c.href as Route)}>
-                    {c.icon && (
-                      <c.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                    )}
-                    <span className="flex-1">{c.label}</span>
-                  </DropdownMenuItem>
-                ))}
-                {/* ⚠️ «Logg ut» lå her fram til 20.08.2026, med en kommentar som
-                    innrømmet at den var den ene handlingen i menyen som ikke
-                    førte til en side. Den hører til PERSONEN, ikke til
-                    konfigurasjonen, og bor nå i brukerraden under. Settings er
-                    dermed rene destinasjoner. Det samme er «Profil» — se
-                    nav.ts. */}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Settings er destinasjon til profil — samme rad-chrome som
+                Verkstedet/Innboks. Pille-fanene på /innstillinger eier
+                undersidene. Kollapset 76px: ikon-lenke, samme mål. */}
+            <Link
+              href={settingsNav.href as Route}
+              aria-current={settingsAktiv ? 'page' : undefined}
+              title={collapsed ? settingsNav.label : undefined}
+              className={`flex h-control w-full items-center gap-2.5 rounded-control text-label transition-colors ${
+                collapsed ? 'justify-center px-0' : 'px-2.5'
+              } ${settingsAktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-sidebar-active/60'}`}
+            >
+              <Ikon icon={settingsNav.icon} active={settingsAktiv} />
+              {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
+            </Link>
 
             {/* ── Deg. Nederst, under Settings, som bestilt ─────────────── */}
             <BrukerRad
@@ -362,7 +343,7 @@ function isChildActive(href: string, pathname: string, search: string): boolean 
  * Én nav-rad, 32px.
  *
  * ── Underpunkter er INLINE igjen (07.08.2026, eiers beslutning) ────────────
- * Flyout ut til siden var riktig for **handlinger** (Handlinger, Settings) —
+ * Flyout ut til siden var riktig for **handlinger** (Handlinger) —
  * korte lister du plukker fra og lukker. Det var feil for **destinasjoner**:
  * en flyout skjuler hvor du er, og du mister følelsen av hvor i navet du står.
  *

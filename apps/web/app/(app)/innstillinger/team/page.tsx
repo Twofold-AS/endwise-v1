@@ -8,9 +8,9 @@ import { Funksjoner } from './_funksjoner';
 import { Inviter } from './_inviter';
 
 /**
- * F5-13 / F5-19 — Team & tilgang. Egen sidebar-destinasjon (#41), ikke
- * Settings-fane. Mekaniker-administrasjonen bor her. Sidene under er uendret —
- * dette er inngangen, ikke en omskriving.
+ * F5-13 / F5-19 — Team. Egen sidebar-destinasjon under Organisasjon (#41),
+ * ikke Settings-fane. Mekaniker-administrasjonen bor her. Sidene under er
+ * uendret — dette er inngangen, ikke en omskriving.
  */
 const RADER: { icon: LucideIcon; title: string; body: string; href: string }[] = [
   {
@@ -37,7 +37,7 @@ export default function TeamPage() {
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
       <div>
-        <h1 className="text-title text-fg">Team & tilgang</h1>
+        <h1 className="text-title text-fg">Team</h1>
         <p className="text-body text-fg-muted">
           Hvem jobber her, hva de har tilgang til, og hva de gjør. Tilgang håndheves server-side
           (RBAC, F1-05); funksjon styrer landingsvisning, ikke rettigheter.

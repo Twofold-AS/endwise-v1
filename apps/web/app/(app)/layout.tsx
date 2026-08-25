@@ -1,8 +1,8 @@
 'use client';
 
 import type { Route } from 'next';
-import { usePathname, useRouter } from 'next/navigation';
-import { type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { type ReactNode, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
 import { LiveSync } from './_lib/live-sync';
 import { LydProvider } from './_lib/lyd';
@@ -42,6 +42,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { data: session, isPending } = useSession();
   const { isMechanic, isAdmin, isLoading, needsOnboarding, erPlattform } = useOrgRole();
   const [plattformVarsel, setPlattformVarsel] = useState<string | null>(null);
+  const visPlattformVarsel = useCallback(() => {
+    setPlattformVarsel(plattformToast());
+  }, []);
 
   /** Har mekaniker-profil OG ingen admin-rolle → mekanikerflaten er hele appen. */
   const kunMekaniker = isMechanic && !isAdmin;
@@ -104,14 +107,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [isLoading, needsOnboarding, pathname, router]);
 
-  useEffect(() => {
-    if (isLoading || !erPlattform) return;
-    if (erForhandlerRutePaaPlattform(pathname)) {
-      setPlattformVarsel(plattformToast());
-      router.replace('/endwise?varsel=plattform' as Route);
-    }
-  }, [isLoading, erPlattform, pathname, router]);
-
   // biome-ignore lint/correctness/useExhaustiveDependencies: les query på nytt etter redirect
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -173,6 +168,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <Suspense
               fallback={<div className="w-[248px] shrink-0 border-border border-r bg-sidebar" />}
             >
+              <PlattformRuteVakt
+                erPlattform={erPlattform}
+                isLoading={isLoading}
+                onBlokkert={visPlattformVarsel}
+              />
               <Sidebar />
             </Suspense>
             <div className="flex min-w-0 flex-1 flex-col">
@@ -200,4 +200,33 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </LiveSync>
     </LydProvider>
   );
+}
+
+/**
+ * Leser `useSearchParams` inne i Suspense (samme grense som Sidebar).
+ * Dealer-fakturering (Abonnement / Tjenester & priser) på plattform skal
+ * vekk — også `?fane=` på `/innstillinger`.
+ */
+function PlattformRuteVakt({
+  erPlattform,
+  isLoading,
+  onBlokkert,
+}: {
+  erPlattform: boolean;
+  isLoading: boolean;
+  onBlokkert: () => void;
+}) {
+  const pathname = usePathname() ?? '';
+  const search = useSearchParams()?.toString() ?? '';
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoading || !erPlattform) return;
+    if (erForhandlerRutePaaPlattform(pathname, search)) {
+      onBlokkert();
+      router.replace('/endwise?varsel=plattform' as Route);
+    }
+  }, [isLoading, erPlattform, pathname, search, router, onBlokkert]);
+
+  return null;
 }

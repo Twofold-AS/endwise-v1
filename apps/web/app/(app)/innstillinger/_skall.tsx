@@ -15,7 +15,8 @@ import { VarslerInnhold } from './varsler/_innhold';
 /**
  * F5-19 — Innstillinger som én flate. Pille-faner øverst, aktiv fane INNE på
  * siden. Ingen hub-kort, ingen nested Settings i sidebaren, ingen Admin-fane.
- * Team er sidebar-destinasjon (#41), ikke en fane her.
+ * Team/Organisasjon er sidebar-destinasjon (#41), ikke en fane her.
+ * Endwise-plattform ser kun Profil (ingen dealer-faner).
  *
  * Fane-state bor i `?fane=`. Gamle Settings-URL-er renderer dette skallet
  * med `startFane`. `/innstillinger/team` er Team-siden, ikke et alias.
@@ -31,11 +32,12 @@ export function InnstillingerSkall({ startFane }: { startFane?: FaneId }) {
 }
 
 function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
-  const { isAdmin } = useOrgRole();
+  const { isAdmin, erPlattform } = useOrgRole();
+  const erForhandler = !erPlattform;
   const params = useSearchParams();
   const fraQuery = params?.get('fane');
-  const aktiv = parseFane(fraQuery, isAdmin, startFane ?? 'profil');
-  const faner = synligeFaner(isAdmin);
+  const aktiv = parseFane(fraQuery, isAdmin, startFane ?? 'profil', erForhandler);
+  const faner = synligeFaner(isAdmin, erForhandler);
   const def = faner.find((f) => f.id === aktiv) ?? faner[0];
 
   return (
@@ -47,27 +49,29 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
         </p>
       </div>
 
-      <div role="tablist" aria-label="Innstillinger" className="flex flex-wrap gap-1.5">
-        {faner.map((f) => {
-          const valgt = f.id === aktiv;
-          return (
-            <Link
-              key={f.id}
-              href={innstillingerHref(f.id) as Route}
-              role="tab"
-              aria-selected={valgt}
-              scroll={false}
-              className={`inline-flex h-control items-center rounded-pill px-3 text-label transition-colors ${
-                valgt
-                  ? 'bg-fg text-bg'
-                  : 'border border-border bg-bg text-fg-muted hover:bg-surface-2 hover:text-fg'
-              }`}
-            >
-              {f.label}
-            </Link>
-          );
-        })}
-      </div>
+      {faner.length > 1 && (
+        <div role="tablist" aria-label="Innstillinger" className="flex flex-wrap gap-1.5">
+          {faner.map((f) => {
+            const valgt = f.id === aktiv;
+            return (
+              <Link
+                key={f.id}
+                href={innstillingerHref(f.id) as Route}
+                role="tab"
+                aria-selected={valgt}
+                scroll={false}
+                className={`inline-flex h-control items-center rounded-pill px-3 text-label transition-colors ${
+                  valgt
+                    ? 'bg-fg text-bg'
+                    : 'border border-border bg-bg text-fg-muted hover:bg-surface-2 hover:text-fg'
+                }`}
+              >
+                {f.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       <section role="tabpanel" aria-label={def?.label ?? 'Profil'} className="flex flex-col gap-5">
         <div>

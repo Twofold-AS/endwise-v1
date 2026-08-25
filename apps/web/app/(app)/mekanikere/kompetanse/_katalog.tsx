@@ -222,11 +222,7 @@ function FerdighetKort({ ferdighet, kanEndre }: { ferdighet: Ferdighet; kanEndre
         >
           <label className="flex flex-col gap-1.5">
             <span className="text-label text-fg">Navn</span>
-            <input
-              value={navn}
-              onChange={(e) => setNavn(e.target.value)}
-              className={FELT}
-            />
+            <input value={navn} onChange={(e) => setNavn(e.target.value)} className={FELT} />
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="text-label text-fg">Beskrivelse</span>
@@ -263,7 +259,13 @@ function FerdighetKort({ ferdighet, kanEndre }: { ferdighet: Ferdighet; kanEndre
               type="submit"
               disabled={!navn.trim() || lagre.isPending}
               state={
-                lagre.isPending ? 'loading' : lagre.isSuccess ? 'success' : lagre.isError ? 'error' : 'idle'
+                lagre.isPending
+                  ? 'loading'
+                  : lagre.isSuccess
+                    ? 'success'
+                    : lagre.isError
+                      ? 'error'
+                      : 'idle'
               }
               loadingText="Lagrer…"
               successText="Lagret"

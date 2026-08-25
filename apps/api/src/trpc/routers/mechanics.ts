@@ -151,9 +151,7 @@ export const mechanicsRouter = router({
         capacity: z.number().int().min(1).max(10),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      updateMechanicCapacity(ctx.db, ctx.tenantId, input),
-    ),
+    .mutation(({ ctx, input }) => updateMechanicCapacity(ctx.db, ctx.tenantId, input)),
 
   /**
    * F3-02 — Hvem kan ta denne jobben?

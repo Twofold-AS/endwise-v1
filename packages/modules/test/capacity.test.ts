@@ -11,6 +11,18 @@ const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
 const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;
 
+describe('mekaniker-kapasitet — validering uten DB', () => {
+  it('avviser kapasitet utenfor 1–10 før skriving', async () => {
+    const dummy = {} as Database;
+    await expect(
+      updateMechanicCapacity(dummy, 'tenant', { mechanicId: 'mek', capacity: 0 }),
+    ).rejects.toThrow(/mellom 1 og 10/);
+    await expect(
+      updateMechanicCapacity(dummy, 'tenant', { mechanicId: 'mek', capacity: 11 }),
+    ).rejects.toThrow(/mellom 1 og 10/);
+  });
+});
+
 describeDb('mekaniker-kapasitet (Timeplan)', () => {
   let owner: Database;
   let app: Database;

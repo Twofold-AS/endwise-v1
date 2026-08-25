@@ -297,11 +297,7 @@ function KompetanseSkjema({
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5">
           <span className="text-label text-fg">Nivå</span>
-          <select
-            value={level}
-            onChange={(e) => setLevel(Number(e.target.value))}
-            className={FELT}
-          >
+          <select value={level} onChange={(e) => setLevel(Number(e.target.value))} className={FELT}>
             {NIVA_VALG.map((v) => (
               <option key={v.niva} value={v.niva}>
                 {v.label}
@@ -377,7 +373,13 @@ function KompetanseSkjema({
           type="submit"
           disabled={lagre.isPending}
           state={
-            lagre.isPending ? 'loading' : lagre.isSuccess ? 'success' : lagre.isError ? 'error' : 'idle'
+            lagre.isPending
+              ? 'loading'
+              : lagre.isSuccess
+                ? 'success'
+                : lagre.isError
+                  ? 'error'
+                  : 'idle'
           }
           loadingText="Lagrer…"
           successText="Lagret"

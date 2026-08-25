@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { nivaTekst, sertStatus, tilNokkel } from '../app/(app)/mekanikere/kompetanse/_niva';
 
 /**
  * P2 — Ansatte › Kompetanse og Timeplan er ekte flater, ikke Placeholder.
@@ -45,6 +46,15 @@ describe('Ansatte › Kompetanse er ekte liste + redigering', () => {
     expect(niva).toMatch(/sert\. t\.o\.m\./);
     expect(mek).toMatch(/nivaTekst/);
     expect(mek).toMatch(/sertStatus/);
+  });
+
+  it('nøkkel og nivåord følger registeret', () => {
+    expect(tilNokkel('EU-kontroll MC')).toBe('eu-kontroll-mc');
+    expect(nivaTekst(1)).toBe('Under opplæring');
+    expect(nivaTekst(5)).toBe('Spesialist');
+    const utlopt = sertStatus(new Date(Date.now() - 86_400_000).toISOString());
+    expect(utlopt?.tone).toBe('text-danger');
+    expect(utlopt?.tekst).toMatch(/utløpt/);
   });
 
   it('rører ikke Tjenester & priser eller Prislisten som fakturamodell', () => {

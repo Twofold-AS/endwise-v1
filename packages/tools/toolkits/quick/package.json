@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@endwise/modules": "workspace:*",
+    "undici": "7.28.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

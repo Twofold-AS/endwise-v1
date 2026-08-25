@@ -1,4 +1,5 @@
 import { QuickAuthError, QuickError } from './errors.ts';
+import { quickFetch } from './https-proxy.ts';
 import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
 import { QUICK_PROBE_USER_MESSAGES } from './probe-error.ts';
 import { quickClientInfo } from './schema.ts';
@@ -77,7 +78,7 @@ export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void
 
   let response: Response;
   try {
-    response = await fetch(`${base}${QUICK_READ_ONLY_PROBE_PATH}`, {
+    response = await quickFetch(`${base}${QUICK_READ_ONLY_PROBE_PATH}`, {
       method: QUICK_READ_ONLY_PROBE_METHOD,
       headers: {
         Authorization: `Token token=${token}`,

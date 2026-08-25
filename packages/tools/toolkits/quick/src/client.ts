@@ -1,6 +1,7 @@
 import type { IntegrationHealth, IntegrationProvider } from '@endwise/modules';
 import { nextBatchOffset } from './batch.ts';
 import { QuickAuthError, QuickError } from './errors.ts';
+import { quickFetch } from './https-proxy.ts';
 import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
 import { probeQuickReadOnly } from './probe.ts';
 import {
@@ -82,7 +83,7 @@ export function createQuickClient(config: QuickConfig) {
   async function request<T>(path: string, schema: { parse: (v: unknown) => T }): Promise<T> {
     let response: Response;
     try {
-      response = await fetch(`${base}${API_PREFIX}${path}`, {
+      response = await quickFetch(`${base}${API_PREFIX}${path}`, {
         method: 'GET',
         headers: {
           Authorization: `Token token=${token}`,

@@ -1,6 +1,7 @@
 export * from './batch.ts';
 export * from './client.ts';
 export * from './errors.ts';
+export * from './https-proxy.ts';
 export * from './normalize.ts';
 export * from './probe.ts';
 export * from './probe-error.ts';

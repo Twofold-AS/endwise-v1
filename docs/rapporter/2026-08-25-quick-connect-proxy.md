@@ -9,7 +9,9 @@
 
 ## Hva gikk galt
 
-Alt gikk som planlagt. PR #28 er ikke rørt. Ingen DB-migrasjon. Ingen TLS-terminering. Ingen Quick-token på proxy-boksen.
+PR #28 er ikke rørt. Ingen DB-migrasjon. Ingen TLS-terminering. Ingen Quick-token på proxy-boksen.
+
+Security-gate i CI (pnpm audit + ZAP mot `example.invalid`) er rød på **main fra før** — ikke introdusert her. Direkte `undici` er bumpet til 7.29.0 (GHSA-4cwx-7wf7-3272). Lint/typecheck/test-jobben er grønn.
 
 ## Fikser
 

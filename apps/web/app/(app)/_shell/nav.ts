@@ -1,17 +1,14 @@
 import {
   ArrowLeftRight,
-  Brain,
   Building2,
   CalendarDays,
   Car,
-  ChartColumn,
   ChartLine,
   CircleUser,
   ClipboardList,
   FilePlus,
   Flag,
   Gauge,
-  Globe,
   Handshake,
   HardHat,
   Inbox,
@@ -23,7 +20,6 @@ import {
   Package,
   Settings,
   ShieldCheck,
-  Sparkles,
   Store,
   Tags,
   UserCog,
@@ -124,7 +120,7 @@ export const CONTEXTS: AppContext[] = [
   {
     key: 'forhandler',
     label: 'Forhandler',
-    hint: 'Drift, saker og kunder',
+    hint: 'Drift, jobber og kunder',
     icon: Building2,
     roles: DRIFT,
     landing: '/dashboard',
@@ -132,7 +128,7 @@ export const CONTEXTS: AppContext[] = [
   {
     key: 'mekaniker',
     label: 'Mekaniker',
-    hint: 'Min dag og arbeidsflate',
+    hint: 'Min dag og jobbene mine',
     icon: HardHat,
     roles: DRIFT,
     requiresMechanic: true,
@@ -146,7 +142,7 @@ export const CONTEXTS: AppContext[] = [
      */
     key: 'lager',
     label: 'Lager',
-    hint: 'Deler, beholdning og bevegelser',
+    hint: 'Deler, beholdning og inn og ut',
     icon: Package,
     roles: DRIFT,
     landing: '/lager',
@@ -198,12 +194,12 @@ export const FORHANDLER_NAV: NavItem[] = [
   },
   {
     key: 'saker',
-    label: 'Saker',
+    label: 'Jobber',
     icon: ClipboardList,
     href: '/saker',
     roles: DRIFT,
     children: [
-      { label: 'Avtaler', href: '/saker', icon: ClipboardList },
+      { label: 'Liste', href: '/saker', icon: ClipboardList },
       { label: 'Kalender', href: '/saker?visning=kalender', icon: CalendarDays },
     ],
   },
@@ -227,36 +223,22 @@ export const FORHANDLER_NAV: NavItem[] = [
   },
   {
     key: 'analyse',
-    label: 'Analyse',
+    // Flattenet 25.08.2026: destinasjonen heter Rapporter. `/analyse?visning=direkte`
+    // virker fortsatt, men «Direkte data» er ikke en egen nav-rad.
+    label: 'Rapporter',
     icon: ChartLine,
     href: '/analyse',
     roles: ADMIN_OF_TENANT,
-    children: [
-      { label: 'Rapporter', href: '/analyse', icon: ChartColumn },
-      { label: 'Direkte data', href: '/analyse?visning=direkte', icon: Globe },
-    ],
   },
-  {
-    // Omdøpt 07.08.2026: «AI-innsikt» beskrev én av flatene, ikke samlingen.
-    // Punktet er nå en paraply over tre AI-verktøy. Ruten `/ai-innsikt` er
-    // urørt — den er «Innsikt»-underpunktet.
-    key: 'ai-verktoy',
-    label: 'AI-verktøy',
-    icon: Brain,
-    href: '/ai-innsikt',
-    roles: ADMIN_OF_TENANT,
-    children: [
-      { label: 'Innsikt', href: '/ai-innsikt', icon: Sparkles },
-      // F6-18 — den ENESTE chat-flaten som faktisk snakker med en modell.
-      { label: 'Diagnose', href: '/ai-verktoy/diagnose', icon: Sparkles },
-      { label: 'Nettside', href: '/ai-verktoy/nettside', icon: Globe },
-      { label: 'Nettbutikk', href: '/ai-verktoy/nettbutikk', icon: Store },
-    ],
-  },
+  /**
+   * AI-verktøy er PARKERT 25.08.2026 — ikke i FORHANDLER_NAV.
+   * Ruter står: `/ai-innsikt`, `/ai-verktoy/diagnose|nettside|nettbutikk`.
+   * Diagnose under Jobber kommer senere. Se PARKED_LABEL.
+   */
   {
     /**
-     * 25.08.2026 (Mikael): egen destinasjon — ikke Settings-fane og ikke
-     * Settings-flyout. 25.08 IA-lås: label **Organisasjon**, over Helpdesk.
+     * 25.08.2026 (Mikael): egen destinasjon — ikke Innstillinger-fane og ikke
+     * flyout. Verkstednorsk: label **Ansatte**, over Hjelp.
      * Endwise-admin beholder label Team på `/endwise/team`.
      *
      * Ruter som allerede fantes: `/innstillinger/team` (F1-10/F5-19),
@@ -264,7 +246,7 @@ export const FORHANDLER_NAV: NavItem[] = [
      * `/mekanikere` lever videre fra Team-siden, men er ikke sidebar-barn.
      */
     key: 'team',
-    label: 'Organisasjon',
+    label: 'Ansatte',
     icon: Users,
     href: '/innstillinger/team',
     roles: DRIFT,
@@ -272,21 +254,21 @@ export const FORHANDLER_NAV: NavItem[] = [
       { label: 'Team', href: '/innstillinger/team', icon: UserCog, roles: ADMIN_OF_TENANT },
       /**
        * F2-05/F5-04 — forhandlerens EGEN katalog (hva KUNDEN betaler).
-       * Tjenester & priser i Settings er det motsatte pengeforholdet
+       * Tjenester & priser i Innstillinger er det motsatte pengeforholdet
        * (hva forhandleren betaler oss).
        *
        * Ingen `roles`: raden arver destinasjonens DRIFT, så en dealer_staff
        * ser katalogen — han må kunne svare på hva en EU-kontroll koster.
        * Skriving er `adminProcedure` server-side.
        */
-      { label: 'Tjenestekatalog', href: '/innstillinger/tjenestekatalog', icon: Wrench },
+      { label: 'Prisliste', href: '/innstillinger/tjenestekatalog', icon: Wrench },
       { label: 'Kompetanse', href: '/mekanikere/kompetanse', icon: Tags, roles: ADMIN_OF_TENANT },
-      { label: 'Kapasitet', href: '/mekanikere/kapasitet', icon: Gauge, roles: ADMIN_OF_TENANT },
+      { label: 'Timeplan', href: '/mekanikere/kapasitet', icon: Gauge, roles: ADMIN_OF_TENANT },
     ],
   },
   {
     key: 'helpdesk',
-    label: 'Helpdesk',
+    label: 'Hjelp',
     icon: LifeBuoy,
     href: '/support',
     roles: DRIFT,
@@ -297,13 +279,13 @@ export const FORHANDLER_NAV: NavItem[] = [
 /**
  * Forankret nederst — visuelt skilt fra hovednavet.
  *
- * 25.08.2026 (Mikael): Settings er en destinasjon til profil, ikke en
+ * 25.08.2026 (Mikael): Innstillinger er en destinasjon til profil, ikke en
  * flyout. Pille-fanene på `/innstillinger` eier undersidene (Abonnement,
  * Varsler, …) for forhandler. Breadcrumb/⌘K navngir dem via SETTINGS_CRUMB.
  */
 export const SETTINGS_NAV: NavItem = {
   key: 'settings',
-  label: 'Settings',
+  label: 'Innstillinger',
   icon: Settings,
   href: '/innstillinger/profil',
   roles: DRIFT,
@@ -314,14 +296,14 @@ export const MEKANIKER_NAV: NavItem[] = [
   { key: 'min-dag', label: 'Min dag', icon: CalendarDays, href: '/min-dag', roles: DRIFT },
   {
     key: 'arbeidsflate',
-    label: 'Arbeidsflate',
+    label: 'Jobbene mine',
     icon: Wrench,
     href: '/mekaniker/arbeid',
     roles: DRIFT,
   },
   {
     key: 'min-kompetanse',
-    label: 'Min kompetanse',
+    label: 'Kompetanse',
     icon: Tags,
     href: '/min-dag/kompetanse',
     roles: DRIFT,
@@ -347,14 +329,14 @@ export const LAGER_NAV: NavItem[] = [
   { key: 'lager-deler', label: 'Deler', icon: Package, href: '/lager/deler', roles: DRIFT },
   {
     key: 'lager-lokasjoner',
-    label: 'Lokasjoner',
+    label: 'Plass',
     icon: MapPin,
     href: '/lager/lokasjoner',
     roles: DRIFT,
   },
   {
     key: 'lager-bevegelser',
-    label: 'Bevegelser',
+    label: 'Inn og ut',
     icon: ArrowLeftRight,
     href: '/lager/bevegelser',
     roles: DRIFT,
@@ -405,7 +387,7 @@ export const ENDWISE_NAV: NavItem[] = [
     roles: ENDWISE,
   },
   /**
-   * F5-23 — hjelpeartiklene skrives HER, ikke i forhandlerens Settings.
+   * F5-23 — hjelpeartiklene skrives HER, ikke i forhandlerens Innstillinger.
    * En publisert artikkel dukker opp i sidebaren hos alle 250 verksteder; det
    * er en plattformhandling, som dev-mode-bryteren ved siden av.
    */
@@ -422,7 +404,7 @@ export const ENDWISE_NAV: NavItem[] = [
    */
   {
     key: 'endwise-flagg',
-    label: 'Feature-flags',
+    label: 'Flagg',
     icon: Flag,
     href: '/endwise/flagg',
     roles: ENDWISE_STYRING,
@@ -436,7 +418,7 @@ export const ENDWISE_NAV: NavItem[] = [
  */
 export const ENDWISE_SETTINGS_NAV: NavItem = {
   key: 'endwise-settings',
-  label: 'Settings',
+  label: 'Innstillinger',
   icon: Settings,
   href: '/innstillinger/profil',
   roles: ENDWISE,
@@ -502,8 +484,8 @@ function pathOf(href: string): string {
 }
 
 /**
- * Dealer-Settings-stier (pille-fanene). Ikke Team/tjenestekatalog —
- * de bor under Organisasjon.
+ * Dealer-Innstillinger-stier (pille-fanene). Ikke Team/tjenestekatalog —
+ * de bor under Ansatte.
  */
 const SETTINGS_STIER = [
   '/innstillinger/profil',
@@ -524,7 +506,7 @@ const SETTINGS_CRUMB: Record<string, string> = {
   '/innstillinger/varsler': 'Varsler',
   '/innstillinger/tjenester': 'Tjenester & priser',
   '/abonnement': 'Abonnement',
-  '/integrasjoner': 'Integrasjoner',
+  '/integrasjoner': 'Koblinger',
   '/tjenester': 'Tjenester & priser',
 };
 
@@ -542,7 +524,7 @@ export function isItemActive(item: NavItem, pathname: string): boolean {
   return hrefs.some((h) => {
     if (pathname === h) return true;
     // /endwise er oversikt — ikke prefix for /endwise/forhandlere.
-    // /innstillinger er Settings-huben — ikke prefix for Organisasjon
+    // /innstillinger er Innstillinger-huben — ikke prefix for Ansatte
     // (/innstillinger/team) etter at den ble egen destinasjon.
     if (h === '/endwise' || h === '/innstillinger') return false;
     return pathname.startsWith(`${h}/`);
@@ -605,7 +587,12 @@ export function breadcrumbFor(
   const child =
     barn.find((c) => {
       const [cPath, cQuery] = c.href.split('?');
-      if (cQuery) return pathname === cPath && search.includes(cQuery);
+      if (!cQuery) return false;
+      return pathname === cPath && search.includes(cQuery);
+    }) ??
+    barn.find((c) => {
+      const [cPath, cQuery] = c.href.split('?');
+      if (cQuery) return false;
       return pathname === cPath;
     }) ??
     barn.find((c) => {
@@ -628,38 +615,42 @@ export const PARKED_LABEL: Record<string, string> = {
   '/marked/nyhetsbrev': 'Parkert · Nyhetsbrev',
   '/marked/kampanjer': 'Parkert · Kampanjer',
   '/marked/innhold': 'Parkert · Innhold',
-  '/marked/live': 'Parkert · Live besøkende (flyttet til Analyse)',
+  '/marked/live': 'Parkert · Live besøkende (flyttet til Rapporter)',
   '/admin': 'Parkert · Endwise-oversikt',
   '/admin/forhandlere': 'Parkert · Forhandlere',
   '/admin/moduler': 'Parkert · Moduler',
-  '/admin/flagg': 'Parkert · Feature-flags',
+  '/admin/flagg': 'Parkert · Flagg',
   '/admin/logg': 'Parkert · Aktivitetslogg',
-  '/bookinger': 'Saker (gammel sti)',
-  '/kalender': 'Saker · Kalender (gammel sti)',
-  '/mekanikere': 'Organisasjon · Mekanikere',
-  '/mekanikere/kompetanse': 'Organisasjon · Kompetanse',
-  '/mekanikere/kapasitet': 'Organisasjon · Kapasitet',
+  '/bookinger': 'Jobber (gammel sti)',
+  '/kalender': 'Jobber · Kalender (gammel sti)',
+  '/mekanikere': 'Ansatte · Mekanikere',
+  '/mekanikere/kompetanse': 'Ansatte · Kompetanse',
+  '/mekanikere/kapasitet': 'Ansatte · Timeplan',
   '/tjenester': 'Tjenester & priser',
   '/innstillinger/profil': 'Innstillinger · Profil',
   '/innstillinger/varsler': 'Innstillinger · Varsler',
   '/innstillinger/tjenester': 'Innstillinger · Tjenester & priser',
   '/abonnement': 'Innstillinger · Abonnement',
-  '/integrasjoner': 'Innstillinger · Integrasjoner',
-  '/support': 'Helpdesk',
+  '/integrasjoner': 'Innstillinger · Koblinger',
+  '/support': 'Hjelp',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
   '/endwise/innstillinger': 'Endwise · Dev-mode',
-  '/innstillinger/tjenestekatalog': 'Organisasjon · Tjenestekatalog',
+  '/innstillinger/tjenestekatalog': 'Ansatte · Prisliste',
   '/butikk': 'Butikk (ikke designet ennå)',
   '/lager/deler': 'Lager · Deler',
-  '/lager/lokasjoner': 'Lager · Lokasjoner',
-  '/lager/bevegelser': 'Lager · Bevegelser',
+  '/lager/lokasjoner': 'Lager · Plass',
+  '/lager/bevegelser': 'Lager · Inn og ut',
   '/min-dag/profil': 'Min dag · Profil (erstattet av «Meg»)',
   '/min-dag/varsler': 'Min dag · Varsler',
+  '/ai-innsikt': 'Parkert · Innsikt',
+  '/ai-verktoy/diagnose': 'Parkert · Diagnose',
+  '/ai-verktoy/nettside': 'Parkert · Nettside',
+  '/ai-verktoy/nettbutikk': 'Parkert · Nettbutikk',
 };
 
 /** Quick actions — bevel-knappene rett under divideren. */
 export const QUICK_ACTIONS = [
-  { label: 'Ny sak', href: '/bookinger/ny', icon: FilePlus },
+  { label: 'Ny jobb', href: '/bookinger/ny', icon: FilePlus },
   { label: 'Ny melding', href: '/innboks?ny=1', icon: MessageSquarePlus },
   { label: 'Ny kunde', href: '/kunder?ny=1', icon: UserPlus },
 ] as const;

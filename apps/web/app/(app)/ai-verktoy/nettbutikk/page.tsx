@@ -14,7 +14,7 @@ export default function AiNettbutikkPage() {
   return (
     <div className="mx-auto flex w-full max-w-[880px] flex-col gap-5 px-8 py-7">
       <div>
-        <h1 className="sr-only">AI-verktøy · Nettbutikk</h1>
+        <h1 className="sr-only">Nettbutikk</h1>
         <p className="flex items-center gap-2 text-title text-fg">
           <Store size={18} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
           Nettbutikk

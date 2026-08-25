@@ -106,8 +106,8 @@ export default function EndwiseFlaggPage() {
   return (
     <div className="mx-auto flex w-full max-w-[880px] flex-col gap-5 px-8 py-7">
       <div>
-        <h1 className="sr-only">Endwise-admin · Feature-flags</h1>
-        <p className="text-title text-fg">Feature-flags</p>
+        <h1 className="sr-only">Endwise-admin · Flagg</h1>
+        <p className="text-title text-fg">Flagg</p>
         <p className="text-body text-fg-muted">
           Release-toggles — om <b>vi</b> har rullet ut en funksjon. De to plattformnøklene
           (dev-mode, kill-switch) er bevisst få. En bryter her selger ikke en modul.
@@ -121,7 +121,7 @@ export default function EndwiseFlaggPage() {
         </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           <Skille
-            tittel="Feature-flags — denne siden"
+            tittel="Flagg — denne siden"
             tekst="feature_flags + feature_flag_overrides. Globalt eller per forhandler. Styres her. Sperren er server-side."
           />
           <Skille

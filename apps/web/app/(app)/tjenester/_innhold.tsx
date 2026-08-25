@@ -131,7 +131,7 @@ export function TjenesterInnhold() {
         href={'/innstillinger/tjenestekatalog' as Route}
         className="inline-flex items-center gap-1.5 text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
       >
-        Ser du etter tjenestene KUNDEN bestiller hos dere? Det er Tjenestekatalogen
+        Ser du etter tjenestene KUNDEN bestiller hos dere? Det er Prislisten
         <ArrowUpRight size={13} strokeWidth={1.75} />
       </Link>
     </div>

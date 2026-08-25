@@ -53,7 +53,7 @@ const LENKER = [
   },
   {
     href: '/endwise/flagg' as Route,
-    tittel: 'Feature-flags',
+    tittel: 'Flagg',
     tekst: 'Release-toggles — ikke kjøpte moduler.',
     icon: Flag,
     styring: true,
@@ -140,11 +140,11 @@ export default function EndwiseOversiktPage() {
 
       {isEndwiseAdmin ? (
         <CardShell className="p-5">
-          <p className="text-label text-fg">Feature-flags er ikke entitlements</p>
+          <p className="text-label text-fg">Flagg er ikke entitlements</p>
           <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
             En bryter på{' '}
             <Link href={'/endwise/flagg' as Route} className="underline-offset-2 hover:underline">
-              Feature-flags
+              Flagg
             </Link>{' '}
             ruller ut en funksjon. Den gir ikke en forhandler en betalt modul. Kjøpte tillegg bor i{' '}
             <code>tenant_modules</code> og skrives bare av Stripe-webhooken (F5-32). Begge må si ja.

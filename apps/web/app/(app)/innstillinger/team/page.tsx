@@ -8,7 +8,7 @@ import { Funksjoner } from './_funksjoner';
 import { Inviter } from './_inviter';
 
 /**
- * F5-13 / F5-19 — Team. Egen sidebar-destinasjon under Organisasjon (#41),
+ * F5-13 / F5-19 — Team. Egen sidebar-destinasjon under Ansatte (#41),
  * ikke Settings-fane. Mekaniker-administrasjonen bor her. Sidene under er
  * uendret — dette er inngangen, ikke en omskriving.
  */
@@ -27,7 +27,7 @@ const RADER: { icon: LucideIcon; title: string; body: string; href: string }[] =
   },
   {
     icon: Gauge,
-    title: 'Kapasitet',
+    title: 'Timeplan',
     body: 'Arbeidstid og belegg per mekaniker.',
     href: '/mekanikere/kapasitet',
   },

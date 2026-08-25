@@ -67,7 +67,7 @@ function SakerPageInner() {
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-title text-fg">Saker</h1>
+          <h1 className="text-title text-fg">Jobber</h1>
           <p className="text-body text-fg-muted">Bookinger og kalender for verkstedet ditt</p>
         </div>
         <Link
@@ -75,7 +75,7 @@ function SakerPageInner() {
           className="inline-flex h-control shrink-0 items-center gap-2 rounded-control bg-primary px-3.5 text-label text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <Plus size={16} />
-          Ny sak
+          Ny jobb
         </Link>
       </div>
 

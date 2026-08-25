@@ -36,7 +36,7 @@ export default function HelpdeskPage() {
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
       <div>
         <h1 className="flex items-center gap-2 text-title text-fg">
-          Helpdesk
+          Hjelp
           <CountBadge count={uleste} label="uleste artikler" />
         </h1>
         <p className="text-body text-fg-muted">

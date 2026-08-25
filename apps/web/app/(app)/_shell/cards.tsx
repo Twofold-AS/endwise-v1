@@ -38,13 +38,13 @@ export function BevelButton({
 }
 
 /**
- * NewBadge — «Ny»-merkelapp. Beholder badge-FORMEN (20px høyde, 6px radius),
- * men bruker RØD farge (eiers beslutning 06.08.2026). Norsk kopi 24.08.2026.
+ * NewBadge — «Ny»-merkelapp. Badge-formen (20px høyde, 6px radius) + rød
+ * `destructive`-variant (eiers beslutning 06.08.2026). Norsk kopi 24.08.2026.
  *
  * Formen er felles, fargen er signalet: «nytt» skal fange blikket, og etter at
  * aksenten ble svart ville en aksentfarget badge forsvunnet i resten av UI-et.
  *
- * ⛔ Ikke telleren. Uleste-antall er `CountBadge` — rød sirkel med hvitt siffer.
+ * Uleste-antall er `CountBadge` — samme form, siffer i stedet for «Ny».
  */
 export function NewBadge({ className }: { className?: string }) {
   return (
@@ -57,12 +57,9 @@ export function NewBadge({ className }: { className?: string }) {
 /**
  * CountBadge — uleste-teller (innboks, nav, helpdesk-antall).
  *
- * Liten rød sirkel med hvitt siffer. Mikael 24.08.2026: ikke grå pille, ikke
- * grønn, ikke `NewBadge`. 0 skjules. Tallet vises som det er (10+ blir en
- * stadium-sirkel, ikke «9+» — det var ikke mønsteret fra før).
- *
- * Fargen er `--ew-danger` (`bg-danger`), ikke hardkodet #EE2924. Tokenet er
- * den klare røden i paletten; `#EE2924` er roadmap-rød og bor ikke i UI-et.
+ * Samme badge-oppsett som `NewBadge` (`Badge variant="destructive"`, 20px/6px).
+ * Mikael 25.08.2026: ikke 18px-sirkelen fra #35, ikke grå pille, ikke grønn.
+ * 0 skjules. Tallet vises som det er (ikke «9+»).
  */
 export function CountBadge({
   count,
@@ -75,16 +72,14 @@ export function CountBadge({
   className?: string;
 }) {
   if (count <= 0) return null;
-  const stadium = count > 9;
   return (
-    <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-danger font-medium text-[10px] text-white leading-none tabular-nums ${
-        stadium ? 'h-[18px] min-w-[18px] px-1' : 'size-[18px]'
-      } ${className ?? ''}`}
+    <Badge
+      variant="destructive"
+      className={`tabular-nums ${className ?? ''}`}
+      aria-label={`${count} ${label}`}
     >
       {count}
-      <span className="sr-only"> {label}</span>
-    </span>
+    </Badge>
   );
 }
 

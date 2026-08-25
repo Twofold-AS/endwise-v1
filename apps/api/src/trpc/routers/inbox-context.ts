@@ -1,6 +1,13 @@
 import { and, asc, desc, eq, gte, inArray, lt, schema, withTenant } from '@endwise/db';
 import { createBillingService } from '@endwise/modules/billing';
-import { lesAvatar, TOM_AVATAR, visningForTraadtype, visningsnavn } from '@endwise/modules/profil';
+import {
+  lesAvatar,
+  mekanikerStatusVisning,
+  TOM_AVATAR,
+  tellerSomBelastning,
+  visningForTraadtype,
+  visningsnavn,
+} from '@endwise/modules/profil';
 import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
 
@@ -203,6 +210,13 @@ export const inboxContextRouter = router({
                 .catch(() => [])
             : [];
 
+          const liveJobber = jobber.filter((j) => tellerSomBelastning(j.status)).length;
+          const vis = mekanikerStatusVisning({
+            aktiv: mek.active,
+            jobberIDag: liveJobber,
+            kapasitet: mek.capacity,
+          });
+
           return {
             type: 'mekaniker' as const,
             mekanikerId: mek.id,
@@ -218,6 +232,7 @@ export const inboxContextRouter = router({
             jobberIDag: jobber.length,
             jobber,
             kompetanse,
+            ...vis,
           };
         }
 

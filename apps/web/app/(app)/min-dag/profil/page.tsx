@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleUser, LayoutDashboard } from '@endwise/ui';
+import { Avatar, LayoutDashboard } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { signOut } from '@/lib/auth-client';
@@ -24,27 +24,34 @@ export default function ProfilPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-4 px-4 py-6">
-      <div className="flex items-center gap-2">
-        <CircleUser size={18} className="text-primary" />
-        <h1 className="font-semibold text-fg text-xl tracking-tight">Profil</h1>
+      <div>
+        <h1 className="text-title text-fg">Profil</h1>
       </div>
 
       <CardShell>
         <div className="flex flex-col gap-3 rounded-lg bg-inset p-5">
           <div className="flex items-center gap-3">
-            <div className="grid size-12 place-items-center rounded-full bg-primary/15 font-semibold text-lg text-primary">
-              {(m?.name ?? '?').slice(0, 1).toUpperCase()}
-            </div>
+            {m ? (
+              <Avatar
+                seed={m.id}
+                valg={{ ...m.avatar, humor: m.statusHumor }}
+                navn={m.name}
+                size={48}
+                bevegelse="hover"
+              />
+            ) : (
+              <span className="grid size-12 place-items-center rounded-control bg-surface-2" />
+            )}
             <div>
-              <p className="font-semibold text-fg">{m?.name ?? 'Mekaniker'}</p>
-              <p className="text-fg-faint text-xs">Mekaniker</p>
+              <p className="text-label text-fg">{m?.name ?? 'Mekaniker'}</p>
+              <p className="text-[12px] text-fg-muted">{m?.statusLabel ?? 'Mekaniker'}</p>
             </div>
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 border-border border-t pt-3 text-[13px]">
-            <dt className="text-fg-faint">Kapasitet</dt>
+            <dt className="text-fg-muted">Kapasitet</dt>
             <dd className="text-fg">{m ? `${m.capacity} samtidig` : '—'}</dd>
-            <dt className="text-fg-faint">Status</dt>
-            <dd className="text-fg">{m?.active ? 'Aktiv' : 'Inaktiv'}</dd>
+            <dt className="text-fg-muted">Status</dt>
+            <dd className="text-fg">{m?.statusLabel ?? '—'}</dd>
           </dl>
         </div>
       </CardShell>
@@ -52,7 +59,7 @@ export default function ProfilPage() {
       <button
         type="button"
         onClick={logout}
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-card font-medium text-fg text-sm active:bg-surface-2"
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-card text-label text-fg active:bg-surface-2"
       >
         <LayoutDashboard size={16} /> Logg ut
       </button>

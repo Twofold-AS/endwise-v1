@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Avatar,
   Bell,
   LogOut,
   type LucideIcon,
@@ -112,9 +113,17 @@ export default function MegPage() {
       <CardShell>
         <div className="flex flex-col gap-3 rounded-lg bg-inset p-5">
           <div className="flex items-center gap-3">
-            <div className="grid size-12 shrink-0 place-items-center rounded-full bg-accent-soft font-medium text-accent-strong text-lg">
-              {(m?.name ?? session?.user?.name ?? '?').slice(0, 1).toUpperCase()}
-            </div>
+            {m ? (
+              <Avatar
+                seed={m.id}
+                valg={{ ...m.avatar, humor: m.statusHumor }}
+                navn={m.name}
+                size={48}
+                bevegelse="alltid"
+              />
+            ) : (
+              <span className="grid size-12 shrink-0 place-items-center rounded-control bg-surface-2 text-fg-muted" />
+            )}
             <div className="min-w-0">
               <p className="truncate text-label text-fg">
                 {m?.name ?? session?.user?.name ?? 'Mekaniker'}
@@ -130,7 +139,7 @@ export default function MegPage() {
                 aria-hidden
                 className={`inline-block size-2 rounded-full ${m?.active ? 'bg-success' : 'bg-fg-muted'}`}
               />
-              {profil.isLoading ? '—' : m?.active ? 'Tilgjengelig' : 'Ikke tilgjengelig'}
+              {profil.isLoading ? '—' : (m?.statusLabel ?? '—')}
             </dd>
             <dt className="text-fg-muted">Kapasitet</dt>
             <dd className="text-fg">{m ? `${m.capacity} jobber samtidig` : '—'}</dd>

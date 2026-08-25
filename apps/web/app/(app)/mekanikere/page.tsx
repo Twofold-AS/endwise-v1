@@ -1,6 +1,8 @@
 'use client';
 
 import { Avatar, CircleAlert, Users } from '@endwise/ui';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
 
@@ -43,8 +45,15 @@ export default function MekanikerePage() {
         <CardShell className="p-10 text-center">
           <p className="text-label text-fg">Ingen mekanikere ennå</p>
           <p className="mt-1 text-[12px] text-fg-muted">
-            Mekanikere opprettes når noen får jobbfunksjonen mekaniker, eller synkes inn.
+            Legg til en mekaniker fra Team — med invitasjon, eller uten e-post hvis hen ikke skal
+            logge inn.
           </p>
+          <Link
+            href={'/innstillinger/team' as Route}
+            className="mt-3 inline-block text-[12px] text-fg-muted underline underline-offset-2 hover:text-fg"
+          >
+            Gå til Team
+          </Link>
         </CardShell>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border">

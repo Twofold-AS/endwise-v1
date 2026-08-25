@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Car, ChevronRight, Mail, Phone, Search, Users } from '@endwise/ui';
+import { Avatar, Car, ChevronRight, Mail, Phone, Plus, Search, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -53,12 +53,24 @@ function KunderInner() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
-      <div>
-        <h1 className="sr-only">Kunder</h1>
-        <p className="text-title text-fg">Kunder</p>
-        <p className="text-body text-fg-muted">
-          Søk opp en kunde for å se kjøretøy, historikk og meldinger samlet.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="sr-only">Kunder</h1>
+          <p className="text-title text-fg">Kunder</p>
+          <p className="text-body text-fg-muted">
+            Søk opp en kunde for å se kjøretøy, historikk og meldinger samlet. Kunder opprettes her
+            — Quick er fakta når det er koblet på.
+          </p>
+        </div>
+        {!nyKunde && (
+          <Link
+            href={'/kunder?ny=1' as Route}
+            className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
+          >
+            <Plus size={14} strokeWidth={1.75} />
+            Ny kunde
+          </Link>
+        )}
       </div>
 
       {nyKunde && <NyKunde onLukk={() => router.replace('/kunder' as Route)} />}
@@ -100,14 +112,27 @@ function KunderInner() {
       ) : kunder.isError ? (
         <Feil melding={kunder.error.message} />
       ) : (kunder.data?.length ?? 0) === 0 ? (
-        <Tomt
-          tittel={sok ? 'Ingen treff' : 'Ingen kunder ennå'}
-          hint={
-            sok
-              ? 'Prøv et annet søk, eller fjern filteret.'
-              : 'Kunder opprettes når en booking kommer inn, eller synkes fra Quick.'
-          }
-        />
+        <>
+          <Tomt
+            tittel={sok ? 'Ingen treff' : 'Ingen kunder ennå'}
+            hint={
+              sok
+                ? 'Prøv et annet søk, eller fjern filteret.'
+                : 'Opprett kunden her. Uten Quick lagrer Endwise kunden selv — ingen synk kreves.'
+            }
+          />
+          {!sok && !nyKunde && (
+            <div className="-mt-2 flex justify-center">
+              <Link
+                href={'/kunder?ny=1' as Route}
+                className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
+              >
+                <Plus size={14} strokeWidth={1.75} />
+                Ny kunde
+              </Link>
+            </div>
+          )}
+        </>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border">
           {kunder.data?.map((k, i) => (

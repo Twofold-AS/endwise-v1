@@ -185,9 +185,20 @@ export const customersRouter = router({
     )
     .mutation(({ ctx, input }) =>
       withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        /**
+         * F2-06 / F5-55 — lokal kunde. Quick er fakta NÅR det er koblet på
+         * (pull overskriver speilede rader). Uten Quick lagrer Endwise kunden
+         * selv. Ingen push, ingen modul-gate, ingen speilkrav.
+         */
         const [created] = await tx
           .insert(schema.customers)
-          .values({ ...input, tenantId: ctx.tenantId })
+          .values({
+            name: input.name,
+            email: input.email,
+            phone: input.phone,
+            tenantId: ctx.tenantId,
+            source: 'endwise',
+          })
           .returning();
         return created;
       }),

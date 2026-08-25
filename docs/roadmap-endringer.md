@@ -5,6 +5,17 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-08-25 — P3: lokal kunde + ansatt uten invitasjon (F5-55, F1-10)
+
+**Type:** produksjonsfiks / manglende inngang. Ingen techstack-endring.
+**Godkjent av:** Mikael Kråkenes (#endwise-v1 fix list). Stripe-punkter ignorert.
+
+**Endring:**
+- **F5-55** `planned` → `done`: «Ny kunde» på kundesiden (hode + tomtilstand). `customers.create` setter `source=endwise` og krever ikke Quick.
+- **F1-10** forblir `done`. Nytt steg: `team.opprettUtenInvitasjon` (selger/support/mekaniker uten e-postinvitasjon). Invitasjonsstien urørt. Ingen Mekaniker-pille i Ny samtale.
+
+---
+
 ## 2026-08-25 — F1-07/F8-01 systemd MDWE fjernet fra CONNECT-proxy
 
 **Type:** produksjonsfiks (ikke ny flate). F1-07 og F8-01 forblir `progress`.

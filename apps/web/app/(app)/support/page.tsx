@@ -11,8 +11,8 @@ import {
   filtrerHelpdesk,
   HELPDESK_KATEGORI_LABEL,
   HELPDESK_KATEGORIER,
-  helpdeskKategoriLabel,
   type HelpdeskKategori,
+  helpdeskKategoriLabel,
 } from './_kategorier';
 
 /**
@@ -54,11 +54,7 @@ export default function HelpdeskPage() {
         </p>
       </div>
 
-      <div
-        role="tablist"
-        aria-label="Kategori"
-        className="flex flex-wrap items-center gap-1.5"
-      >
+      <div role="tablist" aria-label="Kategori" className="flex flex-wrap items-center gap-1.5">
         <button
           type="button"
           role="tab"

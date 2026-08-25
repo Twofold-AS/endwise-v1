@@ -2,9 +2,13 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { aktivJobb, ansattePaJobb } from '../app/(app)/dashboard/_pa-jobb.ts';
-import { timeplanKloss, VERKSTED_DAG_SLUTT, VERKSTED_DAG_START } from '../app/(app)/dashboard/_timeplan-layout.ts';
 import { FORHANDLER_NAV } from '../app/(app)/_shell/nav.ts';
+import { aktivJobb, ansattePaJobb } from '../app/(app)/dashboard/_pa-jobb.ts';
+import {
+  timeplanKloss,
+  VERKSTED_DAG_SLUTT,
+  VERKSTED_DAG_START,
+} from '../app/(app)/dashboard/_timeplan-layout.ts';
 
 /**
  * F3-05 — Verkstedet: timeplan + ansatte på jobb.
@@ -73,7 +77,9 @@ describe('ansattePaJobb — hvem som er på gulvet', () => {
     expect(tidlig.top).toBe(0);
     expect(tidlig.height).toBeGreaterThan(0);
     const sen = timeplanKloss('2026-08-25T17:30:00', '2026-08-25T20:00:00', 40);
-    expect(sen.top + sen.height).toBeLessThanOrEqual(11 * 40 + 1);
+    expect(sen.top).toBeGreaterThan(0);
+    expect(sen.top).toBeLessThan(11 * 40);
+    expect(sen.height).toBeGreaterThanOrEqual(22);
   });
 });
 

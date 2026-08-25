@@ -73,7 +73,10 @@ export function Timeplan({
         </CardShell>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-bg">
-          <div className="relative flex" style={{ height: VERKSTED_DAG_TIMER * VERKSTED_PX_PER_TIME }}>
+          <div
+            className="relative flex"
+            style={{ height: VERKSTED_DAG_TIMER * VERKSTED_PX_PER_TIME }}
+          >
             <div className="w-14 shrink-0">
               {VERKSTED_TIMELISTE.map((time) => (
                 <div

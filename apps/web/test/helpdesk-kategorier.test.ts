@@ -40,7 +40,7 @@ describe('F5-51 — faste helpdesk-kategorier', () => {
   });
 
   it('web-enumet matcher @endwise/db 1:1', () => {
-    const skjema = les('../../packages/db/src/schema/helpdesk.ts');
+    const skjema = les('../../../packages/db/src/schema/helpdesk.ts');
     for (const k of HELPDESK_KATEGORIER) {
       expect(skjema).toContain(`'${k}'`);
       expect(skjema).toContain(`${k}: '${HELPDESK_KATEGORI_LABEL[k]}'`);
@@ -60,11 +60,12 @@ describe('F5-51 — faste helpdesk-kategorier', () => {
 
   it('forhandler-helpdesk filtrerer på kategoriene — ingen ny Admin-fane', () => {
     const support = les('../app/(app)/support/page.tsx');
+    const labels = les('../app/(app)/support/_kategorier.ts');
     const admin = les('../app/(app)/endwise/helpdesk/page.tsx');
     const nav = les('../app/(app)/_shell/nav.ts');
     expect(support).toMatch(/HELPDESK_KATEGORIER/);
-    expect(support).toMatch(/Brukerguide|brukerguide/);
-    expect(support).toMatch(/Oppdateringer|oppdateringer/);
+    expect(labels).toMatch(/brukerguide: 'Brukerguide'/);
+    expect(labels).toMatch(/oppdateringer: 'Oppdateringer'/);
     expect(admin).toMatch(/HELPDESK_KATEGORIER/);
     expect(admin).toMatch(/category/);
     expect(nav).toMatch(/href: '\/endwise\/helpdesk'/);

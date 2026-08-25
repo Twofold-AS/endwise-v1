@@ -10,8 +10,8 @@ import {
   HELPDESK_KATEGORI_DEFAULT,
   HELPDESK_KATEGORI_LABEL,
   HELPDESK_KATEGORIER,
-  helpdeskKategoriLabel,
   type HelpdeskKategori,
+  helpdeskKategoriLabel,
 } from '../../support/_kategorier';
 import { HELPDESK_MIN, hjelpeartikkelLagreHint } from './lagre-hint';
 

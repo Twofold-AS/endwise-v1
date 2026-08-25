@@ -5,7 +5,7 @@ import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
-import { CardShell } from '../_shell/cards';
+import { CardShell, CountBadge, NewBadge } from '../_shell/cards';
 
 /**
  * F5-23 — HELPDESK: artikkellista.
@@ -37,13 +37,7 @@ export default function HelpdeskPage() {
       <div>
         <h1 className="flex items-center gap-2 text-title text-fg">
           Helpdesk
-          {uleste > 0 && (
-            /* ⚠️ RØD (rettet 20.08.2026) — samme merke som i sidebaren og i
-               slideren, så «New» betyr det samme overalt. */
-            <span className="inline-flex h-badge items-center gap-1 rounded-badge bg-danger-soft px-1.5 font-medium text-[11px] text-danger">
-              New<span className="tabular-nums">{uleste}</span>
-            </span>
-          )}
+          <CountBadge count={uleste} label="uleste artikler" />
         </h1>
         <p className="text-body text-fg-muted">
           Hjelpeartikler og veiledninger for Endwise. De fire nyeste vises også nederst i sidebaren.
@@ -81,11 +75,7 @@ export default function HelpdeskPage() {
                 <div className="flex flex-1 flex-col gap-1.5 p-3">
                   <span className="flex items-start gap-2">
                     <span className="min-w-0 flex-1 text-label text-fg">{a.title}</span>
-                    {a.ulest && (
-                      <span className="inline-flex h-badge shrink-0 items-center rounded-badge bg-danger-soft px-1.5 font-medium text-[11px] text-danger">
-                        New
-                      </span>
-                    )}
+                    {a.ulest && <NewBadge />}
                   </span>
                   <span className="line-clamp-3 text-[12px] text-fg-muted leading-relaxed">
                     {a.summary}

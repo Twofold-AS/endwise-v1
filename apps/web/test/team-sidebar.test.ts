@@ -7,6 +7,7 @@ import {
   childrenForRole,
   ENDWISE_NAV,
   ENDWISE_SETTINGS_NAV,
+  erSettingsSti,
   FORHANDLER_NAV,
   isItemActive,
   itemsForRole,
@@ -14,8 +15,9 @@ import {
 } from '../app/(app)/_shell/nav.ts';
 
 /**
- * F5-13 / F5-19 — Team er egen sidebar-destinasjon hos både Endwise-admin
- * og forhandler. Ikke Settings-flyout, ikke Settings-fane, ikke Admin-tab.
+ * F5-13 / F5-19 — Organisasjon er egen sidebar-destinasjon hos forhandler.
+ * Endwise-admin beholder label Team. Settings er en destinasjon til profil,
+ * ikke flyout. Ikke Admin-tab.
  */
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -41,19 +43,30 @@ describe('Team i sidebar — Endwise-admin', () => {
     expect(forhandlere).toBeGreaterThan(team);
     expect(blokk).toMatch(/label:\s*'Team'/);
     expect(blokk).toMatch(/href:\s*'\/endwise\/team'/);
+    expect(blokk).not.toMatch(/label:\s*'Organisasjon'/);
   });
 
-  it('ENDWISE_SETTINGS_NAV har ikke Team — destinasjonen bor i sidebaren', () => {
+  it('ENDWISE_SETTINGS_NAV går til profil, uten dealer-barn og uten Team', () => {
     const settings = utenKommentarer(
       nav.slice(
         nav.indexOf('export const ENDWISE_SETTINGS_NAV'),
         nav.indexOf('export function contextsForRole'),
       ),
     );
+    expect(ENDWISE_SETTINGS_NAV.href).toBe('/innstillinger/profil');
+    expect(ENDWISE_SETTINGS_NAV.children).toBeUndefined();
     expect(settings).not.toMatch(/label:\s*'Team'/);
-    expect(settings).toMatch(/label:\s*'Dev-mode'/);
-    expect(settings).toMatch(/label:\s*'Min profil'/);
-    expect(ENDWISE_SETTINGS_NAV.children?.some((c) => c.label === 'Team')).toBe(false);
+    expect(settings).not.toMatch(/label:\s*'Abonnement'/);
+    expect(settings).not.toMatch(/label:\s*'Dev-mode'/);
+    expect(settings).not.toMatch(/label:\s*'Min profil'/);
+    expect(ENDWISE_SETTINGS_NAV.children?.some((c) => c.label === 'Team')).toBeFalsy();
+  });
+
+  it('Dev-mode-siden lever videre på /endwise/innstillinger', () => {
+    const side = les('../app/(app)/endwise/innstillinger/page.tsx');
+    expect(side.length).toBeGreaterThan(0);
+    const oversikt = les('../app/(app)/endwise/page.tsx');
+    expect(oversikt).toMatch(/href: '\/endwise\/innstillinger'/);
   });
 
   it('ingen Admin-fane i Endwise-nav', () => {
@@ -62,7 +75,7 @@ describe('Team i sidebar — Endwise-admin', () => {
   });
 });
 
-describe('Team i sidebar — forhandler', () => {
+describe('Organisasjon i sidebar — forhandler', () => {
   const nav = les('../app/(app)/_shell/nav.ts');
   const forhandler = utenKommentarer(
     nav.slice(nav.indexOf('export const FORHANDLER_NAV'), nav.indexOf('export const SETTINGS_NAV')),
@@ -71,48 +84,51 @@ describe('Team i sidebar — forhandler', () => {
     nav.slice(nav.indexOf('export const SETTINGS_NAV'), nav.indexOf('export const MEKANIKER_NAV')),
   );
 
-  it('FORHANDLER_NAV har Team som egen destinasjon med inline barn', () => {
-    const team = FORHANDLER_NAV.find((i) => i.key === 'team');
-    expect(team).toBeDefined();
-    expect(team?.label).toBe('Team');
-    expect(team?.href).toBe('/innstillinger/team');
-    expect(team?.children?.map((c) => c.label)).toEqual([
-      'Team & tilgang',
+  it('Organisasjon ligger over Helpdesk, med Team/Tjenestekatalog/Kompetanse/Kapasitet', () => {
+    const keys = FORHANDLER_NAV.map((i) => i.key);
+    expect(keys.indexOf('team')).toBeGreaterThan(keys.indexOf('ai-verktoy'));
+    expect(keys.indexOf('team')).toBeLessThan(keys.indexOf('helpdesk'));
+    const org = FORHANDLER_NAV.find((i) => i.key === 'team');
+    expect(org).toBeDefined();
+    expect(org?.label).toBe('Organisasjon');
+    expect(org?.href).toBe('/innstillinger/team');
+    expect(org?.children?.map((c) => c.label)).toEqual([
+      'Team',
       'Tjenestekatalog',
-      'Mekanikere',
       'Kompetanse',
       'Kapasitet',
     ]);
-    expect(forhandler).toMatch(/key:\s*'team'/);
-    expect(forhandler).toMatch(/label:\s*'Team'/);
-  });
-
-  it('Team & tilgang er ADMIN_OF_TENANT; Tjenestekatalog er synlig for DRIFT', () => {
-    const team = FORHANDLER_NAV.find((i) => i.key === 'team');
-    expect(team).toBeDefined();
-    if (!team) throw new Error('FORHANDLER_NAV mangler Team');
-    const tilgang = childrenForRole(team, 'dealer_admin').map((c) => c.label);
-    const staff = childrenForRole(team, 'dealer_staff').map((c) => c.label);
-    expect(tilgang).toContain('Team & tilgang');
-    expect(tilgang).toContain('Tjenestekatalog');
-    expect(tilgang).toContain('Mekanikere');
-    expect(staff).toEqual(['Tjenestekatalog']);
-    expect(staff).not.toContain('Team & tilgang');
-  });
-
-  it('SETTINGS_NAV har ikke Team & tilgang eller Tjenestekatalog', () => {
-    const labels = SETTINGS_NAV.children?.map((c) => c.label) ?? [];
-    expect(labels).not.toContain('Team & tilgang');
-    expect(labels).not.toContain('Tjenestekatalog');
-    expect(labels).toEqual([
-      'Abonnement',
-      'Varsler',
-      'Tjenester & priser',
-      'Integrasjoner',
-      'Profil',
+    expect(org?.children?.map((c) => c.href)).toEqual([
+      '/innstillinger/team',
+      '/innstillinger/tjenestekatalog',
+      '/mekanikere/kompetanse',
+      '/mekanikere/kapasitet',
     ]);
+    expect(forhandler).toMatch(/key:\s*'team'/);
+    expect(forhandler).toMatch(/label:\s*'Organisasjon'/);
+    expect(forhandler).not.toMatch(/label:\s*'Team & tilgang'/);
+    expect(forhandler).not.toMatch(/label:\s*'Mekanikere'/);
+  });
+
+  it('Team er ADMIN_OF_TENANT; Tjenestekatalog er synlig for DRIFT', () => {
+    const org = FORHANDLER_NAV.find((i) => i.key === 'team');
+    expect(org).toBeDefined();
+    if (!org) throw new Error('FORHANDLER_NAV mangler Organisasjon');
+    const tilgang = childrenForRole(org, 'dealer_admin').map((c) => c.label);
+    const staff = childrenForRole(org, 'dealer_staff').map((c) => c.label);
+    expect(tilgang).toEqual(['Team', 'Tjenestekatalog', 'Kompetanse', 'Kapasitet']);
+    expect(staff).toEqual(['Tjenestekatalog']);
+    expect(staff).not.toContain('Team');
+  });
+
+  it('SETTINGS_NAV er profil-destinasjon uten flyout-barn', () => {
+    expect(SETTINGS_NAV.href).toBe('/innstillinger/profil');
+    expect(SETTINGS_NAV.children).toBeUndefined();
+    expect(settings).toMatch(/href:\s*'\/innstillinger\/profil'/);
+    expect(settings).not.toMatch(/label:\s*'Abonnement'/);
     expect(settings).not.toMatch(/label:\s*'Team & tilgang'/);
     expect(settings).not.toMatch(/label:\s*'Tjenestekatalog'/);
+    expect(settings).not.toMatch(/children:/);
   });
 
   it('forhandler-nav har ingen Admin-tab', () => {
@@ -122,54 +138,79 @@ describe('Team i sidebar — forhandler', () => {
   });
 });
 
-describe('Team vs Settings — aktiv rad og breadcrumb', () => {
-  const team = FORHANDLER_NAV.find((i) => i.key === 'team');
+describe('Organisasjon vs Settings — aktiv rad og breadcrumb', () => {
+  const org = FORHANDLER_NAV.find((i) => i.key === 'team');
 
-  it('Team-ruter aktiverer Team, ikke Settings', () => {
-    expect(team).toBeDefined();
-    if (!team) throw new Error('FORHANDLER_NAV mangler Team');
-    expect(isItemActive(team, '/innstillinger/team')).toBe(true);
-    expect(isItemActive(team, '/innstillinger/tjenestekatalog')).toBe(true);
-    expect(isItemActive(team, '/mekanikere')).toBe(true);
-    expect(isItemActive(team, '/mekanikere/kompetanse')).toBe(true);
+  it('Organisasjon-ruter aktiverer Organisasjon, ikke Settings', () => {
+    expect(org).toBeDefined();
+    if (!org) throw new Error('FORHANDLER_NAV mangler Organisasjon');
+    expect(isItemActive(org, '/innstillinger/team')).toBe(true);
+    expect(isItemActive(org, '/innstillinger/tjenestekatalog')).toBe(true);
+    expect(isItemActive(org, '/mekanikere')).toBe(false);
+    expect(isItemActive(org, '/mekanikere/kompetanse')).toBe(true);
+    expect(isItemActive(org, '/mekanikere/kapasitet')).toBe(true);
     expect(isItemActive(SETTINGS_NAV, '/innstillinger/team')).toBe(false);
     expect(isItemActive(SETTINGS_NAV, '/innstillinger/tjenestekatalog')).toBe(false);
     expect(isItemActive(SETTINGS_NAV, '/mekanikere')).toBe(false);
   });
 
-  it('gjenværende Settings-barn aktiverer Settings, ikke Team', () => {
-    expect(team).toBeDefined();
-    if (!team) throw new Error('FORHANDLER_NAV mangler Team');
+  it('Settings-stier aktiverer Settings, ikke Organisasjon', () => {
+    expect(org).toBeDefined();
+    if (!org) throw new Error('FORHANDLER_NAV mangler Organisasjon');
+    expect(erSettingsSti('/innstillinger')).toBe(true);
+    expect(erSettingsSti('/innstillinger/profil')).toBe(true);
+    expect(erSettingsSti('/innstillinger/varsler')).toBe(true);
+    expect(erSettingsSti('/innstillinger/team')).toBe(false);
     expect(isItemActive(SETTINGS_NAV, '/innstillinger')).toBe(true);
     expect(isItemActive(SETTINGS_NAV, '/innstillinger/varsler')).toBe(true);
     expect(isItemActive(SETTINGS_NAV, '/innstillinger/profil')).toBe(true);
     expect(isItemActive(SETTINGS_NAV, '/innstillinger/tjenester')).toBe(true);
     expect(isItemActive(SETTINGS_NAV, '/abonnement')).toBe(true);
     expect(isItemActive(SETTINGS_NAV, '/integrasjoner')).toBe(true);
-    expect(isItemActive(team, '/innstillinger')).toBe(false);
-    expect(isItemActive(team, '/innstillinger/varsler')).toBe(false);
-    expect(isItemActive(team, '/innstillinger/profil')).toBe(false);
+    expect(isItemActive(org, '/innstillinger')).toBe(false);
+    expect(isItemActive(org, '/innstillinger/varsler')).toBe(false);
+    expect(isItemActive(org, '/innstillinger/profil')).toBe(false);
+    expect(isItemActive(ENDWISE_SETTINGS_NAV, '/innstillinger/profil')).toBe(true);
+    expect(isItemActive(ENDWISE_SETTINGS_NAV, '/abonnement')).toBe(false);
   });
 
-  it('breadcrumb er Team › underpunkt, ikke Settings', () => {
+  it('breadcrumb er Organisasjon › underpunkt, ikke Settings', () => {
     expect(breadcrumbFor('/innstillinger/team', '', 'forhandler')).toEqual([
-      { label: 'Team', href: '/innstillinger/team' },
-      { label: 'Team & tilgang' },
+      { label: 'Organisasjon', href: '/innstillinger/team' },
+      { label: 'Team' },
     ]);
     expect(breadcrumbFor('/innstillinger/tjenestekatalog', '', 'forhandler')).toEqual([
-      { label: 'Team', href: '/innstillinger/team' },
+      { label: 'Organisasjon', href: '/innstillinger/team' },
       { label: 'Tjenestekatalog' },
     ]);
     expect(breadcrumbFor('/mekanikere/kompetanse', '', 'forhandler')).toEqual([
-      { label: 'Team', href: '/innstillinger/team' },
+      { label: 'Organisasjon', href: '/innstillinger/team' },
       { label: 'Kompetanse' },
     ]);
     expect(breadcrumbFor('/innstillinger/varsler', '', 'forhandler')).toEqual([
-      { label: 'Settings', href: '/innstillinger' },
+      { label: 'Settings', href: '/innstillinger/profil' },
       { label: 'Varsler' },
     ]);
     expect(breadcrumbFor('/endwise/team', '', 'endwise')).toEqual([
       { label: 'Team', href: '/endwise/team' },
     ]);
+  });
+});
+
+describe('Settings i sidebaren er destinasjon, ikke flyout', () => {
+  it('utvidet Settings er Link til profil, uten DropdownMenu', () => {
+    const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
+    const start = sidebar.indexOf('settingsNav &&');
+    expect(start).toBeGreaterThan(-1);
+    const bunn = sidebar.slice(start, sidebar.indexOf('function isChildActive'));
+    expect(bunn).toMatch(/<Link/);
+    expect(bunn).toMatch(/settingsNav\.href/);
+    expect(bunn).not.toMatch(/DropdownMenuHeader/);
+    expect(bunn).not.toMatch(/childrenForRole\(settingsNav/);
+  });
+
+  it('inspect har fortsatt settingsNav = null', () => {
+    const sidebar = les('../app/(app)/_shell/sidebar.tsx');
+    expect(sidebar).toMatch(/inspect \? null/);
   });
 });

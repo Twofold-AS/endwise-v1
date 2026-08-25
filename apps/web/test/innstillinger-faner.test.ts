@@ -11,6 +11,10 @@ import {
   synligeFaner,
 } from '../app/(app)/innstillinger/_faner.ts';
 
+function utenKommentarer(kilde: string) {
+  return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+}
+
 const her = dirname(fileURLToPath(import.meta.url));
 
 function les(rel: string) {
@@ -59,11 +63,13 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(skall).not.toMatch(/TeamInnhold/);
   });
 
-  it('admin-faner er de samme som i Settings-flyouten (uten Team)', () => {
+  it('admin-faner er dealer-only; Endwise-plattform ser kun Profil', () => {
     const admin = FANER.filter((f) => f.adminOnly).map((f) => f.id);
     expect(admin).toEqual(['integrasjoner', 'abonnement', 'tjenester']);
     expect(synligeFaner(false).map((f) => f.id)).toEqual(['profil', 'varsler']);
     expect(synligeFaner(true).map((f) => f.id)).toEqual([...FANE_IDS]);
+    expect(synligeFaner(true, false).map((f) => f.id)).toEqual(['profil']);
+    expect(synligeFaner(false, false).map((f) => f.id)).toEqual(['profil']);
   });
 
   it('«Bytt konto / mekaniker» er ikke en fane, og Admin er det heller ikke', () => {
@@ -93,12 +99,15 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(parseFane('varsler', false)).toBe('varsler');
     expect(parseFane(null, false, 'abonnement')).toBe('profil');
     expect(parseFane(null, true, 'abonnement')).toBe('abonnement');
+    expect(parseFane('abonnement', true, 'profil', false)).toBe('profil');
+    expect(parseFane('varsler', true, 'profil', false)).toBe('profil');
   });
 
   it('gamle sider renderer skallet, Team-siden er egen destinasjon', () => {
     expect(les('../app/(app)/innstillinger/profil/page.tsx')).toMatch(/startFane="profil"/);
     expect(les('../app/(app)/innstillinger/team/page.tsx')).not.toMatch(/InnstillingerSkall/);
-    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/Team & tilgang/);
+    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/>Team</);
+    expect(les('../app/(app)/innstillinger/team/page.tsx')).not.toMatch(/Team & tilgang/);
     expect(les('../app/(app)/innstillinger/varsler/page.tsx')).toMatch(/startFane="varsler"/);
     expect(les('../app/(app)/innstillinger/tjenester/page.tsx')).toMatch(/startFane="tjenester"/);
     expect(les('../app/(app)/abonnement/page.tsx')).toMatch(/startFane="abonnement"/);
@@ -133,22 +142,20 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(avatar).not.toMatch(/from '@\/components\/ui\/collapsible'/);
   });
 
-  it('ingen sticky Save-bar, ingen grønn switch/save, Team ligger i sidebaren', () => {
+  it('ingen sticky Save-bar, ingen grønn switch/save, Organisasjon ligger i sidebaren', () => {
     expect(skall).not.toMatch(/sticky/);
     expect(skall).not.toMatch(/bg-success|bg-green|#1ED27D|#22c55e/);
     expect(page).not.toMatch(/Search settings/);
+    expect(skall).toMatch(/erPlattform|erForhandler/);
+    expect(skall).toMatch(/faner\.length > 1/);
     const nav = les('../app/(app)/_shell/nav.ts');
-    const settings = nav.slice(
-      nav.indexOf('export const SETTINGS_NAV'),
-      nav.indexOf('MEKANIKER_NAV'),
+    const settings = utenKommentarer(
+      nav.slice(nav.indexOf('export const SETTINGS_NAV'), nav.indexOf('MEKANIKER_NAV')),
     );
-    expect(settings).toMatch(/href: '\/innstillinger'/);
-    expect(settings).toMatch(/href: '\/abonnement'/);
-    expect(settings).toMatch(/href: '\/innstillinger\/varsler'/);
-    expect(settings).not.toMatch(/label: 'Team & tilgang'/);
-    expect(settings).toMatch(/href: '\/innstillinger\/tjenester'/);
-    expect(settings).toMatch(/href: '\/integrasjoner'/);
     expect(settings).toMatch(/href: '\/innstillinger\/profil'/);
+    expect(settings).not.toMatch(/href: '\/abonnement'/);
+    expect(settings).not.toMatch(/href: '\/innstillinger\/varsler'/);
+    expect(settings).not.toMatch(/label: 'Team & tilgang'/);
     expect(settings).not.toMatch(/label: 'Admin'/);
     expect(nav).toMatch(/key: 'team'/);
     expect(nav).toMatch(/href: '\/innstillinger\/team'/);

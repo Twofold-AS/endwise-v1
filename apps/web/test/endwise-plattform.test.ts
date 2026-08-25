@@ -27,6 +27,15 @@ describe('plattform-org i Bytt visning', () => {
     expect(switcher).not.toMatch(/nå: Forhandler/);
   });
 
+  it('visningsvelgeren har X som minimerer til pille, persistert i localStorage', () => {
+    expect(switcher).toMatch(/Minimer visningsvelger/);
+    expect(switcher).toMatch(/Utvid visningsvelger/);
+    expect(switcher).toMatch(/endwise\.visningsvelger\.minimer/);
+    expect(switcher).toMatch(/rounded-pill/);
+    expect(switcher).toMatch(/localStorage/);
+    expect(switcher).not.toMatch(/label:\s*'Admin'/);
+  });
+
   it('på plattform vises bare Endwise — aldri Forhandler/Lager/Butikk som sesjonsbytte', () => {
     expect(switcher).toMatch(/c\.key === 'endwise'/);
     expect(switcher).toMatch(/visningsvalg = erPlattform/);

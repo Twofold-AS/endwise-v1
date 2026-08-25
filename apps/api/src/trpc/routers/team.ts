@@ -6,8 +6,8 @@ import {
   lesAvatar,
   mekanikerStatusVisning,
   resolveJobbfunksjon,
-  tellerSomBelastning,
   TILDELBARE_FUNKSJONER,
+  tellerSomBelastning,
 } from '@endwise/modules/profil';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';

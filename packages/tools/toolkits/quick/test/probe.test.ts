@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { QuickAuthError, QuickError } from '../src/errors.ts';
+import { getQuickHttp11Dispatcher } from '../src/https-proxy.ts';
 import {
   probeQuickReadOnly,
   QUICK_PROBE_USER_AGENT,
@@ -37,8 +38,11 @@ describe('F1-07 — GET-only Quick-probe', () => {
     expect(init.redirect).toBe('error');
     const headers = (init.headers ?? {}) as Record<string, string>;
     expect(headers['User-Agent']).toBe(QUICK_PROBE_USER_AGENT);
-    expect(headers['User-Agent']).toBe('Endwise/1 QuickProbe');
+    expect(headers['User-Agent']).toBe('curl/8.5.0');
     expect(headers.Accept).toBe('application/json');
+    expect((init as RequestInit & { dispatcher?: unknown }).dispatcher).toBe(
+      getQuickHttp11Dispatcher(),
+    );
   });
 
   it('baseUrl som slutter på /api/v2 treffer ikke /api/v2/api/v2/client/info', async () => {
@@ -120,5 +124,6 @@ describe('F1-07 — GET-only Quick-probe', () => {
     expect(kilde).not.toMatch(/fake-apiv2-ikke-ekte|ProdShared008\/[A-Za-z0-9]{8,}/);
     expect(kilde).not.toMatch(/console\.(log|info|debug|error|warn)/);
     expect(kilde).not.toMatch(/Yamaha Bergen/);
+    expect(kilde).not.toMatch(/Endwise\/1 QuickProbe/);
   });
 });

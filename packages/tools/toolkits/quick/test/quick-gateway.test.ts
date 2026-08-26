@@ -8,6 +8,9 @@ import {
   createQuickGateway,
   GATEWAY_SECRET_HEADER,
   matchAllowedQuickPath,
+  QUICK_CURL_USER_AGENT,
+  QUICK_UPSTREAM_ALLOW_H2,
+  QUICK_UPSTREAM_DISPATCHER,
 } from '../../../../../ops/quick-gateway/gateway.mjs';
 
 const SECRET = 'test-gateway-secret-ikke-ekte';
@@ -107,6 +110,25 @@ describe('ops/quick-gateway — allowlist + secret + ingen persist/logg', () => 
     }
   });
 
+  it('uten token → 400, ingen upstream', async () => {
+    const seen: unknown[] = [];
+    const gw = createQuickGateway({
+      secret: SECRET,
+      log: () => undefined,
+      fetch: async (url) => {
+        seen.push(url);
+        return jsonResponse({});
+      },
+    });
+    const { port, close } = await gw.listen(0);
+    try {
+      expect((await gatewayGet(port, INFO, { secret: SECRET })).status).toBe(400);
+      expect(seen).toHaveLength(0);
+    } finally {
+      await close();
+    }
+  });
+
   it('uten/feil secret → 401, ingen upstream (CWE-290, ikke IP-only)', async () => {
     const seen: unknown[] = [];
     const gw = createQuickGateway({
@@ -128,17 +150,33 @@ describe('ops/quick-gateway — allowlist + secret + ingen persist/logg', () => 
   });
 
   it('happy-path: videresender til q3.quick.no med per-request token, streamer svar', async () => {
-    const seen: { url: string; auth: string | undefined; hasGwSecret: boolean }[] = [];
+    const seen: {
+      url: string;
+      auth: string | undefined;
+      accept: string | null;
+      ua: string | null;
+      headerNames: string[];
+      hasGwSecret: boolean;
+      allowH2: unknown;
+      dispatcher: unknown;
+    }[] = [];
     const payload = { guid: 'probe-ok', source: 'mocked-quick' };
     const gw = createQuickGateway({
       secret: SECRET,
       log: () => undefined,
       fetch: async (url, init) => {
         const headers = new Headers(init?.headers);
+        const headerNames = [...headers.keys()].map((k) => k.toLowerCase()).sort();
         seen.push({
           url: String(url),
           auth: headers.get('authorization') ?? undefined,
+          accept: headers.get('accept'),
+          ua: headers.get('user-agent'),
+          headerNames,
           hasGwSecret: headers.has(GATEWAY_SECRET_HEADER),
+          allowH2: (init as { dispatcher?: { allowH2?: boolean } } | undefined)?.dispatcher
+            ?.allowH2,
+          dispatcher: (init as { dispatcher?: unknown } | undefined)?.dispatcher,
         });
         return jsonResponse(payload);
       },
@@ -148,16 +186,34 @@ describe('ops/quick-gateway — allowlist + secret + ingen persist/logg', () => 
       const res = await gatewayGet(port, `${INFO}?x=1`, { secret: SECRET, token: TOKEN });
       expect(res.status).toBe(200);
       expect(JSON.parse(res.body)).toEqual(payload);
-      expect(seen).toEqual([
-        {
-          url: `https://q3.quick.no${INFO}?x=1`,
-          auth: `Token token=${TOKEN}`,
-          hasGwSecret: false,
-        },
-      ]);
+      expect(seen).toHaveLength(1);
+      expect(seen[0]).toMatchObject({
+        url: `https://q3.quick.no${INFO}?x=1`,
+        auth: `Token token=${TOKEN}`,
+        accept: 'application/json',
+        ua: QUICK_CURL_USER_AGENT,
+        headerNames: ['accept', 'authorization', 'user-agent'],
+        hasGwSecret: false,
+        allowH2: QUICK_UPSTREAM_ALLOW_H2,
+        dispatcher: QUICK_UPSTREAM_DISPATCHER,
+      });
+      expect(seen[0]?.ua).toBe('curl/8.5.0');
+      expect(seen[0]?.allowH2).toBe(false);
     } finally {
       await close();
     }
+  });
+
+  it('default upstream er https.request (HTTP/1.1), ikke undici/H2', () => {
+    expect(QUICK_CURL_USER_AGENT).toBe('curl/8.5.0');
+    expect(QUICK_UPSTREAM_ALLOW_H2).toBe(false);
+    expect(QUICK_UPSTREAM_DISPATCHER).toEqual({ allowH2: false });
+    expect(gatewaySrc).toMatch(/https\.request/);
+    expect(gatewaySrc).toMatch(/curlEquivalentUpstreamFetch/);
+    expect(gatewaySrc).toMatch(/User-Agent': QUICK_CURL_USER_AGENT/);
+    expect(gatewaySrc).not.toMatch(/from ['"]undici['"]/);
+    expect(gatewaySrc).not.toMatch(/allowH2:\s*true/);
+    expect(gatewaySrc).toMatch(/ALLOWED_QUICK_HOST = 'q3\.quick\.no'/);
   });
 
   it('token skrives ikke til disk (CWE-922)', async () => {

@@ -5,7 +5,11 @@ import {
   getQuickGatewayBaseUrl,
   rewriteQuickUrlForGateway,
 } from '../src/gateway.ts';
-import { getQuickHttpsProxyDispatcher } from '../src/https-proxy.ts';
+import {
+  getQuickHttp11Dispatcher,
+  getQuickHttpsProxyDispatcher,
+  QUICK_CURL_USER_AGENT,
+} from '../src/https-proxy.ts';
 import { createQuickClient } from '../src/index.ts';
 import { probeQuickReadOnly } from '../src/probe.ts';
 
@@ -69,6 +73,9 @@ describe('QUICK_GATEWAY_URL — valgfri live-gateway (av = fjern env)', () => {
     expect(headers.Authorization).toBe('Token token=fake-apiv2-ikke-ekte');
     expect(headers[GATEWAY_SECRET_HEADER]).toBe(SECRET);
     expect(headers.Accept).toBe('application/json');
+    expect(headers['User-Agent']).toBe(QUICK_CURL_USER_AGENT);
+    const init = (kall[1] ?? {}) as RequestInit & { dispatcher?: unknown };
+    expect(init.dispatcher).toBe(getQuickHttp11Dispatcher());
   });
 
   it('customer/batch går samme gateway-sti (svar brukes som direkte Quick-kall)', async () => {
@@ -87,6 +94,7 @@ describe('QUICK_GATEWAY_URL — valgfri live-gateway (av = fjern env)', () => {
     const headers = (kall[1] as RequestInit).headers as Record<string, string>;
     expect(headers[GATEWAY_SECRET_HEADER]).toBe(SECRET);
     expect(headers.Authorization).toBe('Token token=fake-apiv2-ikke-ekte');
+    expect(headers['User-Agent']).toBe(QUICK_CURL_USER_AGENT);
   });
 
   it('gateway slår CONNECT — QUICK_HTTPS_PROXY ignoreres når gateway er satt', async () => {
@@ -97,7 +105,7 @@ describe('QUICK_GATEWAY_URL — valgfri live-gateway (av = fjern env)', () => {
     await probeQuickReadOnly(cfg);
     expect(String(spy.mock.calls[0]?.[0])).toMatch(/^https:\/\/gw\.example:8443\//);
     const init = (spy.mock.calls[0]?.[1] ?? {}) as RequestInit & { dispatcher?: unknown };
-    expect(init.dispatcher).toBeUndefined();
+    expect(init.dispatcher).toBe(getQuickHttp11Dispatcher());
     expect(getQuickHttpsProxyDispatcher()).toBeDefined();
   });
 

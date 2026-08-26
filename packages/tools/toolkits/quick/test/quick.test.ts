@@ -61,6 +61,7 @@ describe('customer/batch auth', () => {
     if (!kall) throw new Error('fetch ble aldri kalt');
     const headers = (kall[1] as RequestInit).headers as Record<string, string>;
     expect(headers.Authorization).toBe('Token token=tkn');
+    expect(headers['User-Agent']).toBe('curl/8.5.0');
     expect(spy.mock.calls[0]?.[0]).toBe('https://q3.quick.no/Test_Public/api/v2/client/info');
   });
 });

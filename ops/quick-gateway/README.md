@@ -29,6 +29,10 @@ Gateway er **ikke** et andresystem: den streamer Quick-svaret tilbake. Endwise s
 
 Instans = ett segment (`Test_Public`, `ProdShared008`). Alt annet → 403, ingen utgående kall.
 
+## Upstream mot Quick (curl-ekvivalent)
+
+Live `curl` fra boksen mot `GET /…/api/v2/client/info` gir HTTP 200. Samme URL + token via Node/undici-default ga HTTP 500. Gateway (og Endwise-klienten ved direkte kall) sender derfor **kun** `Authorization: Token token=…`, `Accept: application/json` og `User-Agent: curl/8.5.0`, over **HTTP/1.1** (`https.request` på boksen; undici `Agent({ allowH2: false })` i appen). Ingen ekstra headers. Gatewayen rives ikke ut.
+
 ## Installasjon
 
 ```bash

@@ -15,6 +15,9 @@
  *
  * Logg: statuskode + varighet. Aldri body eller headers (CWE-532).
  *
+ * Upstream mot q3.quick.no matcher working curl: User-Agent curl/8.5.0,
+ * Authorization + Accept, HTTP/1.1 (https.request — ikke Node/undici H2).
+ *
  * Av i appen = fjern QUICK_GATEWAY_URL i Vercel.
  *
  * SSH til boksen: nøkkel `endwise_scw`. Port 22 kun fra SSH_ALLOW_FROM
@@ -30,6 +33,13 @@ import { pathToFileURL } from 'node:url';
 export const ALLOWED_QUICK_HOST = 'q3.quick.no';
 export const GATEWAY_SECRET_HEADER = 'x-endwise-gateway-secret';
 export const QUICK_TOKEN_HEADER = 'x-quick-token';
+/**
+ * Curl-ekvivalent mot q3.quick.no. Live curl (HTTP/1.1 + denne UA) gir 200;
+ * Node/undici-default (annen UA, ofte HTTP/2) har gitt 500 på samme boks.
+ */
+export const QUICK_CURL_USER_AGENT = 'curl/8.5.0';
+export const QUICK_UPSTREAM_ALLOW_H2 = false;
+export const QUICK_UPSTREAM_DISPATCHER = Object.freeze({ allowH2: QUICK_UPSTREAM_ALLOW_H2 });
 
 /** Fast allowlist — ingen andre Quick-stier, ingen vilkårlig proxy. */
 export const ALLOWED_QUICK_API_PATHS = [
@@ -118,6 +128,53 @@ function quickTokenFromReq(req) {
   return '';
 }
 
+/**
+ * Default upstream: node:https.request (alltid HTTP/1.1). Ingen undici-dep
+ * på boksen (apt nodejs). Tester injiserer options.fetch og leser init.
+ *
+ * @param {string} url
+ * @param {{ method?: string, headers?: Record<string, string>, signal?: AbortSignal }} [init]
+ * @returns {Promise<Response>}
+ */
+export function curlEquivalentUpstreamFetch(url, init = {}) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const req = https.request(
+      {
+        protocol: parsed.protocol,
+        hostname: parsed.hostname,
+        port: parsed.port || 443,
+        path: `${parsed.pathname}${parsed.search}`,
+        method: init.method ?? 'GET',
+        headers: init.headers,
+      },
+      (res) => {
+        resolve(
+          new Response(Readable.toWeb(res), {
+            status: res.statusCode ?? 502,
+            headers: /** @type {HeadersInit} */ (res.headers),
+          }),
+        );
+      },
+    );
+    req.on('error', reject);
+    const signal = init.signal;
+    if (signal) {
+      const onAbort = () => {
+        req.destroy();
+        reject(signal.reason ?? new Error('aborted'));
+      };
+      if (signal.aborted) {
+        onAbort();
+        return;
+      }
+      signal.addEventListener('abort', onAbort, { once: true });
+      req.on('close', () => signal.removeEventListener('abort', onAbort));
+    }
+    req.end();
+  });
+}
+
 function loadTlsFromEnv() {
   const certPath = process.env.TLS_CERT_PATH ?? '';
   const keyPath = process.env.TLS_KEY_PATH ?? '';
@@ -142,7 +199,7 @@ function loadTlsFromEnv() {
 export function createQuickGateway(options = {}) {
   const secret = options.secret ?? process.env.GATEWAY_SECRET ?? '';
   const log = options.log ?? ((line) => process.stdout.write(`${line}\n`));
-  const fetchImpl = options.fetch ?? globalThis.fetch;
+  const fetchImpl = options.fetch ?? curlEquivalentUpstreamFetch;
   const tls = options.tls === false ? null : (options.tls ?? null);
 
   if (!secret) {
@@ -202,9 +259,11 @@ export function createQuickGateway(options = {}) {
         headers: {
           Authorization: authorization,
           Accept: 'application/json',
+          'User-Agent': QUICK_CURL_USER_AGENT,
         },
         redirect: 'error',
         signal: AbortSignal.timeout(15_000),
+        dispatcher: QUICK_UPSTREAM_DISPATCHER,
       });
     } catch {
       res.writeHead(502);

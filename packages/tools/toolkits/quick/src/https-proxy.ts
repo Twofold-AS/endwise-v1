@@ -1,4 +1,4 @@
-import { ProxyAgent, fetch as undiciFetch } from 'undici';
+import { Agent, type Dispatcher, ProxyAgent, fetch as undiciFetch } from 'undici';
 import { QuickError } from './errors.ts';
 import {
   GATEWAY_SECRET_HEADER,
@@ -16,6 +16,11 @@ import {
  *    TLS til q3.quick.no er ende-til-ende.
  * 3. Begge uset/tom → direkte fetch (dagens sti).
  *
+ * Alle stier sender curl-ekvivalent form mot Quick (eller mot gatewayen, som
+ * selv gjør curl-ekvivalent mot q3.quick.no): User-Agent curl/8.5.0 + HTTP/1.1
+ * (undici Agent allowH2: false). Live curl på Scaleway-boksen ga 200; Node
+ * default UA / H2 ga 500 på samme GET.
+ *
  * Brukes KUN av Quick-klienten — aldri setGlobalDispatcher / HTTPS_PROXY
  * (ville proxiet Stripe/Resend også).
  *
@@ -23,6 +28,26 @@ import {
  */
 
 const INVALID_PROXY = 'Ugyldig QUICK_HTTPS_PROXY';
+
+/** Samme UA som working `curl` mot q3.quick.no. */
+export const QUICK_CURL_USER_AGENT = 'curl/8.5.0';
+export const QUICK_UPSTREAM_ALLOW_H2 = false;
+
+const http11Dispatcher = new Agent({ allowH2: QUICK_UPSTREAM_ALLOW_H2 });
+
+export function getQuickHttp11Dispatcher(): Agent {
+  return http11Dispatcher;
+}
+
+type QuickFetchInit = RequestInit & { dispatcher?: Dispatcher };
+
+function curlEquivalentHeaders(init?: RequestInit): Record<string, string> {
+  const incoming = (init?.headers as Record<string, string> | undefined) ?? {};
+  return {
+    ...incoming,
+    'User-Agent': QUICK_CURL_USER_AGENT,
+  };
+}
 
 let cached: { raw: string; agent: ProxyAgent } | null = null;
 
@@ -56,7 +81,10 @@ export function getQuickHttpsProxyDispatcher(): ProxyAgent | undefined {
   }
   if (cached?.raw === raw) return cached.agent;
   dropCachedAgent();
-  const agent = new ProxyAgent(assertQuickHttpsProxyUri(raw));
+  const agent = new ProxyAgent({
+    uri: assertQuickHttpsProxyUri(raw),
+    allowH2: QUICK_UPSTREAM_ALLOW_H2,
+  });
   cached = { raw, agent };
   return agent;
 }
@@ -68,19 +96,30 @@ export function quickFetch(input: string, init?: RequestInit): Promise<Response>
     const secret = getQuickGatewaySecret();
     const url = rewriteQuickUrlForGateway(input, gateway);
     const headers = {
-      ...((init?.headers as Record<string, string> | undefined) ?? {}),
+      ...curlEquivalentHeaders(init),
       [GATEWAY_SECRET_HEADER]: secret,
     };
-    return fetch(url, { ...init, headers });
+    const gatewayInit: QuickFetchInit = {
+      ...init,
+      headers,
+      dispatcher: http11Dispatcher,
+    };
+    return fetch(url, gatewayInit as RequestInit);
   }
 
+  const headers = curlEquivalentHeaders(init);
   const dispatcher = getQuickHttpsProxyDispatcher();
   if (!dispatcher) {
-    return fetch(input, init);
+    const directInit: QuickFetchInit = {
+      ...init,
+      headers,
+      dispatcher: http11Dispatcher,
+    };
+    return fetch(input, directInit as RequestInit);
   }
   return undiciFetch(input, {
     method: init?.method,
-    headers: init?.headers as Record<string, string> | undefined,
+    headers,
     redirect: init?.redirect,
     signal: init?.signal ?? undefined,
     dispatcher,

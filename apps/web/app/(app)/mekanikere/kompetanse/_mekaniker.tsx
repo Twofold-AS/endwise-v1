@@ -27,14 +27,44 @@ export function MekanikerKompetanse({
   ferdigheter,
   rader,
   kanEndre,
+  skjulIdentitet = false,
 }: {
   mekaniker: Mekaniker;
   ferdigheter: Ferdighet[];
   rader: Kompetanse[];
   kanEndre: boolean;
+  /** Team-detaljpane: navn/avatar/ledig bor i Hvem, ikke her. */
+  skjulIdentitet?: boolean;
 }) {
   const [apen, setApen] = useState(false);
   const katalog = new Map(ferdigheter.map((f) => [f.key, f]));
+
+  if (skjulIdentitet) {
+    return (
+      <div className="flex flex-col gap-2 rounded-control border border-border bg-bg p-3">
+        {rader.length === 0 ? (
+          <span className="text-[12px] text-fg-muted">Ingen ferdigheter</span>
+        ) : (
+          rader.map((rad) => (
+            <KompetanseRad
+              key={rad.skillKey}
+              mekanikerId={mekaniker.id}
+              rad={rad}
+              navn={katalog.get(rad.skillKey)?.name ?? rad.skillKey}
+              kreverSert={katalog.get(rad.skillKey)?.requiresCertification ?? false}
+              kanEndre={kanEndre}
+            />
+          ))
+        )}
+        {kanEndre && (
+          <NyKompetanse
+            mekanikerId={mekaniker.id}
+            ferdigheter={ferdigheter.filter((f) => !rader.some((r) => r.skillKey === f.key))}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <CardShell>

@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Avatar,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -19,6 +20,7 @@ import { trpc } from '@/lib/trpc';
 import { STATUS_LABEL } from '../../bookinger/_status';
 import { MekanikerKompetanse } from '../../mekanikere/kompetanse/_mekaniker';
 import { fmtTime } from '../../min-dag/_status';
+import { StatusMerke } from './_status';
 
 type Rad = RouterOutput['team']['list'][number];
 
@@ -57,7 +59,7 @@ export function TeamDetaljer({
         className="fixed inset-0 z-30 bg-fg/20 xl:hidden"
       />
       <aside
-        className={`${BREDDE} fixed top-0 right-0 bottom-0 z-40 flex shrink-0 flex-col border-border border-l bg-sidebar xl:static xl:z-auto`}
+        className={`${BREDDE} fixed top-0 right-0 bottom-0 z-40 flex h-[calc(100dvh-3.5rem)] shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar xl:static xl:z-auto`}
         aria-label="Detaljer om den ansatte"
       >
         <div className="flex h-14 shrink-0 items-center gap-2 border-border border-b px-3">
@@ -74,13 +76,13 @@ export function TeamDetaljer({
           </button>
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-3">
-          <Person rad={rad} />
-          <Jobber userId={rad.userId} />
-          <EpostEndring userId={rad.userId} epost={rad.epost} />
-          <PassordEndring userId={rad.userId} kan={rad.kanLoggeInn && Boolean(rad.epost)} />
-          {rad.twoFactorEnabled ? <SlaAv2fa userId={rad.userId} navn={rad.navn} /> : null}
-          <KompetanseSeksjon rad={rad} />
-          <TimeplanSeksjon rad={rad} />
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+            <Hvem rad={rad} />
+            <Jobber userId={rad.userId} />
+            {rad.twoFactorEnabled ? <SlaAv2fa userId={rad.userId} navn={rad.navn} /> : null}
+            <KompetanseSeksjon rad={rad} />
+            <TimeplanSeksjon rad={rad} />
+          </div>
           <SlettAnsatt userId={rad.userId} navn={rad.navn} leder={rad.funksjon === 'leder'} />
         </div>
       </aside>
@@ -97,52 +99,148 @@ function Seksjon({ tittel, children }: { tittel: string; children: ReactNode }) 
   );
 }
 
-function Person({ rad }: { rad: Rad }) {
+function Hvem({ rad }: { rad: Rad }) {
   const utils = trpc.useUtils();
+  const [redigerer, setRedigerer] = useState(false);
+  const [epost, setEpost] = useState(rad.epost);
+  const [funksjon, setFunksjon] = useState(rad.funksjon);
   const sett = trpc.team.setFunction.useMutation({
     onSuccess: () => void utils.team.list.invalidate(),
   });
+  const lagreEpost = trpc.team.endreEpost.useMutation({
+    onSuccess: () => void utils.team.list.invalidate(),
+  });
+
+  const rolleLabel = FUNKSJON[rad.funksjon] ?? rad.funksjon;
+  const epostEndret = epost.trim() !== rad.epost;
+  const rolleEndret = rad.kanEndres && funksjon !== rad.funksjon;
+  const lagrer = sett.isPending || lagreEpost.isPending;
+
+  function lukk() {
+    setEpost(rad.epost);
+    setFunksjon(rad.funksjon);
+    setRedigerer(false);
+  }
 
   return (
     <Seksjon tittel="Hvem">
       <div className="rounded-control border border-border bg-bg p-3">
-        <p className="text-label text-fg">{rad.navn}</p>
-        {rad.kallenavn ? (
-          <p className="text-[12px] text-fg-muted">Kallenavn «{rad.kallenavn}»</p>
-        ) : null}
-        <p className="mt-1 text-[12px] text-fg-muted">
-          {FUNKSJON[rad.funksjon] ?? rad.funksjon}
-          {rad.epost ? ` · ${rad.epost}` : ' · ingen e-post'}
-          {!rad.kanLoggeInn ? ' · uten innlogging' : ''}
-        </p>
-        {rad.kanEndres ? (
-          <details className="mt-2">
-            <summary className="cursor-pointer text-[12px] text-fg-muted hover:text-fg">
-              Rolle
-            </summary>
-            <fieldset className="mt-2 flex flex-wrap gap-1" aria-label={`Rolle for ${rad.navn}`}>
-              {VALGBARE.map((v) => (
-                <button
-                  key={v.verdi}
-                  type="button"
-                  aria-pressed={rad.funksjon === v.verdi}
-                  disabled={sett.isPending}
-                  onClick={() => sett.mutate({ userId: rad.userId, funksjon: v.verdi })}
-                  className={`inline-flex h-7 items-center gap-1 rounded-[7px] px-2 text-[12px] ${
-                    rad.funksjon === v.verdi
-                      ? 'bg-sidebar-active text-fg'
-                      : 'text-fg-muted hover:text-fg'
-                  }`}
-                >
-                  <v.icon size={12} />
-                  {v.label}
-                </button>
-              ))}
-            </fieldset>
-          </details>
+        <div className="flex items-center gap-3">
+          <Avatar
+            seed={rad.userId}
+            valg={{ ...rad.avatar, humor: rad.statusHumor ?? rad.avatar.humor }}
+            navn={rad.navn}
+            size={32}
+            bevegelse="hover"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-label text-fg">{rad.navn}</p>
+            <StatusMerke status={rad.status} label={rad.statusLabel} />
+          </div>
+        </div>
+
+        {redigerer ? (
+          <form
+            className="mt-3 flex flex-col gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const nesteEpost = epost.trim();
+              const jobs: Promise<unknown>[] = [];
+              if (nesteEpost && epostEndret) {
+                jobs.push(lagreEpost.mutateAsync({ userId: rad.userId, epost: nesteEpost }));
+              }
+              if (
+                rolleEndret &&
+                (funksjon === 'selger' || funksjon === 'support' || funksjon === 'mekaniker')
+              ) {
+                jobs.push(sett.mutateAsync({ userId: rad.userId, funksjon }));
+              }
+              void Promise.all(jobs).then(() => setRedigerer(false));
+            }}
+          >
+            <label className="flex flex-col gap-1">
+              <span className="text-[12px] text-fg-muted">E-post</span>
+              <input
+                type="email"
+                value={epost}
+                onChange={(e) => setEpost(e.target.value)}
+                className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              />
+            </label>
+            <div className="flex flex-col gap-1">
+              <span className="text-[12px] text-fg-muted">Rolle</span>
+              {rad.kanEndres ? (
+                <fieldset className="flex flex-wrap gap-1" aria-label={`Rolle for ${rad.navn}`}>
+                  {VALGBARE.map((v) => (
+                    <button
+                      key={v.verdi}
+                      type="button"
+                      aria-pressed={funksjon === v.verdi}
+                      disabled={sett.isPending}
+                      onClick={() => setFunksjon(v.verdi)}
+                      className={`inline-flex h-7 items-center gap-1 rounded-[7px] px-2 text-[12px] ${
+                        funksjon === v.verdi
+                          ? 'bg-sidebar-active text-fg'
+                          : 'text-fg-muted hover:text-fg'
+                      }`}
+                    >
+                      <v.icon size={12} />
+                      {v.label}
+                    </button>
+                  ))}
+                </fieldset>
+              ) : (
+                <p className="text-[12px] text-fg-muted">Leder følger av tilgangsnivået.</p>
+              )}
+            </div>
+            {lagreEpost.isError ? (
+              <p className="text-[12px] text-danger">{lagreEpost.error.message}</p>
+            ) : null}
+            {sett.isError ? <p className="text-[12px] text-danger">{sett.error.message}</p> : null}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={lukk}
+                className="h-control rounded-control px-3 text-label text-fg-muted"
+              >
+                Avbryt
+              </button>
+              <button
+                type="submit"
+                disabled={lagrer || (!epostEndret && !rolleEndret)}
+                className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
+              >
+                {lagrer ? 'Lagrer …' : 'Lagre'}
+              </button>
+            </div>
+          </form>
         ) : (
-          <p className="mt-2 text-[12px] text-fg-muted">Leder følger av tilgangsnivået.</p>
+          <div className="mt-3 flex flex-col gap-2">
+            <div>
+              <p className="text-[12px] text-fg-muted">E-post</p>
+              <p className="text-label text-fg">{rad.epost || 'ingen e-post'}</p>
+            </div>
+            <div>
+              <p className="text-[12px] text-fg-muted">Rolle</p>
+              <p className="text-label text-fg">{rolleLabel}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setEpost(rad.epost);
+                setFunksjon(rad.funksjon);
+                setRedigerer(true);
+              }}
+              className="inline-flex h-control items-center self-start rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2"
+            >
+              Endre
+            </button>
+          </div>
         )}
+
+        <div className="mt-3">
+          <PassordEndring userId={rad.userId} kan={rad.kanLoggeInn && Boolean(rad.epost)} />
+        </div>
       </div>
     </Seksjon>
   );
@@ -184,54 +282,6 @@ function Jobber({ userId }: { userId: string }) {
   );
 }
 
-function EpostEndring({ userId, epost }: { userId: string; epost: string }) {
-  const utils = trpc.useUtils();
-  const [verdi, setVerdi] = useState(epost);
-  const lagre = trpc.team.endreEpost.useMutation({
-    onSuccess: () => void utils.team.list.invalidate(),
-  });
-
-  return (
-    <Seksjon tittel="E-post">
-      <details>
-        <summary className="cursor-pointer text-[12px] text-fg-muted hover:text-fg">
-          E-postendring
-        </summary>
-        <form
-          className="mt-2 flex flex-col gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!verdi.trim()) return;
-            lagre.mutate({ userId, epost: verdi.trim() });
-          }}
-        >
-          <label className="flex flex-col gap-1">
-            <span className="text-[12px] text-fg-muted">Ny e-post</span>
-            <input
-              type="email"
-              required
-              value={verdi}
-              onChange={(e) => setVerdi(e.target.value)}
-              className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={lagre.isPending || verdi.trim() === epost}
-            className="inline-flex h-control items-center self-start rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2 disabled:opacity-40"
-          >
-            {lagre.isPending ? 'Lagrer …' : 'Lagre e-post'}
-          </button>
-          {lagre.isError ? <p className="text-[12px] text-danger">{lagre.error.message}</p> : null}
-          {lagre.isSuccess ? (
-            <p className="text-[12px] text-fg-muted">E-posten er oppdatert.</p>
-          ) : null}
-        </form>
-      </details>
-    </Seksjon>
-  );
-}
-
 function PassordEndring({ userId, kan }: { userId: string; kan: boolean }) {
   const [apen, setApen] = useState(false);
   const send = trpc.team.sendPassordendring.useMutation({
@@ -240,16 +290,14 @@ function PassordEndring({ userId, kan }: { userId: string; kan: boolean }) {
 
   if (!kan) {
     return (
-      <Seksjon tittel="Send passordendring">
-        <p className="text-[12px] text-fg-muted">
-          Personen har ingen innlogging. Opprett hen med e-post hvis hen skal få passord.
-        </p>
-      </Seksjon>
+      <p className="text-[12px] text-fg-muted">
+        Personen har ingen innlogging. Opprett hen med e-post hvis hen skal få passord.
+      </p>
     );
   }
 
   return (
-    <Seksjon tittel="Send passordendring">
+    <>
       <button
         type="button"
         onClick={() => setApen(true)}
@@ -288,7 +336,7 @@ function PassordEndring({ userId, kan }: { userId: string; kan: boolean }) {
       {send.isSuccess ? (
         <p className="text-[12px] text-fg-muted">Passordendring er sendt.</p>
       ) : null}
-    </Seksjon>
+    </>
   );
 }
 
@@ -472,18 +520,13 @@ function KompetanseSeksjon({ rad }: { rad: Rad }) {
 
   return (
     <Seksjon tittel="Kompetanse">
-      <div className="rounded-control border border-border bg-bg px-3 py-2">
-        <p className="text-label text-fg">{rad.navn}</p>
-        <p className="text-[12px] text-fg-muted">
-          {mek?.statusLabel ?? rad.statusLabel ?? 'Ingen status'}
-        </p>
-      </div>
       {mek ? (
         <MekanikerKompetanse
           mekaniker={mek}
           ferdigheter={ferdigheter.data ?? []}
           rader={rader}
           kanEndre
+          skjulIdentitet
         />
       ) : (
         <p className="text-[12px] text-fg-muted">Laster kompetanse …</p>

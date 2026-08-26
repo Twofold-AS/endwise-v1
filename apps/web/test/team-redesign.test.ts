@@ -123,11 +123,21 @@ describe('Opprett ansatt — e-post valgfri, egen pille', () => {
   });
 });
 
-describe('Detaljpane som Innboks — fast høyde uten indre scroll', () => {
+describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
   const detaljer = utenKommentarer(les('../app/(app)/innstillinger/team/_detaljer.tsx'));
+  const side = utenKommentarer(les('../app/(app)/innstillinger/team/page.tsx'));
   const liste = les('../app/(app)/innstillinger/team/_liste.tsx');
   const innboks = utenKommentarer(les('../app/(app)/innboks/_detaljer.tsx'));
   const slot = utenKommentarer(les('../app/(app)/innboks/_detaljer-slot.tsx'));
+  const chrome = utenKommentarer(les('../app/(app)/innboks/_chrome.tsx'));
+  const hvem = detaljer.slice(
+    detaljer.indexOf('function Hvem'),
+    detaljer.indexOf('function Jobber'),
+  );
+  const komp = detaljer.slice(
+    detaljer.indexOf('function KompetanseSeksjon'),
+    detaljer.indexOf('function TimeplanSeksjon'),
+  );
 
   it('listen er kompakt og åpner Detaljer med ArrowUpRight', () => {
     expect(liste).toMatch(/Detaljer/);
@@ -138,39 +148,66 @@ describe('Detaljpane som Innboks — fast høyde uten indre scroll', () => {
     expect(detaljer).toMatch(/PanelRightClose/);
   });
 
-  it('panelet viser person, planlagte jobber, e-post, passord, 2FA, kompetanse, timeplan og Slett sist', () => {
+  it('Hvem er én identitetsblokk: avatar+aktivitet+navn, e-post, rolle, Endre-expand og passord', () => {
+    expect(hvem.length).toBeGreaterThan(80);
+    expect(hvem).toMatch(/<Avatar/);
+    expect(hvem).toMatch(/StatusMerke/);
+    expect(hvem).toMatch(/rad\.navn/);
+    expect(hvem).toMatch(/E-post/);
+    expect(hvem).toMatch(/Rolle/);
+    expect(hvem).toMatch(/>\s*Endre\s*</);
+    expect(hvem).toMatch(/Avbryt/);
+    expect(hvem).toMatch(/team\.endreEpost/);
+    expect(hvem).toMatch(/team\.setFunction/);
+    expect(hvem).toMatch(/<PassordEndring/);
+    expect(detaljer).toMatch(/Send passordendring/);
+    expect(detaljer).toMatch(/team\.sendPassordendring/);
+    expect(hvem).not.toMatch(/<details/);
+    expect(hvem).not.toMatch(/<summary/);
+    expect(detaljer).not.toMatch(/tittel="Send passordendring"/);
+    expect(detaljer).not.toMatch(/tittel="E-post"/);
+    expect(detaljer).not.toMatch(/E-postendring/);
+  });
+
+  it('Kompetanse har ikke navn, avatar eller ledig — det bor bare i Hvem', () => {
+    expect(komp.length).toBeGreaterThan(40);
+    expect(komp).not.toMatch(/rad\.navn/);
+    expect(komp).not.toMatch(/statusLabel/);
+    expect(komp).not.toMatch(/StatusMerke/);
+    expect(komp).not.toMatch(/<Avatar/);
+    expect(komp).toMatch(/skjulIdentitet|Ingen ferdigheter/);
+    expect(komp).toMatch(/MekanikerKompetanse|competence\.listAllMechanicSkills/);
+    expect(hvem).toMatch(/StatusMerke/);
+  });
+
+  it('panelet har planlagte jobber, 2FA, timeplan og Slett sist fylt rød', () => {
     expect(detaljer).toMatch(/Planlagte jobber/);
     expect(detaljer).not.toMatch(/Jobber hen gjør|Jobben hen gjør/);
     expect(detaljer).toMatch(/team\.jobber/);
-    expect(detaljer).toMatch(/E-postendring|Ny e-post/);
-    expect(detaljer).toMatch(/team\.endreEpost/);
-    expect(detaljer).toMatch(/Send passordendring/);
-    expect(detaljer).toMatch(/team\.sendPassordendring/);
     expect(detaljer).toMatch(/Slå av 2FA/);
     expect(detaljer).toMatch(/team\.slaAv2faStart/);
     expect(detaljer).toMatch(/team\.slaAv2fa/);
     expect(detaljer).toMatch(/Slett/);
     expect(detaljer).toMatch(/team\.fjern/);
-    expect(detaljer).toMatch(/Kompetanse/);
-    expect(detaljer).toMatch(/statusLabel/);
     expect(detaljer).toMatch(/Timeplan/);
-    expect(detaljer).toMatch(/MekanikerKompetanse|competence\.listAllMechanicSkills/);
-    expect(detaljer).toMatch(/KompetanseSeksjon[\s\S]*TimeplanSeksjon[\s\S]*SlettAnsatt/);
+    expect(detaljer).toMatch(
+      /Hvem[\s\S]*KompetanseSeksjon[\s\S]*TimeplanSeksjon[\s\S]*SlettAnsatt/,
+    );
     expect(detaljer).toMatch(/bg-danger[\s\S]*text-white/);
   });
 
-  it('rolle og e-post er lukkede nedtrekk, ikke alltid-åpne skjema', () => {
-    expect(detaljer).toMatch(/<details/);
-    expect(detaljer).toMatch(/<summary/);
-    expect(detaljer).toMatch(/Rolle/);
-    expect(detaljer).toMatch(/E-postendring/);
-  });
-
-  it('team- og innboks-detalj har overflow-hidden, ikke overflow-y-auto', () => {
+  it('team- og innboks-kolonnen er 100dvh minus topbar, overflow-hidden, uten overflow-y på pane', () => {
+    expect(side).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
+    expect(side).toMatch(/overflow-hidden/);
+    expect(detaljer).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
     expect(detaljer).toMatch(/overflow-hidden/);
     expect(detaljer).not.toMatch(/overflow-y-auto/);
+    expect(chrome).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
+    expect(chrome).toMatch(/overflow-hidden/);
+    expect(innboks).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
     expect(innboks).toMatch(/overflow-hidden/);
     expect(innboks).not.toMatch(/overflow-y-auto/);
+    expect(slot).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
     expect(slot).toMatch(/overflow-hidden/);
     expect(slot).not.toMatch(/overflow-y-auto/);
   });

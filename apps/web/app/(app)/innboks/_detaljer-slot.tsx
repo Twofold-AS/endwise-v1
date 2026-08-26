@@ -84,7 +84,7 @@ export function DetaljerSlot() {
   if (endwise) {
     return (
       <aside
-        className="fixed top-0 right-0 bottom-0 z-40 flex w-[320px] shrink-0 flex-col border-border border-l bg-sidebar xl:static xl:z-auto"
+        className="fixed top-0 right-0 bottom-0 z-40 flex h-[calc(100dvh-3.5rem)] w-[320px] shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar xl:static xl:z-auto"
         aria-label="Detaljer om samtalen"
       >
         <div className="flex h-14 shrink-0 items-center gap-2 border-border border-b px-3">

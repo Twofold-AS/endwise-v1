@@ -41,8 +41,7 @@ export const TEAM_FANER: readonly TeamFaneDef[] = [
   {
     id: 'opprett',
     label: 'Opprett ansatt',
-    ingress:
-      'Med e-post får hen invitasjon. Uten e-post vises hen i teamet uten innlogging.',
+    ingress: 'Med e-post får hen invitasjon. Uten e-post vises hen i teamet uten innlogging.',
   },
 ];
 

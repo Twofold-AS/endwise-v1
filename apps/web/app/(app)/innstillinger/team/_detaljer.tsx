@@ -474,7 +474,9 @@ function KompetanseSeksjon({ rad }: { rad: Rad }) {
     <Seksjon tittel="Kompetanse">
       <div className="rounded-control border border-border bg-bg px-3 py-2">
         <p className="text-label text-fg">{rad.navn}</p>
-        <p className="text-[12px] text-fg-muted">{mek?.statusLabel ?? rad.statusLabel ?? 'Ingen status'}</p>
+        <p className="text-[12px] text-fg-muted">
+          {mek?.statusLabel ?? rad.statusLabel ?? 'Ingen status'}
+        </p>
       </div>
       {mek ? (
         <MekanikerKompetanse

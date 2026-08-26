@@ -155,11 +155,7 @@ describe('Detaljpane som Innboks — fast høyde uten indre scroll', () => {
     expect(detaljer).toMatch(/statusLabel/);
     expect(detaljer).toMatch(/Timeplan/);
     expect(detaljer).toMatch(/MekanikerKompetanse|competence\.listAllMechanicSkills/);
-    const slett = detaljer.lastIndexOf('SlettAnsatt');
-    const komp = detaljer.lastIndexOf('KompetanseSeksjon');
-    const tid = detaljer.lastIndexOf('TimeplanSeksjon');
-    expect(slett).toBeGreaterThan(komp);
-    expect(slett).toBeGreaterThan(tid);
+    expect(detaljer).toMatch(/KompetanseSeksjon[\s\S]*TimeplanSeksjon[\s\S]*SlettAnsatt/);
     expect(detaljer).toMatch(/bg-danger[\s\S]*text-white/);
   });
 

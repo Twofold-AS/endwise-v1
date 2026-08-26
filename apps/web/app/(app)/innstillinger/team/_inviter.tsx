@@ -6,21 +6,12 @@ import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
 
 /**
- * F1-10 — INVITER EN ANSATT. Lederens flate.
+ * F1-10 — ÉN «Inviter ansatt».
  *
- * ── ⚠️ Knappene her er kosmetikk ─────────────────────────────────────────
- * Sperren er `invitasjoner.opprett`: `adminProcedure` + eksplisitt rollesjekk +
- * funksjonsvalidering i modulen + CHECK-constraint i basen. En `dealer_staff`
- * som kaller ruta direkte får `FORBIDDEN`, uansett hva nettleseren viser.
+ * Med e-post: eksisterende invitasjonsflyt (`invitasjoner.opprett`).
+ * Uten e-post: `team.opprettUtenInvitasjon` — vises i teamet, ingen mail.
  *
- * ── Hva lederen KAN velge, og hva hen ikke kan ───────────────────────────
- * Kun jobbfunksjon (F1-14). **Tilgangsnivået er alltid `dealer_staff`** og
- * finnes ikke som felt — å invitere noen rett til admin er en annen og langt
- * farligere handling, og skal ikke skje fra en nedtrekksliste som handler om
- * hva folk jobber med.
- *
- * ⛔ Tokenet vises ALDRI her. Det finnes i lenka som sendes på e-post, og bare
- * der. Lista under viser hvem som er invitert — ikke hvordan man blir dem.
+ * ⚠️ Knappene er kosmetikk. Sperren er adminProcedure + rollesjekk.
  */
 type Funksjon = 'selger' | 'support' | 'mekaniker';
 
@@ -33,14 +24,16 @@ const FUNKSJONER: { verdi: Funksjon; label: string; hint: string; icon: LucideIc
 export function Inviter() {
   const utils = trpc.useUtils();
   const apne = trpc.invitasjoner.list.useQuery();
+  const [navn, setNavn] = useState('');
   const [epost, setEpost] = useState('');
   const [funksjon, setFunksjon] = useState<Funksjon>('selger');
   const [kvittering, setKvittering] = useState<string | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
 
-  const opprett = trpc.invitasjoner.opprett.useMutation({
+  const opprettInvitasjon = trpc.invitasjoner.opprett.useMutation({
     onSuccess: (res) => {
       setFeil(null);
+      setNavn('');
       setEpost('');
       setKvittering(
         res.sendt
@@ -48,6 +41,24 @@ export function Inviter() {
           : `Invitasjonen er opprettet for ${res.epost}, men e-posten kunne ikke sendes. Sjekk oppsettet, eller tilbakekall og prøv igjen.`,
       );
       void utils.invitasjoner.list.invalidate();
+    },
+    onError: (e) => {
+      setKvittering(null);
+      setFeil(e.message);
+    },
+  });
+
+  const opprettLokal = trpc.team.opprettUtenInvitasjon.useMutation({
+    onSuccess: (res) => {
+      setFeil(null);
+      setNavn('');
+      setEpost('');
+      setKvittering(
+        `${res.navn} er lagt til. Ingen invitasjon er sendt — hen kan ikke logge inn ennå.`,
+      );
+      void utils.team.list.invalidate();
+      void utils.mechanics.list.invalidate();
+      void utils.mechanics.oversikt.invalidate();
     },
     onError: (e) => {
       setKvittering(null);
@@ -65,31 +76,54 @@ export function Inviter() {
 
   function send(event: FormEvent) {
     event.preventDefault();
-    if (!epost.trim()) return;
-    opprett.mutate({ epost: epost.trim(), funksjon });
+    const mail = epost.trim();
+    const n = navn.trim();
+    if (mail) {
+      opprettInvitasjon.mutate({ epost: mail, funksjon });
+      return;
+    }
+    if (!n) {
+      setFeil('Skriv inn navn når du inviterer uten e-post.');
+      return;
+    }
+    opprettLokal.mutate({ navn: n, funksjon });
   }
 
-  const venter = opprett.isPending;
+  const venter = opprettInvitasjon.isPending || opprettLokal.isPending;
+  const kanSende = Boolean(epost.trim() || navn.trim());
 
   return (
     <CardShell className="flex flex-col gap-4 p-4">
       <div>
-        <p className="text-label text-fg">Inviter en ansatt</p>
+        <p className="text-label text-fg">Inviter ansatt</p>
         <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-          Den ansatte får en personlig lenke på e-post, setter sitt eget passord og tofaktor, og
-          lander der jobben deres begynner. Tilgangsnivået blir alltid <b>ansatt</b> — ikke leder.
+          E-post er valgfri. Med e-post får hen en invitasjon og setter selv passord og tofaktor.
+          Uten e-post vises hen i teamet uten innlogging. Tilgangsnivået blir alltid <b>ansatt</b>.
         </p>
       </div>
 
       <form onSubmit={send} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
+          <label htmlFor="inv-navn" className="text-label text-fg">
+            Navn <span className="font-normal text-fg-muted">(påkrevd uten e-post)</span>
+          </label>
+          <input
+            id="inv-navn"
+            value={navn}
+            onChange={(e) => setNavn(e.target.value)}
+            maxLength={160}
+            placeholder="Kari Mekaniker"
+            className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
           <label htmlFor="inv-epost" className="text-label text-fg">
-            E-post
+            E-post <span className="font-normal text-fg-muted">(valgfri)</span>
           </label>
           <input
             id="inv-epost"
             type="email"
-            required
             value={epost}
             onChange={(e) => setEpost(e.target.value)}
             placeholder="fornavn@verksted.no"
@@ -125,20 +159,15 @@ export function Inviter() {
           </div>
         </fieldset>
 
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={venter || !epost.trim()}
-              className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg transition-opacity hover:opacity-90 disabled:opacity-40"
-            >
-              {venter ? 'Sender …' : 'Send invitasjon'}
-            </button>
-            {kvittering ? <p className="text-[12px] text-fg-muted">{kvittering}</p> : null}
-          </div>
-          {!epost.trim() && !venter ? (
-            <p className="text-[12px] text-fg-muted">Skriv inn e-post for å sende invitasjon.</p>
-          ) : null}
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={venter || !kanSende}
+            className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            {venter ? 'Lagrer …' : 'Inviter ansatt'}
+          </button>
+          {kvittering ? <p className="text-[12px] text-fg-muted">{kvittering}</p> : null}
         </div>
 
         {feil ? (
@@ -148,7 +177,6 @@ export function Inviter() {
         ) : null}
       </form>
 
-      {/* ── Åpne invitasjoner ───────────────────────────────────────────── */}
       {apne.data && apne.data.length > 0 ? (
         <div className="flex flex-col gap-2 border-border border-t pt-3">
           <p className="text-label text-fg">Åpne invitasjoner</p>

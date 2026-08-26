@@ -27,9 +27,10 @@ describe('mekanikerlista viser blobatar med status-humor', () => {
   });
 });
 
-describe('Team › Funksjoner er den ekte ansattlista', () => {
-  const funksjoner = readFileSync(
-    resolve(her, '../app/(app)/innstillinger/team/_funksjoner.tsx'),
+describe('Team › lista er den ekte ansattlista', () => {
+  const liste = readFileSync(resolve(her, '../app/(app)/innstillinger/team/_liste.tsx'), 'utf8');
+  const mek = readFileSync(
+    resolve(her, '../app/(app)/innstillinger/team/_mekanikere-pille.tsx'),
     'utf8',
   );
   const inviter = readFileSync(
@@ -38,18 +39,18 @@ describe('Team › Funksjoner er den ekte ansattlista', () => {
   );
   const hub = readFileSync(resolve(her, '../app/(app)/innstillinger/team/page.tsx'), 'utf8');
 
-  it('viser blobatar + statuslabel, ikke initialer', () => {
-    expect(funksjoner).toMatch(/<Avatar/);
-    expect(funksjoner).toMatch(/statusHumor/);
-    expect(funksjoner).toMatch(/statusLabel/);
-    expect(funksjoner).toMatch(/seed=\{r\.userId\}/);
-    expect(funksjoner).not.toMatch(/\.slice\(0,\s*1\)\.toUpperCase\(\)/);
+  it('viser blobatar + status-humor, ikke initialer', () => {
+    expect(liste).toMatch(/<Avatar/);
+    expect(liste).toMatch(/statusHumor/);
+    expect(liste).toMatch(/seed=\{rad\.userId\}/);
+    expect(liste).not.toMatch(/\.slice\(0,\s*1\)\.toUpperCase\(\)/);
+    expect(mek).toMatch(/statusLabel/);
   });
 
-  it('invitasjoner og settings-huben er urørt — ingen ansikt uten identitet', () => {
+  it('invitasjoner er uten avatar — lista eier ansiktene', () => {
     expect(inviter).not.toMatch(/<Avatar/);
-    expect(hub).toMatch(/<Funksjoner/);
     expect(hub).toMatch(/<Inviter/);
+    expect(hub).toMatch(/TeamListe|MekanikerePille/);
   });
 });
 

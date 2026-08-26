@@ -121,9 +121,10 @@ describe('Ny jobb og tomflater', () => {
     expect(analyse).toMatch(/Eksempel — ikke live verkstedstall/);
   });
 
-  it('invite-disabled forklarer at e-post mangler', () => {
-    expect(les('../app/(app)/innstillinger/team/_inviter.tsx')).toMatch(
-      /Skriv inn e-post for å sende invitasjon/,
-    );
+  it('Inviter ansatt forklarer at e-post er valgfri', () => {
+    const inviter = les('../app/(app)/innstillinger/team/_inviter.tsx');
+    expect(inviter).toMatch(/E-post er valgfri/);
+    expect(inviter).toMatch(/Skriv inn navn når du inviterer uten e-post/);
+    expect(inviter).toMatch(/Inviter ansatt/);
   });
 });

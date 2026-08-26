@@ -32,23 +32,23 @@ describe('F5-55 — Ny kunde på kundesiden', () => {
   });
 });
 
-describe('F1-10 — legg til ansatt uten invitasjon', () => {
+describe('F1-10 — én Inviter ansatt (e-post valgfri)', () => {
   const team = les('../app/(app)/innstillinger/team/page.tsx');
   const inviter = les('../app/(app)/innstillinger/team/_inviter.tsx');
-  const lokal = les('../app/(app)/innstillinger/team/_legg-til.tsx');
   const samtale = les('../app/(app)/innboks/_ny-samtale.tsx');
 
-  it('Team har både invitasjon og lokal oppretting', () => {
+  it('Team har én invitasjon — med e-post sender, uten e-post oppretter lokalt', () => {
     expect(team).toMatch(/Inviter/);
-    expect(team).toMatch(/LeggTilUtenInvitasjon/);
-    expect(inviter).toMatch(/Send invitasjon/);
-    expect(lokal).toMatch(/Legg til uten invitasjon/);
-    expect(lokal).toMatch(/team\.opprettUtenInvitasjon/);
-    expect(lokal).toMatch(/Ingen e-post sendes/);
-    expect(lokal).toMatch(/mekaniker/);
-    expect(lokal).toMatch(/selger/);
-    expect(lokal).toMatch(/support/);
-    expect(lokal).not.toMatch(/Kontor|Gulvet/);
+    expect(team).not.toMatch(/LeggTilUtenInvitasjon/);
+    expect(inviter).toMatch(/Inviter ansatt/);
+    expect(inviter).toMatch(/valgfri/);
+    expect(inviter).toMatch(/invitasjoner\.opprett/);
+    expect(inviter).toMatch(/team\.opprettUtenInvitasjon/);
+    expect(inviter).toMatch(/mekaniker/);
+    expect(inviter).toMatch(/selger/);
+    expect(inviter).toMatch(/support/);
+    expect(inviter).not.toMatch(/Kontor|Gulvet/);
+    expect(inviter).not.toMatch(/Ny ansatt/);
   });
 
   it('Ny samtale-piller forblir Kunde · Intern · Support — ingen Mekaniker-pille', () => {

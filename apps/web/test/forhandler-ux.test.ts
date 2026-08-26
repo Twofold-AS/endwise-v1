@@ -2,13 +2,13 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { FANE_ALIAS } from '../app/(app)/innstillinger/_faner.ts';
 import {
   breadcrumbFor,
   FORHANDLER_NAV,
   isItemActive,
   SETTINGS_NAV,
 } from '../app/(app)/_shell/nav.ts';
+import { FANE_ALIAS } from '../app/(app)/innstillinger/_faner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 

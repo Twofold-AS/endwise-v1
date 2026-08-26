@@ -358,9 +358,7 @@ describe('Verkstednorsk nav-labels (25.08.2026)', () => {
     expect(breadcrumbFor('/support', '', 'forhandler')).toEqual([
       { label: 'Hjelp', href: '/hjelp' },
     ]);
-    expect(breadcrumbFor('/hjelp', '', 'forhandler')).toEqual([
-      { label: 'Hjelp', href: '/hjelp' },
-    ]);
+    expect(breadcrumbFor('/hjelp', '', 'forhandler')).toEqual([{ label: 'Hjelp', href: '/hjelp' }]);
     expect(breadcrumbFor('/dashboard', '', 'forhandler')).toEqual([
       { label: 'Verkstedet', href: '/dashboard' },
       { label: 'Dagen' },

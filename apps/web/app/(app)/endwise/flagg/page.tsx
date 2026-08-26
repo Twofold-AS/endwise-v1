@@ -39,6 +39,7 @@ const KJENTE_FORKLARINGER: Record<string, string> = {
   'kill-switch': 'Plattform-kill-switch. Kan ikke overstyres per forhandler.',
   'dev-mode':
     'Dev-mode. Krever i tillegg endwise_admin og demo-tenant — flagget alene gir ingenting.',
+  shop: 'Intern testbutikk. Global default AV. Slås på per forhandler her — ikke en selgbar modul.',
 };
 
 export default function EndwiseFlaggPage() {

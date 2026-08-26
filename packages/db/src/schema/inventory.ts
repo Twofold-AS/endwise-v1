@@ -23,9 +23,10 @@ import { tenants } from './tenants.ts';
  * ikke lenger et spørsmål med ett svar. Lager er sannheten; Butikk (F10-03)
  * spør, og reserverer.
  *
- * ⚠️ Ingen priser mot kunde her. `costMinor` er innkjøpspris og er en
- * FORRETNINGSHEMMELIGHET — se felt-allowlisten i lager-verktøyet for
- * AI-agenten (F6-15/LLM06). Utsalgspris hører hjemme i Butikk.
+ * ⚠️ `costMinor` er innkjøpspris og er en FORRETNINGSHEMMELIGHET — se
+ * felt-allowlisten i lager-verktøyet for AI-agenten (F6-15/LLM06).
+ * `sellPriceMinor` er Butikk-utsalg på SAMME rad (F10-03) — ikke en
+ * annen katalog. Null = ikke til salg.
  */
 
 /**
@@ -74,6 +75,12 @@ export const parts = pgTable(
      * ⛔ FORRETNINGSHEMMELIGHET — aldri ut til en kundevendt agent (LLM06).
      */
     costMinor: integer('cost_minor'),
+    /**
+     * F10-03 — Utsalgspris i ØRE. **Ikke en annen katalog.** Butikk leser
+     * `parts` + `stock_levels`. Null = ikke til salg i Butikk. Kostpris
+     * (`costMinor`) er innkjøp og forblir forretningshemmelighet.
+     */
+    sellPriceMinor: integer('sell_price_minor'),
     /** Varsle når samlet beholdning faller under dette. Null = ikke varsle. */
     minStock: integer('min_stock'),
     active: boolean('active').notNull().default(true),

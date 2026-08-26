@@ -3,6 +3,7 @@ import { erPlattformTenant, landingForPlatform } from '@endwise/modules/plattfor
 import { landingForJobbfunksjon, resolveJobbfunksjon, visningsnavn } from '@endwise/modules/profil';
 import { resolveDevMode } from '../dev-mode.ts';
 import { protectedProcedure, router } from '../init.ts';
+import { resolveShopFlag } from '../shop-flag.ts';
 
 /**
  * F1 — «hvem er jeg?» for klient-side rollegating. Rollen kommer fra
@@ -24,6 +25,7 @@ import { protectedProcedure, router } from '../init.ts';
 export const sessionRouter = router({
   me: protectedProcedure.query(async ({ ctx }) => {
     const devMode = await resolveDevMode(ctx);
+    const shopEnabled = await resolveShopFlag(ctx);
 
     return withTenant(ctx.db, ctx.tenantId, async (tx) => {
       const [mech] = await tx
@@ -181,6 +183,8 @@ export const sessionRouter = router({
         /** Aktive tillegg (`tenant_modules.enabled`). Basis-moduler står ikke her. */
         moduler: moduler.map((m) => m.key),
         devMode,
+        /** F10-03 — kosmetikk. Sperren er shopProcedure. Fail-safe AV. */
+        shopEnabled,
       };
     });
   }),

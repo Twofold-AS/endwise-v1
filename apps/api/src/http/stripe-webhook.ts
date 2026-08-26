@@ -1,5 +1,6 @@
 import { createBillingService, subscriptionFromPriceIds } from '@endwise/modules/billing';
 import { createAppContext } from '../context.ts';
+import { markerShopOrdreBetalt } from '../lib/shop.ts';
 import { getStripe, stripeConfigured } from '../lib/stripe.ts';
 
 /**
@@ -62,9 +63,31 @@ export async function handleStripeWebhookRaw(
     return Response.json({ error: 'signaturfeil' }, { status: 400 });
   }
 
-  const billing = createBillingService(createAppContext().db);
+  const ctx = createAppContext();
+  const billing = createBillingService(ctx.db);
   try {
     switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as {
+          id?: string;
+          mode?: string;
+          payment_intent?: string | { id: string };
+          metadata?: Record<string, string>;
+        };
+        if (session.metadata?.kind !== 'shop') break;
+        const tenantId = session.metadata.tenant_id;
+        const sessionId = session.id;
+        if (!tenantId || !sessionId) break;
+        const paymentIntentId =
+          typeof session.payment_intent === 'string'
+            ? session.payment_intent
+            : (session.payment_intent?.id ?? null);
+        await markerShopOrdreBetalt(ctx.db, tenantId, {
+          checkoutSessionId: sessionId,
+          paymentIntentId,
+        });
+        break;
+      }
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const sub = event.data.object as SubLike;

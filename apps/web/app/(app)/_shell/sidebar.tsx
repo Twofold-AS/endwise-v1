@@ -87,6 +87,7 @@ export function Sidebar() {
     isMechanic,
     tenantName,
     devMode,
+    shopEnabled,
     canSwitchDemo,
     erPlattform,
     verksteder,
@@ -112,7 +113,7 @@ export function Sidebar() {
   const context = inspect ? 'forhandler' : erPlattform ? 'endwise' : (chosen ?? pathContext);
   const contexts = erPlattform
     ? CONTEXTS.filter((c) => c.key === 'endwise')
-    : contextsForRole(role, isMechanic, devMode);
+    : contextsForRole(role, isMechanic, devMode, shopEnabled);
   const navRolle = erPlattform
     ? role === 'endwise_support'
       ? 'endwise_support'
@@ -285,7 +286,7 @@ export function Sidebar() {
           {items.length === 0 && !collapsed && (
             <p className="px-2.5 py-6 text-[12px] text-fg-muted leading-relaxed">
               {context === 'butikk'
-                ? 'Butikk er ikke designet ennå. Konteksten står her som en plassholder — ingen kulisse som later som den virker.'
+                ? 'Butikk er stengt. Feature-flagget «shop» er av for denne forhandleren.'
                 : 'Tom foreløpig. Endwise-internt innhold bygges gradvis; dagens /admin-sider er urørt, men bevisst ikke dratt inn hit.'}
             </p>
           )}

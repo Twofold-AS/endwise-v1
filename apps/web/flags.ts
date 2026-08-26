@@ -15,7 +15,7 @@
  * wired (samme forutsetning som data-sidene). Inntil da bruker flate-kode disse
  * TRYGGE default-verdiene. Nøkkel-registeret her er kontrakten.
  */
-export const FLAG_KEYS = ['kill-switch', 'dev-mode'] as const;
+export const FLAG_KEYS = ['kill-switch', 'dev-mode', 'shop'] as const;
 export type FlagKey = (typeof FLAG_KEYS)[number];
 
 /**
@@ -40,6 +40,8 @@ export const FLAG_KEY_MAX = 64;
 export const FLAG_DEFAULTS: Record<FlagKey, boolean> = {
   'kill-switch': false,
   'dev-mode': false,
+  /** Intern testbutikk. Global default AV. Tenant-overstyring på /endwise/flagg. */
+  shop: false,
 };
 
 export function flagDefault(key: FlagKey): boolean {

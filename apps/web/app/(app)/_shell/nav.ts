@@ -20,6 +20,7 @@ import {
   Package,
   Settings,
   ShieldCheck,
+  ShoppingCart,
   Store,
   Tags,
   UserCog,
@@ -113,6 +114,8 @@ export type AppContext = {
   requiresMechanic?: boolean;
   /** F5-28: vises kun når dev-mode er PÅ (tre server-side betingelser). */
   requiresDevMode?: boolean;
+  /** F10-03: vises kun når feature-flaget `shop` er PÅ for tenanten. */
+  requiresShopFlag?: boolean;
   landing: string;
 };
 
@@ -148,15 +151,16 @@ export const CONTEXTS: AppContext[] = [
     landing: '/lager',
   },
   {
-    // F5-28 — BEVISST TOM. Eier designer flaten selv; den skal ikke gjettes.
-    // Konteksten står i dropdownen som en plassholder man kan gå inn i og se
-    // hva som mangler, ikke som en kulisse som later som den virker.
+    /**
+     * F10-03 — intern testbutikk. Synlig kun når flagget `shop` er på for
+     * tenanten (tenant-overstyring). Ikke en selgbar modul. Ikke Medusa.
+     */
     key: 'butikk',
     label: 'Butikk',
-    hint: 'Ikke designet ennå',
+    hint: 'Katalog og kasse',
     icon: Store,
-    roles: ENDWISE,
-    requiresDevMode: true,
+    roles: DRIFT,
+    requiresShopFlag: true,
     landing: '/butikk',
   },
   {
@@ -343,6 +347,20 @@ export const LAGER_NAV: NavItem[] = [
   },
 ];
 
+/* ══ BUTIKK-konteksten (F10-03) ══════════════════════════════════════════
+ * Intern preview. Katalog leser lager. Ingen ekstra IA.
+ */
+export const BUTIKK_NAV: NavItem[] = [
+  { key: 'butikk-katalog', label: 'Katalog', icon: Package, href: '/butikk', roles: DRIFT },
+  {
+    key: 'butikk-kasse',
+    label: 'Handlekurv / kasse',
+    icon: ShoppingCart,
+    href: '/butikk/kasse',
+    roles: DRIFT,
+  },
+];
+
 /* ══ ENDWISE-ADMIN ═══════════════════════════════════════════════════════
  * Var bevisst tom (eiers beslutning 04.08.2026). Fikk sitt første punkt
  * 07.08.2026: **Forhandlere** — det er herfra en tenant opprettes, og uten
@@ -433,8 +451,9 @@ export const ENDWISE_SETTINGS_NAV: NavItem = {
  *    markeres `disabled` i stedet (F5-29). Å la valget forsvinne uten et ord
  *    var grunnen til at eier «ikke fant mekanikerdelen»: den var der hele
  *    tiden, men uten dør. Nå står døra der, låst, med skiltet på.
- *  · `requiresDevMode` filtrerer derimot HELT bort. Butikk-konteksten er ikke
- *    noe en forhandler skal vite finnes.
+ *  · `requiresDevMode` filtrerer derimot HELT bort.
+ *  · `requiresShopFlag` filtrerer Butikk bort når flagget er av. En
+ *    dealer_admin uten tenant-overstyring skal ikke se konteksten.
  *
  * ⚠️ Begge deler er kosmetikk. Serveren håndhever uansett.
  */
@@ -442,13 +461,18 @@ export function contextsForRole(
   role: OrgRole | null,
   isMechanic: boolean,
   devMode = false,
+  shopFlag = false,
 ): (AppContext & { disabled?: boolean; disabledHint?: string })[] {
   if (!role) return [];
-  return CONTEXTS.filter((c) => c.roles.includes(role) && (!c.requiresDevMode || devMode)).map(
+  return CONTEXTS.filter(
     (c) =>
-      c.requiresMechanic && !isMechanic
-        ? { ...c, disabled: true, disabledHint: 'Krever mekaniker-profil' }
-        : c,
+      c.roles.includes(role) &&
+      (!c.requiresDevMode || devMode) &&
+      (!c.requiresShopFlag || shopFlag),
+  ).map((c) =>
+    c.requiresMechanic && !isMechanic
+      ? { ...c, disabled: true, disabledHint: 'Krever mekaniker-profil' }
+      : c,
   );
 }
 
@@ -456,7 +480,7 @@ export function navForContext(context: ContextKey): NavItem[] {
   if (context === 'mekaniker') return MEKANIKER_NAV;
   if (context === 'endwise') return ENDWISE_NAV;
   if (context === 'lager') return LAGER_NAV;
-  if (context === 'butikk') return [];
+  if (context === 'butikk') return BUTIKK_NAV;
   return FORHANDLER_NAV;
 }
 
@@ -636,7 +660,8 @@ export const PARKED_LABEL: Record<string, string> = {
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
   '/endwise/innstillinger': 'Endwise · Dev-mode',
   '/innstillinger/tjenestekatalog': 'Ansatte · Prisliste',
-  '/butikk': 'Butikk (ikke designet ennå)',
+  '/butikk': 'Butikk · Katalog',
+  '/butikk/kasse': 'Butikk · Handlekurv / kasse',
   '/lager/deler': 'Lager · Deler',
   '/lager/lokasjoner': 'Lager · Plass',
   '/lager/bevegelser': 'Lager · Inn og ut',

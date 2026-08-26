@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  BUTIKK_NAV,
   breadcrumbFor,
   childrenForRole,
   ENDWISE_NAV,
@@ -244,6 +245,7 @@ function alleNavLabels(): string[] {
     ...FORHANDLER_NAV,
     ...MEKANIKER_NAV,
     ...LAGER_NAV,
+    ...BUTIKK_NAV,
     ...ENDWISE_NAV,
     SETTINGS_NAV,
     ENDWISE_SETTINGS_NAV,

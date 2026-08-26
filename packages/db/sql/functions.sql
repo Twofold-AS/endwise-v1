@@ -366,6 +366,7 @@ begin
   -- før den dynamiske løkka. EXECUTE setter ikke FOUND — ROW_COUNT.
   -- Kun foreign_key_violation / undefined_table svelges i runden.
   foreach v_name in array array[
+    'shop_order_lines', 'shop_orders',
     'stock_movements', 'stock_levels', 'parts', 'stock_locations',
     'messages', 'thread_participants', 'threads', 'stream_events', 'notifications',
     'customer_notes', 'bookings', 'vehicles', 'customers',

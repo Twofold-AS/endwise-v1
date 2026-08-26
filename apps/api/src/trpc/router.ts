@@ -22,6 +22,7 @@ import { profileRouter } from './routers/profile.ts';
 import { quickRouter } from './routers/quick.ts';
 import { servicesRouter } from './routers/services.ts';
 import { sessionRouter } from './routers/session.ts';
+import { shopRouter } from './routers/shop.ts';
 import { streamRouter } from './routers/stream.ts';
 import { teamRouter } from './routers/team.ts';
 import { tenantsRouter } from './routers/tenants.ts';
@@ -51,6 +52,7 @@ export const appRouter = router({
   verksted: verkstedRouter,
   flags: flagsRouter,
   inventory: inventoryRouter,
+  shop: shopRouter,
   vehicles: vehiclesRouter,
   helpdesk: helpdeskRouter,
   services: servicesRouter,

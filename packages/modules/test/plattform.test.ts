@@ -82,6 +82,7 @@ describe('landing og kopi', () => {
     expect(erForhandlerRutePaaPlattform('/innstillinger/profil')).toBe(false);
     expect(erForhandlerRutePaaPlattform('/innstillinger/team')).toBe(true);
     expect(erForhandlerRutePaaPlattform('/innstillinger/tjenestekatalog')).toBe(true);
+    expect(erForhandlerRutePaaPlattform('/prisliste')).toBe(true);
     expect(erForhandlerRutePaaPlattform('/abonnement')).toBe(true);
     expect(erForhandlerRutePaaPlattform('/tjenester')).toBe(true);
     expect(erForhandlerRutePaaPlattform('/innstillinger/tjenester')).toBe(true);

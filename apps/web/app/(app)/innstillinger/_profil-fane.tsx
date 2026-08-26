@@ -8,15 +8,16 @@ import { AvatarVelger } from '../_avatar/avatar-velger';
 import { lesTema, settTema, type Tema } from '../_lib/tema';
 import { ByttEpostSkjema } from '../_shell/bytt-epost';
 import { ByttPassordSkjema } from '../_shell/bytt-passord';
-import { KallenavnSeksjon, VarslingslyderRad, VisningsnavnFelt } from '../_shell/profil-kort';
+import { KallenavnFelt, VarslingslyderRad, VisningsnavnFelt } from '../_shell/profil-kort';
 import { ToFaktorRad } from '../_shell/to-faktor-rad';
 
 /**
  * F5-19 / F1-17 / F1-20 — Settings › Profil, landet i pille-fanen.
  *
- * Layout (Jonas): blobatar 56px TIL VENSTRE, visningsnavn | e-post i to
- * kolonner til høyre. Form-, farge- og uttrykk-velgeren er foldet under.
- * Ingen filopplasting. Felt-Lagre beholdes, ingen sticky Save.
+ * Layout (Jonas + Mikael 26.08): blobatar 56px TIL VENSTRE, ett
+ * identitetsblokk til høyre: visningsnavn · kallenavn · e-post. Form-,
+ * farge- og uttrykk-velgeren er foldet under. Ingen filopplasting.
+ * Felt-Lagre beholdes, ingen sticky Save.
  */
 export function ProfilFane() {
   const [theme, setTheme] = useState<Tema>('light');
@@ -47,6 +48,10 @@ export function ProfilFane() {
             <VisningsnavnFelt />
           </div>
           <div>
+            <p className="mb-2 text-label text-fg">Kallenavn</p>
+            <KallenavnFelt />
+          </div>
+          <div className="sm:col-span-2">
             <p className="mb-2 text-label text-fg">E-post</p>
             <input
               value={meg.data?.epost ?? ''}
@@ -62,8 +67,6 @@ export function ProfilFane() {
       </AvatarVelger>
 
       <ByttEpostSkjema gjeldende={meg.data?.epost ?? ''} />
-
-      <KallenavnSeksjon />
 
       <div className="overflow-hidden rounded-xl border border-border">
         <div className="flex h-row-store items-center gap-3 bg-bg px-4">

@@ -1097,9 +1097,8 @@ async function main() {
    *   · i «Deler til Iron 883» (mechanic_dealer = intern) → «Skiftenøkkelen»
    *   · i «Ulyd i bremsene på MT-07» (customer_dealer)   → «Ola Mekaniker»
    *
-   * ⛔ Anna Admin får IKKE kallenavn. `dealer_admin` er forhandlerens offisielle
-   * konto, og mutasjonen ville uansett avvist det (`kanHaKallenavn`). Seeden
-   * skal ikke lage en tilstand UI-et nekter å opprette.
+   * Anna Admin får ikke kallenavn i seeden — hun kan sette det selv.
+   * Alle innloggede roller kan ha kallenavn (26.08.2026).
    */
   await db
     .insert(schema.memberProfiles)

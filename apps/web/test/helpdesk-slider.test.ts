@@ -35,20 +35,27 @@ describe('helpdesk-slider: Ny tvinger åpen, persist kun uten ulest', () => {
     expect(HELPDESK_SLIDER_MINIMER_KEY).not.toMatch(/visningsvelger/);
   });
 
-  it('leser collapsed fra localStorage-verdien 1', () => {
+  it('leser collapsed fra localStorage-verdien 1, ulagret er null', () => {
     expect(lesLagretMinimer('1')).toBe(true);
     expect(lesLagretMinimer('0')).toBe(false);
-    expect(lesLagretMinimer(null)).toBe(false);
+    expect(lesLagretMinimer(null)).toBe(null);
   });
 
   it('Ny sak = fullt åpen ved lasting, selv om localStorage sier minimert', () => {
     expect(sliderStartMinimer(true, true)).toBe(false);
     expect(sliderStartMinimer(false, true)).toBe(false);
+    expect(sliderStartMinimer(null, true, true)).toBe(false);
   });
 
   it('uten ulest respekteres lagret minimert/åpen', () => {
     expect(sliderStartMinimer(true, false)).toBe(true);
     expect(sliderStartMinimer(false, false)).toBe(false);
+  });
+
+  it('tom liste uten lagret valg starter minimert — chrome, ikke slettet', () => {
+    expect(sliderStartMinimer(null, false, true)).toBe(true);
+    expect(sliderStartMinimer(false, false, true)).toBe(false);
+    expect(sliderStartMinimer(null, false, false)).toBe(false);
   });
 
   it('ny ulest id tvinger åpen (live/SSE eller query-oppdatering)', () => {
@@ -92,8 +99,19 @@ describe('TipCard er stedet som minimeres', () => {
     expect(tip).toMatch(/Fra helpdesken/);
     expect(tip).toMatch(/<NewBadge/);
     expect(tip).toMatch(/HOYDE = 208|height: HOYDE/);
-    expect(tip).toMatch(/if \(rader\.length === 0\) return null/);
-    expect(tip).not.toMatch(/Ingen artikler ennå/);
+    expect(tip).not.toMatch(/if \(rader\.length === 0\) return null/);
+    expect(tip).toMatch(/Hjelp/);
+    expect(tip).toMatch(/Ingen artikler ennå/);
+  });
+
+  it('tom liste viser Hjelp-chrome som kan utvides — widgeten slettes ikke', () => {
+    expect(tip).toMatch(/Utvid helpdesk-slider/);
+    expect(tip).toMatch(/Minimer helpdesk-slider/);
+    expect(sidebar).toMatch(/context === 'forhandler' && <TipCard/);
+    expect(sidebar).toMatch(/<TipCard \/>/);
+    const raa = les('../app/(app)/_shell/sidebar.tsx');
+    expect(raa.indexOf('<TipCard')).toBeGreaterThan(-1);
+    expect(raa.indexOf('<TipCard')).toBeLessThan(raa.indexOf('settingsNav.href'));
   });
 
   it('helpdesk.list sitter ikke på 5 min staleTime — focus må treffe nye artikler', () => {

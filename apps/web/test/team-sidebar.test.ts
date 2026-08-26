@@ -90,10 +90,19 @@ describe('Ansatte i sidebar — forhandler', () => {
     nav.slice(nav.indexOf('export const SETTINGS_NAV'), nav.indexOf('export const MEKANIKER_NAV')),
   );
 
-  it('Ansatte ligger over Hjelp, med Team/Kompetanse/Timeplan (uten Prisliste)', () => {
+  it('Ansatte ligger over Rapporter og Hjelp, med Team/Kompetanse/Timeplan (uten Prisliste)', () => {
     const keys = FORHANDLER_NAV.map((i) => i.key);
-    expect(keys.indexOf('team')).toBeGreaterThan(keys.indexOf('analyse'));
-    expect(keys.indexOf('team')).toBeLessThan(keys.indexOf('helpdesk'));
+    expect(keys).toEqual([
+      'dashboard',
+      'innboks',
+      'saker',
+      'kunder',
+      'team',
+      'analyse',
+      'helpdesk',
+    ]);
+    expect(keys.indexOf('team')).toBeLessThan(keys.indexOf('analyse'));
+    expect(keys.indexOf('analyse')).toBeLessThan(keys.indexOf('helpdesk'));
     expect(keys).not.toContain('ai-verktoy');
     expect(keys).not.toContain('samarbeid');
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
@@ -115,22 +124,30 @@ describe('Ansatte i sidebar — forhandler', () => {
     expect(forhandler).not.toMatch(/label:\s*'Samarbeid'/);
   });
 
-  it('Ansatte er ADMIN_OF_TENANT; Prisliste bor under Verkstedet for DRIFT', () => {
+  it('Ansatte er ADMIN_OF_TENANT; Prisliste bor under Jobber for DRIFT', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
     const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
+    const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
     expect(org).toBeDefined();
     expect(verksted).toBeDefined();
-    if (!org || !verksted) throw new Error('FORHANDLER_NAV mangler Ansatte/Verkstedet');
+    expect(jobber).toBeDefined();
+    if (!org || !verksted || !jobber) {
+      throw new Error('FORHANDLER_NAV mangler Ansatte/Verkstedet/Jobber');
+    }
     const tilgang = childrenForRole(org, 'dealer_admin').map((c) => c.label);
     const staffAnsatte = childrenForRole(org, 'dealer_staff').map((c) => c.label);
     const staffVerksted = childrenForRole(verksted, 'dealer_staff').map((c) => c.label);
+    const staffJobber = childrenForRole(jobber, 'dealer_staff').map((c) => c.label);
     expect(tilgang).toEqual(['Team', 'Kompetanse', 'Timeplan']);
     expect(staffAnsatte).toEqual([]);
     expect(itemsForRole(FORHANDLER_NAV, 'dealer_staff').some((i) => i.key === 'team')).toBe(false);
-    expect(staffVerksted).toEqual(['Dagen', 'Prisliste']);
-    expect(verksted.children?.map((c) => c.href)).toEqual([
-      '/dashboard',
-      '/innstillinger/tjenestekatalog',
+    expect(verksted.children).toBeUndefined();
+    expect(staffVerksted).toEqual([]);
+    expect(staffJobber).toEqual(['Oversikt', 'Kalender', 'Prisliste']);
+    expect(jobber.children?.map((c) => c.href)).toEqual([
+      '/jobber',
+      '/jobber?visning=kalender',
+      '/prisliste',
     ]);
   });
 
@@ -163,10 +180,16 @@ describe('Ansatte vs Innstillinger — aktiv rad og breadcrumb', () => {
     expect(isItemActive(org, '/innstillinger/team')).toBe(true);
     expect(isItemActive(org, '/innstillinger/tjenestekatalog')).toBe(false);
     const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
+    const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
     expect(verksted).toBeDefined();
-    if (!verksted) throw new Error('FORHANDLER_NAV mangler Verkstedet');
-    expect(isItemActive(verksted, '/innstillinger/tjenestekatalog')).toBe(true);
+    expect(jobber).toBeDefined();
+    if (!verksted || !jobber) throw new Error('FORHANDLER_NAV mangler Verkstedet/Jobber');
+    expect(isItemActive(verksted, '/innstillinger/tjenestekatalog')).toBe(false);
+    expect(isItemActive(verksted, '/prisliste')).toBe(false);
     expect(isItemActive(verksted, '/dashboard')).toBe(true);
+    expect(isItemActive(verksted, '/verkstedet')).toBe(true);
+    expect(isItemActive(jobber, '/innstillinger/tjenestekatalog')).toBe(true);
+    expect(isItemActive(jobber, '/prisliste')).toBe(true);
     expect(isItemActive(org, '/mekanikere')).toBe(false);
     expect(isItemActive(org, '/mekanikere/kompetanse')).toBe(true);
     expect(isItemActive(org, '/mekanikere/kapasitet')).toBe(true);
@@ -201,7 +224,11 @@ describe('Ansatte vs Innstillinger — aktiv rad og breadcrumb', () => {
       { label: 'Team' },
     ]);
     expect(breadcrumbFor('/innstillinger/tjenestekatalog', '', 'forhandler')).toEqual([
-      { label: 'Verkstedet', href: '/dashboard' },
+      { label: 'Jobber', href: '/jobber' },
+      { label: 'Prisliste' },
+    ]);
+    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
+      { label: 'Jobber', href: '/jobber' },
       { label: 'Prisliste' },
     ]);
     expect(breadcrumbFor('/mekanikere/kompetanse', '', 'forhandler')).toEqual([
@@ -267,22 +294,27 @@ function alleNavLabels(): string[] {
 }
 
 describe('Verkstednorsk nav-labels (25.08.2026)', () => {
-  it('forhandler: åtte knapper, Verkstedet▾ Dagen+Prisliste, uten Samarbeid', () => {
+  it('forhandler: Verkstedet uten dropdown, Jobber▾ Oversikt+Kalender+Prisliste', () => {
     expect(FORHANDLER_NAV.map((i) => i.label)).toEqual([
       'Verkstedet',
       'Innboks',
       'Jobber',
       'Kunder',
-      'Rapporter',
       'Ansatte',
+      'Rapporter',
       'Hjelp',
     ]);
     const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
-    expect(verksted?.children?.map((c) => c.label)).toEqual(['Dagen', 'Prisliste']);
+    expect(verksted?.href).toBe('/dashboard');
+    expect(verksted?.children).toBeUndefined();
     const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
     expect(jobber?.href).toBe('/jobber');
-    expect(jobber?.children?.map((c) => c.label)).toEqual(['Liste', 'Kalender']);
-    expect(jobber?.children?.map((c) => c.href)).toEqual(['/jobber', '/jobber?visning=kalender']);
+    expect(jobber?.children?.map((c) => c.label)).toEqual(['Oversikt', 'Kalender', 'Prisliste']);
+    expect(jobber?.children?.map((c) => c.href)).toEqual([
+      '/jobber',
+      '/jobber?visning=kalender',
+      '/prisliste',
+    ]);
     const rapporter = FORHANDLER_NAV.find((i) => i.key === 'analyse');
     expect(rapporter?.href).toBe('/rapporter');
     expect(rapporter?.children).toBeUndefined();
@@ -331,11 +363,11 @@ describe('Verkstednorsk nav-labels (25.08.2026)', () => {
   it('breadcrumb og PARKED_LABEL følger de nye navnene', () => {
     expect(breadcrumbFor('/saker', '', 'forhandler')).toEqual([
       { label: 'Jobber', href: '/jobber' },
-      { label: 'Liste' },
+      { label: 'Oversikt' },
     ]);
     expect(breadcrumbFor('/jobber', '', 'forhandler')).toEqual([
       { label: 'Jobber', href: '/jobber' },
-      { label: 'Liste' },
+      { label: 'Oversikt' },
     ]);
     expect(breadcrumbFor('/saker', 'visning=kalender', 'forhandler')).toEqual([
       { label: 'Jobber', href: '/jobber' },
@@ -358,12 +390,12 @@ describe('Verkstednorsk nav-labels (25.08.2026)', () => {
     expect(breadcrumbFor('/support', '', 'forhandler')).toEqual([
       { label: 'Hjelp', href: '/hjelp' },
     ]);
-    expect(breadcrumbFor('/hjelp', '', 'forhandler')).toEqual([
-      { label: 'Hjelp', href: '/hjelp' },
-    ]);
+    expect(breadcrumbFor('/hjelp', '', 'forhandler')).toEqual([{ label: 'Hjelp', href: '/hjelp' }]);
     expect(breadcrumbFor('/dashboard', '', 'forhandler')).toEqual([
       { label: 'Verkstedet', href: '/dashboard' },
-      { label: 'Dagen' },
+    ]);
+    expect(breadcrumbFor('/verkstedet', '', 'forhandler')).toEqual([
+      { label: 'Verkstedet', href: '/dashboard' },
     ]);
     expect(breadcrumbFor('/integrasjoner', '', 'forhandler')).toEqual([
       { label: 'Innstillinger', href: '/innstillinger/profil' },
@@ -373,7 +405,8 @@ describe('Verkstednorsk nav-labels (25.08.2026)', () => {
       { label: 'Parkert · Innsikt' },
     ]);
     expect(PARKED_LABEL['/support']).toBe('Hjelp');
-    expect(PARKED_LABEL['/innstillinger/tjenestekatalog']).toBe('Verkstedet · Prisliste');
+    expect(PARKED_LABEL['/innstillinger/tjenestekatalog']).toBe('Jobber · Prisliste');
+    expect(PARKED_LABEL['/prisliste']).toBe('Jobber · Prisliste');
     expect(PARKED_LABEL['/lager/lokasjoner']).toBe('Lager · Plass');
     expect(PARKED_LABEL['/lager/bevegelser']).toBe('Lager · Inn og ut');
     expect(PARKED_LABEL['/admin/flagg']).toBe('Parkert · Flagg');

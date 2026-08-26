@@ -46,19 +46,16 @@ export function visningsnavn(profil: Navneprofil, visning: Navnevisning = 'offis
 /**
  * Kan denne rollen HA kallenavn?
  *
- * ⛔ Nei for `dealer_admin` og `endwise_admin`. Forhandlerkontoen er den
- * offisielle stemmen ut mot kunden, og Endwise-admin er oss. Et kallenavn på en
- * konto som også signerer utgående kommunikasjon er en ulykke som venter på en
- * distraksjon.
+ * 26.08.2026 (Mikael): ja for alle innloggede roller — forhandler-admin,
+ * staff, mekaniker, Endwise. Kallenavnet er intern sjargong og vises aldri
+ * utad (`visningsnavn` defaulter til `offisiell`). Feltet var tidligere
+ * stengt for `dealer_admin`/`endwise_admin`; det er åpnet, ikke et nytt
+ * navnesystem.
  *
- * Håndheves i mutasjonen (`profile.setNickname`), ikke bare ved å skjule feltet
- * i UI-et — et skjult felt er en anbefaling, en avvist mutasjon er en regel.
+ * Håndheves i mutasjonen (`profile.setNickname`) via denne funksjonen.
  */
-const ROLLER_UTEN_KALLENAVN = new Set(['dealer_admin', 'endwise_admin', 'owner']);
-
 export function kanHaKallenavn(rolle: string | null | undefined): boolean {
-  if (!rolle) return false;
-  return !ROLLER_UTEN_KALLENAVN.has(rolle);
+  return Boolean(rolle);
 }
 
 /** Trådtyper der intern visning er lov. Kundetråder er det ikke. */
@@ -85,7 +82,7 @@ export type Jobbfunksjon = 'leder' | 'selger' | 'support' | 'mekaniker';
 
 export const JOBBFUNKSJONER: Jobbfunksjon[] = ['leder', 'selger', 'support', 'mekaniker'];
 
-/** Rollene som ER ledelse. Samme liste som `kanHaKallenavn` nekter. */
+/** Rollene som ER ledelse. Uavhengig av kallenavn — alle roller kan ha det. */
 const LEDERROLLER = new Set(['dealer_admin', 'endwise_admin', 'owner']);
 
 /**

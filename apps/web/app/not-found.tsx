@@ -11,8 +11,8 @@ export default function NotFound() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg px-6 text-center">
       <p className="text-title text-fg">Siden finnes ikke</p>
       <p className="max-w-md text-body text-fg-muted">
-        Adressen peker ikke på en side i Endwise. Gå tilbake til verkstedet, eller sjekk at
-        lenken er skrevet riktig.
+        Adressen peker ikke på en side i Endwise. Gå tilbake til verkstedet, eller sjekk at lenken
+        er skrevet riktig.
       </p>
       <Link
         href={'/dashboard' as Route}

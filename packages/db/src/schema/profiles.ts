@@ -209,9 +209,8 @@ export const jobFunctionEnum = pgEnum('job_function', ['leder', 'selger', 'suppo
  * `offisiell`. Glemmer man å be om intern visning, får man ekte navn. Feilen
  * skal gå mot det trygge.
  *
- * ⛔ Og: en `dealer_admin` skal ikke HA kallenavn. Forhandlerkontoen er den
- * offisielle stemmen ut mot kunden; et kallenavn der er en ulykke som venter.
- * Håndheves i mutasjonen, ikke bare ved å skjule feltet.
+ * 26.08.2026: kallenavn er åpent for alle innloggede roller, også
+ * `dealer_admin`. Det vises bare internt (`visningsnavn(..., 'intern')`).
  */
 export const memberProfiles = pgTable(
   'member_profiles',

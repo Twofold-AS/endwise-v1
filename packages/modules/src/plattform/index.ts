@@ -171,6 +171,7 @@ export function erForhandlerRutePaaPlattform(pathname: string, search = ''): boo
     pathname.startsWith('/analyse') ||
     pathname.startsWith('/ai-') ||
     pathname.startsWith('/support') ||
+    pathname.startsWith('/prisliste') ||
     pathname.startsWith('/lager') ||
     pathname.startsWith('/min-dag') ||
     pathname.startsWith('/mekaniker') ||

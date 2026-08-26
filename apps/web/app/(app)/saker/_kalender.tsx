@@ -32,9 +32,10 @@ const DAG_SLUTT = 18;
 /** Piksler per time. 56 gir en 30-minutters jobb 28px — akkurat lesbart. */
 const PX_PER_TIME = 56;
 
-function rasterFor(
-  jobber: { startsAt: string | Date; endsAt: string | Date }[],
-): { start: number; slutt: number } {
+function rasterFor(jobber: { startsAt: string | Date; endsAt: string | Date }[]): {
+  start: number;
+  slutt: number;
+} {
   let start = DAG_START;
   let slutt = DAG_SLUTT;
   for (const b of jobber) {

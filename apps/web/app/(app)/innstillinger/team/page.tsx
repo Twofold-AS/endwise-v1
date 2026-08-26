@@ -8,13 +8,13 @@ import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
 import { TeamDetaljer } from './_detaljer';
 import { parseTeamFane, TEAM_FANER, teamHref } from './_faner';
-import { Inviter } from './_inviter';
+import { OpprettAnsatt } from './_inviter';
 import { TeamListe } from './_liste';
 import { MekanikerePille } from './_mekanikere-pille';
 
 /**
- * F5-13 / F5-19 / F1-10 — Team under Ansatte.
- * Piller som Innstillinger (?fane=). Én invitasjon. Detaljer som Innboks.
+ * F5-13 / F5-19 / F1-10 — Team under Organisasjon.
+ * Piller som Innstillinger (?fane=). Opprett ansatt på egen pille.
  */
 export default function TeamPage() {
   return (
@@ -41,7 +41,7 @@ function TeamSide() {
         <div>
           <h1 className="text-title text-fg">Team</h1>
           <p className="text-body text-fg-muted">
-            Hvem som jobber her. Invitasjon gir innlogging. Uten e-post vises hen bare i
+            Hvem som jobber her. Med e-post får hen invitasjon. Uten e-post vises hen bare i
             forhandlervisningen.
           </p>
         </div>
@@ -68,19 +68,27 @@ function TeamSide() {
           })}
         </div>
 
-        <Inviter />
-
-        <section role="tabpanel" aria-label={def.label} className="flex flex-col gap-3">
-          <div>
-            <h2 className="text-title text-fg">{def.label}</h2>
-            <p className="text-body text-fg-muted">{def.ingress}</p>
-          </div>
-          {fane === 'mekanikere' ? (
-            <MekanikerePille valgtId={valgtId} onVelg={setValgtId} />
-          ) : (
-            <TeamListe fane={fane} valgtId={valgtId} onVelg={setValgtId} />
-          )}
-        </section>
+        {fane === 'opprett' ? (
+          <section role="tabpanel" aria-label={def.label} className="flex flex-col gap-3">
+            <div>
+              <h2 className="text-title text-fg">{def.label}</h2>
+              <p className="text-body text-fg-muted">{def.ingress}</p>
+            </div>
+            <OpprettAnsatt />
+          </section>
+        ) : (
+          <section role="tabpanel" aria-label={def.label} className="flex flex-col gap-3">
+            <div>
+              <h2 className="text-title text-fg">{def.label}</h2>
+              <p className="text-body text-fg-muted">{def.ingress}</p>
+            </div>
+            {fane === 'mekanikere' ? (
+              <MekanikerePille valgtId={valgtId} onVelg={setValgtId} />
+            ) : (
+              <TeamListe fane={fane} valgtId={valgtId} onVelg={setValgtId} />
+            )}
+          </section>
+        )}
 
         <CardShell className="p-4">
           <p className="text-label text-fg">Tilgangsnivå</p>
@@ -91,7 +99,9 @@ function TeamSide() {
         </CardShell>
       </div>
 
-      <TeamDetaljer rad={valgt} apen={Boolean(valgtId)} onLukk={() => setValgtId(null)} />
+      {fane !== 'opprett' ? (
+        <TeamDetaljer rad={valgt} apen={Boolean(valgtId)} onLukk={() => setValgtId(null)} />
+      ) : null}
     </div>
   );
 }

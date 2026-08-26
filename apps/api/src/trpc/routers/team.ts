@@ -311,6 +311,8 @@ export const teamRouter = router({
         navn: z.string().trim().min(1).max(160),
         epost: z.email().max(200).optional(),
         funksjon: z.enum(['selger', 'support', 'mekaniker']),
+        /** Samme felt som `mechanics.create` / Timeplan — samtidige jobber. */
+        capacity: z.number().int().min(1).max(10).default(1),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -346,6 +348,7 @@ export const teamRouter = router({
       }
 
       const userId = randomUUID();
+      let mechanicId: string | null = null;
 
       try {
         await withTenant(ctx.db, ctx.tenantId, async (tx) => {
@@ -369,12 +372,16 @@ export const teamRouter = router({
             jobFunction: input.funksjon,
           });
           if (input.funksjon === 'mekaniker') {
-            await tx.insert(schema.mechanics).values({
-              tenantId: ctx.tenantId,
-              userId,
-              name: input.navn,
-              capacity: 1,
-            });
+            const [mek] = await tx
+              .insert(schema.mechanics)
+              .values({
+                tenantId: ctx.tenantId,
+                userId,
+                name: input.navn,
+                capacity: input.capacity,
+              })
+              .returning({ id: schema.mechanics.id });
+            mechanicId = mek?.id ?? null;
           }
         });
       } catch (error) {
@@ -391,11 +398,12 @@ export const teamRouter = router({
         epost: oppgitt ?? '',
         funksjon: input.funksjon,
         kanLoggeInn: false,
+        mechanicId,
       };
     }),
 
   /**
-   * Jobber hen gjør — bookinger knyttet til mekanikerprofilen.
+   * Planlagte jobber — bookinger knyttet til mekanikerprofilen.
    * Selger/support uten mekanikerprofil får ærlig tom liste.
    */
   jobber: adminProcedure

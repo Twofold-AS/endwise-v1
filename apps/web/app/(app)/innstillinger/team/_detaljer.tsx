@@ -73,15 +73,15 @@ export function TeamDetaljer({
             <X size={16} strokeWidth={1.75} className="xl:hidden" />
           </button>
         </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-3">
           <Person rad={rad} />
           <Jobber userId={rad.userId} />
           <EpostEndring userId={rad.userId} epost={rad.epost} />
           <PassordEndring userId={rad.userId} kan={rad.kanLoggeInn && Boolean(rad.epost)} />
           {rad.twoFactorEnabled ? <SlaAv2fa userId={rad.userId} navn={rad.navn} /> : null}
-          <SlettAnsatt userId={rad.userId} navn={rad.navn} leder={rad.funksjon === 'leder'} />
           <KompetanseSeksjon rad={rad} />
           <TimeplanSeksjon rad={rad} />
+          <SlettAnsatt userId={rad.userId} navn={rad.navn} leder={rad.funksjon === 'leder'} />
         </div>
       </aside>
     </>
@@ -116,25 +116,30 @@ function Person({ rad }: { rad: Rad }) {
           {!rad.kanLoggeInn ? ' · uten innlogging' : ''}
         </p>
         {rad.kanEndres ? (
-          <fieldset className="mt-2 flex flex-wrap gap-1" aria-label={`Funksjon for ${rad.navn}`}>
-            {VALGBARE.map((v) => (
-              <button
-                key={v.verdi}
-                type="button"
-                aria-pressed={rad.funksjon === v.verdi}
-                disabled={sett.isPending}
-                onClick={() => sett.mutate({ userId: rad.userId, funksjon: v.verdi })}
-                className={`inline-flex h-7 items-center gap-1 rounded-[7px] px-2 text-[12px] ${
-                  rad.funksjon === v.verdi
-                    ? 'bg-sidebar-active text-fg'
-                    : 'text-fg-muted hover:text-fg'
-                }`}
-              >
-                <v.icon size={12} />
-                {v.label}
-              </button>
-            ))}
-          </fieldset>
+          <details className="mt-2">
+            <summary className="cursor-pointer text-[12px] text-fg-muted hover:text-fg">
+              Rolle
+            </summary>
+            <fieldset className="mt-2 flex flex-wrap gap-1" aria-label={`Rolle for ${rad.navn}`}>
+              {VALGBARE.map((v) => (
+                <button
+                  key={v.verdi}
+                  type="button"
+                  aria-pressed={rad.funksjon === v.verdi}
+                  disabled={sett.isPending}
+                  onClick={() => sett.mutate({ userId: rad.userId, funksjon: v.verdi })}
+                  className={`inline-flex h-7 items-center gap-1 rounded-[7px] px-2 text-[12px] ${
+                    rad.funksjon === v.verdi
+                      ? 'bg-sidebar-active text-fg'
+                      : 'text-fg-muted hover:text-fg'
+                  }`}
+                >
+                  <v.icon size={12} />
+                  {v.label}
+                </button>
+              ))}
+            </fieldset>
+          </details>
         ) : (
           <p className="mt-2 text-[12px] text-fg-muted">Leder følger av tilgangsnivået.</p>
         )}
@@ -147,7 +152,7 @@ function Jobber({ userId }: { userId: string }) {
   const jobber = trpc.team.jobber.useQuery({ userId });
 
   return (
-    <Seksjon tittel="Jobber hen gjør">
+    <Seksjon tittel="Planlagte jobber">
       {jobber.isLoading ? (
         <p className="px-1 text-[12px] text-fg-muted">Henter jobber …</p>
       ) : jobber.isError ? (
@@ -187,37 +192,42 @@ function EpostEndring({ userId, epost }: { userId: string; epost: string }) {
   });
 
   return (
-    <Seksjon tittel="E-postendring">
-      <form
-        className="flex flex-col gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!verdi.trim()) return;
-          lagre.mutate({ userId, epost: verdi.trim() });
-        }}
-      >
-        <label className="flex flex-col gap-1">
-          <span className="text-[12px] text-fg-muted">Ny e-post</span>
-          <input
-            type="email"
-            required
-            value={verdi}
-            onChange={(e) => setVerdi(e.target.value)}
-            className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={lagre.isPending || verdi.trim() === epost}
-          className="inline-flex h-control items-center self-start rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2 disabled:opacity-40"
+    <Seksjon tittel="E-post">
+      <details>
+        <summary className="cursor-pointer text-[12px] text-fg-muted hover:text-fg">
+          E-postendring
+        </summary>
+        <form
+          className="mt-2 flex flex-col gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!verdi.trim()) return;
+            lagre.mutate({ userId, epost: verdi.trim() });
+          }}
         >
-          {lagre.isPending ? 'Lagrer …' : 'Lagre e-post'}
-        </button>
-        {lagre.isError ? <p className="text-[12px] text-danger">{lagre.error.message}</p> : null}
-        {lagre.isSuccess ? (
-          <p className="text-[12px] text-fg-muted">E-posten er oppdatert.</p>
-        ) : null}
-      </form>
+          <label className="flex flex-col gap-1">
+            <span className="text-[12px] text-fg-muted">Ny e-post</span>
+            <input
+              type="email"
+              required
+              value={verdi}
+              onChange={(e) => setVerdi(e.target.value)}
+              className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={lagre.isPending || verdi.trim() === epost}
+            className="inline-flex h-control items-center self-start rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2 disabled:opacity-40"
+          >
+            {lagre.isPending ? 'Lagrer …' : 'Lagre e-post'}
+          </button>
+          {lagre.isError ? <p className="text-[12px] text-danger">{lagre.error.message}</p> : null}
+          {lagre.isSuccess ? (
+            <p className="text-[12px] text-fg-muted">E-posten er oppdatert.</p>
+          ) : null}
+        </form>
+      </details>
     </Seksjon>
   );
 }
@@ -232,7 +242,7 @@ function PassordEndring({ userId, kan }: { userId: string; kan: boolean }) {
     return (
       <Seksjon tittel="Send passordendring">
         <p className="text-[12px] text-fg-muted">
-          Personen har ingen innlogging. Inviter hen hvis hen skal få passord.
+          Personen har ingen innlogging. Opprett hen med e-post hvis hen skal få passord.
         </p>
       </Seksjon>
     );
@@ -406,7 +416,7 @@ function SlettAnsatt({ userId, navn, leder }: { userId: string; navn: string; le
       <button
         type="button"
         onClick={() => setApen(true)}
-        className="inline-flex h-control items-center rounded-control border border-border px-3 text-label text-danger hover:bg-surface-2"
+        className="inline-flex h-control items-center rounded-control bg-danger px-3 text-label text-white hover:opacity-90"
       >
         Slett
       </button>
@@ -462,6 +472,10 @@ function KompetanseSeksjon({ rad }: { rad: Rad }) {
 
   return (
     <Seksjon tittel="Kompetanse">
+      <div className="rounded-control border border-border bg-bg px-3 py-2">
+        <p className="text-label text-fg">{rad.navn}</p>
+        <p className="text-[12px] text-fg-muted">{mek?.statusLabel ?? rad.statusLabel ?? 'Ingen status'}</p>
+      </div>
       {mek ? (
         <MekanikerKompetanse
           mekaniker={mek}

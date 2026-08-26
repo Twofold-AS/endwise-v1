@@ -1,21 +1,15 @@
 'use client';
 
-import { Avatar, CircleAlert, Users } from '@endwise/ui';
+import { ArrowUpRight, Avatar, CircleAlert, Users } from '@endwise/ui';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import { StatusMerke } from './_status';
 
 /**
  * Samme occupancy-flate som `/mekanikere` (F3-08 / F6-19):
  * statusprikk, ledig-tekst, «N av kapasitet i dag».
  * Detaljer åpner team-panelet når mekanikeren har en bruker.
  */
-const STATUS_PRIKK: Record<string, string> = {
-  ledig: 'bg-success',
-  på_jobb: 'bg-warn',
-  opptatt: 'bg-warn',
-  fri: 'bg-fg-muted',
-};
-
 export function MekanikerePille({
   valgtId,
   onVelg,
@@ -41,7 +35,7 @@ export function MekanikerePille({
       <CardShell className="p-10 text-center">
         <p className="text-label text-fg">Ingen mekanikere ennå</p>
         <p className="mt-1 text-[12px] text-fg-muted">
-          Inviter en mekaniker øverst — med e-post, eller uten hvis hen ikke skal logge inn.
+          Opprett en mekaniker — med e-post, eller uten hvis hen ikke skal logge inn.
         </p>
       </CardShell>
     );
@@ -66,13 +60,7 @@ export function MekanikerePille({
             />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="truncate text-label text-fg">{m.name}</span>
-              <span className="flex items-center gap-1.5 text-[12px] text-fg-muted">
-                <span
-                  aria-hidden
-                  className={`inline-block size-2 rounded-full ${STATUS_PRIKK[m.status] ?? 'bg-fg-muted'}`}
-                />
-                {m.statusLabel}
-              </span>
+              <StatusMerke status={m.status} label={m.statusLabel} />
             </div>
             <span className="shrink-0 text-[12px] text-fg-muted tabular-nums">
               {m.jobberIDag} av {m.capacity} i dag
@@ -82,9 +70,10 @@ export function MekanikerePille({
                 type="button"
                 onClick={() => onVelg(m.userId as string)}
                 aria-pressed={m.userId === valgtId}
-                className="inline-flex h-control items-center rounded-control border border-border px-2.5 text-label text-fg hover:bg-surface-2"
+                className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg hover:bg-surface-2"
               >
                 Detaljer
+                <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
               </button>
             ) : null}
           </div>

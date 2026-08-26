@@ -20,7 +20,7 @@ import {
 } from '../app/(app)/_shell/nav.ts';
 
 /**
- * F5-13 / F5-19 — Ansatte er egen sidebar-destinasjon hos forhandler.
+ * F5-13 / F5-19 — Organisasjon er egen sidebar-destinasjon hos forhandler.
  * Endwise-admin beholder label Team. Innstillinger er en destinasjon til profil,
  * ikke flyout. Ikke Admin-tab.
  */
@@ -81,7 +81,7 @@ describe('Team i sidebar — Endwise-admin', () => {
   });
 });
 
-describe('Ansatte i sidebar — forhandler', () => {
+describe('Organisasjon i sidebar — forhandler', () => {
   const nav = les('../app/(app)/_shell/nav.ts');
   const forhandler = utenKommentarer(
     nav.slice(nav.indexOf('export const FORHANDLER_NAV'), nav.indexOf('export const SETTINGS_NAV')),
@@ -90,7 +90,7 @@ describe('Ansatte i sidebar — forhandler', () => {
     nav.slice(nav.indexOf('export const SETTINGS_NAV'), nav.indexOf('export const MEKANIKER_NAV')),
   );
 
-  it('Ansatte ligger over Rapporter og Hjelp, med Team/Kompetanse/Timeplan (uten Prisliste)', () => {
+  it('Organisasjon ligger over Rapporter og Hjelp, med Team/Kompetanse/Timeplan (uten Prisliste)', () => {
     const keys = FORHANDLER_NAV.map((i) => i.key);
     expect(keys).toEqual([
       'dashboard',
@@ -107,7 +107,7 @@ describe('Ansatte i sidebar — forhandler', () => {
     expect(keys).not.toContain('samarbeid');
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
     expect(org).toBeDefined();
-    expect(org?.label).toBe('Ansatte');
+    expect(org?.label).toBe('Organisasjon');
     expect(org?.href).toBe('/innstillinger/team');
     expect(org?.children?.map((c) => c.label)).toEqual(['Team', 'Kompetanse', 'Timeplan']);
     expect(org?.children?.map((c) => c.href)).toEqual([
@@ -116,15 +116,15 @@ describe('Ansatte i sidebar — forhandler', () => {
       '/mekanikere/kapasitet',
     ]);
     expect(forhandler).toMatch(/key:\s*'team'/);
-    expect(forhandler).toMatch(/label:\s*'Ansatte'/);
-    expect(forhandler).not.toMatch(/label:\s*'Organisasjon'/);
+    expect(forhandler).toMatch(/label:\s*'Organisasjon'/);
+    expect(forhandler).not.toMatch(/label:\s*'Ansatte'/);
     expect(forhandler).not.toMatch(/label:\s*'Team & tilgang'/);
     expect(forhandler).not.toMatch(/label:\s*'Mekanikere'/);
     expect(forhandler).not.toMatch(/label:\s*'AI-verktøy'/);
     expect(forhandler).not.toMatch(/label:\s*'Samarbeid'/);
   });
 
-  it('Ansatte er ADMIN_OF_TENANT; Prisliste bor under Jobber for DRIFT', () => {
+  it('Organisasjon er ADMIN_OF_TENANT; Prisliste bor under Jobber for DRIFT', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
     const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
     const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
@@ -132,14 +132,14 @@ describe('Ansatte i sidebar — forhandler', () => {
     expect(verksted).toBeDefined();
     expect(jobber).toBeDefined();
     if (!org || !verksted || !jobber) {
-      throw new Error('FORHANDLER_NAV mangler Ansatte/Verkstedet/Jobber');
+      throw new Error('FORHANDLER_NAV mangler Organisasjon/Verkstedet/Jobber');
     }
     const tilgang = childrenForRole(org, 'dealer_admin').map((c) => c.label);
-    const staffAnsatte = childrenForRole(org, 'dealer_staff').map((c) => c.label);
+    const staffOrg = childrenForRole(org, 'dealer_staff').map((c) => c.label);
     const staffVerksted = childrenForRole(verksted, 'dealer_staff').map((c) => c.label);
     const staffJobber = childrenForRole(jobber, 'dealer_staff').map((c) => c.label);
     expect(tilgang).toEqual(['Team', 'Kompetanse', 'Timeplan']);
-    expect(staffAnsatte).toEqual([]);
+    expect(staffOrg).toEqual([]);
     expect(itemsForRole(FORHANDLER_NAV, 'dealer_staff').some((i) => i.key === 'team')).toBe(false);
     expect(verksted.children).toBeUndefined();
     expect(staffVerksted).toEqual([]);
@@ -171,12 +171,12 @@ describe('Ansatte i sidebar — forhandler', () => {
   });
 });
 
-describe('Ansatte vs Innstillinger — aktiv rad og breadcrumb', () => {
+describe('Organisasjon vs Innstillinger — aktiv rad og breadcrumb', () => {
   const org = FORHANDLER_NAV.find((i) => i.key === 'team');
 
-  it('Ansatte-ruter aktiverer Ansatte, ikke Innstillinger', () => {
+  it('Organisasjon-ruter aktiverer Organisasjon, ikke Innstillinger', () => {
     expect(org).toBeDefined();
-    if (!org) throw new Error('FORHANDLER_NAV mangler Ansatte');
+    if (!org) throw new Error('FORHANDLER_NAV mangler Organisasjon');
     expect(isItemActive(org, '/innstillinger/team')).toBe(true);
     expect(isItemActive(org, '/innstillinger/tjenestekatalog')).toBe(false);
     const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
@@ -198,9 +198,9 @@ describe('Ansatte vs Innstillinger — aktiv rad og breadcrumb', () => {
     expect(isItemActive(SETTINGS_NAV, '/mekanikere')).toBe(false);
   });
 
-  it('Innstillinger-stier aktiverer Innstillinger, ikke Ansatte', () => {
+  it('Innstillinger-stier aktiverer Innstillinger, ikke Organisasjon', () => {
     expect(org).toBeDefined();
-    if (!org) throw new Error('FORHANDLER_NAV mangler Ansatte');
+    if (!org) throw new Error('FORHANDLER_NAV mangler Organisasjon');
     expect(erSettingsSti('/innstillinger')).toBe(true);
     expect(erSettingsSti('/innstillinger/profil')).toBe(true);
     expect(erSettingsSti('/innstillinger/varsler')).toBe(true);
@@ -218,9 +218,9 @@ describe('Ansatte vs Innstillinger — aktiv rad og breadcrumb', () => {
     expect(isItemActive(ENDWISE_SETTINGS_NAV, '/abonnement')).toBe(false);
   });
 
-  it('breadcrumb er Ansatte › underpunkt, ikke Innstillinger', () => {
+  it('breadcrumb er Organisasjon › underpunkt, ikke Innstillinger', () => {
     expect(breadcrumbFor('/innstillinger/team', '', 'forhandler')).toEqual([
-      { label: 'Ansatte', href: '/innstillinger/team' },
+      { label: 'Organisasjon', href: '/innstillinger/team' },
       { label: 'Team' },
     ]);
     expect(breadcrumbFor('/innstillinger/tjenestekatalog', '', 'forhandler')).toEqual([
@@ -232,7 +232,7 @@ describe('Ansatte vs Innstillinger — aktiv rad og breadcrumb', () => {
       { label: 'Prisliste' },
     ]);
     expect(breadcrumbFor('/mekanikere/kompetanse', '', 'forhandler')).toEqual([
-      { label: 'Ansatte', href: '/innstillinger/team' },
+      { label: 'Organisasjon', href: '/innstillinger/team' },
       { label: 'Kompetanse' },
     ]);
     expect(breadcrumbFor('/innstillinger/varsler', '', 'forhandler')).toEqual([
@@ -271,7 +271,7 @@ const FORBUDT_LABEL = [
   'Helpdesk',
   'Feature-flags',
   'AI-verktøy',
-  'Organisasjon',
+  'Ansatte',
   'Tjenestekatalog',
   'Direkte data',
 ];
@@ -300,7 +300,7 @@ describe('Verkstednorsk nav-labels (25.08.2026)', () => {
       'Innboks',
       'Jobber',
       'Kunder',
-      'Ansatte',
+      'Organisasjon',
       'Rapporter',
       'Hjelp',
     ]);

@@ -72,7 +72,7 @@ const IKON = 16;
  * lister du plukker fra og lukker igjen.
  *
  * **Inline utfolding** er for DESTINASJONER: Jobber, Kunder, Rapporter,
- * Ansatte. De hører til strukturen du navigerer i, og skal
+ * Organisasjon. De hører til strukturen du navigerer i, og skal
  * ikke skjule hvor du står. Se `NavRow`.
  *
  * Innstillinger er destinasjon (Link til profil), ikke flyout.

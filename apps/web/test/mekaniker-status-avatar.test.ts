@@ -49,7 +49,7 @@ describe('Team › lista er den ekte ansattlista', () => {
 
   it('invitasjoner er uten avatar — lista eier ansiktene', () => {
     expect(inviter).not.toMatch(/<Avatar/);
-    expect(hub).toMatch(/<Inviter/);
+    expect(hub).toMatch(/<OpprettAnsatt/);
     expect(hub).toMatch(/TeamListe|MekanikerePille/);
   });
 });

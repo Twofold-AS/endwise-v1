@@ -5,7 +5,7 @@
  * Varsler · Tjenester & priser.
  *
  * Team er IKKE en fane — #41 la destinasjonen i sidebaren
- * (`/innstillinger/team`), 25.08 omdøpt til Ansatte. Admin-faner
+ * (`/innstillinger/team`), 26.08 omdøpt til Organisasjon. Admin-faner
  * skjules for ikke-admin, og hele dealer-huben (Abonnement, Koblinger,
  * Varsler, Tjenester & priser) skjules for Endwise-plattform. «Bytt konto /
  * mekaniker» er IKKE en fane — visningsbytte bor i sidebar-headeren.

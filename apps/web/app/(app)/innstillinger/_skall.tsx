@@ -15,7 +15,7 @@ import { VarslerInnhold } from './varsler/_innhold';
 /**
  * F5-19 — Innstillinger som én flate. Pille-faner øverst, aktiv fane INNE på
  * siden. Ingen hub-kort, ingen nested Settings i sidebaren, ingen Admin-fane.
- * Team/Ansatte er sidebar-destinasjon (#41), ikke en fane her.
+ * Team/Organisasjon er sidebar-destinasjon (#41), ikke en fane her.
  * Endwise-plattform ser kun Profil (ingen dealer-faner).
  *
  * Fane-state bor i `?fane=`. Gamle Innstillinger-URL-er renderer dette skallet

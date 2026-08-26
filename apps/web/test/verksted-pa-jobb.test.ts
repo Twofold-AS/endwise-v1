@@ -101,9 +101,9 @@ describe('Verkstedet-flaten — navn og innhold', () => {
     expect(nav).toMatch(/AI-verktøy er PARKERT/);
   });
 
-  it('rører ikke Kompetanse/Timeplan under Ansatte', () => {
+  it('rører ikke Kompetanse/Timeplan under Organisasjon', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
-    expect(org?.label).toBe('Ansatte');
+    expect(org?.label).toBe('Organisasjon');
     expect(org?.children?.map((c) => c.label)).toEqual(
       expect.arrayContaining(['Kompetanse', 'Timeplan']),
     );

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { nivaTekst, sertStatus, tilNokkel } from '../app/(app)/mekanikere/kompetanse/_niva';
 
 /**
- * P2 — Ansatte › Kompetanse og Timeplan er ekte flater, ikke Placeholder.
+ * P2 — Organisasjon › Kompetanse og Timeplan er ekte flater, ikke Placeholder.
  * Last og lagring går mot eksisterende tabeller (skills / mechanic_skills /
  * mechanics.capacity / bookings).
  */
@@ -19,17 +19,20 @@ function utenKommentarer(kilde: string) {
   return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
 
-describe('Ansatte › Kompetanse er ekte liste + redigering', () => {
+describe('Organisasjon › Kompetanse er katalog, ikke per-mekaniker', () => {
   const side = utenKommentarer(les('../app/(app)/mekanikere/kompetanse/page.tsx'));
   const katalog = utenKommentarer(les('../app/(app)/mekanikere/kompetanse/_katalog.tsx'));
   const mek = utenKommentarer(les('../app/(app)/mekanikere/kompetanse/_mekaniker.tsx'));
   const niva = les('../app/(app)/mekanikere/kompetanse/_niva.ts');
 
-  it('er ikke lenger en Placeholder', () => {
+  it('er ikke lenger en Placeholder, og viser katalogen', () => {
     expect(side).not.toMatch(/Placeholder/);
-    expect(side).toMatch(/mechanics\.oversikt/);
     expect(side).toMatch(/competence\.listSkills/);
-    expect(side).toMatch(/competence\.listAllMechanicSkills/);
+    expect(side).toMatch(/Ferdighetskatalog/);
+    expect(side).not.toMatch(/Per mekaniker/);
+    expect(side).not.toMatch(/mechanics\.oversikt/);
+    expect(side).not.toMatch(/listAllMechanicSkills/);
+    expect(side).not.toMatch(/MekanikerKompetanse/);
   });
 
   it('laster katalog og kompetanse, lagrer via setMechanicSkill / upsertSkill', () => {
@@ -63,7 +66,7 @@ describe('Ansatte › Kompetanse er ekte liste + redigering', () => {
   });
 });
 
-describe('Ansatte › Timeplan er ekte liste + redigering', () => {
+describe('Organisasjon › Timeplan er ekte liste + redigering', () => {
   const side = utenKommentarer(les('../app/(app)/mekanikere/kapasitet/page.tsx'));
 
   it('er ikke lenger en Placeholder', () => {

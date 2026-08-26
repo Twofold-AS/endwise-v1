@@ -176,6 +176,6 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(settings).not.toMatch(/label: 'Admin'/);
     expect(nav).toMatch(/key: 'team'/);
     expect(nav).toMatch(/href: '\/innstillinger\/team'/);
-    expect(nav).toMatch(/label: 'Ansatte'/);
+    expect(nav).toMatch(/label: 'Organisasjon'/);
   });
 });

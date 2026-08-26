@@ -190,7 +190,7 @@ export function VisningsnavnFelt() {
   );
 }
 
-export function KallenavnSeksjon() {
+export function KallenavnFelt() {
   const utils = trpc.useUtils();
   const lyd = useLyd();
   const meg = trpc.profile.meg.useQuery();
@@ -211,71 +211,59 @@ export function KallenavnSeksjon() {
   });
 
   const d = meg.data;
-  if (!d) return null;
 
   function submitKallenavn(e: FormEvent) {
     e.preventDefault();
     lagreKallenavn.mutate({ kallenavn: kallenavn.trim() });
   }
 
-  if (!d.kanHaKallenavn) {
-    return (
-      <section className="flex flex-col gap-2">
-        <h2 className="text-label text-fg">Kallenavn</h2>
-        <CardShell className="flex items-start gap-3 p-4">
-          <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
-          <p className="text-[12px] text-fg-muted leading-relaxed">
-            Kallenavn er for private profiler — mekanikere og ansatte. Denne kontoen er
-            forhandlerens offisielle konto, og den skal alltid opptre med sitt ekte navn.
-          </p>
-        </CardShell>
-      </section>
-    );
-  }
+  return (
+    <>
+      <form onSubmit={submitKallenavn} className="flex items-start gap-2">
+        <input
+          value={kallenavn}
+          onChange={(e) => setKallenavn(e.target.value)}
+          maxLength={24}
+          placeholder="F.eks. «Skiftenøkkelen»"
+          aria-label="Kallenavn"
+          className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+        />
+        <StatefulButton
+          type="submit"
+          disabled={!d || lagreKallenavn.isPending || kallenavn.trim() === (d.kallenavn ?? '')}
+          state={
+            lagreKallenavn.isPending
+              ? 'loading'
+              : lagreKallenavn.isError
+                ? 'error'
+                : lagreKallenavn.isSuccess
+                  ? 'success'
+                  : 'idle'
+          }
+          loadingText="Lagrer…"
+          successText="Lagret"
+          errorText="Feilet"
+        >
+          Lagre
+        </StatefulButton>
+      </form>
+      {lagreKallenavn.error && (
+        <p className="mt-2 text-body text-danger">{lagreKallenavn.error.message}</p>
+      )}
+      <p className="mt-2 text-[11px] text-fg-muted">
+        Vises bare internt — i chrome og intern chat. Mot kunder brukes visningsnavnet. La feltet
+        stå tomt for å fjerne kallenavnet.
+      </p>
+    </>
+  );
+}
 
+export function KallenavnSeksjon() {
   return (
     <section className="flex flex-col gap-2">
       <h2 className="text-label text-fg">Kallenavn</h2>
       <CardShell className="p-4">
-        <form onSubmit={submitKallenavn} className="flex items-start gap-2">
-          <input
-            value={kallenavn}
-            onChange={(e) => setKallenavn(e.target.value)}
-            maxLength={24}
-            placeholder="F.eks. «Skiftenøkkelen»"
-            aria-label="Kallenavn"
-            className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
-          />
-          <StatefulButton
-            type="submit"
-            disabled={lagreKallenavn.isPending || kallenavn.trim() === (d.kallenavn ?? '')}
-            state={
-              lagreKallenavn.isPending
-                ? 'loading'
-                : lagreKallenavn.isError
-                  ? 'error'
-                  : lagreKallenavn.isSuccess
-                    ? 'success'
-                    : 'idle'
-            }
-            loadingText="Lagrer…"
-            successText="Lagret"
-            errorText="Feilet"
-          >
-            Lagre
-          </StatefulButton>
-        </form>
-        {lagreKallenavn.error && (
-          <p className="mt-2 text-body text-danger">{lagreKallenavn.error.message}</p>
-        )}
-        <div className="mt-3 flex items-start gap-2 rounded-control bg-surface-2 p-3">
-          <CircleAlert size={14} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
-          <p className="text-[11px] text-fg-muted leading-relaxed">
-            Kallenavnet vises <strong className="text-fg">kun internt</strong> — i intern chat og i
-            mekanikervisningen. Mot kunder brukes alltid det ekte navnet ditt. La feltet stå tomt
-            for å fjerne kallenavnet.
-          </p>
-        </div>
+        <KallenavnFelt />
       </CardShell>
     </section>
   );

@@ -53,15 +53,13 @@ describe('visningForTraadtype', () => {
   });
 });
 
-describe('kanHaKallenavn — offisielle kontoer skal ikke ha det', () => {
-  it('nekter forhandler- og Endwise-kontoer', () => {
-    expect(kanHaKallenavn('dealer_admin')).toBe(false);
-    expect(kanHaKallenavn('endwise_admin')).toBe(false);
-    expect(kanHaKallenavn('owner')).toBe(false);
-  });
-
-  it('tillater ansatte og mekanikere', () => {
+describe('kanHaKallenavn — alle innloggede roller, inkl. forhandler-admin', () => {
+  it('tillater forhandler-admin, ansatte, mekaniker-roller og Endwise', () => {
+    expect(kanHaKallenavn('dealer_admin')).toBe(true);
     expect(kanHaKallenavn('dealer_staff')).toBe(true);
+    expect(kanHaKallenavn('endwise_admin')).toBe(true);
+    expect(kanHaKallenavn('endwise_support')).toBe(true);
+    expect(kanHaKallenavn('owner')).toBe(true);
   });
 
   it('uten rolle: nei', () => {

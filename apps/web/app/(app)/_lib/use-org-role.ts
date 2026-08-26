@@ -18,9 +18,8 @@ import { erPlattformIUi } from './plattform';
 export function useOrgRole(): {
   userId: string | null;
   /**
-   * ⚠️ Fra `session.me`, IKKE fra Better-Auth-sesjonen. Se kommentaren i
-   * `routers/session.ts`: navnet hadde to hjem, og sidebaren leste det som
-   * ikke ble oppdatert ved lagring.
+   * Chrome-navn: `session.me.internNavn` (kallenavn, ellers visningsnavn).
+   * Ikke Better-Auth-sesjonen. Se `routers/session.ts`.
    */
   navn: string | null;
   role: OrgRole | null;
@@ -66,7 +65,7 @@ export function useOrgRole(): {
   const role = (me.data?.role as OrgRole | null | undefined) ?? null;
   return {
     userId: me.data?.userId ?? null,
-    navn: me.data?.navn || null,
+    navn: me.data?.internNavn || me.data?.navn || null,
     role,
     tenantName: me.data?.tenantName ?? null,
     tenantKind: (me.data?.tenantKind as 'live' | 'demo' | 'platform' | undefined) ?? 'live',

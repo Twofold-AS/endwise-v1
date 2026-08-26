@@ -8,8 +8,8 @@ import { useEffect, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { NewBadge } from './cards';
 import {
-  HELPDESK_SLIDER_MINIMER_KEY,
   erTestHelpdeskTittel,
+  HELPDESK_SLIDER_MINIMER_KEY,
   harNyUlestArtikkel,
   lesLagretMinimer,
   sliderStartMinimer,
@@ -64,9 +64,11 @@ export function TipCard() {
 
   useEffect(() => {
     if (!artikler.isSuccess) return;
-    const snap = (artikler.data ?? []).map((r) => ({ id: r.id, ulest: r.ulest === true }));
+    const snap = (artikler.data ?? [])
+      .filter((rad) => !erTestHelpdeskTittel(rad.title))
+      .map((rad) => ({ id: rad.id, ulest: rad.ulest === true }));
     if (forrige.current == null) {
-      let lagret = false;
+      let lagret: boolean | null = null;
       try {
         lagret = lesLagretMinimer(window.localStorage.getItem(HELPDESK_SLIDER_MINIMER_KEY));
       } catch {
@@ -76,6 +78,7 @@ export function TipCard() {
         sliderStartMinimer(
           lagret,
           snap.some((r) => r.ulest),
+          snap.length === 0,
         ),
       );
     } else if (harNyUlestArtikkel(forrige.current, snap)) {
@@ -107,14 +110,12 @@ export function TipCard() {
   }, [rader.length, minimer]);
 
   /**
-   * Tom liste = kollapset bort, ikke et dødt «Ingen artikler ennå»-kort
-   * midt i arbeidsnavet (26.08.2026). Hjelp er denne slideren når den
-   * har innhold; X minimerer, tom vises ikke.
+   * ⛔ Tom liste sletter IKKE widgeten. #60 returnerte `null` når lista
+   * var tom (eller bare test-artikler), og da forsvant Hjelp helt.
+   * Chrome skal stå: minimert bar merket Hjelp, med måte å utvide.
    */
-  if (rader.length === 0) return null;
-
-  if (minimer) {
-    const a = rader[Math.min(i, rader.length - 1)];
+  const a = rader[Math.min(i, rader.length - 1)];
+  if (minimer || !artikler.isSuccess) {
     return (
       <button
         type="button"
@@ -124,7 +125,7 @@ export function TipCard() {
         className="flex h-row-store w-full min-w-0 items-center gap-2 rounded-xl border border-border bg-bg px-3 text-left transition-colors hover:bg-sidebar-active focus-visible:outline-2 focus-visible:outline-ring"
       >
         <span className="min-w-0 flex-1 truncate text-[11px] text-fg-muted">
-          {a?.title ?? 'Fra helpdesken'}
+          {a?.title ?? 'Hjelp'}
         </span>
         {harUlest ? <NewBadge /> : null}
         <ChevronDown size={14} className="shrink-0 text-fg-muted" aria-hidden />
@@ -132,8 +133,44 @@ export function TipCard() {
     );
   }
 
-  const a = rader[Math.min(i, rader.length - 1)];
-  if (!a) return null;
+  if (rader.length === 0) {
+    return (
+      <div className="relative flex flex-col gap-2 rounded-xl border border-border bg-bg px-3 py-3">
+        <button
+          type="button"
+          aria-label="Minimer helpdesk-slider"
+          title="Minimer helpdesk-slider"
+          className="absolute top-1.5 right-1.5 z-10 inline-flex size-6 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active hover:text-fg focus-visible:outline-2 focus-visible:outline-ring"
+          onClick={() => settMinimer(true)}
+        >
+          <X size={14} strokeWidth={1.75} />
+        </button>
+        <span className="pr-8 text-label text-fg">Hjelp</span>
+        <p className="text-[11px] text-fg-muted">Ingen artikler ennå.</p>
+        <Link
+          href={'/hjelp' as Route}
+          className="text-[11px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
+        >
+          Alle
+        </Link>
+      </div>
+    );
+  }
+
+  if (!a) {
+    return (
+      <button
+        type="button"
+        aria-label="Utvid helpdesk-slider"
+        title="Utvid helpdesk-slider"
+        onClick={() => settMinimer(false)}
+        className="flex h-row-store w-full min-w-0 items-center gap-2 rounded-xl border border-border bg-bg px-3 text-left transition-colors hover:bg-sidebar-active focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        <span className="min-w-0 flex-1 truncate text-[11px] text-fg-muted">Hjelp</span>
+        <ChevronDown size={14} className="shrink-0 text-fg-muted" aria-hidden />
+      </button>
+    );
+  }
 
   return (
     <div

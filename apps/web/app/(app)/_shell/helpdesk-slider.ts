@@ -13,14 +13,25 @@
 
 export const HELPDESK_SLIDER_MINIMER_KEY = 'endwise.helpdesk-slider.minimer';
 
-export function lesLagretMinimer(raw: string | null): boolean {
-  return raw === '1';
+/** `null` = aldri satt. Skiller «første besøk» fra eksplisitt åpen (`0`). */
+export function lesLagretMinimer(raw: string | null): boolean | null {
+  if (raw === '1') return true;
+  if (raw === '0') return false;
+  return null;
 }
 
-/** Første visning etter lasting: Ny overstyrer lagret minimert. */
-export function sliderStartMinimer(lagretMinimer: boolean, harUlest: boolean): boolean {
+/**
+ * Første visning etter lasting: Ny overstyrer lagret minimert.
+ * Tom liste uten lagret valg starter minimert — chrome skal stå, ikke slettes.
+ */
+export function sliderStartMinimer(
+  lagretMinimer: boolean | null,
+  harUlest: boolean,
+  tom = false,
+): boolean {
   if (harUlest) return false;
-  return lagretMinimer;
+  if (lagretMinimer !== null) return lagretMinimer;
+  return tom;
 }
 
 export type SliderArtikkel = { id: string; ulest: boolean };

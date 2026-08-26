@@ -35,16 +35,21 @@ export default function QuickPage() {
       setToken('');
       setDirty(false);
       utils.quick.config.invalidate();
+      utils.session.me.invalidate();
     },
   });
   const test = trpc.quick.testConnection.useMutation({
-    onSettled: () => utils.quick.config.invalidate(),
+    onSettled: () => {
+      utils.quick.config.invalidate();
+      utils.session.me.invalidate();
+    },
   });
   const conflicts = trpc.conflicts.list.useQuery(undefined, { enabled: isAdmin });
   const pull = trpc.quick.pullNow.useMutation({
     onSettled: () => {
       utils.quick.config.invalidate();
       utils.conflicts.list.invalidate();
+      utils.session.me.invalidate();
     },
   });
   const resolve = trpc.conflicts.resolve.useMutation({

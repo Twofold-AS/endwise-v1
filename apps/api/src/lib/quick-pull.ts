@@ -1,5 +1,6 @@
 import type { Database } from '@endwise/db';
 import {
+  applyQuickDealerProfile,
   createQuickConfigService,
   type QuickCustomerUpsert,
   type QuickPartUpsert,
@@ -10,6 +11,7 @@ import {
 } from '@endwise/modules/quick';
 import {
   createQuickClient,
+  mapQuickClientInfo,
   mapQuickCustomer,
   mapQuickItem,
   mapQuickStockEntry,
@@ -27,7 +29,21 @@ import {
  * returnerer. GET-only mot Quick. Tokenet forlater aldri serveren.
  *
  * DELTA vs FULL: uten `full` sendes `changedAfterDate = lastSyncedAt`.
+ *
+ * Client-info (forhandler-profil) kjøres FØR katalog og i egen sti:
+ * customer/item/stock-feil ruller IKKE tilbake forhandler-skrivet.
  */
+
+/** Client-apply committes før katalog. Katalog-kast ruller ikke tilbake apply. */
+export async function runIndependentOfCatalog<TClient, TCatalog>(opts: {
+  applyClient: () => Promise<TClient>;
+  pullCatalog: () => Promise<TCatalog>;
+}): Promise<{ client: TClient; catalog: TCatalog }> {
+  const client = await opts.applyClient();
+  const catalog = await opts.pullCatalog();
+  return { client, catalog };
+}
+
 export interface QuickPullResult {
   ran: boolean;
   upserted?: number;
@@ -92,15 +108,33 @@ export async function runQuickCustomerPull(
   }
 
   try {
-    const customers = await syncQuickCustomers(db, tenantId, customerUpserts());
-    const lager = await syncQuickParts(db, tenantId, partUpserts(), stockUpserts(), {
-      actorUserId: opts.actorUserId,
+    const { client: dealer, catalog } = await runIndependentOfCatalog({
+      applyClient: async () => {
+        const info = await client.clientInfo();
+        try {
+          return await applyQuickDealerProfile(db, tenantId, mapQuickClientInfo(info));
+        } catch {
+          return { applied: false, mappedKeys: [] as const };
+        }
+      },
+      pullCatalog: async () => {
+        const customers = await syncQuickCustomers(db, tenantId, customerUpserts());
+        const lager = await syncQuickParts(db, tenantId, partUpserts(), stockUpserts(), {
+          actorUserId: opts.actorUserId,
+        });
+        return { customers, lager };
+      },
     });
+    const { customers, lager } = catalog;
     const batches = customers.batches + lager.batches;
     const conflictNote = customers.conflicts > 0 ? ` · ${customers.conflicts} konflikt(er)` : '';
+    const dealerNote =
+      dealer.applied && dealer.mappedKeys.length
+        ? ` · forhandler (${dealer.mappedKeys.join(', ')})`
+        : '';
     await svc.recordSync(tenantId, {
       status: 'ok',
-      detail: `${customers.upserted} kunde(r), ${lager.parts} del(er), ${lager.stock} lagerlinje(r) i ${batches} batch(er)${conflictNote}`,
+      detail: `${customers.upserted} kunde(r), ${lager.parts} del(er), ${lager.stock} lagerlinje(r) i ${batches} batch(er)${conflictNote}${dealerNote}`,
       syncedAt: startedAt,
     });
     return {

@@ -37,6 +37,7 @@ describe('F1-07: Quick-nøkkel i eksisterende chrome', () => {
     expect(quick).toMatch(/Sist hentet/);
     expect(quick).toMatch(/Siste utfall/);
     expect(quick).toMatch(/pullNow|pull\.mutate/);
+    expect(quick).toMatch(/session\.me\.invalidate/);
     expect(quick).not.toMatch(/FIXIE|Scaleway VM|HTTPS_PROXY/);
     expect(quick).not.toMatch(/fetch\([^)]*client\/info/);
     expect(quick).not.toMatch(/Authorization:\s*Token/);

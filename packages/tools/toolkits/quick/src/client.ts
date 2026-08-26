@@ -9,6 +9,7 @@ import {
   parseQuickCustomerBatch,
   parseQuickItemBatch,
   parseQuickStockEntryBatch,
+  type QuickClientInfo,
   type QuickCustomer,
   type QuickCustomerBatch,
   type QuickCustomerRecord,
@@ -153,13 +154,12 @@ export function createQuickClient(config: QuickConfig) {
      * `client/info` — GET-only tilkoblingstest (F1-07-proben). Et 200 beviser
      * at baseUrl + token virker. Kaster QuickAuthError ved 401/403.
      */
-    async clientInfo() {
-      await probeQuickReadOnly({
+    async clientInfo(): Promise<QuickClientInfo> {
+      return probeQuickReadOnly({
         baseUrl: config.baseUrl,
         token: config.token,
         timeoutMs,
       });
-      return {};
     },
 
     /** Én side kunder fra `customer/batch`. */
@@ -247,6 +247,37 @@ export type QuickClient = ReturnType<typeof createQuickClient>;
  * Navn/e-post/telefon-utledningen prøver flere sannsynlige feltnavn. Verifiser
  * mot en ekte respons (Test_Public) og stram inn deretter.
  */
+export interface QuickDealerProfile {
+  /** Forhandlernavn → tenants.name + organization.name. Null = ikke skriv. */
+  name: string | null;
+  /** Quick-nøklene som faktisk ble mappet (logg/detalj, ikke verdier). */
+  mappedKeys: readonly string[];
+}
+
+function nonemptyQuickString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+/**
+ * Mapper `client/info` til forhandler-felt som FINNES i Endwise.
+ *
+ * Feltkart (Quick-nøkkel etter fold → kolonne):
+ *   name    → tenants.name, organization.name
+ *   company → samme, bare hvis name mangler
+ * slug mappes IKKE: unik constraint + `/endwise/verksted/[slug]`. Ingen
+ * bekreftet stabil Quick-slug. Adresse/orgnr/nettside/telefon/e-post har
+ * ingen kolonner på organizations/tenants.
+ */
+export function mapQuickClientInfo(raw: QuickClientInfo): QuickDealerProfile {
+  const fromName = nonemptyQuickString(raw.name);
+  if (fromName) return { name: fromName, mappedKeys: ['name'] };
+  const fromCompany = nonemptyQuickString(raw.company);
+  if (fromCompany) return { name: fromCompany, mappedKeys: ['company'] };
+  return { name: null, mappedKeys: [] };
+}
+
 export function mapQuickCustomer(raw: QuickCustomer): QuickCustomerRecord {
   const contact = raw.contactPersons?.[0];
   const contactName = contact

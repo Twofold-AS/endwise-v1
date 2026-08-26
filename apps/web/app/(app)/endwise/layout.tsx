@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { IkkeTilgang } from '../_shell/ikke-tilgang';
 import { krevEndwiseAdminSide } from '@/lib/endwise-admin-gate';
 
 /**
@@ -13,6 +14,7 @@ export const dynamic = 'force-dynamic';
 export const preferredRegion = 'cdg1';
 
 export default async function EndwiseLayout({ children }: { children: ReactNode }) {
-  await krevEndwiseAdminSide();
+  const utfall = await krevEndwiseAdminSide();
+  if (utfall === 'forbidden') return <IkkeTilgang />;
   return children;
 }

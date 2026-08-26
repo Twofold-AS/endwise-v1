@@ -118,13 +118,21 @@ function MeldingerPageInner() {
        * om samme tomrom, 60 piksler fra hverandre. Igjen står forklaringen som
        * faktisk lærer bort noe — hva de tre partene ER.
        */}
-      <div className="flex flex-col items-center gap-2 py-20 text-center">
-        <MessageSquare size={24} className="text-fg-muted" />
-        <p className="max-w-sm text-[12px] text-fg-muted leading-relaxed">
-          Partene Kunder, Intern og Endwise filtrerer lista til venstre. Alle tre er samme
-          trådmodell — bare tre ulike deltakerpar.
-        </p>
-      </div>
+      {!nySamtale && (
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <MessageSquare size={24} className="text-fg-muted" />
+          <p className="text-label text-fg">Ingen samtale valgt</p>
+          <p className="max-w-sm text-[12px] text-fg-muted leading-relaxed">
+            Velg en tråd til venstre, eller skriv til Endwise.
+          </p>
+          <Link
+            href={'/innboks?ny=1' as Route}
+            className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg"
+          >
+            Skriv til Endwise
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

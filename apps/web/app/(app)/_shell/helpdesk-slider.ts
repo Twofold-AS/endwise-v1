@@ -29,6 +29,12 @@ export type SliderArtikkel = { id: string; ulest: boolean };
  * `forrige == null` er første snapshot etter lasting — det er
  * `sliderStartMinimer` sin jobb, ikke «ny sak midt i økten».
  */
+/** Test-titler skal ikke vises som produktdokumentasjon. */
+export function erTestHelpdeskTittel(title: string): boolean {
+  const t = title.trim().toLowerCase();
+  return t.includes('mikael testing') || t.includes('halla balla');
+}
+
 export function harNyUlestArtikkel(
   forrige: SliderArtikkel[] | null,
   neste: SliderArtikkel[],

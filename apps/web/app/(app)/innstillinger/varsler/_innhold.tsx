@@ -1,7 +1,6 @@
 'use client';
 
 import { Bell, Mail, MessageSquare, Switch } from '@endwise/ui';
-import { useState } from 'react';
 
 /**
  * F5-19 — Settings › Varsler. KONFIGURASJON av kanaler.
@@ -24,8 +23,9 @@ const KANALER = [
   { key: 'push', icon: Bell, title: 'Web Push', body: 'Varsler til mekanikerens PWA (F6-12).' },
 ] as const;
 
+const STANDARD: Record<string, boolean> = { sms: true, epost: true, push: false };
+
 export function VarslerInnhold() {
-  const [on, setOn] = useState<Record<string, boolean>>({ sms: true, epost: true, push: false });
 
   return (
     <div className="flex flex-col gap-5">
@@ -41,17 +41,18 @@ export function VarslerInnhold() {
               <span className="truncate text-[12px] text-fg-muted">{k.body}</span>
             </div>
             <Switch
-              checked={on[k.key]}
-              onCheckedChange={(v) => setOn((s) => ({ ...s, [k.key]: v }))}
-              aria-label={`Slå ${on[k.key] ? 'av' : 'på'} ${k.title}`}
+              checked={STANDARD[k.key]}
+              disabled
+              aria-disabled
+              aria-label={`${k.title} kan ikke endres ennå`}
             />
           </div>
         ))}
       </div>
 
       <p className="text-[12px] text-fg-muted">
-        Valgene lagres ikke ennå — det mangler en rute for varselpreferanser. Selve utsendingen
-        (F3-04) er bygget og idempotent.
+        Bryterne er skrudd av til valgene kan lagres. Utsendingen av SMS og e-post er på plass;
+        preferanserute kommer senere.
       </p>
     </div>
   );

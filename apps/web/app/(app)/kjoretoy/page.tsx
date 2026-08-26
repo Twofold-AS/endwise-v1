@@ -89,14 +89,26 @@ function KjoretoyInner() {
       ) : kjoretoy.isError ? (
         <Feil melding={kjoretoy.error.message} />
       ) : (kjoretoy.data?.length ?? 0) === 0 ? (
-        <Tomt
-          tittel={sok ? 'Ingen treff' : 'Ingen kjøretøy ennå'}
-          hint={
-            sok
-              ? 'Prøv et annet søk, eller bytt type.'
-              : 'Kjøretøy registreres ved booking, eller slås opp mot Vegvesenet.'
-          }
-        />
+        <>
+          <Tomt
+            tittel={sok ? 'Ingen treff' : 'Ingen kjøretøy ennå'}
+            hint={
+              sok
+                ? 'Prøv et annet søk, eller bytt type.'
+                : 'Kjøretøy registreres når du oppretter en jobb, eller slås opp mot Vegvesenet.'
+            }
+          />
+          {!sok && (
+            <div className="-mt-2 flex justify-center">
+              <Link
+                href={'/bookinger/ny' as Route}
+                className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
+              >
+                Slå opp regnr
+              </Link>
+            </div>
+          )}
+        </>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border">
           <div className="flex h-9 items-center gap-4 border-border border-b bg-surface-2 px-4 text-[12px] text-fg-muted">
@@ -116,7 +128,7 @@ function KjoretoyInner() {
                 }`}
               >
                 <span className="w-24 shrink-0 truncate font-mono text-label text-fg">
-                  {v.regNumber ?? '—'}
+                  {v.regNumber ?? 'Uten regnr'}
                 </span>
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="truncate text-label text-fg">
@@ -142,8 +154,9 @@ function KjoretoyInner() {
 
       <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
         <Car size={14} />
-        {kjoretoy.data?.length ?? 0} kjøretøy vist. Merke, modell og EU-frist er speilet fra
-        Vegvesenet — ikke redigert av oss.
+        {kjoretoy.isLoading
+          ? 'Laster kjøretøy …'
+          : `${kjoretoy.data?.length ?? 0} kjøretøy vist. Merke, modell og EU-frist er speilet fra Vegvesenet — ikke redigert av oss.`}
       </p>
     </div>
   );

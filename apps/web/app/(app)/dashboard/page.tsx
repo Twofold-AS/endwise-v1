@@ -112,10 +112,16 @@ export default function VerkstedetPage() {
           </CardShell>
         ) : rader.length === 0 ? (
           <CardShell className="p-10 text-center">
-            <p className="text-label text-fg">Ingen saker i dag</p>
+            <p className="text-label text-fg">Ingen jobber i dag</p>
             <p className="mt-1 text-[12px] text-fg-muted">
-              Kalenderen er tom. Det er enten en rolig dag eller en mulighet.
+              Dagen er tom. Opprett en jobb uten å forlate verkstedet.
             </p>
+            <Link
+              href={'/bookinger/ny' as Route}
+              className="mt-4 inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg"
+            >
+              Ny jobb
+            </Link>
           </CardShell>
         ) : (
           <div className="overflow-hidden rounded-xl border border-border">
@@ -178,7 +184,11 @@ function Teller({
           {label}
         </p>
         <p className="font-medium text-[28px] text-fg leading-none tabular-nums">
-          {laster ? '—' : verdi}
+          {laster ? (
+            <span className="inline-block h-7 w-10 animate-pulse rounded-sm bg-surface-2" />
+          ) : (
+            verdi
+          )}
         </p>
       </div>
     </CardShell>

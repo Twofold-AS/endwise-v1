@@ -102,6 +102,8 @@ export const FANE_ALIAS: Readonly<Record<string, FaneId>> = {
   '/innstillinger/profil': 'profil',
   '/innstillinger/varsler': 'varsler',
   '/innstillinger/tjenester': 'tjenester',
+  '/innstillinger/koblinger': 'integrasjoner',
+  '/innstillinger/integrasjoner': 'integrasjoner',
   '/abonnement': 'abonnement',
   '/integrasjoner': 'integrasjoner',
   '/tjenester': 'tjenester',

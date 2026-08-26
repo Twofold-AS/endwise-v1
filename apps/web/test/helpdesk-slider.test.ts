@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  erTestHelpdeskTittel,
   HELPDESK_SLIDER_MINIMER_KEY,
   harNyUlestArtikkel,
   lesLagretMinimer,
@@ -72,6 +73,14 @@ describe('helpdesk-slider: Ny tvinger åpen, persist kun uten ulest', () => {
   });
 });
 
+describe('test-artikler skjules i forhandler-UI', () => {
+  it('kjenner igjen Mikael testing og Halla balla', () => {
+    expect(erTestHelpdeskTittel('Mikael testing')).toBe(true);
+    expect(erTestHelpdeskTittel('Halla balla!')).toBe(true);
+    expect(erTestHelpdeskTittel('Slik oppretter du en jobb')).toBe(false);
+  });
+});
+
 describe('TipCard er stedet som minimeres', () => {
   const tip = utenKommentarer(les('../app/(app)/_shell/tip-card.tsx'));
   const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
@@ -83,6 +92,8 @@ describe('TipCard er stedet som minimeres', () => {
     expect(tip).toMatch(/Fra helpdesken/);
     expect(tip).toMatch(/<NewBadge/);
     expect(tip).toMatch(/HOYDE = 208|height: HOYDE/);
+    expect(tip).toMatch(/if \(rader\.length === 0\) return null/);
+    expect(tip).not.toMatch(/Ingen artikler ennå/);
   });
 
   it('helpdesk.list sitter ikke på 5 min staleTime — focus må treffe nye artikler', () => {

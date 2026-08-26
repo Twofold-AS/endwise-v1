@@ -14,6 +14,7 @@ import {
   mapQuickItem,
   mapQuickStockEntry,
   QuickError,
+  quickPullUserMessage,
 } from '@endwise/toolkit-quick';
 
 /**
@@ -112,7 +113,7 @@ export async function runQuickCustomerPull(
       conflicts: customers.conflicts,
     };
   } catch (error) {
-    const detail = (error as Error).message;
+    const detail = quickPullUserMessage(error);
     await svc.recordSync(tenantId, { status: 'error', detail });
     throw error;
   }

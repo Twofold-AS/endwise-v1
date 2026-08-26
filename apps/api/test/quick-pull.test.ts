@@ -36,6 +36,13 @@ describe('Quick-pull: GET-only inn i Postgres', () => {
     expect(client).toMatch(/\/customer\/batch/);
   });
 
+  it('pullNow/sist-synk bruker én brukersetning — ikke raw error.message', () => {
+    expect(pull).toMatch(/quickPullUserMessage/);
+    expect(pull).not.toMatch(/const detail = \(error as Error\)\.message/);
+    expect(router).toMatch(/quickPullUserMessage\(error\)/);
+    expect(router).not.toMatch(/Quick-pull feilet: \$\{/);
+  });
+
   it('ingen Fixie, Scaleway-VM-proxy eller browser-token', () => {
     expect(`${pull}\n${router}\n${client}`).not.toMatch(
       /process\.env\.(FIXIE|HTTPS_PROXY|HTTP_PROXY|FIXIE_URL)/,

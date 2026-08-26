@@ -10,6 +10,15 @@ import { z } from 'zod';
  * synken. Felt merket «USIKKER» er gjettede navn og må verifiseres mot en ekte
  * respons (helst mot Test_Public) før vi stoler på dem.
  *
+ * Verifisert 26.08.2026 (parse-feil, ikke live Yamaha-body):
+ *   `quickCustomer` krever camelCase `guid`. `.loose()` bevarer `Guid` men
+ *   aliaser det ikke. `client/info` er `z.object({}).loose()` — derfor kan
+ *   setConfig lykkes mens pullNow kaster «Uventet svarformat fra Quick».
+ *   Yamaha-envelope `{ totalCount, limit, offset, results }` er bekreftet.
+ *   Quick3 release notes bruker PascalCase `ItemCode` / `ItemName`.
+ *   `foldQuickJsonKeys` senker bare første bokstav (Guid→guid). Ingen nye
+ *   feltnavn. Ingen utsalgspris — `syncQuickParts` skriver ikke sellPriceMinor.
+ *
  * Bekreftede endepunkt:
  *   GET /api/v2/customer/batch  (limit, offset, changedAfterDate, customerTypeGuid, expansions)
  *   GET /api/v2/client/info
@@ -167,6 +176,37 @@ export const quickStockEntryBatch = z
   .loose();
 
 export type QuickStockEntryBatch = z.infer<typeof quickStockEntryBatch>;
+
+/**
+ * Quick3 C# JSON er ofte PascalCase (release notes: ItemCode, ItemName).
+ * Våre skjema er camelCase (tester). Senk KUN første bokstav — finner ikke
+ * opp nøkler, mapper Guid→guid og ItemCode→itemCode. camelCase er identitet.
+ */
+export function foldQuickJsonKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(foldQuickJsonKeys);
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      const first = key.charAt(0);
+      const folded = first === '' ? key : first.toLowerCase() + key.slice(1);
+      out[folded] = foldQuickJsonKeys(nested);
+    }
+    return out;
+  }
+  return value;
+}
+
+export function parseQuickCustomerBatch(json: unknown): QuickCustomerBatch {
+  return quickCustomerBatch.parse(foldQuickJsonKeys(json));
+}
+
+export function parseQuickItemBatch(json: unknown): QuickItemBatch {
+  return quickItemBatch.parse(foldQuickJsonKeys(json));
+}
+
+export function parseQuickStockEntryBatch(json: unknown): QuickStockEntryBatch {
+  return quickStockEntryBatch.parse(foldQuickJsonKeys(json));
+}
 
 export interface QuickItemRecord {
   quickGuid: string;

@@ -173,10 +173,11 @@ export const CONTEXTS: AppContext[] = [
 ];
 
 /* ══ FORHANDLER — hoveddestinasjonene, topp→bunn ═════════════════════════
- * 26.08.2026 (Mikael, signert): åtte knapper, dropdowns som i dag.
+ * 26.08.2026 (Mikael, signert): dropdowns som i dag, ikke side-piller.
+ * Verkstedet er én knapp til Dagen. Prisliste bor under Jobber.
  * Samarbeid er skjult til backend finnes (F5-17 er en blindvei).
- * Prisliste bor under Verkstedet, ikke Ansatte. `/ansatte` er expander —
- * ingen egen side (alias-redirect til Team).
+ * `/ansatte` er expander — ingen egen side (alias-redirect til Team).
+ * Hjelp i lista er destinasjonen; slideren står nederst over Innstillinger.
  */
 export const FORHANDLER_NAV: NavItem[] = [
   {
@@ -185,15 +186,6 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: LayoutDashboard,
     href: '/dashboard',
     roles: DRIFT,
-    children: [
-      { label: 'Dagen', href: '/dashboard', icon: LayoutDashboard },
-      /**
-       * F2-05/F5-04 — forhandlerens EGEN katalog (hva KUNDEN betaler).
-       * Flyttet hit 26.08.2026. Ingen `roles`: arver DRIFT, så staff ser
-       * prisen. Skriving er `adminProcedure` server-side.
-       */
-      { label: 'Prisliste', href: '/innstillinger/tjenestekatalog', icon: Wrench },
-    ],
   },
   {
     key: 'innboks',
@@ -210,8 +202,14 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/jobber',
     roles: DRIFT,
     children: [
-      { label: 'Liste', href: '/jobber', icon: ClipboardList },
+      { label: 'Oversikt', href: '/jobber', icon: ClipboardList },
       { label: 'Kalender', href: '/jobber?visning=kalender', icon: CalendarDays },
+      /**
+       * F2-05/F5-04 — forhandlerens EGEN katalog (hva KUNDEN betaler).
+       * Flyttet hit 26.08.2026. Ingen `roles`: arver DRIFT, så staff ser
+       * prisen. Skriving er `adminProcedure` server-side.
+       */
+      { label: 'Prisliste', href: '/prisliste', icon: Wrench },
     ],
   },
   {
@@ -224,13 +222,6 @@ export const FORHANDLER_NAV: NavItem[] = [
       { label: 'Kunder', href: '/kunder', icon: Users },
       { label: 'Kjøretøy', href: '/kjoretoy', icon: Car },
     ],
-  },
-  {
-    key: 'analyse',
-    label: 'Rapporter',
-    icon: ChartLine,
-    href: '/rapporter',
-    roles: ADMIN_OF_TENANT,
   },
   /**
    * AI-verktøy er PARKERT 25.08.2026 — ikke i FORHANDLER_NAV.
@@ -247,6 +238,13 @@ export const FORHANDLER_NAV: NavItem[] = [
       { label: 'Kompetanse', href: '/mekanikere/kompetanse', icon: Tags, roles: ADMIN_OF_TENANT },
       { label: 'Timeplan', href: '/mekanikere/kapasitet', icon: Gauge, roles: ADMIN_OF_TENANT },
     ],
+  },
+  {
+    key: 'analyse',
+    label: 'Rapporter',
+    icon: ChartLine,
+    href: '/rapporter',
+    roles: ADMIN_OF_TENANT,
   },
   {
     key: 'helpdesk',
@@ -498,6 +496,8 @@ export const STI_ALIAS: Readonly<Record<string, string>> = {
   '/support': '/hjelp',
   '/verkstedet': '/dashboard',
   '/dashboard': '/verkstedet',
+  '/prisliste': '/innstillinger/tjenestekatalog',
+  '/innstillinger/tjenestekatalog': '/prisliste',
 };
 
 export function stierFor(href: string): string[] {
@@ -516,7 +516,7 @@ function pathTreffer(pathname: string, href: string): boolean {
 
 /**
  * Dealer-Innstillinger-stier (pille-fanene). Ikke Team/tjenestekatalog —
- * Prisliste bor under Verkstedet, Team under Ansatte.
+ * Prisliste bor under Jobber, Team under Ansatte.
  */
 const SETTINGS_STIER = [
   '/innstillinger/profil',
@@ -609,7 +609,7 @@ export function breadcrumbFor(
   }
 
   // Undervisning: match først på query (?kanal=/?visning=), så på sti. Et
-  // underpunkt med query må matche BÅDE sti og query — ellers ville «Liste»
+  // underpunkt med query må matche BÅDE sti og query — ellers ville «Oversikt»
   // (uten query) alltid vunnet over «Kalender» på samme sti.
   const barn = item.children ?? [];
   const child =
@@ -670,7 +670,8 @@ export const PARKED_LABEL: Record<string, string> = {
   '/innstillinger/integrasjoner': 'Innstillinger · Koblinger',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
   '/endwise/innstillinger': 'Endwise · Dev-mode',
-  '/innstillinger/tjenestekatalog': 'Verkstedet · Prisliste',
+  '/innstillinger/tjenestekatalog': 'Jobber · Prisliste',
+  '/prisliste': 'Jobber · Prisliste',
   '/butikk': 'Butikk · Katalog',
   '/butikk/kasse': 'Butikk · Handlekurv / kasse',
   '/lager/deler': 'Lager · Deler',

@@ -22,6 +22,9 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     expect(les('../app/(app)/rapporter/page.tsx')).toMatch(/from '\.\.\/analyse\/page'/);
     expect(les('../app/(app)/hjelp/page.tsx')).toMatch(/from '\.\.\/support\/page'/);
     expect(les('../app/(app)/verkstedet/page.tsx')).toMatch(/from '\.\.\/dashboard\/page'/);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(
+      /from '\.\.\/innstillinger\/tjenestekatalog\/page'/,
+    );
     expect(les('../app/(app)/ansatte/page.tsx')).toMatch(/redirect\('\/innstillinger\/team'/);
   });
 
@@ -42,6 +45,25 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     expect(jobber && isItemActive(jobber, '/saker')).toBe(true);
     expect(rapporter && isItemActive(rapporter, '/analyse')).toBe(true);
     expect(hjelp && isItemActive(hjelp, '/support')).toBe(true);
+  });
+
+  it('/prisliste og /verkstedet treffer Jobber og Verkstedet', () => {
+    const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
+    const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
+    expect(jobber && isItemActive(jobber, '/prisliste')).toBe(true);
+    expect(jobber && isItemActive(jobber, '/innstillinger/tjenestekatalog')).toBe(true);
+    expect(verksted && isItemActive(verksted, '/verkstedet')).toBe(true);
+    expect(verksted && isItemActive(verksted, '/prisliste')).toBe(false);
+    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
+      { label: 'Jobber', href: '/jobber' },
+      { label: 'Prisliste' },
+    ]);
+  });
+
+  it('Jobber-siden kaller listevisningen Oversikt, ikke Liste', () => {
+    const saker = les('../app/(app)/saker/page.tsx');
+    expect(saker).toMatch(/label="Oversikt"/);
+    expect(saker).not.toMatch(/label="Liste"/);
   });
 });
 

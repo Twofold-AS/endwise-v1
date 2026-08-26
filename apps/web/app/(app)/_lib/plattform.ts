@@ -11,6 +11,7 @@ const INSPECT_KANONISK: Record<string, string> = {
   '/rapporter': '/analyse',
   '/hjelp': '/support',
   '/verkstedet': '/dashboard',
+  '/prisliste': '/innstillinger/tjenestekatalog',
 };
 
 export function remapHrefTilInspect(href: string, slug: string): string {
@@ -77,6 +78,7 @@ export function erForhandlerRutePaaPlattform(pathname: string, search = ''): boo
     pathname.startsWith('/support') ||
     pathname.startsWith('/hjelp') ||
     pathname.startsWith('/verkstedet') ||
+    pathname.startsWith('/prisliste') ||
     pathname.startsWith('/lager') ||
     pathname.startsWith('/min-dag') ||
     pathname.startsWith('/mekaniker') ||

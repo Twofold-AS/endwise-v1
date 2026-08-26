@@ -50,7 +50,7 @@ import { destinasjonNarSesjonFeiler } from './invitasjon/_landing';
  * filnavn blir en byggefeil i stedet for et hull på en side i produksjon.
  * Filene lå opprinnelig som `.jfif`. De er ekte JPEG-er (magic `ffd8`), men
  * `.jfif` er ikke en kjent bilde-endelse for statiske importer eller for
- * bilde-optimaliseringen. **Døpt om til `.jpg` .** Legger du inn
+ * bilde-optimaliseringen. **Døpt om til `.jpg`.** Legger du inn
  * flere bilder: sjekk endelsen først.
  */
 

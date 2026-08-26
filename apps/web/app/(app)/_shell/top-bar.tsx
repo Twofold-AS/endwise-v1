@@ -9,7 +9,7 @@ import { useSidebarState } from './sidebar-state';
 
 /**
  * Topbaren er redusert til ÉN jobb: si hvor du er.
- * Fjernet : logo-lenke, seksjonsnavigasjon og søkeknapp. Alt tre bor
+ * Fjernet: logo-lenke, seksjonsnavigasjon og søkeknapp. Alt tre bor
  * nå i sidebaren. En topbar med knapper og en sidebar med de samme knappene ga
  * to svar på «hvor klikker jeg» — og to steder å glemme å oppdatere.
  * Søket er ikke borte, det er flyttet til tastaturet (K) med synlig inngang

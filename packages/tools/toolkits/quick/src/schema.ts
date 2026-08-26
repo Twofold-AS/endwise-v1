@@ -21,7 +21,7 @@ import { z } from 'zod';
  * GET /api/v2/client/info
  * Kjente, ikke kartlagte: /client/bankaccounts, /client/feesettings,
  * /common/language|country|paymentterm.
- * Delelager (GET-only, ): Quick3-release notes lister *item*-endepunkt
+ * Delelager (GET-only): Quick3-release notes lister *item*-endepunkt
  * (sortering ItemCode/ItemName) og GET stock entry by guid, pluss «batch of X»
  * som standard. Samme batch-JSON som customer. Stier:
  * GET /api/v2/item/batch

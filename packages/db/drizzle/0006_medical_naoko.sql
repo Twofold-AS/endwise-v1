@@ -1,5 +1,5 @@
 /*
- * F6-01 / F6-16 — kanal PÅ meldinger .
+ * F6-01 / F6-16 — kanal på meldinger.
  * Innboksen hadde en kanal-indikator som var ren prototype: den viste et
  * oppdiktet SMS-/e-post-ikon bak en av-som-standard-bryter, fordi `messages`
  * ikke hadde noe felt for hvor meldingen kom fra. Denne migrasjonen gir den

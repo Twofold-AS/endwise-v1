@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * Kallenavn i Settings › Profil og chrome.
- * Mikael : ett identitetsblokk (visningsnavn · kallenavn · e-post),
+ * Mikael: ett identitetsblokk (visningsnavn · kallenavn · e-post),
  * feltet lagrer for alle roller via `member_profiles.nickname`, og chrome
  * viser intern visning (kallenavn, ellers visningsnavn).
  */

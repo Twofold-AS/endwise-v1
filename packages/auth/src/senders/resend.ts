@@ -195,7 +195,7 @@ export async function sendTwoFactorOtp(to: string, otp: string): Promise<void> {
  * Her er det motsatt, og forskjellen er verdt å forstå før noen «retter» den.
  * Better-Auth kaller denne gjennom `runInBackgroundOrAwait`, altså **etter**
  * at `/request-password-reset` allerede har svart 200. En feil her havner i
- * serverloggen og påvirker ikke svaret. Målt : med en Resend-nøkkel
+ * serverloggen og påvirker ikke svaret. Målt: med en Resend-nøkkel
  * som ikke får sende fra domenet, svarte endepunktet 200 mens loggen viste
  * «Failed to run background task: Resend feilet: … domain is not verified».
  * Å gjøre den lukket ville vært et enumereringshull. Sendingen skjer

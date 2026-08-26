@@ -66,7 +66,7 @@ export {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './components/dropdown-menu.tsx';
-// shadcn/ui — chat (ui-pakker §9). Hentet .
+// shadcn/ui — chat (ui-pakker §9). Hentet.
 export {
   Message,
   MessageAvatar,

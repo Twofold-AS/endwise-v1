@@ -6,7 +6,7 @@ import { Questionnaire as Primitive } from '@shadcn/react/questionnaire';
 import type * as React from 'react';
 
 /*
- * shadcn/ui `questionnaire` — stil-skallet, skrevet .
+ * shadcn/ui `questionnaire` — stil-skallet, skrevet.
  * Se ui-pakker.md §9.
  * Denne er ikke kopiert fra registeret
  * `message` og `message-scroller` ble hentet med `npx shadcn@latest view`.

@@ -102,7 +102,7 @@ create policy invitations_open_by_hash_update on invitations
 
 -- To public med vilje: DEFINER kjører som tabelleieren.
 
--- Rotårsak (Scaleway, ): `NOT pg_has_role(current_user,
+-- Rotårsak (Scaleway): `NOT pg_has_role(current_user,
 -- 'authenticated', 'member')` matcher aldri eieren. Den som CREATE role
 -- authenticated er admin av rollen, så pg_has_role(...) er TRUE. Resultat:
 -- tom SELECT på `slug` → «finnes ikke». Permissive OR er ikke et hull

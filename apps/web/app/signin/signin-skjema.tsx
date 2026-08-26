@@ -270,7 +270,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
               {error && <p className="text-[12px] text-danger">{error}</p>}
               {/*
                * Veien ut for den som ikke kommer inn. Sto tomt her
-               * fram til : `/min-dag/meg` henviste til «Glemt
+               * fram til: `/min-dag/meg` henviste til «Glemt
                * passord» mens lenka ikke fantes noe sted.
                */}
               <p className="text-[12px]">

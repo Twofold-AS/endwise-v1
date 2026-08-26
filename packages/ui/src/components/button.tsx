@@ -4,7 +4,7 @@ import { Slot } from 'radix-ui';
 import type * as React from 'react';
 
 /*
- * Avvik fra kanonisk shadcn : radius og høyder følger eierens
+ * Avvik fra kanonisk shadcn: radius og høyder følger eierens
  * designprinsipper — 32px høyde, 10px radius, label-typografi (13/16 Medium)
  * i stedet for shadcns `rounded-md` + `text-sm` + `h-9`. Alt annet er urørt, så
  * `shadcn add` fortsatt kan brukes for nye komponenter.

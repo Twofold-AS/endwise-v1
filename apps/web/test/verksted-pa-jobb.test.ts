@@ -98,7 +98,7 @@ describe('Verkstedet-flaten — navn og innhold', () => {
     expect(FORHANDLER_NAV.some((i) => i.key === 'ai-verktoy')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => /ai-chat|AI-chat/i.test(i.label))).toBe(false);
     const nav = les('../app/(app)/_shell/nav.ts');
-    expect(nav).toMatch(/AI-verktøy er PARKERT/);
+    expect(nav).toMatch(/AI-verktøy er parkert/);
   });
 
   it('rører ikke Kompetanse/Timeplan under Organisasjon', () => {

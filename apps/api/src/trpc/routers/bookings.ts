@@ -281,7 +281,7 @@ export const bookingsRouter = router({
 
   /**
    * F3-03 / F3-07 — Kalender: bookinger som overlapper et tidsvindu.
-   * Beriket . Ruta returnerte tidligere rå
+   * Beriket. Ruta returnerte tidligere rå
    * `bookings`-rader (`listBookings` i booking-motoren). Det holdt for et API,
    * men ikke for en kalender: en kloss uten regnr, tjeneste og mekaniker er et
    * farget rektangel. Nå brukes samme `enrichedColumns` som `list`, så begge

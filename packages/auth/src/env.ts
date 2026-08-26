@@ -86,7 +86,7 @@ export const authEnv = {
        * en tom streng ville sluppet gjennom som avsenderadresse. Og tom er
        * nettopp det `.env.example` leverer for de andre nøklene, så dette er
        * en helt vanlig tilstand i et halvkonfigurert miljø. Fanget av
-       * `epost-innhold.test.ts` .
+       * `epost-innhold.test.ts`.
        */
       from: process.env.RESEND_FROM || `Endwise <no-reply@${RESEND_STANDARD_DOMENE}>`,
     };

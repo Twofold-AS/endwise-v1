@@ -17,7 +17,7 @@ const her = dirname(fileURLToPath(import.meta.url));
 const functions = readFileSync(resolve(her, '../../../packages/db/sql/functions.sql'), 'utf8');
 const grants = readFileSync(resolve(her, '../../../packages/db/sql/grants.sql'), 'utf8');
 const tenantsRouter = readFileSync(resolve(her, '../src/trpc/routers/tenants.ts'), 'utf8');
-const slettSql = functions.slice(functions.lastIndexOf('F5-26 — GDPR-slett'));
+const slettSql = functions.slice(functions.lastIndexOf('GDPR-slett av en forhandler'));
 
 describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
   it('setter transaksjons-lokal GUC før den leser tenants (samme mønster som invitation_hash)', () => {
@@ -51,7 +51,7 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
   });
 
   it('dokumenterer Docker-superuser vs Scaleway (som lookup_open_invitation)', () => {
-    expect(slettSql).toMatch(/FORCE RLS \+ eier som IKKE er superuser/);
+    expect(slettSql).toMatch(/FORCE RLS \+ eier som ikke er superuser/);
     expect(slettSql).toMatch(/row_security=off/);
   });
 
@@ -164,7 +164,7 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
   });
 
   /**
-   * Prod , dpl_H7AceMM6rtzDMdE3DqXBXTfY8nCt, trace 80eab6c:
+   * Prod, dpl_H7AceMM6rtzDMdE3DqXBXTfY8nCt, trace 80eab6c:
    * HTTP 412, sqlstate 23503, constraint audit_log_tenant_id_tenants_id_fk.
    * Eieren som CREATE role authenticated er admin → to authenticated
    * SELECT-policyer gjelder DEFINER. withPlatformAdmin setter ikke
@@ -222,7 +222,7 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
   });
 
   /**
-   * Prod , dpl_98PMuhbM77R4SZJiEPPryVBafJ4X, cdg1, 235 ms,
+   * Prod, dpl_98PMuhbM77R4SZJiEPPryVBafJ4X, cdg1, 235 ms,
    * requestId sdwsb-1787599245213-412242917e8b, trace ebf4fcc558a3a1a2dd3e58dcd874dabb.
    * HTTP 412 etter at Mikael kjørte `pnpm db:setup` (0023/0024).
    * 0024 brukte CREATE OR replace med samme signatur. Drizzle-journalen

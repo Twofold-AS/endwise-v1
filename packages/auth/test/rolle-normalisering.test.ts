@@ -13,7 +13,7 @@ import { createTenant } from '../src/tenant.ts';
  * En bruker som ble stående med `owner` matchet derfor ingen rolleliste i
  * navigasjonen. Sidebar-radene forsvant, kontekstvelgeren forsvant, og
  * brukeren var **låst inne i tenanten uten en dør ut** — nøyaktig det som
- * skjedde i «Yamaha Bergen» .
+ * skjedde i «Yamaha Bergen».
  * Det var ikke et sikkerhetshull. Det var verre på sin egen måte: en stille
  * feil som ikke ga noen feilmelding, bare en app som manglet halvparten av seg
  * selv. Derfor testes det på rollen, ikke på UI-et — UI-et er bare der det ble

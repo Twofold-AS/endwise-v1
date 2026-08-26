@@ -12,7 +12,7 @@
  * Hvorfor sletting og ikke et «gyldig fra»-tidsstempel
  * Tidsstempel-varianten var førstevalget, og ble forkastet etter en måling:
  * `session.created_at` er `timestamp` uten tidssone, og node-postgres
- * skriver den i appserverens lokale tid. Målt : en rad skrevet i
+ * skriver den i appserverens lokale tid. Målt: en rad skrevet i
  * samme øyeblikk som `now` lå 7200 sekunder (2 t) foran `now`, fordi
  * databasen står i UTC og Node i cest.
  * Et tidsstempel satt av SQL (`now`, UTC) sammenlignet med `created_at`

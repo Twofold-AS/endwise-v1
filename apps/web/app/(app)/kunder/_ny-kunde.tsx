@@ -11,7 +11,7 @@ import { CardShell } from '../_shell/cards';
  * «ny kunde». Quick action-en som ikke gjorde noe.
  * Dette var en død knapp. «Ny kunde» i Handlinger-menyen pekte på
  * `/kunder?ny=1`, men kundesiden leste aldri den parameteren — akkurat samme
- * feil som `/innboks?ny=1` hadde fram til . Du trykket, siden lastet,
+ * feil som `/innboks?ny=1` hadde fram til. Du trykket, siden lastet,
  * og ingenting skjedde. `customers.create` har eksistert i backend hele tiden.
  * Skjemaet er med vilje minimalt: navn er det eneste som kreves for å ha en
  * kunde i registeret. Telefon og e-post er valgfrie fordi de faktisk er det

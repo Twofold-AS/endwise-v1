@@ -84,7 +84,7 @@ grant execute on function redact_audit_log(text) to authenticated;
 -- riktig for lederens liste. Men den som Åpner en invitasjonslenke har ingen
 -- sesjon og ingen tenant — og `app.tenant_id` er derfor ikke satt.
 
--- Verifisert : en unscopet `select` som app-rollen returnerer 0 rader.
+-- Verifisert: en unscopet `select` som app-rollen returnerer 0 rader.
 -- Policyen sammenligner mot `nullif(current_setting('app.tenant_id', true), '')`,
 -- som uten kontekst blir NULL, og `tenant_id = NULL` er aldri sant. Uten denne
 -- funksjonen ville hver eneste invitasjon sett ut som «ukjent token».
@@ -104,11 +104,11 @@ grant execute on function redact_audit_log(text) to authenticated;
 -- Den er altså ikke «RLS av» — den er «ett spørsmål, ett svar, og bare hvis du
 -- allerede kjenner hemmeligheten».
 
--- Force RLS + eier som ikke er superuser (Scaleway, )
+-- Force RLS + eier som ikke er superuser (Scaleway)
 
 -- SECURITY DEFINER kjører som tabelleieren. Lokalt er Docker-eieren superuser
 -- og bypasser RLS, så testdataen så grønn ut. I prod er eieren `endwise` uten
--- Bypassrls, og `FORCE ROW LEVEL SECURITY` (grants.sql) gjelder også eieren.
+-- BYPASSRLS, og `FORCE ROW LEVEL SECURITY` (grants.sql) gjelder også eieren.
 -- Tenant-policyen er `TO authenticated` og krever `app.tenant_id`. Resultatet
 -- uten unntak: 0 rader — samme 404 som et ugyldig token.
 
@@ -190,21 +190,21 @@ grant execute on function consume_invitation(text) to authenticated;
 -- transaksjon — samme guc som withPlatformAdmin.
 
 -- Aldri Endwise-tenanten (slug = endwise).
--- Dealer-only "user"-rader slettes (prod : innlogging overlevde
+-- Dealer-only "user"-rader slettes (prod: innlogging overlevde
 -- forhandlerslett). Beholdes kun ved gjenværende member-rad (annen org,
 -- inkl. Endwise). "Never delete self" = acting admin har Endwise-medlemskap
 -- ikke e-post-unntak. Auth-tabeller har ingen RLS (ADR-002).
 
--- Force RLS + eier som ikke er superuser (Scaleway, )
+-- Force RLS + eier som ikke er superuser (Scaleway)
 
 -- Samme klasse som `lookup_open_invitation` (pr #11). SECURITY DEFINER kjører
 -- som tabelleieren. Lokalt er Docker-eieren superuser og bypasser RLS, så
 -- `SELECT slug` og `DELETE` så grønne ut. I prod er eieren `endwise` uten
--- Bypassrls, og force RLS gjelder også eieren. Policyene er `TO authenticated`
+-- BYPASSRLS, og force RLS gjelder også eieren. Policyene er `TO authenticated`
 -- eieren er det ikke. `NOT pg_has_role(authenticated)` er feil predikat:
 -- eieren som CREATE role authenticated er medlem (admin). Resultat uten unntak:
 -- 1. `SELECT slug FROM tenants` → 0 rader → raise «finnes ikke»
--- (dette var 500-en på endwise.no , commit 17ec774).
+-- (dette var 500-en på endwise.no, commit 17ec774).
 -- 2. DELETE på RLS-tabeller treffer default-deny: 0 rader, stille
 -- (ikke insufficient_privilege — se tenant-isolation.test.ts).
 -- 3. `audit_log` og `erasure_requests` har on DELETE restrict mot tenants.

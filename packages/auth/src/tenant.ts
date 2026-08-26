@@ -73,7 +73,7 @@ export async function createTenant(
   const tenantId = org.id;
 
   /**
-   * normaliser eierens rolle . Dette var en ekte bug.
+   * normaliser eierens rolle. Dette var en ekte bug.
    * `auth.api.createOrganization` gir oppretteren Better-Auths egen
    * standardrolle **`owner`** — en verdi som ikke finnes i vår RBAC-modell
    * (`OrgRole` = customer | dealer_staff | dealer_admin | endwise_admin).

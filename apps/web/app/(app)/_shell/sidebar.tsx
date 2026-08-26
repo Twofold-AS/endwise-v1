@@ -144,7 +144,7 @@ export function Sidebar() {
   });
 
   /**
-   * ÉN Åpen om gangen (accordion, ).
+   * Én åpen om gangen (accordion).
    * Tilstanden måtte flyttes hit. Hver `NavRow` hadde sin egen `open`, og
    * en rad som bare kjenner seg selv kan ikke vite at en annen skal lukkes
    * derfor sto Kunder og Saker åpne samtidig og dyttet resten nedover.
@@ -174,7 +174,7 @@ export function Sidebar() {
   }, []);
 
   /**
-   * hard navigasjon, ikke `router.push` .
+   * hard navigasjon, ikke `router.push`.
    * `router.push` beholder dokumentet — og dermed hele React Query-cachen med
    * forrige brukers kunder, meldinger og team. Logger noen andre inn på samme
    * maskin, ser de et glimt av data de ikke har tilgang til før de nye

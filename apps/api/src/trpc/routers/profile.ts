@@ -61,7 +61,7 @@ export const profileRouter = router({
       varslingslyder: pref?.notificationSounds ?? true,
       /** «Detaljer»-panelet i innboksen. Standard PÅ. */
       detaljpanel: pref?.inboxDetailsOpen ?? true,
-      /** Alle innloggede roller kan ha kallenavn . */
+      /** Alle innloggede roller kan ha kallenavn. */
       kanHaKallenavn: kanHaKallenavn(ctx.role),
       /**
        * Avatarvalgene. Null overalt = alt utledes fra seeden.

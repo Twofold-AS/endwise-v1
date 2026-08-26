@@ -5,7 +5,7 @@ import { DEALERS } from '../_data';
 
 /**
  * Forhandlerliste.
- * ikke I bruk . Sto på forhandlerens forside og viste
+ * ikke i bruk. Sto på forhandlerens forside og viste
  * Andre forhandlere — Endwise-interne data på feil skjerm. Fjernet derfra da
  * Verkstedet ble ryddet. Filen står igjen fordi lista hører hjemme i
  * Endwise-admin-konteksten når den bygges (den er bevisst tom i dag).

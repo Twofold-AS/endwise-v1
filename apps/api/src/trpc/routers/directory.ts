@@ -47,7 +47,7 @@ export const directoryRouter = router({
       if (unike.length === 0) return {};
 
       /**
-       * `seed` og `avatar` er med .
+       * `seed` og `avatar` er med.
        * Status-humor bor ikke her. Innboksens samtaleliste og tråd har
        * ingen statuslabel ved ansiktet — uttrykket skal ikke være eneste
        * signal. Status vises på `/mekanikere`, Team › Funksjoner og

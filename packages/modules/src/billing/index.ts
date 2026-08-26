@@ -16,7 +16,7 @@ export type BillingState = {
 };
 
 /**
- * 14 dagers nåde ved mislykket betaling. Eiers beslutning .
+ * 14 dagers nåde ved mislykket betaling. Eiers beslutning.
  * Basis fortsetter alltid — Verkstedet, Saker, Kunder, Lager, Innboks, Helpdesk
  * og Settings har ingen gate og berøres ikke. Det er tilleggene som fryses, og
  * først etter 14 dager i `past_due`.

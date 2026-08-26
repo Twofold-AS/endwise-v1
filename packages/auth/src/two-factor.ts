@@ -18,7 +18,7 @@ import { ROLES_REQUIRING_2FA } from './rbac.ts';
  * 2FA på — den svarer `twoFactorRedirect: true`, og sesjonen lages først etter
  * verifisert engangskode (sesjons-ID roteres da, CWE-384). En eksisterende
  * sesjon for en 2FA-aktivert bruker har derfor vært gjennom koden.
- * Unntaket — sesjoner opprettet før påslaget — er lukket .
+ * Unntaket — sesjoner opprettet før påslaget — er lukket.
  * De ville ellers plutselig bestått sjekken uten å ha sett en kode (målt:
  * Better-Auth rydder dem ikke selv). Sperren ligger i en databasetrigger,
  * `endwise_2fa_session_cutoff` (migrasjon `0010`), som sletter alle sesjoner i

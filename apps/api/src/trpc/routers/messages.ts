@@ -75,7 +75,7 @@ export const messagesRouter = router({
          */
         participantIds: z.array(z.string()).default([]),
         /**
-         * Trådens primærkanal = svarkanalen (F6-01, ).
+         * Trådens primærkanal = svarkanalen (F6-01).
          * Default `app`: en tråd startet i panelet går i panelet. Velger man
          * SMS eller e-post, sier man at samtalen hører hjemme der — og da må
          * `externalRef` peke på nummeret/adressen svaret skal til.

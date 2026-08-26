@@ -284,7 +284,7 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
         },
       }),
 
-      // Passkey (WebAuthn) er utsatt : `@better-auth/passkey` dro inn
+      // Passkey (WebAuthn) er utsatt: `@better-auth/passkey` dro inn
       // en foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt
       // brukte den ennå (auth-client har kun organization + twoFactor). Plugin +
       // pakke fjernet for en ren peer-graf. `passkey`-tabellen i schema er beholdt

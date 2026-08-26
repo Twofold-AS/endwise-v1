@@ -16,7 +16,7 @@ import { type Jobbfunksjon, kanTildeles, TILDELBARE_FUNKSJONER } from '../profil
  * Hvorfor oppslaget går via en SQL-funksjon
  * `invitations` er RLS-isolert som alt annet, men den som åpner lenka har
  * verken sesjon eller tenant — så `app.tenant_id` er ikke satt, og RLS
- * returnerer null rader (verifisert : unscopet select gir 0).
+ * returnerer null rader (verifisert: unscopet select gir 0).
  * `lookup_open_invitation` / `consume_invitation` er SECURITY DEFINER-funksjoner
  * som gjør nøyaktig ett oppslag på hash. Se `packages/db/sql/functions.sql`.
  * Staff-sporet kan aldri bli mer enn `dealer_staff`

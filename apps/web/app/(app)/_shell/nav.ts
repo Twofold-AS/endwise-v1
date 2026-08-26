@@ -79,7 +79,7 @@ export type NavItem = {
   /**
    * Bærer et tall på nav-raden.
    * `unread` — uleste meldinger (Innboks). Rød sirkel, hvitt siffer.
-   * `helpdesk` — uleste hjelpeartikler. Samme røde sirkel — Mikael .
+   * `helpdesk` — uleste hjelpeartikler. Samme røde sirkel — Mikael.
    * «Ny»-tekstbadgen er et annet merke (nye flater/artikler), ikke telleren.
    */
   badge?: 'unread' | 'helpdesk';
@@ -203,7 +203,7 @@ export const FORHANDLER_NAV: NavItem[] = [
       { label: 'Kalender', href: '/jobber?visning=kalender', icon: CalendarDays },
       /**
        * F2-05/F5-04 — forhandlerens egen katalog (hva kunden betaler).
-       * Flyttet hit . Ingen `roles`: arver drift, så staff ser
+       * Flyttet hit. Ingen `roles`: arver drift, så staff ser
        * prisen. Skriving er `adminProcedure` server-side.
        */
       { label: 'Prisliste', href: '/prisliste', icon: Wrench },
@@ -337,7 +337,7 @@ export const BUTIKK_NAV: NavItem[] = [
 
 /*
  * Endwise-admin
- * Var bevisst tom (eiers beslutning ). Fikk sitt første punkt
+ * Var bevisst tom (eiers beslutning). Fikk sitt første punkt
  * Forhandlere — det er herfra en tenant opprettes, og uten
  * den flaten finnes det ingen lovlig vei inn i dev-mode.
  * Fortsatt en clean slate for alt annet: dagens /admin-sider (eksterne
@@ -631,7 +631,7 @@ export function breadcrumbFor(
 
 /**
  * Ruter som ikke er i primær-navet, men som fortsatt finnes og skal ha et navn
- * i breadcrumben og i K. Eiers beslutning : markedsrutene og
+ * i breadcrumben og i K. Eiers beslutning: markedsrutene og
  * Endwise-admin-sidene parkeres — koden beholdes, navet forenkles.
  */
 export const PARKED_LABEL: Record<string, string> = {

@@ -34,7 +34,7 @@ export interface StreamEvent {
 }
 
 /*
- * ÉN delt tilkobling per fane (refaktorert )
+ * Én delt tilkobling per fane (refaktorert)
  * Hooken åpnet tidligere en egen `EventSource` per kallsted. Med én lytter
  * i appen gikk det bra. Da varslingslyden (F5-19) skulle lytte app-bredt, ble
  * det plutselig to per fane — og serveren har et tak:

@@ -18,7 +18,7 @@ export class SessionExpiredError extends Error {
  * 2. Absolutt — maks levetid. Better-Auth har ingen innebygd; vi river
  * sesjonen i databasen når den er passert. En klient-timer
  * ville ikke vært en grense; dette er.
- * 3. 2FA — ny . Roller som krever tofaktor får ingen
+ * 3. 2FA — ny. Roller som krever tofaktor får ingen
  * autorisert sesjon uten det. Se `two-factor.ts`.
  * `db` er et påkrevd argument, ikke valgfritt. Gjorde vi det valgfritt,
  * ville et kallsted som glemte å sende det stille hoppet over 2FA-sjekken — og

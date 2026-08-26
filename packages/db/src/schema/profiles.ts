@@ -16,7 +16,7 @@ import { user } from './auth.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F5-19 / F7-06 — profil og preferanser .
+ * F5-19 / F7-06 — profil og preferanser.
  * To tabeller, og det er ikke overbygging. De to opplysningene her har
  * Ulik rekkevidde, og å slå dem sammen ville gjort én av dem feil:
  * `user_preferences` — global per bruker. Om varslingslyder er på er en

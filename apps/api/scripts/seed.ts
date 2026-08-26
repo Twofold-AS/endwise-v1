@@ -1079,7 +1079,7 @@ async function main() {
    * Tråder
    * Tre tråder, én per kanal, og alle med flere deltakere enn hovedbrukeren.
    * Det siste er poenget: en tråd med bare deg selv kunne aldri avslørt at
-   * innboksen skrev ut rå UUID-er i stedet for navn (F6-01, ).
+   * innboksen skrev ut rå UUID-er i stedet for navn (F6-01).
    * Kunde-tråden krever at kunden har en Better-Auth-bruker — derfor har Kari
    * Nordmann en innlogging.
    */
@@ -1089,7 +1089,7 @@ async function main() {
    * i «Deler til Iron 883» (mechanic_dealer = intern) → «Skiftenøkkelen»
    * i «Ulyd i bremsene på mt-07» (customer_dealer) → «Ola Mekaniker»
    * Anna Admin får ikke kallenavn i seeden — hun kan sette det selv.
-   * Alle innloggede roller kan ha kallenavn .
+   * Alle innloggede roller kan ha kallenavn.
    */
   await db
     .insert(schema.memberProfiles)

@@ -8,7 +8,7 @@ import { networkInterfaces } from 'node:os';
  * Better-Auth svarer `403 Invalid origin` på hvert eneste auth-kall. Symptomet
  * er en innlogging som «bare ikke virker», uten at noe i UI-et antyder at det er
  * adressen i adressefeltet som er problemet. Nøyaktig samme klasse feil som
- * `127.0.0.1`-saken .
+ * `127.0.0.1`-saken.
  * Hvorfor maskinens egne IP-er, og ikke en env-variabel
  * En hardkodet IP i `.env` er riktig helt til ruteren deler ut en ny adresse,
  * og da er man tilbake til en uforklarlig 403. Vi leser i stedet adressene

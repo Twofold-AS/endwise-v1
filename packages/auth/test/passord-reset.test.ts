@@ -284,7 +284,7 @@ describeDb('F1-16: endepunktene mot ekte database', () => {
    * da har endepunktet fortalt en fremmed nøyaktig det flyten er bygget for å
    * skjule. Better-Auth kaller senderen via `runInBackgroundOrAwait`, altså
    * etter at svaret er sendt, så egenskapen holder.
-   * Målt i praksis : med en Resend-nøkkel som ikke fikk sende fra
+   * Målt i praksis: med en Resend-nøkkel som ikke fikk sende fra
    * domenet svarte ruta 200 mens loggen viste «Failed to run background task».
    * Denne testen er den fastholdte versjonen av den observasjonen.
    */

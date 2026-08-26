@@ -5,7 +5,7 @@ import { Providers } from './providers';
 import './globals.css';
 
 /*
- * Typografi — inter (eierens designprinsipper, ). Erstatter Google
+ * Typografi — inter (eierens designprinsipper). Erstatter Google
  * Sans Flex. Inter er sil Open Font License, variabel (hele wght-aksen), og
  * finnes i next/font-katalogen med ekte fallback-metrics — derfor trenger den
  * ikke `adjustFontFallback: false` slik forgjengeren gjorde.
@@ -50,7 +50,7 @@ export const viewport: Viewport = {
 /**
  * Temaet MÅ settes før første maling — derfor et inline-skript og ikke en
  * React-effekt.
- * Dette er fiksen på en ekte bug : mørkt tema overlevde ikke en
+ * Dette er fiksen på en ekte bug: mørkt tema overlevde ikke en
  * refresh. `data-theme="light"` under er serverens gjetning, og den er riktig
  * for en ny bruker — men bryterne lagret ingenting, så hver sidelast satte alle
  * tilbake til lyst.

@@ -39,7 +39,7 @@ export function BevelButton({
 
 /**
  * NewBadge — «Ny»-merkelapp. Badge-formen (20px høyde, 6px radius) + rød
- * `destructive`-variant (eiers beslutning ). Norsk kopi .
+ * `destructive`-variant (eiers beslutning). Norsk kopi.
  * Formen er felles, fargen er signalet: «nytt» skal fange blikket, og etter at
  * aksenten ble svart ville en aksentfarget badge forsvunnet i resten av UI-et.
  * Uleste-antall er `CountBadge` — samme form, siffer i stedet for «Ny».
@@ -55,7 +55,7 @@ export function NewBadge({ className }: { className?: string }) {
 /**
  * CountBadge — uleste-teller (innboks, nav, helpdesk-antall).
  * Samme badge-oppsett som `NewBadge` (`Badge variant="destructive"`, 20px/6px).
- * Mikael : ikke 18px-sirkelen fra #35, ikke grå pille, ikke grønn.
+ * Mikael: ikke 18px-sirkelen fra #35, ikke grå pille, ikke grønn.
  * 0 skjules. Tallet vises som det er (ikke «9+»).
  */
 export function CountBadge({

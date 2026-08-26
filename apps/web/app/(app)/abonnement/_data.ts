@@ -41,7 +41,7 @@ export const PLANS_UI: PlanUI[] = [
 export const MOCK_SUB = { planKey: 'pluss', status: 'active', currentPeriodEnd: '01.08.2026' };
 
 /*
- * `INTEGRATIONS_UI` fjernet .
+ * `INTEGRATIONS_UI` fjernet.
  * Den var hardkodet mock-data med av/på-brytere som kun levde i `useState`.
  * Integrasjonsfanen leser nå `billing.katalog` — ekte `tenant_modules` og
  * ekte priser fra Stripe-katalogen — og har ingen brytere i det hele tatt.

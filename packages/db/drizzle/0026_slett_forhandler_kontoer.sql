@@ -283,7 +283,7 @@ grant execute on function slett_forhandler(uuid) to authenticated;
 
 -- > statement-breakpoint
 
--- Engangs-reparasjon (prod ): 0025 slettet forhandler uten "user".
+-- Engangs-reparasjon (prod): 0025 slettet forhandler uten "user".
 -- Kjører ÉN gang ved migrate som eier — ikke i slett_forhandler.
 -- Bundet til 0025-formen: zero member-rader og minst én session der
 -- active_organization_id is NOT NULL og ikke finnes i organization.

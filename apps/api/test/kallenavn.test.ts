@@ -5,7 +5,7 @@ import { appRouter } from '../src/trpc/router.ts';
 
 /**
  * F7-06 / F5-19 — kallenavn på `member_profiles.nickname`.
- * Mikael : feltet skal lagre for alle roller, inkludert
+ * Mikael: feltet skal lagre for alle roller, inkludert
  * dealer_staff (ikke-admin). Dette er CWE-862-motsatsen: gaten skal
  * slippe inn, ikke stenge, og lesingen skal treffe samme kolonne.
  */

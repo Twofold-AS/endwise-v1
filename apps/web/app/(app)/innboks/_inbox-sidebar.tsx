@@ -37,7 +37,7 @@ import { useInboxModus } from './_modus';
  * innholdet under. To kolonner som er bygget likt leses som ett system.
  * Part-filtrene bor her, ikke i hoved-sidebaren. To kontroller for samme filter
  * ville før eller siden gått ut av synk.
- * Navnebytte . Disse filtrene het «kanaler» i koden, men de
+ * Navnebytte. Disse filtrene het «kanaler» i koden, men de
  * filtrerer på `thread_kind` — altså hvem samtalen er med. Nå som `channel`
  * finnes som ekte kolonne (SMS/e-post/app/widget) ville to ting med samme navn
  * vært en garantert forveksling. Filtrene heter `PARTER`; kanal er kanal.

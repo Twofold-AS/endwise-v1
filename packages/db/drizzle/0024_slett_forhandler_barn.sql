@@ -1,7 +1,7 @@
 /*
  * 0024 — slett_forhandler: SELECT under force RLS + ROW_COUNT på barn.
- * Prod : POST /trpc/tenants.slett → HTTP 412,
- * Sqlstate 23503, constraint audit_log_tenant_id_tenants_id_fk.
+ * Prod: POST /trpc/tenants.slett → HTTP 412,
+ * SQLSTATE 23503, constraint audit_log_tenant_id_tenants_id_fk.
  * Eieren er admin av authenticated, så to authenticated SELECT gjelder
  * DEFINER. Uten app.tenant_id / to public SELECT ser UPDATE 0 rader.
  * INSERT audit.redacted ble værende på forhandleren (restrict).

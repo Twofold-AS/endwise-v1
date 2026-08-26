@@ -8,7 +8,7 @@ import type * as React from 'react';
  * «dekker shadcn dem, skal de bort»).
  * Avvik fra kanonisk shadcn: form-en følger eierens badge-spec — 20px høyde,
  * 6px radius — mens `variant` styrer farge. `default` leser aksent-tokenene,
- * som ble svarte . `destructive` er rød og brukes av «Ny»-badgen.
+ * som ble svarte. `destructive` er rød og brukes av «Ny»-badgen.
  * API-et er uendret.
  */
 const badgeVariants = cva(

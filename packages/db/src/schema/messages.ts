@@ -36,7 +36,7 @@ export const threadKindEnum = pgEnum('thread_kind', [
  * Dette var lenge en **prototype uten datagrunnlag**: innboksen hadde en
  * av-som-standard-bryter som viste et oppdiktet kanal-ikon, fordi `messages`
  * ikke visste hvor meldingen kom fra. Varslingsmodulen (F3-04) sender over SMS
- * og e-post, men svaret kom tilbake anonymt. Kolonnen ble lagt til .
+ * og e-post, men svaret kom tilbake anonymt. Kolonnen ble lagt til.
  * Hvorfor det betyr noe i drift: **svaret må gå tilbake samme vei.** Svarer du
  * i panelet på noe kunden sendte som SMS, og svaret bare blir en app-melding,
  * får kunden det aldri. Kanalen er derfor ikke pynt — den er en rutingsopplysning.

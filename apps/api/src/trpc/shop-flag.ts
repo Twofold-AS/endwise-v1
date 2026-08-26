@@ -1,4 +1,4 @@
-import { eq, schema, withTenant } from '@endwise/db';
+import { and, eq, schema, withTenant } from '@endwise/db';
 import type { AppContext } from '../context.ts';
 
 /**
@@ -26,7 +26,12 @@ export async function resolveShopFlag(ctx: Pick<AppContext, 'db' | 'tenantId'>):
       const [override] = await tx
         .select({ enabled: schema.featureFlagOverrides.enabled })
         .from(schema.featureFlagOverrides)
-        .where(eq(schema.featureFlagOverrides.flagKey, SHOP_FLAG));
+        .where(
+          and(
+            eq(schema.featureFlagOverrides.flagKey, SHOP_FLAG),
+            eq(schema.featureFlagOverrides.tenantId, ctx.tenantId as string),
+          ),
+        );
 
       return override?.enabled ?? global?.enabled ?? AV;
     });

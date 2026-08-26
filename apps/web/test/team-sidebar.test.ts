@@ -3,8 +3,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
-  breadcrumbFor,
   BUTIKK_NAV,
+  breadcrumbFor,
   childrenForRole,
   ENDWISE_NAV,
   ENDWISE_SETTINGS_NAV,

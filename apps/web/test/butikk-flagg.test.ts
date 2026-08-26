@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { BUTIKK_NAV, CONTEXTS, contextsForRole, navForContext } from '../app/(app)/_shell/nav.ts';
 import { FLAG_DEFAULTS, FLAG_KEYS } from '../flags.ts';
-import {
-  BUTIKK_NAV,
-  CONTEXTS,
-  contextsForRole,
-  navForContext,
-} from '../app/(app)/_shell/nav.ts';
 
 /**
  * F10-03 — Butikk er intern og flagg-styrt. Nav er kosmetikk; tRPC er sperren.
@@ -35,8 +30,8 @@ describe('F10-03 — Butikk-nav bak shop-flagget', () => {
     expect(butikk?.requiresShopFlag).toBe(true);
     expect(butikk?.requiresDevMode).toBeFalsy();
     expect(butikk?.label).toBe('Butikk');
-    expect(contextsForRole('dealer_admin', false, true, false).some((c) => c.key === 'butikk')).toBe(
-      false,
-    );
+    expect(
+      contextsForRole('dealer_admin', false, true, false).some((c) => c.key === 'butikk'),
+    ).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
-import { and, eq, schema, sql, withTenant } from '@endwise/db';
 import type { Database } from '@endwise/db';
+import { and, eq, schema, sql, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 
 /**
@@ -38,7 +38,10 @@ export async function lesShopKatalog(db: Database, tenantId: string): Promise<Sh
       .from(schema.parts)
       .leftJoin(
         schema.stockLevels,
-        and(eq(schema.stockLevels.partId, schema.parts.id), eq(schema.stockLevels.tenantId, tenantId)),
+        and(
+          eq(schema.stockLevels.partId, schema.parts.id),
+          eq(schema.stockLevels.tenantId, tenantId),
+        ),
       )
       .where(
         and(

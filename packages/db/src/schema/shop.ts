@@ -21,11 +21,7 @@ import { tenants } from './tenants.ts';
  * den innloggede forhandlerbrukeren (fra sesjonen), ikke en sluttkunde.
  */
 
-export const shopOrderStatusEnum = pgEnum('shop_order_status', [
-  'pending',
-  'paid',
-  'cancelled',
-]);
+export const shopOrderStatusEnum = pgEnum('shop_order_status', ['pending', 'paid', 'cancelled']);
 
 export const shopOrders = pgTable(
   'shop_orders',

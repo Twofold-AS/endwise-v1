@@ -1,7 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
 import { createDb, type Database, eq, schema, sql } from '@endwise/db';
 import { addonKatalog, kjopbareTillegg } from '@endwise/modules';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -35,8 +35,8 @@ async function forventer(
 }
 
 const OWNER_URL = process.env.DATABASE_URL;
-const APP_URL = process.env.APP_DATABASE_URL;
-const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;
+const APP_URL = process.env.APP_DATABASE_URL ?? OWNER_URL;
+const describeDb = OWNER_URL ? describe : describe.skip;
 
 describe('F10-03 — shop er ikke til salgs', () => {
   it('mangler i addonKatalog og kjopbareTillegg', () => {
@@ -51,8 +51,12 @@ describe('F10-03 — shop er ikke til salgs', () => {
   });
 
   it('gaten er shopProcedure (flagg), ikke moduleProcedure(shop)', () => {
-    const init = readFileSync(resolve(her, '../src/trpc/init.ts'), 'utf8');
-    const router = readFileSync(resolve(her, '../src/trpc/routers/shop.ts'), 'utf8');
+    const utenKommentar = (rel: string) =>
+      readFileSync(resolve(her, rel), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '');
+    const init = utenKommentar('../src/trpc/init.ts');
+    const router = utenKommentar('../src/trpc/routers/shop.ts');
     expect(init).toMatch(/export const shopProcedure/);
     expect(init).toMatch(/resolveShopFlag/);
     expect(init).not.toMatch(/moduleProcedure\('shop'\)/);
@@ -69,10 +73,7 @@ describeDb('F10-03 — intern testbutikk', () => {
   let delA = '';
   let lokA = '';
 
-  const ctx = (
-    role: 'endwise_admin' | 'dealer_admin' | 'dealer_staff',
-    tenantId: string,
-  ) => ({
+  const ctx = (role: 'endwise_admin' | 'dealer_admin' | 'dealer_staff', tenantId: string) => ({
     db: app,
     events: { publish: async () => {} } as never,
     tenantId,

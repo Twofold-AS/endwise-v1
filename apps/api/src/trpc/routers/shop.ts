@@ -105,7 +105,9 @@ export const shopRouter = router({
         await tx
           .update(schema.shopOrders)
           .set({ stripeCheckoutSessionId: session.id })
-          .where(and(eq(schema.shopOrders.id, ordre.id), eq(schema.shopOrders.tenantId, ctx.tenantId)));
+          .where(
+            and(eq(schema.shopOrders.id, ordre.id), eq(schema.shopOrders.tenantId, ctx.tenantId)),
+          );
       });
 
       return { url: session.url, orderId: ordre.id };

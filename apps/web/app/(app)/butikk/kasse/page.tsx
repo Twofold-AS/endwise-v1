@@ -118,7 +118,9 @@ function KasseInner() {
                   onChange={(e) => {
                     const n = Number.parseInt(e.target.value, 10);
                     if (!Number.isFinite(n)) return;
-                    setLinjer(settKurvAntall(r.partId, Math.min(r.del.tilgjengelig, Math.max(0, n))));
+                    setLinjer(
+                      settKurvAntall(r.partId, Math.min(r.del.tilgjengelig, Math.max(0, n))),
+                    );
                   }}
                   className="h-control w-16 rounded-control border border-border bg-bg px-2 text-right text-body text-fg tabular-nums outline-none focus-visible:border-fg"
                 />
@@ -168,7 +170,9 @@ export default function ButikkKassePage() {
           <ShoppingCart size={18} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
           Handlekurv / kasse
         </p>
-        <p className="text-body text-fg-muted">Testkasse hos Stripe. Betalingen går ikke til abonnementet.</p>
+        <p className="text-body text-fg-muted">
+          Testkasse hos Stripe. Betalingen går ikke til abonnementet.
+        </p>
       </div>
       <Suspense fallback={<p className="py-12 text-center text-body text-fg-muted">Laster …</p>}>
         <KasseInner />

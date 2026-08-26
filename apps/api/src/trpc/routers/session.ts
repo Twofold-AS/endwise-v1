@@ -11,15 +11,12 @@ import { resolveShopFlag } from '../shop-flag.ts';
  * har en mekaniker-profil i tenanten (mechanics.userId) → skal se «Min dag».
  * (Det finnes ingen egen «mekaniker»-rolle; en mekaniker er dealer_staff med
  * en mekaniker-profil.)
- *
- * ── Utvidet 07.08.2026 (F5-26/F5-27) ───────────────────────────────────────
- * Ruta returnerer nå også tenantens NAVN og KIND, samt dev-mode-status.
- *
+ * Utvidet (F5-26/F5-27)
+ * Ruta returnerer nå også tenantens navn og kind, samt dev-mode-status.
  * Navnet fjerner «Endwise-forhandler»-placeholderen som har stått hardkodet i
  * sidebaren siden 04.08 — ikke fordi den var stygg, men fordi den var en løgn
  * om hvilken forhandler du er logget inn hos.
- *
- * ⚠️ `devMode` her er KOSMETIKK for UI-et: den bestemmer hva som VISES.
+ * `devMode` her er kosmetikk for UI-et: den bestemmer hva som vises.
  * Sperren er `resolveDevMode` på hver skrivesti som faktisk gjør noe.
  */
 export const sessionRouter = router({
@@ -46,7 +43,7 @@ export const sessionRouter = router({
       const needsOnboarding = ctx.role === 'dealer_admin' && !tenant?.onboardingCompletedAt;
 
       /**
-       * F7-06 — Eget kallenavn. Mekanikervisningen er per definisjon INTERN,
+       * Eget kallenavn. Mekanikervisningen er per definisjon intern,
        * så her er `visningsnavn(..., 'intern')` riktig. Ruta returnerer også
        * det ekte navnet, slik at kundevendte flater aldri må gjette.
        */
@@ -64,7 +61,7 @@ export const sessionRouter = router({
         );
 
       /**
-       * Varslingslyder (F5-19). Leses UTENFOR `withTenant`-transaksjonen ville
+       * Varslingslyder (F5-19). Leses utenfor `withTenant`-transaksjonen ville
        * vært like riktig — tabellen er global — men å ta den her sparer en
        * rundtur, og `user_preferences` har ingen tenant-kolonne å bryte mot.
        */
@@ -79,9 +76,8 @@ export const sessionRouter = router({
         .where(eq(schema.tenantModules.enabled, true));
 
       /**
-       * F1-14 — JOBBFUNKSJON + hvor brukeren skal lande.
-       *
-       * ⚠️ Utledes på SERVEREN, ikke i klienten. Klienten kjenner ikke
+       * Jobbfunksjon + hvor brukeren skal lande.
+       * Utledes på serveren, ikke i klienten. Klienten kjenner ikke
        * mekanikerprofilen sikkert, og en landingsregel som regnes ut to steder
        * blir før eller siden to ulike regler. `landing` er svaret, ikke
        * ingrediensene.
@@ -93,13 +89,11 @@ export const sessionRouter = router({
       });
 
       /**
-       * ⚠️ RETTET 20.08.2026 — brukerens EGET navn.
-       *
+       * brukerens eget navn.
        * Sidebaren leste tidligere navnet fra Better-Auth sin klientsesjon,
        * mens `profile.setName` skriver til `user.name` i basen. To hjem for
        * samme opplysning: lagring virket, men sidebaren viste det gamle navnet
        * til neste fulle sidelast, fordi ingenting oppdaterte Better-Auth-cachen.
-       *
        * Løsningen er å fjerne det ene hjemmet, ikke å legge til enda en
        * oppfriskning som noen glemmer neste gang. Navnet kommer nå herfra, og
        * `profile.setName` invaliderer allerede denne ruta.
@@ -155,7 +149,7 @@ export const sessionRouter = router({
       return {
         userId: ctx.userId,
         tenantId: ctx.tenantId,
-        /** Ditt eget visningsnavn. ⛔ Ikke kallenavn — se `internNavn`. */
+        /** Ditt eget visningsnavn. Ikke kallenavn — se `internNavn`. */
         navn: bruker?.name ?? '',
         jobbfunksjon,
         landing,
@@ -175,7 +169,7 @@ export const sessionRouter = router({
         kallenavn: profil?.nickname ?? null,
         /**
          * Kort navn i chrome: kallenavn hvis satt, ellers visningsnavn.
-         * ⛔ Ikke mekanikernavn — chrome er personen, ikke profilraden.
+         * Ikke mekanikernavn — chrome er personen, ikke profilraden.
          */
         internNavn: visningsnavn(
           { navn: bruker?.name ?? '', kallenavn: profil?.nickname ?? null },
@@ -186,7 +180,7 @@ export const sessionRouter = router({
         /** Aktive tillegg (`tenant_modules.enabled`). Basis-moduler står ikke her. */
         moduler: moduler.map((m) => m.key),
         devMode,
-        /** F10-03 — kosmetikk. Sperren er shopProcedure. Fail-safe AV. */
+        /** Kosmetikk. Sperren er shopProcedure. Fail-safe av. */
         shopEnabled,
       };
     });

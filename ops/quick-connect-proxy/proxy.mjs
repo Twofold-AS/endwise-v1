@@ -1,15 +1,11 @@
 /**
- * CONNECT-only egress-proxy for Quick ApiV2.
- *
- * Tillater KUN CONNECT til q3.quick.no:443. Auth = Proxy-Authorization Basic
+ * Connect-only egress-proxy for Quick ApiV2.
+ * Tillater kun connect til q3.quick.no:443. Auth = Proxy-Authorization Basic
  * (delt secret) — ikke Vercel-IP-allowlist (CWE-290). Ingen TLS-terminering,
  * ingen Quick-token, ingen body-/header-logg (CWE-532).
- *
- * Access-log (stdout): timestamp, CONNECT-host, status. Aldri Authorization,
+ * Access-log (stdout): timestamp, connect-host, status. Aldri Authorization,
  * aldri URL-sti, aldri payload.
- *
  * Av i appen = fjern QUICK_HTTPS_PROXY i Vercel.
- *
  * SSH til boksen: nøkkel `endwise_scw`. Port 22 kun fra SSH_ALLOW_FROM
  * (install.sh) — ikke hardkodet operator-IPv4.
  */
@@ -25,7 +21,7 @@ export const ALLOWED_CONNECT_DEST = 'q3.quick.no:443';
  * @property {string} [user]
  * @property {string} [secret]
  * @property {(line: string) => void} [log]
- * @property {(port: number, host: string, cb: () => void) => net.Socket} [connect]
+ * @property {(port: number, host: string, cb: => void) => net.Socket} [connect]
  */
 
 function safeEqual(a, b) {
@@ -133,7 +129,7 @@ export function createQuickConnectProxy(options = {}) {
   return {
     /**
      * @param {number} [port]
-     * @returns {Promise<{ port: number, close: () => Promise<void> }>}
+     * @returns {Promise<{ port: number, close: => Promise<void> }>}
      */
     listen(port = 0) {
       return new Promise((resolve, reject) => {

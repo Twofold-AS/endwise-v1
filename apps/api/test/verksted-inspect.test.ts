@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * Se verkstedet: READ via slug, mutations 403. Ingen setActive.
+ * Se verkstedet: read via slug, mutations 403. Ingen setActive.
  */
 async function forventer(
   kall: Promise<unknown>,

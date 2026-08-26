@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F2-08 — Vegvesen-nøkkelen er server-only. Disse testene leser kilden
+ * Vegvesen-nøkkelen er server-only. Disse testene leser kilden
  * slik at et tilbakefall til `process.env` i klienten, eller et felt som
  * returnerer nøkkelen, blir rødt.
  */

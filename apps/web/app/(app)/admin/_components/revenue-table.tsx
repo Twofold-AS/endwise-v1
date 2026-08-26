@@ -5,8 +5,7 @@ import { MRR_SERIES } from '../_data';
 
 /**
  * MRR-utvikling, 12 måneder. **Erstatter dither-arealgrafen** (dither-kit ut av
- * UI-et 03.08.2026). Mock til Stripe er koblet (F5-09).
- *
+ * UI-et ). Mock til Stripe er koblet (F5-09).
  * Endring per måned var det eneste grafen faktisk fortalte — her står den som
  * tall, med fortegn, i stedet for som en helning man må måle med øyet.
  */

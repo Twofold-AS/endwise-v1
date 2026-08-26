@@ -12,21 +12,18 @@ import { NyTjeneste } from './_ny-tjeneste';
 import { TjenesteKort } from './_tjeneste-kort';
 
 /**
- * F2-05 / F5-04 — FORHANDLERENS EGEN TJENESTEKATALOG.
- *
- * ⚠️ **Ikke å forveksle med `/tjenester`.** Den siden (F5-33) viser hva
- * forhandleren betaler ENDWISE. Denne viser hva KUNDEN betaler forhandleren.
+ * F2-05 / F5-04 — forhandlerens egen tjenestekatalog.
+ * Ikke å forveksle med `/tjenester`. Den siden (F5-33) viser hva
+ * forhandleren betaler endwise. Denne viser hva kunden betaler forhandleren.
  * Nettopp den forvekslingen gjorde at punktet sto som «placeholder, må
  * designes» i fire måneder mens backend var ferdig — så kryssreferansen nederst
  * står der med vilje, ikke som pynt.
- *
- * ── Hvorfor den bor under Settings ──────────────────────────────────────────
+ * Hvorfor den bor under Settings
  * F5-19 sier at all konfigurasjon samles i Settings, og F5-02 formulerer
  * prinsippet: konfigurasjon i Settings, filtrering der arbeidet skjer. En
  * prisliste er ikke dagens arbeid — den settes sjelden og gjelder til noen
  * endrer den. Ruta er den roadmapen selv foreslår i F5-04.
- *
- * ⚠️ Rollegatingen her er KOSMETIKK. `services.create/update/deactivate/
+ * Rollegatingen her er kosmetikk. `services.create/update/deactivate/
  * reactivate` er `adminProcedure` server-side; dette skjuler bare knapper en
  * dealer_staff uansett ville fått 403 på. Lesing er åpen for staff, fordi de må
  * kunne slå opp hva en tjeneste koster når kunden spør i telefonen.
@@ -39,9 +36,9 @@ export default function TjenestekatalogPage() {
   const [nyApen, setNyApen] = useState(false);
 
   /**
-   * ⚠️ `inkluderInaktive` er SANN her, og usann alle andre steder.
+   * `inkluderInaktive` er sann her, og usann alle andre steder.
    * Katalogflaten er det eneste stedet en deaktivert tjeneste skal være synlig
-   * — ellers finnes det ingen vei til å slå den på igjen. Booking-motoren og
+   * ellers finnes det ingen vei til å slå den på igjen. Booking-motoren og
    * /bookinger/ny ber aldri om dem.
    */
   const tjenester = trpc.services.list.useQuery({ inkluderInaktive: true });
@@ -140,7 +137,7 @@ export default function TjenestekatalogPage() {
         </>
       )}
 
-      {/* ── Kryssreferansen som skulle vært her fra starten ──────────────── */}
+      {/* Kryssreferansen som skulle vært her fra starten */}
       <Link
         href={'/tjenester' as Route}
         className="inline-flex items-center gap-1.5 text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"

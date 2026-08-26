@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createPseudonymizer, maskMessages } from '../src/pseudonymize.ts';
 
-/** F14-01 — Dataminimering (art. 5(1)(c)). Ikke anonymisering. */
+/** Dataminimering (art. 5(1)(c)). Ikke anonymisering. */
 describe('pseudonymisering (F14-01)', () => {
   it('maskerer e-post, telefon og regnr', () => {
     const p = createPseudonymizer();
@@ -45,7 +45,7 @@ describe('pseudonymisering (F14-01)', () => {
       p,
     );
 
-    // Systeminstruksjonen er VÅR — den skal ikke maskeres.
+    // Systeminstruksjonen er vår — den skal ikke maskeres.
     expect(masked[0]?.content).toContain('drift@endwise.no');
     expect(masked[1]?.content).not.toContain('ola@example.no');
   });

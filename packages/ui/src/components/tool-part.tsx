@@ -6,29 +6,25 @@ import { AlertTriangle, Check, ChevronRight, Loader2, ShieldAlert, X } from 'luc
 import type * as React from 'react';
 
 /*
- * TOOL-PARTS — én agent-handling, vist fram mens den skjer.
- * Se UI-PAKKER.md §9.
- *
- * ── ⚠️ Egenskrevet, og hvorfor ───────────────────────────────────────────
- * shadcn har ingen tool-part-komponent i registeret (verifisert 12.08.2026).
+ * Tool-parts — én agent-handling, vist fram mens den skjer.
+ * Se ui-pakker.md §9.
+ * Egenskrevet, og hvorfor
+ * shadcn har ingen tool-part-komponent i registeret (verifisert ).
  * Mønsteret finnes i `chatbot-template` som eksempelkode, ikke som en
  * installerbar komponent — så dette er ~90 linjer stil over AI SDK sin
  * `ToolUIPart`-tilstandsmaskin, ikke en erstatning for en pakke.
- *
- * ── Tilstandene er AI SDK sine, ikke våre ────────────────────────────────
+ * Tilstandene er AI SDK sine, ikke våre
  * `input-streaming` → `input-available` → (`approval-requested` →
  * `approval-responded`) → `output-available` | `output-error` | `output-denied`.
  * Navnene speiles med vilje ett-til-ett: en egen oversettelse ville betydd at
  * en ny SDK-tilstand stille falt ut av UI-et.
- *
- * ── Hvorfor vise verktøykall i det hele tatt ─────────────────────────────
+ * Hvorfor vise verktøykall i det hele tatt
  * En agent som svarer «jeg fant tre ledige timer» uten å vise at den slo opp,
- * ber om tillit den ikke har gjort seg fortjent til. Her ser forhandleren HVA
+ * ber om tillit den ikke har gjort seg fortjent til. Her ser forhandleren hva
  * som ble gjort, i hvilken rekkefølge, og hva som kom tilbake. Det er også det
  * eneste stedet en feil («oppslaget feilet») kan bli synlig i stedet for å bli
  * borte i en formulering.
- *
- * ⛔ `output` rendres som tekst, ALDRI som HTML. Verktøy-output er data fra en
+ * `output` rendres som tekst, aldri som HTML. Verktøy-output er data fra en
  * modell og en database — behandles som utrygt (guardrail L4, F6-14).
  */
 
@@ -69,7 +65,7 @@ function StatusIkon({ status }: { status: ToolPartStatus }) {
 }
 
 /**
- * Ett verktøykall. `navn` er den NORSKE etiketten («Slår opp tjenester»), ikke
+ * Ett verktøykall. `navn` er den norske etiketten («Slår opp tjenester»), ikke
  * det tekniske verktøynavnet — kallstedet oversetter, fordi bare det vet hvilken
  * agent det gjelder.
  */
@@ -102,8 +98,10 @@ export function ToolPart({
   );
 }
 
-/** Utfoldbar detalj — inn- eller utdata. Lukket som standard: normalt er det
- *  NAVNET som er interessant, og innmaten kun når noe ser rart ut. */
+/**
+ * Utfoldbar detalj — inn- eller utdata. Lukket som standard: normalt er det
+ * Navnet som er interessant, og innmaten kun når noe ser rart ut.
+ */
 export function ToolPartDetalj({
   etikett,
   verdi,
@@ -128,13 +126,11 @@ export function ToolPartDetalj({
 }
 
 /**
- * ⛔ GODKJENN-FØR-AGENTEN-SKRIVER.
- *
+ * Godkjenn-før-agenten-skriver.
  * Samme prinsipp som overalt ellers hos oss (Quick-push, Framer-publisering):
- * agenten kan foreslå, mennesket utfører. Sperren ligger IKKE her — den ligger i
+ * agenten kan foreslå, mennesket utfører. Sperren ligger ikke her — den ligger i
  * `needsApproval` på verktøyet på serveren, og AI SDK holder kallet tilbake til
  * svaret kommer. Denne komponenten er bare der spørsmålet stilles.
- *
  * Derfor er «Avvis» like framtredende som «Godkjenn»: et godkjenn-steg der det
  * ene valget er en gråtone er ikke et valg, det er en bekreftelsesdialog.
  */

@@ -1,7 +1,7 @@
 import { QuickAuthError, QuickError, QuickSsrfError } from './errors.ts';
 
 /**
- * F1-07 — bruker-synlige BAD_REQUEST for setConfig-proben.
+ * Bruker-synlige BAD_REQUEST for setConfig-proben.
  * Aldri rå fetch-cause (kan bære intern host/IP). Persist kun ved suksess
  * skjer i kallet — meldingene sier at ingenting ble lagret.
  */

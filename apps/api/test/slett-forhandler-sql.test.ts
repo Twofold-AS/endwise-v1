@@ -4,15 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F5-26 / samme klasse som F1-10 (PR #11).
- *
- * Docker-eieren er superuser og bypasser FORCE RLS, så
+ * F5-26 / samme klasse som F1-10 (pr #11).
+ * Docker-eieren er superuser og bypasser force RLS, så
  * `slett_forhandler` kan se grønt ut lokalt mens Scaleway-eieren `endwise`
  * (ikke superuser) ser 0 rader på `SELECT slug` og deretter ikke får slettet
  * RLS-tabeller. `row_security=off` er ikke fiksen (kaster hvis en policy
  * ville filtrert).
- *
- * Disse kildetestene er stand-in for «FORCE RLS + ikke-superuser eier» i CI.
+ * Disse kildetestene er stand-in for «force RLS + ikke-superuser eier» i CI.
  */
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -59,11 +57,11 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
 
   it('TO PUBLIC slett-policyer krever platform_admin, slett_tenant_id og current_user <> authenticated', () => {
     /**
-     * Rotårsak (Scaleway): eieren som CREATE ROLE authenticated er ADMIN
+     * Rotårsak (Scaleway): eieren som CREATE role authenticated er admin
      * av rollen. `pg_has_role(current_user, 'authenticated', 'member')`
      * er da TRUE for DEFINER-eieren → SELECT-policyen matcher aldri →
-     * tom SELECT → «finnes ikke». PERMISSIVE OR er ikke et hull:
-     * `tenants_slett_forhandler_select` er bundet til slett-GUC.
+     * tom SELECT → «finnes ikke». Permissive OR er ikke et hull:
+     * `tenants_slett_forhandler_select` er bundet til slett-guc.
      */
     expect(grants).toMatch(/tenants_platform_admin_read_owner/);
     expect(grants).toMatch(/tenants_slett_forhandler/);
@@ -166,14 +164,13 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
   });
 
   /**
-   * Prod 24.08.2026, dpl_H7AceMM6rtzDMdE3DqXBXTfY8nCt, trace 80eab6c:
-   * HTTP 412, SQLSTATE 23503, constraint audit_log_tenant_id_tenants_id_fk.
-   *
-   * Eieren som CREATE ROLE authenticated ER ADMIN → TO authenticated
+   * Prod , dpl_H7AceMM6rtzDMdE3DqXBXTfY8nCt, trace 80eab6c:
+   * HTTP 412, sqlstate 23503, constraint audit_log_tenant_id_tenants_id_fk.
+   * Eieren som CREATE role authenticated er admin → to authenticated
    * SELECT-policyer gjelder DEFINER. withPlatformAdmin setter ikke
    * app.tenant_id → SELECT 0 rader → UPDATE flytter 0 audit-rader
    * (stille) → INSERT audit.redacted blir værende på forhandleren →
-   * DELETE tenants treffer RESTRICT.
+   * DELETE tenants treffer restrict.
    */
   it('setter app.tenant_id i tillegg til slett-GUC (eier er ADMIN av authenticated)', () => {
     expect(slettSql).toMatch(/set_config\('app\.slett_tenant_id'/);
@@ -225,19 +222,17 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
   });
 
   /**
-   * Prod 24.08.2026, dpl_98PMuhbM77R4SZJiEPPryVBafJ4X, cdg1, 235 ms,
+   * Prod , dpl_98PMuhbM77R4SZJiEPPryVBafJ4X, cdg1, 235 ms,
    * requestId sdwsb-1787599245213-412242917e8b, trace ebf4fcc558a3a1a2dd3e58dcd874dabb.
-   * HTTP 412 ETTER at Mikael kjørte `pnpm db:setup` (0023/0024).
-   *
-   * 0024 brukte CREATE OR REPLACE med samme signatur. Drizzle-journalen
+   * HTTP 412 etter at Mikael kjørte `pnpm db:setup` (0023/0024).
+   * 0024 brukte CREATE OR replace med samme signatur. Drizzle-journalen
    * hopper over 0024 når den allerede er merket kjørt — body kan ligge igjen
-   * fra før SELECT-policyene / Endwise-INSERT. functions.sql OR REPLACE
+   * fra før SELECT-policyene / Endwise-INSERT. functions.sql OR replace
    * alene er ikke en verifiserbar «body ble byttet». 0025 DROPper først.
-   *
-   * Samtidig kodefeil i 0024 selv om body VAR ny: INSERT/UPDATE WITH CHECK
+   * Samtidig kodefeil i 0024 selv om body var ny: INSERT/UPDATE with check
    * mot Endwise gikk via `select id from tenants where slug = 'endwise'`
    * under tenants-RLS. Ny rad etter tenant_id-flytt matcher ikke
-   * audit_log_slett_select (bare slett-GUC). app.slett_endwise_id er GUC,
+   * audit_log_slett_select (bare slett-guc). app.slett_endwise_id er guc,
    * ikke subquery.
    */
   it('0025 DROPper slett_forhandler før CREATE (ikke bare OR REPLACE)', () => {

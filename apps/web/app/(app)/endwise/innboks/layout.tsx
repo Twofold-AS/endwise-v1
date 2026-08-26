@@ -2,8 +2,7 @@ import type { ReactNode } from 'react';
 import { InboxChrome } from '../../innboks/_chrome';
 
 /**
- * F5-11 — samme chrome som /innboks, modus=endwise.
- *
+ * Samme chrome som /innboks, modus=endwise.
  * Gaten ligger i `/endwise/layout.tsx` (`krevEndwiseAdminSide`). Dataene
  * stenges av `endwiseAdminProcedure` på listPlatformSupport.
  */

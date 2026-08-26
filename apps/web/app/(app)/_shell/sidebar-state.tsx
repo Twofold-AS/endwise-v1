@@ -3,7 +3,7 @@
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 
 /**
- * F5-13 — Kollapsen deles mellom TO komponenter: knappen bor i topbaren, flaten
+ * Kollapsen deles mellom to komponenter: knappen bor i topbaren, flaten
  * som endrer seg er sidebaren. Uten en delt tilstand måtte den ene sendt et
  * event til den andre, og da har man en usynlig kobling i stedet for en synlig.
  */

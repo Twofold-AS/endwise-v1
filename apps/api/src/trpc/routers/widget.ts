@@ -3,18 +3,17 @@ import { z } from 'zod';
 import { moduleAdminProcedure, router } from '../init.ts';
 
 /**
- * ⛔ F0-16 — MODUL-GATE: `widget`. Kundewidgeten er et betalt tillegg.
- *
- * ⚠️ Gjelder KUN nøkkelforvaltningen her. Den OFFENTLIGE widget-flaten
+ * Modul-gate: `widget`. Kundewidgeten er et betalt tillegg.
+ * Gjelder kun nøkkelforvaltningen her. Den offentlige widget-flaten
  * (apps/api/src/routes/widget/) har sin egen auth via signert token og skal
- * IKKE ha denne gaten — sluttkunden har ingen sesjon å sjekke moduler mot.
+ * Ikke ha denne gaten — sluttkunden har ingen sesjon å sjekke moduler mot.
  */
 const widgetAdminProcedure = moduleAdminProcedure('widget');
 
 /**
- * F4-02 — Forvaltning av widget-nøkler (dealer_admin). Utstedelse/liste er
- * `adminProcedure` + RLS. Den PUBLISHABLE nøkkelen er offentlig (trygg i Framer);
- * det finnes ingen hemmelig nøkkel å lekke. Den OFFENTLIGE widget-flaten ligger i
+ * Forvaltning av widget-nøkler (dealer_admin). Utstedelse/liste er
+ * `adminProcedure` + RLS. Den publishable nøkkelen er offentlig (trygg i Framer);
+ * det finnes ingen hemmelig nøkkel å lekke. Den offentlige widget-flaten ligger i
  * Hono (`/widget/*`), ikke her — dette er kun admin-siden.
  */
 export const widgetRouter = router({

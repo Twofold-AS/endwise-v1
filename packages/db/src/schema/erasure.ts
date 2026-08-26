@@ -12,18 +12,15 @@ export const erasureStatusEnum = pgEnum('erasure_status', [
 ]);
 
 /**
- * F14-16 — Sletteforespørsler (art. 17).
- *
- * Denne tabellen slettes ALDRI. Det er ikke et paradoks — det er poenget:
+ * Sletteforespørsler (art. 17).
+ * Denne tabellen slettes aldri. Det er ikke et paradoks — det er poenget:
  * beviset på at vi slettet må overleve slettingen. Uten den kan vi ikke
  * dokumentere etterlevelse (art. 5(2) ansvarlighet), og vi kan ikke svare på
  * «slettet dere faktisk?» to år senere.
- *
  * Den inneholder derfor ingen personopplysninger utover en **hash** av
  * subjektet, og en rapport over hva som ble slettet — ikke hva som sto der.
- *
  * Når en forhandler slettes (`slett_forhandler`), flyttes raden til
- * Endwise-tenanten så RESTRICT-FK slipper. Da **roteres `id`** og
+ * Endwise-tenanten så restrict-fk slipper. Da **roteres `id`** og
  * `subject_id` / `requested_by` hashes med sha256(verdi || slettet
  * tenant_id) — Endwise-admin skal ikke arve en annen forhandlers
  * request-UUID eller rå identifikatorer (CWE-359/863/284). Ingen
@@ -40,7 +37,7 @@ export const erasureRequests = pgTable(
 
     /** Hva slettes: 'customer' | 'user' | 'tenant'. */
     subjectType: text('subject_type').notNull(),
-    /** ID-en på det som slettes. Beholdes for å kunne bevise HVA som ble slettet. */
+    /** ID-en på det som slettes. Beholdes for å kunne bevise hva som ble slettet. */
     subjectId: text('subject_id').notNull(),
 
     /** Hvem ba om det: bruker-ID, 'dsr' (den registrerte selv), 'retention' (automatisk). */
@@ -48,7 +45,7 @@ export const erasureRequests = pgTable(
     status: erasureStatusEnum('status').notNull().default('requested'),
 
     /**
-     * Rapporten. Per ledd: hva ble slettet, hvor mange rader — og hva som IKKE
+     * Rapporten. Per ledd: hva ble slettet, hvor mange rader — og hva som ikke
      * lot seg slette, med begrunnelse. Ærligheten er en del av dokumentasjonen.
      */
     report: jsonb('report').$type<Record<string, unknown>>(),

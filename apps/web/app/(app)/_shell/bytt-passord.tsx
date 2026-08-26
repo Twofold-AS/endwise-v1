@@ -12,11 +12,9 @@ import { PassordFelt } from '../../_auth/felter';
 import { CardShell } from './cards';
 
 /**
- * F1-17 — bytt passord med gjeldende som bevis.
- *
- * ⚠️ Én komponent, to steder: Settings › Profil og mekanikerens «Meg», via
+ * Bytt passord med gjeldende som bevis.
+ * Én komponent, to steder: Settings › Profil og mekanikerens «Meg», via
  * `ProfilKort`. To kopier ville fått hver sin validering.
- *
  * Better-Auth `changePassword` krever gjeldende passord. `revokeOtherSessions`
  * er låst til true i `byttPassordKall`, og serveren tvinger det samme i
  * `hooks.before` — klientflagget alene er ikke sperren (CWE-613).

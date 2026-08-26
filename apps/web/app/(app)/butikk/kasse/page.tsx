@@ -158,7 +158,7 @@ function KasseInner() {
 }
 
 /**
- * F10-03 — BUTIKK · Handlekurv / kasse. Stripe test-checkout, ikke abonnement.
+ * Butikk · Handlekurv / kasse. Stripe test-checkout, ikke abonnement.
  * Ingen ny UI-pakke — CardShell + StatefulButton + native number input.
  */
 export default function ButikkKassePage() {

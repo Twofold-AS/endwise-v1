@@ -4,8 +4,8 @@ import { createScopeGate, type Moderator, ScopeGateViolation } from '../src/scop
 const ctx = { tenantId: 't-a', userId: 'u-1', role: 'customer' };
 
 /**
- * F14-05 — Scope-gaten. Testes mot en fake moderator, ikke mot Mistral:
- * vi tester VÅR logikk, ikke deres modell.
+ * Scope-gaten. Testes mot en fake moderator, ikke mot Mistral:
+ * vi tester vår logikk, ikke deres modell.
  */
 describe('scope-gate (F14-05)', () => {
   const moderatorReturning =
@@ -19,7 +19,7 @@ describe('scope-gate (F14-05)', () => {
     expect(result.triggered).toHaveLength(0);
   });
 
-  /** ⚠️ Den regex ikke tar. */
+  /** Den regex ikke tar. */
   it('ANGREP: helseopplysning i fritekst stoppes', async () => {
     const gate = createScopeGate({ moderate: moderatorReturning({ health: 0.93 }) });
     await expect(
@@ -50,7 +50,7 @@ describe('scope-gate (F14-05)', () => {
   });
 
   /**
-   * Audit-modus: vi måler falske positive FØR vi setter den i blokkerende modus.
+   * Audit-modus: vi måler falske positive før vi setter den i blokkerende modus.
    * Å slå på en uprøvd klassifikator i blokkerende modus mot ekte kunder er å
    * bytte ett problem mot et annet.
    */

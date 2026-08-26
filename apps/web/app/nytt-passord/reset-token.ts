@@ -1,17 +1,14 @@
 /**
- * F1-16 — les reset-tokenet fra query, og behold det første som finnes.
- *
- * ── Hvorfor denne fila finnes ────────────────────────────────────────────
+ * Les reset-tokenet fra query, og behold det første som finnes.
+ * Hvorfor denne fila finnes
  * `/nytt-passord` stryker `?token=` med `history.replaceState` så nøkkelen
  * ikke blir liggende i adressefeltet. `useSearchParams` oppdateres da til
  * tom query, og en effekt som gjør `setToken(params.get('token') ?? null)`
  * tømmer tokenet på andre runde. Skjemaet forsvinner. Feilen er den
  * avhengigheten, ikke at tokenet manglet i e-posten.
- *
- * ⛔ Ingen verify-kall her. Å spørre serveren «finnes dette tokenet?» før
+ * Ingen verify-kall her. Å spørre serveren «finnes dette tokenet?» før
  * innsending er et orakel. Gyldighet avgjøres når passordet sendes inn.
- *
- * ⛔ Tokenet logges aldri. Det er nøkkelen til kontoen.
+ * Tokenet logges aldri. Det er nøkkelen til kontoen.
  */
 
 type Query = { get(name: string): string | null } | null | undefined;

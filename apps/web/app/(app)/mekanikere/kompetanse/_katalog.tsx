@@ -10,7 +10,7 @@ import { FELT, tilNokkel } from './_niva';
 type Ferdighet = RouterOutput['competence']['listSkills'][number];
 
 /**
- * F3-12 — ferdighetskatalogen per tenant. Prislisten velger herfra;
+ * Ferdighetskatalogen per tenant. Prislisten velger herfra;
  * kompetansen per mekaniker peker på `key`.
  */
 export function Ferdighetskatalog({

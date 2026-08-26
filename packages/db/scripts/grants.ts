@@ -13,7 +13,7 @@ if (!url)
 
 const here = dirname(fileURLToPath(import.meta.url));
 const grants = readFileSync(join(here, '..', 'sql', 'grants.sql'), 'utf8');
-// F14-16: redact_audit_log() er SECURITY DEFINER og MÅ opprettes av eieren.
+// Redact_audit_log er SECURITY DEFINER og MÅ opprettes av eieren.
 const functions = readFileSync(join(here, '..', 'sql', 'functions.sql'), 'utf8');
 
 const pool = new Pool(pgConnectionConfig(url));
@@ -57,10 +57,10 @@ if (rev.rows[0]?.ok !== true) {
   process.exit(1);
 }
 
-// F1-10 — samme klasse som slett_forhandler: functions.sql DROP+CREATE, men
-// prod 25.08.2026 hadde 42883 fordi repair-0020 droppet og grants aldri
+// Samme klasse som slett_forhandler: functions.sql DROP+CREATE, men
+// prod hadde 42883 fordi repair-0020 droppet og grants aldri
 // fullførte. Exit 1 hvis lookup mangler kolonnene siden velger, eller
-// invitation_hash-GUC-en (FORCE RLS-unntaket fra PR #11).
+// invitation_hash-guc-en (force RLS-unntaket fra pr #11).
 const lookup = await pool.query<{ ok: boolean }>(`
   select exists (
     select 1

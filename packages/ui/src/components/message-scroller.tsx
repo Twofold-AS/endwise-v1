@@ -12,28 +12,26 @@ import { ArrowDown } from 'lucide-react';
 import type * as React from 'react';
 
 /*
- * shadcn/ui `message-scroller` (New York), hentet 12.08.2026 med
- * `npx shadcn@latest view message-scroller`. Se UI-PAKKER.md §9.
- *
- * ── Hvorfor den er verdt en avhengighet ──────────────────────────────────
+ * shadcn/ui `message-scroller` (New York), hentet med
+ * `npx shadcn@latest view message-scroller`. Se ui-pakker.md §9.
+ * Hvorfor den er verdt en avhengighet
  * «Rull til bunnen når det kommer noe nytt» høres ut som fem linjer, og er det
  * ikke. Den må slutte å følge etter i det brukeren scroller opp, ta det opp
  * igjen når de er tilbake på bunnen, ikke hoppe når eldre meldinger lastes inn
  * over, og holde posisjonen mens tokens strømmer inn og endrer høyden
  * kontinuerlig. Oppførselen ligger i `@shadcn/react` (MIT, 56 kB, NULL
  * avhengigheter) — denne fila er bare stil.
- *
- * ── ⚠️ Avvik fra oppstrøms, og hvorfor ───────────────────────────────────
+ * Avvik fra oppstrøms, og hvorfor
  * 1. **Fire utility-klasser fjernet fra viewporten:** `scroll-fade-b`,
- *    `scrollbar-thin`, `scrollbar-gutter-stable` og
- *    `data-autoscrolling:scrollbar-none`. Ingen av dem finnes i vårt
- *    Tailwind-oppsett — de er shadcns egne. Beholdt ville de vært klasser som
- *    ikke gjør noe, altså kode som ser ut til å virke. Trenger vi dem, defineres
- *    de i `theme.css` som ekte utilities.
+ * `scrollbar-thin`, `scrollbar-gutter-stable` og
+ * `data-autoscrolling:scrollbar-none`. Ingen av dem finnes i vårt
+ * Tailwind-oppsett — de er shadcns egne. Beholdt ville de vært klasser som
+ * ikke gjør noe, altså kode som ser ut til å virke. Trenger vi dem, defineres
+ * de i `theme.css` som ekte utilities.
  * 2. **`ArrowDownIcon` → `ArrowDown`** fra vår ikon-barrel-konvensjon.
  * 3. **Norsk skjermlesertekst.** Oppstrøms har «Scroll to end».
  * 4. `render={<Button/>}`-mønsteret er beholdt: primitivet fra `@shadcn/react`
- *    støtter `render`, og vår `Button` har allerede `secondary` + `icon-sm`.
+ * støtter `render`, og vår `Button` har allerede `secondary` + `icon-sm`.
  */
 
 export const MessageScrollerProvider = Primitive.Provider;

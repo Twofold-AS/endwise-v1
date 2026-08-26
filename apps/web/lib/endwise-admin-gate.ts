@@ -6,7 +6,6 @@ import { redirect } from 'next/navigation';
 
 /**
  * F1-26 / CWE-200 — utfall for Endwise-interne sider (`/admin`, `/endwise`).
- *
  * Bruker den eksisterende tRPC-konteksten (`createRequestContext` →
  * `requireSession` + `assertMember`). Ingen ny auth-stack.
  */

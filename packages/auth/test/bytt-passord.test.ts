@@ -27,11 +27,10 @@ import {
 import { byttPassordEtterHook, byttPassordForHook } from '../src/bytt-passord-server.ts';
 
 /**
- * F1-17 — BYTT PASSORD. Klientvalideringen, payloaden, og herdingen
+ * Bytt passord. Klientvalideringen, payloaden, og herdingen
  * mot CWE-613 / CWE-307 / CWE-209.
- *
  * Serveren håndhever `minPasswordLength: 12` uansett. Disse testene låser
- * det vi viser brukeren FØR kallet, og at SERVEREN — ikke klienten —
+ * det vi viser brukeren før kallet, og at serveren — ikke klienten
  * river andre sesjoner, rate-limiter, og skjuler om det gamle passordet
  * var feil.
  */
@@ -144,7 +143,7 @@ describe('CWE-209: generisk API-feil', () => {
   });
 });
 
-// ── Herdingen, som ren regel. Ingen DB, kjører alltid. ───────────────────
+// Herdingen, som ren regel. Ingen DB, kjører alltid.
 describe('F1-17: herdingskravene', () => {
   it('⭐ den EKTE konfigurasjonen i auth.ts har ingen hull', () => {
     expect(byttPassordHull(byggAuth().options)).toEqual([]);
@@ -261,7 +260,7 @@ describe('F1-17 / F1-20: UI lekker ikke API-orakelet', () => {
   });
 });
 
-// ── Endepunktet, mot ekte database. ───────────────────────────────────────
+// Endepunktet, mot ekte database.
 const OWNER_URL = OPPRINNELIG.DATABASE_URL;
 const describeDb = OWNER_URL ? describe : describe.skip;
 
@@ -325,7 +324,7 @@ describeDb('F1-17: change-password mot ekte database', () => {
     const tokensFor = (await sesjoner(userId)).map((s) => s.token);
     expect(tokensFor).toHaveLength(2);
 
-    // Med vilje UTEN revokeOtherSessions — sperren skal sitte på serveren.
+    // Med vilje uten revokeOtherSessions — sperren skal sitte på serveren.
     await auth.api.changePassword({
       body: { currentPassword: GAMMELT, newPassword: NYTT },
       headers: new Headers({ cookie: cookieA }),

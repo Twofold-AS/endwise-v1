@@ -1,20 +1,16 @@
 import { type Database, type HelpdeskKategori, schema } from '@endwise/db';
 
 /**
- * F5-23 — BASISARTIKLENE i helpdesken.
- *
- * ⚠️ Egen fil, ikke enda en blokk i `seed.ts` (som allerede er 1300 linjer).
- * Artiklene er GLOBALE — ingen `tenant_id` — så de hører ikke hjemme i
+ * Basisartiklene i helpdesken.
+ * Egen fil, ikke enda en blokk i `seed.ts` (som allerede er 1300 linjer).
+ * Artiklene er globale — ingen `tenant_id` — så de hører ikke hjemme i
  * per-tenant-løkkene der uansett.
- *
- * ⚠️ Idempotent på `slug`: kjører du `db:seed` to ganger, oppdateres artikkelen
+ * Idempotent på `slug`: kjører du `db:seed` to ganger, oppdateres artikkelen
  * i stedet for å dupliseres. Slug er nettopp derfor utledet av tittelen én gang
  * og deretter fast — den er lenka.
- *
- * ⛔ Bildene er de fire som ligger i `apps/web/public/images/`. Seks artikler
- * deler fire bilder, så to gjentas. Det er en MIDLERTIDIG tilstand i påvente av
+ * Bildene er de fire som ligger i `apps/web/public/images/`. Seks artikler
+ * deler fire bilder, så to gjentas. Det er en midlertidig tilstand i påvente av
  * ekte opplasting (se `schema/helpdesk.ts`), ikke et designvalg.
- *
  * `publishedAt` settes med synkende alder, slik at «de 4 nyeste» i sidebarens
  * slider faktisk har noe å velge mellom.
  */

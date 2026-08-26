@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { CryptoConfigError, decryptSecret, encryptSecret, secretsEqual } from '../src/crypto.ts';
 
 /**
- * F1-07 — Envelope-crypto. Rene enhetstester (ingen DB, ingen Docker): kjører
+ * Envelope-crypto. Rene enhetstester (ingen DB, ingen Docker): kjører
  * overalt. Beviser rundtur, at ingenting lekker i klartekst, og at tukling og
- * feil nøkkel oppdages (AES-256-GCM auth-tag).
+ * feil nøkkel oppdages (aes-256-gcm auth-tag).
  */
 describe('envelope-crypto', () => {
   const kek = randomBytes(32);

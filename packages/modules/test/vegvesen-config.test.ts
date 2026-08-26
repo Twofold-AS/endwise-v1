@@ -11,7 +11,7 @@ import {
 } from '../src/vegvesen/config.ts';
 
 /**
- * F2-08 — Vegvesen-nøkkelen er server-only. `getView` har aldri selve
+ * Vegvesen-nøkkelen er server-only. `getView` har aldri selve
  * hemmeligheten, og klientkoden bundler den ikke.
  */
 

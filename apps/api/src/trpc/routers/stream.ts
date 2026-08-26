@@ -3,8 +3,7 @@ import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
 
 /**
- * F6-02 — Poll-reserve for sanntidskanalen.
- *
+ * Poll-reserve for sanntidskanalen.
  * SSE (`apps/stream`) er den raske veien. Hvis den er nede, eller Vercel-rewriten
  * buffer strømmen, leser klienten `stream_events` her hvert 8.–15. sekund og
  * oppfrisker samme cache som et live-event ville gjort. Innholdet hentes fortsatt

@@ -1,11 +1,11 @@
 /**
- * F0-05 — Event-katalog.
+ * Event-katalog.
  * Rammeverk-uavhengig: ingen import av Hono/Next/Drizzle her.
  * Hvert event er tenant-skopet (multi-tenant, techstack §2 Database).
  */
 
 export interface EventMeta {
-  /** Tenant som eier hendelsen. Obligatorisk på ALLE events. */
+  /** Tenant som eier hendelsen. Obligatorisk på alle events. */
   tenantId: string;
   /** ISO-8601. Settes av emitteren. */
   occurredAt: string;
@@ -16,7 +16,7 @@ export interface EventMeta {
 }
 
 /**
- * Event-katalogen. Utvides fase for fase — nye events legges KUN til her,
+ * Event-katalogen. Utvides fase for fase — nye events legges kun til her,
  * aldri ad-hoc i moduler.
  */
 export interface EventCatalog {

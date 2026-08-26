@@ -23,24 +23,21 @@ export interface RunOptions {
 }
 
 interface RunWithToolsOptions extends RunOptions {
-  /** Verktøy bygget ved SPAWN, med frosset kontekst. Løkka bygger dem aldri selv. */
+  /** Verktøy bygget ved spawn, med frosset kontekst. Løkka bygger dem aldri selv. */
   tools: Record<string, import('ai').Tool>;
 }
 
 /**
- * F6-13 — DEN TYNNE MASTER-LØKKA. **LUKKET FOR ENDRING** (techstack §2).
- *
+ * Den tynne master-løkka. **lukket for endring** (techstack §2).
  * Den gjør nøyaktig fire ting:
- *   1. sjekk entitlement
- *   2. bygg verktøy MED konteksten (som er forseglet)
- *   3. kjør modellen med tool-loop (AI SDK `stopWhen: isStepCount`)
- *   4. send hendelser videre
- *
+ * 1. sjekk entitlement
+ * 2. bygg verktøy med konteksten (som er forseglet)
+ * 3. kjør modellen med tool-loop (AI SDK `stopWhen: isStepCount`)
+ * 4. send hendelser videre
  * Alt annet — hvilke verktøy, hvilke regler, hvilken oppførsel — ligger i
- * TOOLS og GUARDRAILS, ikke her. Grunnen er enkel: en løkke som vokser med
+ * Tools og guardrails, ikke her. Grunnen er enkel: en løkke som vokser med
  * spesialtilfeller blir til slutt et sted der sikkerhetsregler kan gå tapt i
  * en if-setning. Derfor er den liten nok til å leses i sin helhet.
- *
  * Circuit breaker: `agent.maxSteps`. En modell som kaller verktøy i evig løkke
  * er ikke et teoretisk problem — det er en regning.
  */
@@ -48,7 +45,7 @@ export async function runAgent(options: RunOptions): Promise<string> {
   const context = sealContext(options.context);
   assertEntitled(options.agent, context);
 
-  // Samme regionsjekk som i spawnAgent(). Den finnes to steder fordi det finnes
+  // Samme regionsjekk som i spawnAgent. Den finnes to steder fordi det finnes
   // to innganger — og en sikkerhetsregel som bare gjelder den ene inngangen, er
   // ingen sikkerhetsregel.
   if (!providerSatisfies(options.provider, options.agent.dataClass)) {
@@ -68,7 +65,7 @@ export async function runAgent(options: RunOptions): Promise<string> {
 }
 
 /**
- * Selve løkka. Tar verktøyene FERDIG BYGGET — den kan ikke lage nye, og har
+ * Selve løkka. Tar verktøyene ferdig bygget — den kan ikke lage nye, og har
  * derfor ingen mulighet til å bygge et verktøy med en annen tenant enn den
  * agenten ble spawnet for. Se `spawn.ts`.
  */

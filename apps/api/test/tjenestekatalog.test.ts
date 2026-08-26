@@ -4,19 +4,16 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * F2-05 / F5-04 — TJENESTEKATALOGEN: hvem får endre prisen kunden betaler?
- *
- * Skrevet fordi katalogflaten ble bygget 20.08.2026 og gjorde fire prosedyrer
- * som ALDRI hadde hatt et kallsted til noe folk faktisk trykker på. Så lenge de
+ * F2-05 / F5-04 — tjenestekatalogen: hvem får endre prisen kunden betaler?
+ * Skrevet fordi katalogflaten ble og gjorde fire prosedyrer
+ * som aldri hadde hatt et kallsted til noe folk faktisk trykker på. Så lenge de
  * lå ubrukt, var det uten praktisk konsekvens at de sto på
  * `protectedProcedure`. I det de fikk en flate, betydde det at enhver ansatt
  * med en sesjon kunne endre prislista.
- *
- * ⚠️ Vi kaller `appRouter` direkte med en håndlaget context, ikke over HTTP —
+ * Vi kaller `appRouter` direkte med en håndlaget context, ikke over HTTP
  * samme grunn som i `module-gate.test.ts`: en angriper går heller ikke gjennom
  * UI-et, og UI-gating er kosmetikk.
- *
- * ⛔ Merk hva testen IKKE beviser: at knappen er skjult for staff. Det er
+ * Merk hva testen ikke beviser: at knappen er skjult for staff. Det er
  * uinteressant. Den beviser at ruta sier nei.
  */
 const OWNER_URL = process.env.DATABASE_URL;
@@ -61,7 +58,7 @@ describeDb('F2-05 — tjenestekatalogen: rollegate og synlighet', () => {
     await owner.delete(schema.tenants).where(sql`id in (${tenantA}, ${tenantB})`);
   });
 
-  /* ══ ANGREP: dealer_staff skal ikke kunne røre prislista ═══════════════ */
+  /* Angrep: dealer_staff skal ikke kunne røre prislista */
 
   it('ANGREP: dealer_staff kan ikke opprette en tjeneste', async () => {
     await expect(
@@ -111,7 +108,7 @@ describeDb('F2-05 — tjenestekatalogen: rollegate og synlighet', () => {
     );
   });
 
-  /* ══ LESING er åpen — staff må kunne svare kunden i telefonen ══════════ */
+  /* Lesing er åpen — staff må kunne svare kunden i telefonen */
 
   it('dealer_staff KAN lese katalogen', async () => {
     const liste = await ansatt().services.list();
@@ -123,7 +120,7 @@ describeDb('F2-05 — tjenestekatalogen: rollegate og synlighet', () => {
     expect(v.length).toBeGreaterThanOrEqual(1);
   });
 
-  /* ══ VERSJONERING: den gamle raden overlever ═══════════════════════════ */
+  /* Versjonering: den gamle raden overlever */
 
   it('ny versjon lukker den forrige i stedet for å overskrive den', async () => {
     await leder().services.update({
@@ -137,14 +134,14 @@ describeDb('F2-05 — tjenestekatalogen: rollegate og synlighet', () => {
     const v1 = v.find((x) => x.version === 1);
     const v2 = v.find((x) => x.version === 2);
 
-    // ⛔ Kjernen i F2-04: fjorårets pris står fortsatt der, uendret.
+    // Kjernen i F2-04: fjorårets pris står fortsatt der, uendret.
     expect(v1?.priceMinor).toBe(145_000);
     expect(v1?.validTo).not.toBeNull();
     expect(v2?.priceMinor).toBe(165_000);
     expect(v2?.validTo).toBeNull();
   });
 
-  /* ══ SYNLIGHET: deaktivert forsvinner fra booking, ikke fra katalogen ══ */
+  /* Synlighet: deaktivert forsvinner fra booking, ikke fra katalogen */
 
   it('deaktivert tjeneste faller ut av standardlista', async () => {
     await leder().services.deactivate({ serviceId: tjenesteId });
@@ -168,7 +165,7 @@ describeDb('F2-05 — tjenestekatalogen: rollegate og synlighet', () => {
     expect(rad?.version).toBe(2);
   });
 
-  /* ══ TENANT-GRENSEN ════════════════════════════════════════════════════ */
+  /* Tenant-grensen */
 
   it('ANGREP: nabo-forhandleren ser ikke tjenesten', async () => {
     const liste = await naboLeder().services.list({ inkluderInaktive: true });

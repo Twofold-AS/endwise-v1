@@ -2,16 +2,13 @@ import type { ModerationCategory, ModerationResult } from '@endwise/guardrails';
 import { assertEuEndpoint, MISTRAL_EU_BASE_URL } from './mistral.ts';
 
 /**
- * F14-05 — Mistral Moderations som motor for scope-gaten.
- *
+ * Mistral Moderations som motor for scope-gaten.
  * `POST /v1/chat/moderations` med `mistral-moderation-2603`. Ni kategorier;
  * vi bryr oss om **health**, **pii**, **law** og **selfharm**.
- *
  * Ligger i `providers` og ikke i `guardrails`, fordi guardrails ikke skal kjenne
  * HTTP eller leverandører — den tar imot en `Moderator`-funksjon. Bytter vi
  * moderasjonsmotor, er det denne fila som erstattes.
- *
- * ⚠️ Samme EU-assert som chat-modellen. Moderasjonskallet ser NØYAKTIG samme
+ * Samme EU-assert som chat-modellen. Moderasjonskallet ser nøyaktig samme
  * fritekst som vi prøver å beskytte — en scope-gate som lekker er verre enn
  * ingen scope-gate, fordi den gir falsk trygghet.
  */

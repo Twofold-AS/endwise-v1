@@ -1,11 +1,9 @@
 /**
- * F14-03 — Logg-policyen. **Kode, ikke et dokument.**
- *
+ * Logg-policyen. **Kode, ikke et dokument.**
  * Art. 5(1)(e): personopplysninger skal ikke lagres lenger enn nødvendig.
  * «Nødvendig» er et tall, ikke en holdning — så her står tallene.
- *
- * Regelen som gjelder når du legger til en ny tabell: **hvis den kan inneholde
- * personopplysninger, skal den ha en rad her.** Har den ikke det, blir den
+ * Regelen som gjelder når du legger til en ny tabell: hvis den kan inneholde
+ * personopplysninger, skal den ha en rad her. Har den ikke det, blir den
  * liggende for alltid, og ingen oppdager det før Datatilsynet spør.
  */
 export type RetentionBasis =
@@ -80,7 +78,7 @@ export const RETENTION_POLICY: readonly RetentionRule[] = [
   {
     table: 'erasure_requests',
     timestampColumn: 'requested_at',
-    days: 0, // 0 = slettes ALDRI
+    days: 0, // 0 = slettes aldri
     basis: 'security',
     rationale:
       'Beviset på at vi slettet må overleve slettingen. Uten den kan vi ikke dokumentere ' +

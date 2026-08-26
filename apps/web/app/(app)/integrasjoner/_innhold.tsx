@@ -7,7 +7,7 @@ import { CardShell } from '../_shell/cards';
 import { Etterspor } from '../_shell/etterspor';
 
 /**
- * F5-19 — INTEGRASJONER: **tredjeparts** verktøy. Informativ oversikt —
+ * Integrasjoner: **tredjeparts** verktøy. Informativ oversikt
  * ingen av/på-brytere. Oppsett ligger på egne sider.
  */
 type Katalog = RouterOutput['billing']['katalog'];

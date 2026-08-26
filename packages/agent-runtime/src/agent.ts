@@ -14,11 +14,9 @@ export interface AgentDefinition {
   /** Modellrolle, ikke modellnavn. */
   readonly role: ModelRole;
   /**
-   * F14 — Hva slags data agenten KAN se.
-   *
+   * F14 — Hva slags data agenten kan se.
    * `customer_freetext` binder agenten til en EU-provider (Mistral). Det er ikke
-   * en anbefaling — `spawnAgent()` nekter å starte den mot Fireworks.
-   *
+   * en anbefaling — `spawnAgent` nekter å starte den mot Fireworks.
    * Sett den til `tenant_operational` kun hvis agenten aldri, under noen
    * omstendighet, får sluttkundens egne ord inn i prompten.
    */
@@ -27,7 +25,7 @@ export interface AgentDefinition {
   readonly requiredModule: string | null;
   /** Maks antall tool-steg før løkka stopper. Circuit breaker. */
   readonly maxSteps: number;
-  /** Verktøyene agenten får — bygget MED konteksten, aldri uten. */
+  /** Verktøyene agenten får — bygget med konteksten, aldri uten. */
   tools(context: AgentContext): Record<string, Tool>;
 }
 

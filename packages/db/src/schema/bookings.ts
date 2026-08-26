@@ -16,7 +16,7 @@ import { serviceVersions } from './services.ts';
 import { tenants } from './tenants.ts';
 import { vehicles } from './vehicles.ts';
 
-/** F3-01 — Livsløpet. Én vei framover; `cancelled` er den eneste sidedøra. */
+/** Livsløpet. Én vei framover; `cancelled` er den eneste sidedøra. */
 export const bookingStatusEnum = pgEnum('booking_status', [
   'draft',
   'confirmed',
@@ -38,7 +38,7 @@ export const bookings = pgTable(
     vehicleId: uuid('vehicle_id').references(() => vehicles.id, { onDelete: 'set null' }),
 
     /**
-     * Peker på en VERSJON av tjenesten, ikke på tjenesten (F2-04).
+     * Peker på en versjon av tjenesten, ikke på tjenesten (F2-04).
      * Endrer forhandleren prisen i morgen, står denne bookingen fortsatt til
      * det som ble avtalt i dag.
      */
@@ -82,7 +82,6 @@ export const bookings = pgTable(
 
 /**
  * F3-09 / P3 — flere tjenester på én jobb.
- *
  * `bookings.service_version_id` er første/primære tjeneste (bakoverkompatibel
  * liste/kalender). Alle valgte tjenester, inkludert den primære, bor her.
  * `duration_minutes` er katalogtid på avtaletidspunktet — slot-lengden eies

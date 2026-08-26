@@ -1,7 +1,7 @@
 import { createAccessControl } from 'better-auth/plugins/access';
 
 /**
- * F1-05 — RBAC.
+ * RBAC.
  * Fem roller. `customer` er sluttkunden (widget/Min side) og har
  * bevisst ingen rettigheter i forhandlerens data — kun sine egne bookinger, som
  * uansett er RLS-skjermet. `endwise_support` er plattform-team, ikke
@@ -17,15 +17,13 @@ export const statement = {
   member: ['read', 'invite', 'manage'],
   audit: ['read'],
   /**
-   * F2-09 — Lager. KJERNE (ingen modul-gate), men ikke fritt fram for alle
+   * Lager. Kjerne (ingen modul-gate), men ikke fritt fram for alle
    * roller: «alle forhandlere» er modul-nivå, ikke rolle-nivå.
-   *
-   *   read   — se deler og beholdning
-   *   move   — ta ut / registrere inn / reservere (dagens arbeid)
-   *   manage — korrigere beholdning, nedskrive, endre lokasjoner og kostpris
-   *
-   * Skillet som betyr noe: en ansatt skal kunne TA UT en del uten å kunne
-   * JUSTERE beholdningen. Uttak er sporbart mot en jobb; en justering er et
+   * read — se deler og beholdning
+   * move — ta ut / registrere inn / reservere (dagens arbeid)
+   * manage — korrigere beholdning, nedskrive, endre lokasjoner og kostpris
+   * Skillet som betyr noe: en ansatt skal kunne ta ut en del uten å kunne
+   * Justere beholdningen. Uttak er sporbart mot en jobb; en justering er et
    * tall noen bestemte, og den skal en admin stå bak.
    */
   inventory: ['read', 'move', 'manage'],
@@ -48,7 +46,7 @@ export const dealerStaff = ac.newRole({
   inventory: ['read', 'move'],
 });
 
-/** Forhandler-admin: full kontroll i EGEN tenant. */
+/** Forhandler-admin: full kontroll i egen tenant. */
 export const dealerAdmin = ac.newRole({
   booking: ['create', 'read', 'update', 'cancel'],
   mechanic: ['read', 'assign', 'manage'],
@@ -76,7 +74,7 @@ export const endwiseAdmin = ac.newRole({
 
 /**
  * Plattform-support. Innboks + Se verkstedet (lesing). Ikke flagg, ikke
- * slett forhandler, ikke team. ⛔ Ikke dealer_staff «support».
+ * slett forhandler, ikke team. Ikke dealer_staff «support».
  */
 export const endwiseSupport = ac.newRole({
   booking: ['read'],
@@ -100,7 +98,7 @@ export const roles = {
 
 export type Role = keyof typeof roles;
 
-/** Roller som ALLTID krever 2FA (F1-11 — ingen bypass). */
+/** Roller som alltid krever 2FA (F1-11 — ingen bypass). */
 export const ROLES_REQUIRING_2FA: readonly Role[] = [
   'dealer_admin',
   'dealer_staff',

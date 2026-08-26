@@ -4,14 +4,13 @@ import { tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F0-04 — Release-toggles (feature flags), DB-styrt. ERSTATTER Vercel Edge
- * Config (betalt lagring, brukergodkjent 16.07.2026). Selve `flags`-SDK-en var
- * gratis/OSS; det var Edge Config-LAGRINGEN som kostet. Nå bor sannheten i
+ * Release-toggles (feature flags), DB-styrt. Erstatter Vercel Edge
+ * Config (betalt lagring, brukergodkjent ). Selve `flags`-SDK-en var
+ * gratis/oss; det var Edge Config-lagringen som kostet. Nå bor sannheten i
  * Postgres og styres fra admin — gratis og full kontroll.
- *
  * Skillet mot entitlements (tenant_modules) står (techstack §2):
- *   - entitlement    = «har forhandleren KJØPT modulen?»   (tenant_modules)
- *   - release-toggle = «har VI RULLET UT funksjonen?»       (denne)
+ * entitlement = «har forhandleren kjøpt modulen?» (tenant_modules)
+ * release-toggle = «har vi rullet ut funksjonen?» (denne)
  * Begge må si ja.
  */
 

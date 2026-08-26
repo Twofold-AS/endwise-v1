@@ -4,19 +4,15 @@ import { tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F6-02 — Event-loggen SSE-strømmen leser fra.
- *
- * Hvorfor en tabell, når vi allerede har LISTEN/NOTIFY:
- *
- * NOTIFY er ILDLEDNING UTEN HUKOMMELSE. Er klienten frakoblet i de to sekundene
+ * Event-loggen SSE-strømmen leser fra.
+ * Hvorfor en tabell, når vi allerede har listen/notify:
+ * Notify er ildledning uten hukommelse. Er klienten frakoblet i de to sekundene
  * eventet fyres, er det borte for alltid. En mekaniker som kjører gjennom en
  * tunnel ville mistet jobboppdateringen sin.
- *
- * Derfor: hendelsen SKRIVES her (monotont `id`), og NOTIFY sier bare «det finnes
+ * Derfor: hendelsen skrives her (monotont `id`), og notify sier bare «det finnes
  * noe nytt». Ved reconnect sender klienten `Last-Event-ID`, og vi spiller av alt
- * med høyere id. NOTIFY er varselklokka; tabellen er sannheten.
- *
- * `id` er bigserial og GLOBALT monotont — ikke per tenant. Det er trygt fordi
+ * med høyere id. Notify er varselklokka; tabellen er sannheten.
+ * `id` er bigserial og globalt monotont — ikke per tenant. Det er trygt fordi
  * RLS filtrerer radene: en klient ser bare sine egne id-er, og hopp i
  * nummerrekka lekker ingenting annet enn at andre tenants finnes.
  */
@@ -47,10 +43,10 @@ export type StreamEvent = typeof streamEvents.$inferSelect;
 export type NewStreamEvent = typeof streamEvents.$inferInsert;
 
 /**
- * Kanalen alle NOTIFY-er går på. ÉN kanal, ikke én per tenant:
- * LISTEN-kanaler er globale identifikatorer, og et kanalnavn per tenant ville
- * betydd at stream-tjenesten måtte kjøre LISTEN på nytt hver gang en forhandler
- * opprettes. Tenant-filtreringen skjer i tjenesten OG i RLS — payloaden på
- * NOTIFY inneholder aldri innhold, bare «event <id> for tenant <x> finnes».
+ * Kanalen alle notify-er går på. ÉN kanal, ikke én per tenant:
+ * Listen-kanaler er globale identifikatorer, og et kanalnavn per tenant ville
+ * betydd at stream-tjenesten måtte kjøre listen på nytt hver gang en forhandler
+ * opprettes. Tenant-filtreringen skjer i tjenesten og i RLS — payloaden på
+ * Notify inneholder aldri innhold, bare «event <id> for tenant <x> finnes».
  */
 export const STREAM_CHANNEL = 'endwise_stream';

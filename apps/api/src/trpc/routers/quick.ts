@@ -16,33 +16,29 @@ import { aktiverQuickEtterGet } from '../../lib/quick-activate.ts';
 import { runQuickCustomerPull } from '../../lib/quick-pull.ts';
 import { moduleAdminProcedure, moduleProcedure, router } from '../init.ts';
 
-/** ⛔ F0-16 — MODUL-GATE: `quick`. ERP-integrasjonen er et betalt tillegg. */
+/** Modul-gate: `quick`. Erp-integrasjonen er et betalt tillegg. */
 const quickProcedure = moduleProcedure('quick');
 const quickAdminProcedure = moduleAdminProcedure('quick');
 
 /**
  * F8-01 / F8-02 — Quick-integrasjon (QuickLite).
- *
- * SYNK-MODELL (retningsavklart): Quick er FAKTA (source of truth).
- *   - PULL (Quick → Endwise) DOMINERER: `pullNow` (manuell «Hent nå») + cron
- *     08:00/16:00 Oslo (se apps/api/vercel.json + routes/cron/quick-pull.ts).
- *     Overskriver våre felt for radene Quick returnerer. Henter kunder OG
- *     deler/lager (GET item/batch + stockentry/batch) inn i Postgres.
- *   - PUSH (Endwise → Quick) er MINIMERT og ALDRI automatisk: kun bak en
- *     eksplisitt knapp (`pushNow`). Aldri en bieffekt av synk. Ikke implementert
- *     ennå — men flaten er reservert og tydelig gated.
- *
+ * Synk-modell (retningsavklart): Quick er fakta (source of truth).
+ * pull (Quick → Endwise) dominerer: `pullNow` (manuell «Hent nå») + cron
+ * 08:00/16:00 Oslo (se apps/api/vercel.json + routes/cron/quick-pull.ts).
+ * Overskriver våre felt for radene Quick returnerer. Henter kunder og
+ * deler/lager (GET item/batch + stockentry/batch) inn i Postgres.
+ * push (Endwise → Quick) er minimert og aldri automatisk: kun bak en
+ * eksplisitt knapp (`pushNow`). Aldri en bieffekt av synk. Ikke implementert
+ * ennå — men flaten er reservert og tydelig gated.
  * Sikkerhet: skriveflatene er `adminProcedure` (kun dealer_admin/endwise_admin).
- * ALT går via `createQuickConfigService` → `withTenant` → RLS. Tokenet lagres
- * envelope-kryptert og forlater ALDRI serveren (getView returnerer kun `hasToken`).
+ * Alt går via `createQuickConfigService` → `withTenant` → RLS. Tokenet lagres
+ * envelope-kryptert og forlater aldri serveren (getView returnerer kun `hasToken`).
  * Valgfri egress: QUICK_GATEWAY_URL (tynn live-gateway) eller QUICK_HTTPS_PROXY
- * (CONNECT). Uset = direkte fetch. Vercel Static IPs er infrastruktur.
- *
- * Vi hamrer ALDRI Quick: `testConnection` / `setConfig` er ett GET `client/info`,
+ * (connect). Uset = direkte fetch. Vercel Static IPs er infrastruktur.
+ * Vi hamrer aldri Quick: `testConnection` / `setConfig` er ett GET `client/info`,
  * `pullNow` er en moderat paginert delta-pull (changedAfterDate = sist hentet).
- * setConfig persisterer IKKE nøkkelen med mindre GET-proben svarte.
- *
- * TODO: booking/salg-synk, PUSH-impl, kalendersynk, DLQ/retry. Mekaniker
+ * setConfig persisterer ikke nøkkelen med mindre GET-proben svarte.
+ * TODO: booking/salg-synk, push-impl, kalendersynk, dlq/retry. Mekaniker
  * plukk-fra-jobb er neste (lager er P0).
  */
 export const quickRouter = router({
@@ -66,7 +62,7 @@ export const quickRouter = router({
           message: QUICK_PROBE_USER_MESSAGES.noUrl,
         });
       }
-      // CWE-918: valider baseUrl mot SSRF-vernet FØR lagring (ikke bare i klienten).
+      // CWE-918: valider baseUrl mot ssrf-vernet før lagring (ikke bare i klienten).
       try {
         assertAllowedQuickUrl(baseUrl);
       } catch (error) {
@@ -136,7 +132,7 @@ export const quickRouter = router({
   }),
 
   /**
-   * «Hent nå» — manuell PULL (Quick → Endwise), samme overwrite-semantikk som
+   * «Hent nå» — manuell pull (Quick → Endwise), samme overwrite-semantikk som
    * den planlagte cron-pullen. `full` tvinger full re-synk (ellers delta).
    */
   pullNow: quickAdminProcedure
@@ -169,7 +165,7 @@ export const quickRouter = router({
     }),
 
   /**
-   * PUSH (Endwise → Quick) — bevisst, knapp-utløst handling. ALDRI automatisk.
+   * Push (Endwise → Quick) — bevisst, knapp-utløst handling. Aldri automatisk.
    * Ikke implementert ennå: krever en ApiV2-token vi ikke har, og skal holdes
    * minimert (vi vil ikke overkjøre Quick-data). Flaten er reservert og eksplisitt
    * gated slik at push aldri kan bli en bieffekt av pull-synken.

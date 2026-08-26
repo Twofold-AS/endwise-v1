@@ -6,10 +6,9 @@ import type * as React from 'react';
 /*
  * shadcn/ui Badge (New York). Erstatter den gamle primitiv-Badgen (F0-12-notat:
  * «dekker shadcn dem, skal de bort»).
- *
- * ⚠️ AVVIK FRA KANONISK shadcn: FORM-en følger eierens badge-spec — 20px høyde,
+ * Avvik fra kanonisk shadcn: form-en følger eierens badge-spec — 20px høyde,
  * 6px radius — mens `variant` styrer farge. `default` leser aksent-tokenene,
- * som ble SVARTE 06.08.2026. `destructive` er rød og brukes av «Ny»-badgen.
+ * som ble svarte . `destructive` er rød og brukes av «Ny»-badgen.
  * API-et er uendret.
  */
 const badgeVariants = cva(

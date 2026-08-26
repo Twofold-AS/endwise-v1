@@ -4,9 +4,8 @@ import { CircleAlert } from '@endwise/ui';
 import { CardShell } from '../_shell/cards';
 
 /**
- * F5-31 — Små byggeklosser Lager-flatene deler.
- *
- * ⛔ **Ingen handel her.** Kostpris hører hjemme i Lager, utsalgspris i Butikk.
+ * Små byggeklosser Lager-flatene deler.
+ * Ingen handel her. Kostpris hører hjemme i Lager, utsalgspris i Butikk.
  * Ser du en «Selg»-knapp på en av disse sidene, er den i feil fane.
  */
 
@@ -14,9 +13,11 @@ import { CardShell } from '../_shell/cards';
 export function Sidehode({ tittel, undertittel }: { tittel: string; undertittel: string }) {
   return (
     <div>
-      {/* Skjult h1 for skjermlesere og dokumentstruktur — breadcrumben i
-          topbaren sier allerede hvor du er. «Lager · Lager» ville vært å si
-          det samme to ganger, så prefikset dropper når tittelen ER «Lager». */}
+      {/*
+       * Skjult h1 for skjermlesere og dokumentstruktur — breadcrumben i
+       * topbaren sier allerede hvor du er. «Lager · Lager» ville vært å si
+       * det samme to ganger, så prefikset dropper når tittelen er «Lager».
+       */}
       <h1 className="sr-only">{tittel === 'Lager' ? 'Lager' : `Lager · ${tittel}`}</h1>
       <p className="text-title text-fg">{tittel}</p>
       <p className="text-body text-fg-muted">{undertittel}</p>
@@ -48,7 +49,6 @@ export function Tomt({ tittel, hint }: { tittel: string; hint: string }) {
 
 /**
  * Beholdningstall. **Tilgjengelig er hovedtallet, ikke «på lager».**
- *
  * A08: en reservert del står fysisk på hylla, men er lovet bort. Viser vi
  * `onHand` som hovedtall, lover vi bort deler som allerede er lovet bort — og
  * det er nettopp dobbeltsalget reservasjonsmodellen finnes for å hindre.

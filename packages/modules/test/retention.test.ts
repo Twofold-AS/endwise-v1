@@ -3,7 +3,7 @@ import { createDb, type Database, schema, sql } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { prunableRules, pruneExpired, RETENTION_POLICY, ruleFor } from '../src/retention/index.ts';
 
-/** F14-03 — Logg-policyen. Implementert, ikke bare dokumentert. */
+/** Logg-policyen. Implementert, ikke bare dokumentert. */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
 const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;

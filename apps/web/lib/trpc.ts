@@ -7,8 +7,7 @@ export const trpc = createTRPCReact<AppRouter>();
 
 /**
  * Utledede svartyper fra ruteren.
- *
- * ⚠️ Brukes når en komponent tar EN GREN av et union-svar som prop
+ * Brukes når en komponent tar en gren av et union-svar som prop
  * (`_detaljer.tsx` tegner kunde/mekaniker/konto hver for seg). Å utlede typen
  * fra `useQuery(...)['data']` virker ikke: hooken krever argumenter, og
  * `ReturnType` på et ukalt kall gir `never`. `inferRouterOutputs` er den

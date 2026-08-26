@@ -1,21 +1,17 @@
 /**
- * F8-01 — Tre-veis fletting per felt (git-lignende), gjenbrukbar kjerne.
- *
- * AVHENGIGHETSFRI med vilje: ingen DB, ingen Quick — bare ren logikk, så den er
+ * Tre-veis fletting per felt (git-lignende), gjenbrukbar kjerne.
+ * Avhengighetsfri med vilje: ingen DB, ingen Quick — bare ren logikk, så den er
  * triviell å enhetsteste og kan gjenbrukes for kunder NÅ og booking/delelager/
- * salg SENERE (samme mekanikk).
- *
- * «Baseline» er felles stamfar (merge base) = verdiene vi SIST hentet fra Quick.
+ * salg senere (samme mekanikk).
+ * «Baseline» er felles stamfar (merge base) = verdiene vi sist hentet fra Quick.
  * «ours» = vår gjeldende lokale verdi. «theirs» = det Quick sender nå.
- *
  * De fire feltnivå-tilfellene:
- *   1. Quick endret, vi ikke  (theirs≠base, ours=base) → Quick vinner (auto).
- *   2. Vi endret, Quick ikke   (theirs=base, ours≠base) → behold vår (auto).
- *   3. Ingen endret / begge til samme (theirs=ours)     → ingen konflikt.
- *   4. Begge endret ULIKT       (alle tre forskjellige) → KONFLIKT (ikke overskriv).
- *
- * FELTNIVÅ, ikke radnivå: Quick kan endre telefon mens vi endrer et annet felt —
- * begge flettes, ingen konflikt. Konflikt oppstår kun på SAMME felt endret ulikt.
+ * 1. Quick endret, vi ikke (theirs≠base, ours=base) → Quick vinner (auto).
+ * 2. Vi endret, Quick ikke (theirs=base, ours≠base) → behold vår (auto).
+ * 3. Ingen endret / begge til samme (theirs=ours) → ingen konflikt.
+ * 4. Begge endret ulikt (alle tre forskjellige) → konflikt (ikke overskriv).
+ * FeltnivÅ, ikke radnivå: Quick kan endre telefon mens vi endrer et annet felt
+ * begge flettes, ingen konflikt. Konflikt oppstår kun på samme felt endret ulikt.
  */
 
 export type FieldValue = string | null;
@@ -28,11 +24,11 @@ export interface FieldConflict {
 }
 
 export interface MergeOutcome {
-  /** Verdien som skal PERSISTERES per felt (auto-flettet der mulig). */
+  /** Verdien som skal persisteres per felt (auto-flettet der mulig). */
   merged: Record<string, FieldValue>;
   /**
    * Ny baseline per felt. Avanseres til `theirs` for felt vi forsonet; for
-   * KONFLIKT-felt beholdes gammel base, slik at samme konflikt gjendetekteres
+   * Konflikt-felt beholdes gammel base, slik at samme konflikt gjendetekteres
    * idempotent ved neste pull (vi mister den ikke) til den løses.
    */
   newBaseline: Record<string, FieldValue>;
@@ -46,8 +42,7 @@ function norm(v: FieldValue | undefined): FieldValue {
 
 /**
  * Tre-veis flett `fields` fra `ours` (lokalt) og `theirs` (Quick) mot `base`.
- *
- * `base === null` = ingen baseline finnes ennå (ny rad, eller første pull etter
+ * `base null` = ingen baseline finnes ennå (ny rad, eller første pull etter
  * at baseline ble innført). Da vinner Quick for alle felt (overskriv) og baseline
  * etableres — dette bevarer den tidligere «Quick er fakta»-oppførselen og unngår
  * falske konflikter før vi har et sammenlikningsgrunnlag.
@@ -88,7 +83,7 @@ export function threeWayMerge(
       merged[f] = t;
       newBaseline[f] = t;
     } else {
-      // Begge endret ulikt → KONFLIKT: ikke overskriv, ikke avanser baseline.
+      // Begge endret ulikt → konflikt: ikke overskriv, ikke avanser baseline.
       merged[f] = o;
       newBaseline[f] = b;
       conflicts.push({ field: f, base: b, ours: o, theirs: t });

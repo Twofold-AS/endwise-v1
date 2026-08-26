@@ -4,11 +4,10 @@ import { BOOKINGS_30D } from '../_data';
 
 /**
  * Booking-flyt, 30 dager. **Erstatter den stablede dither-arealgrafen**
- * (dither-kit ut av UI-et 03.08.2026).
- *
+ * (dither-kit ut av UI-et ).
  * Totalene øverst er det man faktisk leste ut av grafen på ett blikk; tabellen
  * under gir det grafen aldri kunne gi — det eksakte tallet per dag. Ingen
- * canvas, ingen animasjon, ingen RAF-løkke.
+ * canvas, ingen animasjon, ingen raf-løkke.
  */
 const SERIES = [
   { key: 'fullfort', label: 'Fullført', tone: 'text-success' },

@@ -5,38 +5,33 @@ import { jobFunctionEnum } from './profiles.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F1-10 — INVITASJONER. Lederen inviterer, den ansatte fullfører selv.
- *
- * ── ⛔ Vi lagrer HASHEN, aldri tokenet ───────────────────────────────────
+ * Invitasjoner. Lederen inviterer, den ansatte fullfører selv.
+ * Vi lagrer hashen, aldri tokenet
  * `tokenHash` er SHA-256 av det tilfeldige tokenet. Rå-tokenet finnes ett
  * eneste sted: i lenka som sendes på e-post. Får noen lesetilgang til denne
- * tabellen — en database-dump, en feilkonfigurert backup, en logget spørring —
+ * tabellen — en database-dump, en feilkonfigurert backup, en logget spørring
  * kan de fortsatt ikke godta en eneste invitasjon.
- *
  * SHA-256 uten salt er riktig her, i motsetning til for passord: tokenet er
  * 256 bit kryptografisk tilfeldig, så det finnes ingen ordbok å angripe det
  * med. Bcrypt-runder ville bare gjort oppslaget tregt uten å gjøre det tryggere.
- *
- * ── ⛔ To spor, to CHECKer ───────────────────────────────────────────────
+ * To spor, to CHECKer
  * `kind = staff` er låst til `dealer_staff` + tildelbar funksjon (ikke `leder`).
  * `kind = owner` er det bevisste unntaket: `dealer_admin` + `leder`, brukt av
  * Endwise-admins forhandler-onboarding. Staff-ruten kan ikke velge owner.
  * `kind = platform` er Endwise-team (administrator | support). Aldri F1-10-
  * funksjoner, aldri «eier». `endwise_support` er en annen rolle enn dealer support.
- *
- * ── Offentlig oppslag ────────────────────────────────────────────────────
+ * Offentlig oppslag
  * Tenant-policyen over holder lederens liste. Den som åpner lenka har ingen
  * tenant. Unntaket er `lookup_open_invitation` / `invitations_open_by_hash`
  * i `sql/functions.sql` + `sql/grants.sql` — ikke en Drizzle-policy her,
- * fordi den må gjelde DEFINER-eieren (TO PUBLIC), ikke bare `authenticated`.
- *
- * ── Livssyklus ───────────────────────────────────────────────────────────
- * Åpen  = `accepted_at IS NULL AND revoked_at IS NULL AND expires_at > now()`
+ * fordi den må gjelde DEFINER-eieren (to public), ikke bare `authenticated`.
+ * Livssyklus
+ * Åpen = `accepted_at IS NULL AND revoked_at IS NULL AND expires_at > now`
  * Brukt = `accepted_at` satt. **Engangs**: godta-stien skriver den i samme
- *         transaksjon som medlemskapet opprettes, med en WHERE som krever at
- *         den fortsatt er åpen. To samtidige forsøk gir derfor én vinner.
+ * transaksjon som medlemskapet opprettes, med en WHERE som krever at
+ * den fortsatt er åpen. To samtidige forsøk gir derfor én vinner.
  * Trukket = `revoked_at` satt av lederen.
- * Utløpt  = `expires_at` passert. Ingen jobb må kjøre for at den skal dø.
+ * Utløpt = `expires_at` passert. Ingen jobb må kjøre for at den skal dø.
  */
 export const invitations = pgTable(
   'invitations',
@@ -49,7 +44,7 @@ export const invitations = pgTable(
     /** E-posten invitasjonen ble sendt til. Normalisert til småbokstaver. */
     email: text('email').notNull(),
 
-    /** ⛔ SHA-256 av tokenet. Aldri tokenet selv. Unikt på tvers av alle tenants. */
+    /** SHA-256 av tokenet. Aldri tokenet selv. Unikt på tvers av alle tenants. */
     tokenHash: text('token_hash').notNull(),
 
     /**
@@ -69,7 +64,7 @@ export const invitations = pgTable(
      */
     platformLevel: text('platform_level'),
 
-    /** ⛔ Låst av CHECK mot `kind`. Se filhodet. */
+    /** Låst av check mot `kind`. Se filhodet. */
     role: text('role').notNull().default('dealer_staff'),
 
     /** Hvem som inviterte. Til sporbarhet i lista og i revisjon. */
@@ -82,7 +77,7 @@ export const invitations = pgTable(
   },
   (t) => [
     /**
-     * ⚠️ Unik på hash ALENE, ikke per tenant. Tokenet slås opp FØR vi vet
+     * Unik på hash alene, ikke per tenant. Tokenet slås opp før vi vet
      * hvilken tenant det gjelder — det er hele poenget med en invitasjonslenke.
      * Var den unik per tenant, kunne to tenants i teorien hatt samme hash, og
      * oppslaget ville returnert to rader uten noen måte å velge riktig.

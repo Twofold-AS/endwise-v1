@@ -1,10 +1,8 @@
 /**
- * ⚠️ GENERERT FIL — IKKE REDIGER.
- *
+ * Generert fil — ikke rediger.
  * Kilde: `packages/ui/src/assets/icons/*.svg`
  * Generator: `packages/ui/scripts/build-icons.ts`
  * Regenerer: `node --experimental-strip-types packages/ui/scripts/build-icons.ts`
- *
  * 62 ikoner: Activity, AlarmClockOff, ArrowLeftRight, Bell, Blocks, CalendarDays, Camera, Car, ChartLine, ChartPie, Check, ChevronDown, CircleAlert, CircleCheck, CirclePercent, CircleQuestionMark, CircleUser, ClipboardList, ClockArrowUp, Clock, CreditCard, FilePlus, FolderOpen, Funnel, Globe, Handshake, ImagePlus, Image, Inbox, Info, KeyRound, LayoutDashboard, List, Loader2, Lock, LogOut, Mail, MessageCirclePlus, MessageCircleWarning, MessageCircleX, MessageSquare, Moon, PanelLeft, Phone, Receipt, RefreshCw, Save, Search, Send, Settings, ShieldCheck, Sparkles, Sun, Tags, Timer, Trash2, TriangleAlert, UserPlus, Users, Wrench, X, Zap
  */
 import { createLucideIcon, type LucideIcon } from 'lucide-react';

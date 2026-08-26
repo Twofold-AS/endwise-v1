@@ -8,13 +8,11 @@ import { CardShell } from '../_shell/cards';
 import { FARGER, FORMER, HUMOR, TONER, tilfeldigAvatarValg } from './avatar-valg';
 
 /**
- * F6-19 — Blobatar-velger.
- *
+ * Blobatar-velger.
  * Seed = `user.id`. Form, farge, tone og uttrykk kommer fra seeden (null =
  * bibliotekets default) til noen persisterer — da via knappene, eller
  * «Ny tilfeldig». «Ny tilfeldig» beholder valgt humør og farge.
- *
- * Settings › Profil (Jonas): ansiktet står TIL VENSTRE for visningsnavn|e-post
+ * Settings › Profil (Jonas): ansiktet står til venstre for visningsnavn|e-post
  * (`children`), 56px. Velgeren er foldet under så Profil ikke vokser.
  * shadcn Collapsible er ikke hentet: ett fold, native `<details>`.
  */

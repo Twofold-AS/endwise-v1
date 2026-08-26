@@ -20,28 +20,25 @@ import { CardMedia, CardShell } from '../_shell/cards';
 import { SseStatusPill } from '../_shell/sse-status-pill';
 
 /**
- * F6-04 / F5-22 — AI-INNSIKT: flaten over AI-laget. Flyttet 04.08.2026 fra
+ * F6-04 / F5-22 — ai-innsikt: flaten over AI-laget. Flyttet fra
  * /integrasjoner/ai til /ai-innsikt — den er en egen destinasjon i sidebaren,
  * ikke en integrasjonsinnstilling.
- *
  * To halvdeler, og de svarer på hvert sitt spørsmål:
- *   1. **Rutingen** — hvilken leverandør, i hvilken region, for hvilken
- *      dataklasse? Lest fra serveren (`agent.list`), ikke gjentatt her. Kilden
- *      er `packages/providers`; denne skjermen er et vindu, ikke en kopi.
- *   2. **Konsollen** — kjør en agent og se den tenke i sanntid. Tokenene kommer
- *      over SSE (F6-02), samme kanal som meldingene, fordi agent-svar ER
- *      meldinger som ikke har landet ennå.
- *
- * ⚠️ **To ting i F6-04 finnes ikke i backend ennå: confidence-score og
- * token-tak per tenant.** De står som eksplisitt tomme nederst. Å tegne et tall
+ * 1. **Rutingen** — hvilken leverandør, i hvilken region, for hvilken
+ * dataklasse? Lest fra serveren (`agent.list`), ikke gjentatt her. Kilden
+ * er `packages/providers`; denne skjermen er et vindu, ikke en kopi.
+ * 2. **Konsollen** — kjør en agent og se den tenke i sanntid. Tokenene kommer
+ * over SSE (F6-02), samme kanal som meldingene, fordi agent-svar er
+ * meldinger som ikke har landet ennå.
+ * To ting i F6-04 finnes ikke i backend ennå: confidence-score og
+ * token-tak per tenant. De står som eksplisitt tomme nederst. Å tegne et tall
  * der ville vært å påstå at vi måler noe vi ikke måler.
- *
  * [ART50-UI] `AiDisclosure` står øverst. Art. 50 gjelder også når det er en
  * ansatt som snakker med maskinen.
  */
 type Phase = 'idle' | 'starting' | 'thinking' | 'tool' | 'done' | 'error';
 
-/** Én loader per SSE-event (UI-PAKKER.md §4). Fasen bestemmer hvilken. */
+/** Én loader per SSE-event (ui-pakker.md §4). Fasen bestemmer hvilken. */
 const PHASE_LOADER: Record<string, { Loader: typeof DotmCircular1; label: string }> = {
   starting: { Loader: DotmCircular1, label: 'Starter agenten …' },
   thinking: { Loader: DotmHex1, label: 'Assistenten tenker …' },
@@ -137,7 +134,7 @@ export default function AiDiagnosePage() {
       {/* [ART50-UI] Øverst, før første interaksjon. Ikke flytt den ned. */}
       <AiDisclosure className="rounded-lg" />
 
-      {/* ── 1. Ruting: dataklasse → region → leverandør ───────────────────── */}
+      {/* 1. Ruting: dataklasse → region → leverandør */}
       <section className="flex flex-col gap-2">
         <h2 className="text-title text-fg">Ruting og leverandører</h2>
         {agents.isLoading ? (
@@ -203,7 +200,7 @@ export default function AiDiagnosePage() {
         </p>
       </section>
 
-      {/* ── 2. Konsollen ─────────────────────────────────────────────────── */}
+      {/* 2. Konsollen */}
       <section className="flex flex-col gap-2">
         <h2 className="text-title text-fg">Konsoll</h2>
         <CardShell>
@@ -219,8 +216,10 @@ export default function AiDiagnosePage() {
               <>
                 {loader && (
                   <div className="flex items-center gap-3">
-                    {/* Ingen `colorPreset` — de er hardkodede farger. Vi mater
-                        inn merkevare-aksenten fra token-laget i stedet. */}
+                    {/*
+                     * Ingen `colorPreset` — de er hardkodede farger. Vi mater
+                     * inn merkevare-aksenten fra token-laget i stedet.
+                     */}
                     <loader.Loader
                       size={28}
                       color="var(--ew-accent-strong)"
@@ -306,7 +305,7 @@ export default function AiDiagnosePage() {
         </CardShell>
       </section>
 
-      {/* ── 3. Det som IKKE er bygget ────────────────────────────────────── */}
+      {/* 3. Det som ikke er bygget */}
       <section className="flex flex-col gap-2">
         <h2 className="text-title text-fg">Ikke bygget ennå</h2>
         <div className="grid gap-2 md:grid-cols-2">

@@ -15,25 +15,22 @@ import { z } from 'zod';
 import { createRequestContext } from '../context.ts';
 
 /**
- * F6-18 — STRØMMENDE CHAT-ENDEPUNKT for `useChat`.
- *
- * ── F13-03 — servert som Next route handler, logikken bor her ──────────
+ * Strømmende chat-endepunkt for `useChat`.
+ * Servert som Next route handler, logikken bor her
  * `apps/web/app/chat/[agent]/route.ts` kaller `handleHono` → denne flaten.
  * Klienten (`useChat` / `DefaultChatTransport`) peker på `/chat/<agent>`
  * same-origin. Biblioteket (`@endwise/api`) eier DB, sesjon og agent-runtime
- * — UI-et i web rører fortsatt ikke dataene direkte.
- *
- * ── ⛔ Ingen Vercel AI Gateway ───────────────────────────────────────────
+ * UI-et i web rører fortsatt ikke dataene direkte.
+ * Ingen Vercel AI Gateway
  * Modellen kommer fra `resolveModelProvider(agent.dataClass)`. For AI-diagnose
  * betyr det Mistral (EU), fordi agenten er `customer_freetext` — håndhevet i
- * `streamAgentChat()`, som kaster `DataRegionViolation` hvis noen skulle klare å
+ * `streamAgentChat`, som kaster `DataRegionViolation` hvis noen skulle klare å
  * sende den et annet sted.
- *
- * ── Sperrene, i rekkefølge ───────────────────────────────────────────────
- *   1. sesjon      — Better-Auth. Uten bruker: 401.
- *   2. tenant      — aktiv organisasjon + medlemskap (assertMember). Uten: 403.
- *   3. modul       — agentens `requiredModule` mot `tenant_modules` (F0-04/16).
- *   4. dataregion  — i runtimen. 5. guardrails L1–L5. 6. RLS i basen.
+ * Sperrene, i rekkefølge
+ * 1. sesjon — Better-Auth. Uten bruker: 401.
+ * 2. tenant — aktiv organisasjon + medlemskap (assertMember). Uten: 403.
+ * 3. modul — agentens `requiredModule` mot `tenant_modules` (F0-04/16).
+ * 4. dataregion — i runtimen. 5. guardrails L1–L5. 6. RLS i basen.
  */
 export const chat = new Hono();
 
@@ -45,8 +42,8 @@ const kropp = z.object({
 });
 
 chat.post('/:agent', async (c) => {
-  // ── 1. Sesjon + tenant ────────────────────────────────────────────────
-  // ⛔ F1-11: mangler 2FA, kastes det her — og da skal det IKKE se ut som en
+  // 1. Sesjon + tenant
+  // Mangler 2FA, kastes det her — og da skal det ikke se ut som en
   // vanlig 401. Egen kode, så klienten kan sende brukeren til oppsett.
   let ctx: Awaited<ReturnType<typeof createRequestContext>>;
   try {
@@ -71,8 +68,8 @@ chat.post('/:agent', async (c) => {
   const parsed = kropp.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return c.json({ error: 'Ugyldig forespørsel' }, 400);
 
-  // ── 3. Modul-gaten (F0-16) ────────────────────────────────────────────
-  // Entitlements leses fra DATABASEN, aldri fra klienten. Samme kilde som
+  // 3. Modul-gaten (F0-16)
+  // Entitlements leses fra databasen, aldri fra klienten. Samme kilde som
   // `agent.run` i tRPC-ruteren bruker.
   const moduler = await withTenant(ctx.db, ctx.tenantId, (tx) =>
     tx
@@ -117,7 +114,7 @@ chat.post('/:agent', async (c) => {
       stream: toUIMessageStream({ stream: result.stream }),
     });
   } catch (error) {
-    // ⚠️ En regionsbrudd skal ikke se ut som en tilfeldig 500 i loggen. Det er
+    // En regionsbrudd skal ikke se ut som en tilfeldig 500 i loggen. Det er
     // den ene feilen her som er et personvernproblem, ikke en driftsfeil.
     if (error instanceof DataRegionViolation) {
       console.error(`[dataregion] ${error.message}`);

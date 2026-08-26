@@ -3,7 +3,7 @@ import { LOGO_EPOST_CID, LOGO_EPOST_FILNAVN, LOGO_EPOST_PNG_BASE64 } from '../as
 import { authEnv } from '../env.ts';
 import { byggEpostHtml, knapp, kodeboks, meldingsboks } from './epost-mal.ts';
 
-/** F1-11 — e-post-2FA og auth-eposter går via Resend (techstack §5). */
+/** E-post-2FA og auth-eposter går via Resend (techstack §5). */
 let client: Resend | undefined;
 
 function getClient(): Resend {
@@ -12,28 +12,25 @@ function getClient(): Resend {
 }
 
 /**
- * ⚠️ **AVSENDERDOMENET ER IKKE `endwise.no`.**
- *
- * Feilen som sto 22.08.2026, og som er lett å gjøre igjen: domenet som er
+ * avsenderdomenet er ikke `endwise.no`.
+ * Feilen som sto , og som er lett å gjøre igjen: domenet som er
  * verifisert i Resend heter **`no-reply.endwise.no`** — et subdomene. En
- * `from` på `no-reply@endwise.no` er derfor en adresse på APEX-domenet, som
+ * `from` på `no-reply@endwise.no` er derfor en adresse på apex-domenet, som
  * ikke er verifisert, og Resend svarer:
- *
- *   403 validation_error — «The endwise.no domain is not verified»
- *
+ * 403 validation_error — «The endwise.no domain is not verified»
  * De to strengene ser nesten like ut (`no-reply@endwise.no` mot
- * `no-reply@no-reply.endwise.no`), og feilen rammer ALLE auth-e-poster
+ * `no-reply@no-reply.endwise.no`), og feilen rammer alle auth-e-poster
  * samtidig: engangskode, passordreset og invitasjon. Verifiser mot
  * `GET https://api.resend.com/domains` før du endrer `RESEND_FROM`.
  */
 function feilmeldingFra(error: {
   name?: string;
   message?: string;
-  /** ⚠️ Resend typer denne som `number | null`, ikke `number | undefined`. */
+  /** Resend typer denne som `number | null`, ikke `number | undefined`. */
   statusCode?: number | null;
 }): string {
   /**
-   * ⚠️ Hele feilen, ikke bare `message`. `name` (`validation_error`,
+   * Hele feilen, ikke bare `message`. `name` (`validation_error`,
    * `missing_api_key`, `restricted_api_key`, `rate_limit_exceeded` …) og
    * statuskoden er det som skiller «domenet er ikke verifisert» fra «nøkkelen
    * mangler send-rettighet» — to helt ulike fikser med nokså lik ordlyd.
@@ -55,7 +52,7 @@ export async function sendEmail(input: {
   /** Hvor et svar skal gå, når det ikke er avsenderadressen. Se `sendInboxMessage`. */
   replyTo?: string;
   /**
-   * Resends egen idempotensnøkkel. Vår DB-vakt er beltet, denne er selen —
+   * Resends egen idempotensnøkkel. Vår DB-vakt er beltet, denne er selen
    * samme oppsett som `toolkit-resend` bruker for varsler (F3-04).
    */
   idempotencyKey?: string;
@@ -71,7 +68,7 @@ export async function sendEmail(input: {
       ? {
           html: input.html,
           /**
-           * Logoen som INLINE vedlegg, ikke som `data:`-URI i `src` — Gmail og
+           * Logoen som inline vedlegg, ikke som `data:`-URI i `src` — Gmail og
            * Outlook fjerner sistnevnte. `contentId` gjør at Resend sender den
            * med `Content-Disposition: inline`, og HTML-en refererer den som
            * `cid:endwise-logo`. Se `assets/logo-epost.ts`.
@@ -92,31 +89,26 @@ export async function sendEmail(input: {
 }
 
 /**
- * F1-11 — LOKAL LEVERANSE av engangskoden.
- *
- * ── ⚠️ Problemet dette løser ─────────────────────────────────────────────
- * 12.08.2026 ble 2FA gjort obligatorisk server-side for alle roller unntatt
+ * Lokal leveranse av engangskoden.
+ * Problemet dette løser
+ * ble 2FA gjort obligatorisk server-side for alle roller unntatt
  * `customer`. Uten dette hadde vi låst oss selv ute av vår egen dev-maskin i
  * samme slengen: `RESEND_API_KEY` er ikke satt lokalt, så koden ville aldri
  * kommet noe sted, og ingen kunne logget inn.
- *
- * ── ⛔ Regelen, og hvorfor den er formulert slik ─────────────────────────
- * Koden skrives til serverloggen **kun** når BEGGE er sanne:
- *   1. `NODE_ENV !== 'production'`
- *   2. `RESEND_API_KEY` mangler
- *
+ * Regelen, og hvorfor den er formulert slik
+ * Koden skrives til serverloggen **kun** når begge er sanne:
+ * 1. `NODE_ENV !== 'production'`
+ * 2. `RESEND_API_KEY` mangler
  * Betingelse 2 er den viktige. Med bare betingelse 1 ville en feilsatt
  * `NODE_ENV` i et prod-miljø vært nok til at engangskoder havnet i en
  * driftslogg — og en logg er ikke en hemmelighet: den leses av flere, samles
  * opp hos leverandøren, og overlever lenger enn koden gjør. Med begge må man
- * både kjøre i ikke-prod OG ha fjernet nøkkelen for at det skal skje.
- *
- * ⛔ **Ingen dev-endepunkt.** Vurdert og valgt bort: et endepunkt som spytter
+ * både kjøre i ikke-prod og ha fjernet nøkkelen for at det skal skje.
+ * Ingen dev-endepunkt. Vurdert og valgt bort: et endepunkt som spytter
  * ut siste engangskode er én feilkonfigurasjon unna å være en bakdør i
  * produksjon. En `console.warn` kan ikke kalles utenfra.
- *
- * ⛔ **Ingen fallback i prod.** Mangler nøkkelen der, kaster `sendEmail` — og
- * innloggingen feiler LUKKET. Å la den passere ville betydd 2FA uten andre
+ * Ingen fallback i prod. Mangler nøkkelen der, kaster `sendEmail` — og
+ * innloggingen feiler lukket. Å la den passere ville betydd 2FA uten andre
  * faktor, altså akkurat hullet vi tetter.
  */
 function skalLeggesILogg(): boolean {
@@ -126,7 +118,7 @@ function skalLeggesILogg(): boolean {
 }
 
 /**
- * Skriver en hemmelighet i en ramme i serverloggen. Brukes av BÅDE
+ * Skriver en hemmelighet i en ramme i serverloggen. Brukes av både
  * engangskoden (F1-11) og invitasjonslenka (F1-10) — én implementasjon, så
  * regelen over ikke kan bli formulert ulikt to steder.
  */
@@ -171,7 +163,7 @@ export async function sendTwoFactorOtp(to: string, otp: string): Promise<void> {
     to,
     subject: `${otp} er engangskoden din til Endwise`,
     /**
-     * ⚠️ Ren tekst sendes ALLTID ved siden av HTML-en. Noen leser e-post i
+     * Ren tekst sendes alltid ved siden av HTML-en. Noen leser e-post i
      * klienter uten HTML, noen har slått den av, og noen filtre stripper den.
      * En engangskode som bare finnes i markupen, finnes ikke for dem.
      */
@@ -184,7 +176,7 @@ export async function sendTwoFactorOtp(to: string, otp: string): Promise<void> {
     ].join('\n'),
     html: byggEpostHtml({
       tittel: 'Engangskode til Endwise',
-      // ⚠️ Koden står også her, fordi dette er forhåndsvisningsteksten i
+      // Koden står også her, fordi dette er forhåndsvisningsteksten i
       // innboksen — mange skriver den av uten å åpne e-posten.
       ingress: `Koden din er ${otp}. Den er gyldig i 5 minutter og kan brukes én gang.`,
       innhold: kodeboks(otp),
@@ -194,34 +186,28 @@ export async function sendTwoFactorOtp(to: string, otp: string): Promise<void> {
 }
 
 /**
- * F1-16 — RESETLENKE FOR PASSORD.
- *
- * ⚠️ Lenka INNEHOLDER tokenet, og tokenet ER nøkkelen til kontoen. Den er
+ * Resetlenke for passord.
+ * Lenka inneholder tokenet, og tokenet er nøkkelen til kontoen. Den er
  * derfor like hemmelig som en engangskode og følger nøyaktig samme regel som
- * invitasjonen: i loggen kun når vi ikke er i prod OG Resend mangler.
- *
- * ── ⛔ Denne kan IKKE feile lukket, og det er RIKTIG ─────────────────────
+ * invitasjonen: i loggen kun når vi ikke er i prod og Resend mangler.
+ * Denne kan ikke feile lukket, og det er riktig
  * Invitasjonen over feiler lukket: kaster `sendEmail`, får lederen se det.
  * Her er det motsatt, og forskjellen er verdt å forstå før noen «retter» den.
- *
  * Better-Auth kaller denne gjennom `runInBackgroundOrAwait`, altså **etter**
  * at `/request-password-reset` allerede har svart 200. En feil her havner i
- * serverloggen og påvirker ikke svaret. Målt 22.08.2026: med en Resend-nøkkel
+ * serverloggen og påvirker ikke svaret. Målt : med en Resend-nøkkel
  * som ikke får sende fra domenet, svarte endepunktet 200 mens loggen viste
  * «Failed to run background task: Resend feilet: … domain is not verified».
- *
- * ⛔ **Å gjøre den lukket ville vært et enumereringshull.** Sendingen skjer
- * bare for adresser som FINNES. Lot vi feilen slå gjennom til svaret, ville
+ * Å gjøre den lukket ville vært et enumereringshull. Sendingen skjer
+ * bare for adresser som finnes. Lot vi feilen slå gjennom til svaret, ville
  * en ukjent adresse gitt 200 og en kjent adresse gitt 500 — og da har
  * endepunktet fortalt en fremmed nøyaktig det hele flyten er bygget for å
  * skjule. Se enumereringskommentaren i `auth.ts`.
- *
- * ⚠️ Prisen er reell: en ødelagt e-postoppsett er USYNLIG for brukeren, som
+ * Prisen er reell: en ødelagt e-postoppsett er usynlig for brukeren, som
  * bare ser «sjekk e-posten din» og venter på noe som aldri kommer. Det er
  * derfor feilen må være høylytt i loggen — og derfor levering er noe som må
  * overvåkes (F0-14), ikke noe brukeren kan oppdage for oss.
- *
- * ⚠️ **Lokalt:** `skalLeggesILogg()` krever at nøkkelen MANGLER. Står det en
+ * Lokalt: `skalLeggesILogg` krever at nøkkelen mangler. Står det en
  * nøkkel i `.env` som ikke kan sende fra `endwise.no`, får du verken e-post
  * eller logglinje. Fjern `RESEND_API_KEY` for å teste flyten i dev.
  */
@@ -278,19 +264,16 @@ export async function sendPasswordReset(input: {
 }
 
 /**
- * F1-10 — INVITASJONSLENKE.
- *
- * ⚠️ Lenka INNEHOLDER tokenet. Den er derfor like hemmelig som en engangskode,
- * og følger nøyaktig samme regel: i loggen kun når vi ikke er i prod OG Resend
- * mangler. I prod uten Resend kaster `sendEmail` — invitasjonen feiler LUKKET,
+ * Invitasjonslenke.
+ * Lenka inneholder tokenet. Den er derfor like hemmelig som en engangskode,
+ * og følger nøyaktig samme regel: i loggen kun når vi ikke er i prod og Resend
+ * mangler. I prod uten Resend kaster `sendEmail` — invitasjonen feiler lukket,
  * i stedet for at lederen tror den er sendt.
- *
- * ⚠️ Merk kontrasten til `sendPasswordReset` rett over: DEN kan ikke feile
+ * Merk kontrasten til `sendPasswordReset` rett over: den kan ikke feile
  * lukket, fordi et ærlig feilsvar der ville avslørt om adressen finnes.
  * Invitasjonen har ikke det problemet — mottakeren er valgt av lederen, som
  * allerede vet hvem hen inviterte.
- *
- * ⛔ Tokenet skal ALDRI logges noe annet sted. Ser du en `console.log` med en
+ * Tokenet skal aldri logges noe annet sted. Ser du en `console.log` med en
  * invitasjonslenke utenfor denne funksjonen, er det en lekkasje.
  */
 export async function sendInvitation(input: {
@@ -373,35 +356,29 @@ export async function sendInvitation(input: {
 }
 
 /**
- * F6-26 — UTGÅENDE MELDING FRA INNBOKSEN.
- *
+ * Utgående melding fra innboksen.
  * En ansatt skriver i innboksen på en tråd som har `channel = 'email'`, og
- * kunden får det som e-post. Fram til 22.08.2026 ble kanalen bare LAGRET —
+ * kunden får det som e-post. Fram til ble kanalen bare lagret
  * ingenting gikk ut, og innboksen viste et konvoluttikon på en melding som
  * aldri forlot databasen.
- *
- * ── ⛔ `replyTo` er ikke en detalj. Den er hele svaret på «kunden kan ikke
- *    svare ennå» ──────────────────────────────────────────────────────────
+ * `replyTo` er ikke en detalj. Den er hele svaret på «kunden kan ikke
+ * svare ennå»
  * Innkommende e-post er ikke bygget (F6-27). Uten `replyTo` ville kunden fått
  * en e-post fra `no-reply@…`, trykket svar, og skrevet inn i et tomrom — verst
- * mulig utfall, fordi hen TROR meldingen kom fram.
- *
+ * mulig utfall, fordi hen tror meldingen kom fram.
  * Svaret rutes derfor til **den ansatte som skrev meldingen**, i hens vanlige
  * jobb-innboks. Det er ikke et provisorium som må ryddes bort: det er riktig
  * oppførsel akkurat nå, og når F6-27 lander byttes adressen til trådens egen.
- *
  * Teksten sier det også i klartekst, for den som leser før hen trykker svar.
  */
 /**
- * F1-27 — BEKREFTELSE PÅ E-POSTBYTTE.
- *
+ * Bekreftelse PÅ E-postbytte.
  * To brev, to mottakere, samme hemmelighetsregel som resetlenka:
- *   · `sendByttEpostBekreftelse` går til adressen brukeren HAR. Uten den
- *     kan en stjålet sesjon peke kontoen mot en fremmed innboks.
- *   · `sendByttEpostNyAdresse` går til den NYE adressen etter at eieren
- *     har godkjent. Først når DEN lenka åpnes, skrives e-posten.
- *
- * ⚠️ Lenka INNEHOLDER tokenet. I loggen kun når vi ikke er i prod OG Resend
+ * `sendByttEpostBekreftelse` går til adressen brukeren har. Uten den
+ * kan en stjålet sesjon peke kontoen mot en fremmed innboks.
+ * `sendByttEpostNyAdresse` går til den nye adressen etter at eieren
+ * har godkjent. Først når den lenka åpnes, skrives e-posten.
+ * Lenka inneholder tokenet. I loggen kun når vi ikke er i prod og Resend
  * mangler. Tokenet skal aldri logges noe annet sted.
  */
 export async function sendByttEpostBekreftelse(input: {

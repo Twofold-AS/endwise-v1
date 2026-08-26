@@ -12,34 +12,29 @@ import {
 import { user } from './auth.ts';
 
 /**
- * F5-23 — HELPDESK: Endwise sine egne hjelpeartikler.
- *
- * ── ⛔ GLOBALE TABELLER, UTEN RLS — og det er et valg, ikke en forglemmelse ─
+ * Helpdesk: Endwise sine egne hjelpeartikler.
+ * Globale tabeller, uten RLS — og det er et valg, ikke en forglemmelse
  * En hjelpeartikkel er Endwise sitt innhold, ikke forhandlerens. Den er
- * NØYAKTIG den samme for alle 250 verksteder, og det finnes ingen «min
+ * Nøyaktig den samme for alle 250 verksteder, og det finnes ingen «min
  * artikkel». Ga vi den `tenant_id` og en tenant-policy, ville vi enten måttet
  * kopiere hver artikkel per forhandler (og holde 250 kopier i synk), eller
  * skrevet en policy som slipper alle gjennom — altså RLS som ikke isolerer noe.
- *
  * Samme resonnement som `user_preferences` (se `profiles.ts`): raden inneholder
  * ingen tenant-data.
- *
- * ⚠️ Fordi RLS ikke beskytter disse, ligger beskyttelsen i RUTA:
- *   · skriving  → `endwiseAdminProcedure` (kun Endwise-ansatte, ikke forhandlere)
- *   · lesing    → `protectedProcedure`, og kun `published = true`
- *   · lest-av   → `ctx.userId` er eneste kilde, aldri en ID fra input
+ * Fordi RLS ikke beskytter disse, ligger beskyttelsen i ruta:
+ * skriving → `endwiseAdminProcedure` (kun Endwise-ansatte, ikke forhandlere)
+ * lesing → `protectedProcedure`, og kun `published = true`
+ * lest-av → `ctx.userId` er eneste kilde, aldri en ID fra input
  * Ser du en spørring her med en bruker-ID fra klienten, er det en feil.
  */
 
 /**
  * Bildene en artikkel kan bruke, **inntil videre**.
- *
- * ⛔ Dette er en MIDLERTIDIG allowlist, ikke en designbeslutning. Ekte
+ * Dette er en midlertidig allowlist, ikke en designbeslutning. Ekte
  * opplasting krever et lagringssted, og repoet har tre ulike svar på hvilket:
  * techstack §4 sier Vercel Blob via signerte URL-er, F2-03 sier R2, og F13-03
  * flyttet topologien til Vercel + Scaleway. Det er en §2-avklaring som må tas
  * av eier, ikke gjettes her.
- *
  * Til den er tatt, velger admin blant bildene som allerede ligger i
  * `apps/web/public/images/`. Kolonnen er `text` og tar imot en URL like godt
  * som en filsti, så dagen opplasting kommer, faller allowlisten bort uten at
@@ -53,11 +48,10 @@ export const HELPDESK_BILDER = [
 ] as const;
 
 /**
- * F5-51 — faste kategorier. Forhandlerens språk, ikke fasene våre.
- *
+ * Faste kategorier. Forhandlerens språk, ikke fasene våre.
  * Eksisterende (roadmap): booking · kunder · lager · integrasjoner · fakturering.
- * Lagt til 25.08.2026 (Slack #endwise-v1): Brukerguide · Oppdateringer.
- * ⛔ Ikke fritekst — en ny nøkkel her er en produktbeslutning.
+ * Lagt til (Slack #endwise-v1): Brukerguide · Oppdateringer.
+ * Ikke fritekst — en ny nøkkel her er en produktbeslutning.
  */
 export const HELPDESK_KATEGORIER = [
   'brukerguide',
@@ -89,7 +83,7 @@ export const helpdeskArticles = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     /** Stabil, lesbar URL-del. Endres aldri etter publisering — lenker råtner. */
     slug: text('slug').notNull().unique(),
-    /** ⚠️ Vises BÅDE i helpdesken og i sidebar-slideren. Én tittel, ett sted. */
+    /** Vises både i helpdesken og i sidebar-slideren. Én tittel, ett sted. */
     title: text('title').notNull(),
     /** Kort ingress. Brukes i lista og i slideren — derfor kort, ikke valgfri. */
     summary: text('summary').notNull(),
@@ -121,9 +115,8 @@ export const helpdeskArticles = pgTable(
 );
 
 /**
- * Hvem har lest hva. GLOBAL per bruker — som `user_preferences`.
- *
- * ⚠️ «Ulest» er fraværet av en rad, ikke et flagg som må vedlikeholdes. En ny
+ * Hvem har lest hva. Global per bruker — som `user_preferences`.
+ * «Ulest» er fraværet av en rad, ikke et flagg som må vedlikeholdes. En ny
  * artikkel er dermed automatisk ulest for alle, uten at publiseringen må skrive
  * 250 rader — og en slettet bruker etterlater ingen tellefeil.
  */

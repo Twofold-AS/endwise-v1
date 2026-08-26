@@ -5,8 +5,7 @@ import { createBillingService, NotEntitledError } from '../src/billing/index.ts'
 import { modulesForSubscription } from '../src/billing/plans.ts';
 
 /**
- * F5-09 — Abonnement/entitlements: cross-tenant-angrep + entitlement-gate.
- *
+ * Abonnement/entitlements: cross-tenant-angrep + entitlement-gate.
  * Kjøres som `endwise_app` (APP_DATABASE_URL) der RLS gjelder. Skippes uten DB
  * (samme mønster som de andre isolasjonstestene) — kjør mot Docker lokalt.
  */
@@ -69,15 +68,14 @@ describeDb('F5-09: abonnement — isolasjon + entitlement-gate', () => {
   });
 
   /**
-   * ⚠️ Oppdatert 08.08.2026 til nivåene fra Stripe-katalogen (START/PRO/
-   * ENTERPRISE). Testen sto igjen på `basis`/`proff` og forventet
+   * Oppdatert til nivåene fra Stripe-katalogen (start/pro/
+   * Enterprise). Testen sto igjen på `basis`/`proff` og forventet
    * `['booking','messages','vegvesen']` — modeller fra før F0-16-skillet, der
    * basisflatene også hadde rader i `tenant_modules`. Nå er basis definert ved
-   * at den IKKE har noen rad, så en plan som ikke finnes gir tom liste, og
+   * at den ikke har noen rad, så en plan som ikke finnes gir tom liste, og
    * testen feilet på riktig grunnlag: den beskrev et produkt vi ikke selger.
-   *
    * Forventningen er bevisst knyttet til `modulesForSubscription`, ikke til en
-   * håndskrevet liste: legges en modul til i START skal testen følge med, ikke
+   * håndskrevet liste: legges en modul til i start skal testen følge med, ikke
    * begynne å lyve.
    */
   it('applySubscription(A) gir A sine moduler uten å røre B', async () => {
@@ -94,7 +92,7 @@ describeDb('F5-09: abonnement — isolasjon + entitlement-gate', () => {
   });
 
   it('entitled modul kan skrus av/på av forhandleren selv', async () => {
-    // `widget` er i START — altså noe A faktisk ER entitled til.
+    // `widget` er i start — altså noe A faktisk er entitled til.
     await createBillingService(app).setModuleEnabled(tenantA, 'widget', false);
     const state = await createBillingService(app).getState(tenantA);
     expect(state.modules.find((m) => m.key === 'widget')?.enabled).toBe(false);

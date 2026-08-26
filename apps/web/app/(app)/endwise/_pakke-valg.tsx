@@ -2,9 +2,8 @@
 
 /**
  * F5-26 / F5-32 — Nivå + tillegg utenfor pakken.
- *
- * TIERS/TILLEGG er kilden. Ingen hardkodede nøkler. shop vises
- * aldri. SMS (twilio) er et avkrysnings-tillegg på alle nivåer —
+ * Tiers/tillegg er kilden. Ingen hardkodede nøkler. shop vises
+ * aldri. SMS (twilio) er et avkrysnings-tillegg på alle nivåer
  * ikke en planmodul, pass-through per melding, 0 kr/mnd.
  */
 export type Nivaa = {

@@ -1,13 +1,10 @@
 import type { BookingStatus } from '@endwise/db';
 
 /**
- * F3-01 — Livsløpet, som en maskin og ikke som en samling if-er.
- *
- *   draft ──► confirmed ──► in_progress ──► completed
- *     │           │              │
- *     └───────────┴──────────────┴────────► cancelled
- *                 └────────────────────────► no_show
- *
+ * Livsløpet, som en maskin og ikke som en samling if-er.
+ * draft ► confirmed ► in_progress ► completed
+ * ► cancelled
+ * ► no_show
  * `completed` og `cancelled` er endestasjoner. En fullført jobb kan ikke
  * «avbestilles» i etterkant — da er det en kreditnota, ikke en statusendring.
  */

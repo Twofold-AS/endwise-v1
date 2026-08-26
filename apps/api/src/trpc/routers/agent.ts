@@ -7,10 +7,9 @@ import { z } from 'zod';
 import { moduleAdminProcedure, moduleProcedure, router } from '../init.ts';
 
 /**
- * ⛔ F0-16 — MODUL-GATE: `ai-support`. Agentflaten er et BETALT TILLEGG.
- *
- * Fram til 07.08.2026 sjekket `assertEntitled` i agent-runtime hvilken AGENT
- * som fikk kjøre, men RUTA var åpen: en forhandler uten modulen kunne kalle
+ * Modul-gate: `ai-support`. Agentflaten er et betalt tillegg.
+ * Fram til sjekket `assertEntitled` i agent-runtime hvilken agent
+ * som fikk kjøre, men ruta var åpen: en forhandler uten modulen kunne kalle
  * `agent.list` og se rutingtabellen, og `agent.run` returnerte først en feil
  * dypt nede i runtime. Nå avvises kallet i døra.
  */
@@ -18,21 +17,18 @@ const aiProcedure = moduleProcedure('ai-support');
 const aiAdminProcedure = moduleAdminProcedure('ai-support');
 
 /**
- * F6-13 — Å starte en agent.
- *
- * Svaret her er IKKE agentens tekst. Tokenene strømmer over SSE (F6-02), på samme
+ * Å starte en agent.
+ * Svaret her er ikke agentens tekst. Tokenene strømmer over SSE (F6-02), på samme
  * kanal som meldingene. Denne mutasjonen sier bare «den er i gang» — klienten
  * lytter allerede.
  */
 export const agentRouter = router({
   /**
-   * F6-04 — Hva AI-laget FAKTISK er satt opp som, lest fra kilden.
-   *
+   * Hva AI-laget faktisk er satt opp som, lest fra kilden.
    * Uten denne ruten måtte UI-et gjentatt rutingregelen (dataklasse → region →
    * leverandør) i en klient-konstant. En sikkerhetsregel som står to steder, er
    * en sikkerhetsregel som før eller siden står ulikt to steder — og da viser
    * skjermen noe annet enn det serveren håndhever.
-   *
    * Kun admin: dette er driftsinnsyn (hvilken leverandør, hvilken region,
    * mangler nøkkelen?), ikke noe en hvilken som helst ansatt trenger.
    * Ingen nøkler eller endepunkt-hemmeligheter returneres — bare navn og region.
@@ -95,7 +91,7 @@ export const agentRouter = router({
       await runAgent({
         agent,
         context,
-        // F14: leverandøren velges av AGENTENS DATAKLASSE, ikke av konfig.
+        // F14: leverandøren velges av agentens dataklasse, ikke av konfig.
         // Kunde-support (customer_freetext) → Mistral (EU). Alltid.
         provider: resolveModelProvider(agent.dataClass),
         guardrails,

@@ -4,22 +4,18 @@ import { createDb, type Database } from '../src/client.ts';
 
 /**
  * F5-28 ③ — «Er RLS i det hele tatt PÅ for den rollen appen bruker?»
- *
  * De andre isolasjonstestene angriper policyene. Denne testen angriper
- * FORUTSETNINGEN for dem: at runtime-forbindelsen faktisk er underlagt RLS.
- *
+ * Forutsetningen for dem: at runtime-forbindelsen faktisk er underlagt RLS.
  * Det er en reell fare, ikke en teoretisk. `enable row level security` gjelder
- * for alle andre enn TABELLEIEREN. Peker `APP_DATABASE_URL` på eieren — eller
+ * for alle andre enn tabelleieren. Peker `APP_DATABASE_URL` på eieren — eller
  * er rollen superuser eller `bypassrls` — er hele tenant-isolasjonen borte, og
- * **alle de andre testene blir grønne likevel**. Det ville vært den farligste
+ * alle de andre testene blir grønne likevel. Det ville vært den farligste
  * grønne testen i repoet.
- *
  * Derfor sjekker denne fire ting, og alle fire må holde:
- *   ① runtime-rollen eier ingen RLS-tabell
- *   ② runtime-rollen er hverken superuser eller bypassrls
- *   ③ hver RLS-tabell har FORCE (så ① ikke lenger er nok til å ødelegge noe)
- *   ④ RLS er faktisk påslått på tabellene vi tror den er påslått på
- *
+ * ① runtime-rollen eier ingen RLS-tabell
+ * ② runtime-rollen er hverken superuser eller bypassrls
+ * ③ hver RLS-tabell har force (så ① ikke lenger er nok til å ødelegge noe)
+ * ④ RLS er faktisk påslått på tabellene vi tror den er påslått på
  * Krever `pnpm db:setup` (migrasjoner + grants). Uten DB skippes testen — som
  * alle de andre DB-testene.
  */
@@ -27,7 +23,7 @@ const APP_URL = process.env.APP_DATABASE_URL;
 const OWNER_URL = process.env.DATABASE_URL;
 const describeDb = APP_URL && OWNER_URL ? describe : describe.skip;
 
-/** Tabeller som SKAL ha RLS. Ikke uttømmende — en stikkprøve med tenner. */
+/** Tabeller som skal ha RLS. Ikke uttømmende — en stikkprøve med tenner. */
 const MÅ_HA_RLS = [
   'tenants',
   'tenant_modules',
@@ -160,7 +156,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
   });
 
   it('③d eier av tenants er superuser lokalt — Scaleway-antakelsen står i functions.sql', async () => {
-    // CI/Docker: eieren bypasser FORCE RLS. Vi kan ikke flytte eierskap her
+    // CI/Docker: eieren bypasser force RLS. Vi kan ikke flytte eierskap her
     // uten å ødelegge resten av suiten. Kontraktstestene + ③c er stand-in.
     const res = await app.execute(sql`
       select r.rolsuper

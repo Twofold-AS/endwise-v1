@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cronAuth, evaluateCronAuth } from '../src/lib/cron-auth.ts';
 
 /**
- * F8-01 / CWE-306 — Delt cron-guard. Beviser at cron-endepunkter feiler LUKKET:
+ * F8-01 / CWE-306 — Delt cron-guard. Beviser at cron-endepunkter feiler lukket:
  * mangler CRON_SECRET → stengt; feil/manglende Bearer → 401; riktig → gjennom.
  * Rene tester + in-memory Hono (`app.request`), ingen Docker/nettverk.
  */

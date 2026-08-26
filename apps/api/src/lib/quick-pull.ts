@@ -18,15 +18,12 @@ import {
 } from '@endwise/toolkit-quick';
 
 /**
- * F8-01 / F1-07 — Delt Quick-PULL-orkestrator (Quick → Endwise).
- *
- * Brukes av BÅDE `quick.pullNow` (tRPC, manuell «Hent nå») og cron-jobben
+ * F8-01 / F1-07 — Delt Quick-pull-orkestrator (Quick → Endwise).
+ * Brukes av både `quick.pullNow` (tRPC, manuell «Hent nå») og cron-jobben
  * (`/cron/quick-pull`, 08:00/16:00 Oslo). Én kilde, samme semantikk.
- *
- * SEMANTIKK: Quick er fakta. Pull OVERSKRIVER våre lokale felt for radene Quick
+ * Semantikk: Quick er fakta. Pull overskriver våre lokale felt for radene Quick
  * returnerer. GET-only mot Quick. Tokenet forlater aldri serveren.
- *
- * DELTA vs FULL: uten `full` sendes `changedAfterDate = lastSyncedAt`.
+ * Delta vs full: uten `full` sendes `changedAfterDate = lastSyncedAt`.
  */
 export interface QuickPullResult {
   ran: boolean;
@@ -51,7 +48,7 @@ export async function runQuickCustomerPull(
   if (!cfg) return { ran: false, reason: 'Quick er ikke konfigurert for denne forhandleren' };
 
   const view = await svc.getView(tenantId);
-  // Markøren settes til da DENNE pullen startet — ikke da den var ferdig — så vi
+  // Markøren settes til da denne pullen startet — ikke da den var ferdig — så vi
   // ikke mister endringer som skjer i Quick mens pullen kjører.
   const startedAt = new Date();
   const changedAfterDate = opts.full ? undefined : view.lastSyncedAt?.toISOString();

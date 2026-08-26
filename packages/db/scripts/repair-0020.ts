@@ -2,17 +2,15 @@ import { Pool } from 'pg';
 import { pgConnectionConfig } from '../src/client.ts';
 
 /**
- * 0020 brukte CREATE OR REPLACE lookup_open_invitation uten DROP.
- * Postgres kan ikke endre RETURNS via OR REPLACE — Scaleway db:setup
+ * 0020 brukte CREATE OR replace lookup_open_invitation uten DROP.
+ * Postgres kan ikke endre RETURNS via OR replace — Scaleway db:setup
  * kan ha stoppet her. DROP først, så kan 0020/0021 kjøres om igjen.
- *
- * ── ⚠️ Prod 25.08.2026 (42883) ──────────────────────────────────────────
- * Denne scriptet kjørte DROP på HVER `db:migrate` / `db:setup`. Når 0020
+ * Prod (42883)
+ * Denne scriptet kjørte DROP på hver `db:migrate` / `db:setup`. Når 0020
  * og 0021 allerede står i journalen (Scaleway er på 0026), hopper drizzle
  * over CREATE, og funksjonen blir borte. `db:grants` skulle skapt den på
  * nytt via functions.sql — men grants har historisk feilet på Windows
- * (EBUSY). Resultat: invite-siden 500 / «Klarte ikke hente invitasjonen».
- *
+ * (ebusy). Resultat: invite-siden 500 / «Klarte ikke hente invitasjonen».
  * DROP bare når funksjonen mangler den kontrakten 0021 innførte
  * (platform_level + app.invitation_hash). Er den allerede riktig: hopp over.
  * Mangler den etter at 0021 er merket kjørt: grants.ts CREATE-er den.

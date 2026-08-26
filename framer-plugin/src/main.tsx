@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
 
 /**
- * F4-01 — Plugin-inngang. Åpner plugin-panelet i Framer-editoren.
+ * Plugin-inngang. Åpner plugin-panelet i Framer-editoren.
  */
 framer.showUI({ position: 'top right', width: 320, height: 360 });
 

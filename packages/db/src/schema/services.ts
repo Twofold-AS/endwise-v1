@@ -14,12 +14,11 @@ import { tenants } from './tenants.ts';
 import { vehicleTypeEnum } from './vehicles.ts';
 
 /**
- * F2-04 — Tjenestekatalog, VERSJONERT.
- *
+ * Tjenestekatalog, versjonert.
  * Hvorfor to tabeller: en booking fra i fjor må vise prisen og varigheten som
- * gjaldt DA, ikke den forhandleren endret til i går. `services` er identiteten
- * («EU-kontroll MC»), `service_versions` er fakta på et tidspunkt. Bookinger
- * peker på en VERSJON (F3), aldri på tjenesten direkte.
+ * gjaldt da, ikke den forhandleren endret til i går. `services` er identiteten
+ * («EU-kontroll mc»), `service_versions` er fakta på et tidspunkt. Bookinger
+ * peker på en versjon (F3), aldri på tjenesten direkte.
  */
 export const services = pgTable(
   'services',

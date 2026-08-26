@@ -11,25 +11,21 @@ import { AvatarVelger } from '../../(app)/_avatar/avatar-velger';
 import { destinasjonEtterInvite, krevRevokeAndreSesjoner, trengerKodeSteg } from '../_landing';
 
 /**
- * F1-10 / F5-26 — INVITEE-SIDEN. Første møte med Endwise.
- *
- * ── ⚠️ Hvorfor denne ligger UTENFOR `(app)` ──────────────────────────────
+ * F1-10 / F5-26 — invitee-siden. Første møte med Endwise.
+ * Hvorfor denne ligger utenfor `(app)`
  * Den som åpner lenka har ingen konto, ingen sesjon og ingen forhandler. Hele
  * `(app)` henter data over tRPC, som krever begge deler — og fra F1-11 også
  * fullført 2FA. Denne siden snakker derfor kun med to offentlige endepunkter:
  * `/invitasjoner/*` (vår egen) og `/api/auth/*` (Better-Auth).
- *
- * ── Kjeden (samme skall, første klikk) ──────────────────────────────────
- *   A. HER: sett/bytt passord
- *   B. 2FA hvis rollen krever det — kode i SAMME chrome, ikke «logg inn igjen»
- *   C. Eier: `/oppstart`. Ansatt: `session.me.landing`.
- *
- * ⛔ Fersk invitee (`kreverPassord`) sendes ALDRI til `/signin`.
- * ⛔ Hard navigasjon (`location.assign`) — myk klientnavigasjon er dobbel-login-bugen.
- * Aktiv organisasjon settes FØR navigasjon, ellers er dashbordet tomt til
+ * Kjeden (samme skall, første klikk)
+ * A. Her: sett/bytt passord
+ * B. 2FA hvis rollen krever det — kode i samme chrome, ikke «logg inn igjen»
+ * C. Eier: `/oppstart`. Ansatt: `session.me.landing`.
+ * Fersk invitee (`kreverPassord`) sendes aldri til `/signin`.
+ * Hard navigasjon (`location.assign`) — myk klientnavigasjon er dobbel-login-bugen.
+ * Aktiv organisasjon settes før navigasjon, ellers er dashbordet tomt til
  * neste innlogging.
- *
- * ── Chrome ───────────────────────────────────────────────────────────────
+ * Chrome
  * Samme skall som `/signin` og `/2fa-oppsett`: sentrert `max-w-sm`, logo
  * 44×44, kort `p-[5px]` + inset, `Field` / `PassordFelt` / `StatefulButton`.
  * Ingen ny pakke. Ingen butikk- eller SMS-modul. Ingen egen admin-fane.
@@ -76,7 +72,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     let avbrutt = false;
     void (async () => {
       try {
-        // Flertall: API-et. Entall `/invitasjon/:token` er DENNE siden.
+        // Flertall: API-et. Entall `/invitasjon/:token` er denne siden.
         const res = await fetch(`/invitasjoner/${encodeURIComponent(token)}`);
         const data = (await res.json().catch(() => null)) as
           | (Invitasjon & { gyldig?: boolean; grunn?: string })

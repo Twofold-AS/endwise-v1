@@ -8,7 +8,7 @@ import { CardShell } from '../../_shell/cards';
 import { fmtTime } from '../_status';
 
 /**
- * F7-06 — Varsler-fane. Utledet feed fra mekanikerens egne data (RLS-scopet):
+ * Varsler-fane. Utledet feed fra mekanikerens egne data (RLS-scopet):
  * utløpende sertifiseringer + pågående jobber som trenger oppmerksomhet. En ekte
  * sanntids-push-strøm (SSE, kobles til F7-05-avvik/F6-02) kommer senere.
  */

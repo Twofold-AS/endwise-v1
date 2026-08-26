@@ -5,8 +5,8 @@ import { createDb, type Database, withPlatformInspect } from '../src/client.ts';
 import { schema } from '../src/index.ts';
 
 /**
- * Mons P0 — inspect-GUC skal ikke åpne hele tenanten.
- * Angrep kjøres som app-rollen (FORCE RLS).
+ * Mons P0 — inspect-guc skal ikke åpne hele tenanten.
+ * Angrep kjøres som app-rollen (force RLS).
  */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;

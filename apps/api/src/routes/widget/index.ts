@@ -22,16 +22,14 @@ import {
 import { widgetChat } from './chat.ts';
 
 /**
- * F4 — OFFENTLIG kundewidget-API (Hono, uautentisert men nøkkel-/token-scopet).
- *
+ * F4 — offentlig kundewidget-API (Hono, uautentisert men nøkkel-/token-scopet).
  * Sikkerhet i lag:
- *   1. CORS (`widgetCors`) — cross-origin embed.
- *   2. `/init`: publishable key + Origin-validering → kortlevd token. Rate-limitet.
- *   3. Alt annet: `widgetAuth` verifiserer token → tenant + anonym kunde-ID.
- *   4. All datatilgang RLS-scopet til tenant fra tokenet (aldri klient-input).
- *   5. Rate-limit per endepunkt (anonyme kan spamme).
- *
- * En anonym kunde kan KUN: se tjenester, se ledige tider, opprette EN booking-
+ * 1. CORS (`widgetCors`) — cross-origin embed.
+ * 2. `/init`: publishable key + Origin-validering → kortlevd token. Rate-limitet.
+ * 3. Alt annet: `widgetAuth` verifiserer token → tenant + anonym kunde-ID.
+ * 4. All datatilgang RLS-scopet til tenant fra tokenet (aldri klient-input).
+ * 5. Rate-limit per endepunkt (anonyme kan spamme).
+ * En anonym kunde kan kun: se tjenester, se ledige tider, opprette en booking-
  * forespørsel, chatte med kunde-AI-en (EU). Aldri enumerere andres data.
  */
 
@@ -76,7 +74,7 @@ app.post('/init', async (c) => {
   return c.json({ token, expiresIn: 900, cid });
 });
 
-// ── Fra her krever alt et gyldig token ────────────────────────────────────────
+// Fra her krever alt et gyldig token
 app.use('/services', widgetAuth);
 app.use('/availability', widgetAuth);
 app.use('/booking', widgetAuth);
@@ -126,7 +124,7 @@ app.post('/booking', async (c) => {
   const parsed = z
     .object({
       serviceVersionId: z.uuid(),
-      // z.coerce.date() (som resten av repoet) — parser ISO-streng til Date.
+      // z.coerce.date (som resten av repoet) — parser ISO-streng til Date.
       startsAt: z.coerce.date(),
       customer: z.object({
         name: z.string().min(1).max(120),

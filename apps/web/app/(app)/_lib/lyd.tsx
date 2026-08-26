@@ -5,50 +5,42 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useR
 import { trpc } from '@/lib/trpc';
 
 /**
- * F5-19 — VARSLINGSLYDER (cuelume, MIT, brukergodkjent §2-avhengighet).
- *
- * ── Hvorfor lyd i det hele tatt ───────────────────────────────────────────
+ * Varslingslyder (cuelume, MIT, brukergodkjent §2-avhengighet).
+ * Hvorfor lyd i det hele tatt
  * En forhandler sitter ikke og stirrer på innboksen. En melding som kommer inn
  * mens skjermen er på en annen fane er i praksis usett til noen tilfeldigvis
  * ser etter. En kort lyd er det billigste varselet som finnes.
- *
- * ── ⚠️ HVORFOR DET VAR HELT STILLE (fire feil, funnet 09.08.2026) ─────────
- *
- * 1. **Web Audio var aldri låst opp.** cuelunes `play()` starter med
- *    `if (navigator.userActivation?.hasBeenActive === false) return;` — den gir
- *    opp UMIDDELBART hvis brukeren ikke har rørt siden. Etter en full sidelast
- *    (og kontekstbytte gjør nettopp `window.location.assign`) er `hasBeenActive`
- *    falsk igjen. To vinduer som står stille og venter på en melding er derfor
- *    garantert lydløse — nøyaktig scenarioet en toparts-test er.
- *    → Fikset med `LydOpplaser` under: første klikk/tast i appen spiller en
- *      uhørbar lyd, som lager OG resumer AudioContexten inne i en ekte gest.
- *
- * 2. **Volumet ble ganget med seg selv.** Vi kalte både `setVolume(0.35)` OG
- *    `play(navn, { volume: 0.35 })`. Motoren regner
- *    `masterGain * globalVolume * options.volume` → 0,35 × 0,35 = **0,1225**.
- *    Ikke stille, men langt under det som høres i et verksted.
- *    → Volumet settes nå ÉN gang, globalt. Per-lyd-volum brukes kun der vi
- *      bevisst vil ha noe svakere enn resten (send-kvitteringen).
- *
- * 3. **Prøvelyden slo av seg selv.** `test()` gjorde `setEnabled(true)` →
- *    `play()` → `setEnabled(forrigeVerdi)`. Men når konteksten er suspendert
- *    spiller `play()` ASYNKRONT (`resume().then(...)`), og callbacken sjekker
- *    `enabled` på nytt. Restoren rakk å kjøre først, så den aller første
- *    prøvelyden — den man trykker for å sjekke at lyd virker — ble slukt.
- *    → Ingen restore lenger; `useEffect` på `pa` setter uansett riktig verdi.
- *
+ * Hvorfor det var helt stille (fire feil, funnet )
+ * 1. **Web Audio var aldri låst opp.** cuelunes `play` starter med
+ * `if (navigator.userActivation?.hasBeenActive false) return;` — den gir
+ * opp umiddelbart hvis brukeren ikke har rørt siden. Etter en full sidelast
+ * (og kontekstbytte gjør nettopp `window.location.assign`) er `hasBeenActive`
+ * falsk igjen. To vinduer som står stille og venter på en melding er derfor
+ * garantert lydløse — nøyaktig scenarioet en toparts-test er.
+ * → Fikset med `LydOpplaser` under: første klikk/tast i appen spiller en
+ * uhørbar lyd, som lager og resumer AudioContexten inne i en ekte gest.
+ * 2. **Volumet ble ganget med seg selv.** Vi kalte både `setVolume(0.35)` og
+ * `play(navn, { volume: 0.35 })`. Motoren regner
+ * `masterGain * globalVolume * options.volume` → 0,35 × 0,35 = **0,1225**.
+ * Ikke stille, men langt under det som høres i et verksted.
+ * → Volumet settes nå ÉN gang, globalt. Per-lyd-volum brukes kun der vi
+ * bevisst vil ha noe svakere enn resten (send-kvitteringen).
+ * 3. **Prøvelyden slo av seg selv.** `test` gjorde `setEnabled(true)` →
+ * `play` → `setEnabled(forrigeVerdi)`. Men når konteksten er suspendert
+ * spiller `play` asynkront (`resume.then(...)`), og callbacken sjekker
+ * `enabled` på nytt. Restoren rakk å kjøre først, så den aller første
+ * prøvelyden — den man trykker for å sjekke at lyd virker — ble slukt.
+ * → Ingen restore lenger; `useEffect` på `pa` setter uansett riktig verdi.
  * 4. **Ingen send-lyd fantes.** Serveren hopper over forfatteren når den
- *    publiserer (du skal ikke varsles om din egen melding), så avsenderen fikk
- *    aldri noe. Det er riktig for VARSELET, men avsenderen trenger en
- *    KVITTERING. → `sendt()` under.
- *
- * ── Hvorfor det fortsatt er lite lyd ──────────────────────────────────────
+ * publiserer (du skal ikke varsles om din egen melding), så avsenderen fikk
+ * aldri noe. Det er riktig for varselet, men avsenderen trenger en
+ * Kvittering. → `sendt` under.
+ * Hvorfor det fortsatt er lite lyd
  * Et verksted er allerede et støyende sted, og en lyd man hører tjue ganger om
  * dagen slutter å bety noe. Derfor kun: mottatt melding, sendt melding, og
  * suksess/feil på egne handlinger.
- *
- * ⛔ Ingen `bind()`. Cuelume kan koble lyd på alle `data-cuelume-*`-elementer
- * automatisk — det er nettopp det vi IKKE vil. Hover- og klikklyder over hele
+ * Ingen `bind`. Cuelume kan koble lyd på alle `data-cuelume-*`-elementer
+ * automatisk — det er nettopp det vi ikke vil. Hover- og klikklyder over hele
  * panelet er akkurat den slags som får folk til å skru av lyden helt, og da
  * mister de også varselet som faktisk betyr noe.
  */
@@ -62,7 +54,7 @@ const VOLUM = 0.35;
  */
 const SEND_VOLUM = 0.5;
 
-/** Uhørbar, men ikke null — `play()` returnerer tidlig på nøyaktig 0. */
+/** Uhørbar, men ikke null — `play` returnerer tidlig på nøyaktig 0. */
 const OPPLAS_VOLUM = 0.0001;
 
 type Lydnavn = 'arrival' | 'loading' | 'success' | 'error';
@@ -70,7 +62,7 @@ type Lydnavn = 'arrival' | 'loading' | 'success' | 'error';
 type Lydkontekst = {
   /** Er lyd på for denne brukeren? */
   pa: boolean;
-  /** Ny melding fra noen ANDRE. Varselet. */
+  /** Ny melding fra noen andre. Varselet. */
   nyMelding: () => void;
   /** Du sendte en melding. Kvitteringen — svakere enn varselet. */
   sendt: () => void;
@@ -92,31 +84,25 @@ const Ctx = createContext<Lydkontekst>({
 });
 
 /**
- * ⚠️ **LÅSER OPP WEB AUDIO.** Uten denne er alt annet i fila teoretisk.
- *
+ * låser opp web audio. Uten denne er alt annet i fila teoretisk.
  * Nettlesere lager ikke — og resumer ikke — en AudioContext utenfor en ekte
- * brukergest. cuelume prøver å resume inne i `play()`, men rekker aldri dit:
- * `hasBeenActive === false` gir tidlig retur.
- *
- * Vi spiller derfor en lyd på volum 0.0001 ved FØRSTE klikk eller tastetrykk
+ * brukergest. cuelume prøver å resume inne i `play`, men rekker aldri dit:
+ * `hasBeenActive false` gir tidlig retur.
+ * Vi spiller derfor en lyd på volum 0.0001 ved første klikk eller tastetrykk
  * hvor som helst i appen. Den er uhørbar, men den går gjennom hele veien:
- * `getAudioContext()` opprettes, `resume()` kalles inne i gesten, og
+ * `getAudioContext` opprettes, `resume` kalles inne i gesten, og
  * konteksten står `running` når det faktisk kommer en melding.
- *
- * `enabled` settes midlertidig true — ellers returnerer `play()` med én gang og
+ * `enabled` settes midlertidig true — ellers returnerer `play` med én gang og
  * konteksten blir aldri laget. Riktig verdi settes tilbake straks etter, og
  * `useEffect`-en på `pa` er uansett fasiten.
- *
  * `once: true` + `capture: true`: én gang, og før noe annet rekker å stoppe
  * hendelsen. `pointerdown` framfor `click` fordi et klikk som starter på en
  * knapp og slippes utenfor aldri blir et `click`.
- *
- * ⚠️ **Kjører UANSETT om lyd er på eller av**, og det er med vilje. Gatet vi på
- * `pa`, ville et klikk som skjer FØR `session.me` har svart hoppet over
+ * Kjører uansett om lyd er på eller av, og det er med vilje. Gatet vi på
+ * `pa`, ville et klikk som skjer før `session.me` har svart hoppet over
  * opplåsingen — og `once: true` gir ingen ny sjanse. Kostnaden er én stum
  * AudioContext; gevinsten er at bryteren virker umiddelbart når den skrus på.
- *
- * ⛔ Det vi IKKE kan fikse: kommer det en melding før brukeren har rørt siden i
+ * Det vi ikke kan fikse: kommer det en melding før brukeren har rørt siden i
  * det hele tatt, er den stille. Det er nettleserens autoplay-policy, ikke vår
  * kode. Første klikk hvor som helst løser det for resten av økta.
  */
@@ -133,7 +119,7 @@ function laasOppLyd(gjenopprettTil: boolean) {
 
 export function LydProvider({ children }: { children: ReactNode }) {
   const me = trpc.session.me.useQuery(undefined, { retry: false });
-  // Standard PÅ, men først når vi VET svaret. Under lasting er den av, slik at
+  // Standard PÅ, men først når vi vet svaret. Under lasting er den av, slik at
   // en treg forespørsel aldri gir en lyd brukeren har skrudd av.
   const pa = me.data?.varslingslyder ?? false;
 
@@ -142,7 +128,7 @@ export function LydProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setEnabled(pa);
-    // ⚠️ ÉN gang, globalt. Se feil 2 i filkommentaren — per-lyd-volum i
+    // ÉN gang, globalt. Se feil 2 i filkommentaren — per-lyd-volum i
     // tillegg ganget verdien med seg selv.
     setVolume(VOLUM);
   }, [pa]);
@@ -160,7 +146,7 @@ export function LydProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /**
-   * ⚠️ Alle avspillinger går gjennom denne. Den sjekker `paRef` og ikke `pa`
+   * Alle avspillinger går gjennom denne. Den sjekker `paRef` og ikke `pa`
    * direkte, slik at en callback som ble laget før brukeren skrudde av lyden
    * ikke fortsetter å spille med en gammel verdi i lukningen.
    */
@@ -176,24 +162,23 @@ export function LydProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /**
-   * Inbound-lyd fyrer fra `LiveSync` via `nyMelding()`. Avsenderens kvittering
-   * er fortsatt `sendt()` fra svarfeltet — serveren hopper over forfatteren i
+   * Inbound-lyd fyrer fra `LiveSync` via `nyMelding`. Avsenderens kvittering
+   * er fortsatt `sendt` fra svarfeltet — serveren hopper over forfatteren i
    * `message.created`, så avsenderen skal ikke høre varselet.
    */
   const verdi: Lydkontekst = {
     pa,
     nyMelding: useCallback(() => spill('arrival'), [spill]),
-    // Cue byttet fra `press` til `loading` 09.08.2026 (eiers valg). Volumet er
+    // Cue byttet fra `press` til `loading` (eiers valg). Volumet er
     // uendret — kvitteringen skal fortsatt være svakere enn varselet.
     sendt: useCallback(() => spill('loading', SEND_VOLUM), [spill]),
     suksess: useCallback(() => spill('success'), [spill]),
     feil: useCallback(() => spill('error'), [spill]),
     /**
-     * Prøvelyden spiller UANSETT lagret innstilling — den er svaret på «hvordan
+     * Prøvelyden spiller uansett lagret innstilling — den er svaret på «hvordan
      * høres den ut?», og kalles fra bryteren i det øyeblikket lyd skrus på.
-     *
-     * ⚠️ Ingen restore av `enabled` etterpå. Se feil 3 i filkommentaren:
-     * `play()` er asynkron når konteksten er suspendert, og en restore rett
+     * Ingen restore av `enabled` etterpå. Se feil 3 i filkommentaren:
+     * `play` er asynkron når konteksten er suspendert, og en restore rett
      * etterpå slukte den aller første prøvelyden. `useEffect`-en på `pa` setter
      * riktig verdi ved neste render uansett.
      */

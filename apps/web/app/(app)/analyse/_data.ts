@@ -1,16 +1,13 @@
 /**
- * F5-18 — Mock-data for Analyse.
- *
- * ⚠️ **ALT I DENNE FILA ER OPPDIKTET.** Ingen av tallene kommer fra en database.
+ * Data for Analyse.
+ * Ingen av tallene kommer fra en database.
  * Hver graf er merket «Mock» i UI-et — merkelappen leser `KILDE`-tabellen under,
  * samme kilde som forklaringsteksten. Da kan ikke en graf bli stående umerket
  * fordi noen glemte det.
- *
  * Deterministisk (ingen `Math.random`, ingen `Date.now`) slik at server- og
  * klient-render gir identisk resultat. Tallene ligner et lite verksted:
  * ~10–18 saker per virkedag, lavere i helg, belegg rundt 80 %.
- *
- * ⛔ Ingen kunde-PII her, og det skal aldri komme inn. Analyse viser aggregater.
+ * Ingen kunde-PII her, og det skal aldri komme inn. Analyse viser aggregater.
  */
 
 export type Kilde = 'mock' | 'ekte';
@@ -52,7 +49,8 @@ export const KILDE: Record<string, { kilde: Kilde; forklaring: string }> = {
   },
 };
 
-/* ── Bookingvolum ──────────────────────────────────────────────────────────
+/*
+ * Bookingvolum
  * Søylegraf. Helg gir lavere volum; derfor «hakker» kurven i sjuertakt.
  */
 export type DagRad = { dag: string; fullfort: number; avlyst: number };
@@ -68,7 +66,8 @@ const VOLUM_FULL: DagRad[] = Array.from({ length: 30 }, (_, i) => {
   return { dag: `${((i % 30) + 1).toString().padStart(2, '0')}.07`, fullfort, avlyst };
 });
 
-/* ── Trafikk ───────────────────────────────────────────────────────────────
+/*
+ * Trafikk
  * Arealgraf. To serier: alle sidevisninger og de som endte i en booking.
  */
 export type TrafikkRad = { dag: string; visninger: number; bookingstart: number };
@@ -108,7 +107,8 @@ export function trafikkFor(p: Periode): TrafikkRad[] {
   return TRAFIKK_FULL.slice(p === '7d' ? -7 : -30);
 }
 
-/* ── Belegg og avlysningsrate ──────────────────────────────────────────────
+/*
+ * Belegg og avlysningsrate
  * Linjegraf, to serier i prosent. Belegget stiger jevnt; avlysningsraten
  * ligger lavt og flatt — slik et sunt verksted ser ut.
  */
@@ -128,7 +128,8 @@ export function beleggFor(p: Periode): UkeRad[] {
   return BELEGG_FULL.slice(p === '7d' ? -4 : -12);
 }
 
-/* ── Trafikkilder — PAIGRAF ────────────────────────────────────────────────
+/*
+ * Trafikkilder — paigraf
  * Sortert synkende. Fem skiver er grensen for hva en pai kan lese ut;
  * flere ville blitt fargeflis.
  */
@@ -144,7 +145,8 @@ export const KILDER: KildeRad[] = [
 
 export const KILDER_TOTALT = KILDER.reduce((s, k) => s + k.besok, 0);
 
-/* ── Nøkkeltall per periode ────────────────────────────────────────────────
+/*
+ * Nøkkeltall per periode
  * Tallet står alltid i klartekst — regelen som overlevde dither-fjerningen.
  */
 export type Nokkeltall = {

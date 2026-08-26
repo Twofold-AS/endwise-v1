@@ -3,15 +3,13 @@ import type { MiddlewareHandler } from 'hono';
 
 /**
  * F8-01 / CWE-306 — Delt fail-closed-guard for eksternt trigg­bare cron-ruter.
- *
  * Cron-endepunkter kjører uten brukersesjon og gjør privilegerte ting (sletting,
- * utgående synk mot alle tenants). De MÅ feile LUKKET: mangler `CRON_SECRET`, er
+ * utgående synk mot alle tenants). De MÅ feile lukket: mangler `CRON_SECRET`, er
  * endepunktet stengt — ikke åpent. Tidligere hadde flere ruter mønsteret
- * `if (secret && header !== …)` som slapp ALT gjennom når secreten var uset.
- *
+ * `if (secret && header !== …)` som slapp alt gjennom når secreten var uset.
  * Én implementasjon, brukt av alle cron-ruter, så mønsteret ikke kan drifte fra
  * hverandre igjen. Ingen query-param kan forbigå denne (den kjører som middleware
- * FØR handleren).
+ * Før handleren).
  */
 export type CronAuthResult = 'ok' | 'missing-secret' | 'unauthorized';
 
@@ -34,7 +32,7 @@ export function evaluateCronAuth(
 }
 
 /**
- * Hono-middleware. Legg på HVER cron-rute: `new Hono().use('*', cronAuth).get(…)`.
+ * Hono-middleware. Legg på hver cron-rute: `new Hono.use('*', cronAuth).get(…)`.
  * 503 hvis secret mangler (feil lukket), 401 ved feil/manglende Bearer.
  */
 export const cronAuth: MiddlewareHandler = async (c, next) => {

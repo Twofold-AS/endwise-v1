@@ -4,41 +4,33 @@ import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
 
 /**
- * F6-01 — NAVNEOPPSLAG for meldingsdeltakere.
- *
+ * Navneoppslag for meldingsdeltakere.
  * Innboksen viste rå UUID-er som avsender, fordi ingen rute kunne oversette en
  * `participant_id` til et navn. Denne gjør det — og den er den mest følsomme
  * ruten i hele meldingsflaten, fordi den per definisjon slår opp **personer**.
- *
- * ── ⛔ Hvorfor den ikke bare leser `user`-tabellen ────────────────────────
+ * Hvorfor den ikke bare leser `user`-tabellen
  * Better-Auth sine tabeller har **ingen RLS** (ADR-002: de er globale
  * identiteter). En rute som tok en liste med IDer og returnerte navn fra `user`
  * ville vært et **navneorakel for hele plattformen**: en forhandler kunne prøvd
  * seg fram med IDer og lest ut navnene på andre forhandleres ansatte og kunder.
- *
- * Derfor er oppslaget snudd: vi finner først ut hvem som HØRER TIL denne
+ * Derfor er oppslaget snudd: vi finner først ut hvem som hører til denne
  * tenanten, og krysser de forespurte IDene mot den lista. En ID vi ikke kjenner
  * får `null` — ikke en feil, og ikke et navn.
- *
  * Tre lovlige kilder til et navn, alle tenant-skopet:
- *   1. `member`  — ansatte i tenanten (via Better-Auth organization)
- *   2. `mechanics.user_id` — mekanikere (kan være samme personer som 1)
- *   3. `customers.user_id` — sluttkunder som har logget inn på «Min side»
- *
+ * 1. `member` — ansatte i tenanten (via Better-Auth organization)
+ * 2. `mechanics.user_id` — mekanikere (kan være samme personer som 1)
+ * 3. `customers.user_id` — sluttkunder som har logget inn på «Min side»
  * Er ingen av dem, finnes ikke personen for oss.
  */
 export const directoryRouter = router({
   /**
    * Slå opp navn for et sett deltaker-IDer.
-   *
    * Returnerer et oppslag `{ [id]: { navn, rolle } }`. IDer uten treff mangler
    * fra svaret — klienten viser da en anonym plassholder, ikke en UUID.
-   *
-   * ── ⛔ KALLENAVN (08.08.2026) ────────────────────────────────────────────
-   * `navn` er **allerede løst** av `visningsnavn()` før det forlater serveren.
+   * Kallenavn
+   * `navn` er **allerede løst** av `visningsnavn` før det forlater serveren.
    * Kallenavnet returneres aldri rått, så en klient kan ikke velge å vise det
    * et sted den ikke skulle.
-   *
    * `visning` defaulter til `offisiell` = ekte navn. Glemmer en fremtidig
    * flate å be om intern visning, får den ekte navn — feilen går mot det
    * trygge. Se `packages/modules/src/profil/index.ts`.
@@ -55,15 +47,13 @@ export const directoryRouter = router({
       if (unike.length === 0) return {};
 
       /**
-       * F6-19 — `seed` og `avatar` er med fra 20.08.2026.
-       *
-       * ⛔ Status-humor bor IKKE her. Innboksens samtaleliste og tråd har
+       * `seed` og `avatar` er med .
+       * Status-humor bor ikke her. Innboksens samtaleliste og tråd har
        * ingen statuslabel ved ansiktet — uttrykket skal ikke være eneste
        * signal. Status vises på `/mekanikere`, Team › Funksjoner og
        * Detaljer-panelet, der den norske teksten står ved siden av.
-       *
-       * ⛔ **`seed` er ikke det samme som nøkkelen.** Nøkkelen er deltaker-IDen
-       * meldingen bærer (en Better-Auth-bruker); seeden er personens STABILE
+       * `seed` er ikke det samme som nøkkelen. Nøkkelen er deltaker-IDen
+       * meldingen bærer (en Better-Auth-bruker); seeden er personens stabile
        * identitet i denne tenanten — `customers.id`, `mechanics.id` eller
        * `user.id`. Forskjellen betyr noe: kundekortet (F5-02) kjenner bare
        * `customers.id`, og hadde innboksen seedet på bruker-IDen ville samme
@@ -88,7 +78,7 @@ export const directoryRouter = router({
       > = {};
 
       /**
-       * Kallenavn hentes KUN når intern visning er eksplisitt bedt om. Ikke
+       * Kallenavn hentes kun når intern visning er eksplisitt bedt om. Ikke
        * bare fordi det er unødvendig ellers, men fordi en rad vi aldri leser
        * heller ikke kan lekke ved en senere refaktorering.
        */
@@ -112,14 +102,14 @@ export const directoryRouter = router({
       }
 
       /**
-       * Ett sted navnet avgjøres. Brukes KUN for kollegaer (mekanikere og
+       * Ett sted navnet avgjøres. Brukes kun for kollegaer (mekanikere og
        * ansatte) — kundenavn går rett inn urørt lenger nede, fordi en kunde
        * verken har eller skal ha et kallenavn hos oss.
        */
       const vis = (userId: string, navn: string) =>
         visningsnavn({ navn, kallenavn: kallenavn.get(userId) ?? null }, input.visning);
 
-      // ── 1. Mekanikere og kunder: tenant-skopet av RLS. ────────────────
+      // 1. Mekanikere og kunder: tenant-skopet av RLS.
       const { mekanikere, kunder } = await withTenant(ctx.db, ctx.tenantId, async (tx) => {
         const mekanikere = await tx
           .select({
@@ -150,7 +140,7 @@ export const directoryRouter = router({
         return { mekanikere, kunder };
       }).catch(() => ({ mekanikere: [], kunder: [] }));
 
-      // ⛔ Kunder får ALLTID ekte navn — `vis(..., true)`. En kunde er ikke en
+      // Kunder får alltid ekte navn — `vis(..., true)`. En kunde er ikke en
       // kollega, og har uansett ikke noe kallenavn hos oss.
       for (const k of kunder) {
         if (k.userId) {
@@ -171,10 +161,10 @@ export const directoryRouter = router({
       }
 
       /**
-       * ── 2. Ansatte via organization-medlemskap ────────────────────────
+       * 2. Ansatte via organization-medlemskap
        * `member` og `user` har ingen RLS, så isolasjonen må komme fra spørringen
        * selv: vi filtrerer på `organization_id = ctx.tenantId` (ADR-002:
-       * organization.id ER tenant_id) OG på de forespurte IDene. Uten det
+       * organization.id er tenant_id) og på de forespurte IDene. Uten det
        * første filteret ville dette vært navneorakelet beskrevet over.
        */
       const ansatte = await ctx.db
@@ -198,15 +188,13 @@ export const directoryRouter = router({
       }
 
       /**
-       * ── 3. Avatarvalg ────────────────────────────────────────────────
-       *
-       * ⛔ `user_preferences` har **ingen RLS** (global tabell, se skjemaet), så
+       * 3. Avatarvalg
+       * `user_preferences` har **ingen RLS** (global tabell, se skjemaet), så
        * isolasjonen må komme fra spørringen. Den kommer den fra her: vi slår opp
-       * KUN IDer som allerede står i `ut`, altså IDer stegene over har bekreftet
+       * Kun IDer som allerede står i `ut`, altså IDer stegene over har bekreftet
        * hører til denne tenanten. En ID vi ikke klarte å navngi, spør vi heller
        * ikke om et ansikt for.
-       *
-       * ⚠️ Kunder får sjelden eller aldri en rad her — de fleste har ingen
+       * Kunder får sjelden eller aldri en rad her — de fleste har ingen
        * innlogging å sette et valg fra. Da står `TOM_AVATAR`, og ansiktet
        * kommer i sin helhet fra seeden. Det er riktig, ikke en mangel.
        */

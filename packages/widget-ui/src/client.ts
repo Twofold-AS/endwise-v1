@@ -1,6 +1,5 @@
 /**
  * F4 — Widget API-klient (framework-agnostisk, ren fetch).
- *
  * Veksler publishable key inn i et kortlevd token via `/widget/init`, og bærer
  * tokenet på alle etterfølgende kall. Ingen hemmeligheter her — kun den offentlige
  * publishable key-en (trygg i en publisert side).
@@ -104,7 +103,7 @@ export function createWidgetClient(opts: WidgetClientOptions) {
 export type WidgetClient = ReturnType<typeof createWidgetClient>;
 
 /**
- * [ART50-UI] Statisk fallback-tekst vist FØR første serversvar. Speiler
+ * [ART50-UI] Statisk fallback-tekst vist før første serversvar. Speiler
  * `WIDGET_AI_DISCLOSURE` i `@endwise/modules/widget` og `AI_DISCLOSURE_TEXT` i
  * `@endwise/ui`. Lovtekst (AI Act art. 50) — ikke fjern, ikke flytt fra samtalestart.
  */

@@ -9,27 +9,23 @@ import {
 
 /**
  * Valgfri egress for server-side Quick-HTTPS.
- *
  * 1. QUICK_GATEWAY_URL satt → tynn live-gateway (HTTPS på boksen → q3.quick.no).
- *    CONNECT (QUICK_HTTPS_PROXY) ignoreres så den kan stå av.
- * 2. Ellers QUICK_HTTPS_PROXY satt → undici ProxyAgent (HTTP CONNECT).
- *    TLS til q3.quick.no er ende-til-ende.
+ * Connect (QUICK_HTTPS_PROXY) ignoreres så den kan stå av.
+ * 2. Ellers QUICK_HTTPS_PROXY satt → undici ProxyAgent (HTTP connect).
+ * TLS til q3.quick.no er ende-til-ende.
  * 3. Begge uset/tom → direkte fetch (dagens sti).
- *
  * Alle stier sender curl-ekvivalent form mot Quick (eller mot gatewayen, som
  * selv gjør curl-ekvivalent mot q3.quick.no): User-Agent curl/8.5.0 + HTTP/1.1
  * (undici Agent allowH2: false). Live curl på Scaleway-boksen ga 200; Node
- * default UA / H2 ga 500 på samme GET.
- *
- * Brukes KUN av Quick-klienten — aldri setGlobalDispatcher / HTTPS_PROXY
+ * default ua / H2 ga 500 på samme GET.
+ * Brukes kun av Quick-klienten — aldri setGlobalDispatcher / HTTPS_PROXY
  * (ville proxiet Stripe/Resend også).
- *
- * CWE-532: logg ALDRI gateway-/proxy-URL, secret eller Authorization.
+ * CWE-532: logg aldri gateway-/proxy-URL, secret eller Authorization.
  */
 
 const INVALID_PROXY = 'Ugyldig QUICK_HTTPS_PROXY';
 
-/** Samme UA som working `curl` mot q3.quick.no. */
+/** Samme ua som working `curl` mot q3.quick.no. */
 export const QUICK_CURL_USER_AGENT = 'curl/8.5.0';
 export const QUICK_UPSTREAM_ALLOW_H2 = false;
 

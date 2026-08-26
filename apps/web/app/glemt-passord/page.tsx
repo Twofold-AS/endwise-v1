@@ -8,24 +8,20 @@ import { authClient } from '@/lib/auth-client';
 import { Field, INPUT } from '../_auth/felter';
 
 /**
- * F1-15 — «Glemt passord»: be om en resetlenke.
- *
- * ── ⛔ Skjermens ene sikkerhetsregel ─────────────────────────────────────
- * **Den skal se nøyaktig lik ut enten adressen finnes eller ikke.**
- *
+ * «Glemt passord»: be om en resetlenke.
+ * Skjermens ene sikkerhetsregel
+ * Den skal se nøyaktig lik ut enten adressen finnes eller ikke.
  * Better-Auth svarer allerede identisk på begge (samme JSON, samme melding,
- * og med en simulert token-generering + oppslag for å jevne ut tidsbruken —
+ * og med en simulert token-generering + oppslag for å jevne ut tidsbruken
  * lest i `dist/api/routes/password.mjs`). Men serveren kan gjøre alt riktig
- * og likevel lekke, hvis KLIENTEN sier «vi fant ingen bruker». Derfor viser
+ * og likevel lekke, hvis klienten sier «vi fant ingen bruker». Derfor viser
  * denne siden samme kvittering uansett hva svaret var — og også hvis kallet
  * feilet.
- *
- * ⚠️ Det siste er ikke slurv. En feilmelding som bare dukker opp for adresser
+ * Det siste er ikke slurv. En feilmelding som bare dukker opp for adresser
  * som finnes, er den samme lekkasjen med en annen innpakning. Går noe galt,
  * er det verdt mer at brukeren prøver igjen enn at vi forteller en fremmed
  * hvem som er kunde her.
- *
- * ── Hvorfor ruta ligger utenfor `(app)` ──────────────────────────────────
+ * Hvorfor ruta ligger utenfor `(app)`
  * Samme grunn som `/signin` og `/invitasjon/[token]`: den som er her har
  * ingen sesjon, og hele `(app)` henter data over tRPC som krever både sesjon
  * og fullført 2FA.
@@ -40,7 +36,7 @@ export default function GlemtPassordPage() {
     setBusy('loading');
 
     /**
-     * ⚠️ `.catch()` som svelger — med vilje, se filkommentaren. Vi trimmer
+     * `.catch` som svelger — med vilje, se filkommentaren. Vi trimmer
      * adressen av samme grunn som `/signin` gjør: et limt inn mellomrom gir
      * ellers `400 Invalid email` på en adresse som ser helt riktig ut.
      */

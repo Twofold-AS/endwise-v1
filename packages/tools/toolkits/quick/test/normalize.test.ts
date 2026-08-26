@@ -6,7 +6,7 @@ import {
 } from '../src/normalize.ts';
 
 /**
- * F1-07 — forhandler limer ofte inn Help/swagger-URL og
+ * Forhandler limer ofte inn Help/swagger-URL og
  * «Token token=…»-wrapper. Proben skal treffe origin + shop-slug.
  */
 const SHOP = 'https://q3.quick.no/ProdShared008';

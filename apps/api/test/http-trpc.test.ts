@@ -13,7 +13,7 @@ vi.mock('../src/context.ts', () => ({
 import { handleTrpc } from '../src/http/trpc.ts';
 
 /**
- * F13-03 — tRPC over Web Request, uten Hono og uten DB.
+ * Trpc over Web Request, uten Hono og uten DB.
  * `health` er publicProcedure og trenger ikke sesjon.
  */
 describe('handleTrpc', () => {

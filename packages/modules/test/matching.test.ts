@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createBooking } from '../src/booking/index.ts';
 import { createRuleMatcher } from '../src/matching/index.ts';
 
-/** F3-02 — Regelbasert matching, mot ekte database. */
+/** Regelbasert matching, mot ekte database. */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
 const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;

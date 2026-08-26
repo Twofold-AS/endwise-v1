@@ -1,6 +1,5 @@
 /**
- * F5-23 — klienthint for Opprett/Lagre på /endwise/helpdesk.
- *
+ * Klienthint for Opprett/Lagre på /endwise/helpdesk.
  * Speiler `artikkelFelter` i `apps/api/src/trpc/routers/helpdesk.ts`
  * (`title.min(3)`, `summary.min(10)`, `body.min(10)` etter trim).
  * Knappen er disabled på samme terskler; hintet forklarer *hvorfor*,

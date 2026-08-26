@@ -5,15 +5,13 @@ import type { ReactNode } from 'react';
 import { KILDE } from './_data';
 
 /**
- * F5-18 — Analysekortet, eierens form (06.08.2026):
- *
- *   ikon + overskrift i lysere grå
- *   ─ ─ ─ ─ ─ ─ ─   (stiplet linje)
- *   forklarende tekst
- *          (luft)
- *   TALLET i mørk farge   +12 % (grønn) / −4 % (rød)
- *   [ evt. graf ]
- *
+ * Analysekortet, eierens form
+ * ikon + overskrift i lysere grå
+ * (stiplet linje)
+ * forklarende tekst
+ * (luft)
+ * Tallet i mørk farge +12 % (grønn) / −4 % (rød)
+ * [ evt. graf ]
  * Rekkefølgen er poenget: **tallet kommer før grafen.** En verkstedeier skal
  * kunne lukke fanen etter to sekunder og likevel vite svaret. Grafen er
  * konteksten, ikke svaret.

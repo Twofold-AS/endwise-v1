@@ -9,10 +9,9 @@ import { Suspense, useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 
 /**
- * F1-27 — steg 2: bekreft e-postbytte.
- *
+ * Steg 2: bekreft e-postbytte.
  * Tokenet kommer fra lenka i e-posten. Vi kaller Better-Auth
- * `verify-email` her — det er DENNE handlingen som eventuelt skriver
+ * `verify-email` her — det er denne handlingen som eventuelt skriver
  * den nye adressen, aldri skjemaet i innstillingene.
  */
 function BekreftEpostInner() {

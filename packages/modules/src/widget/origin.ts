@@ -1,6 +1,5 @@
 /**
  * F4-02 / CWE-346 (Origin Validation) — hvilke nettsteder får bruke en widget-nøkkel.
- *
  * En publishable key er offentlig; origin-allowlisten er det som hindrer at
  * hvem som helst kan hoste embed-en på sitt eget domene og snakke på vegne av
  * forhandleren. Streng: eksakt match på skjema+host(+port), ingen wildcards,

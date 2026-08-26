@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 /**
- * F7-01 — Web App Manifest for mekaniker-PWA-en. Gjør Endwise installerbar på
+ * Web App Manifest for mekaniker-PWA-en. Gjør Endwise installerbar på
  * mobil (Add to Home Screen), åpner i standalone (uten nettleser-chrome), starter
  * på «Min dag». Merkevare: lyst tema, svart aksent `#111111`.
  */

@@ -1,14 +1,12 @@
 /**
- * F6-02 — Tilkoblings-caps.
- *
+ * Tilkoblings-caps.
  * SSE holder forbindelsen åpen. Det er hele poenget — og hele risikoen:
  * på Vercel er samtidige tilkoblinger den fremste kostnadsdriveren
  * (techstack §7), og en klient med en reconnect-løkke som har gått i ball kan
  * åpne hundrevis uten å mene noe vondt med det.
- *
  * To grenser, fordi de fanger to ulike feil:
- *   - per BRUKER: en klient som løper løpsk
- *   - per TENANT: en forhandler som (utilsiktet eller ikke) tar hele budsjettet
+ * per bruker: en klient som løper løpsk
+ * per tenant: en forhandler som (utilsiktet eller ikke) tar hele budsjettet
  */
 export const MAX_CONNECTIONS_PER_USER = 5;
 export const MAX_CONNECTIONS_PER_TENANT = 100;

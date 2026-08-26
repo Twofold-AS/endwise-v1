@@ -1,6 +1,5 @@
 /**
- * F3-05 — posisjonering på Verkstedets dagsplan.
- *
+ * Posisjonering på Verkstedets dagsplan.
  * Samme arbeidsdag som Jobber › Kalender (F3-07): 07–18. Jobber utenfor
  * klippes inn i kanten, de forsvinner ikke. Holdt her så kalenderen under
  * Ansatte/Jobber ikke røres.

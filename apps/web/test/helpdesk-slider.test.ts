@@ -11,8 +11,7 @@ import {
 } from '../app/(app)/_shell/helpdesk-slider.ts';
 
 /**
- * F5-23 — Helpdesk-slideren (TipCard) kan minimeres. Visningsvelgeren kan ikke.
- *
+ * Helpdesk-slideren (TipCard) kan minimeres. Visningsvelgeren kan ikke.
  * Ny-badge tvinger åpen ved lasting. Bruker kan likevel lukke. Ny ulest
  * artikkel (ny id, eller ulest none→some) åpner igjen. localStorage overlever
  * refresh, men aldri når lista har ulest.
@@ -123,8 +122,8 @@ describe('TipCard er stedet som minimeres', () => {
   it('ulesteAntall i sidebaren sitter heller ikke på 5 min staleTime', () => {
     const teller = sidebar.slice(
       sidebar.indexOf('helpdeskUlest'),
-      sidebar.indexOf('F5-13 — ⛔ ÉN ÅPEN') > 0
-        ? sidebar.indexOf('F5-13 — ⛔ ÉN ÅPEN')
+      sidebar.indexOf('const [apentPunkt') > 0
+        ? sidebar.indexOf('const [apentPunkt')
         : sidebar.indexOf('helpdeskUlest') + 400,
     );
     expect(sidebar).toMatch(/helpdesk\.ulesteAntall/);

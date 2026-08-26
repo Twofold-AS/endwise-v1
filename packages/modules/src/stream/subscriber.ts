@@ -10,14 +10,12 @@ export interface StreamSignal {
 type Listener = (signal: StreamSignal) => void;
 
 /**
- * F6-02 — Én LISTEN-forbindelse for hele prosessen.
- *
- * MERK: dette MÅ være en `Client`, ikke en `Pool`. LISTEN er session-tilstand —
+ * Én listen-forbindelse for hele prosessen.
+ * Merk: dette MÅ være en `Client`, ikke en `Pool`. Listen er session-tilstand
  * en pooled forbindelse som gis tilbake og lånes ut igjen, slutter å lytte uten
  * å si fra. Vi ville da hatt en SSE-tjeneste som stille sluttet å levere.
- *
- * Én forbindelse, én LISTEN, og fan-out i minnet til alle tilkoblede klienter.
- * Alternativet — én LISTEN per tenant — ville betydd at hver nye forhandler
+ * Én forbindelse, én listen, og fan-out i minnet til alle tilkoblede klienter.
+ * Alternativet — én listen per tenant — ville betydd at hver nye forhandler
  * krevde en ny DB-forbindelse.
  */
 export function createStreamSubscriber(connectionString: string) {

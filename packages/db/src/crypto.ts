@@ -1,30 +1,27 @@
 import { createCipheriv, createDecipheriv, randomBytes, timingSafeEqual } from 'node:crypto';
 
 /**
- * F1-07 — Envelope-crypto for tenant-hemmeligheter (techstack §«Envelope-crypto
- * (AES-256-GCM, BYOK)» — inkl. forhandlerens Quick API-nøkkel).
- *
+ * Envelope-crypto for tenant-hemmeligheter (techstack §«Envelope-crypto
+ * (aes-256-gcm, byok)» — inkl. forhandlerens Quick API-nøkkel).
  * Mønsteret (envelope / to-lags nøkkel):
- *   1. En KEK (Key Encryption Key) ligger UTENFOR databasen — i miljøet
- *      (`ENDWISE_KEK`, base64, 32 byte). Dette er «BYOK»-punktet: bytter
- *      driftsansvarlig ut KEK-en, roteres alt uten at klartekst rører DB.
- *   2. For HVER hemmelighet lages en fersk DEK (Data Encryption Key, 32 byte).
- *      Klarteksten krypteres med DEK-en (AES-256-GCM). DEK-en «pakkes» så inn
- *      (krypteres) med KEK-en (AES-256-GCM).
- *   3. Det som lagres i DB er KUN {pakket DEK + kryptert data} — aldri KEK,
- *      aldri klartekst, aldri en naken DEK.
- *
- * Hvorfor envelope og ikke bare kryptere direkte med KEK: DEK-per-hemmelighet
+ * 1. En kek (Key Encryption Key) ligger utenfor databasen — i miljøet
+ * (`ENDWISE_KEK`, base64, 32 byte). Dette er «byok»-punktet: bytter
+ * driftsansvarlig ut kek-en, roteres alt uten at klartekst rører DB.
+ * 2. For hver hemmelighet lages en fersk dek (Data Encryption Key, 32 byte).
+ * Klarteksten krypteres med dek-en (aes-256-gcm). Dek-en «pakkes» så inn
+ * (krypteres) med kek-en (aes-256-gcm).
+ * 3. Det som lagres i DB er kun {pakket dek + kryptert data} — aldri kek,
+ * aldri klartekst, aldri en naken dek.
+ * Hvorfor envelope og ikke bare kryptere direkte med kek: dek-per-hemmelighet
  * begrenser skade ved en kompromittert nøkkel og gjør rotasjon mulig uten å
- * re-kryptere alt tvers igjennom. KEK-en er den eneste tingen som må roteres.
- *
- * AES-256-GCM gir konfidensialitet + integritet (auth-tag). Vi verifiserer
- * derfor ikke bare at vi KAN dekryptere, men at ingenting er tuklet med.
+ * re-kryptere alt tvers igjennom. Kek-en er den eneste tingen som må roteres.
+ * Aes-256-gcm gir konfidensialitet + integritet (auth-tag). Vi verifiserer
+ * derfor ikke bare at vi kan dekryptere, men at ingenting er tuklet med.
  */
 
 const ALGO = 'aes-256-gcm';
-const KEY_BYTES = 32; // AES-256
-const IV_BYTES = 12; // GCM-anbefaling
+const KEY_BYTES = 32; // Aes-256
+const IV_BYTES = 12; // Gcm-anbefaling
 const KEK_ENV = 'ENDWISE_KEK';
 const ENVELOPE_VERSION = 1;
 
@@ -32,11 +29,11 @@ const ENVELOPE_VERSION = 1;
 interface Envelope {
   /** Skjemaversjon — gjør fremtidig nøkkel-/algoritmerotasjon trygg. */
   v: number;
-  /** DEK pakket med KEK: `dekIv` + `dekTag` beskytter denne. */
+  /** Dek pakket med kek: `dekIv` + `dekTag` beskytter denne. */
   wrappedDek: string;
   dekIv: string;
   dekTag: string;
-  /** Selve hemmeligheten kryptert med DEK. */
+  /** Selve hemmeligheten kryptert med dek. */
   ciphertext: string;
   iv: string;
   tag: string;
@@ -45,7 +42,7 @@ interface Envelope {
 export class CryptoConfigError extends Error {}
 
 /**
- * Leser KEK-en fra miljøet LAT (ikke ved import), slik at det å importere
+ * Leser kek-en fra miljøet lat (ikke ved import), slik at det å importere
  * `@endwise/db` ikke krever nøkkelen. Bare faktisk kryptering/dekryptering gjør.
  */
 function loadKek(explicit?: Buffer): Buffer {
@@ -139,7 +136,7 @@ export function decryptSecret(serialized: string, kek?: Buffer): string {
   return plaintext.toString('utf8');
 }
 
-/** True hvis en KEK er konfigurert. Til «mock-modus»-sjekker uten å kaste. */
+/** True hvis en kek er konfigurert. Til «mock-modus»-sjekker uten å kaste. */
 export function envelopeCryptoConfigured(): boolean {
   try {
     loadKek();

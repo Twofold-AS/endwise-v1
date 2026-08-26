@@ -3,13 +3,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createDb, type Database, eq, schema, sql } from '../src/index.ts';
 
 /**
- * F1-11 — **ANGREPSTEST: en pre-2FA-sesjon skal ALDRI overleve påslaget.**
- *
- * ⚠️ Testen kjører bevisst mot RÅ SQL, ikke gjennom applikasjonen. Kravet er
+ * angrepstest: en pre-2FA-sesjon skal aldri overleve påslaget.
+ * Testen kjører bevisst mot RÅ SQL, ikke gjennom applikasjonen. Kravet er
  * «uansett hvordan 2FA ble slått på — også direkte i basen», og en test som går
  * via appen ville aldri bevist det. Her er `UPDATE "user" SET
  * two_factor_enabled = true` selve angrepet.
- *
  * Sperren er en databasetrigger (`0010_2fa_session_cutoff.sql`), fordi det er
  * det eneste laget som ser alle veier inn.
  */
@@ -69,7 +67,7 @@ describeDb('F1-11: 2FA-påslag river pre-2FA-sesjoner', () => {
     await lagSesjon(bruker, gammelB);
     expect(await sesjoner(bruker)).toHaveLength(2);
 
-    // Selve angrepet: 2FA slås på UTENOM oppsettflaten, uten at én linje
+    // Selve angrepet: 2FA slås på utenom oppsettflaten, uten at én linje
     // applikasjonskode kjører.
     await db.execute(sql`update "user" set two_factor_enabled = true where id = ${bruker}`);
 
@@ -83,8 +81,8 @@ describeDb('F1-11: 2FA-påslag river pre-2FA-sesjoner', () => {
   });
 
   /**
-   * ⚠️ Den viktigste negative testen. Uten `OLD.two_factor_enabled IS DISTINCT
-   * FROM TRUE` i triggeren ville ENHVER oppdatering av en 2FA-bruker logget
+   * Den viktigste negative testen. Uten `old.two_factor_enabled is distinct
+   * FROM TRUE` i triggeren ville enhver oppdatering av en 2FA-bruker logget
    * vedkommende ut — navnebytte, e-postverifisering, Better-Auths egne
    * felt-oppdateringer. Det er et driftsavbrudd, ikke en sikring.
    */

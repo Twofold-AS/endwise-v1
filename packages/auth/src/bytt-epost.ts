@@ -1,19 +1,16 @@
 /**
- * F1-27 — BYTT E-POST i to steg: be om bytte, deretter bekreft.
- *
- * ⛔ E-posten skal ALDRI byttes i samme klikk som forespørselen. En åpen
+ * Bytt E-POST i to steg: be om bytte, deretter bekreft.
+ * E-posten skal aldri byttes i samme klikk som forespørselen. En åpen
  * sesjon (eller et skjema som kaller `updateUser({ email })`) er en vei til
  * å stjele kontoen: angriperen peker innloggingen mot sin egen innboks, og
  * offeret er ute. Sperren er Better-Auth `changeEmail` med verifisering, pluss
- * at `updateEmailWithoutVerification` IKKE står på.
- *
+ * at `updateEmailWithoutVerification` ikke står på.
  * Stegene:
- *   1. Be om bytte (ny adresse + gjeldende passord, som F1-22).
- *   2. Bekreft fra den adressen brukeren HAR (sendChangeEmailConfirmation).
- *   3. Better-Auth sender deretter en lenke til den NYE adressen. Først når
- *      den åpnes, skrives e-posten. Steg 2+3 er bekreftelsen — ikke ett klikk.
- *
- * ⚠️ Denne fila importeres av web-klienten (`@endwise/auth/bytt-epost`).
+ * 1. Be om bytte (ny adresse + gjeldende passord, som F1-22).
+ * 2. Bekreft fra den adressen brukeren har (sendChangeEmailConfirmation).
+ * 3. Better-Auth sender deretter en lenke til den nye adressen. Først når
+ * den åpnes, skrives e-posten. Steg 2+3 er bekreftelsen — ikke ett klikk.
+ * Denne fila importeres av web-klienten (`@endwise/auth/bytt-epost`).
  * Ingen Better-Auth-serverimport her.
  */
 
@@ -27,8 +24,7 @@ export const BEKREFT_EPOST_STI = '/bekreft-epost';
 export const BYTT_EPOST_CALLBACK = '/innstillinger/profil?epost=ok';
 
 /**
- * Rate-limit på å BE om bytte: 5 per minutt, per IP.
- *
+ * Rate-limit på å be om bytte: 5 per minutt, per IP.
  * Samme tak som bytt-passord / 2FA-av (F1-17 / F1-22). En ekte bruker treffer
  * endepunktet én gang. Fem i minuttet er raust for dem og fiendtlig for
  * noen som kverner adresser mot en åpen sesjon.
@@ -59,7 +55,6 @@ const EPOST = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Klientvalidering for Settings › Profil.
- *
  * Trim er den samme lærdommen som `/signin`: et limt inn mellomrom bak
  * prikkene gir nøyaktig samme feil som feil passord.
  */
@@ -82,8 +77,7 @@ export function validerByttEpost(input: ByttEpostInput): ByttEpostOk | ByttEpost
 
 /**
  * Payloaden til Better-Auth `changeEmail`.
- *
- * ⛔ Ingen `email` her — det feltet tilhører `updateUser` og ville byttet
+ * Ingen `email` her — det feltet tilhører `updateUser` og ville byttet
  * adressen uten bekreftelse. `password` følger med så serverhooken kan
  * kreve det (F1-22-mønsteret). Handleren selv kjenner det ikke.
  */
@@ -106,7 +100,6 @@ export function byttEpostKall(ok: ByttEpostOk): {
 
 /**
  * Den delen av Better-Auth-konfigurasjonen denne modulen har en mening om.
- *
  * Strukturell med vilje, ikke `BetterAuthOptions` — samme grep som
  * `passordResetHull` / `byttPassordHull`.
  */
@@ -135,8 +128,7 @@ function grenseErStrammereEnn(regel: unknown, tak: { window: number; max: number
 }
 
 /**
- * Hvilke herdingskrav er IKKE oppfylt? Tom liste = alt i orden.
- *
+ * Hvilke herdingskrav er ikke oppfylt? Tom liste = alt i orden.
  * En slått-av `changeEmail`, eller `updateEmailWithoutVerification: true`,
  * blir en hard testfeil — ikke en stille default som bytter e-post i ett klikk.
  */

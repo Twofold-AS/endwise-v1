@@ -23,11 +23,9 @@ import { STATUS_LABEL, STATUS_TONE } from '../../bookinger/_status';
 import { dato, datoTid, EuFrist, Feil, Kilde, kroner, Laster, Seksjon, TYPE_LABEL } from '../_delt';
 
 /**
- * F5-02 — KUNDEKORTET. «Søk opp en kunde og se alt.»
- *
- * Alt hentes i ÉTT kall (`customers.byId`). Fire separate spørringer ville gitt
+ * Kundekortet. «Søk opp en kunde og se alt.»
+ * Alt hentes i Étt kall (`customers.byId`). Fire separate spørringer ville gitt
  * fire lastetilstander på én skjerm, og en side som blafrer inn i etapper.
- *
  * Rekkefølgen er verkstedets, ikke databasens: hvem er dette → hva eier de →
  * hva har vi gjort → hva er sagt. Notatene ligger nederst fordi de er det man
  * skriver, ikke det man kommer for å lese.
@@ -81,11 +79,13 @@ export default function KundekortPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[900px] flex-col gap-5 px-8 py-7">
-      {/* ── Hvem ─────────────────────────────────────────────────────── */}
+      {/* Hvem */}
       <div className="flex items-start gap-4">
-        {/* F6-19 — seeden er `customers.id`, samme som innboksen og
-            detaljpanelet. Ikke navnet: retter noen en skrivefeil i navnet,
-            skal ikke kunden bytte ansikt. */}
+        {/*
+         * Seeden er `customers.id`, samme som innboksen og
+         * detaljpanelet. Ikke navnet: retter noen en skrivefeil i navnet,
+         * skal ikke kunden bytte ansikt.
+         */}
         <Avatar seed={k.id} navn={k.name} size={48} bevegelse="hover" />
         <div className="min-w-0 flex-1">
           <h1 className="sr-only">Kunde · {k.name}</h1>
@@ -114,7 +114,7 @@ export default function KundekortPage() {
         </div>
       </div>
 
-      {/* ── Kjøretøy ─────────────────────────────────────────────────── */}
+      {/* Kjøretøy */}
       <Seksjon tittel="Kjøretøy" antall={k.kjoretoy.length}>
         {k.kjoretoy.length === 0 ? (
           <CardShell className="p-6 text-center">
@@ -156,7 +156,7 @@ export default function KundekortPage() {
         )}
       </Seksjon>
 
-      {/* ── Servicehistorikk ─────────────────────────────────────────── */}
+      {/* Servicehistorikk */}
       <Seksjon tittel="Servicehistorikk" antall={k.saker.length}>
         {k.saker.length === 0 ? (
           <CardShell className="p-6 text-center">
@@ -201,7 +201,7 @@ export default function KundekortPage() {
         )}
       </Seksjon>
 
-      {/* ── Meldinger ────────────────────────────────────────────────── */}
+      {/* Meldinger */}
       <Seksjon tittel="Meldinger" antall={k.traader.length}>
         {k.traader.length === 0 ? (
           <CardShell className="flex items-start gap-3 p-4">
@@ -236,7 +236,7 @@ export default function KundekortPage() {
         )}
       </Seksjon>
 
-      {/* ── Notater ──────────────────────────────────────────────────── */}
+      {/* Notater */}
       <Seksjon tittel="Notater" antall={k.notater.length}>
         <CardShell className="p-4">
           <form onSubmit={submitNotat} className="flex items-start gap-2">
@@ -261,8 +261,10 @@ export default function KundekortPage() {
           {leggTilNotat.error && (
             <p className="mt-2 text-body text-danger">{leggTilNotat.error.message}</p>
           )}
-          {/* ⚠️ Notater er INTERNE. Det står her fordi feltet ellers ser ut som
-              en melding til kunden — og forskjellen er ikke til å spøke med. */}
+          {/*
+           * Notater er interne. Det står her fordi feltet ellers ser ut som
+           * en melding til kunden — og forskjellen er ikke til å spøke med.
+           */}
           <p className="mt-2 text-[11px] text-fg-muted">
             Notater er interne og vises aldri for kunden.
           </p>

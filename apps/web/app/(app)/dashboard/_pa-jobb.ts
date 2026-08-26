@@ -1,6 +1,5 @@
 /**
- * F3-05 — hvem som er på jobb i Verkstedet i dag.
- *
+ * Hvem som er på jobb i Verkstedet i dag.
  * Ingen vaktplan-tabell her (Timeplan under Ansatte eies av en annen flate).
  * «På jobb» = aktiv mekaniker (ikke `fri`). Statusen kommer fra
  * `mechanics.oversikt` (F6-19). Denne fila filtrerer stripen og finner

@@ -9,10 +9,9 @@ import { CardShell } from '../_shell/cards';
 import { Etterspor } from '../_shell/etterspor';
 
 /**
- * F5-04 / F5-19 — TJENESTER & PRISER: **Endwise-egne** funksjoner.
- *
- * ── Skillet mot «Integrasjoner» ──────────────────────────────────────────
- * Her ligger det VI har bygget. Andres verktøy ligger under Integrasjoner.
+ * F5-04 / F5-19 — tjenester & priser: **Endwise-egne** funksjoner.
+ * Skillet mot «Integrasjoner»
+ * Her ligger det vi har bygget. Andres verktøy ligger under Integrasjoner.
  */
 type Katalog = RouterOutput['billing']['katalog'];
 type Post = Katalog['endwise'][number];

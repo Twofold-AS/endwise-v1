@@ -11,8 +11,7 @@ import {
 
 /**
  * F1-11/F1-12 — opprydding av døde sesjonsrader.
- *
- * ⛔ Testen som betyr noe er den SISTE: at en LEVENDE sesjon overlever.
+ * Testen som betyr noe er den siste: at en levende sesjon overlever.
  * En «opprydding» som logger ut folk midt i arbeidsdagen er et driftsavbrudd,
  * ikke vedlikehold — og det er den feilen som er lett å skrive.
  */
@@ -58,7 +57,7 @@ describeDb('sesjons-opprydding', () => {
         absoluteExpiresAt: new Date(naa + 9 * 60 * 60 * 1000),
       },
       {
-        // ⚠️ Idle-vinduet ser friskt ut, men absolutt maks-levetid er passert.
+        // Idle-vinduet ser friskt ut, men absolutt maks-levetid er passert.
         // Uten `or(...)` i spørringen ville denne blitt liggende for alltid.
         id: absoluttUte,
         token: `t-${absoluttUte}`,

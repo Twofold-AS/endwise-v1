@@ -12,7 +12,7 @@ function kroner(ore: number): string {
 }
 
 /**
- * F10-03 — BUTIKK · Katalog. Leser lager (`parts` + `stock_levels`).
+ * Butikk · Katalog. Leser lager (`parts` + `stock_levels`).
  * Ingen annen katalog. Ingen ny UI-pakke — CardShell + Button + radmønster.
  */
 export default function ButikkKatalogPage() {

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F5-26 — passord-siden har ingen modulvelger. Veiviseren kommer etter 2FA.
+ * Passord-siden har ingen modulvelger. Veiviseren kommer etter 2FA.
  */
 describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
   const her = dirname(fileURLToPath(import.meta.url));

@@ -10,13 +10,11 @@ export interface AuthVars {
 
 /**
  * F1-03/F1-04 — Auth-middleware.
- *
  * Rekkefølgen er hele poenget:
- *   1. sesjon (inkl. absolutt maks-levetid, F1-12)
- *   2. hvilken tenant ber brukeren om?
- *   3. ER brukeren medlem der? (assertMember)
- *   4. FØRST DA settes app.tenant_id og RLS slipper til data
- *
+ * 1. sesjon (inkl. absolutt maks-levetid, F1-12)
+ * 2. hvilken tenant ber brukeren om?
+ * 3. Er brukeren medlem der? (assertMember)
+ * 4. Først da settes app.tenant_id og RLS slipper til data
  * Hopper man over steg 3, vil RLS lydig servere hvilken som helst tenant
  * brukeren finner på å oppgi. RLS beskytter mot lekkasje, ikke mot løgn.
  */

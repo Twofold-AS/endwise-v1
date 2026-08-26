@@ -12,16 +12,14 @@ import {
 } from '../src/password-reset.ts';
 
 /**
- * F1-15 / F1-16 — **ANGREPSTEST for passordreset.**
- *
+ * F1-15 / F1-16 — **angrepstest for passordreset.**
  * En gjenopprettingsflyt er den ene stien som med vilje slipper inn noen som
- * IKKE kan passordet. Alt som er galt her, er galt på den farlige måten.
+ * Ikke kan passordet. Alt som er galt her, er galt på den farlige måten.
  * Hver test under er derfor en egenskap noen kan miste ved et uhell, ikke en
  * beskrivelse av hvordan koden ser ut i dag.
- *
  * De fire som ikke er våre — token-levetid, engangsbruk, ingen enumerering og
- * «ingen sesjon fra en reset» — er Better-Auths oppførsel. **Nettopp derfor
- * står de her.** Arvet oppførsel kan endre seg i en minor uten at noe i vår
+ * «ingen sesjon fra en reset» — er Better-Auths oppførsel. Nettopp derfor
+ * står de her. Arvet oppførsel kan endre seg i en minor uten at noe i vår
  * kode rører seg, og da vil vi at det blir rødt hos oss, ikke stille i prod.
  */
 
@@ -39,7 +37,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// ── 1. Herdingen, som ren regel. Ingen DB, kjører alltid. ──────────────────
+// 1. Herdingen, som ren regel. Ingen DB, kjører alltid.
 describe('F1-16: herdingskravene', () => {
   it('⭐ den EKTE konfigurasjonen i auth.ts har ingen hull', () => {
     // Denne ene assertion-en er hele poenget med fila. Skrur noen av
@@ -49,7 +47,7 @@ describe('F1-16: herdingskravene', () => {
   });
 
   it('⛔ SESJONER: `revokeSessionsOnPasswordReset: false` er et hull', () => {
-    // Better-Auths default ER false. Uten denne testen ville et bortfall av
+    // Better-Auths default er false. Uten denne testen ville et bortfall av
     // linja sett ut som ingenting.
     const hull = passordResetHull({
       emailAndPassword: {
@@ -88,7 +86,7 @@ describe('F1-16: herdingskravene', () => {
   });
 
   it('⛔ RATE LIMIT: en slakkere regel enn taket er et hull', () => {
-    // Better-Auths standardregel for stien er 3 per MINUTT = 180 i timen.
+    // Better-Auths standardregel for stien er 3 per minutt = 180 i timen.
     // Nøyaktig den verdien skal avvises.
     const hull = passordResetHull({
       emailAndPassword: {
@@ -130,7 +128,7 @@ describe('F1-16: herdingskravene', () => {
   });
 
   it('rate-limit-reglene står på de EKSAKTE Better-Auth-stiene', () => {
-    // Nøkkelen matches med `===` (eller wildcard) mot request-stien. En
+    // Nøkkelen matches med `` (eller wildcard) mot request-stien. En
     // skrivefeil her gir ingen feil — bare en regel som aldri treffer.
     const regler = byggAuth().options.rateLimit?.customRules ?? {};
     expect(Object.keys(regler)).toEqual(
@@ -139,7 +137,7 @@ describe('F1-16: herdingskravene', () => {
   });
 });
 
-// ── 2. Leveringsveien for lenka. Ingen DB. ────────────────────────────────
+// 2. Leveringsveien for lenka. Ingen DB.
 describe('F1-16: hvor resetlenka havner', () => {
   async function last() {
     vi.resetModules();
@@ -164,8 +162,8 @@ describe('F1-16: hvor resetlenka havner', () => {
   });
 
   /**
-   * ⛔ Samme regel som engangskoden (F1-11): en feilsatt `NODE_ENV` skal ikke
-   * alene være nok til at en resetlenke havner i en driftslogg. Lenka ER
+   * Samme regel som engangskoden (F1-11): en feilsatt `NODE_ENV` skal ikke
+   * alene være nok til at en resetlenke havner i en driftslogg. Lenka er
    * nøkkelen til kontoen.
    */
   it('⛔ DEV MED Resend konfigurert: lenka skrives IKKE til loggen', async () => {
@@ -179,14 +177,14 @@ describe('F1-16: hvor resetlenka havner', () => {
       lenke: 'https://endwise.test/nytt-passord?token=hemmelig-token',
       utloper: new Date(),
     }).catch(() => {
-      // Resend svarer ikke i test; det er selve LOGGINGEN som prøves her.
+      // Resend svarer ikke i test; det er selve loggingen som prøves her.
     });
 
     expect(warn.mock.calls.flat().join('\n')).not.toContain('hemmelig-token');
   });
 });
 
-// ── 3. Endepunktene, mot ekte database. ───────────────────────────────────
+// 3. Endepunktene, mot ekte database.
 const OWNER_URL = OPPRINNELIG.DATABASE_URL;
 const describeDb = OWNER_URL ? describe : describe.skip;
 
@@ -201,12 +199,10 @@ describeDb('F1-16: endepunktene mot ekte database', () => {
   const opprettede: string[] = [];
 
   /**
-   * ⚠️ **Én fersk bruker per test, ikke én delt.**
-   *
+   * Én fersk bruker per test, ikke én delt.
    * Første utkast delte én bruker mellom testene, og da falt sesjons-testen
    * fordi en tidligere test allerede hadde byttet passordet — «Invalid email
    * or password» på et passord som var riktig da testen ble skrevet.
-   *
    * En delt bruker gjør rekkefølgen til en skjult forutsetning, og en
    * sikkerhetstest som består fordi den tilfeldigvis kjørte først, beviser
    * ingenting. Isolasjonen koster noen millisekunder per test.
@@ -266,8 +262,7 @@ describeDb('F1-16: endepunktene mot ekte database', () => {
   });
 
   /**
-   * ⛔ **Den viktigste testen i fila.**
-   *
+   * Den viktigste testen i fila.
    * Svarer endepunktet ulikt på en adresse som finnes og en som ikke gjør det,
    * er det en kontoteller: hvem som helst kan kverne e-postadresser og få vite
    * hvilke som er kunder hos et verksted. Vi sammenligner hele svaret, ikke
@@ -283,15 +278,13 @@ describeDb('F1-16: endepunktene mot ekte database', () => {
   });
 
   /**
-   * ⛔ **En feilet e-postsending skal IKKE endre svaret.**
-   *
-   * Sendingen skjer bare for adresser som FINNES. Slo en feil der gjennom til
+   * En feilet e-postsending skal ikke endre svaret.
+   * Sendingen skjer bare for adresser som finnes. Slo en feil der gjennom til
    * HTTP-svaret, ville ukjent adresse gitt 200 og kjent adresse gitt 500 — og
    * da har endepunktet fortalt en fremmed nøyaktig det flyten er bygget for å
    * skjule. Better-Auth kaller senderen via `runInBackgroundOrAwait`, altså
    * etter at svaret er sendt, så egenskapen holder.
-   *
-   * ⚠️ Målt i praksis 22.08.2026: med en Resend-nøkkel som ikke fikk sende fra
+   * Målt i praksis : med en Resend-nøkkel som ikke fikk sende fra
    * domenet svarte ruta 200 mens loggen viste «Failed to run background task».
    * Denne testen er den fastholdte versjonen av den observasjonen.
    */
@@ -325,8 +318,7 @@ describeDb('F1-16: endepunktene mot ekte database', () => {
     /**
      * Dette er hele grunnen til at en resetflyt ikke er en bakdør rundt F1-11.
      * Ga `/reset-password` en sesjon, ville den som eier e-posten kommet rett
-     * inn UTEN engangskoden — og obligatorisk 2FA hadde vært en kulisse.
-     *
+     * inn uten engangskoden — og obligatorisk 2FA hadde vært en kulisse.
      * Vi sjekker begge deler: at ingen sesjonsrad oppstår, og at svaret ikke
      * bærer en sesjonscookie.
      */
@@ -372,7 +364,7 @@ describeDb('F1-16: endepunktene mot ekte database', () => {
 
   it('⛔ SESJONER: alle aktive sesjoner rives når passordet byttes', async () => {
     /**
-     * Uten dette ville en angriper som ALLEREDE er inne, blitt værende inne
+     * Uten dette ville en angriper som allerede er inne, blitt værende inne
      * etter at offeret «tok tilbake» kontoen. Resetten ville vært en
      * trøstehandling, ikke en sikring.
      */
@@ -388,10 +380,10 @@ describeDb('F1-16: endepunktene mot ekte database', () => {
 
   it('⛔ 2FA OVERLEVER: `twoFactorEnabled` røres ikke av en reset', async () => {
     /**
-     * ⚠️ Hvis en reset noen gang begynte å re-provisjonere kontoen, kunne 2FA
-     * blitt slått AV stille — og den som utløste resetten ville sluppet inn
+     * Hvis en reset noen gang begynte å re-provisjonere kontoen, kunne 2FA
+     * blitt slått av stille — og den som utløste resetten ville sluppet inn
      * med bare et passord neste gang. Databasetriggeren
-     * `endwise_2fa_session_cutoff` (migrasjon 0010) fanger PÅSLAG, ikke avslag,
+     * `endwise_2fa_session_cutoff` (migrasjon 0010) fanger påslag, ikke avslag,
      * så den ville ikke sagt fra.
      */
     const { epost, userId } = await nyBruker();

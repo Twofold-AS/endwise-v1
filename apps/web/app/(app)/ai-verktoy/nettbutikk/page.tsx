@@ -2,12 +2,10 @@ import { CircleAlert, Store } from '@endwise/ui';
 import { CardShell } from '../../_shell/cards';
 
 /**
- * AI-VERKTØY › NETTBUTIKK — **scaffold, ikke funksjonalitet** (07.08.2026).
- *
+ * Ai-verktøy › nettbutikk — **scaffold, ikke funksjonalitet** .
  * Samme forbehold som søsterflaten «Nettside»: ruten finnes for navigasjonens
  * skyld. Ingen knapper, fordi ingen knapper virker ennå.
- *
- * ⚠️ Nettbutikk er dessuten en større beslutning enn en AI-flate: den forutsetter
+ * Nettbutikk er dessuten en større beslutning enn en AI-flate: den forutsetter
  * produkt- og lagerdata Endwise ikke har i dag. Det er en samtale, ikke en task.
  */
 export default function AiNettbutikkPage() {

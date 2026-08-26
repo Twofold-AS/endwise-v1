@@ -7,10 +7,9 @@ const vehicleType = z.enum(['mc', 'boat', 'atv']);
 /**
  * F2-01 / F5-03 — Kjøretøyregister. Vegvesen-oppslaget (F2-08) ligger i
  * lookup-ruteren; her speiles bare resultatet.
- *
- * ⚠️ Feltene `make`/`model`/`modelYear`/`vin`/`inspectionDue` er **speilet fra
- * Autosys**, ikke vår sannhet. De skrives av oppslaget, ikke for hånd — unntatt
- * for båt og ATV, som ofte ikke finnes i registeret i det hele tatt.
+ * Feltene `make`/`model`/`modelYear`/`vin`/`inspectionDue` er speilet fra
+ * Autosys, ikke vår sannhet. De skrives av oppslaget, ikke for hånd — unntatt
+ * for båt og atv, som ofte ikke finnes i registeret i det hele tatt.
  */
 export const vehiclesRouter = router({
   /**
@@ -74,7 +73,7 @@ export const vehiclesRouter = router({
       const [kjoretoy] = await tx
         .select()
         .from(schema.vehicles)
-        // CWE-639: id OG tenant.
+        // CWE-639: id og tenant.
         .where(and(eq(schema.vehicles.id, input.id), eq(schema.vehicles.tenantId, ctx.tenantId)))
         .limit(1);
       if (!kjoretoy) return null;
@@ -132,7 +131,7 @@ export const vehiclesRouter = router({
         regNumber: z.string().min(2).max(10).optional(),
         customerId: z.uuid().optional(),
         // Feltene under fylles normalt av Vegvesen-oppslaget. Manuell inntasting
-        // er tillatt for båt/ATV, som ofte ikke finnes i Autosys.
+        // er tillatt for båt/atv, som ofte ikke finnes i Autosys.
         make: z.string().max(64).optional(),
         model: z.string().max(64).optional(),
         modelYear: z.string().max(8).optional(),

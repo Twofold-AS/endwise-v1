@@ -20,12 +20,10 @@ export interface UpsertMechanicSkillInput {
 }
 
 /**
- * F3-12 — Kompetanseregisteret.
- *
- * To lag med beskyttelse, og de gjør ULIKE jobber:
- *   - RLS   svarer på «hvilken tenants rader?»  (kan ikke omgås fra appen)
- *   - rolle svarer på «har DU lov til å skrive?» (RLS vet ingenting om roller)
- *
+ * Kompetanseregisteret.
+ * To lag med beskyttelse, og de gjør ulike jobber:
+ * RLS svarer på «hvilken tenants rader?» (kan ikke omgås fra appen)
+ * rolle svarer på «har du lov til å skrive?» (RLS vet ingenting om roller)
  * En dealer_staff er medlem av tenanten. RLS slipper ham inn i dataene. Det er
  * rollesjekken — og bare den — som hindrer at han gir seg selv `mc-eu`.
  */
@@ -154,7 +152,7 @@ export function createCompetenceRegistry(db: Database) {
     /**
      * Sertifiseringer som utløper snart. Driver varselet i F3-04 — en mekaniker
      * som mister sertifiseringen sin midt i en booket uke er et problem man vil
-     * vite om FØR det skjer, ikke etter.
+     * vite om før det skjer, ikke etter.
      */
     async expiringCertifications(tenantId: string, withinDays = 60) {
       return withTenant(db, tenantId, (tx) =>

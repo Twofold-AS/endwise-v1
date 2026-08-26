@@ -1,11 +1,10 @@
 /**
  * @endwise/ui
- *
- * ⚠️ LES `docs/UI-PAKKER.md` FØR DU LAGER EN NY KOMPONENT HER.
- * Endwise bygger UI av EKSTERNE pakker. Egen kode kun når ingen pakke dekker behovet.
+ * Les `docs/UI-PAKKER.md` før du lager en ny komponent her.
+ * Endwise bygger UI av eksterne pakker. Egen kode kun når ingen pakke dekker behovet.
  */
 
-// ─── [ART50-UI] AI Act art. 50 — JURIDISK PÅKREVD. Ikke fjern. ─────────
+// [ART50-UI] AI Act art. 50 — juridisk påkrevd. Ikke fjern.
 export {
   AI_DISCLOSURE_TEXT,
   AI_HANDOVER_TEXT,
@@ -14,7 +13,7 @@ export {
   type DisclosureLocale,
   HumanHandoverNotice,
 } from './compliance/ai-disclosure.tsx';
-// ─── Endwise-primitiver (F0-12) ─────────────────────────────────────────
+// Endwise-primitiver (F0-12)
 export {
   Avatar,
   type AvatarBevegelse,
@@ -22,9 +21,9 @@ export {
   type AvatarValg,
 } from './components/avatar.tsx';
 export { Badge, type BadgeProps, badgeVariants } from './components/badge.tsx';
-// ─── shadcn/ui — struktur ───────────────────────────────────────────────
+// shadcn/ui — struktur
 export { Button, buttonVariants } from './components/button.tsx';
-// ─── Recharts via shadcn Chart-mønsteret — ENESTE chart-motor (UI-PAKKER §2) ──
+// Recharts via shadcn Chart-mønsteret — eneste chart-motor (ui-pakker §2)
 export {
   Area,
   AreaChart,
@@ -67,7 +66,7 @@ export {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './components/dropdown-menu.tsx';
-// ─── shadcn/ui — CHAT (UI-PAKKER §9). Hentet 12.08.2026. ────────────────
+// shadcn/ui — chat (ui-pakker §9). Hentet .
 export {
   Message,
   MessageAvatar,
@@ -88,21 +87,18 @@ export {
   useMessageScrollerScrollable,
   useMessageScrollerVisibility,
 } from './components/message-scroller.tsx';
-/* ─── dither-kit — IKKE EKSPORTERT (03.08.2026) ──────────────────────────────
- *
+/*
+ * dither-kit — ikke eksportert
  * Eier ba om at dither-kit fjernes fra UI-et. All bruk er borte fra `apps/web`
  * (grafer → tabeller, avatar → profil-ikon, gradient-header → rolig aksentflate).
- *
  * Hvorfor eksporten er tatt bort og ikke bare bruken: barrel-en drar hele
  * modulgrafen inn i klient-bundelen selv når ingen komponent bruker den. Målt:
  * dither-kit-koden lå fortsatt i bundelen etter at siste bruk var fjernet.
  * Å eksportere noe ingen skal bruke er å sende det til hver eneste besøkende.
- *
- * ⚠️ **Filene er IKKE slettet** (`src/components/dither-kit/`, 40 filer), og
+ * Filene er ikke slettet (`src/components/dither-kit/`, 40 filer), og
  * dither-kit står fortsatt i techstacken som chart-motor. Skal det reverseres:
- * lim tilbake blokka under. Skal det ut for godt, er det en TECHSTACK-endring
+ * lim tilbake blokka under. Skal det ut for godt, er det en techstack-endring
  * (§1/§2) — da må det avklares hva som tegner charts i stedet.
- *
  * export { Area, type AreaProps, Line } from './components/dither-kit/area.tsx';
  * export { AreaChart, type AreaChartProps, LineChart } from './components/dither-kit/area-chart.tsx';
  * export { DitherAvatar } from './components/dither-kit/avatar.tsx';
@@ -121,9 +117,9 @@ export {
  * export { Tooltip } from './components/dither-kit/tooltip.tsx';
  * export { XAxis } from './components/dither-kit/x-axis.tsx';
  * export { YAxis } from './components/dither-kit/y-axis.tsx';
- * ───────────────────────────────────────────────────────────────────────────── */
+ */
 export type { ButtonProps as MotionButtonProps } from './components/motion/button/base.tsx';
-// ─── beUI — tilstand og bevegelse ───────────────────────────────────────
+// beUI — tilstand og bevegelse
 export { Button as MotionButton } from './components/motion/button/base.tsx';
 export {
   type ButtonState,
@@ -155,7 +151,7 @@ export {
   ToolPartGodkjenning,
   type ToolPartStatus,
 } from './components/tool-part.tsx';
-// ─── lucide-react — eneste ikonbibliotek (kuratert barrel) ──────────────
+// lucide-react — eneste ikonbibliotek (kuratert barrel)
 export * from './icons.ts';
 /** Kanoniske bevegelses-tokens (SPRING_PRESS, SPRING_SWAP, EASE_OUT …). Ikke funn opp egne. */
 export * from './lib/ease.ts';
@@ -165,6 +161,6 @@ export { Btn, type BtnProps } from './primitives/btn.tsx';
 export { Card, CardTitle } from './primitives/card.tsx';
 export { Chip, type ChipProps } from './primitives/chip.tsx';
 export { Input, type InputProps } from './primitives/input.tsx';
-// ─── matrix-loaders — HELE settet (93 loadere) ──────────────────────────
-// Vendorisert. Proprietær lisens — se src/vendor/matrix-loaders/VENDOR.md.
+// matrix-loaders — hele settet (93 loadere)
+// Vendorisert. Proprietær lisens — se src/vendor/matrix-loaders/vendor.md.
 export * from './vendor/matrix-loaders/index.ts';

@@ -4,10 +4,10 @@ import { Slot } from 'radix-ui';
 import type * as React from 'react';
 
 /*
- * ⚠️ AVVIK FRA KANONISK shadcn (03.08.2026): radius og høyder følger eierens
- * designprinsipper — 32px høyde, 10px radius, label-typografi (13/16 Medium) —
+ * Avvik fra kanonisk shadcn : radius og høyder følger eierens
+ * designprinsipper — 32px høyde, 10px radius, label-typografi (13/16 Medium)
  * i stedet for shadcns `rounded-md` + `text-sm` + `h-9`. Alt annet er urørt, så
- * `shadcn add` fortsatt kan brukes for NYE komponenter.
+ * `shadcn add` fortsatt kan brukes for nye komponenter.
  */
 const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-2 rounded-control text-label whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",

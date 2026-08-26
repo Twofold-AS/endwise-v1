@@ -7,7 +7,7 @@ import { Suspense } from 'react';
 import { NySamtale } from '../../innboks/_ny-samtale';
 
 /**
- * F5-11 — tom flate når ingen henvendelse er valgt.
+ * Tom flate når ingen henvendelse er valgt.
  * Lista (og tomtilstanden der) bor i innboks-sidebaren.
  * `?ny=1` åpner samme e-post-aktige compose som hos forhandleren.
  */

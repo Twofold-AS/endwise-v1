@@ -5,21 +5,17 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * F0-16 — MODUL-GATEN. **Dette er testen for CWE-862 (Missing Authorization).**
- *
+ * Modul-gaten. **Dette er testen for CWE-862 (Missing Authorization).**
  * Hvert kall her er et forsøk på å nå en betalt modul uten å ha kjøpt den.
- * Består testene, betyr det at GATEN stoppet forsøket — ikke at UI-et lot være
+ * Består testene, betyr det at gaten stoppet forsøket — ikke at UI-et lot være
  * å vise knappen.
- *
- * ⚠️ Vi kaller `appRouter` direkte med en håndlaget context, ikke over HTTP.
+ * Vi kaller `appRouter` direkte med en håndlaget context, ikke over HTTP.
  * Det er med vilje: en angriper går heller ikke gjennom UI-et. Ruta må stå
  * imot et rått kall.
- *
  * To tenants:
- *   - `medModul`  har `quick` og `ai-support` i `tenant_modules`
- *   - `utenModul` har ingen tillegg i det hele tatt
- *
- * Begge er `dealer_admin` — rollen er altså IKKE forskjellen. Det eneste som
+ * `medModul` har `quick` og `ai-support` i `tenant_modules`
+ * `utenModul` har ingen tillegg i det hele tatt
+ * Begge er `dealer_admin` — rollen er altså ikke forskjellen. Det eneste som
  * skiller dem er om de har betalt.
  */
 const OWNER_URL = process.env.DATABASE_URL;
@@ -52,7 +48,7 @@ describeDb('F0-16 — modul-gaten', () => {
     await owner.insert(schema.tenantModules).values([
       { tenantId: medModul, moduleKey: 'quick', enabled: true },
       { tenantId: medModul, moduleKey: 'ai-support', enabled: true },
-      // ⚠️ Deaktivert, ikke fraværende — nedgradering setter `enabled = false`
+      // Deaktivert, ikke fraværende — nedgradering setter `enabled = false`
       // og skal virke akkurat som om raden ikke fantes.
       { tenantId: medModul, moduleKey: 'vegvesen', enabled: false },
     ]);
@@ -65,7 +61,7 @@ describeDb('F0-16 — modul-gaten', () => {
     await owner.delete(schema.tenants).where(sql`id in (${medModul}, ${utenModul})`);
   });
 
-  /* ══ Katalogen henger sammen ═══════════════════════════════════════════ */
+  /* Katalogen henger sammen */
 
   it('basis og tillegg overlapper ikke', () => {
     const overlapp = BASIS_MODULES.filter((b) => (ADDON_MODULES as readonly string[]).includes(b));
@@ -78,7 +74,7 @@ describeDb('F0-16 — modul-gaten', () => {
     expect(isAddon('shop')).toBe(true);
   });
 
-  /* ══ ANGREP: uten modulen ══════════════════════════════════════════════ */
+  /* Angrep: uten modulen */
 
   it('ANGREP: quick.config uten modulen → FORBIDDEN', async () => {
     const caller = appRouter.createCaller(ctx(utenModul) as never);
@@ -101,19 +97,19 @@ describeDb('F0-16 — modul-gaten', () => {
   });
 
   it('ANGREP: en DEAKTIVERT modul teller som ikke kjøpt', async () => {
-    // `medModul` HAR en vegvesen-rad, men med `enabled = false`.
+    // `medModul` har en vegvesen-rad, men med `enabled = false`.
     const caller = appRouter.createCaller(ctx(medModul) as never);
     await expect(caller.lookup.vehicleByRegNumber({ regNumber: 'AB12345' })).rejects.toThrow(
       /vegvesen.*ikke aktiv|FORBIDDEN/i,
     );
   });
 
-  /* ══ MED modulen slipper gjennom ═══════════════════════════════════════ */
+  /* Med modulen slipper gjennom */
 
   it('quick.config MED modulen slipper gjennom gaten', async () => {
     const caller = appRouter.createCaller(ctx(medModul) as never);
     // Kan svare hva som helst (typisk `null` uten konfig) — poenget er at den
-    // IKKE kaster FORBIDDEN. En feil lenger inne er et annet problem.
+    // Ikke kaster forbidden. En feil lenger inne er et annet problem.
     await expect(caller.quick.config()).resolves.not.toThrow();
   });
 
@@ -123,7 +119,7 @@ describeDb('F0-16 — modul-gaten', () => {
     expect(Array.isArray(agenter)).toBe(true);
   });
 
-  /* ══ BASIS er IKKE gated ═══════════════════════════════════════════════ */
+  /* Basis er ikke gated */
 
   it('BASIS: lager svarer uten noen modul i det hele tatt', async () => {
     const caller = appRouter.createCaller(ctx(utenModul) as never);

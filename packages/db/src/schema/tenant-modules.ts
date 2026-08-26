@@ -4,12 +4,10 @@ import { tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F0-04 — Entitlements (plan -> modul), DB-styrt. Erstatter Unleash.
- *
+ * Entitlements (plan -> modul), DB-styrt. Erstatter Unleash.
  * Skillet som må holdes rent (techstack §2):
- *   - entitlements  = HVA en tenant har betalt for  -> denne tabellen
- *   - release-toggles = HVA vi har rullet ut        -> Vercel Flags SDK + Edge Config
- *
+ * entitlements = hva en tenant har betalt for -> denne tabellen
+ * release-toggles = hva vi har rullet ut -> Vercel Flags SDK + Edge Config
  * Stripe-abonnement (F8) skriver hit; ingen kode leser Stripe direkte.
  */
 export const tenantModules = pgTable(
@@ -23,10 +21,10 @@ export const tenantModules = pgTable(
     enabled: boolean('enabled').notNull().default(true),
     /**
      * Hvem som tildelte nøkkelen.
-     *  · included — Endwise-admin-pakke, på før eieren kommer
-     *  · optional — admin lot eieren velge i veiviseren (av til hen slår på)
-     *  · dealer   — eieren slo på et optional-tillegg
-     *  · stripe   — webhook (F5-32)
+     * included — Endwise-admin-pakke, på før eieren kommer
+     * optional — admin lot eieren velge i veiviseren (av til hen slår på)
+     * dealer — eieren slo på et optional-tillegg
+     * stripe — webhook (F5-32)
      */
     source: text('source', { enum: ['included', 'optional', 'dealer', 'stripe'] })
       .notNull()

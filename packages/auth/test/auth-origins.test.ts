@@ -5,12 +5,10 @@ import { authPublicUrl, authTrustedOrigins } from '../src/auth-origins.ts';
 
 /**
  * F1-01 / F13 — **betrodde origins, låst.**
- *
  * Preview og produksjonsalias på Vercel kjører `NODE_ENV=production`, så den
  * gamle «kun i dev»-lista slapp aldri inn `VERCEL_URL`. Da ble
  * `https://endwise-v1-web.vercel.app` 403 Invalid origin mens et annet alias
  * virket bare fordi det tilfeldigvis var `BETTER_AUTH_URL`.
- *
  * Lista skal navngi det vi kan peke på: produktvert + env Vercel allerede
  * setter. Ingen `*.vercel.app`.
  */

@@ -1,13 +1,11 @@
 /**
- * F5-23 — Minimer-regler for helpdesk-slideren (TipCard).
- *
+ * Minimer-regler for helpdesk-slideren (TipCard).
  * Holdes utenfor React så Ny→åpen og persist kan testes uten å mounte
  * sidebaren. localStorage-nøkkelen er slideren, aldri visningsvelgeren.
- *
- * ── Åpen vs minimert ─────────────────────────────────────────────────────
+ * Åpen vs minimert
  * Ulest («Ny») ved lasting tvinger alltid full slider, også hvis brukeren
  * hadde minimert sist. Brukeren kan likevel minimere mens Ny vises.
- * En *ny* ulest artikkel (ny id, eller ulest none→some) åpner igjen —
+ * En *ny* ulest artikkel (ny id, eller ulest none→some) åpner igjen
  * det er «Endwise publiserte mens forhandleren hadde den lukket».
  */
 

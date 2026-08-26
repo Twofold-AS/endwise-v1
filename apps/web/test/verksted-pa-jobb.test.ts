@@ -11,7 +11,7 @@ import {
 } from '../app/(app)/dashboard/_timeplan-layout.ts';
 
 /**
- * F3-05 — Verkstedet: timeplan + ansatte på jobb.
+ * Verkstedet: timeplan + ansatte på jobb.
  * Ikke Kontor, ikke Gulvet, ikke AI-chat i nav.
  */
 const her = dirname(fileURLToPath(import.meta.url));

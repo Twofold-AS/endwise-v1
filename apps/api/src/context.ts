@@ -15,7 +15,7 @@ export interface AppContext {
   /** Settes av auth-middleware i F1. Null = uautentisert. */
   tenantId: string | null;
   userId: string | null;
-  /** Rollen brukeren har I DENNE tenanten (F1-05). Null = uautentisert. */
+  /** Rollen brukeren har I denne tenanten (F1-05). Null = uautentisert. */
   role: Role | null;
 }
 
@@ -24,14 +24,12 @@ let dbSingleton: Database | undefined;
 function getDb(): Database {
   if (!dbSingleton) {
     /**
-     * ⚠️ F5-28 ③ — APP_DATABASE_URL FØRST, og det er ikke en preferanse.
-     *
-     * `DATABASE_URL` er EIEREN. Kobler API-et seg til som eier, gjelder ikke
+     * F5-28 ③ — APP_DATABASE_URL først, og det er ikke en preferanse.
+     * `DATABASE_URL` er eieren. Kobler API-et seg til som eier, gjelder ikke
      * RLS for den forbindelsen — og det skjer stille: ingen feil, ingen
-     * advarsel, bare rader fra alle tenants. Fram til 07.08.2026 leste denne
+     * advarsel, bare rader fra alle tenants. Fram til leste denne
      * linja `DATABASE_URL` alene, som alle de andre inngangene (stream,
      * notify, quick-pull) allerede unngikk.
-     *
      * `force row level security` i grants.sql lukker hullet i databasen. Denne
      * linja lukker det i applikasjonen. Begge deler, for de feiler ulikt.
      */
@@ -55,25 +53,21 @@ function getAuthForContext(): Auth {
 }
 
 /**
- * F1 — Autentisert tRPC-context. Resolver Better-Auth-sesjonen MYKT (kaster ikke
+ * F1 — Autentisert tRPC-context. Resolver Better-Auth-sesjonen mykt (kaster ikke
  * for uinnloggede — protectedProcedure gjør det): sesjon → aktiv tenant →
  * medlemskapssjekk (assertMember) → rolle. Uten gyldig sesjon/medlemskap står
  * userId/tenantId/role som null.
- *
- * ── ⚠️ To hull som ble tettet 12.08.2026 ────────────────────────────────
- *
- * **1. `requireSession` ble hoppet over.** Denne funksjonen kalte
- * `auth.api.getSession()` direkte, mens REST-middlewaren og SSE-kanalen gikk
+ * To hull som ble tettet
+ * 1. `requireSession` ble hoppet over. Denne funksjonen kalte
+ * `auth.api.getSession` direkte, mens REST-middlewaren og SSE-kanalen gikk
  * gjennom `requireSession`. Forskjellen er ikke kosmetisk: `requireSession`
- * håndhever den ABSOLUTTE maks-levetiden (F1-12), som Better-Auth ikke kjenner.
+ * håndhever den absolutte maks-levetiden (F1-12), som Better-Auth ikke kjenner.
  * tRPC — altså **hele datatrafikken** — hadde derfor kun det glidende
  * idle-vinduet. En sesjon eldre enn 12 timer ble avvist på SSE og i REST, men
  * sluppet gjennom her.
- *
- * **2. 2FA ble ikke håndhevet** (F1-11). Nå ligger sjekken inne i
+ * 2. 2FA ble ikke håndhevet (F1-11). Nå ligger sjekken inne i
  * `requireSession`, så alle tre inngangene arver den automatisk.
- *
- * ⛔ `TwoFactorRequiredError` slippes VIDERE, den svelges ikke som «ikke
+ * `TwoFactorRequiredError` slippes videre, den svelges ikke som «ikke
  * innlogget». Uten det ville brukeren blitt sendt til innloggingsskjermen hen
  * nettopp kom fra, i en løkke, uten å få vite at det er 2FA som mangler.
  */

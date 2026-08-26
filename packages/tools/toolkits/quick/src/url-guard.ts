@@ -1,25 +1,21 @@
 import { QuickSsrfError } from './errors.ts';
 
 /**
- * F8-01 / CWE-918 — SSRF-vern for den BRUKERKONFIGURERTE `baseUrl`.
- *
+ * F8-01 / CWE-918 — ssrf-vern for den brukerkonfigurerte `baseUrl`.
  * Trusselen: dealer_admin skriver inn Quick-instansens URL, og vi gjør utgående
  * requests mot den. Uten kontroll kan en ondsinnet/kompromittert admin peke den
  * mot interne mål — skyens metadata-tjeneste (169.254.169.254), `localhost`,
- * RFC1918 (10/8, 172.16/12, 192.168/16), link-local, osv. Dette er DELT
+ * RFC1918 (10/8, 172.16/12, 192.168/16), link-local, osv. Dette er delt
  * Endwise-infra, ikke tenant-scopet, så det er et plattform-angrep.
- *
  * Kontroller (defense-in-depth):
- *   1. Kun `https:` (ingen http/file/gopher/…).
- *   2. Ingen credentials i URL (`user:pass@host`).
- *   3. Host kan ikke være et IP-literal eller `localhost` (stopper direkte
- *      IMDS/loopback selv om allowlisten skulle utvides).
- *   4. Host MÅ matche en allowlist av domene-suffiks (default `quick.no` →
- *      `quick.no` og `*.quick.no`). Overstyrbart via `QUICK_ALLOWED_HOST_SUFFIXES`.
- *   5. Kun standardport (tom eller 443) — hindrer intern portmålretting.
- *
- * Kall dette BÅDE ved lagring (setConfig) og før HVER fetch i klienten.
- *
+ * 1. Kun `https:` (ingen http/file/gopher/…).
+ * 2. Ingen credentials i URL (`user:pass@host`).
+ * 3. Host kan ikke være et IP-literal eller `localhost` (stopper direkte
+ * Imds/loopback selv om allowlisten skulle utvides).
+ * 4. Host MÅ matche en allowlist av domene-suffiks (default `quick.no` →
+ * `quick.no` og `*.quick.no`). Overstyrbart via `QUICK_ALLOWED_HOST_SUFFIXES`.
+ * 5. Kun standardport (tom eller 443) — hindrer intern portmålretting.
+ * Kall dette både ved lagring (setConfig) og før hver fetch i klienten.
  * Restrisiko (dokumentert): DNS-rebinding der `*.quick.no` resolver til en intern
  * IP krever at Quicks DNS er kompromittert — utenfor dealer-admin-trusselmodellen.
  * `redirect: 'error'` i klienten stopper 3xx-omdirigering til ny host.

@@ -3,8 +3,8 @@ import { and, eq, schema, sql, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 
 /**
- * F10-03 — Butikk leser lager. Tilgjengelig = onHand − reserved, aldri negativ.
- * ⛔ Ingen kostpris ut her. ⛔ Ingen kundepersonopplysninger i logger (CWE-532).
+ * Butikk leser lager. Tilgjengelig = onHand − reserved, aldri negativ.
+ * Ingen kostpris ut her. Ingen kundepersonopplysninger i logger (CWE-532).
  */
 export function tilgjengeligFra(onHand: number, reserved: number): number {
   return Math.max(0, onHand - reserved);

@@ -1,5 +1,7 @@
-/** F0-06 — IntegrationProvider. Én implementasjon per ekstern integrasjon
- *  (Quick, Vegvesen/Autosys, Finn.no, Lime CRM …). Toolkits i packages/tools. */
+/**
+ * IntegrationProvider. Én implementasjon per ekstern integrasjon
+ * (Quick, Vegvesen/Autosys, Finn.no, Lime crm …). Toolkits i packages/tools.
+ */
 export interface IntegrationHealth {
   ok: boolean;
   checkedAt: string;

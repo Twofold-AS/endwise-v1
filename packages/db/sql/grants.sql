@@ -1,14 +1,14 @@
--- Kjøres ETTER migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
+-- Kjøres etter migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
 -- Siste slett-relaterte migrasjon: 0026_slett_forhandler_kontoer (DROP+CREATE).
 -- lookup_open_invitation: CREATE ligger i 0020/0021 + sql/functions.sql (ingen 0027).
 -- Scaleway på 0026: `pnpm db:grants` alene gjenoppretter funksjonen (idempotent).
 -- 0025 DROP+CREATE + app.slett_endwise_id (policyer her speiler 0025).
--- 0024 CREATE OR REPLACE samme signatur — journal hopper over den som allerede kjørt.
+-- 0024 CREATE OR replace samme signatur — journal hopper over den som allerede kjørt.
 -- 0023_quick_lager la Quick-GUID på parts/stock_locations.
---
+
 -- Migrasjonen lager tabellene (som eier) og rollen `authenticated`.
--- Her kobles app-brukeren til rollen, og rollen får lov til å PRØVE å røre
--- tabellene. Hvilke RADER den faktisk ser, bestemmes av RLS-policyene.
+-- Her kobles app-brukeren til rollen, og rollen får lov til å prøve å røre
+-- tabellene. Hvilke rader den faktisk ser, bestemmes av RLS-policyene.
 
 grant authenticated to endwise_app;
 
@@ -23,22 +23,21 @@ alter default privileges in schema public
 alter default privileges in schema public
   grant usage, select on sequences to authenticated;
 
--- ============================================================================
--- FORCE ROW LEVEL SECURITY (07.08.2026, F5-28 ③)
--- ============================================================================
--- `enable row level security` gjelder for ALLE ANDRE ENN TABELLEIEREN. Kobler
+-- Force row level security (F5-28).
+
+-- `enable row level security` gjelder for alle andre enn tabelleieren. Kobler
 -- applikasjonen seg til som eier, er RLS usynlig — og det skjer uten en eneste
 -- feilmelding. `force` fjerner det unntaket: da gjelder policyene også for eier.
---
--- Dette er belte og bukseseler. Runtime SKAL koble til som `endwise_app`
+
+-- Dette er belte og bukseseler. Runtime skal koble til som `endwise_app`
 -- (APP_DATABASE_URL), og da hadde `enable` holdt. Men «skal» er en antakelse om
 -- konfigurasjon, og en antakelse er ikke en sperre.
---
+
 -- Migrasjoner kjøres fortsatt som eier. De rører DDL, ikke rader, så force
 -- påvirker dem ikke. Seeding som eier gjør den derimot: se scripts/seed.ts.
---
+
 -- Dynamisk over pg_class, ikke en håndskrevet tabelliste: en ny tabell med
--- `.enableRLS()` blir dekket automatisk neste gang `pnpm db:grants` kjøres.
+-- `.enableRLS` blir dekket automatisk neste gang `pnpm db:grants` kjøres.
 -- Idempotent.
 do $$
 declare r record;
@@ -57,8 +56,8 @@ begin
   end loop;
 end $$;
 
--- Runtime-rollen må ALDRI kunne omgå RLS på egen hånd.
--- Krever superuser å SETTE. Lokalt (Docker) er eieren superuser; hos en managed
+-- Runtime-rollen må aldri kunne omgå RLS på egen hånd.
+-- Krever superuser å sette. Lokalt (Docker) er eieren superuser; hos en managed
 -- leverandør (Scaleway) er den
 -- det ikke, og der er attributtet uansett aldri satt. Derfor: prøv, og la det
 -- gå hvis vi ikke har rettighetene — testen i test/force-rls.test.ts er den som
@@ -70,17 +69,16 @@ exception when insufficient_privilege then
   raise notice '[force-rls] mangler rettighet til å sette nobypassrls — verifiseres av testen';
 end $$;
 
--- ============================================================================
--- F1-10 — hash-oppslag under FORCE RLS (23.08.2026)
--- ============================================================================
--- SECURITY DEFINER på lookup/consume kjører som eieren. Med FORCE RLS har
--- eieren INGEN tenant-policy (den er TO authenticated), så uten dette unntaket
+-- Hash-oppslag under force RLS
+
+-- SECURITY DEFINER på lookup/consume kjører som eieren. Med force RLS har
+-- eieren ingen tenant-policy (den er to authenticated), så uten dette unntaket
 -- er hver åpen invitasjon usynlig — prod-404 med samme kropp som «ugyldig
 -- token». Policyen slår bare inn når funksjonen har satt `app.invitation_hash`
--- (is_local). Uten GUC: 0 rader, også for eieren. Samme mønster som
+-- (is_local). Uten guc: 0 rader, også for eieren. Samme mønster som
 -- `tenants_platform_admin_read`.
---
--- TO PUBLIC med vilje: DEFINER-eieren er ikke `authenticated`. TO authenticated
+
+-- To public med vilje: DEFINER-eieren er ikke `authenticated`. To authenticated
 -- alene ville latt hullet stå.
 drop policy if exists invitations_open_by_hash on invitations;
 drop policy if exists invitations_open_by_hash_update on invitations;
@@ -96,24 +94,23 @@ create policy invitations_open_by_hash_update on invitations
   using (token_hash = nullif(current_setting('app.invitation_hash', true), ''))
   with check (token_hash = nullif(current_setting('app.invitation_hash', true), ''));
 
--- ============================================================================
--- F5-26 — GDPR-slett under FORCE RLS (23.08.2026)
--- ============================================================================
--- `slett_forhandler` er SECURITY DEFINER. Med FORCE RLS har eieren INGEN
--- tenant-policy (de er TO authenticated). Uten dette unntaket er
+-- GDPR-slett under force RLS
+
+-- `slett_forhandler` er SECURITY DEFINER. Med force RLS har eieren ingen
+-- tenant-policy (de er to authenticated). Uten dette unntaket er
 -- `SELECT slug` 0 rader («finnes ikke») og DELETE på RLS-tabeller 0 rader.
---
--- TO PUBLIC med vilje: DEFINER kjører som tabelleieren.
---
--- ⛔ Rotårsak (Scaleway, 23.08.2026): `NOT pg_has_role(current_user,
--- 'authenticated', 'member')` matcher ALDRI eieren. Den som CREATE ROLE
--- authenticated er ADMIN av rollen, så pg_has_role(...) er TRUE. Resultat:
--- tom SELECT på `slug` → «finnes ikke». PERMISSIVE OR er ikke et hull —
--- `tenants_slett_forhandler_select` er bundet til slett-GUC.
---
--- Predikatet er `current_user IS DISTINCT FROM 'authenticated'` OG
--- `… FROM 'endwise_app'`: app-rollen (med eller uten SET ROLE) kan sette
--- GUC-er, men skal ikke bruke eier-policyene. Eieren `endwise` matcher.
+
+-- To public med vilje: DEFINER kjører som tabelleieren.
+
+-- Rotårsak (Scaleway, ): `NOT pg_has_role(current_user,
+-- 'authenticated', 'member')` matcher aldri eieren. Den som CREATE role
+-- authenticated er admin av rollen, så pg_has_role(...) er TRUE. Resultat:
+-- tom SELECT på `slug` → «finnes ikke». Permissive OR er ikke et hull
+-- `tenants_slett_forhandler_select` er bundet til slett-guc.
+
+-- Predikatet er `current_user IS DISTINCT FROM 'authenticated'` og
+-- `… FROM 'endwise_app'`: app-rollen (med eller uten SET role) kan sette
+-- Guc-er, men skal ikke bruke eier-policyene. Eieren `endwise` matcher.
 
 drop policy if exists tenants_platform_admin_read_owner on tenants;
 create policy tenants_platform_admin_read_owner on tenants
@@ -150,9 +147,9 @@ create policy tenants_slett_forhandler on tenants
     and id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
   );
 
--- USING: raden som flyttes/redigeres tilhører slett-målet.
--- WITH CHECK: NEW.tenant_id er slett-målet (PII-redaksjon) ELLER
--- Endwise-tenanten (flytt så RESTRICT-FK slipper). Ikke vilkårlig tenant_id.
+-- Using: raden som flyttes/redigeres tilhører slett-målet.
+-- With check: new.tenant_id er slett-målet (PII-redaksjon) eller
+-- Endwise-tenanten (flytt så restrict-fk slipper). Ikke vilkårlig tenant_id.
 drop policy if exists audit_log_slett_update on audit_log;
 create policy audit_log_slett_update on audit_log
   as permissive
@@ -242,7 +239,7 @@ create policy erasure_requests_slett_select on erasure_requests
 
 -- DELETE på øvrige RLS-tabeller med tenant_id. Dynamisk: nye tabeller dekkes
 -- neste `pnpm db:grants`. Hopper over audit_log / erasure_requests / tenants
--- (håndteres over). Tabeller UTEN RLS (tenant_delete_challenges) trenger
+-- (håndteres over). Tabeller uten RLS (tenant_delete_challenges) trenger
 -- ingen policy — GRANT DELETE holder, og å skru på RLS her ville knust OTP.
 do $$
 declare r record;

@@ -35,12 +35,10 @@ import { hashSlettKode, lagSlettKode, slettKodeErGyldig } from '../slett-otp.ts'
 import { loggSlettPostgresFeil, mapSlettPostgresFeil } from '../slett-postgres.ts';
 
 /**
- * F5-26 / F5-27 — FORHANDLER-OPPRETTING OG DEMO-TENANTS.
- *
- * ⛔ **Alt som skriver her er `endwiseAdminProcedure`, ikke `adminProcedure`.**
+ * F5-26 / F5-27 — forhandler-oppretting og demo-tenants.
+ * Alt som skriver her er `endwiseAdminProcedure`, ikke `adminProcedure`.
  * Forskjellen er ikke kosmetisk: `adminProcedure` slipper inn `dealer_admin`,
  * og en forhandler skal ikke kunne opprette forhandlere.
- *
  * `current` er unntaket — den er `protectedProcedure`, fordi den bare svarer
  * på «hva heter tenanten jeg allerede er i?». Den kan ikke lekke noe RLS ikke
  * allerede har gitt deg.
@@ -54,8 +52,8 @@ const slugSchema = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Kun små bokstaver, tall og bindestrek');
 
 /**
- * Ekstra TILLEGG utenom nivået. Tom med vilje — Start/Pro/Enterprise
- * kommer fra TIERS. Admin krysser bare av det som ikke allerede ligger i
+ * Ekstra tillegg utenom nivået. Tom med vilje — Start/Pro/Enterprise
+ * kommer fra tiers. Admin krysser bare av det som ikke allerede ligger i
  * pakken. shop er aldri ekstra. SMS (twilio) er tillegg på alle nivåer.
  */
 const START_MODULER: string[] = [];
@@ -258,16 +256,13 @@ export const tenantsRouter = router({
 
   /**
    * Alle forhandlere. Den ene lovlige kryss-tenant-lesningen i systemet.
-   *
-   * ⚠️ **Rettet 07.08.2026 — sto stille tom.** Den gikk på `ctx.db` uten
+   * sto stille tom. Den gikk på `ctx.db` uten
    * tenant-kontekst, i den tro at «rollen er isolasjonen her». Men RLS på
    * `tenants` er `id = current_setting('app.tenant_id')`, og uten den satt gir
    * policyen **null rader, ikke alle rader**. Siden viste ingen forhandlere, og
    * ingenting feilet — den bare var tom.
-   *
-   * `withPlatformAdmin` slår på en SELECT-ONLY-policy for nettopp dette. Se
+   * `withPlatformAdmin` slår på en select-only-policy for nettopp dette. Se
    * `packages/db/src/client.ts` for hvorfor det er tryggere enn alternativet.
-   *
    * Feltene er minimale — navn, slug, kind, dato. Ingen forhandlerdata, ingen
    * kunde-PII.
    */
@@ -305,12 +300,10 @@ export const tenantsRouter = router({
   }),
 
   /**
-   * F1-07 — Live plattformtall. Ingen Stripe, ingen mock.
-   *
-   *  · `tenants` via `withPlatformAdmin` (den ene lovlige kryss-tenant-lesningen)
-   *  · `user` og `member` har bevisst ingen RLS (Better-Auth, ADR-002)
-   *
-   * Bookinger telles IKKE: `withPlatformAdmin` åpner bare `tenants`, og en
+   * Live plattformtall. Ingen Stripe, ingen mock.
+   * `tenants` via `withPlatformAdmin` (den ene lovlige kryss-tenant-lesningen)
+   * `user` og `member` har bevisst ingen RLS (Better-Auth, ADR-002)
+   * Bookinger telles ikke: `withPlatformAdmin` åpner bare `tenants`, og en
    * runde `withTenant` per forhandler er ikke billig. Tom telling er ærlig.
    */
   census: endwiseSupportProcedure.query(async ({ ctx }) => {
@@ -338,7 +331,6 @@ export const tenantsRouter = router({
 
   /**
    * F1-07 / F0-04 — entitlements per forhandler (lesing).
-   *
    * `tenant_modules` har RLS. `withPlatformAdmin` åpner den ikke. Vi lister
    * tenants via platform-admin, og leser modulene i hver tenants egen
    * `withTenant`. Skriving er `setModules` (endwise_admin).
@@ -406,16 +398,14 @@ export const tenantsRouter = router({
   /** Tillegg Endwise-admin kan krysse av. Basis er ikke med. */
   addonKatalog: endwiseAdminProcedure.query(() => addonKatalog()),
 
-  /** Nivå + TILLEGG. TIERS/TILLEGG er kilden — ingen hardkodede nøkler. */
+  /** Nivå + tillegg. Tiers/tillegg er kilden — ingen hardkodede nøkler. */
   pakkeKatalog: endwiseAdminProcedure.query(() => pakkeKatalog()),
 
   /**
    * Opprett en forhandler + eier-invitasjon.
-   *
    * Admin setter aldri passord. Finnes e-posten, blir brukeren `dealer_admin`
    * med en gang og får likevel en sett/bytt-passord-lenke. Finnes den ikke,
    * opprettes tenanten uten eier, og invitee lager kontoen selv.
-   *
    * Admin setter pakken (`included`) og hva eieren *kan* legge til
    * i veiviseren (`optional`). `START_MODULER` er tom; shop avvises.
    */
@@ -429,7 +419,7 @@ export const tenantsRouter = router({
         tier: z.enum(TIER_KEYS).default('start'),
         included: ekstraTilleggSchema.default([]),
         optional: ekstraTilleggSchema.default([]),
-        /** @deprecated Bruk `included` (TILLEGG-nøkler) + `tier`. */
+        /** @deprecated Bruk `included` (tillegg-nøkler) + `tier`. */
         modules: tildelbareModulerSchema.optional(),
       }),
     )
@@ -546,9 +536,8 @@ export const tenantsRouter = router({
 
   /**
    * F0-04 / F5-26 — Endwise-admin skriver `tenant_modules`.
-   *
    * Mikael overstyrer «Stripe-only write» for tildeling. `moduleProcedure`
-   * håndhever fortsatt nøklene. `dealer_admin` får FORBIDDEN (denne ruta er
+   * håndhever fortsatt nøklene. `dealer_admin` får forbidden (denne ruta er
    * `endwiseAdminProcedure`). Hver endring logges (CWE-778).
    */
   setModules: endwiseAdminProcedure
@@ -760,7 +749,7 @@ export const tenantsRouter = router({
     }),
 
   /**
-   * Endre navn, slug og demo-merke. Eier-e-post vises / sendes på nytt —
+   * Endre navn, slug og demo-merke. Eier-e-post vises / sendes på nytt
    * den byttes aldri stille her.
    */
   update: endwiseAdminProcedure
@@ -976,18 +965,15 @@ export const tenantsRouter = router({
   devMode: protectedProcedure.query(({ ctx }) => resolveDevMode(ctx)),
 
   /**
-   * F5-27 — Fyll en DEMO-tenant med placeholder-data.
-   *
-   * ⚠️ **Går gjennom `withTenant`, ikke som DB-eier.** Dev-seeden
+   * Fyll en demo-tenant med placeholder-data.
+   * Går gjennom `withTenant`, ikke som DB-eier. Dev-seeden
    * (`apps/api/scripts/seed.ts`) skriver som eier og sier det selv: «RLS er
-   * usynlig». Det er greit for et engangsscript på kommandolinja. Det er IKKE
+   * usynlig». Det er greit for et engangsscript på kommandolinja. Det er ikke
    * greit for noe som kan kalles fra en innlogget flate — da ville
    * demo-knappen vært den ene skrivestien i systemet uten isolasjon.
-   *
    * `tenantId` er valgfri: uten den brukes sesjonens tenant. Endwise-admin
    * sitter vanligvis i plattform-tenanten, så knappen må kunne peke på en
    * annen demo-tenant. Live-tenants nektes alltid.
-   *
    * Idempotent: kaller du to ganger, får du ikke to sett.
    */
   seedDemo: endwiseAdminProcedure
@@ -1018,9 +1004,9 @@ export const tenantsRouter = router({
       }
 
       return withTenant(ctx.db, targetId, async (tx) => {
-        // ① Mekaniker-profil på MEG. Dette er hele grunnen til at mekaniker-
-        //    konteksten er usynlig for en admin: `isMechanic` krever en rad her.
-        //    Vi jukser ikke med gaten — vi oppretter dataene gaten spør etter.
+        // ① Mekaniker-profil på meg. Dette er hele grunnen til at mekaniker-
+        // konteksten er usynlig for en admin: `isMechanic` krever en rad her.
+        // Vi jukser ikke med gaten — vi oppretter dataene gaten spør etter.
         const [minMek] = await tx
           .select({ id: schema.mechanics.id })
           .from(schema.mechanics)
@@ -1053,7 +1039,7 @@ export const tenantsRouter = router({
             .values({
               tenantId: targetId,
               name: 'EU-kontroll MC (demo)',
-              // Endwise er MC/båt/ATV — ikke bil. Se vehicleTypeEnum.
+              // Endwise er mc/båt/atv — ikke bil. Se vehicleTypeEnum.
               vehicleType: 'mc',
             })
             .returning({ id: schema.services.id });
@@ -1088,33 +1074,28 @@ export const tenantsRouter = router({
     }),
 
   /**
-   * F5-28 ③ — Demo-tenants jeg ER MEDLEM AV.
-   *
-   * ⛔ **Ingen auto-innmelding.** Denne ruten lister kun tenants der det
+   * F5-28 ③ — Demo-tenants jeg er medlem av.
+   * Ingen auto-innmelding. Denne ruten lister kun tenants der det
    * allerede finnes en `member`-rad for meg. Den melder aldri noen inn i noe.
    * Å bytte til en tenant man ikke er medlem av er ikke en funksjon som
    * mangler — det er funksjonen vi med vilje ikke bygger.
-   *
    * Selve byttet skjer klient-side via Better-Auths `organization.setActive`,
    * som validerer medlemskapet på nytt server-side. Denne lista er kun for å
-   * kunne VISE valgene; den gir ingen tilgang.
+   * kunne vise valgene; den gir ingen tilgang.
    */
   myDemoTenants: endwiseAdminProcedure.query(async ({ ctx }) => {
     /**
-     * ⚠️ **Ikke en JOIN — og det er to grunner til det.** (Rettet 07.08.2026;
-     * den opprinnelige versjonen KASTET og hadde aldri virket.)
-     *
+     * Ikke en join — og det er to grunner til det. (;
+     * den opprinnelige versjonen kastet og hadde aldri virket.)
      * 1. `member.organization_id` er `text` (Better-Auth eier den), mens
-     *    `tenants.id` er `uuid`. Postgres sier `operator does not exist:
-     *    text = uuid` — joinen kunne aldri gått.
+     * `tenants.id` er `uuid`. Postgres sier `operator does not exist:
+     * text = uuid` — joinen kunne aldri gått.
      * 2. Selv med en cast ville den vært tom: `tenants` har RLS-policyen
-     *    `id = current_setting('app.tenant_id')`, og en spørring utenfor
-     *    `withTenant` har ingen tenant satt → **null rader, ikke alle rader**.
-     *
+     * `id = current_setting('app.tenant_id')`, og en spørring utenfor
+     * `withTenant` har ingen tenant satt → **null rader, ikke alle rader**.
      * I stedet: `member` har ingen RLS (ADR-002: Better-Auth-tabellene er
      * globale identiteter), så medlemskapene leses direkte. Deretter hentes
-     * hver tenant i SIN EGEN `withTenant`-kontekst.
-     *
+     * hver tenant i sin egen `withTenant`-kontekst.
      * Det er ikke bare en omvei rundt problemet — det er strengere. Før var
      * «kun tenants du er medlem av» en WHERE-betingelse vi selv skrev. Nå er
      * det RLS som håndhever det, ett oppslag av gangen. Lista er dessuten

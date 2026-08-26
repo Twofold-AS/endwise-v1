@@ -5,13 +5,11 @@ import { protectedProcedure, router } from '../init.ts';
 
 /**
  * F2-06 / F5-02 — Kunderegister. Alle spørringer går gjennom withTenant → RLS.
- *
- * ── «Søk opp en kunde og se alt» (F5-02) ──────────────────────────────────
- * `byId` returnerer kunden MED kjøretøy, servicehistorikk og meldingstråder i
+ * «Søk opp en kunde og se alt» (F5-02)
+ * `byId` returnerer kunden med kjøretøy, servicehistorikk og meldingstråder i
  * ett kall. Alternativet — fire separate kall fra klienten — ville gitt fire
  * lastetilstander på én skjerm, og en side som blafrer inn i fire etapper.
- *
- * ⛔ **Sorteringsfelt er en allowlist** (A03, samme regel som i lageret). Et
+ * Sorteringsfelt er en allowlist (A03, samme regel som i lageret). Et
  * kolonnenavn fra klienten er like mye brukerinput som et søkeord.
  */
 const KUNDE_SORT = {
@@ -31,7 +29,7 @@ export const customersRouter = router({
           sok: z.string().max(120).optional(),
           sorter: z.enum(['navn', 'opprettet']).default('navn'),
           retning: z.enum(['asc', 'desc']).default('asc'),
-          /** F8-01: skill Quick-speilede kunder fra dem som er født her. */
+          /** Skill Quick-speilede kunder fra dem som er født her. */
           kilde: z.enum(['alle', 'endwise', 'quick']).default('alle'),
           limit: z.number().int().min(1).max(200).default(100),
         })
@@ -53,7 +51,7 @@ export const customersRouter = router({
             createdAt: schema.customers.createdAt,
             /** Tråddeltaker når kunden har «Min side». Aldri vist i UI. */
             userId: schema.customers.userId,
-            // Antall kjøretøy rett i lista — «har denne kunden en MC hos oss?»
+            // Antall kjøretøy rett i lista — «har denne kunden en mc hos oss?»
             // er spørsmålet man stiller før man klikker.
             antallKjoretoy: sql<number>`(
               select count(*)::int from vehicles v
@@ -81,9 +79,8 @@ export const customersRouter = router({
     ),
 
   /**
-   * Kundekortet — ALT om én kunde i ett kall.
-   *
-   * ⚠️ CWE-639: `id` OG `tenant_id` i hver WHERE, ikke bare RLS. Den dagen noen
+   * Kundekortet — alt om én kunde i ett kall.
+   * CWE-639: `id` og `tenant_id` i hver WHERE, ikke bare RLS. Den dagen noen
    * kaller dette utenfor `withTenant`, skal svaret være «ingenting».
    */
   byId: protectedProcedure.input(z.object({ id: z.uuid() })).query(({ ctx, input }) =>
@@ -143,8 +140,7 @@ export const customersRouter = router({
 
       /**
        * Meldinger knyttet til kunden.
-       *
-       * ⚠️ Koblingen er `customers.user_id` → `thread_participants.participant_id`.
+       * Koblingen er `customers.user_id` → `thread_participants.participant_id`.
        * Har ikke kunden logget inn på «Min side» (F6), finnes ingen kobling — og
        * da er tom liste det ærlige svaret, ikke en gjetning på navn eller e-post.
        */
@@ -186,7 +182,7 @@ export const customersRouter = router({
     .mutation(({ ctx, input }) =>
       withTenant(ctx.db, ctx.tenantId, async (tx) => {
         /**
-         * F2-06 / F5-55 — lokal kunde. Quick er fakta NÅR det er koblet på
+         * F2-06 / F5-55 — lokal kunde. Quick er fakta når det er koblet på
          * (pull overskriver speilede rader). Uten Quick lagrer Endwise kunden
          * selv. Ingen push, ingen modul-gate, ingen speilkrav.
          */
@@ -221,7 +217,7 @@ export const customersRouter = router({
 
         const [note] = await tx
           .insert(schema.customerNotes)
-          // `authorId` fra SESJONEN, aldri fra input — ellers kunne noen
+          // `authorId` fra sesjonen, aldri fra input — ellers kunne noen
           // skrevet et notat i en kollegas navn.
           .values({ ...input, tenantId: ctx.tenantId, authorId: ctx.userId })
           .returning();

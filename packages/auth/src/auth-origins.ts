@@ -2,8 +2,7 @@ import { devTrustedOrigins } from './dev-origins.ts';
 
 /**
  * F1-01 / F13 — offentlige auth-URL-er og betrodde origins.
- *
- * ── Problemet dette løser ─────────────────────────────────────────────────
+ * Problemet dette løser
  * `devTrustedOrigins` ble bare sendt inn når `NODE_ENV !== 'production'`.
  * Vercel preview og alias-hoster kjører `NODE_ENV=production`, så de fikk
  * ingen ekstra origins — bare `BETTER_AUTH_URL` som `baseURL`. Åpnet du
@@ -12,14 +11,12 @@ import { devTrustedOrigins } from './dev-origins.ts';
  * `https://endwise-v1-web.vercel.app` feilet mens
  * `https://endwise-v1-web-endwise-twofold.vercel.app` virket fordi den
  * tilfeldigvis var `BETTER_AUTH_URL`.
- *
- * ── Hva som er betrodd ────────────────────────────────────────────────────
+ * Hva som er betrodd
  * Bare navngitte verter: produktvertene + det Vercel allerede setter
  * (`VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`) +
  * `BETTER_AUTH_URL` / derived base URL. Ingen `*.vercel.app`.
- *
- * ── Preview vs prod ──────────────────────────────────────────────────────
- * Preview skal IKKE arve produksjons-`BETTER_AUTH_URL`. Det splitter
+ * Preview vs prod
+ * Preview skal ikke arve produksjons-`BETTER_AUTH_URL`. Det splitter
  * cookie og origin: resetlenker og sesjoner hører til den hosten
  * deployet faktisk serveres på.
  */
@@ -76,7 +73,6 @@ function httpsOrigin(verdi: string | undefined): string | null {
 
 /**
  * Offentlig base-URL for denne kjøringen.
- *
  * Preview: `https://${VERCEL_URL}` — ikke produksjonsdomenet.
  * Prod (eller NODE_ENV=production uten preview): `BETTER_AUTH_URL`, påkrevd.
  * Dev: `BETTER_AUTH_URL` / localhost, som før.
@@ -98,8 +94,7 @@ export function authPublicUrl(env: AuthOriginEnv = process.env): string {
 
 /**
  * Origins Better-Auth skal godta for denne kjøringen.
- *
- * Kjører i prod, preview og dev — ikke bare lokalt. LAN/localhost bare
+ * Kjører i prod, preview og dev — ikke bare lokalt. Lan/localhost bare
  * når `NODE_ENV !== 'production'`.
  */
 export function authTrustedOrigins(env: AuthOriginEnv = process.env): string[] {

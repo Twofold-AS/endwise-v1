@@ -1,31 +1,26 @@
 /**
- * F1-17 — BYTT PASSORD mens du er innlogget.
- *
- * Reset (F1-16) er for den som IKKE kan passordet. Denne flyten er det
+ * Bytt passord mens du er innlogget.
+ * Reset (F1-16) er for den som ikke kan passordet. Denne flyten er det
  * motsatte: Better-Auth `changePassword` krever gjeldende passord, som er
  * re-autentiseringen Settings-sjekklista ber om for sikkerhetsfelter.
- *
- * ── Hva vi eier her ──────────────────────────────────────────────────────
- * Selve kallet er Better-Auths. Det vi eier er valideringen FØR kallet, og
- * herdingen Better-Auths default IKKE gir:
- *
- *   · CWE-613 — `/change-password` respekterer `revokeOtherSessions` fra
- *     request-body. Default `false`. En klient som utelater flagget, eller
- *     en angriper som kaller API-et direkte, lar andre sesjoner leve.
- *     Sperren er `hooks.before` i `bytt-passord-server.ts`, som tvinger
- *     flagget til `true` før handleren kjører. `byttPassordKall` er et
- *     ekstra lag, ikke sperren.
- *   · CWE-307 — Better-Auth har ingen egen rate-limit på stien. Uten en
- *     `customRules`-oppføring arver den den slakke globalen (60/min).
- *   · CWE-209 / CWE-287 — handleren svarer `INVALID_PASSWORD` når det
- *     gjeldende passordet er feil. Det er en orakel-lekkasje. `hooks.after`
- *     mapper den (og like auth-feil) til én generisk kode.
- *
+ * Hva vi eier her
+ * Selve kallet er Better-Auths. Det vi eier er valideringen før kallet, og
+ * herdingen Better-Auths default ikke gir:
+ * CWE-613 — `/change-password` respekterer `revokeOtherSessions` fra
+ * request-body. Default `false`. En klient som utelater flagget, eller
+ * en angriper som kaller API-et direkte, lar andre sesjoner leve.
+ * Sperren er `hooks.before` i `bytt-passord-server.ts`, som tvinger
+ * flagget til `true` før handleren kjører. `byttPassordKall` er et
+ * ekstra lag, ikke sperren.
+ * CWE-307 — Better-Auth har ingen egen rate-limit på stien. Uten en
+ * `customRules`-oppføring arver den den slakke globalen (60/min).
+ * CWE-209 / CWE-287 — handleren svarer `INVALID_PASSWORD` når det
+ * gjeldende passordet er feil. Det er en orakel-lekkasje. `hooks.after`
+ * mapper den (og like auth-feil) til én generisk kode.
  * Klientsjekkene er bekvemmelighet, ikke sikkerhet: serveren håndhever
  * `minPasswordLength: 12` uansett. Uten sjekken her får brukeren en engelsk
  * feil etter å ha fylt tre felt.
- *
- * ⚠️ Denne fila importeres av web-klienten (`@endwise/auth/bytt-passord`).
+ * Denne fila importeres av web-klienten (`@endwise/auth/bytt-passord`).
  * Ingen Better-Auth-serverimport her — da følger hele auth-grafen med i
  * bundle. Hookene bor i `bytt-passord-server.ts`.
  */
@@ -45,7 +40,6 @@ export const TO_FAKTOR_DISABLE_STI = '/two-factor/disable';
 
 /**
  * Rate-limit på å bytte passord: 5 per minutt, per IP.
- *
  * Trusselen er den samme som `/sign-in/email` (5/60s): nettverksside gjetting
  * av et passord. En ekte bruker treffer endepunktet én gang, kanskje tre hvis
  * hen taster feil. Fem i minuttet er raust for dem og fiendtlig for alt annet.
@@ -55,14 +49,14 @@ export const BYTT_PASSORD_RATE_GRENSE = { window: 60, max: 5 } as const;
 /** Samme tak som bytt-passord, for `enable`/`disable` som krever passord. */
 export const KREDENTIAL_MUTASJON_RATE_GRENSE = { window: 60, max: 5 } as const;
 
-/** API-svaret når gjeldende passord er feil ELLER en annen auth-feil treffer. */
+/** API-svaret når gjeldende passord er feil eller en annen auth-feil treffer. */
 export const BYTT_PASSORD_GENERISK_FEILKODE = 'CHANGE_PASSWORD_FAILED';
 export const BYTT_PASSORD_GENERISK_MELDING = 'Kunne ikke bytte passordet.';
 
 export const KREDENTIAL_MUTASJON_GENERISK_FEILKODE = 'CREDENTIAL_MUTATION_FAILED';
 export const KREDENTIAL_MUTASJON_GENERISK_MELDING = 'Kunne ikke bekrefte handlingen.';
 
-/** Identitet `byttPassordHull()` krever på `hooks.before` / `hooks.after`. */
+/** Identitet `byttPassordHull` krever på `hooks.before` / `hooks.after`. */
 export const BYTT_PASSORD_FOR_HOOK_ID = 'tving-revoke-other-sessions';
 export const BYTT_PASSORD_ETTER_HOOK_ID = 'skjul-auth-feilkode';
 
@@ -103,7 +97,6 @@ export type ByttPassordFeil = {
 
 /**
  * Klientvalidering for Settings › Profil og mekanikerens «Meg».
- *
  * Trim er den samme lærdommen som `/signin`: et limt inn mellomrom er
  * usynlig bak prikkene og gir nøyaktig samme 401 som feil passord.
  */
@@ -129,11 +122,9 @@ export function validerByttPassord(input: ByttPassordInput): ByttPassordOk | Byt
 
 /**
  * Payloaden til Better-Auth `changePassword`.
- *
- * ⛔ `revokeOtherSessions` er IKKE valgfritt her. Default `false` ville latt
+ * `revokeOtherSessions` er ikke valgfritt her. Default `false` ville latt
  * en stjålet sesjon på en annen enhet overleve at eieren byttet passord.
- *
- * ⚠️ Dette er klientlaget. Sperren er `hooks.before` som tvinger flagget
+ * Dette er klientlaget. Sperren er `hooks.before` som tvinger flagget
  * uansett hva request-body sier. Se `byttPassordHull`.
  */
 export function byttPassordKall(ok: ByttPassordOk): {
@@ -150,7 +141,6 @@ export function byttPassordKall(ok: ByttPassordOk): {
 
 /**
  * Den delen av Better-Auth-konfigurasjonen denne modulen har en mening om.
- *
  * Strukturell med vilje, ikke `BetterAuthOptions` — samme grep som
  * `passordResetHull`. Da kan sperren testes mot håndlagde objekter.
  */
@@ -180,8 +170,7 @@ function hookId(hook: unknown): string | undefined {
 }
 
 /**
- * Hvilke herdingskrav er IKKE oppfylt? Tom liste = alt i orden.
- *
+ * Hvilke herdingskrav er ikke oppfylt? Tom liste = alt i orden.
  * CWE-613 uten server-hook, CWE-307 uten rate-limit, eller en hook som ikke
  * er den navngitte sperren, blir en hard testfeil — ikke en stille default.
  */

@@ -7,11 +7,10 @@ import { RevenueTable } from './_components/revenue-table';
 import { ANALYTICS_KPIS, BOOKING_KPIS, REFERRERS, REVENUE_KPIS, TOP_PAGES } from './_data';
 
 /**
- * ENDWISE-OVERSIKT (endwise_admin) — Endwise-INTERN forretningsoversikt: hva VI
+ * Endwise-oversikt (endwise_admin) — Endwise-intern forretningsoversikt: hva vi
  * tjener + plattformtall på tvers av forhandlere. Distinkt fra forhandlerens
  * egen Forhandler→Oversikt (/dashboard), som viser forhandlerens egne tall.
- *
- * Mock: Web Analytics (krever Vercel-deploy, F13-02) + Stripe-inntekt (krever
+ * Web Analytics (krever Vercel-deploy, F13-02) + Stripe-inntekt (krever
  * nøkler, F5-09). Ekte struktur: booking-aggregat (bookings-ruteren finnes).
  */
 export default function EndwiseOverviewPage() {
@@ -25,7 +24,7 @@ export default function EndwiseOverviewPage() {
         </p>
       </div>
 
-      {/* Inntekt (Stripe) — MOCK. Ikke live penger. */}
+      {/* Inntekt (Stripe) — . Ikke live penger. */}
       <Group
         title="Inntekt (Stripe) — mocktall"
         badge
@@ -41,7 +40,7 @@ export default function EndwiseOverviewPage() {
         </SectionCard>
       </Group>
 
-      {/* Web Analytics — MOCK */}
+      {/* Web Analytics — */}
       <Group
         title="Web Analytics"
         badge
@@ -83,7 +82,7 @@ export default function EndwiseOverviewPage() {
         </div>
       </Group>
 
-      {/* Booking (aggregert) — EKTE backend, seed nå */}
+      {/* Booking (aggregert) — ekte backend, seed nå */}
       <Group
         title="Booking (aggregert)"
         note="Ekte backend (bookings-ruteren). Seed til web-tRPC-klienten er wiret."

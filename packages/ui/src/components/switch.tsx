@@ -8,11 +8,9 @@ import type * as React from 'react';
  * shadcn/ui Switch (New York), bygget på `radix-ui`s Switch — samme primitiv
  * shadcn selv bruker, og allerede en avhengighet. Ikke egen kode i betydningen
  * «ny primitiv»; kun shadcn-oppskriften med eierens mål.
- *
- * MÅL (eierens designprinsipper 03.08.2026, låst i widget-tokens):
- *   track 24×14px · thumb 10px · track-på #0077E6
- *
- * Merk at track-farge-på er en EGEN blå (`--ew-switch-track-on`), ikke
+ * Mål (eierens designprinsip, låst i widget-tokens):
+ * track 24×14px · thumb 10px · track-på #0077E6
+ * Merk at track-farge-på er en egen blå (`--ew-switch-track-on`), ikke
  * merkevareaksenten. Det er spesifisert slik, og det er faktisk fornuftig: en
  * bryter som er på skal lese som «på», ikke som «Endwise».
  */

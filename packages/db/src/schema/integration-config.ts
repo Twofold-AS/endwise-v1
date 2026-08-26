@@ -4,16 +4,14 @@ import { tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F8-01 / F1-07 — Per-tenant integrasjonskonfig (først: Quick ERP).
- *
- * Én rad per (tenant, provider). `baseUrl` er IKKE en hemmelighet (per-instans
+ * F8-01 / F1-07 — Per-tenant integrasjonskonfig (først: Quick erp).
+ * Én rad per (tenant, provider). `baseUrl` er ikke en hemmelighet (per-instans
  * URL, f.eks. https://q3.quick.no/ProdShared008) og lagres i klartekst.
- * `tokenCipher` ER en hemmelighet: forhandlerens Quick API-token, envelope-
- * kryptert (AES-256-GCM, se crypto.ts). Klartekst-token rører ALDRI DB.
- *
+ * `tokenCipher` er en hemmelighet: forhandlerens Quick API-token, envelope-
+ * kryptert (aes-256-gcm, se crypto.ts). Klartekst-token rører aldri DB.
  * RLS: tenant-isolert som alt annet — forhandler A når aldri forhandler B sin
  * config eller token, uansett hva som sendes inn (verifisert i angrepstest).
- * Kun dealer_admin/endwise_admin skal SKRIVE hit — det håndheves i API-laget
+ * Kun dealer_admin/endwise_admin skal skrive hit — det håndheves i API-laget
  * (adminProcedure), ikke av RLS (RLS kjenner ikke roller).
  */
 export const integrationConfig = pgTable(

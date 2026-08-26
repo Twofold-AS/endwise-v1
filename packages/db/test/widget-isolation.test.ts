@@ -5,12 +5,10 @@ import { createDb, type Database, withTenant } from '../src/client.ts';
 import { schema } from '../src/index.ts';
 
 /**
- * F4-02 — Angrepstest for den OFFENTLIGE widget-flaten (DB-laget).
- *
+ * Angrepstest for den offentlige widget-flaten (DB-laget).
  * Widget-nøkkelen scoper til ÉN tenant. Beviser at RLS holder: forhandler A ser
  * eller endrer aldri B sine widget-nøkler, og en kunde bundet til A kan aldri nå
  * B sine kunder/tjenester/bookinger. Angrep kjøres som `endwise_app`.
- *
  * Krever Docker-Postgres + `pnpm db:setup`. Skippes uten begge env-URL-ene.
  */
 const OWNER_URL = process.env.DATABASE_URL;

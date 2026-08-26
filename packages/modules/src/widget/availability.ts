@@ -1,7 +1,6 @@
 /**
- * F4-07 — Ledige tider, ren beregning.
- *
- * VIKTIG for personvern (offentlig flate): denne returnerer KUN ledige
+ * Ledige tider, ren beregning.
+ * Viktig for personvern (offentlig flate): denne returnerer kun ledige
  * start-tidspunkter — aldri hvem som er opptatt, hvilke kunder eller bookinger
  * som finnes. Opptatt-intervallene kommer inn som anonyme {start,end}-par og
  * forlater aldri serveren. En anonym kunde kan altså se når det er ledig, men
@@ -27,7 +26,7 @@ export interface FreeSlotQuery {
   notBefore?: Date;
   /**
    * Verkstedets kapasitet = antall mekanikere som kan jobbe samtidig. Et slot er
-   * ledig hvis FÆRRE enn `capacity` opptatt-intervaller overlapper. Default 1.
+   * ledig hvis færre enn `capacity` opptatt-intervaller overlapper. Default 1.
    * Dette lar oss tilby ledighet på verksted-nivå uten å enumerere mekanikere.
    */
   capacity?: number;

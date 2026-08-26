@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * ⚠️ Vi sjekker feil-KODEN, ikke meldingsteksten. Meldingene er norske og skal
+ * Vi sjekker feil-koden, ikke meldingsteksten. Meldingene er norske og skal
  * kunne skrives om uten at en sikkerhetstest brekker — og en test som består
  * fordi ordlyden tilfeldigvis passet, tester ordlyden og ikke sperren.
  */
@@ -13,12 +13,10 @@ async function forventerForbidden(kall: Promise<unknown>) {
 }
 
 /**
- * F1-10 — **ANGREPSTEST: hvem får invitere?**
- *
- * ⚠️ Vi kaller `appRouter` direkte med en håndlaget context, ikke over HTTP.
+ * angrepstest: hvem får invitere?
+ * Vi kaller `appRouter` direkte med en håndlaget context, ikke over HTTP.
  * Det er med vilje — en angriper går heller ikke gjennom UI-et. Ruta må stå
- * imot et rått kall fra en som HAR en gyldig sesjon, men feil rolle.
- *
+ * imot et rått kall fra en som har en gyldig sesjon, men feil rolle.
  * Skjulte knapper er ingen sperre. Sperren er `adminProcedure` pluss den
  * eksplisitte rollesjekken i ruta.
  */
@@ -59,7 +57,7 @@ describeDb('F1-10: hvem kan invitere', () => {
     await owner.delete(schema.tenants).where(eq(schema.tenants.id, tenantId));
   });
 
-  /* ══ ANGREP: feil rolle ════════════════════════════════════════════════ */
+  /* Angrep: feil rolle */
 
   it('⛔ ANGREP: dealer_staff kan ikke invitere', async () => {
     const caller = appRouter.createCaller(ctx('dealer_staff') as never);
@@ -87,7 +85,7 @@ describeDb('F1-10: hvem kan invitere', () => {
     await forventerForbidden(caller.invitasjoner.tilbakekall({ id: randomUUID() }));
   });
 
-  /* ══ Lederen slipper gjennom ═══════════════════════════════════════════ */
+  /* Lederen slipper gjennom */
 
   it('dealer_admin kan invitere', async () => {
     const caller = appRouter.createCaller(ctx('dealer_admin') as never);
@@ -116,7 +114,7 @@ describeDb('F1-10: hvem kan invitere', () => {
       epost: 'forsok@verksted.no',
       funksjon: 'selger',
     });
-    // Invitasjonen havnet i VÅR tenant, ikke i den oppgitte.
+    // Invitasjonen havnet i vår tenant, ikke i den oppgitte.
     const [rad] = await owner
       .select({ tenantId: schema.invitations.tenantId })
       .from(schema.invitations)

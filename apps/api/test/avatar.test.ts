@@ -4,14 +4,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * F6-19 — AVATAR: hvem kan sette hvem sitt ansikt, og hva godtar basen?
- *
+ * Avatar: hvem kan sette hvem sitt ansikt, og hva godtar basen?
  * Avataren er kosmetikk. Ruta som lagrer den er ikke: den skriver til
  * `user_preferences`, som **ikke har RLS** (global tabell, se skjemaet). Der er
  * `ctx.userId` hele beskyttelsen, og da må det finnes en test som sier at ingen
  * bruker-ID kan komme fra input (CWE-639).
- *
- * ⚠️ Vi kaller `appRouter` direkte med en håndlaget context — samme grunn som i
+ * Vi kaller `appRouter` direkte med en håndlaget context — samme grunn som i
  * `module-gate.test.ts`: en angriper går ikke gjennom UI-et.
  */
 const OWNER_URL = process.env.DATABASE_URL;
@@ -50,7 +48,7 @@ describeDb('F6-19 — avatar', () => {
       { id: brukerB, name: 'Ansatt B', email: `${brukerB}@test.no`, emailVerified: true },
     ]);
     /**
-     * ⚠️ ADR-002: `organization.id` ER tenant-IDen, men det er to tabeller —
+     * ADR-002: `organization.id` er tenant-IDen, men det er to tabeller
      * `tenants` er vår, `organization` er Better-Auths, og `member` sin
      * fremmednøkkel peker på den siste. Begge må finnes.
      */
@@ -59,7 +57,7 @@ describeDb('F6-19 — avatar', () => {
       { id: tenantB, name: 'Avatar B', slug: `avb-${tenantB.slice(0, 8)}`, createdAt: new Date() },
     ]);
     await owner.insert(schema.member).values([
-      // ⚠️ `member.created_at` er NOT NULL uten default (Better-Auth eier
+      // `member.created_at` er NOT NULL uten default (Better-Auth eier
       // tabellen), så den må settes eksplisitt her.
       {
         id: randomUUID(),
@@ -89,14 +87,14 @@ describeDb('F6-19 — avatar', () => {
     await owner.delete(schema.tenants).where(sql`id in (${tenantA}, ${tenantB})`);
   });
 
-  /* ══ STANDARD: alt fra seeden ══════════════════════════════════════════ */
+  /* Standard: alt fra seeden */
 
   it('uten lagret valg er alle tre null — alt utledes fra seeden', async () => {
     const meg = await a().profile.meg();
     expect(meg.avatar).toEqual({ form: null, humor: null, farge: null, tone: null });
   });
 
-  /* ══ LAGRING ═══════════════════════════════════════════════════════════ */
+  /* Lagring */
 
   it('lagrer form, farge og tone', async () => {
     await a().profile.setAvatar({ form: 'sun', humor: 'happy', farge: 210, tone: 3 });
@@ -107,12 +105,12 @@ describeDb('F6-19 — avatar', () => {
   it('null tilbakestiller ÉN egenskap uten å røre de andre', async () => {
     await a().profile.setAvatar({ form: 'sun', humor: 'happy', farge: null, tone: 3 });
     const meg = await a().profile.meg();
-    // ⛔ Kjernen i at feltene er `.nullable()` og ikke `.optional()`: null er et
+    // Kjernen i at feltene er `.nullable` og ikke `.optional`: null er et
     // valg («per seed»), ikke fravær av et valg.
     expect(meg.avatar).toEqual({ form: 'sun', humor: 'happy', farge: null, tone: 3 });
   });
 
-  /* ══ ANGREP: input som ikke skal godtas ════════════════════════════════ */
+  /* Angrep: input som ikke skal godtas */
 
   it('ANGREP: ukjent form avvises av zod', async () => {
     await expect(
@@ -135,10 +133,10 @@ describeDb('F6-19 — avatar', () => {
     ).rejects.toThrow();
   });
 
-  /* ══ HUMØR (20.08.2026) ════════════════════════════════════════════════ */
+  /* Humør */
 
   it('ANGREP: et humør utenfor det kuraterte utvalget avvises', async () => {
-    // `sad` FINNES i blobatar, men er bevisst ikke tilbudt. At biblioteket
+    // `sad` finnes i blobatar, men er bevisst ikke tilbudt. At biblioteket
     // kjenner en verdi gjør den ikke lovlig hos oss.
     await expect(
       a().profile.setAvatar({ form: null, humor: 'sad' as never, farge: null, tone: null }),
@@ -152,9 +150,9 @@ describeDb('F6-19 — avatar', () => {
   });
 
   /**
-   * ⚠️ Drizzle pakker databasefeilen inn i sin egen «Failed query»-melding, så
+   * Drizzle pakker databasefeilen inn i sin egen «Failed query»-melding, så
    * constraint-navnet ligger i `cause`, ikke i `message`. En `toThrow(/navn/)`
-   * ville derfor bestått på FEIL grunnlag — eller feilet selv om regelen virket.
+   * ville derfor bestått på feil grunnlag — eller feilet selv om regelen virket.
    * Vi leser derfor navnet der det faktisk står.
    */
   async function constraintVed(fn: () => Promise<unknown>): Promise<string> {
@@ -168,7 +166,7 @@ describeDb('F6-19 — avatar', () => {
   }
 
   it('ANGREP: rå INSERT med ukjent form avvises av CHECK-en i basen', async () => {
-    // ⛔ Det tredje laget. Zod beskytter ruta; denne beskytter tabellen mot en
+    // Det tredje laget. Zod beskytter ruta; denne beskytter tabellen mot en
     // fremtidig rute som glemmer regelen.
     const navn = await constraintVed(() =>
       owner
@@ -208,7 +206,7 @@ describeDb('F6-19 — avatar', () => {
     expect(navn).toBe('user_preferences_avatar_humor_check');
   });
 
-  /* ══ EIERSKAP: ingen bruker-ID fra input ═══════════════════════════════ */
+  /* Eierskap: ingen bruker-ID fra input */
 
   it('ANGREP: setAvatar tar ingen userId — B kan ikke sette A sitt ansikt', async () => {
     /**
@@ -232,12 +230,12 @@ describeDb('F6-19 — avatar', () => {
     expect(megB.avatar).toEqual({ form: 'triangle', humor: 'wink', farge: 10, tone: 0 });
   });
 
-  /* ══ VISNINGSNAVN — rotårsaken til sidebar-bugen (20.08.2026) ═════════ */
+  /* Visningsnavn — rotårsaken til sidebar-bugen */
 
   it('session.me returnerer brukerens EGET navn', async () => {
     /**
-     * ⛔ Dette feltet er hele fiksen. Sidebaren leste navnet fra Better-Auths
-     * klientsesjon, mens `profile.setName` skriver til `user.name` i basen —
+     * Dette feltet er hele fiksen. Sidebaren leste navnet fra Better-Auths
+     * klientsesjon, mens `profile.setName` skriver til `user.name` i basen
      * to hjem for samme opplysning, og bare det ene ble oppdatert.
      */
     const meg = await a().session.me();
@@ -249,12 +247,12 @@ describeDb('F6-19 — avatar', () => {
     const meg = await a().session.me();
     expect(meg.navn).toBe('Ansatt A2');
 
-    // ⚠️ Og det er MITT navn som endret seg, ikke naboens.
+    // Og det er mitt navn som endret seg, ikke naboens.
     const megB = await b().session.me();
     expect(megB.navn).toBe('Ansatt B');
   });
 
-  /* ══ OPPSLAG: seed og avatar via directory ═════════════════════════════ */
+  /* Oppslag: seed og avatar via directory */
 
   it('participants gir seed + avatar for egen tenants folk', async () => {
     const svar = await a().directory.participants({ ids: [brukerA], visning: 'offisiell' });
@@ -263,7 +261,7 @@ describeDb('F6-19 — avatar', () => {
   });
 
   it('ANGREP: nabo-tenanten får verken navn, seed eller ansikt', async () => {
-    // ⛔ `user_preferences` har ingen RLS. Isolasjonen kommer av at IDen aldri
+    // `user_preferences` har ingen RLS. Isolasjonen kommer av at IDen aldri
     // blir oppløst i tenant B — og en ID vi ikke kan navngi, spør vi heller
     // ikke om et ansikt for.
     const svar = await b().directory.participants({ ids: [brukerA], visning: 'offisiell' });

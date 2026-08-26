@@ -10,20 +10,17 @@ export interface PublishInput {
 }
 
 /**
- * F6-02 — Publisering.
- *
+ * Publisering.
  * To trinn, i én transaksjon:
- *   1. SKRIV eventet (får en monoton `id`)
- *   2. NOTIFY med bare «id + tenant + audience»
- *
- * NOTIFY-payloaden inneholder ALDRI innhold. To grunner, og begge er reelle:
- *   - Postgres kutter NOTIFY-payload på 8000 bytes. En lang melding ville
- *     stilltiende blitt avkortet.
- *   - Alle som lytter på kanalen ser payloaden. Å legge meldingstekst der ville
- *     vært å sende hver kundes samtale til hver eneste tilkoblede prosess.
- *     Innholdet hentes fra tabellen, gjennom RLS.
- *
- * NOTIFY er varselklokka. Tabellen er sannheten.
+ * 1. Skriv eventet (får en monoton `id`)
+ * 2. Notify med bare «id + tenant + audience»
+ * Notify-payloaden inneholder aldri innhold. To grunner, og begge er reelle:
+ * Postgres kutter notify-payload på 8000 bytes. En lang melding ville
+ * stilltiende blitt avkortet.
+ * Alle som lytter på kanalen ser payloaden. Å legge meldingstekst der ville
+ * vært å sende hver kundes samtale til hver eneste tilkoblede prosess.
+ * Innholdet hentes fra tabellen, gjennom RLS.
+ * Notify er varselklokka. Tabellen er sannheten.
  */
 export async function publishEvent(db: Database, input: PublishInput) {
   return withTenant(db, input.tenantId, async (tx) => {
@@ -51,8 +48,7 @@ export async function publishEvent(db: Database, input: PublishInput) {
 }
 
 /**
- * F6-02 — Avspilling ved reconnect (Last-Event-ID).
- *
+ * Avspilling ved reconnect (Last-Event-ID).
  * Går gjennom `withTenant`, altså RLS. En klient som sender en `Last-Event-ID`
  * fra en annen tenant får null rader — ikke andres historikk.
  */

@@ -3,7 +3,7 @@ import * as expressions from 'blobatar/expression';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F6-19 — Vokabularet vårt er bibliotekets ekte `expression`-eksporter.
+ * Vokabularet vårt er bibliotekets ekte `expression`-eksporter.
  * Vi gjetter ikke enum. De ti vi persisterer er et kuratert utvalg av de
  * fjorten blobatar eksporterer.
  */

@@ -4,9 +4,8 @@ import { trpc } from '@/lib/trpc';
 import { BEVEGELSE_LABEL, BEVEGELSE_TONE, Feil, Laster, Sidehode, Tomt } from '../_delt';
 
 /**
- * F5-31 — LAGER · Bevegelser. Append-only historikk.
- *
- * ⚠️ **Dette er fasiten, ikke en rapport.** `stock_levels` er en
+ * Lager · Bevegelser. Append-only historikk.
+ * Dette er fasiten, ikke en rapport. `stock_levels` er en
  * materialisering man kan bygge opp igjen herfra — ikke omvendt. Derfor kan
  * ingen rad her redigeres: er tallet feil, legger man til en korreksjon. Man
  * retter ikke historien.

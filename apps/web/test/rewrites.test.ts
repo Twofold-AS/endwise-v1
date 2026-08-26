@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { streamRewrites } from '../lib/rewrites.ts';
 
 /**
- * F13-03 — når API-et lever i Next, skal vi IKKE lenger proxe auth/tRPC
+ * Når API-et lever i Next, skal vi ikke lenger proxe auth/tRPC
  * til localhost:3001. Bare `/stream/*` går ut av appen.
  */
 describe('streamRewrites', () => {

@@ -44,7 +44,7 @@ export const appRouter = router({
   directory: directoryRouter,
   profile: profileRouter,
   inboxContext: inboxContextRouter,
-  // F1-10 — lederens side av invitasjonsflyten.
+  // Lederens side av invitasjonsflyten.
   invitasjoner: invitasjonerRouter,
   onboarding: onboardingRouter,
   team: teamRouter,
@@ -62,7 +62,7 @@ export const appRouter = router({
   mechanics: mechanicsRouter,
   competence: competenceRouter,
 
-  // F8 — Integrasjoner (Quick ERP-adapter)
+  // F8 — Integrasjoner (Quick erp-adapter)
   quick: quickRouter,
   conflicts: conflictsRouter,
 

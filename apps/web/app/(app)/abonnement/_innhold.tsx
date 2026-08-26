@@ -15,9 +15,8 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 
 /**
- * F5-09 / F5-32 — ABONNEMENT. Velg nivå + valgfrie tillegg → Stripe checkout.
- *
- * ⛔ **Vi utfører aldri et trekk.** Knappen henter en URL fra Stripe som
+ * F5-09 / F5-32 — abonnement. Velg nivå + valgfrie tillegg → Stripe checkout.
+ * Vi utfører aldri et trekk. Knappen henter en URL fra Stripe som
  * forhandleren selv fullfører der. Og entitlements flippes ikke av denne siden i
  * det hele tatt — kun av den signaturverifiserte webhooken.
  */

@@ -14,10 +14,9 @@ import { parts } from './inventory.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F10-03 — Interne butikkordrer. **Ikke Medusa.** Katalog er lager (`parts`).
+ * Interne butikkordrer. **Ikke Medusa.** Katalog er lager (`parts`).
  * Disse tabellene er kun salg: ordre + linjer, tenant-RLS, Stripe test-kasse.
- *
- * ⛔ Ingen kundepersonopplysninger her i første slice. `createdByUserId` er
+ * Ingen kundepersonopplysninger her i første slice. `createdByUserId` er
  * den innloggede forhandlerbrukeren (fra sesjonen), ikke en sluttkunde.
  */
 
@@ -62,7 +61,7 @@ export const shopOrderLines = pgTable(
     partId: uuid('part_id')
       .notNull()
       .references(() => parts.id, { onDelete: 'restrict' }),
-    /** Snapshot — katalogen kan endre navn/SKU etter at ordren er lagt. */
+    /** Snapshot — katalogen kan endre navn/sku etter at ordren er lagt. */
     sku: text('sku').notNull(),
     name: text('name').notNull(),
     quantity: integer('quantity').notNull(),

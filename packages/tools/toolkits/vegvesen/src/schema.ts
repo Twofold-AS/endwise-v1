@@ -1,14 +1,12 @@
 import { z } from 'zod';
 
 /**
- * F2-08 — Autosys «Enkeltoppslag».
- *
- * Skjemaet under er en BEVISST DELMENGDE av API-ets respons. Den fulle
+ * Autosys «Enkeltoppslag».
+ * Skjemaet under er en bevisst delmengde av API-ets respons. Den fulle
  * `EnkeltOppslagKjoretoydata` har hundrevis av felter (ADR-tankdata,
- * WLTP-koeffisienter, akselgrupper …). Vi speiler kun det verkstedet trenger.
- * `.loose()` gjør at ukjente felter passerer i stedet for å velte oppslaget når
+ * Wltp-koeffisienter, akselgrupper …). Vi speiler kun det verkstedet trenger.
+ * `.loose` gjør at ukjente felter passerer i stedet for å velte oppslaget når
  * Vegvesenet utvider API-et.
- *
  * Kilde: https://akfell-datautlevering.atlas.vegvesen.no/v3/api-docs (OpenAPI 3.1)
  */
 const merke = z.object({ merke: z.string().optional() }).loose();

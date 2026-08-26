@@ -1,42 +1,37 @@
 /**
- * F5-09 / F5-32 / F0-16 — PRISKATALOGEN. Én kilde til sannhet for hva Endwise
+ * F5-09 / F5-32 / F0-16 — priskatalogen. Én kilde til sannhet for hva Endwise
  * selger og hvilke moduler hvert kjøp låser opp.
- *
- * ── Modellen (eiers v3, besluttet 07.08.2026) ──────────────────────────────
- * Flat pris per FORHANDLER per måned, **ubegrenset antall brukere**, eks. mva.
+ * Modellen (eiers v3, besluttet )
+ * Flat pris per forhandler per måned, **ubegrenset antall brukere**, eks. mva.
  * Ingen pris per sete: et verksted som ansetter en lærling skal ikke få en
  * regning for det.
- *
- * **Tre nivåer** (START/PRO/ENTERPRISE) som hver er et BUNDLE av moduler, pluss
- * **valgfrie tillegg** som kan legges på et hvilket som helst nivå. I Stripe er
+ * Tre nivåer (start/pro/enterprise) som hver er et bundle av moduler, pluss
+ * valgfrie tillegg som kan legges på et hvilket som helst nivå. I Stripe er
  * nivået én subscription item og hvert tillegg sin egen — derfor kan de
  * kombineres fritt uten at vi trenger ni forskjellige produkter.
- *
- * ── ⚠️ Forholdet til F0-16 ────────────────────────────────────────────────
- * Nøklene her ER `tenant_modules`-nøklene som `moduleProcedure()` sjekker.
- * **En nøkkel i katalogen uten en gate på rutene sine er en modul vi selger
- * uten at noen dør er låst** — nøyaktig CWE-862-funnet. Legger du til en nøkkel
+ * Forholdet til F0-16
+ * Nøklene her er `tenant_modules`-nøklene som `moduleProcedure` sjekker.
+ * En nøkkel i katalogen uten en gate på rutene sine er en modul vi selger
+ * uten at noen dør er låst — nøyaktig CWE-862-funnet. Legger du til en nøkkel
  * her, legg til gaten i samme commit.
- *
  * Basis-funksjonene (Verkstedet, Saker, Kunder, **Lager**, Innboks, Helpdesk,
- * Settings, mekanikervisningen) har INGEN gate og står derfor ikke som nøkler.
- * START selger tilgangen til dem — men det som teknisk låses opp av START er
+ * Settings, mekanikervisningen) har ingen gate og står derfor ikke som nøkler.
+ * Start selger tilgangen til dem — men det som teknisk låses opp av start er
  * kun `widget` og `resend`, fordi resten aldri var låst.
- *
- * ── Fase 1 vs. fase 2 ─────────────────────────────────────────────────────
- * Dette er FASE 1: faste nivåer + tillegg. **Metered overforbruk (SMS,
- * AI-diagnoser, nettside-endringer) er IKKE bygget.** Kvotene under er skrevet
+ * Fase 1 vs. fase 2
+ * Dette er fase 1: faste nivåer + tillegg. Metered overforbruk (SMS,
+ * AI-diagnoser, nettside-endringer) er ikke bygget. Kvotene under er skrevet
  * ned nå så tallene finnes ett sted når målingen kommer — men ingenting teller
  * dem, og ingenting stopper ved grensen. Se `KVOTER_ER_IKKE_HANDHEVET`.
  */
 import type { ModuleKey } from '../entitlements.ts';
 
-/* ══ Nivåene ═════════════════════════════════════════════════════════════ */
+/* Nivåene */
 
 export type TierKey = 'start' | 'pro' | 'enterprise';
 
 /**
- * Kvoter per måned. **FASE 2 — ikke håndhevet av noe i dag.**
+ * Kvoter per måned. **fase 2 — ikke håndhevet av noe i dag.**
  * `null` = ubegrenset/ikke relevant for nivået.
  */
 export type Kvoter = {
@@ -48,26 +43,26 @@ export type Kvoter = {
   nettsideEndringer: number | null;
 };
 
-/** ⚠️ Leses av ingen kode som håndhever. Ren forberedelse — se fila over. */
+/** Leses av ingen kode som håndhever. Ren forberedelse — se fila over. */
 export const KVOTER_ER_IKKE_HANDHEVET = true;
 
 export type Tier = {
   key: TierKey;
   name: string;
-  /** Månedspris i ØRE, eks. mva. Stripe er fasit; dette er til visning. */
+  /** Månedspris i Øre, eks. mva. Stripe er fasit; dette er til visning. */
   priceMonthlyMinor: number;
-  /** Env-variabelen med Stripe price-ID. Vi hardkoder ALDRI price-IDer. */
+  /** Env-variabelen med Stripe price-ID. Vi hardkoder aldri price-IDer. */
   stripePriceEnv: string;
   /** Kort setning til plankortet. */
   pitch: string;
-  /** Hva forhandleren FÅR, i deres språk. Ikke modulnøkler. */
+  /** Hva forhandleren får, i deres språk. Ikke modulnøkler. */
   hoydepunkter: string[];
   /** `tenant_modules`-nøklene nivået låser opp. Kumulativt. */
   modules: ModuleKey[];
   kvoter: Kvoter;
 };
 
-/** Modulene START låser opp. Alt annet i START er basis og har ingen gate. */
+/** Modulene start låser opp. Alt annet i start er basis og har ingen gate. */
 const START_MODULER: ModuleKey[] = [
   'widget', // Bookingwidget på egen nettside (F4)
   'resend', // Transaksjons-e-post
@@ -78,7 +73,7 @@ const PRO_MODULER: ModuleKey[] = [
   'ai-support', // AI-diagnose og assistent (F6-04)
   'ai-diagnose',
   'ai-providers',
-  'quick', // Quick ERP-synk (F8-01)
+  'quick', // Quick erp-synk (F8-01)
   'vegvesen', // Regnr-oppslag (F2-08)
   'smart-hverdag', // Push, handlingsknapper, kalender, nettbrett, passkey
 ];
@@ -88,7 +83,7 @@ const ENTERPRISE_MODULER: ModuleKey[] = [
   'ai-nettside', // AI-verktøy › Nettside (F5-24)
   'ai-innsikt', // AI-verktøy › Innsikt
   'quick-agent', // Agent mot Quick
-  'crm-lime', // Lime CRM
+  'crm-lime', // Lime crm
   'webhooks', // Utgående webhooks
 ];
 
@@ -146,14 +141,13 @@ export const TIERS: Tier[] = [
   },
 ];
 
-/* ══ Valgfrie tillegg ════════════════════════════════════════════════════ */
+/* Valgfrie tillegg */
 
 /**
  * `available` — kan kjøpes nå.
- * `coming`    — 🕓 funksjonen finnes ikke ennå. Vises, men kan IKKE kjøpes.
- * `blocked`   — ⛔ avhenger av en beslutning som ikke er tatt (Butikk/Medusa).
- *
- * ⚠️ Å selge noe som ikke virker er verre enn å ikke selge det. `coming` og
+ * `coming` — funksjonen finnes ikke ennå. Vises, men kan ikke kjøpes.
+ * `blocked` — avhenger av en beslutning som ikke er tatt (Butikk/Medusa).
+ * Å selge noe som ikke virker er verre enn å ikke selge det. `coming` og
  * `blocked` filtreres bort før checkout — server-side, ikke bare i UI-et.
  */
 export type TilleggStatus = 'available' | 'coming' | 'blocked';
@@ -280,8 +274,8 @@ export const TILLEGG: Tillegg[] = [
 ];
 
 /**
- * ⛔ IKKE I SALG, og skal ikke bli det uten en egen beslutning:
- * **kryssforhandler-servicehistorikk** (F11-09). Det er kundedata på tvers av
+ * Ikke I salg, og skal ikke bli det uten en egen beslutning:
+ * kryssforhandler-servicehistorikk (F11-09). Det er kundedata på tvers av
  * forhandlere, og prislappen er ikke problemet — personvernet er.
  */
 export const IKKE_I_SALG = ['kryssforhandler-historikk'] as const;
@@ -299,7 +293,7 @@ export function erTierKey(key: string | null | undefined): key is TierKey {
   return key === 'start' || key === 'pro' || key === 'enterprise';
 }
 
-/* ══ Oppslag ═════════════════════════════════════════════════════════════ */
+/* Oppslag */
 
 export function tierByKey(key: string | null | undefined): Tier | undefined {
   return TIERS.find((t) => t.key === key);
@@ -316,11 +310,10 @@ export function kjopbareTillegg(): Tillegg[] {
 
 /**
  * Faste/valgfrie tillegg for et valgt nivå.
- *
- *  · `status === 'available'`
- *  · modulen ligger IKKE allerede i `TIERS[nivaa].modules`
- *  · aldri shop (blocked). SMS er tillegg på alle nivåer, aldri planmodul.
- *  · coming/blocked skjules
+ * `status 'available'`
+ * modulen ligger ikke allerede i `TIERS[nivaa].modules`
+ * aldri shop (blocked). SMS er tillegg på alle nivåer, aldri planmodul.
+ * coming/blocked skjules
  */
 export function tilgjengeligeTilleggForNivaa(tierKey: string | null | undefined): Tillegg[] {
   const inkludert = new Set<ModuleKey>(tierByKey(tierKey)?.modules ?? []);
@@ -338,10 +331,9 @@ export function erGyldigEkstraTillegg(
 
 /**
  * Pakke → `tenant_modules`.
- *
- *  · included = nivåets bundle (uten SMS) + avkryssede TILLEGG-nøkler
- *  · optional = samme katalog minus de som er merket included
- *  · shop kommer aldri med; twilio bare hvis det er krysset av som tillegg
+ * included = nivåets bundle (uten SMS) + avkryssede tillegg-nøkler
+ * optional = samme katalog minus de som er merket included
+ * shop kommer aldri med; twilio bare hvis det er krysset av som tillegg
  */
 export function utvidPakke(
   tierKey: string,
@@ -430,7 +422,8 @@ export function subscriptionFromPriceIds(
   return { tier, tillegg };
 }
 
-/* ══ Bakoverkompatibilitet ═══════════════════════════════════════════════
+/*
+ * Bakoverkompatibilitet
  * Eldre kallsteder (billing-tjenesten, /integrasjoner-flaten) bruker `PLANS`,
  * `modulesForPlan` og `INTEGRATIONS`. De peker nå på nivåene.
  */

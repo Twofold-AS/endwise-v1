@@ -6,22 +6,19 @@ import { useId } from 'react';
 import { Legend, ResponsiveContainer, Tooltip } from 'recharts';
 
 /*
- * shadcn/ui Chart-mønsteret på Recharts. Hentet inn 05.08.2026 etter
+ * shadcn/ui Chart-mønsteret på Recharts. etter
  * brukergodkjent §2-beslutning (Recharts er chart-motoren; dither-kit ble
  * fjernet 03.08 og lot flaten stå uten motor).
- *
- * ⚠️ Ligger i `packages/ui`, ikke i appen — samme regel som dropdown-menu og
- * dialog: apper importerer ikke chart-biblioteket direkte (UI-PAKKER §5). Da
- * finnes akse-stil, tooltip og farge-oppslag ETT sted.
- *
- * ── Hvorfor `ChartStyle` finnes ────────────────────────────────────────────
+ * Ligger i `packages/ui`, ikke i appen — samme regel som dropdown-menu og
+ * dialog: apper importerer ikke chart-biblioteket direkte (ui-pakker §5). Da
+ * finnes akse-stil, tooltip og farge-oppslag ett sted.
+ * Hvorfor `ChartStyle` finnes
  * Recharts tar farger som props (`fill`, `stroke`), ikke som klasser. Uten et
  * mellomledd ville hver graf hardkodet en hex — og da snur den ikke med
  * lys/mørk-toggelen. `ChartStyle` skriver ut `--color-<serie>` per graf, hentet
  * fra `config`, slik at seriene kan si `fill="var(--color-bookinger)"` og
  * verdien løses mot token-laget i det gjeldende temaet.
- *
- * ── Bevisst enkelt ─────────────────────────────────────────────────────────
+ * Bevisst enkelt
  * Målgruppen er en ikke-teknisk forhandler. Derfor: kun søyle, linje og areal.
  * Ingen glød, ingen 3D, ingen crosshatch, og `isAnimationActive={false}` som
  * standard i kallstedene — en graf som beveger seg mens du leser den, er
@@ -47,8 +44,8 @@ export const CHART_COLORS = {
 } as const;
 
 function useChartId(): string {
-  // `useId()` og ikke en teller eller Math.random: SSR og klient må komme fram
-  // til samme id, ellers får vi hydreringsfeil OG feil farger i første frame.
+  // `useId` og ikke en teller eller Math.random: SSR og klient må komme fram
+  // til samme id, ellers får vi hydreringsfeil og feil farger i første frame.
   // Kolon er ugyldig i en CSS-attributtselektor, derfor byttes det ut.
   return `ew-chart-${useId().replace(/:/g, '')}`;
 }
@@ -183,12 +180,11 @@ export function ChartLegendContent({ config }: { config: ChartConfig }) {
 }
 
 /*
- * Recharts-primitivene re-eksporteres HERFRA slik at appene aldri importerer
- * `recharts` direkte (UI-PAKKER §5, samme regel som for radix og lucide).
+ * Recharts-primitivene re-eksporteres herfra slik at appene aldri importerer
+ * `recharts` direkte (ui-pakker §5, samme regel som for radix og lucide).
  * Bytter vi motor senere, er det denne fila som endres — ikke tjue kallsteder.
- *
- * ⚠️ Kun de RENE graftypene er eksponert: søyle, linje, areal — og **pai**
- * (lagt til 06.08.2026 på eiers bestilling, til fordelingen av trafikkilder).
+ * Kun de rene graftypene er eksponert: søyle, linje, areal — og **pai**
+ * (lagt til på eiers bestilling, til fordelingen av trafikkilder).
  * Radar, scatter, treemap og sankey er fortsatt utelatt: de er ikke bestilt, og
  * en eksportert komponent er en komponent noen tar i bruk.
  */

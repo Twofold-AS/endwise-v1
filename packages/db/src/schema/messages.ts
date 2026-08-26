@@ -15,13 +15,12 @@ import { authenticatedRole } from '../roles.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F6-01 — Meldingstråder.
- *
+ * Meldingstråder.
  * De tre samtale-kanalene (techstack §3) deler ÉN trådmodell. Forskjellen er
  * bare hvem som står i hver ende:
- *   customer_dealer  — kunde ↔ forhandler (widget)
- *   mechanic_dealer  — mekaniker ↔ forhandler (PWA)
- *   dealer_admin     — forhandler ↔ oss (support)
+ * customer_dealer — kunde forhandler (widget)
+ * mechanic_dealer — mekaniker forhandler (PWA)
+ * dealer_admin — forhandler oss (support)
  */
 export const threadKindEnum = pgEnum('thread_kind', [
   'customer_dealer',
@@ -30,31 +29,26 @@ export const threadKindEnum = pgEnum('thread_kind', [
 ]);
 
 /**
- * F6-01 / F6-16 — HVOR meldingen kom inn, eller gikk ut.
- *
- * `kind` sier HVEM som snakker (kunde / mekaniker / oss). Dette sier gjennom
- * HVA. De to er uavhengige: en kundesamtale kan komme inn på SMS i dag og på
+ * F6-01 / F6-16 — hvor meldingen kom inn, eller gikk ut.
+ * `kind` sier hvem som snakker (kunde / mekaniker / oss). Dette sier gjennom
+ * Hva. De to er uavhengige: en kundesamtale kan komme inn på SMS i dag og på
  * e-post i morgen, uten at det er en annen slags samtale.
- *
- * ⚠️ Dette var lenge en **prototype uten datagrunnlag**: innboksen hadde en
+ * Dette var lenge en **prototype uten datagrunnlag**: innboksen hadde en
  * av-som-standard-bryter som viste et oppdiktet kanal-ikon, fordi `messages`
- * ikke visste hvor meldingen kom fra. Varslingsmodulen (F3-04) SENDER over SMS
- * og e-post, men svaret kom tilbake anonymt. Kolonnen ble lagt til 08.08.2026.
- *
+ * ikke visste hvor meldingen kom fra. Varslingsmodulen (F3-04) sender over SMS
+ * og e-post, men svaret kom tilbake anonymt. Kolonnen ble lagt til .
  * Hvorfor det betyr noe i drift: **svaret må gå tilbake samme vei.** Svarer du
  * i panelet på noe kunden sendte som SMS, og svaret bare blir en app-melding,
  * får kunden det aldri. Kanalen er derfor ikke pynt — den er en rutingsopplysning.
- *
- *   app    — skrevet i Endwise (panel, mekaniker-PWA)
- *   sms    — Twilio
- *   email  — e-post (Resend ut, innkommende i F6-16)
- *   web    — kundewidgeten på forhandlerens nettside (F4)
+ * app — skrevet i Endwise (panel, mekaniker-PWA)
+ * sms — Twilio
+ * email — e-post (Resend ut, innkommende i F6-16)
+ * web — kundewidgeten på forhandlerens nettside (F4)
  */
 export const messageChannelEnum = pgEnum('message_channel', ['app', 'sms', 'email', 'web']);
 
 /**
- * Kom den INN til oss, eller gikk den UT fra oss?
- *
+ * Kom den inn til oss, eller gikk den ut fra oss?
  * Kanalen alene er tvetydig så snart en tråd går begge veier: to e-poster i
  * samme tråd er ikke det samme hvis den ene er kundens og den andre er vår.
  * `app`-meldinger er alltid `outbound` — de oppstår i Endwise.
@@ -62,24 +56,20 @@ export const messageChannelEnum = pgEnum('message_channel', ['app', 'sms', 'emai
 export const messageDirectionEnum = pgEnum('message_direction', ['inbound', 'outbound']);
 
 /**
- * F6-26 — LEVERINGSSTATUS for en utgående melding på en ekstern kanal.
- *
- * ⛔ **Hele grunnen til at dette er en kolonne og ikke utledet:** meldingsraden
- * skrives FØR utsendingen forsøkes, fordi det brukeren skrev aldri skal gå tapt
+ * Leveringsstatus for en utgående melding på en ekstern kanal.
+ * Hele grunnen til at dette er en kolonne og ikke utledet: meldingsraden
+ * skrives før utsendingen forsøkes, fordi det brukeren skrev aldri skal gå tapt
  * i en nettverksfeil. Uten et statusfelt ville raden i tråden vært visuelt
  * identisk enten e-posten gikk eller ikke — og en melding som ser sendt ut,
  * men aldri gikk, er verre enn en synlig feil. Selgeren tror kunden er varslet.
- *
- *   pending  — skrevet, ikke forsøkt sendt ennå
- *   sending  — vi har tatt eierskap og holder på. Se merknaden under.
- *   sent     — leverandøren har tatt imot den (`external_id` er satt)
- *   failed   — forsøket feilet. `delivery_error` sier hvorfor. Kan sendes på nytt
- *
- * ⚠️ `sending` finnes fordi alternativet er verre. Setter man `sent` FØR kallet
+ * pending — skrevet, ikke forsøkt sendt ennå
+ * sending — vi har tatt eierskap og holder på. Se merknaden under.
+ * sent — leverandøren har tatt imot den (`external_id` er satt)
+ * failed — forsøket feilet. `delivery_error` sier hvorfor. Kan sendes på nytt
+ * `sending` finnes fordi alternativet er verre. Setter man `sent` før kallet
  * (som `notifications`-dispatcheren i F3-04 gjør), vil en krasj midt i kallet
  * etterlate en rad som påstår at den gikk. Med `sending` er en strandet rad
  * synlig som strandet, og kan plukkes opp igjen — den lyver ikke.
- *
  * NULL = ingen ekstern levering gjelder. Det er normaltilstanden: en
  * `app`-melding leveres ved å ligge i basen, og har ingenting å rapportere.
  */
@@ -100,22 +90,19 @@ export const threads = pgTable(
     kind: threadKindEnum('kind').notNull(),
     subject: text('subject'),
     /**
-     * Trådens PRIMÆRKANAL — og dermed **svarkanalen**.
-     *
+     * Trådens primærkanal — og dermed **svarkanalen**.
      * Ikke utledet fra siste melding: en kunde som svarer fra appen én gang
      * skal ikke flytte hele samtalen bort fra e-post. Kanalen settes når tråden
      * oppstår, og endres bare bevisst.
      */
     channel: messageChannelEnum('channel').notNull().default('app'),
     /**
-     * F6-16 (forberedt, ikke i bruk ennå) — trådens nøkkel i den EKSTERNE
+     * F6-16 (forberedt, ikke i bruk ennå) — trådens nøkkel i den eksterne
      * kanalen: kundens e-postadresse eller telefonnummer.
-     *
      * Dette er kroken innkommende e-post skal henges på. Når en e-post treffer
-     * forhandlerens adresse, må den ende i RIKTIG tråd og ikke lage en ny hver
+     * forhandlerens adresse, må den ende i riktig tråd og ikke lage en ny hver
      * gang — `(tenant_id, channel, external_ref)` er det oppslaget.
-     *
-     * ⚠️ Inneholder persondata (e-post/telefon). Beskyttet av samme RLS som
+     * Inneholder persondata (e-post/telefon). Beskyttet av samme RLS som
      * resten av tabellen; ingen egen behandling, men verdt å vite at raden ikke
      * er «bare metadata».
      */
@@ -128,13 +115,13 @@ export const threads = pgTable(
   },
   (t) => [
     index('threads_tenant_last_idx').on(t.tenantId, t.lastMessageAt),
-    // F6-16: «hvilken tråd hører denne innkommende e-posten til?» skal være ett
+    // «hvilken tråd hører denne innkommende e-posten til?» skal være ett
     // indeksoppslag, ikke en scan over alle trådene til forhandleren.
     index('threads_tenant_channel_ref_idx').on(t.tenantId, t.channel, t.externalRef),
     tenantPolicy('threads', t.tenantId),
     /**
-     * F5-11 — SELECT-only for Endwise-admin. `withPlatformAdmin` åpner denne.
-     * ⛔ Kun `dealer_admin` (forhandler↔Endwise). customer_dealer og
+     * SELECT-only for Endwise-admin. `withPlatformAdmin` åpner denne.
+     * Kun `dealer_admin` (forhandlerEndwise). customer_dealer og
      * mechanic_dealer forblir usynlige — det er samtaler vi ikke skal lese.
      */
     pgPolicy('threads_platform_admin_support_read', {
@@ -154,9 +141,8 @@ export const threads = pgTable(
 
 /**
  * Hvem er med i tråden.
- *
  * Dette er tilgangskontrollen på meldingsnivå: RLS holder tenant-grensen, men
- * INNENFOR en tenant skal ikke hvilken som helst ansatt kunne lese hvilken som
+ * Innenfor en tenant skal ikke hvilken som helst ansatt kunne lese hvilken som
  * helst kundesamtale. Deltakelse er kravet.
  */
 export const threadParticipants = pgTable(
@@ -212,15 +198,14 @@ export const messages = pgTable(
     /** Bruker-ID, eller 'agent:<navn>'. En agent er bare en deltaker til (F6-05). */
     authorId: text('author_id').notNull(),
     body: text('body').notNull(),
-    /** Hvor DENNE meldingen kom inn / gikk ut. Se `messageChannelEnum`. */
+    /** Hvor denne meldingen kom inn / gikk ut. Se `messageChannelEnum`. */
     channel: messageChannelEnum('channel').notNull().default('app'),
     /** Inn til oss eller ut fra oss. Se `messageDirectionEnum`. */
     direction: messageDirectionEnum('direction').notNull().default('outbound'),
     /**
      * F6-16 (forberedt) — leverandørens egen ID: Resend/Twilio message-id, eller
      * en e-posts `Message-ID`.
-     *
-     * ⚠️ Dette er **idempotensnøkkelen for innkommende meldinger**. En webhook
+     * Dette er **idempotensnøkkelen for innkommende meldinger**. En webhook
      * leveres mer enn én gang; uten denne blir hver ny levering en ny melding i
      * tråden. Unik per tenant (NULL teller som distinkt i Postgres, så
      * app-meldinger rammes ikke).
@@ -229,9 +214,8 @@ export const messages = pgTable(
     /** Motpartens adresse i den eksterne kanalen (e-post/telefon). Persondata. */
     externalRef: text('external_ref'),
     /**
-     * F6-26 — se `messageDeliveryEnum`. NULL for app-meldinger.
-     *
-     * ⚠️ Dette feltet ER idempotensvakten. Utsendingen tar eierskap med en
+     * Se `messageDeliveryEnum`. NULL for app-meldinger.
+     * Dette feltet er idempotensvakten. Utsendingen tar eierskap med en
      * betinget `UPDATE … WHERE delivery_status IN ('pending','failed')`; treffer
      * den null rader, holder noen andre allerede på, og vi sender ikke.
      */

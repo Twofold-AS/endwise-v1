@@ -4,12 +4,10 @@ import { tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F5-09 — Abonnementstilstand per forhandler (Stripe). Én rad per tenant.
- *
+ * Abonnementstilstand per forhandler (Stripe). Én rad per tenant.
  * Kobler forhandlerens Stripe-kunde/abonnement til planen. Planen bestemmer
  * hvilke moduler/integrasjoner tenanten får (entitlements, F0-04 → tenant_modules).
  * Stripe-webhooken skriver hit; ingen kode leser Stripe direkte i drift.
- *
  * Tenant-skopet via RLS. Webhooken finner tenant via `tenant_id` i Stripe-
  * metadata (ikke via kryss-tenant-oppslag).
  */

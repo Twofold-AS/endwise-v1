@@ -1,12 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
- * F1-11 — LOKAL LEVERANSE av engangskoden.
- *
- * ⚠️ Denne testen finnes fordi bekvemmeligheten «skriv koden i loggen så vi kan
+ * Lokal leveranse av engangskoden.
+ * Denne testen finnes fordi bekvemmeligheten «skriv koden i loggen så vi kan
  * teste lokalt» er nøyaktig den typen snarvei som overlever inn i produksjon
  * hvis ingen holder den fast. Her holdes den fast: koden skal i loggen **kun**
- * når vi ikke er i prod OG Resend mangler.
+ * når vi ikke er i prod og Resend mangler.
  */
 
 const OPPRINNELIG = { ...process.env };
@@ -39,9 +38,9 @@ describe('sendTwoFactorOtp — leveringsvei', () => {
   });
 
   /**
-   * ⛔ Den viktigste testen i fila. En feilsatt `NODE_ENV` skal ikke alene være
+   * Den viktigste testen i fila. En feilsatt `NODE_ENV` skal ikke alene være
    * nok til at engangskoder havner i en driftslogg — derfor krever
-   * dev-leveransen OGSÅ at Resend-nøkkelen mangler.
+   * dev-leveransen ogsÅ at Resend-nøkkelen mangler.
    */
   it('⛔ DEV MED Resend konfigurert: koden skrives IKKE til loggen', async () => {
     process.env.NODE_ENV = 'development';
@@ -50,7 +49,7 @@ describe('sendTwoFactorOtp — leveringsvei', () => {
 
     const { sendTwoFactorOtp } = await last();
     // Resend-kallet feiler (nøkkelen er tull) — det er greit. Poenget er at
-    // koden ikke skal ha vært innom loggen FØR forsøket.
+    // koden ikke skal ha vært innom loggen før forsøket.
     await sendTwoFactorOtp('mikkis@twofold.no', '654321').catch(() => {});
 
     expect(warn.mock.calls.flat().join('\n')).not.toContain('654321');

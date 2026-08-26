@@ -1,24 +1,19 @@
 import type { ModelMessage } from 'ai';
 
 /**
- * F14-01 — Pseudonymisering før prompt.
- *
- * Modellen trenger å vite AT det finnes en kunde, ikke HVEM det er. «Ola
+ * Pseudonymisering før prompt.
+ * Modellen trenger å vite at det finnes en kunde, ikke hvem det er. «Ola
  * Nordmann på 99887766» og «KUNDE_1 på TLF_1» gir nøyaktig samme svar på
- * «når kan dere ta MC-en?».
- *
- * ── HVA DEN ER, OG HVA DEN IKKE ER ──────────────────────────────────────────
- *
- * Etter at support-agenten ble flyttet til Mistral (EU), er dette **ikke lenger
- * en brannvegg mot tredjelandsoverføring** — den kampen er vunnet med
+ * «når kan dere ta mc-en?».
+ * Hva den er, og hva den ikke er
+ * Etter at support-agenten ble flyttet til Mistral (EU), er dette ikke lenger
+ * en brannvegg mot tredjelandsoverføring — den kampen er vunnet med
  * arkitektur. Det den er nå, er **dataminimering** (art. 5(1)(c)): leverandøren
  * får ikke opplysninger den ikke trenger for å gjøre jobben. Det gjelder både
  * Mistral og — særlig — Fireworks-agentene.
- *
- * **Dette gjør IKKE dataene anonyme.** Vi holder kartet, altså kan vi
+ * Dette gjør ikke dataene anonyme. Vi holder kartet, altså kan vi
  * re-identifisere, altså er de fortsatt personopplysninger og GDPR gjelder.
  * Den som påstår noe annet, har misforstått art. 4(5).
- *
  * Kartet lever i minnet, kun for varigheten av én agent-kjøring. Det skrives
  * aldri til disk — et pseudonymiseringskart på disk er en gjenidentifiserings-
  * nøkkel med et pent navn.

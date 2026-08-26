@@ -7,13 +7,11 @@ export const notificationChannelEnum = pgEnum('notification_channel', ['email', 
 export const notificationStatusEnum = pgEnum('notification_status', ['sent', 'failed']);
 
 /**
- * F3-04 — Varslings-logg, og samtidig idempotensvakten.
- *
- * Vercel Workflows RETRYER steg som feiler (F0-13). Uten denne tabellen ville en
+ * Varslings-logg, og samtidig idempotensvakten.
+ * Vercel Workflows retryer steg som feiler (F0-13). Uten denne tabellen ville en
  * retry etter en timeout — der SMS-en faktisk gikk ut — sendt den én gang til.
  * Kunden får ikke to påminnelser om samme time fordi nettverket hikstet.
- *
- * Nøkkelen er unik per tenant. Sendingen skjer KUN hvis raden ble skrevet.
+ * Nøkkelen er unik per tenant. Sendingen skjer kun hvis raden ble skrevet.
  */
 export const notifications = pgTable(
   'notifications',

@@ -1,14 +1,12 @@
 /**
- * F5-19 — Innstillinger som én flate med pille-faner.
- *
- * Fanerekkefølge (25.08.2026): Profil · Koblinger · Abonnement ·
+ * Innstillinger som én flate med pille-faner.
+ * Fanerekkefølge : Profil · Koblinger · Abonnement
  * Varsler · Tjenester & priser.
- *
- * Team er IKKE en fane — #41 la destinasjonen i sidebaren
+ * Team er ikke en fane — #41 la destinasjonen i sidebaren
  * (`/innstillinger/team`), 26.08 omdøpt til Organisasjon. Admin-faner
  * skjules for ikke-admin, og hele dealer-huben (Abonnement, Koblinger,
  * Varsler, Tjenester & priser) skjules for Endwise-plattform. «Bytt konto /
- * mekaniker» er IKKE en fane — visningsbytte bor i sidebar-headeren.
+ * mekaniker» er ikke en fane — visningsbytte bor i sidebar-headeren.
  */
 
 export const FANE_IDS = ['profil', 'integrasjoner', 'abonnement', 'varsler', 'tjenester'] as const;
@@ -95,8 +93,7 @@ export function innstillingerHref(fane: FaneId): string {
 /**
  * Alias-stier som skal lande på samme skall. Brukes av sidene selv (startFane)
  * og av tester — ikke av sidebaren, som beholder de gamle href-ene.
- *
- * `/innstillinger/team` er IKKE alias: Team er egen sidebar-destinasjon (#41).
+ * `/innstillinger/team` er ikke alias: Team er egen sidebar-destinasjon (#41).
  */
 export const FANE_ALIAS: Readonly<Record<string, FaneId>> = {
   '/innstillinger/profil': 'profil',

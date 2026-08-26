@@ -8,21 +8,18 @@ import {
 import { type Jobbfunksjon, kanTildeles, TILDELBARE_FUNKSJONER } from '../profil/index.ts';
 
 /**
- * F1-10 — INVITASJONER. Lederen inviterer, den ansatte fullfører selv.
- *
- * ── ⛔ Tokenet finnes ETT sted: i lenka ──────────────────────────────────
- * Vi genererer 32 tilfeldige byte, sender dem i lenka, og lagrer **bare
- * SHA-256 av dem**. Databasen kjenner aldri hemmeligheten. En dump, en backup
+ * Invitasjoner. Lederen inviterer, den ansatte fullfører selv.
+ * Tokenet finnes ett sted: i lenka
+ * Vi genererer 32 tilfeldige byte, sender dem i lenka, og lagrer bare
+ * SHA-256 av dem. Databasen kjenner aldri hemmeligheten. En dump, en backup
  * på avveie eller en logget spørring gir ingen brukbare invitasjoner.
- *
- * ── ⛔ Hvorfor oppslaget går via en SQL-funksjon ─────────────────────────
+ * Hvorfor oppslaget går via en SQL-funksjon
  * `invitations` er RLS-isolert som alt annet, men den som åpner lenka har
  * verken sesjon eller tenant — så `app.tenant_id` er ikke satt, og RLS
- * returnerer null rader (verifisert 16.08.2026: unscopet select gir 0).
+ * returnerer null rader (verifisert : unscopet select gir 0).
  * `lookup_open_invitation` / `consume_invitation` er SECURITY DEFINER-funksjoner
  * som gjør nøyaktig ett oppslag på hash. Se `packages/db/sql/functions.sql`.
- *
- * ── ⛔ Staff-sporet kan aldri bli mer enn `dealer_staff` ─────────────────
+ * Staff-sporet kan aldri bli mer enn `dealer_staff`
  * Tre lag på `opprett`: denne funksjonen validerer, ruta er `adminProcedure`,
  * og CHECKen (`kind = staff` → `dealer_staff`, ikke `leder`). Owner-sporet
  * (`opprettEier`) er et eget kall som setter `kind = owner` bevisst.
@@ -42,8 +39,7 @@ export class InvitasjonUgyldigError extends Error {
 /**
  * Hasher tokenet. Eksportert fordi godta-stien må hashe det samme, og to
  * implementasjoner ville før eller siden blitt ulike.
- *
- * SHA-256 uten salt er riktig HER, i motsetning til for passord: tokenet er
+ * SHA-256 uten salt er riktig her, i motsetning til for passord: tokenet er
  * 256 bit kryptografisk tilfeldig, så det finnes ingen ordbok å angripe det
  * med. Bcrypt ville bare gjort oppslaget tregt uten å gjøre det tryggere.
  */
@@ -93,9 +89,8 @@ export interface NyEierInvitasjon {
 export function createInvitasjonsmodul(db: Database) {
   return {
     /**
-     * Oppretter en invitasjon og returnerer RÅ-TOKENET én gang.
-     *
-     * ⚠️ Returverdien er eneste sted tokenet noen gang finnes utenfor lenka.
+     * Oppretter en invitasjon og returnerer rå-tokenet én gang.
+     * Returverdien er eneste sted tokenet noen gang finnes utenfor lenka.
      * Kallstedet skal sende det og så glemme det — ikke logge det, ikke lagre
      * det, ikke returnere det til en liste-visning.
      */
@@ -122,7 +117,7 @@ export function createInvitasjonsmodul(db: Database) {
             email: epost,
             tokenHash: hashInvitasjonstoken(token),
             jobFunction: input.funksjon,
-            // ⛔ Aldri fra input. Staff-sporet er låst — se filhodet.
+            // Aldri fra input. Staff-sporet er låst — se filhodet.
             kind: 'staff',
             role: 'dealer_staff',
             invitedBy: input.invitedBy,
@@ -148,9 +143,8 @@ export function createInvitasjonsmodul(db: Database) {
     },
 
     /**
-     * F5-26 — EIER-INVITASJON. Eget spor, ikke en parameter på `opprett`.
-     *
-     * ⛔ `leder` / `dealer_admin` settes her, aldri fra klienten. Staff-CHECken
+     * Eier-invitasjon. Eget spor, ikke en parameter på `opprett`.
+     * `leder` / `dealer_admin` settes her, aldri fra klienten. Staff-CHECken
      * står urørt: `opprett` kan fortsatt ikke lage dette.
      */
     async opprettEier(
@@ -353,7 +347,7 @@ export function createInvitasjonsmodul(db: Database) {
     },
 
     /**
-     * Tilbakekall. ⚠️ Tenant-ID kommer fra sesjonen, ikke fra klienten, og står
+     * Tilbakekall. Tenant-ID kommer fra sesjonen, ikke fra klienten, og står
      * i WHERE-en i tillegg til RLS. En leder skal ikke kunne tilbakekalle en
      * annen forhandlers invitasjon selv om hen gjetter en ID.
      */
@@ -376,10 +370,9 @@ export function createInvitasjonsmodul(db: Database) {
     },
 
     /**
-     * Slår opp en ÅPEN invitasjon fra rå-token. Ingen sesjon nødvendig.
-     *
+     * Slår opp en Åpen invitasjon fra rå-token. Ingen sesjon nødvendig.
      * Returnerer null for alt som ikke er åpent — utløpt, brukt, tilbakekalt
-     * eller ukjent. ⚠️ Med vilje samme svar for alle fire: en angriper som
+     * eller ukjent. Med vilje samme svar for alle fire: en angriper som
      * prøver seg skal ikke få vite om et token fantes en gang.
      */
     async finnApen(token: string): Promise<ApenInvitasjon | null> {
@@ -427,9 +420,8 @@ export function createInvitasjonsmodul(db: Database) {
     },
 
     /**
-     * ⛔ ENGANGS-GARANTIEN. Merker invitasjonen brukt og returnerer IDen.
+     * Engangs-garantien. Merker invitasjonen brukt og returnerer IDen.
      * Null = den var ikke åpen lenger.
-     *
      * Garantien ligger i SQL-funksjonens `where accepted_at is null` — to
      * samtidige forsøk gir én vinner, avgjort av databasen og ikke av
      * rekkefølgen på to HTTP-kall.
@@ -449,7 +441,7 @@ export type Invitasjonsmodul = ReturnType<typeof createInvitasjonsmodul>;
  * Konstant-tids sammenligning av to tokens. Ikke brukt i oppslaget (der er det
  * en indeksert hash-likhet, som ikke lekker noe), men eksportert fordi neste
  * person som trenger å sammenligne et token skal finne den her i stedet for å
- * skrive `a === b`.
+ * skrive `a b`.
  */
 export function tokenErLike(a: string, b: string): boolean {
   const ba = Buffer.from(a);

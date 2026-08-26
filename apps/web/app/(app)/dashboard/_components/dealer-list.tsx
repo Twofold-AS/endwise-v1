@@ -5,12 +5,10 @@ import { DEALERS } from '../_data';
 
 /**
  * Forhandlerliste.
- *
- * ⚠️ **IKKE I BRUK fra 06.08.2026.** Sto på forhandlerens forside og viste
- * ANDRE forhandlere — Endwise-interne data på feil skjerm. Fjernet derfra da
+ * ikke I bruk . Sto på forhandlerens forside og viste
+ * Andre forhandlere — Endwise-interne data på feil skjerm. Fjernet derfra da
  * Verkstedet ble ryddet. Filen står igjen fordi lista hører hjemme i
  * Endwise-admin-konteksten når den bygges (den er bevisst tom i dag).
- *
  * 44px «stores»-rad (eierens spec): to tekstlinjer i navnekolonnen.
  */
 export function DealerList() {

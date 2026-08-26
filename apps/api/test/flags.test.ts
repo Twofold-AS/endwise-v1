@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * ⚠️ Vi sjekker feil-KODEN, ikke meldingsteksten. Meldingene er norske og skal
+ * Vi sjekker feil-koden, ikke meldingsteksten. Meldingene er norske og skal
  * kunne skrives om uten at en sikkerhetstest brekker.
  */
 async function forventer(
@@ -15,12 +15,10 @@ async function forventer(
 }
 
 /**
- * F0-04 — FEATURE-FLAGS: hvem får skru, og treffer skrivingen RIKTIG tenant?
- *
+ * Feature-flags: hvem får skru, og treffer skrivingen riktig tenant?
  * Backend fantes. Denne testen dekker den nye Endwise-admin-flaten:
  * `listPlatform` / `setTenantOverride` / `clearTenantOverride`. Sperren er
  * ruta, ikke at knappen ligger under /endwise.
- *
  * To tenants. `endwise_admin` sitter i tenant A og skriver override på B.
  * Hvis override-raden lander på A, eller B blir usynlig for resolve i B, er
  * gaten ødelagt.
@@ -78,7 +76,7 @@ describeDb('F0-04 — feature-flags-admin', () => {
     await owner.delete(schema.tenants).where(sql`id in (${tenantA}, ${tenantB})`);
   });
 
-  /* ══ ANGREP: feil rolle ════════════════════════════════════════════════ */
+  /* Angrep: feil rolle */
 
   it('⛔ ANGREP: dealer_admin kan ikke listPlatform', async () => {
     await forventer(somForhandlerI(tenantA).flags.listPlatform(), 'FORBIDDEN');
@@ -132,7 +130,7 @@ describeDb('F0-04 — feature-flags-admin', () => {
     );
   });
 
-  /* ══ Fail-closed ═══════════════════════════════════════════════════════ */
+  /* Fail-closed */
 
   it('⛔ ANGREP: ugyldig nøkkel avvises på serveren (CWE-20), ikke bare i UI', async () => {
     const ugyldige = ['Bad Key', 'HAS_UNDER', 'ÆØÅ', '-leading', 'trailing-', 'a/b', '../x'];
@@ -174,7 +172,7 @@ describeDb('F0-04 — feature-flags-admin', () => {
     );
   });
 
-  /* ══ Lovlig sti: global + per-tenant, isolert ══════════════════════════ */
+  /* Lovlig sti: global + per-tenant, isolert */
 
   it('endwise_admin kan skru globalt, og resolve i begge tenants følger', async () => {
     await somEndwiseI(tenantA).flags.setGlobal({ key: flagg, enabled: true });
@@ -225,7 +223,7 @@ describeDb('F0-04 — feature-flags-admin', () => {
     expect(listeB.overrides.some((o) => o.flagKey === flagg)).toBe(false);
   });
 
-  /* ══ CWE-778: ingen stille privilegieendring ═══════════════════════════ */
+  /* CWE-778: ingen stille privilegieendring */
 
   it('setGlobal skriver audit med actor, nøkkel, gammel og ny verdi', async () => {
     await owner.delete(schema.auditLog).where(sql`tenant_id in (${tenantA}, ${tenantB})`);

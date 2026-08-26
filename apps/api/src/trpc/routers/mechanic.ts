@@ -15,7 +15,7 @@ function dayWindow(dateISO?: string): { from: Date; to: Date } {
 }
 
 /**
- * F7 — Mekanikerens «Min dag». Alt scopet til den INNLOGGEDE mekanikeren:
+ * F7 — Mekanikerens «Min dag». Alt scopet til den innloggede mekanikeren:
  * mechanicId utledes fra `mechanics.userId = ctx.userId`, aldri fra input →
  * ingen mekaniker kan be om en annens kø. RLS gjør at kun egen tenant er synlig.
  */
@@ -103,12 +103,11 @@ export const mechanicRouter = router({
     ),
 
   /**
-   * F7-05 — Meld avvik på en jobb → sanntidsvarsel til selger.
-   *
-   * Scoping: mekanikeren kan KUN melde avvik på SIN egen jobb (bookingId må ha
+   * Meld avvik på en jobb → sanntidsvarsel til selger.
+   * Scoping: mekanikeren kan kun melde avvik på sin egen jobb (bookingId må ha
    * `mechanicId = min mekaniker-id`); ellers NOT_FOUND. RLS holder tenant-grensen.
    * Avviket lagres på bookingen (notat) og et innholdsløst SSE-event publiseres
-   * (F6-02-regelen: aldri innhold i NOTIFY-payloaden).
+   * (F6-02-regelen: aldri innhold i notify-payloaden).
    */
   reportDeviation: protectedProcedure
     .input(z.object({ bookingId: z.uuid(), message: z.string().min(1).max(500) }))

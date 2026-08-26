@@ -2,7 +2,6 @@ import { type Database, eq, schema, withTenant } from '@endwise/db';
 
 /**
  * F3-08 / Timeplan — samtidig kapasitet på mekanikeren.
- *
  * Feltet bor på `mechanics.capacity` (1–10). Det finnes ingen egen
  * timeplan-tabell: belegg er bookinger mot denne kapasiteten, samme modell
  * mekanikeren ser under Timeplan («Min dag»).

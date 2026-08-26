@@ -1,5 +1,5 @@
 /**
- * F1-07 — forhandler limer inn Help/swagger-URL og «Token token=…».
+ * Forhandler limer inn Help/swagger-URL og «Token token=…».
  * Proben og persist skal bruke origin + shop-slug og rå ApiV2-nøkkel.
  */
 

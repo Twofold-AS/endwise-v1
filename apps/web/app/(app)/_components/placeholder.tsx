@@ -1,7 +1,7 @@
 /**
  * Placeholder for sider som ennå ikke er bygget (F3/F5). Holder shellet + to-
  * nivå-navigasjonen demonstrerbar: å velge en seksjon i topbaren og klikke et
- * underpunkt i sidebaren viser denne, i stedet for en 404 UTENFOR shellet.
+ * underpunkt i sidebaren viser denne, i stedet for en 404 utenfor shellet.
  * Backend/tRPC finnes for de fleste (se roadmap-mapping).
  */
 export function Placeholder({

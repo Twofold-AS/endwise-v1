@@ -5,11 +5,10 @@ import { authenticatedRole } from '../roles.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F1-06 — Audit-grunnlag: append-only logg av kritiske operasjoner.
- *
- * Append-only håndheves i DATABASEN, ikke i koden: policyene under gir
+ * Audit-grunnlag: append-only logg av kritiske operasjoner.
+ * Append-only håndheves i databasen, ikke i koden: policyene under gir
  * INSERT og SELECT — ingen UPDATE, ingen DELETE. En kompromittert app-rolle
- * kan altså skrive historie, men ikke skrive OM den.
+ * kan altså skrive historie, men ikke skrive om den.
  */
 export const auditLog = pgTable(
   'audit_log',
@@ -44,9 +43,9 @@ export const auditLog = pgTable(
       to: authenticatedRole,
       withCheck: sql`${t.tenantId} = ${currentTenantId}`,
     }),
-    // Ingen UPDATE- eller DELETE-policy for authenticated. Det ER
-    // append-only-garantien. `slett_forhandler` redigerer via TO PUBLIC-
-    // policyer i sql/grants.sql (GUC + ikke-authenticated), aldri her.
+    // Ingen UPDATE- eller DELETE-policy for authenticated. Det er
+    // append-only-garantien. `slett_forhandler` redigerer via to public-
+    // policyer i sql/grants.sql (guc + ikke-authenticated), aldri her.
   ],
 ).enableRLS();
 

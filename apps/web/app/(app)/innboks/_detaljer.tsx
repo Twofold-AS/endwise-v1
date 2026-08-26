@@ -23,27 +23,23 @@ import { KANAL, tilKanal } from './_kanal';
 import { fmtWhen } from './_lib';
 
 /**
- * F6-17 — «DETALJER»: kontekstpanelet helt til høyre i innboksen.
- *
- * ── Hva det er til for ────────────────────────────────────────────────────
+ * «detaljer»: kontekstpanelet helt til høyre i innboksen.
+ * Hva det er til for
  * En melding uten kontekst er en gåte. «Rekker dere bremsene før helgen?» er et
  * annet spørsmål hvis kunden har en booking på torsdag enn hvis hun ikke har
  * noen. Panelet svarer på «hvem er dette, og hva har vi gående med dem» uten at
  * man må forlate samtalen — og uten at svaret må gjettes fra hukommelsen.
- *
- * ── Innholdet følger TRÅDTYPEN, ikke en fane-velger ──────────────────────
+ * Innholdet følger trådtypen, ikke en fane-velger
  * Serveren avgjør (`inboxContext.forThread`) og returnerer en diskriminert
  * union. Klienten tegner det den får. Å la brukeren velge «vis kundekort» i en
  * intern tråd ville vært et valg uten et riktig svar.
- *
- * ── ⛔ Personvern ────────────────────────────────────────────────────────
- * For kundetråder er dette forhandlerens EGEN kunde og deres egen strukturerte
+ * Personvern
+ * For kundetråder er dette forhandlerens egen kunde og deres egen strukturerte
  * data — helt innenfor. Grensen som holdes: ingenting på tvers av tenants (RLS
  * + deltakelseskrav på serveren), og **ingen meldingstekst** fra andre tråder.
  * Listen «Andre samtaler» viser emne og tidspunkt. Vil man lese, åpner man
  * tråden.
- *
- * ── Bredde og små skjermer ───────────────────────────────────────────────
+ * Bredde og små skjermer
  * 320px, som innboks-sidebaren — to like brede kolonner rammer inn samtalen i
  * midten. Under `xl` legger panelet seg som et **overlay** over tråden i stedet
  * for å presse den sammen: tre kolonner på en 13-tommer gir en 200px
@@ -69,8 +65,10 @@ export function DetaljerPanel({
 
   return (
     <>
-      {/* Overlay-bakgrunn under xl. Klikk utenfor lukker — ellers ville
-          panelet stengt tråden inne på en liten skjerm. */}
+      {/*
+       * Overlay-bakgrunn under xl. Klikk utenfor lukker — ellers ville
+       * panelet stengt tråden inne på en liten skjerm.
+       */}
       <button
         type="button"
         aria-label="Lukk detaljer"
@@ -117,7 +115,7 @@ export function DetaljerPanel({
   );
 }
 
-/* ══ Felles smådeler ═════════════════════════════════════════════════════ */
+/* Felles smådeler */
 
 function Seksjon({
   tittel,
@@ -149,7 +147,7 @@ function Tom({ tekst }: { tekst: string }) {
 }
 
 /**
- * ⚠️ Fallbacket. Ikke tomme felter med streker — en nøktern setning som sier
+ * Fallbacket. Ikke tomme felter med streker — en nøktern setning som sier
  * hva vi ikke vet. Et kundekort uten kunde ser ut som en feil; en setning som
  * sier «vi finner ingen kunde knyttet til denne samtalen» er et svar.
  */
@@ -198,7 +196,7 @@ function UkjentKontekst({ grunn }: { grunn?: string }) {
   return <Nøktern tittel={g.tittel} tekst={g.tekst} />;
 }
 
-/* ══ KUNDE ═══════════════════════════════════════════════════════════════ */
+/* Kunde */
 
 type Kontekst = RouterOutput['inboxContext']['forThread'];
 type KundeData = Extract<Kontekst, { type: 'kunde' }>;
@@ -210,8 +208,10 @@ function Kundekontekst({ data }: { data: KundeData }) {
       {/* Identitet */}
       <Link href={`/kunder/${k.id}` as Route} className="group block">
         <div className="flex items-center gap-3 rounded-control border border-border bg-bg p-3 transition-colors group-hover:bg-surface-2">
-          {/* F6-19 — seeden er `customers.id`, nøyaktig samme som innboks-
-              lista og kundekortet bruker. Én person, ett ansikt, tre flater. */}
+          {/*
+           * Seeden er `customers.id`, nøyaktig samme som innboks-
+           * lista og kundekortet bruker. Én person, ett ansikt, tre flater.
+           */}
           <Avatar seed={k.id} navn={k.navn} size={36} bevegelse="hover" />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="flex items-center gap-1.5 truncate text-label text-fg">
@@ -305,8 +305,10 @@ function Kundekontekst({ data }: { data: KundeData }) {
             })}
           </div>
         )}
-        {/* ⛔ Står her med vilje: panelet viser AT dere har snakket sammen, ikke
-            HVA som ble sagt. */}
+        {/*
+         * Står her med vilje: panelet viser at dere har snakket sammen, ikke
+         * Hva som ble sagt.
+         */}
         <p className="px-1 text-[11px] text-fg-muted">Emne og tidspunkt — ikke meldingstekst.</p>
       </Seksjon>
     </>
@@ -354,7 +356,7 @@ function SakListe({
   );
 }
 
-/* ══ MEKANIKER ═══════════════════════════════════════════════════════════ */
+/* Mekaniker */
 
 type MekData = Extract<Kontekst, { type: 'mekaniker' }>;
 
@@ -362,9 +364,11 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
   return (
     <>
       <div className="flex items-center gap-3 rounded-control border border-border bg-bg p-3">
-        {/* ⚠️ Skiftenøkkelen sto her og sa «en mekaniker», ikke «HVILKEN
-            mekaniker». Seeden er `mechanics.id`; valgene kommer fra serveren
-            slik at ansiktet er det samme som i tråden ved siden av. */}
+        {/*
+         * Skiftenøkkelen sto her og sa «en mekaniker», ikke «hvilken
+         * mekaniker». Seeden er `mechanics.id`; valgene kommer fra serveren
+         * slik at ansiktet er det samme som i tråden ved siden av.
+         */}
         <Avatar
           seed={data.mekanikerId}
           valg={{ ...data.avatar, humor: data.statusHumor }}
@@ -392,8 +396,10 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
             kapasitet <span className="font-medium">{data.kapasitet}</span> samtidig
           </p>
         </div>
-        {/* ⚠️ Kapasitet er «samtidige jobber», ikke «per dag». Å regne det om til
-            en prosent ville gitt tallet en presisjon det ikke har. */}
+        {/*
+         * Kapasitet er «samtidige jobber», ikke «per dag». Å regne det om til
+         * en prosent ville gitt tallet en presisjon det ikke har.
+         */}
         <p className="px-1 text-[11px] text-fg-muted leading-relaxed">
           Kapasitet betyr hvor mange jobber som kan gå samtidig, ikke hvor mange som får plass i
           løpet av dagen. Tallene er en pekepinn, ikke en fasit.
@@ -481,7 +487,7 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
   );
 }
 
-/* ══ KONTO / ENDWISE-SUPPORT ═════════════════════════════════════════════ */
+/* Konto / endwise-support */
 
 type KontoData = Extract<Kontekst, { type: 'konto' }>;
 
@@ -494,7 +500,7 @@ const STATUS_TEKST: Record<string, string> = {
 };
 
 /**
- * F5-11 — Endwise-admin ser forhandleren, ikke kundekortet.
+ * Endwise-admin ser forhandleren, ikke kundekortet.
  * «Se verkstedet» er URL-lesing under /endwise/verksted/[slug] — ikke setActive.
  */
 export function EndwiseForhandlerDetaljer({ navn, slug }: { navn: string; slug: string }) {

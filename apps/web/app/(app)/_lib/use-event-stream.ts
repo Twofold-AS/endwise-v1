@@ -10,16 +10,14 @@ import {
 } from './live-event';
 
 /**
- * F6-02 — Klientsiden av sanntidskanalen.
- *
+ * Klientsiden av sanntidskanalen.
  * `apps/stream` har vært ferdig lenge; det som manglet var noen som lyttet.
  * Hooken er bevisst tynn: den gjør ÉN ting — leverer eventer og en ærlig
  * tilkoblingsstatus. Den holder ikke på domenetilstand.
- *
- * **Payloaden brukes aldri som innhold.** Serveren sender med vilje bare
+ * Payloaden brukes aldri som innhold. Serveren sender med vilje bare
  * «hva skjedde + hvilken subjectId» — selve meldingen hentes gjennom tRPC, og
  * dermed gjennom RLS. Derfor er mønsteret i kallstedene alltid:
- * *event → invalidate query → hent på nytt*, aldri *event → skriv rett i UI*.
+ * event → invalidate query → hent på nytt*, aldri *event → skriv rett i UI*.
  * Et UI som stoler på pushet innhold, viser til slutt noe RLS aldri godkjente.
  */
 export type StreamStatus = 'connecting' | 'live' | 'idle';
@@ -31,21 +29,18 @@ export interface StreamEvent {
   type: string;
   /** Tråden/objektet eventet gjelder. Null for tenant-brede eventer. */
   subjectId: string | null;
-  /** Resten av serverens payload. Metadata — ALDRI sannheten om innholdet. */
+  /** Resten av serverens payload. Metadata — aldri sannheten om innholdet. */
   data: Record<string, unknown>;
 }
 
-/* ════════════════════════════════════════════════════════════════════════
- * ÉN DELT TILKOBLING PER FANE (refaktorert 08.08.2026)
- * ════════════════════════════════════════════════════════════════════════
- *
- * ⚠️ Hooken åpnet tidligere en EGEN `EventSource` per kallsted. Med én lytter
+/*
+ * ÉN delt tilkobling per fane (refaktorert )
+ * Hooken åpnet tidligere en egen `EventSource` per kallsted. Med én lytter
  * i appen gikk det bra. Da varslingslyden (F5-19) skulle lytte app-bredt, ble
  * det plutselig to per fane — og serveren har et tak:
  * `MAX_CONNECTIONS_PER_USER = 5` (`packages/modules/src/stream/`). To vinduer
  * × to lyttere = fire, tre vinduer = seks, og den sjette får 429. Nøyaktig det
  * scenarioet en toparts-test i to nettleservinduer er.
- *
  * Nå deler alle kallsteder ÉN strøm: første abonnent åpner den, siste lukker
  * den. Det er både billigere og mer korrekt — avspilling siden `Last-Event-ID`
  * skjer én gang, ikke én gang per komponent som tilfeldigvis lyttet.
@@ -86,7 +81,7 @@ function apne() {
   if (kilde) return;
   settStatus('connecting');
   // Same-origin (Next rewrite → apps/stream). EventSource sender sesjons-
-  // cookien selv; ingen token i URL-en. lastEventId i query er for NYE
+  // cookien selv; ingen token i URL-en. lastEventId i query er for nye
   // EventSource-instanser (browseren husker Last-Event-ID bare på den gamle).
   const source = new EventSource(streamSseUrl(lagretLastEventId()));
   kilde = source;

@@ -5,26 +5,23 @@ import { osloHour, QUICK_PULL_HOURS_OSLO } from '../../lib/oslo-time.ts';
 import { runQuickCustomerPull } from '../../lib/quick-pull.ts';
 
 /**
- * F8-01 — Planlagt Quick-PULL (Quick → Endwise), 08:00 og 16:00 Europe/Oslo.
- *
- * TIDSSONE: Vercel Cron er UTC-only og kan ikke uttrykke «08:00 Oslo» direkte
+ * Planlagt Quick-pull (Quick → Endwise), 08:00 og 16:00 Europe/Oslo.
+ * Tidssone: Vercel Cron er UTC-only og kan ikke uttrykke «08:00 Oslo» direkte
  * (offset skifter sommer/vinter). Vi løser det slik: vercel.json trigger denne
- * på ALLE aktuelle UTC-timer (06:00, 07:00, 14:00, 15:00 — dekker CET og CEST),
- * og handleren kjører den EKTE pullen KUN når Oslo-timen faktisk er 08 eller 16.
- * DST håndteres dermed korrekt via IANA-sonen, ikke en hardkodet offset. De
- * «ekstra» trigger-timene (feil side av DST) blir no-ops.
- *
- * LOKALT: cron kjører kun når appen er deployet (Vercel). Lokalt forblir pull
- * MANUELL via «Hent nå» i UI-et / `quick.pullNow`.
- *
+ * på alle aktuelle UTC-timer (06:00, 07:00, 14:00, 15:00 — dekker cet og cest),
+ * og handleren kjører den ekte pullen kun når Oslo-timen faktisk er 08 eller 16.
+ * Dst håndteres dermed korrekt via iana-sonen, ikke en hardkodet offset. De
+ * «ekstra» trigger-timene (feil side av dst) blir no-ops.
+ * Lokalt: cron kjører kun når appen er deployet (Vercel). Lokalt forblir pull
+ * Manuell via «Hent nå» i UI-et / `quick.pullNow`.
  * Itererer tenants og puller hver for seg via `withTenant` → RLS. Forhandlere
  * uten Quick-config hoppes over (getDecrypted → null). Én forhandlers feil
  * stopper ikke de andre (feil samles, 200 med rapport).
  */
 export const cronQuickPull = new Hono().use('*', cronAuth).get('/', async (c) => {
-  // CWE-306: autentisering skjer i `cronAuth`-middleware (feiler lukket) FØR dette.
-  // `?force=1` under kan derfor bare brukes av en allerede autentisert kaller —
-  // den forbigår KUN tidsgaten, aldri autentiseringen.
+  // CWE-306: autentisering skjer i `cronAuth`-middleware (feiler lukket) før dette.
+  // `?force=1` under kan derfor bare brukes av en allerede autentisert kaller
+  // den forbigår kun tidsgaten, aldri autentiseringen.
   const hour = osloHour();
   const forced = c.req.query('force') === '1'; // for manuell test av selve jobben
   if (!forced && !QUICK_PULL_HOURS_OSLO.includes(hour as (typeof QUICK_PULL_HOURS_OSLO)[number])) {

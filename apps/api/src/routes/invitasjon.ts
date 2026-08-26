@@ -9,24 +9,22 @@ import { createAppContext } from '../context.ts';
 import { lesPostgresCause } from '../trpc/slett-postgres.ts';
 
 /**
- * F1-10 — DEN OFFENTLIGE SIDEN av invitasjonsflyten.
- *
- * ── ⚠️ Hvorfor denne IKKE er en tRPC-rute ────────────────────────────────
+ * Den offentlige siden av invitasjonsflyten.
+ * Hvorfor denne ikke er en tRPC-rute
  * Den som åpner en invitasjonslenke har ingen konto, ingen sesjon og ingen
  * forhandler. Alle tRPC-rutene går gjennom `createRequestContext`, som
  * håndhever sesjon og 2FA (F1-11) — altså nøyaktig det invitee ikke har ennå.
  * Dette er samme klasse flate som `/widget/*`: offentlig inngang, med
  * hemmeligheten i forespørselen i stedet for i en cookie.
- *
- * ── ⛔ Hva som beskytter den ─────────────────────────────────────────────
- *   · Tokenet er 256 bit tilfeldig og finnes bare i lenka. Det er ingen liste
- *     å ramse opp — uten et gyldig token er det ingen inngang.
- *   · Oppslaget går gjennom `lookup_open_invitation` (SECURITY DEFINER), som
- *     kun svarer på ÅPNE invitasjoner. Utløpt, brukt og tilbakekalt gir samme
- *     svar som ukjent: null.
- *   · `consume_invitation` er atomisk. To samtidige forsøk gir én vinner.
- *   · Rollen kommer fra RADEN, aldri fra forespørselen. Klienten kan ikke be om
- *     å bli `dealer_admin` — det finnes ikke et felt for det.
+ * Hva som beskytter den
+ * Tokenet er 256 bit tilfeldig og finnes bare i lenka. Det er ingen liste
+ * å ramse opp — uten et gyldig token er det ingen inngang.
+ * Oppslaget går gjennom `lookup_open_invitation` (SECURITY DEFINER), som
+ * kun svarer på Åpne invitasjoner. Utløpt, brukt og tilbakekalt gir samme
+ * svar som ukjent: null.
+ * `consume_invitation` er atomisk. To samtidige forsøk gir én vinner.
+ * Rollen kommer fra raden, aldri fra forespørselen. Klienten kan ikke be om
+ * å bli `dealer_admin` — det finnes ikke et felt for det.
  */
 export const invitasjon = new Hono();
 
@@ -47,7 +45,7 @@ function loggOppslagFeil(error: unknown): void {
 }
 
 /**
- * ⚠️ Lat DB. `createAppContext()` kaster uten DATABASE_URL — det må ikke
+ * Lat DB. `createAppContext` kaster uten DATABASE_URL — det må ikke
  * skje ved import, ellers feiler `next build` på Vercel (F13-03).
  */
 function db() {
@@ -61,9 +59,8 @@ const getAuth = () => {
 
 /**
  * GET — hva gjelder invitasjonen? Kalles av oppsett-siden for å vise
- * forhandlernavn og funksjon FØR brukeren skriver passordet sitt.
- *
- * ⚠️ Svarer bevisst tynt: forhandlernavn, funksjon, e-post og utløp. Ikke hvem
+ * forhandlernavn og funksjon før brukeren skriver passordet sitt.
+ * Svarer bevisst tynt: forhandlernavn, funksjon, e-post og utløp. Ikke hvem
  * som inviterte, ikke tenant-ID, ikke noe om andre ansatte.
  */
 invitasjon.get('/:token', async (c) => {
@@ -80,13 +77,12 @@ invitasjon.get('/:token', async (c) => {
   }
 
   /**
-   * ⚠️ `withTenant`, ikke et rått select. `tenants` har RLS + FORCE RLS, så et
-   * oppslag uten kontekst returnerer NULL RADER — ikke en feil. Første versjon
+   * `withTenant`, ikke et rått select. `tenants` har RLS + force RLS, så et
+   * oppslag uten kontekst returnerer NULL rader — ikke en feil. Første versjon
    * hadde et rått select her, og resultatet var at forhandlernavnet stille ble
    * «Endwise» for alle: fallbacken så ut som en fornuftig standard i stedet for
    * som en tom spørring. Fanget i ende-til-ende-testen, ikke av typecheck.
-   *
-   * Tenanten er kjent fra invitasjonsraden, så konteksten kan settes trygt —
+   * Tenanten er kjent fra invitasjonsraden, så konteksten kan settes trygt
    * den kommer fra tokenet, ikke fra forespørselen.
    */
   const [forhandler] = await withTenant(db(), inv.tenantId, (tx) =>
@@ -120,22 +116,20 @@ invitasjon.get('/:token', async (c) => {
 const godtaKropp = z.object({
   token: z.string().min(10),
   navn: z.string().trim().min(2).max(120),
-  /** ⚠️ Samme minimum som Better-Auth er konfigurert med (`minPasswordLength: 12`). */
+  /** Samme minimum som Better-Auth er konfigurert med (`minPasswordLength: 12`). */
   passord: z.string().min(12).max(200).optional(),
 });
 
 /**
  * POST — godta invitasjonen.
- *
  * Rekkefølgen er valgt bevisst:
- *   1. Valider input FØR noe forbrukes. En for kort passordstreng skal ikke
- *      brenne invitasjonen.
- *   2. Slå opp at den er åpen.
- *   3. **Forbruk tokenet** — atomisk, én vinner.
- *   4. Opprett/hent bruker, medlemskap og profil.
- *
- * ⚠️ Feiler steg 4 etter at steg 3 er gjort, er invitasjonen brukt opp uten at
- * kontoen ble ferdig. Det er den TRYGGE feilretningen: aldri to kontoer fra ett
+ * 1. Valider input før noe forbrukes. En for kort passordstreng skal ikke
+ * brenne invitasjonen.
+ * 2. Slå opp at den er åpen.
+ * 3. **Forbruk tokenet** — atomisk, én vinner.
+ * 4. Opprett/hent bruker, medlemskap og profil.
+ * Feiler steg 4 etter at steg 3 er gjort, er invitasjonen brukt opp uten at
+ * kontoen ble ferdig. Det er den trygge feilretningen: aldri to kontoer fra ett
  * token. Lederen kan invitere på nytt. Motsatt rekkefølge ville gjort et
  * kappløp mellom to faner til to medlemskap.
  */
@@ -189,7 +183,7 @@ invitasjon.post('/godta', async (c) => {
     );
   }
 
-  // ── 3. Forbruk. Etter denne linja er tokenet dødt. ────────────────────
+  // 3. Forbruk. Etter denne linja er tokenet dødt.
   const forbrukt = await modul.forbruk(parsed.data.token);
   if (!forbrukt) {
     // Noen andre kom først — eller den ble tilbakekalt i mellomtiden.
@@ -216,12 +210,11 @@ invitasjon.post('/godta', async (c) => {
       userId = ny.id;
 
       /**
-       * ⚠️ E-posten er allerede bevist: invitasjonen ble sendt DIT, og bare den
+       * E-posten er allerede bevist: invitasjonen ble sendt dit, og bare den
        * som leste den har tokenet. Å kreve en ny verifiseringsmail ville vært å
        * be om bevis for noe vi nettopp har fått bevist — og i dev uten Resend
        * ville det låst hele flyten.
-       *
-       * ⛔ `twoFactorEnabled` settes IKKE her. Den ansatte er `dealer_staff`,
+       * `twoFactorEnabled` settes ikke her. Den ansatte er `dealer_staff`,
        * som krever 2FA (F1-11), og skal gjennom oppsettet selv. Å sette den her
        * ville gitt en konto som består 2FA-gaten uten at noen kode er tastet.
        */
@@ -234,7 +227,7 @@ invitasjon.post('/godta', async (c) => {
         .where(eq(schema.user.id, userId));
     }
 
-    // ── 4. Medlemskap + profil, i tenanten fra RADEN. ──────────────────
+    // 4. Medlemskap + profil, i tenanten fra raden.
     const [alleredeMedlem] = await db()
       .select({ id: schema.member.id })
       .from(schema.member)
@@ -253,7 +246,7 @@ invitasjon.post('/godta', async (c) => {
           id: randomUUID(),
           organizationId: inv.tenantId,
           userId: userId as string,
-          // ⛔ Fra raden, aldri fra forespørselen. Staff er dealer_staff;
+          // Fra raden, aldri fra forespørselen. Staff er dealer_staff;
           // owner-sporet kan være dealer_admin — CHECKen skiller på kind.
           role: inv.rolle,
           createdAt: new Date(),
@@ -283,7 +276,7 @@ invitasjon.post('/godta', async (c) => {
       nyKonto: !eksisterende,
     });
   } catch (error) {
-    // ⚠️ Invitasjonen ER forbrukt. Si det rett ut i stedet for å late som om
+    // Invitasjonen er forbrukt. Si det rett ut i stedet for å late som om
     // brukeren kan prøve igjen med samme lenke.
     console.error(`[invitasjon] godta feilet etter forbruk: ${(error as Error).message}`);
     return c.json(

@@ -39,7 +39,7 @@ export function plattformToast(): string {
   return 'Endwise er plattformen, ikke et verksted.';
 }
 
-/** UI: kind=platform ELLER slug=endwise — ikke vent på at setup har satt kind. */
+/** UI: kind=platform eller slug=endwise — ikke vent på at setup har satt kind. */
 export function erPlattformIUi(input: {
   erPlattform?: boolean;
   slug?: string | null;

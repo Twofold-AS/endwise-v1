@@ -12,9 +12,8 @@ import { z } from 'zod';
 import { endwiseSupportProcedure, protectedProcedure, router } from '../init.ts';
 
 /**
- * F6-26 — den konkrete e-postkanalen for utgående meldinger.
- *
- * ⚠️ `undefined` når `RESEND_API_KEY` mangler, og det er meningen. Modulen
+ * Den konkrete e-postkanalen for utgående meldinger.
+ * `undefined` når `RESEND_API_KEY` mangler, og det er meningen. Modulen
  * markerer da meldingen `failed` med «E-postkanalen er ikke konfigurert» i
  * stedet for å late som den gikk. Lokalt uten Resend ser man altså at den ikke
  * ble sendt — som er sannheten.
@@ -27,9 +26,8 @@ const meldinger = (db: Parameters<typeof createMessagesModule>[0]) =>
   createMessagesModule(db, { epost: epostkanal });
 
 /**
- * F6-01 — Meldinger.
- *
- * `authorId`/`readerId` tas ALDRI fra input — alltid fra sesjonen. Ellers kunne
+ * Meldinger.
+ * `authorId`/`readerId` tas aldri fra input — alltid fra sesjonen. Ellers kunne
  * en bruker lest en tråd «som» noen andre ved å sende deres ID.
  */
 function toTRPCError(error: unknown): never {
@@ -69,7 +67,7 @@ export const messagesRouter = router({
         kind: z.enum(['customer_dealer', 'mechanic_dealer', 'dealer_admin']),
         subject: z.string().max(140).optional(),
         /**
-         * Kan være TOM (endret 07.08.2026). Oppretteren legges alltid til
+         * Kan være tom (endret ). Oppretteren legges alltid til
          * under, så en tom liste betyr «en tråd med bare meg» — som er en
          * gyldig tråd, og den eneste måten å teste sanntid mot seg selv på.
          * `min(1)` her ville avvist det uten at det gjorde noe tryggere:
@@ -77,8 +75,7 @@ export const messagesRouter = router({
          */
         participantIds: z.array(z.string()).default([]),
         /**
-         * Trådens primærkanal = SVARKANALEN (F6-01, 08.08.2026).
-         *
+         * Trådens primærkanal = svarkanalen (F6-01, ).
          * Default `app`: en tråd startet i panelet går i panelet. Velger man
          * SMS eller e-post, sier man at samtalen hører hjemme der — og da må
          * `externalRef` peke på nummeret/adressen svaret skal til.
@@ -116,9 +113,8 @@ export const messagesRouter = router({
     }),
 
   /**
-   * F6-26 — send en melding som feilet på nytt.
-   *
-   * ⚠️ Ingen `channel` eller mottaker fra input: alt hentes fra raden og
+   * Send en melding som feilet på nytt.
+   * Ingen `channel` eller mottaker fra input: alt hentes fra raden og
    * tråden. Ellers kunne en deltaker sendt hvilken som helst melding til
    * hvilken som helst adresse ved å oppgi den selv.
    */
@@ -147,9 +143,8 @@ export const messagesRouter = router({
     }),
 
   /**
-   * F5-11 — Innboks for Endwise-admin: dealer_admin-tråder fra ALLE forhandlere.
-   *
-   * ⛔ Ikke `listThreads`. Den er tenant-skopet og skal forbli det.
+   * Innboks for Endwise-admin: dealer_admin-tråder fra alle forhandlere.
+   * Ikke `listThreads`. Den er tenant-skopet og skal forbli det.
    * Sperren er `endwiseSupportProcedure` (admin + plattform-support). Lesing går via `withPlatformAdmin`
    * + SELECT-only RLS på kind = dealer_admin.
    */
@@ -195,9 +190,9 @@ export const messagesRouter = router({
     }),
 
   /**
-   * F5-11 — Ny samtale fra Endwise-innboksen. Skriver på forhandler-tenanten.
-   * ⛔ Ingen tenant-id fra sesjonen; målet kommer fra input og sjekkes mot
-   * plattform-lista. dealer_admin/dealer_staff får FORBIDDEN her.
+   * Ny samtale fra Endwise-innboksen. Skriver på forhandler-tenanten.
+   * Ingen tenant-id fra sesjonen; målet kommer fra input og sjekkes mot
+   * plattform-lista. dealer_admin/dealer_staff får forbidden her.
    */
   createPlatformSupportThread: endwiseSupportProcedure
     .input(

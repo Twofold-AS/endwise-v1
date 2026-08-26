@@ -5,7 +5,6 @@ import { appRouter } from '../src/trpc/router.ts';
 
 /**
  * F2-06 / F5-55 — opprett kunde i Endwise uten Quick.
- *
  * Hypotesen var at create var gated på Quick-config. Den er det ikke: ruta
  * har eksistert, men uten test og med tomtilstand som pekte på booking/Quick.
  * Denne fila låser at en forhandler uten Quick-rad kan opprette en lokal

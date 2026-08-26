@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F6-19 — mekaniker-/ansattflater viser blobatar med status-humor, og
- * tilgjengelighetstekst ved siden av. Status overstyrer KUN humor.
+ * Mekaniker-/ansattflater viser blobatar med status-humor, og
+ * tilgjengelighetstekst ved siden av. Status overstyrer kun humor.
  * Sidebar og profil viser det valgte uttrykket.
  */
 const her = dirname(fileURLToPath(import.meta.url));

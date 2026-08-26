@@ -21,7 +21,7 @@ export class NotAParticipantError extends Error {
 }
 
 /**
- * Visningsnavn for dealer↔Endwise. Kun medlemmer av forhandler-org eller
+ * Visningsnavn for dealerEndwise. Kun medlemmer av forhandler-org eller
  * Endwise-org — ikke kunder (ingen PII-orakel).
  */
 type SupportNavn = { navn: string; rolle: string | null };
@@ -78,7 +78,7 @@ async function navnForDealerOgEndwise(
   return ut;
 }
 
-/** F5-11 — tråden finnes ikke, eller er ikke forhandler↔Endwise. */
+/** Tråden finnes ikke, eller er ikke forhandlerEndwise. */
 export class PlatformSupportNotFoundError extends Error {
   readonly code = 'PLATFORM_SUPPORT_NOT_FOUND';
   constructor(threadId: string) {
@@ -86,7 +86,7 @@ export class PlatformSupportNotFoundError extends Error {
   }
 }
 
-/** F5-11 — Endwise kan bare starte support-tråd hos en ekte forhandler. */
+/** Endwise kan bare starte support-tråd hos en ekte forhandler. */
 export class PlatformSupportInvalidTenantError extends Error {
   readonly code = 'PLATFORM_SUPPORT_INVALID_TENANT';
   constructor() {
@@ -94,7 +94,7 @@ export class PlatformSupportInvalidTenantError extends Error {
   }
 }
 
-/** F5-11 — uten leder i forhandler-orga lander ikke tråden i deres innboks. */
+/** Uten leder i forhandler-orga lander ikke tråden i deres innboks. */
 export class PlatformSupportNoDealerAdminError extends Error {
   readonly code = 'PLATFORM_SUPPORT_NO_DEALER_ADMIN';
   constructor() {
@@ -103,13 +103,11 @@ export class PlatformSupportNoDealerAdminError extends Error {
 }
 
 /**
- * F6-01 — Meldings-modulen.
- *
- * To lag med tilgangskontroll, og de fanger to ULIKE feil:
- *   - RLS:        «hvilken tenants tråder?» — hindrer at forhandler A ser B
- *   - deltakelse: «er DU med i denne tråden?» — hindrer at en ansatt hos A
- *                 leser en kundesamtale hos A som han ikke er del av
- *
+ * Meldings-modulen.
+ * To lag med tilgangskontroll, og de fanger to ulike feil:
+ * RLS: «hvilken tenants tråder?» — hindrer at forhandler A ser B
+ * deltakelse: «er du med i denne tråden?» — hindrer at en ansatt hos A
+ * leser en kundesamtale hos A som han ikke er del av
  * Bare RLS ville gitt hver ansatt tilgang til hver kundes samtale i huset.
  * Det er ikke en tenant-lekkasje, men det er fortsatt en lekkasje.
  */
@@ -118,9 +116,8 @@ export type MessageChannel = 'app' | 'sms' | 'email' | 'web';
 export type MessageDirection = 'inbound' | 'outbound';
 
 /**
- * F6-26 — transporten for en utgående e-postmelding.
- *
- * Et GRENSESNITT, ikke en Resend-import. `packages/modules` avhenger av `db` og
+ * Transporten for en utgående e-postmelding.
+ * Et grensesnitt, ikke en Resend-import. `packages/modules` avhenger av `db` og
  * `events` og ingenting annet (F0-06: moduler skal kunne bytte leverandør), så
  * den konkrete kanalen kobles på i `apps/api` — nøyaktig som `createDispatcher`
  * tar sine kanaler utenfra i F3-04.
@@ -148,15 +145,13 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
   }
 
   /**
-   * ⛔ **IDEMPOTENSVAKTEN.** Leverer én melding, og gjør det høyst én gang.
-   *
-   * Mønsteret er F3-04s: ta eierskap i basen FØR nettverkskallet, slik at to
+   * idempotensvakten. Leverer én melding, og gjør det høyst én gang.
+   * Mønsteret er F3-04s: ta eierskap i basen før nettverkskallet, slik at to
    * samtidige forsøk ikke kan bli to e-poster. Forskjellen fra dispatcheren er
    * at vi går via `sending` i stedet for rett til `sent` — se
    * `messageDeliveryEnum` for hvorfor en krasj midt i kallet ellers ville
    * etterlatt en rad som påstår at den gikk.
-   *
-   * Den betingede UPDATE-en er selve låsen: `WHERE delivery_status IN
+   * Den betingede UPDATE-en er selve låsen: `WHERE delivery_status in
    * ('pending','failed')` treffer null rader hvis noen andre allerede har tatt
    * den, og da returnerer vi uten å sende. `sent` kan aldri plukkes opp igjen.
    */
@@ -189,7 +184,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
 
     if (!kanaler.epost) {
       // Ingen kanal koblet på (typisk: RESEND_API_KEY mangler lokalt). Det er
-      // en KONFIGURASJONSFEIL, og den skal være synlig i tråden — ikke en
+      // en konfigurasjonsfeil, og den skal være synlig i tråden — ikke en
       // stille app-melding som ser levert ut.
       await markerFeilet('E-postkanalen er ikke konfigurert på serveren.');
       return;
@@ -203,12 +198,11 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       .where(eq(schema.user.id, melding.authorId));
 
     /**
-     * ⚠️ **`withTenant`, ikke `db` direkte.** `tenants` har RLS, så et rått
+     * `withTenant`, ikke `db` direkte. `tenants` har RLS, så et rått
      * oppslag returnerer null rader og forhandlernavnet faller stille tilbake
-     * til «verkstedet» i e-posten kunden får. Fanget av testen 22.08.2026 —
+     * til «verkstedet» i e-posten kunden får. Fanget av testen
      * ingenting kastet, navnet ble bare feil.
-     *
-     * (`user` over er en Better-Auth-tabell UTEN RLS, ADR-002, og leses derfor
+     * (`user` over er en Better-Auth-tabell uten RLS, ADR-002, og leses derfor
      * med `db`. Forskjellen er ikke tilfeldig.)
      */
     const [forhandler] = await withTenant(db, tenantId, (tx) =>
@@ -220,7 +214,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
 
     if (!avsender?.epost) {
       /**
-       * ⚠️ Uten avsenderens e-post har kunden ingen vei tilbake — svaret ville
+       * Uten avsenderens e-post har kunden ingen vei tilbake — svaret ville
        * gått til `no-reply`. Da er det bedre å feile synlig enn å sende en
        * melding kunden ikke kan svare på. Treffer typisk agent-forfattere
        * (`agent:*`), som ikke er Better-Auth-brukere.
@@ -315,7 +309,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
 
     /**
      * Skriv melding + push den ut. Rekkefølgen er viktig: eventet publiseres
-     * ETTER at meldingen er skrevet, ellers ville en klient kunne rekke å be om
+     * Etter at meldingen er skrevet, ellers ville en klient kunne rekke å be om
      * en melding som ikke finnes ennå.
      */
     async postMessage(input: {
@@ -325,9 +319,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       body: string;
       /**
        * Hvor meldingen kom inn / gikk ut.
-       *
-       * ⚠️ Default er `app`, ikke trådens kanal. En melding skrevet i panelet
-       * ER en app-melding, også i en e-posttråd — helt til utsendingen faktisk
+       * Default er `app`, ikke trådens kanal. En melding skrevet i panelet
+       * Er en app-melding, også i en e-posttråd — helt til utsendingen faktisk
        * skjer over e-post (F6-16). Å arve trådens kanal her ville betydd at
        * indikatoren løy om noe som ennå ikke er sendt.
        */
@@ -341,9 +334,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
         await assertParticipant(tx, input.threadId, input.authorId);
 
         /**
-         * F6-26 — trådens kanal avgjør om meldingen skal UT et sted.
-         *
-         * ⚠️ Leses i samme transaksjon som innsettingen. Hentet vi den utenfor,
+         * Trådens kanal avgjør om meldingen skal ut et sted.
+         * Leses i samme transaksjon som innsettingen. Hentet vi den utenfor,
          * kunne kanalen rukket å endre seg mellom oppslag og skriving, og raden
          * ville sagt én ting mens utsendingen gjorde en annen.
          */
@@ -356,8 +348,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
           .where(eq(schema.threads.id, input.threadId));
 
         /**
-         * ⛔ Sendes bare når kanalen er e-post OG vi har en adresse.
-         *
+         * Sendes bare når kanalen er e-post og vi har en adresse.
          * En e-posttråd uten `external_ref` er en tråd ingen kan nås på. Da er
          * riktig oppførsel å skrive meldingen som en vanlig app-melding — ikke
          * å markere den `pending` for en levering som aldri kan skje.
@@ -375,7 +366,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             authorId: input.authorId,
             body: input.body,
             /**
-             * ⚠️ Kanalen på raden er hva som FAKTISK skjer med denne meldingen,
+             * Kanalen på raden er hva som faktisk skjer med denne meldingen,
              * ikke hva tråden ønsker seg. Kan den ikke sendes, er den en
              * app-melding — og badgen i innboksen sier det samme som virkeligheten.
              */
@@ -417,14 +408,12 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       }
 
       /**
-       * F6-26 — utsendingen skjer ETTER at raden og eventene er på plass.
-       *
-       * ⛔ Rekkefølgen er ikke tilfeldig: **det brukeren skrev skal aldri gå
-       * tapt i en nettverksfeil.** Sendte vi først, ville en Resend-timeout
+       * Utsendingen skjer etter at raden og eventene er på plass.
+       * Rekkefølgen er ikke tilfeldig: det brukeren skrev skal aldri gå
+       * tapt i en nettverksfeil. Sendte vi først, ville en Resend-timeout
        * betydd at meldingen forsvant fra skjermen selv om den kanskje gikk.
        * Nå er den alltid i tråden, og statusen sier hva som skjedde med den.
-       *
-       * ⚠️ Await-et, ikke i bakgrunnen. Den som trykker «send» skal få vite om
+       * Await-et, ikke i bakgrunnen. Den som trykker «send» skal få vite om
        * det gikk før hen går videre. En bakgrunnskø her ville krevd Workflows
        * (F3-04-mønsteret) og et sted å vise resultatet i etterkant — verdt det
        * når volumet krever det, unødvendig for én e-post.
@@ -440,8 +429,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
     },
 
     /**
-     * F6-26 — send en FEILET melding på nytt.
-     *
+     * Send en feilet melding på nytt.
      * Kun `failed` og `pending` kan plukkes opp — se `leverEpost`. En melding
      * som allerede er `sent` kan ikke sendes igjen ved et uhell, og det er
      * hele poenget: kunden skal ikke få den samme meldingen to ganger fordi
@@ -499,8 +487,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             /** Svarkanalen. Se `messageChannelEnum`. */
             channel: schema.threads.channel,
             /**
-             * Kanalen SISTE melding kom på — ikke nødvendigvis trådens egen.
-             *
+             * Kanalen siste melding kom på — ikke nødvendigvis trådens egen.
              * Forskjellen er hele poenget for den som sitter i innboksen: en
              * e-posttråd der siste melding kom som SMS betyr at kunden byttet
              * vei, og at svaret kanskje bør følge etter.
@@ -518,12 +505,10 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
                      or m.created_at > ${schema.threadParticipants.lastReadAt})
             )`,
             /**
-             * Hvem ELLERS er i tråden? (lagt til 08.08.2026 for F6-01)
-             *
+             * Hvem ellers er i tråden? (lagt til for F6-01)
              * Innboksen viste «Samtale · Kunde» fordi den ikke hadde noe annet
              * enn emnet å skrive. Motpartene er det innboksen egentlig sorterer
              * etter i hodet på den som leser: du husker Kari, ikke emnefeltet.
-             *
              * Bare IDer her — navnene slås opp av `directory.participants`, som
              * er den ene ruta som har lov til å oversette en ID til et navn.
              */
@@ -547,7 +532,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
     },
 
     /**
-     * F6-05 — Legg mennesker inn i en tråd agenten allerede står i.
+     * Legg mennesker inn i en tråd agenten allerede står i.
      * Idempotent: eskalerer agenten to ganger, dupliseres ikke deltakerne.
      */
     async addParticipants(tenantId: string, threadId: string, participantIds: string[]) {
@@ -569,8 +554,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
     },
 
     /**
-     * F6-05 — Systemmelding fra agenten. Går utenom deltaker-sjekken fordi
-     * agenten skriver PÅ VEGNE AV systemet i det øyeblikket den gir fra seg
+     * Systemmelding fra agenten. Går utenom deltaker-sjekken fordi
+     * agenten skriver PÅ vegne av systemet i det øyeblikket den gir fra seg
      * tråden — men den er fortsatt tenant-skopet og RLS gjelder.
      */
     async postSystemMessage(input: {
@@ -615,9 +600,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
     },
 
     /**
-     * F5-11 — alle forhandler↔Endwise-tråder, på tvers av tenants.
-     *
-     * Kjører under `withPlatformAdmin`. RLS slipper KUN `dealer_admin` gjennom.
+     * Alle forhandlerEndwise-tråder, på tvers av tenants.
+     * Kjører under `withPlatformAdmin`. RLS slipper kun `dealer_admin` gjennom.
      * Deltakelse kreves ikke — Endwise er mottakeren, ikke en forhåndsvalgt
      * deltaker. `listThreads` er urørt.
      */
@@ -731,7 +715,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
 
     /**
      * Svar i forhandlerens tråd. Oppslag via platform-admin (kind-sjekk),
-     * skriving via `withTenant` på DEN tenanten — så forhandleren ser svaret
+     * skriving via `withTenant` på den tenanten — så forhandleren ser svaret
      * i sin Endwise-kanal. Ingen ny tråd, ingen Endwise-tenant.
      */
     async postPlatformSupportReply(input: { threadId: string; authorId: string; body: string }) {
@@ -789,10 +773,9 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
     },
 
     /**
-     * F5-11 — Endwise starter en dealer_admin-tråd HOS forhandleren.
-     *
+     * Endwise starter en dealer_admin-tråd hos forhandleren.
      * Samme skrive-sti som `postPlatformSupportReply`: oppslag via
-     * platform-admin, insert via `withTenant` på DEN tenanten. Uten leder
+     * platform-admin, insert via `withTenant` på den tenanten. Uten leder
      * som deltaker ville forhandleren aldri sett tråden (`listThreads`
      * krever deltakelse; `listPlatformSupport` gjør det ikke).
      */

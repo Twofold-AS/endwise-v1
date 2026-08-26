@@ -2,7 +2,7 @@ import { serve } from '@hono/node-server';
 import app from './app.ts';
 
 /**
- * Valgfri lokal `serve()`. F13-03: Vercel og `next dev` bruker Next route
+ * Valgfri lokal `serve`. F13-03: Vercel og `next dev` bruker Next route
  * handlers, ikke denne prosessen. Beholdt for Docker/dev som vil treffe
  * Hono direkte på :3001.
  */

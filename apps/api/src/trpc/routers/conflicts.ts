@@ -4,14 +4,13 @@ import { z } from 'zod';
 import { moduleAdminProcedure, router } from '../init.ts';
 
 /**
- * ⛔ F0-16 — MODUL-GATE: `quick`. Synk-konflikter OPPSTÅR av Quick-synken;
+ * Modul-gate: `quick`. Synk-konflikter oppstår av Quick-synken;
  * uten modulen finnes de ikke, og ruta skal ikke svare.
  */
 const quickAdminProcedure = moduleAdminProcedure('quick');
 
 /**
  * F8-01 / F8-02 — Synk-konflikter (tre-veis fletting).
- *
  * Sikkerhet: `adminProcedure` (kun dealer_admin/endwise_admin) + `withTenant` →
  * RLS. Forhandler A ser eller løser aldri B sine konflikter — verken via rolle
  * eller RLS.

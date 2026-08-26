@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { HELPDESK_MIN, hjelpeartikkelLagreHint } from '../app/(app)/endwise/helpdesk/lagre-hint.ts';
 
 /**
- * F5-23 — Opprett/Lagre på /endwise/helpdesk var disabled uten forklaring
+ * Opprett/Lagre på /endwise/helpdesk var disabled uten forklaring
  * når tittel/ingress/brødtekst var under server-Zod-minima.
  * Hintet speiler `artikkelFelter` i helpdesk-ruta. Første felt som feiler.
  */

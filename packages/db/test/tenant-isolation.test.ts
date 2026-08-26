@@ -5,18 +5,15 @@ import { createDb, type Database, withTenant } from '../src/client.ts';
 import { schema } from '../src/index.ts';
 
 /**
- * F1-08 — Automatiserte cross-tenant-angrep.
- *
- * Hver test her ER et angrep. Består den, betyr det at DATABASEN stoppet
+ * Automatiserte cross-tenant-angrep.
+ * Hver test her er et angrep. Består den, betyr det at databasen stoppet
  * angrepet — ikke at koden vår oppførte seg pent.
- *
  * To forbindelser, og det er hele poenget:
- *   - owner (DATABASE_URL)     eier tabellene. RLS gjelder IKKE for eieren.
- *                              Brukes kun til seeding/opprydding.
- *   - app   (APP_DATABASE_URL) er `endwise_app` (medlem av `authenticated`).
- *                              Alle angrep kjøres herfra. Dette er rollen
- *                              applikasjonen faktisk bruker i runtime.
- *
+ * owner (DATABASE_URL) eier tabellene. RLS gjelder ikke for eieren.
+ * Brukes kun til seeding/opprydding.
+ * app (APP_DATABASE_URL) er `endwise_app` (medlem av `authenticated`).
+ * Alle angrep kjøres herfra. Dette er rollen
+ * applikasjonen faktisk bruker i runtime.
  * Kjørte vi angrepene som eier, ville alt "bestått" fordi RLS var usynlig.
  * Det ville vært den farligste grønne testen i repoet.
  */
@@ -77,9 +74,9 @@ describeDb('tenant-isolasjon (RLS)', () => {
   });
 
   /**
-   * VIKTIG FUNN (F1-08): Postgres kaster IKKE feil når en UPDATE/DELETE mangler
+   * Viktig funn (F1-08): Postgres kaster ikke feil når en UPDATE/DELETE mangler
    * policy — raden blir bare usynlig for kommandoen, og du får `0 rows affected`.
-   * Tukling med audit-loggen feiler altså STILLE. Applikasjonskode kan derfor
+   * Tukling med audit-loggen feiler altså stille. Applikasjonskode kan derfor
    * aldri stole på et unntak her; garantien er at raden er uendret.
    */
   it('audit-loggen er append-only: UPDATE endrer ingenting', async () => {

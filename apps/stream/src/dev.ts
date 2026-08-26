@@ -2,7 +2,7 @@ import { serve } from '@hono/node-server';
 import { createStreamApp } from './app.ts';
 
 // Rot-.env lastes av dev-scriptet via `node --env-file-if-exists=../../.env`
-// (Node auto-laster IKKE .env). Kjør `cp .env.example .env` og fyll inn verdiene.
+// (Node auto-laster ikke .env). Kjør `cp .env.example .env` og fyll inn verdiene.
 // APP_DATABASE_URL = app-rollen (RLS på). Faller tilbake til DATABASE_URL (eier).
 const databaseUrl = process.env.APP_DATABASE_URL ?? process.env.DATABASE_URL;
 if (!databaseUrl) {

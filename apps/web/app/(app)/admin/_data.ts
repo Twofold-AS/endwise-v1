@@ -1,16 +1,15 @@
 import type { Kpi } from '../dashboard/_data';
 
 /**
- * Endwise-INTERN oversikt (endwise_admin): «hva VI tjener» + plattformtall på
- * tvers av forhandlere. IKKE en enkelt forhandlers side.
- *
- * MOCK: Web Analytics (krever Vercel-deploy) + Stripe-inntekt (krever nøkler).
+ * Endwise-intern oversikt (endwise_admin): «hva vi tjener» + plattformtall på
+ * tvers av forhandlere. Ikke en enkelt forhandlers side.
+ * Web Analytics (krever Vercel-deploy) + Stripe-inntekt (krever nøkler).
  * Tallene er placeholder — ikke live penger. Siden er server-gatet
  * (`admin/layout.tsx` → `krevEndwiseAdminSide`); de skal ikke prerendres
- * for anonyme. EKTE STRUKTUR: booking-aggregat har backend.
+ * for anonyme. Ekte struktur: booking-aggregat har backend.
  */
 
-// ── Inntekt (Stripe) — MOCK til Stripe er koblet ────────────────────────────
+// Inntekt (Stripe) — mock til Stripe er koblet
 export const REVENUE_KPIS: Kpi[] = [
   {
     key: 'mrr',
@@ -67,7 +66,7 @@ export const MRR_SERIES: MonthRow[] = [
   { mnd: 'jul', mrr: 148500 },
 ];
 
-// ── Web Analytics — MOCK, samles KUN på Vercel-deploy ───────────────────────
+// Web Analytics — , samles kun på Vercel-deploy
 export const ANALYTICS_KPIS: Kpi[] = [
   {
     key: 'bes',
@@ -122,7 +121,7 @@ export const REFERRERS: { source: string; visits: number }[] = [
   { source: 'finn.no', visits: 720 },
 ];
 
-// ── Booking (aggregert på tvers av forhandlere) — EKTE backend, seed nå ──────
+// Booking (aggregert på tvers av forhandlere) — ekte backend, seed nå
 export const BOOKING_KPIS: Kpi[] = [
   {
     key: 'tot',

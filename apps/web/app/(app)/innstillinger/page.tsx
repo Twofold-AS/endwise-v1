@@ -1,11 +1,9 @@
 import { InnstillingerSkall } from './_skall';
 
 /**
- * F5-19 — SETTINGS. All konfigurasjon, forankret nederst i sidebaren.
- *
- * 24.08.2026: hub-kortene er borte. Én flate med liggende pille-faner; aktiv
+ * Settings. All konfigurasjon, forankret nederst i sidebaren.
+ * hub-kortene er borte. Én flate med liggende pille-faner; aktiv
  * fane vises inne på siden. `?fane=` er kanonisk fane-state.
- *
  * Prinsippet er uendret: konfigurasjon bor her, filtrering og sortering bor på
  * selve sidene.
  */

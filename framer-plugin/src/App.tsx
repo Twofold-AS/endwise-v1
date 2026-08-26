@@ -2,13 +2,12 @@ import { framer } from 'framer-plugin';
 import { useState } from 'react';
 
 /**
- * F4-01 — Framer Plugin-skall (SKJELETT, status `progress`).
- *
+ * Framer Plugin-skall (skjelett, status `progress`).
  * Jobb (per roadmap): pairing (OTP/QR) → nøkkelutstedelse, plugin storage,
  * tenant-config UI. Denne versjonen er det minimale skallet: forhandleren limer
- * inn sin PUBLISHABLE key (hentet i admin → Integrasjoner → Widget) + API-base,
+ * inn sin publishable key (hentet i admin → Integrasjoner → Widget) + API-base,
  * som lagres i plugin storage og settes som Property Controls på Code Component-en
- * (F4-09). GJENSTÅR: ekte pairing-flyt (OTP/QR mot Endwise-admin), Code File
+ * (F4-09). Gjenstår: ekte pairing-flyt (OTP/QR mot Endwise-admin), Code File
  * API-synk (F4-11), multi-tenant MCP (F4-12). Ingen hemmelig nøkkel her (CWE-798).
  */
 export function App() {

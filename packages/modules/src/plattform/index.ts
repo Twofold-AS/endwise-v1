@@ -1,7 +1,6 @@
 /**
- * Endwise som PLATTFORM-org — ikke et verksted.
- *
- * ⛔ Jobbfunksjonene leder|selger|support|mekaniker (F1-10) brukes ALDRI her.
+ * Endwise som plattform-org — ikke et verksted.
+ * Jobbfunksjonene leder|selger|support|mekaniker (F1-10) brukes aldri her.
  * Plattform-«support» er et tilgangsnivå, ikke en forhandler-funksjon.
  */
 
@@ -12,7 +11,7 @@ export const TENANT_KIND_PLATFORM = 'platform' as const;
 export const PLATFORM_NIVA = ['eier', 'administrator', 'support'] as const;
 export type PlatformNiva = (typeof PLATFORM_NIVA)[number];
 
-/** Nivåer som kan INVITERES. Eier opprettes én gang (første endwise_admin). */
+/** Nivåer som kan inviteres. Eier opprettes én gang (første endwise_admin). */
 export const INVITERBARE_PLATFORM_NIVA = ['administrator', 'support'] as const;
 export type InviterbartPlatformNiva = (typeof INVITERBARE_PLATFORM_NIVA)[number];
 
@@ -96,7 +95,7 @@ export function invitasjonstekst(niva: InviterbartPlatformNiva): {
   };
 }
 
-/** Kontekster når aktiv org ER plattform-tenanten. */
+/** Kontekster når aktiv org er plattform-tenanten. */
 export const PLATFORM_KONTEKST = {
   key: 'endwise' as const,
   label: 'Endwise',

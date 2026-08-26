@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 /**
- * F7-07 — Er enheten på nett? Mekanikeren mister ofte dekning i verkstedet, så
+ * Er enheten på nett? Mekanikeren mister ofte dekning i verkstedet, så
  * flatene trenger en tydelig offline-tilstand. Bruker `navigator.onLine` +
  * online/offline-eventene. SSR-trygt (antar online til hydrering).
  */

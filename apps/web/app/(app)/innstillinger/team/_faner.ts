@@ -1,6 +1,5 @@
 /**
  * Team-piller — samme ?fane=-mønster som Innstillinger (F5-19).
- *
  * Filtrerer eksisterende `job_function` (F1-14): selger · support · mekaniker.
  * Ingen nye rolle-enum. Leder vises bare under Ansatte (hele lista).
  */

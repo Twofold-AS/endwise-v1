@@ -6,12 +6,10 @@ import { describe, expect, it } from 'vitest';
 import { drizzleKitPgCredentials, pgConnectionConfig } from '../src/client.ts';
 
 /**
- * F13-01 — Vercel → Scaleway Managed PostgreSQL.
- *
- * Scaleway public TLS bruker egen CA. node-postgres behandler `sslmode=require`
+ * Vercel → Scaleway Managed PostgreSQL.
+ * Scaleway public TLS bruker egen ca. node-postgres behandler `sslmode=require`
  * som verify-full, så Node kaster DEPTH_ZERO_SELF_SIGNED_CERT.
- *
- * Rene enhetstester (ingen DB): beviser at fjern host får TLS uten CA-sjekk,
+ * Rene enhetstester (ingen DB): beviser at fjern host får TLS uten ca-sjekk,
  * at localhost/docker ikke får workarounen, og at TLS ikke skrus av.
  */
 function resolvedSsl(connectionString: string) {

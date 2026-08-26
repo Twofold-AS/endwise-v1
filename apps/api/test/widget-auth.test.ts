@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type WidgetVars, widgetAuth } from '../src/lib/widget-auth.ts';
 
 /**
- * F4-02 — Widget-auth-middleware. In-memory Hono (`app.request`), ingen Docker.
+ * Widget-auth-middleware. In-memory Hono (`app.request`), ingen Docker.
  * Beviser at flaten feiler lukket uten et gyldig kortlevd token, og at et gyldig
  * token gir tenant-kontekst.
  */

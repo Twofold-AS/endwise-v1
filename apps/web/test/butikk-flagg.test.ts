@@ -3,7 +3,7 @@ import { BUTIKK_NAV, CONTEXTS, contextsForRole, navForContext } from '../app/(ap
 import { FLAG_DEFAULTS, FLAG_KEYS } from '../flags.ts';
 
 /**
- * F10-03 — Butikk er intern og flagg-styrt. Nav er kosmetikk; tRPC er sperren.
+ * Butikk er intern og flagg-styrt. Nav er kosmetikk; tRPC er sperren.
  */
 describe('F10-03 — Butikk-nav bak shop-flagget', () => {
   it('flagget shop er kjent og default AV', () => {

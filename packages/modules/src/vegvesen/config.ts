@@ -12,7 +12,7 @@ import {
 /** Integrasjonsnøkkelen for Vegvesen. Speiler modulnøkkelen (F0-16). */
 export const VEGVESEN_PROVIDER = 'vegvesen';
 
-/** Ikke-hemmelig visning. Selve nøkkelen forlater ALDRI serveren. */
+/** Ikke-hemmelig visning. Selve nøkkelen forlater aldri serveren. */
 export interface VegvesenConfigView {
   hasKey: boolean;
 }
@@ -20,10 +20,9 @@ export interface VegvesenConfigView {
 export class VegvesenConfigError extends Error {}
 
 /**
- * F2-08 — Per-tenant Vegvesen-API-nøkkel (RLS-skopet).
- *
+ * Per-tenant Vegvesen-API-nøkkel (RLS-skopet).
  * Samme tabell og envelope-crypto som Quick (`integration_config`).
- * `getView` returnerer KUN `hasKey`. `getDecrypted` er for lookup-klienten
+ * `getView` returnerer kun `hasKey`. `getDecrypted` er for lookup-klienten
  * og skal aldri sendes til nettleseren.
  */
 export function createVegvesenConfigService(db: Database) {

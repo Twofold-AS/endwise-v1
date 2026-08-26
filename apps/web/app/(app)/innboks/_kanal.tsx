@@ -4,17 +4,15 @@ import { Globe, Mail, MessageSquare, Phone } from '@endwise/ui';
 import type { ComponentType } from 'react';
 
 /**
- * F6-01 — KANAL-INDIKATOREN. Hvor kom meldingen inn, og hvor må svaret gå?
- *
- * ── Hvorfor dette ikke lenger er en bryter ────────────────────────────────
- * Fram til 08.08.2026 var indikatoren en prototype bak en avkrysningsboks, av
+ * Kanal-indikatoren. Hvor kom meldingen inn, og hvor må svaret gå?
+ * Hvorfor dette ikke lenger er en bryter
+ * Fram til var indikatoren en prototype bak en avkrysningsboks, av
  * som standard, fordi `messages` ikke hadde noe kanalfelt — ikonet var oppdiktet.
  * Nå finnes `messages.channel` og `threads.channel` i databasen, og da er det
  * ikke lenger riktig å gjemme opplysningen: **svaret må gå tilbake samme vei.**
  * Svarer du i panelet på noe som kom som SMS, og svaret blir en app-melding,
  * får kunden det aldri. Det er ikke en detalj man skrur på ved behov.
- *
- * ── Hvorfor form OG farge, ikke bare farge ────────────────────────────────
+ * Hvorfor form og farge, ikke bare farge
  * Kanalen bæres av ikonet (telefon / konvolutt / snakkeboble / klode). Fargen
  * er sekundær. Fire farger som eneste skille ville falt sammen for en
  * fargeblind bruker, og badgene har i tillegg alltid en `title`/`aria-label`.
@@ -30,10 +28,9 @@ type Spek = {
 };
 
 /**
- * ⚠️ Tonene er de temauavhengige `*-soft`-tokenene, ikke alfa-varianter.
+ * Tonene er de temauavhengige `*-soft`-tokenene, ikke alfa-varianter.
  * Samme regel som `KIND_TONE` i `_lib.ts`.
- *
- * `app` er bevisst NØYTRAL (surface-2). Det er normaltilstanden — de fargede
+ * `app` er bevisst nøytral (surface-2). Det er normaltilstanden — de fargede
  * er unntakene som fortjener øyet. Gjør man app grønn også, betyr fargen
  * ingenting lenger.
  */
@@ -75,7 +72,6 @@ export function tilKanal(v: string | null | undefined): Kanal {
 
 /**
  * Kompakt merke: ikon + tekst. Brukes i trådlista og over meldingene.
- *
  * `kunIkon` finnes for de trange stedene (samtalekortets toppline), men da må
  * `title`/`aria-label` bære hele setningen — et ikon uten navn er en gåte.
  */
@@ -118,8 +114,7 @@ export function KanalMerke({
 
 /**
  * Trådens kanal-linje: hvor samtalen går, og hvor svaret havner.
- *
- * Viser TO ting når de er ulike: trådens kanal (svarkanalen) og kanalen siste
+ * Viser to ting når de er ulike: trådens kanal (svarkanalen) og kanalen siste
  * melding faktisk kom på. Er de like — det vanlige — vises bare én, fordi to
  * identiske merker ved siden av hverandre bare er støy.
  */

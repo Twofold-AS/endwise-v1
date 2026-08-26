@@ -7,7 +7,7 @@ import {
   useReducedMotion,
   type Variants,
 } from "motion/react";
-// ⚠️ Hentes fra VÅR ikon-barrel, ikke fra lucide direkte (07.08.2026).
+// Hentes fra vår ikon-barrel, ikke fra lucide direkte .
 // Ellers fikk StatefulButton lucides strektykkelse (1.75) mens resten av UI-et
 // brukte eierens egne (2) — to ikonsett i samme knapp.
 import { Check, Loader2, X } from "../../../icons.ts";

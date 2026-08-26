@@ -3,7 +3,7 @@ import { index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizz
 import { tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
-/** F2-06 — Kunderegister. Sluttkunden hos en forhandler. */
+/** Kunderegister. Sluttkunden hos en forhandler. */
 export const customers = pgTable(
   'customers',
   {
@@ -17,21 +17,21 @@ export const customers = pgTable(
     email: text('email'),
     phone: text('phone'),
     /**
-     * F8-01 — Hvor kunden kom fra: 'endwise' (opprettet her) eller 'quick'
+     * Hvor kunden kom fra: 'endwise' (opprettet her) eller 'quick'
      * (speilet fra forhandlerens Quick). Default 'endwise'. Plain text (som
-     * bookings.source), ikke enum — kilder kan komme til (Lime CRM, Finn …).
+     * bookings.source), ikke enum — kilder kan komme til (Lime crm, Finn …).
      */
     source: text('source').notNull().default('endwise'),
     /**
-     * F8-01 — Quick sin entitets-GUID (externalRef). Bærer identiteten på tvers
+     * Quick sin entitets-GUID (externalRef). Bærer identiteten på tvers
      * av synk-kjøringer, så upsert blir idempotent. Null for kunder født i Endwise.
      */
     quickGuid: text('quick_guid'),
     /**
-     * F8-01 — Merge-base for tre-veis fletting: verdiene vi SIST hentet fra Quick
+     * Merge-base for tre-veis fletting: verdiene vi sist hentet fra Quick
      * for de Quick-eide feltene ({name, email, phone}). Lar oss skille «Quick
      * endret» fra «vi endret» per felt. Null før første pull / for lokale kunder.
-     * Lokale redigeringer skal IKKE røre denne — kun pull/konflikt-løsning gjør.
+     * Lokale redigeringer skal ikke røre denne — kun pull/konflikt-løsning gjør.
      */
     quickBaseline: jsonb('quick_baseline').$type<Record<string, string | null>>(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
@@ -49,7 +49,7 @@ export const customers = pgTable(
   ],
 ).enableRLS();
 
-/** F2-06 — Notater. Egen tabell, ikke en tekstkolonne: notater har forfatter og tid. */
+/** Notater. Egen tabell, ikke en tekstkolonne: notater har forfatter og tid. */
 export const customerNotes = pgTable(
   'customer_notes',
   {

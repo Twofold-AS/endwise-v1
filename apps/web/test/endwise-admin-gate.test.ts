@@ -63,7 +63,7 @@ describe('F1-26: server-gate på /admin og /endwise', () => {
     expect(nav).toMatch(/key:\s*'endwise-oversikt'/);
     const forhandlerBlokk = nav.slice(
       nav.indexOf('export const FORHANDLER_NAV'),
-      nav.indexOf('/* ══ ENDWISE-ADMIN'),
+      nav.indexOf('export const ENDWISE_NAV'),
     );
     expect(forhandlerBlokk).not.toMatch(/href:\s*'\/admin'/);
     expect(forhandlerBlokk).not.toMatch(/label:\s*'Admin'/);

@@ -8,13 +8,11 @@ import { type Kjoretoytype, parsePris, TYPE_VALG } from './_felles';
 import { TjenesteFelter, TOMME_FELTER, type Versjonsfelter } from './_felter';
 
 /**
- * F2-05 / F5-04 — NY TJENESTE.
- *
- * Oppretter `services`-raden OG versjon 1 i samme kall (`services.create` gjør
+ * F2-05 / F5-04 — ny tjeneste.
+ * Oppretter `services`-raden og versjon 1 i samme kall (`services.create` gjør
  * begge i én transaksjon). En tjeneste uten versjon ville vært en tjeneste uten
  * varighet og pris — altså ikke bookbar.
- *
- * ⚠️ Navn og kjøretøytype settes KUN her. De hører til identiteten, ikke til
+ * Navn og kjøretøytype settes kun her. De hører til identiteten, ikke til
  * versjonen, og `update` tar dem derfor ikke imot.
  */
 export function NyTjeneste({ onLukk }: { onLukk: () => void }) {
@@ -87,10 +85,12 @@ export function NyTjeneste({ onLukk }: { onLukk: () => void }) {
 
           <div className="flex flex-col gap-1.5">
             <span className="text-label text-fg">Gjelder</span>
-            {/* ⚠️ Ekte <input type="radio">, ikke knapper med role="radio": dette er
-                et SKJEMAFELT, og da skal tastaturet oppføre seg som i et skjema
-                (piltaster velger, feltet er ett tabbstopp). Pillene ellers i appen
-                er filtre — der er tablist riktig. Utseendet er identisk. */}
+            {/*
+             * Ekte <input type="radio">, ikke knapper med role="radio": dette er
+             * et skjemafelt, og da skal tastaturet oppføre seg som i et skjema
+             * (piltaster velger, feltet er ett tabbstopp). Pillene ellers i appen
+             * er filtre — der er tablist riktig. Utseendet er identisk.
+             */}
             <fieldset className="inline-flex h-control w-fit items-center gap-0.5 rounded-control border border-border bg-bg p-0.5">
               <legend className="sr-only">Kjøretøytype</legend>
               {TYPE_VALG.map((v) => (

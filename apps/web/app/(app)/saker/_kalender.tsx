@@ -9,21 +9,16 @@ import { CardShell } from '../_shell/cards';
 import { fmtServices, STATUS_TONE } from '../bookinger/_status';
 
 /**
- * F3-07 — KALENDERVISNING. Dag og uke, jobbklosser plassert etter klokkeslett.
- *
+ * Kalendervisning. Dag og uke, jobbklosser plassert etter klokkeslett.
  * API-et fantes fra før (F3-03: `bookings.calendar` med `from`/`to`/`mechanicId`).
  * Dette er selve visningen.
- *
- * ── To valg som styrer resten ─────────────────────────────────────────────
- *
- * **1. Klossene er posisjonert, ikke stablet.** En jobb kl. 09 og en kl. 14 skal
+ * To valg som styrer resten
+ * 1. Klossene er posisjonert, ikke stablet. En jobb kl. 09 og en kl. 14 skal
  * stå der de faktisk er, ellers er det en liste med kalenderpynt. Derfor
  * absolutt posisjonering mot et fast timeraster: `top` fra starttid, `height`
  * fra varighet.
- *
- * **2. Rasteret dekker verkstedets dag, og utvider seg hvis en jobb ligger
- * utenfor 07–18.** Å klippe klossen inn i kanten og fotnote det, er en bug.
- *
+ * 2. Rasteret dekker verkstedets dag, og utvider seg hvis en jobb ligger
+ * utenfor 07–18. Å klippe klossen inn i kanten og fotnote det, er en bug.
  * Én kolonne per mekaniker, eller alt samlet. Samlet er default: det er
  * spørsmålet «hva skjer i dag» som stilles oftest, ikke «hva gjør Ola».
  */
@@ -92,7 +87,7 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
     [fra, modus],
   );
 
-  // Kolonner: én per mekaniker, eller én samlet. Samme rendering begge veier —
+  // Kolonner: én per mekaniker, eller én samlet. Samme rendering begge veier
   // det er bare grupperingsnøkkelen som endrer seg.
   const kolonner = useMemo(() => {
     if (!perMekaniker || modus === 'uke') return [{ id: null as string | null, navn: 'Alle' }];
@@ -107,7 +102,7 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* ── Styring ──────────────────────────────────────────────────── */}
+      {/* Styring */}
       <div className="flex flex-wrap items-center gap-2">
         <div
           role="tablist"
@@ -166,8 +161,10 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
             : `${fra.toLocaleDateString('nb-NO', { day: 'numeric', month: 'short' })} – ${leggTilDager(fra, 6).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short' })}`}
         </span>
 
-        {/* Per mekaniker gir bare mening i dagsvisning: syv dager × fem
-            mekanikere er 35 kolonner, og da er ingenting lesbart. */}
+        {/*
+         * Per mekaniker gir bare mening i dagsvisning: syv dager × fem
+         * mekanikere er 35 kolonner, og da er ingenting lesbart.
+         */}
         {modus === 'dag' && (
           <button
             type="button"
@@ -185,7 +182,7 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
         )}
       </div>
 
-      {/* ── Rutenettet ───────────────────────────────────────────────── */}
+      {/* Rutenettet */}
       {jobber.isLoading ? (
         <div className="py-16 text-center text-body text-fg-muted">Laster kalender …</div>
       ) : jobber.isError ? (
@@ -296,7 +293,6 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
 
 /**
  * Én jobbkloss. Posisjonen er tiden — det er hele poenget med en kalender.
- *
  * Varigheten leses av `endsAt`, ikke av tjenestens standardvarighet: en jobb som
  * tok tre timer skal se ut som tre timer, også når tjenesten er satt til én.
  */

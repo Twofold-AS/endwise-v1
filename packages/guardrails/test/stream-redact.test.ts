@@ -2,13 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { createStreamRedactor } from '../src/index.ts';
 
 /**
- * F6-18 — L4 for STRØMMENDE svar.
- *
- * Poenget med hele fila: `filterOutput()` er testet mot hele tekster og virker
+ * L4 for strømmende svar.
+ * Poenget med hele fila: `filterOutput` er testet mot hele tekster og virker
  * der. Denne testen finnes fordi strømming er en helt annen feilmodus — et
  * fødselsnummer delt over to tokens treffer ingen regex, og teksten er ute i
  * nettleseren før noen kunne filtrert den.
- *
  * Hjelperen under strømmer tegn for tegn, altså verst tenkelige oppdeling.
  */
 function stromTegnForTegn(tekst: string): string {
@@ -69,7 +67,7 @@ describe('createStreamRedactor (L4 strømmende)', () => {
   });
 
   it('⚠️ tolker ikke tolv sifre som fødselsnummer, heller ikke på bitgrensen', () => {
-    // Regelen er ELLEVE sifre. Kjørte vi regexen på en avkuttet buffer, ville
+    // Regelen er elleve sifre. Kjørte vi regexen på en avkuttet buffer, ville
     // `\b` truffet midt i tallet og gjort 12 sifre om til et «fødselsnummer».
     const tekst = `Ordrenummer ${'1'.repeat(12)} er registrert.`;
     for (let storrelse = 1; storrelse <= 9; storrelse += 1) {

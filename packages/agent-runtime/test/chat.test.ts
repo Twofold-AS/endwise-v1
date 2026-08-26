@@ -7,9 +7,8 @@ import type { AgentContext, AgentDefinition } from '../src/index.ts';
 import { streamAgentChat } from '../src/index.ts';
 
 /**
- * F6-18 — CHAT-INNGANGEN.
- *
- * ── Hva denne fila faktisk beviser ───────────────────────────────────────
+ * Chat-inngangen.
+ * Hva denne fila faktisk beviser
  * At chat-strømmen kommer fra **vår** runtime med **våre** sperrer — ikke fra
  * en gateway som ruter et sted vi ikke bestemmer. Testene kjører uten nøkkel,
  * uten nettverk og uten database, fordi det som testes er grensene våre, ikke
@@ -69,8 +68,8 @@ describe('streamAgentChat (F6-18)', () => {
   });
 
   /**
-   * ⛔ Kjernen i hele F14-rutingen. En `customer_freetext`-agent mot en
-   * leverandør utenfor EU skal ikke KUNNE starte — ikke logges, ikke advares
+   * Kjernen i hele F14-rutingen. En `customer_freetext`-agent mot en
+   * leverandør utenfor EU skal ikke kunne starte — ikke logges, ikke advares
    * om. Dette er testen som gjør at ingen kan «bare midlertidig» rute
    * kundesamtaler til en amerikansk modell.
    */
@@ -122,7 +121,7 @@ describe('streamAgentChat (F6-18)', () => {
   });
 
   /**
-   * L4 må virke I STRØMMEN, ikke bare på ferdig tekst. Her deles nøkkelen over
+   * L4 må virke I strømmen, ikke bare på ferdig tekst. Her deles nøkkelen over
    * to tokens med vilje — det er nøyaktig tilfellet som slipper gjennom hvis man
    * filtrerer per bit.
    */

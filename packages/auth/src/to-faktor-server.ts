@@ -2,11 +2,9 @@ import { type Database, eq, schema, withTenant } from '@endwise/db';
 import { TO_FAKTOR_DISABLE_AUDIT_ACTION } from './to-faktor-oppsett.ts';
 
 /**
- * F1-22 — spor i `audit_log` når 2FA slås av.
- *
- * ⛔ Ingen passord, koder eller tokens i metadata. Tabellen er append-only
+ * Spor i `audit_log` når 2FA slås av.
+ * Ingen passord, koder eller tokens i metadata. Tabellen er append-only
  * og leses av flere (F5-05).
- *
  * En bruker kan høre til flere forhandlere. Vi skriver én rad per
  * medlemskap — det er den forhandleren som har krav på å se at personen
  * slokket 2FA, ikke en tilfeldig «aktiv» tenant.

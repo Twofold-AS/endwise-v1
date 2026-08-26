@@ -2,8 +2,7 @@ import twilio from 'twilio';
 import { authEnv } from '../env.ts';
 
 /**
- * F1-01 — Twilio Verify som OTP-sender (techstack §2 Auth).
- *
+ * Twilio Verify som OTP-sender (techstack §2 Auth).
  * Poenget med Verify: Twilio eier koden. Vi genererer den ikke, lagrer den ikke
  * og sammenligner den ikke — vi spør bare «er denne gyldig?». Da finnes det
  * ingen OTP-hemmelighet hos oss å lekke.

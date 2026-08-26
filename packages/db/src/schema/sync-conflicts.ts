@@ -4,14 +4,12 @@ import { tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F8-01 — Synk-konflikter (tre-veis fletting). Én rad per felt der BÅDE Quick og
+ * Synk-konflikter (tre-veis fletting). Én rad per felt der både Quick og
  * vi endret samme felt til ulik verdi siden forrige pull (se merge.ts).
- *
  * Generisk med vilje (`entity` + `entityId` + `field`) så booking/delelager/salg
  * arver samme konflikt-kø som kunder. RLS-scopet: forhandler A ser aldri B.
- *
  * Idempotens: partiell unik indeks på (tenant, provider, entity, entityId, field)
- * der `status='open'` → gjentatte pull-er OPPDATERER samme åpne konflikt i stedet
+ * der `status='open'` → gjentatte pull-er oppdaterer samme åpne konflikt i stedet
  * for å lage duplikater. Løste konflikter (`status='resolved'`) beholdes som spor.
  */
 export const syncConflicts = pgTable(
@@ -44,7 +42,7 @@ export const syncConflicts = pgTable(
     resolvedAt: timestamp('resolved_at', { withTimezone: true }),
     /**
      * Satt ved «behold vår»: vår verdi bør pushes til Quick. Push er fortsatt
-     * gated (F8-01), så dette er kun REGISTRERT INTENSJON — ingen automatisk push.
+     * gated (F8-01), så dette er kun registrert intensjon — ingen automatisk push.
      */
     pushIntent: text('push_intent'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),

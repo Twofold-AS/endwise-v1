@@ -9,8 +9,8 @@ import {
 } from '../app/(app)/support/_kategorier.ts';
 
 /**
- * F5-51 — helpdesk-kategorier. Slack #endwise-v1 ba om Brukerguide og
- * Oppdateringer i tillegg til de eksisterende (booking · kunder · lager ·
+ * Helpdesk-kategorier. Slack #endwise-v1 ba om Brukerguide og
+ * Oppdateringer i tillegg til de eksisterende (booking · kunder · lager
  * integrasjoner · fakturering). Ingen ny Admin-fane.
  */
 const her = dirname(fileURLToPath(import.meta.url));

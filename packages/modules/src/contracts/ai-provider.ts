@@ -1,6 +1,6 @@
 /**
- * F0-06 — AIProvider (tynt lag for latency-sensitive enkeltkall).
- * Modeller velges ALDRI hardkodet: kaller oppgir en rolle, og modellkatalogen
+ * AIProvider (tynt lag for latency-sensitive enkeltkall).
+ * Modeller velges aldri hardkodet: kaller oppgir en rolle, og modellkatalogen
  * (packages/providers) mapper tenant/plan + rolle -> modell.
  */
 export type ModelRole = 'fast' | 'standard' | 'hard' | 'embed' | 'realtime';

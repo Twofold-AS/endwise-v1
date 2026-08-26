@@ -48,7 +48,6 @@ function dagsvindu(iso: string): { from: Date; to: Date } {
 
 /**
  * F3-08 / F7-03 — Ansatte › Timeplan.
- *
  * Ikke en annen modell enn mekanikerens Timeplan: kapasitet bor på
  * `mechanics.capacity`, jobbene er bookinger for valgt dag. Lederen justerer
  * hvor mange jobber mekanikeren kan ha samtidig.

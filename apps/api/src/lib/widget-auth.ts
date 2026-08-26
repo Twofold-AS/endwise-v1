@@ -2,8 +2,7 @@ import { verifyWidgetToken, WidgetTokenError } from '@endwise/modules/widget';
 import type { MiddlewareHandler } from 'hono';
 
 /**
- * F4-02 — Auth/CORS-lag for de OFFENTLIGE `/widget/*`-endepunktene.
- *
+ * Auth/CORS-lag for de offentlige `/widget/*`-endepunktene.
  * Trusselmodell: uautentisert, cross-origin, anonyme kunder. Sikkerheten hviler
  * på (1) origin-validering + publishable key ved `/init` (utsteder token), og
  * (2) et kortlevd token verifisert på hver etterfølgende forespørsel her.

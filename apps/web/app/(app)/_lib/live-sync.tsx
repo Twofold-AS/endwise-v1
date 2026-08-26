@@ -13,12 +13,10 @@ import { useLyd } from './lyd';
 import { useEventStream } from './use-event-stream';
 
 /**
- * F6-02 — App-bred oppfriskning av tRPC-cachen ved live events.
- *
+ * App-bred oppfriskning av tRPC-cachen ved live events.
  * Innboks-sidene lyttet hver for seg. Når mottakeren sto i en åpen tråd, ble
  * lista ikke invalidert; sto hen et annet sted, ble verken tråd eller liste
  * oppdatert. Pakkebytte publiserte ingenting. ÉN lytter i shellet fikser begge.
- *
  * SSE er den raske veien. Poll mot `stream.since` er reserven (F13-03) hvis
  * strømmen er nede eller rewriten buffer.
  */
@@ -119,7 +117,7 @@ export function LiveSync({ children }: { children: ReactNode }) {
   }, [cursor, head.data?.lastEventId]);
 
   /**
-   * Helpdesk-artikler er globale og har ingen SSE i PR #36 LiveSync
+   * Helpdesk-artikler er globale og har ingen SSE i pr #36 LiveSync
    * (`message.created` / `tenant.modules.changed`). Window-focus er
    * oppfriskningen, så Ny og slideren ikke sitter på stale 5-min cache.
    */

@@ -5,17 +5,15 @@ import { byggEpostHtml, esc, knapp, kodeboks } from '../src/senders/epost-mal.ts
 
 /**
  * F1-11 / F1-16 — **e-postinnholdet, låst.**
- *
- * ── Hvorfor akkurat disse ────────────────────────────────────────────────
- * Alle feilene som ble rettet 22.08.2026 er STILLE feil: e-posten sendes, den
+ * Hvorfor akkurat disse
+ * Alle feilene som ble er stille feil: e-posten sendes, den
  * ser riktig ut i koden, og den er ubrukelig i innboksen. Ingen av dem gir
  * typefeil, og ingen av dem kaster.
- *
- *   · feil avsenderdomene   → 403 på HVER auth-e-post
- *   · SVG som logo          → tomt bilde hos Gmail/Outlook/Apple Mail
- *   · `data:`-URI i `src`   → strippes av Gmail og Outlook
- *   · logo uten egen flate  → usynlig i mørk modus
- *   · HTML uten tekstdel    → ingen kode for den som leser i ren tekst
+ * feil avsenderdomene → 403 på hver auth-e-post
+ * SVG som logo → tomt bilde hos Gmail/Outlook/Apple Mail
+ * `data:`-URI i `src` → strippes av Gmail og Outlook
+ * logo uten egen flate → usynlig i mørk modus
+ * HTML uten tekstdel → ingen kode for den som leser i ren tekst
  */
 
 const OPPRINNELIG = { ...process.env };
@@ -28,7 +26,7 @@ afterEach(() => {
 describe('avsenderdomene', () => {
   it('godtar begge domenene som er verifisert i Resend', () => {
     /**
-     * ⚠️ Om morgenen 22.08.2026 var KUN `no-reply.endwise.no` verifisert, og
+     * Om morgenen var kun `no-reply.endwise.no` verifisert, og
      * apex-domenet ga 403 på hver auth-e-post. Senere samme dag ble apex også
      * verifisert. Begge er gyldige nå — lista er fasiten, ikke hukommelsen.
      */
@@ -48,7 +46,7 @@ describe('avsenderdomene', () => {
   it('⛔ EKSAKT treff — et uverifisert subdomene slipper ikke gjennom', () => {
     /**
      * Resend verifiserer hvert domene for seg. En `endsWith`-regel ville
-     * påstått at `post.endwise.no` er godkjent fordi `endwise.no` er det —
+     * påstått at `post.endwise.no` er godkjent fordi `endwise.no` er det
      * og den e-posten ville 403-et i produksjon. Lista er eksakt.
      */
     expect(avsenderErVerifisert('x@post.endwise.no')).toBe(false);
@@ -60,7 +58,7 @@ describe('avsenderdomene', () => {
   });
 
   it('⭐ standardverdien i env.ts er på det verifiserte domenet', async () => {
-    // Uten RESEND_FROM faller vi tilbake på en literal. Er DEN feil, feiler
+    // Uten RESEND_FROM faller vi tilbake på en literal. Er den feil, feiler
     // hvert miljø som ikke setter variabelen — stille, helt til noen prøver
     // å logge inn.
     process.env.RESEND_API_KEY = 'test-nokkel';
@@ -80,8 +78,8 @@ describe('logoen', () => {
 
   it('har alfakanal, så den kan ligge på den mørke flata', () => {
     const bytes = Buffer.from(LOGO_EPOST_PNG_BASE64, 'base64');
-    // IHDR: bredde/høyde på byte 16–23, fargetype på byte 25.
-    // 6 = RGBA, 3 = palett (med tRNS for gjennomsiktighet).
+    // Ihdr: bredde/høyde på byte 16–23, fargetype på byte 25.
+    // 6 = rgba, 3 = palett (med tRNS for gjennomsiktighet).
     const fargetype = bytes[25];
     expect([3, 4, 6]).toContain(fargetype);
     expect(bytes.readUInt32BE(16)).toBe(64);
@@ -119,8 +117,8 @@ describe('e-postmalen', () => {
 
   it('⛔ logoen ligger på en flate med eksplisitt bgcolor — mørk modus', () => {
     /**
-     * Logoen er HVIT. Uten en egen mørk flate ville den vært usynlig i enhver
-     * klient som ikke inverterer. `bgcolor` som ATTRIBUTT (ikke bare CSS)
+     * Logoen er hvit. Uten en egen mørk flate ville den vært usynlig i enhver
+     * klient som ikke inverterer. `bgcolor` som attributt (ikke bare CSS)
      * overlever i praktisk talt alle klienter, også Outlooks Word-motor.
      */
     expect(html).toMatch(/<td[^>]+bgcolor="#0b0b0b"/);
@@ -176,7 +174,7 @@ describe('engangskode-e-posten', () => {
   });
 
   /**
-   * ⛔ Koden MÅ finnes i tekstdelen også. En engangskode som bare står i
+   * Koden MÅ finnes i tekstdelen også. En engangskode som bare står i
    * HTML-en, finnes ikke for den som leser i ren tekst — og det er nettopp
    * den brukeren som ikke får logget inn og ikke skjønner hvorfor.
    */

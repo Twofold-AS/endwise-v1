@@ -12,7 +12,7 @@ export interface EventBus {
 }
 
 /**
- * F0-05 — Typet in-process emitter.
+ * Typet in-process emitter.
  * Bevisst tynn: varige/asynkrone jobber hører hjemme i Vercel Workflows (F0-13),
  * ikke i en kø her. Bussen er for synkron fan-out innenfor én request.
  */

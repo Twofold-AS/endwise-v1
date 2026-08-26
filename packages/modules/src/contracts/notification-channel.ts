@@ -1,4 +1,4 @@
-/** F0-06 — NotificationChannel. Resend (e-post) og Twilio (SMS) implementerer denne. */
+/** NotificationChannel. Resend (e-post) og Twilio (SMS) implementerer denne. */
 export type NotificationKind = 'email' | 'sms';
 
 export interface NotificationMessage {

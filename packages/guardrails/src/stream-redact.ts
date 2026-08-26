@@ -2,30 +2,25 @@ import { SECRET_PATTERNS } from './pipeline.ts';
 import { type GuardContext, GuardrailViolation } from './types.ts';
 
 /**
- * F6-14 L4, STRØMMENDE VARIANT.
- *
- * ── ⚠️ Problemet dette løser ─────────────────────────────────────────────
- * `filterOutput()` kjører regexene på HELE svaret. Det virker når svaret
+ * F6-14 L4, strømmende variant.
+ * Problemet dette løser
+ * `filterOutput` kjører regexene på hele svaret. Det virker når svaret
  * kommer i ett stykke. I en chat gjør det ikke det: modellen sender tokens, og
  * et fødselsnummer kan komme som `«120345»` + `«67890»`. Kjører man regexen på
  * hver bit for seg, treffer den ingen av dem — og begge er allerede sendt til
  * nettleseren når hele teksten omsider finnes.
- *
- * **Å strømme rått og filtrere til slutt er ikke å filtrere.** Teksten er ute.
- *
- * ── Hvordan den løser det ────────────────────────────────────────────────
- * Vi akkumulerer hele teksten og kjører regexene på den HVER gang, men sender
+ * Å strømme rått og filtrere til slutt er ikke å filtrere. Teksten er ute.
+ * Hvordan den løser det
+ * Vi akkumulerer hele teksten og kjører regexene på den hver gang, men sender
  * bare ut den delen som ikke lenger kan endre seg: alt unntatt de siste
  * `holdback` tegnene. Et treff som ligger helt inne i den trygge sonen kan
  * ikke vokse seg ut av den, så redaksjonen er endelig før den sendes.
- *
  * `holdback` er normalt `HOLDBACK` tegn — lengre enn det lengste mønsteret med
- * fast lengde. ⚠️ Unntaket er DB-URL-mønsteret, som er ubegrenset (`[^\s]+`):
+ * fast lengde. Unntaket er DB-URL-mønsteret, som er ubegrenset (`[^\s]+`):
  * ser vi starten på en slik uten at den er avsluttet av mellomrom ennå, holder
  * vi tilbake helt fra der den begynte. Ellers kunne halve tilkoblingsstrengen
  * rukket ut mens vi ventet på resten.
- *
- * Prisen er at de siste ~80 tegnene henger etter til `flush()`. Det er en
+ * Prisen er at de siste ~80 tegnene henger etter til `flush`. Det er en
  * forsinkelse på slutten av svaret, ikke en hakking underveis.
  */
 
@@ -45,9 +40,9 @@ export interface StreamRedactor {
 }
 
 /**
- * ⚠️ Teller treff, men rapporterer dem IKKE selv. Fordi vi kjører over hele den
+ * Teller treff, men rapporterer dem ikke selv. Fordi vi kjører over hele den
  * akkumulerte teksten på nytt for hver token, ville et treff blitt rapportert på
- * nytt hundre ganger. Kallstedet melder bare fra når TALLET øker.
+ * nytt hundre ganger. Kallstedet melder bare fra når tallet øker.
  */
 function redact(text: string): { tekst: string; treff: number } {
   let safe = text;
@@ -71,7 +66,7 @@ export function createStreamRedactor(
   let sendtLengde = 0;
   let treff = 0;
 
-  /** Melder fra kun når antallet treff har ØKT siden forrige runde. */
+  /** Melder fra kun når antallet treff har Økt siden forrige runde. */
   const meldFra = (nyttAntall: number) => {
     while (treff < nyttAntall) {
       treff += 1;
@@ -108,11 +103,11 @@ export function createStreamRedactor(
     push(delta: string) {
       akkumulert += delta;
 
-      // ⚠️ Redigér ALLTID hele den akkumulerte teksten, ikke bare den trygge
+      // Redigér alltid hele den akkumulerte teksten, ikke bare den trygge
       // biten. Kjørte vi regexen på et avkuttet stykke, ville `\b` truffet på
       // slutten av avkuttingen: elleve sifre etterfulgt av et tolvte ville blitt
       // lest som et fødselsnummer i den ene runden og ikke i den neste.
-      // Grensen settes ETTER redigeringen, ikke før.
+      // Grensen settes etter redigeringen, ikke før.
       const { tekst: redigert, treff: antall } = redact(akkumulert);
       meldFra(antall);
       const trygtTil = Math.max(0, redigert.length - holdbackFor(akkumulert));

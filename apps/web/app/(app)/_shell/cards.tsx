@@ -4,7 +4,7 @@ import { Badge, LifeBuoy } from '@endwise/ui';
 import type { CSSProperties, ReactNode } from 'react';
 
 /**
- * BEVEL — den hevede knappeflaten. Leser nå token-laget i stedet for TheFolds
+ * Bevel — den hevede knappeflaten. Leser nå token-laget i stedet for TheFolds
  * mørke `#262626`, så den snur med temaet: hvit flate med myk topp-høylys i
  * lyst, mørk grå i mørkt. Verdiene bor i `widget-tokens`, ikke her.
  */
@@ -39,11 +39,9 @@ export function BevelButton({
 
 /**
  * NewBadge — «Ny»-merkelapp. Badge-formen (20px høyde, 6px radius) + rød
- * `destructive`-variant (eiers beslutning 06.08.2026). Norsk kopi 24.08.2026.
- *
+ * `destructive`-variant (eiers beslutning ). Norsk kopi .
  * Formen er felles, fargen er signalet: «nytt» skal fange blikket, og etter at
  * aksenten ble svart ville en aksentfarget badge forsvunnet i resten av UI-et.
- *
  * Uleste-antall er `CountBadge` — samme form, siffer i stedet for «Ny».
  */
 export function NewBadge({ className }: { className?: string }) {
@@ -56,9 +54,8 @@ export function NewBadge({ className }: { className?: string }) {
 
 /**
  * CountBadge — uleste-teller (innboks, nav, helpdesk-antall).
- *
  * Samme badge-oppsett som `NewBadge` (`Badge variant="destructive"`, 20px/6px).
- * Mikael 25.08.2026: ikke 18px-sirkelen fra #35, ikke grå pille, ikke grønn.
+ * Mikael : ikke 18px-sirkelen fra #35, ikke grå pille, ikke grønn.
  * 0 skjules. Tallet vises som det er (ikke «9+»).
  */
 export function CountBadge({
@@ -85,7 +82,7 @@ export function CountBadge({
 
 /**
  * CardShell — TheFold-kortet: ytre kort (radius 12, 5px padding, kant) rundt en
- * INDRE panel. Dobbelt kant-uttrykk: ytre kortkant + indre panel-kant.
+ * Indre panel. Dobbelt kant-uttrykk: ytre kortkant + indre panel-kant.
  * Bruk med `CardMedia` (innhold øverst) + en tekstdel under.
  */
 export function CardShell({ children, className }: { children: ReactNode; className?: string }) {
@@ -99,9 +96,9 @@ export function CardShell({ children, className }: { children: ReactNode; classN
 }
 
 /**
- * CardMedia — indre innholdspanel (radius 8, inset-flate). Innhold ØVERST.
+ * CardMedia — indre innholdspanel (radius 8, inset-flate). Innhold Øverst.
  * Inset-kanten er en ekte hårlinje fra token-laget nå, ikke et hvitt overlegg
- * — et 4 % hvitt overlegg er usynlig mot en hvit flate.
+ * et 4 % hvitt overlegg er usynlig mot en hvit flate.
  */
 export function CardMedia({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -116,8 +113,7 @@ export function CardMedia({ children, className }: { children: ReactNode; classN
 /**
  * SupportCard — split-card for Support-kanalen (F5-11): mediepanel øverst →
  * tekst + bevel-knapp under.
- *
- * ⚠️ 03.08.2026: `DitherGradient` fjernet (dither-kit ut av UI-et). Panelet er
+ * `DitherGradient` fjernet (dither-kit ut av UI-et). Panelet er
  * nå en rolig aksentflate med ikonet — kortet står, effekten er borte.
  */
 export function SupportCard() {

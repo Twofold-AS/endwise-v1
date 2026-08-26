@@ -1,7 +1,7 @@
 import { handleTrpc } from '@endwise/api/http/trpc';
 
 /**
- * F13-03 — tRPC same-origin. Klienten (`httpBatchLink` mot `/trpc`) sender
+ * Trpc same-origin. Klienten (`httpBatchLink` mot `/trpc`) sender
  * sesjonscookien med `credentials: 'include'`. Ingen rewrite til localhost.
  */
 export const runtime = 'nodejs';

@@ -8,11 +8,9 @@ import { CardShell } from '../_shell/cards';
 
 /**
  * F6-19 / F3-08 — Mekanikerliste med load og status.
- *
- * Mekanikerne ER teamet. Identitet (form/farge/tone/seed) er den persistente
+ * Mekanikerne er teamet. Identitet (form/farge/tone/seed) er den persistente
  * avataren; `humor` på denne flaten kommer fra status, ikke fra profilvalget.
  * Tilgjengelighetsteksten står ved siden av — uttrykket er ikke eneste signal.
- *
  * Ferdighetsmerker og sertifiseringer er fortsatt F3-08 (kompetansesiden).
  */
 const STATUS_PRIKK: Record<string, string> = {

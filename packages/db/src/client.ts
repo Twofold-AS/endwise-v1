@@ -25,7 +25,7 @@ function hostnameFromConnectionString(connectionString: string): string | null {
 /**
  * node-postgres overskriver `ssl` når connection-stringen inneholder
  * `sslmode` / `sslrootcert` / `sslcert` / `sslkey`. Fjern dem slik at
- * `{ rejectUnauthorized: false }` faktisk gjelder (Scaleway-CA på Vercel).
+ * `{ rejectUnauthorized: false }` faktisk gjelder (Scaleway-ca på Vercel).
  */
 function withoutPgSslQueryParams(connectionString: string): string {
   try {
@@ -41,13 +41,11 @@ function withoutPgSslQueryParams(connectionString: string): string {
 }
 
 /**
- * F13-01 — TLS mot Scaleway Managed PostgreSQL.
- *
- * Scaleway public TLS bruker egen CA. `sslmode=require` i URL-en behandles
+ * TLS mot Scaleway Managed PostgreSQL.
+ * Scaleway public TLS bruker egen ca. `sslmode=require` i URL-en behandles
  * av node-postgres som verify-full, og Node kaster
- * `DEPTH_ZERO_SELF_SIGNED_CERT` fra Vercel. Ingen Scaleway-CA i repoet.
- *
- * Fjern host: TLS på, uten CA-sjekk. Localhost/Docker: urørt — Docker-Postgres
+ * `DEPTH_ZERO_SELF_SIGNED_CERT` fra Vercel. Ingen Scaleway-ca i repoet.
+ * Fjern host: TLS på, uten ca-sjekk. Localhost/Docker: urørt — Docker-Postgres
  * har typisk ikke TLS, og workarounen ville krevd SSL mot 127.0.0.1.
  * TLS skrus aldri av (`ssl: false`).
  */
@@ -65,7 +63,7 @@ export function pgConnectionConfig(connectionString: string): PgConnectionConfig
 
 /**
  * drizzle-kit 0.31: `url` + `ssl` er ikke lov sammen (kun `url`, eller
- * host/user/database + `ssl`). Scaleway-CA krever rejectUnauthorized:false,
+ * host/user/database + `ssl`). Scaleway-ca krever rejectUnauthorized:false,
  * ellers blir `drizzle-kit migrate` exit 1 med bare SSL-advarsler.
  */
 export function drizzleKitPgCredentials(connectionString: string) {
@@ -85,16 +83,14 @@ export function drizzleKitPgCredentials(connectionString: string) {
 
 /**
  * Driver: node-postgres (`pg`) over vanlig TCP.
- *
  * Vanlig TCP fungerer mot både Docker-basen vi utvikler mot og Scaleway
- * Managed PostgreSQL i produksjon (besluttet 09.08.2026). Serverless-drivere
+ * Managed PostgreSQL i produksjon (besluttet ). Serverless-drivere
  * som snakker WebSocket til en leverandørs egen proxy er bevisst unngått: de
  * kan ikke koble til en vanlig Postgres, og de ville låst oss til én leverandør.
- *
- * ⚠️ Pooling: låsing bruker `pg_advisory_xact_lock` (TRANSAKSJONS-skopet), ikke
- * session-skopet. Går man gjennom en pooler — og Scaleway tilbyr pgbouncer —
+ * Pooling: låsing bruker `pg_advisory_xact_lock` (transaksjons-skopet), ikke
+ * session-skopet. Går man gjennom en pooler — og Scaleway tilbyr pgbouncer
  * gjenbrukes forbindelser på tvers av forespørsler, og en session-lås ville
- * fulgt med neste låner. Transaksjonslåsen slippes av COMMIT/ROLLBACK uansett.
+ * fulgt med neste låner. Transaksjonslåsen slippes av commit/rollback uansett.
  */
 export function createDb(connectionString: string) {
   const pool = new Pool(pgConnectionConfig(connectionString));
@@ -102,13 +98,11 @@ export function createDb(connectionString: string) {
 }
 
 /**
- * F0-03 — Eneste lovlige inngang til tenant-data.
- *
- * Setter `app.tenant_id` LOKALT i transaksjonen, slik at RLS-policyene filtrerer.
+ * Eneste lovlige inngang til tenant-data.
+ * Setter `app.tenant_id` lokalt i transaksjonen, slik at RLS-policyene filtrerer.
  * Aldri `SET` uten `LOCAL`/`is_local=true`: det ville lekket tenant-konteksten
  * videre til neste låner av pool-forbindelsen.
- *
- * MERK: kall alltid assertMember() (@endwise/auth) FØR denne. RLS stoler på
+ * Merk: kall alltid assertMember (@endwise/auth) før denne. RLS stoler på
  * `app.tenant_id` — den verifiserer ikke at brukeren har lov til å be om den.
  */
 export async function withTenant<T>(
@@ -123,26 +117,22 @@ export async function withTenant<T>(
 }
 
 /**
- * F5-26 — Kryss-tenant LESNING for Endwise-admin. **Bruk med vett.**
- *
+ * Kryss-tenant lesning for Endwise-admin. **Bruk med vett.**
  * Setter `app.platform_admin` transaksjons-lokalt, som slår på den
- * SELECT-ONLY-policyen `tenants_platform_admin_read`. Den finnes fordi
+ * Select-only-policyen `tenants_platform_admin_read`. Den finnes fordi
  * `tenants`-policyen ellers gir **null rader** utenfor en tenant-kontekst — og
  * Endwise-admin må kunne se forhandlerlista.
- *
- * ⛔ **Tre regler, og de er ikke forhandlingsbare:**
- *
- *   1. Kalles KUN fra `endwiseAdminProcedure`. Rollen er sperren; dette er
- *      bare mekanismen som lar den gjøre jobben uten at RLS skrus av.
- *   2. Policyen er `for: 'select'` uten `withCheck`. **Skriving på tvers av
- *      tenants er fortsatt umulig**, også for oss.
- *   3. For authenticated åpner denne GUC-en SELECT på `tenants` og på
- *      `dealer_admin`-tråder (F5-11: threads / messages / thread_participants).
- *      Ikke customer_dealer, ikke mechanic_dealer, og ingen skriving.
- *      `slett_forhandler` sine TO PUBLIC-policyer krever `platform_admin`
- *      **og** `app.slett_tenant_id` **og** at kalleren ikke er
- *      `authenticated` — app-trafikk som bare setter GUC-er åpnes ikke.
- *
+ * Tre regler, og de er ikke forhandlingsbare:
+ * 1. Kalles kun fra `endwiseAdminProcedure`. Rollen er sperren; dette er
+ * bare mekanismen som lar den gjøre jobben uten at RLS skrus av.
+ * 2. Policyen er `for: 'select'` uten `withCheck`. Skriving på tvers av
+ * tenants er fortsatt umulig, også for oss.
+ * 3. For authenticated åpner denne guc-en SELECT på `tenants` og på
+ * `dealer_admin`-tråder (F5-11: threads / messages / thread_participants).
+ * Ikke customer_dealer, ikke mechanic_dealer, og ingen skriving.
+ * `slett_forhandler` sine to public-policyer krever `platform_admin`
+ * og `app.slett_tenant_id` **og** at kalleren ikke er
+ * `authenticated` — app-trafikk som bare setter guc-er åpnes ikke.
  * Alternativet — å koble til som DB-eier for akkurat denne spørringen — ville
  * omgått RLS fullstendig og gjort den ene lesestien til den ene uten isolasjon.
  * Dette er det smalest mulige hullet som løser problemet.
@@ -159,13 +149,11 @@ export async function withPlatformAdmin<T>(
 
 /**
  * Read-only inspeksjon av ÉN forhandler. Brukes av Se verkstedet.
- *
  * Setter `app.platform_inspect` til forhandlerens UUID og
- * `SET TRANSACTION READ ONLY`. Kalles KUN fra `endwiseInspectProcedure`.
- *
- * ⛔ Ikke tenant-GUC-en — det ville åpnet FORCE RLS for hele tenanten
+ * `SET TRANSACTION READ ONLY`. Kalles kun fra `endwiseInspectProcedure`.
+ * Ikke tenant-guc-en — det ville åpnet force RLS for hele tenanten
  * (kunder e-post/telefon, alle tråder, integrasjonstokens).
- * ⛔ Ikke impersonering. Sesjonens aktive org forblir plattformen.
+ * Ikke impersonering. Sesjonens aktive org forblir plattformen.
  */
 export async function withPlatformInspect<T>(
   db: Database,

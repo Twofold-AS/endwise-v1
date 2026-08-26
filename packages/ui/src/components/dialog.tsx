@@ -7,8 +7,7 @@ import type * as React from 'react';
 /*
  * shadcn/ui Dialog (New York) på `radix-ui`. Samme begrunnelse som
  * dropdown-menu.tsx: primitivet bor i pakken, ikke i appen.
- *
- * `DialogContent` er BEVISST uten posisjonering — kommandopaletten vil ligge
+ * `DialogContent` er bevisst uten posisjonering — kommandopaletten vil ligge
  * øverst på skjermen, ikke sentrert. Kallstedet bestemmer plasseringen; denne
  * gir kun ramme, overlegg og tilgjengelighet.
  */

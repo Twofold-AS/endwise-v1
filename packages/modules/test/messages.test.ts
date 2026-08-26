@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createMessagesModule, NotAParticipantError } from '../src/messages/index.ts';
 import { readEventsSince } from '../src/stream/index.ts';
 
-/** F6-01 — Tråder og meldinger, med begge tilgangslagene angrepet. */
+/** Tråder og meldinger, med begge tilgangslagene angrepet. */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
 const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;
@@ -73,7 +73,7 @@ describeDb('meldinger (F6-01)', () => {
   });
 
   /**
-   * RLS holder tenant-grensen. Men INNENFOR en tenant er ikke enhver ansatt
+   * RLS holder tenant-grensen. Men innenfor en tenant er ikke enhver ansatt
    * automatisk med i enhver kundesamtale. Deltakelse er kravet.
    */
   it('ANGREP: en ansatt som ikke er deltaker kan ikke lese tråden', async () => {

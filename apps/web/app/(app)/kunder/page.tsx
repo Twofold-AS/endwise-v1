@@ -10,12 +10,10 @@ import { Feil, Kilde, Laster, Tomt } from './_delt';
 import { NyKunde } from './_ny-kunde';
 
 /**
- * F5-02 — KUNDER. Liste med søk og filtrering.
- *
- * ⚠️ **Filtreringen bor HER, ikke i Settings** (prinsippet fra F5-19:
+ * Kunder. Liste med søk og filtrering.
+ * Filtreringen bor her, ikke i Settings (prinsippet fra F5-19:
  * konfigurasjon i Settings, filtrering der arbeidet skjer). Søket treffer navn,
  * e-post og telefon — de tre tingene man har for hånden når kunden ringer.
- *
  * Sorteringen er en allowlist server-side (A03); knappene her er bare de samme
  * to verdiene serveren allerede godtar.
  */
@@ -35,7 +33,7 @@ function KunderInner() {
   const router = useRouter();
   const [sok, setSok] = useState(params?.get('sok') ?? '');
   /**
-   * ⚠️ Quick action «Ny kunde» peker hit med ?ny=1. Fram til 09.08.2026 leste
+   * Quick action «Ny kunde» peker hit med ?ny=1. Fram til leste
    * ingenting den parameteren — knappen gikk til en side som så uendret ut.
    * Samme feil som /innboks?ny=1 hadde. Se `_ny-kunde.tsx`.
    */
@@ -225,7 +223,7 @@ function Knapperad({
   );
 }
 
-/** ⚠️ Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?sok=). */
+/** Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?sok=). */
 export default function Page() {
   return (
     <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster kunder …</div>}>

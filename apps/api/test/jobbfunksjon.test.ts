@@ -4,18 +4,15 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * F1-14 — JOBBFUNKSJON: hvem får lov til å endre den?
- *
- * **Dette er testen for CWE-862 / OWASP A01 på funksjonsaksen.** Hvert kall er
+ * Jobbfunksjon: hvem får lov til å endre den?
+ * Dette er testen for CWE-862 / owasp A01 på funksjonsaksen. Hvert kall er
  * et forsøk på å sette en funksjon uten å være leder, eller på en person som
  * ikke hører til forhandleren.
- *
- * ⚠️ Vi kaller `appRouter` direkte med en håndlaget context, ikke over HTTP —
+ * Vi kaller `appRouter` direkte med en håndlaget context, ikke over HTTP
  * samme grunn som i `module-gate.test.ts`: en angriper går heller ikke gjennom
  * UI-et. At knappen er skjult beviser ingenting.
- *
- * ⚠️ **Landingsregelen testes rent** i `packages/modules/test/profil.test.ts`.
- * Her tester vi at REGELEN NÅS — altså at `session.me` returnerer den funksjonen
+ * Landingsregelen testes rent i `packages/modules/test/profil.test.ts`.
+ * Her tester vi at regelen nås — altså at `session.me` returnerer den funksjonen
  * og landingen personen faktisk skal ha, med ekte rader i basen.
  */
 const OWNER_URL = process.env.DATABASE_URL;
@@ -32,7 +29,7 @@ describeDb('F1-14 — jobbfunksjon', () => {
   const SELGER = `selger-${tenant.slice(0, 8)}`;
   const SUPPORT = `support-${tenant.slice(0, 8)}`;
   const MEKANIKER = `mek-${tenant.slice(0, 8)}`;
-  /** Medlem av en ANNEN forhandler. Skal ikke kunne røres herfra. */
+  /** Medlem av en annen forhandler. Skal ikke kunne røres herfra. */
   const FREMMED = `fremmed-${annenTenant.slice(0, 8)}`;
 
   const ctx = (userId: string, role: string) =>
@@ -54,7 +51,7 @@ describeDb('F1-14 — jobbfunksjon', () => {
     ]);
 
     /**
-     * ⚠️ BÅDE `organization` OG `tenants`. ADR-002: organization.id ER
+     * Både `organization` og `tenants`. ADR-002: organization.id er
      * tenant_id, men det er to fysiske tabeller — `member.organization_id`
      * peker på Better-Auths, og domenetabellene på vår. Uten begge feiler
      * innsettingen på fremmednøkkelen, som den skal.
@@ -122,7 +119,7 @@ describeDb('F1-14 — jobbfunksjon', () => {
       },
     ]);
 
-    // Mekanikeren har en profil → funksjonen skal UTLEDES uten lagret verdi.
+    // Mekanikeren har en profil → funksjonen skal utledes uten lagret verdi.
     await owner
       .insert(schema.mechanics)
       .values({ tenantId: tenant, userId: MEKANIKER, name: 'Mekanikeren', capacity: 1 });
@@ -139,7 +136,7 @@ describeDb('F1-14 — jobbfunksjon', () => {
     await owner.delete(schema.organization).where(sql`id in (${tenant}, ${annenTenant})`);
   });
 
-  /* ══ ANGREP ═══════════════════════════════════════════════════════════ */
+  /* Angrep */
 
   it('⛔ ANGREP: dealer_staff kan ikke endre funksjon på en kollega', async () => {
     const api = appRouter.createCaller(ctx(SELGER, 'dealer_staff'));
@@ -158,7 +155,7 @@ describeDb('F1-14 — jobbfunksjon', () => {
   });
 
   it('⛔ ANGREP: lederen kan ikke sette funksjon på en ANNEN forhandlers ansatt', async () => {
-    // RLS ville stoppet lesingen, men innskrivingen ville hatt VÅR tenant-id og
+    // RLS ville stoppet lesingen, men innskrivingen ville hatt vår tenant-id og
     // altså vært lovlig. Derfor må medlemskapet sjekkes eksplisitt i ruta.
     const api = appRouter.createCaller(ctx(LEDER, 'dealer_admin'));
     await expect(api.team.setFunction({ userId: FREMMED, funksjon: 'support' })).rejects.toThrow(
@@ -181,7 +178,7 @@ describeDb('F1-14 — jobbfunksjon', () => {
     );
   });
 
-  /* ══ NORMALFLYT ═══════════════════════════════════════════════════════ */
+  /* Normalflyt */
 
   it('lederen kan sette funksjon, og den slår ut i landingen', async () => {
     const leder = appRouter.createCaller(ctx(LEDER, 'dealer_admin'));
@@ -220,7 +217,7 @@ describeDb('F1-14 — jobbfunksjon', () => {
     const per = new Map(liste.map((r) => [r.userId, r]));
 
     expect(per.get(LEDER)?.funksjon).toBe('leder');
-    expect(per.get(LEDER)?.kanEndres).toBe(false); // ⛔ ledere står fast
+    expect(per.get(LEDER)?.kanEndres).toBe(false); // ledere står fast
     expect(per.get(SUPPORT)?.funksjon).toBe('support');
     expect(per.get(SUPPORT)?.kanEndres).toBe(true);
     expect(per.get(MEKANIKER)?.harMekanikerprofil).toBe(true);
@@ -234,7 +231,7 @@ describeDb('F1-14 — jobbfunksjon', () => {
       farge: null,
       tone: null,
     });
-    // Naboen skal ALDRI dukke opp i vår liste.
+    // Naboen skal aldri dukke opp i vår liste.
     expect(per.has(FREMMED)).toBe(false);
   });
 

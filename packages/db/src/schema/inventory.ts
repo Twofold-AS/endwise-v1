@@ -15,17 +15,15 @@ import { mechanics } from './mechanics.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F2-09 — LAGER. Driftslageret til verkstedet. **KJERNE, ikke betalt modul.**
- *
+ * Lager. Driftslageret til verkstedet. **kjerne, ikke betalt modul.**
  * Skillet som må holdes rent gjennom hele modellen:
- * **Lager er fysisk beholdning. Butikk er salg.** Blander vi dem, får vi to
+ * Lager er fysisk beholdning. Butikk er salg. Blander vi dem, får vi to
  * steder som begge tror de eier lagernivået — og da er «hvor mange har vi?»
  * ikke lenger et spørsmål med ett svar. Lager er sannheten; Butikk (F10-03)
  * spør, og reserverer.
- *
- * ⚠️ `costMinor` er innkjøpspris og er en FORRETNINGSHEMMELIGHET — se
+ * `costMinor` er innkjøpspris og er en forretningshemmelighet — se
  * felt-allowlisten i lager-verktøyet for AI-agenten (F6-15/LLM06).
- * `sellPriceMinor` er Butikk-utsalg på SAMME rad (F10-03) — ikke en
+ * `sellPriceMinor` er Butikk-utsalg på samme rad (F10-03) — ikke en
  * annen katalog. Null = ikke til salg.
  */
 
@@ -46,13 +44,12 @@ export const stockMovementKindEnum = pgEnum('stock_movement_kind', [
   'release',
 ]);
 
-/* ══ Deler ═══════════════════════════════════════════════════════════════ */
+/* Deler */
 
 /**
  * En artikkel på delelageret.
- *
- * ⚠️ **CWE-639/IDOR:** `sku` er menneskelesbar og GJETTBAR — det er hele
- * poenget med et delenummer. Et oppslag på `sku` alene er derfor en IDOR som
+ * CWE-639/idor: `sku` er menneskelesbar og gjettbar — det er hele
+ * poenget med et delenummer. Et oppslag på `sku` alene er derfor en idor som
  * ser ut som et oppslag. Unik-indeksen er `(tenant_id, sku)`, aldri `sku`
  * alene, og hver spørring må ha tenant i WHERE i tillegg til RLS som nett.
  */
@@ -63,7 +60,7 @@ export const parts = pgTable(
     tenantId: uuid('tenant_id')
       .notNull()
       .references(() => tenants.id, { onDelete: 'cascade' }),
-    /** Delenummer/SKU. Unikt PER TENANT — to verksteder kan ha samme nummer. */
+    /** Delenummer/sku. Unikt per tenant — to verksteder kan ha samme nummer. */
     sku: text('sku').notNull(),
     name: text('name').notNull(),
     /** Fri gruppering: «Bremser», «Filter», «Olje». Ingen enum — dette er verkstedets eget språk. */
@@ -71,12 +68,12 @@ export const parts = pgTable(
     /** Enhet: stk, liter, meter. */
     unit: text('unit').notNull().default('stk'),
     /**
-     * Innkjøpspris i ØRE. Flyttall og penger hører ikke sammen.
-     * ⛔ FORRETNINGSHEMMELIGHET — aldri ut til en kundevendt agent (LLM06).
+     * Innkjøpspris i Øre. Flyttall og penger hører ikke sammen.
+     * Forretningshemmelighet — aldri ut til en kundevendt agent (LLM06).
      */
     costMinor: integer('cost_minor'),
     /**
-     * F10-03 — Utsalgspris i ØRE. **Ikke en annen katalog.** Butikk leser
+     * Utsalgspris i Øre. **Ikke en annen katalog.** Butikk leser
      * `parts` + `stock_levels`. Null = ikke til salg i Butikk. Kostpris
      * (`costMinor`) er innkjøp og forblir forretningshemmelighet.
      */
@@ -90,7 +87,7 @@ export const parts = pgTable(
      */
     source: text('source').notNull().default('endwise'),
     /**
-     * F8-01 — Quick sin vare-GUID. Idempotent upsert. Null for deler født i Endwise.
+     * Quick sin vare-GUID. Idempotent upsert. Null for deler født i Endwise.
      */
     quickGuid: text('quick_guid'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
@@ -104,7 +101,7 @@ export const parts = pgTable(
   ],
 ).enableRLS();
 
-/* ══ Lokasjoner ══════════════════════════════════════════════════════════ */
+/* Lokasjoner */
 
 /** Hylle, rom, servicebil — hvor delen fysisk ligger. */
 export const stockLocations = pgTable(
@@ -114,7 +111,7 @@ export const stockLocations = pgTable(
     tenantId: uuid('tenant_id')
       .notNull()
       .references(() => tenants.id, { onDelete: 'cascade' }),
-    /** Kort kode brukt i hverdagen: «A-03», «BIL-1». */
+    /** Kort kode brukt i hverdagen: «A-03», «bil-1». */
     code: text('code').notNull(),
     name: text('name').notNull(),
     /** Quick sin lokasjons-GUID. Null for lokasjoner født i Endwise. */
@@ -129,20 +126,17 @@ export const stockLocations = pgTable(
   ],
 ).enableRLS();
 
-/* ══ Lagernivå ═══════════════════════════════════════════════════════════ */
+/* Lagernivå */
 
 /**
  * Beholdning per del per lokasjon.
- *
- * ⛔ **`reserved` er ikke valgfri, og den er ikke pynt.**
- *
- * Sikkerhetsgjennomgangen (OWASP A08) slo fast at nedtelling alene gir
+ * `reserved` er ikke valgfri, og den er ikke pynt.
+ * Sikkerhetsgjennomgangen (owasp A08) slo fast at nedtelling alene gir
  * dobbeltsalg: mekanikeren tar den siste bremseklossen fra hylla, og ti
  * minutter senere selger butikken den samme klossen — fordi ingen av dem så
  * den andres hensikt før uttaket var et faktum.
- *
  * Derfor: **tilgjengelig = onHand − reserved.** Et salg eller en planlagt jobb
- * RESERVERER; uttaket bekreftes når delen faktisk forlater hylla. Feltet må
+ * Reserverer; uttaket bekreftes når delen faktisk forlater hylla. Feltet må
  * finnes fra dag én, ellers må hele Butikk-synken (F8-10) bygges om senere.
  */
 export const stockLevels = pgTable(
@@ -171,16 +165,14 @@ export const stockLevels = pgTable(
   ],
 ).enableRLS();
 
-/* ══ Bevegelser ══════════════════════════════════════════════════════════ */
+/* Bevegelser */
 
 /**
  * Append-only bevegelseslogg. **Dette er fasiten.**
- *
  * `stock_levels` er en materialisering man kan bygge opp igjen fra denne — ikke
  * omvendt. Derfor har den ingen `updatedAt`: en rad her endres aldri. Er tallet
  * feil, legger man til en `adjust`, man retter ikke historien.
- *
- * `actorUserId` og `mechanicId` svarer på HVEM: den første er alltid satt (en
+ * `actorUserId` og `mechanicId` svarer på hvem: den første er alltid satt (en
  * innlogget bruker gjorde dette), den andre kun når uttaket hører til en
  * mekanikers jobb.
  */
@@ -199,7 +191,7 @@ export const stockMovements = pgTable(
       .references(() => stockLocations.id, { onDelete: 'cascade' }),
     kind: stockMovementKindEnum('kind').notNull(),
     /**
-     * Antall. Alltid POSITIVT — retningen ligger i `kind`, ikke i fortegnet.
+     * Antall. Alltid positivt — retningen ligger i `kind`, ikke i fortegnet.
      * Et negativt tall på en `in` ville vært to måter å si det samme på.
      */
     quantity: integer('quantity').notNull(),

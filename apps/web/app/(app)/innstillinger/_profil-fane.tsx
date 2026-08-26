@@ -13,8 +13,7 @@ import { ToFaktorRad } from '../_shell/to-faktor-rad';
 
 /**
  * F5-19 / F1-17 / F1-20 — Settings › Profil, landet i pille-fanen.
- *
- * Layout (Jonas + Mikael 26.08): blobatar 56px TIL VENSTRE, ett
+ * Layout (Jonas + Mikael 26.08): blobatar 56px til venstre, ett
  * identitetsblokk til høyre: visningsnavn · kallenavn · e-post. Form-,
  * farge- og uttrykk-velgeren er foldet under. Ingen filopplasting.
  * Felt-Lagre beholdes, ingen sticky Save.

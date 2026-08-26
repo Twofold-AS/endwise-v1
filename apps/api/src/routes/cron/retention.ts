@@ -4,14 +4,12 @@ import { Hono } from 'hono';
 import { cronAuth } from '../../lib/cron-auth.ts';
 
 /**
- * F14-03 — Automatisk sletting, kjørt av Vercel Cron (se apps/web/vercel.json).
- *
+ * Automatisk sletting, kjørt av Vercel Cron (se apps/web/vercel.json).
  * Itererer over tenants og rydder hver for seg gjennom `withTenant` → RLS.
  * Jobben har ingen global slette-tilgang; den kan ikke, ved en feil, tømme
  * feil forhandler.
- *
- * CWE-306: `cronAuth`-middleware feiler LUKKET (503 uten CRON_SECRET, 401 ved feil
- * Bearer). Ekstra viktig her: dette endepunktet SLETTER data.
+ * CWE-306: `cronAuth`-middleware feiler lukket (503 uten CRON_SECRET, 401 ved feil
+ * Bearer). Ekstra viktig her: dette endepunktet sletter data.
  */
 export const cronRetention = new Hono().use('*', cronAuth).get('/', async (c) => {
   const url = process.env.DATABASE_URL;

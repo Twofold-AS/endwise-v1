@@ -5,7 +5,7 @@ import { POST as stripePost } from '../app/stripe/webhook/route.ts';
 import { GET as trpcGet, POST as trpcPost } from '../app/trpc/[...trpc]/route.ts';
 
 /**
- * F13-03 — route-filene eksporterer Web-handlere. Health beviser at
+ * Route-filene eksporterer Web-handlere. Health beviser at
  * Vercel-appen svarer uten en kjørende `apps/api`-prosess.
  */
 describe('porterte Next route handlers', () => {

@@ -2,31 +2,22 @@ import type { HTMLAttributes } from 'react';
 import { cn } from '../lib/utils.ts';
 
 /**
- * ═══════════════════════════════════════════════════════════════════════════
- *  [ART50-UI]  AI Act art. 50 — TRANSPARENSPLIKT
- * ═══════════════════════════════════════════════════════════════════════════
- *
- * ⚠️ **DENNE KOMPONENTEN ER JURIDISK PÅKREVD, IKKE VALGFRI.**
- *
+ * [ART50-UI] AI Act art. 50 — transparensplikt
+ * denne komponenten er juridisk påkrevd, ikke valgfri.
  * Regulation (EU) 2024/1689 art. 50(1): et AI-system som samhandler direkte med
- * fysiske personer skal utformes slik at personen **informeres om at de snakker
+ * fysiske personer skal utformes slik at personen informeres om at de snakker
  * med en AI** — senest ved første interaksjon. For en chat betyr det: **før
- * eller helt i begynnelsen av samtalen.** Ikke i vilkårene. Ikke i en fotnote.
- *
- * **Gjelder fra 2. august 2026.** Bot inntil 15 mill. EUR / 3 % av global omsetning.
- *
- * ── STATUS: FUNKSJONELL, IKKE PEN ──────────────────────────────────────────
- *
+ * eller helt i begynnelsen av samtalen. Ikke i vilkårene. Ikke i en fotnote.
+ * Gjelder fra 2. august 2026. Bot inntil 15 mill. Eur / 3 % av global omsetning.
+ * Status: funksjonell, ikke pen
  * Designet er bevisst minimalt. Den juridiske gyldigheten avhenger ikke av
  * hvor pen den er — den avhenger av at informasjonen er der, tydelig, før
  * samtalen starter.
- *
- * **Søk etter `[ART50-UI]` i repoet** for alle stedene dette skal pusses når
+ * Søk etter `[ART50-UI]` i repoet for alle stedene dette skal pusses når
  * tokens/prototypen er inne. Se roadmap **F14-04** (implementasjon) og
- * **F4-15** (design-pass).
- *
- * ⚠️ Når du pusser: **du kan endre HVORDAN den ser ut. Du kan ikke fjerne AT den
- * er der, og du kan ikke flytte den bort fra samtalestart.** Det er ikke design,
+ * F4-15 (design-pass).
+ * Når du pusser: du kan endre hvordan den ser ut. Du kan ikke fjerne at den
+ * er der, og du kan ikke flytte den bort fra samtalestart. Det er ikke design,
  * det er lovtekst.
  */
 
@@ -48,7 +39,7 @@ export interface AiDisclosureProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * [ART50-UI] Vises ØVERST i chatten, før første melding. Ikke bak et ikon,
+ * [ART50-UI] Vises Øverst i chatten, før første melding. Ikke bak et ikon,
  * ikke i en tooltip, ikke i en «les mer».
  */
 export function AiDisclosure({ locale = 'no', className, ...props }: AiDisclosureProps) {
@@ -73,8 +64,7 @@ export function AiDisclosure({ locale = 'no', className, ...props }: AiDisclosur
 
 /**
  * [ART50-UI] Vises i tråden når agenten eskalerer til et menneske (F6-05).
- *
- * Art. 50 handler om at brukeren skal VITE hva den snakker med. Da må hun også
+ * Art. 50 handler om at brukeren skal vite hva den snakker med. Da må hun også
  * få vite når det skifter — ellers tror hun fortsatt hun snakker med maskinen.
  */
 export function HumanHandoverNotice({ locale = 'no', className, ...props }: AiDisclosureProps) {

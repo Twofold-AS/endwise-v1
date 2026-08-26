@@ -8,13 +8,11 @@ export interface PruneResult {
 }
 
 /**
- * F14-03 — Automatisk sletting. Kjøres av Vercel Cron (F0-13).
- *
+ * Automatisk sletting. Kjøres av Vercel Cron (F0-13).
  * Går gjennom `withTenant` — altså RLS. Ryddingen kan ikke, ved en feil, slette
  * en annen forhandlers data. Cron-jobben itererer over tenants; den har ingen
  * global slette-tilgang.
- *
- * `audit_log` er bevisst UTE av denne løkka: den redakteres, den slettes ikke
+ * `audit_log` er bevisst ute av denne løkka: den redakteres, den slettes ikke
  * (mode: 'redact'). Se `erasure/`.
  */
 export async function pruneExpired(db: Database, tenantId: string): Promise<PruneResult[]> {

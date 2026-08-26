@@ -13,27 +13,24 @@ export interface ErasureReport {
   status: 'completed' | 'partial';
   /** Ledd vi slettet i, med antall. */
   purged: Record<string, number>;
-  /** Ledd som ble REDAKTERT (ikke slettet), med antall. */
+  /** Ledd som ble redaktert (ikke slettet), med antall. */
   redacted: Record<string, number>;
-  /** Ledd vi IKKE kan slette i — med begrunnelse. Dette er ikke en unnskyldning; det er et faktum. */
+  /** Ledd vi ikke kan slette i — med begrunnelse. Dette er ikke en unnskyldning; det er et faktum. */
   notPurgeable: Array<{ where: string; why: string; goneWithinDays: number | null }>;
 }
 
 /**
- * F14-16 — Sletting av en kunde (art. 17), gjennom ALLE ledd.
- *
+ * Sletting av en kunde (art. 17), gjennom alle ledd.
  * Rekkefølgen er ikke tilfeldig:
- *
- *   1. **Registrer forespørselen først.** Krasjer vi midt i slettingen, skal det
- *      finnes et spor av at den ble bedt om. En sletting ingen vet ble forsøkt,
- *      er en sletting som aldri skjedde.
- *   2. Slett/anonymiser i domenetabellene.
- *   3. Redaktér audit-loggen (kan ikke slettes — se sql/functions.sql).
- *   4. Dokumentér leverandørleddet, inkludert det vi IKKE får slettet.
- *   5. Lukk forespørselen med rapporten.
- *
- * **Status blir `partial`, ikke `completed`, når det finnes ledd vi ikke kan
- * slette i.** Å rapportere «completed» når Mistral fortsatt har prompten i 30
+ * 1. **Registrer forespørselen først.** Krasjer vi midt i slettingen, skal det
+ * finnes et spor av at den ble bedt om. En sletting ingen vet ble forsøkt,
+ * er en sletting som aldri skjedde.
+ * 2. Slett/anonymiser i domenetabellene.
+ * 3. Redaktér audit-loggen (kan ikke slettes — se sql/functions.sql).
+ * 4. Dokumentér leverandørleddet, inkludert det vi ikke får slettet.
+ * 5. Lukk forespørselen med rapporten.
+ * Status blir `partial`, ikke `completed`, når det finnes ledd vi ikke kan
+ * slette i. Å rapportere «completed» når Mistral fortsatt har prompten i 30
  * dager, ville vært en løgn i et dokument vi selv har laget for å bevise at vi
  * er til å stole på.
  */
@@ -43,7 +40,7 @@ export async function eraseCustomer(
 ): Promise<ErasureReport> {
   const { tenantId, customerId, requestedBy } = input;
 
-  // 1. Spor FØRST.
+  // 1. Spor først.
   const request = await withTenant(db, tenantId, async (tx) => {
     const [row] = await tx
       .insert(schema.erasureRequests)
@@ -84,16 +81,16 @@ export async function eraseCustomer(
     purged.customer_notes = notes.rowCount ?? 0;
 
     // 2c. Kjøretøy: koblingen brytes, kjøretøyet består.
-    //     Et regnr uten eier er ikke lenger en personopplysning — og verkstedet
-    //     trenger historikken på kjøretøyet (neste eier skal vite hva som er gjort).
+    // Et regnr uten eier er ikke lenger en personopplysning — og verkstedet
+    // trenger historikken på kjøretøyet (neste eier skal vite hva som er gjort).
     const vehicles = await tx.execute(
       sql`update vehicles set customer_id = null where customer_id = ${customerId}`,
     );
     redacted.vehicles = vehicles.rowCount ?? 0;
 
-    // 2d. Bookinger: anonymiseres, slettes IKKE.
-    //     Bokføringsloven krever at transaksjonen består. Vi fjerner personen
-    //     fra den, ikke transaksjonen fra regnskapet.
+    // 2d. Bookinger: anonymiseres, slettes ikke.
+    // Bokføringsloven krever at transaksjonen består. Vi fjerner personen
+    // fra den, ikke transaksjonen fra regnskapet.
     const bookings = await tx.execute(
       sql`update bookings set customer_id = null, notes = null where customer_id = ${customerId}`,
     );
@@ -109,8 +106,8 @@ export async function eraseCustomer(
     const customer = await tx.execute(sql`delete from customers where id = ${customerId}`);
     purged.customers = customer.rowCount ?? 0;
 
-    // 3. Audit-loggen: REDAKTERES gjennom den kontrollerte funksjonen.
-    //    App-rollen har fortsatt ingen UPDATE på audit_log — den ber bare om det.
+    // 3. Audit-loggen: redakteres gjennom den kontrollerte funksjonen.
+    // App-rollen har fortsatt ingen UPDATE på audit_log — den ber bare om det.
     const audit = await tx.execute(sql`select redact_audit_log(${customerId}) as redacted`);
     const auditRows = (audit.rows[0] as { redacted?: number } | undefined)?.redacted ?? 0;
     redacted.audit_log = Number(auditRows);

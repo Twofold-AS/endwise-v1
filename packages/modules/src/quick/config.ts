@@ -15,7 +15,7 @@ export const QUICK_PROVIDER = 'quick';
 /** Ikke-hemmelig visning av Quick-konfigen (trygg å sende til klienten). */
 export interface QuickConfigView {
   baseUrl: string | null;
-  /** Om en token er lagret. Selve tokenet forlater ALDRI serveren. */
+  /** Om en token er lagret. Selve tokenet forlater aldri serveren. */
   hasToken: boolean;
   lastSyncedAt: Date | null;
   lastSyncStatus: string | null;
@@ -32,9 +32,8 @@ export class QuickConfigError extends Error {}
 
 /**
  * F8-01 / F1-07 — Per-tenant Quick-konfig (RLS-skopet). Tokenet lagres envelope-
- * kryptert (AES-256-GCM, @endwise/db/crypto). Alt går via `withTenant` → RLS, så
+ * kryptert (aes-256-gcm, @endwise/db/crypto). Alt går via `withTenant` → RLS, så
  * forhandler A kan verken lese eller skrive forhandler B — uansett input.
- *
  * Rollestyring (kun dealer_admin/endwise_admin skriver) håndheves i API-laget
  * (adminProcedure); RLS kjenner ikke roller.
  */

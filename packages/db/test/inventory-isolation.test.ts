@@ -5,14 +5,12 @@ import { createDb, type Database, withTenant } from '../src/client.ts';
 import { schema } from '../src/index.ts';
 
 /**
- * F2-09 — Tenant-isolasjon på LAGER. Hver test her ER et angrep.
- *
+ * Tenant-isolasjon på lager. Hver test her er et angrep.
  * Samme oppsett som `tenant-isolation.test.ts`: to forbindelser, og det er
  * hele poenget. `owner` seeder på tvers; **alle angrep kjøres fra `app`**
  * (`endwise_app`), rollen applikasjonen faktisk bruker. Kjørte vi angrepene
  * som eier, ville alt «bestått» fordi RLS var usynlig.
- *
- * ⚠️ Lager er KJERNE — alle forhandlere har det. Det gjør isolasjonen viktigere,
+ * Lager er kjerne — alle forhandlere har det. Det gjør isolasjonen viktigere,
  * ikke mindre viktig: her ligger delenumre, beholdning og innkjøpspriser for
  * hvert eneste verksted i systemet.
  */
@@ -48,7 +46,7 @@ describeDb('lager-isolasjon (RLS)', () => {
       .values({ tenantId: tenantB, code: 'B-01', name: 'Hylle B' })
       .returning();
 
-    // ⚠️ SAMME SKU i begge tenants — det er selve IDOR-scenarioet (CWE-639).
+    // Samme sku i begge tenants — det er selve idor-scenarioet (CWE-639).
     // Delenummer er gjettbart med vilje; unik-indeksen er (tenant_id, sku).
     const [pa] = await owner
       .insert(schema.parts)

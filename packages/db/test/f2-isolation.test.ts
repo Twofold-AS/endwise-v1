@@ -6,7 +6,6 @@ import { schema } from '../src/index.ts';
 
 /**
  * F1-08 utvidet til F2-tabellene.
- *
  * Hver ny tabell med `tenant_id` skal ha RLS. Denne suiten er kontrollen på at
  * ingen slipper unna: legger noen til en tabell uten `tenantPolicy`, feiler den.
  * Angrepene kjøres som `endwise_app` — for tabelleieren er RLS usynlig.

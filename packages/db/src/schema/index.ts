@@ -16,6 +16,7 @@ export * from './messages.ts';
 export * from './notifications.ts';
 export * from './profiles.ts';
 export * from './services.ts';
+export * from './shop.ts';
 export * from './stream-events.ts';
 export * from './sync-conflicts.ts';
 export * from './tenant-delete-challenges.ts';

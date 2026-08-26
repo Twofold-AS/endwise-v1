@@ -59,7 +59,7 @@ export const ADDON_MODULES = [
   'sso',
   'nyhetsbrev',
   'finn',
-  'shop', // ⛔ blokkert — venter på Medusa-beslutning (F10-03)
+  'shop', // ⛔ blokkert — intern flagg-preview, ikke til salgs (F10-03)
   'rapporter', // 🕓 ikke bygget
   'analyse-pro', // 🕓 ikke bygget
   'betaling-widget', // 🕓 ikke bygget (F8-05)

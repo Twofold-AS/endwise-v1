@@ -57,6 +57,8 @@ export function useOrgRole(): {
    */
   canSwitchDemo: boolean;
   needsOnboarding: boolean;
+  /** F10-03 — kosmetikk. Sperren er shopProcedure. Fail-safe AV. */
+  shopEnabled: boolean;
 } {
   const { data: session, isPending } = useSession();
   const authed = Boolean(session?.user);
@@ -87,5 +89,6 @@ export function useOrgRole(): {
     devMode: me.data?.devMode?.enabled ?? false,
     canSwitchDemo: (me.data?.devMode?.flagOn ?? false) && role === 'endwise_admin',
     needsOnboarding: me.data?.needsOnboarding ?? false,
+    shopEnabled: me.data?.shopEnabled ?? false,
   };
 }

@@ -235,7 +235,7 @@ export const TILLEGG: Tillegg[] = [
     module: 'shop',
     status: 'blocked',
     merknad:
-      'Venter på beslutning om Medusa (isolasjonsmodell + avhengighet). Se F10-03 og sikkerhetsgjennomgangen.',
+      'Ikke til salgs. Intern testbutikk styres av feature-flagget «shop», ikke av dette tillegget.',
   },
   {
     key: 'rapporter',

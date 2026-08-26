@@ -38,6 +38,8 @@ const MÅ_HA_RLS = [
   'messages',
   'threads',
   'feature_flag_overrides',
+  'shop_orders',
+  'shop_order_lines',
 ];
 
 describeDb('FORCE RLS + runtime-rollen', () => {

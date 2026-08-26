@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   breadcrumbFor,
+  BUTIKK_NAV,
   childrenForRole,
   ENDWISE_NAV,
   ENDWISE_SETTINGS_NAV,
@@ -244,6 +245,7 @@ function alleNavLabels(): string[] {
     ...FORHANDLER_NAV,
     ...MEKANIKER_NAV,
     ...LAGER_NAV,
+    ...BUTIKK_NAV,
     ...ENDWISE_NAV,
     SETTINGS_NAV,
     ENDWISE_SETTINGS_NAV,

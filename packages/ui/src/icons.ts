@@ -62,6 +62,7 @@ export {
   PanelRightOpen,
   Plug,
   Plus,
+  ShoppingCart,
   Store,
   TrendingDown,
   TrendingUp,

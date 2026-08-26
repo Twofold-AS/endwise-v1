@@ -2,6 +2,7 @@ import { and, eq, schema, withTenant } from '@endwise/db';
 import type { AddonModule } from '@endwise/modules';
 import { initTRPC, TRPCError } from '@trpc/server';
 import type { AppContext } from '../context.ts';
+import { resolveShopFlag } from './shop-flag.ts';
 
 /**
  * F0-02 — tRPC v11 for INTERNE flater (admin-/forhandler-dashboard, mekaniker-PWA).
@@ -121,6 +122,34 @@ export function moduleAdminProcedure(moduleKey: AddonModule) {
     return opts.next({ ctx });
   });
 }
+
+const SHOP_ROLLER = new Set(['dealer_admin', 'dealer_staff', 'endwise_admin', 'endwise_support']);
+
+/**
+ * F10-03 — Butikk-gaten. **Ikke `moduleProcedure('shop')`.** Shop ligger i
+ * ADDON_MODULES men er IKKE_TILDELBAR — admin kan ikke gi Nettbutikk, og
+ * Stripe-abonnementet selger den ikke. Eneste lovlige åpning er feature-flaget
+ * `shop` (tenant-overstyring) + vanlig auth/RLS.
+ *
+ * Fail-safe: flaggoppslag som feiler = AV = FORBIDDEN.
+ */
+export const shopProcedure = protectedProcedure.use(async function shopFlagOn(opts) {
+  const { ctx } = opts;
+  const pa = await resolveShopFlag(ctx);
+  if (!pa) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Butikk er ikke aktiv for denne forhandleren',
+    });
+  }
+  if (!SHOP_ROLLER.has(ctx.role)) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: `Rollen «${ctx.role}» kan ikke bruke Butikk`,
+    });
+  }
+  return opts.next({ ctx });
+});
 
 export const endwiseAdminProcedure = protectedProcedure.use(function isEndwiseAdmin(opts) {
   const { ctx } = opts;

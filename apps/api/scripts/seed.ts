@@ -841,6 +841,7 @@ async function main() {
       name: 'Bremseklosser foran',
       category: 'Bremser',
       cost: 48000,
+      sell: 79900,
       min: 4,
       inn: 12,
       res: 2,
@@ -851,6 +852,7 @@ async function main() {
       name: 'Bremseklosser bak',
       category: 'Bremser',
       cost: 39000,
+      sell: 64900,
       min: 4,
       inn: 3,
       res: 1,
@@ -861,6 +863,7 @@ async function main() {
       name: 'Motorolje 10W-40, 1 l',
       category: 'Olje',
       cost: 14900,
+      sell: 24900,
       min: 10,
       inn: 24,
       res: 0,
@@ -871,6 +874,7 @@ async function main() {
       name: 'Oljefilter',
       category: 'Filter',
       cost: 12500,
+      sell: 19900,
       min: 6,
       inn: 18,
       res: 3,
@@ -881,6 +885,7 @@ async function main() {
       name: 'Luftfilter',
       category: 'Filter',
       cost: 22000,
+      sell: 34900,
       min: 5,
       inn: 2,
       res: 0,
@@ -891,6 +896,7 @@ async function main() {
       name: 'Tennplugg',
       category: 'Tenning',
       cost: 8900,
+      sell: 14900,
       min: 8,
       inn: 30,
       res: 4,
@@ -901,6 +907,7 @@ async function main() {
       name: 'Kjedesett',
       category: 'Drivverk',
       cost: 189000,
+      sell: 299000,
       min: 2,
       inn: 5,
       res: 1,
@@ -911,6 +918,7 @@ async function main() {
       name: 'Dekk 120/70-17',
       category: 'Dekk',
       cost: 165000,
+      sell: 249000,
       min: 2,
       inn: 6,
       res: 2,
@@ -943,7 +951,13 @@ async function main() {
         .select()
         .from(schema.parts)
         .where(and(eq(schema.parts.tenantId, tenantId), eq(schema.parts.sku, d.sku)));
-      if (finnes) continue;
+      if (finnes) {
+        await db
+          .update(schema.parts)
+          .set({ sellPriceMinor: d.sell })
+          .where(eq(schema.parts.id, finnes.id));
+        continue;
+      }
 
       const [del] = await db
         .insert(schema.parts)
@@ -953,6 +967,7 @@ async function main() {
           name: d.name,
           category: d.category,
           costMinor: d.cost,
+          sellPriceMinor: d.sell,
           minStock: d.min,
         })
         .returning();
@@ -1051,6 +1066,17 @@ async function main() {
       description: 'F5-27 — dev-mode. Krever i tillegg endwise_admin OG tenants.kind=demo.',
     })
     .onConflictDoUpdate({ target: schema.featureFlags.key, set: { enabled: true } });
+
+  // F10-03 — intern testbutikk. Global default AV. Ikke slå på i seeden.
+  await db
+    .insert(schema.featureFlags)
+    .values({
+      key: 'shop',
+      enabled: false,
+      description:
+        'Intern testbutikk (F10-03). Global default AV. Slås på per forhandler via tenant-overstyring. Ikke en selgbar modul.',
+    })
+    .onConflictDoNothing();
 
   /* Mekaniker-profil på HOVEDBRUKEREN er allerede opprettet over (den trengtes
    * for ukas bookinger). Uten den er `isMechanic` false, og mekanikervisningen

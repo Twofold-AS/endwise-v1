@@ -35,3 +35,21 @@ export function quickProbeUserMessage(error: unknown): string {
   }
   return QUICK_PROBE_USER_MESSAGES.unexpected;
 }
+
+/** Én setning til UI/sist-synk. Aldri rå Quick/HTTP-body. */
+export const QUICK_PULL_USER_MESSAGES = {
+  rejected: 'Quick avviste nøkkelen.',
+  timeout: 'Tidsavbrudd mot Quick.',
+  unreachable: 'Nådde ikke Quick.',
+  unexpected: 'Uventet svar fra Quick.',
+  http500: 'Quick svarte 500.',
+} as const;
+
+export function quickPullUserMessage(error: unknown): string {
+  const probe = quickProbeUserMessage(error);
+  if (probe === QUICK_PROBE_USER_MESSAGES.rejected) return QUICK_PULL_USER_MESSAGES.rejected;
+  if (probe === QUICK_PROBE_USER_MESSAGES.timeout) return QUICK_PULL_USER_MESSAGES.timeout;
+  if (probe === QUICK_PROBE_USER_MESSAGES.unreachable) return QUICK_PULL_USER_MESSAGES.unreachable;
+  if (probe === QUICK_PROBE_USER_MESSAGES.http500) return QUICK_PULL_USER_MESSAGES.http500;
+  return QUICK_PULL_USER_MESSAGES.unexpected;
+}

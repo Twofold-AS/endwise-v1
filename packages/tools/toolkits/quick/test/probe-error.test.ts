@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { QuickAuthError, QuickError, QuickSsrfError } from '../src/errors.ts';
-import { QUICK_PROBE_USER_MESSAGES, quickProbeUserMessage } from '../src/probe-error.ts';
+import {
+  QUICK_PROBE_USER_MESSAGES,
+  QUICK_PULL_USER_MESSAGES,
+  quickProbeUserMessage,
+  quickPullUserMessage,
+} from '../src/probe-error.ts';
 
 describe('quickProbeUserMessage — distinkte BAD_REQUEST, ingen rå fetch-cause', () => {
   it('401/403 → nøkkel avvist', () => {
@@ -84,5 +89,23 @@ describe('quickProbeUserMessage — distinkte BAD_REQUEST, ingen rå fetch-cause
     expect(quickProbeUserMessage(new QuickSsrfError('baseUrl må bruke https'))).toBe(
       'baseUrl må bruke https',
     );
+  });
+});
+
+describe('quickPullUserMessage — én setning, ikke raw error.message', () => {
+  it('svarformat / 401 / timeout blir egne setninger uten intern host', () => {
+    expect(quickPullUserMessage(new QuickError('Uventet svarformat fra Quick'))).toBe(
+      QUICK_PULL_USER_MESSAGES.unexpected,
+    );
+    expect(quickPullUserMessage(new QuickAuthError('x', 401))).toBe(
+      QUICK_PULL_USER_MESSAGES.rejected,
+    );
+    expect(quickPullUserMessage(new QuickError('Tidsavbrudd mot Quick'))).toBe(
+      QUICK_PULL_USER_MESSAGES.timeout,
+    );
+    const raw = new Error('fetch failed: https://169.254.169.254/ ECONNREFUSED');
+    expect(quickPullUserMessage(raw)).toBe(QUICK_PULL_USER_MESSAGES.unexpected);
+    expect(quickPullUserMessage(raw)).not.toContain('169.254');
+    expect(QUICK_PULL_USER_MESSAGES.unexpected).not.toMatch(/Ingenting er lagret/);
   });
 });

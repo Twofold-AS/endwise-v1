@@ -5,6 +5,10 @@ import { QUICK_CURL_USER_AGENT, quickFetch } from './https-proxy.ts';
 import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
 import { probeQuickReadOnly } from './probe.ts';
 import {
+  foldQuickJsonKeys,
+  parseQuickCustomerBatch,
+  parseQuickItemBatch,
+  parseQuickStockEntryBatch,
   type QuickCustomer,
   type QuickCustomerBatch,
   type QuickCustomerRecord,
@@ -14,9 +18,6 @@ import {
   type QuickStockEntry,
   type QuickStockEntryBatch,
   type QuickStockRecord,
-  quickCustomerBatch,
-  quickItemBatch,
-  quickStockEntryBatch,
 } from './schema.ts';
 import { assertAllowedQuickUrl } from './url-guard.ts';
 
@@ -121,7 +122,7 @@ export function createQuickClient(config: QuickConfig) {
       throw new QuickError('Uventet svar fra Quick (ikke JSON)');
     }
     try {
-      return schema.parse(json);
+      return schema.parse(foldQuickJsonKeys(json));
     } catch {
       throw new QuickError('Uventet svarformat fra Quick');
     }
@@ -169,7 +170,7 @@ export function createQuickClient(config: QuickConfig) {
       if (params.changedAfterDate) q.set('changedAfterDate', params.changedAfterDate);
       if (params.customerTypeGuid) q.set('customerTypeGuid', params.customerTypeGuid);
       if (params.expansions?.length) q.set('expansions', params.expansions.join(','));
-      return request(`/customer/batch?${q}`, quickCustomerBatch);
+      return request(`/customer/batch?${q}`, { parse: parseQuickCustomerBatch });
     },
 
     /** Én side varer fra `item/batch` (GET-only). */
@@ -180,7 +181,7 @@ export function createQuickClient(config: QuickConfig) {
       q.set('limit', String(params.limit ?? DEFAULT_PAGE_SIZE));
       q.set('offset', String(params.offset ?? 0));
       if (params.changedAfterDate) q.set('changedAfterDate', params.changedAfterDate);
-      return request(`/item/batch?${q}`, quickItemBatch);
+      return request(`/item/batch?${q}`, { parse: parseQuickItemBatch });
     },
 
     /** Én side lagerlinjer fra `stockentry/batch` (GET-only). */
@@ -191,7 +192,7 @@ export function createQuickClient(config: QuickConfig) {
       q.set('limit', String(params.limit ?? DEFAULT_PAGE_SIZE));
       q.set('offset', String(params.offset ?? 0));
       if (params.changedAfterDate) q.set('changedAfterDate', params.changedAfterDate);
-      return request(`/stockentry/batch?${q}`, quickStockEntryBatch);
+      return request(`/stockentry/batch?${q}`, { parse: parseQuickStockEntryBatch });
     },
 
     /**

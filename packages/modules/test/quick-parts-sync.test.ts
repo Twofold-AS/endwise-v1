@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { applyQuickOnHand, stockFromItemOnHand } from '../src/quick/sync-parts.ts';
 
@@ -55,5 +58,14 @@ describe('stockFromItemOnHand — fallback uten stockentry', () => {
         onHand: null,
       }),
     ).toBeNull();
+  });
+});
+
+describe('syncQuickParts skriver ikke utsalg uten Quick-felt', () => {
+  it('sku/name/unit/costMinor — ikke sellPriceMinor', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const src = readFileSync(resolve(her, '../src/quick/sync-parts.ts'), 'utf8');
+    expect(src).toMatch(/costMinor: r\.costMinor/);
+    expect(src).not.toMatch(/sellPriceMinor:/);
   });
 });

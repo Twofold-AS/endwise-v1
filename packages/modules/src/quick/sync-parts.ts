@@ -51,6 +51,11 @@ const DEFAULT_LOCATION_NAME = 'Quick';
  *
  * NETTVERK skjer i iteratorene — UTENFOR DB-transaksjonene. Quick er FAKTA
  * for sku/navn/enhet/kost/onHand. `reserved` beholdes.
+ *
+ * ⛔ Ingen `sellPriceMinor` her. Shop-katalogen krever utsalg, men ingen
+ * Quick-prisfelt er bekreftet i fixtures/tester/captured responses
+ * (kun costPrice/cost i mapping). Ikke finn opp utsalg. Oppfølging: når
+ * et live item-felt er sett, map det — ikke før.
  */
 export async function syncQuickParts(
   db: Database,

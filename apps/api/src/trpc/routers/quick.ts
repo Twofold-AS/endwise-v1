@@ -8,6 +8,7 @@ import {
   QUICK_PROBE_USER_MESSAGES,
   QuickSsrfError,
   quickProbeUserMessage,
+  quickPullUserMessage,
 } from '@endwise/toolkit-quick';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -162,7 +163,7 @@ export const quickRouter = router({
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Quick-pull feilet: ${(error as Error).message}`,
+          message: quickPullUserMessage(error),
         });
       }
     }),

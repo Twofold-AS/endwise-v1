@@ -24,11 +24,13 @@ import { trpc } from '@/lib/trpc';
 export function BrukerRad({
   navn,
   rolle,
+  laster = false,
   collapsed,
   onLoggUt,
 }: {
-  navn: string;
-  rolle: string;
+  navn: string | null;
+  rolle: string | null;
+  laster?: boolean;
   collapsed: boolean;
   onLoggUt: () => void | Promise<void>;
 }) {
@@ -81,8 +83,8 @@ export function BrukerRad({
       <button
         type="button"
         onClick={() => void onLoggUt()}
-        title={`Logg ut (${navn})`}
-        aria-label={`Logg ut (${navn})`}
+        title={navn ? `Logg ut (${navn})` : 'Logg ut'}
+        aria-label={navn ? `Logg ut (${navn})` : 'Logg ut'}
         className="flex h-11 w-full items-center justify-center rounded-control transition-colors hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-ring"
       >
         {avatar}
@@ -96,8 +98,17 @@ export function BrukerRad({
       {/* Navn over rolle, som i kontekstbytteren over — to linjer med samme
           rytme leses som samme system. */}
       <span className="flex min-w-0 flex-1 flex-col text-left">
-        <span className="truncate text-label text-fg">{navn}</span>
-        <span className="truncate text-[12px] text-fg-muted">{rolle}</span>
+        {laster ? (
+          <>
+            <span className="h-3.5 w-24 animate-pulse rounded-sm bg-surface-2" />
+            <span className="mt-1 h-3 w-16 animate-pulse rounded-sm bg-surface-2" />
+          </>
+        ) : (
+          <>
+            <span className="truncate text-label text-fg">{navn ?? '—'}</span>
+            <span className="truncate text-[12px] text-fg-muted">{rolle ?? '—'}</span>
+          </>
+        )}
       </span>
       <button
         type="button"

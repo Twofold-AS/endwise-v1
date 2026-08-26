@@ -206,7 +206,9 @@ export default function QuickPage() {
               }
             />
           )}
-          {pull.isError && <StatusLine ok={false} text={pull.error.message} />}
+          {pull.isError && (
+            <StatusLine ok={false} text="Klarte ikke hente fra Quick. Prøv igjen." />
+          )}
 
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 border-border border-t pt-3 text-[12px]">
             <dt className="text-fg-faint">Sist hentet</dt>

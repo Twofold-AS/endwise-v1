@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc';
 import { NewBadge } from './cards';
 import {
   HELPDESK_SLIDER_MINIMER_KEY,
+  erTestHelpdeskTittel,
   harNyUlestArtikkel,
   lesLagretMinimer,
   sliderStartMinimer,
@@ -54,7 +55,7 @@ export function TipCard() {
     { limit: 4 },
     { retry: false, refetchOnWindowFocus: true },
   );
-  const rader = artikler.data ?? [];
+  const rader = (artikler.data ?? []).filter((r) => !erTestHelpdeskTittel(r.title));
   const harUlest = rader.some((r) => r.ulest === true);
 
   const [i, setI] = useState(0);
@@ -106,21 +107,11 @@ export function TipCard() {
   }, [rader.length, minimer]);
 
   /**
-   * ⚠️ Plassen holdes av med én gang, også mens det lastes og hvis det ikke
-   * finnes artikler. Å rendre `null` her ville gitt nøyaktig den hoppingen
-   * fast høyde skal fjerne — bare én gang, ved innlasting, i stedet for hvert
-   * niende sekund.
+   * Tom liste = kollapset bort, ikke et dødt «Ingen artikler ennå»-kort
+   * midt i arbeidsnavet (26.08.2026). Hjelp er denne slideren når den
+   * har innhold; X minimerer, tom vises ikke.
    */
-  if (rader.length === 0) {
-    return (
-      <div
-        style={{ height: HOYDE }}
-        className="flex items-center justify-center rounded-xl border border-border bg-bg px-3 text-center text-[11px] text-fg-muted"
-      >
-        {artikler.isLoading ? 'Laster …' : 'Ingen artikler ennå.'}
-      </div>
-    );
-  }
+  if (rader.length === 0) return null;
 
   if (minimer) {
     const a = rader[Math.min(i, rader.length - 1)];

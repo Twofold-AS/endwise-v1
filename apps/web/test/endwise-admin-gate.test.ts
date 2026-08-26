@@ -74,6 +74,17 @@ describe('F1-26: server-gate på /admin og /endwise', () => {
     expect(kilde).toMatch(/createRequestContext/);
     expect(kilde).toMatch(/TwoFactorRequiredError/);
     expect(kilde).toMatch(/redirect\('\/signin'/);
+    expect(kilde).toMatch(/return 'forbidden'/);
     expect(kilde).not.toMatch(/lucia|next-auth|clerk/i);
+  });
+
+  it('forbidden hos forhandler renderer Ikke tilgang og beholder sesjonen', () => {
+    const admin = readFileSync(resolve(her, '../app/(app)/admin/layout.tsx'), 'utf8');
+    const endwise = readFileSync(resolve(her, '../app/(app)/endwise/layout.tsx'), 'utf8');
+    expect(admin).toMatch(/IkkeTilgang/);
+    expect(admin).toMatch(/utfall === 'forbidden'/);
+    expect(endwise).toMatch(/IkkeTilgang/);
+    expect(admin).not.toMatch(/signOut|authClient\.signOut/);
+    expect(endwise).not.toMatch(/signOut|authClient\.signOut/);
   });
 });

@@ -9,7 +9,6 @@ import {
   FilePlus,
   Flag,
   Gauge,
-  Handshake,
   HardHat,
   Inbox,
   LayoutDashboard,
@@ -173,16 +172,28 @@ export const CONTEXTS: AppContext[] = [
   },
 ];
 
-/* ══ FORHANDLER — hoveddestinasjonene, topp→bunn ═════════════════════════ */
+/* ══ FORHANDLER — hoveddestinasjonene, topp→bunn ═════════════════════════
+ * 26.08.2026 (Mikael, signert): åtte knapper, dropdowns som i dag.
+ * Samarbeid er skjult til backend finnes (F5-17 er en blindvei).
+ * Prisliste bor under Verkstedet, ikke Ansatte. `/ansatte` er expander —
+ * ingen egen side (alias-redirect til Team).
+ */
 export const FORHANDLER_NAV: NavItem[] = [
   {
     key: 'dashboard',
-    // Omdøpt 06.08.2026: «Dashboard» er et ord fra vår verden, ikke fra
-    // verkstedet. «Verkstedet» er stedet eieren faktisk tenker på.
     label: 'Verkstedet',
     icon: LayoutDashboard,
     href: '/dashboard',
     roles: DRIFT,
+    children: [
+      { label: 'Dagen', href: '/dashboard', icon: LayoutDashboard },
+      /**
+       * F2-05/F5-04 — forhandlerens EGEN katalog (hva KUNDEN betaler).
+       * Flyttet hit 26.08.2026. Ingen `roles`: arver DRIFT, så staff ser
+       * prisen. Skriving er `adminProcedure` server-side.
+       */
+      { label: 'Prisliste', href: '/innstillinger/tjenestekatalog', icon: Wrench },
+    ],
   },
   {
     key: 'innboks',
@@ -191,20 +202,16 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/innboks',
     roles: DRIFT,
     badge: 'unread',
-    // ⚠️ Ingen `children` lenger (05.08.2026). Kanalfiltrene Kunder/Intern/
-    // Endwise bor nå i innboksens EGEN sidebar inne i innholdsområdet — se
-    // `innboks/_inbox-sidebar.tsx`. Å ha dem begge steder ville betydd to
-    // kontroller for samme filter, og de ville gått ut av synk.
   },
   {
     key: 'saker',
     label: 'Jobber',
     icon: ClipboardList,
-    href: '/saker',
+    href: '/jobber',
     roles: DRIFT,
     children: [
-      { label: 'Liste', href: '/saker', icon: ClipboardList },
-      { label: 'Kalender', href: '/saker?visning=kalender', icon: CalendarDays },
+      { label: 'Liste', href: '/jobber', icon: ClipboardList },
+      { label: 'Kalender', href: '/jobber?visning=kalender', icon: CalendarDays },
     ],
   },
   {
@@ -219,53 +226,24 @@ export const FORHANDLER_NAV: NavItem[] = [
     ],
   },
   {
-    key: 'samarbeid',
-    label: 'Samarbeid',
-    icon: Handshake,
-    href: '/samarbeid',
-    roles: ADMIN_OF_TENANT,
-  },
-  {
     key: 'analyse',
-    // Flattenet 25.08.2026: destinasjonen heter Rapporter. `/analyse?visning=direkte`
-    // virker fortsatt, men «Direkte data» er ikke en egen nav-rad.
     label: 'Rapporter',
     icon: ChartLine,
-    href: '/analyse',
+    href: '/rapporter',
     roles: ADMIN_OF_TENANT,
   },
   /**
    * AI-verktøy er PARKERT 25.08.2026 — ikke i FORHANDLER_NAV.
    * Ruter står: `/ai-innsikt`, `/ai-verktoy/diagnose|nettside|nettbutikk`.
-   * Diagnose under Jobber kommer senere. Se PARKED_LABEL.
    */
   {
-    /**
-     * 25.08.2026 (Mikael): egen destinasjon — ikke Innstillinger-fane og ikke
-     * flyout. Verkstednorsk: label **Ansatte**, over Hjelp.
-     * Endwise-admin beholder label Team på `/endwise/team`.
-     *
-     * Ruter som allerede fantes: `/innstillinger/team` (F1-10/F5-19),
-     * `/innstillinger/tjenestekatalog` (F2-05/F5-04), kompetanse og kapasitet.
-     * `/mekanikere` lever videre fra Team-siden, men er ikke sidebar-barn.
-     */
     key: 'team',
     label: 'Ansatte',
     icon: Users,
     href: '/innstillinger/team',
-    roles: DRIFT,
+    roles: ADMIN_OF_TENANT,
     children: [
       { label: 'Team', href: '/innstillinger/team', icon: UserCog, roles: ADMIN_OF_TENANT },
-      /**
-       * F2-05/F5-04 — forhandlerens EGEN katalog (hva KUNDEN betaler).
-       * Tjenester & priser i Innstillinger er det motsatte pengeforholdet
-       * (hva forhandleren betaler oss).
-       *
-       * Ingen `roles`: raden arver destinasjonens DRIFT, så en dealer_staff
-       * ser katalogen — han må kunne svare på hva en EU-kontroll koster.
-       * Skriving er `adminProcedure` server-side.
-       */
-      { label: 'Prisliste', href: '/innstillinger/tjenestekatalog', icon: Wrench },
       { label: 'Kompetanse', href: '/mekanikere/kompetanse', icon: Tags, roles: ADMIN_OF_TENANT },
       { label: 'Timeplan', href: '/mekanikere/kapasitet', icon: Gauge, roles: ADMIN_OF_TENANT },
     ],
@@ -274,7 +252,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     key: 'helpdesk',
     label: 'Hjelp',
     icon: LifeBuoy,
-    href: '/support',
+    href: '/hjelp',
     roles: DRIFT,
     badge: 'helpdesk',
   },
@@ -504,17 +482,48 @@ export function childrenForRole(item: NavItem, role: OrgRole | null): NavChild[]
 
 /** Stien uten query — nav-href-er kan bære `?kanal=`/`?visning=`. */
 function pathOf(href: string): string {
-  return href.split('?')[0];
+  return href.split('?')[0] ?? href;
+}
+
+/**
+ * Brukernavn ↔ intern sti. Navet peker på de norske URL-ene; de gamle
+ * sidene lever videre som alias. Inspect-remap oversetter tilbake.
+ */
+export const STI_ALIAS: Readonly<Record<string, string>> = {
+  '/jobber': '/saker',
+  '/saker': '/jobber',
+  '/rapporter': '/analyse',
+  '/analyse': '/rapporter',
+  '/hjelp': '/support',
+  '/support': '/hjelp',
+  '/verkstedet': '/dashboard',
+  '/dashboard': '/verkstedet',
+};
+
+export function stierFor(href: string): string[] {
+  const p = pathOf(href);
+  const alias = STI_ALIAS[p];
+  return alias && alias !== p ? [p, alias] : [p];
+}
+
+function pathTreffer(pathname: string, href: string): boolean {
+  return stierFor(href).some((h) => {
+    if (pathname === h) return true;
+    if (h === '/endwise' || h === '/innstillinger') return false;
+    return pathname.startsWith(`${h}/`);
+  });
 }
 
 /**
  * Dealer-Innstillinger-stier (pille-fanene). Ikke Team/tjenestekatalog —
- * de bor under Ansatte.
+ * Prisliste bor under Verkstedet, Team under Ansatte.
  */
 const SETTINGS_STIER = [
   '/innstillinger/profil',
   '/innstillinger/varsler',
   '/innstillinger/tjenester',
+  '/innstillinger/koblinger',
+  '/innstillinger/integrasjoner',
   '/abonnement',
   '/integrasjoner',
   '/tjenester',
@@ -529,6 +538,8 @@ const SETTINGS_CRUMB: Record<string, string> = {
   '/innstillinger/profil': 'Profil',
   '/innstillinger/varsler': 'Varsler',
   '/innstillinger/tjenester': 'Tjenester & priser',
+  '/innstillinger/koblinger': 'Koblinger',
+  '/innstillinger/integrasjoner': 'Koblinger',
   '/abonnement': 'Abonnement',
   '/integrasjoner': 'Koblinger',
   '/tjenester': 'Tjenester & priser',
@@ -544,15 +555,8 @@ export function isItemActive(item: NavItem, pathname: string): boolean {
       pathname.startsWith('/innstillinger/profil/')
     );
   }
-  const hrefs = [item.href, ...(item.children?.map((c) => c.href) ?? [])].map(pathOf);
-  return hrefs.some((h) => {
-    if (pathname === h) return true;
-    // /endwise er oversikt — ikke prefix for /endwise/forhandlere.
-    // /innstillinger er Innstillinger-huben — ikke prefix for Ansatte
-    // (/innstillinger/team) etter at den ble egen destinasjon.
-    if (h === '/endwise' || h === '/innstillinger') return false;
-    return pathname.startsWith(`${h}/`);
-  });
+  const hrefs = [item.href, ...(item.children?.map((c) => c.href) ?? [])];
+  return hrefs.some((h) => pathTreffer(pathname, h));
 }
 
 /**
@@ -612,17 +616,17 @@ export function breadcrumbFor(
     barn.find((c) => {
       const [cPath, cQuery] = c.href.split('?');
       if (!cQuery) return false;
-      return pathname === cPath && search.includes(cQuery);
+      return stierFor(cPath ?? '').includes(pathname) && search.includes(cQuery);
     }) ??
     barn.find((c) => {
       const [cPath, cQuery] = c.href.split('?');
       if (cQuery) return false;
-      return pathname === cPath;
+      return stierFor(cPath ?? '').includes(pathname);
     }) ??
     barn.find((c) => {
       const [cPath, cQuery] = c.href.split('?');
       if (cQuery) return false;
-      return pathname.startsWith(`${cPath}/`);
+      return pathTreffer(pathname, cPath ?? '');
     });
   if (child && child.label !== item.label) crumbs.push({ label: child.label });
 
@@ -657,9 +661,16 @@ export const PARKED_LABEL: Record<string, string> = {
   '/abonnement': 'Innstillinger · Abonnement',
   '/integrasjoner': 'Innstillinger · Koblinger',
   '/support': 'Hjelp',
+  '/hjelp': 'Hjelp',
+  '/jobber': 'Jobber',
+  '/rapporter': 'Rapporter',
+  '/verkstedet': 'Verkstedet',
+  '/ansatte': 'Ansatte',
+  '/innstillinger/koblinger': 'Innstillinger · Koblinger',
+  '/innstillinger/integrasjoner': 'Innstillinger · Koblinger',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
   '/endwise/innstillinger': 'Endwise · Dev-mode',
-  '/innstillinger/tjenestekatalog': 'Ansatte · Prisliste',
+  '/innstillinger/tjenestekatalog': 'Verkstedet · Prisliste',
   '/butikk': 'Butikk · Katalog',
   '/butikk/kasse': 'Butikk · Handlekurv / kasse',
   '/lager/deler': 'Lager · Deler',

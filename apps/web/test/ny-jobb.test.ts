@@ -43,6 +43,15 @@ describe('Ny jobb — flere tjenester og manuell varighet', () => {
   it('rører ikke Stripe eller abonnementspriser', () => {
     expect(ny).not.toMatch(/STRIPE|4490|8490|12490/);
   });
+
+  it('oppretter kunde og kjøretøy i samme flyt', () => {
+    expect(ny).toMatch(/Ny kunde/);
+    expect(ny).toMatch(/Nytt kjøretøy/);
+    expect(ny).toMatch(/customers\.create/);
+    expect(ny).toMatch(/vehicles\.create/);
+    expect(ny).toMatch(/Søk kunde/);
+    expect(ny).not.toMatch(/href=\{\s*['"]\/kunder/);
+  });
 });
 
 describe('fmtServices', () => {

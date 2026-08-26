@@ -125,15 +125,20 @@ export function Inviter() {
           </div>
         </fieldset>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={venter || !epost.trim()}
-            className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg transition-opacity hover:opacity-90 disabled:opacity-40"
-          >
-            {venter ? 'Sender …' : 'Send invitasjon'}
-          </button>
-          {kvittering ? <p className="text-[12px] text-fg-muted">{kvittering}</p> : null}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={venter || !epost.trim()}
+              className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg transition-opacity hover:opacity-90 disabled:opacity-40"
+            >
+              {venter ? 'Sender …' : 'Send invitasjon'}
+            </button>
+            {kvittering ? <p className="text-[12px] text-fg-muted">{kvittering}</p> : null}
+          </div>
+          {!epost.trim() && !venter ? (
+            <p className="text-[12px] text-fg-muted">Skriv inn e-post for å sende invitasjon.</p>
+          ) : null}
         </div>
 
         {feil ? (

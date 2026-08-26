@@ -165,12 +165,17 @@ function SakerPageInner() {
       ) : rows.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-16 text-center">
           <ClipboardList size={24} className="text-fg-muted" />
-          <p className="text-body text-fg-muted">Ingen saker matcher filteret.</p>
+          <p className="text-label text-fg">Ingen jobber ennå</p>
+          <p className="text-body text-fg-muted">
+            {search || status || mechanicId
+              ? 'Ingen jobber matcher filteret.'
+              : 'Opprett den første jobben uten å forlate denne flaten.'}
+          </p>
           <Link
             href={'/bookinger/ny' as Route}
-            className="text-accent-strong text-body hover:underline"
+            className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg"
           >
-            Opprett den første →
+            Ny jobb
           </Link>
         </div>
       ) : (

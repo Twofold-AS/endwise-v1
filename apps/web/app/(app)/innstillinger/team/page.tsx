@@ -23,7 +23,7 @@ const RADER: { icon: LucideIcon; title: string; body: string; href: string }[] =
   {
     icon: ShieldCheck,
     title: 'Kompetanse',
-    body: 'Ferdigheter, gradert nivå og sertifisering med utløpsdato (F3-12).',
+    body: 'Ferdigheter, gradert nivå og sertifisering med utløpsdato.',
     href: '/mekanikere/kompetanse',
   },
   {
@@ -72,10 +72,8 @@ export default function TeamPage() {
       <CardShell className="p-4">
         <p className="text-label text-fg">Tilgangsnivå</p>
         <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-          Invitasjoner (F1-10) gir alltid tilgangsnivået <b>ansatt</b>. Å gjøre noen til leder
-          (dealer_admin) kan ikke gjøres herfra — backend for roller finnes (F1-05), men flaten for
-          å ENDRE tilgangsnivå er bevisst ikke bygget ennå. Jobbfunksjon over er en annen akse: den
-          styrer hvor folk lander, ikke hva de har lov til.
+          Invitasjoner gir alltid tilgangsnivået <b>ansatt</b>. Å gjøre noen til leder gjøres ikke
+          herfra ennå. Jobbfunksjon styrer hvor folk lander, ikke hva de har lov til.
         </p>
       </CardShell>
     </div>

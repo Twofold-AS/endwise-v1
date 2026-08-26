@@ -32,6 +32,11 @@ import { endwiseAdminProcedure, protectedProcedure, router } from '../init.ts';
  */
 
 /** Felt som er felles for opprett og oppdater. Én definisjon, to kallsteder. */
+function erTestHelpdeskTittel(title: string): boolean {
+  const t = title.trim().toLowerCase();
+  return t.includes('mikael testing') || t.includes('halla balla');
+}
+
 const artikkelFelter = {
   title: z.string().trim().min(3).max(120),
   summary: z.string().trim().min(10).max(240),
@@ -73,8 +78,8 @@ export const helpdeskRouter = router({
    */
   list: protectedProcedure
     .input(z.object({ limit: z.number().int().min(1).max(100).default(50) }).optional())
-    .query(({ ctx, input }) =>
-      ctx.db
+    .query(async ({ ctx, input }) => {
+      const rader = await ctx.db
         .select({
           id: schema.helpdeskArticles.id,
           slug: schema.helpdeskArticles.slug,
@@ -100,8 +105,9 @@ export const helpdeskRouter = router({
         )
         .where(eq(schema.helpdeskArticles.published, true))
         .orderBy(desc(schema.helpdeskArticles.publishedAt), desc(schema.helpdeskArticles.sortOrder))
-        .limit(input?.limit ?? 50),
-    ),
+        .limit(input?.limit ?? 50);
+      return rader.filter((r) => !erTestHelpdeskTittel(r.title));
+    }),
 
   /**
    * Antall uleste. Egen rute, ikke utledet av `list`.
@@ -111,8 +117,8 @@ export const helpdeskRouter = router({
    * å laste innholdet for å vise et tall.
    */
   ulesteAntall: protectedProcedure.query(async ({ ctx }) => {
-    const [rad] = await ctx.db
-      .select({ antall: sql<number>`count(*)::int` })
+    const rader = await ctx.db
+      .select({ title: schema.helpdeskArticles.title })
       .from(schema.helpdeskArticles)
       .leftJoin(
         schema.helpdeskReads,
@@ -124,7 +130,7 @@ export const helpdeskRouter = router({
       .where(
         and(eq(schema.helpdeskArticles.published, true), isNull(schema.helpdeskReads.articleId)),
       );
-    return rad?.antall ?? 0;
+    return rader.filter((r) => !erTestHelpdeskTittel(r.title)).length;
   }),
 
   /** Én artikkel i sin helhet. ⛔ Upubliserte finnes ikke for en leser. */

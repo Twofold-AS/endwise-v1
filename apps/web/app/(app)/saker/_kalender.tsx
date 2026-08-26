@@ -21,20 +21,31 @@ import { fmtServices, STATUS_TONE } from '../bookinger/_status';
  * absolutt posisjonering mot et fast timeraster: `top` fra starttid, `height`
  * fra varighet.
  *
- * **2. Rasteret dekker verkstedets dag (07–18), ikke døgnet.** 24 timer gjør
- * hver kloss uleselig for å få plass til natta, når ingen jobber. Faller en
- * booking utenfor, klippes den inn i kanten — den forsvinner ikke.
+ * **2. Rasteret dekker verkstedets dag, og utvider seg hvis en jobb ligger
+ * utenfor 07–18.** Å klippe klossen inn i kanten og fotnote det, er en bug.
  *
  * Én kolonne per mekaniker, eller alt samlet. Samlet er default: det er
  * spørsmålet «hva skjer i dag» som stilles oftest, ikke «hva gjør Ola».
  */
-const START_TIME = 7;
-const SLUTT_TIME = 18;
-const TIMER = SLUTT_TIME - START_TIME;
-/** Timene selv (7, 8, … 17) — de er nøklene i rasteret, ikke posisjonen deres. */
-const TIMELISTE = Array.from({ length: TIMER }, (_, i) => START_TIME + i);
+const DAG_START = 7;
+const DAG_SLUTT = 18;
 /** Piksler per time. 56 gir en 30-minutters jobb 28px — akkurat lesbart. */
 const PX_PER_TIME = 56;
+
+function rasterFor(
+  jobber: { startsAt: string | Date; endsAt: string | Date }[],
+): { start: number; slutt: number } {
+  let start = DAG_START;
+  let slutt = DAG_SLUTT;
+  for (const b of jobber) {
+    const s = new Date(b.startsAt);
+    const e = new Date(b.endsAt);
+    start = Math.min(start, s.getHours());
+    const sluttTime = e.getHours() + (e.getMinutes() > 0 || e.getSeconds() > 0 ? 1 : 0);
+    slutt = Math.max(slutt, sluttTime);
+  }
+  return { start: Math.max(0, start), slutt: Math.min(24, Math.max(start + 1, slutt)) };
+}
 
 type Modus = 'dag' | 'uke';
 
@@ -89,6 +100,9 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
   }, [perMekaniker, modus, mekanikere.data]);
 
   const rader = jobber.data ?? [];
+  const { start: startTime, slutt: sluttTime } = rasterFor(rader);
+  const timer = sluttTime - startTime;
+  const timeliste = Array.from({ length: timer }, (_, i) => startTime + i);
 
   return (
     <div className="flex flex-col gap-3">
@@ -209,10 +223,10 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
             </div>
 
             {/* Timeraster + klosser */}
-            <div className="relative flex" style={{ height: TIMER * PX_PER_TIME }}>
+            <div className="relative flex" style={{ height: timer * PX_PER_TIME }}>
               {/* Timelinjal */}
               <div className="w-14 shrink-0">
-                {TIMELISTE.map((time) => (
+                {timeliste.map((time) => (
                   <div
                     key={time}
                     style={{ height: PX_PER_TIME }}
@@ -244,7 +258,7 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
                     className="relative min-w-0 flex-1 border-border border-l"
                   >
                     {/* Timelinjer bak klossene */}
-                    {TIMELISTE.map((time) => (
+                    {timeliste.map((time) => (
                       <div
                         key={time}
                         style={{ height: PX_PER_TIME }}
@@ -253,7 +267,13 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
                     ))}
 
                     {kolonneJobber.map((b) => (
-                      <Kloss key={b.id} booking={b} kolIndex={kolIndex} />
+                      <Kloss
+                        key={b.id}
+                        booking={b}
+                        kolIndex={kolIndex}
+                        startTime={startTime}
+                        sluttTime={sluttTime}
+                      />
                     ))}
                   </div>
                 );
@@ -265,8 +285,9 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
 
       <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
         <CalendarDays size={14} />
-        {rader.length} {rader.length === 1 ? 'sak' : 'saker'} i perioden. Rutenettet viser{' '}
-        {START_TIME}–{SLUTT_TIME}; jobber utenfor klippes inn i kanten.
+        {jobber.isLoading
+          ? 'Laster kalender …'
+          : `${rader.length} ${rader.length === 1 ? 'jobb' : 'jobber'} i perioden.`}
       </p>
     </div>
   );
@@ -281,6 +302,8 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
 function Kloss({
   booking,
   kolIndex,
+  startTime,
+  sluttTime,
 }: {
   booking: {
     id: string;
@@ -293,6 +316,8 @@ function Kloss({
     mechanicName: string | null;
   };
   kolIndex: number;
+  startTime: number;
+  sluttTime: number;
 }) {
   const start = new Date(booking.startsAt);
   const slutt = new Date(booking.endsAt);
@@ -300,12 +325,10 @@ function Kloss({
   const startTimer = start.getHours() + start.getMinutes() / 60;
   const sluttTimer = slutt.getHours() + slutt.getMinutes() / 60;
 
-  // Klipp inn i rasteret i stedet for å skjule. En jobb kl. 06 skal fortsatt
-  // være synlig — den er bare presset opp mot kanten.
-  const fra = Math.max(START_TIME, Math.min(startTimer, SLUTT_TIME));
-  const til = Math.min(SLUTT_TIME, Math.max(sluttTimer, fra + 0.25));
+  const fra = Math.max(startTime, Math.min(startTimer, sluttTime));
+  const til = Math.min(sluttTime, Math.max(sluttTimer, fra + 0.25));
 
-  const top = (fra - START_TIME) * PX_PER_TIME;
+  const top = (fra - startTime) * PX_PER_TIME;
   const height = Math.max(22, (til - fra) * PX_PER_TIME);
 
   return (
@@ -321,7 +344,7 @@ function Kloss({
     >
       <div className="truncate font-medium text-[11px] tabular-nums">
         {start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}{' '}
-        {booking.regNumber ?? ''}
+        {booking.regNumber ?? 'Uten regnr'}
       </div>
       {height > 34 && (
         <div className="truncate text-[11px] opacity-80">

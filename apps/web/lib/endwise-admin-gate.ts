@@ -25,9 +25,10 @@ export function endwiseAdminUtfall(input: {
 
 /**
  * Server-gate for layout. Kaster `redirect` før barn (KPI-tall) rendres.
- * Uten sesjon eller uten `endwise_admin` → `/signin`. 2FA-plikt → oppsett.
+ * Uten sesjon → `/signin`. 2FA-plikt → oppsett.
+ * Innlogget uten Endwise-rolle → `forbidden` (sesjonen beholdes).
  */
-export async function krevEndwiseAdminSide(): Promise<void> {
+export async function krevEndwiseAdminSide(): Promise<EndwiseAdminUtfall> {
   let utfall: EndwiseAdminUtfall;
   try {
     const ctx = await createRequestContext(await headers());
@@ -40,7 +41,8 @@ export async function krevEndwiseAdminSide(): Promise<void> {
     }
   }
 
-  if (utfall === 'ok') return;
+  if (utfall === 'ok') return 'ok';
   if (utfall === 'two_factor') redirect('/2fa-oppsett' as Route);
-  redirect('/signin' as Route);
+  if (utfall === 'signin') redirect('/signin' as Route);
+  return 'forbidden';
 }

@@ -14,7 +14,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { authClient, useSession } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import {
   isVerkstedInspectPath,
@@ -37,6 +37,7 @@ import {
   itemsForRole,
   type NavItem,
   navForContext,
+  stierFor,
   QUICK_ACTIONS,
   settingsForContext,
 } from './nav';
@@ -80,7 +81,6 @@ export function Sidebar() {
   const pathname = usePathname() ?? '';
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { data: session } = useSession();
   const {
     navn,
     role,
@@ -88,6 +88,7 @@ export function Sidebar() {
     tenantName,
     devMode,
     shopEnabled,
+    isLoading: rolleLaster,
     canSwitchDemo,
     erPlattform,
     verksteder,
@@ -319,11 +320,12 @@ export function Sidebar() {
 
             {/* ── Deg. Nederst, under Innstillinger, som bestilt ─────────────── */}
             <BrukerRad
-              /* ⛔ `navn` fra session.me, ikke `session.user.name` fra
-                 Better-Auth: den siste oppdateres ikke når du lagrer et nytt
-                 navn på profilen. Se routers/session.ts. */
-              navn={navn ?? session?.user?.name ?? 'Ikke innlogget'}
-              rolle={ROLE_LABEL[role ?? ''] ?? '—'}
+              /* Én identitet: session.me.navn. Ikke Better-Auth-navn som
+                 fallback (to navn i chrome) og ikke «Ikke innlogget» mens
+                 sesjonen lastes. */
+              navn={navn}
+              rolle={role ? (ROLE_LABEL[role] ?? '—') : null}
+              laster={rolleLaster}
               collapsed={collapsed}
               onLoggUt={logout}
             />
@@ -337,8 +339,9 @@ export function Sidebar() {
 /** Er dette underpunktet det aktive? Query teller når underpunktet bærer query. */
 function isChildActive(href: string, pathname: string, search: string): boolean {
   const [cPath, cQuery] = href.split('?');
-  if (cQuery) return pathname === cPath && search.includes(cQuery);
-  return pathname === cPath && !search.includes('visning=');
+  const treff = stierFor(cPath ?? '').includes(pathname);
+  if (cQuery) return treff && search.includes(cQuery);
+  return treff && !search.includes('visning=');
 }
 
 /**

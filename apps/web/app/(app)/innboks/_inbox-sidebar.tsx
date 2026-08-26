@@ -109,8 +109,6 @@ export function InboxSidebar() {
       .filter((t) => part === 'alle' || t.kind === part)
       .map((t) => ({
         id: t.id,
-        // Kort referanse av tråd-id-en — det forhandleren leser opp i telefonen.
-        ref: `SAK-${t.id.slice(0, 4).toUpperCase()}`,
         kind: t.kind as ThreadKind,
         avsender: threadHeading(
           t.subject,
@@ -202,20 +200,18 @@ export function InboxSidebar() {
               <button
                 key={p.key}
                 type="button"
-                // Klikk på aktiv part nullstiller til «Alle» — samme knapp,
-                // begge veier, i stedet for en egen «Alle»-knapp ved siden av
-                // en tittel som allerede sier «Alle».
                 onClick={() => setPart(aktiv ? 'alle' : (p.key as ThreadKind))}
                 aria-pressed={aktiv}
                 title={p.label}
                 aria-label={`Vis ${p.label}`}
-                className={`flex size-7 items-center justify-center rounded-control transition-colors ${
+                className={`inline-flex h-7 items-center gap-1 rounded-control px-1.5 text-[11px] transition-colors ${
                   aktiv
                     ? 'bg-sidebar-active text-fg'
                     : 'text-fg-muted hover:bg-sidebar-active/60 hover:text-fg'
                 }`}
               >
-                {p.icon && <p.icon size={16} strokeWidth={1.75} />}
+                {p.icon && <p.icon size={14} strokeWidth={1.75} />}
+                <span>{p.label}</span>
               </button>
             );
           })}
@@ -240,9 +236,17 @@ export function InboxSidebar() {
             <p className="text-label text-fg">Ingen samtaler</p>
             <p className="text-[12px] text-fg-muted">
               {part === 'alle'
-                ? 'Innboksen er tom. Nye henvendelser lander her.'
+                ? 'Innboksen er tom. Skriv til Endwise hvis du lurer på noe.'
                 : 'Ingen samtaler for denne parten.'}
             </p>
+            {part === 'alle' && (
+              <Link
+                href={'/innboks?ny=1' as Route}
+                className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[12px] text-bg"
+              >
+                Skriv til Endwise
+              </Link>
+            )}
           </div>
         ) : (
           rader.map((t) => (
@@ -321,7 +325,6 @@ function SamtaleKort({
   aktiv,
 }: {
   rad: {
-    ref: string;
     kind: ThreadKind;
     avsender: string;
     utdrag: string;
@@ -343,7 +346,6 @@ function SamtaleKort({
         {/* Kanalen står FØRST på raden, ikke bak en bryter. Det er den som
             avgjør hvordan man svarer — se `_kanal.tsx`. */}
         <KanalMerke kanal={rad.sisteKanal} kunIkon />
-        <span className="font-mono text-[11px] text-fg-muted">{rad.ref}</span>
         <span className="ml-auto shrink-0 text-[11px] text-fg-muted tabular-nums">{rad.nar}</span>
       </div>
 

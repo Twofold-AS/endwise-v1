@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell, CountBadge, NewBadge } from '../_shell/cards';
+import { erTestHelpdeskTittel } from '../_shell/helpdesk-slider';
 import {
   filtrerHelpdesk,
   HELPDESK_KATEGORI_LABEL,
@@ -38,7 +39,10 @@ function dato(d: Date | string): string {
 export default function HelpdeskPage() {
   const artikler = trpc.helpdesk.list.useQuery({ limit: 50 });
   const [kategori, setKategori] = useState<HelpdeskKategori | 'alle'>('alle');
-  const alle = artikler.data ?? [];
+  const alle = useMemo(
+    () => (artikler.data ?? []).filter((a) => !erTestHelpdeskTittel(a.title)),
+    [artikler.data],
+  );
   const rader = useMemo(() => filtrerHelpdesk(alle, kategori), [alle, kategori]);
   const uleste = rader.filter((a) => a.ulest).length;
 

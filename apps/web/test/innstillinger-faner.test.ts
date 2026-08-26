@@ -89,6 +89,8 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(FANE_ALIAS['/innstillinger/tjenester']).toBe('tjenester');
     expect(FANE_ALIAS['/abonnement']).toBe('abonnement');
     expect(FANE_ALIAS['/integrasjoner']).toBe('integrasjoner');
+    expect(FANE_ALIAS['/innstillinger/koblinger']).toBe('integrasjoner');
+    expect(FANE_ALIAS['/innstillinger/integrasjoner']).toBe('integrasjoner');
   });
 
   it('ukjent eller admin-only fane for ikke-admin faller til profil', () => {
@@ -119,6 +121,12 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(les('../app/(app)/innstillinger/tjenester/page.tsx')).toMatch(/startFane="tjenester"/);
     expect(les('../app/(app)/abonnement/page.tsx')).toMatch(/startFane="abonnement"/);
     expect(les('../app/(app)/integrasjoner/page.tsx')).toMatch(/startFane="integrasjoner"/);
+    expect(les('../app/(app)/innstillinger/koblinger/page.tsx')).toMatch(
+      /startFane="integrasjoner"/,
+    );
+    expect(les('../app/(app)/innstillinger/integrasjoner/page.tsx')).toMatch(
+      /startFane="integrasjoner"/,
+    );
   });
 
   it('profil-fanen beholder blobatar og har ikke filopplasting', () => {

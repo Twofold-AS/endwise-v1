@@ -24,8 +24,11 @@ import {
   XAxis,
   YAxis,
 } from '@endwise/ui';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
+import { trpc } from '@/lib/trpc';
 import { LiveVisitorsGlobe } from '../marked/live/_globe';
 import {
   beleggFor,
@@ -84,21 +87,42 @@ function AnalysePageInner() {
   const params = useSearchParams();
   const visning = params?.get('visning') === 'direkte' ? 'direkte' : 'rapporter';
   const [periode, setPeriode] = useState<Periode>('30d');
+  const bookings = trpc.bookings.list.useQuery({ limit: 1 });
 
   const nokkeltall = nokkeltallFor(periode);
   const volum = volumFor(periode);
   const belegg = beleggFor(periode);
   const trafikk = trafikkFor(periode);
+  const tomt = bookings.isSuccess && (bookings.data?.length ?? 0) === 0;
 
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
       <h1 className="sr-only">Rapporter</h1>
 
+      {visning === 'rapporter' && tomt && (
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-8 py-16 text-center">
+          <p className="text-label text-fg">Ingen rapporter ennå</p>
+          <p className="max-w-md text-body text-fg-muted">
+            Tallene kommer når verkstedet har ekte jobber. Vi viser ikke oppdiktede butikktall.
+          </p>
+          <Link
+            href={'/bookinger/ny' as Route}
+            className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg"
+          >
+            Ny jobb
+          </Link>
+        </div>
+      )}
+
+      {visning === 'rapporter' && bookings.isLoading && (
+        <div className="h-40 animate-pulse rounded-xl bg-surface-2" />
+      )}
+
       {/* ⚠️ Ingen fane-velger for Rapporter/Direkte data (fjernet 06.08.2026).
           Sidebaren eier navigasjonen — en tab-rad som gjør det samme er to
           kontroller for én beslutning, og de går ut av synk.
           Periodevelgeren står: den FILTRERER, den navigerer ikke. */}
-      {visning === 'rapporter' && (
+      {visning === 'rapporter' && !tomt && !bookings.isLoading && (
         <div className="flex justify-end">
           <Velger
             aria-label="Periode"
@@ -120,7 +144,7 @@ function AnalysePageInner() {
             <LiveVisitorsGlobe />
           </div>
         </AnalyseKort>
-      ) : (
+      ) : tomt || bookings.isLoading ? null : (
         <>
           {/* Nøkkeltall — tallet før grafen. */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -290,8 +314,8 @@ function AnalysePageInner() {
           </div>
 
           <p className="text-[12px] text-fg-muted leading-relaxed">
-            Alle tall over er <b>mock</b> (<code>analyse/_data.ts</code>) — realistiske, men
-            oppdiktet, så flaten kan vurderes visuelt før datakildene er koblet.
+            Eksempel — ikke live verkstedstall. Grafene viser hvordan rapportene vil se ut når
+            bookinger er koblet.
           </p>
         </>
       )}

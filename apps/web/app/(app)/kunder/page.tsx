@@ -182,7 +182,9 @@ function KunderInner() {
 
       <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
         <Users size={14} />
-        {kunder.data?.length ?? 0} kunder vist. Filtrene over gjelder kun denne lista.
+        {kunder.isLoading
+          ? 'Laster kunder …'
+          : `${kunder.data?.length ?? 0} kunder vist. Filtrene over gjelder kun denne lista.`}
       </p>
     </div>
   );

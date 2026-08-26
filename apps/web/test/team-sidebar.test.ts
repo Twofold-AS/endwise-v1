@@ -90,24 +90,19 @@ describe('Ansatte i sidebar — forhandler', () => {
     nav.slice(nav.indexOf('export const SETTINGS_NAV'), nav.indexOf('export const MEKANIKER_NAV')),
   );
 
-  it('Ansatte ligger over Hjelp, med Team/Prisliste/Kompetanse/Timeplan', () => {
+  it('Ansatte ligger over Hjelp, med Team/Kompetanse/Timeplan (uten Prisliste)', () => {
     const keys = FORHANDLER_NAV.map((i) => i.key);
     expect(keys.indexOf('team')).toBeGreaterThan(keys.indexOf('analyse'));
     expect(keys.indexOf('team')).toBeLessThan(keys.indexOf('helpdesk'));
     expect(keys).not.toContain('ai-verktoy');
+    expect(keys).not.toContain('samarbeid');
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
     expect(org).toBeDefined();
     expect(org?.label).toBe('Ansatte');
     expect(org?.href).toBe('/innstillinger/team');
-    expect(org?.children?.map((c) => c.label)).toEqual([
-      'Team',
-      'Prisliste',
-      'Kompetanse',
-      'Timeplan',
-    ]);
+    expect(org?.children?.map((c) => c.label)).toEqual(['Team', 'Kompetanse', 'Timeplan']);
     expect(org?.children?.map((c) => c.href)).toEqual([
       '/innstillinger/team',
-      '/innstillinger/tjenestekatalog',
       '/mekanikere/kompetanse',
       '/mekanikere/kapasitet',
     ]);
@@ -117,17 +112,26 @@ describe('Ansatte i sidebar — forhandler', () => {
     expect(forhandler).not.toMatch(/label:\s*'Team & tilgang'/);
     expect(forhandler).not.toMatch(/label:\s*'Mekanikere'/);
     expect(forhandler).not.toMatch(/label:\s*'AI-verktøy'/);
+    expect(forhandler).not.toMatch(/label:\s*'Samarbeid'/);
   });
 
-  it('Team er ADMIN_OF_TENANT; Prisliste er synlig for DRIFT', () => {
+  it('Ansatte er ADMIN_OF_TENANT; Prisliste bor under Verkstedet for DRIFT', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
+    const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
     expect(org).toBeDefined();
-    if (!org) throw new Error('FORHANDLER_NAV mangler Ansatte');
+    expect(verksted).toBeDefined();
+    if (!org || !verksted) throw new Error('FORHANDLER_NAV mangler Ansatte/Verkstedet');
     const tilgang = childrenForRole(org, 'dealer_admin').map((c) => c.label);
-    const staff = childrenForRole(org, 'dealer_staff').map((c) => c.label);
-    expect(tilgang).toEqual(['Team', 'Prisliste', 'Kompetanse', 'Timeplan']);
-    expect(staff).toEqual(['Prisliste']);
-    expect(staff).not.toContain('Team');
+    const staffAnsatte = childrenForRole(org, 'dealer_staff').map((c) => c.label);
+    const staffVerksted = childrenForRole(verksted, 'dealer_staff').map((c) => c.label);
+    expect(tilgang).toEqual(['Team', 'Kompetanse', 'Timeplan']);
+    expect(staffAnsatte).toEqual([]);
+    expect(itemsForRole(FORHANDLER_NAV, 'dealer_staff').some((i) => i.key === 'team')).toBe(false);
+    expect(staffVerksted).toEqual(['Dagen', 'Prisliste']);
+    expect(verksted.children?.map((c) => c.href)).toEqual([
+      '/dashboard',
+      '/innstillinger/tjenestekatalog',
+    ]);
   });
 
   it('SETTINGS_NAV er profil-destinasjon uten flyout-barn', () => {
@@ -157,7 +161,12 @@ describe('Ansatte vs Innstillinger — aktiv rad og breadcrumb', () => {
     expect(org).toBeDefined();
     if (!org) throw new Error('FORHANDLER_NAV mangler Ansatte');
     expect(isItemActive(org, '/innstillinger/team')).toBe(true);
-    expect(isItemActive(org, '/innstillinger/tjenestekatalog')).toBe(true);
+    expect(isItemActive(org, '/innstillinger/tjenestekatalog')).toBe(false);
+    const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
+    expect(verksted).toBeDefined();
+    if (!verksted) throw new Error('FORHANDLER_NAV mangler Verkstedet');
+    expect(isItemActive(verksted, '/innstillinger/tjenestekatalog')).toBe(true);
+    expect(isItemActive(verksted, '/dashboard')).toBe(true);
     expect(isItemActive(org, '/mekanikere')).toBe(false);
     expect(isItemActive(org, '/mekanikere/kompetanse')).toBe(true);
     expect(isItemActive(org, '/mekanikere/kapasitet')).toBe(true);
@@ -192,7 +201,7 @@ describe('Ansatte vs Innstillinger — aktiv rad og breadcrumb', () => {
       { label: 'Team' },
     ]);
     expect(breadcrumbFor('/innstillinger/tjenestekatalog', '', 'forhandler')).toEqual([
-      { label: 'Ansatte', href: '/innstillinger/team' },
+      { label: 'Verkstedet', href: '/dashboard' },
       { label: 'Prisliste' },
     ]);
     expect(breadcrumbFor('/mekanikere/kompetanse', '', 'forhandler')).toEqual([
@@ -258,26 +267,28 @@ function alleNavLabels(): string[] {
 }
 
 describe('Verkstednorsk nav-labels (25.08.2026)', () => {
-  it('forhandler: Jobber/Liste, Rapporter uten barn, Ansatte, Hjelp — AI parkert', () => {
+  it('forhandler: åtte knapper, Verkstedet▾ Dagen+Prisliste, uten Samarbeid', () => {
     expect(FORHANDLER_NAV.map((i) => i.label)).toEqual([
       'Verkstedet',
       'Innboks',
       'Jobber',
       'Kunder',
-      'Samarbeid',
       'Rapporter',
       'Ansatte',
       'Hjelp',
     ]);
+    const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
+    expect(verksted?.children?.map((c) => c.label)).toEqual(['Dagen', 'Prisliste']);
     const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
-    expect(jobber?.href).toBe('/saker');
+    expect(jobber?.href).toBe('/jobber');
     expect(jobber?.children?.map((c) => c.label)).toEqual(['Liste', 'Kalender']);
-    expect(jobber?.children?.map((c) => c.href)).toEqual(['/saker', '/saker?visning=kalender']);
+    expect(jobber?.children?.map((c) => c.href)).toEqual(['/jobber', '/jobber?visning=kalender']);
     const rapporter = FORHANDLER_NAV.find((i) => i.key === 'analyse');
-    expect(rapporter?.href).toBe('/analyse');
+    expect(rapporter?.href).toBe('/rapporter');
     expect(rapporter?.children).toBeUndefined();
     expect(FORHANDLER_NAV.some((i) => i.key === 'ai-verktoy')).toBe(false);
-    expect(FORHANDLER_NAV.find((i) => i.key === 'helpdesk')?.href).toBe('/support');
+    expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(false);
+    expect(FORHANDLER_NAV.find((i) => i.key === 'helpdesk')?.href).toBe('/hjelp');
     expect(FORHANDLER_NAV.find((i) => i.key === 'helpdesk')?.badge).toBe('helpdesk');
   });
 
@@ -319,25 +330,40 @@ describe('Verkstednorsk nav-labels (25.08.2026)', () => {
 
   it('breadcrumb og PARKED_LABEL følger de nye navnene', () => {
     expect(breadcrumbFor('/saker', '', 'forhandler')).toEqual([
-      { label: 'Jobber', href: '/saker' },
+      { label: 'Jobber', href: '/jobber' },
+      { label: 'Liste' },
+    ]);
+    expect(breadcrumbFor('/jobber', '', 'forhandler')).toEqual([
+      { label: 'Jobber', href: '/jobber' },
       { label: 'Liste' },
     ]);
     expect(breadcrumbFor('/saker', 'visning=kalender', 'forhandler')).toEqual([
-      { label: 'Jobber', href: '/saker' },
+      { label: 'Jobber', href: '/jobber' },
       { label: 'Kalender' },
     ]);
     expect(breadcrumbFor('/analyse', '', 'forhandler')).toEqual([
-      { label: 'Rapporter', href: '/analyse' },
+      { label: 'Rapporter', href: '/rapporter' },
+    ]);
+    expect(breadcrumbFor('/rapporter', '', 'forhandler')).toEqual([
+      { label: 'Rapporter', href: '/rapporter' },
     ]);
     expect(breadcrumbFor('/analyse', 'visning=direkte', 'forhandler')).toEqual([
-      { label: 'Rapporter', href: '/analyse' },
+      { label: 'Rapporter', href: '/rapporter' },
     ]);
     const rapporter = FORHANDLER_NAV.find((i) => i.key === 'analyse');
     expect(rapporter).toBeDefined();
     if (!rapporter) throw new Error('FORHANDLER_NAV mangler Rapporter');
     expect(isItemActive(rapporter, '/analyse')).toBe(true);
+    expect(isItemActive(rapporter, '/rapporter')).toBe(true);
     expect(breadcrumbFor('/support', '', 'forhandler')).toEqual([
-      { label: 'Hjelp', href: '/support' },
+      { label: 'Hjelp', href: '/hjelp' },
+    ]);
+    expect(breadcrumbFor('/hjelp', '', 'forhandler')).toEqual([
+      { label: 'Hjelp', href: '/hjelp' },
+    ]);
+    expect(breadcrumbFor('/dashboard', '', 'forhandler')).toEqual([
+      { label: 'Verkstedet', href: '/dashboard' },
+      { label: 'Dagen' },
     ]);
     expect(breadcrumbFor('/integrasjoner', '', 'forhandler')).toEqual([
       { label: 'Innstillinger', href: '/innstillinger/profil' },
@@ -347,7 +373,7 @@ describe('Verkstednorsk nav-labels (25.08.2026)', () => {
       { label: 'Parkert · Innsikt' },
     ]);
     expect(PARKED_LABEL['/support']).toBe('Hjelp');
-    expect(PARKED_LABEL['/innstillinger/tjenestekatalog']).toBe('Ansatte · Prisliste');
+    expect(PARKED_LABEL['/innstillinger/tjenestekatalog']).toBe('Verkstedet · Prisliste');
     expect(PARKED_LABEL['/lager/lokasjoner']).toBe('Lager · Plass');
     expect(PARKED_LABEL['/lager/bevegelser']).toBe('Lager · Inn og ut');
     expect(PARKED_LABEL['/admin/flagg']).toBe('Parkert · Flagg');

@@ -67,18 +67,11 @@ export default function SamarbeidPage() {
           <Handshake size={24} className="text-fg-muted" />
           <p className="text-label text-fg">Ingen delt informasjon ennå</p>
           <p className="max-w-md text-[12px] text-fg-muted leading-relaxed">
-            Backend for Samarbeid er ikke bygget. Den venter med vilje på en juridisk avklaring av
-            rettslig grunnlag for deling mellom behandlingsansvarlige — samme avklaring som F14-07
-            (rolleavklaring) allerede blokkerer på.
+            Deling mellom verksteder er ikke åpnet ennå. Inngangen er skjult i menyen til den er
+            klar.
           </p>
         </CardMedia>
       </CardShell>
-
-      <p className="text-[12px] text-fg-muted">
-        Kryssforhandler-servicehistorikk (oppslag på regnr eller understellsnummer) er skilt ut som
-        eget, blokkert roadmap-punkt — <b>F11-09</b>. Den kan ikke avidentifiseres bort, fordi hele
-        poenget er å slå opp et bestemt kjøretøy.
-      </p>
     </div>
   );
 }

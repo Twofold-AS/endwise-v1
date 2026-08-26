@@ -29,10 +29,6 @@ export default function NyJobbPage() {
   const [durationMinutes, setDurationMinutes] = useState<number | ''>('');
   const [durationManual, setDurationManual] = useState(false);
 
-  const customers = trpc.customers.list.useQuery({ limit: 200 });
-  const vehicles = trpc.vehicles.list.useQuery(
-    customerId ? { customerId: customerId as never } : {},
-  );
   const services = trpc.services.list.useQuery();
   const mechanics = trpc.mechanics.list.useQuery();
 
@@ -159,38 +155,15 @@ export default function NyJobbPage() {
       </div>
 
       <Section step={1} title="Kunde og kjøretøy">
-        <Field label="Kunde">
-          <select
-            value={customerId}
-            onChange={(e) => {
-              setCustomerId(e.target.value);
-              setVehicleId('');
-            }}
-            className={selectCls}
-          >
-            <option value="">— uten kunde —</option>
-            {(customers.data ?? []).map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Kjøretøy">
-          <select
-            value={vehicleId}
-            onChange={(e) => setVehicleId(e.target.value)}
-            className={selectCls}
-          >
-            <option value="">— uten kjøretøy —</option>
-            {(vehicles.data ?? []).map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.regNumber ?? 'uten regnr'} ·{' '}
-                {[v.make, v.model].filter(Boolean).join(' ') || v.type}
-              </option>
-            ))}
-          </select>
-        </Field>
+        <KundeIFlyt
+          customerId={customerId}
+          vehicleId={vehicleId}
+          onCustomer={(id) => {
+            setCustomerId(id);
+            setVehicleId('');
+          }}
+          onVehicle={setVehicleId}
+        />
 
         <div className="flex items-end gap-2">
           <Field label="Slå opp regnr (Vegvesen)">
@@ -218,9 +191,7 @@ export default function NyJobbPage() {
           </button>
         </div>
         {lookup.isError && (
-          <p className="text-fg-faint text-xs">
-            Oppslag utilgjengelig ({lookup.error.message}). Krever VEGVESEN_API_KEY.
-          </p>
+          <p className="text-fg-faint text-xs">Klarte ikke slå opp regnr akkurat nå.</p>
         )}
         {lookup.data && (
           <p className="text-success text-xs">
@@ -398,6 +369,173 @@ const inputCls =
   'h-9 w-full rounded-md border border-border bg-bg px-3 text-fg text-sm placeholder:text-fg-faint focus-visible:outline-2 focus-visible:outline-accent';
 const selectCls =
   'h-9 w-full rounded-md border border-border bg-bg px-3 text-fg text-sm focus-visible:outline-2 focus-visible:outline-accent';
+
+function KundeIFlyt({
+  customerId,
+  vehicleId,
+  onCustomer,
+  onVehicle,
+}: {
+  customerId: string;
+  vehicleId: string;
+  onCustomer: (id: string) => void;
+  onVehicle: (id: string) => void;
+}) {
+  const utils = trpc.useUtils();
+  const [sok, setSok] = useState('');
+  const [nyKunde, setNyKunde] = useState(false);
+  const [nyttKjoretoy, setNyttKjoretoy] = useState(false);
+  const [navn, setNavn] = useState('');
+  const [telefon, setTelefon] = useState('');
+  const [regnr, setRegnr] = useState('');
+
+  const customers = trpc.customers.list.useQuery({
+    sok: sok.trim() || undefined,
+    limit: 50,
+  });
+  const vehicles = trpc.vehicles.list.useQuery(
+    customerId ? { customerId: customerId as never } : {},
+  );
+  const opprettKunde = trpc.customers.create.useMutation({
+    onSuccess: (kunde) => {
+      void utils.customers.list.invalidate();
+      if (kunde?.id) onCustomer(kunde.id);
+      setNyKunde(false);
+      setNavn('');
+      setTelefon('');
+    },
+  });
+  const opprettKjoretoy = trpc.vehicles.create.useMutation({
+    onSuccess: (v) => {
+      void utils.vehicles.list.invalidate();
+      if (v?.id) onVehicle(v.id);
+      setNyttKjoretoy(false);
+      setRegnr('');
+    },
+  });
+
+  return (
+    <>
+      <Field label="Søk kunde">
+        <input
+          value={sok}
+          onChange={(e) => setSok(e.target.value)}
+          placeholder="Navn eller telefon"
+          className={inputCls}
+        />
+      </Field>
+      <Field label="Kunde">
+        <select
+          value={customerId}
+          onChange={(e) => onCustomer(e.target.value)}
+          className={selectCls}
+        >
+          <option value="">— velg kunde —</option>
+          {(customers.data ?? []).map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+              {c.phone ? ` · ${c.phone}` : ''}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <button
+        type="button"
+        onClick={() => setNyKunde((v) => !v)}
+        className="self-start text-xs text-fg underline decoration-border underline-offset-2 hover:text-fg"
+      >
+        {nyKunde ? 'Skjul ny kunde' : 'Ny kunde'}
+      </button>
+      {nyKunde && (
+        <div className="flex flex-col gap-2 rounded-lg border border-border bg-bg p-3">
+          <Field label="Navn">
+            <input
+              value={navn}
+              onChange={(e) => setNavn(e.target.value)}
+              className={inputCls}
+              placeholder="Kari Nordmann"
+            />
+          </Field>
+          <Field label="Telefon">
+            <input
+              value={telefon}
+              onChange={(e) => setTelefon(e.target.value)}
+              className={inputCls}
+              placeholder="+4790000000"
+            />
+          </Field>
+          <button
+            type="button"
+            disabled={!navn.trim() || !telefon.trim() || opprettKunde.isPending}
+            onClick={() =>
+              opprettKunde.mutate({ name: navn.trim(), phone: telefon.trim() || undefined })
+            }
+            className="inline-flex h-9 items-center justify-center rounded-md bg-fg px-3 text-bg text-sm disabled:opacity-50"
+          >
+            {opprettKunde.isPending ? 'Lagrer …' : 'Lagre kunde'}
+          </button>
+          {opprettKunde.isError && (
+            <p className="text-danger text-xs">Klarte ikke lagre kunden. Prøv igjen.</p>
+          )}
+        </div>
+      )}
+
+      <Field label="Kjøretøy">
+        <select
+          value={vehicleId}
+          onChange={(e) => onVehicle(e.target.value)}
+          className={selectCls}
+          disabled={!customerId}
+        >
+          <option value="">{customerId ? '— velg kjøretøy —' : 'Velg kunde først'}</option>
+          {(vehicles.data ?? []).map((v) => (
+            <option key={v.id} value={v.id}>
+              {v.regNumber ?? 'Uten regnr'} ·{' '}
+              {[v.make, v.model].filter(Boolean).join(' ') || v.type}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <button
+        type="button"
+        disabled={!customerId}
+        onClick={() => setNyttKjoretoy((v) => !v)}
+        className="self-start text-xs text-fg underline decoration-border underline-offset-2 hover:text-fg disabled:opacity-40"
+      >
+        {nyttKjoretoy ? 'Skjul nytt kjøretøy' : 'Nytt kjøretøy'}
+      </button>
+      {nyttKjoretoy && customerId && (
+        <div className="flex flex-col gap-2 rounded-lg border border-border bg-bg p-3">
+          <Field label="Regnr">
+            <input
+              value={regnr}
+              onChange={(e) => setRegnr(e.target.value.toUpperCase())}
+              className={inputCls}
+              placeholder="EK12345"
+            />
+          </Field>
+          <button
+            type="button"
+            disabled={regnr.trim().length < 2 || opprettKjoretoy.isPending}
+            onClick={() =>
+              opprettKjoretoy.mutate({
+                customerId: customerId as never,
+                type: 'mc',
+                regNumber: regnr.trim(),
+              })
+            }
+            className="inline-flex h-9 items-center justify-center rounded-md bg-fg px-3 text-bg text-sm disabled:opacity-50"
+          >
+            {opprettKjoretoy.isPending ? 'Lagrer …' : 'Lagre kjøretøy'}
+          </button>
+          {opprettKjoretoy.isError && (
+            <p className="text-danger text-xs">Klarte ikke lagre kjøretøyet. Prøv igjen.</p>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
 
 function Section({
   step,

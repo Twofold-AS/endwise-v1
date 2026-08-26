@@ -5,9 +5,18 @@
 
 export const LESING_TITLE = 'Kun lesing';
 
+/** Nav-alias → eksisterende inspect-side (ingen /jobber under verksted/). */
+const INSPECT_KANONISK: Record<string, string> = {
+  '/jobber': '/saker',
+  '/rapporter': '/analyse',
+  '/hjelp': '/support',
+  '/verkstedet': '/dashboard',
+};
+
 export function remapHrefTilInspect(href: string, slug: string): string {
   const [path, query] = href.split('?');
-  const mapped = `/endwise/verksted/${slug}${path === '/' ? '' : path}`;
+  const kanon = INSPECT_KANONISK[path ?? ''] ?? path;
+  const mapped = `/endwise/verksted/${slug}${kanon === '/' ? '' : kanon}`;
   return query ? `${mapped}?${query}` : mapped;
 }
 
@@ -58,12 +67,16 @@ export function erForhandlerRutePaaPlattform(pathname: string, search = ''): boo
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/innboks') ||
     pathname.startsWith('/saker') ||
+    pathname.startsWith('/jobber') ||
     pathname.startsWith('/kunder') ||
     pathname.startsWith('/kjoretoy') ||
     pathname.startsWith('/samarbeid') ||
     pathname.startsWith('/analyse') ||
+    pathname.startsWith('/rapporter') ||
     pathname.startsWith('/ai-') ||
     pathname.startsWith('/support') ||
+    pathname.startsWith('/hjelp') ||
+    pathname.startsWith('/verkstedet') ||
     pathname.startsWith('/lager') ||
     pathname.startsWith('/min-dag') ||
     pathname.startsWith('/mekaniker') ||

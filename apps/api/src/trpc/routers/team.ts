@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, gte, inArray, lt, schema, withTenant } from '@endwise/db';
+import { createAuth, sendTwoFactorOtp } from '@endwise/auth';
+import { and, desc, eq, gte, inArray, lt, schema, withTenant } from '@endwise/db';
 import {
   type Jobbfunksjon,
   kanEndreJobbfunksjon,
@@ -13,6 +14,13 @@ import {
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, router } from '../init.ts';
+import {
+  hashTeamBekreftelse,
+  kodeMatcher,
+  nyBekreftelseskode,
+  TEAM_BEKREFTELSE_TTL_MS,
+  teamBekreftelseId,
+} from './team-bekreftelse.ts';
 
 /** Ikke-ruterbar adresse når lederen ikke oppgir e-post. Aldri send dit. */
 const UTEN_INNLOGGING_SUFFIKS = '@uten-innlogging.invalid';
@@ -59,6 +67,7 @@ export const teamRouter = router({
         rolle: schema.member.role,
         navn: schema.user.name,
         epost: schema.user.email,
+        twoFactorEnabled: schema.user.twoFactorEnabled,
       })
       .from(schema.member)
       .innerJoin(schema.user, eq(schema.user.id, schema.member.userId))
@@ -196,6 +205,8 @@ export const teamRouter = router({
           /** Er funksjonen satt eksplisitt, eller utledet? Vises i UI-et. */
           eksplisitt: Boolean(p?.jobFunction),
           harMekanikerprofil: erMekaniker.has(m.userId),
+          mechanicId: mek?.id ?? null,
+          twoFactorEnabled: Boolean(m.twoFactorEnabled),
           /** ⛔ Ledere kan ikke få tildelt funksjon — den følger av rollen. */
           kanEndres: !kanEndreJobbfunksjon(m.rolle),
           /**
@@ -382,4 +393,289 @@ export const teamRouter = router({
         kanLoggeInn: false,
       };
     }),
+
+  /**
+   * Jobber hen gjør — bookinger knyttet til mekanikerprofilen.
+   * Selger/support uten mekanikerprofil får ærlig tom liste.
+   */
+  jobber: adminProcedure
+    .input(z.object({ userId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      await assertMedlem(ctx, input.userId);
+      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [mek] = await tx
+          .select({ id: schema.mechanics.id })
+          .from(schema.mechanics)
+          .where(
+            and(
+              eq(schema.mechanics.tenantId, ctx.tenantId),
+              eq(schema.mechanics.userId, input.userId),
+            ),
+          );
+        if (!mek) return [];
+
+        const fra = new Date();
+        fra.setDate(fra.getDate() - 30);
+        return tx
+          .select({
+            id: schema.bookings.id,
+            status: schema.bookings.status,
+            startsAt: schema.bookings.startsAt,
+            endsAt: schema.bookings.endsAt,
+            regNumber: schema.vehicles.regNumber,
+            serviceName: schema.services.name,
+          })
+          .from(schema.bookings)
+          .leftJoin(schema.vehicles, eq(schema.vehicles.id, schema.bookings.vehicleId))
+          .leftJoin(
+            schema.serviceVersions,
+            eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
+          )
+          .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
+          .where(and(eq(schema.bookings.mechanicId, mek.id), gte(schema.bookings.startsAt, fra)))
+          .orderBy(desc(schema.bookings.startsAt))
+          .limit(12);
+      });
+    }),
+
+  /**
+   * Oppdater lagret e-post på eksisterende bruker. Ingen ny identitet.
+   * To-stegs changeEmail (F1-27) er for egen profil — her handler lederen
+   * på en ansatt i tenanten.
+   */
+  endreEpost: adminProcedure
+    .input(z.object({ userId: z.string().min(1), epost: z.email().max(200) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!kanEndreJobbfunksjon(ctx.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare forhandlerens leder kan endre e-post.',
+        });
+      }
+      await assertMedlem(ctx, input.userId);
+      const epost = input.epost.trim().toLowerCase();
+      const [finnes] = await ctx.db
+        .select({ id: schema.user.id })
+        .from(schema.user)
+        .where(eq(schema.user.email, epost))
+        .limit(1);
+      if (finnes && finnes.id !== input.userId) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'E-posten er allerede i bruk.',
+        });
+      }
+      await ctx.db
+        .update(schema.user)
+        .set({ email: epost, emailVerified: false, updatedAt: new Date() })
+        .where(eq(schema.user.id, input.userId));
+      return { userId: input.userId, epost };
+    }),
+
+  /**
+   * Trigger eksisterende Better-Auth passordreset mot den ansattes e-post.
+   */
+  sendPassordendring: adminProcedure
+    .input(z.object({ userId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!kanEndreJobbfunksjon(ctx.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare forhandlerens leder kan sende passordendring.',
+        });
+      }
+      const medlem = await assertMedlem(ctx, input.userId);
+      if (!medlem.epost || erUtenInnloggingEpost(medlem.epost)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Personen har ingen e-post. Inviter hen hvis hen skal ha innlogging.',
+        });
+      }
+      const [konto] = await ctx.db
+        .select({ id: schema.account.id })
+        .from(schema.account)
+        .where(
+          and(eq(schema.account.userId, input.userId), eq(schema.account.providerId, 'credential')),
+        );
+      if (!konto) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Personen har ingen innlogging. Send en invitasjon i stedet.',
+        });
+      }
+      const auth = createAuth(ctx.db);
+      await auth.api.requestPasswordReset({ body: { email: medlem.epost } });
+      return { sendt: true };
+    }),
+
+  /**
+   * Steg 1: send engangskode til LEDERENS e-post. Ingenting slås av her.
+   */
+  slaAv2faStart: adminProcedure
+    .input(z.object({ userId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!kanEndreJobbfunksjon(ctx.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare forhandlerens leder kan slå av 2FA.',
+        });
+      }
+      const mal = await assertMedlem(ctx, input.userId);
+      if (!mal.twoFactorEnabled) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '2FA er ikke på for denne personen.',
+        });
+      }
+      const [leder] = await ctx.db
+        .select({ email: schema.user.email })
+        .from(schema.user)
+        .where(eq(schema.user.id, ctx.userId));
+      if (!leder?.email || erUtenInnloggingEpost(leder.email)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Vi fant ingen e-post å sende bekreftelseskoden til.',
+        });
+      }
+      const kode = nyBekreftelseskode();
+      const ident = teamBekreftelseId(ctx.tenantId, ctx.userId, input.userId);
+      await ctx.db.delete(schema.verification).where(eq(schema.verification.identifier, ident));
+      await ctx.db.insert(schema.verification).values({
+        id: randomUUID(),
+        identifier: ident,
+        value: hashTeamBekreftelse(kode),
+        expiresAt: new Date(Date.now() + TEAM_BEKREFTELSE_TTL_MS),
+      });
+      await sendTwoFactorOtp(leder.email, kode);
+      return { sendt: true };
+    }),
+
+  /**
+   * Steg 2: koden må stemme. Én klikk slår aldri av 2FA.
+   */
+  slaAv2fa: adminProcedure
+    .input(z.object({ userId: z.string().min(1), kode: z.string().trim().min(4).max(12) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!kanEndreJobbfunksjon(ctx.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare forhandlerens leder kan slå av 2FA.',
+        });
+      }
+      await assertMedlem(ctx, input.userId);
+      const ident = teamBekreftelseId(ctx.tenantId, ctx.userId, input.userId);
+      const [rad] = await ctx.db
+        .select({
+          id: schema.verification.id,
+          value: schema.verification.value,
+          expiresAt: schema.verification.expiresAt,
+        })
+        .from(schema.verification)
+        .where(eq(schema.verification.identifier, ident));
+      if (!rad || rad.expiresAt.getTime() < Date.now() || !kodeMatcher(rad.value, input.kode)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Ugyldig eller utløpt bekreftelseskode. Be om en ny kode.',
+        });
+      }
+      await ctx.db.delete(schema.verification).where(eq(schema.verification.id, rad.id));
+      await ctx.db
+        .update(schema.user)
+        .set({ twoFactorEnabled: false, updatedAt: new Date() })
+        .where(eq(schema.user.id, input.userId));
+      await ctx.db.delete(schema.twoFactor).where(eq(schema.twoFactor.userId, input.userId));
+      await withTenant(ctx.db, ctx.tenantId, (tx) =>
+        tx.insert(schema.auditLog).values({
+          tenantId: ctx.tenantId,
+          actor: ctx.userId,
+          action: 'two_factor.disabled',
+          subjectType: 'user',
+          subjectId: input.userId,
+          metadata: { via: 'team', av: ctx.userId },
+        }),
+      );
+      return { userId: input.userId, twoFactorEnabled: false };
+    }),
+
+  /**
+   * Fjern fra teamet. Mekaniker deaktiveres (`active = false`).
+   * Brukeren slettes ikke — produktet deaktiverer, det hard-sletter ikke.
+   */
+  fjern: adminProcedure
+    .input(z.object({ userId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!kanEndreJobbfunksjon(ctx.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare forhandlerens leder kan fjerne ansatte.',
+        });
+      }
+      if (input.userId === ctx.userId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Du kan ikke fjerne deg selv.',
+        });
+      }
+      const medlem = await assertMedlem(ctx, input.userId);
+      if (kanEndreJobbfunksjon(medlem.rolle)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Ledere fjernes ikke herfra.',
+        });
+      }
+      await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        await tx
+          .update(schema.mechanics)
+          .set({ active: false })
+          .where(
+            and(
+              eq(schema.mechanics.tenantId, ctx.tenantId),
+              eq(schema.mechanics.userId, input.userId),
+            ),
+          );
+        await tx
+          .delete(schema.memberProfiles)
+          .where(
+            and(
+              eq(schema.memberProfiles.tenantId, ctx.tenantId),
+              eq(schema.memberProfiles.userId, input.userId),
+            ),
+          );
+      });
+      await ctx.db
+        .delete(schema.member)
+        .where(
+          and(
+            eq(schema.member.organizationId, ctx.tenantId),
+            eq(schema.member.userId, input.userId),
+          ),
+        );
+      return { userId: input.userId, deaktivert: true };
+    }),
 });
+
+async function assertMedlem(
+  ctx: { db: import('@endwise/db').Database; tenantId: string },
+  userId: string,
+): Promise<{ rolle: string; epost: string; twoFactorEnabled: boolean }> {
+  const [medlem] = await ctx.db
+    .select({
+      rolle: schema.member.role,
+      epost: schema.user.email,
+      twoFactorEnabled: schema.user.twoFactorEnabled,
+    })
+    .from(schema.member)
+    .innerJoin(schema.user, eq(schema.user.id, schema.member.userId))
+    .where(and(eq(schema.member.organizationId, ctx.tenantId), eq(schema.member.userId, userId)));
+  if (!medlem) {
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: 'Personen er ikke medlem av denne forhandleren.',
+    });
+  }
+  return {
+    rolle: medlem.rolle,
+    epost: medlem.epost,
+    twoFactorEnabled: Boolean(medlem.twoFactorEnabled),
+  };
+}

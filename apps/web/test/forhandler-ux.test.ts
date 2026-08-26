@@ -2,13 +2,13 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { FANE_ALIAS } from '../app/(app)/innstillinger/_faner.ts';
 import {
   breadcrumbFor,
   FORHANDLER_NAV,
   isItemActive,
   SETTINGS_NAV,
 } from '../app/(app)/_shell/nav.ts';
+import { FANE_ALIAS } from '../app/(app)/innstillinger/_faner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -99,9 +99,10 @@ describe('Ny jobb og tomflater', () => {
     expect(analyse).toMatch(/Eksempel — ikke live verkstedstall/);
   });
 
-  it('invite-disabled forklarer at e-post mangler', () => {
-    expect(les('../app/(app)/innstillinger/team/_inviter.tsx')).toMatch(
-      /Skriv inn e-post for å sende invitasjon/,
-    );
+  it('Inviter ansatt forklarer at e-post er valgfri', () => {
+    const inviter = les('../app/(app)/innstillinger/team/_inviter.tsx');
+    expect(inviter).toMatch(/E-post er valgfri/);
+    expect(inviter).toMatch(/Skriv inn navn når du inviterer uten e-post/);
+    expect(inviter).toMatch(/Inviter ansatt/);
   });
 });

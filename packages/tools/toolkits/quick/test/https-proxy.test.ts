@@ -1,9 +1,17 @@
+import { readFileSync } from 'node:fs';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ProxyAgent } from 'undici';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { QuickError } from '../src/errors.ts';
-import { getQuickHttpsProxyDispatcher } from '../src/https-proxy.ts';
+import {
+  getQuickHttp11Dispatcher,
+  getQuickHttpsProxyDispatcher,
+  QUICK_CURL_USER_AGENT,
+  QUICK_UPSTREAM_ALLOW_H2,
+} from '../src/https-proxy.ts';
 import { createQuickClient } from '../src/index.ts';
 import { probeQuickReadOnly } from '../src/probe.ts';
 
@@ -63,14 +71,17 @@ describe('QUICK_HTTPS_PROXY — valgfri CONNECT (av = fjern env)', () => {
     expect(() => getQuickHttpsProxyDispatcher()).toThrow(QuickError);
   });
 
-  it('probe uten proxy kaller fetch uten dispatcher', async () => {
+  it('probe uten proxy kaller fetch med HTTP/1.1-dispatcher (ingen H2)', async () => {
     delete process.env.QUICK_HTTPS_PROXY;
     const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({}));
     await probeQuickReadOnly(cfg);
     const kall = spy.mock.calls[0];
     if (!kall) throw new Error('fetch ble aldri kalt');
     const init = (kall[1] ?? {}) as RequestInit & { dispatcher?: unknown };
-    expect(init.dispatcher).toBeUndefined();
+    expect(init.dispatcher).toBe(getQuickHttp11Dispatcher());
+    expect(QUICK_UPSTREAM_ALLOW_H2).toBe(false);
+    const headers = (init.headers ?? {}) as Record<string, string>;
+    expect(headers['User-Agent']).toBe(QUICK_CURL_USER_AGENT);
   });
 
   it('probe med proxy gjør CONNECT til q3.quick.no:443 (ikke live Quick)', async () => {
@@ -98,6 +109,30 @@ describe('QUICK_HTTPS_PROXY — valgfri CONNECT (av = fjern env)', () => {
         server.close((err) => (err ? reject(err) : resolve())),
       );
     }
+  });
+
+  it('customer/batch uten proxy er curl-ekvivalent (UA + HTTP/1.1)', async () => {
+    delete process.env.QUICK_HTTPS_PROXY;
+    const spy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(jsonResponse({ totalCount: 0, limit: 10, offset: 0, results: [] }));
+    await createQuickClient(cfg).customerBatch({ limit: 10, offset: 0 });
+    const kall = spy.mock.calls[0];
+    if (!kall) throw new Error('fetch ble aldri kalt');
+    const init = (kall[1] ?? {}) as RequestInit & { dispatcher?: unknown };
+    const headers = (init.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe('Token token=fake-apiv2-ikke-ekte');
+    expect(headers.Accept).toBe('application/json');
+    expect(headers['User-Agent']).toBe(QUICK_CURL_USER_AGENT);
+    expect(init.dispatcher).toBe(getQuickHttp11Dispatcher());
+  });
+
+  it('kilden tvinger allowH2: false på Agent og ProxyAgent', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const kilde = readFileSync(resolve(her, '../src/https-proxy.ts'), 'utf8');
+    expect(kilde).toMatch(/allowH2:\s*QUICK_UPSTREAM_ALLOW_H2/);
+    expect(kilde).toMatch(/QUICK_CURL_USER_AGENT = 'curl\/8\.5\.0'/);
+    expect(kilde).not.toMatch(/allowH2:\s*true/);
   });
 
   it('customer/batch med proxy bruker samme CONNECT-sti', async () => {

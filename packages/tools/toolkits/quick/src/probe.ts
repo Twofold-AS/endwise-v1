@@ -1,5 +1,5 @@
 import { QuickAuthError, QuickError } from './errors.ts';
-import { quickFetch } from './https-proxy.ts';
+import { QUICK_CURL_USER_AGENT, quickFetch } from './https-proxy.ts';
 import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
 import { QUICK_PROBE_USER_MESSAGES } from './probe-error.ts';
 import { quickClientInfo } from './schema.ts';
@@ -17,8 +17,8 @@ import { assertAllowedQuickUrl } from './url-guard.ts';
 export const QUICK_READ_ONLY_PROBE_METHOD = 'GET';
 /** Relativt til instansens baseUrl (uten trailing slash). */
 export const QUICK_READ_ONLY_PROBE_PATH = '/api/v2/client/info';
-/** Stabil UA — Quick kan 500-e Vercel-egress uten kjent klient. */
-export const QUICK_PROBE_USER_AGENT = 'Endwise/1 QuickProbe';
+/** Curl-ekvivalent UA (samme som working curl mot q3.quick.no). */
+export const QUICK_PROBE_USER_AGENT = QUICK_CURL_USER_AGENT;
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 export const MAX_RESPONSE_BYTES = 256_000;

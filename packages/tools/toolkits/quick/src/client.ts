@@ -1,7 +1,7 @@
 import type { IntegrationHealth, IntegrationProvider } from '@endwise/modules';
 import { nextBatchOffset } from './batch.ts';
 import { QuickAuthError, QuickError } from './errors.ts';
-import { quickFetch } from './https-proxy.ts';
+import { QUICK_CURL_USER_AGENT, quickFetch } from './https-proxy.ts';
 import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
 import { probeQuickReadOnly } from './probe.ts';
 import {
@@ -88,6 +88,7 @@ export function createQuickClient(config: QuickConfig) {
         headers: {
           Authorization: `Token token=${token}`,
           Accept: 'application/json',
+          'User-Agent': QUICK_CURL_USER_AGENT,
         },
         // CWE-918: ikke følg 3xx til en ny host (redirect-SSRF-bypass).
         redirect: 'error',

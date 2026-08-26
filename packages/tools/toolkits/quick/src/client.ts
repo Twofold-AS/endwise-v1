@@ -2,7 +2,12 @@ import type { IntegrationHealth, IntegrationProvider } from '@endwise/modules';
 import { nextBatchOffset } from './batch.ts';
 import { QuickAuthError, QuickError } from './errors.ts';
 import { QUICK_CURL_USER_AGENT, quickFetch } from './https-proxy.ts';
-import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
+import {
+  normalizeQuickBaseUrl,
+  normalizeQuickToken,
+  stripTrailingApiV2,
+  stripTrailingSlashes,
+} from './normalize.ts';
 import { probeQuickReadOnly } from './probe.ts';
 import {
   foldQuickJsonKeys,
@@ -77,9 +82,7 @@ export function createQuickClient(config: QuickConfig) {
   // QuickSsrfError hvis den peker et ulovlig sted. Normaliserer samtidig.
   const validated = assertAllowedQuickUrl(normalizeQuickBaseUrl(config.baseUrl));
   const token = normalizeQuickToken(config.token);
-  const base = `${validated.origin}${validated.pathname}`
-    .replace(/\/+$/, '')
-    .replace(/\/api\/v2$/i, '');
+  const base = stripTrailingApiV2(stripTrailingSlashes(`${validated.origin}${validated.pathname}`));
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   async function request<T>(path: string, schema: { parse: (v: unknown) => T }): Promise<T> {

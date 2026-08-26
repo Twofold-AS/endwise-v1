@@ -22,7 +22,9 @@ Live Yamaha-body er ikke logget (gateway logger aldri body). Mapper bare nøkler
 
 ## 2. Hva gikk galt
 
-Ingenting blokkerte. Context.dev MCP var ikke autentisert. Ingen live `client/info`-JSON i tidligere agenter (CWE-532). Derfor: `name`/`company` er de eneste nøklene vi kan mappe uten å finne opp felt; `.loose()` bevarer resten.
+Ingenting blokkerte implementasjonen. Context.dev MCP var ikke autentisert. Ingen live `client/info`-JSON i tidligere agenter (CWE-532). Derfor: `name`/`company` er de eneste nøklene vi kan mappe uten å finne opp felt; `.loose()` bevarer resten.
+
+CI etter første push: Lint · Typecheck · Test grønn. CodeQL high på `/\/+$/` i `normalize.ts` (ReDoS mot ukontrollert limt URL) — fila var urørt i første commit, men Client-apply sendte mer input dit så alerten ble «ny på PR». Dependency-Check og ZAP feiler også på `main` (transitive audit + ZAP mot `https://example.invalid`).
 
 ## 3. Hvilke fikser ble gjort
 
@@ -31,6 +33,7 @@ Ingenting blokkerte. Context.dev MCP var ikke autentisert. Ingen live `client/in
 3. `applyQuickDealerProfile` / `buildDealerProfileWrite` i modules — tenant-skopet, plattform-sperre.
 4. `runIndependentOfCatalog` i `quick-pull.ts` — batch-500 ruller ikke tilbake Client-apply.
 5. `session.me.invalidate()` etter pull/setConfig/test.
+6. `stripTrailingSlashes` / `stripTrailingApiV2` — lineær strip, ingen `/\/+$/` (CodeQL).
 
 ## 4. Neste steg
 

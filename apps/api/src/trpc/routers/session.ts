@@ -171,11 +171,14 @@ export const sessionRouter = router({
         isMechanic: Boolean(mech),
         mechanicId: mech?.id ?? null,
         mechanicName: mech?.name ?? null,
-        /** Ekte navn på mekanikerprofilen. Aldri kallenavn. */
+        /** Tenant-lokalt kallenavn (`member_profiles.nickname`). */
         kallenavn: profil?.nickname ?? null,
-        /** Internt visningsnavn = kallenavn hvis satt, ellers ekte navn. */
+        /**
+         * Kort navn i chrome: kallenavn hvis satt, ellers visningsnavn.
+         * ⛔ Ikke mekanikernavn — chrome er personen, ikke profilraden.
+         */
         internNavn: visningsnavn(
-          { navn: mech?.name ?? '', kallenavn: profil?.nickname ?? null },
+          { navn: bruker?.name ?? '', kallenavn: profil?.nickname ?? null },
           'intern',
         ),
         /** Ingen rad = aldri rørt = standard PÅ. */

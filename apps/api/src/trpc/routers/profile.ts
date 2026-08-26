@@ -63,7 +63,7 @@ export const profileRouter = router({
       varslingslyder: pref?.notificationSounds ?? true,
       /** F6-17 — «Detaljer»-panelet i innboksen. Standard PÅ. */
       detaljpanel: pref?.inboxDetailsOpen ?? true,
-      /** Skal kallenavn-feltet i det hele tatt vises? Serveren bestemmer. */
+      /** Alle innloggede roller kan ha kallenavn (26.08.2026). */
       kanHaKallenavn: kanHaKallenavn(ctx.role),
       /**
        * F6-19 — avatarvalgene. Null overalt = alt utledes fra seeden.
@@ -96,9 +96,9 @@ export const profileRouter = router({
   /**
    * Sett eller fjern eget kallenavn (tom streng = fjern).
    *
-   * ⛔ Avvises for `dealer_admin`/`endwise_admin`/`owner`. Å skjule feltet i
-   * UI-et er en anbefaling; denne sjekken er regelen. Rollen leses fra
-   * konteksten (`assertMember`), aldri fra input.
+   * 26.08.2026: åpent for alle innloggede roller. Rollen leses fra
+   * konteksten (`assertMember`), aldri fra input. Uten rolle avvises
+   * kallet — det er «ikke innlogget», ikke «admin får ikke».
    */
   setNickname: protectedProcedure
     .input(z.object({ kallenavn: z.string().trim().max(24) }))
@@ -106,8 +106,7 @@ export const profileRouter = router({
       if (!kanHaKallenavn(ctx.role)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message:
-            'Forhandler- og Endwise-kontoer kan ikke ha kallenavn. Kontoen er den offisielle stemmen ut mot kunden.',
+          message: 'Du må være innlogget for å sette kallenavn.',
         });
       }
 

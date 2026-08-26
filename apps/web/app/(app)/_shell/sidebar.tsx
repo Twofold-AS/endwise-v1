@@ -37,9 +37,9 @@ import {
   itemsForRole,
   type NavItem,
   navForContext,
-  stierFor,
   QUICK_ACTIONS,
   settingsForContext,
+  stierFor,
 } from './nav';
 import { useSidebarState } from './sidebar-state';
 import { TipCard } from './tip-card';
@@ -320,9 +320,8 @@ export function Sidebar() {
 
             {/* ── Deg. Nederst, under Innstillinger, som bestilt ─────────────── */}
             <BrukerRad
-              /* Én identitet: session.me.navn. Ikke Better-Auth-navn som
-                 fallback (to navn i chrome) og ikke «Ikke innlogget» mens
-                 sesjonen lastes. */
+              /* Én identitet: internNavn via useOrgRole (kallenavn, ellers
+                 visningsnavn). Ikke Better-Auth-navn som fallback. */
               navn={navn}
               rolle={role ? (ROLE_LABEL[role] ?? '—') : null}
               laster={rolleLaster}

@@ -26,7 +26,6 @@ const KANALER = [
 const STANDARD: Record<string, boolean> = { sms: true, epost: true, push: false };
 
 export function VarslerInnhold() {
-
   return (
     <div className="flex flex-col gap-5">
       <div className="overflow-hidden rounded-xl border border-border">

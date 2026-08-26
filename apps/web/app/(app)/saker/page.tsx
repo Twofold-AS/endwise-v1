@@ -91,7 +91,7 @@ function SakerPageInner() {
             active={visning === 'liste'}
             onClick={() => setVisning('liste')}
             icon={<List size={16} />}
-            label="Liste"
+            label="Oversikt"
           />
           <ViewTab
             active={visning === 'kalender'}

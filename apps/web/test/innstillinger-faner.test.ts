@@ -144,6 +144,7 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(profilFane).toMatch(/size=\{56\}/);
     expect(profilFane).toMatch(/foldFormer/);
     expect(profilFane).toMatch(/VisningsnavnFelt/);
+    expect(profilFane).toMatch(/KallenavnFelt/);
     expect(profilFane).toMatch(/ByttEpostSkjema/);
     expect(profilFane).toMatch(/readOnly/);
     expect(profilFane).toMatch(/<AvatarVelger[\s\S]*?<\/AvatarVelger>/);

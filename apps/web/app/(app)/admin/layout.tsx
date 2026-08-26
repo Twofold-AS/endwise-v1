@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { IkkeTilgang } from '../_shell/ikke-tilgang';
 import { krevEndwiseAdminSide } from '@/lib/endwise-admin-gate';
+import { IkkeTilgang } from '../_shell/ikke-tilgang';
 
 /**
  * F1-26 — server-gate for `/admin`.

@@ -36,17 +36,14 @@ export type OrgRole =
   | 'endwise_support';
 
 /**
- * F5-13 — SIDEBAR-FØRST NAVIGASJON.
- *
+ * Sidebar-først navigasjon.
  * Erstatter den gamle to-nivå-modellen (topbar = seksjoner, sidebar =
- * underpunkter). Prinsippet er snudd: **sidebaren ER navigasjonen, topbaren er
- * bare et sted-du-er-skilt.**
- *
+ * underpunkter). Prinsippet er snudd: sidebaren er navigasjonen, topbaren er
+ * bare et sted-du-er-skilt.
  * Denne fila er fortsatt ÉN datastruktur som styrer alt: sidebar-radene,
  * dropdown-menyene og breadcrumben i topbaren. Flytt en rad for å flytte en
  * side. Legg til et objekt for en ny destinasjon.
- *
- * ⚠️ Rollegating her er KOSMETIKK. Den ekte sperren er RLS + adminProcedure
+ * Rollegating her er kosmetikk. Den ekte sperren er RLS + adminProcedure
  * server-side; dette skjuler bare rader brukeren likevel ville fått 403 på.
  */
 
@@ -68,13 +65,12 @@ export type NavItem = {
   href: string;
   roles: OrgRole[];
   /**
-   * ⚠️ Ingen nav-rader bruker denne per 20.08.2026 — eier ba om at «New» ble
+   * Ingen nav-rader bruker denne — eier ba om at «New» ble
    * fjernet fra sidebaren. Fem rader hadde den, og et merke som står på fem av
    * elleve rader i månedsvis slutter å bety «nytt» og begynner å bety
-   * «bakgrunn». Feltet står igjen fordi mekanismen er riktig når noe FAKTISK er
+   * «bakgrunn». Feltet står igjen fordi mekanismen er riktig når noe faktisk er
    * nytt — men da skal det tas av igjen.
-   *
-   * ⛔ Det eneste «Ny» i sidebaren nå er helpdesk-merket, og den er datadrevet:
+   * Det eneste «Ny» i sidebaren nå er helpdesk-merket, og den er datadrevet:
    * den forsvinner av seg selv når du har lest artiklene.
    */
   isNew?: boolean;
@@ -82,10 +78,9 @@ export type NavItem = {
   children?: NavChild[];
   /**
    * Bærer et tall på nav-raden.
-   *
-   * `unread`   — uleste meldinger (Innboks). Rød sirkel, hvitt siffer.
-   * `helpdesk` — uleste hjelpeartikler. Samme røde sirkel — Mikael 24.08.2026.
-   *   «Ny»-tekstbadgen er et annet merke (nye flater/artikler), ikke telleren.
+   * `unread` — uleste meldinger (Innboks). Rød sirkel, hvitt siffer.
+   * `helpdesk` — uleste hjelpeartikler. Samme røde sirkel — Mikael.
+   * «Ny»-tekstbadgen er et annet merke (nye flater/artikler), ikke telleren.
    */
   badge?: 'unread' | 'helpdesk';
   countKey?: 'kunder' | 'intern' | 'endwise';
@@ -96,7 +91,8 @@ const ADMIN_OF_TENANT: OrgRole[] = ['dealer_admin', 'endwise_admin'];
 const ENDWISE: OrgRole[] = ['endwise_admin', 'endwise_support'];
 const ENDWISE_STYRING: OrgRole[] = ['endwise_admin'];
 
-/* ══ KONTEKSTER ═══════════════════════════════════════════════════════════
+/*
+ * Kontekster
  * Tre kontekster i ÉN sidebar — dropdownen i toppen bytter hvilken som vises.
  * Ikke tre sidebars, og ikke tre apper.
  */
@@ -107,13 +103,13 @@ export type AppContext = {
   label: string;
   hint: string;
   icon: LucideIcon;
-  /** Hvem får LOV til å velge konteksten. */
+  /** Hvem får lov til å velge konteksten. */
   roles: OrgRole[];
   /** Krever at brukeren har en mekaniker-profil (mechanics.userId). */
   requiresMechanic?: boolean;
-  /** F5-28: vises kun når dev-mode er PÅ (tre server-side betingelser). */
+  /** Vises kun når dev-mode er PÅ (tre server-side betingelser). */
   requiresDevMode?: boolean;
-  /** F10-03: vises kun når feature-flaget `shop` er PÅ for tenanten. */
+  /** Vises kun når feature-flaget `shop` er PÅ for tenanten. */
   requiresShopFlag?: boolean;
   landing: string;
 };
@@ -138,9 +134,9 @@ export const CONTEXTS: AppContext[] = [
   },
   {
     /**
-     * F5-31 — LAGER. Den første konteksten som bare ER der: ingen
+     * Lager. Den første konteksten som bare er der: ingen
      * `requiresDevMode`, ingen `requiresMechanic`, ingen modul-gate.
-     * Lager er KJERNE — et verksted uten deloversikt er et verksted uten drift.
+     * Lager er kjerne — et verksted uten deloversikt er et verksted uten drift.
      */
     key: 'lager',
     label: 'Lager',
@@ -151,7 +147,7 @@ export const CONTEXTS: AppContext[] = [
   },
   {
     /**
-     * F10-03 — intern testbutikk. Synlig kun når flagget `shop` er på for
+     * Intern testbutikk. Synlig kun når flagget `shop` er på for
      * tenanten (tenant-overstyring). Ikke en selgbar modul. Ikke Medusa.
      */
     key: 'butikk',
@@ -172,8 +168,9 @@ export const CONTEXTS: AppContext[] = [
   },
 ];
 
-/* ══ FORHANDLER — hoveddestinasjonene, topp→bunn ═════════════════════════
- * 26.08.2026 (Mikael, signert): dropdowns som i dag, ikke side-piller.
+/*
+ * Forhandler — hoveddestinasjonene, topp→bunn
+ * (Mikael, signert): dropdowns som i dag, ikke side-piller.
  * Verkstedet er én knapp til Dagen. Prisliste bor under Jobber.
  * Samarbeid er skjult til backend finnes (F5-17 er en blindvei).
  * `/ansatte` er expander — ingen egen side (alias-redirect til Team).
@@ -205,8 +202,8 @@ export const FORHANDLER_NAV: NavItem[] = [
       { label: 'Oversikt', href: '/jobber', icon: ClipboardList },
       { label: 'Kalender', href: '/jobber?visning=kalender', icon: CalendarDays },
       /**
-       * F2-05/F5-04 — forhandlerens EGEN katalog (hva KUNDEN betaler).
-       * Flyttet hit 26.08.2026. Ingen `roles`: arver DRIFT, så staff ser
+       * F2-05/F5-04 — forhandlerens egen katalog (hva kunden betaler).
+       * Flyttet hit. Ingen `roles`: arver drift, så staff ser
        * prisen. Skriving er `adminProcedure` server-side.
        */
       { label: 'Prisliste', href: '/prisliste', icon: Wrench },
@@ -224,7 +221,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     ],
   },
   /**
-   * AI-verktøy er PARKERT 25.08.2026 — ikke i FORHANDLER_NAV.
+   * AI-verktøy er parkert — ikke i FORHANDLER_NAV.
    * Ruter står: `/ai-innsikt`, `/ai-verktoy/diagnose|nettside|nettbutikk`.
    */
   {
@@ -258,10 +255,9 @@ export const FORHANDLER_NAV: NavItem[] = [
 
 /**
  * Forankret nederst — visuelt skilt fra hovednavet.
- *
- * 25.08.2026 (Mikael): Innstillinger er en destinasjon til profil, ikke en
+ * (Mikael): Innstillinger er en destinasjon til profil, ikke en
  * flyout. Pille-fanene på `/innstillinger` eier undersidene (Abonnement,
- * Varsler, …) for forhandler. Breadcrumb/⌘K navngir dem via SETTINGS_CRUMB.
+ * Varsler, …) for forhandler. Breadcrumb/K navngir dem via SETTINGS_CRUMB.
  */
 export const SETTINGS_NAV: NavItem = {
   key: 'settings',
@@ -271,7 +267,7 @@ export const SETTINGS_NAV: NavItem = {
   roles: DRIFT,
 };
 
-/* ══ MEKANIKER-konteksten ════════════════════════════════════════════════ */
+/* Mekaniker-konteksten */
 export const MEKANIKER_NAV: NavItem[] = [
   { key: 'min-dag', label: 'Min dag', icon: CalendarDays, href: '/min-dag', roles: DRIFT },
   {
@@ -295,13 +291,14 @@ export const MEKANIKER_NAV: NavItem[] = [
     href: '/min-dag/timeplan',
     roles: DRIFT,
   },
-  // F7-06 — samme «Meg» som i bunnmenyen. Mekanikervisningen har ÉN layout;
+  // Samme «Meg» som i bunnmenyen. Mekanikervisningen har ÉN layout;
   // en admin som ser den i sidebaren skal se de samme punktene.
   { key: 'min-meg', label: 'Meg', icon: CircleUser, href: '/min-dag/meg', roles: DRIFT },
 ];
 
-/* ══ LAGER-konteksten (F5-31) ════════════════════════════════════════════
- * ⛔ Ingen handel her. Ser du en «Selg»-knapp, er den i feil fane: kostpris
+/*
+ * Lager-konteksten (F5-31)
+ * Ingen handel her. Ser du en «Selg»-knapp, er den i feil fane: kostpris
  * hører hjemme i Lager, utsalgspris i Butikk.
  */
 export const LAGER_NAV: NavItem[] = [
@@ -323,8 +320,9 @@ export const LAGER_NAV: NavItem[] = [
   },
 ];
 
-/* ══ BUTIKK-konteksten (F10-03) ══════════════════════════════════════════
- * Intern preview. Katalog leser lager. Ingen ekstra IA.
+/*
+ * Butikk-konteksten (F10-03)
+ * Intern preview. Katalog leser lager. Ingen ekstra ia.
  */
 export const BUTIKK_NAV: NavItem[] = [
   { key: 'butikk-katalog', label: 'Katalog', icon: Package, href: '/butikk', roles: DRIFT },
@@ -337,11 +335,11 @@ export const BUTIKK_NAV: NavItem[] = [
   },
 ];
 
-/* ══ ENDWISE-ADMIN ═══════════════════════════════════════════════════════
- * Var bevisst tom (eiers beslutning 04.08.2026). Fikk sitt første punkt
- * 07.08.2026: **Forhandlere** — det er herfra en tenant opprettes, og uten
+/*
+ * Endwise-admin
+ * Var bevisst tom (eiers beslutning). Fikk sitt første punkt
+ * Forhandlere — det er herfra en tenant opprettes, og uten
  * den flaten finnes det ingen lovlig vei inn i dev-mode.
- *
  * Fortsatt en clean slate for alt annet: dagens /admin-sider (eksterne
  * kostnader, moduler, flagg, logg) er urørt og bevisst ikke dratt inn.
  */
@@ -354,7 +352,7 @@ export const ENDWISE_NAV: NavItem[] = [
     roles: ENDWISE,
   },
   /**
-   * F5-11 — forhandler↔Endwise. Ikke en Admin-tab, ikke butikk.
+   * ForhandlerEndwise. Ikke en Admin-tab, ikke butikk.
    * Lista er `listPlatformSupport` (dealer_admin på tvers av tenants).
    */
   {
@@ -381,7 +379,7 @@ export const ENDWISE_NAV: NavItem[] = [
     roles: ENDWISE,
   },
   /**
-   * F5-23 — hjelpeartiklene skrives HER, ikke i forhandlerens Innstillinger.
+   * Hjelpeartiklene skrives her, ikke i forhandlerens Innstillinger.
    * En publisert artikkel dukker opp i sidebaren hos alle 250 verksteder; det
    * er en plattformhandling, som dev-mode-bryteren ved siden av.
    */
@@ -393,7 +391,7 @@ export const ENDWISE_NAV: NavItem[] = [
     roles: ENDWISE_STYRING,
   },
   /**
-   * F0-04 — release-toggles, IKKE entitlements. Kjøpte moduler skrives av
+   * Release-toggles, ikke entitlements. Kjøpte moduler skrives av
    * Stripe og bor ikke her. Plattformhandling: kun endwise_admin.
    */
   {
@@ -418,20 +416,18 @@ export const ENDWISE_SETTINGS_NAV: NavItem = {
   roles: ENDWISE,
 };
 
-/* ══ Oppslag ═════════════════════════════════════════════════════════════ */
+/* Oppslag */
 
 /**
- * Kontekstene en bruker skal SE. Merk to ting:
- *
- *  · `requiresMechanic` filtrerer ikke lenger bort mekaniker-konteksten — den
- *    markeres `disabled` i stedet (F5-29). Å la valget forsvinne uten et ord
- *    var grunnen til at eier «ikke fant mekanikerdelen»: den var der hele
- *    tiden, men uten dør. Nå står døra der, låst, med skiltet på.
- *  · `requiresDevMode` filtrerer derimot HELT bort.
- *  · `requiresShopFlag` filtrerer Butikk bort når flagget er av. En
- *    dealer_admin uten tenant-overstyring skal ikke se konteksten.
- *
- * ⚠️ Begge deler er kosmetikk. Serveren håndhever uansett.
+ * Kontekstene en bruker skal se. Merk to ting:
+ * `requiresMechanic` filtrerer ikke lenger bort mekaniker-konteksten — den
+ * markeres `disabled` i stedet (F5-29). Å la valget forsvinne uten et ord
+ * var grunnen til at eier «ikke fant mekanikerdelen»: den var der hele
+ * tiden, men uten dør. Nå står døra der, låst, med skiltet på.
+ * `requiresDevMode` filtrerer derimot helt bort.
+ * `requiresShopFlag` filtrerer Butikk bort når flagget er av. En
+ * dealer_admin uten tenant-overstyring skal ikke se konteksten.
+ * Begge deler er kosmetikk. Serveren håndhever uansett.
  */
 export function contextsForRole(
   role: OrgRole | null,
@@ -484,7 +480,7 @@ function pathOf(href: string): string {
 }
 
 /**
- * Brukernavn ↔ intern sti. Navet peker på de norske URL-ene; de gamle
+ * Brukernavn intern sti. Navet peker på de norske URL-ene; de gamle
  * sidene lever videre som alias. Inspect-remap oversetter tilbake.
  */
 export const STI_ALIAS: Readonly<Record<string, string>> = {
@@ -515,7 +511,7 @@ function pathTreffer(pathname: string, href: string): boolean {
 }
 
 /**
- * Dealer-Innstillinger-stier (pille-fanene). Ikke Team/tjenestekatalog —
+ * Dealer-Innstillinger-stier (pille-fanene). Ikke Team/tjenestekatalog
  * Prisliste bor under Jobber, Team under Organisasjon.
  */
 const SETTINGS_STIER = [
@@ -573,7 +569,7 @@ export function contextForPath(pathname: string): ContextKey {
 
 /** Rollens landingsside etter innlogging. */
 export function landingForRole(role: OrgRole | null, isMechanic: boolean): string {
-  // Samme «ren mekaniker»-regel som i (app)/layout.tsx: en admin som OGSÅ har
+  // Samme «ren mekaniker»-regel som i (app)/layout.tsx: en admin som ogsÅ har
   // mekaniker-profil skal lande på sitt eget dashboard, ikke i mekanikerflaten.
   if (role === 'endwise_admin' || role === 'endwise_support') return '/endwise';
   const kunMekaniker = isMechanic && role !== 'dealer_admin';
@@ -582,8 +578,8 @@ export function landingForRole(role: OrgRole | null, isMechanic: boolean): strin
 }
 
 /**
- * F5-13 — Breadcrumb: destinasjon › undervisning.
- * Dette er ALT topbaren viser nå. Returnerer tom liste for ukjente ruter, som
+ * Breadcrumb: destinasjon › undervisning.
+ * Dette er alt topbaren viser nå. Returnerer tom liste for ukjente ruter, som
  * er riktigere enn å gjette et navn.
  */
 export function breadcrumbFor(
@@ -609,7 +605,7 @@ export function breadcrumbFor(
   }
 
   // Undervisning: match først på query (?kanal=/?visning=), så på sti. Et
-  // underpunkt med query må matche BÅDE sti og query — ellers ville «Oversikt»
+  // underpunkt med query må matche både sti og query — ellers ville «Oversikt»
   // (uten query) alltid vunnet over «Kalender» på samme sti.
   const barn = item.children ?? [];
   const child =
@@ -634,8 +630,8 @@ export function breadcrumbFor(
 }
 
 /**
- * Ruter som IKKE er i primær-navet, men som fortsatt finnes og skal ha et navn
- * i breadcrumben og i ⌘K. Eiers beslutning 04.08.2026: markedsrutene og
+ * Ruter som ikke er i primær-navet, men som fortsatt finnes og skal ha et navn
+ * i breadcrumben og i K. Eiers beslutning: markedsrutene og
  * Endwise-admin-sidene parkeres — koden beholdes, navet forenkles.
  */
 export const PARKED_LABEL: Record<string, string> = {

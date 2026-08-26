@@ -5,10 +5,9 @@ import { describe, expect, it } from 'vitest';
 import { listAgents } from '../src/index.ts';
 
 /**
- * F13-03 — Vercel serverless (endwise-v1-web) bundler ikke `instructions.md`
+ * Vercel serverless (endwise-v1-web) bundler ikke `instructions.md`
  * når agentene leser den med `readFileSync` + `import.meta.url` ved import.
- * Da krasjer HELE tRPC-routerens modulevaluering (også `session.me`).
- *
+ * Da krasjer hele tRPC-routerens modulevaluering (også `session.me`).
  * Instruksjonen skal fortsatt bo i `instructions.md` (techstack §2), men
  * lastes som en bundler-inline-streng — aldri fra et absolutt `/var/task/`-spor.
  */

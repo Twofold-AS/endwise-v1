@@ -8,7 +8,6 @@ import { Ferdighetskatalog } from './_katalog';
 
 /**
  * F3-08 / F3-12 — Organisasjon › Kompetanse.
- *
  * Katalogen over hva som finnes. Tildeling per person bor på Team
  * (liste, detaljpane og Opprett ansatt). Prislisten peker hit.
  */

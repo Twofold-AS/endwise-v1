@@ -44,17 +44,14 @@ import {
 import { AnalyseKort } from './_kort';
 
 /**
- * F5-18 — ANALYSE. Forhandlerens egne tall: drift og nettside.
- *
- * ⚠️ **Ingen h1 med «Analyse».** Breadcrumben i topbaren sier det allerede —
+ * Analyse. Forhandlerens egne tall: drift og nettside.
+ * Ingen h1 med «Analyse». Breadcrumben i topbaren sier det allerede
  * to like titler over hverandre er samme informasjon to ganger. Plassen brukes
  * i stedet til periodevelgeren, som faktisk gjør noe.
- *
- * **Chart-motor: Recharts** via shadcns Chart-mønster. Fargene er CSS-variabler
+ * Chart-motor: Recharts via shadcns Chart-mønster. Fargene er CSS-variabler
  * mot token-laget, så grafene snur med lys/mørk uten betinget farge her.
- *
- * ⛔ Ingen kunde-PII. Alt er aggregater.
- * ⚠️ Alle tall er mock — se `_data.ts` og «Mock»-merket på hvert kort.
+ * Ingen kunde-PII. Alt er aggregater.
+ * Alle tall er mock — se `_data.ts` og «Mock»-merket på hvert kort.
  */
 const CFG_VOLUM: ChartConfig = {
   fullfort: { label: 'Fullførte', color: CHART_COLORS.accent },
@@ -118,10 +115,12 @@ function AnalysePageInner() {
         <div className="h-40 animate-pulse rounded-xl bg-surface-2" />
       )}
 
-      {/* ⚠️ Ingen fane-velger for Rapporter/Direkte data (fjernet 06.08.2026).
-          Sidebaren eier navigasjonen — en tab-rad som gjør det samme er to
-          kontroller for én beslutning, og de går ut av synk.
-          Periodevelgeren står: den FILTRERER, den navigerer ikke. */}
+      {/*
+       * Ingen fane-velger for Rapporter/Direkte data (fjernet ).
+       * Sidebaren eier navigasjonen — en tab-rad som gjør det samme er to
+       * kontroller for én beslutning, og de går ut av synk.
+       * Periodevelgeren står: den filtrerer, den navigerer ikke.
+       */}
       {visning === 'rapporter' && !tomt && !bookings.isLoading && (
         <div className="flex justify-end">
           <Velger
@@ -261,8 +260,10 @@ function AnalysePageInner() {
               <ChartLegendContent config={CFG_TRAFIKK} />
             </AnalyseKort>
 
-            {/* Paigraf: fordeling er nettopp det pai er god til — andel av en
-                helhet. Tallene står i lista ved siden av, ikke bare i skivene. */}
+            {/*
+             * Paigraf: fordeling er nettopp det pai er god til — andel av en
+             * helhet. Tallene står i lista ved siden av, ikke bare i skivene.
+             */}
             <AnalyseKort
               id="kilder"
               icon={Users}
@@ -360,7 +361,7 @@ function Velger({
   );
 }
 
-/** ⚠️ Suspense-grense er PÅKREVD: siden leser `useSearchParams()`. */
+/** Suspense-grense er påkrevd: siden leser `useSearchParams`. */
 export default function Page() {
   return (
     <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster analyse …</div>}>

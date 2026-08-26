@@ -4,11 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * Mons P0 etter NO-GO på a840318.
- *
+ * Mons P0 etter no-go på a840318.
  * Kildekontrakt — kjører uten DATABASE_URL. Beviser at inspect ikke
  * bytter app.tenant_id, at 0021 tetter 0019/0020, og at hash-policyen
- * ikke er FOR ALL.
+ * ikke er for all.
  */
 const her = dirname(fileURLToPath(import.meta.url));
 

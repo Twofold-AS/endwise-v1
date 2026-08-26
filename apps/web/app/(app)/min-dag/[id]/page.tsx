@@ -16,7 +16,7 @@ import { useOnline } from '../../_lib/use-online';
 import { BevelButton, CardShell } from '../../_shell/cards';
 import { estMinutes, fmtTime, STATUS_LABEL } from '../_status';
 
-/** PROTOTYPE: valgene mekanikeren kan be om. Ingen backend bak dem. */
+/** Prototype: valgene mekanikeren kan be om. Ingen backend bak dem. */
 const EXTRA_TIME = [15, 30, 60] as const;
 
 // Sjekkliste er mock (tjeneste-sjekkliste-backend kommer); resten er ekte booking-data.
@@ -31,10 +31,9 @@ const CHECKLIST = [
 /**
  * F7 — Jobbdetalj for mekanikeren. Store statusknapper som bruker booking-
  * livssyklusen (Start → in_progress, Ferdig → completed er ekte transitions).
- *
- * F7-07 — OFFLINE: mister mekanikeren dekning, legges statusendringen i kø og
+ * Offline: mister mekanikeren dekning, legges statusendringen i kø og
  * sendes automatisk når nettet er tilbake (ingen tapt «Ferdig»).
- * F7-05 — AVVIK: «Meld avvik» varsler selger i sanntid (SSE).
+ * Avvik: «Meld avvik» varsler selger i sanntid (SSE).
  */
 export default function JobbDetaljPage() {
   const params = useParams<{ id: string }>();
@@ -50,7 +49,7 @@ export default function JobbDetaljPage() {
   const [queued, setQueued] = useState(0);
   const [deviationOpen, setDeviationOpen] = useState(false);
   const [deviationText, setDeviationText] = useState('');
-  // PROTOTYPE: «Be om mer tid». Lokal tilstand, ingen server.
+  // Prototype: «Be om mer tid». Lokal tilstand, ingen server.
   const [timeOpen, setTimeOpen] = useState(false);
   const [extraMinutes, setExtraMinutes] = useState<number>(30);
   const [timeSent, setTimeSent] = useState(false);
@@ -106,8 +105,8 @@ export default function JobbDetaljPage() {
 
   function sendDeviation() {
     const message = deviationText.trim();
-    // ⚠️ En GUARD, ikke `job!.id` og ikke `job?.id`.
-    //
+    // En guard, ikke `job!.id` og ikke `job?.id`.
+
     // `job!.id` var en påstand linteren med rette klaget på. Men
     // autofiksen til `job?.id` var verre enn problemet: da ville
     // `bookingId` blitt `undefined`, og en manglende jobb hadde blitt en
@@ -160,16 +159,18 @@ export default function JobbDetaljPage() {
         <p className="text-danger text-xs">{transition.error.message}</p>
       )}
 
-      {/* ── PROTOTYPE: «Be om mer tid» ──────────────────────────────────
-          Mekanikeren oppdager underveis at jobben er større enn avtalt. I dag
-          er alternativene å ringe selgeren eller å bare bruke tiden — begge
-          gjør at kalenderen lyver resten av dagen.
+      {/*
+ * Prototype: «Be om mer tid»
+ * Mekanikeren oppdager underveis at jobben er større enn avtalt. I dag
+ * er alternativene å ringe selgeren eller å bare bruke tiden — begge
+ * gjør at kalenderen lyver resten av dagen.
 
-          ⚠️ PROTOTYPE-NIVÅ. Ingen backend: ingen rute tar imot en
-          tidsforespørsel, ingen kalender flyttes, ingen kunde varsles. Dette
-          viser MØNSTERET — knapp, valg av lengde, kvittering — så det kan
-          vurderes før det bygges. Bygges for alvor: egen mutasjon som varsler
-          selger (F3-04) og foreslår ny slutt-tid i kalenderen (F3-07). */}
+ * Prototype-nivÅ. Ingen backend: ingen rute tar imot en
+ * tidsforespørsel, ingen kalender flyttes, ingen kunde varsles. Dette
+ * viser mønsteret — knapp, valg av lengde, kvittering — så det kan
+ * vurderes før det bygges. Bygges for alvor: egen mutasjon som varsler
+ * selger (F3-04) og foreslår ny slutt-tid i kalenderen (F3-07).
+*/}
       <div className="flex flex-col gap-2">
         {!timeOpen ? (
           <button
@@ -240,7 +241,7 @@ export default function JobbDetaljPage() {
         )}
       </div>
 
-      {/* F7-05 — Meld avvik → sanntidsvarsel til selger. */}
+      {/* Meld avvik → sanntidsvarsel til selger. */}
       <div className="flex flex-col gap-2">
         {!deviationOpen ? (
           <button

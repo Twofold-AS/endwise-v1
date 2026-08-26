@@ -2,8 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 
 /**
  * Engangskode når lederen slår av 2FA for en ansatt.
- *
- * ⛔ Koden sendes til LEDERENS e-post (den som handler), aldri til målet.
+ * Koden sendes til lederens e-post (den som handler), aldri til målet.
  * Databasen lagrer SHA-256 — samme grep som invitasjonstoken (F1-10).
  */
 export const TEAM_BEKREFTELSE_TTL_MS = 5 * 60_000;

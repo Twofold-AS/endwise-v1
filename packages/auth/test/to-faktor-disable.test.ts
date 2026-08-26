@@ -15,8 +15,7 @@ import {
 } from '../src/to-faktor-oppsett.ts';
 
 /**
- * F1-22 — slå av 2FA krever passord på serveren, og skriver audit.
- *
+ * Slå av 2FA krever passord på serveren, og skriver audit.
  * Klientflagg er ikke en sperre. En åpen sesjon alene skal ikke slå av 2FA.
  * Feil passord og annen auth-feil får samme generiske svar (CWE-209).
  */

@@ -1,8 +1,8 @@
 import Stripe from 'stripe';
 
 /**
- * F5-09 — Lat Stripe-klient. Env-variablene skal ikke kreves ved import
- * (build/test/mock). `stripeConfigured()` sier om vi kan gjøre ekte kall.
+ * Lat Stripe-klient. Env-variablene skal ikke kreves ved import
+ * (build/test/mock). `stripeConfigured` sier om vi kan gjøre ekte kall.
  */
 let client: Stripe | undefined;
 

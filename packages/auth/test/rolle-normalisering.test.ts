@@ -5,27 +5,24 @@ import { createAuth } from '../src/auth.ts';
 import { createTenant } from '../src/tenant.ts';
 
 /**
- * F1-04 — **«LÅST INNE»-TESTEN.**
- *
- * ── Bugen denne fanger ────────────────────────────────────────────────────
+ * «låst inne»-testen.
+ * Bugen denne fanger
  * `auth.api.createOrganization` gir oppretteren Better-Auths standardrolle
  * `owner`. Vår RBAC-modell kjenner ikke den verdien: `OrgRole` er
  * `customer | dealer_staff | dealer_admin | endwise_admin`.
- *
  * En bruker som ble stående med `owner` matchet derfor ingen rolleliste i
  * navigasjonen. Sidebar-radene forsvant, kontekstvelgeren forsvant, og
  * brukeren var **låst inne i tenanten uten en dør ut** — nøyaktig det som
- * skjedde i «Yamaha Bergen» 09.08.2026.
- *
+ * skjedde i «Yamaha Bergen».
  * Det var ikke et sikkerhetshull. Det var verre på sin egen måte: en stille
  * feil som ikke ga noen feilmelding, bare en app som manglet halvparten av seg
- * selv. Derfor testes det på ROLLEN, ikke på UI-et — UI-et er bare der det ble
+ * selv. Derfor testes det på rollen, ikke på UI-et — UI-et er bare der det ble
  * synlig.
  */
 const OWNER_URL = process.env.DATABASE_URL;
 /**
- * Krever OGSÅ BETTER_AUTH_SECRET: testen instansierer en ekte Better-Auth for å
- * gå gjennom den FAKTISKE opprettelsesveien. En test som stubbet den ville ikke
+ * Krever ogsÅ BETTER_AUTH_SECRET: testen instansierer en ekte Better-Auth for å
+ * gå gjennom den faktiske opprettelsesveien. En test som stubbet den ville ikke
  * fanget bugen, siden bugen lå i hva Better-Auth selv skriver.
  * Kjør med .env lastet, f.eks. `node --env-file=.env` i test-kommandoen.
  * Uten secret skippes testen i stedet for å feile på en manglende variabel.

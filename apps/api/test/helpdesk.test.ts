@@ -4,15 +4,13 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * F5-23 — HELPDESK: hvem får skrive, og hva ser en leser?
- *
- * ⛔ **Kjernespørsmålet:** en artikkel publisert her vises i sidebaren hos ALLE
+ * Helpdesk: hvem får skrive, og hva ser en leser?
+ * Kjernespørsmålet: en artikkel publisert her vises i sidebaren hos alle
  * forhandlere. Klarer en `dealer_admin` å skrive en, kan ett verksted sende
  * innhold inn i 249 andres navigasjon. Skrivestien er derfor
  * `endwiseAdminProcedure` og ikke `adminProcedure` — forskjellen er nettopp at
  * den siste ville sluppet dealer_admin inn.
- *
- * ⚠️ Tabellene har INGEN RLS (globalt innhold, se skjemaet). Da er ruta hele
+ * Tabellene har ingen RLS (globalt innhold, se skjemaet). Da er ruta hele
  * beskyttelsen, og det er ruta denne testen angriper — direkte på `appRouter`,
  * ikke gjennom UI-et.
  */
@@ -68,7 +66,7 @@ describeDb('F5-23 — helpdesk', () => {
     await owner.delete(schema.tenants).where(eq(schema.tenants.id, tenant));
   });
 
-  /* ══ ANGREP: forhandlere skal ikke kunne skrive ════════════════════════ */
+  /* Angrep: forhandlere skal ikke kunne skrive */
 
   const utkast = {
     title: 'Kapret artikkel fra en forhandler',
@@ -91,11 +89,11 @@ describeDb('F5-23 — helpdesk', () => {
   });
 
   it('ANGREP: dealer_admin kan ikke se kladdelista', async () => {
-    // `alle` returnerer OGSÅ upubliserte. Det er Endwise-internt.
+    // `alle` returnerer ogsÅ upubliserte. Det er Endwise-internt.
     await expect(somForhandler().helpdesk.alle()).rejects.toThrow(/Kun Endwise-admin|FORBIDDEN/i);
   });
 
-  /* ══ ENDWISE-ADMIN skriver ════════════════════════════════════════════ */
+  /* Endwise-admin skriver */
 
   it('endwise_admin kan opprette, og slug utledes av tittelen', async () => {
     const rad = await somEndwise().helpdesk.opprett({
@@ -136,7 +134,7 @@ describeDb('F5-23 — helpdesk', () => {
     ).rejects.toThrow();
   });
 
-  /* ══ LESING ═══════════════════════════════════════════════════════════ */
+  /* Lesing */
 
   it('en forhandler KAN lese publiserte artikler', async () => {
     const liste = await somForhandler().helpdesk.list({ limit: 50 });
@@ -152,7 +150,7 @@ describeDb('F5-23 — helpdesk', () => {
     expect(direkte).toBeNull();
   });
 
-  /* ══ ULEST ════════════════════════════════════════════════════════════ */
+  /* Ulest */
 
   it('en ny artikkel er ULEST uten at publiseringen skrev noe per bruker', async () => {
     const liste = await somForhandler().helpdesk.list({ limit: 50 });
@@ -167,7 +165,7 @@ describeDb('F5-23 — helpdesk', () => {
     expect(etter.find((a) => a.id === artikkelId)?.ulest).toBe(false);
     expect(await somForhandler().helpdesk.ulesteAntall()).toBe(forFor - 1);
 
-    // ⛔ Ansatt i samme tenant har ikke lest noe, og skal fortsatt se den som ny.
+    // Ansatt i samme tenant har ikke lest noe, og skal fortsatt se den som ny.
     const annen = await somAnsatt().helpdesk.list({ limit: 50 });
     expect(annen.find((a) => a.id === artikkelId)?.ulest).toBe(true);
   });
@@ -192,7 +190,7 @@ describeDb('F5-23 — helpdesk', () => {
     expect(somEndwiseSer.find((a) => a.id === artikkelId)?.ulest).toBe(true);
   });
 
-  /* ══ OPPDATERING ══════════════════════════════════════════════════════ */
+  /* Oppdatering */
 
   it('oppdatering endrer tittelen, men ALDRI slug — lenka skal overleve', async () => {
     const før = await somEndwise().helpdesk.bySlug({ slug: 'slik-fungerer-a-teste-ting' });
@@ -221,7 +219,7 @@ describeDb('F5-23 — helpdesk', () => {
     ).rejects.toThrow(/Kun Endwise-admin|FORBIDDEN/i);
   });
 
-  /* ══ F5-51 — KATEGORIER ═══════════════════════════════════════════════ */
+  /* Kategorier */
 
   it('tar Brukerguide og Oppdateringer, og de eksisterende kategoriene', async () => {
     const guide = await somEndwise().helpdesk.opprett({

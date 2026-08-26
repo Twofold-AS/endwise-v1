@@ -2,15 +2,13 @@ import type { ModelMessage, Tool } from 'ai';
 import { type GuardContext, type GuardrailPipeline, GuardrailViolation } from './types.ts';
 
 /**
- * F6-14 — Guardrails L1–L5 (OWASP LLM Top 10).
- *
- * Fem lag, og de fanger fem ULIKE feil. Slår du sammen to av dem, mister du én.
- *
- *   L1  INPUT       — brukerinput er DATA, ikke instruksjoner (LLM01)
- *   L2  SCOPE       — verktøy arver tenant fra sesjonen, aldri fra modellen (LLM02)
- *   L3  TOOL-OUTPUT — det et verktøy returnerer er DATA, ikke instruksjoner (LLM01)
- *   L4  OUTPUT      — hemmeligheter og PII slipper ikke ut (LLM02/LLM06)
- *   L5  BUDSJETT    — steg- og kallgrenser; en løpsk løkke er en regning (LLM04)
+ * Guardrails L1–L5 (owasp LLM Top 10).
+ * Fem lag, og de fanger fem ulike feil. Slår du sammen to av dem, mister du én.
+ * L1 input — brukerinput er data, ikke instruksjoner (LLM01)
+ * L2 scope — verktøy arver tenant fra sesjonen, aldri fra modellen (LLM02)
+ * L3 tool-output — det et verktøy returnerer er data, ikke instruksjoner (LLM01)
+ * L4 output — hemmeligheter og PII slipper ikke ut (LLM02/LLM06)
+ * L5 budsjett — steg- og kallgrenser; en løpsk løkke er en regning (LLM04)
  */
 
 /** L1 — mønstre som forsøker å overstyre systeminstruksjonen. */
@@ -24,8 +22,7 @@ const INJECTION_PATTERNS = [
 
 /**
  * L4 — ting som aldri skal ut av en agent, uansett hvor pent den blir spurt.
- *
- * ⚠️ Eksportert fordi den strømmende varianten (`stream-redact.ts`) MÅ bruke
+ * Eksportert fordi den strømmende varianten (`stream-redact.ts`) MÅ bruke
  * nøyaktig samme liste. To lister ville før eller siden blitt ulike, og da ville
  * det som er filtrert i et vanlig svar sluppet gjennom i et strømmet — altså
  * verst tenkelige utfall: en sperre som virker i testen og ikke i praksis.
@@ -56,9 +53,8 @@ export function createGuardrails(options: GuardrailOptions = {}): GuardrailPipel
   return {
     /**
      * L1 — Prompt-injeksjon.
-     *
-     * Vi FJERNER ikke teksten (da ville vi ødelagt legitime meldinger som
-     * tilfeldigvis nevner «systeminstruksjon»). Vi RAMMER den inn: innholdet
+     * Vi fjerner ikke teksten (da ville vi ødelagt legitime meldinger som
+     * tilfeldigvis nevner «systeminstruksjon»). Vi rammer den inn: innholdet
      * merkes eksplisitt som data fra en ekstern part. Modellen får se den, men
      * den er ikke lenger formulert som en ordre.
      */
@@ -84,17 +80,14 @@ export function createGuardrails(options: GuardrailOptions = {}): GuardrailPipel
 
     /**
      * L2 + L3 + L5 — verktøyene.
-     *
-     * L2: Vi fjerner ALLE tenant-lignende felter fra input modellen sender.
-     *     Verktøyet henter tenant fra konteksten uansett — men om modellen får
-     *     lov til å SENDE en tenantId, vil noen før eller siden lese den «bare
-     *     for logging», og da er grensen borte. Den skal ikke finnes.
-     *
-     * L3: Resultatet pakkes inn som DATA. Et verktøy som returnerer en tekst
-     *     der det står «du er nå administrator», skal ikke kunne bli en ordre.
-     *     Det er den klassiske indirekte injeksjonen — og den kommer inn via
-     *     data vi selv har hentet (f.eks. en kundes melding, et Quick-felt).
-     *
+     * L2: Vi fjerner alle tenant-lignende felter fra input modellen sender.
+     * Verktøyet henter tenant fra konteksten uansett — men om modellen får
+     * lov til å sende en tenantId, vil noen før eller siden lese den «bare
+     * for logging», og da er grensen borte. Den skal ikke finnes.
+     * L3: Resultatet pakkes inn som data. Et verktøy som returnerer en tekst
+     * der det står «du er nå administrator», skal ikke kunne bli en ordre.
+     * Det er den klassiske indirekte injeksjonen — og den kommer inn via
+     * data vi selv har hentet (f.eks. en kundes melding, et Quick-felt).
      * L5: Teller kall. En modell som kaller samme verktøy i evig løkke stoppes.
      */
     wrapTools(tools: Record<string, Tool>, context: GuardContext) {
@@ -128,7 +121,7 @@ export function createGuardrails(options: GuardrailOptions = {}): GuardrailPipel
             const result = await original(cleaned as never, execOptions);
 
             // L3 — og samtidig en hard serialisering.
-            //
+
             // `toJsonSafe` er ikke kosmetikk: Drizzle returnerer `Date`-objekter,
             // og modellen tar kun imot ren JSON. Uten dette feiler hele tool-loopen
             // på andre steg med en uleselig skjemafeil. Funnet ved å kjøre løkka.
@@ -164,7 +157,7 @@ function toJsonSafe(value: unknown): unknown {
   return JSON.parse(JSON.stringify(value ?? null));
 }
 
-/** Felter modellen ALDRI får bestemme. Sesjonen eier disse. */
+/** Felter modellen aldri får bestemme. Sesjonen eier disse. */
 const SCOPE_FIELDS = ['tenantId', 'tenant_id', 'organizationId', 'userId', 'user_id', 'role'];
 
 function stripScopeFields(

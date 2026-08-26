@@ -3,12 +3,10 @@
 import { Bell, Mail, MessageSquare, Switch } from '@endwise/ui';
 
 /**
- * F5-19 — Settings › Varsler. KONFIGURASJON av kanaler.
- *
- * ⚠️ Notifikasjons-SENTERET (F5-08, klokka med dropdown) hører ikke hjemme her —
+ * Settings › Varsler. Konfigurasjon av kanaler.
+ * Notifikasjons-senteret (F5-08, klokka med dropdown) hører ikke hjemme her
  * det er en flate, ikke en innstilling. Telleren ligger i sidebarens toppseksjon.
- *
- * STATUS: skall. Bryterne er lokal tilstand — det finnes ingen tRPC-rute for
+ * Status: skall. Bryterne er lokal tilstand — det finnes ingen tRPC-rute for
  * varselpreferanser ennå. Utsendingen (Twilio/Resend via Vercel Workflows,
  * F3-04) er bygget; det er valgene som mangler.
  */

@@ -58,7 +58,7 @@ export const TYPE_LABEL: Record<string, string> = {
 };
 
 /**
- * F8-01 — Hvor raden kom fra. Quick-speilede rader kan ikke redigeres fritt her,
+ * Hvor raden kom fra. Quick-speilede rader kan ikke redigeres fritt her,
  * så det er verdt å se med én gang.
  */
 export function Kilde({ source }: { source: string | null }) {

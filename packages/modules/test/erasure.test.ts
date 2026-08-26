@@ -6,7 +6,7 @@ import { createMessagesModule } from '../src/messages/index.ts';
 import { publishEvent } from '../src/stream/index.ts';
 
 /**
- * F14-16 — Sletterutinen, gjennom alle ledd.
+ * Sletterutinen, gjennom alle ledd.
  */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
@@ -127,7 +127,7 @@ describeDb('sletterutine (F14-16)', () => {
   });
 
   /**
-   * Bookingen SLETTES ikke — bokføringsloven krever at transaksjonen består.
+   * Bookingen slettes ikke — bokføringsloven krever at transaksjonen består.
    * Vi fjerner personen fra den, ikke transaksjonen fra regnskapet.
    */
   it('bookingen består, men er anonymisert', async () => {
@@ -144,7 +144,7 @@ describeDb('sletterutine (F14-16)', () => {
   });
 
   /**
-   * ⚠️ DEN VIKTIGSTE. Audit-loggen er append-only — den KAN ikke slettes av
+   * Den viktigste. Audit-loggen er append-only — den kan ikke slettes av
    * app-rollen. Den redakteres gjennom en SECURITY DEFINER-funksjon, og
    * redaksjonen blir selv en rad i loggen den redigerte.
    */
@@ -159,7 +159,7 @@ describeDb('sletterutine (F14-16)', () => {
     expect(gammel?.ipAddress).toBeNull();
     expect(JSON.stringify(gammel?.metadata)).not.toContain('Ola Nordmann');
 
-    // Redaksjonen er selv en hendelse — og DEN raden kan ingen redigere bort.
+    // Redaksjonen er selv en hendelse — og den raden kan ingen redigere bort.
     const spor = rader.find((r) => r.action === 'audit.redacted');
     expect(spor).toBeDefined();
     expect(spor?.actor).toBe('system:erasure');
@@ -169,7 +169,7 @@ describeDb('sletterutine (F14-16)', () => {
     const result = await app.execute(
       sql`update audit_log set actor = 'hacket' where tenant_id = ${tenantA}`,
     );
-    // RLS: ingen UPDATE-policy → 0 rader. Redaksjon skjer KUN via funksjonen.
+    // RLS: ingen UPDATE-policy → 0 rader. Redaksjon skjer kun via funksjonen.
     expect(result.rowCount).toBe(0);
   });
 

@@ -14,8 +14,7 @@ import { widget } from './routes/widget/index.ts';
 
 /**
  * Hono-skallet. Eies av `apps/api` som bibliotek.
- *
- * F13-03: Vercel bruker IKKE `serve()` herfra. Next.js route handlers i
+ * Vercel bruker ikke `serve` herfra. Next.js route handlers i
  * `apps/web` kaller `handleTrpc` / `handleAuth` / `handleStripeWebhook` /
  * `handleHono` direkte. Dette skallet er den tynne lokale stien
  * (`src/dev.ts` + Docker) og implementasjonen bak `handleHono`.
@@ -31,22 +30,22 @@ app.on(['GET', 'POST'], '/api/auth/*', (c) => handleAuth(c.req.raw));
 app.get('/health', () => handleHealth());
 app.get('/health/', () => handleHealth());
 
-// F5-09 — Stripe abonnement-webhook (signaturverifisert, rå body).
+// Stripe abonnement-webhook (signaturverifisert, rå body).
 app.post('/stripe/webhook', (c) => handleStripeWebhook(c.req.raw));
 
 app.route('/cron/cleanup', cronCleanup);
-// F14-03: automatisk sletting etter retensjonspolicyen.
+// Automatisk sletting etter retensjonspolicyen.
 app.route('/cron/retention', cronRetention);
-// F8-01: planlagt Quick-pull 08:00/16:00 Oslo (DST-guard i handleren).
+// Planlagt Quick-pull 08:00/16:00 Oslo (dst-guard i handleren).
 app.route('/cron/quick-pull', cronQuickPull);
-// F4: OFFENTLIG kundewidget (publishable key + origin + kortlevd token, ikke sesjon).
+// F4: offentlig kundewidget (publishable key + origin + kortlevd token, ikke sesjon).
 app.route('/widget', widget);
-// F6-18 — strømmende AI-chat for `useChat`. Sesjonsbasert, tenant-scopet,
-// modell valgt av agentens dataklasse. ⛔ Ikke Vercel AI Gateway.
+// Strømmende AI-chat for `useChat`. Sesjonsbasert, tenant-scopet,
+// modell valgt av agentens dataklasse. Ikke Vercel AI Gateway.
 app.route('/chat', chat);
-// F1-10 — OFFENTLIG invitasjonsflate. Ingen sesjon: den som åpner lenka har
+// Offentlig invitasjonsflate. Ingen sesjon: den som åpner lenka har
 // ingen konto ennå. Hemmeligheten ligger i tokenet, ikke i en cookie.
-// ⚠️ FLERTALL med vilje: SIDEN ligger på /invitasjon/[token] i Next. Delte de
+// Flertall med vilje: siden ligger på /invitasjon/[token] i Next. Delte de
 // sti, ville Next servert HTML der klienten venter JSON.
 app.route('/invitasjoner', invitasjon);
 

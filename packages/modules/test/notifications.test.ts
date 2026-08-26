@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { NotificationChannel } from '../src/contracts/index.ts';
 import { createDispatcher } from '../src/notifications/index.ts';
 
-/** F3-04 — Varsling. Testen som betyr noe: retry sender ikke dobbelt. */
+/** Varsling. Testen som betyr noe: retry sender ikke dobbelt. */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
 const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;
@@ -14,7 +14,7 @@ describeDb('varsling (F3-04)', () => {
   let app: Database;
   const tenantId = randomUUID();
 
-  /** Teller hvor mange ganger vi FAKTISK sendte. */
+  /** Teller hvor mange ganger vi faktisk sendte. */
   let sendCount = 0;
   const fakeSms: NotificationChannel = {
     kind: 'sms',
@@ -62,7 +62,7 @@ describeDb('varsling (F3-04)', () => {
   });
 
   /**
-   * DEN VIKTIGE. Vercel Workflows retryer feilede steg. Uten idempotens-vakten
+   * Den viktige. Vercel Workflows retryer feilede steg. Uten idempotens-vakten
    * ville kunden fått to påminnelser om samme time fordi nettverket hikstet.
    */
   it('IDEMPOTENS: samme nøkkel to ganger → sendes ÉN gang', async () => {

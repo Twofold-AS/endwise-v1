@@ -6,25 +6,22 @@ import { Questionnaire as Primitive } from '@shadcn/react/questionnaire';
 import type * as React from 'react';
 
 /*
- * shadcn/ui `questionnaire` — stil-skallet, skrevet 12.08.2026.
- * Se UI-PAKKER.md §9.
- *
- * ── ⚠️ Denne er IKKE kopiert fra registeret ──────────────────────────────
+ * shadcn/ui `questionnaire` — stil-skallet, skrevet.
+ * Se ui-pakker.md §9.
+ * Denne er ikke kopiert fra registeret
  * `message` og `message-scroller` ble hentet med `npx shadcn@latest view`.
- * `questionnaire` ligger IKKE i det offentlige style-registeret
- * (`/r/styles/new-york-v4/questionnaire.json` → 404, verifisert 12.08.2026);
+ * `questionnaire` ligger ikke i det offentlige style-registeret
+ * (`/r/styles/new-york-v4/questionnaire.json` → 404, verifisert );
  * bare dokumentasjonssidene finnes. **Oppførselen** — flersteg, enkelt-/
  * flervalg, fritekst, hopp over, tastatursnarveier, validering — kommer likevel
  * fra `@shadcn/react/questionnaire`, samme pakke som scrolleren bruker.
- *
  * Denne fila er derfor **kun stil på et ekte shadcn-primitiv**, skrevet mot den
- * dokumenterte API-en (Root · Progress · Item · Title · Description · Choices ·
+ * dokumenterte API-en (Root · Progress · Item · Title · Description · Choices
  * Choice · Input · Error · Actions · Previous · Skip · Next · Submit).
- * ⚠️ Blir komponenten publisert i registeret senere, bør denne byttes ut mot
+ * Blir komponenten publisert i registeret senere, bør denne byttes ut mot
  * den kanoniske i stedet for å vedlikeholdes videre.
- *
- * ── Hva den brukes til hos oss ───────────────────────────────────────────
- * Human-in-the-loop: agenten kan ikke gjette, så den SPØR. Se `ask_user` i
+ * Hva den brukes til hos oss
+ * Human-in-the-loop: agenten kan ikke gjette, så den spør. Se `ask_user` i
  * `tool-part.tsx`. Et fritekstsvar fra en kunde er `customer_freetext` og skal
  * behandles deretter — den regelen ligger på serveren, ikke her.
  */

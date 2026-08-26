@@ -2,7 +2,7 @@
  * Seed/mock-data for admin-oversikten. Deterministisk (ingen Math.random) så
  * server- og klient-render matcher. Byttes mot ekte tRPC-spørringer (F3-05/F5)
  * senere. Feltet `spark`/`color` på KPI-ene er ubrukt etter at dither-kit ble
- * fjernet 03.08.2026 — beholdt inntil videre så seed-formen ikke må skrives om.
+ * fjernet — beholdt inntil videre så seed-formen ikke må skrives om.
  */
 
 export type DayRow = {

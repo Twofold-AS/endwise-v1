@@ -5,22 +5,18 @@ import { getStripe, stripeConfigured } from '../lib/stripe.ts';
 
 /**
  * F5-09 / F5-32 / F13-03 — Stripe-webhook for abonnement-livssyklus.
- *
- * ⛔ **DETTE ER DEN ENESTE VEIEN ENTITLEMENTS FLIPPES.** Ingen klient-rute
+ * dette er den eneste veien entitlements flippes. Ingen klient-rute
  * skriver `tenant_modules` — modultilgang er en konsekvens av en verifisert
  * betaling, aldri av et knappetrykk. `checkout` returnerer bare en URL.
- *
- * **Signaturverifisering er PÅ:** `constructEvent(body, sig, whsec)` på RÅ
- * body-streng. Kall `await req.text()` FØR denne — aldri `req.json()`.
+ * Signaturverifisering er PÅ: `constructEvent(body, sig, whsec)` på RÅ
+ * body-streng. Kall `await req.text` før denne — aldri `req.json`.
  * Feiler signaturen, svarer vi 400 og rører ingenting. Uten
- * STRIPE_WEBHOOK_SECRET svarer ruta 503 — den feiler LUKKET, ikke åpent.
- *
+ * STRIPE_WEBHOOK_SECRET svarer ruta 503 — den feiler lukket, ikke åpent.
  * Tenant finnes via `tenant_id` i abonnementets metadata (satt ved checkout),
  * ikke via kryss-tenant-oppslag. Alt skrives gjennom withTenant → RLS.
- *
- * ── Nivå + tillegg (07.08.2026) ───────────────────────────────────────────
- * Et abonnement har nå FLERE subscription items: ett for nivået og ett per
- * tillegg. Vi leser derfor ALLE price-IDene, ikke bare `items.data[0]` — den
+ * Nivå + tillegg
+ * Et abonnement har nå flere subscription items: ett for nivået og ett per
+ * tillegg. Vi leser derfor alle price-IDene, ikke bare `items.data[0]` — den
  * gamle koden ville stille mistet hvert eneste tillegg.
  */
 
@@ -94,7 +90,7 @@ export async function handleStripeWebhookRaw(
         const tenantId = sub.metadata?.tenant_id;
         if (!tenantId) break;
 
-        // ⚠️ ALLE items, ikke bare den første: nivået er ett item, hvert
+        // Alle items, ikke bare den første: nivået er ett item, hvert
         // tillegg sitt eget. `items.data[0]` ville mistet tilleggene stille.
         const priceIds = sub.items.data.map((i) => i.price?.id);
         const { tier, tillegg } = subscriptionFromPriceIds(priceIds);
@@ -114,7 +110,7 @@ export async function handleStripeWebhookRaw(
             },
           );
         } else {
-          // Kjenner vi ikke igjen nivået, rører vi IKKE modulene. Å nulle dem
+          // Kjenner vi ikke igjen nivået, rører vi ikke modulene. Å nulle dem
           // fordi en price-ID manglet i .env ville stengt et betalende verksted.
           await billing.setStatus(tenantId, sub.status);
         }
@@ -128,7 +124,7 @@ export async function handleStripeWebhookRaw(
       case 'invoice.payment_failed': {
         const inv = event.data.object as InvoiceLike;
         const tenantId = inv.subscription_details?.metadata?.tenant_id ?? inv.metadata?.tenant_id;
-        // ⚠️ Kun status. Modulene står PÅ — nåden er 14 dager
+        // Kun status. Modulene står PÅ — nåden er 14 dager
         // (PAST_DUE_NADE_DAGER), og frysejobben er ikke bygget (F5-32).
         // Basis berøres uansett aldri: den har ingen gate.
         if (tenantId) await billing.setStatus(tenantId, 'past_due');
@@ -144,7 +140,7 @@ export async function handleStripeWebhookRaw(
 }
 
 /**
- * Les rå body med `req.text()` — aldri `req.json()`. Next-ruta speiler dette
+ * Les rå body med `req.text` — aldri `req.json`. Next-ruta speiler dette
  * eksplisitt slik at signaturverifiseringen ikke kan miste whitespace.
  */
 export async function handleStripeWebhook(req: Request): Promise<Response> {

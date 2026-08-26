@@ -5,12 +5,10 @@ import { createTwilioChannel } from '@endwise/toolkit-twilio';
 import { FatalError, RetryableError } from 'workflow';
 
 /**
- * F3-04 — Varsling som durable jobb (Vercel Workflows, F0-13/ADR-003).
- *
+ * Varsling som durable jobb (Vercel Workflows, F0-13/ADR-003).
  * Roadmap-teksten sier «Twilio + BullMQ». BullMQ er et dødt valg (techstack §6).
  * Køen er Workflows. Sendingen er den samme.
- *
- * Retry-sikkerheten ligger IKKE her — den ligger i dispatcherens idempotens-vakt.
+ * Retry-sikkerheten ligger ikke her — den ligger i dispatcherens idempotens-vakt.
  * Dette steget kan trygt kjøres om igjen: andre gang returnerer den
  * `duplicate: true` og sender ingenting.
  */
@@ -62,7 +60,7 @@ async function sendNotification(input: DispatchInput) {
 
 async function escalate(input: DispatchInput, reason: string) {
   'use step';
-  // DLQ-mønsteret (F0-13): et varsel som aldri kom fram, skal ikke forsvinne i stillhet.
+  // Dlq-mønsteret (F0-13): et varsel som aldri kom fram, skal ikke forsvinne i stillhet.
   console.error(`[dlq] varsel ikke levert: ${input.event} → ${input.to}: ${reason}`);
 }
 

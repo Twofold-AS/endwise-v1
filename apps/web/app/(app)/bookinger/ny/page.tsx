@@ -9,7 +9,7 @@ import { trpc } from '@/lib/trpc';
 import { fmtMinor } from '../_status';
 
 /**
- * F3-09 / P3 — «Ny jobb». EKTE flyt mot slot-lock-motoren (F3-01): velg
+ * F3-09 / P3 — «Ny jobb». Ekte flyt mot slot-lock-motoren (F3-01): velg
  * kunde/kjøretøy/tjenester/tid → matcheren (F3-02) rangerer mekanikere →
  * `bookings.create` tar slot-låsen og skriver. Flere tjenester på én jobb;
  * varighet er katalogsum, overstyrbar manuelt. Vegvesen-oppslag (F2-08) som

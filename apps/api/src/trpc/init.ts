@@ -5,7 +5,7 @@ import type { AppContext } from '../context.ts';
 import { resolveShopFlag } from './shop-flag.ts';
 
 /**
- * F0-02 — tRPC v11 for INTERNE flater (admin-/forhandler-dashboard, mekaniker-PWA).
+ * Trpc v11 for interne flater (admin-/forhandler-dashboard, mekaniker-PWA).
  * Offentlig REST (widget, Quick, webhooks) går via Hono — se src/routes/.
  */
 const t = initTRPC.context<AppContext>().create();
@@ -25,11 +25,10 @@ export const protectedProcedure = t.procedure.use(function isAuthed(opts) {
 });
 
 /**
- * F3-12 — Skriveflater som krever forhandler-admin.
- *
+ * Skriveflater som krever forhandler-admin.
  * RLS svarer på «hvilken tenants rader?». Den vet ingenting om roller. En
  * dealer_staff er medlem av tenanten, så RLS slipper ham inn i dataene — det er
- * BARE denne sjekken som hindrer at han gir seg selv nye ferdigheter.
+ * Bare denne sjekken som hindrer at han gir seg selv nye ferdigheter.
  */
 export const adminProcedure = protectedProcedure.use(function isAdmin(opts) {
   const { ctx } = opts;
@@ -43,41 +42,34 @@ export const adminProcedure = protectedProcedure.use(function isAdmin(opts) {
 });
 
 /**
- * F5-26 — STRENGERE ENN `adminProcedure`, og det er hele poenget.
- *
+ * Strengere enn `adminProcedure`, og det er hele poenget.
  * `adminProcedure` slipper inn **både** `dealer_admin` og `endwise_admin`. Det
  * er riktig for «styr ditt eget verksted». Det er feil for alt som gjelder
- * PLATTFORMEN: opprette forhandlere, skru på dev-mode, endre globale flagg.
+ * Plattformen: opprette forhandlere, skru på dev-mode, endre globale flagg.
  * En forhandler skal ikke kunne opprette forhandlere.
- *
  * Fram til nå har hver slik rute gjentatt `if (ctx.role !== 'endwise_admin')`
  * inne i seg selv (se `flags.setGlobal`). Det virker, men en sjekk som må
  * huskes er en sjekk som en dag glemmes. Her er den en type-grense i stedet.
  */
 /**
- * F0-16 — MODUL-GATEN. **Dette lukker CWE-862 (Missing Authorization).**
- *
+ * Modul-gaten. **Dette lukker CWE-862 (Missing Authorization).**
  * RLS svarer på «hvilken tenants rader?». Den vet ingenting om betaling. Fram
- * til nå håndhevet vi entitlements KUN på AI-agent-stien (`assertEntitled` i
+ * til nå håndhevet vi entitlements kun på AI-agent-stien (`assertEntitled` i
  * agent-runtime) — ingen tRPC-prosedyre sjekket modul. En `dealer_admin` uten
  * Butikk- eller Quick-modulen fikk svar ved å kalle ruten direkte; UI-et skjulte
  * bare knappen, og en gjemt knapp er ikke en sperre.
- *
- * ── Tre lag, og de feiler ULIKT ───────────────────────────────────────────
- *
- *   1. **Entitlement** — `tenant_modules` har nøkkelen med `enabled = true`.
- *      Leses fra DB gjennom `withTenant`, **aldri fra klienten**.
- *   2. **Rolle** — `protectedProcedure` under; skriveruter legger
- *      `adminProcedure` på toppen. Å ha kjøpt en modul er ikke det samme som å
- *      ha lov til å endre den.
- *   3. **Skop** — `ctx.tenantId` kommer fra sesjonen (`assertMember`), og
- *      spørringen kjører i `withTenant`. Ingen rute tar imot en tenant-id.
- *
- * ⚠️ **Fail-safe: feiler oppslaget, er svaret NEI.** En tom modulliste er
+ * Tre lag, og de feiler ulikt
+ * 1. **Entitlement** — `tenant_modules` har nøkkelen med `enabled = true`.
+ * Leses fra DB gjennom `withTenant`, **aldri fra klienten**.
+ * 2. **Rolle** — `protectedProcedure` under; skriveruter legger
+ * `adminProcedure` på toppen. Å ha kjøpt en modul er ikke det samme som å
+ * ha lov til å endre den.
+ * 3. **Skop** — `ctx.tenantId` kommer fra sesjonen (`assertMember`), og
+ * spørringen kjører i `withTenant`. Ingen rute tar imot en tenant-id.
+ * Fail-safe: feiler oppslaget, er svaret nei. En tom modulliste er
  * trygg; en antatt-full er det ikke. Samme mønster som `agent.ts` allerede
- * bruker med sin `.catch(() => [])`.
- *
- * ⛔ **Legg ALDRI denne på en basis-rute.** Verkstedet, Innboks, Saker, Kunder,
+ * bruker med sin `.catch( => [])`.
+ * Legg aldri denne på en basis-rute. Verkstedet, Innboks, Saker, Kunder,
  * Lager, Helpdesk og Settings er kjerne — se `BASIS_MODULES` i
  * `packages/modules/src/entitlements.ts`. Et verksted som ikke får se sitt eget
  * lager fordi et kort utløp, er et produkt som har misforstått seg selv.
@@ -126,12 +118,11 @@ export function moduleAdminProcedure(moduleKey: AddonModule) {
 const SHOP_ROLLER = new Set(['dealer_admin', 'dealer_staff', 'endwise_admin', 'endwise_support']);
 
 /**
- * F10-03 — Butikk-gaten. **Ikke `moduleProcedure('shop')`.** Shop ligger i
+ * Butikk-gaten. **Ikke `moduleProcedure('shop')`.** Shop ligger i
  * ADDON_MODULES men er IKKE_TILDELBAR — admin kan ikke gi Nettbutikk, og
  * Stripe-abonnementet selger den ikke. Eneste lovlige åpning er feature-flaget
  * `shop` (tenant-overstyring) + vanlig auth/RLS.
- *
- * Fail-safe: flaggoppslag som feiler = AV = FORBIDDEN.
+ * Fail-safe: flaggoppslag som feiler = av = forbidden.
  */
 export const shopProcedure = protectedProcedure.use(async function shopFlagOn(opts) {
   const { ctx } = opts;
@@ -164,7 +155,7 @@ export const endwiseAdminProcedure = protectedProcedure.use(function isEndwiseAd
 
 /**
  * Plattform-team: eier, administrator og support.
- * ⛔ Ikke dealer_staff «support». Ikke dealer_admin.
+ * Ikke dealer_staff «support». Ikke dealer_admin.
  */
 export const endwiseSupportProcedure = protectedProcedure.use(function isEndwiseTeam(opts) {
   const { ctx } = opts;
@@ -178,7 +169,7 @@ export const endwiseSupportProcedure = protectedProcedure.use(function isEndwise
 });
 
 /**
- * Se verkstedet: kun LESING. Mutations 403. Data via slug, ikke sesjon-tenant.
+ * Se verkstedet: kun lesing. Mutations 403. Data via slug, ikke sesjon-tenant.
  */
 export const endwiseInspectProcedure = endwiseSupportProcedure.use(function kunLesing(opts) {
   if (opts.type === 'mutation') {

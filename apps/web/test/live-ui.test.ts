@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * Bug A+B — stale UI etter live events.
- *
  * Innboksen invaliderte bare på lista (`/innboks`) og i den åpne tråden, og
  * trådsiden rørte ikke `listThreads`. Pakkebytte skrev `tenant_modules` uten
  * SSE og uten bekreftelse i admin. Disse testene låser at oppfriskningen er
@@ -55,7 +54,7 @@ describe('Bug A: innboks oppdateres live app-bredt', () => {
     expect(sync).toMatch(/shouldPlayInboundSound|nyMelding/);
     const lyd = utenKommentarer(les('../app/(app)/_lib/lyd.tsx'));
     // LydProvider skal ikke lenger eie SSE-abonnementet alene — LiveSync gjør det
-    // app-bredt og kan avspille ved poll-reserve. Avsender bruker fortsatt sendt().
+    // app-bredt og kan avspille ved poll-reserve. Avsender bruker fortsatt sendt.
     expect(lyd).toMatch(/sendt/);
     expect(lyd).toMatch(/nyMelding/);
   });

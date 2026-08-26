@@ -2,24 +2,21 @@ import { cn } from '@endwise/ui/lib/utils';
 import type * as React from 'react';
 
 /*
- * shadcn/ui `message` (New York), hentet 12.08.2026 med
+ * shadcn/ui `message` (New York), hentet med
  * `npx shadcn@latest view message` og lagt her — samme framgangsmåte som
- * dropdown-menu og dialog. Se UI-PAKKER.md §9.
- *
- * ── Hva den er ───────────────────────────────────────────────────────────
+ * dropdown-menu og dialog. Se ui-pakker.md §9.
+ * Hva den er
  * Ren struktur og CSS. **Null avhengigheter** — ingen Radix, ingen
  * `@shadcn/react`, ingen state. Den vet ingenting om AI, om strømming eller om
  * hvem som skrev meldingen; den stabler bare avsender, innhold og fot.
- *
- * ── Avvik fra oppstrøms, og hvorfor ──────────────────────────────────────
- * · `export function` i stedet for `function` + samlet `export {}` nederst —
- *   følger resten av `packages/ui`.
- * · Ellers **urørt**. Klassene bruker shadcn-semantikken (`bg-muted`,
- *   `text-muted-foreground`), som `theme.css` allerede mapper til `--ew-*`.
- *   Derfor snur den med temaet uten at vi rører en linje.
- *
- * ⚠️ `align="end"` betyr «min egen melding» (høyrestilt), `start` betyr
- * motpartens. Det er en VISUELL rolle, ikke en sikkerhetsrolle — hvem som
+ * Avvik fra oppstrøms, og hvorfor
+ * `export function` i stedet for `function` + samlet `export {}` nederst
+ * følger resten av `packages/ui`.
+ * Ellers **urørt**. Klassene bruker shadcn-semantikken (`bg-muted`,
+ * `text-muted-foreground`), som `theme.css` allerede mapper til `--ew-*`.
+ * Derfor snur den med temaet uten at vi rører en linje.
+ * `align="end"` betyr «min egen melding» (høyrestilt), `start` betyr
+ * motpartens. Det er en visuell rolle, ikke en sikkerhetsrolle — hvem som
  * faktisk skrev noe avgjøres på serveren, aldri av denne propen.
  */
 
@@ -104,7 +101,7 @@ export function MessageFooter({ className, ...props }: React.ComponentProps<'div
 }
 
 /**
- * Selve boblen. ⚠️ **Ikke fra oppstrøms** — shadcn lar deg style
+ * Selve boblen. **Ikke fra oppstrøms** — shadcn lar deg style
  * `MessageContent` fritt, men da ville hvert kallsted gjentatt bakgrunn, radius
  * og maksbredde, og den femte kopien ville sett litt annerledes ut.
  *

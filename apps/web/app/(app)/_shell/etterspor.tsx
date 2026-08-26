@@ -8,19 +8,16 @@ import { trpc } from '@/lib/trpc';
 import { CardShell } from './cards';
 
 /**
- * F5-19 / F5-11 — «MELD INTERESSE».
- *
- * ── ⛔ Hvorfor dette ikke er en av/på-knapp ──────────────────────────────
+ * F5-19 / F5-11 — «meld interesse».
+ * Hvorfor dette ikke er en av/på-knapp
  * Forhandleren kan ikke aktivere en tjeneste selv. Entitlements skrives kun av
  * den signaturverifiserte Stripe-webhooken (F5-09), eller av oss etter avtale.
  * En knapp som lot som noe ble skrudd på ville vært en løgn med to utfall:
  * enten skjer ingenting, eller så tar vi betalt for noe ingen ba om.
- *
- * ── Hvorfor det heller ikke er en `mailto:` ──────────────────────────────
- * Fordi vi allerede HAR kanalen. Support-tråden forhandler↔Endwise (F5-11) er
+ * Hvorfor det heller ikke er en `mailto:`
+ * Fordi vi allerede har kanalen. Support-tråden forhandlerEndwise (F5-11) er
  * bygget, den ligger i innboksen, og den er sporbar for begge parter. En
  * e-post fra en tilfeldig adresse er verken.
- *
  * Ønsket blir altså en ekte tråd med emne «Ønsker: <navn>», og forhandleren
  * sendes rett inn i den — der kan hun skrive mer, og vi kan svare.
  */
@@ -64,7 +61,7 @@ export function Etterspor({
   function submit(e: FormEvent) {
     e.preventDefault();
     opprett.mutate({
-      // Support-kanalen: forhandler ↔ Endwise. Ikke en kundetråd.
+      // Support-kanalen: forhandler Endwise. Ikke en kundetråd.
       kind: 'dealer_admin',
       subject: `Ønsker: ${hva}`,
       participantIds: [],

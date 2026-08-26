@@ -14,8 +14,7 @@ import { eierLasForHook } from './eier-las-server.ts';
 import { skriv2faDisableAudit } from './to-faktor-server.ts';
 
 /**
- * F1-17 — serverhookene for bytt-passord og like kredential-mutasjoner.
- *
+ * Serverhookene for bytt-passord og like kredential-mutasjoner.
  * Lever i en egen fil fordi `bytt-passord.ts` lastes av web-klienten.
  * En import av `better-auth/api` der ville dratt hele server-grafen inn i
  * bundle.
@@ -58,9 +57,8 @@ function brukerIdFraHook(ctx: {
 
 /**
  * CWE-613 — tvinger `revokeOtherSessions: true` på `/change-password`
- * FØR Better-Auths handler kjører.
- *
- * F1-22 — nekter `/two-factor/disable` uten passord. Better-Auth krever
+ * Før Better-Auths handler kjører.
+ * Nekter `/two-factor/disable` uten passord. Better-Auth krever
  * det allerede for credential-kontoer; hooken er sperren mot en fremtid
  * der et klientflagg eller `allowPasswordless` ville sluppet gjennom.
  */
@@ -74,7 +72,7 @@ export const byttPassordForHook = merket(
       }
       if (ctx.path === BYTT_EPOST_STI) {
         /**
-         * Session-middleware på `/change-email` kjører ETTER hooks.before.
+         * Session-middleware på `/change-email` kjører etter hooks.before.
          * Uten `getSessionFromCtx` her er `ctx.context.session` tom, og
          * `checkPassword` hoppes over — da holder det med en åpen sesjon
          * pluss en vilkårlig passordstreng.
@@ -119,12 +117,11 @@ export const byttPassordForHook = merket(
 
 /**
  * CWE-209 / CWE-287 — skiller ikke «feil gammelt passord» fra annen
- * auth-feil i API-svaret. Valideringsfeil på det NYE passordet
+ * auth-feil i API-svaret. Valideringsfeil på det nye passordet
  * (`PASSWORD_TOO_SHORT` / `PASSWORD_TOO_LONG`) får stå: de lekker ikke
  * om det gamle var riktig.
- *
  * På `/two-factor/disable` skriver en vellykket avslutting til
- * audit_log (F1-22). `db` er den samme instansen `createAuth` fikk —
+ * audit_log (F1-22). `db` er den samme instansen `createAuth` fikk
  * ikke en ny pool mot env.
  */
 export function createByttPassordEtterHook(db?: Database) {

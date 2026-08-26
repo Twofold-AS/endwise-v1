@@ -30,47 +30,40 @@ import { trpc } from '@/lib/trpc';
 import { Field, INPUT, PassordFelt } from '../_auth/felter';
 
 /**
- * F1-11 / F1-21 / F1-22 / F1-23 / F1-25 — TVUNGEN 2FA-ENROLLMENT, stylet
+ * F1-11 / F1-21 / F1-22 / F1-23 / F1-25 — tvungen 2FA-enrollment, stylet
  * som `/signin`. Gjenopprettingskoder vises én gang. Slå-av krever passord.
- *
- * ── ⚠️ Hvorfor denne ruta ligger UTENFOR `(app)` ─────────────────────────
- * Fra 12.08.2026 håndheves 2FA server-side: en `dealer_admin` / `dealer_staff` /
+ * Hvorfor denne ruta ligger utenfor `(app)`
+ * håndheves 2FA server-side: en `dealer_admin` / `dealer_staff` /
  * `endwise_admin` uten 2FA får `TWO_FACTOR_REQUIRED` på hver eneste tRPC-rute.
- * Hele forhandlerpanelet henter data over tRPC, så **det finnes ikke en flate
- * inne i `(app)` hen kan nå** — heller ikke innstillingssiden der 2FA ville blitt
+ * Hele forhandlerpanelet henter data over tRPC, så det finnes ikke en flate
+ * inne i `(app)` hen kan nå — heller ikke innstillingssiden der 2FA ville blitt
  * skrudd på. Uten denne siden er fiksen en utestengelse, ikke en sikring.
- *
- * Denne siden snakker derfor KUN med Better-Auth (`/api/auth/*`), som med vilje
+ * Denne siden snakker derfor kun med Better-Auth (`/api/auth/*`), som med vilje
  * står utenfor 2FA-gaten. Det er trygt: hvert steg krever noe hen allerede måtte
  * bevise — `enable` krever passordet på nytt, og flagget `twoFactorEnabled`
  * settes først når engangskoden er verifisert.
- *
- * ── Rekkefølgen, og hvorfor den er slik ──────────────────────────────────
- *   1. `enable({ password })`   → lager hemmeligheten OG backupCodes. Flagget
- *                                 settes IKKE ennå. Kodene fanges her.
- *   2. `sendOtp()`              → koden sendes via Resend (dev uten nøkkel: serverlogg).
- *   3. `verifyOtp({ code })`    → NÅ settes `twoFactorEnabled = true`.
- *   4. `revokeOtherSessions()`  → ⛔ se under.
- *   5. `steg = 'koder'`         → F1-21: vis kodene. Kan ikke gå videre uten
- *                                 nedlasting eller kopiering + bekreftelse.
- *   6. `steg = 'ferdig'`        → F1-23: vis kvittering. Ikke naviger ennå.
- *
- * ⚠️ **Steg 4 er nå ET EKSTRA LAG, ikke selve sperren.** Fra 16.08.2026 river
+ * Rekkefølgen, og hvorfor den er slik
+ * 1. `enable({ password })` → lager hemmeligheten og backupCodes. Flagget
+ * settes ikke ennå. Kodene fanges her.
+ * 2. `sendOtp` → koden sendes via Resend (dev uten nøkkel: serverlogg).
+ * 3. `verifyOtp({ code })` → NÅ settes `twoFactorEnabled = true`.
+ * 4. `revokeOtherSessions` → se under.
+ * 5. `steg = 'koder'` → F1-21: vis kodene. Kan ikke gå videre uten
+ * nedlasting eller kopiering + bekreftelse.
+ * 6. `steg = 'ferdig'` → F1-23: vis kvittering. Ikke naviger ennå.
+ * Steg 4 er nå et ekstra lag, ikke selve sperren. river
  * en databasetrigger (`endwise_2fa_session_cutoff`, migrasjon `0010`) alle
  * sesjoner i det `two_factor_enabled` settes — uansett hvor det skjer, også ved
  * et rått `UPDATE` i basen. Den er sperren.
- *
- * ── F1-21 ────────────────────────────────────────────────────────────────
+ * F1-21
  * Better-Auth 1.6.23 returnerer `backupCodes` fra `enable`. Vi later ikke som
  * om de må genereres etterpå. De vises én gang i minnet; lukker du fanen
  * er de borte (lagret kryptert, ikke i klartekst).
- *
- * ── F1-23 ────────────────────────────────────────────────────────────────
+ * F1-23
  * Tidligere kalte denne sida `window.location.assign('/dashboard')` i samme
  * tick som `steg = 'ferdig'`. Tilstanden rakk aldri å rendre. Nå viser vi
  * kodene, deretter kvitteringen, og hard navigasjon skjer først på «Fortsett».
- *
- * ── F1-25 ────────────────────────────────────────────────────────────────
+ * F1-25
  * Samme byggeklosser som `/signin`: `StatefulButton`, `Field`, `INPUT`,
  * `PassordFelt`. Ingen nye primitiver.
  */

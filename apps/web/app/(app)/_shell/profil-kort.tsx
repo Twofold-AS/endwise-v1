@@ -16,14 +16,12 @@ import { ByttPassordSkjema } from './bytt-passord';
 import { CardShell } from './cards';
 
 /**
- * F5-19 / F7-06 — EGEN PROFIL: navn, kallenavn og varslingslyder.
- *
- * ⚠️ **Én komponent, to steder.** Den vises både i forhandlerens
+ * F5-19 / F7-06 — egen profil: navn, kallenavn og varslingslyder.
+ * Én komponent, to steder. Den vises både i forhandlerens
  * Settings › Profil og i mekanikerens «Meg»-fane. To kopier ville før eller
  * siden fått hver sin variant av av/på-knappen, og da er det ikke lenger den
  * samme innstillingen — bare to som ser like ut.
- *
- * Settings-fanen (24.08.2026) komponerer de eksporterte delene i et annet
+ * Settings-fanen komponerer de eksporterte delene i et annet
  * skall (blobatar øverst, to kolonner, Switch-rader). «Meg» bruker
  * `ProfilKort` uendret.
  */

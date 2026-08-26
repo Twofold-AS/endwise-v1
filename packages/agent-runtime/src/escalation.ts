@@ -3,13 +3,11 @@ import { publishEvent } from '@endwise/modules/stream';
 import type { AgentContext } from './context.ts';
 
 /**
- * F6-05 — Eskalering: agent → menneske, SAMME TRÅD.
- *
+ * Eskalering: agent → menneske, samme tråd.
  * Broen mellom de to systemene (techstack §3). Når AI-førstelinjen treffer noe
- * den ikke skal svare på, flyttes tråden til et menneske — **kunden starter ikke
- * på nytt.** Meldings-modulen (F6-01) eier tråden; agenten var bare første
+ * den ikke skal svare på, flyttes tråden til et menneske — kunden starter ikke
+ * på nytt. Meldings-modulen (F6-01) eier tråden; agenten var bare første
  * deltaker i den.
- *
  * Det er hele grunnen til at agenten skriver i `messages` og ikke i en egen
  * «AI-samtale»-tabell. Hadde den hatt sin egen, ville eskalering betydd
  * kopiering — og en kunde som må gjenta seg selv til et menneske, har allerede
@@ -47,11 +45,10 @@ export class NoThreadError extends Error {
 
 /**
  * Eskalerer. Tre ting skjer, i denne rekkefølgen:
- *   1. mennesket legges til som deltaker i tråden
- *   2. en systemmelding forklarer HVORFOR (kunden skal se at det skjedde)
- *   3. et event går ut på SSE (F6-02) slik at mennesket ser tråden med én gang
- *
- * Agenten fjernes IKKE fra tråden. Historikken er kontekst for mennesket som
+ * 1. mennesket legges til som deltaker i tråden
+ * 2. en systemmelding forklarer hvorfor (kunden skal se at det skjedde)
+ * 3. et event går ut på SSE (F6-02) slik at mennesket ser tråden med én gang
+ * Agenten fjernes ikke fra tråden. Historikken er kontekst for mennesket som
  * overtar — å slette den ville vært å kaste bort det eneste som gjør
  * overleveringen sømløs.
  */

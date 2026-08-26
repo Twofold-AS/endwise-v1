@@ -1,22 +1,17 @@
 /**
- * F6-19 — STATUS PÅ ANSATTE, UTLEDT AV FELT SOM FINNES.
- *
+ * Status PÅ ansatte, utledt av felt som finnes.
  * Det finnes ingen `ledig`/`syk`/`ferie`-kolonne og ingen presence. Det som
  * faktisk bor i skjemaet er:
- *
- *   · `mechanics.active`  — på jobb / fri
- *   · `mechanics.capacity` — samtidige jobber
- *   · dagens bookinger     — belastning
- *
- * ⛔ Status overstyrer KUN `humor` i visningen, og BARE der status vises
+ * `mechanics.active` — på jobb / fri
+ * `mechanics.capacity` — samtidige jobber
+ * dagens bookinger — belastning
+ * Status overstyrer kun `humor` i visningen, og bare der status vises
  * (mekaniker-/ansattliste, Detaljer-panelet). Form, farge, tone og seed er
  * den persistente identiteten. Sidebar, profil og velgeren viser det
  * brukeren selv valgte.
- *
  * Bookinger som teller: `draft` / `confirmed` / `in_progress`. Fullført,
  * avlyst og no-show frigir plassen — de skal ikke tegne noen som opptatt.
- *
- * ⛔ `fri` er `idle` (nøytralt), ikke `sleepy`. Sleepy leses som trøtt, ikke
+ * `fri` er `idle` (nøytralt), ikke `sleepy`. Sleepy leses som trøtt, ikke
  * som «ikke på jobb». `sad` brukes ikke til arbeidsstatus.
  */
 export const STATUS_TELLENDE_BOOKING = ['draft', 'confirmed', 'in_progress'] as const;

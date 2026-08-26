@@ -16,17 +16,15 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * F5-32 — PRISKATALOGEN og provisjoneringen.
- *
+ * Priskatalogen og provisjoneringen.
  * To slags tester her, og skillet er med vilje:
- *
- *  1. **Rene** tester av katalogen — nivå/tillegg → modulnøkler. Krever ingen DB.
- *     Det er her en feil ville vært dyrest: selger vi PRO og gir PRO-moduler, men
- *     nøkkelen heter noe annet enn den gaten sjekker, har vi tatt betalt for en
- *     låst dør.
- *  2. **Integrasjons**tester mot ekte DB: at `applySubscription` skriver riktig,
- *     at nedgradering deaktiverer i stedet for å slette, og at **modul-gaten fra
- *     F0-16 respekterer resultatet**. Katalogen og gaten må være enige.
+ * 1. **Rene** tester av katalogen — nivå/tillegg → modulnøkler. Krever ingen DB.
+ * Det er her en feil ville vært dyrest: selger vi pro og gir pro-moduler, men
+ * nøkkelen heter noe annet enn den gaten sjekker, har vi tatt betalt for en
+ * låst dør.
+ * 2. **Integrasjons**tester mot ekte DB: at `applySubscription` skriver riktig,
+ * at nedgradering deaktiverer i stedet for å slette, og at modul-gaten fra
+ * F0-16 respekterer resultatet. Katalogen og gaten må være enige.
  */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
@@ -80,8 +78,8 @@ describe('F5-32 — priskatalogen (ren)', () => {
 
   it('modulesForSubscription slår sammen nivå + tillegg uten duplikater', () => {
     const m = modulesForSubscription('pro', ['white-label', 'nyhetsbrev']);
-    expect(m).toContain('ai-support'); // fra PRO
-    expect(m).toContain('widget'); // arvet fra START
+    expect(m).toContain('ai-support'); // fra pro
+    expect(m).toContain('widget'); // arvet fra start
     expect(m).toContain('white-label'); // fra tillegg
     expect(m).toContain('nyhetsbrev');
     expect(new Set(m).size).toBe(m.length);
@@ -111,7 +109,7 @@ describe('F5-32 — priskatalogen (ren)', () => {
   });
 });
 
-/* ══ Integrasjon mot ekte DB ═══════════════════════════════════════════ */
+/* Integrasjon mot ekte DB */
 
 const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;
 
@@ -193,9 +191,9 @@ describeDb('F5-32 — provisjonering + gaten er enige', () => {
       .where(eq(schema.tenantModules.tenantId, tenantId));
     const aktive = rader.filter((r) => r.enabled).map((r) => r.moduleKey);
     expect(aktive).toContain('white-label');
-    expect(aktive).toContain('widget'); // fra START
+    expect(aktive).toContain('widget'); // fra start
     expect(aktive).not.toContain('sso'); // ikke kjøpt
-    expect(aktive).not.toContain('ai-support'); // ikke i START
+    expect(aktive).not.toContain('ai-support'); // ikke i start
   });
 
   it('BASIS berøres aldri — Lager svarer uansett nivå', async () => {

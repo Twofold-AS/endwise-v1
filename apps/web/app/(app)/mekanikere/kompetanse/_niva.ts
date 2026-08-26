@@ -1,5 +1,5 @@
 /**
- * F3-12 — nivåordene UI-et skal vise. Speiler `SKILL_LEVELS` i
+ * Nivåordene UI-et skal vise. Speiler `SKILL_LEVELS` i
  * `packages/db/src/schema/competence.ts`. Tall alene er for matcheren;
  * forhandleren skal lese «Selvstendig», ikke «3».
  */

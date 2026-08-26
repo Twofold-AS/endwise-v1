@@ -6,12 +6,10 @@ import { schema } from '../src/index.ts';
 
 /**
  * F8-01 / F1-07 — Angrepstest for `integration_config`.
- *
  * Quick-tokenet ligger her (envelope-kryptert), så denne tabellen er et
- * høyverdi-mål. Testen beviser at RLS holder: forhandler A når ALDRI forhandler
+ * høyverdi-mål. Testen beviser at RLS holder: forhandler A når aldri forhandler
  * B sin Quick-config eller token — verken lesing, oppdatering eller innsetting
  * på tvers. Angrepene kjøres som `endwise_app` (authenticated-rollen).
- *
  * Krever Docker-Postgres + `pnpm db:setup` (owner + app-rolle). Uten begge
  * env-URL-ene skippes suiten — samme mønster som f2-isolation.test.ts.
  */

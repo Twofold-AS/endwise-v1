@@ -8,7 +8,6 @@ import { createWidgetPublicService, WidgetBookingError } from '../src/widget/ser
 /**
  * F4-20 + CWE-367/841 — serveren avviser start utenfor tilgjengelighet,
  * avviser når shopen er full, og serialiserer siste slot (ingen race).
- *
  * Krever Docker-Postgres + `pnpm db:setup`. Skippes uten begge env-URL-ene
  * (ikke for å skjule tidssone — den dekkes av widget-security, som alltid kjører).
  */

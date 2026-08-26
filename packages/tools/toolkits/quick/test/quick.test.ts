@@ -52,11 +52,11 @@ describe('customer/batch auth', () => {
   it('token sendes som Authorization: Token token=<token>', async () => {
     const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({}));
     await createQuickClient(cfg).clientInfo();
-    // ⚠️ Sjekk FØR dereferering. `spy.mock.calls[0]?.[1]` kan være undefined,
+    // Sjekk før dereferering. `spy.mock.calls[0]?.[1]` kan være undefined,
     // og et cast skjuler det bare til det smeller med «cannot read headers of
     // undefined» — en feilmelding som ikke sier at kallet aldri skjedde.
     const kall = spy.mock.calls[0];
-    // `throw`, ikke `expect(...).toBeDefined()`: en assertion smalner ikke
+    // `throw`, ikke `expect(...).toBeDefined`: en assertion smalner ikke
     // typen, så neste linje ville fortsatt vært et usikkert oppslag.
     if (!kall) throw new Error('fetch ble aldri kalt');
     const headers = (kall[1] as RequestInit).headers as Record<string, string>;

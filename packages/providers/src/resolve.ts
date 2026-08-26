@@ -6,11 +6,9 @@ import { createMockProvider } from './mock.ts';
 import type { ModelProvider } from './provider.ts';
 
 /**
- * F14 — Leverandørvalg ETTER DATAKLASSE, ikke etter smak.
- *
- *   customer_freetext  → Mistral (EU). Ingen andre alternativer.
- *   tenant_operational → Fireworks (global) — eller Mistral hvis vi vil.
- *
+ * F14 — Leverandørvalg etter dataklasse, ikke etter smak.
+ * customer_freetext → Mistral (EU). Ingen andre alternativer.
+ * tenant_operational → Fireworks (global) — eller Mistral hvis vi vil.
  * Uten nøkkel: mock, slik at alt kjører lokalt. I produksjon er manglende nøkkel
  * en feil, ikke en bekvemmelighet — da skal det smelle, ikke stille bli en
  * fake-agent.

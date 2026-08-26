@@ -1,2 +1,2 @@
-ALTER TABLE "user_preferences" ADD COLUMN "avatar_humor" text;--> statement-breakpoint
+ALTER TABLE "user_preferences" ADD COLUMN "avatar_humor" text;-- > statement-breakpoint
 ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_avatar_humor_check" CHECK ("user_preferences"."avatar_humor" is null or "user_preferences"."avatar_humor" in ('idle','happy','wink','smug','sleepy','thinking','surprised','unsure','love','shy'));

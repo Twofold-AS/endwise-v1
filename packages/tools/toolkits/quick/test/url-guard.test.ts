@@ -3,7 +3,7 @@ import { QuickSsrfError } from '../src/errors.ts';
 import { assertAllowedQuickUrl } from '../src/url-guard.ts';
 
 /**
- * F8-01 / CWE-918 — SSRF-vern på brukerkonfigurert baseUrl. De farlige inputene
+ * F8-01 / CWE-918 — ssrf-vern på brukerkonfigurert baseUrl. De farlige inputene
  * MÅ avvises; de legitime Quick-URL-ene MÅ slippe gjennom. Rene tester, ingen DB.
  */
 afterEach(() => {

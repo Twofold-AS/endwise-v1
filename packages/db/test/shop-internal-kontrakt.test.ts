@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F10-03 — intern testbutikk. Ikke Medusa. Egne tabeller + lager.
+ * Intern testbutikk. Ikke Medusa. Egne tabeller + lager.
  */
 const her = dirname(fileURLToPath(import.meta.url));
 

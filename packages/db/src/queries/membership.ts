@@ -20,12 +20,11 @@ export async function findMembership(
 }
 
 /**
- * F1-11 — ALLE roller brukeren har, på tvers av forhandlere.
- *
- * ⚠️ Hvorfor «alle» og ikke bare rollen i den aktive forhandleren: en bruker kan
+ * Alle roller brukeren har, på tvers av forhandlere.
+ * Hvorfor «alle» og ikke bare rollen i den aktive forhandleren: en bruker kan
  * være `customer` hos verksted A og `dealer_admin` hos verksted B. Sjekker vi
  * bare den aktive, kan hen logge inn uten 2FA med A som aktiv, og deretter bytte
- * til B. 2FA-kravet henger på PERSONEN, ikke på hvilken fane som er åpen.
+ * til B. 2FA-kravet henger på personen, ikke på hvilken fane som er åpen.
  */
 export async function findRolesForUser(db: Database, userId: string): Promise<string[]> {
   const rows = await db.select({ role: member.role }).from(member).where(eq(member.userId, userId));

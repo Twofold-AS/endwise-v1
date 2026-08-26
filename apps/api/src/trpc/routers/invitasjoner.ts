@@ -7,29 +7,26 @@ import { z } from 'zod';
 import { adminProcedure, router } from '../init.ts';
 
 /**
- * F1-10 — INVITASJONER. Lederens side av flyten.
- *
- * ── ⛔ Hele ruteren er `adminProcedure` ──────────────────────────────────
+ * Invitasjoner. Lederens side av flyten.
+ * Hele ruteren er `adminProcedure`
  * Også lista. En åpen invitasjon røper hvem verkstedet er i ferd med å ansette
  * og i hvilken funksjon — det er lederens informasjon, ikke noe enhver
  * innlogget skal kunne lese. Samme resonnement som `team.list`.
- *
- * ── De fire sperrene på `opprett` ────────────────────────────────────────
- *   1. `adminProcedure` — kun dealer_admin/endwise_admin i det hele tatt.
- *   2. `kanEndreJobbfunksjon(ctx.role)` — eksplisitt, ikke en antagelse om hva
- *      `adminProcedure` slipper gjennom. Endres den ene, står den andre igjen.
- *   3. Funksjonen må være TILDELBAR (modulen) — `leder` avvises.
- *   4. Rollen settes til `dealer_staff` i modulen og håndheves av en
- *      CHECK-constraint i basen. Den kommer ALDRI fra klienten.
- *
- * ⚠️ `tenantId` kommer fra sesjonen. Det finnes ikke et felt å oppgi den i, så
+ * De fire sperrene på `opprett`
+ * 1. `adminProcedure` — kun dealer_admin/endwise_admin i det hele tatt.
+ * 2. `kanEndreJobbfunksjon(ctx.role)` — eksplisitt, ikke en antagelse om hva
+ * `adminProcedure` slipper gjennom. Endres den ene, står den andre igjen.
+ * 3. Funksjonen må være tildelbar (modulen) — `leder` avvises.
+ * 4. Rollen settes til `dealer_staff` i modulen og håndheves av en
+ * Check-constraint i basen. Den kommer aldri fra klienten.
+ * `tenantId` kommer fra sesjonen. Det finnes ikke et felt å oppgi den i, så
  * en leder kan ikke invitere inn i en annen forhandler uansett hva hen sender.
  */
 export const invitasjonerRouter = router({
   list: adminProcedure.query(async ({ ctx }) => {
     const modul = createInvitasjonsmodul(ctx.db);
     const rader = await modul.listApne(ctx.tenantId);
-    // ⛔ Merk hva som IKKE er med: `token_hash`. Lista er til lederen, og
+    // Merk hva som ikke er med: `token_hash`. Lista er til lederen, og
     // hashen har ingen nytte der — men den ville vært et unødvendig sted den
     // kunne lekke fra.
     return rader.map((r) => ({
@@ -74,7 +71,7 @@ export const invitasjonerRouter = router({
         throw error;
       }
 
-      // ⚠️ `withTenant`, ikke et rått select — `tenants` har RLS, og uten
+      // `withTenant`, ikke et rått select — `tenants` har RLS, og uten
       // kontekst returnerer den null rader i stedet for en feil. Da ville
       // e-posten stille sagt «Endwise» i stedet for verkstedets navn.
       const [forhandler] = await withTenant(ctx.db, ctx.tenantId, (tx) =>
@@ -89,7 +86,7 @@ export const invitasjonerRouter = router({
       const lenke = `${base.replace(/\/$/, '')}/invitasjon/${resultat.token}`;
 
       /**
-       * ⚠️ Sendingen skjer ETTER at raden er skrevet, og feil her ruller IKKE
+       * Sendingen skjer etter at raden er skrevet, og feil her ruller ikke
        * tilbake invitasjonen. Det er et bevisst valg: en invitasjon som finnes
        * i basen men ikke kom fram kan sendes på nytt, mens en som ble rullet
        * tilbake fordi e-posttjenesten hikstet bare forsvinner. Lederen får vite
@@ -109,7 +106,7 @@ export const invitasjonerRouter = router({
         console.error(`[invitasjon] e-post feilet: ${(error as Error).message}`);
       }
 
-      // ⛔ Tokenet returneres ALDRI til klienten. Det finnes i lenka, og der
+      // Tokenet returneres aldri til klienten. Det finnes i lenka, og der
       // alene. Returnerer vi det her, ligger det i nettverksloggen til enhver
       // som har åpnet devtools på lederens maskin.
       return {

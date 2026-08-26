@@ -2,22 +2,18 @@ import type { ModuleKey } from '../entitlements.ts';
 import { TIERS, TILLEGG, type TilleggStatus } from './plans.ts';
 
 /**
- * F5-19 — PRODUKTKATALOGEN, delt i to akser.
- *
- * ── Hvorfor skillet finnes ────────────────────────────────────────────────
+ * Produktkatalogen, delt i to akser.
+ * Hvorfor skillet finnes
  * Forhandleren stiller to helt forskjellige spørsmål, og de fortjener hver sin
  * skjerm:
- *
- *   «Hva har vi koblet til av ANDRES verktøy?»  → Integrasjoner
- *   «Hva betaler vi Endwise for?»               → Tjenester & priser
- *
+ * «Hva har vi koblet til av andres verktøy?» → Integrasjoner
+ * «Hva betaler vi Endwise for?» → Tjenester & priser
  * Blandet man dem, ble Quick-synken stående ved siden av AI-diagnose som om de
  * var samme slags ting. Det er de ikke: den ene avhenger av et system
  * forhandleren allerede eier og betaler for et annet sted, den andre er noe vi
  * har bygget og tar betalt for.
- *
- * ── ⛔ INGEN AV/PÅ HER ───────────────────────────────────────────────────
- * Katalogen beskriver hva som FINNES og hva forhandleren HAR. Den aktiverer
+ * Ingen av/PÅ her
+ * Katalogen beskriver hva som finnes og hva forhandleren har. Den aktiverer
  * ingenting. Aktivering skjer gjennom abonnementet (Stripe-webhooken er den
  * eneste som skriver entitlements) eller ved kontakt. En bryter i en
  * oversiktsflate ville antydet at man kan skru på noe man ikke har betalt for.
@@ -33,7 +29,7 @@ export type Katalogpost = {
   /** Hvem eier tjenesten i andre enden. Kun for tredjepart. */
   leverandor?: string;
   /**
-   * Hva den koster som TILLEGG (øre/mnd). Mangler den, er modulen inkludert i
+   * Hva den koster som tillegg (øre/mnd). Mangler den, er modulen inkludert i
    * et abonnementsnivå — se `inkludertI`.
    */
   prisMinor?: number;
@@ -44,9 +40,9 @@ export type Katalogpost = {
 };
 
 /**
- * ⚠️ **Composio er IKKE besluttet.** Den står her fordi eier ba om å se den i
+ * Composio er ikke besluttet. Den står her fordi eier ba om å se den i
  * katalogen, og fordi en tom «tilgjengelig»-liste ikke forteller forhandleren
- * hva som er på vei. Men den er ikke i techstacken (CLAUDE.md §2), ingenting er
+ * hva som er på vei. Men den er ikke i techstacken (claude.md §2), ingenting er
  * bygget, og status er `coming` med merknad. Skal den faktisk tas i bruk, er
  * det en egen stack-beslutning — ikke noe denne fila avgjør.
  */
@@ -205,7 +201,6 @@ function tilleggForModul(key: ModuleKey) {
 
 /**
  * Hele katalogen, klassifisert og priset.
- *
  * Pris og status hentes fra `TILLEGG`/`TIERS` — ikke skrevet inn på nytt her.
  * To steder å endre en pris er ett sted for mye.
  */

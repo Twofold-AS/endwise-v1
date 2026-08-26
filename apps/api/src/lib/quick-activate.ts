@@ -1,6 +1,5 @@
 /**
- * F1-07 — Aktiver Quick-nøkkel FØRST etter vellykket GET-probe.
- *
+ * Aktiver Quick-nøkkel først etter vellykket GET-probe.
  * Rekkefølge er hele poenget: probe → persist → (valgfritt) enable.
  * Feiler proben, kalles verken persist eller enable. Tokenet logges ikke.
  * Persist får normalisert URL (origin + shop-slug) og nøkkel uten wrapper.

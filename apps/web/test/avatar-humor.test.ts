@@ -11,7 +11,7 @@ import {
 } from '../app/(app)/_avatar/avatar-valg.ts';
 
 /**
- * F6-19 — happy-låsen er OPPHEVET. Opprett og «Ny tilfeldig» tvinger ikke
+ * Happy-låsen er opphevet. Opprett og «Ny tilfeldig» tvinger ikke
  * humør til happy. Valgt humør og farge overskrives ikke.
  */
 const her = dirname(fileURLToPath(import.meta.url));

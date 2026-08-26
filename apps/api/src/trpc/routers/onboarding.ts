@@ -21,17 +21,15 @@ import { aktiverQuickEtterGet, quickNokkelMangler } from '../../lib/quick-activa
 import { adminProcedure, router } from '../init.ts';
 
 /**
- * F5-26 — EIER-VEIVISER. Egen skriverute, IKKE `tenants.setModules`.
- *
- * ⛔ `dealer_admin` får FORBIDDEN på `tenants.setModules` / `tenants.create`.
+ * Eier-veiviser. Egen skriverute, ikke `tenants.setModules`.
+ * `dealer_admin` får forbidden på `tenants.setModules` / `tenants.create`.
  * Her kan hen bare:
- *   · sette visningsnavn
- *   · slå på nøkler admin merket `source=optional` for DENNE tenanten
- *   · kun mens onboarding ikke er fullført
- *
+ * sette visningsnavn
+ * slå på nøkler admin merket `source=optional` for denne tenanten
+ * kun mens onboarding ikke er fullført
  * shop avvises selv om noen skulle ha rotet den inn som optional.
  * SMS kan slås på hvis admin åpnet den som optional.
- * Team-invitasjoner går via `invitasjoner.opprett` (F1-10 staff-CHECK).
+ * Team-invitasjoner går via `invitasjoner.opprett` (F1-10 staff-check).
  */
 
 const extrasSchema = z

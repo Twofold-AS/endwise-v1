@@ -19,13 +19,11 @@ import { CardShell } from '../_shell/cards';
 import { KjopteModulerTabell } from './_kjopte-moduler';
 
 /**
- * F1-07 / F5-26 — ENDWISE-ADMIN OVERSIKT.
- *
+ * F1-07 / F5-26 — endwise-admin oversikt.
  * Tidligere en redirect til /endwise/forhandlere. Landing er nå live KPI
  * fra Postgres (`tenants.census`), ikke mock inntektstall. Sperren er
  * `krevEndwiseAdminSide` i layout + `endwiseAdminProcedure` på rutene.
- *
- * Bookinger telles ikke: platform-admin-GUC-en åpner `tenants` og
+ * Bookinger telles ikke: platform-admin-guc-en åpner `tenants` og
  * SELECT på dealer_admin-tråder (F5-11), ikke bookinger.
  */
 

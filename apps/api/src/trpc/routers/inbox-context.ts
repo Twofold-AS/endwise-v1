@@ -12,24 +12,21 @@ import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
 
 /**
- * F6-17 — «DETALJER»-PANELET i innboksen: hva handler denne samtalen om?
- *
- * ── Hvorfor én rute og ikke fem ───────────────────────────────────────────
+ * «detaljer»-panelet i innboksen: hva handler denne samtalen om?
+ * Hvorfor én rute og ikke fem
  * Panelet viser ulikt innhold per trådtype, men det er ÉN skjerm med ÉN
  * lastetilstand. Fem separate kall ville gitt fem spinnere i en 320px kolonne,
  * og klienten måtte visst hvilke av dem som gjaldt — altså kjent trådtypen før
  * den spurte. Serveren vet det allerede. Svaret er derfor en diskriminert union
  * på `type`, og klienten bare tegner det den får.
- *
- * ── ⛔ TILGANG: to sperrer, som resten av meldingslaget ───────────────────
- *   1. RLS  — alt går gjennom `withTenant`. Ingen annen forhandlers data.
- *   2. DELTAKELSE — `assertDeltaker` under. Uten den kunne en ansatt hos samme
- *      forhandler slått opp kundekortet til en samtale hun ikke er med i, ved
- *      å gjette en tråd-ID. Det er ikke en tenant-lekkasje, men det er
- *      fortsatt en lekkasje (samme resonnement som `listMessages`).
- *
- * ── Personvern ────────────────────────────────────────────────────────────
- * For en kundetråd er dette forhandlerens EGEN kunde, og strukturert data de
+ * Tilgang: to sperrer, som resten av meldingslaget
+ * 1. RLS — alt går gjennom `withTenant`. Ingen annen forhandlers data.
+ * 2. Deltakelse — `assertDeltaker` under. Uten den kunne en ansatt hos samme
+ * forhandler slått opp kundekortet til en samtale hun ikke er med i, ved
+ * å gjette en tråd-ID. Det er ikke en tenant-lekkasje, men det er
+ * fortsatt en lekkasje (samme resonnement som `listMessages`).
+ * Personvern
+ * For en kundetråd er dette forhandlerens egen kunde, og strukturert data de
  * allerede eier: kontaktinfo, kjøretøy, saker. Ingenting hentes på tvers av
  * tenants, og Endwise leser fortsatt aldri meldingsinnhold — panelet viser
  * emner og tidspunkter fra kundens tråder, ikke meldingstekst.
@@ -43,7 +40,7 @@ export const inboxContextRouter = router({
     .input(z.object({ threadId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       return withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        // ── 1. Finnes tråden, og er DU med i den? ──────────────────────
+        // 1. Finnes tråden, og er du med i den?
         const [traad] = await tx
           .select({
             id: schema.threads.id,
@@ -76,14 +73,14 @@ export const inboxContextRouter = router({
           .map((d) => d.id)
           .filter((id) => id !== ctx.userId && !id.startsWith('agent:'));
 
-        /* ══ ENDWISE-SUPPORT → konto og abonnement ═══════════════════════ */
+        /* Endwise-support → konto og abonnement */
         if (traad.kind === 'dealer_admin') {
           const [tenant] = await tx
             .select({ name: schema.tenants.name, kind: schema.tenants.kind })
             .from(schema.tenants)
             .where(eq(schema.tenants.id, ctx.tenantId));
 
-          // ⚠️ Utenfor `tx`: billing-tjenesten åpner sin egen tenant-transaksjon.
+          // Utenfor `tx`: billing-tjenesten åpner sin egen tenant-transaksjon.
           const abonnement = await createBillingService(ctx.db)
             .getState(ctx.tenantId)
             .catch(() => null);
@@ -94,13 +91,13 @@ export const inboxContextRouter = router({
             tenantKind: tenant?.kind ?? 'live',
             planKey: abonnement?.planKey ?? null,
             status: abonnement?.status ?? null,
-            /** Kun AKTIVE moduler. En liste med avslåtte er støy her. */
+            /** Kun aktive moduler. En liste med avslåtte er støy her. */
             moduler: (abonnement?.modules ?? []).filter((m) => m.enabled).map((m) => m.key),
             currentPeriodEnd: abonnement?.currentPeriodEnd ?? null,
           };
         }
 
-        /* ══ INTERN TRÅD → motpartens arbeidsdag ═════════════════════════ */
+        /* Intern tråd → motpartens arbeidsdag */
         if (traad.kind === 'mechanic_dealer') {
           if (motparter.length === 0) {
             return { type: 'ukjent' as const, grunn: 'ingen_motpart' as const };
@@ -118,11 +115,10 @@ export const inboxContextRouter = router({
           if (!mek) return { type: 'ukjent' as const, grunn: 'ingen_mekanikerprofil' as const };
 
           /**
-           * ⛔ Kallenavn (F7-06). `mechanic_dealer` ER en intern tråd, så her
+           * Kallenavn (F7-06). `mechanic_dealer` er en intern tråd, så her
            * gjelder samme visning som meldingene i den — ellers ville panelet
            * sagt «Ola Mekaniker» mens boblene ved siden av sier
            * «Skiftenøkkelen», og leseren måtte gjette at det er samme person.
-           *
            * `visningForTraadtype` avgjør, ikke en hardkodet 'intern': da følger
            * panelet regelen automatisk hvis flere trådtyper kommer til.
            */
@@ -180,21 +176,18 @@ export const inboxContextRouter = router({
 
           /**
            * Belastning = jobber i dag mot kapasitet.
-           *
-           * ⚠️ Kapasitet er «samtidige jobber», ikke «jobber per dag». Tallet er
+           * Kapasitet er «samtidige jobber», ikke «jobber per dag». Tallet er
            * derfor en indikasjon, ikke en fasit — og det står slik i UI-et. Å
            * regne det om til en prosent ville gitt tallet en presisjon det ikke
            * har.
            */
           /**
-           * F6-19 — mekanikerens egne avatarvalg.
-           *
-           * ⚠️ Uten dette ville panelet tegnet ansiktet fra seeden mens tråden
+           * Mekanikerens egne avatarvalg.
+           * Uten dette ville panelet tegnet ansiktet fra seeden mens tråden
            * ved siden av tegnet det mekanikeren faktisk har valgt — samme
            * person, to ansikter, 300 piksler fra hverandre.
-           *
-           * ⛔ `user_preferences` har ingen RLS. Isolasjonen kommer fra at
-           * `mek` allerede ER hentet tenant-skopet: vi slår opp valgene til den
+           * `user_preferences` har ingen RLS. Isolasjonen kommer fra at
+           * `mek` allerede er hentet tenant-skopet: vi slår opp valgene til den
            * mekanikeren, ikke til en ID fra klienten.
            */
           const [avatarRad] = mek.userId
@@ -220,7 +213,7 @@ export const inboxContextRouter = router({
           return {
             type: 'mekaniker' as const,
             mekanikerId: mek.id,
-            /** ⛔ Seeden er `mechanics.id` — samme som innboksen bruker. */
+            /** Seeden er `mechanics.id` — samme som innboksen bruker. */
             avatar: mek.userId ? lesAvatar(avatarRad ?? null) : TOM_AVATAR,
             /** Internt visningsnavn — kallenavn hvis satt. Se over. */
             navn: visningsnavn(
@@ -236,7 +229,7 @@ export const inboxContextRouter = router({
           };
         }
 
-        /* ══ KUNDETRÅD → kundekortet i kortform ══════════════════════════ */
+        /* Kundetråd → kundekortet i kortform */
         // Kunden finnes på to måter: som innlogget deltaker (`customers.user_id`)
         // eller — for e-post/SMS-tråder — via `threads.external_ref`. Den andre
         // veien er nettopp poenget med `external_ref` (F6-16).
@@ -295,7 +288,7 @@ export const inboxContextRouter = router({
           .limit(20);
 
         /**
-         * ⚠️ ANDRE tråder med samme kunde — emne og tidspunkt, ALDRI tekst.
+         * Andre tråder med samme kunde — emne og tidspunkt, aldri tekst.
          * Panelet skal si «dere har snakket sammen før», ikke gjengi hva som
          * ble sagt. Vil man lese, åpner man tråden.
          */

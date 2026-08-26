@@ -8,7 +8,7 @@ import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
 
 /**
- * F7-06 — Profil-fane. Mekanikeren ser KUN sitt eget: navn, kapasitet, status.
+ * Profil-fane. Mekanikeren ser kun sitt eget: navn, kapasitet, status.
  * Ingen abonnement/admin/andre forhandlere — rollegatingen i (app)/layout låser
  * mekanikeren til /min-dag, og server (RLS/adminProcedure) er den ekte grensen.
  */

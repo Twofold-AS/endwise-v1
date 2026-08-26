@@ -10,18 +10,16 @@ import {
 } from '../src/two-factor.ts';
 
 /**
- * F1-11 — **ANGREPSTEST for obligatorisk 2FA.**
- *
+ * angrepstest for obligatorisk 2FA.
  * Hvert kall her er et forsøk på å få en autorisert sesjon uten å ha fullført
- * tofaktor. Består testene, betyr det at SERVEREN stoppet forsøket — ikke at
+ * tofaktor. Består testene, betyr det at serveren stoppet forsøket — ikke at
  * UI-et lot være å vise en knapp.
- *
- * ── Hva som var galt før 12.08.2026 ──────────────────────────────────────
+ * Hva som var galt før
  * `ROLES_REQUIRING_2FA` var definert og brukt null steder. En `dealer_admin`
  * uten 2FA logget inn med passord alene og fikk en helt vanlig sesjon.
  */
 
-// ── Den rene regelen. Ingen DB, kjører alltid, også i CI uten Docker. ──────
+// Den rene regelen. Ingen DB, kjører alltid, også i CI uten Docker.
 describe('F1-11: regelen (uten database)', () => {
   it('⚠️ ALLE roller unntatt `customer` krever 2FA — bekreftet mot koden', () => {
     // Oppgaven antok «dealer_admin + endwise_admin». Koden sier også
@@ -65,9 +63,9 @@ describe('F1-11: regelen (uten database)', () => {
   });
 
   /**
-   * ⛔ Omgåelsen som ville vært lettest å finne: vær `customer` hos verksted A,
+   * Omgåelsen som ville vært lettest å finne: vær `customer` hos verksted A,
    * `dealer_admin` hos B. Logg inn uten 2FA med A som aktiv, bytt så til B.
-   * Kravet henger på PERSONEN, ikke på hvilken fane som er åpen.
+   * Kravet henger på personen, ikke på hvilken fane som er åpen.
    */
   it('⛔ ÉN 2FA-pliktig rolle er nok, selv om de andre ikke krever det', () => {
     expect(() =>
@@ -87,7 +85,7 @@ describe('F1-11: regelen (uten database)', () => {
   });
 });
 
-// ── Samme regel, men med ekte medlemskap fra databasen. ───────────────────
+// Samme regel, men med ekte medlemskap fra databasen.
 const OWNER_URL = process.env.DATABASE_URL;
 const describeDb = OWNER_URL ? describe : describe.skip;
 

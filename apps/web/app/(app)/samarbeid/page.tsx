@@ -4,20 +4,17 @@ import { BookOpen, Handshake, Receipt, TriangleAlert } from '@endwise/ui';
 import { CardMedia, CardShell } from '../_shell/cards';
 
 /**
- * F5-17 — SAMARBEID (tidligere «Kunnskapsbase»).
- *
+ * Samarbeid (tidligere «Kunnskapsbase»).
  * Forhandlere deler og finner informasjon på tvers: rutiner, erfaringer,
  * tjenester og prisliste.
- *
- * ⛔ **Dette er den eneste flaten i produktet som med vilje krysser
- * tenant-grensen.** Alt annet vi har bygget — RLS, `withTenant`, deltakersjekk
- * i meldinger, tenant-bindingen i `spawnAgent()` — finnes for å hindre nettopp
+ * Dette er den eneste flaten i produktet som med vilje krysser
+ * tenant-grensen. Alt annet vi har bygget — RLS, `withTenant`, deltakersjekk
+ * i meldinger, tenant-bindingen i `spawnAgent` — finnes for å hindre nettopp
  * det. Derfor står grensen i klartekst øverst på skjermen, ikke i en
  * dokumentasjonsfil ingen leser.
- *
- * STATUS: flate-skall. Backend finnes ikke — det er med vilje. Delt innhold
- * skal ha en EGEN tabell utenfor tenant-RLS-mønsteret, med et skjema som ikke
- * HAR felter for kundefritekst, kontaktinfo eller regnr. Det som ikke har et
+ * Status: flate-skall. Backend finnes ikke — det er med vilje. Delt innhold
+ * skal ha en egen tabell utenfor tenant-RLS-mønsteret, med et skjema som ikke
+ * Har felter for kundefritekst, kontaktinfo eller regnr. Det som ikke har et
  * felt, kan ikke lekke inn i det.
  */
 export default function SamarbeidPage() {

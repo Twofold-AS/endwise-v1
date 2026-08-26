@@ -3,8 +3,7 @@ import { krevEndwiseAdminSide } from '@/lib/endwise-admin-gate';
 import { IkkeTilgang } from '../_shell/ikke-tilgang';
 
 /**
- * F1-26 — server-gate for `/admin`.
- *
+ * Server-gate for `/admin`.
  * Siden var statisk prerendret (`x-nextjs-prerender: 1`) med mock Stripe-KPI
  * i HTML-en til hvem som helst som traff URL-en. Klient-guarden i
  * `(app)/layout.tsx` kjører for sent. `force-dynamic` + `requireSession` via

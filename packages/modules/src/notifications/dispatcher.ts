@@ -28,17 +28,14 @@ export class NoChannelError extends Error {
 }
 
 /**
- * F3-04 — Varslingsmodulen.
- *
- * ⚠️ Roadmap-teksten sier «Twilio + BullMQ». **BullMQ er et dødt valg**
+ * Varslingsmodulen.
+ * Roadmap-teksten sier «Twilio + BullMQ». **BullMQ er et dødt valg**
  * (techstack §1/§6) — køen er Vercel Workflows (F0-13, ADR-003). Selve
- * *sendingen* er det samme; det er transporten rundt som er en annen.
- *
+ * sendingen* er det samme; det er transporten rundt som er en annen.
  * Idempotens-vakten er hele poenget: Workflows retryer steg som feiler. Går en
  * SMS ut og svaret forsvinner i en timeout, vil retry-en prøve igjen. Uten
  * vakten får kunden to påminnelser om samme time.
- *
- * Derfor: **skriv raden FØRST, send etterpå.** Er nøkkelen allerede brukt, gjør
+ * Derfor: **skriv raden først, send etterpå.** Er nøkkelen allerede brukt, gjør
  * vi ingenting. En unique-violation på (tenant, idempotency_key) betyr «noen
  * andre kom først» — ikke en feil.
  */
@@ -72,8 +69,8 @@ export function createDispatcher(db: Database, channels: readonly NotificationCh
       if (!row) return { sent: false, duplicate: true };
 
       // 2. Send. Feiler den, markeres raden som failed — nøkkelen forblir brukt,
-      //    og en Workflow-retry vil se `failed` og kan velge å eskalere i stedet
-      //    for å spamme mottakeren.
+      // og en Workflow-retry vil se `failed` og kan velge å eskalere i stedet
+      // for å spamme mottakeren.
       try {
         const result = await channel.send({
           tenantId: input.tenantId,

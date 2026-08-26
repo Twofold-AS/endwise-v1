@@ -7,7 +7,7 @@ import { useOrgRole } from '../../_lib/use-org-role';
 import { CardShell } from '../../_shell/cards';
 
 /**
- * F2-08 — Vegvesen-API-nøkkel. Serveren lagrer den envelope-kryptert.
+ * Vegvesen-API-nøkkel. Serveren lagrer den envelope-kryptert.
  * Klienten ser bare `hasKey`. Nøkkelen logges ikke og bundler ikke.
  */
 export default function VegvesenPage() {

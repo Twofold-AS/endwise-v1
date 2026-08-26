@@ -5,10 +5,9 @@ import { useEffect, useState } from 'react';
 import { lesTema, settTema, type Tema } from '../_lib/tema';
 
 /**
- * Tema-toggle. LYST er standard (satt på <html data-theme="light"> i
+ * Tema-toggle. Lyst er standard (satt på <html data-theme="light"> i
  * app/layout.tsx); denne flipper mellom "light" og "dark".
- *
- * ⚠️ **RETTET 20.08.2026.** Denne skrev tidligere rett på
+ * . Denne skrev tidligere rett på
  * `document.documentElement.dataset.theme` og lagret ingenting — så mørkt tema
  * forsvant ved hver refresh. Lagring og bytte bor nå i `_lib/tema.ts`, og
  * oppstart i et inline-skript i layouten. Se den fila for hele historien.

@@ -12,8 +12,7 @@ import {
 } from '../src/stream/index.ts';
 
 /**
- * F6-02 — SSE-fundamentet.
- *
+ * SSE-fundamentet.
  * En SSE-strøm som lekker på tvers av tenants er samme feil som en spørring som
  * gjør det — bare vanskeligere å oppdage. Derfor angripes den her.
  */
@@ -85,7 +84,7 @@ describeDb('SSE-fundament (F6-02)', () => {
       payload: { secret: 'B sin data' },
     });
 
-    // A prøver å spille av fra en id like FØR B sitt event.
+    // A prøver å spille av fra en id like før B sitt event.
     const leaked = await readEventsSince(app, tenantA, bEvent.id - 1, brukerA);
     expect(leaked.some((e) => e.type === 'hemmelig')).toBe(false);
     expect(leaked.every((e) => e.tenantId === tenantA)).toBe(true);
@@ -93,7 +92,7 @@ describeDb('SSE-fundament (F6-02)', () => {
 
   /**
    * Innenfor samme tenant: et event adressert til én bruker skal ikke havne
-   * hos en annen. RLS ser ikke forskjell på to brukere i samme tenant —
+   * hos en annen. RLS ser ikke forskjell på to brukere i samme tenant
    * `audienceId` er det som gjør det.
    */
   it('ANGREP: privat event til bruker A leveres ikke til bruker B', async () => {
@@ -129,7 +128,7 @@ describeDb('SSE-fundament (F6-02)', () => {
     expect(forB.some((e) => e.type === 'booking.updated')).toBe(true);
   });
 
-  /** NOTIFY skal faktisk fyre — ellers er hele live-delen død. */
+  /** Notify skal faktisk fyre — ellers er hele live-delen død. */
   it('LISTEN/NOTIFY: publisering utløser et signal på kanalen', async () => {
     const listener = new Client({ connectionString: OWNER_URL as string });
     await listener.connect();

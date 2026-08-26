@@ -41,7 +41,7 @@ function toTRPCError(error: unknown): never {
 
 /**
  * Beriket rad (navn, ikke bare IDer) for liste + detalj. Samme join-mønster som
- * mechanic.myDay. LEFT join der feltet er valgfritt (kunde/kjøretøy), INNER der
+ * mechanic.myDay. Left join der feltet er valgfritt (kunde/kjøretøy), inner der
  * det er obligatorisk (mekaniker + tjenesteversjon).
  */
 const enrichedColumns = {
@@ -191,7 +191,7 @@ export const bookingsRouter = router({
     }),
 
   /**
-   * F3-06 — Bookingliste (forhandler). RLS-scopet til innlogget tenant.
+   * Bookingliste (forhandler). RLS-scopet til innlogget tenant.
    * Filtre: status, mekaniker, dato-vindu, fritekst (kunde/regnr/notat). Beriket.
    */
   list: protectedProcedure
@@ -241,7 +241,7 @@ export const bookingsRouter = router({
       }),
     ),
 
-  /** F3-06 — Detalj: beriket booking + append-only historikk (audit-loggen). */
+  /** Detalj: beriket booking + append-only historikk (audit-loggen). */
   byId: protectedProcedure.input(z.object({ id: z.uuid() })).query(({ ctx, input }) =>
     withTenant(ctx.db, ctx.tenantId, async (tx) => {
       const [booking] = await tx
@@ -280,14 +280,12 @@ export const bookingsRouter = router({
   ),
 
   /**
-   * F3-03 / F3-07 — Kalender: bookinger som OVERLAPPER et tidsvindu.
-   *
-   * ⚠️ **Beriket fra 08.08.2026.** Ruta returnerte tidligere rå
+   * F3-03 / F3-07 — Kalender: bookinger som overlapper et tidsvindu.
+   * Beriket. Ruta returnerte tidligere rå
    * `bookings`-rader (`listBookings` i booking-motoren). Det holdt for et API,
    * men ikke for en kalender: en kloss uten regnr, tjeneste og mekaniker er et
    * farget rektangel. Nå brukes samme `enrichedColumns` som `list`, så begge
    * visningene av samme data faktisk viser det samme.
-   *
    * Overlapp-vinduet er `startsAt < to AND endsAt > from` — ikke `startsAt`
    * mellom fra og til. En jobb som begynte i går kl. 16 og varer til i dag skal
    * være med i dagens kalender; ellers forsvinner den nettopp den dagen den er

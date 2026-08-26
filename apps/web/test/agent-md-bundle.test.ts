@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F13-03 — Next/Turbopack på Vercel inliner ikke `instructions.md` med mindre
+ * Next/Turbopack på Vercel inliner ikke `instructions.md` med mindre
  * vi sier ifra. Uten dette faller vi tilbake på `readFileSync` mot `/var/task`.
  */
 const config = readFileSync(

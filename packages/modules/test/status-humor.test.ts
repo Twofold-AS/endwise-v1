@@ -10,11 +10,10 @@ import {
 } from '../src/profil/status-humor.ts';
 
 /**
- * F6-19 — STATUS → HUMØR.
- *
- * Avataren på mekaniker-/ansattlista speiler FAKTISKE felt (`mechanics.active`
+ * Status → humør.
+ * Avataren på mekaniker-/ansattlista speiler faktiske felt (`mechanics.active`
  * + dagens levende jobber mot `capacity`). Ingen presence, ingen nye kolonner.
- * ⛔ Status overstyrer KUN `humor` i visningen — identitet (form/farge/tone)
+ * Status overstyrer kun `humor` i visningen — identitet (form/farge/tone)
  * kommer fra den persistente avataren.
  */
 describe('utledMekanikerStatus', () => {

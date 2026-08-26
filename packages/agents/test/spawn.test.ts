@@ -20,7 +20,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { driftInnsiktAgent, kundeSupportAgent } from '../src/index.ts';
 
 /**
- * F6-13 — Tenant-bindingen ved spawn, og F6-05 — eskalering.
+ * Tenant-bindingen ved spawn, og F6-05 — eskalering.
  */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
@@ -114,7 +114,7 @@ describeDb('agent spawn: tenant-binding (F6-13)', () => {
   it('konteksten er frosset — tenantId kan ikke muteres bakveien', () => {
     const context = ctx();
     spawn(context);
-    // `sealContext` fryser en KOPI; originalen kan mutere uten at agenten følger med.
+    // `sealContext` fryser en kopi; originalen kan mutere uten at agenten følger med.
     (context as unknown as { tenantId: string }).tenantId = tenantB;
 
     const session = spawn(ctx());
@@ -122,7 +122,7 @@ describeDb('agent spawn: tenant-binding (F6-13)', () => {
   });
 
   /**
-   * ⚠️ HOVEDTESTEN.
+   * Hovedtesten.
    * Uansett hva som skjer i løkka — prompt-injeksjon, modellen som sender
    * tenantId, en fremtidig refaktorering — skal en agent spawnet for A aldri
    * ende opp med å operere som B.
@@ -232,11 +232,11 @@ describeDb('eskalering agent → menneske (F6-05)', () => {
       },
     );
 
-    // Selgeren er nå deltaker i den SAMME tråden…
+    // Selgeren er nå deltaker i den samme tråden…
     const selgersInboks = await messages.listThreads(tenantId, selger);
     expect(selgersInboks.map((t) => t.id)).toContain(thread.id);
 
-    // …og HELE historikken er der. Ingen kopiering, ingen gjentakelse.
+    // …og hele historikken er der. Ingen kopiering, ingen gjentakelse.
     const historikk = await messages.listMessages(tenantId, thread.id, selger);
     expect(historikk.map((m) => m.body)).toContain('Det klikker når jeg girer');
     expect(historikk.some((m) => m.body.includes('utenfor det assistenten kan svare på'))).toBe(
@@ -259,9 +259,8 @@ describeDb('eskalering agent → menneske (F6-05)', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
 // F14 — Rutingregelen håndhevet i kode
-// ─────────────────────────────────────────────────────────────────────────────
+
 describe('dataregion-håndheving ved spawn (F14)', () => {
   const dummyContext = () =>
     ({
@@ -273,12 +272,10 @@ describe('dataregion-håndheving ved spawn (F14)', () => {
     }) as never;
 
   /**
-   * ⚠️ KJERNEN I HELE F14.
-   *
-   * Kunde-support-agenten ser sluttkundens fritekst. Den skal IKKE kunne
-   * spawnes mot Fireworks (USA) — uansett hvor mange som prøver, uansett hvor
+   * Kjernen I hele F14.
+   * Kunde-support-agenten ser sluttkundens fritekst. Den skal ikke kunne
+   * spawnes mot Fireworks (usa) — uansett hvor mange som prøver, uansett hvor
    * fristende det er å «bare teste raskt».
-   *
    * En feilkonfigurasjon her er ikke en bug. Det er norske kunders
    * helseopplysninger sendt ut av EU.
    */

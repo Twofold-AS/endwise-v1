@@ -1,8 +1,7 @@
 /**
- * Drizzle-operatorene re-eksporteres HERFRA, ikke importert direkte i appene.
- *
+ * Drizzle-operatorene re-eksporteres herfra, ikke importert direkte i appene.
  * Grunn: to kopier av drizzle-orm i treet gir to inkompatible typeverdener
- * (`eq()` fra den ene passer ikke kolonnen fra den andre). Ved å la @endwise/db
+ * (`eq` fra den ene passer ikke kolonnen fra den andre). Ved å la @endwise/db
  * eie avhengigheten, finnes den bare én gang.
  */
 export {

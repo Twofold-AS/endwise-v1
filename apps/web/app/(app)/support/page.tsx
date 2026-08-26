@@ -17,16 +17,14 @@ import {
 } from './_kategorier';
 
 /**
- * F5-23 — HELPDESK: artikkellista.
- *
- * ⚠️ 05.08.2026: «Åpne supportkanalen» er FJERNET herfra (eiers beslutning).
+ * Helpdesk: artikkellista.
+ * «Åpne supportkanalen» er fjernet herfra (eiers beslutning).
  * Samtalen med Endwise bor i Innboks › Endwise — samme meldingssystem, samme
  * SSE. En egen inngang her ville vært en andre dør til det samme rommet.
- *
- * ── Uleste (20.08.2026) ───────────────────────────────────────────────────
+ * Uleste
  * «Ulest» er fraværet av en lest-rad, ikke et flagg. En ny artikkel er derfor
  * automatisk ulest for alle uten at publiseringen må skrive en rad per bruker.
- * Selve merkingen skjer når artikkelen ÅPNES — se `[slug]/page.tsx`.
+ * Selve merkingen skjer når artikkelen Åpnes — se `[slug]/page.tsx`.
  */
 function dato(d: Date | string): string {
   return new Date(d).toLocaleDateString('nb-NO', {
@@ -106,8 +104,10 @@ export default function HelpdeskPage() {
             <Link key={a.id} href={`/support/${a.slug}` as Route} className="group block">
               <CardShell className="h-full transition-colors group-hover:border-border-strong">
                 {a.image && (
-                  /* ⚠️ Fast forhold, ikke fast høyde: kortene står i et grid og
-                     må ha samme bildehøyde uansett hva slags bilde det er. */
+                  /*
+                   * Fast forhold, ikke fast høyde: kortene står i et grid og
+                   * må ha samme bildehøyde uansett hva slags bilde det er.
+                   */
                   <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-surface-2">
                     <Image
                       src={a.image}

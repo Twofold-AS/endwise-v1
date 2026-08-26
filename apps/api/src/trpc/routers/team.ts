@@ -38,24 +38,21 @@ function dagensVindu(): { fra: Date; til: Date } {
 }
 
 /**
- * F1-14 — TEAM & TILGANG: hvem jobber her, og hva gjør de?
- *
- * ── ⛔ Hele ruteren er `adminProcedure` ──────────────────────────────────
+ * Team & tilgang: hvem jobber her, og hva gjør de?
+ * Hele ruteren er `adminProcedure`
  * Ikke bare mutasjonen. Lista over kollegaer med navn, e-post, rolle og
  * funksjon er et personregister over verkstedet — den hører til lederen, ikke
  * til hvem som helst som er innlogget. En `dealer_staff` som kunne lese den,
  * kunne kartlagt hele huset uten å ha noe der å gjøre.
- *
- * ── To dimensjoner, aldri blandet ────────────────────────────────────────
- * Ruta ENDRER kun `job_function`. Den rører **aldri** `member.role` — å bytte
+ * To dimensjoner, aldri blandet
+ * Ruta endrer kun `job_function`. Den rører **aldri** `member.role` — å bytte
  * noens tilgangsnivå er en annen og langt farligere handling, og skal ikke
  * kunne skje ved et uhell fra en nedtrekksliste som heter «Funksjon».
  */
 export const teamRouter = router({
   /**
    * Alle medlemmer i tenanten, med utledet jobbfunksjon.
-   *
-   * ⚠️ `member` og `user` har ingen RLS (ADR-002), så isolasjonen må komme fra
+   * `member` og `user` har ingen RLS (ADR-002), så isolasjonen må komme fra
    * spørringen selv: `organization_id = ctx.tenantId`. Samme grep som
    * `directory.participants` — se doc-kommentaren der for hvorfor det er
    * viktigere enn det ser ut.
@@ -144,7 +141,7 @@ export const teamRouter = router({
     }));
 
     /**
-     * F6-19 — `user_preferences` har ingen RLS. Isolasjonen kommer av at
+     * `user_preferences` har ingen RLS. Isolasjonen kommer av at
      * `ider` allerede er tenant-skopet via `member.organization_id`.
      */
     const avatarRader = await ctx.db
@@ -195,7 +192,7 @@ export const teamRouter = router({
           epost: erUtenInnloggingEpost(m.epost) ? '' : m.epost,
           kanLoggeInn: medInnlogging.has(m.userId),
           rolle: m.rolle,
-          /** ⚠️ Kallenavn er INTERNT. Team & tilgang er en intern flate. */
+          /** Kallenavn er internt. Team & tilgang er en intern flate. */
           kallenavn: p?.nickname ?? null,
           funksjon: resolveJobbfunksjon({
             rolle: m.rolle,
@@ -207,7 +204,7 @@ export const teamRouter = router({
           harMekanikerprofil: erMekaniker.has(m.userId),
           mechanicId: mek?.id ?? null,
           twoFactorEnabled: Boolean(m.twoFactorEnabled),
-          /** ⛔ Ledere kan ikke få tildelt funksjon — den følger av rollen. */
+          /** Ledere kan ikke få tildelt funksjon — den følger av rollen. */
           kanEndres: !kanEndreJobbfunksjon(m.rolle),
           /**
            * Seed for ansatte er `user.id`. Mekanikerlista (`/mekanikere`)
@@ -222,18 +219,17 @@ export const teamRouter = router({
 
   /**
    * Sett jobbfunksjon på et medlem.
-   *
-   * ⛔ Fire sperrer, og hver enkelt fanger en egen feil:
-   *   1. `adminProcedure` — kun dealer_admin/endwise_admin i det hele tatt.
-   *   2. `kanEndreJobbfunksjon(ctx.role)` — eksplisitt sjekk, ikke bare en
-   *      antagelse om hva `adminProcedure` slipper gjennom. Endres den ene,
-   *      står den andre igjen.
-   *   3. **Målpersonen må være medlem av DENNE tenanten.** Uten denne kunne en
-   *      leder sendt en vilkårlig bruker-ID og skrevet en profilrad for en
-   *      ansatt hos en annen forhandler (CWE-639 / OWASP A01). RLS ville stoppet
-   *      lesingen, men innskrivingen ville hatt vår egen tenant-id og altså
-   *      vært lovlig — det er nettopp derfor medlemskapet må sjekkes her.
-   *   4. Funksjonen må være TILDELBAR. `leder` avvises: den følger av rollen.
+   * Fire sperrer, og hver enkelt fanger en egen feil:
+   * 1. `adminProcedure` — kun dealer_admin/endwise_admin i det hele tatt.
+   * 2. `kanEndreJobbfunksjon(ctx.role)` — eksplisitt sjekk, ikke bare en
+   * antagelse om hva `adminProcedure` slipper gjennom. Endres den ene,
+   * står den andre igjen.
+   * 3. **Målpersonen må være medlem av denne tenanten.** Uten denne kunne en
+   * leder sendt en vilkårlig bruker-ID og skrevet en profilrad for en
+   * ansatt hos en annen forhandler (CWE-639 / owasp A01). RLS ville stoppet
+   * lesingen, men innskrivingen ville hatt vår egen tenant-id og altså
+   * vært lovlig — det er nettopp derfor medlemskapet må sjekkes her.
+   * 4. Funksjonen må være tildelbar. `leder` avvises: den følger av rollen.
    */
   setFunction: adminProcedure
     .input(
@@ -285,7 +281,7 @@ export const teamRouter = router({
           .values({ tenantId: ctx.tenantId, userId: input.userId, jobFunction: input.funksjon })
           .onConflictDoUpdate({
             target: [schema.memberProfiles.tenantId, schema.memberProfiles.userId],
-            // ⚠️ Kun funksjonen. Kallenavnet er personens eget og skal ikke
+            // Kun funksjonen. Kallenavnet er personens eget og skal ikke
             // nullstilles fordi lederen endret hva de jobber med.
             set: { jobFunction: input.funksjon, updatedAt: new Date() },
           }),
@@ -294,15 +290,13 @@ export const teamRouter = router({
     }),
 
   /**
-   * F1-10 tillegg — LEGG TIL ANSATT UTEN INVITASJON.
-   *
+   * F1-10 tillegg — legg til ansatt uten invitasjon.
    * Verkstedet som ikke trenger mekaniker-PWA (eller som vil ha navnet i
    * forhandlervisningen før noen logger inn) må kunne opprette selger /
    * support / mekaniker lokalt. Ingen e-post sendes. Ingen invitasjonsrad.
    * Ingen passord — admin setter aldri passord for andre (samme regel som
    * F1-10). Personen vises i teamet; innlogging skjer bare via invitasjon.
-   *
-   * ⛔ Rollen er alltid `dealer_staff`. `leder` avvises. Tenant kommer fra
+   * Rollen er alltid `dealer_staff`. `leder` avvises. Tenant kommer fra
    * sesjonen. Eksisterende e-post avvises — da skal invitasjonsstien brukes.
    */
   opprettUtenInvitasjon: adminProcedure
@@ -517,7 +511,7 @@ export const teamRouter = router({
     }),
 
   /**
-   * Steg 1: send engangskode til LEDERENS e-post. Ingenting slås av her.
+   * Steg 1: send engangskode til lederens e-post. Ingenting slås av her.
    */
   slaAv2faStart: adminProcedure
     .input(z.object({ userId: z.string().min(1) }))

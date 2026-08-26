@@ -14,10 +14,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { kundeSupportAgent } from '../src/index.ts';
 
 /**
- * F6-13 — Agent-runtimen.
- *
- * Kjøres mot MOCK-leverandøren, ikke mot Fireworks. Det er ikke en snarvei:
- * disse testene handler om VÅRE grenser (tenant, entitlement, guardrails), ikke
+ * Agent-runtimen.
+ * Kjøres mot mock-leverandøren, ikke mot Fireworks. Det er ikke en snarvei:
+ * disse testene handler om våre grenser (tenant, entitlement, guardrails), ikke
  * om modellens oppførsel. De skal kjøre i CI, uten nøkkel og uten nettverk.
  */
 const OWNER_URL = process.env.DATABASE_URL;
@@ -124,15 +123,12 @@ describeDb('agent-runtime (F6-13)', () => {
   });
 
   /**
-   * ⚠️ DEN VIKTIGSTE TESTEN I REPOET.
-   *
+   * Den viktigste testen I repoet.
    * Modellen blir bedt (via prompt-injeksjon) om å hente tenant B sine data,
-   * og den FORSØKER — den sender `tenantId: tenantB` til verktøyet.
-   *
+   * og den forsøker — den sender `tenantId: tenantB` til verktøyet.
    * Den skal likevel bare få tenant A sine bookinger, fordi:
-   *   L2 fjerner tenantId fra input, og verktøyet henter tenant fra konteksten
-   *   (som kommer fra sesjonen), og RLS filtrerer uansett.
-   *
+   * L2 fjerner tenantId fra input, og verktøyet henter tenant fra konteksten
+   * (som kommer fra sesjonen), og RLS filtrerer uansett.
    * En AI-agent som kan lese på tvers av tenants er den verste lekkasjen vi kan
    * lage: den er automatisert, den skalerer, og den ser ut som en normal samtale.
    */

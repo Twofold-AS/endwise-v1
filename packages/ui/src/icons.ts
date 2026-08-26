@@ -1,36 +1,30 @@
 /**
- * Kuratert ikon-barrel. **UI-PAKKER §6: appene importerer ALDRI ikoner direkte
- * fra `lucide-react`** — alt går gjennom denne fila.
- *
- * ── F5-20: leveranse 2 (07.08.2026) ────────────────────────────────────────
- * Barrel-en har fortsatt TO kilder, men balansen har snudd:
- *
- *   · `./icons.generated.ts` — eierens egne SVG-er, generert fra
- *      `src/assets/icons/*.svg` av `scripts/build-icons.ts`. **62 ikoner.**
- *   · `lucide-react` — resten, inntil egne SVG-er finnes for dem.
- *
+ * Kuratert ikon-barrel. ui-pakker §6: appene importerer aldri ikoner direkte
+ * fra `lucide-react` — alt går gjennom denne fila.
+ * Leveranse 2
+ * Barrel-en har fortsatt to kilder, men balansen har snudd:
+ * `./icons.generated.ts` — eierens egne SVG-er, generert fra
+ * `src/assets/icons/*.svg` av `scripts/build-icons.ts`. **62 ikoner.**
+ * `lucide-react` — resten, inntil egne SVG-er finnes for dem.
  * Et ikon flyttes fra lucide-blokka til den genererte ved å legge SVG-en i
- * `assets/icons/`, kjøre `build:icons` og flytte navnet — **ingen kallsteder
- * endres**, fordi `createLucideIcon` returnerer nøyaktig `LucideIcon`.
- *
- * ⚠️ `type LucideIcon` blir HOS lucide uansett. Den er typen, ikke et ikon.
- *
- * ⚠️ Så lenge lista er delt, er ikonsettet visuelt blandet: egne ikoner har
+ * `assets/icons/`, kjøre `build:icons` og flytte navnet — ingen kallsteder
+ * endres, fordi `createLucideIcon` returnerer nøyaktig `LucideIcon`.
+ * `type LucideIcon` blir hos lucide uansett. Den er typen, ikke et ikon.
+ * Så lenge lista er delt, er ikonsettet visuelt blandet: egne ikoner har
  * `stroke-width` 2 og en litt annen strektone enn lucides 1.75. Det er synlig,
  * og det forsvinner først når lucide-blokka er tom. Se
  * `docs/notater/ikonregister.md` for hvilke som mangler.
- *
- * ⚠️ Slug-avvik: lucide har døpt om `circle-help` → `CircleQuestionMark` og
+ * Slug-avvik: lucide har døpt om `circle-help` → `CircleQuestionMark` og
  * `filter` → `Funnel`. Egne SVG-er må hete det lucide heter i dag.
  */
 
-// ── LUCIDE — venter på egne SVG-er ─────────────────────────────────────────
+// LUCIDE — venter på egne SVG-er
 export {
   ArrowUpRight,
   BellRing,
   BookOpen,
-  // ⚠️ Tilbake til lucide 07.08.2026: eierens AI-main.svg viste seg å være
-  // KUN en liten sirkel (spenn 4,8 av 24) — nav-punktet «AI-verktøy» rendret
+  // eierens AI-main.svg viste seg å være
+  // Kun en liten sirkel (spenn 4,8 av 24) — nav-punktet «AI-verktøy» rendret
   // som en dott. Se ikonregisteret; en ekte hjerne må tegnes.
   Brain,
   Building2,
@@ -41,9 +35,9 @@ export {
   Copy,
   Download,
   ExternalLink,
-  // F1-18 — vis/skjul passord. Ingen UI-pakke i §-kartet dekker et
+  // Vis/skjul passord. Ingen UI-pakke i §-kartet dekker et
   // passordfelt med avsløringsknapp (shadcn har `Input`, ikke en variant),
-  // så kontrollen er egenskrevet i `app/_auth/felter.tsx`. Se UI-PAKKER §8.
+  // så kontrollen er egenskrevet i `app/_auth/felter.tsx`. Se ui-pakker §8.
   Eye,
   EyeOff,
   Flag,
@@ -71,7 +65,7 @@ export {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-// ── EGNE IKONER — generert fra src/assets/icons/ av scripts/build-icons.ts ──
+// Egne ikoner — generert fra src/assets/icons/ av scripts/build-icons.ts
 export {
   Activity,
   AlarmClockOff,

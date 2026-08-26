@@ -13,7 +13,7 @@ export const KIND_LABEL: Record<string, string> = {
 /**
  * Tekst/bakgrunn per kanal. Bruker de temauavhengige `*-soft`-tokenene, ikke
  * alfa-varianter av aksenten: en 12 %-grønn mot hvitt blir nesten usynlig,
- * mens `--ew-accent-soft` (#CAFACE) er eierens faktiske badge-fyll.
+ * mens `--ew-accent-soft` (#caface) er eierens faktiske badge-fyll.
  */
 export const KIND_TONE: Record<string, string> = {
   customer_dealer: 'bg-accent-soft text-accent-strong',
@@ -55,7 +55,7 @@ export const ROLLE_LABEL: Record<string, string> = {
   kunde: 'Kunde',
 };
 
-/** Rolle i dealer↔Endwise-tråd. Aldri en bar «Ansatt». */
+/** Rolle i dealerEndwise-tråd. Aldri en bar «Ansatt». */
 export function supportRolleEtikett(rolle: string | null | undefined): string | null {
   if (rolle === 'dealer_admin') return 'Forhandler-admin';
   if (rolle === 'endwise_admin') return 'Endwise-admin';
@@ -79,18 +79,16 @@ export function tilDeltakerRolle(rolle: string | null | undefined): DeltakerRoll
 
 /**
  * Hvem skrev dette?
- *
- * Navnene kommer fra `directory.participants` (08.08.2026) — ruta som krysser
+ * Navnene kommer fra `directory.participants` — ruta som krysser
  * deltaker-IDene mot hvem som faktisk hører til denne tenanten. Fram til da
  * viste innboksen «Deltaker a3f9c1», altså en UUID med hatt på.
- *
- * ⚠️ Fallbacket er beholdt med vilje. En ID uten treff er ikke en feil: det kan
+ * Fallbacket er beholdt med vilje. En ID uten treff er ikke en feil: det kan
  * være en tidligere ansatt, eller en kunde som aldri logget inn på «Min side».
  * Da er en stabil, kort referanse riktigere enn et gjettet navn — og langt
  * riktigere enn å skjule at det står noen der.
  */
 /**
- * Listerad i dealer↔Endwise-innboksen: KUN verksted-/forhandlernavn.
+ * Listerad i dealerEndwise-innboksen: kun verksted-/forhandlernavn.
  * Personen hører hjemme i tråden, ikke på raden.
  */
 export function supportRadTittel(
@@ -158,8 +156,7 @@ export function authorLabel(
 }
 
 /**
- * Hvem er samtalen MED? Brukes som tittel i innbokslista.
- *
+ * Hvem er samtalen med? Brukes som tittel i innbokslista.
  * Emnet vinner når det finnes — det er det mennesket skrev. Uten emne er
  * motpartens navn langt mer nyttig enn «Samtale · Kunde». Over to motparter
  * kortes det ned; en tråd med fem deltakere trenger ikke fem navn i en 320px
@@ -223,18 +220,16 @@ export const ESCALATION_REASON_LABEL: Record<string, string> = {
 };
 
 /**
- * ⛔ Hvilken navnevisning en trådtype tåler.
- *
- * ⚠️ **Speiler `visningForTraadtype()` i `packages/modules/src/profil/`.**
+ * Hvilken navnevisning en trådtype tåler.
+ * Speiler `visningForTraadtype` i `packages/modules/src/profil/`.
  * `apps/web` har ikke `@endwise/modules` som avhengighet (det er server-laget),
  * og å dra inn hele modulpakken i nettleserbundelen for én linje ville vært
  * dyrere enn duplikatet.
- *
- * At det står to steder er greit HER, og bare her, fordi klienten ikke er
+ * At det står to steder er greit her, og bare her, fordi klienten ikke er
  * sikkerheten: den velger bare hvilket oppslag den ber om. Serveren løser
  * navnet, og `directory.participants` defaulter til `offisiell`. Ber klienten
- * feil, blir det feil VISNING — ikke en åpen dør. Den ekte grensen står i
- * `visningsnavn()` på serveren.
+ * feil, blir det feil visning — ikke en åpen dør. Den ekte grensen står i
+ * `visningsnavn` på serveren.
  */
 export function visningForTraadtype(kind: string): 'intern' | 'offisiell' {
   return kind === 'mechanic_dealer' || kind === 'dealer_admin' ? 'intern' : 'offisiell';

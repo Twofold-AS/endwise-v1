@@ -17,8 +17,8 @@ import {
 } from '../src/bytt-epost.ts';
 
 /**
- * F1-27 — BYTT E-POST i to steg. Klientvalideringen, konfig-sperren, og at
- * selve adressen IKKE byttes når noen bare ber om det.
+ * Bytt E-POST i to steg. Klientvalideringen, konfig-sperren, og at
+ * selve adressen ikke byttes når noen bare ber om det.
  */
 
 const GYLDIG = {

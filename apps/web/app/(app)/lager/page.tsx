@@ -8,8 +8,7 @@ import { CardShell } from '../_shell/cards';
 import { Beholdning, Feil, Laster, Sidehode, Tomt } from './_delt';
 
 /**
- * F5-31 — LAGER · Oversikt. Alt her er ekte data fra `inventory`-ruteren.
- *
+ * Lager · Oversikt. Alt her er ekte data fra `inventory`-ruteren.
  * Fire tellere, og «Tilgjengelig» er den som betyr noe: en reservert del står
  * på hylla, men er lovet bort. Så «Lav beholdning» rett under — det eneste på
  * siden som krever en handling.

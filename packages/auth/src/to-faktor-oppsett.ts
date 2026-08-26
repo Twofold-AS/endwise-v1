@@ -1,14 +1,12 @@
 /**
  * F1-20 / F1-21 / F1-22 / F1-23 — 2FA-status, gjenopprettingskoder,
  * slå-av og kvittering etter påslag.
- *
- * ── F1-23: hvorfor navigasjonen er SKILT fra «ferdig» ─────────────────────
+ * Hvorfor navigasjonen er skilt fra «ferdig»
  * `/2fa-oppsett` satte `steg = 'ferdig'` og kalte `window.location.assign`
  * i samme blokk. Tilstanden rakk aldri å rendre — brukeren så aldri at det
- * gikk bra. Derfor returnerer `etter2faBekreftet()` KUN «vis kvittering».
+ * gikk bra. Derfor returnerer `etter2faBekreftet` kun «vis kvittering».
  * Navigasjon skjer først når brukeren trykker Fortsett.
- *
- * ── F1-21: kodene kommer fra `enable`, ikke fra et eget kall ──────────────
+ * Kodene kommer fra `enable`, ikke fra et eget kall
  * Better-Auth 1.6.23 lager backupCodes i `/two-factor/enable` og returnerer
  * dem i klartekst ÉN gang. `generateBackupCodes` er for å bytte sett senere
  * (krever at 2FA allerede er på). Vi viser det enable allerede ga oss.
@@ -39,9 +37,8 @@ export type KoderFullforInput = {
 };
 
 /**
- * F1-21 — oppsettet er uferdig til kodene er tatt vare på.
- *
- * Nedlasting ELLER kopiering, pluss en eksplisitt bekreftelse. En avkrysning
+ * Oppsettet er uferdig til kodene er tatt vare på.
+ * Nedlasting eller kopiering, pluss en eksplisitt bekreftelse. En avkrysning
  * alene er det folk klikker seg forbi. En nedlasting uten bekreftelse er
  * like lett å glemme.
  */
@@ -119,8 +116,7 @@ export function fortsettEtter2faKvittering(landing?: string | null): { destinasj
 }
 
 /**
- * F1-20 — statusraden i Settings › Profil og mekanikerens «Meg».
- *
+ * Statusraden i Settings › Profil og mekanikerens «Meg».
  * Leser `session.user.twoFactorEnabled`. Udefinert felt = vi vet ikke ennå
  * (sesjonen laster), ikke «av».
  */

@@ -5,15 +5,14 @@ import { kundeSupportAgent } from './kunde-support/agent.ts';
 
 /**
  * Agent-registeret. «Agent = mappe» (techstack §2).
- *
  * Legg merke til `dataClass` på hver agent — den avgjør hvilken leverandør
- * agenten kan kjøre på (F14). Det er ikke en kommentar; `spawnAgent()` nekter å
+ * agenten kan kjøre på (F14). Det er ikke en kommentar; `spawnAgent` nekter å
  * starte en `customer_freetext`-agent mot en ikke-EU-leverandør.
  */
 const AGENTS: Record<string, AgentDefinition> = {
   [kundeSupportAgent.name]: kundeSupportAgent,
   [driftInnsiktAgent.name]: driftInnsiktAgent,
-  // F6-04 — første agent på chat-flaten (F6-18). customer_freetext ⇒ Mistral EU.
+  // Første agent på chat-flaten (F6-18). customer_freetext ⇒ Mistral EU.
   [aiDiagnoseAgent.name]: aiDiagnoseAgent,
 };
 

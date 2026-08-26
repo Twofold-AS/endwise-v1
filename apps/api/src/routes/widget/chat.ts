@@ -21,17 +21,16 @@ import { createAppContext } from '../../context.ts';
 import type { WidgetVars } from '../../lib/widget-auth.ts';
 
 /**
- * F4 + F14-04/05/01 — Kundevendt AI-chat i widgeten. Dette er en OFFENTLIG flate,
+ * F4 + F14-04/05/01 — Kundevendt AI-chat i widgeten. Dette er en offentlig flate,
  * så de fire lovpålagte/sikkerhets-egenskapene er ikke valgfrie:
- *
- *   1. ART. 50 (F14-04): opplysningen «du snakker med en AI» returneres som det
- *      FØRSTE feltet i HVERT svar — server-håndhevet, kan ikke fjernes av klienten.
- *   2. DATAREGION (F14-02): provider = `resolveModelProvider('customer_freetext')`
- *      ⇒ Mistral (EU), ALDRI Fireworks. `runAgent` dobbeltsjekker via
- *      `providerSatisfies`; uten EU-provider i prod kaster resolveren.
- *   3. SCOPE-GATE (F14-05): sensitive kategorier (helse/pii/jus/selvskading) →
- *      eskaler til menneske FØR teksten når AI-en.
- *   4. PSEUDONYMISERING (F14-01): kundefritekst maskeres før prompt, unmaskes i svaret.
+ * 1. Art. 50 (F14-04): opplysningen «du snakker med en AI» returneres som det
+ * Første feltet i hvert svar — server-håndhevet, kan ikke fjernes av klienten.
+ * 2. Dataregion (F14-02): provider = `resolveModelProvider('customer_freetext')`
+ * ⇒ Mistral (EU), aldri Fireworks. `runAgent` dobbeltsjekker via
+ * `providerSatisfies`; uten EU-provider i prod kaster resolveren.
+ * 3. Scope-gate (F14-05): sensitive kategorier (helse/pii/jus/selvskading) →
+ * eskaler til menneske før teksten når AI-en.
+ * 4. Pseudonymisering (F14-01): kundefritekst maskeres før prompt, unmaskes i svaret.
  */
 
 const chatLimiter = createRateLimiter({ windowMs: 5 * 60_000, max: 20 });
@@ -68,11 +67,11 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
     );
   }
 
-  // (3) Scope-gate FØR AI. Ekte moderasjon når Mistral er konfigurert (EU); ellers
-  //     audit-modus (dev uten nøkkel) — permissiv, men da kjører uansett mock-provider.
+  // (3) Scope-gate før AI. Ekte moderasjon når Mistral er konfigurert (EU); ellers
+  // audit-modus (dev uten nøkkel) — permissiv, men da kjører uansett mock-provider.
   const mistralConfigured = Boolean(process.env.MISTRAL_API_KEY);
   // Fallback-moderator (dev uten Mistral-nøkkel): må matche `Moderator`-typen
-  // eksakt — `categories` er et OBJEKT (Partial<Record<..., boolean>>), ikke en array.
+  // eksakt — `categories` er et objekt (Partial<Record<..., boolean>>), ikke en array.
   const noopModerator: Moderator = async (_text) => ({ categories: {} });
   const moderate: Moderator = mistralConfigured ? createMistralModerator() : noopModerator;
   const gate = createScopeGate({ moderate, mode: mistralConfigured ? 'escalate' : 'audit' });

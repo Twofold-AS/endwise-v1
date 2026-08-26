@@ -1,11 +1,9 @@
 /**
- * F14-16 — Leverandørleddet. **Her er ærligheten viktigere enn koden.**
- *
+ * Leverandørleddet. **Her er ærligheten viktigere enn koden.**
  * En sletterutine som stopper ved vår egen database er ikke en sletterutine.
  * Men det finnes ledd vi **ikke kan slette i** — og å late som noe annet er
  * verre enn å innrømme det. Denne fila dokumenterer hva som faktisk skjer hos
- * hver leverandør når vi sletter, og hva vi IKKE får til.
- *
+ * hver leverandør når vi sletter, og hva vi ikke får til.
  * Innholdet her går rett inn i sletterapporten (`erasure_requests.report`), slik
  * at svaret til den registrerte er sant og etterprøvbart.
  */
@@ -84,7 +82,7 @@ export function vendorFact(vendor: string): VendorErasureFact | undefined {
   return VENDOR_ERASURE_FACTS.find((v) => v.vendor === vendor);
 }
 
-/** Leddene vi IKKE kan slette i på forespørsel. Går inn i svaret til den registrerte. */
+/** Leddene vi ikke kan slette i på forespørsel. Går inn i svaret til den registrerte. */
 export function vendorsWeCannotPurge(): VendorErasureFact[] {
   return VENDOR_ERASURE_FACTS.filter(
     (v) => v.capability === 'auto_expires' || v.capability === 'none',

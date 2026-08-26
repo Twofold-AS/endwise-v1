@@ -2,21 +2,17 @@ import { TIERS, TILLEGG } from '@endwise/modules/billing';
 import Stripe from 'stripe';
 
 /**
- * F5-32 — Opprett Products + Prices i Stripe fra priskatalogen.
- *
+ * Opprett Products + Prices i Stripe fra priskatalogen.
  * Kjør: `pnpm stripe:setup`
- *
- * ⛔ **TEST-MODUS ONLY.** Scriptet nekter å kjøre med en `sk_live_`-nøkkel.
+ * test-modus only. Scriptet nekter å kjøre med en `sk_live_`-nøkkel.
  * Prisstrukturen skal settes opp og verifiseres i test før den røres i live,
  * og et script som «bare» kan opprette et live-produkt ved et uhell er et
  * script som en dag gjør det.
- *
- * **Idempotent:** hvert produkt får en fast `lookup_key` på prisen. Kjører du
+ * Idempotent: hvert produkt får en fast `lookup_key` på prisen. Kjører du
  * på nytt, gjenbrukes eksisterende pris i stedet for at det lages en ny — ellers
  * ville tredje kjøring gitt tre priser på samme produkt og ingen visshet om
  * hvilken som faktisk brukes.
- *
- * ⚠️ Scriptet SKRIVER IKKE i .env. Det skriver ut linjene du limer inn. Å la et
+ * Scriptet skriver ikke i .env. Det skriver ut linjene du limer inn. Å la et
  * script redigere hemmeligheter automatisk er en vane man ikke vil ha.
  */
 

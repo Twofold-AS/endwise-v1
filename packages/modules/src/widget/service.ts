@@ -36,7 +36,7 @@ export interface WidgetKeyResolution {
   active: boolean;
 }
 
-/** Public-safe tjeneste (kun det en anonym kunde skal se — ALDRI interne skills). */
+/** Public-safe tjeneste (kun det en anonym kunde skal se — aldri interne skills). */
 export interface WidgetService {
   serviceVersionId: string;
   name: string;
@@ -46,8 +46,8 @@ export interface WidgetService {
 }
 
 /**
- * F4-02 — Forvaltning av widget-nøkler (dealer_admin). Skriv/les er RLS-scopet
- * via `withTenant`. `resolveByPublishableKey` er det ENESTE unscopede oppslaget —
+ * Forvaltning av widget-nøkler (dealer_admin). Skriv/les er RLS-scopet
+ * via `withTenant`. `resolveByPublishableKey` er det eneste unscopede oppslaget
  * den kjører før vi har tenant-kontekst, og nøkkelen er offentlig (raden bærer
  * ingen hemmelighet), så det er trygt. Kall den med en betrodd server-tilkobling.
  */
@@ -91,7 +91,7 @@ export function createWidgetKeyService(db: Database) {
     },
 
     /**
-     * Slå opp tenant + tillatte origins fra en publishable key. UNSCOPED med
+     * Slå opp tenant + tillatte origins fra en publishable key. Unscoped med
      * vilje (vi kjenner ikke tenant ennå). Returnerer null hvis ukjent/inaktiv.
      */
     async resolveByPublishableKey(publishableKey: string): Promise<WidgetKeyResolution | null> {
@@ -114,9 +114,9 @@ export function createWidgetKeyService(db: Database) {
 export type WidgetKeyService = ReturnType<typeof createWidgetKeyService>;
 
 /**
- * F4 — Public-safe datatilgang for anonyme widget-kunder. ALT er RLS-scopet til
- * `tenantId` (fra den validerte nøkkelen). En anonym kunde kan KUN: se tjenester,
- * se ledige tider, opprette EN booking-forespørsel for SIN egen henvendelse.
+ * F4 — Public-safe datatilgang for anonyme widget-kunder. Alt er RLS-scopet til
+ * `tenantId` (fra den validerte nøkkelen). En anonym kunde kan kun: se tjenester,
+ * se ledige tider, opprette en booking-forespørsel for sin egen henvendelse.
  * Ingen lister over andres kunder/kjøretøy/bookinger forlater serveren.
  */
 /**
@@ -189,7 +189,7 @@ export function createWidgetPublicService(db: Database) {
     },
 
     /**
-     * Ledige starttider for en tjeneste på en dag. Returnerer KUN tidspunkter —
+     * Ledige starttider for en tjeneste på en dag. Returnerer kun tidspunkter
      * opptatt-tidene (start/slutt fra bookinger) forlater aldri serveren, og
      * ingen kunde-/booking-identitet eksponeres.
      */
@@ -219,7 +219,7 @@ export function createWidgetPublicService(db: Database) {
     },
 
     /**
-     * Opprett en booking-forespørsel fra widgeten. Mekaniker velges SERVER-side
+     * Opprett en booking-forespørsel fra widgeten. Mekaniker velges server-side
      * (ingen enumerering av mekanikere fra klienten). Kunden oppgir kun sine egne
      * data. `idempotencyKey` (påkrevd) gjør gjentatt innsending trygg.
      * Går via slot-lock-motoren (F3) — samme overlapp-vern som admin-booking.

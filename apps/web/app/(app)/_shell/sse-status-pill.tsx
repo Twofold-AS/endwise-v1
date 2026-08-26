@@ -13,7 +13,7 @@ const LABEL: Record<SseState, string> = {
 /**
  * SSE-status-pille. Konseptuelt koblet til `apps/stream` (F6-02): når strømmen
  * er oppe, viser pilla «Sanntid» med grønn puls. Her drevet av en `state`-prop
- * (mock/seed) til strøm-klienten wires inn. Farge/tekst står ALLTID i klartekst
+ * (mock/seed) til strøm-klienten wires inn. Farge/tekst står alltid i klartekst
  * ved siden av prikken — pulsen alene bærer ikke informasjon.
  */
 export function SseStatusPill({ state = 'live' }: { state?: SseState }) {

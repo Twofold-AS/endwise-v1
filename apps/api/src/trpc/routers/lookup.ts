@@ -6,16 +6,15 @@ import { z } from 'zod';
 import { moduleProcedure, router } from '../init.ts';
 
 /**
- * ⛔ F0-16 — MODUL-GATE: `vegvesen`. Hvert oppslag er et kall mot Autosys som
- * KOSTER — å la ruta stå åpen var både et entitlement-hull og en regning.
+ * Modul-gate: `vegvesen`. Hvert oppslag er et kall mot Autosys som
+ * Koster — å la ruta stå åpen var både et entitlement-hull og en regning.
  */
 const vegvesenProcedure = moduleProcedure('vegvesen');
 
 /**
- * F2-08 — Vegvesen-oppslag: regnr → merke/modell/årsmodell/EU-frist.
- *
+ * Vegvesen-oppslag: regnr → merke/modell/årsmodell/EU-frist.
  * Nøkkelen er per tenant (envelope-kryptert, F1-07) med env som reserve.
- * Oppslaget er et SPEIL: vi lagrer det Vegvesenet sier, og `lookupAt`
+ * Oppslaget er et speil: vi lagrer det Vegvesenet sier, og `lookupAt`
  * forteller når. Vi later aldri som at det er vår sannhet. Nøkkelen logges ikke.
  */
 export const lookupRouter = router({
@@ -32,7 +31,7 @@ export const lookupRouter = router({
       return createVegvesenClient({ apiKey }).lookupByRegNumber(input.regNumber);
     }),
 
-  /** Slår opp OG speiler treffet inn på kjøretøyet. */
+  /** Slår opp og speiler treffet inn på kjøretøyet. */
   refreshVehicle: vegvesenProcedure
     .input(z.object({ vehicleId: z.uuid(), regNumber: z.string().min(2).max(10) }))
     .mutation(async ({ ctx, input }) => {

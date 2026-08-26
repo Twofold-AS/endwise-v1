@@ -4,8 +4,7 @@ import { catalogFromEnv, type ModelCatalog, type PlanKey, resolveModel } from '.
 import type { ModelProvider, ModelRequest } from './provider.ts';
 
 /**
- * F6-13 — Fireworks (techstack: LLM-leverandør, brukergodkjent 14.07.2026).
- *
+ * Fireworks (techstack: LLM-leverandør, brukergodkjent ).
  * Merk hvor tynt dette laget er. Det er meningen: hele agent-runtimen snakker
  * med `ModelProvider`, ikke med Fireworks. Skulle leverandøren byttes igjen,
  * er det denne fila som erstattes — ingenting annet.
@@ -23,8 +22,8 @@ export function createFireworksProvider(options?: {
 
   return {
     name: 'fireworks',
-    // ⚠️ Fireworks serverless kan ikke region-pinnes — inferensen kan kjøre i USA.
-    // Derfor kan denne leverandøren ALDRI betjene en agent som ser sluttkundens
+    // Fireworks serverless kan ikke region-pinnes — inferensen kan kjøre i usa.
+    // Derfor kan denne leverandøren aldri betjene en agent som ser sluttkundens
     // fritekst (se data-region.ts).
     region: 'global',
 

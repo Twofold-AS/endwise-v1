@@ -1,6 +1,5 @@
 /**
- * F5-51 — helpdesk-kategorier. Speiler `@endwise/db` (HELPDESK_KATEGORIER).
- *
+ * Helpdesk-kategorier. Speiler `@endwise/db` (HELPDESK_KATEGORIER).
  * Web importerer ikke `@endwise/db`. Testen `helpdesk-kategorier.test.ts`
  * låser at nøkler og norske labels matcher skjemaet 1:1.
  */

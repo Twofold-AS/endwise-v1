@@ -4,32 +4,27 @@ import { tool } from 'ai';
 import { z } from 'zod';
 
 /**
- * F6-15 / F2-09 — LAGER-VERKTØY FOR AGENTEN. **KUN LESING.**
- *
- * Sikkerhetsgjennomgangen (docs/notater/sikkerhet-lager-butikk.md, DEL 2)
+ * F6-15 / F2-09 — lager-verktøy for agenten. **kun lesing.**
+ * Sikkerhetsgjennomgangen (docs/notater/sikkerhet-lager-butikk.md, del 2)
  * pekte ut tre grenser. Denne fila håndhever alle tre — og den er bevisst
  * kjedelig, fordi det er poenget.
- *
- * ── ① Aldri krysse tenant ─────────────────────────────────────────────────
+ * ① Aldri krysse tenant
  * Alt går gjennom `withTenant(context.db, context.tenantId, …)`. `tenantId`
- * kommer fra SESJONEN via `AgentContext`, aldri fra modellen. Guardrails L2
+ * kommer fra sesjonen via `AgentContext`, aldri fra modellen. Guardrails L2
  * stripper i tillegg tenant-lignende felter fra alt modellen sender
  * (`SCOPE_FIELDS` i packages/guardrails), og RLS er nettet under. Tre lag.
- *
- * ── ② Aldri skrive ────────────────────────────────────────────────────────
+ * ② Aldri skrive
  * Det finnes ingen skrivende verktøy her, og det er ikke en forglemmelse.
- * OWASP LLM08 (Excessive Agency) er den reelle risikoen når en agent kommer
+ * Owasp LLM08 (Excessive Agency) er den reelle risikoen når en agent kommer
  * nær fysiske varer: «juster beholdningen til 4» er et helt annet ansvar enn
  * «hvor mange har vi?». Skriving skal gå via forslag + menneskelig bekreftelse
  * (F6-15), og den mekanismen er ikke bygget ennå. **Inntil da: ingenting.**
- *
- * ── ③ FELT-ALLOWLIST, ikke tabell-allowlist (LLM06) ───────────────────────
- * ⛔ `costMinor` (innkjøpspris) og `minStock` returneres ALDRI. Innkjøpspris
+ * ③ felt-allowlist, ikke tabell-allowlist (LLM06)
+ * `costMinor` (innkjøpspris) og `minStock` returneres aldri. Innkjøpspris
  * og marginer er forretningshemmeligheter, og guardrails L4 leter ikke etter
  * dem — den fanger API-nøkler, DB-URL-er og fødselsnummer. Ville vi gitt
  * agenten hele raden, hadde ett spørsmål holdt: «hva koster den inn?»
- *
- * Derfor listes hver kolonne eksplisitt under. `select()` uten argumenter, ellerx
+ * Derfor listes hver kolonne eksplisitt under. `select` uten argumenter, ellerx
  * `select({ ...schema.parts })`, ville lekket kostpris den dagen noen la til en
  * kolonne — uten at noen la merke til det.
  */
@@ -97,8 +92,8 @@ export function lagerVerktoy(context: AgentContext) {
           const rader = await tx
             .select({
               ...SYNLIGE_DELEFELT,
-              // `minStock` brukes til SAMMENLIGNINGEN, men returneres ikke som
-              // eget felt — agenten trenger å vite HVA som er lavt, ikke hvilke
+              // `minStock` brukes til sammenligningen, men returneres ikke som
+              // eget felt — agenten trenger å vite hva som er lavt, ikke hvilke
               // terskler forhandleren har satt.
               tilgjengelig: sql<number>`(coalesce(sum(${schema.stockLevels.onHand}), 0) - coalesce(sum(${schema.stockLevels.reserved}), 0))::int`,
               underMinimum: sql<boolean>`(coalesce(sum(${schema.stockLevels.onHand}), 0) - coalesce(sum(${schema.stockLevels.reserved}), 0)) < coalesce(${schema.parts.minStock}, 0)`,

@@ -30,18 +30,15 @@ import {
 import { useInboxModus } from './_modus';
 
 /**
- * F6-01 / F5-14 — INNBOKSENS EGEN SIDEBAR.
- *
- * Den andre sidebaren. Hoved-sidebaren sier hvilket ROM du er i; denne sier
- * hvilken SAMTALE. Samme oppbygning som hoved-sidebaren med vilje: en 56px
+ * F6-01 / F5-14 — innboksens egen sidebar.
+ * Den andre sidebaren. Hoved-sidebaren sier hvilket rom du er i; denne sier
+ * hvilken samtale. Samme oppbygning som hoved-sidebaren med vilje: en 56px
  * header med `border-b` som ligger på samme linje som topbarens skillelinje, og
  * innholdet under. To kolonner som er bygget likt leses som ett system.
- *
- * Part-filtrene bor HER, ikke i hoved-sidebaren. To kontroller for samme filter
+ * Part-filtrene bor her, ikke i hoved-sidebaren. To kontroller for samme filter
  * ville før eller siden gått ut av synk.
- *
- * ⚠️ **Navnebytte 08.08.2026.** Disse filtrene het «KANALER» i koden, men de
- * filtrerer på `thread_kind` — altså HVEM samtalen er med. Nå som `channel`
+ * Navnebytte. Disse filtrene het «kanaler» i koden, men de
+ * filtrerer på `thread_kind` — altså hvem samtalen er med. Nå som `channel`
  * finnes som ekte kolonne (SMS/e-post/app/widget) ville to ting med samme navn
  * vært en garantert forveksling. Filtrene heter `PARTER`; kanal er kanal.
  */
@@ -69,17 +66,14 @@ export function InboxSidebar() {
 
   /**
    * Navnene på alle motparter i innboksen.
-   *
-   * ── ⛔ TO oppslag, og det er ikke sløsing ────────────────────────────────
-   * Kallenavn er lov i INTERNE tråder (`mechanic_dealer`, `dealer_admin`) og
+   * To oppslag, og det er ikke sløsing
+   * Kallenavn er lov i interne tråder (`mechanic_dealer`, `dealer_admin`) og
    * forbudt i kundetråder. Ett samlet oppslag ville måttet velge én visning for
    * hele lista — og da hadde enten kallenavnene forsvunnet der de hører hjemme,
    * eller dukket opp i en kundesamtale. Derfor deles IDene etter trådtype, og
    * hvert sett spørres med sin egen visning.
-   *
    * Serveren løser navnet; klienten velger bare hvilket kart den slår opp i.
-   * Se `visningForTraadtype()` i `@endwise/modules/profil`.
-   *
+   * Se `visningForTraadtype` i `@endwise/modules/profil`.
    * `agent:`-IDene filtreres bort før vi spør — de er ikke mennesker og finnes
    * ikke i noe register.
    */
@@ -114,7 +108,7 @@ export function InboxSidebar() {
           t.subject,
           t.kind,
           t.motparter ?? [],
-          // Kartet velges per TRÅD, ikke per liste. Dette er hele grunnen til
+          // Kartet velges per tråd, ikke per liste. Dette er hele grunnen til
           // at det er to oppslag.
           visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
           me.data?.userId,
@@ -126,14 +120,12 @@ export function InboxSidebar() {
         kanal: tilKanal(t.channel),
         sisteKanal: tilKanal(t.sisteKanal),
         /**
-         * F6-19 — ansiktet på raden.
-         *
-         * ⚠️ En tråd kan ha flere motparter, men raden har plass til ÉN. Vi tar
+         * Ansiktet på raden.
+         * En tråd kan ha flere motparter, men raden har plass til ÉN. Vi tar
          * den første som verken er deg selv eller en agent — samme person
-         * `threadHeading()` navngir raden etter, så bilde og navn ikke peker på
+         * `threadHeading` navngir raden etter, så bilde og navn ikke peker på
          * hver sin deltaker.
-         *
-         * ⛔ Seeden kommer fra SERVEREN (`participants.seed`), ikke fra
+         * Seeden kommer fra serveren (`participants.seed`), ikke fra
          * deltaker-IDen: for en kunde er den `customers.id`, som er den samme
          * seeden kundekortet bruker. Ellers ville samme menneske hatt to
          * ansikter på to flater.
@@ -189,7 +181,7 @@ export function InboxSidebar() {
 
   return (
     <aside className="flex w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
-      {/* ── Header: 56px + border-b, på linje med topbaren ─────────────── */}
+      {/* Header: 56px + border-b, på linje med topbaren */}
       <div className="flex h-14 shrink-0 items-center gap-1 border-border border-b px-3">
         <h2 className="mr-auto min-w-0 truncate text-title text-fg">{aktivLabel}</h2>
 
@@ -218,15 +210,15 @@ export function InboxSidebar() {
         </div>
       </div>
       {/**
-       * F5-14 — «Ny samtale» sto som et 28px ikon i headeren. For utydelig
-       * hos både forhandler og Endwise-admin (Mikael 25.08.2026). Full bredde
+       * «Ny samtale» sto som et 28px ikon i headeren. For utydelig
+       * hos både forhandler og Endwise-admin (Mikael ). Full bredde
        * med synlig tekst, samme sted lista står, begge innbokser.
        */}
       <div className="shrink-0 border-border border-b p-2">
         <NySamtaleLenke href={'/innboks?ny=1' as Route} />
       </div>
 
-      {/* ── Samtalene ──────────────────────────────────────────────────── */}
+      {/* Samtalene */}
       <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
         {threads.isLoading ? (
           <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
@@ -262,12 +254,11 @@ export function InboxSidebar() {
 
 /**
  * Hvem raden skal vise ansiktet til.
- *
  * Null når tråden bare har deg selv og agenter i seg — da tegnes ingen avatar
  * i stedet for en tilfeldig plassholder. Et ansikt som ikke står for noen, er
  * verre enn ingen ansikt.
  */
-/** F5-11 — rad i Endwise-innboksen: forhandlernavn først, sist melding muted. */
+/** Rad i Endwise-innboksen: forhandlernavn først, sist melding muted. */
 function SupportKort({
   navn,
   utdrag,
@@ -312,7 +303,7 @@ function motpartFor(
   for (const id of motparter) {
     if (!id || id === megId || id.startsWith('agent:')) continue;
     const treff = navn?.[id];
-    // ⚠️ Ukjent ID: vi har ingen seed vi kan stole på (deltaker-IDen er IKKE
+    // Ukjent ID: vi har ingen seed vi kan stole på (deltaker-IDen er ikke
     // seeden), så da tegnes ingenting. Se `directory.participants`.
     if (treff) return { seed: treff.seed, navn: treff.navn, avatar: treff.avatar };
   }
@@ -343,25 +334,31 @@ function SamtaleKort({
       }`}
     >
       <div className="flex items-center gap-2">
-        {/* Kanalen står FØRST på raden, ikke bak en bryter. Det er den som
-            avgjør hvordan man svarer — se `_kanal.tsx`. */}
+        {/*
+         * Kanalen står først på raden, ikke bak en bryter. Det er den som
+         * avgjør hvordan man svarer — se `_kanal.tsx`.
+         */}
         <KanalMerke kanal={rad.sisteKanal} kunIkon />
         <span className="ml-auto shrink-0 text-[11px] text-fg-muted tabular-nums">{rad.nar}</span>
       </div>
 
       <div className="flex items-center gap-2">
-        {/* F6-19 — ansiktet står FØR navnet: øyet kjenner igjen en form
-            raskere enn det leser en streng, og lista skannes mer enn den
-            leses. `navn` tom = dekorativ, siden navnet står rett ved siden av
-            og en skjermleser ellers ville lest det to ganger. */}
+        {/*
+         * Ansiktet står før navnet: øyet kjenner igjen en form
+         * raskere enn det leser en streng, og lista skannes mer enn den
+         * leses. `navn` tom = dekorativ, siden navnet står rett ved siden av
+         * og en skjermleser ellers ville lest det to ganger.
+         */}
         {rad.motpart && (
           <Avatar
             seed={rad.motpart.seed}
             valg={rad.motpart.avatar}
             size={20}
             navn=""
-            /* ⛔ Lista. Ett `<img>` per rad, ingen bevegelse. Dette er flaten
-               hele `bevegelse`-propen finnes for å beskytte. */
+            /*
+             * Lista. Ett `<img>` per rad, ingen bevegelse. Dette er flaten
+             * hele `bevegelse`-propen finnes for å beskytte.
+             */
             bevegelse="stille"
           />
         )}
@@ -383,8 +380,10 @@ function SamtaleKort({
         >
           {KIND_LABEL[rad.kind] ?? rad.kind}
         </span>
-        {/* Bytter samtalen vei, skal det SES i lista — ikke først når du
-            åpner tråden og svarer feil sted. */}
+        {/*
+         * Bytter samtalen vei, skal det ses i lista — ikke først når du
+         * åpner tråden og svarer feil sted.
+         */}
         {rad.sisteKanal !== rad.kanal && (
           <span className="inline-flex h-badge items-center gap-1 rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
             svar som

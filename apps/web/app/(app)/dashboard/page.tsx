@@ -11,20 +11,16 @@ import { AnsattePaJobb } from './_ansatte-pa-jobb';
 import { Timeplan } from './_timeplan';
 
 /**
- * VERKSTEDET (F3-05/F5-01) — forhandlerens landingsside.
- *
- * ── Ryddet 06.08.2026 (eiers beslutning) ───────────────────────────────────
+ * Verkstedet (F3-05/F5-01) — forhandlerens landingsside.
+ * Ryddet (eiers beslutning)
  * Siden viste tre ting som ikke betydde noe for en verkstedeier:
- *
- *   · fire KPI-kort med oppdiktede tall («412 000 kr», «87 % belegg»)
- *   · en 30-dagers booking-tabell med genererte rader
- *   · en liste over ANDRE FORHANDLERE — Endwise-interne data på forhandlerens
- *     egen forside. Det var rett og slett feil skjerm
- *
+ * fire KPI-kort med oppdiktede tall («412 000 kr», «87 % belegg»)
+ * en 30-dagers booking-tabell med genererte rader
+ * en liste over andre forhandlere — Endwise-interne data på forhandlerens
+ * egen forside. Det var rett og slett feil skjerm
  * Alt tre er fjernet. Det som står igjen er **ekte data fra `bookings.list`**:
  * dagens saker, og tre tellere utledet fra de samme radene. Ingenting er
  * oppdiktet, så ingenting trenger et «Mock»-merke.
- *
  * Er det tomt, sier siden det — en tom dag er informasjon, ikke en feil.
  */
 export default function VerkstedetPage() {
@@ -57,8 +53,10 @@ export default function VerkstedetPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
-      {/* Breadcrumben sier «Verkstedet» — h1 er skjult for øyet, beholdt for
-          skjermlesere og dokumentstruktur. */}
+      {/*
+       * Breadcrumben sier «Verkstedet» — h1 er skjult for øyet, beholdt for
+       * skjermlesere og dokumentstruktur.
+       */}
       <div>
         <h1 className="sr-only">Verkstedet</h1>
         <p className="text-title text-fg">Her er dagen din, sjef 👋</p>

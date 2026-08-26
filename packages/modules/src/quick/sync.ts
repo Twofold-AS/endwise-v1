@@ -28,23 +28,19 @@ export interface SyncCustomersResult {
 const MERGE_FIELDS = ['name', 'email', 'phone'] as const;
 
 /**
- * F8-01 — Kundesynk med TRE-VEIS FLETTING (git-lignende, per felt).
- *
+ * Kundesynk med tre-veis fletting (git-lignende, per felt).
  * Kilden er en AsyncIterable (typisk toolkitets `iterateCustomers` mappet til
- * upsert-form). NETTVERKET skjer i iteratoren — UTENFOR DB-transaksjonene: vi
+ * upsert-form). Nettverket skjer i iteratoren — utenfor DB-transaksjonene: vi
  * buffrer til `batchSize` og skriver hver batch i sin egen korte `withTenant`-
  * transaksjon. Aldri en åpen transaksjon mens vi venter på Quick.
- *
- * FLETTELOGIKK (per felt, mot baseline = sist hentet fra Quick; se merge.ts):
- *   - Quick endret, vi ikke → Quick vinner (auto).
- *   - Vi endret, Quick ikke  → behold vår (auto).
- *   - Begge til samme         → ingen konflikt.
- *   - Begge ulikt             → KONFLIKT: IKKE overskriv, skriv til `sync_conflicts`.
+ * Flettelogikk (per felt, mot baseline = sist hentet fra Quick; se merge.ts):
+ * Quick endret, vi ikke → Quick vinner (auto).
+ * Vi endret, Quick ikke → behold vår (auto).
+ * Begge til samme → ingen konflikt.
+ * Begge ulikt → konflikt: ikke overskriv, skriv til `sync_conflicts`.
  * Nye rader (ukjent quickGuid): Quick vinner og baseline etableres.
- *
- * BEVISST IKKE rørt (lokale-KUN-felt): `userId` (Min-side-kobling), `createdAt`,
+ * Bevisst ikke rørt (lokale-kun-felt): `userId` (Min-side-kobling), `createdAt`,
  * kundenotater (egen tabell). Ikke Quick sitt domene.
- *
  * Gjenbruk: `threeWayMerge` + `sync_conflicts` er entitets-agnostiske, så
  * booking/delelager/salg kobler seg på samme mekanikk (egne felt + entity-navn).
  */
@@ -82,7 +78,7 @@ export async function syncQuickCustomers(
         };
         const current = r.quickGuid ? byGuid.get(r.quickGuid) : undefined;
 
-        // NY rad: Quick vinner, baseline etableres.
+        // Ny rad: Quick vinner, baseline etableres.
         if (!current) {
           await tx.insert(schema.customers).values({
             tenantId,
@@ -97,7 +93,7 @@ export async function syncQuickCustomers(
           continue;
         }
 
-        // EKSISTERENDE: tre-veis flett per felt.
+        // Eksisterende: tre-veis flett per felt.
         const ours: Record<string, FieldValue> = {
           name: current.name,
           email: current.email,

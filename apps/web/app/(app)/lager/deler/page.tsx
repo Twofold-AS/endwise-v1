@@ -9,14 +9,12 @@ import { Beholdning, Feil, kroner, Laster, Sidehode, Tomt } from '../_delt';
 import { BevegelseDialog } from './_bevegelse-dialog';
 
 /**
- * F5-31 — LAGER · Deler.
- *
- * ⛔ **Sorteringen er en allowlist, ikke en fri streng.** Verdiene under er de
+ * Lager · Deler.
+ * Sorteringen er en allowlist, ikke en fri streng. Verdiene under er de
  * eneste serveren godtar (`PART_SORT` i `inventory.ts`). Det er ikke
  * dobbeltarbeid — det er at klienten og serveren er enige om det samme lille
  * settet, og at serveren ikke stoler på klienten uansett (A03).
- *
- * ⚠️ Kostpris vises kun for admin. Den er en forretningshemmelighet, og
+ * Kostpris vises kun for admin. Den er en forretningshemmelighet, og
  * AI-agenten ser den heller ikke (LLM06).
  */
 const SORTERINGER = [
@@ -188,7 +186,7 @@ function DelerInner() {
   );
 }
 
-/** ⚠️ Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?sok=). */
+/** Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?sok=). */
 export default function Page() {
   return (
     <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster deler …</div>}>

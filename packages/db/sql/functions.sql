@@ -1,31 +1,31 @@
--- F14-16 — Den kontrollerte redaksjonen av audit-loggen.
---
--- ── PROBLEMET ───────────────────────────────────────────────────────────────
---
+-- Den kontrollerte redaksjonen av audit-loggen.
+
+-- Problemet
+
 -- `audit_log` er append-only, med vilje: policyene gir INSERT og SELECT, ingen
 -- UPDATE, ingen DELETE (F1-06). En kompromittert app-rolle kan skrive historie,
--- men ikke skrive OM den.
---
+-- men ikke skrive om den.
+
 -- Men art. 17 (rett til sletting) gjelder også audit-loggen. To krav som peker
--- i hver sin retning: loggen skal være uforanderlig, OG personopplysninger i
+-- i hver sin retning: loggen skal være uforanderlig, og personopplysninger i
 -- den skal kunne fjernes.
---
--- ── LØSNINGEN ───────────────────────────────────────────────────────────────
---
--- Vi sletter ikke RADEN. Vi REDAKTERER FELTENE som inneholder personopplysninger
+
+-- Løsningen
+
+-- Vi sletter ikke raden. Vi redakterer feltene som inneholder personopplysninger
 -- (`actor`, `subject_id`, `metadata`, `ip_address`), og lar resten stå:
 -- tidspunktet, handlingen, tenant. Loggens integritet som hendelseskjede
 -- overlever; personen forsvinner ut av den.
---
+
 -- Redaksjonen skjer gjennom denne funksjonen, som:
---   * er SECURITY DEFINER — kjører som EIEREN, ikke som app-rollen. App-rollen
---     får dermed aldri UPDATE-rettighet på audit_log. Den kan bare BE om
---     redaksjon, ikke utføre den.
---   * er tenant-skopet — den leser `app.tenant_id` selv og kan ikke overtales
---     til å redigere en annen forhandlers logg.
---   * skriver et spor av seg selv i `audit_log`, som en helt vanlig, uslettelig
---     rad. **Redaksjonen blir selv en hendelse i loggen den redigerer.**
---
+-- er SECURITY DEFINER — kjører som eieren, ikke som app-rollen. App-rollen
+-- får dermed aldri UPDATE-rettighet på audit_log. Den kan bare be om
+-- redaksjon, ikke utføre den.
+-- er tenant-skopet — den leser `app.tenant_id` selv og kan ikke overtales
+-- til å redigere en annen forhandlers logg.
+-- skriver et spor av seg selv i `audit_log`, som en helt vanlig, uslettelig
+-- rad. **Redaksjonen blir selv en hendelse i loggen den redigerer.**
+
 -- Det er forskjellen på «vi slettet fra loggen» og «loggen viser at vi slettet».
 
 create or replace function redact_audit_log(p_subject_id text)
@@ -38,7 +38,7 @@ declare
   v_tenant uuid;
   v_count  integer;
 begin
-  -- Tenant hentes fra sesjonsvariabelen — ALDRI fra et argument. Et argument
+  -- Tenant hentes fra sesjonsvariabelen — aldri fra et argument. Et argument
   -- kunne blitt satt av den som kaller; dette kan det ikke.
   v_tenant := nullif(current_setting('app.tenant_id', true), '')::uuid;
   if v_tenant is null then
@@ -57,7 +57,7 @@ begin
   get diagnostics v_count = row_count;
 
   -- Redaksjonen er selv en hendelse. Den skrives inn i loggen den nettopp
-  -- redigerte, og DEN raden kan ingen redigere bort.
+  -- redigerte, og den raden kan ingen redigere bort.
   insert into audit_log (tenant_id, actor, action, subject_type, subject_id, metadata)
   values (
     v_tenant,
@@ -72,55 +72,53 @@ begin
 end;
 $$;
 
--- App-rollen får LOV til å be om redaksjon — men ikke å gjøre den selv.
+-- App-rollen får lov til å be om redaksjon — men ikke å gjøre den selv.
 -- (Funksjonen kjører som eier; app-rollen har fortsatt ingen UPDATE på audit_log.)
 grant execute on function redact_audit_log(text) to authenticated;
 
+-- Invitasjonsoppslag før vi vet hvilken forhandler det gjelder.
 
--- ═══════════════════════════════════════════════════════════════════════════
--- F1-10 — Invitasjonsoppslag FØR vi vet hvilken forhandler det gjelder.
---
--- ── PROBLEMET ───────────────────────────────────────────────────────────────
---
--- `invitations` har RLS + FORCE RLS, tenant-isolert som alt annet. Det er
--- riktig for lederens liste. Men den som ÅPNER en invitasjonslenke har ingen
+-- Problemet
+
+-- `invitations` har RLS + force RLS, tenant-isolert som alt annet. Det er
+-- riktig for lederens liste. Men den som Åpner en invitasjonslenke har ingen
 -- sesjon og ingen tenant — og `app.tenant_id` er derfor ikke satt.
---
--- Verifisert 16.08.2026: en unscopet `select` som app-rollen returnerer 0 rader.
+
+-- Verifisert: en unscopet `select` som app-rollen returnerer 0 rader.
 -- Policyen sammenligner mot `nullif(current_setting('app.tenant_id', true), '')`,
 -- som uten kontekst blir NULL, og `tenant_id = NULL` er aldri sant. Uten denne
 -- funksjonen ville hver eneste invitasjon sett ut som «ukjent token».
---
--- ── LØSNINGEN ───────────────────────────────────────────────────────────────
---
+
+-- Løsningen
+
 -- Ett smalt, kontrollert unntak. Funksjonen:
---   * tar HASHEN, aldri tokenet. Kallstedet hasher; databasen ser aldri
---     hemmeligheten, heller ikke i en logget spørring.
---   * returnerer KUN de feltene godta-stien trenger. Ikke e-post til andre
---     invitasjoner, ikke hvem som inviterte, ikke noe å iterere over.
---   * returnerer kun ÅPNE invitasjoner. Utløpt, brukt eller tilbakekalt gir
---     null — avvisningen ligger i SQL-en, ikke i en if-setning noen kan glemme.
---   * kan ikke brukes til å ramse opp noe: uten en gyldig 256-bits hash finnes
---     det ingen inngang. Det er et oppslag, ikke en spørring.
---
+-- tar hashen, aldri tokenet. Kallstedet hasher; databasen ser aldri
+-- hemmeligheten, heller ikke i en logget spørring.
+-- returnerer kun de feltene godta-stien trenger. Ikke e-post til andre
+-- invitasjoner, ikke hvem som inviterte, ikke noe å iterere over.
+-- returnerer kun Åpne invitasjoner. Utløpt, brukt eller tilbakekalt gir
+-- null — avvisningen ligger i SQL-en, ikke i en if-setning noen kan glemme.
+-- kan ikke brukes til å ramse opp noe: uten en gyldig 256-bits hash finnes
+-- det ingen inngang. Det er et oppslag, ikke en spørring.
+
 -- Den er altså ikke «RLS av» — den er «ett spørsmål, ett svar, og bare hvis du
 -- allerede kjenner hemmeligheten».
---
--- ── ⚠️ FORCE RLS + eier som IKKE er superuser (Scaleway, 23.08.2026) ────
---
+
+-- Force RLS + eier som ikke er superuser (Scaleway)
+
 -- SECURITY DEFINER kjører som tabelleieren. Lokalt er Docker-eieren superuser
 -- og bypasser RLS, så testdataen så grønn ut. I prod er eieren `endwise` uten
 -- BYPASSRLS, og `FORCE ROW LEVEL SECURITY` (grants.sql) gjelder også eieren.
 -- Tenant-policyen er `TO authenticated` og krever `app.tenant_id`. Resultatet
 -- uten unntak: 0 rader — samme 404 som et ugyldig token.
---
--- `row_security=off` hjelper ikke: den GUC-en kaster hvis en policy VILLE
+
+-- `row_security=off` hjelper ikke: den guc-en kaster hvis en policy ville
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
 -- `tenants_platform_admin_read`: en smal policy som slår inn når
 -- `app.invitation_hash` er satt (se grants.sql), og funksjonen setter den
--- transaksjons-lokalt FØR den leser. Uten GUC ser eieren fortsatt 0 rader.
+-- transaksjons-lokalt før den leser. Uten guc ser eieren fortsatt 0 rader.
 
--- DROP først: CREATE OR REPLACE kan ikke bytte RETURNS (0020/PR #24).
+-- DROP først: CREATE OR replace kan ikke bytte RETURNS (0020/pr #24).
 -- Idempotent — `pnpm db:grants` kan kjøres om igjen på Scaleway (0026).
 drop function if exists lookup_open_invitation(text);
 
@@ -153,11 +151,11 @@ begin
 end;
 $$;
 
--- ⛔ Merking av en invitasjon som BRUKT. Samme unntak, samme grunn: den som
+-- Merking av en invitasjon som brukt. Samme unntak, samme grunn: den som
 -- godtar har ingen tenant-kontekst ennå.
---
--- Engangs-garantien ligger HER, i `where accepted_at is null`. To samtidige
--- forsøk på samme token gir én rad tilbake til den ene og null til den andre —
+
+-- Engangs-garantien ligger her, i `where accepted_at is null`. To samtidige
+-- forsøk på samme token gir én rad tilbake til den ene og null til den andre
 -- databasen avgjør, ikke rekkefølgen på to HTTP-kall.
 create or replace function consume_invitation(p_token_hash text)
 returns uuid
@@ -186,74 +184,72 @@ revoke all on function consume_invitation(text) from public;
 grant execute on function lookup_open_invitation(text) to authenticated;
 grant execute on function consume_invitation(text) to authenticated;
 
-
--- ═══════════════════════════════════════════════════════════════════════════
--- F5-26 — GDPR-slett av en forhandler. App-rollen kan ikke slette audit_log
+-- GDPR-slett av en forhandler. App-rollen kan ikke slette audit_log
 -- (append-only) eller tenants-raden mens restrict-FKer lever. Funksjonen
--- kjører som eier, men KREVER at `app.platform_admin` er satt i samme
--- transaksjon — samme GUC som withPlatformAdmin().
---
--- ⛔ Aldri Endwise-tenanten (slug = endwise).
--- Dealer-only "user"-rader SLETTES (prod 24.08.2026: innlogging overlevde
+-- kjører som eier, men krever at `app.platform_admin` er satt i samme
+-- transaksjon — samme guc som withPlatformAdmin.
+
+-- Aldri Endwise-tenanten (slug = endwise).
+-- Dealer-only "user"-rader slettes (prod: innlogging overlevde
 -- forhandlerslett). Beholdes kun ved gjenværende member-rad (annen org,
 -- inkl. Endwise). "Never delete self" = acting admin har Endwise-medlemskap
--- — ikke e-post-unntak. Auth-tabeller har INGEN RLS (ADR-002).
---
--- ── ⚠️ FORCE RLS + eier som IKKE er superuser (Scaleway, 23.08.2026) ────
---
--- Samme klasse som `lookup_open_invitation` (PR #11). SECURITY DEFINER kjører
+-- ikke e-post-unntak. Auth-tabeller har ingen RLS (ADR-002).
+
+-- Force RLS + eier som ikke er superuser (Scaleway)
+
+-- Samme klasse som `lookup_open_invitation` (pr #11). SECURITY DEFINER kjører
 -- som tabelleieren. Lokalt er Docker-eieren superuser og bypasser RLS, så
 -- `SELECT slug` og `DELETE` så grønne ut. I prod er eieren `endwise` uten
--- BYPASSRLS, og FORCE RLS gjelder også eieren. Policyene er `TO authenticated`
--- — eieren er det ikke. `NOT pg_has_role(authenticated)` er FEIL predikat:
--- eieren som CREATE ROLE authenticated ER medlem (ADMIN). Resultat uten unntak:
---   1. `SELECT slug FROM tenants` → 0 rader → raise «finnes ikke»
---      (dette var 500-en på endwise.no 23.08.2026, commit 17ec774).
---   2. DELETE på RLS-tabeller treffer default-deny: 0 rader, STILLE
---      (ikke insufficient_privilege — se tenant-isolation.test.ts).
---   3. `audit_log` og `erasure_requests` har ON DELETE RESTRICT mot tenants.
---      Hard-slett av audit_log er forbudt (F1-06). Uten å flytte kjedene
---      feiler `DELETE FROM tenants` med foreign_key_violation.
--- 4. Prod 24.08.2026 (412, SQLSTATE 23503, audit_log_tenant_id_tenants_id_fk):
---      eieren ER ADMIN av `authenticated`, så TO authenticated SELECT gjelder
---      DEFINER. `withPlatformAdmin` setter ikke `app.tenant_id` → SELECT 0
---      rader → UPDATE flytter 0 audit-rader (stille) → INSERT audit.redacted
---      blir værende på forhandleren. FORCE RLS + RESTRICT = 412.
---      Fikset i 0024: sett `app.tenant_id`, TO PUBLIC SELECT-policyer, skriv
---      spor på Endwise, ROW_COUNT etter EXECUTE.
--- 5. Prod 24.08.2026 ETTER `pnpm db:setup` (dpl_98PMuhbM77R4SZJiEPPryVBafJ4X,
---      cdg1, requestId sdwsb-1787599245213-412242917e8b): 412 igjen.
---      0024 var CREATE OR REPLACE samme signatur — drizzle-journal hopper
---      over den som allerede er merket kjørt, så body/policy kan ligge igjen
---      fra før. INSERT/UPDATE WITH CHECK mot Endwise gikk via
---      `select id from tenants where slug = 'endwise'` under tenants-RLS;
---      ny audit-rad etter flytt matcher ikke SELECT som bare ser slett-GUC.
---      0025: DROP FUNCTION + CREATE, `app.slett_endwise_id` (ingen subquery),
---      SELECT ser begge GUCer, EXISTS på gjenværende rader, stacked
---      constraint_name hvis DELETE tenants likevel treffer RESTRICT.
--- 6. Prod 24.08.2026 ETTER 0025: slett lyktes, men dealer-brukere kunne
---      fortsatt logge inn (tomt skall, ingen org/member). 0025 slettet
---      member/invitation/organization, ikke "user" (passordhash, 2FA,
---      passkey, sesjon ble igjen). 0026 sletter dealer-only "user" SCOPET til user_id samlet fra DENNE
---      orgen (`u.id = any (v_org_user_ids)` + NOT EXISTS member i SAMME
---      statement). CASCADE river session/account/two_factor/passkey.
---      Beholdt (annen org, inkl. Endwise): sesjon mot død org fjernes.
---      Ingen global slett av memberless users i funksjonen (CWE-212/359/284).
---      0025-leftovers: engangs-DML KUN i migrasjon 0026, bundet til session
---      mot manglende organization — ikke alle memberless. Ikke i funksjonen
---      (grants.ts re-applier functions.sql).
---
--- `row_security=off` er IKKE fiksen: den GUC-en kaster hvis en policy VILLE
+-- BYPASSRLS, og force RLS gjelder også eieren. Policyene er `TO authenticated`
+-- eieren er det ikke. `NOT pg_has_role(authenticated)` er feil predikat:
+-- eieren som CREATE role authenticated er medlem (admin). Resultat uten unntak:
+-- 1. `SELECT slug FROM tenants` → 0 rader → raise «finnes ikke»
+-- (dette var 500-en på endwise.no, commit 17ec774).
+-- 2. DELETE på RLS-tabeller treffer default-deny: 0 rader, stille
+-- (ikke insufficient_privilege — se tenant-isolation.test.ts).
+-- 3. `audit_log` og `erasure_requests` har on DELETE restrict mot tenants.
+-- Hard-slett av audit_log er forbudt (F1-06). Uten å flytte kjedene
+-- feiler `DELETE FROM tenants` med foreign_key_violation.
+-- 4. Prod (412, sqlstate 23503, audit_log_tenant_id_tenants_id_fk):
+-- eieren er admin av `authenticated`, så to authenticated SELECT gjelder
+-- DEFINER. `withPlatformAdmin` setter ikke `app.tenant_id` → SELECT 0
+-- rader → UPDATE flytter 0 audit-rader (stille) → INSERT audit.redacted
+-- blir værende på forhandleren. Force RLS + restrict = 412.
+-- Fikset i 0024: sett `app.tenant_id`, to public SELECT-policyer, skriv
+-- spor på Endwise, ROW_COUNT etter execute.
+-- 5. Prod etter `pnpm db:setup` (dpl_98PMuhbM77R4SZJiEPPryVBafJ4X,
+-- cdg1, requestId sdwsb-1787599245213-412242917e8b): 412 igjen.
+-- 0024 var CREATE OR replace samme signatur — drizzle-journal hopper
+-- over den som allerede er merket kjørt, så body/policy kan ligge igjen
+-- fra før. INSERT/UPDATE with check mot Endwise gikk via
+-- `select id from tenants where slug = 'endwise'` under tenants-RLS;
+-- ny audit-rad etter flytt matcher ikke SELECT som bare ser slett-guc.
+-- 0025: DROP FUNCTION + CREATE, `app.slett_endwise_id` (ingen subquery),
+-- SELECT ser begge GUCer, exists på gjenværende rader, stacked
+-- constraint_name hvis DELETE tenants likevel treffer restrict.
+-- 6. Prod etter 0025: slett lyktes, men dealer-brukere kunne
+-- fortsatt logge inn (tomt skall, ingen org/member). 0025 slettet
+-- member/invitation/organization, ikke "user" (passordhash, 2FA,
+-- passkey, sesjon ble igjen). 0026 sletter dealer-only "user" scopet til user_id samlet fra denne
+-- orgen (`u.id = any (v_org_user_ids)` + NOT exists member i samme
+-- statement). Cascade river session/account/two_factor/passkey.
+-- Beholdt (annen org, inkl. Endwise): sesjon mot død org fjernes.
+-- Ingen global slett av memberless users i funksjonen (CWE-212/359/284).
+-- 0025-leftovers: engangs-DML kun i migrasjon 0026, bundet til session
+-- mot manglende organization — ikke alle memberless. Ikke i funksjonen
+-- (grants.ts re-applier functions.sql).
+
+-- `row_security=off` er ikke fiksen: den guc-en kaster hvis en policy ville
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
 -- `invitations_open_by_hash`: funksjonen setter `app.slett_tenant_id`
--- transaksjons-lokalt, og grants.sql har smale TO PUBLIC-policyer som
--- krever platform_admin + slett-GUC + current_user <> authenticated
--- / endwise_app. `NOT pg_has_role(authenticated)` er FEIL predikat:
--- eieren som CREATE ROLE authenticated ER medlem (ADMIN) → tom SELECT.
--- App-rollen kan sette GUC-er, men matcher ikke eier-policyene.
--- Uten GUC ser eieren fortsatt 0 rader.
---
--- CI kan ikke simulere «FORCE RLS + ikke-superuser eier» uten å flytte
+-- transaksjons-lokalt, og grants.sql har smale to public-policyer som
+-- krever platform_admin + slett-guc + current_user <> authenticated
+-- / endwise_app. `NOT pg_has_role(authenticated)` er feil predikat:
+-- eieren som CREATE role authenticated er medlem (admin) → tom SELECT.
+-- App-rollen kan sette guc-er, men matcher ikke eier-policyene.
+-- Uten guc ser eieren fortsatt 0 rader.
+
+-- CI kan ikke simulere «force RLS + ikke-superuser eier» uten å flytte
 -- eierskap på alle tabeller. Kontraktstestene i
 -- apps/api/test/slett-forhandler-sql.test.ts + force-rls.test.ts er stand-in.
 
@@ -285,10 +281,10 @@ begin
     raise exception 'slett_forhandler: krever platform_admin';
   end if;
 
-  -- Transaksjons-lokalt. TO PUBLIC-policyene i grants.sql ser kun DENNE id-en.
-  -- app.tenant_id også: eieren er ADMIN av authenticated, så TO authenticated
-  -- SELECT gjelder DEFINER. Uten tenant-GUC ser UPDATE 0 rader.
-  -- app.slett_endwise_id: WITH CHECK/INSERT/SELECT etter flytt, uten subquery
+  -- Transaksjons-lokalt. To public-policyene i grants.sql ser kun denne id-en.
+  -- app.tenant_id også: eieren er admin av authenticated, så to authenticated
+  -- SELECT gjelder DEFINER. Uten tenant-guc ser UPDATE 0 rader.
+  -- app.slett_endwise_id: with check/INSERT/SELECT etter flytt, uten subquery
   -- mot tenants (RLS på slug='endwise' kan gi NULL → 42501 eller stille 0).
   perform set_config('app.slett_tenant_id', p_tenant_id::text, true);
   perform set_config('app.tenant_id', p_tenant_id::text, true);
@@ -307,9 +303,9 @@ begin
   end if;
   perform set_config('app.slett_endwise_id', v_endwise::text, true);
 
-  -- F1-06: aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
+  -- Aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
   -- redact_audit_log — den leser app.tenant_id og har ingen UPDATE-policy for
-  -- eieren under FORCE RLS), flytt kjeden til Endwise så ON DELETE RESTRICT
+  -- eieren under force RLS), flytt kjeden til Endwise så on DELETE restrict
   -- slipper tenants-raden, skriv spor PÅ Endwise (ikke på slett-målet).
   update audit_log
      set actor      = '[REDAKTERT]',
@@ -334,8 +330,8 @@ begin
     jsonb_build_object('rows_redacted', v_redacted, 'reason', 'slett_forhandler')
   );
 
-  -- F14-16: erasure_requests slettes ALDRI (art. 5(2)-beviset må overleve
-  -- forhandlerslett). Samme ON DELETE RESTRICT mot tenants.
+  -- Erasure_requests slettes aldri (art. 5(2)-beviset må overleve
+  -- forhandlerslett). Samme on DELETE restrict mot tenants.
   -- CWE-359/863/284: flytt til Endwise, roter id, hash identifikatorene.
   -- Ingen server-pepper i repoet. md5 er deterministisk og rainbow-bart;
   -- sha256(verdi || slettet tenant_id) er ikke-reversibel og tenant-bundet.
@@ -363,7 +359,7 @@ begin
   end if;
 
   -- Barn først (parts/stock_levels/customers inkludert). Kjent FK-rekkefølge
-  -- før den dynamiske løkka. EXECUTE setter ikke FOUND — ROW_COUNT.
+  -- før den dynamiske løkka. Execute setter ikke found — ROW_COUNT.
   -- Kun foreign_key_violation / undefined_table svelges i runden.
   foreach v_name in array array[
     'shop_order_lines', 'shop_orders',
@@ -436,7 +432,7 @@ begin
       using errcode = '23503';
   end if;
 
-  -- Samle forhandlerens brukere FØR member-slett. Dealer-only kontoer
+  -- Samle forhandlerens brukere før member-slett. Dealer-only kontoer
   -- skal dø med forhandleren. "Never delete self" verner acting admin
   -- og Endwise-brukere — de har member-rad i Endwise-org og beholdes.
   v_org_user_ids := array(
@@ -450,10 +446,10 @@ begin
   delete from invitation where organization_id = p_tenant_id::text;
   delete from organization where id = p_tenant_id::text;
 
-  -- Dealer-only: SCOPET til innsamlede id-er. Samme statement krever
-  -- NOT EXISTS member (Endwise-/tverr-org beholdes — de har member-rad).
-  -- CWE-212/359/284: ALDRI globalt «slett alle uten member» her.
-  -- Auth-tabellene har INGEN RLS (ADR-002); DEFINER kan slette uten slett-GUC.
+  -- Dealer-only: scopet til innsamlede id-er. Samme statement krever
+  -- NOT exists member (Endwise-/tverr-org beholdes — de har member-rad).
+  -- CWE-212/359/284: aldri globalt «slett alle uten member» her.
+  -- Auth-tabellene har ingen RLS (ADR-002); DEFINER kan slette uten slett-guc.
   delete from verification v
    using "user" u
    where v.identifier = u.email
@@ -475,7 +471,7 @@ begin
      );
 
   -- Beholdte brukere kan fortsatt ha sesjon mot død org.
-  -- 0025-leftovers (memberless + session mot manglende org) ryddes KUN
+  -- 0025-leftovers (memberless + session mot manglende org) ryddes kun
   -- som én-gangs DML i 0026-migrasjonen — ikke her. Funksjonen forblir
   -- scoped (`any(v_org_user_ids)`). grants.ts re-applier denne fila.
   delete from session where active_organization_id = p_tenant_id::text;

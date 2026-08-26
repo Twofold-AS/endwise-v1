@@ -5,11 +5,10 @@ import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
 import { seedHelpdesk } from './seed-helpdesk.ts';
 
 /**
- * DEV-SEED — demo-kontoer + tenant A-data. IKKE for produksjon.
- *
+ * Dev-seed — demo-kontoer + tenant A-data. Ikke for produksjon.
  * Kjør: `pnpm db:seed` (krever Docker-DB oppe: `pnpm db:up`).
  * Kjører som eier (DATABASE_URL) → RLS er usynlig, så vi kan skrive på tvers.
- * Demo-kontoene har e-post/passord + verifisert e-post + 2FA AV (dev-only).
+ * Demo-kontoene har e-post/passord + verifisert e-post + 2FA av (dev-only).
  * Produksjonsflyten (OTP + obligatorisk e-post-2FA) er uendret.
  */
 
@@ -63,7 +62,7 @@ async function ensureTenant(
         .set({ kind: 'demo' })
         .where(eq(schema.tenants.id, existing.id));
     }
-    // F0-16: synk TILLEGGENE idempotent. Uten dette beholder eldre seedede
+    // Synk tilleggene idempotent. Uten dette beholder eldre seedede
     // tenants modullista fra før basis/tillegg-skillet, og gaten låser flater
     // demoen skal vise.
     for (const moduleKey of modules) {
@@ -83,9 +82,9 @@ async function ensureTenant(
     ownerUserId,
     plan,
     modules,
-    // ⛔ DEV-SEEDEN OPPRETTER KUN DEMO-TENANTS. Scriptet nekter å kjøre i
+    // Dev-seeden oppretter kun demo-tenants. Scriptet nekter å kjøre i
     // produksjon (sjekken øverst), så dette kan ikke lekke ut. «Verksted A» og
-    // «Verksted B» ER oppdiktede verksteder — å merke dem 'live' ville vært
+    // «Verksted B» er oppdiktede verksteder — å merke dem 'live' ville vært
     // feil på egne premisser, og det er nettopp merkingen dev-mode-gaten
     // krever som sitt tredje lag.
     kind: 'demo',
@@ -176,7 +175,7 @@ async function main() {
   const staffA = await ensureUser('ansatt-a@verksted.test', 'Stein Ansatt (Verksted A)');
   const mekA = await ensureUser('mekaniker-a@verksted.test', 'Ola Mekaniker (Verksted A)');
   const adminB = await ensureUser('admin-b@verksted.test', 'Bjørn Admin (Verksted B)');
-  // F1-14 — én per jobbfunksjon, så landingsvisningen kan testes for hånd.
+  // Én per jobbfunksjon, så landingsvisningen kan testes for hånd.
   const selgerA = await ensureUser('selger-a@verksted.test', 'Silje Selger (Verksted A)');
   const supportA = await ensureUser('support-a@verksted.test', 'Sara Support (Verksted A)');
   const platformSupport = await ensureUser('support@endwise.test', 'Endwise Support');
@@ -185,9 +184,8 @@ async function main() {
   await setMemberRole(platformTenant, platformSupport, 'endwise_support');
 
   /**
-   * ⚠️ F0-16: kun TILLEGG her. 'booking' og 'messages' er fjernet — de er basis
+   * Kun tillegg her. 'booking' og 'messages' er fjernet — de er basis
    * og har ingen gate, så en rad for dem ville antydet at de kunne tas bort.
-   *
    * Verksted A får alt, så hele demoen (AI-verktøy, Quick, widget, rapporter)
    * faktisk lar seg klikke gjennom lokalt.
    */
@@ -203,7 +201,7 @@ async function main() {
     'nyhetsbrev',
     'analyse-pro',
   ]);
-  // Verksted B står med vilje på BASIS — den er kontrasten: her skal AI-verktøy
+  // Verksted B står med vilje på basis — den er kontrasten: her skal AI-verktøy
   // og Quick faktisk være låst, så gaten kan sees virke i UI-et.
   const tenantB = await ensureTenant('Verksted B', 'verksted-b', adminB, 'basis', ['vegvesen']);
 
@@ -211,7 +209,7 @@ async function main() {
   await setMemberRole(tenantA, adminA, 'dealer_admin');
   await setMemberRole(tenantA, staffA, 'dealer_staff');
   await setMemberRole(tenantA, mekA, 'dealer_staff'); // mekaniker = staff + profil
-  // ⛔ Selger og support er BEGGE dealer_staff — nøyaktig samme tilgang.
+  // Selger og support er begge dealer_staff — nøyaktig samme tilgang.
   // Forskjellen ligger i jobbfunksjonen under, ikke i rettigheter.
   await setMemberRole(tenantA, selgerA, 'dealer_staff');
   await setMemberRole(tenantA, supportA, 'dealer_staff');
@@ -245,23 +243,22 @@ async function main() {
       .onConflictDoNothing();
   }
 
-  /* ══ KUNDER, KJØRETØY OG UKAS BOOKINGER ═══════════════════════════════
-   *
-   * ⚠️ **Skrevet om 08.08.2026 — og grunnen er verdt å huske.** Blokken her
-   * var IKKE idempotent: hver `pnpm db:seed` la inn en ny «Kari Kunde», et nytt
+  /*
+   * Kunder, kjøretøy og ukas bookinger
+   * og grunnen er verdt å huske. Blokken her
+   * var ikke idempotent: hver `pnpm db:seed` la inn en ny «Kari Kunde», et nytt
    * kjøretøy, en ny tjeneste og tre nye bookinger. Etter noen kjøringer sto
    * Verksted A med åtte identiske kunder og 25 bookinger på to datoer — data
    * som verken lignet et verksted eller lot seg teste mot. Nå slås alt opp før
    * det skrives, og bookingene bruker `idempotencyKey` (unik per tenant), som
    * er samme mekanisme widgeten bruker mot dobbeltklikk.
-   *
-   * Dataene er valgt for å STRESSE flatene, ikke for å pynte dem:
-   *   · navn som faktisk kan søkes fra hverandre (ikke åtte Kari)
-   *   · en EU-frist som er GÅTT UT og en som går ut snart → rød og gul i UI
-   *   · en båt uten regnr → kolonnen må tåle «—», ikke gjemme raden
-   *   · en kunde med Better-Auth-bruker → navneoppslaget i innboksen kan sees
-   *   · bookinger på BEGGE mekanikere gjennom hele uka → kalenderen får noe å
-   *     legge ved siden av hverandre, ikke én kloss i et tomt rutenett
+   * Dataene er valgt for å stresse flatene, ikke for å pynte dem:
+   * navn som faktisk kan søkes fra hverandre (ikke åtte Kari)
+   * en EU-frist som er gått ut og en som går ut snart → rød og gul i UI
+   * en båt uten regnr → kolonnen må tåle «—», ikke gjemme raden
+   * en kunde med Better-Auth-bruker → navneoppslaget i innboksen kan sees
+   * bookinger på begge mekanikere gjennom hele uka → kalenderen får noe å
+   * legge ved siden av hverandre, ikke én kloss i et tomt rutenett
    */
   type KundeSpek = {
     navn: string;
@@ -335,7 +332,7 @@ async function main() {
       vin: '4XASEA507KA123456',
       euOm: null,
     },
-    // Gått ut: skal vises RØD i lista og på kortet.
+    // Gått ut: skal vises rød i lista og på kortet.
     {
       eier: 'Ola Hansen',
       type: 'mc',
@@ -439,7 +436,7 @@ async function main() {
     { navn: 'Båtmotor-service', type: 'boat' as const, min: 120, pris: 395000, skills: [] },
   ];
 
-  // ── Kunder ────────────────────────────────────────────────────────────
+  // Kunder
   const kundeIder: Record<string, string> = {};
   for (const k of KUNDER) {
     const [finnes] = await db
@@ -467,7 +464,7 @@ async function main() {
     kundeIder[k.navn] = ny.id;
   }
 
-  // ── Kjøretøy ──────────────────────────────────────────────────────────
+  // Kjøretøy
   const kjoretoyIder: Record<string, string> = {};
   for (const v of KJORETOY) {
     const noekkel = v.reg ?? v.vin;
@@ -499,7 +496,7 @@ async function main() {
     kjoretoyIder[noekkel] = ny.id;
   }
 
-  // ── Tjenester (bookinger peker på VERSJONEN, ikke tjenesten) ──────────
+  // Tjenester (bookinger peker på versjonen, ikke tjenesten)
   const versjonIder: Record<string, string> = {};
   for (const t of TJENESTER) {
     let [svc] = await db
@@ -532,16 +529,16 @@ async function main() {
     versjonIder[t.navn] = ver.id;
   }
 
-  /* ── Ukas bookinger ────────────────────────────────────────────────────
-   *
-   * Lagt ut fra MANDAG i inneværende uke, ikke fra faste datoer: seeden skal
+  /*
+   * Ukas bookinger
+   * Lagt ut fra mandag i inneværende uke, ikke fra faste datoer: seeden skal
    * gi en kalender med innhold uansett når den kjøres. Begge mekanikerne får
    * jobber som overlapper i tid — det er nettopp da per-mekaniker-kolonnene
    * i dagsvisningen har en jobb å gjøre.
    */
   const mandag = new Date();
   mandag.setHours(0, 0, 0, 0);
-  // getDay(): 0 = søndag. Norsk uke starter mandag.
+  // getDay: 0 = søndag. Norsk uke starter mandag.
   mandag.setDate(mandag.getDate() - ((mandag.getDay() + 6) % 7));
 
   /** `mek: 0` = Ola Mekaniker, `1` = hovedbrukerens demo-mekaniker. */
@@ -773,7 +770,7 @@ async function main() {
     const eier = KJORETOY.find((v) => (v.reg ?? v.vin) === b.kjoretoy)?.eier;
 
     /**
-     * Idempotensnøkkelen bærer UKEN, ikke bare indeksen: kjører du seeden
+     * Idempotensnøkkelen bærer uken, ikke bare indeksen: kjører du seeden
      * neste uke skal du få neste ukes bookinger, ikke null nye fordi nøklene
      * kolliderte med forrige ukes.
      */
@@ -800,17 +797,15 @@ async function main() {
     nyeBookinger++;
   }
 
-  /* ══ LAGER (F2-09) — demo-deler gjennom EKTE tabeller ═════════════════
-   *
+  /*
+   * Lager (F2-09) — demo-deler gjennom ekte tabeller
    * Ikke hardkodet UI: dette er rader i `parts`/`stock_locations`/
    * `stock_levels`/`stock_movements`, hentet av `inventory`-ruteren gjennom
    * RLS som alt annet. Er noe umulig å seede, er det en gap i backend — ikke
    * noe å skjule bak en mock.
-   *
-   * Beholdningen bygges av BEVEGELSER, ikke ved å sette et tall: det er slik
+   * Beholdningen bygges av bevegelser, ikke ved å sette et tall: det er slik
    * den fungerer i drift, og da tester seeden faktisk regnestykket.
-   *
-   * ⚠️ Kjøres bare for de kjente seed-tenantene (Verksted A/B). En forhandler
+   * Kjøres bare for de kjente seed-tenantene (Verksted A/B). En forhandler
    * opprettet fra Endwise-admin skal ikke få lager-demo bare fordi noen
    * kjørte `pnpm db:seed`.
    */
@@ -834,7 +829,7 @@ async function main() {
     { code: 'BIL-1', name: 'Servicebil 1' },
   ];
 
-  /** Realistiske MC-verkstedsdeler. `min` gir noen som havner under minimum. */
+  /** Realistiske mc-verkstedsdeler. `min` gir noen som havner under minimum. */
   const DELER = [
     {
       sku: 'BRK-1042',
@@ -977,7 +972,7 @@ async function main() {
         .insert(schema.stockLevels)
         .values({ tenantId, partId: del.id, locationId, onHand: d.inn, reserved: d.res });
 
-      // Bevegelsene som FORKLARER tallene over. Historikken er fasiten.
+      // Bevegelsene som forklarer tallene over. Historikken er fasiten.
       await db.insert(schema.stockMovements).values({
         tenantId,
         partId: del.id,
@@ -1009,28 +1004,25 @@ async function main() {
     const [t] = await db.select().from(schema.tenants).where(eq(schema.tenants.slug, slug));
     if (t?.kind !== 'demo') continue;
 
-    /* ⚠️ **LÅST-INNE-BUGEN (fikset 09.08.2026).**
-     *
+    /*
      * Hovedbrukeren sto som `owner` i «Yamaha Bergen» — Better-Auths egen
      * standardrolle fra `createOrganization`, som ikke finnes i vår RBAC-modell.
      * Da matchet hun ingen rolleliste i navet: kontekstvelgeren forsvant, og
      * hun kunne ikke bytte tilbake til de andre demoene. Låst inne.
-     *
      * Rotårsaken er fikset i `createTenant` (den normaliserer nå til
-     * dealer_admin). Denne linja rydder opp i tenants som allerede FINNES, og
+     * dealer_admin). Denne linja rydder opp i tenants som allerede finnes, og
      * hever hovedbrukeren til `endwise_admin` i alle sine demo-tenants slik at
      * dev-mode faktisk slår inn overalt.
-     *
-     * ⛔ Gaten er URØRT: flagg + endwise_admin + kind='demo' gjelder fortsatt.
-     * Vi gjør ikke betingelsen svakere — vi OPPFYLLER den, og bare i tenants
+     * Gaten er urørt: flagg + endwise_admin + kind='demo' gjelder fortsatt.
+     * Vi gjør ikke betingelsen svakere — vi oppfyller den, og bare i tenants
      * som allerede er merket `demo`. En live tenant treffes aldri av loopen.
      */
     await setMemberRole(t.id, endwiseAdmin, 'endwise_admin');
 
     await seedLager(t.id, endwiseAdmin);
-    // F0-16: gi demo-tenantene ALLE tillegg, så hele produktet lar seg klikke
+    // Gi demo-tenantene alle tillegg, så hele produktet lar seg klikke
     // gjennom lokalt uansett hvilken demo man lander i. Verksted B er unntaket
-    // og står på basis med vilje — den er kontrasten der gaten kan SEES virke.
+    // og står på basis med vilje — den er kontrasten der gaten kan sees virke.
     if (t.slug !== 'verksted-b') {
       for (const moduleKey of ALLE_TILLEGG) {
         await db
@@ -1045,17 +1037,15 @@ async function main() {
     lagerTenants++;
   }
 
-  /* ══ DEV-MODE: gjør hovedbrukeren klar UTEN å røre gaten ═══════════════
-   *
-   * Gaten (F5-28) står urørt og krever fortsatt ALLE tre:
-   *   (a) flagget `dev-mode` på
-   *   (b) rollen endwise_admin
-   *   (c) tenants.kind = 'demo'
-   *
-   * Det seeden gjør er å OPPFYLLE dem med ekte data lokalt — ikke å omgå dem.
+  /*
+   * Dev-mode: gjør hovedbrukeren klar uten å røre gaten
+   * Gaten (F5-28) står urørt og krever fortsatt alle tre:
+   * (a) flagget `dev-mode` på
+   * (b) rollen endwise_admin
+   * (c) tenants.kind = 'demo'
+   * Det seeden gjør er å oppfylle dem med ekte data lokalt — ikke å omgå dem.
    * (b) settes av setMemberRole over, (c) av ensureTenant; her tar vi (a).
-   *
-   * ⛔ Scriptet nekter å kjøre i produksjon (sjekken øverst), så ingenting av
+   * Scriptet nekter å kjøre i produksjon (sjekken øverst), så ingenting av
    * dette kan nå en ekte forhandler.
    */
   await db
@@ -1067,7 +1057,7 @@ async function main() {
     })
     .onConflictDoUpdate({ target: schema.featureFlags.key, set: { enabled: true } });
 
-  // F10-03 — intern testbutikk. Global default AV. Ikke slå på i seeden.
+  // Intern testbutikk. Global default av. Ikke slå på i seeden.
   await db
     .insert(schema.featureFlags)
     .values({
@@ -1078,27 +1068,28 @@ async function main() {
     })
     .onConflictDoNothing();
 
-  /* Mekaniker-profil på HOVEDBRUKEREN er allerede opprettet over (den trengtes
+  /*
+   * Mekaniker-profil på hovedbrukeren er allerede opprettet over (den trengtes
    * for ukas bookinger). Uten den er `isMechanic` false, og mekanikervisningen
-   * står låst med «Krever mekaniker-profil» (F5-29). Vi jukser ikke med gaten —
-   * vi oppretter raden gaten spør etter. */
+   * står låst med «Krever mekaniker-profil» (F5-29). Vi jukser ikke med gaten
+   * vi oppretter raden gaten spør etter.
+   */
 
-  /* ══ TRÅDER ═══════════════════════════════════════════════════════════
-   *
-   * Tre tråder, én per kanal, og alle med FLERE deltakere enn hovedbrukeren.
+  /*
+   * Tråder
+   * Tre tråder, én per kanal, og alle med flere deltakere enn hovedbrukeren.
    * Det siste er poenget: en tråd med bare deg selv kunne aldri avslørt at
-   * innboksen skrev ut rå UUID-er i stedet for navn (F6-01, fikset 08.08.2026).
+   * innboksen skrev ut rå UUID-er i stedet for navn (F6-01).
    * Kunde-tråden krever at kunden har en Better-Auth-bruker — derfor har Kari
    * Nordmann en innlogging.
    */
-  /* ══ KALLENAVN (F7-06) ════════════════════════════════════════════════
-   *
-   * Ola Mekaniker får et kallenavn, slik at grensen faktisk kan SEES virke:
-   *   · i «Deler til Iron 883» (mechanic_dealer = intern) → «Skiftenøkkelen»
-   *   · i «Ulyd i bremsene på MT-07» (customer_dealer)   → «Ola Mekaniker»
-   *
+  /*
+   * Kallenavn (F7-06)
+   * Ola Mekaniker får et kallenavn, slik at grensen faktisk kan sees virke:
+   * i «Deler til Iron 883» (mechanic_dealer = intern) → «Skiftenøkkelen»
+   * i «Ulyd i bremsene på mt-07» (customer_dealer) → «Ola Mekaniker»
    * Anna Admin får ikke kallenavn i seeden — hun kan sette det selv.
-   * Alle innloggede roller kan ha kallenavn (26.08.2026).
+   * Alle innloggede roller kan ha kallenavn.
    */
   await db
     .insert(schema.memberProfiles)
@@ -1108,13 +1099,12 @@ async function main() {
       set: { nickname: 'Skiftenøkkelen', updatedAt: new Date() },
     });
 
-  /* ══ JOBBFUNKSJON (F1-14) ═════════════════════════════════════════════
-   *
-   * ⛔ Merk at INGEN av disse endrer rolle. Alle tre er `dealer_staff` med
+  /*
+   * Jobbfunksjon (F1-14)
+   * Merk at ingen av disse endrer rolle. Alle tre er `dealer_staff` med
    * nøyaktig samme tilgang — funksjonen styrer kun hvor de lander og hvordan
    * navet vektlegges. Det er hele poenget med å ha to akser.
-   *
-   * Anna (dealer_admin) får bevisst INGEN rad: `leder` utledes av rollen, og
+   * Anna (dealer_admin) får bevisst ingen rad: `leder` utledes av rollen, og
    * en lagret verdi ville vært en sannhet som kunne komme i utakt med den.
    */
   for (const [userId, funksjon] of [
@@ -1138,13 +1128,11 @@ async function main() {
     .where(and(eq(schema.customers.tenantId, tenantA), eq(schema.customers.name, 'Kari Nordmann')));
 
   /**
-   * ── Kanal på demo-trådene (08.08.2026) ────────────────────────────────
-   *
+   * Kanal på demo-trådene
    * `channel` er nå en ekte kolonne, ikke en prototype. Demo-dataene dekker
    * derfor alle fire kanalene, for det er nettopp variasjonen indikatoren
    * skal vise: fire tråder som alle er `app` beviser ingenting.
-   *
-   * ⚠️ `direction: 'inbound'` betyr at meldingen kom UTENFRA. Kundens SMS og
+   * `direction: 'inbound'` betyr at meldingen kom utenfra. Kundens SMS og
    * e-post er innkommende; forhandlerens svar er `outbound` — også når det er
    * skrevet i panelet, som er hele poenget med at kanalen på svaret er `app`
    * inntil utsending over SMS/e-post faktisk finnes (F6-14).
@@ -1172,7 +1160,7 @@ async function main() {
       // E-POST-tråden: kunden skrev til forhandlerens postkasse.
       channel: 'email',
       externalRef: 'kari@kunde.test',
-      // Ola er med i kundetråden med vilje: der skal han vises med EKTE navn,
+      // Ola er med i kundetråden med vilje: der skal han vises med ekte navn,
       // mens han i den interne tråden vises som «Skiftenøkkelen». Grensen er
       // ikke verdt noe før den kan sees virke på samme person.
       deltakere: [kariKunde?.userId ?? null, adminA, mekA, endwiseAdmin],
@@ -1231,7 +1219,7 @@ async function main() {
     {
       kind: 'customer_dealer',
       subject: 'Ledig time for EU-kontroll?',
-      // WIDGET-tråden: kunden skrev i bookingwidgeten på nettsiden (F4).
+      // Widget-tråden: kunden skrev i bookingwidgeten på nettsiden (F4).
       channel: 'web',
       deltakere: [adminA, endwiseAdmin],
       meldinger: [
@@ -1274,14 +1262,13 @@ async function main() {
   ];
 
   /**
-   * ⚠️ **SYNKER, hopper ikke over.** Loopen sa tidligere `if (finnes) continue`.
-   * Det er riktig mot duplikater, men gjør seeden ute av stand til å RETTE noe:
-   * da `channel` kom til 08.08.2026, sto trådene som allerede fantes igjen som
+   * synker, hopper ikke over. Loopen sa tidligere `if (finnes) continue`.
+   * Det er riktig mot duplikater, men gjør seeden ute av stand til å rette noe:
+   * da `channel` kom til , sto trådene som allerede fantes igjen som
    * `app`, og demoen viste ikke det den nettopp hadde fått. En dev-seed som
    * bare kan skrive én gang er en engangsseed.
-   *
    * Nå oppdateres trådens kanal, og meldingene matches på `(thread_id, body)`.
-   * Teksten er en gyldig nøkkel her fordi seed-meldingene ER faste strenger i
+   * Teksten er en gyldig nøkkel her fordi seed-meldingene er faste strenger i
    * denne fila — det er ikke et mønster for produksjonskode.
    */
   for (const t of TRADER) {
@@ -1359,13 +1346,13 @@ async function main() {
   console.info('  support    support-a@verksted.test   → lander på /innboks');
   console.info('  mekaniker  mekaniker-a@verksted.test → lander på /min-dag');
   console.info('  leder      admin-a@verksted.test     (dealer_admin, utledet)');
-  // ── F1-10 — ÅPEN DEMO-INVITASJON i Verksted A ────────────────────────
-  //
-  // ⚠️ Idempotent: eventuelle eksisterende ÅPNE demo-invitasjoner til samme
+  // Åpen demo-invitasjon i Verksted A
+
+  // Idempotent: eventuelle eksisterende Åpne demo-invitasjoner til samme
   // adresse tilbakekalles først, så en ny seed ikke etterlater en haug med
   // gyldige lenker på samme e-post.
-  //
-  // ⛔ Tokenet skrives til konsollen HER fordi dette er seed-skriptet for et
+
+  // Tokenet skrives til konsollen her fordi dette er seed-skriptet for et
   // lokalt demo-oppsett — samme resonnement som dev-leveransen i
   // senders/resend.ts. Skriptet nekter uansett å kjøre mot produksjon
   // (sjekken øverst i fila).
@@ -1407,7 +1394,7 @@ async function main() {
     nyeBookinger,
   );
 
-  /* ══ F5-23 — helpdesk-artiklene. GLOBALE, ikke per forhandler. ═══════ */
+  /* Helpdesk-artiklene. Globale, ikke per forhandler. */
   const antallArtikler = await seedHelpdesk(db);
   console.info(
     '\n📚 Helpdesk: %s artikler (globale — samme for alle forhandlere).',

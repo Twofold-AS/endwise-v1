@@ -11,13 +11,11 @@ import { ESCALATION_REASON_LABEL, fmtWhen } from './_lib';
 import { NySamtale } from './_ny-samtale';
 
 /**
- * F6-01 — Innholdsflaten når ingen samtale er valgt.
- *
- * Selve trådlista flyttet 05.08.2026 ut i innboksens egen sidebar
- * (`_inbox-sidebar.tsx`). Det som blir igjen her er det som gjelder HELE
+ * Innholdsflaten når ingen samtale er valgt.
+ * Selve trådlista flyttet ut i innboksens egen sidebar
+ * (`_inbox-sidebar.tsx`). Det som blir igjen her er det som gjelder hele
  * innboksen: eskaleringene fra AI.
- *
- * F6-05 — Når en agent gir fra seg en samtale, er det den ene tingen på
+ * Når en agent gir fra seg en samtale, er det den ene tingen på
  * skjermen som haster. Derfor står den her, i det store feltet, og ikke som en
  * rad blant tjue andre rader i sidebaren.
  */
@@ -29,7 +27,7 @@ function MeldingerPageInner() {
   const params = useSearchParams();
   const [escalations, setEscalations] = useState<LiveEscalation[]>([]);
 
-  // Quick action «Ny melding» peker hit med ?ny=1. Fram til 07.08.2026 leste
+  // Quick action «Ny melding» peker hit med ?ny=1. Fram til leste
   // ingenting den parameteren — knappen gikk til en side som så uendret ut.
   const nySamtale = params?.get('ny') === '1';
 
@@ -57,16 +55,16 @@ function MeldingerPageInner() {
   );
 
   // Sanntid kjører fortsatt — men uten statuspille. Eiers beslutning
-  // 06.08.2026: statusmerker («Sanntid», «Live», «Aktive») er pynt som
-  // konkurrerer med innholdet. Strømmen skal merkes ved at ting DUKKER OPP,
+  // statusmerker («Sanntid», «Live», «Aktive») er pynt som
+  // konkurrerer med innholdet. Strømmen skal merkes ved at ting dukker opp,
   // ikke ved en lampe som sier at den kunne dukket opp.
   useEventStream(onStreamEvent);
 
   return (
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-8 py-7">
       {/**
-       * F5-14 — «Ny samtale»-knappen sto her fram til 20.08.2026 og er flyttet
-       * til innboks-sidebarens header. Den lå på den ENESTE skjermen der man
+       * «Ny samtale»-knappen sto her fram til og er flyttet
+       * til innboks-sidebarens header. Den lå på den eneste skjermen der man
        * ikke leser en tråd — altså ikke der man er når man vil starte en ny.
        * Nå står den der lista står, og er tilgjengelig hele tiden.
        */}
@@ -77,7 +75,7 @@ function MeldingerPageInner() {
 
       {nySamtale && <NySamtale onLukk={() => router.replace('/innboks' as Route)} />}
 
-      {/* F6-05 — Eskalert fra AI. Live på SSE mens siden er åpen. */}
+      {/* Eskalert fra AI. Live på SSE mens siden er åpen. */}
       {escalations.length > 0 && (
         <section className="flex flex-col gap-2 rounded-xl border border-warn/25 bg-warn-soft p-3">
           <h2 className="flex items-center gap-2 text-label text-warn">
@@ -113,10 +111,10 @@ function MeldingerPageInner() {
       )}
 
       {/**
-       * ⚠️ Her sto «Ingen samtale valgt» i tillegg til ingressen over, som
+       * Her sto «Ingen samtale valgt» i tillegg til ingressen over, som
        * allerede sier «Velg en samtale i lista til venstre». To tomromsbeskjeder
        * om samme tomrom, 60 piksler fra hverandre. Igjen står forklaringen som
-       * faktisk lærer bort noe — hva de tre partene ER.
+       * faktisk lærer bort noe — hva de tre partene er.
        */}
       {!nySamtale && (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
@@ -137,7 +135,7 @@ function MeldingerPageInner() {
   );
 }
 
-/** ⚠️ Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?ny=1). */
+/** Suspense-grense er påkrevd: siden leser `useSearchParams` (?ny=1). */
 export default function MeldingerPage() {
   return (
     <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster innboks …</div>}>

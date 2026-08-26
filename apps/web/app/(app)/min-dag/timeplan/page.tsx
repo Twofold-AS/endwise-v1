@@ -8,7 +8,7 @@ import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
 import { estMinutes, fmtTime, STATUS_LABEL } from '../_status';
 
-/** F7-03 — Timeplan: velg dag i strip, se den dagens jobber (mekaniker-scopet). */
+/** Timeplan: velg dag i strip, se den dagens jobber (mekaniker-scopet). */
 function dayList(): { iso: string; label: string; weekday: string }[] {
   const out: { iso: string; label: string; weekday: string }[] = [];
   const base = new Date();

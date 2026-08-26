@@ -5,16 +5,12 @@ import type { ModelProvider, ModelRequest } from './provider.ts';
 
 /**
  * F14 — Mistral (EU). Leverandøren for alt som ser sluttkundens fritekst.
- *
- * ⚠️ **Base-URL-en er en sikkerhetsgrense, ikke en innstilling.**
- *
- * Mistral hoster i EU **som standard** — men de har også et EKSPLISITT
- * US-endepunkt, og bruker du det, ligger dataene i USA (deres egen
+ * Base-URL-en er en sikkerhetsgrense, ikke en innstilling.
+ * Mistral hoster i EU **som standard** — men de har også et eksplisitt
+ * Us-endepunkt, og bruker du det, ligger dataene i usa (deres egen
  * dokumentasjon sier det rett ut). Derfor:
- *
- *   - vi setter base-URL eksplisitt til EU-endepunktet
- *   - vi nekter å starte hvis noen har overstyrt den til noe annet
- *
+ * vi setter base-URL eksplisitt til EU-endepunktet
+ * vi nekter å starte hvis noen har overstyrt den til noe annet
  * En feilstavet miljøvariabel skal ikke kunne flytte norske kunders
  * helseopplysninger over Atlanteren i stillhet.
  */
@@ -53,7 +49,7 @@ export function createMistralProvider(options?: {
   const apiKey = options?.apiKey ?? process.env.MISTRAL_API_KEY ?? '';
   const baseURL = options?.baseUrl ?? process.env.MISTRAL_BASE_URL ?? MISTRAL_EU_BASE_URL;
 
-  // Sjekkes ved OPPRETTELSE, ikke ved første kall. En feilkonfigurert prosess
+  // Sjekkes ved opprettelse, ikke ved første kall. En feilkonfigurert prosess
   // skal ikke få lov til å starte og så feile ved første kunde.
   assertEuEndpoint(baseURL);
 

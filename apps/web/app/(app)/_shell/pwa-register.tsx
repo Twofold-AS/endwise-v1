@@ -3,26 +3,22 @@
 import { useEffect } from 'react';
 
 /**
- * F7-07 — Registrerer service-workeren (`/sw.js`). Ren bieffekt, ingen UI.
- *
- * ⚠️ **IKKE I UTVIKLING (fra 08.08.2026), og den rydder opp etter seg.**
- *
- * SW-en registreres med `scope: '/'` — altså hele origin. Den rendres riktignok
+ * Registrerer service-workeren (`/sw.js`). Ren bieffekt, ingen UI.
+ * ikke I utvikling , og den rydder opp etter seg.
+ * Sw-en registreres med `scope: '/'` — altså hele origin. Den rendres riktignok
  * bare i `MobileShell` (mekanikerflaten), men når den først er registrert,
- * kontrollerer den HVER side i appen, for alltid, uansett hvem som er logget
+ * kontrollerer den hver side i appen, for alltid, uansett hvem som er logget
  * inn. Det er slik en admin som aldri ser mekanikerflaten likevel fikk sidene
- * sine servert gjennom SW-cachen.
- *
+ * sine servert gjennom sw-cachen.
  * I dev betydde det at `/_next/static/`-chunks ble servert fra cache med
  * cache-first-strategi. En hard refresh omgår HTTP-cachen, men **ikke** en
  * service worker — så gammel kode overlevde både `.next`-sletting,
  * server-restart og Ctrl+Shift+R. Det er hele forklaringen på
  * «module factory is not available» og `fill-rule`-advarslene som kom tilbake
  * uansett hva vi ryddet på serversiden.
- *
  * Offline-støtte er en **produksjonsfunksjon**. I dev er den kun en måte å
  * servere gammel kode på, så her avregistrerer vi i stedet — og sletter
- * `endwise-*`-cachene, slik at maskiner som allerede har SW-en installert leger
+ * `endwise-*`-cachene, slik at maskiner som allerede har sw-en installert leger
  * seg selv ved første sidelast. Uten den oppryddingen ville en utvikler måttet
  * gå inn i DevTools › Application › Service Workers og gjøre det for hånd.
  */

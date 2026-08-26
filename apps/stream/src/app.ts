@@ -12,20 +12,17 @@ import { HEARTBEAT_MS, MAX_STREAM_LIFETIME_MS } from './config.ts';
 
 /**
  * apps/stream — F6-02.
- *
- * Én SSE-tjeneste, to typer innhold (techstack §3): menneske↔menneske-meldinger
- * OG AI-streaming. De deler transport, ikke datamodell.
- *
+ * Én SSE-tjeneste, to typer innhold (techstack §3): menneskemenneske-meldinger
+ * Og AI-streaming. De deler transport, ikke datamodell.
  * Sikkerheten, i den rekkefølgen den må skje:
- *   1. sesjon        — hvem er du? (F1-12, inkl. absolutt maks-levetid)
- *   2. medlemskap    — hører du til denne tenanten? (assertMember)
- *   3. audience      — er dette eventet ment for DEG?
- *   4. RLS           — innholdet hentes gjennom withTenant
- *
- * **En SSE-strøm som lekker på tvers av tenants er samme feil som en spørring
+ * 1. sesjon — hvem er du? (F1-12, inkl. absolutt maks-levetid)
+ * 2. medlemskap — hører du til denne tenanten? (assertMember)
+ * 3. audience — er dette eventet ment for deg?
+ * 4. RLS — innholdet hentes gjennom withTenant
+ * En SSE-strøm som lekker på tvers av tenants er samme feil som en spørring
  * som gjør det — bare vanskeligere å oppdage, fordi den lekker over tid og
- * ingen ser en 200 som er feil.** Derfor er filtreringen i punkt 3 en HARD
- * sjekk i tjenesten, ikke bare en antagelse om at NOTIFY-en var riktig adressert.
+ * ingen ser en 200 som er feil. Derfor er filtreringen i punkt 3 en hard
+ * sjekk i tjenesten, ikke bare en antagelse om at notify-en var riktig adressert.
  */
 export function createStreamApp(options: { databaseUrl: string; listenUrl?: string }) {
   const db = createDb(options.databaseUrl);
@@ -41,10 +38,10 @@ export function createStreamApp(options: { databaseUrl: string; listenUrl?: stri
 
   app.get('/sse', async (c) => {
     // 1. Hvem er du?
-    // ⚠️ `.catch(() => null)` slår sammen ALLE avvisningsgrunner til 401 —
+    // `.catch( => null)` slår sammen alle avvisningsgrunner til 401
     // utløpt sesjon og manglende 2FA (F1-11) ser like ut her. Det er greit for
     // en SSE-kanal: klienten skal uansett bare koble ned og sende brukeren til
-    // innlogging. Den DETALJERTE feilkoden gis av tRPC-laget (`init.ts`), som er
+    // innlogging. Den detaljerte feilkoden gis av tRPC-laget (`init.ts`), som er
     // der UI-et faktisk kan gjøre noe med den.
     const session = await requireSession(auth, db, c.req.raw.headers).catch(() => null);
     if (!session) return c.json({ error: 'Ikke innlogget' }, 401);
@@ -52,8 +49,8 @@ export function createStreamApp(options: { databaseUrl: string; listenUrl?: stri
     const tenantId = c.req.query('tenantId') ?? session.session.activeOrganizationId;
     if (!tenantId) return c.json({ error: 'Ingen tenant' }, 400);
 
-    // 2. Hører du til DENNE tenanten? Uten dette kan en innlogget bruker be om
-    //    hvilken som helst tenant-ID og få strømmen hennes.
+    // 2. Hører du til denne tenanten? Uten dette kan en innlogget bruker be om
+    // hvilken som helst tenant-ID og få strømmen hennes.
     const userId = session.user.id;
     try {
       await assertMember(db, userId, tenantId);
@@ -88,7 +85,7 @@ export function createStreamApp(options: { databaseUrl: string; listenUrl?: stri
       stream.onAbort(close);
 
       // 4. Avspilling: alt klienten gikk glipp av mens den var frakoblet.
-      //    Går gjennom RLS — en Last-Event-ID fra en annen tenant gir null rader.
+      // Går gjennom RLS — en Last-Event-ID fra en annen tenant gir null rader.
       if (lastEventId > 0) {
         const missed = await readEventsSince(db, tenantId, lastEventId, userId);
         for (const event of missed) {
@@ -100,11 +97,11 @@ export function createStreamApp(options: { databaseUrl: string; listenUrl?: stri
         }
       }
 
-      // 5. Live. NOTIFY sier bare at det finnes noe nytt; innholdet leses fra
-      //    tabellen gjennom RLS.
+      // 5. Live. Notify sier bare at det finnes noe nytt; innholdet leses fra
+      // tabellen gjennom RLS.
       const unsubscribe = subscriber.subscribe((signal) => {
         if (closed) return;
-        // HARD filtrering. Vi stoler ikke på at NOTIFY-en var riktig adressert.
+        // Hard filtrering. Vi stoler ikke på at notify-en var riktig adressert.
         if (signal.tenantId !== tenantId) return;
         if (signal.audienceId !== null && signal.audienceId !== userId) return;
 

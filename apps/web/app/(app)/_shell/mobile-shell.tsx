@@ -16,12 +16,11 @@ import { useOnline } from '../_lib/use-online';
 import { PwaRegister } from './pwa-register';
 
 /**
- * F7-01 — Mekanikerens mobil-shell: bottom-nav med 5 faner + offline-banner.
+ * Mekanikerens mobil-shell: bottom-nav med 5 faner + offline-banner.
  * Erstatter admin-sidebaren for `dealer_staff`-mekanikere (mobil-først). Store
  * trykkmål, ingen tabeller. Rollegatingen skjer i (app)/layout; her er UI-et.
- *
- * ⚠️ Siste fane heter «Meg» (F7-06, 07.08.2026), ikke «Profil». Den er
- * mekanikerens PERSONLIGE flate — tema, varsler, egen profil og sikkerhet — og
+ * Siste fane heter «Meg» (F7-06), ikke «Profil». Den er
+ * mekanikerens personlige flate — tema, varsler, egen profil og sikkerhet — og
  * har ingenting med forhandlerens Settings å gjøre. Navnet er valgt for å gjøre
  * det skillet tydelig også for den som bare ser bunnmenyen.
  */

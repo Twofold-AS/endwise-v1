@@ -1,20 +1,19 @@
 @import "tailwindcss";
 @import "@endwise/ui/theme.css";
 /*
- * matrix-loaders (UI-PAKKER.md §4) er ren CSS-animasjon: komponentene setter
+ * matrix-loaders (ui-pakker.md §4) er ren CSS-animasjon: komponentene setter
  * bare klasser og CSS-variabler, keyframene bor i pakkens egen `styles.css`.
  * Uten denne importen rendrer alle 93 loaderne som en stillestående prikkerute
- * — ingen feilmelding, bare noe som ser ødelagt ut. Samme familie av felle som
+ * ingen feilmelding, bare noe som ser ødelagt ut. Samme familie av felle som
  * @source-fiksen under. Tatt i bruk første gang på AI-diagnose (F6-04).
  */
 @import "@endwise/ui/matrix-loaders.css";
 /**
- * F6-19 — blobatars bevegelseslag. ⚠️ Samme familie som gotchaen over: uten
- * denne importen er det INGEN feilmelding, ingenting i typecheck og ingenting i
+ * Blobatars bevegelseslag. Samme familie som gotchaen over: uten
+ * denne importen er det ingen feilmelding, ingenting i typecheck og ingenting i
  * byggesteget — bare avatarer som står stille der de skulle puste. Keyframene
  * (mo-breathe, mo-bob, mo-blink, mo-saccade) bor i pakkens egen fil;
  * komponenten setter bare klassene og CSS-variablene.
- *
  * Lastes for hver side som rendrer en Avatar, også der ingen animeres. Fila er
  * ren CSS uten selektorer som treffer noe annet, og et betinget CSS-lag ville
  * kostet mer i kompleksitet enn det sparer i bytes.
@@ -22,8 +21,8 @@
 @import "blobatar/motion.css";
 
 /*
- * Tailwind v4 skanner som standard IKKE workspace-pakker (de ligger via
- * node_modules). Uten dette ble utility-klasser som brukes KUN inne i
+ * Tailwind v4 skanner som standard ikke workspace-pakker (de ligger via
+ * node_modules). Uten dette ble utility-klasser som brukes kun inne i
  * `@endwise/ui` (f.eks. dither-kit sin `h-full`, `overflow-visible`,
  * `fill-current`, `stroke-border`) aldri generert — så chart-containerne
  * kollapset til 0 høyde og dither ble usynlig. `@source` scanner UI-pakkens

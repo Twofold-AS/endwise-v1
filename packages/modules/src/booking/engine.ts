@@ -44,12 +44,11 @@ export interface CreateBookingInput {
 }
 
 /**
- * Advisory-låser — TRANSAKSJONS-skopet (`pg_advisory_xact_lock`), ikke session.
+ * Advisory-låser — transaksjons-skopet (`pg_advisory_xact_lock`), ikke session.
  * Går man gjennom en pooler (pgbouncer) gjenbrukes forbindelser; en session-lås
- * ville fulgt med neste låner. Transaksjonslåsen slippes av COMMIT/ROLLBACK.
- *
+ * ville fulgt med neste låner. Transaksjonslåsen slippes av commit/rollback.
  * To bigint-nøkler = (hashtext(tenant), hashtext(ressurs)).
- * Rekkefølge ALLTID: shop først, deretter mekaniker — ellers deadlock.
+ * Rekkefølge alltid: shop først, deretter mekaniker — ellers deadlock.
  */
 export type TenantTx = Parameters<Parameters<Database['transaction']>[0]>[0];
 
@@ -63,7 +62,7 @@ export function lockMechanic(tenantId: string, mechanicId: string) {
 }
 
 /**
- * F3-01 — skriv booking. Kalleren MÅ holde shop-lås + mekaniker-lås i SAMME
+ * Skriv booking. Kalleren MÅ holde shop-lås + mekaniker-lås i samme
  * `withTenant`-transaksjon. Idempotens + kapasitet mot mekanikerens `capacity`.
  */
 export async function writeBooking(tx: TenantTx, input: CreateBookingInput) {
@@ -147,13 +146,12 @@ export async function writeBooking(tx: TenantTx, input: CreateBookingInput) {
 }
 
 /**
- * F3-01 — Booking-motoren.
- *
+ * Booking-motoren.
  * Rekkefølgen inne i transaksjonen er hele beskyttelsen:
- *   1. LÅS verkstedet (shop-kapasitet) deretter mekanikeren
- *   2. sjekk idempotensnøkkel — allerede booket? returner den samme
- *   3. sjekk overlapp mot mekanikerens kapasitet
- *   4. skriv
+ * 1. Lås verkstedet (shop-kapasitet) deretter mekanikeren
+ * 2. sjekk idempotensnøkkel — allerede booket? returner den samme
+ * 3. sjekk overlapp mot mekanikerens kapasitet
+ * 4. skriv
  */
 export async function createBooking(db: Database, input: CreateBookingInput) {
   const slotMinutes =
@@ -178,7 +176,7 @@ export async function createBooking(db: Database, input: CreateBookingInput) {
   });
 }
 
-/** F3-01 — Statusendring. Går gjennom livsløps-maskinen, aldri utenom. */
+/** Statusendring. Går gjennom livsløps-maskinen, aldri utenom. */
 export async function transitionBooking(
   db: Database,
   tenantId: string,
@@ -203,7 +201,7 @@ export async function transitionBooking(
       .where(eq(schema.bookings.id, bookingId))
       .returning();
 
-    // F1-06: append-only historikk. Samme transaksjon → status og logg kan
+    // Append-only historikk. Samme transaksjon → status og logg kan
     // aldri komme ut av synk. RLS (withTenant) garanterer riktig tenant.
     await tx.insert(schema.auditLog).values({
       tenantId,
@@ -219,7 +217,7 @@ export async function transitionBooking(
 }
 
 /**
- * F3-03 — Kalender-API: bookinger i et tidsvindu, valgfritt per mekaniker.
+ * Kalender-API: bookinger i et tidsvindu, valgfritt per mekaniker.
  */
 export async function listBookings(
   db: Database,

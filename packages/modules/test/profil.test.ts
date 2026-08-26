@@ -10,8 +10,7 @@ import {
 } from '../src/profil/index.ts';
 
 /**
- * F7-06 — KALLENAVN-GRENSEN.
- *
+ * Kallenavn-grensen.
  * Testen finnes fordi regelen er lett å bryte ved et uhell: den brytes ikke ved
  * at noen skriver «vis kallenavn til kunden», men ved at noen glemmer å si
  * hvilken visning de vil ha. Derfor tester vi defaulten like hardt som regelen.
@@ -68,9 +67,9 @@ describe('kanHaKallenavn — alle innloggede roller, inkl. forhandler-admin', ()
   });
 });
 
-/* ══════════════════════════════════════════════════════════════════════════
- * F1-13 — JOBBFUNKSJON
- * ══════════════════════════════════════════════════════════════════════════ */
+/*
+ * Jobbfunksjon
+ */
 
 describe('resolveJobbfunksjon — to dimensjoner, aldri blandet', () => {
   it('rollen vinner: en dealer_admin er ALLTID leder', () => {
@@ -145,7 +144,7 @@ describe('kanTildeles — «leder» kan ikke velges fra en liste', () => {
 describe('funksjon gir ALDRI rettigheter', () => {
   it('selger og support har samme tilgangsforutsetning (begge dealer_staff)', () => {
     // Testen er en påstand om modellen: den eneste forskjellen mellom dem er
-    // landingen. Legger noen inn en rettighetsforskjell, må denne endres —
+    // landingen. Legger noen inn en rettighetsforskjell, må denne endres
     // og da skal man stoppe opp og lese kommentaren i `profil/index.ts`.
     expect(landingForJobbfunksjon('selger')).not.toBe(landingForJobbfunksjon('support'));
     expect(kanEndreJobbfunksjon('dealer_staff')).toBe(false);

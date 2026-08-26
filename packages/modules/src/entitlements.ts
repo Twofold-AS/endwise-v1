@@ -1,24 +1,21 @@
 /**
- * F0-04 — Entitlements-oppslag (DB-styrt).
- *
+ * Entitlements-oppslag (DB-styrt).
  * Entitlement != feature flag:
- *   - entitlement    -> «har denne forhandleren kjøpt modulen?»  (tenant_modules i DB)
- *   - release-toggle -> «har VI rullet ut funksjonen?»           (Vercel Flags SDK)
+ * entitlement -> «har denne forhandleren kjøpt modulen?» (tenant_modules i DB)
+ * release-toggle -> «har vi rullet ut funksjonen?» (Vercel Flags SDK)
  * Begge må si ja. Blandes de, får du enten lekkasje eller feilfakturering.
  */
 export type ModuleKey = string;
 
 /**
- * F0-16 — BASIS vs. TILLEGG. **Dette skillet er en sikkerhetsgrense, ikke en
- * prisliste.**
- *
- * ── BASIS: ingen gate, ingen rad i `tenant_modules` ────────────────────────
- * Et verksted uten booking, innboks, kunder eller LAGER er ikke et verksted.
+ * Basis vs. Tillegg. Dette skillet er en sikkerhetsgrense, ikke en
+ * prisliste.
+ * Basis: ingen gate, ingen rad i `tenant_modules`
+ * Et verksted uten booking, innboks, kunder eller lager er ikke et verksted.
  * Disse rutene er `protectedProcedure`/`adminProcedure` og skal **aldri** få en
  * `moduleProcedure`. At noe er gratis er ikke en forglemmelse — det er
  * beslutningen.
- *
- * ⚠️ Listen er dokumentasjon, ikke håndheving: basis er definert ved at ingen
+ * Listen er dokumentasjon, ikke håndheving: basis er definert ved at ingen
  * gate finnes. Den står her så neste person ser hva som med vilje er utenfor.
  */
 export const BASIS_MODULES = [
@@ -31,48 +28,46 @@ export const BASIS_MODULES = [
 ] as const;
 
 /**
- * ── TILLEGG: krever en rad i `tenant_modules` med `enabled = true` ─────────
+ * Tillegg: krever en rad i `tenant_modules` med `enabled = true`
  * Hver nøkkel her MÅ ha en `moduleProcedure(...)` på rutene sine. En nøkkel som
  * står her uten gate er nøyaktig funnet CWE-862 beskrev: en modul vi selger uten
  * at noen dør er låst.
  */
 export const ADDON_MODULES = [
-  // ── Låses opp av NIVÅENE (start/pro/enterprise) ──
-  'widget', // Bookingwidget (START)
-  'resend', // Transaksjons-e-post (START)
-  'ai-support', // AI-assistent og -diagnose (PRO)
+  // Låses opp av nivåene (start/pro/enterprise)
+  'widget', // Bookingwidget (start)
+  'resend', // Transaksjons-e-post (start)
+  'ai-support', // AI-assistent og -diagnose (pro)
   'ai-diagnose',
   'ai-providers',
-  'quick', // Quick ERP-synk (PRO)
-  'vegvesen', // Regnr-oppslag (PRO)
-  'smart-hverdag', // Push, handlingsknapper, kalender, nettbrett, passkey (PRO)
-  'ai-nettside', // AI-verktøy › Nettside (ENTERPRISE)
-  'ai-innsikt', // AI-verktøy › Innsikt (ENTERPRISE)
-  'quick-agent', // Agent mot Quick (ENTERPRISE)
-  'crm-lime', // Lime CRM (ENTERPRISE)
-  'webhooks', // Utgående webhooks (ENTERPRISE)
+  'quick', // Quick erp-synk (pro)
+  'vegvesen', // Regnr-oppslag (pro)
+  'smart-hverdag', // Push, handlingsknapper, kalender, nettbrett, passkey (pro)
+  'ai-nettside', // AI-verktøy › Nettside (enterprise)
+  'ai-innsikt', // AI-verktøy › Innsikt (enterprise)
+  'quick-agent', // Agent mot Quick (enterprise)
+  'crm-lime', // Lime crm (enterprise)
+  'webhooks', // Utgående webhooks (enterprise)
 
-  // ── Valgfrie TILLEGG, én pris = én nøkkel ──
+  // Valgfrie tillegg, én pris = én nøkkel
   'twilio', // SMS — pass-through-tillegg, alle nivåer, aldri planmodul
   'erp',
   'white-label',
   'sso',
   'nyhetsbrev',
   'finn',
-  'shop', // ⛔ blokkert — intern flagg-preview, ikke til salgs (F10-03)
-  'rapporter', // 🕓 ikke bygget
-  'analyse-pro', // 🕓 ikke bygget
-  'betaling-widget', // 🕓 ikke bygget (F8-05)
-  'samarbeid', // 🕓 backend finnes ikke (F5-17)
+  'shop', // blokkert — intern flagg-preview, ikke til salgs (F10-03)
+  'rapporter', // ikke bygget
+  'analyse-pro', // ikke bygget
+  'betaling-widget', // ikke bygget (F8-05)
+  'samarbeid', // backend finnes ikke (F5-17)
 ] as const;
 
 export type AddonModule = (typeof ADDON_MODULES)[number];
 
 /**
- * Nøkkler admin IKKE kan krysse av eller sende inn på create/setModules.
- *
- *  · `shop` — Nettbutikk er blokkert / ikke til salgs (F10-03, 690).
- *
+ * Nøkkler admin ikke kan krysse av eller sende inn på create/setModules.
+ * `shop` — Nettbutikk er blokkert / ikke til salgs (F10-03, 690).
  * SMS (`twilio`) er tildelbart tillegg på alle nivåer — pass-through per
  * bookingmelding, ingen månedsavgift.
  */
@@ -136,7 +131,7 @@ export const ADDON_LABELS: Record<AddonModule, string> = {
   samarbeid: 'Samarbeid',
 };
 
-/** Admin-katalog: ADDON minus shop. Basis er aldri med. SMS er med. */
+/** Admin-katalog: addon minus shop. Basis er aldri med. SMS er med. */
 export function addonKatalog(): Array<{ key: TildelbarAddon; label: string }> {
   return ADDON_MODULES.filter(erTildelbarAddon).map((key) => ({
     key,

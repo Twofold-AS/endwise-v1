@@ -4,8 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createBooking, SlotConflictError, transitionBooking } from '../src/booking/index.ts';
 
 /**
- * F3-01 — Booking-motoren, testet der den kan feile: samtidighet.
- *
+ * Booking-motoren, testet der den kan feile: samtidighet.
  * Alt kjøres som `endwise_app` (RLS på), akkurat som i produksjon.
  */
 const OWNER_URL = process.env.DATABASE_URL;
@@ -68,7 +67,7 @@ describeDb('booking-motor (F3-01)', () => {
     await owner.delete(schema.services).where(sql`tenant_id = ${tenantId}`);
     await owner.delete(schema.mechanics).where(sql`tenant_id = ${tenantId}`);
     /**
-     * ⚠️ Revisjonsloggen må ryddes FØR tenanten. Booking-overgangene skriver
+     * Revisjonsloggen må ryddes før tenanten. Booking-overgangene skriver
      * `audit_log`-rader (F0-13) med en FK til `tenants`, så en `delete from
      * tenants` uten dette feiler på fremmednøkkelen — og det er FK-en som gjør
      * jobben sin: en revisjonslogg skal ikke kunne bli foreldreløs i stillhet.
@@ -122,7 +121,7 @@ describeDb('booking-motor (F3-01)', () => {
   });
 
   /**
-   * DEN VIKTIGE. Uten pg_advisory_xact_lock ville begge forespørslene sett
+   * Den viktige. Uten pg_advisory_xact_lock ville begge forespørslene sett
    * «ledig» samtidig og begge skrevet — dobbeltbooking.
    */
   it('SAMTIDIGHET: to parallelle bookinger på samme slot → nøyaktig én vinner', async () => {

@@ -5,8 +5,7 @@ import { tenants } from './tenants.ts';
 
 /**
  * Mekaniker.
- *
- * MERK: ferdighetene ligger IKKE her. De bor i `mechanic_skills` (F3-12), fordi
+ * Merk: ferdighetene ligger ikke her. De bor i `mechanic_skills` (F3-12), fordi
  * en ferdighet er mer enn et ord — den har nivå, sertifisering og utløpsdato.
  * Én kilde til sannhet: matcheren (F3-02) leser derfra, ikke herfra.
  */

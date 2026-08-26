@@ -20,7 +20,7 @@ import {
 } from '../_status';
 
 /**
- * F3-06 — Bookingdetalj. EKTE data (`bookings.byId`): kunde, kjøretøy, tjeneste,
+ * Bookingdetalj. Ekte data (`bookings.byId`): kunde, kjøretøy, tjeneste,
  * mekaniker, status + append-only historikk fra audit-loggen. Statusendringer går
  * gjennom `bookings.transition` — samme livssyklus som «Min dag». Klienten viser
  * kun lovlige overganger; serveren håndhever maskinen.

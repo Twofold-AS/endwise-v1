@@ -3,7 +3,6 @@ import { SignInSkjema } from './signin-skjema';
 
 /**
  * F1-02 / F1-26 — innlogging. Seed-hintet er en server-avgjørelse.
- *
  * CWE-215: produksjon (`NODE_ENV=production` / `VERCEL_ENV=production`) skal
  * ikke nevne `pnpm db:seed`, demo-kontoer eller passord. Preview/dev kan vise
  * hintet fordi `visDemoHint` sjekker env, ikke en kommentar. Teksten bor her
@@ -30,7 +29,7 @@ export default function SignInPage() {
 }
 
 /**
- * ⚠️ `Field` og `INPUT` lå HER fram til 22.08.2026 og er flyttet til
+ * `Field` og `INPUT` lå her fram til og er flyttet til
  * `app/_auth/felter.tsx`. `/glemt-passord` og `/nytt-passord` bruker de samme
  * feltene, og tre kopier av en inputstil blir tre ulike inputstiler ved neste
  * justering av eierens kontrollspec.

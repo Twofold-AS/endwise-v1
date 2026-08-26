@@ -1,7 +1,7 @@
 import { handleHono } from '@endwise/api/http/hono';
 
 /**
- * F13-03 — offentlig `/widget/*` (publishable key + kortlevd token, CORS).
+ * Offentlig `/widget/*` (publishable key + kortlevd token, CORS).
  * Hono eier flaten; Next videresender Web Request uendret.
  */
 export const runtime = 'nodejs';

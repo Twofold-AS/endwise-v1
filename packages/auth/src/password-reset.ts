@@ -1,25 +1,21 @@
 /**
- * F1-15 / F1-16 — PASSORDRESET: grensene, samlet ett sted.
- *
- * ── Hvorfor denne fila finnes ────────────────────────────────────────────
+ * F1-15 / F1-16 — passordreset: grensene, samlet ett sted.
+ * Hvorfor denne fila finnes
  * Selve flyten er Better-Auths (`/request-password-reset` → e-post →
  * `/reset-password`). Det vi eier er **hvor stramt den er skrudd**, og de
  * innstillingene er spredt over `emailAndPassword` og `rateLimit` i
  * `auth.ts`. Fire av dem er sikkerhetsgrenser der Better-Auths standardverdi
  * er den utrygge:
- *
- *   · `revokeSessionsOnPasswordReset`  — **default `false`**
- *   · `resetPasswordTokenExpiresIn`    — default 1 time
- *   · rate-limit på `/request-password-reset` — default 3 per minutt
- *   · `sendResetPassword`              — uten den er hele ruta av
- *
+ * `revokeSessionsOnPasswordReset` — **default `false`**
+ * `resetPasswordTokenExpiresIn` — default 1 time
+ * rate-limit på `/request-password-reset` — default 3 per minutt
+ * `sendResetPassword` — uten den er hele ruta av
  * En slått av ved et uhell gir ingen feilmelding og ingen rød test. Derfor
- * ligger reglene her som DATA, og `passordResetHull()` er sperren som gjør et
+ * ligger reglene her som data, og `passordResetHull` er sperren som gjør et
  * bortfall til en hard testfeil. Samme grep som `two-factor.ts`: den rene
  * avgjørelsen skilles ut nettopp fordi en regel som bare finnes inne i et
  * konfigurasjonsobjekt er en regel ingen tester.
- *
- * ── ⚠️ Hva denne flyten IKKE beskytter mot ───────────────────────────────
+ * Hva denne flyten ikke beskytter mot
  * Andre faktor (F1-11) er en engangskode på **e-post**, og resetlenka går til
  * samme innboks. Den som eier innboksen får dermed begge. Resetflyten gjør
  * ikke dette verre — den arver det av e-post-2FA — men den gjør det synlig,
@@ -30,19 +26,17 @@
 
 /**
  * Lenkas levetid: **30 minutter**.
- *
  * Kortere enn Better-Auths time, og bevisst mye kortere enn invitasjonens sju
- * dager (F1-10). Forskjellen er hva lenka ÅPNER: en invitasjon lager en konto
+ * dager (F1-10). Forskjellen er hva lenka Åpner: en invitasjon lager en konto
  * som ikke finnes ennå, en resetlenke er en nøkkel til en konto som finnes og
  * har data i seg. En slik nøkkel skal ikke ligge og gjelde i en innboks.
- *
  * 30 minutter er langt nok til å finne e-posten, bytte enhet og skrive et
  * passord man må finne på — og kort nok til at lenka er død lenge før noen
  * blar i gamle meldinger.
  */
 export const PASSORD_RESET_TTL_SEKUNDER = 1_800;
 
-/** Taket `passordResetHull()` håndhever. Over dette er lenka ikke lenger kortlivet. */
+/** Taket `passordResetHull` håndhever. Over dette er lenka ikke lenger kortlivet. */
 export const PASSORD_RESET_TTL_MAKS_SEKUNDER = 3_600;
 
 /** Better-Auth-stiene. Navngitt fordi rate-limit-nøklene må treffe dem eksakt. */
@@ -50,22 +44,19 @@ export const RESET_BE_OM_STI = '/request-password-reset';
 export const RESET_SETT_STI = '/reset-password';
 
 /**
- * Rate-limit på å BE om en lenke: 5 per kvarter, per IP.
- *
- * ⚠️ Better-Auths standard for denne stien er 3 per **minutt** — som er 180 i
+ * Rate-limit på å be om en lenke: 5 per kvarter, per IP.
+ * Better-Auths standard for denne stien er 3 per **minutt** — som er 180 i
  * timen. Det er rikelig til to angrep som ikke krever at man gjetter noe:
  * å fylle en innboks med resetvarsler, og å kverne e-postadresser mot
  * endepunktet. Svaret lekker riktignok ikke om adressen finnes (se
  * `auth.ts`), men volumet i seg selv er angrepet her.
- *
  * Et menneske trenger én forespørsel, kanskje to hvis den første e-posten
  * drøyer. Fem i kvarteret er raust for dem og fiendtlig for alt annet.
  */
 export const RESET_BE_OM_GRENSE = { window: 900, max: 5 } as const;
 
 /**
- * Rate-limit på å SETTE nytt passord: 10 per kvarter, per IP.
- *
+ * Rate-limit på å sette nytt passord: 10 per kvarter, per IP.
  * Tokenet er 24 tegn fra Better-Auths `generateId` — det gjettes ikke uansett.
  * Grensen står der fordi et endepunkt som tar imot et hemmelig token og svarer
  * ulikt på gyldig og ugyldig, alltid skal ha et tak. Den koster ingenting for
@@ -81,8 +72,7 @@ export const GLEMT_PASSORD_STI = '/glemt-passord';
 
 /**
  * Den delen av Better-Auth-konfigurasjonen denne modulen har en mening om.
- *
- * ⚠️ Strukturell med vilje, ikke `BetterAuthOptions`. Da kan `passordResetHull`
+ * Strukturell med vilje, ikke `BetterAuthOptions`. Da kan `passordResetHull`
  * testes mot håndlagde objekter — inkludert de ugyldige variantene, som er de
  * eneste som beviser at sperren virker.
  */
@@ -108,10 +98,9 @@ function grenseErStrammereEnn(regel: unknown, tak: { window: number; max: number
 }
 
 /**
- * Hvilke herdingskrav er IKKE oppfylt? Tom liste = alt i orden.
- *
+ * Hvilke herdingskrav er ikke oppfylt? Tom liste = alt i orden.
  * Returnerer strenger og ikke et boolsk svar fordi en test som feiler skal
- * si HVA som mangler. «forventet true, fikk false» på en konfigurasjonssjekk
+ * si hva som mangler. «forventet true, fikk false» på en konfigurasjonssjekk
  * er nesten like lite hjelp som ingen test.
  */
 export function passordResetHull(konfig: ResetKonfig): string[] {
@@ -142,7 +131,7 @@ export function passordResetHull(konfig: ResetKonfig): string[] {
   }
 
   if (ep?.revokeSessionsOnPasswordReset !== true) {
-    // ⛔ Den viktigste av de fem. Se `auth.ts` for hvorfor.
+    // Den viktigste av de fem. Se `auth.ts` for hvorfor.
     hull.push(
       'emailAndPassword.revokeSessionsOnPasswordReset må være true — ellers overlever angriperens sesjon at offeret «tar tilbake» kontoen',
     );

@@ -3,10 +3,9 @@ import { handleStripeWebhook, handleStripeWebhookRaw } from '../src/http/stripe-
 
 /**
  * F13-03 / F5-09 — rå body til Stripe-signaturen.
- *
  * Beviser kontrakten uten å snakke med Stripe eller DB: uten nøkler feiler
- * ruta LUKKET (503), og med nøkler men uten gyldig signatur blir det 400.
- * `req.json()` brukes aldri — kun `req.text()` / raw string.
+ * ruta lukket (503), og med nøkler men uten gyldig signatur blir det 400.
+ * `req.json` brukes aldri — kun `req.text` / raw string.
  */
 describe('handleStripeWebhookRaw', () => {
   const ORIG_SK = process.env.STRIPE_SECRET_KEY;

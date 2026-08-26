@@ -8,13 +8,11 @@ import { breadcrumbFor, contextForPath } from './nav';
 import { useSidebarState } from './sidebar-state';
 
 /**
- * F5-13 — Topbaren er redusert til ÉN jobb: si hvor du er.
- *
- * Fjernet 04.08.2026: logo-lenke, seksjonsnavigasjon og søkeknapp. Alt tre bor
- * nå i sidebaren. En topbar med knapper OG en sidebar med de samme knappene ga
+ * Topbaren er redusert til ÉN jobb: si hvor du er.
+ * Fjernet: logo-lenke, seksjonsnavigasjon og søkeknapp. Alt tre bor
+ * nå i sidebaren. En topbar med knapper og en sidebar med de samme knappene ga
  * to svar på «hvor klikker jeg» — og to steder å glemme å oppdatere.
- *
- * Søket er ikke borte, det er flyttet til tastaturet (⌘K) med synlig inngang
+ * Søket er ikke borte, det er flyttet til tastaturet (K) med synlig inngang
  * nederst i sidebaren. Se `command-palette.tsx`.
  */
 export function TopBar() {
@@ -25,8 +23,10 @@ export function TopBar() {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-border border-b bg-bg px-4">
-      {/* Kollaps-knappen bor her, ikke i sidebaren: den handler om hvor mye plass
-          INNHOLDET skal få, og da hører den hjemme over innholdet. */}
+      {/*
+       * Kollaps-knappen bor her, ikke i sidebaren: den handler om hvor mye plass
+       * Innholdet skal få, og da hører den hjemme over innholdet.
+       */}
       <button
         type="button"
         onClick={toggle}

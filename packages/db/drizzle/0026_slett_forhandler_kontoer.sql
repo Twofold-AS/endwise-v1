@@ -1,25 +1,20 @@
 /*
  * 0026 — slett_forhandler: slett dealer-only Better-Auth-kontoer.
- *
- * Prod 24.08.2026 ETTER 0025: tenants.slett / slett_forhandler lyktes
+ * Prod etter 0025: tenants.slett / slett_forhandler lyktes
  * (412/RLS fikset). Dealer-brukere kunne likevel logge inn — tomt skall,
  * ingen org/member. 0025 slettet member/invitation/organization, ikke
  * "user" (passordhash, 2FA, passkey, sesjon ble igjen).
- *
  * Historisk kommentar «Sletter ikke user-rader (never delete self)»
- * vernet acting platform-admin og Endwise-brukere, IKKE dealer-ansatte.
- *
+ * vernet acting platform-admin og Endwise-brukere, ikke dealer-ansatte.
  * DROP FUNCTION først (samme mønster som 0025). Policyer urørt (0025
- * app.slett_endwise_id + FORCE RLS beholdes). Auth-tabeller har INGEN
- * RLS (ADR-002) — ikke legg til; DEFINER kan slette uten slett-GUC.
- *
- * Funksjonen sletter KUN user_id samlet fra DENNE orgen
- * (`u.id = any (v_org_user_ids)` + NOT EXISTS member i samme statement).
+ * app.slett_endwise_id + force RLS beholdes). Auth-tabeller har ingen
+ * RLS (ADR-002) — ikke legg til; DEFINER kan slette uten slett-guc.
+ * Funksjonen sletter kun user_id samlet fra denne orgen
+ * (`u.id = any (v_org_user_ids)` + NOT exists member i samme statement).
  * Ingen global slett av memberless users i funksjonen (CWE-212/359/284).
- *
- * Engangs-reparasjon (0025-leftovers i prod): DML nederst i DENNE
+ * Engangs-reparasjon (0025-leftovers i prod): DML nederst i denne
  * migrasjonen, én gang som eier ved migrate — ikke i slett_forhandler.
- * Bundet: memberless `"user"` som HAR en session.active_organization_id
+ * Bundet: memberless `"user"` som har en session.active_organization_id
  * som ikke finnes i organization (0025-formen). Mid-signup / pending
  * invite uten slik sesjon røres ikke (CWE-212/359/284).
  * Etter db:setup: loggen MÅ si slett_forhandler rev=0026.
@@ -54,10 +49,10 @@ begin
     raise exception 'slett_forhandler: krever platform_admin';
   end if;
 
-  -- Transaksjons-lokalt. TO PUBLIC-policyene i grants.sql ser kun DENNE id-en.
-  -- app.tenant_id også: eieren er ADMIN av authenticated, så TO authenticated
-  -- SELECT gjelder DEFINER. Uten tenant-GUC ser UPDATE 0 rader.
-  -- app.slett_endwise_id: WITH CHECK/INSERT/SELECT etter flytt, uten subquery
+  -- Transaksjons-lokalt. To public-policyene i grants.sql ser kun denne id-en.
+  -- app.tenant_id også: eieren er admin av authenticated, så to authenticated
+  -- SELECT gjelder DEFINER. Uten tenant-guc ser UPDATE 0 rader.
+  -- app.slett_endwise_id: with check/INSERT/SELECT etter flytt, uten subquery
   -- mot tenants (RLS på slug='endwise' kan gi NULL → 42501 eller stille 0).
   perform set_config('app.slett_tenant_id', p_tenant_id::text, true);
   perform set_config('app.tenant_id', p_tenant_id::text, true);
@@ -76,9 +71,9 @@ begin
   end if;
   perform set_config('app.slett_endwise_id', v_endwise::text, true);
 
-  -- F1-06: aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
+  -- Aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
   -- redact_audit_log — den leser app.tenant_id og har ingen UPDATE-policy for
-  -- eieren under FORCE RLS), flytt kjeden til Endwise så ON DELETE RESTRICT
+  -- eieren under force RLS), flytt kjeden til Endwise så on DELETE restrict
   -- slipper tenants-raden, skriv spor PÅ Endwise (ikke på slett-målet).
   update audit_log
      set actor      = '[REDAKTERT]',
@@ -103,8 +98,8 @@ begin
     jsonb_build_object('rows_redacted', v_redacted, 'reason', 'slett_forhandler')
   );
 
-  -- F14-16: erasure_requests slettes ALDRI (art. 5(2)-beviset må overleve
-  -- forhandlerslett). Samme ON DELETE RESTRICT mot tenants.
+  -- Erasure_requests slettes aldri (art. 5(2)-beviset må overleve
+  -- forhandlerslett). Samme on DELETE restrict mot tenants.
   -- CWE-359/863/284: flytt til Endwise, roter id, hash identifikatorene.
   -- Ingen server-pepper i repoet. md5 er deterministisk og rainbow-bart;
   -- sha256(verdi || slettet tenant_id) er ikke-reversibel og tenant-bundet.
@@ -132,7 +127,7 @@ begin
   end if;
 
   -- Barn først (parts/stock_levels/customers inkludert). Kjent FK-rekkefølge
-  -- før den dynamiske løkka. EXECUTE setter ikke FOUND — ROW_COUNT.
+  -- før den dynamiske løkka. Execute setter ikke found — ROW_COUNT.
   -- Kun foreign_key_violation / undefined_table svelges i runden.
   foreach v_name in array array[
     'stock_movements', 'stock_levels', 'parts', 'stock_locations',
@@ -204,7 +199,7 @@ begin
       using errcode = '23503';
   end if;
 
-  -- Samle forhandlerens brukere FØR member-slett. Dealer-only kontoer
+  -- Samle forhandlerens brukere før member-slett. Dealer-only kontoer
   -- skal dø med forhandleren. "Never delete self" verner acting admin
   -- og Endwise-brukere — de har member-rad i Endwise-org og beholdes.
   v_org_user_ids := array(
@@ -218,10 +213,10 @@ begin
   delete from invitation where organization_id = p_tenant_id::text;
   delete from organization where id = p_tenant_id::text;
 
-  -- Dealer-only: SCOPET til innsamlede id-er. Samme statement krever
-  -- NOT EXISTS member (Endwise-/tverr-org beholdes — de har member-rad).
-  -- CWE-212/359/284: ALDRI globalt «slett alle uten member» her.
-  -- Auth-tabellene har INGEN RLS (ADR-002); DEFINER kan slette uten slett-GUC.
+  -- Dealer-only: scopet til innsamlede id-er. Samme statement krever
+  -- NOT exists member (Endwise-/tverr-org beholdes — de har member-rad).
+  -- CWE-212/359/284: aldri globalt «slett alle uten member» her.
+  -- Auth-tabellene har ingen RLS (ADR-002); DEFINER kan slette uten slett-guc.
   delete from verification v
    using "user" u
    where v.identifier = u.email
@@ -243,8 +238,8 @@ begin
      );
 
   -- Beholdte brukere kan fortsatt ha sesjon mot død org.
-  -- 0025-leftovers (memberless + session mot manglende org) ryddes KUN
-  -- som én-gangs DML nederst i DENNE migrasjonen — ikke i funksjonen.
+  -- 0025-leftovers (memberless + session mot manglende org) ryddes kun
+  -- som én-gangs DML nederst i denne migrasjonen — ikke i funksjonen.
   -- Funksjonen forblir scoped (`any(v_org_user_ids)`).
   delete from session where active_organization_id = p_tenant_id::text;
 
@@ -286,14 +281,14 @@ $$;
 
 grant execute on function slett_forhandler(uuid) to authenticated;
 
---> statement-breakpoint
+-- > statement-breakpoint
 
--- Engangs-reparasjon (prod 24.08.2026): 0025 slettet forhandler uten "user".
+-- Engangs-reparasjon (prod): 0025 slettet forhandler uten "user".
 -- Kjører ÉN gang ved migrate som eier — ikke i slett_forhandler.
--- Bundet til 0025-formen: zero member-rader OG minst én session der
--- active_organization_id IS NOT NULL og ikke finnes i organization.
--- Mid-signup / pending invite (ingen slik sesjon) røres IKKE (CWE-212/359/284).
--- CASCADE river session/account/two_factor/passkey. verification har ingen user-FK.
+-- Bundet til 0025-formen: zero member-rader og minst én session der
+-- active_organization_id is NOT NULL og ikke finnes i organization.
+-- Mid-signup / pending invite (ingen slik sesjon) røres ikke (CWE-212/359/284).
+-- Cascade river session/account/two_factor/passkey. verification har ingen user-FK.
 delete from verification v
  using "user" u
  where v.identifier = u.email

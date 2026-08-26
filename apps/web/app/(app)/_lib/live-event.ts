@@ -1,7 +1,6 @@
 /**
- * F6-02 — Hvilke cache-familier et SSE-event skal oppfriske.
- *
- * Selve innholdet hentes gjennom tRPC/RLS. Her avgjør vi bare HVA som er
+ * Hvilke cache-familier et SSE-event skal oppfriske.
+ * Selve innholdet hentes gjennom tRPC/RLS. Her avgjør vi bare hva som er
  * blitt gammelt. Holdes utenfor React så det kan testes uten å mounte appen.
  */
 

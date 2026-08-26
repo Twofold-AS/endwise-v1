@@ -30,15 +30,12 @@ export type VerkstedMedlemskap = {
 
 /**
  * F5-13 / F5-28 — Merkeboks + kontekst-dropdown.
- *
  * Når aktiv org er plattform-tenanten: header Endwise + Plattform.
  * Dropdown viser bare Endwise. «Forhandlere» er inspect-URL
  * (`/endwise/verksted/[slug]`), aldri setActive. Ekte verksted-medlemskap
- * kommer ETTER «Dine verksteder» — det er ekte medlemskap, ikke Se verkstedet.
- *
+ * kommer etter «Dine verksteder» — det er ekte medlemskap, ikke Se verkstedet.
  * I Se verkstedet (inspect): bare «Tilbake til Endwise». Ingen setActive.
- *
- * Minimer (X → pille) hører IKKE hjemme her. Det ligger på helpdesk-slideren
+ * Minimer (X → pille) hører ikke hjemme her. Det ligger på helpdesk-slideren
  * (`TipCard`, F5-23).
  */
 export function ContextSwitcher({

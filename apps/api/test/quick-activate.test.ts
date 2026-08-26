@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { aktiverQuickEtterGet } from '../src/lib/quick-activate.ts';
 
 /**
- * F1-07 — forhandlerens EGEN Quick-nøkkel: GET-probe FØR persist/aktivering.
+ * Forhandlerens egen Quick-nøkkel: GET-probe før persist/aktivering.
  * Testdata er oppdiktet — aldri en ekte ApiV2-nøkkel.
  */
 const FAKE_TOKEN = 'fake-apiv2-ikke-ekte';

@@ -13,11 +13,10 @@ import { ProfilFane } from './_profil-fane';
 import { VarslerInnhold } from './varsler/_innhold';
 
 /**
- * F5-19 — Innstillinger som én flate. Pille-faner øverst, aktiv fane INNE på
+ * Innstillinger som én flate. Pille-faner øverst, aktiv fane inne på
  * siden. Ingen hub-kort, ingen nested Settings i sidebaren, ingen Admin-fane.
  * Team/Organisasjon er sidebar-destinasjon (#41), ikke en fane her.
  * Endwise-plattform ser kun Profil (ingen dealer-faner).
- *
  * Fane-state bor i `?fane=`. Gamle Innstillinger-URL-er renderer dette skallet
  * med `startFane`. `/innstillinger/team` er Team-siden, ikke et alias.
  */

@@ -6,26 +6,23 @@ const vehicleType = z.enum(['mc', 'boat', 'atv']);
 
 /**
  * F2-04 / F2-05 / F5-04 — Tjenestekatalog, versjonert.
- *
- * `update` LAGER EN NY VERSJON. Den endrer aldri en eksisterende, fordi
+ * `update` lager en ny versjon. Den endrer aldri en eksisterende, fordi
  * bookinger fra i fjor peker på versjonen som gjaldt da. Endrer du prisen i dag,
  * skal fjorårets faktura fortsatt stemme.
- *
- * ── ⛔ SKRIVING KREVER dealer_admin (endret 20.08.2026) ────────────────────
+ * Skriving krever dealer_admin (endret )
  * De tre skrivende prosedyrene lå på `protectedProcedure` så lenge de ikke
  * hadde ett eneste kallsted. I det F2-05 gir dem en flate, betyr det at hvem
- * som helst med en sesjon i tenanten kan endre prisen KUNDEN betaler. RLS
+ * som helst med en sesjon i tenanten kan endre prisen kunden betaler. RLS
  * svarer på «hvilken tenants rader», ikke «har denne personen lov». Samme
  * argument som `adminProcedure` selv fører for kompetanse (F3-12): en
- * dealer_staff er medlem, så RLS slipper ham inn i dataene — det er BARE
+ * dealer_staff er medlem, så RLS slipper ham inn i dataene — det er bare
  * rollesjekken som stopper ham. Lesing er fortsatt åpen for staff: de må se
  * katalogen for å booke manuelt.
  */
 export const servicesRouter = router({
   /**
    * Gjeldende versjon av hver tjeneste.
-   *
-   * ⚠️ `inkluderInaktive` er som standard USANN, og det er booking-motorens
+   * `inkluderInaktive` er som standard usann, og det er booking-motorens
    * garanti: en deaktivert tjeneste skal aldri kunne velges på en ny sak.
    * Katalogflaten ber eksplisitt om dem, for å kunne vise dem fram igjen.
    */
@@ -40,7 +37,7 @@ export const servicesRouter = router({
             vehicleType: schema.services.vehicleType,
             active: schema.services.active,
             createdAt: schema.services.createdAt,
-            // Bookinger peker på VERSJONEN (F2-04) — createBooking trenger denne.
+            // Bookinger peker på versjonen (F2-04) — createBooking trenger denne.
             serviceVersionId: schema.serviceVersions.id,
             version: schema.serviceVersions.version,
             durationMinutes: schema.serviceVersions.durationMinutes,
@@ -57,7 +54,7 @@ export const servicesRouter = router({
               isNull(schema.serviceVersions.validTo),
             ),
           )
-          // ⚠️ Utelatt input = aktive tjenester. Den trygge standarden.
+          // Utelatt input = aktive tjenester. Den trygge standarden.
           .where(input?.inkluderInaktive ? undefined : eq(schema.services.active, true))
           .orderBy(asc(schema.services.name)),
       ),
@@ -65,9 +62,8 @@ export const servicesRouter = router({
 
   /**
    * Hele versjonshistorikken for én tjeneste — nyeste først.
-   *
    * Uten denne er «versjonering» bare et tall i UI-et. Poenget med to tabeller
-   * er at man skal KUNNE se hva som gjaldt før; et versjonsnummer man ikke kan
+   * er at man skal kunne se hva som gjaldt før; et versjonsnummer man ikke kan
    * slå opp, beviser ingenting for en forhandler som lurer på hvorfor
    * fjorårets faktura sier noe annet enn prislista i dag.
    */
@@ -186,8 +182,7 @@ export const servicesRouter = router({
 
   /**
    * Angre en deaktivering.
-   *
-   * ⚠️ Finnes fordi `deactivate` ellers er en enveisdør fra UI-et: den
+   * Finnes fordi `deactivate` ellers er en enveisdør fra UI-et: den
    * deaktiverte tjenesten forsvinner ut av `list`, og uten denne ruta er eneste
    * vei tilbake et manuelt UPDATE i basen. Versjonene røres ikke — tjenesten
    * kommer tilbake med nøyaktig den versjonen som gjaldt da den ble slått av.

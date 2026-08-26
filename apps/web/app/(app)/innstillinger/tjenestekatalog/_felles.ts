@@ -1,7 +1,6 @@
 /**
  * F2-05 / F5-04 — Små regler tjenestekatalogen deler.
- *
- * Ligger her og ikke i `kunder/_delt.tsx` fordi de handler om PRISSETTING, som
+ * Ligger her og ikke i `kunder/_delt.tsx` fordi de handler om prissetting, som
  * bare denne flaten gjør. Visning av en pris (`kroner`) er derimot felles og
  * hentes derfra.
  */
@@ -16,13 +15,11 @@ export type Kjoretoytype = (typeof TYPE_VALG)[number]['key'];
 
 /**
  * Kroner fra tastaturet → øre i basen.
- *
- * ⛔ **Tom streng er IKKE null-pris — den er «ingen pris satt».** Kolonnen
+ * Tom streng er ikke null-pris — den er «ingen pris satt». Kolonnen
  * `price_minor` er nullbar med vilje: en tjeneste kan koste «etter medgått tid»
  * eller «på forespørsel». Skrev vi 0 i stedet, ville prislista si at
  * EU-kontrollen er gratis.
- *
- * ⚠️ Komma OG punktum godtas, og mellomrom strippes — «1 450,50» er slik en
+ * Komma og punktum godtas, og mellomrom strippes — «1 450,50» er slik en
  * norsk forhandler faktisk skriver et beløp. Alt annet avvises heller enn å
  * tolkes: `Number('1450kr')` er `NaN`, men `parseFloat('1450kr')` er 1450, og
  * en parser som gjetter er en parser som en dag gjetter feil på en prislapp.

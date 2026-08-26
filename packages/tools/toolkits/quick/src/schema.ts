@@ -1,50 +1,47 @@
 import { z } from 'zod';
 
 /**
- * F8-01 — Quick3 Web API (v2, BETA).
- *
- * ⚠️ USIKKERHET: Swaggeren (…/swagger/docs/v2) er TOKEN-GATED og returnerte tomt
+ * Quick3 Web API (v2, beta).
+ * Usikkerhet: Swaggeren (…/swagger/docs/v2) er token-gated og returnerte tomt
  * uten en gyldig ApiV2-token. Feltene under er derfor modellert mot det som er
- * BEKREFTET i oppgavespesifikasjonen — ikke mot en fullstendig API-kontrakt.
- * ALT er `.loose()` slik at ukjente/uventede felt PASSERER i stedet for å velte
- * synken. Felt merket «USIKKER» er gjettede navn og må verifiseres mot en ekte
+ * Bekreftet i oppgavespesifikasjonen — ikke mot en fullstendig API-kontrakt.
+ * Alt er `.loose` slik at ukjente/uventede felt passerer i stedet for å velte
+ * synken. Felt merket «usikker» er gjettede navn og må verifiseres mot en ekte
  * respons (helst mot Test_Public) før vi stoler på dem.
- *
- * Verifisert 26.08.2026 (parse-feil, ikke live Yamaha-body):
- *   `quickCustomer` krever camelCase `guid`. `.loose()` bevarer `Guid` men
- *   aliaser det ikke. `client/info` er `z.object({}).loose()` — derfor kan
- *   setConfig lykkes mens pullNow kaster «Uventet svarformat fra Quick».
- *   Yamaha-envelope `{ totalCount, limit, offset, results }` er bekreftet.
- *   Quick3 release notes bruker PascalCase `ItemCode` / `ItemName`.
- *   `foldQuickJsonKeys` senker bare første bokstav (Guid→guid). Ingen nye
- *   feltnavn. Ingen utsalgspris — `syncQuickParts` skriver ikke sellPriceMinor.
- *
+ * Verifisert (parse-feil, ikke live Yamaha-body):
+ * `quickCustomer` krever camelCase `guid`. `.loose` bevarer `Guid` men
+ * aliaser det ikke. `client/info` er `z.object({}).loose` — derfor kan
+ * setConfig lykkes mens pullNow kaster «Uventet svarformat fra Quick».
+ * Yamaha-envelope `{ totalCount, limit, offset, results }` er bekreftet.
+ * Quick3 release notes bruker PascalCase `ItemCode` / `ItemName`.
+ * `foldQuickJsonKeys` senker bare første bokstav (Guid→guid). Ingen nye
+ * feltnavn. Ingen utsalgspris — `syncQuickParts` skriver ikke sellPriceMinor.
  * Bekreftede endepunkt:
- *   GET /api/v2/customer/batch  (limit, offset, changedAfterDate, customerTypeGuid, expansions)
- *   GET /api/v2/client/info
+ * GET /api/v2/customer/batch (limit, offset, changedAfterDate, customerTypeGuid, expansions)
+ * GET /api/v2/client/info
  * Kjente, ikke kartlagte: /client/bankaccounts, /client/feesettings,
- *   /common/language|country|paymentterm.
- * Delelager (GET-only, 24.08.2026): Quick3-release notes lister *item*-endepunkt
+ * /common/language|country|paymentterm.
+ * Delelager (GET-only): Quick3-release notes lister *item*-endepunkt
  * (sortering ItemCode/ItemName) og GET stock entry by guid, pluss «batch of X»
  * som standard. Samme batch-JSON som customer. Stier:
- *   GET /api/v2/item/batch
- *   GET /api/v2/stockentry/batch
+ * GET /api/v2/item/batch
+ * GET /api/v2/stockentry/batch
  * Ingen POST/PUT/PATCH/DELETE mot Quick i pull.
  */
 
 /**
  * En kontaktperson på en Quick-kunde. Kun `contactPersons: [...]` er bekreftet å
- * finnes; de indre feltnavnene er USIKRE (flere vanlige varianter forsøkes ved
- * mapping). `.loose()` bevarer alt vi ikke kjenner.
+ * finnes; de indre feltnavnene er usikre (flere vanlige varianter forsøkes ved
+ * mapping). `.loose` bevarer alt vi ikke kjenner.
  */
 export const quickContactPerson = z
   .object({
     guid: z.string().optional(),
-    // USIKKER — navn kan komme som ett felt eller delt fornavn/etternavn.
+    // Usikker — navn kan komme som ett felt eller delt fornavn/etternavn.
     name: z.string().optional(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-    // USIKKER — e-post/telefon-feltnavn ikke bekreftet.
+    // Usikker — e-post/telefon-feltnavn ikke bekreftet.
     email: z.string().optional(),
     phone: z.string().optional(),
     mobile: z.string().optional(),
@@ -52,18 +49,18 @@ export const quickContactPerson = z
   .loose();
 
 /**
- * En kunde slik den kommer fra `customer/batch`. BEKREFTET: `guid`, `company`,
- * `contactPersons`. Resten er USIKKER og bevares via `.loose()`.
+ * En kunde slik den kommer fra `customer/batch`. Bekreftet: `guid`, `company`,
+ * `contactPersons`. Resten er usikker og bevares via `.loose`.
  */
 export const quickCustomer = z
   .object({
-    /** BEKREFTET — entitetens GUID. Bærer identiteten mellom synk-kjøringer. */
+    /** Bekreftet — entitetens GUID. Bærer identiteten mellom synk-kjøringer. */
     guid: z.string(),
-    /** BEKREFTET — firmanavn (kan være tomt for privatkunder). */
+    /** Bekreftet — firmanavn (kan være tomt for privatkunder). */
     company: z.string().optional(),
-    /** BEKREFTET — liste med kontaktpersoner. */
+    /** Bekreftet — liste med kontaktpersoner. */
     contactPersons: z.array(quickContactPerson).optional(),
-    // USIKRE toppnivåfelt — vanlige i kunderegistre; verifiseres mot ekte respons.
+    // Usikre toppnivåfelt — vanlige i kunderegistre; verifiseres mot ekte respons.
     email: z.string().optional(),
     phone: z.string().optional(),
     customerTypeGuid: z.string().optional(),
@@ -72,7 +69,7 @@ export const quickCustomer = z
 
 export type QuickCustomer = z.infer<typeof quickCustomer>;
 
-/** BEKREFTET responsform for de paginerte batch-endepunktene. */
+/** Bekreftet responsform for de paginerte batch-endepunktene. */
 export const quickCustomerBatch = z
   .object({
     totalCount: z.number(),
@@ -86,7 +83,7 @@ export type QuickCustomerBatch = z.infer<typeof quickCustomerBatch>;
 
 /**
  * `client/info` — brukes som «test tilkobling». Innholdet er ikke fullt kjent,
- * så vi validerer bare at det ER et objekt (.loose()); selve 200-svaret er
+ * så vi validerer bare at det er et objekt (.loose); selve 200-svaret er
  * beviset på at token + baseUrl virker.
  */
 export const quickClientInfo = z.object({}).loose();
@@ -102,8 +99,8 @@ export interface QuickCustomerRecord {
 }
 
 /**
- * En vare/del fra `item/batch`. BEKREFTET fra Quick-release notes: ItemCode,
- * ItemName. `guid` følger customer-mønsteret. Resten er `.loose()`.
+ * En vare/del fra `item/batch`. Bekreftet fra Quick-release notes: ItemCode,
+ * ItemName. `guid` følger customer-mønsteret. Resten er `.loose`.
  */
 export const quickItem = z
   .object({
@@ -140,7 +137,7 @@ export const quickItemBatch = z
 export type QuickItemBatch = z.infer<typeof quickItemBatch>;
 
 /**
- * En lagerlinje fra `stockentry/batch`. Feltnavn er USIKRE (flere varianter
+ * En lagerlinje fra `stockentry/batch`. Feltnavn er usikre (flere varianter
  * forsøkes i mapping) — samme strategi som contactPersons på kunde.
  */
 export const quickStockEntry = z
@@ -179,7 +176,7 @@ export type QuickStockEntryBatch = z.infer<typeof quickStockEntryBatch>;
 
 /**
  * Quick3 C# JSON er ofte PascalCase (release notes: ItemCode, ItemName).
- * Våre skjema er camelCase (tester). Senk KUN første bokstav — finner ikke
+ * Våre skjema er camelCase (tester). Senk kun første bokstav — finner ikke
  * opp nøkler, mapper Guid→guid og ItemCode→itemCode. camelCase er identitet.
  */
 export function foldQuickJsonKeys(value: unknown): unknown {

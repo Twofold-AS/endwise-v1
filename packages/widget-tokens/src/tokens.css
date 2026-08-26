@@ -1,86 +1,86 @@
 /*
- * F0-11 — @endwise/widget-tokens.
- *
- * STATUS: DESIGN-PRINSIPPER FRA EIER (03.08.2026). **LYST TEMA ER STANDARD.**
- *
- * Verdiene under er gitt av eier og har FORRANG over UI-PAKKER.md der de
- * kolliderer (UI-PAKKER §5 er oppdatert tilsvarende). Snu det ikke tilbake uten
+ * @endwise/widget-tokens.
+ * Status: design-prinsipper fra eier. **lyst tema er standard.**
+ * Verdiene under er gitt av eier og har forrang over ui-pakker.md der de
+ * kolliderer (ui-pakker §5 er oppdatert tilsvarende). Snu det ikke tilbake uten
  * ny beskjed — dette er ikke et forslag, det er spesifikasjonen.
- *
- *   Typografi   Inter. Titler 16/20 Medium · labels 13/16 Medium · brødtekst 14 Regular
- *   Knapper     32px høyde, 10px radius
- *   Rader       40px (data) · 44px («stores»)
- *   Badge       20px høyde, 6px radius  (fyll/tekst var #CAFACE/#15B042 —
- *                                        endret til aksent-tokenene 06.08.2026)
- *   Switch      24×14px, 10px thumb      (track-på var #0077E6 — følger nå aksenten)
- *   Tekst       #333333 default · #777777 subtle
- *   Lyst        bakgrunn #ffffff · sidebar #fafafa · valgt i sidebar #ededed
- *   Mørkt       bakgrunn #171717 · sidebar #1a1a1a · valgt i sidebar #292929
- *
- * ── Hva som er GITT og hva som er UTLEDET ──────────────────────────────────
- * Alt over er gitt. Verdier merket «utledet» under er MINE, fordi UI-et trenger
+ * Typografi Inter. Titler 16/20 Medium · labels 13/16 Medium · brødtekst 14 Regular
+ * Knapper 32px høyde, 10px radius
+ * Rader 40px (data) · 44px («stores»)
+ * Badge 20px høyde, 6px radius (fyll/tekst var #caface/#15B042
+ * endret til aksent-tokenene )
+ * Switch 24×14px, 10px thumb (track-på var #0077E6 — følger nå aksenten)
+ * Tekst #333333 default · #777777 subtle
+ * Lyst bakgrunn #ffffff · sidebar #fafafa · valgt i sidebar #ededed
+ * Mørkt bakgrunn #171717 · sidebar #1a1a1a · valgt i sidebar #292929
+ * Hva som er gitt og hva som er utledet
+ * Alt over er gitt. Verdier merket «utledet» under er mine, fordi UI-et trenger
  * dem og spesifikasjonen ikke nevner dem (hårlinjer, hover-flate, kortflate,
  * mørk tekstrampe). De er markert eksplisitt, slik at de er lette å overstyre.
- *
- * Merk: spesifikasjonen har NØYAKTIG TO tekstfarger. `--ew-fg-faint` er derfor
+ * Merk: spesifikasjonen har nøyaktig to tekstfarger. `--ew-fg-faint` er derfor
  * aliasert til subtle (#777777) i stedet for at jeg fant på en tredje. Vil du ha
  * et tredje nivå, sett verdien her — ingen komponent trenger å endres.
- *
- * Tailwind 4 leser disse via @theme (packages/ui/src/theme.css). Bytt VERDIER
+ * Tailwind 4 leser disse via @theme (packages/ui/src/theme.css). Bytt verdier
  * her, ikke navn — og ikke i theme.css. Dette er den ene sannheten for farge/font.
  */
 
-/* ══ LYST (STANDARD) ══════════════════════════════════════════════════════ */
+/* Lyst (standard) */
 :root,
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Flater — GITT */
+  /* Flater — gitt */
   --ew-bg: #ffffff; /* generell bakgrunn */
   --ew-sidebar: #fafafa; /* sidebar-kolonnen */
   --ew-sidebar-active: #ededed; /* valgt element i sidebar */
 
-  /* Flater — UTLEDET */
+  /* Flater — utledet */
   --ew-surface: #ffffff; /* kortflate (flush med siden; kanten bærer) */
   --ew-surface-2: #f5f5f5; /* hover — ett hakk før `sidebar-active` */
   --ew-inset: #fafafa; /* indre panel i kort (CardMedia) */
   --ew-border: #e5e5e5; /* hårlinjer */
   --ew-border-strong: #d4d4d4; /* input-kant / fokusert kant */
 
-  /* Tekst — GITT (to farger, ikke tre) */
+  /* Tekst — gitt (to farger, ikke tre) */
   --ew-fg: #333333;
   --ew-fg-muted: #777777;
   --ew-fg-faint: #777777; /* alias — se filkommentaren */
 
-  /* ⚠️ AKSENT ER SVART FRA 06.08.2026 (eierens beslutning, «foreløpig»).
-     Grønnen ble brukt så bredt at den sluttet å bety noe — den var ikke lenger
-     en aksent, den var bakgrunnsstøy. Svart gjør at det som FAKTISK er grønt
-     (suksess, positiv endring) leses som informasjon igjen.
+  /*
+ * Aksent er svart (eierens beslutning, «foreløpig»).
+ * Grønnen ble brukt så bredt at den sluttet å bety noe — den var ikke lenger
+ * en aksent, den var bakgrunnsstøy. Svart gjør at det som faktisk er grønt
+ * (suksess, positiv endring) leses som informasjon igjen.
 
-     Logogrønnen #1ED27D er IKKE rørt: den bor i apps/web/public/logo/logo.svg
-     og i merkeboksen, ikke i disse tokenene. Skal grønnen tilbake som aksent,
-     er det disse fire linjene som endres — ingen komponenter. */
+ * Logogrønnen #1ED27D er ikke rørt: den bor i apps/web/public/logo/logo.svg
+ * og i merkeboksen, ikke i disse tokenene. Skal grønnen tilbake som aksent,
+ * er det disse fire linjene som endres — ingen komponenter.
+*/
   --ew-accent: #111111; /* fyll (primærknapp, aktiv markør) */
-  --ew-accent-strong: #111111; /* aksent som TEKST og ikon */
+  --ew-accent-strong: #111111; /* aksent som tekst og ikon */
   --ew-accent-fg: #ffffff; /* tekst oppå --ew-accent */
   --ew-accent-soft: #ededed; /* aksentfylt flate (badge, egen boble) */
   --ew-accent-dim: rgba(17, 17, 17, 0.08);
 
-  /* Semantiske statusfarger — UTLEDET, justert for lys bakgrunn */
+  /* Semantiske statusfarger — utledet, justert for lys bakgrunn */
   --ew-warn: #b45309;
   --ew-warn-soft: #fef3c7;
   --ew-danger: #c8332b;
   --ew-danger-soft: #fdecea;
-  /* ⚠️ Suksess-grønnen er BEHOLDT, selv om aksenten ble svart. Den er
-     informasjon (+12 %, «Region OK»), ikke merkevare — og nå som den er den
-     eneste grønnen på skjermen, betyr den endelig noe. */
+  /*
+ * Suksess-grønnen er beholdt, selv om aksenten ble svart. Den er
+ * informasjon (+12 %, «Region OK»), ikke merkevare — og nå som den er den
+ * eneste grønnen på skjermen, betyr den endelig noe.
+*/
   --ew-success: #15b042;
   --ew-success-soft: #caface;
 
   /* Bevel (TheFold-knappeflaten) — lys variant */
-  /* Bevel-flaten er IKKE ren hvit i lyst tema (endret 06.08.2026): en hvit
-     knapp på #fafafa-sidebaren leste som et hull, ikke som en hevet flate.
-     #f2f2f2 gir samme relieff som den mørke varianten. */
+  /*
+ * Bevel-flaten er ikke ren hvit i lyst tema (endret ): en hvit
+ * knapp på #fafafa-sidebaren leste som et hull, ikke som en hevet flate.
+ * #f2f2f2 gir samme relieff som den mørke varianten.
+*/
   --ew-bevel-face: #f2f2f2;
   --ew-bevel-border: #e0e0e0;
   --ew-bevel-shadow: 0 1px 2px rgba(17, 17, 17, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
@@ -91,32 +91,36 @@
   --ew-glass-blur: 0px;
 }
 
-/* ══ MØRKT (toggle) ═══════════════════════════════════════════════════════ */
+/* Mørkt (toggle) */
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Flater — GITT */
+  /* Flater — gitt */
   --ew-bg: #171717;
   --ew-sidebar: #1a1a1a;
   --ew-sidebar-active: #292929;
 
-  /* Flater — UTLEDET */
+  /* Flater — utledet */
   --ew-surface: #1f1f1f;
   --ew-surface-2: #292929; /* samme tone som valgt element — én hover-sannhet */
   --ew-inset: #141414;
   --ew-border: #2a2a2a;
   --ew-border-strong: #363636;
 
-  /* Tekst — UTLEDET. #333333/#777777 er lyst-tema-verdier og ville vært
-     uleselige her; rampen er speilet med samme to-nivå-struktur. */
+  /*
+ * Tekst — utledet. #333333/#777777 er lyst-tema-verdier og ville vært
+ * uleselige her; rampen er speilet med samme to-nivå-struktur.
+*/
   --ew-fg: #ededed;
   --ew-fg-muted: #8f8f8f;
   --ew-fg-faint: #8f8f8f;
 
-  /* ⚠️ I mørkt tema er «svart aksent» HVIT. En svart aksent på #171717 ville
-     vært usynlig — det er ikke en farge, det er et hull. Inversjonen holder
-     både kontrasten og betydningen: aksenten er den nøytrale, sterkeste tonen
-     i temaet. Endret 06.08.2026 sammen med den lyse. */
+  /*
+ * I mørkt tema er «svart aksent» hvit. En svart aksent på #171717 ville
+ * vært usynlig — det er ikke en farge, det er et hull. Inversjonen holder
+ * både kontrasten og betydningen: aksenten er den nøytrale, sterkeste tonen
+ * i temaet. Endret sammen med den lyse.
+*/
   --ew-accent: #ffffff;
   --ew-accent-strong: #ffffff;
   --ew-accent-fg: #111111;
@@ -139,9 +143,9 @@
   --ew-glass-border: #2a2a2a;
 }
 
-/* ══ FORM OG MÅL — temauavhengig ══════════════════════════════════════════ */
+/* Form og mål — temauavhengig */
 :root {
-  /* Kontrollhøyder og radier — GITT */
+  /* Kontrollhøyder og radier — gitt */
   --ew-control-h: 32px; /* knapper, inputs, selects */
   --ew-radius-control: 10px; /* knapper */
   --ew-row-h: 40px; /* datarad */
@@ -151,8 +155,10 @@
   --ew-switch-w: 24px;
   --ew-switch-h: 14px;
   --ew-switch-thumb: 10px;
-  /* Følger aksenten (svart i lyst, hvit i mørkt) — eierens beslutning
-     06.08.2026. Var #0077E6. */
+  /*
+ * Følger aksenten (svart i lyst, hvit i mørkt) — eierens beslutning
+ * . Var #0077E6.
+*/
   --ew-switch-track-on: var(--ew-accent);
 
   /* Øvrig radius-skala */
@@ -170,7 +176,7 @@
   --ew-space-6: 24px;
   --ew-space-8: 32px;
 
-  /* Typografi — Inter (GITT). next/font-variabel m/ systemfallback. */
+  /* Typografi — Inter (gitt). next/font-variabel m/ systemfallback. */
   --ew-font-sans:
     var(--font-inter, "Inter"), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;

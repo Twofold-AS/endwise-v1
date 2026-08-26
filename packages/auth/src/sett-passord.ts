@@ -2,13 +2,11 @@ import { and, type Database, eq, schema } from '@endwise/db';
 import { hashPassword } from 'better-auth/crypto';
 
 /**
- * F5-26 — sett/bytt passord uten gjeldende passord.
- *
+ * Sett/bytt passord uten gjeldende passord.
  * Better-Auth `changePassword` krever det gamle. Eier-invitasjonen er
  * beviset (samme som F1-10 for ny konto): den som har tokenet eier
  * e-posten. Admin ser aldri passordet.
- *
- * ⛔ Ingen sesjon deles ut her. Invitee logger inn etterpå og møter 2FA.
+ * Ingen sesjon deles ut her. Invitee logger inn etterpå og møter 2FA.
  */
 export async function settPassordUtenSesjon(
   db: Database,

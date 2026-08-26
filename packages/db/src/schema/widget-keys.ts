@@ -4,18 +4,15 @@ import { tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F4-02 — Publishable widget-nøkkel per forhandler.
- *
- * Dette er en OFFENTLIG nøkkel (trygg å legge i en publisert Framer-side, à la
- * Stripes `pk_...`). Den er IKKE en hemmelighet — den identifiserer bare hvilken
+ * Publishable widget-nøkkel per forhandler.
+ * Dette er en offentlig nøkkel (trygg å legge i en publisert Framer-side, à la
+ * Stripes `pk_...`). Den er ikke en hemmelighet — den identifiserer bare hvilken
  * tenant en anonym kunde snakker på vegne av, og hvilke origins embed-en får
- * kjøre fra. Secret-nøkler skal ALDRI i Framer (CWE-798/522).
- *
- * Sikkerhetsmodell: nøkkelen alene gir KUN det en anonym kunde skal kunne — se
- * tjenester/ledige tider og opprette EN booking-forespørsel. All faktisk data-
+ * kjøre fra. Secret-nøkler skal aldri i Framer (CWE-798/522).
+ * Sikkerhetsmodell: nøkkelen alene gir kun det en anonym kunde skal kunne — se
+ * tjenester/ledige tider og opprette en booking-forespørsel. All faktisk data-
  * tilgang er RLS-scopet til `tenantId`. `allowedOrigins` begrenser hvilke
  * nettsteder som kan veksle nøkkelen inn i et kortlevd token (CORS/origin-vern).
- *
  * RLS: forvaltnings-/skrivestien (dealer_admin) er tenant-isolert. Selve
  * nøkkel→tenant-oppslaget (før vi har tenant-kontekst) gjøres av en betrodd
  * server-tjeneste — nøkkelen er offentlig, så raden lekker ingenting sensitivt.

@@ -6,19 +6,17 @@ import { useEffect, useRef, useState } from 'react';
 import { subscribeVisitors } from './_visitors';
 
 /**
- * Globe-kart bygget på MapLibre GL JS (open-source, ingen API-nøkkel) —
+ * Globe-kart bygget på MapLibre gl JS (open-source, ingen API-nøkkel)
  * samme motor som mapcn. mapcn.dev/registry var utilgjengelig (web_fetch-timeout),
  * så komponenten er skrevet direkte på MapLibre i mapcn-ånd; bytt gjerne inn den
  * offisielle wrapperen senere (`npx shadcn@latest add https://mapcn.dev/maps/map.json`).
- *
  * Grønne prikker = besøkende akkurat nå. Data via `subscribeVisitors` (simulert
  * nå, SSE-klar). Prikkene dukker opp per by og forsvinner etter en TTL → live-følelse.
  */
 /**
- * Kartstilen bygges fra TOKEN-LAGET, ikke fra hardkodede hex-verdier (endret
- * 06.08.2026). Den gamle stilen var låst mørk (#0e0e0e hav, #1c1c1c land) og
+ * Kartstilen bygges fra token-laget, ikke fra hardkodede hex-verdier (endret
+ * ). Den gamle stilen var låst mørk (#0e0e0e hav, #1c1c1c land) og
  * ble en svart flekk midt i det lyse temaet.
- *
  * MapLibre tar ikke `var(--…)` — den trenger ekte farger. Derfor leses tokenene
  * ut av DOM-en ved oppstart. Det er også grunnen til at kartet må bygges på
  * nytt når temaet bytter (se `key` på containeren).
@@ -73,7 +71,7 @@ export function LiveVisitorsGlobe() {
     return () => obs.disconnect();
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `tema` er med VILJE eneste avhengighet — den tvinger en full ombygging av kartet
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `tema` er med vilje eneste avhengighet — den tvinger en full ombygging av kartet
   useEffect(() => {
     let cancelled = false;
     // biome-ignore lint/suspicious/noExplicitAny: MapLibre-typer lastes dynamisk

@@ -3,29 +3,25 @@ import { OCCUPYING_STATUSES } from '../booking/lifecycle.ts';
 import type { MatchCandidate, MatchRequest, MechanicMatcher } from '../contracts/index.ts';
 
 /**
- * F3-02 — Regelbasert mekaniker-matching.
- *
+ * Regelbasert mekaniker-matching.
  * Kilden er **kompetanseregisteret** (F3-12), ikke en tekstliste på mekanikeren.
  * Det betyr at det forhandleren skriver inn i medlemsadministrasjonen er det
  * matcheren faktisk rangerer på. Én kilde til sannhet.
- *
- * ── HARDE KRAV (diskvalifiserer) ────────────────────────────────────────────
- *   1. mekanikeren er aktiv
- *   2. har ALLE ferdighetene tjenesteversjonen krever
- *   3. har GYLDIG sertifisering der ferdigheten krever det
- *      (utløpt sertifisering = ikke kvalifisert. En dato som ikke sjekkes, er
- *       ikke en sertifisering — det er en påstand.)
- *   4. har ledig kapasitet i hele tidsvinduet
- *
- * ── PRIORITERING (rangerer de som er igjen) ─────────────────────────────────
- *   • lavest belastning vinner — vi sprer jobbene, vi stabler dem ikke
- *   • SPESIALIST-VERN: ved likhet vinner den med lavest samlet ekspertise.
- *     Spesialisttimer er den knappeste ressursen i et verksted; de skal ikke
- *     brukes på jobber en selvstendig mekaniker kan ta.
- *     (Målt på NIVÅ, ikke på antall ferdigheter. Fem ferdigheter på nivå 1 er
- *      en generalist, ikke en spesialist — den gamle tellingen tok feil.)
- *
- * Matcheren VELGER IKKE. Den rangerer. Valget og slot-låsen tilhører
+ * Harde krav (diskvalifiserer)
+ * 1. mekanikeren er aktiv
+ * 2. har alle ferdighetene tjenesteversjonen krever
+ * 3. har gyldig sertifisering der ferdigheten krever det
+ * (utløpt sertifisering = ikke kvalifisert. En dato som ikke sjekkes, er
+ * ikke en sertifisering — det er en påstand.)
+ * 4. har ledig kapasitet i hele tidsvinduet
+ * Prioritering (rangerer de som er igjen)
+ * • lavest belastning vinner — vi sprer jobbene, vi stabler dem ikke
+ * • spesialist-vern: ved likhet vinner den med lavest samlet ekspertise.
+ * Spesialisttimer er den knappeste ressursen i et verksted; de skal ikke
+ * brukes på jobber en selvstendig mekaniker kan ta.
+ * (Målt på nivÅ, ikke på antall ferdigheter. Fem ferdigheter på nivå 1 er
+ * en generalist, ikke en spesialist — den gamle tellingen tok feil.)
+ * Matcheren velger ikke. Den rangerer. Valget og slot-låsen tilhører
  * booking-motoren (F3-01) — ellers ville to steder kunne dobbeltbooke.
  */
 export function createRuleMatcher(db: Database): MechanicMatcher {
@@ -42,7 +38,7 @@ export function createRuleMatcher(db: Database): MechanicMatcher {
 
         const mechanicIds = mechanics.map((m) => m.id);
 
-        // Kompetanse + katalogen i én spørring: vi må vite BÅDE nivået og om
+        // Kompetanse + katalogen i én spørring: vi må vite både nivået og om
         // ferdigheten i det hele tatt krever sertifisering.
         const competence = await tx
           .select({
@@ -94,7 +90,7 @@ export function createRuleMatcher(db: Database): MechanicMatcher {
           const skillMap = new Map(skills.map((s) => [s.skillKey, s]));
           const reasons: string[] = [];
 
-          // KRAV 2 + 3: alle ferdigheter, med gyldig sertifisering der det kreves.
+          // Krav 2 + 3: alle ferdigheter, med gyldig sertifisering der det kreves.
           let qualified = true;
           for (const required of request.requiredSkills) {
             const held = skillMap.get(required);
@@ -114,7 +110,7 @@ export function createRuleMatcher(db: Database): MechanicMatcher {
           }
           if (!qualified) continue;
 
-          // KRAV 4: ledig kapasitet.
+          // Krav 4: ledig kapasitet.
           const load = loadByMechanic.get(mechanic.id) ?? 0;
           if (load >= mechanic.capacity) continue;
 
@@ -126,13 +122,13 @@ export function createRuleMatcher(db: Database): MechanicMatcher {
             reasons.push('Tjenesten krever ingen spesielle ferdigheter');
           }
 
-          // PRIORITERING 1: ledig kapasitet (0–1).
+          // Prioritering 1: ledig kapasitet (0–1).
           const capacityScore = 1 - load / mechanic.capacity;
           reasons.push(
             load === 0 ? 'Helt ledig i tidsrommet' : `${load} av ${mechanic.capacity} opptatt`,
           );
 
-          // PRIORITERING 2: spesialist-vern, målt på samlet ekspertise.
+          // Prioritering 2: spesialist-vern, målt på samlet ekspertise.
           const totalExpertise = skills.reduce((sum, s) => sum + s.level, 0);
           const specialistPenalty = Math.min(totalExpertise, 30) * 0.01;
           if (totalExpertise > 0) {

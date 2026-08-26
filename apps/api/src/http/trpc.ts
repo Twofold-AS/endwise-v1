@@ -5,10 +5,9 @@ import { createRequestContext } from '../context.ts';
 import { appRouter } from '../trpc/router.ts';
 
 /**
- * F13-03 — tRPC som Web Request/Response, uten Hono.
- *
+ * Trpc som Web Request/Response, uten Hono.
  * Samme `fetchRequestHandler` som Hono-skallet brukte. Next.js route handlers
- * og den lokale `serve()`-prosessen kaller begge denne, så Vercel trenger
+ * og den lokale `serve`-prosessen kaller begge denne, så Vercel trenger
  * ikke `API_INTERNAL_URL` mot localhost.
  */
 export function handleTrpc(req: Request): Promise<Response> {
@@ -17,11 +16,11 @@ export function handleTrpc(req: Request): Promise<Response> {
     req,
     router: appRouter,
     /**
-     * ⛔ F1-11 — `TwoFactorRequiredError` oversettes til en EGEN feilkode, ikke
+     * `TwoFactorRequiredError` oversettes til en egen feilkode, ikke
      * til 401. Forskjellen betyr noe for brukeren: 401 sender hen til
      * innloggingsskjermen hen nettopp kom fra (og der virker passordet, så
      * løkka går rundt), mens `TWO_FACTOR_REQUIRED` forteller klienten at det er
-     * OPPSETT som mangler. Uten dette skillet ville tvungen enrollment blitt en
+     * Oppsett som mangler. Uten dette skillet ville tvungen enrollment blitt en
      * uendelig innloggingsløkke uten forklaring.
      */
     createContext: async () => {

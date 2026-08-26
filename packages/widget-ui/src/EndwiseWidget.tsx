@@ -9,9 +9,8 @@ import {
 import { WIDGET_FALLBACK as fb } from './widget-fallbacks.ts';
 
 /**
- * F4-03 — Embeddbar kundewidget: art. 50-merking + AI-chat + booking-flyt.
- *
- * [ART50-UI] Opplysningen om at man snakker med en AI står ØVERST, FØR samtalen,
+ * Embeddbar kundewidget: art. 50-merking + AI-chat + booking-flyt.
+ * [ART50-UI] Opplysningen om at man snakker med en AI står Øverst, før samtalen,
  * og kan ikke skrus av — det er lovtekst (AI Act art. 50), ikke pynt. Serveren
  * sender i tillegg opplysningen i hvert chat-svar (belte og bukseseler).
  */
@@ -71,7 +70,7 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
 
   return (
     <div style={box}>
-      {/* [ART50-UI] Art. 50-opplysning — ØVERST, alltid, kan ikke fjernes. */}
+      {/* [ART50-UI] Art. 50-opplysning — Øverst, alltid, kan ikke fjernes. */}
       <div
         data-art50="disclosure"
         role="note"

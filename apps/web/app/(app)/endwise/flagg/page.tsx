@@ -18,17 +18,15 @@ import { CardShell } from '../../_shell/cards';
 import { KjopteModulerTabell } from '../_kjopte-moduler';
 
 /**
- * F0-04 — FEATURE-FLAGS i Endwise-admin.
- *
- * ── To brytere som ofte forveksles ────────────────────────────────────────
- * Denne siden er RELEASE-TOGGLES: har VI rullet ut en funksjon, globalt eller
- * per forhandler. Det er IKKE entitlements. Hva forhandleren har KJØPT bor i
+ * Feature-flags i Endwise-admin.
+ * To brytere som ofte forveksles
+ * Denne siden er release-toggles: har vi rullet ut en funksjon, globalt eller
+ * per forhandler. Det er ikke entitlements. Hva forhandleren har kjøpt bor i
  * `tenant_modules`. Stripe-webhooken (F5-32) skriver ved kjøp; Endwise-admin
  * kan tildele tillegg ved onboarding og her under. `moduleProcedure` håndhever.
  * En bryter her åpner ikke en ubetalt modul.
- *
  * Sperren er `endwiseAdminProcedure` på listPlatform/setGlobal/setTenantOverride
- * — at siden ligger under /endwise er kosmetikk.
+ * at siden ligger under /endwise er kosmetikk.
  */
 
 type Plattform = RouterOutput['flags']['listPlatform'];

@@ -10,14 +10,12 @@ import { STATUS_LABEL, STATUS_TONE } from '../../bookinger/_status';
 import { dato, EuFrist, Feil, kroner, Laster, Seksjon, TYPE_LABEL } from '../../kunder/_delt';
 
 /**
- * F5-03 — KJØRETØYKORTET: data, eier og servicehistorikk.
- *
- * ⚠️ **Feltene fra Vegvesenet er speilet, ikke vår sannhet.** Merke, modell,
+ * Kjøretøykortet: data, eier og servicehistorikk.
+ * Feltene fra Vegvesenet er speilet, ikke vår sannhet. Merke, modell,
  * årsmodell, understellsnummer og EU-frist kommer fra Autosys (F2-08) og
  * skrives av oppslaget — ikke for hånd. Derfor står «sist oppdatert» synlig:
  * et speil uten dato er en påstand uten alder.
- *
- * Båt og ATV finnes ofte ikke i Autosys i det hele tatt. Da er feltene tomme,
+ * Båt og atv finnes ofte ikke i Autosys i det hele tatt. Da er feltene tomme,
  * og det er riktig — ikke en feil å skjule.
  */
 export default function KjoretoykortPage() {
@@ -58,7 +56,7 @@ export default function KjoretoykortPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[900px] flex-col gap-5 px-8 py-7">
-      {/* ── Hva ──────────────────────────────────────────────────────── */}
+      {/* Hva */}
       <div className="flex items-start gap-4">
         <span className="grid size-12 shrink-0 place-items-center rounded-control bg-surface-2 text-fg-muted">
           <Car size={22} strokeWidth={1.75} />
@@ -72,8 +70,10 @@ export default function KjoretoykortPage() {
           </p>
         </div>
 
-        {/* Vegvesen-oppslag er en BETALT tjeneste per kall (modul `vegvesen`).
-            Knappen er derfor eksplisitt, aldri automatisk ved sidelast. */}
+        {/*
+         * Vegvesen-oppslag er en betalt tjeneste per kall (modul `vegvesen`).
+         * Knappen er derfor eksplisitt, aldri automatisk ved sidelast.
+         */}
         {v.regNumber && (
           <StatefulButton
             disabled={oppdater.isPending}
@@ -104,7 +104,7 @@ export default function KjoretoykortPage() {
         </CardShell>
       )}
 
-      {/* ── Fakta ────────────────────────────────────────────────────── */}
+      {/* Fakta */}
       <Seksjon tittel="Om kjøretøyet">
         <CardShell className="p-5">
           <dl className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-3 text-[13px] sm:grid-cols-[auto_1fr_auto_1fr]">
@@ -130,8 +130,10 @@ export default function KjoretoykortPage() {
             )}
           </p>
 
-          {/* ⚠️ Garanti finnes ikke i datamodellen. Å tegne et tomt «Garanti»-felt
-              ville antydet at vi vet noe vi ikke vet. */}
+          {/*
+           * Garanti finnes ikke i datamodellen. Å tegne et tomt «Garanti»-felt
+           * ville antydet at vi vet noe vi ikke vet.
+           */}
           <p className="mt-2 text-[11px] text-fg-muted">
             Garantiinformasjon finnes ikke i registeret ennå — det er ikke et felt vi henter fra
             Autosys, og det er ikke lagt inn manuelt.
@@ -139,7 +141,7 @@ export default function KjoretoykortPage() {
         </CardShell>
       </Seksjon>
 
-      {/* ── Eier ─────────────────────────────────────────────────────── */}
+      {/* Eier */}
       <Seksjon tittel="Eier">
         {v.eier ? (
           <Link href={`/kunder/${v.eier.id}` as Route} className="group block">
@@ -166,7 +168,7 @@ export default function KjoretoykortPage() {
         )}
       </Seksjon>
 
-      {/* ── Servicehistorikk ─────────────────────────────────────────── */}
+      {/* Servicehistorikk */}
       <Seksjon tittel="Servicehistorikk" antall={v.saker.length}>
         {v.saker.length === 0 ? (
           <CardShell className="p-6 text-center">

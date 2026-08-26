@@ -1,18 +1,15 @@
 /*
- * 0022 — slett_forhandler: eier-SELECT under FORCE RLS.
- *
+ * 0022 — slett_forhandler: eier-SELECT under force RLS.
  * Rotårsak: `NOT pg_has_role(current_user, 'authenticated', 'member')` er
- * FALSE for Scaleway-eieren `endwise`. Den som CREATE ROLE authenticated er
- * ADMIN av rollen, så DEFINER-SELECT på tenants.slug returnerer 0 rader
+ * FALSE for Scaleway-eieren `endwise`. Den som CREATE role authenticated er
+ * Admin av rollen, så DEFINER-SELECT på tenants.slug returnerer 0 rader
  * («finnes ikke» / «Fant ikke forhandleren»).
- *
- * PERMISSIVE OR er ikke et hull. Ny SELECT-policy er bundet til
+ * Permissive OR er ikke et hull. Ny SELECT-policy er bundet til
  * app.slett_tenant_id. App-rollen (authenticated / endwise_app) matcher ikke.
- *
- * Idempotent: DROP IF EXISTS / CREATE. 0021 røres ikke.
+ * Idempotent: DROP IF exists / CREATE. 0021 røres ikke.
  * Etter merge: `pnpm db:setup` (migrate + grants).
  */
-drop policy if exists tenants_platform_admin_read_owner on tenants;--> statement-breakpoint
+drop policy if exists tenants_platform_admin_read_owner on tenants;-- > statement-breakpoint
 create policy tenants_platform_admin_read_owner on tenants
   as permissive
   for select
@@ -21,9 +18,9 @@ create policy tenants_platform_admin_read_owner on tenants
     current_setting('app.platform_admin', true) = 'on'
     and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
-drop policy if exists tenants_slett_forhandler_select on tenants;--> statement-breakpoint
+drop policy if exists tenants_slett_forhandler_select on tenants;-- > statement-breakpoint
 create policy tenants_slett_forhandler_select on tenants
   as permissive
   for select
@@ -33,9 +30,9 @@ create policy tenants_slett_forhandler_select on tenants
     and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
-drop policy if exists tenants_slett_forhandler on tenants;--> statement-breakpoint
+drop policy if exists tenants_slett_forhandler on tenants;-- > statement-breakpoint
 create policy tenants_slett_forhandler on tenants
   as permissive
   for delete
@@ -45,9 +42,9 @@ create policy tenants_slett_forhandler on tenants
     and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
-drop policy if exists audit_log_slett_update on audit_log;--> statement-breakpoint
+drop policy if exists audit_log_slett_update on audit_log;-- > statement-breakpoint
 create policy audit_log_slett_update on audit_log
   as permissive
   for update
@@ -66,9 +63,9 @@ create policy audit_log_slett_update on audit_log
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
       or tenant_id = (select id from tenants where slug = 'endwise')
     )
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
-drop policy if exists audit_log_slett_insert on audit_log;--> statement-breakpoint
+drop policy if exists audit_log_slett_insert on audit_log;-- > statement-breakpoint
 create policy audit_log_slett_insert on audit_log
   as permissive
   for insert
@@ -78,9 +75,9 @@ create policy audit_log_slett_insert on audit_log
     and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
-drop policy if exists erasure_requests_slett_forhandler on erasure_requests;--> statement-breakpoint
+drop policy if exists erasure_requests_slett_forhandler on erasure_requests;-- > statement-breakpoint
 create policy erasure_requests_slett_forhandler on erasure_requests
   as permissive
   for update
@@ -99,7 +96,7 @@ create policy erasure_requests_slett_forhandler on erasure_requests
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
       or tenant_id = (select id from tenants where slug = 'endwise')
     )
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
 do $$
 declare r record;

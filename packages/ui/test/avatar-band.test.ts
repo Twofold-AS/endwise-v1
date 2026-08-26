@@ -2,25 +2,22 @@ import { _layout, blobatar } from 'blobatar';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F6-19 — BÅNDKARTET I `avatar.tsx` MOT BIBLIOTEKET SELV.
- *
- * ⚠️ **Dette er den eneste delen av avatarkoden som kan være stille feil.**
+ * Båndkartet I `avatar.tsx` mot biblioteket selv.
+ * Dette er den eneste delen av avatarkoden som kan være stille feil.
  * `FORM_BAND` er ti tall jeg leste ut av blobatars vektede `BANDS`-liste og
  * regnet midtpunktet av for hånd. Er ett av dem på feil side av en grense, får
  * brukeren en annen form enn knappen viste — og ingenting kaster, ingenting
  * logger, typecheck er grønn. Det ser bare litt rart ut for én person.
- *
- * `_layout()` rapporterer hvilken form biblioteket faktisk valgte. Den er
+ * `_layout` rapporterer hvilken form biblioteket faktisk valgte. Den er
  * understreket fordi formen på returverdien ikke er offentlig API, men
  * `shape`-navnet er nettopp det denne testen trenger — og at den er privat er
  * en grunn til å teste mot den her, ikke i produksjonskoden.
- *
- * ⛔ Testen er også versjonsvakten: blobatar fryser seed→utseende per major, så
+ * Testen er også versjonsvakten: blobatar fryser seed→utseende per major, så
  * en dag noen bumper til 3.x flytter båndene seg, og da skal dette bli rødt før
  * noen oppdager det i innboksen.
  */
 
-/** ⚠️ Må holdes IDENTISK med `FORM_BAND` i `src/components/avatar.tsx`. */
+/** Må holdes identisk med `FORM_BAND` i `src/components/avatar.tsx`. */
 const FORM_BAND: Record<string, number> = {
   round: 0.11,
   organic: 0.35,
@@ -34,7 +31,7 @@ const FORM_BAND: Record<string, number> = {
   triangle: 0.99,
 };
 
-/** ⚠️ Må holdes identisk med `TONE_BAND` i samme fil. */
+/** Må holdes identisk med `TONE_BAND` i samme fil. */
 const TONE_BAND = [0.1, 0.28, 0.49, 0.71, 0.865, 0.965];
 
 /** Tre vilkårlige, men faste seeds. Bandet skal treffe uansett hvem det gjelder. */

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { isQuickPullHour, osloHour } from '../src/lib/oslo-time.ts';
 
 /**
- * F8-01 — DST-guard for den planlagte Quick-pullen. Beviser at Vercel Cron
- * (UTC-only) treffer 08:00 og 16:00 Oslo NØYAKTIG to ganger, både vinter (CET,
- * UTC+1) og sommer (CEST, UTC+2). Vercel trigger på UTC-timene 6,7,14,15; kun de
+ * Dst-guard for den planlagte Quick-pullen. Beviser at Vercel Cron
+ * (UTC-only) treffer 08:00 og 16:00 Oslo nøyaktig to ganger, både vinter (cet,
+ * UTC+1) og sommer (cest, UTC+2). Vercel trigger på UTC-timene 6,7,14,15; kun de
  * som mapper til Oslo 08/16 skal kjøre.
  */
 const utc = (month: number, hourUTC: number) => new Date(Date.UTC(2026, month, 15, hourUTC, 0, 0));

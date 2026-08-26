@@ -8,12 +8,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * F5-11 — Endwise-admin skal se dealer↔Endwise-tråder på tvers av tenants.
- *
+ * Endwise-admin skal se dealerEndwise-tråder på tvers av tenants.
  * `listThreads` er tenant-skopet og skal forbli det. Den nye ruta er
- * `endwiseAdminProcedure` + `withPlatformAdmin`, og RLS åpner KUN
+ * `endwiseAdminProcedure` + `withPlatformAdmin`, og RLS åpner kun
  * `thread_kind = dealer_admin`. customer_dealer og mechanic_dealer er
- * usynlige. dealer_admin/dealer_staff får FORBIDDEN.
+ * usynlige. dealer_admin/dealer_staff får forbidden.
  */
 async function forventer(
   kall: Promise<unknown>,

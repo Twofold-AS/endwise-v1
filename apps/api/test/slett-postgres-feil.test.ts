@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { lesPostgresCause, mapSlettPostgresFeil } from '../src/trpc/slett-postgres.ts';
 
 /**
- * F5-26 — Drizzle sluker Postgres-årsaken. Disse testene er rene (ingen DB)
+ * Drizzle sluker Postgres-årsaken. Disse testene er rene (ingen DB)
  * og ville ha gjort 500-en på endwise.no lesbar: `cause.message` i stedet for
  * bare «Failed query: select slett_forhandler($1::uuid)».
  */

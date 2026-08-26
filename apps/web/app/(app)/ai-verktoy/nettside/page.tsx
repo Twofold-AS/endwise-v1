@@ -7,31 +7,27 @@ import { AgentChat } from '../../_chat/agent-chat';
 import { CardShell } from '../../_shell/cards';
 
 /**
- * AI-VERKTØY › NETTSIDE — flaten finnes, agenten gjør ikke.
- *
- * ── ⚠️ Hva som er ekte her, og hva som ikke er det ───────────────────────
- * **Ingenting under snakker med en modell.** Samtalen er skrevet i koden rett
- * nedenfor og spilles av lokalt gjennom `createChat()` fra
+ * Ai-verktøy › nettside — flaten finnes, agenten gjør ikke.
+ * Hva som er ekte her, og hva som ikke er det
+ * Ingenting under snakker med en modell. Samtalen er skrevet i koden rett
+ * nedenfor og spilles av lokalt gjennom `createChat` fra
  * `@shadcn/helpers/ai-sdk`. Ingen nettverkskall, ingen lagring, ingen
  * handlinger utført.
- *
- * ── Hvorfor da bygge den ─────────────────────────────────────────────────
- * Framer-agenten (F8-09) er PLANLAGT, ikke bygget — den venter på Framers
+ * Hvorfor da bygge den
+ * Framer-agenten (F8-09) er planlagt, ikke bygget — den venter på Framers
  * Server API og en Scaleway-container (F13-04). Fram til da er valget mellom en
  * tom side og en ramme som viser hva flaten skal bli. Vi har valgt rammen, med
  * ett hardt krav: **den skal ikke kunne forveksles med noe som virker.**
  * Derfor `demo`-flagget på `AgentChat`, som tegner en advarsel over samtalen,
  * og derfor gjentar teksten under det samme.
- *
- * ⛔ Den forhåndsskrevne samtalen viser med vilje **godkjenn-steget** før
+ * Den forhåndsskrevne samtalen viser med vilje **godkjenn-steget** før
  * publisering. Det er ikke pynt: det er mønsteret vi har forpliktet oss til i
  * F8-09, og det skal være synlig fra første skisse, ikke lagt til på slutten.
- *
- * ⚠️ Når agenten faktisk bygges: bytt `transport`/`startMeldinger` mot
+ * Når agenten faktisk bygges: bytt `transport`/`startMeldinger` mot
  * `agent="framer-nettside"` og fjern `demo`. Resten av flaten står.
  */
 export default function AiNettsidePage() {
-  // `useMemo` fordi `createChat()` bygger en transport med intern tilstand.
+  // `useMemo` fordi `createChat` bygger en transport med intern tilstand.
   // Ny instans på hver render ville nullstilt samtalen ved hvert tastetrykk.
   const demo = useMemo(
     () =>

@@ -15,22 +15,19 @@ import { getStripe, stripeConfigured } from '../../lib/stripe.ts';
 import { adminProcedure, protectedProcedure, router } from '../init.ts';
 
 /**
- * F5-09 — Forhandler-selvbetjent abonnement + integrasjoner.
- *
+ * Forhandler-selvbetjent abonnement + integrasjoner.
  * Sikkerhet: skriveflatene er `adminProcedure` (kun dealer_admin/endwise_admin),
- * og ALT går via `createBillingService` → `withTenant` → RLS. Forhandler A kan
+ * og alt går via `createBillingService` → `withTenant` → RLS. Forhandler A kan
  * dermed verken lese eller endre forhandler B — verken via rolle eller RLS.
- *
- * Vi utfører ALDRI betalinger på vegne av noen: `checkout` returnerer en URL som
+ * Vi utfører aldri betalinger på vegne av noen: `checkout` returnerer en URL som
  * forhandleren selv fullfører hos Stripe. Uten Stripe-nøkler kjører flaten i
- * mock-modus (checkout/portal utilgjengelig; plan→entitlements testbar via
+ * modus (checkout/portal utilgjengelig; plan→entitlements testbar via
  * `applyPlanMock` i ikke-produksjon).
  */
 export const billingRouter = router({
   /**
    * Priskatalogen til UI-et: tre nivåer + valgfrie tillegg.
-   *
-   * `kjopbar` er utledet av BÅDE status og om price-IDen finnes i miljøet — et
+   * `kjopbar` er utledet av både status og om price-IDen finnes i miljøet — et
    * tillegg uten pris i Stripe kan ikke kjøpes uansett hvor klar funksjonen er,
    * og en knapp som garantert feiler er verre enn en låst knapp.
    */
@@ -68,14 +65,12 @@ export const billingRouter = router({
   ),
 
   /**
-   * F5-19 — KATALOGEN, delt i tredjeparts-integrasjoner og Endwise-egne
+   * Katalogen, delt i tredjeparts-integrasjoner og Endwise-egne
    * tjenester, slått mot hva forhandleren faktisk har.
-   *
-   * ⛔ **Ren lesning.** Ruta aktiverer ingenting og har ingen av/på. Det er med
+   * Ren lesning. Ruta aktiverer ingenting og har ingen av/på. Det er med
    * vilje: entitlements skrives kun av den signaturverifiserte Stripe-webhooken
    * (F5-09). En bryter her ville antydet at man kan skru på noe man ikke har
    * betalt for — og ville uansett blitt avvist av `NotEntitledError`.
-   *
    * `har` = raden finnes i `tenant_modules`. `aktiv` = den er skrudd på. En
    * nedgradert modul står som `har: true, aktiv: false` fordi vi deaktiverer
    * framfor å slette — historikken skal ikke forsvinne fordi noen byttet plan.
@@ -137,13 +132,11 @@ export const billingRouter = router({
 
   /**
    * Start checkout for et nivå + valgfrie tillegg.
-   *
-   * ⛔ **Vi utfører aldri et trekk.** Ruta returnerer en URL forhandleren selv
+   * Vi utfører aldri et trekk. Ruta returnerer en URL forhandleren selv
    * fullfører hos Stripe, og entitlements flippes først av den
    * signaturverifiserte webhooken.
-   *
-   * ⚠️ Tilleggene filtreres SERVER-SIDE mot `kjopbareTillegg()`. At UI-et viser
-   * 🕓-tillegg som låst er kosmetikk; her er sperren. Å selge «Nettbutikk» før
+   * Tilleggene filtreres server-side mot `kjopbareTillegg`. At UI-et viser
+   * tillegg som låst er kosmetikk; her er sperren. Å selge «Nettbutikk» før
    * Medusa-beslutningen er tatt, ville vært å ta betalt for noe vi ikke kan
    * levere.
    */
@@ -254,7 +247,6 @@ export const billingRouter = router({
    * Simuler at webhooken har provisjonert. **Kun i dev** — sjekken er en
    * eksplisitt `FORBIDDEN` i produksjon, ikke en antakelse om at ruta ikke
    * finnes der.
-   *
    * Den finnes fordi Stripe-webhooken krever en offentlig URL (stripe CLI eller
    * tunnel); uten den kunne ikke onboarding-flyten testes lokalt i det hele tatt.
    */

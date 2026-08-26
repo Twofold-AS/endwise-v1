@@ -2,28 +2,24 @@ import { countSessions, createDb, purgeExpiredSessions } from '@endwise/db';
 import { FatalError, RetryableError } from 'workflow';
 
 /**
- * F0-13 — Vercel Workflows (durable functions) + Vercel Cron.
+ * Vercel Workflows (durable functions) + Vercel Cron.
  * ADR-003 avgjort: ingen BullMQ, ingen QStash, ingen Trigger.dev, ingen Redis.
- *
- * Mønsteret som gjelder for ALLE jobber:
- *   "use workflow" = orkestrering (durable, resumable)
- *   "use step"     = én retry-bar enhet med full Node-tilgang
- *   RetryableError = forbigående feil  -> retry
- *   FatalError     = permanent feil    -> til DLQ-steget, ingen retry
+ * Mønsteret som gjelder for alle jobber:
+ * "use workflow" = orkestrering (durable, resumable)
+ * "use step" = én retry-bar enhet med full Node-tilgang
+ * RetryableError = forbigående feil -> retry
+ * FatalError = permanent feil -> til dlq-steget, ingen retry
  */
 
 /**
- * F1-11/F1-12 — sletter DØDE sesjonsrader.
- *
- * ⚠️ Dette er hygiene, ikke en sikkerhetsmekanisme. En utløpt rad gir ingen
+ * F1-11/F1-12 — sletter døde sesjonsrader.
+ * Dette er hygiene, ikke en sikkerhetsmekanisme. En utløpt rad gir ingen
  * tilgang — `requireSession` avviser den lenge før den slettes her. Uten jobben
  * hoper de seg bare opp: dev-basen hadde 85 rader der samtlige var utløpt.
- *
- * ⛔ Sletter KUN rader som allerede er døde (passert idle-vindu eller absolutt
+ * Sletter kun rader som allerede er døde (passert idle-vindu eller absolutt
  * maks-levetid). Den rører aldri en levende sesjon — en «opprydding» som
  * logger ut folk midt i arbeidsdagen er et driftsavbrudd, ikke vedlikehold.
- *
- * ⚠️ `olderThanDays` gjelder IKKE her, med vilje: en sesjon som utløp for ti
+ * `olderThanDays` gjelder ikke her, med vilje: en sesjon som utløp for ti
  * minutter siden er like død som en fra i fjor, og å beholde den i 30 dager
  * ville bare vært å ta vare på IP-adresser og user-agents lenger enn nødvendig
  * (F14-03, dataminimering). Parameteren styrer de andre oppryddingene.
@@ -55,7 +51,7 @@ async function purgeExpiredRows(olderThanDays: number): Promise<number> {
 
 async function deadLetter(job: string, reason: string): Promise<void> {
   'use step';
-  // DLQ-mønsteret: permanent feil parkeres og varsles, den kastes ikke bort.
+  // Dlq-mønsteret: permanent feil parkeres og varsles, den kastes ikke bort.
   console.error(`[dlq] ${job}: ${reason}`);
 }
 

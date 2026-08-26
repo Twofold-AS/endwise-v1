@@ -1,8 +1,7 @@
 import { handleAuth } from '@endwise/api/http/auth';
 
 /**
- * F13-03 — Better-Auth same-origin.
- *
+ * Better-Auth same-origin.
  * `handler(request)` leser `Cookie` og setter `Set-Cookie` på svaret
  * (`endwise.session_token`, prefix fra `cookiePrefix: 'endwise'`). Fordi
  * ruta lever på `apps/web` sitt origin, er cookien førsteparts. Klienten

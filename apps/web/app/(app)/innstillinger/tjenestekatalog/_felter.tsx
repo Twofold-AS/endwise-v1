@@ -7,15 +7,13 @@ import { trpc } from '@/lib/trpc';
 import { visVarighet } from './_felles';
 
 /**
- * F2-05 / F5-04 — FELTSETTET som er felles for «ny tjeneste» og «ny versjon».
- *
- * ⛔ **Én definisjon, to kallsteder — med vilje.** `create` og `update` tar
- * nøyaktig de samme fire versjonsfeltene, fordi begge skriver en RAD i
+ * F2-05 / F5-04 — feltsettet som er felles for «ny tjeneste» og «ny versjon».
+ * Én definisjon, to kallsteder — med vilje. `create` og `update` tar
+ * nøyaktig de samme fire versjonsfeltene, fordi begge skriver en rad i
  * `service_versions`. Hadde skjemaene vært skrevet hver for seg, ville de før
  * eller siden fått ulik validering, og da ville «rediger» kunnet lagre noe
  * «opprett» aldri ville godtatt.
- *
- * Navn og kjøretøytype er IKKE her: de bor på `services` og er tjenestens
+ * Navn og kjøretøytype er ikke her: de bor på `services` og er tjenestens
  * identitet. De settes én gang og versjoneres ikke — endrer du dem, er det en
  * annen tjeneste.
  */
@@ -44,8 +42,7 @@ export function TjenesteFelter({
   onEndre: (neste: Versjonsfelter) => void;
 }) {
   /**
-   * ⛔ Ferdigheter velges fra REGISTERET, aldri som fritekst.
-   *
+   * Ferdigheter velges fra registeret, aldri som fritekst.
    * `service_versions.skills` peker på `skills.key` (F3-12), og det er den
    * koblingen MechanicMatcher (F3-02) bruker for å finne en mekaniker som kan
    * jobben. En skrivefeil her ville ikke gitt noen feilmelding — den ville gitt
@@ -98,7 +95,7 @@ export function TjenesteFelter({
             placeholder="1450"
             className={INPUT}
           />
-          {/* ⚠️ Tomt felt er en gyldig og meningsbærende tilstand — ikke gratis. */}
+          {/* Tomt felt er en gyldig og meningsbærende tilstand — ikke gratis. */}
           <span className="text-[12px] text-fg-muted">
             La feltet stå tomt for «pris på forespørsel».
           </span>
@@ -148,9 +145,11 @@ export function TjenesteFelter({
         )}
 
         {ukjente.length > 0 && (
-          /* En nøkkel som er fjernet fra registeret etter at versjonen ble
-             skrevet. Den skjules ikke: da ville den forsvunnet stille ved neste
-             lagring, og matchingen endret seg uten at noen valgte det. */
+          /*
+           * En nøkkel som er fjernet fra registeret etter at versjonen ble
+           * skrevet. Den skjules ikke: da ville den forsvunnet stille ved neste
+           * lagring, og matchingen endret seg uten at noen valgte det.
+           */
           <p className="flex items-start gap-2 text-[12px] text-warn">
             <TriangleAlert size={14} strokeWidth={1.75} className="mt-0.5 shrink-0" />
             <span>

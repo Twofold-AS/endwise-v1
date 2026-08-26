@@ -11,23 +11,20 @@ export type BillingState = {
   planKey: string | null;
   status: string;
   currentPeriodEnd: Date | null;
-  /** Moduler tenanten HAR (nivå + tillegg), med av/på-tilstand. */
+  /** Moduler tenanten har (nivå + tillegg), med av/på-tilstand. */
   modules: { key: ModuleKey; enabled: boolean }[];
 };
 
 /**
- * F5-32 — **14 DAGERS NÅDE ved mislykket betaling.** Eiers beslutning 07.08.2026.
- *
- * Basis fortsetter ALLTID — Verkstedet, Saker, Kunder, Lager, Innboks, Helpdesk
- * og Settings har ingen gate og berøres ikke. Det er TILLEGGENE som fryses, og
+ * 14 dagers nåde ved mislykket betaling. Eiers beslutning.
+ * Basis fortsetter alltid — Verkstedet, Saker, Kunder, Lager, Innboks, Helpdesk
+ * og Settings har ingen gate og berøres ikke. Det er tilleggene som fryses, og
  * først etter 14 dager i `past_due`.
- *
  * Å stenge et verksted midt i arbeidsdagen fordi et kort utløp er dårlig
  * produkt; 14 dager rekker for et nytt kort, og er kort nok til at det ikke blir
  * gratis drift.
- *
- * ⚠️ **Parameteren er satt, jobben er ikke bygget.** Ingenting fryser noe i dag
- * — se `erUtenforNade()` og F5-32. Cron-steget kommer senere.
+ * Parameteren er satt, jobben er ikke bygget. Ingenting fryser noe i dag
+ * se `erUtenforNade` og F5-32. Cron-steget kommer senere.
  */
 export const PAST_DUE_NADE_DAGER = 14;
 
@@ -56,11 +53,10 @@ export class NotEntitledError extends Error {
 }
 
 /**
- * F5-09 — Billing-tjeneste (ren DB, RLS-skopet). Skriver tenant_modules
+ * Billing-tjeneste (ren DB, RLS-skopet). Skriver tenant_modules
  * (entitlements) + billing_customers. Ingen Stripe-SDK her; apps/api eier
  * Stripe-kallene og kaller disse funksjonene med utpakkede verdier.
- *
- * ALLE operasjoner kjører under `withTenant` → RLS garanterer at forhandler A
+ * Alle operasjoner kjører under `withTenant` → RLS garanterer at forhandler A
  * aldri rører forhandler B sine rader, uavhengig av hva som sendes inn.
  */
 export function createBillingService(db: Database) {
@@ -85,18 +81,15 @@ export function createBillingService(db: Database) {
     },
 
     /**
-     * Sett tenantens NIVÅ + TILLEGG → synk entitlements.
-     *
-     * ⚠️ **Kalles KUN fra den signaturverifiserte Stripe-webhooken.** Ingen
+     * Sett tenantens nivÅ + tillegg → synk entitlements.
+     * Kalles kun fra den signaturverifiserte Stripe-webhooken. Ingen
      * klient-sti når hit; entitlements er en konsekvens av en betaling, ikke av
      * et knappetrykk.
-     *
-     * ── Nedgradering: `enabled = false`, ikke DELETE (endret 07.08.2026) ──
+     * Nedgradering: `enabled = false`, ikke DELETE (endret )
      * Tidligere slettet denne rader for moduler utenfor planen. Det var feil på
      * to måter: (1) dataene modulen eier blir stående uansett, så sletting av
-     * entitlementet skjuler bare at forhandleren HAR hatt den, og (2) kommer de
+     * entitlementet skjuler bare at forhandleren har hatt den, og (2) kommer de
      * tilbake, mistet vi historikken om hva de en gang betalte for.
-     *
      * Nå deaktiveres raden i stedet. `moduleProcedure` leser `enabled = true`,
      * så virkningen er identisk — men den er reversibel og etterlater et spor.
      */
@@ -136,7 +129,7 @@ export function createBillingService(db: Database) {
             },
           });
 
-        // Aktiver alt abonnementet gir. `enabled: true` settes eksplisitt —
+        // Aktiver alt abonnementet gir. `enabled: true` settes eksplisitt
         // en tidligere nedgradert modul skal skrus PÅ igjen ved oppgradering.
         for (const key of wanted) {
           await tx
@@ -188,7 +181,7 @@ export function createBillingService(db: Database) {
     },
 
     /**
-     * Forhandler skrur en integrasjon av/på. KUN tillatt hvis tenanten er
+     * Forhandler skrur en integrasjon av/på. Kun tillatt hvis tenanten er
      * entitled (raden finnes i tenant_modules). Ellers NotEntitledError.
      */
     async setModuleEnabled(

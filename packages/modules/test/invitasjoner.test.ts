@@ -12,14 +12,13 @@ import {
 } from '../src/invitasjoner/index.ts';
 
 /**
- * F1-10 — **ANGREPSTESTER for invitasjonsflyten.**
- *
- * Hvert `⛔`-tilfelle er et forsøk på å komme inn med et token som ikke skal
- * virke. Består testene, betyr det at SERVEREN stoppet forsøket — ikke at
+ * angrepstester for invitasjonsflyten.
+ * Hvert ``-tilfelle er et forsøk på å komme inn med et token som ikke skal
+ * virke. Består testene, betyr det at serveren stoppet forsøket — ikke at
  * UI-et lot være å vise en knapp.
  */
 
-// ── Ting som ikke trenger database. Kjører alltid, også i CI uten Docker. ──
+// Ting som ikke trenger database. Kjører alltid, også i CI uten Docker.
 describe('F1-10: token og validering (uten database)', () => {
   it('⛔ tokenet lagres ALDRI i klartekst — hashen er noe annet enn tokenet', () => {
     const token = 'et-token-som-later-som-om-det-er-tilfeldig';
@@ -101,7 +100,7 @@ describeDb('F1-10: invitasjoner mot database', () => {
     expect(invitasjon.rolle).toBe('dealer_staff');
     expect(invitasjon.kind).toBe('staff');
 
-    // ⛔ Raden skal inneholde hashen, ikke tokenet.
+    // Raden skal inneholde hashen, ikke tokenet.
     const [rad] = await withTenant(db, tenantA, (tx) =>
       tx
         .select({ hash: schema.invitations.tokenHash })
@@ -125,7 +124,7 @@ describeDb('F1-10: invitasjoner mot database', () => {
   });
 
   /**
-   * ⛔ DATABASEN er siste skanse. Selv om noen skriver en ny rute som glemmer
+   * Databasen er siste skanse. Selv om noen skriver en ny rute som glemmer
    * modulens validering, skal en `dealer_admin`-invitasjon avvises.
    */
   it('⛔ CHECK-constraint avviser en rolle som ikke er dealer_staff på staff-sporet', async () => {
@@ -250,7 +249,7 @@ describeDb('F1-10: invitasjoner mot database', () => {
   });
 
   /**
-   * ⛔ ANGREPET SOM BETYR MEST: lederen i forhandler B prøver å tilbakekalle —
+   * Angrepet som betyr mest: lederen i forhandler B prøver å tilbakekalle
    * eller på annen måte røre — forhandler A sin invitasjon. Hen har en gyldig
    * sesjon og en gyldig rolle; det eneste som stopper hen er at tenant-IDen
    * kommer fra sesjonen og står i WHERE-en.

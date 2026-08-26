@@ -6,17 +6,15 @@ import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
 
 /**
- * F5-31 — Registrer en lagerbevegelse.
- *
- * ⚠️ **«Korriger» er admin-only, og det er ikke pynt.** Et uttak er sporbart
+ * Registrer en lagerbevegelse.
+ * «Korriger» er admin-only, og det er ikke pynt. Et uttak er sporbart
  * mot en jobb; en korreksjon er et tall noen bestemte. Derfor er den skjult for
  * `dealer_staff` her — og avvist server-side i `inventory.move` uansett, som er
  * den sperren som faktisk teller.
- *
- * ⛔ **Reservasjon er ikke det samme som uttak.** «Reserver» binder delen uten
+ * Reservasjon er ikke det samme som uttak. «Reserver» binder delen uten
  * å ta den av hylla; «Ut» tar den ut og innfrir reservasjonen. Det er nettopp
  * skillet som hindrer at butikken selger delen mekanikeren nettopp tok
- * (OWASP A08).
+ * (owasp A08).
  */
 const TYPER = [
   { key: 'in', label: 'Inn', hint: 'Varemottak — beholdningen øker' },
@@ -67,9 +65,11 @@ export function BevegelseDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Bakteppet er en ekte knapp, ikke et div med onClick: da får det
-          tastaturfokus og Escape/Enter gratis, og skjermlesere får en handling
-          de kan navngi. */}
+      {/*
+       * Bakteppet er en ekte knapp, ikke et div med onClick: da får det
+       * tastaturfokus og Escape/Enter gratis, og skjermlesere får en handling
+       * de kan navngi.
+       */}
       <button
         type="button"
         aria-label="Lukk"

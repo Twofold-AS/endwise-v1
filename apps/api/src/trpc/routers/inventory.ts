@@ -4,33 +4,28 @@ import { z } from 'zod';
 import { adminProcedure, protectedProcedure, router } from '../init.ts';
 
 /**
- * F2-09 — LAGER. Driftslageret. **KJERNE — ingen modul-gate.**
- *
+ * Lager. Driftslageret. **kjerne — ingen modul-gate.**
  * Lager er ikke et tillegg man kjøper: et verksted uten deloversikt er et
  * verksted uten drift. Derfor `protectedProcedure`/`adminProcedure` og ingen
  * entitlement-sjekk (jf. F0-16, som gjelder Butikk).
- *
- * ── Sikkerhetsvalgene i denne fila, og hvorfor ────────────────────────────
- *
- * **A03 (injection):** sortering kommer fra klienten. Den slås opp i en
- * ALLOWLIST og blir aldri satt inn i SQL som tekst. `sql.raw(input.sortBy)`
+ * Sikkerhetsvalgene i denne fila, og hvorfor
+ * A03 (injection): sortering kommer fra klienten. Den slås opp i en
+ * Allowlist og blir aldri satt inn i SQL som tekst. `sql.raw(input.sortBy)`
  * ville vært injection med ekstra steg — et kolonnenavn fra en klient er like
  * mye brukerinput som et søkeord.
- *
- * **CWE-639 (IDOR):** `sku` er gjettbar med vilje. Hvert oppslag har tenant i
+ * CWE-639 (idor): `sku` er gjettbar med vilje. Hvert oppslag har tenant i
  * WHERE i tillegg til RLS — belte og bukseseler, fordi den dagen noen kaller
  * en av disse funksjonene utenfor `withTenant` skal svaret være «ingenting»,
  * ikke «en annen forhandlers del».
- *
- * **RBAC:** uttak og innregistrering er `protectedProcedure` (dagens arbeid);
- * korreksjon og lokasjoner er `adminProcedure`. En ansatt skal kunne TA UT en
- * del uten å kunne JUSTERE beholdningen — et uttak er sporbart mot en jobb, en
+ * RBAC: uttak og innregistrering er `protectedProcedure` (dagens arbeid);
+ * korreksjon og lokasjoner er `adminProcedure`. En ansatt skal kunne ta ut en
+ * del uten å kunne justere beholdningen — et uttak er sporbart mot en jobb, en
  * justering er et tall noen bestemte.
  */
 
 /**
- * ⛔ A03 — Lovlige sorteringsfelt. Ikke en bekvemmelighet, en sperre.
- * Nøkkelen er det klienten sender; verdien er kolonnen VI velger.
+ * A03 — Lovlige sorteringsfelt. Ikke en bekvemmelighet, en sperre.
+ * Nøkkelen er det klienten sender; verdien er kolonnen vi velger.
  */
 const PART_SORT = {
   sku: schema.parts.sku,
@@ -43,11 +38,10 @@ const partSortSchema = z.enum(['sku', 'navn', 'kategori', 'opprettet']).default(
 const retningSchema = z.enum(['asc', 'desc']).default('asc');
 
 export const inventoryRouter = router({
-  /* ══ Deler ════════════════════════════════════════════════════════════ */
+  /* Deler */
 
   /**
    * Deleliste med søk, sortering og aggregert beholdning.
-   *
    * Beholdningen summeres over alle lokasjoner, og `tilgjengelig` er det tallet
    * som betyr noe i praksis: **onHand − reserved**. Å vise `onHand` alene ville
    * vært å love bort deler som allerede er lovet bort.
@@ -97,7 +91,7 @@ export const inventoryRouter = router({
             schema.stockLevels,
             and(
               eq(schema.stockLevels.partId, schema.parts.id),
-              // Tenant også i JOIN-en. RLS dekker det, men en join er nettopp
+              // Tenant også i join-en. RLS dekker det, men en join er nettopp
               // stedet der en glemt betingelse blir usynlig.
               eq(schema.stockLevels.tenantId, ctx.tenantId),
             ),
@@ -123,7 +117,7 @@ export const inventoryRouter = router({
       const [del] = await tx
         .select()
         .from(schema.parts)
-        // CWE-639: id OG tenant. Aldri id alene.
+        // CWE-639: id og tenant. Aldri id alene.
         .where(and(eq(schema.parts.id, input.id), eq(schema.parts.tenantId, ctx.tenantId)));
       if (!del) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke delen' });
 
@@ -176,7 +170,7 @@ export const inventoryRouter = router({
       }),
     ),
 
-  /* ══ Lokasjoner ═══════════════════════════════════════════════════════ */
+  /* Lokasjoner */
 
   listLocations: protectedProcedure.query(({ ctx }) =>
     withTenant(ctx.db, ctx.tenantId, (tx) =>
@@ -200,7 +194,7 @@ export const inventoryRouter = router({
       }),
     ),
 
-  /* ══ Bevegelser ═══════════════════════════════════════════════════════ */
+  /* Bevegelser */
 
   listMovements: protectedProcedure
     .input(
@@ -244,17 +238,14 @@ export const inventoryRouter = router({
 
   /**
    * Registrer en bevegelse og oppdater beholdningen — i ÉN transaksjon.
-   *
-   * ⚠️ **`actorUserId` tas fra sesjonen, aldri fra input.** Ellers kunne en
+   * `actorUserId` tas fra sesjonen, aldri fra input. Ellers kunne en
    * bruker skrevet historikk i en kollegas navn.
-   *
    * Regnestykket per type:
-   *   in      → onHand + n
-   *   out     → onHand − n, og reserved − n (uttaket innfrir reservasjonen)
-   *   adjust  → onHand settes TIL n (opptelling)
-   *   reserve → reserved + n   (onHand står — delen er der, men lovet bort)
-   *   release → reserved − n
-   *
+   * in → onHand + n
+   * out → onHand − n, og reserved − n (uttaket innfrir reservasjonen)
+   * adjust → onHand settes til n (opptelling)
+   * reserve → reserved + n (onHand står — delen er der, men lovet bort)
+   * release → reserved − n
    * `adjust` er `adminProcedure`-territorium, men ligger her fordi det er samme
    * skriving; rollesjekken står i mutasjonen under.
    */

@@ -17,9 +17,9 @@ export interface ConflictView {
 export class ConflictError extends Error {}
 
 /**
- * F8-01 — Konflikt-kø-tjeneste (tre-veis fletting). RLS-scopet: alt via
+ * Konflikt-kø-tjeneste (tre-veis fletting). RLS-scopet: alt via
  * `withTenant`. `list` viser åpne konflikter; `resolve` bruker valget og
- * oppdaterer både konflikten OG den underliggende raden + merge-baselinen.
+ * oppdaterer både konflikten og den underliggende raden + merge-baselinen.
  */
 export function createConflictService(db: Database) {
   return {
@@ -57,10 +57,10 @@ export function createConflictService(db: Database) {
 
     /**
      * Løs en konflikt.
-     *   - 'quick': ta Quicks verdi → oppdater raden + avanser baseline til Quick.
-     *   - 'local': behold vår verdi → avanser baseline til Quick (så SAMME Quick-
-     *      verdi ikke gjendetekteres), og REGISTRER push-intensjon (push er gated,
-     *      så ingen automatisk skriving til Quick — kun intensjon).
+     * 'quick': ta Quicks verdi → oppdater raden + avanser baseline til Quick.
+     * 'local': behold vår verdi → avanser baseline til Quick (så samme Quick-
+     * verdi ikke gjendetekteres), og registrer push-intensjon (push er gated,
+     * så ingen automatisk skriving til Quick — kun intensjon).
      * Begge markerer konflikten løst (hvem/hvordan/når).
      */
     async resolve(
@@ -90,13 +90,13 @@ export function createConflictService(db: Database) {
             .where(eq(schema.customers.id, conflict.entityId));
           if (row) {
             const newValue = input.resolution === 'quick' ? conflict.theirValue : conflict.ourValue;
-            // Avanser merge-baselinen for feltet til Quicks verdi i BEGGE tilfeller:
+            // Avanser merge-baselinen for feltet til Quicks verdi i begge tilfeller:
             // etter forsoning er Quick-verdien det nye felles utgangspunktet.
             const baseline = {
               ...(row.quickBaseline ?? {}),
               [conflict.field]: conflict.theirValue,
             };
-            // Eksplisitt per felt (unngår dynamisk nøkkel i drizzle .set()). name er notNull.
+            // Eksplisitt per felt (unngår dynamisk nøkkel i drizzle .set). name er notNull.
             const fieldSet =
               conflict.field === 'name'
                 ? { name: newValue ?? row.name }

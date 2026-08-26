@@ -5,13 +5,12 @@ import { adminProcedure, protectedProcedure, router } from '../init.ts';
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Må være YYYY-MM-DD');
 
 /**
- * F3-12 — Kompetanseregister. UI-en er F3-08.
- *
+ * Kompetanseregister. UI-en er F3-08.
  * Skriving: `adminProcedure` (kun dealer_admin i egen tenant, eller endwise_admin).
  * Lesing: `protectedProcedure` — staff må se hvem som kan hva for å booke manuelt.
  */
 export const competenceRouter = router({
-  // ── Ferdighetskatalogen ───────────────────────────────────────────────
+  // Ferdighetskatalogen
   listSkills: protectedProcedure.query(({ ctx }) =>
     createCompetenceRegistry(ctx.db).listSkills(ctx.tenantId),
   ),
@@ -34,7 +33,7 @@ export const competenceRouter = router({
       createCompetenceRegistry(ctx.db).upsertSkill(ctx.tenantId, ctx.role, input),
     ),
 
-  // ── Kompetanse per mekaniker ──────────────────────────────────────────
+  // Kompetanse per mekaniker
   listMechanicSkills: protectedProcedure
     .input(z.object({ mechanicId: z.uuid() }))
     .query(({ ctx, input }) =>

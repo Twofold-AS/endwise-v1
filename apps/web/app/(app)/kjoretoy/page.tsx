@@ -9,12 +9,10 @@ import { trpc } from '@/lib/trpc';
 import { EuFrist, Feil, Laster, Tomt, TYPE_LABEL } from '../kunder/_delt';
 
 /**
- * F5-03 — KJØRETØY. Liste med søk på **regnr og understellsnummer**.
- *
+ * Kjøretøy. Liste med søk på **regnr og understellsnummer**.
  * Det er de to tingene man har når kjøretøyet står foran deg og eieren ikke gjør
  * det. Søket treffer også merke og modell, fordi «den svarte Yamahaen» er et
  * like vanlig utgangspunkt.
- *
  * Eiernavnet står i lista med vilje: en ren regnr-liste er bare kodetall.
  */
 const TYPER = [
@@ -162,7 +160,7 @@ function KjoretoyInner() {
   );
 }
 
-/** ⚠️ Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?sok=). */
+/** Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?sok=). */
 export default function Page() {
   return (
     <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster kjøretøy …</div>}>

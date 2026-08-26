@@ -6,8 +6,7 @@ import type {
 import twilio from 'twilio';
 
 /**
- * F3-04 — SMS-kanalen. Twilio (techstack §5).
- *
+ * SMS-kanalen. Twilio (techstack §5).
  * Merk: dette er *transaksjonell SMS*, ikke Verify. Verify (OTP, F1-01) er en
  * annen tjeneste med en annen livssyklus — de skal ikke blandes.
  */

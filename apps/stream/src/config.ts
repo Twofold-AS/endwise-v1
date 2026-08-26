@@ -1,4 +1,4 @@
-/** F6-02 — Heartbeat hvert 15. sekund (techstack §2 Sanntid). */
+/** Heartbeat hvert 15. sekund (techstack §2 Sanntid). */
 export const HEARTBEAT_MS = 15_000;
 
 /**

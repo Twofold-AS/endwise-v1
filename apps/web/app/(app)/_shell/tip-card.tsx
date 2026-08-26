@@ -16,36 +16,31 @@ import {
 } from './helpdesk-slider';
 
 /**
- * F5-23 — NYTT FRA HELPDESKEN. Slideren nederst i sidebaren.
- *
- * ── ⛔ FAST HØYDE når den er UTVIDET ──────────────────────────────────────
- * Fram til 20.08.2026 var kortet et fritt `flex flex-col` med fire hardkodede
- * tips av ulik lengde. Hvert niende sekund byttet teksten, høyden endret seg —
- * og siden kortet ligger NEDERST i en kolonne, dyttet det alt over seg opp og
+ * Nytt fra helpdesken. Slideren nederst i sidebaren.
+ * Fast høyde når den er utvidet
+ * Fram til var kortet et fritt `flex flex-col` med fire hardkodede
+ * tips av ulik lengde. Hvert niende sekund byttet teksten, høyden endret seg
+ * og siden kortet ligger nederst i en kolonne, dyttet det alt over seg opp og
  * ned mens man jobbet. En slider som flytter på navigasjonen er verre enn
  * ingen slider.
- *
  * Utvidet er høyden låst i `HOYDE`, bildet har fast forhold, og teksten
  * klippes med `line-clamp`. Brukeren kan minimere (X) til en kompakt bar;
  * det er lov å krympe da. Karusellen skal bare ikke hoppe hvert 9. sekund.
- *
- * ── Drevet av data, ikke av en liste i denne fila ─────────────────────────
- * Innholdet er de fire NYESTE publiserte artiklene fra helpdesken. Skriver
+ * Drevet av data, ikke av en liste i denne fila
+ * Innholdet er de fire nyeste publiserte artiklene fra helpdesken. Skriver
  * Endwise-admin en ny artikkel, dukker den opp her uten at noen rører kode.
- *
- * ── Ny tvinger åpen ──────────────────────────────────────────────────────
+ * Ny tvinger åpen
  * Ulest artikkel ved lasting = full slider, også hvis localStorage sier
  * minimert. Brukeren kan likevel lukke. En ny ulest (ny id, eller ulest
  * none→some etter query-oppdatering) åpner igjen.
- *
- * ⚠️ Ingen 5-min `staleTime`. Sidebaren ligger på hver side, men nye
- * artikler skal treffe ved window-focus. PR #36 LiveSync har ingen
+ * Ingen 5-min `staleTime`. Sidebaren ligger på hver side, men nye
+ * artikler skal treffe ved window-focus. Pr #36 LiveSync har ingen
  * helpdesk-SSE (kun inbox/entitlements) — vi finner ikke opp en ny buss.
  */
 const INTERVAL_MS = 9000;
 
 /**
- * ⛔ Ett tall, ett sted. Bildet (72px) + teksten + prikkeraden må summere seg
+ * Ett tall, ett sted. Bildet (72px) + teksten + prikkeraden må summere seg
  * til dette, ellers hopper kortet likevel. Endrer du høyden, endre her.
  */
 const HOYDE = 208;
@@ -110,7 +105,7 @@ export function TipCard() {
   }, [rader.length, minimer]);
 
   /**
-   * ⛔ Tom liste sletter IKKE widgeten. #60 returnerte `null` når lista
+   * Tom liste sletter ikke widgeten. #60 returnerte `null` når lista
    * var tom (eller bare test-artikler), og da forsvant Hjelp helt.
    * Chrome skal stå: minimert bar merket Hjelp, med måte å utvide.
    */
@@ -189,8 +184,10 @@ export function TipCard() {
 
       <Link href={`/support/${a.slug}` as Route} className="group flex min-h-0 flex-1 flex-col">
         <div className="flex flex-col gap-1.5 px-3 pt-3 pr-8">
-          {/* ⚠️ «Ny»-tekstbadge når artikkelen er ulest for DEG — et merke
-              alle alltid ser, betyr ingenting. Telleren i navet er CountBadge. */}
+          {/*
+           * «Ny»-tekstbadge når artikkelen er ulest for deg — et merke
+           * alle alltid ser, betyr ingenting. Telleren i navet er CountBadge.
+           */}
           <span className="flex items-center gap-2">
             {a.ulest ? (
               <NewBadge />
@@ -199,9 +196,11 @@ export function TipCard() {
             )}
           </span>
 
-          {/* Overskrift med linje under teksten, og pil som sier at den kan
-              leses. Pilen flytter seg litt på hover — den eneste bevegelsen i
-              kortet som ikke er tidsstyrt. */}
+          {/*
+           * Overskrift med linje under teksten, og pil som sier at den kan
+           * leses. Pilen flytter seg litt på hover — den eneste bevegelsen i
+           * kortet som ikke er tidsstyrt.
+           */}
           <span className="flex items-start gap-1.5 border-border border-b pb-1.5">
             <span className="line-clamp-2 min-w-0 flex-1 text-label text-fg">{a.title}</span>
             <ArrowUpRight
@@ -213,9 +212,11 @@ export function TipCard() {
           </span>
         </div>
 
-        {/* Bildet under, fast forhold. `sizes` er sidebarbredden minus padding
-            — et for stort tall her laster dobbelt så store filer uten at noe
-            ser galt ut. */}
+        {/*
+         * Bildet under, fast forhold. `sizes` er sidebarbredden minus padding
+         * et for stort tall her laster dobbelt så store filer uten at noe
+         * ser galt ut.
+         */}
         <div className="relative mx-3 mt-2 h-[72px] shrink-0 overflow-hidden rounded-lg bg-surface-2">
           {a.image && <Image src={a.image} alt="" fill sizes="224px" className="object-cover" />}
         </div>

@@ -1,13 +1,11 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 /**
- * F4-02 — Kortlevd widget-token (HS256 JWT, signert med Node-crypto HMAC).
- *
- * Utstedt av `/widget/init` ETTER at publishable key + Origin er validert. Det
+ * Kortlevd widget-token (HS256 JWT, signert med Node-crypto HMAC).
+ * Utstedt av `/widget/init` etter at publishable key + Origin er validert. Det
  * er dette tokenet klienten sender på hver etterfølgende forespørsel — ikke
  * publishable key direkte. Kortlevd (default 15 min) så en lekket token har kort
- * levetid. Bærer KUN tenant-ID + en anonym kunde-ID, aldri hemmeligheter.
- *
+ * levetid. Bærer kun tenant-ID + en anonym kunde-ID, aldri hemmeligheter.
  * HS256 er nok her (samme part signerer og verifiserer). Vi håndruller det med
  * node:crypto framfor å dra inn `jose` — én mindre avhengighet, og signeringen
  * er triviell og enhetstestbar. Verifisering er konstant-tid (timingSafeEqual).

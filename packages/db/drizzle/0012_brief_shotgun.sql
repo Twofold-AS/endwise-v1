@@ -1,6 +1,6 @@
-ALTER TABLE "user_preferences" ADD COLUMN "avatar_shape" text;--> statement-breakpoint
-ALTER TABLE "user_preferences" ADD COLUMN "avatar_hue" integer;--> statement-breakpoint
-ALTER TABLE "user_preferences" ADD COLUMN "avatar_tone" integer;--> statement-breakpoint
-ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_avatar_shape_check" CHECK ("user_preferences"."avatar_shape" is null or "user_preferences"."avatar_shape" in ('round','organic','boxy','capsule','nub','cloud','droplet','hexagon','sun','triangle'));--> statement-breakpoint
-ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_avatar_hue_check" CHECK ("user_preferences"."avatar_hue" is null or ("user_preferences"."avatar_hue" >= 0 and "user_preferences"."avatar_hue" <= 359));--> statement-breakpoint
+ALTER TABLE "user_preferences" ADD COLUMN "avatar_shape" text;-- > statement-breakpoint
+ALTER TABLE "user_preferences" ADD COLUMN "avatar_hue" integer;-- > statement-breakpoint
+ALTER TABLE "user_preferences" ADD COLUMN "avatar_tone" integer;-- > statement-breakpoint
+ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_avatar_shape_check" CHECK ("user_preferences"."avatar_shape" is null or "user_preferences"."avatar_shape" in ('round','organic','boxy','capsule','nub','cloud','droplet','hexagon','sun','triangle'));-- > statement-breakpoint
+ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_avatar_hue_check" CHECK ("user_preferences"."avatar_hue" is null or ("user_preferences"."avatar_hue" >= 0 and "user_preferences"."avatar_hue" <= 359));-- > statement-breakpoint
 ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_avatar_tone_check" CHECK ("user_preferences"."avatar_tone" is null or ("user_preferences"."avatar_tone" >= 0 and "user_preferences"."avatar_tone" <= 5));

@@ -35,9 +35,8 @@ type Booking = {
 };
 
 /**
- * F3-05 — stripen «Ansatte på jobb» på Verkstedet.
- *
- * ⛔ Ikke Kompetanse/Timeplan under Ansatte. ⛔ Ikke Kontor/Gulvet.
+ * Stripen «Ansatte på jobb» på Verkstedet.
+ * Ikke Kompetanse/Timeplan under Ansatte. Ikke Kontor/Gulvet.
  * Utvidelsen er native `<details>` — samme grep som Profil-formen.
  */
 export function AnsattePaJobb({

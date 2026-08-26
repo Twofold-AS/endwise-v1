@@ -4,14 +4,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * F1-07 / F5-26 — PLATTFORM-CENSUS for Endwise-admin.
- *
+ * F1-07 / F5-26 — plattform-census for Endwise-admin.
  * Live tellinger (tenants, brukere, medlemskap) og read-only entitlements
  * (`tenant_modules`). Sperren er `endwiseAdminProcedure`, ikke at knappen
- * ligger under /endwise. En `dealer_admin` skal få FORBIDDEN — også på lesing.
- *
+ * ligger under /endwise. En `dealer_admin` skal få forbidden — også på lesing.
  * Skrivesti for entitlements er `tenants.setModules` (endwise_admin) og
- * Stripe-webhooken (F5-32). dealer_admin får FORBIDDEN.
+ * Stripe-webhooken (F5-32). dealer_admin får forbidden.
  */
 async function forventer(
   kall: Promise<unknown>,
@@ -29,7 +27,7 @@ const fakeCtx = (role: 'endwise_admin' | 'endwise_support' | 'dealer_admin' | 'd
     role,
   }) as never;
 
-/** Rollen sjekkes FØR spørringen — disse trenger ikke Postgres. */
+/** Rollen sjekkes før spørringen — disse trenger ikke Postgres. */
 describe('F1-07 — census rolle-sperre', () => {
   it('⛔ ANGREP: dealer_admin kan ikke census', async () => {
     await forventer(appRouter.createCaller(fakeCtx('dealer_admin')).tenants.census(), 'FORBIDDEN');
@@ -185,7 +183,7 @@ describeDb('F1-07 — Endwise-admin census (Postgres)', () => {
     await owner.delete(schema.tenants).where(sql`id in (${tenantLive}, ${tenantDemo})`);
   });
 
-  /* ══ Live tellinger ════════════════════════════════════════════════════ */
+  /* Live tellinger */
 
   it('endwise_admin får live tellinger som matcher Postgres', async () => {
     const census = await somEndwise().tenants.census();

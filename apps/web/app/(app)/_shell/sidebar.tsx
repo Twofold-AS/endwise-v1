@@ -56,25 +56,20 @@ const ROLE_LABEL: Record<string, string> = {
 const IKON = 16;
 
 /**
- * F5-13 — DEN DOMINERENDE SIDEBAREN.
- *
+ * Den dominerende sidebaren.
  * Header på nøyaktig 56px med `border-b`, samme høyde som topbaren, så
  * skillelinjene møtes på én y-verdi tvers over skjermen.
- *
- * ── Kollapset tilstand ─────────────────────────────────────────────────────
+ * Kollapset tilstand
  * Knappen bor i topbaren (ved siden av breadcrumben), tilstanden i
- * `sidebar-state.tsx`. Kollapset viser headeren KUN merkeboksen, og nav-radene
+ * `sidebar-state.tsx`. Kollapset viser headeren kun merkeboksen, og nav-radene
  * blir ikon-only med `title` som fallback. Ingen tekst som brekker, ingen
  * ellipse — bare ikonene.
- *
- * ── To mønstre, med vilje (07.08.2026, Settings 25.08) ─────────────────────
- * **Flyout ut til siden** er for HANDLINGER: «Handlinger» (⌘K). Korte
+ * To mønstre, med vilje.
+ * Flyout ut til siden er for handlinger: «Handlinger» (K). Korte
  * lister du plukker fra og lukker igjen.
- *
- * **Inline utfolding** er for DESTINASJONER: Jobber, Kunder, Rapporter,
+ * Inline utfolding er for destinasjoner: Jobber, Kunder, Rapporter,
  * Organisasjon. De hører til strukturen du navigerer i, og skal
  * ikke skjule hvor du står. Se `NavRow`.
- *
  * Innstillinger er destinasjon (Link til profil), ikke flyout.
  */
 export function Sidebar() {
@@ -102,7 +97,7 @@ export function Sidebar() {
 
   const pathContext = contextForPath(pathname);
   const [chosen, setChosen] = useState<ContextKey | null>(null);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: pathContext ER hele avhengigheten; setChosen er stabil
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathContext er hele avhengigheten; setChosen er stabil
   useEffect(() => {
     setChosen(null);
   }, [pathContext]);
@@ -138,7 +133,7 @@ export function Sidebar() {
     retry: false,
   });
   /**
-   * F5-23 — uleste hjelpeartikler. Egen, billig telling: badgen står på en rad
+   * Uleste hjelpeartikler. Egen, billig telling: badgen står på en rad
    * som rendres på hver side, og å hente 50 artikler for å telle dem ville vært
    * å laste innholdet for å vise et tall. Ingen lang staleTime: Ny og slideren
    * skal treffe nye artikler ved window-focus.
@@ -149,12 +144,10 @@ export function Sidebar() {
   });
 
   /**
-   * F5-13 — ⛔ ÉN ÅPEN OM GANGEN (accordion, 20.08.2026).
-   *
-   * ⚠️ Tilstanden MÅTTE flyttes hit. Hver `NavRow` hadde sin egen `open`, og
-   * en rad som bare kjenner seg selv kan ikke vite at en annen skal lukkes —
+   * Én åpen om gangen (accordion).
+   * Tilstanden måtte flyttes hit. Hver `NavRow` hadde sin egen `open`, og
+   * en rad som bare kjenner seg selv kan ikke vite at en annen skal lukkes
    * derfor sto Kunder og Saker åpne samtidig og dyttet resten nedover.
-   *
    * `null` = ingen åpen. Klikk på den åpne lukker den (samme knapp, begge
    * veier) — samme mønster som part-filtrene i innboksen bruker.
    */
@@ -167,7 +160,7 @@ export function Sidebar() {
     return (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0);
   }, [context, support.data, threads.data]);
 
-  // ⌘K åpner quick actions.
+  // K åpner quick actions.
   const [quickOpen, setQuickOpen] = useState(false);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -181,14 +174,12 @@ export function Sidebar() {
   }, []);
 
   /**
-   * ⚠️ **HARD navigasjon, ikke `router.push`** (rettet 09.08.2026).
-   *
+   * hard navigasjon, ikke `router.push`.
    * `router.push` beholder dokumentet — og dermed hele React Query-cachen med
    * forrige brukers kunder, meldinger og team. Logger noen andre inn på samme
    * maskin, ser de et glimt av data de ikke har tilgang til før de nye
-   * spørringene lander. RLS hindrer at de HENTER noe nytt; den kan ikke tømme
+   * spørringene lander. RLS hindrer at de henter noe nytt; den kan ikke tømme
    * en cache som allerede ligger i minnet.
-   *
    * En full sidelast river ned alt. Samme grep som innlogging og
    * kontekstbytte bruker, av samme grunn.
    */
@@ -206,15 +197,17 @@ export function Sidebar() {
         collapsed ? 'w-[76px]' : 'w-[248px]'
       }`}
     >
-      {/* ── Header: 56px + border-b ──────────────────────────────────── */}
+      {/* Header: 56px + border-b */}
       <div
         className={`flex h-14 shrink-0 items-center border-border border-b ${
           collapsed ? 'justify-center px-2' : 'px-3'
         }`}
       >
-        {/* F5-26: `dealerName` er ekte navn fra `tenants.name`. Placeholderen
-            «Endwise-forhandler» sto hardkodet her fram til 07.08.2026 — den var
-            ikke bare stygg, den var en påstand om hvor du er logget inn. */}
+        {/*
+         * `dealerName` er ekte navn fra `tenants.name`. Placeholderen
+         * «Endwise-forhandler» sto hardkodet her fram til — den var
+         * ikke bare stygg, den var en påstand om hvor du er logget inn.
+         */}
         <ContextSwitcher
           contexts={contexts}
           active={inspect ? 'forhandler' : context}
@@ -230,7 +223,7 @@ export function Sidebar() {
         />
       </div>
 
-      {/* ── Innhold ──────────────────────────────────────────────────── */}
+      {/* Innhold */}
       <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-3">
         {context === 'forhandler' && !inspect && (
           <DropdownMenu open={quickOpen} onOpenChange={setQuickOpen}>
@@ -293,7 +286,7 @@ export function Sidebar() {
           )}
         </nav>
 
-        {/* ── Bunn: tips-kort → divider → Settings → DEG ──────────────── */}
+        {/* Bunn: tips-kort → divider → Settings → DEG */}
         {settingsNav && (
           <div className="flex flex-col gap-3">
             {/* Tips-kortet forklarer FORHANDLERENS begreper. I Endwise-admin
@@ -318,7 +311,7 @@ export function Sidebar() {
               {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
             </Link>
 
-            {/* ── Deg. Nederst, under Innstillinger, som bestilt ─────────────── */}
+            {/* Deg. Nederst, under Innstillinger, som bestilt */}
             <BrukerRad
               /* Én identitet: internNavn via useOrgRole (kallenavn, ellers
                  visningsnavn). Ikke Better-Auth-navn som fallback. */
@@ -346,7 +339,7 @@ function isChildActive(href: string, pathname: string, search: string): boolean 
 /**
  * Én nav-rad, 32px.
  *
- * ── Underpunkter er INLINE igjen (07.08.2026, eiers beslutning) ────────────
+ * Underpunkter er inline igjen (eiers beslutning).
  * Flyout ut til siden var riktig for **handlinger** (Handlinger) —
  * korte lister du plukker fra og lukker. Det var feil for **destinasjoner**:
  * en flyout skjuler hvor du er, og du mister følelsen av hvor i navet du står.
@@ -355,7 +348,7 @@ function isChildActive(href: string, pathname: string, search: string): boolean 
  * sidebaren. Raden er en knapp som åpner/lukker; underpunktene er lenkene.
  * Åpen som standard når raden er aktiv, så du alltid ser deg selv i strukturen.
  *
- * ⚠️ **Ett unntak, av nødvendighet:** i kollapset sidebar (76px) er det ingen
+ * **Ett unntak, av nødvendighet:** i kollapset sidebar (76px) er det ingen
  * bredde å folde ut i. Der faller raden tilbake til flyouten. Alternativet
  * ville vært å skjule underpunktene helt, og da er de utilgjengelige.
  */
@@ -379,7 +372,7 @@ function NavRow({
   collapsed: boolean;
   apen: boolean;
   /**
-   * ⚠️ Setteren sendes inn RÅ, ikke pakket i en pil-funksjon per rad.
+   * Setteren sendes inn RÅ, ikke pakket i en pil-funksjon per rad.
    * `useState`-settere er stabile mellom renders; en `(pa) => set(...)` ville
    * fått ny identitet hver render, og da måtte effekten under enten utelate den
    * fra avhengighetene (og bli undertrykt) eller kjøre i loop. Her er
@@ -393,7 +386,7 @@ function NavRow({
   const count = item.badge === 'unread' ? unread : item.badge === 'helpdesk' ? helpdesk : 0;
 
   /**
-   * ⚠️ Aktiv rad åpner seg selv — men bare når den BLIR aktiv, ikke ved hver
+   * Aktiv rad åpner seg selv — men bare når den BLIR aktiv, ikke ved hver
    * render. Uten `active` i avhengighetslista ville et klikk på en annen rad
    * blitt overstyrt tilbake med én gang, og accordionen aldri fått lukke noe.
    */
@@ -498,7 +491,7 @@ function NavRow({
       </button>
 
       {/**
-       * ⛔ `grid-template-rows: 0fr → 1fr` og ikke `max-height`.
+       * `grid-template-rows: 0fr → 1fr` og ikke `max-height`.
        *
        * En høydeanimasjon trenger et tall å gå MOT, og `height:auto` kan ikke
        * animeres. Den vanlige omgåelsen er `max-height: 500px`, men da må man
@@ -510,7 +503,7 @@ function NavRow({
        * mange underpunkter raden har. Barnet må ha `min-h-0` og
        * `overflow-hidden`, ellers nekter griden å krympe under innholdet.
        *
-       * ⚠️ `aria-hidden` når lukket: innholdet er fortsatt i DOM-en (det er det
+       * `aria-hidden` når lukket: innholdet er fortsatt i DOM-en (det er det
        * som gjør animasjonen mulig), og uten dette ville en skjermleser lest opp
        * underpunkter som ikke er synlige.
        */}

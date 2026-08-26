@@ -16,28 +16,25 @@ import {
 import { HELPDESK_MIN, hjelpeartikkelLagreHint } from './lagre-hint';
 
 /**
- * F5-23 / F1-07 — ENDWISE-ADMIN: skriv hjelpeartikler.
- *
- * ── ⛔ Hvorfor denne ligger i /endwise og ikke i forhandlerens Settings ────
- * En artikkel som publiseres her dukker opp i sidebaren til ALLE forhandlere.
+ * F5-23 / F1-07 — endwise-admin: skriv hjelpeartikler.
+ * Hvorfor denne ligger i /endwise og ikke i forhandlerens Settings
+ * En artikkel som publiseres her dukker opp i sidebaren til alle forhandlere.
  * Det er en plattformhandling, ikke en verkstedhandling — samme skille som
  * dev-mode-bryteren (F5-27), som bor her av nøyaktig samme grunn.
- *
  * Ruta bak er `endwiseAdminProcedure`, som er strengere enn `adminProcedure`:
- * den slipper KUN `endwise_admin` inn. En `dealer_admin` er admin i sitt eget
- * verksted og skal ikke kunne skrive til 249 andres. ⚠️ At denne siden ligger
+ * den slipper kun `endwise_admin` inn. En `dealer_admin` er admin i sitt eget
+ * verksted og skal ikke kunne skrive til 249 andres. At denne siden ligger
  * i en kontekst forhandlere ikke ser, er kosmetikk — sperren er i ruta.
- *
- * ── ⚠️ BILDER VELGES, DE LASTES IKKE OPP ──────────────────────────────────
+ * Bilder velges, de lastes ikke opp
  * `packages/uploads` er fortsatt en tom plassholder, og repoet har tre ulike
- * svar på hvor filer skal lagres (techstack §4: Vercel Blob · F2-03: R2 ·
- * F13-03: Vercel + Scaleway). Det er en §2-avklaring for eier, ikke noe å
+ * svar på hvor filer skal lagres (techstack §4: Vercel Blob · F2-03: R2
+ * Vercel + Scaleway). Det er en §2-avklaring for eier, ikke noe å
  * gjette på her. Inntil den er tatt, velges bildet fra de fire som ligger i
  * `apps/web/public/images/`. Selve datamodellen er allerede klar for en URL.
  */
 type Artikkel = RouterOutput['helpdesk']['alle'][number];
 
-/** ⚠️ Speiler `HELPDESK_BILDER` i `@endwise/db`. Serveren validerer mot sin. */
+/** Speiler `HELPDESK_BILDER` i `@endwise/db`. Serveren validerer mot sin. */
 const BILDER = ['/images/hero.jpg', '/images/img_1.jpg', '/images/img_2.jpg', '/images/img_3.jpg'];
 
 const TOMT = {
@@ -60,8 +57,10 @@ export default function EndwiseHelpdeskPage() {
 
   const etterSkriving = () => {
     void utils.helpdesk.alle.invalidate();
-    /* Lesesidene og sidebaren viser det samme innholdet — begge må hentes på
-       nytt, ellers står den gamle tittelen i slideren til cachen løper ut. */
+    /*
+     * Lesesidene og sidebaren viser det samme innholdet — begge må hentes på
+     * nytt, ellers står den gamle tittelen i slideren til cachen løper ut.
+     */
     void utils.helpdesk.list.invalidate();
     void utils.helpdesk.ulesteAntall.invalidate();
   };

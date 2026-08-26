@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * F5-11 / F5-14 — Innboks i Endwise-admin + forhandlerens Ny samtale.
- *
  * Låst kopi og navigasjon. Sperren er tRPC (`endwiseAdminProcedure`), ikke at
  * knappen ligger under /endwise.
  */
@@ -50,7 +49,7 @@ describe('F5-11: ENDWISE_NAV har Innboks etter Oversikt', () => {
   it('forhandler-nav har fortsatt ingen Admin-tab', () => {
     const forhandlerBlokk = nav.slice(
       nav.indexOf('export const FORHANDLER_NAV'),
-      nav.indexOf('/* ══ ENDWISE-ADMIN'),
+      nav.indexOf('export const ENDWISE_NAV'),
     );
     expect(forhandlerBlokk).not.toMatch(/href:\s*'\/admin'/);
     expect(forhandlerBlokk).not.toMatch(/label:\s*'Admin'/);

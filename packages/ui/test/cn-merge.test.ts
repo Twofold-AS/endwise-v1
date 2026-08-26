@@ -2,19 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { cn } from '../src/lib/utils.ts';
 
 /**
- * F0-12 — `cn()` MÅ kjenne våre egne font-størrelser.
- *
- * ⚠️ **Dette er en regresjonstest for en bug som var helt stille.**
+ * `cn` MÅ kjenne våre egne font-størrelser.
+ * Dette er en regresjonstest for en bug som var helt stille.
  * `text-title`, `text-label` og `text-body` er egne utilities fra `theme.css`.
  * Stock tailwind-merge kjenner dem ikke, og antar at `text-label` konflikter
  * med `text-primary-foreground` fordi begge starter med `text-`. Den beholder
  * den siste og kaster den første.
- *
  * Resultatet var «Logg inn» og «Lagre» med grå tekst på svart knapp — og i
  * mørkt tema lysegrå på hvitt, altså nesten usynlig. Ingenting kastet,
  * ingenting i typecheck, ingenting i bygget.
- *
- * ⛔ Testen sjekker BEGGE retninger, fordi rekkefølgen avgjorde hvilken halvdel
+ * Testen sjekker begge retninger, fordi rekkefølgen avgjorde hvilken halvdel
  * som forsvant: beUI setter variant før size (fargen røk), shadcn setter base
  * før variant (størrelsen røk).
  */

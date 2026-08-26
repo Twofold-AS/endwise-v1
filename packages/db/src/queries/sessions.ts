@@ -5,22 +5,19 @@ import { session } from '../schema/auth.ts';
 /**
  * Sesjonsspørringer. Bor her av samme grunn som `membership.ts`: Drizzle skal ha
  * ÉN instans i treet.
- *
- * ⚠️ Ingen av disse går gjennom `withTenant()`. Det er med vilje —
- * Better-Auth-tabellene har bevisst INGEN RLS (se `schema/auth.ts`): de er
+ * Ingen av disse går gjennom `withTenant`. Det er med vilje
+ * Better-Auth-tabellene har bevisst ingen RLS (se `schema/auth.ts`): de er
  * globale identiteter, og innloggingen skjer før noen forhandler er valgt.
  * Grensen her er at spørringene alltid er bundet til en `userId` som kommer fra
  * en verifisert sesjon, aldri fra klienten.
  */
 
 /**
- * Sletter sesjoner som uansett er døde: utløpt idle-vindu ELLER passert absolutt
+ * Sletter sesjoner som uansett er døde: utløpt idle-vindu eller passert absolutt
  * maks-levetid (F1-12).
- *
- * ⚠️ Dette er opprydding, ikke en sikkerhetsmekanisme. En utløpt rad gir ingen
+ * Dette er opprydding, ikke en sikkerhetsmekanisme. En utløpt rad gir ingen
  * tilgang — `requireSession` avviser den lenge før den slettes. Poenget er at
  * tabellen ikke skal vokse i det uendelige med rader ingen kan bruke.
- *
  * `absoluteExpiresAt` er nullbar på eldre rader. `or(...)` dekker begge:
  * er den satt og passert, eller er `expiresAt` passert, er raden død.
  */

@@ -1,6 +1,6 @@
 import { registerOTel } from '@vercel/otel';
 
-/** F0-14 — Observability: Vercel Observability + OpenTelemetry + Sentry. */
+/** Observability: Vercel Observability + OpenTelemetry + Sentry. */
 export async function register() {
   registerOTel({ serviceName: process.env.OTEL_SERVICE_NAME ?? 'endwise-web' });
 

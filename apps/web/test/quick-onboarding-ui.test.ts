@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F1-07 — UI for forhandlerens egen Quick-nøkkel. Kilde-tester (ingen ekte nøkkel).
+ * UI for forhandlerens egen Quick-nøkkel. Kilde-tester (ingen ekte nøkkel).
  */
 describe('F1-07: Quick-nøkkel i eksisterende chrome', () => {
   const her = dirname(fileURLToPath(import.meta.url));

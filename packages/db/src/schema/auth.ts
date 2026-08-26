@@ -1,14 +1,12 @@
 /**
  * F1-01/F1-03 — Better-Auth-tabeller.
- *
- * GENERERT av `pnpm --filter @endwise/auth db:auth-schema`
+ * Generert av `pnpm --filter @endwise/auth db:auth-schema`
  * (@better-auth/cli generate, config: packages/auth/auth-cli.config.ts).
  * Ikke rediger for hånd — regenerer.
- *
- * ADR-002: disse tabellene har BEVISST ingen RLS. De er globale identiteter,
+ * ADR-002: disse tabellene har bevisst ingen RLS. De er globale identiteter,
  * og Better-Auth spør uten `app.tenant_id` i transaksjonen — RLS her ville
  * låst innloggingen ute av sin egen database. Tenant-grensen går på
- * `organization.id` (= tenant_id) + `assertMember()` i @endwise/auth,
+ * `organization.id` (= tenant_id) + `assertMember` i @endwise/auth,
  * og RLS på domenetabellene.
  */
 import { relations } from 'drizzle-orm';

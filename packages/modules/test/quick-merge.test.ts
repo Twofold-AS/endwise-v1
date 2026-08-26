@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { threeWayMerge } from '../src/quick/merge.ts';
 
 /**
- * F8-01 — Tre-veis flette-kjerne. De fire feltnivå-tilfellene + feltnivå-fletting
+ * Tre-veis flette-kjerne. De fire feltnivå-tilfellene + feltnivå-fletting
  * (ulike felt endret samtidig gir ingen konflikt). Rene tester, ingen DB.
  */
 const F = ['name', 'email', 'phone'];
@@ -53,7 +53,7 @@ describe('threeWayMerge — de fire tilfellene', () => {
       F,
     );
     expect(r.conflicts).toEqual([{ field: 'phone', base: '1', ours: '9', theirs: '2' }]);
-    // Ikke overskrevet (beholder vår), baseline IKKE avansert (idempotent gjendetekt).
+    // Ikke overskrevet (beholder vår), baseline ikke avansert (idempotent gjendetekt).
     expect(r.merged.phone).toBe('9');
     expect(r.newBaseline.phone).toBe('1');
   });

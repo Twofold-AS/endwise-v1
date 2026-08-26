@@ -3,9 +3,8 @@ import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
  * Engangskode for GDPR-slett av forhandler.
- *
- * ⛔ Ingen RLS med vilje — samme mønster som Better-Auth-tabellene.
- * Tabellen røres KUN fra `endwiseAdminProcedure`. Radene er
+ * Ingen RLS med vilje — samme mønster som Better-Auth-tabellene.
+ * Tabellen røres kun fra `endwiseAdminProcedure`. Radene er
  * admin-bruker + mål-tenant + hash, aldri koden selv.
  */
 export const tenantDeleteChallenges = pgTable('tenant_delete_challenges', {

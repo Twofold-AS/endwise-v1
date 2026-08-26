@@ -17,13 +17,11 @@ import { CardShell } from '../_shell/cards';
 import { useInboxModus } from './_modus';
 
 /**
- * F5-14 / F6-01 — «NY SAMTALE» som e-post: mottakerliste, ikke en hub.
- *
- * Én stor pille med nøyaktig tre piller inni (Jonas + Mikael 25.08.2026):
- *   Kunde   → customers.list · customer_dealer
- *   Intern  → mechanics.list · mechanic_dealer (verkstedsgulvet — mekanikerne bor her)
- *   Support → dealer_admin / Endwise (het «Skriv til Endwise»)
- *
+ * F5-14 / F6-01 — «ny samtale» som e-post: mottakerliste, ikke en hub.
+ * Én stor pille med nøyaktig tre piller inni (Jonas + Mikael ):
+ * Kunde → customers.list · customer_dealer
+ * Intern → mechanics.list · mechanic_dealer (verkstedsgulvet — mekanikerne bor her)
+ * Support → dealer_admin / Endwise (het «Skriv til Endwise»)
  * Support er default og primær (fylt bg-fg). De to andre er outline.
  * Ingen bruker-ID-felt. Ingen fjerde Mekaniker-pille.
  */

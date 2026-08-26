@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 
 /**
  * apps/framer-agent — Vercel Container.
- * Grunnen til at denne IKKE er en serverless function: Framer External Agent CLI
+ * Grunnen til at denne ikke er en serverless function: Framer External Agent CLI
  * krever shell + filsystem (techstack §2). Selve agenten kobles på i F4/F9.
  */
 const app = new Hono();

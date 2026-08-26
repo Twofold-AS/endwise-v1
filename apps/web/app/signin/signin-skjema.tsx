@@ -10,18 +10,15 @@ import { Field, INPUT, PassordFelt } from '../_auth/felter';
 import { destinasjonNarSesjonFeiler } from '../invitasjon/_landing';
 
 /**
- * F1-02 / F1-11 — Innlogging i TO STEG: passord → engangskode på e-post.
- *
+ * F1-02 / F1-11 — Innlogging i to steg: passord → engangskode på e-post.
  * Steg 2 er ikke en opsjon brukeren kan hoppe over. Better-Auth svarer
  * `twoFactorRedirect: true` i stedet for en sesjon når kontoen har 2FA på, og
- * da FINNES det ingen innlogget tilstand å gå videre fra — skjermen kan ikke
+ * da finnes det ingen innlogget tilstand å gå videre fra — skjermen kan ikke
  * «glemme» å vise kodefeltet, for det er ingenting bak den å vise.
- *
- * **Ingen «husk denne enheten».** `trustDevice` sendes aldri (F1-11: ingen
+ * Ingen «husk denne enheten». `trustDevice` sendes aldri (F1-11: ingen
  * bypass). Det er derfor knappen ikke finnes her — en avkrysningsboks vi
  * bevisst ignorerer, ville vært verre enn ingen boks.
- *
- * Sesjons-ID-en roteres av two-factor-pluginen når koden godtas (CWE-384) —
+ * Sesjons-ID-en roteres av two-factor-pluginen når koden godtas (CWE-384)
  * server-side, ikke noe denne siden gjør eller kan slå av.
  */
 type Step = 'credentials' | 'otp' | 'gjenoppretting';
@@ -33,10 +30,9 @@ const RESEND_COOLDOWN_SECONDS = 60;
  * Better-Auth svarer på engelsk, og de tre feilene ser like ut for brukeren
  * selv om de betyr helt forskjellige ting. Uten skillet sitter man og prøver et
  * passord som var riktig hele tiden.
- *
- *   429 INVALID …            → for mange forsøk (passordet kan ha vært riktig)
- *   400 INVALID_EMAIL        → e-postfeltet er ikke en gyldig adresse
- *   401 INVALID_EMAIL_OR_…   → feil e-post ELLER feil passord
+ * 429 invalid … → for mange forsøk (passordet kan ha vært riktig)
+ * 400 INVALID_EMAIL → e-postfeltet er ikke en gyldig adresse
+ * 401 INVALID_EMAIL_OR_… → feil e-post eller feil passord
  */
 function feilmelding(res: {
   error?: { status?: number; code?: string; message?: string } | null;
@@ -79,20 +75,16 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
 
   /**
    * Felles landing: sett aktiv organisasjon (tenant) → tRPC-context får tenant
-   * + rolle → spør serveren HVOR denne personen skal begynne dagen.
-   *
-   * ── F1-14: landing følger JOBBFUNKSJON ────────────────────────────────
-   *   leder / selger → /dashboard    support → /innboks    mekaniker → /min-dag
-   *
-   * ⚠️ Målet hentes fra `session.me` (`landing`), ikke regnet ut her. Regelen
+   * + rolle → spør serveren hvor denne personen skal begynne dagen.
+   * Landing følger jobbfunksjon
+   * leder / selger → /dashboard support → /innboks mekaniker → /min-dag
+   * Målet hentes fra `session.me` (`landing`), ikke regnet ut her. Regelen
    * avhenger av mekanikerprofil og lagret funksjon — ting klienten ikke kjenner
    * sikkert — og en landingsregel som finnes to steder blir før eller siden to
    * ulike regler.
-   *
-   * ⚠️ Og det er en LANDING, ikke en lås: etterpå kan man navigere fritt
+   * Og det er en landing, ikke en lås: etterpå kan man navigere fritt
    * innenfor sin egen tilgang. Den eneste ekte låsen er «ren mekaniker», som
    * `(app)/layout.tsx` håndhever fordi mekanikerflaten er hele appen for dem.
-   *
    * Feiler oppslaget, går vi til /dashboard som før. En treg eller nede API
    * skal ikke stoppe en vellykket innlogging.
    */
@@ -104,13 +96,11 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     setBusy('success');
 
     /**
-     * ⛔ F1-11 — TVUNGEN ENROLLMENT.
-     *
+     * Tvungen enrollment.
      * Krever rollen 2FA og brukeren ikke har satt det opp, svarer serveren
-     * `TWO_FACTOR_REQUIRED` på ALLE tRPC-ruter — også denne. Da skal hen til
+     * `TWO_FACTOR_REQUIRED` på alle tRPC-ruter — også denne. Da skal hen til
      * oppsett, ikke til dashbordet og ikke tilbake til innlogging.
-     *
-     * ⚠️ Falt vi tilbake til `/dashboard` her (som før), ville brukeren landet
+     * Falt vi tilbake til `/dashboard` her (som før), ville brukeren landet
      * på en side der hvert eneste datakall feiler, uten å få vite hvorfor.
      */
     const landing = await utils.session.me
@@ -120,19 +110,16 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     // session.me.landing er /oppstart for eier som ikke har fullført veiviseren.
 
     /**
-     * ⚠️ **HARD navigasjon, ikke `router.push`. Dette var DOBBEL-LOGIN-BUGEN.**
-     *
+     * hard navigasjon, ikke `router.push`. Dette var dobbel-login-bugen.
      * `router.push` er en myk klientnavigasjon: dokumentet gjenbrukes, og
      * `(app)/layout.tsx` monteres inn i en app som allerede kjører. Der kalles
-     * `useSession()` for aller første gang — `/signin` bruker den ikke — så
-     * Better-Auths sesjons-store er UINITIALISERT i det øyeblikket guarden
+     * `useSession` for aller første gang — `/signin` bruker den ikke — så
+     * Better-Auths sesjons-store er uinitialisert i det øyeblikket guarden
      * leser den. Ett render med «ingen bruker» er nok:
      * `router.replace('/signin')` fyrer, og du er tilbake på innlogging med en
      * helt gyldig sesjon i cookien.
-     *
      * Andre forsøk virket fordi storen da var fylt av hentingen fra første
      * forsøk. Derav «må logge inn to ganger».
-     *
      * En full sidelast fjerner hele klassen: cookien er med på aller første
      * request, appen booter én gang med en ekte sesjon, og ingen klient-cache
      * kan være foreldet. Kontekstbytteren gjør allerede nøyaktig dette, av
@@ -159,19 +146,15 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     setNotice(null);
 
     /**
-     * ⚠️ **TRIM. Dette er ikke pynt — det var den faktiske innloggingsfeilen
-     * 07.08.2026.**
-     *
+     * trim. Dette er ikke pynt — det var den faktiske innloggingsfeilen
      * Et passord som limes inn fra en melding, et terminalvindu eller et
      * dokument får nesten alltid med seg et mellomrom eller et linjeskift på
      * slutten. Feltet viser prikker, så det er **usynlig**. Better-Auth svarer
      * da `401 Invalid email or password` — nøyaktig samme melding som ved feil
      * passord — og brukeren sitter og skriver et passord som var riktig.
-     *
      * Mellomrom i ytterkant av et passord er et lime-artefakt, aldri et valg.
      * Samme for e-posten, som ellers gir en enda mer forvirrende `400 Invalid
      * email` (feltet ser jo helt riktig ut).
-     *
      * Merk: kontoopprettelse må trimme likt. Eneste vei inn i dag er seeden,
      * som bruker literaler uten mellomrom — men står det her, blir det ikke
      * glemt når invitasjonsflyten (F1-10) bygges.
@@ -195,12 +178,11 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     if (await sendCode()) {
       setStep('otp');
       /**
-       * ⚠️ INGEN notis her (fjernet 20.08.2026). Overskriften på steg 2 sier
+       * Ingen notis her (fjernet ). Overskriften på steg 2 sier
        * allerede «Vi sendte en 6-sifret kode til {e-post}» — en liten linje
        * under knappen som gjentar det samme, er den samme opplysningen to
        * ganger på én skjerm.
-       *
-       * Notisen beholdes for «Send ny kode», der den sier noe NYTT: at den
+       * Notisen beholdes for «Send ny kode», der den sier noe nytt: at den
        * handlingen du nettopp gjorde faktisk skjedde. Se `onResend`.
        */
       setBusy('idle');
@@ -273,9 +255,11 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
                   placeholder="deg@twofold.no"
                 />
               </Field>
-              {/* F1-18 — avsløringsknappen gjør lime-artefaktet synlig; se
-                  `_auth/felter.tsx` for hvorfor det er en sikkerhetsdetalj og
-                  ikke pynt. */}
+              {/*
+               * Avsløringsknappen gjør lime-artefaktet synlig; se
+               * `_auth/felter.tsx` for hvorfor det er en sikkerhetsdetalj og
+               * ikke pynt.
+               */}
               <PassordFelt
                 id="signin-password"
                 label="Passord"
@@ -284,9 +268,11 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
                 autoComplete="current-password"
               />
               {error && <p className="text-[12px] text-danger">{error}</p>}
-              {/* F1-15 — veien ut for den som ikke kommer inn. Sto tomt her
-                  fram til 22.08.2026: `/min-dag/meg` henviste til «Glemt
-                  passord» mens lenka ikke fantes noe sted. */}
+              {/*
+               * Veien ut for den som ikke kommer inn. Sto tomt her
+               * fram til: `/min-dag/meg` henviste til «Glemt
+               * passord» mens lenka ikke fantes noe sted.
+               */}
               <p className="text-[12px]">
                 <Link
                   href="/glemt-passord"

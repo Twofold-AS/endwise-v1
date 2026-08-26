@@ -23,20 +23,17 @@ import { ProfilKort } from '../../_shell/profil-kort';
 import { ToFaktorRad } from '../../_shell/to-faktor-rad';
 
 /**
- * F7-06 — «MEG». Mekanikerens personlige fane, nederst i bunnmenyen.
- *
- * ⛔ **Dette er IKKE forhandlerens Settings.** Ingenting her gjelder verkstedet:
+ * «meg». Mekanikerens personlige fane, nederst i bunnmenyen.
+ * Dette er ikke forhandlerens Settings. Ingenting her gjelder verkstedet:
  * ingen abonnement, ingen team, ingen priser, ingen andre mekanikere. Alt er
  * mekaniker-scopet — `mechanic.myProfile` utleder mekanikeren fra
  * `mechanics.userId = ctx.userId`, aldri fra input, så det finnes ingen vei til
  * en kollegas profil herfra.
- *
- * ── Hvorfor to hurtigbrytere øverst ───────────────────────────────────────
+ * Hvorfor to hurtigbrytere øverst
  * Dette er en telefon i et verksted, ofte med hansker på. De to tingene som
  * faktisk byttes ofte — **tema** (sollys mot mørk hall) og **varsler av/på**
  * (pause, møte, fridag) — ligger derfor øverst som store brytere, ikke nede i
  * en innstillingsliste. Resten er ting man ser på én gang.
- *
  * Samme layout på maskin: mekanikervisningen har ingen egen desktop-variant, og
  * skal ikke få det. To varianter av samme skjerm er to skjermer å holde i synk.
  */
@@ -83,7 +80,7 @@ export default function MegPage() {
     <div className="mx-auto flex w-full max-w-[560px] flex-col gap-4 px-4 py-6">
       <h1 className="sr-only">Meg</h1>
 
-      {/* ── Hurtigbrytere: det man faktisk bytter ofte ─────────────────── */}
+      {/* Hurtigbrytere: det man faktisk bytter ofte */}
       <CardShell>
         <div className="flex flex-col divide-y divide-border rounded-lg bg-inset">
           <Hurtigbryter
@@ -109,7 +106,7 @@ export default function MegPage() {
         </div>
       </CardShell>
 
-      {/* ── Hvem du er ────────────────────────────────────────────────── */}
+      {/* Hvem du er */}
       <CardShell>
         <div className="flex flex-col gap-3 rounded-lg bg-inset p-5">
           <div className="flex items-center gap-3">
@@ -146,12 +143,14 @@ export default function MegPage() {
         </div>
       </CardShell>
 
-      {/* ── Navn, kallenavn og varslingslyder ─────────────────────────
-          Samme komponent som forhandlerens Settings › Profil. Én innstilling,
-          ett sted i koden — se `_shell/profil-kort.tsx`. */}
+      {/*
+       * Navn, kallenavn og varslingslyder
+       * Samme komponent som forhandlerens Settings › Profil. Én innstilling,
+       * ett sted i koden — se `_shell/profil-kort.tsx`.
+       */}
       <ProfilKort />
 
-      {/* ── Sikkerhet ─────────────────────────────────────────────────── */}
+      {/* Sikkerhet */}
       <CardShell>
         <div className="flex flex-col gap-3 rounded-lg bg-inset p-5">
           <p className="flex items-center gap-2 text-label text-fg">
@@ -159,9 +158,11 @@ export default function MegPage() {
             Sikkerhet
           </p>
 
-          {/* F1-17 — bytte med gjeldende passord bor i ProfilKort over.
-              F1-20 / F1-22 — samme statusrad som Settings › Profil.
-              Slå-av krever gjeldende passord. Resetlenka står under passordskjemaet. */}
+          {/*
+           * Bytte med gjeldende passord bor i ProfilKort over.
+           * F1-20 / F1-22 — samme statusrad som Settings › Profil.
+           * Slå-av krever gjeldende passord. Resetlenka står under passordskjemaet.
+           */}
           <ToFaktorRad
             enabled={
               session?.user && 'twoFactorEnabled' in session.user
@@ -172,7 +173,7 @@ export default function MegPage() {
         </div>
       </CardShell>
 
-      {/* ── Varslingskanaler ──────────────────────────────────────────── */}
+      {/* Varslingskanaler */}
       <CardShell>
         <div className="flex flex-col gap-3 rounded-lg bg-inset p-5">
           <p className="flex items-center gap-2 text-label text-fg">
@@ -184,9 +185,11 @@ export default function MegPage() {
           <Kanal icon={Phone} navn="SMS" status="Kommer" viktig />
           <Kanal icon={Mail} navn="E-post" status="På" />
 
-          {/* ⚠️ Ærlig om hva som mangler: push og SMS er de to som betyr noe når
-              man står i hallen uten appen åpen, og de er ikke koblet ennå. Å
-              vise dem som «På» ville vært å love varsler som aldri kommer. */}
+          {/*
+           * Ærlig om hva som mangler: push og SMS er de to som betyr noe når
+           * man står i hallen uten appen åpen, og de er ikke koblet ennå. Å
+           * vise dem som «På» ville vært å love varsler som aldri kommer.
+           */}
           <p className="text-[12px] text-fg-muted leading-relaxed">
             Push og SMS er ikke koblet ennå — de er de to som betyr mest når du står i hallen, og de
             kommer sammen med varslingsmotoren. Fram til da når vi deg på e-post.

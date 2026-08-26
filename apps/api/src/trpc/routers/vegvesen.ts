@@ -4,14 +4,13 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { moduleAdminProcedure, moduleProcedure, router } from '../init.ts';
 
-/** ⛔ F0-16 — MODUL-GATE: `vegvesen`. */
+/** Modul-gate: `vegvesen`. */
 const vegvesenProcedure = moduleProcedure('vegvesen');
 const vegvesenAdminProcedure = moduleAdminProcedure('vegvesen');
 
 /**
- * F2-08 — Vegvesen-API-nøkkel per forhandler.
- *
- * ⛔ `config` returnerer KUN `hasKey`. Nøkkelen forlater aldri serveren,
+ * Vegvesen-API-nøkkel per forhandler.
+ * `config` returnerer kun `hasKey`. Nøkkelen forlater aldri serveren,
  * logges ikke, og sendes ikke til klienten.
  */
 export const vegvesenRouter = router({

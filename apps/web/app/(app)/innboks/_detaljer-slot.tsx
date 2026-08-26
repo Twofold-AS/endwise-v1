@@ -8,23 +8,19 @@ import { DetaljerPanel, EndwiseForhandlerDetaljer } from './_detaljer';
 import { useInboxModus } from './_modus';
 
 /**
- * F6-17 — Plassen «Detaljer»-panelet bor på, og bryteren som styrer det.
- *
- * ── Hvorfor åpne/lukke-tilstanden bor HER ─────────────────────────────────
+ * Plassen «Detaljer»-panelet bor på, og bryteren som styrer det.
+ * Hvorfor åpne/lukke-tilstanden bor her
  * Både panelet og knappen som åpner det trenger den. Lå den i trådvisningen,
  * måtte den løftes gjennom en context bare for å nå to søsken. Slot-en er den
  * felles forelderen som allerede finnes.
- *
- * ── Tilstanden lagres per BRUKER, ikke i localStorage ─────────────────────
+ * Tilstanden lagres per bruker, ikke i localStorage
  * `user_preferences.inbox_details_open` (F5-19-tabellen). Det er en arbeidsvane,
  * ikke en nettleserinnstilling: åpner du innboksen på verkstedets maskin i dag
  * og din egen i morgen, skal panelet stå som du forlot det.
- *
- * ⚠️ Optimistisk lokalt: bryteren flytter panelet MED ÉN GANG og lagrer i
+ * Optimistisk lokalt: bryteren flytter panelet med ÉN gang og lagrer i
  * bakgrunnen. Å vente på en rundtur før en kolonne forsvinner ville føltes som
  * treghet, og det er ingenting å angre på om lagringen feiler.
- *
- * ── ⛔ Panelet vises KUN når en samtale er valgt ─────────────────────────
+ * Panelet vises kun når en samtale er valgt
  * `/innboks` uten tråd har ingen kontekst å vise — der ville panelet vært en
  * tom kolonne som stjeler bredde fra lista.
  */

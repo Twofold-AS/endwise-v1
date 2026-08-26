@@ -6,18 +6,16 @@ import { RESEND_STANDARD_DOMENE as TOOLKIT_STANDARD } from '@endwise/toolkit-res
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 /**
- * F6-26 — UTGÅENDE E-POST FRA INNBOKSEN.
- *
- * ── Hva som faktisk kan gå galt her ──────────────────────────────────────
- * Fram til 22.08.2026 var kanalvalget ren metadata: raden fikk et
+ * Utgående E-POST fra innboksen.
+ * Hva som faktisk kan gå galt her
+ * Fram til var kanalvalget ren metadata: raden fikk et
  * konvoluttikon, og ingenting ble sendt. Feilen var usynlig fordi UI-et så
  * riktig ut. Testene under låser de tre tingene som kan bli usynlig gale igjen:
- *
- *   1. **Idempotens** — to forsøk må ikke bli to e-poster hos kunden.
- *   2. **Kanalen på raden må matche det som FAKTISK ble sendt** — ellers lyver
- *      badgen i innboksen, og selgeren tror kunden er varslet.
- *   3. **Avsenderdomenet** — apex mot verifisert subdomene. Samme felle som
- *      slo ut hver eneste auth-e-post samme dag.
+ * 1. **Idempotens** — to forsøk må ikke bli to e-poster hos kunden.
+ * 2. **Kanalen på raden må matche det som faktisk ble sendt** — ellers lyver
+ * badgen i innboksen, og selgeren tror kunden er varslet.
+ * 3. **Avsenderdomenet** — apex mot verifisert subdomene. Samme felle som
+ * slo ut hver eneste auth-e-post samme dag.
  */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
@@ -25,8 +23,7 @@ const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;
 
 /**
  * Teller kall og lar testen bestemme om «leverandøren» svarer eller kaster.
- *
- * ⚠️ Leverandør-ID-en må være GLOBALT unik, ikke `resend-1` per kanal.
+ * Leverandør-ID-en må være globalt unik, ikke `resend-1` per kanal.
  * `messages` har en unik indeks på `(tenant_id, external_id)`, så to tester i
  * samme tenant som begge skriver «resend-1» gir en constraint-violation — og
  * koden markerer da meldingen `failed`, helt korrekt. Første versjon av denne
@@ -58,7 +55,7 @@ describe('F6-26 — avsenderdomenet', () => {
   });
 
   it('⛔ standard-avsenderen er faktisk et verifisert domene', () => {
-    // Er den ikke det, feiler HVER e-post i et miljø uten RESEND_FROM.
+    // Er den ikke det, feiler hver e-post i et miljø uten RESEND_FROM.
     expect(avsenderErVerifisert(`Endwise <no-reply@${TOOLKIT_STANDARD}>`)).toBe(true);
   });
 });
@@ -116,7 +113,7 @@ describeDb('F6-26 — utgående melding fra innboksen', () => {
     expect(kall).toHaveLength(1);
     expect(kall[0]).toMatchObject({
       to: KUNDE_EPOST,
-      // ⛔ Svaret må gå til et menneske, ikke til no-reply. Se F6-27.
+      // Svaret må gå til et menneske, ikke til no-reply. Se F6-27.
       svarTil: `${ansatt}@test.no`,
       avsenderNavn: 'Kari Selger',
       forhandler: 'Bergen MC',
@@ -126,7 +123,7 @@ describeDb('F6-26 — utgående melding fra innboksen', () => {
       idempotencyKey: melding.id,
     });
 
-    // ⛔ Kanalen på raden = det som faktisk gikk ut.
+    // Kanalen på raden = det som faktisk gikk ut.
     expect(melding.channel).toBe('email');
     expect(melding.deliveryStatus).toBe('sent');
     expect(melding.externalId).toBe(`${prefiks}-1`);
@@ -197,7 +194,7 @@ describeDb('F6-26 — utgående melding fra innboksen', () => {
     expect(kall).toHaveLength(1);
     expect(melding.deliveryStatus).toBe('failed');
     expect(melding.deliveryError).toContain('403');
-    // ⛔ Meldingen er IKKE tapt — det brukeren skrev står fortsatt i tråden.
+    // Meldingen er ikke tapt — det brukeren skrev står fortsatt i tråden.
     expect(melding.body).toBe('Denne feiler.');
   });
 
@@ -282,7 +279,7 @@ describeDb('F6-26 — utgående melding fra innboksen', () => {
   });
 
   it('⛔ uten e-postkanal koblet på feiler den synlig, ikke stille', async () => {
-    // Typisk lokalt uten RESEND_API_KEY. Skal IKKE se ut som en sendt melding.
+    // Typisk lokalt uten RESEND_API_KEY. Skal ikke se ut som en sendt melding.
     const modul = createMessagesModule(app, {});
     const traad = await nyEpostTraad(modul);
 

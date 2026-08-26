@@ -12,11 +12,10 @@ import { Field, INPUT, PassordFelt } from '../../_auth/felter';
 import { CardShell } from './cards';
 
 /**
- * F1-27 — be om e-postbytte. Adressen byttes IKKE her.
- *
+ * Be om e-postbytte. Adressen byttes ikke her.
  * Samme komposisjon som `ByttPassordSkjema` (PassordFelt + StatefulButton).
  * Serveren krever passord (F1-22-mønsteret) og sender bekreftelse til
- * adressen brukeren HAR. Først når lenka åpnes — og den nye adressen
+ * adressen brukeren har. Først når lenka åpnes — og den nye adressen
  * bekreftes — skrives e-posten.
  */
 export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {

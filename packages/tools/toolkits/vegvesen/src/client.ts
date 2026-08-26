@@ -23,10 +23,9 @@ export interface VegvesenConfig {
 }
 
 /**
- * F2-08 — Kjøretøyoppslag mot Statens vegvesen (Autosys «Enkeltoppslag»).
- *
- * GDPR-merknad som IKKE er valgfri: kjennemerke og understellsnummer er
- * personopplysninger etter norsk rett. Oppslag krever behandlingsgrunnlag —
+ * Kjøretøyoppslag mot Statens vegvesen (Autosys «Enkeltoppslag»).
+ * GDPR-merknad som ikke er valgfri: kjennemerke og understellsnummer er
+ * personopplysninger etter norsk rett. Oppslag krever behandlingsgrunnlag
  * her: booking-forespørselen fra kunden selv. Vi logger derfor aldri regnr
  * i klartekst utenfor tenant-skopet, og speiler kun det verkstedet trenger.
  */
@@ -90,8 +89,8 @@ export function createVegvesenClient(config: VegvesenConfig) {
 export type VegvesenClient = ReturnType<typeof createVegvesenClient>;
 
 /**
- * F0-06 — IntegrationProvider-implementasjonen.
- * `validate()` gjør et ekte oppslag: en API-nøkkel som ikke virker skal avvises
+ * IntegrationProvider-implementasjonen.
+ * `validate` gjør et ekte oppslag: en API-nøkkel som ikke virker skal avvises
  * ved onboarding, ikke første gang en kunde prøver å booke.
  */
 export function vegvesenProvider(

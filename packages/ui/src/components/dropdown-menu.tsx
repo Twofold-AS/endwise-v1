@@ -7,11 +7,9 @@ import type * as React from 'react';
 /*
  * shadcn/ui DropdownMenu (New York) på `radix-ui` — samme primitiv shadcn selv
  * bruker, og allerede en avhengighet av denne pakken.
- *
- * ⚠️ Ligger her og ikke i `apps/web` med vilje: UI-PAKKER §5 sier apper ikke
+ * Ligger her og ikke i `apps/web` med vilje: ui-pakker §5 sier apper ikke
  * importerer primitivbiblioteket direkte. Da finnes det ett sted å endre
  * dropdown-utseendet, og appen slipper å deklarere `radix-ui` selv.
- *
  * Mål følger eierens spec: rader 40px, radius 10px, label 13/16.
  */
 export const DropdownMenu = Primitive.Root;
@@ -84,7 +82,7 @@ export function DropdownMenuSeparator({
 }
 
 /**
- * FELLES POPUP-MØNSTER (06.08.2026, eierens spec).
+ * Felles popup-mønster (eierens spec).
  *
  * Hver flyout som åpner ut fra sidebaren starter likt: **navnet på punktet**,
  * en **stiplet** skillelinje, og så radene. Den stiplede linja er valgt med

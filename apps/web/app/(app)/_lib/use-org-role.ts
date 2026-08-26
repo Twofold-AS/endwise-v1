@@ -6,11 +6,10 @@ import type { OrgRole } from '../_shell/nav';
 import { erPlattformIUi } from './plattform';
 
 /**
- * F1-05 — Ekte rolle fra sesjonen: Better-Auth sier innlogget/ikke, og
+ * Ekte rolle fra sesjonen: Better-Auth sier innlogget/ikke, og
  * `trpc.session.me` gir org-rollen + om brukeren er mekaniker (mekaniker-profil).
  * Klient-side gating er kosmetikk; server håndhever via adminProcedure/RLS.
- *
- * ── Utvidet 07.08.2026 (F5-26/F5-27) ───────────────────────────────────────
+ * Utvidet (F5-26/F5-27)
  * `tenantName` erstatter «Endwise-forhandler»-placeholderen i sidebaren.
  * `devMode` er de tre betingelsene fra `apps/api/src/trpc/dev-mode.ts`, allerede
  * resolvert på serveren — klienten regner ikke ut noe selv, den viser bare svaret.
@@ -43,20 +42,19 @@ export function useOrgRole(): {
   isAdmin: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
-  /** ⚠️ Kosmetikk. Sperren er server-side på hver skrivesti. */
+  /** Kosmetikk. Sperren er server-side på hver skrivesti. */
   devMode: boolean;
   /**
-   * Kan brukeren BYTTE til en demo-tenant? Bevisst svakere enn `devMode`.
-   *
-   * Full dev-mode krever at du allerede ER i en demo-tenant — men da ville
-   * bytteren som får deg DIT vært gjemt bak seg selv. Derfor holder det med
+   * Kan brukeren bytte til en demo-tenant? Bevisst svakere enn `devMode`.
+   * Full dev-mode krever at du allerede er i en demo-tenant — men da ville
+   * bytteren som får deg dit vært gjemt bak seg selv. Derfor holder det med
    * flagg + endwise_admin for å se lista. Det gir ingen tilgang: ruta bak den
    * er `endwiseAdminProcedure` og returnerer kun tenants du allerede er
    * medlem av.
    */
   canSwitchDemo: boolean;
   needsOnboarding: boolean;
-  /** F10-03 — kosmetikk. Sperren er shopProcedure. Fail-safe AV. */
+  /** Kosmetikk. Sperren er shopProcedure. Fail-safe av. */
   shopEnabled: boolean;
 } {
   const { data: session, isPending } = useSession();

@@ -5,21 +5,18 @@ import { AgentChat } from '../../_chat/agent-chat';
 import { CardShell } from '../../_shell/cards';
 
 /**
- * F6-04 + F6-18 — AI-DIAGNOSE, den EKTE chat-flaten.
- *
- * ⚠️ Dette er den eneste chat-flaten i produktet som faktisk snakker med en
+ * F6-04 + F6-18 — ai-diagnose, den ekte chat-flaten.
+ * Dette er den eneste chat-flaten i produktet som faktisk snakker med en
  * modell. Den går mot `/chat/ai-diagnose` (Next route handler) → agent-runtime.
  * Sammenlign med `/ai-verktoy/nettside`, som er en demo-strøm og sier det.
- *
- * ── Hvorfor akkurat denne agenten først ──────────────────────────────────
+ * Hvorfor akkurat denne agenten først
  * F6-04 hadde backend fra før (leverandør-abstraksjon, dataklasse-ruting,
- * logging). Det som manglet var en flate der noen faktisk kunne SNAKKE med den
- * — konsollen på `/ai-innsikt` kjører én melding om gangen uten samtale.
- *
- * ── ⛔ Dataklassen bestemmer leverandøren ────────────────────────────────
+ * logging). Det som manglet var en flate der noen faktisk kunne snakke med den
+ * konsollen på `/ai-innsikt` kjører én melding om gangen uten samtale.
+ * Dataklassen bestemmer leverandøren
  * Agenten er `customer_freetext`: den som skriver beskriver et problem med egne
  * ord, og vi vet ikke hva som står der. Derfor **Mistral (EU)**, håndhevet i
- * `streamAgentChat()`. Klienten kan ikke overstyre det.
+ * `streamAgentChat`. Klienten kan ikke overstyre det.
  */
 export default function AiDiagnosePage() {
   return (

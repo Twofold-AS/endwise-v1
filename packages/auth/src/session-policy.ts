@@ -1,12 +1,11 @@
 /**
- * F1-12 — Sesjonspolicy (CWE-613, ASVS 3.3).
- *
+ * Sesjonspolicy (CWE-613, ASVS 3.3).
  * To grenser, ikke én:
- *   - IDLE:     60 min uten aktivitet -> ut. Glidende vindu, håndhevet SERVERSIDE
- *               (Better-Auth `expiresIn` + `updateAge`), ikke en klient-timer.
- *   - ABSOLUTT: uansett aktivitet dør sesjonen etter maks-levetiden. Better-Auth
- *               har ingen innebygd absolutt levetid — derfor feltet
- *               `absoluteExpiresAt` på sesjonen + sjekken under.
+ * idle: 60 min uten aktivitet -> ut. Glidende vindu, håndhevet serverside
+ * (Better-Auth `expiresIn` + `updateAge`), ikke en klient-timer.
+ * absolutt: uansett aktivitet dør sesjonen etter maks-levetiden. Better-Auth
+ * har ingen innebygd absolutt levetid — derfor feltet
+ * `absoluteExpiresAt` på sesjonen + sjekken under.
  */
 export const IDLE_TIMEOUT_SECONDS = 60 * 60; // 60 min
 export const SESSION_UPDATE_AGE_SECONDS = 5 * 60; // rull vinduet maks hvert 5. min

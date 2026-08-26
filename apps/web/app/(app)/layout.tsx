@@ -16,22 +16,18 @@ import { TopBar } from './_shell/top-bar';
 
 /**
  * Admin/forhandler-shell (TheFold-stil) + auth-/rolle-guard.
- *
- * - Ikke innlogget → /signin.
- * - **Ren** mekaniker → låst til /min-dag med mobil-shell (kosmetisk;
- *   RLS/adminProcedure er den ekte sperren server-side).
- *
- * ── ⚠️ «Ren» er ikke en detalj (rettet 07.08.2026) ─────────────────────────
- * Guarden låste tidligere ALLE med `isMechanic` til /min-dag og ga dem
+ * Ikke innlogget → /signin.
+ * Ren mekaniker → låst til /min-dag med mobil-shell (kosmetisk;
+ * RLS/adminProcedure er den ekte sperren server-side).
+ * «Ren» er ikke en detalj
+ * Guarden låste tidligere alle med `isMechanic` til /min-dag og ga dem
  * mobil-shellet — altså **ingen sidebar og ingen kontekstvelger**.
- *
  * Det var riktig så lenge en mekaniker-profil bare fantes på mekanikere. Men
  * `isMechanic` betyr «har en rad i `mechanics`», ikke «skal kun se
  * mekanikerflaten». En forhandler-admin som også jobber på gulvet — eller en
  * Endwise-admin i dev-mode — ble låst ute fra sitt eget dashboard, og
  * kontekstvelgeren (F5-29) som finnes nettopp for å bytte mellom visningene,
  * var utilgjengelig.
- *
  * Nå gjelder låsen kun den som ikke har noe annet sted å være: `dealer_staff`
  * med mekaniker-profil. Admins får full sidebar, og bytter til
  * mekanikervisningen via kontekstvelgeren som alle andre visninger.
@@ -46,23 +42,20 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     setPlattformVarsel(plattformToast());
   }, []);
 
-  /** Har mekaniker-profil OG ingen admin-rolle → mekanikerflaten er hele appen. */
+  /** Har mekaniker-profil og ingen admin-rolle → mekanikerflaten er hele appen. */
   const kunMekaniker = isMechanic && !isAdmin;
 
   /**
-   * ⛔ **UTLOGGINGS-GUARDEN — og hvorfor den spør serveren før den kaster deg ut.**
-   *
+   * utloggings-guarden — og hvorfor den spør serveren før den kaster deg ut.
    * Guarden gjorde tidligere `if (!isPending && !session?.user) redirect`. Den
    * stolte altså på Better-Auths klient-store alene. Ved en myk navigasjon inn
    * i appen er den storen uinitialisert i ett render — «ingen bruker» betyr da
    * «ikke hentet ennå», ikke «ikke innlogget». Resultatet var at en helt gyldig
    * innlogging ble kastet rett tilbake til /signin (dobbel-login-bugen).
-   *
    * Innlogging gjør nå en full sidelast, som fjerner kappløpet i praksis. Denne
-   * sjekken er det andre laget: **vi kaster ingen ut på et fravær av data — bare
-   * på et bekreftet nei.** Én eksplisitt `getSession()` mot serveren, og først
-   * hvis DEN sier nei går vi til /signin.
-   *
+   * sjekken er det andre laget: vi kaster ingen ut på et fravær av data — bare
+   * på et bekreftet nei. Én eksplisitt `getSession` mot serveren, og først
+   * hvis den sier nei går vi til /signin.
    * Kostnaden er ett ekstra kall, og bare i feilstien. Prisen for å ta feil er
    * at brukeren mister det hun holdt på med.
    */
@@ -116,9 +109,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [pathname]);
 
-  // F7-01 — Mekanikeren får mobil-shell (bottom-nav), ikke admin-sidebaren.
+  // Mekanikeren får mobil-shell (bottom-nav), ikke admin-sidebaren.
   // Server håndhever grensen (RLS + adminProcedure); dette er UI-formen.
-  // F5-19 — Lyd gjelder BEGGE shellene. Mekanikeren er den som oftest har
+  // Lyd gjelder begge shellene. Mekanikeren er den som oftest har
   // hendene fulle og skjermen i lomma; å la lyden bare finnes i adminpanelet
   // ville vært å gi varselet til den som allerede ser skjermen.
   if (kunMekaniker) {
@@ -132,31 +125,30 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }
 
   /*
-   * F7-07 — ⚠️ Service-worker-håndteringen hører hjemme HER, ikke bare i
-   * MobileShell (flyttet 08.08.2026).
-   *
-   * SW-en registreres med `scope: '/'` og kontrollerer da HVER side i appen —
+   * Service-worker-håndteringen hører hjemme her, ikke bare i
+   * MobileShell (flyttet ).
+   * Sw-en registreres med `scope: '/'` og kontrollerer da hver side i appen
    * også for en admin som aldri ser mekanikerflaten. Lå avregistreringen kun i
-   * MobileShell, ville en admin med en gammel SW installert aldri fått ryddet
-   * opp, og fortsatt blitt servert gammel kode fra SW-cachen.
+   * MobileShell, ville en admin med en gammel sw installert aldri fått ryddet
+   * opp, og fortsatt blitt servert gammel kode fra sw-cachen.
    */
 
   /*
-   * F5-13 — Sidebaren er nå YTTERST og går fra topp til bunn. Topbaren ligger
-   * INNENFOR innholdskolonnen, ikke over hele skjermen: den beskriver bare hvor
+   * Sidebaren er nå ytterst og går fra topp til bunn. Topbaren ligger
+   * Innenfor innholdskolonnen, ikke over hele skjermen: den beskriver bare hvor
    * du er i innholdet, ikke i appen. Rekkefølgen i DOM-en sier det samme som
    * hierarkiet i hodet.
-   *
-   * ⚠️ Kommandopaletten (⌘K som globalt søk) er FJERNET 05.08.2026 på eiers
-   * beslutning. ⌘K åpner nå quick actions i sidebaren i stedet. Konsekvensen er
-   * at de parkerte rutene (marked/*, admin/*) ikke lenger har en inngang i UI-et
-   * — de nås kun ved å skrive URL-en. Se sesjonsrapporten.
+   * Kommandopaletten (K som globalt søk) er fjernet på eiers
+   * beslutning. K åpner nå quick actions i sidebaren i stedet. Konsekvensen er
+   * at de parkerte rutene (marked/*
+   * , admin/*) ikke lenger har en inngang i UI-et
+   * de nås kun ved å skrive URL-en. Se sesjonsrapporten.
    */
   /*
-   * ⚠️ `<Suspense>` rundt Sidebar og TopBar er PÅKREVD, ikke pynt. Begge leser
-   * `useSearchParams()` (kanal-/visningsvalg i navet, breadcrumb), og uten en
-   * suspense-grense trekker det HELE app-treet ut av statisk prerender —
-   * `next build` feiler med «useSearchParams() should be wrapped in a suspense
+   * `<Suspense>` rundt Sidebar og TopBar er påkrevd, ikke pynt. Begge leser
+   * `useSearchParams` (kanal-/visningsvalg i navet, breadcrumb), og uten en
+   * suspense-grense trekker det hele app-treet ut av statisk prerender
+   * `next build` feiler med «useSearchParams should be wrapped in a suspense
    * boundary» på hver eneste side, også de som ikke rører query.
    */
   return (

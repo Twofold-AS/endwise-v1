@@ -5,11 +5,10 @@ import { CardShell } from '../../_shell/cards';
 import type { Kpi } from '../_data';
 
 /**
- * KPI-kort. **Ingen graf** — dither-kit ble fjernet fra UI-et 03.08.2026
+ * KPI-kort. **Ingen graf** — dither-kit ble fjernet fra UI-et
  * (eierens beslutning). Kortet står, tallet bærer.
- *
  * Regelen fra før var at grafen aldri skulle bære informasjon alene; tallet
- * skulle alltid stå i klartekst. Derfor kostet det ingenting å ta bort grafen —
+ * skulle alltid stå i klartekst. Derfor kostet det ingenting å ta bort grafen
  * all informasjon var allerede i teksten. Det er også hele beviset på at regelen
  * var riktig.
  */

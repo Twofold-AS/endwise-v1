@@ -1,4 +1,4 @@
-/// <reference path="../md.d.ts" />
+// / <reference path="../md.d.ts" />
 import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import { createMessagesModule } from '@endwise/modules';
@@ -7,20 +7,17 @@ import { z } from 'zod';
 import instructions from './instructions.md?raw';
 
 /**
- * F6-04 — AI-DIAGNOSE. Den første agenten som kjører på chat-flaten (F6-18).
- *
- * ── ⛔ dataClass: customer_freetext ──────────────────────────────────────
+ * Ai-diagnose. Den første agenten som kjører på chat-flaten (F6-18).
+ * dataClass: customer_freetext
  * Den som skriver, beskriver et problem med egne ord. Vi kontrollerer ikke hva
  * som står der — det kan være «jeg falt av og brakk håndleddet, sykkelen står
  * i grøfta», altså helseopplysninger (art. 9). Derfor **Mistral (EU), alltid**,
- * håndhevet i `streamAgentChat()`/`spawnAgent()`, ikke i en konfigfil.
- *
- * ── De tre verktøyene, og hvorfor akkurat disse ──────────────────────────
- *   `tjenester`      LESE  — hva verkstedet faktisk tilbyr. Uten den ville
- *                            modellen funnet på tjenester som ikke finnes.
- *   `sporKunden`     SPØR  — klient-verktøy UTEN `execute`. Se under.
- *   `noterDiagnose`  SKRIVE — bak `needsApproval`. Se under.
- *
+ * håndhevet i `streamAgentChat`/`spawnAgent`, ikke i en konfigfil.
+ * De tre verktøyene, og hvorfor akkurat disse
+ * `tjenester` lese — hva verkstedet faktisk tilbyr. Uten den ville
+ * modellen funnet på tjenester som ikke finnes.
+ * `sporKunden` spør — klient-verktøy uten `execute`. Se under.
+ * `noterDiagnose` skrive — bak `needsApproval`. Se under.
  * Ingen av dem tar imot en `tenantId`. Den finnes ikke som felt å be i.
  */
 export const aiDiagnoseAgent: AgentDefinition = {
@@ -52,14 +49,12 @@ export const aiDiagnoseAgent: AgentDefinition = {
       }),
 
       /**
-       * ⚠️ INGEN `execute`. Det er ikke en forglemmelse — det er mekanismen.
-       *
+       * Ingen `execute`. Det er ikke en forglemmelse — det er mekanismen.
        * Et verktøy uten `execute` kjøres ikke på serveren. AI SDK sender det til
-       * klienten som en tool-part i tilstand `input-available`, og løkka STOPPER
+       * klienten som en tool-part i tilstand `input-available`, og løkka stopper
        * til svaret kommer tilbake via `addToolOutput`. Det er human-in-the-loop
        * uten at vi har bygget en eneste tilstandsmaskin selv.
-       *
-       * UI-et rendrer dette som en `Questionnaire` (UI-PAKKER §9).
+       * UI-et rendrer dette som en `Questionnaire` (ui-pakker §9).
        */
       sporKunden: tool({
         description:
@@ -75,15 +70,13 @@ export const aiDiagnoseAgent: AgentDefinition = {
       }),
 
       /**
-       * ⛔ GODKJENN-FØR-AGENTEN-SKRIVER.
-       *
+       * Godkjenn-før-agenten-skriver.
        * `needsApproval: true` gjør at AI SDK holder kallet tilbake og sender
        * tilstanden `approval-requested` til klienten. `execute` kjører først når
        * et menneske har svart ja. Samme prinsipp som Quick-push (F8-01) og
        * Framer-publisering (F8-09): agenten foreslår, mennesket utfører.
-       *
-       * ⚠️ Skrivingen går gjennom `postMessage`, som kaller `assertParticipant`.
-       * Er ikke brukeren deltaker i tråden, feiler den — den feiler LUKKET.
+       * Skrivingen går gjennom `postMessage`, som kaller `assertParticipant`.
+       * Er ikke brukeren deltaker i tråden, feiler den — den feiler lukket.
        */
       noterDiagnose: tool({
         description:
@@ -111,7 +104,7 @@ export const aiDiagnoseAgent: AgentDefinition = {
             return { skrevet: false, grunn: 'Ingen sak å skrive i.' };
           }
 
-          // ⚠️ Tjenesten må FINNES. Uten denne sjekken kunne modellen skrevet et
+          // Tjenesten må finnes. Uten denne sjekken kunne modellen skrevet et
           // notat om «Stor service Platinum» som verkstedet ikke tilbyr, og det
           // ville sett like ekte ut som alt annet i saken.
           const treff = await withTenant(context.db, context.tenantId, (tx) =>

@@ -42,14 +42,12 @@ import {
 import { useInboxModus } from '../_modus';
 
 /**
- * F6-01 — Tråden. F6-05 — overtakelsen fra AI, i SAMME tråd.
- *
+ * Tråden. F6-05 — overtakelsen fra AI, i samme tråd.
  * Det som gjør eskaleringen synlig her er ikke en egen «eskalert»-kolonne, men
  * at agenten skrev en systemmelding i tråden da den ga slipp (`escalateToHuman`).
  * Historikken over den er kontekst for mennesket som overtar — derfor vises hele
  * samtalen, ikke bare det som skjedde etter overtakelsen.
- *
- * `markRead` kjøres når tråden åpnes OG når det kommer nye meldinger mens den
+ * `markRead` kjøres når tråden åpnes og når det kommer nye meldinger mens den
  * står åpen. Uten det andre kallet ville uleste-telleren vokst mens brukeren
  * satt og så på meldingene.
  */
@@ -87,9 +85,8 @@ export default function TrådPage() {
   });
   const markRead = endwise ? markReadPlatform : markReadDealer;
   /**
-   * F6-26 — send en melding som ikke gikk fram, på nytt.
-   *
-   * ⚠️ Serveren avviser en melding som allerede står som `sent`, så et
+   * Send en melding som ikke gikk fram, på nytt.
+   * Serveren avviser en melding som allerede står som `sent`, så et
    * dobbeltklikk her kan ikke bli to e-poster hos kunden. Knappen er likevel
    * deaktivert mens den går — ikke for sikkerhets skyld, men fordi en knapp som
    * ikke reagerer på trykk ser ødelagt ut.
@@ -121,8 +118,7 @@ export default function TrådPage() {
   const rows = useMemo(() => messages.data ?? [], [messages.data]);
 
   /**
-   * Navn på alle som HAR skrevet, pluss alle som ER i tråden.
-   *
+   * Navn på alle som har skrevet, pluss alle som er i tråden.
    * Begge kilder trengs: en deltaker som ennå ikke har skrevet skal likevel
    * kunne navngi tråden, og en forfatter som siden er tatt ut av tråden skal
    * ikke miste navnet sitt bakover i historikken.
@@ -134,10 +130,9 @@ export default function TrådPage() {
   }, [rows, motparter]);
 
   /**
-   * ⛔ Kallenavn KUN i interne tråder. Én tråd på skjermen = én visning, så her
+   * Kallenavn kun i interne tråder. Én tråd på skjermen = én visning, så her
    * er det enkelt: kundetråder får `offisiell`, og da ser serveren aldri engang
    * etter et kallenavn.
-   *
    * Fram til tråden er lastet står visningen på `offisiell` — å defaulte til
    * `intern` mens vi venter ville betydd at et kallenavn kunne blinke innom i
    * en kundetråd før riktig svar kom.
@@ -173,7 +168,7 @@ export default function TrådPage() {
 
   const navnKart = { ...(navn.data ?? {}), ...meldingNavn };
 
-  // Sanntid: bare for DENNE tråden. Eventet er varselklokka; innholdet hentes
+  // Sanntid: bare for denne tråden. Eventet er varselklokka; innholdet hentes
   // gjennom tRPC (og dermed RLS).
   const onStreamEvent = useCallback(
     (event: { type: string; subjectId: string | null }) => {
@@ -191,8 +186,8 @@ export default function TrådPage() {
     [threadId, utils, endwise],
   );
   // Sanntid kjører fortsatt — men uten statuspille. Eiers beslutning
-  // 06.08.2026: statusmerker («Sanntid», «Live», «Aktive») er pynt som
-  // konkurrerer med innholdet. Strømmen skal merkes ved at ting DUKKER OPP,
+  // statusmerker («Sanntid», «Live», «Aktive») er pynt som
+  // konkurrerer med innholdet. Strømmen skal merkes ved at ting dukker opp,
   // ikke ved en lampe som sier at den kunne dukket opp.
   useEventStream(onStreamEvent);
 
@@ -275,18 +270,19 @@ export default function TrådPage() {
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           {/**
-           * F5-14 — ⛔ «← Meldinger» sto her fram til 20.08.2026 og er fjernet.
-           *
+           * «← Meldinger» sto her fram til og er fjernet.
            * Innboksen har tre kolonner, og `layout.tsx` holder samtalelista
-           * MONTERT på tvers av trådbytter. Lista står altså allerede til
+           * Montert på tvers av trådbytter. Lista står altså allerede til
            * venstre mens du leser tråden. En knapp som «tar deg tilbake» til
            * noe du aldri forlot, er ikke navigasjon — den er en påstand om at
            * du er et annet sted enn du er.
            */}
           <h1 className="truncate text-title text-fg">{tradTittel}</h1>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
-            {/* Kanalen står i HODET, ikke nede ved svarfeltet: den skal være
-                lest før man begynner å skrive, ikke etterpå. */}
+            {/*
+             * Kanalen står i hodet, ikke nede ved svarfeltet: den skal være
+             * lest før man begynner å skrive, ikke etterpå.
+             */}
             {thread && (
               <KanalLinje
                 traad={tilKanal(thread.channel)}
@@ -305,8 +301,10 @@ export default function TrådPage() {
               </span>
             )}
             <span className="text-[12px] text-fg-muted">{rows.length} meldinger</span>
-            {/* Med emne står motpartene ellers ingen steder — og «hvem snakker
-                jeg med» er halve spørsmålet når du åpner en tråd. */}
+            {/*
+             * Med emne står motpartene ellers ingen steder — og «hvem snakker
+             * jeg med» er halve spørsmålet når du åpner en tråd.
+             */}
             {thread && 'motparter' in thread && thread.subject?.trim() && motparter.length > 0 && (
               <span className="min-w-0 truncate text-[12px] text-fg-muted">
                 · {threadHeading(null, thread.kind, motparter, navnKart, me.data?.userId)}
@@ -316,9 +314,11 @@ export default function TrådPage() {
         </div>
       </div>
 
-      {/* [ART50-UI] F6-05 — brukeren skal vite NÅR det skifter fra maskin til
-          menneske. Teksten er lovtekst; plasseringen (i tråden, over meldingene
-          som kom etter) er design. */}
+      {/*
+       * [ART50-UI] F6-05 — brukeren skal vite når det skifter fra maskin til
+       * menneske. Teksten er lovtekst; plasseringen (i tråden, over meldingene
+       * som kom etter) er design.
+       */}
       {escalated && (
         <div className="flex flex-col gap-2">
           <HumanHandoverNotice className="rounded-control bg-warn-soft text-body" />
@@ -388,7 +388,7 @@ export default function TrådPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Svarfelt. StatefulButton fordi dette ENDRER tilstand (UI-PAKKER §3). */}
+      {/* Svarfelt. StatefulButton fordi dette endrer tilstand (ui-pakker §3). */}
       <form onSubmit={onSubmit} className="flex items-end gap-2">
         <textarea
           value={body}
@@ -420,16 +420,13 @@ export default function TrådPage() {
 
 /**
  * Én melding.
- *
- * ⚠️ 03.08.2026: `DitherAvatar` fjernet (dither-kit ut av UI-et). Andre
+ * `DitherAvatar` fjernet (dither-kit ut av UI-et). Andre
  * deltakere får nå det samme nøytrale profil-ikonet som sidebaren bruker.
- *
  * Det kostet oss noe ekte: dither-avataren var **stabil per deltaker-ID**, så
- * øyet kunne skille to mennesker fra hverandre uten navn. Løst 08.08.2026 med
+ * øyet kunne skille to mennesker fra hverandre uten navn. Løst med
  * `directory.participants` — nå står navnet der, og initialene i avataren.
- *
- * ── Kanal per melding (08.08.2026) ────────────────────────────────────────
- * `kanal` vises som et merke ved siden av navnet — men KUN når den ikke er
+ * Kanal per melding
+ * `kanal` vises som et merke ved siden av navnet — men kun når den ikke er
  * `app`. En app-melding i en app-tråd er normaltilstanden, og et merke på hver
  * eneste rad hadde gjort merket usynlig nettopp der det betyr noe.
  */
@@ -461,31 +458,29 @@ function Message({
   /** Hvor meldingen kom inn / gikk ut. */
   kanal: Kanal;
   /**
-   * ⛔ Seeden til avataren — fra SERVEREN, ikke `authorId`. Null når vi ikke
+   * Seeden til avataren — fra serveren, ikke `authorId`. Null når vi ikke
    * kjenner personen; da tegnes det nøytrale ikonet, ikke et gjettet ansikt.
    */
   seed: string | null;
   avatar: AvatarValg | null;
-  /** `direction === 'inbound'` — den kom UTENFRA, ikke fra oss. */
+  /** `direction 'inbound'` — den kom utenfra, ikke fra oss. */
   utenfor: boolean;
   body: string;
   at: Date | string;
-  /** F6-26 — leveringsstatus for ekstern kanal. `null` = ingen levering gjelder. */
+  /** Leveringsstatus for ekstern kanal. `null` = ingen levering gjelder. */
   levering: 'pending' | 'sending' | 'sent' | 'failed' | null;
   leveringsfeil: string | null;
-  /** Satt kun når meldingen KAN sendes på nytt, altså når den har feilet. */
+  /** Satt kun når meldingen kan sendes på nytt, altså når den har feilet. */
   paaNytt?: () => void;
   sender: boolean;
 }) {
   /**
-   * F6-19 — initialene er borte, avataren er tilbake.
-   *
-   * Fram til 20.08.2026 sto det to bokstaver her. De var lesbare, men to
-   * mekanikere som begge forkortes «MH» fikk nøyaktig samme rute — og da bærer
+   * Initialene er borte, avataren er tilbake.
+   * Fram til sto det to bokstaver her. De var lesbare, men to
+   * mekanikere som begge forkortes «mh» fikk nøyaktig samme rute — og da bærer
    * ruta ingen informasjon. Blobatar gir formen tilbake, og navnet står
    * fortsatt rett ved siden av, så lesbarheten vi vant i august er i behold.
-   *
-   * ⚠️ Krever BEGGE deler: en rolle (personen hører til tenanten) og en seed
+   * Krever begge deler: en rolle (personen hører til tenanten) og en seed
    * fra serveren. Mangler én av dem, er det nøytrale ikonet riktig svar.
    */
   const kjent = Boolean(rolle && seed);
@@ -505,12 +500,14 @@ function Message({
             Du
           </span>
         ) : kjent && seed ? (
-          /* ⚠️ `hover` og ikke `alltid`: en tråd har mange meldinger, og
-             tretti ansikter som puster samtidig er nettopp den veggen av
-             bevegelse biblioteket selv advarer mot. Amplituden er 0 til du
-             peker — da rører ETT ansikt seg.
-             ⚠️ Vanlig JS-kommentar, ikke {/* … *​/}: vi står i en ternær
-             uttrykksposisjon, ikke blant JSX-barn. */
+          /*
+           * `hover` og ikke `alltid`: en tråd har mange meldinger, og
+           * tretti ansikter som puster samtidig er nettopp den veggen av
+           * bevegelse biblioteket selv advarer mot. Amplituden er 0 til du
+           * peker — da rører ett ansikt seg.
+           * Vanlig JS-kommentar, ikke {/* … *​/}: vi står i en ternær
+           * uttrykksposisjon, ikke blant JSX-barn.
+           */
           <Avatar seed={seed} valg={avatar} navn={author} size={28} bevegelse="hover" />
         ) : (
           <span className="grid size-7 place-items-center rounded-control bg-surface-2 text-fg-muted">
@@ -521,21 +518,25 @@ function Message({
       <div className={`flex min-w-0 max-w-[78%] flex-col gap-1 ${mine ? 'items-end' : ''}`}>
         <div className="flex items-baseline gap-2">
           <span className="text-[12px] text-fg-muted">{author}</span>
-          {/* Rollen står bare på andre enn deg selv: «Kunde» eller «Mekaniker»
-              endrer hvordan svaret skal formuleres. */}
+          {/*
+           * Rollen står bare på andre enn deg selv: «Kunde» eller «Mekaniker»
+           * endrer hvordan svaret skal formuleres.
+           */}
           {rolleEtikett && (
             <span className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
               {rolleEtikett}
             </span>
           )}
-          {/* Bare når kanalen er noe ANNET enn app — se doc over. */}
+          {/* Bare når kanalen er noe annet enn app — se doc over. */}
           {kanal !== 'app' && <KanalMerke kanal={kanal} />}
           <span className="text-[12px] text-fg-muted tabular-nums">{fmtTime(at)}</span>
         </div>
-        {/* ⚠️ Innkommende meldinger fra en EKSTERN kanal får en tydelig venstre
-            kant. En e-post kunden sendte til forhandlerens postkasse er ikke
-            det samme som en linje noen skrev i panelet, og forskjellen skal
-            være synlig uten å lese merket. */}
+        {/*
+         * Innkommende meldinger fra en ekstern kanal får en tydelig venstre
+         * kant. En e-post kunden sendte til forhandlerens postkasse er ikke
+         * det samme som en linje noen skrev i panelet, og forskjellen skal
+         * være synlig uten å lese merket.
+         */}
         <p
           className={`whitespace-pre-wrap break-words rounded-control px-3 py-2 text-body text-fg ${
             mine
@@ -549,9 +550,8 @@ function Message({
         </p>
 
         {/**
-         * F6-26 — LEVERINGSSTATUS.
-         *
-         * ⛔ Vises bevisst IKKE når statusen er `sent`. Kanalmerket over sier
+         * Leveringsstatus.
+         * Vises bevisst ikke når statusen er `sent`. Kanalmerket over sier
          * allerede at dette gikk på e-post, og en «Sendt»-hake på hver eneste
          * rad ville gjort den varselet under usynlig — det er nettopp den som
          * må fanges. Stillhet betyr «gikk fint»; alt annet får plass.

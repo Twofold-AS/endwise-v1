@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * F7-07 — Offline-kø for statusendringer. Mister mekanikeren dekning midt i en
+ * Offline-kø for statusendringer. Mister mekanikeren dekning midt i en
  * jobb, skal «Ferdig» ikke bare feile — den legges i kø og sendes når nettet er
  * tilbake. Bevisst enkel: i minnet (tømmes ved full reload — dokumentert), én
  * kø for booking-overganger. Nok til kjeller-uten-dekning-tilfellet.

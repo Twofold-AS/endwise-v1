@@ -16,16 +16,14 @@ import {
 } from '../src/schema.ts';
 
 /**
- * Live symptom: setConfig (client/info → z.object({}).loose()) can succeed
+ * Live symptom: setConfig (client/info → z.object({}).loose) can succeed
  * while pullNow throws «Uventet svarformat fra Quick» because customer/item/
  * stockentry batch schemas require camelCase `guid` on every result.
- *
  * Evidence in-repo (not invented):
- * - Yamaha envelope `{ totalCount, limit, offset, results }` (batch.ts).
- * - Quick3 release notes: item sort fields `ItemCode`, `ItemName` (PascalCase).
- * - Tests only feed camelCase `{ guid }`.
- * - `.loose()` keeps extra keys; it does not alias `Guid` → `guid`.
- *
+ * Yamaha envelope `{ totalCount, limit, offset, results }` (batch.ts).
+ * Quick3 release notes: item sort fields `ItemCode`, `ItemName` (PascalCase).
+ * Tests only feed camelCase `{ guid }`.
+ * `.loose` keeps extra keys; it does not alias `Guid` → `guid`.
  * This file locks the parse of those shapes. It is not a live Yamaha pull.
  */
 

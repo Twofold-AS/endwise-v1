@@ -6,8 +6,7 @@ import { createDb, type Database } from '../src/client.ts';
 import { schema } from '../src/index.ts';
 
 /**
- * F3-01 — Booking-motoren, testet der den kan feile: samtidighet.
- *
+ * Booking-motoren, testet der den kan feile: samtidighet.
  * Alt kjøres som `endwise_app` (RLS på), akkurat som i produksjon.
  */
 const OWNER_URL = process.env.DATABASE_URL;
@@ -103,7 +102,7 @@ describeDb('booking-motor (F3-01)', () => {
   });
 
   /**
-   * DEN VIKTIGE. Uten pg_advisory_xact_lock ville begge forespørslene sett
+   * Den viktige. Uten pg_advisory_xact_lock ville begge forespørslene sett
    * «ledig» samtidig og begge skrevet — dobbeltbooking.
    */
   it('SAMTIDIGHET: to parallelle bookinger på samme slot → nøyaktig én vinner', async () => {

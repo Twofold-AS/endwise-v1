@@ -1,44 +1,38 @@
 /*
- * F7-07 — Service Worker: offline-skall for mekaniker-PWA-en.
- *
- * Strategi (bevisst konservativ — vi cacher ALDRI API-svar/persondata):
- *   - Navigasjoner (mode 'navigate'): network-first → ved feil, fall tilbake til
- *     cachet side, ellers offline.html. Så mekanikeren mister ikke skallet i en
- *     kjeller uten dekning.
- *   - Statiske GET-assets (samme origin, _next/static, ikoner, manifest):
- *     stale-while-revalidate.
- *   - Alt annet (POST, /trpc, /api, /widget, cross-origin): rør ikke — går rett
- *     til nett. Statusendringer og persondata skal ALDRI ligge i en cache på enheten.
- *
- * ══ ⚠️ 08.08.2026 — DENNE FILA SERVERTE GAMMEL KODE I DAGEVIS ══════════════
- *
+ * Service Worker: offline-skall for mekaniker-PWA-en.
+ * Strategi (bevisst konservativ — vi cacher aldri API-svar/persondata):
+ * Navigasjoner (mode 'navigate'): network-first → ved feil, fall tilbake til
+ * cachet side, ellers offline.html. Så mekanikeren mister ikke skallet i en
+ * kjeller uten dekning.
+ * Statiske GET-assets (samme origin, _next/static, ikoner, manifest):
+ * stale-while-revalidate.
+ * Alt annet (POST, /trpc, /api, /widget, cross-origin): rør ikke — går rett
+ * til nett. Statusendringer og persondata skal aldri ligge i en cache på enheten.
+ * denne fila serverte gammel kode I dagevis
  * Symptomet var «module factory is not available» og «Invalid DOM property
  * fill-rule» som kom tilbake uansett hvor mange ganger .next ble slettet,
  * dev-serveren restartet og nettleseren hard-refreshet.
- *
- * Årsaken var her: **en hard refresh omgår HTTP-cachen, men IKKE en service
- * worker.** SW-en satt foran alt, cachet `/_next/static/`-chunks med
+ * Årsaken var her: en hard refresh omgår HTTP-cachen, men ikke en service
+ * worker. sw-en satt foran alt, cachet `/_next/static/`-chunks med
  * `cached || network` — altså cache-first — og serverte dem videre lenge etter
  * at kilden var endret. Cache-navnet var dessuten konstant, så `activate`
  * ryddet aldri noe: `keys.filter((k) => k !== CACHE)` traff aldri seg selv.
- *
- * Verifisert: 30 `/_next/static/`-oppføringer lå i cachen i DEV, inkludert
+ * Verifisert: 30 `/_next/static/`-oppføringer lå i cachen i dev, inkludert
  * Turbopacks HMR-klient.
- *
  * Tre ting er endret:
- *   1. **SW-en registreres ikke lenger i dev** (se `_shell/pwa-register.tsx`),
- *      og gamle registreringer avregistreres automatisk. Offline-støtte er en
- *      produksjonsfunksjon; i dev er den bare en måte å servere gammel kode på.
- *   2. **Cache-navnet er versjonert** — `v2` gjør at `activate` sletter hver
- *      eneste v1-cache som finnes på en enhet der ute. Bump ved hver
- *      strategiendring.
- *   3. **Dev-artefakter caches aldri**, uansett. Skulle noen registrere SW-en
- *      manuelt i dev (som vi gjorde for å bevise feilen), kan den ikke lenger
- *      servere en foreldet Turbopack-chunk.
+ * 1. **sw-en registreres ikke lenger i dev** (se `_shell/pwa-register.tsx`),
+ * og gamle registreringer avregistreres automatisk. Offline-støtte er en
+ * produksjonsfunksjon; i dev er den bare en måte å servere gammel kode på.
+ * 2. **Cache-navnet er versjonert** — `v2` gjør at `activate` sletter hver
+ * eneste v1-cache som finnes på en enhet der ute. Bump ved hver
+ * strategiendring.
+ * 3. **Dev-artefakter caches aldri**, uansett. Skulle noen registrere sw-en
+ * manuelt i dev (som vi gjorde for å bevise feilen), kan den ikke lenger
+ * servere en foreldet Turbopack-chunk.
  */
 
 /**
- * ⚠️ BUMP VED HVER STRATEGIENDRING. Navnet er det eneste som får `activate` til
+ * Bump ved hver strategiendring. Navnet er det eneste som får `activate` til
  * å rydde: den sletter alle cacher som ikke heter dette. Endres ikke navnet,
  * blir gamle oppføringer liggende for alltid.
  */
@@ -114,7 +108,7 @@ self.addEventListener('fetch', (event) => {
   if (isDevArtifact(url)) return;
 
   if (request.mode === 'navigate') {
-    // Network-first: online får du ALLTID fersk HTML, med ferske chunk-hasher.
+    // Network-first: online får du alltid fersk HTML, med ferske chunk-hasher.
     // Cachen er kun et sikkerhetsnett for kjelleren uten dekning.
     event.respondWith(
       fetch(request)
@@ -131,9 +125,9 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isStaticAsset(url)) {
-    // Stale-while-revalidate. Trygt i PRODUKSJON fordi Next gir hver bygg nye,
+    // Stale-while-revalidate. Trygt i produksjon fordi Next gir hver bygg nye,
     // innholds-hashede filnavn: endret innhold = ny URL = ingen gammel treff.
-    // I dev ville det IKKE vært trygt — derfor registreres ikke SW-en der.
+    // I dev ville det ikke vært trygt — derfor registreres ikke sw-en der.
     event.respondWith(
       caches.open(CACHE).then(async (c) => {
         const cached = await c.match(request);

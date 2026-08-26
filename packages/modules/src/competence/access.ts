@@ -1,12 +1,10 @@
 /**
- * F3-12 — Hvem får redigere kompetanse?
- *
+ * Hvem får redigere kompetanse?
  * Regelen er ikke «alle innloggede i tenanten». En mekaniker som kan gi seg selv
- * ferdigheten `mc-eu` kan booke seg selv på jobber han ikke har lov til å ta —
+ * ferdigheten `mc-eu` kan booke seg selv på jobber han ikke har lov til å ta
  * og sertifiseringsdatoen er da bare et tall han skrev inn selv.
- *
- * Derfor: kun `dealer_admin` (i EGEN tenant) og `endwise_admin`.
- * `dealer_staff` og `customer` kan LESE (staff må se hvem som kan hva for å
+ * Derfor: kun `dealer_admin` (i egen tenant) og `endwise_admin`.
+ * `dealer_staff` og `customer` kan lese (staff må se hvem som kan hva for å
  * booke manuelt), men aldri skrive.
  */
 export type CompetenceRole =

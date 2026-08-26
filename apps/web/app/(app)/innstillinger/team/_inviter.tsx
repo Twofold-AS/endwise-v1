@@ -7,15 +7,12 @@ import { CardShell } from '../../_shell/cards';
 import { KompetanseVelger, type ValgtKompetanse } from './_kompetanse-velger';
 
 /**
- * F1-10 — «Opprett ansatt» på egen pille.
- *
+ * «Opprett ansatt» på egen pille.
  * Med e-post: eksisterende invitasjonsflyt (`invitasjoner.opprett`).
  * Uten e-post: `team.opprettUtenInvitasjon` — vises i teamet, ingen mail.
- *
  * Kompetanse og `mechanics.capacity` (samtidige jobber) gjenbrukes fra
  * Kompetanse-/Timeplan-flatene. Ingen nye felt eller roller.
- *
- * ⚠️ Knappene er kosmetikk. Sperren er adminProcedure + rollesjekk.
+ * Knappene er kosmetikk. Sperren er adminProcedure + rollesjekk.
  */
 type Funksjon = 'selger' | 'support' | 'mekaniker';
 

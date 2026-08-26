@@ -9,10 +9,9 @@ import {
 } from '../app/nytt-passord/reset-token.ts';
 
 /**
- * F1-16 — tokenet skal overleve at sida stryker query-strengen.
- *
+ * Tokenet skal overleve at sida stryker query-strengen.
  * `useSearchParams` oppdateres når `history.replaceState` fjerner `?token=`.
- * Effekten som leser params må da BEHOLDE det første ikke-tomme tokenet,
+ * Effekten som leser params må da beholde det første ikke-tomme tokenet,
  * ellers vises «Denne siden må åpnes fra lenken i e-posten» etter et ekte
  * e-postklikk.
  */

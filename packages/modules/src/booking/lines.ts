@@ -1,6 +1,5 @@
 /**
  * F3-09 / P3 — linjer og varighet for en jobb.
- *
  * Katalogen gir default-minutter per tjeneste. Slot-lengden kan overstyres
  * manuelt når jobben opprettes. Pris røres ikke her.
  */

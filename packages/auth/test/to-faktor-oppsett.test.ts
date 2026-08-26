@@ -60,7 +60,7 @@ describe('F1-23: kvittering før navigasjon', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const kilde = readFileSync(resolve(her, '../../../apps/web/app/2fa-oppsett/page.tsx'), 'utf8');
 
-    // Den gamle feilen: setSteg('ferdig') og location.assign i SAMME blokk.
+    // Den gamle feilen: setSteg('ferdig') og location.assign i samme blokk.
     // En kvittering som settes og rives i samme tick, er ingen kvittering.
     const utenKommentarer = kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
     expect(utenKommentarer).toMatch(/etter2faBekreftet\s*\(/);

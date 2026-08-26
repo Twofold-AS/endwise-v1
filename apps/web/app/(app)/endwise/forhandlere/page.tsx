@@ -21,9 +21,8 @@ import { CardShell } from '../../_shell/cards';
 import { NivaaValg, TilleggListe, tilleggForNivaa, tilleggNokler } from '../_pakke-valg';
 
 /**
- * F5-26 — FORHANDLERE. Invite-only onboarding.
- *
- * Admin velger ett nivå (TIERS) og krysser av TILLEGG som ikke allerede
+ * Forhandlere. Invite-only onboarding.
+ * Admin velger ett nivå (tiers) og krysser av tillegg som ikke allerede
  * ligger i pakken. Eieren setter passord, 2FA og går gjennom veiviseren.
  * Endwise-tenanten kan ikke inviteres på nytt, slettes eller få ny pakke.
  */

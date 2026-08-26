@@ -1,10 +1,8 @@
 /**
- * F1-10 — hvor en fersk invitee skal etter ekte sesjon (passord + ev. 2FA).
- *
- * ⛔ Hard navigasjon (`location.assign`) skjer i kallstedet, ikke her.
+ * Hvor en fersk invitee skal etter ekte sesjon (passord + ev. 2FA).
+ * Hard navigasjon (`location.assign`) skjer i kallstedet, ikke her.
  * Myk klientnavigasjon er dobbel-login-bugen.
- *
- * ⛔ `TWO_FACTOR_REQUIRED` slår `/oppstart` og `session.me.landing`.
+ * `TWO_FACTOR_REQUIRED` slår `/oppstart` og `session.me.landing`.
  * Uferdig 2FA har ingen autorisert tRPC-sesjon — dashbordet laster ingenting.
  */
 export function destinasjonEtterInvite(
@@ -19,7 +17,7 @@ export function destinasjonEtterInvite(
   return '/dashboard';
 }
 
-/** Samme regel som `land()` — brukt av `/signin` og `/` etter innlogging. */
+/** Samme regel som `land` — brukt av `/signin` og `/` etter innlogging. */
 export function destinasjonNarSesjonFeiler(error: unknown): string {
   const melding = error instanceof Error ? error.message : String(error);
   return destinasjonEtterInvite('staff', null, melding);

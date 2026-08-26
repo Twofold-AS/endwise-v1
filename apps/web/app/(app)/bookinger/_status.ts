@@ -1,6 +1,6 @@
 /**
  * Delt status-lag for booking-UI (liste, detalj, «Min dag»). Speiler
- * booking-livssyklusen i `@endwise/modules` (F3-01). Klienten bruker dette KUN
+ * booking-livssyklusen i `@endwise/modules` (F3-01). Klienten bruker dette kun
  * til å vise/grå ut knapper — serveren håndhever den ekte maskinen (assertTransition).
  */
 export type BookingStatus =
@@ -30,7 +30,7 @@ export const STATUS_TONE: Record<string, string> = {
   no_show: 'text-danger bg-danger/12',
 };
 
-/** Lovlige overganger — speil av lifecycle.ts sin TRANSITIONS. */
+/** Lovlige overganger — speil av lifecycle.ts sin transitions. */
 export const ALLOWED_TRANSITIONS: Record<string, BookingStatus[]> = {
   draft: ['confirmed', 'cancelled'],
   confirmed: ['in_progress', 'cancelled', 'no_show'],

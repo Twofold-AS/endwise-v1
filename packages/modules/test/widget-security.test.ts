@@ -12,7 +12,7 @@ import { createRateLimiter } from '../src/widget/rate-limit.ts';
 import { signWidgetToken, verifyWidgetToken, WidgetTokenError } from '../src/widget/token.ts';
 
 /**
- * F4-02 — Sikkerhetskjernen for den OFFENTLIGE widgeten. Rene tester (ingen DB).
+ * Sikkerhetskjernen for den offentlige widgeten. Rene tester (ingen DB).
  */
 
 describe('widget-token (HS256)', () => {

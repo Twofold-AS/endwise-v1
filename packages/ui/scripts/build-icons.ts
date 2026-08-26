@@ -1,26 +1,22 @@
 /**
- * F5-20 — Ikon-codegen.
- *
- *   packages/ui/src/assets/icons/<slug>.svg
- *        ↓  dette scriptet
- *   packages/ui/src/icons.generated.ts   (ett createLucideIcon-kall per fil)
- *
- * Kjør:  node --experimental-strip-types packages/ui/scripts/build-icons.ts
+ * Ikon-codegen.
+ * packages/ui/src/assets/icons/<slug>.svg
+ * ↓ dette scriptet
+ * packages/ui/src/icons.generated.ts (ett createLucideIcon-kall per fil)
+ * Kjør: node --experimental-strip-types packages/ui/scripts/build-icons.ts
  * (samme mønster som packages/db/scripts/grants.ts)
- *
- * ── Hvorfor ingen XML-parser ───────────────────────────────────────────────
- * Ingen ny avhengighet uten godkjenning (CLAUDE.md §2). SVG-ene er VÅRE EGNE,
+ * Hvorfor ingen XML-parser
+ * Ingen ny avhengighet uten godkjenning (claude.md §2). SVG-ene er våre egne,
  * eksportert fra Figma med en kjent og stabil form, så en uttrekker holder.
  * Den er med vilje streng: møter den et element den ikke kjenner, sier den fra
  * i stedet for å slippe det gjennom. Et ikon som stilltiende mister en strek er
  * verre enn et ikon som ikke bygger.
- *
- * ── Normalisering ──────────────────────────────────────────────────────────
+ * Normalisering
  * Figma-eksporter kommer med `<defs>`, `<clipPath>` og en `<g clip-path=…>`
  * rundt alt, pluss hardkodet `stroke="black"`. Ingen av delene kan være med:
  * clip-path kan ikke representeres i `IconNode`, og en hardkodet farge betyr at
  * ikonet ikke snur med temaet. Scriptet fjerner wrapperen og bytter farge til
- * `currentColor` — det er den ENE grunnen til at rå eksporter kan legges rett
+ * `currentColor` — det er den ene grunnen til at rå eksporter kan legges rett
  * inn i mappa uten håndarbeid.
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -34,7 +30,7 @@ const UT_FIL = join(HER, '..', 'src', 'icons.generated.ts');
 /** Elementene `IconNode` kan representere. Alt annet er en feil. */
 const TILLATT = new Set(['path', 'circle', 'ellipse', 'line', 'polygon', 'polyline', 'rect', 'g']);
 
-/** Attributter som skal STRIPPES — de settes av wrapperen, ikke av ikonet. */
+/** Attributter som skal strippes — de settes av wrapperen, ikke av ikonet. */
 const STRIPP = new Set([
   'stroke-width',
   'strokewidth',
@@ -52,18 +48,15 @@ const STRIPP = new Set([
 export type IkonNode = [string, Record<string, string>];
 
 /**
- * ⚠️ SVG-attributt → React DOM-prop. **Dette er ikke kosmetikk.**
- *
+ * SVG-attributt → React DOM-prop. **Dette er ikke kosmetikk.**
  * En SVG skriver `fill-rule`. React vil ha `fillRule`, og kaster ellers
- * «Invalid DOM property `fill-rule`. Did you mean `fillRule`?» i konsollen —
- * og dropper attributtet, så ikonet rendrer FEIL (evenodd-hull blir fylt).
- *
+ * «Invalid DOM property `fill-rule`. Did you mean `fillRule`?» i konsollen
+ * og dropper attributtet, så ikonet rendrer feil (evenodd-hull blir fylt).
  * Feilen dukket opp da `settings.svg` kom inn i leveranse 2: den er den første
  * med `fill-rule`/`clip-rule`. Konverteringen er derfor generell og ikke en
  * liste over de to — neste Figma-eksport kan ta med `stroke-dasharray`,
  * `stop-color` eller hva som helst annet.
- *
- * Navn med kolon (`xlink:href`, `xml:space`) konverteres IKKE — de er
+ * Navn med kolon (`xlink:href`, `xml:space`) konverteres ikke — de er
  * navnerom og hører ikke hjemme i et ikon uansett; de strippes over.
  */
 function tilCamel(navn: string): string {
@@ -100,11 +93,11 @@ function parseAttrs(raw: string): Record<string, string> {
       if (verdi === 'none' || verdi === 'white' || verdi === '#fff' || verdi === '#ffffff')
         continue;
       ut.fill = 'currentColor';
-      // Et fylt ikon skal ikke ALSO få wrapperens strek rundt seg.
+      // Et fylt ikon skal ikke also få wrapperens strek rundt seg.
       ut.stroke = 'none';
       continue;
     }
-    // Alt annet slipper gjennom — men ALLTID som React-prop, aldri som rått
+    // Alt annet slipper gjennom — men alltid som React-prop, aldri som rått
     // SVG-attributtnavn.
     ut[tilCamel(navn)] = verdi;
   }
@@ -119,7 +112,7 @@ export function svgTilNoder(svg: string, filnavn: string): IkonNode[] {
   if (!svgMatch) throw new Error(`${filnavn}: fant ingen <svg>-rot`);
   kropp = svgMatch[1];
 
-  // Pakk ut <g>-wrappere. En <g> uten transform bærer ingen informasjon —
+  // Pakk ut <g>-wrappere. En <g> uten transform bærer ingen informasjon
   // den er bare Figmas clip-emballasje.
   kropp = kropp.replace(/<g(?![^>]*\btransform=)[^>]*>/g, '').replace(/<\/g>/g, '');
 
@@ -166,7 +159,7 @@ function main() {
     const pascal = tilPascal(slug);
     const noder = svgTilNoder(readFileSync(join(IKON_MAPPE, fil), 'utf8'), fil);
 
-    // ⛔ Sikkerhetsnett: en kebab-nøkkel her ville blitt en React-advarsel i
+    // Sikkerhetsnett: en kebab-nøkkel her ville blitt en React-advarsel i
     // konsollen og et attributt som stilltiende droppes. Feil hardt i stedet.
     for (const [, attrs] of noder) {
       const kebab = Object.keys(attrs).filter((k) => k.includes('-'));
@@ -194,7 +187,7 @@ function main() {
   }
 
   const ut = `/**
- * ⚠️ GENERERT FIL — IKKE REDIGER.
+ * Generert fil — ikke rediger.
  *
  * Kilde: \`packages/ui/src/assets/icons/*.svg\`
  * Generator: \`packages/ui/scripts/build-icons.ts\`

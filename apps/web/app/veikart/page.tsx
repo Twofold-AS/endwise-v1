@@ -3,29 +3,24 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 /**
- * OFFENTLIG VEIKART — `/veikart`.
- *
- * ── Hvem den er for ──────────────────────────────────────────────────────
- * Forhandlere, ikke utviklere. Derfor **ingen F-koder, ingen fasenavn, ingen
- * teknisk sjargong**. «F6-17 kontekstpanel med diskriminert union» blir «Du ser
+ * Offentlig veikart — `/veikart`.
+ * Hvem den er for
+ * Forhandlere, ikke utviklere. Derfor ingen F-koder, ingen fasenavn, ingen
+ * teknisk sjargong. «F6-17 kontekstpanel med diskriminert union» blir «Du ser
  * hvem kunden er mens du svarer».
- *
- * ── ⚠️ Hvordan Endwise oppdaterer denne ─────────────────────────────────
- * ALT innhold ligger i `VEIKART` rett under. Legg til, flytt eller fjern
- * punkter DER — JSX-en trenger aldri å røres. Oppdater også `SIST_OPPDATERT`,
+ * Hvordan Endwise oppdaterer denne
+ * Alt innhold ligger i `VEIKART` rett under. Legg til, flytt eller fjern
+ * punkter der — JSX-en trenger aldri å røres. Oppdater også `SIST_OPPDATERT`,
  * ellers ser lista fersk ut lenge etter at den har sluttet å være det.
- *
- * ── ⛔ Regelen for hva som får stå hvor ─────────────────────────────────
- * «Nylig lansert» = det forhandleren kan bruke I DAG. «Underveis» = arbeid som
+ * Regelen for hva som får stå hvor
+ * «Nylig lansert» = det forhandleren kan bruke I dag. «Underveis» = arbeid som
  * faktisk pågår. «Planlagt» = alt annet, inkludert det som avhenger av
  * beslutninger vi ikke har tatt.
- *
  * Et punkt som er blokkert eller uavklart hører i **Planlagt** med nøktern
  * ordlyd — aldri i «Underveis» for å se mer produktiv ut. En forhandler som
  * planlegger driften rundt et løfte vi ikke holder, har vi skadet, ikke solgt
  * til. Se `docs/endwise-roadmap.html` for den interne statusen dette speiler.
- *
- * ── Design ───────────────────────────────────────────────────────────────
+ * Design
  * Samme nakne stil som «/»: overskrift + liste, ingen ikoner, ingen kort,
  * ingen animasjon. Eier styler begge sidene samtidig senere.
  */
@@ -178,11 +173,13 @@ export default function VeikartPage() {
   return (
     <main className="min-h-screen bg-bg text-fg">
       <div className="mx-auto flex w-full max-w-[720px] flex-col gap-14 px-6 py-16 sm:py-24">
-        {/* ── Avsender ─────────────────────────────────────────────────── */}
+        {/* Avsender */}
         <header className="flex items-center gap-3">
           <Link href={'/' as Route} className="flex items-center gap-3">
-            {/* Samme merkeboks som ellers: liten, svart, hvit logo — i BEGGE
-                temaer. Logoen er en merkemarkør, ikke en flate som snur. */}
+            {/*
+             * Samme merkeboks som ellers: liten, svart, hvit logo — i begge
+             * temaer. Logoen er en merkemarkør, ikke en flate som snur.
+             */}
             <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-black">
               <Image
                 src="/logo/logo.svg"
@@ -198,7 +195,7 @@ export default function VeikartPage() {
           </Link>
         </header>
 
-        {/* ── Tittel ───────────────────────────────────────────────────── */}
+        {/* Tittel */}
         <section className="flex flex-col gap-4">
           <h1 className="font-semibold text-[34px] text-fg leading-[1.15] tracking-tight sm:text-[40px]">
             Veikart
@@ -210,7 +207,7 @@ export default function VeikartPage() {
           <p className="text-[12px] text-fg-muted">Sist oppdatert {SIST_OPPDATERT}</p>
         </section>
 
-        {/* ── Bolkene ──────────────────────────────────────────────────── */}
+        {/* Bolkene */}
         {VEIKART.map((bolk) => (
           <section
             key={bolk.overskrift}
@@ -221,7 +218,7 @@ export default function VeikartPage() {
               <p className="text-body text-fg-muted">{bolk.ingress}</p>
             </div>
 
-            {/* En LISTE, ikke kort. Se filkommentaren. */}
+            {/* En liste, ikke kort. Se filkommentaren. */}
             <ul className="flex flex-col gap-6">
               {bolk.punkter.map((p) => (
                 <li key={p.tittel} className="flex flex-col gap-1.5">
@@ -233,7 +230,7 @@ export default function VeikartPage() {
           </section>
         ))}
 
-        {/* ── Tilbake ──────────────────────────────────────────────────── */}
+        {/* Tilbake */}
         <footer className="flex flex-wrap items-center gap-4 border-border border-t pt-8 text-[12px] text-fg-muted">
           <Link href={'/' as Route} className="underline underline-offset-2 hover:text-fg">
             Tilbake til forsiden

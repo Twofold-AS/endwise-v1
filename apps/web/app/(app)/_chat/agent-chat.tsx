@@ -30,38 +30,32 @@ import { type ChatTransport, DefaultChatTransport, type UIMessage } from 'ai';
 import { type FormEvent, useMemo, useState } from 'react';
 
 /**
- * F6-18 — CHAT-FLATEN. Én komponent, to bruk: ekte agent og demo-strøm.
- *
- * ── ⛔ Ingen Vercel AI Gateway ───────────────────────────────────────────
+ * Chat-flaten. Én komponent, to bruk: ekte agent og demo-strøm.
+ * Ingen Vercel AI Gateway
  * `DefaultChatTransport` peker på `/chat/<agent>` (Next route handler, F13-03).
  * Der velges modellen av agentens dataklasse:
  * AI-diagnose er `customer_freetext` ⇒ **Mistral, EU**. Klienten kan ikke be om
  * en annen modell — det finnes ikke et felt for det.
- *
- * ── Hvorfor tool-parts vises ─────────────────────────────────────────────
+ * Hvorfor tool-parts vises
  * En agent som sier «jeg fant tre tjenester» uten å vise at den slo opp, ber om
  * tillit den ikke har gjort seg fortjent til. Hvert verktøykall rendres med
- * tilstanden sin, og feil blir SYNLIGE i stedet for å bli borte i en pen
+ * tilstanden sin, og feil blir synlige i stedet for å bli borte i en pen
  * formulering.
- *
- * ── De tre verktøyene, og hva de blir i UI-et ────────────────────────────
- *   `tjenester`      → `ToolPart` (oppslag, med utfoldbar innmat)
- *   `sporKunden`     → `Questionnaire` — agenten spør, løkka STOPPER til svar
- *   `noterDiagnose`  → `ToolPartGodkjenning` — ⛔ skriving krever et menneske
- *
- * ⚠️ Verktøynavnene er agent-spesifikke. `ETIKETTER` oversetter dem til norsk;
+ * De tre verktøyene, og hva de blir i UI-et
+ * `tjenester` → `ToolPart` (oppslag, med utfoldbar innmat)
+ * `sporKunden` → `Questionnaire` — agenten spør, løkka stopper til svar
+ * `noterDiagnose` → `ToolPartGodkjenning` — skriving krever et menneske
+ * Verktøynavnene er agent-spesifikke. `ETIKETTER` oversetter dem til norsk;
  * ukjente verktøy faller tilbake på sitt tekniske navn framfor å bli usynlige.
  * Et verktøykall vi ikke har oversatt skal se rart ut, ikke forsvinne.
  */
 
 /**
  * Stabil React-nøkkel for én meldingsdel.
- *
  * Verktøydeler har `toolCallId`, som er stabil gjennom hele livsløpet
  * `input-streaming → … → output-available`. Bruker vi posisjonen i stedet, ville
  * React remountet godkjenn-panelet hver gang en tilstand endret seg — altså
  * nullstilt det midt i at noen holder på å svare på det.
- *
  * Tekstdeler har ingen ID. De er til gjengjeld stabile i rekkefølge innenfor én
  * melding, så posisjonen er riktig nøkkel der.
  */
@@ -88,7 +82,7 @@ export interface AgentChatProps {
   /** Eksempler brukeren kan klikke på i stedet for å finne på noe selv. */
   forslag?: string[];
   /**
-   * ⚠️ Kun for DEMO-flater: en ferdig transport fra `createChat()`. Er den satt,
+   * Kun for demo-flater: en ferdig transport fra `createChat`. Er den satt,
    * går det ikke ett nettverkskall — og da MÅ `demo` også være satt, ellers
    * later flaten som om den er ekte.
    */
@@ -142,8 +136,10 @@ export function AgentChat({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      {/* [ART50-UI] AI Act art. 50. Gjelder også når det er en ansatt som
-          snakker med maskinen — og i demoen, som ser helt ekte ut. */}
+      {/*
+       * [ART50-UI] AI Act art. 50. Gjelder også når det er en ansatt som
+       * snakker med maskinen — og i demoen, som ser helt ekte ut.
+       */}
       <AiDisclosure />
 
       {demo ? (
@@ -236,7 +232,7 @@ export function AgentChat({
 
 /**
  * Én del av en melding. Tekst er tekst; alt som starter med `tool-` er et
- * verktøykall og rendres etter TILSTANDEN sin.
+ * verktøykall og rendres etter tilstanden sin.
  */
 function Del({
   del,
@@ -271,7 +267,7 @@ function Del({
   const verktoy = p.toolName ?? p.type.replace(/^tool-/, '');
   const navn = ETIKETTER[verktoy] ?? verktoy;
 
-  // ── ask_user: agenten spør, og løkka står stille til den får svar ───────
+  // ask_user: agenten spør, og løkka står stille til den får svar
   if (verktoy === 'sporKunden' && p.state === 'input-available') {
     const sporsmal = String(p.input?.sporsmal ?? 'Kan du utdype?');
     const alternativer = Array.isArray(p.input?.alternativer)
@@ -310,7 +306,7 @@ function Del({
     );
   }
 
-  // ── ⛔ Godkjenn før agenten skriver ────────────────────────────────────
+  // Godkjenn før agenten skriver
   if (p.state === 'approval-requested' && p.approval && !p.approval.isAutomatic) {
     const id = p.approval.id;
     return (

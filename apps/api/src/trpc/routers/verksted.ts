@@ -26,7 +26,7 @@ async function finnForhandler(db: Parameters<typeof withPlatformAdmin>[0], slug:
 }
 
 /**
- * Se verkstedet — READ via slug, ikke sesjon-tenant.
+ * Se verkstedet — read via slug, ikke sesjon-tenant.
  * Mutations 403 (`endwiseInspectProcedure`). Ingen setActive.
  */
 export const verkstedRouter = router({

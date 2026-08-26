@@ -26,11 +26,9 @@ export const mechanicsRouter = router({
 
   /**
    * F6-19 / F3-08 — mekanikerlista med persistente avatarvalg og status-humor.
-   *
    * `list` er bevisst urørt: bookinger/saker/dashboard bruker den som
    * id→navn. Denne ruta beriker med dagens belastning og avatar.
-   *
-   * ⛔ `user_preferences` har ingen RLS. Isolasjonen kommer av at vi bare
+   * `user_preferences` har ingen RLS. Isolasjonen kommer av at vi bare
    * slår opp IDer som allerede er hentet tenant-skopet fra `mechanics`.
    */
   oversikt: protectedProcedure.query(({ ctx }) =>
@@ -126,8 +124,8 @@ export const mechanicsRouter = router({
       z.object({
         name: z.string().min(1),
         capacity: z.number().int().min(1).max(10).default(1),
-        // Ferdigheter settes IKKE her. De hører til kompetanseregisteret (F3-12)
-        // — competence.setMechanicSkill — som har rolle-gate og sertifisering.
+        // Ferdigheter settes ikke her. De hører til kompetanseregisteret (F3-12)
+        // competence.setMechanicSkill — som har rolle-gate og sertifisering.
       }),
     )
     .mutation(({ ctx, input }) =>
@@ -154,9 +152,8 @@ export const mechanicsRouter = router({
     .mutation(({ ctx, input }) => updateMechanicCapacity(ctx.db, ctx.tenantId, input)),
 
   /**
-   * F3-02 — Hvem kan ta denne jobben?
-   *
-   * Returnerer en RANGERT liste, ikke ett svar. Booking-motoren (F3-01) eier
+   * Hvem kan ta denne jobben?
+   * Returnerer en rangert liste, ikke ett svar. Booking-motoren (F3-01) eier
    * valget og slot-låsen — matcheren skal aldri kunne dobbeltbooke noen.
    */
   match: protectedProcedure

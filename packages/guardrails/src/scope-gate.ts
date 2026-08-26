@@ -1,38 +1,29 @@
 import { type GuardContext, GuardrailViolation } from './types.ts';
 
 /**
- * F14-05 — Scope-gate: art. 9-vakten. **Pre-flight, ikke etterkontroll.**
- *
- * Kjøres FØR meldingen når hoved-modellen. Finner den særlige kategorier
+ * Scope-gate: art. 9-vakten. **Pre-flight, ikke etterkontroll.**
+ * Kjøres før meldingen når hoved-modellen. Finner den særlige kategorier
  * (helse, fødselsnummer, straffbare forhold …), stopper vi og eskalerer til et
  * menneske (F6-05) i stedet for å sende dem videre.
- *
- * ── HVORFOR MISTRAL MODERATIONS, OG IKKE REGEX ──────────────────────────────
- *
+ * Hvorfor mistral moderations, og ikke regex
  * Vi hadde allerede regex-baserte mønstre i L1/L4. De er billige og fanger det
- * åpenbare (fødselsnummer, API-nøkler). De fanger IKKE dette:
- *
- *   «Jeg har ryggprolaps og klarer ikke løfte sykkelen opp på rampa»
- *
+ * åpenbare (fødselsnummer, API-nøkler). De fanger ikke dette:
+ * «Jeg har ryggprolaps og klarer ikke løfte sykkelen opp på rampa»
  * Det er en helseopplysning etter art. 9. Ingen regex tar den uten å også ta
  * hundre uskyldige setninger.
- *
  * Mistrals moderasjonsmodell (`mistral-moderation-2603`) klassifiserer tekst i
  * ni kategorier — og tre av dem er nøyaktig det vi trenger: **health**, **pii**
  * og **law**. Den er trent på flere språk, inkludert norsk-nære.
- *
  * Og — dette er poenget som avgjorde valget — **den kjører i EU**. En scope-gate
- * som selv måtte sende kundens fritekst til USA for å avgjøre om den kunne
- * sendes til USA, ville vært en sirkel vi ikke kom ut av.
- *
- * ── HVA VI IKKE LOVER ───────────────────────────────────────────────────────
- *
+ * som selv måtte sende kundens fritekst til usa for å avgjøre om den kunne
+ * sendes til usa, ville vært en sirkel vi ikke kom ut av.
+ * Hva vi ikke lover
  * Ingen klassifikator er perfekt. Denne fanger mer enn regex, ikke alt. Derfor
  * er den ett av tre tiltak, ikke det eneste:
- *   1. denne gaten
- *   2. transparens i UI («ikke del helseopplysninger her»)
- *   3. kort retensjon + EU-provider, slik at det som slipper gjennom uansett
- *      ikke forlater EU og ikke blir liggende
+ * 1. denne gaten
+ * 2. transparens i UI («ikke del helseopplysninger her»)
+ * 3. kort retensjon + EU-provider, slik at det som slipper gjennom uansett
+ * ikke forlater EU og ikke blir liggende
  */
 export type ModerationCategory =
   | 'sexual'
@@ -68,7 +59,7 @@ export interface ScopeGateResult {
 }
 
 export class ScopeGateViolation extends GuardrailViolation {
-  // Eksplisitt felt + tilordning (IKKE TS «parameter property»): Node kjører
+  // Eksplisitt felt + tilordning (ikke TS «parameter property»): Node kjører
   // .ts i strip-only-modus (--experimental-strip-types) og støtter ikke
   // parameter properties, som krever kodegenerering. tsc fanget det ikke.
   readonly categories: ModerationCategory[];
@@ -88,9 +79,9 @@ export function createScopeGate(options: {
   threshold?: number;
   /**
    * Hva gjør vi ved treff?
-   *  - 'escalate' (default): stopp og send til menneske
-   *  - 'audit':   slipp gjennom, men logg. Brukes til å måle falske positive
-   *               FØR vi setter den i blokkerende modus
+   * 'escalate' (default): stopp og send til menneske
+   * 'audit': slipp gjennom, men logg. Brukes til å måle falske positive
+   * Før vi setter den i blokkerende modus
    */
   mode?: 'escalate' | 'audit';
   onTrigger?: (result: ScopeGateResult, context: GuardContext) => void;

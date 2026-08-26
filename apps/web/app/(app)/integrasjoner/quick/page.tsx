@@ -8,13 +8,11 @@ import { CardShell } from '../../_shell/cards';
 
 /**
  * F8-01 / F8-02 — Quick-integrasjon (QuickLite).
- *
- * SYNK-MODELL: Quick er FAKTA. PULL (Quick → Endwise) dominerer og overskriver
+ * Synk-modell: Quick er fakta. Pull (Quick → Endwise) dominerer og overskriver
  * våre felt — automatisk 08:00/16:00 (Oslo, kun i produksjon) + manuell «Hent nå».
- * PUSH (Endwise → Quick) er ALDRI automatisk: kun en bevisst, knapp-utløst
+ * Push (Endwise → Quick) er aldri automatisk: kun en bevisst, knapp-utløst
  * handling, tydelig adskilt (kommer — venter på ApiV2-token).
- *
- * Tokenet lagres envelope-kryptert og vises ALDRI tilbake. Kun forhandler-admin
+ * Tokenet lagres envelope-kryptert og vises aldri tilbake. Kun forhandler-admin
  * kan endre — server håndhever via adminProcedure + RLS; dette er kosmetisk gating.
  */
 export default function QuickPage() {
@@ -113,7 +111,7 @@ export default function QuickPage() {
                 setBaseUrl(e.target.value);
               }}
               disabled={!isAdmin}
-              placeholder="https://q3.quick.no/ProdShared008"
+              placeholder="https:// q3.quick.no/ProdShared008"
               spellCheck={false}
             />
           </label>

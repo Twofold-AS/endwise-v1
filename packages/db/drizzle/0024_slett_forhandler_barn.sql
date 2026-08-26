@@ -1,14 +1,12 @@
 /*
- * 0024 — slett_forhandler: SELECT under FORCE RLS + ROW_COUNT på barn.
- *
- * Prod 24.08.2026: POST /trpc/tenants.slett → HTTP 412,
+ * 0024 — slett_forhandler: SELECT under force RLS + ROW_COUNT på barn.
+ * Prod: POST /trpc/tenants.slett → HTTP 412,
  * SQLSTATE 23503, constraint audit_log_tenant_id_tenants_id_fk.
- * Eieren er ADMIN av authenticated, så TO authenticated SELECT gjelder
- * DEFINER. Uten app.tenant_id / TO PUBLIC SELECT ser UPDATE 0 rader.
- * INSERT audit.redacted ble værende på forhandleren (RESTRICT).
- * EXECUTE setter ikke FOUND — barn-løkka (parts/stock/customers) hoppet.
- *
- * CREATE OR REPLACE (samme signatur) — ingen DROP.
+ * Eieren er admin av authenticated, så to authenticated SELECT gjelder
+ * DEFINER. Uten app.tenant_id / to public SELECT ser UPDATE 0 rader.
+ * INSERT audit.redacted ble værende på forhandleren (restrict).
+ * Execute setter ikke found — barn-løkka (parts/stock/customers) hoppet.
+ * CREATE OR replace (samme signatur) — ingen DROP.
  * Idempotent. Etter merge: `pnpm db:setup` (migrate + grants).
  */
 drop policy if exists audit_log_slett_insert on audit_log;
@@ -24,7 +22,7 @@ create policy audit_log_slett_insert on audit_log
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
       or tenant_id = (select id from tenants where slug = 'endwise')
     )
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
 drop policy if exists audit_log_slett_select on audit_log;
 create policy audit_log_slett_select on audit_log
@@ -36,7 +34,7 @@ create policy audit_log_slett_select on audit_log
     and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
 drop policy if exists erasure_requests_slett_forhandler on erasure_requests;
 create policy erasure_requests_slett_forhandler on erasure_requests
@@ -57,7 +55,7 @@ create policy erasure_requests_slett_forhandler on erasure_requests
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
       or tenant_id = (select id from tenants where slug = 'endwise')
     )
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
 drop policy if exists erasure_requests_slett_select on erasure_requests;
 create policy erasure_requests_slett_select on erasure_requests
@@ -69,11 +67,11 @@ create policy erasure_requests_slett_select on erasure_requests
     and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
-  );--> statement-breakpoint
+  );-- > statement-breakpoint
 
 -- DELETE på øvrige RLS-tabeller med tenant_id. Dynamisk: nye tabeller dekkes
 -- neste `pnpm db:grants`. Hopper over audit_log / erasure_requests / tenants
--- (håndteres over). Tabeller UTEN RLS (tenant_delete_challenges) trenger
+-- (håndteres over). Tabeller uten RLS (tenant_delete_challenges) trenger
 -- ingen policy — GRANT DELETE holder, og å skru på RLS her ville knust OTP.
 do $$
 declare r record;
@@ -121,7 +119,7 @@ begin
       r.relname
     );
   end loop;
-end $$;--> statement-breakpoint
+end $$;-- > statement-breakpoint
 
 create or replace function slett_forhandler(p_tenant_id uuid)
 returns void
@@ -143,9 +141,9 @@ begin
     raise exception 'slett_forhandler: krever platform_admin';
   end if;
 
-  -- Transaksjons-lokalt. TO PUBLIC-policyene i grants.sql ser kun DENNE id-en.
-  -- app.tenant_id også: eieren er ADMIN av authenticated, så TO authenticated
-  -- SELECT gjelder DEFINER. Uten tenant-GUC ser UPDATE 0 rader.
+  -- Transaksjons-lokalt. To public-policyene i grants.sql ser kun denne id-en.
+  -- app.tenant_id også: eieren er admin av authenticated, så to authenticated
+  -- SELECT gjelder DEFINER. Uten tenant-guc ser UPDATE 0 rader.
   perform set_config('app.slett_tenant_id', p_tenant_id::text, true);
   perform set_config('app.tenant_id', p_tenant_id::text, true);
 
@@ -162,9 +160,9 @@ begin
     raise exception 'slett_forhandler: Endwise-tenanten mangler (kan ikke flytte audit-kjeden)';
   end if;
 
-  -- F1-06: aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
+  -- Aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
   -- redact_audit_log — den leser app.tenant_id og har ingen UPDATE-policy for
-  -- eieren under FORCE RLS), flytt kjeden til Endwise så ON DELETE RESTRICT
+  -- eieren under force RLS), flytt kjeden til Endwise så on DELETE restrict
   -- slipper tenants-raden, skriv spor PÅ Endwise (ikke på slett-målet).
   update audit_log
      set actor      = '[REDAKTERT]',
@@ -189,8 +187,8 @@ begin
     jsonb_build_object('rows_redacted', v_redacted, 'reason', 'slett_forhandler')
   );
 
-  -- F14-16: erasure_requests slettes ALDRI (art. 5(2)-beviset må overleve
-  -- forhandlerslett). Samme ON DELETE RESTRICT mot tenants.
+  -- Erasure_requests slettes aldri (art. 5(2)-beviset må overleve
+  -- forhandlerslett). Samme on DELETE restrict mot tenants.
   -- CWE-359/863/284: flytt til Endwise, roter id, hash identifikatorene.
   -- Ingen server-pepper i repoet. md5 er deterministisk og rainbow-bart;
   -- sha256(verdi || slettet tenant_id) er ikke-reversibel og tenant-bundet.
@@ -218,7 +216,7 @@ begin
   end if;
 
   -- Barn først (parts/stock_levels/customers inkludert). Looper til
-  -- FK-rekkefølgen slipper gjennom. EXECUTE setter ikke FOUND — ROW_COUNT.
+  -- FK-rekkefølgen slipper gjennom. Execute setter ikke found — ROW_COUNT.
   -- Kun foreign_key_violation svelges i runden — RLS/privilegier skal synes.
   for i in 1..24 loop
     v_progress := false;

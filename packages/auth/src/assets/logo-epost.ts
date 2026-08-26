@@ -1,23 +1,19 @@
 /**
  * Endwise-logoen som PNG, base64, for e-post. **Generert fil — ikke rediger.**
- *
  * Lages av `scripts/lag-logo-png.js` fra `apps/web/public/logo/logo.svg`.
  * 64×80 px (2× av visningsstørrelsen 32×40), hvit, gjennomsiktig bakgrunn.
- *
- * ── ⚠️ Hvorfor base64 HER og ikke i `<img src="data:…">` ─────────────────
+ * Hvorfor base64 her og ikke i `<img src="data:…">`
  * De to er ikke det samme. Gmail og Outlook **fjerner** `data:`-URI-er i
  * `src`, så en «inline base64-logo» i markupen vises ikke hos de fleste
- * mottakere. Denne strengen er derimot innholdet i et VEDLEGG, som sendes med
+ * mottakere. Denne strengen er derimot innholdet i et vedlegg, som sendes med
  * `contentId` og refereres som `cid:` i HTML-en — det er den varianten
  * e-postklienter faktisk støtter.
- *
- * ── Hvorfor ikke en URL ──────────────────────────────────────────────────
+ * Hvorfor ikke en URL
  * En hostet PNG er det vanlige valget, men den krever et offentlig domene å
  * ligge på. `BETTER_AUTH_URL` er `http://localhost:3000` fram til F13 er
  * gjort, og en logo som peker på localhost vises hos nøyaktig én mottaker:
  * den som sendte den.
- *
- * ⚠️ Størrelsen er 1.0 kB base64. Holdes den under ~10 kB, er den
+ * Størrelsen er 1.0 kB base64. Holdes den under ~10 kB, er den
  * billigere enn den ekstra rundturen en hostet URL koster mottakeren.
  */
 export const LOGO_EPOST_PNG_BASE64 =

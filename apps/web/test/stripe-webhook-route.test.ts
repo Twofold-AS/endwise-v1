@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F13-03 — Next-ruta MÅ lese rå body med `req.text()`.
- * En `req.json()` her ville ødelagt Stripe-signaturen i produksjon.
+ * Next-ruta MÅ lese rå body med `req.text`.
+ * En `req.json` her ville ødelagt Stripe-signaturen i produksjon.
  */
 describe('stripe webhook route (F13-03)', () => {
   const src = readFileSync(

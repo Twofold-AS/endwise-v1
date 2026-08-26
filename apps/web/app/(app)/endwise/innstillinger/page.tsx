@@ -7,14 +7,12 @@ import { useOrgRole } from '../../_lib/use-org-role';
 import { CardShell } from '../../_shell/cards';
 
 /**
- * F5-27 — DEV-MODE-BRYTEREN. Bor i **Endwise-admin** › Settings, aldri i
+ * Dev-mode-bryteren. Bor i **Endwise-admin** › Settings, aldri i
  * forhandlerens. Det er ikke bare et rollespørsmål: en bryter en forhandler
- * kan SE, er en bryter en forhandler vil prøve å trykke på.
- *
- * Siden viser hele gaten åpent i stedet for bare av/på. Det er med vilje —
+ * kan se, er en bryter en forhandler vil prøve å trykke på.
+ * Siden viser hele gaten åpent i stedet for bare av/på. Det er med vilje
  * en sikkerhetsmekanisme man ikke kan se tilstanden til, er en man ender opp
  * med å gjette på.
- *
  * Seed-knappen peker på en valgt demo-tenant. Endwise-admin sitter i
  * plattform-tenanten, så «seed denne sesjonen» ville vært en død knapp.
  */
@@ -55,7 +53,7 @@ export default function EndwiseInnstillingerPage() {
         </p>
       </div>
 
-      {/* ── Bryteren ───────────────────────────────────────────────────── */}
+      {/* Bryteren */}
       <CardShell className="p-5">
         <div className="flex items-start justify-between gap-6">
           <div className="flex min-w-0 flex-col gap-1">
@@ -84,7 +82,7 @@ export default function EndwiseInnstillingerPage() {
         )}
       </CardShell>
 
-      {/* ── Gaten, synlig ──────────────────────────────────────────────── */}
+      {/* Gaten, synlig */}
       <CardShell className="p-5">
         <p className="flex items-center gap-2 text-label text-fg">
           <ShieldCheck size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
@@ -133,7 +131,7 @@ export default function EndwiseInnstillingerPage() {
         </div>
       </CardShell>
 
-      {/* ── Demo-data ──────────────────────────────────────────────────── */}
+      {/* Demo-data */}
       <CardShell className="p-5">
         <p className="text-label text-fg">Fyll en demo-tenant med data</p>
         <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">

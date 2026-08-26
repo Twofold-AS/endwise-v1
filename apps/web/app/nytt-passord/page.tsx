@@ -10,24 +10,21 @@ import { PassordFelt } from '../_auth/felter';
 import { beholdForsteToken, lesResetToken, resetLenkeFeil } from './reset-token';
 
 /**
- * F1-16 — sett nytt passord. Andre halvdel av flyten som starter i
+ * Sett nytt passord. Andre halvdel av flyten som starter i
  * `/glemt-passord`.
- *
- * ── Hvor tokenet kommer fra ──────────────────────────────────────────────
+ * Hvor tokenet kommer fra
  * `sendResetPassword` i `packages/auth/src/auth.ts` bygger lenka rett hit med
  * `?token=…`, i stedet for å bruke Better-Auths eget redirect-endepunkt. Ett
  * ledd mindre der tokenet står i en URL. Selve valideringen skjer uansett
  * server-side når `POST /reset-password` konsumerer det.
- *
- * ── ⚠️ Tokenet fjernes fra adressefeltet med én gang ─────────────────────
+ * Tokenet fjernes fra adressefeltet med én gang
  * `history.replaceState` stryker query-strengen etter at vi har lest den.
  * Tokenet er en engangsnøkkel til kontoen, og så lenge det står i URL-en
  * ligger det i nettleserhistorikken, i alt som deler skjerm, og i `Referer`
  * på enhver utgående forespørsel siden måtte gjøre. Det første ikke-tomme
  * tokenet beholdes i state — `useSearchParams` som blir tom etter strip
  * skal ikke tømme det (se `reset-token.ts`).
- *
- * ⛔ Vi verifiserer IKKE tokenet ved sidelast. Et «sjekk om det er gyldig»-
+ * Vi verifiserer ikke tokenet ved sidelast. Et «sjekk om det er gyldig»-
  * kall ville vært et gratis orakel for å teste tokens uten å bruke dem opp.
  * Brukeren får svaret når hen sender inn passordet — som er det eneste
  * tidspunktet svaret betyr noe.
@@ -45,8 +42,8 @@ function NyttPassordInner() {
   useEffect(() => {
     const neste = lesResetToken(params);
     const feil = resetLenkeFeil(params);
-    // Første ikke-tomme token vinner. Etter replaceState er params tom —
-    // da skal vi IKKE gjøre setToken(null) og miste skjemaet.
+    // Første ikke-tomme token vinner. Etter replaceState er params tom
+    // da skal vi ikke gjøre setToken(null) og miste skjemaet.
     setToken((forrige) => beholdForsteToken(forrige, neste));
     setKlar(true);
     if (neste || feil) {
@@ -77,7 +74,7 @@ function NyttPassordInner() {
 
     if (res.error) {
       /**
-       * ⚠️ Better-Auth svarer `INVALID_TOKEN` på både brukt, utløpt og oppdiktet
+       * Better-Auth svarer `INVALID_TOKEN` på både brukt, utløpt og oppdiktet
        * token — den skiller dem ikke, og det er riktig: forskjellen ville
        * fortalt en angriper om et token har eksistert. Teksten vår må derfor
        * dekke alle tre, og peke på veien videre i stedet for å gjette årsak.
@@ -129,8 +126,10 @@ function NyttPassordInner() {
             </div>
           </div>
         ) : !token ? (
-          /* Ingen token i adressen — som regel fordi lenka er klippet i to av
-             en e-postklient, eller fordi noen åpnet sida direkte. */
+          /*
+           * Ingen token i adressen — som regel fordi lenka er klippet i to av
+           * en e-postklient, eller fordi noen åpnet sida direkte.
+           */
           <div className="rounded-xl border border-border bg-card p-[5px]">
             <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
               <p className="text-[12px] text-fg-muted leading-relaxed">
@@ -196,7 +195,7 @@ function NyttPassordInner() {
   );
 }
 
-/** ⚠️ Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?token=). */
+/** Suspense-grense er påkrevd: siden leser `useSearchParams` (?token=). */
 export default function NyttPassordPage() {
   return (
     <Suspense fallback={null}>

@@ -3,10 +3,9 @@
 import { createContext, type ReactNode, useContext } from 'react';
 
 /**
- * F5-11 — samme innboks-chrome, to lesere.
- *
+ * Samme innboks-chrome, to lesere.
  * `forhandler` = /innboks (egen tenant, tre parter).
- * `endwise`    = /endwise/innboks (dealer_admin på tvers, ingen Kunder/Intern).
+ * `endwise` = /endwise/innboks (dealer_admin på tvers, ingen Kunder/Intern).
  */
 export type InboxModus = 'forhandler' | 'endwise';
 

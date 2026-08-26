@@ -1,25 +1,17 @@
 /**
- * Tynn live Quick-gateway (ikke CONNECT, ikke dump-VM).
- *
+ * Tynn live Quick-gateway (ikke connect, ikke dump-vm).
  * Vercel → HTTPS hit → denne boksen → HTTPS ut til q3.quick.no:443.
- * Historisk fikk kun kall som OPPSTO på Scaleway-boksen HTTP 200 hos Quick.
- *
+ * Historisk fikk kun kall som oppsto på Scaleway-boksen HTTP 200 hos Quick.
  * Auth Endwise→gateway: delt secret (X-Endwise-Gateway-Secret eller Bearer).
  * Ikke Vercel-IP (CWE-290). Valgfri mTLS hvis TLS_CLIENT_CA_PATH er satt.
- *
- * Gateway kaller KUN q3.quick.no og en fast allowlist av Quick-stier
+ * Gateway kaller kun q3.quick.no og en fast allowlist av Quick-stier
  * (CWE-441/918). Ingen vilkårlig URL/proxy.
- *
- * Forhandlerens Quick-token kommer per request (header), lever KUN i
- * prosessminne, skrives ALDRI til disk (CWE-922).
- *
+ * Forhandlerens Quick-token kommer per request (header), lever kun i
+ * prosessminne, skrives aldri til disk (CWE-922).
  * Logg: statuskode + varighet. Aldri body eller headers (CWE-532).
- *
  * Upstream mot q3.quick.no matcher working curl: User-Agent curl/8.5.0,
  * Authorization + Accept, HTTP/1.1 (https.request — ikke Node/undici H2).
- *
  * Av i appen = fjern QUICK_GATEWAY_URL i Vercel.
- *
  * SSH til boksen: nøkkel `endwise_scw`. Port 22 kun fra SSH_ALLOW_FROM
  * (install.sh) — ikke 0.0.0.0/0.
  */
@@ -34,8 +26,8 @@ export const ALLOWED_QUICK_HOST = 'q3.quick.no';
 export const GATEWAY_SECRET_HEADER = 'x-endwise-gateway-secret';
 export const QUICK_TOKEN_HEADER = 'x-quick-token';
 /**
- * Curl-ekvivalent mot q3.quick.no. Live curl (HTTP/1.1 + denne UA) gir 200;
- * Node/undici-default (annen UA, ofte HTTP/2) har gitt 500 på samme boks.
+ * Curl-ekvivalent mot q3.quick.no. Live curl (HTTP/1.1 + denne ua) gir 200;
+ * Node/undici-default (annen ua, ofte HTTP/2) har gitt 500 på samme boks.
  */
 export const QUICK_CURL_USER_AGENT = 'curl/8.5.0';
 export const QUICK_UPSTREAM_ALLOW_H2 = false;
@@ -114,7 +106,7 @@ function gatewaySecretFromReq(req) {
 }
 
 /**
- * Token KUN fra request — aldri env/disk. Returnert streng er request-skopet.
+ * Token kun fra request — aldri env/disk. Returnert streng er request-skopet.
  * @param {import('node:http').IncomingMessage} req
  */
 function quickTokenFromReq(req) {
@@ -131,7 +123,6 @@ function quickTokenFromReq(req) {
 /**
  * Default upstream: node:https.request (alltid HTTP/1.1). Ingen undici-dep
  * på boksen (apt nodejs). Tester injiserer options.fetch og leser init.
- *
  * @param {string} url
  * @param {{ method?: string, headers?: Record<string, string>, signal?: AbortSignal }} [init]
  * @returns {Promise<Response>}
@@ -295,7 +286,7 @@ export function createQuickGateway(options = {}) {
     /**
      * @param {number} [port]
      * @param {string} [host]
-     * @returns {Promise<{ port: number, close: () => Promise<void> }>}
+     * @returns {Promise<{ port: number, close: => Promise<void> }>}
      */
     listen(port = 0, host = options.host ?? '127.0.0.1') {
       return new Promise((resolve, reject) => {

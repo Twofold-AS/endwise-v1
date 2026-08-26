@@ -1,15 +1,12 @@
 /**
  * Live besøks-events for globen.
- *
- * ⚠️ SIMULERT NÅ. Ekte data kommer fra widgeten via SSE (apps/stream). Bytt
- * `subscribeVisitors` sin body til en EventSource UTEN å røre globe-komponenten:
- *
- *   export function subscribeVisitors(onEvent) {
- *     const es = new EventSource('/stream/visitors');   // apps/stream (F4-14/F11)
- *     es.onmessage = (m) => onEvent(JSON.parse(m.data) as VisitorEvent);
- *     return () => es.close();
- *   }
- *
+ * Simulert NÅ. Ekte data kommer fra widgeten via SSE (apps/stream). Bytt
+ * `subscribeVisitors` sin body til en EventSource uten å røre globe-komponenten:
+ * export function subscribeVisitors(onEvent) {
+ * const es = new EventSource('/stream/visitors'); // apps/stream (F4-14/F11)
+ * es.onmessage = (m) => onEvent(JSON.parse(m.data) as VisitorEvent);
+ * return => es.close;
+ * }
  * Kontrakten (VisitorEvent + subscribe→unsubscribe) er den samme, så byttet er
  * én funksjon.
  */

@@ -5,16 +5,13 @@ import { useState } from 'react';
 
 /**
  * [ART50-UI] Minimal AI-chat-flate — bygget for å oppfylle AI Act art. 50 i tide.
- *
- * ⚠️ **STYGG MED VILJE.** Fristen er 2. august 2026, og den juridiske gyldigheten
+ * stygg med vilje. Fristen er 2. august 2026, og den juridiske gyldigheten
  * avhenger ikke av design. Denne skjermen finnes for at merkingen skal være på
- * plass og testbar FØR fristen — ikke for å være pen.
- *
- * **Design-pass når tokens er inne: roadmap F4-15.** Søk `[ART50-UI]`.
- *
- * Det som IKKE kan endres i design-passet:
- *   - at `<AiDisclosure>` står ØVERST, før første melding
- *   - at `<HumanHandoverNotice>` vises når agenten eskalerer (F6-05)
+ * plass og testbar før fristen — ikke for å være pen.
+ * Design-pass når tokens er inne: roadmap F4-15. Søk `[ART50-UI]`.
+ * Det som ikke kan endres i design-passet:
+ * at `<AiDisclosure>` står Øverst, før første melding
+ * at `<HumanHandoverNotice>` vises når agenten eskalerer (F6-05)
  * Alt annet er fritt vilt.
  */
 export default function ChatPage() {
@@ -28,8 +25,10 @@ export default function ChatPage() {
     <main className="mx-auto max-w-xl p-6">
       <h1 className="mb-4 text-xl font-semibold">Kundechat</h1>
 
-      {/* [ART50-UI] Art. 50(1): informasjonen skal gis SENEST ved første
-          interaksjon. Derfor står den her — over meldingene, ikke under. */}
+      {/*
+       * [ART50-UI] Art. 50(1): informasjonen skal gis senest ved første
+       * interaksjon. Derfor står den her — over meldingene, ikke under.
+       */}
       <AiDisclosure className="mb-4" />
 
       <Card className="min-h-40 space-y-2">
@@ -47,7 +46,7 @@ export default function ChatPage() {
           </p>
         ))}
 
-        {/* [ART50-UI] Brukeren skal vite NÅR det skifter fra maskin til menneske. */}
+        {/* [ART50-UI] Brukeren skal vite når det skifter fra maskin til menneske. */}
         {escalated && <HumanHandoverNotice className="mt-2" />}
       </Card>
 

@@ -24,11 +24,10 @@ const TYPE_LABEL: Record<string, string> = Object.fromEntries(
 );
 
 /**
- * F2-05 / F5-04 — ETT KORT PER TJENESTE: gjeldende versjon, redigering og historikk.
- *
- * ⛔ **«Rediger» heter «Ny versjon», og det er ikke pynt.** `services.update`
+ * F2-05 / F5-04 — ett kort per tjeneste: gjeldende versjon, redigering og historikk.
+ * «Rediger» heter «Ny versjon», og det er ikke pynt. `services.update`
  * lukker den gjeldende versjonen med `validTo` og skriver en ny rad. Bookinger
- * fra i fjor peker på den GAMLE versjonen og endrer seg ikke. Kalte vi knappen
+ * fra i fjor peker på den gamle versjonen og endrer seg ikke. Kalte vi knappen
  * «Lagre», ville flaten fortalt en usannhet om hva som skjer — og en forhandler
  * som tror han retter en skrivefeil fra i går, ville i stedet innført en
  * prisendring som gjelder fra i dag.
@@ -45,7 +44,7 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
     beskrivelse: tjeneste.description ?? '',
   });
 
-  /** Historikken hentes FØRST når kortet åpnes — ikke for hele lista på sidelast. */
+  /** Historikken hentes først når kortet åpnes — ikke for hele lista på sidelast. */
   const historikk = trpc.services.versions.useQuery({ serviceId: tjeneste.id }, { enabled: apen });
 
   const etterSkriving = () => {
@@ -82,7 +81,7 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
 
   return (
     <CardShell className={tjeneste.active ? '' : 'opacity-60'}>
-      {/* ── Hodet: alt man trenger for å kjenne igjen tjenesten ─────────── */}
+      {/* Hodet: alt man trenger for å kjenne igjen tjenesten */}
       <button
         type="button"
         onClick={() => setApen((v) => !v)}
@@ -112,7 +111,7 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
               <Clock size={12} strokeWidth={1.75} />
               {visVarighet(tjeneste.durationMinutes)}
             </span>
-            {/* ⚠️ «Pris på forespørsel» og «0 kr» er to ulike ting. */}
+            {/* «Pris på forespørsel» og «0 kr» er to ulike ting. */}
             <span className="tabular-nums">
               {tjeneste.priceMinor == null ? 'Pris på forespørsel' : kroner(tjeneste.priceMinor)}
             </span>
@@ -137,7 +136,7 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
             <p className="text-body text-fg-muted">{tjeneste.description}</p>
           )}
 
-          {/* ── Redigering — kun for dealer_admin ────────────────────────── */}
+          {/* Redigering — kun for dealer_admin */}
           {kanEndre &&
             (redigerer ? (
               <div className="flex flex-col gap-4">
@@ -222,7 +221,7 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
               </div>
             ))}
 
-          {/* ── Historikken: beviset på at versjonering betyr noe ────────── */}
+          {/* Historikken: beviset på at versjonering betyr noe */}
           <section className="flex flex-col gap-2">
             <h3 className="text-label text-fg">Versjoner</h3>
             {historikk.isLoading ? (

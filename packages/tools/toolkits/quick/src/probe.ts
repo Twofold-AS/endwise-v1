@@ -6,18 +6,16 @@ import { quickClientInfo } from './schema.ts';
 import { assertAllowedQuickUrl } from './url-guard.ts';
 
 /**
- * F1-07 — GET-only tilkoblingsprobe mot Quick.
- *
+ * GET-only tilkoblingsprobe mot Quick.
  * Bekreftet endepunkt: `GET /api/v2/client/info` (se schema.ts).
  * Ingen POST/PUT/PATCH/DELETE. Ingen pull/push. Ingen synk.
- *
- * Tokenet sendes som `Authorization` og logges ALDRI her.
+ * Tokenet sendes som `Authorization` og logges aldri her.
  */
 
 export const QUICK_READ_ONLY_PROBE_METHOD = 'GET';
 /** Relativt til instansens baseUrl (uten trailing slash). */
 export const QUICK_READ_ONLY_PROBE_PATH = '/api/v2/client/info';
-/** Curl-ekvivalent UA (samme som working curl mot q3.quick.no). */
+/** Curl-ekvivalent ua (samme som working curl mot q3.quick.no). */
 export const QUICK_PROBE_USER_AGENT = QUICK_CURL_USER_AGENT;
 
 const DEFAULT_TIMEOUT_MS = 15_000;
@@ -60,7 +58,7 @@ export type QuickProbeConfig = {
 };
 
 /**
- * Ett lesekall. Kaster ved 401/403, nettverksfeil, SSRF-ulovlig URL
+ * Ett lesekall. Kaster ved 401/403, nettverksfeil, ssrf-ulovlig URL
  * eller uventet svar. Returnerer void — innholdet brukes ikke til synk.
  */
 export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void> {

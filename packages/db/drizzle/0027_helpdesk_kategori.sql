@@ -1,8 +1,7 @@
 /*
  * 0027 — F5-51: fast kategori på hjelpeartikler.
- *
  * Globale tabeller uten RLS (se schema/helpdesk.ts). Kolonnen er text +
- * applikasjonsenum, ikke pg ENUM — samme mønster som andre faste lister
+ * applikasjonsenum, ikke pg enum — samme mønster som andre faste lister
  * i repoet. Eksisterende rader får brukerguide (veiledningene som allerede
  * ligger der). Etter merge: pnpm db:setup (migrate + grants).
  */

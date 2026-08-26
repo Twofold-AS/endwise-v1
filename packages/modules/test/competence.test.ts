@@ -5,11 +5,10 @@ import { CompetenceForbiddenError, createCompetenceRegistry } from '../src/compe
 import { createRuleMatcher } from '../src/matching/index.ts';
 
 /**
- * F3-12 — Kompetanseregisteret, og angrepene på det.
- *
- * To beskyttelseslag som gjør ULIKE jobber, og begge testes:
- *   - RLS:   «hvilken tenants rader?»   → cross-tenant-angrepene
- *   - rolle: «har DU lov til å skrive?» → privilege-escalation-angrepet
+ * Kompetanseregisteret, og angrepene på det.
+ * To beskyttelseslag som gjør ulike jobber, og begge testes:
+ * RLS: «hvilken tenants rader?» → cross-tenant-angrepene
+ * rolle: «har du lov til å skrive?» → privilege-escalation-angrepet
  */
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
@@ -60,7 +59,7 @@ describeDb('kompetanseregister (F3-12)', () => {
     }
   });
 
-  // ── ROLLE-GATE ────────────────────────────────────────────────────────
+  // Rolle-gate
   it('ANGREP: en mekaniker (dealer_staff) kan IKKE gi seg selv en ferdighet', async () => {
     const registry = createCompetenceRegistry(app);
     await expect(
@@ -93,7 +92,7 @@ describeDb('kompetanseregister (F3-12)', () => {
     expect(row?.level).toBe(3);
   });
 
-  // ── RLS / CROSS-TENANT ────────────────────────────────────────────────
+  // RLS / cross-tenant
   it('ANGREP: A kan ikke lese B sine mekanikeres kompetanse', async () => {
     await owner.insert(schema.mechanicSkills).values({
       tenantId: tenantB,
@@ -127,7 +126,7 @@ describeDb('kompetanseregister (F3-12)', () => {
     expect(skills).toHaveLength(2);
   });
 
-  // ── MATCHEREN LESER FRA REGISTERET ────────────────────────────────────
+  // Matcheren leser fra registeret
   it('matcheren finner mekanikeren når kompetansen er registrert', async () => {
     const result = await createRuleMatcher(app).match({
       tenantId: tenantA,
@@ -140,7 +139,7 @@ describeDb('kompetanseregister (F3-12)', () => {
   });
 
   /**
-   * DEN VIKTIGSTE. En dato som ikke sjekkes er ikke en sertifisering — det er
+   * Den viktigste. En dato som ikke sjekkes er ikke en sertifisering — det er
    * en påstand. En mekaniker med utløpt EU-sertifisering skal ikke kunne bookes
    * på en EU-kontroll. Det er ikke en UX-bug; det er et tilsynsavvik.
    */

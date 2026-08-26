@@ -1,12 +1,10 @@
 /**
- * F6-19 — Valgene AvatarVelger kan persistere. Speiler serverens
- * `AVATAR_FORMER` / `AVATAR_HUMOR` (zod + CHECK).
- *
+ * Valgene AvatarVelger kan persistere. Speiler serverens
+ * `AVATAR_FORMER` / `AVATAR_HUMOR` (zod + check).
  * Identitet er form + farge + seed. Humør er det brukeren valgte — «Ny
  * tilfeldig» rører ikke et valgt humør eller en valgt farge. Opprett uten
  * valg trekker blant de ti kuraterte humørene, aldri et fast happy.
- *
- * ⛔ `sad` / `mad` / `sick` / `scared` finnes i blobatar, men er ikke i
+ * `sad` / `mad` / `sick` / `scared` finnes i blobatar, men er ikke i
  * vokabularet vi lagrer. Status-visningen mapper mot happy/thinking/idle.
  */
 
@@ -37,7 +35,7 @@ export const HUMOR = [
 ] as const;
 
 /**
- * Åtte punkter rundt fargesirkelen. Siste to er 270 (lilla) og 320 (rosa) —
+ * Åtte punkter rundt fargesirkelen. Siste to er 270 (lilla) og 320 (rosa)
  * 300/340 lå for tett på magenta/rosa og leste som to varianter av det samme.
  * 320 er blobatars dokumenterte ende («hue stops … to 320»).
  */
@@ -84,7 +82,7 @@ export function erTomAvatarValg(valg: AvatarVelgerValg | null | undefined): bool
 
 /**
  * «Ny tilfeldig» / ny avatar: ny form (og tone om den ikke er valgt).
- * Valgt humør og farge beholdes. Uten valg trekkes humør blant alle ti —
+ * Valgt humør og farge beholdes. Uten valg trekkes humør blant alle ti
  * aldri hardkodet happy.
  */
 export function tilfeldigAvatarValg(

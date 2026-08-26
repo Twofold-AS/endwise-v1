@@ -18,18 +18,15 @@ import {
 import { Kalender } from './_kalender';
 
 /**
- * F5-15 — SAKER. Samler det som var tre nav-punkter: Bookinger, Ny booking og
+ * Saker. Samler det som var tre nav-punkter: Bookinger, Ny booking og
  * Kalender.
- *
  * Kalenderen er en **visning**, ikke en destinasjon. Tre innganger til samme
  * rom var tre steder å lure på hvor man egentlig skulle. «Ny sak» ligger som
  * quick action i sidebaren — en «opprett»-rad i navigasjonen er en handling
  * forkledd som et sted.
- *
- * Filtrene gjelder BEGGE visningene (prinsippet fra F5-19: konfigurasjon i
+ * Filtrene gjelder begge visningene (prinsippet fra F5-19: konfigurasjon i
  * Settings, filtrering der arbeidet skjer).
- *
- * ⚠️ Detaljruten er fortsatt `/bookinger/[id]` og opprettelse `/bookinger/ny` —
+ * Detaljruten er fortsatt `/bookinger/[id]` og opprettelse `/bookinger/ny`
  * bevisst ikke flyttet i denne økten. Se sesjonsrapporten.
  */
 function SakerPageInner() {
@@ -80,7 +77,7 @@ function SakerPageInner() {
         </Link>
       </div>
 
-      {/* Visningsbytte — liste ↔ kalender. Samme data, to representasjoner. */}
+      {/* Visningsbytte — liste kalender. Samme data, to representasjoner. */}
       <div className="flex flex-wrap items-center gap-2">
         <div
           role="tablist"
@@ -151,9 +148,9 @@ function SakerPageInner() {
       </div>
 
       {visning === 'kalender' ? (
-        // F3-07 — bygget 08.08.2026. Mekaniker-filteret over gjelder også her
-        // (prinsippet i filkommentaren: filtrene gjelder BEGGE visningene).
-        // Status- og fritekstfilteret gjør det derimot IKKE: en kalender med
+        // . Mekaniker-filteret over gjelder også her
+        // (prinsippet i filkommentaren: filtrene gjelder begge visningene).
+        // Status- og fritekstfilteret gjør det derimot ikke: en kalender med
         // hull der de filtrerte jobbene sto ville løyet om hvor opptatt dagen er.
         <Kalender mechanicId={mechanicId || undefined} />
       ) : bookings.isLoading ? (
@@ -254,7 +251,7 @@ function ViewTab({
 }
 
 /**
- * ⚠️ Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (kanal-/
+ * Suspense-grense er påkrevd: siden leser `useSearchParams` (kanal-/
  * visningsvalg fra sidebaren), og uten den faller hele ruten ut av statisk
  * prerender og `next build` feiler.
  */

@@ -1,4 +1,4 @@
-/// <reference path="../md.d.ts" />
+// / <reference path="../md.d.ts" />
 import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
 import { schema, withTenant } from '@endwise/db';
 import { tool } from 'ai';
@@ -8,13 +8,11 @@ import { lagerVerktoy } from './lager-verktoy.ts';
 
 /**
  * F14 — Drifts-agenten. Kontrasten til kunde-support.
- *
- * `dataClass: 'tenant_operational'` — den ser KUN forhandlerens egne
+ * `dataClass: 'tenant_operational'` — den ser kun forhandlerens egne
  * strukturerte driftsdata. Ingen sluttkunde skriver inn i den; det er en ansatt
  * som spør om sin egen kapasitet.
- *
- * Derfor kan den kjøre på Fireworks. **Og derfor må den aldri få et verktøy som
- * returnerer kundens fritekst.** Legger noen til et `lesKundemelding`-verktøy
+ * Derfor kan den kjøre på Fireworks. Og derfor må den aldri få et verktøy som
+ * returnerer kundens fritekst. Legger noen til et `lesKundemelding`-verktøy
  * her, må dataklassen endres til `customer_freetext` i samme commit — ellers er
  * det en stille lekkasje.
  */
@@ -37,7 +35,7 @@ export const driftInnsiktAgent: AgentDefinition = {
           ),
       }),
 
-      // F6-15 — Lager, KUN LESING og med felt-allowlist (ingen kostpris).
+      // Lager, kun lesing og med felt-allowlist (ingen kostpris).
       // Se lager-verktoy.ts for de tre grensene og hvorfor de står der.
       ...lagerVerktoy(context),
 

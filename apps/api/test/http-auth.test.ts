@@ -22,7 +22,7 @@ vi.mock('@endwise/auth', async (importOriginal) => {
 import { handleAuth } from '../src/http/auth.ts';
 
 /**
- * F13-03 — Better-Auth-handleren videresender Request og bevarer Set-Cookie.
+ * Better-Auth-handleren videresender Request og bevarer Set-Cookie.
  * Same-origin i Next gjør cookien førsteparts; denne testen beviser at
  * headeren overlever handleren, ikke at Better-Auth selv setter den.
  */

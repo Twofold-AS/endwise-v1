@@ -2,43 +2,37 @@ import { type Database, findRolesForUser } from '@endwise/db';
 import { ROLES_REQUIRING_2FA } from './rbac.ts';
 
 /**
- * F1-11 — HÅNDHEVELSE av obligatorisk 2FA. **Dette er sikkerhetsgrensen.**
- *
- * ── Hva som var galt før 12.08.2026 ──────────────────────────────────────
+ * Håndhevelse av obligatorisk 2FA. **Dette er sikkerhetsgrensen.**
+ * Hva som var galt før
  * `ROLES_REQUIRING_2FA` var definert i `rbac.ts` og **brukt null steder**.
  * Better-Auth sin twoFactor-plugin var riktig konfigurert, men den håndhever
  * kun 2FA for brukere som har `twoFactorEnabled = true`. En `dealer_admin` med
  * flagget av logget inn med passord alene og fikk en helt vanlig sesjon.
- * Kravet sto altså i koden som en KONSTANT, ikke som en sperre — og en
+ * Kravet sto altså i koden som en konstant, ikke som en sperre — og en
  * sikkerhetsregel ingen leser, er ingen sikkerhetsregel.
- *
- * ── Regelen, i én setning ────────────────────────────────────────────────
+ * Regelen, i én setning
  * Har brukeren en rolle som krever 2FA, og `twoFactorEnabled` er ikke sann,
  * finnes det ingen autorisert sesjon. Punktum.
- *
- * ── Hvorfor `twoFactorEnabled` er nok til å bety «fullførte 2FA» ─────────
- * Better-Auth oppretter IKKE en sesjon ved passord-innlogging når kontoen har
+ * Hvorfor `twoFactorEnabled` er nok til å bety «fullførte 2FA»
+ * Better-Auth oppretter ikke en sesjon ved passord-innlogging når kontoen har
  * 2FA på — den svarer `twoFactorRedirect: true`, og sesjonen lages først etter
  * verifisert engangskode (sesjons-ID roteres da, CWE-384). En eksisterende
- * sesjon for en 2FA-aktivert bruker HAR derfor vært gjennom koden.
- *
- * ⚠️ **Unntaket — sesjoner opprettet FØR påslaget — er LUKKET 16.08.2026.**
+ * sesjon for en 2FA-aktivert bruker har derfor vært gjennom koden.
+ * Unntaket — sesjoner opprettet før påslaget — er lukket.
  * De ville ellers plutselig bestått sjekken uten å ha sett en kode (målt:
- * Better-Auth rydder dem ikke selv). Sperren ligger i en DATABASETRIGGER,
+ * Better-Auth rydder dem ikke selv). Sperren ligger i en databasetrigger,
  * `endwise_2fa_session_cutoff` (migrasjon `0010`), som sletter alle sesjoner i
  * det `two_factor_enabled` går fra ikke-sann til sann.
- *
  * Den ligger i basen og ikke her fordi kravet er «uansett hvordan 2FA ble slått
  * på» — et rått `UPDATE "user" SET two_factor_enabled = true` kjører ingen
  * applikasjonskode. Denne modulen kan derfor ikke være siste skanse; triggeren
  * er det. Se `packages/db/drizzle/0010_2fa_session_cutoff.sql` for hvorfor det
- * ble SLETTING og ikke et «gyldig fra»-tidsstempel (kort svar: `session.created_at`
- * skrives i appserverens lokale tid, `now()` er databasens — sammenligningen
- * ville vært systematisk skjev, og skjev FEIL vei).
- *
- * ── ⛔ Ingen «husk enhet» ────────────────────────────────────────────────
+ * ble sletting og ikke et «gyldig fra»-tidsstempel (kort svar: `session.created_at`
+ * skrives i appserverens lokale tid, `now` er databasens — sammenligningen
+ * ville vært systematisk skjev, og skjev feil vei).
+ * Ingen «husk enhet»
  * `trustDevice` sendes aldri fra vår side. Spec-en sier passord + engangskode
- * ved HVER innlogging for disse rollene.
+ * ved hver innlogging for disse rollene.
  */
 
 export class TwoFactorRequiredError extends Error {
@@ -50,11 +44,10 @@ export class TwoFactorRequiredError extends Error {
   readonly reason = 'enrollment' as const;
 
   /**
-   * ⚠️ Feltet deklareres EKSPLISITT og tilordnes i konstruktøren — ikke som en
+   * Feltet deklareres eksplisitt og tilordnes i konstruktøren — ikke som en
    * parameter-property (`constructor(readonly roller: ...)`).
-   *
    * Det er ikke stil: `apps/api` og `apps/stream` kjøres med Nodes
-   * `--experimental-strip-types`, som bare FJERNER typer og ikke kan
+   * `--experimental-strip-types`, som bare fjerner typer og ikke kan
    * transformere kode. En parameter-property må genereres om til en tilordning,
    * og da kaster Node `ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX` ved import — begge
    * serverne døde på oppstart. `tsc --noEmit` sa ingenting, fordi syntaksen er
@@ -82,7 +75,7 @@ export function rolesRequiring2FA(roles: readonly string[]): string[] {
 }
 
 /**
- * Den rene avgjørelsen, uten database. Skilt ut fordi det er DENNE som skal
+ * Den rene avgjørelsen, uten database. Skilt ut fordi det er denne som skal
  * være triviell å teste — og fordi en regel som bare finnes inne i en
  * databasespørring er en regel ingen tester.
  */
@@ -98,8 +91,7 @@ export function assertTwoFactorSatisfied(input: {
 
 /**
  * Samme avgjørelse, men henter rollene selv.
- *
- * ⚠️ Ser på ALLE medlemskap, ikke bare den aktive forhandleren. En bruker som
+ * Ser på alle medlemskap, ikke bare den aktive forhandleren. En bruker som
  * er `customer` hos A og `dealer_admin` hos B skal ikke kunne logge inn uten
  * 2FA med A som aktiv og deretter bytte til B. Kravet henger på personen.
  */

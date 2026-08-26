@@ -5,34 +5,29 @@ import { type AgentDefinition, assertEntitled } from './agent.ts';
 import { type AgentContext, sealContext } from './context.ts';
 
 /**
- * F6-18 — CHAT-INNGANGEN til agent-runtimen.
- *
- * ── Hvorfor en egen fil ved siden av `loop.ts` ───────────────────────────
- * `runAgent()` DRENERER strømmen selv og returnerer ferdig tekst. Det er riktig
+ * Chat-inngangen til agent-runtimen.
+ * Hvorfor en egen fil ved siden av `loop.ts`
+ * `runAgent` drenerer strømmen selv og returnerer ferdig tekst. Det er riktig
  * for den bakgrunnskjøringen den ble laget for (F6-02: agenten svarer i en tråd,
  * tokens går ut over SSE). En chat trenger det motsatte: `useChat` vil ha
- * strømmen SELV, i AI SDK sitt UI-message-format, med tool-parts og
+ * strømmen selv, i AI SDK sitt UI-message-format, med tool-parts og
  * godkjenn-steg intakt.
- *
- * Løsningen er IKKE å utvide master-løkka. Den er «LUKKET FOR ENDRING»
+ * Løsningen er ikke å utvide master-løkka. Den er «lukket for endring»
  * (techstack §2) av en grunn: en løkke som vokser med spesialtilfeller blir et
  * sted der en sikkerhetsregel kan forsvinne i en if-setning. Dette er en ny
- * inngang med de SAMME sperrene, ikke en ny variant av løkka.
- *
- * ── ⛔ De fire sperrene, i samme rekkefølge som `spawnAgent()` ───────────
- *   1. dataregion   — customer_freetext ⇒ EU-provider. Kastes, ikke logges.
- *   2. entitlement  — betalt modul (F0-04).
- *   3. forseglet kontekst — tenantId kan ikke settes, bare gis.
- *   4. guardrails   — L1 inn, L2/L3/L5 på verktøy, L4 ut (strømmende, se under).
- *
- * ── ⚠️ L4 måtte skrives om for strømming ────────────────────────────────
- * `filterOutput()` kjører på hele svaret. Tokens kommer i biter, og et
+ * inngang med de samme sperrene, ikke en ny variant av løkka.
+ * De fire sperrene, i samme rekkefølge som `spawnAgent`
+ * 1. dataregion — customer_freetext ⇒ EU-provider. Kastes, ikke logges.
+ * 2. entitlement — betalt modul (F0-04).
+ * 3. forseglet kontekst — tenantId kan ikke settes, bare gis.
+ * 4. guardrails — L1 inn, L2/L3/L5 på verktøy, L4 ut (strømmende, se under).
+ * L4 måtte skrives om for strømming
+ * `filterOutput` kjører på hele svaret. Tokens kommer i biter, og et
  * fødselsnummer delt over to biter treffer ingen regex. Å strømme rått og
  * filtrere til slutt er ikke å filtrere — teksten er allerede i nettleseren.
- * Derfor går hver `text-delta` gjennom `createStreamRedactor()`, som holder
+ * Derfor går hver `text-delta` gjennom `createStreamRedactor`, som holder
  * tilbake de siste ~80 tegnene til de er trygge. Se `stream-redact.ts`.
- *
- * ⛔ **Ingen Vercel AI Gateway.** Modellen kommer fra `provider.model()`, som
+ * Ingen Vercel AI Gateway. Modellen kommer fra `provider.model`, som
  * kommer fra `resolveModelProvider(agent.dataClass)`. Rutingen er den samme som
  * for alle andre agenter, og den er håndhevet — ikke konfigurert.
  */
@@ -49,13 +44,13 @@ export interface ChatOptions {
 
 /**
  * Bygger `streamText`-resultatet en chat-rute kan gjøre om til en
- * UI-message-stream. Returnerer resultatet UDRENERT — kallstedet eier strømmen.
+ * UI-message-stream. Returnerer resultatet udrenert — kallstedet eier strømmen.
  */
 export function streamAgentChat(options: ChatOptions) {
   const { agent, provider, guardrails } = options;
 
-  // 1. Dataregion FØRST, som i spawnAgent(). En kunde-agent mot Fireworks er
-  //    ikke en feilkonfigurasjon — det er norske kunders ord sendt til USA.
+  // 1. Dataregion først, som i spawnAgent. En kunde-agent mot Fireworks er
+  // ikke en feilkonfigurasjon — det er norske kunders ord sendt til usa.
   if (!providerSatisfies(provider, agent.dataClass)) {
     throw new DataRegionViolation(agent.name, agent.dataClass, provider.name, provider.region);
   }
@@ -65,7 +60,7 @@ export function streamAgentChat(options: ChatOptions) {
   assertEntitled(agent, context);
 
   // 4. Verktøyene bygges ÉN gang, med den frosne konteksten — samme invariant
-  //    som spawn: det finnes ikke et sted der en tenant-ID kan *settes*.
+  // som spawn: det finnes ikke et sted der en tenant-ID kan *settes*.
   const tools = guardrails.wrapTools(agent.tools(context), context);
 
   // Fabrikk, ikke instans: transformen lager én redaktør per tekstblokk.
@@ -86,22 +81,18 @@ export function streamAgentChat(options: ChatOptions) {
  * L4 som en strøm-transform. Tekst-biter går gjennom redaktøren; alt annet
  * (tool-calls, steg-hendelser) passerer urørt — de er strukturerte felter, ikke
  * fritekst, og har allerede vært gjennom L2/L3 i `wrapTools`.
- *
- * ── ⚠️ Hvorfor resten tømmes på `text-end`, ikke i `flush()` ─────────────
- * Første forsøk tømte redaktøren i strømmens `flush()`. Det så riktig ut og var
+ * Hvorfor resten tømmes på `text-end`, ikke i `flush`
+ * Første forsøk tømte redaktøren i strømmens `flush`. Det så riktig ut og var
  * feil, og feilen var synlig først når man kjørte det mot ekte HTTP:
- *
- *   data: {"type":"text-end","id":"0"}
- *   data: {"type":"finish"}
- *   data: {"type":"text-delta","id":"l4-flush", …}   ← etter finish
- *   data: {"type":"error","errorText":"An error occurred."}
- *
- * To feil i én: teksten kom ETTER at meldingen var erklært ferdig, og den hadde
+ * data: {"type":"text-end","id":"0"}
+ * data: {"type":"finish"}
+ * data: {"type":"text-delta","id":"l4-flush", …} ← etter finish
+ * data: {"type":"error","errorText":"An error occurred."}
+ * To feil i én: teksten kom etter at meldingen var erklært ferdig, og den hadde
  * en `id` det aldri var sendt noen `text-start` for — så UI-message-strømmen
  * avviste den og avsluttet med `error`. Halen av hvert svar ville forsvunnet.
- *
  * Nå holdes én redaktør per tekstblokk (`text-start` … `text-end`), og resten
- * tømmes rett FØR `text-end` går ut, med samme `id`. Da er rekkefølgen den
+ * tømmes rett før `text-end` går ut, med samme `id`. Da er rekkefølgen den
  * SDK-en forventer, og halen havner der den hører hjemme.
  */
 function l4Redaksjon(lagRedactor: () => ReturnType<typeof createStreamRedactor>) {
@@ -139,7 +130,7 @@ function l4Redaksjon(lagRedactor: () => ReturnType<typeof createStreamRedactor>)
           const r = blokker.get(chunk.id);
           if (r) {
             const rest = r.flush();
-            // ⚠️ Resten FØRST, så `text-end`. Motsatt rekkefølge er nøyaktig
+            // Resten først, så `text-end`. Motsatt rekkefølge er nøyaktig
             // bugen kommentaren over beskriver.
             if (rest) {
               controller.enqueue({

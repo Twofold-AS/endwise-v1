@@ -2,33 +2,28 @@ import { LOGO_EPOST_CID } from '../assets/logo-epost.ts';
 
 /**
  * Felles HTML-skall for auth-e-postene (engangskode, passordreset, invitasjon).
- *
- * ── ⚠️ E-post er ikke web. Reglene som styrer valgene her ────────────────
- * · **Tabeller, ikke flexbox/grid.** Outlook rendrer med Word-motoren.
- * · **Inline `style`, ikke klasser.** Gmail stripper `<style>` i mange
- *   sammenhenger, og alltid i videresendte meldinger.
- * · **Ingen SVG.** Gmail, Outlook og Apple Mail viser den ikke. Logoen er PNG.
- * · **Ingen `data:`-URI i `<img src>`.** Gmail og Outlook FJERNER dem. Logoen
- *   sendes derfor som et inline VEDLEGG med `contentId`, referert som
- *   `cid:`. Se `assets/logo-epost.ts` for hvorfor det ikke er samme sak som
- *   «inline base64».
- * · **Ingen ekstern URL for logoen.** Den ville måttet ligge på et offentlig
- *   domene; `BETTER_AUTH_URL` er localhost fram til F13.
- *
- * ── ⛔ Mørk modus ────────────────────────────────────────────────────────
+ * E-post er ikke web. Reglene som styrer valgene her
+ * Tabeller, ikke flexbox/grid. Outlook rendrer med Word-motoren.
+ * Inline `style`, ikke klasser. Gmail stripper `<style>` i mange
+ * sammenhenger, og alltid i videresendte meldinger.
+ * Ingen SVG. Gmail, Outlook og Apple Mail viser den ikke. Logoen er PNG.
+ * Ingen `data:`-URI i `<img src>`. Gmail og Outlook fjerner dem. Logoen
+ * sendes derfor som et inline vedlegg med `contentId`, referert som
+ * `cid:`. Se `assets/logo-epost.ts` for hvorfor det ikke er samme sak som
+ * «inline base64».
+ * Ingen ekstern URL for logoen. Den ville måttet ligge på et offentlig
+ * domene; `BETTER_AUTH_URL` er localhost fram til F13.
+ * Mørk modus
  * Gmail, Outlook og Apple Mail inverterer lyse flater på hver sin måte, og
  * `prefers-color-scheme` er upålitelig — Gmail respekterer den ikke i alle
  * klienter. Vi løser det ved ikke å være avhengige av den:
- *
- *   **Logoen står alltid på sin egen mørke flate.** Den er hvit, og blokka bak
- *   har eksplisitt `bgcolor="#0b0b0b"` på en `<td>` — det attributtet
- *   overlever i praktisk talt alle klienter. Uansett om resten av e-posten
- *   inverteres eller ikke, ligger logoen på en kjent bakgrunn.
- *
+ * Logoen står alltid på sin egen mørke flate. Den er hvit, og blokka bak
+ * har eksplisitt `bgcolor="#0b0b0b"` på en `<td>` — det attributtet
+ * overlever i praktisk talt alle klienter. Uansett om resten av e-posten
+ * inverteres eller ikke, ligger logoen på en kjent bakgrunn.
  * En hvit logo på en lys flate ville vært usynlig i akkurat den klienten som
  * ikke inverterer. En svart logo på en lys flate ville vært usynlig i den som
  * gjør det. Egen flate er den eneste varianten som er trygg i begge.
- *
  * `color-scheme`/`supported-color-schemes` er satt i tillegg — de hjelper der
  * de leses, og skader ingen steder.
  */
@@ -59,11 +54,10 @@ export function esc(s: string): string {
 
 /**
  * Bygger hele HTML-dokumentet.
- *
- * @param tittel    Overskriften i kortet — også `<title>`.
- * @param ingress   Én setning under overskriften.
- * @param innhold   Ferdig HTML: kodeboks, knapp eller lenke.
- * @param fotnote   Liten tekst nederst, typisk «har du ikke bedt om dette …».
+ * @param tittel Overskriften i kortet — også `<title>`.
+ * @param ingress Én setning under overskriften.
+ * @param innhold Ferdig HTML: kodeboks, knapp eller lenke.
+ * @param fotnote Liten tekst nederst, typisk «har du ikke bedt om dette …».
  */
 export function byggEpostHtml(input: {
   tittel: string;
@@ -89,7 +83,7 @@ export function byggEpostHtml(input: {
     <td align="center" style="padding:32px 16px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background-color:${FARGE.kort};border:1px solid ${FARGE.kant};border-radius:14px;overflow:hidden;">
 
-        <!-- ⛔ Logoflata. Eksplisitt bgcolor: se filkommentaren om mørk modus. -->
+ <!-- Logoflata. Eksplisitt bgcolor: se filkommentaren om mørk modus. -->
         <tr>
           <td align="center" bgcolor="${FARGE.merke}" style="background-color:${FARGE.merke};padding:24px 24px 20px 24px;">
             <img src="cid:${LOGO_EPOST_CID}"
@@ -137,12 +131,11 @@ export function kodeboks(kode: string): string {
 }
 
 /**
- * F6-26 — meldingsteksten fra innboksen, slik den ble skrevet.
- *
- * ⚠️ `white-space: pre-wrap` er poenget: en melding fra et verksted er ofte en
+ * Meldingsteksten fra innboksen, slik den ble skrevet.
+ * `white-space: pre-wrap` er poenget: en melding fra et verksted er ofte en
  * punktliste med linjeskift («byttet olje / fant slitt kjede / pris 4200»).
  * Uten den kollapser alt til én blokk, og meningen med oppsettet forsvinner.
- * `esc()` gjør at innholdet aldri kan bli markup.
+ * `esc` gjør at innholdet aldri kan bli markup.
  */
 export function meldingsboks(tekst: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -156,8 +149,7 @@ export function meldingsboks(tekst: string): string {
 
 /**
  * Knapp som lenke.
- *
- * ⚠️ URL-en gjentas som ren tekst under. Mange klienter og bedriftsfiltre
+ * URL-en gjentas som ren tekst under. Mange klienter og bedriftsfiltre
  * gjør knapper uklikkbare eller skriver om lenker, og da er en synlig adresse
  * forskjellen på en e-post som virker og en som ikke gjør det.
  */

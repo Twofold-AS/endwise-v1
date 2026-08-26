@@ -4,8 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * «Ny»-tekstbadge + rød teller i samme badge-form (25.08.2026).
- *
+ * «Ny»-tekstbadge + rød teller i samme badge-form.
  * Låst kopi og form: synlig «New» på badge/pille er feil; uleste-tall skal
  * være `CountBadge` (`Badge variant="destructive"`, 20px/6px), ikke 18px-sirkel
  * og ikke grå/grønn pille.

@@ -1,12 +1,9 @@
 /**
- * F14 — Dataregion. Dette er en SIKKERHETSTYPE, ikke en etikett.
- *
+ * F14 — Dataregion. Dette er en sikkerhetstype, ikke en etikett.
  * Rutingregelen, i klartekst:
- *
- *   Agenter som kan motta SLUTTKUNDENS FRITEKST **må** kjøre på en EU-provider.
- *   Agenter som kun ser tenant-skopede driftsdata kan kjøre hvor som helst.
- *
- * Grunnen til at dette er en TYPE og ikke en kommentar: en feilkonfigurasjon her
+ * Agenter som kan motta sluttkundens fritekst **må** kjøre på en EU-provider.
+ * Agenter som kun ser tenant-skopede driftsdata kan kjøre hvor som helst.
+ * Grunnen til at dette er en type og ikke en kommentar: en feilkonfigurasjon her
  * er ikke en bug — det er et personvernbrudd. Å sende en norsk kundes fritekst
  * (som kan inneholde helseopplysninger, jf. art. 9) til en amerikansk
  * inferens-tjeneste fordi noen skrev feil streng i en config, skal ikke være
@@ -16,13 +13,12 @@ export type DataRegion = 'eu' | 'global';
 
 /**
  * Hva slags data en agent kan se. Bestemmer hvilken region den MÅ kjøre i.
- *
  * `customer_freetext` = sluttkundens egne ord. Vi kontrollerer ikke hva som står
  * der, og kan derfor ikke garantere at det er fritt for særlige kategorier.
  */
 export type DataClass = 'tenant_operational' | 'customer_freetext';
 
-/** Regionen en datklasse KREVER. Ingen skjønn, ingen overstyring. */
+/** Regionen en datklasse krever. Ingen skjønn, ingen overstyring. */
 export const REQUIRED_REGION: Record<DataClass, DataRegion> = {
   // Bookinger, tjenester, mekanikere — vår egen strukturerte drift.
   tenant_operational: 'global',

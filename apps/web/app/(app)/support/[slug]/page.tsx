@@ -11,15 +11,13 @@ import { CardShell } from '../../_shell/cards';
 import { helpdeskKategoriLabel } from '../_kategorier';
 
 /**
- * F5-23 — ÉN HJELPEARTIKKEL.
- *
- * ── Når blir den «lest»? ──────────────────────────────────────────────────
- * Når den ÅPNES, ikke når den scrolles til bunns. Vi vet ikke om noen har lest
+ * ÉN hjelpeartikkel.
+ * Når blir den «lest»?
+ * Når den Åpnes, ikke når den scrolles til bunns. Vi vet ikke om noen har lest
  * teksten, og å late som ville gitt en teller som lyver begge veier. «Åpnet» er
  * det vi faktisk kan observere, og det er nok: badgen skal si «her er noe du
  * ikke har sett», ikke «her er noe du ikke har forstått».
- *
- * ⚠️ Kallet er idempotent server-side (`onConflictDoNothing`), så en refresh
+ * Kallet er idempotent server-side (`onConflictDoNothing`), så en refresh
  * flytter ikke tidspunktet for første lesning.
  */
 export default function ArtikkelPage() {
@@ -38,7 +36,7 @@ export default function ArtikkelPage() {
   });
 
   /**
-   * ⚠️ `mutate` er stabil fra tRPC, men vi holder avhengigheten på IDen alene
+   * `mutate` er stabil fra tRPC, men vi holder avhengigheten på IDen alene
    * så effekten kjører én gang per artikkel — ikke på hver render.
    */
   const id = artikkel.data?.id;
@@ -105,7 +103,7 @@ export default function ArtikkelPage() {
       )}
 
       {/**
-       * ⚠️ Brødteksten er ren tekst med tomme linjer mellom avsnitt, ikke
+       * Brødteksten er ren tekst med tomme linjer mellom avsnitt, ikke
        * markdown. Å tolke markdown fra en tekstboks ville krevd en parser og en
        * sanitizer — og en HTML-sanitizer vi skriver selv er nøyaktig den typen
        * kode man ikke skal skrive selv. Splitt på blank linje holder for

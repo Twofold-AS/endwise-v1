@@ -5,8 +5,7 @@ import { streamRewrites } from './lib/rewrites.ts';
 
 /**
  * Maskinens private IPv4-adresser — for `allowedDevOrigins` under.
- *
- * ⚠️ Bevisst duplisert fra `packages/auth/src/dev-origins.ts` (~10 linjer).
+ * Bevisst duplisert fra `packages/auth/src/dev-origins.ts` (~10 linjer).
  * `next.config.ts` lastes før workspace-pakkene transpileres, og å dra inn
  * `@endwise/auth` — som igjen drar inn Better-Auth og hele db-laget — i en
  * konfigurasjonsfil ville kostet langt mer enn de ti linjene. Endres reglene ett
@@ -28,23 +27,20 @@ function lokaleIPv4(): string[] {
 
 const nextConfig: NextConfig = {
   /**
-   * ⚠️ **DETTE er grunnen til at telefonen ikke fikk appen til å virke.**
-   *
+   * dette er grunnen til at telefonen ikke fikk appen til å virke.
    * Fra Next 15.2 blokkeres kryss-origin-forespørsler mot dev-serverens interne
    * ressurser (HMR, `/_next/*`) med mindre origin-en står her. Åpner du
    * `http://192.168.x.x:3000` på telefonen uten dette, laster HTML-en, men
    * JS-chunkene og hot reload blir avvist — siden ser halvferdig eller helt død
    * ut, og feilen står i en konsoll man ikke har på en telefon.
-   *
-   * Adressene leses fra maskinens EGNE grensesnitt ved oppstart, ikke fra en
+   * Adressene leses fra maskinens egne grensesnitt ved oppstart, ikke fra en
    * env-variabel som blir feil neste gang ruteren deler ut en ny IP. Kun
    * private RFC1918-adresser, og bare denne maskinens.
-   *
-   * ⛔ Gjelder KUN `next dev`. Produksjonsbygget bryr seg ikke om feltet.
+   * Gjelder kun `next dev`. Produksjonsbygget bryr seg ikke om feltet.
    */
   allowedDevOrigins: lokaleIPv4(),
   // Workspace-pakkene distribueres som TS-kilde — Next transpilerer dem.
-  // F13-03: `@endwise/api` (og avhengighetene) kjøres INNE i web, ikke via rewrite.
+  // `@endwise/api` (og avhengighetene) kjøres inne i web, ikke via rewrite.
   transpilePackages: [
     '@endwise/api',
     '@endwise/ui',
@@ -65,22 +61,22 @@ const nextConfig: NextConfig = {
   // `pg` har native optional deps — ikke bundle i serverless-funksjonen.
   serverExternalPackages: ['pg'],
   typedRoutes: true,
-  // F13-03 — auth/tRPC/chat/invitasjoner er Next route handlers (same-origin).
+  // Auth/tRPC/chat/invitasjoner er Next route handlers (same-origin).
   // Bare SSE (`apps/stream`) proxes fortsatt; den hører ikke hjemme på Vercel
-  // serverless (permanent LISTEN + 30 min tilkoblinger).
-  //
-  // F6-02 — `EventSource` kan ikke sette headere og sender kun cookies
+  // serverless (permanent listen + 30 min tilkoblinger).
+
+  // `EventSource` kan ikke sette headere og sender kun cookies
   // same-origin; uten denne rewriten ville sanntidskanalen enten vært
   // uautentisert eller krevd CORS + token i URL. En sesjonstoken i en
   // query-parameter havner i hver eneste tilgangslogg.
   async rewrites() {
     return [...streamRewrites(process.env)];
   },
-  // F13-03 — agent-instruksjonene (instructions.md ved siden av agent.ts)
+  // Agent-instruksjonene (instructions.md ved siden av agent.ts)
   // må inn i JS-bunten. readFileSync + import.meta.url peker på
-  // /var/task/packages/agents/src/.../instructions.md, som Turbopack/NFT
+  // /var/task/packages/agents/src/.../instructions.md, som Turbopack/nft
   // ikke kopierer. Da krasjer modulevalueringen av @endwise/agents og
-  // dermed HELE tRPC-routerens import (også session.me).
+  // dermed hele tRPC-routerens import (også session.me).
   turbopack: {
     rules: {
       '*.md': {

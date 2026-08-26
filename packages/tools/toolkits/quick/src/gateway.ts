@@ -2,13 +2,11 @@ import { QuickError } from './errors.ts';
 
 /**
  * Valgfri tynn live-gateway for server-side Quick-HTTPS.
- *
  * Av = fjern QUICK_GATEWAY_URL i Vercel — da går kallet direkte (eller via
- * valgfri CONNECT hvis QUICK_HTTPS_PROXY er satt).
+ * valgfri connect hvis QUICK_HTTPS_PROXY er satt).
  * Satt: kall skrives om til gateway-origin + samme sti; forhandler-token
- * sendes per request. CONNECT brukes ikke når gateway er på.
- *
- * CWE-532: logg ALDRI denne URL-en eller secret.
+ * sendes per request. Connect brukes ikke når gateway er på.
+ * CWE-532: logg aldri denne URL-en eller secret.
  */
 
 export const GATEWAY_SECRET_HEADER = 'X-Endwise-Gateway-Secret';

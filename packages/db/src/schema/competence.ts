@@ -15,29 +15,24 @@ import { mechanics } from './mechanics.ts';
 import { tenants } from './tenants.ts';
 
 /**
- * F3-12 — Kompetanseregister.
- *
- * ── HVORFOR GRADERT OG IKKE BINÆRT ──────────────────────────────────────────
- *
- * Binært («har / har ikke») hadde vært nok til å svare på det HARDE kravet i
- * F3-02: kan denne mekanikeren ta jobben? Men matcheren gjør to ting, ikke én.
+ * Kompetanseregister.
+ * Hvorfor gradert og ikke binært
+ * Binært («har / har ikke») hadde vært nok til å svare på det harde kravet i
+ * Kan denne mekanikeren ta jobben? Men matcheren gjør to ting, ikke én.
  * Den andre er **spesialist-vernet**: når flere kan ta jobben, skal ikke
  * båtmotor-eksperten bruke dagen på EU-kontroll av en moped.
- *
- * Spesialist-vernet trengte et MÅL. Til nå telte det bare antall ferdigheter —
+ * Spesialist-vernet trengte et mål. Til nå telte det bare antall ferdigheter
  * en grov proxy: «mange ferdigheter = spesialist». Det er feil. En mekaniker med
  * fem ferdigheter på nybegynnernivå er en generalist, ikke en spesialist.
  * Nivået er det som faktisk skiller dem.
- *
- * Og så er det sertifiseringen, som avgjorde saken: **EU-kontroll krever en
- * sertifisering som UTLØPER.** En boolean kan ikke utløpe. Et felt som ikke kan
+ * Og så er det sertifiseringen, som avgjorde saken: EU-kontroll krever en
+ * sertifisering som utløper. En boolean kan ikke utløpe. Et felt som ikke kan
  * utløpe, vil før eller siden la en usertifisert mekaniker ta en jobb han ikke
  * har lov til å ta — og det er ikke en UX-bug, det er et tilsynsavvik.
- *
  * Derfor: nivå 1–5 + valgfri sertifisering med utløpsdato.
  */
 
-/** Ferdighetskatalogen — per tenant. Én forhandler kaller det «MC-EU», en annen «EU MC». */
+/** Ferdighetskatalogen — per tenant. Én forhandler kaller det «mc-eu», en annen «EU mc». */
 export const skills = pgTable(
   'skills',
   {
@@ -57,10 +52,9 @@ export const skills = pgTable(
 
 /**
  * Kompetansen til én mekaniker på én ferdighet.
- *
  * `level`: 1 = under opplæring · 3 = selvstendig · 5 = spesialist.
  * `certificationExpiresAt`: null = ingen sertifisering registrert. Er ferdigheten
- * merket `requiresCertification`, teller mekanikeren som IKKE kvalifisert uten en
+ * merket `requiresCertification`, teller mekanikeren som ikke kvalifisert uten en
  * gyldig dato — se `qualifiedMechanicSkills`.
  */
 export const mechanicSkills = pgTable(

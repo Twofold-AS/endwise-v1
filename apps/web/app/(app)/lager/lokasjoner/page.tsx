@@ -8,9 +8,8 @@ import { CardShell } from '../../_shell/cards';
 import { Feil, Laster, Sidehode, Tomt } from '../_delt';
 
 /**
- * F5-31 — LAGER · Lokasjoner. Hylle, rom, servicebil.
- *
- * ⚠️ Oppretting er `adminProcedure` server-side. Skjemaet vises derfor kun for
+ * Lager · Lokasjoner. Hylle, rom, servicebil.
+ * Oppretting er `adminProcedure` server-side. Skjemaet vises derfor kun for
  * admin — men det er kosmetikk; sperren står i `inventory.createLocation`.
  */
 export default function LokasjonerPage() {

@@ -6,9 +6,8 @@ import { getStripe, stripeConfigured } from '../../lib/stripe.ts';
 import { router, shopProcedure } from '../init.ts';
 
 /**
- * F10-03 — Intern testbutikk. **Ikke `moduleProcedure('shop')`.**
+ * Intern testbutikk. **Ikke `moduleProcedure('shop')`.**
  * Gaten er `shopProcedure` (feature-flag `shop` + auth/RLS).
- *
  * Stripe-kassen er `mode: payment` — holdt adskilt fra abonnements-items.
  */
 export const shopRouter = router({

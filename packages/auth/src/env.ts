@@ -8,20 +8,17 @@ function required(name: string): string {
 
 /**
  * Domenene som er verifisert i Resend.
- *
- * ── ⚠️ Historikken her er verdt å lese før noen «rydder» ────────────────
- * Om morgenen 22.08.2026 var KUN `no-reply.endwise.no` verifisert, og en
+ * Historikken her er verdt å lese før noen «rydder»
+ * Om morgenen var kun `no-reply.endwise.no` verifisert, og en
  * avsender på apex-domenet `endwise.no` ga `403 validation_error` på hver
  * eneste auth-e-post. Det var den feilen som gjorde at engangskoden ikke kom
  * fram. Senere samme dag ble **apex-domenet også verifisert**, og begge virker
  * nå (bekreftet mot `GET /domains`: begge `verified`).
- *
- * ⛔ Derfor er dette en LISTE med EKSAKTE domener, ikke ett domene med en
+ * Derfor er dette en liste med eksakte domener, ikke ett domene med en
  * subdomene-regel. Resend verifiserer hvert domene for seg — at
  * `no-reply.endwise.no` er verifisert sier ingenting om `endwise.no`, og
  * motsatt. En `endsWith`-regel ville påstått noe om Resend som ikke er sant,
  * og sluppet gjennom et domene som ville 403-et i produksjon.
- *
  * Legger noen til et domene i Resend, skal det inn her — og motsatt.
  */
 export const RESEND_VERIFISERTE_DOMENER = ['endwise.no', 'no-reply.endwise.no'] as const;
@@ -43,7 +40,6 @@ export function avsenderDomene(from: string): string | null {
 
 /**
  * Er avsenderen på et domene Resend vil godta?
- *
  * Eksakt treff mot lista. Ingen subdomene-logikk — se kommentaren over.
  */
 export function avsenderErVerifisert(from: string): boolean {
@@ -77,21 +73,20 @@ export const authEnv = {
     return {
       apiKey: required('RESEND_API_KEY'),
       /**
-       * ⚠️ **Standardverdien var `noreply@endwise.no` fram til 22.08.2026, og
-       * den var feil.** Domenet som er verifisert i Resend heter
-       * `no-reply.endwise.no` — et SUBDOMENE. En avsender på apex-domenet
-       * `endwise.no` avvises med `403 validation_error`, og da feiler ALLE
+       * Standardverdien var `noreply@endwise.no` fram til , og
+       * den var feil. Domenet som er verifisert i Resend heter
+       * `no-reply.endwise.no` — et subdomene. En avsender på apex-domenet
+       * `endwise.no` avvises med `403 validation_error`, og da feiler alle
        * auth-e-poster samtidig: engangskode, passordreset og invitasjon.
-       *
        * Verifiser mot `GET https://api.resend.com/domains` før du endrer
        * denne eller `RESEND_FROM`. De to strengene ser nesten like ut.
        */
       /**
-       * ⚠️ `||`, ikke `??`. `??` faller kun tilbake på `null`/`undefined` —
-       * en TOM streng ville sluppet gjennom som avsenderadresse. Og tom er
+       * `||`, ikke `??`. `??` faller kun tilbake på `null`/`undefined`
+       * en tom streng ville sluppet gjennom som avsenderadresse. Og tom er
        * nettopp det `.env.example` leverer for de andre nøklene, så dette er
        * en helt vanlig tilstand i et halvkonfigurert miljø. Fanget av
-       * `epost-innhold.test.ts` 22.08.2026.
+       * `epost-innhold.test.ts`.
        */
       from: process.env.RESEND_FROM || `Endwise <no-reply@${RESEND_STANDARD_DOMENE}>`,
     };

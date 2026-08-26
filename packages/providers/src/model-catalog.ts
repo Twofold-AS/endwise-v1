@@ -2,13 +2,10 @@ import type { ModelRole } from '@endwise/modules';
 
 /**
  * Modellkatalog med roller (techstack §2 AI-lag).
- *
- * **INGEN HARDKODEDE MODELLER.** Kallstedene ber om en ROLLE («fast», «hard» …),
+ * ingen hardkodede modeller. Kallstedene ber om en rolle («fast», «hard» …),
  * og katalogen mapper (leverandør, plan, rolle) → modell-ID.
- *
- * Modell-ID-ene leses fra MILJØET, per leverandør:
- *   FIREWORKS_MODEL_FAST, MISTRAL_MODEL_FAST, …
- *
+ * Modell-ID-ene leses fra miljøet, per leverandør:
+ * FIREWORKS_MODEL_FAST, MISTRAL_MODEL_FAST, …
  * Grunnen til at de ikke ligger i kode: modellnavn endrer seg raskere enn
  * repoet, og en modell vi gjetter på er en modell som ikke finnes.
  */

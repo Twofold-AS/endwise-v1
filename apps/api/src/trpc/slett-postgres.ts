@@ -1,10 +1,9 @@
 import { TRPCError } from '@trpc/server';
 
 /**
- * F5-26 — Drizzle viser «Failed query: select slett_forhandler(…)» og gjemmer
+ * Drizzle viser «Failed query: select slett_forhandler(…)» og gjemmer
  * Postgres-årsaken i `error.cause`. Produksjon på Scaleway (17ec774) ga 500
- * uten SQLSTATE i Vercel-loggen.
- *
+ * uten sqlstate i Vercel-loggen.
  * Mappes hit slik at Endwise-admin ser klassen (mangler funksjon / RLS / FK),
  * ikke en rå spørring. Ruta er `endwiseAdminProcedure` — ikke-admin kommer
  * aldri hit.

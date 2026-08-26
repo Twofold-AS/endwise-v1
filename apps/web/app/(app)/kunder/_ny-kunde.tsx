@@ -8,15 +8,13 @@ import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
 
 /**
- * F5-02 — «NY KUNDE». Quick action-en som ikke gjorde noe.
- *
- * ⚠️ **Dette var en død knapp.** «Ny kunde» i Handlinger-menyen pekte på
+ * «ny kunde». Quick action-en som ikke gjorde noe.
+ * Dette var en død knapp. «Ny kunde» i Handlinger-menyen pekte på
  * `/kunder?ny=1`, men kundesiden leste aldri den parameteren — akkurat samme
- * feil som `/innboks?ny=1` hadde fram til 07.08.2026. Du trykket, siden lastet,
+ * feil som `/innboks?ny=1` hadde fram til. Du trykket, siden lastet,
  * og ingenting skjedde. `customers.create` har eksistert i backend hele tiden.
- *
  * Skjemaet er med vilje minimalt: navn er det eneste som kreves for å ha en
- * kunde i registeret. Telefon og e-post er valgfrie fordi de faktisk er det —
+ * kunde i registeret. Telefon og e-post er valgfrie fordi de faktisk er det
  * en kunde som kommer inn døra med en sykkel har ikke alltid oppgitt noen av
  * delene, og et påkrevd felt ville tvunget fram en oppdiktet verdi.
  */
@@ -32,7 +30,7 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
     onSuccess: (kunde) => {
       void utils.customers.list.invalidate();
       // Rett inn på kundekortet: den som nettopp opprettet en kunde skal som
-      // regel gjøre noe MER med den (legge inn kjøretøy, en sak).
+      // regel gjøre noe mer med den (legge inn kjøretøy, en sak).
       if (kunde?.id) router.replace(`/kunder/${kunde.id}` as Route);
       else onLukk();
     },
@@ -44,8 +42,8 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
     if (!n) return;
     opprett.mutate({
       name: n,
-      // ⚠️ Tomme strenger må bli `undefined`, ikke ''. Zod-skjemaet krever en
-      // gyldig e-post HVIS feltet er med — en tom streng ville blitt avvist.
+      // Tomme strenger må bli `undefined`, ikke ''. Zod-skjemaet krever en
+      // gyldig e-post hvis feltet er med — en tom streng ville blitt avvist.
       phone: telefon.trim() || undefined,
       email: epost.trim() || undefined,
     });

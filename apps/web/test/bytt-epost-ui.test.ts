@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * F1-27 — e-postbytte i UI er to steg. Skjemaet i profilen BER om bytte;
+ * E-postbytte i UI er to steg. Skjemaet i profilen ber om bytte;
  * bekreftelsessiden er det som kaller verifyEmail.
  */
 

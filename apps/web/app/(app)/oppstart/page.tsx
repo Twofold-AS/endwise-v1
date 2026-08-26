@@ -8,8 +8,7 @@ import { AvatarVelger } from '../_avatar/avatar-velger';
 import { CardShell } from '../_shell/cards';
 
 /**
- * F5-26 / F6-19 — EIER-VEIVISER. Etter passord (invite) og tvungen 2FA.
- *
+ * F5-26 / F6-19 — eier-veiviser. Etter passord (invite) og tvungen 2FA.
  * Visningsnavn → Avatar → (Tillegg bare hvis admin åpnet optional) → Team.
  * Avatar-steget er samme velger som profil: form, farge, humør, tone.
  * Tomt tilleggssteg vises ikke. Quick-feltene er urørt.

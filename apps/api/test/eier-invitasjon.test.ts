@@ -7,12 +7,11 @@ import { invitasjon } from '../src/routes/invitasjon.ts';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
- * F5-26 — INVITE-ONLY FORHANDLER-ONBOARDING.
- *
- *  · manglende bruker + create → tenant + eier-invite, ingen bruker ennå
- *  · godta setter passord og dealer_admin
- *  · dealer_admin kan ikke tildele egne moduler
- *  · staff-invite kan fortsatt ikke bli dealer_admin
+ * Invite-only forhandler-onboarding.
+ * manglende bruker + create → tenant + eier-invite, ingen bruker ennå
+ * godta setter passord og dealer_admin
+ * dealer_admin kan ikke tildele egne moduler
+ * staff-invite kan fortsatt ikke bli dealer_admin
  */
 async function forventer(kall: Promise<unknown>, code: 'FORBIDDEN' | 'NOT_FOUND' | 'BAD_REQUEST') {
   await expect(kall).rejects.toMatchObject({ code });
@@ -278,7 +277,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     expect(rad?.kind).toBe('owner');
 
     const { hashInvitasjonstoken } = await import('@endwise/modules/invitasjoner');
-    // Tokenet er ikke i basen. Vi lager en NY invite vi kjenner tokenet til.
+    // Tokenet er ikke i basen. Vi lager en ny invite vi kjenner tokenet til.
     const { createInvitasjonsmodul } = await import('@endwise/modules/invitasjoner');
     const modul = createInvitasjonsmodul(owner);
     await modul.tilbakekallApneEier(opprettet.tenantId, epost);

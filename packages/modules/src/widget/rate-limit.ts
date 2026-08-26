@@ -1,10 +1,9 @@
 /**
- * F4-02 / CWE-770 — Rate-limiting for de OFFENTLIGE, uautentiserte widget-
+ * F4-02 / CWE-770 — Rate-limiting for de offentlige, uautentiserte widget-
  * endepunktene. Anonyme kan spamme (booking-spam, AI-kostnad, enumererings-
  * forsøk), så hvert widget-endepunkt må ha et tak.
- *
  * Fast-vindu-teller i minnet: enkelt, ingen avhengighet, godt nok per instans.
- * MERK (drift): dette er PER prosess/instans. Ved horisontal skalering trengs en
+ * Merk (drift): dette er per prosess/instans. Ved horisontal skalering trengs en
  * delt teller (Redis/Upstash) for et globalt tak — dokumentert som TODO. Taket
  * her stopper uansett den enkeltinstans-flommen som er den realistiske trusselen.
  */

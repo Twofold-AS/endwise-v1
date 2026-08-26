@@ -5,7 +5,6 @@ import { appRouter } from '../src/trpc/router.ts';
 
 /**
  * F1-10 tillegg — opprett ansatt uten å sende invitasjons-e-post.
- *
  * Hypotesen holdt: `invitasjoner.opprett` sender alltid (eller forsøker).
  * Denne ruta lager medlemskap + funksjon uten invitations-rad og uten
  * credential-konto. Invitasjonsstien er urørt.

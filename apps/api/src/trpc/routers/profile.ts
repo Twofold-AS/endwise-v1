@@ -11,16 +11,14 @@ import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
 
 /**
- * F5-19 / F7-06 — EGEN PROFIL: navn, kallenavn og varslingslyder.
- *
- * ── ⚠️ Den gjennomgående regelen ──────────────────────────────────────────
- * **Ingen rute her tar en bruker-ID fra input.** Alt skrives for `ctx.userId`.
+ * F5-19 / F7-06 — egen profil: navn, kallenavn og varslingslyder.
+ * Den gjennomgående regelen
+ * Ingen rute her tar en bruker-ID fra input. Alt skrives for `ctx.userId`.
  * Det er ikke en forglemmelse at det mangler et `userId`-felt — det er hele
  * sikkerhetsmodellen: «endre egen profil» skal ikke kunne bli «endre hvem som
  * helst sin profil» ved å bytte ut én streng i en forespørsel (CWE-639,
- * OWASP A01 Broken Access Control).
- *
- * `user_preferences` har ingen RLS (global tabell, se skjemaet), så her ER
+ * Owasp A01 Broken Access Control).
+ * `user_preferences` har ingen RLS (global tabell, se skjemaet), så her er
  * `ctx.userId` hele beskyttelsen. `member_profiles` har RLS i tillegg.
  */
 export const profileRouter = router({
@@ -61,14 +59,13 @@ export const profileRouter = router({
       kallenavn: profil?.nickname ?? null,
       /** Ingen rad = aldri rørt = standard PÅ. */
       varslingslyder: pref?.notificationSounds ?? true,
-      /** F6-17 — «Detaljer»-panelet i innboksen. Standard PÅ. */
+      /** «Detaljer»-panelet i innboksen. Standard PÅ. */
       detaljpanel: pref?.inboxDetailsOpen ?? true,
-      /** Alle innloggede roller kan ha kallenavn (26.08.2026). */
+      /** Alle innloggede roller kan ha kallenavn. */
       kanHaKallenavn: kanHaKallenavn(ctx.role),
       /**
-       * F6-19 — avatarvalgene. Null overalt = alt utledes fra seeden.
-       *
-       * ⚠️ Seeden returneres bevisst IKKE herfra: den er `ctx.userId`, som
+       * Avatarvalgene. Null overalt = alt utledes fra seeden.
+       * Seeden returneres bevisst ikke herfra: den er `ctx.userId`, som
        * klienten allerede har fra `session.me`. To kilder til samme seed er
        * to steder den kan bli feil.
        */
@@ -77,8 +74,7 @@ export const profileRouter = router({
   }),
 
   /**
-   * Endre EGET visningsnavn.
-   *
+   * Endre eget visningsnavn.
    * Navnet ligger på `user` (Better-Auth) og er dermed globalt: bytter du navn,
    * bytter du det overalt. Det er riktig — det er ditt navn, ikke en rolle du
    * har hos én forhandler. Kallenavnet er det tenant-lokale.
@@ -95,8 +91,7 @@ export const profileRouter = router({
 
   /**
    * Sett eller fjern eget kallenavn (tom streng = fjern).
-   *
-   * 26.08.2026: åpent for alle innloggede roller. Rollen leses fra
+   * åpent for alle innloggede roller. Rollen leses fra
    * konteksten (`assertMember`), aldri fra input. Uten rolle avvises
    * kallet — det er «ikke innlogget», ikke «admin får ikke».
    */
@@ -124,8 +119,7 @@ export const profileRouter = router({
     }),
 
   /**
-   * F6-17 — «Detaljer»-panelet åpent/lukket.
-   *
+   * «Detaljer»-panelet åpent/lukket.
    * Egen mutasjon, ikke en generisk `setPreference(key, value)`. En generisk
    * setter ville betydd at klienten bestemmer hvilke kolonner som finnes — og
    * første gang noen sender en nøkkel vi ikke kjenner, må serveren enten
@@ -145,19 +139,16 @@ export const profileRouter = router({
     }),
 
   /**
-   * F6-19 — EGEN AVATAR: form, farge og tone.
-   *
-   * ⛔ Tre navngitte felt, ikke blobatars rå `traits`-map. Tok ruta imot en fri
-   * `Record<string, number>`, ville KLIENTEN bestemt hvilke egenskaper som kan
+   * Egen avatar: form, farge og tone.
+   * Tre navngitte felt, ikke blobatars rå `traits`-map. Tok ruta imot en fri
+   * `Record<string, number>`, ville klienten bestemt hvilke egenskaper som kan
    * pinnes — også `motion.*` og `gaze.*`, som ingen har bedt om å styre, og
    * som vi da ville lagret uten å vite hva betyr. Serveren eier vokabularet.
-   *
    * `null` er en meningsbærende verdi og ikke «ikke oppgitt»: den betyr
-   * «la seeden bestemme denne ene tingen». Derfor `.nullable()` og ikke
-   * `.optional()` — et utelatt felt ville ikke kunne skille «rør ikke» fra
+   * «la seeden bestemme denne ene tingen». Derfor `.nullable` og ikke
+   * `.optional` — et utelatt felt ville ikke kunne skille «rør ikke» fra
    * «tilbakestill».
-   *
-   * ⚠️ Ingen `userId` i input. Samme regel som resten av fila.
+   * Ingen `userId` i input. Samme regel som resten av fila.
    */
   setAvatar: protectedProcedure
     .input(

@@ -80,5 +80,5 @@ export type {
 export * as schema from './schema/index.ts';
 /** Kanalnavnet SSE-tjenesten LISTENer på (F6-02). */
 export { STREAM_CHANNEL } from './schema/stream-events.ts';
-/** F5-27 — verdiliste (ikke bare typen), brukes til validering i tRPC. */
+/** Verdiliste (ikke bare typen), brukes til validering i tRPC. */
 export { TENANT_KINDS } from './schema/tenants.ts';

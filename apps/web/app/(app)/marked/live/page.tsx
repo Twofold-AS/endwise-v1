@@ -5,8 +5,8 @@ import { CardShell, NewBadge } from '../../_shell/cards';
 import { LiveVisitorsGlobe } from './_globe';
 
 /**
- * Marked → Live besøkende. Globe (MapLibre GL, mørkt, ingen API-nøkkel) som viser
- * hvor folk ser på forhandlerens nettside akkurat nå. SIMULERTE prikker nå — klar
+ * Marked → Live besøkende. Globe (MapLibre gl, mørkt, ingen API-nøkkel) som viser
+ * hvor folk ser på forhandlerens nettside akkurat nå. Simulerte prikker nå — klar
  * for ekte SSE-strøm fra widgeten (apps/stream), se `_visitors.ts`.
  */
 export default function LiveBesokendePage() {

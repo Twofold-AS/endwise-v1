@@ -51,7 +51,7 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
   });
 
   it('dokumenterer Docker-superuser vs Scaleway (som lookup_open_invitation)', () => {
-    expect(slettSql).toMatch(/FORCE RLS \+ eier som ikke er superuser/);
+    expect(slettSql).toMatch(/Force RLS \+ eier som ikke er superuser/);
     expect(slettSql).toMatch(/row_security=off/);
   });
 

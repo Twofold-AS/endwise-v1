@@ -121,10 +121,11 @@ describe('Ny jobb og tomflater', () => {
     expect(analyse).toMatch(/Eksempel — ikke live verkstedstall/);
   });
 
-  it('Inviter ansatt forklarer at e-post er valgfri', () => {
+  it('Opprett ansatt forklarer at e-post er valgfri', () => {
     const inviter = les('../app/(app)/innstillinger/team/_inviter.tsx');
     expect(inviter).toMatch(/E-post er valgfri/);
-    expect(inviter).toMatch(/Skriv inn navn når du inviterer uten e-post/);
-    expect(inviter).toMatch(/Inviter ansatt/);
+    expect(inviter).toMatch(/Skriv inn navn når du oppretter uten e-post/);
+    expect(inviter).toMatch(/Opprett ansatt/);
+    expect(inviter).not.toMatch(/Inviter ansatt/);
   });
 });

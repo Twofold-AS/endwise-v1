@@ -1,10 +1,11 @@
 'use client';
 
-import { Avatar, CircleAlert } from '@endwise/ui';
+import { ArrowUpRight, Avatar, CircleAlert } from '@endwise/ui';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
-import type { TeamFaneId } from './_faner';
+import type { TeamListeFaneId } from './_faner';
+import { StatusMerke } from './_status';
 
 type Rad = RouterOutput['team']['list'][number];
 
@@ -15,7 +16,7 @@ const FUNKSJON_LABEL: Record<string, string> = {
   mekaniker: 'Mekaniker',
 };
 
-export function passerFane(funksjon: string, fane: TeamFaneId): boolean {
+export function passerFane(funksjon: string, fane: TeamListeFaneId): boolean {
   if (fane === 'alle') return true;
   if (fane === 'mekanikere') return funksjon === 'mekaniker';
   if (fane === 'selgere') return funksjon === 'selger';
@@ -23,11 +24,11 @@ export function passerFane(funksjon: string, fane: TeamFaneId): boolean {
   return true;
 }
 
-const TOM: Record<TeamFaneId, { tittel: string; hint: string }> = {
-  alle: { tittel: 'Ingen ansatte ennå', hint: 'Inviter noen øverst — med eller uten e-post.' },
+const TOM: Record<TeamListeFaneId, { tittel: string; hint: string }> = {
+  alle: { tittel: 'Ingen ansatte ennå', hint: 'Opprett ansatt — med eller uten e-post.' },
   mekanikere: {
     tittel: 'Ingen mekanikere ennå',
-    hint: 'Inviter en mekaniker, eller tildel jobbfunksjonen i detaljene.',
+    hint: 'Opprett en mekaniker, eller tildel jobbfunksjonen i detaljene.',
   },
   selgere: {
     tittel: 'Ingen selgere ennå',
@@ -44,7 +45,7 @@ export function TeamListe({
   valgtId,
   onVelg,
 }: {
-  fane: TeamFaneId;
+  fane: TeamListeFaneId;
   valgtId: string | null;
   onVelg: (userId: string) => void;
 }) {
@@ -118,14 +119,16 @@ function TeamRad({
         <span className="truncate text-[12px] text-fg-muted">
           {FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}
         </span>
+        <StatusMerke status={rad.status} label={rad.statusLabel} />
       </div>
       <button
         type="button"
         onClick={onVelg}
         aria-pressed={valgt}
-        className="inline-flex h-control items-center rounded-control border border-border px-2.5 text-label text-fg hover:bg-surface-2"
+        className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg hover:bg-surface-2"
       >
         Detaljer
+        <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
       </button>
     </div>
   );

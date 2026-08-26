@@ -229,7 +229,7 @@ export const FORHANDLER_NAV: NavItem[] = [
    */
   {
     key: 'team',
-    label: 'Ansatte',
+    label: 'Organisasjon',
     icon: Users,
     href: '/innstillinger/team',
     roles: ADMIN_OF_TENANT,
@@ -516,7 +516,7 @@ function pathTreffer(pathname: string, href: string): boolean {
 
 /**
  * Dealer-Innstillinger-stier (pille-fanene). Ikke Team/tjenestekatalog —
- * Prisliste bor under Jobber, Team under Ansatte.
+ * Prisliste bor under Jobber, Team under Organisasjon.
  */
 const SETTINGS_STIER = [
   '/innstillinger/profil',
@@ -651,9 +651,9 @@ export const PARKED_LABEL: Record<string, string> = {
   '/admin/logg': 'Parkert · Aktivitetslogg',
   '/bookinger': 'Jobber (gammel sti)',
   '/kalender': 'Jobber · Kalender (gammel sti)',
-  '/mekanikere': 'Ansatte · Mekanikere',
-  '/mekanikere/kompetanse': 'Ansatte · Kompetanse',
-  '/mekanikere/kapasitet': 'Ansatte · Timeplan',
+  '/mekanikere': 'Organisasjon · Mekanikere',
+  '/mekanikere/kompetanse': 'Organisasjon · Kompetanse',
+  '/mekanikere/kapasitet': 'Organisasjon · Timeplan',
   '/tjenester': 'Tjenester & priser',
   '/innstillinger/profil': 'Innstillinger · Profil',
   '/innstillinger/varsler': 'Innstillinger · Varsler',
@@ -665,7 +665,7 @@ export const PARKED_LABEL: Record<string, string> = {
   '/jobber': 'Jobber',
   '/rapporter': 'Rapporter',
   '/verkstedet': 'Verkstedet',
-  '/ansatte': 'Ansatte',
+  '/ansatte': 'Organisasjon',
   '/innstillinger/koblinger': 'Innstillinger · Koblinger',
   '/innstillinger/integrasjoner': 'Innstillinger · Koblinger',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',

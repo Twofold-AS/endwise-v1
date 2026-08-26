@@ -2,11 +2,13 @@
  * Team-piller — samme ?fane=-mønster som Innstillinger (F5-19).
  *
  * Filtrerer eksisterende `job_function` (F1-14): selger · support · mekaniker.
- * Ingen nye rolle-enum. Leder vises bare under Alle.
+ * Ingen nye rolle-enum. Leder vises bare under Ansatte (hele lista).
  */
 
-export const TEAM_FANE_IDS = ['alle', 'mekanikere', 'selgere', 'support'] as const;
+export const TEAM_LISTE_FANE_IDS = ['alle', 'mekanikere', 'selgere', 'support'] as const;
+export const TEAM_FANE_IDS = [...TEAM_LISTE_FANE_IDS, 'opprett'] as const;
 
+export type TeamListeFaneId = (typeof TEAM_LISTE_FANE_IDS)[number];
 export type TeamFaneId = (typeof TEAM_FANE_IDS)[number];
 
 export type TeamFaneDef = {
@@ -18,7 +20,7 @@ export type TeamFaneDef = {
 export const TEAM_FANER: readonly TeamFaneDef[] = [
   {
     id: 'alle',
-    label: 'Alle',
+    label: 'Ansatte',
     ingress: 'Hele teamet. Detaljer åpnes til høyre, som i innboksen.',
   },
   {
@@ -35,6 +37,11 @@ export const TEAM_FANER: readonly TeamFaneDef[] = [
     id: 'support',
     label: 'Support',
     ingress: 'Ansatte med jobbfunksjonen support.',
+  },
+  {
+    id: 'opprett',
+    label: 'Opprett ansatt',
+    ingress: 'Med e-post får hen invitasjon. Uten e-post vises hen i teamet uten innlogging.',
   },
 ];
 

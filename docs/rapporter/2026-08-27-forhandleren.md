@@ -30,14 +30,16 @@ Skriving: `dealer_admin` (`adminProcedure`). Inspect: `verksted.forhandleren` (k
 
 ## 2. Hva gikk galt
 
-Alt gikk som planlagt i testharness. Context.dev MCP var ikke autentisert. Live Yamaha `client/info`-body er ikke logget — nøkler utenom `name`/`company` mappes bare når de finnes etter fold.
+Context.dev MCP var ikke autentisert. Live Yamaha `client/info`-body er ikke logget — nøkler utenom `name`/`company` mappes bare når de finnes etter fold. Lokal pre-push `api:build` feiler på pre-eksisterende `instructions.md?raw` i `packages/agents` (samme på main). DB-testen for `forhandler.update` hoppes over uten `DATABASE_URL`. UI er ikke klikket i nettleser (ingen kjørende app).
 
 ## 3. Hvilke fikser ble gjort
 
 1. `dealer_profiles` + migrasjon 0030 (RLS + inspect-SELECT).
 2. `mapQuickClientInfo` / `applyQuickDealerProfile` / `runIndependentOfCatalog`.
-3. tRPC `forhandler.get`/`update` og inspect-lesing.
-4. Forhandleren-kortet (norsk UI, slug read-only).
+3. Tom leftover tømmer ikke `quick_client` (`leftoverBagWrite`).
+4. tRPC `forhandler.get`/`update` og inspect-lesing.
+5. Forhandleren-kortet (norsk UI, slug read-only).
+6. PR #67: https://github.com/Twofold-AS/endwise-v1/pull/67
 
 ## 4. Neste steg
 

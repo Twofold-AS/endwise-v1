@@ -11,7 +11,10 @@ import {
   TO_FAKTOR_ENABLE_STI,
 } from './bytt-passord.ts';
 import { eierLasForHook } from './eier-las-server.ts';
-import { skriv2faDisableAudit } from './to-faktor-server.ts';
+import {
+  festUbrukteGjenopprettingskoderPaaRedirect,
+  skriv2faDisableAudit,
+} from './to-faktor-server.ts';
 
 /**
  * Serverhookene for bytt-passord og like kredential-mutasjoner.
@@ -127,6 +130,9 @@ export const byttPassordForHook = merket(
 export function createByttPassordEtterHook(db?: Database) {
   return merket(
     createAuthMiddleware(async (ctx) => {
+      if (db) {
+        await festUbrukteGjenopprettingskoderPaaRedirect(ctx, db);
+      }
       if (!KREDENTIAL_STIER.has(ctx.path)) return;
       if (erSkjultAuthFeilkode(feilkodeFraReturned(ctx.context.returned))) {
         throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));

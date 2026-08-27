@@ -1,5 +1,11 @@
 'use client';
 
+import {
+  harUbrukteGjenopprettingskoderFraSvar,
+  OTP_UGYLDIG_MELDING,
+  tolkToFaktorVerifySvar,
+  visGjenopprettingsvalg,
+} from '@endwise/auth/to-faktor-oppsett';
 import { Lock, Mail, ShieldCheck, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -61,6 +67,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [cooldown, setCooldown] = useState(0);
+  const [harUbrukteKoder, setHarUbrukteKoder] = useState(false);
   const codeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -175,6 +182,8 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
       return;
     }
 
+    setHarUbrukteKoder(harUbrukteGjenopprettingskoderFraSvar(res.data ?? res));
+
     if (await sendCode()) {
       setStep('otp');
       /**
@@ -196,18 +205,27 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     setBusy('loading');
     setError(null);
 
-    const res =
-      step === 'gjenoppretting'
-        ? await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
-        : await authClient.twoFactor.verifyOtp({ code: code.trim() });
-    if (res.error) {
-      setError(res.error.message ?? 'Feil eller utløpt kode');
+    try {
+      const res =
+        step === 'gjenoppretting'
+          ? await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
+          : await authClient.twoFactor.verifyOtp({ code: code.trim() });
+      const utfall = tolkToFaktorVerifySvar(res);
+      if (!utfall.ok) {
+        setError(utfall.feil);
+        setBusy(utfall.knappeTilstand);
+        setCode('');
+        codeRef.current?.focus();
+        return;
+      }
+      await finishSignIn();
+    } catch (error) {
+      const utfall = tolkToFaktorVerifySvar(error);
+      setError(utfall.ok ? OTP_UGYLDIG_MELDING : utfall.feil);
       setBusy('error');
       setCode('');
       codeRef.current?.focus();
-      return;
     }
-    await finishSignIn();
   }
 
   async function onResend() {
@@ -365,13 +383,14 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
                     setError(null);
                     setNotice(null);
                     setBusy('idle');
+                    setHarUbrukteKoder(false);
                   }}
                   className="text-[12px] text-fg-muted transition-colors hover:text-fg"
                 >
                   Bytt konto
                 </button>
               </div>
-              {step === 'otp' ? (
+              {step === 'otp' && visGjenopprettingsvalg(harUbrukteKoder) ? (
                 <button
                   type="button"
                   onClick={() => {

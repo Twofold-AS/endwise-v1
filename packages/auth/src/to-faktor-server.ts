@@ -1,5 +1,51 @@
 import { type Database, eq, schema, withTenant } from '@endwise/db';
-import { TO_FAKTOR_DISABLE_AUDIT_ACTION } from './to-faktor-oppsett.ts';
+import {
+  harUbrukteGjenopprettingskoder,
+  TO_FAKTOR_DISABLE_AUDIT_ACTION,
+} from './to-faktor-oppsett.ts';
+
+export const TO_FAKTOR_SIGNIN_STI = '/sign-in/email';
+
+/**
+ * Etter passord + twoFactorRedirect: finnes det ubrukte backup-koder?
+ * Leser `two_factor.backup_codes` — ingen nye felter. Tom liste / ingen rad
+ * = innloggingen skal skjule gjenopprettingsvalget (CWE-640, ikke orakel:
+ * passordet er allerede bevist).
+ */
+export async function lesHarUbrukteGjenopprettingskoder(
+  db: Database,
+  epost: string,
+): Promise<boolean> {
+  const [rad] = await db
+    .select({ backupCodes: schema.twoFactor.backupCodes })
+    .from(schema.twoFactor)
+    .innerJoin(schema.user, eq(schema.twoFactor.userId, schema.user.id))
+    .where(eq(schema.user.email, epost))
+    .limit(1);
+  return harUbrukteGjenopprettingskoder(rad?.backupCodes);
+}
+
+export async function festUbrukteGjenopprettingskoderPaaRedirect(
+  ctx: {
+    path: string;
+    body?: unknown;
+    context: { returned?: unknown };
+  },
+  db: Database,
+): Promise<void> {
+  if (ctx.path !== TO_FAKTOR_SIGNIN_STI) return;
+  const returned = ctx.context.returned;
+  if (typeof returned !== 'object' || returned === null) return;
+  if ((returned as { twoFactorRedirect?: unknown }).twoFactorRedirect !== true) return;
+  const body = ctx.body;
+  const epost =
+    typeof body === 'object' && body !== null && 'email' in body
+      ? (body as { email?: unknown }).email
+      : undefined;
+  if (typeof epost !== 'string' || !epost.trim()) return;
+  const har = await lesHarUbrukteGjenopprettingskoder(db, epost.trim());
+  (returned as Record<string, unknown>).harUbrukteGjenopprettingskoder = har;
+}
 
 /**
  * Spor i `audit_log` når 2FA slås av.

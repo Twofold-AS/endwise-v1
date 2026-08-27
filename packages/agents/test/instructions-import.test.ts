@@ -55,6 +55,13 @@ describe('agent-instruksjoner lastes uten filesystem (F13-03)', () => {
     }
   });
 
+  it('triple-slash peker på md.d.ts (api:build følger importen)', () => {
+    for (const file of files) {
+      const src = readFileSync(file, 'utf8');
+      expect(src, file).toMatch(/^\/\/\/ <reference path="\.\.\/md\.d\.ts" \/>/m);
+    }
+  });
+
   it('ingen .ts i pakken gjør readFileSync mot .md', () => {
     const walk = (dir: string): string[] =>
       readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

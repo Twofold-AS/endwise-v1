@@ -1,4 +1,4 @@
-// / <reference path="../md.d.ts" />
+/// <reference path="../md.d.ts" />
 import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
 import { schema, withTenant } from '@endwise/db';
 import { tool } from 'ai';

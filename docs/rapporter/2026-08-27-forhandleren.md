@@ -30,7 +30,7 @@ Skriving: `dealer_admin` (`adminProcedure`). Inspect: `verksted.forhandleren` (k
 
 ## 2. Hva gikk galt
 
-Context.dev MCP var ikke autentisert. Live Yamaha `client/info`-body er ikke logget — nøkler utenom `name`/`company` mappes bare når de finnes etter fold. Lokal pre-push `api:build` feiler på pre-eksisterende `instructions.md?raw` i `packages/agents` (samme på main). DB-testen for `forhandler.update` hoppes over uten `DATABASE_URL`. UI er ikke klikket i nettleser (ingen kjørende app).
+Context.dev MCP var ikke autentisert. Live Yamaha `client/info`-body er ikke logget — nøkler utenom `name`/`company` mappes bare når de finnes etter fold. #66 brøt `/// <reference>` til `// / <reference>` — `api:build` og Vercel-preview feilet på `instructions.md?raw`. ZAP og Dependency-Check feiler også på main. DB-testen for `forhandler.update` hoppes over uten `DATABASE_URL`. UI er ikke klikket i nettleser.
 
 ## 3. Hvilke fikser ble gjort
 
@@ -40,6 +40,7 @@ Context.dev MCP var ikke autentisert. Live Yamaha `client/info`-body er ikke log
 4. tRPC `forhandler.get`/`update` og inspect-lesing.
 5. Forhandleren-kortet (norsk UI, slug read-only).
 6. PR #67: https://github.com/Twofold-AS/endwise-v1/pull/67
+7. Gjenopprettet `/// <reference path="../md.d.ts" />` etter #66.
 
 ## 4. Neste steg
 

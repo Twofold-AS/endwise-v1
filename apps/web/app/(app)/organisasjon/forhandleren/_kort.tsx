@@ -97,7 +97,10 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
     );
   }
 
-  const leftover = data.leftover ?? {};
+  const leftover =
+    data.leftover && typeof data.leftover === 'object' && !Array.isArray(data.leftover)
+      ? data.leftover
+      : {};
   const leftoverKeys = Object.keys(leftover);
 
   return (

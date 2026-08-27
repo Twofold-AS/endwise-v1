@@ -39,4 +39,16 @@ describe('0030 dealer_profile-kontrakt', () => {
   it('slett_forhandler kjenner dealer_profiles', () => {
     expect(functions).toMatch(/'dealer_profiles'/);
   });
+
+  it('0031 GRANTer authenticated (prod kan ha kjørt 0030 uten db:grants)', () => {
+    const grant = les('../drizzle/0031_dealer_profile_grant.sql');
+    expect(journal).toMatch(/0031_dealer_profile_grant/);
+    expect(grant).toMatch(/CREATE TABLE IF NOT EXISTS "dealer_profiles"/);
+    expect(grant).toMatch(
+      /GRANT SELECT, INSERT, UPDATE, DELETE ON "dealer_profiles" TO authenticated/i,
+    );
+    expect(grant).toMatch(/FORCE ROW LEVEL SECURITY/);
+    expect(grant).toMatch(/dealer_profiles_tenant_isolation/);
+    expect(grant).not.toMatch(/sell_price_minor|sellPriceMinor/);
+  });
 });

@@ -3,7 +3,7 @@ import { erPlattformTenant } from '@endwise/modules/plattform';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { endwiseInspectProcedure, router } from '../init.ts';
-import { lesForhandlerKort } from './forhandler.ts';
+import { hentForhandlerKort } from './forhandler.ts';
 
 const slugInput = z.object({ slug: z.string().min(1).max(80) });
 
@@ -179,10 +179,10 @@ export const verkstedRouter = router({
 
   forhandleren: endwiseInspectProcedure.input(slugInput).query(async ({ ctx, input }) => {
     const t = await finnForhandler(ctx.db, input.slug);
-    return withPlatformInspect(ctx.db, t.id, async (tx) => ({
+    return {
       tenant: t,
-      kort: await lesForhandlerKort(tx, t.id),
-    }));
+      kort: await hentForhandlerKort((fn) => withPlatformInspect(ctx.db, t.id, fn), t.id),
+    };
   }),
 
   /** Alltid 403 — dokumenterer at Se verkstedet ikke skriver. */

@@ -1,7 +1,7 @@
 /**
  * F1-01/F1-03 — Better-Auth-tabeller.
  * Generert av `pnpm --filter @endwise/auth db:auth-schema`
- * (@better-auth/cli generate, config: packages/auth/auth-cli.config.ts).
+ * (`auth`/`better-auth generate`, config: packages/auth/auth-cli.config.ts).
  * Ikke rediger for hånd — regenerer.
  * ADR-002: disse tabellene har bevisst ingen RLS. De er globale identiteter,
  * og Better-Auth spør uten `app.tenant_id` i transaksjonen — RLS her ville

@@ -16,13 +16,13 @@
   },
   "dependencies": {
     "@endwise/db": "workspace:*",
-    "better-auth": "^1.6.23",
+    "better-auth": "~1.6.30",
     "resend": "^6.17.2",
     "twilio": "^6.0.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@better-auth/cli": "^1.4.21",
+    "auth": "~1.6.30",
     "@types/node": "^24.10.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"

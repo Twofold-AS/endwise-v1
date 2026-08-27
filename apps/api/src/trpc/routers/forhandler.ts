@@ -3,6 +3,7 @@ import { erPlattformTenant } from '@endwise/modules/plattform';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, router } from '../init.ts';
+import { lesPostgresCause } from '../slett-postgres.ts';
 
 type TenantTx = Parameters<Parameters<Database['transaction']>[0]>[0];
 
@@ -21,7 +22,45 @@ export type ForhandlerKort = {
   leftover: Record<string, unknown>;
 };
 
-export async function lesForhandlerKort(tx: TenantTx, tenantId: string): Promise<ForhandlerKort> {
+export function somLeftover(value: unknown): Record<string, unknown> {
+  if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
+export function tomtForhandlerKort(tenant: { name: string; slug: string }): ForhandlerKort {
+  return {
+    name: tenant.name,
+    slug: tenant.slug,
+    orgnr: '',
+    address: '',
+    postalCode: '',
+    city: '',
+    phone: '',
+    email: '',
+    website: '',
+    leftover: {},
+  };
+}
+
+export function erManglendeDealerProfil(error: unknown): boolean {
+  const pg = lesPostgresCause(error);
+  const topp = error instanceof Error ? error.message : '';
+  const msg = `${pg.message ?? ''} ${topp}`;
+  if (pg.code === '42P01' || pg.code === '42703') return true;
+  if (pg.code === '42501' && /dealer_profiles/i.test(msg)) return true;
+  return (
+    /dealer_profiles/i.test(msg) &&
+    /does not exist|undefined_(table|column)|permission denied/i.test(msg)
+  );
+}
+
+function feltTekst(value: unknown): string {
+  return typeof value === 'string' ? value : value == null ? '' : String(value);
+}
+
+async function lesTenantNavn(tx: TenantTx, tenantId: string) {
   const [tenant] = await tx
     .select({
       name: schema.tenants.name,
@@ -32,6 +71,11 @@ export async function lesForhandlerKort(tx: TenantTx, tenantId: string): Promise
   if (!tenant) {
     throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren.' });
   }
+  return tenant;
+}
+
+export async function lesForhandlerKort(tx: TenantTx, tenantId: string): Promise<ForhandlerKort> {
+  const tenant = await lesTenantNavn(tx, tenantId);
   const [profil] = await tx
     .select({
       orgnr: schema.dealerProfiles.orgnr,
@@ -48,15 +92,36 @@ export async function lesForhandlerKort(tx: TenantTx, tenantId: string): Promise
   return {
     name: tenant.name,
     slug: tenant.slug,
-    orgnr: profil?.orgnr ?? '',
-    address: profil?.address ?? '',
-    postalCode: profil?.postalCode ?? '',
-    city: profil?.city ?? '',
-    phone: profil?.phone ?? '',
-    email: profil?.email ?? '',
-    website: profil?.website ?? '',
-    leftover: profil?.leftover ?? {},
+    orgnr: feltTekst(profil?.orgnr),
+    address: feltTekst(profil?.address),
+    postalCode: feltTekst(profil?.postalCode),
+    city: feltTekst(profil?.city),
+    phone: feltTekst(profil?.phone),
+    email: feltTekst(profil?.email),
+    website: feltTekst(profil?.website),
+    leftover: somLeftover(profil?.leftover),
   };
+}
+
+/**
+ * Ny transaksjon ved manglende tabell/kolonne — ikke catch inne i samme tx
+ * (Postgres avbryter resten av transaksjonen etter 42P01).
+ */
+export async function hentForhandlerKort(
+  kjor: (fn: (tx: TenantTx) => Promise<ForhandlerKort>) => Promise<ForhandlerKort>,
+  tenantId: string,
+): Promise<ForhandlerKort> {
+  try {
+    return await kjor((tx) => lesForhandlerKort(tx, tenantId));
+  } catch (error) {
+    if (!erManglendeDealerProfil(error)) throw error;
+    const pg = lesPostgresCause(error);
+    console.error('[forhandler.get] dealer_profiles utilgjengelig', {
+      code: pg.code,
+      message: pg.message,
+    });
+    return kjor(async (tx) => tomtForhandlerKort(await lesTenantNavn(tx, tenantId)));
+  }
 }
 
 /**
@@ -65,7 +130,7 @@ export async function lesForhandlerKort(tx: TenantTx, tenantId: string): Promise
  */
 export const forhandlerRouter = router({
   get: adminProcedure.query(({ ctx }) =>
-    withTenant(ctx.db, ctx.tenantId, (tx) => lesForhandlerKort(tx, ctx.tenantId)),
+    hentForhandlerKort((fn) => withTenant(ctx.db, ctx.tenantId, fn), ctx.tenantId),
   ),
 
   update: adminProcedure
@@ -127,7 +192,7 @@ export const forhandlerRouter = router({
             phone: input.phone ?? '',
             email: input.email ?? '',
             website: input.website ?? '',
-            quickClient: eksisterende?.leftover ?? {},
+            quickClient: somLeftover(eksisterende?.leftover),
             updatedAt: now,
           })
           .onConflictDoUpdate({

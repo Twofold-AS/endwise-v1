@@ -5,6 +5,12 @@ import { fileURLToPath } from 'node:url';
 import { createDb, type Database, eq, schema } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
+import {
+  erManglendeDealerProfil,
+  hentForhandlerKort,
+  somLeftover,
+  tomtForhandlerKort,
+} from '../src/trpc/routers/forhandler.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -55,6 +61,85 @@ describe('Forhandleren — rollegate', () => {
   });
 });
 
+describe('Forhandleren — get uten 500 når profil mangler', () => {
+  it('leftover som ikke er objekt blir {} — Zod/UI tåler det', () => {
+    expect(somLeftover(null)).toEqual({});
+    expect(somLeftover(undefined)).toEqual({});
+    expect(somLeftover([])).toEqual({});
+    expect(somLeftover('guid')).toEqual({});
+    expect(somLeftover({ guid: 'cli-1' })).toEqual({ guid: 'cli-1' });
+  });
+
+  it('tomt kort har tenant-navn og tomme butikkfelt, ikke oppdiktede priser', () => {
+    const kort = tomtForhandlerKort({ name: 'Yamaha Bergen', slug: 'yamaha-bergen' });
+    expect(kort).toEqual({
+      name: 'Yamaha Bergen',
+      slug: 'yamaha-bergen',
+      orgnr: '',
+      address: '',
+      postalCode: '',
+      city: '',
+      phone: '',
+      email: '',
+      website: '',
+      leftover: {},
+    });
+    expect(kort).not.toHaveProperty('sellPriceMinor');
+    expect(kort).not.toHaveProperty('kallenavn');
+  });
+
+  it('42P01 / 42703 / permission på dealer_profiles er «mangler»', () => {
+    expect(
+      erManglendeDealerProfil({
+        message: 'Failed query: select from "dealer_profiles"',
+        cause: { code: '42P01', message: 'relation "dealer_profiles" does not exist' },
+      }),
+    ).toBe(true);
+    expect(
+      erManglendeDealerProfil({
+        cause: { code: '42703', message: 'column "quick_client" does not exist' },
+      }),
+    ).toBe(true);
+    expect(
+      erManglendeDealerProfil({
+        message: 'Failed query: select from "dealer_profiles"',
+        cause: { code: '42501', message: 'permission denied for table dealer_profiles' },
+      }),
+    ).toBe(true);
+    expect(
+      erManglendeDealerProfil({
+        cause: { code: '23503', message: 'foreign key' },
+      }),
+    ).toBe(false);
+  });
+
+  it('hentForhandlerKort faller tilbake til tenant-kort når profil-tabellen mangler', async () => {
+    const tomt = tomtForhandlerKort({ name: 'Yamaha Bergen', slug: 'yamaha-bergen' });
+    let kall = 0;
+    const kort = await hentForhandlerKort(async () => {
+      kall += 1;
+      if (kall === 1) {
+        throw Object.assign(new Error('Failed query: select from "dealer_profiles"'), {
+          cause: { code: '42P01', message: 'relation "dealer_profiles" does not exist' },
+        });
+      }
+      return tomt;
+    }, '00000000-0000-0000-0000-000000000099');
+
+    expect(kall).toBe(2);
+    expect(kort).toEqual(tomt);
+  });
+
+  it('get og inspect bruker hentForhandlerKort, ikke rå lesForhandlerKort', () => {
+    const get = les('../src/trpc/routers/forhandler.ts');
+    const inspect = les('../src/trpc/routers/verksted.ts');
+    expect(get).toMatch(/hentForhandlerKort/);
+    expect(get).toMatch(/get:\s*adminProcedure\.query/);
+    expect(inspect).toMatch(/hentForhandlerKort/);
+    expect(inspect).toMatch(/withPlatformInspect/);
+  });
+});
+
 const OWNER_URL = process.env.DATABASE_URL;
 const APP_URL = process.env.APP_DATABASE_URL;
 const describeDb = OWNER_URL && APP_URL ? describe : describe.skip;
@@ -93,6 +178,16 @@ describeDb('Forhandleren — dealer_admin lagrer uten Quick', () => {
     await owner.delete(schema.dealerProfiles).where(eq(schema.dealerProfiles.tenantId, tenant));
     await owner.delete(schema.organization).where(eq(schema.organization.id, tenant));
     await owner.delete(schema.tenants).where(eq(schema.tenants.id, tenant));
+  });
+
+  it('get uten dealer_profiles-rad gir tenant-navn og tomme butikkfelt', async () => {
+    const kort = await leder().forhandler.get();
+    expect(kort.name).toBe('Gammelt navn');
+    expect(kort.slug).toBe(`fh-${tenant.slice(0, 8)}`);
+    expect(kort.address).toBe('');
+    expect(kort.orgnr).toBe('');
+    expect(kort.leftover).toEqual({});
+    expect(kort).not.toHaveProperty('sellPriceMinor');
   });
 
   it('lagrer adresse og lar slug stå', async () => {

@@ -33,6 +33,7 @@ describe('Organisasjon › Forhandleren', () => {
     expect(kort).toMatch(/readOnly/);
     expect(kort).not.toMatch(/aria-label="Kallenavn"|label="Kallenavn"/);
     expect(kort).not.toMatch(/ToFaktorRad|twoFactorEnabled|setNickname/);
+    expect(kort).toMatch(/!Array\.isArray\(data\.leftover\)/);
   });
 
   it('breadcrumb er Organisasjon · Forhandleren', () => {

@@ -6,11 +6,13 @@ import {
   mapQuickStockEntry,
 } from '../src/index.ts';
 import {
+  describeQuickJsonKeys,
   foldQuickJsonKeys,
   parseQuickCustomerBatch,
   parseQuickItemBatch,
   parseQuickStockEntryBatch,
   quickCustomerBatch,
+  quickEntitySnapshot,
   quickItemBatch,
   quickStockEntryBatch,
 } from '../src/schema.ts';
@@ -190,6 +192,153 @@ describe('parseQuick*Batch — ekte Quick-casing uten å finne opp felt', () => 
       results: [{ Guid: 'x', ExtraUnknown: { foo: 1 } }],
     });
     expect(page.results[0]?.guid).toBe('x');
+  });
+});
+
+/**
+ * Produksjonsform (C# JSON): PascalCase + null på valgfrie felt.
+ * #59-fold aliaser Guid→guid, men Zod `.optional()` avviser `null`.
+ * Ett null-felt velter hele siden → pullNow 500 etter at Quick svarte.
+ */
+const LIVE_NULL_CUSTOMER_PAGE = {
+  TotalCount: 2,
+  Limit: 100,
+  Offset: 0,
+  Results: [
+    {
+      Guid: 'cust-1',
+      Company: null,
+      Email: null,
+      Phone: null,
+      ContactPersons: null,
+      CustomerTypeGuid: null,
+    },
+    {
+      Guid: 'cust-2',
+      Company: 'Yamaha Bergen',
+      ContactPersons: [{ FirstName: 'Kari', LastName: null, Email: 'kari@x.no', Mobile: null }],
+    },
+  ],
+};
+
+const LIVE_NULL_ITEM_PAGE = {
+  TotalCount: 1,
+  Limit: 100,
+  Offset: 0,
+  Results: [
+    {
+      Guid: 'item-1',
+      ItemCode: 'YAM-001',
+      ItemName: 'Tennplugg',
+      CostPrice: null,
+      Unit: null,
+      ItemGroup: { Guid: 'grp-1', Name: 'Yamaha Motor' },
+      Groups: [{ Name: 'Reservedeler' }],
+    },
+  ],
+};
+
+const LIVE_NULL_STOCK_PAGE = {
+  TotalCount: 1,
+  Limit: 100,
+  Offset: 0,
+  Results: [
+    {
+      Guid: 'se-1',
+      ItemGuid: 'item-1',
+      Quantity: 4,
+      StockLocationGuid: null,
+      StockLocationCode: 'A-01',
+      StockLocationName: null,
+    },
+  ],
+};
+
+describe('live C#-form med null — må ikke velte batch', () => {
+  it('customer/batch med Company/ContactPersons=null parser og mapper', () => {
+    const page = parseQuickCustomerBatch(LIVE_NULL_CUSTOMER_PAGE);
+    expect(page.results).toHaveLength(2);
+    const first = page.results[0];
+    const second = page.results[1];
+    if (!first || !second) throw new Error('forventet to kunder');
+    expect(first.guid).toBe('cust-1');
+    expect(mapQuickCustomer(first)).toEqual({
+      quickGuid: 'cust-1',
+      name: 'Ukjent kunde',
+      email: null,
+      phone: null,
+    });
+    expect(mapQuickCustomer(second).name).toBe('Yamaha Bergen');
+  });
+
+  it('item/batch med CostPrice=null og Quick-grupper parser uten å finne opp utsalg', () => {
+    const page = parseQuickItemBatch(LIVE_NULL_ITEM_PAGE);
+    const item = page.results[0];
+    if (!item) throw new Error('forventet en vare');
+    const mapped = mapQuickItem(item);
+    expect(mapped).toEqual({
+      quickGuid: 'item-1',
+      sku: 'YAM-001',
+      name: 'Tennplugg',
+      unit: 'stk',
+      costMinor: null,
+      active: true,
+      onHand: null,
+    });
+    expect(mapped).not.toHaveProperty('sellPriceMinor');
+    expect(mapped).not.toHaveProperty('group');
+    expect(mapped).not.toHaveProperty('itemGroup');
+  });
+
+  it('stockentry/batch med null lokasjonsnavn parser', () => {
+    const page = parseQuickStockEntryBatch(LIVE_NULL_STOCK_PAGE);
+    const row = page.results[0];
+    if (!row) throw new Error('forventet en lagerlinje');
+    expect(mapQuickStockEntry(row)).toEqual({
+      quickGuid: 'se-1',
+      itemQuickGuid: 'item-1',
+      onHand: 4,
+      locationQuickGuid: null,
+      locationCode: 'A-01',
+      locationName: 'A-01',
+    });
+  });
+
+  it('rad uten identitet hoppes over — resten av siden beholdes', () => {
+    const page = parseQuickCustomerBatch({
+      totalCount: 2,
+      limit: 2,
+      offset: 0,
+      results: [{ Company: 'Uten id' }, { Guid: 'ok-1', Company: 'Med id' }],
+    });
+    expect(page.results.map((r) => r.guid)).toEqual(['ok-1']);
+  });
+
+  it('avvist envelope logger kun nøkler — ikke verdier', () => {
+    const spy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    expect(() => parseQuickCustomerBatch({ Foo: 'hemmelig', Bar: 1 })).toThrow(
+      /Uventet svarformat fra Quick for kunder/,
+    );
+    const logged = spy.mock.calls.map((c) => c.join(' ')).join('\n');
+    expect(logged).toMatch(/customer/);
+    expect(logged).toMatch(/foo|Foo|bar|Bar/);
+    expect(logged).not.toContain('hemmelig');
+  });
+
+  it('snapshot er type + external id + jsonb av nøkler Quick faktisk sendte', () => {
+    const folded = foldQuickJsonKeys(LIVE_NULL_ITEM_PAGE.Results[0]) as Record<string, unknown>;
+    const snap = quickEntitySnapshot('item', folded);
+    expect(snap).toEqual({
+      type: 'item',
+      externalId: 'item-1',
+      payload: folded,
+    });
+    expect(snap?.payload).toHaveProperty('itemGroup');
+    expect(snap?.payload).not.toHaveProperty('sellPriceMinor');
+  });
+
+  it('describeQuickJsonKeys lister toppnivå uten verdier', () => {
+    expect(describeQuickJsonKeys({ Guid: 'x', Company: 'Y' }).sort()).toEqual(['Company', 'Guid']);
   });
 });
 

@@ -202,7 +202,7 @@ export default function QuickPage() {
             </button>
           </div>
 
-          {pull.data?.ok && (
+          {pull.data?.ok && !pull.data.partial && (
             <StatusLine
               ok={pull.data.conflicts === 0}
               text={
@@ -212,8 +212,28 @@ export default function QuickPage() {
               }
             />
           )}
+          {pull.data?.partial && (
+            <StatusLine
+              ok={false}
+              text={`Delvis hentet: ${pull.data.customers} kunde(r), ${pull.data.parts} del(er), ${pull.data.stock} lagerlinje(r). ${
+                pull.data.errors.map((e) => e.message).join(' ') || 'Én entitet feilet.'
+              }`}
+            />
+          )}
+          {pull.data && !pull.data.ok && !pull.data.partial && (
+            <StatusLine
+              ok={false}
+              text={
+                pull.data.errors.map((e) => e.message).join(' ') ||
+                'Klarte ikke hente fra Quick. Prøv igjen.'
+              }
+            />
+          )}
           {pull.isError && (
-            <StatusLine ok={false} text="Klarte ikke hente fra Quick. Prøv igjen." />
+            <StatusLine
+              ok={false}
+              text={pull.error.message || 'Klarte ikke hente fra Quick. Prøv igjen.'}
+            />
           )}
 
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 border-border border-t pt-3 text-[12px]">

@@ -46,6 +46,9 @@ export const QUICK_PULL_USER_MESSAGES = {
 } as const;
 
 export function quickPullUserMessage(error: unknown): string {
+  if (error instanceof QuickError && / for (kunder|varer|lager)\.?$/i.test(error.message)) {
+    return error.message;
+  }
   const probe = quickProbeUserMessage(error);
   if (probe === QUICK_PROBE_USER_MESSAGES.rejected) return QUICK_PULL_USER_MESSAGES.rejected;
   if (probe === QUICK_PROBE_USER_MESSAGES.timeout) return QUICK_PULL_USER_MESSAGES.timeout;

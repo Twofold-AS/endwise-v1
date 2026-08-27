@@ -84,7 +84,11 @@ export function createQuickClient(config: QuickConfig) {
   const base = stripTrailingApiV2(stripTrailingSlashes(`${validated.origin}${validated.pathname}`));
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  async function request<T>(path: string, schema: { parse: (v: unknown) => T }): Promise<T> {
+  async function request<T>(
+    path: string,
+    schema: { parse: (v: unknown) => T },
+    entityNb: 'kunder' | 'varer' | 'lager',
+  ): Promise<T> {
     let response: Response;
     try {
       response = await quickFetch(`${base}${API_PREFIX}${path}`, {
@@ -102,7 +106,9 @@ export function createQuickClient(config: QuickConfig) {
     } catch (cause) {
       // CWE-209/532: aldri reflekter rå cause (kan bære intern host/IP) til klient.
       const timedOut = (cause as Error)?.name === 'TimeoutError';
-      throw new QuickError(timedOut ? 'Tidsavbrudd mot Quick' : 'Nådde ikke Quick');
+      throw new QuickError(
+        timedOut ? `Tidsavbrudd mot Quick for ${entityNb}.` : `Nådde ikke Quick for ${entityNb}.`,
+      );
     }
 
     if (response.status === 401 || response.status === 403) {
@@ -126,8 +132,9 @@ export function createQuickClient(config: QuickConfig) {
     }
     try {
       return schema.parse(foldQuickJsonKeys(json));
-    } catch {
-      throw new QuickError('Uventet svarformat fra Quick');
+    } catch (error) {
+      if (error instanceof QuickError) throw error;
+      throw new QuickError(`Uventet svarformat fra Quick for ${entityNb}.`);
     }
   }
 
@@ -172,7 +179,7 @@ export function createQuickClient(config: QuickConfig) {
       if (params.changedAfterDate) q.set('changedAfterDate', params.changedAfterDate);
       if (params.customerTypeGuid) q.set('customerTypeGuid', params.customerTypeGuid);
       if (params.expansions?.length) q.set('expansions', params.expansions.join(','));
-      return request(`/customer/batch?${q}`, { parse: parseQuickCustomerBatch });
+      return request(`/customer/batch?${q}`, { parse: parseQuickCustomerBatch }, 'kunder');
     },
 
     /** Én side varer fra `item/batch` (GET-only). */
@@ -183,7 +190,7 @@ export function createQuickClient(config: QuickConfig) {
       q.set('limit', String(params.limit ?? DEFAULT_PAGE_SIZE));
       q.set('offset', String(params.offset ?? 0));
       if (params.changedAfterDate) q.set('changedAfterDate', params.changedAfterDate);
-      return request(`/item/batch?${q}`, { parse: parseQuickItemBatch });
+      return request(`/item/batch?${q}`, { parse: parseQuickItemBatch }, 'varer');
     },
 
     /** Én side lagerlinjer fra `stockentry/batch` (GET-only). */
@@ -194,7 +201,7 @@ export function createQuickClient(config: QuickConfig) {
       q.set('limit', String(params.limit ?? DEFAULT_PAGE_SIZE));
       q.set('offset', String(params.offset ?? 0));
       if (params.changedAfterDate) q.set('changedAfterDate', params.changedAfterDate);
-      return request(`/stockentry/batch?${q}`, { parse: parseQuickStockEntryBatch });
+      return request(`/stockentry/batch?${q}`, { parse: parseQuickStockEntryBatch }, 'lager');
     },
 
     /**
@@ -362,15 +369,20 @@ export function mapQuickCustomer(raw: QuickCustomer): QuickCustomerRecord {
   const name = (raw.company?.trim() || contactName || 'Ukjent kunde').trim();
   const email = raw.email ?? contact?.email ?? null;
   const phone = raw.phone ?? contact?.mobile ?? contact?.phone ?? null;
-  return { quickGuid: raw.guid, name, email: email || null, phone: phone || null };
+  return {
+    quickGuid: raw.guid,
+    name,
+    email: email || null,
+    phone: phone || null,
+  };
 }
 
-function nokToMinor(n: number | undefined): number | null {
+function nokToMinor(n: number | null | undefined): number | null {
   if (n == null || !Number.isFinite(n)) return null;
   return Math.round(n * 100);
 }
 
-function nonNegInt(n: number | undefined): number | null {
+function nonNegInt(n: number | null | undefined): number | null {
   if (n == null || !Number.isFinite(n)) return null;
   return Math.max(0, Math.round(n));
 }

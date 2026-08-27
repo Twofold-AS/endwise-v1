@@ -93,6 +93,18 @@ describe('quickProbeUserMessage — distinkte BAD_REQUEST, ingen rå fetch-cause
 });
 
 describe('quickPullUserMessage — én setning, ikke raw error.message', () => {
+  it('entitet + schema vs nettverk er spesifikke norske setninger', () => {
+    expect(quickPullUserMessage(new QuickError('Uventet svarformat fra Quick for kunder.'))).toBe(
+      'Uventet svarformat fra Quick for kunder.',
+    );
+    expect(quickPullUserMessage(new QuickError('Nådde ikke Quick for varer.'))).toBe(
+      'Nådde ikke Quick for varer.',
+    );
+    expect(quickPullUserMessage(new QuickError('Tidsavbrudd mot Quick for lager.'))).toBe(
+      'Tidsavbrudd mot Quick for lager.',
+    );
+  });
+
   it('svarformat / 401 / timeout blir egne setninger uten intern host', () => {
     expect(quickPullUserMessage(new QuickError('Uventet svarformat fra Quick'))).toBe(
       QUICK_PULL_USER_MESSAGES.unexpected,

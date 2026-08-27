@@ -43,6 +43,14 @@ describe('F1-07: Quick-nøkkel i eksisterende chrome', () => {
     expect(quick).not.toMatch(/Authorization:\s*Token/);
   });
 
+  it('pull-feil viser spesifikk serversetning — ikke bare «Klarte ikke hente»', () => {
+    expect(quick).toMatch(/pull\.error\.message/);
+    expect(quick).toMatch(/partial|Delvis/);
+    expect(quick).not.toMatch(
+      /pull\.isError && \(\s*<StatusLine ok=\{false\} text="Klarte ikke hente fra Quick\. Prøv igjen\."/,
+    );
+  });
+
   it('ingen ny Admin-fane i forhandler-sidebaren', () => {
     expect(sidebar).not.toMatch(/href:\s*['"]\/admin['"]/);
     expect(sidebar).not.toMatch(/tittel:\s*['"]Admin['"]/);

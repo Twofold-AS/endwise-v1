@@ -12,7 +12,8 @@ import {
 
 /**
  * Mikael — Team-polish: Organisasjon, piller Ansatte + Opprett ansatt,
- * detaljpane uten scroll, Slett sist. Ingen Admin-tab. Ingen Kontor/Gulvet.
+ * listekolonne scroller, pane-kropp scroller, Slett shrink-0 nederst.
+ * Ingen Admin-tab. Ingen Kontor/Gulvet.
  */
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -196,20 +197,26 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
     expect(detaljer).toMatch(/bg-danger[\s\S]*text-white/);
   });
 
-  it('team- og innboks-kolonnen er 100dvh minus topbar, overflow-hidden, uten overflow-y på pane', () => {
-    expect(side).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
-    expect(side).toMatch(/overflow-hidden/);
+  it('Team-lista scroller i egen kolonne; pane-kroppen scroller; Slett er shrink-0', () => {
+    const ytterst =
+      side.match(/function TeamSide[\s\S]*?return \(\s*<div className="([^"]+)"/)?.[1] ?? '';
+    expect(ytterst).not.toMatch(/overflow-hidden/);
+    expect(side).toMatch(/min-h-0 flex-1 overflow-y-auto/);
+    expect(side).toMatch(
+      /role="tablist"[^>]*shrink-0|className="[^"]*shrink-0[^"]*"[^>]*role="tablist"/,
+    );
     expect(detaljer).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
-    expect(detaljer).toMatch(/overflow-hidden/);
-    expect(detaljer).not.toMatch(/overflow-y-auto/);
-    expect(chrome).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
-    expect(chrome).toMatch(/overflow-hidden/);
+    expect(detaljer).toMatch(/overflow-y-auto/);
+    expect(detaljer).toMatch(/min-h-0/);
+    expect(detaljer).toMatch(/shrink-0[\s\S]{0,120}<SlettAnsatt/);
     expect(innboks).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
-    expect(innboks).toMatch(/overflow-hidden/);
-    expect(innboks).not.toMatch(/overflow-y-auto/);
+    expect(innboks).toMatch(/overflow-y-auto/);
     expect(slot).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
-    expect(slot).toMatch(/overflow-hidden/);
-    expect(slot).not.toMatch(/overflow-y-auto/);
+    expect(slot).toMatch(/overflow-y-auto/);
+    expect(chrome).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
+    const trådListe = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
+    expect(trådListe).toMatch(/min-h-0 flex-1[\s\S]*overflow-y-auto/);
+    expect(trådListe).toMatch(/aside className="[^"]*min-h-0/);
   });
 
   it('passord og 2FA krever bekreftelse, 2FA krever kode, 2FA vises bare når den er på', () => {

@@ -158,13 +158,15 @@ export const quickRouter = router({
           throw new TRPCError({ code: 'PRECONDITION_FAILED', message: res.reason });
         }
         return {
-          ok: true as const,
+          ok: res.ok !== false,
+          partial: res.partial === true,
           upserted: res.upserted ?? 0,
           customers: res.customers ?? res.upserted ?? 0,
           parts: res.parts ?? 0,
           stock: res.stock ?? 0,
           batches: res.batches ?? 0,
           conflicts: res.conflicts ?? 0,
+          errors: res.errors ?? [],
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;

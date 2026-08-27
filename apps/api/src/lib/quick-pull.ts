@@ -40,8 +40,18 @@ export async function runIndependentOfCatalog<TClient, TCatalog>(opts: {
   return { client, catalog };
 }
 
+export type QuickPullEntity = 'customer' | 'item' | 'stock';
+
+export interface QuickPullEntityError {
+  entity: QuickPullEntity;
+  kind: 'schema' | 'network' | 'persist';
+  message: string;
+}
+
 export interface QuickPullResult {
   ran: boolean;
+  ok?: boolean;
+  partial?: boolean;
   upserted?: number;
   customers?: number;
   parts?: number;
@@ -49,9 +59,62 @@ export interface QuickPullResult {
   batches?: number;
   /** Antall felt-konflikter oppdaget i denne pullen (lagt i konflikt-køen). */
   conflicts?: number;
+  errors?: QuickPullEntityError[];
   /** Grunn til at pull ikke kjørte (f.eks. «ikke konfigurert»). */
   reason?: string;
 }
+
+export function classifyQuickPullError(error: unknown): QuickPullEntityError['kind'] {
+  if (error instanceof QuickError) {
+    if (/svarformat/i.test(error.message)) return 'schema';
+    if (/nådde ikke|tidsavbrudd/i.test(error.message)) return 'network';
+    if (error.status !== undefined && error.status >= 400) return 'network';
+  }
+  return 'persist';
+}
+
+/** Kjører customer/item/stock hver for seg. Én feil stopper ikke de andre. */
+export async function runIsolatedEntities<TCustomer, TItem, TStock>(tasks: {
+  customer?: () => Promise<TCustomer>;
+  item?: () => Promise<TItem>;
+  stock?: () => Promise<TStock>;
+}): Promise<{
+  results: { customer?: TCustomer; item?: TItem; stock?: TStock };
+  errors: QuickPullEntityError[];
+}> {
+  const results: { customer?: TCustomer; item?: TItem; stock?: TStock } = {};
+  const errors: QuickPullEntityError[] = [];
+
+  async function runOne<T>(
+    entity: QuickPullEntity,
+    task: (() => Promise<T>) | undefined,
+    assign: (value: T) => void,
+  ): Promise<void> {
+    if (!task) return;
+    try {
+      assign(await task());
+    } catch (error) {
+      errors.push({
+        entity,
+        kind: classifyQuickPullError(error),
+        message: quickPullUserMessage(error),
+      });
+    }
+  }
+
+  await runOne('customer', tasks.customer, (value) => {
+    results.customer = value;
+  });
+  await runOne('item', tasks.item, (value) => {
+    results.item = value;
+  });
+  await runOne('stock', tasks.stock, (value) => {
+    results.stock = value;
+  });
+  return { results, errors };
+}
+
+async function* emptyQuickRows(): AsyncGenerator<never> {}
 
 export async function runQuickCustomerPull(
   db: Database,
@@ -114,37 +177,57 @@ export async function runQuickCustomerPull(
         }
       },
       pullCatalog: async () => {
-        const customers = await syncQuickCustomers(db, tenantId, customerUpserts());
-        const lager = await syncQuickParts(db, tenantId, partUpserts(), stockUpserts(), {
-          actorUserId: opts.actorUserId,
+        const actor = { actorUserId: opts.actorUserId };
+        return runIsolatedEntities({
+          customer: () => syncQuickCustomers(db, tenantId, customerUpserts()),
+          item: () => syncQuickParts(db, tenantId, partUpserts(), emptyQuickRows(), actor),
+          stock: () => syncQuickParts(db, tenantId, emptyQuickRows(), stockUpserts(), actor),
         });
-        return { customers, lager };
       },
     });
-    const { customers, lager } = catalog;
-    const batches = customers.batches + lager.batches;
-    const conflictNote = customers.conflicts > 0 ? ` · ${customers.conflicts} konflikt(er)` : '';
+    const customers = catalog.results.customer;
+    const parts = catalog.results.item;
+    const stock = catalog.results.stock;
+    const errors = catalog.errors;
+    const customerCount = customers?.upserted ?? 0;
+    const partCount = parts?.parts ?? 0;
+    const stockCount = stock?.stock ?? 0;
+    const batches = (customers?.batches ?? 0) + (parts?.batches ?? 0) + (stock?.batches ?? 0);
+    const conflicts = customers?.conflicts ?? 0;
+    const persisted = customerCount + partCount + stockCount > 0 || dealer.applied;
+    const partial = errors.length > 0 && persisted;
+    const status = errors.length === 0 ? 'ok' : persisted ? 'partial' : 'error';
+    const conflictNote = conflicts > 0 ? ` · ${conflicts} konflikt(er)` : '';
     const dealerNote =
       dealer.applied && dealer.mappedKeys.length
         ? ` · forhandler (${dealer.mappedKeys.join(', ')})`
         : '';
+    const errorNote = errors.length ? ` · ${errors.map((e) => e.message).join(' ')}` : '';
     await svc.recordSync(tenantId, {
-      status: 'ok',
-      detail: `${customers.upserted} kunde(r), ${lager.parts} del(er), ${lager.stock} lagerlinje(r) i ${batches} batch(er)${conflictNote}${dealerNote}`,
-      syncedAt: startedAt,
+      status,
+      detail: `${customerCount} kunde(r), ${partCount} del(er), ${stockCount} lagerlinje(r) i ${batches} batch(er)${conflictNote}${dealerNote}${errorNote}`,
+      syncedAt: persisted ? startedAt : undefined,
     });
     return {
       ran: true,
-      upserted: customers.upserted,
-      customers: customers.upserted,
-      parts: lager.parts,
-      stock: lager.stock,
+      ok: errors.length === 0,
+      partial,
+      upserted: customerCount,
+      customers: customerCount,
+      parts: partCount,
+      stock: stockCount,
       batches,
-      conflicts: customers.conflicts,
+      conflicts,
+      errors,
     };
   } catch (error) {
     const detail = quickPullUserMessage(error);
     await svc.recordSync(tenantId, { status: 'error', detail });
-    throw error;
+    return {
+      ran: true,
+      ok: false,
+      partial: false,
+      errors: [{ entity: 'customer', kind: classifyQuickPullError(error), message: detail }],
+    };
   }
 }

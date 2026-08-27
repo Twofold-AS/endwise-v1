@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { QuickError } from './errors.ts';
 
 /**
  * Quick3 Web API (v2, beta).
@@ -34,17 +35,21 @@ import { z } from 'zod';
  * finnes; de indre feltnavnene er usikre (flere vanlige varianter forsøkes ved
  * mapping). `.loose` bevarer alt vi ikke kjenner.
  */
+const nullishString = z.string().nullish();
+const nullishNumber = z.number().nullish();
+const nullishBool = z.boolean().nullish();
+
 export const quickContactPerson = z
   .object({
-    guid: z.string().optional(),
+    guid: nullishString,
     // Usikker — navn kan komme som ett felt eller delt fornavn/etternavn.
-    name: z.string().optional(),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
+    name: nullishString,
+    firstName: nullishString,
+    lastName: nullishString,
     // Usikker — e-post/telefon-feltnavn ikke bekreftet.
-    email: z.string().optional(),
-    phone: z.string().optional(),
-    mobile: z.string().optional(),
+    email: nullishString,
+    phone: nullishString,
+    mobile: nullishString,
   })
   .loose();
 
@@ -56,14 +61,14 @@ export const quickCustomer = z
   .object({
     /** Bekreftet — entitetens GUID. Bærer identiteten mellom synk-kjøringer. */
     guid: z.string(),
-    /** Bekreftet — firmanavn (kan være tomt for privatkunder). */
-    company: z.string().optional(),
+    /** Bekreftet — firmanavn (kan være tomt for privatkunder). C# sender ofte null. */
+    company: nullishString,
     /** Bekreftet — liste med kontaktpersoner. */
-    contactPersons: z.array(quickContactPerson).optional(),
+    contactPersons: z.array(quickContactPerson).nullish(),
     // Usikre toppnivåfelt — vanlige i kunderegistre; verifiseres mot ekte respons.
-    email: z.string().optional(),
-    phone: z.string().optional(),
-    customerTypeGuid: z.string().optional(),
+    email: nullishString,
+    phone: nullishString,
+    customerTypeGuid: nullishString,
   })
   .loose();
 
@@ -131,21 +136,21 @@ export interface QuickCustomerRecord {
 export const quickItem = z
   .object({
     guid: z.string(),
-    itemCode: z.string().optional(),
-    code: z.string().optional(),
-    number: z.string().optional(),
-    name: z.string().optional(),
-    itemName: z.string().optional(),
-    unit: z.string().optional(),
-    unitCode: z.string().optional(),
-    costPrice: z.number().optional(),
-    cost: z.number().optional(),
-    inStock: z.number().optional(),
-    stock: z.number().optional(),
-    isInactive: z.boolean().optional(),
-    inactive: z.boolean().optional(),
-    discontinued: z.boolean().optional(),
-    active: z.boolean().optional(),
+    itemCode: nullishString,
+    code: nullishString,
+    number: nullishString,
+    name: nullishString,
+    itemName: nullishString,
+    unit: nullishString,
+    unitCode: nullishString,
+    costPrice: nullishNumber,
+    cost: nullishNumber,
+    inStock: nullishNumber,
+    stock: nullishNumber,
+    isInactive: nullishBool,
+    inactive: nullishBool,
+    discontinued: nullishBool,
+    active: nullishBool,
   })
   .loose();
 
@@ -169,21 +174,21 @@ export type QuickItemBatch = z.infer<typeof quickItemBatch>;
 export const quickStockEntry = z
   .object({
     guid: z.string(),
-    itemGuid: z.string().optional(),
-    item: z.object({ guid: z.string().optional() }).loose().optional(),
-    quantity: z.number().optional(),
-    inStock: z.number().optional(),
-    stock: z.number().optional(),
-    amount: z.number().optional(),
-    stockLocationGuid: z.string().optional(),
-    warehouseGuid: z.string().optional(),
-    locationGuid: z.string().optional(),
-    stockLocationCode: z.string().optional(),
-    warehouseCode: z.string().optional(),
-    locationCode: z.string().optional(),
-    stockLocationName: z.string().optional(),
-    warehouseName: z.string().optional(),
-    locationName: z.string().optional(),
+    itemGuid: nullishString,
+    item: z.object({ guid: nullishString }).loose().nullish(),
+    quantity: nullishNumber,
+    inStock: nullishNumber,
+    stock: nullishNumber,
+    amount: nullishNumber,
+    stockLocationGuid: nullishString,
+    warehouseGuid: nullishString,
+    locationGuid: nullishString,
+    stockLocationCode: nullishString,
+    warehouseCode: nullishString,
+    locationCode: nullishString,
+    stockLocationName: nullishString,
+    warehouseName: nullishString,
+    locationName: nullishString,
   })
   .loose();
 
@@ -219,16 +224,114 @@ export function foldQuickJsonKeys(value: unknown): unknown {
   return value;
 }
 
+export type QuickSnapshotType = 'customer' | 'item' | 'stock';
+
+const ENTITY_NB: Record<QuickSnapshotType, string> = {
+  customer: 'kunder',
+  item: 'varer',
+  stock: 'lager',
+};
+
+/** Envelope uten rad-skjema — C# kan sende null/utelate limit. */
+export const quickBatchEnvelope = z
+  .object({
+    totalCount: z.coerce.number(),
+    limit: z.coerce.number().optional().default(0),
+    offset: z.coerce.number().optional().default(0),
+    results: z.array(z.unknown()).nullish().default([]),
+  })
+  .loose();
+
+export function describeQuickJsonKeys(value: unknown): string[] {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return [];
+  return Object.keys(value);
+}
+
+/** CWE-532: kun nøkler, aldri verdier (kan være PII). */
+export function logQuickSchemaReject(entity: QuickSnapshotType, value: unknown): void {
+  console.info(
+    JSON.stringify({
+      msg: 'quick.batch.schema_reject',
+      entity,
+      keys: describeQuickJsonKeys(value),
+    }),
+  );
+}
+
+function nonemptyQuickKey(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+/** Persist-identitet: type + ekstern id + jsonb av nøkler Quick faktisk sendte. */
+export function quickEntitySnapshot(
+  type: QuickSnapshotType,
+  row: Record<string, unknown>,
+): { type: QuickSnapshotType; externalId: string; payload: Record<string, unknown> } | null {
+  const externalId = nonemptyQuickKey(row.guid) ?? nonemptyQuickKey(row.id);
+  if (!externalId) return null;
+  return { type, externalId, payload: row };
+}
+
+function aliasRowGuid(row: Record<string, unknown>): Record<string, unknown> {
+  if (nonemptyQuickKey(row.guid)) return row;
+  const id = nonemptyQuickKey(row.id);
+  return id ? { ...row, guid: id } : row;
+}
+
+function parseQuickBatch<T>(
+  json: unknown,
+  entity: QuickSnapshotType,
+  parseRow: (row: Record<string, unknown>) => T | null,
+): { totalCount: number; limit: number; offset: number; results: T[] } {
+  const folded = foldQuickJsonKeys(json);
+  const envelope = quickBatchEnvelope.safeParse(folded);
+  if (!envelope.success) {
+    logQuickSchemaReject(entity, folded);
+    throw new QuickError(`Uventet svarformat fra Quick for ${ENTITY_NB[entity]}.`);
+  }
+  const results: T[] = [];
+  let loggedSkip = false;
+  for (const raw of envelope.data.results ?? []) {
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) continue;
+    const row = parseRow(aliasRowGuid(raw as Record<string, unknown>));
+    if (row) {
+      results.push(row);
+      continue;
+    }
+    if (!loggedSkip) {
+      logQuickSchemaReject(entity, raw);
+      loggedSkip = true;
+    }
+  }
+  return {
+    totalCount: envelope.data.totalCount,
+    limit: envelope.data.limit,
+    offset: envelope.data.offset,
+    results,
+  };
+}
+
 export function parseQuickCustomerBatch(json: unknown): QuickCustomerBatch {
-  return quickCustomerBatch.parse(foldQuickJsonKeys(json));
+  return parseQuickBatch(json, 'customer', (row) => {
+    const parsed = quickCustomer.safeParse(row);
+    return parsed.success ? parsed.data : null;
+  });
 }
 
 export function parseQuickItemBatch(json: unknown): QuickItemBatch {
-  return quickItemBatch.parse(foldQuickJsonKeys(json));
+  return parseQuickBatch(json, 'item', (row) => {
+    const parsed = quickItem.safeParse(row);
+    return parsed.success ? parsed.data : null;
+  });
 }
 
 export function parseQuickStockEntryBatch(json: unknown): QuickStockEntryBatch {
-  return quickStockEntryBatch.parse(foldQuickJsonKeys(json));
+  return parseQuickBatch(json, 'stock', (row) => {
+    const parsed = quickStockEntry.safeParse(row);
+    return parsed.success ? parsed.data : null;
+  });
 }
 
 export function parseQuickClientInfo(json: unknown): QuickClientInfo {

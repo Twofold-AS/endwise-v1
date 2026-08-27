@@ -3,13 +3,32 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { QuickError } from '@endwise/toolkit-quick';
 import { describe, expect, it } from 'vitest';
-import { runIndependentOfCatalog } from '../src/lib/quick-pull.ts';
+import { runIndependentOfCatalog, runIsolatedEntities } from '../src/lib/quick-pull.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
 function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
+
+describe('én entitetsfeil gir ærlig delvis resultat — ikke blanket kast', () => {
+  it('kunder lykkes når varer kaster schema-feil', async () => {
+    const { results, errors } = await runIsolatedEntities({
+      customer: async () => ({ upserted: 3 }),
+      item: async () => {
+        throw new QuickError('Uventet svarformat fra Quick for varer.');
+      },
+      stock: async () => ({ upserted: 1 }),
+    });
+    expect(results.customer).toEqual({ upserted: 3 });
+    expect(results.item).toBeUndefined();
+    expect(results.stock).toEqual({ upserted: 1 });
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.entity).toBe('item');
+    expect(errors[0]?.kind).toBe('schema');
+    expect(errors[0]?.message).toMatch(/varer/);
+  });
+});
 
 describe('katalog-feil ruller ikke tilbake Client-apply', () => {
   it('apply er ferdig før catalog kaster', async () => {

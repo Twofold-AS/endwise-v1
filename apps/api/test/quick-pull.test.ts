@@ -36,6 +36,13 @@ describe('Quick-pull: GET-only inn i Postgres', () => {
     expect(client).toMatch(/\/customer\/batch/);
   });
 
+  it('pullNow returnerer delvis resultat i stedet for blanket 500', () => {
+    expect(pull).toMatch(/runIsolatedEntities/);
+    expect(pull).toMatch(/partial/);
+    expect(router).toMatch(/partial:/);
+    expect(router).toMatch(/errors:/);
+  });
+
   it('pullNow/sist-synk bruker én brukersetning — ikke raw error.message', () => {
     expect(pull).toMatch(/quickPullUserMessage/);
     expect(pull).not.toMatch(/const detail = \(error as Error\)\.message/);

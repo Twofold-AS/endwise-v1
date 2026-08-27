@@ -107,7 +107,7 @@ export function createQuickConfigService(db: Database) {
     /** Skriv utfallet av en synk/test (status + detalj, ev. sett lastSyncedAt). */
     async recordSync(
       tenantId: string,
-      result: { status: 'ok' | 'error'; detail?: string; syncedAt?: Date | null },
+      result: { status: 'ok' | 'error' | 'partial'; detail?: string; syncedAt?: Date | null },
     ): Promise<void> {
       await withTenant(db, tenantId, async (tx) => {
         await tx

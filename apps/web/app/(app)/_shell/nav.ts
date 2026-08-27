@@ -173,7 +173,7 @@ export const CONTEXTS: AppContext[] = [
  * (Mikael, signert): dropdowns som i dag, ikke side-piller.
  * Verkstedet er én knapp til Dagen. Prisliste bor under Jobber.
  * Samarbeid er skjult til backend finnes (F5-17 er en blindvei).
- * `/ansatte` er expander — ingen egen side (alias-redirect til Team).
+ * `/ansatte` er expander — alias-redirect til Forhandleren (første barn).
  * Hjelp i lista er destinasjonen; slideren står nederst over Innstillinger.
  */
 export const FORHANDLER_NAV: NavItem[] = [
@@ -228,9 +228,15 @@ export const FORHANDLER_NAV: NavItem[] = [
     key: 'team',
     label: 'Organisasjon',
     icon: Users,
-    href: '/innstillinger/team',
+    href: '/organisasjon/forhandleren',
     roles: ADMIN_OF_TENANT,
     children: [
+      {
+        label: 'Forhandleren',
+        href: '/organisasjon/forhandleren',
+        icon: Building2,
+        roles: ADMIN_OF_TENANT,
+      },
       { label: 'Team', href: '/innstillinger/team', icon: UserCog, roles: ADMIN_OF_TENANT },
       { label: 'Kompetanse', href: '/mekanikere/kompetanse', icon: Tags, roles: ADMIN_OF_TENANT },
       { label: 'Timeplan', href: '/mekanikere/kapasitet', icon: Gauge, roles: ADMIN_OF_TENANT },
@@ -494,6 +500,8 @@ export const STI_ALIAS: Readonly<Record<string, string>> = {
   '/dashboard': '/verkstedet',
   '/prisliste': '/innstillinger/tjenestekatalog',
   '/innstillinger/tjenestekatalog': '/prisliste',
+  '/forhandleren': '/organisasjon/forhandleren',
+  '/organisasjon/forhandleren': '/forhandleren',
 };
 
 export function stierFor(href: string): string[] {
@@ -662,6 +670,8 @@ export const PARKED_LABEL: Record<string, string> = {
   '/rapporter': 'Rapporter',
   '/verkstedet': 'Verkstedet',
   '/ansatte': 'Organisasjon',
+  '/forhandleren': 'Organisasjon · Forhandleren',
+  '/organisasjon/forhandleren': 'Organisasjon · Forhandleren',
   '/innstillinger/koblinger': 'Innstillinger · Koblinger',
   '/innstillinger/integrasjoner': 'Innstillinger · Koblinger',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',

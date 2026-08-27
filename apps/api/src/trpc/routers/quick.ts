@@ -1,7 +1,8 @@
 import { envelopeCryptoConfigured } from '@endwise/db';
-import { createQuickConfigService } from '@endwise/modules/quick';
+import { applyQuickDealerProfile, createQuickConfigService } from '@endwise/modules/quick';
 import {
   assertAllowedQuickUrl,
+  mapQuickClientInfo,
   normalizeQuickBaseUrl,
   normalizeQuickToken,
   probeQuickReadOnly,
@@ -94,12 +95,17 @@ export const quickRouter = router({
         });
       }
       try {
-        await aktiverQuickEtterGet({
+        const info = await aktiverQuickEtterGet({
           probe: (cfg) => probeQuickReadOnly(cfg),
           persist: (cfg) => svc.set(ctx.tenantId, cfg),
           baseUrl,
           token,
         });
+        try {
+          await applyQuickDealerProfile(ctx.db, ctx.tenantId, mapQuickClientInfo(info));
+        } catch {
+          // Tilkobling er lagret. Forhandler-skriv skal ikke velte setConfig.
+        }
       } catch (error) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -121,7 +127,12 @@ export const quickRouter = router({
     }
     const checkedAt = new Date().toISOString();
     try {
-      await probeQuickReadOnly(cfg);
+      const info = await probeQuickReadOnly(cfg);
+      try {
+        await applyQuickDealerProfile(ctx.db, ctx.tenantId, mapQuickClientInfo(info));
+      } catch {
+        // Tilkobling OK. Forhandler-skriv skal ikke velte testen.
+      }
       await svc.recordSync(ctx.tenantId, { status: 'ok', detail: 'Tilkobling OK' });
       return { ok: true as const, checkedAt };
     } catch (error) {

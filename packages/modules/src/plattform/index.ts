@@ -180,6 +180,8 @@ export function erForhandlerRutePaaPlattform(pathname: string, search = ''): boo
     pathname.startsWith('/tjenester') ||
     pathname.startsWith('/innstillinger') ||
     pathname.startsWith('/integrasjoner') ||
-    pathname.startsWith('/mekanikere')
+    pathname.startsWith('/mekanikere') ||
+    pathname.startsWith('/organisasjon') ||
+    pathname.startsWith('/forhandleren')
   );
 }

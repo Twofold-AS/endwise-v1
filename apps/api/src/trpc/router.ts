@@ -7,6 +7,7 @@ import { conflictsRouter } from './routers/conflicts.ts';
 import { customersRouter } from './routers/customers.ts';
 import { directoryRouter } from './routers/directory.ts';
 import { flagsRouter } from './routers/flags.ts';
+import { forhandlerRouter } from './routers/forhandler.ts';
 import { helpdeskRouter } from './routers/helpdesk.ts';
 import { inboxContextRouter } from './routers/inbox-context.ts';
 import { inventoryRouter } from './routers/inventory.ts';
@@ -51,6 +52,7 @@ export const appRouter = router({
   platformTeam: platformTeamRouter,
   verksted: verkstedRouter,
   flags: flagsRouter,
+  forhandler: forhandlerRouter,
   inventory: inventoryRouter,
   shop: shopRouter,
   vehicles: vehiclesRouter,

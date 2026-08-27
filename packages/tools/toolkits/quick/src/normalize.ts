@@ -4,6 +4,25 @@
  */
 
 const DOCS_OR_API_SLUG = /^(api|help|swagger)$/i;
+const API_V2_SUFFIX = '/api/v2';
+
+/** Lineær strip av trailing `/`. Unngår `/\/+$/` mot limt URL. */
+export function stripTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47) end -= 1;
+  return end === value.length ? value : value.slice(0, end);
+}
+
+/** Case-insensitive `/api/v2` på slutten. */
+export function stripTrailingApiV2(value: string): string {
+  if (
+    value.length >= API_V2_SUFFIX.length &&
+    value.slice(-API_V2_SUFFIX.length).toLowerCase() === API_V2_SUFFIX
+  ) {
+    return value.slice(0, -API_V2_SUFFIX.length);
+  }
+  return value;
+}
 
 /**
  * Trim, drop query/hash, behold origin + første path-segment (shop-slug).
@@ -16,7 +35,7 @@ export function normalizeQuickBaseUrl(raw: string): string {
   try {
     url = new URL(trimmed);
   } catch {
-    return trimmed.replace(/\/+$/, '');
+    return stripTrailingSlashes(trimmed);
   }
   const slug = url.pathname.split('/').filter(Boolean)[0];
   if (!slug || DOCS_OR_API_SLUG.test(slug)) return url.origin;

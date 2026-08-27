@@ -26,6 +26,7 @@ export default defineConfig({
       'test/platform-inspect.test.ts',
       // F3-09 / P3 — booking_services RLS + backfill-kontrakt.
       'test/booking-services-kontrakt.test.ts',
+      'test/dealer-profile-kontrakt.test.ts',
     ],
     // RLS-testene deler DB-tilstand — serielt, ikke parallelt.
     fileParallelism: false,

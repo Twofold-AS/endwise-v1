@@ -1,8 +1,13 @@
 import { QuickAuthError, QuickError } from './errors.ts';
 import { QUICK_CURL_USER_AGENT, quickFetch } from './https-proxy.ts';
-import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
+import {
+  normalizeQuickBaseUrl,
+  normalizeQuickToken,
+  stripTrailingApiV2,
+  stripTrailingSlashes,
+} from './normalize.ts';
 import { QUICK_PROBE_USER_MESSAGES } from './probe-error.ts';
-import { quickClientInfo } from './schema.ts';
+import { parseQuickClientInfo, type QuickClientInfo } from './schema.ts';
 import { assertAllowedQuickUrl } from './url-guard.ts';
 
 /**
@@ -59,9 +64,9 @@ export type QuickProbeConfig = {
 
 /**
  * Ett lesekall. Kaster ved 401/403, nettverksfeil, ssrf-ulovlig URL
- * eller uventet svar. Returnerer void — innholdet brukes ikke til synk.
+ * eller uventet svar. Returnerer parset Client (folder PascalCase).
  */
-export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void> {
+export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<QuickClientInfo> {
   const baseUrl = normalizeQuickBaseUrl(config.baseUrl);
   const token = normalizeQuickToken(config.token);
   if (!baseUrl) throw new QuickError(QUICK_PROBE_USER_MESSAGES.noUrl);
@@ -69,9 +74,7 @@ export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void
 
   const validated = assertAllowedQuickUrl(baseUrl);
   // Aldri .../api/v2/api/v2/client/info — en limt /api/v2-suffix 500-er hos Quick.
-  const base = `${validated.origin}${validated.pathname}`
-    .replace(/\/+$/, '')
-    .replace(/\/api\/v2$/i, '');
+  const base = stripTrailingApiV2(stripTrailingSlashes(`${validated.origin}${validated.pathname}`));
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   let response: Response;
@@ -106,7 +109,7 @@ export async function probeQuickReadOnly(config: QuickProbeConfig): Promise<void
     throw new QuickError('Uventet svar fra Quick (ikke JSON)');
   }
   try {
-    quickClientInfo.parse(json);
+    return parseQuickClientInfo(json);
   } catch {
     throw new QuickError('Uventet svarformat fra Quick');
   }

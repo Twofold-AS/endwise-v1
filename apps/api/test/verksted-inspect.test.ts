@@ -48,6 +48,7 @@ describe('Se verkstedet — kun lesing', () => {
     const init = readFileSync(resolve(her, '../src/trpc/init.ts'), 'utf8');
     expect(verksted).toMatch(/withPlatformInspect/);
     expect(verksted).toMatch(/endwiseInspectProcedure/);
+    expect(verksted).toMatch(/forhandleren/);
     expect(verksted).toMatch(/slug/);
     expect(verksted).not.toMatch(/organization\.setActive|impersonat/i);
     expect(verksted).not.toMatch(/withTenant\(/);

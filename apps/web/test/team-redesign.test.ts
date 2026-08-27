@@ -221,11 +221,17 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
 });
 
 describe('Sidebar Kompetanse og Timeplan står — bunnknappene på Team er borte', () => {
-  it('Organisasjon-dropdown har Team, Kompetanse og Timeplan', () => {
+  it('Organisasjon-dropdown har Forhandleren, Team, Kompetanse og Timeplan', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
     expect(org?.label).toBe('Organisasjon');
-    expect(org?.children?.map((c) => c.label)).toEqual(['Team', 'Kompetanse', 'Timeplan']);
+    expect(org?.children?.map((c) => c.label)).toEqual([
+      'Forhandleren',
+      'Team',
+      'Kompetanse',
+      'Timeplan',
+    ]);
     expect(org?.children?.map((c) => c.href)).toEqual([
+      '/organisasjon/forhandleren',
       '/innstillinger/team',
       '/mekanikere/kompetanse',
       '/mekanikere/kapasitet',

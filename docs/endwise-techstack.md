@@ -114,7 +114,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - Branch-per-PR = preview-miljøer med ekte DB
 
 ### Auth — `packages/auth`
-- **Better-Auth 1.x** — organizations (multi-tenant), phone-number-plugin, twoFactor (e-post-OTP). Passkey (WebAuthn) er MIDLERTIDIG UTSATT (17.07.2026): `@better-auth/passkey` dro inn et foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt brukte den. Pakke + plugin fjernet, `passkey`-tabellen beholdt dormant. Reaktiveres når WebAuthn-flyten bygges. Se roadmap-endringer.md.
+- **Better-Auth 1.x** (`better-auth` ~1.6.30) — organizations (multi-tenant), phone-number-plugin, twoFactor (e-post-OTP). Schema-CLI er pakken `auth` (samme 1.6.x), ikke det forlatte `@better-auth/cli` som pinner `better-auth@1.4`. Passkey (WebAuthn) er MIDLERTIDIG UTSATT (17.07.2026): `@better-auth/passkey` dro inn et foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt brukte den. Pakke + plugin fjernet, `passkey`-tabellen beholdt dormant. Reaktiveres når WebAuthn-flyten bygges. Se roadmap-endringer.md.
 - **Obligatorisk e-post-2FA** for hver forhandler/admin (ingen bypass)
 - **60-min idle-timeout** (serverside sliding-vindu) + absolutt maks-levetid
 - **Twilio Verify** som OTP-sender

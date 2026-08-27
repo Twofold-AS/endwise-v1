@@ -10,8 +10,8 @@ import { z } from 'zod';
  * respons (helst mot Test_Public) før vi stoler på dem.
  * Verifisert (parse-feil, ikke live Yamaha-body):
  * `quickCustomer` krever camelCase `guid`. `.loose` bevarer `Guid` men
- * aliaser det ikke. `client/info` er `z.object({}).loose` — derfor kan
- * setConfig lykkes mens pullNow kaster «Uventet svarformat fra Quick».
+ * aliaser det ikke. `client/info` krever ingen felt (tomt objekt passerer)
+ * men folder PascalCase før forhandler-profil.
  * Yamaha-envelope `{ totalCount, limit, offset, results }` er bekreftet.
  * Quick3 release notes bruker PascalCase `ItemCode` / `ItemName`.
  * `foldQuickJsonKeys` senker bare første bokstav (Guid→guid). Ingen nye
@@ -82,12 +82,38 @@ export const quickCustomerBatch = z
 export type QuickCustomerBatch = z.infer<typeof quickCustomerBatch>;
 
 /**
- * `client/info` — brukes som «test tilkobling». Innholdet er ikke fullt kjent,
- * så vi validerer bare at det er et objekt (.loose); selve 200-svaret er
- * beviset på at token + baseUrl virker.
+ * `client/info` — tilkoblingstest + forhandler-profil.
+ * Ingen påkrevde felt: tomt objekt (dagens probe-suksess) passerer.
+ * Bekreftet firmanavn: name / company (samme som customer/batch).
+ * Øvrige nøkler bevares via .loose og mappes bare når de finnes etter fold.
  */
-export const quickClientInfo = z.object({}).loose();
+export const quickClientInfo = z
+  .object({
+    name: z.string().optional(),
+    company: z.string().optional(),
+  })
+  .loose();
 export type QuickClientInfo = z.infer<typeof quickClientInfo>;
+
+/** Quick-nøkkel etter fold → Endwise-kolonne. Tom verdi = ikke overskriv. */
+export const QUICK_CLIENT_FIELD_MAP = [
+  { quick: 'name', columns: ['tenants.name', 'organization.name'] },
+  {
+    quick: 'company',
+    columns: ['tenants.name', 'organization.name'],
+    when: 'hvis name mangler',
+  },
+  { quick: 'organizationNumber', columns: ['dealer_profiles.orgnr'] },
+  { quick: 'orgNo', columns: ['dealer_profiles.orgnr'], when: 'hvis organizationNumber mangler' },
+  { quick: 'address', columns: ['dealer_profiles.address'] },
+  { quick: 'zipCode', columns: ['dealer_profiles.postal_code'] },
+  { quick: 'postalCode', columns: ['dealer_profiles.postal_code'], when: 'hvis zipCode mangler' },
+  { quick: 'city', columns: ['dealer_profiles.city'] },
+  { quick: 'phone', columns: ['dealer_profiles.phone'] },
+  { quick: 'email', columns: ['dealer_profiles.email'] },
+  { quick: 'website', columns: ['dealer_profiles.website'] },
+  { quick: 'homepage', columns: ['dealer_profiles.website'], when: 'hvis website mangler' },
+] as const;
 
 /** Det flate resultatet resten av Endwise forholder seg til (mappet fra QuickCustomer). */
 export interface QuickCustomerRecord {
@@ -203,6 +229,10 @@ export function parseQuickItemBatch(json: unknown): QuickItemBatch {
 
 export function parseQuickStockEntryBatch(json: unknown): QuickStockEntryBatch {
   return quickStockEntryBatch.parse(foldQuickJsonKeys(json));
+}
+
+export function parseQuickClientInfo(json: unknown): QuickClientInfo {
+  return quickClientInfo.parse(foldQuickJsonKeys(json));
 }
 
 export interface QuickItemRecord {

@@ -5,6 +5,7 @@ export * from './billing.ts';
 export * from './bookings.ts';
 export * from './competence.ts';
 export * from './customers.ts';
+export * from './dealer-profile.ts';
 export * from './erasure.ts';
 export * from './feature-flags.ts';
 export * from './helpdesk.ts';

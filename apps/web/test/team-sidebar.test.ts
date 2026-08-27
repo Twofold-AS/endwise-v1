@@ -90,7 +90,7 @@ describe('Organisasjon i sidebar — forhandler', () => {
     nav.slice(nav.indexOf('export const SETTINGS_NAV'), nav.indexOf('export const MEKANIKER_NAV')),
   );
 
-  it('Organisasjon ligger over Rapporter og Hjelp, med Team/Kompetanse/Timeplan (uten Prisliste)', () => {
+  it('Organisasjon ligger over Rapporter og Hjelp, med Forhandleren/Team/Kompetanse/Timeplan (uten Prisliste)', () => {
     const keys = FORHANDLER_NAV.map((i) => i.key);
     expect(keys).toEqual([
       'dashboard',
@@ -108,9 +108,15 @@ describe('Organisasjon i sidebar — forhandler', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
     expect(org).toBeDefined();
     expect(org?.label).toBe('Organisasjon');
-    expect(org?.href).toBe('/innstillinger/team');
-    expect(org?.children?.map((c) => c.label)).toEqual(['Team', 'Kompetanse', 'Timeplan']);
+    expect(org?.href).toBe('/organisasjon/forhandleren');
+    expect(org?.children?.map((c) => c.label)).toEqual([
+      'Forhandleren',
+      'Team',
+      'Kompetanse',
+      'Timeplan',
+    ]);
     expect(org?.children?.map((c) => c.href)).toEqual([
+      '/organisasjon/forhandleren',
       '/innstillinger/team',
       '/mekanikere/kompetanse',
       '/mekanikere/kapasitet',
@@ -138,7 +144,7 @@ describe('Organisasjon i sidebar — forhandler', () => {
     const staffOrg = childrenForRole(org, 'dealer_staff').map((c) => c.label);
     const staffVerksted = childrenForRole(verksted, 'dealer_staff').map((c) => c.label);
     const staffJobber = childrenForRole(jobber, 'dealer_staff').map((c) => c.label);
-    expect(tilgang).toEqual(['Team', 'Kompetanse', 'Timeplan']);
+    expect(tilgang).toEqual(['Forhandleren', 'Team', 'Kompetanse', 'Timeplan']);
     expect(staffOrg).toEqual([]);
     expect(itemsForRole(FORHANDLER_NAV, 'dealer_staff').some((i) => i.key === 'team')).toBe(false);
     expect(verksted.children).toBeUndefined();
@@ -177,6 +183,8 @@ describe('Organisasjon vs Innstillinger — aktiv rad og breadcrumb', () => {
   it('Organisasjon-ruter aktiverer Organisasjon, ikke Innstillinger', () => {
     expect(org).toBeDefined();
     if (!org) throw new Error('FORHANDLER_NAV mangler Organisasjon');
+    expect(isItemActive(org, '/organisasjon/forhandleren')).toBe(true);
+    expect(isItemActive(org, '/forhandleren')).toBe(true);
     expect(isItemActive(org, '/innstillinger/team')).toBe(true);
     expect(isItemActive(org, '/innstillinger/tjenestekatalog')).toBe(false);
     const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
@@ -220,8 +228,12 @@ describe('Organisasjon vs Innstillinger — aktiv rad og breadcrumb', () => {
 
   it('breadcrumb er Organisasjon › underpunkt, ikke Innstillinger', () => {
     expect(breadcrumbFor('/innstillinger/team', '', 'forhandler')).toEqual([
-      { label: 'Organisasjon', href: '/innstillinger/team' },
+      { label: 'Organisasjon', href: '/organisasjon/forhandleren' },
       { label: 'Team' },
+    ]);
+    expect(breadcrumbFor('/organisasjon/forhandleren', '', 'forhandler')).toEqual([
+      { label: 'Organisasjon', href: '/organisasjon/forhandleren' },
+      { label: 'Forhandleren' },
     ]);
     expect(breadcrumbFor('/innstillinger/tjenestekatalog', '', 'forhandler')).toEqual([
       { label: 'Jobber', href: '/jobber' },
@@ -232,7 +244,7 @@ describe('Organisasjon vs Innstillinger — aktiv rad og breadcrumb', () => {
       { label: 'Prisliste' },
     ]);
     expect(breadcrumbFor('/mekanikere/kompetanse', '', 'forhandler')).toEqual([
-      { label: 'Organisasjon', href: '/innstillinger/team' },
+      { label: 'Organisasjon', href: '/organisasjon/forhandleren' },
       { label: 'Kompetanse' },
     ]);
     expect(breadcrumbFor('/innstillinger/varsler', '', 'forhandler')).toEqual([

@@ -6,12 +6,14 @@ import {
   erTildelbarAddon,
   tierByKey,
 } from '@endwise/modules';
-import { createQuickConfigService } from '@endwise/modules/quick';
+import { applyQuickDealerProfile, createQuickConfigService } from '@endwise/modules/quick';
 import {
   assertAllowedQuickUrl,
+  mapQuickClientInfo,
   normalizeQuickBaseUrl,
   normalizeQuickToken,
   probeQuickReadOnly,
+  type QuickClientInfo,
   QuickSsrfError,
   quickProbeUserMessage,
 } from '@endwise/toolkit-quick';
@@ -139,6 +141,7 @@ export const onboardingRouter = router({
         });
       }
 
+      let probedClient: QuickClientInfo | undefined;
       if (extras.includes('quick') && input.quick) {
         const baseUrl = normalizeQuickBaseUrl(input.quick.baseUrl);
         const token = normalizeQuickToken(input.quick.token);
@@ -158,7 +161,7 @@ export const onboardingRouter = router({
         }
         try {
           // GET først — ingen persist her. Persist skjer etter at extras er tillatt.
-          await probeQuickReadOnly({ baseUrl, token });
+          probedClient = await probeQuickReadOnly({ baseUrl, token });
         } catch (error) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
@@ -167,7 +170,7 @@ export const onboardingRouter = router({
         }
       }
 
-      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+      const result = await withTenant(ctx.db, ctx.tenantId, async (tx) => {
         const [tenant] = await tx
           .select({
             name: schema.tenants.name,
@@ -265,5 +268,18 @@ export const onboardingRouter = router({
 
         return { visningsnavn: navn, granted, complete: true };
       });
+
+      if (probedClient) {
+        const mapped = mapQuickClientInfo(probedClient);
+        try {
+          await applyQuickDealerProfile(ctx.db, ctx.tenantId, mapped);
+        } catch {
+          // Oppstart er ferdig. Quick-navn er fakta når det finnes.
+        }
+        if (mapped.name) {
+          return { ...result, visningsnavn: mapped.name };
+        }
+      }
+      return result;
     }),
 });

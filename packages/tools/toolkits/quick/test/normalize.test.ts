@@ -3,6 +3,8 @@ import {
   MAX_QUICK_TOKEN_LENGTH,
   normalizeQuickBaseUrl,
   normalizeQuickToken,
+  stripTrailingApiV2,
+  stripTrailingSlashes,
 } from '../src/normalize.ts';
 
 /**
@@ -34,6 +36,26 @@ describe('normalizeQuickBaseUrl', () => {
 
   it('tom etter trim blir tom streng', () => {
     expect(normalizeQuickBaseUrl('   ')).toBe('');
+  });
+
+  it('ugyldig URL stripper trailing slash uten regex', () => {
+    expect(normalizeQuickBaseUrl('ikke-en-url///')).toBe('ikke-en-url');
+    expect(normalizeQuickBaseUrl('ikke-en-url')).toBe('ikke-en-url');
+    expect(normalizeQuickBaseUrl('////')).toBe('');
+  });
+});
+
+describe('stripTrailingSlashes / stripTrailingApiV2', () => {
+  it('fjerner bare avsluttende skråstreker, lineært', () => {
+    expect(stripTrailingSlashes('https://q3.quick.no/shop///')).toBe('https://q3.quick.no/shop');
+    expect(stripTrailingSlashes('/')).toBe('');
+    expect(stripTrailingSlashes('abc')).toBe('abc');
+  });
+
+  it('fjerner /api/v2-suffix uten regex, etter slash-strip', () => {
+    expect(stripTrailingApiV2(stripTrailingSlashes(`${SHOP}/api/v2/`))).toBe(SHOP);
+    expect(stripTrailingApiV2(`${SHOP}/API/V2`)).toBe(SHOP);
+    expect(stripTrailingApiV2(SHOP)).toBe(SHOP);
   });
 });
 

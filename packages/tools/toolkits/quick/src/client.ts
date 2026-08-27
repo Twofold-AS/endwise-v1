@@ -2,13 +2,19 @@ import type { IntegrationHealth, IntegrationProvider } from '@endwise/modules';
 import { nextBatchOffset } from './batch.ts';
 import { QuickAuthError, QuickError } from './errors.ts';
 import { QUICK_CURL_USER_AGENT, quickFetch } from './https-proxy.ts';
-import { normalizeQuickBaseUrl, normalizeQuickToken } from './normalize.ts';
+import {
+  normalizeQuickBaseUrl,
+  normalizeQuickToken,
+  stripTrailingApiV2,
+  stripTrailingSlashes,
+} from './normalize.ts';
 import { probeQuickReadOnly } from './probe.ts';
 import {
   foldQuickJsonKeys,
   parseQuickCustomerBatch,
   parseQuickItemBatch,
   parseQuickStockEntryBatch,
+  type QuickClientInfo,
   type QuickCustomer,
   type QuickCustomerBatch,
   type QuickCustomerRecord,
@@ -75,9 +81,7 @@ export function createQuickClient(config: QuickConfig) {
   // QuickSsrfError hvis den peker et ulovlig sted. Normaliserer samtidig.
   const validated = assertAllowedQuickUrl(normalizeQuickBaseUrl(config.baseUrl));
   const token = normalizeQuickToken(config.token);
-  const base = `${validated.origin}${validated.pathname}`
-    .replace(/\/+$/, '')
-    .replace(/\/api\/v2$/i, '');
+  const base = stripTrailingApiV2(stripTrailingSlashes(`${validated.origin}${validated.pathname}`));
   const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   async function request<T>(path: string, schema: { parse: (v: unknown) => T }): Promise<T> {
@@ -152,13 +156,12 @@ export function createQuickClient(config: QuickConfig) {
      * `client/info` — GET-only tilkoblingstest (F1-07-proben). Et 200 beviser
      * at baseUrl + token virker. Kaster QuickAuthError ved 401/403.
      */
-    async clientInfo() {
-      await probeQuickReadOnly({
+    async clientInfo(): Promise<QuickClientInfo> {
+      return probeQuickReadOnly({
         baseUrl: config.baseUrl,
         token: config.token,
         timeoutMs,
       });
-      return {};
     },
 
     /** Én side kunder fra `customer/batch`. */
@@ -237,6 +240,113 @@ export function createQuickClient(config: QuickConfig) {
 }
 
 export type QuickClient = ReturnType<typeof createQuickClient>;
+
+export interface QuickDealerProfile {
+  name: string | null;
+  orgnr: string | null;
+  address: string | null;
+  postalCode: string | null;
+  city: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  leftover: Record<string, unknown>;
+  mappedKeys: readonly string[];
+}
+
+function nonemptyQuickString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function firstPresent(
+  raw: Record<string, unknown>,
+  keys: readonly string[],
+): { value: string; key: string } | null {
+  for (const key of keys) {
+    const value = nonemptyQuickString(raw[key]);
+    if (value) return { value, key };
+  }
+  return null;
+}
+
+/**
+ * Mapper `client/info` til forhandler-felt.
+ * Bekreftet: name / company → firmanavn.
+ * Øvrige kolonner bare når nøkkelen finnes etter fold. Tom verdi skriver ikke.
+ * slug mappes aldri. leftover = nøkler uten kolonne.
+ */
+export function mapQuickClientInfo(raw: QuickClientInfo): QuickDealerProfile {
+  const rec = raw as Record<string, unknown>;
+  const mappedKeys: string[] = [];
+  const consumed = new Set<string>();
+
+  const fromName = firstPresent(rec, ['name']);
+  const fromCompany = fromName ? null : firstPresent(rec, ['company']);
+  const nameHit = fromName ?? fromCompany;
+  if (nameHit) {
+    mappedKeys.push(nameHit.key);
+    consumed.add(nameHit.key);
+  }
+
+  const orgnr = firstPresent(rec, ['organizationNumber', 'orgNo']);
+  if (orgnr) {
+    mappedKeys.push(orgnr.key);
+    consumed.add(orgnr.key);
+  }
+  const address = firstPresent(rec, ['address']);
+  if (address) {
+    mappedKeys.push(address.key);
+    consumed.add(address.key);
+  }
+  const postalCode = firstPresent(rec, ['zipCode', 'postalCode']);
+  if (postalCode) {
+    mappedKeys.push(postalCode.key);
+    consumed.add(postalCode.key);
+  }
+  const city = firstPresent(rec, ['city']);
+  if (city) {
+    mappedKeys.push(city.key);
+    consumed.add(city.key);
+  }
+  const phone = firstPresent(rec, ['phone']);
+  if (phone) {
+    mappedKeys.push(phone.key);
+    consumed.add(phone.key);
+  }
+  const email = firstPresent(rec, ['email']);
+  if (email) {
+    mappedKeys.push(email.key);
+    consumed.add(email.key);
+  }
+  const website = firstPresent(rec, ['website', 'homepage']);
+  if (website) {
+    mappedKeys.push(website.key);
+    consumed.add(website.key);
+  }
+
+  const leftover: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(rec)) {
+    if (consumed.has(key)) continue;
+    if (value === undefined || value === null) continue;
+    if (typeof value === 'string' && value.trim() === '') continue;
+    leftover[key] = value;
+  }
+
+  return {
+    name: nameHit?.value ?? null,
+    orgnr: orgnr?.value ?? null,
+    address: address?.value ?? null,
+    postalCode: postalCode?.value ?? null,
+    city: city?.value ?? null,
+    phone: phone?.value ?? null,
+    email: email?.value ?? null,
+    website: website?.value ?? null,
+    leftover,
+    mappedKeys,
+  };
+}
 
 /**
  * Mapper en rå Quick-kunde til det flate speilet Endwise lagrer.

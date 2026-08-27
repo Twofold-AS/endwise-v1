@@ -1,4 +1,4 @@
-// / <reference path="../md.d.ts" />
+/// <reference path="../md.d.ts" />
 import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import { createMessagesModule } from '@endwise/modules';

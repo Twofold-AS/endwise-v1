@@ -17,16 +17,17 @@ export function quickNokkelMangler(
   return !quick?.baseUrl?.trim() || !quick.token?.trim();
 }
 
-export async function aktiverQuickEtterGet(opts: {
-  probe: (cfg: QuickNokkel) => Promise<void>;
+export async function aktiverQuickEtterGet<T>(opts: {
+  probe: (cfg: QuickNokkel) => Promise<T>;
   persist: (cfg: QuickNokkel) => Promise<void>;
   enableModule?: () => Promise<void>;
   baseUrl: string;
   token: string;
-}): Promise<void> {
+}): Promise<T> {
   const baseUrl = normalizeQuickBaseUrl(opts.baseUrl);
   const token = normalizeQuickToken(opts.token);
-  await opts.probe({ baseUrl, token });
+  const probed = await opts.probe({ baseUrl, token });
   await opts.persist({ baseUrl, token });
   await opts.enableModule?.();
+  return probed;
 }

@@ -143,7 +143,7 @@ export function InboxSidebar() {
   if (endwise) {
     const henvendelser = support.data ?? [];
     return (
-      <aside className="flex w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
+      <aside className="flex min-h-0 w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
         <div className="flex h-14 shrink-0 items-center border-border border-b px-3">
           <h2 className="min-w-0 truncate text-title text-fg">Innboks</h2>
         </div>
@@ -180,7 +180,7 @@ export function InboxSidebar() {
   }
 
   return (
-    <aside className="flex w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
+    <aside className="flex min-h-0 w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
       {/* Header: 56px + border-b, på linje med topbaren */}
       <div className="flex h-14 shrink-0 items-center gap-1 border-border border-b px-3">
         <h2 className="mr-auto min-w-0 truncate text-title text-fg">{aktivLabel}</h2>

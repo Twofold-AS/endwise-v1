@@ -59,7 +59,7 @@ export function TeamDetaljer({
         className="fixed inset-0 z-30 bg-fg/20 xl:hidden"
       />
       <aside
-        className={`${BREDDE} fixed top-0 right-0 bottom-0 z-40 flex h-[calc(100dvh-3.5rem)] shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar xl:static xl:z-auto`}
+        className={`${BREDDE} fixed top-0 right-0 bottom-0 z-40 flex h-[calc(100dvh-3.5rem)] shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar xl:static xl:z-auto xl:h-full`}
         aria-label="Detaljer om den ansatte"
       >
         <div className="flex h-14 shrink-0 items-center gap-2 border-border border-b px-3">
@@ -76,14 +76,16 @@ export function TeamDetaljer({
           </button>
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-3">
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
             <Hvem rad={rad} />
             <Jobber userId={rad.userId} />
             {rad.twoFactorEnabled ? <SlaAv2fa userId={rad.userId} navn={rad.navn} /> : null}
             <KompetanseSeksjon rad={rad} />
             <TimeplanSeksjon rad={rad} />
           </div>
-          <SlettAnsatt userId={rad.userId} navn={rad.navn} leder={rad.funksjon === 'leder'} />
+          <div className="shrink-0">
+            <SlettAnsatt userId={rad.userId} navn={rad.navn} leder={rad.funksjon === 'leder'} />
+          </div>
         </div>
       </aside>
     </>

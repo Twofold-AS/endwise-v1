@@ -36,9 +36,9 @@ function TeamSide() {
   );
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] min-h-0 overflow-hidden">
-      <div className="mx-auto flex min-h-0 w-full max-w-[1120px] flex-1 flex-col gap-5 overflow-y-auto px-8 py-7">
-        <div>
+    <div className="flex h-full min-h-0">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1120px] flex-1 flex-col gap-5 px-8 py-7">
+        <div className="shrink-0">
           <h1 className="text-title text-fg">Team</h1>
           <p className="text-body text-fg-muted">
             Hvem som jobber her. Med e-post får hen invitasjon. Uten e-post vises hen bare i
@@ -46,7 +46,7 @@ function TeamSide() {
           </p>
         </div>
 
-        <div role="tablist" aria-label="Team" className="flex flex-wrap gap-1.5">
+        <div role="tablist" aria-label="Team" className="flex shrink-0 flex-wrap gap-1.5">
           {TEAM_FANER.map((f) => {
             const valgtFane = f.id === fane;
             return (
@@ -69,28 +69,38 @@ function TeamSide() {
         </div>
 
         {fane === 'opprett' ? (
-          <section role="tabpanel" aria-label={def.label} className="flex flex-col gap-3">
-            <div>
+          <section
+            role="tabpanel"
+            aria-label={def.label}
+            className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto"
+          >
+            <div className="shrink-0">
               <h2 className="text-title text-fg">{def.label}</h2>
               <p className="text-body text-fg-muted">{def.ingress}</p>
             </div>
             <OpprettAnsatt />
           </section>
         ) : (
-          <section role="tabpanel" aria-label={def.label} className="flex flex-col gap-3">
-            <div>
+          <section
+            role="tabpanel"
+            aria-label={def.label}
+            className="flex min-h-0 flex-1 flex-col gap-3"
+          >
+            <div className="shrink-0">
               <h2 className="text-title text-fg">{def.label}</h2>
               <p className="text-body text-fg-muted">{def.ingress}</p>
             </div>
-            {fane === 'mekanikere' ? (
-              <MekanikerePille valgtId={valgtId} onVelg={setValgtId} />
-            ) : (
-              <TeamListe fane={fane} valgtId={valgtId} onVelg={setValgtId} />
-            )}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {fane === 'mekanikere' ? (
+                <MekanikerePille valgtId={valgtId} onVelg={setValgtId} />
+              ) : (
+                <TeamListe fane={fane} valgtId={valgtId} onVelg={setValgtId} />
+              )}
+            </div>
           </section>
         )}
 
-        <CardShell className="p-4">
+        <CardShell className="shrink-0 p-4">
           <p className="text-label text-fg">Tilgangsnivå</p>
           <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
             Invitasjoner gir alltid tilgangsnivået <b>ansatt</b>. Å gjøre noen til leder gjøres ikke

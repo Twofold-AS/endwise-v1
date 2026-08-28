@@ -11,13 +11,14 @@ export const PHONE_LOGO_KOLONNE =
   'flex h-full w-[calc(0.75rem+22px+0.5rem)] shrink-0 items-center pl-3';
 
 /** Horisontal scroll uten vertikal wiggle. */
-export const PHONE_H_SCROLL =
-  'overflow-x-auto overflow-y-hidden overscroll-y-none touch-pan-x';
+export const PHONE_H_SCROLL = 'overflow-x-auto overflow-y-hidden overscroll-y-none touch-pan-x';
 
 export function scrollAktivTilStart(scroller: HTMLElement, instant: boolean) {
   const aktiv = scroller.querySelector<HTMLElement>('[aria-current="page"]');
   if (!aktiv) return;
   const left =
-    aktiv.getBoundingClientRect().left - scroller.getBoundingClientRect().left + scroller.scrollLeft;
+    aktiv.getBoundingClientRect().left -
+    scroller.getBoundingClientRect().left +
+    scroller.scrollLeft;
   scroller.scrollTo({ left: Math.max(0, left), top: 0, behavior: instant ? 'instant' : 'smooth' });
 }

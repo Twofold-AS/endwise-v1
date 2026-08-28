@@ -89,6 +89,7 @@ export function PhoneNav() {
 
   const settingsAktiv = settingsNav ? isItemActive(settingsNav, pathname) : false;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll når aktiv destinasjon bytter
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;

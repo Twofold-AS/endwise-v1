@@ -14,10 +14,11 @@ import { PHONE_H_SCROLL, PHONE_LOGO_KOLONNE } from './phone-chrome';
 
 /**
  * Top-bar 2 — Organisasjon-seksjoner.
- * Jonas 28.08 fasit: samme 32-rad som top-bar 1 (h-control), text-label,
- * aktiv = sidebar-active #ededed, hover = surface-2 #f5f5f5.
- * Sidebar-rad, ikke Button primary. Én rad, overflow-x, gap-2, ingen wrap.
- * Telefon: horisontal-only, venstre kant = etter sticky logo.
+ * Desktop: samme 32-rad som top-bar 1 (h-control).
+ * Telefon: litt høyere rad (py-1.5) med piller som har py-1 — ikke flush
+ * mot barens kant, ikke h-row (40). text-label, aktiv = sidebar-active
+ * #ededed, hover = surface-2 #f5f5f5. Ingen svarte piller.
+ * Én rad, overflow-x, gap-2, ingen wrap. Venstre kant = etter sticky logo.
  */
 export function erOrganisasjonSide(pathname: string): boolean {
   if (pathname === '/organisasjon' || pathname.startsWith('/organisasjon/')) return true;
@@ -41,7 +42,7 @@ export function OrganisasjonSeksjonBar() {
   return (
     <nav
       aria-label="Organisasjon"
-      className="flex h-control min-h-control shrink-0 touch-pan-x items-center overflow-y-hidden border-border border-b bg-bg md:px-4"
+      className="flex h-control min-h-control shrink-0 touch-pan-x items-center overflow-y-hidden border-border border-b bg-bg max-md:h-auto max-md:min-h-0 max-md:py-1.5 md:px-4"
     >
       <div className={`${PHONE_LOGO_KOLONNE} md:hidden`} aria-hidden />
       <div
@@ -60,7 +61,7 @@ export function OrganisasjonSeksjonBar() {
               href={href as Route}
               scroll={false}
               aria-current={valgt ? 'page' : undefined}
-              className={`inline-flex h-control min-h-control shrink-0 items-center whitespace-nowrap rounded-control px-2.5 text-label transition-colors ${
+              className={`inline-flex h-control min-h-control shrink-0 items-center whitespace-nowrap rounded-control px-2.5 text-label transition-colors max-md:h-auto max-md:min-h-0 max-md:py-1 ${
                 valgt ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
               }`}
             >

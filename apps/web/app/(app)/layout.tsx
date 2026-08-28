@@ -11,7 +11,7 @@ import { useOrgRole } from './_lib/use-org-role';
 import { erTillattMekanikerSti } from './_shell/nav';
 import { PhoneNav } from './_shell/phone-nav';
 import { PwaRegister } from './_shell/pwa-register';
-import { OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
+import { InnboksSeksjonBar, OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
 import { TopBar } from './_shell/top-bar';
@@ -156,8 +156,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <TopBar />
                 </div>
                 <OrganisasjonSeksjonBar />
+                <InnboksSeksjonBar />
               </Suspense>
-              <main className="min-w-0 flex-1 overflow-y-auto">
+              <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
                 {plattformVarsel ? (
                   <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
                     <p className="text-label">{plattformVarsel}</p>

@@ -206,7 +206,7 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
     expect(innboks).toMatch(/overflow-y-auto/);
     expect(slot).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
     expect(slot).toMatch(/overflow-y-auto/);
-    expect(chrome).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
+    expect(chrome).toMatch(/h-full min-h-0/);
     const trådListe = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     expect(trådListe).toMatch(/min-h-0 flex-1[\s\S]*overflow-y-auto/);
     expect(trådListe).toMatch(/aside className="[^"]*min-h-0/);

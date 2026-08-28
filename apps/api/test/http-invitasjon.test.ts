@@ -136,4 +136,13 @@ describe('FORCE RLS-unntaket for invitasjonsoppslag', () => {
     expect(rute).toMatch(/kind === 'platform'|kind === "platform"/);
     expect(rute).toMatch(/erPlattformTenant/);
   });
+
+  it('godta krever passord og lager credential når brukeren finnes uten konto', () => {
+    const rute = readFileSync(resolve(her, '../src/routes/invitasjon.ts'), 'utf8');
+    expect(rute).toMatch(/inviteeKreverPassord/);
+    expect(rute).toMatch(/settPassordUtenSesjon/);
+    expect(rute).toMatch(/providerId,\s*'credential'/);
+    expect(rute).toMatch(/harCredential|harKonto/);
+    expect(rute).not.toMatch(/kreverPassord = inv\.kind === 'owner' \|\| !eksisterende/);
+  });
 });

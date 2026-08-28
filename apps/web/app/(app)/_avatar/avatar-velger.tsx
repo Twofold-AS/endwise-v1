@@ -4,6 +4,7 @@ import { Avatar, ChevronDown, CircleAlert, RefreshCw } from '@endwise/ui';
 import { type ReactNode, useEffect, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
+import { erUautorisert, norskAuthFeil } from '../../_auth/feil';
 import { CardShell } from '../_shell/cards';
 import { FARGER, FORMER, HUMOR, TONER, tilfeldigAvatarValg } from './avatar-valg';
 
@@ -53,6 +54,10 @@ export function AvatarVelger({
     },
   });
 
+  function kanLagre() {
+    return !(meg.isError && erUautorisert(meg.error));
+  }
+
   function nyTilfeldig() {
     const neste = tilfeldigAvatarValg({
       humor: valg.humor ?? undefined,
@@ -60,11 +65,13 @@ export function AvatarVelger({
       tone: valg.tone ?? undefined,
     });
     setValg(neste);
+    if (!kanLagre()) return;
     lagre.mutate(neste);
   }
 
   function velg(neste: Valg) {
     setValg(neste);
+    if (!kanLagre()) return;
     lagre.mutate(neste);
   }
 
@@ -271,9 +278,9 @@ export function AvatarVelger({
       )}
 
       {lagre.error ? (
-        <p className="flex items-start gap-2 text-body text-danger">
+        <p role="alert" className="flex items-start gap-2 text-body text-danger">
           <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-          {lagre.error.message}
+          {norskAuthFeil(lagre.error)}
         </p>
       ) : null}
     </>

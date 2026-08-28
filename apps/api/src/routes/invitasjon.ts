@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { createAuth, settPassordUtenSesjon } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
-import { type ApenInvitasjon, createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
+import {
+  type ApenInvitasjon,
+  createInvitasjonsmodul,
+  inviteeKreverPassord,
+} from '@endwise/modules/invitasjoner';
 import { erPlattformTenant } from '@endwise/modules/plattform';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -42,6 +46,15 @@ function loggOppslagFeil(error: unknown): void {
     code: pg.code,
     missingFunction: oppslagFeilet(error),
   });
+}
+
+async function harCredentialKonto(userId: string): Promise<boolean> {
+  const [konto] = await db()
+    .select({ id: schema.account.id })
+    .from(schema.account)
+    .where(and(eq(schema.account.userId, userId), eq(schema.account.providerId, 'credential')))
+    .limit(1);
+  return Boolean(konto);
 }
 
 /**
@@ -93,12 +106,14 @@ invitasjon.get('/:token', async (c) => {
       .limit(1),
   );
 
-  // Finnes brukeren fra før? Da skal skjemaet be om samtykke, ikke om passord.
+  // Finnes brukeren fra før? Da skal skjemaet be om samtykke, ikke om passord
+  // — med mindre hen mangler credential-konto (kan ikke logge inn).
   const [eksisterende] = await db()
     .select({ id: schema.user.id })
     .from(schema.user)
     .where(eq(schema.user.email, inv.epost))
     .limit(1);
+  const harCredential = eksisterende ? await harCredentialKonto(eksisterende.id) : false;
 
   return c.json({
     gyldig: true,
@@ -109,7 +124,11 @@ invitasjon.get('/:token', async (c) => {
     forhandler: inv.kind === 'platform' ? 'Endwise' : (forhandler?.navn ?? 'Endwise'),
     utloper: inv.utloper,
     harKonto: Boolean(eksisterende),
-    kreverPassord: inv.kind === 'owner' || !eksisterende,
+    kreverPassord: inviteeKreverPassord({
+      kind: inv.kind,
+      harBruker: Boolean(eksisterende),
+      harCredential,
+    }),
   });
 });
 
@@ -169,8 +188,13 @@ invitasjon.post('/godta', async (c) => {
     .from(schema.user)
     .where(eq(schema.user.email, inv.epost))
     .limit(1);
+  const harCredential = eksisterende ? await harCredentialKonto(eksisterende.id) : false;
 
-  const kreverPassord = inv.kind === 'owner' || !eksisterende;
+  const kreverPassord = inviteeKreverPassord({
+    kind: inv.kind,
+    harBruker: Boolean(eksisterende),
+    harCredential,
+  });
   if (kreverPassord && !parsed.data.passord) {
     return c.json(
       {
@@ -219,7 +243,7 @@ invitasjon.post('/godta', async (c) => {
        * ville gitt en konto som består 2FA-gaten uten at noen kode er tastet.
        */
       await db().update(schema.user).set({ emailVerified: true }).where(eq(schema.user.id, userId));
-    } else if (inv.kind === 'owner' && parsed.data.passord) {
+    } else if (parsed.data.passord && (inv.kind === 'owner' || !harCredential)) {
       await settPassordUtenSesjon(db(), userId, parsed.data.passord);
       await db()
         .update(schema.user)

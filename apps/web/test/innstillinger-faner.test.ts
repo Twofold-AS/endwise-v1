@@ -122,18 +122,19 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
     expect(profilFane).not.toMatch(/Search settings|Pinned|PRO-badge/i);
   });
 
-  it('profil-raden har avatar til venstre for visningsnavn|e-post, velger foldet', () => {
+  it('profil-raden har avatar + endre-knapp øverst, feltene stables under uten kort', () => {
     expect(profilFane).toMatch(/size=\{56\}/);
     expect(profilFane).toMatch(/foldFormer/);
+    expect(profilFane).toMatch(/utenKort/);
     expect(profilFane).toMatch(/VisningsnavnFelt/);
     expect(profilFane).toMatch(/KallenavnFelt/);
     expect(profilFane).toMatch(/ByttEpostSkjema/);
     expect(profilFane).toMatch(/readOnly/);
-    expect(profilFane).toMatch(/<AvatarVelger[\s\S]*?<\/AvatarVelger>/);
-    expect(profilFane).not.toMatch(/<AvatarVelger[^>]*\/>/);
-    expect(profilFane).toMatch(/sm:grid-cols-2/);
+    expect(profilFane).toMatch(/<AvatarVelger[^>]*\/>/);
+    expect(profilFane).not.toMatch(/<AvatarVelger[\s\S]*?<\/AvatarVelger>/);
+    expect(profilFane).not.toMatch(/sm:grid-cols-2/);
     const avatar = les('../app/(app)/_avatar/avatar-velger.tsx');
-    expect(avatar).toMatch(/flex flex-row items-start gap-4/);
+    expect(avatar).toMatch(/flex flex-row items-center gap-4/);
     expect(avatar).toMatch(/<details/);
     expect(avatar).toMatch(/Endre form, farge og uttrykk/);
     expect(avatar).toMatch(/HUMOR\.map/);

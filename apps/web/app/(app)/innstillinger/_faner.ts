@@ -1,14 +1,9 @@
 /**
- * Innstillinger som én flate med pille-faner.
- * Fanerekkefølge : Profil · Koblinger · Abonnement
- * Varsler · Tjenester & priser.
- * Team er ikke en fane — destinasjonen er Ansatte i sidebaren
- * (`/innstillinger/team`). Admin-faner skjules for ikke-admin, og hele
- * dealer-huben (Abonnement, Koblinger, Tjenester & priser) skjules for
- * selger/support og Endwise-plattform. Ingen visningsvelger.
+ * Innstillinger — kun Profil + Varsler.
+ * Abonnement, Tjenester & priser og Koblinger bor på Organisasjon.
  */
 
-export const FANE_IDS = ['profil', 'integrasjoner', 'abonnement', 'varsler', 'tjenester'] as const;
+export const FANE_IDS = ['profil', 'varsler'] as const;
 
 export type FaneId = (typeof FANE_IDS)[number];
 
@@ -26,29 +21,9 @@ export const FANER: readonly FaneDef[] = [
     ingress: 'Navn, avatar, varslingslyder, sikkerhet og utseende.',
   },
   {
-    id: 'integrasjoner',
-    label: 'Koblinger',
-    ingress:
-      'Verktøy fra andre leverandører som Endwise snakker med. Endwise-egne funksjoner ligger under Tjenester & priser.',
-    adminOnly: true,
-  },
-  {
-    id: 'abonnement',
-    label: 'Abonnement',
-    ingress: 'Flat pris per verksted. Ubegrenset antall brukere. Alle priser eks. mva.',
-    adminOnly: true,
-  },
-  {
     id: 'varsler',
     label: 'Varsler',
     ingress: 'Hvilke kanaler verkstedet bruker mot kunder og ansatte.',
-  },
-  {
-    id: 'tjenester',
-    label: 'Tjenester & priser',
-    ingress:
-      'Funksjonene Endwise har bygget, og hva de koster. Andres verktøy ligger under Koblinger.',
-    adminOnly: true,
   },
 ];
 
@@ -58,49 +33,33 @@ export function erFaneId(v: string | null | undefined): v is FaneId {
   return typeof v === 'string' && FANE_SETT.has(v);
 }
 
-/**
- * Les `?fane=` (eller en kjent alias-sti) og fall tilbake til Profil når
- * verdien er ukjent eller admin-only for en ikke-admin.
- */
 export function parseFane(
   raw: string | null | undefined,
-  isAdmin: boolean,
+  _isAdmin: boolean,
   fallback: FaneId = 'profil',
   erForhandler = true,
 ): FaneId {
   if (!erForhandler) return 'profil';
   const kandidat: FaneId = erFaneId(raw) ? raw : fallback;
   const def = FANER.find((f) => f.id === kandidat);
-  if (!def || (def.adminOnly && !isAdmin)) return 'profil';
+  if (!def) return 'profil';
   return kandidat;
 }
 
-/**
- * Dealer-faner kun i forhandler-kontekst. Endwise-admin/support på
- * plattform ser Profil alene — ikke Abonnement som om de var forhandler.
- */
-export function synligeFaner(isAdmin: boolean, erForhandler = true): FaneDef[] {
+export function synligeFaner(_isAdmin: boolean, erForhandler = true): FaneDef[] {
   if (!erForhandler) return FANER.filter((f) => f.id === 'profil');
-  return FANER.filter((f) => !f.adminOnly || isAdmin);
+  return [...FANER];
 }
 
-/** Kanonisk URL for en fane. Gamle stier aliaser hit. */
 export function innstillingerHref(fane: FaneId): string {
   return `/innstillinger?fane=${fane}`;
 }
 
 /**
- * Alias-stier som skal lande på samme skall. Brukes av sidene selv (startFane)
- * og av tester — ikke av sidebaren, som beholder de gamle href-ene.
- * `/innstillinger/team` er ikke alias: Team er egen sidebar-destinasjon (#41).
+ * Gamle alias. Abonnement/Koblinger/Tjenester peker ikke lenger hit —
+ * de sidene redirecter til Organisasjon.
  */
 export const FANE_ALIAS: Readonly<Record<string, FaneId>> = {
   '/innstillinger/profil': 'profil',
   '/innstillinger/varsler': 'varsler',
-  '/innstillinger/tjenester': 'tjenester',
-  '/innstillinger/koblinger': 'integrasjoner',
-  '/innstillinger/integrasjoner': 'integrasjoner',
-  '/abonnement': 'abonnement',
-  '/integrasjoner': 'integrasjoner',
-  '/tjenester': 'tjenester',
 };

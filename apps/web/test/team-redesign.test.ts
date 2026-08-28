@@ -51,11 +51,9 @@ describe('Team-piller som Innstillinger ?fane=', () => {
   });
 
   it('Team-siden leser ?fane= og filtrerer på eksisterende jobbfunksjon', () => {
-    const side = les('../app/(app)/innstillinger/team/page.tsx');
+    const side = les('../app/(app)/organisasjon/_ansatte.tsx');
     const liste = les('../app/(app)/innstillinger/team/_liste.tsx');
-    expect(side).toMatch(/parseTeamFane/);
-    expect(side).toMatch(/\?fane=/);
-    expect(side).toMatch(/role="tablist"/);
+    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/organisasjon\?seksjon=ansatte/);
     expect(liste).toMatch(/funksjon === 'selger'/);
     expect(liste).toMatch(/funksjon === 'support'/);
     expect(liste).toMatch(/funksjon === 'mekaniker'/);
@@ -85,14 +83,14 @@ describe('Team-piller som Innstillinger ?fane=', () => {
   });
 });
 
-describe('Opprett ansatt — e-post valgfri, egen pille', () => {
-  const inviter = les('../app/(app)/innstillinger/team/_inviter.tsx');
-  const side = les('../app/(app)/innstillinger/team/page.tsx');
+describe('Opprett ansatt — e-post valgfri, dialog', () => {
+  const inviter = les('../app/(app)/organisasjon/_opprett-dialog.tsx');
+  const side = les('../app/(app)/organisasjon/_ansatte.tsx');
   const velger = les('../app/(app)/innstillinger/team/_kompetanse-velger.tsx');
 
-  it('har én handling på Opprett-pillen, ikke modal på lista', () => {
+  it('har én handling som åpner dialog, ikke egen pille', () => {
     expect(inviter).toMatch(/Opprett ansatt/);
-    expect(inviter).toMatch(/valgfri/);
+    expect(inviter).toMatch(/DialogTitle/);
     expect(inviter).toMatch(/invitasjoner\.opprett/);
     expect(inviter).toMatch(/team\.opprettUtenInvitasjon/);
     expect(inviter).toMatch(/KompetanseVelger/);
@@ -105,7 +103,7 @@ describe('Opprett ansatt — e-post valgfri, egen pille', () => {
     expect(inviter).not.toMatch(/Legg til uten invitasjon/);
     expect(side).not.toMatch(/LeggTilUtenInvitasjon/);
     expect(side).not.toMatch(/_legg-til/);
-    expect(side).toMatch(/fane === 'opprett'/);
+    expect(side).toMatch(/OpprettAnsattDialog/);
   });
 
   it('ingen «Inviter ansatt»-streng', () => {
@@ -126,7 +124,6 @@ describe('Opprett ansatt — e-post valgfri, egen pille', () => {
 
 describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
   const detaljer = utenKommentarer(les('../app/(app)/innstillinger/team/_detaljer.tsx'));
-  const side = utenKommentarer(les('../app/(app)/innstillinger/team/page.tsx'));
   const liste = les('../app/(app)/innstillinger/team/_liste.tsx');
   const innboks = utenKommentarer(les('../app/(app)/innboks/_detaljer.tsx'));
   const slot = utenKommentarer(les('../app/(app)/innboks/_detaljer-slot.tsx'));
@@ -198,13 +195,7 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
   });
 
   it('Team-lista scroller i egen kolonne; pane-kroppen scroller; Slett er shrink-0', () => {
-    const ytterst =
-      side.match(/function TeamSide[\s\S]*?return \(\s*<div className="([^"]+)"/)?.[1] ?? '';
-    expect(ytterst).not.toMatch(/overflow-hidden/);
-    expect(side).toMatch(/min-h-0 flex-1 overflow-y-auto/);
-    expect(side).toMatch(
-      /role="tablist"[^>]*shrink-0|className="[^"]*shrink-0[^"]*"[^>]*role="tablist"/,
-    );
+    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/redirect/);
     expect(detaljer).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
     expect(detaljer).toMatch(/overflow-y-auto/);
     expect(detaljer).toMatch(/min-h-0/);
@@ -229,19 +220,21 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
 
 describe('Sidebar Kompetanse og Timeplan står — bunnknappene på Team er borte', () => {
   it('Ansatte har piller Team, Prisliste, Kompetanse og Timeplan', () => {
-    const org = FORHANDLER_NAV.find((i) => i.key === 'team');
-    expect(org?.label).toBe('Ansatte');
+    const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
+    expect(org?.label).toBe('Organisasjon');
     expect(org?.pills?.map((c) => c.label)).toEqual([
-      'Team',
-      'Prisliste',
-      'Kompetanse',
+      'Oversikt',
       'Timeplan',
+      'Ansatte',
+      'Abonnement',
+      'Integrasjoner',
     ]);
     expect(org?.pills?.map((c) => c.href)).toEqual([
-      '/innstillinger/team',
-      '/prisliste',
-      '/mekanikere/kompetanse',
-      '/mekanikere/kapasitet',
+      '/organisasjon',
+      '/organisasjon?seksjon=timeplan',
+      '/organisasjon?seksjon=ansatte',
+      '/organisasjon?seksjon=abonnement',
+      '/organisasjon?seksjon=integrasjoner',
     ]);
   });
 

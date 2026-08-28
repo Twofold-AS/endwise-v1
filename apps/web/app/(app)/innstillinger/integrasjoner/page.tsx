@@ -1,6 +1,6 @@
-import { InnstillingerSkall } from '../_skall';
+import type { Route } from 'next';
+import { redirect } from 'next/navigation';
 
-/** Alias for `/innstillinger?fane=integrasjoner`. */
 export default function IntegrasjonerAliasPage() {
-  return <InnstillingerSkall startFane="integrasjoner" />;
+  redirect('/organisasjon?seksjon=integrasjoner' as Route);
 }

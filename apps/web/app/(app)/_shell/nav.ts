@@ -8,7 +8,6 @@ import {
   ClipboardList,
   FilePlus,
   Flag,
-  Gauge,
   HardHat,
   Inbox,
   LayoutDashboard,
@@ -22,7 +21,6 @@ import {
   ShoppingCart,
   Store,
   Tags,
-  UserCog,
   UserPlus,
   Users,
   Wrench,
@@ -91,6 +89,21 @@ export type NavItem = {
   badge?: 'unread' | 'helpdesk';
   countKey?: 'kunder' | 'intern' | 'endwise';
 };
+
+const ADMIN_KUN: OrgRole[] = ['dealer_admin'];
+
+/**
+ * Mikael IA 28.08 ettermiddag — Organisasjon er ÉN side.
+ * Top-bar 2 er seksjonene. Kompetanse er ikke en pille.
+ * Abonnement + Integrasjoner bare for dealer_admin (skjules for selger/support).
+ */
+export const ORGANISASJON_SEKSJONER: NavChild[] = [
+  { label: 'Oversikt', href: '/organisasjon' },
+  { label: 'Timeplan', href: '/organisasjon?seksjon=timeplan' },
+  { label: 'Ansatte', href: '/organisasjon?seksjon=ansatte' },
+  { label: 'Abonnement', href: '/organisasjon?seksjon=abonnement', roles: ADMIN_KUN },
+  { label: 'Integrasjoner', href: '/organisasjon?seksjon=integrasjoner', roles: ADMIN_KUN },
+];
 
 export type ShellKey = 'forhandler' | 'mekaniker' | 'endwise' | 'endwise_partner';
 
@@ -176,9 +189,11 @@ export const CONTEXTS: AppContext[] = [
 ];
 
 /*
- * Jonas IA 28.08 — fasit. Ett skall, ingen visningsvelger.
- * Piller på siden. Landing åpner første pille.
- * Prisliste under Ansatte. Hjelp = /support, ikke slideren.
+ * Mikael IA 28.08 ettermiddag — fasit over Jonas-morgenen.
+ * Ett skall, ingen visningsvelger. Organisasjon er ÉN rad → /organisasjon.
+ * Top-bar 2 = Oversikt · Timeplan · Ansatte · Abonnement · Integrasjoner.
+ * Kompetanse er ikke pille/sidebar. Prisliste bor på Oversikt.
+ * Hjelp = /support. Innstillinger = Profil + Varsler.
  */
 /*
  * AI-verktøy er parkert — ikke i FORHANDLER_NAV.
@@ -263,17 +278,12 @@ export const FORHANDLER_NAV: NavItem[] = [
     roles: DRIFT,
   },
   {
-    key: 'team',
-    label: 'Ansatte',
-    icon: UserCog,
-    href: '/innstillinger/team',
+    key: 'organisasjon',
+    label: 'Organisasjon',
+    icon: Building2,
+    href: '/organisasjon',
     roles: DRIFT,
-    pills: [
-      { label: 'Team', href: '/innstillinger/team', icon: UserCog },
-      { label: 'Prisliste', href: '/prisliste', icon: Wrench },
-      { label: 'Kompetanse', href: '/mekanikere/kompetanse', icon: Tags },
-      { label: 'Timeplan', href: '/mekanikere/kapasitet', icon: Gauge },
-    ],
+    pills: ORGANISASJON_SEKSJONER,
   },
   {
     key: 'helpdesk',
@@ -288,9 +298,8 @@ export const FORHANDLER_NAV: NavItem[] = [
 
 /**
  * Forankret nederst — visuelt skilt fra hovednavet.
- * (Mikael): Innstillinger er en destinasjon til profil, ikke en
- * flyout. Pille-fanene på `/innstillinger` eier undersidene (Abonnement,
- * Varsler, …) for forhandler. Breadcrumb/K navngir dem via SETTINGS_CRUMB.
+ * Mikael 28.08: Innstillinger er profil + varsler. Abonnement,
+ * Tjenester & priser og Koblinger bor på Organisasjon.
  */
 export const SETTINGS_NAV: NavItem = {
   key: 'settings',
@@ -298,6 +307,10 @@ export const SETTINGS_NAV: NavItem = {
   icon: Settings,
   href: '/innstillinger/profil',
   roles: DRIFT,
+  pills: [
+    { label: 'Profil', href: '/innstillinger/profil' },
+    { label: 'Varsler', href: '/innstillinger/varsler' },
+  ],
 };
 
 /* Mekaniker-konteksten */
@@ -570,6 +583,12 @@ export function childrenForRole(item: NavItem, role: OrgRole | null): NavChild[]
   return item.children.filter((c) => !c.roles || (role != null && c.roles.includes(role)));
 }
 
+/** Piller/seksjoner som rollen skal se. */
+export function pillsForRole(item: NavItem, role: OrgRole | null): NavChild[] {
+  if (!item.pills) return [];
+  return item.pills.filter((c) => !c.roles || (role != null && c.roles.includes(role)));
+}
+
 /** Stien uten query — nav-href-er kan bære `?kanal=`/`?visning=`. */
 function pathOf(href: string): string {
   return href.split('?')[0] ?? href;
@@ -590,8 +609,9 @@ export const STI_ALIAS: Readonly<Record<string, string>> = {
   '/dashboard': '/verkstedet',
   '/prisliste': '/innstillinger/tjenestekatalog',
   '/innstillinger/tjenestekatalog': '/prisliste',
-  '/forhandleren': '/organisasjon/forhandleren',
-  '/organisasjon/forhandleren': '/forhandleren',
+  '/forhandleren': '/organisasjon',
+  '/organisasjon/forhandleren': '/organisasjon',
+  '/ansatte': '/organisasjon',
 };
 
 export function stierFor(href: string): string[] {
@@ -609,19 +629,33 @@ function pathTreffer(pathname: string, href: string): boolean {
 }
 
 /**
- * Dealer-Innstillinger-stier (pille-fanene). Ikke Team/Prisliste —
- * de bor under Ansatte.
+ * Dealer-Innstillinger — kun Profil + Varsler.
+ * Abonnement / Tjenester & priser / Koblinger bor på Organisasjon.
  */
-const SETTINGS_STIER = [
-  '/innstillinger/profil',
-  '/innstillinger/varsler',
+const SETTINGS_STIER = ['/innstillinger/profil', '/innstillinger/varsler'] as const;
+
+const ORGANISASJON_STIER = [
+  '/organisasjon',
+  '/forhandleren',
+  '/ansatte',
+  '/innstillinger/team',
+  '/mekanikere/kapasitet',
+  '/mekanikere/kompetanse',
+  '/abonnement',
+  '/tjenester',
+  '/prisliste',
+  '/innstillinger/tjenestekatalog',
   '/innstillinger/tjenester',
   '/innstillinger/koblinger',
   '/innstillinger/integrasjoner',
-  '/abonnement',
-  '/integrasjoner',
-  '/tjenester',
 ] as const;
+
+export function erOrganisasjonSti(pathname: string): boolean {
+  if (ORGANISASJON_STIER.some((s) => pathname === s || pathname.startsWith(`${s}/`))) {
+    return true;
+  }
+  return pathname === '/integrasjoner' || pathname.startsWith('/integrasjoner/');
+}
 
 export function erSettingsSti(pathname: string): boolean {
   if (pathname === '/innstillinger') return true;
@@ -631,16 +665,11 @@ export function erSettingsSti(pathname: string): boolean {
 const SETTINGS_CRUMB: Record<string, string> = {
   '/innstillinger/profil': 'Profil',
   '/innstillinger/varsler': 'Varsler',
-  '/innstillinger/tjenester': 'Tjenester & priser',
-  '/innstillinger/koblinger': 'Koblinger',
-  '/innstillinger/integrasjoner': 'Koblinger',
-  '/abonnement': 'Abonnement',
-  '/integrasjoner': 'Koblinger',
-  '/tjenester': 'Tjenester & priser',
 };
 
 /** Er denne destinasjonen den aktive? */
 export function isItemActive(item: NavItem, pathname: string): boolean {
+  if (item.key === 'organisasjon') return erOrganisasjonSti(pathname);
   if (item.key === 'settings') return erSettingsSti(pathname);
   if (item.key === 'endwise-settings') {
     return (
@@ -704,6 +733,14 @@ export function breadcrumbFor(
     return crumbs;
   }
 
+  if (
+    item.key === 'organisasjon' &&
+    (pathname === '/prisliste' || pathname === '/innstillinger/tjenestekatalog')
+  ) {
+    crumbs.push({ label: 'Oversikt' });
+    return crumbs;
+  }
+
   // Undervisning: match først på query (?kanal=/?visning=), så på sti. Et
   // underpunkt med query må matche både sti og query — ellers ville «Oversikt»
   // (uten query) alltid vunnet over «Kalender» på samme sti.
@@ -747,29 +784,30 @@ export const PARKED_LABEL: Record<string, string> = {
   '/admin/logg': 'Parkert · Aktivitetslogg',
   '/bookinger': 'Jobber (gammel sti)',
   '/kalender': 'Jobber · Kalender (gammel sti)',
-  '/mekanikere': 'Ansatte · Mekanikere',
-  '/mekanikere/kompetanse': 'Ansatte · Kompetanse',
-  '/mekanikere/kapasitet': 'Ansatte · Timeplan',
-  '/tjenester': 'Tjenester & priser',
+  '/mekanikere': 'Organisasjon · Ansatte',
+  '/mekanikere/kompetanse': 'Organisasjon · Ansatte',
+  '/mekanikere/kapasitet': 'Organisasjon · Timeplan',
+  '/tjenester': 'Organisasjon · Abonnement',
   '/innstillinger/profil': 'Innstillinger · Profil',
   '/innstillinger/varsler': 'Innstillinger · Varsler',
-  '/innstillinger/tjenester': 'Innstillinger · Tjenester & priser',
-  '/abonnement': 'Innstillinger · Abonnement',
-  '/integrasjoner': 'Innstillinger · Koblinger',
+  '/innstillinger/tjenester': 'Organisasjon · Abonnement',
+  '/abonnement': 'Organisasjon · Abonnement',
+  '/integrasjoner': 'Organisasjon · Integrasjoner',
   '/support': 'Hjelp',
   '/hjelp': 'Hjelp',
   '/jobber': 'Jobber',
   '/rapporter': 'Rapporter',
   '/verkstedet': 'Verkstedet',
-  '/ansatte': 'Ansatte',
-  '/forhandleren': 'Forhandleren',
-  '/organisasjon/forhandleren': 'Forhandleren',
-  '/innstillinger/koblinger': 'Innstillinger · Koblinger',
-  '/innstillinger/integrasjoner': 'Innstillinger · Koblinger',
+  '/ansatte': 'Organisasjon · Ansatte',
+  '/forhandleren': 'Organisasjon · Oversikt',
+  '/organisasjon': 'Organisasjon',
+  '/organisasjon/forhandleren': 'Organisasjon · Oversikt',
+  '/innstillinger/koblinger': 'Organisasjon · Integrasjoner',
+  '/innstillinger/integrasjoner': 'Organisasjon · Integrasjoner',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
   '/endwise/innstillinger': 'Endwise · Dev-mode',
-  '/innstillinger/tjenestekatalog': 'Ansatte · Prisliste',
-  '/prisliste': 'Ansatte · Prisliste',
+  '/innstillinger/tjenestekatalog': 'Organisasjon · Oversikt',
+  '/prisliste': 'Organisasjon · Oversikt',
   '/butikk': 'Butikk · Katalog',
   '/butikk/kasse': 'Butikk · Handlekurv / kasse',
   '/lager/deler': 'Lager · Deler',

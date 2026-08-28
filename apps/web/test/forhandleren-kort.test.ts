@@ -10,22 +10,24 @@ function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
 
-describe('Organisasjon › Forhandleren', () => {
-  it('Ansatte-piller er Team, Prisliste, Kompetanse, Timeplan — ikke Forhandleren', () => {
-    const org = FORHANDLER_NAV.find((i) => i.key === 'team');
-    expect(org?.label).toBe('Ansatte');
+describe('Organisasjon › Oversikt (forhandlerkort)', () => {
+  it('Organisasjon-piller er Oversikt Timeplan Ansatte Abonnement Integrasjoner', () => {
+    const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
+    expect(org?.label).toBe('Organisasjon');
     expect(org?.pills?.map((c) => c.label)).toEqual([
-      'Team',
-      'Prisliste',
-      'Kompetanse',
+      'Oversikt',
       'Timeplan',
+      'Ansatte',
+      'Abonnement',
+      'Integrasjoner',
     ]);
   });
 
-  it('siden rendrer firmanavn og adresse, uten kallenavn', () => {
-    const side = les('../app/(app)/organisasjon/forhandleren/page.tsx');
+  it('kortet rendrer firmanavn og adresse, uten kallenavn', () => {
+    const side = les('../app/(app)/organisasjon/page.tsx');
     const kort = les('../app/(app)/organisasjon/forhandleren/_kort.tsx');
-    expect(side).toMatch(/Forhandleren/);
+    expect(side).toMatch(/ForhandlerKort/);
+    expect(side).toMatch(/PrislisteFlate/);
     expect(kort).toMatch(/Firmanavn/);
     expect(kort).toMatch(/Adresse/);
     expect(kort).toMatch(/Forhandler-epost/);
@@ -39,8 +41,9 @@ describe('Organisasjon › Forhandleren', () => {
 
   it('Forhandleren er ikke en nav-rad', () => {
     expect(FORHANDLER_NAV.some((i) => i.label === 'Forhandleren')).toBe(false);
-    expect(breadcrumbFor('/organisasjon/forhandleren', '', 'forhandler')).toEqual([
-      { label: 'Forhandleren' },
+    expect(breadcrumbFor('/organisasjon', '', 'forhandler')).toEqual([
+      { label: 'Organisasjon', href: '/organisasjon' },
+      { label: 'Oversikt' },
     ]);
   });
 });

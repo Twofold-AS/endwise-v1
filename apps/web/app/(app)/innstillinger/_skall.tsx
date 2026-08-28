@@ -5,20 +5,12 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useOrgRole } from '../_lib/use-org-role';
-import { AbonnementInnhold } from '../abonnement/_innhold';
-import { IntegrasjonerInnhold } from '../integrasjoner/_innhold';
-import { TjenesterInnhold } from '../tjenester/_innhold';
 import { type FaneId, innstillingerHref, parseFane, synligeFaner } from './_faner';
 import { ProfilFane } from './_profil-fane';
 import { VarslerInnhold } from './varsler/_innhold';
 
 /**
- * Innstillinger som én flate. Pille-faner øverst, aktiv fane inne på
- * siden. Ingen hub-kort, ingen nested Settings i sidebaren, ingen Admin-fane.
- * Team/Organisasjon er sidebar-destinasjon (#41), ikke en fane her.
- * Endwise-plattform ser kun Profil (ingen dealer-faner).
- * Fane-state bor i `?fane=`. Gamle Innstillinger-URL-er renderer dette skallet
- * med `startFane`. `/innstillinger/team` er Team-siden, ikke et alias.
+ * Innstillinger: Profil + Varsler. Ingen Abonnement/Koblinger/Tjenester her.
  */
 export function InnstillingerSkall({ startFane }: { startFane?: FaneId }) {
   return (
@@ -44,7 +36,7 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
       <div>
         <h1 className="text-title text-fg">Innstillinger</h1>
         <p className="text-body text-fg-muted">
-          All konfigurasjon ett sted. Filtrering og sortering ligger på sidene der du jobber.
+          Profil og varsler. Organisasjon ligger i sidebaren.
         </p>
       </div>
 
@@ -87,13 +79,7 @@ function FaneInnhold({ fane }: { fane: FaneId }) {
   switch (fane) {
     case 'profil':
       return <ProfilFane />;
-    case 'integrasjoner':
-      return <IntegrasjonerInnhold />;
-    case 'abonnement':
-      return <AbonnementInnhold />;
     case 'varsler':
       return <VarslerInnhold />;
-    case 'tjenester':
-      return <TjenesterInnhold />;
   }
 }

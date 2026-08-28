@@ -22,22 +22,20 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     expect(les('../app/(app)/rapporter/page.tsx')).toMatch(/from '\.\.\/analyse\/page'/);
     expect(les('../app/(app)/hjelp/page.tsx')).toMatch(/from '\.\.\/support\/page'/);
     expect(les('../app/(app)/verkstedet/page.tsx')).toMatch(/from '\.\.\/dashboard\/page'/);
-    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(
-      /from '\.\.\/innstillinger\/tjenestekatalog\/page'/,
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/redirect\('\/organisasjon'/);
+    expect(les('../app/(app)/innstillinger/tjenestekatalog/page.tsx')).toMatch(
+      /redirect\('\/organisasjon'/,
     );
-    expect(les('../app/(app)/ansatte/page.tsx')).toMatch(/redirect\('\/innstillinger\/team'/);
-    expect(les('../app/(app)/forhandleren/page.tsx')).toMatch(
-      /from '\.\.\/organisasjon\/forhandleren\/page'/,
-    );
+    expect(les('../app/(app)/ansatte/page.tsx')).toMatch(/organisasjon\?seksjon=ansatte/);
+    expect(les('../app/(app)/forhandleren/page.tsx')).toMatch(/redirect\('\/organisasjon'/);
   });
 
-  it('settings-alias /koblinger og /integrasjoner lander på Koblinger', () => {
-    expect(FANE_ALIAS['/innstillinger/koblinger']).toBe('integrasjoner');
-    expect(FANE_ALIAS['/innstillinger/integrasjoner']).toBe('integrasjoner');
-    expect(isItemActive(SETTINGS_NAV, '/innstillinger/koblinger')).toBe(true);
+  it('settings-alias /koblinger og /integrasjoner lander på Organisasjon', () => {
+    expect(FANE_ALIAS['/innstillinger/koblinger']).toBeUndefined();
+    expect(FANE_ALIAS['/innstillinger/integrasjoner']).toBeUndefined();
+    expect(isItemActive(SETTINGS_NAV, '/innstillinger/koblinger')).toBe(false);
     expect(breadcrumbFor('/innstillinger/koblinger', '', 'forhandler')).toEqual([
-      { label: 'Innstillinger', href: '/innstillinger/profil' },
-      { label: 'Koblinger' },
+      { label: 'Organisasjon', href: '/organisasjon' },
     ]);
   });
 
@@ -58,8 +56,8 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     expect(verksted && isItemActive(verksted, '/verkstedet')).toBe(true);
     expect(verksted && isItemActive(verksted, '/prisliste')).toBe(false);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Ansatte', href: '/innstillinger/team' },
-      { label: 'Prisliste' },
+      { label: 'Organisasjon', href: '/organisasjon' },
+      { label: 'Oversikt' },
     ]);
   });
 
@@ -125,8 +123,8 @@ describe('Ny jobb og tomflater', () => {
   });
 
   it('Opprett ansatt forklarer at e-post er valgfri', () => {
-    const inviter = les('../app/(app)/innstillinger/team/_inviter.tsx');
-    expect(inviter).toMatch(/E-post er valgfri/);
+    const inviter = les('../app/(app)/organisasjon/_opprett-dialog.tsx');
+    expect(inviter).toMatch(/E-post adresse/);
     expect(inviter).toMatch(/Skriv inn navn når du oppretter uten e-post/);
     expect(inviter).toMatch(/Opprett ansatt/);
     expect(inviter).not.toMatch(/Inviter ansatt/);

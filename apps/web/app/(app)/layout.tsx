@@ -9,7 +9,9 @@ import { LydProvider } from './_lib/lyd';
 import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
 import { erTillattMekanikerSti } from './_shell/nav';
+import { PhoneNav } from './_shell/phone-nav';
 import { PwaRegister } from './_shell/pwa-register';
+import { OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
 import { TopBar } from './_shell/top-bar';
@@ -132,7 +134,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <PwaRegister />
           <div className="flex h-screen w-screen overflow-hidden bg-bg text-fg">
             <Suspense
-              fallback={<div className="w-[248px] shrink-0 border-border border-r bg-sidebar" />}
+              fallback={
+                <div className="hidden w-[248px] shrink-0 border-border border-r bg-sidebar md:block" />
+              }
             >
               <PlattformRuteVakt
                 erPlattform={erPlattform}
@@ -142,8 +146,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <Sidebar />
             </Suspense>
             <div className="flex min-w-0 flex-1 flex-col">
-              <Suspense fallback={<div className="h-14 shrink-0 border-border border-b bg-bg" />}>
-                <TopBar />
+              <Suspense
+                fallback={<div className="h-control shrink-0 border-border border-b bg-bg" />}
+              >
+                <div className="md:hidden">
+                  <PhoneNav />
+                </div>
+                <div className="hidden md:block">
+                  <TopBar />
+                </div>
+                <OrganisasjonSeksjonBar />
               </Suspense>
               <main className="min-w-0 flex-1 overflow-y-auto">
                 {plattformVarsel ? (

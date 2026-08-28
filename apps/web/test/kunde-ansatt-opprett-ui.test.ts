@@ -33,16 +33,16 @@ describe('F5-55 — Ny kunde på kundesiden', () => {
 });
 
 describe('F1-10 — Opprett ansatt (e-post valgfri)', () => {
-  const team = les('../app/(app)/innstillinger/team/page.tsx');
-  const inviter = les('../app/(app)/innstillinger/team/_inviter.tsx');
+  const team = les('../app/(app)/organisasjon/_ansatte.tsx');
+  const inviter = les('../app/(app)/organisasjon/_opprett-dialog.tsx');
   const samtale = les('../app/(app)/innboks/_ny-samtale.tsx');
 
   it('Team har Opprett ansatt — med e-post sender, uten e-post oppretter lokalt', () => {
-    expect(team).toMatch(/OpprettAnsatt/);
+    expect(team).toMatch(/OpprettAnsattDialog/);
     expect(team).not.toMatch(/LeggTilUtenInvitasjon/);
     expect(inviter).toMatch(/Opprett ansatt/);
     expect(inviter).not.toMatch(/Inviter ansatt/);
-    expect(inviter).toMatch(/valgfri/);
+    expect(inviter).toMatch(/E-post adresse/);
     expect(inviter).toMatch(/invitasjoner\.opprett/);
     expect(inviter).toMatch(/team\.opprettUtenInvitasjon/);
     expect(inviter).toMatch(/mekaniker/);

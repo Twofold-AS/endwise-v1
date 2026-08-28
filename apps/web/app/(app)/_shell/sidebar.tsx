@@ -38,29 +38,14 @@ import { SidebarHeader } from './sidebar-header';
 import { useSidebarState } from './sidebar-state';
 import { TipCard } from './tip-card';
 
-const ROLE_LABEL: Record<string, string> = {
-  dealer_admin: 'Forhandler',
-  dealer_staff: 'Ansatt',
-  endwise_admin: 'Endwise-admin',
-  endwise_support: 'Endwise-partner',
-  customer: 'Kunde',
-};
-
 /** Nav-ikoner 16px. */
 const IKON = 16;
 
 /**
- * Den dominerende sidebaren.
- * Header på nøyaktig 56px med `border-b`, samme høyde som topbaren, så
- * skillelinjene møtes på én y-verdi tvers over skjermen.
- * Kollapset tilstand
- * Knappen bor i topbaren (ved siden av breadcrumben), tilstanden i
- * `sidebar-state.tsx`. Kollapset viser headeren kun merkeboksen, og nav-radene
- * blir ikon-only med `title` som fallback. Ingen tekst som brekker, ingen
- * ellipse — bare ikonene.
- * Jonas 28.08: piller er horisontale faner på siden, ikke barn i
- * sidebaren. Landing åpner første pille. Innstillinger er destinasjon
- * (Link til profil), ikke flyout. Helpdesk-slideren er ikke nav.
+ * Den dominerende sidebaren (desktop).
+ * Header er h-control, samme rad som top-bar 1.
+ * Kollaps-knappen bor i sidebaren. Ingen «Forhandler»-undertekst.
+ * På telefon erstattes denne av PhoneNav.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -160,13 +145,12 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`flex shrink-0 flex-col border-border border-r bg-sidebar transition-[width] duration-150 ${
+      className={`hidden shrink-0 flex-col border-border border-r bg-sidebar transition-[width] duration-150 md:flex ${
         collapsed ? 'w-[76px]' : 'w-[248px]'
       }`}
     >
-      {/* Header: 56px + border-b */}
       <div
-        className={`flex h-14 shrink-0 items-center border-border border-b ${
+        className={`flex h-control shrink-0 items-center border-border border-b ${
           collapsed ? 'justify-center px-2' : 'px-3'
         }`}
       >
@@ -246,7 +230,11 @@ export function Sidebar() {
 
         {/* Bunn: tips-kort → divider → Settings → DEG */}
         <div className="flex flex-col gap-3">
-          {!collapsed && shell === 'forhandler' && <TipCard />}
+          {!collapsed && shell === 'forhandler' && (
+            <div className="hidden md:block">
+              <TipCard />
+            </div>
+          )}
           <div className="-mx-3 h-px bg-border" />
           {settingsNav ? (
             <Link
@@ -261,13 +249,7 @@ export function Sidebar() {
               {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
             </Link>
           ) : null}
-          <BrukerRad
-            navn={navn}
-            rolle={role ? (ROLE_LABEL[role] ?? '—') : null}
-            laster={rolleLaster}
-            collapsed={collapsed}
-            onLoggUt={logout}
-          />
+          <BrukerRad navn={navn} laster={rolleLaster} collapsed={collapsed} onLoggUt={logout} />
         </div>
       </div>
     </aside>

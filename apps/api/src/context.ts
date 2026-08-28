@@ -6,7 +6,7 @@ import {
   requireSession,
   TwoFactorRequiredError,
 } from '@endwise/auth';
-import { createDb, type Database } from '@endwise/db';
+import { createDb, type Database, eq, schema, withTenant } from '@endwise/db';
 import { createEventBus, type EventBus } from '@endwise/events';
 
 export interface AppContext {
@@ -17,6 +17,11 @@ export interface AppContext {
   userId: string | null;
   /** Rollen brukeren har I denne tenanten (F1-05). Null = uautentisert. */
   role: Role | null;
+  /** Jobbfunksjon i tenanten. Null = ikke lastet / ingen profil. */
+  jobFunction: string | null;
+  /** Har rad i mechanics med userId. */
+  isMechanic: boolean;
+  mechanicId: string | null;
 }
 
 let dbSingleton: Database | undefined;
@@ -42,8 +47,45 @@ function getDb(): Database {
 
 const events = createEventBus();
 
+async function lesJobbOgMekaniker(
+  db: Database,
+  tenantId: string,
+  userId: string,
+): Promise<{ jobFunction: string | null; isMechanic: boolean; mechanicId: string | null }> {
+  try {
+    return await withTenant(db, tenantId, async (tx) => {
+      const [profil] = await tx
+        .select({ jobFunction: schema.memberProfiles.jobFunction })
+        .from(schema.memberProfiles)
+        .where(eq(schema.memberProfiles.userId, userId))
+        .limit(1);
+      const [mek] = await tx
+        .select({ id: schema.mechanics.id })
+        .from(schema.mechanics)
+        .where(eq(schema.mechanics.userId, userId))
+        .limit(1);
+      return {
+        jobFunction: profil?.jobFunction ?? null,
+        isMechanic: Boolean(mek),
+        mechanicId: mek?.id ?? null,
+      };
+    });
+  } catch {
+    return { jobFunction: null, isMechanic: false, mechanicId: null };
+  }
+}
+
 export function createAppContext(): AppContext {
-  return { db: getDb(), events, tenantId: null, userId: null, role: null };
+  return {
+    db: getDb(),
+    events,
+    tenantId: null,
+    userId: null,
+    role: null,
+    jobFunction: null,
+    isMechanic: false,
+    mechanicId: null,
+  };
 }
 
 let authSingleton: Auth | undefined;
@@ -79,7 +121,8 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
     if (!tenantId) return { ...base, userId: data.user.id };
     try {
       const role = await assertMember(base.db, data.user.id, tenantId);
-      return { ...base, userId: data.user.id, tenantId, role };
+      const profil = await lesJobbOgMekaniker(base.db, tenantId, data.user.id);
+      return { ...base, userId: data.user.id, tenantId, role, ...profil };
     } catch {
       return { ...base, userId: data.user.id };
     }

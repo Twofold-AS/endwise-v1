@@ -155,10 +155,10 @@ describe('Se verkstedet er URL-lesing', () => {
 
   it('sidebar tvinger Endwise-nav på plattform — også når rollen er dealer_admin', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
-    expect(sidebar).toMatch(/CONTEXTS\.filter\(\(c\) => c\.key === 'endwise'\)/);
-    expect(sidebar).toMatch(/erPlattform \? 'endwise'/);
+    expect(sidebar).toMatch(/shellForBruker/);
+    expect(sidebar).toMatch(/erPlattform/);
     expect(sidebar).toMatch(/endwise_admin/);
-    expect(sidebar).not.toMatch(/contextsForRole\(role, isMechanic, false\)\.filter/);
+    expect(sidebar).not.toMatch(/ContextSwitcher/);
   });
 });
 

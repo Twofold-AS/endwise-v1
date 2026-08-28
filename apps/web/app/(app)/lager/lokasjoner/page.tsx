@@ -5,6 +5,7 @@ import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { CardShell } from '../../_shell/cards';
+import { LagerPiller } from '../../_shell/ansatte-piller';
 import { Feil, Laster, Sidehode, Tomt } from '../_delt';
 
 /**
@@ -39,6 +40,7 @@ export default function LokasjonerPage() {
         tittel="Plass"
         undertittel="Hvor delene fysisk ligger. Koden er den du bruker i hverdagen."
       />
+      <LagerPiller />
 
       {isAdmin && (
         <CardShell className="p-5">

@@ -118,6 +118,60 @@ export const invitasjonerRouter = router({
       };
     }),
 
+  opprettEier: adminProcedure
+    .input(z.object({ epost: z.email().max(200) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!kanEndreJobbfunksjon(ctx.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare forhandlerens leder kan invitere en forhandler.',
+        });
+      }
+      const modul = createInvitasjonsmodul(ctx.db);
+      let resultat: Awaited<ReturnType<typeof modul.opprettEier>>;
+      try {
+        resultat = await modul.opprettEier({
+          tenantId: ctx.tenantId,
+          epost: input.epost,
+          invitedBy: ctx.userId,
+        });
+      } catch (error) {
+        if (error instanceof InvitasjonUgyldigError) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+        }
+        throw error;
+      }
+      const [forhandler] = await withTenant(ctx.db, ctx.tenantId, (tx) =>
+        tx
+          .select({ navn: schema.tenants.name })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.id, ctx.tenantId))
+          .limit(1),
+      );
+      const base = authEnv.baseUrl;
+      const lenke = `${base.replace(/\/$/, '')}/invitasjon/${resultat.token}`;
+      let sendt = true;
+      try {
+        await sendInvitation({
+          to: resultat.invitasjon.epost,
+          lenke,
+          forhandler: forhandler?.navn ?? 'Endwise',
+          funksjon: 'leder',
+          utloper: resultat.invitasjon.utloper,
+        });
+      } catch (error) {
+        sendt = false;
+        console.error(`[invitasjon] e-post feilet: ${(error as Error).message}`);
+      }
+      return {
+        id: resultat.invitasjon.id,
+        epost: resultat.invitasjon.epost,
+        funksjon: 'leder' as const,
+        utloper: resultat.invitasjon.utloper,
+        sendt,
+      };
+    }),
+
   tilbakekall: adminProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ ctx, input }) => {
     const modul = createInvitasjonsmodul(ctx.db);
     const ok = await modul.tilbakekall(ctx.tenantId, input.id);

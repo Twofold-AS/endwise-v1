@@ -74,8 +74,14 @@ export type NavItem = {
    * den forsvinner av seg selv når du har lest artiklene.
    */
   isNew?: boolean;
-  /** Viser dropdown-pil og folder ut underpunktene. */
+  /** Ikke lenger i sidebaren (Jonas 28.08). Piller bor på siden. */
   children?: NavChild[];
+  /** Horisontale piller på destinasjonssiden. Ikke barn i sidebaren. */
+  pills?: NavChild[];
+  /** Visuell skillelinje over raden (Jonas-treet). */
+  dividerBefore?: boolean;
+  /** Butikk-raden skjules når shop-flagget er av. */
+  requiresShopFlag?: boolean;
   /**
    * Bærer et tall på nav-raden.
    * `unread` — uleste meldinger (Innboks). Rød sirkel, hvitt siffer.
@@ -86,8 +92,9 @@ export type NavItem = {
   countKey?: 'kunder' | 'intern' | 'endwise';
 };
 
-const DRIFT: OrgRole[] = ['dealer_staff', 'dealer_admin', 'endwise_admin', 'endwise_support'];
-const ADMIN_OF_TENANT: OrgRole[] = ['dealer_admin', 'endwise_admin'];
+export type ShellKey = 'forhandler' | 'mekaniker' | 'endwise' | 'endwise_partner';
+
+const DRIFT: OrgRole[] = ['dealer_staff', 'dealer_admin'];
 const ENDWISE: OrgRole[] = ['endwise_admin', 'endwise_support'];
 const ENDWISE_STYRING: OrgRole[] = ['endwise_admin'];
 
@@ -169,12 +176,13 @@ export const CONTEXTS: AppContext[] = [
 ];
 
 /*
- * Forhandler — hoveddestinasjonene, topp→bunn
- * (Mikael, signert): dropdowns som i dag, ikke side-piller.
- * Verkstedet er én knapp til Dagen. Prisliste bor under Jobber.
- * Samarbeid er skjult til backend finnes (F5-17 er en blindvei).
- * `/ansatte` er expander — alias-redirect til Forhandleren (første barn).
- * Hjelp i lista er destinasjonen; slideren står nederst over Innstillinger.
+ * Jonas IA 28.08 — fasit. Ett skall, ingen visningsvelger.
+ * Piller på siden. Landing åpner første pille.
+ * Prisliste under Ansatte. Hjelp = /support, ikke slideren.
+ */
+/*
+ * AI-verktøy er parkert — ikke i FORHANDLER_NAV.
+ * Ruter står: `/ai-innsikt`, `/ai-verktoy/diagnose|nettside|nettbutikk`.
  */
 export const FORHANDLER_NAV: NavItem[] = [
   {
@@ -198,15 +206,9 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: ClipboardList,
     href: '/jobber',
     roles: DRIFT,
-    children: [
-      { label: 'Oversikt', href: '/jobber', icon: ClipboardList },
+    pills: [
+      { label: 'Liste', href: '/jobber', icon: ClipboardList },
       { label: 'Kalender', href: '/jobber?visning=kalender', icon: CalendarDays },
-      /**
-       * F2-05/F5-04 — forhandlerens egen katalog (hva kunden betaler).
-       * Flyttet hit. Ingen `roles`: arver drift, så staff ser
-       * prisen. Skriving er `adminProcedure` server-side.
-       */
-      { label: 'Prisliste', href: '/prisliste', icon: Wrench },
     ],
   },
   {
@@ -215,47 +217,72 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Users,
     href: '/kunder',
     roles: DRIFT,
-    children: [
+    pills: [
       { label: 'Kunder', href: '/kunder', icon: Users },
       { label: 'Kjøretøy', href: '/kjoretoy', icon: Car },
     ],
   },
-  /**
-   * AI-verktøy er parkert — ikke i FORHANDLER_NAV.
-   * Ruter står: `/ai-innsikt`, `/ai-verktoy/diagnose|nettside|nettbutikk`.
-   */
   {
-    key: 'team',
-    label: 'Organisasjon',
-    icon: Users,
-    href: '/organisasjon/forhandleren',
-    roles: ADMIN_OF_TENANT,
-    children: [
-      {
-        label: 'Forhandleren',
-        href: '/organisasjon/forhandleren',
-        icon: Building2,
-        roles: ADMIN_OF_TENANT,
-      },
-      { label: 'Team', href: '/innstillinger/team', icon: UserCog, roles: ADMIN_OF_TENANT },
-      { label: 'Kompetanse', href: '/mekanikere/kompetanse', icon: Tags, roles: ADMIN_OF_TENANT },
-      { label: 'Timeplan', href: '/mekanikere/kapasitet', icon: Gauge, roles: ADMIN_OF_TENANT },
+    key: 'lager',
+    label: 'Lager',
+    icon: Package,
+    href: '/lager',
+    roles: DRIFT,
+    pills: [
+      { label: 'Oversikt', href: '/lager', icon: LayoutDashboard },
+      { label: 'Deler', href: '/lager/deler', icon: Package },
+      { label: 'Plass', href: '/lager/lokasjoner', icon: MapPin },
+      { label: 'Inn og ut', href: '/lager/bevegelser', icon: ArrowLeftRight },
     ],
+  },
+  {
+    key: 'butikk',
+    label: 'Butikk',
+    icon: Store,
+    href: '/butikk',
+    roles: DRIFT,
+    requiresShopFlag: true,
+    pills: [
+      { label: 'Katalog', href: '/butikk', icon: Package },
+      { label: 'Handlekurv / kasse', href: '/butikk/kasse', icon: ShoppingCart },
+    ],
+  },
+  {
+    key: 'samarbeid',
+    label: 'Samarbeid',
+    icon: MessageSquarePlus,
+    href: '/samarbeid',
+    roles: DRIFT,
+    dividerBefore: true,
   },
   {
     key: 'analyse',
     label: 'Rapporter',
     icon: ChartLine,
     href: '/rapporter',
-    roles: ADMIN_OF_TENANT,
+    roles: DRIFT,
+  },
+  {
+    key: 'team',
+    label: 'Ansatte',
+    icon: UserCog,
+    href: '/innstillinger/team',
+    roles: DRIFT,
+    pills: [
+      { label: 'Team', href: '/innstillinger/team', icon: UserCog },
+      { label: 'Prisliste', href: '/prisliste', icon: Wrench },
+      { label: 'Kompetanse', href: '/mekanikere/kompetanse', icon: Tags },
+      { label: 'Timeplan', href: '/mekanikere/kapasitet', icon: Gauge },
+    ],
   },
   {
     key: 'helpdesk',
     label: 'Hjelp',
     icon: LifeBuoy,
-    href: '/hjelp',
+    href: '/support',
     roles: DRIFT,
     badge: 'helpdesk',
+    dividerBefore: true,
   },
 ];
 
@@ -284,6 +311,23 @@ export const MEKANIKER_NAV: NavItem[] = [
     roles: DRIFT,
   },
   {
+    key: 'lager',
+    label: 'Lager',
+    icon: Package,
+    href: '/lager',
+    roles: DRIFT,
+    pills: [{ label: 'Oversikt', href: '/lager', icon: LayoutDashboard }],
+  },
+  {
+    key: 'butikk',
+    label: 'Butikk',
+    icon: Store,
+    href: '/butikk',
+    roles: DRIFT,
+    requiresShopFlag: true,
+    pills: [{ label: 'Katalog', href: '/butikk', icon: Package }],
+  },
+  {
     key: 'min-kompetanse',
     label: 'Kompetanse',
     icon: Tags,
@@ -297,8 +341,15 @@ export const MEKANIKER_NAV: NavItem[] = [
     href: '/min-dag/timeplan',
     roles: DRIFT,
   },
-  // Samme «Meg» som i bunnmenyen. Mekanikervisningen har ÉN layout;
-  // en admin som ser den i sidebaren skal se de samme punktene.
+  {
+    key: 'helpdesk',
+    label: 'Hjelp',
+    icon: LifeBuoy,
+    href: '/support',
+    roles: DRIFT,
+    badge: 'helpdesk',
+    dividerBefore: true,
+  },
   { key: 'min-meg', label: 'Meg', icon: CircleUser, href: '/min-dag/meg', roles: DRIFT },
 ];
 
@@ -357,10 +408,6 @@ export const ENDWISE_NAV: NavItem[] = [
     href: '/endwise',
     roles: ENDWISE,
   },
-  /**
-   * ForhandlerEndwise. Ikke en Admin-tab, ikke butikk.
-   * Lista er `listPlatformSupport` (dealer_admin på tvers av tenants).
-   */
   {
     key: 'endwise-innboks',
     label: 'Innboks',
@@ -371,18 +418,18 @@ export const ENDWISE_NAV: NavItem[] = [
     countKey: 'endwise',
   },
   {
-    key: 'endwise-team',
-    label: 'Team',
-    icon: Users,
-    href: '/endwise/team',
-    roles: ENDWISE_STYRING,
-  },
-  {
     key: 'endwise-forhandlere',
     label: 'Forhandlere',
     icon: Building2,
     href: '/endwise/forhandlere',
     roles: ENDWISE,
+  },
+  {
+    key: 'endwise-team',
+    label: 'Team',
+    icon: Users,
+    href: '/endwise/team',
+    roles: ENDWISE_STYRING,
   },
   /**
    * Hjelpeartiklene skrives her, ikke i forhandlerens Innstillinger.
@@ -454,12 +501,49 @@ export function contextsForRole(
   );
 }
 
+export function shellForBruker(input: {
+  role: OrgRole | null;
+  jobFunction?: string | null;
+  isMechanic?: boolean;
+  erPlattform?: boolean;
+}): ShellKey {
+  if (input.erPlattform || input.role === 'endwise_admin' || input.role === 'endwise_support') {
+    return input.role === 'endwise_support' ? 'endwise_partner' : 'endwise';
+  }
+  const kunMekaniker =
+    input.role === 'dealer_staff' &&
+    (Boolean(input.isMechanic) || input.jobFunction === 'mekaniker');
+  return kunMekaniker ? 'mekaniker' : 'forhandler';
+}
+
+export function navForShell(shell: ShellKey): NavItem[] {
+  if (shell === 'mekaniker') return MEKANIKER_NAV;
+  if (shell === 'endwise' || shell === 'endwise_partner') return ENDWISE_NAV;
+  return FORHANDLER_NAV;
+}
+
 export function navForContext(context: ContextKey): NavItem[] {
   if (context === 'mekaniker') return MEKANIKER_NAV;
   if (context === 'endwise') return ENDWISE_NAV;
   if (context === 'lager') return LAGER_NAV;
   if (context === 'butikk') return BUTIKK_NAV;
   return FORHANDLER_NAV;
+}
+
+export function erTillattMekanikerSti(pathname: string): boolean {
+  if (pathname.startsWith('/min-dag')) return true;
+  if (pathname.startsWith('/mekaniker/')) return true;
+  if (pathname === '/lager') return true;
+  if (pathname === '/butikk') return true;
+  if (pathname === '/support' || pathname === '/hjelp') return true;
+  return false;
+}
+
+/** Settings-blokka nederst — ulik per skall, `null` = ingen (mekaniker har Meg). */
+export function settingsForShell(shell: ShellKey): NavItem | null {
+  if (shell === 'forhandler') return SETTINGS_NAV;
+  if (shell === 'endwise' || shell === 'endwise_partner') return ENDWISE_SETTINGS_NAV;
+  return null;
 }
 
 /** Settings-blokka nederst — ulik per kontekst, `null` = ingen. */
@@ -470,8 +554,14 @@ export function settingsForContext(context: ContextKey): NavItem | null {
 }
 
 /** Radene i en kontekst som rollen skal se. */
-export function itemsForRole(items: NavItem[], role: OrgRole | null): NavItem[] {
-  return items.filter((i) => role != null && i.roles.includes(role));
+export function itemsForRole(
+  items: NavItem[],
+  role: OrgRole | null,
+  shopEnabled = true,
+): NavItem[] {
+  return items.filter(
+    (i) => role != null && i.roles.includes(role) && (!i.requiresShopFlag || shopEnabled),
+  );
 }
 
 /** Underpunktene i en destinasjon som rollen skal se. */
@@ -519,8 +609,8 @@ function pathTreffer(pathname: string, href: string): boolean {
 }
 
 /**
- * Dealer-Innstillinger-stier (pille-fanene). Ikke Team/tjenestekatalog
- * Prisliste bor under Jobber, Team under Organisasjon.
+ * Dealer-Innstillinger-stier (pille-fanene). Ikke Team/Prisliste —
+ * de bor under Ansatte.
  */
 const SETTINGS_STIER = [
   '/innstillinger/profil',
@@ -559,7 +649,11 @@ export function isItemActive(item: NavItem, pathname: string): boolean {
       pathname.startsWith('/innstillinger/profil/')
     );
   }
-  const hrefs = [item.href, ...(item.children?.map((c) => c.href) ?? [])];
+  const hrefs = [
+    item.href,
+    ...(item.pills?.map((c) => c.href) ?? []),
+    ...(item.children?.map((c) => c.href) ?? []),
+  ];
   return hrefs.some((h) => pathTreffer(pathname, h));
 }
 
@@ -570,8 +664,6 @@ export function isItemActive(item: NavItem, pathname: string): boolean {
 export function contextForPath(pathname: string): ContextKey {
   if (pathname.startsWith('/min-dag') || pathname.startsWith('/mekaniker/')) return 'mekaniker';
   if (pathname.startsWith('/endwise')) return 'endwise';
-  if (pathname.startsWith('/lager')) return 'lager';
-  if (pathname.startsWith('/butikk')) return 'butikk';
   return 'forhandler';
 }
 
@@ -615,7 +707,7 @@ export function breadcrumbFor(
   // Undervisning: match først på query (?kanal=/?visning=), så på sti. Et
   // underpunkt med query må matche både sti og query — ellers ville «Oversikt»
   // (uten query) alltid vunnet over «Kalender» på samme sti.
-  const barn = item.children ?? [];
+  const barn = item.pills ?? item.children ?? [];
   const child =
     barn.find((c) => {
       const [cPath, cQuery] = c.href.split('?');
@@ -655,9 +747,9 @@ export const PARKED_LABEL: Record<string, string> = {
   '/admin/logg': 'Parkert · Aktivitetslogg',
   '/bookinger': 'Jobber (gammel sti)',
   '/kalender': 'Jobber · Kalender (gammel sti)',
-  '/mekanikere': 'Organisasjon · Mekanikere',
-  '/mekanikere/kompetanse': 'Organisasjon · Kompetanse',
-  '/mekanikere/kapasitet': 'Organisasjon · Timeplan',
+  '/mekanikere': 'Ansatte · Mekanikere',
+  '/mekanikere/kompetanse': 'Ansatte · Kompetanse',
+  '/mekanikere/kapasitet': 'Ansatte · Timeplan',
   '/tjenester': 'Tjenester & priser',
   '/innstillinger/profil': 'Innstillinger · Profil',
   '/innstillinger/varsler': 'Innstillinger · Varsler',
@@ -669,15 +761,15 @@ export const PARKED_LABEL: Record<string, string> = {
   '/jobber': 'Jobber',
   '/rapporter': 'Rapporter',
   '/verkstedet': 'Verkstedet',
-  '/ansatte': 'Organisasjon',
-  '/forhandleren': 'Organisasjon · Forhandleren',
-  '/organisasjon/forhandleren': 'Organisasjon · Forhandleren',
+  '/ansatte': 'Ansatte',
+  '/forhandleren': 'Forhandleren',
+  '/organisasjon/forhandleren': 'Forhandleren',
   '/innstillinger/koblinger': 'Innstillinger · Koblinger',
   '/innstillinger/integrasjoner': 'Innstillinger · Koblinger',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
   '/endwise/innstillinger': 'Endwise · Dev-mode',
-  '/innstillinger/tjenestekatalog': 'Jobber · Prisliste',
-  '/prisliste': 'Jobber · Prisliste',
+  '/innstillinger/tjenestekatalog': 'Ansatte · Prisliste',
+  '/prisliste': 'Ansatte · Prisliste',
   '/butikk': 'Butikk · Katalog',
   '/butikk/kasse': 'Butikk · Handlekurv / kasse',
   '/lager/deler': 'Lager · Deler',

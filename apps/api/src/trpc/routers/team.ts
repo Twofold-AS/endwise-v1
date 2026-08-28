@@ -13,7 +13,7 @@ import {
 } from '@endwise/modules/profil';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { adminProcedure, router } from '../init.ts';
+import { adminProcedure, router, staffProcedure } from '../init.ts';
 import {
   hashTeamBekreftelse,
   kodeMatcher,
@@ -57,7 +57,7 @@ export const teamRouter = router({
    * `directory.participants` — se doc-kommentaren der for hvorfor det er
    * viktigere enn det ser ut.
    */
-  list: adminProcedure.query(async ({ ctx }) => {
+  list: staffProcedure.query(async ({ ctx }) => {
     const medlemmer = await ctx.db
       .select({
         userId: schema.member.userId,
@@ -324,22 +324,14 @@ export const teamRouter = router({
       }
 
       const oppgitt = input.epost?.trim().toLowerCase();
-      const epost = oppgitt || `u-${randomUUID()}${UTEN_INNLOGGING_SUFFIKS}`;
-
       if (oppgitt) {
-        const [finnes] = await ctx.db
-          .select({ id: schema.user.id })
-          .from(schema.user)
-          .where(eq(schema.user.email, oppgitt))
-          .limit(1);
-        if (finnes) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message:
-              'E-posten er allerede i bruk. Inviter personen hvis hen skal logge inn, eller bruk en annen adresse.',
-          });
-        }
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'Bruk invitasjon når personen skal logge inn. Ikke opprett en konto uten passord på en ekte e-post.',
+        });
       }
+      const epost = `u-${randomUUID()}${UTEN_INNLOGGING_SUFFIKS}`;
 
       const userId = randomUUID();
       let mechanicId: string | null = null;
@@ -400,7 +392,7 @@ export const teamRouter = router({
    * Planlagte jobber — bookinger knyttet til mekanikerprofilen.
    * Selger/support uten mekanikerprofil får ærlig tom liste.
    */
-  jobber: adminProcedure
+  jobber: staffProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       await assertMedlem(ctx, input.userId);

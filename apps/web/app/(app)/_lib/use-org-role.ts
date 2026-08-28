@@ -35,6 +35,7 @@ export function useOrgRole(): {
     isMechanic: boolean;
   }>;
   isMechanic: boolean;
+  jobbfunksjon: string | null;
   isDealerAdmin: boolean;
   isEndwiseAdmin: boolean;
   isEndwiseSupport: boolean;
@@ -76,6 +77,7 @@ export function useOrgRole(): {
     plattformTenantId: me.data?.plattformTenantId ?? null,
     verksteder: me.data?.verksteder ?? [],
     isMechanic: me.data?.isMechanic ?? false,
+    jobbfunksjon: me.data?.jobbfunksjon ?? null,
     isDealerAdmin: role === 'dealer_admin' || role === 'endwise_admin',
     isEndwiseAdmin: role === 'endwise_admin',
     isEndwiseSupport: role === 'endwise_support',

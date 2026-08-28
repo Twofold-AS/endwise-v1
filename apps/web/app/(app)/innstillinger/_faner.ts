@@ -2,11 +2,10 @@
  * Innstillinger som én flate med pille-faner.
  * Fanerekkefølge : Profil · Koblinger · Abonnement
  * Varsler · Tjenester & priser.
- * Team er ikke en fane — #41 la destinasjonen i sidebaren
- * (`/innstillinger/team`), 26.08 omdøpt til Organisasjon. Admin-faner
- * skjules for ikke-admin, og hele dealer-huben (Abonnement, Koblinger,
- * Varsler, Tjenester & priser) skjules for Endwise-plattform. «Bytt konto /
- * mekaniker» er ikke en fane — visningsbytte bor i sidebar-headeren.
+ * Team er ikke en fane — destinasjonen er Ansatte i sidebaren
+ * (`/innstillinger/team`). Admin-faner skjules for ikke-admin, og hele
+ * dealer-huben (Abonnement, Koblinger, Tjenester & priser) skjules for
+ * selger/support og Endwise-plattform. Ingen visningsvelger.
  */
 
 export const FANE_IDS = ['profil', 'integrasjoner', 'abonnement', 'varsler', 'tjenester'] as const;

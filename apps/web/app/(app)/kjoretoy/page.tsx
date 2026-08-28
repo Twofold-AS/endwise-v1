@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { KunderPiller } from '../_shell/ansatte-piller';
 import { EuFrist, Feil, Laster, Tomt, TYPE_LABEL } from '../kunder/_delt';
 
 /**
@@ -38,6 +39,9 @@ function KjoretoyInner() {
       <div>
         <h1 className="sr-only">Kjøretøy</h1>
         <p className="text-title text-fg">Kjøretøy</p>
+        <div className="mt-3">
+          <KunderPiller />
+        </div>
         <p className="text-body text-fg-muted">
           Søk på registreringsnummer, understellsnummer, merke eller modell.
         </p>

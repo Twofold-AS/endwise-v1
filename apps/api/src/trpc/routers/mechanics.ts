@@ -119,7 +119,7 @@ export const mechanicsRouter = router({
     }),
   ),
 
-  create: protectedProcedure
+  create: adminProcedure
     .input(
       z.object({
         name: z.string().min(1),

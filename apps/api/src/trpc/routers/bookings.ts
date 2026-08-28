@@ -24,7 +24,8 @@ import {
 } from '@endwise/modules/booking';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { protectedProcedure, router } from '../init.ts';
+import { erMekanikerKonto } from '@endwise/auth';
+import { protectedProcedure, router, staffProcedure } from '../init.ts';
 
 const status = z.enum(['draft', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show']);
 
@@ -150,7 +151,7 @@ async function attachJobLines<
 
 export const bookingsRouter = router({
   /** F3-11 / F3-09 — Internt jobb-inntak. Flere tjenester + manuell varighet. */
-  create: protectedProcedure
+  create: staffProcedure
     .input(
       z.object({
         mechanicId: z.uuid(),
@@ -183,6 +184,21 @@ export const bookingsRouter = router({
     .input(z.object({ bookingId: z.uuid(), to: status }))
     .mutation(async ({ ctx, input }) => {
       try {
+        if (erMekanikerKonto(ctx) && ctx.mechanicId) {
+          const [rad] = await withTenant(ctx.db, ctx.tenantId, (tx) =>
+            tx
+              .select({ mechanicId: schema.bookings.mechanicId })
+              .from(schema.bookings)
+              .where(eq(schema.bookings.id, input.bookingId))
+              .limit(1),
+          );
+          if (!rad || rad.mechanicId !== ctx.mechanicId) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Mekaniker har ikke tilgang til denne jobben.',
+            });
+          }
+        }
         // ctx.userId → audit-loggens actor (F1-06). Gjelder også «Min dag».
         return await transitionBooking(ctx.db, ctx.tenantId, input.bookingId, input.to, ctx.userId);
       } catch (error) {
@@ -211,7 +227,9 @@ export const bookingsRouter = router({
       withTenant(ctx.db, ctx.tenantId, async (tx) => {
         const conditions = [];
         if (input.status) conditions.push(eq(schema.bookings.status, input.status));
-        if (input.mechanicId) conditions.push(eq(schema.bookings.mechanicId, input.mechanicId));
+        const egetVerksted = erMekanikerKonto(ctx) && ctx.mechanicId;
+        const mekanikerFilter = egetVerksted ? ctx.mechanicId : input.mechanicId;
+        if (mekanikerFilter) conditions.push(eq(schema.bookings.mechanicId, mekanikerFilter));
         if (input.from) conditions.push(gte(schema.bookings.startsAt, input.from));
         if (input.to) conditions.push(lte(schema.bookings.startsAt, input.to));
         if (input.search) {
@@ -258,6 +276,12 @@ export const bookingsRouter = router({
         .where(eq(schema.bookings.id, input.id))
         .limit(1);
       if (!booking) return null;
+      if (erMekanikerKonto(ctx) && ctx.mechanicId && booking.mechanicId !== ctx.mechanicId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Mekaniker har ikke tilgang til denne jobben.',
+        });
+      }
       const [enriched] = await attachJobLines(tx, [booking]);
       if (!enriched) return null;
 
@@ -316,7 +340,11 @@ export const bookingsRouter = router({
             and(
               lt(schema.bookings.startsAt, input.to),
               gt(schema.bookings.endsAt, input.from),
-              input.mechanicId ? eq(schema.bookings.mechanicId, input.mechanicId) : undefined,
+              (erMekanikerKonto(ctx) && ctx.mechanicId
+                ? eq(schema.bookings.mechanicId, ctx.mechanicId)
+                : input.mechanicId
+                  ? eq(schema.bookings.mechanicId, input.mechanicId)
+                  : undefined),
             ),
           )
           .orderBy(schema.bookings.startsAt);

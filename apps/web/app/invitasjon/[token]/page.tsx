@@ -28,7 +28,8 @@ import {
  * A. Her: sett/bytt passord
  * B. 2FA hvis rollen krever det — kode i samme chrome, ikke «logg inn igjen»
  * C. Eier: `/oppstart`. Ansatt: `session.me.landing`.
- * Fersk invitee (`kreverPassord`) sendes aldri til `/signin`.
+ * Invitee sendes aldri til `/signin` for å hoppe over 2FA — heller ikke
+ * når kontoen finnes fra før.
  * Hard navigasjon (`location.assign`) — myk klientnavigasjon er dobbel-login-bugen.
  * Aktiv organisasjon settes før navigasjon, ellers er dashbordet tomt til
  * neste innlogging.
@@ -47,6 +48,7 @@ type Invitasjon = {
   utloper: string;
   harKonto: boolean;
   kreverPassord: boolean;
+  krever2FA?: boolean;
 };
 
 const FUNKSJONSTEKST: Record<string, string> = {
@@ -181,7 +183,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         body: JSON.stringify({
           token,
           navn: navn.trim(),
-          ...(inv.kreverPassord ? { passord: trimmedPassord } : {}),
+          passord: trimmedPassord,
         }),
       });
       const data = await res.json();
@@ -191,11 +193,6 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
       }
 
       setFerdig(true);
-
-      if (!inv.kreverPassord) {
-        window.location.assign('/signin');
-        return;
-      }
 
       const inn = await authClient.signIn.email({
         email: inv.epost,
@@ -416,22 +413,25 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                 />
               </Field>
 
-              {inv.kreverPassord ? (
-                <PassordFelt
-                  id="inv-passord"
-                  label={inv.harKonto ? 'Sett eller bytt passord' : 'Velg et passord'}
-                  value={passord}
-                  onChange={setPassord}
-                  autoComplete="new-password"
-                  minLength={12}
-                  beskrivelse="Minst 12 tegn. Etterpå setter du opp tofaktor — det er påkrevd."
-                />
-              ) : (
-                <p className="text-[12px] text-fg-muted leading-relaxed">
-                  Du har allerede en Endwise-konto på denne e-posten. Vi legger deg til hos{' '}
-                  {inv.forhandler} — logg inn med passordet du har fra før.
-                </p>
-              )}
+              <PassordFelt
+                id="inv-passord"
+                label={
+                  inv.harKonto && inv.kind !== 'owner'
+                    ? 'Passordet ditt'
+                    : inv.harKonto
+                      ? 'Sett eller bytt passord'
+                      : 'Velg et passord'
+                }
+                value={passord}
+                onChange={setPassord}
+                autoComplete={inv.harKonto ? 'current-password' : 'new-password'}
+                minLength={12}
+                beskrivelse={
+                  inv.harKonto
+                    ? 'Skriv passordet til kontoen. Tofaktor er påkrevd — vi hopper den aldri over.'
+                    : 'Minst 12 tegn. Etterpå setter du opp tofaktor — det er påkrevd.'
+                }
+              />
 
               {feil ? (
                 <p role="alert" className="text-[12px] text-danger">
@@ -449,10 +449,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                 errorText="Prøv igjen"
                 icon={<Lock size={15} />}
                 disabled={
-                  sender ||
-                  ferdig ||
-                  navn.trim().length < 2 ||
-                  (inv.kreverPassord && passord.length < 12)
+                  sender || ferdig || navn.trim().length < 2 || passord.length < 12
                 }
               >
                 Fortsett

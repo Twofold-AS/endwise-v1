@@ -11,11 +11,12 @@ function les(rel: string) {
 }
 
 describe('Organisasjon › Forhandleren', () => {
-  it('nav-barn er Forhandleren, Team, Kompetanse, Timeplan', () => {
+  it('Ansatte-piller er Team, Prisliste, Kompetanse, Timeplan — ikke Forhandleren', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
-    expect(org?.children?.map((c) => c.label)).toEqual([
-      'Forhandleren',
+    expect(org?.label).toBe('Ansatte');
+    expect(org?.pills?.map((c) => c.label)).toEqual([
       'Team',
+      'Prisliste',
       'Kompetanse',
       'Timeplan',
     ]);
@@ -36,9 +37,9 @@ describe('Organisasjon › Forhandleren', () => {
     expect(kort).toMatch(/!Array\.isArray\(data\.leftover\)/);
   });
 
-  it('breadcrumb er Organisasjon · Forhandleren', () => {
+  it('Forhandleren er ikke en nav-rad', () => {
+    expect(FORHANDLER_NAV.some((i) => i.label === 'Forhandleren')).toBe(false);
     expect(breadcrumbFor('/organisasjon/forhandleren', '', 'forhandler')).toEqual([
-      { label: 'Organisasjon', href: '/organisasjon/forhandleren' },
       { label: 'Forhandleren' },
     ]);
   });

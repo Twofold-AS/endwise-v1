@@ -159,7 +159,7 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(avatar).not.toMatch(/from '@\/components\/ui\/collapsible'/);
   });
 
-  it('ingen sticky Save-bar, ingen grønn switch/save, Organisasjon ligger i sidebaren', () => {
+  it('ingen sticky Save-bar, ingen grønn switch/save, Ansatte ligger i sidebaren', () => {
     expect(skall).not.toMatch(/sticky/);
     expect(skall).not.toMatch(/bg-success|bg-green|#1ED27D|#22c55e/);
     expect(page).not.toMatch(/Search settings/);
@@ -176,6 +176,6 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(settings).not.toMatch(/label: 'Admin'/);
     expect(nav).toMatch(/key: 'team'/);
     expect(nav).toMatch(/href: '\/innstillinger\/team'/);
-    expect(nav).toMatch(/label: 'Organisasjon'/);
+    expect(nav).toMatch(/label: 'Ansatte'/);
   });
 });

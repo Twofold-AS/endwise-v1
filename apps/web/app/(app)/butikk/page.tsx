@@ -4,6 +4,7 @@ import { Button, Package, Store } from '@endwise/ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { ButikkPiller } from '../_shell/ansatte-piller';
 import { CardShell } from '../_shell/cards';
 import { antallIKurv, leggIKurv } from './_kurv';
 
@@ -34,6 +35,9 @@ export default function ButikkKatalogPage() {
         <p className="text-body text-fg-muted">
           Aktive deler med utsalgspris. Tilgjengelig = på lager minus reservert.
         </p>
+        <div className="mt-3">
+          <ButikkPiller />
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-3">

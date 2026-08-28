@@ -4,7 +4,10 @@ import { ArrowLeftRight, MapPin, Package, TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
+import { useOrgRole } from '../_lib/use-org-role';
+import { LagerPiller } from '../_shell/ansatte-piller';
 import { CardShell } from '../_shell/cards';
+import { shellForBruker } from '../_shell/nav';
 import { Beholdning, Feil, Laster, Sidehode, Tomt } from './_delt';
 
 /**
@@ -14,6 +17,14 @@ import { Beholdning, Feil, Laster, Sidehode, Tomt } from './_delt';
  * siden som krever en handling.
  */
 export default function LagerOversiktPage() {
+  const { role, jobbfunksjon, isMechanic, erPlattform } = useOrgRole();
+  const kunMekaniker =
+    shellForBruker({
+      role,
+      jobFunction: jobbfunksjon,
+      isMechanic,
+      erPlattform,
+    }) === 'mekaniker';
   const oppsummering = trpc.inventory.summary.useQuery();
   const lave = trpc.inventory.listParts.useQuery({
     sorter: 'sku',
@@ -30,6 +41,7 @@ export default function LagerOversiktPage() {
         tittel="Lager"
         undertittel="Deler, beholdning og inn og ut. Kjerne — ikke et tillegg."
       />
+      <LagerPiller />
 
       {oppsummering.isError ? (
         <Feil melding={oppsummering.error.message} />
@@ -68,12 +80,14 @@ export default function LagerOversiktPage() {
       <section className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-title text-fg">Må bestilles</h2>
-          <Link
-            href={'/lager/deler' as Route}
-            className="text-[12px] text-fg-muted transition-colors hover:text-fg"
-          >
-            Se alle deler →
-          </Link>
+          {!kunMekaniker ? (
+            <Link
+              href={'/lager/deler' as Route}
+              className="text-[12px] text-fg-muted transition-colors hover:text-fg"
+            >
+              Se alle deler →
+            </Link>
+          ) : null}
         </div>
 
         {lave.isLoading ? (

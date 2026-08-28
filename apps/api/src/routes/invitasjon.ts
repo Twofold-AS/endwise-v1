@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { createAuth, settPassordUtenSesjon } from '@endwise/auth';
+import { createAuth, rolleKrever2FA, settPassordUtenSesjon } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import {
   type ApenInvitasjon,
@@ -106,8 +106,8 @@ invitasjon.get('/:token', async (c) => {
       .limit(1),
   );
 
-  // Finnes brukeren fra før? Da skal skjemaet be om samtykke, ikke om passord
-  // — med mindre hen mangler credential-konto (kan ikke logge inn).
+  // 2FA-pliktig rolle: passord + kode i samme skall, også om kontoen finnes.
+  // Uten credential (Opprett ansatt, deretter invitert): passord uansett.
   const [eksisterende] = await db()
     .select({ id: schema.user.id })
     .from(schema.user)
@@ -115,6 +115,14 @@ invitasjon.get('/:token', async (c) => {
     .limit(1);
   const harCredential = eksisterende ? await harCredentialKonto(eksisterende.id) : false;
 
+  const krever2FA = rolleKrever2FA(inv.rolle);
+  const kreverPassord =
+    krever2FA ||
+    inviteeKreverPassord({
+      kind: inv.kind,
+      harBruker: Boolean(eksisterende),
+      harCredential,
+    });
   return c.json({
     gyldig: true,
     epost: inv.epost,
@@ -124,11 +132,8 @@ invitasjon.get('/:token', async (c) => {
     forhandler: inv.kind === 'platform' ? 'Endwise' : (forhandler?.navn ?? 'Endwise'),
     utloper: inv.utloper,
     harKonto: Boolean(eksisterende),
-    kreverPassord: inviteeKreverPassord({
-      kind: inv.kind,
-      harBruker: Boolean(eksisterende),
-      harCredential,
-    }),
+    krever2FA,
+    kreverPassord,
   });
 });
 
@@ -190,16 +195,20 @@ invitasjon.post('/godta', async (c) => {
     .limit(1);
   const harCredential = eksisterende ? await harCredentialKonto(eksisterende.id) : false;
 
-  const kreverPassord = inviteeKreverPassord({
-    kind: inv.kind,
-    harBruker: Boolean(eksisterende),
-    harCredential,
-  });
+  const krever2FA = rolleKrever2FA(inv.rolle);
+  const kreverPassord =
+    krever2FA ||
+    inviteeKreverPassord({
+      kind: inv.kind,
+      harBruker: Boolean(eksisterende),
+      harCredential,
+    });
   if (kreverPassord && !parsed.data.passord) {
     return c.json(
       {
-        error:
-          inv.kind === 'owner'
+        error: krever2FA
+          ? 'Passord kreves. Tofaktor er påkrevd for denne rollen.'
+          : inv.kind === 'owner'
             ? 'Sett eller bytt passord (minst 12 tegn).'
             : 'Passord kreves for en ny konto.',
       },
@@ -242,18 +251,32 @@ invitasjon.post('/godta', async (c) => {
        * som krever 2FA (F1-11), og skal gjennom oppsettet selv. Å sette den her
        * ville gitt en konto som består 2FA-gaten uten at noen kode er tastet.
        */
-      await db().update(schema.user).set({ emailVerified: true }).where(eq(schema.user.id, userId));
-    } else if (parsed.data.passord && (inv.kind === 'owner' || !harCredential)) {
-      await settPassordUtenSesjon(db(), userId, parsed.data.passord);
       await db()
         .update(schema.user)
-        .set({ name: parsed.data.navn, emailVerified: true })
+        .set({
+          name: parsed.data.navn,
+          email: inv.epost,
+          emailVerified: true,
+        })
+        .where(eq(schema.user.id, userId));
+    } else {
+      if (parsed.data.passord && (inv.kind === 'owner' || !harCredential)) {
+        await settPassordUtenSesjon(db(), userId, parsed.data.passord);
+      }
+      await db()
+        .update(schema.user)
+        .set({
+          name: parsed.data.navn,
+          email: inv.epost,
+          emailVerified: true,
+        })
         .where(eq(schema.user.id, userId));
     }
 
     // 4. Medlemskap + profil, i tenanten fra raden.
+    // Alltid invitert rolle — aldri behold en høyere rolle («ikke elevere»).
     const [alleredeMedlem] = await db()
-      .select({ id: schema.member.id })
+      .select({ id: schema.member.id, role: schema.member.role })
       .from(schema.member)
       .where(
         and(
@@ -275,6 +298,11 @@ invitasjon.post('/godta', async (c) => {
           role: inv.rolle,
           createdAt: new Date(),
         });
+    } else if (alleredeMedlem.role !== inv.rolle) {
+      await db()
+        .update(schema.member)
+        .set({ role: inv.rolle })
+        .where(eq(schema.member.id, alleredeMedlem.id));
     }
 
     if (inv.kind !== 'platform' && inv.funksjon) {
@@ -291,6 +319,24 @@ invitasjon.post('/godta', async (c) => {
             set: { jobFunction: inv.funksjon, updatedAt: new Date() },
           }),
       );
+    }
+
+    if (inv.funksjon === 'mekaniker') {
+      await withTenant(db(), inv.tenantId, async (tx) => {
+        const [finnes] = await tx
+          .select({ id: schema.mechanics.id })
+          .from(schema.mechanics)
+          .where(eq(schema.mechanics.userId, userId as string))
+          .limit(1);
+        if (!finnes) {
+          await tx.insert(schema.mechanics).values({
+            tenantId: inv.tenantId,
+            userId: userId as string,
+            name: parsed.data.navn,
+            capacity: 1,
+          });
+        }
+      });
     }
 
     return c.json({

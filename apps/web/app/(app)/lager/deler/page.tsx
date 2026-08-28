@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { LagerPiller } from '../../_shell/ansatte-piller';
 import { Beholdning, Feil, kroner, Laster, Sidehode, Tomt } from '../_delt';
 import { BevegelseDialog } from './_bevegelse-dialog';
 
@@ -49,6 +50,7 @@ function DelerInner() {
         tittel="Deler"
         undertittel="Tilgjengelig = på lager minus reservert. Det er tallet som gjelder."
       />
+      <LagerPiller />
 
       {/* Søk + sortering */}
       <div className="flex flex-wrap items-center gap-2">

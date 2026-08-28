@@ -76,30 +76,22 @@ describe('CountBadge er samme badge-form som Ny', () => {
   });
 });
 
-describe('NavRow: Ny først, teller i chevron-sporet uten barn', () => {
+describe('NavRow: Ny først, teller etter label, ingen barn', () => {
   const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
   const navRow = sidebar.slice(
     sidebar.indexOf('function NavRow'),
     sidebar.indexOf('function medFra'),
   );
-  const innhold = navRow.slice(navRow.indexOf('const innhold'), navRow.indexOf('const radKlasse'));
-
   it('NewBadge kommer før telleren i radinnholdet (første merke etter label)', () => {
-    const ny = innhold.indexOf('<NewBadge');
-    const teller = innhold.indexOf('{teller}');
+    const ny = navRow.indexOf('<NewBadge');
+    const teller = navRow.indexOf('count > 0 ? teller');
     expect(ny).toBeGreaterThan(-1);
     expect(teller).toBeGreaterThan(ny);
   });
 
-  it('rader uten barn: CountBadge i høyre spor, ikke foran 14px-plassholder', () => {
-    expect(navRow).toMatch(/const harBarn = children\.length > 0/);
-    expect(navRow).toMatch(/<ChevronDown/);
-    expect(navRow).toMatch(/w-3\.5/);
-    expect(innhold).toMatch(/: count > 0 \? \(\s*teller\s*\) : \(\s*chevronPlass/);
-  });
-
-  it('rader med barn: chevron ytterst, teller før pilen', () => {
-    expect(innhold).toMatch(/harBarn \?[\s\S]*\{teller\}[\s\S]*\{chevronPlass\}/);
+  it('rader uten barn i sidebaren: CountBadge etter label, ingen chevron', () => {
+    expect(navRow).not.toMatch(/ChevronDown|harBarn|childrenForRole/);
+    expect(navRow).toMatch(/count > 0 \? teller/);
   });
 });
 

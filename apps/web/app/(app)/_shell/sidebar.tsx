@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  ChevronDown,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuHeader,
@@ -13,7 +12,7 @@ import {
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import {
@@ -25,30 +24,25 @@ import {
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
 import { BEVEL, CountBadge, NewBadge } from './cards';
-import { ContextSwitcher } from './context-switcher';
 import {
-  CONTEXTS,
-  type ContextKey,
-  childrenForRole,
-  contextForPath,
-  contextsForRole,
   FORHANDLER_NAV,
   isItemActive,
   itemsForRole,
   type NavItem,
-  navForContext,
+  navForShell,
   QUICK_ACTIONS,
-  settingsForContext,
-  stierFor,
+  settingsForShell,
+  shellForBruker,
 } from './nav';
+import { SidebarHeader } from './sidebar-header';
 import { useSidebarState } from './sidebar-state';
 import { TipCard } from './tip-card';
 
 const ROLE_LABEL: Record<string, string> = {
-  dealer_admin: 'Forhandler-admin',
+  dealer_admin: 'Forhandler',
   dealer_staff: 'Ansatt',
   endwise_admin: 'Endwise-admin',
-  endwise_support: 'Endwise-support',
+  endwise_support: 'Endwise-partner',
   customer: 'Kunde',
 };
 
@@ -64,13 +58,9 @@ const IKON = 16;
  * `sidebar-state.tsx`. Kollapset viser headeren kun merkeboksen, og nav-radene
  * blir ikon-only med `title` som fallback. Ingen tekst som brekker, ingen
  * ellipse — bare ikonene.
- * To mønstre, med vilje.
- * Flyout ut til siden er for handlinger: «Handlinger» (K). Korte
- * lister du plukker fra og lukker igjen.
- * Inline utfolding er for destinasjoner: Jobber, Kunder, Rapporter,
- * Organisasjon. De hører til strukturen du navigerer i, og skal
- * ikke skjule hvor du står. Se `NavRow`.
- * Innstillinger er destinasjon (Link til profil), ikke flyout.
+ * Jonas 28.08: piller er horisontale faner på siden, ikke barn i
+ * sidebaren. Landing åpner første pille. Innstillinger er destinasjon
+ * (Link til profil), ikke flyout. Helpdesk-slideren er ikke nav.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -80,14 +70,11 @@ export function Sidebar() {
     navn,
     role,
     isMechanic,
+    jobbfunksjon,
     tenantName,
-    devMode,
     shopEnabled,
     isLoading: rolleLaster,
-    canSwitchDemo,
     erPlattform,
-    verksteder,
-    plattformTenantId,
   } = useOrgRole();
   const inspect = isVerkstedInspectPath(pathname);
   const inspectSlug = verkstedSlugFromPath(pathname);
@@ -95,41 +82,32 @@ export function Sidebar() {
   const inspectTilbake = tilbakeHref(fra);
   const { collapsed } = useSidebarState();
 
-  const pathContext = contextForPath(pathname);
-  const [chosen, setChosen] = useState<ContextKey | null>(null);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: pathContext er hele avhengigheten; setChosen er stabil
-  useEffect(() => {
-    setChosen(null);
-  }, [pathContext]);
-  /**
-   * slug=endwise / kind=platform er plattform — også før setup har satt
-   * Better Auth-rollen til endwise_admin. Ikke vis Forhandler/Lager fordi
-   * rollen fortsatt er dealer_admin.
-   */
-  const context = inspect ? 'forhandler' : erPlattform ? 'endwise' : (chosen ?? pathContext);
-  const contexts = erPlattform
-    ? CONTEXTS.filter((c) => c.key === 'endwise')
-    : contextsForRole(role, isMechanic, devMode, shopEnabled);
+  const shell = inspect
+    ? 'forhandler'
+    : shellForBruker({
+        role,
+        jobFunction: jobbfunksjon,
+        isMechanic,
+        erPlattform,
+      });
   const navRolle = erPlattform
     ? role === 'endwise_support'
       ? 'endwise_support'
       : 'endwise_admin'
     : role;
   const rawItems = inspect
-    ? itemsForRole(FORHANDLER_NAV, 'dealer_admin').map((item) =>
+    ? itemsForRole(FORHANDLER_NAV, 'dealer_admin', shopEnabled).map((item) =>
         remapNav(item, inspectSlug ?? '', fra),
       )
-    : itemsForRole(navForContext(context), navRolle);
+    : itemsForRole(navForShell(shell), navRolle, shopEnabled);
   const items = rawItems;
-  // Settings-blokka er ulik per kontekst: forhandlerens konfigurasjon i
-  // forhandler-konteksten, dev-mode-bryteren i Endwise-admin. `null` i resten.
-  const settingsNav = inspect ? null : settingsForContext(context);
+  const settingsNav = inspect ? null : settingsForShell(shell);
 
   const threads = trpc.messages.listThreads.useQuery(undefined, {
-    enabled: Boolean(role) && context !== 'endwise' && !inspect,
+    enabled: Boolean(role) && shell !== 'endwise' && shell !== 'endwise_partner' && !inspect,
   });
   const support = trpc.messages.listPlatformSupport.useQuery(undefined, {
-    enabled: Boolean(role) && context === 'endwise' && !inspect,
+    enabled: Boolean(role) && (shell === 'endwise' || shell === 'endwise_partner') && !inspect,
     retry: false,
   });
   /**
@@ -143,22 +121,12 @@ export function Sidebar() {
     refetchOnWindowFocus: true,
   });
 
-  /**
-   * Én åpen om gangen (accordion).
-   * Tilstanden måtte flyttes hit. Hver `NavRow` hadde sin egen `open`, og
-   * en rad som bare kjenner seg selv kan ikke vite at en annen skal lukkes
-   * derfor sto Kunder og Saker åpne samtidig og dyttet resten nedover.
-   * `null` = ingen åpen. Klikk på den åpne lukker den (samme knapp, begge
-   * veier) — samme mønster som part-filtrene i innboksen bruker.
-   */
-  const [apentPunkt, setApentPunkt] = useState<string | null>(null);
-
   const unread = useMemo(() => {
-    if (context === 'endwise') {
+    if (shell === 'endwise' || shell === 'endwise_partner') {
       return (support.data ?? []).filter((t) => t.unread).length;
     }
     return (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0);
-  }, [context, support.data, threads.data]);
+  }, [shell, support.data, threads.data]);
 
   // K åpner quick actions.
   const [quickOpen, setQuickOpen] = useState(false);
@@ -188,7 +156,6 @@ export function Sidebar() {
     window.location.assign('/signin');
   }
 
-  const search = searchParams?.toString() ?? '';
   const settingsAktiv = settingsNav ? isItemActive(settingsNav, pathname) : false;
 
   return (
@@ -208,24 +175,17 @@ export function Sidebar() {
          * «Endwise-forhandler» sto hardkodet her fram til — den var
          * ikke bare stygg, den var en påstand om hvor du er logget inn.
          */}
-        <ContextSwitcher
-          contexts={contexts}
-          active={inspect ? 'forhandler' : context}
+        <SidebarHeader
           collapsed={collapsed}
-          dealerName={tenantName ?? '—'}
-          canSwitchDemo={canSwitchDemo && !inspect && !erPlattform}
-          erPlattform={erPlattform}
+          navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
           inspect={inspect}
           inspectTilbakeHref={inspectTilbake}
-          verksteder={verksteder}
-          plattformTenantId={plattformTenantId}
-          onSelect={setChosen}
         />
       </div>
 
       {/* Innhold */}
       <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-3">
-        {context === 'forhandler' && !inspect && (
+        {shell === 'forhandler' && !inspect && (
           <DropdownMenu open={quickOpen} onOpenChange={setQuickOpen}>
             <DropdownMenuTrigger asChild>
               <button
@@ -264,41 +224,31 @@ export function Sidebar() {
           className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
         >
           {items.map((item) => (
-            <NavRow
-              key={item.key}
-              item={item}
-              pathname={pathname}
-              search={search}
-              role={role}
-              unread={unread}
-              helpdesk={helpdeskUlest.data ?? 0}
-              collapsed={collapsed}
-              apen={apentPunkt === item.key}
-              settApent={setApentPunkt}
-            />
+            <Fragment key={item.key}>
+              {item.dividerBefore ? <hr className="my-1.5 h-px border-0 bg-border" /> : null}
+              <NavRow
+                item={item}
+                pathname={pathname}
+                unread={unread}
+                helpdesk={helpdeskUlest.data ?? 0}
+                collapsed={collapsed}
+              />
+            </Fragment>
           ))}
           {items.length === 0 && !collapsed && (
             <p className="px-2.5 py-6 text-[12px] text-fg-muted leading-relaxed">
-              {context === 'butikk'
-                ? 'Butikk er stengt. Feature-flagget «shop» er av for denne forhandleren.'
-                : 'Tom foreløpig. Endwise-internt innhold bygges gradvis; dagens /admin-sider er urørt, men bevisst ikke dratt inn hit.'}
+              {shell === 'forhandler' && !shopEnabled
+                ? 'Ingen destinasjoner å vise.'
+                : 'Tom foreløpig.'}
             </p>
           )}
         </nav>
 
         {/* Bunn: tips-kort → divider → Settings → DEG */}
-        {settingsNav && (
-          <div className="flex flex-col gap-3">
-            {/* Tips-kortet forklarer FORHANDLERENS begreper. I Endwise-admin
-                ville det vært å forklare oss selv vårt eget produkt. */}
-            {!collapsed && context === 'forhandler' && <TipCard />}
-
-            {/* Går helt ut i kantene — `-mx-3` opphever kolonnens padding. */}
-            <div className="-mx-3 h-px bg-border" />
-
-            {/* Settings er destinasjon til profil — samme rad-chrome som
-                Verkstedet/Innboks. Pille-fanene på /innstillinger eier
-                undersidene. Kollapset 76px: ikon-lenke, samme mål. */}
+        <div className="flex flex-col gap-3">
+          {!collapsed && shell === 'forhandler' && <TipCard />}
+          <div className="-mx-3 h-px bg-border" />
+          {settingsNav ? (
             <Link
               href={settingsNav.href as Route}
               aria-current={settingsAktiv ? 'page' : undefined}
@@ -310,112 +260,41 @@ export function Sidebar() {
               <Ikon icon={settingsNav.icon} active={settingsAktiv} />
               {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
             </Link>
-
-            {/* Deg. Nederst, under Innstillinger, som bestilt */}
-            <BrukerRad
-              /* Én identitet: internNavn via useOrgRole (kallenavn, ellers
-                 visningsnavn). Ikke Better-Auth-navn som fallback. */
-              navn={navn}
-              rolle={role ? (ROLE_LABEL[role] ?? '—') : null}
-              laster={rolleLaster}
-              collapsed={collapsed}
-              onLoggUt={logout}
-            />
-          </div>
-        )}
+          ) : null}
+          <BrukerRad
+            navn={navn}
+            rolle={role ? (ROLE_LABEL[role] ?? '—') : null}
+            laster={rolleLaster}
+            collapsed={collapsed}
+            onLoggUt={logout}
+          />
+        </div>
       </div>
     </aside>
   );
 }
 
-/** Er dette underpunktet det aktive? Query teller når underpunktet bærer query. */
-function isChildActive(href: string, pathname: string, search: string): boolean {
-  const [cPath, cQuery] = href.split('?');
-  const treff = stierFor(cPath ?? '').includes(pathname);
-  if (cQuery) return treff && search.includes(cQuery);
-  return treff && !search.includes('visning=');
-}
-
 /**
- * Én nav-rad, 32px.
- *
- * Underpunkter er inline igjen (eiers beslutning).
- * Flyout ut til siden var riktig for **handlinger** (Handlinger) —
- * korte lister du plukker fra og lukker. Det var feil for **destinasjoner**:
- * en flyout skjuler hvor du er, og du mister følelsen av hvor i navet du står.
- *
- * Derfor: rader med underpunkter folder seg ut UNDER seg selv i selve
- * sidebaren. Raden er en knapp som åpner/lukker; underpunktene er lenkene.
- * Åpen som standard når raden er aktiv, så du alltid ser deg selv i strukturen.
- *
- * **Ett unntak, av nødvendighet:** i kollapset sidebar (76px) er det ingen
- * bredde å folde ut i. Der faller raden tilbake til flyouten. Alternativet
- * ville vært å skjule underpunktene helt, og da er de utilgjengelige.
+ * Én nav-rad, 32px. Piller bor på siden — raden er alltid en destinasjon.
  */
 function NavRow({
   item,
   pathname,
-  search,
-  role,
   unread,
   helpdesk,
   collapsed,
-  apen,
-  settApent,
 }: {
   item: NavItem;
   pathname: string;
-  search: string;
-  role: string | null;
   unread: number;
   helpdesk: number;
   collapsed: boolean;
-  apen: boolean;
-  /**
-   * Setteren sendes inn RÅ, ikke pakket i en pil-funksjon per rad.
-   * `useState`-settere er stabile mellom renders; en `(pa) => set(...)` ville
-   * fått ny identitet hver render, og da måtte effekten under enten utelate den
-   * fra avhengighetene (og bli undertrykt) eller kjøre i loop. Her er
-   * avhengighetslista ærlig.
-   */
-  settApent: (key: string | null) => void;
 }) {
-  const router = useRouter();
   const active = isItemActive(item, pathname);
-  const children = childrenForRole(item, role as never);
   const count = item.badge === 'unread' ? unread : item.badge === 'helpdesk' ? helpdesk : 0;
-
-  /**
-   * Aktiv rad åpner seg selv — men bare når den BLIR aktiv, ikke ved hver
-   * render. Uten `active` i avhengighetslista ville et klikk på en annen rad
-   * blitt overstyrt tilbake med én gang, og accordionen aldri fått lukke noe.
-   */
-  useEffect(() => {
-    if (active) settApent(item.key);
-  }, [active, item.key, settApent]);
-
-  const harBarn = children.length > 0;
   const teller = (
     <CountBadge count={count} label={item.badge === 'helpdesk' ? 'nye artikler' : 'uleste'} />
   );
-  /* Pil-plassen er ALLTID 14px når den vises — så dropdown-radene holder
-     chevronen helt til høyre. På rader UTEN barn (Innboks, Hjelp) sitter
-     CountBadge i det sporet i stedet for å ligge 14px inn. Tom plassholder
-     beholdes når telleren er 0, så «Ny» ikke hopper mot kanten. */
-  const chevronPlass = (
-    <span className="grid w-3.5 shrink-0 place-items-center" aria-hidden>
-      {harBarn && (
-        /* Snur med samme varighet som utfoldingen, så pilen og innholdet
-           beveger seg som én ting. */
-        <ChevronDown
-          size={14}
-          strokeWidth={1.75}
-          className={`text-fg-muted transition-transform duration-200 ${apen ? 'rotate-180' : ''}`}
-        />
-      )}
-    </span>
-  );
-
   const innhold = (
     <>
       <Ikon icon={item.icon} active={active} />
@@ -423,120 +302,23 @@ function NavRow({
         <>
           <span className="flex-1 truncate text-left">{item.label}</span>
           {item.isNew && <NewBadge />}
-          {harBarn ? (
-            <>
-              {teller}
-              {chevronPlass}
-            </>
-          ) : count > 0 ? (
-            teller
-          ) : (
-            chevronPlass
-          )}
+          {count > 0 ? teller : null}
         </>
       )}
     </>
   );
 
-  const radKlasse = `flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors ${
-    collapsed ? 'justify-center px-0' : 'px-2.5'
-  } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`;
-
-  if (children.length === 0) {
-    return (
-      <Link
-        href={item.href as Route}
-        aria-current={active ? 'page' : undefined}
-        title={collapsed ? item.label : undefined}
-        className={radKlasse}
-      >
-        {innhold}
-      </Link>
-    );
-  }
-
-  // Kollapset: ingen plass til inline. Flyout er fallback, ikke mønsteret.
-  if (collapsed) {
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button type="button" title={item.label} className={radKlasse}>
-            {innhold}
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start" sideOffset={16} className="z-50">
-          <DropdownMenuHeader>{item.label}</DropdownMenuHeader>
-          {children.map((c) => (
-            <DropdownMenuItem key={c.href} onSelect={() => router.push(c.href as Route)}>
-              {c.icon && (
-                <c.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-              )}
-              <span className="flex-1">{c.label}</span>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
-
   return (
-    <div className="flex flex-col">
-      <button
-        type="button"
-        aria-expanded={apen}
-        onClick={() => settApent(apen ? null : item.key)}
-        className={radKlasse}
-      >
-        {innhold}
-      </button>
-
-      {/**
-       * `grid-template-rows: 0fr → 1fr` og ikke `max-height`.
-       *
-       * En høydeanimasjon trenger et tall å gå MOT, og `height:auto` kan ikke
-       * animeres. Den vanlige omgåelsen er `max-height: 500px`, men da må man
-       * gjette en høyde: gjetter man for lavt, klippes den siste raden bort;
-       * gjetter man for høyt, henger animasjonen i lufta før den starter fordi
-       * den bruker like lang tid på piksler som ikke finnes.
-       *
-       * `0fr → 1fr` lar nettleseren regne ut den EKTE høyden, uansett hvor
-       * mange underpunkter raden har. Barnet må ha `min-h-0` og
-       * `overflow-hidden`, ellers nekter griden å krympe under innholdet.
-       *
-       * `aria-hidden` når lukket: innholdet er fortsatt i DOM-en (det er det
-       * som gjør animasjonen mulig), og uten dette ville en skjermleser lest opp
-       * underpunkter som ikke er synlige.
-       */}
-      <div
-        className={`grid transition-[grid-template-rows] duration-200 ease-out ${
-          apen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-        }`}
-        aria-hidden={!apen}
-      >
-        <div className="min-h-0 overflow-hidden">
-          <div className="mt-0.5 flex flex-col gap-0.5 pb-1 pl-[26px]">
-            {children.map((c) => {
-              const childActive = isChildActive(c.href, pathname, search);
-              return (
-                <Link
-                  key={c.href}
-                  href={c.href as Route}
-                  aria-current={childActive ? 'page' : undefined}
-                  className={`flex h-8 items-center gap-2 rounded-control px-2 text-label transition-colors ${
-                    childActive
-                      ? 'bg-sidebar-active text-fg'
-                      : 'text-fg-muted hover:bg-sidebar-active/60 hover:text-fg'
-                  }`}
-                >
-                  {c.icon && <c.icon size={14} strokeWidth={1.75} className="shrink-0" />}
-                  <span className="flex-1 truncate">{c.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
+    <Link
+      href={item.href as Route}
+      aria-current={active ? 'page' : undefined}
+      title={collapsed ? item.label : undefined}
+      className={`flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors ${
+        collapsed ? 'justify-center px-0' : 'px-2.5'
+      } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}
+    >
+      {innhold}
+    </Link>
   );
 }
 
@@ -549,6 +331,10 @@ function remapNav(item: NavItem, slug: string, fra: string | null): NavItem {
   return {
     ...item,
     href: medFra(remapHrefTilInspect(item.href, slug), fra),
+    pills: item.pills?.map((c) => ({
+      ...c,
+      href: medFra(remapHrefTilInspect(c.href, slug), fra),
+    })),
     children: item.children?.map((c) => ({
       ...c,
       href: medFra(remapHrefTilInspect(c.href, slug), fra),

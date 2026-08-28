@@ -3,11 +3,12 @@
 import { ShieldCheck } from '@endwise/ui';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { AnsattePiller } from '../../_shell/ansatte-piller';
 import { Feil, Laster } from '../../kunder/_delt';
 import { Ferdighetskatalog } from './_katalog';
 
 /**
- * F3-08 / F3-12 — Organisasjon › Kompetanse.
+ * F3-08 / F3-12 — Ansatte › Kompetanse.
  * Katalogen over hva som finnes. Tildeling per person bor på Team
  * (liste, detaljpane og Opprett ansatt). Prislisten peker hit.
  */
@@ -27,6 +28,9 @@ export default function KompetansePage() {
           Ferdighetskatalogen. Hva som finnes her, tildeles på Team — ikke som en egen
           per-mekaniker-liste.
         </p>
+        <div className="mt-3">
+          <AnsattePiller />
+        </div>
       </div>
 
       {ferdigheter.isLoading ? (

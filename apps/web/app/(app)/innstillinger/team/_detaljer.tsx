@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
+import { useOrgRole } from '../../_lib/use-org-role';
 import { STATUS_LABEL } from '../../bookinger/_status';
 import { MekanikerKompetanse } from '../../mekanikere/kompetanse/_mekaniker';
 import { fmtTime } from '../../min-dag/_status';
@@ -48,6 +49,7 @@ export function TeamDetaljer({
   apen: boolean;
   onLukk: () => void;
 }) {
+  const { isAdmin } = useOrgRole();
   if (!apen || !rad) return null;
 
   return (
@@ -77,15 +79,19 @@ export function TeamDetaljer({
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-3">
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-            <Hvem rad={rad} />
+            <Hvem rad={rad} kanEndre={isAdmin} />
             <Jobber userId={rad.userId} />
-            {rad.twoFactorEnabled ? <SlaAv2fa userId={rad.userId} navn={rad.navn} /> : null}
-            <KompetanseSeksjon rad={rad} />
-            <TimeplanSeksjon rad={rad} />
+            {isAdmin && rad.twoFactorEnabled ? (
+              <SlaAv2fa userId={rad.userId} navn={rad.navn} />
+            ) : null}
+            <KompetanseSeksjon rad={rad} kanEndre={isAdmin} />
+            <TimeplanSeksjon rad={rad} kanEndre={isAdmin} />
           </div>
-          <div className="shrink-0">
-            <SlettAnsatt userId={rad.userId} navn={rad.navn} leder={rad.funksjon === 'leder'} />
-          </div>
+          {isAdmin ? (
+            <div className="shrink-0">
+              <SlettAnsatt userId={rad.userId} navn={rad.navn} leder={rad.funksjon === 'leder'} />
+            </div>
+          ) : null}
         </div>
       </aside>
     </>
@@ -101,7 +107,7 @@ function Seksjon({ tittel, children }: { tittel: string; children: ReactNode }) 
   );
 }
 
-function Hvem({ rad }: { rad: Rad }) {
+function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
   const utils = trpc.useUtils();
   const [redigerer, setRedigerer] = useState(false);
   const [epost, setEpost] = useState(rad.epost);
@@ -226,23 +232,27 @@ function Hvem({ rad }: { rad: Rad }) {
               <p className="text-[12px] text-fg-muted">Rolle</p>
               <p className="text-label text-fg">{rolleLabel}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setEpost(rad.epost);
-                setFunksjon(rad.funksjon);
-                setRedigerer(true);
-              }}
-              className="inline-flex h-control items-center self-start rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2"
-            >
-              Endre
-            </button>
+            {kanEndre ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setEpost(rad.epost);
+                  setFunksjon(rad.funksjon);
+                  setRedigerer(true);
+                }}
+                className="inline-flex h-control items-center self-start rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2"
+              >
+                Endre
+              </button>
+            ) : null}
           </div>
         )}
 
-        <div className="mt-3">
-          <PassordEndring userId={rad.userId} kan={rad.kanLoggeInn && Boolean(rad.epost)} />
-        </div>
+        {kanEndre ? (
+          <div className="mt-3">
+            <PassordEndring userId={rad.userId} kan={rad.kanLoggeInn && Boolean(rad.epost)} />
+          </div>
+        ) : null}
       </div>
     </Seksjon>
   );
@@ -502,7 +512,7 @@ function SlettAnsatt({ userId, navn, leder }: { userId: string; navn: string; le
   );
 }
 
-function KompetanseSeksjon({ rad }: { rad: Rad }) {
+function KompetanseSeksjon({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
   const mekanikere = trpc.mechanics.oversikt.useQuery();
   const ferdigheter = trpc.competence.listSkills.useQuery();
   const kompetanse = trpc.competence.listAllMechanicSkills.useQuery();
@@ -527,7 +537,7 @@ function KompetanseSeksjon({ rad }: { rad: Rad }) {
           mekaniker={mek}
           ferdigheter={ferdigheter.data ?? []}
           rader={rader}
-          kanEndre
+          kanEndre={kanEndre}
           skjulIdentitet
         />
       ) : (
@@ -537,7 +547,7 @@ function KompetanseSeksjon({ rad }: { rad: Rad }) {
   );
 }
 
-function TimeplanSeksjon({ rad }: { rad: Rad }) {
+function TimeplanSeksjon({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
   const utils = trpc.useUtils();
   const [kapasitet, setKapasitet] = useState(String(2));
   const mekanikere = trpc.mechanics.oversikt.useQuery();
@@ -574,7 +584,7 @@ function TimeplanSeksjon({ rad }: { rad: Rad }) {
         <p className="text-[12px] text-fg-muted">
           {mek ? `${mek.jobberIDag} av ${mek.capacity} i dag` : 'Kapasitet lastes …'}
         </p>
-        {mek ? (
+        {mek && kanEndre ? (
           <form
             className="mt-2 flex items-end gap-2"
             onSubmit={(e) => {

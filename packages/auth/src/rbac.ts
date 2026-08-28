@@ -105,3 +105,94 @@ export const ROLES_REQUIRING_2FA: readonly Role[] = [
   'endwise_admin',
   'endwise_support',
 ];
+
+export type RbacRessurs = keyof typeof statement;
+
+/**
+ * Speil av `ac.newRole`-deklarasjonene over. Better-Auth sin Role-type
+ * eksponerer ikke statements som vi kan lese uten å gjette API — denne
+ * tabellen er det tRPC faktisk kaller. Hold den identisk med rollene over.
+ */
+const TILLATELSER: Record<Role, Partial<Record<RbacRessurs, readonly string[]>>> = {
+  customer: { booking: ['create', 'read', 'cancel'] },
+  dealer_staff: {
+    booking: ['create', 'read', 'update', 'cancel'],
+    mechanic: ['read', 'assign'],
+    customer: ['read'],
+    service: ['read'],
+    inventory: ['read', 'move'],
+  },
+  dealer_admin: {
+    booking: ['create', 'read', 'update', 'cancel'],
+    mechanic: ['read', 'assign', 'manage'],
+    customer: ['read', 'manage'],
+    service: ['read', 'manage'],
+    tenant: ['read', 'manage'],
+    entitlement: ['read'],
+    member: ['read', 'invite', 'manage'],
+    audit: ['read'],
+    inventory: ['read', 'move', 'manage'],
+  },
+  endwise_admin: {
+    booking: ['create', 'read', 'update', 'cancel'],
+    mechanic: ['read', 'assign', 'manage'],
+    customer: ['read', 'manage'],
+    service: ['read', 'manage'],
+    tenant: ['read', 'manage'],
+    entitlement: ['read', 'manage'],
+    member: ['read', 'invite', 'manage'],
+    audit: ['read'],
+    inventory: ['read', 'move', 'manage'],
+  },
+  endwise_support: {
+    booking: ['read'],
+    mechanic: ['read'],
+    customer: ['read'],
+    service: ['read'],
+    tenant: ['read'],
+    entitlement: ['read'],
+    member: ['read'],
+    audit: ['read'],
+    inventory: ['read'],
+  },
+};
+
+/** Har rollen denne handlingen i RBAC-kartet? Jobbfunksjon er et eget lag. */
+export function kan(
+  role: Role | null | undefined,
+  ressurs: RbacRessurs,
+  handling: string,
+): boolean {
+  if (!role) return false;
+  return TILLATELSER[role][ressurs]?.includes(handling) ?? false;
+}
+
+export function rolleKrever2FA(rolle: string | null | undefined): boolean {
+  return (ROLES_REQUIRING_2FA as readonly string[]).includes(rolle ?? '');
+}
+
+/**
+ * Mekaniker-sesjon: dealer_staff + (mechanics.userId eller job_function).
+ * dealer_admin som også har mekaniker-rad er fortsatt forhandler.
+ */
+export function erMekanikerKonto(input: {
+  role: Role | string | null | undefined;
+  jobFunction?: string | null;
+  isMechanic?: boolean;
+}): boolean {
+  if (input.role === 'dealer_admin' || input.role === 'endwise_admin') return false;
+  if (input.role !== 'dealer_staff') return false;
+  return Boolean(input.isMechanic) || input.jobFunction === 'mekaniker';
+}
+
+/** Selger, support og forhandler — ikke mekaniker. */
+export function kanSkriveDealerDesk(input: {
+  role: Role | string | null | undefined;
+  jobFunction?: string | null;
+  isMechanic?: boolean;
+}): boolean {
+  if (input.role === 'dealer_admin' || input.role === 'endwise_admin') return true;
+  if (input.role !== 'dealer_staff') return false;
+  if (erMekanikerKonto(input)) return false;
+  return kan('dealer_staff', 'booking', 'create');
+}

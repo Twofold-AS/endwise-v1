@@ -8,7 +8,7 @@ import { LiveSync } from './_lib/live-sync';
 import { LydProvider } from './_lib/lyd';
 import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
-import { MobileShell } from './_shell/mobile-shell';
+import { erTillattMekanikerSti } from './_shell/nav';
 import { PwaRegister } from './_shell/pwa-register';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
@@ -17,20 +17,8 @@ import { TopBar } from './_shell/top-bar';
 /**
  * Admin/forhandler-shell (TheFold-stil) + auth-/rolle-guard.
  * Ikke innlogget → /signin.
- * Ren mekaniker → låst til /min-dag med mobil-shell (kosmetisk;
- * RLS/adminProcedure er den ekte sperren server-side).
- * «Ren» er ikke en detalj
- * Guarden låste tidligere alle med `isMechanic` til /min-dag og ga dem
- * mobil-shellet — altså **ingen sidebar og ingen kontekstvelger**.
- * Det var riktig så lenge en mekaniker-profil bare fantes på mekanikere. Men
- * `isMechanic` betyr «har en rad i `mechanics`», ikke «skal kun se
- * mekanikerflaten». En forhandler-admin som også jobber på gulvet — eller en
- * Endwise-admin i dev-mode — ble låst ute fra sitt eget dashboard, og
- * kontekstvelgeren (F5-29) som finnes nettopp for å bytte mellom visningene,
- * var utilgjengelig.
- * Nå gjelder låsen kun den som ikke har noe annet sted å være: `dealer_staff`
- * med mekaniker-profil. Admins får full sidebar, og bytter til
- * mekanikervisningen via kontekstvelgeren som alle andre visninger.
+ * Ren mekaniker → eget skall (Jonas 28.08). Ingen visningsvelger.
+ * dealer_admin som også har mekaniker-rad er fortsatt forhandler.
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -88,7 +76,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, [bekreftetUtlogget, router]);
 
   useEffect(() => {
-    if (!isLoading && kunMekaniker && !pathname.startsWith('/min-dag')) {
+    if (!isLoading && kunMekaniker && !erTillattMekanikerSti(pathname)) {
       router.replace('/min-dag' as Route);
     }
   }, [isLoading, kunMekaniker, pathname, router]);
@@ -109,21 +97,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   }, [pathname]);
 
-  // Mekanikeren får mobil-shell (bottom-nav), ikke admin-sidebaren.
-  // Server håndhever grensen (RLS + adminProcedure); dette er UI-formen.
-  // Lyd gjelder begge shellene. Mekanikeren er den som oftest har
-  // hendene fulle og skjermen i lomma; å la lyden bare finnes i adminpanelet
-  // ville vært å gi varselet til den som allerede ser skjermen.
-  if (kunMekaniker) {
-    return (
-      <LydProvider>
-        <LiveSync>
-          <MobileShell>{children}</MobileShell>
-        </LiveSync>
-      </LydProvider>
-    );
-  }
-
+  // Jonas 28.08: mekaniker får samme desktop-sidebar, eget skall.
   /*
    * Service-worker-håndteringen hører hjemme her, ikke bare i
    * MobileShell (flyttet ).

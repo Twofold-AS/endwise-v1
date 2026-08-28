@@ -59,8 +59,7 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(kilde).toMatch(/Bekrefter …/);
     expect(kilde).toMatch(/organization\.setActive/);
     expect(kilde).not.toMatch(/router\.push/);
-    // kreverPassord:false (eksisterende konto) får /signin — det er OK.
-    expect(kilde).toMatch(/kreverPassord[\s\S]*\/signin/);
+    expect(kilde).not.toMatch(/if\s*\(\s*!inv\.kreverPassord\s*\)[\s\S]{0,80}\/signin/);
   });
 
   it('eksisterende konto (/signin) og / sender uferdig 2FA til /2fa-oppsett', () => {

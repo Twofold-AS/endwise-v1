@@ -72,15 +72,15 @@ describe('plattform-org i Bytt visning', () => {
     expect(nav).toMatch(/landing:\s*'\/endwise'/);
   });
 
-  it('Team ligger i ENDWISE_NAV etter Innboks, ikke som Admin-tab', () => {
+  it('Forhandlere ligger før Team i ENDWISE_NAV, ikke som Admin-tab', () => {
     const start = nav.indexOf('export const ENDWISE_NAV');
     const slutt = nav.indexOf('export const ENDWISE_SETTINGS_NAV');
     const blokk = nav.slice(start, slutt);
     const innboks = blokk.indexOf("key: 'endwise-innboks'");
     const team = blokk.indexOf("key: 'endwise-team'");
     const forhandlere = blokk.indexOf("key: 'endwise-forhandlere'");
-    expect(team).toBeGreaterThan(innboks);
-    expect(forhandlere).toBeGreaterThan(team);
+    expect(forhandlere).toBeGreaterThan(innboks);
+    expect(team).toBeGreaterThan(forhandlere);
     expect(blokk).toMatch(/href:\s*'\/endwise\/team'/);
     expect(nav).not.toMatch(/label:\s*'Admin'/);
     const settings = nav.slice(slutt, nav.indexOf('export function contextsForRole'));
@@ -155,10 +155,10 @@ describe('Se verkstedet er URL-lesing', () => {
 
   it('sidebar tvinger Endwise-nav på plattform — også når rollen er dealer_admin', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
-    expect(sidebar).toMatch(/CONTEXTS\.filter\(\(c\) => c\.key === 'endwise'\)/);
-    expect(sidebar).toMatch(/erPlattform \? 'endwise'/);
+    expect(sidebar).toMatch(/shellForBruker/);
+    expect(sidebar).toMatch(/erPlattform/);
     expect(sidebar).toMatch(/endwise_admin/);
-    expect(sidebar).not.toMatch(/contextsForRole\(role, isMechanic, false\)\.filter/);
+    expect(sidebar).not.toMatch(/ContextSwitcher/);
   });
 });
 

@@ -99,7 +99,7 @@ export const sessionRouter = router({
        * `profile.setName` invaliderer allerede denne ruta.
        */
       const [bruker] = await ctx.db
-        .select({ name: schema.user.name })
+        .select({ name: schema.user.name, email: schema.user.email })
         .from(schema.user)
         .where(eq(schema.user.id, ctx.userId));
 
@@ -151,6 +151,7 @@ export const sessionRouter = router({
         tenantId: ctx.tenantId,
         /** Ditt eget visningsnavn. Ikke kallenavn — se `internNavn`. */
         navn: bruker?.name ?? '',
+        epost: bruker?.email ?? '',
         jobbfunksjon,
         landing,
         needsOnboarding: erPlattform ? false : needsOnboarding,

@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, ilike, or, schema, withTenant } from '@endwise/db';
 import { z } from 'zod';
-import { protectedProcedure, router } from '../init.ts';
+import { protectedProcedure, router, staffProcedure } from '../init.ts';
 
 const vehicleType = z.enum(['mc', 'boat', 'atv']);
 
@@ -124,7 +124,7 @@ export const vehiclesRouter = router({
     }),
   ),
 
-  create: protectedProcedure
+  create: staffProcedure
     .input(
       z.object({
         type: vehicleType,

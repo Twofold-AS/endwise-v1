@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { AnsattePiller } from '../../_shell/ansatte-piller';
 import { CardShell } from '../../_shell/cards';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
 import { estMinutes, fmtTime, STATUS_LABEL } from '../../min-dag/_status';
@@ -83,6 +84,9 @@ export default function TimeplanPage() {
         <p className="text-body text-fg-muted">
           Kapasitet og jobber per mekaniker. Samme dag-stripe som på Timeplan under Min dag.
         </p>
+        <div className="mt-3">
+          <AnsattePiller />
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">

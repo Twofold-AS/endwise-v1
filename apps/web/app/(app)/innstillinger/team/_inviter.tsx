@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, Inbox, type LucideIcon, Store, Wrench } from '@endwise/ui';
+import { Building2, CircleAlert, Inbox, type LucideIcon, Store, Wrench } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
@@ -14,12 +14,18 @@ import { KompetanseVelger, type ValgtKompetanse } from './_kompetanse-velger';
  * Kompetanse-/Timeplan-flatene. Ingen nye felt eller roller.
  * Knappene er kosmetikk. Sperren er adminProcedure + rollesjekk.
  */
-type Funksjon = 'selger' | 'support' | 'mekaniker';
+type Funksjon = 'forhandler' | 'selger' | 'support' | 'mekaniker';
 
 const FUNKSJONER: { verdi: Funksjon; label: string; hint: string; icon: LucideIcon }[] = [
-  { verdi: 'selger', label: 'Selger', hint: 'Lander på dashbordet', icon: Store },
-  { verdi: 'support', label: 'Support', hint: 'Lander i innboksen', icon: Inbox },
-  { verdi: 'mekaniker', label: 'Mekaniker', hint: 'Lander på Min dag', icon: Wrench },
+  {
+    verdi: 'forhandler',
+    label: 'Forhandler',
+    hint: 'Én konto som kjører huset — sjelden',
+    icon: Building2,
+  },
+  { verdi: 'selger', label: 'Selger', hint: 'Samme flate som forhandler, uten admin', icon: Store },
+  { verdi: 'support', label: 'Support', hint: 'Samme tilgang som selger', icon: Inbox },
+  { verdi: 'mekaniker', label: 'Mekaniker', hint: 'Min dag, lager og butikk', icon: Wrench },
 ];
 
 export function OpprettAnsatt() {
@@ -44,6 +50,26 @@ export function OpprettAnsatt() {
       });
     }
   }
+
+  const opprettEier = trpc.invitasjoner.opprettEier.useMutation({
+    onSuccess: (res) => {
+      setFeil(null);
+      setNavn('');
+      setEpost('');
+      setKompetanse([]);
+      setKapasitet('1');
+      setKvittering(
+        res.sendt
+          ? `Invitasjon sendt til ${res.epost}.`
+          : `Invitasjonen er opprettet for ${res.epost}, men e-posten kunne ikke sendes. Sjekk oppsettet, eller tilbakekall og prøv igjen.`,
+      );
+      void utils.invitasjoner.list.invalidate();
+    },
+    onError: (e) => {
+      setKvittering(null);
+      setFeil(e.message);
+    },
+  });
 
   const opprettInvitasjon = trpc.invitasjoner.opprett.useMutation({
     onSuccess: (res) => {
@@ -108,7 +134,15 @@ export function OpprettAnsatt() {
     const mail = epost.trim();
     const n = navn.trim();
     if (mail) {
+      if (funksjon === 'forhandler') {
+        opprettEier.mutate({ epost: mail });
+        return;
+      }
       opprettInvitasjon.mutate({ epost: mail, funksjon });
+      return;
+    }
+    if (funksjon === 'forhandler') {
+      setFeil('Forhandler krever e-post og invitasjon. Ikke opprett uten innlogging.');
       return;
     }
     if (!n) {
@@ -121,7 +155,11 @@ export function OpprettAnsatt() {
     opprettLokal.mutate({ navn: n, funksjon, capacity });
   }
 
-  const venter = opprettInvitasjon.isPending || opprettLokal.isPending || settKompetanse.isPending;
+  const venter =
+    opprettInvitasjon.isPending ||
+    opprettEier.isPending ||
+    opprettLokal.isPending ||
+    settKompetanse.isPending;
   const kanSende = Boolean(epost.trim() || navn.trim());
 
   return (

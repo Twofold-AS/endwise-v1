@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { protectedProcedure, router } from '../init.ts';
+import { router, staffProcedure } from '../init.ts';
 
 /**
  * F2-06 / F5-02 — Kunderegister. Alle spørringer går gjennom withTenant → RLS.
@@ -22,7 +22,7 @@ export const customersRouter = router({
    * Kundeliste med søk. Søket treffer navn, e-post og telefon — det er de tre
    * tingene man har for hånden når kunden ringer.
    */
-  list: protectedProcedure
+  list: staffProcedure
     .input(
       z
         .object({
@@ -83,7 +83,7 @@ export const customersRouter = router({
    * CWE-639: `id` og `tenant_id` i hver WHERE, ikke bare RLS. Den dagen noen
    * kaller dette utenfor `withTenant`, skal svaret være «ingenting».
    */
-  byId: protectedProcedure.input(z.object({ id: z.uuid() })).query(({ ctx, input }) =>
+  byId: staffProcedure.input(z.object({ id: z.uuid() })).query(({ ctx, input }) =>
     withTenant(ctx.db, ctx.tenantId, async (tx) => {
       const [kunde] = await tx
         .select()
@@ -171,7 +171,7 @@ export const customersRouter = router({
     }),
   ),
 
-  create: protectedProcedure
+  create: staffProcedure
     .input(
       z.object({
         name: z.string().min(1).max(160),
@@ -200,7 +200,7 @@ export const customersRouter = router({
       }),
     ),
 
-  addNote: protectedProcedure
+  addNote: staffProcedure
     .input(z.object({ customerId: z.uuid(), body: z.string().min(1).max(4000) }))
     .mutation(({ ctx, input }) =>
       withTenant(ctx.db, ctx.tenantId, async (tx) => {

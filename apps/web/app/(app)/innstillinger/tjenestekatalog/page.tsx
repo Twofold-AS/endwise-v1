@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { AnsattePiller } from '../../_shell/ansatte-piller';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
 import { TYPE_VALG } from './_felles';
 import { NyTjeneste } from './_ny-tjeneste';
@@ -61,6 +62,9 @@ export default function TjenestekatalogPage() {
           Tjenestene kunden kan bestille hos dere, med varighet, pris og hvilke ferdigheter jobben
           krever.
         </p>
+        <div className="mt-3">
+          <AnsattePiller />
+        </div>
       </div>
 
       {/* Filtre + ny tjeneste */}

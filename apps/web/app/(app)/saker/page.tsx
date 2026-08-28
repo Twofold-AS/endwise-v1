@@ -1,12 +1,13 @@
 'use client';
 
-import { CalendarDays, ClipboardList, Funnel, List, Plus, Search, Wrench } from '@endwise/ui';
+import { Funnel, Plus, Search } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
+import { SidePiller } from '../_shell/side-piller';
 import {
   ALL_STATUSES,
   fmtDateTime,
@@ -30,8 +31,6 @@ import { Kalender } from './_kalender';
  * bevisst ikke flyttet i denne økten. Se sesjonsrapporten.
  */
 function SakerPageInner() {
-  const router = useRouter();
-  const pathname = usePathname() ?? '/saker';
   const params = useSearchParams();
   const visning = params?.get('visning') === 'kalender' ? 'kalender' : 'liste';
 
@@ -54,13 +53,6 @@ function SakerPageInner() {
     return m;
   }, [mechanics.data]);
 
-  function setVisning(next: 'liste' | 'kalender') {
-    const q = new URLSearchParams(params?.toString() ?? '');
-    if (next === 'kalender') q.set('visning', 'kalender');
-    else q.delete('visning');
-    router.replace(`${pathname}${q.toString() ? `?${q}` : ''}` as Route);
-  }
-
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
       <div className="flex items-start justify-between gap-4">
@@ -77,26 +69,15 @@ function SakerPageInner() {
         </Link>
       </div>
 
-      {/* Visningsbytte — liste kalender. Samme data, to representasjoner. */}
       <div className="flex flex-wrap items-center gap-2">
-        <div
-          role="tablist"
-          aria-label="Visning"
-          className="inline-flex h-control items-center gap-0.5 rounded-control border border-border bg-bg p-0.5"
-        >
-          <ViewTab
-            active={visning === 'liste'}
-            onClick={() => setVisning('liste')}
-            icon={<List size={16} />}
-            label="Oversikt"
-          />
-          <ViewTab
-            active={visning === 'kalender'}
-            onClick={() => setVisning('kalender')}
-            icon={<CalendarDays size={16} />}
-            label="Kalender"
-          />
-        </div>
+        <SidePiller
+          ariaLabel="Jobber"
+          piller={[
+            { label: 'Liste', href: '/jobber' },
+            { label: 'Kalender', href: '/jobber?visning=kalender' },
+          ]}
+          aktivHref={visning === 'kalender' ? '/jobber?visning=kalender' : '/jobber'}
+        />
 
         <span className="ml-1 inline-flex items-center gap-1.5 text-[12px] text-fg-muted">
           <Funnel size={14} />
@@ -220,33 +201,6 @@ function SakerPageInner() {
         </div>
       )}
     </div>
-  );
-}
-
-function ViewTab({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={`inline-flex h-7 items-center gap-1.5 rounded-[7px] px-2.5 text-label transition-colors ${
-        active ? 'bg-sidebar-active text-fg' : 'text-fg-muted hover:text-fg'
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
   );
 }
 

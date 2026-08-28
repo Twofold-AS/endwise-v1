@@ -1,3 +1,4 @@
+import { kanSkriveDealerDesk } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -29,6 +30,12 @@ export const shopRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (!kanSkriveDealerDesk(ctx)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Mekaniker har ikke tilgang til kassen.',
+        });
+      }
       if (!stripeConfigured()) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',

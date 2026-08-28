@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useOrgRole } from '../../_lib/use-org-role';
+import { AnsattePiller } from '../../_shell/ansatte-piller';
 import { CardShell } from '../../_shell/cards';
 import { TeamDetaljer } from './_detaljer';
 import { parseTeamFane, TEAM_FANER, teamHref } from './_faner';
@@ -13,7 +15,7 @@ import { TeamListe } from './_liste';
 import { MekanikerePille } from './_mekanikere-pille';
 
 /**
- * F5-13 / F5-19 / F1-10 — Team under Organisasjon.
+ * F5-13 / F5-19 / F1-10 — Team under Ansatte.
  * Piller som Innstillinger (?fane=). Opprett ansatt på egen pille.
  */
 export default function TeamPage() {
@@ -25,9 +27,12 @@ export default function TeamPage() {
 }
 
 function TeamSide() {
+  const { isAdmin } = useOrgRole();
   const params = useSearchParams();
-  const fane = parseTeamFane(params?.get('fane'));
-  const def = TEAM_FANER.find((f) => f.id === fane) ?? TEAM_FANER[0];
+  const faneRaw = parseTeamFane(params?.get('fane'));
+  const fane = !isAdmin && faneRaw === 'opprett' ? 'alle' : faneRaw;
+  const faner = TEAM_FANER.filter((f) => f.id !== 'opprett' || isAdmin);
+  const def = faner.find((f) => f.id === fane) ?? faner[0];
   const [valgtId, setValgtId] = useState<string | null>(null);
   const team = trpc.team.list.useQuery();
   const valgt = useMemo(
@@ -44,10 +49,13 @@ function TeamSide() {
             Hvem som jobber her. Med e-post får hen invitasjon. Uten e-post vises hen bare i
             forhandlervisningen.
           </p>
+          <div className="mt-3">
+            <AnsattePiller />
+          </div>
         </div>
 
         <div role="tablist" aria-label="Team" className="flex shrink-0 flex-wrap gap-1.5">
-          {TEAM_FANER.map((f) => {
+          {faner.map((f) => {
             const valgtFane = f.id === fane;
             return (
               <Link

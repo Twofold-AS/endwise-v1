@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { adminProcedure, protectedProcedure, router, staffProcedure } from '../init.ts';
 
 /**
  * Lager. Driftslageret. **kjerne — ingen modul-gate.**
@@ -172,7 +172,7 @@ export const inventoryRouter = router({
 
   /* Lokasjoner */
 
-  listLocations: protectedProcedure.query(({ ctx }) =>
+  listLocations: staffProcedure.query(({ ctx }) =>
     withTenant(ctx.db, ctx.tenantId, (tx) =>
       tx
         .select()
@@ -196,7 +196,7 @@ export const inventoryRouter = router({
 
   /* Bevegelser */
 
-  listMovements: protectedProcedure
+  listMovements: staffProcedure
     .input(
       z
         .object({
@@ -249,7 +249,7 @@ export const inventoryRouter = router({
    * `adjust` er `adminProcedure`-territorium, men ligger her fordi det er samme
    * skriving; rollesjekken står i mutasjonen under.
    */
-  move: protectedProcedure
+  move: staffProcedure
     .input(
       z.object({
         partId: z.uuid(),

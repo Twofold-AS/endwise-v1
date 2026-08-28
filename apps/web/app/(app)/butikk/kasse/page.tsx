@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { ButikkPiller } from '../../_shell/ansatte-piller';
 import { CardShell } from '../../_shell/cards';
 import { lesKurv, settKurvAntall, tomKurv } from '../_kurv';
 
@@ -173,6 +174,9 @@ export default function ButikkKassePage() {
         <p className="text-body text-fg-muted">
           Testkasse hos Stripe. Betalingen går ikke til abonnementet.
         </p>
+        <div className="mt-3">
+          <ButikkPiller />
+        </div>
       </div>
       <Suspense fallback={<p className="py-12 text-center text-body text-fg-muted">Laster …</p>}>
         <KasseInner />

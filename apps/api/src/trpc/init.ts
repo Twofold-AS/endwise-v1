@@ -1,3 +1,4 @@
+import { erMekanikerKonto, kanSkriveDealerDesk } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import type { AddonModule } from '@endwise/modules';
 import { initTRPC, TRPCError } from '@trpc/server';
@@ -17,11 +18,43 @@ export const publicProcedure = t.procedure;
 export const protectedProcedure = t.procedure.use(function isAuthed(opts) {
   const { ctx } = opts;
   if (!ctx.userId || !ctx.tenantId || !ctx.role) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'Du er ikke innlogget.',
+    });
   }
   return opts.next({
     ctx: { ...ctx, userId: ctx.userId, tenantId: ctx.tenantId, role: ctx.role },
   });
+});
+
+/**
+ * Forhandler-desk: dealer_admin, selger og support.
+ * Mekaniker (dealer_staff + mechanics.userId / job_function) får 403.
+ */
+export const staffProcedure = protectedProcedure.use(function isDesk(opts) {
+  const { ctx } = opts;
+  if (!kanSkriveDealerDesk(ctx)) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: erMekanikerKonto(ctx)
+        ? 'Mekaniker har ikke tilgang til dette.'
+        : 'Du har ikke tilgang til dette.',
+    });
+  }
+  return opts.next({ ctx });
+});
+
+/** Krever mechanics.userId i tenanten. */
+export const mechanicProcedure = protectedProcedure.use(function isMechanic(opts) {
+  const { ctx } = opts;
+  if (!ctx.isMechanic || !ctx.mechanicId) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Krever mekaniker-profil.',
+    });
+  }
+  return opts.next({ ctx });
 });
 
 /**

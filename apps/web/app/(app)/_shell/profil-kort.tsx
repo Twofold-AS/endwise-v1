@@ -51,7 +51,7 @@ export function ProfilKort() {
           <CircleUser size={24} className="shrink-0 text-fg-muted" />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="truncate text-label text-fg">{d.navn || '—'}</span>
-            <span className="truncate text-[12px] text-fg-muted">{d.epost}</span>
+            <span className="truncate text-[12px] text-fg-muted">{d.epost.trim() || '—'}</span>
           </div>
         </div>
       </CardShell>

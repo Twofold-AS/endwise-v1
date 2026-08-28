@@ -101,10 +101,10 @@ describe('Verkstedet-flaten — navn og innhold', () => {
     expect(nav).toMatch(/AI-verktøy er parkert/);
   });
 
-  it('rører ikke Kompetanse/Timeplan under Organisasjon', () => {
+  it('rører ikke Kompetanse/Timeplan under Ansatte som sidebar-barn', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'team');
-    expect(org?.label).toBe('Organisasjon');
-    expect(org?.children?.map((c) => c.label)).toEqual(
+    expect(org?.label).toBe('Ansatte');
+    expect(org?.pills?.map((c) => c.label)).toEqual(
       expect.arrayContaining(['Kompetanse', 'Timeplan']),
     );
     const kompetanse = les('../app/(app)/mekanikere/kompetanse/page.tsx');

@@ -42,7 +42,7 @@ describe('F5-11: ENDWISE_NAV har Innboks etter Oversikt', () => {
   it('Endwise-sidebar teller ulest fra listPlatformSupport, ikke listThreads', () => {
     const sidebar = les('../app/(app)/_shell/sidebar.tsx');
     expect(sidebar).toMatch(/listPlatformSupport/);
-    expect(sidebar).toMatch(/context === 'endwise'/);
+    expect(sidebar).toMatch(/shell === 'endwise'/);
     expect(sidebar).toMatch(/filter\(\(t\) => t\.unread\)/);
   });
 

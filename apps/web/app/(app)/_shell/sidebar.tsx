@@ -249,12 +249,7 @@ export function Sidebar() {
               {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
             </Link>
           ) : null}
-          <BrukerRad
-            navn={navn}
-            laster={rolleLaster}
-            collapsed={collapsed}
-            onLoggUt={logout}
-          />
+          <BrukerRad navn={navn} laster={rolleLaster} collapsed={collapsed} onLoggUt={logout} />
         </div>
       </div>
     </aside>

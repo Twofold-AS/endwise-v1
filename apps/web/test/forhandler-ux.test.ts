@@ -22,8 +22,9 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     expect(les('../app/(app)/rapporter/page.tsx')).toMatch(/from '\.\.\/analyse\/page'/);
     expect(les('../app/(app)/hjelp/page.tsx')).toMatch(/from '\.\.\/support\/page'/);
     expect(les('../app/(app)/verkstedet/page.tsx')).toMatch(/from '\.\.\/dashboard\/page'/);
-    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(
-      /from '\.\.\/innstillinger\/tjenestekatalog\/page'/,
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/redirect\('\/organisasjon'/);
+    expect(les('../app/(app)/innstillinger/tjenestekatalog/page.tsx')).toMatch(
+      /redirect\('\/organisasjon'/,
     );
     expect(les('../app/(app)/ansatte/page.tsx')).toMatch(/organisasjon\?seksjon=ansatte/);
     expect(les('../app/(app)/forhandleren/page.tsx')).toMatch(/redirect\('\/organisasjon'/);

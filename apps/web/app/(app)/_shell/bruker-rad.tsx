@@ -52,13 +52,14 @@ export function BrukerRad({
   }
 
   return (
-    <div
-      style={BEVEL}
-      className="flex h-control w-full items-center gap-2 rounded-control px-2.5"
-    >
+    <div style={BEVEL} className="flex h-control w-full items-center gap-2 rounded-control px-2.5">
       {avatar}
       <span className="min-w-0 flex-1 truncate text-left text-label text-fg">
-        {laster ? <span className="inline-block h-3.5 w-24 animate-pulse rounded-sm bg-surface-2" /> : (navn ?? '—')}
+        {laster ? (
+          <span className="inline-block h-3.5 w-24 animate-pulse rounded-sm bg-surface-2" />
+        ) : (
+          (navn ?? '—')
+        )}
       </span>
       <button
         type="button"

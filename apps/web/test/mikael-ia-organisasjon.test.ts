@@ -14,8 +14,8 @@ import {
   pillsForRole,
   SETTINGS_NAV,
 } from '../app/(app)/_shell/nav.ts';
+import { FANE_IDS, FANER, synligeFaner } from '../app/(app)/innstillinger/_faner.ts';
 import { parseOrgSeksjon } from '../app/(app)/organisasjon/_seksjoner.ts';
-import { FANER, FANE_IDS, synligeFaner } from '../app/(app)/innstillinger/_faner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -83,9 +83,9 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
       'Abonnement',
       'Integrasjoner',
     ]);
-    expect(itemsForRole(FORHANDLER_NAV, 'dealer_staff', true).some((i) => i.key === 'organisasjon')).toBe(
-      true,
-    );
+    expect(
+      itemsForRole(FORHANDLER_NAV, 'dealer_staff', true).some((i) => i.key === 'organisasjon'),
+    ).toBe(true);
   });
 
   it('mekaniker ser ikke Organisasjon', () => {
@@ -177,7 +177,8 @@ describe('Mikael IA — Opprett ansatt-dialog og kort', () => {
   it('aktivitetsmerke bruker accent-soft / success, ikke Ny-rød', () => {
     expect(aktivitet).toMatch(/bg-success/);
     expect(aktivitet).toMatch(/bg-accent-soft/);
-    expect(aktivitet).not.toMatch(/destructive|#EE2924|#ee2924/i);
+    expect(aktivitet).not.toMatch(/destructive/);
+    expect(aktivitet).not.toMatch(/#ee2924/i);
   });
 });
 
@@ -194,6 +195,8 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(header).toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(top).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(header).toMatch(/width=\{22\}/);
+    expect(header).toMatch(/logo\/logo\.svg/);
+    expect(header).not.toMatch(/logo-invert|recolor|filter:/);
     expect(header).not.toMatch(/Forhandler/);
   });
 
@@ -208,9 +211,13 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(layout).toMatch(/md:hidden/);
     expect(layout).toMatch(/OrganisasjonSeksjonBar/);
     expect(phone).toMatch(/overflow-x-auto/);
+    expect(phone).toMatch(/flex-nowrap/);
     expect(phone).toMatch(/h-control/);
+    expect(phone).toMatch(/min-h-control/);
     expect(phone).toMatch(/text-label/);
+    expect(phone).toMatch(/whitespace-nowrap/);
     expect(phone).not.toMatch(/TipCard|helpdesk-slider|hamburger/i);
+    expect(phone).not.toMatch(/text-sm|text-\[11px\]/);
     expect(sidebar).toMatch(/hidden[\s\S]*md:flex/);
   });
 
@@ -218,11 +225,43 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(seksjon).toMatch(/bg-sidebar-active/);
     expect(seksjon).toMatch(/hover:bg-surface-2/);
     expect(seksjon).toMatch(/overflow-x-auto/);
+    expect(seksjon).toMatch(/flex-nowrap/);
+    expect(seksjon).toMatch(/whitespace-nowrap/);
     expect(seksjon).toMatch(/h-control/);
+    expect(seksjon).toMatch(/min-h-control/);
     expect(seksjon).toMatch(/text-label/);
     expect(seksjon).toMatch(/gap-2/);
     expect(seksjon).not.toMatch(/bg-fg text-bg/);
     expect(seksjon).not.toMatch(/rounded-pill/);
     expect(seksjon).not.toMatch(/h-row-store|h-11/);
+    expect(seksjon).not.toMatch(/text-sm|text-\[11px\]/);
+    expect(seksjon).not.toMatch(/shadow/);
+    expect(seksjon).not.toMatch(/Button|variant=/);
+  });
+});
+
+describe('Mikael IA — Prisliste på Oversikt, inspect', () => {
+  it('Prisliste er ikke pille og ikke under Jobber', () => {
+    const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
+    expect(jobber?.pills?.some((p) => /prisliste/i.test(p.label))).toBe(false);
+    expect(jobber?.pills?.some((p) => /prisliste/i.test(p.href))).toBe(false);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/redirect\('\/organisasjon'/);
+    expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/PrislisteFlate/);
+    expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/TjenesterInnhold/);
+    expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/seksjon === 'prisliste'/);
+  });
+
+  it('inspect Organisasjon peker på /organisasjon, ikke Forhandleren-rad', () => {
+    const plattform = les('../app/(app)/_lib/plattform.ts');
+    expect(plattform).toMatch(/'\/organisasjon': '\/organisasjon'/);
+    expect(plattform).not.toMatch(/'\/organisasjon': '\/organisasjon\/forhandleren'/);
+    expect(les('../app/(app)/endwise/verksted/[slug]/organisasjon/page.tsx')).toMatch(
+      /ForhandlerKort/,
+    );
+    expect(les('../app/(app)/endwise/verksted/[slug]/organisasjon/forhandleren/page.tsx')).toMatch(
+      /organisasjon/,
+    );
+    expect(les('../app/(app)/_shell/seksjon-bar.tsx')).toMatch(/isVerkstedInspectPath/);
+    expect(les('../app/(app)/_shell/seksjon-bar.tsx')).toMatch(/remapHrefTilInspect/);
   });
 });

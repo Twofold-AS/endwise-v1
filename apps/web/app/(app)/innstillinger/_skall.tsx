@@ -35,7 +35,9 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
       <div>
         <h1 className="text-title text-fg">Innstillinger</h1>
-        <p className="text-body text-fg-muted">Profil og varsler. Organisasjon ligger i sidebaren.</p>
+        <p className="text-body text-fg-muted">
+          Profil og varsler. Organisasjon ligger i sidebaren.
+        </p>
       </div>
 
       {faner.length > 1 && (

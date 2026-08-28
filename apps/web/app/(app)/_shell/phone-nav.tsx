@@ -6,7 +6,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { isVerkstedInspectPath, remapHrefTilInspect, verkstedSlugFromPath } from '../_lib/plattform';
+import {
+  isVerkstedInspectPath,
+  remapHrefTilInspect,
+  verkstedSlugFromPath,
+} from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CountBadge } from './cards';
 import {
@@ -77,14 +81,14 @@ export function PhoneNav() {
   return (
     <nav
       aria-label="Hovednavigasjon"
-      className="flex h-control shrink-0 items-center gap-2 overflow-x-auto border-border border-b bg-sidebar px-3"
+      className="flex h-control min-h-control shrink-0 flex-nowrap items-center gap-2 overflow-x-auto border-border border-b bg-sidebar px-3"
     >
       {shell === 'forhandler' && !inspect ? (
         <div className="relative shrink-0">
           <button
             type="button"
             onClick={() => setHandlinger((v) => !v)}
-            className="inline-flex h-control items-center gap-1.5 rounded-control px-2.5 text-label text-fg hover:bg-surface-2"
+            className="inline-flex h-control min-h-control items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label text-fg hover:bg-surface-2"
           >
             <Zap size={16} strokeWidth={1.75} className="text-accent-strong" />
             Handlinger
@@ -121,7 +125,7 @@ export function PhoneNav() {
         <Link
           href={settingsNav.href as Route}
           aria-current={settingsAktiv ? 'page' : undefined}
-          className={`inline-flex h-control shrink-0 items-center gap-1.5 rounded-control px-2.5 text-label ${
+          className={`inline-flex h-control min-h-control shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label ${
             settingsAktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
           }`}
         >
@@ -150,7 +154,7 @@ function PhoneRad({
     <Link
       href={item.href as Route}
       aria-current={active ? 'page' : undefined}
-      className={`inline-flex h-control shrink-0 items-center gap-1.5 rounded-control px-2.5 text-label ${
+      className={`inline-flex h-control min-h-control shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label ${
         active ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
       }`}
     >

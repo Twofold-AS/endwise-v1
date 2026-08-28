@@ -20,13 +20,7 @@ const FELT =
  * Opprett ansatt som dialog. Gjenbruker invitasjon / team.opprett.
  * Tilganger er synlig og disabled — ACL kommer senere.
  */
-export function OpprettAnsattDialog({
-  apen,
-  onLukk,
-}: {
-  apen: boolean;
-  onLukk: () => void;
-}) {
+export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: () => void }) {
   const utils = trpc.useUtils();
   const [navn, setNavn] = useState('');
   const [epost, setEpost] = useState('');

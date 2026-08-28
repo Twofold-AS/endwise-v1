@@ -137,8 +137,7 @@ function AnsattKort({
 
       <div className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-label text-fg-muted">
-          Rolle{' '}
-          <span className="text-fg">{FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}</span>
+          Rolle <span className="text-fg">{FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}</span>
         </span>
         {kanEndre && rad.kanEndres ? (
           <button
@@ -208,14 +207,21 @@ function RolleDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLukk: (
           </select>
         </label>
         <div className="mt-4 flex justify-end gap-2">
-          <button type="button" onClick={onLukk} className="h-control px-3 text-label text-fg-muted">
+          <button
+            type="button"
+            onClick={onLukk}
+            className="h-control px-3 text-label text-fg-muted"
+          >
             Avbryt
           </button>
           <button
             type="button"
             disabled={sett.isPending || funksjon === rad.funksjon}
             onClick={() =>
-              sett.mutate({ userId: rad.userId, funksjon: funksjon as (typeof ROLLE_VALG)[number]['verdi'] })
+              sett.mutate({
+                userId: rad.userId,
+                funksjon: funksjon as (typeof ROLLE_VALG)[number]['verdi'],
+              })
             }
             className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
           >
@@ -251,7 +257,11 @@ function KompetanseDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLu
           <div className="mt-3">
             <KompetanseVelger valgte={valgte} onEndre={setValgte} />
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={onLukk} className="h-control px-3 text-label text-fg-muted">
+              <button
+                type="button"
+                onClick={onLukk}
+                className="h-control px-3 text-label text-fg-muted"
+              >
                 Avbryt
               </button>
               <button

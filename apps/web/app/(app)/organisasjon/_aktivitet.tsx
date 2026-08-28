@@ -1,6 +1,6 @@
 /**
  * Aktivitetsmerke på ansattkort.
- * Jonas: accent-soft / success. Ikke Ny-rød, ikke #EE2924.
+ * Jonas: accent-soft / success. Ikke Ny-rød.
  */
 export function AktivitetMerke({
   status,

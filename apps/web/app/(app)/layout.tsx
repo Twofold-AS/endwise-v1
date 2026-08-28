@@ -9,8 +9,8 @@ import { LydProvider } from './_lib/lyd';
 import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
 import { erTillattMekanikerSti } from './_shell/nav';
-import { PwaRegister } from './_shell/pwa-register';
 import { PhoneNav } from './_shell/phone-nav';
+import { PwaRegister } from './_shell/pwa-register';
 import { OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
@@ -146,7 +146,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <Sidebar />
             </Suspense>
             <div className="flex min-w-0 flex-1 flex-col">
-              <Suspense fallback={<div className="h-control shrink-0 border-border border-b bg-bg" />}>
+              <Suspense
+                fallback={<div className="h-control shrink-0 border-border border-b bg-bg" />}
+              >
                 <div className="md:hidden">
                   <PhoneNav />
                 </div>

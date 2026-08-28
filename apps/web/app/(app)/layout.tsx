@@ -9,6 +9,7 @@ import { LydProvider } from './_lib/lyd';
 import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
 import { erTillattMekanikerSti } from './_shell/nav';
+import { InboxFilterProvider } from './_shell/inbox-filter';
 import { PhoneNav } from './_shell/phone-nav';
 import { PwaRegister } from './_shell/pwa-register';
 import { InnboksSeksjonBar, OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
@@ -131,8 +132,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <LydProvider>
       <LiveSync>
         <SidebarStateProvider>
-          <PwaRegister />
-          <div className="flex h-screen w-screen overflow-hidden bg-bg text-fg">
+          <InboxFilterProvider>
+            <PwaRegister />
+            <div className="flex h-screen w-screen overflow-hidden bg-bg text-fg">
             <Suspense
               fallback={
                 <div className="hidden w-[248px] shrink-0 border-border border-r bg-sidebar md:block" />
@@ -174,7 +176,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 {children}
               </main>
             </div>
-          </div>
+            </div>
+          </InboxFilterProvider>
         </SidebarStateProvider>
       </LiveSync>
     </LydProvider>

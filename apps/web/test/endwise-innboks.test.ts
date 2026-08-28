@@ -132,10 +132,10 @@ describe('F5-14: Ny samtale — Kunde · Intern · Support', () => {
   });
 });
 
-describe('F5-14: Ny samtale-knappen er synlig i begge innbokser', () => {
-  it('forhandler- og Endwise-sidebar har merket Ny samtale, ikke bare et ikon', () => {
+describe('F5-14: Ny chat-knappen er synlig i begge innbokser', () => {
+  it('forhandler- og Endwise-sidebar har merket Ny chat, ikke bare et ikon', () => {
     const sidebar = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
-    expect(sidebar).toMatch(/Ny samtale/);
+    expect(sidebar).toMatch(/Ny chat/);
     expect(sidebar).toMatch(/\/innboks\?ny=1/);
     expect(sidebar).toMatch(/\/endwise\/innboks\?ny=1/);
     expect(sidebar).toMatch(/NySamtaleLenke/);

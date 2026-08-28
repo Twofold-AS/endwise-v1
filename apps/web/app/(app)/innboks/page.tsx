@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageSquare, Sparkles, TriangleAlert } from '@endwise/ui';
+import { Button, Inbox, MessageSquarePlus, Sparkles, TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -62,17 +62,6 @@ function MeldingerPageInner() {
 
   return (
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-8 py-7">
-      {/**
-       * «Ny samtale»-knappen sto her fram til og er flyttet
-       * til innboks-sidebarens header. Den lå på den eneste skjermen der man
-       * ikke leser en tråd — altså ikke der man er når man vil starte en ny.
-       * Nå står den der lista står, og er tilgjengelig hele tiden.
-       */}
-      <div>
-        <h1 className="text-title text-fg">Oversikt</h1>
-        <p className="text-body text-fg-muted">Velg en samtale i lista til venstre for å svare.</p>
-      </div>
-
       {nySamtale && <NySamtale onLukk={() => router.replace('/innboks' as Route)} />}
 
       {/* Eskalert fra AI. Live på SSE mens siden er åpen. */}
@@ -110,25 +99,16 @@ function MeldingerPageInner() {
         </section>
       )}
 
-      {/**
-       * Her sto «Ingen samtale valgt» i tillegg til ingressen over, som
-       * allerede sier «Velg en samtale i lista til venstre». To tomromsbeskjeder
-       * om samme tomrom, 60 piksler fra hverandre. Igjen står forklaringen som
-       * faktisk lærer bort noe — hva de tre partene er.
-       */}
       {!nySamtale && (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <MessageSquare size={24} className="text-fg-muted" />
-          <p className="text-label text-fg">Ingen samtale valgt</p>
-          <p className="max-w-sm text-[12px] text-fg-muted leading-relaxed">
-            Velg en tråd til venstre, eller skriv til Endwise.
-          </p>
-          <Link
-            href={'/innboks?ny=1' as Route}
-            className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg"
-          >
-            Skriv til Endwise
-          </Link>
+        <div className="flex min-h-[min(520px,70dvh)] flex-col items-center justify-center gap-4 py-16 text-center">
+          <Inbox size={56} strokeWidth={1.25} className="text-fg-muted" />
+          <p className="text-title text-fg">Ingen valgte meldinger</p>
+          <Button asChild>
+            <Link href={'/innboks?ny=1' as Route}>
+              <MessageSquarePlus size={16} strokeWidth={1.75} />
+              Ny chat
+            </Link>
+          </Button>
         </div>
       )}
     </div>

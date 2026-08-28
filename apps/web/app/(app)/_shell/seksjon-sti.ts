@@ -5,7 +5,11 @@ export function erOrganisasjonSide(pathname: string): boolean {
   return /\/endwise\/verksted\/[^/]+\/organisasjon(\/|$)/.test(pathname);
 }
 
+export function erDealerInnboks(pathname: string): boolean {
+  return pathname === '/innboks' || pathname.startsWith('/innboks/');
+}
+
 export function erInnboksSide(pathname: string): boolean {
-  if (pathname === '/innboks' || pathname.startsWith('/innboks/')) return true;
+  if (erDealerInnboks(pathname)) return true;
   return /\/endwise\/verksted\/[^/]+\/innboks(\/|$)/.test(pathname);
 }

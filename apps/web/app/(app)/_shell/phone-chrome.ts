@@ -22,8 +22,15 @@ export function endSpacerPx(scrollerWidth: number, aktivWidth: number): number {
   return Math.max(0, scrollerWidth - aktivWidth);
 }
 
+export function finnAktivIScroll(scroller: HTMLElement): HTMLElement | null {
+  return (
+    scroller.querySelector<HTMLElement>('[aria-current="page"]') ??
+    scroller.querySelector<HTMLElement>('[aria-pressed="true"]')
+  );
+}
+
 export function scrollAktivTilStart(scroller: HTMLElement, instant: boolean) {
-  const aktiv = scroller.querySelector<HTMLElement>('[aria-current="page"]');
+  const aktiv = finnAktivIScroll(scroller);
   if (!aktiv) return;
   const left =
     aktiv.getBoundingClientRect().left -
@@ -34,7 +41,17 @@ export function scrollAktivTilStart(scroller: HTMLElement, instant: boolean) {
 
 /** Sett end-spacer fra aktiv knapp, deretter scroll den inntil logo. */
 export function laasAktivMotStart(scroller: HTMLElement, spacer: HTMLElement, instant: boolean) {
-  const aktiv = scroller.querySelector<HTMLElement>('[aria-current="page"]');
+  const aktiv = finnAktivIScroll(scroller);
   spacer.style.width = `${endSpacerPx(scroller.clientWidth, aktiv?.offsetWidth ?? 0)}px`;
   scrollAktivTilStart(scroller, instant);
+}
+
+/** Ett steg mot starten av den horisontale baren. Ikke en destinasjon. */
+export function scrollTilbake(scroller: HTMLElement) {
+  const steg = Math.max(64, scroller.clientWidth - 24);
+  scroller.scrollTo({
+    left: Math.max(0, scroller.scrollLeft - steg),
+    top: 0,
+    behavior: 'smooth',
+  });
 }

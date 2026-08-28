@@ -105,13 +105,6 @@ export const ORGANISASJON_SEKSJONER: NavChild[] = [
   { label: 'Integrasjoner', href: '/organisasjon?seksjon=integrasjoner', roles: ADMIN_KUN },
 ];
 
-/**
- * Mikael IA 28.08 kveld — Innboks matcher Organisasjon-skallet.
- * Top-bar 2 er bare Oversikt (alle chatter). Kunder/Intern/Endwise
- * er filterknapper under pilla, ikke egne destinasjoner.
- */
-export const INNBOKS_SEKSJONER: NavChild[] = [{ label: 'Oversikt', href: '/innboks' }];
-
 export type ShellKey = 'forhandler' | 'mekaniker' | 'endwise' | 'endwise_partner';
 
 const DRIFT: OrgRole[] = ['dealer_staff', 'dealer_admin'];
@@ -221,7 +214,6 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/innboks',
     roles: DRIFT,
     badge: 'unread',
-    pills: INNBOKS_SEKSJONER,
   },
   {
     key: 'saker',

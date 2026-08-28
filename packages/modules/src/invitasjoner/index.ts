@@ -52,6 +52,23 @@ export function normaliserEpost(epost: string): string {
   return epost.trim().toLowerCase();
 }
 
+/**
+ * Trenger invitee å sette passord på godta-siden?
+ * Eier bytter alltid (tokenet er beviset). Ny bruker må lage konto.
+ * Eksisterende bruker uten credential-rad (Opprett ansatt uten innlogging,
+ * deretter invitert) må også sette passord — ellers feiler sign-in med
+ * «Credential account not found».
+ */
+export function inviteeKreverPassord(input: {
+  kind: Invitasjonskind;
+  harBruker: boolean;
+  harCredential: boolean;
+}): boolean {
+  if (input.kind === 'owner') return true;
+  if (!input.harBruker) return true;
+  return !input.harCredential;
+}
+
 export interface NyInvitasjon {
   tenantId: string;
   epost: string;

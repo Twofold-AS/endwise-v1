@@ -5,8 +5,12 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   destinasjonEtterInvite,
   destinasjonNarSesjonFeiler,
+  destinasjonVedManglendeSesjon,
+  erUautorisert,
   feilKlasseUtenHemmelighet,
   krevRevokeAndreSesjoner,
+  MANGLER_SESJON_UI,
+  norskAuthFeil,
   REVOKE_ANDRE_SESJONER_UI,
   trengerKodeSteg,
 } from '../app/invitasjon/_landing.ts';
@@ -124,6 +128,51 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
       krevRevokeAndreSesjoner(async () => ({ error: null }), 'invite'),
     ).resolves.toBeUndefined();
     warn.mockRestore();
+  });
+});
+
+describe('P0: avatar-onboarding dør ikke på 401', () => {
+  const kilde = readFileSync(resolve(her, '../app/invitasjon/[token]/page.tsx'), 'utf8');
+  const avatar = readFileSync(resolve(her, '../app/(app)/_avatar/avatar-velger.tsx'), 'utf8');
+
+  it('UNAUTHORIZED og manglende credential blir norsk, aldri rå kodestreng', () => {
+    expect(erUautorisert(new Error('UNAUTHORIZED'))).toBe(true);
+    expect(erUautorisert({ message: 'UNAUTHORIZED' })).toBe(true);
+    expect(erUautorisert({ data: { code: 'UNAUTHORIZED' } })).toBe(true);
+    expect(erUautorisert(new Error('Credential account not found'))).toBe(true);
+    expect(erUautorisert(new Error('Nettet er nede'))).toBe(false);
+    expect(norskAuthFeil(new Error('UNAUTHORIZED'))).toBe(MANGLER_SESJON_UI);
+    expect(norskAuthFeil(new Error('UNAUTHORIZED'))).not.toMatch(/UNAUTHORIZED/);
+    expect(norskAuthFeil(new Error('Credential account not found'))).toBe(MANGLER_SESJON_UI);
+    expect(norskAuthFeil(new Error('Klarte ikke lagre'))).toBe('Klarte ikke lagre');
+    expect(destinasjonVedManglendeSesjon()).toBe('/signin');
+    expect(MANGLER_SESJON_UI).toMatch(/innlogget|invitasjon/i);
+    expect(MANGLER_SESJON_UI).not.toMatch(/UNAUTHORIZED|#EE2924/i);
+  });
+
+  it('avatar-steget aktiverer org før tRPC, og 401 sender til /signin', () => {
+    const start = kilde.indexOf('async function bekreftKode');
+    const bekreft = kilde.slice(start, kilde.indexOf('const rolle', start));
+    expect(bekreft).toMatch(/aktiverOrg\(/);
+    expect(bekreft.indexOf('aktiverOrg')).toBeLessThan(bekreft.indexOf("setSteg('avatar')"));
+    expect(kilde).toMatch(/erUautorisert/);
+    expect(kilde).toMatch(/destinasjonVedManglendeSesjon|\/signin/);
+    expect(kilde).toMatch(/norskAuthFeil/);
+    expect(kilde).not.toMatch(/setFeil\(\(error as Error\)\.message\)/);
+  });
+
+  it('Hopp over lander uten å kreve setAvatar når man er innlogget', () => {
+    expect(kilde).toMatch(/async function hoppOverAvatar|function hoppOverAvatar/);
+    const start = kilde.indexOf('hoppOverAvatar');
+    const hopp = kilde.slice(start, kilde.indexOf('const rolle', start));
+    expect(hopp).toMatch(/land\(/);
+    expect(hopp).not.toMatch(/settAvatar|setAvatar|mutateAsync/);
+    expect(kilde).toMatch(/onClick=\{\(\) => void hoppOverAvatar\(\)\}/);
+  });
+
+  it('AvatarVelger viser norsk sidetekst, ikke rå UNAUTHORIZED', () => {
+    expect(avatar).toMatch(/norskAuthFeil/);
+    expect(avatar).not.toMatch(/\{lagre\.error\.message\}/);
   });
 });
 

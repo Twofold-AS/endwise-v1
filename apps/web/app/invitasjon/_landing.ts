@@ -1,3 +1,10 @@
+export {
+  destinasjonVedManglendeSesjon,
+  erUautorisert,
+  MANGLER_SESJON_UI,
+  norskAuthFeil,
+} from '../_auth/feil';
+
 /**
  * Hvor en fersk invitee skal etter ekte sesjon (passord + ev. 2FA).
  * Hard navigasjon (`location.assign`) skjer i kallstedet, ikke her.

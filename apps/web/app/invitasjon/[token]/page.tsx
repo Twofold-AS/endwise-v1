@@ -8,7 +8,14 @@ import { trpc } from '@/lib/trpc';
 import { Field, INPUT, PassordFelt } from '../../_auth/felter';
 import { fullforAvatarValg } from '../../(app)/_avatar/avatar-valg';
 import { AvatarVelger } from '../../(app)/_avatar/avatar-velger';
-import { destinasjonEtterInvite, krevRevokeAndreSesjoner, trengerKodeSteg } from '../_landing';
+import {
+  destinasjonEtterInvite,
+  destinasjonVedManglendeSesjon,
+  erUautorisert,
+  krevRevokeAndreSesjoner,
+  norskAuthFeil,
+  trengerKodeSteg,
+} from '../_landing';
 
 /**
  * F1-10 / F5-26 — invitee-siden. Første møte med Endwise.
@@ -104,11 +111,27 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     if (steg === 'kode') codeRef.current?.focus();
   }, [steg]);
 
+  useEffect(() => {
+    if (steg !== 'avatar') return;
+    if ((me.isError && erUautorisert(me.error)) || (meg.isError && erUautorisert(meg.error))) {
+      window.location.assign(destinasjonVedManglendeSesjon());
+    }
+  }, [steg, me.isError, me.error, meg.isError, meg.error]);
+
   async function aktiverOrg() {
     const orgs = await authClient.organization.list();
+    if (orgs.error) {
+      throw new Error(orgs.error.message ?? 'Klarte ikke hente forhandleren.');
+    }
     const platform = orgs.data?.find((o) => o.slug === 'endwise');
     const first = platform ?? orgs.data?.[0];
-    if (first) await authClient.organization.setActive({ organizationId: first.id });
+    if (!first) {
+      throw new Error('Fant ingen forhandler å knytte sesjonen til.');
+    }
+    const aktiv = await authClient.organization.setActive({ organizationId: first.id });
+    if (aktiv.error) {
+      throw new Error(aktiv.error.message ?? 'Klarte ikke aktivere forhandleren.');
+    }
   }
 
   async function land(kind: Invitasjon['kind']) {
@@ -121,6 +144,10 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
       const me = await utils.session.me.fetch();
       window.location.assign(destinasjonEtterInvite(kind, me.landing));
     } catch (error) {
+      if (erUautorisert(error)) {
+        window.location.assign(destinasjonVedManglendeSesjon());
+        return;
+      }
       const feil = error instanceof Error ? error.message : String(error);
       window.location.assign(destinasjonEtterInvite(kind, null, feil));
     }
@@ -175,7 +202,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         password: trimmedPassord,
       });
       if (inn.error) {
-        setFeil(inn.error.message ?? 'Klarte ikke logge inn. Prøv igjen fra denne siden.');
+        setFeil(norskAuthFeil(inn.error));
         setFerdig(false);
         return;
       }
@@ -200,7 +227,11 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
       }
       setFerdig(false);
     } catch (error) {
-      setFeil((error as Error).message);
+      if (erUautorisert(error)) {
+        window.location.assign(destinasjonVedManglendeSesjon());
+        return;
+      }
+      setFeil(norskAuthFeil(error));
       setFerdig(false);
     } finally {
       setSender(false);
@@ -227,9 +258,14 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         await land(inv.kind);
         return;
       }
+      await aktiverOrg();
       setSteg('avatar');
     } catch (error) {
-      const melding = error instanceof Error ? error.message : String(error);
+      if (erUautorisert(error)) {
+        window.location.assign(destinasjonVedManglendeSesjon());
+        return;
+      }
+      const melding = norskAuthFeil(error);
       if (trengerKodeSteg({ feil: melding })) {
         setFeil('Tofaktor kreves. Skriv koden vi sendte.');
         return;
@@ -256,7 +292,32 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
       }
       await land(inv.kind);
     } catch (error) {
-      setFeil((error as Error).message);
+      if (erUautorisert(error)) {
+        window.location.assign(destinasjonVedManglendeSesjon());
+        return;
+      }
+      setFeil(norskAuthFeil(error));
+    } finally {
+      setSender(false);
+    }
+  }
+
+  async function hoppOverAvatar() {
+    if (!inv) return;
+    if ((me.isError && erUautorisert(me.error)) || (meg.isError && erUautorisert(meg.error))) {
+      window.location.assign(destinasjonVedManglendeSesjon());
+      return;
+    }
+    setFeil(null);
+    setSender(true);
+    try {
+      await land(inv.kind);
+    } catch (error) {
+      if (erUautorisert(error)) {
+        window.location.assign(destinasjonVedManglendeSesjon());
+        return;
+      }
+      setFeil(norskAuthFeil(error));
     } finally {
       setSender(false);
     }
@@ -476,7 +537,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
               <button
                 type="button"
                 disabled={sender}
-                onClick={() => void fullforAvatar()}
+                onClick={() => void hoppOverAvatar()}
                 className="text-center text-[12px] text-fg-muted underline-offset-2 hover:underline disabled:opacity-40"
               >
                 Hopp over

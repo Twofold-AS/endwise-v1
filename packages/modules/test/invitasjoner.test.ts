@@ -8,6 +8,7 @@ import {
   createInvitasjonsmodul,
   hashInvitasjonstoken,
   InvitasjonUgyldigError,
+  inviteeKreverPassord,
   normaliserEpost,
 } from '../src/invitasjoner/index.ts';
 
@@ -44,6 +45,24 @@ describe('F1-10: token og validering (uten database)', () => {
       /endwise_admin[\s\S]{0,200}administrator|administrator[\s\S]{0,200}endwise_admin/,
     );
     expect(kilde).toMatch(/endwise_support[\s\S]{0,80}support|support[\s\S]{0,80}endwise_support/);
+  });
+
+  it('eksisterende bruker uten credential-konto må sette passord (staff og platform)', () => {
+    expect(inviteeKreverPassord({ kind: 'staff', harBruker: true, harCredential: false })).toBe(
+      true,
+    );
+    expect(inviteeKreverPassord({ kind: 'platform', harBruker: true, harCredential: false })).toBe(
+      true,
+    );
+    expect(inviteeKreverPassord({ kind: 'staff', harBruker: true, harCredential: true })).toBe(
+      false,
+    );
+    expect(inviteeKreverPassord({ kind: 'staff', harBruker: false, harCredential: false })).toBe(
+      true,
+    );
+    expect(inviteeKreverPassord({ kind: 'owner', harBruker: true, harCredential: true })).toBe(
+      true,
+    );
   });
 
   it('oppslaget caster hashen til text (unngår lookup_open_invitation(unknown))', () => {

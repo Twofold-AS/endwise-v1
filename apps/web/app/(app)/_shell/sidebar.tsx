@@ -113,11 +113,14 @@ export function Sidebar() {
     return (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0);
   }, [shell, support.data, threads.data]);
 
-  // K åpner quick actions.
+  // K åpner quick actions — bare desktop. På telefon er Handlinger borte
+  // (ingen bevel, ingen overflow). Dropdown portaler til body, så ⌘K
+  // må ikke åpne den under md.
   const [quickOpen, setQuickOpen] = useState(false);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
+        if (!window.matchMedia('(min-width: 768px)').matches) return;
         e.preventDefault();
         setQuickOpen((o) => !o);
       }

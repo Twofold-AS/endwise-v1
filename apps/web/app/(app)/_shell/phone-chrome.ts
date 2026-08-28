@@ -13,6 +13,15 @@ export const PHONE_LOGO_KOLONNE =
 /** Horisontal scroll uten vertikal wiggle. */
 export const PHONE_H_SCROLL = 'overflow-x-auto overflow-y-hidden overscroll-y-none touch-pan-x';
 
+/**
+ * Trailing space så ethvert valgt punkt kan scrolle flush etter logo.
+ * Målt — ikke et magisk px som bare treffer én skjermbredde.
+ */
+export function endSpacerPx(scrollerWidth: number, aktivWidth: number): number {
+  if (aktivWidth <= 0) return 0;
+  return Math.max(0, scrollerWidth - aktivWidth);
+}
+
 export function scrollAktivTilStart(scroller: HTMLElement, instant: boolean) {
   const aktiv = scroller.querySelector<HTMLElement>('[aria-current="page"]');
   if (!aktiv) return;
@@ -21,4 +30,11 @@ export function scrollAktivTilStart(scroller: HTMLElement, instant: boolean) {
     scroller.getBoundingClientRect().left +
     scroller.scrollLeft;
   scroller.scrollTo({ left: Math.max(0, left), top: 0, behavior: instant ? 'instant' : 'smooth' });
+}
+
+/** Sett end-spacer fra aktiv knapp, deretter scroll den inntil logo. */
+export function laasAktivMotStart(scroller: HTMLElement, spacer: HTMLElement, instant: boolean) {
+  const aktiv = scroller.querySelector<HTMLElement>('[aria-current="page"]');
+  spacer.style.width = `${endSpacerPx(scroller.clientWidth, aktiv?.offsetWidth ?? 0)}px`;
+  scrollAktivTilStart(scroller, instant);
 }

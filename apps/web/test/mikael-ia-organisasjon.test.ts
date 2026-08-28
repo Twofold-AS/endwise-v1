@@ -226,12 +226,17 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(phone).toMatch(/text-label/);
     expect(phone).toMatch(/whitespace-nowrap/);
     expect(phone).toMatch(/logo\/logo\.svg/);
-    expect(phone).toMatch(/scrollAktivTilStart/);
+    expect(phone).toMatch(/laasAktivMotStart/);
+    expect(phone).toMatch(/data-end-spacer/);
+    expect(phone).not.toMatch(/Handlinger/);
+    expect(phone).not.toMatch(/QUICK_ACTIONS/);
     expect(phone).not.toMatch(/logo-invert|recolor|filter:/);
     expect(phone).not.toMatch(/h-row-store|h-11/);
     expect(phone).not.toMatch(/TipCard|helpdesk-slider|hamburger/i);
     expect(phone).not.toMatch(/text-sm|text-\[11px\]/);
     expect(sidebar).toMatch(/hidden[\s\S]*md:flex/);
+    expect(sidebar).toMatch(/Handlinger/);
+    expect(sidebar).toMatch(/min-width:\s*768px/);
   });
 
   it('top-bar 2 er sidebar-rad, ikke svart pille', () => {
@@ -245,6 +250,9 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(seksjon).toMatch(/whitespace-nowrap/);
     expect(seksjon).toMatch(/h-control/);
     expect(seksjon).toMatch(/min-h-control/);
+    expect(seksjon).toMatch(/max-md:py-1\.5/);
+    expect(seksjon).toMatch(/max-md:py-1/);
+    expect(seksjon).toMatch(/max-md:h-auto/);
     expect(seksjon).toMatch(/text-label/);
     expect(seksjon).toMatch(/gap-2/);
     expect(seksjon).not.toMatch(/bg-fg text-bg/);

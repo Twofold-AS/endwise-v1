@@ -1,11 +1,11 @@
 'use client';
 
-import { type LucideIcon, Zap } from '@endwise/ui';
+import type { LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useMemo, useRef } from 'react';
 import { trpc } from '@/lib/trpc';
 import {
   isVerkstedInspectPath,
@@ -20,31 +20,31 @@ import {
   itemsForRole,
   type NavItem,
   navForShell,
-  QUICK_ACTIONS,
   settingsForShell,
   shellForBruker,
 } from './nav';
 import {
+  laasAktivMotStart,
   PHONE_H_SCROLL,
   PHONE_LOGO_KOLONNE,
   PHONE_LOGO_PX,
-  scrollAktivTilStart,
 } from './phone-chrome';
 
 /**
  * Telefon: horisontal sidebar. Erstatter top-bar 1.
  * Samme destinasjoner som desktop. Hjelp er en vanlig knapp, ikke slider.
+ * Ingen Handlinger — den bevelen er desktop-sidebar.
  * Hovedraden er h-row (40px-token) — større enn 32-raden, ikke 44.
  * Logo er pinnest til venstre. Valgt punkt scroller inntil logo.
+ * End-spacer måles (clientWidth − aktivWidth) så siste punkt når samme plass.
  */
 export function PhoneNav() {
   const pathname = usePathname() ?? '';
-  const router = useRouter();
   const { role, jobbfunksjon, isMechanic, shopEnabled, erPlattform } = useOrgRole();
   const inspect = isVerkstedInspectPath(pathname);
   const inspectSlug = verkstedSlugFromPath(pathname);
-  const [handlinger, setHandlinger] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const spacerRef = useRef<HTMLDivElement>(null);
   const forsteScroll = useRef(true);
 
   const shell = inspect
@@ -92,11 +92,23 @@ export function PhoneNav() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll når aktiv destinasjon bytter
   useEffect(() => {
     const scroller = scrollerRef.current;
-    if (!scroller) return;
+    const spacer = spacerRef.current;
+    if (!scroller || !spacer) return;
+
+    const laas = (instant: boolean) => laasAktivMotStart(scroller, spacer, instant);
     const instant = forsteScroll.current;
     forsteScroll.current = false;
-    const ramme = requestAnimationFrame(() => scrollAktivTilStart(scroller, instant));
-    return () => cancelAnimationFrame(ramme);
+    const ramme = requestAnimationFrame(() => laas(instant));
+
+    const ro = new ResizeObserver(() => laas(true));
+    ro.observe(scroller);
+    const aktiv = scroller.querySelector<HTMLElement>('[aria-current="page"]');
+    if (aktiv) ro.observe(aktiv);
+
+    return () => {
+      cancelAnimationFrame(ramme);
+      ro.disconnect();
+    };
   }, [pathname, items.length, settingsAktiv]);
 
   return (
@@ -117,35 +129,6 @@ export function PhoneNav() {
         ref={scrollerRef}
         className={`flex min-h-0 min-w-0 flex-1 flex-nowrap items-center gap-2 ${PHONE_H_SCROLL} pr-3`}
       >
-        {shell === 'forhandler' && !inspect ? (
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={() => setHandlinger((v) => !v)}
-              className="inline-flex h-row min-h-row items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label text-fg hover:bg-surface-2"
-            >
-              <Zap size={16} strokeWidth={1.75} className="text-accent-strong" />
-              Handlinger
-            </button>
-            {handlinger ? (
-              <div className="absolute top-full left-0 z-40 mt-1 min-w-[160px] rounded-control border border-border bg-bg py-1">
-                {QUICK_ACTIONS.map((a) => (
-                  <button
-                    key={a.href}
-                    type="button"
-                    onClick={() => {
-                      setHandlinger(false);
-                      router.push(a.href as Route);
-                    }}
-                    className="flex h-control w-full items-center px-2.5 text-left text-label text-fg hover:bg-surface-2"
-                  >
-                    {a.label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
         {items.map((item) => (
           <PhoneRad
             key={item.key}
@@ -167,6 +150,7 @@ export function PhoneNav() {
             {settingsNav.label}
           </Link>
         ) : null}
+        <div ref={spacerRef} aria-hidden className="pointer-events-none shrink-0" data-end-spacer />
       </div>
     </nav>
   );

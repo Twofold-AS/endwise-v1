@@ -1,6 +1,6 @@
 'use client';
 
-import { type LucideIcon } from '@endwise/ui';
+import type { LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,7 +23,12 @@ import {
   settingsForShell,
   shellForBruker,
 } from './nav';
-import { PHONE_H_SCROLL, PHONE_LOGO_KOLONNE, PHONE_LOGO_PX, laasAktivMotStart } from './phone-chrome';
+import {
+  laasAktivMotStart,
+  PHONE_H_SCROLL,
+  PHONE_LOGO_KOLONNE,
+  PHONE_LOGO_PX,
+} from './phone-chrome';
 
 /**
  * Telefon: horisontal sidebar. Erstatter top-bar 1.

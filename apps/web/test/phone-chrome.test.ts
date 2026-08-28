@@ -26,6 +26,18 @@ describe('phone-chrome', () => {
     expect(endSpacerPx(320, 0)).toBe(0);
   });
 
+  it('siste punkt kan nå scroller-start med målt spacer', () => {
+    const widths = [118, 96, 92, 104, 108, 86, 132];
+    const gap = 8;
+    const clientWidth = 320;
+    const last = widths.at(-1) ?? 0;
+    const spacer = endSpacerPx(clientWidth, last);
+    const gaps = gap * Math.max(0, widths.length - 1);
+    const content = widths.reduce((sum, w) => sum + w, 0) + gaps + spacer;
+    const lastOffset = widths.slice(0, -1).reduce((sum, w) => sum + w, 0) + gaps;
+    expect(content - clientWidth).toBeGreaterThanOrEqual(lastOffset);
+  });
+
   it('scroller aktivt punkt til start uten vertikal hopp', () => {
     const aktiv = {
       getBoundingClientRect: () => ({ left: 80, top: 12 }),
@@ -64,11 +76,7 @@ describe('phone-chrome', () => {
       },
     };
 
-    laasAktivMotStart(
-      scroller as unknown as HTMLElement,
-      spacer as unknown as HTMLElement,
-      true,
-    );
+    laasAktivMotStart(scroller as unknown as HTMLElement, spacer as unknown as HTMLElement, true);
 
     expect(spacer.style.width).toBe('210px');
     expect(sett.left).toBe(240);

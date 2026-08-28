@@ -1,6 +1,6 @@
 'use client';
 
-import { Funnel, Plus, Search } from '@endwise/ui';
+import { ClipboardList, Funnel, Plus, Search, Wrench } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';

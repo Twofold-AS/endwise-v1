@@ -82,18 +82,16 @@ describe('NavRow: Ny først, teller etter label, ingen barn', () => {
     sidebar.indexOf('function NavRow'),
     sidebar.indexOf('function medFra'),
   );
-  const innhold = navRow.slice(navRow.indexOf('const innhold'), navRow.indexOf('return ('));
-
   it('NewBadge kommer før telleren i radinnholdet (første merke etter label)', () => {
-    const ny = innhold.indexOf('<NewBadge');
-    const teller = innhold.indexOf('{teller}');
+    const ny = navRow.indexOf('<NewBadge');
+    const teller = navRow.indexOf('count > 0 ? teller');
     expect(ny).toBeGreaterThan(-1);
     expect(teller).toBeGreaterThan(ny);
   });
 
   it('rader uten barn i sidebaren: CountBadge etter label, ingen chevron', () => {
     expect(navRow).not.toMatch(/ChevronDown|harBarn|childrenForRole/);
-    expect(innhold).toMatch(/count > 0 \? teller/);
+    expect(navRow).toMatch(/count > 0 \? teller/);
   });
 });
 

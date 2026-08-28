@@ -26,6 +26,15 @@ const ROLLE_VALG = [
   { verdi: 'mekaniker', label: 'Mekaniker' },
 ] as const;
 
+type JobFunksjon = 'leder' | 'selger' | 'support' | 'mekaniker';
+
+function somJobFunksjon(verdi: string): JobFunksjon | null {
+  if (verdi === 'leder' || verdi === 'selger' || verdi === 'support' || verdi === 'mekaniker') {
+    return verdi;
+  }
+  return null;
+}
+
 export function OrganisasjonAnsatte() {
   const { isAdmin } = useOrgRole();
   const [opprett, setOpprett] = useState(false);
@@ -180,7 +189,7 @@ function AnsattKort({
 
 function RolleDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLukk: () => void }) {
   const utils = trpc.useUtils();
-  const [funksjon, setFunksjon] = useState(rad.funksjon);
+  const [funksjon, setFunksjon] = useState<JobFunksjon>(rad.funksjon);
   const sett = trpc.team.setFunction.useMutation({
     onSuccess: () => {
       void utils.team.list.invalidate();
@@ -196,7 +205,10 @@ function RolleDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLukk: (
           <span className="text-label text-fg">Rolle</span>
           <select
             value={funksjon}
-            onChange={(e) => setFunksjon(e.target.value)}
+            onChange={(e) => {
+              const neste = somJobFunksjon(e.target.value);
+              if (neste) setFunksjon(neste);
+            }}
             className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg"
           >
             {ROLLE_VALG.map((r) => (

@@ -13,6 +13,18 @@ const ROLLER: { verdi: Funksjon; label: string }[] = [
   { verdi: 'support', label: 'Support' },
 ];
 
+function somFunksjon(verdi: string): Funksjon | null {
+  if (
+    verdi === 'selger' ||
+    verdi === 'support' ||
+    verdi === 'mekaniker' ||
+    verdi === 'forhandler'
+  ) {
+    return verdi;
+  }
+  return null;
+}
+
 const FELT =
   'h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:bg-surface-2 disabled:text-fg-muted';
 
@@ -165,7 +177,10 @@ export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: (
             <span className="text-label text-fg">Rolle</span>
             <select
               value={funksjon}
-              onChange={(e) => setFunksjon(e.target.value as Funksjon)}
+              onChange={(e) => {
+                const neste = somFunksjon(e.target.value);
+                if (neste) setFunksjon(neste);
+              }}
               className={FELT}
             >
               {ROLLER.map((r) => (

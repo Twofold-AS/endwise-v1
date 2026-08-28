@@ -17,7 +17,12 @@ import { KompetanseVelger, type ValgtKompetanse } from './_kompetanse-velger';
 type Funksjon = 'forhandler' | 'selger' | 'support' | 'mekaniker';
 
 const FUNKSJONER: { verdi: Funksjon; label: string; hint: string; icon: LucideIcon }[] = [
-  { verdi: 'forhandler', label: 'Forhandler', hint: 'Én konto som kjører huset — sjelden', icon: Building2 },
+  {
+    verdi: 'forhandler',
+    label: 'Forhandler',
+    hint: 'Én konto som kjører huset — sjelden',
+    icon: Building2,
+  },
   { verdi: 'selger', label: 'Selger', hint: 'Samme flate som forhandler, uten admin', icon: Store },
   { verdi: 'support', label: 'Support', hint: 'Samme tilgang som selger', icon: Inbox },
   { verdi: 'mekaniker', label: 'Mekaniker', hint: 'Min dag, lager og butikk', icon: Wrench },

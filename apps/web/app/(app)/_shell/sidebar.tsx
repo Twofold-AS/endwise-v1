@@ -24,7 +24,6 @@ import {
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
 import { BEVEL, CountBadge, NewBadge } from './cards';
-import { SidebarHeader } from './sidebar-header';
 import {
   FORHANDLER_NAV,
   isItemActive,
@@ -35,6 +34,7 @@ import {
   settingsForShell,
   shellForBruker,
 } from './nav';
+import { SidebarHeader } from './sidebar-header';
 import { useSidebarState } from './sidebar-state';
 import { TipCard } from './tip-card';
 
@@ -225,9 +225,7 @@ export function Sidebar() {
         >
           {items.map((item) => (
             <Fragment key={item.key}>
-              {item.dividerBefore ? (
-                <div className="my-1.5 h-px bg-border" role="separator" />
-              ) : null}
+              {item.dividerBefore ? <hr className="my-1.5 h-px border-0 bg-border" /> : null}
               <NavRow
                 item={item}
                 pathname={pathname}

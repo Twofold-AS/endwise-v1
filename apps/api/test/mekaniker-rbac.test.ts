@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { erMekanikerKonto, kan, kanSkriveDealerDesk } from '@endwise/auth';
+import { describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
 
 /**
@@ -36,9 +36,9 @@ describe('RBAC-kart: mekaniker vs desk', () => {
     expect(
       erMekanikerKonto({ role: 'dealer_staff', jobFunction: 'mekaniker', isMechanic: true }),
     ).toBe(true);
-    expect(erMekanikerKonto({ role: 'dealer_staff', jobFunction: 'selger', isMechanic: false })).toBe(
-      false,
-    );
+    expect(
+      erMekanikerKonto({ role: 'dealer_staff', jobFunction: 'selger', isMechanic: false }),
+    ).toBe(false);
     expect(
       erMekanikerKonto({ role: 'dealer_admin', jobFunction: 'mekaniker', isMechanic: true }),
     ).toBe(false);
@@ -81,7 +81,9 @@ describe('mekaniker API deny', () => {
     await expect(
       appRouter.createCaller(mekaniker()).mechanics.create({ name: 'Ny' }),
     ).rejects.toMatchObject({ code: 'FORBIDDEN' });
-    await expect(appRouter.createCaller(selger()).mechanics.create({ name: 'Ny' })).rejects.toMatchObject({
+    await expect(
+      appRouter.createCaller(selger()).mechanics.create({ name: 'Ny' }),
+    ).rejects.toMatchObject({
       code: 'FORBIDDEN',
     });
   });

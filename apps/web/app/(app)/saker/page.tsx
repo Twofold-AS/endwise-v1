@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
+import { SidePiller } from '../_shell/side-piller';
 import {
   ALL_STATUSES,
   fmtDateTime,
@@ -15,7 +16,6 @@ import {
   STATUS_LABEL,
   STATUS_TONE,
 } from '../bookinger/_status';
-import { SidePiller } from '../_shell/side-piller';
 import { Kalender } from './_kalender';
 
 /**

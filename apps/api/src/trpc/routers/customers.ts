@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { protectedProcedure, router, staffProcedure } from '../init.ts';
+import { router, staffProcedure } from '../init.ts';
 
 /**
  * F2-06 / F5-02 — Kunderegister. Alle spørringer går gjennom withTenant → RLS.

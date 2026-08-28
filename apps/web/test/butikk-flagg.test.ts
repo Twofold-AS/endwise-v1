@@ -12,13 +12,15 @@ describe('F10-03 — Butikk-nav bak shop-flagget', () => {
   });
 
   it('flagg av: dealer_admin ser ikke Butikk-raden', () => {
-    expect(itemsForRole(FORHANDLER_NAV, 'dealer_admin', false).some((i) => i.key === 'butikk')).toBe(
-      false,
-    );
+    expect(
+      itemsForRole(FORHANDLER_NAV, 'dealer_admin', false).some((i) => i.key === 'butikk'),
+    ).toBe(false);
   });
 
   it('flagg på: dealer_admin ser Butikk med Katalog og Handlekurv / kasse', () => {
-    const butikk = itemsForRole(FORHANDLER_NAV, 'dealer_admin', true).find((i) => i.key === 'butikk');
+    const butikk = itemsForRole(FORHANDLER_NAV, 'dealer_admin', true).find(
+      (i) => i.key === 'butikk',
+    );
     expect(butikk?.pills?.map((p) => p.label)).toEqual(['Katalog', 'Handlekurv / kasse']);
     expect(butikk?.pills?.map((p) => p.href)).toEqual(['/butikk', '/butikk/kasse']);
   });

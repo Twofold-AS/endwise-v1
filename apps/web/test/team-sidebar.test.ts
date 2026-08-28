@@ -84,9 +84,9 @@ describe('Jonas IA — forhandler sidebar', () => {
     const admin = itemsForRole(FORHANDLER_NAV, 'dealer_admin', true).map((i) => i.label);
     const staff = itemsForRole(FORHANDLER_NAV, 'dealer_staff', true).map((i) => i.label);
     expect(admin).toEqual(staff);
-    expect(itemsForRole(FORHANDLER_NAV, 'dealer_staff', false).some((i) => i.key === 'butikk')).toBe(
-      false,
-    );
+    expect(
+      itemsForRole(FORHANDLER_NAV, 'dealer_staff', false).some((i) => i.key === 'butikk'),
+    ).toBe(false);
   });
 
   it('Innstillinger er profil-destinasjon uten flyout', () => {

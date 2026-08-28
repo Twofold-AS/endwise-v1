@@ -1,3 +1,4 @@
+import { erMekanikerKonto } from '@endwise/auth';
 import {
   and,
   desc,
@@ -24,7 +25,6 @@ import {
 } from '@endwise/modules/booking';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { erMekanikerKonto } from '@endwise/auth';
 import { protectedProcedure, router, staffProcedure } from '../init.ts';
 
 const status = z.enum(['draft', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show']);
@@ -340,11 +340,11 @@ export const bookingsRouter = router({
             and(
               lt(schema.bookings.startsAt, input.to),
               gt(schema.bookings.endsAt, input.from),
-              (erMekanikerKonto(ctx) && ctx.mechanicId
+              erMekanikerKonto(ctx) && ctx.mechanicId
                 ? eq(schema.bookings.mechanicId, ctx.mechanicId)
                 : input.mechanicId
                   ? eq(schema.bookings.mechanicId, input.mechanicId)
-                  : undefined),
+                  : undefined,
             ),
           )
           .orderBy(schema.bookings.startsAt);

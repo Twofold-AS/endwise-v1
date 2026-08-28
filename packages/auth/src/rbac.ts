@@ -158,7 +158,11 @@ const TILLATELSER: Record<Role, Partial<Record<RbacRessurs, readonly string[]>>>
 };
 
 /** Har rollen denne handlingen i RBAC-kartet? Jobbfunksjon er et eget lag. */
-export function kan(role: Role | null | undefined, ressurs: RbacRessurs, handling: string): boolean {
+export function kan(
+  role: Role | null | undefined,
+  ressurs: RbacRessurs,
+  handling: string,
+): boolean {
   if (!role) return false;
   return TILLATELSER[role][ressurs]?.includes(handling) ?? false;
 }

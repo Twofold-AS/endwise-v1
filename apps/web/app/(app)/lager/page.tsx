@@ -5,9 +5,9 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
-import { shellForBruker } from '../_shell/nav';
-import { CardShell } from '../_shell/cards';
 import { LagerPiller } from '../_shell/ansatte-piller';
+import { CardShell } from '../_shell/cards';
+import { shellForBruker } from '../_shell/nav';
 import { Beholdning, Feil, Laster, Sidehode, Tomt } from './_delt';
 
 /**

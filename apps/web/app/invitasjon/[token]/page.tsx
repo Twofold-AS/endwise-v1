@@ -448,9 +448,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                 successText="Opprettet"
                 errorText="Prøv igjen"
                 icon={<Lock size={15} />}
-                disabled={
-                  sender || ferdig || navn.trim().length < 2 || passord.length < 12
-                }
+                disabled={sender || ferdig || navn.trim().length < 2 || passord.length < 12}
               >
                 Fortsett
               </StatefulButton>

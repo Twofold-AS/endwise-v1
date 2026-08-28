@@ -4,8 +4,8 @@ import { CircleAlert, MapPin, Plus, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
-import { CardShell } from '../../_shell/cards';
 import { LagerPiller } from '../../_shell/ansatte-piller';
+import { CardShell } from '../../_shell/cards';
 import { Feil, Laster, Sidehode, Tomt } from '../_delt';
 
 /**

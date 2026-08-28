@@ -8,9 +8,9 @@ import { LiveSync } from './_lib/live-sync';
 import { LydProvider } from './_lib/lyd';
 import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
+import { erTillattMekanikerSti } from './_shell/nav';
 import { PwaRegister } from './_shell/pwa-register';
 import { Sidebar } from './_shell/sidebar';
-import { erTillattMekanikerSti } from './_shell/nav';
 import { SidebarStateProvider } from './_shell/sidebar-state';
 import { TopBar } from './_shell/top-bar';
 

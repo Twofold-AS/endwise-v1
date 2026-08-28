@@ -92,7 +92,9 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
 
   it('gamle sider redirecter til Organisasjon, Team er Organisasjon › Ansatte', () => {
     expect(les('../app/(app)/innstillinger/profil/page.tsx')).toMatch(/startFane="profil"/);
-    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/organisasjon\?seksjon=ansatte/);
+    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(
+      /organisasjon\?seksjon=ansatte/,
+    );
     expect(les('../app/(app)/innstillinger/varsler/page.tsx')).toMatch(/startFane="varsler"/);
     expect(les('../app/(app)/innstillinger/tjenester/page.tsx')).toMatch(
       /organisasjon\?seksjon=abonnement/,

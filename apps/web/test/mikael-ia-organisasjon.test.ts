@@ -190,6 +190,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
   const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
   const phone = utenKommentarer(les('../app/(app)/_shell/phone-nav.tsx'));
+  const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
 
   it('minimize sitter i sidebaren, ikke i top-bar 1', () => {
     expect(header).toMatch(/PanelLeftClose|PanelLeftOpen/);
@@ -210,12 +211,24 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(layout).toMatch(/PhoneNav/);
     expect(layout).toMatch(/md:hidden/);
     expect(layout).toMatch(/OrganisasjonSeksjonBar/);
-    expect(phone).toMatch(/overflow-x-auto/);
+    expect(chrome).toMatch(/overflow-x-auto/);
+    expect(chrome).toMatch(/overflow-y-hidden/);
+    expect(chrome).toMatch(/touch-pan-x/);
+    expect(chrome).toMatch(/overscroll-y-none/);
+    expect(chrome).toMatch(/scrollTo/);
+    expect(chrome).not.toMatch(/scrollIntoView/);
+    expect(phone).toMatch(/PHONE_H_SCROLL/);
+    expect(phone).toMatch(/overflow-y-hidden/);
+    expect(phone).toMatch(/touch-pan-x/);
     expect(phone).toMatch(/flex-nowrap/);
-    expect(phone).toMatch(/h-control/);
-    expect(phone).toMatch(/min-h-control/);
+    expect(phone).toMatch(/h-row/);
+    expect(phone).toMatch(/min-h-row/);
     expect(phone).toMatch(/text-label/);
     expect(phone).toMatch(/whitespace-nowrap/);
+    expect(phone).toMatch(/logo\/logo\.svg/);
+    expect(phone).toMatch(/scrollAktivTilStart/);
+    expect(phone).not.toMatch(/logo-invert|recolor|filter:/);
+    expect(phone).not.toMatch(/h-row-store|h-11/);
     expect(phone).not.toMatch(/TipCard|helpdesk-slider|hamburger/i);
     expect(phone).not.toMatch(/text-sm|text-\[11px\]/);
     expect(sidebar).toMatch(/hidden[\s\S]*md:flex/);
@@ -224,7 +237,10 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   it('top-bar 2 er sidebar-rad, ikke svart pille', () => {
     expect(seksjon).toMatch(/bg-sidebar-active/);
     expect(seksjon).toMatch(/hover:bg-surface-2/);
-    expect(seksjon).toMatch(/overflow-x-auto/);
+    expect(seksjon).toMatch(/PHONE_H_SCROLL/);
+    expect(seksjon).toMatch(/overflow-y-hidden/);
+    expect(seksjon).toMatch(/touch-pan-x/);
+    expect(seksjon).toMatch(/PHONE_LOGO_KOLONNE/);
     expect(seksjon).toMatch(/flex-nowrap/);
     expect(seksjon).toMatch(/whitespace-nowrap/);
     expect(seksjon).toMatch(/h-control/);

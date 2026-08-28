@@ -88,10 +88,10 @@ export function TimeplanFlate({ skjulPiller = false }: { skjulPiller?: boolean }
       <div>
         <h1 className="sr-only">Timeplan</h1>
         {skjulPiller ? null : (
-        <p className="flex items-center gap-2 text-title text-fg">
-          <CalendarDays size={18} strokeWidth={1.75} className="text-fg-muted" />
-          Timeplan
-        </p>
+          <p className="flex items-center gap-2 text-title text-fg">
+            <CalendarDays size={18} strokeWidth={1.75} className="text-fg-muted" />
+            Timeplan
+          </p>
         )}
         <p className="text-body text-fg-muted">
           Kapasitet og jobber per mekaniker. Samme dag-stripe som på Timeplan under Min dag.

@@ -53,7 +53,9 @@ describe('Team-piller som Innstillinger ?fane=', () => {
   it('Team-siden leser ?fane= og filtrerer på eksisterende jobbfunksjon', () => {
     const side = les('../app/(app)/organisasjon/_ansatte.tsx');
     const liste = les('../app/(app)/innstillinger/team/_liste.tsx');
-    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/organisasjon\?seksjon=ansatte/);
+    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(
+      /organisasjon\?seksjon=ansatte/,
+    );
     expect(liste).toMatch(/funksjon === 'selger'/);
     expect(liste).toMatch(/funksjon === 'support'/);
     expect(liste).toMatch(/funksjon === 'mekaniker'/);

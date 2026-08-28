@@ -37,7 +37,7 @@ describe('Team › lista er den ekte ansattlista', () => {
     resolve(her, '../app/(app)/innstillinger/team/_inviter.tsx'),
     'utf8',
   );
-  const hub = readFileSync(resolve(her, '../app/(app)/innstillinger/team/page.tsx'), 'utf8');
+  const hub = readFileSync(resolve(her, '../app/(app)/organisasjon/_ansatte.tsx'), 'utf8');
 
   it('viser blobatar + status-humor, ikke initialer', () => {
     expect(liste).toMatch(/<Avatar/);
@@ -50,7 +50,7 @@ describe('Team › lista er den ekte ansattlista', () => {
   it('invitasjoner er uten avatar — lista eier ansiktene', () => {
     expect(inviter).not.toMatch(/<Avatar/);
     expect(hub).toMatch(/<OpprettAnsatt/);
-    expect(hub).toMatch(/TeamListe|MekanikerePille/);
+    expect(hub).toMatch(/OrganisasjonAnsatte|AnsattKort/);
   });
 });
 

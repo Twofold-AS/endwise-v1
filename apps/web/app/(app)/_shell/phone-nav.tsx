@@ -2,9 +2,10 @@
 
 import { type LucideIcon, Zap } from '@endwise/ui';
 import type { Route } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import {
   isVerkstedInspectPath,
@@ -23,10 +24,18 @@ import {
   settingsForShell,
   shellForBruker,
 } from './nav';
+import {
+  PHONE_H_SCROLL,
+  PHONE_LOGO_KOLONNE,
+  PHONE_LOGO_PX,
+  scrollAktivTilStart,
+} from './phone-chrome';
 
 /**
  * Telefon: horisontal sidebar. Erstatter top-bar 1.
  * Samme destinasjoner som desktop. Hjelp er en vanlig knapp, ikke slider.
+ * Hovedraden er h-row (40px-token) — større enn 32-raden, ikke 44.
+ * Logo er pinnest til venstre. Valgt punkt scroller inntil logo.
  */
 export function PhoneNav() {
   const pathname = usePathname() ?? '';
@@ -35,6 +44,8 @@ export function PhoneNav() {
   const inspect = isVerkstedInspectPath(pathname);
   const inspectSlug = verkstedSlugFromPath(pathname);
   const [handlinger, setHandlinger] = useState(false);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const forsteScroll = useRef(true);
 
   const shell = inspect
     ? 'forhandler'
@@ -78,61 +89,85 @@ export function PhoneNav() {
 
   const settingsAktiv = settingsNav ? isItemActive(settingsNav, pathname) : false;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll når aktiv destinasjon bytter
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const instant = forsteScroll.current;
+    forsteScroll.current = false;
+    const ramme = requestAnimationFrame(() => scrollAktivTilStart(scroller, instant));
+    return () => cancelAnimationFrame(ramme);
+  }, [pathname, items.length, settingsAktiv]);
+
   return (
     <nav
       aria-label="Hovednavigasjon"
-      className="flex h-control min-h-control shrink-0 flex-nowrap items-center gap-2 overflow-x-auto border-border border-b bg-sidebar px-3"
+      className="flex h-row min-h-row shrink-0 touch-pan-x items-center overflow-y-hidden border-border border-b bg-sidebar"
     >
-      {shell === 'forhandler' && !inspect ? (
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => setHandlinger((v) => !v)}
-            className="inline-flex h-control min-h-control items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label text-fg hover:bg-surface-2"
-          >
-            <Zap size={16} strokeWidth={1.75} className="text-accent-strong" />
-            Handlinger
-          </button>
-          {handlinger ? (
-            <div className="absolute top-full left-0 z-40 mt-1 min-w-[160px] rounded-control border border-border bg-bg py-1">
-              {QUICK_ACTIONS.map((a) => (
-                <button
-                  key={a.href}
-                  type="button"
-                  onClick={() => {
-                    setHandlinger(false);
-                    router.push(a.href as Route);
-                  }}
-                  className="flex h-control w-full items-center px-2.5 text-left text-label text-fg hover:bg-surface-2"
-                >
-                  {a.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      {items.map((item) => (
-        <PhoneRad
-          key={item.key}
-          item={item}
-          pathname={pathname}
-          unread={unread}
-          helpdesk={helpdeskUlest.data ?? 0}
+      <div className={PHONE_LOGO_KOLONNE}>
+        <Image
+          src="/logo/logo.svg"
+          alt="Endwise"
+          width={PHONE_LOGO_PX}
+          height={PHONE_LOGO_PX}
+          priority
         />
-      ))}
-      {settingsNav ? (
-        <Link
-          href={settingsNav.href as Route}
-          aria-current={settingsAktiv ? 'page' : undefined}
-          className={`inline-flex h-control min-h-control shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label ${
-            settingsAktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-          }`}
-        >
-          <Ikon icon={settingsNav.icon} active={settingsAktiv} />
-          {settingsNav.label}
-        </Link>
-      ) : null}
+      </div>
+      <div
+        ref={scrollerRef}
+        className={`flex min-h-0 min-w-0 flex-1 flex-nowrap items-center gap-2 ${PHONE_H_SCROLL} pr-3`}
+      >
+        {shell === 'forhandler' && !inspect ? (
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setHandlinger((v) => !v)}
+              className="inline-flex h-row min-h-row items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label text-fg hover:bg-surface-2"
+            >
+              <Zap size={16} strokeWidth={1.75} className="text-accent-strong" />
+              Handlinger
+            </button>
+            {handlinger ? (
+              <div className="absolute top-full left-0 z-40 mt-1 min-w-[160px] rounded-control border border-border bg-bg py-1">
+                {QUICK_ACTIONS.map((a) => (
+                  <button
+                    key={a.href}
+                    type="button"
+                    onClick={() => {
+                      setHandlinger(false);
+                      router.push(a.href as Route);
+                    }}
+                    className="flex h-control w-full items-center px-2.5 text-left text-label text-fg hover:bg-surface-2"
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        {items.map((item) => (
+          <PhoneRad
+            key={item.key}
+            item={item}
+            pathname={pathname}
+            unread={unread}
+            helpdesk={helpdeskUlest.data ?? 0}
+          />
+        ))}
+        {settingsNav ? (
+          <Link
+            href={settingsNav.href as Route}
+            aria-current={settingsAktiv ? 'page' : undefined}
+            className={`inline-flex h-row min-h-row shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label ${
+              settingsAktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+            }`}
+          >
+            <Ikon icon={settingsNav.icon} active={settingsAktiv} />
+            {settingsNav.label}
+          </Link>
+        ) : null}
+      </div>
     </nav>
   );
 }
@@ -154,7 +189,7 @@ function PhoneRad({
     <Link
       href={item.href as Route}
       aria-current={active ? 'page' : undefined}
-      className={`inline-flex h-control min-h-control shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label ${
+      className={`inline-flex h-row min-h-row shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label ${
         active ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
       }`}
     >

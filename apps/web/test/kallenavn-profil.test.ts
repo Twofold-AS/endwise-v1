@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * Kallenavn i Settings › Profil og chrome.
- * Mikael: ett identitetsblokk (visningsnavn · kallenavn · e-post),
+ * Mikael: visningsnavn · kallenavn · e-post stables under avataren,
  * feltet lagrer for alle roller via `member_profiles.nickname`, og chrome
  * viser intern visning (kallenavn, ellers visningsnavn).
  */
@@ -19,17 +19,17 @@ function utenKommentarer(kilde: string) {
   return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
 
-describe('Profil: kallenavn i samme identitetsblokk som visningsnavn og e-post', () => {
+describe('Profil: kallenavn stables med visningsnavn og e-post under avataren', () => {
   const fane = utenKommentarer(les('../app/(app)/innstillinger/_profil-fane.tsx'));
   const kort = utenKommentarer(les('../app/(app)/_shell/profil-kort.tsx'));
 
-  it('feltet sitter inne i AvatarVelger sammen med visningsnavn og e-post', () => {
-    const barn = fane.slice(fane.indexOf('<AvatarVelger'), fane.indexOf('</AvatarVelger>'));
-    expect(barn).toMatch(/VisningsnavnFelt/);
-    expect(barn).toMatch(/KallenavnFelt/);
-    expect(barn).toMatch(/aria-label="E-post"|E-post/);
-    expect(barn.indexOf('VisningsnavnFelt')).toBeLessThan(barn.indexOf('KallenavnFelt'));
-    expect(barn.indexOf('KallenavnFelt')).toBeLessThan(barn.indexOf('E-post'));
+  it('feltet stables under avataren sammen med visningsnavn og e-post, ikke i kortet', () => {
+    const jsx = fane.slice(fane.indexOf('return ('));
+    expect(jsx).toMatch(/<AvatarVelger[^>]*utenKort/);
+    expect(jsx).not.toMatch(/<AvatarVelger[\s\S]*?<\/AvatarVelger>/);
+    expect(jsx.indexOf('<AvatarVelger')).toBeLessThan(jsx.indexOf('<VisningsnavnFelt'));
+    expect(jsx.indexOf('<VisningsnavnFelt')).toBeLessThan(jsx.indexOf('<KallenavnFelt'));
+    expect(jsx.indexOf('<KallenavnFelt')).toBeLessThan(jsx.indexOf('E-post'));
     expect(fane).not.toMatch(/<KallenavnSeksjon/);
   });
 

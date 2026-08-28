@@ -13,10 +13,10 @@ import { ToFaktorRad } from '../_shell/to-faktor-rad';
 
 /**
  * F5-19 / F1-17 / F1-20 — Settings › Profil, landet i pille-fanen.
- * Layout (Jonas + Mikael 26.08): blobatar 56px til venstre, ett
- * identitetsblokk til høyre: visningsnavn · kallenavn · e-post. Form-,
- * farge- og uttrykk-velgeren er foldet under. Ingen filopplasting.
- * Felt-Lagre beholdes, ingen sticky Save.
+ * Layout (Mikael 28.08): avatar + endre-knapp på samme rad øverst,
+ * uten CardShell. Deretter visningsnavn · kallenavn · e-post ett og
+ * ett nedover. Form-/farge-/uttrykk-velgeren er foldet under avataren.
+ * Ingen filopplasting. Felt-Lagre beholdes, ingen sticky Save.
  */
 export function ProfilFane() {
   const [theme, setTheme] = useState<Tema>('light');
@@ -40,30 +40,28 @@ export function ProfilFane() {
 
   return (
     <div className="flex flex-col gap-5">
-      <AvatarVelger seed={me.data?.userId ?? null} size={56} foldFormer>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <p className="mb-2 text-label text-fg">Visningsnavn</p>
-            <VisningsnavnFelt />
-          </div>
-          <div>
-            <p className="mb-2 text-label text-fg">Kallenavn</p>
-            <KallenavnFelt />
-          </div>
-          <div className="sm:col-span-2">
-            <p className="mb-2 text-label text-fg">E-post</p>
-            <input
-              value={meg.data?.epost ?? ''}
-              readOnly
-              aria-label="E-post"
-              className="h-control w-full rounded-control border border-border bg-surface-2 px-2.5 text-body text-fg-muted outline-none"
-            />
-            <p className="mt-2 text-[11px] text-fg-muted">
-              Byttes i to steg under — ikke med ett klikk.
-            </p>
-          </div>
-        </div>
-      </AvatarVelger>
+      <AvatarVelger seed={me.data?.userId ?? null} size={56} foldFormer utenKort />
+
+      <div>
+        <p className="mb-2 text-label text-fg">Visningsnavn</p>
+        <VisningsnavnFelt />
+      </div>
+      <div>
+        <p className="mb-2 text-label text-fg">Kallenavn</p>
+        <KallenavnFelt />
+      </div>
+      <div>
+        <p className="mb-2 text-label text-fg">E-post</p>
+        <input
+          value={meg.data?.epost ?? ''}
+          readOnly
+          aria-label="E-post"
+          className="h-control w-full rounded-control border border-border bg-surface-2 px-2.5 text-body text-fg-muted outline-none"
+        />
+        <p className="mt-2 text-[11px] text-fg-muted">
+          Byttes i to steg under — ikke med ett klikk.
+        </p>
+      </div>
 
       <ByttEpostSkjema gjeldende={meg.data?.epost ?? ''} />
 

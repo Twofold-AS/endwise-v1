@@ -18,7 +18,14 @@ Alt gikk som planlagt mot briefen. Ingen avvik i RBAC eller compose-piller.
 - Telefon-landing skjuler detaljkolonnen (`InboxHovedflate`) så lista er hele flaten.
 - `PhoneHScroll` eier spacer + tilbake-pil, brukt av `PhoneNav` og top-bar 2.
 
+## Merge mot #82 (1522036)
+
+- `origin/main` (`1522036` Profil uten identitetskort) merget inn i `cursor/innboks-telefon-pc-e797` så #83 blir mergeable.
+- Konflikt kun i `docs/UI-PAKKER.md` («Sist oppdatert»): beholdt både innboks-IA-notatet og profil-notatet.
+- `docs/endwise-roadmap.html` auto-merget: F5-14 telefon/PC-steg + F5-19 profil-layout begge beholdt.
+- Profilkode og -tester tatt fra #82 uendret. Innboks-IA uendret.
+
 ## Neste steg
 
-- Draft PR mot main. Ikke merget.
+- Draft PR #83 mot main. Ikke merget.
 - F5-14 forblir `progress` (innboksen er bygget, IA iterates).

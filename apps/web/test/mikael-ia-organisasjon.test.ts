@@ -256,7 +256,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(seksjon).toMatch(/max-md:py-1/);
     expect(seksjon).toMatch(/max-md:h-auto/);
     expect(seksjon).toMatch(/text-label/);
-    expect(seksjon).toMatch(/gap-2/);
+    expect(hscroll).toMatch(/gap-2/);
     expect(seksjon).not.toMatch(/bg-fg text-bg/);
     expect(seksjon).not.toMatch(/rounded-pill/);
     expect(seksjon).not.toMatch(/h-row-store|h-11/);

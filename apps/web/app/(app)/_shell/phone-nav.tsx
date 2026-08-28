@@ -95,7 +95,10 @@ export function PhoneNav() {
           priority
         />
       </div>
-      <PhoneHScroll lockKey={`${pathname}:${items.length}:${settingsAktiv ? 1 : 0}`} className="pr-3">
+      <PhoneHScroll
+        lockKey={`${pathname}:${items.length}:${settingsAktiv ? 1 : 0}`}
+        className="pr-3"
+      >
         {items.map((item) => (
           <PhoneRad
             key={item.key}

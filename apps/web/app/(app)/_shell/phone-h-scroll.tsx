@@ -25,6 +25,7 @@ export function PhoneHScroll({
   const spacerRef = useRef<HTMLDivElement>(null);
   const forsteScroll = useRef(true);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-lås når aktiv destinasjon/filter bytter
   useEffect(() => {
     const scroller = scrollerRef.current;
     const spacer = spacerRef.current;

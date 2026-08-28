@@ -51,11 +51,7 @@ function SeksjonPilleNav({
       className="flex h-control min-h-control shrink-0 touch-pan-x items-center overflow-y-hidden border-border border-b bg-bg max-md:h-auto max-md:min-h-0 max-md:py-1.5 md:px-4"
     >
       <div className={`${PHONE_LOGO_KOLONNE} md:hidden`} aria-hidden />
-      <PhoneHScroll
-        lockKey={`${pathname}:${aktivHref}`}
-        className="max-md:pr-3"
-        telefonBareSpacer
-      >
+      <PhoneHScroll lockKey={`${pathname}:${aktivHref}`} className="max-md:pr-3" telefonBareSpacer>
         {piller.map((p) => {
           const valgt = erValgt(p);
           const raw = inspect && slug ? remapHrefTilInspect(p.href, slug) : p.href;

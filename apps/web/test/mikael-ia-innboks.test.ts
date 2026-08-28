@@ -2,12 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { INNBOKS_FILTERE } from '../app/(app)/_shell/inbox-filter.tsx';
-import {
-  breadcrumbFor,
-  FORHANDLER_NAV,
-  MEKANIKER_NAV,
-} from '../app/(app)/_shell/nav.ts';
+import { breadcrumbFor, FORHANDLER_NAV, MEKANIKER_NAV } from '../app/(app)/_shell/nav.ts';
 import { erDealerInnboks, erInnboksSide } from '../app/(app)/_shell/seksjon-sti.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -25,13 +20,12 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     const innboks = FORHANDLER_NAV.find((i) => i.key === 'innboks');
     expect(innboks?.href).toBe('/innboks');
     expect(innboks?.pills).toBeUndefined();
-    expect(innboks?.pills?.some((p) => p.label === 'Oversikt')).not.toBe(true);
-    expect(INNBOKS_FILTERE.map((p) => p.label)).toEqual([
-      'Alle chatter',
-      'Kunder',
-      'Intern',
-      'Endwise',
-    ]);
+    const filter = utenKommentarer(les('../app/(app)/_shell/inbox-filter.tsx'));
+    expect(filter).toMatch(/label: 'Alle chatter'/);
+    expect(filter).toMatch(/label: 'Kunder'/);
+    expect(filter).toMatch(/label: 'Intern'/);
+    expect(filter).toMatch(/label: 'Endwise'/);
+    expect(filter).not.toMatch(/Oversikt/);
     expect(MEKANIKER_NAV.some((i) => i.label === 'Innboks')).toBe(false);
   });
 
@@ -59,7 +53,7 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     expect(seksjon).not.toMatch(/Oversikt/);
     expect(seksjon).toMatch(/bg-sidebar-active/);
     expect(seksjon).toMatch(/hover:bg-surface-2/);
-    expect(seksjon).toMatch(/gap-2/);
+    expect(seksjon).toMatch(/PhoneHScroll/);
     expect(seksjon).toMatch(/py-1\.5/);
     expect(seksjon).toMatch(/max-md:py-1/);
     expect(seksjon).not.toMatch(/bg-fg text-bg/);

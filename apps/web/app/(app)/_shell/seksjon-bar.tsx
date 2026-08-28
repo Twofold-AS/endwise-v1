@@ -10,12 +10,14 @@ import {
 } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { ORGANISASJON_SEKSJONER } from './nav';
+import { PHONE_H_SCROLL, PHONE_LOGO_KOLONNE } from './phone-chrome';
 
 /**
  * Top-bar 2 — Organisasjon-seksjoner.
  * Jonas 28.08 fasit: samme 32-rad som top-bar 1 (h-control), text-label,
  * aktiv = sidebar-active #ededed, hover = surface-2 #f5f5f5.
  * Sidebar-rad, ikke Button primary. Én rad, overflow-x, gap-2, ingen wrap.
+ * Telefon: horisontal-only, venstre kant = etter sticky logo.
  */
 export function erOrganisasjonSide(pathname: string): boolean {
   if (pathname === '/organisasjon' || pathname.startsWith('/organisasjon/')) return true;
@@ -39,29 +41,34 @@ export function OrganisasjonSeksjonBar() {
   return (
     <nav
       aria-label="Organisasjon"
-      className="flex h-control min-h-control shrink-0 flex-nowrap items-center gap-2 overflow-x-auto border-border border-b bg-bg px-4"
+      className="flex h-control min-h-control shrink-0 touch-pan-x items-center overflow-y-hidden border-border border-b bg-bg md:px-4"
     >
-      {synlige.map((p) => {
-        const query = p.href.split('?')[1] ?? '';
-        const valgt = query ? seksjon != null && query.includes(`seksjon=${seksjon}`) : !seksjon;
-        const raw = inspect && slug ? remapHrefTilInspect(p.href, slug) : p.href;
-        const href = fra
-          ? `${raw}${raw.includes('?') ? '&' : '?'}fra=${encodeURIComponent(fra)}`
-          : raw;
-        return (
-          <Link
-            key={p.href}
-            href={href as Route}
-            scroll={false}
-            aria-current={valgt ? 'page' : undefined}
-            className={`inline-flex h-control min-h-control shrink-0 items-center whitespace-nowrap rounded-control px-2.5 text-label transition-colors ${
-              valgt ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-            }`}
-          >
-            {p.label}
-          </Link>
-        );
-      })}
+      <div className={`${PHONE_LOGO_KOLONNE} md:hidden`} aria-hidden />
+      <div
+        className={`flex min-w-0 flex-1 flex-nowrap items-center gap-2 ${PHONE_H_SCROLL} max-md:pr-3`}
+      >
+        {synlige.map((p) => {
+          const query = p.href.split('?')[1] ?? '';
+          const valgt = query ? seksjon != null && query.includes(`seksjon=${seksjon}`) : !seksjon;
+          const raw = inspect && slug ? remapHrefTilInspect(p.href, slug) : p.href;
+          const href = fra
+            ? `${raw}${raw.includes('?') ? '&' : '?'}fra=${encodeURIComponent(fra)}`
+            : raw;
+          return (
+            <Link
+              key={p.href}
+              href={href as Route}
+              scroll={false}
+              aria-current={valgt ? 'page' : undefined}
+              className={`inline-flex h-control min-h-control shrink-0 items-center whitespace-nowrap rounded-control px-2.5 text-label transition-colors ${
+                valgt ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+              }`}
+            >
+              {p.label}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

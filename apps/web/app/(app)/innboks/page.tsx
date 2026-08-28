@@ -69,7 +69,7 @@ function MeldingerPageInner() {
        * Nå står den der lista står, og er tilgjengelig hele tiden.
        */}
       <div>
-        <h1 className="text-title text-fg">Innboks</h1>
+        <h1 className="text-title text-fg">Oversikt</h1>
         <p className="text-body text-fg-muted">Velg en samtale i lista til venstre for å svare.</p>
       </div>
 

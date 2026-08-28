@@ -4,6 +4,7 @@ import {
   Avatar,
   type AvatarValg,
   Button,
+  Inbox,
   LifeBuoy,
   type LucideIcon,
   MessageSquare,
@@ -42,8 +43,8 @@ import { useInboxModus } from './_modus';
  * finnes som ekte kolonne (SMS/e-post/app/widget) ville to ting med samme navn
  * vært en garantert forveksling. Filtrene heter `PARTER`; kanal er kanal.
  */
-const PARTER: { key: 'alle' | ThreadKind; label: string; icon?: LucideIcon }[] = [
-  { key: 'alle', label: 'Alle' },
+const PARTER: { key: 'alle' | ThreadKind; label: string; icon: LucideIcon }[] = [
+  { key: 'alle', label: 'Alle chatter', icon: Inbox },
   { key: 'customer_dealer', label: 'Kunder', icon: Users },
   { key: 'mechanic_dealer', label: 'Intern', icon: Wrench },
   { key: 'dealer_admin', label: 'Endwise', icon: LifeBuoy },
@@ -138,8 +139,6 @@ export function InboxSidebar() {
       }));
   }, [ekte, part, navnIntern.data, navnOffisiell.data, me.data?.userId]);
 
-  const aktivLabel = PARTER.find((p) => p.key === part)?.label ?? 'Alle';
-
   if (endwise) {
     const henvendelser = support.data ?? [];
     return (
@@ -148,7 +147,7 @@ export function InboxSidebar() {
           <h2 className="min-w-0 truncate text-title text-fg">Innboks</h2>
         </div>
         <div className="shrink-0 border-border border-b p-2">
-          <NySamtaleLenke href={'/endwise/innboks?ny=1' as Route} />
+          <NySamtaleLenke href={'/endwise/innboks?ny=1' as Route} full />
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
           {support.isLoading ? (
@@ -181,40 +180,37 @@ export function InboxSidebar() {
 
   return (
     <aside className="flex min-h-0 w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
-      {/* Header: 56px + border-b, på linje med topbaren */}
-      <div className="flex h-14 shrink-0 items-center gap-1 border-border border-b px-3">
-        <h2 className="mr-auto min-w-0 truncate text-title text-fg">{aktivLabel}</h2>
-
-        <div className="flex shrink-0 items-center gap-0.5">
-          {PARTER.filter((p) => p.icon).map((p) => {
+      {/**
+       * Mikael IA 28.08 kveld — raden under top-bar 2 / på Oversikt.
+       * Part-filtre er ikon-knapper (samme chrome som Organisasjon-piller).
+       * Ny samtale er tekstknapp i samme rad, ikke et ikon.
+       */}
+      <div className="flex shrink-0 items-center gap-2 border-border border-b px-3 py-1.5">
+        <h2 className="sr-only">Oversikt</h2>
+        <div
+          className="flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto"
+          role="toolbar"
+          aria-label="Sorter samtaler"
+        >
+          {PARTER.map((p) => {
             const aktiv = part === p.key;
             return (
               <button
                 key={p.key}
                 type="button"
-                onClick={() => setPart(aktiv ? 'alle' : (p.key as ThreadKind))}
+                onClick={() => setPart(p.key)}
                 aria-pressed={aktiv}
                 title={p.label}
-                aria-label={`Vis ${p.label}`}
-                className={`inline-flex h-7 items-center gap-1 rounded-control px-1.5 text-[11px] transition-colors ${
-                  aktiv
-                    ? 'bg-sidebar-active text-fg'
-                    : 'text-fg-muted hover:bg-sidebar-active/60 hover:text-fg'
+                aria-label={p.label}
+                className={`inline-flex h-control min-h-control shrink-0 items-center justify-center rounded-control px-2.5 transition-colors ${
+                  aktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
                 }`}
               >
-                {p.icon && <p.icon size={14} strokeWidth={1.75} />}
-                <span>{p.label}</span>
+                <p.icon size={16} strokeWidth={1.75} />
               </button>
             );
           })}
         </div>
-      </div>
-      {/**
-       * «Ny samtale» sto som et 28px ikon i headeren. For utydelig
-       * hos både forhandler og Endwise-admin (Mikael ). Full bredde
-       * med synlig tekst, samme sted lista står, begge innbokser.
-       */}
-      <div className="shrink-0 border-border border-b p-2">
         <NySamtaleLenke href={'/innboks?ny=1' as Route} />
       </div>
 
@@ -395,10 +391,10 @@ function SamtaleKort({
   );
 }
 
-/** Tydelig compose-knapp. Ikon alene i headeren var for lett å overse. */
-function NySamtaleLenke({ href }: { href: Route }) {
+/** Tydelig compose-knapp med tekst. Ikon alene var for lett å overse. */
+function NySamtaleLenke({ href, full }: { href: Route; full?: boolean }) {
   return (
-    <Button asChild className="w-full">
+    <Button asChild className={full ? 'w-full' : 'shrink-0'}>
       <Link href={href}>
         <MessageSquarePlus size={16} strokeWidth={1.75} />
         Ny samtale

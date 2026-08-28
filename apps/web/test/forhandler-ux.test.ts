@@ -100,10 +100,11 @@ describe('Ny jobb og tomflater', () => {
     expect(dash).toMatch(/animate-pulse/);
   });
 
-  it('innboks-filtre har synlig tekst, tomflate peker på Skriv til Endwise', () => {
+  it('innboks-filtre er ikon-knapper, tomflate peker på Skriv til Endwise', () => {
     const side = les('../app/(app)/innboks/_inbox-sidebar.tsx');
     const pane = les('../app/(app)/innboks/page.tsx');
-    expect(side).toMatch(/<span>\{p\.label\}<\/span>/);
+    expect(side).toMatch(/aria-label=\{p\.label\}/);
+    expect(side).not.toMatch(/<span>\{p\.label\}<\/span>/);
     expect(side).toMatch(/Skriv til Endwise/);
     expect(pane).toMatch(/Skriv til Endwise/);
     expect(side).not.toMatch(/SAK-/);

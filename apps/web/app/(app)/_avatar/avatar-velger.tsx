@@ -13,9 +13,9 @@ import { FARGER, FORMER, HUMOR, TONER, tilfeldigAvatarValg } from './avatar-valg
  * Seed = `user.id`. Form, farge, tone og uttrykk kommer fra seeden (null =
  * bibliotekets default) til noen persisterer — da via knappene, eller
  * «Ny tilfeldig». «Ny tilfeldig» beholder valgt humør og farge.
- * Settings › Profil (Jonas): ansiktet står til venstre for visningsnavn|e-post
- * (`children`), 56px. Velgeren er foldet under så Profil ikke vokser.
- * shadcn Collapsible er ikke hentet: ett fold, native `<details>`.
+ * Settings › Profil (Mikael 28.08): ansiktet og «Ny tilfeldig» er søsken
+ * på samme rad (56px, `utenKort`). Velgeren er foldet under. Navn-feltene
+ * bor utenfor velgeren. shadcn Collapsible er ikke hentet: native `<details>`.
  */
 
 type Valg = RouterOutput['profile']['meg']['avatar'];
@@ -34,7 +34,7 @@ export function AvatarVelger({
   size?: 48 | 56 | 64;
   /** Form/farge/uttrykk under et fold — Profil, så flaten ikke blir lengre. */
   foldFormer?: boolean;
-  /** Oppstart/invite: uten CardShell, kortet ligger rundt. */
+  /** Profil, oppstart og invite: uten CardShell. */
   utenKort?: boolean;
   children?: ReactNode;
 }) {
@@ -229,32 +229,34 @@ export function AvatarVelger({
     </div>
   );
 
+  const toppRad = foldFormer ? (
+    <div className="flex flex-row items-center gap-4">
+      <Avatar seed={seed} valg={valg} navn="" size={size} bevegelse="alltid" className="shrink-0" />
+      {nyTilfeldigKnapp}
+    </div>
+  ) : (
+    <div className="flex flex-row items-start gap-4">
+      <Avatar seed={seed} valg={valg} navn="" size={size} bevegelse="alltid" className="shrink-0" />
+      {children ? (
+        <div className="min-w-0 flex-1">{children}</div>
+      ) : (
+        <>
+          <div className="min-w-0 flex-1">
+            <p className="text-label text-fg">Avataren din</p>
+            <p className="text-[12px] text-fg-muted leading-relaxed">
+              Ett ansikt, knyttet til kontoen din. Velg form, farge og humør, eller trekk en ny
+              tilfeldig — valgt humør og farge blir stående.
+            </p>
+          </div>
+          {nyTilfeldigKnapp}
+        </>
+      )}
+    </div>
+  );
+
   const innhold = (
     <>
-      <div className="flex flex-row items-start gap-4">
-        <Avatar
-          seed={seed}
-          valg={valg}
-          navn=""
-          size={size}
-          bevegelse="alltid"
-          className="shrink-0"
-        />
-        {children ? (
-          <div className="min-w-0 flex-1">{children}</div>
-        ) : (
-          <>
-            <div className="min-w-0 flex-1">
-              <p className="text-label text-fg">Avataren din</p>
-              <p className="text-[12px] text-fg-muted leading-relaxed">
-                Ett ansikt, knyttet til kontoen din. Velg form, farge og humør, eller trekk en ny
-                tilfeldig — valgt humør og farge blir stående.
-              </p>
-            </div>
-            {nyTilfeldigKnapp}
-          </>
-        )}
-      </div>
+      {toppRad}
 
       {foldFormer ? (
         <details className="group">
@@ -266,12 +268,7 @@ export function AvatarVelger({
             />
             Endre form, farge og uttrykk
           </summary>
-          <div className="mt-3 flex flex-col gap-3">
-            {children ? (
-              <div className="flex flex-wrap items-center gap-2">{nyTilfeldigKnapp}</div>
-            ) : null}
-            {velgere}
-          </div>
+          <div className="mt-3 flex flex-col gap-3">{velgere}</div>
         </details>
       ) : (
         velgere

@@ -200,7 +200,7 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
       <form onSubmit={send} className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-label text-fg">Ny samtale</p>
+            <p className="text-label text-fg">Ny chat</p>
             <p className="text-[12px] text-fg-muted">
               Velg mottaker i lista — som en e-post, ikke en hub.
             </p>

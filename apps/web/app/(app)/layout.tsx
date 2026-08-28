@@ -8,6 +8,7 @@ import { LiveSync } from './_lib/live-sync';
 import { LydProvider } from './_lib/lyd';
 import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
+import { InboxFilterProvider } from './_shell/inbox-filter';
 import { erTillattMekanikerSti } from './_shell/nav';
 import { PhoneNav } from './_shell/phone-nav';
 import { PwaRegister } from './_shell/pwa-register';
@@ -131,50 +132,52 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <LydProvider>
       <LiveSync>
         <SidebarStateProvider>
-          <PwaRegister />
-          <div className="flex h-screen w-screen overflow-hidden bg-bg text-fg">
-            <Suspense
-              fallback={
-                <div className="hidden w-[248px] shrink-0 border-border border-r bg-sidebar md:block" />
-              }
-            >
-              <PlattformRuteVakt
-                erPlattform={erPlattform}
-                isLoading={isLoading}
-                onBlokkert={visPlattformVarsel}
-              />
-              <Sidebar />
-            </Suspense>
-            <div className="flex min-w-0 flex-1 flex-col">
+          <InboxFilterProvider>
+            <PwaRegister />
+            <div className="flex h-screen w-screen overflow-hidden bg-bg text-fg">
               <Suspense
-                fallback={<div className="h-control shrink-0 border-border border-b bg-bg" />}
+                fallback={
+                  <div className="hidden w-[248px] shrink-0 border-border border-r bg-sidebar md:block" />
+                }
               >
-                <div className="md:hidden">
-                  <PhoneNav />
-                </div>
-                <div className="hidden md:block">
-                  <TopBar />
-                </div>
-                <OrganisasjonSeksjonBar />
-                <InnboksSeksjonBar />
+                <PlattformRuteVakt
+                  erPlattform={erPlattform}
+                  isLoading={isLoading}
+                  onBlokkert={visPlattformVarsel}
+                />
+                <Sidebar />
               </Suspense>
-              <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-                {plattformVarsel ? (
-                  <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
-                    <p className="text-label">{plattformVarsel}</p>
-                    <button
-                      type="button"
-                      className="text-[12px] underline-offset-2 hover:underline"
-                      onClick={() => setPlattformVarsel(null)}
-                    >
-                      Lukk
-                    </button>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <Suspense
+                  fallback={<div className="h-control shrink-0 border-border border-b bg-bg" />}
+                >
+                  <div className="md:hidden">
+                    <PhoneNav />
                   </div>
-                ) : null}
-                {children}
-              </main>
+                  <div className="hidden md:block">
+                    <TopBar />
+                  </div>
+                  <OrganisasjonSeksjonBar />
+                  <InnboksSeksjonBar />
+                </Suspense>
+                <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+                  {plattformVarsel ? (
+                    <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
+                      <p className="text-label">{plattformVarsel}</p>
+                      <button
+                        type="button"
+                        className="text-[12px] underline-offset-2 hover:underline"
+                        onClick={() => setPlattformVarsel(null)}
+                      >
+                        Lukk
+                      </button>
+                    </div>
+                  ) : null}
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
+          </InboxFilterProvider>
         </SidebarStateProvider>
       </LiveSync>
     </LydProvider>

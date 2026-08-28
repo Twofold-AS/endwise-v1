@@ -1,11 +1,26 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   endSpacerPx,
+  finnAktivIScroll,
   laasAktivMotStart,
   PHONE_H_SCROLL,
   PHONE_LOGO_KOLONNE,
   scrollAktivTilStart,
+  scrollTilbake,
 } from '../app/(app)/_shell/phone-chrome.ts';
+
+const her = dirname(fileURLToPath(import.meta.url));
+
+function les(rel: string) {
+  return readFileSync(resolve(her, rel), 'utf8');
+}
+
+function utenKommentarer(kilde: string) {
+  return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+}
 
 describe('phone-chrome', () => {
   it('låser scroll til horisontal-only og pinner logo-kolonnen', () => {
@@ -81,5 +96,54 @@ describe('phone-chrome', () => {
     expect(spacer.style.width).toBe('210px');
     expect(sett.left).toBe(240);
     expect(sett.top).toBe(0);
+  });
+
+  it('finnAktivIScroll tar aria-current, deretter aria-pressed', () => {
+    const pressed = { id: 'filter' };
+    const current = { id: 'nav' };
+    const begge = {
+      querySelector: (sel: string) => {
+        if (sel.includes('aria-current')) return current;
+        if (sel.includes('aria-pressed')) return pressed;
+        return null;
+      },
+    };
+    const bareFilter = {
+      querySelector: (sel: string) => (sel.includes('aria-pressed') ? pressed : null),
+    };
+    expect(finnAktivIScroll(begge as unknown as HTMLElement)).toBe(current);
+    expect(finnAktivIScroll(bareFilter as unknown as HTMLElement)).toBe(pressed);
+  });
+
+  it('scrollTilbake går mot start uten vertikal hopp', () => {
+    let sett: ScrollToOptions = {};
+    const scroller = {
+      clientWidth: 300,
+      scrollLeft: 400,
+      scrollTo: (opts: ScrollToOptions) => {
+        sett = opts;
+      },
+    };
+    scrollTilbake(scroller as unknown as HTMLElement);
+    expect(sett.left).toBe(124);
+    expect(sett.top).toBe(0);
+    expect(sett.behavior).toBe('smooth');
+  });
+
+  it('tilbake-pil sitter i end-spacer uten hover eller aktiv-tilstand', () => {
+    const hscroll = utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'));
+    const phone = utenKommentarer(les('../app/(app)/_shell/phone-nav.tsx'));
+    const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
+    expect(phone).toMatch(/PhoneHScroll/);
+    expect(seksjon).toMatch(/PhoneHScroll/);
+    expect(hscroll).toMatch(/data-end-spacer/);
+    expect(hscroll).toMatch(/data-scroll-tilbake/);
+    expect(hscroll).toMatch(/Rull tilbake/);
+    expect(hscroll).toMatch(/scrollTilbake/);
+    expect(hscroll).toMatch(/ChevronLeft/);
+    const knapp = hscroll.slice(hscroll.indexOf('data-scroll-tilbake'));
+    expect(knapp).not.toMatch(/hover:/);
+    expect(knapp).not.toMatch(/aria-current|aria-pressed|aria-selected/);
+    expect(knapp).not.toMatch(/bg-sidebar-active|bg-fg/);
   });
 });

@@ -190,6 +190,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
   const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
   const phone = utenKommentarer(les('../app/(app)/_shell/phone-nav.tsx'));
+  const hscroll = utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'));
   const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
 
   it('minimize sitter i sidebaren, ikke i top-bar 1', () => {
@@ -217,17 +218,18 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(chrome).toMatch(/overscroll-y-none/);
     expect(chrome).toMatch(/scrollTo/);
     expect(chrome).not.toMatch(/scrollIntoView/);
-    expect(phone).toMatch(/PHONE_H_SCROLL/);
+    expect(phone).toMatch(/PhoneHScroll/);
     expect(phone).toMatch(/overflow-y-hidden/);
     expect(phone).toMatch(/touch-pan-x/);
-    expect(phone).toMatch(/flex-nowrap/);
+    expect(hscroll).toMatch(/flex-nowrap/);
     expect(phone).toMatch(/h-row/);
     expect(phone).toMatch(/min-h-row/);
     expect(phone).toMatch(/text-label/);
     expect(phone).toMatch(/whitespace-nowrap/);
     expect(phone).toMatch(/logo\/logo\.svg/);
-    expect(phone).toMatch(/laasAktivMotStart/);
-    expect(phone).toMatch(/data-end-spacer/);
+    expect(hscroll).toMatch(/laasAktivMotStart/);
+    expect(hscroll).toMatch(/data-end-spacer/);
+    expect(hscroll).toMatch(/data-scroll-tilbake/);
     expect(phone).not.toMatch(/Handlinger/);
     expect(phone).not.toMatch(/QUICK_ACTIONS/);
     expect(phone).not.toMatch(/logo-invert|recolor|filter:/);
@@ -242,11 +244,11 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   it('top-bar 2 er sidebar-rad, ikke svart pille', () => {
     expect(seksjon).toMatch(/bg-sidebar-active/);
     expect(seksjon).toMatch(/hover:bg-surface-2/);
-    expect(seksjon).toMatch(/PHONE_H_SCROLL/);
+    expect(seksjon).toMatch(/PhoneHScroll/);
     expect(seksjon).toMatch(/overflow-y-hidden/);
     expect(seksjon).toMatch(/touch-pan-x/);
     expect(seksjon).toMatch(/PHONE_LOGO_KOLONNE/);
-    expect(seksjon).toMatch(/flex-nowrap/);
+    expect(hscroll).toMatch(/flex-nowrap/);
     expect(seksjon).toMatch(/whitespace-nowrap/);
     expect(seksjon).toMatch(/h-control/);
     expect(seksjon).toMatch(/min-h-control/);
@@ -254,7 +256,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(seksjon).toMatch(/max-md:py-1/);
     expect(seksjon).toMatch(/max-md:h-auto/);
     expect(seksjon).toMatch(/text-label/);
-    expect(seksjon).toMatch(/gap-2/);
+    expect(hscroll).toMatch(/gap-2/);
     expect(seksjon).not.toMatch(/bg-fg text-bg/);
     expect(seksjon).not.toMatch(/rounded-pill/);
     expect(seksjon).not.toMatch(/h-row-store|h-11/);

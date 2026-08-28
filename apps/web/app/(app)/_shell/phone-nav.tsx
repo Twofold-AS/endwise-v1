@@ -5,7 +5,7 @@ import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import {
   isVerkstedInspectPath,
@@ -23,12 +23,8 @@ import {
   settingsForShell,
   shellForBruker,
 } from './nav';
-import {
-  laasAktivMotStart,
-  PHONE_H_SCROLL,
-  PHONE_LOGO_KOLONNE,
-  PHONE_LOGO_PX,
-} from './phone-chrome';
+import { PHONE_LOGO_KOLONNE, PHONE_LOGO_PX } from './phone-chrome';
+import { PhoneHScroll } from './phone-h-scroll';
 
 /**
  * Telefon: horisontal sidebar. Erstatter top-bar 1.
@@ -43,10 +39,6 @@ export function PhoneNav() {
   const { role, jobbfunksjon, isMechanic, shopEnabled, erPlattform } = useOrgRole();
   const inspect = isVerkstedInspectPath(pathname);
   const inspectSlug = verkstedSlugFromPath(pathname);
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const spacerRef = useRef<HTMLDivElement>(null);
-  const forsteScroll = useRef(true);
-
   const shell = inspect
     ? 'forhandler'
     : shellForBruker({
@@ -89,28 +81,6 @@ export function PhoneNav() {
 
   const settingsAktiv = settingsNav ? isItemActive(settingsNav, pathname) : false;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll når aktiv destinasjon bytter
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    const spacer = spacerRef.current;
-    if (!scroller || !spacer) return;
-
-    const laas = (instant: boolean) => laasAktivMotStart(scroller, spacer, instant);
-    const instant = forsteScroll.current;
-    forsteScroll.current = false;
-    const ramme = requestAnimationFrame(() => laas(instant));
-
-    const ro = new ResizeObserver(() => laas(true));
-    ro.observe(scroller);
-    const aktiv = scroller.querySelector<HTMLElement>('[aria-current="page"]');
-    if (aktiv) ro.observe(aktiv);
-
-    return () => {
-      cancelAnimationFrame(ramme);
-      ro.disconnect();
-    };
-  }, [pathname, items.length, settingsAktiv]);
-
   return (
     <nav
       aria-label="Hovednavigasjon"
@@ -125,9 +95,9 @@ export function PhoneNav() {
           priority
         />
       </div>
-      <div
-        ref={scrollerRef}
-        className={`flex min-h-0 min-w-0 flex-1 flex-nowrap items-center gap-2 ${PHONE_H_SCROLL} pr-3`}
+      <PhoneHScroll
+        lockKey={`${pathname}:${items.length}:${settingsAktiv ? 1 : 0}`}
+        className="pr-3"
       >
         {items.map((item) => (
           <PhoneRad
@@ -150,8 +120,7 @@ export function PhoneNav() {
             {settingsNav.label}
           </Link>
         ) : null}
-        <div ref={spacerRef} aria-hidden className="pointer-events-none shrink-0" data-end-spacer />
-      </div>
+      </PhoneHScroll>
     </nav>
   );
 }

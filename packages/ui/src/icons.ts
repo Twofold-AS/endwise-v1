@@ -30,6 +30,7 @@ export {
   Building2,
   CalendarCheck,
   ChartColumn,
+  ChevronLeft,
   ChevronRight,
   Command,
   Copy,

@@ -1,23 +1,13 @@
 'use client';
 
-import {
-  Avatar,
-  type AvatarValg,
-  Button,
-  Inbox,
-  LifeBuoy,
-  type LucideIcon,
-  MessageSquare,
-  MessageSquarePlus,
-  Users,
-  Wrench,
-} from '@endwise/ui';
+import { Avatar, type AvatarValg, Button, MessageSquare, MessageSquarePlus } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
+import { INNBOKS_FILTERE, useInboxFilter } from '../_shell/inbox-filter';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
 import {
   fmtWhen,
@@ -43,19 +33,12 @@ import { useInboxModus } from './_modus';
  * finnes som ekte kolonne (SMS/e-post/app/widget) ville to ting med samme navn
  * vært en garantert forveksling. Filtrene heter `PARTER`; kanal er kanal.
  */
-const PARTER: { key: 'alle' | ThreadKind; label: string; icon: LucideIcon }[] = [
-  { key: 'alle', label: 'Alle chatter', icon: Inbox },
-  { key: 'customer_dealer', label: 'Kunder', icon: Users },
-  { key: 'mechanic_dealer', label: 'Intern', icon: Wrench },
-  { key: 'dealer_admin', label: 'Endwise', icon: LifeBuoy },
-];
-
 export function InboxSidebar() {
   const params = useParams<{ id?: string }>();
   const aktivId = params?.id;
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const [part, setPart] = useState<'alle' | ThreadKind>('alle');
+  const { part, setPart } = useInboxFilter();
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -142,7 +125,7 @@ export function InboxSidebar() {
   if (endwise) {
     const henvendelser = support.data ?? [];
     return (
-      <aside className="flex min-h-0 w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
+      <aside className="flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r">
         <div className="flex h-14 shrink-0 items-center border-border border-b px-3">
           <h2 className="min-w-0 truncate text-title text-fg">Innboks</h2>
         </div>
@@ -179,20 +162,19 @@ export function InboxSidebar() {
   }
 
   return (
-    <aside className="flex min-h-0 w-[320px] shrink-0 flex-col border-border border-r bg-sidebar">
+    <aside className="flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r">
       {/**
-       * Mikael IA 28.08 kveld — raden under top-bar 2 / på Oversikt.
-       * Part-filtre er ikon-knapper (samme chrome som Organisasjon-piller).
-       * Ny samtale er tekstknapp i samme rad, ikke et ikon.
+       * Desktop list-header: ikon-only filtre + Ny chat.
+       * Telefon-filtrene bor i top-bar 2 (ikon + tekst) — ikke duplisert.
        */}
-      <div className="flex shrink-0 items-center gap-2 border-border border-b px-3 py-1.5">
-        <h2 className="sr-only">Oversikt</h2>
+      <div className="hidden shrink-0 items-center gap-2 border-border border-b px-3 py-1.5 md:flex">
+        <h2 className="sr-only">Samtaler</h2>
         <div
           className="flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto"
           role="toolbar"
           aria-label="Sorter samtaler"
         >
-          {PARTER.map((p) => {
+          {INNBOKS_FILTERE.map((p) => {
             const aktiv = part === p.key;
             return (
               <button
@@ -397,7 +379,7 @@ function NySamtaleLenke({ href, full }: { href: Route; full?: boolean }) {
     <Button asChild className={full ? 'w-full' : 'shrink-0'}>
       <Link href={href}>
         <MessageSquarePlus size={16} strokeWidth={1.75} />
-        Ny samtale
+        Ny chat
       </Link>
     </Button>
   );

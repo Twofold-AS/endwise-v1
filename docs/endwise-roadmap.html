@@ -543,7 +543,8 @@ const ROADMAP = [
         { t:"Uleste-teller på nav-knappen", d:"<code>messages.listThreads</code> returnerer allerede <code>unread</code> per tråd. Summeres per kind for dropdown-radene og totalt for knappen. Badge følger eierens spec (20px/6px)." },
         { t:"F6-05-eskaleringer beholder plassen sin", d:"Live-varselet øverst i innboksen (<code>thread.escalated</code> over SSE) flyttes med. ⚠️ Fortsatt live-only til en rute leser <code>stream_events</code> — se F6-05." },
         { t:"F5-11 får endelig et hjem i forhandler-UI-et", d:"Endwise-support har vært «planned» siden v1.5 uten flate. Den ER dette dropdown-valget. Fra 25.08.2026 er compose-pillen «Support» (ikke «Skriv til Endwise»), default og fylt." },
-        { t:"✅ 28.08.2026 kveld — Organisasjon-skall + ikonfiltre", d:"Top-bar 2 er samme komponent som Organisasjon (sidebar-aktiv <code>#ededed</code>, hover <code>#f5f5f5</code>, <code>h-control</code>). Landing = Oversikt. Part-filtre er ikon-only under pilla. Ny samtale med tekst i samme rad." }
+        { t:"✅ 28.08.2026 kveld — Organisasjon-skall + ikonfiltre", d:"Top-bar 2 er samme komponent som Organisasjon (sidebar-aktiv <code>#ededed</code>, hover <code>#f5f5f5</code>, <code>h-control</code>). Landing = Oversikt. Part-filtre er ikon-only under pilla. Ny samtale med tekst i samme rad." },
+        { t:"✅ 28.08.2026 kveld — telefon/PC-skille + tilbake-pil", d:"Oversikt-pilla er borte fra Innboks. Telefon top-bar 2 er filterrad (ikon+tekst: Alle chatter · Kunder · Intern · Endwise) + Ny chat. Desktop har ingen innboks-top-bar 2; ikonfiltre + Ny chat i list-header. Tom detalj = stor Inbox-ikon + «Ingen valgte meldinger». Tilbake-pil i telefon end-spacer (ingen hover/aktiv). Organisasjon-piller uendret. Mekaniker får fortsatt ikke dealer-innboksen." }
       ],
       src:["packages/db/src/schema/messages.ts","apps/web/app/(app)/meldinger/"]
     } },

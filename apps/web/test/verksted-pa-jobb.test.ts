@@ -101,12 +101,13 @@ describe('Verkstedet-flaten — navn og innhold', () => {
     expect(nav).toMatch(/AI-verktøy er parkert/);
   });
 
-  it('rører ikke Kompetanse/Timeplan under Ansatte som sidebar-barn', () => {
-    const org = FORHANDLER_NAV.find((i) => i.key === 'team');
-    expect(org?.label).toBe('Ansatte');
+  it('rører ikke Kompetanse som Organisasjon-pille; Timeplan er seksjon', () => {
+    const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
+    expect(org?.label).toBe('Organisasjon');
     expect(org?.pills?.map((c) => c.label)).toEqual(
-      expect.arrayContaining(['Kompetanse', 'Timeplan']),
+      expect.arrayContaining(['Timeplan', 'Ansatte']),
     );
+    expect(org?.pills?.some((c) => c.label === 'Kompetanse')).toBe(false);
     const kompetanse = les('../app/(app)/mekanikere/kompetanse/page.tsx');
     expect(kompetanse).not.toMatch(/AnsattePaJobb|dashboard\/_timeplan/);
   });

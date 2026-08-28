@@ -1,10 +1,6 @@
-import { InnstillingerSkall } from '../innstillinger/_skall';
+import type { Route } from 'next';
+import { redirect } from 'next/navigation';
 
-/**
- * F5-04 / F5-19 — tjenester & priser.
- * Alias for `/innstillinger?fane=tjenester`. Kryssreferansen fra
- * tjenestekatalogen peker hit og lander i fanen.
- */
-export default function TjenesterPage() {
-  return <InnstillingerSkall startFane="tjenester" />;
+export default function TjenesterAlias() {
+  redirect('/organisasjon?seksjon=abonnement' as Route);
 }

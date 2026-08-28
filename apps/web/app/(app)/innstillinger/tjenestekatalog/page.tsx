@@ -32,6 +32,10 @@ import { TjenesteKort } from './_tjeneste-kort';
 const FILTRE = [{ key: 'alle', label: 'Alle' }, ...TYPE_VALG] as const;
 
 export default function TjenestekatalogPage() {
+  return <PrislisteFlate />;
+}
+
+export function PrislisteFlate({ skjulPiller = false }: { skjulPiller?: boolean }) {
   const { isAdmin } = useOrgRole();
   const [filter, setFilter] = useState<string>('alle');
   const [nyApen, setNyApen] = useState(false);
@@ -51,7 +55,13 @@ export default function TjenestekatalogPage() {
   const inaktive = synlige.filter((t) => !t.active);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
+    <div
+      className={
+        skjulPiller
+          ? 'flex flex-col gap-5'
+          : 'mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7'
+      }
+    >
       <div>
         <h1 className="sr-only">Prisliste</h1>
         <p className="flex items-center gap-2 text-title text-fg">
@@ -62,9 +72,11 @@ export default function TjenestekatalogPage() {
           Tjenestene kunden kan bestille hos dere, med varighet, pris og hvilke ferdigheter jobben
           krever.
         </p>
-        <div className="mt-3">
-          <AnsattePiller />
-        </div>
+        {skjulPiller ? null : (
+          <div className="mt-3">
+            <AnsattePiller />
+          </div>
+        )}
       </div>
 
       {/* Filtre + ny tjeneste */}
@@ -143,7 +155,7 @@ export default function TjenestekatalogPage() {
 
       {/* Kryssreferansen som skulle vært her fra starten */}
       <Link
-        href={'/tjenester' as Route}
+        href={'/organisasjon?seksjon=abonnement' as Route}
         className="inline-flex items-center gap-1.5 text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
       >
         Ser du etter hva dere betaler Endwise? Det ligger under «Tjenester &amp; priser»

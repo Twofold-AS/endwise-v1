@@ -21,7 +21,7 @@ function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
 
-describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
+describe('F5-19: innstillinger er Profil + Varsler', () => {
   const page = les('../app/(app)/innstillinger/page.tsx');
   const skall = les('../app/(app)/innstillinger/_skall.tsx');
   const profilFane = les('../app/(app)/innstillinger/_profil-fane.tsx');
@@ -41,33 +41,20 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(page).not.toMatch(/>Settings</);
   });
 
-  it('har liggende pille-faner uten Team (Team bor i sidebaren)', () => {
+  it('har kun Profil og Varsler — Abonnement/Koblinger/Tjenester er flyttet', () => {
     expect(skall).toMatch(/role="tablist"/);
-    expect(skall).toMatch(/rounded-pill/);
-    expect([...FANE_IDS]).toEqual([
-      'profil',
-      'integrasjoner',
-      'abonnement',
-      'varsler',
-      'tjenester',
-    ]);
-    expect(FANER.map((f) => f.label)).toEqual([
-      'Profil',
-      'Koblinger',
-      'Abonnement',
-      'Varsler',
-      'Tjenester & priser',
-    ]);
+    expect([...FANE_IDS]).toEqual(['profil', 'varsler']);
+    expect(FANER.map((f) => f.label)).toEqual(['Profil', 'Varsler']);
     expect(FANER.map((f) => f.id)).not.toContain('team');
+    expect(FANER.map((f) => f.id)).not.toContain('abonnement');
     expect(FANER.map((f) => f.label)).not.toContain('Team & tilgang');
     expect(skall).not.toMatch(/TeamInnhold/);
+    expect(skall).not.toMatch(/AbonnementInnhold/);
   });
 
-  it('admin-faner er dealer-only; Endwise-plattform ser kun Profil', () => {
-    const admin = FANER.filter((f) => f.adminOnly).map((f) => f.id);
-    expect(admin).toEqual(['integrasjoner', 'abonnement', 'tjenester']);
+  it('Endwise-plattform ser kun Profil', () => {
     expect(synligeFaner(false).map((f) => f.id)).toEqual(['profil', 'varsler']);
-    expect(synligeFaner(true).map((f) => f.id)).toEqual([...FANE_IDS]);
+    expect(synligeFaner(true).map((f) => f.id)).toEqual(['profil', 'varsler']);
     expect(synligeFaner(true, false).map((f) => f.id)).toEqual(['profil']);
     expect(synligeFaner(false, false).map((f) => f.id)).toEqual(['profil']);
   });
@@ -80,52 +67,45 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(FANER.map((f) => f.id)).not.toContain('admin');
   });
 
-  it('kanonisk fane-URL er ?fane=, og gamle stier er alias — unntatt Team', () => {
+  it('kanonisk fane-URL er ?fane=, gamle dealer-stier er ikke lenger alias', () => {
     expect(innstillingerHref('profil')).toBe('/innstillinger?fane=profil');
-    expect(innstillingerHref('abonnement')).toBe('/innstillinger?fane=abonnement');
     expect(FANE_ALIAS['/innstillinger/profil']).toBe('profil');
     expect(FANE_ALIAS['/innstillinger/team']).toBeUndefined();
     expect(FANE_ALIAS['/innstillinger/varsler']).toBe('varsler');
-    expect(FANE_ALIAS['/innstillinger/tjenester']).toBe('tjenester');
-    expect(FANE_ALIAS['/abonnement']).toBe('abonnement');
-    expect(FANE_ALIAS['/integrasjoner']).toBe('integrasjoner');
-    expect(FANE_ALIAS['/innstillinger/koblinger']).toBe('integrasjoner');
-    expect(FANE_ALIAS['/innstillinger/integrasjoner']).toBe('integrasjoner');
+    expect(FANE_ALIAS['/abonnement']).toBeUndefined();
+    expect(FANE_ALIAS['/integrasjoner']).toBeUndefined();
   });
 
-  it('ukjent eller admin-only fane for ikke-admin faller til profil', () => {
+  it('ukjent fane faller til profil', () => {
     expect(parseFane(null, false)).toBe('profil');
     expect(parseFane('ukjent', true)).toBe('profil');
     expect(parseFane('team', false)).toBe('profil');
-    expect(parseFane('team', true)).toBe('profil');
     expect(parseFane('varsler', false)).toBe('varsler');
-    expect(parseFane(null, false, 'abonnement')).toBe('profil');
-    expect(parseFane(null, true, 'abonnement')).toBe('abonnement');
     expect(parseFane('abonnement', true, 'profil', false)).toBe('profil');
-    expect(parseFane('varsler', true, 'profil', false)).toBe('profil');
   });
 
   it('gamle Abonnement- og Tjenester-URL-er er dealer-ruter som plattform redirecter vekk', () => {
     const kopi = les('../app/(app)/_lib/plattform.ts');
     expect(kopi).toMatch(/pathname\.startsWith\('\/tjenester'\)/);
-    expect(kopi).toMatch(/fane === 'abonnement' \|\| fane === 'tjenester'/);
     expect(les('../app/(app)/layout.tsx')).toMatch(/erForhandlerRutePaaPlattform\(pathname,/);
   });
 
-  it('gamle sider renderer skallet, Team-siden er egen destinasjon', () => {
+  it('gamle sider redirecter til Organisasjon, Team er Organisasjon › Ansatte', () => {
     expect(les('../app/(app)/innstillinger/profil/page.tsx')).toMatch(/startFane="profil"/);
-    expect(les('../app/(app)/innstillinger/team/page.tsx')).not.toMatch(/InnstillingerSkall/);
-    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/>Team</);
-    expect(les('../app/(app)/innstillinger/team/page.tsx')).not.toMatch(/Team & tilgang/);
+    expect(les('../app/(app)/innstillinger/team/page.tsx')).toMatch(/organisasjon\?seksjon=ansatte/);
     expect(les('../app/(app)/innstillinger/varsler/page.tsx')).toMatch(/startFane="varsler"/);
-    expect(les('../app/(app)/innstillinger/tjenester/page.tsx')).toMatch(/startFane="tjenester"/);
-    expect(les('../app/(app)/abonnement/page.tsx')).toMatch(/startFane="abonnement"/);
-    expect(les('../app/(app)/integrasjoner/page.tsx')).toMatch(/startFane="integrasjoner"/);
+    expect(les('../app/(app)/innstillinger/tjenester/page.tsx')).toMatch(
+      /organisasjon\?seksjon=abonnement/,
+    );
+    expect(les('../app/(app)/abonnement/page.tsx')).toMatch(/organisasjon\?seksjon=abonnement/);
+    expect(les('../app/(app)/integrasjoner/page.tsx')).toMatch(
+      /organisasjon\?seksjon=integrasjoner/,
+    );
     expect(les('../app/(app)/innstillinger/koblinger/page.tsx')).toMatch(
-      /startFane="integrasjoner"/,
+      /organisasjon\?seksjon=integrasjoner/,
     );
     expect(les('../app/(app)/innstillinger/integrasjoner/page.tsx')).toMatch(
-      /startFane="integrasjoner"/,
+      /organisasjon\?seksjon=integrasjoner/,
     );
   });
 
@@ -159,7 +139,7 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     expect(avatar).not.toMatch(/from '@\/components\/ui\/collapsible'/);
   });
 
-  it('ingen sticky Save-bar, ingen grønn switch/save, Ansatte ligger i sidebaren', () => {
+  it('ingen sticky Save-bar, ingen grønn switch/save, Organisasjon ligger i sidebaren', () => {
     expect(skall).not.toMatch(/sticky/);
     expect(skall).not.toMatch(/bg-success|bg-green|#1ED27D|#22c55e/);
     expect(page).not.toMatch(/Search settings/);
@@ -171,11 +151,10 @@ describe('F5-19: innstillinger er pille-faner, ikke en kort-hub', () => {
     );
     expect(settings).toMatch(/href: '\/innstillinger\/profil'/);
     expect(settings).not.toMatch(/href: '\/abonnement'/);
-    expect(settings).not.toMatch(/href: '\/innstillinger\/varsler'/);
     expect(settings).not.toMatch(/label: 'Team & tilgang'/);
     expect(settings).not.toMatch(/label: 'Admin'/);
-    expect(nav).toMatch(/key: 'team'/);
-    expect(nav).toMatch(/href: '\/innstillinger\/team'/);
-    expect(nav).toMatch(/label: 'Ansatte'/);
+    expect(nav).toMatch(/key: 'organisasjon'/);
+    expect(nav).toMatch(/href: '\/organisasjon'/);
+    expect(nav).toMatch(/label: 'Organisasjon'/);
   });
 });

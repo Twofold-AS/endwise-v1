@@ -12,7 +12,8 @@ const INSPECT_KANONISK: Record<string, string> = {
   '/hjelp': '/support',
   '/verkstedet': '/dashboard',
   '/prisliste': '/innstillinger/tjenestekatalog',
-  '/forhandleren': '/organisasjon/forhandleren',
+  '/forhandleren': '/organisasjon',
+  '/organisasjon': '/organisasjon/forhandleren',
 };
 
 export function remapHrefTilInspect(href: string, slug: string): string {

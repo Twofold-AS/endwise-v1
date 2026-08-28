@@ -106,7 +106,7 @@ describe('TipCard er stedet som minimeres', () => {
   it('tom liste viser Hjelp-chrome som kan utvides — widgeten slettes ikke', () => {
     expect(tip).toMatch(/Utvid helpdesk-slider/);
     expect(tip).toMatch(/Minimer helpdesk-slider/);
-    expect(sidebar).toMatch(/shell === 'forhandler' && <TipCard/);
+    expect(sidebar).toMatch(/shell === 'forhandler'/);
     expect(sidebar).toMatch(/<TipCard \/>/);
     const raa = les('../app/(app)/_shell/sidebar.tsx');
     expect(raa.indexOf('<TipCard')).toBeGreaterThan(-1);

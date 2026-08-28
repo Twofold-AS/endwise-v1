@@ -65,6 +65,7 @@ export const teamRouter = router({
         navn: schema.user.name,
         epost: schema.user.email,
         twoFactorEnabled: schema.user.twoFactorEnabled,
+        createdAt: schema.member.createdAt,
       })
       .from(schema.member)
       .innerJoin(schema.user, eq(schema.user.id, schema.member.userId))
@@ -179,10 +180,11 @@ export const teamRouter = router({
       .map((m) => {
         const p = profilPer.get(m.userId);
         const mek = mekPerBruker.get(m.userId);
+        const jobberIDag = mek ? (jobberPerMek.get(mek.id) ?? 0) : 0;
         const vis = mek
           ? mekanikerStatusVisning({
               aktiv: mek.active,
-              jobberIDag: jobberPerMek.get(mek.id) ?? 0,
+              jobberIDag,
               kapasitet: mek.capacity,
             })
           : { status: null, statusHumor: null, statusLabel: null };
@@ -192,6 +194,8 @@ export const teamRouter = router({
           epost: erUtenInnloggingEpost(m.epost) ? '' : m.epost,
           kanLoggeInn: medInnlogging.has(m.userId),
           rolle: m.rolle,
+          ansattSiden: m.createdAt,
+          jobberIDag,
           /** Kallenavn er internt. Team & tilgang er en intern flate. */
           kallenavn: p?.nickname ?? null,
           funksjon: resolveJobbfunksjon({

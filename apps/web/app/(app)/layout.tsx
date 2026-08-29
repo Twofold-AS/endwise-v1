@@ -10,6 +10,7 @@ import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
 import { InboxFilterProvider } from './_shell/inbox-filter';
 import { erTillattMekanikerSti } from './_shell/nav';
+import { APP_SHELL } from './_shell/phone-chrome';
 import { PhoneNav } from './_shell/phone-nav';
 import { PwaRegister } from './_shell/pwa-register';
 import { InnboksSeksjonBar, OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
@@ -134,7 +135,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <SidebarStateProvider>
           <InboxFilterProvider>
             <PwaRegister />
-            <div className="flex h-screen w-screen overflow-hidden bg-bg text-fg">
+            <div className={`flex ${APP_SHELL}`}>
               <Suspense
                 fallback={
                   <div className="hidden w-[248px] shrink-0 border-border border-r bg-sidebar md:block" />

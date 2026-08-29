@@ -66,6 +66,7 @@ export {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './components/dropdown-menu.tsx';
+export { Grainient, type GrainientProps } from './components/grainient.tsx';
 // shadcn/ui — chat (ui-pakker §9). Hentet.
 export {
   Message,

@@ -148,7 +148,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 />
                 <Sidebar />
               </Suspense>
-              <div className="flex min-w-0 flex-1 flex-col">
+              <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                 <Suspense
                   fallback={<div className="h-control shrink-0 border-border border-b bg-bg" />}
                 >
@@ -159,22 +159,24 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <OrganisasjonSeksjonBar />
                   <InnboksSeksjonBar />
                 </Suspense>
-                <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-                  {plattformVarsel ? (
-                    <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
-                      <p className="text-label">{plattformVarsel}</p>
-                      <button
-                        type="button"
-                        className="text-[12px] underline-offset-2 hover:underline"
-                        onClick={() => setPlattformVarsel(null)}
-                      >
-                        Lukk
-                      </button>
-                    </div>
-                  ) : null}
-                  {children}
-                </main>
-                <PhoneBevel />
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+                  <main className="min-h-0 min-w-0 md:flex-1">
+                    {plattformVarsel ? (
+                      <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
+                        <p className="text-label">{plattformVarsel}</p>
+                        <button
+                          type="button"
+                          className="text-[12px] underline-offset-2 hover:underline"
+                          onClick={() => setPlattformVarsel(null)}
+                        >
+                          Lukk
+                        </button>
+                      </div>
+                    ) : null}
+                    {children}
+                  </main>
+                  <PhoneBevel />
+                </div>
               </div>
             </div>
           </InboxFilterProvider>

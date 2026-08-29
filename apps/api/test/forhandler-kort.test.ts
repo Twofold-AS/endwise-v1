@@ -135,6 +135,7 @@ describe('Forhandleren — get uten 500 når profil mangler', () => {
     const inspect = les('../src/trpc/routers/verksted.ts');
     expect(get).toMatch(/hentForhandlerKort/);
     expect(get).toMatch(/get:\s*adminProcedure\.query/);
+    expect(get).toMatch(/kort:\s*protectedProcedure\.query/);
     expect(inspect).toMatch(/hentForhandlerKort/);
     expect(inspect).toMatch(/withPlatformInspect/);
   });

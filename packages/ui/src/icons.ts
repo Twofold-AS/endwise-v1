@@ -22,6 +22,7 @@
 export {
   ArrowUpRight,
   BellRing,
+  Bike,
   BookOpen,
   // eierens AI-main.svg viste seg å være
   // Kun en liten sirkel (spenn 4,8 av 24) — nav-punktet «AI-verktøy» rendret
@@ -57,6 +58,7 @@ export {
   PanelRightOpen,
   Plug,
   Plus,
+  Sailboat,
   ShoppingCart,
   Store,
   TrendingDown,

@@ -8,6 +8,7 @@
  * @source-fiksen under. Tatt i bruk første gang på AI-diagnose (F6-04).
  */
 @import "@endwise/ui/matrix-loaders.css";
+@import "@endwise/ui/grainient.css";
 /**
  * Blobatars bevegelseslag. Samme familie som gotchaen over: uten
  * denne importen er det ingen feilmelding, ingenting i typecheck og ingenting i

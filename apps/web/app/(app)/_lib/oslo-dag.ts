@@ -11,6 +11,7 @@ export {
   osloStartAvDag,
   osloStartAvUke,
   osloUkedagMandag0,
+  osloVegg,
   osloVeggklokke,
   osloVeggtid,
   PRODUKT_TIDSSONE,

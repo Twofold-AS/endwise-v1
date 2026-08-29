@@ -1,110 +1,89 @@
 'use client';
 
-import { CalendarDays, Car } from '@endwise/ui';
+import { CalendarDays } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { osloKalenderdag } from '../../_lib/oslo-dag';
 import {
-  osloKalenderdag,
-  osloPlusDager,
-  osloVeggklokke,
-  PRODUKT_TIDSSONE,
-} from '../../_lib/oslo-dag';
-import { CardShell } from '../../_shell/cards';
-import { estMinutes, fmtTime, STATUS_LABEL } from '../_status';
-
-/** Timeplan: velg dag i strip, se den dagens jobber (mekaniker-scopet). */
-function dayList(): { iso: string; label: string; weekday: string }[] {
-  const out: { iso: string; label: string; weekday: string }[] = [];
-  const start = osloKalenderdag(new Date());
-  for (let i = 0; i < 7; i++) {
-    const ymd = osloPlusDager(start, i);
-    const middag = osloVeggklokke(ymd, 12, 0);
-    out.push({
-      iso: ymd,
-      label: middag.toLocaleDateString('nb-NO', {
-        day: '2-digit',
-        month: 'short',
-        timeZone: PRODUKT_TIDSSONE,
-      }),
-      weekday: middag.toLocaleDateString('nb-NO', {
-        weekday: 'short',
-        timeZone: PRODUKT_TIDSSONE,
-      }),
-    });
-  }
-  return out;
-}
+  TIMEPLAN_DAG_SLUTT,
+  TIMEPLAN_DAG_START,
+  TIMEPLAN_PX_PER_TIME,
+  TIMEPLAN_TIMELISTE,
+  timeplanKloss,
+} from '../../_shell/timeplan-dager';
+import { TimeplanStripe } from '../../_shell/timeplan-stripe';
+import { STATUS_LABEL } from '../_status';
 
 export default function TimeplanPage() {
-  const days = dayList();
-  const [selected, setSelected] = useState(days[0].iso);
-  const day = trpc.mechanic.myDay.useQuery({ date: selected });
+  const [valgt, setValgt] = useState(() => osloKalenderdag(new Date()));
+  const day = trpc.mechanic.myDay.useQuery({ date: valgt });
   const jobs = day.data?.jobs ?? [];
 
   return (
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-4 px-4 py-6">
       <div className="flex items-center gap-2">
-        <CalendarDays size={18} className="text-primary" />
-        <h1 className="font-semibold text-fg text-xl tracking-tight">Timeplan</h1>
+        <CalendarDays size={18} className="text-fg" />
+        <h1 className="text-title text-fg">Timeplan</h1>
       </div>
 
-      {/* Dag-strip — store trykkmål. */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {days.map((d) => {
-          const active = d.iso === selected;
-          return (
-            <button
-              type="button"
-              key={d.iso}
-              onClick={() => setSelected(d.iso)}
-              className={`flex min-w-[56px] shrink-0 flex-col items-center gap-0.5 rounded-xl border px-3 py-2 ${
-                active
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border bg-card text-fg-muted'
-              }`}
-            >
-              <span className="text-[10px] uppercase">{d.weekday}</span>
-              <span className="font-semibold text-[13px]">{d.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      <TimeplanStripe valgt={valgt} onValgt={setValgt} />
 
-      {day.isLoading && <p className="text-fg-faint text-sm">Laster …</p>}
-      {!day.isLoading && jobs.length === 0 && (
-        <p className="text-fg-faint text-sm">Ingen jobber denne dagen.</p>
-      )}
+      {day.isLoading ? <p className="text-[12px] text-fg-muted">Laster …</p> : null}
 
-      <div className="flex flex-col gap-2.5">
-        {jobs.map((job) => (
-          <Link key={job.id} href={`/min-dag/${job.id}` as Route} className="block">
-            <CardShell>
-              <div className="flex items-center gap-3 rounded-lg bg-inset p-3.5">
-                <div className="w-14 shrink-0 text-center font-semibold text-[13px] text-primary tabular-nums">
-                  {fmtTime(job.startsAt)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <Car size={13} className="shrink-0 text-fg-muted" />
-                    <span className="truncate font-semibold text-[13px] text-fg">
-                      {job.regNumber ?? 'Ukjent regnr'}
-                    </span>
-                  </div>
-                  <p className="truncate text-fg-faint text-xs">
-                    {job.customerName ?? 'Ukjent kunde'} · est.{' '}
-                    {estMinutes(job.startsAt, job.endsAt)} min
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-fg-muted">
-                  {STATUS_LABEL[job.status] ?? job.status}
-                </span>
+      <div className="overflow-hidden rounded-xl border border-border bg-bg">
+        <div
+          className="relative flex"
+          style={{ height: TIMEPLAN_TIMELISTE.length * TIMEPLAN_PX_PER_TIME }}
+        >
+          <div className="w-14 shrink-0">
+            {TIMEPLAN_TIMELISTE.map((time) => (
+              <div
+                key={time}
+                style={{ height: TIMEPLAN_PX_PER_TIME }}
+                className="relative border-border border-b text-[11px] text-fg-muted tabular-nums"
+              >
+                <span className="absolute top-1 right-2">{String(time).padStart(2, '0')}:00</span>
               </div>
-            </CardShell>
-          </Link>
-        ))}
+            ))}
+          </div>
+          <div className="relative min-w-0 flex-1 border-border border-l">
+            {TIMEPLAN_TIMELISTE.map((time) => (
+              <div
+                key={time}
+                style={{ height: TIMEPLAN_PX_PER_TIME }}
+                className="border-border/60 border-b"
+              />
+            ))}
+            {jobs.map((job) => {
+              const { top, height } = timeplanKloss(job.startsAt, job.endsAt);
+              return (
+                <Link
+                  key={job.id}
+                  href={`/min-dag/${job.id}` as Route}
+                  style={{ top, height }}
+                  className="absolute right-1 left-1 overflow-hidden rounded-control border border-border bg-card px-2 py-1"
+                >
+                  <div className="truncate text-label text-fg">
+                    {job.customerName ?? 'Ukjent kunde'}
+                  </div>
+                  {height > 32 ? (
+                    <div className="truncate text-[11px] text-fg-muted">
+                      {STATUS_LABEL[job.status] ?? job.status}
+                    </div>
+                  ) : null}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </div>
+
+      <p className="text-[12px] text-fg-muted">
+        Rutenettet er {String(TIMEPLAN_DAG_START).padStart(2, '0')}:00–
+        {String(TIMEPLAN_DAG_SLUTT).padStart(2, '0')}:00.
+      </p>
     </div>
   );
 }

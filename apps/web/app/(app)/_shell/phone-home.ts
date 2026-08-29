@@ -27,7 +27,7 @@ export const PHONE_SHELL_ROT =
   'flex h-dvh max-h-dvh min-h-svh w-full overflow-hidden bg-bg text-fg overscroll-none';
 
 export const PHONE_SAFE_TOP = 'pt-[env(safe-area-inset-top)]';
-export const PHONE_SAFE_BUNN = 'pb-[env(safe-area-inset-bottom)]';
+export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';
 
 /**
  * Samme flate som resten av appen (`CardShell`): `--ew-surface` / `--ew-fg`.
@@ -60,6 +60,7 @@ export type PhoneKortKey =
   | 'lager'
   | 'butikk'
   | 'min-dag'
+  | 'dine-jobber'
   | 'kompetanse';
 
 export type PhoneHjemRad = {
@@ -78,7 +79,13 @@ export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['lager'], kind: 'low' },
 ];
 
-export const MEKANIKER_PHONE_HURTIG: PhoneKortKey[] = ['lager', 'kompetanse', 'timeplan', 'hjelp'];
+export const MEKANIKER_PHONE_HURTIG: PhoneKortKey[] = [
+  'dine-jobber',
+  'lager',
+  'kompetanse',
+  'timeplan',
+  'hjelp',
+];
 
 export const PHONE_KORT_META: Record<
   PhoneKortKey,
@@ -96,7 +103,8 @@ export const PHONE_KORT_META: Record<
   hjelp: { label: 'Hjelp', href: '/support', icon: LifeBuoy },
   lager: { label: 'Lager', href: '/lager', icon: Package },
   butikk: { label: 'Butikk', href: '/butikk', icon: Store },
-  'min-dag': { label: 'Min dag', href: '/min-dag', icon: CalendarDays },
+  'min-dag': { label: 'Dine jobber', href: '/dine-jobber', icon: CalendarDays },
+  'dine-jobber': { label: 'Dine jobber', href: '/dine-jobber', icon: CalendarDays },
   kompetanse: { label: 'Kompetanse', href: '/min-dag/kompetanse', icon: ShieldCheck },
 };
 
@@ -111,7 +119,7 @@ export function dealerPhoneHjemRader(shopEnabled: boolean): PhoneHjemRad[] {
 
 export function mekanikerHurtigKort(shopEnabled: boolean): PhoneKortKey[] {
   if (!shopEnabled) return [...MEKANIKER_PHONE_HURTIG];
-  return ['lager', 'kompetanse', 'timeplan', 'hjelp', 'butikk'];
+  return ['dine-jobber', 'lager', 'kompetanse', 'timeplan', 'hjelp', 'butikk'];
 }
 
 export function flatDealerHjemKeys(shopEnabled: boolean): PhoneKortKey[] {

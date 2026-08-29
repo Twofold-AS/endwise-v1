@@ -146,7 +146,7 @@ export const CONTEXTS: AppContext[] = [
   {
     key: 'mekaniker',
     label: 'Mekaniker',
-    hint: 'Min dag og jobbene mine',
+    hint: 'Dine jobber og jobbene mine',
     icon: HardHat,
     roles: DRIFT,
     requiresMechanic: true,
@@ -315,7 +315,13 @@ export const SETTINGS_NAV: NavItem = {
 
 /* Mekaniker-konteksten */
 export const MEKANIKER_NAV: NavItem[] = [
-  { key: 'min-dag', label: 'Min dag', icon: CalendarDays, href: '/min-dag', roles: DRIFT },
+  {
+    key: 'dine-jobber',
+    label: 'Dine jobber',
+    icon: CalendarDays,
+    href: '/dine-jobber',
+    roles: DRIFT,
+  },
   {
     key: 'arbeidsflate',
     label: 'Jobbene mine',
@@ -545,6 +551,7 @@ export function navForContext(context: ContextKey): NavItem[] {
 
 export function erTillattMekanikerSti(pathname: string): boolean {
   if (pathname.startsWith('/min-dag')) return true;
+  if (pathname.startsWith('/dine-jobber')) return true;
   if (pathname.startsWith('/mekaniker/')) return true;
   if (pathname === '/lager') return true;
   if (pathname === '/butikk') return true;
@@ -691,7 +698,12 @@ export function isItemActive(item: NavItem, pathname: string): boolean {
  * refresh) så sidebaren viser riktig kontekst uten at brukeren må velge på nytt.
  */
 export function contextForPath(pathname: string): ContextKey {
-  if (pathname.startsWith('/min-dag') || pathname.startsWith('/mekaniker/')) return 'mekaniker';
+  if (
+    pathname.startsWith('/min-dag') ||
+    pathname.startsWith('/dine-jobber') ||
+    pathname.startsWith('/mekaniker/')
+  )
+    return 'mekaniker';
   if (pathname.startsWith('/endwise')) return 'endwise';
   return 'forhandler';
 }

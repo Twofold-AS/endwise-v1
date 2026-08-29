@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useEventStream } from '../_lib/use-event-stream';
+import { ForhandlerGrainientKort } from '../_shell/forhandler-grainient';
 import { ESCALATION_REASON_LABEL, fmtWhen } from './_lib';
 import { NySamtale } from './_ny-samtale';
 
@@ -62,6 +63,7 @@ function MeldingerPageInner() {
 
   return (
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-8 py-7">
+      <ForhandlerGrainientKort />
       {nySamtale && <NySamtale onLukk={() => router.replace('/innboks' as Route)} />}
 
       {/* Eskalert fra AI. Live på SSE mens siden er åpen. */}

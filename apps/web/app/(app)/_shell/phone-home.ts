@@ -22,8 +22,9 @@ import type { ShellKey } from './nav';
  * Desktop-sidebar er urørt. Denne fila er kun telefon-IA.
  */
 
+/** Kort-hjem-rot: #84 dvh/overscroll + #85 min-h-svh. Safe-area sitter på logo/bevel. */
 export const PHONE_SHELL_ROT =
-  'flex h-dvh max-h-dvh min-h-svh w-full overflow-hidden bg-bg text-fg';
+  'flex h-dvh max-h-dvh min-h-svh w-full overflow-hidden bg-bg text-fg overscroll-none';
 
 export const PHONE_SAFE_TOP = 'pt-[env(safe-area-inset-top)]';
 export const PHONE_SAFE_BUNN = 'pb-[env(safe-area-inset-bottom)]';

@@ -21,6 +21,12 @@ Alt gikk som planlagt mot den låste FILL-specen. Context7 MCP fantes ikke i mil
 - Timeplan på hjem er destinasjon til Jobber › Kalender, ikke Organisasjon-kapasitet.
 - Innboks-ulest på fylt kort er hvit prikk/tall, ikke Ny-rød.
 
+## Merge mot main (#84, 29.08.2026)
+
+- Konflikter: `apps/web/app/(app)/layout.tsx`, `apps/web/app/layout.tsx`, `apps/web/app/(app)/_shell/mobile-shell.tsx`, `docs/endwise-roadmap.html`.
+- Løst: kort-hjem-chrome (`PhoneShell` + `PhoneBevel`, `PHONE_SHELL_ROT`) + #84 viewport (`h-dvh`, `overscroll-none`, `viewport-fit: cover`, html/body `100dvh`, `APP_SHELL` i `phone-chrome` / `MobileShell`). Safe-area på logo/bevel, ikke doblet på `<main>`.
+- #84 ble ikke revertet. Ingen ny PR.
+
 ## Neste fase / neste steg
 
 - Book for kunde er merkelapp på jobbkortet inne i Verkstedet — AI-/siste-kunde-dør er ikke denne PR-en.

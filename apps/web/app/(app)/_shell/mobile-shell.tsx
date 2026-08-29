@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useOnline } from '../_lib/use-online';
+import { APP_SHELL } from './phone-chrome';
 import { PwaRegister } from './pwa-register';
 
 /**
@@ -37,7 +38,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const online = useOnline();
 
   return (
-    <div className="flex h-dvh max-h-dvh min-h-svh w-full flex-col overflow-hidden bg-bg text-fg">
+    <div className={`flex flex-col ${APP_SHELL}`}>
       <PwaRegister />
 
       {!online && (
@@ -47,14 +48,9 @@ export function MobileShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <main className="min-h-0 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
-        {children}
-      </main>
+      <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
 
-      <nav
-        className="grid shrink-0 grid-cols-5 border-border border-t bg-card"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
+      <nav className="grid shrink-0 grid-cols-5 border-border border-t bg-card">
         {TABS.map((t) => {
           const active =
             t.href === '/min-dag' ? pathname === '/min-dag' : pathname.startsWith(t.href);

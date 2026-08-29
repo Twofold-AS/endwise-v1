@@ -24,7 +24,7 @@ import { type ShellKey, settingsForShell } from './nav';
 
 /** Kort-hjem-rot: #84 dvh/overscroll + #85 min-h-svh. Safe-area sitter på logo/bevel. */
 export const PHONE_SHELL_ROT =
-  'flex h-dvh max-h-dvh min-h-svh w-full overflow-hidden bg-bg text-fg overscroll-none';
+  'flex h-dvh max-h-dvh min-h-dvh min-h-svh w-full overflow-hidden bg-bg text-fg overscroll-none';
 
 export const PHONE_SAFE_TOP = 'pt-[env(safe-area-inset-top)]';
 export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';

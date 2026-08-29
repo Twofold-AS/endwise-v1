@@ -41,7 +41,7 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('dealer phone home — kortrekkefølge og fyll', () => {
-  it('låser hero → Innboks|Timeplan → Statistikk|Tjenester → Kunder|Organisasjon → Samarbeid|Hjelp → Lager lavt', () => {
+  it('låser hero → Innboks|Timeplan → Statistikk|Salg → Kunder|Organisasjon → Samarbeid|Hjelp → Lager lavt', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['verkstedet'],
       ['innboks', 'timeplan'],
@@ -56,7 +56,7 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('low');
   });
 
-  it('Innboks|Timeplan og Tjenester er høyt, Lager er lavt', () => {
+  it('Innboks|Timeplan og Salg er høyt, Lager er lavt', () => {
     const keys = DEALER_PHONE_HJEM.map((r) => r.keys.join('|'));
     expect(keys.indexOf('innboks|timeplan')).toBeLessThan(keys.indexOf('statistikk|tjenester'));
     expect(keys.indexOf('statistikk|tjenester')).toBeLessThan(keys.indexOf('lager'));
@@ -79,8 +79,9 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(labels.some((l) => /book|oppslag|prisliste|abonnement|\bai\b/.test(l))).toBe(false);
   });
 
-  it('Timeplan går til /jobber, Tjenester til /prisliste, Statistikk til /rapporter', () => {
+  it('Timeplan går til /jobber, Salg til /prisliste, Statistikk til /rapporter', () => {
     expect(PHONE_KORT_META.timeplan.href).toBe('/jobber');
+    expect(PHONE_KORT_META.tjenester.label).toBe('Salg');
     expect(PHONE_KORT_META.tjenester.href).toBe('/prisliste');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     expect(PHONE_KORT_META.verkstedet.href).toContain('visning=dag');

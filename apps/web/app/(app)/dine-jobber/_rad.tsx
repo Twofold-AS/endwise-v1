@@ -37,7 +37,12 @@ export function JobbRad({
       <span className="w-12 shrink-0 text-title tabular-nums">{fmtTime(startsAt)}</span>
       <KjoretoyMerke type={vehicleType} />
       <span className="min-w-0 flex-1 truncate text-title">{customerName ?? 'Ukjent kunde'}</span>
-      <ChevronRight size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" aria-label="Detaljer" />
+      <ChevronRight
+        size={16}
+        strokeWidth={1.75}
+        className="shrink-0 text-fg-muted"
+        aria-label="Detaljer"
+      />
     </Link>
   );
 }

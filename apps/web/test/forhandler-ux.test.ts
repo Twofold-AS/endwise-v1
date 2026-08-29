@@ -46,7 +46,7 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     expect(hjelp && isItemActive(hjelp, '/support')).toBe(true);
   });
 
-  it('/prisliste treffer Tjenester, /verkstedet treffer Verkstedet', () => {
+  it('/prisliste treffer Salg, /verkstedet treffer Verkstedet', () => {
     const timeplan = FORHANDLER_NAV.find((i) => i.key === 'saker');
     const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
     const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
@@ -55,7 +55,7 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     expect(verksted && isItemActive(verksted, '/verkstedet')).toBe(true);
     expect(verksted && isItemActive(verksted, '/prisliste')).toBe(false);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Tjenester', href: '/prisliste' },
+      { label: 'Salg', href: '/prisliste' },
     ]);
   });
 

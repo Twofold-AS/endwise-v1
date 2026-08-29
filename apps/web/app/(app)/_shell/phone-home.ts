@@ -66,7 +66,7 @@ export type PhoneHjemRad = {
   kind: 'hero' | 'full' | 'pair' | 'low';
 };
 
-/** Dealer-rekkefølge: hero → Innboks|Timeplan → Statistikk|Tjenester → … → Lager lavt. */
+/** Dealer-rekkefølge: hero → Innboks|Timeplan → Statistikk|Salg → … → Lager lavt. */
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['verkstedet'], kind: 'hero' },
   { keys: ['innboks', 'timeplan'], kind: 'pair' },
@@ -86,7 +86,7 @@ export const PHONE_KORT_META: Record<
   verkstedet: { label: 'Verkstedet', href: '/dashboard?visning=dag', icon: LayoutDashboard },
   timeplan: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
   statistikk: { label: 'Statistikk', href: '/rapporter', icon: ChartColumn },
-  tjenester: { label: 'Tjenester', href: '/prisliste', icon: Wrench },
+  tjenester: { label: 'Salg', href: '/prisliste', icon: Wrench },
   innboks: { label: 'Innboks', href: '/innboks', icon: Inbox },
   jobber: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
   kunder: { label: 'Kunder', href: '/kunder', icon: Users },

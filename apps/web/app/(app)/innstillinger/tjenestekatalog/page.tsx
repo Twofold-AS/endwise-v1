@@ -2,7 +2,7 @@
 
 import { PrislisteFlate } from './_flate';
 
-/** Alias til Tjenester. */
+/** Alias til Salg. */
 export default function TjenestekatalogPage() {
-  return <PrislisteFlate tittel="Tjenester" />;
+  return <PrislisteFlate tittel="Salg" />;
 }

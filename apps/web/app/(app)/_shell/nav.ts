@@ -190,7 +190,7 @@ export const CONTEXTS: AppContext[] = [
  * Mikael IA 28.08 ettermiddag — fasit over Jonas-morgenen.
  * Ett skall, ingen visningsvelger. Organisasjon er ÉN rad → /organisasjon.
  * Top-bar 2 = Oversikt · Ansatte · Abonnement · Integrasjoner.
- * Kompetanse er ikke pille/sidebar. Timeplan er egen destinasjon. Tjenester er egen destinasjon.
+ * Kompetanse er ikke pille/sidebar. Timeplan er egen destinasjon. Salg er egen destinasjon.
  * Hjelp = /support. Innstillinger = Profil + Varsler.
  */
 /*
@@ -270,7 +270,7 @@ export const FORHANDLER_NAV: NavItem[] = [
   },
   {
     key: 'tjenester',
-    label: 'Tjenester',
+    label: 'Salg',
     icon: Wrench,
     href: '/prisliste',
     roles: DRIFT,
@@ -806,8 +806,8 @@ export const PARKED_LABEL: Record<string, string> = {
   '/innstillinger/integrasjoner': 'Organisasjon · Integrasjoner',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
   '/endwise/innstillinger': 'Endwise · Dev-mode',
-  '/innstillinger/tjenestekatalog': 'Tjenester',
-  '/prisliste': 'Tjenester',
+  '/innstillinger/tjenestekatalog': 'Salg',
+  '/prisliste': 'Salg',
   '/butikk': 'Butikk · Katalog',
   '/butikk/kasse': 'Butikk · Handlekurv / kasse',
   '/lager/deler': 'Lager · Deler',

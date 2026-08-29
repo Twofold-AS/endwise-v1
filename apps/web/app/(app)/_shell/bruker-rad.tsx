@@ -1,24 +1,29 @@
 'use client';
 
-import { Avatar, LogOut } from '@endwise/ui';
+import { Avatar, LogOut, Settings } from '@endwise/ui';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { BEVEL } from './cards';
 
 /**
  * Avatar + navn + logg ut i samme bevel som Handlinger.
  * Ingen rolletittel. Avataren har ingen egen boks.
+ * `innstillingerHref` er bare telefon-bevel — desktop-sidebar sender den ikke.
  */
 export function BrukerRad({
   navn,
   laster = false,
   collapsed,
   onLoggUt,
+  innstillingerHref,
 }: {
   navn: string | null;
   rolle?: string | null;
   laster?: boolean;
   collapsed: boolean;
   onLoggUt: () => void | Promise<void>;
+  innstillingerHref?: string;
 }) {
   const me = trpc.session.me.useQuery();
   const profil = trpc.profile.meg.useQuery(undefined, { retry: false });
@@ -61,6 +66,16 @@ export function BrukerRad({
           (navn ?? '—')
         )}
       </span>
+      {innstillingerHref ? (
+        <Link
+          href={innstillingerHref as Route}
+          title="Innstillinger"
+          aria-label="Innstillinger"
+          className="flex size-7 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          <Settings size={15} strokeWidth={1.75} />
+        </Link>
+      ) : null}
       <button
         type="button"
         onClick={() => void onLoggUt()}

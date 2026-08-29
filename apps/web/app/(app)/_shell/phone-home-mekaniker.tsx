@@ -30,7 +30,7 @@ export function PhoneHomeMekaniker() {
     <div className="mx-auto flex w-full max-w-[520px] flex-col gap-3 px-3 py-3 md:hidden">
       <div className={`${PHONE_KORT_FYLL} flex flex-col gap-2 p-3`}>
         <h1 className="text-title">Min dag</h1>
-        <p className="text-[12px] opacity-90">{minDagMeta(jobs, naa)}</p>
+        <p className="text-[12px] text-fg-muted">{minDagMeta(jobs, naa)}</p>
       </div>
 
       <div className={`grid gap-3 ${hurtig.length > 4 ? 'grid-cols-2' : 'grid-cols-2'}`}>
@@ -56,14 +56,14 @@ export function PhoneHomeMekaniker() {
                 <button
                   type="button"
                   aria-expanded={open}
-                  className="inline-flex h-control shrink-0 items-center rounded-control bg-accent-fg px-3 text-label text-accent"
+                  className="inline-flex h-control shrink-0 items-center rounded-control bg-fg px-3 text-bg text-label"
                   onClick={() => setAapen((forrige) => (forrige === job.id ? null : job.id))}
                 >
                   Detaljer
                 </button>
               </div>
               {open ? (
-                <div className="flex flex-col gap-1 text-[12px] opacity-90">
+                <div className="flex flex-col gap-1 text-[12px] text-fg-muted">
                   <p>{job.customerName ?? 'Ukjent kunde'}</p>
                   <p>
                     {job.regNumber ?? 'Uten regnr'}

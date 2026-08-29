@@ -10,7 +10,13 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
 import { breadcrumbFor, contextForPath, shellForBruker } from './nav';
 import { PHONE_LOGO_PX } from './phone-chrome';
-import { erPhoneHjem, PHONE_SAFE_BUNN, PHONE_SAFE_TOP, phoneHjemHref } from './phone-home';
+import {
+  erPhoneHjem,
+  PHONE_SAFE_BUNN,
+  PHONE_SAFE_TOP,
+  phoneHjemHref,
+  phoneInnstillingerHref,
+} from './phone-home';
 
 async function loggUt() {
   await authClient.signOut();
@@ -18,9 +24,9 @@ async function loggUt() {
 }
 
 /**
- * Telefon-chrome: hvit topp med logo over kortene, bevel under innholdet.
+ * Telefon-chrome: temabakgrunn med logo over kortene, bevel under innholdet.
  * Ingen horisontal scroller, hamburger, Mer-sheet, visningsvelger eller bunnbar.
- * Innstillinger bor i bevelen: avatar + navn + logg ut, uten rolletittel.
+ * Innstillinger bor i bevelen: avatar + navn + tannhjul + logg ut.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -66,10 +72,22 @@ export function PhoneShell() {
 }
 
 export function PhoneBevel() {
-  const { navn, isLoading } = useOrgRole();
+  const { navn, isLoading, role, jobbfunksjon, isMechanic, erPlattform } = useOrgRole();
+  const shell = shellForBruker({
+    role,
+    jobFunction: jobbfunksjon,
+    isMechanic,
+    erPlattform,
+  });
   return (
     <footer className={`shrink-0 bg-bg px-3 pt-2 md:hidden ${PHONE_SAFE_BUNN}`}>
-      <BrukerRad navn={navn} laster={isLoading} collapsed={false} onLoggUt={loggUt} />
+      <BrukerRad
+        navn={navn}
+        laster={isLoading}
+        collapsed={false}
+        onLoggUt={loggUt}
+        innstillingerHref={phoneInnstillingerHref(shell)}
+      />
     </footer>
   );
 }

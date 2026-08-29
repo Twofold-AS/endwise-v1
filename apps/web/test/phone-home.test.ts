@@ -16,6 +16,7 @@ import {
   PHONE_SAFE_BUNN,
   PHONE_SAFE_TOP,
   PHONE_SHELL_ROT,
+  phoneInnstillingerHref,
 } from '../app/(app)/_shell/phone-home.ts';
 import {
   innboksMeta,
@@ -163,16 +164,25 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(nesteJobb(uke, naa)?.what).toMatch(/Olje/);
   });
 
-  it('kort er fylt aksent, radius 12, text-title + 12px meta — ikke outline', () => {
+  it('kort bruker appens flate/tekst-tokens — ikke shadcn accent (vasket hvit-på-grå)', () => {
     expect(PHONE_KORT_FYLL).toMatch(/rounded-xl/);
-    expect(PHONE_KORT_FYLL).toMatch(/bg-accent/);
-    expect(PHONE_KORT_FYLL).toMatch(/text-accent-fg/);
+    expect(PHONE_KORT_FYLL).toMatch(/bg-card/);
+    expect(PHONE_KORT_FYLL).toMatch(/text-fg/);
+    expect(PHONE_KORT_FYLL).toMatch(/border-border/);
+    expect(PHONE_KORT_FYLL).not.toMatch(/bg-accent(?!-|soft|strong|dim|fg)/);
+    expect(PHONE_KORT_FYLL).not.toMatch(/text-accent-fg/);
+    expect(PHONE_KORT_FYLL).not.toMatch(/bg-white|bg-accent-fg/);
     const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
     expect(kort).toMatch(/text-title/);
     expect(kort).toMatch(/text-\[12px\]/);
-    expect(kort).not.toMatch(/border-border/);
+    expect(kort).toMatch(/text-fg-muted/);
+    expect(kort).not.toMatch(/text-accent-fg/);
     expect(kort).not.toMatch(/variant="outline"|outline-card/);
     expect(kort).not.toMatch(/NewBadge|variant="destructive"/);
+    const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
+    expect(hjem).not.toMatch(/text-accent-fg|bg-accent-fg/);
+    const mek = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
+    expect(mek).not.toMatch(/text-accent-fg|bg-accent-fg/);
   });
 });
 
@@ -196,7 +206,25 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(shell).toMatch(/PHONE_SAFE_BUNN/);
     expect(shell).toMatch(/logo\/logo\.svg/);
     expect(shell).toMatch(/BrukerRad|Logg ut/);
+    expect(shell).toMatch(/innstillingerHref|phoneInnstillingerHref/);
     expect(shell).not.toMatch(/rolle \?\?/);
+    expect(PHONE_SHELL_ROT).toMatch(/bg-bg/);
+    expect(PHONE_SHELL_ROT).toMatch(/text-fg/);
+    expect(PHONE_SHELL_ROT).not.toMatch(/bg-white/);
+  });
+
+  it('bevel-raden har Innstillinger-ikon på samme linje som avatar og logg ut', () => {
+    expect(phoneInnstillingerHref('forhandler')).toBe('/innstillinger/profil');
+    expect(phoneInnstillingerHref('endwise')).toBe('/innstillinger/profil');
+    expect(phoneInnstillingerHref('endwise_partner')).toBe('/innstillinger/profil');
+    expect(phoneInnstillingerHref('mekaniker')).toBe('/min-dag/meg');
+    const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
+    expect(rad).toMatch(/innstillingerHref/);
+    expect(rad).toMatch(/Settings/);
+    expect(rad).toMatch(/Innstillinger/);
+    expect(rad).toMatch(/LogOut/);
+    const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
+    expect(sidebar).not.toMatch(/innstillingerHref/);
   });
 
   it('ingen bunnbar, hamburger, horisontal hovedscroller, Mer-sheet eller visningsvelger', () => {

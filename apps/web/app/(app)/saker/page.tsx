@@ -25,13 +25,22 @@ function TimeplanPageInner() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-title text-fg">Timeplan</h1>
-          <p className="text-body text-fg-muted">
-            Kapasitet og kalender for verkstedet. Samme dag og tid i Europe/Oslo.
-          </p>
-        </div>
+      <div>
+        <h1 className="text-title text-fg">Timeplan</h1>
+        <p className="text-body text-fg-muted">
+          Kapasitet og kalender for verkstedet. Samme dag og tid i Europe/Oslo.
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <SidePiller
+          ariaLabel="Timeplan"
+          piller={[
+            { label: 'Liste', href: '/jobber' },
+            { label: 'Kalender', href: '/jobber?visning=kalender' },
+          ]}
+          aktivHref={visning === 'kalender' ? '/jobber?visning=kalender' : '/jobber'}
+        />
         <div className="flex shrink-0 items-center gap-2">
           <Link
             href={'/bookinger/ny' as Route}
@@ -49,15 +58,6 @@ function TimeplanPageInner() {
           </button>
         </div>
       </div>
-
-      <SidePiller
-        ariaLabel="Timeplan"
-        piller={[
-          { label: 'Liste', href: '/jobber' },
-          { label: 'Kalender', href: '/jobber?visning=kalender' },
-        ]}
-        aktivHref={visning === 'kalender' ? '/jobber?visning=kalender' : '/jobber'}
-      />
 
       <TimeplanStripe valgt={valgt} onValgt={setValgt} />
 

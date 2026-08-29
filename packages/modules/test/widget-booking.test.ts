@@ -26,7 +26,7 @@ describeDb('widget booking-forespørsel (F4-20 + kapasitet)', () => {
   const shortVersionId = randomUUID();
   const longVersionId = randomUUID();
   const day = '2026-09-15';
-  const lateStart = widgetWallTime(day, 15, 30);
+  const lateStart = widgetWallTime(day, 18, 0);
   const validStart = widgetWallTime(day, 9, 0);
   const fullStart = widgetWallTime(day, 10, 0);
   const raceStart = widgetWallTime(day, 11, 0);
@@ -88,7 +88,7 @@ describeDb('widget booking-forespørsel (F4-20 + kapasitet)', () => {
     ).rejects.toThrow(WidgetBookingError);
   });
 
-  it('avviser 15:30 Oslo på 180-min tjeneste (passer 30-min)', async () => {
+  it('avviser 18:00 Oslo på 180-min tjeneste (passer 30-min)', async () => {
     const svc = createWidgetPublicService(app);
     const { dayStart, dayEnd } = widgetWorkingDay(day);
     const shortSlots = await svc.availableSlots(tenantId, {

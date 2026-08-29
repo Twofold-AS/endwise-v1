@@ -225,7 +225,11 @@ describeDb('F10-03 — intern testbutikk', () => {
       .from(schema.widgetKeys)
       .where(eq(schema.widgetKeys.tenantId, tenantA));
     expect(rad?.label).toBe('Butikk-testplassering');
-    expect(rad?.allowedOrigins).toEqual(['https://endwise.test', 'https://preview.endwise.test']);
+    expect(rad?.allowedOrigins).toEqual([
+      'https://endwise.no',
+      'https://endwise.test',
+      'https://preview.endwise.test',
+    ]);
   });
 
   it('bookingWidget rører ikke Framer-nøkkel med annen etikett', async () => {

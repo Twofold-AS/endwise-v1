@@ -15,13 +15,16 @@ import {
   widgetWorkingDay,
 } from './availability.ts';
 import { generatePublishableKey } from './keys.ts';
-import { normalizeOrigin, originAllowed } from './origin.ts';
+import { normalizeOrigin } from './origin.ts';
 
 /** Samme levende statuser som `/widget/availability` — completed frigir slotet. */
 const WIDGET_OCCUPYING = sql`${schema.bookings.status} in ('confirmed','in_progress','draft')`;
 
 /** Etikett på nøkkelen som eies av Butikk-testplasseringen — ikke Framer. */
 export const BUTIKK_TEST_WIDGET_LABEL = 'Butikk-testplassering';
+
+/** In-app embed på https://endwise.no/butikk må alltid få lov (CWE-346). */
+export const ENDWISE_APP_ORIGIN = 'https://endwise.no';
 
 const BUTIKK_TEST_ORIGIN_TAK = 20;
 
@@ -97,10 +100,13 @@ export function createWidgetKeyService(db: Database) {
      * Rører bare nøkkelen merket `BUTIKK_TEST_WIDGET_LABEL` — Framer-nøkler
      * med annen etikett står urørt. Origin-listen er allowlisten /widget/init
      * sjekker (CWE-346); preview-URLer byttes, så vi appender og cap'er.
+     * `https://endwise.no` er alltid med — innlogget forhandler tester
+     * egen widget på /butikk.
      */
     async ensureShopTestKey(tenantId: string, origin: string): Promise<WidgetKeyView> {
       const norm = normalizeOrigin(origin);
       if (!norm) throw new WidgetKeyOriginError('Ugyldig origin');
+      const seed = [...new Set([ENDWISE_APP_ORIGIN, norm])];
       return withTenant(db, tenantId, async (tx) => {
         const [existing] = await tx
           .select()
@@ -113,10 +119,13 @@ export function createWidgetKeyService(db: Database) {
           )
           .limit(1);
         if (existing) {
-          if (originAllowed(norm, existing.allowedOrigins)) return toKeyView(existing);
-          const next = [...new Set([...existing.allowedOrigins, norm])].slice(
+          const next = [...new Set([...existing.allowedOrigins, ...seed])].slice(
             -BUTIKK_TEST_ORIGIN_TAK,
           );
+          const samme =
+            next.length === existing.allowedOrigins.length &&
+            next.every((o) => existing.allowedOrigins.includes(o));
+          if (samme) return toKeyView(existing);
           const [updated] = await tx
             .update(schema.widgetKeys)
             .set({ allowedOrigins: next, updatedAt: new Date() })
@@ -130,7 +139,7 @@ export function createWidgetKeyService(db: Database) {
           .values({
             tenantId,
             publishableKey,
-            allowedOrigins: [norm],
+            allowedOrigins: seed,
             label: BUTIKK_TEST_WIDGET_LABEL,
           })
           .returning();
@@ -146,22 +155,27 @@ export function createWidgetKeyService(db: Database) {
     },
 
     /**
-     * Slå opp tenant + tillatte origins fra en publishable key. Unscoped med
-     * vilje (vi kjenner ikke tenant ennå). Returnerer null hvis ukjent/inaktiv.
+     * Slå opp tenant + tillatte origins fra en publishable key.
+     * Går via `lookup_widget_key` (SECURITY DEFINER + smal GUC-policy).
+     * Unscopet `select` mot `widget_keys` gir 0 rader under FORCE RLS —
+     * det var produksjons-401 på `/widget/init`.
      */
     async resolveByPublishableKey(publishableKey: string): Promise<WidgetKeyResolution | null> {
       if (!publishableKey?.startsWith('pk_')) return null;
-      const [row] = await db
-        .select({
-          tenantId: schema.widgetKeys.tenantId,
-          allowedOrigins: schema.widgetKeys.allowedOrigins,
-          active: schema.widgetKeys.active,
-        })
-        .from(schema.widgetKeys)
-        .where(eq(schema.widgetKeys.publishableKey, publishableKey))
-        .limit(1);
-      if (!row?.active) return null;
-      return { tenantId: row.tenantId, allowedOrigins: row.allowedOrigins, active: row.active };
+      const res = await db.execute(
+        sql`select tenant_id, allowed_origins, active
+              from lookup_widget_key(${publishableKey}::text)`,
+      );
+      const rad = (res.rows ?? res)[0] as
+        | {
+            tenant_id: string;
+            allowed_origins: string[] | null;
+            active: boolean;
+          }
+        | undefined;
+      if (!rad?.active) return null;
+      const allowed = Array.isArray(rad.allowed_origins) ? rad.allowed_origins : [];
+      return { tenantId: rad.tenant_id, allowedOrigins: allowed, active: rad.active };
     },
   };
 }
@@ -194,10 +208,23 @@ async function shopSlotSnapshot(
     .limit(1);
   if (!ver) return null;
 
-  const mechanics = await tx
-    .select({ id: schema.mechanics.id, capacity: schema.mechanics.capacity })
+  const rader = await tx
+    .select({
+      id: schema.mechanics.id,
+      capacity: schema.mechanics.capacity,
+      userId: schema.mechanics.userId,
+    })
     .from(schema.mechanics)
     .where(eq(schema.mechanics.active, true));
+  /**
+   * Timeplan viser aktive mekanikere. Når minst én har userId (knyttet
+   * ansatt), er det de som er bookbare. Uten userId (tester, eldre rader)
+   * faller vi tilbake til alle aktive — ledig mekaniker = bookbare timer.
+   * Ingen dealer_profiles, ingen skill-gate her.
+   */
+  const medBruker = rader.filter((m) => m.userId);
+  const valgte = medBruker.length > 0 ? medBruker : rader;
+  const mechanics = valgte.map(({ id, capacity }) => ({ id, capacity }));
   const capacity = mechanics.reduce((n, m) => n + m.capacity, 0);
 
   const busy = await tx

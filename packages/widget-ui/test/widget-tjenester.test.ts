@@ -28,6 +28,14 @@ describe('Widget tjenester — tom/retry, ikke «feil»', () => {
     expect(widget).not.toMatch(/\.catch\(\(\) => \{\}\)/);
   });
 
+  it('ledige tider: retry ved feil, ærlig tom når det ikke finnes slots', () => {
+    expect(widget).toMatch(/availability/);
+    expect(widget).toMatch(/Ingen ledige tider/);
+    expect(widget).toMatch(/Kunne ikke hente ledige tider|Prøv igjen/);
+    expect(widget).not.toMatch(/Could not fetch available hours/);
+    expect(widget.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/['"`][Ff]eil['"`]/);
+  });
+
   it('kan ta imot samme katalog som Tjenester (services.list)', () => {
     expect(widget).toMatch(/initialServices/);
   });

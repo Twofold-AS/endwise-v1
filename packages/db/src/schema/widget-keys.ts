@@ -14,8 +14,9 @@ import { tenants } from './tenants.ts';
  * tilgang er RLS-scopet til `tenantId`. `allowedOrigins` begrenser hvilke
  * nettsteder som kan veksle nøkkelen inn i et kortlevd token (CORS/origin-vern).
  * RLS: forvaltnings-/skrivestien (dealer_admin) er tenant-isolert. Selve
- * nøkkel→tenant-oppslaget (før vi har tenant-kontekst) gjøres av en betrodd
- * server-tjeneste — nøkkelen er offentlig, så raden lekker ingenting sensitivt.
+ * nøkkel→tenant-oppslaget (før vi har tenant-kontekst) går via
+ * `lookup_widget_key` (SECURITY DEFINER + `app.widget_publishable_key`).
+ * Unscopet select gir 0 rader under FORCE RLS. Nøkkelen er offentlig.
  */
 export const widgetKeys = pgTable(
   'widget_keys',

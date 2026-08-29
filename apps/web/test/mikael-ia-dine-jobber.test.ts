@@ -24,7 +24,8 @@ import {
   TIMEPLAN_DAG_SLUTT,
   TIMEPLAN_DAG_START,
   timeplanDagerFra,
-  timeplanManeder,
+  timeplanManedNavn,
+  timeplanSkiftManed,
 } from '../app/(app)/_shell/timeplan-dager.ts';
 import {
   osloStartFraFelt,
@@ -178,8 +179,10 @@ describe('Timeplan — piler, valgt dag først, måned, 08–20', () => {
     expect(dager[1]?.ymd).toBe(osloPlusDager(valgt, 1));
     expect(TIMEPLAN_DAG_START).toBe(8);
     expect(TIMEPLAN_DAG_SLUTT).toBe(20);
-    const maneder = timeplanManeder(valgt);
-    expect(maneder.some((m) => m.aktiv)).toBe(true);
+    expect(timeplanManedNavn(valgt)).toMatch(/august/i);
+    expect(timeplanSkiftManed(valgt, 1)).toBe('2026-09-29');
+    expect(timeplanSkiftManed('2026-01-31', 1)).toBe('2026-02-28');
+    expect(timeplanSkiftManed('2026-03-31', -1)).toBe('2026-02-28');
   });
 
   it('Timeplan-siden bruker piler og Oslo-døgn, ikke overflow-scroll', () => {
@@ -189,6 +192,13 @@ describe('Timeplan — piler, valgt dag først, måned, 08–20', () => {
     expect(side).toMatch(/08:00|TIMEPLAN_DAG_START/);
     expect(stripe).toMatch(/aria-label="Forrige dag"/);
     expect(stripe).toMatch(/aria-label="Neste dag"/);
+    expect(stripe).toMatch(/aria-label="Forrige måned"/);
+    expect(stripe).toMatch(/aria-label="Neste måned"/);
+    expect(stripe).toMatch(/timeplanManedNavn|capitalize/);
+    expect(stripe).not.toMatch(/timeplanManeder\(/);
+    expect(stripe).not.toMatch(/min-w-\[56px\]/);
+    expect(stripe).not.toMatch(/overflow-hidden/);
+    expect(stripe).not.toMatch(/overflow-x/);
     expect(side + stripe).not.toMatch(/overflow-x-auto/);
     expect(side).toMatch(/osloKalenderdag|osloVeggklokke|PRODUKT_TIDSSONE/);
   });

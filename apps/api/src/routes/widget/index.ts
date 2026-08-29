@@ -64,7 +64,8 @@ app.post('/init', async (c) => {
   if (!resolution) return c.json({ error: 'Ukjent eller inaktiv nøkkel' }, 401);
 
   // CWE-346: embed-en må kjøre fra en registrert origin for denne nøkkelen.
-  const origin = c.req.header('origin');
+  // Referer som fallback: samme-origin POST kan mangle Origin i noen klienter.
+  const origin = c.req.header('origin') || c.req.header('referer');
   if (!originAllowed(origin, resolution.allowedOrigins)) {
     return c.json({ error: 'Origin er ikke registrert for denne nøkkelen' }, 403);
   }
@@ -101,7 +102,7 @@ app.get('/availability', async (c) => {
     .safeParse({ serviceVersionId: c.req.query('serviceVersionId'), date: c.req.query('date') });
   if (!q.success) return c.json({ error: 'Ugyldige parametre' }, 400);
 
-  // Arbeidsdag 08–16 Europe/Oslo (forenklet; ekte åpningstider er F5/senere).
+  // Arbeidsdag 08–20 Europe/Oslo — samme vindu som Timeplan.
   const { dayStart, dayEnd } = widgetWorkingDay(q.data.date);
   const slots = await createWidgetPublicService(lazyDb()).availableSlots(tenantId, {
     serviceVersionId: q.data.serviceVersionId,

@@ -8,6 +8,7 @@ import { Suspense, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { sammeOsloDag } from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
+import { ForhandlerGrainientKort } from '../_shell/forhandler-grainient';
 import { PhoneHomeDealer } from '../_shell/phone-home-dealer';
 import { fmtServices, fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
 import { AnsattePaJobb } from './_ansatte-pa-jobb';
@@ -86,6 +87,7 @@ function VerkstedetDesktop() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
+      <ForhandlerGrainientKort />
       {/*
        * Breadcrumben sier «Verkstedet» — h1 er skjult for øyet, beholdt for
        * skjermlesere og dokumentstruktur.

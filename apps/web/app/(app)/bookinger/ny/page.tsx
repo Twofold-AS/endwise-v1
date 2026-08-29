@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { StarttidVelger } from '../_starttid-velger';
 import { fmtMinor } from '../_status';
 
 /**
@@ -267,14 +268,12 @@ export default function NyJobbPage() {
         )}
 
         <Field label="Starttid">
-          <input
-            type="datetime-local"
+          <StarttidVelger
             value={startsAt}
-            onChange={(e) => {
-              setStartsAt(e.target.value);
+            onChange={(iso) => {
+              setStartsAt(iso);
               setMechanicId('');
             }}
-            className={inputCls}
           />
         </Field>
         {window && selected.length > 0 && (

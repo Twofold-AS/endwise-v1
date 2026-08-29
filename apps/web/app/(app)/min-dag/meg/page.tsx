@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { signOut, useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import { FerieMock } from '../../_shell/ferie-mock';
 import { ProfilKort } from '../../_shell/profil-kort';
 import { ToFaktorRad } from '../../_shell/to-faktor-rad';
 
@@ -79,6 +80,8 @@ export default function MegPage() {
   return (
     <div className="mx-auto flex w-full max-w-[560px] flex-col gap-4 px-4 py-6">
       <h1 className="sr-only">Meg</h1>
+
+      <FerieMock />
 
       {/* Hurtigbrytere: det man faktisk bytter ofte */}
       <CardShell>

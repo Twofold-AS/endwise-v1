@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
+import { ForhandlerGrainientKort } from './forhandler-grainient';
 import { dealerPhoneHjemRader, PHONE_KORT_META, type PhoneKortKey } from './phone-home';
 import {
   hjelpMeta,
@@ -70,6 +71,7 @@ export function PhoneHomeDealer() {
 
   return (
     <div className="mx-auto flex w-full max-w-[520px] flex-col gap-3 px-3 py-3 md:hidden">
+      <ForhandlerGrainientKort />
       {rader.map((rad) => {
         if (rad.keys[0] === 'verkstedet') {
           const dest = PHONE_KORT_META.verkstedet;

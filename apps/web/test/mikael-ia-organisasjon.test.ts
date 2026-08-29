@@ -91,7 +91,7 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
   it('mekaniker ser ikke Organisasjon', () => {
     expect(MEKANIKER_NAV.some((i) => i.label === 'Organisasjon')).toBe(false);
     expect(MEKANIKER_NAV.map((i) => i.label)).toEqual([
-      'Min dag',
+      'Dine jobber',
       'Jobbene mine',
       'Lager',
       'Butikk',

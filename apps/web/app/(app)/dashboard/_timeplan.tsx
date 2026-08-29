@@ -30,7 +30,7 @@ type Booking = {
 };
 
 /**
- * Dagens timeplan på Verkstedet (07–18).
+ * Dagens timeplan på Verkstedet (08–20).
  * Jobbklossene sitter på klokkeslettet, med statusfarge. Ikke Jobber › Kalender
  * og ikke Timeplan under Ansatte.
  */

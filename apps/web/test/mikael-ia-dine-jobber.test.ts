@@ -1,0 +1,226 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import { osloKalenderdag, osloPlusDager, osloVeggklokke } from '../app/(app)/_lib/oslo-dag.ts';
+import {
+  adresseLinje,
+  FERIE_MOCK,
+  GRAINIENT_LYS,
+  GRAINIENT_MORK,
+  kjoretoyIkon,
+  visKortFelt,
+} from '../app/(app)/_shell/forhandler-kort.ts';
+import { erTillattMekanikerSti, MEKANIKER_NAV } from '../app/(app)/_shell/nav.ts';
+import {
+  erMekanikerPhoneHjem,
+  MEKANIKER_PHONE_HURTIG,
+  mekanikerHurtigKort,
+  PHONE_KORT_META,
+  PHONE_SAFE_BUNN,
+  PHONE_SHELL_ROT,
+} from '../app/(app)/_shell/phone-home.ts';
+import {
+  TIMEPLAN_DAG_SLUTT,
+  TIMEPLAN_DAG_START,
+  timeplanDagerFra,
+  timeplanManeder,
+} from '../app/(app)/_shell/timeplan-dager.ts';
+import {
+  osloStartFraFelt,
+  tilOsloDato,
+  tilOsloMinutt,
+  tilOsloTime,
+} from '../app/(app)/bookinger/_starttid.ts';
+
+const her = dirname(fileURLToPath(import.meta.url));
+
+function les(rel: string) {
+  return readFileSync(resolve(her, rel), 'utf8');
+}
+
+function utenKommentarer(kilde: string) {
+  return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+}
+
+describe('Dine jobber erstatter Min dag', () => {
+  it('nav-label og rute er Dine jobber /dine-jobber', () => {
+    expect(MEKANIKER_NAV.map((i) => i.label)).toEqual([
+      'Dine jobber',
+      'Jobbene mine',
+      'Lager',
+      'Butikk',
+      'Kompetanse',
+      'Timeplan',
+      'Hjelp',
+      'Meg',
+    ]);
+    expect(MEKANIKER_NAV[0]?.href).toBe('/dine-jobber');
+    expect(MEKANIKER_NAV.some((i) => i.label === 'Min dag')).toBe(false);
+    expect(erTillattMekanikerSti('/dine-jobber')).toBe(true);
+    expect(erTillattMekanikerSti('/min-dag/abc')).toBe(true);
+  });
+
+  it('telefon-hjem har Dine jobber-kort, ikke Min dag-hero eller Detaljer-accordion', () => {
+    expect(MEKANIKER_PHONE_HURTIG).toEqual([
+      'dine-jobber',
+      'lager',
+      'kompetanse',
+      'timeplan',
+      'hjelp',
+    ]);
+    expect(mekanikerHurtigKort(false)).not.toContain('butikk');
+    expect(PHONE_KORT_META['dine-jobber']?.href).toBe('/dine-jobber');
+    expect(PHONE_KORT_META['dine-jobber']?.label).toBe('Dine jobber');
+    const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
+    expect(hjem).not.toMatch(/Min dag/);
+    expect(hjem).not.toMatch(/Detaljer/);
+    expect(hjem).not.toMatch(/aria-expanded/);
+    expect(hjem).toMatch(/ForhandlerGrainientKort|forhandler-grainient/);
+    expect(erMekanikerPhoneHjem('/min-dag')).toBe(true);
+    expect(erMekanikerPhoneHjem('/dine-jobber')).toBe(false);
+  });
+
+  it('Dine jobber-siden har forhandlernavn, jobb-bokser og peker til eksisterende START/FERDIG', () => {
+    const side = utenKommentarer(les('../app/(app)/dine-jobber/page.tsx'));
+    const flate = utenKommentarer(les('../app/(app)/dine-jobber/_flate.tsx'));
+    expect(side + flate).toMatch(/Dine jobber/);
+    expect(side + flate).toMatch(/forhandler\.kort|tenantName|forhandlernavn/);
+    expect(side + flate).toMatch(/\/min-dag\/\$\{/);
+    expect(side + flate).toMatch(/ChevronRight|aria-label="Detaljer/);
+    expect(side + flate).toMatch(/kjoretoyIkon|vehicleType/);
+    expect(side + flate).not.toMatch(/Kontor|Gulvet/);
+    expect(side + flate).not.toMatch(/\bSaker\b/);
+  });
+
+  it('jobbdetalj har ikke egen tilbake-til-Min-dag på siden', () => {
+    const detalj = utenKommentarer(les('../app/(app)/min-dag/[id]/page.tsx'));
+    expect(detalj).not.toMatch(/← Min dag/);
+    expect(detalj).toMatch(/Start/);
+    expect(detalj).toMatch(/Ferdig/);
+  });
+});
+
+describe('Grainient forhandler-kort', () => {
+  it('bruker ekte Grainient, ikke en håndrullet gradient', () => {
+    const kort = utenKommentarer(les('../app/(app)/_shell/forhandler-grainient.tsx'));
+    expect(kort).toMatch(/from ['"]@endwise\/ui['"]/);
+    expect(kort).toMatch(/Grainient/);
+    expect(kort).toMatch(/timeSpeed=\{0\.25\}/);
+    expect(kort).toMatch(/colorBalance=\{0\.2\}/);
+    expect(kort).toMatch(/warpStrength=\{1/);
+    expect(kort).toMatch(/GRAINIENT_LYS|GRAINIENT_MORK/);
+    expect(kort).not.toMatch(/linear-gradient|bg-gradient/);
+    expect(kort).toMatch(/rounded-xl/);
+  });
+
+  it('lys og mørk palett er låst, og kortet viser bare eksisterende felt', () => {
+    expect(GRAINIENT_MORK).toEqual({
+      color1: '#777777',
+      color2: '#333333',
+      color3: '#111111',
+    });
+    expect(GRAINIENT_LYS).toEqual({
+      color1: '#ffffff',
+      color2: '#ededed',
+      color3: '#f5f5f5',
+    });
+    expect(visKortFelt({ orgnr: ' 123 ', address: '', phone: '', website: '' })).toEqual([
+      { label: 'Orgnr', verdi: '123' },
+    ]);
+    expect(adresseLinje({ address: 'Gate 1', postalCode: '0150', city: 'Oslo' })).toBe(
+      'Gate 1, 0150 Oslo',
+    );
+    expect(kjoretoyIkon('mc')).toBe('mc');
+    expect(kjoretoyIkon('atv')).toBe('atv');
+    expect(kjoretoyIkon('boat')).toBe('boat');
+    expect(kjoretoyIkon('ukjent')).toBe('mc');
+  });
+
+  it('kortet sitter på forhandler-, mekaniker-, selger- og support-hjem', () => {
+    const dealer = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
+    const mek = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
+    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    const innboks = utenKommentarer(les('../app/(app)/innboks/page.tsx'));
+    expect(dealer).toMatch(/ForhandlerGrainientKort/);
+    expect(mek).toMatch(/ForhandlerGrainientKort/);
+    expect(dash).toMatch(/ForhandlerGrainientKort/);
+    expect(innboks).toMatch(/ForhandlerGrainientKort/);
+  });
+});
+
+describe('telefon-bevel og logo-rad', () => {
+  it('bevel er i dokumentflyt, ikke sticky/fixed', () => {
+    const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    expect(layout).toMatch(/PhoneBevel/);
+    expect(layout).toMatch(/overflow-y-auto/);
+    expect(shell).not.toMatch(/sticky|fixed/);
+    expect(PHONE_SHELL_ROT).toMatch(/h-dvh/);
+    expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
+  });
+
+  it('tilbake sitter på samme rad som logo, til høyre', () => {
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    expect(shell).toMatch(/justify-between|ml-auto/);
+    expect(shell).toMatch(/ChevronLeft/);
+    expect(shell).toMatch(/Tilbake/);
+    expect(shell).not.toMatch(/border-b[\s\S]*Tilbake/);
+  });
+});
+
+describe('Timeplan — piler, valgt dag først, måned, 08–20', () => {
+  it('valgt dag er først, og stripen har 08–20', () => {
+    const valgt = '2026-08-29';
+    const dager = timeplanDagerFra(valgt, 7);
+    expect(dager[0]?.ymd).toBe(valgt);
+    expect(dager[1]?.ymd).toBe(osloPlusDager(valgt, 1));
+    expect(TIMEPLAN_DAG_START).toBe(8);
+    expect(TIMEPLAN_DAG_SLUTT).toBe(20);
+    const maneder = timeplanManeder(valgt);
+    expect(maneder.some((m) => m.aktiv)).toBe(true);
+  });
+
+  it('Timeplan-siden bruker piler og Oslo-døgn, ikke overflow-scroll', () => {
+    const side = utenKommentarer(les('../app/(app)/min-dag/timeplan/page.tsx'));
+    const stripe = utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'));
+    expect(side).toMatch(/TimeplanStripe|timeplanDagerFra/);
+    expect(side).toMatch(/08:00|TIMEPLAN_DAG_START/);
+    expect(stripe).toMatch(/aria-label="Forrige dag"/);
+    expect(stripe).toMatch(/aria-label="Neste dag"/);
+    expect(side + stripe).not.toMatch(/overflow-x-auto/);
+    expect(side).toMatch(/osloKalenderdag|osloVeggklokke|PRODUKT_TIDSSONE/);
+  });
+});
+
+describe('Jobb starttid — dato og klokke som expandere', () => {
+  it('Ny jobb har Date- og Time-knapper, ikke datetime-local', () => {
+    const ny = utenKommentarer(les('../app/(app)/bookinger/ny/page.tsx'));
+    expect(ny).toMatch(/StarttidVelger|Dato|Klokke/);
+    expect(ny).not.toMatch(/datetime-local/);
+  });
+
+  it('bygger Oslo-instant uten UTC-døgnskifte', () => {
+    const iso = osloStartFraFelt('2026-08-29', 8, 0);
+    expect(osloKalenderdag(iso)).toBe('2026-08-29');
+    expect(tilOsloDato(iso)).toBe('2026-08-29');
+    expect(tilOsloTime(iso)).toBe(8);
+    expect(tilOsloMinutt(iso)).toBe(0);
+    expect(osloVeggklokke('2026-08-29', 8, 0).toISOString()).toBe(iso);
+  });
+});
+
+describe('Ferie-mock i Innstillinger', () => {
+  it('er merket som kommer/mock og vises på telefon + desktop', () => {
+    expect(FERIE_MOCK.length).toBeGreaterThan(0);
+    expect(FERIE_MOCK.every((r) => typeof r.dager === 'number')).toBe(true);
+    const skall = utenKommentarer(les('../app/(app)/innstillinger/_skall.tsx'));
+    const meg = utenKommentarer(les('../app/(app)/min-dag/meg/page.tsx'));
+    const ferie = utenKommentarer(les('../app/(app)/_shell/ferie-mock.tsx'));
+    expect(skall).toMatch(/FerieMock/);
+    expect(meg).toMatch(/FerieMock/);
+    expect(ferie).toMatch(/kommer|mock/i);
+    expect(ferie).toMatch(/Ferie/);
+    expect(ferie).not.toMatch(/resend|fetch\(|trpc\./);
+  });
+});

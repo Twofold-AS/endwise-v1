@@ -1,14 +1,14 @@
 /**
  * Posisjonering på Verkstedets dagsplan.
- * Samme arbeidsdag som Jobber › Kalender (F3-07): 07–18. Jobber utenfor
+ * Samme arbeidsdag som Timeplan: 08–20. Jobber utenfor
  * klippes inn i kanten, de forsvinner ikke. Holdt her så kalenderen under
  * Ansatte/Jobber ikke røres.
  */
 
 import { osloVeggtid, sammeOsloDag } from '../_lib/oslo-dag';
 
-export const VERKSTED_DAG_START = 7;
-export const VERKSTED_DAG_SLUTT = 18;
+export const VERKSTED_DAG_START = 8;
+export const VERKSTED_DAG_SLUTT = 20;
 export const VERKSTED_DAG_TIMER = VERKSTED_DAG_SLUTT - VERKSTED_DAG_START;
 export const VERKSTED_PX_PER_TIME = 44;
 

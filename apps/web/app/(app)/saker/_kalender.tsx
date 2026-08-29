@@ -28,12 +28,12 @@ import { fmtServices, STATUS_TONE } from '../bookinger/_status';
  * absolutt posisjonering mot et fast timeraster: `top` fra starttid, `height`
  * fra varighet.
  * 2. Rasteret dekker verkstedets dag, og utvider seg hvis en jobb ligger
- * utenfor 07–18. Å klippe klossen inn i kanten og fotnote det, er en bug.
+ * utenfor 08–20. Å klippe klossen inn i kanten og fotnote det, er en bug.
  * Én kolonne per mekaniker, eller alt samlet. Samlet er default: det er
  * spørsmålet «hva skjer i dag» som stilles oftest, ikke «hva gjør Ola».
  */
-const DAG_START = 7;
-const DAG_SLUTT = 18;
+const DAG_START = 8;
+const DAG_SLUTT = 20;
 /** Piksler per time. 56 gir en 30-minutters jobb 28px — akkurat lesbart. */
 const PX_PER_TIME = 56;
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useOrgRole } from '../_lib/use-org-role';
+import { FerieMock } from '../_shell/ferie-mock';
 import { type FaneId, innstillingerHref, parseFane, synligeFaner } from './_faner';
 import { ProfilFane } from './_profil-fane';
 import { VarslerInnhold } from './varsler/_innhold';
@@ -70,6 +71,7 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
           <p className="text-body text-fg-muted">{def?.ingress}</p>
         </div>
         <FaneInnhold fane={aktiv} />
+        <FerieMock />
       </section>
     </div>
   );

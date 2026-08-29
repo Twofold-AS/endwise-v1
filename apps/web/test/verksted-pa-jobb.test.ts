@@ -70,9 +70,9 @@ describe('ansattePaJobb — hvem som er på gulvet', () => {
     expect(aktivJobb(jobber, 'm3', naa)).toBeNull();
   });
 
-  it('timeplan-klossen klippes inn i 07–18', () => {
-    expect(VERKSTED_DAG_START).toBe(7);
-    expect(VERKSTED_DAG_SLUTT).toBe(18);
+  it('timeplan-klossen klippes inn i 08–20', () => {
+    expect(VERKSTED_DAG_START).toBe(8);
+    expect(VERKSTED_DAG_SLUTT).toBe(20);
     const tidlig = timeplanKloss('2026-08-25T04:00:00.000Z', '2026-08-25T06:00:00.000Z', 40);
     expect(tidlig.top).toBe(0);
     expect(tidlig.height).toBeGreaterThan(0);

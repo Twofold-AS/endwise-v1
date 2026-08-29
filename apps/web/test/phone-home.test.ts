@@ -22,7 +22,6 @@ import {
   innboksMeta,
   kunderMeta,
   lagerMeta,
-  minDagMeta,
   nesteJobb,
   organisasjonMeta,
   rapporterSetning,
@@ -258,10 +257,17 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
   });
 });
 
-describe('mekaniker phone home — Min dag + accordion', () => {
-  it('hurtigkort er Lager, Kompetanse, Timeplan, Hjelp — Butikk ved flagg', () => {
-    expect(MEKANIKER_PHONE_HURTIG).toEqual(['lager', 'kompetanse', 'timeplan', 'hjelp']);
+describe('mekaniker phone home — Dine jobber, ikke Min dag', () => {
+  it('hurtigkort er Dine jobber, Lager, Kompetanse, Timeplan, Hjelp — Butikk ved flagg', () => {
+    expect(MEKANIKER_PHONE_HURTIG).toEqual([
+      'dine-jobber',
+      'lager',
+      'kompetanse',
+      'timeplan',
+      'hjelp',
+    ]);
     expect(mekanikerHurtigKort(true)).toEqual([
+      'dine-jobber',
       'lager',
       'kompetanse',
       'timeplan',
@@ -271,25 +277,21 @@ describe('mekaniker phone home — Min dag + accordion', () => {
     expect(mekanikerHurtigKort(false)).not.toContain('butikk');
   });
 
-  it('hero er Min dag med antall og neste tid, ikke destinasjonsrutenett', () => {
-    const naa = new Date('2026-08-29T07:00:00');
-    expect(
-      minDagMeta(
-        [{ id: '1', status: 'confirmed', startsAt: '2026-08-29T09:15:00', serviceName: 'EU' }],
-        naa,
-      ),
-    ).toMatch(/1 jobb i dag/);
+  it('ingen Min dag-hero eller Detaljer-accordion — Grainient + destinasjonskort', () => {
     const side = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
-    expect(side).toMatch(/Min dag/);
-    expect(side).toMatch(/Detaljer/);
-    expect(side).toMatch(/accordion|aria-expanded/);
+    expect(side).not.toMatch(/Min dag/);
+    expect(side).not.toMatch(/Detaljer/);
+    expect(side).not.toMatch(/accordion|aria-expanded/);
+    expect(side).toMatch(/ForhandlerGrainientKort/);
+    expect(side).toMatch(/PhoneKort/);
     expect(side).not.toMatch(/swipe|clock-ring|tidslinje|time-axis/i);
   });
 
-  it('Detaljer er accordion på raden, ikke navigasjon til /min-dag/[id]', () => {
+  it('Dine jobber går til /dine-jobber, ikke accordion mot /min-dag/[id] på hjem', () => {
     const side = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
     expect(side).not.toMatch(/href=\{`\/min-dag\/\$\{/);
-    expect(side).toMatch(/Detaljer/);
+    expect(PHONE_KORT_META['dine-jobber']?.href).toBe('/dine-jobber');
+    expect(PHONE_KORT_META['dine-jobber']?.label).toBe('Dine jobber');
   });
 });
 

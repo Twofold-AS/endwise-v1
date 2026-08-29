@@ -1,8 +1,6 @@
 'use client';
 
 import { Bell, Car, ClockArrowUp, Timer } from '@endwise/ui';
-import type { Route } from 'next';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
@@ -77,9 +75,7 @@ export default function JobbDetaljPage() {
     return (
       <div className="px-6 py-7">
         <p className="text-fg-muted text-sm">Fant ikke jobben i dagens kø.</p>
-        <Link href={'/min-dag' as Route} className="text-primary text-sm">
-          ← Min dag
-        </Link>
+        <p className="text-fg-muted text-sm">Bruk tilbake i topplinjen.</p>
       </div>
     );
   }
@@ -125,10 +121,6 @@ export default function JobbDetaljPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-4 px-4 py-6">
-      <Link href={'/min-dag' as Route} className="text-fg-faint text-xs hover:text-fg">
-        ← Min dag
-      </Link>
-
       <div className="flex items-center gap-2">
         <Car size={18} className="text-fg-muted" />
         <h1 className="font-semibold text-fg text-xl tracking-tight">

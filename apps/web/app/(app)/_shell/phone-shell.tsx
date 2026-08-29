@@ -8,7 +8,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
-import { breadcrumbFor, contextForPath, shellForBruker } from './nav';
+import { shellForBruker } from './nav';
 import { PHONE_LOGO_PX } from './phone-chrome';
 import {
   erPhoneHjem,
@@ -24,10 +24,8 @@ async function loggUt() {
 }
 
 /**
- * Telefon-chrome: temabakgrunn med logo over kortene, bevel under innholdet.
- * Logoen er svart (logo.svg) og får logo-invert så den synes i mørkt tema.
- * Ingen horisontal scroller, hamburger, Mer-sheet, visningsvelger eller bunnbar.
- * Innstillinger bor i bevelen: avatar + navn + tannhjul + logg ut.
+ * Telefon-chrome: logo-rad med safe-area. Tilbake sitter på samme rad, til høyre.
+ * Bevel ligger i dokumentflyt nederst på siden — ikke sticky/fixed.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -41,11 +39,10 @@ export function PhoneShell() {
   });
   const hjem = erPhoneHjem(pathname, search, shell);
   const hjemHref = phoneHjemHref(shell);
-  const tittel = breadcrumbFor(pathname, search, contextForPath(pathname))[0]?.label ?? 'Endwise';
 
   return (
     <header className={`shrink-0 bg-bg md:hidden ${PHONE_SAFE_TOP}`}>
-      <div className="flex h-row items-center px-3">
+      <div className="flex h-row items-center justify-between px-3">
         <Link href={hjemHref as Route} aria-label="Hjem">
           <Image
             src="/logo/logo.svg"
@@ -56,19 +53,16 @@ export function PhoneShell() {
             className="logo-invert"
           />
         </Link>
-      </div>
-      {hjem ? null : (
-        <div className="flex h-row items-center gap-2 border-border border-b px-3">
+        {hjem ? null : (
           <Link
             href={hjemHref as Route}
-            className="inline-flex h-control items-center gap-1 rounded-control px-2 text-label text-fg"
+            className="ml-auto inline-flex h-control items-center gap-1 rounded-control px-2 text-label text-fg"
           >
             <ChevronLeft size={16} strokeWidth={1.75} />
             Tilbake
           </Link>
-          <h1 className="truncate text-title text-fg">{tittel}</h1>
-        </div>
-      )}
+        )}
+      </div>
     </header>
   );
 }
@@ -82,7 +76,7 @@ export function PhoneBevel() {
     erPlattform,
   });
   return (
-    <footer className={`shrink-0 bg-bg px-3 pt-2 md:hidden ${PHONE_SAFE_BUNN}`}>
+    <footer className={`bg-bg px-3 pt-4 md:hidden ${PHONE_SAFE_BUNN}`}>
       <BrukerRad
         navn={navn}
         laster={isLoading}

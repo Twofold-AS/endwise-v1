@@ -2,7 +2,7 @@ import { type Database, eq, schema, withTenant } from '@endwise/db';
 import { erPlattformTenant } from '@endwise/modules/plattform';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { adminProcedure, router } from '../init.ts';
+import { adminProcedure, protectedProcedure, router } from '../init.ts';
 import { lesPostgresCause } from '../slett-postgres.ts';
 
 type TenantTx = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -130,6 +130,11 @@ export async function hentForhandlerKort(
  */
 export const forhandlerRouter = router({
   get: adminProcedure.query(({ ctx }) =>
+    hentForhandlerKort((fn) => withTenant(ctx.db, ctx.tenantId, fn), ctx.tenantId),
+  ),
+
+  /** Les-kort for alle innloggede på tenanten — Grainient-hjem. */
+  kort: protectedProcedure.query(({ ctx }) =>
     hentForhandlerKort((fn) => withTenant(ctx.db, ctx.tenantId, fn), ctx.tenantId),
   ),
 

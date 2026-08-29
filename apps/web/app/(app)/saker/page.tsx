@@ -14,7 +14,7 @@ import { Kalender } from './_kalender';
 /**
  * Timeplan. Liste = kapasitet (tidligere Organisasjon › Timeplan).
  * Kalender = jobber på valgt Oslo-dag med samme stripe som Liste.
- * Opprett jobb åpner /bookinger/ny. Prisliste bor ikke her — destinasjonen er Salg.
+ * Opprett jobb åpner /bookinger/ny. Salg er egen destinasjon, ikke en Timeplan-knapp.
  */
 function TimeplanPageInner() {
   const params = useSearchParams();

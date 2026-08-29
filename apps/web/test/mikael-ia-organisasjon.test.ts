@@ -265,7 +265,9 @@ describe('Mikael IA — Prisliste på Oversikt, inspect', () => {
     expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/TjenesterInnhold/);
     expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/seksjon === 'prisliste'/);
     expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/seksjon === 'timeplan'/);
-    expect(les('../app/(app)/saker/page.tsx')).not.toMatch(/Prisliste|PrislisteFlate|prislisteApen/);
+    expect(utenKommentarer(les('../app/(app)/saker/page.tsx'))).not.toMatch(
+      /Prisliste|PrislisteFlate|prislisteApen/,
+    );
   });
 
   it('inspect Organisasjon peker på /organisasjon, ikke Forhandleren-rad', () => {

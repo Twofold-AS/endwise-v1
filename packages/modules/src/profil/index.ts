@@ -248,6 +248,7 @@ export function lesAvatar(
 }
 
 export { updateMechanicCapacity } from './capacity.ts';
+export { synkMekanikerRad } from './mekaniker-rad.ts';
 
 export type { MekanikerStatus, StatusHumor } from './status-humor.ts';
 export {

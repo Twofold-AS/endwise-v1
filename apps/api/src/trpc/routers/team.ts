@@ -8,6 +8,7 @@ import {
   lesAvatar,
   mekanikerStatusVisning,
   resolveJobbfunksjon,
+  synkMekanikerRad,
   TILDELBARE_FUNKSJONER,
   tellerSomBelastning,
 } from '@endwise/modules/profil';
@@ -45,9 +46,10 @@ function dagensVindu(): { fra: Date; til: Date } {
  * til hvem som helst som er innlogget. En `dealer_staff` som kunne lese den,
  * kunne kartlagt hele huset uten å ha noe der å gjøre.
  * To dimensjoner, aldri blandet
- * Ruta endrer kun `job_function`. Den rører **aldri** `member.role` — å bytte
- * noens tilgangsnivå er en annen og langt farligere handling, og skal ikke
- * kunne skje ved et uhell fra en nedtrekksliste som heter «Funksjon».
+ * Ruta endrer `job_function` (landing) og synker `mechanics` (tildelbarhet).
+ * Den rører **aldri** `member.role` — å bytte noens tilgangsnivå er en annen
+ * og langt farligere handling, og skal ikke kunne skje ved et uhell fra en
+ * nedtrekksliste som heter «Funksjon».
  */
 export const teamRouter = router({
   /**
@@ -279,8 +281,13 @@ export const teamRouter = router({
         });
       }
 
-      await withTenant(ctx.db, ctx.tenantId, (tx) =>
-        tx
+      const [bruker] = await ctx.db
+        .select({ name: schema.user.name })
+        .from(schema.user)
+        .where(eq(schema.user.id, input.userId));
+
+      await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        await tx
           .insert(schema.memberProfiles)
           .values({ tenantId: ctx.tenantId, userId: input.userId, jobFunction: input.funksjon })
           .onConflictDoUpdate({
@@ -288,8 +295,17 @@ export const teamRouter = router({
             // Kun funksjonen. Kallenavnet er personens eget og skal ikke
             // nullstilles fordi lederen endret hva de jobber med.
             set: { jobFunction: input.funksjon, updatedAt: new Date() },
-          }),
-      );
+          });
+        // Landing = job_function. Tildelbarhet = mechanics-rad (active).
+        // Uten denne synken blir personen synlig på Ansatte og kan lande
+        // på /min-dag, men usynlig i jobbpicker (list/match).
+        await synkMekanikerRad(tx, {
+          tenantId: ctx.tenantId,
+          userId: input.userId,
+          funksjon: input.funksjon,
+          navn: bruker?.name ?? 'Mekaniker',
+        });
+      });
       return { userId: input.userId, funksjon: input.funksjon };
     }),
 
@@ -361,18 +377,13 @@ export const teamRouter = router({
             userId,
             jobFunction: input.funksjon,
           });
-          if (input.funksjon === 'mekaniker') {
-            const [mek] = await tx
-              .insert(schema.mechanics)
-              .values({
-                tenantId: ctx.tenantId,
-                userId,
-                name: input.navn,
-                capacity: input.capacity,
-              })
-              .returning({ id: schema.mechanics.id });
-            mechanicId = mek?.id ?? null;
-          }
+          mechanicId = await synkMekanikerRad(tx, {
+            tenantId: ctx.tenantId,
+            userId,
+            funksjon: input.funksjon,
+            navn: input.navn,
+            capacity: input.capacity,
+          });
         });
       } catch (error) {
         if (error instanceof TRPCError) throw error;

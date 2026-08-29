@@ -193,6 +193,8 @@ function RolleDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLukk: (
   const sett = trpc.team.setFunction.useMutation({
     onSuccess: () => {
       void utils.team.list.invalidate();
+      void utils.mechanics.list.invalidate();
+      void utils.mechanics.oversikt.invalidate();
       onLukk();
     },
   });

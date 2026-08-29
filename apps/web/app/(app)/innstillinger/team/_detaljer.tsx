@@ -113,7 +113,11 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
   const [epost, setEpost] = useState(rad.epost);
   const [funksjon, setFunksjon] = useState(rad.funksjon);
   const sett = trpc.team.setFunction.useMutation({
-    onSuccess: () => void utils.team.list.invalidate(),
+    onSuccess: () => {
+      void utils.team.list.invalidate();
+      void utils.mechanics.list.invalidate();
+      void utils.mechanics.oversikt.invalidate();
+    },
   });
   const lagreEpost = trpc.team.endreEpost.useMutation({
     onSuccess: () => void utils.team.list.invalidate(),

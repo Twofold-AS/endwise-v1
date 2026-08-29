@@ -15,6 +15,7 @@
     "@blobatar/react": "^2.3.1",
     "@endwise/api": "workspace:*",
     "@endwise/auth": "workspace:*",
+    "@endwise/modules": "workspace:*",
     "@endwise/ui": "workspace:*",
     "@endwise/widget-tokens": "workspace:*",
     "@sentry/nextjs": "^10.65.0",

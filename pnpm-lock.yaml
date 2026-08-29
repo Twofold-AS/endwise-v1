@@ -167,6 +167,9 @@ importers:
       '@endwise/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@endwise/modules':
+        specifier: workspace:*
+        version: link:../../packages/modules
       '@endwise/ui':
         specifier: workspace:*
         version: link:../../packages/ui

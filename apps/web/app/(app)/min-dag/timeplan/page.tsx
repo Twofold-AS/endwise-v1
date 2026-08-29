@@ -5,21 +5,33 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import {
+  osloKalenderdag,
+  osloPlusDager,
+  osloVeggklokke,
+  PRODUKT_TIDSSONE,
+} from '../../_lib/oslo-dag';
 import { CardShell } from '../../_shell/cards';
 import { estMinutes, fmtTime, STATUS_LABEL } from '../_status';
 
 /** Timeplan: velg dag i strip, se den dagens jobber (mekaniker-scopet). */
 function dayList(): { iso: string; label: string; weekday: string }[] {
   const out: { iso: string; label: string; weekday: string }[] = [];
-  const base = new Date();
-  base.setHours(0, 0, 0, 0);
+  const start = osloKalenderdag(new Date());
   for (let i = 0; i < 7; i++) {
-    const d = new Date(base);
-    d.setDate(d.getDate() + i);
+    const ymd = osloPlusDager(start, i);
+    const middag = osloVeggklokke(ymd, 12, 0);
     out.push({
-      iso: d.toISOString(),
-      label: d.toLocaleDateString('nb-NO', { day: '2-digit', month: 'short' }),
-      weekday: d.toLocaleDateString('nb-NO', { weekday: 'short' }),
+      iso: ymd,
+      label: middag.toLocaleDateString('nb-NO', {
+        day: '2-digit',
+        month: 'short',
+        timeZone: PRODUKT_TIDSSONE,
+      }),
+      weekday: middag.toLocaleDateString('nb-NO', {
+        weekday: 'short',
+        timeZone: PRODUKT_TIDSSONE,
+      }),
     });
   }
   return out;

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { sammeOsloDag } from '../../../../_lib/oslo-dag';
 import { CardShell } from '../../../../_shell/cards';
 import { fmtTime, STATUS_LABEL, STATUS_TONE } from '../../../../bookinger/_status';
 import { LesingFeil } from '../_lesing';
@@ -21,7 +22,7 @@ export default function VerkstedDashboardPage() {
   const { idag, paagaar, ferdigIdag, rader } = useMemo(() => {
     const alle = data.data?.bookings ?? [];
     const naa = new Date();
-    const sammeDag = (d: Date | string) => new Date(d).toDateString() === naa.toDateString();
+    const sammeDag = (d: Date | string) => sammeOsloDag(d, naa);
     const dagens = alle
       .filter((b) => sammeDag(b.startsAt))
       .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());

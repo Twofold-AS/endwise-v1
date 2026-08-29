@@ -6,10 +6,12 @@ import {
   etter2faKodeBekreftet,
   fortsettEtter2faKvittering,
   KODER_FILNAVN,
+  KODER_MANGLER_ETTER_ENABLE_MELDING,
   kanFullforeKoder,
   koderSomTekstfil,
-  plukkBackupKoder,
+  krevBackupKoderEtterEnable,
   slaaAv2faKall,
+  tolkToFaktorVerifySvar,
   validerSlaaAv2fa,
 } from '@endwise/auth/to-faktor-oppsett';
 import {
@@ -105,8 +107,13 @@ export default function ToFaktorOppsettPage() {
         setBusy('error');
         return;
       }
-      const hentet = plukkBackupKoder(res.data ?? res);
-      if (hentet.length > 0) setKoder(hentet);
+      const hentet = krevBackupKoderEtterEnable(res.data ?? res);
+      if (hentet.length === 0) {
+        setFeil(KODER_MANGLER_ETTER_ENABLE_MELDING);
+        setBusy('error');
+        return;
+      }
+      setKoder(hentet);
       const sendt = await authClient.twoFactor.sendOtp();
       if (sendt.error) {
         setFeil(sendt.error.message ?? 'Kunne ikke sende engangskode.');
@@ -127,9 +134,10 @@ export default function ToFaktorOppsettPage() {
     setBusy('loading');
     try {
       const res = await authClient.twoFactor.verifyOtp({ code: kode.trim() });
-      if (res.error) {
-        setFeil(res.error.message ?? 'Feil kode.');
-        setBusy('error');
+      const utfall = tolkToFaktorVerifySvar(res);
+      if (!utfall.ok) {
+        setFeil(utfall.feil);
+        setBusy(utfall.knappeTilstand);
         setKode('');
         codeRef.current?.focus();
         return;
@@ -302,6 +310,21 @@ export default function ToFaktorOppsettPage() {
                   dukker opp.
                 </span>
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  void authClient.twoFactor.sendOtp().then((sendt) => {
+                    if (sendt.error) {
+                      setFeil(sendt.error.message ?? 'Kunne ikke sende engangskode.');
+                      return;
+                    }
+                    setFeil(null);
+                  });
+                }}
+                className="text-left text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
+              >
+                Send ny kode
+              </button>
             </div>
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton

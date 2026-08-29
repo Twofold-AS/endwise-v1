@@ -282,6 +282,16 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
             await sendTwoFactorOtp(user.email, otp);
           },
         },
+        /**
+         * F1-21 / CWE-640. Better-Auth 1.6.30 lagrer kodene kryptert
+         * (`encrypted` — ikke klartekst). De vises én gang i enable-svaret.
+         * `hashed` finnes ikke i 1.6.30; vi finner ikke på egen kolonne.
+         */
+        backupCodeOptions: {
+          amount: 10,
+          length: 10,
+          storeBackupCodes: 'encrypted',
+        },
       }),
 
       // Passkey (WebAuthn) er utsatt: `@better-auth/passkey` dro inn

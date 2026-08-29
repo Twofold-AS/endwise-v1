@@ -1,6 +1,22 @@
 'use client';
 
-import { Lock, Mail, ShieldCheck, StatefulButton } from '@endwise/ui';
+import {
+  KODER_FILNAVN,
+  KODER_MANGLER_ETTER_ENABLE_MELDING,
+  kanFullforeKoder,
+  koderSomTekstfil,
+  krevBackupKoderEtterEnable,
+  tolkToFaktorVerifySvar,
+} from '@endwise/auth/to-faktor-oppsett';
+import {
+  ClipboardList,
+  Copy,
+  Download,
+  Lock,
+  Mail,
+  ShieldCheck,
+  StatefulButton,
+} from '@endwise/ui';
 import Image from 'next/image';
 import { use, useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
@@ -70,7 +86,11 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const [kode, setKode] = useState('');
   const [sender, setSender] = useState(false);
   const [ferdig, setFerdig] = useState(false);
-  const [steg, setSteg] = useState<'skjema' | 'kode' | 'avatar'>('skjema');
+  const [steg, setSteg] = useState<'skjema' | 'kode' | 'koder' | 'avatar'>('skjema');
+  const [koder, setKoder] = useState<string[]>([]);
+  const [lastetNed, setLastetNed] = useState(false);
+  const [kopiert, setKopiert] = useState(false);
+  const [bekreftetLagret, setBekreftetLagret] = useState(false);
   const meg = trpc.profile.meg.useQuery(undefined, { retry: false, enabled: steg === 'avatar' });
   const me = trpc.session.me.useQuery(undefined, { retry: false, enabled: steg === 'avatar' });
   const settAvatar = trpc.profile.setAvatar.useMutation();
@@ -157,10 +177,17 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
 
   async function startKodeSteg(passordForEnable: string) {
     const enable = await authClient.twoFactor.enable({ password: passordForEnable });
-    if (enable.error && !/already/i.test(enable.error.message ?? '')) {
+    const already = /already/i.test(enable.error?.message ?? '');
+    if (enable.error && !already) {
       setFeil(enable.error.message ?? 'Kunne ikke starte tofaktor.');
       return false;
     }
+    const hentet = krevBackupKoderEtterEnable(enable.data ?? enable);
+    if (hentet.length === 0 && !already) {
+      setFeil(KODER_MANGLER_ETTER_ENABLE_MELDING);
+      return false;
+    }
+    setKoder(hentet);
     const sendt = await authClient.twoFactor.sendOtp();
     if (sendt.error) {
       setFeil(sendt.error.message ?? 'Kunne ikke sende engangskode.');
@@ -243,13 +270,18 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     try {
       if (!otpFerdigRef.current) {
         const res = await authClient.twoFactor.verifyOtp({ code: kode.trim() });
-        if (res.error) {
-          setFeil(res.error.message ?? 'Feil kode.');
+        const utfall = tolkToFaktorVerifySvar(res);
+        if (!utfall.ok) {
+          setFeil(utfall.feil);
           setKode('');
           codeRef.current?.focus();
           return;
         }
         otpFerdigRef.current = true;
+      }
+      if (koder.length > 0) {
+        setSteg('koder');
+        return;
       }
       if (inv.kind === 'owner') {
         await land(inv.kind);
@@ -268,6 +300,44 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         return;
       }
       setFeil(melding);
+    } finally {
+      setSender(false);
+    }
+  }
+
+  function lastNedKoder() {
+    const blob = new Blob([koderSomTekstfil(koder)], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const lenke = document.createElement('a');
+    lenke.href = url;
+    lenke.download = KODER_FILNAVN;
+    lenke.click();
+    URL.revokeObjectURL(url);
+    setLastetNed(true);
+    setFeil(null);
+  }
+
+  async function kopierKoder() {
+    await navigator.clipboard.writeText(koder.join('\n'));
+    setKopiert(true);
+    setFeil(null);
+  }
+
+  async function fullforKoder() {
+    if (!inv) return;
+    if (!kanFullforeKoder({ lastetNed, kopiert, bekreftetLagret })) {
+      setFeil('Last ned eller kopier kodene, og bekreft at du har lagret dem.');
+      return;
+    }
+    setSender(true);
+    try {
+      if (inv.kind === 'owner') {
+        await land(inv.kind);
+        return;
+      }
+      setSteg('avatar');
+    } catch (error) {
+      setFeil((error as Error).message);
     } finally {
       setSender(false);
     }
@@ -331,26 +401,30 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const tittel = inv
     ? steg === 'avatar'
       ? 'Velg avataren din'
-      : steg === 'kode'
-        ? 'Bekreft med engangskode'
-        : inv.kind === 'platform'
-          ? 'Velkommen til Endwise'
-          : `Velkommen til ${inv.forhandler}`
+      : steg === 'koder'
+        ? 'Lagre gjenopprettingskodene'
+        : steg === 'kode'
+          ? 'Bekreft med engangskode'
+          : inv.kind === 'platform'
+            ? 'Velkommen til Endwise'
+            : `Velkommen til ${inv.forhandler}`
     : laster
       ? 'Invitasjon'
       : 'Invitasjonen virker ikke';
   const undertekst = inv
     ? steg === 'avatar'
       ? 'Form, farge og humør. Du kan endre det senere i profilen.'
-      : steg === 'kode'
-        ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
-        : inv.kind === 'platform'
-          ? inv.platformLevel === 'administrator'
-            ? `Du er invitert til Endwise-support som administrator. Kontoen knyttes til ${inv.epost}.`
-            : `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
-          : inv.kind === 'owner'
-            ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
-            : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
+      : steg === 'koder'
+        ? 'Kodene vises bare nå. Last dem ned eller kopier dem — uten dem er du utestengt hvis e-posten forsvinner.'
+        : steg === 'kode'
+          ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
+          : inv.kind === 'platform'
+            ? inv.platformLevel === 'administrator'
+              ? `Du er invitert til Endwise-support som administrator. Kontoen knyttes til ${inv.epost}.`
+              : `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
+            : inv.kind === 'owner'
+              ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
+              : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
     : laster
       ? null
       : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be om en ny hvis du trenger det.';
@@ -489,6 +563,21 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
                   dukker opp.
                 </span>
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  void authClient.twoFactor.sendOtp().then((sendt) => {
+                    if (sendt.error) {
+                      setFeil(sendt.error.message ?? 'Kunne ikke sende engangskode.');
+                      return;
+                    }
+                    setFeil(null);
+                  });
+                }}
+                className="text-left text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
+              >
+                Send ny kode
+              </button>
             </div>
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton
@@ -505,6 +594,74 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
               </StatefulButton>
             </div>
           </form>
+        ) : null}
+
+        {inv && steg === 'koder' ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
+            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
+              <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
+                <ClipboardList size={13} className="mt-px shrink-0" />
+                <span>Hver kode kan brukes én gang. Vi viser dem ikke igjen.</span>
+              </p>
+              <ol className="grid grid-cols-1 gap-1.5 font-mono text-[13px] text-fg tabular-nums">
+                {koder.map((kodeTekst) => (
+                  <li
+                    key={kodeTekst}
+                    className="rounded-control border border-border bg-bg px-3 py-1.5"
+                  >
+                    {kodeTekst}
+                  </li>
+                ))}
+              </ol>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={lastNedKoder}
+                  className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-3 text-fg text-label transition-colors hover:bg-surface-2"
+                >
+                  <Download size={14} />
+                  Last ned
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void kopierKoder();
+                  }}
+                  className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-3 text-fg text-label transition-colors hover:bg-surface-2"
+                >
+                  <Copy size={14} />
+                  {kopiert ? 'Kopiert' : 'Kopier'}
+                </button>
+              </div>
+              <label className="flex items-start gap-2 text-[12px] text-fg leading-relaxed">
+                <input
+                  type="checkbox"
+                  checked={bekreftetLagret}
+                  onChange={(ev) => setBekreftetLagret(ev.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>Jeg har lagret kodene på et trygt sted utenfor denne maskinen.</span>
+              </label>
+              {feil ? (
+                <p role="alert" className="text-[12px] text-danger">
+                  {feil}
+                </p>
+              ) : null}
+            </div>
+            <div className="px-1.5 pt-1 pb-1">
+              <StatefulButton
+                type="button"
+                state={sender ? 'loading' : 'idle'}
+                className="w-full"
+                loadingText="Fortsetter …"
+                successText="Lagret"
+                disabled={sender || !kanFullforeKoder({ lastetNed, kopiert, bekreftetLagret })}
+                onClick={() => void fullforKoder()}
+              >
+                Fullfør oppsett
+              </StatefulButton>
+            </div>
+          </div>
         ) : null}
 
         {inv && steg === 'avatar' ? (

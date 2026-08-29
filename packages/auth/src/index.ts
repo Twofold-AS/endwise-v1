@@ -22,4 +22,5 @@ export * from './session.ts';
 export * from './session-policy.ts';
 export { settPassordUtenSesjon } from './sett-passord.ts';
 export * from './tenant.ts';
+export { formaterKlokkeslett, PRODUKT_TIDSSONE } from './tid.ts';
 export * from './two-factor.ts';

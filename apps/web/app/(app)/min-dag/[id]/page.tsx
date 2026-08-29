@@ -43,13 +43,13 @@ export default function JobbDetaljPage() {
     onMutate: async ({ bookingId, to }) => {
       await utils.mechanic.myDay.cancel();
       const prev = utils.mechanic.myDay.getData();
-      utils.mechanic.myDay.setData(undefined, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          jobs: old.jobs.map((j) => (j.id === bookingId ? { ...j, status: to } : j)),
+      if (prev) {
+        const next = {
+          ...prev,
+          jobs: prev.jobs.map((j) => (j.id === bookingId ? { ...j, status: to } : j)),
         };
-      });
+        utils.mechanic.myDay.setData(undefined, next as typeof prev);
+      }
       return { prev };
     },
     onError: (_err, _vars, ctx) => {

@@ -107,5 +107,25 @@ if (lookup.rows[0]?.ok !== true) {
   process.exit(1);
 }
 
+const widgetLookup = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'lookup_widget_key'
+       and pg_get_function_identity_arguments(p.oid) in ('text', 'p_publishable_key text')
+       and strpos(p.prosrc, 'app.widget_publishable_key') > 0
+  ) as ok
+`);
+if (widgetLookup.rows[0]?.ok !== true) {
+  console.error(
+    '[db] lookup_widget_key mangler eller har feil kontrakt (DROP+CREATE feilet). ' +
+      'Kjør `pnpm db:grants` på nytt mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
 await pool.end();
 console.info('[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0026)');

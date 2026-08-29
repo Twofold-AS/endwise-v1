@@ -261,23 +261,29 @@ function BookingPanel({
 }) {
   const services = state.status === 'ready' ? state.services : [];
   const [serviceVersionId, setServiceVersionId] = useState('');
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Oslo' }).format(new Date()),
+  );
   const [slots, setSlots] = useState<string[]>([]);
   const [chosen, setChosen] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hentet, setHentet] = useState(false);
 
   async function loadSlots() {
     setError(null);
     setSlots([]);
     setChosen('');
+    setHentet(false);
     if (!serviceVersionId) return;
     try {
       const r = await client.availability(serviceVersionId, date);
       setSlots(r.slots);
+      setHentet(true);
     } catch {
+      setHentet(true);
       setError(locale === 'no' ? 'Kunne ikke hente ledige tider' : 'Could not load availability');
     }
   }
@@ -377,6 +383,7 @@ function BookingPanel({
           const cleared = resetBookingChoice();
           setSlots(cleared.slots);
           setChosen(cleared.chosen);
+          setHentet(false);
         }}
         style={field}
       >
@@ -397,6 +404,7 @@ function BookingPanel({
           const cleared = resetBookingChoice();
           setSlots(cleared.slots);
           setChosen(cleared.chosen);
+          setHentet(false);
         }}
         style={field}
       />
@@ -429,10 +437,17 @@ function BookingPanel({
               {new Date(s).toLocaleTimeString(locale === 'no' ? 'nb-NO' : 'en', {
                 hour: '2-digit',
                 minute: '2-digit',
+                timeZone: 'Europe/Oslo',
               })}
             </button>
           ))}
         </div>
+      )}
+
+      {hentet && slots.length === 0 && !error && (
+        <p style={{ fontSize: 13, color: `var(--ew-fg-muted, ${fb.fgMuted})`, marginBottom: 10 }}>
+          {locale === 'no' ? 'Ingen ledige tider denne dagen.' : 'No available times this day.'}
+        </p>
       )}
 
       {chosen && (
@@ -463,7 +478,27 @@ function BookingPanel({
       )}
 
       {error && (
-        <p style={{ color: 'var(--ew-danger, #f87171)', fontSize: 12, marginTop: 8 }}>{error}</p>
+        <div style={{ marginTop: 8 }}>
+          <p style={{ color: 'var(--ew-danger, #f87171)', fontSize: 12, marginBottom: 8 }}>
+            {error}
+          </p>
+          <button
+            type="button"
+            onClick={() => void loadSlots()}
+            style={{
+              padding: '8px 14px',
+              borderRadius: 8,
+              border: `1px solid var(--ew-border, ${fb.border})`,
+              background: `var(--ew-surface, ${fb.surface})`,
+              color: `var(--ew-fg, ${fb.fg})`,
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 13,
+            }}
+          >
+            {locale === 'no' ? 'Prøv igjen' : 'Try again'}
+          </button>
+        </div>
       )}
     </div>
   );

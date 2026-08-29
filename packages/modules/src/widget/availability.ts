@@ -40,7 +40,7 @@ const MS_PER_MIN = 60_000;
 
 /** F4-07/F4-20 — samme arbeidsdag og rutenett som `/widget/availability`. */
 export const WIDGET_DAY_OPEN_HOUR = 8;
-export const WIDGET_DAY_CLOSE_HOUR = 16;
+export const WIDGET_DAY_CLOSE_HOUR = 20;
 export const WIDGET_SLOT_STEP_MINUTES = 30;
 
 /** Widget-vinduet er verkstedets veggklokke, ikke serverens lokale sone. */
@@ -60,7 +60,7 @@ export function widgetDayKey(from: Date | string): string {
   return osloKalenderdag(from);
 }
 
-/** Arbeidsdag 08–16 Europe/Oslo — samme parser som widget-ruten. */
+/** Arbeidsdag 08–20 Europe/Oslo — samme vindu som Timeplan. */
 export function widgetWorkingDay(from: Date | string): { dayStart: Date; dayEnd: Date } {
   const key = widgetDayKey(from);
   return {

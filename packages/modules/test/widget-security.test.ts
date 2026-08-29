@@ -130,7 +130,7 @@ describe('computeFreeSlots', () => {
 
   it('F4-20: start som passer 30 min passer ikke 180 min samme dag (Oslo)', () => {
     const { dayStart, dayEnd } = widgetWorkingDay('2026-09-15');
-    const late = widgetWallTime('2026-09-15', 15, 30);
+    const late = widgetWallTime('2026-09-15', 17, 30);
     const short = computeFreeSlots({
       dayStart,
       dayEnd,
@@ -188,20 +188,20 @@ describe('computeFreeSlots', () => {
 });
 
 describe('widgetWorkingDay (Europe/Oslo)', () => {
-  it('sommer: 08–16 Oslo er 06:00–14:00 UTC', () => {
+  it('sommer: 08–20 Oslo er 06:00–18:00 UTC', () => {
     const { dayStart, dayEnd } = widgetWorkingDay('2026-09-15');
     expect(dayStart.toISOString()).toBe('2026-09-15T06:00:00.000Z');
-    expect(dayEnd.toISOString()).toBe('2026-09-15T14:00:00.000Z');
+    expect(dayEnd.toISOString()).toBe('2026-09-15T18:00:00.000Z');
   });
 
-  it('vinter: 08–16 Oslo er 07:00–15:00 UTC', () => {
+  it('vinter: 08–20 Oslo er 07:00–19:00 UTC', () => {
     const { dayStart, dayEnd } = widgetWorkingDay('2026-01-15');
     expect(dayStart.toISOString()).toBe('2026-01-15T07:00:00.000Z');
-    expect(dayEnd.toISOString()).toBe('2026-01-15T15:00:00.000Z');
+    expect(dayEnd.toISOString()).toBe('2026-01-15T19:00:00.000Z');
   });
 
-  it('15:30 UTC i september er 17:30 Oslo — ikke et tilbudt slot', () => {
-    const utc = new Date('2026-09-15T15:30:00.000Z');
+  it('18:30 UTC i september er 20:30 Oslo — ikke et tilbudt slot', () => {
+    const utc = new Date('2026-09-15T18:30:00.000Z');
     expect(widgetDayKey(utc)).toBe('2026-09-15');
     const { dayStart, dayEnd } = widgetWorkingDay(utc);
     const slots = computeFreeSlots({
@@ -212,7 +212,7 @@ describe('widgetWorkingDay (Europe/Oslo)', () => {
       busy: [],
     });
     expect(isOfferedSlot(utc, slots)).toBe(false);
-    expect(isOfferedSlot(widgetWallTime('2026-09-15', 15, 30), slots)).toBe(true);
+    expect(isOfferedSlot(widgetWallTime('2026-09-15', 19, 30), slots)).toBe(true);
   });
 });
 

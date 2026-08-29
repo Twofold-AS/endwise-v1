@@ -94,6 +94,17 @@ create policy invitations_open_by_hash_update on invitations
   using (token_hash = nullif(current_setting('app.invitation_hash', true), ''))
   with check (token_hash = nullif(current_setting('app.invitation_hash', true), ''));
 
+-- Widget-nøkkel under force RLS (samme mønster som invitations_open_by_hash).
+-- DEFINER-eieren er ikke authenticated. Uten public-policy: 0 rader i prod.
+drop policy if exists widget_keys_lookup_by_pk on widget_keys;
+create policy widget_keys_lookup_by_pk on widget_keys
+  as permissive
+  for select
+  to public
+  using (
+    publishable_key = nullif(current_setting('app.widget_publishable_key', true), '')
+  );
+
 -- GDPR-slett under force RLS
 
 -- `slett_forhandler` er SECURITY DEFINER. Med force RLS har eieren ingen

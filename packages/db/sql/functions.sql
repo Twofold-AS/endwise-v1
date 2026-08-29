@@ -184,6 +184,44 @@ revoke all on function consume_invitation(text) from public;
 grant execute on function lookup_open_invitation(text) to authenticated;
 grant execute on function consume_invitation(text) to authenticated;
 
+-- Widget-nøkkeloppslag før vi vet hvilken forhandler det gjelder.
+
+-- Samme klasse som lookup_open_invitation. `widget_keys` har FORCE RLS og
+-- tenant-policy TO authenticated. /widget/init har verken sesjon eller
+-- app.tenant_id. Unscopet select gir 0 rader → 401 «ukjent nøkkel», og
+-- widgeten kommer aldri til /widget/availability.
+
+-- Ett smalt unntak: SECURITY DEFINER + GUC app.widget_publishable_key.
+-- Nøkkelen er allerede offentlig (pk_live_…). Funksjonen returnerer kun
+-- tenant + allowlist + active, og bare når nøkkelen er aktiv.
+
+drop function if exists lookup_widget_key(text);
+
+create or replace function lookup_widget_key(p_publishable_key text)
+returns table (
+  tenant_id       uuid,
+  allowed_origins text[],
+  active          boolean
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- lookup_widget_key_rev=0033
+  perform set_config('app.widget_publishable_key', p_publishable_key, true);
+  return query
+    select k.tenant_id, k.allowed_origins, k.active
+      from widget_keys k
+     where k.publishable_key = p_publishable_key
+       and k.active = true
+     limit 1;
+end;
+$$;
+
+revoke all on function lookup_widget_key(text) from public;
+grant execute on function lookup_widget_key(text) to authenticated;
+
 -- GDPR-slett av en forhandler. App-rollen kan ikke slette audit_log
 -- (append-only) eller tenants-raden mens restrict-FKer lever. Funksjonen
 -- kjører som eier, men krever at `app.platform_admin` er satt i samme

@@ -3,10 +3,6 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
-  DEALER_PHONE_HJEM,
-  PHONE_KORT_META,
-} from '../app/(app)/_shell/phone-home.ts';
-import {
   breadcrumbFor,
   FORHANDLER_NAV,
   isItemActive,
@@ -15,6 +11,7 @@ import {
   PARKED_LABEL,
   pillsForRole,
 } from '../app/(app)/_shell/nav.ts';
+import { DEALER_PHONE_HJEM, PHONE_KORT_META } from '../app/(app)/_shell/phone-home.ts';
 import { parseOrgSeksjon } from '../app/(app)/organisasjon/_seksjoner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -82,10 +79,11 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
       'Abonnement',
       'Integrasjoner',
     ]);
-    expect(pillsForRole(FORHANDLER_NAV.find((i) => i.key === 'organisasjon')!, 'dealer_staff').map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-    ]);
+    expect(
+      pillsForRole(FORHANDLER_NAV.find((i) => i.key === 'organisasjon')!, 'dealer_staff').map(
+        (p) => p.label,
+      ),
+    ).toEqual(['Oversikt', 'Ansatte']);
   });
 
   it('mekaniker beholder Dine jobber og ser ikke Organisasjon', () => {
@@ -111,6 +109,20 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
     expect(kalender).not.toMatch(/datetime-local/);
     expect(kapasitet).toMatch(/TimeplanStripe/);
     expect(kapasitet).not.toMatch(/overflow-x-auto/);
+  });
+
+  it('Opprett jobb og Prisliste står på samme rad som Liste|Kalender, ikke i tittelraden', () => {
+    const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
+    const h1 = side.indexOf('<h1');
+    const piller = side.indexOf('SidePiller');
+    const opprett = side.indexOf('Opprett jobb');
+    const prisliste = side.indexOf('Prisliste');
+    expect(h1).toBeGreaterThan(-1);
+    expect(piller).toBeGreaterThan(h1);
+    expect(opprett).toBeGreaterThan(piller);
+    expect(prisliste).toBeGreaterThan(opprett);
+    expect(side).toMatch(/justify-between[\s\S]*SidePiller[\s\S]*Opprett jobb[\s\S]*Prisliste/);
+    expect(side).toMatch(/\/bookinger\/ny/);
   });
 
   it('Tjenester er /prisliste (samme services.list), /tjenester forblir abonnement', () => {

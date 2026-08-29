@@ -51,7 +51,29 @@ export function timeplanDagerFra(valgtYmd: string, antall = 7): TimeplanDag[] {
   return out;
 }
 
-/** Tre måneder: forrige, denne (aktiv), neste — samme visuelle språk som dag-stripen. */
+/** Månedsnavn for valgt Oslo-dag, nb-NO (capitalize i UI). */
+export function timeplanManedNavn(valgtYmd: string): string {
+  const ymd = osloKalenderdag(valgtYmd);
+  return osloVeggklokke(ymd, 12, 0).toLocaleDateString('nb-NO', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: PRODUKT_TIDSSONE,
+  });
+}
+
+/** Ett kalendermåned fram/tilbake. Valgt dag klemmes inn i måneden (31. jan → 28. feb). */
+export function timeplanSkiftManed(valgtYmd: string, delta: number): string {
+  const ymd = osloKalenderdag(valgtYmd);
+  const [y, m, d] = ymd.split('-').map(Number);
+  const total = y * 12 + (m - 1) + delta;
+  const nyY = Math.floor(total / 12);
+  const nyM = (total % 12) + 1;
+  const siste = new Date(Date.UTC(nyY, nyM, 0)).getUTCDate();
+  const dag = Math.min(d, siste);
+  return `${nyY}-${String(nyM).padStart(2, '0')}-${String(dag).padStart(2, '0')}`;
+}
+
+/** Tre måneder: forrige, denne (aktiv), neste — beholdt for tester/kallsteder utenom stripen. */
 export function timeplanManeder(valgtYmd: string): TimeplanManed[] {
   const ymd = osloKalenderdag(valgtYmd);
   const [y, m] = ymd.split('-').map(Number);

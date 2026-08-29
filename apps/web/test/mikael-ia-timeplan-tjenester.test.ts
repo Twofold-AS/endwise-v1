@@ -79,11 +79,9 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
       'Abonnement',
       'Integrasjoner',
     ]);
-    expect(
-      pillsForRole(FORHANDLER_NAV.find((i) => i.key === 'organisasjon')!, 'dealer_staff').map(
-        (p) => p.label,
-      ),
-    ).toEqual(['Oversikt', 'Ansatte']);
+    const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
+    if (!org) throw new Error('mangler Organisasjon');
+    expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual(['Oversikt', 'Ansatte']);
   });
 
   it('mekaniker beholder Dine jobber og ser ikke Organisasjon', () => {
@@ -146,12 +144,12 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/PrislisteFlate/);
     expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/redirect\('\/organisasjon'/);
     expect(les('../app/(app)/tjenester/page.tsx')).toMatch(/seksjon=abonnement/);
-    expect(isItemActive(FORHANDLER_NAV.find((i) => i.key === 'tjenester')!, '/prisliste')).toBe(
-      true,
-    );
-    expect(isItemActive(FORHANDLER_NAV.find((i) => i.key === 'organisasjon')!, '/prisliste')).toBe(
-      false,
-    );
+    const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
+    if (!tjenester) throw new Error('mangler Tjenester');
+    const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
+    if (!org) throw new Error('mangler Organisasjon');
+    expect(isItemActive(tjenester, '/prisliste')).toBe(true);
+    expect(isItemActive(org, '/prisliste')).toBe(false);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
       { label: 'Tjenester', href: '/prisliste' },
     ]);

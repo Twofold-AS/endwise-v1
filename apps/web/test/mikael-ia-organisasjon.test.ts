@@ -69,10 +69,7 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
   it('selger/support ser Organisasjon uten Abonnement og Integrasjoner', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     if (!org) throw new Error('mangler Organisasjon');
-    expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-    ]);
+    expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual(['Oversikt', 'Ansatte']);
     expect(pillsForRole(org, 'dealer_admin').map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',

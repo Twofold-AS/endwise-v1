@@ -98,7 +98,7 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
 
   const leftover: Record<string, unknown> =
     vis.leftover && typeof vis.leftover === 'object' && !Array.isArray(vis.leftover)
-      ? vis.leftover
+      ? (vis.leftover as Record<string, unknown>)
       : {};
   const leftoverKeys = Object.keys(leftover);
 

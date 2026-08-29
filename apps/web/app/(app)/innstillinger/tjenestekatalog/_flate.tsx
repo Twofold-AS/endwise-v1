@@ -13,11 +13,17 @@ import { TjenesteKort } from './_tjeneste-kort';
 
 /**
  * F2-05 / F5-04 — forhandlerens egen tjenestekatalog.
- * Bor som blokk på Organisasjon → Oversikt. Ikke egen pille.
+ * Destinasjon Tjenester + popup Prisliste på Timeplan. Samme SoR som widgeten.
  */
 const FILTRE = [{ key: 'alle', label: 'Alle' }, ...TYPE_VALG] as const;
 
-export function PrislisteFlate({ skjulPiller = false }: { skjulPiller?: boolean }) {
+export function PrislisteFlate({
+  skjulPiller = false,
+  tittel = 'Prisliste',
+}: {
+  skjulPiller?: boolean;
+  tittel?: string;
+}) {
   const { isAdmin } = useOrgRole();
   const [filter, setFilter] = useState<string>('alle');
   const [nyApen, setNyApen] = useState(false);
@@ -45,10 +51,10 @@ export function PrislisteFlate({ skjulPiller = false }: { skjulPiller?: boolean 
       }
     >
       <div>
-        <h1 className="sr-only">Prisliste</h1>
+        <h1 className="sr-only">{tittel}</h1>
         <p className="flex items-center gap-2 text-title text-fg">
           <Wrench size={18} strokeWidth={1.75} className="text-fg-muted" />
-          Prisliste
+          {tittel}
         </p>
         <p className="text-body text-fg-muted">
           Tjenestene kunden kan bestille hos dere, med varighet, pris og hvilke ferdigheter jobben

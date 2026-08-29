@@ -61,7 +61,7 @@ export function createWidgetClient(opts: WidgetClientOptions) {
     }
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new WidgetClientError(body.error ?? `Feil (${res.status})`);
+      throw new WidgetClientError(body.error ?? 'Kunne ikke hente data. Prøv igjen.');
     }
     return (await res.json()) as T;
   }

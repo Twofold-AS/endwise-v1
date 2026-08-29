@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, StatefulButton } from '@endwise/ui';
+import { StatefulButton } from '@endwise/ui';
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../../_lib/lyd';
@@ -41,7 +41,6 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
   );
   const data = lesing ? inspect.data?.kort : dealer.data;
   const laster = lesing ? inspect.isLoading : dealer.isLoading;
-  const feil = lesing ? inspect.error : dealer.error;
 
   const [skjema, setSkjema] = useState<Skjema>(TOMT);
 
@@ -86,20 +85,20 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
   if (laster) {
     return <p className="px-1 py-6 text-body text-fg-muted">Laster forhandleren …</p>;
   }
-  if (feil || !data) {
-    return (
-      <CardShell className="flex items-start gap-3 p-4">
-        <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-danger" />
-        <p className="text-body text-danger">
-          Kunne ikke hente forhandleren: {feil?.message ?? 'ukjent feil'}
-        </p>
-      </CardShell>
-    );
-  }
+
+  /**
+   * Tomt kort når `dealer_profiles` mangler eller `get` degraderer.
+   * Aldri «feil» — samme ærlighet som `forhandler.kort`.
+   */
+  const vis = data ?? {
+    name: skjema.name,
+    slug: '',
+    leftover: {},
+  };
 
   const leftover =
-    data.leftover && typeof data.leftover === 'object' && !Array.isArray(data.leftover)
-      ? data.leftover
+    vis.leftover && typeof vis.leftover === 'object' && !Array.isArray(vis.leftover)
+      ? vis.leftover
       : {};
   const leftoverKeys = Object.keys(leftover);
 
@@ -114,7 +113,7 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
         />
         <label className="flex flex-col gap-1.5">
           <span className="text-label text-fg">Slug</span>
-          <input value={data.slug} readOnly disabled className={INPUT} aria-label="Slug" />
+          <input value={vis.slug} readOnly disabled className={INPUT} aria-label="Slug" />
           <span className="text-[12px] text-fg-muted">
             Settes ved opprettelse. Quick overskriver den ikke.
           </span>

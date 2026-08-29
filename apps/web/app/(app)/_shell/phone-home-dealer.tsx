@@ -1,7 +1,5 @@
 'use client';
 
-import type { Route } from 'next';
-import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
@@ -12,11 +10,8 @@ import {
   innboksMeta,
   kunderMeta,
   lagerMeta,
-  nesteJobb,
   organisasjonMeta,
-  rapporterSetning,
   statistikkSetning,
-  timeplanRader,
   verkstedHeroTall,
 } from './phone-home-data';
 import { PhoneKort } from './phone-kort';
@@ -24,6 +19,7 @@ import { PhoneKort } from './phone-kort';
 /**
  * Forhandlerens telefon-hjem. Fylte kort med ekte meta.
  * Verkstedet-hero er tellere, ikke en jobbliste. Tap = dagen.
+ * Timeplan-kortet er destinasjon (ikon + navn) — ingen jobbliste på kortet.
  */
 export function PhoneHomeDealer() {
   const { shopEnabled } = useOrgRole();
@@ -44,22 +40,22 @@ export function PhoneHomeDealer() {
     limit: 5,
   });
   const bevegelser = trpc.inventory.listMovements.useQuery({ limit: 5 });
+  const tjenester = trpc.services.list.useQuery();
 
   const naa = useMemo(() => new Date(), []);
   const jobber = bookings.data ?? [];
   const hero = verkstedHeroTall(jobber, naa);
-  const plan = timeplanRader(jobber, naa, 4);
-  const neste = nesteJobb(jobber, naa);
   const innboks = innboksMeta(threads.data ?? []);
   const rader = dealerPhoneHjemRader(shopEnabled);
 
   const metaFor = (key: PhoneKortKey): { text?: string; ulest?: number } => {
     if (key === 'statistikk') return { text: statistikkSetning(jobber, naa) };
-    if (key === 'rapporter') return { text: rapporterSetning() };
-    if (key === 'innboks') return { text: innboks.linje, ulest: innboks.ulest };
-    if (key === 'jobber') {
-      return { text: neste ? `${neste.time} · ${neste.what}` : 'Ingen jobber i dag' };
+    if (key === 'tjenester') {
+      const n = (tjenester.data ?? []).filter((t) => t.active).length;
+      return { text: n === 0 ? 'Ingen tjenester ennå' : `${n} bookbare` };
     }
+    if (key === 'innboks') return { text: innboks.linje, ulest: innboks.ulest };
+    if (key === 'timeplan') return {};
     if (key === 'kunder') return { text: kunderMeta(customers.data ?? []) };
     if (key === 'organisasjon') return { text: organisasjonMeta(oversikt.data ?? []) };
     if (key === 'samarbeid') return { text: 'Ingen delt informasjon ennå' };
@@ -89,36 +85,6 @@ export function PhoneHomeDealer() {
                 <HeroTall label="Fullført" verdi={hero.fullfort} laster={bookings.isLoading} />
               </div>
             </PhoneKort>
-          );
-        }
-
-        if (rad.keys[0] === 'timeplan') {
-          const dest = PHONE_KORT_META.timeplan;
-          return (
-            <div key="timeplan" className="relative">
-              <PhoneKort href={dest.href} icon={dest.icon} navn={dest.label} className="w-full">
-                {plan.length === 0 ? (
-                  <p className="text-[12px] text-fg-muted">Ingen jobber i dag</p>
-                ) : (
-                  <ul className="flex flex-col gap-1">
-                    {plan.map((r) => (
-                      <li key={`${r.time}-${r.what}`} className="flex gap-2 text-[12px]">
-                        <span className="w-10 shrink-0 tabular-nums">{r.time}</span>
-                        <span className="min-w-0 truncate">{r.what}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </PhoneKort>
-              {plan.length === 0 ? (
-                <Link
-                  href={'/bookinger/ny' as Route}
-                  className="absolute right-3 bottom-3 inline-flex h-control items-center rounded-control bg-fg px-3 text-bg text-label"
-                >
-                  Ny jobb
-                </Link>
-              ) : null}
-            </div>
           );
         }
 

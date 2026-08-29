@@ -41,27 +41,26 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('dealer phone home — kortrekkefølge og fyll', () => {
-  it('låser hero → Timeplan → Statistikk|Rapporter → Innboks|Jobber → Kunder|Organisasjon → Samarbeid|Hjelp → Lager lavt', () => {
+  it('låser hero → Innboks|Timeplan → Statistikk|Tjenester → Kunder|Organisasjon → Samarbeid|Hjelp → Lager lavt', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['verkstedet'],
-      ['timeplan'],
-      ['statistikk', 'rapporter'],
-      ['innboks', 'jobber'],
+      ['innboks', 'timeplan'],
+      ['statistikk', 'tjenester'],
       ['kunder', 'organisasjon'],
       ['samarbeid', 'hjelp'],
       ['lager'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
-    expect(DEALER_PHONE_HJEM[1]?.kind).toBe('full');
+    expect(DEALER_PHONE_HJEM[1]?.kind).toBe('pair');
     expect(DEALER_PHONE_HJEM[2]?.kind).toBe('pair');
     expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('low');
   });
 
-  it('Timeplan og Rapporter er høyt, Lager er lavt', () => {
+  it('Innboks|Timeplan og Tjenester er høyt, Lager er lavt', () => {
     const keys = DEALER_PHONE_HJEM.map((r) => r.keys.join('|'));
-    expect(keys.indexOf('timeplan')).toBeLessThan(keys.indexOf('statistikk|rapporter'));
-    expect(keys.indexOf('statistikk|rapporter')).toBeLessThan(keys.indexOf('lager'));
-    expect(keys.indexOf('timeplan')).toBeLessThan(keys.indexOf('lager'));
+    expect(keys.indexOf('innboks|timeplan')).toBeLessThan(keys.indexOf('statistikk|tjenester'));
+    expect(keys.indexOf('statistikk|tjenester')).toBeLessThan(keys.indexOf('lager'));
+    expect(keys.indexOf('innboks|timeplan')).toBeLessThan(keys.indexOf('lager'));
     expect(keys.at(-1)).toBe('lager');
   });
 
@@ -80,9 +79,9 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(labels.some((l) => /book|oppslag|prisliste|abonnement|\bai\b/.test(l))).toBe(false);
   });
 
-  it('Timeplan går til Jobber-kalender, Rapporter til /analyse, Statistikk til Rapporter', () => {
-    expect(PHONE_KORT_META.timeplan.href).toBe('/jobber?visning=kalender');
-    expect(PHONE_KORT_META.rapporter.href).toBe('/analyse');
+  it('Timeplan går til /jobber, Tjenester til /prisliste, Statistikk til /rapporter', () => {
+    expect(PHONE_KORT_META.timeplan.href).toBe('/jobber');
+    expect(PHONE_KORT_META.tjenester.href).toBe('/prisliste');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     expect(PHONE_KORT_META.verkstedet.href).toContain('visning=dag');
   });
@@ -106,7 +105,7 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(hjem).not.toMatch(/jobb-liste|Dagens saker/);
   });
 
-  it('Timeplan-kortet bærer neste 3–4 rader, tomtekst og Ny jobb på kortet', () => {
+  it('Timeplan-kortet er destinasjon uten jobbliste eller Ny jobb', () => {
     const naa = new Date('2026-08-29T06:00:00');
     const rader = timeplanRader(
       [
@@ -132,12 +131,13 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(rader[0]?.what).toMatch(/EU-kontroll/);
     expect(rader[0]?.time).toMatch(/\d/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/Ingen jobber i dag/);
-    expect(hjem).toMatch(/Ny jobb/);
-    expect(hjem).toMatch(/bookinger\/ny/);
+    expect(hjem).not.toMatch(/Ingen jobber i dag/);
+    expect(hjem).not.toMatch(/Ny jobb/);
+    expect(hjem).not.toMatch(/bookinger\/ny/);
+    expect(hjem).toMatch(/key === 'timeplan'/);
   });
 
-  it('fyller statistikk, innboks, kunder, org, lager og rapporter fra ekte/eksisterende tall', () => {
+  it('fyller statistikk, innboks, kunder, org, lager og rapporter-setning fra ekte/eksisterende tall', () => {
     const naa = new Date('2026-08-26T12:00:00');
     const uke = [
       { id: '1', status: 'completed', startsAt: '2026-08-24T08:00:00', serviceName: 'EU' },

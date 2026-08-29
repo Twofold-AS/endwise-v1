@@ -127,10 +127,10 @@ export function TjenesterInnhold() {
       </section>
 
       <Link
-        href={'/innstillinger/tjenestekatalog' as Route}
+        href={'/prisliste' as Route}
         className="inline-flex items-center gap-1.5 text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
       >
-        Ser du etter tjenestene KUNDEN bestiller hos dere? Det er Prislisten
+        Ser du etter tjenestene KUNDEN bestiller hos dere? Det er Tjenester
         <ArrowUpRight size={13} strokeWidth={1.75} />
       </Link>
     </div>

@@ -32,12 +32,12 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     expect(FORHANDLER_NAV.map((i) => i.label)).toEqual([
       'Verkstedet',
       'Innboks',
-      'Jobber',
+      'Timeplan',
       'Kunder',
       'Lager',
       'Butikk',
       'Samarbeid',
-      'Rapporter',
+      'Tjenester',
       'Organisasjon',
       'Hjelp',
     ]);
@@ -48,14 +48,12 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     expect(org?.href).toBe('/organisasjon');
     expect(org?.pills?.map((p) => p.label)).toEqual([
       'Oversikt',
-      'Timeplan',
       'Ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);
     expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
       'Oversikt',
-      'Timeplan',
       'Ansatte',
       'Abonnement',
       'Integrasjoner',
@@ -73,12 +71,10 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     if (!org) throw new Error('mangler Organisasjon');
     expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual([
       'Oversikt',
-      'Timeplan',
       'Ansatte',
     ]);
     expect(pillsForRole(org, 'dealer_admin').map((p) => p.label)).toEqual([
       'Oversikt',
-      'Timeplan',
       'Ansatte',
       'Abonnement',
       'Integrasjoner',
@@ -117,7 +113,7 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     if (!org) throw new Error('mangler Organisasjon');
     expect(isItemActive(org, '/organisasjon')).toBe(true);
-    expect(isItemActive(org, '/prisliste')).toBe(true);
+    expect(isItemActive(org, '/prisliste')).toBe(false);
     expect(isItemActive(org, '/abonnement')).toBe(true);
     expect(breadcrumbFor('/organisasjon', '', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },
@@ -128,10 +124,9 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
       { label: 'Ansatte' },
     ]);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Organisasjon', href: '/organisasjon' },
-      { label: 'Oversikt' },
+      { label: 'Tjenester', href: '/prisliste' },
     ]);
-    expect(PARKED_LABEL['/prisliste']).toBe('Organisasjon · Oversikt');
+    expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');
   });
 
   it('ukjent eller admin-seksjon for selger faller til Oversikt', () => {
@@ -262,14 +257,16 @@ describe('Mikael IA — shell-chrome og telefon', () => {
 });
 
 describe('Mikael IA — Prisliste på Oversikt, inspect', () => {
-  it('Prisliste er ikke pille og ikke under Jobber', () => {
-    const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
-    expect(jobber?.pills?.some((p) => /prisliste/i.test(p.label))).toBe(false);
-    expect(jobber?.pills?.some((p) => /prisliste/i.test(p.href))).toBe(false);
-    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/redirect\('\/organisasjon'/);
-    expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/PrislisteFlate/);
+  it('Prisliste er popup på Timeplan, ikke Organisasjon-pille', () => {
+    const timeplan = FORHANDLER_NAV.find((i) => i.key === 'saker');
+    expect(timeplan?.pills?.some((p) => /prisliste/i.test(p.label))).toBe(false);
+    expect(timeplan?.pills?.some((p) => /prisliste/i.test(p.href))).toBe(false);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/PrislisteFlate/);
+    expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/redirect\('\/organisasjon'/);
+    expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/PrislisteFlate/);
     expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/TjenesterInnhold/);
     expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/seksjon === 'prisliste'/);
+    expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/seksjon === 'timeplan'/);
   });
 
   it('inspect Organisasjon peker på /organisasjon, ikke Forhandleren-rad', () => {

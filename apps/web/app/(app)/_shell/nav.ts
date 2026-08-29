@@ -3,7 +3,6 @@ import {
   Building2,
   CalendarDays,
   Car,
-  ChartLine,
   CircleUser,
   ClipboardList,
   FilePlus,
@@ -99,7 +98,6 @@ const ADMIN_KUN: OrgRole[] = ['dealer_admin'];
  */
 export const ORGANISASJON_SEKSJONER: NavChild[] = [
   { label: 'Oversikt', href: '/organisasjon' },
-  { label: 'Timeplan', href: '/organisasjon?seksjon=timeplan' },
   { label: 'Ansatte', href: '/organisasjon?seksjon=ansatte' },
   { label: 'Abonnement', href: '/organisasjon?seksjon=abonnement', roles: ADMIN_KUN },
   { label: 'Integrasjoner', href: '/organisasjon?seksjon=integrasjoner', roles: ADMIN_KUN },
@@ -138,7 +136,7 @@ export const CONTEXTS: AppContext[] = [
   {
     key: 'forhandler',
     label: 'Forhandler',
-    hint: 'Drift, jobber og kunder',
+    hint: 'Drift, timeplan og kunder',
     icon: Building2,
     roles: DRIFT,
     landing: '/dashboard',
@@ -191,8 +189,8 @@ export const CONTEXTS: AppContext[] = [
 /*
  * Mikael IA 28.08 ettermiddag — fasit over Jonas-morgenen.
  * Ett skall, ingen visningsvelger. Organisasjon er ÉN rad → /organisasjon.
- * Top-bar 2 = Oversikt · Timeplan · Ansatte · Abonnement · Integrasjoner.
- * Kompetanse er ikke pille/sidebar. Prisliste bor på Oversikt.
+ * Top-bar 2 = Oversikt · Ansatte · Abonnement · Integrasjoner.
+ * Kompetanse er ikke pille/sidebar. Timeplan er egen destinasjon. Tjenester er egen destinasjon.
  * Hjelp = /support. Innstillinger = Profil + Varsler.
  */
 /*
@@ -217,8 +215,8 @@ export const FORHANDLER_NAV: NavItem[] = [
   },
   {
     key: 'saker',
-    label: 'Jobber',
-    icon: ClipboardList,
+    label: 'Timeplan',
+    icon: CalendarDays,
     href: '/jobber',
     roles: DRIFT,
     pills: [
@@ -271,10 +269,10 @@ export const FORHANDLER_NAV: NavItem[] = [
     dividerBefore: true,
   },
   {
-    key: 'analyse',
-    label: 'Rapporter',
-    icon: ChartLine,
-    href: '/rapporter',
+    key: 'tjenester',
+    label: 'Tjenester',
+    icon: Wrench,
+    href: '/prisliste',
     roles: DRIFT,
   },
   {
@@ -650,8 +648,6 @@ const ORGANISASJON_STIER = [
   '/mekanikere/kompetanse',
   '/abonnement',
   '/tjenester',
-  '/prisliste',
-  '/innstillinger/tjenestekatalog',
   '/innstillinger/tjenester',
   '/innstillinger/koblinger',
   '/innstillinger/integrasjoner',
@@ -745,14 +741,6 @@ export function breadcrumbFor(
     return crumbs;
   }
 
-  if (
-    item.key === 'organisasjon' &&
-    (pathname === '/prisliste' || pathname === '/innstillinger/tjenestekatalog')
-  ) {
-    crumbs.push({ label: 'Oversikt' });
-    return crumbs;
-  }
-
   // Undervisning: match først på query (?kanal=/?visning=), så på sti. Et
   // underpunkt med query må matche både sti og query — ellers ville «Oversikt»
   // (uten query) alltid vunnet over «Kalender» på samme sti.
@@ -798,7 +786,7 @@ export const PARKED_LABEL: Record<string, string> = {
   '/kalender': 'Jobber · Kalender (gammel sti)',
   '/mekanikere': 'Organisasjon · Ansatte',
   '/mekanikere/kompetanse': 'Organisasjon · Ansatte',
-  '/mekanikere/kapasitet': 'Organisasjon · Timeplan',
+  '/mekanikere/kapasitet': 'Timeplan',
   '/tjenester': 'Organisasjon · Abonnement',
   '/innstillinger/profil': 'Innstillinger · Profil',
   '/innstillinger/varsler': 'Innstillinger · Varsler',
@@ -807,8 +795,8 @@ export const PARKED_LABEL: Record<string, string> = {
   '/integrasjoner': 'Organisasjon · Integrasjoner',
   '/support': 'Hjelp',
   '/hjelp': 'Hjelp',
-  '/jobber': 'Jobber',
-  '/rapporter': 'Rapporter',
+  '/jobber': 'Timeplan',
+  '/rapporter': 'Statistikk',
   '/verkstedet': 'Verkstedet',
   '/ansatte': 'Organisasjon · Ansatte',
   '/forhandleren': 'Organisasjon · Oversikt',
@@ -818,8 +806,8 @@ export const PARKED_LABEL: Record<string, string> = {
   '/innstillinger/integrasjoner': 'Organisasjon · Integrasjoner',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
   '/endwise/innstillinger': 'Endwise · Dev-mode',
-  '/innstillinger/tjenestekatalog': 'Organisasjon · Oversikt',
-  '/prisliste': 'Organisasjon · Oversikt',
+  '/innstillinger/tjenestekatalog': 'Tjenester',
+  '/prisliste': 'Tjenester',
   '/butikk': 'Butikk · Katalog',
   '/butikk/kasse': 'Butikk · Handlekurv / kasse',
   '/lager/deler': 'Lager · Deler',
@@ -835,7 +823,7 @@ export const PARKED_LABEL: Record<string, string> = {
 
 /** Quick actions — bevel-knappene rett under divideren. */
 export const QUICK_ACTIONS = [
-  { label: 'Ny jobb', href: '/bookinger/ny', icon: FilePlus },
+  { label: 'Opprett jobb', href: '/bookinger/ny', icon: FilePlus },
   { label: 'Ny melding', href: '/innboks?ny=1', icon: MessageSquarePlus },
   { label: 'Ny kunde', href: '/kunder?ny=1', icon: UserPlus },
 ] as const;

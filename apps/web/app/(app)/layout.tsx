@@ -160,7 +160,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <InnboksSeksjonBar />
                 </Suspense>
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
-                  <main className="min-h-0 min-w-0 md:flex-1">
+                  <main className="min-w-0 flex-1">
                     {plattformVarsel ? (
                       <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
                         <p className="text-label">{plattformVarsel}</p>

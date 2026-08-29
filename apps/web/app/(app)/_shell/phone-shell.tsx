@@ -25,7 +25,8 @@ async function loggUt() {
 
 /**
  * Telefon-chrome: logo-rad med safe-area. Tilbake sitter på samme rad, til høyre.
- * Bevel ligger i dokumentflyt nederst på siden — ikke sticky/fixed.
+ * Bevel er siste barn i innholdskolonnen med mt-auto — nederst når
+ * innholdet er kort, etter innholdet når det er langt. Ikke sticky/fixed.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -76,7 +77,7 @@ export function PhoneBevel() {
     erPlattform,
   });
   return (
-    <footer className={`bg-bg px-3 pt-4 md:hidden ${PHONE_SAFE_BUNN}`}>
+    <footer className={`mt-auto bg-bg px-3 pt-4 md:hidden ${PHONE_SAFE_BUNN}`}>
       <BrukerRad
         navn={navn}
         laster={isLoading}

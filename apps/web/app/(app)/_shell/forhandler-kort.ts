@@ -9,17 +9,15 @@ export type ForhandlerKortFelt = {
   website?: string | null;
 };
 
-export const GRAINIENT_MORK = {
+/** Samme tre grå i lys og mørk — Mikael 29.08.2026, ikke lys-vask. */
+export const GRAINIENT_FARGER = {
   color1: '#777777',
   color2: '#333333',
   color3: '#111111',
 } as const;
 
-export const GRAINIENT_LYS = {
-  color1: '#ffffff',
-  color2: '#ededed',
-  color3: '#f5f5f5',
-} as const;
+export const GRAINIENT_MORK = GRAINIENT_FARGER;
+export const GRAINIENT_LYS = GRAINIENT_FARGER;
 
 export function visKortFelt(kort: ForhandlerKortFelt): { label: string; verdi: string }[] {
   const ut: { label: string; verdi: string }[] = [];

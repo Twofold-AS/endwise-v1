@@ -109,22 +109,20 @@ describe('Grainient forhandler-kort', () => {
     expect(kort).toMatch(/timeSpeed=\{0\.25\}/);
     expect(kort).toMatch(/colorBalance=\{0\.2\}/);
     expect(kort).toMatch(/warpStrength=\{1/);
-    expect(kort).toMatch(/GRAINIENT_LYS|GRAINIENT_MORK/);
+    expect(kort).toMatch(/GRAINIENT_LYS|GRAINIENT_MORK|GRAINIENT_FARGER/);
     expect(kort).not.toMatch(/linear-gradient|bg-gradient/);
     expect(kort).toMatch(/rounded-xl/);
   });
 
-  it('lys og mørk palett er låst, og kortet viser bare eksisterende felt', () => {
-    expect(GRAINIENT_MORK).toEqual({
-      color1: '#777777',
-      color2: '#333333',
-      color3: '#111111',
-    });
-    expect(GRAINIENT_LYS).toEqual({
-      color1: '#ffffff',
-      color2: '#ededed',
-      color3: '#f5f5f5',
-    });
+  it('lys og mørk palett er samme tre grå, uten lys-vask eller hvit overlay', () => {
+    const greyer = { color1: '#777777', color2: '#333333', color3: '#111111' };
+    expect(GRAINIENT_MORK).toEqual(greyer);
+    expect(GRAINIENT_LYS).toEqual(greyer);
+    const kort = utenKommentarer(les('../app/(app)/_shell/forhandler-grainient.tsx'));
+    expect(kort).not.toMatch(/color[123]=\{['"]#(?:ffffff|ededed|f5f5f5)/);
+    expect(kort).not.toMatch(/lightMode=\{(?:true|lys)\}/);
+    expect(kort).toMatch(/text-white/);
+    expect(kort).not.toMatch(/text-\[#111111\]/);
     expect(visKortFelt({ orgnr: ' 123 ', address: '', phone: '', website: '' })).toEqual([
       { label: 'Orgnr', verdi: '123' },
     ]);
@@ -150,13 +148,16 @@ describe('Grainient forhandler-kort', () => {
 });
 
 describe('telefon-bevel og logo-rad', () => {
-  it('bevel er i dokumentflyt, ikke sticky/fixed', () => {
+  it('bevel er siste barn i telefon-kolonnen, ikke sticky/fixed', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(layout).toMatch(/PhoneBevel/);
+    expect(layout).toMatch(/<main[\s\S]*<\/main>\s*<PhoneBevel\s*\/>/);
     expect(layout).toMatch(/overflow-y-auto/);
+    expect(layout).toMatch(/<main className="[^"]*\bflex-1\b/);
+    expect(layout).not.toMatch(/<main className="[^"]*\bmd:flex-1\b/);
+    expect(shell).toMatch(/mt-auto/);
     expect(shell).not.toMatch(/sticky|fixed/);
-    expect(PHONE_SHELL_ROT).toMatch(/h-dvh/);
+    expect(PHONE_SHELL_ROT).toMatch(/min-h-dvh|h-dvh|flex-1/);
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
   });
 

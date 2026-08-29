@@ -174,9 +174,11 @@ describe('telefon-bevel og logo-rad', () => {
 describe('Timeplan — piler, valgt dag først, måned, 08–20', () => {
   it('valgt dag er først, og stripen har 08–20', () => {
     const valgt = '2026-08-29';
-    const dager = timeplanDagerFra(valgt, 7);
+    const dager = timeplanDagerFra(valgt);
+    expect(dager).toHaveLength(3);
     expect(dager[0]?.ymd).toBe(valgt);
     expect(dager[1]?.ymd).toBe(osloPlusDager(valgt, 1));
+    expect(dager[2]?.ymd).toBe(osloPlusDager(valgt, 2));
     expect(TIMEPLAN_DAG_START).toBe(8);
     expect(TIMEPLAN_DAG_SLUTT).toBe(20);
     expect(timeplanManedNavn(valgt)).toMatch(/august/i);

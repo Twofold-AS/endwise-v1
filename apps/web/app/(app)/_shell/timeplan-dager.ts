@@ -29,7 +29,7 @@ export type TimeplanManed = {
 };
 
 /** Valgt dag først, deretter de neste dagene i Europe/Oslo. */
-export function timeplanDagerFra(valgtYmd: string, antall = 7): TimeplanDag[] {
+export function timeplanDagerFra(valgtYmd: string, antall = 3): TimeplanDag[] {
   const start = osloKalenderdag(valgtYmd);
   const out: TimeplanDag[] = [];
   for (let i = 0; i < antall; i++) {

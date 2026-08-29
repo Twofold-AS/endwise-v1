@@ -104,9 +104,7 @@ describe('Verkstedet-flaten — navn og innhold', () => {
   it('rører ikke Kompetanse som Organisasjon-pille; Timeplan er egen destinasjon', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     expect(org?.label).toBe('Organisasjon');
-    expect(org?.pills?.map((c) => c.label)).toEqual(
-      expect.arrayContaining(['Ansatte']),
-    );
+    expect(org?.pills?.map((c) => c.label)).toEqual(expect.arrayContaining(['Ansatte']));
     expect(org?.pills?.some((c) => c.label === 'Timeplan')).toBe(false);
     expect(org?.pills?.some((c) => c.label === 'Kompetanse')).toBe(false);
     const kompetanse = les('../app/(app)/mekanikere/kompetanse/page.tsx');

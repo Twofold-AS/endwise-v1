@@ -12,8 +12,6 @@ import {
   kjoretoyIkon,
   visKortFelt,
 } from '../app/(app)/_shell/forhandler-kort.ts';
-import { HJEM_JOBBER_MAX, hjemJobbSlots } from '../app/(app)/dine-jobber/_hjem.ts';
-import { jobbStatusKnapper } from '../app/(app)/min-dag/_status.ts';
 import { erTillattMekanikerSti, MEKANIKER_NAV } from '../app/(app)/_shell/nav.ts';
 import {
   erMekanikerPhoneHjem,
@@ -36,6 +34,8 @@ import {
   tilOsloMinutt,
   tilOsloTime,
 } from '../app/(app)/bookinger/_starttid.ts';
+import { HJEM_JOBBER_MAX, hjemJobbSlots } from '../app/(app)/dine-jobber/_hjem.ts';
+import { jobbStatusKnapper } from '../app/(app)/min-dag/_status.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 

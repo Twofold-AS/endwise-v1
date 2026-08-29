@@ -166,10 +166,7 @@ export default function JobbDetaljPage() {
           Fullført
         </div>
       ) : knapper.start ? (
-        <BevelButton
-          className="h-14 w-full text-[15px]"
-          onClick={() => setStatus('in_progress')}
-        >
+        <BevelButton className="h-14 w-full text-[15px]" onClick={() => setStatus('in_progress')}>
           Start
         </BevelButton>
       ) : knapper.stopp || knapper.fullfortHandling ? (

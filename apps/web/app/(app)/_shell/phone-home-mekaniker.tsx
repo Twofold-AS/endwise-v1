@@ -1,21 +1,25 @@
 'use client';
 
 import { useOrgRole } from '../_lib/use-org-role';
+import { DineJobberHjemKort } from '../dine-jobber/_hjem-kort';
 import { ForhandlerGrainientKort } from './forhandler-grainient';
 import { MEKANIKER_TIMEPLAN_HREF, mekanikerHurtigKort, PHONE_KORT_META } from './phone-home';
 import { PhoneKort } from './phone-kort';
 
 /**
- * Mekanikerens telefon-hjem. Grainient-kort først, deretter destinasjonskort.
- * Dine jobber er egen side — ingen Min dag-hero, ingen Detaljer-accordion.
+ * Mekanikerens telefon-hjem. Grainient, stort Dine jobber-kort, Lager full
+ * bredde, deretter små destinasjonskort. Ingen Min dag-hero, ingen accordion.
  */
 export function PhoneHomeMekaniker() {
   const { shopEnabled } = useOrgRole();
   const hurtig = mekanikerHurtigKort(shopEnabled);
+  const lager = PHONE_KORT_META.lager;
 
   return (
     <div className="mx-auto flex w-full max-w-[520px] flex-col gap-3 px-3 py-3 md:hidden">
       <ForhandlerGrainientKort />
+      <DineJobberHjemKort />
+      <PhoneKort href={lager.href} icon={lager.icon} navn={lager.label} className="w-full" />
       <div className="grid grid-cols-2 gap-3">
         {hurtig.map((key) => {
           const dest = PHONE_KORT_META[key];

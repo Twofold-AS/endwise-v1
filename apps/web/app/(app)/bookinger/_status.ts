@@ -17,7 +17,7 @@ export const STATUS_LABEL: Record<string, string> = {
   draft: 'Utkast',
   confirmed: 'Planlagt',
   in_progress: 'Pågår',
-  completed: 'Ferdig',
+  completed: 'Fullført',
   cancelled: 'Avlyst',
   no_show: 'Møtte ikke',
 };
@@ -36,7 +36,7 @@ export const STATUS_TONE: Record<string, string> = {
 export const ALLOWED_TRANSITIONS: Record<string, BookingStatus[]> = {
   draft: ['confirmed', 'cancelled'],
   confirmed: ['in_progress', 'cancelled', 'no_show'],
-  in_progress: ['completed', 'cancelled'],
+  in_progress: ['confirmed', 'completed', 'cancelled'],
   completed: [],
   cancelled: [],
   no_show: [],
@@ -46,10 +46,16 @@ export const ALLOWED_TRANSITIONS: Record<string, BookingStatus[]> = {
 export const TRANSITION_LABEL: Record<string, string> = {
   confirmed: 'Bekreft',
   in_progress: 'Start',
-  completed: 'Fullfør',
+  completed: 'Fullført',
   cancelled: 'Avlys',
   no_show: 'Møtte ikke',
 };
+
+/** Knappetekst avhenger av hvor vi kommer fra (Stopp ≠ Bekreft). */
+export function overgangLabel(from: string, to: string): string {
+  if (from === 'in_progress' && to === 'confirmed') return 'Stopp';
+  return TRANSITION_LABEL[to] ?? STATUS_LABEL[to] ?? to;
+}
 
 export const ALL_STATUSES: BookingStatus[] = [
   'draft',

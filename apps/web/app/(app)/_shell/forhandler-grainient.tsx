@@ -18,7 +18,7 @@ export function ForhandlerGrainientKort() {
     <article
       data-forhandler-grainient
       data-forhandlernavn
-      className="relative isolate min-h-[140px] w-full overflow-hidden rounded-xl"
+      className="relative isolate min-h-[220px] w-full overflow-hidden rounded-xl"
     >
       <div className="absolute inset-0" aria-hidden>
         <Grainient

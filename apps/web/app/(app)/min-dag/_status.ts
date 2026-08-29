@@ -4,10 +4,31 @@ export const STATUS_LABEL: Record<string, string> = {
   draft: 'Utkast',
   confirmed: 'Planlagt',
   in_progress: 'Pågår',
-  completed: 'Ferdig',
+  completed: 'Fullført',
   cancelled: 'Avlyst',
   no_show: 'Møtte ikke',
 };
+
+/** Knapper på jobbdetalj — utledet av live status, ikke hardkodet Start+Ferdig. */
+export type JobbStatusKnapper = {
+  start: boolean;
+  stopp: boolean;
+  fullfortHandling: boolean;
+  fullfortStatus: boolean;
+};
+
+export function jobbStatusKnapper(status: string): JobbStatusKnapper {
+  if (status === 'completed') {
+    return { start: false, stopp: false, fullfortHandling: false, fullfortStatus: true };
+  }
+  if (status === 'in_progress') {
+    return { start: false, stopp: true, fullfortHandling: true, fullfortStatus: false };
+  }
+  if (status === 'confirmed') {
+    return { start: true, stopp: false, fullfortHandling: false, fullfortStatus: false };
+  }
+  return { start: false, stopp: false, fullfortHandling: false, fullfortStatus: false };
+}
 
 export function fmtTime(d: Date | string): string {
   const date = new Date(d);

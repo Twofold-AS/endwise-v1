@@ -258,38 +258,33 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
 });
 
 describe('mekaniker phone home — Dine jobber, ikke Min dag', () => {
-  it('hurtigkort er Dine jobber, Lager, Kompetanse, Timeplan, Hjelp — Butikk ved flagg', () => {
-    expect(MEKANIKER_PHONE_HURTIG).toEqual([
-      'dine-jobber',
-      'lager',
-      'kompetanse',
-      'timeplan',
-      'hjelp',
-    ]);
-    expect(mekanikerHurtigKort(true)).toEqual([
-      'dine-jobber',
-      'lager',
-      'kompetanse',
-      'timeplan',
-      'hjelp',
-      'butikk',
-    ]);
+  it('hurtigkort er Kompetanse, Timeplan, Hjelp — Butikk ved flagg, uten Dine jobber/Lager', () => {
+    expect(MEKANIKER_PHONE_HURTIG).toEqual(['kompetanse', 'timeplan', 'hjelp']);
+    expect(mekanikerHurtigKort(true)).toEqual(['kompetanse', 'timeplan', 'hjelp', 'butikk']);
     expect(mekanikerHurtigKort(false)).not.toContain('butikk');
+    expect(mekanikerHurtigKort(false)).not.toContain('dine-jobber');
+    expect(mekanikerHurtigKort(false)).not.toContain('lager');
   });
 
-  it('ingen Min dag-hero eller Detaljer-accordion — Grainient + destinasjonskort', () => {
+  it('ingen Min dag-hero eller Detaljer-accordion — Grainient + stort kort + Lager', () => {
     const side = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
     expect(side).not.toMatch(/Min dag/);
     expect(side).not.toMatch(/Detaljer/);
     expect(side).not.toMatch(/accordion|aria-expanded/);
     expect(side).toMatch(/ForhandlerGrainientKort/);
+    expect(side).toMatch(/DineJobberHjemKort/);
     expect(side).toMatch(/PhoneKort/);
     expect(side).not.toMatch(/swipe|clock-ring|tidslinje|time-axis/i);
   });
 
-  it('Dine jobber går til /dine-jobber, ikke accordion mot /min-dag/[id] på hjem', () => {
-    const side = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
-    expect(side).not.toMatch(/href=\{`\/min-dag\/\$\{/);
+  it('rader går til /min-dag/[id], Se alle til /dine-jobber — ikke accordion', () => {
+    const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
+    const kort = utenKommentarer(les('../app/(app)/dine-jobber/_hjem-kort.tsx'));
+    const rad = utenKommentarer(les('../app/(app)/dine-jobber/_rad.tsx'));
+    expect(hjem).not.toMatch(/accordion|aria-expanded/);
+    expect(kort).toMatch(/Se alle jobber/);
+    expect(kort).toMatch(/\/dine-jobber/);
+    expect(rad).toMatch(/\/min-dag\/\$\{/);
     expect(PHONE_KORT_META['dine-jobber']?.href).toBe('/dine-jobber');
     expect(PHONE_KORT_META['dine-jobber']?.label).toBe('Dine jobber');
   });

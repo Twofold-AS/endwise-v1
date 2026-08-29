@@ -14,9 +14,9 @@ import {
   fmtMinor,
   fmtServices,
   fmtTime,
+  overgangLabel,
   STATUS_LABEL,
   STATUS_TONE,
-  TRANSITION_LABEL,
 } from '../_status';
 
 /**
@@ -82,7 +82,7 @@ export default function BookingDetaljPage() {
               className={to === 'cancelled' || to === 'no_show' ? 'opacity-90' : ''}
               onClick={() => setStatus(to)}
             >
-              {TRANSITION_LABEL[to] ?? STATUS_LABEL[to]}
+              {overgangLabel(b.status, to)}
             </BevelButton>
           ))}
           {transition.isPending && (

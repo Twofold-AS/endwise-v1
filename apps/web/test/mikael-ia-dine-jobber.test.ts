@@ -6,11 +6,14 @@ import { osloKalenderdag, osloPlusDager, osloVeggklokke } from '../app/(app)/_li
 import {
   adresseLinje,
   FERIE_MOCK,
+  formatLeftoverVerdi,
   GRAINIENT_LYS,
   GRAINIENT_MORK,
   kjoretoyIkon,
   visKortFelt,
 } from '../app/(app)/_shell/forhandler-kort.ts';
+import { HJEM_JOBBER_MAX, hjemJobbSlots } from '../app/(app)/dine-jobber/_hjem.ts';
+import { jobbStatusKnapper } from '../app/(app)/min-dag/_status.ts';
 import { erTillattMekanikerSti, MEKANIKER_NAV } from '../app/(app)/_shell/nav.ts';
 import {
   erMekanikerPhoneHjem,
@@ -62,15 +65,10 @@ describe('Dine jobber erstatter Min dag', () => {
     expect(erTillattMekanikerSti('/min-dag/abc')).toBe(true);
   });
 
-  it('telefon-hjem har Dine jobber-kort, ikke Min dag-hero eller Detaljer-accordion', () => {
-    expect(MEKANIKER_PHONE_HURTIG).toEqual([
-      'dine-jobber',
-      'lager',
-      'kompetanse',
-      'timeplan',
-      'hjelp',
-    ]);
+  it('telefon-hjem har stort Dine jobber-kort, ikke Min dag-hero eller Detaljer-accordion', () => {
+    expect(MEKANIKER_PHONE_HURTIG).toEqual(['kompetanse', 'timeplan', 'hjelp']);
     expect(mekanikerHurtigKort(false)).not.toContain('butikk');
+    expect(mekanikerHurtigKort(false)).not.toContain('dine-jobber');
     expect(PHONE_KORT_META['dine-jobber']?.href).toBe('/dine-jobber');
     expect(PHONE_KORT_META['dine-jobber']?.label).toBe('Dine jobber');
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
@@ -78,18 +76,21 @@ describe('Dine jobber erstatter Min dag', () => {
     expect(hjem).not.toMatch(/Detaljer/);
     expect(hjem).not.toMatch(/aria-expanded/);
     expect(hjem).toMatch(/ForhandlerGrainientKort|forhandler-grainient/);
+    expect(hjem).toMatch(/DineJobberHjemKort/);
     expect(erMekanikerPhoneHjem('/min-dag')).toBe(true);
     expect(erMekanikerPhoneHjem('/dine-jobber')).toBe(false);
   });
 
-  it('Dine jobber-siden har forhandlernavn, jobb-bokser og peker til eksisterende START/FERDIG', () => {
+  it('Dine jobber-siden har jobb-bokser mot START/FULLFØRT, uten duplisert forhandlernavn', () => {
     const side = utenKommentarer(les('../app/(app)/dine-jobber/page.tsx'));
     const flate = utenKommentarer(les('../app/(app)/dine-jobber/_flate.tsx'));
+    const rad = utenKommentarer(les('../app/(app)/dine-jobber/_rad.tsx'));
     expect(side + flate).toMatch(/Dine jobber/);
-    expect(side + flate).toMatch(/forhandler\.kort|tenantName|forhandlernavn/);
-    expect(side + flate).toMatch(/\/min-dag\/\$\{/);
-    expect(side + flate).toMatch(/ChevronRight|aria-label="Detaljer/);
-    expect(side + flate).toMatch(/kjoretoyIkon|vehicleType/);
+    expect(flate).toMatch(/ForhandlerGrainientKort|forhandler-grainient/);
+    expect(flate).not.toMatch(/data-forhandlernavn/);
+    expect(rad).toMatch(/\/min-dag\/\$\{/);
+    expect(rad).toMatch(/ChevronRight|aria-label="Detaljer/);
+    expect(rad).toMatch(/kjoretoyIkon|vehicleType/);
     expect(side + flate).not.toMatch(/Kontor|Gulvet/);
     expect(side + flate).not.toMatch(/\bSaker\b/);
   });
@@ -98,7 +99,9 @@ describe('Dine jobber erstatter Min dag', () => {
     const detalj = utenKommentarer(les('../app/(app)/min-dag/[id]/page.tsx'));
     expect(detalj).not.toMatch(/← Min dag/);
     expect(detalj).toMatch(/Start/);
-    expect(detalj).toMatch(/Ferdig/);
+    expect(detalj).toMatch(/Fullført/);
+    expect(detalj).not.toMatch(/['"]Ferdig['"]/);
+    expect(detalj).toMatch(/jobbStatusKnapper|Stopp/);
   });
 });
 
@@ -127,6 +130,20 @@ describe('Grainient forhandler-kort', () => {
     expect(visKortFelt({ orgnr: ' 123 ', address: '', phone: '', website: '' })).toEqual([
       { label: 'Orgnr', verdi: '123' },
     ]);
+    expect(
+      visKortFelt({
+        orgnr: '1',
+        email: 'post@verksted.no',
+        leftover: { guid: 'cli-1', tom: '' },
+      }),
+    ).toEqual([
+      { label: 'Orgnr', verdi: '1' },
+      { label: 'E-post', verdi: 'post@verksted.no' },
+      { label: 'guid', verdi: 'cli-1' },
+    ]);
+    expect(formatLeftoverVerdi('  ')).toBeNull();
+    expect(kort).toMatch(/min-h-\[220px\]/);
+    expect(kort).not.toMatch(/min-h-\[140px\]/);
     expect(adresseLinje({ address: 'Gate 1', postalCode: '0150', city: 'Oslo' })).toBe(
       'Gate 1, 0150 Oslo',
     );
@@ -220,6 +237,48 @@ describe('Jobb starttid — dato og klokke som expandere', () => {
     expect(tilOsloTime(iso)).toBe(8);
     expect(tilOsloMinutt(iso)).toBe(0);
     expect(osloVeggklokke('2026-08-29', 8, 0).toISOString()).toBe(iso);
+  });
+});
+
+describe('mekaniker-hjem — fast 3-spors Dine jobber-kort', () => {
+  it('reserverer alltid tre rader og viser maks tre jobber', () => {
+    expect(HJEM_JOBBER_MAX).toBe(3);
+    expect(hjemJobbSlots([]).length).toBe(3);
+    expect(hjemJobbSlots(['a']).length).toBe(3);
+    expect(hjemJobbSlots(['a', 'b', 'c', 'd'])).toEqual(['a', 'b', 'c']);
+    expect(hjemJobbSlots(['a'])[1]).toBeNull();
+    expect(hjemJobbSlots(['a'])[2]).toBeNull();
+    const kort = utenKommentarer(les('../app/(app)/dine-jobber/_hjem-kort.tsx'));
+    expect(kort).toMatch(/h-\[148px\]/);
+    expect(kort).toMatch(/Se alle jobber/);
+    expect(kort).toMatch(/Ingen jobber i dag/);
+    expect(kort).toMatch(/mechanic\.myDay/);
+    const minDag = utenKommentarer(les('../app/(app)/min-dag/page.tsx'));
+    expect(minDag).toMatch(/DineJobberHjemKort/);
+    expect(minDag).not.toMatch(/DineJobberFlate/);
+  });
+});
+
+describe('jobbstatus-knapper følger live status', () => {
+  it('Start bare når planlagt, Stopp+Fullført når pågår, Fullført som status når completed', () => {
+    expect(jobbStatusKnapper('confirmed')).toEqual({
+      start: true,
+      stopp: false,
+      fullfortHandling: false,
+      fullfortStatus: false,
+    });
+    expect(jobbStatusKnapper('in_progress')).toEqual({
+      start: false,
+      stopp: true,
+      fullfortHandling: true,
+      fullfortStatus: false,
+    });
+    expect(jobbStatusKnapper('completed')).toEqual({
+      start: false,
+      stopp: false,
+      fullfortHandling: false,
+      fullfortStatus: true,
+    });
   });
 });
 

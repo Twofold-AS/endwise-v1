@@ -11,8 +11,8 @@ import {
   subscribeQueue,
 } from '../../_lib/offline-queue';
 import { useOnline } from '../../_lib/use-online';
-import { BevelButton, CardShell } from '../../_shell/cards';
-import { estMinutes, fmtTime, STATUS_LABEL } from '../_status';
+import { BEVEL, BevelButton, CardShell } from '../../_shell/cards';
+import { estMinutes, fmtTime, jobbStatusKnapper, STATUS_LABEL } from '../_status';
 
 /** Prototype: valgene mekanikeren kan be om. Ingen backend bak dem. */
 const EXTRA_TIME = [15, 30, 60] as const;
@@ -27,10 +27,10 @@ const CHECKLIST = [
 ];
 
 /**
- * F7 — Jobbdetalj for mekanikeren. Store statusknapper som bruker booking-
- * livssyklusen (Start → in_progress, Ferdig → completed er ekte transitions).
+ * F7 — Jobbdetalj for mekanikeren. Statusknapper utledes av live status
+ * (Start → in_progress, Stopp → confirmed, Fullført → completed).
  * Offline: mister mekanikeren dekning, legges statusendringen i kø og
- * sendes automatisk når nettet er tilbake (ingen tapt «Ferdig»).
+ * sendes automatisk når nettet er tilbake (ingen tapt «Fullført»).
  * Avvik: «Meld avvik» varsler selger i sanntid (SSE).
  */
 export default function JobbDetaljPage() {
@@ -40,7 +40,24 @@ export default function JobbDetaljPage() {
   const day = trpc.mechanic.myDay.useQuery();
 
   const transition = trpc.bookings.transition.useMutation({
-    onSuccess: () => utils.mechanic.myDay.invalidate(),
+    onMutate: async ({ bookingId, to }) => {
+      await utils.mechanic.myDay.cancel();
+      const prev = utils.mechanic.myDay.getData();
+      utils.mechanic.myDay.setData(undefined, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          jobs: old.jobs.map((j) => (j.id === bookingId ? { ...j, status: to } : j)),
+        };
+      });
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) utils.mechanic.myDay.setData(undefined, ctx.prev);
+    },
+    onSettled: () => {
+      void utils.mechanic.myDay.invalidate();
+    },
   });
   const deviation = trpc.mechanic.reportDeviation.useMutation();
 
@@ -80,7 +97,8 @@ export default function JobbDetaljPage() {
     );
   }
 
-  const setStatus = (to: 'in_progress' | 'completed') => {
+  const knapper = jobbStatusKnapper(job.status);
+  const setStatus = (to: 'in_progress' | 'completed' | 'confirmed') => {
     // Offline (eller kall feiler) → legg i kø, ikke mist endringen.
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       enqueueTransition({ bookingId: job.id, to });
@@ -138,15 +156,36 @@ export default function JobbDetaljPage() {
         </div>
       )}
 
-      {/* Statusknapper — store touch-mål, bruker booking-livssyklusen. */}
-      <div className="grid grid-cols-2 gap-2">
-        <BevelButton className="h-14 w-full text-[15px]" onClick={() => setStatus('in_progress')}>
+      {/* Statusknapper — utledet av live status etter mutate + invalidate. */}
+      {knapper.fullfortStatus ? (
+        <div
+          style={BEVEL}
+          aria-live="polite"
+          className="flex h-14 w-full items-center justify-center rounded-control text-[15px] text-fg"
+        >
+          Fullført
+        </div>
+      ) : knapper.start ? (
+        <BevelButton
+          className="h-14 w-full text-[15px]"
+          onClick={() => setStatus('in_progress')}
+        >
           Start
         </BevelButton>
-        <BevelButton className="h-14 w-full text-[15px]" onClick={() => setStatus('completed')}>
-          Ferdig
-        </BevelButton>
-      </div>
+      ) : knapper.stopp || knapper.fullfortHandling ? (
+        <div className="grid grid-cols-2 gap-2">
+          {knapper.stopp ? (
+            <BevelButton className="h-14 w-full text-[15px]" onClick={() => setStatus('confirmed')}>
+              Stopp
+            </BevelButton>
+          ) : null}
+          {knapper.fullfortHandling ? (
+            <BevelButton className="h-14 w-full text-[15px]" onClick={() => setStatus('completed')}>
+              Fullført
+            </BevelButton>
+          ) : null}
+        </div>
+      ) : null}
       {transition.error && online && (
         <p className="text-danger text-xs">{transition.error.message}</p>
       )}

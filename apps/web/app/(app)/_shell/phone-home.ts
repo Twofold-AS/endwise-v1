@@ -76,13 +76,8 @@ export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['lager'], kind: 'low' },
 ];
 
-export const MEKANIKER_PHONE_HURTIG: PhoneKortKey[] = [
-  'dine-jobber',
-  'lager',
-  'kompetanse',
-  'timeplan',
-  'hjelp',
-];
+/** Små destinasjonskort under Lager. Dine jobber og Lager er egne flater. */
+export const MEKANIKER_PHONE_HURTIG: PhoneKortKey[] = ['kompetanse', 'timeplan', 'hjelp'];
 
 export const PHONE_KORT_META: Record<
   PhoneKortKey,
@@ -116,7 +111,7 @@ export function dealerPhoneHjemRader(shopEnabled: boolean): PhoneHjemRad[] {
 
 export function mekanikerHurtigKort(shopEnabled: boolean): PhoneKortKey[] {
   if (!shopEnabled) return [...MEKANIKER_PHONE_HURTIG];
-  return ['dine-jobber', 'lager', 'kompetanse', 'timeplan', 'hjelp', 'butikk'];
+  return [...MEKANIKER_PHONE_HURTIG, 'butikk'];
 }
 
 export function flatDealerHjemKeys(shopEnabled: boolean): PhoneKortKey[] {

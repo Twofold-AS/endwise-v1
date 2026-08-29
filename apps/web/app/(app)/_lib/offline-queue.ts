@@ -2,13 +2,13 @@
 
 /**
  * Offline-kø for statusendringer. Mister mekanikeren dekning midt i en
- * jobb, skal «Ferdig» ikke bare feile — den legges i kø og sendes når nettet er
+ * jobb, skal «Fullført» ikke bare feile — den legges i kø og sendes når nettet er
  * tilbake. Bevisst enkel: i minnet (tømmes ved full reload — dokumentert), én
  * kø for booking-overganger. Nok til kjeller-uten-dekning-tilfellet.
  */
 export interface PendingTransition {
   bookingId: string;
-  to: 'in_progress' | 'completed';
+  to: 'in_progress' | 'completed' | 'confirmed';
 }
 
 let queue: PendingTransition[] = [];

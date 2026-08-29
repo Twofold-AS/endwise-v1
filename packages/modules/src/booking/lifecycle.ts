@@ -3,6 +3,7 @@ import type { BookingStatus } from '@endwise/db';
 /**
  * Livsløpet, som en maskin og ikke som en samling if-er.
  * draft ► confirmed ► in_progress ► completed
+ * in_progress ► confirmed (stopp uten å fullføre — ingen ny enum)
  * ► cancelled
  * ► no_show
  * `completed` og `cancelled` er endestasjoner. En fullført jobb kan ikke
@@ -11,7 +12,7 @@ import type { BookingStatus } from '@endwise/db';
 const TRANSITIONS: Record<BookingStatus, readonly BookingStatus[]> = {
   draft: ['confirmed', 'cancelled'],
   confirmed: ['in_progress', 'cancelled', 'no_show'],
-  in_progress: ['completed', 'cancelled'],
+  in_progress: ['confirmed', 'completed', 'cancelled'],
   completed: [],
   cancelled: [],
   no_show: [],

@@ -198,7 +198,12 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(top).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(header).toMatch(/width=\{22\}/);
     expect(header).toMatch(/logo\/logo\.svg/);
-    expect(header).not.toMatch(/logo-invert|recolor|filter:/);
+    const headerLogoer = header.match(/<Image[\s\S]*?\/>/g) ?? [];
+    expect(headerLogoer.length).toBeGreaterThanOrEqual(2);
+    for (const logo of headerLogoer) {
+      expect(logo).toMatch(/logo-invert/);
+    }
+    expect(header).not.toMatch(/recolor|filter:/);
     expect(header).not.toMatch(/Forhandler/);
   });
 
@@ -216,10 +221,11 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(layout).toMatch(/OrganisasjonSeksjonBar/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/logo\/logo\.svg/);
+    expect(shell).toMatch(/logo-invert/);
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
     expect(shell).toMatch(/PHONE_SAFE_BUNN/);
     expect(shell).not.toMatch(/PhoneHScroll|hamburger|Handlinger|QUICK_ACTIONS/i);
-    expect(shell).not.toMatch(/logo-invert|recolor|filter:/);
+    expect(shell).not.toMatch(/recolor|filter:/);
     expect(shell).not.toMatch(/TipCard|helpdesk-slider|visningsvelger/i);
     expect(sidebar).toMatch(/hidden[\s\S]*md:flex/);
     expect(sidebar).toMatch(/Handlinger/);

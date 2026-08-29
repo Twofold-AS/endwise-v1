@@ -9,7 +9,8 @@ import { useSidebarState } from './sidebar-state';
 /**
  * Sidebar-topp uten visningsvelger. Ett skall per innlogging.
  * Minimize bor her, inne i sidebaren. Ingen «Forhandler»-undertekst.
- * Logo er samme logo.svg, bare mindre.
+ * Logo er samme logo.svg, bare mindre. logo-invert følger tema
+ * (svart på lyst, hvit på mørkt) — samme klasse som context-switcher.
  */
 export function SidebarHeader({
   collapsed,
@@ -49,7 +50,7 @@ export function SidebarHeader({
             collapsed ? 'justify-center px-0' : 'px-1'
           }`}
         >
-          <Image src="/logo/logo.svg" alt="" width={22} height={22} />
+          <Image src="/logo/logo.svg" alt="" width={22} height={22} className="logo-invert" />
           {!collapsed && <span className="truncate">Tilbake til Endwise</span>}
         </Link>
         {!collapsed && minimer}
@@ -63,7 +64,7 @@ export function SidebarHeader({
       className={`flex w-full items-center gap-2 ${collapsed ? 'justify-center' : 'px-1'}`}
       title={navn}
     >
-      <Image src="/logo/logo.svg" alt="Endwise" width={22} height={22} />
+      <Image src="/logo/logo.svg" alt="Endwise" width={22} height={22} className="logo-invert" />
       {!collapsed && <span className="min-w-0 flex-1 truncate text-label text-fg">{navn}</span>}
       {minimer}
     </div>

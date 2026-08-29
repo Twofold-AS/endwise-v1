@@ -205,6 +205,9 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
     expect(shell).toMatch(/PHONE_SAFE_BUNN/);
     expect(shell).toMatch(/logo\/logo\.svg/);
+    expect(shell).toMatch(/logo-invert/);
+    expect(shell).toMatch(/bg-bg/);
+    expect(shell).not.toMatch(/bg-white/);
     expect(shell).toMatch(/BrukerRad|Logg ut/);
     expect(shell).toMatch(/innstillingerHref|phoneInnstillingerHref/);
     expect(shell).not.toMatch(/rolle \?\?/);
@@ -238,6 +241,15 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(hjem).not.toMatch(/hamburger|bottom-nav|grid-cols-5/);
     expect(layout).not.toMatch(/MobileShell/);
     expect(shell).not.toMatch(/grid-cols-5/);
+  });
+
+  it('svart logo.svg inverteres til hvit i mørkt tema, uten hvit sidebakgrunn', () => {
+    const tema = les('../../../packages/ui/src/theme.css');
+    expect(tema).toMatch(
+      /\[data-theme=["']dark["']\]\s*\.logo-invert\s*\{[^}]*filter:\s*brightness\(0\)\s+invert\(1\)/,
+    );
+    expect(PHONE_SHELL_ROT).toMatch(/bg-bg/);
+    expect(PHONE_SHELL_ROT).not.toMatch(/bg-white/);
   });
 
   it('viewport-fit cover slik Chrome får ekte safe-area', () => {

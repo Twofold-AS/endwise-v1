@@ -3,7 +3,6 @@ import {
   Building2,
   CalendarDays,
   ChartColumn,
-  ChartLine,
   Handshake,
   Inbox,
   LayoutDashboard,
@@ -17,9 +16,8 @@ import {
 import { type ShellKey, settingsForShell } from './nav';
 
 /**
- * Låst telefon-hjem (Jonas FILL 29.08.2026).
- * Kortene er destinasjoner med ekte meta — ikke tomme dører.
- * Desktop-sidebar er urørt. Denne fila er kun telefon-IA.
+ * Låst telefon-hjem (Mikael 29.08.2026).
+ * Kortene er destinasjoner. Samme funksjoner på PC (sidebar), annen chrome.
  */
 
 /** Kort-hjem-rot: #84 dvh/overscroll + #85 min-h-svh. Safe-area sitter på logo/bevel. */
@@ -50,7 +48,7 @@ export type PhoneKortKey =
   | 'verkstedet'
   | 'timeplan'
   | 'statistikk'
-  | 'rapporter'
+  | 'tjenester'
   | 'innboks'
   | 'jobber'
   | 'kunder'
@@ -68,12 +66,11 @@ export type PhoneHjemRad = {
   kind: 'hero' | 'full' | 'pair' | 'low';
 };
 
-/** Dealer-rekkefølge: hero → Timeplan → Statistikk|Rapporter → … → Lager lavt. */
+/** Dealer-rekkefølge: hero → Innboks|Timeplan → Statistikk|Tjenester → … → Lager lavt. */
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['verkstedet'], kind: 'hero' },
-  { keys: ['timeplan'], kind: 'full' },
-  { keys: ['statistikk', 'rapporter'], kind: 'pair' },
-  { keys: ['innboks', 'jobber'], kind: 'pair' },
+  { keys: ['innboks', 'timeplan'], kind: 'pair' },
+  { keys: ['statistikk', 'tjenester'], kind: 'pair' },
   { keys: ['kunder', 'organisasjon'], kind: 'pair' },
   { keys: ['samarbeid', 'hjelp'], kind: 'pair' },
   { keys: ['lager'], kind: 'low' },
@@ -92,11 +89,11 @@ export const PHONE_KORT_META: Record<
   { label: string; href: string; icon: LucideIcon }
 > = {
   verkstedet: { label: 'Verkstedet', href: '/dashboard?visning=dag', icon: LayoutDashboard },
-  timeplan: { label: 'Timeplan', href: '/jobber?visning=kalender', icon: CalendarDays },
+  timeplan: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
   statistikk: { label: 'Statistikk', href: '/rapporter', icon: ChartColumn },
-  rapporter: { label: 'Rapporter', href: '/analyse', icon: ChartLine },
+  tjenester: { label: 'Tjenester', href: '/prisliste', icon: Wrench },
   innboks: { label: 'Innboks', href: '/innboks', icon: Inbox },
-  jobber: { label: 'Jobber', href: '/jobber', icon: Wrench },
+  jobber: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
   kunder: { label: 'Kunder', href: '/kunder', icon: Users },
   organisasjon: { label: 'Organisasjon', href: '/organisasjon', icon: Building2 },
   samarbeid: { label: 'Samarbeid', href: '/samarbeid', icon: Handshake },

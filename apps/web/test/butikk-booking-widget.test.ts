@@ -37,6 +37,8 @@ describe('F10-03 / F4-03 — booking-widget på Butikk', () => {
     expect(embed).toMatch(/shopEnabled/);
     expect(embed).toMatch(/if \(!shopEnabled\) return null/);
     expect(embed).toMatch(/trpc\.shop\.bookingWidget/);
+    expect(embed).toMatch(/trpc\.services\.list/);
+    expect(embed.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/forhandler\.get/);
     expect(embed).toMatch(/enabled: shopEnabled/);
   });
 

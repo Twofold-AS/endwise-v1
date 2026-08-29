@@ -11,12 +11,11 @@ function les(rel: string) {
 }
 
 describe('Organisasjon › Oversikt (forhandlerkort)', () => {
-  it('Organisasjon-piller er Oversikt Timeplan Ansatte Abonnement Integrasjoner', () => {
+  it('Organisasjon-piller er Oversikt Ansatte Abonnement Integrasjoner', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     expect(org?.label).toBe('Organisasjon');
     expect(org?.pills?.map((c) => c.label)).toEqual([
       'Oversikt',
-      'Timeplan',
       'Ansatte',
       'Abonnement',
       'Integrasjoner',
@@ -27,7 +26,7 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
     const side = les('../app/(app)/organisasjon/page.tsx');
     const kort = les('../app/(app)/organisasjon/forhandleren/_kort.tsx');
     expect(side).toMatch(/ForhandlerKort/);
-    expect(side).toMatch(/PrislisteFlate/);
+    expect(side).not.toMatch(/PrislisteFlate/);
     expect(kort).toMatch(/Firmanavn/);
     expect(kort).toMatch(/Adresse/);
     expect(kort).toMatch(/Forhandler-epost/);
@@ -36,7 +35,7 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
     expect(kort).toMatch(/readOnly/);
     expect(kort).not.toMatch(/aria-label="Kallenavn"|label="Kallenavn"/);
     expect(kort).not.toMatch(/ToFaktorRad|twoFactorEnabled|setNickname/);
-    expect(kort).toMatch(/!Array\.isArray\(data\.leftover\)/);
+    expect(kort).toMatch(/!Array\.isArray\(vis\.leftover\)/);
   });
 
   it('Forhandleren er ikke en nav-rad', () => {

@@ -147,9 +147,9 @@ export default function NyJobbPage() {
     <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 px-8 py-7">
       <div>
         <Link href={'/saker' as Route} className="text-fg-faint text-xs hover:text-fg">
-          ← Jobber
+          ← Timeplan
         </Link>
-        <h1 className="mt-1 font-semibold text-fg text-xl tracking-tight">Ny jobb</h1>
+        <h1 className="mt-1 font-semibold text-fg text-xl tracking-tight">Opprett jobb</h1>
         <p className="text-fg-muted text-sm">
           Velg én eller flere tjenester og tid — matcheren foreslår mekaniker, motoren låser slotet.
         </p>

@@ -83,7 +83,7 @@ describe('Organisasjon › Timeplan er ekte liste + redigering', () => {
   });
 
   it('gjenbruker Timeplan-språket fra Min dag, ikke en ny modell', () => {
-    expect(side).toMatch(/dagListe|weekday/);
+    expect(side).toMatch(/TimeplanStripe|weekday/);
     expect(side).toMatch(/fmtTime/);
     expect(side).toMatch(/STATUS_LABEL/);
     expect(side).toMatch(/Samtidige jobber/);

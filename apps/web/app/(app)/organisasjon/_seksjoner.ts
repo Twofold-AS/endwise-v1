@@ -1,10 +1,4 @@
-export const ORG_SEKSJON_IDS = [
-  'oversikt',
-  'timeplan',
-  'ansatte',
-  'abonnement',
-  'integrasjoner',
-] as const;
+export const ORG_SEKSJON_IDS = ['oversikt', 'ansatte', 'abonnement', 'integrasjoner'] as const;
 
 export type OrgSeksjon = (typeof ORG_SEKSJON_IDS)[number];
 

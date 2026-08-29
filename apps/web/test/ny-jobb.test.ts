@@ -17,10 +17,10 @@ function les(rel: string) {
 describe('Ny jobb — flere tjenester og manuell varighet', () => {
   const ny = les('../app/(app)/bookinger/ny/page.tsx');
 
-  it('siden heter Ny jobb og peker tilbake til Jobber, ikke tickets', () => {
-    expect(ny).toMatch(/Ny jobb/);
-    expect(ny).toMatch(/← Jobber/);
+  it('siden heter Opprett jobb og peker tilbake til Timeplan, ikke tickets', () => {
     expect(ny).toMatch(/Opprett jobb/);
+    expect(ny).toMatch(/← Timeplan/);
+    expect(ny).not.toMatch(/← Jobber/);
     expect(ny).not.toMatch(/ticket/i);
     expect(ny).not.toMatch(/Ny booking/);
   });

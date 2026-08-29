@@ -22,9 +22,9 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     expect(les('../app/(app)/rapporter/page.tsx')).toMatch(/from '\.\.\/analyse\/page'/);
     expect(les('../app/(app)/hjelp/page.tsx')).toMatch(/from '\.\.\/support\/page'/);
     expect(les('../app/(app)/verkstedet/page.tsx')).toMatch(/from '\.\.\/dashboard\/page'/);
-    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/redirect\('\/organisasjon'/);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/PrislisteFlate/);
     expect(les('../app/(app)/innstillinger/tjenestekatalog/page.tsx')).toMatch(
-      /redirect\('\/organisasjon'/,
+      /PrislisteFlate/,
     );
     expect(les('../app/(app)/ansatte/page.tsx')).toMatch(/organisasjon\?seksjon=ansatte/);
     expect(les('../app/(app)/forhandleren/page.tsx')).toMatch(/redirect\('\/organisasjon'/);
@@ -41,27 +41,27 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
 
   it('gamle /saker /analyse /support aktiverer de nye nav-radene', () => {
     const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
-    const rapporter = FORHANDLER_NAV.find((i) => i.key === 'analyse');
+    const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
     const hjelp = FORHANDLER_NAV.find((i) => i.key === 'helpdesk');
     expect(jobber && isItemActive(jobber, '/saker')).toBe(true);
-    expect(rapporter && isItemActive(rapporter, '/analyse')).toBe(true);
+    expect(tjenester && isItemActive(tjenester, '/prisliste')).toBe(true);
     expect(hjelp && isItemActive(hjelp, '/support')).toBe(true);
   });
 
-  it('/prisliste og /verkstedet treffer Jobber og Verkstedet', () => {
-    const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
+  it('/prisliste treffer Tjenester, /verkstedet treffer Verkstedet', () => {
+    const timeplan = FORHANDLER_NAV.find((i) => i.key === 'saker');
+    const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
     const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
-    expect(jobber && isItemActive(jobber, '/prisliste')).toBe(false);
-    expect(jobber && isItemActive(jobber, '/innstillinger/tjenestekatalog')).toBe(false);
+    expect(timeplan && isItemActive(timeplan, '/prisliste')).toBe(false);
+    expect(tjenester && isItemActive(tjenester, '/innstillinger/tjenestekatalog')).toBe(true);
     expect(verksted && isItemActive(verksted, '/verkstedet')).toBe(true);
     expect(verksted && isItemActive(verksted, '/prisliste')).toBe(false);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Organisasjon', href: '/organisasjon' },
-      { label: 'Oversikt' },
+      { label: 'Tjenester', href: '/prisliste' },
     ]);
   });
 
-  it('Jobber-siden kaller listevisningen Liste', () => {
+  it('Timeplan-siden kaller listevisningen Liste', () => {
     const saker = les('../app/(app)/saker/page.tsx');
     expect(saker).toMatch(/label: 'Liste'/);
     expect(saker).not.toMatch(/label="Oversikt"/);
@@ -110,10 +110,11 @@ describe('Ny jobb og tomflater', () => {
     expect(side).not.toMatch(/SAK-/);
   });
 
-  it('kalender utvider rasteret i stedet for å klippe 07–18', () => {
+  it('kalender bruker Timeplan 08–20 Oslo, ikke datetime-local', () => {
     const kal = les('../app/(app)/saker/_kalender.tsx');
-    expect(kal).toMatch(/function rasterFor/);
-    expect(kal).not.toMatch(/klippes inn i kanten/);
+    expect(kal).toMatch(/TIMEPLAN_DAG_START/);
+    expect(kal).toMatch(/osloDagsvindu/);
+    expect(kal).not.toMatch(/datetime-local/);
   });
 
   it('rapporter skjuler mock-filsti og viser tomflate uten bookinger', () => {

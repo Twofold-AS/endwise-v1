@@ -3,19 +3,14 @@
 import { Avatar, CalendarDays, Car, CircleAlert, Gauge, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
-import {
-  osloDagsvindu,
-  osloKalenderdag,
-  osloPlusDager,
-  osloVeggklokke,
-  PRODUKT_TIDSSONE,
-} from '../../_lib/oslo-dag';
+import { osloDagsvindu, osloKalenderdag } from '../../_lib/oslo-dag';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { AnsattePiller } from '../../_shell/ansatte-piller';
 import { CardShell } from '../../_shell/cards';
+import { TimeplanStripe } from '../../_shell/timeplan-stripe';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
 import { estMinutes, fmtTime, STATUS_LABEL } from '../../min-dag/_status';
 import { FELT } from '../kompetanse/_niva';
@@ -29,29 +24,6 @@ const STATUS_PRIKK: Record<string, string> = {
   fri: 'bg-fg-muted',
 };
 
-/** Samme 7-dagers stripe som mekanikerens Timeplan («Min dag»). */
-function dagListe(): { iso: string; label: string; weekday: string }[] {
-  const out: { iso: string; label: string; weekday: string }[] = [];
-  const start = osloKalenderdag(new Date());
-  for (let i = 0; i < 7; i++) {
-    const ymd = osloPlusDager(start, i);
-    const middag = osloVeggklokke(ymd, 12, 0);
-    out.push({
-      iso: ymd,
-      label: middag.toLocaleDateString('nb-NO', {
-        day: '2-digit',
-        month: 'short',
-        timeZone: PRODUKT_TIDSSONE,
-      }),
-      weekday: middag.toLocaleDateString('nb-NO', {
-        weekday: 'short',
-        timeZone: PRODUKT_TIDSSONE,
-      }),
-    });
-  }
-  return out;
-}
-
 /**
  * F3-08 / F7-03 — Ansatte › Timeplan.
  * Ikke en annen modell enn mekanikerens Timeplan: kapasitet bor på
@@ -62,10 +34,21 @@ export default function TimeplanPage() {
   return <TimeplanFlate />;
 }
 
-export function TimeplanFlate({ skjulPiller = false }: { skjulPiller?: boolean }) {
+export function TimeplanFlate({
+  skjulPiller = false,
+  valgt: valgtUtenfra,
+  onValgt,
+  skjulStripe = false,
+}: {
+  skjulPiller?: boolean;
+  valgt?: string;
+  onValgt?: (ymd: string) => void;
+  skjulStripe?: boolean;
+}) {
   const { isAdmin } = useOrgRole();
-  const dager = useMemo(() => dagListe(), []);
-  const [valgt, setValgt] = useState(dager[0]?.iso ?? osloKalenderdag(new Date()));
+  const [internValgt, setInternValgt] = useState(() => osloKalenderdag(new Date()));
+  const valgt = valgtUtenfra ?? internValgt;
+  const setValgt = onValgt ?? setInternValgt;
   const vindu = osloDagsvindu(valgt);
 
   const mekanikere = trpc.mechanics.oversikt.useQuery();
@@ -108,26 +91,7 @@ export function TimeplanFlate({ skjulPiller = false }: { skjulPiller?: boolean }
         )}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {dager.map((d) => {
-          const aktiv = d.iso === valgt;
-          return (
-            <button
-              type="button"
-              key={d.iso}
-              onClick={() => setValgt(d.iso)}
-              className={`flex min-w-[56px] shrink-0 flex-col items-center gap-0.5 rounded-xl border px-3 py-2 ${
-                aktiv
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border bg-card text-fg-muted'
-              }`}
-            >
-              <span className="text-[10px] uppercase">{d.weekday}</span>
-              <span className="font-semibold text-[13px]">{d.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {skjulStripe ? null : <TimeplanStripe valgt={valgt} onValgt={setValgt} />}
 
       {laster ? (
         <Laster />

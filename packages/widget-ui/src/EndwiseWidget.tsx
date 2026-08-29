@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
 import { resetBookingChoice } from './booking-choice.ts';
 import {
   type ChatReply,
@@ -18,7 +18,19 @@ export interface EndwiseWidgetProps {
   apiBase: string;
   publishableKey: string;
   locale?: 'no' | 'en';
+  /**
+   * Samme katalog som Tjenester (`services.list` / `service_versions`).
+   * Brukes som start og som fallback når `/widget/services` ikke svarer.
+   * Widgeten kaller aldri `forhandler.get`.
+   */
+  initialServices?: WidgetService[];
 }
+
+type ServicesState =
+  | { status: 'loading' }
+  | { status: 'ready'; services: WidgetService[] }
+  | { status: 'empty' }
+  | { status: 'error' };
 
 const box: CSSProperties = {
   fontFamily: 'var(--ew-font-sans, system-ui, sans-serif)',
@@ -33,21 +45,45 @@ const box: CSSProperties = {
 const accent = `var(--ew-accent, ${fb.accent})`;
 const accentFg = `var(--ew-accent-fg, ${fb.accentFg})`;
 
-export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: EndwiseWidgetProps) {
+export function EndwiseWidget({
+  apiBase,
+  publishableKey,
+  locale = 'no',
+  initialServices,
+}: EndwiseWidgetProps) {
   const clientRef = useRef(createWidgetClient({ apiBase, publishableKey }));
   const [tab, setTab] = useState<'chat' | 'booking'>('chat');
   const [messages, setMessages] = useState<{ from: 'you' | 'ai'; text: string }[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [services, setServices] = useState<WidgetService[]>([]);
+  const [servicesState, setServicesState] = useState<ServicesState>(() =>
+    initialServices && initialServices.length > 0
+      ? { status: 'ready', services: initialServices }
+      : { status: 'loading' },
+  );
 
-  // Hent tjenester (til booking-fanen) når widgeten åpnes.
-  useEffect(() => {
+  const lastTjenester = useCallback(() => {
+    setServicesState({ status: 'loading' });
     clientRef.current
       .listServices()
-      .then((r) => setServices(r.services))
-      .catch(() => {});
-  }, []);
+      .then((r) => {
+        const list = r.services.length > 0 ? r.services : (initialServices ?? []);
+        setServicesState(
+          list.length > 0 ? { status: 'ready', services: list } : { status: 'empty' },
+        );
+      })
+      .catch(() => {
+        if (initialServices && initialServices.length > 0) {
+          setServicesState({ status: 'ready', services: initialServices });
+          return;
+        }
+        setServicesState({ status: 'error' });
+      });
+  }, [initialServices]);
+
+  useEffect(() => {
+    lastTjenester();
+  }, [lastTjenester]);
 
   async function send() {
     const text = input.trim();
@@ -200,7 +236,12 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
           </div>
         </div>
       ) : (
-        <BookingPanel client={clientRef.current} services={services} locale={locale} />
+        <BookingPanel
+          client={clientRef.current}
+          state={servicesState}
+          locale={locale}
+          onRetry={lastTjenester}
+        />
       )}
     </div>
   );
@@ -209,13 +250,16 @@ export function EndwiseWidget({ apiBase, publishableKey, locale = 'no' }: Endwis
 /** F4-03..08 — booking-flyt (skjelett): velg tjeneste → tid → bekreft. */
 function BookingPanel({
   client,
-  services,
+  state,
   locale,
+  onRetry,
 }: {
   client: ReturnType<typeof createWidgetClient>;
-  services: WidgetService[];
+  state: ServicesState;
   locale: 'no' | 'en';
+  onRetry: () => void;
 }) {
+  const services = state.status === 'ready' ? state.services : [];
   const [serviceVersionId, setServiceVersionId] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [slots, setSlots] = useState<string[]>([]);
@@ -278,6 +322,50 @@ function BookingPanel({
     fontSize: 13,
     marginBottom: 10,
   };
+
+  if (state.status === 'loading') {
+    return (
+      <div style={{ padding: 16, fontSize: 13, color: `var(--ew-fg-muted, ${fb.fgMuted})` }}>
+        {locale === 'no' ? 'Henter tjenester …' : 'Loading services…'}
+      </div>
+    );
+  }
+
+  if (state.status === 'error') {
+    return (
+      <div style={{ padding: 16 }}>
+        <p style={{ fontSize: 13, color: `var(--ew-fg, ${fb.fg})`, marginBottom: 10 }}>
+          {locale === 'no' ? 'Kunne ikke hente tjenester.' : 'Could not load services.'}
+        </p>
+        <button
+          type="button"
+          onClick={onRetry}
+          style={{
+            padding: '8px 14px',
+            borderRadius: 8,
+            border: `1px solid var(--ew-border, ${fb.border})`,
+            background: `var(--ew-surface, ${fb.surface})`,
+            color: `var(--ew-fg, ${fb.fg})`,
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 13,
+          }}
+        >
+          {locale === 'no' ? 'Prøv igjen' : 'Try again'}
+        </button>
+      </div>
+    );
+  }
+
+  if (state.status === 'empty') {
+    return (
+      <div style={{ padding: 16, fontSize: 13, color: `var(--ew-fg-muted, ${fb.fgMuted})` }}>
+        {locale === 'no'
+          ? 'Ingen bookbare tjenester ennå. Legg dem inn under Tjenester.'
+          : 'No bookable services yet.'}
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 16, maxHeight: 380, overflowY: 'auto' }}>

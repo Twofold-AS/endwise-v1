@@ -3,12 +3,15 @@
 import { CalendarCheck, ClipboardList, Inbox, Wrench } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
+import { PhoneHomeDealer } from '../_shell/phone-home-dealer';
 import { fmtServices, fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
 import { AnsattePaJobb } from './_ansatte-pa-jobb';
 import { Timeplan } from './_timeplan';
+import { VerkstedetDag } from './_verkstedet-dag';
 
 /**
  * Verkstedet (F3-05/F5-01) — forhandlerens landingsside.
@@ -24,6 +27,20 @@ import { Timeplan } from './_timeplan';
  * Er det tomt, sier siden det — en tom dag er informasjon, ikke en feil.
  */
 export default function VerkstedetPage() {
+  const search = useSearchParams();
+  const dag = search?.get('visning') === 'dag';
+
+  return (
+    <>
+      {dag ? <VerkstedetDag /> : <PhoneHomeDealer />}
+      <div className="hidden md:block">
+        <VerkstedetDesktop />
+      </div>
+    </>
+  );
+}
+
+function VerkstedetDesktop() {
   const bookings = trpc.bookings.list.useQuery({ limit: 100 });
   const mechanics = trpc.mechanics.list.useQuery();
   const oversikt = trpc.mechanics.oversikt.useQuery();

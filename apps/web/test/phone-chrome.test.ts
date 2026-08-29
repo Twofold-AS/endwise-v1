@@ -143,7 +143,9 @@ describe('phone-chrome', () => {
     expect(chrome).toMatch(/safe-area-inset-bottom/);
     expect(chrome).not.toMatch(/\bh-screen\b|\b100vh\b/);
 
-    expect(layout).toMatch(/APP_SHELL/);
+    expect(layout).toMatch(/PHONE_SHELL_ROT/);
+    expect(layout).toMatch(/PhoneShell/);
+    expect(layout).not.toMatch(/PhoneNav/);
     expect(layout).not.toMatch(/\bh-screen\b|\bw-screen\b|\b100vh\b/);
 
     expect(mobile).toMatch(/APP_SHELL/);
@@ -156,9 +158,7 @@ describe('phone-chrome', () => {
 
   it('tilbake-pil sitter i end-spacer uten hover eller aktiv-tilstand', () => {
     const hscroll = utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'));
-    const phone = utenKommentarer(les('../app/(app)/_shell/phone-nav.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-    expect(phone).toMatch(/PhoneHScroll/);
     expect(seksjon).toMatch(/PhoneHScroll/);
     expect(hscroll).toMatch(/data-end-spacer/);
     expect(hscroll).toMatch(/data-scroll-tilbake/);

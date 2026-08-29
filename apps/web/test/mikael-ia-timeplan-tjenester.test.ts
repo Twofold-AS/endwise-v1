@@ -114,15 +114,14 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
   it('Opprett jobb og Prisliste står på samme rad som Liste|Kalender, ikke i tittelraden', () => {
     const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
     const h1 = side.indexOf('<h1');
-    const piller = side.indexOf('SidePiller');
-    const opprett = side.indexOf('Opprett jobb');
-    const prisliste = side.indexOf('Prisliste');
     expect(h1).toBeGreaterThan(-1);
-    expect(piller).toBeGreaterThan(h1);
-    expect(opprett).toBeGreaterThan(piller);
-    expect(prisliste).toBeGreaterThan(opprett);
-    expect(side).toMatch(/justify-between[\s\S]*SidePiller[\s\S]*Opprett jobb[\s\S]*Prisliste/);
-    expect(side).toMatch(/\/bookinger\/ny/);
+    const etterH1 = side.slice(h1);
+    expect(etterH1.indexOf('SidePiller')).toBeGreaterThan(-1);
+    expect(etterH1.indexOf('Opprett jobb')).toBeGreaterThan(etterH1.indexOf('SidePiller'));
+    expect(etterH1.indexOf('Prisliste')).toBeGreaterThan(etterH1.indexOf('Opprett jobb'));
+    expect(etterH1).toMatch(/justify-between[\s\S]*SidePiller[\s\S]*Opprett jobb[\s\S]*Prisliste/);
+    expect(etterH1).toMatch(/\/bookinger\/ny/);
+    expect(side.slice(0, h1)).not.toMatch(/Opprett jobb/);
   });
 
   it('Tjenester er /prisliste (samme services.list), /tjenester forblir abonnement', () => {

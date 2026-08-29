@@ -62,6 +62,9 @@ describe('F10-03 — shop er ikke til salgs', () => {
     expect(init).not.toMatch(/moduleProcedure\('shop'\)/);
     expect(router).toMatch(/shopProcedure/);
     expect(router).not.toMatch(/moduleProcedure\('shop'\)/);
+    expect(router).toMatch(/bookingWidget: shopProcedure/);
+    expect(router).not.toMatch(/moduleProcedure\('widget'\)/);
+    expect(router).not.toMatch(/quick\.(push|write)/);
   });
 });
 
@@ -138,6 +141,7 @@ describeDb('F10-03 — intern testbutikk', () => {
     await owner.delete(schema.stockLevels).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
     await owner.delete(schema.parts).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
     await owner.delete(schema.stockLocations).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
+    await owner.delete(schema.widgetKeys).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
     await owner
       .delete(schema.featureFlagOverrides)
       .where(sql`tenant_id in (${tenantA}, ${tenantB})`);
@@ -154,6 +158,13 @@ describeDb('F10-03 — intern testbutikk', () => {
         linjer: [{ partId: delA, quantity: 1 }],
         returnUrl: 'https://endwise.test/butikk',
       }),
+      'FORBIDDEN',
+    );
+  });
+
+  it('flagg av: dealer_admin får FORBIDDEN på bookingWidget', async () => {
+    await forventer(
+      somForhandlerI(tenantA).shop.bookingWidget({ origin: 'https://endwise.test' }),
       'FORBIDDEN',
     );
   });
@@ -188,6 +199,59 @@ describeDb('F10-03 — intern testbutikk', () => {
 
   it('flagg på for A gir ikke katalog hos B', async () => {
     await forventer(somForhandlerI(tenantB).shop.catalog(), 'FORBIDDEN');
+  });
+
+  it('flagg av: bookingWidget er FORBIDDEN', async () => {
+    await forventer(
+      somForhandlerI(tenantB).shop.bookingWidget({ origin: 'https://endwise.test' }),
+      'FORBIDDEN',
+    );
+  });
+
+  it('flagg på: bookingWidget utsteder testnøkkel uten widget-modul', async () => {
+    const ut = await somForhandlerI(tenantA).shop.bookingWidget({
+      origin: 'https://endwise.test',
+    });
+    expect(ut.publishableKey).toMatch(/^pk_live_/);
+    expect(ut.apiBase).toBe('');
+
+    const igjen = await somForhandlerI(tenantA).shop.bookingWidget({
+      origin: 'https://preview.endwise.test',
+    });
+    expect(igjen.publishableKey).toBe(ut.publishableKey);
+
+    const [rad] = await owner
+      .select()
+      .from(schema.widgetKeys)
+      .where(eq(schema.widgetKeys.tenantId, tenantA));
+    expect(rad?.label).toBe('Butikk-testplassering');
+    expect(rad?.allowedOrigins).toEqual(['https://endwise.test', 'https://preview.endwise.test']);
+  });
+
+  it('bookingWidget rører ikke Framer-nøkkel med annen etikett', async () => {
+    await owner.insert(schema.widgetKeys).values({
+      tenantId: tenantA,
+      publishableKey: `pk_live_framer_${tenantA.replace(/-/g, '').slice(0, 20)}`,
+      allowedOrigins: ['https://verksted.no'],
+      label: 'Hovednettside',
+    });
+    const ut = await somForhandlerI(tenantA).shop.bookingWidget({
+      origin: 'https://endwise.test',
+    });
+    expect(ut.publishableKey).not.toMatch(/^pk_live_framer_/);
+
+    const [framer] = await owner
+      .select()
+      .from(schema.widgetKeys)
+      .where(eq(schema.widgetKeys.label, 'Hovednettside'));
+    expect(framer?.allowedOrigins).toEqual(['https://verksted.no']);
+  });
+
+  it('flagg på for A gir ikke bookingWidget hos B', async () => {
+    await forventer(
+      somForhandlerI(tenantB).shop.bookingWidget({ origin: 'https://endwise.test' }),
+      'FORBIDDEN',
+    );
   });
 
   it('flagg på: checkout oppretter Stripe-session (mock) og pending ordre', async () => {

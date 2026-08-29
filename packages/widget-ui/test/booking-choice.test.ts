@@ -22,6 +22,26 @@ describe('resetBookingChoice (F4-20)', () => {
   });
 });
 
+describe('booking-steg (låst rekkefølge)', () => {
+  it('er tjeneste → tid → konto → bekreft, ikke konto først og ikke Google Reserve', () => {
+    const src = readFileSync(join(root, '../src/EndwiseWidget.tsx'), 'utf8');
+    const tjeneste = src.indexOf("locale === 'no' ? 'Tjeneste'");
+    const dato = src.indexOf("locale === 'no' ? 'Dato'");
+    const navn = src.indexOf("locale === 'no' ? 'Navn'");
+    const telefon = src.indexOf("locale === 'no' ? 'Telefon'");
+    const send = src.indexOf("locale === 'no' ? 'Send booking-forespørsel'");
+    expect(tjeneste).toBeGreaterThan(-1);
+    expect(dato).toBeGreaterThan(tjeneste);
+    expect(navn).toBeGreaterThan(dato);
+    expect(telefon).toBeGreaterThan(navn);
+    expect(send).toBeGreaterThan(telefon);
+    expect(src).not.toMatch(/Reserve with Google/i);
+    expect(src).not.toMatch(/guest-then-convert/i);
+    // Konto/kontakt vises først når tid er valgt — aldri før tjeneste/tid.
+    expect(src).toMatch(/\{chosen && \(/);
+  });
+});
+
 describe('widget-fallbacks', () => {
   it('er lyst tema med svart aksent, ikke mørk/grønn/rød', () => {
     expect(WIDGET_FALLBACK.bg).toBe('#ffffff');

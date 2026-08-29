@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { ButikkPiller } from '../_shell/ansatte-piller';
 import { CardShell } from '../_shell/cards';
+import { ButikkBookingWidget } from './_booking-widget';
 import { antallIKurv, leggIKurv } from './_kurv';
 
 function kroner(ore: number): string {
@@ -15,6 +16,7 @@ function kroner(ore: number): string {
 /**
  * Butikk · Katalog. Leser lager (`parts` + `stock_levels`).
  * Ingen annen katalog. Ingen ny UI-pakke — CardShell + Button + radmønster.
+ * Midlertidig: eksisterende EndwiseWidget (F4-03) for å teste booking.
  */
 export default function ButikkKatalogPage() {
   const katalog = trpc.shop.catalog.useQuery();
@@ -49,6 +51,8 @@ export default function ButikkKatalogPage() {
           Handlekurv / kasse{kurvAntall > 0 ? ` (${kurvAntall})` : ''}
         </Link>
       </div>
+
+      <ButikkBookingWidget />
 
       {katalog.isError ? (
         <CardShell className="p-6">

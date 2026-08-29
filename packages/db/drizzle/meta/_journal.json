@@ -225,6 +225,13 @@
       "when": 1787808000000,
       "tag": "0031_dealer_profile_grant",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1787988000000,
+      "tag": "0032_mekaniker_rad_backfill",
+      "breakpoints": true
     }
   ]
 }

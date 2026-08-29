@@ -27,6 +27,8 @@ export default defineConfig({
       // F3-09 / P3 — booking_services RLS + backfill-kontrakt.
       'test/booking-services-kontrakt.test.ts',
       'test/dealer-profile-kontrakt.test.ts',
+      // F1-14 — setFunction-hull: mechanics-rad for job_function=mekaniker.
+      'test/mekaniker-backfill-kontrakt.test.ts',
     ],
     // RLS-testene deler DB-tilstand — serielt, ikke parallelt.
     fileParallelism: false,

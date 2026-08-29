@@ -45,6 +45,7 @@ const nextConfig: NextConfig = {
     '@endwise/api',
     '@endwise/ui',
     '@endwise/widget-tokens',
+    '@endwise/widget-ui',
     '@endwise/auth',
     '@endwise/db',
     '@endwise/events',

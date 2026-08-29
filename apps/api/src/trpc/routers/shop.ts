@@ -1,5 +1,6 @@
 import { kanSkriveDealerDesk } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
+import { createWidgetKeyService, WidgetKeyOriginError } from '@endwise/modules/widget';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { byggShopLinjer, lesShopKatalog } from '../../lib/shop.ts';
@@ -13,6 +14,28 @@ import { router, shopProcedure } from '../init.ts';
  */
 export const shopRouter = router({
   catalog: shopProcedure.query(({ ctx }) => lesShopKatalog(ctx.db, ctx.tenantId)),
+
+  /**
+   * Midlertidig testplassering: publishable key til den eksisterende
+   * EndwiseWidget på /butikk. Ikke en ny booking. Ikke widget-modulen
+   * (F4 admin-nøkler) — gaten er shop-flagget, samme som katalogen.
+   */
+  bookingWidget: shopProcedure
+    .input(z.object({ origin: z.string().url().max(200) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const key = await createWidgetKeyService(ctx.db).ensureShopTestKey(
+          ctx.tenantId,
+          input.origin,
+        );
+        return { publishableKey: key.publishableKey, apiBase: '' };
+      } catch (error) {
+        if (error instanceof WidgetKeyOriginError) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+        }
+        throw error;
+      }
+    }),
 
   createCheckout: shopProcedure
     .input(

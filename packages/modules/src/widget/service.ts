@@ -15,10 +15,31 @@ import {
   widgetWorkingDay,
 } from './availability.ts';
 import { generatePublishableKey } from './keys.ts';
-import { normalizeOrigin } from './origin.ts';
+import { normalizeOrigin, originAllowed } from './origin.ts';
 
 /** Samme levende statuser som `/widget/availability` — completed frigir slotet. */
 const WIDGET_OCCUPYING = sql`${schema.bookings.status} in ('confirmed','in_progress','draft')`;
+
+/** Etikett på nøkkelen som eies av Butikk-testplasseringen — ikke Framer. */
+export const BUTIKK_TEST_WIDGET_LABEL = 'Butikk-testplassering';
+
+const BUTIKK_TEST_ORIGIN_TAK = 20;
+
+function toKeyView(row: {
+  id: string;
+  publishableKey: string;
+  allowedOrigins: string[];
+  label: string | null;
+  active: boolean;
+}): WidgetKeyView {
+  return {
+    id: row.id,
+    publishableKey: row.publishableKey,
+    allowedOrigins: row.allowedOrigins,
+    label: row.label,
+    active: row.active,
+  };
+}
 
 /** Ikke-hemmelig view av en widget-nøkkel (trygt til admin-UI). */
 export interface WidgetKeyView {
@@ -67,26 +88,60 @@ export function createWidgetKeyService(db: Database) {
           .insert(schema.widgetKeys)
           .values({ tenantId, publishableKey, allowedOrigins: origins, label: input.label ?? null })
           .returning();
-        return {
-          id: row.id,
-          publishableKey: row.publishableKey,
-          allowedOrigins: row.allowedOrigins,
-          label: row.label,
-          active: row.active,
-        };
+        return toKeyView(row);
+      });
+    },
+
+    /**
+     * Get-or-create for midlertidig testplassering på /butikk.
+     * Rører bare nøkkelen merket `BUTIKK_TEST_WIDGET_LABEL` — Framer-nøkler
+     * med annen etikett står urørt. Origin-listen er allowlisten /widget/init
+     * sjekker (CWE-346); preview-URLer byttes, så vi appender og cap'er.
+     */
+    async ensureShopTestKey(tenantId: string, origin: string): Promise<WidgetKeyView> {
+      const norm = normalizeOrigin(origin);
+      if (!norm) throw new WidgetKeyOriginError('Ugyldig origin');
+      return withTenant(db, tenantId, async (tx) => {
+        const [existing] = await tx
+          .select()
+          .from(schema.widgetKeys)
+          .where(
+            and(
+              eq(schema.widgetKeys.label, BUTIKK_TEST_WIDGET_LABEL),
+              eq(schema.widgetKeys.active, true),
+            ),
+          )
+          .limit(1);
+        if (existing) {
+          if (originAllowed(norm, existing.allowedOrigins)) return toKeyView(existing);
+          const next = [...new Set([...existing.allowedOrigins, norm])].slice(
+            -BUTIKK_TEST_ORIGIN_TAK,
+          );
+          const [updated] = await tx
+            .update(schema.widgetKeys)
+            .set({ allowedOrigins: next, updatedAt: new Date() })
+            .where(eq(schema.widgetKeys.id, existing.id))
+            .returning();
+          return toKeyView(updated);
+        }
+        const publishableKey = generatePublishableKey();
+        const [row] = await tx
+          .insert(schema.widgetKeys)
+          .values({
+            tenantId,
+            publishableKey,
+            allowedOrigins: [norm],
+            label: BUTIKK_TEST_WIDGET_LABEL,
+          })
+          .returning();
+        return toKeyView(row);
       });
     },
 
     async list(tenantId: string): Promise<WidgetKeyView[]> {
       return withTenant(db, tenantId, async (tx) => {
         const rows = await tx.select().from(schema.widgetKeys);
-        return rows.map((r) => ({
-          id: r.id,
-          publishableKey: r.publishableKey,
-          allowedOrigins: r.allowedOrigins,
-          label: r.label,
-          active: r.active,
-        }));
+        return rows.map(toKeyView);
       });
     },
 
@@ -319,5 +374,8 @@ export function createWidgetPublicService(db: Database) {
 }
 
 export class WidgetBookingError extends Error {}
+
+/** Ugyldig origin til testnøkkelen (ikke en booking-feil). */
+export class WidgetKeyOriginError extends Error {}
 
 export type WidgetPublicService = ReturnType<typeof createWidgetPublicService>;

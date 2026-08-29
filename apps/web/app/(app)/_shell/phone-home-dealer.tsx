@@ -5,12 +5,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
-import {
-  dealerPhoneHjemRader,
-  PHONE_KORT_FYLL,
-  PHONE_KORT_META,
-  type PhoneKortKey,
-} from './phone-home';
+import { dealerPhoneHjemRader, PHONE_KORT_META, type PhoneKortKey } from './phone-home';
 import {
   hjelpMeta,
   innboksMeta,
@@ -101,7 +96,7 @@ export function PhoneHomeDealer() {
             <div key="timeplan" className="relative">
               <PhoneKort href={dest.href} icon={dest.icon} navn={dest.label} className="w-full">
                 {plan.length === 0 ? (
-                  <p className="text-[12px] opacity-90">Ingen jobber i dag</p>
+                  <p className="text-[12px] text-fg-muted">Ingen jobber i dag</p>
                 ) : (
                   <ul className="flex flex-col gap-1">
                     {plan.map((r) => (
@@ -116,7 +111,7 @@ export function PhoneHomeDealer() {
               {plan.length === 0 ? (
                 <Link
                   href={'/bookinger/ny' as Route}
-                  className="absolute right-3 bottom-3 inline-flex h-control items-center rounded-control bg-accent-fg px-3 text-label text-accent"
+                  className="absolute right-3 bottom-3 inline-flex h-control items-center rounded-control bg-fg px-3 text-bg text-label"
                 >
                   Ny jobb
                 </Link>
@@ -154,11 +149,11 @@ export function PhoneHomeDealer() {
 
 function HeroTall({ label, verdi, laster }: { label: string; verdi: number; laster: boolean }) {
   return (
-    <div className={`${PHONE_KORT_FYLL} bg-accent-fg/10 p-2`}>
-      <p className="text-[12px] opacity-90">{label}</p>
-      <p className="text-title tabular-nums">
+    <div className="rounded-lg bg-surface-2 p-2">
+      <p className="text-[12px] text-fg-muted">{label}</p>
+      <p className="text-title text-fg tabular-nums">
         {laster ? (
-          <span className="inline-block h-4 w-6 animate-pulse rounded-sm bg-accent-fg/20" />
+          <span className="inline-block h-4 w-6 animate-pulse rounded-sm bg-border" />
         ) : (
           verdi
         )}

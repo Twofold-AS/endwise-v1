@@ -14,7 +14,7 @@ import {
   Users,
   Wrench,
 } from '@endwise/ui';
-import type { ShellKey } from './nav';
+import { type ShellKey, settingsForShell } from './nav';
 
 /**
  * Låst telefon-hjem (Jonas FILL 29.08.2026).
@@ -29,7 +29,13 @@ export const PHONE_SHELL_ROT =
 export const PHONE_SAFE_TOP = 'pt-[env(safe-area-inset-top)]';
 export const PHONE_SAFE_BUNN = 'pb-[env(safe-area-inset-bottom)]';
 
-export const PHONE_KORT_FYLL = 'rounded-xl bg-accent text-accent-fg shadow-none outline-none';
+/**
+ * Samme flate som resten av appen (`CardShell`): `--ew-surface` / `--ew-fg`.
+ * Ikke `bg-accent` — i theme.css er `--color-accent` shadcn-hover
+ * (`--ew-surface-2`, #f5f5f5 i lyst) mens `text-accent-fg` er `--ew-accent-fg`
+ * (hvit i lyst). Den kombinasjonen er den vaskede «hvite overlay»-en.
+ */
+export const PHONE_KORT_FYLL = 'rounded-xl border border-border bg-card text-fg shadow-none';
 
 export const FORBUDT_DEALER_HJEM = [
   'book',
@@ -134,6 +140,11 @@ export function phoneHjemHref(shell: ShellKey): string {
   if (shell === 'mekaniker') return '/min-dag';
   if (shell === 'endwise' || shell === 'endwise_partner') return '/endwise';
   return '/dashboard';
+}
+
+/** Innstillinger på telefon-bevel: Profil + Varsler, eller Meg for mekaniker. */
+export function phoneInnstillingerHref(shell: ShellKey): string {
+  return settingsForShell(shell)?.href ?? '/min-dag/meg';
 }
 
 export function ukeStartMandag(naa: Date): Date {

@@ -7,9 +7,9 @@ import type { ReactNode } from 'react';
 import { PHONE_KORT_FYLL } from './phone-home';
 
 /**
- * Fylt destinasjonskort på telefon-hjem.
- * Aksent #111 / tekst #fff (snur i mørkt). Radius 12. Ikke outline.
- * Ulest er hvit prikk/tall — ikke Ny-rød.
+ * Destinasjonskort på telefon-hjem.
+ * Samme flate/tekst som CardShell (bg-card / text-fg), radius 12.
+ * Ulest er invertert prikk/tall — ikke Ny-rød.
  */
 export function PhoneKort({
   href,
@@ -38,13 +38,13 @@ export function PhoneKort({
         <Icon size={16} strokeWidth={1.75} className="shrink-0" />
         <span className="min-w-0 flex-1 truncate text-title">{navn}</span>
         {ulest && ulest > 0 ? (
-          <span className="inline-flex size-5 min-w-5 items-center justify-center rounded-full bg-accent-fg text-[11px] text-accent tabular-nums">
+          <span className="inline-flex size-5 min-w-5 items-center justify-center rounded-full bg-fg text-[11px] text-bg tabular-nums">
             <span className="sr-only">{ulest} uleste. </span>
             {ulest}
           </span>
         ) : null}
       </div>
-      {meta ? <p className="text-[12px] leading-snug opacity-90">{meta}</p> : null}
+      {meta ? <p className="text-[12px] text-fg-muted leading-snug">{meta}</p> : null}
       {children}
     </Link>
   );

@@ -7,6 +7,8 @@
     ".": "./src/index.ts",
     "./bytt-passord": "./src/bytt-passord.ts",
     "./bytt-epost": "./src/bytt-epost.ts",
+    "./password-reset": "./src/password-reset.ts",
+    "./tid": "./src/tid.ts",
     "./to-faktor-oppsett": "./src/to-faktor-oppsett.ts"
   },
   "scripts": {

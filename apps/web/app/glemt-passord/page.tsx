@@ -1,5 +1,7 @@
 'use client';
 
+import { PASSORD_RESET_TTL_SEKUNDER } from '@endwise/auth/password-reset';
+import { formaterKlokkeslett } from '@endwise/auth/tid';
 import { Mail, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -29,6 +31,7 @@ import { Field, INPUT } from '../_auth/felter';
 export default function GlemtPassordPage() {
   const [epost, setEpost] = useState('');
   const [sendt, setSendt] = useState(false);
+  const [utloperKl, setUtloperKl] = useState<string | null>(null);
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   async function onSubmit(e: FormEvent) {
@@ -42,6 +45,7 @@ export default function GlemtPassordPage() {
      */
     await authClient.requestPasswordReset({ email: epost.trim() }).catch(() => undefined);
 
+    setUtloperKl(formaterKlokkeslett(new Date(Date.now() + PASSORD_RESET_TTL_SEKUNDER * 1000)));
     setBusy('success');
     setSendt(true);
   }
@@ -65,9 +69,12 @@ export default function GlemtPassordPage() {
               <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
                 <Mail size={13} className="mt-px shrink-0" />
                 <span>
-                  Lenken kan brukes <b>én gang</b> og varer i 30 minutter. Når passordet er byttet,
-                  blir du logget ut på alle enheter og må logge inn på nytt — med engangskode, som
-                  vanlig.
+                  Lenken kan brukes <b>én gang</b> og varer i 30 minutter
+                  {utloperKl
+                    ? `. Siste tidspunkt for å tilbakestille via lenken er kl. ${utloperKl}`
+                    : ''}
+                  . Når passordet er byttet, blir du logget ut på alle enheter og må logge inn på
+                  nytt — med engangskode, som vanlig.
                 </span>
               </p>
               <p className="text-[12px] text-fg-muted leading-relaxed">

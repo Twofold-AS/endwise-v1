@@ -8,7 +8,7 @@ import { useOrgRole } from '../_lib/use-org-role';
 /**
  * Midlertidig testplassering av den eksisterende kundewidgeten (F4-03).
  * Ikke en ny booking. Synlig bare når shop-flagget er på (samme gate som Butikk).
- * Tjenestene kommer fra Tjenester (`services.list`) — samme SoR som widget-API-et.
+ * Tjenestene kommer fra Salg (`services.list`) — samme SoR som widget-API-et.
  * Dealer-profil-tabellen er utenfor denne flaten.
  */
 export function ButikkBookingWidget() {

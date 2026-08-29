@@ -12,7 +12,7 @@ import { ForhandlerKort } from './forhandleren/_kort';
 
 /**
  * Organisasjon — én side. Top-bar 2 velger seksjon.
- * Landing = Oversikt (forhandlerkort). Timeplan og Prisliste bor på Timeplan.
+ * Landing = Oversikt (forhandlerkort). Timeplan er egen destinasjon. Salg er /prisliste.
  */
 export default function OrganisasjonPage() {
   return (

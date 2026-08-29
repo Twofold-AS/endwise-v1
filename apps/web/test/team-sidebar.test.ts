@@ -40,7 +40,7 @@ describe('Jonas IA — forhandler sidebar', () => {
       'Lager',
       'Butikk',
       'Samarbeid',
-      'Tjenester',
+      'Salg',
       'Organisasjon',
       'Hjelp',
     ]);
@@ -158,7 +158,7 @@ describe('Jonas IA — breadcrumb og piller', () => {
       { label: 'Kalender' },
     ]);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Tjenester', href: '/prisliste' },
+      { label: 'Salg', href: '/prisliste' },
     ]);
     expect(breadcrumbFor('/organisasjon', 'seksjon=ansatte', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },
@@ -171,7 +171,7 @@ describe('Jonas IA — breadcrumb og piller', () => {
     expect(breadcrumbFor('/support', '', 'forhandler')).toEqual([
       { label: 'Hjelp', href: '/support' },
     ]);
-    expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');
+    expect(PARKED_LABEL['/prisliste']).toBe('Salg');
   });
 
   it('ingen visningsvelger i sidebaren', () => {

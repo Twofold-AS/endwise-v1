@@ -13,7 +13,7 @@ import { TjenesteKort } from './_tjeneste-kort';
 
 /**
  * F2-05 / F5-04 — forhandlerens egen tjenestekatalog.
- * Destinasjon Tjenester + popup Prisliste på Timeplan. Samme SoR som widgeten.
+ * Destinasjon Salg (`/prisliste`). Samme SoR som widgeten. Ikke Timeplan-popup.
  */
 const FILTRE = [{ key: 'alle', label: 'Alle' }, ...TYPE_VALG] as const;
 

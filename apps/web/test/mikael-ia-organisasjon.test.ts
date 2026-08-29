@@ -37,7 +37,7 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
       'Lager',
       'Butikk',
       'Samarbeid',
-      'Tjenester',
+      'Salg',
       'Organisasjon',
       'Hjelp',
     ]);
@@ -121,9 +121,9 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
       { label: 'Ansatte' },
     ]);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Tjenester', href: '/prisliste' },
+      { label: 'Salg', href: '/prisliste' },
     ]);
-    expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');
+    expect(PARKED_LABEL['/prisliste']).toBe('Salg');
   });
 
   it('ukjent eller admin-seksjon for selger faller til Oversikt', () => {
@@ -254,16 +254,18 @@ describe('Mikael IA — shell-chrome og telefon', () => {
 });
 
 describe('Mikael IA — Prisliste på Oversikt, inspect', () => {
-  it('Prisliste er popup på Timeplan, ikke Organisasjon-pille', () => {
+  it('Salg er /prisliste, ikke Organisasjon-pille og ikke Timeplan-popup', () => {
     const timeplan = FORHANDLER_NAV.find((i) => i.key === 'saker');
     expect(timeplan?.pills?.some((p) => /prisliste/i.test(p.label))).toBe(false);
     expect(timeplan?.pills?.some((p) => /prisliste/i.test(p.href))).toBe(false);
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/PrislisteFlate/);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/tittel="Salg"/);
     expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/redirect\('\/organisasjon'/);
     expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/PrislisteFlate/);
     expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/TjenesterInnhold/);
     expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/seksjon === 'prisliste'/);
     expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/seksjon === 'timeplan'/);
+    expect(les('../app/(app)/saker/page.tsx')).not.toMatch(/Prisliste|PrislisteFlate|prislisteApen/);
   });
 
   it('inspect Organisasjon peker på /organisasjon, ikke Forhandleren-rad', () => {

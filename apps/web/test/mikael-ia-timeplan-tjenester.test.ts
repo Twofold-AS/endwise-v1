@@ -24,8 +24,8 @@ function utenKommentarer(kilde: string) {
   return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
 
-describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
-  it('telefon-hjem: hero → Innboks|Timeplan → Statistikk|Tjenester → resten, Lager lavt', () => {
+describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
+  it('telefon-hjem: hero → Innboks|Timeplan → Statistikk|Salg → resten, Lager lavt', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['verkstedet'],
       ['innboks', 'timeplan'],
@@ -39,7 +39,7 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
     expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('low');
     expect(PHONE_KORT_META.timeplan.label).toBe('Timeplan');
     expect(PHONE_KORT_META.timeplan.href).toBe('/jobber');
-    expect(PHONE_KORT_META.tjenester.label).toBe('Tjenester');
+    expect(PHONE_KORT_META.tjenester.label).toBe('Salg');
     expect(PHONE_KORT_META.tjenester.href).toBe('/prisliste');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     const keys = DEALER_PHONE_HJEM.flatMap((r) => r.keys);
@@ -55,7 +55,7 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
     expect(hjem).toMatch(/PHONE_KORT_META\.timeplan|key === 'timeplan'|innboks.*timeplan/);
   });
 
-  it('PC-sidebar: Timeplan og Tjenester, Organisasjon uten Timeplan-pille', () => {
+  it('PC-sidebar: Timeplan og Salg, Organisasjon uten Timeplan-pille', () => {
     expect(FORHANDLER_NAV.map((i) => i.label)).toEqual([
       'Verkstedet',
       'Innboks',
@@ -64,7 +64,7 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
       'Lager',
       'Butikk',
       'Samarbeid',
-      'Tjenester',
+      'Salg',
       'Organisasjon',
       'Hjelp',
     ]);
@@ -91,15 +91,15 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
     expect(les('../app/(app)/dine-jobber/_flate.tsx')).not.toMatch(/Kontor|Gulvet/);
   });
 
-  it('Timeplan-destinasjon: Opprett jobb + Prisliste-dialog, Liste = kapasitet, Kalender = stripe', () => {
+  it('Timeplan-destinasjon: Opprett jobb uten Prisliste, Liste = kapasitet, Kalender = stripe', () => {
     const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
     const kalender = utenKommentarer(les('../app/(app)/saker/_kalender.tsx'));
     const kapasitet = utenKommentarer(les('../app/(app)/mekanikere/kapasitet/page.tsx'));
     expect(side).toMatch(/Timeplan/);
     expect(side).toMatch(/Opprett jobb/);
     expect(side).not.toMatch(/Ny jobb/);
-    expect(side).toMatch(/Prisliste/);
-    expect(side).toMatch(/Dialog|PrislisteDialog|prislisteApen/);
+    expect(side).not.toMatch(/Prisliste/);
+    expect(side).not.toMatch(/Dialog|PrislisteDialog|prislisteApen|PrislisteFlate/);
     expect(side).toMatch(/TimeplanFlate/);
     expect(side).toMatch(/TimeplanStripe/);
     expect(side).not.toMatch(/Saker|Kontor|Gulvet/);
@@ -109,16 +109,15 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
     expect(kapasitet).not.toMatch(/overflow-x-auto/);
   });
 
-  it('Opprett jobb og Prisliste står rett under tittelteksten, Liste|Kalender på egen rad', () => {
+  it('Opprett jobb står rett under tittelteksten, Liste|Kalender på egen rad, uten Prisliste', () => {
     const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
     const h1 = side.indexOf('<h1');
     expect(h1).toBeGreaterThan(-1);
     const etterH1 = side.slice(h1);
     expect(etterH1.indexOf('Opprett jobb')).toBeGreaterThan(-1);
     expect(etterH1.indexOf('Opprett jobb')).toBeLessThan(etterH1.indexOf('SidePiller'));
-    expect(etterH1.indexOf('Prisliste')).toBeGreaterThan(etterH1.indexOf('Opprett jobb'));
-    expect(etterH1.indexOf('Prisliste')).toBeLessThan(etterH1.indexOf('SidePiller'));
-    expect(etterH1).toMatch(/h-control[\s\S]*Opprett jobb[\s\S]*h-control[\s\S]*Prisliste/);
+    expect(etterH1).not.toMatch(/Prisliste/);
+    expect(etterH1).toMatch(/h-control[\s\S]*Opprett jobb/);
     expect(etterH1).toMatch(/\/bookinger\/ny/);
     expect(etterH1).not.toMatch(/justify-between[\s\S]*SidePiller[\s\S]*Opprett jobb/);
     expect(etterH1).not.toMatch(/SidePiller[\s\S]*Opprett jobb/);
@@ -140,24 +139,26 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
     expect(stripe).toMatch(/timeplanManedNavn/);
   });
 
-  it('Tjenester er /prisliste (samme services.list), /tjenester forblir abonnement', () => {
+  it('Salg er /prisliste (samme services.list), /tjenester forblir abonnement', () => {
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/PrislisteFlate/);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/tittel="Salg"/);
     expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/redirect\('\/organisasjon'/);
     expect(les('../app/(app)/tjenester/page.tsx')).toMatch(/seksjon=abonnement/);
     const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
-    if (!tjenester) throw new Error('mangler Tjenester');
+    if (!tjenester) throw new Error('mangler Salg');
+    expect(tjenester.label).toBe('Salg');
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     if (!org) throw new Error('mangler Organisasjon');
     expect(isItemActive(tjenester, '/prisliste')).toBe(true);
     expect(isItemActive(org, '/prisliste')).toBe(false);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Tjenester', href: '/prisliste' },
+      { label: 'Salg', href: '/prisliste' },
     ]);
     expect(breadcrumbFor('/jobber', 'visning=kalender', 'forhandler')).toEqual([
       { label: 'Timeplan', href: '/jobber' },
       { label: 'Kalender' },
     ]);
-    expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');
+    expect(PARKED_LABEL['/prisliste']).toBe('Salg');
     expect(parseOrgSeksjon('timeplan', true)).toBe('oversikt');
   });
 

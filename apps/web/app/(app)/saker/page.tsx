@@ -30,18 +30,7 @@ function TimeplanPageInner() {
         <p className="text-body text-fg-muted">
           Kapasitet og kalender for verkstedet. Samme dag og tid i Europe/Oslo.
         </p>
-      </div>
-
-      <div className="flex items-center justify-between gap-2">
-        <SidePiller
-          ariaLabel="Timeplan"
-          piller={[
-            { label: 'Liste', href: '/jobber' },
-            { label: 'Kalender', href: '/jobber?visning=kalender' },
-          ]}
-          aktivHref={visning === 'kalender' ? '/jobber?visning=kalender' : '/jobber'}
-        />
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <Link
             href={'/bookinger/ny' as Route}
             className="inline-flex h-control items-center gap-2 rounded-control bg-primary px-3.5 text-label text-primary-foreground transition-colors hover:bg-primary/90"
@@ -58,6 +47,15 @@ function TimeplanPageInner() {
           </button>
         </div>
       </div>
+
+      <SidePiller
+        ariaLabel="Timeplan"
+        piller={[
+          { label: 'Liste', href: '/jobber' },
+          { label: 'Kalender', href: '/jobber?visning=kalender' },
+        ]}
+        aktivHref={visning === 'kalender' ? '/jobber?visning=kalender' : '/jobber'}
+      />
 
       <TimeplanStripe valgt={valgt} onValgt={setValgt} />
 

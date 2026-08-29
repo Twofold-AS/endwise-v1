@@ -111,17 +111,35 @@ describe('Mikael 29.08 — Timeplan + Tjenester + widget uten «feil»', () => {
     expect(kapasitet).not.toMatch(/overflow-x-auto/);
   });
 
-  it('Opprett jobb og Prisliste står på samme rad som Liste|Kalender, ikke i tittelraden', () => {
+  it('Opprett jobb og Prisliste står rett under tittelteksten, Liste|Kalender på egen rad', () => {
     const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
     const h1 = side.indexOf('<h1');
     expect(h1).toBeGreaterThan(-1);
     const etterH1 = side.slice(h1);
-    expect(etterH1.indexOf('SidePiller')).toBeGreaterThan(-1);
-    expect(etterH1.indexOf('Opprett jobb')).toBeGreaterThan(etterH1.indexOf('SidePiller'));
+    expect(etterH1.indexOf('Opprett jobb')).toBeGreaterThan(-1);
+    expect(etterH1.indexOf('Opprett jobb')).toBeLessThan(etterH1.indexOf('SidePiller'));
     expect(etterH1.indexOf('Prisliste')).toBeGreaterThan(etterH1.indexOf('Opprett jobb'));
-    expect(etterH1).toMatch(/justify-between[\s\S]*SidePiller[\s\S]*Opprett jobb[\s\S]*Prisliste/);
+    expect(etterH1.indexOf('Prisliste')).toBeLessThan(etterH1.indexOf('SidePiller'));
+    expect(etterH1).toMatch(/h-control[\s\S]*Opprett jobb[\s\S]*h-control[\s\S]*Prisliste/);
     expect(etterH1).toMatch(/\/bookinger\/ny/);
+    expect(etterH1).not.toMatch(/justify-between[\s\S]*SidePiller[\s\S]*Opprett jobb/);
+    expect(etterH1).not.toMatch(/SidePiller[\s\S]*Opprett jobb/);
     expect(side.slice(0, h1)).not.toMatch(/Opprett jobb/);
+  });
+
+  it('TimeplanStripe viser tre hele dager uten klipp, samme stripe på Liste og Kalender', () => {
+    const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
+    const stripe = utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'));
+    const dager = utenKommentarer(les('../app/(app)/_shell/timeplan-dager.ts'));
+    expect(side).toMatch(/TimeplanStripe/);
+    expect(side).toMatch(/visning === 'kalender'/);
+    expect(stripe).toMatch(/timeplanDagerFra\(valgt(?:, 3)?\)/);
+    expect(stripe).not.toMatch(/timeplanDagerFra\(valgt, 7\)/);
+    expect(dager).toMatch(/antall = 3/);
+    expect(stripe).not.toMatch(/overflow-hidden/);
+    expect(stripe).not.toMatch(/overflow-x/);
+    expect(stripe).toMatch(/aria-label="Forrige måned"/);
+    expect(stripe).toMatch(/timeplanManedNavn/);
   });
 
   it('Tjenester er /prisliste (samme services.list), /tjenester forblir abonnement', () => {

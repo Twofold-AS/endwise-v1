@@ -6,6 +6,8 @@
  * hvilken sak som vises når raden utvides.
  */
 
+import { sammeOsloDag } from '../_lib/oslo-dag';
+
 export type PaJobbStatus = 'ledig' | 'på_jobb' | 'opptatt' | 'fri';
 
 export type PaJobbMekaniker = {
@@ -25,7 +27,7 @@ export type PaJobbBooking = {
 };
 
 export function sammeKalenderdag(a: Date | string, b: Date): boolean {
-  return new Date(a).toDateString() === b.toDateString();
+  return sammeOsloDag(a, b);
 }
 
 /** Inaktiv (`fri`) holdes utenfor stripen. Ledig/på jobb/opptatt er på gulvet. */

@@ -1,3 +1,5 @@
+import { PRODUKT_TIDSSONE } from '../_lib/oslo-dag';
+
 export const STATUS_LABEL: Record<string, string> = {
   draft: 'Utkast',
   confirmed: 'Planlagt',
@@ -9,7 +11,11 @@ export const STATUS_LABEL: Record<string, string> = {
 
 export function fmtTime(d: Date | string): string {
   const date = new Date(d);
-  return date.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString('nb-NO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: PRODUKT_TIDSSONE,
+  });
 }
 
 export function estMinutes(from: Date | string, to: Date | string): number {

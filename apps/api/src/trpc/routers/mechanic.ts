@@ -1,17 +1,14 @@
 import { and, asc, eq, gte, lt, schema, sql, withTenant } from '@endwise/db';
 import { lesAvatar, mekanikerStatusVisning, tellerSomBelastning } from '@endwise/modules/profil';
 import { publishEvent } from '@endwise/modules/stream';
+import { osloDagsvindu } from '@endwise/modules/tid';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, router } from '../init.ts';
 
+/** Døgnvindu i Europe/Oslo — ikke process-TZ (Vercel er UTC). */
 function dayWindow(dateISO?: string): { from: Date; to: Date } {
-  const base = dateISO ? new Date(dateISO) : new Date();
-  const from = new Date(base);
-  from.setHours(0, 0, 0, 0);
-  const to = new Date(from);
-  to.setDate(to.getDate() + 1);
-  return { from, to };
+  return osloDagsvindu(dateISO ?? new Date());
 }
 
 /**

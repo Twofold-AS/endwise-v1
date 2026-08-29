@@ -25,6 +25,7 @@ async function loggUt() {
 
 /**
  * Telefon-chrome: temabakgrunn med logo over kortene, bevel under innholdet.
+ * Logoen er svart (logo.svg) og får logo-invert så den synes i mørkt tema.
  * Ingen horisontal scroller, hamburger, Mer-sheet, visningsvelger eller bunnbar.
  * Innstillinger bor i bevelen: avatar + navn + tannhjul + logg ut.
  */
@@ -52,6 +53,7 @@ export function PhoneShell() {
             width={PHONE_LOGO_PX}
             height={PHONE_LOGO_PX}
             priority
+            className="logo-invert"
           />
         </Link>
       </div>

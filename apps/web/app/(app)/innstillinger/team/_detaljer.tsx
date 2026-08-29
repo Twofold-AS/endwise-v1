@@ -1,5 +1,7 @@
 'use client';
 
+import { PASSORD_RESET_TTL_SEKUNDER } from '@endwise/auth/password-reset';
+import { formaterKlokkeslett } from '@endwise/auth/tid';
 import {
   Avatar,
   Dialog,
@@ -296,8 +298,12 @@ function Jobber({ userId }: { userId: string }) {
 
 function PassordEndring({ userId, kan }: { userId: string; kan: boolean }) {
   const [apen, setApen] = useState(false);
+  const [utloperKl, setUtloperKl] = useState<string | null>(null);
   const send = trpc.team.sendPassordendring.useMutation({
-    onSuccess: () => setApen(false),
+    onSuccess: () => {
+      setApen(false);
+      setUtloperKl(formaterKlokkeslett(new Date(Date.now() + PASSORD_RESET_TTL_SEKUNDER * 1000)));
+    },
   });
 
   if (!kan) {
@@ -346,7 +352,10 @@ function PassordEndring({ userId, kan }: { userId: string; kan: boolean }) {
         </DialogContent>
       </Dialog>
       {send.isSuccess ? (
-        <p className="text-[12px] text-fg-muted">Passordendring er sendt.</p>
+        <p className="text-[12px] text-fg-muted">
+          Passordendring er sendt.
+          {utloperKl ? ` Siste tidspunkt for å tilbakestille via lenken er kl. ${utloperKl}.` : ''}
+        </p>
       ) : null}
     </>
   );

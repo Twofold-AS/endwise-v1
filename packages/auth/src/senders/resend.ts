@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { LOGO_EPOST_CID, LOGO_EPOST_FILNAVN, LOGO_EPOST_PNG_BASE64 } from '../assets/logo-epost.ts';
 import { authEnv } from '../env.ts';
+import { formaterKlokkeslett } from '../tid.ts';
 import { byggEpostHtml, knapp, kodeboks, meldingsboks } from './epost-mal.ts';
 
 /** E-post-2FA og auth-eposter går via Resend (techstack §5). */
@@ -216,10 +217,7 @@ export async function sendPasswordReset(input: {
   lenke: string;
   utloper: Date;
 }): Promise<void> {
-  const klokkeslett = input.utloper.toLocaleTimeString('nb-NO', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const klokkeslett = formaterKlokkeslett(input.utloper);
 
   if (skalLeggesILogg()) {
     devRamme(

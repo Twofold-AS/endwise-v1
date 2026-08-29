@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { sammeOsloDag } from '../_lib/oslo-dag';
 import { fmtServices, fmtTime, STATUS_LABEL } from '../bookinger/_status';
 import { Timeplan } from './_timeplan';
 
@@ -25,7 +26,7 @@ export function VerkstedetDag() {
 
   const rader = useMemo(() => {
     return (bookings.data ?? [])
-      .filter((b) => new Date(b.startsAt).toDateString() === naa.toDateString())
+      .filter((b) => sammeOsloDag(b.startsAt, naa))
       .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
   }, [bookings.data, naa]);
 

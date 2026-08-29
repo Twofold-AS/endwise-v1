@@ -6,6 +6,13 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
+import {
+  osloDagsvindu,
+  osloKalenderdag,
+  osloPlusDager,
+  osloVeggklokke,
+  PRODUKT_TIDSSONE,
+} from '../../_lib/oslo-dag';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { AnsattePiller } from '../../_shell/ansatte-piller';
 import { CardShell } from '../../_shell/cards';
@@ -25,26 +32,24 @@ const STATUS_PRIKK: Record<string, string> = {
 /** Samme 7-dagers stripe som mekanikerens Timeplan («Min dag»). */
 function dagListe(): { iso: string; label: string; weekday: string }[] {
   const out: { iso: string; label: string; weekday: string }[] = [];
-  const base = new Date();
-  base.setHours(0, 0, 0, 0);
+  const start = osloKalenderdag(new Date());
   for (let i = 0; i < 7; i++) {
-    const d = new Date(base);
-    d.setDate(d.getDate() + i);
+    const ymd = osloPlusDager(start, i);
+    const middag = osloVeggklokke(ymd, 12, 0);
     out.push({
-      iso: d.toISOString(),
-      label: d.toLocaleDateString('nb-NO', { day: '2-digit', month: 'short' }),
-      weekday: d.toLocaleDateString('nb-NO', { weekday: 'short' }),
+      iso: ymd,
+      label: middag.toLocaleDateString('nb-NO', {
+        day: '2-digit',
+        month: 'short',
+        timeZone: PRODUKT_TIDSSONE,
+      }),
+      weekday: middag.toLocaleDateString('nb-NO', {
+        weekday: 'short',
+        timeZone: PRODUKT_TIDSSONE,
+      }),
     });
   }
   return out;
-}
-
-function dagsvindu(iso: string): { from: Date; to: Date } {
-  const from = new Date(iso);
-  from.setHours(0, 0, 0, 0);
-  const to = new Date(from);
-  to.setDate(to.getDate() + 1);
-  return { from, to };
 }
 
 /**
@@ -60,8 +65,8 @@ export default function TimeplanPage() {
 export function TimeplanFlate({ skjulPiller = false }: { skjulPiller?: boolean }) {
   const { isAdmin } = useOrgRole();
   const dager = useMemo(() => dagListe(), []);
-  const [valgt, setValgt] = useState(dager[0]?.iso ?? new Date().toISOString());
-  const vindu = dagsvindu(valgt);
+  const [valgt, setValgt] = useState(dager[0]?.iso ?? osloKalenderdag(new Date()));
+  const vindu = osloDagsvindu(valgt);
 
   const mekanikere = trpc.mechanics.oversikt.useQuery();
   const kalender = trpc.bookings.calendar.useQuery({ from: vindu.from, to: vindu.to });

@@ -3,6 +3,8 @@
  * booking-livssyklusen i `@endwise/modules` (F3-01). Klienten bruker dette kun
  * til å vise/grå ut knapper — serveren håndhever den ekte maskinen (assertTransition).
  */
+import { PRODUKT_TIDSSONE } from '../_lib/oslo-dag';
+
 export type BookingStatus =
   | 'draft'
   | 'confirmed'
@@ -59,7 +61,11 @@ export const ALL_STATUSES: BookingStatus[] = [
 ];
 
 export function fmtTime(d: Date | string): string {
-  return new Date(d).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+  return new Date(d).toLocaleTimeString('nb-NO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: PRODUKT_TIDSSONE,
+  });
 }
 
 export function fmtDate(d: Date | string): string {
@@ -67,6 +73,7 @@ export function fmtDate(d: Date | string): string {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: PRODUKT_TIDSSONE,
   });
 }
 

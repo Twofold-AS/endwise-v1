@@ -5,6 +5,16 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import {
+  osloKalenderdag,
+  osloPlusDager,
+  osloStartAvDag,
+  osloStartAvUke,
+  osloUkedagMandag0,
+  osloVeggtid,
+  PRODUKT_TIDSSONE,
+  sammeOsloDag,
+} from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
 import { fmtServices, STATUS_TONE } from '../bookinger/_status';
 
@@ -34,10 +44,10 @@ function rasterFor(jobber: { startsAt: string | Date; endsAt: string | Date }[])
   let start = DAG_START;
   let slutt = DAG_SLUTT;
   for (const b of jobber) {
-    const s = new Date(b.startsAt);
-    const e = new Date(b.endsAt);
-    start = Math.min(start, s.getHours());
-    const sluttTime = e.getHours() + (e.getMinutes() > 0 || e.getSeconds() > 0 ? 1 : 0);
+    const s = osloVeggtid(b.startsAt);
+    const e = osloVeggtid(b.endsAt);
+    start = Math.min(start, s.hour);
+    const sluttTime = e.hour + (e.minute > 0 ? 1 : 0);
     slutt = Math.max(slutt, sluttTime);
   }
   return { start: Math.max(0, start), slutt: Math.min(24, Math.max(start + 1, slutt)) };
@@ -46,23 +56,16 @@ function rasterFor(jobber: { startsAt: string | Date; endsAt: string | Date }[])
 type Modus = 'dag' | 'uke';
 
 function startAvDag(d: Date): Date {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
+  return osloStartAvDag(d);
 }
 
 /** Mandag som ukestart — norsk konvensjon, ikke søndag. */
 function startAvUke(d: Date): Date {
-  const x = startAvDag(d);
-  const dag = (x.getDay() + 6) % 7;
-  x.setDate(x.getDate() - dag);
-  return x;
+  return osloStartAvUke(d);
 }
 
 function leggTilDager(d: Date, n: number): Date {
-  const x = new Date(d);
-  x.setDate(x.getDate() + n);
-  return x;
+  return osloStartAvDag(osloPlusDager(osloKalenderdag(d), n));
 }
 
 const DAGNAVN = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
@@ -157,8 +160,9 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',
+                timeZone: PRODUKT_TIDSSONE,
               })
-            : `${fra.toLocaleDateString('nb-NO', { day: 'numeric', month: 'short' })} – ${leggTilDager(fra, 6).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short' })}`}
+            : `${fra.toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', timeZone: PRODUKT_TIDSSONE })} – ${leggTilDager(fra, 6).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', timeZone: PRODUKT_TIDSSONE })}`}
         </span>
 
         {/*
@@ -205,16 +209,19 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
                     </div>
                   ))
                 : dager.map((d) => {
-                    const iDag = d.toDateString() === new Date().toDateString();
+                    const iDag = sammeOsloDag(d, new Date());
+                    const dagKey = osloKalenderdag(d);
                     return (
                       <div
-                        key={d.toISOString()}
+                        key={dagKey}
                         className={`flex-1 border-border border-l px-2 py-2 text-center ${iDag ? 'bg-accent-soft' : ''}`}
                       >
                         <div className="text-[11px] text-fg-muted">
-                          {DAGNAVN[(d.getDay() + 6) % 7]}
+                          {DAGNAVN[osloUkedagMandag0(d)]}
                         </div>
-                        <div className="text-label text-fg tabular-nums">{d.getDate()}.</div>
+                        <div className="text-label text-fg tabular-nums">
+                          {Number(dagKey.slice(8, 10))}.
+                        </div>
                       </div>
                     );
                   })}
@@ -243,7 +250,7 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
                     const k = kol as { id: string | null };
                     return k.id == null || b.mechanicId === k.id;
                   }
-                  return start.toDateString() === (kol as Date).toDateString();
+                  return sammeOsloDag(start, kol as Date);
                 });
 
                 return (
@@ -251,7 +258,7 @@ export function Kalender({ mechanicId }: { mechanicId?: string }) {
                     key={
                       erDag
                         ? ((kol as { id: string | null }).id ?? 'alle')
-                        : (kol as Date).toISOString()
+                        : osloKalenderdag(kol as Date)
                     }
                     className="relative min-w-0 flex-1 border-border border-l"
                   >
@@ -318,9 +325,11 @@ function Kloss({
 }) {
   const start = new Date(booking.startsAt);
   const slutt = new Date(booking.endsAt);
+  const startVegg = osloVeggtid(start);
+  const sluttVegg = osloVeggtid(slutt);
 
-  const startTimer = start.getHours() + start.getMinutes() / 60;
-  const sluttTimer = slutt.getHours() + slutt.getMinutes() / 60;
+  const startTimer = startVegg.hour + startVegg.minute / 60;
+  const sluttTimer = sluttVegg.hour + sluttVegg.minute / 60;
 
   const fra = Math.max(startTime, Math.min(startTimer, sluttTime));
   const til = Math.min(sluttTime, Math.max(sluttTimer, fra + 0.25));
@@ -335,12 +344,16 @@ function Kloss({
       className={`absolute right-1 left-1 overflow-hidden rounded-control border border-border px-2 py-1 transition-colors hover:border-border-strong ${
         STATUS_TONE[booking.status] ?? 'bg-surface-2 text-fg'
       }`}
-      title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} · ${fmtServices(booking)}${booking.mechanicName ? ` · ${booking.mechanicName}` : ''}`}
+      title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit', timeZone: PRODUKT_TIDSSONE })} · ${fmtServices(booking)}${booking.mechanicName ? ` · ${booking.mechanicName}` : ''}`}
       // Sørger for at senere klosser tegnes over tidligere ved overlapp.
       data-kol={kolIndex}
     >
       <div className="truncate font-medium text-[11px] tabular-nums">
-        {start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}{' '}
+        {start.toLocaleTimeString('nb-NO', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: PRODUKT_TIDSSONE,
+        })}{' '}
         {booking.regNumber ?? 'Uten regnr'}
       </div>
       {height > 34 && (

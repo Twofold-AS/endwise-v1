@@ -238,6 +238,48 @@ describe('engangskode-e-posten', () => {
   });
 });
 
+describe('passordreset-e-posten (F1-16)', () => {
+  async function last() {
+    vi.resetModules();
+    return import('../src/senders/resend.ts');
+  }
+
+  beforeEach(() => {
+    process.env.NODE_ENV = 'test';
+    process.env.RESEND_API_KEY = 'test-nokkel';
+    process.env.RESEND_FROM = 'Endwise <no-reply@no-reply.endwise.no>';
+  });
+
+  it('skriver utløp i Europe/Oslo, ikke UTC', async () => {
+    const sendt: Record<string, unknown>[] = [];
+    vi.doMock('resend', () => ({
+      Resend: class {
+        emails = {
+          send: async (payload: Record<string, unknown>) => {
+            sendt.push(payload);
+            return { data: { id: 'x' }, error: null };
+          },
+        };
+      },
+    }));
+
+    const { sendPasswordReset } = await last();
+    await sendPasswordReset({
+      to: 'mikkis@twofold.no',
+      lenke: 'https://endwise.no/nytt-passord?token=eksempel',
+      utloper: new Date('2026-08-29T05:46:00.000Z'),
+    });
+
+    expect(sendt).toHaveLength(1);
+    const p = sendt[0] as { text: string; html: string };
+    expect(p.text).toContain('gyldig til kl. 07:46');
+    expect(p.html).toContain('gyldig til kl. 07:46');
+    expect(p.text).not.toContain('gyldig til kl. 05:46');
+    expect(p.html).not.toContain('gyldig til kl. 05:46');
+    vi.doUnmock('resend');
+  });
+});
+
 describe('invitasjons-e-posten (F1-10)', () => {
   async function last() {
     vi.resetModules();

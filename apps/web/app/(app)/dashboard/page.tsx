@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { sammeOsloDag } from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
 import { PhoneHomeDealer } from '../_shell/phone-home-dealer';
 import { fmtServices, fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
@@ -63,7 +64,7 @@ function VerkstedetDesktop() {
   const { idag, paagaar, ferdigIdag, rader } = useMemo(() => {
     const alle = bookings.data ?? [];
     const naa = new Date();
-    const sammeDag = (d: Date | string) => new Date(d).toDateString() === naa.toDateString();
+    const sammeDag = (d: Date | string) => sammeOsloDag(d, naa);
 
     const dagens = alle
       .filter((b) => sammeDag(b.startsAt))

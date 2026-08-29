@@ -4,6 +4,7 @@ import { CalendarDays } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { PRODUKT_TIDSSONE } from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
 import { fmtServices, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
 import {
@@ -110,10 +111,14 @@ export function Timeplan({
                     className={`absolute right-1 left-1 overflow-hidden rounded-control border border-border px-2 py-1 transition-colors hover:border-border-strong ${
                       STATUS_TONE[b.status] ?? 'bg-surface-2 text-fg'
                     }`}
-                    title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} · ${STATUS_LABEL[b.status] ?? b.status}`}
+                    title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit', timeZone: PRODUKT_TIDSSONE })} · ${STATUS_LABEL[b.status] ?? b.status}`}
                   >
                     <div className="truncate font-medium text-[11px] tabular-nums">
-                      {start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}{' '}
+                      {start.toLocaleTimeString('nb-NO', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        timeZone: PRODUKT_TIDSSONE,
+                      })}{' '}
                       {b.regNumber ?? ''}
                     </div>
                     {height > 32 && (

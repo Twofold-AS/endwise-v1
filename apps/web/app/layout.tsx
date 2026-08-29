@@ -39,6 +39,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: '#ffffff',
   colorScheme: 'light',
+  // Chrome/iOS: uten cover er env(safe-area-inset-*) 0 og 100vh går under UI.
+  viewportFit: 'cover',
 };
 
 /*

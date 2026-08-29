@@ -130,6 +130,30 @@ describe('phone-chrome', () => {
     expect(sett.behavior).toBe('smooth');
   });
 
+  it('app-skallet bruker dvh og safe-area, ikke 100vh på sideroten', () => {
+    const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
+    const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
+    const mobile = utenKommentarer(les('../app/(app)/_shell/mobile-shell.tsx'));
+    const rot = utenKommentarer(les('../app/layout.tsx'));
+    const css = les('../app/globals.css');
+
+    expect(chrome).toMatch(/export const APP_SHELL/);
+    expect(chrome).toMatch(/h-dvh|100dvh/);
+    expect(chrome).toMatch(/safe-area-inset-top/);
+    expect(chrome).toMatch(/safe-area-inset-bottom/);
+    expect(chrome).not.toMatch(/\bh-screen\b|\b100vh\b/);
+
+    expect(layout).toMatch(/APP_SHELL/);
+    expect(layout).not.toMatch(/\bh-screen\b|\bw-screen\b|\b100vh\b/);
+
+    expect(mobile).toMatch(/APP_SHELL/);
+    expect(mobile).not.toMatch(/\bh-screen\b|\bw-screen\b|\b100vh\b/);
+    expect(mobile).not.toMatch(/<main[^>]*safe-area-inset-bottom/);
+
+    expect(rot).toMatch(/viewportFit:\s*['"]cover['"]/);
+    expect(css).toMatch(/100dvh/);
+  });
+
   it('tilbake-pil sitter i end-spacer uten hover eller aktiv-tilstand', () => {
     const hscroll = utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'));
     const phone = utenKommentarer(les('../app/(app)/_shell/phone-nav.tsx'));

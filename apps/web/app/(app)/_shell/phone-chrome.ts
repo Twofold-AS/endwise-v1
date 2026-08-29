@@ -14,6 +14,16 @@ export const PHONE_LOGO_KOLONNE =
 export const PHONE_H_SCROLL = 'overflow-x-auto overflow-y-hidden overscroll-y-none touch-pan-x';
 
 /**
+ * Viewport-låst app-skall (forhandler + mekaniker).
+ * Chrome-mobil: `h-screen`/`100vh` er den store viewporten (adresselinje
+ * skjult). Med overflow-hidden klippes topp/bunn mot Chrome-UI, notch og
+ * home indicator. `100dvh` følger synlig viewport. Safe-area på selve
+ * skallet — ikke på `<main>` og ikke som 40px-gjetning. Desktop: inset er 0.
+ */
+export const APP_SHELL =
+  'h-dvh w-full overflow-hidden bg-bg text-fg overscroll-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]';
+
+/**
  * Trailing space så ethvert valgt punkt kan scrolle flush etter logo.
  * Målt — ikke et magisk px som bare treffer én skjermbredde.
  */

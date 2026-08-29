@@ -30,6 +30,18 @@
  */
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
 
+/*
+ * Chrome-mobil: 100vh inkluderer den kollapsende adresselinjen.
+ * html/body følger synlig viewport (dvh) så app-skallet ikke stikker
+ * utenfor. overflow låses IKKE her — innloggingssider må kunne scrolle.
+ */
+html {
+  height: 100dvh;
+}
+body {
+  min-height: 100dvh;
+}
+
 /* Skjult scrollbar for sidebar-rail-en (beholder scroll, fjerner sporet). */
 .no-scrollbar {
   scrollbar-width: none;

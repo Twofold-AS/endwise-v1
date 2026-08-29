@@ -38,18 +38,20 @@ export function Timeplan({
   mekName,
   laster,
   feil,
+  tittel = 'Timeplan',
 }: {
   jobber: Booking[] | undefined;
   mekName: Map<string, string>;
   laster: boolean;
   feil?: string;
+  tittel?: string;
 }) {
   const rader = useMemo(() => dagensSaker(jobber ?? [], new Date()), [jobber]);
 
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-title text-fg">Timeplan</h2>
+        <h2 className="text-title text-fg">{tittel}</h2>
         <Link
           href={'/saker?visning=kalender' as Route}
           className="text-[12px] text-fg-muted transition-colors hover:text-fg"

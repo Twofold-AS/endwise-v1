@@ -132,9 +132,7 @@ describe('phone-chrome', () => {
 
   it('tilbake-pil sitter i end-spacer uten hover eller aktiv-tilstand', () => {
     const hscroll = utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'));
-    const phone = utenKommentarer(les('../app/(app)/_shell/phone-nav.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-    expect(phone).toMatch(/PhoneHScroll/);
     expect(seksjon).toMatch(/PhoneHScroll/);
     expect(hscroll).toMatch(/data-end-spacer/);
     expect(hscroll).toMatch(/data-scroll-tilbake/);

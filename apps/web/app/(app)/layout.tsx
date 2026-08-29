@@ -10,7 +10,8 @@ import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
 import { InboxFilterProvider } from './_shell/inbox-filter';
 import { erTillattMekanikerSti } from './_shell/nav';
-import { PhoneNav } from './_shell/phone-nav';
+import { PHONE_SHELL_ROT } from './_shell/phone-home';
+import { PhoneBevel, PhoneShell } from './_shell/phone-shell';
 import { PwaRegister } from './_shell/pwa-register';
 import { InnboksSeksjonBar, OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
 import { Sidebar } from './_shell/sidebar';
@@ -134,7 +135,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <SidebarStateProvider>
           <InboxFilterProvider>
             <PwaRegister />
-            <div className="flex h-screen w-screen overflow-hidden bg-bg text-fg">
+            <div className={PHONE_SHELL_ROT}>
               <Suspense
                 fallback={
                   <div className="hidden w-[248px] shrink-0 border-border border-r bg-sidebar md:block" />
@@ -151,9 +152,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Suspense
                   fallback={<div className="h-control shrink-0 border-border border-b bg-bg" />}
                 >
-                  <div className="md:hidden">
-                    <PhoneNav />
-                  </div>
+                  <PhoneShell />
                   <div className="hidden md:block">
                     <TopBar />
                   </div>
@@ -175,6 +174,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   ) : null}
                   {children}
                 </main>
+                <PhoneBevel />
               </div>
             </div>
           </InboxFilterProvider>

@@ -37,7 +37,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
   const online = useOnline();
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-fg">
+    <div className="flex h-dvh max-h-dvh min-h-svh w-full flex-col overflow-hidden bg-bg text-fg">
       <PwaRegister />
 
       {!online && (

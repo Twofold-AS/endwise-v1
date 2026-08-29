@@ -189,7 +189,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
   const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
   const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-  const phone = utenKommentarer(les('../app/(app)/_shell/phone-nav.tsx'));
+  const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
   const hscroll = utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'));
   const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
 
@@ -208,51 +208,40 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(rad).not.toMatch(/UserCog/);
   });
 
-  it('telefon: horisontal nav, ingen top-bar 1, Hjelp er knapp', () => {
-    expect(layout).toMatch(/PhoneNav/);
-    expect(layout).toMatch(/md:hidden/);
+  it('telefon: kort-hjem-shell, ingen top-bar 1, desktop-sidebar urørt', () => {
+    expect(layout).toMatch(/PhoneShell/);
+    expect(layout).toMatch(/PhoneBevel/);
+    expect(layout).not.toMatch(/PhoneNav/);
+    expect(layout).toMatch(/hidden md:block/);
     expect(layout).toMatch(/OrganisasjonSeksjonBar/);
-    expect(chrome).toMatch(/overflow-x-auto/);
-    expect(chrome).toMatch(/overflow-y-hidden/);
-    expect(chrome).toMatch(/touch-pan-x/);
-    expect(chrome).toMatch(/overscroll-y-none/);
-    expect(chrome).toMatch(/scrollTo/);
-    expect(chrome).not.toMatch(/scrollIntoView/);
-    expect(phone).toMatch(/PhoneHScroll/);
-    expect(phone).toMatch(/overflow-y-hidden/);
-    expect(phone).toMatch(/touch-pan-x/);
-    expect(hscroll).toMatch(/flex-nowrap/);
-    expect(phone).toMatch(/h-row/);
-    expect(phone).toMatch(/min-h-row/);
-    expect(phone).toMatch(/text-label/);
-    expect(phone).toMatch(/whitespace-nowrap/);
-    expect(phone).toMatch(/logo\/logo\.svg/);
-    expect(hscroll).toMatch(/laasAktivMotStart/);
-    expect(hscroll).toMatch(/data-end-spacer/);
-    expect(hscroll).toMatch(/data-scroll-tilbake/);
-    expect(phone).not.toMatch(/Handlinger/);
-    expect(phone).not.toMatch(/QUICK_ACTIONS/);
-    expect(phone).not.toMatch(/logo-invert|recolor|filter:/);
-    expect(phone).not.toMatch(/h-row-store|h-11/);
-    expect(phone).not.toMatch(/TipCard|helpdesk-slider|hamburger/i);
-    expect(phone).not.toMatch(/text-sm|text-\[11px\]/);
+    expect(shell).toMatch(/md:hidden/);
+    expect(shell).toMatch(/logo\/logo\.svg/);
+    expect(shell).toMatch(/PHONE_SAFE_TOP/);
+    expect(shell).toMatch(/PHONE_SAFE_BUNN/);
+    expect(shell).not.toMatch(/PhoneHScroll|hamburger|Handlinger|QUICK_ACTIONS/i);
+    expect(shell).not.toMatch(/logo-invert|recolor|filter:/);
+    expect(shell).not.toMatch(/TipCard|helpdesk-slider|visningsvelger/i);
     expect(sidebar).toMatch(/hidden[\s\S]*md:flex/);
     expect(sidebar).toMatch(/Handlinger/);
     expect(sidebar).toMatch(/min-width:\s*768px/);
+    expect(chrome).toMatch(/scrollTo/);
+    expect(chrome).not.toMatch(/scrollIntoView/);
+    expect(hscroll).toMatch(/data-end-spacer/);
   });
 
   it('top-bar 2 er sidebar-rad, ikke svart pille', () => {
     expect(seksjon).toMatch(/bg-sidebar-active/);
     expect(seksjon).toMatch(/hover:bg-surface-2/);
     expect(seksjon).toMatch(/PhoneHScroll/);
+    expect(seksjon).toMatch(/flex-wrap/);
     expect(seksjon).toMatch(/overflow-y-hidden/);
     expect(seksjon).toMatch(/touch-pan-x/);
-    expect(seksjon).toMatch(/PHONE_LOGO_KOLONNE/);
+    expect(seksjon).not.toMatch(/PHONE_LOGO_KOLONNE/);
     expect(hscroll).toMatch(/flex-nowrap/);
     expect(seksjon).toMatch(/whitespace-nowrap/);
     expect(seksjon).toMatch(/h-control/);
     expect(seksjon).toMatch(/min-h-control/);
-    expect(seksjon).toMatch(/max-md:py-1\.5/);
+    expect(seksjon).toMatch(/py-1\.5/);
     expect(seksjon).toMatch(/max-md:py-1/);
     expect(seksjon).toMatch(/max-md:h-auto/);
     expect(seksjon).toMatch(/text-label/);

@@ -45,7 +45,7 @@ const IKON = 16;
  * Den dominerende sidebaren (desktop).
  * Header er h-control, samme rad som top-bar 1.
  * Kollaps-knappen bor i sidebaren. Ingen «Forhandler»-undertekst.
- * På telefon erstattes denne av PhoneNav.
+ * På telefon erstattes denne av PhoneShell (kort-hjem + bevel).
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';

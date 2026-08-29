@@ -4,7 +4,7 @@ import { CalendarCheck, ClipboardList, Inbox, Wrench } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { Suspense, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
 import { PhoneHomeDealer } from '../_shell/phone-home-dealer';
@@ -26,7 +26,7 @@ import { VerkstedetDag } from './_verkstedet-dag';
  * oppdiktet, så ingenting trenger et «Mock»-merke.
  * Er det tomt, sier siden det — en tom dag er informasjon, ikke en feil.
  */
-export default function VerkstedetPage() {
+function VerkstedetPageInner() {
   const search = useSearchParams();
   const dag = search?.get('visning') === 'dag';
 
@@ -37,6 +37,21 @@ export default function VerkstedetPage() {
         <VerkstedetDesktop />
       </div>
     </>
+  );
+}
+
+/**
+ * Suspense-grense er påkrevd: siden leser `useSearchParams` (?visning=dag).
+ * Uten den faller /dashboard og aliaset /verkstedet ut av prerender
+ * og `next build` feiler.
+ */
+export default function VerkstedetPage() {
+  return (
+    <Suspense
+      fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster verkstedet …</div>}
+    >
+      <VerkstedetPageInner />
+    </Suspense>
   );
 }
 

@@ -268,6 +268,15 @@ describe('desktop sidebar er urørt', () => {
     expect(dash).toMatch(/hidden md:block|md:hidden/);
     expect(dash).toMatch(/Dagens saker|AnsattePaJobb|Timeplan/);
   });
+
+  it('dashboard og /verkstedet wrapper useSearchParams i Suspense (next build)', () => {
+    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    const alias = les('../app/(app)/verkstedet/page.tsx');
+    expect(dash).toMatch(/useSearchParams/);
+    expect(dash).toMatch(/<Suspense[\s\S]*VerkstedetPageInner/);
+    expect(dash).toMatch(/export default function VerkstedetPage/);
+    expect(alias).toMatch(/from ['"]\.\.\/dashboard\/page['"]/);
+  });
 });
 
 describe('Verkstedet-dag og Organisasjon på telefon', () => {

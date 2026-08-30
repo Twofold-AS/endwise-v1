@@ -5,49 +5,50 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   FARGER,
   fullforAvatarValg,
-  HUMOR,
   TOM_AVATAR_VALG,
   tilfeldigAvatarValg,
 } from '../app/(app)/_avatar/avatar-valg.ts';
 
 /**
- * Happy-låsen er opphevet. Opprett og «Ny tilfeldig» tvinger ikke
- * humør til happy. Valgt humør og farge overskrives ikke.
+ * Form, humør og tone er ute av velgeren. Bare farge (hue) styres.
+ * «Ny tilfeldig» trekker en ny farge og tømmer leftover-feltene.
  */
 const her = dirname(fileURLToPath(import.meta.url));
 
-describe('AvatarVelger — farge, humør og eksisterende kontroller', () => {
+describe('AvatarVelger — bare farge, uten form/humør/tone', () => {
   const velger = readFileSync(resolve(her, '../app/(app)/_avatar/avatar-velger.tsx'), 'utf8');
 
-  it('har ingen medHappy-lås og tvinger ikke humor: happy', () => {
-    expect(velger).not.toMatch(/function medHappy/);
-    expect(velger).not.toMatch(/medHappy\(/);
-    expect(velger).not.toMatch(/Humøret er alltid blidt/);
-    expect(velger).not.toMatch(/ALLTID happy/);
+  it('har ingen form-, humør- eller tone-velger', () => {
+    expect(velger).not.toMatch(/FORMER\.map/);
+    expect(velger).not.toMatch(/HUMOR\.map/);
+    expect(velger).not.toMatch(/TONER\.map/);
+    expect(velger).not.toMatch(/<p className="mb-2 text-label text-fg">Form<\/p>/);
+    expect(velger).not.toMatch(/<p className="mb-2 text-label text-fg">Humør<\/p>/);
+    expect(velger).not.toMatch(/<p className="mb-2 text-label text-fg">Tone<\/p>/);
+    expect(velger).not.toMatch(/Endre form, farge og uttrykk/);
+    expect(velger).not.toMatch(/velg form, farge og humør/i);
+    expect(velger).not.toMatch(/<details/);
+    expect(velger).not.toMatch(/foldFormer/);
+    expect(velger).not.toMatch(/function Nedtrekk/);
+    expect(velger).not.toMatch(/id="humor"/);
     expect(velger).not.toMatch(/humor:\s*['"]happy['"]/);
   });
 
-  it('viser form, farge, humør og tone — uten de fire P0-nedtrekkene', () => {
-    expect(velger).toMatch(/FORMER\.map/);
+  it('viser farge og Ny tilfeldig, med gaze på det store ansiktet', () => {
     expect(velger).toMatch(/FARGER\.map/);
-    expect(velger).toMatch(/HUMOR\.map/);
-    expect(velger).toMatch(/TONER\.map/);
     expect(velger).toMatch(/Ny tilfeldig/);
     expect(velger).toMatch(/size = 48/);
     expect(velger).toMatch(/size=\{size\}/);
     expect(velger).toMatch(/bevegelse="alltid"/);
-    expect(velger).not.toMatch(/function Nedtrekk/);
-    expect(velger).not.toMatch(/id="humor"/);
-    expect(velger).not.toMatch(/grid grid-cols-2 gap-3 lg:grid-cols-4/);
+    expect(velger).toMatch(/Velg farge, eller trekk en ny tilfeldig/);
   });
 
-  it('Ny tilfeldig beholder valgt humør og farge', () => {
-    expect(velger).toMatch(/tilfeldigAvatarValg\(\{/);
-    expect(velger).toMatch(/humor:\s*valg\.humor/);
-    expect(velger).toMatch(/farge:\s*valg\.farge/);
+  it('Ny tilfeldig tømmer leftover form/humør/tone', () => {
+    expect(velger).toMatch(/tilfeldigAvatarValg\(\)/);
+    expect(velger).not.toMatch(/humor:\s*valg\.humor/);
   });
 
-  it('sidebar viser valgt humor — ikke tvunget happy, ikke jobbstatus', () => {
+  it('sidebar viser seed+farge — ikke tvunget happy, ikke jobbstatus', () => {
     const rad = readFileSync(resolve(her, '../app/(app)/_shell/bruker-rad.tsx'), 'utf8');
     expect(rad).toMatch(/bevegelse="alltid"/);
     expect(rad).toMatch(/valg=\{profil\.data\?\.avatar\}/);
@@ -56,24 +57,10 @@ describe('AvatarVelger — farge, humør og eksisterende kontroller', () => {
   });
 });
 
-describe('tilfeldigAvatarValg trekker uttrykk, ikke bare happy', () => {
+describe('tilfeldigAvatarValg trekker farge, ikke form eller humør', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-  });
-
-  it('vokabularet er bibliotekets ti kuraterte uttrykk', () => {
-    expect(HUMOR.map((h) => h.key)).toEqual([
-      'idle',
-      'happy',
-      'wink',
-      'smug',
-      'sleepy',
-      'thinking',
-      'surprised',
-      'unsure',
-      'love',
-      'shy',
-    ]);
+    vi.restoreAllMocks();
   });
 
   it('siste to farger er lilla 270 og rosa 320 — ikke 300/340', () => {
@@ -84,79 +71,57 @@ describe('tilfeldigAvatarValg trekker uttrykk, ikke bare happy', () => {
     expect(FARGER.map((f) => f.grader)).not.toContain(340);
   });
 
-  it('kan trekke sleepy og thinking — ikke tvunget til happy', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.45);
+  it('trekker en farge og tømmer form/humør/tone', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.01);
     const valg = tilfeldigAvatarValg();
-    expect(valg.humor).not.toBe('happy');
-    expect(HUMOR.map((h) => h.key)).toContain(valg.humor);
+    expect(valg.form).toBeNull();
+    expect(valg.humor).toBeNull();
+    expect(valg.tone).toBeNull();
+    expect(valg.farge).toBe(20);
   });
 
-  it('ulike tilfeldige trekk kan gi ulike uttrykk', () => {
-    const sett = new Set<string>();
-    for (let i = 0; i < HUMOR.length; i++) {
-      vi.spyOn(Math, 'random').mockReturnValue((i + 0.1) / HUMOR.length);
-      sett.add(tilfeldigAvatarValg().humor ?? '');
-      vi.restoreAllMocks();
-    }
-    expect(sett.size).toBeGreaterThan(1);
-  });
-
-  it('beholder valgt humør og farge når form regenereres', () => {
-    const neste = tilfeldigAvatarValg({ humor: 'thinking', farge: 150, tone: 2 });
-    expect(neste.humor).toBe('thinking');
+  it('beholder valgt farge når den sendes inn — leftover røres ikke tilbake', () => {
+    const neste = tilfeldigAvatarValg({ farge: 150 });
     expect(neste.farge).toBe(150);
-    expect(neste.tone).toBe(2);
-    expect(neste.form).toBeTruthy();
-    expect(neste.humor).not.toBe('happy');
+    expect(neste.form).toBeNull();
+    expect(neste.humor).toBeNull();
+    expect(neste.tone).toBeNull();
   });
 });
 
-describe('opprett-sti tvinger ikke happy', () => {
+describe('opprett-sti tvinger ikke happy og pinner ikke form', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
-  it('tom avatar får tilfeldig humør blant de ti — ikke hardkodet happy', () => {
+  it('tom avatar får tilfeldig farge — ikke form eller humør', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.01);
     const valg = fullforAvatarValg(TOM_AVATAR_VALG);
-    expect(valg.humor).not.toBeNull();
-    expect(HUMOR.map((h) => h.key)).toContain(valg.humor);
-    expect(valg.humor).toBe('idle');
-    expect(valg.form).toBeTruthy();
-    expect(valg.farge).toBeTruthy();
+    expect(valg.farge).toBe(20);
+    expect(valg.form).toBeNull();
+    expect(valg.humor).toBeNull();
+    expect(valg.tone).toBeNull();
   });
 
   it('null-input er samme opprett-sti som tomt valg', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.55);
     const valg = fullforAvatarValg(null);
-    expect(valg.humor).not.toBe('happy');
-    expect(HUMOR.map((h) => h.key)).toContain(valg.humor);
+    expect(valg.form).toBeNull();
+    expect(valg.humor).toBeNull();
+    expect(FARGER.map((f) => f.grader)).toContain(valg.farge);
   });
 
-  it('delvis valg uten humør får tilfeldig humør — farge og form røres ikke', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.75);
+  it('leftover form/humør/tone tømmes ved fullfør — fargen beholdes', () => {
     const valg = fullforAvatarValg({
       form: 'sun',
-      humor: null,
+      humor: 'wink',
       farge: 195,
       tone: 3,
     });
-    expect(valg.form).toBe('sun');
+    expect(valg.form).toBeNull();
+    expect(valg.humor).toBeNull();
+    expect(valg.tone).toBeNull();
     expect(valg.farge).toBe(195);
-    expect(valg.tone).toBe(3);
-    expect(valg.humor).not.toBeNull();
-    expect(valg.humor).not.toBe('happy');
-    expect(HUMOR.map((h) => h.key)).toContain(valg.humor);
-  });
-
-  it('valgt humør overskrives ikke ved fullfør', () => {
-    const valgt = {
-      form: 'triangle' as const,
-      humor: 'wink' as const,
-      farge: 250,
-      tone: 1,
-    };
-    expect(fullforAvatarValg(valgt)).toEqual(valgt);
   });
 });

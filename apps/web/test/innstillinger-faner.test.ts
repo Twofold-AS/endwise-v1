@@ -124,7 +124,7 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
 
   it('profil-raden har avatar + endre-knapp øverst, feltene stables under uten kort', () => {
     expect(profilFane).toMatch(/size=\{56\}/);
-    expect(profilFane).toMatch(/foldFormer/);
+    expect(profilFane).not.toMatch(/foldFormer/);
     expect(profilFane).toMatch(/utenKort/);
     expect(profilFane).toMatch(/VisningsnavnFelt/);
     expect(profilFane).toMatch(/KallenavnFelt/);
@@ -135,9 +135,10 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
     expect(profilFane).not.toMatch(/sm:grid-cols-2/);
     const avatar = les('../app/(app)/_avatar/avatar-velger.tsx');
     expect(avatar).toMatch(/flex flex-row items-center gap-4/);
-    expect(avatar).toMatch(/<details/);
-    expect(avatar).toMatch(/Endre form, farge og uttrykk/);
-    expect(avatar).toMatch(/HUMOR\.map/);
+    expect(avatar).not.toMatch(/<details/);
+    expect(avatar).not.toMatch(/Endre form, farge og uttrykk/);
+    expect(avatar).not.toMatch(/HUMOR\.map/);
+    expect(avatar).toMatch(/FARGER\.map/);
     expect(avatar).not.toMatch(/function medHappy/);
     expect(avatar).not.toMatch(/from '@\/components\/ui\/collapsible'/);
   });

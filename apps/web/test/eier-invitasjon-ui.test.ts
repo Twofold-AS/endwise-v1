@@ -100,11 +100,11 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(oppstart).not.toMatch(/setModules/);
   });
 
-  it('avatar-velgeren er ett ansikt med Ny tilfeldig, farge og humør — ikke fire nedtrekk', () => {
+  it('avatar-velgeren er ett ansikt med Ny tilfeldig og farge — ikke form/humør/tone', () => {
     expect(avatar).toMatch(/Ny tilfeldig/);
-    expect(avatar).toMatch(/HUMOR\.map/);
+    expect(avatar).not.toMatch(/HUMOR\.map/);
     expect(avatar).toMatch(/FARGER\.map/);
-    expect(avatar).toMatch(/TONER\.map/);
+    expect(avatar).not.toMatch(/TONER\.map/);
     expect(avatar).not.toMatch(/function Nedtrekk/);
     expect(avatar).not.toMatch(/id="humor"/);
   });

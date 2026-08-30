@@ -341,7 +341,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
       : 'Invitasjonen virker ikke';
   const undertekst = inv
     ? steg === 'avatar'
-      ? 'Form, farge og humør. Du kan endre det senere i profilen.'
+      ? 'Velg farge, eller trekk en ny tilfeldig. Du kan endre det senere i profilen.'
       : steg === 'kode'
         ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
         : inv.kind === 'platform'

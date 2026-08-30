@@ -15,8 +15,8 @@ import { ToFaktorRad } from '../_shell/to-faktor-rad';
  * F5-19 / F1-17 / F1-20 — Settings › Profil, landet i pille-fanen.
  * Layout (Mikael 28.08): avatar + endre-knapp på samme rad øverst,
  * uten CardShell. Deretter visningsnavn · kallenavn · e-post ett og
- * ett nedover. Form-/farge-/uttrykk-velgeren er foldet under avataren.
- * Ingen filopplasting. Felt-Lagre beholdes, ingen sticky Save.
+ * ett nedover. Bare fargevelger under avataren — form, humør og tone
+ * er borte. Ingen filopplasting. Felt-Lagre beholdes, ingen sticky Save.
  */
 export function ProfilFane() {
   const [theme, setTheme] = useState<Tema>('light');
@@ -40,7 +40,7 @@ export function ProfilFane() {
 
   return (
     <div className="flex flex-col gap-5">
-      <AvatarVelger seed={me.data?.userId ?? null} size={56} foldFormer utenKort />
+      <AvatarVelger seed={me.data?.userId ?? null} size={56} utenKort />
 
       <div>
         <p className="mb-2 text-label text-fg">Visningsnavn</p>

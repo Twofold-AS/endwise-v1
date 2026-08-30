@@ -159,8 +159,8 @@ importers:
         specifier: ^4.0.67
         version: 4.0.67(react@19.2.7)(zod@4.4.3)
       '@blobatar/react':
-        specifier: ^2.3.1
-        version: 2.3.1(blobatar@2.3.1(react@19.2.7))(react@19.2.7)
+        specifier: ^2.7.0
+        version: 2.7.0(blobatar@2.7.0(react@19.2.7))(react@19.2.7)
       '@endwise/api':
         specifier: workspace:*
         version: link:../api
@@ -207,8 +207,8 @@ importers:
         specifier: ~1.6.30
         version: 1.6.30(@opentelemetry/api@1.9.1)(@prisma/client@5.22.0)(better-sqlite3@12.11.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)(@prisma/client@5.22.0)(@types/pg@8.20.0)(better-sqlite3@12.11.1)(kysely@0.29.3)(pg@8.22.0))(next@16.2.11(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(pg@8.22.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.1)))
       blobatar:
-        specifier: ^2.3.1
-        version: 2.3.1(react@19.2.7)
+        specifier: ^2.7.0
+        version: 2.7.0(react@19.2.7)
       cuelume:
         specifier: ^0.2.2
         version: 0.2.2
@@ -571,8 +571,8 @@ importers:
   packages/ui:
     dependencies:
       '@blobatar/react':
-        specifier: ^2.3.1
-        version: 2.3.1(blobatar@2.3.1(react@19.2.7))(react@19.2.7)
+        specifier: ^2.7.0
+        version: 2.7.0(blobatar@2.7.0(react@19.2.7))(react@19.2.7)
       '@endwise/widget-tokens':
         specifier: workspace:*
         version: link:../widget-tokens
@@ -586,8 +586,8 @@ importers:
         specifier: ^3.1.8
         version: 3.1.8
       blobatar:
-        specifier: ^2.3.1
-        version: 2.3.1(react@19.2.7)
+        specifier: ^2.7.0
+        version: 2.7.0(react@19.2.7)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1095,8 +1095,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@blobatar/react@2.3.1':
-    resolution: {integrity: sha512-Xessznso5qjidUEuy/wujRTEzBNZYDwlYOVpeRPK5ORvB4ONgnXWsl7epa9t3fslNkhPhyVFz4HmSNH/qNQjog==}
+  '@blobatar/react@2.7.0':
+    resolution: {integrity: sha512-rysDM1+2qoeIwIezVw/em+ZxOMyqqjqJOGNEvtOOU1nFp0jmzyEjlXtJTDM6xPKamq59pq6wcG9+mHIUZV572A==}
     peerDependencies:
       blobatar: 2.x
       react: '>=18'
@@ -4179,8 +4179,8 @@ packages:
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
 
-  blobatar@2.3.1:
-    resolution: {integrity: sha512-2gySQ2v0HvsHtI0O3jkasaepAOCl6RKrhRymVQKrGZt5Cnhpr8diKNR+bDDPckFMl6ybu6YTGN7e+lSoPrMxaA==}
+  blobatar@2.7.0:
+    resolution: {integrity: sha512-tL1p2J3dXE/Z9U/ITwHqU7HBHmTH+Am+hif1J1hWAhvFT1VYC2HG+eXtN7081yuY+L2lrp9bs/VaF7dVH3S2jw==}
     peerDependencies:
       react: '>=18'
       vue: '>=3'
@@ -7431,9 +7431,9 @@ snapshots:
   '@biomejs/cli-win32-x64@2.5.4':
     optional: true
 
-  '@blobatar/react@2.3.1(blobatar@2.3.1(react@19.2.7))(react@19.2.7)':
+  '@blobatar/react@2.7.0(blobatar@2.7.0(react@19.2.7))(react@19.2.7)':
     dependencies:
-      blobatar: 2.3.1(react@19.2.7)
+      blobatar: 2.7.0(react@19.2.7)
       react: 19.2.7
 
   '@borewit/text-codec@0.2.2': {}
@@ -10387,7 +10387,7 @@ snapshots:
       readable-stream: 3.6.2
     optional: true
 
-  blobatar@2.3.1(react@19.2.7):
+  blobatar@2.7.0(react@19.2.7):
     optionalDependencies:
       react: 19.2.7
 

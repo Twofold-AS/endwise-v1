@@ -1,16 +1,7 @@
+'use client';
+
 import { Blobatar } from '@blobatar/react';
-import {
-  happy,
-  idle,
-  love,
-  shy,
-  sleepy,
-  smug,
-  surprised,
-  thinking,
-  unsure,
-  wink,
-} from 'blobatar/expression';
+import { useGaze } from '@blobatar/react/gaze';
 import { cn } from '../lib/utils.ts';
 
 /**
@@ -28,43 +19,17 @@ import { cn } from '../lib/utils.ts';
  * påkrevde db-argument: gjør du det valgfritt, hopper kallstedet som glemmer
  * det stille over avgjørelsen.
  * Nå nekter TypeScript å kompilere til noen har tatt stilling.
- * Hvorfor plata er vår, ikke blobatars
- * `background` er av i denne stilen, og det er riktig for oss: rammen rundt
- * kommer fra token-laget (`bg-surface-2`, `rounded-control`). Da eier
- * designsystemet lys/mørk, ikke biblioteket.
+ * Gaze bare på det store ansiktet
+ * `useGaze` + `blobatar/gaze.css` er bibliotekets peker-lag. Det hører hjemme
+ * på det ene store ansiktet som er poenget med skjermen (profil-header,
+ * `bevegelse="alltid"`, minst 48px). Lister og rader (`stille`, 32px) får
+ * ikke peker-sporing. Sidebaren er `alltid` men 22px — den puster, den stirrer
+ * ikke.
+ * Form, humør og tone fra lagrede valg ignoreres. Seeden (og ev. farge)
+ * bestemmer ansiktet. Vi importerer ingen expression-positurer.
  * Denne komponenten er eneste sted `@blobatar/react` importeres i hele
  * repoet. Samme regel som for recharts og lucide.
  */
-
-/** Silhuettene, i blobatars egen rekkefølge. Se `AVATAR_FORMER` server-side. */
-const FORM_BAND: Record<string, number> = {
-  /**
-   * Midtpunktet i hver forms band fra `blobatar/src/styles/blob.ts`:
-   * round [0, .22) · organic [.22, .48) · boxy [.48, .6) · capsule [.6, .7)
-   * nub [.7, .79) · cloud [.79, .86) · droplet [.86, .915) · hexagon [.915, .95)
-   * sun [.95, .98) · triangle [.98, 1)
-   * Midtpunkt og ikke kanten: en verdi rett på en bandgrense er ett
-   * flyttallstrinn fra å tippe over i nabo­formen. Låst av
-   * `packages/ui/test/avatar-band.test.ts`, som spør biblioteket selv.
-   */
-  round: 0.11,
-  organic: 0.35,
-  boxy: 0.54,
-  capsule: 0.65,
-  nub: 0.745,
-  cloud: 0.825,
-  droplet: 0.887,
-  hexagon: 0.932,
-  sun: 0.965,
-  triangle: 0.99,
-};
-
-/**
- * Midtpunktet i hver av blobatars seks forfattede svatsjer (`TONES` i
- * `color.ts`), som er kumulative: [.2, .36, .62, .8, .93, 1].
- * Pastell · blek nøytral · mid · dyp · lys · blekk.
- */
-const TONE_BAND = [0.1, 0.28, 0.49, 0.71, 0.865, 0.965];
 
 /**
  * Hvor mye avataren får lov å røre på seg.
@@ -79,8 +44,8 @@ const TONE_BAND = [0.1, 0.28, 0.49, 0.71, 0.865, 0.965];
  * `alltid` er dokumentert som unntaket for «a profile header» — én avatar,
  * der bevegelsen er innholdet. Bruk den ikke på noe som kan opptre i flertall.
  * Begge de animerte krever `blobatar/motion.css`, som importeres i
- * `apps/web/app/globals.css`. Uten den er det ingen feilmelding — bare et
- * ansikt som står stille. Se ui-pakker §10.
+ * `apps/web/app/globals.css`. Gaze krever i tillegg `blobatar/gaze.css`.
+ * Uten dem er det ingen feilmelding — bare et ansikt som står stille.
  * Gratis fra biblioteket, og verdt å vite: `prefers-reduced-motion: reduce`
  * slår av all animasjon, og på enheter uten ekte hover pauses `hover`-modus
  * helt. Vi trenger ikke håndtere noen av delene selv.
@@ -88,24 +53,16 @@ const TONE_BAND = [0.1, 0.28, 0.49, 0.71, 0.865, 0.965];
 export type AvatarBevegelse = 'stille' | 'hover' | 'alltid';
 
 /**
- * Humør → blobatars `Expression`-verdi.
- * Uttrykkene importeres som verdier, ikke slås opp på navn. Det er
- * bibliotekets eget design: «a consumer who imports `happy` ships `happy` and
- * one who imports nothing ships nothing». Vi importerer de ti vi tilbyr, og
- * betaler ikke for de fire vi har valgt bort.
- * Uttrykket rendres ogsÅ statisk. Bare selve overgangen mellom to humør
- * krever `animate` — så et valgt humør synes i lister uten at vi slår på
- * bevegelse der.
+ * Brukerens egne valg. Bare `farge` påvirker ansiktet.
+ * `form` / `humor` / `tone` kan fortsatt ligge i `user_preferences` fra
+ * tidligere velgere — de leses, men de endrer ikke ansiktet. Seeden (og ev.
+ * hue) eier silhuetten.
  */
-const HUMOR = { idle, happy, wink, smug, sleepy, thinking, surprised, unsure, love, shy } as const;
-
 export type AvatarValg = {
   form?: string | null;
-  /** Nøkkel i `HUMOR`. Ukjent verdi faller til nøytralt, ikke til en tom SVG. */
   humor?: string | null;
   /** Grader, 0–359. */
   farge?: number | null;
-  /** Indeks 0–5. */
   tone?: number | null;
 };
 
@@ -118,38 +75,42 @@ export type AvatarProps = {
   navn?: string;
   /** Piksler. Slotten er kvadratisk. */
   size?: number;
-  /** Brukerens egne valg. Utelatte felt kommer fra seeden. */
+  /** Brukerens egne valg. Bare hue brukes. */
   valg?: AvatarValg | null;
   className?: string;
 };
 
+/** Profil-header og velger-forhåndsvisning. Ikke sidebar (22px) og ikke rader. */
+export function skalFølgePeker(bevegelse: AvatarBevegelse, size: number): boolean {
+  return bevegelse === 'alltid' && size >= 48;
+}
+
 export function Avatar({ seed, bevegelse, navn, size = 28, valg, className }: AvatarProps) {
-  const form = valg?.form ? FORM_BAND[valg.form] : undefined;
-  const tone = typeof valg?.tone === 'number' ? TONE_BAND[valg.tone] : undefined;
+  const gaze = useGaze({
+    travel: 3,
+    lookAt: skalFølgePeker(bevegelse, size) ? 'pointer' : null,
+  });
 
   /**
-   * Delt mellom de to grenene. `hue` er grader og vinner over `traits.hue`;
-   * `tone` er en 0–1-posisjon i svatsjsettet.
+   * Delt mellom de to grenene. `hue` er grader og vinner over seeden.
+   * Form, humør og tone fra `valg` sendes bevisst ikke videre — et gammelt
+   * lagret «sun»/«happy» skal ikke lenger bytte ansikt.
    * `normalize` av: biblioteket trimmer og lowercaser navnet sitt som
    * standard, hvilket er riktig når seeden er et navn. Vår seed er en UUID vi
    * allerede eier — normalisering ville bare vært en operasjon som en dag
    * endrer seg og flytter alle ansikter.
+   * Expression utelates: idle er bibliotekets default, byte-identisk med å
+   * sende `idle`. Ingen positur-import.
    */
   const felles = {
     name: seed,
     size,
-    /**
-     * Null/ukjent humor er `idle` (nøytralt), aldri bibliotekets happy-pose.
-     * Idle er byte-identisk med å utelate expression — men vi sender den
-     * eksplisitt så et tomt valg ikke kan leses som «alltid blid».
-     */
-    expression: HUMOR[(valg?.humor as keyof typeof HUMOR) || 'idle'] ?? idle,
     hue: typeof valg?.farge === 'number' ? valg.farge : undefined,
-    tone,
-    traits: form === undefined ? undefined : { shape: form },
     normalize: false,
     title: navn || undefined,
   } as const;
+
+  const medGaze = skalFølgePeker(bevegelse, size);
 
   return (
     <span
@@ -168,7 +129,11 @@ export function Avatar({ seed, bevegelse, navn, size = 28, valg, className }: Av
       {bevegelse === 'stille' ? (
         <Blobatar {...felles} alt={navn ?? ''} />
       ) : (
-        <Blobatar {...felles} animate={bevegelse === 'alltid' ? 'always' : 'hover'} />
+        <Blobatar
+          {...felles}
+          ref={medGaze ? gaze.ref : undefined}
+          animate={bevegelse === 'alltid' ? 'always' : 'hover'}
+        />
       )}
     </span>
   );

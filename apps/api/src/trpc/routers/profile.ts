@@ -139,11 +139,11 @@ export const profileRouter = router({
     }),
 
   /**
-   * Egen avatar: form, farge og tone.
+   * Egen avatar. UI-et styrer bare farge (hue). Form, humør og tone tas
+   * fortsatt imot (gammel klient / leftover) men `Avatar` ignorerer dem.
    * Tre navngitte felt, ikke blobatars rå `traits`-map. Tok ruta imot en fri
    * `Record<string, number>`, ville klienten bestemt hvilke egenskaper som kan
-   * pinnes — også `motion.*` og `gaze.*`, som ingen har bedt om å styre, og
-   * som vi da ville lagret uten å vite hva betyr. Serveren eier vokabularet.
+   * pinnes — også `motion.*` og `gaze.*`. Serveren eier vokabularet.
    * `null` er en meningsbærende verdi og ikke «ikke oppgitt»: den betyr
    * «la seeden bestemme denne ene tingen». Derfor `.nullable` og ikke
    * `.optional` — et utelatt felt ville ikke kunne skille «rør ikke» fra

@@ -12,7 +12,7 @@
  * Switch 24×14px, 10px thumb (track-på var #0077E6 — følger nå aksenten)
  * Tekst #333333 default · #777777 subtle
  * Lyst bakgrunn #ffffff · sidebar #fafafa · valgt i sidebar #ededed
- * Mørkt bakgrunn #171717 · sidebar #1a1a1a · valgt i sidebar #292929
+ * Mørkt bakgrunn #000000 · sidebar #1a1a1a · valgt i sidebar #292929
  * Hva som er gitt og hva som er utledet
  * Alt over er gitt. Verdier merket «utledet» under er mine, fordi UI-et trenger
  * dem og spesifikasjonen ikke nevner dem (hårlinjer, hover-flate, kortflate,
@@ -96,7 +96,7 @@
   color-scheme: dark;
 
   /* Flater — gitt */
-  --ew-bg: #171717;
+  --ew-bg: #000000; /* sidebakgrunn — bek, ikke kull */
   --ew-sidebar: #1a1a1a;
   --ew-sidebar-active: #292929;
 
@@ -116,7 +116,7 @@
   --ew-fg-faint: #8f8f8f;
 
   /*
- * I mørkt tema er «svart aksent» hvit. En svart aksent på #171717 ville
+ * I mørkt tema er «svart aksent» hvit. En svart aksent på #000000 ville
  * vært usynlig — det er ikke en farge, det er et hull. Inversjonen holder
  * både kontrasten og betydningen: aksenten er den nøytrale, sterkeste tonen
  * i temaet. Endret sammen med den lyse.

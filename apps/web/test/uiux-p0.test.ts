@@ -178,7 +178,7 @@ describe('P0: avatar-onboarding dør ikke på 401', () => {
 describe('P0: /oppstart er visningsnavn · avatar · team (tillegg bare hvis åpnet)', () => {
   const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/page.tsx'), 'utf8');
 
-  it('har avatar-steg med farge og humør, og hopper over tomt tilleggssteg', () => {
+  it('har avatar-steg med farge, og hopper over tomt tilleggssteg', () => {
     expect(oppstart).toMatch(/Visningsnavn/);
     expect(oppstart).toMatch(/Avatar/);
     expect(oppstart).toMatch(/Team/);
@@ -190,26 +190,26 @@ describe('P0: /oppstart er visningsnavn · avatar · team (tillegg bare hvis åp
   });
 });
 
-describe('P0: avatar-velger uten fire nedtrekk (humør er låst opp)', () => {
+describe('P0: avatar-velger uten form/humør/tone', () => {
   const avatar = readFileSync(resolve(her, '../app/(app)/_avatar/avatar-velger.tsx'), 'utf8');
   const profil = readFileSync(resolve(her, '../app/(app)/innstillinger/_profil-fane.tsx'), 'utf8');
 
-  it('profil har velger uten fire nedtrekk', () => {
+  it('profil har velger med farge — uten form, humør og tone', () => {
     expect(profil).toMatch(/AvatarVelger/);
     expect(avatar).toMatch(/Ny tilfeldig/);
-    expect(avatar).toMatch(/HUMOR\.map/);
+    expect(avatar).not.toMatch(/HUMOR\.map/);
     expect(avatar).toMatch(/size = 48/);
     expect(avatar).toMatch(/size=\{size\}/);
     expect(avatar).toMatch(/bevegelse="alltid"/);
-    expect(avatar).toMatch(/FORMER\.map/);
+    expect(avatar).not.toMatch(/FORMER\.map/);
     expect(avatar).toMatch(/FARGER\.map/);
-    expect(avatar).toMatch(/TONER\.map/);
+    expect(avatar).not.toMatch(/TONER\.map/);
     expect(avatar).not.toMatch(/function Nedtrekk/);
     expect(avatar).not.toMatch(/id="humor"/);
     expect(avatar).not.toMatch(/grid grid-cols-2 gap-3 lg:grid-cols-4/);
   });
 
-  it('sidebar-avataren beveger seg hele tiden og viser valgt humor', () => {
+  it('sidebar-avataren beveger seg hele tiden uten tvunget happy', () => {
     const rad = readFileSync(resolve(her, '../app/(app)/_shell/bruker-rad.tsx'), 'utf8');
     expect(rad).toMatch(/bevegelse="alltid"/);
     expect(rad).toMatch(/valg=\{profil\.data\?\.avatar\}/);

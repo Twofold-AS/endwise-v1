@@ -19,6 +19,7 @@ export {
   type AvatarBevegelse,
   type AvatarProps,
   type AvatarValg,
+  skalFølgePeker,
 } from './components/avatar.tsx';
 export { Badge, type BadgeProps, badgeVariants } from './components/badge.tsx';
 // shadcn/ui — struktur

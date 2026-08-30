@@ -10,7 +10,7 @@ import { CardShell } from '../_shell/cards';
 /**
  * F5-26 / F6-19 — eier-veiviser. Etter passord (invite) og tvungen 2FA.
  * Visningsnavn → Avatar → (Tillegg bare hvis admin åpnet optional) → Team.
- * Avatar-steget er samme velger som profil: form, farge, humør, tone.
+ * Avatar-steget er samme velger som profil: farge (hue) + Ny tilfeldig.
  * Tomt tilleggssteg vises ikke. Quick-feltene er urørt.
  */
 type Funksjon = 'selger' | 'support' | 'mekaniker';
@@ -237,8 +237,8 @@ export default function OppstartPage() {
           <div>
             <p className="text-label text-fg">Avatar</p>
             <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-              Form, farge og humør. Hopper du over, trekker vi blant valgene — ikke et fast blidt
-              ansikt.
+              Velg farge, eller trekk en ny tilfeldig. Hopper du over, trekker vi en farge — seeden
+              eier ansiktet.
             </p>
           </div>
           <AvatarVelger seed={me.data?.userId ?? null} utenKort />

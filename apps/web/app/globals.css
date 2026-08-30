@@ -20,6 +20,13 @@
  * kostet mer i kompleksitet enn det sparer i bytes.
  */
 @import "blobatar/motion.css";
+/**
+ * Blobatars peker-lag (gaze). Samme familie som motion-gotchaen: uten
+ * denne importen er det ingen feilmelding — bare øyne som ikke følger
+ * pekeren på profil-avataren. `--mo-track-travel` settes av `useGaze`
+ * på det ene store ansiktet (`bevegelse="alltid"`, minst 48px).
+ */
+@import "blobatar/gaze.css";
 
 /*
  * Tailwind v4 skanner som standard ikke workspace-pakker (de ligger via

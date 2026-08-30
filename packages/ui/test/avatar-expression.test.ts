@@ -3,42 +3,22 @@ import * as expressions from 'blobatar/expression';
 import { describe, expect, it } from 'vitest';
 
 /**
- * Vokabularet vårt er bibliotekets ekte `expression`-eksporter.
- * Vi gjetter ikke enum. De ti vi persisterer er et kuratert utvalg av de
- * fjorten blobatar eksporterer.
+ * Vi tilbyr ikke lenger et uttrykks-vokabular. Biblioteket har dem fortsatt
+ * — testen låser at vi ikke importerer dem inn i `Avatar`.
  */
-const KURATERT = [
-  'idle',
-  'happy',
-  'wink',
-  'smug',
-  'sleepy',
-  'thinking',
-  'surprised',
-  'unsure',
-  'love',
-  'shy',
-] as const;
 
-describe('blobatar/expression — bibliotekets ekte uttrykk', () => {
-  it('eksporterer de ti vi tilbyr i velgeren', () => {
-    for (const navn of KURATERT) {
-      expect(expressions).toHaveProperty(navn);
-    }
-  });
-
-  it('eksporterer også sad/mad/sick/scared — vi persisterer dem ikke', () => {
-    expect(expressions).toHaveProperty('sad');
-    expect(expressions).toHaveProperty('mad');
-    expect(expressions).toHaveProperty('sick');
-    expect(expressions).toHaveProperty('scared');
+describe('blobatar/expression — biblioteket har dem, vi tilbyr dem ikke', () => {
+  it('eksporterer fortsatt idle/happy — vi importerer dem ikke', () => {
+    expect(expressions).toHaveProperty('idle');
+    expect(expressions).toHaveProperty('happy');
   });
 });
 
-describe('Avatar — tomt humør er idle, ikke happy', () => {
-  it('faller til idle når humor mangler', () => {
+describe('Avatar — ingen forced happy, ingen expression-import', () => {
+  it('faller til seed/idle ved å utelate expression', () => {
     const kilde = readFileSync(new URL('../src/components/avatar.tsx', import.meta.url), 'utf8');
-    expect(kilde).toMatch(/HUMOR\[\(valg\?\.humor as keyof typeof HUMOR\) \|\| 'idle'\]/);
+    expect(kilde).not.toMatch(/from ['"]blobatar\/expression['"]/);
     expect(kilde).not.toMatch(/humor:\s*['"]happy['"]/);
+    expect(kilde).not.toMatch(/expression:\s*HUMOR/);
   });
 });

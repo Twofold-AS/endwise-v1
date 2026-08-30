@@ -29,6 +29,13 @@
 > snippet-grå `#777777` / `#333333` / `#111111` på selve Grainient — ikke lys-vask
 > (`#ffffff` / `#ededed` / `#f5f5f5`). Tekst på kortet er lys i begge tema. Ikke vask siden hvit.
 
+> ### ⚠️ blobatar-gaze-gotcha (30.08.2026)
+> `apps/web/app/globals.css` MÅ ha `@import "blobatar/gaze.css";` ved siden av
+> `blobatar/motion.css`. Gaze er peker-laget (`useGaze` i `Avatar`) — uten
+> CSS-en er det ingen feilmelding, bare øyne som ikke følger pekeren på
+> profil-avataren. `--mo-track-travel` settes av hooken; stylesheetet eier
+> keyframene. Samme familie som matrix-loaders-gotchaen under.
+>
 > ### ⚠️ matrix-loaders-gotcha (03.08.2026)
 > `apps/web/app/globals.css` MÅ ha `@import "@endwise/ui/matrix-loaders.css";`. Loaderne er **ren
 > CSS-animasjon** — komponentene setter bare klasser (`.dmx-root`, `.dmx-dot`) og CSS-variabler,
@@ -68,11 +75,11 @@
 > Inter · titler 16/20 Medium · labels 13/16 Medium · brødtekst 14 Regular · knapper 32px/10px ·
 > rader 40px (data) og 44px (stores) · badge 20px/6px (farge fra aksent-tokenene) ·
 > switch 24×14/10px (track følger aksenten) · tekst `#333333`/`#777777` · **LYST TEMA STANDARD** (`#ffffff`, sidebar
-> `#fafafa`, valgt `#ededed`) · mørkt som toggle (`#171717`/`#1a1a1a`/`#292929`).
+> `#fafafa`, valgt `#ededed`) · mørkt som toggle (`#000000`/`#1a1a1a`/`#292929`).
 > **Full tabell + hva som er utledet: §6 «Design-prinsipper fra eier».** Kolliderer noe i denne
 > fila med den seksjonen, er det den seksjonen som gjelder.
 
-**Sist oppdatert:** 29. august 2026 kveld (Mikael: destinasjon Salg på `/prisliste`, Prisliste ut av Timeplan — ingen ny pakke) · 29. august 2026 kveld (Mikael: mekaniker-hjem stort Dine jobber 3 faste spor, Start/Stopp/Fullført, mer forhandler-info på Grainient — ingen ny pakke) · 29. august 2026 kveld (Timeplan: Opprett jobb + Prisliste under tittel, tre dag-chips — ingen ny pakke) · 29. august 2026 natt (Timeplan-knapper på pillerad, måned/dag uten klipp, widget-init lookup — ingen ny pakke) · 29. august 2026 kveld (Mikael: Timeplan + Tjenester, Prisliste som Dialog på Timeplan, widget tom/retry — ingen ny pakke) · 29. august 2026 (Butikk: testplassering av eksisterende EndwiseWidget på `/butikk` — ingen ny pakke) · 29. august 2026 kveld (F5-13: telefon-bevel `mt-auto` i min-h-dvh-kolonne, Grainient samme grå i lys/mørk — ingen ny pakke) · 29. august 2026 natt (Mikael IA-lås: Grainient fra react-bits på forhandler-kort, Dine jobber, telefon-bevel i flyt, Timeplan-piler 08–20, starttid-expandere, ferie-mock) · 29. august 2026 (telefon kort-hjem + safe-area/dvh — ingen ny pakke; fylte aksentkort, accordion på mekaniker-rad) · 28. august 2026 (Innboks: ingen Oversikt, telefon filter+Ny chat, desktop tom postkasse, tilbake-pil i end-spacer — ingen ny pakke) · 28. august 2026 (Profil: avatar+endre-knapp på rad, felt ut av CardShell — ingen ny pakke) · 28. august 2026 (Innboks top-bar 2 Oversikt + ikonfiltre — ingen ny pakke) · 28. august 2026 (telefon: end-spacer + top-bar 2 py + uten Handlinger — ingen ny pakke) · 28. august 2026 (telefon hovedmeny: h-row + pinnest logo + pan-x — ingen ny pakke) · 27. august 2026 (Organisasjon › Forhandleren: CardShell + native input + StatefulButton — ingen ny pakke) · 26. august 2026 (Team Hvem + pane-høyde: Avatar/StatusMerke i Hvem, Endre folder ut e-post/rolle — ingen ny pakke) · 26. august 2026 (Team-redesign: piller + Inviter ansatt + Innboks-detaljpane — ingen ny pakke, samme tablist som Innstillinger og Dialog som slett-forhandler) · 26. august 2026 (F10-03 intern testbutikk: Katalog + Handlekurv / kasse — ingen ny pakke, samme radmønster som Lager › Deler) · 25. august 2026 (F3-09/P3: Ny jobb med flere tjenester + manuell varighet — ingen ny pakke; samme radmønster som mekanikervelgeren) · 25. august 2026 (F1-27 to-stegs e-postbytte + F2-08 Vegvesen-nøkkel i innstillinger — ingen ny pakke) · 25. august 2026 (F3-08/F3-12: Ansatte › Kompetanse + Timeplan — ingen ny pakke, samme komposisjon som Prislisten) · 25. august 2026 (F5-51/F3-05: helpdesk-kategorier + Verkstedet timeplan/ansatte på jobb — ingen ny pakke, pille-tablist + CardShell + Avatar) · 25. august 2026 (F6-19: avatar-velger med farge+humør ved opprett og «Ny tilfeldig»; siste farger 270/320 — ingen ny pakke) · 25. august 2026 (F5-23: minimer på helpdesk-slider, ikke visningsvelger — ingen ny pakke) · 25. august 2026 (F5-13/F5-19 IA-lås: Settings = Link til profil, ikke flyout; Organisasjon over Helpdesk — ingen ny pakke) · 25. august 2026 (F5-19: pille-faner uten Team — Team er sidebar-destinasjon #41; Profil-avatar 56px til venstre, form+uttrykk foldet — native `<details>`) · 25. august 2026 (Ny samtale: Kunde · Intern · Support — ingen ny pakke) · 25. august 2026 (`CountBadge` = samme `Badge variant=destructive` som «Ny», 20px/6px — ikke 18px-sirkel; Helpdesk-teller i chevron-sporet — ingen ny pakke) · 25. august 2026 (F6-19: status-humor på Team › Funksjoner + `/mekanikere`; fri→idle; sidebar/profil viser valgt humor — ingen ny pakke) · 24. august 2026 (F6-19: uttrykk låst opp i `AvatarVelger` + status-humor på mekanikerflaten — ingen ny pakke) · 24. august 2026 («Ny»-badge + rød `CountBadge` — ingen ny pakke) · 23. august 2026 (sidebar-avatar `alltid` + formvalg i Profil — ingen ny pakke) · 23. august 2026 (plattform-org + Se verkstedet + `/endwise/team` — ingen ny pakke, shadcn/beUI-komposisjon) · 23. august 2026 (F1-21/F1-22: gjenopprettingskoder + passord før 2FA av — ingen ny pakke) · 23. august 2026 (SMS-avkrysning synlig i Ny forhandler/Endre pakke — Jens overstyrer UI/UX P0 som skjulte den; shop forblir skjult) · 23. august 2026 (UI/UX P0: invite+2FA i samme skall, `/oppstart` uten avatar, `AvatarVelger` = 48px + Ny tilfeldig / always happy, varslingslyder som Switch-rad, pakkevelger 3 kolonner) · 23. august 2026 (F5-26: nivå+tillegg, `/oppstart`, `AvatarVelger` i `_avatar/` — ingen ny pakke, ingen cmdk) · 22. august 2026 (widget-fallbacks + PWA-manifest følger lyst tema og svart aksent `#111` — F4-20; stale «grønn aksent»-kommentarer rettet) · 20. august 2026 (bevegelse skrudd på selektivt — påkrevd `bevegelse`-prop på `Avatar`, tre verdier, se §10 · ⭐ **blobatar inn som avatarpakke** — F6-19, brukergodkjent §2-beslutning; se §10. Seed = stabil ID, aldri navn · tjenestekatalogen F2-05/F5-04 — ingen ny pakke, ren komposisjon; se §8. ⚠️ Første sted i appen med ekte radioknapper i stedet for pille-gruppe, fordi det er et skjemafelt og ikke et filter) · 7. august 2026 (dev-mode + forhandler-oppretting bygget — F5-26…F5-29; ingen nye UI-pakker, alt på shadcn/beUI som før: `Switch`, `StatefulButton`, `DropdownMenu`, `Badge`. Sidebar-mønsteret delt i to: **flyout for handlinger, inline utfolding for destinasjoner**) · 6. august 2026 (⚠️ **aksent grønn → svart** i token-laget · felles flyout-mønster m/ stiplet header-divider · ⭐ **F5-20 i gang** — 26 egne SVG-ikoner koblet inn via codegen · shell-justeringer: kollapsbar sidebar, tips-kort, bevel-handlinger · Analyse omformet: periodevelger, nye kort, paigraf · `Pie`/`Cell` eksponert) · 5. august 2026 (⭐ **Recharts inn som chart-motor** — brukergodkjent §2-beslutning; Analyse F5-18 bygget ferdig med søyle-, linje- og arealgrafer) · 4. august 2026 (sidebar-først shell bygget — F5-13: `dropdown-menu` + `dialog` hentet inn, ⌘K-palett på `Dialog` i stedet for `command`/cmdk) · 3. august 2026 (eierens design-prinsipper innført: Inter + lyst tema standard +
+**Sist oppdatert:** 30. august 2026 (Mikael: mørk sidebakgrunn `#000000`; blobatar gaze på profil-avatar, form/humør/tone ut av velgeren — blobatar 2.7.0, ingen ny pakke) · 29. august 2026 kveld (Mikael: destinasjon Salg på `/prisliste`, Prisliste ut av Timeplan — ingen ny pakke) · 29. august 2026 kveld (Mikael: mekaniker-hjem stort Dine jobber 3 faste spor, Start/Stopp/Fullført, mer forhandler-info på Grainient — ingen ny pakke) · 29. august 2026 kveld (Timeplan: Opprett jobb + Prisliste under tittel, tre dag-chips — ingen ny pakke) · 29. august 2026 natt (Timeplan-knapper på pillerad, måned/dag uten klipp, widget-init lookup — ingen ny pakke) · 29. august 2026 kveld (Mikael: Timeplan + Tjenester, Prisliste som Dialog på Timeplan, widget tom/retry — ingen ny pakke) · 29. august 2026 (Butikk: testplassering av eksisterende EndwiseWidget på `/butikk` — ingen ny pakke) · 29. august 2026 kveld (F5-13: telefon-bevel `mt-auto` i min-h-dvh-kolonne, Grainient samme grå i lys/mørk — ingen ny pakke) · 29. august 2026 natt (Mikael IA-lås: Grainient fra react-bits på forhandler-kort, Dine jobber, telefon-bevel i flyt, Timeplan-piler 08–20, starttid-expandere, ferie-mock) · 29. august 2026 (telefon kort-hjem + safe-area/dvh — ingen ny pakke; fylte aksentkort, accordion på mekaniker-rad) · 28. august 2026 (Innboks: ingen Oversikt, telefon filter+Ny chat, desktop tom postkasse, tilbake-pil i end-spacer — ingen ny pakke) · 28. august 2026 (Profil: avatar+endre-knapp på rad, felt ut av CardShell — ingen ny pakke) · 28. august 2026 (Innboks top-bar 2 Oversikt + ikonfiltre — ingen ny pakke) · 28. august 2026 (telefon: end-spacer + top-bar 2 py + uten Handlinger — ingen ny pakke) · 28. august 2026 (telefon hovedmeny: h-row + pinnest logo + pan-x — ingen ny pakke) · 27. august 2026 (Organisasjon › Forhandleren: CardShell + native input + StatefulButton — ingen ny pakke) · 26. august 2026 (Team Hvem + pane-høyde: Avatar/StatusMerke i Hvem, Endre folder ut e-post/rolle — ingen ny pakke) · 26. august 2026 (Team-redesign: piller + Inviter ansatt + Innboks-detaljpane — ingen ny pakke, samme tablist som Innstillinger og Dialog som slett-forhandler) · 26. august 2026 (F10-03 intern testbutikk: Katalog + Handlekurv / kasse — ingen ny pakke, samme radmønster som Lager › Deler) · 25. august 2026 (F3-09/P3: Ny jobb med flere tjenester + manuell varighet — ingen ny pakke; samme radmønster som mekanikervelgeren) · 25. august 2026 (F1-27 to-stegs e-postbytte + F2-08 Vegvesen-nøkkel i innstillinger — ingen ny pakke) · 25. august 2026 (F3-08/F3-12: Ansatte › Kompetanse + Timeplan — ingen ny pakke, samme komposisjon som Prislisten) · 25. august 2026 (F5-51/F3-05: helpdesk-kategorier + Verkstedet timeplan/ansatte på jobb — ingen ny pakke, pille-tablist + CardShell + Avatar) · 25. august 2026 (F6-19: avatar-velger med farge+humør ved opprett og «Ny tilfeldig»; siste farger 270/320 — ingen ny pakke) · 25. august 2026 (F5-23: minimer på helpdesk-slider, ikke visningsvelger — ingen ny pakke) · 25. august 2026 (F5-13/F5-19 IA-lås: Settings = Link til profil, ikke flyout; Organisasjon over Helpdesk — ingen ny pakke) · 25. august 2026 (F5-19: pille-faner uten Team — Team er sidebar-destinasjon #41; Profil-avatar 56px til venstre, form+uttrykk foldet — native `<details>`) · 25. august 2026 (Ny samtale: Kunde · Intern · Support — ingen ny pakke) · 25. august 2026 (`CountBadge` = samme `Badge variant=destructive` som «Ny», 20px/6px — ikke 18px-sirkel; Helpdesk-teller i chevron-sporet — ingen ny pakke) · 25. august 2026 (F6-19: status-humor på Team › Funksjoner + `/mekanikere`; fri→idle; sidebar/profil viser valgt humor — ingen ny pakke) · 24. august 2026 (F6-19: uttrykk låst opp i `AvatarVelger` + status-humor på mekanikerflaten — ingen ny pakke) · 24. august 2026 («Ny»-badge + rød `CountBadge` — ingen ny pakke) · 23. august 2026 (sidebar-avatar `alltid` + formvalg i Profil — ingen ny pakke) · 23. august 2026 (plattform-org + Se verkstedet + `/endwise/team` — ingen ny pakke, shadcn/beUI-komposisjon) · 23. august 2026 (F1-21/F1-22: gjenopprettingskoder + passord før 2FA av — ingen ny pakke) · 23. august 2026 (SMS-avkrysning synlig i Ny forhandler/Endre pakke — Jens overstyrer UI/UX P0 som skjulte den; shop forblir skjult) · 23. august 2026 (UI/UX P0: invite+2FA i samme skall, `/oppstart` uten avatar, `AvatarVelger` = 48px + Ny tilfeldig / always happy, varslingslyder som Switch-rad, pakkevelger 3 kolonner) · 23. august 2026 (F5-26: nivå+tillegg, `/oppstart`, `AvatarVelger` i `_avatar/` — ingen ny pakke, ingen cmdk) · 22. august 2026 (widget-fallbacks + PWA-manifest følger lyst tema og svart aksent `#111` — F4-20; stale «grønn aksent»-kommentarer rettet) · 20. august 2026 (bevegelse skrudd på selektivt — påkrevd `bevegelse`-prop på `Avatar`, tre verdier, se §10 · ⭐ **blobatar inn som avatarpakke** — F6-19, brukergodkjent §2-beslutning; se §10. Seed = stabil ID, aldri navn · tjenestekatalogen F2-05/F5-04 — ingen ny pakke, ren komposisjon; se §8. ⚠️ Første sted i appen med ekte radioknapper i stedet for pille-gruppe, fordi det er et skjemafelt og ikke et filter) · 7. august 2026 (dev-mode + forhandler-oppretting bygget — F5-26…F5-29; ingen nye UI-pakker, alt på shadcn/beUI som før: `Switch`, `StatefulButton`, `DropdownMenu`, `Badge`. Sidebar-mønsteret delt i to: **flyout for handlinger, inline utfolding for destinasjoner**) · 6. august 2026 (⚠️ **aksent grønn → svart** i token-laget · felles flyout-mønster m/ stiplet header-divider · ⭐ **F5-20 i gang** — 26 egne SVG-ikoner koblet inn via codegen · shell-justeringer: kollapsbar sidebar, tips-kort, bevel-handlinger · Analyse omformet: periodevelger, nye kort, paigraf · `Pie`/`Cell` eksponert) · 5. august 2026 (⭐ **Recharts inn som chart-motor** — brukergodkjent §2-beslutning; Analyse F5-18 bygget ferdig med søyle-, linje- og arealgrafer) · 4. august 2026 (sidebar-først shell bygget — F5-13: `dropdown-menu` + `dialog` hentet inn, ⌘K-palett på `Dialog` i stedet for `command`/cmdk) · 3. august 2026 (eierens design-prinsipper innført: Inter + lyst tema standard +
 mål-tokens · matrix-loaders TATT I BRUK første gang på AI-diagnose · StatefulButton i 2FA-innlogging
 og trådsvar · SSE-klient wiret · `Switch` hentet inn · ⛔ **dither-kit FJERNET fra UI-et og fra
 barrel-eksporten**)
@@ -309,7 +316,7 @@ klartekst ved siden av: «Assistenten tenker …», ikke bare en animasjon.
 | **Switch** | 24×14px track · 10px thumb · track-på `#0077E6` | `<Switch>` · `--ew-switch-*` |
 | **Tekst** | `#333333` default · `#777777` subtle | `text-fg` · `text-fg-muted` |
 | **Lyst (STANDARD)** | bakgrunn `#ffffff` · sidebar `#fafafa` · valgt i sidebar `#ededed` | `bg-bg` · `bg-sidebar` · `bg-sidebar-active` |
-| **Mørkt (toggle)** | bakgrunn `#171717` · sidebar `#1a1a1a` · valgt i sidebar `#292929` | samme tokens, `[data-theme="dark"]` |
+| **Mørkt (toggle)** | bakgrunn `#000000` · sidebar `#1a1a1a` · valgt i sidebar `#292929` | samme tokens, `[data-theme="dark"]` |
 
 **Lyst tema er nå standard** (`<html data-theme="light">`). Mørkt ligger komplett ved siden av og
 nås med `<ThemeToggle>`. Begge palettene bor i `packages/widget-tokens/src/tokens.css`.
@@ -434,7 +441,7 @@ Kun disse. Hver enkelt har en grunn.
 | `ByttPassordSkjema` / `ToFaktorRad` (`apps/web/app/(app)/_shell/`) | **Ingen ny pakke.** Passordbytte (F1-17), 2FA-status (F1-20) og slå-av med passord (F1-22) er komposisjon av `PassordFelt` + `StatefulButton` + token-rad. De bor i `_shell` fordi `_shell/profil-kort.tsx` allerede deles mellom Settings › Profil og mekanikerens «Meg» — to kopier av sikkerhetsfeltene ville fått hver sin validering. Gjenopprettingskoder (F1-21) vises på `/2fa-oppsett` med samme kort (`Field`, `StatefulButton`, Last ned/Kopier). Ingen ny Admin-tab. Reglene (`validerByttPassord`, `validerSlaaAv2fa`, `kanFullforeKoder`, `toFaktorStatusTekst`, `etter2faBekreftet`) ligger i `@endwise/auth` som rene funksjoner, samme grep som `password-reset.ts`. Nye ikoner i barrelen: `Copy`, `Download` |
 | `ByttEpostSkjema` / `/bekreft-epost` | **Ingen ny pakke.** F1-27: to-stegs e-postbytte er samme komposisjon som bytt-passord (`Field` + `PassordFelt` + `StatefulButton` + `CardShell`). Bekreftelsessiden gjenbruker innloggingschromet. Reglene bor i `@endwise/auth/bytt-epost`. Vegvesen-oppsett (`/integrasjoner/vegvesen`) er `Input type=password` + `StatefulButton` som Quick — ingen ny primitiv. |
 
-| Innstillinger-skallet (`apps/web/app/(app)/innstillinger/_skall.tsx`, F5-19 24–25.08.2026) | **Ingen ny pakke.** Liggende pille-faner er app-nivå komposisjon av samme `role="tablist"`-mønster som Saker/Kunder (`Link` + `rounded-pill` + `bg-fg text-bg` for aktiv). shadcn `Tabs` kunne hentes, men den er underline/boxed New York — vi ville restylet den til piller uansett, og resten av appen bruker allerede egen tablist for filtre. Ingen nested Settings i sidebaren, ingen Admin-fane, ingen ny farge. **Team/Organisasjon er ikke en fane** — #41 la destinasjonen i sidebaren (`/innstillinger/team`). Endwise-plattform ser kun Profil (ingen dealer-piller). Settings i sidebaren er `Link` til profil, ikke `DropdownMenu`. Visningsvelgeren er logo + navn + chevron — **ingen** X/pille. Minimer (lucide `X` → kompakt bar, `endwise.helpdesk-slider.minimer`) sitter på helpdesk-slideren (`TipCard`, F5-23); shadcn har ingen collapse-to-bar. Ny-badge tvinger åpen. Tema og varslingslyder i Profil-fanen er shadcn `Switch` i `h-row-store`, samme som Varsler. **Profil (Mikael 28.08 kveld):** `AvatarVelger` med `utenKort` + `foldFormer` — avatar og «Ny tilfeldig» er søsken på samme rad, feltene stables under uten CardShell. Kallenavn er et ekte felt for alle roller. Form-, farge- og uttrykk-velgeren er native `<details>` / «Endre form, farge og uttrykk» — shadcn `Collapsible` er ikke hentet. Felt-Lagre uendret, ingen sticky Save |
+| Innstillinger-skallet (`apps/web/app/(app)/innstillinger/_skall.tsx`, F5-19 24–25.08.2026) | **Ingen ny pakke.** Liggende pille-faner er app-nivå komposisjon av samme `role="tablist"`-mønster som Saker/Kunder (`Link` + `rounded-pill` + `bg-fg text-bg` for aktiv). shadcn `Tabs` kunne hentes, men den er underline/boxed New York — vi ville restylet den til piller uansett, og resten av appen bruker allerede egen tablist for filtre. Ingen nested Settings i sidebaren, ingen Admin-fane, ingen ny farge. **Team/Organisasjon er ikke en fane** — #41 la destinasjonen i sidebaren (`/innstillinger/team`). Endwise-plattform ser kun Profil (ingen dealer-piller). Settings i sidebaren er `Link` til profil, ikke `DropdownMenu`. Visningsvelgeren er logo + navn + chevron — **ingen** X/pille. Minimer (lucide `X` → kompakt bar, `endwise.helpdesk-slider.minimer`) sitter på helpdesk-slideren (`TipCard`, F5-23); shadcn har ingen collapse-to-bar. Ny-badge tvinger åpen. Tema og varslingslyder i Profil-fanen er shadcn `Switch` i `h-row-store`, samme som Varsler. **Profil (Mikael 30.08):** `AvatarVelger` med `utenKort` — avatar og «Ny tilfeldig» er søsken på samme rad, feltene stables under uten CardShell. Bare **farge** (hue) velges. Form, humør og tone er borte; leftover i `user_preferences` endrer ikke ansiktet. Kallenavn er et ekte felt for alle roller. Felt-Lagre uendret, ingen sticky Save |
 
 | Verkstedet timeplan + ansatte på jobb (`apps/web/app/(app)/dashboard/_timeplan.tsx`, `_ansatte-pa-jobb.tsx`, F3-05 25.08.2026) | **Ingen ny pakke.** Timeplanen er samme 07–18-raster som Jobber › Kalender (F3-07), komponert av `CardShell` + `Link` + status-tokens. Ansatte på jobb er `Avatar` + native `<details>` (samme expand-grep som Profil). shadcn har ingen verksted-timeplan; å hente `calendar` ville vært en §2-pakke for en dagsstripe. Kompetanse/Timeplan under Ansatte røres ikke. |
 
@@ -519,7 +526,7 @@ bekreftelsesdialog.
 | | |
 |---|---|
 | **Brukes til** | Deterministiske ansikter på PERSONER i admin-flatene |
-| **Installasjon** | `pnpm --filter @endwise/ui add blobatar @blobatar/react` · versjon `^2.3.1` |
+| **Installasjon** | `pnpm --filter @endwise/ui add blobatar @blobatar/react` · versjon `^2.7.0` |
 | **Ligger i** | `packages/ui/src/components/avatar.tsx` (wrapper `Avatar`) |
 | **Lisens** | MIT |
 | **Runtime-avhengighet** | `blobatar` + `@blobatar/react` i **både** `packages/ui` og `apps/web`. ⚠️ Samme felle som `motion` (§6) og `recharts` (§2): Next transpilerer UI-kildekoden i APPENS resolusjonskontekst |
@@ -528,13 +535,15 @@ bekreftelsesdialog.
 
 ### Hva som faktisk er tatt i bruk
 
-`<Blobatar name size hue tone traits normalize title alt />` — statisk modus, som rendrer
+`<Blobatar name size hue normalize title alt />` — statisk modus, som rendrer
 **ett `<img>`** med en percent-enkodet data-URI. Ingenting hentes over nett; hele SVG-en regnes ut
-i nettleseren.
+i nettleseren. På profil-headeren (`bevegelse="alltid"`, minst 48px) festes
+`useGaze` fra `@blobatar/react/gaze` så øynene følger pekeren.
 
-✅ **`expression` er i bruk (24.08.2026).** Velgeren persisterer de ti kuraterte
-uttrykkene. På mekanikerflaten overstyrer status `humor` (ikke identitet).
-`sad`/`mad`/`sick`/`scared` er fortsatt ute av vokabularet vi lagrer.
+⛔ **`expression` er ute (30.08.2026).** Vi importerer ingen positurer fra
+`blobatar/expression`. Ansiktet er seed (og ev. hue), nøytralt/idle — ikke en
+tvunget happy-pose. Lagret `avatar_shape` / `avatar_humor` / `avatar_tone` endrer
+ikke ansiktet. Status-label på mekanikerflaten står som tekst ved siden av.
 
 ⛔ **Ikke tatt i bruk, med vilje:**
 
@@ -553,7 +562,7 @@ noen har tatt stilling.**
 
 | Verdi | Rendring | Brukes på |
 |---|---|---|
-| `stille` | ett `<img>` | Samtalelista · kundelista · de 24 valgknappene i profilen |
+| `stille` | ett `<img>` | Samtalelista · kundelista · fargeknappene i profilen |
 | `hover` | inline SVG, amplitude 0 til `:hover` | Meldingene i tråden · Detaljer-panelet · kundekortet |
 | `alltid` | inline SVG, alltid i bevegelse | Brukerraden i sidebaren (ett ansikt) · forhåndsvisningen i Settings › Profil |
 
@@ -566,10 +575,11 @@ et ansikt.
 nøyaktig profil-forhåndsvisningen: der ER bevegelsen innholdet, siden du står og ser på ansiktet
 mens du endrer det. **Bruk den ikke på noe som kan opptre i flertall.**
 
-⚠️ **`@import "blobatar/motion.css";` i `apps/web/app/globals.css` er PÅKREVD** for begge de
-animerte modusene. Samme familie som matrix-loaders-gotchaen i toppen av denne fila: uten importen
-er det ingen feilmelding, ingenting i typecheck og ingenting i byggesteget — bare avatarer som står
-stille der de skulle puste.
+⚠️ **`@import "blobatar/motion.css";` og `@import "blobatar/gaze.css";` i
+`apps/web/app/globals.css` er PÅKREVD** for bevegelse og peker-blikk. Samme familie som
+matrix-loaders-gotchaen i toppen av denne fila: uten importen er det ingen feilmelding,
+ingenting i typecheck og ingenting i byggesteget — bare avatarer som står stille der de
+skulle puste, eller øyne som ikke følger pekeren.
 
 Gratis fra biblioteket: `prefers-reduced-motion: reduce` slår av all animasjon, og på enheter uten
 ekte hover pauses `hover`-modus helt. Ingen av delene håndteres av oss.
@@ -585,24 +595,25 @@ innboksen og et annet på kundekortet.
 `normalize={false}` er satt: biblioteket trimmer og lowercaser navnet sitt som standard, hvilket er
 riktig når seeden ER et navn. Vår seed er en UUID vi eier selv.
 
-### Redigerbart: form + uttrykk — «Ny tilfeldig» trekker begge
+### Redigerbart: bare farge — gaze på det store ansiktet (30.08.2026)
 
-Pakken eksponerer 39 trait-nøkler. **Vi pinner ikke fire lister.** Ett ansikt per person
-(seed = `user.id`). Form, farge, tone **og uttrykk** er seed-default til noen velger i
-Settings › Profil (10 form-knapper + 10 uttrykk, 48px, `bevegelse="alltid"`) eller trykker
-«Ny tilfeldig». Humør er **ikke lenger låst til happy** — velgeren viser bibliotekets ti
-kuraterte `expression`-eksporter. Sidebaren og profilen viser det valgte uttrykket.
-Ikke på widget/kunde.
+Pakken eksponerer 39 trait-nøkler. **Vi pinner én: hue.** Ett ansikt per person
+(seed = `user.id`). Form, tone og uttrykk kommer fra seeden. Settings › Profil
+har fargeknapper + «Ny tilfeldig». Ingen form-, humør- eller tone-velger, og
+ingenting av det gjemmes bak et fold.
 
-⚠️ På mekaniker-/ansattlista (`/mekanikere`, Team › Funksjoner) og Detaljer-panelet
-overstyrer **status** kun `humor` (ledig → happy, på jobb/opptatt → thinking,
-fri → idle — ikke sleepy). Identitet og det lagrede uttrykket i velgeren, sidebaren
-og profilen er urørt. Tilgjengelighetstekst står ved siden av.
+⭐ **Gaze** (`useGaze` + `blobatar/gaze` + `blobatar/gaze.css`) sitter bare på det
+ene store ansiktet som er poenget med skjermen — profil-header / velger-forhåndsvisning
+(`bevegelse="alltid"`, minst 48px). Ikke på lister og rader (`stille`, 32px), og
+ikke på sidebar-ansiktet (22px).
 
-⚠️ Vi lagrer **formnavnet**, ikke 0–1-tallet: tallbåndene er frosset per major i blobatar, men et
-band kan flytte seg i neste major, og da ville et lagret tall stille gitt en annen form. Navn kan
-remappes. Kartleggingen navn → band ligger i `avatar.tsx`; vokabularet speiles i
-`@endwise/modules/profil` (zod) og i en CHECK-constraint i basen.
+⚠️ På mekaniker-/ansattlista står **status som tekst** ved siden av. Den overstyrer
+ikke lenger ansiktet. Leftover `form` / `humor` / `tone` i `user_preferences`
+ignoreres i `Avatar`.
+
+Kolonnene i basen (`avatar_shape`, `avatar_humor`, `avatar_tone`) er urørt — de
+kan fortsatt leses og skrives — men UI-et nullstiller dem ved neste lagring og
+rendrer dem ikke.
 
 ### Hvor den brukes
 

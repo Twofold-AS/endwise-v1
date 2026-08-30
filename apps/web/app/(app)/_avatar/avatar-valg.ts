@@ -17,10 +17,10 @@ export const FARGER = [
 ] as const;
 
 export type AvatarVelgerValg = {
-  form: string | null;
-  humor: string | null;
+  form: null;
+  humor: null;
   farge: number | null;
-  tone: number | null;
+  tone: null;
 };
 
 export const TOM_AVATAR_VALG: AvatarVelgerValg = {
@@ -34,7 +34,14 @@ function trekk<T>(liste: readonly T[]): T {
   return liste[Math.floor(Math.random() * liste.length)] as T;
 }
 
-export function erTomAvatarValg(valg: AvatarVelgerValg | null | undefined): boolean {
+type AvatarValgInput = {
+  form?: string | null;
+  humor?: string | null;
+  farge?: number | null;
+  tone?: number | null;
+};
+
+export function erTomAvatarValg(valg: AvatarValgInput | null | undefined): boolean {
   if (!valg) return true;
   return valg.farge == null;
 }
@@ -60,12 +67,12 @@ export function tilfeldigAvatarValg(
  * nullstilles alltid — leftover fra før denne endringen skal ikke persisteres
  * videre som om de fortsatt gjaldt.
  */
-export function fullforAvatarValg(valg: AvatarVelgerValg | null | undefined): AvatarVelgerValg {
+export function fullforAvatarValg(valg: AvatarValgInput | null | undefined): AvatarVelgerValg {
   if (!valg || erTomAvatarValg(valg)) return tilfeldigAvatarValg();
   return {
     form: null,
     humor: null,
-    farge: valg.farge,
+    farge: valg.farge ?? null,
     tone: null,
   };
 }

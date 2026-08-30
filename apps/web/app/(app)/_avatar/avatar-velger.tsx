@@ -1,7 +1,7 @@
 'use client';
 
 import { Avatar, CircleAlert, RefreshCw } from '@endwise/ui';
-import { type ReactNode, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { erUautorisert, norskAuthFeil } from '../../_auth/feil';
@@ -28,14 +28,12 @@ export function AvatarVelger({
   seed,
   size = 48,
   utenKort = false,
-  children,
 }: {
   seed: string | null;
   /** Settings-raden bruker 56 (48–64). Default 48 er F6-19-målet. */
   size?: 48 | 56 | 64;
   /** Profil, oppstart og invite: uten CardShell. */
   utenKort?: boolean;
-  children?: ReactNode;
 }) {
   const utils = trpc.useUtils();
   const meg = trpc.profile.meg.useQuery(undefined, { retry: false });
@@ -106,13 +104,7 @@ export function AvatarVelger({
                 aktiv ? 'bg-sidebar-active ring-1 ring-border-strong' : 'hover:bg-surface-2'
               }`}
             >
-              <Avatar
-                seed={seed}
-                valg={kunFarge(f.grader)}
-                navn=""
-                size={32}
-                bevegelse="stille"
-              />
+              <Avatar seed={seed} valg={kunFarge(f.grader)} navn="" size={32} bevegelse="stille" />
             </button>
           );
         })}
@@ -123,11 +115,11 @@ export function AvatarVelger({
   const toppRad = (
     <div className="flex flex-row items-center gap-4">
       <Avatar seed={seed} valg={valg} navn="" size={size} bevegelse="alltid" className="shrink-0" />
-      {children ? <div className="min-w-0 flex-1">{children}</div> : nyTilfeldigKnapp}
+      {nyTilfeldigKnapp}
     </div>
   );
 
-  const sidetekst = children ? null : (
+  const sidetekst = (
     <p className="text-[12px] text-fg-muted leading-relaxed">
       Ett ansikt, knyttet til kontoen din. Velg farge, eller trekk en ny tilfeldig.
     </p>

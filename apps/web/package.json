@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.67",
-    "@blobatar/react": "^2.7.0",
     "@endwise/api": "workspace:*",
     "@endwise/auth": "workspace:*",
     "@endwise/modules": "workspace:*",
@@ -28,7 +27,6 @@
     "@vercel/otel": "^2.0.0",
     "ai": "^7.0.64",
     "better-auth": "~1.6.30",
-    "blobatar": "^2.7.0",
     "cuelume": "^0.2.2",
     "maplibre-gl": "^5.19.0",
     "motion": "^12.42.2",

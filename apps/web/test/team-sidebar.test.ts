@@ -43,6 +43,7 @@ describe('Jonas IA — forhandler sidebar', () => {
       'Salg',
       'Organisasjon',
       'Hjelp',
+      'Bot',
     ]);
     for (const rad of FORHANDLER_NAV) {
       expect(rad.children).toBeUndefined();

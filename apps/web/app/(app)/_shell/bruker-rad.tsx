@@ -35,7 +35,7 @@ export function BrukerRad({
       valg={profil.data?.avatar}
       navn=""
       size={collapsed ? 22 : 22}
-      bevegelse="alltid"
+      bevegelse="stille"
     />
   ) : (
     <span className="inline-block size-[22px] shrink-0" aria-hidden />

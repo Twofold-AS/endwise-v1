@@ -3,6 +3,7 @@ import {
   AVATAR_FORMER,
   AVATAR_HUMOR,
   AVATAR_TONER,
+  BLOUB_FARGE_IDER,
   kanHaKallenavn,
   lesAvatar,
 } from '@endwise/modules/profil';
@@ -37,6 +38,7 @@ export const profileRouter = router({
         avatarHumor: schema.userPreferences.avatarHumor,
         avatarHue: schema.userPreferences.avatarHue,
         avatarTone: schema.userPreferences.avatarTone,
+        avatarColor: schema.userPreferences.avatarColor,
       })
       .from(schema.userPreferences)
       .where(eq(schema.userPreferences.userId, ctx.userId));
@@ -155,7 +157,7 @@ export const profileRouter = router({
       z.object({
         form: z.enum(AVATAR_FORMER).nullable(),
         humor: z.enum(AVATAR_HUMOR).nullable(),
-        farge: z.number().int().min(0).max(359).nullable(),
+        farge: z.enum(BLOUB_FARGE_IDER).nullable(),
         tone: z
           .number()
           .int()
@@ -171,7 +173,8 @@ export const profileRouter = router({
           userId: ctx.userId,
           avatarShape: input.form,
           avatarHumor: input.humor,
-          avatarHue: input.farge,
+          avatarHue: null,
+          avatarColor: input.farge,
           avatarTone: input.tone,
         })
         .onConflictDoUpdate({
@@ -179,7 +182,8 @@ export const profileRouter = router({
           set: {
             avatarShape: input.form,
             avatarHumor: input.humor,
-            avatarHue: input.farge,
+            avatarHue: null,
+            avatarColor: input.farge,
             avatarTone: input.tone,
             updatedAt: new Date(),
           },

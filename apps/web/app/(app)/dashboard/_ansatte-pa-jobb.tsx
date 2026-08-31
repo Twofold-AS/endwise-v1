@@ -1,18 +1,12 @@
 'use client';
 
-import { Avatar, type AvatarValg, Users } from '@endwise/ui';
+import { Avatar, type AvatarValg, hexForFarge, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { CardShell } from '../_shell/cards';
 import { fmtServices, fmtTime, STATUS_LABEL } from '../bookinger/_status';
 import { aktivJobb, ansattePaJobb, dagensJobber } from './_pa-jobb';
-
-const STATUS_PRIKK: Record<string, string> = {
-  ledig: 'bg-success',
-  på_jobb: 'bg-warn',
-  opptatt: 'bg-warn',
-};
 
 type Mekaniker = {
   id: string;
@@ -21,6 +15,7 @@ type Mekaniker = {
   statusLabel: string;
   statusHumor: string;
   avatar: AvatarValg | null;
+  farge?: string | null;
 };
 
 type Booking = {
@@ -86,7 +81,8 @@ export function AnsattePaJobb({
                     <span className="flex items-center gap-1.5 text-[12px] text-fg-muted">
                       <span
                         aria-hidden
-                        className={`inline-block size-2 rounded-full ${STATUS_PRIKK[m.status] ?? 'bg-fg-muted'}`}
+                        className="inline-block size-2 rounded-full"
+                        style={{ backgroundColor: hexForFarge(m.farge ?? m.avatar?.farge, m.id) }}
                       />
                       {m.statusLabel}
                       {sak ? ` · ${fmtServices(sak)} ${fmtTime(sak.startsAt)}` : ' · Ingen sak nå'}

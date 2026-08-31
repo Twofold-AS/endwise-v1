@@ -3,18 +3,16 @@
 import { Inbox, StatefulButton, Store, Wrench } from '@endwise/ui';
 import { type FormEvent, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { fullforAvatarValg } from '../_avatar/avatar-valg';
-import { AvatarVelger } from '../_avatar/avatar-velger';
 import { CardShell } from '../_shell/cards';
 
 /**
  * F5-26 / F6-19 — eier-veiviser. Etter passord (invite) og tvungen 2FA.
- * Visningsnavn → Avatar → (Tillegg bare hvis admin åpnet optional) → Team.
- * Avatar-steget er samme velger som profil: farge (hue) + Ny tilfeldig.
+ * Visningsnavn → (Tillegg bare hvis admin åpnet optional) → Team.
+ * Ingen avatar-velger. Fargen tildeles automatisk.
  * Tomt tilleggssteg vises ikke. Quick-feltene er urørt.
  */
 type Funksjon = 'selger' | 'support' | 'mekaniker';
-type StegId = 'navn' | 'avatar' | 'tillegg' | 'team';
+type StegId = 'navn' | 'tillegg' | 'team';
 
 const FUNKSJONER: { verdi: Funksjon; label: string; hint: string; Icon: typeof Store }[] = [
   { verdi: 'selger', label: 'Selger', hint: 'Lander på dashbordet', Icon: Store },
@@ -25,13 +23,9 @@ const FUNKSJONER: { verdi: Funksjon; label: string; hint: string; Icon: typeof S
 export default function OppstartPage() {
   const utils = trpc.useUtils();
   const status = trpc.onboarding.status.useQuery();
-  const me = trpc.session.me.useQuery();
-  const profil = trpc.profile.meg.useQuery(undefined, { retry: false });
   const fullfor = trpc.onboarding.fullfor.useMutation();
   const inviter = trpc.invitasjoner.opprett.useMutation();
   const apne = trpc.invitasjoner.list.useQuery();
-  const settAvatar = trpc.profile.setAvatar.useMutation();
-
   const [steg, setSteg] = useState<StegId>('navn');
   const [navn, setNavn] = useState<string | null>(null);
   const [extras, setExtras] = useState<Set<string>>(new Set());
@@ -46,10 +40,7 @@ export default function OppstartPage() {
   const nivaaNavn = status.data?.nivaa.name ?? 'Start';
   const harTillegg = (status.data?.optional.length ?? 0) > 0;
   const stegRad = useMemo<Array<{ id: StegId; tittel: string }>>(() => {
-    const rad: Array<{ id: StegId; tittel: string }> = [
-      { id: 'navn', tittel: 'Visningsnavn' },
-      { id: 'avatar', tittel: 'Avatar' },
-    ];
+    const rad: Array<{ id: StegId; tittel: string }> = [{ id: 'navn', tittel: 'Visningsnavn' }];
     if (harTillegg) rad.push({ id: 'tillegg', tittel: 'Tillegg' });
     rad.push({ id: 'team', tittel: 'Team' });
     return rad;
@@ -73,37 +64,15 @@ export default function OppstartPage() {
   const quickKlar = !quickValgt || (quickBaseUrl.trim().length > 0 && quickToken.trim().length > 0);
 
   function etterNavn() {
-    setSteg('avatar');
-  }
-
-  function etterAvatar() {
     setSteg(harTillegg ? 'tillegg' : 'team');
   }
 
   function tilbakeFraTillegg() {
-    setSteg('avatar');
+    setSteg('navn');
   }
 
   function tilbakeFraTeam() {
-    setSteg(harTillegg ? 'tillegg' : 'avatar');
-  }
-
-  async function fullforAvatarOgVidere() {
-    setFeil(null);
-    try {
-      const neste = fullforAvatarValg(profil.data?.avatar);
-      if (
-        neste.form !== (profil.data?.avatar?.form ?? null) ||
-        neste.humor !== (profil.data?.avatar?.humor ?? null) ||
-        neste.farge !== (profil.data?.avatar?.farge ?? null) ||
-        neste.tone !== (profil.data?.avatar?.tone ?? null)
-      ) {
-        await settAvatar.mutateAsync(neste);
-      }
-      etterAvatar();
-    } catch (error) {
-      setFeil((error as Error).message);
-    }
+    setSteg(harTillegg ? 'tillegg' : 'navn');
   }
 
   async function sendAnsatt(event: FormEvent) {
@@ -180,8 +149,8 @@ export default function OppstartPage() {
         <h1 className="text-title text-fg">Velkommen til Endwise</h1>
         <p className="text-body text-fg-muted">
           {harTillegg
-            ? 'Visningsnavn, avatar, tillegg som er åpnet for dere, og teamet.'
-            : 'Visningsnavn, avatar og teamet.'}
+            ? 'Visningsnavn, tillegg som er åpnet for dere, og teamet.'
+            : 'Visningsnavn og teamet.'}
         </p>
       </div>
 
@@ -228,46 +197,6 @@ export default function OppstartPage() {
             >
               Neste
             </button>
-          </div>
-        </CardShell>
-      ) : null}
-
-      {steg === 'avatar' ? (
-        <CardShell className="flex flex-col gap-4 p-5">
-          <div>
-            <p className="text-label text-fg">Avatar</p>
-            <p className="mt-1 text-[12px] text-fg-muted leading-relaxed">
-              Velg farge, eller trekk en ny tilfeldig. Hopper du over, trekker vi en farge — seeden
-              eier ansiktet.
-            </p>
-          </div>
-          <AvatarVelger seed={me.data?.userId ?? null} utenKort />
-          <div className="flex justify-between">
-            <button
-              type="button"
-              onClick={() => setSteg('navn')}
-              className="text-[12px] text-fg-muted underline-offset-2 hover:underline"
-            >
-              Tilbake
-            </button>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => void fullforAvatarOgVidere()}
-                disabled={settAvatar.isPending}
-                className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg disabled:opacity-40"
-              >
-                Hopp over
-              </button>
-              <button
-                type="button"
-                onClick={() => void fullforAvatarOgVidere()}
-                disabled={settAvatar.isPending}
-                className="inline-flex h-control items-center rounded-control bg-fg px-4 text-bg text-label disabled:opacity-40"
-              >
-                Neste
-              </button>
-            </div>
           </div>
         </CardShell>
       ) : null}

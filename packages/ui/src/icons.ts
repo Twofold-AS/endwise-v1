@@ -24,6 +24,7 @@ export {
   BellRing,
   Bike,
   BookOpen,
+  Bot,
   // eierens AI-main.svg viste seg å være
   // Kun en liten sirkel (spenn 4,8 av 24) — nav-punktet «AI-verktøy» rendret
   // som en dott. Se ikonregisteret; en ekte hjerne må tegnes.

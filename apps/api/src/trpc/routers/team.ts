@@ -2,15 +2,19 @@ import { randomUUID } from 'node:crypto';
 import { createAuth, sendTwoFactorOtp } from '@endwise/auth';
 import { and, desc, eq, gte, inArray, lt, schema, withTenant } from '@endwise/db';
 import {
+  assertMedlemAvTenant,
+  BLOUB_FARGE_IDER,
   type Jobbfunksjon,
   kanEndreJobbfunksjon,
   kanTildeles,
   lesAvatar,
   mekanikerStatusVisning,
   resolveJobbfunksjon,
+  settAnsattFarge,
   synkMekanikerRad,
   TILDELBARE_FUNKSJONER,
   tellerSomBelastning,
+  tildelAnsattFarge,
 } from '@endwise/modules/profil';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -154,6 +158,7 @@ export const teamRouter = router({
         avatarHumor: schema.userPreferences.avatarHumor,
         avatarHue: schema.userPreferences.avatarHue,
         avatarTone: schema.userPreferences.avatarTone,
+        avatarColor: schema.userPreferences.avatarColor,
       })
       .from(schema.userPreferences)
       .where(inArray(schema.userPreferences.userId, ider))
@@ -190,6 +195,7 @@ export const teamRouter = router({
               kapasitet: mek.capacity,
             })
           : { status: null, statusHumor: null, statusLabel: null };
+        const avatar = lesAvatar(avatarPer.get(m.userId) ?? null);
         return {
           userId: m.userId,
           navn: m.navn,
@@ -216,7 +222,8 @@ export const teamRouter = router({
            * Seed for ansatte er `user.id`. Mekanikerlista (`/mekanikere`)
            * seeder på `mechanics.id` — to flater, to IDer, med vilje.
            */
-          avatar: lesAvatar(avatarPer.get(m.userId) ?? null),
+          avatar,
+          farge: avatar.farge,
           ...vis,
         };
       })
@@ -310,6 +317,35 @@ export const teamRouter = router({
     }),
 
   /**
+   * Dealer setter ansattfarge. Tolv faste svatsjer, ikke fri hue.
+   * Ikke egen «velg ansikt»-profil — fargen er identiteten.
+   */
+  setFarge: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().min(1),
+        farge: z.enum(BLOUB_FARGE_IDER),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!kanEndreJobbfunksjon(ctx.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare forhandlerens leder kan endre ansattfarge.',
+        });
+      }
+      const medlem = await assertMedlemAvTenant(ctx.db, ctx.tenantId, input.userId);
+      if (!medlem) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Personen er ikke medlem av denne forhandleren.',
+        });
+      }
+      await settAnsattFarge(ctx.db, input.userId, input.farge);
+      return { userId: input.userId, farge: input.farge };
+    }),
+
+  /**
    * F1-10 tillegg — legg til ansatt uten invitasjon.
    * Verkstedet som ikke trenger mekaniker-PWA (eller som vil ha navnet i
    * forhandlervisningen før noen logger inn) må kunne opprette selger /
@@ -392,6 +428,8 @@ export const teamRouter = router({
           message: 'Klarte ikke legge til den ansatte. Prøv igjen, eller bruk en annen e-post.',
         });
       }
+
+      await tildelAnsattFarge(ctx.db, ctx.tenantId, userId);
 
       return {
         userId,

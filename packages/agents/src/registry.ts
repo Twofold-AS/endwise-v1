@@ -2,6 +2,7 @@ import type { AgentDefinition } from '@endwise/agent-runtime';
 import { aiDiagnoseAgent } from './ai-diagnose/agent.ts';
 import { driftInnsiktAgent } from './drift-innsikt/agent.ts';
 import { kundeSupportAgent } from './kunde-support/agent.ts';
+import { workshopAgent } from './workshop/agent.ts';
 
 /**
  * Agent-registeret. «Agent = mappe» (techstack §2).
@@ -14,6 +15,7 @@ const AGENTS: Record<string, AgentDefinition> = {
   [driftInnsiktAgent.name]: driftInnsiktAgent,
   // Første agent på chat-flaten (F6-18). customer_freetext ⇒ Mistral EU.
   [aiDiagnoseAgent.name]: aiDiagnoseAgent,
+  [workshopAgent.name]: workshopAgent,
 };
 
 export class UnknownAgentError extends Error {

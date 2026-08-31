@@ -7,6 +7,7 @@ import {
   inviteeKreverPassord,
 } from '@endwise/modules/invitasjoner';
 import { erPlattformTenant } from '@endwise/modules/plattform';
+import { tildelAnsattFarge } from '@endwise/modules/profil';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createAppContext } from '../context.ts';
@@ -337,6 +338,10 @@ invitasjon.post('/godta', async (c) => {
           });
         }
       });
+    }
+
+    if (inv.kind !== 'platform') {
+      await tildelAnsattFarge(db(), inv.tenantId, userId as string);
     }
 
     return c.json({

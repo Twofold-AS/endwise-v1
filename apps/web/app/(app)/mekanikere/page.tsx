@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, CircleAlert, Users } from '@endwise/ui';
+import { Avatar, CircleAlert, hexForFarge, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
@@ -13,13 +13,6 @@ import { CardShell } from '../_shell/cards';
  * Tilgjengelighetsteksten står ved siden av — uttrykket er ikke eneste signal.
  * Ferdighetsmerker og sertifiseringer er fortsatt F3-08 (kompetansesiden).
  */
-const STATUS_PRIKK: Record<string, string> = {
-  ledig: 'bg-success',
-  på_jobb: 'bg-warn',
-  opptatt: 'bg-warn',
-  fri: 'bg-fg-muted',
-};
-
 export default function MekanikerePage() {
   const liste = trpc.mechanics.oversikt.useQuery();
 
@@ -74,7 +67,8 @@ export default function MekanikerePage() {
                 <span className="flex items-center gap-1.5 text-[12px] text-fg-muted">
                   <span
                     aria-hidden
-                    className={`inline-block size-2 rounded-full ${STATUS_PRIKK[m.status] ?? 'bg-fg-muted'}`}
+                    className="inline-block size-2 rounded-full"
+                    style={{ backgroundColor: hexForFarge(m.farge ?? m.avatar?.farge, m.id) }}
                   />
                   {m.statusLabel}
                 </span>

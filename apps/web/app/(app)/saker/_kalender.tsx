@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, HardHat } from '@endwise/ui';
+import { CalendarDays, HardHat, hexForFarge, staffFargeStil } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
@@ -8,12 +8,14 @@ import { trpc } from '@/lib/trpc';
 import { osloDagsvindu, osloVeggtid, PRODUKT_TIDSSONE } from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
 import {
+  klossSporStil,
+  pakkKlosser,
   TIMEPLAN_DAG_SLUTT,
   TIMEPLAN_DAG_START,
   TIMEPLAN_PX_PER_TIME,
   TIMEPLAN_TIMELISTE,
 } from '../_shell/timeplan-dager';
-import { fmtServices, STATUS_TONE } from '../bookinger/_status';
+import { fmtServices } from '../bookinger/_status';
 
 /**
  * Timeplan › Kalender. Samme dag-vindu som Organisasjon-Timeplan (#92):
@@ -23,7 +25,7 @@ export function Kalender({ mechanicId, valgt }: { mechanicId?: string; valgt: st
   const [perMekaniker, setPerMekaniker] = useState(false);
   const vindu = osloDagsvindu(valgt);
 
-  const mekanikere = trpc.mechanics.list.useQuery();
+  const mekanikere = trpc.mechanics.oversikt.useQuery();
   const jobber = trpc.bookings.calendar.useQuery({
     from: vindu.from,
     to: vindu.to,
@@ -71,14 +73,26 @@ export function Kalender({ mechanicId, valgt }: { mechanicId?: string; valgt: st
           <div className="min-w-[640px]">
             <div className="flex border-border border-b bg-surface-2">
               <div className="w-14 shrink-0" />
-              {kolonner.map((k) => (
-                <div
-                  key={k.id ?? 'alle'}
-                  className="flex-1 border-border border-l px-3 py-2 text-label text-fg"
-                >
-                  {k.navn}
-                </div>
-              ))}
+              {kolonner.map((k) => {
+                const mek = (mekanikere.data ?? []).find((m) => m.id === k.id);
+                return (
+                  <div
+                    key={k.id ?? 'alle'}
+                    className="flex flex-1 items-center gap-1.5 border-border border-l px-3 py-2 text-label text-fg"
+                  >
+                    {k.id ? (
+                      <span
+                        aria-hidden
+                        className="inline-block size-2 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor: hexForFarge(mek?.farge ?? mek?.avatar?.farge, k.id),
+                        }}
+                      />
+                    ) : null}
+                    {k.navn}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="relative flex" style={{ height: timer * TIMEPLAN_PX_PER_TIME }}>
@@ -98,6 +112,7 @@ export function Kalender({ mechanicId, valgt }: { mechanicId?: string; valgt: st
                 const kolonneJobber = rader.filter(
                   (b) => kol.id == null || b.mechanicId === kol.id,
                 );
+                const spor = pakkKlosser(kolonneJobber);
                 return (
                   <div
                     key={kol.id ?? 'alle'}
@@ -110,13 +125,15 @@ export function Kalender({ mechanicId, valgt }: { mechanicId?: string; valgt: st
                         className="border-border/60 border-b"
                       />
                     ))}
-                    {kolonneJobber.map((b) => (
+                    {kolonneJobber.map((b, i) => (
                       <Kloss
                         key={b.id}
                         booking={b}
                         kolIndex={kolIndex}
                         startTime={startTime}
                         sluttTime={sluttTime}
+                        spor={spor[i]?.spor ?? 0}
+                        sporAntall={spor[i]?.sporAntall ?? 1}
                       />
                     ))}
                   </div>
@@ -147,6 +164,8 @@ function Kloss({
   kolIndex,
   startTime,
   sluttTime,
+  spor,
+  sporAntall,
 }: {
   booking: {
     id: string;
@@ -157,10 +176,14 @@ function Kloss({
     serviceName: string | null;
     serviceNames?: readonly (string | null)[] | null;
     mechanicName: string | null;
+    mechanicId?: string | null;
+    farge?: string | null;
   };
   kolIndex: number;
   startTime: number;
   sluttTime: number;
+  spor: number;
+  sporAntall: number;
 }) {
   const start = new Date(booking.startsAt);
   const slutt = new Date(booking.endsAt);
@@ -179,10 +202,13 @@ function Kloss({
   return (
     <Link
       href={`/bookinger/${booking.id}` as Route}
-      style={{ top, height }}
-      className={`absolute right-1 left-1 overflow-hidden rounded-control border border-border px-2 py-1 transition-colors hover:border-border-strong ${
-        STATUS_TONE[booking.status] ?? 'bg-surface-2 text-fg'
-      }`}
+      style={{
+        top,
+        height,
+        ...klossSporStil(spor, sporAntall),
+        ...staffFargeStil(booking.farge, booking.mechanicId ?? undefined),
+      }}
+      className="absolute overflow-hidden rounded-control border px-2 py-1 text-fg transition-colors hover:brightness-[0.97]"
       title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit', timeZone: PRODUKT_TIDSSONE })} · ${fmtServices(booking)}${booking.mechanicName ? ` · ${booking.mechanicName}` : ''}`}
       // Sørger for at senere klosser tegnes over tidligere ved overlapp.
       data-kol={kolIndex}

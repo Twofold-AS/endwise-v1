@@ -1,3 +1,5 @@
+import { type BloubFargeId, erBloubFarge, fargeFraHue } from './farge.ts';
+
 /**
  * F5-19 / F7-06 — visningsnavn, og den ene grensen som må holde.
  * Regelen
@@ -202,8 +204,8 @@ export type AvatarValg = {
   form: AvatarForm | null;
   /** Utledes aldri av seeden. Null = nøytralt ansikt. */
   humor: AvatarHumor | null;
-  /** Grader, 0–359. */
-  farge: number | null;
+  /** Bloub ColorId. Hue-grader er leftover og mappes ved lesing. */
+  farge: BloubFargeId | null;
   /** Indeks i svatsjsettet, 0–5. */
   tone: number | null;
 };
@@ -232,24 +234,31 @@ export function lesAvatar(
         avatarHumor?: string | null;
         avatarHue?: number | null;
         avatarTone?: number | null;
+        avatarColor?: string | null;
       }
     | null
     | undefined,
 ): AvatarValg {
   if (!rad) return TOM_AVATAR;
-  const farge = rad.avatarHue;
   const tone = rad.avatarTone;
+  const farge = erBloubFarge(rad.avatarColor) ? rad.avatarColor : fargeFraHue(rad.avatarHue);
   return {
     form: erAvatarForm(rad.avatarShape) ? rad.avatarShape : null,
     humor: erAvatarHumor(rad.avatarHumor) ? rad.avatarHumor : null,
-    farge: typeof farge === 'number' && farge >= 0 && farge <= 359 ? farge : null,
+    farge,
     tone: typeof tone === 'number' && tone >= 0 && tone < AVATAR_TONER ? tone : null,
   };
 }
 
 export { updateMechanicCapacity } from './capacity.ts';
+export type { BloubFargeId } from './farge.ts';
+export {
+  BLOUB_FARGE_IDER,
+  erBloubFarge,
+  fargeFraHue,
+  nesteFarge,
+} from './farge.ts';
 export { synkMekanikerRad } from './mekaniker-rad.ts';
-
 export type { MekanikerStatus, StatusHumor } from './status-humor.ts';
 export {
   MEKANIKER_STATUS_HUMOR,
@@ -260,3 +269,9 @@ export {
   utledMekanikerStatus,
   visningsHumor,
 } from './status-humor.ts';
+export {
+  assertMedlemAvTenant,
+  brukteFargerITenant,
+  settAnsattFarge,
+  tildelAnsattFarge,
+} from './tildel-farge.ts';

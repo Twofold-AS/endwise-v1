@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
+import { FargeSvatser } from '../../_avatar/farge-svatser';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { STATUS_LABEL } from '../../bookinger/_status';
 import { MekanikerKompetanse } from '../../mekanikere/kompetanse/_mekaniker';
@@ -149,9 +150,19 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
           />
           <div className="min-w-0">
             <p className="truncate text-label text-fg">{rad.navn}</p>
-            <StatusMerke status={rad.status} label={rad.statusLabel} />
+            <StatusMerke
+              status={rad.status}
+              label={rad.statusLabel}
+              farge={rad.farge ?? rad.avatar?.farge}
+              seed={rad.userId}
+            />
           </div>
         </div>
+        {kanEndre ? (
+          <div className="mt-3">
+            <FargeSvatser userId={rad.userId} valgt={rad.farge ?? rad.avatar?.farge} />
+          </div>
+        ) : null}
 
         {redigerer ? (
           <form

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createAuth, createTenant } from '@endwise/auth';
 import { and, createDb, eq, isNull, schema, withTenant } from '@endwise/db';
 import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
+import { tildelAnsattFarge } from '@endwise/modules/profil';
 import { seedHelpdesk } from './seed-helpdesk.ts';
 
 /**
@@ -215,6 +216,17 @@ async function main() {
   await setMemberRole(tenantA, supportA, 'dealer_staff');
   await setMemberRole(tenantA, endwiseAdmin, 'endwise_admin');
   await setMemberRole(tenantB, adminB, 'dealer_admin');
+
+  for (const [tenant, user] of [
+    [tenantA, adminA],
+    [tenantA, staffA],
+    [tenantA, mekA],
+    [tenantA, selgerA],
+    [tenantA, supportA],
+    [tenantB, adminB],
+  ] as const) {
+    await tildelAnsattFarge(db, tenant, user);
+  }
 
   // Mekaniker-profil (kobler mekaniker-brukeren til tenant A).
   let [mech] = await db

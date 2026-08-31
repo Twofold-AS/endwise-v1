@@ -132,7 +132,6 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
 
 describe('P0: avatar-onboarding dør ikke på 401', () => {
   const kilde = readFileSync(resolve(her, '../app/invitasjon/[token]/page.tsx'), 'utf8');
-  const avatar = readFileSync(resolve(her, '../app/(app)/_avatar/avatar-velger.tsx'), 'utf8');
 
   it('UNAUTHORIZED og manglende credential blir norsk, aldri rå kodestreng', () => {
     expect(erUautorisert(new Error('UNAUTHORIZED'))).toBe(true);
@@ -149,69 +148,45 @@ describe('P0: avatar-onboarding dør ikke på 401', () => {
     expect(MANGLER_SESJON_UI).not.toMatch(/UNAUTHORIZED|#EE2924/i);
   });
 
-  it('avatar-steget aktiverer org før tRPC, og 401 sender til /signin', () => {
+  it('etter 2FA aktiveres org og man lander — uten avatar-steg', () => {
     const start = kilde.indexOf('async function bekreftKode');
     const bekreft = kilde.slice(start, kilde.indexOf('const rolle', start));
     expect(bekreft).toMatch(/aktiverOrg\(/);
-    expect(bekreft.indexOf('aktiverOrg')).toBeLessThan(bekreft.indexOf("setSteg('avatar')"));
+    expect(bekreft).toMatch(/land\(/);
+    expect(kilde).not.toMatch(/setSteg\('avatar'\)/);
     expect(kilde).toMatch(/erUautorisert/);
     expect(kilde).toMatch(/destinasjonVedManglendeSesjon|\/signin/);
     expect(kilde).toMatch(/norskAuthFeil/);
     expect(kilde).not.toMatch(/setFeil\(\(error as Error\)\.message\)/);
   });
-
-  it('Hopp over lander uten å kreve setAvatar når man er innlogget', () => {
-    expect(kilde).toMatch(/async function hoppOverAvatar|function hoppOverAvatar/);
-    const start = kilde.indexOf('hoppOverAvatar');
-    const hopp = kilde.slice(start, kilde.indexOf('const rolle', start));
-    expect(hopp).toMatch(/land\(/);
-    expect(hopp).not.toMatch(/settAvatar|setAvatar|mutateAsync/);
-    expect(kilde).toMatch(/onClick=\{\(\) => void hoppOverAvatar\(\)\}/);
-  });
-
-  it('AvatarVelger viser norsk sidetekst, ikke rå UNAUTHORIZED', () => {
-    expect(avatar).toMatch(/norskAuthFeil/);
-    expect(avatar).not.toMatch(/\{lagre\.error\.message\}/);
-  });
 });
 
-describe('P0: /oppstart er visningsnavn · avatar · team (tillegg bare hvis åpnet)', () => {
+describe('P0: /oppstart er visningsnavn · team (tillegg bare hvis åpnet)', () => {
   const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/page.tsx'), 'utf8');
 
-  it('har avatar-steg med farge, og hopper over tomt tilleggssteg', () => {
+  it('har ikke avatar-velger, og hopper over tomt tilleggssteg', () => {
     expect(oppstart).toMatch(/Visningsnavn/);
-    expect(oppstart).toMatch(/Avatar/);
     expect(oppstart).toMatch(/Team/);
     expect(oppstart).toMatch(/optional\.length/);
-    expect(oppstart).toMatch(/AvatarVelger/);
-    expect(oppstart).toMatch(/fullforAvatarValg/);
+    expect(oppstart).not.toMatch(/AvatarVelger/);
+    expect(oppstart).not.toMatch(/fullforAvatarValg/);
     expect(oppstart).not.toMatch(/STEG = \['Visningsnavn', 'Avatar'/);
     expect(oppstart).not.toMatch(/utledes ansiktet fra navnet/);
   });
 });
 
-describe('P0: avatar-velger uten form/humør/tone', () => {
-  const avatar = readFileSync(resolve(her, '../app/(app)/_avatar/avatar-velger.tsx'), 'utf8');
+describe('P0: profil uten ansiktsvelger', () => {
   const profil = readFileSync(resolve(her, '../app/(app)/innstillinger/_profil-fane.tsx'), 'utf8');
 
-  it('profil har velger med farge — uten form, humør og tone', () => {
-    expect(profil).toMatch(/AvatarVelger/);
-    expect(avatar).toMatch(/Ny tilfeldig/);
-    expect(avatar).not.toMatch(/HUMOR\.map/);
-    expect(avatar).toMatch(/size = 48/);
-    expect(avatar).toMatch(/size=\{size\}/);
-    expect(avatar).toMatch(/bevegelse="alltid"/);
-    expect(avatar).not.toMatch(/FORMER\.map/);
-    expect(avatar).toMatch(/FARGER\.map/);
-    expect(avatar).not.toMatch(/TONER\.map/);
-    expect(avatar).not.toMatch(/function Nedtrekk/);
-    expect(avatar).not.toMatch(/id="humor"/);
-    expect(avatar).not.toMatch(/grid grid-cols-2 gap-3 lg:grid-cols-4/);
+  it('profil viser bloub, ikke velger', () => {
+    expect(profil).not.toMatch(/AvatarVelger/);
+    expect(profil).toMatch(/bevegelse="alltid"/);
+    expect(profil).toMatch(/size=\{56\}/);
   });
 
-  it('sidebar-avataren beveger seg hele tiden uten tvunget happy', () => {
+  it('sidebar-avataren er stille uten tvunget happy', () => {
     const rad = readFileSync(resolve(her, '../app/(app)/_shell/bruker-rad.tsx'), 'utf8');
-    expect(rad).toMatch(/bevegelse="alltid"/);
+    expect(rad).toMatch(/bevegelse="stille"/);
     expect(rad).toMatch(/valg=\{profil\.data\?\.avatar\}/);
     expect(rad).not.toMatch(/humor:\s*['"]happy['"]/);
   });

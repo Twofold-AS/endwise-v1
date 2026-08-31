@@ -1,6 +1,15 @@
 'use client';
 
-import { Avatar, CalendarDays, Car, CircleAlert, Gauge, StatefulButton } from '@endwise/ui';
+import {
+  Avatar,
+  CalendarDays,
+  Car,
+  CircleAlert,
+  Gauge,
+  hexForFarge,
+  StatefulButton,
+  staffFargeStil,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -16,13 +25,6 @@ import { estMinutes, fmtTime, STATUS_LABEL } from '../../min-dag/_status';
 import { FELT } from '../kompetanse/_niva';
 
 const TELLER_STATUS = new Set(['draft', 'confirmed', 'in_progress']);
-
-const STATUS_PRIKK: Record<string, string> = {
-  ledig: 'bg-success',
-  på_jobb: 'bg-warn',
-  opptatt: 'bg-warn',
-  fri: 'bg-fg-muted',
-};
 
 /**
  * F3-08 / F7-03 — Ansatte › Timeplan.
@@ -162,7 +164,13 @@ function MekanikerTimeplan({
           <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
             <span
               aria-hidden
-              className={`inline-block size-2 rounded-full ${STATUS_PRIKK[mekaniker.status] ?? 'bg-fg-muted'}`}
+              className="inline-block size-2 rounded-full"
+              style={{
+                backgroundColor: hexForFarge(
+                  mekaniker.farge ?? mekaniker.avatar?.farge,
+                  mekaniker.id,
+                ),
+              }}
             />
             {mekaniker.statusLabel}
           </p>
@@ -248,7 +256,10 @@ function MekanikerTimeplan({
         ) : (
           jobber.map((job) => (
             <Link key={job.id} href={`/bookinger/${job.id}` as Route} className="block">
-              <div className="flex items-center gap-3 rounded-lg bg-inset p-3">
+              <div
+                className="flex items-center gap-3 rounded-lg border p-3"
+                style={staffFargeStil(mekaniker.farge ?? mekaniker.avatar?.farge, mekaniker.id)}
+              >
                 <div className="w-14 shrink-0 text-center font-semibold text-[13px] text-primary tabular-nums">
                   {fmtTime(job.startsAt)}
                 </div>

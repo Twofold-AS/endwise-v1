@@ -111,8 +111,9 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
     );
   });
 
-  it('profil-fanen beholder blobatar og har ikke filopplasting', () => {
-    expect(profilFane).toMatch(/AvatarVelger/);
+  it('profil-fanen viser bloub og har ikke filopplasting', () => {
+    expect(profilFane).toMatch(/<Avatar/);
+    expect(profilFane).not.toMatch(/AvatarVelger/);
     expect(profilFane).toMatch(/ToFaktorRad/);
     expect(profilFane).toMatch(/twoFactorEnabled/);
     expect(profilFane).toMatch(/<Switch/);
@@ -125,22 +126,12 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
   it('profil-raden har avatar + endre-knapp øverst, feltene stables under uten kort', () => {
     expect(profilFane).toMatch(/size=\{56\}/);
     expect(profilFane).not.toMatch(/foldFormer/);
-    expect(profilFane).toMatch(/utenKort/);
     expect(profilFane).toMatch(/VisningsnavnFelt/);
     expect(profilFane).toMatch(/KallenavnFelt/);
     expect(profilFane).toMatch(/ByttEpostSkjema/);
     expect(profilFane).toMatch(/readOnly/);
-    expect(profilFane).toMatch(/<AvatarVelger[^>]*\/>/);
-    expect(profilFane).not.toMatch(/<AvatarVelger[\s\S]*?<\/AvatarVelger>/);
+    expect(profilFane).not.toMatch(/AvatarVelger/);
     expect(profilFane).not.toMatch(/sm:grid-cols-2/);
-    const avatar = les('../app/(app)/_avatar/avatar-velger.tsx');
-    expect(avatar).toMatch(/flex flex-row items-center gap-4/);
-    expect(avatar).not.toMatch(/<details/);
-    expect(avatar).not.toMatch(/Endre form, farge og uttrykk/);
-    expect(avatar).not.toMatch(/HUMOR\.map/);
-    expect(avatar).toMatch(/FARGER\.map/);
-    expect(avatar).not.toMatch(/function medHappy/);
-    expect(avatar).not.toMatch(/from '@\/components\/ui\/collapsible'/);
   });
 
   it('ingen sticky Save-bar, ingen grønn switch/save, Organisasjon ligger i sidebaren', () => {

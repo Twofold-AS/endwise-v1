@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  Bot,
   Building2,
   CalendarDays,
   Car,
@@ -291,6 +292,17 @@ export const FORHANDLER_NAV: NavItem[] = [
     roles: DRIFT,
     badge: 'helpdesk',
     dividerBefore: true,
+  },
+  {
+    /**
+     * Intern gjennomgang av maskot-animasjonen. Ikke en kjerne-destinasjon
+     * og ikke på telefon-hjem (egen kortliste i phone-home.ts).
+     */
+    key: 'bot',
+    label: 'Bot',
+    icon: Bot,
+    href: '/bot',
+    roles: DRIFT,
   },
 ];
 

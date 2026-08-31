@@ -19,7 +19,15 @@ export {
   type AvatarBevegelse,
   type AvatarProps,
   type AvatarValg,
+  BLOUB_FARGE_IDER,
+  BLOUB_FARGE_LABEL,
+  BLOUB_HVILE,
+  COLORS,
+  type ColorId,
+  hexForFarge,
+  losFarge,
   skalFølgePeker,
+  staffFargeStil,
 } from './components/avatar.tsx';
 export { Badge, type BadgeProps, badgeVariants } from './components/badge.tsx';
 // shadcn/ui — struktur
@@ -153,6 +161,8 @@ export {
   ToolPartGodkjenning,
   type ToolPartStatus,
 } from './components/tool-part.tsx';
+export { useBloubIdleLiv } from './hooks/use-bloub-idle-liv.ts';
+export { useBloubPapir } from './hooks/use-bloub-papir.ts';
 // lucide-react — eneste ikonbibliotek (kuratert barrel)
 export * from './icons.ts';
 /** Kanoniske bevegelses-tokens (SPRING_PRESS, SPRING_SWAP, EASE_OUT …). Ikke funn opp egne. */

@@ -81,6 +81,8 @@ describe('Team-piller som Innstillinger ?fane=', () => {
     expect(liste).toMatch(/statusLabel/);
     const status = les('../app/(app)/innstillinger/team/_status.tsx');
     expect(status).toMatch(/Ingen status/);
+    expect(status).toMatch(/hexForFarge/);
+    expect(status).not.toMatch(/STATUS_PRIKK/);
     expect(status).not.toMatch(/bg-success.*Ingen/);
   });
 });

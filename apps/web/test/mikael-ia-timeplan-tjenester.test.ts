@@ -67,6 +67,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
       'Salg',
       'Organisasjon',
       'Hjelp',
+      'Bot',
     ]);
     expect(FORHANDLER_NAV.find((i) => i.key === 'saker')?.pills?.map((p) => p.label)).toEqual([
       'Liste',

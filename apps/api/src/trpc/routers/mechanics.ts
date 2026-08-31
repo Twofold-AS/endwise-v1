@@ -85,6 +85,7 @@ export const mechanicsRouter = router({
                 avatarHumor: schema.userPreferences.avatarHumor,
                 avatarHue: schema.userPreferences.avatarHue,
                 avatarTone: schema.userPreferences.avatarTone,
+                avatarColor: schema.userPreferences.avatarColor,
               })
               .from(schema.userPreferences)
               .where(inArray(schema.userPreferences.userId, brukerIder))
@@ -101,6 +102,7 @@ export const mechanicsRouter = router({
             jobberIDag,
             kapasitet: m.capacity,
           });
+          const avatar = m.userId ? lesAvatar(avatarPer.get(m.userId) ?? null) : TOM_AVATAR;
           return {
             id: m.id,
             name: visningsnavn(
@@ -110,7 +112,8 @@ export const mechanicsRouter = router({
             userId: m.userId,
             active: m.active,
             capacity: m.capacity,
-            avatar: m.userId ? lesAvatar(avatarPer.get(m.userId) ?? null) : TOM_AVATAR,
+            avatar,
+            farge: avatar.farge,
             jobberIDag,
             ...vis,
           };

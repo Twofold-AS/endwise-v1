@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, ChevronDown, CircleAlert, Plus, StatefulButton } from '@endwise/ui';
+import { Avatar, ChevronDown, CircleAlert, hexForFarge, Plus, StatefulButton } from '@endwise/ui';
 import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
@@ -10,13 +10,6 @@ import { FELT, NIVA_VALG, nivaTekst, sertStatus } from './_niva';
 type Mekaniker = RouterOutput['mechanics']['oversikt'][number];
 type Ferdighet = RouterOutput['competence']['listSkills'][number];
 type Kompetanse = RouterOutput['competence']['listAllMechanicSkills'][number];
-
-const STATUS_PRIKK: Record<string, string> = {
-  ledig: 'bg-success',
-  på_jobb: 'bg-warn',
-  opptatt: 'bg-warn',
-  fri: 'bg-fg-muted',
-};
 
 /**
  * F3-12 / F3-08 — kompetanse per mekaniker. Samme felter mekanikeren leser
@@ -86,7 +79,13 @@ export function MekanikerKompetanse({
           <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
             <span
               aria-hidden
-              className={`inline-block size-2 rounded-full ${STATUS_PRIKK[mekaniker.status] ?? 'bg-fg-muted'}`}
+              className="inline-block size-2 rounded-full"
+              style={{
+                backgroundColor: hexForFarge(
+                  mekaniker.farge ?? mekaniker.avatar?.farge,
+                  mekaniker.id,
+                ),
+              }}
             />
             {mekaniker.statusLabel}
           </p>

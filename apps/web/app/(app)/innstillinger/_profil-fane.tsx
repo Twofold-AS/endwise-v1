@@ -1,10 +1,9 @@
 'use client';
 
-import { Moon, Sun, Switch } from '@endwise/ui';
+import { Avatar, Moon, Sun, Switch } from '@endwise/ui';
 import { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
-import { AvatarVelger } from '../_avatar/avatar-velger';
 import { lesTema, settTema, type Tema } from '../_lib/tema';
 import { ByttEpostSkjema } from '../_shell/bytt-epost';
 import { ByttPassordSkjema } from '../_shell/bytt-passord';
@@ -40,7 +39,20 @@ export function ProfilFane() {
 
   return (
     <div className="flex flex-col gap-5">
-      <AvatarVelger seed={me.data?.userId ?? null} size={56} utenKort />
+      {me.data?.userId ? (
+        <div className="flex items-center gap-4">
+          <Avatar
+            seed={me.data.userId}
+            valg={meg.data?.avatar}
+            navn={meg.data?.navn ?? ''}
+            size={56}
+            bevegelse="alltid"
+          />
+          <p className="text-[12px] text-fg-muted leading-relaxed">
+            Ansiktet er bloub. Fargen settes av forhandleren under Organisasjon › Ansatte.
+          </p>
+        </div>
+      ) : null}
 
       <div>
         <p className="mb-2 text-label text-fg">Visningsnavn</p>

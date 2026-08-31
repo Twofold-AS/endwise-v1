@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { FORHANDLER_NAV } from '../app/(app)/_shell/nav.ts';
+import { klossSporStil, pakkKlosser } from '../app/(app)/_shell/timeplan-dager.ts';
 import { aktivJobb, ansattePaJobb } from '../app/(app)/dashboard/_pa-jobb.ts';
 import {
   timeplanKloss,
@@ -81,6 +82,31 @@ describe('ansattePaJobb — hvem som er på gulvet', () => {
     expect(sen.top).toBeLessThan(11 * 40);
     expect(sen.height).toBeGreaterThanOrEqual(22);
   });
+
+  it('fem overlappende 08:00-jobber får hvert sitt spor', () => {
+    const start = '2026-08-25T08:00:00';
+    const slutt = '2026-08-25T09:00:00';
+    const fem = [1, 2, 3, 4, 5].map((i) => ({
+      id: `j${i}`,
+      startsAt: start,
+      endsAt: slutt,
+    }));
+    const spor = pakkKlosser(fem);
+    expect(spor).toHaveLength(5);
+    expect(new Set(spor.map((s) => s.spor)).size).toBe(5);
+    expect(spor.every((s) => s.sporAntall === 5)).toBe(true);
+    const stil = klossSporStil(0, 5);
+    expect(stil.left).toMatch(/0%/);
+    expect(stil.width).toMatch(/20%/);
+  });
+
+  it('jobber etter hverandre deler ikke spor', () => {
+    const spor = pakkKlosser([
+      { startsAt: '2026-08-25T08:00:00', endsAt: '2026-08-25T09:00:00' },
+      { startsAt: '2026-08-25T09:00:00', endsAt: '2026-08-25T10:00:00' },
+    ]);
+    expect(spor.map((s) => s.sporAntall)).toEqual([1, 1]);
+  });
 });
 
 describe('Verkstedet-flaten — navn og innhold', () => {
@@ -109,5 +135,16 @@ describe('Verkstedet-flaten — navn og innhold', () => {
     expect(org?.pills?.some((c) => c.label === 'Kompetanse')).toBe(false);
     const kompetanse = les('../app/(app)/mekanikere/kompetanse/page.tsx');
     expect(kompetanse).not.toMatch(/AnsattePaJobb|dashboard\/_timeplan/);
+  });
+
+  it('timeplan-klosser bruker staff ColorId, ikke status-tone', () => {
+    const timeplan = les('../app/(app)/dashboard/_timeplan.tsx');
+    const kalender = les('../app/(app)/saker/_kalender.tsx');
+    expect(timeplan).toMatch(/staffFargeStil\(b\.farge/);
+    expect(timeplan).toMatch(/pakkKlosser/);
+    expect(timeplan).not.toMatch(/STATUS_TONE/);
+    expect(kalender).toMatch(/staffFargeStil\(booking\.farge/);
+    expect(kalender).toMatch(/pakkKlosser/);
+    expect(kalender).not.toMatch(/STATUS_TONE/);
   });
 });

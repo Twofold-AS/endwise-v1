@@ -21,25 +21,17 @@ function utenKommentarer(kilde: string) {
 
 describe('Profil: avatar og felt ut av det gamle kortet', () => {
   const fane = utenKommentarer(les('../app/(app)/innstillinger/_profil-fane.tsx'));
-  const velger = utenKommentarer(les('../app/(app)/_avatar/avatar-velger.tsx'));
 
-  it('avatar og endre-knapp er søsken i samme rad øverst', () => {
-    const merke = 'flex flex-row items-center gap-4';
-    const start = velger.indexOf(merke);
-    const rad = velger.slice(start, velger.indexOf('</div>', start));
-    expect(rad).toMatch(/<Avatar/);
-    expect(rad).toMatch(/\{nyTilfeldigKnapp\}/);
-    expect(rad).not.toMatch(/children/);
-    expect(rad.indexOf('<Avatar')).toBeLessThan(rad.indexOf('{nyTilfeldigKnapp}'));
+  it('avatar vises øverst uten velger', () => {
+    expect(fane).toMatch(/<Avatar/);
+    expect(fane).not.toMatch(/AvatarVelger/);
+    expect(fane).not.toMatch(/Ny tilfeldig/);
   });
 
-  it('profil-feltene ligger ikke i AvatarVelger eller CardShell', () => {
-    expect(fane).toMatch(/<AvatarVelger[^>]*utenKort/);
-    expect(fane).toMatch(/<AvatarVelger[^>]*\/>/);
-    expect(fane).not.toMatch(/<AvatarVelger[\s\S]*?<\/AvatarVelger>/);
+  it('profil-feltene ligger ikke i en velger eller CardShell', () => {
     expect(fane).not.toMatch(/sm:grid-cols-2/);
 
-    const etterAvatar = fane.slice(fane.indexOf('<AvatarVelger'));
+    const etterAvatar = fane.slice(fane.indexOf('<Avatar'));
     expect(etterAvatar).toMatch(/VisningsnavnFelt/);
     expect(etterAvatar).toMatch(/KallenavnFelt/);
     expect(etterAvatar).toMatch(/aria-label="E-post"|E-post/);

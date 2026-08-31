@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 /**
- * Mekaniker-/ansattflater viser blobatar med status-humor, og
+ * Mekaniker-/ansattflater viser bloub med staff ColorId, og
  * tilgjengelighetstekst ved siden av. Status overstyrer kun humor.
  * Sidebar og profil viser det valgte uttrykket.
  */
 const her = dirname(fileURLToPath(import.meta.url));
 
-describe('mekanikerlista viser blobatar med status-humor', () => {
+describe('mekanikerlista viser bloub med staff-farge', () => {
   const side = readFileSync(resolve(her, '../app/(app)/mekanikere/page.tsx'), 'utf8');
 
   it('er ikke lenger en Placeholder', () => {
@@ -19,6 +19,8 @@ describe('mekanikerlista viser blobatar med status-humor', () => {
     expect(side).toMatch(/<Avatar/);
     expect(side).toMatch(/statusHumor/);
     expect(side).toMatch(/statusLabel/);
+    expect(side).toMatch(/hexForFarge/);
+    expect(side).toMatch(/size=\{32\}/);
   });
 
   it('identitet kommer fra persistente valg — status overstyrer bare humor', () => {
@@ -39,7 +41,7 @@ describe('Team › lista er den ekte ansattlista', () => {
   );
   const hub = readFileSync(resolve(her, '../app/(app)/organisasjon/_ansatte.tsx'), 'utf8');
 
-  it('viser blobatar + status-humor, ikke initialer', () => {
+  it('viser bloub + status-humor, ikke initialer', () => {
     expect(liste).toMatch(/<Avatar/);
     expect(liste).toMatch(/statusHumor/);
     expect(liste).toMatch(/seed=\{rad\.userId\}/);
@@ -60,7 +62,7 @@ describe('sidebar og profil viser valgt humor, ikke jobbstatus', () => {
   const profil = readFileSync(resolve(her, '../app/(app)/min-dag/profil/page.tsx'), 'utf8');
 
   it('sidebar tvinger ikke happy og overstyrer ikke med status', () => {
-    expect(rad).toMatch(/bevegelse="alltid"/);
+    expect(rad).toMatch(/bevegelse="stille"/);
     expect(rad).toMatch(/valg=\{profil\.data\?\.avatar\}/);
     expect(rad).not.toMatch(/humor:\s*['"]happy['"]/);
     expect(rad).not.toMatch(/statusHumor/);

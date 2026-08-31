@@ -4,6 +4,7 @@ import { Avatar, Dialog, DialogContent, DialogTitle, Plus } from '@endwise/ui';
 import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
+import { FargeSvatser } from '../_avatar/farge-svatser';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
@@ -126,7 +127,7 @@ function AnsattKort({
           seed={rad.userId}
           valg={{ ...rad.avatar, humor: rad.statusHumor ?? rad.avatar.humor }}
           navn={rad.navn}
-          size={40}
+          size={32}
           bevegelse="stille"
         />
         <div className="min-w-0 flex-1">
@@ -159,6 +160,10 @@ function AnsattKort({
           </button>
         ) : null}
       </div>
+
+      {kanEndre ? (
+        <FargeSvatser userId={rad.userId} valgt={rad.farge ?? rad.avatar?.farge} />
+      ) : null}
 
       <div className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-label text-fg-muted">

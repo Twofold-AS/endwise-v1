@@ -40,6 +40,7 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
       'Salg',
       'Organisasjon',
       'Hjelp',
+      'Bot',
     ]);
     for (const rad of FORHANDLER_NAV) {
       expect(rad.children).toBeUndefined();

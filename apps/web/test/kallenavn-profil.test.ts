@@ -25,9 +25,9 @@ describe('Profil: kallenavn stables med visningsnavn og e-post under avataren', 
 
   it('feltet stables under avataren sammen med visningsnavn og e-post, ikke i kortet', () => {
     const jsx = fane.slice(fane.indexOf('return ('));
-    expect(jsx).toMatch(/<AvatarVelger[^>]*utenKort/);
-    expect(jsx).not.toMatch(/<AvatarVelger[\s\S]*?<\/AvatarVelger>/);
-    expect(jsx.indexOf('<AvatarVelger')).toBeLessThan(jsx.indexOf('<VisningsnavnFelt'));
+    expect(jsx).toMatch(/<Avatar/);
+    expect(jsx).not.toMatch(/AvatarVelger/);
+    expect(jsx.indexOf('<Avatar')).toBeLessThan(jsx.indexOf('<VisningsnavnFelt'));
     expect(jsx.indexOf('<VisningsnavnFelt')).toBeLessThan(jsx.indexOf('<KallenavnFelt'));
     expect(jsx.indexOf('<KallenavnFelt')).toBeLessThan(jsx.indexOf('E-post'));
     expect(fane).not.toMatch(/<KallenavnSeksjon/);

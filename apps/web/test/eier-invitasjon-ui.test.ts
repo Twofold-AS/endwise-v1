@@ -14,7 +14,6 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     'utf8',
   );
   const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/page.tsx'), 'utf8');
-  const avatar = readFileSync(resolve(her, '../app/(app)/_avatar/avatar-velger.tsx'), 'utf8');
   const pakke = readFileSync(resolve(her, '../app/(app)/endwise/_pakke-valg.tsx'), 'utf8');
 
   it('godta-siden ber om passord og har ingen tilleggs-UI', () => {
@@ -82,10 +81,10 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).not.toMatch(/setActive|impersonat/i);
   });
 
-  it('eier-veiviseren er visningsnavn · avatar · team', () => {
+  it('eier-veiviseren er visningsnavn · team, uten ansiktsvelger', () => {
     expect(oppstart).toMatch(/Visningsnavn/);
-    expect(oppstart).toMatch(/AvatarVelger/);
-    expect(oppstart).toMatch(/fullforAvatarValg/);
+    expect(oppstart).not.toMatch(/AvatarVelger/);
+    expect(oppstart).not.toMatch(/fullforAvatarValg/);
     expect(oppstart).toMatch(/Team/);
     expect(oppstart).toMatch(/Pakken din er/);
     expect(oppstart).toMatch(/optional\.length/);
@@ -100,22 +99,11 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(oppstart).not.toMatch(/setModules/);
   });
 
-  it('avatar-velgeren er ett ansikt med Ny tilfeldig og farge — ikke form/humør/tone', () => {
-    expect(avatar).toMatch(/Ny tilfeldig/);
-    expect(avatar).not.toMatch(/HUMOR\.map/);
-    expect(avatar).toMatch(/FARGER\.map/);
-    expect(avatar).not.toMatch(/TONER\.map/);
-    expect(avatar).not.toMatch(/function Nedtrekk/);
-    expect(avatar).not.toMatch(/id="humor"/);
-  });
-
-  it('ansatt-invite har avatar-steg etter 2FA, eier går til oppstart', () => {
-    expect(kilde).toMatch(/steg === 'avatar'/);
-    expect(kilde).toMatch(/Velg avataren din/);
-    expect(kilde).toMatch(/fullforAvatarValg/);
+  it('ansatt-invite lander etter 2FA uten avatar-steg, eier går til oppstart', () => {
+    expect(kilde).not.toMatch(/steg === 'avatar'/);
+    expect(kilde).not.toMatch(/Velg avataren din/);
+    expect(kilde).not.toMatch(/AvatarVelger/);
     expect(kilde).toMatch(/inv\.kind === 'owner'/);
-    expect(kilde).toMatch(/setSteg\('avatar'\)/);
-    expect(kilde).toMatch(/AvatarVelger/);
   });
 
   it('ingen offentlig /registrer-side', () => {

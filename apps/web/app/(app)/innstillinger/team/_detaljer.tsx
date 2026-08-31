@@ -23,6 +23,7 @@ import { useOrgRole } from '../../_lib/use-org-role';
 import { STATUS_LABEL } from '../../bookinger/_status';
 import { MekanikerKompetanse } from '../../mekanikere/kompetanse/_mekaniker';
 import { fmtTime } from '../../min-dag/_status';
+import { FargeSvatser } from '../../_avatar/farge-svatser';
 import { StatusMerke } from './_status';
 
 type Rad = RouterOutput['team']['list'][number];
@@ -149,9 +150,19 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
           />
           <div className="min-w-0">
             <p className="truncate text-label text-fg">{rad.navn}</p>
-            <StatusMerke status={rad.status} label={rad.statusLabel} />
+            <StatusMerke
+              status={rad.status}
+              label={rad.statusLabel}
+              farge={rad.farge ?? rad.avatar?.farge}
+              seed={rad.userId}
+            />
           </div>
         </div>
+        {kanEndre ? (
+          <div className="mt-3">
+            <FargeSvatser userId={rad.userId} valgt={rad.farge ?? rad.avatar?.farge} />
+          </div>
+        ) : null}
 
         {redigerer ? (
           <form

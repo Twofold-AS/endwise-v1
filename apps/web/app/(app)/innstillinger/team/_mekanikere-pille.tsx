@@ -60,7 +60,12 @@ export function MekanikerePille({
             />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="truncate text-label text-fg">{m.name}</span>
-              <StatusMerke status={m.status} label={m.statusLabel} />
+              <StatusMerke
+                status={m.status}
+                label={m.statusLabel}
+                farge={m.farge ?? m.avatar?.farge}
+                seed={m.id}
+              />
             </div>
             <span className="shrink-0 text-[12px] text-fg-muted tabular-nums">
               {m.jobberIDag} av {m.capacity} i dag

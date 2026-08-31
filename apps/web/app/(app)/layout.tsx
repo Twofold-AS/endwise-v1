@@ -17,6 +17,7 @@ import { InnboksSeksjonBar, OrganisasjonSeksjonBar } from './_shell/seksjon-bar'
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
 import { TopBar } from './_shell/top-bar';
+import { WorkshopBloub } from './_workshop/workshop-bloub';
 
 /**
  * Admin/forhandler-shell (TheFold-stil) + auth-/rolle-guard.
@@ -177,6 +178,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   </main>
                   <PhoneBevel />
                 </div>
+                <Suspense fallback={null}>
+                  <WorkshopBloub />
+                </Suspense>
               </div>
             </div>
           </InboxFilterProvider>

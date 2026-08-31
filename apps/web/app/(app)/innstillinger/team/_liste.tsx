@@ -119,7 +119,12 @@ function TeamRad({
         <span className="truncate text-[12px] text-fg-muted">
           {FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}
         </span>
-        <StatusMerke status={rad.status} label={rad.statusLabel} />
+        <StatusMerke
+          status={rad.status}
+          label={rad.statusLabel}
+          farge={rad.farge ?? rad.avatar?.farge}
+          seed={rad.userId}
+        />
       </div>
       <button
         type="button"

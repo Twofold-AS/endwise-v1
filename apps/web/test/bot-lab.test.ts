@@ -86,10 +86,11 @@ describe('Bot-lab — bloub', () => {
     expect(`${figur}\n${side}`).not.toMatch(/Grok|x\.ai|中文|zh:/);
   });
 
-  it('Avatar/blobatar er urørt', () => {
+  it('Avatar er bloub, /bot-laben lever videre', () => {
     const avatar = les('../../../packages/ui/src/components/avatar.tsx');
-    expect(avatar).toMatch(/from '@blobatar\/react'/);
-    expect(avatar).not.toMatch(/morph-bot|endwise-blob|bloub|BloubBot/);
+    expect(avatar).toMatch(/BloubBot/);
+    expect(avatar).not.toMatch(/@blobatar\/react/);
+    expect(les('../app/(app)/bot/page.tsx')).toMatch(/BotFigur|bloub|uttrykk/);
   });
 
   it('ingen Morph-tre er igjen, og motoren sample-er tilstandene', async () => {

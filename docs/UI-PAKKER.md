@@ -29,12 +29,10 @@
 > snippet-grå `#777777` / `#333333` / `#111111` på selve Grainient — ikke lys-vask
 > (`#ffffff` / `#ededed` / `#f5f5f5`). Tekst på kortet er lys i begge tema. Ikke vask siden hvit.
 
-> ### ⚠️ blobatar-gaze-gotcha (30.08.2026)
-> `apps/web/app/globals.css` MÅ ha `@import "blobatar/gaze.css";` ved siden av
-> `blobatar/motion.css`. Gaze er peker-laget (`useGaze` i `Avatar`) — uten
-> CSS-en er det ingen feilmelding, bare øyne som ikke følger pekeren på
-> profil-avataren. `--mo-track-travel` settes av hooken; stylesheetet eier
-> keyframene. Samme familie som matrix-loaders-gotchaen under.
+> ### ⚠️ blobatar er ute (31.08.2026)
+> `Avatar` er bloub. Ikke importer `blobatar/*` i `globals.css`. Staff-farge er
+> `ColorId` fra `skins.ts` COLORS — samme id på avatar, timeplan-kloss, jobb-kort
+> og assignment-chip. Ikke finn opp en annen palett.
 >
 > ### ⚠️ matrix-loaders-gotcha (03.08.2026)
 > `apps/web/app/globals.css` MÅ ha `@import "@endwise/ui/matrix-loaders.css";`. Loaderne er **ren
@@ -96,8 +94,8 @@ barrel-eksporten**)
 | **Bevegelse (tilstand)** | beUI | Knapper/kontroller som endrer tilstand (idle → loading → success) |
 | **Bevegelse (venting)** | matrix-loaders | «AI tenker»-animasjoner, én loader per SSE-event |
 | **Bakgrunn (kort)** | Grainient (react-bits) | Hero-kort på Forhandler/Mekaniker/Selger/Support-hjem. WebGL via `ogl`. Se §1 |
-| **Identitet** | blobatar | Deterministiske ansikter på personer. Kun admin-flater — se §10 |
-| **Maskot-lab** | bloub (`jeremy-prt/bloub`) | Intern `/bot`. Ikke produkt-avatar. Se §11 |
+| **Identitet** | bloub (`BloubBot`) | Cercle + store øyne. Én ColorId per ansatt (12 faste). Se §10 |
+| **Maskot-lab** | bloub (`jeremy-prt/bloub`) | Intern `/bot` lever videre. Se §11 |
 
 Alt renner gjennom `packages/ui/src/theme.css`: shadcn-semantikk (`--primary`, `--border` …)
 peker inn i `--ew-*`-tokens. **Ingen komponent hardkoder farge.**
@@ -450,7 +448,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Dine jobber / Timeplan-stripe / starttid / ferie-mock (`dine-jobber/`, `_shell/timeplan-stripe.tsx`, `bookinger/_starttid-velger.tsx`, `_shell/ferie-mock.tsx`, 29.08.2026 natt) | **Ingen ny pakke utover Grainient.** Jobb-bokser er `Link` + lucide `Bike`/`Sailboat` + `ChevronRight` til eksisterende `/min-dag/[id]`. Timeplan-piler er `ChevronLeft`/`ChevronRight`. <b>29.08 kveld:</b> én måned i midten + tre hele dag-chips (`flex-1 min-w-0`) — ingen `overflow-hidden`/`min-w-[56px]`. Starttid er to native expander-knapper (Oslo-kalender + scroll-spinner) — shadcn `calendar` er ikke hentet; `datetime-local` er bevisst vekk. Ferie er merket mock/kommer, hardcoded liste, ingen tRPC. |
 
-| Bot-lab (`apps/web/app/(app)/bot/`, F6-29, 31.08.2026) | **Ingen ny npm-pakke.** Runtime er vendorisert bloub-motor (`src/bot/`, pin `b4bb3c1`) + React-wrapper `BloubBot`. Form `cercle`. Øyne er maskehull. Siden er intern gjennomgang: sju primærchips + 14 SEQUENCE-tilstander + 16 hvileuttrykk. shadcn har ingen maskot. ⛔ Erstatter ikke `Avatar`/blobatar. Se §11. |
+| Bot-lab (`apps/web/app/(app)/bot/`, F6-29, 31.08.2026) | **Ingen ny npm-pakke.** Runtime er vendorisert bloub-motor + `BloubBot`. Intern lab lever videre. Produkt-avatar er nå samme motor (se §10). |
 
 Legger du til en rad her, skal den ha en setning som forklarer hvorfor ingen pakke holdt.
 
@@ -524,7 +522,19 @@ bekreftelsesdialog.
 
 ---
 
-## 10. blobatar — avatarer (hentet 20.08.2026, F6-19)
+## 10. Avatar — bloub (31.08.2026)
+
+⛔ **blobatar er ute.** `Avatar` rendrer `BloubBot` (cercle, store øyne / `surpris`).
+Eneste forskjell mellom folk er `ColorId` fra `skins.ts` COLORS. Samme id farger
+avatar-bloub, timeplan-klosser, jobb-kort og assignment-chips — ikke en annen
+palett, ikke status-tone. Hue-grader 0–359 er leftover. Dealer setter farge fra
+12 svatsjer. **Kroppen er liten:** FAB 40–48, liste/rad 22–32, popup-hode 56–72.
+Profil kan være litt større. Lister: `still` (ingen rAF).
+`@import "blobatar/*"` er fjernet fra `globals.css`.
+
+Historikk (F6-19 blobatar) står under som arkiv — ikke installer den igjen.
+
+### Arkiv: blobatar (hentet 20.08.2026, F6-19)
 
 | | |
 |---|---|
@@ -641,7 +651,7 @@ organisasjon (den er ikke en person), **ikke** i widgeten eller på kundevendte 
 | **Ligger i** | `packages/ui/src/vendor/bloub/` (motor) · `packages/ui/src/bloub/BloubBot.tsx` (React-wrapper) |
 | **Lisens** | MIT på **koden** i vendor-treet, ikke x.ai-designet den imiterer. Ikke tilknyttet x.ai. «Grok» og «x.ai» tilhører sine eiere. Se `VENDOR.md` |
 | **Hentet inn** | `src/bot/`: engine, states, expressions, skins, profiles, shape, face, math, cycles, decor, eyefit, repere. Plus `src/ui/gaze.ts` (rammeverkfri lookTarget). Ikke Vue-app, editor, i18n, eksport, customise, capture, anime, intro, stockage, video. Ikke `*.test.ts` |
-| **Status** | Intern lab. ⛔ **Ikke produkt-avatar.** `Avatar` / blobatar er urørt |
+| **Status** | Intern lab lever. Produkt-avatar er samme `BloubBot` (kompakt, se §10) |
 
 Mikael: Morph Bot + Jonas Endwise-blob-spleis er **fjernet**. Geometrien er bloub uredigert (målt, ikke avrundet). Form default `cercle` (sirkel, radiell avvik under 0,7 %). Øyne er maskehull mot sidebakgrunn (`#ffffff` lyst, `#000000` mørkt). Kropp er aksent `#111111` / `#ffffff`. `engine.sample(t)` hvert rAF-frame; stop fryser ikke klokken.
 

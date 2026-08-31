@@ -110,3 +110,64 @@ export function timeplanKloss(
     height: Math.max(22, (til - fra) * pxPerTime),
   };
 }
+
+export type KlossSpor = { spor: number; sporAntall: number };
+
+/**
+ * Side-ved-side når flere jobber overlapper (fem folk kl. 08:00).
+ * Hver kloss får eget spor, slik at staff-fargen synes — ikke én oppå neste.
+ */
+export function pakkKlosser<T extends { startsAt: Date | string; endsAt: Date | string }>(
+  rader: readonly T[],
+): KlossSpor[] {
+  const n = rader.length;
+  if (n === 0) return [];
+
+  const items = rader.map((r, i) => {
+    const start = new Date(r.startsAt).getTime();
+    const end = Math.max(start + 1, new Date(r.endsAt).getTime());
+    return { i, start, end, spor: 0 };
+  });
+  items.sort((a, b) => a.start - b.start || a.end - b.end || a.i - b.i);
+
+  type Node = (typeof items)[number];
+  const aktive: Node[] = [];
+  const klynger: Node[][] = [];
+  let klynge: Node[] = [];
+
+  for (const it of items) {
+    for (let i = aktive.length - 1; i >= 0; i -= 1) {
+      const ferdig = aktive[i];
+      if (ferdig && ferdig.end <= it.start) aktive.splice(i, 1);
+    }
+    if (aktive.length === 0 && klynge.length > 0) {
+      klynger.push(klynge);
+      klynge = [];
+    }
+    const brukt = new Set(aktive.map((a) => a.spor));
+    let spor = 0;
+    while (brukt.has(spor)) spor += 1;
+    it.spor = spor;
+    aktive.push(it);
+    klynge.push(it);
+  }
+  if (klynge.length > 0) klynger.push(klynge);
+
+  const out: KlossSpor[] = Array.from({ length: n }, () => ({ spor: 0, sporAntall: 1 }));
+  for (const k of klynger) {
+    const sporAntall = Math.max(1, ...k.map((x) => x.spor + 1));
+    for (const x of k) {
+      out[x.i] = { spor: x.spor, sporAntall };
+    }
+  }
+  return out;
+}
+
+export function klossSporStil(spor: number, sporAntall: number): { left: string; width: string } {
+  const antall = Math.max(1, sporAntall);
+  const i = Math.max(0, Math.min(spor, antall - 1));
+  return {
+    left: `calc(${(i / antall) * 100}% + 0.25rem)`,
+    width: `calc(${100 / antall}% - 0.5rem)`,
+  };
+}

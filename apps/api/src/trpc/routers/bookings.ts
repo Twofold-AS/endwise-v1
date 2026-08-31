@@ -1,6 +1,7 @@
 import { erMekanikerKonto } from '@endwise/auth';
 import {
   and,
+  type Database,
   desc,
   eq,
   gt,
@@ -23,6 +24,7 @@ import {
   type TenantTx,
   transitionBooking,
 } from '@endwise/modules/booking';
+import { lesAvatar } from '@endwise/modules/profil';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, router, staffProcedure } from '../init.ts';
@@ -63,6 +65,7 @@ const enrichedColumns = {
   model: schema.vehicles.model,
   mechanicId: schema.bookings.mechanicId,
   mechanicName: schema.mechanics.name,
+  mechanicUserId: schema.mechanics.userId,
   serviceVersionId: schema.bookings.serviceVersionId,
   serviceName: schema.services.name,
   serviceVersion: schema.serviceVersions.version,
@@ -147,6 +150,26 @@ async function attachJobLines<
       serviceName: formatServiceNames(names.length > 0 ? names : [r.serviceName]),
     };
   });
+}
+
+async function attachFarger<T extends { mechanicUserId?: string | null }>(db: Database, rows: T[]) {
+  const ids = [
+    ...new Set(rows.map((r) => r.mechanicUserId).filter((id): id is string => Boolean(id))),
+  ];
+  if (ids.length === 0) return rows.map((r) => ({ ...r, farge: null as string | null }));
+  const prefs = await db
+    .select({
+      userId: schema.userPreferences.userId,
+      avatarColor: schema.userPreferences.avatarColor,
+      avatarHue: schema.userPreferences.avatarHue,
+    })
+    .from(schema.userPreferences)
+    .where(inArray(schema.userPreferences.userId, ids));
+  const map = new Map(prefs.map((p) => [p.userId, lesAvatar(p).farge]));
+  return rows.map((r) => ({
+    ...r,
+    farge: r.mechanicUserId ? (map.get(r.mechanicUserId) ?? null) : null,
+  }));
 }
 
 export const bookingsRouter = router({
@@ -255,7 +278,7 @@ export const bookingsRouter = router({
           .where(conditions.length ? and(...conditions) : undefined)
           .orderBy(desc(schema.bookings.startsAt))
           .limit(input.limit);
-        return attachJobLines(tx, rows);
+        return attachFarger(ctx.db, await attachJobLines(tx, rows));
       }),
     ),
 
@@ -282,7 +305,7 @@ export const bookingsRouter = router({
           message: 'Mekaniker har ikke tilgang til denne jobben.',
         });
       }
-      const [enriched] = await attachJobLines(tx, [booking]);
+      const [enriched] = await attachFarger(ctx.db, await attachJobLines(tx, [booking]));
       if (!enriched) return null;
 
       const history = await tx
@@ -348,7 +371,7 @@ export const bookingsRouter = router({
             ),
           )
           .orderBy(schema.bookings.startsAt);
-        return attachJobLines(tx, rows);
+        return attachFarger(ctx.db, await attachJobLines(tx, rows));
       }),
     ),
 });

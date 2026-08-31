@@ -119,8 +119,13 @@ export const userPreferences = pgTable(
      */
     /** Silhuett. Null = per seed. Se `AVATAR_FORMER`. */
     avatarShape: text('avatar_shape'),
-    /** Fargetone i grader, 0–359. Null = per seed. */
+    /** Fargetone i grader, 0–359. Leftover — ikke lenger kilde til sannhet. */
     avatarHue: integer('avatar_hue'),
+    /**
+     * Ansattfarge. Bloub ColorId (encre, brun, rouge, …).
+     * Én palett for avatar, timeplan, jobb-kort og chips. Null = ikke tildelt.
+     */
+    avatarColor: text('avatar_color'),
     /** Indeks i blobatars seks forfattede svatsjer, 0–5. Null = per seed. */
     avatarTone: integer('avatar_tone'),
     /**
@@ -154,6 +159,10 @@ export const userPreferences = pgTable(
     check(
       'user_preferences_avatar_tone_check',
       sql`${t.avatarTone} is null or (${t.avatarTone} >= 0 and ${t.avatarTone} <= 5)`,
+    ),
+    check(
+      'user_preferences_avatar_color_check',
+      sql`${t.avatarColor} is null or ${t.avatarColor} in ('encre','brun','rouge','orange','ambre','vert','turquoise','bleu','violet','rose','gris','creme')`,
     ),
   ],
 );

@@ -207,6 +207,7 @@ export const directoryRouter = router({
             avatarHumor: schema.userPreferences.avatarHumor,
             avatarHue: schema.userPreferences.avatarHue,
             avatarTone: schema.userPreferences.avatarTone,
+            avatarColor: schema.userPreferences.avatarColor,
           })
           .from(schema.userPreferences)
           .where(inArray(schema.userPreferences.userId, kjente))

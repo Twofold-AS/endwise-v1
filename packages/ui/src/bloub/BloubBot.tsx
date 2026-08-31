@@ -29,6 +29,11 @@ export type BloubBotProps = {
   /** Sidebakgrunn som hex — øynene er maskehull mot denne. */
   paper?: string;
   expression?: ExpressionId;
+  /**
+   * Én ramme, ingen rAF. Lister med 200 rader skal være billige.
+   * Motoren remountes ikke — `still` slår bare av klokka.
+   */
+  still?: boolean;
   onStateChange?: (id: StateId) => void;
 };
 
@@ -69,6 +74,7 @@ export function BloubBot({
   color = ENDWISE_KROPP,
   paper = ENDWISE_PAPIR,
   expression = DEFAULT_EXPRESSION,
+  still = false,
   onStateChange,
 }: BloubBotProps) {
   const reactId = useId().replace(/:/g, '');
@@ -84,8 +90,9 @@ export function BloubBot({
     follow,
     shape,
     expression,
+    still,
   });
-  live.current = { state, playing, follow, shape, expression };
+  live.current = { state, playing, follow, shape, expression, still };
 
   const engineRef = useRef<BotEngine | null>(null);
   if (!engineRef.current) {
@@ -107,6 +114,7 @@ export function BloubBot({
   const cycleRef = useRef(defaultCycle().blocks);
 
   useEffect(() => {
+    if (still) return;
     const onMove = (event: PointerEvent) => {
       if (event.pointerType === 'touch') return;
       pointerRef.current = { x: event.clientX, y: event.clientY };
@@ -120,7 +128,7 @@ export function BloubBot({
       window.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerleave', onLeave);
     };
-  }, []);
+  }, [still]);
 
   useEffect(() => {
     const release = (now: number) => {
@@ -169,6 +177,20 @@ export function BloubBot({
       nextAtRef.current = clock - from + b.duration;
     };
 
+    const paintStill = () => {
+      const { state: want, shape: wantShape, expression: wantExpr } = live.current;
+      engine.setShape(radiiFor(wantShape), 0);
+      engine.setExpression(exprFor(wantExpr), 0);
+      if (engine.state !== want) engine.setState(want, 0);
+      engine.setLook(null, 0, 0);
+      setFrame(engine.sample(0));
+    };
+
+    if (still) {
+      paintStill();
+      return;
+    }
+
     let raf = 0;
     const tick = (ms: number) => {
       raf = requestAnimationFrame(tick);
@@ -183,7 +205,14 @@ export function BloubBot({
         follow: followPtr,
         shape: wantShape,
         expression: wantExpr,
+        still: frozen,
       } = live.current;
+
+      if (frozen) {
+        cancelAnimationFrame(raf);
+        paintStill();
+        return;
+      }
 
       engine.setShape(radiiFor(wantShape), clock);
       engine.setExpression(exprFor(wantExpr), clock);
@@ -209,7 +238,7 @@ export function BloubBot({
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [engine]);
+  }, [engine, still]);
 
   const R = DEMI_VIEWBOX;
   const ink = color;

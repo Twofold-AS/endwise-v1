@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Car, CreditCard, Users, Wrench } from '@endwise/ui';
+import { Activity, Car, CreditCard, hexForFarge, Users, Wrench } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -97,7 +97,13 @@ export default function BookingDetaljPage() {
       {/* Fakta-rutenett */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Fact icon={<Users size={15} />} label="Kunde" value={b.customerName ?? '—'} />
-        <Fact icon={<Wrench size={15} />} label="Mekaniker" value={b.mechanicName ?? '—'} />
+        <Fact
+          icon={<Wrench size={15} />}
+          label="Mekaniker"
+          value={b.mechanicName ?? '—'}
+          farge={b.farge}
+          seed={b.mechanicId}
+        />
         <Fact
           icon={<CreditCard size={15} />}
           label={b.services && b.services.length > 1 ? 'Tjenester' : 'Tjeneste'}
@@ -173,13 +179,34 @@ export default function BookingDetaljPage() {
   );
 }
 
-function Fact({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Fact({
+  icon,
+  label,
+  value,
+  farge,
+  seed,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  farge?: string | null;
+  seed?: string | null;
+}) {
   return (
     <div className="flex items-start gap-2.5 rounded-lg border border-border bg-card px-3.5 py-3">
       <span className="mt-0.5 text-fg-faint">{icon}</span>
       <div className="min-w-0">
         <p className="text-fg-faint text-xs">{label}</p>
-        <p className="truncate text-fg text-sm">{value}</p>
+        <p className="flex items-center gap-1.5 truncate text-fg text-sm">
+          {farge != null || seed ? (
+            <span
+              aria-hidden
+              className="inline-block size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: hexForFarge(farge, seed ?? undefined) }}
+            />
+          ) : null}
+          {value}
+        </p>
       </div>
     </div>
   );

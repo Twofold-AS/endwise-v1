@@ -39,6 +39,8 @@ export interface ChatOptions {
   guardrails: GuardrailPipeline;
   /** Historikken, allerede konvertert fra UI-meldinger av kallstedet. */
   messages: ModelMessage[];
+  /** Sidekontekst og annet som skal inn i systemprompten på hver tur. */
+  systemExtra?: string;
   onViolation?: (message: string) => void;
 }
 
@@ -69,7 +71,9 @@ export function streamAgentChat(options: ChatOptions) {
 
   return streamText({
     model: provider.model({ role: agent.role, tenantId: context.tenantId }),
-    system: agent.instructions,
+    system: options.systemExtra
+      ? `${agent.instructions}\n\n${options.systemExtra}`
+      : agent.instructions,
     messages: options.messages,
     tools,
     stopWhen: isStepCount(agent.maxSteps),

@@ -1,12 +1,13 @@
 'use client';
 
-import { CalendarDays } from '@endwise/ui';
+import { CalendarDays, staffFargeStil } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { PRODUKT_TIDSSONE } from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
-import { fmtServices, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
+import { klossSporStil, pakkKlosser } from '../_shell/timeplan-dager';
+import { fmtServices, STATUS_LABEL } from '../bookinger/_status';
 import {
   dagensSaker,
   timeplanKloss,
@@ -27,12 +28,13 @@ type Booking = {
   serviceNames?: readonly (string | null)[] | null;
   mechanicId: string | null;
   mechanicName?: string | null;
+  farge?: string | null;
 };
 
 /**
  * Dagens timeplan på Verkstedet (08–20).
- * Jobbklossene sitter på klokkeslettet, med statusfarge. Ikke Jobber › Kalender
- * og ikke Timeplan under Ansatte.
+ * Jobbklossene sitter på klokkeslettet, med den ansattes ColorId.
+ * Overlapp (fem folk kl. 08:00) pakkes side-ved-side. Status er tekst.
  */
 export function Timeplan({
   jobber,
@@ -48,6 +50,7 @@ export function Timeplan({
   tittel?: string;
 }) {
   const rader = useMemo(() => dagensSaker(jobber ?? [], new Date()), [jobber]);
+  const spor = useMemo(() => pakkKlosser(rader), [rader]);
 
   return (
     <section className="flex flex-col gap-2">
@@ -99,18 +102,22 @@ export function Timeplan({
                   className="border-border/60 border-b"
                 />
               ))}
-              {rader.map((b) => {
+              {rader.map((b, i) => {
                 const { top, height } = timeplanKloss(b.startsAt, b.endsAt);
                 const start = new Date(b.startsAt);
                 const navn = b.mechanicName ?? (b.mechanicId ? mekName.get(b.mechanicId) : null);
+                const plass = spor[i] ?? { spor: 0, sporAntall: 1 };
                 return (
                   <Link
                     key={b.id}
                     href={`/bookinger/${b.id}` as Route}
-                    style={{ top, height }}
-                    className={`absolute right-1 left-1 overflow-hidden rounded-control border border-border px-2 py-1 transition-colors hover:border-border-strong ${
-                      STATUS_TONE[b.status] ?? 'bg-surface-2 text-fg'
-                    }`}
+                    style={{
+                      top,
+                      height,
+                      ...klossSporStil(plass.spor, plass.sporAntall),
+                      ...staffFargeStil(b.farge, b.mechanicId ?? undefined),
+                    }}
+                    className="absolute overflow-hidden rounded-control border px-2 py-1 text-fg transition-colors hover:brightness-[0.97]"
                     title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit', timeZone: PRODUKT_TIDSSONE })} · ${STATUS_LABEL[b.status] ?? b.status}`}
                   >
                     <div className="truncate font-medium text-[11px] tabular-nums">

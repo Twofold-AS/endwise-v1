@@ -97,9 +97,9 @@ describeDb('F6-19 — avatar', () => {
   /* Lagring */
 
   it('lagrer form, farge og tone', async () => {
-    await a().profile.setAvatar({ form: 'sun', humor: 'happy', farge: 210, tone: 3 });
+    await a().profile.setAvatar({ form: 'sun', humor: 'happy', farge: 'bleu', tone: 3 });
     const meg = await a().profile.meg();
-    expect(meg.avatar).toEqual({ form: 'sun', humor: 'happy', farge: 210, tone: 3 });
+    expect(meg.avatar).toEqual({ form: 'sun', humor: 'happy', farge: 'bleu', tone: 3 });
   });
 
   it('null tilbakestiller ÉN egenskap uten å røre de andre', async () => {
@@ -118,12 +118,12 @@ describeDb('F6-19 — avatar', () => {
     ).rejects.toThrow();
   });
 
-  it('ANGREP: farge utenfor 0–359 avvises', async () => {
+  it('ANGREP: farge utenfor paletten avvises', async () => {
     await expect(
-      a().profile.setAvatar({ form: null, humor: null, farge: 400, tone: null }),
+      a().profile.setAvatar({ form: null, humor: null, farge: 'lime' as never, tone: null }),
     ).rejects.toThrow();
     await expect(
-      a().profile.setAvatar({ form: null, humor: null, farge: -1, tone: null }),
+      a().profile.setAvatar({ form: null, humor: null, farge: 210 as never, tone: null }),
     ).rejects.toThrow();
   });
 
@@ -217,7 +217,7 @@ describeDb('F6-19 — avatar', () => {
     await b().profile.setAvatar({
       form: 'triangle',
       humor: 'wink',
-      farge: 10,
+      farge: 'violet',
       tone: 0,
       userId: brukerA,
     } as never);
@@ -227,7 +227,7 @@ describeDb('F6-19 — avatar', () => {
     expect(megA.avatar.farge).toBeNull();
 
     const megB = await b().profile.meg();
-    expect(megB.avatar).toEqual({ form: 'triangle', humor: 'wink', farge: 10, tone: 0 });
+    expect(megB.avatar).toEqual({ form: 'triangle', humor: 'wink', farge: 'violet', tone: 0 });
   });
 
   /* Visningsnavn — rotårsaken til sidebar-bugen */

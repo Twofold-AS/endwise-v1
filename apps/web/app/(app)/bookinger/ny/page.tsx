@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, Check, Search, Sparkles, Wrench } from '@endwise/ui';
+import { Car, Check, hexForFarge, Search, Sparkles, staffFargeStil } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -31,7 +31,7 @@ export default function NyJobbPage() {
   const [durationManual, setDurationManual] = useState(false);
 
   const services = trpc.services.list.useQuery();
-  const mechanics = trpc.mechanics.list.useQuery();
+  const mechanics = trpc.mechanics.oversikt.useQuery();
 
   const selected = useMemo(
     () => (services.data ?? []).filter((s) => serviceIds.includes(s.id)),
@@ -85,6 +85,7 @@ export default function NyJobbPage() {
   const create = trpc.bookings.create.useMutation({
     onSuccess: (booking) => {
       utils.bookings.list.invalidate();
+      globalThis.dispatchEvent(new Event('endwise:booking-lagret'));
       router.push(`/bookinger/${booking.id}` as Route);
     },
   });
@@ -304,12 +305,23 @@ export default function NyJobbPage() {
                   type="button"
                   onClick={() => setMechanicId(cand.mechanicId)}
                   className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${
-                    selectedMech
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border bg-card hover:bg-surface-2'
+                    selectedMech ? 'ring-2 ring-fg ring-offset-1' : ''
                   }`}
+                  style={staffFargeStil(
+                    mechanics.data?.find((m) => m.id === cand.mechanicId)?.farge,
+                    cand.mechanicId,
+                  )}
                 >
-                  <Wrench size={15} className="shrink-0 text-fg-muted" />
+                  <span
+                    aria-hidden
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{
+                      backgroundColor: hexForFarge(
+                        mechanics.data?.find((m) => m.id === cand.mechanicId)?.farge,
+                        cand.mechanicId,
+                      ),
+                    }}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 text-[13px] text-fg">
                       {mechName.get(cand.mechanicId) ?? cand.mechanicId}

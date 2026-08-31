@@ -8,6 +8,7 @@ import {
   CircleUser,
   ClipboardList,
   CreditCard,
+  hexForFarge,
   MessageSquare,
   PanelRightClose,
   Timer,
@@ -373,7 +374,7 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
           seed={data.mekanikerId}
           valg={{ ...data.avatar, humor: data.statusHumor }}
           navn={data.navn}
-          size={36}
+          size={32}
           bevegelse="hover"
         />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -381,7 +382,8 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
           <span className="flex items-center gap-1.5 text-[12px] text-fg-muted">
             <span
               aria-hidden
-              className={`inline-block size-2 rounded-full ${data.aktiv ? 'bg-success' : 'bg-fg-muted'}`}
+              className="inline-block size-2 rounded-full"
+              style={{ backgroundColor: hexForFarge(data.avatar?.farge, data.mekanikerId) }}
             />
             {data.statusLabel}
           </span>

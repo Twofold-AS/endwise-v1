@@ -19,12 +19,10 @@
     "build:icons": "node --experimental-strip-types scripts/build-icons.ts"
   },
   "dependencies": {
-    "@blobatar/react": "^2.7.0",
     "@endwise/widget-tokens": "workspace:*",
     "@shadcn/react": "0.3.0",
     "@types/d3-scale": "^4.0.9",
     "@types/d3-shape": "^3.1.8",
-    "blobatar": "^2.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "d3-scale": "^4.0.2",

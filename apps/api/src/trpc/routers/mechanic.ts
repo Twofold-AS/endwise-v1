@@ -49,6 +49,7 @@ export const mechanicRouter = router({
           avatarHumor: schema.userPreferences.avatarHumor,
           avatarHue: schema.userPreferences.avatarHue,
           avatarTone: schema.userPreferences.avatarTone,
+          avatarColor: schema.userPreferences.avatarColor,
         })
         .from(schema.userPreferences)
         .where(eq(schema.userPreferences.userId, ctx.userId))

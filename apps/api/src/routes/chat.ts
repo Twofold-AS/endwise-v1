@@ -39,6 +39,14 @@ const kropp = z.object({
   messages: z.array(z.custom<UIMessage>()).min(1),
   /** Saken agenten eventuelt skal skrive i. Valideres av verktøyet, ikke her. */
   threadId: z.uuid().optional(),
+  /** Hvilken side brukeren står på. Workshop-agenten får dette hver tur. */
+  side: z
+    .object({
+      pathname: z.string().max(200),
+      tittel: z.string().max(120),
+      merkelapp: z.string().max(40),
+    })
+    .optional(),
 });
 
 chat.post('/:agent', async (c) => {
@@ -107,6 +115,15 @@ chat.post('/:agent', async (c) => {
       provider: resolveModelProvider(agent.dataClass),
       guardrails,
       messages: await convertToModelMessages(parsed.data.messages),
+      systemExtra: parsed.data.side
+        ? [
+            'Sidekontekst (den ansatte står her nå):',
+            `Merkelapp: ${parsed.data.side.merkelapp}`,
+            `Tittel: ${parsed.data.side.tittel}`,
+            `Sti: ${parsed.data.side.pathname}`,
+            'Svar på norsk. Snakk om bookinger hvis det er relevant, men skriv aldri til Quick.',
+          ].join('\n')
+        : undefined,
       onViolation: (message) => console.warn(`[guardrail:${agent.name}] ${message}`),
     });
 

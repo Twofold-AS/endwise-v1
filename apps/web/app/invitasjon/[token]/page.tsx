@@ -282,12 +282,12 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     ? steg === 'kode'
       ? `Vi sendte en 6-sifret kode til ${inv.epost}. Den varer i noen minutter.`
       : inv.kind === 'platform'
-          ? inv.platformLevel === 'administrator'
-            ? `Du er invitert til Endwise-support som administrator. Kontoen knyttes til ${inv.epost}.`
-            : `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
-          : inv.kind === 'owner'
-            ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
-            : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
+        ? inv.platformLevel === 'administrator'
+          ? `Du er invitert til Endwise-support som administrator. Kontoen knyttes til ${inv.epost}.`
+          : `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
+        : inv.kind === 'owner'
+          ? `Du er invitert som eier. Kontoen knyttes til ${inv.epost}.`
+          : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
     : laster
       ? null
       : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager. Be om en ny hvis du trenger det.';

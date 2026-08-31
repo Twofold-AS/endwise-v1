@@ -19,11 +19,11 @@ import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
+import { FargeSvatser } from '../../_avatar/farge-svatser';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { STATUS_LABEL } from '../../bookinger/_status';
 import { MekanikerKompetanse } from '../../mekanikere/kompetanse/_mekaniker';
 import { fmtTime } from '../../min-dag/_status';
-import { FargeSvatser } from '../../_avatar/farge-svatser';
 import { StatusMerke } from './_status';
 
 type Rad = RouterOutput['team']['list'][number];

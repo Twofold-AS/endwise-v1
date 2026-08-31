@@ -40,9 +40,7 @@ export default function OppstartPage() {
   const nivaaNavn = status.data?.nivaa.name ?? 'Start';
   const harTillegg = (status.data?.optional.length ?? 0) > 0;
   const stegRad = useMemo<Array<{ id: StegId; tittel: string }>>(() => {
-    const rad: Array<{ id: StegId; tittel: string }> = [
-      { id: 'navn', tittel: 'Visningsnavn' },
-    ];
+    const rad: Array<{ id: StegId; tittel: string }> = [{ id: 'navn', tittel: 'Visningsnavn' }];
     if (harTillegg) rad.push({ id: 'tillegg', tittel: 'Tillegg' });
     rad.push({ id: 'team', tittel: 'Team' });
     return rad;

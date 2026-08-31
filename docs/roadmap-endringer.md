@@ -5,6 +5,13 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-08-31 — F6-29 intern Bot-lab (Endwise-blob)
+
+**Type:** ny intern flate. Ingen techstack-endring. Ingen npm-pakke (oppstrøms Morph Bot har ikke license-felt).
+**Endring:** Nytt punkt **F6-29** `done`: `/bot` + sidebar «Bot». Runtime vendorisert fra scrya-com/grokbot-animation `component/` (pin `031a583`). Geometri er original Endwise-blob (Jonas-fasit), spleiset inn slik at Grok-EXPRESSION-pooler og 18-former ikke brukes på siden. blobatar/`Avatar` urørt.
+
+---
+
 ## 2026-08-25 — F1-10 lookup_open_invitation 42883 på Scaleway
 
 **Type:** produksjonsfiks (ikke ny flate). F1-10 forblir `done`.

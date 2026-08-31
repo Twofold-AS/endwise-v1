@@ -18,6 +18,7 @@
       "!apps/web/public",
       "!packages/ui/src/components/dither-kit",
       "!packages/ui/src/vendor",
+      "!packages/ui/src/morph-bot/endwise-blob.js",
       "!packages/ui/src/assets/icons",
       "!packages/ui/src/assets/icons-v2",
       "!packages/ui/src/icons.generated.ts",

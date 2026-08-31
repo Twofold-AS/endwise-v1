@@ -8,9 +8,7 @@
     "./theme.css": "./src/theme.css",
     "./grainient.css": "./src/components/grainient.css",
     "./matrix-loaders.css": "./src/vendor/matrix-loaders/styles.css",
-    "./vendor/morph-bot": "./src/vendor/morph-bot/morph-bot.js",
-    "./morph-bot/endwise-blob": "./src/morph-bot/endwise-blob.js",
-    "./morph-bot/endwise-splice": "./src/morph-bot/endwise-splice.js",
+    "./bloub/BloubBot": "./src/bloub/BloubBot.tsx",
     "./components/*": "./src/components/*.tsx",
     "./lib/*": "./src/lib/*.ts",
     "./hooks/*": "./src/hooks/*.ts"

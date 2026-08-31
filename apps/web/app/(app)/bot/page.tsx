@@ -1,35 +1,42 @@
 'use client';
 
 import { Switch } from '@endwise/ui';
-import { useCallback, useState } from 'react';
-import { BotFigur, type MorphBotEl, spillMorph } from './_figur';
+import { useState } from 'react';
+import { BotFigur } from './_figur';
 import {
   BOT_HOVED,
-  BOT_MORPHS,
   BOT_STORRELSER,
   BOT_TILSTANDER,
+  BOT_UTTRYKK,
+  type BotHoved,
   type BotTilstand,
+  type BotUttrykk,
+  DEFAULT_EXPRESSION,
   FELT,
 } from './_katalog';
 
 /**
  * Intern gjennomgang av maskoten. Tittelen sitter i top-baren («Bot»).
- * Kroppen er Endwise-blob. De seks primærchipene er de låste øye-settene.
+ * Motoren er bloub. Form er låst til cercle.
  */
 export default function BotPage() {
   const [tilstand, setTilstand] = useState<BotTilstand>('idle');
+  const [uttrykk, setUttrykk] = useState<BotUttrykk>(DEFAULT_EXPRESSION);
+  const [hoved, setHoved] = useState<BotHoved>('idle');
   const [folgPeker, setFolgPeker] = useState(true);
+  const [spiller, setSpiller] = useState(false);
   const [storrelse, setStorrelse] = useState<(typeof BOT_STORRELSER)[number]>(280);
-  const [bot, setBot] = useState<MorphBotEl | null>(null);
-  const onReady = useCallback((el: MorphBotEl | null) => {
-    setBot(el);
-  }, []);
-
-  const hovedAktiv = BOT_HOVED.find((h) => h.tilstand === tilstand)?.oye ?? null;
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-8 px-4 py-8">
-      <BotFigur tilstand={tilstand} storrelse={storrelse} folgPeker={folgPeker} onReady={onReady} />
+      <BotFigur
+        tilstand={tilstand}
+        uttrykk={uttrykk}
+        storrelse={storrelse}
+        folgPeker={folgPeker}
+        spiller={spiller}
+        onTilstand={setTilstand}
+      />
 
       <div className="flex w-full max-w-[520px] flex-col gap-4">
         <div role="tablist" aria-label="Uttrykk" className="flex flex-wrap justify-center gap-1.5">
@@ -38,10 +45,15 @@ export default function BotPage() {
               key={h.oye}
               type="button"
               role="tab"
-              aria-selected={hovedAktiv === h.oye}
-              onClick={() => setTilstand(h.tilstand)}
+              aria-selected={hoved === h.oye}
+              onClick={() => {
+                setSpiller(false);
+                setHoved(h.oye);
+                setTilstand(h.tilstand);
+                setUttrykk(h.uttrykk);
+              }}
               className={`inline-flex h-control items-center rounded-pill px-3 text-label transition-colors ${
-                hovedAktiv === h.oye ? 'bg-fg text-bg' : 'bg-surface-2 text-fg-muted hover:text-fg'
+                hoved === h.oye ? 'bg-fg text-bg' : 'bg-surface-2 text-fg-muted hover:text-fg'
               }`}
             >
               {h.label}
@@ -55,7 +67,16 @@ export default function BotPage() {
             <select
               className={FELT}
               value={tilstand}
-              onChange={(e) => setTilstand(e.target.value as BotTilstand)}
+              onChange={(e) => {
+                setSpiller(false);
+                setTilstand(e.target.value as BotTilstand);
+                setHoved(
+                  BOT_HOVED.find(
+                    (h) =>
+                      h.tilstand === e.target.value && h.oye !== 'laster' && h.oye !== 'lytter',
+                  )?.oye ?? 'idle',
+                );
+              }}
             >
               {BOT_TILSTANDER.map((id) => (
                 <option key={id} value={id}>
@@ -66,19 +87,13 @@ export default function BotPage() {
           </label>
 
           <label className="flex min-w-0 flex-col gap-1">
-            <span className="text-label text-fg-muted">Morph</span>
+            <span className="text-label text-fg-muted">Uttrykk</span>
             <select
               className={FELT}
-              defaultValue=""
-              onChange={(e) => {
-                const v = e.target.value;
-                if (!v) return;
-                spillMorph(bot, v as (typeof BOT_MORPHS)[number]);
-                e.target.value = '';
-              }}
+              value={uttrykk}
+              onChange={(e) => setUttrykk(e.target.value as BotUttrykk)}
             >
-              <option value="">Spill morph…</option>
-              {BOT_MORPHS.map((id) => (
+              {BOT_UTTRYKK.map((id) => (
                 <option key={id} value={id}>
                   {id}
                 </option>
@@ -88,9 +103,15 @@ export default function BotPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="text-label text-fg">Følg peker</span>
-            <Switch checked={folgPeker} onCheckedChange={setFolgPeker} aria-label="Følg peker" />
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-label text-fg">Følg peker</span>
+              <Switch checked={folgPeker} onCheckedChange={setFolgPeker} aria-label="Følg peker" />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-label text-fg">Spill syklus</span>
+              <Switch checked={spiller} onCheckedChange={setSpiller} aria-label="Spill syklus" />
+            </div>
           </div>
           <fieldset aria-label="Størrelse" className="flex items-center gap-1.5 border-0 p-0">
             {BOT_STORRELSER.map((px) => (

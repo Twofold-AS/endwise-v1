@@ -1,77 +1,33 @@
-export const BOT_TILSTANDER = [
-  'sleeping',
-  'waking',
-  'idle',
-  'listening',
-  'thinking',
-  'searching',
-  'working',
-  'excited',
-  'surprised',
-  'suspicious',
-  'angry',
-  'drowsy',
-  'happy',
-  'curious',
-  'confused',
-  'bored',
-  'proud',
-  'shy',
-  'sad',
-  'laughing',
-  'scared',
-  'playful',
-  'celebrate',
-  'orbit',
-  'radar',
-  'progress',
-  'spawning',
-  'humming',
-  'loading',
-  'dictating',
-  'writing',
-  'sending',
-  'receiving',
-  'uploading',
-  'notifying',
-  'alerting',
-  'dragging',
-  'bouncing',
-  'powering-down',
-] as const;
+import {
+  DEFAULT_EXPRESSION,
+  EXPRESSIONS,
+  type ExpressionId,
+  SEQUENCE,
+  type StateId,
+} from '@endwise/ui/bloub/BloubBot';
 
-export type BotTilstand = (typeof BOT_TILSTANDER)[number];
+export type BotTilstand = StateId;
+export type BotUttrykk = ExpressionId;
 
-export const BOT_MORPHS = [
-  'dots',
-  'orbit',
-  'radar',
-  'progress',
-  'gather',
-  'wave',
-  'send',
-  'receive',
-  'dock',
-  'ball',
-  'whirl',
-  'pencil',
-  'bang',
-  'standby',
-] as const;
+export const BOT_TILSTANDER = SEQUENCE;
 
-export type BotMorph = (typeof BOT_MORPHS)[number];
+export const BOT_UTTRYKK = EXPRESSIONS.map((e) => e.id);
 
-/** De seks låste Endwise-øyene. Norsk etikett → motor-tilstand. */
 export const BOT_HOVED = [
-  { oye: 'idle', label: 'idle', tilstand: 'idle' },
-  { oye: 'tenker', label: 'tenker', tilstand: 'thinking' },
-  { oye: 'lytter', label: 'lytter', tilstand: 'listening' },
-  { oye: 'laster', label: 'laster', tilstand: 'loading' },
-  { oye: 'feirer', label: 'feirer', tilstand: 'celebrate' },
-  { oye: 'alarm', label: 'alarm', tilstand: 'alerting' },
+  { oye: 'idle', label: 'idle', tilstand: 'idle' as const, uttrykk: 'neutre' as const },
+  { oye: 'tenker', label: 'tenker', tilstand: 'thinking' as const, uttrykk: 'neutre' as const },
+  { oye: 'lytter', label: 'lytter', tilstand: 'idle' as const, uttrykk: 'attentif' as const },
+  { oye: 'laster', label: 'laster', tilstand: 'thinking' as const, uttrykk: 'neutre' as const },
+  { oye: 'feirer', label: 'feirer', tilstand: 'burst' as const, uttrykk: 'neutre' as const },
+  { oye: 'alarm', label: 'alarm', tilstand: 'alert' as const, uttrykk: 'neutre' as const },
+  { oye: 'orbit', label: 'orbit', tilstand: 'orbit' as const, uttrykk: 'neutre' as const },
 ] as const;
+
+export type BotHoved = (typeof BOT_HOVED)[number]['oye'];
 
 export const BOT_STORRELSER = [240, 280, 320] as const;
 
 export const FELT =
   'h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none focus-visible:border-fg';
+
+export { DEFAULT_EXPRESSION, SEQUENCE };

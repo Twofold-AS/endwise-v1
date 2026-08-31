@@ -5,10 +5,17 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-08-31 — F6-29 /bot byttet til bloub
+
+**Type:** intern flate, bytte av motor. Ingen techstack-endring. Ingen npm-pakke.
+**Endring:** **F6-29** forblir `done`. Morph Bot-runtime + Jonas Endwise-blob-spleis fjernet. Vendorisert `jeremy-prt/bloub` pin `b4bb3c1` (MIT på koden, ikke x.ai-designet). React-wrapper. Form `cercle`. blobatar/`Avatar` urørt.
+
+---
+
 ## 2026-08-31 — F6-29 intern Bot-lab (Endwise-blob)
 
 **Type:** ny intern flate. Ingen techstack-endring. Ingen npm-pakke (oppstrøms Morph Bot har ikke license-felt).
-**Endring:** Nytt punkt **F6-29** `done`: `/bot` + sidebar «Bot». Runtime vendorisert fra scrya-com/grokbot-animation `component/` (pin `031a583`). Geometri er original Endwise-blob (Jonas-fasit), spleiset inn slik at Grok-EXPRESSION-pooler og 18-former ikke brukes på siden. blobatar/`Avatar` urørt.
+**Endring:** Nytt punkt **F6-29** `done`: `/bot` + sidebar «Bot». Runtime vendorisert fra scrya-com/grokbot-animation `component/` (pin `031a583`). Geometri er original Endwise-blob (Jonas-fasit), spleiset inn slik at Grok-EXPRESSION-pooler og 18-former ikke brukes på siden. blobatar/`Avatar` urørt. **⚠️ OVERSTYRT samme kveld:** Morph fjernet, bloub inn (se over).
 
 ---
 

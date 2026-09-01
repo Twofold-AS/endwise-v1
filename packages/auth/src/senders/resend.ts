@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { LOGO_EPOST_CID, LOGO_EPOST_FILNAVN, LOGO_EPOST_PNG_BASE64 } from '../assets/logo-epost.ts';
 import { authEnv } from '../env.ts';
+import { visMagicLinkKode } from '../magic-link.ts';
 import { formaterKlokkeslett } from '../tid.ts';
 import { byggEpostHtml, knapp, kodeboks, meldingsboks } from './epost-mal.ts';
 
@@ -277,9 +278,11 @@ export async function sendPasswordReset(input: {
 export async function sendMagicLink(input: {
   to: string;
   lenke: string;
+  kode: string;
   utloper: Date;
 }): Promise<void> {
   const klokkeslett = formaterKlokkeslett(input.utloper);
+  const kodeVisning = visMagicLinkKode(input.kode);
 
   if (skalLeggesILogg()) {
     devRamme(
@@ -287,14 +290,15 @@ export async function sendMagicLink(input: {
       [
         ['Til:', input.to],
         ['Lenke:', input.lenke],
+        ['Kode:', kodeVisning],
       ],
-      `Gyldig til kl. ${klokkeslett}. Kan brukes én gang.`,
+      `Gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
     );
     return;
   }
 
   const fotnote =
-    'Har du ikke bedt om denne lenken, kan du se bort fra e-posten. Ingen får inn uten tofaktor-appen din.';
+    'Har du ikke bedt om denne lenken, kan du se bort fra e-posten. Bare den nyeste e-posten gjelder — eldre lenker slutter å virke.';
 
   await sendEmail({
     to: input.to,
@@ -302,19 +306,19 @@ export async function sendMagicLink(input: {
     text: [
       'Hei!',
       '',
-      'Åpne lenken for å logge inn på Endwise:',
+      'Åpne lenken for å logge inn på Endwise, eller skriv koden manuelt:',
       input.lenke,
       '',
-      `Lenken kan brukes én gang og er gyldig til kl. ${klokkeslett}.`,
+      `Kode: ${kodeVisning}`,
       '',
-      'Etter lenken må du bekrefte med autentikator-appen. En stjålet innboks er ikke nok.',
+      `Kan brukes én gang og er gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
       '',
       fotnote,
     ].join('\n'),
     html: byggEpostHtml({
       tittel: 'Logg inn på Endwise',
-      ingress: `Lenken kan brukes én gang og er gyldig til kl. ${klokkeslett}. Deretter bekrefter du med autentikator-appen.`,
-      innhold: knapp(input.lenke, 'Logg inn'),
+      ingress: `Lenken og koden er det samme engangsbeviset. Gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
+      innhold: `${knapp(input.lenke, 'Logg inn')}${kodeboks(kodeVisning)}`,
       fotnote,
     }),
   });

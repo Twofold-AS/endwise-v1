@@ -44,4 +44,6 @@ Kjente restrisikoer (Mons, kalt ut, ikke lukket):
 
 ## 5. Mikael-lås (samme dag, senere)
 
-Uenrollert fikk kode-vegg på `/signin`. Fikset: etter e-post er flaten `/signin?steg=valg` med tre synlige valg. TOTP-feltet er aktivt bare ved `/signin?steg=totp` (twoFactorEnabled etter magic link). Ellers forklaring + lenke til `/2fa-oppsett`. `TWO_FACTOR_REQUIRED` er enroll, ikke kode.
+Uenrollert fikk kode-vegg. Deretter tre-valg som var feil.
+
+**Nå:** etter e-post `/signin?steg=valg` med to knapper: Skriv kode manuelt · Bytt konto. Ingen magiclink-knapp. Lenka og koden er samme token. Bare siste ubrukte lenke gjelder (eldre slettes ved ny send). Stale verify: «Lenken er utløpt eller erstattet…». Enroll uten sesjon: åpne nyeste e-post, ikke «trykk på linken først».

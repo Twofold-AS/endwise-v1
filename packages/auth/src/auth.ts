@@ -15,6 +15,7 @@ import {
 import { byttPassordForHook } from './bytt-passord-server.ts';
 import { authEnv } from './env.ts';
 import {
+  genererMagicLinkKode,
   MAGIC_LINK_BE_OM_GRENSE,
   MAGIC_LINK_BE_OM_STI,
   MAGIC_LINK_TTL_SEKUNDER,
@@ -192,11 +193,13 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
         expiresIn: MAGIC_LINK_TTL_SEKUNDER,
         disableSignUp: true,
         storeToken: 'hashed',
+        generateToken: async () => genererMagicLinkKode(),
         rateLimit: MAGIC_LINK_BE_OM_GRENSE,
-        sendMagicLink: async ({ email, url }) => {
+        sendMagicLink: async ({ email, url, token }) => {
           await sendMagicLink({
             to: email,
             lenke: url,
+            kode: token,
             utloper: new Date(Date.now() + MAGIC_LINK_TTL_SEKUNDER * 1000),
           });
         },

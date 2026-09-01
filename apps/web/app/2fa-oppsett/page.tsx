@@ -1,5 +1,6 @@
 'use client';
 
+import { MAGIC_LINK_ENROLL_UTEN_SESJON } from '@endwise/auth/magic-link';
 import {
   etter2faBekreftet,
   etter2faKodeBekreftet,
@@ -19,7 +20,7 @@ import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { Field, INPUT } from '../_auth/felter';
-import { SIGNIN_VALG_STI } from '../signin/signin-steg';
+import { SIGNIN_STI } from '../signin/signin-steg';
 
 /**
  * Tvungen TOTP-enrollment. Ingen passord, ingen e-postkode.
@@ -75,7 +76,7 @@ export default function ToFaktorOppsettPage() {
       if (hentet.length > 0) setKoder(hentet);
       const uri = plukkTotpUri(res.data ?? res);
       if (!uri) {
-        setFeil('Kunne ikke hente nøkkelen til appen. Logg inn med magic link og prøv igjen.');
+        setFeil(MAGIC_LINK_ENROLL_UTEN_SESJON);
         setBusy('error');
         startet.current = false;
         return;
@@ -188,11 +189,11 @@ export default function ToFaktorOppsettPage() {
         {steg === 'app' && !sesjonLaster && !session?.user ? (
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
             <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
-              Innloggingslenken må åpnes først. Uten den kan vi ikke binde appen.
+              {MAGIC_LINK_ENROLL_UTEN_SESJON}
             </div>
             <div className="px-1.5 pt-1 pb-1">
               <a
-                href={SIGNIN_VALG_STI}
+                href={SIGNIN_STI}
                 className="inline-flex h-control w-full items-center justify-center rounded-control bg-fg px-4 text-bg text-label"
               >
                 Tilbake til innlogging

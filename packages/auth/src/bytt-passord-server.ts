@@ -15,6 +15,7 @@ import {
 } from './bytt-passord.ts';
 import { eierLasForHook } from './eier-las-server.ts';
 import { MAGIC_LINK_BE_OM_STI, MAGIC_LINK_CALLBACK } from './magic-link.ts';
+import { slettEldreMagicLinkTokens } from './magic-link-tokens.ts';
 import { skriv2faDisableAudit } from './to-faktor-server.ts';
 
 /**
@@ -89,11 +90,14 @@ export const byttPassordForHook = merket(
     if (ctx.path === MAGIC_LINK_BE_OM_STI) {
       const body = ctx.body;
       if (typeof body !== 'object' || body === null) return;
+      const epost = 'email' in body && typeof body.email === 'string' ? body.email : '';
+      if (epost) await slettEldreMagicLinkTokens(epost);
       return {
         context: {
           body: {
             ...body,
             callbackURL: MAGIC_LINK_CALLBACK,
+            errorCallbackURL: MAGIC_LINK_CALLBACK,
           },
         },
       };

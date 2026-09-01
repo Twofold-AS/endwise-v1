@@ -35,6 +35,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(authKilde).toMatch(/emailAndPassword:\s*\{[\s\S]*enabled:\s*false/);
     expect(authKilde).toMatch(/allowPasswordless:\s*true/);
     expect(authKilde).toMatch(/magicLink\(/);
+    expect(authKilde).toMatch(/generateToken:\s*async\s*\(\)\s*=>\s*genererMagicLinkKode/);
     expect(authKilde).not.toMatch(/otpOptions|sendOTP:\s*sendTwoFactorOtp/);
   });
 
@@ -44,6 +45,8 @@ describe('magic link + TOTP (Mons-lås)', () => {
     const hook = readFileSync(resolve(her, '../src/bytt-passord-server.ts'), 'utf8');
     expect(hook).toMatch(/MAGIC_LINK_BE_OM_STI/);
     expect(hook).toMatch(/callbackURL:\s*MAGIC_LINK_CALLBACK/);
+    expect(hook).toMatch(/errorCallbackURL:\s*MAGIC_LINK_CALLBACK/);
+    expect(hook).toMatch(/slettEldreMagicLinkTokens/);
     const signin = readFileSync(
       resolve(her, '../../../apps/web/app/signin/signin-skjema.tsx'),
       'utf8',
@@ -100,15 +103,17 @@ describe('magic link + TOTP (Mons-lås)', () => {
     );
     expect(signin).toMatch(/signIn\.magicLink/);
     expect(signin).toMatch(/verifyTotp/);
-    expect(signin).toMatch(/Skriv inn kode/);
-    expect(signin).toMatch(/Logg inn med magiclink/);
+    expect(signin).toMatch(/Skriv kode manuelt/);
     expect(signin).toMatch(/Bytt konto/);
-    expect(signin).toMatch(/ikke bundet en autentikator-app/);
+    expect(signin).not.toMatch(/Logg inn med magiclink/);
+    expect(signin).toMatch(/magicLinkVerifySti/);
     expect(signin).not.toMatch(/type=["']password["']/);
     expect(signin).not.toMatch(/verifyOtp|sendOtp/);
     expect(oppsett).toMatch(/twoFactor\.enable/);
     expect(oppsett).toMatch(/verifyTotp/);
     expect(oppsett).not.toMatch(/type=["']password["']/);
     expect(oppsett).not.toMatch(/sendOtp/);
+    expect(oppsett).toMatch(/MAGIC_LINK_ENROLL_UTEN_SESJON/);
+    expect(oppsett).not.toMatch(/Innloggingslenken må åpnes først/);
   });
 });

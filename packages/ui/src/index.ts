@@ -75,6 +75,7 @@ export {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './components/dropdown-menu.tsx';
+export { Grainient, type GrainientProps } from './components/grainient.tsx';
 // shadcn/ui — chat (ui-pakker §9). Hentet.
 export {
   Message,
@@ -153,11 +154,6 @@ export {
   QuestionnaireSubmit,
   QuestionnaireTitle,
 } from './components/questionnaire.tsx';
-export {
-  SHADERGRADIENT_FARGER,
-  ShaderGradientBakgrunn,
-  type ShaderGradientBakgrunnProps,
-} from './components/shader-gradient.tsx';
 export { Switch } from './components/switch.tsx';
 export {
   ToolPart,

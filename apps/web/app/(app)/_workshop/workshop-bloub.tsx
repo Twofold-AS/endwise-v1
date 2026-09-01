@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import {
   AiDisclosure,
   BLOUB_HVILE,
+  Grainient,
   Message,
   MessageBubble,
   MessageContent,
@@ -14,7 +15,6 @@ import {
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
-  ShaderGradientBakgrunn,
   useBloubIdleLiv,
   useBloubPapir,
   X,
@@ -25,14 +25,15 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { sidekontekst } from './sidekontekst';
 
-const FAB = 36;
+/** Får plass i h-control (32px) uten sirkel-chip. */
+const STRIP_BOT = 28;
 const HODE = 48;
 
 /**
- * ShaderGradient-stripe i toppen av innholdskolonnen (sidebar-kant →
- * skjermkant på desktop; under telefon-toppbaren, full bredde på telefon).
- * Liten bloub til høyre åpner workshop-chat med sidekontekst.
- * Ingen Quick-skriving. Ingen bunn-FAB. Samme komponent på telefon og desktop.
+ * Grainient-stripe (maks 32px) i toppen av innholdskolonnen.
+ * Hvit forklaring + hvit bloub ytterst til høyre, uten sirkel-bakgrunn.
+ * Samme komponent på telefon (under toppbaren) og desktop.
+ * Ingen Quick-skriving. Ingen bunn-FAB.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -85,14 +86,17 @@ export function WorkshopBloub() {
   if (pathname.startsWith('/oppstart')) return null;
 
   return (
-    <div data-workshop-strip className="relative h-14 w-full shrink-0">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <ShaderGradientBakgrunn className="h-full w-full" />
+    <div
+      data-workshop-strip
+      className="relative h-control max-h-[32px] w-full shrink-0 overflow-hidden"
+    >
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <Grainient className="absolute inset-0 h-full w-full" />
       </div>
 
       {apen ? (
         <div
-          className="fixed top-[calc(env(safe-area-inset-top)+6rem)] right-3 z-40 flex w-[min(22rem,calc(100vw-1.5rem))] max-h-[min(34rem,70vh)] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-lg md:top-[4.25rem]"
+          className="fixed top-[calc(env(safe-area-inset-top)+4.5rem)] right-3 z-40 flex w-[min(22rem,calc(100vw-1.5rem))] max-h-[min(34rem,70vh)] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-lg md:top-10"
           role="dialog"
           aria-label="Verkstedsassistent"
         >
@@ -195,27 +199,32 @@ export function WorkshopBloub() {
         </div>
       ) : null}
 
-      <button
-        type="button"
-        onClick={() => setApen((v) => !v)}
-        aria-expanded={apen}
-        aria-label={apen ? 'Lukk verkstedsassistent' : 'Åpne verkstedsassistent'}
-        data-workshop-sticky
-        className="absolute top-1/2 right-3 z-10 flex -translate-y-1/2 items-center justify-center rounded-full bg-bg/90 shadow-md ring-1 ring-border transition hover:ring-border-strong focus-visible:outline-2 focus-visible:outline-ring"
-        style={{ width: FAB, height: FAB }}
-      >
-        <BloubBot
-          size={FAB}
-          shape="cercle"
-          color="#111111"
-          paper={papir}
-          state={tilstand}
-          expression={uttrykk}
-          follow={false}
-          still={false}
-          playing={false}
-        />
-      </button>
+      <div className="relative z-10 flex h-full items-center gap-2 px-3">
+        <p className="min-w-0 flex-1 truncate text-label text-white">
+          Endwise-hjelpen — kjenner siden du er på
+        </p>
+        <button
+          type="button"
+          onClick={() => setApen((v) => !v)}
+          aria-expanded={apen}
+          aria-label={apen ? 'Lukk verkstedsassistent' : 'Åpne verkstedsassistent'}
+          data-workshop-sticky
+          className="flex shrink-0 items-center justify-center bg-transparent focus-visible:outline-2 focus-visible:outline-white"
+          style={{ width: STRIP_BOT, height: STRIP_BOT }}
+        >
+          <BloubBot
+            size={STRIP_BOT}
+            shape="cercle"
+            color="#ffffff"
+            paper="#111111"
+            state={tilstand}
+            expression={uttrykk}
+            follow={false}
+            still={false}
+            playing={false}
+          />
+        </button>
+      </div>
     </div>
   );
 }

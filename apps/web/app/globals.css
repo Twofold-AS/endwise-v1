@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@endwise/ui/theme.css";
+@import "@endwise/ui/grainient.css";
 /*
  * matrix-loaders (ui-pakker.md §4) er ren CSS-animasjon: komponentene setter
  * bare klasser og CSS-variabler, keyframene bor i pakkens egen `styles.css`.

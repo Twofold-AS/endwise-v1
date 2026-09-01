@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./theme.css": "./src/theme.css",
+    "./grainient.css": "./src/components/grainient.css",
     "./matrix-loaders.css": "./src/vendor/matrix-loaders/styles.css",
     "./bloub/BloubBot": "./src/bloub/BloubBot.tsx",
     "./components/*": "./src/components/*.tsx",
@@ -19,9 +20,7 @@
   },
   "dependencies": {
     "@endwise/widget-tokens": "workspace:*",
-    "@react-three/fiber": "^9",
     "@shadcn/react": "0.3.0",
-    "@shadergradient/react": "^2.4.20",
     "@types/d3-scale": "^4.0.9",
     "@types/d3-shape": "^3.1.8",
     "class-variance-authority": "^0.7.1",
@@ -30,10 +29,10 @@
     "d3-shape": "^3.2.0",
     "lucide-react": "^0.548.0",
     "motion": "^12.42.2",
+    "ogl": "^1.0.11",
     "radix-ui": "^1.6.2",
     "recharts": "^3.10.1",
-    "tailwind-merge": "^3.4.0",
-    "three": "^0.185.1"
+    "tailwind-merge": "^3.4.0"
   },
   "peerDependencies": {
     "react": "^19.2.0"

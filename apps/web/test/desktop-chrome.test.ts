@@ -44,14 +44,16 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(sidebar).toMatch(/gap-\[4px\]/);
     expect(sidebar).toMatch(/TipCard/);
     expect(sidebar).toMatch(/BrukerRad/);
-    expect(header).toMatch(/LOGO = 32/);
-    expect(header).toMatch(/text-title/);
+    expect(sidebar).not.toMatch(/settingsNav \? \(/);
+    expect(sidebar).not.toMatch(/-mx-3 h-px bg-border/);
+    expect(header).toMatch(/LOGO = 18/);
+    expect(header).not.toMatch(/text-title text-fg/);
     expect(rad).not.toMatch(/Avatar|BEVEL|variant === 'phone'/);
     expect(rad).toMatch(/if \(collapsed\)/);
     expect(rad).toMatch(/LogOut/);
   });
 
-  it('app-skall: ingen breadcrumb-topbar, ingen Grainient, ingen mørkt-toggle, ShaderGradient-stripe', () => {
+  it('app-skall: ingen breadcrumb-topbar, ingen mørkt-toggle, Grainient 32px-stripe', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const rot = les('../app/layout.tsx');
     const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
@@ -62,11 +64,12 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(layout).toMatch(/WorkshopBloub/);
     expect(rot).toMatch(/data-theme="light"/);
     expect(rot).not.toMatch(/TEMA_SKRIPT|endwise:tema/);
-    expect(workshop).toMatch(/ShaderGradientBakgrunn/);
+    expect(workshop).toMatch(/Grainient/);
+    expect(workshop).toMatch(/h-control max-h-\[32px\]/);
     expect(workshop).toMatch(/data-workshop-strip/);
     expect(workshop).not.toMatch(/fixed[\s\S]*bottom/);
-    expect(workshop).not.toMatch(/Grainient/);
-    expect(globals).not.toMatch(/grainient/);
+    expect(workshop).not.toMatch(/ShaderGradient/);
+    expect(globals).toMatch(/grainient\.css/);
     expect(profil).not.toMatch(/Mørkt tema|settTema/);
     expect(meg).not.toMatch(/Mørkt tema|byttTema/);
   });

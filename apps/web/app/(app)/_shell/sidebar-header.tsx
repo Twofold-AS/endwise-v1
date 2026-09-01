@@ -6,8 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSidebarState } from './sidebar-state';
 
-/** Logo og forhandlernavn på én rad, samme høyde. Ikke en caption under merket. */
-const LOGO = 32;
+/** Liten logo. Forhandlernavn vises ikke ved siden av merket. */
+const LOGO = 18;
 
 /**
  * Sidebar-topp uten visningsvelger. Ett skall per innlogging.
@@ -74,7 +74,7 @@ export function SidebarHeader({
 
   return (
     <div
-      className={`flex w-full items-center gap-2 ${collapsed ? 'justify-center' : 'px-1'}`}
+      className={`flex w-full items-center ${collapsed ? 'justify-center' : 'justify-between px-1'}`}
       title={navn}
     >
       <Image
@@ -84,11 +84,6 @@ export function SidebarHeader({
         height={LOGO}
         className="logo-invert shrink-0"
       />
-      {!collapsed && (
-        <span className="flex h-8 min-w-0 flex-1 items-center truncate text-title text-fg">
-          {navn}
-        </span>
-      )}
       {minimer}
     </div>
   );

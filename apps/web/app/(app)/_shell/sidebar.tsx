@@ -162,8 +162,6 @@ export function Sidebar() {
     window.location.assign('/signin');
   }
 
-  const settingsAktiv = settingsNav ? isItemActive(settingsNav, pathname) : false;
-
   return (
     <aside
       data-sidebar
@@ -262,24 +260,9 @@ export function Sidebar() {
           )}
         </nav>
 
-        {/* Bunn: helpdesk-kort over innstillinger/profil. Ingen avatar. */}
+        {/* Bunn: helpdesk-kort over profil/logg ut. Ingen Innstillinger-rad, ingen divider. */}
         <div className="flex flex-col gap-3">
           {!smal && shell !== 'endwise' && shell !== 'endwise_partner' && <TipCard />}
-          <div className="-mx-3 h-px bg-border" />
-          {settingsNav ? (
-            <Link
-              href={settingsNav.href as Route}
-              aria-current={settingsAktiv ? 'page' : undefined}
-              title={smal ? settingsNav.label : undefined}
-              onClick={phoneOpen ? closePhone : undefined}
-              className={`flex h-control w-full items-center gap-2.5 rounded-control text-label transition-colors ${
-                smal ? 'justify-center px-0' : 'px-2.5'
-              } ${settingsAktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-sidebar-active/60'}`}
-            >
-              <Ikon icon={settingsNav.icon} active={settingsAktiv} />
-              {!smal && <span className="flex-1 text-left">{settingsNav.label}</span>}
-            </Link>
-          ) : null}
           <BrukerRad
             navn={navn}
             laster={rolleLaster}

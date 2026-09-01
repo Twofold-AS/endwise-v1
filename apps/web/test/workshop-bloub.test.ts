@@ -32,13 +32,19 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(layout).not.toMatch(/bottom-tab|PhoneTab/);
   });
 
-  it('er top-stripe med ShaderGradient, liten bloub til høyre, sidekontekst med hver tur', () => {
+  it('er 32px Grainient-stripe med hvit bloub uten sirkel, sidekontekst med hver tur', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
     expect(fab).toMatch(/data-workshop-strip/);
-    expect(fab).toMatch(/ShaderGradientBakgrunn/);
-    expect(fab).toMatch(/const FAB = 36/);
+    expect(fab).toMatch(/Grainient/);
+    expect(fab).toMatch(/h-control max-h-\[32px\]/);
+    expect(fab).toMatch(/const STRIP_BOT = 28/);
     expect(fab).toMatch(/const HODE = 48/);
+    expect(fab).toMatch(/color="#ffffff"/);
+    expect(fab).toMatch(/paper="#111111"/);
+    expect(fab).toMatch(/Endwise-hjelpen/);
+    expect(fab).toMatch(/text-white/);
     expect(fab).toMatch(/data-workshop-sticky/);
+    expect(fab).not.toMatch(/rounded-full|bg-bg\/90|ring-1/);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
     expect(fab).toMatch(/body: \{ side \}/);
     expect(fab).toMatch(/expression=\{uttrykk\}/);
@@ -51,7 +57,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).not.toMatch(/fixed right-3 bottom/);
     expect(fab).not.toMatch(/size=\{320\}/);
     expect(fab).not.toMatch(/#1ED27D|#EE2924/);
-    expect(fab).not.toMatch(/Grainient|grainient/);
+    expect(fab).not.toMatch(/ShaderGradient/);
   });
 
   it('chat-ruta tar imot sidekontekst-header', () => {

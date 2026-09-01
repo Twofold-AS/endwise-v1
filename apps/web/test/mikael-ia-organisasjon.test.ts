@@ -185,7 +185,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   it('minimize sitter i sidebaren, ikke i top-bar 1', () => {
     expect(header).toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(top).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
-    expect(header).toMatch(/LOGO = 32|width=\{32\}|width=\{LOGO\}/);
+    expect(header).toMatch(/LOGO = 18|width=\{18\}|width=\{LOGO\}/);
     expect(header).toMatch(/logo\/logo\.svg/);
     const headerLogoer = header.match(/<Image[\s\S]*?\/>/g) ?? [];
     expect(headerLogoer.length).toBeGreaterThanOrEqual(2);

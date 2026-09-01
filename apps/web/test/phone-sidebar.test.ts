@@ -55,15 +55,16 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(sidebar).toMatch(/FORHANDLER_NAV|navForShell/);
   });
 
-  it('ShaderGradient-stripe vises på telefon under toppbaren, ikke som FAB', () => {
+  it('Grainient-stripe vises på telefon under toppbaren, 32px, ikke som FAB', () => {
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).toMatch(/WorkshopBloub/);
     expect(workshop).toMatch(/data-workshop-strip/);
-    expect(workshop).toMatch(/ShaderGradientBakgrunn/);
-    expect(workshop).toMatch(/relative h-14 w-full shrink-0/);
+    expect(workshop).toMatch(/Grainient/);
+    expect(workshop).toMatch(/h-control max-h-\[32px\]/);
     expect(workshop).not.toMatch(/hidden h-14/);
     expect(workshop).not.toMatch(/md:block/);
     expect(workshop).not.toMatch(/fixed[\s\S]*bottom/);
+    expect(workshop).not.toMatch(/ShaderGradient/);
   });
 
   it('profil og logg ut er flat sidebar-rad uten avatar', () => {

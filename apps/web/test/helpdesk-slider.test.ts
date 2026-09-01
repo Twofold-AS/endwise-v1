@@ -110,7 +110,7 @@ describe('TipCard er stedet som minimeres', () => {
     expect(sidebar).toMatch(/<TipCard \/>/);
     const raa = les('../app/(app)/_shell/sidebar.tsx');
     expect(raa.indexOf('<TipCard')).toBeGreaterThan(-1);
-    expect(raa.indexOf('<TipCard')).toBeLessThan(raa.indexOf('settingsNav.href'));
+    expect(raa.indexOf('<TipCard')).toBeLessThan(raa.indexOf('settingsNav?.href'));
   });
 
   it('helpdesk.list sitter ikke på 5 min staleTime — focus må treffe nye artikler', () => {

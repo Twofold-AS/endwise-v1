@@ -184,11 +184,11 @@ describe('P0: profil uten ansiktsvelger', () => {
     expect(profil).toMatch(/size=\{56\}/);
   });
 
-  it('sidebar-avataren er stille uten tvunget happy', () => {
+  it('sidebar har ingen avatar og tvinger ikke happy', () => {
     const rad = readFileSync(resolve(her, '../app/(app)/_shell/bruker-rad.tsx'), 'utf8');
-    expect(rad).toMatch(/bevegelse="stille"/);
-    expect(rad).toMatch(/valg=\{profil\.data\?\.avatar\}/);
+    expect(rad).not.toMatch(/<Avatar|bevegelse=/);
     expect(rad).not.toMatch(/humor:\s*['"]happy['"]/);
+    expect(rad).toMatch(/LogOut/);
   });
 });
 

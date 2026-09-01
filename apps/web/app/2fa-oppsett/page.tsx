@@ -67,7 +67,9 @@ export default function ToFaktorOppsettPage() {
     try {
       const res = await authClient.twoFactor.enable({});
       if (res.error && !/already/i.test(res.error.message ?? '')) {
-        setFeil(res.error.message ?? 'Kunne ikke starte oppsettet.');
+        const msg = res.error.message ?? '';
+        const utenSesjon = res.error.status === 401 || /unauthorized|session|forbidden/i.test(msg);
+        setFeil(utenSesjon ? MAGIC_LINK_ENROLL_UTEN_SESJON : msg || 'Kunne ikke starte oppsettet.');
         setBusy('error');
         startet.current = false;
         return;

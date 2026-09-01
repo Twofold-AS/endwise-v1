@@ -12,7 +12,7 @@ import {
   MAGIC_LINK_TTL_SEKUNDER,
   MAGIC_LINK_VERIFY_STI,
 } from '../src/magic-link.ts';
-import { MAGIC_LINK_2FA_HOOK_ID } from '../src/magic-link-2fa.ts';
+import { erTotpFaktiskBundet, MAGIC_LINK_2FA_HOOK_ID } from '../src/magic-link-2fa.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 const OPPRINNELIG = { ...process.env };
@@ -72,7 +72,8 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(hook).toMatch(/deleteSessionCookie/);
     expect(hook).toMatch(/setNewSession\(null\)/);
     expect(hook).toMatch(/ENROLL_COOKIE_NAME/);
-    expect(hook).toMatch(/twoFactorEnabled !== true/);
+    expect(hook).toMatch(/erTotpFaktiskBundet/);
+    expect(hook).toMatch(/twoFactorEnabled:\s*false|twoFactorEnabled = false/);
     expect(hook).toMatch(/MAGIC_LINK_ENROLL_STI/);
     expect(hook).toMatch(/MAGIC_LINK_TOTP_QUERY/);
     expect(hook).not.toMatch(/setSessionCookie/);
@@ -84,6 +85,40 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(hook).toMatch(/twoFactorEnabled !== true/);
     expect(hook).toMatch(/TWO_FACTOR_REQUIRED/);
     expect(hook).toMatch(/verifiserFerskTotpMotHemmelighet/);
+  });
+
+  it('flag uten two_factor-rad er ikke enrollert TOTP', async () => {
+    await expect(
+      erTotpFaktiskBundet(async () => null, { id: 'u1', twoFactorEnabled: true }),
+    ).resolves.toBe(false);
+    await expect(
+      erTotpFaktiskBundet(async () => ({ secret: '' }), { id: 'u1', twoFactorEnabled: true }),
+    ).resolves.toBe(false);
+    await expect(
+      erTotpFaktiskBundet(async () => ({ secret: 'skjult' }), {
+        id: 'u1',
+        twoFactorEnabled: false,
+      }),
+    ).resolves.toBe(false);
+    await expect(
+      erTotpFaktiskBundet(async () => ({ secret: 'skjult' }), {
+        id: 'u1',
+        twoFactorEnabled: true,
+      }),
+    ).resolves.toBe(true);
+  });
+
+  it('0036 tømmer bare foreldreløse two_factor_enabled, ikke TOTP-hemmelighet', () => {
+    const sql = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/0036_orphan_two_factor_flag.sql'),
+      'utf8',
+    );
+    const utenKommentar = sql.replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(utenKommentar).toMatch(/UPDATE "user" SET two_factor_enabled = false/i);
+    expect(utenKommentar).toMatch(/NOT IN \(SELECT user_id FROM two_factor\)/i);
+    expect(utenKommentar).not.toMatch(/DELETE FROM "two_factor"/i);
+    expect(utenKommentar).not.toMatch(/SET "secret"/i);
+    expect(utenKommentar).not.toMatch(/password/i);
   });
 
   it('0035 tømmer passord-hash, ikke TOTP', () => {

@@ -26,11 +26,23 @@ export type SignInEtterLenke = SignInFlate | 'enroll';
  * må vi IKKE vise app-kode til noen som ikke har two_factor-kake.
  */
 export function harTotpVindu(cookieHeader = ''): boolean {
-  return /(?:^|;\s*)(?:__Secure-|__Host-)?(?:endwise\.)?two_factor=/.test(cookieHeader);
+  return /(?:^|;\s*)[^=;\s]*two_factor=/.test(cookieHeader);
 }
 
 export function harEnrollVindu(cookieHeader = ''): boolean {
-  return /(?:^|;\s*)(?:__Secure-|__Host-)?(?:endwise\.)?enroll_2fa=/.test(cookieHeader);
+  return /(?:^|;\s*)[^=;\s]*enroll_2fa=/.test(cookieHeader);
+}
+
+/** Klikk-landing uten kake / error-query: tokenet er brukt. Ikke stille venteskjerm. */
+export function skalViseErstattetMelding(input: {
+  steg?: string | null;
+  feil?: string | null;
+  totpKlar: boolean;
+  enrollKlar: boolean;
+}): boolean {
+  if (input.totpKlar || input.enrollKlar) return false;
+  if (input.feil) return true;
+  return input.steg === 'totp';
 }
 
 /**

@@ -28,6 +28,7 @@ import {
   SIGNIN_VALG_STI,
   SIGNIN_VENT_TITTEL,
   type SignInFlate,
+  skalViseErstattetMelding,
   toemIdentifisertEpost,
 } from './signin-steg';
 
@@ -64,6 +65,14 @@ function landingTilFlate(steg: string | null, feil: string | null, totpKlar: boo
   return neste === 'enroll' ? 'valg' : neste;
 }
 
+function landingFeil(steg: string | null, feil: string | null, totpKlar: boolean): string | null {
+  if (totpKlar) return null;
+  if (skalViseErstattetMelding({ steg, feil, totpKlar, enrollKlar: false })) {
+    return MAGIC_LINK_ERSTATTET_MELDING;
+  }
+  return meldingForMagicLinkFeil(feil);
+}
+
 export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totpKlar: boolean }) {
   const utils = trpc.useUtils();
   const search = useSearchParams();
@@ -77,7 +86,7 @@ export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totp
   const [totp, setTotp] = useState('');
   const [manuell, setManuell] = useState(false);
   const [error, setError] = useState<string | null>(() =>
-    totpKlar ? null : meldingForMagicLinkFeil(feilQuery),
+    landingFeil(stegQuery, feilQuery, totpKlar),
   );
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const kodeRef = useRef<HTMLInputElement>(null);
@@ -99,7 +108,7 @@ export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totp
       setError(null);
       return;
     }
-    if (feilQuery) setError(meldingForMagicLinkFeil(feilQuery));
+    setError(landingFeil(stegQuery, feilQuery, totpKlar));
   }, [stegQuery, feilQuery, totpKlar]);
 
   useEffect(() => {
@@ -365,7 +374,6 @@ export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totp
                   icon={<Mail size={15} />}
                   onClick={() => {
                     setManuell(true);
-                    setError(null);
                   }}
                 >
                   {SIGNIN_VALG_SKRIV_KODE}

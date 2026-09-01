@@ -16,6 +16,7 @@ import {
   SIGNIN_VALG_STI,
   SIGNIN_VENT_TITTEL,
   signInFlateFraQuery,
+  skalViseErstattetMelding,
 } from '../app/signin/signin-steg.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -33,6 +34,8 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
   it('two_factor-kake gjenkjennes, two_factor_enabled gjør det ikke', () => {
     expect(harTotpVindu('endwise.two_factor=abc')).toBe(true);
     expect(harTotpVindu('__Secure-endwise.two_factor=abc')).toBe(true);
+    expect(harTotpVindu('__Host-endwise.two_factor=abc')).toBe(true);
+    expect(harTotpVindu('foo.bar.two_factor=abc')).toBe(true);
     expect(harTotpVindu('two_factor=abc')).toBe(true);
     expect(harTotpVindu('endwise.session=x')).toBe(false);
     expect(harTotpVindu('two_factor_enabled=1')).toBe(false);
@@ -61,6 +64,7 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
   it('enroll-kake gjenkjennes separat fra two_factor', () => {
     expect(harEnrollVindu('endwise.enroll_2fa=abc')).toBe(true);
     expect(harEnrollVindu('__Secure-endwise.enroll_2fa=abc')).toBe(true);
+    expect(harEnrollVindu('__Host-endwise.enroll_2fa=abc')).toBe(true);
     expect(harEnrollVindu('enroll_2fa=abc')).toBe(true);
     expect(harEnrollVindu('endwise.two_factor=abc')).toBe(false);
     expect(harEnrollVindu('')).toBe(false);
@@ -103,6 +107,29 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
         enrollKlar: false,
       }),
     ).toBe('valg');
+  });
+
+  it('forbrukt lenke uten kake viser erstattet-melding, ikke stille venteskjerm', () => {
+    expect(
+      skalViseErstattetMelding({
+        steg: 'totp',
+        totpKlar: false,
+        enrollKlar: false,
+      }),
+    ).toBe(true);
+    expect(
+      skalViseErstattetMelding({
+        feil: 'INVALID_TOKEN',
+        totpKlar: false,
+        enrollKlar: false,
+      }),
+    ).toBe(true);
+    expect(skalViseErstattetMelding({ steg: 'valg', totpKlar: false, enrollKlar: false })).toBe(
+      false,
+    );
+    expect(skalViseErstattetMelding({ steg: 'totp', totpKlar: true, enrollKlar: false })).toBe(
+      false,
+    );
   });
 });
 
@@ -164,6 +191,7 @@ describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', ()
 
   it('stale-lenke viser erstattet-melding, ikke trykk på linken først', () => {
     expect(kilde).toMatch(/meldingForMagicLinkFeil/);
+    expect(kilde).toMatch(/skalViseErstattetMelding/);
     expect(kilde).not.toMatch(/trykk på linken først/i);
     expect(kilde).not.toMatch(/Innloggingslenken må åpnes først/);
   });
@@ -174,10 +202,36 @@ describe('signin-side: server leser HttpOnly-kaker etter verify', () => {
 
   it('force-dynamic + cookies — enroll-kake går til /2fa-oppsett', () => {
     expect(side).toMatch(/force-dynamic/);
+    expect(side).toMatch(/revalidate\s*=\s*0/);
+    expect(side).toMatch(/fetchCache\s*=\s*['"]force-no-store['"]/);
     expect(side).toMatch(/cookies\(/);
     expect(side).toMatch(/harTotpVindu/);
     expect(side).toMatch(/harEnrollVindu/);
     expect(side).toMatch(/totpKlar/);
     expect(side).toMatch(/redirect\((SIGNIN_ENROLL_STI|['"]\/2fa-oppsett['"])/);
+  });
+});
+
+describe('auth-sider er ukachebare (ikke prerender på branch-alias)', () => {
+  const nextCfg = readFileSync(resolve(her, '../next.config.ts'), 'utf8');
+  const proxy = readFileSync(resolve(her, '../proxy.ts'), 'utf8');
+  const oppsett = `${readFileSync(resolve(her, '../app/2fa-oppsett/page.tsx'), 'utf8')}\n${readFileSync(resolve(her, '../app/2fa-oppsett/layout.tsx'), 'utf8')}`;
+
+  it('next.config og proxy setter Cache-Control no-store på /signin /2fa-oppsett /api/auth', () => {
+    expect(nextCfg).toMatch(/private, no-store, no-cache, must-revalidate/);
+    expect(nextCfg).toMatch(/\/signin/);
+    expect(nextCfg).toMatch(/\/2fa-oppsett/);
+    expect(nextCfg).toMatch(/\/api\/auth/);
+    expect(proxy).toMatch(/private, no-store, no-cache, must-revalidate/);
+    expect(proxy).toMatch(/Vercel-CDN-Cache-Control|CDN-Cache-Control/);
+    expect(proxy).toMatch(/\/signin/);
+    expect(proxy).toMatch(/\/2fa-oppsett/);
+    expect(proxy).toMatch(/\/api\/auth/);
+  });
+
+  it('/2fa-oppsett er force-dynamic, ikke prerender', () => {
+    expect(oppsett).toMatch(/force-dynamic/);
+    expect(oppsett).toMatch(/revalidate\s*=\s*0/);
+    expect(oppsett).toMatch(/fetchCache\s*=\s*['"]force-no-store['"]/);
   });
 });

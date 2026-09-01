@@ -38,8 +38,9 @@ describe('magic-link-kode', () => {
     expect(meldingForMagicLinkFeil(null)).toBeNull();
     expect(MAGIC_LINK_ERSTATTET_MELDING).toMatch(/nyeste e-posten/);
     expect(MAGIC_LINK_ERSTATTET_MELDING).not.toMatch(/trykk på linken først/i);
-    expect(MAGIC_LINK_ENROLL_UTEN_SESJON).toMatch(/nyeste innloggingslenken/);
+    expect(MAGIC_LINK_ENROLL_UTEN_SESJON).toMatch(/Fortsett/);
     expect(MAGIC_LINK_ENROLL_UTEN_SESJON).not.toMatch(/trykk på linken først/i);
+    expect(MAGIC_LINK_ENROLL_UTEN_SESJON).not.toMatch(/nyeste innloggingslenken/);
   });
 
   it('kjenner igjen magic-link-rader og ikke reset/2fa', () => {

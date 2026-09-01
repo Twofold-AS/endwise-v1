@@ -26,7 +26,7 @@ export const RESEND_VERIFISERTE_DOMENER = ['endwise.no', 'no-reply.endwise.no'] 
 
 /** Domenet standard-avsenderen bruker. Produkt-From er likevel låst. */
 export const RESEND_STANDARD_DOMENE = 'endwise.no';
-export { RESEND_FROM_KANONISK, produktAvsender } from './resend-avsender.ts';
+export { produktAvsender, RESEND_FROM_KANONISK } from './resend-avsender.ts';
 
 /**
  * Plukker domenet ut av en `from`-streng, enten den er `a@b.no` eller
@@ -58,8 +58,9 @@ export const authEnv = {
     return required('BETTER_AUTH_SECRET');
   },
   /**
-   * Offentlig URL for denne kjøringen. Preview bruker `VERCEL_URL`,
-   * ikke produksjons-`BETTER_AUTH_URL` — se `authPublicUrl`.
+   * Offentlig URL for denne kjøringen. Preview bruker
+   * `VERCEL_BRANCH_URL` (ellers `VERCEL_URL`), aldri produksjons-
+   * `BETTER_AUTH_URL` — se `authPublicUrl`.
    */
   get baseUrl() {
     return authPublicUrl();

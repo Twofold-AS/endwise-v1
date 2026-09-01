@@ -7,6 +7,8 @@ import { SignInSkjema } from './signin-skjema';
 import { harEnrollVindu, harTotpVindu, SIGNIN_ENROLL_STI } from './signin-steg';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 /**
  * two_factor / enroll_2fa er HttpOnly. document.cookie ser dem ikke —

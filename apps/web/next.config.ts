@@ -74,6 +74,20 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [...streamRewrites(process.env)];
   },
+  async headers() {
+    const noStore = [
+      { key: 'Cache-Control', value: 'private, no-store, no-cache, must-revalidate' },
+      { key: 'CDN-Cache-Control', value: 'no-store' },
+      { key: 'Vercel-CDN-Cache-Control', value: 'no-store' },
+    ];
+    return [
+      { source: '/signin', headers: noStore },
+      { source: '/signin/:path*', headers: noStore },
+      { source: '/2fa-oppsett', headers: noStore },
+      { source: '/2fa-oppsett/:path*', headers: noStore },
+      { source: '/api/auth/:path*', headers: noStore },
+    ];
+  },
   // Agent-instruksjonene (instructions.md ved siden av agent.ts)
   // må inn i JS-bunten. readFileSync + import.meta.url peker på
   // /var/task/packages/agents/src/.../instructions.md, som Turbopack/nft

@@ -24,7 +24,7 @@ export const MAGIC_LINK_ERSTATTET_MELDING =
   'Lenken er utløpt eller erstattet. Åpne den nyeste e-posten fra Endwise.';
 
 export const MAGIC_LINK_ENROLL_UTEN_SESJON =
-  'Åpne den nyeste innloggingslenken i e-posten. Eldre lenker er ugyldige. Deretter binder du appen.';
+  'Be om en ny innloggingslenke med Fortsett. Den forrige er brukt. Deretter binder du appen.';
 
 export function genererMagicLinkKode(): string {
   const bytes = new Uint8Array(MAGIC_LINK_KODE_LENGDE);

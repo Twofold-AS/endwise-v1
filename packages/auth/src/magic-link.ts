@@ -6,6 +6,7 @@
 
 export const MAGIC_LINK_TTL_SEKUNDER = 600;
 export const MAGIC_LINK_BE_OM_STI = '/sign-in/magic-link';
+export const SIGN_OUT_STI = '/sign-out';
 export const MAGIC_LINK_VERIFY_STI = '/magic-link/verify';
 export const MAGIC_LINK_VERIFY_URL = `/api/auth${MAGIC_LINK_VERIFY_STI}`;
 export const MAGIC_LINK_CALLBACK = '/signin';

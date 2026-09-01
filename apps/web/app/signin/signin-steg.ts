@@ -40,15 +40,15 @@ export function skalViseErstattetMelding(input: {
   totpKlar: boolean;
   enrollKlar: boolean;
 }): boolean {
-  if (input.totpKlar || input.enrollKlar) return false;
+  if (input.steg === 'totp' && (input.totpKlar || input.enrollKlar)) return false;
   if (input.feil) return true;
   return input.steg === 'totp';
 }
 
 /**
- * Etter magic-link-verify: HttpOnly-kaker (two_factor / enroll_2fa) er
- * sannheten — ikke document.cookie og ikke error-query. Tokenet er allerede
- * brukt. Venteskjerm her er løkken «lenken dreper seg selv».
+ * Leftover two_factor / enroll_2fa etter en eldre verify er ikke
+ * sannhet for Fortsett (steg=valg) eller e-postflaten. Kakene gjelder
+ * bare etter DENNE verify (steg=totp).
  */
 export function flateEtterMagicLinkLanding(input: {
   steg?: string | null;
@@ -56,8 +56,9 @@ export function flateEtterMagicLinkLanding(input: {
   totpKlar: boolean;
   enrollKlar: boolean;
 }): SignInEtterLenke {
-  if (input.enrollKlar) return 'enroll';
-  if (input.totpKlar) return 'totp';
+  const denneVerify = input.steg === 'totp';
+  if (denneVerify && input.enrollKlar) return 'enroll';
+  if (denneVerify && input.totpKlar) return 'totp';
   if (input.feil) return 'valg';
   return signInFlateFraQuery(input.steg, { totpKlar: false });
 }

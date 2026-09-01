@@ -21,9 +21,15 @@ function kakeHeader(jar: Awaited<ReturnType<typeof cookies>>): string {
     .join('; ');
 }
 
-export default async function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ steg?: string }>;
+}) {
+  const { steg } = await searchParams;
   const header = kakeHeader(await cookies());
-  if (harEnrollVindu(header)) {
+  const nyEpost = !steg || steg === 'valg' || steg === 'sendt';
+  if (harEnrollVindu(header) && !nyEpost) {
     redirect(SIGNIN_ENROLL_STI as Route);
   }
   const totpKlar = harTotpVindu(header);

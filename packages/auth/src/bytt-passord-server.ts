@@ -19,7 +19,8 @@ import {
   slettAndreSesjoner,
   verifiserFerskTotpMotHemmelighet,
 } from './enroll-server.ts';
-import { MAGIC_LINK_BE_OM_STI, MAGIC_LINK_CALLBACK } from './magic-link.ts';
+import { utlopFaktorKaker } from './faktor-kaker.ts';
+import { MAGIC_LINK_BE_OM_STI, MAGIC_LINK_CALLBACK, SIGN_OUT_STI } from './magic-link.ts';
 import { slettEldreMagicLinkTokens } from './magic-link-tokens.ts';
 import { skriv2faDisableAudit } from './to-faktor-server.ts';
 
@@ -100,6 +101,9 @@ export const byttPassordForHook = merket(
           ...(enroll ? { session: enroll } : {}),
         },
       };
+    }
+    if (ctx.path === SIGN_OUT_STI || ctx.path === MAGIC_LINK_BE_OM_STI) {
+      utlopFaktorKaker(ctx);
     }
     if (ctx.path === MAGIC_LINK_BE_OM_STI) {
       const body = ctx.body;

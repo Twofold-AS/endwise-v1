@@ -106,6 +106,28 @@ describe('magic link + TOTP (Mons-lås)', () => {
         twoFactorEnabled: true,
       }),
     ).resolves.toBe(true);
+    await expect(
+      erTotpFaktiskBundet(async () => ({ secret: 'skjult', verified: false }), {
+        id: 'u1',
+        twoFactorEnabled: true,
+      }),
+    ).resolves.toBe(false);
+    await expect(
+      erTotpFaktiskBundet(async () => ({ secret: 'skjult', verified: true }), {
+        id: 'u1',
+        twoFactorEnabled: true,
+      }),
+    ).resolves.toBe(true);
+  });
+
+  it('send-hook utløper leftover two_factor og enroll_2fa (signOut er ikke nok)', () => {
+    const forHook = readFileSync(resolve(her, '../src/bytt-passord-server.ts'), 'utf8');
+    const kake = readFileSync(resolve(her, '../src/magic-link-2fa.ts'), 'utf8');
+    expect(forHook).toMatch(/MAGIC_LINK_BE_OM_STI/);
+    expect(`${forHook}\n${kake}`).toMatch(/utlopFaktorKaker|maxAge:\s*0/);
+    expect(kake).toMatch(/TWO_FACTOR_COOKIE_NAME|two_factor/);
+    expect(kake).toMatch(/ENROLL_COOKIE_NAME|enroll_2fa/);
+    expect(forHook).toMatch(/utlopFaktorKaker/);
   });
 
   it('0036 tømmer bare foreldreløse two_factor_enabled, ikke TOTP-hemmelighet', () => {

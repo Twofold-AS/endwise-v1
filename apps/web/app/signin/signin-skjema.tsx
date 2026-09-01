@@ -66,7 +66,7 @@ function landingTilFlate(steg: string | null, feil: string | null, totpKlar: boo
 }
 
 function landingFeil(steg: string | null, feil: string | null, totpKlar: boolean): string | null {
-  if (totpKlar) return null;
+  if (steg === 'totp' && totpKlar) return null;
   if (skalViseErstattetMelding({ steg, feil, totpKlar, enrollKlar: false })) {
     return MAGIC_LINK_ERSTATTET_MELDING;
   }
@@ -148,10 +148,7 @@ export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totp
       setBusy('error');
       return;
     }
-    setManuell(false);
-    setFlate('valg');
-    settStegIUrl('valg');
-    setBusy('idle');
+    window.location.assign(SIGNIN_VALG_STI);
   }
 
   async function onEpost(e: FormEvent) {
@@ -212,15 +209,8 @@ export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totp
 
   async function byttKonto() {
     toemIdentifisertEpost();
-    setEmail('');
-    setKode('');
-    setTotp('');
-    setManuell(false);
-    setError(null);
-    setBusy('idle');
-    setFlate('epost');
-    settStegIUrl(null);
     await authClient.signOut().catch(() => undefined);
+    window.location.assign(SIGNIN_STI);
   }
 
   const tittel =

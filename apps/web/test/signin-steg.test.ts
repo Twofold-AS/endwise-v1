@@ -70,12 +70,9 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
     expect(harEnrollVindu('')).toBe(false);
   });
 
-  it('klikk-landing: HttpOnly-kake slår venteskjerm og error-query', () => {
-    expect(flateEtterMagicLinkLanding({ steg: 'totp', totpKlar: true, enrollKlar: false })).toBe(
-      'totp',
-    );
-    expect(flateEtterMagicLinkLanding({ steg: null, totpKlar: true, enrollKlar: false })).toBe(
-      'totp',
+  it('leftover two_factor-kake etter Fortsett (steg=valg) er venteskjerm, ikke totp', () => {
+    expect(flateEtterMagicLinkLanding({ steg: 'valg', totpKlar: true, enrollKlar: false })).toBe(
+      'valg',
     );
     expect(
       flateEtterMagicLinkLanding({
@@ -84,15 +81,16 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
         totpKlar: true,
         enrollKlar: false,
       }),
-    ).toBe('totp');
-    expect(
-      flateEtterMagicLinkLanding({
-        steg: 'valg',
-        feil: 'INVALID_TOKEN',
-        totpKlar: false,
-        enrollKlar: true,
-      }),
-    ).toBe('enroll');
+    ).toBe('valg');
+    expect(flateEtterMagicLinkLanding({ steg: null, totpKlar: true, enrollKlar: false })).toBe(
+      'epost',
+    );
+  });
+
+  it('steg=totp + kake er totp; steg=totp uten kake er venteskjerm', () => {
+    expect(flateEtterMagicLinkLanding({ steg: 'totp', totpKlar: true, enrollKlar: false })).toBe(
+      'totp',
+    );
     expect(
       flateEtterMagicLinkLanding({
         steg: 'totp',
@@ -105,6 +103,23 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
         feil: 'INVALID_TOKEN',
         totpKlar: false,
         enrollKlar: false,
+      }),
+    ).toBe('valg');
+  });
+
+  it('leftover enroll-kake ved ny e-post / valg er ikke 307 /2fa-oppsett', () => {
+    expect(flateEtterMagicLinkLanding({ steg: 'valg', totpKlar: false, enrollKlar: true })).toBe(
+      'valg',
+    );
+    expect(flateEtterMagicLinkLanding({ steg: null, totpKlar: false, enrollKlar: true })).toBe(
+      'epost',
+    );
+    expect(
+      flateEtterMagicLinkLanding({
+        steg: 'valg',
+        feil: 'INVALID_TOKEN',
+        totpKlar: false,
+        enrollKlar: true,
       }),
     ).toBe('valg');
   });
@@ -151,13 +166,18 @@ describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', ()
     expect(kilde).toMatch(/\{!manuell && \(/);
   });
 
-  it('Fortsett går til valg, aldri totp — totp krever server-lest two_factor-kake', () => {
-    expect(kilde).toMatch(/setFlate\('valg'\)/);
-    expect(kilde).toMatch(/settStegIUrl\('valg'\)/);
+  it('Fortsett / Send på nytt full-laster venteskjerm så leftover totpKlar ikke snapper', () => {
+    expect(kilde).toMatch(/location\.assign\(SIGNIN_VALG_STI\)/);
     expect(kilde).toMatch(/flateEtterMagicLinkLanding/);
     expect(kilde).toMatch(/totpKlar/);
     expect(kilde).not.toMatch(/document\.cookie/);
     expect(kilde).not.toMatch(/lesTotpVindu/);
+  });
+
+  it('Bytt konto tømmer HttpOnly-kaker og full-laster epost-flaten', () => {
+    expect(kilde).toMatch(/async function byttKonto/);
+    expect(kilde).toMatch(/location\.assign\(SIGNIN_STI\)/);
+    expect(kilde).toMatch(/signOut/);
   });
 
   it('venteskjerm fyrer ikke magic-link på mount — bare Fortsett / Send på nytt', () => {
@@ -200,15 +220,16 @@ describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', ()
 describe('signin-side: server leser HttpOnly-kaker etter verify', () => {
   const side = readFileSync(resolve(her, '../app/signin/page.tsx'), 'utf8');
 
-  it('force-dynamic + cookies — enroll-kake går til /2fa-oppsett', () => {
+  it('force-dynamic + cookies — enroll-307 bare etter denne verify, ikke ved valg/epost', () => {
     expect(side).toMatch(/force-dynamic/);
     expect(side).toMatch(/revalidate\s*=\s*0/);
     expect(side).toMatch(/fetchCache\s*=\s*['"]force-no-store['"]/);
     expect(side).toMatch(/cookies\(/);
+    expect(side).toMatch(/searchParams/);
     expect(side).toMatch(/harTotpVindu/);
     expect(side).toMatch(/harEnrollVindu/);
     expect(side).toMatch(/totpKlar/);
-    expect(side).toMatch(/redirect\((SIGNIN_ENROLL_STI|['"]\/2fa-oppsett['"])/);
+    expect(side).toMatch(/steg === ['"]valg['"]|steg !== ['"]valg['"]/);
   });
 });
 

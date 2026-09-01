@@ -5,6 +5,7 @@ import { deleteSessionCookie } from 'better-auth/cookies';
 import { BYTT_PASSORD_ETTER_HOOK_ID } from './bytt-passord.ts';
 import { createByttPassordEtterHook } from './bytt-passord-server.ts';
 import { byggEnrollIdentifier, ENROLL_COOKIE_MAX_AGE, ENROLL_COOKIE_NAME } from './enroll.ts';
+import { TWO_FACTOR_COOKIE_NAME } from './faktor-kaker.ts';
 import {
   MAGIC_LINK_CALLBACK,
   MAGIC_LINK_ENROLL_STI,
@@ -24,17 +25,22 @@ import {
  */
 export const MAGIC_LINK_2FA_HOOK_ID = 'magic-link-krever-totp';
 
-const TWO_FACTOR_COOKIE_NAME = 'two_factor';
 const TWO_FACTOR_COOKIE_MAX_AGE = 600;
 const AUTH_NO_STORE = 'private, no-store, no-cache, must-revalidate';
 
+export { TWO_FACTOR_COOKIE_NAME, utlopFaktorKaker } from './faktor-kaker.ts';
+
 export async function erTotpFaktiskBundet(
-  lesRad: (userId: string) => Promise<{ secret?: string | null } | null>,
+  lesRad: (userId: string) => Promise<{ secret?: string | null; verified?: boolean | null } | null>,
   user: { id: string; twoFactorEnabled?: boolean | null },
 ): Promise<boolean> {
   if (user.twoFactorEnabled !== true) return false;
   const rad = await lesRad(user.id);
-  return Boolean(rad?.secret);
+  if (!rad?.secret) return false;
+  // verifyTotp på sign-in kaster TOTP_NOT_ENABLED når verified === false
+  // (leftover enable() uten QR). Da er det enroll, ikke app-kode.
+  if (rad.verified === false) return false;
+  return true;
 }
 
 function merket<T extends object>(fn: T, id: string): T & { endwiseId: string } {
@@ -141,7 +147,7 @@ export const magicLink2faEtterHook = merket(
         return (await ctx.context.adapter.findOne({
           model: 'twoFactor',
           where: [{ field: 'userId', value: userId }],
-        })) as { secret?: string | null } | null;
+        })) as { secret?: string | null; verified?: boolean | null } | null;
       } catch {
         return null;
       }

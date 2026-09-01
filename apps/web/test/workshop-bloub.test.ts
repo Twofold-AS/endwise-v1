@@ -68,10 +68,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(css).toMatch(/ronny-blink/);
     expect(css).toMatch(/10s/);
     expect(css).toMatch(/ronny-spin/);
-    const sticky = fab.indexOf('data-workshop-sticky');
-    const label = fab.indexOf('La KI-Ronny ta styringen');
-    expect(sticky).toBeGreaterThan(-1);
-    expect(label).toBeGreaterThan(sticky);
+    expect(fab).toMatch(/data-workshop-sticky[\s\S]*La KI-Ronny ta styringen/);
   });
 
   it('chat-ruta tar imot sidekontekst-header', () => {

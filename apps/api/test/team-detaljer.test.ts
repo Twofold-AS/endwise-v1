@@ -2,7 +2,6 @@ import { createHash, randomUUID } from 'node:crypto';
 import { createDb, type Database, eq, schema, sql } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { appRouter } from '../src/trpc/router.ts';
-import { hashTeamBekreftelse, teamBekreftelseId } from '../src/trpc/routers/team-bekreftelse.ts';
 
 /**
  * Team-detalj: jobber, e-post, passordreset, 2FA-av med kode, slett.
@@ -162,16 +161,16 @@ describeDb('Team-detalj — adminhandlinger', () => {
     await expect(api.team.jobber({ userId: LEDER })).rejects.toThrow(
       /dealer_staff|FORBIDDEN|kan ikke/i,
     );
-    await expect(api.team.endreEpost({ userId: LEDER, epost: 'x@test.invalid' })).rejects.toThrow(
-      /dealer_staff|FORBIDDEN|kan ikke/i,
-    );
+    await expect(
+      api.team.endreEpost({ userId: LEDER, epost: 'x@test.invalid', totp: '123456' }),
+    ).rejects.toThrow(/dealer_staff|FORBIDDEN|kan ikke/i);
     await expect(api.team.sendPassordendring({ userId: LEDER })).rejects.toThrow(
       /dealer_staff|FORBIDDEN|kan ikke/i,
     );
     await expect(api.team.slaAv2faStart({ userId: LEDER })).rejects.toThrow(
       /dealer_staff|FORBIDDEN|kan ikke/i,
     );
-    await expect(api.team.slaAv2fa({ userId: LEDER, kode: '123456' })).rejects.toThrow(
+    await expect(api.team.slaAv2fa({ userId: LEDER, totp: '123456' })).rejects.toThrow(
       /dealer_staff|FORBIDDEN|kan ikke/i,
     );
     await expect(api.team.fjern({ userId: LEDER })).rejects.toThrow(
@@ -179,35 +178,36 @@ describeDb('Team-detalj — adminhandlinger', () => {
     );
   });
 
-  it('leder endrer lagret e-post uten å lage ny identitet', async () => {
+  it('⛔ leder kan ikke endre e-post uten fersk TOTP', async () => {
     const api = appRouter.createCaller(ctx(LEDER, 'dealer_admin'));
     const ny = `kari-${tenantA.slice(0, 8)}@verksted.test`;
-    const res = await api.team.endreEpost({ userId: ANSATT, epost: ny });
-    expect(res.epost).toBe(ny);
+    await expect(api.team.endreEpost({ userId: ANSATT, epost: ny, totp: '000000' })).rejects.toThrow(
+      /fersk kode|FORBIDDEN|TOTP/i,
+    );
     const [rad] = await owner
       .select({ id: schema.user.id, email: schema.user.email })
       .from(schema.user)
       .where(eq(schema.user.id, ANSATT));
-    expect(rad?.id).toBe(ANSATT);
-    expect(rad?.email).toBe(ny);
+    expect(rad?.email).toBe(`${ANSATT}@test.invalid`);
   });
 
   it('⛔ leder i tenant B kan ikke endre e-post i tenant A', async () => {
     const api = appRouter.createCaller(ctx(NABO, 'dealer_admin', tenantB));
     await expect(
-      api.team.endreEpost({ userId: ANSATT, epost: 'stjelt@test.invalid' }),
+      api.team.endreEpost({ userId: ANSATT, epost: 'stjelt@test.invalid', totp: '123456' }),
     ).rejects.toThrow(/ikke medlem|NOT_FOUND|finner ikke/i);
   });
 
-  it('2FA-av uten kode avvises, feil kode avvises, riktig kode slår av', async () => {
+  it('2FA-av uten fersk TOTP avvises — e-postkode teller ikke', async () => {
     const api = appRouter.createCaller(ctx(LEDER, 'dealer_admin'));
-    await expect(api.team.slaAv2fa({ userId: ANSATT, kode: '000000' })).rejects.toThrow(
-      /kode|bekreft/i,
+    await expect(api.team.slaAv2fa({ userId: ANSATT, totp: '000000' })).rejects.toThrow(
+      /fersk kode|FORBIDDEN|TOTP/i,
     );
 
-    await api.team.slaAv2faStart({ userId: ANSATT });
-    await expect(api.team.slaAv2fa({ userId: ANSATT, kode: '000000' })).rejects.toThrow(
-      /kode|ugyldig/i,
+    const start = await api.team.slaAv2faStart({ userId: ANSATT });
+    expect(start.kreverTotp).toBe(true);
+    await expect(api.team.slaAv2fa({ userId: ANSATT, totp: '000000' })).rejects.toThrow(
+      /fersk kode|FORBIDDEN|TOTP/i,
     );
 
     const [etterFeil] = await owner
@@ -215,30 +215,6 @@ describeDb('Team-detalj — adminhandlinger', () => {
       .from(schema.user)
       .where(eq(schema.user.id, ANSATT));
     expect(etterFeil?.on).toBe(true);
-
-    const ident = teamBekreftelseId(tenantA, LEDER, ANSATT);
-    await owner.delete(schema.verification).where(eq(schema.verification.identifier, ident));
-    await owner.insert(schema.verification).values({
-      id: randomUUID(),
-      identifier: ident,
-      value: hashTeamBekreftelse('654321'),
-      expiresAt: new Date(Date.now() + 5 * 60_000),
-    });
-
-    const ok = await api.team.slaAv2fa({ userId: ANSATT, kode: '654321' });
-    expect(ok.twoFactorEnabled).toBe(false);
-
-    const [etter] = await owner
-      .select({ on: schema.user.twoFactorEnabled })
-      .from(schema.user)
-      .where(eq(schema.user.id, ANSATT));
-    expect(etter?.on).toBe(false);
-
-    const [tf] = await owner
-      .select({ id: schema.twoFactor.id })
-      .from(schema.twoFactor)
-      .where(eq(schema.twoFactor.userId, ANSATT));
-    expect(tf).toBeUndefined();
   });
 
   it('hash av bekreftelseskode er SHA-256, aldri åpen tekst', () => {

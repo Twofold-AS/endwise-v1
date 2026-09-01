@@ -30,6 +30,8 @@ describe('F1-27: e-postbytte er to steg i UI-et', () => {
     expect(skjema).not.toMatch(/Gjeldende passord|type=['"]password['"]/);
     expect(skjema).not.toMatch(/updateUser/);
     expect(skjema).toMatch(/Send bekreftelse/);
+    expect(skjema).toMatch(/bytt-epost-totp/);
+    expect(skjema).toMatch(/App-kode/);
   });
 
   it('bekreftelsessiden kaller verifyEmail og aldri updateUser', () => {

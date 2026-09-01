@@ -146,21 +146,17 @@ describe('F1-16: hvor resetlenka havner', () => {
     return import('../src/senders/resend.ts');
   }
 
-  it('DEV uten Resend: lenka skrives til serverloggen, ingen e-post', async () => {
+  it('⛔ sendPasswordReset er stengt', async () => {
     process.env.NODE_ENV = 'development';
     process.env.RESEND_API_KEY = '';
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
     const { sendPasswordReset } = await last();
-    await sendPasswordReset({
-      to: 'mikkis@twofold.no',
-      lenke: 'https://endwise.test/nytt-passord?token=hemmelig-token',
-      utloper: new Date(),
-    });
-
-    const utskrift = warn.mock.calls.flat().join('\n');
-    expect(utskrift).toContain('hemmelig-token');
-    expect(utskrift).toContain('KUN DEV');
+    await expect(
+      sendPasswordReset({
+        to: 'mikkis@twofold.no',
+        lenke: 'https://endwise.test/nytt-passord?token=hemmelig-token',
+        utloper: new Date(),
+      }),
+    ).rejects.toThrow(/Passordreset er stengt/);
   });
 
   /**
@@ -168,21 +164,17 @@ describe('F1-16: hvor resetlenka havner', () => {
    * alene være nok til at en resetlenke havner i en driftslogg. Lenka er
    * nøkkelen til kontoen.
    */
-  it('⛔ DEV MED Resend konfigurert: lenka skrives IKKE til loggen', async () => {
+  it('⛔ DEV MED Resend: sender fortsatt ikke — funksjonen er stengt', async () => {
     process.env.NODE_ENV = 'development';
     process.env.RESEND_API_KEY = 'test-nokkel';
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
     const { sendPasswordReset } = await last();
-    await sendPasswordReset({
-      to: 'mikkis@twofold.no',
-      lenke: 'https://endwise.test/nytt-passord?token=hemmelig-token',
-      utloper: new Date(),
-    }).catch(() => {
-      // Resend svarer ikke i test; det er selve loggingen som prøves her.
-    });
-
-    expect(warn.mock.calls.flat().join('\n')).not.toContain('hemmelig-token');
+    await expect(
+      sendPasswordReset({
+        to: 'mikkis@twofold.no',
+        lenke: 'https://endwise.test/nytt-passord?token=hemmelig-token',
+        utloper: new Date(),
+      }),
+    ).rejects.toThrow(/Passordreset er stengt/);
   });
 });
 

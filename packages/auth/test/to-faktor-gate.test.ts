@@ -26,12 +26,13 @@ describe('F1-11: regelen (uten database)', () => {
     // dealer_staff. Testen låser fasiten, så et framtidig tillegg til
     // rolle-listen ikke stille faller utenfor kravet.
     expect([...ROLES_REQUIRING_2FA].sort()).toEqual([
+      'customer',
       'dealer_admin',
       'dealer_staff',
       'endwise_admin',
       'endwise_support',
     ]);
-    expect(roleRequires2FA('customer')).toBe(false);
+    expect(roleRequires2FA('customer')).toBe(true);
   });
 
   it('⛔ avviser 2FA-pliktig rolle UTEN 2FA', () => {
@@ -56,10 +57,10 @@ describe('F1-11: regelen (uten database)', () => {
     ).not.toThrow();
   });
 
-  it('slipper gjennom `customer` uten 2FA — kunder skal ikke tvinges', () => {
+  it('⛔ `customer` med Endwise-innlogging krever TOTP', () => {
     expect(() =>
       assertTwoFactorSatisfied({ roles: ['customer'], twoFactorEnabled: false }),
-    ).not.toThrow();
+    ).toThrow(TwoFactorRequiredError);
   });
 
   /**
@@ -167,8 +168,10 @@ describeDb('F1-11: håndhevelse mot ekte medlemskap', () => {
     );
   });
 
-  it('customer uten 2FA slipper gjennom', async () => {
-    await expect(assertTwoFactorForUser(owner, kundeUser, false)).resolves.toBeUndefined();
+  it('⛔ customer uten 2FA får IKKE en autorisert sesjon', async () => {
+    await expect(assertTwoFactorForUser(owner, kundeUser, false)).rejects.toBeInstanceOf(
+      TwoFactorRequiredError,
+    );
   });
 
   it('⛔ kunde hos A + admin hos B blir stoppet — rollen hos B teller', async () => {

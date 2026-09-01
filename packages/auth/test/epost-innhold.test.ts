@@ -170,15 +170,17 @@ describe('engangskode-e-posten', () => {
   beforeEach(() => {
     process.env.NODE_ENV = 'test';
     process.env.RESEND_API_KEY = 'test-nokkel';
-    process.env.RESEND_FROM = 'Endwise <no-reply@no-reply.endwise.no>';
+    process.env.RESEND_FROM = 'Endwise <noreply@endwise.no>';
   });
 
-  /**
-   * Koden MÅ finnes i tekstdelen også. En engangskode som bare står i
-   * HTML-en, finnes ikke for den som leser i ren tekst — og det er nettopp
-   * den brukeren som ikke får logget inn og ikke skjønner hvorfor.
-   */
-  it('⛔ sender BÅDE html og ren tekst, med koden i begge', async () => {
+  it('⛔ sendTwoFactorOtp er stengt — ingen e-post-OTP', async () => {
+    const { sendTwoFactorOtp } = await last();
+    await expect(sendTwoFactorOtp('mikkis@twofold.no', '482913')).rejects.toThrow(
+      /ikke andre faktor/,
+    );
+  });
+
+  it('⛔ sendBekreftelseskode bruker kanonisk From og escaper', async () => {
     const sendt: Record<string, unknown>[] = [];
     vi.doMock('resend', () => ({
       Resend: class {
@@ -191,21 +193,15 @@ describe('engangskode-e-posten', () => {
       },
     }));
 
-    const { sendTwoFactorOtp } = await last();
-    await sendTwoFactorOtp('mikkis@twofold.no', '482913');
+    const { sendBekreftelseskode } = await last();
+    await sendBekreftelseskode('mikkis@twofold.no', '482913');
 
     expect(sendt).toHaveLength(1);
-    const p = sendt[0] as { text: string; html: string; subject: string; attachments?: unknown[] };
+    const p = sendt[0] as { from: string; text: string; html: string; subject: string };
+    expect(p.from).toBe('Endwise <noreply@endwise.no>');
     expect(p.text).toContain('482913');
     expect(p.html).toContain('482913');
-    // Emnefeltet bærer koden, så den kan leses fra varselet uten å åpne.
     expect(p.subject).toContain('482913');
-    // Logoen skal følge med som inline vedlegg.
-    expect(p.attachments).toHaveLength(1);
-    expect(p.attachments?.[0]).toMatchObject({
-      contentId: LOGO_EPOST_CID,
-      contentType: 'image/png',
-    });
     vi.doUnmock('resend');
   });
 
@@ -247,36 +243,18 @@ describe('passordreset-e-posten (F1-16)', () => {
   beforeEach(() => {
     process.env.NODE_ENV = 'test';
     process.env.RESEND_API_KEY = 'test-nokkel';
-    process.env.RESEND_FROM = 'Endwise <no-reply@no-reply.endwise.no>';
+    process.env.RESEND_FROM = 'Endwise <noreply@endwise.no>';
   });
 
-  it('skriver utløp i Europe/Oslo, ikke UTC', async () => {
-    const sendt: Record<string, unknown>[] = [];
-    vi.doMock('resend', () => ({
-      Resend: class {
-        emails = {
-          send: async (payload: Record<string, unknown>) => {
-            sendt.push(payload);
-            return { data: { id: 'x' }, error: null };
-          },
-        };
-      },
-    }));
-
+  it('⛔ sendPasswordReset er stengt', async () => {
     const { sendPasswordReset } = await last();
-    await sendPasswordReset({
-      to: 'mikkis@twofold.no',
-      lenke: 'https://endwise.no/nytt-passord?token=eksempel',
-      utloper: new Date('2026-08-29T05:46:00.000Z'),
-    });
-
-    expect(sendt).toHaveLength(1);
-    const p = sendt[0] as { text: string; html: string };
-    expect(p.text).toContain('gyldig til kl. 07:46');
-    expect(p.html).toContain('gyldig til kl. 07:46');
-    expect(p.text).not.toContain('gyldig til kl. 05:46');
-    expect(p.html).not.toContain('gyldig til kl. 05:46');
-    vi.doUnmock('resend');
+    await expect(
+      sendPasswordReset({
+        to: 'mikkis@twofold.no',
+        lenke: 'https://endwise.no/nytt-passord?token=eksempel',
+        utloper: new Date('2026-08-29T05:46:00.000Z'),
+      }),
+    ).rejects.toThrow(/Passordreset er stengt/);
   });
 });
 
@@ -289,7 +267,7 @@ describe('invitasjons-e-posten (F1-10)', () => {
   beforeEach(() => {
     process.env.NODE_ENV = 'test';
     process.env.RESEND_API_KEY = 'test-nokkel';
-    process.env.RESEND_FROM = 'Endwise <no-reply@no-reply.endwise.no>';
+    process.env.RESEND_FROM = 'Endwise <noreply@endwise.no>';
   });
 
   it('sender HTML med cid-logo og knappen «Åpne invitasjonen»', async () => {
@@ -317,8 +295,12 @@ describe('invitasjons-e-posten (F1-10)', () => {
     expect(sendt).toHaveLength(1);
     const p = sendt[0] as { text: string; html: string; subject: string; attachments?: unknown[] };
     expect(p.subject).toBe('Du er invitert til Verksted A i Endwise');
+    expect((p as { from?: string }).from).toBe('Endwise <noreply@endwise.no>');
     expect(p.text).toContain('https://endwise.no/invitasjon/eksempel');
+    expect(p.text).toMatch(/godta invitasjonen og logge inn/);
+    expect(p.text).not.toMatch(/sett passord/i);
     expect(p.html).toContain('Åpne invitasjonen');
+    expect(p.html).not.toMatch(/sett passord/i);
     expect(p.html).toContain(`src="cid:${LOGO_EPOST_CID}"`);
     expect(p.html).not.toContain('src="data:');
     expect(p.attachments).toHaveLength(1);
@@ -327,5 +309,17 @@ describe('invitasjons-e-posten (F1-10)', () => {
       contentType: 'image/png',
     });
     vi.doUnmock('resend');
+  });
+
+  it('⛔ sendEmail avviser klient-From', async () => {
+    const { sendEmail } = await last();
+    await expect(
+      sendEmail({
+        to: 'a@b.no',
+        subject: 's',
+        text: 't',
+        from: 'Hacker <evil@evil.no>',
+      } as never),
+    ).rejects.toThrow(/from settes ikke/);
   });
 });

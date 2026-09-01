@@ -55,8 +55,7 @@ describe('F6-26 — avsenderdomenet', () => {
   });
 
   it('⛔ standard-avsenderen er faktisk et verifisert domene', () => {
-    // Er den ikke det, feiler hver e-post i et miljø uten RESEND_FROM.
-    expect(avsenderErVerifisert(`Endwise <no-reply@${TOOLKIT_STANDARD}>`)).toBe(true);
+    expect(avsenderErVerifisert(`Endwise <noreply@${TOOLKIT_STANDARD}>`)).toBe(true);
   });
 });
 
@@ -79,9 +78,15 @@ describeDb('F6-26 — utgående melding fra innboksen', () => {
       email: `${ansatt}@test.no`,
       emailVerified: true,
     });
+    await owner.insert(schema.customers).values({
+      tenantId: tenant,
+      name: 'Kari Kunde',
+      email: KUNDE_EPOST,
+    });
   });
 
   afterAll(async () => {
+    await owner.delete(schema.customers).where(eq(schema.customers.tenantId, tenant));
     await owner.delete(schema.user).where(eq(schema.user.id, ansatt));
     await owner.delete(schema.tenants).where(eq(schema.tenants.id, tenant));
   });
@@ -312,5 +317,38 @@ describeDb('F6-26 — utgående melding fra innboksen', () => {
         readerId: `fremmed-${randomUUID()}`,
       }),
     ).rejects.toThrow(/ikke deltaker/i);
+  });
+
+  it('⛔ e-posttråd til ukjent adresse avvises — ingen vilkårlig to', async () => {
+    const { kanal, kall } = lagKanal();
+    const modul = createMessagesModule(app, { epost: kanal });
+    await expect(
+      modul.createThread({
+        tenantId: tenant,
+        kind: 'customer_dealer',
+        subject: 'Spam',
+        channel: 'email',
+        externalRef: 'hvem-som-helst@evil.no',
+        participantIds: [ansatt],
+      }),
+    ).rejects.toThrow(/kjent kunde|UNKNOWN_INBOX/i);
+    expect(kall).toHaveLength(0);
+  });
+
+  it('⛔ postMessage ignorerer klient-to — sender bare thread.external_ref', async () => {
+    const { kanal, kall } = lagKanal();
+    const modul = createMessagesModule(app, { epost: kanal });
+    const traad = await nyEpostTraad(modul);
+    await modul.postMessage({
+      tenantId: tenant,
+      threadId: traad.id,
+      authorId: ansatt,
+      body: 'Hei',
+      externalRef: 'fremmed@evil.no',
+    });
+    expect(kall).toHaveLength(1);
+    expect(kall[0]?.to).toBe(KUNDE_EPOST);
+    expect(kall[0]?.to).not.toBe('fremmed@evil.no');
+    expect(kall[0]?.svarTil).toBe(`${ansatt}@test.no`);
   });
 });

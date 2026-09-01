@@ -217,8 +217,10 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
   it('passord og 2FA krever bekreftelse, 2FA krever kode, 2FA vises bare når den er på', () => {
     expect(detaljer).toMatch(/twoFactorEnabled/);
     expect(detaljer).toMatch(/Bekreft/);
-    expect(detaljer).toMatch(/kode|engangskode/i);
+    expect(detaljer).toMatch(/App-kode|autentikator-app/i);
+    expect(detaljer).toMatch(/totp/);
     expect(detaljer).not.toMatch(/slaAv2fa\(\{\s*userId/);
+    expect(detaljer).not.toMatch(/engangskode til din e-post/);
   });
 });
 

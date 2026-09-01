@@ -1,10 +1,12 @@
 import { sendInboxMessage } from '@endwise/auth';
 import {
   createMessagesModule,
+  erKjentKundeKontakt,
   NotAParticipantError,
   PlatformSupportInvalidTenantError,
   PlatformSupportNoDealerAdminError,
   PlatformSupportNotFoundError,
+  UkjentInnboksMottakerError,
   type UtgaaendeEpost,
 } from '@endwise/modules/messages';
 import { TRPCError } from '@trpc/server';
@@ -41,6 +43,9 @@ function toTRPCError(error: unknown): never {
     throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
   }
   if (error instanceof PlatformSupportNoDealerAdminError) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
+  }
+  if (error instanceof UkjentInnboksMottakerError) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
   }
   throw error;
@@ -85,17 +90,26 @@ export const messagesRouter = router({
         externalRef: z.string().max(320).optional(),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      meldinger(ctx.db).createThread({
+    .mutation(async ({ ctx, input }) => {
+      const ref = input.externalRef?.trim() || null;
+      if (ref && (input.channel === 'email' || input.channel === 'sms')) {
+        const kjent = await erKjentKundeKontakt(ctx.db, ctx.tenantId, ref);
+        if (!kjent) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Mottakeren er ikke en kjent kunde hos forhandleren.',
+          });
+        }
+      }
+      return meldinger(ctx.db).createThread({
         tenantId: ctx.tenantId,
         kind: input.kind,
         subject: input.subject,
         channel: input.channel,
-        externalRef: input.externalRef ?? null,
-        // Den som oppretter tråden er alltid med i den.
+        externalRef: ref,
         participantIds: [...new Set([...input.participantIds, ctx.userId])],
-      }),
-    ),
+      });
+    }),
 
   post: protectedProcedure
     .input(z.object({ threadId: z.uuid(), body: z.string().min(1).max(4000) }))

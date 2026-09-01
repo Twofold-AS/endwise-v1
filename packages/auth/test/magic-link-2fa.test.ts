@@ -37,6 +37,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(authKilde).toMatch(/magicLink\(/);
     expect(authKilde).toMatch(/generateToken:\s*async\s*\(\)\s*=>\s*genererMagicLinkKode/);
     expect(authKilde).not.toMatch(/otpOptions|sendOTP:\s*sendTwoFactorOtp/);
+    expect(authKilde).toMatch(/erProduktDestinasjon/);
   });
 
   it('callback tvinges til /signin — ingen klient-next', () => {
@@ -69,6 +70,8 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(MAGIC_LINK_ENROLL_STI).toBe('/2fa-oppsett');
     const hook = readFileSync(resolve(her, '../src/magic-link-2fa.ts'), 'utf8');
     expect(hook).toMatch(/deleteSessionCookie/);
+    expect(hook).toMatch(/setNewSession\(null\)/);
+    expect(hook).toMatch(/ENROLL_COOKIE_NAME/);
     expect(hook).toMatch(/twoFactorEnabled !== true/);
     expect(hook).toMatch(/MAGIC_LINK_ENROLL_STI/);
     expect(hook).toMatch(/MAGIC_LINK_TOTP_QUERY/);
@@ -79,6 +82,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(hook).toMatch(/BYTT_EPOST_STI/);
     expect(hook).toMatch(/twoFactorEnabled !== true/);
     expect(hook).toMatch(/TWO_FACTOR_REQUIRED/);
+    expect(hook).toMatch(/verifiserFerskTotpMotHemmelighet/);
   });
 
   it('0035 tømmer passord-hash, ikke TOTP', () => {
@@ -114,6 +118,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(oppsett).not.toMatch(/type=["']password["']/);
     expect(oppsett).not.toMatch(/sendOtp/);
     expect(oppsett).toMatch(/MAGIC_LINK_ENROLL_UTEN_SESJON/);
+    expect(oppsett).toMatch(/samme innboks/);
     expect(oppsett).not.toMatch(/Innloggingslenken må åpnes først/);
   });
 });

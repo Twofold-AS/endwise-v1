@@ -32,7 +32,8 @@ import { ROLES_REQUIRING_2FA } from './rbac.ts';
  * ville vært systematisk skjev, og skjev feil vei).
  * Ingen «husk enhet»
  * `trustDevice` tvinges til false på verify-totp / verify-backup-code.
- * Customer-rollen krever ikke 2FA — kjent restrisiko (Mons).
+ * Alle som har Endwise-innlogging krever TOTP, også customer.
+ * Widget-kunder uten app-innlogging får ingen konto her — vi lager den ikke.
  */
 
 export class TwoFactorRequiredError extends Error {
@@ -83,10 +84,9 @@ export function assertTwoFactorSatisfied(input: {
   roles: readonly string[];
   twoFactorEnabled: boolean | null | undefined;
 }): void {
-  const krever = rolesRequiring2FA(input.roles);
-  if (krever.length === 0) return;
   if (input.twoFactorEnabled === true) return;
-  throw new TwoFactorRequiredError(krever);
+  const krever = rolesRequiring2FA(input.roles);
+  throw new TwoFactorRequiredError(krever.length > 0 ? krever : ['login']);
 }
 
 /**

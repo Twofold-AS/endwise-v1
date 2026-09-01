@@ -37,6 +37,7 @@ export const BYTT_EPOST_GENERISK_MELDING = 'Kunne ikke be om e-postbytte.';
 export type ByttEpostInput = {
   nyEpost: string;
   bekreft: string;
+  totp?: string;
   passord?: string;
 };
 
@@ -66,6 +67,10 @@ export function validerByttEpost(input: ByttEpostInput): ByttEpostOk | ByttEpost
   if (nyEpost !== bekreft) {
     return { ok: false, feil: 'De to e-postadressene er ikke like.' };
   }
+  const totp = typeof input.totp === 'string' ? input.totp.replace(/\D/g, '') : '';
+  if (!/^\d{6}$/.test(totp)) {
+    return { ok: false, feil: 'Skriv en fersk kode fra autentikator-appen.' };
+  }
   return { ok: true, nyEpost };
 }
 
@@ -80,13 +85,18 @@ export function byttEpostLenke(token: string): string {
   return `${BEKREFT_EPOST_STI}?token=${encodeURIComponent(token)}`;
 }
 
-export function byttEpostKall(ok: ByttEpostOk): {
+export function byttEpostKall(
+  ok: ByttEpostOk,
+  totp?: string,
+): {
   newEmail: string;
   callbackURL: typeof BYTT_EPOST_CALLBACK;
+  totp?: string;
 } {
   return {
     newEmail: ok.nyEpost,
     callbackURL: BYTT_EPOST_CALLBACK,
+    ...(totp ? { totp } : {}),
   };
 }
 

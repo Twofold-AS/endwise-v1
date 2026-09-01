@@ -21,6 +21,7 @@ describe('P0: eksisterende bruker må gjennom 2FA ved invitasjon', () => {
 
   it('dealer_staff, dealer_admin og endwise_* krever 2FA', () => {
     expect(ROLES_REQUIRING_2FA).toEqual([
+      'customer',
       'dealer_admin',
       'dealer_staff',
       'endwise_admin',

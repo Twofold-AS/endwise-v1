@@ -14,6 +14,11 @@ import {
   TO_FAKTOR_VERIFY_TOTP_STI,
 } from './bytt-passord.ts';
 import { eierLasForHook } from './eier-las-server.ts';
+import {
+  enrollSesjonFraKake,
+  slettAndreSesjoner,
+  verifiserFerskTotpMotHemmelighet,
+} from './enroll-server.ts';
 import { MAGIC_LINK_BE_OM_STI, MAGIC_LINK_CALLBACK } from './magic-link.ts';
 import { slettEldreMagicLinkTokens } from './magic-link-tokens.ts';
 import { skriv2faDisableAudit } from './to-faktor-server.ts';
@@ -30,6 +35,8 @@ const KREDENTIAL_STIER = new Set([
   TO_FAKTOR_ENABLE_STI,
   TO_FAKTOR_DISABLE_STI,
   BYTT_EPOST_STI,
+  TO_FAKTOR_VERIFY_TOTP_STI,
+  TO_FAKTOR_VERIFY_BACKUP_STI,
 ]);
 
 function merket<T extends object>(fn: T, id: string): T & { endwiseId: string } {
@@ -75,15 +82,22 @@ export const byttPassordForHook = merket(
         code: 'TWO_FACTOR_DISABLE_FORBIDDEN',
       });
     }
+    if (ctx.path === TO_FAKTOR_ENABLE_STI) {
+      const enroll = await enrollSesjonFraKake(ctx);
+      if (!enroll) return;
+      return { context: { session: enroll } };
+    }
     if (ctx.path === TO_FAKTOR_VERIFY_TOTP_STI || ctx.path === TO_FAKTOR_VERIFY_BACKUP_STI) {
       const body = ctx.body;
       if (typeof body !== 'object' || body === null) return;
+      const enroll = await enrollSesjonFraKake(ctx);
       return {
         context: {
           body: {
             ...body,
             trustDevice: false,
           },
+          ...(enroll ? { session: enroll } : {}),
         },
       };
     }
@@ -118,6 +132,7 @@ export const byttPassordForHook = merket(
           code: 'TWO_FACTOR_REQUIRED',
         });
       }
+      await verifiserFerskTotpMotHemmelighet(ctx, session.user.id, ctx.body);
       return;
     }
     if (ctx.path !== BYTT_PASSORD_STI) return;
@@ -150,9 +165,25 @@ export function createByttPassordEtterHook(db?: Database) {
       if (erSkjultAuthFeilkode(feilkodeFraReturned(ctx.context.returned))) {
         throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
       }
-      if (ctx.path !== TO_FAKTOR_DISABLE_STI || !db) return;
       if (isAPIError(ctx.context.returned)) return;
       const userId = brukerIdFraHook(ctx);
+      if (
+        (ctx.path === TO_FAKTOR_VERIFY_TOTP_STI || ctx.path === TO_FAKTOR_VERIFY_BACKUP_STI) &&
+        userId
+      ) {
+        const token =
+          typeof ctx.context.session?.session?.token === 'string'
+            ? ctx.context.session.session.token
+            : typeof ctx.context.newSession?.session?.token === 'string'
+              ? ctx.context.newSession.session.token
+              : undefined;
+        try {
+          await slettAndreSesjoner(ctx, userId, token);
+        } catch (error) {
+          console.error('[auth] revokeOtherSessions etter TOTP feilet', error);
+        }
+      }
+      if (ctx.path !== TO_FAKTOR_DISABLE_STI || !db) return;
       if (!userId) return;
       try {
         await skriv2faDisableAudit(db, userId);

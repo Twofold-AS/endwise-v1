@@ -186,23 +186,7 @@ export default function ToFaktorOppsettPage() {
           <p className="text-center text-body text-fg-muted">{ingress}</p>
         </div>
 
-        {steg === 'app' && !sesjonLaster && !session?.user ? (
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
-            <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
-              {MAGIC_LINK_ENROLL_UTEN_SESJON}
-            </div>
-            <div className="px-1.5 pt-1 pb-1">
-              <a
-                href={SIGNIN_STI}
-                className="inline-flex h-control w-full items-center justify-center rounded-control bg-fg px-4 text-bg text-label"
-              >
-                Tilbake til innlogging
-              </a>
-            </div>
-          </div>
-        ) : null}
-
-        {steg === 'app' && (sesjonLaster || session?.user) ? (
+        {steg === 'app' ? (
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
             <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
               Vi lager en hemmelighet til Google Authenticator, 1Password eller tilsvarende. Ingen
@@ -222,6 +206,14 @@ export default function ToFaktorOppsettPage() {
               >
                 Start oppsett
               </StatefulButton>
+              {feil === MAGIC_LINK_ENROLL_UTEN_SESJON ? (
+                <a
+                  href={SIGNIN_STI}
+                  className="mt-2 inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label"
+                >
+                  Tilbake til innlogging
+                </a>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -283,7 +275,10 @@ export default function ToFaktorOppsettPage() {
             <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
               <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
                 <ClipboardList size={13} className="mt-px shrink-0" />
-                <span>Hver kode kan brukes én gang. Vi viser dem ikke igjen.</span>
+                <span>
+                  Hver kode kan brukes én gang. Vi viser dem ikke igjen. Ikke lagre dem i samme
+                  innboks som magic-lenken.
+                </span>
               </p>
               <ol className="grid grid-cols-1 gap-1.5 font-mono text-[13px] text-fg tabular-nums">
                 {koder.map((kodeTekst) => (

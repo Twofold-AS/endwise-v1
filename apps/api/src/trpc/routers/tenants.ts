@@ -4,7 +4,7 @@ import {
   createTenant,
   createTenantShell,
   sendInvitation,
-  sendTwoFactorOtp,
+  sendBekreftelseskode,
 } from '@endwise/auth';
 import { and, asc, desc, eq, schema, sql, withPlatformAdmin, withTenant } from '@endwise/db';
 import {
@@ -866,7 +866,7 @@ export const tenantsRouter = router({
         codeHash: hashSlettKode(kode),
         expiresAt: utloper,
       });
-      await sendTwoFactorOtp(epost, kode);
+      await sendBekreftelseskode(epost, kode);
       return { epost, utloper };
     }),
 

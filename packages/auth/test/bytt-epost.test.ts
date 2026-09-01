@@ -24,7 +24,7 @@ import {
 const GYLDIG = {
   nyEpost: 'ny@endwise.test',
   bekreft: 'ny@endwise.test',
-  passord: 'gammelt-passord-123',
+  totp: '482913',
 };
 
 const OPPRINNELIG = { ...process.env };
@@ -40,10 +40,11 @@ afterEach(() => {
 });
 
 describe('validerByttEpost', () => {
-  it('godtar gyldig adresse og trimmer/lowercaser — uten passord', () => {
+  it('godtar gyldig adresse og trimmer/lowercaser — uten passord, med TOTP', () => {
     const r = validerByttEpost({
       nyEpost: '  Ny@Endwise.TEST  ',
       bekreft: '  ny@endwise.test  ',
+      totp: '482913',
     });
     expect(r).toEqual({
       ok: true,
@@ -62,6 +63,12 @@ describe('validerByttEpost', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.feil).toMatch(/gyldig/i);
   });
+
+  it('⛔ uten fersk TOTP avvises', () => {
+    const r = validerByttEpost({ nyEpost: GYLDIG.nyEpost, bekreft: GYLDIG.bekreft });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.feil).toMatch(/fersk kode|autentikator/i);
+  });
 });
 
 describe('byttEpostKall', () => {
@@ -69,9 +76,10 @@ describe('byttEpostKall', () => {
     const ok = validerByttEpost(GYLDIG);
     expect(ok.ok).toBe(true);
     if (!ok.ok) return;
-    expect(byttEpostKall(ok)).toEqual({
+    expect(byttEpostKall(ok, '482913')).toEqual({
       newEmail: GYLDIG.nyEpost,
       callbackURL: BYTT_EPOST_CALLBACK,
+      totp: '482913',
     });
     expect(byttEpostKall(ok)).not.toHaveProperty('password');
     expect(byttEpostKall(ok)).not.toHaveProperty('email');
@@ -141,6 +149,7 @@ describe('F1-27: kilden bytter ikke e-post i ett steg', () => {
     expect(hook).toMatch(/getSessionFromCtx/);
     expect(hook).toMatch(/twoFactorEnabled !== true/);
     expect(hook).toMatch(/TWO_FACTOR_REQUIRED/);
+    expect(hook).toMatch(/verifiserFerskTotpMotHemmelighet/);
     expect(hook).not.toMatch(/checkPassword/);
   });
 });

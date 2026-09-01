@@ -24,6 +24,7 @@ import {
 } from './magic-link.ts';
 import { createAuthEtterHook } from './magic-link-2fa.ts';
 import { ac, roles } from './rbac.ts';
+import { erProduktDestinasjon } from './produkt-destinasjon.ts';
 import {
   sendByttEpostBekreftelse,
   sendByttEpostNyAdresse,
@@ -196,6 +197,12 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
         generateToken: async () => genererMagicLinkKode(),
         rateLimit: MAGIC_LINK_BE_OM_GRENSE,
         sendMagicLink: async ({ email, url, token }) => {
+          /**
+           * CWE-770 — klientens `email` er ikke en destinasjon.
+           * Resend fyrer bare hvis adressen allerede er en Endwise-bruker.
+           * Ukjent: stille return (samme 200, ingen enumerering).
+           */
+          if (!(await erProduktDestinasjon(db, email))) return;
           await sendMagicLink({
             to: email,
             lenke: url,

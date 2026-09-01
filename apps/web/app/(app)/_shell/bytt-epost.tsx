@@ -20,6 +20,7 @@ import { CardShell } from './cards';
 export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {
   const [nyEpost, setNyEpost] = useState('');
   const [bekreft, setBekreft] = useState('');
+  const [totp, setTotp] = useState('');
   const [feil, setFeil] = useState<string | null>(null);
   const [sendt, setSendt] = useState(false);
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -47,7 +48,7 @@ export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {
      * bare `newEmail` + `callbackURL` — feltet strippes i handleren, ikke
      * i `hooks.before`. `as never` er typen, ikke en snarvei rundt sjekken.
      */
-    const res = await authClient.changeEmail(byttEpostKall(sjekk) as never);
+    const res = await authClient.changeEmail(byttEpostKall(sjekk, totp.trim()) as never);
     if (res.error) {
       setBusy('error');
       setFeil(BYTT_EPOST_GENERISK_MELDING);
@@ -58,6 +59,7 @@ export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {
     setSendt(true);
     setNyEpost('');
     setBekreft('');
+    setTotp('');
   }
 
   return (
@@ -83,6 +85,20 @@ export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {
               value={bekreft}
               onChange={(e) => setBekreft(e.target.value)}
               className={`w-full ${INPUT}`}
+            />
+          </Field>
+          <Field id="bytt-epost-totp" label="App-kode">
+            <input
+              id="bytt-epost-totp"
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              required
+              value={totp}
+              onChange={(e) => setTotp(e.target.value.replace(/\D/g, ''))}
+              className={`w-full ${INPUT} font-mono tracking-[0.4em]`}
+              placeholder="••••••"
             />
           </Field>
           {feil && <p className="text-[12px] text-danger">{feil}</p>}

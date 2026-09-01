@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { createAuth, sendTwoFactorOtp } from '@endwise/auth';
+import {
+  authEnv,
+  TOTP_STEP_UP_MELDING,
+  verifiserFerskTotpForBruker,
+} from '@endwise/auth';
 import { and, desc, eq, gte, inArray, lt, schema, withTenant } from '@endwise/db';
 import {
   assertMedlemAvTenant,
@@ -19,13 +23,6 @@ import {
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, router, staffProcedure } from '../init.ts';
-import {
-  hashTeamBekreftelse,
-  kodeMatcher,
-  nyBekreftelseskode,
-  TEAM_BEKREFTELSE_TTL_MS,
-  teamBekreftelseId,
-} from './team-bekreftelse.ts';
 
 /** Ikke-ruterbar adresse når lederen ikke oppgir e-post. Aldri send dit. */
 const UTEN_INNLOGGING_SUFFIKS = '@uten-innlogging.invalid';
@@ -491,13 +488,24 @@ export const teamRouter = router({
    * på en ansatt i tenanten.
    */
   endreEpost: adminProcedure
-    .input(z.object({ userId: z.string().min(1), epost: z.email().max(200) }))
+    .input(
+      z.object({
+        userId: z.string().min(1),
+        epost: z.email().max(200),
+        totp: z.string().min(1).max(12),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       if (!kanEndreJobbfunksjon(ctx.role)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Bare forhandlerens leder kan endre e-post.',
         });
+      }
+      try {
+        await verifiserFerskTotpForBruker(ctx.db, ctx.userId, { totp: input.totp }, authEnv.secret);
+      } catch {
+        throw new TRPCError({ code: 'FORBIDDEN', message: TOTP_STEP_UP_MELDING });
       }
       await assertMedlem(ctx, input.userId);
       const epost = input.epost.trim().toLowerCase();
@@ -520,43 +528,19 @@ export const teamRouter = router({
     }),
 
   /**
-   * Trigger eksisterende Better-Auth passordreset mot den ansattes e-post.
+   * CWE-262 — passordreset er stengt. Innlogging er magic link.
    */
   sendPassordendring: adminProcedure
     .input(z.object({ userId: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      if (!kanEndreJobbfunksjon(ctx.role)) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Bare forhandlerens leder kan sende passordendring.',
-        });
-      }
-      const medlem = await assertMedlem(ctx, input.userId);
-      if (!medlem.epost || erUtenInnloggingEpost(medlem.epost)) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Personen har ingen e-post. Inviter hen hvis hen skal ha innlogging.',
-        });
-      }
-      const [konto] = await ctx.db
-        .select({ id: schema.account.id })
-        .from(schema.account)
-        .where(
-          and(eq(schema.account.userId, input.userId), eq(schema.account.providerId, 'credential')),
-        );
-      if (!konto) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Personen har ingen innlogging. Send en invitasjon i stedet.',
-        });
-      }
-      const auth = createAuth(ctx.db);
-      await auth.api.requestPasswordReset({ body: { email: medlem.epost } });
-      return { sendt: true };
+    .mutation(async () => {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Passordendring er stengt. Personen logger inn med magic link.',
+      });
     }),
 
   /**
-   * Steg 1: send engangskode til lederens e-post. Ingenting slås av her.
+   * Steg 1: sjekk at lederen kan slå av 2FA. Ingen e-postkode.
    */
   slaAv2faStart: adminProcedure
     .input(z.object({ userId: z.string().min(1) }))
@@ -574,34 +558,14 @@ export const teamRouter = router({
           message: '2FA er ikke på for denne personen.',
         });
       }
-      const [leder] = await ctx.db
-        .select({ email: schema.user.email })
-        .from(schema.user)
-        .where(eq(schema.user.id, ctx.userId));
-      if (!leder?.email || erUtenInnloggingEpost(leder.email)) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Vi fant ingen e-post å sende bekreftelseskoden til.',
-        });
-      }
-      const kode = nyBekreftelseskode();
-      const ident = teamBekreftelseId(ctx.tenantId, ctx.userId, input.userId);
-      await ctx.db.delete(schema.verification).where(eq(schema.verification.identifier, ident));
-      await ctx.db.insert(schema.verification).values({
-        id: randomUUID(),
-        identifier: ident,
-        value: hashTeamBekreftelse(kode),
-        expiresAt: new Date(Date.now() + TEAM_BEKREFTELSE_TTL_MS),
-      });
-      await sendTwoFactorOtp(leder.email, kode);
-      return { sendt: true };
+      return { kreverTotp: true };
     }),
 
   /**
-   * Steg 2: koden må stemme. Én klikk slår aldri av 2FA.
+   * Steg 2: fersk TOTP fra lederen. Aldri e-post-OTP (CWE-308).
    */
   slaAv2fa: adminProcedure
-    .input(z.object({ userId: z.string().min(1), kode: z.string().trim().min(4).max(12) }))
+    .input(z.object({ userId: z.string().min(1), totp: z.string().trim().min(4).max(12) }))
     .mutation(async ({ ctx, input }) => {
       if (!kanEndreJobbfunksjon(ctx.role)) {
         throw new TRPCError({
@@ -610,22 +574,11 @@ export const teamRouter = router({
         });
       }
       await assertMedlem(ctx, input.userId);
-      const ident = teamBekreftelseId(ctx.tenantId, ctx.userId, input.userId);
-      const [rad] = await ctx.db
-        .select({
-          id: schema.verification.id,
-          value: schema.verification.value,
-          expiresAt: schema.verification.expiresAt,
-        })
-        .from(schema.verification)
-        .where(eq(schema.verification.identifier, ident));
-      if (!rad || rad.expiresAt.getTime() < Date.now() || !kodeMatcher(rad.value, input.kode)) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Ugyldig eller utløpt bekreftelseskode. Be om en ny kode.',
-        });
+      try {
+        await verifiserFerskTotpForBruker(ctx.db, ctx.userId, { totp: input.totp }, authEnv.secret);
+      } catch {
+        throw new TRPCError({ code: 'FORBIDDEN', message: TOTP_STEP_UP_MELDING });
       }
-      await ctx.db.delete(schema.verification).where(eq(schema.verification.id, rad.id));
       await ctx.db
         .update(schema.user)
         .set({ twoFactorEnabled: false, updatedAt: new Date() })

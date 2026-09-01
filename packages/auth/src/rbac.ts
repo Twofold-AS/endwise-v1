@@ -100,6 +100,7 @@ export type Role = keyof typeof roles;
 
 /** Roller som alltid krever 2FA (F1-11 — ingen bypass). */
 export const ROLES_REQUIRING_2FA: readonly Role[] = [
+  'customer',
   'dealer_admin',
   'dealer_staff',
   'endwise_admin',

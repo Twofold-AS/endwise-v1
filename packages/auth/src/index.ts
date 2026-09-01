@@ -11,6 +11,7 @@ export * from './magic-link.ts';
 export * from './password-reset.ts';
 export * from './rbac.ts';
 export {
+  sendBekreftelseskode,
   sendByttEpostBekreftelse,
   sendByttEpostNyAdresse,
   sendEmail,
@@ -20,6 +21,15 @@ export {
   sendPasswordReset,
   sendTwoFactorOtp,
 } from './senders/resend.ts';
+export {
+  RESEND_FROM_KANONISK,
+  avsenderErKanonisk,
+  produktAvsender,
+} from './resend-avsender.ts';
+export { ENROLL_COOKIE_NAME, ENROLL_COOKIE_MAX_AGE } from './enroll.ts';
+export { TOTP_STEP_UP_KODE, TOTP_STEP_UP_MELDING, krevFerskTotpFraBody } from './totp-steg.ts';
+export { verifiserFerskTotpForBruker } from './totp-db.ts';
+export { erProduktDestinasjon } from './produkt-destinasjon.ts';
 export * from './session.ts';
 export * from './session-policy.ts';
 export { settPassordUtenSesjon } from './sett-passord.ts';

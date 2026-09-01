@@ -26,7 +26,6 @@ async function sendNotification(input: DispatchInput) {
     channels.push(
       createResendChannel({
         apiKey: process.env.RESEND_API_KEY,
-        from: process.env.RESEND_FROM,
       }),
     );
   }

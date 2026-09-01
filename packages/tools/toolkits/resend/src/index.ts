@@ -33,13 +33,24 @@ export function createResendChannel(config: {
    * i en Workflow-logg. Se `RESEND_VERIFISERTE_DOMENER` i `@endwise/auth` for
    * hvilke som er det, og hvorfor den lista er eksakt og ikke en subdomene-regel.
    */
-  const from = config.from || `Endwise <no-reply@${RESEND_STANDARD_DOMENE}>`;
+  const kanonisk = `Endwise <noreply@${RESEND_STANDARD_DOMENE}>`;
+  const from =
+    process.env.NODE_ENV === 'production'
+      ? kanonisk
+      : !config.from || config.from === kanonisk
+        ? kanonisk
+        : (() => {
+            throw new Error(`RESEND_FROM må være nøyaktig ${kanonisk}`);
+          })();
 
   return {
     kind: 'email',
     name: 'resend',
 
     async send(message: NotificationMessage): Promise<NotificationResult> {
+      if (from !== kanonisk) {
+        throw new Error(`From er ikke den kanoniske produktadressen (${kanonisk})`);
+      }
       const { data, error } = await client.emails.send({
         from,
         to: message.to,

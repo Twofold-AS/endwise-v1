@@ -4,6 +4,7 @@ import {
   desc,
   eq,
   inArray,
+  or,
   schema,
   sql,
   withPlatformAdmin,
@@ -12,6 +13,39 @@ import {
 import { erPlattformTenant } from '../plattform/index.ts';
 import { visningsnavn } from '../profil/index.ts';
 import { publishEvent } from '../stream/publisher.ts';
+
+/** Utgående e-post per forfatter per minutt. Sperrer åpen send. */
+export const INBOX_SEND_MAX_PER_MINUTT = 10;
+
+/** CWE-770 — innboks-to må være kjent kunde hos forhandleren. */
+export class UkjentInnboksMottakerError extends Error {
+  readonly code = 'UNKNOWN_INBOX_DESTINATION';
+  constructor() {
+    super('Mottakeren er ikke en kjent kunde hos forhandleren.');
+  }
+}
+
+export async function erKjentKundeKontakt(
+  db: Database,
+  tenantId: string,
+  ref: string,
+): Promise<boolean> {
+  const n = ref.trim();
+  if (!n) return false;
+  const [rad] = await withTenant(db, tenantId, (tx) =>
+    tx
+      .select({ id: schema.customers.id })
+      .from(schema.customers)
+      .where(
+        and(
+          eq(schema.customers.tenantId, tenantId),
+          or(eq(schema.customers.email, n), eq(schema.customers.phone, n)),
+        ),
+      )
+      .limit(1),
+  );
+  return Boolean(rad);
+}
 
 export class NotAParticipantError extends Error {
   readonly code = 'NOT_A_PARTICIPANT';
@@ -225,14 +259,41 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
 
     const [traad] = await withTenant(db, tenantId, (tx) =>
       tx
-        .select({ subject: schema.threads.subject })
+        .select({ subject: schema.threads.subject, externalRef: schema.threads.externalRef })
         .from(schema.threads)
         .where(eq(schema.threads.id, melding.threadId)),
     );
 
+    const mottaker = traad?.externalRef?.trim() ?? '';
+    if (!mottaker) {
+      await markerFeilet('Tråden har ingen kundeadresse å sende til.');
+      return;
+    }
+    if (!(await erKjentKundeKontakt(db, tenantId, mottaker))) {
+      await markerFeilet('Mottakeren er ikke en kjent kunde hos forhandleren.');
+      return;
+    }
+
+    const [teller] = await withTenant(db, tenantId, (tx) =>
+      tx
+        .select({ n: sql<number>`count(*)::int` })
+        .from(schema.messages)
+        .where(
+          and(
+            eq(schema.messages.authorId, melding.authorId),
+            eq(schema.messages.channel, 'email'),
+            sql`${schema.messages.createdAt} > now() - interval '1 minute'`,
+          ),
+        ),
+    );
+    if ((teller?.n ?? 0) > INBOX_SEND_MAX_PER_MINUTT) {
+      await markerFeilet('For mange e-poster. Vent ett minutt.');
+      return;
+    }
+
     try {
       const providerId = await kanaler.epost.send({
-        to: melding.externalRef ?? '',
+        to: mottaker,
         svarTil: avsender.epost,
         avsenderNavn: avsender.navn ?? 'Endwise',
         forhandler: forhandler?.navn ?? 'verkstedet',
@@ -282,6 +343,13 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       /** Kundens e-post/telefon i den eksterne kanalen. Kroken F6-16 henger på. */
       externalRef?: string | null;
     }) {
+      const kanal = input.channel ?? 'app';
+      const ref = input.externalRef?.trim() || null;
+      if ((kanal === 'email' || kanal === 'sms') && ref) {
+        if (!(await erKjentKundeKontakt(db, input.tenantId, ref))) {
+          throw new UkjentInnboksMottakerError();
+        }
+      }
       return withTenant(db, input.tenantId, async (tx) => {
         const [thread] = await tx
           .insert(schema.threads)
@@ -289,8 +357,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             tenantId: input.tenantId,
             kind: input.kind,
             subject: input.subject ?? null,
-            channel: input.channel ?? 'app',
-            externalRef: input.externalRef ?? null,
+            channel: kanal,
+            externalRef: ref,
           })
           .returning();
         if (!thread) throw new Error('Tråden ble ikke opprettet');
@@ -354,7 +422,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
          * å markere den `pending` for en levering som aldri kan skje.
          */
         const eksternKanal = input.channel ?? thread?.channel ?? 'app';
-        const mottaker = input.externalRef ?? thread?.externalRef ?? null;
+        /** Mottaker er alltid trådens external_ref — aldri klientens to. */
+        const mottaker = thread?.externalRef ?? null;
         const skalSendes =
           input.direction !== 'inbound' && eksternKanal === 'email' && Boolean(mottaker);
 

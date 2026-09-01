@@ -112,6 +112,7 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
   const utils = trpc.useUtils();
   const [redigerer, setRedigerer] = useState(false);
   const [epost, setEpost] = useState(rad.epost);
+  const [totp, setTotp] = useState('');
   const [funksjon, setFunksjon] = useState(rad.funksjon);
   const sett = trpc.team.setFunction.useMutation({
     onSuccess: () => {
@@ -170,7 +171,9 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
               const nesteEpost = epost.trim();
               const jobs: Promise<unknown>[] = [];
               if (nesteEpost && epostEndret) {
-                jobs.push(lagreEpost.mutateAsync({ userId: rad.userId, epost: nesteEpost }));
+                jobs.push(
+                  lagreEpost.mutateAsync({ userId: rad.userId, epost: nesteEpost, totp: totp.trim() }),
+                );
               }
               if (
                 rolleEndret &&
@@ -190,6 +193,20 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
                 className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               />
             </label>
+            {epostEndret ? (
+              <label className="flex flex-col gap-1">
+                <span className="text-[12px] text-fg-muted">App-kode</span>
+                <input
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={totp}
+                  onChange={(e) => setTotp(e.target.value.replace(/\D/g, ''))}
+                  className="h-control rounded-control border border-border bg-bg px-3 font-mono text-body text-fg tracking-[0.4em]"
+                  placeholder="••••••"
+                />
+              </label>
+            ) : null}
             <div className="flex flex-col gap-1">
               <span className="text-[12px] text-fg-muted">Rolle</span>
               {rad.kanEndres ? (
@@ -230,7 +247,7 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
               </button>
               <button
                 type="submit"
-                disabled={lagrer || (!epostEndret && !rolleEndret)}
+                disabled={lagrer || (!epostEndret && !rolleEndret) || (epostEndret && totp.length !== 6)}
                 className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
               >
                 {lagrer ? 'Lagrer …' : 'Lagre'}
@@ -327,14 +344,14 @@ function InnloggingNotat({ kan }: { kan: boolean }) {
 function SlaAv2fa({ userId, navn }: { userId: string; navn: string }) {
   const utils = trpc.useUtils();
   const [steg, setSteg] = useState<'lukket' | 'bekreft' | 'kode'>('lukket');
-  const [kode, setKode] = useState('');
+  const [totp, setTotp] = useState('');
   const start = trpc.team.slaAv2faStart.useMutation({
     onSuccess: () => setSteg('kode'),
   });
   const slaaAv = trpc.team.slaAv2fa.useMutation({
     onSuccess: () => {
       setSteg('lukket');
-      setKode('');
+      setTotp('');
       void utils.team.list.invalidate();
     },
   });
@@ -342,7 +359,7 @@ function SlaAv2fa({ userId, navn }: { userId: string; navn: string }) {
   return (
     <Seksjon tittel="Slå av 2FA">
       <p className="text-[12px] text-fg-muted">
-        2FA er på. Vi sender en engangskode til din e-post før noe slås av.
+        2FA er på. En fersk kode fra din autentikator-app kreves før noe slås av.
       </p>
       <button
         type="button"
@@ -357,7 +374,7 @@ function SlaAv2fa({ userId, navn }: { userId: string; navn: string }) {
             <>
               <DialogTitle className="text-title text-fg">Slå av 2FA for {navn}?</DialogTitle>
               <DialogDescription className="mt-2 text-body text-fg-muted">
-                Bekreft først. Deretter må du taste inn engangskoden vi sender til deg.
+                Bekreft først. Deretter må du taste inn en fersk kode fra autentikator-appen.
               </DialogDescription>
               {start.isError ? (
                 <p className="mt-2 text-[12px] text-danger">{start.error.message}</p>
@@ -376,24 +393,26 @@ function SlaAv2fa({ userId, navn }: { userId: string; navn: string }) {
                   onClick={() => start.mutate({ userId })}
                   className="h-control rounded-control bg-fg px-3 text-label text-bg disabled:opacity-40"
                 >
-                  {start.isPending ? 'Sender kode …' : 'Bekreft og send kode'}
+                  {start.isPending ? 'Sjekker …' : 'Bekreft og skriv kode'}
                 </button>
               </div>
             </>
           ) : (
             <>
-              <DialogTitle className="text-title text-fg">Skriv inn engangskoden</DialogTitle>
+              <DialogTitle className="text-title text-fg">Skriv inn app-koden</DialogTitle>
               <DialogDescription className="mt-2 text-body text-fg-muted">
-                Koden er sendt til din e-post. 2FA slås ikke av uten den.
+                En fersk kode fra din autentikator-app. 2FA slås ikke av uten den.
               </DialogDescription>
               <label className="mt-3 flex flex-col gap-1">
-                <span className="text-[12px] text-fg-muted">Bekreftelseskode</span>
+                <span className="text-[12px] text-fg-muted">App-kode</span>
                 <input
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  value={kode}
-                  onChange={(e) => setKode(e.target.value)}
-                  className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg"
+                  maxLength={6}
+                  value={totp}
+                  onChange={(e) => setTotp(e.target.value.replace(/\D/g, ''))}
+                  className="h-control rounded-control border border-border bg-bg px-3 font-mono text-body text-fg tracking-[0.4em]"
+                  placeholder="••••••"
                 />
               </label>
               {slaaAv.isError ? (
@@ -409,8 +428,8 @@ function SlaAv2fa({ userId, navn }: { userId: string; navn: string }) {
                 </button>
                 <button
                   type="button"
-                  disabled={slaaAv.isPending || kode.trim().length < 4}
-                  onClick={() => slaaAv.mutate({ userId, kode: kode.trim() })}
+                  disabled={slaaAv.isPending || totp.length !== 6}
+                  onClick={() => slaaAv.mutate({ userId, totp })}
                   className="h-control rounded-control bg-danger px-3 text-label text-white disabled:opacity-40"
                 >
                   {slaaAv.isPending ? 'Slår av …' : 'Slå av 2FA'}

@@ -1,4 +1,4 @@
-import { erTenantDestinasjon } from '@endwise/auth';
+import { erTenantDestinasjon, erTenantTelefonDestinasjon } from '@endwise/auth';
 import { createDb } from '@endwise/db';
 import { createDispatcher, type DispatchInput } from '@endwise/modules/notifications';
 import { createResendChannel } from '@endwise/toolkit-resend';
@@ -38,6 +38,7 @@ async function sendNotification(input: DispatchInput) {
         accountSid: process.env.TWILIO_ACCOUNT_SID,
         authToken: process.env.TWILIO_AUTH_TOKEN,
         from: process.env.TWILIO_FROM,
+        kanSendeTil: (to, tenantId) => erTenantTelefonDestinasjon(db, tenantId, to),
       }),
     );
   }

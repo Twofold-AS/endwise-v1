@@ -65,6 +65,7 @@ describe('F6-26 — avsenderdomenet', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const notify = readFileSync(resolve(her, '../src/workflows/notify.ts'), 'utf8');
     expect(notify).toMatch(/erTenantDestinasjon\(db, tenantId, to\)/);
+    expect(notify).toMatch(/erTenantTelefonDestinasjon\(db, tenantId, to\)/);
     expect(notify).not.toMatch(/erProduktDestinasjon|erAuthDestinasjon\(db, to\)/);
     expect(notify).toMatch(/kanSendeTil/);
     expect(notify).not.toMatch(/RESEND_FROM/);
@@ -75,6 +76,15 @@ describe('F6-26 — avsenderdomenet', () => {
     expect(toolkit).toMatch(/from settes ikke av kalleren/);
     expect(toolkit).toMatch(/kanSendeTil/);
     expect(toolkit).toMatch(/produkt-destinasjon/);
+    const twilio = readFileSync(
+      resolve(her, '../../../packages/tools/toolkits/twilio/src/index.ts'),
+      'utf8',
+    );
+    expect(twilio).toMatch(/to settes ikke av kalleren/);
+    expect(twilio).toMatch(/kanSendeTil/);
+    expect(twilio).toMatch(/stengtDest/);
+    expect(twilio).toMatch(/produkt-destinasjon/);
+    expect(twilio).toMatch(/tenantId er påkrevd/);
   });
 
   it('⛔ standard-avsenderen er faktisk et verifisert domene', () => {

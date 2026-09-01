@@ -1,4 +1,4 @@
-import { and, eq, isNull, or, sql, type Database, schema, withTenant } from '@endwise/db';
+import { and, type Database, eq, isNull, or, schema, sql, withTenant } from '@endwise/db';
 import { erEnkelEpost } from './resend-avsender.ts';
 
 /**
@@ -75,6 +75,72 @@ export async function erTenantDestinasjon(
           and(
             eq(schema.customers.tenantId, tenant),
             or(eq(schema.customers.email, norm), sql`lower(${schema.customers.email}) = ${norm}`),
+          ),
+        )
+        .limit(1),
+    );
+    return Boolean(kunde);
+  } catch {
+    return false;
+  }
+}
+
+function erEnkelTelefon(n: string): boolean {
+  const t = n.trim();
+  if (!t) return false;
+  if (/[\r\n,;]/.test(t)) return false;
+  if (!/\d/.test(t)) return false;
+  return t.length <= 20;
+}
+
+function telefonSiffer(n: string): string {
+  return n.replace(/\D/g, '');
+}
+
+/**
+ * Varsel-SMS (toolkit-twilio / notify).
+ * Tillatt: kjent kundenummer hos DENNE forhandleren, eller ansatt-telefon
+ * i samme tenant. Krever tenant-id. Tom tenant = nei.
+ * Aldri global `customers.phone`. Ikke auth/magic-link.
+ */
+export async function erTenantTelefonDestinasjon(
+  db: Database,
+  tenantId: string,
+  telefon: string,
+): Promise<boolean> {
+  const tenant = tenantId.trim();
+  const trimmet = telefon.trim();
+  if (!tenant || !erEnkelTelefon(trimmet)) return false;
+  const siffer = telefonSiffer(trimmet);
+  if (siffer.length < 8) return false;
+  try {
+    const [ansatt] = await db
+      .select({ id: schema.user.id })
+      .from(schema.user)
+      .innerJoin(schema.member, eq(schema.member.userId, schema.user.id))
+      .where(
+        and(
+          eq(schema.member.organizationId, tenant),
+          or(
+            eq(schema.user.phoneNumber, trimmet),
+            sql`regexp_replace(coalesce(${schema.user.phoneNumber}, ''), '[^0-9]', '', 'g') = ${siffer}`,
+          ),
+        ),
+      )
+      .limit(1);
+    if (ansatt) return true;
+
+    const [kunde] = await withTenant(db, tenant, (tx) =>
+      tx
+        .select({ id: schema.customers.id })
+        .from(schema.customers)
+        .where(
+          and(
+            eq(schema.customers.tenantId, tenant),
+            or(
+              eq(schema.customers.phone, trimmet),
+              sql`regexp_replace(coalesce(${schema.customers.phone}, ''), '[^0-9]', '', 'g') = ${siffer}`,
+            ),
           ),
         )
         .limit(1),

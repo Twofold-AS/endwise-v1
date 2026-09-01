@@ -1,5 +1,6 @@
 export * from './auth.ts';
 export { authPublicUrl, authTrustedOrigins, PRODUKT_ORIGINS } from './auth-origins.ts';
+export { ENROLL_COOKIE_MAX_AGE, ENROLL_COOKIE_NAME } from './enroll.ts';
 export {
   authEnv,
   avsenderDomene,
@@ -9,7 +10,18 @@ export {
 } from './env.ts';
 export * from './magic-link.ts';
 export * from './password-reset.ts';
+export {
+  erAuthDestinasjon,
+  erProduktDestinasjon,
+  erTenantDestinasjon,
+  erTenantTelefonDestinasjon,
+} from './produkt-destinasjon.ts';
 export * from './rbac.ts';
+export {
+  avsenderErKanonisk,
+  produktAvsender,
+  RESEND_FROM_KANONISK,
+} from './resend-avsender.ts';
 export {
   sendBekreftelseskode,
   sendByttEpostBekreftelse,
@@ -21,22 +33,11 @@ export {
   sendPasswordReset,
   sendTwoFactorOtp,
 } from './senders/resend.ts';
-export {
-  RESEND_FROM_KANONISK,
-  avsenderErKanonisk,
-  produktAvsender,
-} from './resend-avsender.ts';
-export { ENROLL_COOKIE_NAME, ENROLL_COOKIE_MAX_AGE } from './enroll.ts';
-export { TOTP_STEP_UP_KODE, TOTP_STEP_UP_MELDING, krevFerskTotpFraBody } from './totp-steg.ts';
-export { verifiserFerskTotpForBruker } from './totp-db.ts';
-export {
-  erAuthDestinasjon,
-  erProduktDestinasjon,
-  erTenantDestinasjon,
-} from './produkt-destinasjon.ts';
 export * from './session.ts';
 export * from './session-policy.ts';
 export { settPassordUtenSesjon } from './sett-passord.ts';
 export * from './tenant.ts';
 export { formaterKlokkeslett, PRODUKT_TIDSSONE } from './tid.ts';
+export { verifiserFerskTotpForBruker } from './totp-db.ts';
+export { krevFerskTotpFraBody, TOTP_STEP_UP_KODE, TOTP_STEP_UP_MELDING } from './totp-steg.ts';
 export * from './two-factor.ts';

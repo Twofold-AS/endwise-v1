@@ -30,4 +30,4 @@ Innlogget Vercel-preview av `/2fa-oppsett` krever enroll-kake; `/signin` kan vis
 
 ## 4. Neste steg
 
-Preview `/signin` og `/2fa-oppsett` på PR #105. Ikke merge.
+Preview verifisert på `dpl_FcJggwoxaCqNKH3zCxLkN5EHyDFU` (`2ee72b4`): `/signin?steg=valg` har Skriv kode manuelt + Bytt konto; `/2fa-oppsett` uten sesjon viser Start oppsett. Ikke merge.

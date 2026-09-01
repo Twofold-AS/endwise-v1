@@ -297,8 +297,8 @@ export async function sendMagicLink(input: {
     ].join('\n'),
     html: byggEpostHtml({
       tittel: 'Logg inn på Endwise',
-      ingress: `Lenken og koden er det samme engangsbeviset. Gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
-      innhold: `${knapp(input.lenke, 'Logg inn')}${kodeboks(kodeVisning)}`,
+      ingress: `Koden din er ${kodeVisning}. Trykk på knappen eller skriv den manuelt. Gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
+      innhold: `${kodeboks(kodeVisning)}<div style="height:16px"></div>${knapp(input.lenke, 'Logg inn')}`,
       fotnote,
     }),
   });

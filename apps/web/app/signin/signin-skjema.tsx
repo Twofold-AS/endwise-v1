@@ -15,17 +15,24 @@ import { trpc } from '@/lib/trpc';
 import { Field, INPUT } from '../_auth/felter';
 import { destinasjonNarSesjonFeiler } from '../invitasjon/_landing';
 import {
+  harTotpVindu,
   lagreIdentifisertEpost,
   lesIdentifisertEpost,
+  meldingForTotpFeil,
   SIGNIN_STI,
+  SIGNIN_VALG_BYTT_KONTO,
+  SIGNIN_VALG_LOGG_INN,
+  SIGNIN_VALG_SKRIV_KODE,
   SIGNIN_VALG_STI,
+  SIGNIN_VENT_TITTEL,
   signInFlateFraQuery,
   toemIdentifisertEpost,
 } from './signin-steg';
 
 /**
- * Etter e-post: to knapper. Lenka i e-posten og den manuelle koden er
- * samme engangsbevis. TOTP-app kommer først etter vellykket verify + enrollment.
+ * Etter e-post: venteskjerm (lenke i innboksen). Manuell kode er samme
+ * engangsbevis — ett felt, ikke to. TOTP-app kommer først etter verify
+ * av en bruker som allerede har bundet autentikator.
  */
 function feilmelding(res: {
   error?: { status?: number; code?: string; message?: string } | null;
@@ -45,6 +52,11 @@ function settStegIUrl(steg: 'valg' | null) {
   window.history.replaceState(null, '', dest);
 }
 
+function lesTotpVindu(): boolean {
+  if (typeof document === 'undefined') return false;
+  return harTotpVindu(document.cookie);
+}
+
 export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
   const utils = trpc.useUtils();
   const search = useSearchParams();
@@ -54,6 +66,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
   const [email, setEmail] = useState('');
   const [kode, setKode] = useState('');
   const [totp, setTotp] = useState('');
+  const [manuell, setManuell] = useState(false);
   const [error, setError] = useState<string | null>(() => meldingForMagicLinkFeil(feilQuery));
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const kodeRef = useRef<HTMLInputElement>(null);
@@ -65,7 +78,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
       setError(meldingForMagicLinkFeil(feilQuery));
       return;
     }
-    setFlate(signInFlateFraQuery(stegQuery));
+    setFlate(signInFlateFraQuery(stegQuery, { totpKlar: lesTotpVindu() }));
   }, [stegQuery, feilQuery]);
 
   useEffect(() => {
@@ -74,9 +87,9 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (flate === 'valg') kodeRef.current?.focus();
+    if (flate === 'valg' && manuell) kodeRef.current?.focus();
     if (flate === 'totp') totpRef.current?.focus();
-  }, [flate]);
+  }, [flate, manuell]);
 
   async function finishSignIn() {
     const orgs = await authClient.organization.list();
@@ -107,6 +120,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
       setBusy('error');
       return;
     }
+    setManuell(false);
     setFlate('valg');
     settStegIUrl('valg');
     setBusy('idle');
@@ -126,13 +140,26 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
 
   async function onTotp(e: FormEvent) {
     e.preventDefault();
+    if (!lesTotpVindu()) {
+      setError(meldingForTotpFeil({ code: 'TOTP_NOT_ENABLED' }));
+      setFlate('valg');
+      settStegIUrl('valg');
+      setBusy('idle');
+      return;
+    }
     setBusy('loading');
     setError(null);
     const res = await authClient.twoFactor.verifyTotp({ code: totp.trim() });
     if (res.error) {
-      setError(res.error.message ?? 'Feil eller utløpt kode');
-      setBusy('error');
+      const melding = meldingForTotpFeil(res.error);
+      setError(melding);
+      setBusy('idle');
       setTotp('');
+      if (melding.includes('ikke satt opp')) {
+        setFlate('valg');
+        settStegIUrl('valg');
+        return;
+      }
       totpRef.current?.focus();
       return;
     }
@@ -144,6 +171,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     setEmail('');
     setKode('');
     setTotp('');
+    setManuell(false);
     setError(null);
     setBusy('idle');
     setFlate('epost');
@@ -156,7 +184,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
       ? 'Logg inn på Endwise'
       : flate === 'totp'
         ? 'Bekreft med autentikator'
-        : 'Sjekk e-posten';
+        : SIGNIN_VENT_TITTEL /* Trykk på lenken i e-posten */;
 
   const ingress =
     flate === 'epost'
@@ -164,8 +192,8 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
       : flate === 'totp'
         ? 'Skriv den 6-sifrede koden fra autentikator-appen. Ikke en e-postkode.'
         : email
-          ? `Lenke sendt til ${email}. Åpne den nyeste e-posten, eller skriv koden derfra.`
-          : 'Åpne den nyeste e-posten, eller skriv koden derfra.';
+          ? `Vi sendte en innloggingslenke til ${email}. Åpne den nyeste e-posten.`
+          : 'Åpne den nyeste e-posten fra Endwise.';
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg px-4 text-fg">
@@ -240,7 +268,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
                 className="w-full"
                 loadingText="Sjekker koden…"
                 successText="Bekreftet"
-                errorText="Feil kode"
+                errorText="Prøv igjen"
                 icon={<ShieldCheck size={15} />}
               >
                 Bekreft
@@ -250,50 +278,70 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
                 onClick={() => void byttKonto()}
                 className="inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
               >
-                Bytt konto
+                {SIGNIN_VALG_BYTT_KONTO}
               </button>
             </div>
           </form>
         ) : (
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
-            <form
-              onSubmit={onSkrivKodeManuelt}
-              className="flex flex-col gap-3 rounded-lg bg-inset p-4"
-            >
-              <Field id="signin-magic-kode" label="Kode fra e-posten">
-                <input
-                  id="signin-magic-kode"
-                  ref={kodeRef}
-                  autoComplete="one-time-code"
-                  inputMode="text"
-                  value={kode}
-                  onChange={(ev) => setKode(ev.target.value.toUpperCase())}
-                  className={`${INPUT} text-center font-mono text-[16px] tracking-[0.2em] tabular-nums`}
-                  placeholder="XXXX-XXXX-XXXX"
-                />
-              </Field>
-              {error && (
-                <p className="text-[12px] text-danger">{error ?? MAGIC_LINK_ERSTATTET_MELDING}</p>
-              )}
-              <StatefulButton
-                type="submit"
-                state={busy}
-                className="w-full"
-                loadingText="Sjekker koden…"
-                successText="Bekreftet"
-                errorText="Prøv igjen"
-                icon={<ShieldCheck size={15} />}
+            {manuell ? (
+              <form
+                onSubmit={onSkrivKodeManuelt}
+                className="flex flex-col gap-3 rounded-lg bg-inset p-4"
               >
-                Skriv kode manuelt
-              </StatefulButton>
-            </form>
-            <div className="px-1.5 pb-1">
+                <Field id="signin-magic-kode" label="Kode fra e-posten">
+                  <input
+                    id="signin-magic-kode"
+                    ref={kodeRef}
+                    autoComplete="one-time-code"
+                    inputMode="text"
+                    value={kode}
+                    onChange={(ev) => setKode(ev.target.value.toUpperCase())}
+                    className={`${INPUT} text-center font-mono text-[16px] tracking-[0.2em] tabular-nums`}
+                    placeholder="ABCD-EFGH-IJKL"
+                  />
+                </Field>
+                {error && (
+                  <p className="text-[12px] text-danger">{error ?? MAGIC_LINK_ERSTATTET_MELDING}</p>
+                )}
+                <StatefulButton
+                  type="submit"
+                  state={busy}
+                  className="w-full"
+                  loadingText="Sjekker koden…"
+                  successText="Bekreftet"
+                  errorText="Prøv igjen"
+                  icon={<ShieldCheck size={15} />}
+                >
+                  {SIGNIN_VALG_LOGG_INN}
+                </StatefulButton>
+              </form>
+            ) : error ? (
+              <div className="rounded-lg bg-inset p-4">
+                <p className="text-[12px] text-danger">{error ?? MAGIC_LINK_ERSTATTET_MELDING}</p>
+              </div>
+            ) : null}
+            <div className="flex flex-col gap-2 px-1.5 pt-1 pb-1">
+              {!manuell && (
+                <StatefulButton
+                  type="button"
+                  state="idle"
+                  className="w-full"
+                  icon={<Mail size={15} />}
+                  onClick={() => {
+                    setManuell(true);
+                    setError(null);
+                  }}
+                >
+                  {SIGNIN_VALG_SKRIV_KODE}
+                </StatefulButton>
+              )}
               <button
                 type="button"
                 onClick={() => void byttKonto()}
                 className="inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
               >
-                Bytt konto
+                {SIGNIN_VALG_BYTT_KONTO}
               </button>
             </div>
           </div>

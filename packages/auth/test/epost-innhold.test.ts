@@ -173,6 +173,40 @@ describe('engangskode-e-posten', () => {
     process.env.RESEND_FROM = 'Endwise <noreply@endwise.no>';
   });
 
+  it('magic-link-e-posten er gammel OTP-stil: synlig kode + Logg inn, ikke TOTP', async () => {
+    const sendt: Record<string, unknown>[] = [];
+    vi.doMock('resend', () => ({
+      Resend: class {
+        emails = {
+          send: async (payload: Record<string, unknown>) => {
+            sendt.push(payload);
+            return { data: { id: 'x' }, error: null };
+          },
+        };
+      },
+    }));
+
+    const { sendMagicLink } = await last();
+    await sendMagicLink({
+      to: 'mikkis@twofold.no',
+      lenke: 'https://endwise.no/api/auth/magic-link/verify?token=ABCD',
+      kode: 'ABCDEFGH2345',
+      utloper: new Date('2026-09-01T19:00:00.000Z'),
+    });
+
+    expect(sendt).toHaveLength(1);
+    const p = sendt[0] as { from: string; text: string; html: string; subject: string };
+    expect(p.from).toBe('Endwise <noreply@endwise.no>');
+    expect(p.subject).toBe('Logg inn på Endwise');
+    expect(p.text).toMatch(/Kode:\s*ABCD-EFGH-2345/);
+    expect(p.html).toContain('ABCD-EFGH-2345');
+    expect(p.html).toContain('Logg inn');
+    expect(p.html).toContain('Koden din er');
+    expect(p.html).not.toMatch(/TOTP|app-kode|autentikator/i);
+    expect(p.text).not.toMatch(/TOTP|app-kode|autentikator/i);
+    vi.doUnmock('resend');
+  });
+
   it('⛔ sendTwoFactorOtp er stengt — ingen e-post-OTP', async () => {
     const { sendTwoFactorOtp } = await last();
     await expect(sendTwoFactorOtp('mikkis@twofold.no', '482913')).rejects.toThrow(

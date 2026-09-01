@@ -3,40 +3,89 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  harTotpVindu,
+  meldingForTotpFeil,
   SIGNIN_STI,
   SIGNIN_TOTP_STI,
   SIGNIN_VALG_BYTT_KONTO,
+  SIGNIN_VALG_LOGG_INN,
   SIGNIN_VALG_SKRIV_KODE,
   SIGNIN_VALG_STI,
+  SIGNIN_VENT_TITTEL,
   signInFlateFraQuery,
 } from '../app/signin/signin-steg.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
-describe('signin-steg: to knapper etter e-post', () => {
-  it('tom query er e-postflaten, valg og totp er egne flater', () => {
+describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
+  it('tom query er e-postflaten; totp uten kake er venteskjerm', () => {
     expect(signInFlateFraQuery(null)).toBe('epost');
     expect(signInFlateFraQuery('valg')).toBe('valg');
     expect(signInFlateFraQuery('sendt')).toBe('valg');
-    expect(signInFlateFraQuery('totp')).toBe('totp');
+    expect(signInFlateFraQuery('totp')).toBe('valg');
+    expect(signInFlateFraQuery('totp', { totpKlar: false })).toBe('valg');
+    expect(signInFlateFraQuery('totp', { totpKlar: true })).toBe('totp');
   });
 
-  it('kanoniske stier', () => {
+  it('two_factor-kake gjenkjennes, two_factor_enabled gjør det ikke', () => {
+    expect(harTotpVindu('endwise.two_factor=abc')).toBe(true);
+    expect(harTotpVindu('__Secure-endwise.two_factor=abc')).toBe(true);
+    expect(harTotpVindu('two_factor=abc')).toBe(true);
+    expect(harTotpVindu('endwise.session=x')).toBe(false);
+    expect(harTotpVindu('two_factor_enabled=1')).toBe(false);
+    expect(harTotpVindu('')).toBe(false);
+  });
+
+  it('TOTP-feil er norsk — aldri «TOTP not enabled»', () => {
+    expect(meldingForTotpFeil({ code: 'TOTP_NOT_ENABLED', message: 'TOTP not enabled' })).toMatch(
+      /Autentikator er ikke satt opp/,
+    );
+    expect(meldingForTotpFeil({ message: 'TOTP not enabled' })).not.toMatch(/TOTP not enabled/);
+    expect(meldingForTotpFeil({ message: 'wrong' })).toMatch(/app-kode/);
+  });
+
+  it('kanoniske stier og venteskjerm-tekst', () => {
     expect(SIGNIN_STI).toBe('/signin');
     expect(SIGNIN_VALG_STI).toBe('/signin?steg=valg');
     expect(SIGNIN_TOTP_STI).toBe('/signin?steg=totp');
+    expect(SIGNIN_VENT_TITTEL).toBe('Trykk på lenken i e-posten');
     expect(SIGNIN_VALG_SKRIV_KODE).toBe('Skriv kode manuelt');
     expect(SIGNIN_VALG_BYTT_KONTO).toBe('Bytt konto');
+    expect(SIGNIN_VALG_LOGG_INN).toBe('Logg inn');
   });
 });
 
-describe('signin-skjema: to knapper, ingen magiclink-knapp', () => {
+describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', () => {
   const kilde = readFileSync(resolve(her, '../app/signin/signin-skjema.tsx'), 'utf8');
 
-  it('har nøyaktig de to knappetekstene', () => {
-    expect(kilde).toContain('Skriv kode manuelt');
-    expect(kilde).toContain('Bytt konto');
+  it('venteskjerm etter Fortsett — heading og de to valgene', () => {
+    expect(kilde).toMatch(/SIGNIN_VENT_TITTEL|Trykk på lenken i e-posten/);
+    expect(kilde).toContain('SIGNIN_VALG_SKRIV_KODE');
+    expect(kilde).toContain('SIGNIN_VALG_BYTT_KONTO');
     expect(kilde).not.toMatch(/Logg inn med magiclink/);
+    expect(kilde).not.toMatch(/Sjekk e-posten/);
+  });
+
+  it('Skriv kode manuelt står ett sted — ikke gruppert felt + samme knapp', () => {
+    expect(kilde).toContain('setManuell(true)');
+    expect(kilde).toContain('SIGNIN_VALG_LOGG_INN');
+    expect(kilde).not.toMatch(/XXXX-XXXX-XXXX/);
+    expect(kilde).toMatch(/\{!manuell && \(/);
+  });
+
+  it('Fortsett går til valg, aldri totp — totp krever two_factor-kake', () => {
+    expect(kilde).toMatch(/setFlate\('valg'\)/);
+    expect(kilde).toMatch(/settStegIUrl\('valg'\)/);
+    expect(kilde).toMatch(/harTotpVindu|lesTotpVindu/);
+    expect(kilde).toMatch(/totpKlar:\s*lesTotpVindu\(\)/);
+    expect(kilde).not.toMatch(/setFlate\('totp'\)/);
+  });
+
+  it('ingen engelsk TOTP-feil og primærknapp er ikke Feil kode', () => {
+    expect(kilde).toMatch(/meldingForTotpFeil/);
+    expect(kilde).not.toMatch(/TOTP not enabled/);
+    expect(kilde).not.toMatch(/errorText=["']Feil kode["']/);
+    expect(kilde).toMatch(/errorText=["']Prøv igjen["']/);
   });
 
   it('manuell kode treffer samme verify-sti som e-postlenka', () => {

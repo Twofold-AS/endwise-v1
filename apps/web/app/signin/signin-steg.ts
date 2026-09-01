@@ -1,6 +1,8 @@
 /**
- * Innlogging etter identifisert e-post: to knapper.
+ * Innlogging etter identifisert e-post: venteskjerm, ikke TOTP-vegg.
  * Magic-lenka og den manuelle koden er samme engangsbevis.
+ * TOTP-flaten vises bare når Better-Auth allerede har satt two_factor-kaken
+ * (appen er bundet). Uenrollert lander aldri på «Bekreft med autentikator».
  */
 
 export const SIGNIN_STI = '/signin';
@@ -8,15 +10,41 @@ export const SIGNIN_VALG_STI = '/signin?steg=valg';
 export const SIGNIN_TOTP_STI = '/signin?steg=totp';
 export const SIGNIN_EPOST_KEY = 'endwise.signin.epost';
 
+export const SIGNIN_VENT_TITTEL = 'Trykk på lenken i e-posten';
 export const SIGNIN_VALG_SKRIV_KODE = 'Skriv kode manuelt';
 export const SIGNIN_VALG_BYTT_KONTO = 'Bytt konto';
+export const SIGNIN_VALG_LOGG_INN = 'Logg inn';
 
 export type SignInFlate = 'epost' | 'valg' | 'totp';
 
-export function signInFlateFraQuery(steg: string | null | undefined): SignInFlate {
-  if (steg === 'totp') return 'totp';
-  if (steg === 'valg' || steg === 'sendt') return 'valg';
+/**
+ * `steg=totp` i URL-en er ikke nok. Preview/historikk kan etterlate queryen
+ * etter Fortsett (replaceState oppdaterer ikke Next searchParams), og da
+ * må vi IKKE vise app-kode til noen som ikke har two_factor-kake.
+ */
+export function harTotpVindu(cookieHeader = ''): boolean {
+  return /(?:^|;\s*)(?:__Secure-|__Host-)?(?:endwise\.)?two_factor=/.test(cookieHeader);
+}
+
+export function signInFlateFraQuery(
+  steg: string | null | undefined,
+  opts?: { totpKlar?: boolean },
+): SignInFlate {
+  if (steg === 'totp' && opts?.totpKlar === true) return 'totp';
+  if (steg === 'valg' || steg === 'sendt' || steg === 'totp') return 'valg';
   return 'epost';
+}
+
+export function meldingForTotpFeil(error?: { code?: string; message?: string } | null): string {
+  const kode = error?.code ?? '';
+  const melding = error?.message ?? '';
+  if (kode === 'TOTP_NOT_ENABLED' || /TOTP not enabled/i.test(melding)) {
+    return 'Autentikator er ikke satt opp ennå. Trykk på lenken i e-posten først.';
+  }
+  if (kode === 'INVALID_TWO_FACTOR_COOKIE' || /invalid two factor cookie/i.test(melding)) {
+    return 'Sesjonen for app-koden er utløpt. Trykk på lenken i e-posten på nytt.';
+  }
+  return 'Feil eller utløpt app-kode. Prøv igjen.';
 }
 
 export function lagreIdentifisertEpost(epost: string): void {

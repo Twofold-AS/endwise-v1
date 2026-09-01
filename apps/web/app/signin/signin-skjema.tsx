@@ -15,17 +15,19 @@ import { trpc } from '@/lib/trpc';
 import { Field, INPUT } from '../_auth/felter';
 import { destinasjonNarSesjonFeiler } from '../invitasjon/_landing';
 import {
-  harTotpVindu,
+  flateEtterMagicLinkLanding,
   lagreIdentifisertEpost,
   lesIdentifisertEpost,
   meldingForTotpFeil,
+  SIGNIN_ENROLL_STI,
   SIGNIN_STI,
   SIGNIN_VALG_BYTT_KONTO,
   SIGNIN_VALG_LOGG_INN,
+  SIGNIN_VALG_SEND_NYTT,
   SIGNIN_VALG_SKRIV_KODE,
   SIGNIN_VALG_STI,
   SIGNIN_VENT_TITTEL,
-  signInFlateFraQuery,
+  type SignInFlate,
   toemIdentifisertEpost,
 } from './signin-steg';
 
@@ -52,34 +54,53 @@ function settStegIUrl(steg: 'valg' | null) {
   window.history.replaceState(null, '', dest);
 }
 
-function lesTotpVindu(): boolean {
-  if (typeof document === 'undefined') return false;
-  return harTotpVindu(document.cookie);
+function landingTilFlate(steg: string | null, feil: string | null, totpKlar: boolean): SignInFlate {
+  const neste = flateEtterMagicLinkLanding({
+    steg,
+    feil,
+    totpKlar,
+    enrollKlar: false,
+  });
+  return neste === 'enroll' ? 'valg' : neste;
 }
 
-export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
+export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totpKlar: boolean }) {
   const utils = trpc.useUtils();
   const search = useSearchParams();
   const stegQuery = search?.get('steg') ?? null;
   const feilQuery = search?.get('error') ?? null;
-  const [flate, setFlate] = useState(() => (feilQuery ? 'valg' : signInFlateFraQuery(stegQuery)));
+  const [flate, setFlate] = useState<SignInFlate>(() =>
+    landingTilFlate(stegQuery, feilQuery, totpKlar),
+  );
   const [email, setEmail] = useState('');
   const [kode, setKode] = useState('');
   const [totp, setTotp] = useState('');
   const [manuell, setManuell] = useState(false);
-  const [error, setError] = useState<string | null>(() => meldingForMagicLinkFeil(feilQuery));
+  const [error, setError] = useState<string | null>(() =>
+    totpKlar ? null : meldingForMagicLinkFeil(feilQuery),
+  );
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const kodeRef = useRef<HTMLInputElement>(null);
   const totpRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (feilQuery) {
-      setFlate('valg');
-      setError(meldingForMagicLinkFeil(feilQuery));
+    const neste = flateEtterMagicLinkLanding({
+      steg: stegQuery,
+      feil: feilQuery,
+      totpKlar,
+      enrollKlar: false,
+    });
+    if (neste === 'enroll') {
+      window.location.replace(SIGNIN_ENROLL_STI);
       return;
     }
-    setFlate(signInFlateFraQuery(stegQuery, { totpKlar: lesTotpVindu() }));
-  }, [stegQuery, feilQuery]);
+    setFlate(neste);
+    if (neste === 'totp') {
+      setError(null);
+      return;
+    }
+    if (feilQuery) setError(meldingForMagicLinkFeil(feilQuery));
+  }, [stegQuery, feilQuery, totpKlar]);
 
   useEffect(() => {
     const lagret = lesIdentifisertEpost();
@@ -104,9 +125,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     window.location.assign(landing ?? '/dashboard');
   }
 
-  async function onEpost(e: FormEvent) {
-    e.preventDefault();
-    const adresse = email.trim();
+  async function sendLenke(adresse: string) {
     setBusy('loading');
     setError(null);
     lagreIdentifisertEpost(adresse);
@@ -126,6 +145,22 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     setBusy('idle');
   }
 
+  async function onEpost(e: FormEvent) {
+    e.preventDefault();
+    await sendLenke(email.trim());
+  }
+
+  async function onSendPaNytt() {
+    const adresse = email.trim() || lesIdentifisertEpost();
+    if (!adresse) {
+      setError('Skriv e-posten til kontoen på nytt.');
+      setFlate('epost');
+      settStegIUrl(null);
+      return;
+    }
+    await sendLenke(adresse);
+  }
+
   function onSkrivKodeManuelt(e: FormEvent) {
     e.preventDefault();
     const token = normaliserMagicLinkKode(kode);
@@ -140,7 +175,7 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
 
   async function onTotp(e: FormEvent) {
     e.preventDefault();
-    if (!lesTotpVindu()) {
+    if (!totpKlar) {
       setError(meldingForTotpFeil({ code: 'TOTP_NOT_ENABLED' }));
       setFlate('valg');
       settStegIUrl('valg');
@@ -336,6 +371,13 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
                   {SIGNIN_VALG_SKRIV_KODE}
                 </StatefulButton>
               )}
+              <button
+                type="button"
+                onClick={() => void onSendPaNytt()}
+                className="inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
+              >
+                {SIGNIN_VALG_SEND_NYTT}
+              </button>
               <button
                 type="button"
                 onClick={() => void byttKonto()}

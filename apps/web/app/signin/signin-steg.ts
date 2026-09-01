@@ -8,14 +8,17 @@
 export const SIGNIN_STI = '/signin';
 export const SIGNIN_VALG_STI = '/signin?steg=valg';
 export const SIGNIN_TOTP_STI = '/signin?steg=totp';
+export const SIGNIN_ENROLL_STI = '/2fa-oppsett';
 export const SIGNIN_EPOST_KEY = 'endwise.signin.epost';
 
 export const SIGNIN_VENT_TITTEL = 'Trykk på lenken i e-posten';
 export const SIGNIN_VALG_SKRIV_KODE = 'Skriv kode manuelt';
 export const SIGNIN_VALG_BYTT_KONTO = 'Bytt konto';
 export const SIGNIN_VALG_LOGG_INN = 'Logg inn';
+export const SIGNIN_VALG_SEND_NYTT = 'Send på nytt';
 
 export type SignInFlate = 'epost' | 'valg' | 'totp';
+export type SignInEtterLenke = SignInFlate | 'enroll';
 
 /**
  * `steg=totp` i URL-en er ikke nok. Preview/historikk kan etterlate queryen
@@ -24,6 +27,27 @@ export type SignInFlate = 'epost' | 'valg' | 'totp';
  */
 export function harTotpVindu(cookieHeader = ''): boolean {
   return /(?:^|;\s*)(?:__Secure-|__Host-)?(?:endwise\.)?two_factor=/.test(cookieHeader);
+}
+
+export function harEnrollVindu(cookieHeader = ''): boolean {
+  return /(?:^|;\s*)(?:__Secure-|__Host-)?(?:endwise\.)?enroll_2fa=/.test(cookieHeader);
+}
+
+/**
+ * Etter magic-link-verify: HttpOnly-kaker (two_factor / enroll_2fa) er
+ * sannheten — ikke document.cookie og ikke error-query. Tokenet er allerede
+ * brukt. Venteskjerm her er løkken «lenken dreper seg selv».
+ */
+export function flateEtterMagicLinkLanding(input: {
+  steg?: string | null;
+  feil?: string | null;
+  totpKlar: boolean;
+  enrollKlar: boolean;
+}): SignInEtterLenke {
+  if (input.enrollKlar) return 'enroll';
+  if (input.totpKlar) return 'totp';
+  if (input.feil) return 'valg';
+  return signInFlateFraQuery(input.steg, { totpKlar: false });
 }
 
 export function signInFlateFraQuery(

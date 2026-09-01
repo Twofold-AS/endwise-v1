@@ -3,12 +3,15 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  flateEtterMagicLinkLanding,
+  harEnrollVindu,
   harTotpVindu,
   meldingForTotpFeil,
   SIGNIN_STI,
   SIGNIN_TOTP_STI,
   SIGNIN_VALG_BYTT_KONTO,
   SIGNIN_VALG_LOGG_INN,
+  SIGNIN_VALG_SEND_NYTT,
   SIGNIN_VALG_SKRIV_KODE,
   SIGNIN_VALG_STI,
   SIGNIN_VENT_TITTEL,
@@ -52,6 +55,54 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
     expect(SIGNIN_VALG_SKRIV_KODE).toBe('Skriv kode manuelt');
     expect(SIGNIN_VALG_BYTT_KONTO).toBe('Bytt konto');
     expect(SIGNIN_VALG_LOGG_INN).toBe('Logg inn');
+    expect(SIGNIN_VALG_SEND_NYTT).toBe('Send på nytt');
+  });
+
+  it('enroll-kake gjenkjennes separat fra two_factor', () => {
+    expect(harEnrollVindu('endwise.enroll_2fa=abc')).toBe(true);
+    expect(harEnrollVindu('__Secure-endwise.enroll_2fa=abc')).toBe(true);
+    expect(harEnrollVindu('enroll_2fa=abc')).toBe(true);
+    expect(harEnrollVindu('endwise.two_factor=abc')).toBe(false);
+    expect(harEnrollVindu('')).toBe(false);
+  });
+
+  it('klikk-landing: HttpOnly-kake slår venteskjerm og error-query', () => {
+    expect(flateEtterMagicLinkLanding({ steg: 'totp', totpKlar: true, enrollKlar: false })).toBe(
+      'totp',
+    );
+    expect(flateEtterMagicLinkLanding({ steg: null, totpKlar: true, enrollKlar: false })).toBe(
+      'totp',
+    );
+    expect(
+      flateEtterMagicLinkLanding({
+        steg: 'valg',
+        feil: 'INVALID_TOKEN',
+        totpKlar: true,
+        enrollKlar: false,
+      }),
+    ).toBe('totp');
+    expect(
+      flateEtterMagicLinkLanding({
+        steg: 'valg',
+        feil: 'INVALID_TOKEN',
+        totpKlar: false,
+        enrollKlar: true,
+      }),
+    ).toBe('enroll');
+    expect(
+      flateEtterMagicLinkLanding({
+        steg: 'totp',
+        totpKlar: false,
+        enrollKlar: false,
+      }),
+    ).toBe('valg');
+    expect(
+      flateEtterMagicLinkLanding({
+        feil: 'INVALID_TOKEN',
+        totpKlar: false,
+        enrollKlar: false,
+      }),
+    ).toBe('valg');
   });
 });
 
@@ -73,12 +124,26 @@ describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', ()
     expect(kilde).toMatch(/\{!manuell && \(/);
   });
 
-  it('Fortsett går til valg, aldri totp — totp krever two_factor-kake', () => {
+  it('Fortsett går til valg, aldri totp — totp krever server-lest two_factor-kake', () => {
     expect(kilde).toMatch(/setFlate\('valg'\)/);
     expect(kilde).toMatch(/settStegIUrl\('valg'\)/);
-    expect(kilde).toMatch(/harTotpVindu|lesTotpVindu/);
-    expect(kilde).toMatch(/totpKlar:\s*lesTotpVindu\(\)/);
-    expect(kilde).not.toMatch(/setFlate\('totp'\)/);
+    expect(kilde).toMatch(/flateEtterMagicLinkLanding/);
+    expect(kilde).toMatch(/totpKlar/);
+    expect(kilde).not.toMatch(/document\.cookie/);
+    expect(kilde).not.toMatch(/lesTotpVindu/);
+  });
+
+  it('venteskjerm fyrer ikke magic-link på mount — bare Fortsett / Send på nytt', () => {
+    const effekter = [...kilde.matchAll(/useEffect\(([\s\S]*?)\n {2}\},/g)].map((m) => m[1] ?? '');
+    expect(effekter.join('\n')).not.toMatch(/signIn\.magicLink/);
+    expect(kilde).toMatch(/async function sendLenke/);
+    expect(kilde).toMatch(/SIGNIN_VALG_SEND_NYTT|Send på nytt/);
+    expect(kilde).toMatch(/signIn\.magicLink/);
+  });
+
+  it('error-query med totp-kake går ikke tilbake til venteskjerm', () => {
+    expect(kilde).not.toMatch(/if \(feilQuery\) \{\s*setFlate\('valg'\)/);
+    expect(kilde).toMatch(/flateEtterMagicLinkLanding/);
   });
 
   it('ingen engelsk TOTP-feil og primærknapp er ikke Feil kode', () => {
@@ -101,5 +166,18 @@ describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', ()
     expect(kilde).toMatch(/meldingForMagicLinkFeil/);
     expect(kilde).not.toMatch(/trykk på linken først/i);
     expect(kilde).not.toMatch(/Innloggingslenken må åpnes først/);
+  });
+});
+
+describe('signin-side: server leser HttpOnly-kaker etter verify', () => {
+  const side = readFileSync(resolve(her, '../app/signin/page.tsx'), 'utf8');
+
+  it('force-dynamic + cookies — enroll-kake går til /2fa-oppsett', () => {
+    expect(side).toMatch(/force-dynamic/);
+    expect(side).toMatch(/cookies\(/);
+    expect(side).toMatch(/harTotpVindu/);
+    expect(side).toMatch(/harEnrollVindu/);
+    expect(side).toMatch(/totpKlar/);
+    expect(side).toMatch(/redirect\((SIGNIN_ENROLL_STI|['"]\/2fa-oppsett['"])/);
   });
 });

@@ -33,7 +33,8 @@ export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';
  * (`--ew-surface-2`, #f5f5f5 i lyst) mens `text-accent-fg` er `--ew-accent-fg`
  * (hvit i lyst). Den kombinasjonen er den vaskede «hvite overlay»-en.
  */
-export const PHONE_KORT_FYLL = 'rounded-xl border border-border bg-card text-fg shadow-none';
+export const PHONE_KORT_FYLL =
+  'min-h-row-store rounded-xl border border-border bg-card text-fg shadow-none';
 
 export const FORBUDT_DEALER_HJEM = [
   'book',

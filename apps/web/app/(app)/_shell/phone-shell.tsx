@@ -8,6 +8,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
+import { erHjemHigFlate } from './hjem-hig';
 import { shellForBruker } from './nav';
 import { PHONE_LOGO_PX } from './phone-chrome';
 import {
@@ -39,11 +40,15 @@ export function PhoneShell() {
     erPlattform,
   });
   const hjem = erPhoneHjem(pathname, search, shell);
+  const hig = erHjemHigFlate(pathname, search, shell);
   const hjemHref = phoneHjemHref(shell);
 
   return (
-    <header className={`shrink-0 bg-bg md:hidden ${PHONE_SAFE_TOP}`}>
-      <div className="flex h-row items-center justify-between px-3">
+    <header
+      data-hjem-hig={hig ? 'on' : undefined}
+      className={`shrink-0 bg-bg md:hidden ${PHONE_SAFE_TOP}`}
+    >
+      <div className="hjem-hig-logo-rad flex h-row items-center justify-between px-3">
         <Link href={hjemHref as Route} aria-label="Hjem">
           <Image
             src="/logo/logo.svg"
@@ -69,6 +74,8 @@ export function PhoneShell() {
 }
 
 export function PhoneBevel() {
+  const pathname = usePathname() ?? '';
+  const search = useSearchParams()?.toString() ?? '';
   const { navn, isLoading, role, jobbfunksjon, isMechanic, erPlattform } = useOrgRole();
   const shell = shellForBruker({
     role,
@@ -76,8 +83,12 @@ export function PhoneBevel() {
     isMechanic,
     erPlattform,
   });
+  const hig = erHjemHigFlate(pathname, search, shell);
   return (
-    <footer className={`mt-auto bg-bg px-3 pt-4 md:hidden ${PHONE_SAFE_BUNN}`}>
+    <footer
+      data-hjem-hig={hig ? 'on' : undefined}
+      className={`mt-auto bg-bg px-3 pt-4 md:hidden ${PHONE_SAFE_BUNN}`}
+    >
       <BrukerRad
         navn={navn}
         laster={isLoading}

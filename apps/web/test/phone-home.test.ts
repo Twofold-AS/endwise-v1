@@ -301,9 +301,10 @@ describe('desktop sidebar er urørt', () => {
     expect(sidebar).toMatch(/QUICK_ACTIONS/);
   });
 
-  it('dealer desktop Verkstedet er uendret bak md:hidden-skillet', () => {
+  it('dealer desktop hjem er samme kort-destinasjoner; VerkstedetDesktop ligger for rollback', () => {
     const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
-    expect(dash).toMatch(/hidden md:block|md:hidden/);
+    expect(dash).toMatch(/PhoneHomeDealer/);
+    expect(dash).toMatch(/VerkstedetDesktop/);
     expect(dash).toMatch(/Dagens saker|AnsattePaJobb|Timeplan/);
   });
 

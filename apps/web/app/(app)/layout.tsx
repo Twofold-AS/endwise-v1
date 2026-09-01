@@ -176,7 +176,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     ) : null}
                     {children}
                   </main>
-                  <PhoneBevel />
+                  <Suspense fallback={null}>
+                    <PhoneBevel />
+                  </Suspense>
                 </div>
                 <Suspense fallback={null}>
                   <WorkshopBloub />

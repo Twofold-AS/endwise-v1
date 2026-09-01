@@ -9,6 +9,7 @@
  */
 @import "@endwise/ui/matrix-loaders.css";
 @import "@endwise/ui/grainient.css";
+@import "./(app)/_shell/hjem-hig.css";
 
 /*
  * Tailwind v4 skanner som standard ikke workspace-pakker (de ligger via

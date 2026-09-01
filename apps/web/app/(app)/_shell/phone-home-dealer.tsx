@@ -66,7 +66,10 @@ export function PhoneHomeDealer() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[520px] flex-col gap-3 px-3 py-3 md:hidden">
+    <div
+      data-hjem-hig="on"
+      className="hjem-hig-flate mx-auto flex min-h-full w-full max-w-[520px] flex-col gap-4 md:max-w-[560px]"
+    >
       <ForhandlerGrainientKort />
       {rader.map((rad) => {
         if (rad.keys[0] === 'verkstedet') {
@@ -92,7 +95,7 @@ export function PhoneHomeDealer() {
         return (
           <div
             key={par.join('|')}
-            className={par.length === 1 ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-2 gap-3'}
+            className={par.length === 1 ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-2 gap-4'}
           >
             {par.map((key) => {
               const dest = PHONE_KORT_META[key];

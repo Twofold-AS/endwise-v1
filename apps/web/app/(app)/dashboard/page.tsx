@@ -32,14 +32,7 @@ function VerkstedetPageInner() {
   const search = useSearchParams();
   const dag = search?.get('visning') === 'dag';
 
-  return (
-    <>
-      {dag ? <VerkstedetDag /> : <PhoneHomeDealer />}
-      <div className="hidden md:block">
-        <VerkstedetDesktop />
-      </div>
-    </>
-  );
+  return dag ? <VerkstedetDag /> : <PhoneHomeDealer />;
 }
 
 /**
@@ -57,7 +50,8 @@ export default function VerkstedetPage() {
   );
 }
 
-function VerkstedetDesktop() {
+/** Beholdt for enkel rollback av kastbar HIG-preview. Ikke rendret på hjem. */
+export function VerkstedetDesktop() {
   const bookings = trpc.bookings.list.useQuery({ limit: 100 });
   const mechanics = trpc.mechanics.list.useQuery();
   const oversikt = trpc.mechanics.oversikt.useQuery();

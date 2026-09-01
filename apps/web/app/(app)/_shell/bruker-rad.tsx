@@ -57,7 +57,11 @@ export function BrukerRad({
   }
 
   return (
-    <div style={BEVEL} className="flex h-control w-full items-center gap-2 rounded-control px-2.5">
+    <div
+      data-hjem-hig-rad=""
+      style={BEVEL}
+      className="flex h-control w-full items-center gap-2 rounded-control px-2.5"
+    >
       {avatar}
       <span className="min-w-0 flex-1 truncate text-left text-label text-fg">
         {laster ? (
@@ -71,6 +75,7 @@ export function BrukerRad({
           href={innstillingerHref as Route}
           title="Innstillinger"
           aria-label="Innstillinger"
+          data-hjem-hig-treff=""
           className="flex size-7 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-ring"
         >
           <Settings size={15} strokeWidth={1.75} />
@@ -81,6 +86,7 @@ export function BrukerRad({
         onClick={() => void onLoggUt()}
         title="Logg ut"
         aria-label="Logg ut"
+        data-hjem-hig-treff=""
         className="flex size-7 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-danger-soft hover:text-danger focus-visible:outline-2 focus-visible:outline-ring"
       >
         <LogOut size={15} strokeWidth={1.75} />

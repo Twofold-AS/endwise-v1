@@ -3,7 +3,6 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
-import { BEVEL } from '../_shell/cards';
 import { hjemJobbSlots } from './_hjem';
 import { JobbRad } from './_rad';
 
@@ -46,8 +45,8 @@ export function DineJobberHjemKort() {
       <Link
         href={'/dine-jobber' as Route}
         data-se-alle-jobber
-        style={BEVEL}
-        className="inline-flex h-control w-full shrink-0 items-center justify-center rounded-control text-label text-fg"
+        data-hjem-hig-primaer=""
+        className="inline-flex h-11 min-h-11 w-full shrink-0 items-center justify-center rounded-control bg-fg text-bg text-label"
       >
         Se alle jobber
       </Link>

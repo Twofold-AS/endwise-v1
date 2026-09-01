@@ -1,0 +1,128 @@
+/*
+ * Kastbar Apple-HIG-*prinsipper* på hjem (F5-56).
+ * Roller, ikke én hex som sannhet. Ikke Apple Blue. Ikke SF Pro / SF Symbols.
+ * Ikke Liquid Glass. Gjelder KUN [data-hjem-hig] — resten av appen urørt.
+ *
+ * Lys: lerret (grouped canvas) + hevet grouped-flate.
+ * Mørk: dempet base + lysere hevet kort — ikke #000-invert av hele siden.
+ */
+
+[data-hjem-hig] {
+  --hjem-label: #111111;
+  --hjem-secondary: #5c5c61;
+  --hjem-tertiary: #6e6e73;
+  --hjem-canvas: #f3f3f5;
+  --hjem-grouped: #ffffff;
+  --hjem-fill: #e6e6ea;
+  --hjem-separator: #d4d4d8;
+  --hjem-accent: #111111;
+
+  --ew-bg: var(--hjem-canvas);
+  --ew-surface: var(--hjem-grouped);
+  --ew-surface-2: var(--hjem-fill);
+  --ew-inset: var(--hjem-fill);
+  --ew-border: var(--hjem-separator);
+  --ew-fg: var(--hjem-label);
+  --ew-fg-muted: var(--hjem-secondary);
+  --ew-fg-faint: var(--hjem-tertiary);
+  --ew-accent: var(--hjem-accent);
+  --ew-accent-strong: var(--hjem-accent);
+  --ew-accent-fg: #ffffff;
+
+  --color-bg: var(--hjem-canvas);
+  --color-surface: var(--hjem-grouped);
+  --color-surface-2: var(--hjem-fill);
+  --color-card: var(--hjem-grouped);
+  --color-fg: var(--hjem-label);
+  --color-fg-muted: var(--hjem-secondary);
+  --color-fg-faint: var(--hjem-tertiary);
+  --color-border: var(--hjem-separator);
+  --color-background: var(--hjem-canvas);
+  --color-foreground: var(--hjem-label);
+  --background: var(--hjem-canvas);
+  --foreground: var(--hjem-label);
+  --card: var(--hjem-grouped);
+  --muted-foreground: var(--hjem-secondary);
+  --border: var(--hjem-separator);
+
+  /* Inter beholdt. Størrelser mot SF Body 17/22-følelse — ikke SF-fil. */
+  --text-title: 17px;
+  --text-title--line-height: 22px;
+  --text-body: 17px;
+  --text-body--line-height: 22px;
+  --text-label: 15px;
+  --text-label--line-height: 20px;
+
+  background-color: var(--hjem-canvas);
+  color: var(--hjem-label);
+}
+
+[data-theme="dark"] [data-hjem-hig] {
+  --hjem-label: #f2f2f2;
+  --hjem-secondary: #b4b4b8;
+  --hjem-tertiary: #9a9aa0;
+  --hjem-canvas: #1b1b1d;
+  --hjem-grouped: #2c2c30;
+  --hjem-fill: #3a3a3e;
+  --hjem-separator: #3f3f44;
+  --hjem-accent: #ffffff;
+
+  --ew-accent-fg: #111111;
+}
+
+/* Innhold til kantene; kort er innfelte grupper. ~16 kompakt / ~20 regular. */
+.hjem-hig-flate {
+  width: 100%;
+  padding-inline: 16px;
+  padding-block: 16px;
+}
+
+@media (min-width: 768px) {
+  .hjem-hig-flate {
+    padding-inline: 20px;
+    padding-block: 20px;
+  }
+}
+
+/* 44pt-gulv på telefon-hjem. 32/10 er peker-rest — ikke her. */
+@media (max-width: 767px) {
+  [data-hjem-hig] [data-phone-kort] {
+    min-height: 44px;
+  }
+
+  [data-hjem-hig] header .hjem-hig-logo-rad {
+    min-height: 44px;
+    padding-inline: 16px;
+  }
+
+  [data-hjem-hig] footer {
+    padding-inline: 16px;
+  }
+
+  [data-hjem-hig] footer [data-hjem-hig-treff] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  [data-hjem-hig] footer [data-hjem-hig-rad] {
+    min-height: 44px;
+  }
+}
+
+/* Én primærhandling — ikke krom, ikke brødtekst. */
+[data-hjem-hig] [data-hjem-hig-primaer] {
+  min-height: 44px;
+  background: var(--hjem-accent);
+  color: var(--ew-accent-fg);
+  border: 0;
+  box-shadow: none;
+}
+
+/* Ingen blur/material på innhold. Krom får heller ingen glass her. */
+[data-hjem-hig] .hjem-hig-flate,
+[data-hjem-hig] [data-phone-kort],
+[data-hjem-hig] [data-forhandler-grainient],
+[data-hjem-hig] [data-dine-jobber-hjem] {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}

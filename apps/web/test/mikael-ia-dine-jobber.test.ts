@@ -169,7 +169,7 @@ describe('telefon-bevel og logo-rad', () => {
   it('bevel er siste barn i telefon-kolonnen, ikke sticky/fixed', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(layout).toMatch(/<main[\s\S]*<\/main>\s*<PhoneBevel\s*\/>/);
+    expect(layout).toMatch(/<main[\s\S]*<\/main>\s*(<Suspense[^>]*>\s*)?<PhoneBevel\s*\/>/);
     expect(layout).toMatch(/overflow-y-auto/);
     expect(layout).toMatch(/<main className="[^"]*\bflex-1\b/);
     expect(layout).not.toMatch(/<main className="[^"]*\bmd:flex-1\b/);
@@ -254,8 +254,10 @@ describe('mekaniker-hjem — fast 3-spors Dine jobber-kort', () => {
     expect(kort).toMatch(/Ingen jobber i dag/);
     expect(kort).toMatch(/mechanic\.myDay/);
     const minDag = utenKommentarer(les('../app/(app)/min-dag/page.tsx'));
-    expect(minDag).toMatch(/DineJobberHjemKort/);
+    expect(minDag).toMatch(/PhoneHomeMekaniker/);
     expect(minDag).not.toMatch(/DineJobberFlate/);
+    const mekHjem = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
+    expect(mekHjem).toMatch(/DineJobberHjemKort/);
   });
 });
 

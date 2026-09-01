@@ -32,10 +32,10 @@ export function PhoneKort({
     <Link
       href={href as Route}
       data-phone-kort={navn}
-      className={`${PHONE_KORT_FYLL} flex flex-col gap-2 p-3 ${className ?? ''}`}
+      className={`${PHONE_KORT_FYLL} flex min-h-11 flex-col gap-2 p-3 ${className ?? ''}`}
     >
-      <div className="flex items-center gap-2">
-        <Icon size={16} strokeWidth={1.75} className="shrink-0" />
+      <div className="flex min-h-11 items-center gap-2">
+        <Icon size={18} strokeWidth={1.75} className="shrink-0" />
         <span className="min-w-0 flex-1 truncate text-title">{navn}</span>
         {ulest && ulest > 0 ? (
           <span className="inline-flex size-5 min-w-5 items-center justify-center rounded-full bg-fg text-[11px] text-bg tabular-nums">

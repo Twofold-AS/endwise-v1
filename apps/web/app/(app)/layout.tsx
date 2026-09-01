@@ -16,7 +16,6 @@ import { PwaRegister } from './_shell/pwa-register';
 import { InnboksSeksjonBar, OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
-import { TopBar } from './_shell/top-bar';
 import { WorkshopBloub } from './_workshop/workshop-bloub';
 
 /**
@@ -113,10 +112,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    */
 
   /*
-   * Sidebaren er nå ytterst og går fra topp til bunn. Topbaren ligger
-   * Innenfor innholdskolonnen, ikke over hele skjermen: den beskriver bare hvor
-   * du er i innholdet, ikke i appen. Rekkefølgen i DOM-en sier det samme som
-   * hierarkiet i hodet.
+   * Sidebaren er ytterst og går fra topp til bunn. Breadcrumb-topbar er borte.
+   * Øverst i innholdskolonnen sitter workshop-stripen (ShaderGradient + bloub).
    * Kommandopaletten (K som globalt søk) er fjernet på eiers
    * beslutning. K åpner nå quick actions i sidebaren i stedet. Konsekvensen er
    * at de parkerte rutene (marked/*
@@ -124,11 +121,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    * de nås kun ved å skrive URL-en. Se sesjonsrapporten.
    */
   /*
-   * `<Suspense>` rundt Sidebar og TopBar er påkrevd, ikke pynt. Begge leser
-   * `useSearchParams` (kanal-/visningsvalg i navet, breadcrumb), og uten en
-   * suspense-grense trekker det hele app-treet ut av statisk prerender
-   * `next build` feiler med «useSearchParams should be wrapped in a suspense
-   * boundary» på hver eneste side, også de som ikke rører query.
+   * `<Suspense>` rundt Sidebar og WorkshopBloub er påkrevd, ikke pynt. Begge
+   * leser `useSearchParams`, og uten en suspense-grense trekker det hele
+   * app-treet ut av statisk prerender.
    */
   return (
     <LydProvider>
@@ -150,13 +145,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Sidebar />
               </Suspense>
               <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                <Suspense
-                  fallback={<div className="h-control shrink-0 border-border border-b bg-bg" />}
-                >
+                <Suspense fallback={<div className="hidden h-14 shrink-0 bg-bg md:block" />}>
                   <PhoneShell />
-                  <div className="hidden md:block">
-                    <TopBar />
-                  </div>
+                  <WorkshopBloub />
                   <OrganisasjonSeksjonBar />
                   <InnboksSeksjonBar />
                 </Suspense>
@@ -178,9 +169,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   </main>
                   <PhoneBevel />
                 </div>
-                <Suspense fallback={null}>
-                  <WorkshopBloub />
-                </Suspense>
               </div>
             </div>
           </InboxFilterProvider>

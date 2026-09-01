@@ -1,10 +1,8 @@
 'use client';
 
-import { Avatar, Moon, Sun, Switch } from '@endwise/ui';
-import { useEffect, useState } from 'react';
+import { Avatar } from '@endwise/ui';
 import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
-import { lesTema, settTema, type Tema } from '../_lib/tema';
 import { ByttEpostSkjema } from '../_shell/bytt-epost';
 import { ByttPassordSkjema } from '../_shell/bytt-passord';
 import { KallenavnFelt, VarslingslyderRad, VisningsnavnFelt } from '../_shell/profil-kort';
@@ -18,7 +16,6 @@ import { ToFaktorRad } from '../_shell/to-faktor-rad';
  * er borte. Ingen filopplasting. Felt-Lagre beholdes, ingen sticky Save.
  */
 export function ProfilFane() {
-  const [theme, setTheme] = useState<Tema>('light');
   const me = trpc.session.me.useQuery();
   const meg = trpc.profile.meg.useQuery();
   const { data: session } = useSession();
@@ -26,16 +23,6 @@ export function ProfilFane() {
     session?.user && 'twoFactorEnabled' in session.user
       ? (session.user as { twoFactorEnabled?: boolean }).twoFactorEnabled
       : undefined;
-
-  useEffect(() => {
-    setTheme(lesTema());
-  }, []);
-
-  function byttTema(mork: boolean) {
-    const next: Tema = mork ? 'dark' : 'light';
-    settTema(next);
-    setTheme(next);
-  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -78,21 +65,7 @@ export function ProfilFane() {
       <ByttEpostSkjema gjeldende={meg.data?.epost ?? ''} />
 
       <div className="overflow-hidden rounded-xl border border-border">
-        <div className="flex h-row-store items-center gap-3 bg-bg px-4">
-          {theme === 'dark' ? (
-            <Moon size={16} className="shrink-0 text-fg-muted" />
-          ) : (
-            <Sun size={16} className="shrink-0 text-fg-muted" />
-          )}
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="text-label text-fg">Mørkt tema</span>
-            <span className="text-[12px] text-fg-muted">Lyst tema er standard.</span>
-          </div>
-          <Switch checked={theme === 'dark'} onCheckedChange={byttTema} aria-label="Mørkt tema" />
-        </div>
-        <div className="border-border border-t">
-          <VarslingslyderRad />
-        </div>
+        <VarslingslyderRad />
       </div>
 
       <ByttPassordSkjema />

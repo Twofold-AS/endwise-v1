@@ -39,7 +39,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('low');
     expect(PHONE_KORT_META.timeplan.label).toBe('Timeplan');
     expect(PHONE_KORT_META.timeplan.href).toBe('/jobber');
-    expect(PHONE_KORT_META.tjenester.label).toBe('Salg');
+    expect(PHONE_KORT_META.tjenester.label).toBe('Tjenester');
     expect(PHONE_KORT_META.tjenester.href).toBe('/prisliste');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     const keys = DEALER_PHONE_HJEM.flatMap((r) => r.keys);
@@ -61,13 +61,10 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
       'Innboks',
       'Timeplan',
       'Kunder',
+      'Tjenester',
+      'Organisasjon',
       'Lager',
       'Butikk',
-      'Samarbeid',
-      'Salg',
-      'Organisasjon',
-      'Hjelp',
-      'Bot',
     ]);
     expect(FORHANDLER_NAV.find((i) => i.key === 'saker')?.pills?.map((p) => p.label)).toEqual([
       'Liste',
@@ -140,26 +137,26 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(stripe).toMatch(/timeplanManedNavn/);
   });
 
-  it('Salg er /prisliste (samme services.list), /tjenester forblir abonnement', () => {
+  it('Tjenester er /prisliste (samme services.list), /tjenester forblir abonnement', () => {
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/PrislisteFlate/);
-    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/tittel="Salg"/);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/tittel="Tjenester"/);
     expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/redirect\('\/organisasjon'/);
     expect(les('../app/(app)/tjenester/page.tsx')).toMatch(/seksjon=abonnement/);
     const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
-    if (!tjenester) throw new Error('mangler Salg');
-    expect(tjenester.label).toBe('Salg');
+    if (!tjenester) throw new Error('mangler Tjenester');
+    expect(tjenester.label).toBe('Tjenester');
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     if (!org) throw new Error('mangler Organisasjon');
     expect(isItemActive(tjenester, '/prisliste')).toBe(true);
     expect(isItemActive(org, '/prisliste')).toBe(false);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Salg', href: '/prisliste' },
+      { label: 'Tjenester', href: '/prisliste' },
     ]);
     expect(breadcrumbFor('/jobber', 'visning=kalender', 'forhandler')).toEqual([
       { label: 'Timeplan', href: '/jobber' },
       { label: 'Kalender' },
     ]);
-    expect(PARKED_LABEL['/prisliste']).toBe('Salg');
+    expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');
     expect(parseOrgSeksjon('timeplan', true)).toBe('oversikt');
   });
 

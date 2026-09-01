@@ -6,10 +6,8 @@ import {
   LogOut,
   type LucideIcon,
   Mail,
-  Moon,
   Phone,
   ShieldCheck,
-  Sun,
   Switch,
   Zap,
 } from '@endwise/ui';
@@ -30,17 +28,13 @@ import { ToFaktorRad } from '../../_shell/to-faktor-rad';
  * mekaniker-scopet — `mechanic.myProfile` utleder mekanikeren fra
  * `mechanics.userId = ctx.userId`, aldri fra input, så det finnes ingen vei til
  * en kollegas profil herfra.
- * Hvorfor to hurtigbrytere øverst
- * Dette er en telefon i et verksted, ofte med hansker på. De to tingene som
- * faktisk byttes ofte — **tema** (sollys mot mørk hall) og **varsler av/på**
- * (pause, møte, fridag) — ligger derfor øverst som store brytere, ikke nede i
- * en innstillingsliste. Resten er ting man ser på én gang.
+ * Hurtigbryter øverst: varsler av/på (pause, møte, fridag).
+ * Produktet er lys-only — ingen tema-toggle.
  * Samme layout på maskin: mekanikervisningen har ingen egen desktop-variant, og
  * skal ikke få det. To varianter av samme skjerm er to skjermer å holde i synk.
  */
 
 /** Lokale preferanser. Ingen backend ennå — F6-12 (Web Push) eier den delen. */
-const LAGER_TEMA = 'endwise.tema';
 const LAGER_VARSLER = 'endwise.varsler';
 
 export default function MegPage() {
@@ -49,23 +43,11 @@ export default function MegPage() {
   const profil = trpc.mechanic.myProfile.useQuery();
   const m = profil.data;
 
-  const [tema, setTema] = useState<'light' | 'dark'>('light');
   const [varsler, setVarsler] = useState(true);
 
-  // Leses etter mount — server vet ikke hva nettleseren har valgt, og å gjette
-  // gir hydrerings-mismatch.
   useEffect(() => {
-    const naa = document.documentElement.dataset.theme;
-    if (naa === 'light' || naa === 'dark') setTema(naa);
     setVarsler(localStorage.getItem(LAGER_VARSLER) !== 'av');
   }, []);
-
-  function byttTema(mork: boolean) {
-    const neste = mork ? 'dark' : 'light';
-    document.documentElement.dataset.theme = neste;
-    localStorage.setItem(LAGER_TEMA, neste);
-    setTema(neste);
-  }
 
   function byttVarsler(paa: boolean) {
     localStorage.setItem(LAGER_VARSLER, paa ? 'på' : 'av');
@@ -83,17 +65,8 @@ export default function MegPage() {
 
       <FerieMock />
 
-      {/* Hurtigbrytere: det man faktisk bytter ofte */}
       <CardShell>
         <div className="flex flex-col divide-y divide-border rounded-lg bg-inset">
-          <Hurtigbryter
-            id="tema"
-            icon={tema === 'dark' ? Moon : Sun}
-            tittel="Mørkt tema"
-            hint={tema === 'dark' ? 'På — lettere i mørk hall' : 'Av — lettere i sollys'}
-            checked={tema === 'dark'}
-            onChange={byttTema}
-          />
           <Hurtigbryter
             id="varsler"
             icon={Bell}

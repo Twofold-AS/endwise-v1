@@ -1,6 +1,6 @@
 'use client';
 
-import { ForhandlerGrainientKort } from '../_shell/forhandler-grainient';
+import { ForhandlerInfoKort } from '../_shell/forhandler-info-kort';
 import { PhoneHomeMekaniker } from '../_shell/phone-home-mekaniker';
 import { DineJobberHjemKort } from '../dine-jobber/_hjem-kort';
 
@@ -12,7 +12,7 @@ export default function MinDagPage() {
     <>
       <PhoneHomeMekaniker />
       <div className="mx-auto hidden w-full max-w-[820px] flex-col gap-3 px-3 py-4 md:flex md:px-6 md:py-7">
-        <ForhandlerGrainientKort />
+        <ForhandlerInfoKort />
         <DineJobberHjemKort />
       </div>
     </>

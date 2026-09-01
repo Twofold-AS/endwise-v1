@@ -2,12 +2,12 @@
 
 import { useOrgRole } from '../_lib/use-org-role';
 import { DineJobberHjemKort } from '../dine-jobber/_hjem-kort';
-import { ForhandlerGrainientKort } from './forhandler-grainient';
+import { ForhandlerInfoKort } from './forhandler-info-kort';
 import { MEKANIKER_TIMEPLAN_HREF, mekanikerHurtigKort, PHONE_KORT_META } from './phone-home';
 import { PhoneKort } from './phone-kort';
 
 /**
- * Mekanikerens telefon-hjem. Grainient, stort Dine jobber-kort, Lager full
+ * Mekanikerens telefon-hjem. Forhandler-info, stort Dine jobber-kort, Lager full
  * bredde, deretter små destinasjonskort. Ingen Min dag-hero, ingen accordion.
  */
 export function PhoneHomeMekaniker() {
@@ -17,7 +17,7 @@ export function PhoneHomeMekaniker() {
 
   return (
     <div className="mx-auto flex w-full max-w-[520px] flex-col gap-3 px-3 py-3 md:hidden">
-      <ForhandlerGrainientKort />
+      <ForhandlerInfoKort />
       <DineJobberHjemKort />
       <PhoneKort href={lager.href} icon={lager.icon} navn={lager.label} className="w-full" />
       <div className="grid grid-cols-2 gap-3">

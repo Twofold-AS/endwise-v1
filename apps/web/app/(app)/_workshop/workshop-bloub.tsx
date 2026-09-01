@@ -14,6 +14,7 @@ import {
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
+  ShaderGradientBakgrunn,
   useBloubIdleLiv,
   useBloubPapir,
   X,
@@ -24,12 +25,13 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { sidekontekst } from './sidekontekst';
 
-const FAB = 44;
-const HODE = 64;
+const FAB = 36;
+const HODE = 48;
 
 /**
- * Sticky workshop-bloub. Kompakt FAB (~44px), nederst til høyre, inne i
- * safe-area. Klikk åpner chat med bloub på toppen. Én montasje i app-skallet.
+ * Desktop: ShaderGradient-stripe i toppen av innholdskolonnen
+ * (sidebar-kant → skjermkant). Liten bloub til høyre åpner workshop-chat
+ * med sidekontekst. Ingen Quick-skriving. Ingen bunn-FAB. Skjult på telefon.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -82,13 +84,14 @@ export function WorkshopBloub() {
   if (pathname.startsWith('/oppstart')) return null;
 
   return (
-    <div
-      data-workshop-fab
-      className="pointer-events-none fixed right-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] z-30 flex flex-col items-end gap-2 md:right-4 md:bottom-4"
-    >
+    <div data-workshop-strip className="relative hidden h-14 w-full shrink-0 md:block">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <ShaderGradientBakgrunn className="h-full w-full" />
+      </div>
+
       {apen ? (
         <div
-          className="pointer-events-auto flex w-[min(22rem,calc(100vw-1.5rem))] max-h-[min(34rem,70vh)] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-lg"
+          className="fixed top-[4.25rem] right-3 z-40 flex w-[min(22rem,calc(100vw-1.5rem))] max-h-[min(34rem,70vh)] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-lg"
           role="dialog"
           aria-label="Verkstedsassistent"
         >
@@ -136,7 +139,7 @@ export function WorkshopBloub() {
                       </Message>
                     </MessageScrollerItem>
                     {messages.map((melding) => {
-                      const tekst = melding.parts
+                      const tekstDel = melding.parts
                         .filter((del) => del.type === 'text')
                         .map((del) => del.text)
                         .join('');
@@ -147,9 +150,9 @@ export function WorkshopBloub() {
                               <MessageHeader>
                                 {melding.role === 'user' ? 'Du' : 'Bloub'}
                               </MessageHeader>
-                              {tekst ? (
+                              {tekstDel ? (
                                 <MessageBubble egen={melding.role === 'user'}>
-                                  {tekst}
+                                  {tekstDel}
                                 </MessageBubble>
                               ) : null}
                             </MessageContent>
@@ -197,7 +200,7 @@ export function WorkshopBloub() {
         aria-expanded={apen}
         aria-label={apen ? 'Lukk verkstedsassistent' : 'Åpne verkstedsassistent'}
         data-workshop-sticky
-        className="pointer-events-auto flex items-center justify-center rounded-full bg-bg shadow-md ring-1 ring-border transition hover:ring-border-strong focus-visible:outline-2 focus-visible:outline-ring"
+        className="absolute top-1/2 right-3 z-10 flex -translate-y-1/2 items-center justify-center rounded-full bg-bg/90 shadow-md ring-1 ring-border transition hover:ring-border-strong focus-visible:outline-2 focus-visible:outline-ring"
         style={{ width: FAB, height: FAB }}
       >
         <BloubBot

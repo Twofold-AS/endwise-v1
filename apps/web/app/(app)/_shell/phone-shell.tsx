@@ -84,6 +84,7 @@ export function PhoneBevel() {
         collapsed={false}
         onLoggUt={loggUt}
         innstillingerHref={phoneInnstillingerHref(shell)}
+        variant="phone"
       />
     </footer>
   );

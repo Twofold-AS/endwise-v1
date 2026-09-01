@@ -182,8 +182,9 @@ export function BloubBot({
       engine.setShape(radiiFor(wantShape), 0);
       engine.setExpression(exprFor(wantExpr), 0);
       if (engine.state !== want) engine.setState(want, 0);
-      engine.setLook(null, 0, 0);
-      setFrame(engine.sample(0));
+      /* morph 0 + sample(0) ga NaN i lookAtTime og hoppet over øynene. */
+      engine.setLook(null, 0, BotEngine.LOOK_MORPH);
+      setFrame(engine.sample(0.35));
     };
 
     if (still) {
@@ -314,6 +315,15 @@ export function BloubBot({
         <g mask={`url(#${maskId})`}>
           <rect x={-R} y={-R} width={R * 2} height={R * 2} fill={ink} />
         </g>
+        {frame.eyes.map((eye, i) => (
+          <path
+            key={`eye-paint-${String(i)}`}
+            d={eye.d}
+            transform={eye.matrix}
+            opacity={eye.alpha}
+            fill={paper}
+          />
+        ))}
       </g>
 
       {!frame.dotsBehind ? (

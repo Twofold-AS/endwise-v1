@@ -81,7 +81,7 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
 
   it('Timeplan går til /jobber, Salg til /prisliste, Statistikk til /rapporter', () => {
     expect(PHONE_KORT_META.timeplan.href).toBe('/jobber');
-    expect(PHONE_KORT_META.tjenester.label).toBe('Salg');
+    expect(PHONE_KORT_META.tjenester.label).toBe('Tjenester');
     expect(PHONE_KORT_META.tjenester.href).toBe('/prisliste');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     expect(PHONE_KORT_META.verkstedet.href).toContain('visning=dag');
@@ -227,7 +227,7 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(rad).toMatch(/Innstillinger/);
     expect(rad).toMatch(/LogOut/);
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
-    expect(sidebar).not.toMatch(/innstillingerHref/);
+    expect(sidebar).toMatch(/innstillingerHref/);
   });
 
   it('ingen bunnbar, hamburger, horisontal hovedscroller, Mer-sheet eller visningsvelger', () => {
@@ -267,12 +267,12 @@ describe('mekaniker phone home — Dine jobber, ikke Min dag', () => {
     expect(mekanikerHurtigKort(false)).not.toContain('lager');
   });
 
-  it('ingen Min dag-hero eller Detaljer-accordion — Grainient + stort kort + Lager', () => {
+  it('ingen Min dag-hero eller Detaljer-accordion — forhandler-info + stort kort + Lager', () => {
     const side = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
     expect(side).not.toMatch(/Min dag/);
     expect(side).not.toMatch(/Detaljer/);
     expect(side).not.toMatch(/accordion|aria-expanded/);
-    expect(side).toMatch(/ForhandlerGrainientKort/);
+    expect(side).toMatch(/ForhandlerInfoKort/);
     expect(side).toMatch(/DineJobberHjemKort/);
     expect(side).toMatch(/PhoneKort/);
     expect(side).not.toMatch(/swipe|clock-ring|tidslinje|time-axis/i);

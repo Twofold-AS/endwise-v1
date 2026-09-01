@@ -1,6 +1,5 @@
 import {
   ArrowLeftRight,
-  Bot,
   Building2,
   CalendarDays,
   Car,
@@ -192,11 +191,13 @@ export const CONTEXTS: AppContext[] = [
  * Ett skall, ingen visningsvelger. Organisasjon er ÉN rad → /organisasjon.
  * Top-bar 2 = Oversikt · Ansatte · Abonnement · Integrasjoner.
  * Kompetanse er ikke pille/sidebar. Timeplan er egen destinasjon. Salg er egen destinasjon.
- * Hjelp = /support. Innstillinger = Profil + Varsler.
+ * Hjelp er TipCard nederst, ikke en nav-destinasjon. /bot lever som URL, ikke i nav.
+ * Innstillinger = Profil + Varsler.
  */
 /*
  * AI-verktøy er parkert — ikke i FORHANDLER_NAV.
  * Ruter står: `/ai-innsikt`, `/ai-verktoy/diagnose|nettside|nettbutikk`.
+ * Samarbeid, Hjelp-dest og Bot er ute av sidebaren (Mikael desktop-chrome 01.09.2026).
  */
 export const FORHANDLER_NAV: NavItem[] = [
   {
@@ -237,6 +238,21 @@ export const FORHANDLER_NAV: NavItem[] = [
     ],
   },
   {
+    key: 'tjenester',
+    label: 'Tjenester',
+    icon: Wrench,
+    href: '/prisliste',
+    roles: DRIFT,
+  },
+  {
+    key: 'organisasjon',
+    label: 'Organisasjon',
+    icon: Building2,
+    href: '/organisasjon',
+    roles: DRIFT,
+    pills: ORGANISASJON_SEKSJONER,
+  },
+  {
     key: 'lager',
     label: 'Lager',
     icon: Package,
@@ -260,49 +276,6 @@ export const FORHANDLER_NAV: NavItem[] = [
       { label: 'Katalog', href: '/butikk', icon: Package },
       { label: 'Handlekurv / kasse', href: '/butikk/kasse', icon: ShoppingCart },
     ],
-  },
-  {
-    key: 'samarbeid',
-    label: 'Samarbeid',
-    icon: MessageSquarePlus,
-    href: '/samarbeid',
-    roles: DRIFT,
-    dividerBefore: true,
-  },
-  {
-    key: 'tjenester',
-    label: 'Salg',
-    icon: Wrench,
-    href: '/prisliste',
-    roles: DRIFT,
-  },
-  {
-    key: 'organisasjon',
-    label: 'Organisasjon',
-    icon: Building2,
-    href: '/organisasjon',
-    roles: DRIFT,
-    pills: ORGANISASJON_SEKSJONER,
-  },
-  {
-    key: 'helpdesk',
-    label: 'Hjelp',
-    icon: LifeBuoy,
-    href: '/support',
-    roles: DRIFT,
-    badge: 'helpdesk',
-    dividerBefore: true,
-  },
-  {
-    /**
-     * Intern gjennomgang av maskot-animasjonen. Ikke en kjerne-destinasjon
-     * og ikke på telefon-hjem (egen kortliste i phone-home.ts).
-     */
-    key: 'bot',
-    label: 'Bot',
-    icon: Bot,
-    href: '/bot',
-    roles: DRIFT,
   },
 ];
 
@@ -369,15 +342,6 @@ export const MEKANIKER_NAV: NavItem[] = [
     icon: CalendarDays,
     href: '/min-dag/timeplan',
     roles: DRIFT,
-  },
-  {
-    key: 'helpdesk',
-    label: 'Hjelp',
-    icon: LifeBuoy,
-    href: '/support',
-    roles: DRIFT,
-    badge: 'helpdesk',
-    dividerBefore: true,
   },
   { key: 'min-meg', label: 'Meg', icon: CircleUser, href: '/min-dag/meg', roles: DRIFT },
 ];
@@ -818,8 +782,10 @@ export const PARKED_LABEL: Record<string, string> = {
   '/innstillinger/integrasjoner': 'Organisasjon · Integrasjoner',
   '/endwise/helpdesk': 'Endwise · Hjelpeartikler',
   '/endwise/innstillinger': 'Endwise · Dev-mode',
-  '/innstillinger/tjenestekatalog': 'Salg',
-  '/prisliste': 'Salg',
+  '/innstillinger/tjenestekatalog': 'Tjenester',
+  '/prisliste': 'Tjenester',
+  '/bot': 'Bot',
+  '/samarbeid': 'Samarbeid',
   '/butikk': 'Butikk · Katalog',
   '/butikk/kasse': 'Butikk · Handlekurv / kasse',
   '/lager/deler': 'Lager · Deler',

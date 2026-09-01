@@ -86,7 +86,7 @@ export const PHONE_KORT_META: Record<
   verkstedet: { label: 'Verkstedet', href: '/dashboard?visning=dag', icon: LayoutDashboard },
   timeplan: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
   statistikk: { label: 'Statistikk', href: '/rapporter', icon: ChartColumn },
-  tjenester: { label: 'Salg', href: '/prisliste', icon: Wrench },
+  tjenester: { label: 'Tjenester', href: '/prisliste', icon: Wrench },
   innboks: { label: 'Innboks', href: '/innboks', icon: Inbox },
   jobber: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
   kunder: { label: 'Kunder', href: '/kunder', icon: Users },

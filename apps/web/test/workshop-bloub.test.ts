@@ -24,17 +24,20 @@ describe('Workshop sidekontekst', () => {
   });
 });
 
-describe('Sticky workshop i app-skallet', () => {
-  it('er montert én gang i (app)/layout', () => {
+describe('Workshop-stripe i app-skallet', () => {
+  it('er montert én gang i (app)/layout, uten breadcrumb-topbar', () => {
     const layout = les('../app/(app)/layout.tsx');
     expect(layout).toMatch(/WorkshopBloub/);
+    expect(layout).not.toMatch(/TopBar/);
     expect(layout).not.toMatch(/bottom-tab|PhoneTab/);
   });
 
-  it('FAB er kompakt, header er modest, sidekontekst går med hver tur', () => {
+  it('er top-stripe med ShaderGradient, liten bloub til høyre, sidekontekst med hver tur', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
-    expect(fab).toMatch(/const FAB = 44/);
-    expect(fab).toMatch(/const HODE = 64/);
+    expect(fab).toMatch(/data-workshop-strip/);
+    expect(fab).toMatch(/ShaderGradientBakgrunn/);
+    expect(fab).toMatch(/const FAB = 36/);
+    expect(fab).toMatch(/const HODE = 48/);
     expect(fab).toMatch(/data-workshop-sticky/);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
     expect(fab).toMatch(/body: \{ side \}/);
@@ -43,8 +46,10 @@ describe('Sticky workshop i app-skallet', () => {
     expect(fab).toMatch(/attentif/);
     expect(fab).toMatch(/alert/);
     expect(fab).toMatch(/burst/);
+    expect(fab).not.toMatch(/fixed right-3 bottom/);
     expect(fab).not.toMatch(/size=\{320\}/);
     expect(fab).not.toMatch(/#1ED27D|#EE2924/);
+    expect(fab).not.toMatch(/Grainient|grainient/);
   });
 
   it('chat-ruta tar imot sidekontekst-header', () => {

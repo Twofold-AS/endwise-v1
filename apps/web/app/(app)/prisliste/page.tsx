@@ -2,7 +2,7 @@
 
 import { PrislisteFlate } from '../innstillinger/tjenestekatalog/_flate';
 
-/** Salg — bookbare tjenester (samme SoR som widgeten). Rute /prisliste. */
-export default function SalgPage() {
-  return <PrislisteFlate tittel="Salg" />;
+/** Tjenester — bookbare tjenester (samme SoR som widgeten). Rute /prisliste. */
+export default function TjenesterPage() {
+  return <PrislisteFlate tittel="Tjenester" />;
 }

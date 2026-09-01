@@ -42,9 +42,8 @@ import { TipCard } from './tip-card';
 const IKON = 16;
 
 /**
- * Den dominerende sidebaren (desktop).
- * Header er h-control, samme rad som top-bar 1.
- * Kollaps-knappen bor i sidebaren. Ingen «Forhandler»-undertekst.
+ * Den dominerende sidebaren (desktop). Hvit flate, ingen header-divider.
+ * Kollaps-knappen bor i sidebaren. Ingen avatar. Hjelp er TipCard, ikke dest.
  * På telefon erstattes denne av PhoneShell (kort-hjem + bevel).
  */
 export function Sidebar() {
@@ -148,12 +147,12 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`hidden shrink-0 flex-col border-border border-r bg-sidebar transition-[width] duration-150 md:flex ${
+      className={`hidden shrink-0 flex-col border-border border-r bg-[#ffffff] transition-[width] duration-150 md:flex ${
         collapsed ? 'w-[76px]' : 'w-[248px]'
       }`}
     >
       <div
-        className={`flex h-control shrink-0 items-center border-border border-b ${
+        className={`flex min-h-10 shrink-0 items-center py-2 ${
           collapsed ? 'justify-center px-2' : 'px-3'
         }`}
       >
@@ -208,7 +207,7 @@ export function Sidebar() {
 
         <nav
           aria-label="Hovednavigasjon"
-          className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
+          className="flex min-h-0 flex-1 flex-col gap-[4px] overflow-y-auto"
         >
           {items.map((item) => (
             <Fragment key={item.key}>
@@ -231,9 +230,9 @@ export function Sidebar() {
           )}
         </nav>
 
-        {/* Bunn: tips-kort → divider → Settings → DEG */}
+        {/* Bunn: helpdesk-kort over innstillinger/profil. Ingen avatar. */}
         <div className="flex flex-col gap-3">
-          {!collapsed && shell === 'forhandler' && (
+          {!collapsed && shell !== 'endwise' && shell !== 'endwise_partner' && (
             <div className="hidden md:block">
               <TipCard />
             </div>
@@ -252,7 +251,17 @@ export function Sidebar() {
               {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
             </Link>
           ) : null}
-          <BrukerRad navn={navn} laster={rolleLaster} collapsed={collapsed} onLoggUt={logout} />
+          <BrukerRad
+            navn={navn}
+            laster={rolleLaster}
+            collapsed={collapsed}
+            onLoggUt={logout}
+            innstillingerHref={
+              settingsNav?.href ??
+              (shell === 'mekaniker' ? '/min-dag/meg' : '/innstillinger/profil')
+            }
+            variant="sidebar"
+          />
         </div>
       </div>
     </aside>

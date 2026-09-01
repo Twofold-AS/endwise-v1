@@ -58,6 +58,9 @@ const nextConfig: NextConfig = {
     '@endwise/toolkit-resend',
     '@endwise/toolkit-twilio',
     '@endwise/toolkit-vegvesen',
+    '@shadergradient/react',
+    '@react-three/fiber',
+    'three',
   ],
   // `pg` har native optional deps — ikke bundle i serverless-funksjonen.
   serverExternalPackages: ['pg'],

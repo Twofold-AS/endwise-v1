@@ -10,9 +10,10 @@ describe('mørk sidebakgrunn er bek', () => {
     expect(dark).not.toMatch(/--ew-bg:\s*#171717/);
   });
 
-  it('lyst --ew-bg er uendret #ffffff', () => {
+  it('lyst --ew-bg og --ew-sidebar er #ffffff', () => {
     const light = css.slice(0, css.indexOf('[data-theme="dark"]'));
     expect(light).toMatch(/--ew-bg:\s*#ffffff/);
+    expect(light).toMatch(/--ew-sidebar:\s*#ffffff/);
   });
 
   it('sidebar og kortflater er fortsatt løftet i mørkt', () => {

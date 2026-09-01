@@ -241,9 +241,9 @@ describe('F1-17 / F1-20: UI lekker ikke API-orakelet', () => {
   const her = dirname(fileURLToPath(import.meta.url));
 
   it('ByttPassordSkjema er fjernet — ingen passord-UI', () => {
-    expect(
-      existsSync(resolve(her, '../../../apps/web/app/(app)/_shell/bytt-passord.tsx')),
-    ).toBe(false);
+    expect(existsSync(resolve(her, '../../../apps/web/app/(app)/_shell/bytt-passord.tsx'))).toBe(
+      false,
+    );
     const felter = readFileSync(resolve(her, '../../../apps/web/app/_auth/felter.tsx'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\/\/[^\n]*/g, '');

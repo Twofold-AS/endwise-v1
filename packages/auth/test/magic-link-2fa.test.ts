@@ -4,15 +4,15 @@ import { fileURLToPath } from 'node:url';
 import { createDb } from '@endwise/db';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createAuth } from '../src/auth.ts';
-import { MAGIC_LINK_2FA_HOOK_ID } from '../src/magic-link-2fa.ts';
 import {
   MAGIC_LINK_BE_OM_STI,
   MAGIC_LINK_CALLBACK,
   MAGIC_LINK_ENROLL_STI,
-  MAGIC_LINK_TTL_SEKUNDER,
   MAGIC_LINK_TOTP_QUERY,
+  MAGIC_LINK_TTL_SEKUNDER,
   MAGIC_LINK_VERIFY_STI,
 } from '../src/magic-link.ts';
+import { MAGIC_LINK_2FA_HOOK_ID } from '../src/magic-link-2fa.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 const OPPRINNELIG = { ...process.env };

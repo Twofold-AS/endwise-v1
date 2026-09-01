@@ -1,6 +1,6 @@
 'use client';
 
-import { oppgraderKnappetekst } from '@endwise/modules/billing';
+import { oppgraderKnappetekst } from '@endwise/modules/billing/plans';
 import { Grainient } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';

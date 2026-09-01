@@ -100,40 +100,40 @@ export function InboxSidebar() {
         return sortering === 'eldste' ? da - db : db - da;
       });
     return filtrert.map((t) => ({
-        id: t.id,
-        kind: t.kind as ThreadKind,
-        avsender: threadHeading(
-          t.subject,
-          t.kind,
-          t.motparter ?? [],
-          // Kartet velges per tråd, ikke per liste. Dette er hele grunnen til
-          // at det er to oppslag.
-          visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
-          me.data?.userId,
-        ),
-        utdrag: '',
-        nar: fmtWhen(t.lastMessageAt),
-        ulest: t.unread ?? 0,
-        // Ekte kanaldata fra `threads.channel` / siste meldings `channel`.
-        kanal: tilKanal(t.channel),
-        sisteKanal: tilKanal(t.sisteKanal),
-        /**
-         * Ansiktet på raden.
-         * En tråd kan ha flere motparter, men raden har plass til ÉN. Vi tar
-         * den første som verken er deg selv eller en agent — samme person
-         * `threadHeading` navngir raden etter, så bilde og navn ikke peker på
-         * hver sin deltaker.
-         * Seeden kommer fra serveren (`participants.seed`), ikke fra
-         * deltaker-IDen: for en kunde er den `customers.id`, som er den samme
-         * seeden kundekortet bruker. Ellers ville samme menneske hatt to
-         * ansikter på to flater.
-         */
-        motpart: motpartFor(
-          t.motparter ?? [],
-          visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
-          me.data?.userId,
-        ),
-      }));
+      id: t.id,
+      kind: t.kind as ThreadKind,
+      avsender: threadHeading(
+        t.subject,
+        t.kind,
+        t.motparter ?? [],
+        // Kartet velges per tråd, ikke per liste. Dette er hele grunnen til
+        // at det er to oppslag.
+        visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
+        me.data?.userId,
+      ),
+      utdrag: '',
+      nar: fmtWhen(t.lastMessageAt),
+      ulest: t.unread ?? 0,
+      // Ekte kanaldata fra `threads.channel` / siste meldings `channel`.
+      kanal: tilKanal(t.channel),
+      sisteKanal: tilKanal(t.sisteKanal),
+      /**
+       * Ansiktet på raden.
+       * En tråd kan ha flere motparter, men raden har plass til ÉN. Vi tar
+       * den første som verken er deg selv eller en agent — samme person
+       * `threadHeading` navngir raden etter, så bilde og navn ikke peker på
+       * hver sin deltaker.
+       * Seeden kommer fra serveren (`participants.seed`), ikke fra
+       * deltaker-IDen: for en kunde er den `customers.id`, som er den samme
+       * seeden kundekortet bruker. Ellers ville samme menneske hatt to
+       * ansikter på to flater.
+       */
+      motpart: motpartFor(
+        t.motparter ?? [],
+        visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
+        me.data?.userId,
+      ),
+    }));
   }, [ekte, part, sortering, skjulte, navnIntern.data, navnOffisiell.data, me.data?.userId]);
 
   if (endwise) {

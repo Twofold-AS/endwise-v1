@@ -10,8 +10,10 @@ export function TilbakePil({ size = 16 }: { size?: number }) {
       viewBox="0 0 16 16"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      role="img"
       aria-hidden
     >
+      <title>Tilbake</title>
       <path
         d="M10.25 3.25 5.5 8l4.75 4.75"
         stroke="currentColor"

@@ -55,12 +55,7 @@ export const magicLink2faEtterHook = merket(
     const cookie = ctx.context.createAuthCookie(TWO_FACTOR_COOKIE_NAME, {
       maxAge: TWO_FACTOR_COOKIE_MAX_AGE,
     });
-    await ctx.setSignedCookie(
-      cookie.name,
-      identifier,
-      ctx.context.secret,
-      cookie.attributes,
-    );
+    await ctx.setSignedCookie(cookie.name, identifier, ctx.context.secret, cookie.attributes);
 
     const dest = new URL(MAGIC_LINK_CALLBACK, ctx.context.baseURL);
     dest.search = MAGIC_LINK_TOTP_QUERY;

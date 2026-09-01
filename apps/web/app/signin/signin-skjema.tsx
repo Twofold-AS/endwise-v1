@@ -30,9 +30,7 @@ function feilmelding(res: {
 export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
   const utils = trpc.useUtils();
   const search = useSearchParams();
-  const [step, setStep] = useState<Step>(() =>
-    search?.get('steg') === 'totp' ? 'totp' : 'epost',
-  );
+  const [step, setStep] = useState<Step>(() => (search?.get('steg') === 'totp' ? 'totp' : 'epost'));
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);

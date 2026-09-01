@@ -234,9 +234,7 @@ export default function ToFaktorOppsettPage() {
                   </button>
                 </p>
               ) : null}
-              {totpUri ? (
-                <p className="break-all text-[11px] text-fg-muted">{totpUri}</p>
-              ) : null}
+              {totpUri ? <p className="break-all text-[11px] text-fg-muted">{totpUri}</p> : null}
               <Field id="tfa-kode" label="App-kode">
                 <input
                   id="tfa-kode"

@@ -7,6 +7,7 @@ export {
   RESEND_STANDARD_DOMENE,
   RESEND_VERIFISERTE_DOMENER,
 } from './env.ts';
+export * from './magic-link.ts';
 export * from './password-reset.ts';
 export * from './rbac.ts';
 export {
@@ -19,7 +20,6 @@ export {
   sendPasswordReset,
   sendTwoFactorOtp,
 } from './senders/resend.ts';
-export * from './magic-link.ts';
 export * from './session.ts';
 export * from './session-policy.ts';
 export { settPassordUtenSesjon } from './sett-passord.ts';

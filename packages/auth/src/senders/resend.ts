@@ -274,7 +274,11 @@ export async function sendPasswordReset(input: {
  * Tokenet skal aldri logges noe annet sted. Ser du en `console.log` med en
  * invitasjonslenke utenfor denne funksjonen, er det en lekkasje.
  */
-export async function sendMagicLink(input: { to: string; lenke: string; utloper: Date }): Promise<void> {
+export async function sendMagicLink(input: {
+  to: string;
+  lenke: string;
+  utloper: Date;
+}): Promise<void> {
   const klokkeslett = formaterKlokkeslett(input.utloper);
 
   if (skalLeggesILogg()) {

@@ -14,7 +14,6 @@ import {
 } from './bytt-passord.ts';
 import { byttPassordForHook } from './bytt-passord-server.ts';
 import { authEnv } from './env.ts';
-import { createAuthEtterHook } from './magic-link-2fa.ts';
 import {
   MAGIC_LINK_BE_OM_GRENSE,
   MAGIC_LINK_BE_OM_STI,
@@ -22,6 +21,7 @@ import {
   MAGIC_LINK_VERIFY_GRENSE,
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
+import { createAuthEtterHook } from './magic-link-2fa.ts';
 import { ac, roles } from './rbac.ts';
 import {
   sendByttEpostBekreftelse,

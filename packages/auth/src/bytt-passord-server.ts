@@ -2,10 +2,6 @@ import type { Database } from '@endwise/db';
 import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from 'better-auth/api';
 import { BYTT_EPOST_STI } from './bytt-epost.ts';
 import {
-  MAGIC_LINK_BE_OM_STI,
-  MAGIC_LINK_CALLBACK,
-} from './magic-link.ts';
-import {
   BYTT_PASSORD_ETTER_HOOK_ID,
   BYTT_PASSORD_FOR_HOOK_ID,
   BYTT_PASSORD_STI,
@@ -15,6 +11,7 @@ import {
   TO_FAKTOR_ENABLE_STI,
 } from './bytt-passord.ts';
 import { eierLasForHook } from './eier-las-server.ts';
+import { MAGIC_LINK_BE_OM_STI, MAGIC_LINK_CALLBACK } from './magic-link.ts';
 import { skriv2faDisableAudit } from './to-faktor-server.ts';
 
 /**

@@ -34,10 +34,10 @@ import {
   settingsForShell,
   shellForBruker,
 } from './nav';
+import { OppgraderPille } from './oppgrader-pille';
 import { SHELL_HEADER_RAD } from './phone-chrome';
 import { SidebarHeader } from './sidebar-header';
 import { useSidebarState } from './sidebar-state';
-import { OppgraderPille } from './oppgrader-pille';
 
 /** Nav-ikoner 16px. */
 const IKON = 16;

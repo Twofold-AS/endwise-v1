@@ -80,7 +80,7 @@ describe('F1-11: regelen (uten database)', () => {
       expect.unreachable('skulle kastet');
     } catch (error) {
       expect(error).toBeInstanceOf(TwoFactorRequiredError);
-      expect((error as TwoFactorRequiredError).roller).toEqual(['dealer_staff']);
+      expect((error as TwoFactorRequiredError).roller).toEqual(['customer', 'dealer_staff']);
       expect((error as TwoFactorRequiredError).reason).toBe('enrollment');
     }
   });

@@ -15,9 +15,9 @@ PR: https://github.com/Twofold-AS/endwise-v1/pull/105 (utkast, ikke merge)
 
 ## 2. Hva gikk galt
 
-Alt gikk som planlagt etter testrydding. Innlogget Vercel-preview av `/2fa-oppsett` krever enroll-kake; `/signin` kan vises uten sesjon.
+`@better-auth/utils/otp` er ikke en direkte avhengighet — importen i enroll/step-up sprakk i tester. Byttet til lokal RFC 6238 (`totp-verify.ts`, HMAC-SHA1, periode 30, vindu ±1) som matcher Better-Auth. Rolle-testen forventet bare `dealer_staff`; customer er nå i `ROLES_REQUIRING_2FA`.
 
-SPF/DKIM ligger hos Resend, ikke i repo.
+Innlogget Vercel-preview av `/2fa-oppsett` krever enroll-kake; `/signin` kan vises uten sesjon. SPF/DKIM ligger hos Resend, ikke i repo.
 
 ## 3. Hvilke fikser ble gjort
 

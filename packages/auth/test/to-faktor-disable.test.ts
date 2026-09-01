@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { BYTT_EPOST_STI } from '../src/bytt-epost.ts';
 import {
   TO_FAKTOR_DISABLE_STI,
   TO_FAKTOR_SEND_OTP_STI,
@@ -6,6 +7,7 @@ import {
   TO_FAKTOR_VERIFY_TOTP_STI,
 } from '../src/bytt-passord.ts';
 import { byttPassordForHook } from '../src/bytt-passord-server.ts';
+import { TOTP_STEP_UP_KODE } from '../src/totp-steg.ts';
 import { TO_FAKTOR_DISABLE_AUDIT_ACTION } from '../src/to-faktor-oppsett.ts';
 
 describe('F1-22: selvbetjent disable er stengt (Mons)', () => {
@@ -44,6 +46,26 @@ describe('F1-22: selvbetjent disable er stengt (Mons)', () => {
     } as never);
     expect(backup).toEqual({
       context: { body: { code: 'aaaaa-bbbbb', trustDevice: false } },
+    });
+  });
+
+  it('⛔ change-email uten fersk TOTP er 403 selv med 2FA på', async () => {
+    await expect(
+      byttPassordForHook({
+        path: BYTT_EPOST_STI,
+        body: { newEmail: 'ny@test.no' },
+        context: {
+          session: {
+            user: { id: 'u1', twoFactorEnabled: true },
+            session: { token: 't', userId: 'u1' },
+          },
+          adapter: { findOne: async () => null },
+        },
+        getSignedCookie: async () => null,
+      } as never),
+    ).rejects.toMatchObject({
+      status: 'FORBIDDEN',
+      body: { code: TOTP_STEP_UP_KODE },
     });
   });
 

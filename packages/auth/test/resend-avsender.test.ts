@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   avsenderErKanonisk,
@@ -9,6 +10,7 @@ import {
 import { byggEnrollIdentifier, byggEnrollSesjon, erEnrollIdentifier } from '../src/enroll.ts';
 import { erProduktDestinasjon } from '../src/produkt-destinasjon.ts';
 import { krevFerskTotpFraBody, TOTP_STEP_UP_KODE } from '../src/totp-steg.ts';
+import { verifiserTotpKode } from '../src/totp-verify.ts';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -73,6 +75,23 @@ describe('TOTP step-up', () => {
 
   it('godtar 6 siffer', () => {
     expect(krevFerskTotpFraBody({ totp: '482913' })).toBe('482913');
+  });
+
+  it('verifiserTotpKode matcher HMAC-SHA1 periode 30 vindu ±1', () => {
+    const hemmelighet = 'endwise-totp-test-secret';
+    const counter = Math.floor(Date.now() / 30_000);
+    const teller = Buffer.alloc(8);
+    teller.writeBigUInt64BE(BigInt(counter));
+    const hmac = createHmac('sha1', hemmelighet).update(teller).digest();
+    const offset = hmac[hmac.length - 1]! & 15;
+    const trunkert =
+      ((hmac[offset]! & 127) << 24) |
+      ((hmac[offset + 1]! & 255) << 16) |
+      ((hmac[offset + 2]! & 255) << 8) |
+      (hmac[offset + 3]! & 255);
+    const kode = (trunkert % 1_000_000).toString().padStart(6, '0');
+    expect(verifiserTotpKode(hemmelighet, kode)).toBe(true);
+    expect(verifiserTotpKode(hemmelighet, '000000')).toBe(false);
   });
 });
 

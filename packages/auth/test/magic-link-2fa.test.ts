@@ -75,6 +75,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(hook).toMatch(/twoFactorEnabled !== true/);
     expect(hook).toMatch(/MAGIC_LINK_ENROLL_STI/);
     expect(hook).toMatch(/MAGIC_LINK_TOTP_QUERY/);
+    expect(hook).not.toMatch(/setSessionCookie/);
   });
 
   it('e-postbytte krever TOTP på, ikke passord', () => {
@@ -118,7 +119,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(oppsett).not.toMatch(/type=["']password["']/);
     expect(oppsett).not.toMatch(/sendOtp/);
     expect(oppsett).toMatch(/MAGIC_LINK_ENROLL_UTEN_SESJON/);
-    expect(oppsett).toMatch(/samme innboks/);
+    expect(oppsett).toMatch(/samme\s+innboks/);
     expect(oppsett).not.toMatch(/Innloggingslenken må åpnes først/);
   });
 });

@@ -1,7 +1,7 @@
 import { symmetricDecrypt } from 'better-auth/crypto';
-import { createOTP } from '@better-auth/utils/otp';
 import { byggEnrollSesjon, ENROLL_COOKIE_NAME, erEnrollIdentifier } from './enroll.ts';
 import { krevFerskTotpFraBody } from './totp-steg.ts';
+import { verifiserTotpKode } from './totp-verify.ts';
 
 type HookCtx = {
   context: {
@@ -86,7 +86,7 @@ export async function verifiserFerskTotpMotHemmelighet(
     key: ctx.context.secretConfig as Parameters<typeof symmetricDecrypt>[0]['key'],
     data: twoFactor.secret,
   });
-  const ok = await createOTP(secret, { period: 30, digits: 6 }).verify(totp);
+  const ok = verifiserTotpKode(secret, totp);
   if (!ok) {
     throw krevFerskTotpFraBody({});
   }

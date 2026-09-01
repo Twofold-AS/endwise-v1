@@ -1,7 +1,7 @@
-import { createOTP } from '@better-auth/utils/otp';
 import { type Database, eq, schema } from '@endwise/db';
 import { symmetricDecrypt } from 'better-auth/crypto';
 import { krevFerskTotpFraBody, TOTP_STEP_UP_KODE, TOTP_STEP_UP_MELDING } from './totp-steg.ts';
+import { verifiserTotpKode } from './totp-verify.ts';
 
 /**
  * TOTP-step-up uten Better-Auth-hook-ctx (tRPC: e-postbytte, leder-reset).
@@ -25,7 +25,7 @@ export async function verifiserFerskTotpForBruker(
     key: secretKey as Parameters<typeof symmetricDecrypt>[0]['key'],
     data: twoFactor.secret,
   });
-  const ok = await createOTP(secret, { period: 30, digits: 6 }).verify(totp);
+  const ok = verifiserTotpKode(secret, totp);
   if (!ok) {
     throw krevFerskTotpFraBody({});
   }

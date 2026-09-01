@@ -112,12 +112,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    */
 
   /*
-   * Sidebaren er ytterst og går fra topp til bunn (desktop-skinne). På telefon
-   * er den samme sidebaren et fullskjerm-overlay, lukket som default.
-   * Fast telefon-toppbar med åpne-ikon ytterst til høyre. PhoneBevel er borte.
-   * Breadcrumb-topbar er borte. Workshop-stripen (Grainient 32px + hvit bloub)
-   * sitter under toppbaren på telefon og øverst i innholdskolonnen på desktop.
-   * Kommandopaletten (K som globalt søk) er fjernet på eiers
+   * Sidebaren er overlay på telefon og desktop — lukket default, åpnes fra
+   * samme toppbar-ikon ytterst til høyre. Ingen persistent desktop-skinne.
+   * Fast toppbar med 18px-logo. PhoneBevel er borte. Breadcrumb-topbar er borte.
+   * Workshop-stripen (Grainient, KI-Ronny til venstre) er ~44px på telefon og
+   * 32px på desktop. Kommandopaletten (K som globalt søk) er fjernet på eiers
    * beslutning. K åpner nå quick actions i sidebaren i stedet. Konsekvensen er
    * at de parkerte rutene (marked/*
    * , admin/*) ikke lenger har en inngang i UI-et
@@ -135,11 +134,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <InboxFilterProvider>
             <PwaRegister />
             <div className={PHONE_SHELL_ROT}>
-              <Suspense
-                fallback={
-                  <div className="hidden w-[248px] shrink-0 border-border border-r bg-sidebar md:block" />
-                }
-              >
+              <Suspense fallback={null}>
                 <PlattformRuteVakt
                   erPlattform={erPlattform}
                   isLoading={isLoading}
@@ -148,7 +143,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Sidebar />
               </Suspense>
               <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                <Suspense fallback={<div className="h-control max-h-[32px] shrink-0 bg-bg" />}>
+                <Suspense
+                  fallback={
+                    <div className="h-11 max-h-[44px] shrink-0 bg-bg md:h-control md:max-h-[32px]" />
+                  }
+                >
                   <PhoneShell />
                   <WorkshopBloub />
                   <OrganisasjonSeksjonBar />

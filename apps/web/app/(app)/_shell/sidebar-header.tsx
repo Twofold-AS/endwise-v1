@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSidebarState } from './sidebar-state';
 
-/** Liten logo. Forhandlernavn vises ikke ved siden av merket. */
+/** Liten logo — samme 18px i overlay og i lukket toppbar. Forhandlernavn vises ikke. */
 const LOGO = 18;
 
 /**

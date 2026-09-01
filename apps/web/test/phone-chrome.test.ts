@@ -8,6 +8,7 @@ import {
   laasAktivMotStart,
   PHONE_H_SCROLL,
   PHONE_LOGO_KOLONNE,
+  PHONE_LOGO_PX,
   scrollAktivTilStart,
   scrollTilbake,
 } from '../app/(app)/_shell/phone-chrome.ts';
@@ -28,7 +29,8 @@ describe('phone-chrome', () => {
     expect(PHONE_H_SCROLL).toContain('overflow-y-hidden');
     expect(PHONE_H_SCROLL).toContain('touch-pan-x');
     expect(PHONE_H_SCROLL).toContain('overscroll-y-none');
-    expect(PHONE_LOGO_KOLONNE).toContain('22px');
+    expect(PHONE_LOGO_PX).toBe(18);
+    expect(PHONE_LOGO_KOLONNE).toContain('18px');
     expect(PHONE_LOGO_KOLONNE).toContain('0.75rem');
     expect(PHONE_LOGO_KOLONNE).toContain('0.5rem');
   });

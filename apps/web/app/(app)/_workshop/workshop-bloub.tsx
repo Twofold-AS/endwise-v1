@@ -1,47 +1,33 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import {
-  AiDisclosure,
-  BLOUB_HVILE,
-  Grainient,
-  Message,
-  MessageBubble,
-  MessageContent,
-  MessageHeader,
-  MessageScroller,
-  MessageScrollerButton,
-  MessageScrollerContent,
-  MessageScrollerItem,
-  MessageScrollerProvider,
-  MessageScrollerViewport,
-  useBloubIdleLiv,
-  useBloubPapir,
-  X,
-} from '@endwise/ui';
+import { Grainient, useBloubIdleLiv } from '@endwise/ui';
 import { BloubBot, type ExpressionId, type StateId } from '@endwise/ui/bloub/BloubBot';
 import { DefaultChatTransport } from 'ai';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { sidekontekst } from './sidekontekst';
 
-/** Får plass i h-control (32px) uten sirkel-chip. */
+/** Får plass i desktop 32px og telefon ~44px uten sirkel-chip. */
 const STRIP_BOT = 28;
-const HODE = 48;
+const SPIN_MS = 700;
 
 /**
- * Grainient-stripe (maks 32px) i toppen av innholdskolonnen.
- * Hvit forklaring + hvit bloub ytterst til høyre, uten sirkel-bakgrunn.
+ * Grainient-stripe: telefon ~44px, desktop 32px.
+ * Hvit «La KI-Ronny ta styringen» (blink 10s) + hvit Ronny ytterst til venstre,
+ * uten sirkel. Klikk: surpris-øyne + kort spinn, deretter bunndock med kun input.
  * Samme komponent på telefon (under toppbaren) og desktop.
- * Ingen Quick-skriving. Ingen bunn-FAB.
+ * Ingen Quick-skriving. Ingen bunn-FAB. Ingen tall workshop-panel.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
   const search = useSearchParams()?.toString() ?? '';
   const [apen, setApen] = useState(false);
+  const [klikk, setKlikk] = useState(false);
   const [tekst, setTekst] = useState('');
   const [suksess, setSuksess] = useState(false);
-  const papir = useBloubPapir();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const spinTimer = useRef<number | null>(null);
   const side = useMemo(() => sidekontekst(pathname, search), [pathname, search]);
 
   const transport = useMemo(
@@ -67,9 +53,25 @@ export function WorkshopBloub() {
     return () => window.removeEventListener('endwise:booking-lagret', onSuksess);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (spinTimer.current) window.clearTimeout(spinTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!apen) return;
+    inputRef.current?.focus();
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setApen(false);
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [apen]);
+
   const tilstand: StateId = suksess ? 'burst' : error ? 'alert' : opptatt ? 'thinking' : 'idle';
-  const idleLiv = useBloubIdleLiv(!opptatt && !skriver && !error && !suksess);
-  const uttrykk: ExpressionId = skriver ? 'attentif' : idleLiv;
+  const idleLiv = useBloubIdleLiv(!klikk && !opptatt && !skriver && !error && !suksess);
+  const uttrykk: ExpressionId = klikk ? 'surpris' : skriver ? 'attentif' : idleLiv;
 
   function send(innhold: string) {
     const rensket = innhold.trim();
@@ -83,12 +85,27 @@ export function WorkshopBloub() {
     send(tekst);
   }
 
+  function onRonny() {
+    if (apen) {
+      setApen(false);
+      setKlikk(false);
+      if (spinTimer.current) window.clearTimeout(spinTimer.current);
+      return;
+    }
+    setKlikk(true);
+    if (spinTimer.current) window.clearTimeout(spinTimer.current);
+    spinTimer.current = window.setTimeout(() => {
+      setKlikk(false);
+      setApen(true);
+    }, SPIN_MS);
+  }
+
   if (pathname.startsWith('/oppstart')) return null;
 
   return (
     <div
       data-workshop-strip
-      className="relative h-control max-h-[32px] w-full shrink-0 overflow-hidden"
+      className="relative h-11 max-h-[44px] w-full shrink-0 overflow-hidden md:h-control md:max-h-[32px]"
     >
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Grainient className="absolute inset-0 h-full w-full" />
@@ -96,134 +113,76 @@ export function WorkshopBloub() {
 
       {apen ? (
         <div
-          className="fixed top-[calc(env(safe-area-inset-top)+4.5rem)] right-3 z-40 flex w-[min(22rem,calc(100vw-1.5rem))] max-h-[min(34rem,70vh)] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-lg md:top-10"
+          data-workshop-dock
+          className="fixed inset-x-0 bottom-0 z-40 bg-bg pb-[env(safe-area-inset-bottom)]"
           role="dialog"
-          aria-label="Verkstedsassistent"
+          aria-label="KI-Ronny"
         >
-          <div className="flex items-center gap-3 border-border border-b px-3 py-2">
-            <BloubBot
-              size={HODE}
-              shape="cercle"
-              color="#111111"
-              paper={papir}
-              state={tilstand}
-              expression={uttrykk === BLOUB_HVILE ? BLOUB_HVILE : uttrykk}
-              follow
-              still={false}
-              playing={false}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="text-label text-fg">Verkstedsassistent</p>
-              <p className="truncate text-[11px] text-fg-muted">{side.merkelapp}</p>
+          {messages.length > 0 || error ? (
+            <div className="max-h-[40vh] overflow-y-auto px-3 py-2">
+              {messages.map((melding) => {
+                const tekstDel = melding.parts
+                  .filter((del) => del.type === 'text')
+                  .map((del) => del.text)
+                  .join('');
+                if (!tekstDel) return null;
+                return (
+                  <p
+                    key={melding.id}
+                    className={`py-1 text-body ${
+                      melding.role === 'user' ? 'text-right text-fg' : 'text-fg-muted'
+                    }`}
+                  >
+                    {tekstDel}
+                  </p>
+                );
+              })}
+              {error ? (
+                <p className="py-1 text-body text-destructive">Noe gikk galt. Prøv igjen.</p>
+              ) : null}
             </div>
-            <button
-              type="button"
-              onClick={() => setApen(false)}
-              aria-label="Lukk assistent"
-              className="flex size-7 items-center justify-center rounded-control text-fg-muted hover:bg-surface-2 hover:text-fg"
-            >
-              <X size={16} strokeWidth={1.75} />
-            </button>
-          </div>
-
-          <div className="flex min-h-0 flex-1 flex-col gap-2 p-3">
-            <AiDisclosure />
-            <MessageScrollerProvider autoScroll>
-              <MessageScroller className="min-h-[10rem] flex-1">
-                <MessageScrollerViewport className="px-0">
-                  <MessageScrollerContent>
-                    <MessageScrollerItem>
-                      <Message align="start">
-                        <MessageContent>
-                          <MessageHeader>Bloub</MessageHeader>
-                          <MessageBubble>
-                            Hei — jeg er her om du vil sette opp bookinger, forstå timeplanen eller
-                            bare spørre. Du er på {side.merkelapp} nå.
-                          </MessageBubble>
-                        </MessageContent>
-                      </Message>
-                    </MessageScrollerItem>
-                    {messages.map((melding) => {
-                      const tekstDel = melding.parts
-                        .filter((del) => del.type === 'text')
-                        .map((del) => del.text)
-                        .join('');
-                      return (
-                        <MessageScrollerItem key={melding.id} messageId={melding.id} scrollAnchor>
-                          <Message align={melding.role === 'user' ? 'end' : 'start'}>
-                            <MessageContent>
-                              <MessageHeader>
-                                {melding.role === 'user' ? 'Du' : 'Bloub'}
-                              </MessageHeader>
-                              {tekstDel ? (
-                                <MessageBubble egen={melding.role === 'user'}>
-                                  {tekstDel}
-                                </MessageBubble>
-                              ) : null}
-                            </MessageContent>
-                          </Message>
-                        </MessageScrollerItem>
-                      );
-                    })}
-                    {error ? (
-                      <MessageScrollerItem>
-                        <p className="rounded-control border border-destructive/40 px-3 py-2 text-body text-destructive">
-                          Noe gikk galt. Prøv igjen.
-                        </p>
-                      </MessageScrollerItem>
-                    ) : null}
-                  </MessageScrollerContent>
-                </MessageScrollerViewport>
-                <MessageScrollerButton />
-              </MessageScroller>
-            </MessageScrollerProvider>
-
-            <form onSubmit={onSubmit} className="flex items-center gap-2">
-              <input
-                value={tekst}
-                onChange={(e) => setTekst(e.target.value)}
-                placeholder="Spør om bookinger, timeplan …"
-                disabled={opptatt}
-                data-workshop-input
-                className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50"
-              />
-              <button
-                type="submit"
-                disabled={opptatt || !tekst.trim()}
-                className="inline-flex h-control shrink-0 items-center rounded-control bg-fg px-3 text-label text-bg transition-opacity hover:opacity-90 disabled:opacity-40"
-              >
-                {opptatt ? '…' : 'Send'}
-              </button>
-            </form>
-          </div>
+          ) : null}
+          <form onSubmit={onSubmit} className="px-3 py-2">
+            <input
+              ref={inputRef}
+              value={tekst}
+              onChange={(e) => setTekst(e.target.value)}
+              placeholder="Spør Ronny …"
+              disabled={opptatt}
+              data-workshop-input
+              className="h-control w-full rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50"
+            />
+          </form>
         </div>
       ) : null}
 
       <div className="relative z-10 flex h-full items-center gap-2 px-3">
-        <p className="min-w-0 flex-1 truncate text-label text-white">
-          Endwise-hjelpen — kjenner siden du er på
-        </p>
         <button
           type="button"
-          onClick={() => setApen((v) => !v)}
+          onClick={onRonny}
           aria-expanded={apen}
-          aria-label={apen ? 'Lukk verkstedsassistent' : 'Åpne verkstedsassistent'}
+          aria-label={apen ? 'Lukk KI-Ronny' : 'Åpne KI-Ronny'}
           data-workshop-sticky
           className="flex shrink-0 items-center justify-center bg-transparent focus-visible:outline-2 focus-visible:outline-white"
           style={{ width: STRIP_BOT, height: STRIP_BOT }}
         >
-          <BloubBot
-            size={STRIP_BOT}
-            shape="cercle"
-            color="#ffffff"
-            paper="#111111"
-            state={tilstand}
-            expression={uttrykk}
-            follow={false}
-            still={false}
-            playing={false}
-          />
+          <span data-ronny-spin={klikk ? '' : undefined} className="flex">
+            <BloubBot
+              size={STRIP_BOT}
+              shape="cercle"
+              color="#ffffff"
+              paper="#111111"
+              state={tilstand}
+              expression={uttrykk}
+              follow={false}
+              still={false}
+              playing={false}
+            />
+          </span>
         </button>
+        <p data-ronny-blink className="min-w-0 flex-1 truncate text-label text-white">
+          La KI-Ronny ta styringen
+        </p>
       </div>
     </div>
   );

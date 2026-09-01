@@ -12,9 +12,9 @@ import { erPhoneHjem, PHONE_SAFE_TOP, phoneHjemHref } from './phone-home';
 import { useSidebarState } from './sidebar-state';
 
 /**
- * Fast telefon-toppbar (alltid synlig når overlay er lukket).
- * Logo til venstre. Åpne-sidebar-ikon ytterst til høyre.
- * Ingen bevel, ingen hamburger-drawer, ingen Mer-ark.
+ * Fast toppbar på telefon og desktop (alltid synlig når overlay er lukket).
+ * Logo til venstre (18px, samme som sidebar-overlay). Åpne-sidebar-ikon ytterst til høyre.
+ * Ingen persistent desktop-skinne. Ingen bevel, ingen hamburger-drawer, ingen Mer-ark.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -31,10 +31,7 @@ export function PhoneShell() {
   const hjemHref = phoneHjemHref(shell);
 
   return (
-    <header
-      data-phone-top-bar
-      className={`sticky top-0 z-20 shrink-0 bg-bg md:hidden ${PHONE_SAFE_TOP}`}
-    >
+    <header data-phone-top-bar className={`sticky top-0 z-20 shrink-0 bg-bg ${PHONE_SAFE_TOP}`}>
       <div className="flex h-row items-center gap-2 px-3">
         <Link href={hjemHref as Route} aria-label="Hjem">
           <Image

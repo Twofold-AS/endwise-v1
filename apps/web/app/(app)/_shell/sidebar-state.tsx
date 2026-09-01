@@ -3,8 +3,9 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 
 /**
- * Kollapsen (desktop-skinne) og telefon-overlay deles mellom header, top-bar
- * og sidebaren. Telefon starter alltid lukket. Overlay er ikke kollapset skinne.
+ * Overlay-sidebar (telefon og desktop) og eventuell kollaps deles mellom
+ * header, toppbar og sidebaren. Overlay starter alltid lukket — åpnes fra
+ * samme toppbar-ikon ytterst til høyre. Ingen persistent desktop-skinne.
  */
 type SidebarState = {
   collapsed: boolean;

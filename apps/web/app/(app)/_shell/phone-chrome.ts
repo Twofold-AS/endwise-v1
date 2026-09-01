@@ -2,13 +2,13 @@
  * Telefon-chrome delt mellom hovedmeny og top-bar 2.
  * Logo-kolonnen er pinnest (ikke i scroll), så Oversikt/Timeplan
  * starter under valgt hovedpunkt — samme venstre-innfelt.
- * 22px = samme logo.svg-mål som sidebar-header.
+ * 18px = samme logo.svg-mål som sidebar-header (lukket toppbar og overlay).
  */
-export const PHONE_LOGO_PX = 22;
+export const PHONE_LOGO_PX = 18;
 
-/** pl-3 + 22px logo + gap-2. */
+/** pl-3 + 18px logo + gap-2. */
 export const PHONE_LOGO_KOLONNE =
-  'flex h-full w-[calc(0.75rem+22px+0.5rem)] shrink-0 items-center pl-3';
+  'flex h-full w-[calc(0.75rem+18px+0.5rem)] shrink-0 items-center pl-3';
 
 /** Horisontal scroll uten vertikal wiggle. */
 export const PHONE_H_SCROLL = 'overflow-x-auto overflow-y-hidden overscroll-y-none touch-pan-x';

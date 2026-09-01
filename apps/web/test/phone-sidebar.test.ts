@@ -17,6 +17,8 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
   const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
   const state = utenKommentarer(les('../app/(app)/_shell/sidebar-state.tsx'));
   const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+  const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
+  const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
   const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
   const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
   const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
@@ -24,13 +26,16 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
   it('telefon-toppbar er fast, logo til venstre, åpne-ikon ytterst til høyre', () => {
     expect(shell).toMatch(/data-phone-top-bar/);
     expect(shell).toMatch(/sticky top-0/);
-    expect(shell).toMatch(/md:hidden/);
+    expect(shell).not.toMatch(/md:hidden/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
     expect(shell).toMatch(/ml-auto[\s\S]*PanelLeftOpen|ml-auto flex size-8/);
     expect(shell).not.toMatch(/PhoneBevel|BEVEL/);
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).not.toMatch(/PhoneBevel/);
+    expect(chrome).toMatch(/PHONE_LOGO_PX = 18/);
+    expect(header).toMatch(/LOGO = 18/);
+    expect(shell).toMatch(/PHONE_LOGO_PX/);
   });
 
   it('sidebar er lukket som default på telefon og dekker hele viewport når åpen', () => {
@@ -41,8 +46,9 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(sidebar).toMatch(/data-phone-sidebar=\{phoneOpen \? 'open' : 'closed'\}/);
     expect(sidebar).toMatch(/fixed inset-0 z-50 flex w-full/);
     expect(sidebar).toMatch(/phoneOpen[\s\S]*hidden/);
-    expect(sidebar).toMatch(/md:flex/);
-    expect(sidebar).toMatch(/md:static/);
+    expect(sidebar).not.toMatch(/md:flex/);
+    expect(sidebar).not.toMatch(/md:static/);
+    expect(sidebar).not.toMatch(/md:w-\[248px\]/);
     expect(sidebar).toMatch(/bg-\[#ffffff\]/);
     expect(sidebar).toMatch(/TipCard/);
     expect(sidebar).not.toMatch(/hidden md:block/);
@@ -55,15 +61,17 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(sidebar).toMatch(/FORHANDLER_NAV|navForShell/);
   });
 
-  it('Grainient-stripe vises på telefon under toppbaren, 32px, ikke som FAB', () => {
+  it('Grainient-stripe vises under toppbaren, høyere på telefon, ikke som FAB', () => {
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).toMatch(/WorkshopBloub/);
     expect(workshop).toMatch(/data-workshop-strip/);
     expect(workshop).toMatch(/Grainient/);
-    expect(workshop).toMatch(/h-control max-h-\[32px\]/);
+    expect(workshop).toMatch(/h-11 max-h-\[44px\]/);
+    expect(workshop).toMatch(/md:h-control md:max-h-\[32px\]/);
+    expect(workshop).toMatch(/La KI-Ronny ta styringen/);
     expect(workshop).not.toMatch(/hidden h-14/);
     expect(workshop).not.toMatch(/md:block/);
-    expect(workshop).not.toMatch(/fixed[\s\S]*bottom/);
+    expect(workshop).toMatch(/fixed inset-x-0 bottom-0/);
     expect(workshop).not.toMatch(/ShaderGradient/);
   });
 

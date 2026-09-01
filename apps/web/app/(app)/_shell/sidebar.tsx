@@ -42,9 +42,9 @@ import { TipCard } from './tip-card';
 const IKON = 16;
 
 /**
- * Samme sidebar på desktop (skinne) og telefon (fullskjerm-overlay, lukket default).
+ * Samme overlay-sidebar på telefon og desktop — lukket default, åpnes fra
+ * toppbar-ikonet ytterst til høyre. Ingen persistent desktop-skinne.
  * Hvit flate, ingen header-divider. Ingen avatar. Hjelp er TipCard, ikke dest.
- * Kollapset desktop-skinne er IKKE telefonmodus.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -130,15 +130,6 @@ export function Sidebar() {
   }, []);
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)');
-    const lukkPaaDesktop = () => {
-      if (mq.matches) closePhone();
-    };
-    mq.addEventListener('change', lukkPaaDesktop);
-    return () => mq.removeEventListener('change', lukkPaaDesktop);
-  }, [closePhone]);
-
-  useEffect(() => {
     if (!phoneOpen) return;
     const onEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closePhone();
@@ -166,12 +157,10 @@ export function Sidebar() {
     <aside
       data-sidebar
       data-phone-sidebar={phoneOpen ? 'open' : 'closed'}
-      className={`flex-col border-border border-r bg-[#ffffff] transition-[width] duration-150 ${
+      className={`flex-col border-border border-r bg-[#ffffff] ${
         phoneOpen
           ? 'fixed inset-0 z-50 flex w-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]'
           : 'hidden'
-      } md:static md:inset-auto md:z-auto md:flex md:shrink-0 md:pt-0 md:pb-0 ${
-        smal ? 'md:w-[76px]' : 'md:w-[248px]'
       }`}
     >
       <div

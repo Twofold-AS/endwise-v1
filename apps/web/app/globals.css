@@ -40,3 +40,30 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* KI-Ronny: tekst blinker hvert 10. sekund. Kort spinn ved klikk. */
+@keyframes ronny-blink {
+  0%,
+  92%,
+  100% {
+    opacity: 1;
+  }
+  94%,
+  98% {
+    opacity: 0.15;
+  }
+}
+[data-ronny-blink] {
+  animation: ronny-blink 10s ease-in-out infinite;
+}
+@keyframes ronny-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+[data-ronny-spin] {
+  animation: ronny-spin 0.7s ease-in-out;
+}

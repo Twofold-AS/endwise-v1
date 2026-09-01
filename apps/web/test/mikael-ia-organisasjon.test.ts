@@ -212,7 +212,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(layout).toMatch(/WorkshopBloub/);
     expect(layout).not.toMatch(/TopBar/);
     expect(layout).toMatch(/OrganisasjonSeksjonBar/);
-    expect(shell).toMatch(/md:hidden/);
+    expect(shell).not.toMatch(/md:hidden/);
     expect(shell).toMatch(/logo\/logo\.svg/);
     expect(shell).toMatch(/logo-invert/);
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
@@ -226,7 +226,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(sidebar).toMatch(/data-phone-sidebar/);
     expect(sidebar).toMatch(/fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
-    expect(sidebar).toMatch(/md:flex/);
+    expect(sidebar).not.toMatch(/md:flex/);
     expect(sidebar).toMatch(/Handlinger/);
     expect(sidebar).toMatch(/min-width:\s*768px/);
     expect(chrome).toMatch(/scrollTo/);

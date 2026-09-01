@@ -32,19 +32,26 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(layout).not.toMatch(/bottom-tab|PhoneTab/);
   });
 
-  it('er 32px Grainient-stripe med hvit bloub uten sirkel, sidekontekst med hver tur', () => {
+  it('er Grainient-stripe med KI-Ronny til venstre, blink og bunndock', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
+    const css = les('../app/globals.css');
     expect(fab).toMatch(/data-workshop-strip/);
     expect(fab).toMatch(/Grainient/);
-    expect(fab).toMatch(/h-control max-h-\[32px\]/);
+    expect(fab).toMatch(/h-11 max-h-\[44px\]/);
+    expect(fab).toMatch(/md:h-control md:max-h-\[32px\]/);
     expect(fab).toMatch(/const STRIP_BOT = 28/);
-    expect(fab).toMatch(/const HODE = 48/);
     expect(fab).toMatch(/color="#ffffff"/);
     expect(fab).toMatch(/paper="#111111"/);
-    expect(fab).toMatch(/Endwise-hjelpen/);
+    expect(fab).toMatch(/La KI-Ronny ta styringen/);
+    expect(fab).toMatch(/data-ronny-blink/);
+    expect(fab).toMatch(/surpris/);
+    expect(fab).toMatch(/data-ronny-spin/);
+    expect(fab).toMatch(/data-workshop-dock/);
+    expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
     expect(fab).toMatch(/text-white/);
     expect(fab).toMatch(/data-workshop-sticky/);
     expect(fab).not.toMatch(/rounded-full|bg-bg\/90|ring-1/);
+    expect(fab).not.toMatch(/Verkstedsassistent|AiDisclosure|MessageScroller/);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
     expect(fab).toMatch(/body: \{ side \}/);
     expect(fab).toMatch(/expression=\{uttrykk\}/);
@@ -58,6 +65,13 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).not.toMatch(/size=\{320\}/);
     expect(fab).not.toMatch(/#1ED27D|#EE2924/);
     expect(fab).not.toMatch(/ShaderGradient/);
+    expect(css).toMatch(/ronny-blink/);
+    expect(css).toMatch(/10s/);
+    expect(css).toMatch(/ronny-spin/);
+    const sticky = fab.indexOf('data-workshop-sticky');
+    const label = fab.indexOf('La KI-Ronny ta styringen');
+    expect(sticky).toBeGreaterThan(-1);
+    expect(label).toBeGreaterThan(sticky);
   });
 
   it('chat-ruta tar imot sidekontekst-header', () => {

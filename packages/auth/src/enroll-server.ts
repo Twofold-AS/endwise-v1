@@ -30,7 +30,7 @@ type HookCtx = {
     };
     createAuthCookie: (name: string, opts?: { maxAge?: number }) => { name: string };
   };
-  getSignedCookie: (name: string, secret: string) => Promise<string | null>;
+  getSignedCookie: (name: string, secret: string) => Promise<string | false | null>;
 };
 
 export async function lesEnrollBrukerId(ctx: HookCtx): Promise<string | null> {

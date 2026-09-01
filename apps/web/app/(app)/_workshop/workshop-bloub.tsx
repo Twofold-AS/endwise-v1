@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { Grainient, useBloubIdleLiv } from '@endwise/ui';
+import { Grainient } from '@endwise/ui';
 import { BloubBot, type ExpressionId, type StateId } from '@endwise/ui/bloub/BloubBot';
 import { DefaultChatTransport } from 'ai';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -11,13 +11,38 @@ import { sidekontekst } from './sidekontekst';
 /** Får plass i desktop 32px og telefon ~44px uten sirkel-chip. */
 const STRIP_BOT = 28;
 const SPIN_MS = 700;
+const IDLE_MS = 5000;
+
+/**
+ * Seks ekte bloub-uttrykk/tilstander, syklet hvert 5. sekund.
+ * colere, surpris, wink (blunk), curieux, attentif, heureux — fra vendor, ikke Morph.
+ */
+const RONNY_IDLE: readonly { expression: ExpressionId; state: StateId }[] = [
+  { expression: 'colere', state: 'idle' },
+  { expression: 'surpris', state: 'idle' },
+  { expression: 'neutre', state: 'wink' },
+  { expression: 'curieux', state: 'idle' },
+  { expression: 'attentif', state: 'idle' },
+  { expression: 'heureux', state: 'idle' },
+];
+
+function useRonnyIdle(aktiv: boolean): (typeof RONNY_IDLE)[number] {
+  const [steg, setSteg] = useState(0);
+  useEffect(() => {
+    if (!aktiv) return;
+    const id = window.setInterval(() => {
+      setSteg((s) => (s + 1) % RONNY_IDLE.length);
+    }, IDLE_MS);
+    return () => window.clearInterval(id);
+  }, [aktiv]);
+  return RONNY_IDLE[steg] ?? RONNY_IDLE[0];
+}
 
 /**
  * Grainient-stripe: telefon ~44px, desktop 32px.
- * Hvit «La KI-Ronny ta styringen» (blink 10s) + hvit Ronny ytterst til venstre,
- * uten sirkel. Klikk: surpris-øyne + kort spinn, deretter bunndock med kun input.
- * Samme komponent på telefon (under toppbaren) og desktop.
- * Ingen Quick-skriving. Ingen bunn-FAB. Ingen tall workshop-panel.
+ * Statisk «La KI-Ronny ta styringen» + hvit Ronny ytterst til venstre, uten sirkel.
+ * Idle: 6 vendor-uttrykk hvert 5. sekund. Klikk: surpris + rotateY-spinn, deretter bunndock.
+ * Ingen tekst-blink. Ingen vertikal flip.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -43,6 +68,7 @@ export function WorkshopBloub() {
   const { messages, sendMessage, status, error } = useChat({ transport });
   const opptatt = status === 'submitted' || status === 'streaming';
   const skriver = tekst.trim().length > 0 && !opptatt;
+  const idle = useRonnyIdle(!klikk && !opptatt && !skriver && !error && !suksess);
 
   useEffect(() => {
     const onSuksess = () => {
@@ -69,9 +95,16 @@ export function WorkshopBloub() {
     return () => document.removeEventListener('keydown', onEscape);
   }, [apen]);
 
-  const tilstand: StateId = suksess ? 'burst' : error ? 'alert' : opptatt ? 'thinking' : 'idle';
-  const idleLiv = useBloubIdleLiv(!klikk && !opptatt && !skriver && !error && !suksess);
-  const uttrykk: ExpressionId = klikk ? 'surpris' : skriver ? 'attentif' : idleLiv;
+  const tilstand: StateId = klikk
+    ? 'idle'
+    : suksess
+      ? 'burst'
+      : error
+        ? 'alert'
+        : opptatt
+          ? 'thinking'
+          : idle.state;
+  const uttrykk: ExpressionId = klikk ? 'surpris' : skriver ? 'attentif' : idle.expression;
 
   function send(innhold: string) {
     const rensket = innhold.trim();
@@ -163,6 +196,7 @@ export function WorkshopBloub() {
           aria-expanded={apen}
           aria-label={apen ? 'Lukk KI-Ronny' : 'Åpne KI-Ronny'}
           data-workshop-sticky
+          data-ronny-stage
           className="flex shrink-0 items-center justify-center bg-transparent focus-visible:outline-2 focus-visible:outline-white"
           style={{ width: STRIP_BOT, height: STRIP_BOT }}
         >
@@ -180,9 +214,7 @@ export function WorkshopBloub() {
             />
           </span>
         </button>
-        <p data-ronny-blink className="min-w-0 flex-1 truncate text-label text-white">
-          La KI-Ronny ta styringen
-        </p>
+        <p className="min-w-0 flex-1 truncate text-label text-white">La KI-Ronny ta styringen</p>
       </div>
     </div>
   );

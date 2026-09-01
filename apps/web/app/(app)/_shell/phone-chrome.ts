@@ -6,6 +6,13 @@
  */
 export const PHONE_LOGO_PX = 18;
 
+/**
+ * Samme header-rad i lukket toppbar og åpen overlay — identisk høyde,
+ * venstre-innfelt og vertikal sentrering så logoen ikke hopper.
+ */
+export const SHELL_HEADER_RAD = 'flex h-row items-center gap-2 px-3';
+export const SHELL_LOGO_WRAP = 'flex shrink-0 items-center';
+
 /** pl-3 + 18px logo + gap-2. */
 export const PHONE_LOGO_KOLONNE =
   'flex h-full w-[calc(0.75rem+18px+0.5rem)] shrink-0 items-center pl-3';

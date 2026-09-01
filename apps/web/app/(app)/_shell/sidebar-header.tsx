@@ -4,6 +4,7 @@ import { PanelLeftClose, PanelLeftOpen } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SHELL_LOGO_WRAP } from './phone-chrome';
 import { useSidebarState } from './sidebar-state';
 
 /** Liten logo — samme 18px i overlay og i lukket toppbar. Forhandlernavn vises ikke. */
@@ -50,8 +51,9 @@ export function SidebarHeader({
       <div className={`flex w-full items-center gap-2 ${collapsed ? 'justify-center' : ''}`}>
         <Link
           href={(inspectTilbakeHref ?? '/endwise') as Route}
-          className={`flex min-w-0 items-center gap-2 rounded-control text-fg hover:bg-sidebar-active/60 ${
-            collapsed ? 'justify-center px-0' : 'px-1'
+          data-shell-logo
+          className={`${SHELL_LOGO_WRAP} min-w-0 gap-2 rounded-control text-fg hover:bg-sidebar-active/60 ${
+            collapsed ? 'justify-center' : ''
           }`}
         >
           <Image
@@ -73,18 +75,17 @@ export function SidebarHeader({
   }
 
   return (
-    <div
-      className={`flex w-full items-center ${collapsed ? 'justify-center' : 'justify-between px-1'}`}
-      title={navn}
-    >
-      <Image
-        src="/logo/logo.svg"
-        alt="Endwise"
-        width={LOGO}
-        height={LOGO}
-        className="logo-invert shrink-0"
-      />
-      {minimer}
-    </div>
+    <>
+      <span data-shell-logo className={SHELL_LOGO_WRAP} title={navn}>
+        <Image
+          src="/logo/logo.svg"
+          alt="Endwise"
+          width={LOGO}
+          height={LOGO}
+          className="logo-invert shrink-0"
+        />
+      </span>
+      <div className="ml-auto">{minimer}</div>
+    </>
   );
 }

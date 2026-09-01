@@ -34,6 +34,7 @@ import {
   settingsForShell,
   shellForBruker,
 } from './nav';
+import { SHELL_HEADER_RAD } from './phone-chrome';
 import { SidebarHeader } from './sidebar-header';
 import { useSidebarState } from './sidebar-state';
 import { TipCard } from './tip-card';
@@ -163,11 +164,7 @@ export function Sidebar() {
           : 'hidden'
       }`}
     >
-      <div
-        className={`flex min-h-10 shrink-0 items-center py-2 ${
-          smal ? 'justify-center px-2' : 'px-3'
-        }`}
-      >
+      <div data-shell-header className={`shrink-0 ${SHELL_HEADER_RAD}`}>
         {/*
          * `dealerName` er ekte navn fra `tenants.name`. Placeholderen
          * «Endwise-forhandler» sto hardkodet her fram til — den var

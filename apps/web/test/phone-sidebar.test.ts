@@ -34,8 +34,17 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).not.toMatch(/PhoneBevel/);
     expect(chrome).toMatch(/PHONE_LOGO_PX = 18/);
+    expect(chrome).toMatch(/SHELL_HEADER_RAD/);
+    expect(chrome).toMatch(/flex h-row items-center gap-2 px-3/);
     expect(header).toMatch(/LOGO = 18/);
+    expect(header).toMatch(/SHELL_LOGO_WRAP/);
+    expect(header).not.toMatch(/justify-between px-1/);
     expect(shell).toMatch(/PHONE_LOGO_PX/);
+    expect(shell).toMatch(/SHELL_HEADER_RAD/);
+    expect(shell).toMatch(/data-shell-logo/);
+    expect(sidebar).toMatch(/SHELL_HEADER_RAD/);
+    expect(sidebar).toMatch(/data-shell-header/);
+    expect(sidebar).not.toMatch(/min-h-10 shrink-0 items-center py-2/);
   });
 
   it('sidebar er lukket som default på telefon og dekker hele viewport når åpen', () => {

@@ -26,7 +26,8 @@
 > Ikke forhandler-hero. ShaderGradient er ute. Importer `@endwise/ui/grainient.css`.
 > `ogl` i både `@endwise/ui` og `@endwise/web`, og i `transpilePackages`. Hvit
 > KI-Ronny (BloubBot) ytterst til venstre (`color="#ffffff"`, `paper="#111111"`),
-> ingen sirkel-chip. Tekst «La KI-Ronny ta styringen» blinker hvert 10. sekund.
+> ingen sirkel-chip. Tekst «La KI-Ronny ta styringen» er statisk. Idle-syklus
+> hvert 5. sekund: `colere` · `surpris` · `wink` · `curieux` · `attentif` · `heureux`.
 
 > ### ⚠️ blobatar er ute (31.08.2026)
 > `Avatar` er bloub. Ikke importer `blobatar/*` i `globals.css`. Staff-farge er
@@ -446,7 +447,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Dine jobber / Timeplan-stripe / starttid / ferie-mock (`dine-jobber/`, `_shell/timeplan-stripe.tsx`, `bookinger/_starttid-velger.tsx`, `_shell/ferie-mock.tsx`, 29.08.2026 natt) | **Ingen ny pakke.** Jobb-bokser er `Link` + lucide `Bike`/`Sailboat` + `ChevronRight` til eksisterende `/min-dag/[id]`. Timeplan-piler er `ChevronLeft`/`ChevronRight`. Starttid er to native expander-knapper. Ferie er merket mock/kommer. |
 
-| Workshop-stripe (`_workshop/workshop-bloub.tsx` + `grainient.tsx`, 01.09.2026 kveld) | **Grainient** (§1). Telefon ~44px, desktop 32px. Hvit KI-Ronny ytterst til venstre uten sirkel-chip (`color="#ffffff"`, `paper="#111111"`). Tekst «La KI-Ronny ta styringen» (`data-ronny-blink`, 10s). Klikk: `surpris` + `data-ronny-spin`, deretter bunndock med kun input. ShaderGradient ute. Chat mot `/chat/workshop` (sidekontekst, ⛔ Quick-skriving). Samme stripe på telefon (under toppbaren) og desktop. |
+| Workshop-stripe (`_workshop/workshop-bloub.tsx` + `grainient.tsx`, 01.09.2026 kveld) | **Grainient** (§1). Telefon ~44px, desktop 32px. Hvit KI-Ronny ytterst til venstre uten sirkel-chip. Tekst «La KI-Ronny ta styringen» er statisk (ingen blink). Idle: seks vendor-uttrykk hvert 5. sekund (`colere` `surpris` `wink` `curieux` `attentif` `heureux`). Klikk: `surpris` + `rotateY(360deg)` (ikke `rotateX`), deretter bunndock med kun input. ShaderGradient ute. Chat mot `/chat/workshop` (sidekontekst, ⛔ Quick-skriving). |
 
 | Bot-lab (`apps/web/app/(app)/bot/`, F6-29, 31.08.2026) | **Ingen ny npm-pakke.** Runtime er vendorisert bloub-motor + `BloubBot`. Intern lab lever videre. Produkt-avatar er nå samme motor (se §10). |
 

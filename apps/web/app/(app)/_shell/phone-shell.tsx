@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useOrgRole } from '../_lib/use-org-role';
 import { shellForBruker } from './nav';
-import { PHONE_LOGO_PX } from './phone-chrome';
+import { PHONE_LOGO_PX, SHELL_HEADER_RAD, SHELL_LOGO_WRAP } from './phone-chrome';
 import { erPhoneHjem, PHONE_SAFE_TOP, phoneHjemHref } from './phone-home';
 import { useSidebarState } from './sidebar-state';
 
@@ -32,8 +32,13 @@ export function PhoneShell() {
 
   return (
     <header data-phone-top-bar className={`sticky top-0 z-20 shrink-0 bg-bg ${PHONE_SAFE_TOP}`}>
-      <div className="flex h-row items-center gap-2 px-3">
-        <Link href={hjemHref as Route} aria-label="Hjem">
+      <div data-shell-header className={SHELL_HEADER_RAD}>
+        <Link
+          href={hjemHref as Route}
+          aria-label="Hjem"
+          data-shell-logo
+          className={SHELL_LOGO_WRAP}
+        >
           <Image
             src="/logo/logo.svg"
             alt="Endwise"

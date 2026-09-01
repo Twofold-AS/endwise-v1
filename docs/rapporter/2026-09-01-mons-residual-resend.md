@@ -4,7 +4,7 @@ PR: https://github.com/Twofold-AS/endwise-v1/pull/105 (utkast, ikke merge)
 
 ## 1. Hva er gjort
 
-- **F1-11 / CWE-770:** Magic-link fyrer Resend bare mot eksisterende Endwise-bruker. Ukjent adresse: stille nei, samme 200. Innboks-`to` = `threads.external_ref` fra DB, og den må tilhøre en kjent kunde hos forhandleren. Klient-`externalRef` avvises.
+- **F1-11 / CWE-770:** Magic-link fyrer Resend bare mot eksisterende Endwise-bruker eller åpen invitee. Ukjent adresse: stille nei, samme 200. Innboks-`to` = `threads.external_ref` fra DB, og den må tilhøre en kjent kunde hos forhandleren. Klient-`externalRef` avvises.
 - **F1-11 / CWE-20:** Produkt-From er hardkodet `Endwise <noreply@endwise.no>`. `sendEmail` kaller `avsenderErKanonisk` + `avsenderErVerifisert`. `RESEND_FROM` ignoreres i prod. Klient-`from` kastes.
 - **F1-11 / CWE-308:** Leder-reset av 2FA krever fersk TOTP fra lederen. Ingen e-post-OTP. `sendTwoFactorOtp` og `sendPasswordReset` kaster. `/two-factor/send-otp` og `/two-factor/disable` forblir FORBIDDEN.
 - **F1-11 / CWE-287:** `/change-email` og `team.endreEpost` krever fersk TOTP i samme request. `twoFactorEnabled` alene er ikke nok.

@@ -135,17 +135,12 @@ export const byttPassordForHook = merket(
       await verifiserFerskTotpMotHemmelighet(ctx, session.user.id, ctx.body);
       return;
     }
-    if (ctx.path !== BYTT_PASSORD_STI) return;
-    const body = ctx.body;
-    if (typeof body !== 'object' || body === null) return;
-    return {
-      context: {
-        body: {
-          ...body,
-          revokeOtherSessions: true,
-        },
-      },
-    };
+    if (ctx.path === BYTT_PASSORD_STI) {
+      throw new APIError('FORBIDDEN', {
+        message: 'Passord er av. Innlogging er magic link + TOTP.',
+        code: 'PASSWORD_DISABLED',
+      });
+    }
   }),
   BYTT_PASSORD_FOR_HOOK_ID,
 );

@@ -1,18 +1,43 @@
-import { type Database, eq, schema } from '@endwise/db';
+import { and, eq, isNull, type Database, schema } from '@endwise/db';
 import { erEnkelEpost } from './resend-avsender.ts';
 
 /**
  * CWE-770 — Resend fyrer bare mot produkt-destinasjoner.
- * Klientens `email` i magic-link er ikke en adresse vi stoler på.
+ * Tillatt: eksisterende Endwise-bruker, eller åpen invitasjon (invitee).
+ * Klientens `email` i magic-link er ikke en destinasjon.
  * Ukjent adresse: stille nei (samme 200, ingen enumerering).
  */
 export async function erProduktDestinasjon(db: Database, epost: string): Promise<boolean> {
   const norm = epost.trim().toLowerCase();
   if (!erEnkelEpost(norm)) return false;
-  const [rad] = await db
-    .select({ id: schema.user.id })
-    .from(schema.user)
-    .where(eq(schema.user.email, norm))
-    .limit(1);
-  return Boolean(rad);
+  try {
+    const [bruker] = await db
+      .select({ id: schema.user.id })
+      .from(schema.user)
+      .where(eq(schema.user.email, norm))
+      .limit(1);
+    if (bruker) return true;
+
+    const [ba] = await db
+      .select({ id: schema.invitation.id })
+      .from(schema.invitation)
+      .where(and(eq(schema.invitation.email, norm), eq(schema.invitation.status, 'pending')))
+      .limit(1);
+    if (ba) return true;
+
+    const [inv] = await db
+      .select({ id: schema.invitations.id })
+      .from(schema.invitations)
+      .where(
+        and(
+          eq(schema.invitations.email, norm),
+          isNull(schema.invitations.acceptedAt),
+          isNull(schema.invitations.revokedAt),
+        ),
+      )
+      .limit(1);
+    return Boolean(inv);
+  } catch {
+    return false;
+  }
 }

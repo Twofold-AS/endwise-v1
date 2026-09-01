@@ -47,3 +47,10 @@ Kjente restrisikoer (Mons, kalt ut, ikke lukket):
 Uenrollert fikk kode-vegg. Deretter tre-valg som var feil.
 
 **Nå:** etter e-post `/signin?steg=valg` med to knapper: Skriv kode manuelt · Bytt konto. Ingen magiclink-knapp. Lenka og koden er samme token. Bare siste ubrukte lenke gjelder (eldre slettes ved ny send). Stale verify: «Lenken er utløpt eller erstattet…». Enroll uten sesjon: åpne nyeste e-post, ikke «trykk på linken først».
+
+**Preview verifisert** på `dpl_2Emut96ufjrRzcor41AQQ4NmfMoP` (`3971588`):
+- `/signin` — e-post + Fortsett
+- `/signin?steg=valg` — nøyaktig «Skriv kode manuelt» og «Bytt konto»
+- Bytt konto → tilbake til e-post
+- `?error=INVALID_TOKEN` — «Lenken er utløpt eller erstattet. Åpne den nyeste e-posten fra Endwise.»
+- `/2fa-oppsett` uten sesjon — «Åpne den nyeste innloggingslenken i e-posten. Eldre lenker er ugyldige. Deretter binder du appen.»

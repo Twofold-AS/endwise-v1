@@ -221,7 +221,13 @@ export function Sidebar() {
             <DropdownMenuContent side="right" align="start" sideOffset={16} className="z-50">
               <DropdownMenuHeader>Handlinger</DropdownMenuHeader>
               {QUICK_ACTIONS.map((a) => (
-                <DropdownMenuItem key={a.href} onSelect={() => router.push(a.href as Route)}>
+                <DropdownMenuItem
+                  key={a.href}
+                  onSelect={() => {
+                    if (phoneOpen) closePhone();
+                    router.push(a.href as Route);
+                  }}
+                >
                   <a.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
                   <span className="flex-1">{a.label}</span>
                 </DropdownMenuItem>

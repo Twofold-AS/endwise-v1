@@ -24,17 +24,20 @@ export function SidebarHeader({
   inspect?: boolean;
   inspectTilbakeHref?: string;
 }) {
-  const { toggle } = useSidebarState();
+  const { toggle, phoneOpen, closePhone } = useSidebarState();
   const minimer = (
     <button
       type="button"
-      onClick={toggle}
-      aria-label={collapsed ? 'Utvid sidebaren' : 'Gjør sidebaren mindre'}
-      title={collapsed ? 'Utvid sidebaren' : 'Gjør sidebaren mindre'}
-      aria-expanded={!collapsed}
+      onClick={phoneOpen ? closePhone : toggle}
+      aria-label={
+        phoneOpen ? 'Lukk sidebaren' : collapsed ? 'Utvid sidebaren' : 'Gjør sidebaren mindre'
+      }
+      title={phoneOpen ? 'Lukk sidebaren' : collapsed ? 'Utvid sidebaren' : 'Gjør sidebaren mindre'}
+      aria-expanded={phoneOpen ? true : !collapsed}
+      data-phone-sidebar-close={phoneOpen ? '' : undefined}
       className="flex size-8 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active hover:text-fg"
     >
-      {collapsed ? (
+      {collapsed && !phoneOpen ? (
         <PanelLeftOpen size={16} strokeWidth={1.75} />
       ) : (
         <PanelLeftClose size={16} strokeWidth={1.75} />

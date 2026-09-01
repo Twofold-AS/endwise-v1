@@ -43,11 +43,11 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(sidebar).not.toMatch(/min-h-10 shrink-0 items-center py-2[\s\S]{0,80}border-b-/);
     expect(sidebar).toMatch(/gap-\[4px\]/);
     expect(sidebar).toMatch(/TipCard/);
-    expect(sidebar).toMatch(/variant="sidebar"/);
+    expect(sidebar).toMatch(/BrukerRad/);
     expect(header).toMatch(/LOGO = 32/);
     expect(header).toMatch(/text-title/);
-    expect(rad).toMatch(/telefon \? avatar : null/);
-    expect(rad).toMatch(/collapsed && !telefon/);
+    expect(rad).not.toMatch(/Avatar|BEVEL|variant === 'phone'/);
+    expect(rad).toMatch(/if \(collapsed\)/);
     expect(rad).toMatch(/LogOut/);
   });
 

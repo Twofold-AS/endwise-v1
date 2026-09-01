@@ -29,9 +29,10 @@ const FAB = 36;
 const HODE = 48;
 
 /**
- * Desktop: ShaderGradient-stripe i toppen av innholdskolonnen
- * (sidebar-kant → skjermkant). Liten bloub til høyre åpner workshop-chat
- * med sidekontekst. Ingen Quick-skriving. Ingen bunn-FAB. Skjult på telefon.
+ * ShaderGradient-stripe i toppen av innholdskolonnen (sidebar-kant →
+ * skjermkant på desktop; under telefon-toppbaren, full bredde på telefon).
+ * Liten bloub til høyre åpner workshop-chat med sidekontekst.
+ * Ingen Quick-skriving. Ingen bunn-FAB. Samme komponent på telefon og desktop.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -84,14 +85,14 @@ export function WorkshopBloub() {
   if (pathname.startsWith('/oppstart')) return null;
 
   return (
-    <div data-workshop-strip className="relative hidden h-14 w-full shrink-0 md:block">
+    <div data-workshop-strip className="relative h-14 w-full shrink-0">
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <ShaderGradientBakgrunn className="h-full w-full" />
       </div>
 
       {apen ? (
         <div
-          className="fixed top-[4.25rem] right-3 z-40 flex w-[min(22rem,calc(100vw-1.5rem))] max-h-[min(34rem,70vh)] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-lg"
+          className="fixed top-[calc(env(safe-area-inset-top)+6rem)] right-3 z-40 flex w-[min(22rem,calc(100vw-1.5rem))] max-h-[min(34rem,70vh)] flex-col overflow-hidden rounded-xl border border-border bg-bg shadow-lg md:top-[4.25rem]"
           role="dialog"
           aria-label="Verkstedsassistent"
         >

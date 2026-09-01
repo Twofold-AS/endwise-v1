@@ -42,9 +42,9 @@ import { TipCard } from './tip-card';
 const IKON = 16;
 
 /**
- * Den dominerende sidebaren (desktop). Hvit flate, ingen header-divider.
- * Kollaps-knappen bor i sidebaren. Ingen avatar. Hjelp er TipCard, ikke dest.
- * På telefon erstattes denne av PhoneShell (kort-hjem + bevel).
+ * Samme sidebar på desktop (skinne) og telefon (fullskjerm-overlay, lukket default).
+ * Hvit flate, ingen header-divider. Ingen avatar. Hjelp er TipCard, ikke dest.
+ * Kollapset desktop-skinne er IKKE telefonmodus.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -64,7 +64,8 @@ export function Sidebar() {
   const inspectSlug = verkstedSlugFromPath(pathname);
   const fra = searchParams?.get('fra') ?? null;
   const inspectTilbake = tilbakeHref(fra);
-  const { collapsed } = useSidebarState();
+  const { collapsed, phoneOpen, closePhone } = useSidebarState();
+  const smal = collapsed && !phoneOpen;
 
   const shell = inspect
     ? 'forhandler'
@@ -128,6 +129,24 @@ export function Sidebar() {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const lukkPaaDesktop = () => {
+      if (mq.matches) closePhone();
+    };
+    mq.addEventListener('change', lukkPaaDesktop);
+    return () => mq.removeEventListener('change', lukkPaaDesktop);
+  }, [closePhone]);
+
+  useEffect(() => {
+    if (!phoneOpen) return;
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closePhone();
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [phoneOpen, closePhone]);
+
   /**
    * hard navigasjon, ikke `router.push`.
    * `router.push` beholder dokumentet — og dermed hele React Query-cachen med
@@ -147,13 +166,19 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`hidden shrink-0 flex-col border-border border-r bg-[#ffffff] transition-[width] duration-150 md:flex ${
-        collapsed ? 'w-[76px]' : 'w-[248px]'
+      data-sidebar
+      data-phone-sidebar={phoneOpen ? 'open' : 'closed'}
+      className={`flex-col border-border border-r bg-[#ffffff] transition-[width] duration-150 ${
+        phoneOpen
+          ? 'fixed inset-0 z-50 flex w-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]'
+          : 'hidden'
+      } md:static md:inset-auto md:z-auto md:flex md:shrink-0 md:pt-0 md:pb-0 ${
+        smal ? 'md:w-[76px]' : 'md:w-[248px]'
       }`}
     >
       <div
         className={`flex min-h-10 shrink-0 items-center py-2 ${
-          collapsed ? 'justify-center px-2' : 'px-3'
+          smal ? 'justify-center px-2' : 'px-3'
         }`}
       >
         {/*
@@ -162,7 +187,7 @@ export function Sidebar() {
          * ikke bare stygg, den var en påstand om hvor du er logget inn.
          */}
         <SidebarHeader
-          collapsed={collapsed}
+          collapsed={smal}
           navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
           inspect={inspect}
           inspectTilbakeHref={inspectTilbake}
@@ -177,13 +202,13 @@ export function Sidebar() {
               <button
                 type="button"
                 style={BEVEL}
-                title={collapsed ? 'Handlinger (⌘K)' : undefined}
+                title={smal ? 'Handlinger (⌘K)' : undefined}
                 className={`flex h-control w-full items-center gap-2 rounded-control text-label transition hover:brightness-[0.98] focus-visible:outline-2 focus-visible:outline-ring ${
-                  collapsed ? 'justify-center px-0' : 'px-2.5'
+                  smal ? 'justify-center px-0' : 'px-2.5'
                 }`}
               >
                 <Zap size={IKON} strokeWidth={1.75} className="shrink-0 text-accent-strong" />
-                {!collapsed && (
+                {!smal && (
                   <>
                     <span className="flex-1 text-left">Handlinger</span>
                     <kbd className="rounded-badge border border-border/60 px-1.5 font-mono text-[11px] text-fg-muted">
@@ -217,11 +242,12 @@ export function Sidebar() {
                 pathname={pathname}
                 unread={unread}
                 helpdesk={helpdeskUlest.data ?? 0}
-                collapsed={collapsed}
+                collapsed={smal}
+                onNavigate={phoneOpen ? closePhone : undefined}
               />
             </Fragment>
           ))}
-          {items.length === 0 && !collapsed && (
+          {items.length === 0 && !smal && (
             <p className="px-2.5 py-6 text-[12px] text-fg-muted leading-relaxed">
               {shell === 'forhandler' && !shopEnabled
                 ? 'Ingen destinasjoner å vise.'
@@ -232,35 +258,32 @@ export function Sidebar() {
 
         {/* Bunn: helpdesk-kort over innstillinger/profil. Ingen avatar. */}
         <div className="flex flex-col gap-3">
-          {!collapsed && shell !== 'endwise' && shell !== 'endwise_partner' && (
-            <div className="hidden md:block">
-              <TipCard />
-            </div>
-          )}
+          {!smal && shell !== 'endwise' && shell !== 'endwise_partner' && <TipCard />}
           <div className="-mx-3 h-px bg-border" />
           {settingsNav ? (
             <Link
               href={settingsNav.href as Route}
               aria-current={settingsAktiv ? 'page' : undefined}
-              title={collapsed ? settingsNav.label : undefined}
+              title={smal ? settingsNav.label : undefined}
+              onClick={phoneOpen ? closePhone : undefined}
               className={`flex h-control w-full items-center gap-2.5 rounded-control text-label transition-colors ${
-                collapsed ? 'justify-center px-0' : 'px-2.5'
+                smal ? 'justify-center px-0' : 'px-2.5'
               } ${settingsAktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-sidebar-active/60'}`}
             >
               <Ikon icon={settingsNav.icon} active={settingsAktiv} />
-              {!collapsed && <span className="flex-1 text-left">{settingsNav.label}</span>}
+              {!smal && <span className="flex-1 text-left">{settingsNav.label}</span>}
             </Link>
           ) : null}
           <BrukerRad
             navn={navn}
             laster={rolleLaster}
-            collapsed={collapsed}
+            collapsed={smal}
             onLoggUt={logout}
             innstillingerHref={
               settingsNav?.href ??
               (shell === 'mekaniker' ? '/min-dag/meg' : '/innstillinger/profil')
             }
-            variant="sidebar"
+            onNavigate={phoneOpen ? closePhone : undefined}
           />
         </div>
       </div>
@@ -277,12 +300,14 @@ function NavRow({
   unread,
   helpdesk,
   collapsed,
+  onNavigate,
 }: {
   item: NavItem;
   pathname: string;
   unread: number;
   helpdesk: number;
   collapsed: boolean;
+  onNavigate?: () => void;
 }) {
   const active = isItemActive(item, pathname);
   const count = item.badge === 'unread' ? unread : item.badge === 'helpdesk' ? helpdesk : 0;
@@ -307,6 +332,7 @@ function NavRow({
       href={item.href as Route}
       aria-current={active ? 'page' : undefined}
       title={collapsed ? item.label : undefined}
+      onClick={onNavigate}
       className={`flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors ${
         collapsed ? 'justify-center px-0' : 'px-2.5'
       } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}

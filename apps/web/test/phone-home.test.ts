@@ -198,25 +198,27 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(PHONE_SHELL_ROT).toMatch(/min-h-svh/);
   });
 
-  it('safe-area-inset-top over logo, safe-area-inset-bottom under bevel', () => {
+  it('safe-area-inset-top over logo; overlay-sidebar tar bunnen', () => {
     expect(PHONE_SAFE_TOP).toContain('safe-area-inset-top');
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
-    expect(shell).toMatch(/PHONE_SAFE_BUNN/);
+    expect(shell).not.toMatch(/PHONE_SAFE_BUNN/);
     expect(shell).toMatch(/logo\/logo\.svg/);
     expect(shell).toMatch(/logo-invert/);
     expect(shell).toMatch(/bg-bg/);
     expect(shell).not.toMatch(/bg-white/);
-    expect(shell).toMatch(/BrukerRad|Logg ut/);
-    expect(shell).toMatch(/innstillingerHref|phoneInnstillingerHref/);
+    expect(shell).toMatch(/data-phone-sidebar-open/);
+    expect(shell).not.toMatch(/BrukerRad/);
     expect(shell).not.toMatch(/rolle \?\?/);
+    expect(sidebar).toMatch(/safe-area-inset-bottom/);
     expect(PHONE_SHELL_ROT).toMatch(/bg-bg/);
     expect(PHONE_SHELL_ROT).toMatch(/text-fg/);
     expect(PHONE_SHELL_ROT).not.toMatch(/bg-white/);
   });
 
-  it('bevel-raden har Innstillinger-ikon på samme linje som avatar og logg ut', () => {
+  it('profil og logg ut bor i sidebaren, ikke i telefon-bevel', () => {
     expect(phoneInnstillingerHref('forhandler')).toBe('/innstillinger/profil');
     expect(phoneInnstillingerHref('endwise')).toBe('/innstillinger/profil');
     expect(phoneInnstillingerHref('endwise_partner')).toBe('/innstillinger/profil');
@@ -226,8 +228,11 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(rad).toMatch(/Settings/);
     expect(rad).toMatch(/Profil|Innstillinger/);
     expect(rad).toMatch(/LogOut/);
+    expect(rad).not.toMatch(/BEVEL|Avatar|variant === 'phone'/);
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     expect(sidebar).toMatch(/innstillingerHref/);
+    const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
+    expect(layout).not.toMatch(/PhoneBevel/);
   });
 
   it('ingen bunnbar, hamburger, horisontal hovedscroller, Mer-sheet eller visningsvelger', () => {
@@ -236,7 +241,7 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(layout).not.toMatch(/PhoneNav/);
     expect(layout).toMatch(/PhoneShell/);
-    expect(shell).not.toMatch(/hamburger|Menu\b|Sheet|visningsvelger|Kontor|Gulvet/i);
+    expect(shell).not.toMatch(/hamburger|\bMenu\b|Sheet|visningsvelger|Kontor|Gulvet/i);
     expect(shell).not.toMatch(/PhoneHScroll|overflow-x-auto/);
     expect(hjem).not.toMatch(/hamburger|bottom-nav|grid-cols-5/);
     expect(layout).not.toMatch(/MobileShell/);
@@ -292,11 +297,16 @@ describe('mekaniker phone home — Dine jobber, ikke Min dag', () => {
 });
 
 describe('desktop sidebar er urørt', () => {
-  it('sidebar er hidden md:flex med Handlinger og BrukerRad', () => {
+  it('sidebar er desktop-skinne + telefon-overlay, samme innhold', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
-    expect(sidebar).toMatch(/hidden[\s\S]*md:flex/);
+    expect(sidebar).toMatch(/data-phone-sidebar/);
+    expect(sidebar).toMatch(/fixed inset-0/);
+    expect(sidebar).toMatch(/hidden/);
+    expect(sidebar).toMatch(/md:flex/);
+    expect(sidebar).toMatch(/phoneOpen/);
     expect(sidebar).toMatch(/Handlinger/);
     expect(sidebar).toMatch(/BrukerRad/);
+    expect(sidebar).toMatch(/TipCard/);
     expect(sidebar).toMatch(/min-width:\s*768px/);
     expect(sidebar).toMatch(/QUICK_ACTIONS/);
   });

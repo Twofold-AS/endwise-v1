@@ -46,6 +46,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/attentif/);
     expect(fab).toMatch(/alert/);
     expect(fab).toMatch(/burst/);
+    expect(fab).not.toMatch(/hidden h-14 w-full shrink-0 md:block/);
+    expect(fab).not.toMatch(/className="relative hidden /);
     expect(fab).not.toMatch(/fixed right-3 bottom/);
     expect(fab).not.toMatch(/size=\{320\}/);
     expect(fab).not.toMatch(/#1ED27D|#EE2924/);

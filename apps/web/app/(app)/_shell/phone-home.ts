@@ -16,11 +16,11 @@ import {
 import { type ShellKey, settingsForShell } from './nav';
 
 /**
- * Låst telefon-hjem (Mikael 29.08.2026).
- * Kortene er destinasjoner. Samme funksjoner på PC (sidebar), annen chrome.
+ * Telefon-hjem-kort (Mikael 29.08.2026) er sideinnhold, ikke meny.
+ * Meny er samme sidebar som desktop (fullskjerm-overlay, 01.09.2026).
  */
 
-/** Kort-hjem-rot: #84 dvh/overscroll + #85 min-h-svh. Safe-area sitter på logo/bevel. */
+/** Rot: #84 dvh/overscroll + #85 min-h-svh. Safe-area sitter på toppbar og overlay. */
 export const PHONE_SHELL_ROT =
   'flex h-dvh max-h-dvh min-h-dvh min-h-svh w-full overflow-hidden bg-bg text-fg overscroll-none';
 

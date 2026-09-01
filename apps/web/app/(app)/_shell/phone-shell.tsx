@@ -1,37 +1,26 @@
 'use client';
 
-import { ChevronLeft } from '@endwise/ui';
+import { ChevronLeft, PanelLeftOpen } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { authClient } from '@/lib/auth-client';
 import { useOrgRole } from '../_lib/use-org-role';
-import { BrukerRad } from './bruker-rad';
 import { shellForBruker } from './nav';
 import { PHONE_LOGO_PX } from './phone-chrome';
-import {
-  erPhoneHjem,
-  PHONE_SAFE_BUNN,
-  PHONE_SAFE_TOP,
-  phoneHjemHref,
-  phoneInnstillingerHref,
-} from './phone-home';
-
-async function loggUt() {
-  await authClient.signOut();
-  window.location.assign('/signin');
-}
+import { erPhoneHjem, PHONE_SAFE_TOP, phoneHjemHref } from './phone-home';
+import { useSidebarState } from './sidebar-state';
 
 /**
- * Telefon-chrome: logo-rad med safe-area. Tilbake sitter på samme rad, til høyre.
- * Bevel er siste barn i innholdskolonnen med mt-auto — nederst når
- * innholdet er kort, etter innholdet når det er langt. Ikke sticky/fixed.
+ * Fast telefon-toppbar (alltid synlig når overlay er lukket).
+ * Logo til venstre. Åpne-sidebar-ikon ytterst til høyre.
+ * Ingen bevel, ingen hamburger-drawer, ingen Mer-ark.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
   const search = useSearchParams()?.toString() ?? '';
   const { role, jobbfunksjon, isMechanic, erPlattform } = useOrgRole();
+  const { openPhone } = useSidebarState();
   const shell = shellForBruker({
     role,
     jobFunction: jobbfunksjon,
@@ -42,8 +31,11 @@ export function PhoneShell() {
   const hjemHref = phoneHjemHref(shell);
 
   return (
-    <header className={`shrink-0 bg-bg md:hidden ${PHONE_SAFE_TOP}`}>
-      <div className="flex h-row items-center justify-between px-3">
+    <header
+      data-phone-top-bar
+      className={`sticky top-0 z-20 shrink-0 bg-bg md:hidden ${PHONE_SAFE_TOP}`}
+    >
+      <div className="flex h-row items-center gap-2 px-3">
         <Link href={hjemHref as Route} aria-label="Hjem">
           <Image
             src="/logo/logo.svg"
@@ -57,35 +49,23 @@ export function PhoneShell() {
         {hjem ? null : (
           <Link
             href={hjemHref as Route}
-            className="ml-auto inline-flex h-control items-center gap-1 rounded-control px-2 text-label text-fg"
+            className="inline-flex h-control items-center gap-1 rounded-control px-2 text-label text-fg"
           >
             <ChevronLeft size={16} strokeWidth={1.75} />
             Tilbake
           </Link>
         )}
+        <button
+          type="button"
+          data-phone-sidebar-open
+          aria-label="Åpne sidebaren"
+          title="Åpne sidebaren"
+          className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-ring"
+          onClick={openPhone}
+        >
+          <PanelLeftOpen size={18} strokeWidth={1.75} />
+        </button>
       </div>
     </header>
-  );
-}
-
-export function PhoneBevel() {
-  const { navn, isLoading, role, jobbfunksjon, isMechanic, erPlattform } = useOrgRole();
-  const shell = shellForBruker({
-    role,
-    jobFunction: jobbfunksjon,
-    isMechanic,
-    erPlattform,
-  });
-  return (
-    <footer className={`mt-auto bg-bg px-3 pt-4 md:hidden ${PHONE_SAFE_BUNN}`}>
-      <BrukerRad
-        navn={navn}
-        laster={isLoading}
-        collapsed={false}
-        onLoggUt={loggUt}
-        innstillingerHref={phoneInnstillingerHref(shell)}
-        variant="phone"
-      />
-    </footer>
   );
 }

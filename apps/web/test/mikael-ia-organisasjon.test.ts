@@ -196,17 +196,18 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(header).not.toMatch(/Forhandler/);
   });
 
-  it('sidebar-brukerchip er flat uten avatar; telefon beholder bevel', () => {
-    expect(rad).toMatch(/variant === 'phone'/);
-    expect(rad).toMatch(/BEVEL/);
-    expect(rad).toMatch(/telefon \? avatar : null/);
+  it('sidebar-brukerchip er flat uten avatar; ingen telefon-bevel', () => {
+    expect(rad).not.toMatch(/variant === 'phone'/);
+    expect(rad).not.toMatch(/BEVEL/);
+    expect(rad).not.toMatch(/Avatar/);
     expect(rad).not.toMatch(/rolle \?\?/);
     expect(rad).not.toMatch(/UserCog/);
+    expect(rad).toMatch(/LogOut/);
   });
 
-  it('telefon: kort-hjem-shell, ingen top-bar 1, desktop-sidebar urørt', () => {
+  it('telefon: fast toppbar + samme sidebar som overlay, ingen bevel/Mer-ark', () => {
     expect(layout).toMatch(/PhoneShell/);
-    expect(layout).toMatch(/PhoneBevel/);
+    expect(layout).not.toMatch(/PhoneBevel/);
     expect(layout).not.toMatch(/PhoneNav/);
     expect(layout).toMatch(/WorkshopBloub/);
     expect(layout).not.toMatch(/TopBar/);
@@ -215,11 +216,17 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(shell).toMatch(/logo\/logo\.svg/);
     expect(shell).toMatch(/logo-invert/);
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
-    expect(shell).toMatch(/PHONE_SAFE_BUNN/);
-    expect(shell).not.toMatch(/PhoneHScroll|hamburger|Handlinger|QUICK_ACTIONS/i);
+    expect(shell).toMatch(/data-phone-sidebar-open/);
+    expect(shell).toMatch(/PanelLeftOpen/);
+    expect(shell).toMatch(/ml-auto/);
+    expect(shell).not.toMatch(/PHONE_SAFE_BUNN/);
+    expect(shell).not.toMatch(/PhoneHScroll|hamburger|\bMenu\b|Handlinger|QUICK_ACTIONS/i);
     expect(shell).not.toMatch(/recolor|filter:/);
     expect(shell).not.toMatch(/TipCard|helpdesk-slider|visningsvelger/i);
-    expect(sidebar).toMatch(/hidden[\s\S]*md:flex/);
+    expect(sidebar).toMatch(/data-phone-sidebar/);
+    expect(sidebar).toMatch(/fixed inset-0/);
+    expect(sidebar).toMatch(/hidden/);
+    expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/Handlinger/);
     expect(sidebar).toMatch(/min-width:\s*768px/);
     expect(chrome).toMatch(/scrollTo/);

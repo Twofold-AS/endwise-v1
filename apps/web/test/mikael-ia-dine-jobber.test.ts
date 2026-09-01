@@ -149,23 +149,25 @@ describe('Forhandler-info uten Grainient', () => {
   });
 });
 
-describe('telefon-bevel og logo-rad', () => {
-  it('bevel er siste barn i telefon-kolonnen, ikke sticky/fixed', () => {
+describe('telefon-toppbar og sidebar-overlay', () => {
+  it('ingen PhoneBevel — profil/logg ut bor i samme sidebar som desktop', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(layout).toMatch(/<main[\s\S]*<\/main>\s*<PhoneBevel\s*\/>/);
+    expect(layout).not.toMatch(/PhoneBevel/);
     expect(layout).toMatch(/overflow-y-auto/);
     expect(layout).toMatch(/<main className="[^"]*\bflex-1\b/);
     expect(layout).not.toMatch(/<main className="[^"]*\bmd:flex-1\b/);
-    expect(shell).toMatch(/mt-auto/);
-    expect(shell).not.toMatch(/sticky|fixed/);
+    expect(shell).toMatch(/data-phone-top-bar/);
+    expect(shell).toMatch(/sticky top-0/);
     expect(PHONE_SHELL_ROT).toMatch(/min-h-dvh|h-dvh|flex-1/);
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
   });
 
-  it('tilbake sitter på samme rad som logo, til høyre', () => {
+  it('logo til venstre, åpne-sidebar-ikon ytterst til høyre', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/justify-between|ml-auto/);
+    expect(shell).toMatch(/ml-auto/);
+    expect(shell).toMatch(/data-phone-sidebar-open/);
+    expect(shell).toMatch(/PanelLeftOpen/);
     expect(shell).toMatch(/ChevronLeft/);
     expect(shell).toMatch(/Tilbake/);
     expect(shell).not.toMatch(/border-b[\s\S]*Tilbake/);

@@ -10,7 +10,7 @@ PR: https://github.com/Twofold-AS/endwise-v1/pull/105 (utkast, ikke merge)
 - **F1-11 / CWE-287:** `/change-email` og `team.endreEpost` krever fersk TOTP i samme request. `twoFactorEnabled` alene er ikke nok.
 - **F1-11 / CWE-308 enroll:** Uenrollert magic-link-verify gir ingen app-sesjon. Kortlivet `enroll_2fa`-kake, bare `/2fa-oppsett`. Etter TOTP-bind + verify: ekte sesjon. Andre sesjoner revokes.
 - **F1-11 / roller:** `customer` i `ROLES_REQUIRING_2FA`. Widget uten app-innlogging får ingen konto.
-- **F1-11 / CWE-262:** `team.sendPassordendring` og `settPassordUtenSesjon` er stengt. `emailAndPassword.enabled` forblir false.
+- **F1-11 / CWE-262:** `team.sendPassordendring`, `settPassordUtenSesjon` og `/change-password` er stengt. `emailAndPassword.enabled` forblir false. `mons-lock-7.test.ts` låser alle sju punktene.
 - To-knappers signin uendret: Skriv kode manuelt + Bytt konto.
 
 ## 2. Hva gikk galt
@@ -30,4 +30,4 @@ Innlogget Vercel-preview av `/2fa-oppsett` krever enroll-kake; `/signin` kan vis
 
 ## 4. Neste steg
 
-Preview verifisert på `dpl_FcJggwoxaCqNKH3zCxLkN5EHyDFU` (`2ee72b4`): `/signin?steg=valg` har Skriv kode manuelt + Bytt konto; `/2fa-oppsett` uten sesjon viser Start oppsett. Ikke merge.
+Toolkit-resend er bak samme From/to-port (`kanSendeTil` + `erProduktDestinasjon`). Auth 1–7 uendret. Ikke merge.

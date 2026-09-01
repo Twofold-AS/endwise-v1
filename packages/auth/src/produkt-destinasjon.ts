@@ -1,10 +1,10 @@
-import { and, eq, isNull, type Database, schema } from '@endwise/db';
+import { and, eq, isNull, or, sql, type Database, schema } from '@endwise/db';
 import { erEnkelEpost } from './resend-avsender.ts';
 
 /**
  * CWE-770 — Resend fyrer bare mot produkt-destinasjoner.
- * Tillatt: eksisterende Endwise-bruker, eller åpen invitasjon (invitee).
- * Klientens `email` i magic-link er ikke en destinasjon.
+ * Tillatt: eksisterende bruker, åpen invitee, eller kjent kundeadresse.
+ * Klientens `email` er ikke en destinasjon.
  * Ukjent adresse: stille nei (samme 200, ingen enumerering).
  */
 export async function erProduktDestinasjon(db: Database, epost: string): Promise<boolean> {
@@ -36,7 +36,14 @@ export async function erProduktDestinasjon(db: Database, epost: string): Promise
         ),
       )
       .limit(1);
-    return Boolean(inv);
+    if (inv) return true;
+
+    const [kunde] = await db
+      .select({ id: schema.customers.id })
+      .from(schema.customers)
+      .where(or(eq(schema.customers.email, norm), sql`lower(${schema.customers.email}) = ${norm}`))
+      .limit(1);
+    return Boolean(kunde);
   } catch {
     return false;
   }

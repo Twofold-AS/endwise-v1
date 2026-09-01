@@ -6,57 +6,64 @@ import type {
 import { Resend } from 'resend';
 
 /**
- * Domenet standard-avsenderen bruker når `RESEND_FROM` ikke er satt.
- * Bevisst duplisert fra `packages/auth/src/env.ts`
- * (`RESEND_STANDARD_DOMENE`). Å importere `@endwise/auth` hit ville dratt
- * Better-Auth og hele db-laget inn i en tynn transportpakke, for én streng.
- * Samme avveining som `next.config.ts` gjør mot `dev-origins.ts`.
- * Duplikatet er ikke overlatt til en kommentar: `apps/api/test/
- * utgaaende-epost.test.ts` feiler hvis de to konstantene glir fra hverandre.
+ * Samme produkt-From som `@endwise/auth` (`RESEND_FROM_KANONISK`).
+ * Toolkit importerer ikke auth — det ville dratt Better-Auth inn her.
+ * `apps/api/test/utgaaende-epost.test.ts` feiler hvis strengene glir.
  */
 export const RESEND_STANDARD_DOMENE = 'endwise.no';
+export const RESEND_FROM_KANONISK = `Endwise <noreply@${RESEND_STANDARD_DOMENE}>`;
 
-/** E-postkanalen. Resend (techstack §5). */
+const EPOST = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function erEnkelEpost(adresse: string): boolean {
+  const trimmet = adresse.trim();
+  if (!EPOST.test(trimmet)) return false;
+  if (/[\r\n,;]/.test(trimmet)) return false;
+  return true;
+}
+
+function stripCrLf(verdi: string): string {
+  return verdi.replace(/[\r\n\u2028\u2029]+/g, ' ').trim();
+}
+
+/**
+ * E-postkanal for F3-04-varsler. Ingen annen Resend-klient som hopper over
+ * From/to-porten. `from` settes aldri av kalleren. `to` må godkjennes av
+ * `kanSendeTil` (typisk `erProduktDestinasjon`).
+ */
 export function createResendChannel(config: {
   apiKey: string;
-  from?: string;
+  kanSendeTil: (to: string) => Promise<boolean>;
 }): NotificationChannel {
+  if (Object.hasOwn(config, 'from')) {
+    throw new Error('from settes ikke av kalleren');
+  }
+  if (typeof config.kanSendeTil !== 'function') {
+    throw new Error('kanSendeTil er påkrevd — Resend fyrer ikke mot frie adresser');
+  }
   const client = new Resend(config.apiKey);
-  /**
-   * `||`, ikke `??`. `??` faller bare tilbake på `null`/`undefined`, så
-   * en tom `RESEND_FROM` ville sluppet gjennom som avsenderadresse. `notify.ts`
-   * sender `process.env.RESEND_FROM` rett inn hit, og en env-variabel satt til
-   * tom streng er en helt vanlig tilstand i et halvkonfigurert miljø. Rettet
-   * ; samme feil sto i `packages/auth/src/env.ts`.
-   * Domenet MÅ være verifisert i Resend, ellers svarer den
-   * `403 validation_error` og hvert varsel denne kanalen sender feiler — stille,
-   * i en Workflow-logg. Se `RESEND_VERIFISERTE_DOMENER` i `@endwise/auth` for
-   * hvilke som er det, og hvorfor den lista er eksakt og ikke en subdomene-regel.
-   */
-  const kanonisk = `Endwise <noreply@${RESEND_STANDARD_DOMENE}>`;
-  const from =
-    process.env.NODE_ENV === 'production'
-      ? kanonisk
-      : !config.from || config.from === kanonisk
-        ? kanonisk
-        : (() => {
-            throw new Error(`RESEND_FROM må være nøyaktig ${kanonisk}`);
-          })();
+  const from = RESEND_FROM_KANONISK;
 
   return {
     kind: 'email',
     name: 'resend',
 
     async send(message: NotificationMessage): Promise<NotificationResult> {
-      if (from !== kanonisk) {
-        throw new Error(`From er ikke den kanoniske produktadressen (${kanonisk})`);
+      if (from !== RESEND_FROM_KANONISK) {
+        throw new Error(`From er ikke den kanoniske produktadressen (${RESEND_FROM_KANONISK})`);
+      }
+      const to = message.to.trim();
+      if (!erEnkelEpost(to)) {
+        throw new Error('Ugyldig to');
+      }
+      if (!(await config.kanSendeTil(to))) {
+        throw new Error('Mottakeren er ikke en produkt-destinasjon');
       }
       const { data, error } = await client.emails.send({
         from,
-        to: message.to,
-        subject: message.subject ?? 'Melding fra Endwise',
+        to,
+        subject: stripCrLf(message.subject ?? 'Melding fra Endwise'),
         text: message.body,
-        // Resend sin egen idempotens — vår DB-vakt (F3-04) er beltet, denne er selen.
         headers: { 'Idempotency-Key': message.idempotencyKey },
       });
 

@@ -32,6 +32,7 @@ describe('Mons lock 1–7 (ikke merge før disse er grønne)', () => {
     expect(dest).toMatch(/schema\.user\.email/);
     expect(dest).toMatch(/schema\.invitation/);
     expect(dest).toMatch(/schema\.invitations/);
+    expect(dest).toMatch(/schema\.customers/);
     expect(messages).toMatch(/erKjentKundeKontakt/);
     expect(messages).not.toMatch(/from:\s*z\./);
     expect(messages).not.toMatch(/html:\s*z\./);

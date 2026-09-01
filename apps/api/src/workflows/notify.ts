@@ -1,3 +1,4 @@
+import { erProduktDestinasjon } from '@endwise/auth';
 import { createDb } from '@endwise/db';
 import { createDispatcher, type DispatchInput } from '@endwise/modules/notifications';
 import { createResendChannel } from '@endwise/toolkit-resend';
@@ -21,11 +22,13 @@ async function sendNotification(input: DispatchInput) {
       'Mangler database-URL: sett APP_DATABASE_URL eller DATABASE_URL (se .env.example)',
     );
 
+  const db = createDb(databaseUrl);
   const channels = [];
   if (process.env.RESEND_API_KEY) {
     channels.push(
       createResendChannel({
         apiKey: process.env.RESEND_API_KEY,
+        kanSendeTil: (to) => erProduktDestinasjon(db, to),
       }),
     );
   }
@@ -44,7 +47,7 @@ async function sendNotification(input: DispatchInput) {
     throw new FatalError('Ingen varslingskanaler er konfigurert');
   }
 
-  const dispatcher = createDispatcher(createDb(databaseUrl), channels);
+  const dispatcher = createDispatcher(db, channels);
 
   try {
     return await dispatcher.dispatch(input);

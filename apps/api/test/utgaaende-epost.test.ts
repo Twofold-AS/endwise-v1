@@ -1,8 +1,14 @@
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { RESEND_STANDARD_DOMENE as AUTH_STANDARD, avsenderErVerifisert } from '@endwise/auth';
 import { createDb, type Database, eq, schema } from '@endwise/db';
 import { createMessagesModule, type UtgaaendeEpost } from '@endwise/modules/messages';
-import { RESEND_STANDARD_DOMENE as TOOLKIT_STANDARD } from '@endwise/toolkit-resend';
+import {
+  RESEND_FROM_KANONISK as TOOLKIT_FROM,
+  RESEND_STANDARD_DOMENE as TOOLKIT_STANDARD,
+} from '@endwise/toolkit-resend';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 /**
@@ -52,6 +58,22 @@ describe('F6-26 — avsenderdomenet', () => {
      * e-postene og den andre halvparten virker, som er verst mulig.
      */
     expect(TOOLKIT_STANDARD).toBe(AUTH_STANDARD);
+    expect(TOOLKIT_FROM).toBe('Endwise <noreply@endwise.no>');
+  });
+
+  it('⛔ notify-varsler går gjennom erProduktDestinasjon, ikke fri to', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const notify = readFileSync(resolve(her, '../src/workflows/notify.ts'), 'utf8');
+    expect(notify).toMatch(/erProduktDestinasjon/);
+    expect(notify).toMatch(/kanSendeTil/);
+    expect(notify).not.toMatch(/RESEND_FROM/);
+    const toolkit = readFileSync(
+      resolve(her, '../../../packages/tools/toolkits/resend/src/index.ts'),
+      'utf8',
+    );
+    expect(toolkit).toMatch(/from settes ikke av kalleren/);
+    expect(toolkit).toMatch(/kanSendeTil/);
+    expect(toolkit).toMatch(/produkt-destinasjon/);
   });
 
   it('⛔ standard-avsenderen er faktisk et verifisert domene', () => {

@@ -29,9 +29,9 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(destinasjonEtterInvite('staff', null)).toBe('/dashboard');
   });
 
-  it('2FA-kode vises ved twoFactorRedirect eller TWO_FACTOR_REQUIRED', () => {
+  it('2FA-kode vises bare ved twoFactorRedirect — TWO_FACTOR_REQUIRED er enroll', () => {
     expect(trengerKodeSteg({ twoFactorRedirect: true })).toBe(true);
-    expect(trengerKodeSteg({ feil: 'TWO_FACTOR_REQUIRED' })).toBe(true);
+    expect(trengerKodeSteg({ feil: 'TWO_FACTOR_REQUIRED' })).toBe(false);
     expect(trengerKodeSteg({})).toBe(false);
   });
 

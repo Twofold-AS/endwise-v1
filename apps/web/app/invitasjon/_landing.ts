@@ -34,8 +34,10 @@ export function trengerKodeSteg(input: {
   twoFactorRedirect?: boolean | null;
   feil?: string | null;
 }): boolean {
-  if (input.twoFactorRedirect === true) return true;
-  return Boolean(input.feil?.includes('TWO_FACTOR_REQUIRED'));
+  // twoFactorRedirect = already enrolled, pending TOTP after magic link.
+  // TWO_FACTOR_REQUIRED = not enrolled → /2fa-oppsett, never a code wall.
+  if (input.feil?.includes('TWO_FACTOR_REQUIRED')) return false;
+  return input.twoFactorRedirect === true;
 }
 
 /** Trygg UI-tekst når `revokeOtherSessions` feiler etter invite-OTP. Ingen token. */

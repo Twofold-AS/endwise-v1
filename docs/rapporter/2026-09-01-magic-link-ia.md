@@ -41,3 +41,7 @@ Kjente restrisikoer (Mons, kalt ut, ikke lukket):
 - Kjør migrasjon `0035` mot preview/prod når PR skal merges (ikke nå). Den nuller bare passord-hash.
 - Innlogget telefon-preview av `/dashboard` og `/innboks` når sesjon finnes.
 - Ikke merge. Ingen ping til Jonas.
+
+## 5. Mikael-lås (samme dag, senere)
+
+Uenrollert fikk kode-vegg på `/signin`. Fikset: etter e-post er flaten `/signin?steg=valg` med tre synlige valg. TOTP-feltet er aktivt bare ved `/signin?steg=totp` (twoFactorEnabled etter magic link). Ellers forklaring + lenke til `/2fa-oppsett`. `TWO_FACTOR_REQUIRED` er enroll, ikke kode.

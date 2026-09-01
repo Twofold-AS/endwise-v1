@@ -19,6 +19,7 @@ import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { Field, INPUT } from '../_auth/felter';
+import { SIGNIN_VALG_STI } from '../signin/signin-steg';
 
 /**
  * Tvungen TOTP-enrollment. Ingen passord, ingen e-postkode.
@@ -28,7 +29,7 @@ import { Field, INPUT } from '../_auth/felter';
 export default function ToFaktorOppsettPage() {
   const router = useRouter();
   const utils = trpc.useUtils();
-  const { data: session } = useSession();
+  const { data: session, isPending: sesjonLaster } = useSession();
   const [steg, setSteg] = useState<'app' | 'kode' | 'koder' | 'av' | 'ferdig'>('app');
   const [kode, setKode] = useState('');
   const [koder, setKoder] = useState<string[]>([]);
@@ -73,7 +74,13 @@ export default function ToFaktorOppsettPage() {
       const hentet = plukkBackupKoder(res.data ?? res);
       if (hentet.length > 0) setKoder(hentet);
       const uri = plukkTotpUri(res.data ?? res);
-      if (uri) setTotpUri(uri);
+      if (!uri) {
+        setFeil('Kunne ikke hente nøkkelen til appen. Logg inn med magic link og prøv igjen.');
+        setBusy('error');
+        startet.current = false;
+        return;
+      }
+      setTotpUri(uri);
       setBusy('idle');
       setSteg('kode');
     } catch (error) {
@@ -178,12 +185,29 @@ export default function ToFaktorOppsettPage() {
           <p className="text-center text-body text-fg-muted">{ingress}</p>
         </div>
 
-        {steg === 'app' ? (
+        {steg === 'app' && !sesjonLaster && !session?.user ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
+            <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
+              Innloggingslenken må åpnes først. Uten den kan vi ikke binde appen.
+            </div>
+            <div className="px-1.5 pt-1 pb-1">
+              <a
+                href={SIGNIN_VALG_STI}
+                className="inline-flex h-control w-full items-center justify-center rounded-control bg-fg px-4 text-bg text-label"
+              >
+                Tilbake til innlogging
+              </a>
+            </div>
+          </div>
+        ) : null}
+
+        {steg === 'app' && (sesjonLaster || session?.user) ? (
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
             <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
               Vi lager en hemmelighet til Google Authenticator, 1Password eller tilsvarende. Ingen
-              passord.
+              passord. Bind appen før du skriver koden.
             </div>
+            {feil ? <p className="px-4 text-[12px] text-danger">{feil}</p> : null}
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton
                 type="button"

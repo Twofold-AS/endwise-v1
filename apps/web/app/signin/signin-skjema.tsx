@@ -1,5 +1,6 @@
 'use client';
 
+import { TO_FAKTOR_OPPSETT_STI } from '@endwise/auth/to-faktor-oppsett';
 import { Mail, ShieldCheck, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -8,12 +9,23 @@ import { authClient, signIn } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { Field, INPUT } from '../_auth/felter';
 import { destinasjonNarSesjonFeiler } from '../invitasjon/_landing';
+import {
+  lagreIdentifisertEpost,
+  lesIdentifisertEpost,
+  SIGNIN_STI,
+  SIGNIN_VALG_STI,
+  signInFlateFraQuery,
+  toemIdentifisertEpost,
+  totpFeltAktivt,
+  trengerEnrollForklaring,
+} from './signin-steg';
 
 /**
- * Innlogging: magic link til konto-e-post, deretter TOTP-app.
- * Ingen passord. Ingen e-postkode som andre faktor.
+ * Innlogging: e-post → tre synlige valg.
+ * TOTP-feltet er aktivt bare etter magic link når twoFactorEnabled er på.
+ * Uenrollert: magic link, deretter /2fa-oppsett. Ingen kode-vegg.
  */
-type Step = 'epost' | 'sendt' | 'totp' | 'gjenoppretting';
+type KodeModus = 'totp' | 'gjenoppretting';
 
 function feilmelding(res: {
   error?: { status?: number; code?: string; message?: string } | null;
@@ -27,23 +39,40 @@ function feilmelding(res: {
   return res.error?.message ?? 'Innlogging feilet';
 }
 
+function settStegIUrl(steg: 'valg' | null) {
+  if (typeof window === 'undefined') return;
+  const dest = steg === 'valg' ? SIGNIN_VALG_STI : SIGNIN_STI;
+  window.history.replaceState(null, '', dest);
+}
+
 export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
   const utils = trpc.useUtils();
   const search = useSearchParams();
-  const [step, setStep] = useState<Step>(() => (search?.get('steg') === 'totp' ? 'totp' : 'epost'));
+  const stegQuery = search?.get('steg') ?? null;
+  const [flate, setFlate] = useState(() => signInFlateFraQuery(stegQuery));
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
+  const [kodeModus, setKodeModus] = useState<KodeModus>('totp');
+  const [lenkeSendt, setLenkeSendt] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [magicBusy, setMagicBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const codeRef = useRef<HTMLInputElement>(null);
+  const enrollert = totpFeltAktivt(stegQuery);
+  const visEnroll = trengerEnrollForklaring(stegQuery);
 
   useEffect(() => {
-    if (search?.get('steg') === 'totp') setStep('totp');
-  }, [search]);
+    setFlate(signInFlateFraQuery(stegQuery));
+  }, [stegQuery]);
 
   useEffect(() => {
-    if (step === 'totp' || step === 'gjenoppretting') codeRef.current?.focus();
-  }, [step]);
+    const lagret = lesIdentifisertEpost();
+    if (lagret) setEmail(lagret);
+  }, []);
+
+  useEffect(() => {
+    if (flate === 'valg' && enrollert) codeRef.current?.focus();
+  }, [flate, enrollert]);
 
   async function finishSignIn() {
     const orgs = await authClient.organization.list();
@@ -58,29 +87,56 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     window.location.assign(landing ?? '/dashboard');
   }
 
-  async function onEpost(e: FormEvent) {
-    e.preventDefault();
-    setBusy('loading');
-    setError(null);
+  async function sendMagicLink(adresse: string) {
     const res = await signIn.magicLink({
-      email: email.trim(),
+      email: adresse,
       callbackURL: '/signin',
     });
     if (res.error) {
       setError(feilmelding(res));
+      return false;
+    }
+    setLenkeSendt(true);
+    setError(null);
+    return true;
+  }
+
+  async function onEpost(e: FormEvent) {
+    e.preventDefault();
+    const adresse = email.trim();
+    setBusy('loading');
+    setError(null);
+    lagreIdentifisertEpost(adresse);
+    const ok = await sendMagicLink(adresse);
+    if (!ok) {
       setBusy('error');
       return;
     }
-    setStep('sendt');
+    setFlate('valg');
+    settStegIUrl('valg');
     setBusy('idle');
+  }
+
+  async function onMagicLinkPaaNytt() {
+    const adresse = email.trim();
+    if (!adresse) {
+      setError('Skriv e-postadressen først.');
+      return;
+    }
+    setMagicBusy('loading');
+    setError(null);
+    lagreIdentifisertEpost(adresse);
+    const ok = await sendMagicLink(adresse);
+    setMagicBusy(ok ? 'success' : 'error');
   }
 
   async function onVerify(e: FormEvent) {
     e.preventDefault();
+    if (!enrollert) return;
     setBusy('loading');
     setError(null);
     const res =
-      step === 'gjenoppretting'
+      kodeModus === 'gjenoppretting'
         ? await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
         : await authClient.twoFactor.verifyTotp({ code: code.trim() });
     if (res.error) {
@@ -93,32 +149,38 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
     await finishSignIn();
   }
 
+  async function byttKonto() {
+    toemIdentifisertEpost();
+    setEmail('');
+    setCode('');
+    setError(null);
+    setLenkeSendt(false);
+    setKodeModus('totp');
+    setBusy('idle');
+    setMagicBusy('idle');
+    setFlate('epost');
+    settStegIUrl(null);
+    await authClient.signOut().catch(() => undefined);
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg px-4 text-fg">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3">
           <Image src="/logo/logo.svg" alt="Endwise" width={44} height={44} priority />
           <h1 className="text-title text-fg">
-            {step === 'epost'
-              ? 'Logg inn på Endwise'
-              : step === 'sendt'
-                ? 'Sjekk e-posten'
-                : step === 'gjenoppretting'
-                  ? 'Bruk gjenopprettingskode'
-                  : 'Bekreft med autentikator'}
+            {flate === 'epost' ? 'Logg inn på Endwise' : 'Velg innloggingsmåte'}
           </h1>
           <p className="text-center text-body text-fg-muted">
-            {step === 'epost'
-              ? 'Vi sender en innloggingslenke til kontoen din. Deretter bekrefter du med appen.'
-              : step === 'sendt'
-                ? `Lenke sendt til ${email}. Åpne den på denne enheten.`
-                : step === 'gjenoppretting'
-                  ? 'En av kodene du lastet ned da du satte opp tofaktor. Hver kode kan brukes én gang.'
-                  : 'Skriv den 6-sifrede koden fra autentikator-appen. Ikke en e-postkode.'}
+            {flate === 'epost'
+              ? 'Skriv e-posten til kontoen. Vi sender en innloggingslenke — ingen passord.'
+              : email
+                ? `Konto: ${email}`
+                : 'Tre valg. Magic link først hvis du ikke har bundet en app.'}
           </p>
         </div>
 
-        {step === 'epost' ? (
+        {flate === 'epost' ? (
           <form
             onSubmit={onEpost}
             className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
@@ -148,124 +210,123 @@ export function SignInSkjema({ demoHint }: { demoHint: ReactNode }) {
                 errorText="Prøv igjen"
                 icon={<Mail size={15} />}
               >
-                Send innloggingslenke
+                Fortsett
               </StatefulButton>
             </div>
           </form>
-        ) : step === 'sendt' ? (
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
-            <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
-              Åpne lenken i e-posten. Etterpå spør vi om koden fra autentikator-appen — en stjålet
-              innboks er ikke nok.
-            </div>
-            <div className="px-1.5 pt-1 pb-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setStep('epost');
-                  setBusy('idle');
-                  setError(null);
-                }}
-                className="text-[12px] text-fg-muted underline underline-offset-2 hover:text-fg"
-              >
-                Bytt konto
-              </button>
-            </div>
-          </div>
         ) : (
-          <form
-            onSubmit={onVerify}
-            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
-          >
-            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              <Field
-                id="signin-totp"
-                label={step === 'gjenoppretting' ? 'Gjenopprettingskode' : 'App-kode'}
-              >
-                <input
-                  id="signin-totp"
-                  ref={codeRef}
-                  autoComplete={step === 'gjenoppretting' ? 'off' : 'one-time-code'}
-                  inputMode={step === 'gjenoppretting' ? 'text' : 'numeric'}
-                  pattern={step === 'gjenoppretting' ? undefined : '[0-9]*'}
-                  maxLength={step === 'gjenoppretting' ? 16 : 6}
-                  required
-                  value={code}
-                  onChange={(ev) =>
-                    setCode(
-                      step === 'gjenoppretting'
-                        ? ev.target.value.trim()
-                        : ev.target.value.replace(/\D/g, ''),
-                    )
-                  }
-                  className={
-                    step === 'gjenoppretting'
-                      ? `${INPUT} text-center font-mono text-[16px] tabular-nums`
-                      : `${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`
-                  }
-                  placeholder={step === 'gjenoppretting' ? 'xxxxx-xxxxx' : '••••••'}
-                />
-              </Field>
-              {error && <p className="text-[12px] text-danger">{error}</p>}
-              <div className="flex items-center justify-between gap-2">
-                {step === 'gjenoppretting' ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep('totp');
-                      setCode('');
-                      setError(null);
-                      setBusy('idle');
-                    }}
-                    className="text-[12px] text-fg-muted underline underline-offset-2 hover:text-fg"
-                  >
-                    Tilbake til app-kode
-                  </button>
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
+            <div className="flex flex-col gap-4 rounded-lg bg-inset p-4">
+              <section className="flex flex-col gap-2">
+                <h2 className="text-label text-fg">Skriv inn kode</h2>
+                {visEnroll ? (
+                  <p className="text-[12px] text-fg-muted leading-relaxed">
+                    Du har ikke bundet en autentikator-app ennå. Logg inn med magic link først — så
+                    åpner vi oppsettet der du binder appen. Ikke en e-postkode.
+                  </p>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep('gjenoppretting');
-                      setCode('');
-                      setError(null);
-                      setBusy('idle');
-                    }}
-                    className="text-[12px] text-fg-muted underline underline-offset-2 hover:text-fg"
-                  >
-                    Bruk gjenopprettingskode
-                  </button>
+                  <form onSubmit={(e) => void onVerify(e)} className="flex flex-col gap-2">
+                    <Field
+                      id="signin-totp"
+                      label={kodeModus === 'gjenoppretting' ? 'Gjenopprettingskode' : 'App-kode'}
+                    >
+                      <input
+                        id="signin-totp"
+                        ref={codeRef}
+                        autoComplete={kodeModus === 'gjenoppretting' ? 'off' : 'one-time-code'}
+                        inputMode={kodeModus === 'gjenoppretting' ? 'text' : 'numeric'}
+                        pattern={kodeModus === 'gjenoppretting' ? undefined : '[0-9]*'}
+                        maxLength={kodeModus === 'gjenoppretting' ? 16 : 6}
+                        required
+                        value={code}
+                        onChange={(ev) =>
+                          setCode(
+                            kodeModus === 'gjenoppretting'
+                              ? ev.target.value.trim()
+                              : ev.target.value.replace(/\D/g, ''),
+                          )
+                        }
+                        className={
+                          kodeModus === 'gjenoppretting'
+                            ? `${INPUT} text-center font-mono text-[16px] tabular-nums`
+                            : `${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`
+                        }
+                        placeholder={kodeModus === 'gjenoppretting' ? 'xxxxx-xxxxx' : '••••••'}
+                      />
+                    </Field>
+                    <StatefulButton
+                      type="submit"
+                      state={busy}
+                      className="w-full"
+                      loadingText="Sjekker koden…"
+                      successText="Bekreftet"
+                      errorText="Feil kode"
+                      icon={<ShieldCheck size={15} />}
+                    >
+                      Bekreft og logg inn
+                    </StatefulButton>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setKodeModus(kodeModus === 'totp' ? 'gjenoppretting' : 'totp');
+                        setCode('');
+                        setError(null);
+                        setBusy('idle');
+                      }}
+                      className="text-left text-[12px] text-fg-muted underline underline-offset-2 hover:text-fg"
+                    >
+                      {kodeModus === 'gjenoppretting'
+                        ? 'Tilbake til app-kode'
+                        : 'Bruk gjenopprettingskode'}
+                    </button>
+                  </form>
                 )}
+                <a
+                  href={TO_FAKTOR_OPPSETT_STI}
+                  className="text-[12px] text-fg underline underline-offset-2 hover:text-fg-muted"
+                >
+                  Sett opp autentikator
+                </a>
+              </section>
+
+              <section className="flex flex-col gap-2 border-border border-t pt-3">
+                <h2 className="text-label text-fg">Logg inn med magiclink</h2>
+                <p className="text-[12px] text-fg-muted leading-relaxed">
+                  {lenkeSendt
+                    ? `Lenke sendt til ${email}. Åpne den på denne enheten. Har du ikke app, går du videre til oppsett.`
+                    : 'Vi sender en innloggingslenke til kontoen. Uten bundet app åpner lenken oppsettet.'}
+                </p>
+                <StatefulButton
+                  type="button"
+                  state={magicBusy}
+                  className="w-full"
+                  loadingText="Sender lenke…"
+                  successText="Sendt"
+                  errorText="Prøv igjen"
+                  icon={<Mail size={15} />}
+                  onClick={() => void onMagicLinkPaaNytt()}
+                >
+                  Logg inn med magiclink
+                </StatefulButton>
+              </section>
+
+              <section className="flex flex-col gap-2 border-border border-t pt-3">
+                <h2 className="text-label text-fg">Bytt konto</h2>
                 <button
                   type="button"
-                  onClick={() => {
-                    setStep('epost');
-                    setCode('');
-                    setError(null);
-                    setBusy('idle');
-                  }}
-                  className="text-[12px] text-fg-muted hover:text-fg"
+                  onClick={() => void byttKonto()}
+                  className="inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
                 >
                   Bytt konto
                 </button>
-              </div>
+              </section>
+
+              {error && <p className="text-[12px] text-danger">{error}</p>}
             </div>
-            <div className="px-1.5 pt-1 pb-1">
-              <StatefulButton
-                type="submit"
-                state={busy}
-                className="w-full"
-                loadingText="Sjekker koden…"
-                successText="Bekreftet"
-                errorText="Feil kode"
-                icon={<ShieldCheck size={15} />}
-              >
-                Bekreft og logg inn
-              </StatefulButton>
-            </div>
-          </form>
+          </div>
         )}
 
-        {step === 'epost' || step === 'sendt' ? demoHint : null}
+        {demoHint}
       </div>
     </main>
   );

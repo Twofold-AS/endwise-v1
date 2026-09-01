@@ -100,6 +100,10 @@ describe('magic link + TOTP (Mons-lås)', () => {
     );
     expect(signin).toMatch(/signIn\.magicLink/);
     expect(signin).toMatch(/verifyTotp/);
+    expect(signin).toMatch(/Skriv inn kode/);
+    expect(signin).toMatch(/Logg inn med magiclink/);
+    expect(signin).toMatch(/Bytt konto/);
+    expect(signin).toMatch(/ikke bundet en autentikator-app/);
     expect(signin).not.toMatch(/type=["']password["']/);
     expect(signin).not.toMatch(/verifyOtp|sendOtp/);
     expect(oppsett).toMatch(/twoFactor\.enable/);

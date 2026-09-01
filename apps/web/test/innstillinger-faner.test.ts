@@ -116,7 +116,8 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
     expect(profilFane).not.toMatch(/AvatarVelger/);
     expect(profilFane).toMatch(/ToFaktorRad/);
     expect(profilFane).toMatch(/twoFactorEnabled/);
-    expect(profilFane).toMatch(/<Switch/);
+    expect(profilFane).toMatch(/VarslingslyderRad/);
+    expect(profilFane).not.toMatch(/Mørkt tema/);
     expect(profilFane).not.toMatch(/type=['"]file['"]/);
     expect(profilFane).toMatch(/Ingen filopplasting/);
     expect(profilFane).not.toMatch(/timezone|tidssone|ukestart|datoformat/i);

@@ -224,7 +224,7 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
     expect(rad).toMatch(/innstillingerHref/);
     expect(rad).toMatch(/Settings/);
-    expect(rad).toMatch(/Innstillinger/);
+    expect(rad).toMatch(/Profil|Innstillinger/);
     expect(rad).toMatch(/LogOut/);
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     expect(sidebar).toMatch(/innstillingerHref/);

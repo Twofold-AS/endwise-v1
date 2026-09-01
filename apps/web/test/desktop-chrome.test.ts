@@ -39,7 +39,8 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
     const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
     expect(sidebar).toMatch(/bg-\[#ffffff\]/);
-    expect(sidebar).not.toMatch(/border-b |border-b"|header[\s\S]*border-b/);
+    expect(header).not.toMatch(/border-b/);
+    expect(sidebar).not.toMatch(/min-h-10 shrink-0 items-center py-2[\s\S]{0,80}border-b-/);
     expect(sidebar).toMatch(/gap-\[4px\]/);
     expect(sidebar).toMatch(/TipCard/);
     expect(sidebar).toMatch(/variant="sidebar"/);

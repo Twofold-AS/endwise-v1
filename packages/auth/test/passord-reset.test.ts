@@ -39,10 +39,8 @@ afterEach(() => {
 
 // 1. Herdingen, som ren regel. Ingen DB, kjører alltid.
 describe('F1-16: herdingskravene', () => {
-  it('⭐ den EKTE konfigurasjonen i auth.ts har ingen hull', () => {
-    // Denne ene assertion-en er hele poenget med fila. Skrur noen av
-    // `revokeSessionsOnPasswordReset`, forlenger tokenet eller fjerner
-    // rate-limit-regelen, blir det rødt her — ikke i produksjon.
+  it('⭐ den EKTE konfigurasjonen har passord av — reset er da uten hull', () => {
+    expect(byggAuth().options.emailAndPassword?.enabled).toBe(false);
     expect(passordResetHull(byggAuth().options)).toEqual([]);
   });
 
@@ -122,16 +120,20 @@ describe('F1-16: herdingskravene', () => {
     expect(hull.join()).toContain('sendResetPassword');
   });
 
-  it('`assertPassordResetHerdet` navngir hvert hull i feilmeldingen', () => {
-    // En konfigurasjonstest som bare sier «false» hjelper ingen kl. 02.
-    expect(() => assertPassordResetHerdet({})).toThrow(/revokeSessionsOnPasswordReset/);
+  it('`assertPassordResetHerdet` navngir hvert hull når passord fortsatt er på', () => {
+    expect(() =>
+      assertPassordResetHerdet({
+        emailAndPassword: { enabled: true },
+      }),
+    ).toThrow(/sendResetPassword|revokeSessionsOnPasswordReset/);
   });
 
-  it('rate-limit-reglene står på de EKSAKTE Better-Auth-stiene', () => {
-    // Nøkkelen matches med `` (eller wildcard) mot request-stien. En
-    // skrivefeil her gir ingen feil — bare en regel som aldri treffer.
+  it('rate-limit-reglene står på magic-link-stiene, ikke reset', () => {
     const regler = byggAuth().options.rateLimit?.customRules ?? {};
     expect(Object.keys(regler)).toEqual(
+      expect.arrayContaining(['/sign-in/magic-link', '/magic-link/verify']),
+    );
+    expect(Object.keys(regler)).not.toEqual(
       expect.arrayContaining(['/request-password-reset', '/reset-password']),
     );
   });
@@ -186,7 +188,8 @@ describe('F1-16: hvor resetlenka havner', () => {
 
 // 3. Endepunktene, mot ekte database.
 const OWNER_URL = OPPRINNELIG.DATABASE_URL;
-const describeDb = OWNER_URL ? describe : describe.skip;
+/** Passord-API er av. DB-reset-flyten er ikke lenger en innloggingsvei. */
+const describeDb = OWNER_URL ? describe.skip : describe.skip;
 
 describeDb('F1-16: endepunktene mot ekte database', () => {
   let db: Database;

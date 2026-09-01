@@ -62,17 +62,17 @@ describe('resetLenkeFeil', () => {
 describe('F1-16: /nytt-passord tømmer ikke tokenet etter strip', () => {
   const her = dirname(fileURLToPath(import.meta.url));
 
-  it('sida bruker beholdForsteToken og logger aldri tokenet', () => {
+  it('sida redirecter til /signin — passordreset er borte', () => {
     const side = readFileSync(resolve(her, '../app/nytt-passord/page.tsx'), 'utf8');
-    expect(side).toMatch(/beholdForsteToken/);
-    expect(side).toMatch(/lesResetToken/);
-    expect(side).not.toMatch(/setToken\(params\?\.get\(['"]token['"]\) \?\? null\)/);
+    expect(side).toMatch(/redirect\(['"]\/signin['"]\)/);
+    expect(side).not.toMatch(/beholdForsteToken|lesResetToken|type=['"]password['"]/);
     expect(side).not.toMatch(/console\.(log|debug|info|warn|error)\([^)]*token/i);
   });
 
-  it('sendResetPassword setter query-navnet token, ikke token_hash', () => {
+  it('auth.ts har ikke passordreset — magic link er innloggingen', () => {
     const auth = readFileSync(resolve(her, '../../../packages/auth/src/auth.ts'), 'utf8');
-    expect(auth).toMatch(/searchParams\.set\(['"]token['"], token\)/);
-    expect(auth).not.toMatch(/searchParams\.set\(['"]token_hash['"]/);
+    expect(auth).toMatch(/emailAndPassword:\s*\{[\s\S]*enabled:\s*false/);
+    expect(auth).toMatch(/magicLink\(/);
+    expect(auth).not.toMatch(/sendResetPassword/);
   });
 });

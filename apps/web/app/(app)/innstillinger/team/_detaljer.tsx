@@ -1,7 +1,5 @@
 'use client';
 
-import { PASSORD_RESET_TTL_SEKUNDER } from '@endwise/auth/password-reset';
-import { formaterKlokkeslett } from '@endwise/auth/tid';
 import {
   Avatar,
   Dialog,
@@ -267,7 +265,7 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
 
         {kanEndre ? (
           <div className="mt-3">
-            <PassordEndring userId={rad.userId} kan={rad.kanLoggeInn && Boolean(rad.epost)} />
+            <InnloggingNotat kan={rad.kanLoggeInn && Boolean(rad.epost)} />
           </div>
         ) : null}
       </div>
@@ -311,68 +309,18 @@ function Jobber({ userId }: { userId: string }) {
   );
 }
 
-function PassordEndring({ userId, kan }: { userId: string; kan: boolean }) {
-  const [apen, setApen] = useState(false);
-  const [utloperKl, setUtloperKl] = useState<string | null>(null);
-  const send = trpc.team.sendPassordendring.useMutation({
-    onSuccess: () => {
-      setApen(false);
-      setUtloperKl(formaterKlokkeslett(new Date(Date.now() + PASSORD_RESET_TTL_SEKUNDER * 1000)));
-    },
-  });
-
+function InnloggingNotat({ kan }: { kan: boolean }) {
   if (!kan) {
     return (
       <p className="text-[12px] text-fg-muted">
-        Personen har ingen innlogging. Opprett hen med e-post hvis hen skal få passord.
+        Personen har ingen innlogging. Inviter med e-post — hen logger inn med magic link.
       </p>
     );
   }
-
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setApen(true)}
-        className="inline-flex h-control items-center rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2"
-      >
-        Send passordendring
-      </button>
-      <Dialog open={apen} onOpenChange={setApen}>
-        <DialogContent className="top-1/2 left-1/2 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-5">
-          <DialogTitle className="text-title text-fg">Sende passordendring?</DialogTitle>
-          <DialogDescription className="mt-2 text-body text-fg-muted">
-            Vi sender en resetlenke til den lagrede e-posten. Bekreft før vi sender.
-          </DialogDescription>
-          {send.isError ? (
-            <p className="mt-2 text-[12px] text-danger">{send.error.message}</p>
-          ) : null}
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setApen(false)}
-              className="h-control rounded-control px-3 text-label text-fg-muted"
-            >
-              Avbryt
-            </button>
-            <button
-              type="button"
-              disabled={send.isPending}
-              onClick={() => send.mutate({ userId })}
-              className="h-control rounded-control bg-fg px-3 text-label text-bg disabled:opacity-40"
-            >
-              {send.isPending ? 'Sender …' : 'Bekreft og send'}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      {send.isSuccess ? (
-        <p className="text-[12px] text-fg-muted">
-          Passordendring er sendt.
-          {utloperKl ? ` Siste tidspunkt for å tilbakestille via lenken er kl. ${utloperKl}.` : ''}
-        </p>
-      ) : null}
-    </>
+    <p className="text-[12px] text-fg-muted">
+      Logger inn med magic link til konto-e-posten + autentikator-app. Ingen passord.
+    </p>
   );
 }
 

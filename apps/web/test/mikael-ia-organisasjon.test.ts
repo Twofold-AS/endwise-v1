@@ -218,7 +218,8 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
-    expect(shell).toMatch(/ml-auto/);
+    expect(shell).not.toMatch(/ml-auto/);
+    expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/PHONE_SAFE_BUNN/);
     expect(shell).not.toMatch(/PhoneHScroll|hamburger|\bMenu\b|Handlinger|QUICK_ACTIONS/i);
     expect(shell).not.toMatch(/recolor|filter:/);
@@ -237,10 +238,10 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   it('top-bar 2 er sidebar-rad, ikke svart pille', () => {
     expect(seksjon).toMatch(/bg-sidebar-active/);
     expect(seksjon).toMatch(/hover:bg-surface-2/);
-    expect(seksjon).toMatch(/PhoneHScroll/);
+    expect(seksjon).not.toMatch(/PhoneHScroll/);
     expect(seksjon).toMatch(/flex-wrap/);
-    expect(seksjon).toMatch(/overflow-y-hidden/);
-    expect(seksjon).toMatch(/touch-pan-x/);
+    expect(seksjon).not.toMatch(/overflow-y-hidden/);
+    expect(seksjon).not.toMatch(/touch-pan-x/);
     expect(seksjon).not.toMatch(/PHONE_LOGO_KOLONNE/);
     expect(hscroll).toMatch(/flex-nowrap/);
     expect(seksjon).toMatch(/whitespace-nowrap/);

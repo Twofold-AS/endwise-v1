@@ -13,15 +13,28 @@ export const INNBOKS_FILTERE: { key: InboxPart; label: string; icon: LucideIcon 
   { key: 'dealer_admin', label: 'Endwise', icon: LifeBuoy },
 ];
 
+export type InboxSortering = 'nyeste' | 'eldste';
+
 const InboxFilterContext = createContext<{
   part: InboxPart;
   setPart: (part: InboxPart) => void;
+  sortering: InboxSortering;
+  setSortering: (s: InboxSortering) => void;
+  skjulte: ReadonlySet<string>;
+  skjul: (id: string) => void;
 } | null>(null);
 
 export function InboxFilterProvider({ children }: { children: ReactNode }) {
   const [part, setPart] = useState<InboxPart>('alle');
+  const [sortering, setSortering] = useState<InboxSortering>('nyeste');
+  const [skjulte, setSkjulte] = useState<ReadonlySet<string>>(() => new Set());
+  function skjul(id: string) {
+    setSkjulte((forrige) => new Set([...forrige, id]));
+  }
   return (
-    <InboxFilterContext.Provider value={{ part, setPart }}>{children}</InboxFilterContext.Provider>
+    <InboxFilterContext.Provider value={{ part, setPart, sortering, setSortering, skjulte, skjul }}>
+      {children}
+    </InboxFilterContext.Provider>
   );
 }
 

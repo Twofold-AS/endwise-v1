@@ -4,7 +4,6 @@ import { Avatar } from '@endwise/ui';
 import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { ByttEpostSkjema } from '../_shell/bytt-epost';
-import { ByttPassordSkjema } from '../_shell/bytt-passord';
 import { KallenavnFelt, VarslingslyderRad, VisningsnavnFelt } from '../_shell/profil-kort';
 import { ToFaktorRad } from '../_shell/to-faktor-rad';
 
@@ -67,8 +66,6 @@ export function ProfilFane() {
       <div className="overflow-hidden rounded-xl border border-border">
         <VarslingslyderRad />
       </div>
-
-      <ByttPassordSkjema />
 
       <div className="overflow-hidden rounded-xl border border-border">
         <ToFaktorRad enabled={twoFactorEnabled} />

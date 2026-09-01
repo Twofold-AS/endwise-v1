@@ -41,19 +41,20 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('dealer phone home — kortrekkefølge og fyll', () => {
-  it('låser hero → Innboks|Timeplan → Statistikk|Salg → Kunder|Organisasjon → Samarbeid|Hjelp → Lager lavt', () => {
+  it('låser hero → Innboks|Timeplan → Statistikk|Salg → Kunder|Organisasjon → Lager lavt (ingen Samarbeid)', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['verkstedet'],
       ['innboks', 'timeplan'],
       ['statistikk', 'tjenester'],
       ['kunder', 'organisasjon'],
-      ['samarbeid', 'hjelp'],
       ['lager'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(DEALER_PHONE_HJEM[1]?.kind).toBe('pair');
     expect(DEALER_PHONE_HJEM[2]?.kind).toBe('pair');
     expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('low');
+    expect(flatDealerHjemKeys(true)).not.toContain('samarbeid');
+    expect(PHONE_KORT_META).not.toHaveProperty('samarbeid');
   });
 
   it('Innboks|Timeplan og Salg er høyt, Lager er lavt', () => {
@@ -307,7 +308,7 @@ describe('desktop sidebar er overlay som telefon', () => {
     expect(sidebar).toMatch(/phoneOpen/);
     expect(sidebar).toMatch(/Handlinger/);
     expect(sidebar).toMatch(/BrukerRad/);
-    expect(sidebar).toMatch(/TipCard/);
+    expect(sidebar).toMatch(/OppgraderPille/);
     expect(sidebar).toMatch(/min-width:\s*768px/);
     expect(sidebar).toMatch(/QUICK_ACTIONS/);
   });

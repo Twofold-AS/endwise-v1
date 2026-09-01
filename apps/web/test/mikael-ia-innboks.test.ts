@@ -38,27 +38,26 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     ]);
   });
 
-  it('telefon top-bar 2 er filterrad med ikon+tekst og Ny chat — desktop skjuler den', () => {
+  it('Innboks-verktøy bor i lista (to linjer), seksjon-bar er no-op', () => {
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
+    const side = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     expect(layout).toMatch(/InnboksSeksjonBar/);
     expect(layout).toMatch(/OrganisasjonSeksjonBar/);
     expect(seksjon).toMatch(/export function InnboksSeksjonBar/);
     expect(seksjon).toMatch(/export function OrganisasjonSeksjonBar/);
-    expect(seksjon).toMatch(/aria-label="Innboks"/);
-    expect(seksjon).toMatch(/md:hidden/);
-    expect(seksjon).toMatch(/INNBOKS_FILTERE/);
-    expect(seksjon).toMatch(/Ny chat/);
-    expect(seksjon).toMatch(/MessageSquarePlus/);
-    expect(seksjon).not.toMatch(/Oversikt/);
-    expect(seksjon).toMatch(/bg-sidebar-active/);
-    expect(seksjon).toMatch(/hover:bg-surface-2/);
-    expect(seksjon).toMatch(/PhoneHScroll/);
-    expect(seksjon).toMatch(/py-1\.5/);
-    expect(seksjon).toMatch(/max-md:py-1/);
-    expect(seksjon).not.toMatch(/bg-fg text-bg/);
-    expect(seksjon).not.toMatch(/h-row-store|h-11/);
-    expect(seksjon).toMatch(/\{p\.label\}/);
+    expect(seksjon).toMatch(/return null/);
+    expect(seksjon).not.toMatch(/PhoneHScroll/);
+    expect(seksjon).not.toMatch(/INNBOKS_FILTERE/);
+    expect(side).toMatch(/aria-label="Innboks"/);
+    expect(side).toMatch(/INNBOKS_FILTERE/);
+    expect(side).toMatch(/MessageSquarePlus/);
+    expect(side).toMatch(/Nyeste/);
+    expect(side).toMatch(/Eldste/);
+    expect(side).toMatch(/max-md:hidden/);
+    expect(side).not.toMatch(/Oversikt/);
+    expect(side).toMatch(/bg-sidebar-active/);
+    expect(side).toMatch(/hover:bg-surface-2/);
   });
 
   it('erInnboksSide dekker dealer og inspect, filterbar er kun dealer', () => {
@@ -69,8 +68,8 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     expect(erInnboksSide('/organisasjon')).toBe(false);
     expect(erDealerInnboks('/innboks')).toBe(true);
     expect(erDealerInnboks('/endwise/verksted/acme/innboks')).toBe(false);
-    const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-    expect(seksjon).toMatch(/erDealerInnboks/);
+    const sti = utenKommentarer(les('../app/(app)/_shell/seksjon-sti.ts'));
+    expect(sti).toMatch(/erDealerInnboks/);
   });
 });
 
@@ -81,19 +80,22 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
   const chrome = utenKommentarer(les('../app/(app)/innboks/_chrome.tsx'));
   const hoved = utenKommentarer(les('../app/(app)/innboks/_hovedflate.tsx'));
 
-  it('desktop list-header er ikon-only, skjult på telefon', () => {
+  it('to linjer uten divider: visning + slett, sortering under', () => {
     expect(side).toMatch(/INNBOKS_FILTERE/);
-    expect(side).toMatch(/hidden[\s\S]*md:flex/);
     expect(side).toMatch(/aria-label=\{p\.label\}/);
     expect(side).toMatch(/title=\{p\.label\}/);
-    expect(side).not.toMatch(/<span>\{p\.label\}<\/span>/);
+    expect(side).toMatch(/\{p\.label\}/);
     expect(side).toMatch(/bg-sidebar-active/);
     expect(side).toMatch(/hover:bg-surface-2/);
+    expect(side).toMatch(/Nyeste/);
+    expect(side).toMatch(/Eldste/);
+    expect(side).toMatch(/Trash2/);
+    expect(side).toMatch(/aktivId \? 'max-md:hidden'/);
   });
 
-  it('Ny chat åpner Kunde · Intern · Support — ingen Mekaniker', () => {
-    expect(side).toMatch(/Ny chat/);
-    expect(side).toMatch(/NySamtaleLenke/);
+  it('Ny melding er ikon, compose åpner Kunde · Intern · Support — ingen Mekaniker', () => {
+    expect(side).toMatch(/Ny melding/);
+    expect(side).toMatch(/MessageSquarePlus/);
     expect(side).toMatch(/\/innboks\?ny=1/);
     expect(samtale).toMatch(/label: 'Kunde'/);
     expect(samtale).toMatch(/label: 'Intern'/);

@@ -87,47 +87,17 @@ describe('test-artikler skjules i forhandler-UI', () => {
   });
 });
 
-describe('TipCard er stedet som minimeres', () => {
-  const tip = utenKommentarer(les('../app/(app)/_shell/tip-card.tsx'));
+describe('TipCard er ute av sidebaren — OppgraderPille sitter der', () => {
   const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
+  const pille = utenKommentarer(les('../app/(app)/_shell/oppgrader-pille.tsx'));
 
-  it('persisterer i endwise.helpdesk-slider.minimer og har minimer/utvid', () => {
-    expect(tip).toMatch(/HELPDESK_SLIDER_MINIMER_KEY/);
-    expect(tip).toMatch(/Minimer helpdesk-slider/);
-    expect(tip).toMatch(/Utvid helpdesk-slider/);
-    expect(tip).toMatch(/Fra helpdesken/);
-    expect(tip).toMatch(/<NewBadge/);
-    expect(tip).toMatch(/HOYDE = 208|height: HOYDE/);
-    expect(tip).not.toMatch(/if \(rader\.length === 0\) return null/);
-    expect(tip).toMatch(/Hjelp/);
-    expect(tip).toMatch(/Ingen artikler ennå/);
-  });
-
-  it('tom liste viser Hjelp-chrome som kan utvides — widgeten slettes ikke', () => {
-    expect(tip).toMatch(/Utvid helpdesk-slider/);
-    expect(tip).toMatch(/Minimer helpdesk-slider/);
-    expect(sidebar).toMatch(/shell === 'forhandler'/);
-    expect(sidebar).toMatch(/<TipCard \/>/);
-    const raa = les('../app/(app)/_shell/sidebar.tsx');
-    expect(raa.indexOf('<TipCard')).toBeGreaterThan(-1);
-    expect(raa.indexOf('<TipCard')).toBeLessThan(raa.indexOf('settingsNav?.href'));
-  });
-
-  it('helpdesk.list sitter ikke på 5 min staleTime — focus må treffe nye artikler', () => {
-    expect(tip).toMatch(/helpdesk\.list/);
-    expect(tip).not.toMatch(/staleTime:\s*5\s*\*\s*60_000/);
-    expect(tip).toMatch(/refetchOnWindowFocus:\s*true/);
-  });
-
-  it('ulesteAntall i sidebaren sitter heller ikke på 5 min staleTime', () => {
-    const teller = sidebar.slice(
-      sidebar.indexOf('helpdeskUlest'),
-      sidebar.indexOf('const [apentPunkt') > 0
-        ? sidebar.indexOf('const [apentPunkt')
-        : sidebar.indexOf('helpdeskUlest') + 400,
-    );
-    expect(sidebar).toMatch(/helpdesk\.ulesteAntall/);
-    expect(teller).not.toMatch(/staleTime:\s*5\s*\*\s*60_000/);
+  it('sidebar monterer Grainient-oppgraderingspille, ikke Hjelp-TipCard', () => {
+    expect(sidebar).toMatch(/OppgraderPille/);
+    expect(sidebar).not.toMatch(/<TipCard/);
+    expect(pille).toMatch(/Grainient/);
+    expect(pille).toMatch(/oppgraderKnappetekst/);
+    expect(pille).toMatch(/organisasjon\?seksjon=abonnement/);
+    expect(pille).not.toMatch(/ShaderGradient/);
   });
 });
 

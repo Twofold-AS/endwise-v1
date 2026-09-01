@@ -58,7 +58,7 @@ describeDb('F1-10 — staff-invite lager credential for eksisterende bruker', ()
     await owner.delete(schema.tenants).where(eq(schema.tenants.id, tenantId));
   });
 
-  it('GET krever passord, godta skriver credential-konto', async () => {
+  it('GET krever ikke passord, godta oppretter uten credential-hash', async () => {
     const [kontoFor] = await owner
       .select({ id: schema.account.id })
       .from(schema.account)
@@ -84,7 +84,7 @@ describeDb('F1-10 — staff-invite lager credential for eksisterende bruker', ()
     };
     expect(peekBody.gyldig).toBe(true);
     expect(peekBody.harKonto).toBe(true);
-    expect(peekBody.kreverPassord).toBe(true);
+    expect(peekBody.kreverPassord).toBe(false);
 
     const godta = await handleHono(
       new Request('http://endwise.test/invitasjoner/godta', {
@@ -93,7 +93,6 @@ describeDb('F1-10 — staff-invite lager credential for eksisterende bruker', ()
         body: JSON.stringify({
           token,
           navn: 'Per Tang',
-          passord: 'mekaniker-pass-12',
         }),
       }),
     );
@@ -108,7 +107,6 @@ describeDb('F1-10 — staff-invite lager credential for eksisterende bruker', ()
       })
       .from(schema.account)
       .where(eq(schema.account.userId, ansattId));
-    expect(konto?.providerId).toBe('credential');
-    expect(konto?.password).toBeTruthy();
+    expect(konto?.password ?? null).toBeFalsy();
   });
 });

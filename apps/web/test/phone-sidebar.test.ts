@@ -23,13 +23,14 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
   const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
   const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
 
-  it('telefon-toppbar er fast, logo til venstre, åpne-ikon ytterst til høyre', () => {
+  it('telefon-toppbar er fast, logo til venstre, åpne-ikon rett ved logoen', () => {
     expect(shell).toMatch(/data-phone-top-bar/);
     expect(shell).toMatch(/sticky top-0/);
     expect(shell).not.toMatch(/md:hidden/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
-    expect(shell).toMatch(/ml-auto[\s\S]*PanelLeftOpen|ml-auto flex size-8/);
+    expect(shell).toMatch(/TilbakePil|data-shell-tilbake/);
+    expect(shell).not.toMatch(/ml-auto/);
     expect(shell).not.toMatch(/PhoneBevel|BEVEL/);
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).not.toMatch(/PhoneBevel/);
@@ -59,7 +60,8 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(sidebar).not.toMatch(/md:static/);
     expect(sidebar).not.toMatch(/md:w-\[248px\]/);
     expect(sidebar).toMatch(/bg-\[#ffffff\]/);
-    expect(sidebar).toMatch(/TipCard/);
+    expect(sidebar).toMatch(/OppgraderPille/);
+    expect(sidebar).not.toMatch(/<TipCard/);
     expect(sidebar).not.toMatch(/hidden md:block/);
     expect(sidebar).toMatch(/smal = collapsed && !phoneOpen/);
   });

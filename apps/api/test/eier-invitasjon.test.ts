@@ -257,7 +257,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     );
   });
 
-  it('godta på eier-invite setter passord og dealer_admin', async () => {
+  it('godta på eier-invite setter navn og dealer_admin uten passord', async () => {
     const slug = `godta-${randomUUID().slice(0, 8)}`;
     slugs.push(slug);
     const epost = `godta.${slug}@verksted.test`;
@@ -292,7 +292,7 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     expect(peek.status).toBe(200);
     const peekBody = (await peek.json()) as { kreverPassord: boolean; kind: string };
     expect(peekBody.kind).toBe('owner');
-    expect(peekBody.kreverPassord).toBe(true);
+    expect(peekBody.kreverPassord).toBe(false);
 
     // Samme sti som siden (`/invitasjoner/:token`), ikke sub-appen på `/:token`.
     const viaSide = await handleHono(
@@ -301,11 +301,10 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     expect(viaSide.status).toBe(200);
     expect(await viaSide.json()).toMatchObject({ gyldig: true, kind: 'owner' });
 
-    const passord = 'eier-passord-12';
     const godta = await invitasjon.request('/godta', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ token, navn: 'Kari Eier', passord }),
+      body: JSON.stringify({ token, navn: 'Kari Eier' }),
     });
     const body = (await godta.json()) as { ok?: boolean; error?: string; nyKonto?: boolean };
     expect(godta.status, body.error).toBe(200);

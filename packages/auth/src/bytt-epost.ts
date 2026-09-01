@@ -37,13 +37,12 @@ export const BYTT_EPOST_GENERISK_MELDING = 'Kunne ikke be om e-postbytte.';
 export type ByttEpostInput = {
   nyEpost: string;
   bekreft: string;
-  passord: string;
+  passord?: string;
 };
 
 export type ByttEpostOk = {
   ok: true;
   nyEpost: string;
-  passord: string;
 };
 
 export type ByttEpostFeil = {
@@ -61,18 +60,13 @@ const EPOST = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function validerByttEpost(input: ByttEpostInput): ByttEpostOk | ByttEpostFeil {
   const nyEpost = input.nyEpost.trim().toLowerCase();
   const bekreft = input.bekreft.trim().toLowerCase();
-  const passord = input.passord.trim();
-
-  if (!passord) {
-    return { ok: false, feil: 'Skriv det gjeldende passordet før du bytter e-post.' };
-  }
   if (!nyEpost || !EPOST.test(nyEpost)) {
     return { ok: false, feil: 'Skriv en gyldig ny e-postadresse.' };
   }
   if (nyEpost !== bekreft) {
     return { ok: false, feil: 'De to e-postadressene er ikke like.' };
   }
-  return { ok: true, nyEpost, passord };
+  return { ok: true, nyEpost };
 }
 
 /**
@@ -89,12 +83,10 @@ export function byttEpostLenke(token: string): string {
 export function byttEpostKall(ok: ByttEpostOk): {
   newEmail: string;
   callbackURL: typeof BYTT_EPOST_CALLBACK;
-  password: string;
 } {
   return {
     newEmail: ok.nyEpost,
     callbackURL: BYTT_EPOST_CALLBACK,
-    password: ok.passord,
   };
 }
 

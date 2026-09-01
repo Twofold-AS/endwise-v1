@@ -6,6 +6,9 @@
  */
 export const PHONE_LOGO_PX = 18;
 
+/** Åpne- og lukke-ikon er samme mål — ellers hopper headeren. */
+export const SHELL_TOGGLE_PX = 16;
+
 /**
  * Samme header-rad i lukket toppbar og åpen overlay — identisk høyde,
  * venstre-innfelt og vertikal sentrering så logoen ikke hopper.

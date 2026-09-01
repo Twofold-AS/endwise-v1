@@ -1,6 +1,13 @@
 'use client';
 
-import { Avatar, type AvatarValg, Button, MessageSquare, MessageSquarePlus } from '@endwise/ui';
+import {
+  Avatar,
+  type AvatarValg,
+  Button,
+  MessageSquare,
+  MessageSquarePlus,
+  Trash2,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -38,7 +45,7 @@ export function InboxSidebar() {
   const aktivId = params?.id;
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, setPart } = useInboxFilter();
+  const { part, setPart, sortering, setSortering, skjulte, skjul } = useInboxFilter();
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -83,9 +90,16 @@ export function InboxSidebar() {
   );
 
   const rader = useMemo(() => {
-    return ekte
+    const filtrert = ekte
+      .filter((t) => !skjulte.has(t.id))
       .filter((t) => part === 'alle' || t.kind === part)
-      .map((t) => ({
+      .slice()
+      .sort((a, b) => {
+        const da = new Date(a.lastMessageAt).getTime();
+        const db = new Date(b.lastMessageAt).getTime();
+        return sortering === 'eldste' ? da - db : db - da;
+      });
+    return filtrert.map((t) => ({
         id: t.id,
         kind: t.kind as ThreadKind,
         avsender: threadHeading(
@@ -120,13 +134,17 @@ export function InboxSidebar() {
           me.data?.userId,
         ),
       }));
-  }, [ekte, part, navnIntern.data, navnOffisiell.data, me.data?.userId]);
+  }, [ekte, part, sortering, skjulte, navnIntern.data, navnOffisiell.data, me.data?.userId]);
 
   if (endwise) {
     const henvendelser = support.data ?? [];
     return (
-      <aside className="flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r">
-        <div className="flex h-14 shrink-0 items-center border-border border-b px-3">
+      <aside
+        className={`flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r ${
+          aktivId ? 'max-md:hidden' : ''
+        }`}
+      >
+        <div className="flex h-14 shrink-0 items-center px-3">
           <h2 className="min-w-0 truncate text-title text-fg">Innboks</h2>
         </div>
         <div className="shrink-0 border-border border-b p-2">
@@ -162,18 +180,27 @@ export function InboxSidebar() {
   }
 
   return (
-    <aside className="flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r">
+    <aside
+      className={`flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r ${
+        aktivId ? 'max-md:hidden' : ''
+      }`}
+    >
       {/**
-       * Desktop list-header: ikon-only filtre + Ny chat.
-       * Telefon-filtrene bor i top-bar 2 (ikon + tekst) — ikke duplisert.
+       * To linjer, ingen divider, ingen horisontal slider.
+       * 1) Ny melding som ikon + visningsvalg + slett
+       * 2) Sortering
        */}
-      <div className="hidden shrink-0 items-center gap-2 border-border border-b px-3 py-1.5 md:flex">
+      <div className="flex shrink-0 flex-col gap-1.5 px-3 py-1.5">
         <h2 className="sr-only">Samtaler</h2>
-        <div
-          className="flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto"
-          role="toolbar"
-          aria-label="Sorter samtaler"
-        >
+        <div className="flex flex-wrap items-center gap-1.5" role="toolbar" aria-label="Innboks">
+          <Link
+            href={'/innboks?ny=1' as Route}
+            aria-label="Ny melding"
+            title="Ny melding"
+            className="inline-flex size-8 items-center justify-center rounded-control text-fg hover:bg-surface-2"
+          >
+            <MessageSquarePlus size={16} strokeWidth={1.75} />
+          </Link>
           {INNBOKS_FILTERE.map((p) => {
             const aktiv = part === p.key;
             return (
@@ -184,16 +211,51 @@ export function InboxSidebar() {
                 aria-pressed={aktiv}
                 title={p.label}
                 aria-label={p.label}
-                className={`inline-flex h-control min-h-control shrink-0 items-center justify-center rounded-control px-2.5 transition-colors ${
+                className={`inline-flex h-control items-center rounded-control px-2.5 text-label transition-colors ${
                   aktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
                 }`}
               >
-                <p.icon size={16} strokeWidth={1.75} />
+                {p.label}
               </button>
             );
           })}
+          <button
+            type="button"
+            aria-label="Slett valgt samtale"
+            title="Slett valgt samtale"
+            disabled={!aktivId}
+            className="inline-flex size-8 items-center justify-center rounded-control text-fg hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={() => {
+              if (aktivId) skjul(aktivId);
+            }}
+          >
+            <Trash2 size={16} strokeWidth={1.75} />
+          </button>
         </div>
-        <NySamtaleLenke href={'/innboks?ny=1' as Route} />
+        <div
+          className="flex flex-wrap items-center gap-1.5"
+          role="toolbar"
+          aria-label="Sorter samtaler"
+        >
+          {(
+            [
+              ['nyeste', 'Nyeste'],
+              ['eldste', 'Eldste'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setSortering(key)}
+              aria-pressed={sortering === key}
+              className={`inline-flex h-control items-center rounded-control px-2.5 text-label transition-colors ${
+                sortering === key ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Samtalene */}

@@ -4,7 +4,7 @@ import { PanelLeftClose, PanelLeftOpen } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { SHELL_LOGO_WRAP } from './phone-chrome';
+import { SHELL_LOGO_WRAP, SHELL_TOGGLE_PX } from './phone-chrome';
 import { useSidebarState } from './sidebar-state';
 
 /** Liten logo — samme 18px i overlay og i lukket toppbar. Forhandlernavn vises ikke. */
@@ -12,7 +12,7 @@ const LOGO = 18;
 
 /**
  * Sidebar-topp uten visningsvelger. Ett skall per innlogging.
- * Minimize bor her. Ingen divider under headeren.
+ * Lukke-ikonet sitter rett ved logoen (ikke ytterst til høyre).
  */
 export function SidebarHeader({
   collapsed,
@@ -39,9 +39,9 @@ export function SidebarHeader({
       className="flex size-8 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active hover:text-fg"
     >
       {collapsed && !phoneOpen ? (
-        <PanelLeftOpen size={16} strokeWidth={1.75} />
+        <PanelLeftOpen size={SHELL_TOGGLE_PX} strokeWidth={1.75} />
       ) : (
-        <PanelLeftClose size={16} strokeWidth={1.75} />
+        <PanelLeftClose size={SHELL_TOGGLE_PX} strokeWidth={1.75} />
       )}
     </button>
   );
@@ -85,7 +85,7 @@ export function SidebarHeader({
           className="logo-invert shrink-0"
         />
       </span>
-      <div className="ml-auto">{minimer}</div>
+      {minimer}
     </>
   );
 }

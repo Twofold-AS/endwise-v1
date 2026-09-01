@@ -16,10 +16,11 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
   const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/page.tsx'), 'utf8');
   const pakke = readFileSync(resolve(her, '../app/(app)/endwise/_pakke-valg.tsx'), 'utf8');
 
-  it('godta-siden ber om passord og har ingen tilleggs-UI', () => {
-    expect(kilde).toMatch(/Sett eller bytt passord|Velg et passord/);
-    expect(kilde).toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
-    expect(kilde).toMatch(/Bekrefter …/);
+  it('godta-siden ber om navn og sender magic link — ingen tilleggs-UI', () => {
+    expect(kilde).toMatch(/Hva heter du/);
+    expect(kilde).toMatch(/signIn\.magicLink|magicLink/);
+    expect(kilde).not.toMatch(/type=["']password["']/);
+    expect(kilde).not.toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
     expect(kilde).not.toMatch(/ADDON_MODULES|tenant_modules|Velg moduler|planvelger|abonnement/);
     expect(kilde).not.toMatch(/addonKatalog|setModules/);
   });
@@ -27,7 +28,8 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
   it('kloner /signin-chromet — logo, kort, StatefulButton, auth-felt', () => {
     expect(kilde).toMatch(/from '@endwise\/ui'/);
     expect(kilde).toMatch(/StatefulButton/);
-    expect(kilde).toMatch(/Field, INPUT, PassordFelt/);
+    expect(kilde).toMatch(/Field, INPUT/);
+    expect(kilde).not.toMatch(/PassordFelt/);
     expect(kilde).toMatch(/\/logo\/logo\.svg/);
     expect(kilde).toMatch(/max-w-sm/);
     expect(kilde).toMatch(/rounded-xl border border-border bg-card p-\[5px\]/);
@@ -37,9 +39,6 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(kilde).toMatch(/fetch\(`\/invitasjoner\/\$\{encodeURIComponent\(token\)\}`\)/);
     expect(kilde).not.toMatch(/fetch\(`\/invitasjon\/\$\{/);
     expect(kilde).toMatch(/Oppretter …/);
-    expect(kilde).toMatch(/Opprettet/);
-    expect(kilde).toMatch(/<Lock /);
-    expect(kilde).toMatch(/Du er invitert som eier/);
     expect(kilde).toMatch(/Invitasjonen virker ikke/);
     expect(kilde).toMatch(/utløper etter sju dager/);
     expect(kilde).not.toMatch(/max-w-\[440px\]/);
@@ -55,7 +54,7 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).toMatch(/tenants\.update/);
     expect(forhandlere).toMatch(/sendSlettKode/);
     expect(forhandlere).toMatch(/Slett forhandleren/);
-    expect(forhandlere).toMatch(/Eieren setter\s+passord og 2FA\s+selv — du setter det aldri/);
+    expect(forhandlere).toMatch(/Eieren logger inn med magic link \+ TOTP selv — du setter det aldri/);
     expect(forhandlere).toMatch(/Velg én pakke/);
     expect(forhandlere).toMatch(/Send invitasjon på nytt/);
     expect(forhandlere).toMatch(/t\.erEndwise/);
@@ -103,7 +102,7 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(kilde).not.toMatch(/steg === 'avatar'/);
     expect(kilde).not.toMatch(/Velg avataren din/);
     expect(kilde).not.toMatch(/AvatarVelger/);
-    expect(kilde).toMatch(/inv\.kind === 'owner'/);
+    expect(kilde).toMatch(/inv\?\.kind === 'owner'/);
   });
 
   it('ingen offentlig /registrer-side', () => {

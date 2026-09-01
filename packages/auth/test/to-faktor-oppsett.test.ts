@@ -10,11 +10,11 @@ import {
   kanFullforeKoder,
   koderSomTekstfil,
   plukkBackupKoder,
-  slaaAv2faKall,
+  plukkTotpUri,
+  secretFraTotpUri,
   TO_FAKTOR_DISABLE_AUDIT_ACTION,
   TO_FAKTOR_OPPSETT_STI,
   toFaktorStatusTekst,
-  validerSlaaAv2fa,
 } from '../src/to-faktor-oppsett.ts';
 
 /**
@@ -24,7 +24,7 @@ import {
 
 describe('F1-20: toFaktorStatusTekst', () => {
   it('viser På når twoFactorEnabled er true', () => {
-    expect(toFaktorStatusTekst(true)).toBe('På — engangskode på e-post');
+    expect(toFaktorStatusTekst(true)).toBe('På — autentikator-app');
   });
 
   it('viser Av når twoFactorEnabled er false', () => {
@@ -145,26 +145,12 @@ describe('F1-21: gjenopprettingskoder kan ikke hoppes over', () => {
   });
 });
 
-describe('F1-22: slå av krever passord — klientlaget er ikke sperren', () => {
-  it('⛔ tomt passord avvises før kallet', () => {
-    const r = validerSlaaAv2fa('   ');
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.feil).toMatch(/passordet/i);
-  });
-
-  it('trimmer og sender KUN password — ingen klientflagg', () => {
-    const sjekk = validerSlaaAv2fa('  hemmelig-passord-123  ');
-    expect(sjekk.ok).toBe(true);
-    if (!sjekk.ok) return;
-    expect(slaaAv2faKall(sjekk)).toEqual({ password: 'hemmelig-passord-123' });
-    expect(Object.keys(slaaAv2faKall(sjekk))).toEqual(['password']);
-  });
-
+describe('F1-22: slå av uten passord — TOTP er andre faktor', () => {
   it('audit-handlingen er navngitt og inneholder ikke hemmeligheter', () => {
     expect(TO_FAKTOR_DISABLE_AUDIT_ACTION).toBe('two_factor.disabled');
   });
 
-  it('ToFaktorRad og /2fa-oppsett slår av med passord — ikke bare en åpen sesjon', () => {
+  it('ToFaktorRad og /2fa-oppsett slår av uten passordfelt', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const rad = readFileSync(
       resolve(her, '../../../apps/web/app/(app)/_shell/to-faktor-rad.tsx'),
@@ -175,26 +161,32 @@ describe('F1-22: slå av krever passord — klientlaget er ikke sperren', () => 
       'utf8',
     );
 
-    expect(rad).toMatch(/validerSlaaAv2fa/);
     expect(rad).toMatch(/twoFactor\.disable/);
-    expect(rad).toMatch(/KREDENTIAL_MUTASJON_GENERISK_MELDING/);
+    expect(rad).not.toMatch(/type=["']password["']/);
     expect(rad).not.toMatch(/INVALID_PASSWORD/);
-    expect(oppsett).toMatch(/validerSlaaAv2fa|steg === 'av'/);
+    expect(oppsett).toMatch(/steg === 'av'/);
     expect(oppsett).toMatch(/twoFactor\.disable/);
-    expect(oppsett).toMatch(/KREDENTIAL_MUTASJON_GENERISK_MELDING/);
+    expect(oppsett).not.toMatch(/type=["']password["']/);
     expect(oppsett).not.toMatch(/INVALID_PASSWORD/);
+  });
+
+  it('plukker totpURI og secret fra enable-svaret', () => {
+    const uri = 'otpauth://totp/Endwise:a@b.c?secret=ABCDEF&issuer=Endwise';
+    expect(plukkTotpUri({ totpURI: uri })).toBe(uri);
+    expect(plukkTotpUri({ data: { totpURI: uri } })).toBe(uri);
+    expect(secretFraTotpUri(uri)).toBe('ABCDEF');
   });
 });
 
 describe('F1-17 / F1-20: delt flate', () => {
   const her = dirname(fileURLToPath(import.meta.url));
 
-  it('ProfilKort eier ByttPassordSkjema — én komponent, to steder', () => {
+  it('ProfilKort har ikke ByttPassordSkjema', () => {
     const kilde = readFileSync(
       resolve(her, '../../../apps/web/app/(app)/_shell/profil-kort.tsx'),
       'utf8',
     );
-    expect(kilde).toMatch(/ByttPassordSkjema/);
+    expect(kilde).not.toMatch(/ByttPassordSkjema/);
   });
 
   it('forhandlerens profil leser session.user.twoFactorEnabled og viser ToFaktorRad', () => {
@@ -209,12 +201,13 @@ describe('F1-17 / F1-20: delt flate', () => {
 });
 
 describe('F1-25: oppsettsiden gjenbruker innloggingens byggeklosser', () => {
-  it('importerer StatefulButton og PassordFelt fra /signin sine byggeklosser', () => {
+  it('importerer StatefulButton og Field — ingen PassordFelt', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const kilde = readFileSync(resolve(her, '../../../apps/web/app/2fa-oppsett/page.tsx'), 'utf8');
     expect(kilde).toMatch(/StatefulButton/);
-    expect(kilde).toMatch(/PassordFelt/);
+    expect(kilde).toMatch(/Field, INPUT/);
     expect(kilde).toMatch(/from ['"]\.\.\/_auth\/felter['"]/);
+    expect(kilde).not.toMatch(/PassordFelt/);
     expect(kilde).not.toMatch(/Bevisst UDESIGNET/);
   });
 });

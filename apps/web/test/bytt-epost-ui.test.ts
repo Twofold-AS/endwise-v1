@@ -27,7 +27,7 @@ describe('F1-27: e-postbytte er to steg i UI-et', () => {
     const skjema = les('../app/(app)/_shell/bytt-epost.tsx');
     expect(skjema).toMatch(/changeEmail/);
     expect(skjema).toMatch(/byttEpostKall/);
-    expect(skjema).toMatch(/Gjeldende passord/);
+    expect(skjema).not.toMatch(/Gjeldende passord|type=['"]password['"]/);
     expect(skjema).not.toMatch(/updateUser/);
     expect(skjema).toMatch(/Send bekreftelse/);
   });

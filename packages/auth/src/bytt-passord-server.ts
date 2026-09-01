@@ -2,6 +2,10 @@ import type { Database } from '@endwise/db';
 import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from 'better-auth/api';
 import { BYTT_EPOST_STI } from './bytt-epost.ts';
 import {
+  MAGIC_LINK_BE_OM_STI,
+  MAGIC_LINK_CALLBACK,
+} from './magic-link.ts';
+import {
   BYTT_PASSORD_ETTER_HOOK_ID,
   BYTT_PASSORD_FOR_HOOK_ID,
   BYTT_PASSORD_STI,
@@ -41,13 +45,6 @@ function feilkodeFraReturned(returned: unknown): string | undefined {
   return undefined;
 }
 
-function passordFraBody(body: unknown): string | undefined {
-  if (typeof body !== 'object' || body === null) return undefined;
-  if (!('password' in body)) return undefined;
-  const verdi = (body as { password?: unknown }).password;
-  return typeof verdi === 'string' ? verdi : undefined;
-}
-
 function brukerIdFraHook(ctx: {
   context: { session?: { user?: { id?: unknown } } };
 }): string | undefined {
@@ -65,38 +62,33 @@ function brukerIdFraHook(ctx: {
 export const byttPassordForHook = merket(
   createAuthMiddleware(async (ctx) => {
     await eierLasForHook(ctx);
-    if (ctx.path === TO_FAKTOR_DISABLE_STI || ctx.path === BYTT_EPOST_STI) {
-      const password = passordFraBody(ctx.body);
-      if (password === undefined || password.trim().length === 0) {
-        throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
+    if (ctx.path === MAGIC_LINK_BE_OM_STI) {
+      const body = ctx.body;
+      if (typeof body !== 'object' || body === null) return;
+      return {
+        context: {
+          body: {
+            ...body,
+            callbackURL: MAGIC_LINK_CALLBACK,
+          },
+        },
+      };
+    }
+    if (ctx.path === BYTT_EPOST_STI) {
+      /**
+       * E-postbytte er tostegs (bekreftelse til gammel + ny adresse).
+       * Passord er borte. TOTP må være på — ellers holder stjålet sesjon
+       * (etter magic link uten 2FA) til å peke kontoen mot en fremmed innboks.
+       */
+      const session = await getSessionFromCtx(ctx);
+      if (!session?.user?.id) {
+        throw new APIError('UNAUTHORIZED', { message: 'Unauthorized', code: 'UNAUTHORIZED' });
       }
-      if (ctx.path === BYTT_EPOST_STI) {
-        /**
-         * Session-middleware på `/change-email` kjører etter hooks.before.
-         * Uten `getSessionFromCtx` her er `ctx.context.session` tom, og
-         * `checkPassword` hoppes over — da holder det med en åpen sesjon
-         * pluss en vilkårlig passordstreng.
-         */
-        const session = await getSessionFromCtx(ctx);
-        const userId = session?.user?.id;
-        const check = (
-          ctx as {
-            context?: {
-              password?: { checkPassword?: (id: string, c: unknown) => Promise<unknown> };
-            };
-          }
-        ).context?.password?.checkPassword;
-        if (typeof userId !== 'string' || typeof check !== 'function') {
-          throw new APIError('UNAUTHORIZED', { message: 'Unauthorized', code: 'UNAUTHORIZED' });
-        }
-        try {
-          await check(userId, ctx);
-        } catch (error) {
-          if (erSkjultAuthFeilkode(feilkodeFraReturned(error))) {
-            throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
-          }
-          throw error;
-        }
+      if (session.user.twoFactorEnabled !== true) {
+        throw new APIError('FORBIDDEN', {
+          message: 'Tofaktor må være slått på før du bytter e-post.',
+          code: 'TWO_FACTOR_REQUIRED',
+        });
       }
       return;
     }

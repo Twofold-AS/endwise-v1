@@ -6,7 +6,6 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { ForhandlerInfoKort } from './forhandler-info-kort';
 import { dealerPhoneHjemRader, PHONE_KORT_META, type PhoneKortKey } from './phone-home';
 import {
-  hjelpMeta,
   innboksMeta,
   kunderMeta,
   lagerMeta,
@@ -32,7 +31,6 @@ export function PhoneHomeDealer() {
     limit: 50,
   });
   const oversikt = trpc.mechanics.oversikt.useQuery();
-  const artikler = trpc.helpdesk.list.useQuery({ limit: 20 });
   const lave = trpc.inventory.listParts.useQuery({
     kunLav: true,
     sorter: 'sku',
@@ -58,8 +56,6 @@ export function PhoneHomeDealer() {
     if (key === 'timeplan') return {};
     if (key === 'kunder') return { text: kunderMeta(customers.data ?? []) };
     if (key === 'organisasjon') return { text: organisasjonMeta(oversikt.data ?? []) };
-    if (key === 'samarbeid') return { text: 'Ingen delt informasjon ennå' };
-    if (key === 'hjelp') return { text: hjelpMeta(artikler.data ?? []) };
     if (key === 'lager') return { text: lagerMeta(lave.data ?? [], bevegelser.data ?? []) };
     if (key === 'butikk') return { text: 'Katalog og kasse' };
     return {};

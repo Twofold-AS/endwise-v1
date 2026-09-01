@@ -115,8 +115,8 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - Branch-per-PR = preview-miljøer med ekte DB
 
 ### Auth — `packages/auth`
-- **Better-Auth 1.x** (`better-auth` ~1.6.30) — organizations (multi-tenant), phone-number-plugin, twoFactor (e-post-OTP). Schema-CLI er pakken `auth` (samme 1.6.x), ikke det forlatte `@better-auth/cli` som pinner `better-auth@1.4`. Passkey (WebAuthn) er MIDLERTIDIG UTSATT (17.07.2026): `@better-auth/passkey` dro inn et foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt brukte den. Pakke + plugin fjernet, `passkey`-tabellen beholdt dormant. Reaktiveres når WebAuthn-flyten bygges. Se roadmap-endringer.md.
-- **Obligatorisk e-post-2FA** for hver forhandler/admin (ingen bypass)
+- **Better-Auth 1.x** (`better-auth` ~1.6.30) — organizations (multi-tenant), phone-number-plugin, magicLink + twoFactor (TOTP-app, ikke e-post-OTP). `emailAndPassword.enabled` er `false`. Schema-CLI er pakken `auth` (samme 1.6.x), ikke det forlatte `@better-auth/cli` som pinner `better-auth@1.4`. Passkey (WebAuthn) er MIDLERTIDIG UTSATT (17.07.2026): `@better-auth/passkey` dro inn et foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt brukte den. Pakke + plugin fjernet, `passkey`-tabellen beholdt dormant. Reaktiveres når WebAuthn-flyten bygges. Se roadmap-endringer.md.
+- **Innlogging: magic link (innboks) + TOTP-app.** Ingen passord-UI. Andre faktor er ikke e-postkode — stjålet mailbox skal ikke fullføre innlogging. `ROLES_REQUIRING_2FA` håndheves i `requireSession()`. Første innlogging etter migrering: midlertidig sesjon kun til `/2fa-oppsett`. Better-Auth sin 2FA-hook treffer ikke `/magic-link/verify` — egen etter-hook river sesjonen og setter 2FA-kake. SPF/DKIM ligger hos Resend, ikke i repo.
 - **60-min idle-timeout** (serverside sliding-vindu) + absolutt maks-levetid
 - **Twilio Verify** som OTP-sender
 - **Envelope-crypto** (AES-256-GCM, BYOK) for tenant-secrets — inkl. forhandlerens Quick API-nøkkel

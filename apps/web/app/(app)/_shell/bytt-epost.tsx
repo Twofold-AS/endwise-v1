@@ -8,20 +8,18 @@ import {
 import { Mail, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
-import { Field, INPUT, PassordFelt } from '../../_auth/felter';
+import { Field, INPUT } from '../../_auth/felter';
 import { CardShell } from './cards';
 
 /**
  * Be om e-postbytte. Adressen byttes ikke her.
- * Samme komposisjon som `ByttPassordSkjema` (PassordFelt + StatefulButton).
- * Serveren krever passord (F1-22-mønsteret) og sender bekreftelse til
+ * Serveren krever innlogget sesjon med TOTP på. Bekreftelse går til
  * adressen brukeren har. Først når lenka åpnes — og den nye adressen
  * bekreftes — skrives e-posten.
  */
 export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {
   const [nyEpost, setNyEpost] = useState('');
   const [bekreft, setBekreft] = useState('');
-  const [passord, setPassord] = useState('');
   const [feil, setFeil] = useState<string | null>(null);
   const [sendt, setSendt] = useState(false);
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -31,7 +29,7 @@ export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {
     setFeil(null);
     setSendt(false);
 
-    const sjekk = validerByttEpost({ nyEpost, bekreft, passord });
+    const sjekk = validerByttEpost({ nyEpost, bekreft });
     if (!sjekk.ok) {
       setFeil(sjekk.feil);
       setBusy('error');
@@ -60,7 +58,6 @@ export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {
     setSendt(true);
     setNyEpost('');
     setBekreft('');
-    setPassord('');
   }
 
   return (
@@ -88,14 +85,6 @@ export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {
               className={`w-full ${INPUT}`}
             />
           </Field>
-          <PassordFelt
-            id="bytt-epost-passord"
-            label="Gjeldende passord"
-            value={passord}
-            onChange={setPassord}
-            autoComplete="current-password"
-            beskrivelse="Kreves for å be om bytte. En åpen sesjon er ikke nok."
-          />
           {feil && <p className="text-[12px] text-danger">{feil}</p>}
           {sendt && (
             <p className="text-[12px] text-fg-muted">

@@ -37,15 +37,16 @@ import {
 import { SHELL_HEADER_RAD } from './phone-chrome';
 import { SidebarHeader } from './sidebar-header';
 import { useSidebarState } from './sidebar-state';
-import { TipCard } from './tip-card';
+import { OppgraderPille } from './oppgrader-pille';
 
 /** Nav-ikoner 16px. */
 const IKON = 16;
 
 /**
  * Samme overlay-sidebar på telefon og desktop — lukket default, åpnes fra
- * toppbar-ikonet ytterst til høyre. Ingen persistent desktop-skinne.
- * Hvit flate, ingen header-divider. Ingen avatar. Hjelp er TipCard, ikke dest.
+ * toppbar-ikonet ved logoen. Ingen persistent desktop-skinne.
+ * Hvit flate, ingen header-divider. Ingen avatar. Hjelp-TipCard er ute;
+ * nederst sitter Grainient-oppgraderingspillen.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -246,9 +247,9 @@ export function Sidebar() {
           )}
         </nav>
 
-        {/* Bunn: helpdesk-kort over profil/logg ut. Ingen Innstillinger-rad, ingen divider. */}
+        {/* Bunn: oppgraderingspille over profil/logg ut. Ingen Hjelp-TipCard. */}
         <div className="flex flex-col gap-3">
-          {!smal && shell !== 'endwise' && shell !== 'endwise_partner' && <TipCard />}
+          {!smal && shell !== 'endwise' && shell !== 'endwise_partner' && <OppgraderPille />}
           <BrukerRad
             navn={navn}
             laster={rolleLaster}

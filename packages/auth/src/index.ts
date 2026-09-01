@@ -15,9 +15,11 @@ export {
   sendEmail,
   sendInboxMessage,
   sendInvitation,
+  sendMagicLink,
   sendPasswordReset,
   sendTwoFactorOtp,
 } from './senders/resend.ts';
+export * from './magic-link.ts';
 export * from './session.ts';
 export * from './session-policy.ts';
 export { settPassordUtenSesjon } from './sett-passord.ts';

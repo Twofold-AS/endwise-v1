@@ -103,12 +103,13 @@ describe('Dine jobber erstatter Min dag', () => {
 });
 
 describe('Forhandler-info uten Grainient', () => {
-  it('er et vanlig kort, ikke Grainient eller ShaderGradient', () => {
+  it('er en ren tittel, ikke kort eller Grainient', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/forhandler-info-kort.tsx'));
     expect(kort).toMatch(/data-forhandler-info/);
     expect(kort).not.toMatch(/Grainient|ShaderGradient/);
-    expect(kort).toMatch(/rounded-xl/);
-    expect(kort).toMatch(/bg-card/);
+    expect(kort).toMatch(/<h1/);
+    expect(kort).not.toMatch(/rounded-xl/);
+    expect(kort).not.toMatch(/bg-card/);
   });
 
   it('kortfeltene er uendret', () => {
@@ -163,14 +164,15 @@ describe('telefon-toppbar og sidebar-overlay', () => {
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
   });
 
-  it('logo til venstre, åpne-sidebar-ikon ytterst til høyre', () => {
+  it('logo til venstre, åpne-sidebar-ikon rett ved logoen, tilbake er history', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/ml-auto/);
+    expect(shell).not.toMatch(/ml-auto/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
-    expect(shell).toMatch(/ChevronLeft/);
+    expect(shell).toMatch(/TilbakePil/);
+    expect(shell).toMatch(/router\.back\(\)/);
     expect(shell).toMatch(/Tilbake/);
-    expect(shell).not.toMatch(/border-b[\s\S]*Tilbake/);
+    expect(shell).not.toMatch(/ChevronLeft/);
   });
 });
 

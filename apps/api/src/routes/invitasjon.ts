@@ -1,11 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { createAuth, rolleKrever2FA, settPassordUtenSesjon } from '@endwise/auth';
+import { rolleKrever2FA } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
-import {
-  type ApenInvitasjon,
-  createInvitasjonsmodul,
-  inviteeKreverPassord,
-} from '@endwise/modules/invitasjoner';
+import { type ApenInvitasjon, createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
 import { erPlattformTenant } from '@endwise/modules/plattform';
 import { tildelAnsattFarge } from '@endwise/modules/profil';
 import { Hono } from 'hono';
@@ -49,15 +45,6 @@ function loggOppslagFeil(error: unknown): void {
   });
 }
 
-async function harCredentialKonto(userId: string): Promise<boolean> {
-  const [konto] = await db()
-    .select({ id: schema.account.id })
-    .from(schema.account)
-    .where(and(eq(schema.account.userId, userId), eq(schema.account.providerId, 'credential')))
-    .limit(1);
-  return Boolean(konto);
-}
-
 /**
  * Lat DB. `createAppContext` kaster uten DATABASE_URL — det må ikke
  * skje ved import, ellers feiler `next build` på Vercel (F13-03).
@@ -65,11 +52,6 @@ async function harCredentialKonto(userId: string): Promise<boolean> {
 function db() {
   return createAppContext().db;
 }
-let authInstance: ReturnType<typeof createAuth> | undefined;
-const getAuth = () => {
-  authInstance ??= createAuth(db());
-  return authInstance;
-};
 
 /**
  * GET — hva gjelder invitasjonen? Kalles av oppsett-siden for å vise
@@ -114,16 +96,7 @@ invitasjon.get('/:token', async (c) => {
     .from(schema.user)
     .where(eq(schema.user.email, inv.epost))
     .limit(1);
-  const harCredential = eksisterende ? await harCredentialKonto(eksisterende.id) : false;
-
   const krever2FA = rolleKrever2FA(inv.rolle);
-  const kreverPassord =
-    krever2FA ||
-    inviteeKreverPassord({
-      kind: inv.kind,
-      harBruker: Boolean(eksisterende),
-      harCredential,
-    });
   return c.json({
     gyldig: true,
     epost: inv.epost,
@@ -134,15 +107,13 @@ invitasjon.get('/:token', async (c) => {
     utloper: inv.utloper,
     harKonto: Boolean(eksisterende),
     krever2FA,
-    kreverPassord,
+    kreverPassord: false,
   });
 });
 
 const godtaKropp = z.object({
   token: z.string().min(10),
   navn: z.string().trim().min(2).max(120),
-  /** Samme minimum som Better-Auth er konfigurert med (`minPasswordLength: 12`). */
-  passord: z.string().min(12).max(200).optional(),
 });
 
 /**
@@ -161,7 +132,7 @@ const godtaKropp = z.object({
 invitasjon.post('/godta', async (c) => {
   const parsed = godtaKropp.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) {
-    return c.json({ error: 'Ugyldig forespørsel. Navn kreves, passord minst 12 tegn.' }, 400);
+    return c.json({ error: 'Ugyldig forespørsel. Navn kreves.' }, 400);
   }
 
   const modul = createInvitasjonsmodul(db());
@@ -194,29 +165,6 @@ invitasjon.post('/godta', async (c) => {
     .from(schema.user)
     .where(eq(schema.user.email, inv.epost))
     .limit(1);
-  const harCredential = eksisterende ? await harCredentialKonto(eksisterende.id) : false;
-
-  const krever2FA = rolleKrever2FA(inv.rolle);
-  const kreverPassord =
-    krever2FA ||
-    inviteeKreverPassord({
-      kind: inv.kind,
-      harBruker: Boolean(eksisterende),
-      harCredential,
-    });
-  if (kreverPassord && !parsed.data.passord) {
-    return c.json(
-      {
-        error: krever2FA
-          ? 'Passord kreves. Tofaktor er påkrevd for denne rollen.'
-          : inv.kind === 'owner'
-            ? 'Sett eller bytt passord (minst 12 tegn).'
-            : 'Passord kreves for en ny konto.',
-      },
-      400,
-    );
-  }
-
   // 3. Forbruk. Etter denne linja er tokenet dødt.
   const forbrukt = await modul.forbruk(parsed.data.token);
   if (!forbrukt) {
@@ -228,42 +176,17 @@ invitasjon.post('/godta', async (c) => {
     let userId = eksisterende?.id;
 
     if (!userId) {
-      await getAuth().api.signUpEmail({
-        body: {
-          email: inv.epost,
-          password: parsed.data.passord as string,
-          name: parsed.data.navn,
-        },
+      const nyId = randomUUID();
+      await db().insert(schema.user).values({
+        id: nyId,
+        email: inv.epost,
+        name: parsed.data.navn,
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
-      const [ny] = await db()
-        .select({ id: schema.user.id })
-        .from(schema.user)
-        .where(eq(schema.user.email, inv.epost))
-        .limit(1);
-      if (!ny) throw new Error('Brukeren ble ikke opprettet');
-      userId = ny.id;
-
-      /**
-       * E-posten er allerede bevist: invitasjonen ble sendt dit, og bare den
-       * som leste den har tokenet. Å kreve en ny verifiseringsmail ville vært å
-       * be om bevis for noe vi nettopp har fått bevist — og i dev uten Resend
-       * ville det låst hele flyten.
-       * `twoFactorEnabled` settes ikke her. Den ansatte er `dealer_staff`,
-       * som krever 2FA (F1-11), og skal gjennom oppsettet selv. Å sette den her
-       * ville gitt en konto som består 2FA-gaten uten at noen kode er tastet.
-       */
-      await db()
-        .update(schema.user)
-        .set({
-          name: parsed.data.navn,
-          email: inv.epost,
-          emailVerified: true,
-        })
-        .where(eq(schema.user.id, userId));
+      userId = nyId;
     } else {
-      if (parsed.data.passord && (inv.kind === 'owner' || !harCredential)) {
-        await settPassordUtenSesjon(db(), userId, parsed.data.passord);
-      }
       await db()
         .update(schema.user)
         .set({

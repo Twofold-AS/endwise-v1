@@ -150,7 +150,7 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
     expect(detaljer).toMatch(/PanelRightClose/);
   });
 
-  it('Hvem er én identitetsblokk: avatar+aktivitet+navn, e-post, rolle, Endre-expand og passord', () => {
+  it('Hvem er én identitetsblokk: avatar+aktivitet+navn, e-post, rolle, Endre-expand og innlogging', () => {
     expect(hvem.length).toBeGreaterThan(80);
     expect(hvem).toMatch(/<Avatar/);
     expect(hvem).toMatch(/StatusMerke/);
@@ -161,12 +161,12 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
     expect(hvem).toMatch(/Avbryt/);
     expect(hvem).toMatch(/team\.endreEpost/);
     expect(hvem).toMatch(/team\.setFunction/);
-    expect(hvem).toMatch(/<PassordEndring/);
-    expect(detaljer).toMatch(/Send passordendring/);
-    expect(detaljer).toMatch(/team\.sendPassordendring/);
+    expect(hvem).toMatch(/<InnloggingNotat/);
+    expect(detaljer).toMatch(/magic link/);
+    expect(detaljer).not.toMatch(/Send passordendring/);
+    expect(detaljer).not.toMatch(/team\.sendPassordendring/);
     expect(hvem).not.toMatch(/<details/);
     expect(hvem).not.toMatch(/<summary/);
-    expect(detaljer).not.toMatch(/tittel="Send passordendring"/);
     expect(detaljer).not.toMatch(/tittel="E-post"/);
     expect(detaljer).not.toMatch(/E-postendring/);
   });
@@ -211,7 +211,7 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
     expect(chrome).toMatch(/h-full min-h-0/);
     const trådListe = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     expect(trådListe).toMatch(/min-h-0 flex-1[\s\S]*overflow-y-auto/);
-    expect(trådListe).toMatch(/aside className="[^"]*min-h-0/);
+    expect(trådListe).toMatch(/<aside[\s\S]*min-h-0/);
   });
 
   it('passord og 2FA krever bekreftelse, 2FA krever kode, 2FA vises bare når den er på', () => {

@@ -11,6 +11,7 @@ import {
   PHONE_LOGO_PX,
   SHELL_HEADER_RAD,
   SHELL_LOGO_WRAP,
+  SHELL_TOGGLE_PX,
   scrollAktivTilStart,
   scrollTilbake,
 } from '../app/(app)/_shell/phone-chrome.ts';
@@ -162,18 +163,17 @@ describe('phone-chrome', () => {
     expect(css).toMatch(/100dvh/);
   });
 
-  it('tilbake-pil sitter i end-spacer uten hover eller aktiv-tilstand', () => {
-    const hscroll = utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'));
+  it('tilbake i toppbaren er history.back via lokal SVG, ikke PhoneHScroll', () => {
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-    expect(seksjon).toMatch(/PhoneHScroll/);
-    expect(hscroll).toMatch(/data-end-spacer/);
-    expect(hscroll).toMatch(/data-scroll-tilbake/);
-    expect(hscroll).toMatch(/Rull tilbake/);
-    expect(hscroll).toMatch(/scrollTilbake/);
-    expect(hscroll).toMatch(/ChevronLeft/);
-    const knapp = hscroll.slice(hscroll.indexOf('data-scroll-tilbake'));
-    expect(knapp).not.toMatch(/hover:/);
-    expect(knapp).not.toMatch(/aria-current|aria-pressed|aria-selected/);
-    expect(knapp).not.toMatch(/bg-sidebar-active|bg-fg/);
+    const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
+    expect(seksjon).not.toMatch(/PhoneHScroll/);
+    expect(seksjon).toMatch(/return null/);
+    expect(shell).toMatch(/data-shell-tilbake/);
+    expect(shell).toMatch(/router\.back\(\)/);
+    expect(shell).toMatch(/TilbakePil/);
+    expect(pil).toMatch(/<svg/);
+    expect(pil).not.toMatch(/lucide|ChevronLeft/);
+    expect(SHELL_TOGGLE_PX).toBe(16);
   });
 });

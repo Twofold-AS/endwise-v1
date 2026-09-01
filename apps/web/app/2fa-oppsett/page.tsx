@@ -1,6 +1,5 @@
 'use client';
 
-import { KREDENTIAL_MUTASJON_GENERISK_MELDING } from '@endwise/auth/bytt-passord';
 import {
   etter2faBekreftet,
   etter2faKodeBekreftet,
@@ -9,82 +8,42 @@ import {
   kanFullforeKoder,
   koderSomTekstfil,
   plukkBackupKoder,
-  slaaAv2faKall,
-  validerSlaaAv2fa,
+  plukkTotpUri,
+  secretFraTotpUri,
 } from '@endwise/auth/to-faktor-oppsett';
-import {
-  ClipboardList,
-  Copy,
-  Download,
-  Lock,
-  Mail,
-  ShieldCheck,
-  StatefulButton,
-} from '@endwise/ui';
+import { ClipboardList, Copy, Download, ShieldCheck, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
-import { Field, INPUT, PassordFelt } from '../_auth/felter';
+import { Field, INPUT } from '../_auth/felter';
 
 /**
- * F1-11 / F1-21 / F1-22 / F1-23 / F1-25 — tvungen 2FA-enrollment, stylet
- * som `/signin`. Gjenopprettingskoder vises én gang. Slå-av krever passord.
- * Hvorfor denne ruta ligger utenfor `(app)`
- * håndheves 2FA server-side: en `dealer_admin` / `dealer_staff` /
- * `endwise_admin` uten 2FA får `TWO_FACTOR_REQUIRED` på hver eneste tRPC-rute.
- * Hele forhandlerpanelet henter data over tRPC, så det finnes ikke en flate
- * inne i `(app)` hen kan nå — heller ikke innstillingssiden der 2FA ville blitt
- * skrudd på. Uten denne siden er fiksen en utestengelse, ikke en sikring.
- * Denne siden snakker derfor kun med Better-Auth (`/api/auth/*`), som med vilje
- * står utenfor 2FA-gaten. Det er trygt: hvert steg krever noe hen allerede måtte
- * bevise — `enable` krever passordet på nytt, og flagget `twoFactorEnabled`
- * settes først når engangskoden er verifisert.
- * Rekkefølgen, og hvorfor den er slik
- * 1. `enable({ password })` → lager hemmeligheten og backupCodes. Flagget
- * settes ikke ennå. Kodene fanges her.
- * 2. `sendOtp` → koden sendes via Resend (dev uten nøkkel: serverlogg).
- * 3. `verifyOtp({ code })` → NÅ settes `twoFactorEnabled = true`.
- * 4. `revokeOtherSessions` → se under.
- * 5. `steg = 'koder'` → F1-21: vis kodene. Kan ikke gå videre uten
- * nedlasting eller kopiering + bekreftelse.
- * 6. `steg = 'ferdig'` → F1-23: vis kvittering. Ikke naviger ennå.
- * Steg 4 er nå et ekstra lag, ikke selve sperren. river
- * en databasetrigger (`endwise_2fa_session_cutoff`, migrasjon `0010`) alle
- * sesjoner i det `two_factor_enabled` settes — uansett hvor det skjer, også ved
- * et rått `UPDATE` i basen. Den er sperren.
- * F1-21
- * Better-Auth 1.6.23 returnerer `backupCodes` fra `enable`. Vi later ikke som
- * om de må genereres etterpå. De vises én gang i minnet; lukker du fanen
- * er de borte (lagret kryptert, ikke i klartekst).
- * F1-23
- * Tidligere kalte denne sida `window.location.assign('/dashboard')` i samme
- * tick som `steg = 'ferdig'`. Tilstanden rakk aldri å rendre. Nå viser vi
- * kodene, deretter kvitteringen, og hard navigasjon skjer først på «Fortsett».
- * F1-25
- * Samme byggeklosser som `/signin`: `StatefulButton`, `Field`, `INPUT`,
- * `PassordFelt`. Ingen nye primitiver.
+ * Tvungen TOTP-enrollment. Ingen passord, ingen e-postkode.
+ * enable() uten passord (allowPasswordless) → totpURI + backupCodes →
+ * verifyTotp setter twoFactorEnabled.
  */
 export default function ToFaktorOppsettPage() {
   const router = useRouter();
   const utils = trpc.useUtils();
   const { data: session } = useSession();
-  const [steg, setSteg] = useState<'passord' | 'kode' | 'koder' | 'av' | 'ferdig'>('passord');
-  const [passord, setPassord] = useState('');
+  const [steg, setSteg] = useState<'app' | 'kode' | 'koder' | 'av' | 'ferdig'>('app');
   const [kode, setKode] = useState('');
   const [koder, setKoder] = useState<string[]>([]);
+  const [totpUri, setTotpUri] = useState<string | null>(null);
   const [lastetNed, setLastetNed] = useState(false);
   const [kopiert, setKopiert] = useState(false);
   const [bekreftetLagret, setBekreftetLagret] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const codeRef = useRef<HTMLInputElement>(null);
+  const startet = useRef(false);
 
   useEffect(() => {
     if (koder.length > 0) return;
-    if (steg !== 'passord') return;
+    if (steg !== 'app') return;
     if (
       session?.user &&
       'twoFactorEnabled' in session.user &&
@@ -94,30 +53,33 @@ export default function ToFaktorOppsettPage() {
     }
   }, [session, steg, koder.length]);
 
-  async function startOppsett(event: FormEvent) {
-    event.preventDefault();
+  useEffect(() => {
+    if (steg === 'kode') codeRef.current?.focus();
+  }, [steg]);
+
+  async function startOppsett() {
+    if (startet.current) return;
+    startet.current = true;
     setFeil(null);
     setBusy('loading');
     try {
-      const res = await authClient.twoFactor.enable({ password: passord.trim() });
+      const res = await authClient.twoFactor.enable({});
       if (res.error && !/already/i.test(res.error.message ?? '')) {
         setFeil(res.error.message ?? 'Kunne ikke starte oppsettet.');
         setBusy('error');
+        startet.current = false;
         return;
       }
       const hentet = plukkBackupKoder(res.data ?? res);
       if (hentet.length > 0) setKoder(hentet);
-      const sendt = await authClient.twoFactor.sendOtp();
-      if (sendt.error) {
-        setFeil(sendt.error.message ?? 'Kunne ikke sende engangskode.');
-        setBusy('error');
-        return;
-      }
+      const uri = plukkTotpUri(res.data ?? res);
+      if (uri) setTotpUri(uri);
       setBusy('idle');
       setSteg('kode');
     } catch (error) {
       setFeil((error as Error).message);
       setBusy('error');
+      startet.current = false;
     }
   }
 
@@ -126,7 +88,7 @@ export default function ToFaktorOppsettPage() {
     setFeil(null);
     setBusy('loading');
     try {
-      const res = await authClient.twoFactor.verifyOtp({ code: kode.trim() });
+      const res = await authClient.twoFactor.verifyTotp({ code: kode.trim() });
       if (res.error) {
         setFeil(res.error.message ?? 'Feil kode.');
         setBusy('error');
@@ -134,13 +96,10 @@ export default function ToFaktorOppsettPage() {
         codeRef.current?.focus();
         return;
       }
-
       await authClient.revokeOtherSessions().catch(() => {
-        console.warn('[2fa] revokeOtherSessions feilet — gamle sesjoner kan leve videre');
+        console.warn('[2fa] revokeOtherSessions feilet');
       });
-
-      const neste = etter2faKodeBekreftet();
-      setSteg(neste.steg);
+      setSteg(etter2faKodeBekreftet().steg);
       setBusy('idle');
     } catch (error) {
       setFeil((error as Error).message);
@@ -171,46 +130,38 @@ export default function ToFaktorOppsettPage() {
       setFeil('Last ned eller kopier kodene, og bekreft at du har lagret dem.');
       return;
     }
-    const neste = etter2faBekreftet();
-    setSteg(neste.steg);
+    setSteg(etter2faBekreftet().steg);
     setBusy('success');
   }
 
   async function slaAv(event: FormEvent) {
     event.preventDefault();
     setFeil(null);
-    const sjekk = validerSlaaAv2fa(passord);
-    if (!sjekk.ok) {
-      setFeil(sjekk.feil);
-      setBusy('error');
-      return;
-    }
     setBusy('loading');
-    const res = await authClient.twoFactor.disable(slaaAv2faKall(sjekk));
+    const res = await authClient.twoFactor.disable({});
     if (res.error) {
       setBusy('error');
-      setFeil(KREDENTIAL_MUTASJON_GENERISK_MELDING);
+      setFeil(res.error.message ?? 'Kunne ikke slå av tofaktor.');
       return;
     }
     setBusy('success');
-    setPassord('');
-    setSteg('passord');
+    setSteg('app');
+    startet.current = false;
   }
 
   function fortsett() {
     void utils.session.me
       .fetch()
       .then((me) => {
-        const { destinasjon } = fortsettEtter2faKvittering(me.landing);
-        window.location.assign(destinasjon);
+        window.location.assign(fortsettEtter2faKvittering(me.landing).destinasjon);
       })
       .catch(() => {
-        const { destinasjon } = fortsettEtter2faKvittering();
-        window.location.assign(destinasjon);
+        window.location.assign(fortsettEtter2faKvittering().destinasjon);
       });
   }
 
   const koderOk = kanFullforeKoder({ lastetNed, kopiert, bekreftetLagret });
+  const secret = totpUri ? secretFraTotpUri(totpUri) : null;
 
   const tittel =
     steg === 'ferdig'
@@ -218,20 +169,20 @@ export default function ToFaktorOppsettPage() {
       : steg === 'koder'
         ? 'Lagre gjenopprettingskodene'
         : steg === 'kode'
-          ? 'Bekreft med engangskode'
+          ? 'Bekreft med autentikator'
           : steg === 'av'
             ? 'Slå av tofaktor'
-            : 'Sett opp tofaktor';
+            : 'Sett opp autentikator';
   const ingress =
     steg === 'ferdig'
-      ? 'Neste innlogging spør om en engangskode på e-post. Det er beviset på at det gikk bra.'
+      ? 'Neste innlogging: magic link + kode fra appen. En stjålet innboks er ikke nok.'
       : steg === 'koder'
-        ? 'Kodene vises bare nå. Last dem ned eller kopier dem — uten dem er du utestengt hvis e-posten forsvinner.'
+        ? 'Kodene vises bare nå. Last dem ned eller kopier dem — uten dem er du utestengt hvis appen forsvinner.'
         : steg === 'kode'
-          ? 'Vi sendte en 6-sifret kode til e-postadressen din. Den varer i noen minutter.'
+          ? 'Legg til Endwise i autentikator-appen og skriv den 6-sifrede koden.'
           : steg === 'av'
-            ? 'En åpen sesjon er ikke nok. Skriv passordet ditt for å slå av tofaktor.'
-            : 'Rollen din krever tofaktor-autentisering. Du må sette det opp før du kommer videre.';
+            ? 'Slår av tofaktor. Neste innlogging krever at du setter den opp igjen.'
+            : 'Rollen din krever en autentikator-app. Ikke e-postkode.';
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg px-4 text-fg">
@@ -242,44 +193,51 @@ export default function ToFaktorOppsettPage() {
           <p className="text-center text-body text-fg-muted">{ingress}</p>
         </div>
 
-        {steg === 'passord' ? (
-          <form
-            onSubmit={startOppsett}
-            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
-          >
-            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              <PassordFelt
-                id="tfa-passord"
-                label="Bekreft passordet ditt"
-                value={passord}
-                onChange={setPassord}
-                autoComplete="current-password"
-              />
-              {feil && <p className="text-[12px] text-danger">{feil}</p>}
+        {steg === 'app' ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
+            <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
+              Vi lager en hemmelighet til Google Authenticator, 1Password eller tilsvarende. Ingen
+              passord.
             </div>
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton
-                type="submit"
+                type="button"
                 state={busy}
                 className="w-full"
-                loadingText="Sender kode …"
-                successText="Sendt"
+                loadingText="Starter …"
+                successText="Klar"
                 errorText="Prøv igjen"
-                icon={<Lock size={15} />}
+                icon={<ShieldCheck size={15} />}
+                onClick={() => void startOppsett()}
               >
-                Send meg en engangskode
+                Start oppsett
               </StatefulButton>
             </div>
-          </form>
+          </div>
         ) : null}
 
         {steg === 'kode' ? (
           <form
-            onSubmit={bekreft}
+            onSubmit={(e) => void bekreft(e)}
             className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
           >
             <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              <Field id="tfa-kode" label="Engangskode">
+              {secret ? (
+                <p className="break-all font-mono text-[12px] text-fg">
+                  Nøkkel: {secret}
+                  <button
+                    type="button"
+                    className="ml-2 underline"
+                    onClick={() => void navigator.clipboard.writeText(secret)}
+                  >
+                    Kopier
+                  </button>
+                </p>
+              ) : null}
+              {totpUri ? (
+                <p className="break-all text-[11px] text-fg-muted">{totpUri}</p>
+              ) : null}
+              <Field id="tfa-kode" label="App-kode">
                 <input
                   id="tfa-kode"
                   ref={codeRef}
@@ -295,13 +253,6 @@ export default function ToFaktorOppsettPage() {
                 />
               </Field>
               {feil && <p className="text-[12px] text-danger">{feil}</p>}
-              <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
-                <Mail size={13} className="mt-px shrink-0" />
-                <span>
-                  Vi har sendt en engangskode til e-posten din. Sjekk søppelposten om den ikke
-                  dukker opp.
-                </span>
-              </p>
             </div>
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton
@@ -340,17 +291,15 @@ export default function ToFaktorOppsettPage() {
                 <button
                   type="button"
                   onClick={lastNedKoder}
-                  className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-3 text-fg text-label transition-colors hover:bg-surface-2"
+                  className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
                 >
                   <Download size={14} />
                   Last ned
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    void kopierKoder();
-                  }}
-                  className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-3 text-fg text-label transition-colors hover:bg-surface-2"
+                  onClick={() => void kopierKoder()}
+                  className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
                 >
                   <Copy size={14} />
                   {kopiert ? 'Kopiert' : 'Kopier'}
@@ -382,19 +331,13 @@ export default function ToFaktorOppsettPage() {
 
         {steg === 'av' ? (
           <form
-            onSubmit={slaAv}
+            onSubmit={(e) => void slaAv(e)}
             className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
           >
-            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              <PassordFelt
-                id="tfa-av-passord-oppsett"
-                label="Gjeldende passord"
-                value={passord}
-                onChange={setPassord}
-                autoComplete="current-password"
-              />
-              {feil && <p className="text-[12px] text-danger">{feil}</p>}
+            <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted">
+              Ingen passord. Du er allerede innlogget.
             </div>
+            {feil && <p className="px-4 text-[12px] text-danger">{feil}</p>}
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton
                 type="submit"
@@ -403,7 +346,7 @@ export default function ToFaktorOppsettPage() {
                 loadingText="Slår av …"
                 successText="Slått av"
                 errorText="Prøv igjen"
-                icon={<Lock size={15} />}
+                icon={<ShieldCheck size={15} />}
               >
                 Slå av tofaktor
               </StatefulButton>
@@ -413,14 +356,8 @@ export default function ToFaktorOppsettPage() {
 
         {steg === 'ferdig' ? (
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
-            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              <p className="flex items-start gap-2 text-[12px] text-fg-muted leading-relaxed">
-                <ShieldCheck size={13} className="mt-px shrink-0" />
-                <span>
-                  Tofaktor er på. Neste innlogging krever passord og engangskode — det finnes ingen
-                  «husk denne enheten».
-                </span>
-              </p>
+            <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
+              Tofaktor er på. Neste innlogging: magic link + app-kode. Ingen «husk denne enheten».
             </div>
             <div className="px-1.5 pt-1 pb-1">
               <button

@@ -274,6 +274,48 @@ export async function sendPasswordReset(input: {
  * Tokenet skal aldri logges noe annet sted. Ser du en `console.log` med en
  * invitasjonslenke utenfor denne funksjonen, er det en lekkasje.
  */
+export async function sendMagicLink(input: { to: string; lenke: string; utloper: Date }): Promise<void> {
+  const klokkeslett = formaterKlokkeslett(input.utloper);
+
+  if (skalLeggesILogg()) {
+    devRamme(
+      'MAGIC LINK (KUN DEV — Resend er ikke konfigurert)',
+      [
+        ['Til:', input.to],
+        ['Lenke:', input.lenke],
+      ],
+      `Gyldig til kl. ${klokkeslett}. Kan brukes én gang.`,
+    );
+    return;
+  }
+
+  const fotnote =
+    'Har du ikke bedt om denne lenken, kan du se bort fra e-posten. Ingen får inn uten tofaktor-appen din.';
+
+  await sendEmail({
+    to: input.to,
+    subject: 'Logg inn på Endwise',
+    text: [
+      'Hei!',
+      '',
+      'Åpne lenken for å logge inn på Endwise:',
+      input.lenke,
+      '',
+      `Lenken kan brukes én gang og er gyldig til kl. ${klokkeslett}.`,
+      '',
+      'Etter lenken må du bekrefte med autentikator-appen. En stjålet innboks er ikke nok.',
+      '',
+      fotnote,
+    ].join('\n'),
+    html: byggEpostHtml({
+      tittel: 'Logg inn på Endwise',
+      ingress: `Lenken kan brukes én gang og er gyldig til kl. ${klokkeslett}. Deretter bekrefter du med autentikator-appen.`,
+      innhold: knapp(input.lenke, 'Logg inn'),
+      fotnote,
+    }),
+  });
+}
+
 export async function sendInvitation(input: {
   to: string;
   lenke: string;

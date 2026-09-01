@@ -293,6 +293,23 @@ export function erTierKey(key: string | null | undefined): key is TierKey {
   return key === 'start' || key === 'pro' || key === 'enterprise';
 }
 
+/**
+ * Neste trinn på stigen start → pro → enterprise.
+ * Ukjent/tom nøkkel behandles som start (første kjøp).
+ * Allerede enterprise → undefined (knappen viser bare «Enterprise»).
+ */
+export function nesteTier(key: string | null | undefined): Tier | undefined {
+  if (key === 'enterprise') return undefined;
+  if (key === 'pro') return tierByKey('enterprise');
+  return tierByKey('pro');
+}
+
+/** Knappetekst uten priser. */
+export function oppgraderKnappetekst(key: string | null | undefined): string {
+  const neste = nesteTier(key);
+  return neste ? `Oppgrader til ${neste.name}` : 'Enterprise';
+}
+
 /* Oppslag */
 
 export function tierByKey(key: string | null | undefined): Tier | undefined {

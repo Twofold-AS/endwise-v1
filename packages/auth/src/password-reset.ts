@@ -108,10 +108,12 @@ export function passordResetHull(konfig: ResetKonfig): string[] {
   const ep = konfig.emailAndPassword;
   const regler = konfig.rateLimit?.customRules ?? {};
 
+  /**
+   * Passord er av. Reset-stien skal ikke finnes. Tom hull-liste når
+   * `enabled !== true` er den herdete tilstanden — ikke et hull.
+   */
   if (ep?.enabled !== true) {
-    hull.push(
-      'emailAndPassword.enabled må være true — uten den finnes ingen passordkonto å resette',
-    );
+    return hull;
   }
   if (typeof ep?.sendResetPassword !== 'function') {
     hull.push(

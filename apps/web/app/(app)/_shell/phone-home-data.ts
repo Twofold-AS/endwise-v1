@@ -141,10 +141,6 @@ export function organisasjonMeta(
   return `${n} på jobb`;
 }
 
-export function samarbeidMeta(): string {
-  return 'Ingen delt informasjon ennå';
-}
-
 export function hjelpMeta(artikler: PhoneArtikkel[]): string {
   const ulest = artikler.find((a) => a.ulest);
   return ulest?.title ?? 'Spør oss';

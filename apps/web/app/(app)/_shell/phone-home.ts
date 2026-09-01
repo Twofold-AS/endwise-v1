@@ -3,7 +3,6 @@ import {
   Building2,
   CalendarDays,
   ChartColumn,
-  Handshake,
   Inbox,
   LayoutDashboard,
   LifeBuoy,
@@ -53,7 +52,6 @@ export type PhoneKortKey =
   | 'jobber'
   | 'kunder'
   | 'organisasjon'
-  | 'samarbeid'
   | 'hjelp'
   | 'lager'
   | 'butikk'
@@ -72,7 +70,6 @@ export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['innboks', 'timeplan'], kind: 'pair' },
   { keys: ['statistikk', 'tjenester'], kind: 'pair' },
   { keys: ['kunder', 'organisasjon'], kind: 'pair' },
-  { keys: ['samarbeid', 'hjelp'], kind: 'pair' },
   { keys: ['lager'], kind: 'low' },
 ];
 
@@ -91,7 +88,6 @@ export const PHONE_KORT_META: Record<
   jobber: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
   kunder: { label: 'Kunder', href: '/kunder', icon: Users },
   organisasjon: { label: 'Organisasjon', href: '/organisasjon', icon: Building2 },
-  samarbeid: { label: 'Samarbeid', href: '/samarbeid', icon: Handshake },
   hjelp: { label: 'Hjelp', href: '/support', icon: LifeBuoy },
   lager: { label: 'Lager', href: '/lager', icon: Package },
   butikk: { label: 'Butikk', href: '/butikk', icon: Store },

@@ -52,10 +52,8 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
                 role="tab"
                 aria-selected={valgt}
                 scroll={false}
-                className={`inline-flex h-control items-center rounded-pill px-3 text-label transition-colors ${
-                  valgt
-                    ? 'bg-fg text-bg'
-                    : 'border border-border bg-bg text-fg-muted hover:bg-surface-2 hover:text-fg'
+                className={`inline-flex h-control items-center rounded-control px-2.5 text-label transition-colors ${
+                  valgt ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
                 }`}
               >
                 {f.label}

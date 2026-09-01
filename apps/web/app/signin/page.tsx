@@ -1,10 +1,8 @@
-import type { Route } from 'next';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { visDemoHint } from '@/lib/vis-demo-hint';
 import { SignInSkjema } from './signin-skjema';
-import { harEnrollVindu, harTotpVindu, SIGNIN_ENROLL_STI } from './signin-steg';
+import { harTotpVindu } from './signin-steg';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -26,12 +24,8 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ steg?: string }>;
 }) {
-  const { steg } = await searchParams;
+  await searchParams;
   const header = kakeHeader(await cookies());
-  const nyEpost = !steg || steg === 'valg' || steg === 'sendt';
-  if (harEnrollVindu(header) && !nyEpost) {
-    redirect(SIGNIN_ENROLL_STI as Route);
-  }
   const totpKlar = harTotpVindu(header);
   const visHint = visDemoHint({
     NODE_ENV: process.env.NODE_ENV,

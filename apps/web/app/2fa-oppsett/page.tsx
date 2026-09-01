@@ -7,10 +7,12 @@ import {
   fortsettEtter2faKvittering,
   KODER_FILNAVN,
   kanFullforeKoder,
+  kanStarteTotpOppsett,
   koderSomTekstfil,
   plukkBackupKoder,
   plukkTotpUri,
   secretFraTotpUri,
+  TOTP_OPPSETT_INGRESS,
 } from '@endwise/auth/to-faktor-oppsett';
 import { ClipboardList, Copy, Download, ShieldCheck, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
@@ -23,9 +25,8 @@ import { Field, INPUT } from '../_auth/felter';
 import { SIGNIN_STI } from '../signin/signin-steg';
 
 /**
- * Tvungen TOTP-enrollment. Ingen passord, ingen e-postkode.
- * enable() uten passord (allowPasswordless) → totpURI + backupCodes →
- * verifyTotp setter twoFactorEnabled.
+ * Senere opt-in for TOTP. Krever ekte innlogget sesjon (ikke enroll-kake
+ * fra brukt magic-lenke). Ingen passord, ingen e-postkode.
  */
 export default function ToFaktorOppsettPage() {
   const router = useRouter();
@@ -60,7 +61,12 @@ export default function ToFaktorOppsettPage() {
   }, [steg]);
 
   async function startOppsett() {
-    if (startet.current) return;
+    if (startet.current || sesjonLaster) return;
+    if (!kanStarteTotpOppsett(Boolean(session?.user))) {
+      setFeil(MAGIC_LINK_ENROLL_UTEN_SESJON);
+      setBusy('error');
+      return;
+    }
     startet.current = true;
     setFeil(null);
     setBusy('loading');
@@ -177,7 +183,7 @@ export default function ToFaktorOppsettPage() {
           ? 'Legg til Endwise i autentikator-appen og skriv den 6-sifrede koden.'
           : steg === 'av'
             ? 'Autentikator-appen er allerede satt opp. Selvbetjent slå-av er stengt.'
-            : 'Rollen din krever en autentikator-app. Ikke e-postkode.';
+            : TOTP_OPPSETT_INGRESS;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg px-4 text-fg">
@@ -198,7 +204,7 @@ export default function ToFaktorOppsettPage() {
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton
                 type="button"
-                state={busy}
+                state={sesjonLaster ? 'loading' : busy}
                 className="w-full"
                 loadingText="Starter …"
                 successText="Klar"

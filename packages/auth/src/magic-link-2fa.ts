@@ -4,25 +4,35 @@ import { createAuthMiddleware } from 'better-auth/api';
 import { deleteSessionCookie } from 'better-auth/cookies';
 import { BYTT_PASSORD_ETTER_HOOK_ID } from './bytt-passord.ts';
 import { createByttPassordEtterHook } from './bytt-passord-server.ts';
-import { byggEnrollIdentifier, ENROLL_COOKIE_MAX_AGE, ENROLL_COOKIE_NAME } from './enroll.ts';
 import { TWO_FACTOR_COOKIE_NAME } from './faktor-kaker.ts';
 import {
+  MAGIC_LINK_APP_LANDING,
   MAGIC_LINK_CALLBACK,
-  MAGIC_LINK_ENROLL_STI,
   MAGIC_LINK_TOTP_QUERY,
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
 
 /**
  * Better-Auths twoFactor-plugin lytter bare på `/sign-in/email` (osv.).
- * Magic link-verify setter ellers en full sesjon — da holder stjålet innboks.
- * Uenrollert: river sesjonen, setter enroll-kake (ikke app-sesjon).
- * Enrollert: river sesjonen, setter two_factor-kake, krever TOTP.
+ * Enrollert TOTP: river sesjonen, setter two_factor-kake, krever app-kode.
+ * Uenrollert: BEHOLDER app-sesjonen og sender inn i appen. Autentikator
+ * er valgfri og senere — ikke på første innlogging.
  *
- * Enrollert TOTP = twoFactorEnabled OG en two_factor-rad med secret.
- * Gammel e-post-OTP / delvis enable kan etterlate flagget uten rad —
- * da er det enroll, ikke «skriv koden fra appen».
+ * Enrollert TOTP = twoFactorEnabled OG en two_factor-rad med secret
+ * OG verified !== false. Leftover enable() uten QR er ubundet.
  */
+
+export type MagicLinkEtterVerify =
+  | { handling: 'behold-sesjon'; dest: typeof MAGIC_LINK_APP_LANDING }
+  | { handling: 'totp-mur'; dest: string };
+
+/** Ren avgjørelse etter magic-link-verify. Ingen sideeffekter. */
+export function etterMagicLinkVerify(bundet: boolean): MagicLinkEtterVerify {
+  if (bundet) {
+    return { handling: 'totp-mur', dest: `${MAGIC_LINK_CALLBACK}?${MAGIC_LINK_TOTP_QUERY}` };
+  }
+  return { handling: 'behold-sesjon', dest: MAGIC_LINK_APP_LANDING };
+}
 export const MAGIC_LINK_2FA_HOOK_ID = 'magic-link-krever-totp';
 
 const TWO_FACTOR_COOKIE_MAX_AGE = 600;
@@ -37,8 +47,7 @@ export async function erTotpFaktiskBundet(
   if (user.twoFactorEnabled !== true) return false;
   const rad = await lesRad(user.id);
   if (!rad?.secret) return false;
-  // verifyTotp på sign-in kaster TOTP_NOT_ENABLED når verified === false
-  // (leftover enable() uten QR). Da er det enroll, ikke app-kode.
+  // leftover enable() uten QR: verified === false. Ubundet, ikke TOTP-mur.
   if (rad.verified === false) return false;
   return true;
 }
@@ -98,19 +107,23 @@ async function settKakeOgOmdiriger(
   throw ctx.redirect(dest);
 }
 
-async function startEnroll(ctx: HookCtx, userId: string): Promise<Response> {
-  const identifier = byggEnrollIdentifier(randomBytes(10).toString('hex'));
-  const expiresAt = new Date(Date.now() + ENROLL_COOKIE_MAX_AGE * 1000);
-  await ctx.context.internalAdapter.createVerificationValue({
-    value: userId,
-    identifier,
-    expiresAt,
-  });
-  const cookie = ctx.context.createAuthCookie(ENROLL_COOKIE_NAME, {
-    maxAge: ENROLL_COOKIE_MAX_AGE,
-  });
-  const dest = new URL(MAGIC_LINK_ENROLL_STI, ctx.context.baseURL);
-  return settKakeOgOmdiriger(ctx, cookie, identifier, dest.toString());
+function omdirigerTilApp(ctx: HookCtx): Response {
+  const dest = new URL(MAGIC_LINK_APP_LANDING, ctx.context.baseURL).toString();
+  ctx.setHeader('Cache-Control', AUTH_NO_STORE);
+  ctx.setHeader('CDN-Cache-Control', 'no-store');
+  ctx.setHeader('Vercel-CDN-Cache-Control', 'no-store');
+  const kaker = typeof ctx.headers?.getSetCookie === 'function' ? ctx.headers.getSetCookie() : [];
+  if (kaker.length > 0) {
+    const headers = new Headers({
+      Location: dest,
+      'Cache-Control': AUTH_NO_STORE,
+      'CDN-Cache-Control': 'no-store',
+      'Vercel-CDN-Cache-Control': 'no-store',
+    });
+    for (const kake of kaker) headers.append('Set-Cookie', kake);
+    return new Response(null, { status: 302, headers });
+  }
+  throw ctx.redirect(dest);
 }
 
 async function startTotp(ctx: HookCtx, userId: string): Promise<Response> {
@@ -140,8 +153,6 @@ export const magicLink2faEtterHook = merket(
     const data = ctx.context.newSession;
     if (!data?.user) return;
 
-    await rivSesjon(ctx);
-
     const lesRad = async (userId: string) => {
       try {
         return (await ctx.context.adapter.findOne({
@@ -154,7 +165,8 @@ export const magicLink2faEtterHook = merket(
     };
 
     const bundet = await erTotpFaktiskBundet(lesRad, data.user);
-    if (!bundet) {
+    const neste = etterMagicLinkVerify(bundet);
+    if (neste.handling === 'behold-sesjon') {
       if (data.user.twoFactorEnabled === true) {
         try {
           await ctx.context.internalAdapter.updateUser(data.user.id, {
@@ -164,9 +176,10 @@ export const magicLink2faEtterHook = merket(
           // 0036 + neste verify heler. Missed migrate skal ikke låse ute.
         }
       }
-      return startEnroll(ctx, data.user.id);
+      return omdirigerTilApp(ctx);
     }
 
+    await rivSesjon(ctx);
     return startTotp(ctx, data.user.id);
   }),
   MAGIC_LINK_2FA_HOOK_ID,

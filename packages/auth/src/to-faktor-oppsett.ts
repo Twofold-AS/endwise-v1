@@ -94,3 +94,11 @@ export function toFaktorStatusTekst(enabled: boolean | undefined): string {
 }
 
 export const TO_FAKTOR_OPPSETT_STI = '/2fa-oppsett';
+
+/** Valgfritt senere — ikke «rollen din krever» / nå-eller-aldri. */
+export const TOTP_OPPSETT_INGRESS =
+  'Du kan slå på autentikator-app her. Det er valgfritt — ikke påkrevd nå.';
+
+export function kanStarteTotpOppsett(harInnloggetSesjon: boolean): boolean {
+  return harInnloggetSesjon === true;
+}

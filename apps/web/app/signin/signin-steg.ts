@@ -57,7 +57,6 @@ export function flateEtterMagicLinkLanding(input: {
   enrollKlar: boolean;
 }): SignInEtterLenke {
   const denneVerify = input.steg === 'totp';
-  if (denneVerify && input.enrollKlar) return 'enroll';
   if (denneVerify && input.totpKlar) return 'totp';
   if (input.feil) return 'valg';
   return signInFlateFraQuery(input.steg, { totpKlar: false });

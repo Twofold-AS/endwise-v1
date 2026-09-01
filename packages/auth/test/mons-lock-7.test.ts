@@ -90,20 +90,26 @@ describe('Mons lock 1–7 (ikke merge før disse er grønne)', () => {
     ).rejects.toMatchObject({ status: 'FORBIDDEN', body: { code: TOTP_STEP_UP_KODE } });
   });
 
-  it('5) CWE-308 enroll: uenrollert verify river sesjon, bare enroll-kake', () => {
+  it('5) CWE-308: enrollert verify river sesjon; uenrollert beholder den', () => {
     const hook = les('../src/magic-link-2fa.ts');
+    expect(hook).toMatch(/etterMagicLinkVerify/);
     expect(hook).toMatch(/deleteSessionCookie/);
     expect(hook).toMatch(/setNewSession\(null\)/);
-    expect(hook).toMatch(/ENROLL_COOKIE_NAME/);
+    expect(hook).toMatch(/MAGIC_LINK_APP_LANDING/);
+    expect(hook).not.toMatch(/startEnroll/);
     expect(hook).not.toMatch(/setSessionCookie/);
     expect(les('../src/session.ts')).toMatch(/assertTwoFactorForUser/);
   });
 
-  it('6) customer i ROLES_REQUIRING_2FA — innlogging uten TOTP feiler', () => {
+  it('6) customer i ROLES_REQUIRING_2FA — uenrollert blokkeres ikke', () => {
     expect([...ROLES_REQUIRING_2FA]).toContain('customer');
     expect(() =>
       assertTwoFactorSatisfied({ roles: ['customer'], twoFactorEnabled: false }),
-    ).toThrow(TwoFactorRequiredError);
+    ).not.toThrow();
+    expect(() =>
+      assertTwoFactorSatisfied({ roles: ['dealer_admin'], twoFactorEnabled: false }),
+    ).not.toThrow();
+    expect(TwoFactorRequiredError).toBeDefined();
   });
 
   it('7) CWE-262: passordstabelen er død', async () => {

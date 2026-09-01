@@ -12,6 +12,8 @@ export const MAGIC_LINK_VERIFY_URL = `/api/auth${MAGIC_LINK_VERIFY_STI}`;
 export const MAGIC_LINK_CALLBACK = '/signin';
 export const MAGIC_LINK_TOTP_QUERY = 'steg=totp';
 export const MAGIC_LINK_ENROLL_STI = '/2fa-oppsett';
+/** Uenrollert etter verify: inn i appen, ikke /2fa-oppsett. `/` henter landing. */
+export const MAGIC_LINK_APP_LANDING = '/';
 
 /** Samme tak som gammel e-post-innlogging: 5 per minutt per IP. */
 export const MAGIC_LINK_BE_OM_GRENSE = { window: 60, max: 5 } as const;
@@ -25,7 +27,7 @@ export const MAGIC_LINK_ERSTATTET_MELDING =
   'Lenken er utløpt eller erstattet. Åpne den nyeste e-posten fra Endwise.';
 
 export const MAGIC_LINK_ENROLL_UTEN_SESJON =
-  'Be om en ny innloggingslenke med Fortsett. Den forrige er brukt. Deretter binder du appen.';
+  'Logg inn først. Autentikator slår du på når du er inne.';
 
 export function genererMagicLinkKode(): string {
   const bytes = new Uint8Array(MAGIC_LINK_KODE_LENGDE);

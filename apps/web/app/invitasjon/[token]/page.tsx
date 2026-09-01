@@ -118,7 +118,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
 
   const undertekst = inv
     ? steg === 'sendt'
-      ? `Innloggingslenke sendt til ${inv.epost}. Etter lenken bekrefter du med autentikator-appen.`
+      ? `Innloggingslenke sendt til ${inv.epost}. Åpne lenken for å gå inn. Autentikator kan du slå på senere.`
       : inv.kind === 'platform'
         ? `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
         : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
@@ -189,7 +189,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
 
         {inv && steg === 'sendt' ? (
           <div className="rounded-xl border border-border bg-card p-4 text-[12px] text-fg-muted leading-relaxed">
-            Åpne lenken i e-posten, deretter autentikator-appen. Ingen passord.
+            Åpne lenken i e-posten for å logge inn. Ingen passord. Autentikator er valgfri.
           </div>
         ) : null}
       </div>

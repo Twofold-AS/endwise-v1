@@ -13,10 +13,10 @@ describe('endwiseAdminUtfall', () => {
     expect(endwiseAdminUtfall({ userId: null, role: null })).toBe('signin');
   });
 
-  it('2FA påkrevd → oppsett, ikke admin-HTML', () => {
+  it('uenrollert endwise-admin får admin — TOTP blokkerer ikke', () => {
     expect(
       endwiseAdminUtfall({ userId: 'u1', role: 'endwise_admin', twoFactorRequired: true }),
-    ).toBe('two_factor');
+    ).toBe('ok');
   });
 
   it('innlogget uten endwise_admin → forbidden', () => {

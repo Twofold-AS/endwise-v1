@@ -84,6 +84,8 @@ export const byttPassordForHook = merket(
       });
     }
     if (ctx.path === TO_FAKTOR_ENABLE_STI) {
+      const innlogget = await getSessionFromCtx(ctx);
+      if (innlogget?.user?.id) return;
       const enroll = await enrollSesjonFraKake(ctx);
       if (!enroll) return;
       return { context: { session: enroll } };

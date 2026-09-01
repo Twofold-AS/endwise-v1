@@ -12,8 +12,10 @@ import {
   plukkBackupKoder,
   plukkTotpUri,
   secretFraTotpUri,
+  kanStarteTotpOppsett,
   TO_FAKTOR_DISABLE_AUDIT_ACTION,
   TO_FAKTOR_OPPSETT_STI,
+  TOTP_OPPSETT_INGRESS,
   toFaktorStatusTekst,
 } from '../src/to-faktor-oppsett.ts';
 
@@ -23,6 +25,8 @@ import {
  */
 
 describe('F1-20: toFaktorStatusTekst', () => {
+  const her = dirname(fileURLToPath(import.meta.url));
+
   it('viser På når twoFactorEnabled er true', () => {
     expect(toFaktorStatusTekst(true)).toBe('På — autentikator-app');
   });
@@ -35,8 +39,17 @@ describe('F1-20: toFaktorStatusTekst', () => {
     expect(toFaktorStatusTekst(undefined)).toBe('—');
   });
 
-  it('oppsettlenken peker på /2fa-oppsett — ikke en innstillingsside bak 2FA-gaten', () => {
+  it('oppsettlenken peker på /2fa-oppsett — senere opt-in fra innstillinger', () => {
     expect(TO_FAKTOR_OPPSETT_STI).toBe('/2fa-oppsett');
+    expect(TOTP_OPPSETT_INGRESS).toMatch(/valgfritt/i);
+    expect(TOTP_OPPSETT_INGRESS).not.toMatch(/Rollen din krever|nå-eller-aldri|må/i);
+    expect(kanStarteTotpOppsett(true)).toBe(true);
+    expect(kanStarteTotpOppsett(false)).toBe(false);
+    const kilde = readFileSync(resolve(her, '../../../apps/web/app/2fa-oppsett/page.tsx'), 'utf8');
+    expect(kilde).toMatch(/TOTP_OPPSETT_INGRESS|kanStarteTotpOppsett/);
+    expect(kilde).toMatch(/useSession/);
+    expect(kilde).toMatch(/twoFactor\.enable/);
+    expect(kilde).not.toMatch(/Rollen din krever/);
   });
 });
 

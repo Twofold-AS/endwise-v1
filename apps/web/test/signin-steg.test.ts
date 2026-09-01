@@ -107,7 +107,7 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
     ).toBe('valg');
   });
 
-  it('leftover enroll-kake ved ny e-post / valg er ikke 307 /2fa-oppsett', () => {
+  it('leftover enroll-kake er aldri 307 /2fa-oppsett — TOTP er senere opt-in', () => {
     expect(flateEtterMagicLinkLanding({ steg: 'valg', totpKlar: false, enrollKlar: true })).toBe(
       'valg',
     );
@@ -122,6 +122,9 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
         enrollKlar: true,
       }),
     ).toBe('valg');
+    expect(flateEtterMagicLinkLanding({ steg: 'totp', totpKlar: false, enrollKlar: true })).toBe(
+      'valg',
+    );
   });
 
   it('forbrukt lenke uten kake viser erstattet-melding, ikke stille venteskjerm', () => {
@@ -220,16 +223,15 @@ describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', ()
 describe('signin-side: server leser HttpOnly-kaker etter verify', () => {
   const side = readFileSync(resolve(her, '../app/signin/page.tsx'), 'utf8');
 
-  it('force-dynamic + cookies — enroll-307 bare etter denne verify, ikke ved valg/epost', () => {
+  it('force-dynamic + cookies — ingen 307 /2fa-oppsett av leftover enroll-kake', () => {
     expect(side).toMatch(/force-dynamic/);
     expect(side).toMatch(/revalidate\s*=\s*0/);
     expect(side).toMatch(/fetchCache\s*=\s*['"]force-no-store['"]/);
     expect(side).toMatch(/cookies\(/);
     expect(side).toMatch(/searchParams/);
     expect(side).toMatch(/harTotpVindu/);
-    expect(side).toMatch(/harEnrollVindu/);
     expect(side).toMatch(/totpKlar/);
-    expect(side).toMatch(/steg === ['"]valg['"]|steg !== ['"]valg['"]/);
+    expect(side).not.toMatch(/redirect\(SIGNIN_ENROLL_STI/);
   });
 });
 

@@ -18,8 +18,8 @@ export class SessionExpiredError extends Error {
  * 2. Absolutt — maks levetid. Better-Auth har ingen innebygd; vi river
  * sesjonen i databasen når den er passert. En klient-timer
  * ville ikke vært en grense; dette er.
- * 3. 2FA — ny. Roller som krever tofaktor får ingen
- * autorisert sesjon uten det. Se `two-factor.ts`.
+ * 3. 2FA — TOTP er valgfri. `assertTwoFactorForUser` blokkerer ikke
+ * uenrollerte. Bundet TOTP håndheves ved neste magic-link-verify.
  * `db` er et påkrevd argument, ikke valgfritt. Gjorde vi det valgfritt,
  * ville et kallsted som glemte å sende det stille hoppet over 2FA-sjekken — og
  * det er nøyaktig den feilen denne funksjonen finnes for å hindre. Nå må hvert
@@ -37,9 +37,8 @@ export async function requireSession(auth: Auth, db: Database, headers: Headers)
     throw new SessionExpiredError('absolute');
   }
 
-  // Kaster TwoFactorRequiredError. Kallstedene oversetter den til en egen
-  // feilkode (ikke 401), slik at UI-et kan sende brukeren til oppsett i stedet
-  // for til innloggingsskjermen hen nettopp kom fra.
+  // TOTP er valgfri: uenrollert får bruke appen. Kall beholdes så
+  // requireSession fortsatt er én inngang (idle + absolut + ev. fremtidig gate).
   await assertTwoFactorForUser(db, data.user.id, data.user.twoFactorEnabled);
 
   return data;

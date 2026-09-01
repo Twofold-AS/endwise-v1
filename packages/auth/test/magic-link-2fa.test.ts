@@ -5,14 +5,20 @@ import { createDb } from '@endwise/db';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createAuth } from '../src/auth.ts';
 import {
+  MAGIC_LINK_APP_LANDING,
   MAGIC_LINK_BE_OM_STI,
   MAGIC_LINK_CALLBACK,
   MAGIC_LINK_ENROLL_STI,
+  MAGIC_LINK_ENROLL_UTEN_SESJON,
   MAGIC_LINK_TOTP_QUERY,
   MAGIC_LINK_TTL_SEKUNDER,
   MAGIC_LINK_VERIFY_STI,
 } from '../src/magic-link.ts';
-import { erTotpFaktiskBundet, MAGIC_LINK_2FA_HOOK_ID } from '../src/magic-link-2fa.ts';
+import {
+  erTotpFaktiskBundet,
+  etterMagicLinkVerify,
+  MAGIC_LINK_2FA_HOOK_ID,
+} from '../src/magic-link-2fa.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 const OPPRINNELIG = { ...process.env };
@@ -62,21 +68,49 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(invite).not.toMatch(/searchParams\.get\(['"]next['"]\)/);
   });
 
-  it('etter-hook river sesjon ved TOTP og sender uenrollert til /2fa-oppsett', () => {
+  it('uenrollert verify beholder sesjon og lander i appen — ikke /2fa-oppsett', () => {
+    expect(etterMagicLinkVerify(false)).toEqual({
+      handling: 'behold-sesjon',
+      dest: MAGIC_LINK_APP_LANDING,
+    });
+    expect(MAGIC_LINK_APP_LANDING).toBe('/');
+    expect(MAGIC_LINK_APP_LANDING).not.toBe(MAGIC_LINK_ENROLL_STI);
+    expect(MAGIC_LINK_ENROLL_STI).toBe('/2fa-oppsett');
+    const hook = readFileSync(resolve(her, '../src/magic-link-2fa.ts'), 'utf8');
+    const utenKommentar = hook.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+    expect(utenKommentar).toMatch(/etterMagicLinkVerify/);
+    expect(utenKommentar).toMatch(/erTotpFaktiskBundet/);
+    expect(utenKommentar).toMatch(/MAGIC_LINK_APP_LANDING/);
+    expect(utenKommentar).not.toMatch(/startEnroll/);
+    expect(utenKommentar).not.toMatch(/MAGIC_LINK_ENROLL_STI/);
+    expect(utenKommentar).not.toMatch(/ENROLL_COOKIE_NAME/);
+  });
+
+  it('enrollert verify river sesjon og setter TOTP-mur', () => {
+    expect(etterMagicLinkVerify(true)).toEqual({
+      handling: 'totp-mur',
+      dest: `${MAGIC_LINK_CALLBACK}?${MAGIC_LINK_TOTP_QUERY}`,
+    });
     expect(MAGIC_LINK_2FA_HOOK_ID).toBe('magic-link-krever-totp');
     expect(MAGIC_LINK_VERIFY_STI).toBe('/magic-link/verify');
     expect(MAGIC_LINK_BE_OM_STI).toBe('/sign-in/magic-link');
     expect(MAGIC_LINK_TOTP_QUERY).toBe('steg=totp');
-    expect(MAGIC_LINK_ENROLL_STI).toBe('/2fa-oppsett');
     const hook = readFileSync(resolve(her, '../src/magic-link-2fa.ts'), 'utf8');
     expect(hook).toMatch(/deleteSessionCookie/);
     expect(hook).toMatch(/setNewSession\(null\)/);
-    expect(hook).toMatch(/ENROLL_COOKIE_NAME/);
-    expect(hook).toMatch(/erTotpFaktiskBundet/);
-    expect(hook).toMatch(/twoFactorEnabled:\s*false|twoFactorEnabled = false/);
-    expect(hook).toMatch(/MAGIC_LINK_ENROLL_STI/);
     expect(hook).toMatch(/MAGIC_LINK_TOTP_QUERY/);
     expect(hook).not.toMatch(/setSessionCookie/);
+  });
+
+  it('leftover unverified enable() er ubundet — sesjon inn, ikke TOTP-mur', async () => {
+    const leftover = await erTotpFaktiskBundet(
+      async () => ({ secret: 'skjult', verified: false }),
+      { id: 'u1', twoFactorEnabled: true },
+    );
+    expect(leftover).toBe(false);
+    expect(etterMagicLinkVerify(leftover).handling).toBe('behold-sesjon');
+    expect(etterMagicLinkVerify(leftover).dest).not.toBe(MAGIC_LINK_ENROLL_STI);
+    expect(etterMagicLinkVerify(leftover).dest).not.toContain(MAGIC_LINK_TOTP_QUERY);
   });
 
   it('e-postbytte krever TOTP på, ikke passord', () => {
@@ -126,8 +160,8 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(forHook).toMatch(/MAGIC_LINK_BE_OM_STI/);
     expect(`${forHook}\n${kake}`).toMatch(/utlopFaktorKaker|maxAge:\s*0/);
     expect(kake).toMatch(/TWO_FACTOR_COOKIE_NAME|two_factor/);
-    expect(kake).toMatch(/ENROLL_COOKIE_NAME|enroll_2fa/);
     expect(forHook).toMatch(/utlopFaktorKaker/);
+    expect(forHook).toMatch(/ENROLL_COOKIE_NAME|enroll_2fa|utlopFaktorKaker/);
   });
 
   it('0036 tømmer bare foreldreløse two_factor_enabled, ikke TOTP-hemmelighet', () => {
@@ -179,5 +213,9 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(oppsett).toMatch(/MAGIC_LINK_ENROLL_UTEN_SESJON/);
     expect(oppsett).toMatch(/samme\s+innboks/);
     expect(oppsett).not.toMatch(/Innloggingslenken må åpnes først/);
+    expect(oppsett).not.toMatch(/Rollen din krever/);
+    expect(oppsett).toMatch(/useSession/);
+    expect(MAGIC_LINK_ENROLL_UTEN_SESJON).toMatch(/Logg inn først/);
+    expect(MAGIC_LINK_ENROLL_UTEN_SESJON).not.toMatch(/Fortsett|forrige er brukt/);
   });
 });

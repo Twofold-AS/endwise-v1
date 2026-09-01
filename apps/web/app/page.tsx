@@ -151,9 +151,7 @@ export default function BasePage() {
 
       // `landing` avhenger av jobbfunksjon og mekanikerprofil — ting klienten
       // ikke kjenner sikkert. Regelen bor på serveren, og bare der.
-      // Mangler 2FA-oppsett, svarer serveren TWO_FACTOR_REQUIRED på
-      // alle tRPC-ruter. Da skal brukeren til oppsett, ikke til et dashbord der
-      // ingenting laster. Samme regel som i `/signin`.
+      // TOTP er valgfri. TWO_FACTOR_REQUIRED tvinger ikke /2fa-oppsett.
       const landing = await utils.session.me
         .fetch()
         .then((me) => me.landing)

@@ -72,7 +72,7 @@ export function koderSomTekstfil(koder: readonly string[]): string {
     'Endwise — gjenopprettingskoder',
     '',
     'Hver kode kan brukes én gang hvis du mister autentikator-appen.',
-    'Oppbevar dem utenfor denne maskinen.',
+    'Oppbevar dem utenfor denne maskinen — ikke i samme innboks som magic link.',
     '',
     ...koder,
     '',

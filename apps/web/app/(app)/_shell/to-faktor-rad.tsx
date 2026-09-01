@@ -1,30 +1,14 @@
 'use client';
 
 import { TO_FAKTOR_OPPSETT_STI, toFaktorStatusTekst } from '@endwise/auth/to-faktor-oppsett';
-import { ShieldCheck, StatefulButton } from '@endwise/ui';
-import { type FormEvent, useState } from 'react';
-import { authClient } from '@/lib/auth-client';
+import { ShieldCheck } from '@endwise/ui';
 
 /**
- * 2FA-statusrad. Slå-av uten passord — sesjonen er allerede TOTP-bevist.
+ * 2FA-statusrad. Selvbetjent slå-av er stengt (Mons): stjålet sesjon
+ * skal ikke kunne slå av TOTP. Leder tilbakestiller fra Team.
  */
 export function ToFaktorRad({ enabled }: { enabled: boolean | undefined }) {
   const pa = enabled === true;
-  const [feil, setFeil] = useState<string | null>(null);
-  const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-
-  async function slaAv(event: FormEvent) {
-    event.preventDefault();
-    setFeil(null);
-    setBusy('loading');
-    const res = await authClient.twoFactor.disable({});
-    if (res.error) {
-      setBusy('error');
-      setFeil(res.error.message ?? 'Kunne ikke slå av tofaktor.');
-      return;
-    }
-    setBusy('success');
-  }
 
   return (
     <div className="flex flex-col">
@@ -44,23 +28,9 @@ export function ToFaktorRad({ enabled }: { enabled: boolean | undefined }) {
         )}
       </div>
       {pa ? (
-        <form
-          onSubmit={slaAv}
-          className="flex flex-col gap-3 border-border border-t bg-inset px-4 py-3"
-        >
-          {feil && <p className="text-[12px] text-danger">{feil}</p>}
-          <StatefulButton
-            type="submit"
-            state={busy}
-            className="self-start"
-            loadingText="Slår av …"
-            successText="Slått av"
-            errorText="Prøv igjen"
-            icon={<ShieldCheck size={15} />}
-          >
-            Slå av tofaktor
-          </StatefulButton>
-        </form>
+        <p className="border-border border-t bg-inset px-4 py-3 text-[12px] text-fg-muted">
+          Kan ikke slås av her. Be en leder om å tilbakestille.
+        </p>
       ) : null}
     </div>
   );

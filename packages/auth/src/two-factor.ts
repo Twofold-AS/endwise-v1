@@ -31,8 +31,8 @@ import { ROLES_REQUIRING_2FA } from './rbac.ts';
  * skrives i appserverens lokale tid, `now` er databasens — sammenligningen
  * ville vært systematisk skjev, og skjev feil vei).
  * Ingen «husk enhet»
- * `trustDevice` sendes aldri fra vår side. Spec-en sier passord + engangskode
- * ved hver innlogging for disse rollene.
+ * `trustDevice` tvinges til false på verify-totp / verify-backup-code.
+ * Customer-rollen krever ikke 2FA — kjent restrisiko (Mons).
  */
 
 export class TwoFactorRequiredError extends Error {

@@ -78,6 +78,17 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(hook).toMatch(/TWO_FACTOR_REQUIRED/);
   });
 
+  it('0035 tømmer passord-hash, ikke TOTP', () => {
+    const sql = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/0035_drop_password_hashes.sql'),
+      'utf8',
+    );
+    const utenKommentar = sql.replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(utenKommentar).toMatch(/UPDATE "account" SET "password" = NULL/);
+    expect(utenKommentar).not.toMatch(/two_factor/);
+    expect(utenKommentar).not.toMatch(/DELETE FROM/);
+  });
+
   it('signin og 2fa-oppsett har ingen passordfelt og ingen e-post-OTP', () => {
     const signin = readFileSync(
       resolve(her, '../../../apps/web/app/signin/signin-skjema.tsx'),

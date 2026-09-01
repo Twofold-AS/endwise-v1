@@ -1,24 +1,53 @@
 import { describe, expect, it } from 'vitest';
-import { TO_FAKTOR_DISABLE_STI } from '../src/bytt-passord.ts';
+import {
+  TO_FAKTOR_DISABLE_STI,
+  TO_FAKTOR_SEND_OTP_STI,
+  TO_FAKTOR_VERIFY_BACKUP_STI,
+  TO_FAKTOR_VERIFY_TOTP_STI,
+} from '../src/bytt-passord.ts';
 import { byttPassordForHook } from '../src/bytt-passord-server.ts';
 import { TO_FAKTOR_DISABLE_AUDIT_ACTION } from '../src/to-faktor-oppsett.ts';
 
-/**
- * Slå av 2FA uten passord. Passord er av; sesjonen er allerede TOTP-bevist
- * (eller enroll-sesjon). Audit skrives i etter-hooken.
- */
-
-describe('F1-22: disable uten passord', () => {
-  it('serverhooken krever ikke passord på /two-factor/disable', async () => {
+describe('F1-22: selvbetjent disable er stengt (Mons)', () => {
+  it('serverhooken nekter /two-factor/disable', async () => {
     await expect(
       byttPassordForHook({
         path: TO_FAKTOR_DISABLE_STI,
         body: {},
       } as never),
-    ).resolves.toBeUndefined();
+    ).rejects.toMatchObject({
+      status: 'FORBIDDEN',
+      body: { code: 'TWO_FACTOR_DISABLE_FORBIDDEN' },
+    });
   });
 
-  it('audit-handlingen er navngitt', () => {
+  it('e-post-OTP-sti er stengt', async () => {
+    await expect(
+      byttPassordForHook({
+        path: TO_FAKTOR_SEND_OTP_STI,
+        body: {},
+      } as never),
+    ).rejects.toMatchObject({ status: 'FORBIDDEN', body: { code: 'TWO_FACTOR_OTP_DISABLED' } });
+  });
+
+  it('trustDevice tvinges av på TOTP og backup-verify', async () => {
+    const totp = await byttPassordForHook({
+      path: TO_FAKTOR_VERIFY_TOTP_STI,
+      body: { code: '123456', trustDevice: true },
+    } as never);
+    expect(totp).toEqual({
+      context: { body: { code: '123456', trustDevice: false } },
+    });
+    const backup = await byttPassordForHook({
+      path: TO_FAKTOR_VERIFY_BACKUP_STI,
+      body: { code: 'aaaaa-bbbbb', trustDevice: true },
+    } as never);
+    expect(backup).toEqual({
+      context: { body: { code: 'aaaaa-bbbbb', trustDevice: false } },
+    });
+  });
+
+  it('audit-handlingen er navngitt (team-reset skriver den)', () => {
     expect(TO_FAKTOR_DISABLE_AUDIT_ACTION).toBe('two_factor.disabled');
     expect(TO_FAKTOR_DISABLE_STI).toBe('/two-factor/disable');
   });

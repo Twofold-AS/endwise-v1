@@ -1,11 +1,9 @@
 /*
  * 0035 — passord ut. Innlogging er magic link + TOTP-app.
- * Tøm credential-hasher så allowPasswordless gjelder (ellers krever
- * Better-Auth fortsatt passord på 2FA enable/disable).
- * Nullstill e-post-OTP-2FA: alle må sette TOTP.
- * Første innlogging etter denne: magic link gir midlertidig sesjon
- * som bare kan fullføre /2fa-oppsett. Etter TOTP er innboks ikke nok.
+ * Tøm credential-hasher så allowPasswordless gjelder.
+ * TOTP-rader og two_factor_enabled beholdes: Mons — ikke tving alle
+ * gjennom et enroll-vindu der innboks er begge faktorer.
+ * Uenrollert (two_factor_enabled=false) → magic link + /2fa-oppsett,
+ * gated av TWO_FACTOR_REQUIRED. Enrollert → magic link + TOTP.
  */
-UPDATE "account" SET "password" = NULL WHERE "password" IS NOT NULL;-- > statement-breakpoint
-UPDATE "user" SET "two_factor_enabled" = false WHERE "two_factor_enabled" IS TRUE;-- > statement-breakpoint
-DELETE FROM "two_factor";
+UPDATE "account" SET "password" = NULL WHERE "password" IS NOT NULL;

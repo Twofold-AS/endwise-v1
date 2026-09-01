@@ -120,6 +120,7 @@ describe('F1-21: gjenopprettingskoder kan ikke hoppes over', () => {
     const tekst = koderSomTekstfil(['aaaaa-bbbbb']);
     expect(tekst).toContain('aaaaa-bbbbb');
     expect(tekst).toMatch(/gjenopprettingskoder/i);
+    expect(tekst).toMatch(/ikke i samme innboks som magic link/);
     expect(tekst.toLowerCase()).not.toMatch(/password|session|secret|otp/);
     expect(KODER_FILNAVN).toBe('endwise-gjenopprettingskoder.txt');
   });
@@ -145,12 +146,12 @@ describe('F1-21: gjenopprettingskoder kan ikke hoppes over', () => {
   });
 });
 
-describe('F1-22: slå av uten passord — TOTP er andre faktor', () => {
+describe('F1-22: selvbetjent slå-av er stengt', () => {
   it('audit-handlingen er navngitt og inneholder ikke hemmeligheter', () => {
     expect(TO_FAKTOR_DISABLE_AUDIT_ACTION).toBe('two_factor.disabled');
   });
 
-  it('ToFaktorRad og /2fa-oppsett slår av uten passordfelt', () => {
+  it('ToFaktorRad og /2fa-oppsett har ikke disable-kall', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const rad = readFileSync(
       resolve(her, '../../../apps/web/app/(app)/_shell/to-faktor-rad.tsx'),
@@ -161,11 +162,11 @@ describe('F1-22: slå av uten passord — TOTP er andre faktor', () => {
       'utf8',
     );
 
-    expect(rad).toMatch(/twoFactor\.disable/);
+    expect(rad).not.toMatch(/twoFactor\.disable/);
+    expect(rad).toMatch(/Be en leder om å tilbakestille/);
     expect(rad).not.toMatch(/type=["']password["']/);
-    expect(rad).not.toMatch(/INVALID_PASSWORD/);
-    expect(oppsett).toMatch(/steg === 'av'/);
-    expect(oppsett).toMatch(/twoFactor\.disable/);
+    expect(oppsett).not.toMatch(/twoFactor\.disable/);
+    expect(oppsett).toMatch(/Be en leder om å tilbakestille/);
     expect(oppsett).not.toMatch(/type=["']password["']/);
     expect(oppsett).not.toMatch(/INVALID_PASSWORD/);
   });

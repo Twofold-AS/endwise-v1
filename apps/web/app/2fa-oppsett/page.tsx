@@ -134,21 +134,6 @@ export default function ToFaktorOppsettPage() {
     setBusy('success');
   }
 
-  async function slaAv(event: FormEvent) {
-    event.preventDefault();
-    setFeil(null);
-    setBusy('loading');
-    const res = await authClient.twoFactor.disable({});
-    if (res.error) {
-      setBusy('error');
-      setFeil(res.error.message ?? 'Kunne ikke slå av tofaktor.');
-      return;
-    }
-    setBusy('success');
-    setSteg('app');
-    startet.current = false;
-  }
-
   function fortsett() {
     void utils.session.me
       .fetch()
@@ -171,7 +156,7 @@ export default function ToFaktorOppsettPage() {
         : steg === 'kode'
           ? 'Bekreft med autentikator'
           : steg === 'av'
-            ? 'Slå av tofaktor'
+            ? 'Tofaktor er på'
             : 'Sett opp autentikator';
   const ingress =
     steg === 'ferdig'
@@ -181,7 +166,7 @@ export default function ToFaktorOppsettPage() {
         : steg === 'kode'
           ? 'Legg til Endwise i autentikator-appen og skriv den 6-sifrede koden.'
           : steg === 'av'
-            ? 'Slår av tofaktor. Neste innlogging krever at du setter den opp igjen.'
+            ? 'Autentikator-appen er allerede satt opp. Selvbetjent slå-av er stengt.'
             : 'Rollen din krever en autentikator-app. Ikke e-postkode.';
 
   return (
@@ -328,28 +313,20 @@ export default function ToFaktorOppsettPage() {
         ) : null}
 
         {steg === 'av' ? (
-          <form
-            onSubmit={(e) => void slaAv(e)}
-            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
-          >
-            <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted">
-              Ingen passord. Du er allerede innlogget.
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
+            <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
+              Tofaktor kan ikke slås av selv. Be en leder om å tilbakestille.
             </div>
-            {feil && <p className="px-4 text-[12px] text-danger">{feil}</p>}
             <div className="px-1.5 pt-1 pb-1">
-              <StatefulButton
-                type="submit"
-                state={busy}
-                className="w-full"
-                loadingText="Slår av …"
-                successText="Slått av"
-                errorText="Prøv igjen"
-                icon={<ShieldCheck size={15} />}
+              <button
+                type="button"
+                onClick={fortsett}
+                className="inline-flex h-control w-full items-center justify-center rounded-control bg-fg px-4 text-bg text-label"
               >
-                Slå av tofaktor
-              </StatefulButton>
+                Fortsett
+              </button>
             </div>
-          </form>
+          </div>
         ) : null}
 
         {steg === 'ferdig' ? (

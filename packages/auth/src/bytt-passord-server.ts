@@ -9,6 +9,9 @@ import {
   generiskAuthFeilForSti,
   TO_FAKTOR_DISABLE_STI,
   TO_FAKTOR_ENABLE_STI,
+  TO_FAKTOR_SEND_OTP_STI,
+  TO_FAKTOR_VERIFY_BACKUP_STI,
+  TO_FAKTOR_VERIFY_TOTP_STI,
 } from './bytt-passord.ts';
 import { eierLasForHook } from './eier-las-server.ts';
 import { MAGIC_LINK_BE_OM_STI, MAGIC_LINK_CALLBACK } from './magic-link.ts';
@@ -59,6 +62,30 @@ function brukerIdFraHook(ctx: {
 export const byttPassordForHook = merket(
   createAuthMiddleware(async (ctx) => {
     await eierLasForHook(ctx);
+    if (ctx.path === TO_FAKTOR_SEND_OTP_STI) {
+      throw new APIError('FORBIDDEN', {
+        message: 'E-postkode er ikke andre faktor.',
+        code: 'TWO_FACTOR_OTP_DISABLED',
+      });
+    }
+    if (ctx.path === TO_FAKTOR_DISABLE_STI) {
+      throw new APIError('FORBIDDEN', {
+        message: 'Tofaktor kan ikke slås av selv. Be en leder om å tilbakestille.',
+        code: 'TWO_FACTOR_DISABLE_FORBIDDEN',
+      });
+    }
+    if (ctx.path === TO_FAKTOR_VERIFY_TOTP_STI || ctx.path === TO_FAKTOR_VERIFY_BACKUP_STI) {
+      const body = ctx.body;
+      if (typeof body !== 'object' || body === null) return;
+      return {
+        context: {
+          body: {
+            ...body,
+            trustDevice: false,
+          },
+        },
+      };
+    }
     if (ctx.path === MAGIC_LINK_BE_OM_STI) {
       const body = ctx.body;
       if (typeof body !== 'object' || body === null) return;
@@ -109,9 +136,8 @@ export const byttPassordForHook = merket(
  * auth-feil i API-svaret. Valideringsfeil på det nye passordet
  * (`PASSWORD_TOO_SHORT` / `PASSWORD_TOO_LONG`) får stå: de lekker ikke
  * om det gamle var riktig.
- * På `/two-factor/disable` skriver en vellykket avslutting til
- * audit_log (F1-22). `db` er den samme instansen `createAuth` fikk
- * ikke en ny pool mot env.
+ * `/two-factor/disable` er FORBIDDEN i before-hook (Mons).
+ * Audit `two_factor.disabled` skrives av team-reset, ikke denne stien.
  */
 export function createByttPassordEtterHook(db?: Database) {
   return merket(

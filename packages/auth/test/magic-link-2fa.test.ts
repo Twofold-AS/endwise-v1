@@ -37,7 +37,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(authKilde).toMatch(/magicLink\(/);
     expect(authKilde).toMatch(/generateToken:\s*async\s*\(\)\s*=>\s*genererMagicLinkKode/);
     expect(authKilde).not.toMatch(/otpOptions|sendOTP:\s*sendTwoFactorOtp/);
-    expect(authKilde).toMatch(/erProduktDestinasjon/);
+    expect(authKilde).toMatch(/erAuthDestinasjon/);
   });
 
   it('callback tvinges til /signin — ingen klient-next', () => {

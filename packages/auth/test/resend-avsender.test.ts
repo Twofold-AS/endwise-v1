@@ -111,7 +111,7 @@ describe('åpen send er stengt', () => {
 
   it('magic-link fyrer bare mot produkt-destinasjon', () => {
     const auth = readFileSync(resolve(her, '../src/auth.ts'), 'utf8');
-    expect(auth).toMatch(/erProduktDestinasjon\(db, email\)/);
+    expect(auth).toMatch(/erAuthDestinasjon\(db, email\)/);
   });
 
   it('ingen tRPC tar imot to/from/html/replyTo fra klienten', () => {

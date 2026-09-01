@@ -1,4 +1,4 @@
-import { erProduktDestinasjon } from '@endwise/auth';
+import { erTenantDestinasjon } from '@endwise/auth';
 import { createDb } from '@endwise/db';
 import { createDispatcher, type DispatchInput } from '@endwise/modules/notifications';
 import { createResendChannel } from '@endwise/toolkit-resend';
@@ -28,7 +28,7 @@ async function sendNotification(input: DispatchInput) {
     channels.push(
       createResendChannel({
         apiKey: process.env.RESEND_API_KEY,
-        kanSendeTil: (to) => erProduktDestinasjon(db, to),
+        kanSendeTil: (to, tenantId) => erTenantDestinasjon(db, tenantId, to),
       }),
     );
   }

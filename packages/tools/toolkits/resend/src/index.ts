@@ -26,21 +26,28 @@ function stripCrLf(verdi: string): string {
   return verdi.replace(/[\r\n\u2028\u2029]+/g, ' ').trim();
 }
 
+/** Uten predikat: nei. Alltid-sann er ikke default. */
+async function stengtDest(_to: string, _tenantId: string): Promise<boolean> {
+  return false;
+}
+
+export type KanSendeTil = (to: string, tenantId: string) => Promise<boolean>;
+
 /**
- * E-postkanal for F3-04-varsler. Ingen annen Resend-klient som hopper over
- * From/to-porten. `from` settes aldri av kalleren. `to` må godkjennes av
- * `kanSendeTil` (typisk `erProduktDestinasjon`).
+ * E-postkanal for F3-04-varsler. From er hardkodet.
+ * Dest er et eget predikat per kanal — ikke auth-OR-en.
+ * `kanSendeTil` default er false (fail closed). Kalleren må sende
+ * tenant-id inn i predikatet (typisk `erTenantDestinasjon`).
  */
 export function createResendChannel(config: {
   apiKey: string;
-  kanSendeTil: (to: string) => Promise<boolean>;
+  kanSendeTil?: KanSendeTil;
 }): NotificationChannel {
   if (Object.hasOwn(config, 'from')) {
     throw new Error('from settes ikke av kalleren');
   }
-  if (typeof config.kanSendeTil !== 'function') {
-    throw new Error('kanSendeTil er påkrevd — Resend fyrer ikke mot frie adresser');
-  }
+  const kanSendeTil: KanSendeTil =
+    typeof config.kanSendeTil === 'function' ? config.kanSendeTil : stengtDest;
   const client = new Resend(config.apiKey);
   const from = RESEND_FROM_KANONISK;
 
@@ -52,11 +59,15 @@ export function createResendChannel(config: {
       if (from !== RESEND_FROM_KANONISK) {
         throw new Error(`From er ikke den kanoniske produktadressen (${RESEND_FROM_KANONISK})`);
       }
+      const tenantId = message.tenantId?.trim() ?? '';
+      if (!tenantId) {
+        throw new Error('tenantId er påkrevd — dest er tenant-skopet');
+      }
       const to = message.to.trim();
       if (!erEnkelEpost(to)) {
         throw new Error('Ugyldig to');
       }
-      if (!(await config.kanSendeTil(to))) {
+      if (!(await kanSendeTil(to, tenantId))) {
         throw new Error('Mottakeren er ikke en produkt-destinasjon');
       }
       const { data, error } = await client.emails.send({

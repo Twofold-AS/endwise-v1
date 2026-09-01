@@ -61,10 +61,11 @@ describe('F6-26 — avsenderdomenet', () => {
     expect(TOOLKIT_FROM).toBe('Endwise <noreply@endwise.no>');
   });
 
-  it('⛔ notify-varsler går gjennom erProduktDestinasjon, ikke fri to', () => {
+  it('⛔ notify-varsler går gjennom erTenantDestinasjon, ikke auth-OR eller fri to', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const notify = readFileSync(resolve(her, '../src/workflows/notify.ts'), 'utf8');
-    expect(notify).toMatch(/erProduktDestinasjon/);
+    expect(notify).toMatch(/erTenantDestinasjon\(db, tenantId, to\)/);
+    expect(notify).not.toMatch(/erProduktDestinasjon|erAuthDestinasjon\(db, to\)/);
     expect(notify).toMatch(/kanSendeTil/);
     expect(notify).not.toMatch(/RESEND_FROM/);
     const toolkit = readFileSync(

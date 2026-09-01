@@ -14,7 +14,7 @@ afterEach(() => {
   send.mockClear();
 });
 
-describe('toolkit-resend From/to-port (Mons residual)', () => {
+describe('toolkit-resend From/to-port (Mons dest-lås)', () => {
   it('From er nøyaktig Endwise <noreply@endwise.no>', () => {
     expect(RESEND_FROM_KANONISK).toBe('Endwise <noreply@endwise.no>');
   });
@@ -29,21 +29,46 @@ describe('toolkit-resend From/to-port (Mons residual)', () => {
     ).toThrow(/from settes ikke/);
   });
 
-  it('⛔ krever kanSendeTil — ingen send uten dest-port', () => {
-    expect(() => createResendChannel({ apiKey: 're_test' } as never)).toThrow(/kanSendeTil/);
-  });
-
-  it('⛔ sender ikke til fremmed to', async () => {
-    const kanal = createResendChannel({
-      apiKey: 're_test',
-      kanSendeTil: async () => false,
-    });
+  it('⛔ kanSendeTil er false som default — uten predikat sendes ingenting', async () => {
+    const kanal = createResendChannel({ apiKey: 're_test' });
     await expect(
       kanal.send({
         tenantId: 't',
         to: 'hvem-som-helst@evil.no',
         body: 'spam',
-        idempotencyKey: 'k1',
+        idempotencyKey: 'k0',
+      }),
+    ).rejects.toThrow(/produkt-destinasjon/);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('⛔ uten tenantId sendes ingenting, også med alltid-sann predikat', async () => {
+    const kanal = createResendChannel({
+      apiKey: 're_test',
+      kanSendeTil: async () => true,
+    });
+    await expect(
+      kanal.send({
+        tenantId: '',
+        to: 'kunde@example.no',
+        body: 'x',
+        idempotencyKey: 'k-tom',
+      }),
+    ).rejects.toThrow(/tenantId/);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('⛔ annen tenants kunde er nei', async () => {
+    const kanal = createResendChannel({
+      apiKey: 're_test',
+      kanSendeTil: async (to, tenantId) => tenantId === 'tenant-a' && to === 'kunde@a.no',
+    });
+    await expect(
+      kanal.send({
+        tenantId: 'tenant-b',
+        to: 'kunde@a.no',
+        body: 'stjålet',
+        idempotencyKey: 'k-kryss',
       }),
     ).rejects.toThrow(/produkt-destinasjon/);
     expect(send).not.toHaveBeenCalled();
@@ -65,10 +90,10 @@ describe('toolkit-resend From/to-port (Mons residual)', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('godkjent dest fyrer med kanonisk From, aldri klient-from', async () => {
+  it('godkjent dest i samme tenant fyrer med kanonisk From', async () => {
     const kanal = createResendChannel({
       apiKey: 're_test',
-      kanSendeTil: async (to) => to === 'kunde@example.no',
+      kanSendeTil: async (to, tenantId) => to === 'kunde@example.no' && tenantId === 't',
     });
     const resultat = await kanal.send({
       tenantId: 't',

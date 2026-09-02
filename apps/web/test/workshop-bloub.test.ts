@@ -116,7 +116,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/PHONE_KORT_FYLL/);
     expect(fab).toMatch(/text-\[14px\]/);
     expect(fab).toMatch(/gap-6/);
-    expect(fab).toMatch(/max-w-\[520px\]/);
+    expect(fab).toMatch(/VERKSTED_INNHOLD/);
     expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,280}rounded-full/);
     expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,280}ring-1/);
     expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,80}size-6/);
@@ -143,11 +143,20 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).not.toMatch(/rounded-none/);
     expect(fab).toMatch(/data-ronny-kort-padding/);
     expect(fab).toMatch(/data-ronny-kort-padding[\s\S]{0,280}pt-1/);
-    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,80}pb-1\.5/);
+    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,80}pb-1/);
+    expect(fab).toMatch(/data-ronny-handtak[\s\S]{0,400}py-0\.5/);
+    expect(fab).toMatch(/VERKSTED_INNHOLD/);
+    expect(fab).toMatch(/data-ronny-verksted-bredde/);
+    expect(fab).toMatch(/data-ronny-prompt-kort[\s\S]{0,160}py-1\.5/);
     expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}bg-transparent/);
     expect(fab).not.toMatch(/data-ronny-svar-kort[\s\S]{0,160}bg-\[#fff\]/);
-    expect(fab).toMatch(/max-w-\[1120px\]/);
-    expect(fab).toMatch(/md:px-8/);
+    const hjem = les('../app/(app)/_shell/phone-home.ts');
+    expect(hjem).toMatch(
+      /VERKSTED_INNHOLD = 'mx-auto w-full max-w-\[520px\] px-3 md:max-w-\[1120px\] md:px-8'/,
+    );
+    expect(les('../app/(app)/_shell/phone-home-dealer.tsx')).toMatch(/VERKSTED_INNHOLD/);
+    expect(les('../app/(app)/dashboard/page.tsx')).toMatch(/VERKSTED_INNHOLD/);
+    expect(fab).toMatch(/md:px-8|VERKSTED_INNHOLD/);
     expect(fab).toMatch(/opacity-100/);
     expect(fab).toMatch(/bg-transparent/);
     expect(fab).toMatch(/cursor-grab/);
@@ -219,9 +228,11 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-peek-svar/);
     expect(fab).not.toMatch(/max-h-\[28vh\]/);
     expect(fab).not.toMatch(/borderRadius: 9999/);
-    expect(submit).toMatch(/max-h-10/);
-    expect(submit).toMatch(/min-h-7/);
+    expect(submit).toMatch(/max-h-8/);
+    expect(submit).toMatch(/min-h-6/);
+    expect(submit).not.toMatch(/max-h-10/);
     expect(submit).not.toMatch(/max-h-36/);
+    expect(submit).toMatch(/size-7/);
     expect(submit).toMatch(/flex w-full items-end/);
   });
 

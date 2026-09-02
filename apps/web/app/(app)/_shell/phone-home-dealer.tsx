@@ -3,7 +3,12 @@
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
-import { dealerPhoneHjemRader, PHONE_KORT_META, type PhoneKortKey } from './phone-home';
+import {
+  dealerPhoneHjemRader,
+  PHONE_KORT_META,
+  type PhoneKortKey,
+  VERKSTED_INNHOLD,
+} from './phone-home';
 import {
   innboksMeta,
   kunderMeta,
@@ -62,12 +67,11 @@ export function PhoneHomeDealer() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[520px] flex-col gap-3 px-3 py-3 md:hidden">
+    <div className={`${VERKSTED_INNHOLD} flex flex-col gap-3 py-3 md:hidden`}>
       {rader.map((rad) => {
         if (rad.keys[0] === 'verkstedet') {
           const dest = PHONE_KORT_META.verkstedet;
-          const forhandlernavn =
-            tenantName?.trim() || kort.data?.name?.trim() || dest.label;
+          const forhandlernavn = tenantName?.trim() || kort.data?.name?.trim() || dest.label;
           return (
             <PhoneKort
               key="verkstedet"

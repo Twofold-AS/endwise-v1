@@ -402,7 +402,7 @@ Ikke skriv egne erstatninger for disse — hent dem når skjermen som trenger de
 | Pakke | Til hva | Hentes i |
 |---|---|---|
 | `slot-text` | Rullende KPI-siffer | F3-05 (DealerOverview). KPI-tallene på admin-oversikten er i klartekst inntil videre |
-| `ai-elements` | Conversation, Message, PromptInput, Plan, Task, Voice | ⚠️ **OVERLAPPER NÅ MED §9** (12.08.2026). Chat-flaten ble bygget på shadcn sine `message`/`message-scroller`/`questionnaire` etter eierens beskrivelse, så `Conversation`/`Message`/`PromptInput` er allerede dekket. Igjen står `Plan`, `Task` og `Voice`. **Å ta inn `ai-elements` nå ville gitt to meldingskomponenter side om side** — det er en techstack-avklaring (§2), ikke noe som skal skje i forbifarten |
+| `ai-elements` | Conversation, Message, Plan, Task, Voice | **02.09.2026 (Mikael / Ronny):** `PromptInput` + `Textarea` + `Footer` + `Submit` er hentet som komposisjon i `packages/ui/src/components/prompt-input.tsx` (samme navn og Enter/Shift+Enter som AI Elements). Full registry (`command`/`select`/`hover-card`/`attachments`) er **ikke** tatt inn — Mikael forbød model-picker, globe og vedlegg. Diagnose-chatten fortsetter på §9 `message`/`message-scroller`. Igjen står `Plan`, `Task` og `Voice`. |
 
 > ❌ **Recharts er FJERNET fra techstacken** (14.07.2026, brukergodkjent) — begrunnelsen var at
 > dither-kit dekket alle chart-typene. ⚠️ **Etter 03.08.2026 er dither-kit ute av UI-et (§2), så det
@@ -454,7 +454,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Dine jobber / Timeplan-stripe / starttid / ferie-mock (`dine-jobber/`, `_shell/timeplan-stripe.tsx`, `bookinger/_starttid-velger.tsx`, `_shell/ferie-mock.tsx`, 29.08.2026 natt) | **Ingen ny pakke.** Jobb-bokser er `Link` + lucide `Bike`/`Sailboat` + `ChevronRight` til eksisterende `/min-dag/[id]`. Timeplan-piler er `ChevronLeft`/`ChevronRight`. Starttid er to native expander-knapper. Ferie er merket mock/kommer. |
 
-| Workshop-stripe (`_workshop/workshop-bloub.tsx` + `grainient.tsx`, 01.09.2026 kveld) | **Grainient** (§1). Telefon ~44px, desktop 32px. Hvit KI-Ronny + «La KI-Ronny ta styringen» **midtstilt** (`justify-center items-center`) på PC og telefon. Idle: seks vendor-uttrykk hvert 5. sekund (`colere` `surpris` `wink` `curieux` `attentif` `heureux`). Klikk: `surpris` + `rotateY(360deg)` (ikke `rotateX`), deretter bunndock med kun input. ShaderGradient ute. Chat mot `/chat/workshop` (sidekontekst, ⛔ Quick-skriving). |
+| Workshop-stripe (`_workshop/workshop-bloub.tsx` + `grainient.tsx`, 01.09.2026 kveld) | **Grainient** (§1). Telefon ~44px, desktop 32px. Hvit KI-Ronny midtstilt. **02.09.2026:** bunndock er AI Elements-navngitt `PromptInput` (textarea, Enter/Shift+Enter, Footer, Submit med eget `Send`-SVG). Forstørr/minimer er lokale SVG-er (ikke lucide Maximize2). Apple-grammatikk kun på dock (parchment `#f5f5f7`, hairline `#e0e0e0`, 18px radius, 44px runde ikonknapper, ingen skygge). Stripe forblir Grainient. Verktøy: `gåTil` (hviteliste) + `søkKunder`; `opprettBooking`/`søkJobber`/`åpneInnboks` parkert. ⛔ Model-picker, globe, vedlegg, andre Grainient. |
 
 | Bot-lab (`apps/web/app/(app)/bot/`, F6-29, 31.08.2026) | **Ingen ny npm-pakke.** Runtime er vendorisert bloub-motor + `BloubBot`. Intern lab lever videre. Produkt-avatar er nå samme motor (se §10). |
 

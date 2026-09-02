@@ -53,10 +53,21 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/heureux/);
     expect(fab).toMatch(/data-ronny-spin/);
     expect(fab).toMatch(/data-workshop-dock/);
+    expect(fab).toMatch(/PromptInput/);
+    expect(fab).toMatch(/PromptInputTextarea/);
+    expect(fab).toMatch(/PromptInputFooter/);
+    expect(fab).toMatch(/PromptInputSubmit/);
+    expect(fab).not.toMatch(/PromptInputSelect|GlobeIcon|webSearch|model picker/);
+    expect(fab).toMatch(/ForstorIkon|MinimerIkon/);
+    expect(fab).toMatch(/data-ronny-forstor/);
+    expect(fab).toMatch(/#f5f5f7/);
+    expect(fab).toMatch(/#e0e0e0/);
+    expect(fab).toMatch(/gåTil|gaaTil|erTillattGaaTil/);
     expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
     expect(fab).toMatch(/text-white/);
     expect(fab).toMatch(/data-workshop-sticky/);
-    expect(fab).not.toMatch(/rounded-full|bg-bg\/90|ring-1/);
+    expect(fab).not.toMatch(/bg-bg\/90|ring-1 ring/);
+    expect(fab).toMatch(/rounded-full text-\[#1d1d1f\]/);
     expect(fab).not.toMatch(/Verkstedsassistent|AiDisclosure|MessageScroller/);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
     expect(fab).toMatch(/body: \{ side \}/);
@@ -88,6 +99,30 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(chat).toMatch(/pathname/);
     expect(chat).toMatch(/systemExtra/);
     expect(chat).toMatch(/skriv aldri til Quick/i);
+  });
+
+  it('workshop-agenten har gåTil, søkKunder og parkerte skriv', () => {
+    const agent = les('../../../packages/agents/src/workshop/agent.ts');
+    expect(agent).toMatch(/gåTil:/);
+    expect(agent).toMatch(/søkKunder:/);
+    expect(agent).toMatch(/opprettBooking:/);
+    expect(agent).toMatch(/søkJobber:/);
+    expect(agent).toMatch(/åpneInnboks:/);
+    expect(agent).toMatch(/status: 'kommer'/);
+    expect(agent).toMatch(/erTillattGaaTil/);
+    expect(agent).toMatch(/schema\.customers/);
+  });
+});
+
+describe('Ronny gåTil-hviteliste', () => {
+  it('slipper inn kjente stier og kunde-uuid, avviser URL-er', async () => {
+    const { erTillattGaaTil } = await import('../app/(app)/_workshop/gaa-til.ts');
+    expect(erTillattGaaTil('/kunder')).toBe(true);
+    expect(erTillattGaaTil('/endwise/innboks')).toBe(true);
+    expect(erTillattGaaTil('/kunder/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee')).toBe(true);
+    expect(erTillattGaaTil('https://evil.example/kunder')).toBe(false);
+    expect(erTillattGaaTil('//evil.example')).toBe(false);
+    expect(erTillattGaaTil('/admin')).toBe(false);
   });
 });
 

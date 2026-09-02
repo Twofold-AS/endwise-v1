@@ -9,7 +9,7 @@ import {
 import { Mail, ShieldCheck, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { authClient, signIn } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { Field, INPUT } from '../_auth/felter';
@@ -73,7 +73,7 @@ function landingFeil(steg: string | null, feil: string | null, totpKlar: boolean
   return meldingForMagicLinkFeil(feil);
 }
 
-export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totpKlar: boolean }) {
+export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
   const utils = trpc.useUtils();
   const search = useSearchParams();
   const stegQuery = search?.get('steg') ?? null;
@@ -357,25 +357,28 @@ export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totp
             ) : null}
             <div className="flex flex-col gap-2 px-1.5 pt-1 pb-1">
               {!manuell && (
-                <StatefulButton
+                <button
                   type="button"
-                  state="idle"
-                  className="w-full"
-                  icon={<Mail size={15} />}
                   onClick={() => {
                     setManuell(true);
                   }}
+                  className="inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
                 >
                   {SIGNIN_VALG_SKRIV_KODE}
-                </StatefulButton>
+                </button>
               )}
-              <button
+              <StatefulButton
                 type="button"
+                state={busy}
+                className="w-full"
+                loadingText="Sender lenke…"
+                successText="Sendt"
+                errorText="Prøv igjen"
+                icon={<Mail size={15} />}
                 onClick={() => void onSendPaNytt()}
-                className="inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
               >
                 {SIGNIN_VALG_SEND_NYTT}
-              </button>
+              </StatefulButton>
               <button
                 type="button"
                 onClick={() => void byttKonto()}
@@ -386,8 +389,6 @@ export function SignInSkjema({ demoHint, totpKlar }: { demoHint: ReactNode; totp
             </div>
           </div>
         )}
-
-        {demoHint}
       </div>
     </main>
   );

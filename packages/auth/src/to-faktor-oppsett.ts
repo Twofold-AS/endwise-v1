@@ -102,3 +102,5 @@ export const TOTP_OPPSETT_INGRESS =
 export function kanStarteTotpOppsett(harInnloggetSesjon: boolean): boolean {
   return harInnloggetSesjon === true;
 }
+
+export { norskTotpEnableFeil } from './totp-enable-feil.ts';

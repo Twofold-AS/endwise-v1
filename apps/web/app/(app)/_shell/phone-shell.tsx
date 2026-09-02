@@ -13,9 +13,8 @@ import { useSidebarState } from './sidebar-state';
 import { TilbakePil } from './tilbake-pil';
 
 /**
- * Fast toppbar på telefon og desktop (alltid synlig når overlay er lukket).
- * Logo = Hjem. Sidebar-ikon rett ved logoen (samme 16px som lukk).
- * Tilbake = history.back(), ikke hjem. Ingen dealer-boks her.
+ * Fast toppbar på telefon. Overlay-lås (logo / tilbake / åpne sidebar)
+ * er mobil. Desktop har persistent skinne — denne baren er `md:hidden`.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -33,7 +32,10 @@ export function PhoneShell() {
   const hjemHref = phoneHjemHref(shell);
 
   return (
-    <header data-phone-top-bar className={`sticky top-0 z-20 shrink-0 bg-bg ${PHONE_SAFE_TOP}`}>
+    <header
+      data-phone-top-bar
+      className={`sticky top-0 z-20 shrink-0 bg-bg md:hidden ${PHONE_SAFE_TOP}`}
+    >
       <div data-shell-header className={SHELL_HEADER_RAD}>
         <Link
           href={hjemHref as Route}

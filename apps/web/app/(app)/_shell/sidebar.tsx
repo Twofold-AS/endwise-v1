@@ -43,10 +43,9 @@ import { useSidebarState } from './sidebar-state';
 const IKON = 16;
 
 /**
- * Samme overlay-sidebar på telefon og desktop — lukket default, åpnes fra
- * toppbar-ikonet ved logoen. Ingen persistent desktop-skinne.
- * Hvit flate, ingen header-divider. Ingen avatar. Hjelp-TipCard er ute;
- * nederst sitter Grainient-oppgraderingspillen.
+ * Desktop: persistent venstre skinne (alltid synlig, innhold ved siden).
+ * Telefon: fullskjerm-overlay, lukket default, åpnes fra PhoneShell.
+ * Hvit flate. Hjelp-TipCard er ute; nederst sitter Galaxy-oppgraderingspillen.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -161,8 +160,8 @@ export function Sidebar() {
       data-phone-sidebar={phoneOpen ? 'open' : 'closed'}
       className={`flex-col border-border border-r bg-[#ffffff] ${
         phoneOpen
-          ? 'fixed inset-0 z-50 flex w-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]'
-          : 'hidden'
+          ? `fixed inset-0 z-50 flex w-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:static md:inset-auto md:z-auto ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
+          : `hidden md:flex md:static ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
       }`}
     >
       <div data-shell-header className={`shrink-0 ${SHELL_HEADER_RAD}`}>

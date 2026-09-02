@@ -112,15 +112,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    */
 
   /*
-   * Sidebaren er overlay på telefon og desktop — lukket default, åpnes fra
-   * samme toppbar-ikon ytterst til høyre. Ingen persistent desktop-skinne.
-   * Fast toppbar med 18px-logo. PhoneBevel er borte. Breadcrumb-topbar er borte.
-   * Workshop-stripen (Grainient, KI-Ronny til venstre) er ~44px på telefon og
-   * 32px på desktop. Kommandopaletten (K som globalt søk) er fjernet på eiers
-   * beslutning. K åpner nå quick actions i sidebaren i stedet. Konsekvensen er
-   * at de parkerte rutene (marked/*
-   * , admin/*) ikke lenger har en inngang i UI-et
-   * de nås kun ved å skrive URL-en. Se sesjonsrapporten.
+   * Desktop-sidebar er persistent venstre skinne. Overlay/fullskjerm-drawer
+   * er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
+   * Fast toppbar med 18px-logo på telefon. PhoneBevel er borte.
+   * Workshop-stripen (Grainient, KI-Ronny sentrert) er ~44px på telefon og
+   * 32px på desktop. K åpner quick actions i sidebaren på desktop.
    */
   /*
    * `<Suspense>` rundt Sidebar og WorkshopBloub er påkrevd, ikke pynt. Begge

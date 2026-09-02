@@ -5,6 +5,7 @@ import {
   type Role,
   requireSession,
   TwoFactorRequiredError,
+  velgAktivOrganisasjon,
 } from '@endwise/auth';
 import { createDb, type Database, eq, schema, withTenant } from '@endwise/db';
 import { createEventBus, type EventBus } from '@endwise/events';
@@ -117,7 +118,29 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
   const base = createAppContext();
   try {
     const data = await requireSession(getAuthForContext(), base.db, headers);
-    const tenantId = data.session.activeOrganizationId ?? null;
+    let tenantId = data.session.activeOrganizationId ?? null;
+    if (!tenantId) {
+      const medlemskap = await base.db
+        .select({
+          id: schema.organization.id,
+          slug: schema.organization.slug,
+          role: schema.member.role,
+        })
+        .from(schema.member)
+        .innerJoin(schema.organization, eq(schema.organization.id, schema.member.organizationId))
+        .where(eq(schema.member.userId, data.user.id));
+      tenantId = velgAktivOrganisasjon(medlemskap);
+      if (tenantId) {
+        try {
+          await base.db
+            .update(schema.session)
+            .set({ activeOrganizationId: tenantId })
+            .where(eq(schema.session.id, data.session.id));
+        } catch {
+          // Neste request velger på nytt. Sidene lastes likevel med tenantId.
+        }
+      }
+    }
     if (!tenantId) return { ...base, userId: data.user.id };
     try {
       const role = await assertMember(base.db, data.user.id, tenantId);
@@ -127,7 +150,8 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
       return { ...base, userId: data.user.id };
     }
   } catch (error) {
-    if (error instanceof TwoFactorRequiredError) throw error;
+    // TOTP er valgfri. TWO_FACTOR_REQUIRED tømmer ikke tRPC/REST.
+    if (error instanceof TwoFactorRequiredError) return base;
     return base;
   }
 }

@@ -1,3 +1,4 @@
+export * from './aktiv-org.ts';
 export * from './auth.ts';
 export { authPublicUrl, authTrustedOrigins, PRODUKT_ORIGINS } from './auth-origins.ts';
 export { ENROLL_COOKIE_MAX_AGE, ENROLL_COOKIE_NAME } from './enroll.ts';

@@ -91,10 +91,11 @@ describe('TipCard er ute av sidebaren — OppgraderPille sitter der', () => {
   const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
   const pille = utenKommentarer(les('../app/(app)/_shell/oppgrader-pille.tsx'));
 
-  it('sidebar monterer Grainient-oppgraderingspille, ikke Hjelp-TipCard', () => {
+  it('sidebar monterer Galaxy-oppgraderingspille, ikke Hjelp-TipCard', () => {
     expect(sidebar).toMatch(/OppgraderPille/);
     expect(sidebar).not.toMatch(/<TipCard/);
-    expect(pille).toMatch(/Grainient/);
+    expect(pille).toMatch(/<Galaxy/);
+    expect(pille).not.toMatch(/Grainient/);
     expect(pille).toMatch(/oppgraderKnappetekst/);
     expect(pille).toMatch(/organisasjon\?seksjon=abonnement/);
     expect(pille).not.toMatch(/ShaderGradient/);

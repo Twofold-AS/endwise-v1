@@ -163,7 +163,10 @@ export function createByttPassordEtterHook(db?: Database) {
   return merket(
     createAuthMiddleware(async (ctx) => {
       if (!KREDENTIAL_STIER.has(ctx.path)) return;
-      if (erSkjultAuthFeilkode(feilkodeFraReturned(ctx.context.returned))) {
+      if (
+        ctx.path === BYTT_PASSORD_STI &&
+        erSkjultAuthFeilkode(feilkodeFraReturned(ctx.context.returned))
+      ) {
         throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
       }
       if (isAPIError(ctx.context.returned)) return;

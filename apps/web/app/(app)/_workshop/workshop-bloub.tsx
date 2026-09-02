@@ -40,7 +40,7 @@ function useRonnyIdle(aktiv: boolean): (typeof RONNY_IDLE)[number] {
 
 /**
  * Grainient-stripe: telefon ~44px, desktop 32px.
- * Statisk «La KI-Ronny ta styringen» + hvit Ronny ytterst til venstre, uten sirkel.
+ * Statisk «La KI-Ronny ta styringen» + hvit Ronny, midtstilt i stripen (PC og telefon).
  * Idle: 6 vendor-uttrykk hvert 5. sekund. Klikk: surpris + rotateY-spinn, deretter bunndock.
  * Ingen tekst-blink. Ingen vertikal flip.
  */
@@ -189,7 +189,7 @@ export function WorkshopBloub() {
         </div>
       ) : null}
 
-      <div className="relative z-10 flex h-full items-center gap-2 px-3">
+      <div className="relative z-10 flex h-full w-full items-center justify-center gap-2 px-3">
         <button
           type="button"
           onClick={onRonny}
@@ -214,7 +214,7 @@ export function WorkshopBloub() {
             />
           </span>
         </button>
-        <p className="min-w-0 flex-1 truncate text-label text-white">La KI-Ronny ta styringen</p>
+        <p className="min-w-0 truncate text-label text-white">La KI-Ronny ta styringen</p>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import {
   kanFullforeKoder,
   kanStarteTotpOppsett,
   koderSomTekstfil,
+  norskTotpEnableFeil,
   plukkBackupKoder,
   plukkTotpUri,
   secretFraTotpUri,
@@ -73,9 +74,12 @@ export default function ToFaktorOppsettPage() {
     try {
       const res = await authClient.twoFactor.enable({});
       if (res.error && !/already/i.test(res.error.message ?? '')) {
-        const msg = res.error.message ?? '';
-        const utenSesjon = res.error.status === 401 || /unauthorized|session|forbidden/i.test(msg);
-        setFeil(utenSesjon ? MAGIC_LINK_ENROLL_UTEN_SESJON : msg || 'Kunne ikke starte oppsettet.');
+        setFeil(
+          norskTotpEnableFeil({
+            code: res.error.code,
+            message: res.error.message,
+          }),
+        );
         setBusy('error');
         startet.current = false;
         return;
@@ -93,7 +97,7 @@ export default function ToFaktorOppsettPage() {
       setBusy('idle');
       setSteg('kode');
     } catch (error) {
-      setFeil((error as Error).message);
+      setFeil(norskTotpEnableFeil({ message: (error as Error).message }));
       setBusy('error');
       startet.current = false;
     }
@@ -106,7 +110,12 @@ export default function ToFaktorOppsettPage() {
     try {
       const res = await authClient.twoFactor.verifyTotp({ code: kode.trim() });
       if (res.error) {
-        setFeil(res.error.message ?? 'Feil kode.');
+        setFeil(
+          norskTotpEnableFeil({
+            code: res.error.code,
+            message: res.error.message ?? 'Feil kode.',
+          }),
+        );
         setBusy('error');
         setKode('');
         codeRef.current?.focus();
@@ -197,7 +206,7 @@ export default function ToFaktorOppsettPage() {
         {steg === 'app' ? (
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
             <div className="rounded-lg bg-inset p-4 text-[12px] text-fg-muted leading-relaxed">
-              Vi lager en hemmelighet til Google Authenticator, 1Password eller tilsvarende. Ingen
+              Vi lager en hemmelighet til Microsoft Authenticator eller Google Authenticator. Ingen
               passord. Bind appen før du skriver koden.
             </div>
             {feil ? <p className="px-4 text-[12px] text-danger">{feil}</p> : null}

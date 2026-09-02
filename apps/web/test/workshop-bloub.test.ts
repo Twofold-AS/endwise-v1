@@ -74,6 +74,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(css).not.toMatch(/rotateX/);
     expect(css).toMatch(/rotateY\(360deg\)/);
     expect(css).toMatch(/ronny-spin/);
+    expect(fab).toMatch(/justify-center/);
     expect(fab).toMatch(/data-workshop-sticky[\s\S]*La KI-Ronny ta styringen/);
   });
 

@@ -16,7 +16,7 @@ import { type ShellKey, settingsForShell } from './nav';
 
 /**
  * Telefon-hjem-kort (Mikael 29.08.2026) er sideinnhold, ikke meny.
- * Meny er samme sidebar som desktop (fullskjerm-overlay, 01.09.2026).
+ * Meny: desktop = persistent skinne. Telefon = fullskjerm-overlay.
  */
 
 /** Rot: #84 dvh/overscroll + #85 min-h-svh. Safe-area sitter på toppbar og overlay. */

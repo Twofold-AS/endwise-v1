@@ -26,7 +26,7 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
   it('telefon-toppbar er fast, logo til venstre, åpne-ikon rett ved logoen', () => {
     expect(shell).toMatch(/data-phone-top-bar/);
     expect(shell).toMatch(/sticky top-0/);
-    expect(shell).not.toMatch(/md:hidden/);
+    expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
     expect(shell).toMatch(/TilbakePil|data-shell-tilbake/);
@@ -56,9 +56,10 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(sidebar).toMatch(/data-phone-sidebar=\{phoneOpen \? 'open' : 'closed'\}/);
     expect(sidebar).toMatch(/fixed inset-0 z-50 flex w-full/);
     expect(sidebar).toMatch(/phoneOpen[\s\S]*hidden/);
-    expect(sidebar).not.toMatch(/md:flex/);
-    expect(sidebar).not.toMatch(/md:static/);
-    expect(sidebar).not.toMatch(/md:w-\[248px\]/);
+    expect(sidebar).toMatch(/md:flex/);
+    expect(sidebar).toMatch(/md:static/);
+    expect(sidebar).toMatch(/md:w-\[248px\]/);
+    expect(shell).toMatch(/md:hidden/);
     expect(sidebar).toMatch(/bg-\[#ffffff\]/);
     expect(sidebar).toMatch(/OppgraderPille/);
     expect(sidebar).not.toMatch(/<TipCard/);

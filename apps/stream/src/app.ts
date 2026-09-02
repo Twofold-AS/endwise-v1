@@ -1,4 +1,10 @@
-import { assertMember, createAuth, requireSession } from '@endwise/auth';
+import {
+  assertMember,
+  createAuth,
+  requireSession,
+  SessionExpiredError,
+  TwoFactorRequiredError,
+} from '@endwise/auth';
 import { createDb } from '@endwise/db';
 import {
   ConnectionCapError,
@@ -38,13 +44,20 @@ export function createStreamApp(options: { databaseUrl: string; listenUrl?: stri
 
   app.get('/sse', async (c) => {
     // 1. Hvem er du?
-    // `.catch( => null)` slår sammen alle avvisningsgrunner til 401
-    // utløpt sesjon og manglende 2FA (F1-11) ser like ut her. Det er greit for
-    // en SSE-kanal: klienten skal uansett bare koble ned og sende brukeren til
-    // innlogging. Den detaljerte feilkoden gis av tRPC-laget (`init.ts`), som er
-    // der UI-et faktisk kan gjøre noe med den.
-    const session = await requireSession(auth, db, c.req.raw.headers).catch(() => null);
-    if (!session) return c.json({ error: 'Ikke innlogget' }, 401);
+    // Bare utløpt sesjon er 401. TOTP er valgfri — TwoFactorRequiredError
+    // tømmer ikke SSE (og kastes ikke fra requireSession lenger).
+    let session: Awaited<ReturnType<typeof requireSession>>;
+    try {
+      session = await requireSession(auth, db, c.req.raw.headers);
+    } catch (error) {
+      if (error instanceof SessionExpiredError) {
+        return c.json({ error: 'Ikke innlogget' }, 401);
+      }
+      if (error instanceof TwoFactorRequiredError) {
+        return c.json({ error: 'Ikke innlogget' }, 401);
+      }
+      throw error;
+    }
 
     const tenantId = c.req.query('tenantId') ?? session.session.activeOrganizationId;
     if (!tenantId) return c.json({ error: 'Ingen tenant' }, 400);

@@ -75,6 +75,7 @@ export {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './components/dropdown-menu.tsx';
+export { Galaxy, type GalaxyProps } from './components/galaxy.tsx';
 export { Grainient, type GrainientProps } from './components/grainient.tsx';
 // shadcn/ui — chat (ui-pakker §9). Hentet.
 export {

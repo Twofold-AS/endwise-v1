@@ -81,6 +81,16 @@ export function assertTwoFactorSatisfied(_input: {
 }
 
 /**
+ * `session.me.twoFactorRequired` — sidene skal lastes uten godkjent 2FA.
+ * Bundet TOTP ble allerede krevd ved magic-link-verify.
+ */
+export function sessionMeTwoFactorRequired(_input?: {
+  twoFactorEnabled?: boolean | null;
+}): boolean {
+  return false;
+}
+
+/**
  * Samme avgjørelse, men henter rollene selv.
  * Ser på alle medlemskap, ikke bare den aktive forhandleren. En bruker som
  * er `customer` hos A og `dealer_admin` hos B skal ikke kunne logge inn uten

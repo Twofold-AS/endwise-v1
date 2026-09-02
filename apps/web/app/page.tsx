@@ -149,6 +149,13 @@ export default function BasePage() {
         return;
       }
 
+      // Magic-link-verify lander her, ikke i finishSignIn. Sett aktiv org
+      // (Endwise-plattform først) før session.me — ellers UNAUTHORIZED → /dashboard.
+      const orgs = await authClient.organization.list().catch(() => ({ data: null }));
+      const platform = orgs.data?.find((o) => o.slug === 'endwise');
+      const first = platform ?? orgs.data?.[0];
+      if (first) await authClient.organization.setActive({ organizationId: first.id });
+
       // `landing` avhenger av jobbfunksjon og mekanikerprofil — ting klienten
       // ikke kjenner sikkert. Regelen bor på serveren, og bare der.
       // TOTP er valgfri. TWO_FACTOR_REQUIRED tvinger ikke /2fa-oppsett.

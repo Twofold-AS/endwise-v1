@@ -297,14 +297,14 @@ describe('mekaniker phone home — Dine jobber, ikke Min dag', () => {
   });
 });
 
-describe('desktop sidebar er overlay som telefon', () => {
-  it('sidebar er overlay på telefon og desktop, samme innhold', () => {
+describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
+  it('sidebar er overlay på telefon og fast skinne på md+', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     expect(sidebar).toMatch(/data-phone-sidebar/);
     expect(sidebar).toMatch(/fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
-    expect(sidebar).not.toMatch(/md:flex/);
-    expect(sidebar).not.toMatch(/md:w-\[248px\]/);
+    expect(sidebar).toMatch(/md:flex/);
+    expect(sidebar).toMatch(/md:w-\[248px\]/);
     expect(sidebar).toMatch(/phoneOpen/);
     expect(sidebar).toMatch(/Handlinger/);
     expect(sidebar).toMatch(/BrukerRad/);

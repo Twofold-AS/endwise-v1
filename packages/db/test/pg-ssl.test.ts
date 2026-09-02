@@ -88,6 +88,24 @@ describe('pgConnectionConfig (F13-01 Scaleway TLS)', () => {
       rejectUnauthorized: false,
     });
   });
+
+  it('Scaleway public :19800 får samme TLS-workaround som :5432', () => {
+    const config = pgConnectionConfig(
+      'postgresql://endwise:hemmelig@203.0.113.10:19800/endwise?sslmode=require',
+    );
+    expect(config.ssl).toEqual({ rejectUnauthorized: false });
+    expect(config).toHaveProperty('ssl');
+    expect(resolvedSsl(config.connectionString)).toEqual({ rejectUnauthorized: false });
+  });
+
+  it('PgBouncer :6432: ingen ssl-nøkkel (klient-TLS av; server_tls bare mot Postgres)', () => {
+    const url = 'postgresql://endwise_app:hemmelig@203.0.113.52:6432/endwise?sslmode=require';
+    const config = pgConnectionConfig(url);
+    expect(config).not.toHaveProperty('ssl');
+    expect(config.ssl).toBeUndefined();
+    expect(config.connectionString).not.toMatch(/sslmode=/i);
+    expect(resolvedSsl(url)).toBeFalsy();
+  });
 });
 
 describe('pgPoolConfig (Vercel / delt Postgres)', () => {
@@ -112,5 +130,15 @@ describe('pgPoolConfig (Vercel / delt Postgres)', () => {
     expect(pool.max).toBe(5);
     expect(pool).not.toHaveProperty('ssl');
     expect(pool.connectionString).toBe('postgresql://endwise:endwise@localhost:5432/endwise');
+  });
+
+  it('PgBouncer :6432: remote pool (max 1), uten ssl-objekt', () => {
+    const pool = pgPoolConfig(
+      'postgresql://endwise_app:hemmelig@203.0.113.52:6432/endwise?sslmode=require',
+    );
+    expect(pool.max).toBe(1);
+    expect(pool).not.toHaveProperty('ssl');
+    expect(pool.ssl).toBeUndefined();
+    expect(pool.connectionString).not.toMatch(/sslmode=/i);
   });
 });

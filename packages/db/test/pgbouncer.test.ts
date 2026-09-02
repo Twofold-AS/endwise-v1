@@ -151,6 +151,8 @@ describe('PgBouncer-container (infra/pgbouncer)', () => {
     expect(note).toMatch(/5432/);
     expect(note).toMatch(/19800/);
     expect(note).toMatch(/Klient-TLS|klient-TLS|client.?tls/i);
+    expect(note).toMatch(/max:\s*5/);
+    expect(note).toMatch(/max:\s*1/);
     expect(note).toMatch(/min_scale\s*=\s*1/);
     expect(note).toMatch(/ikke.*Serverless SQL|Serverless SQL.*ikke/i);
     expect(note).not.toMatch(/neon\.tech/i);

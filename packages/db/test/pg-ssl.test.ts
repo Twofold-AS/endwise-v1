@@ -132,11 +132,21 @@ describe('pgPoolConfig (Vercel / delt Postgres)', () => {
     expect(pool.connectionString).toBe('postgresql://endwise:endwise@localhost:5432/endwise');
   });
 
-  it('PgBouncer :6432: remote pool (max 1), uten ssl-objekt', () => {
+  it('direkte Managed Postgres :19800: remote pool max 1 (ikke pooler)', () => {
+    const pool = pgPoolConfig(
+      'postgresql://endwise_app:hemmelig@203.0.113.10:19800/endwise?sslmode=require',
+    );
+    expect(pool.max).toBe(1);
+    expect(pool.ssl).toEqual({ rejectUnauthorized: false });
+  });
+
+  it('PgBouncer :6432: remote pool max 5 (transaction-pooler), uten ssl-objekt', () => {
     const pool = pgPoolConfig(
       'postgresql://endwise_app:hemmelig@203.0.113.52:6432/endwise?sslmode=require',
     );
-    expect(pool.max).toBe(1);
+    expect(pool.max).toBe(5);
+    expect(pool.max).toBeGreaterThan(1);
+    expect(pool.max).toBeLessThanOrEqual(5);
     expect(pool).not.toHaveProperty('ssl');
     expect(pool.ssl).toBeUndefined();
     expect(pool.connectionString).not.toMatch(/sslmode=/i);

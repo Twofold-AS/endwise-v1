@@ -86,6 +86,15 @@ describe('Bug B: pakkebytte bekreftes og oppfrisker forhandleren', () => {
     expect(live).not.toMatch(/helpdesk/);
   });
 
+  it('poller ikke stream.since / stream.head uten sesjon (401 uten DB-runde)', () => {
+    const sync = utenKommentarer(les('../app/(app)/_lib/live-sync.tsx'));
+    expect(sync).toMatch(/useSession/);
+    expect(sync).toMatch(/const harSesjon = Boolean\(session\?\.user\)/);
+    expect(sync).toMatch(/useEventStream\(apply,\s*harSesjon\)/);
+    expect(sync).toMatch(/stream\.head\.useQuery\([\s\S]*enabled:\s*harSesjon/);
+    expect(sync).toMatch(/stream\.since\.useQuery\([\s\S]*enabled:\s*harSesjon && cursor != null/);
+  });
+
   it('Oppsett-lenke vises bare for aktive tillegg — ikke etter nedgradering', () => {
     const side = utenKommentarer(les('../app/(app)/integrasjoner/_innhold.tsx'));
     expect(side).toMatch(/post\.aktiv/);

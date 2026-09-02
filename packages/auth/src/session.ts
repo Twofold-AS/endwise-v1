@@ -11,6 +11,18 @@ export class SessionExpiredError extends Error {
 }
 
 /**
+ * Better-Auth-sesjonskake (`cookiePrefix: 'endwise'`).
+ * Prod (`useSecureCookies`): `__Secure-endwise.session_token`.
+ * Dev: `endwise.session_token`. Ingen kake = ingen sesjon — hopp over
+ * `getSession`/DB. Produktregler (idle, absolut, 2FA) gjelder når kaken finnes.
+ */
+const SESJON_KAKE = /(?:^|;\s*)(?:__Secure-)?endwise\.session_token=/;
+
+export function harSesjonsCookie(headers: Headers): boolean {
+  return SESJON_KAKE.test(headers.get('cookie') ?? '');
+}
+
+/**
  * F1-12 + F1-11 — Serverside sesjonssjekk. Alle beskyttede flater går gjennom
  * denne.
  * Tre grenser, og de feiler ulikt:

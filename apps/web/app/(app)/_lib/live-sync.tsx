@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import {
   LAST_EVENT_STORAGE_KEY,
@@ -18,7 +19,9 @@ import { useEventStream } from './use-event-stream';
  * lista ikke invalidert; sto hen et annet sted, ble verken tråd eller liste
  * oppdatert. Pakkebytte publiserte ingenting. ÉN lytter i shellet fikser begge.
  * SSE er den raske veien. Poll mot `stream.since` er reserven (F13-03) hvis
- * strømmen er nede eller rewriten buffer.
+ * strømmen er nede eller rewriten buffer. Uten sesjon: ingen poll og ingen
+ * SSE — uinnlogget app-shell (eller leftover sessionStorage-cursor) skal
+ * ikke treffe `protectedProcedure` hvert 8. sekund.
  */
 function invalidateFamily(
   utils: ReturnType<typeof trpc.useUtils>,
@@ -51,6 +54,8 @@ function lagretCursor(): number | null {
 
 export function LiveSync({ children }: { children: ReactNode }) {
   const utils = trpc.useUtils();
+  const { data: session } = useSession();
+  const harSesjon = Boolean(session?.user);
   const lyd = useLyd();
   const sett = useRef(new Set<string>());
   const sistLyd = useRef(0);
@@ -103,9 +108,10 @@ export function LiveSync({ children }: { children: ReactNode }) {
     [utils, lyd],
   );
 
-  const status = useEventStream(apply);
+  const status = useEventStream(apply, harSesjon);
 
   const head = trpc.stream.head.useQuery(undefined, {
+    enabled: harSesjon,
     retry: false,
     staleTime: 30_000,
   });
@@ -133,7 +139,7 @@ export function LiveSync({ children }: { children: ReactNode }) {
   const poll = trpc.stream.since.useQuery(
     { lastEventId: cursor ?? 0 },
     {
-      enabled: cursor != null,
+      enabled: harSesjon && cursor != null,
       refetchInterval: status === 'live' ? LIVE_POLL_MS.live : LIVE_POLL_MS.fallback,
       retry: false,
     },

@@ -10,7 +10,7 @@ import {
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
 import { useInboxFilter } from '../_shell/inbox-filter';
@@ -45,7 +45,9 @@ export function InboxSidebar() {
   const aktivId = params?.id;
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, sortering, setSortering, skjulte, skjul } = useInboxFilter();
+  const { part, sortering, setSortering, skjulte, skjul, skjulFlere } = useInboxFilter();
+  const [velgModus, setVelgModus] = useState(false);
+  const [valgte, setValgte] = useState<ReadonlySet<string>>(() => new Set());
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -186,38 +188,16 @@ export function InboxSidebar() {
       }`}
     >
       {/**
-       * To linjer, ingen divider, ingen horisontal slider.
-       * 1) Ny melding som ikon + visningsvalg + slett
-       * 2) Sortering
+       * Mikael 02.09: én verktøylinje — Nyeste, Eldste, slett, ny chat, velg kort.
+       * Telefon kan wrappe, men alt sitter i samme stripe (z-20, min 44px).
        */}
-      <div className="flex shrink-0 flex-col gap-1.5 px-3 py-1.5">
+      <div className="relative z-20 flex shrink-0 flex-col overflow-visible px-3 py-1.5">
         <h2 className="sr-only">Samtaler</h2>
-        <div className="flex flex-wrap items-center gap-1.5" role="toolbar" aria-label="Innboks">
-          <Link
-            href={'/innboks?ny=1' as Route}
-            aria-label="Ny melding"
-            title="Ny melding"
-            className="inline-flex size-8 items-center justify-center rounded-control text-fg hover:bg-surface-2"
-          >
-            <NyMeldingIkon size={16} />
-          </Link>
-          <button
-            type="button"
-            aria-label="Slett valgt samtale"
-            title="Slett valgt samtale"
-            disabled={!aktivId}
-            className="inline-flex size-8 items-center justify-center rounded-control text-fg hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
-            onClick={() => {
-              if (aktivId) skjul(aktivId);
-            }}
-          >
-            <Trash2 size={16} strokeWidth={1.75} />
-          </button>
-        </div>
         <div
-          className="flex flex-wrap items-center gap-1.5"
+          data-innboks-verktoy
+          className="relative z-20 flex flex-wrap items-center gap-1.5 overflow-visible"
           role="toolbar"
-          aria-label="Sorter samtaler"
+          aria-label="Innboks"
         >
           {(
             [
@@ -230,13 +210,51 @@ export function InboxSidebar() {
               type="button"
               onClick={() => setSortering(key)}
               aria-pressed={sortering === key}
-              className={`inline-flex h-control items-center rounded-control px-2.5 text-label transition-colors ${
+              className={`inline-flex min-h-11 items-center rounded-control px-2.5 text-label transition-colors md:h-control md:min-h-control ${
                 sortering === key ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
               }`}
             >
               {label}
             </button>
           ))}
+          <button
+            type="button"
+            aria-label="Slett valgt samtale"
+            title="Slett valgt samtale"
+            disabled={velgModus ? valgte.size === 0 : !aktivId}
+            className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-danger hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={() => {
+              if (velgModus) {
+                skjulFlere([...valgte]);
+                setValgte(new Set());
+                return;
+              }
+              if (aktivId) skjul(aktivId);
+            }}
+          >
+            <Trash2 size={16} strokeWidth={1.75} />
+          </button>
+          <Link
+            href={'/innboks?ny=1' as Route}
+            aria-label="Ny melding"
+            title="Ny melding"
+            className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-fg hover:bg-surface-2"
+          >
+            <NyMeldingIkon size={16} />
+          </Link>
+          <button
+            type="button"
+            aria-pressed={velgModus}
+            onClick={() => {
+              setVelgModus((v) => !v);
+              setValgte(new Set());
+            }}
+            className={`inline-flex min-h-11 items-center rounded-control px-2.5 text-label ${
+              velgModus ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+            }`}
+          >
+            Velg kort
+          </button>
         </div>
       </div>
 
@@ -263,11 +281,38 @@ export function InboxSidebar() {
             )}
           </div>
         ) : (
-          rader.map((t) => (
-            <Link key={t.id} href={`/innboks/${t.id}` as Route} className="block">
-              <SamtaleKort rad={t} aktiv={t.id === aktivId} />
-            </Link>
-          ))
+          rader.map((t) =>
+            velgModus ? (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={valgte.has(t.id)}
+                onClick={() => {
+                  setValgte((forrige) => {
+                    const neste = new Set(forrige);
+                    if (neste.has(t.id)) neste.delete(t.id);
+                    else neste.add(t.id);
+                    return neste;
+                  });
+                }}
+                className="flex w-full items-start gap-2 text-left"
+              >
+                <span
+                  aria-hidden
+                  className={`mt-3 size-4 shrink-0 rounded-sm border ${
+                    valgte.has(t.id) ? 'border-fg bg-fg' : 'border-border bg-bg'
+                  }`}
+                />
+                <span className="min-w-0 flex-1">
+                  <SamtaleKort rad={t} aktiv={valgte.has(t.id)} />
+                </span>
+              </button>
+            ) : (
+              <Link key={t.id} href={`/innboks/${t.id}` as Route} className="block">
+                <SamtaleKort rad={t} aktiv={t.id === aktivId} />
+              </Link>
+            ),
+          )
         )}
       </div>
     </aside>

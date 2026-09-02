@@ -1,12 +1,15 @@
 'use client';
 
+import { Trash2 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useOrgRole } from '../_lib/use-org-role';
+import { InviterAnsatt } from '../innboks/_inviter-ansatt';
 import { type InboxPart, useInboxFilter } from './inbox-filter';
 import { shellForBruker } from './nav';
 import { destinasjonFaner } from './seksjon-faner';
+import { erInnboksTrad, innboksTradId } from './seksjon-sti';
 
 /**
  * Top-bar 2 under Ronny på ALLE destinasjoner (Jonas 28.08 / Mikael 02.09).
@@ -18,16 +21,48 @@ const PILLE_KLASSE =
 
 export function DestinasjonSeksjonBar() {
   const pathname = usePathname() ?? '';
+  const router = useRouter();
   const searchParams = useSearchParams();
   const search = searchParams?.toString() ?? '';
   const { role, jobbfunksjon, isMechanic, erPlattform, shopEnabled } = useOrgRole();
-  const { part, setPart } = useInboxFilter();
+  const { part, setPart, skjul } = useInboxFilter();
   const shell = shellForBruker({
     role,
     jobFunction: jobbfunksjon,
     isMechanic,
     erPlattform,
   });
+  const tradId = innboksTradId(pathname);
+  if (erInnboksTrad(pathname) && tradId) {
+    return (
+      <nav
+        data-destinasjon-bar
+        data-trad-chrome
+        aria-label="Tråd"
+        className="relative z-20 flex flex-wrap items-center gap-2 overflow-visible border-border border-b bg-surface-2/80 px-3 py-1.5 md:h-control md:min-h-control md:flex-nowrap md:gap-8 md:px-4 md:py-0"
+      >
+        <Link
+          href={'/innboks' as Route}
+          className="inline-flex min-h-11 shrink-0 items-center rounded-control px-2.5 text-label text-fg hover:bg-surface-2 md:h-control md:min-h-control"
+        >
+          Tilbake
+        </Link>
+        <button
+          type="button"
+          aria-label="Slett samtale"
+          title="Slett samtale"
+          onClick={() => {
+            skjul(tradId);
+            router.push('/innboks' as Route);
+          }}
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-control text-danger hover:bg-surface-2 md:h-control md:min-h-control"
+        >
+          <Trash2 size={16} strokeWidth={1.75} />
+        </button>
+        <InviterAnsatt threadId={tradId} />
+      </nav>
+    );
+  }
   const faner = destinasjonFaner({
     pathname,
     search,

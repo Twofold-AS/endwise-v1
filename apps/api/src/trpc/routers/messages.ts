@@ -1,4 +1,5 @@
 import { sendInboxMessage } from '@endwise/auth';
+import { and, eq, inArray, schema } from '@endwise/db';
 import {
   createMessagesModule,
   erKjentKundeKontakt,
@@ -6,6 +7,7 @@ import {
   PlatformSupportInvalidTenantError,
   PlatformSupportNoDealerAdminError,
   PlatformSupportNotFoundError,
+  TomInvitasjonError,
   UkjentInnboksMottakerError,
   type UtgaaendeEpost,
 } from '@endwise/modules/messages';
@@ -46,6 +48,9 @@ function toTRPCError(error: unknown): never {
     throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
   }
   if (error instanceof UkjentInnboksMottakerError) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
+  }
+  if (error instanceof TomInvitasjonError) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
   }
   throw error;
@@ -223,6 +228,51 @@ export const messagesRouter = router({
           authorId: ctx.userId,
           subject: input.subject,
           body: input.body,
+        });
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
+
+  /**
+   * Mikael 02.09: FORK ny gruppesamtale. Gammel tråd og medlemsliste
+   * står. Ingen e-post. Inviterte må allerede være tenant-ansatte.
+   */
+  forkThread: protectedProcedure
+    .input(
+      z.object({
+        threadId: z.uuid(),
+        inviteeIds: z.array(z.string().min(1)).min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const unike = [...new Set(input.inviteeIds.filter((id) => id !== ctx.userId))];
+      if (unike.length === 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Velg minst én ansatt å invitere.',
+        });
+      }
+      const medlemmer = await ctx.db
+        .select({ userId: schema.member.userId, navn: schema.user.name })
+        .from(schema.member)
+        .innerJoin(schema.user, eq(schema.user.id, schema.member.userId))
+        .where(
+          and(eq(schema.member.organizationId, ctx.tenantId), inArray(schema.member.userId, unike)),
+        );
+      if (medlemmer.length !== unike.length) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare ansatte i forhandleren kan inviteres.',
+        });
+      }
+      try {
+        return await meldinger(ctx.db).forkThread({
+          tenantId: ctx.tenantId,
+          threadId: input.threadId,
+          callerId: ctx.userId,
+          inviteeIds: unike,
+          inviteeNames: medlemmer.map((m) => m.navn?.trim() || 'Ansatt'),
         });
       } catch (error) {
         return toTRPCError(error);

@@ -15,6 +15,7 @@ const InboxFilterContext = createContext<{
   setSortering: (s: InboxSortering) => void;
   skjulte: ReadonlySet<string>;
   skjul: (id: string) => void;
+  skjulFlere: (ider: string[]) => void;
 } | null>(null);
 
 export function InboxFilterProvider({ children }: { children: ReactNode }) {
@@ -24,8 +25,14 @@ export function InboxFilterProvider({ children }: { children: ReactNode }) {
   function skjul(id: string) {
     setSkjulte((forrige) => new Set([...forrige, id]));
   }
+  function skjulFlere(ider: string[]) {
+    if (ider.length === 0) return;
+    setSkjulte((forrige) => new Set([...forrige, ...ider]));
+  }
   return (
-    <InboxFilterContext.Provider value={{ part, setPart, sortering, setSortering, skjulte, skjul }}>
+    <InboxFilterContext.Provider
+      value={{ part, setPart, sortering, setSortering, skjulte, skjul, skjulFlere }}
+    >
       {children}
     </InboxFilterContext.Provider>
   );

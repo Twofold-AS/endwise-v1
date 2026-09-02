@@ -136,6 +136,30 @@ export class PlatformSupportNoDealerAdminError extends Error {
   }
 }
 
+/** Inviter ansatt uten valgte ansatte. */
+export class TomInvitasjonError extends Error {
+  readonly code = 'EMPTY_INVITE';
+  constructor() {
+    super('Velg minst én ansatt å invitere.');
+  }
+}
+
+/** Systemlinje i den gamle tråden når en gruppe forkes ut. */
+export function forkSystemMelding(input: {
+  inviteeNames: string[];
+  newSubject: string | null;
+}): string {
+  const hvem =
+    input.inviteeNames
+      .map((n) => n.trim())
+      .filter(Boolean)
+      .join(', ') || 'flere ansatte';
+  const trad = input.newSubject?.trim();
+  return trad
+    ? `Samtalen ble utvidet med ${hvem}. Fortsett i «${trad}».`
+    : `Samtalen ble utvidet med ${hvem}. Fortsett i den nye gruppesamtalen.`;
+}
+
 /**
  * Meldings-modulen.
  * To lag med tilgangskontroll, og de fanger to ulike feil:
@@ -620,6 +644,74 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             target: [schema.threadParticipants.threadId, schema.threadParticipants.participantId],
           }),
       );
+    },
+
+    /**
+     * Mikael 02.09: Inviter ansatt FORKER en ny gruppesamtale.
+     * Gammel tråd og medlemsliste står urørt. Ny tråd kopierer kontekst
+     * (kind / subject / channel / externalRef / opprinnelige deltakere)
+     * pluss de inviterte. Ingen e-post.
+     */
+    async forkThread(input: {
+      tenantId: string;
+      threadId: string;
+      callerId: string;
+      inviteeIds: string[];
+      inviteeNames: string[];
+    }) {
+      const invitees = [...new Set(input.inviteeIds.filter((id) => id && id !== input.callerId))];
+      if (invitees.length === 0) throw new TomInvitasjonError();
+
+      return withTenant(db, input.tenantId, async (tx) => {
+        const [traad] = await tx
+          .select()
+          .from(schema.threads)
+          .where(eq(schema.threads.id, input.threadId));
+        if (!traad) throw new Error('Fant ikke tråden');
+        await assertParticipant(tx, input.threadId, input.callerId);
+
+        const gamle = await tx
+          .select({ id: schema.threadParticipants.participantId })
+          .from(schema.threadParticipants)
+          .where(eq(schema.threadParticipants.threadId, input.threadId));
+        const nyeIder = [...new Set([...gamle.map((g) => g.id), ...invitees, input.callerId])];
+
+        const [ny] = await tx
+          .insert(schema.threads)
+          .values({
+            tenantId: input.tenantId,
+            kind: traad.kind,
+            subject: traad.subject,
+            channel: traad.channel,
+            externalRef: traad.externalRef,
+          })
+          .returning();
+        if (!ny) throw new Error('Tråden ble ikke opprettet');
+
+        await tx.insert(schema.threadParticipants).values(
+          nyeIder.map((participantId) => ({
+            tenantId: input.tenantId,
+            threadId: ny.id,
+            participantId,
+          })),
+        );
+
+        await tx.insert(schema.messages).values({
+          tenantId: input.tenantId,
+          threadId: input.threadId,
+          authorId: input.callerId,
+          body: forkSystemMelding({
+            inviteeNames: input.inviteeNames,
+            newSubject: ny.subject,
+          }),
+        });
+        await tx
+          .update(schema.threads)
+          .set({ lastMessageAt: new Date() })
+          .where(eq(schema.threads.id, input.threadId));
+
+        return ny;
+      });
     },
 
     /**

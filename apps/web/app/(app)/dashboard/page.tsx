@@ -7,8 +7,8 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { sammeOsloDag } from '../_lib/oslo-dag';
+import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
-import { ForhandlerInfoKort } from '../_shell/forhandler-info-kort';
 import { PhoneHomeDealer } from '../_shell/phone-home-dealer';
 import { fmtServices, fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
 import { AnsattePaJobb } from './_ansatte-pa-jobb';
@@ -58,9 +58,12 @@ export default function VerkstedetPage() {
 }
 
 function VerkstedetDesktop() {
+  const { tenantName } = useOrgRole();
+  const kort = trpc.forhandler.kort.useQuery();
   const bookings = trpc.bookings.list.useQuery({ limit: 100 });
   const mechanics = trpc.mechanics.list.useQuery();
   const oversikt = trpc.mechanics.oversikt.useQuery();
+  const forhandlernavn = tenantName?.trim() || kort.data?.name?.trim() || 'Forhandleren';
 
   const { idag, paagaar, ferdigIdag, rader } = useMemo(() => {
     const alle = bookings.data ?? [];
@@ -87,16 +90,24 @@ function VerkstedetDesktop() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
-      <ForhandlerInfoKort />
       {/*
-       * Breadcrumben sier «Verkstedet» — h1 er skjult for øyet, beholdt for
-       * skjermlesere og dokumentstruktur.
+       * Mikael 02.09: synlig hero-tittel er forhandlernavn.
+       * «Verkstedet» / «Her er dagen din» beholdes skjult.
        */}
-      <div>
-        <h1 className="sr-only">Verkstedet</h1>
-        <p className="text-title text-fg">Her er dagen din, sjef 👋</p>
-        <p className="text-body text-fg-muted">Alt under er hentet fra dine egne saker.</p>
+      <div className="sr-only">
+        <h1>Verkstedet</h1>
+        <p>Her er dagen din, sjef 👋</p>
+        <p>Alt under er hentet fra dine egne saker.</p>
       </div>
+      <Link href={'/dashboard?visning=dag' as Route} data-verkstedet-hero className="block">
+        <CardShell>
+          <div className="px-3 py-4">
+            <p className="text-title text-fg">
+              {kort.isLoading && !tenantName ? '…' : forhandlernavn}
+            </p>
+          </div>
+        </CardShell>
+      </Link>
 
       {/* Tre tellere, alle utledet fra samme spørring. Ingen mock. */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

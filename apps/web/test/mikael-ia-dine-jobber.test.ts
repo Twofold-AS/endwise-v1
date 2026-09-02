@@ -137,14 +137,19 @@ describe('Forhandler-info uten Grainient', () => {
     expect(kjoretoyIkon('ukjent')).toBe('mc');
   });
 
-  it('kortet sitter på forhandler-, mekaniker-, selger- og support-hjem', () => {
+  it('kortet sitter på mekaniker- og innboks-hjem — ikke over Verkstedet-hero', () => {
     const dealer = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const mek = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
     const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
     const innboks = utenKommentarer(les('../app/(app)/innboks/page.tsx'));
-    expect(dealer).toMatch(/ForhandlerInfoKort/);
+    expect(dealer).not.toMatch(/ForhandlerInfoKort/);
+    expect(dealer).toMatch(/tenantName/);
+    expect(dealer).toMatch(/navn=\{forhandlernavn\}/);
     expect(mek).toMatch(/ForhandlerInfoKort/);
-    expect(dash).toMatch(/ForhandlerInfoKort/);
+    expect(dash).not.toMatch(/ForhandlerInfoKort/);
+    expect(dash).toMatch(/data-verkstedet-hero/);
+    expect(dash).toMatch(/tenantName/);
+    expect(dash).toMatch(/sr-only/);
     expect(innboks).toMatch(/ForhandlerInfoKort/);
     expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(/Grainient|grainient/);
   });

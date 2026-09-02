@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
-import { ForhandlerInfoKort } from './forhandler-info-kort';
 import { dealerPhoneHjemRader, PHONE_KORT_META, type PhoneKortKey } from './phone-home';
 import {
   innboksMeta,
@@ -21,7 +20,8 @@ import { PhoneKort } from './phone-kort';
  * Timeplan-kortet er destinasjon (ikon + navn) — ingen jobbliste på kortet.
  */
 export function PhoneHomeDealer() {
-  const { shopEnabled } = useOrgRole();
+  const { shopEnabled, tenantName } = useOrgRole();
+  const kort = trpc.forhandler.kort.useQuery();
   const bookings = trpc.bookings.list.useQuery({ limit: 100 });
   const threads = trpc.messages.listThreads.useQuery();
   const customers = trpc.customers.list.useQuery({
@@ -63,16 +63,17 @@ export function PhoneHomeDealer() {
 
   return (
     <div className="mx-auto flex w-full max-w-[520px] flex-col gap-3 px-3 py-3 md:hidden">
-      <ForhandlerInfoKort />
       {rader.map((rad) => {
         if (rad.keys[0] === 'verkstedet') {
           const dest = PHONE_KORT_META.verkstedet;
+          const forhandlernavn =
+            tenantName?.trim() || kort.data?.name?.trim() || dest.label;
           return (
             <PhoneKort
               key="verkstedet"
               href={dest.href}
               icon={dest.icon}
-              navn={dest.label}
+              navn={forhandlernavn}
               className="w-full"
             >
               <div className="grid grid-cols-3 gap-2">

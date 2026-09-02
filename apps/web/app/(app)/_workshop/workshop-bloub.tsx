@@ -13,7 +13,7 @@ import {
 import { BloubBot, type ExpressionId, type StateId } from '@endwise/ui/bloub/BloubBot';
 import { DefaultChatTransport } from 'ai';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { erTillattGaaTil } from './gaa-til';
 import { RonnyPil } from './ronny-ikoner';
 import { sidekontekst } from './sidekontekst';
@@ -24,10 +24,8 @@ const SPIN_MS = 700;
 const IDLE_MS = 2500;
 const KORN_RAMME = 3;
 const RAMME_PX = 18;
-const HANDTAK_DRA_DOCK = 40;
-const HANDTAK_DRA_FULL = 110;
-/** Kompakt dock: stripe + én linje-composer. Første send → samtalehøyde. */
-const DOCK_KOMPAKT = '8.25rem';
+/** Kompakt dock: stripe + composer + liten pil. Første send/fold → samtalehøyde. */
+const DOCK_KOMPAKT = '10.5rem';
 const DOCK_SAMTALE = 'min(48dvh, 28rem)';
 
 type RonnyVisning = 'stripe' | 'dock' | 'utvidet';
@@ -77,17 +75,21 @@ function gaaTilHref(del: { type: string; state?: string; output?: unknown }): st
   return out.href;
 }
 
-function skallHoyde(visning: RonnyVisning, ankerTop: number, harSamtale: boolean): string {
+function skallHoyde(
+  visning: RonnyVisning,
+  ankerTop: number,
+  harSamtale: boolean,
+  foldet: boolean,
+): string {
   if (visning === 'stripe') return '100%';
   if (visning === 'utvidet') return `calc(100dvh - ${ankerTop}px - 8px)`;
-  if (harSamtale) return DOCK_SAMTALE;
+  if (harSamtale || foldet) return DOCK_SAMTALE;
   return DOCK_KOMPAKT;
 }
 
 /**
- * Én Grainient-boks (18px ytre + 18px indre). Stripe + panel er samme skall.
- * Åpne = kompakt composer. Første send folder til fast samtalehøyde (scroll
- * over prompt, skjult scrollbar). Sirkel = fullscreen. Escape: utvidet → dock → stripe.
+ * Lukket = vanlig chrome-stripe (radius 0). Åpen = Grainient-kort 18px,
+ * samme px som dashboard-kort. Første send/fold → fast samtalehøyde.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -96,14 +98,14 @@ export function WorkshopBloub() {
   const [visning, setVisning] = useState<RonnyVisning>('stripe');
   const [klikk, setKlikk] = useState(false);
   const [suksess, setSuksess] = useState(false);
+  const [foldet, setFoldet] = useState(false);
   const [ankerTop, setAnkerTop] = useState(0);
   const spinTimer = useRef<number | null>(null);
   const ankerRef = useRef<HTMLDivElement>(null);
-  const draStart = useRef<number | null>(null);
-  const harDratt = useRef(false);
   const sisteGaaTil = useRef<string>('');
   const side = useMemo(() => sidekontekst(pathname, search), [pathname, search]);
   const apen = visning !== 'stripe';
+  const lukket = visning === 'stripe';
 
   const transport = useMemo(
     () =>
@@ -117,7 +119,8 @@ export function WorkshopBloub() {
 
   const { messages, sendMessage, status, error } = useChat({ transport });
   const harSamtale = messages.length > 0 || Boolean(error);
-  const fastHoyde = visning === 'utvidet' || (visning === 'dock' && harSamtale);
+  const fastHoyde = visning === 'utvidet' || (visning === 'dock' && (harSamtale || foldet));
+  const visHandtak = visning === 'dock' && !harSamtale && !foldet;
   const opptatt = status === 'submitted' || status === 'streaming';
   const idle = useRonnyIdle(!klikk);
 
@@ -182,6 +185,7 @@ export function WorkshopBloub() {
   function send(innhold: string) {
     const rensket = innhold.trim();
     if (!rensket || opptatt) return;
+    setFoldet(true);
     void sendMessage({ text: rensket });
   }
 
@@ -218,30 +222,13 @@ export function WorkshopBloub() {
     setVisning('dock');
   }
 
-  function onHandtakNed(e: PointerEvent<HTMLButtonElement>) {
-    draStart.current = e.clientY;
-    harDratt.current = false;
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-
-  function onHandtakFlytt(e: PointerEvent<HTMLButtonElement>) {
-    if (draStart.current == null) return;
-    const dy = e.clientY - draStart.current;
-    if (dy > 16) harDratt.current = true;
-    if (dy > HANDTAK_DRA_FULL) setVisning('utvidet');
-    else if (dy > HANDTAK_DRA_DOCK) setVisning((v) => (v === 'stripe' ? 'dock' : v));
-  }
-
-  function onHandtakOpp() {
-    if (!harDratt.current) {
-      setVisning((v) => (v === 'stripe' ? 'dock' : v === 'dock' ? 'utvidet' : 'stripe'));
-    }
-    draStart.current = null;
+  function onForsteFold() {
+    setFoldet(true);
   }
 
   if (pathname.startsWith('/oppstart')) return null;
 
-  const visTraad = harSamtale || visning === 'utvidet';
+  const visTraad = harSamtale || visning === 'utvidet' || foldet;
 
   return (
     <div
@@ -250,8 +237,13 @@ export function WorkshopBloub() {
     >
       <div
         data-workshop-shell
-        className="absolute inset-x-0 top-0 z-40 overflow-hidden rounded-[18px] shadow-none transition-[height] duration-300 ease-out"
-        style={{ height: skallHoyde(visning, ankerTop, harSamtale), borderRadius: RAMME_PX }}
+        className={`absolute inset-x-0 top-0 z-40 overflow-hidden shadow-none transition-[height,border-radius] duration-300 ease-out ${
+          lukket ? 'rounded-none' : 'rounded-[18px]'
+        }`}
+        style={{
+          height: skallHoyde(visning, ankerTop, harSamtale, foldet),
+          borderRadius: lukket ? 0 : RAMME_PX,
+        }}
       >
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Grainient className="absolute inset-0 h-full w-full" />
@@ -315,16 +307,22 @@ export function WorkshopBloub() {
           >
             <div
               className={`min-h-0 overflow-hidden ${fastHoyde ? 'h-full' : ''}`}
-              style={{ paddingLeft: KORN_RAMME, paddingRight: KORN_RAMME, paddingBottom: KORN_RAMME }}
+              style={
+                lukket
+                  ? undefined
+                  : { paddingLeft: KORN_RAMME, paddingRight: KORN_RAMME, paddingBottom: KORN_RAMME }
+              }
             >
               <div
-                className={`flex min-h-0 flex-col overflow-hidden bg-[#fff] ${fastHoyde ? 'h-full' : ''}`}
-                style={{ borderRadius: RAMME_PX }}
+                className={`flex min-h-0 flex-col overflow-hidden ${fastHoyde ? 'h-full' : ''} ${
+                  lukket ? '' : 'bg-[#fff]'
+                }`}
+                style={lukket ? undefined : { borderRadius: RAMME_PX }}
               >
                 {visTraad ? (
                   <div
                     data-ronny-traad
-                    className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-2"
+                    className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 py-2 md:px-8"
                   >
                     {messages.map((melding) => {
                       const tekstDel = tekstFraMelding(melding);
@@ -345,43 +343,47 @@ export function WorkshopBloub() {
                     ) : null}
                   </div>
                 ) : null}
-                <div className="shrink-0 px-3 pt-1 pb-10">
+                <div
+                  data-ronny-kort-padding
+                  className={`mx-auto w-full max-w-[1120px] shrink-0 px-3 pt-3 pb-6 md:px-8 transition-all duration-300 ease-out ${
+                    apen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                  }`}
+                >
                   <PromptInput
                     onSubmit={onPrompt}
-                    className="border border-[#e0e0e0] bg-[#f5f5f7] shadow-none"
-                    style={{ borderRadius: 9999 }}
+                    className="border-0 bg-transparent shadow-none"
                   >
                     <PromptInputBody className="min-w-0 flex-1">
                       <PromptInputTextarea
                         placeholder="Spør Ronny …"
                         disabled={opptatt}
-                        className="text-label text-[#1d1d1f] placeholder:text-[#1d1d1f]/45"
+                        className="bg-transparent text-label text-[#1d1d1f] placeholder:text-[#1d1d1f]/45"
                       />
                     </PromptInputBody>
                     <PromptInputFooter>
                       <PromptInputSubmit status={status} />
                     </PromptInputFooter>
                   </PromptInput>
+                  {visHandtak ? (
+                    <div className="flex justify-center pt-3">
+                      <button
+                        type="button"
+                        data-ronny-utvid
+                        data-ronny-handtak
+                        aria-label="Utvid samtalen"
+                        title="Utvid"
+                        onClick={onForsteFold}
+                        className="flex size-6 items-center justify-center rounded-full text-[#1d1d1f] ring-1 ring-[#e0e0e0]"
+                      >
+                        <RonnyPil size={12} />
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <button
-          type="button"
-          data-ronny-utvid
-          data-ronny-handtak
-          aria-label={visning === 'utvidet' ? 'Minimer samtalen' : 'Utvid samtalen'}
-          title={visning === 'utvidet' ? 'Minimer' : 'Utvid'}
-          onPointerDown={onHandtakNed}
-          onPointerMove={onHandtakFlytt}
-          onPointerUp={onHandtakOpp}
-          onPointerCancel={onHandtakOpp}
-          className="absolute bottom-1 left-1/2 z-20 flex size-10 -translate-x-1/2 cursor-grab touch-none items-center justify-center rounded-full bg-[#fafafc] text-[#1d1d1f] ring-1 ring-[#e0e0e0] active:cursor-grabbing"
-        >
-          <RonnyPil size={16} opp={visning === 'utvidet'} />
-        </button>
       </div>
     </div>
   );

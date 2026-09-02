@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { breadcrumbFor, FORHANDLER_NAV, MEKANIKER_NAV } from '../app/(app)/_shell/nav.ts';
-import { erDealerInnboks, erInnboksSide } from '../app/(app)/_shell/seksjon-sti.ts';
+import { erDealerInnboks, erInnboksSide, erInnboksTrad } from '../app/(app)/_shell/seksjon-sti.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -64,8 +64,49 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     expect(erInnboksSide('/organisasjon')).toBe(false);
     expect(erDealerInnboks('/innboks')).toBe(true);
     expect(erDealerInnboks('/endwise/verksted/acme/innboks')).toBe(false);
+    expect(erInnboksTrad('/innboks')).toBe(false);
+    expect(erInnboksTrad('/innboks/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee')).toBe(true);
+    expect(erInnboksTrad('/innboks/abc')).toBe(true);
     const sti = utenKommentarer(les('../app/(app)/_shell/seksjon-sti.ts'));
     expect(sti).toMatch(/erDealerInnboks/);
+    expect(sti).toMatch(/erInnboksTrad/);
+  });
+});
+
+describe('Mikael 02.09 — tråd-chrome og fork', () => {
+  it('dest-bar i åpen tråd er Tilbake + slett + Inviter ansatt', () => {
+    const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
+    const inviter = utenKommentarer(les('../app/(app)/innboks/_inviter-ansatt.tsx'));
+    expect(seksjon).toMatch(/erInnboksTrad/);
+    expect(seksjon).toMatch(/Tilbake/);
+    expect(seksjon).toMatch(/InviterAnsatt|Inviter ansatt/);
+    expect(seksjon).toMatch(/Trash2/);
+    expect(seksjon).toMatch(/text-danger/);
+    expect(seksjon).not.toMatch(/ChevronLeft|chevron-left/);
+    expect(inviter).toMatch(/forkThread/);
+    expect(inviter).toMatch(/team\.list/);
+    expect(inviter).not.toMatch(/addParticipants/);
+    expect(inviter).not.toMatch(/sendInboxMessage|RESEND/);
+  });
+
+  it('tråd-composer er samme PromptInput som Ronny', () => {
+    const trad = utenKommentarer(les('../app/(app)/innboks/[id]/page.tsx'));
+    expect(trad).toMatch(/PromptInput/);
+    expect(trad).toMatch(/PromptInputTextarea/);
+    expect(trad).toMatch(/PromptInputSubmit/);
+    expect(trad).not.toMatch(/min-h-\[56px\]/);
+    expect(trad).not.toMatch(/StatefulButton/);
+  });
+
+  it('messages.forkThread validerer tenant-ansatte og muterer ikke gammel tråd', () => {
+    const router = les('../../api/src/trpc/routers/messages.ts');
+    const modul = les('../../../packages/modules/src/messages/threads.ts');
+    expect(router).toMatch(/forkThread:/);
+    expect(router).toMatch(/organizationId, ctx.tenantId/);
+    expect(router).toMatch(/inviteeIds/);
+    expect(modul).toMatch(/async forkThread/);
+    expect(modul).toMatch(/forkSystemMelding/);
+    expect(modul).toMatch(/Gammel tråd og medlemsliste står urørt/);
   });
 });
 
@@ -76,12 +117,17 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
   const chrome = utenKommentarer(les('../app/(app)/innboks/_chrome.tsx'));
   const hoved = utenKommentarer(les('../app/(app)/innboks/_hovedflate.tsx'));
 
-  it('to linjer uten divider: compose + slett, sortering under', () => {
+  it('én verktøylinje: Nyeste, Eldste, slett, ny chat og velg kort', () => {
     expect(side).toMatch(/NyMeldingIkon/);
     expect(side).toMatch(/Nyeste/);
     expect(side).toMatch(/Eldste/);
     expect(side).toMatch(/Trash2/);
+    expect(side).toMatch(/velg kort|Velg kort/);
+    expect(side).toMatch(/data-innboks-verktoy/);
+    expect(side).toMatch(/min-h-11/);
+    expect(side).toMatch(/z-20/);
     expect(side).toMatch(/aktivId \? 'max-md:hidden'/);
+    expect(side).not.toMatch(/To linjer/);
   });
 
   it('Ny melding er ikon, compose åpner Kunde · Intern · Support — ingen Mekaniker', () => {

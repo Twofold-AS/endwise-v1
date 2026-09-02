@@ -348,6 +348,14 @@ describe('Verkstedet-dag og Organisasjon på telefon', () => {
     expect(hjem).not.toMatch(/Book for kunde/);
   });
 
+  it('hero-tittel er forhandlernavn, ikke Verkstedet, uten ForhandlerInfoKort over', () => {
+    const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
+    expect(hjem).not.toMatch(/ForhandlerInfoKort/);
+    expect(hjem).toMatch(/tenantName/);
+    expect(hjem).toMatch(/navn=\{forhandlernavn\}/);
+    expect(hjem).toMatch(/visning=dag|dest\.href/);
+  });
+
   it('Organisasjon-piller wrapper på telefon og skjuler Abonnement/Integrasjoner for selger', () => {
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
     const faner = utenKommentarer(les('../app/(app)/_shell/seksjon-faner.ts'));

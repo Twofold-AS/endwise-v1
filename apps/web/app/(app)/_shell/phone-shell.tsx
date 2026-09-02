@@ -7,12 +7,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useOrgRole } from '../_lib/use-org-role';
 import { shellForBruker } from './nav';
-import {
-  PHONE_LOGO_PX,
-  SHELL_HEADER_RAD,
-  SHELL_LOGO_WRAP,
-  SHELL_TOGGLE_PX,
-} from './phone-chrome';
+import { PHONE_LOGO_PX, SHELL_HEADER_RAD, SHELL_LOGO_WRAP, SHELL_TOGGLE_PX } from './phone-chrome';
 import { erPhoneHjem, PHONE_SAFE_TOP, phoneHjemHref } from './phone-home';
 import { useSidebarState } from './sidebar-state';
 import { TilbakePil } from './tilbake-pil';

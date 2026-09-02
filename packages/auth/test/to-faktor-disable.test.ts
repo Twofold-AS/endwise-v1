@@ -7,8 +7,8 @@ import {
   TO_FAKTOR_VERIFY_TOTP_STI,
 } from '../src/bytt-passord.ts';
 import { byttPassordForHook } from '../src/bytt-passord-server.ts';
-import { TOTP_STEP_UP_KODE } from '../src/totp-steg.ts';
 import { TO_FAKTOR_DISABLE_AUDIT_ACTION } from '../src/to-faktor-oppsett.ts';
+import { TOTP_STEP_UP_KODE } from '../src/totp-steg.ts';
 
 describe('F1-22: selvbetjent disable er stengt (Mons)', () => {
   it('serverhooken nekter /two-factor/disable', async () => {

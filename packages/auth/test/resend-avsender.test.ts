@@ -1,5 +1,10 @@
 import { createHmac } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
+import { byggEnrollIdentifier, byggEnrollSesjon, erEnrollIdentifier } from '../src/enroll.ts';
+import { erProduktDestinasjon } from '../src/produkt-destinasjon.ts';
 import {
   avsenderErKanonisk,
   erEnkelEpost,
@@ -7,13 +12,8 @@ import {
   RESEND_FROM_KANONISK,
   stripCrLf,
 } from '../src/resend-avsender.ts';
-import { byggEnrollIdentifier, byggEnrollSesjon, erEnrollIdentifier } from '../src/enroll.ts';
-import { erProduktDestinasjon } from '../src/produkt-destinasjon.ts';
 import { krevFerskTotpFraBody, TOTP_STEP_UP_KODE } from '../src/totp-steg.ts';
 import { verifiserTotpKode } from '../src/totp-verify.ts';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const OPPRINNELIG = { ...process.env };
 

@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { destinasjonFaner } from '../app/(app)/_shell/seksjon-faner.ts';
 import { SHELL_LOGO_PX, SHELL_TOGGLE_PX } from '../app/(app)/_shell/phone-chrome.ts';
+import { destinasjonFaner } from '../app/(app)/_shell/seksjon-faner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 

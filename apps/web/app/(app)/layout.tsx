@@ -28,7 +28,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? '';
   const { data: session, isPending } = useSession();
-  const { isMechanic, isAdmin, isLoading, needsOnboarding, erPlattform } = useOrgRole();
+  const { isMechanic, isAdmin, isLoading, needsOnboarding, erPlattform, landing } = useOrgRole();
   const [plattformVarsel, setPlattformVarsel] = useState<string | null>(null);
   const visPlattformVarsel = useCallback(() => {
     setPlattformVarsel(plattformToast());
@@ -89,8 +89,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     if (isLoading) return;
     if (needsOnboarding && !pathname.startsWith('/oppstart')) {
       router.replace('/oppstart' as Route);
+      return;
     }
-  }, [isLoading, needsOnboarding, pathname, router]);
+    if (!needsOnboarding && pathname.startsWith('/oppstart')) {
+      const dest = landing.startsWith('/') && !landing.startsWith('//') ? landing : '/dashboard';
+      router.replace(dest as Route);
+    }
+  }, [isLoading, needsOnboarding, pathname, router, landing]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: les query på nytt etter redirect
   useEffect(() => {

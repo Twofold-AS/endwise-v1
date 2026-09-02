@@ -172,7 +172,11 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
               const jobs: Promise<unknown>[] = [];
               if (nesteEpost && epostEndret) {
                 jobs.push(
-                  lagreEpost.mutateAsync({ userId: rad.userId, epost: nesteEpost, totp: totp.trim() }),
+                  lagreEpost.mutateAsync({
+                    userId: rad.userId,
+                    epost: nesteEpost,
+                    totp: totp.trim(),
+                  }),
                 );
               }
               if (
@@ -247,7 +251,9 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
               </button>
               <button
                 type="submit"
-                disabled={lagrer || (!epostEndret && !rolleEndret) || (epostEndret && totp.length !== 6)}
+                disabled={
+                  lagrer || (!epostEndret && !rolleEndret) || (epostEndret && totp.length !== 6)
+                }
                 className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
               >
                 {lagrer ? 'Lagrer …' : 'Lagre'}

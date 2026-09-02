@@ -65,6 +65,8 @@ export function useOrgRole(): {
    */
   canSwitchDemo: boolean;
   needsOnboarding: boolean;
+  /** Serverens landing. Brukes for å slippe ut av /oppstart uten tenant. */
+  landing: string;
   /** Kosmetikk. Sperren er shopProcedure. Fail-safe av. */
   shopEnabled: boolean;
 } {
@@ -110,6 +112,7 @@ export function useOrgRole(): {
     devMode: me.data?.devMode?.enabled ?? false,
     canSwitchDemo: (me.data?.devMode?.flagOn ?? false) && role === 'endwise_admin',
     needsOnboarding: me.data?.needsOnboarding ?? false,
+    landing: me.data?.landing ?? '/dashboard',
     shopEnabled: me.data?.shopEnabled ?? false,
   };
 }

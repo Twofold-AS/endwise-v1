@@ -69,7 +69,9 @@ export function InviterAnsatt({ threadId }: { threadId: string }) {
                     aria-pressed={valgte.has(a.userId)}
                     onClick={() => toggle(a.userId)}
                     className={`flex w-full min-h-11 items-center gap-2 rounded-control px-2 text-left text-label ${
-                      valgte.has(a.userId) ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+                      valgte.has(a.userId)
+                        ? 'bg-sidebar-active text-fg'
+                        : 'text-fg hover:bg-surface-2'
                     }`}
                   >
                     <span

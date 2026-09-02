@@ -1,9 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import {
-  authEnv,
-  TOTP_STEP_UP_MELDING,
-  verifiserFerskTotpForBruker,
-} from '@endwise/auth';
+import { authEnv, TOTP_STEP_UP_MELDING, verifiserFerskTotpForBruker } from '@endwise/auth';
 import { and, desc, eq, gte, inArray, lt, schema, withTenant } from '@endwise/db';
 import {
   assertMedlemAvTenant,

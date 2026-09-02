@@ -18,6 +18,20 @@ function utenKommentarer(kilde: string) {
  * via Promise.all). Mot pool max 5 + 13 parallelle prosedyrer = deadlock
  * / connection timeout, og hele first-paint-batchen ble aldri ferdig.
  */
+describe('session.me sender ikke dealer_admin til /oppstart uten tenant', () => {
+  it('needsOnboarding krever tenants-rad', () => {
+    const kilde = utenKommentarer(les('../src/trpc/routers/session.ts'));
+    expect(kilde).toMatch(/function dealerNeedsOnboarding/);
+    expect(kilde).toMatch(/if \(!input\.tenant\) return false/);
+    expect(kilde).toMatch(/dealerNeedsOnboarding\(/);
+    expect(kilde).toMatch(/landingEtterSesjon\(/);
+    expect(kilde).toMatch(/loggManglendeTenantRad\('session\.me'/);
+    expect(kilde).not.toMatch(
+      /needsOnboarding = ctx\.role === 'dealer_admin' && !tenant\?\.onboardingCompletedAt/,
+    );
+  });
+});
+
 describe('session.me holder ikke tenant-tx mens den ber om flere', () => {
   it('kjerne-withTenant avsluttes før verksted-oppslag', () => {
     const kilde = utenKommentarer(les('../src/trpc/routers/session.ts'));

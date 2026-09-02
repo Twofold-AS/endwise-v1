@@ -59,11 +59,12 @@ export default function VerkstedetPage() {
 
 function VerkstedetDesktop() {
   const { tenantName } = useOrgRole();
-  const kort = trpc.forhandler.kort.useQuery();
+  const kort = trpc.forhandler.kort.useQuery(undefined, { retry: false });
   const bookings = trpc.bookings.list.useQuery({ limit: 100 });
   const mechanics = trpc.mechanics.list.useQuery();
   const oversikt = trpc.mechanics.oversikt.useQuery();
-  const forhandlernavn = tenantName?.trim() || kort.data?.name?.trim() || 'Forhandleren';
+  const kortNavn = kort.isError ? '' : (kort.data?.name?.trim() ?? '');
+  const forhandlernavn = tenantName?.trim() || kortNavn || 'Forhandleren';
 
   const { idag, paagaar, ferdigIdag, rader } = useMemo(() => {
     const alle = bookings.data ?? [];
@@ -103,7 +104,7 @@ function VerkstedetDesktop() {
         <CardShell>
           <div className="px-3 py-4">
             <p className="text-title text-fg">
-              {kort.isLoading && !tenantName ? '…' : forhandlernavn}
+              {kort.isLoading && !kort.isError && !tenantName ? '…' : forhandlernavn}
             </p>
           </div>
         </CardShell>

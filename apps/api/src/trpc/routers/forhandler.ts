@@ -3,6 +3,7 @@ import { erPlattformTenant } from '@endwise/modules/plattform';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { loggManglendeTenantRad } from '../manglende-tenant.ts';
 import { lesPostgresCause } from '../slett-postgres.ts';
 
 type TenantTx = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -60,22 +61,55 @@ function feltTekst(value: unknown): string {
   return typeof value === 'string' ? value : value == null ? '' : String(value);
 }
 
-async function lesTenantNavn(tx: TenantTx, tenantId: string) {
+async function lesTenantNavnOptional(tx: TenantTx, tenantId: string) {
   const [tenant] = await tx
     .select({
       name: schema.tenants.name,
       slug: schema.tenants.slug,
+      kind: schema.tenants.kind,
     })
     .from(schema.tenants)
     .where(eq(schema.tenants.id, tenantId));
+  return tenant ?? null;
+}
+
+async function lesTenantNavn(tx: TenantTx, tenantId: string) {
+  const tenant = await lesTenantNavnOptional(tx, tenantId);
   if (!tenant) {
     throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren.' });
   }
   return tenant;
 }
 
-export async function lesForhandlerKort(tx: TenantTx, tenantId: string): Promise<ForhandlerKort> {
-  const tenant = await lesTenantNavn(tx, tenantId);
+async function lesOrgNavn(tx: TenantTx, tenantId: string) {
+  const [org] = await tx
+    .select({
+      name: schema.organization.name,
+      slug: schema.organization.slug,
+    })
+    .from(schema.organization)
+    .where(eq(schema.organization.id, tenantId));
+  return org ?? null;
+}
+
+/**
+ * Chrome-fallback når tenants-raden mangler. Better-Auth organization
+ * (ingen RLS) kan finnes uten speilet tenants-rad — leftover etter slett
+ * eller createTenant som bare skrev org. Dette er lesing til chrome, ikke
+ * å dikte opp en forhandler. Reparer org ↔ tenants i databasen.
+ */
+export function kortFraOrgEllerTom(org: { name: string; slug: string } | null): ForhandlerKort {
+  if (org && erPlattformTenant(org)) {
+    return tomtForhandlerKort({ name: '', slug: '' });
+  }
+  return tomtForhandlerKort({ name: org?.name ?? '', slug: org?.slug ?? '' });
+}
+
+async function lesForhandlerKortFraTenant(
+  tx: TenantTx,
+  tenantId: string,
+  tenant: { name: string; slug: string },
+): Promise<ForhandlerKort> {
   const [profil] = await tx
     .select({
       orgnr: schema.dealerProfiles.orgnr,
@@ -103,6 +137,11 @@ export async function lesForhandlerKort(tx: TenantTx, tenantId: string): Promise
   };
 }
 
+export async function lesForhandlerKort(tx: TenantTx, tenantId: string): Promise<ForhandlerKort> {
+  const tenant = await lesTenantNavn(tx, tenantId);
+  return lesForhandlerKortFraTenant(tx, tenantId, tenant);
+}
+
 /**
  * Ny transaksjon ved manglende tabell/kolonne — ikke catch inne i samme tx
  * (Postgres avbryter resten av transaksjonen etter 42P01).
@@ -112,7 +151,17 @@ export async function hentForhandlerKort(
   tenantId: string,
 ): Promise<ForhandlerKort> {
   try {
-    return await kjor((tx) => lesForhandlerKort(tx, tenantId));
+    return await kjor(async (tx) => {
+      const tenant = await lesTenantNavnOptional(tx, tenantId);
+      if (!tenant) {
+        loggManglendeTenantRad('forhandler.kort', tenantId);
+        return kortFraOrgEllerTom(await lesOrgNavn(tx, tenantId));
+      }
+      if (erPlattformTenant(tenant)) {
+        return tomtForhandlerKort({ name: '', slug: '' });
+      }
+      return lesForhandlerKortFraTenant(tx, tenantId, tenant);
+    });
   } catch (error) {
     if (!erManglendeDealerProfil(error)) throw error;
     const pg = lesPostgresCause(error);
@@ -120,7 +169,14 @@ export async function hentForhandlerKort(
       code: pg.code,
       message: pg.message,
     });
-    return kjor(async (tx) => tomtForhandlerKort(await lesTenantNavn(tx, tenantId)));
+    return kjor(async (tx) => {
+      const tenant = await lesTenantNavnOptional(tx, tenantId);
+      if (tenant && !erPlattformTenant(tenant)) {
+        return tomtForhandlerKort(tenant);
+      }
+      if (!tenant) loggManglendeTenantRad('forhandler.kort', tenantId);
+      return kortFraOrgEllerTom(await lesOrgNavn(tx, tenantId));
+    });
   }
 }
 

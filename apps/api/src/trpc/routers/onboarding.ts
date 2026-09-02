@@ -21,6 +21,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { aktiverQuickEtterGet, quickNokkelMangler } from '../../lib/quick-activate.ts';
 import { adminProcedure, router } from '../init.ts';
+import { loggManglendeTenantRad, manglendeTenantFeil } from '../manglende-tenant.ts';
 
 /**
  * Eier-veiviser. Egen skriverute, ikke `tenants.setModules`.
@@ -59,6 +60,17 @@ export const onboardingRouter = router({
         })
         .from(schema.tenants)
         .where(eq(schema.tenants.id, ctx.tenantId));
+
+      if (!tenant) {
+        loggManglendeTenantRad('onboarding.status', ctx.tenantId);
+        return {
+          complete: false,
+          visningsnavn: '',
+          nivaa: { key: 'start', name: 'Start' },
+          included: [],
+          optional: [],
+        };
+      }
 
       const rader = await tx
         .select({
@@ -180,7 +192,8 @@ export const onboardingRouter = router({
           .where(eq(schema.tenants.id, ctx.tenantId));
 
         if (!tenant) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+          loggManglendeTenantRad('onboarding.fullfor', ctx.tenantId);
+          throw manglendeTenantFeil();
         }
         if (tenant.onboardingCompletedAt) {
           throw new TRPCError({

@@ -31,7 +31,7 @@ type SlettSteg = 'advarsel' | 'bekreft';
 export default function ForhandlerePage() {
   const { isEndwiseAdmin } = useOrgRole();
   const utils = trpc.useUtils();
-  const liste = trpc.tenants.list.useQuery();
+  const liste = trpc.tenants.list.useQuery(undefined, { retry: false });
   const katalog = trpc.tenants.pakkeKatalog.useQuery(undefined, { enabled: isEndwiseAdmin });
   const entitlements = trpc.tenants.listModules.useQuery(undefined, { enabled: isEndwiseAdmin });
 

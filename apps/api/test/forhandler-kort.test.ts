@@ -4,13 +4,16 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDb, type Database, eq, schema } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { MANGLER_TENANT_MELDING, manglendeTenantFeil } from '../src/trpc/manglende-tenant.ts';
 import { appRouter } from '../src/trpc/router.ts';
 import {
   erManglendeDealerProfil,
   hentForhandlerKort,
+  kortFraOrgEllerTom,
   somLeftover,
   tomtForhandlerKort,
 } from '../src/trpc/routers/forhandler.ts';
+import { dealerNeedsOnboarding, landingEtterSesjon } from '../src/trpc/routers/session.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -130,12 +133,106 @@ describe('Forhandleren — get uten 500 når profil mangler', () => {
     expect(kort).toEqual(tomt);
   });
 
+  function fakeTx(opts: {
+    tenant?: { name: string; slug: string; kind?: 'live' | 'demo' | 'platform' };
+    org?: { name: string; slug: string };
+    profilFeil?: unknown;
+  }) {
+    return {
+      select: () => ({
+        from: (table: unknown) => ({
+          where: async () => {
+            if (table === schema.tenants) return opts.tenant ? [opts.tenant] : [];
+            if (table === schema.organization) return opts.org ? [opts.org] : [];
+            if (table === schema.dealerProfiles) {
+              if (opts.profilFeil) throw opts.profilFeil;
+              return [];
+            }
+            return [];
+          },
+        }),
+      }),
+    };
+  }
+
+  it('hentForhandlerKort uten tenants-rad gir org-kort, ikke NOT_FOUND', async () => {
+    const org = { name: 'Yamaha Bergen', slug: 'yamaha-bergen' };
+    const kort = await hentForhandlerKort(
+      (fn) => fn(fakeTx({ org }) as never),
+      '00000000-0000-0000-0000-000000000088',
+    );
+    expect(kort).toEqual(tomtForhandlerKort(org));
+  });
+
+  it('hentForhandlerKort uten tenants-rad og uten org gir tomt kort', async () => {
+    const kort = await hentForhandlerKort(
+      (fn) => fn(fakeTx({}) as never),
+      '00000000-0000-0000-0000-000000000077',
+    );
+    expect(kort).toEqual(tomtForhandlerKort({ name: '', slug: '' }));
+  });
+
+  it('plattform-tenant gir tomt kort uten å kaste', async () => {
+    const kort = await hentForhandlerKort(
+      (fn) =>
+        fn(
+          fakeTx({
+            tenant: { name: 'Endwise', slug: 'endwise', kind: 'platform' },
+          }) as never,
+        ),
+      '00000000-0000-0000-0000-000000000066',
+    );
+    expect(kort).toEqual(tomtForhandlerKort({ name: '', slug: '' }));
+  });
+
+  it('kortFraOrgEllerTom bruker org-navn, plattform blir tomt', () => {
+    expect(kortFraOrgEllerTom({ name: 'Yamaha Bergen', slug: 'yamaha-bergen' })).toEqual(
+      tomtForhandlerKort({ name: 'Yamaha Bergen', slug: 'yamaha-bergen' }),
+    );
+    expect(kortFraOrgEllerTom({ name: 'Endwise', slug: 'endwise' })).toEqual(
+      tomtForhandlerKort({ name: '', slug: '' }),
+    );
+    expect(kortFraOrgEllerTom(null)).toEqual(tomtForhandlerKort({ name: '', slug: '' }));
+  });
+
+  it('dealer_admin uten tenants-rad skal ikke onboardes', () => {
+    expect(
+      dealerNeedsOnboarding({
+        role: 'dealer_admin',
+        tenant: undefined,
+        erPlattform: false,
+      }),
+    ).toBe(false);
+    expect(
+      dealerNeedsOnboarding({
+        role: 'dealer_admin',
+        tenant: { onboardingCompletedAt: null },
+        erPlattform: false,
+      }),
+    ).toBe(true);
+    expect(
+      landingEtterSesjon({
+        erPlattform: false,
+        needsOnboarding: false,
+        manglerTenant: true,
+        harPlattformMedlemskap: true,
+        role: 'dealer_admin',
+        jobbfunksjon: 'leder',
+      }),
+    ).toBe('/endwise');
+    expect(manglendeTenantFeil()).toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message: MANGLER_TENANT_MELDING,
+    });
+  });
+
   it('get og inspect bruker hentForhandlerKort, ikke rå lesForhandlerKort', () => {
     const get = les('../src/trpc/routers/forhandler.ts');
     const inspect = les('../src/trpc/routers/verksted.ts');
     expect(get).toMatch(/hentForhandlerKort/);
     expect(get).toMatch(/get:\s*adminProcedure\.query/);
     expect(get).toMatch(/kort:\s*protectedProcedure\.query/);
+    expect(get).toMatch(/loggManglendeTenantRad\('forhandler\.kort'/);
     expect(inspect).toMatch(/hentForhandlerKort/);
     expect(inspect).toMatch(/withPlatformInspect/);
   });
@@ -203,5 +300,83 @@ describeDb('Forhandleren — dealer_admin lagrer uten Quick', () => {
     expect(lagret.city).toBe('Bergen');
     expect(lagret.slug).toBe(`fh-${tenant.slice(0, 8)}`);
     expect(lagret.name).toBe('Gammelt navn');
+  });
+});
+
+describeDb('Forhandleren — org uten tenants-rad', () => {
+  let owner: Database;
+  let app: Database;
+  const tenant = randomUUID();
+  const userId = `fh-mangler-${tenant.slice(0, 8)}`;
+  const orgNavn = 'Org uten tenant';
+  const orgSlug = `fh-org-${tenant.slice(0, 8)}`;
+
+  const leder = () =>
+    appRouter.createCaller({
+      db: app,
+      events: { publish: async () => {} } as never,
+      tenantId: tenant,
+      userId,
+      role: 'dealer_admin',
+    } as never);
+
+  beforeAll(async () => {
+    owner = createDb(OWNER_URL as string);
+    app = createDb(APP_URL as string);
+    await owner.insert(schema.organization).values({
+      id: tenant,
+      name: orgNavn,
+      slug: orgSlug,
+      createdAt: new Date(),
+    });
+    await owner.insert(schema.user).values({
+      id: userId,
+      name: 'Eier uten tenant',
+      email: `${userId}@test.invalid`,
+      emailVerified: true,
+    });
+    await owner.insert(schema.member).values({
+      id: randomUUID(),
+      organizationId: tenant,
+      userId,
+      role: 'dealer_admin',
+      createdAt: new Date(),
+    });
+  });
+
+  afterAll(async () => {
+    await owner.delete(schema.member).where(eq(schema.member.userId, userId));
+    await owner.delete(schema.user).where(eq(schema.user.id, userId));
+    await owner.delete(schema.organization).where(eq(schema.organization.id, tenant));
+  });
+
+  it('kort er 200 med org-navn når tenants-rad mangler', async () => {
+    const kort = await leder().forhandler.kort();
+    expect(kort).toEqual(tomtForhandlerKort({ name: orgNavn, slug: orgSlug }));
+  });
+
+  it('session.me er 200 med needsOnboarding false', async () => {
+    const me = await leder().session.me();
+    expect(me.needsOnboarding).toBe(false);
+    expect(me.landing).not.toBe('/oppstart');
+    expect(me.tenantName).toBe(orgNavn);
+  });
+
+  it('onboarding.status er ikke ferdig — raden mangler, ikke fullført', async () => {
+    const status = await leder().onboarding.status();
+    expect(status.complete).toBe(false);
+    expect(status.visningsnavn).toBe('');
+  });
+
+  it('onboarding.fullfor er PRECONDITION_FAILED, ikke NOT_FOUND eller complete', async () => {
+    await expect(
+      leder().onboarding.fullfor({
+        visningsnavn: 'Nytt navn AS',
+        extras: [],
+      }),
+    ).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message: MANGLER_TENANT_MELDING,
+    });
   });
 });

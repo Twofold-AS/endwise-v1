@@ -1,10 +1,47 @@
 import { sessionMeTwoFactorRequired } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import { erPlattformTenant, landingForPlatform } from '@endwise/modules/plattform';
-import { landingForJobbfunksjon, resolveJobbfunksjon, visningsnavn } from '@endwise/modules/profil';
+import {
+  type Jobbfunksjon,
+  landingForJobbfunksjon,
+  resolveJobbfunksjon,
+  visningsnavn,
+} from '@endwise/modules/profil';
 import { resolveDevMode } from '../dev-mode.ts';
 import { protectedProcedure, router } from '../init.ts';
+import { loggManglendeTenantRad } from '../manglende-tenant.ts';
 import { resolveShopFlag } from '../shop-flag.ts';
+
+/**
+ * Eier-veiviseren krever en tenants-rad. Uten rad er det ingenting å
+ * onboarde — ikke fordi oppstarten lyktes. `!tenant?.onboardingCompletedAt`
+ * var true og sendte dealer_admin til /oppstart, der fullfor 404-et.
+ * Reparer organization uten speilet tenants-rad (leftover etter slett,
+ * eller createTenant som bare skrev org).
+ */
+export function dealerNeedsOnboarding(input: {
+  role: string | null | undefined;
+  tenant: { onboardingCompletedAt: Date | null } | null | undefined;
+  erPlattform: boolean;
+}): boolean {
+  if (input.erPlattform) return false;
+  if (!input.tenant) return false;
+  return input.role === 'dealer_admin' && !input.tenant.onboardingCompletedAt;
+}
+
+export function landingEtterSesjon(input: {
+  erPlattform: boolean;
+  needsOnboarding: boolean;
+  manglerTenant: boolean;
+  harPlattformMedlemskap: boolean;
+  role: string | null | undefined;
+  jobbfunksjon: Jobbfunksjon;
+}): string {
+  if (input.erPlattform) return landingForPlatform(input.role) ?? '/endwise';
+  if (input.manglerTenant && input.harPlattformMedlemskap) return '/endwise';
+  if (input.needsOnboarding) return '/oppstart';
+  return landingForJobbfunksjon(input.jobbfunksjon);
+}
 
 /**
  * F1 — «hvem er jeg?» for klient-side rollegating. Rollen kommer fra
@@ -46,7 +83,7 @@ export const sessionRouter = router({
         .from(schema.tenants)
         .where(eq(schema.tenants.id, ctx.tenantId));
 
-      const needsOnboarding = ctx.role === 'dealer_admin' && !tenant?.onboardingCompletedAt;
+      if (!tenant) loggManglendeTenantRad('session.me', ctx.tenantId);
 
       /**
        * Eget kallenavn. Mekanikervisningen er per definisjon intern,
@@ -94,7 +131,7 @@ export const sessionRouter = router({
         harMekanikerprofil: Boolean(mech),
       });
 
-      return { mech, tenant, needsOnboarding, profil, pref, moduler, jobbfunksjon };
+      return { mech, tenant, profil, pref, moduler, jobbfunksjon };
     });
 
     /**
@@ -160,17 +197,25 @@ export const sessionRouter = router({
       });
     }
 
-    const { mech, tenant, needsOnboarding, profil, pref, moduler, jobbfunksjon } = kjerne;
+    const { mech, tenant, profil, pref, moduler, jobbfunksjon } = kjerne;
 
     const erPlattform = erPlattformTenant({
       slug: tenant?.slug ?? aktivOrg?.slug,
       kind: tenant?.kind,
     });
-    const landing = erPlattform
-      ? (landingForPlatform(ctx.role) ?? '/endwise')
-      : needsOnboarding
-        ? '/oppstart'
-        : landingForJobbfunksjon(jobbfunksjon);
+    const needsOnboarding = dealerNeedsOnboarding({
+      role: ctx.role,
+      tenant,
+      erPlattform,
+    });
+    const landing = landingEtterSesjon({
+      erPlattform,
+      needsOnboarding,
+      manglerTenant: !tenant,
+      harPlattformMedlemskap: Boolean(plattformOrg),
+      role: ctx.role,
+      jobbfunksjon,
+    });
 
     return {
       userId: ctx.userId,
@@ -180,8 +225,8 @@ export const sessionRouter = router({
       epost: bruker?.email ?? '',
       jobbfunksjon,
       landing,
-      needsOnboarding: erPlattform ? false : needsOnboarding,
-      tenantName: tenant?.name ?? null,
+      needsOnboarding,
+      tenantName: tenant?.name ?? aktivOrg?.name ?? null,
       tenantSlug: tenant?.slug ?? aktivOrg?.slug ?? null,
       tenantKind: tenant?.kind ?? 'live',
       aktivOrgSlug: aktivOrg?.slug ?? null,

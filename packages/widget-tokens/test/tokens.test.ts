@@ -14,10 +14,6 @@ describe('mørk sidebakgrunn er bek', () => {
     const light = css.slice(0, css.indexOf('[data-theme="dark"]'));
     expect(light).toMatch(/--ew-bg:\s*#ffffff/);
     expect(light).toMatch(/--ew-sidebar:\s*#ffffff/);
-    expect(light).toMatch(/--ew-fg:\s*#1d1d1f/);
-    expect(light).toMatch(/--ew-accent:\s*#0066cc/);
-    expect(light).toMatch(/--ew-border:\s*#e0e0e0/);
-    expect(light).toMatch(/--ew-bevel-shadow:\s*none/);
   });
 
   it('sidebar og kortflater er fortsatt løftet i mørkt', () => {

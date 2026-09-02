@@ -62,6 +62,17 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-forstor/);
     expect(fab).toMatch(/#f5f5f7/);
     expect(fab).toMatch(/#e0e0e0/);
+    expect(fab).toMatch(/size-11/);
+    expect(fab).toMatch(/210 210 215/);
+    expect(fab).not.toMatch(/#0066cc|#0071e3/);
+    expect(fab).toMatch(/shadow-none/);
+    const tokens = les('../../../packages/widget-tokens/src/tokens.css');
+    const light = tokens.slice(0, tokens.indexOf('[data-theme="dark"]'));
+    expect(light).toMatch(/--ew-accent:\s*#111111/);
+    expect(light).not.toMatch(/--ew-accent:\s*#0066cc/);
+    const submit = les('../../../packages/ui/src/components/prompt-input.tsx');
+    expect(submit).toMatch(/bg-\[#111\]/);
+    expect(submit).not.toMatch(/#0066cc/);
     expect(fab).toMatch(/gåTil|gaaTil|erTillattGaaTil/);
     expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
     expect(fab).toMatch(/text-white/);

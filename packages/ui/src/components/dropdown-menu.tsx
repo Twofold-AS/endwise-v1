@@ -28,7 +28,7 @@ export function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          'z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-bg p-1',
+          'z-50 min-w-[220px] overflow-hidden rounded-xl border border-border bg-bg p-1 shadow-lg',
           'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
           className,
         )}

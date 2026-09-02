@@ -182,14 +182,14 @@ export function WorkshopBloub() {
         <div
           data-workshop-dock
           data-ronny-visning={visning}
-          className={`fixed inset-x-0 bottom-0 z-40 bg-[#fff] pb-[env(safe-area-inset-bottom)] ${
+          className={`fixed inset-x-0 bottom-0 z-40 bg-[#fff] pb-[env(safe-area-inset-bottom)] shadow-none ${
             visning === 'utvidet' ? 'max-h-[min(70vh,36rem)]' : ''
           }`}
           style={{ borderTop: '1px solid #e0e0e0' }}
           role="dialog"
           aria-label="KI-Ronny"
         >
-          <div className="flex items-center justify-end gap-2 px-3 pt-2">
+          <div className="flex items-center justify-end gap-2 px-5 pt-4">
             <button
               type="button"
               data-ronny-forstor
@@ -204,8 +204,8 @@ export function WorkshopBloub() {
           </div>
           {visning === 'utvidet' || messages.length > 0 || error ? (
             <div
-              className={`overflow-y-auto px-4 ${
-                visning === 'utvidet' ? 'max-h-[min(48vh,24rem)] py-3' : 'max-h-[28vh] py-2'
+              className={`overflow-y-auto px-5 ${
+                visning === 'utvidet' ? 'max-h-[min(48vh,24rem)] py-4' : 'max-h-[28vh] py-3'
               }`}
             >
               {messages.map((melding) => {
@@ -227,10 +227,10 @@ export function WorkshopBloub() {
               ) : null}
             </div>
           ) : null}
-          <div className="px-3 pb-3 pt-1">
+          <div className="px-5 pb-5 pt-2">
             <PromptInput
               onSubmit={onPrompt}
-              className="border border-[#e0e0e0] bg-[#f5f5f7]"
+              className="border border-[#e0e0e0] bg-[#f5f5f7] shadow-none"
               style={{ borderRadius: 18 }}
             >
               <PromptInputBody>

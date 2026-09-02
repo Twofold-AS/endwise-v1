@@ -133,7 +133,7 @@ export function ChartTooltipContent({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="min-w-[160px] rounded-control border border-border bg-bg px-3 py-2">
+    <div className="min-w-[160px] rounded-control border border-border bg-bg px-3 py-2 shadow-lg">
       {label != null && <p className="mb-1.5 text-[12px] text-fg-muted">{label}</p>}
       <div className="flex flex-col gap-1">
         {payload.map((entry) => {

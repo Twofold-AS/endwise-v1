@@ -87,7 +87,7 @@
   --radius-lg: var(--ew-radius-lg);
   --radius-xl: var(--ew-radius-xl);
   --radius-pill: var(--ew-radius-pill);
-  --radius-control: var(--ew-radius-control); /* 8px — utility */
+  --radius-control: var(--ew-radius-control); /* 10px — knapper */
   --radius-badge: var(--ew-badge-radius); /* 6px */
 
   /* Mål (eierens spec) */
@@ -105,12 +105,12 @@
    */
   --text-title: 16px;
   --text-title--line-height: 20px;
-  --text-title--font-weight: 600;
+  --text-title--font-weight: 500;
   --text-label: 13px;
   --text-label--line-height: 16px;
-  --text-label--font-weight: 400;
-  --text-body: 17px;
-  --text-body--line-height: 1.47;
+  --text-label--font-weight: 500;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
   --text-body--font-weight: 400;
 
   --font-sans: var(--ew-font-sans);

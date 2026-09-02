@@ -41,7 +41,7 @@ export function DialogContent({
       <Primitive.Content
         data-slot="dialog-content"
         className={cn(
-          'fixed z-50 overflow-hidden rounded-xl border border-border bg-bg',
+          'fixed z-50 overflow-hidden rounded-xl border border-border bg-bg shadow-lg',
           className,
         )}
         {...props}

@@ -3,6 +3,7 @@ import {
   createConcurrencyGate,
   TENANT_TX_CONCURRENCY,
   TENANT_TX_WAIT_TIMEOUT_MS,
+  tenantTxGate,
 } from '../src/concurrency.ts';
 
 describe('createConcurrencyGate', () => {
@@ -34,6 +35,17 @@ describe('createConcurrencyGate', () => {
     ).rejects.toThrow(/kan ikke nøstes/);
   });
 
+  it('batch-gate rundt tenantTxGate er tillatt (limitBatch → withTenant)', async () => {
+    const batchGate = createConcurrencyGate(2);
+    await expect(batchGate.run(() => tenantTxGate.run(async () => 'ok'))).resolves.toBe('ok');
+  });
+
+  it('tenantTxGate rundt tenantTxGate kaster — ekte nøstet withTenant', async () => {
+    await expect(
+      tenantTxGate.run(async () => tenantTxGate.run(async () => 'indre')),
+    ).rejects.toThrow(/kan ikke nøstes/);
+  });
+
   it('køen feiler bounded i stedet for å vente evig', async () => {
     const gate = createConcurrencyGate(1, 40);
     const start = Date.now();
@@ -42,6 +54,17 @@ describe('createConcurrencyGate', () => {
     expect(Date.now() - start).toBeLessThan(500);
     void holder;
   });
+
+  it('køen timer ut etter 5s (default TENANT_TX_WAIT_TIMEOUT_MS)', async () => {
+    const gate = createConcurrencyGate(1);
+    const start = Date.now();
+    const holder = gate.run(() => new Promise<void>(() => undefined));
+    await expect(gate.run(async () => 'nei')).rejects.toThrow(/ventet for lenge/);
+    const ventet = Date.now() - start;
+    expect(ventet).toBeGreaterThanOrEqual(TENANT_TX_WAIT_TIMEOUT_MS - 250);
+    expect(ventet).toBeLessThan(TENANT_TX_WAIT_TIMEOUT_MS + 1_500);
+    void holder;
+  }, 10_000);
 
   it('TENANT_TX_CONCURRENCY er 2 — ikke gjett-opp av pool-max', () => {
     expect(TENANT_TX_CONCURRENCY).toBe(2);

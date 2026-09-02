@@ -10,16 +10,18 @@ import { AsyncLocalStorage } from 'node:async_hooks';
  * 2 er bevisst: plass til sesjonsoppslag på de andre slottene. Ikke gjett
  * opp `max` på poolen.
  *
- * Porten er **ikke** reentrant. Nøstet `run()` kaster — det er den gamle
- * deadlocken (ytterste tx holder slotten, inner venter evig). Kallstedet
- * skal slippe ytterste `withTenant` før det ber om en til.
+ * Porten er **ikke** reentrant. Nøstet `run()` på *samme* instans kaster —
+ * det er den gamle deadlocken (ytterste tx holder slotten, inner venter
+ * evig). Kallstedet skal slippe ytterste `withTenant` før det ber om en til.
+ *
+ * ALS eies per instans, ikke modul-globalt. tRPC-batch-semaføren
+ * (`limitBatch`) og isolate-`tenantTxGate` er to porter. Batch-porten
+ * SKAL wrappe `withTenant`; det er ikke nøsting.
  */
 export const TENANT_TX_CONCURRENCY = 2;
 
 /** Samme orden som `connectionTimeoutMillis`. Køen skal ikke vente evig. */
 export const TENANT_TX_WAIT_TIMEOUT_MS = 5_000;
-
-const inneIGate = new AsyncLocalStorage<true>();
 
 export function createConcurrencyGate(
   max: number,
@@ -28,6 +30,7 @@ export function createConcurrencyGate(
   run<T>(fn: () => Promise<T>): Promise<T>;
 } {
   if (max < 1) throw new Error('createConcurrencyGate: max må være minst 1');
+  const inneIGate = new AsyncLocalStorage<true>();
   let active = 0;
   const kø: Array<() => void> = [];
 

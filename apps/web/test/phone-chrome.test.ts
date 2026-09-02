@@ -172,9 +172,10 @@ describe('phone-chrome', () => {
     expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).toMatch(/router\.back\(\)/);
     expect(shell).toMatch(/Tilbake/);
-    expect(shell).not.toMatch(/TilbakePil/);
+    expect(shell).toMatch(/TilbakePil/);
     expect(pil).not.toMatch(/<svg/);
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
-    expect(SHELL_TOGGLE_PX).toBe(24);
+    expect(pil).toMatch(/text-label/);
+    expect(SHELL_TOGGLE_PX).toBe(16);
   });
 });

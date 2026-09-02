@@ -1,7 +1,7 @@
 /**
  * Tilbake er ordet — uten pil, lucide eller lokal chevron.
- * Mikael 02.09.2026.
+ * Samme familie som sidebar-labels / dest-bar: text-label 13/16, ink.
  */
 export function TilbakePil(_props?: { size?: number }) {
-  return <span>Tilbake</span>;
+  return <span className="text-label text-fg">Tilbake</span>;
 }

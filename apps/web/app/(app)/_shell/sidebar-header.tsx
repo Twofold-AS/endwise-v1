@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { SHELL_LOGO_PX, SHELL_LOGO_WRAP, SHELL_TOGGLE_PX } from './phone-chrome';
 import { useSidebarState } from './sidebar-state';
 
-/** Samme 24px i overlay og desktop-skinne. Tyngre enn Tilbake-teksten. */
+/** Logo 24px. Toggle er 16px — samme som destinasjonsikonene i sidebaren. */
 const LOGO = SHELL_LOGO_PX;
 
 /**

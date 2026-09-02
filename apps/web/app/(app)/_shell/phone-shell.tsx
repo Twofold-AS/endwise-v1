@@ -15,6 +15,7 @@ import {
 } from './phone-chrome';
 import { erPhoneHjem, PHONE_SAFE_TOP, phoneHjemHref } from './phone-home';
 import { useSidebarState } from './sidebar-state';
+import { TilbakePil } from './tilbake-pil';
 
 /**
  * Fast toppbar på telefon. Overlay-lås (logo / tilbake / åpne sidebar)
@@ -72,10 +73,10 @@ export function PhoneShell() {
             data-shell-tilbake
             aria-label="Tilbake"
             title="Tilbake"
-            className="inline-flex h-control items-center rounded-control px-2 text-label text-fg"
+            className="inline-flex h-control items-center rounded-control px-2"
             onClick={() => router.back()}
           >
-            Tilbake
+            <TilbakePil />
           </button>
         )}
       </div>

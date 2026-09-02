@@ -21,23 +21,30 @@ describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
     expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).toMatch(/Tilbake/);
-    expect(shell).not.toMatch(/TilbakePil/);
+    expect(shell).toMatch(/TilbakePil/);
     expect(shell).not.toMatch(/<svg/);
     expect(shell).not.toMatch(/ChevronLeft|lucide/);
     expect(pil).not.toMatch(/<svg/);
     expect(pil).toMatch(/Tilbake/);
+    expect(pil).toMatch(/text-label/);
+    expect(pil).toMatch(/text-fg/);
+    expect(pil).not.toMatch(/uppercase|tracking-|text-title|text-\[/);
   });
 
-  it('logo og sidebar-toggle er minst 24px på PC og telefon', () => {
-    expect(SHELL_LOGO_PX).toBeGreaterThanOrEqual(24);
-    expect(SHELL_TOGGLE_PX).toBeGreaterThanOrEqual(24);
+  it('logo er 24px merke; sidebar-toggle er 16px som nav-ikonene', () => {
+    const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
+    expect(SHELL_LOGO_PX).toBe(24);
+    expect(SHELL_TOGGLE_PX).toBe(16);
+    expect(sidebar).toMatch(/const IKON = 16/);
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
+    expect(header).toMatch(/SHELL_TOGGLE_PX/);
+    expect(shell).toMatch(/SHELL_TOGGLE_PX/);
     expect(header).toMatch(/SHELL_LOGO_PX|width=\{24\}|LOGO = 24/);
     expect(shell).toMatch(/SHELL_LOGO_PX|PHONE_LOGO_PX|width=\{24\}/);
-    expect(chrome).not.toMatch(/PHONE_LOGO_PX = 18/);
-    expect(chrome).not.toMatch(/SHELL_TOGGLE_PX = 16/);
+    expect(chrome).toMatch(/SHELL_TOGGLE_PX = 16/);
+    expect(chrome).not.toMatch(/SHELL_TOGGLE_PX = 24/);
     expect(header).not.toMatch(/LOGO = 18/);
   });
 });

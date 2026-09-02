@@ -2,13 +2,13 @@
  * Telefon-chrome delt mellom hovedmeny og top-bar 2.
  * Logo-kolonnen er pinnest (ikke i scroll), så Oversikt/Timeplan
  * starter under valgt hovedpunkt — samme venstre-innfelt.
- * 24px — tyngre enn Tilbake-teksten (text-label 13px). Samme på PC og telefon.
+ * Logo 24px er merkevare. Toggle er IKKE logo — den matcher nav-ikonene.
  */
 export const SHELL_LOGO_PX = 24;
 export const PHONE_LOGO_PX = SHELL_LOGO_PX;
 
-/** Åpne- og lukke-ikon er samme mål som logoen — ellers hopper headeren. */
-export const SHELL_TOGGLE_PX = 24;
+/** Samme 16px som sidebar-rader (`IKON` i sidebar.tsx). PC-skinne og telefon. */
+export const SHELL_TOGGLE_PX = 16;
 
 /**
  * Samme header-rad i lukket toppbar og åpen overlay — identisk høyde,

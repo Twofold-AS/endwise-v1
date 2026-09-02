@@ -308,206 +308,208 @@ export function WorkshopBloub() {
         className="relative z-40 h-11 max-h-[44px] shrink-0 md:h-control md:max-h-[32px]"
       >
         <div
-          data-ronny-verksted-bredde
           className={
-            utvidet
-              ? `fixed right-0 bottom-0 left-0 z-[60] ${VERKSTED_INNHOLD}`
-              : `absolute inset-x-0 top-0 z-40 ${VERKSTED_INNHOLD}`
+            utvidet ? 'fixed right-0 bottom-0 left-0 z-[60]' : 'absolute inset-x-0 top-0 z-40'
           }
           style={utvidet ? { top: ankerTop } : undefined}
         >
           <div
-            data-workshop-shell
-            data-ronny-overlay={utvidet ? '' : undefined}
-            className="overflow-hidden rounded-[18px] shadow-none"
-            style={
-              utvidet
-                ? { height: '100%', borderRadius: RAMME_PX }
-                : {
-                    height: skallHoyde(visning, visPeek),
-                    borderRadius: RAMME_PX,
-                    transition: PANEL_OVERGANG,
-                  }
-            }
+            data-ronny-verksted-bredde
+            className={`${VERKSTED_INNHOLD} ${utvidet ? 'h-full' : ''}`}
           >
-            <div className="pointer-events-none absolute inset-0" aria-hidden>
-              <Grainient className="absolute inset-0 h-full w-full" />
-            </div>
-
-            <div className={`relative flex flex-col ${fastHoyde || utvidet ? 'h-full' : ''}`}>
-              <div
-                data-workshop-strip
-                className="relative h-11 max-h-[44px] w-full shrink-0 md:h-control md:max-h-[32px]"
-              >
-                <div
-                  data-workshop-cluster
-                  className="absolute inset-0 z-10 flex items-center justify-center gap-2"
-                >
-                  <button
-                    type="button"
-                    onClick={onRonny}
-                    aria-expanded={apen}
-                    aria-label={apen ? 'Lukk KI-Ronny' : 'Åpne KI-Ronny'}
-                    data-workshop-sticky
-                    data-ronny-stage
-                    className="flex shrink-0 items-center justify-center self-center bg-transparent focus-visible:outline-2 focus-visible:outline-white"
-                    style={{ width: STRIP_BOT, height: STRIP_BOT }}
-                  >
-                    <span data-ronny-spin={klikk ? '' : undefined} className="flex">
-                      <BloubBot
-                        size={STRIP_BOT}
-                        shape="cercle"
-                        color="#ffffff"
-                        paper="#111111"
-                        state={tilstand}
-                        expression={uttrykk}
-                        follow={false}
-                        still={false}
-                        playing={false}
-                      />
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onTekstEllerPil}
-                    aria-expanded={apen}
-                    className="flex min-w-0 items-center gap-1.5 bg-transparent text-white focus-visible:outline-2 focus-visible:outline-white"
-                  >
-                    <span className="truncate leading-none text-label text-white">
-                      La KI-Ronny ta styringen
-                    </span>
-                    <RonnyPil size={14} opp={apen} />
-                  </button>
-                </div>
+            <div
+              data-workshop-shell
+              data-ronny-overlay={utvidet ? '' : undefined}
+              className="overflow-hidden rounded-[18px] shadow-none"
+              style={
+                utvidet
+                  ? { height: '100%', borderRadius: RAMME_PX }
+                  : {
+                      height: skallHoyde(visning, visPeek),
+                      borderRadius: RAMME_PX,
+                      transition: PANEL_OVERGANG,
+                    }
+              }
+            >
+              <div className="pointer-events-none absolute inset-0" aria-hidden>
+                <Grainient className="absolute inset-0 h-full w-full" />
               </div>
 
-              <div
-                data-workshop-dock
-                data-ronny-visning={visning}
-                data-ronny-peek={visPeek ? '' : undefined}
-                className="grid min-h-0 flex-1 transition-[grid-template-rows] duration-200"
-                style={{
-                  gridTemplateRows: visDockInnhold
-                    ? fastHoyde || utvidet
-                      ? '1fr'
-                      : 'auto'
-                    : '0fr',
-                  transitionTimingFunction: APPLE_EASE,
-                }}
-                role="dialog"
-                aria-label="KI-Ronny"
-                aria-hidden={!visDockInnhold}
-              >
+              <div className={`relative flex flex-col ${fastHoyde || utvidet ? 'h-full' : ''}`}>
                 <div
-                  data-ronny-ramme
-                  className={`flex min-h-0 flex-col overflow-hidden ${fastHoyde || utvidet ? 'h-full' : ''}`}
-                  style={
-                    visDockInnhold
-                      ? {
-                          paddingLeft: KORN_RAMME,
-                          paddingRight: KORN_RAMME,
-                          paddingBottom: KORN_RAMME,
-                        }
-                      : undefined
-                  }
+                  data-workshop-strip
+                  className="relative h-11 max-h-[44px] w-full shrink-0 md:h-control md:max-h-[32px]"
                 >
                   <div
-                    data-ronny-kort-padding
-                    className={`w-full px-3 ${
-                      fastHoyde || utvidet ? 'flex min-h-0 flex-1 flex-col' : ''
-                    } ${visDockInnhold ? 'opacity-100' : 'opacity-0'} pt-1 transition-opacity duration-200`}
-                    style={{ transitionTimingFunction: APPLE_EASE }}
+                    data-workshop-cluster
+                    className="absolute inset-0 z-10 flex items-center justify-center gap-2"
+                  >
+                    <button
+                      type="button"
+                      onClick={onRonny}
+                      aria-expanded={apen}
+                      aria-label={apen ? 'Lukk KI-Ronny' : 'Åpne KI-Ronny'}
+                      data-workshop-sticky
+                      data-ronny-stage
+                      className="flex shrink-0 items-center justify-center self-center bg-transparent focus-visible:outline-2 focus-visible:outline-white"
+                      style={{ width: STRIP_BOT, height: STRIP_BOT }}
+                    >
+                      <span data-ronny-spin={klikk ? '' : undefined} className="flex">
+                        <BloubBot
+                          size={STRIP_BOT}
+                          shape="cercle"
+                          color="#ffffff"
+                          paper="#111111"
+                          state={tilstand}
+                          expression={uttrykk}
+                          follow={false}
+                          still={false}
+                          playing={false}
+                        />
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onTekstEllerPil}
+                      aria-expanded={apen}
+                      className="flex min-w-0 items-center gap-1.5 bg-transparent text-white focus-visible:outline-2 focus-visible:outline-white"
+                    >
+                      <span className="truncate leading-none text-label text-white">
+                        La KI-Ronny ta styringen
+                      </span>
+                      <RonnyPil size={14} opp={apen} />
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  data-workshop-dock
+                  data-ronny-visning={visning}
+                  data-ronny-peek={visPeek ? '' : undefined}
+                  className="grid min-h-0 flex-1 transition-[grid-template-rows] duration-200"
+                  style={{
+                    gridTemplateRows: visDockInnhold
+                      ? fastHoyde || utvidet
+                        ? '1fr'
+                        : 'auto'
+                      : '0fr',
+                    transitionTimingFunction: APPLE_EASE,
+                  }}
+                  role="dialog"
+                  aria-label="KI-Ronny"
+                  aria-hidden={!visDockInnhold}
+                >
+                  <div
+                    data-ronny-ramme
+                    className={`flex min-h-0 flex-col overflow-hidden ${fastHoyde || utvidet ? 'h-full' : ''}`}
+                    style={
+                      visDockInnhold
+                        ? {
+                            paddingLeft: KORN_RAMME,
+                            paddingRight: KORN_RAMME,
+                            paddingBottom: KORN_RAMME,
+                          }
+                        : undefined
+                    }
                   >
                     <div
-                      data-ronny-svar-kort
-                      className={`flex flex-col overflow-hidden bg-transparent px-3 pt-0.5 pb-0 text-[#1d1d1f] ${
-                        fastHoyde || utvidet ? 'h-full min-h-0 flex-1' : ''
-                      }`}
-                      style={{
-                        maxHeight: visPeek ? PEEK_MAX : undefined,
-                        paddingBottom: utvidet ? composerHoyde : undefined,
-                      }}
+                      data-ronny-kort-padding
+                      className={`w-full px-3 ${
+                        fastHoyde || utvidet ? 'flex min-h-0 flex-1 flex-col' : ''
+                      } ${visDockInnhold ? 'opacity-100' : 'opacity-0'} pt-1 transition-opacity duration-200`}
+                      style={{ transitionTimingFunction: APPLE_EASE }}
                     >
-                      {utvidet ? (
-                        <div
-                          data-ronny-traad
-                          className="no-scrollbar flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pt-1 pb-0 md:gap-5"
-                        >
-                          {messages.map((melding) => {
-                            const tekstDel = tekstFraMelding(melding);
-                            if (!tekstDel) return null;
-                            return (
-                              <Message
-                                key={melding.id}
-                                align={melding.role === 'user' ? 'end' : 'start'}
-                              >
+                      <div
+                        data-ronny-svar-kort
+                        className={`flex flex-col overflow-hidden bg-transparent px-3 pt-0.5 pb-0 text-[#1d1d1f] ${
+                          fastHoyde || utvidet ? 'h-full min-h-0 flex-1' : ''
+                        }`}
+                        style={{
+                          maxHeight: visPeek ? PEEK_MAX : undefined,
+                          paddingBottom: utvidet ? composerHoyde : undefined,
+                        }}
+                      >
+                        {utvidet ? (
+                          <div
+                            data-ronny-traad
+                            className="no-scrollbar flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pt-1 pb-0 md:gap-5"
+                          >
+                            {messages.map((melding) => {
+                              const tekstDel = tekstFraMelding(melding);
+                              if (!tekstDel) return null;
+                              return (
+                                <Message
+                                  key={melding.id}
+                                  align={melding.role === 'user' ? 'end' : 'start'}
+                                >
+                                  <MessageContent>
+                                    <MessageBubble
+                                      egen={melding.role === 'user'}
+                                      className={BOBLE_TEKST}
+                                    >
+                                      {tekstDel}
+                                    </MessageBubble>
+                                  </MessageContent>
+                                </Message>
+                              );
+                            })}
+                            {error ? (
+                              <Message align="start">
                                 <MessageContent>
-                                  <MessageBubble
-                                    egen={melding.role === 'user'}
-                                    className={BOBLE_TEKST}
-                                  >
-                                    {tekstDel}
+                                  <MessageBubble className={BOBLE_TEKST}>
+                                    {norskChatFeil(error)}
                                   </MessageBubble>
                                 </MessageContent>
                               </Message>
-                            );
-                          })}
-                          {error ? (
-                            <Message align="start">
-                              <MessageContent>
-                                <MessageBubble className={BOBLE_TEKST}>
-                                  {norskChatFeil(error)}
-                                </MessageBubble>
-                              </MessageContent>
-                            </Message>
-                          ) : visTenker ? (
-                            <RonnyTenkerTekst />
-                          ) : null}
-                        </div>
-                      ) : visPeek ? (
-                        <div
-                          data-ronny-traad
-                          data-ronny-peek-svar
-                          className="no-scrollbar min-h-0 overflow-y-auto py-0"
+                            ) : visTenker ? (
+                              <RonnyTenkerTekst />
+                            ) : null}
+                          </div>
+                        ) : visPeek ? (
+                          <div
+                            data-ronny-traad
+                            data-ronny-peek-svar
+                            className="no-scrollbar min-h-0 overflow-y-auto py-0"
+                          >
+                            {ronnySvar ? (
+                              <Message align="start">
+                                <MessageContent>
+                                  <MessageBubble className={BOBLE_TEKST}>{ronnySvar}</MessageBubble>
+                                </MessageContent>
+                              </Message>
+                            ) : error ? (
+                              <Message align="start">
+                                <MessageContent>
+                                  <MessageBubble className={BOBLE_TEKST}>
+                                    {norskChatFeil(error)}
+                                  </MessageBubble>
+                                </MessageContent>
+                              </Message>
+                            ) : visTenker ? (
+                              <RonnyTenkerTekst />
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                    {visHandtak ? (
+                      <div data-ronny-handtak-rad className="flex justify-center pt-0 pb-1">
+                        <button
+                          type="button"
+                          data-ronny-utvid
+                          data-ronny-handtak
+                          aria-label={utvidet ? 'Lukk samtale' : 'Se hele'}
+                          title={utvidet ? 'Lukk samtale' : 'Se hele'}
+                          aria-expanded={utvidet}
+                          onPointerDown={onHandtakNed}
+                          onPointerUp={onHandtakOpp}
+                          className="flex cursor-grab touch-none items-center justify-center px-6 py-0.5 active:cursor-grabbing"
                         >
-                          {ronnySvar ? (
-                            <Message align="start">
-                              <MessageContent>
-                                <MessageBubble className={BOBLE_TEKST}>{ronnySvar}</MessageBubble>
-                              </MessageContent>
-                            </Message>
-                          ) : error ? (
-                            <Message align="start">
-                              <MessageContent>
-                                <MessageBubble className={BOBLE_TEKST}>
-                                  {norskChatFeil(error)}
-                                </MessageBubble>
-                              </MessageContent>
-                            </Message>
-                          ) : visTenker ? (
-                            <RonnyTenkerTekst />
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </div>
+                          <RonnyHandtak />
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
-                  {visHandtak ? (
-                    <div data-ronny-handtak-rad className="flex justify-center pt-0 pb-1">
-                      <button
-                        type="button"
-                        data-ronny-utvid
-                        data-ronny-handtak
-                        aria-label={utvidet ? 'Lukk samtale' : 'Se hele'}
-                        title={utvidet ? 'Lukk samtale' : 'Se hele'}
-                        aria-expanded={utvidet}
-                        onPointerDown={onHandtakNed}
-                        onPointerUp={onHandtakOpp}
-                        className="flex cursor-grab touch-none items-center justify-center px-6 py-0.5 active:cursor-grabbing"
-                      >
-                        <RonnyHandtak />
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
               </div>
             </div>

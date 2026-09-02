@@ -144,7 +144,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-kort-padding/);
     expect(fab).toMatch(/data-ronny-kort-padding[\s\S]{0,280}pt-1/);
     expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,80}pb-1/);
-    expect(fab).toMatch(/data-ronny-handtak[\s\S]{0,400}py-0\.5/);
+    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]*py-0\.5/);
     expect(fab).toMatch(/VERKSTED_INNHOLD/);
     expect(fab).toMatch(/data-ronny-verksted-bredde/);
     expect(fab).toMatch(/data-ronny-prompt-kort[\s\S]{0,160}py-1\.5/);

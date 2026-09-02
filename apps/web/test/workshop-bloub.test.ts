@@ -134,9 +134,6 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/z-\[60\]/);
     expect(fab).toMatch(/z-\[70\]/);
     expect(fab).not.toMatch(/calc\(100dvh - \$\{ankerTop\}px - 8px\)/);
-    expect(fab.indexOf('data-ronny-handtak-rad')).toBeGreaterThan(
-      fab.indexOf('data-ronny-composer'),
-    );
     expect(fab.indexOf('data-ronny-prompt-kort')).toBeGreaterThan(
       fab.indexOf('data-ronny-handtak-rad'),
     );
@@ -154,6 +151,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-verksted-bredde/);
     expect(fab).toMatch(/data-ronny-flate/);
     expect(fab).toMatch(/data-ronny-laast/);
+    expect(fab).toMatch(/if \(utvidet\) \{\s*scroller.setAttribute\('data-ronny-laast'/);
+    expect(fab).not.toMatch(/if \(apen\) \{\s*scroller.setAttribute\('data-ronny-laast'/);
     expect(fab).toMatch(/data-ronny-side-scroll/);
     expect(fab).toMatch(/data-ronny-logg-ramme/);
     expect(fab).toMatch(/loggOverflow/);
@@ -217,7 +216,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/setPromptTekst\(''\)/);
     expect(fab).toMatch(/data-ronny-prompt-linje/);
     expect(fab).not.toMatch(/data-ronny-prompt-linje[\s\S]{0,80}border-b/);
-    expect(fab).not.toMatch(/data-ronny-composer[\s\S]{0,800}Grainient/);
+    expect(fab).toMatch(/utvidet \? \(/);
+    expect(fab).toMatch(/data-ronny-composer[\s\S]*Grainient/);
     expect(fab).toMatch(/norskChatFeil/);
     expect(fab).not.toMatch(/Noe gikk galt\. Prøv igjen\./);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);

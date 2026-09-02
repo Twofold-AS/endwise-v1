@@ -129,9 +129,9 @@ function skallHoyde(visning: RonnyVisning, visPeek: boolean): string {
 }
 
 /**
- * Åpen (peek/full): fast ugjennomsiktig flate under chrome. Siden låses.
- * Peek-kort = Verksted-bredde; backdrop dekker resten. Full = viewport-grainient.
- * Composer-bakgrunn er full bredde. Håndtak over input. Tenking i stripe-tekst.
+ * Peek (etter send): svar under stripen, composer-kort alene nederst,
+ * siden synlig. Full-dekning kun via strek-ikonet (og samme ikon lukker
+ * tilbake til peek). Tenking i stripe-tekst. Håndtak over input.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -169,7 +169,6 @@ export function WorkshopBloub() {
   const { messages, sendMessage, status, error } = useChat({ transport });
   const ronnySvar = sisteTurTekst(messages);
   const visPeek = visning === 'dock' && (Boolean(ronnySvar) || Boolean(error));
-  const visDockInnhold = visPeek || utvidet;
   const visHandtak = visPeek || utvidet;
   const opptatt = status === 'submitted' || status === 'streaming';
   const idle = useRonnyIdle(!klikk);
@@ -206,7 +205,7 @@ export function WorkshopBloub() {
   useEffect(() => {
     const scroller = document.querySelector<HTMLElement>('[data-ronny-side-scroll]');
     if (!scroller) return;
-    if (apen) {
+    if (utvidet) {
       scroller.setAttribute('data-ronny-laast', '');
       scroller.style.overflow = 'hidden';
     } else {
@@ -217,7 +216,7 @@ export function WorkshopBloub() {
       scroller.removeAttribute('data-ronny-laast');
       scroller.style.overflow = '';
     };
-  }, [apen]);
+  }, [utvidet]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: mål på nytt når composer/peek vises
   useLayoutEffect(() => {
@@ -491,31 +490,119 @@ export function WorkshopBloub() {
     </div>
   ) : null;
 
+  const handtak = visHandtak ? (
+    <div data-ronny-handtak-rad className="flex justify-center pt-3 pb-2">
+      <button
+        type="button"
+        data-ronny-utvid
+        data-ronny-handtak
+        aria-label={utvidet ? 'Lukk samtale' : 'Se hele'}
+        title={utvidet ? 'Lukk samtale' : 'Se hele'}
+        aria-expanded={utvidet}
+        onPointerDown={onHandtakNed}
+        onPointerUp={onHandtakOpp}
+        className="flex cursor-grab touch-none items-center justify-center px-6 py-1 active:cursor-grabbing"
+      >
+        <RonnyHandtak />
+      </button>
+    </div>
+  ) : null;
+
+  const promptKort = (
+    <div
+      data-ronny-prompt-kort
+      className={`${PHONE_KORT_FYLL} border-[#e0e0e0] bg-[#fff] px-2 py-1.5 text-[#1d1d1f]`}
+      style={{ borderRadius: RAMME_PX }}
+    >
+      <PromptInput onSubmit={onPrompt} className="border-0 bg-transparent shadow-none">
+        <PromptInputBody data-ronny-prompt-linje className="min-w-0 flex-1">
+          <PromptInputTextarea
+            value={promptTekst}
+            onChange={(e) => setPromptTekst(e.target.value)}
+            placeholder="Spør Ronny …"
+            disabled={opptatt}
+            className="bg-transparent text-[16px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/45 md:text-label"
+          />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputSubmit status={submitStatus} />
+        </PromptInputFooter>
+      </PromptInput>
+    </div>
+  );
+
   return (
     <>
       <div
         ref={ankerRef}
         className="relative z-40 h-11 max-h-[44px] shrink-0 md:h-control md:max-h-[32px]"
       >
-        {apen ? null : (
+        {utvidet ? null : (
           <div className="absolute inset-x-0 top-0 z-40">
             <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
               <div
                 data-workshop-shell
                 className={KORT_KANT}
-                style={{ height: '100%', borderRadius: RAMME_PX }}
+                style={{
+                  height: skallHoyde(visning, visPeek),
+                  borderRadius: RAMME_PX,
+                  transition: PANEL_OVERGANG,
+                }}
               >
                 <div className="pointer-events-none absolute inset-0" aria-hidden>
                   <Grainient className="absolute inset-0 h-full w-full" />
                 </div>
-                <div className="relative">{stripe}</div>
+                <div className="relative flex flex-col">
+                  {stripe}
+                  <div
+                    data-workshop-dock
+                    data-ronny-visning={visning}
+                    data-ronny-foldet={foldet ? '' : undefined}
+                    data-ronny-peek={visPeek ? '' : undefined}
+                    className="grid min-h-0 transition-[grid-template-rows] duration-200"
+                    style={{
+                      gridTemplateRows: visPeek ? 'auto' : '0fr',
+                      transitionTimingFunction: APPLE_EASE,
+                    }}
+                    role="dialog"
+                    aria-label="KI-Ronny"
+                    aria-hidden={!visPeek}
+                  >
+                    <div
+                      data-ronny-ramme
+                      className="flex min-h-0 flex-col overflow-hidden"
+                      style={
+                        visPeek
+                          ? {
+                              paddingLeft: KORN_RAMME,
+                              paddingRight: KORN_RAMME,
+                              paddingBottom: KORN_RAMME,
+                            }
+                          : undefined
+                      }
+                    >
+                      <div
+                        data-ronny-kort-padding
+                        className={`w-full ${visPeek ? 'opacity-100' : 'opacity-0'} pt-1 transition-opacity duration-200`}
+                        style={{ transitionTimingFunction: APPLE_EASE }}
+                      >
+                        <div
+                          data-ronny-svar-kort
+                          className="flex flex-col overflow-hidden bg-transparent pt-0.5 pb-1 text-[#1d1d1f]"
+                        >
+                          {visPeek ? loggUtsnitt : null}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {apen ? (
+      {utvidet ? (
         <div
           data-ronny-flate
           data-ronny-overlay=""
@@ -527,83 +614,24 @@ export function WorkshopBloub() {
           <div className="pointer-events-none absolute inset-0" aria-hidden>
             <Grainient className="absolute inset-0 h-full w-full" />
           </div>
-
-          {utvidet ? (
-            <div className="relative flex h-full flex-col">
-              {stripe}
+          <div className="relative flex h-full flex-col">
+            {stripe}
+            <div
+              data-workshop-dock
+              data-ronny-visning={visning}
+              data-ronny-foldet={foldet ? '' : undefined}
+              className="flex min-h-0 flex-1 flex-col"
+              role="dialog"
+              aria-label="KI-Ronny"
+            >
               <div
-                data-workshop-dock
-                data-ronny-visning={visning}
-                data-ronny-foldet={foldet ? '' : undefined}
-                className="flex min-h-0 flex-1 flex-col"
-                role="dialog"
-                aria-label="KI-Ronny"
+                data-ronny-svar-kort
+                className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"
               >
-                <div
-                  data-ronny-svar-kort
-                  className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"
-                >
-                  {loggUtsnitt}
-                </div>
+                {loggUtsnitt}
               </div>
             </div>
-          ) : (
-            <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
-              <div
-                className={KORT_KANT}
-                style={{
-                  height: skallHoyde(visning, visPeek),
-                  borderRadius: RAMME_PX,
-                  transition: PANEL_OVERGANG,
-                }}
-              >
-                <div className="relative flex flex-col">
-                  {stripe}
-                  <div
-                    data-workshop-dock
-                    data-ronny-visning={visning}
-                    data-ronny-foldet={foldet ? '' : undefined}
-                    data-ronny-peek={visPeek ? '' : undefined}
-                    className="grid min-h-0 transition-[grid-template-rows] duration-200"
-                    style={{
-                      gridTemplateRows: visDockInnhold ? 'auto' : '0fr',
-                      transitionTimingFunction: APPLE_EASE,
-                    }}
-                    role="dialog"
-                    aria-label="KI-Ronny"
-                    aria-hidden={!visDockInnhold}
-                  >
-                    <div
-                      data-ronny-ramme
-                      className="flex min-h-0 flex-col overflow-hidden"
-                      style={
-                        visDockInnhold
-                          ? {
-                              paddingLeft: KORN_RAMME,
-                              paddingRight: KORN_RAMME,
-                              paddingBottom: KORN_RAMME,
-                            }
-                          : undefined
-                      }
-                    >
-                      <div
-                        data-ronny-kort-padding
-                        className={`w-full ${visDockInnhold ? 'opacity-100' : 'opacity-0'} pt-1 transition-opacity duration-200`}
-                        style={{ transitionTimingFunction: APPLE_EASE }}
-                      >
-                        <div
-                          data-ronny-svar-kort
-                          className="flex flex-col overflow-hidden bg-transparent pt-0.5 pb-1 text-[#1d1d1f]"
-                        >
-                          {loggUtsnitt}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       ) : null}
 
@@ -614,45 +642,24 @@ export function WorkshopBloub() {
           className="fixed inset-x-0 bottom-0 z-[70] w-full shadow-none"
           style={{ paddingBottom: COMPOSER_BUNN }}
         >
-          {visHandtak ? (
-            <div data-ronny-handtak-rad className="flex justify-center pt-3 pb-2">
-              <button
-                type="button"
-                data-ronny-utvid
-                data-ronny-handtak
-                aria-label={utvidet ? 'Lukk samtale' : 'Se hele'}
-                title={utvidet ? 'Lukk samtale' : 'Se hele'}
-                aria-expanded={utvidet}
-                onPointerDown={onHandtakNed}
-                onPointerUp={onHandtakOpp}
-                className="flex cursor-grab touch-none items-center justify-center px-6 py-1 active:cursor-grabbing"
-              >
-                <RonnyHandtak />
-              </button>
+          {utvidet ? (
+            <div className="relative w-full px-3">
+              {handtak}
+              <div className="pt-1.5 pb-1.5">{promptKort}</div>
             </div>
-          ) : null}
-          <div className="relative w-full px-3 pt-1.5 pb-1.5">
-            <div
-              data-ronny-prompt-kort
-              className={`${PHONE_KORT_FYLL} border-[#e0e0e0] bg-[#fff] px-2 py-1.5 text-[#1d1d1f]`}
-              style={{ borderRadius: RAMME_PX }}
-            >
-              <PromptInput onSubmit={onPrompt} className="border-0 bg-transparent shadow-none">
-                <PromptInputBody data-ronny-prompt-linje className="min-w-0 flex-1">
-                  <PromptInputTextarea
-                    value={promptTekst}
-                    onChange={(e) => setPromptTekst(e.target.value)}
-                    placeholder="Spør Ronny …"
-                    disabled={opptatt}
-                    className="bg-transparent text-[16px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/45 md:text-label"
-                  />
-                </PromptInputBody>
-                <PromptInputFooter>
-                  <PromptInputSubmit status={submitStatus} />
-                </PromptInputFooter>
-              </PromptInput>
+          ) : (
+            <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
+              <div className={`relative ${KORT_KANT}`}>
+                <div className="pointer-events-none absolute inset-0" aria-hidden>
+                  <Grainient className="absolute inset-0 h-full w-full" />
+                </div>
+                <div className="relative px-3 pt-1.5 pb-1.5">
+                  {handtak}
+                  {promptKort}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ) : null}
     </>

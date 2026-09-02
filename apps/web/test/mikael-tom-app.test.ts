@@ -149,9 +149,26 @@ describe('Mikael 02.09 — Ronny sentrert, Galaxy på Oppgrader', () => {
 
   it('Oppgrader bruker Galaxy inne i knappen, ikke Grainient', () => {
     const pille = utenKommentarer(les('../app/(app)/_shell/oppgrader-pille.tsx'));
+    const css = les('../app/globals.css');
     expect(pille).toMatch(/<Galaxy/);
-    expect(pille).toMatch(/#111/);
+    expect(pille).toMatch(/starSpeed=\{0\.2\}/);
+    expect(pille).toMatch(/density=\{1\}/);
+    expect(pille).toMatch(/hueShift=\{140\}/);
+    expect(pille).toMatch(/speed=\{1\}/);
+    expect(pille).toMatch(/glowIntensity=\{0\.15\}/);
+    expect(pille).toMatch(/saturation=\{0\}/);
+    expect(pille).toMatch(/mouseRepulsion/);
+    expect(pille).toMatch(/repulsionStrength=\{2\}/);
+    expect(pille).toMatch(/twinkleIntensity=\{0\.3\}/);
+    expect(pille).toMatch(/rotationSpeed=\{0\.1\}/);
+    expect(pille).toMatch(/\btransparent\b/);
+    expect(pille).toMatch(/overflow-hidden/);
+    expect(pille).toMatch(/bg-\[#111\]/);
+    expect(pille).toMatch(/relative z-10/);
+    expect(pille).not.toMatch(/pointer-events-none absolute inset-0/);
+    expect(pille).not.toMatch(/1080/);
     expect(pille).not.toMatch(/Grainient/);
     expect(pille).not.toMatch(/ShaderGradient/);
+    expect(css).toMatch(/@endwise\/ui\/galaxy\.css/);
   });
 });

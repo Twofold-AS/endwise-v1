@@ -20,7 +20,7 @@ export function OppgraderPille() {
       data-oppgrader-pille
       className="relative mx-2 mb-1 flex h-9 items-center justify-center overflow-hidden rounded-full bg-[#111] px-4 text-label text-white"
     >
-      <span className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <span className="absolute inset-0 overflow-hidden" aria-hidden>
         <Galaxy
           starSpeed={0.2}
           density={1}
@@ -35,7 +35,7 @@ export function OppgraderPille() {
           transparent
         />
       </span>
-      <span className="relative z-10 truncate">{tekst}</span>
+      <span className="pointer-events-none relative z-10 truncate">{tekst}</span>
     </Link>
   );
 }

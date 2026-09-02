@@ -33,6 +33,27 @@ body {
   min-height: 100dvh;
 }
 
+/*
+ * iOS Safari zoomer hele siden når et felt med computed font-size < 16px
+ * får fokus. Gulv på telefon. Pinch-zoom beholdes (ingen viewport-tak).
+ * Desktop (md+) beholder text-label 13px. Bobler/logg er ikke felt.
+ */
+@media (max-width: 767.98px) {
+  input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not(
+    [type="radio"]
+  ):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="image"]):not(
+    [type="color"]
+  ),
+  textarea,
+  select,
+  [contenteditable="true"],
+  [contenteditable=""] {
+    /* Tailwind text-label (13px) slår ellers denne. */
+    /* biome-ignore lint/complexity/noImportantStyles: iOS-gulv må slå utility-klasser */
+    font-size: max(16px, 100%) !important;
+  }
+}
+
 /* Skjult scrollbar for sidebar-rail-en (beholder scroll, fjerner sporet). */
 .no-scrollbar {
   scrollbar-width: none;

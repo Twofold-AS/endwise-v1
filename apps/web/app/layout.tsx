@@ -36,6 +36,7 @@ export const metadata: Metadata = {
 };
 
 // PWA-tema (Next 14+: themeColor hører til viewport, ikke metadata).
+// Pinch-zoom beholdes. iOS-fokuszoom fikses med felt ≥16px, ikke viewport-tak.
 export const viewport: Viewport = {
   themeColor: '#ffffff',
   colorScheme: 'light',

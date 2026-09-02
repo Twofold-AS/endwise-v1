@@ -212,10 +212,7 @@ export default function TrådPage() {
   function onPrompt(melding: PromptInputMessage, event: FormEvent<HTMLFormElement>) {
     const text = melding.text.trim();
     if (!text) return;
-    post.mutate(
-      { threadId, body: text },
-      { onSuccess: () => event.currentTarget.reset() },
-    );
+    post.mutate({ threadId, body: text }, { onSuccess: () => event.currentTarget.reset() });
   }
 
   const motpartId =
@@ -402,7 +399,7 @@ export default function TrådPage() {
             placeholder="Skriv et svar …"
             maxLength={4000}
             disabled={post.isPending}
-            className="bg-transparent text-label text-[#1d1d1f] placeholder:text-[#1d1d1f]/45"
+            className="bg-transparent text-[16px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/45 md:text-label"
           />
         </PromptInputBody>
         <PromptInputFooter>

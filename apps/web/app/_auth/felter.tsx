@@ -9,7 +9,7 @@
  * samme kontroll. Innlogging er magic link + TOTP, uten passordfelt.
  */
 
-/** Input = kontrollhøyde 32px, radius 10px, brødtekst (eierens spec). */
+/** Input = kontrollhøyde 32px, radius 10px, brødtekst 17px (≥16px så iOS ikke zoomer). */
 export const INPUT =
   'h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring';
 

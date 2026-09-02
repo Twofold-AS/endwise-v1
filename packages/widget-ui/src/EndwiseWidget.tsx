@@ -213,7 +213,7 @@ export function EndwiseWidget({
                 border: `1px solid var(--ew-border, ${fb.border})`,
                 background: `var(--ew-bg, ${fb.bg})`,
                 color: `var(--ew-fg, ${fb.fg})`,
-                fontSize: 13,
+                fontSize: 16,
               }}
             />
             <button
@@ -325,7 +325,7 @@ function BookingPanel({
     border: `1px solid var(--ew-border, ${fb.border})`,
     background: `var(--ew-bg, ${fb.bg})`,
     color: `var(--ew-fg, ${fb.fg})`,
-    fontSize: 13,
+    fontSize: 16,
     marginBottom: 10,
   };
 

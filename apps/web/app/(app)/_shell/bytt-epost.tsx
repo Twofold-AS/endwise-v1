@@ -97,7 +97,7 @@ export function ByttEpostSkjema({ gjeldende }: { gjeldende: string }) {
               required
               value={totp}
               onChange={(e) => setTotp(e.target.value.replace(/\D/g, ''))}
-              className={`w-full ${INPUT} font-mono tracking-[0.4em]`}
+              className={`w-full ${INPUT} text-center font-mono text-[16px] tracking-[0.4em] tabular-nums`}
               placeholder="••••••"
             />
           </Field>

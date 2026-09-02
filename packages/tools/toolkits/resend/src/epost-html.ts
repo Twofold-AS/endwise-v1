@@ -2,6 +2,7 @@
  * HTML-skall for booking-/avvik-varsler.
  * Speiler tokenene i `packages/auth/src/senders/epost-mal.ts` (Mikael Apple-lås).
  * Toolkit importerer ikke `@endwise/auth` — det ville dratt Better-Auth hit.
+ * Ordmerke i stedet for cid-logo (auth eier vedlegget). Samme parchment/white.
  * Duplikatet er trygt så lenge `resend-port.test.ts` låser de samme hex-verdiene.
  */
 

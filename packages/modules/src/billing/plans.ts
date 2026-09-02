@@ -473,5 +473,5 @@ export const INTEGRATIONS: { key: ModuleKey; name: string; desc: string }[] = [
   { key: 'quick', name: 'Quick', desc: 'Import av bookinger fra Quick' },
   { key: 'twilio', name: 'Twilio (SMS)', desc: 'SMS-varsler til kunder' },
   { key: 'resend', name: 'Resend (e-post)', desc: 'Transaksjons-e-post + nyhetsbrev' },
-  { key: 'ai-providers', name: 'AI-leverandører', desc: 'Fireworks + Mistral (AI-agenter)' },
+  { key: 'ai-providers', name: 'AI-leverandører', desc: 'Mistral EU (AI-agenter)' },
 ];

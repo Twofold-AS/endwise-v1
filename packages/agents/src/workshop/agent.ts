@@ -8,8 +8,9 @@ import { erTillattGaaTil } from './gaa-til.ts';
 import instructions from './instructions.md?raw';
 
 /**
- * Workshop-agenten. Samme provider-sti som drift-innsikt (tenant_operational,
- * rolle `fast` — billig/cachet). Ingen ny leverandør. Ingen Quick-skriving.
+ * Workshop-agenten (Ronny). Samme dataklasse som drift-innsikt
+ * (`tenant_operational`, rolle `fast`). `resolveModelProvider` ruter begge
+ * til Mistral EU (Mikael 02.09.2026) — ikke Fireworks. Ingen Quick-skriving.
  * `requiredModule: null` — den følger brukeren på hver side, også uten
  * ai-support-modulen.
  */

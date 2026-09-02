@@ -69,7 +69,7 @@ describe('Mistral EU-endepunkt (F14-02)', () => {
   });
 });
 
-describe('resolveModelProvider ruter etter dataklasse', () => {
+describe('resolveModelProvider ruter begge dataklasser til Mistral', () => {
   it('fritekst uten Mistral-nøkkel i PRODUKSJON = feil, ikke fallback til Fireworks', () => {
     expect(() =>
       resolveModelProvider('customer_freetext', {
@@ -86,14 +86,25 @@ describe('resolveModelProvider ruter etter dataklasse', () => {
     expect(p.name).toBe('mistral');
   });
 
-  it('driftsdata med Fireworks-nøkkel → Fireworks', () => {
+  it('intern (Ronny/drift) med Mistral-nøkkel → Mistral, ikke Fireworks', () => {
     const p = resolveModelProvider('tenant_operational', {
-      FIREWORKS_API_KEY: 'x',
+      MISTRAL_API_KEY: 'x',
+      FIREWORKS_API_KEY: 'også-denne',
     } as NodeJS.ProcessEnv);
-    expect(p.name).toBe('fireworks');
+    expect(p.name).toBe('mistral');
   });
 
-  it('uten nøkler (dev) → mock, aldri feil leverandør', () => {
+  it('intern uten Mistral-nøkkel i PRODUKSJON = feil, selv med Fireworks-nøkkel', () => {
+    expect(() =>
+      resolveModelProvider('tenant_operational', {
+        NODE_ENV: 'production',
+        FIREWORKS_API_KEY: 'har-denne',
+      } as NodeJS.ProcessEnv),
+    ).toThrow(MissingEuProviderError);
+  });
+
+  it('uten nøkler (dev) → mock for begge klasser, aldri Fireworks', () => {
     expect(resolveModelProvider('customer_freetext', {} as NodeJS.ProcessEnv).name).toBe('mock');
+    expect(resolveModelProvider('tenant_operational', {} as NodeJS.ProcessEnv).name).toBe('mock');
   });
 });

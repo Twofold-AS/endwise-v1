@@ -22,10 +22,11 @@ import { createRequestContext } from '../context.ts';
  * same-origin. Biblioteket (`@endwise/api`) eier DB, sesjon og agent-runtime
  * UI-et i web rører fortsatt ikke dataene direkte.
  * Ingen Vercel AI Gateway
- * Modellen kommer fra `resolveModelProvider(agent.dataClass)`. For AI-diagnose
- * betyr det Mistral (EU), fordi agenten er `customer_freetext` — håndhevet i
- * `streamAgentChat`, som kaster `DataRegionViolation` hvis noen skulle klare å
- * sende den et annet sted.
+ * Modellen kommer fra `resolveModelProvider(agent.dataClass)`. Begge
+ * dataklasser rutes til Mistral EU (Mikael 02.09.2026) — Ronny/workshop
+ * (`tenant_operational`) og AI-diagnose/kunde (`customer_freetext`).
+ * `streamAgentChat` kaster `DataRegionViolation` hvis `customer_freetext`
+ * likevel sendes mot en ikke-EU-leverandør.
  * Sperrene, i rekkefølge
  * 1. sesjon — Better-Auth. Uten bruker: 401.
  * 2. tenant — aktiv organisasjon + medlemskap (assertMember). Uten: 403.

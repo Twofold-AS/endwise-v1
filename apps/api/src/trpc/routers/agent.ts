@@ -91,8 +91,7 @@ export const agentRouter = router({
       await runAgent({
         agent,
         context,
-        // F14: leverandøren velges av agentens dataklasse, ikke av konfig.
-        // Kunde-support (customer_freetext) → Mistral (EU). Alltid.
+        // F14 / Mikael 02.09.2026: resolve ruter begge dataklasser til Mistral EU.
         provider: resolveModelProvider(agent.dataClass),
         guardrails,
         messages: [{ role: 'user', content: input.message }],

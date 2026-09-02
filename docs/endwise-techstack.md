@@ -80,7 +80,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **Zod** — validering
 - **Vercel AI SDK** (`ai` ^7) — agent tool-loop + streaming. ⚠️ Deklarert som DIREKTE avhengighet i `apps/api` og `apps/web` fra 12.08.2026, ikke bare transitivt
 - **`@ai-sdk/react`** (12.08.2026, brukergodkjent §2-beslutning) — `useChat` for chat-flaten (F6-18). React-bindingen til `ai@7` vi allerede kjører, ikke en ny leverandør
-- ⛔ **Vercel AI Gateway brukes IKKE.** Modellvalget går gjennom `resolveModelProvider(dataClass)` — kundevendt → Mistral (EU), internt → Fireworks. En gateway ville flyttet den avgjørelsen ut av vår kode, og EU-residensen med den
+- ⛔ **Vercel AI Gateway brukes IKKE.** Modellvalget går gjennom `resolveModelProvider(dataClass)` — **begge dataklasser → Mistral (EU)** (Mikael 02.09.2026). En gateway ville flyttet den avgjørelsen ut av vår kode, og EU-residensen med den
 - **Chat SDK** — samtale-skjelett (resumable streams, historikk)
 
 ### Sanntid — `apps/stream`
@@ -94,17 +94,13 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **Agent = mappe** (`packages/agents/<navn>/`: `agent.ts` + `instructions.md` + `skills/`), auto-registrert, entitlement-gated
 - **Modellkatalog med roller** (fast/standard/hard/embed/realtime) — **ingen hardkodede modeller**; tenant/plan mapper rolle→modell
 - **AIProvider** (tynt lag) for latency-sensitive enkeltkall (diagnose, streaming)
-- **TO LLM-LEVERANDØRER, delt etter DATAKLASSE** (brukergodkjent 14.07.2026 — se `docs/personvern/`):
-  - **Mistral (EU)** — `@ai-sdk/mistral`. **Alt som ser sluttkundens fritekst.** EU-endepunkt (`https://api.mistral.ai/v1`) er hardkodet som eneste lovlige; Mistrals US-endepunkt er **sperret i kode** (`assertEuEndpoint`)
-  - **Fireworks (global)** — `@ai-sdk/fireworks`. Kun agenter som ser **tenant-skopede driftsdata**
-  - **Regelen håndheves i kode, ikke i dokumentasjon:** hver agent erklærer `dataClass`, hver provider erklærer `region`, og `spawnAgent()` nekter å starte en `customer_freetext`-agent mot en ikke-EU-leverandør. En feilkonfigurasjon her er et personvernbrudd, ikke en bug
+- **LLM-LEVERANDØR: Mistral EU for alle agenter** (Mikael 02.09.2026 — se `docs/personvern/` for historikken 14.07):
+  - **Mistral (EU)** — `@ai-sdk/mistral`. Ronny (`/chat/workshop`), kunde-support/widget og intern drift. EU-endepunkt (`https://api.mistral.ai/v1`) er hardkodet som eneste lovlige; Mistrals US-endepunkt er **sperret i kode** (`assertEuEndpoint`)
+  - **Function calling** via chat completions + våre tools (`gåTil`, `søkKunder`, …). ⛔ Ikke Mistral Agents API (innebygd web_search/code_interpreter)
+  - **`@ai-sdk/fireworks` står i repoet** men `resolveModelProvider` velger den **aldri**. Ingen intern fallback til Fireworks når Mistral-nøkkel mangler i prod
+  - **EU-vernet står:** hver agent erklærer `dataClass`, hver provider erklærer `region`, og `spawnAgent()` nekter å starte en `customer_freetext`-agent mot en ikke-EU-leverandør. En feilkonfigurasjon her er et personvernbrudd, ikke en bug
   - **Scope-gate (F14-05):** Mistral Moderations (`mistral-moderation-2603`) klassifiserer kundens fritekst **i EU** før den når hoved-modellen. Kategoriene `health`, `pii`, `law`, `selfharm` → eskaler til menneske (F6-05)
-- **Fireworks — SERVERLESS** (`@ai-sdk/fireworks`), ikke dedicated/on-demand. Leverandører bak abstraksjon (mulig å bytte). ~~OpenAI~~ er ute — se «Døde valg» §1 (brukergodkjent 14.07.2026)
-  - **Tool calling støttes på serverless** (OpenAI-kompatibel `tools`-spesifikasjon), men **kun på modeller som er merket `supportsTools`** — sjekk feltet før en modell velges til en agent-rolle
-  - Fireworks anbefaler **lav temperatur (0.0–0.3)** ved tool calling for å unngå hallusinerte parametre
-  - Serverless-begrensninger som gjelder oss: **harde rate limits**, **smalere modellutvalg** enn on-demand, **delt kapasitet** (latens varierer med last), og **ingen egne modeller**
-  - ⚠️ **Serverless har ingen region-pinning.** On-demand kan settes til `--region EUROPE`; serverless kan ikke. Det er en GDPR-avveining vi må ta bevisst — se §5
-- **Ingen hardkodede modell-ID-er.** Modellkatalogen leser `FIREWORKS_MODEL_<ROLLE>` fra miljøet
+- **Ingen hardkodede modell-ID-er.** Modellkatalogen leser `MISTRAL_MODEL_<ROLLE>` fra miljøet (`FAST` / `STANDARD` / `HARD` / `EMBED` / `REALTIME`). Eksempel i `.env.example`: `mistral-small-2603` (Small 4, tool calling) for FAST og STANDARD
 - **Fusion / Council** (OpenRouter) for planlegging/resonnering — opt-in, «lei først, eie senere»; aldri i booking-stien
 - **Guardrails L1–L5** (`packages/guardrails`) — se sikkerhetsdokumentet
 
@@ -217,11 +213,11 @@ endwise/
 | **Finn.no, Lime CRM** | Salg / CRM | Egne adaptere |
 | **Framer 3.0** | Widget-distribusjon + hovedside-agent | Plugin (widgets) + **Server API** (sideendring via chat, server-side). ⛔ Ikke community-MCP-pluginen — krever åpen klient, skalerer ikke til 250 forhandlere |
 | **Composio** | Long-tail OAuth | Utsatt til konkret behov (f.eks. forhandlers Google Calendar) |
-| **Mistral (EU)** | LLM | **Kundevendt.** All sluttkunde-fritekst. EU-hosting som standard; US-endepunktet er sperret i kode. Moderations-API-et driver scope-gaten (F14-05) |
-| **Fireworks (serverless)** | LLM | **Intern drift.** Bak modellkatalog (`FIREWORKS_API_KEY` + `FIREWORKS_MODEL_*`). Per token, harde rate limits, ingen region-pinning |
+| **Mistral (EU)** | LLM | **Alle agenter** (Ronny, kunde, intern). EU-hosting; US-endepunktet er sperret i kode. Katalog: `MISTRAL_MODEL_*`. Moderations-API-et driver scope-gaten (F14-05) |
+| **Fireworks (serverless)** | LLM | **Ikke valgt av agent-runtime** (Mikael 02.09.2026). Pakken `@ai-sdk/fireworks` står for EU-tester. Ingen region-pinning |
 | **OpenRouter** | LLM | Kun for Fusion/Council (planlegging) — aldri i booking-stien |
 
-**⚠️ Åpent punkt — GDPR og Fireworks serverless:** hele arkitekturen ellers er EU-bundet (Vercel cdg1 Paris, Scaleway Frankrike). Fireworks **serverless** tilbyr ikke region-valg — det gjør bare on-demand-deployments (`--region EUROPE`). Så lenge agentene kun får se tenant-skopede driftsdata (bookinger, tjenester), er eksponeringen begrenset, men den er ikke null. Skal kundedata eller fritekst fra kunder inn i prompten, må dette avklares — enten med DPA/SCC, eller ved å flytte til on-demand i EU-regionen. **Eier er informert (14.07.2026).**
+**⚠️ Fireworks serverless (historikk 14.07.2026):** var prisvalg for intern drift, ikke lovkrav. Fra 02.09.2026 ruter `resolveModelProvider` intern og kunde til Mistral EU. Pakken kan bli stående unused. GDPR-åpningen (ingen region-pin på serverless) gjelder derfor ikke agent-stiene. **Eier låst (Mikael 02.09.2026).**
 
 **Betaling sluttkunde→forhandler (forskudd i widget):** ADR-001 fortsatt åpen — Nets Easy vs Stripe+Vipps, tiltet mot Stripe+Vipps siden Stripe alt er valgt for fakturering.
 
@@ -229,7 +225,7 @@ endwise/
 
 ## 6. Hva vi bevisst IKKE bruker
 
-Hetzner · Coolify · Traefik · NestJS · Encore · BullMQ · QStash · Trigger.dev · Redis (som fast avhengighet) · Unleash · Cloudflare WAF · WAL-G · Lucia · Postmark · dither-kit (fjernet fra UI-et 03.08.2026 — filene ligger, men er ikke eksportert) · Vercel Edge Config (betalt flagg-lagring — DB-basert flagg valgt) · OpenAI (som LLM-leverandør — Fireworks serverless er valgt) · Composio Sandbox/e2b (Endwise-agenter kjører ikke vilkårlig kode; Framer-agenten har et FAST verktøysett) · **Framer community-MCP-plugin** (lagt til 11.08.2026 — krever en åpen Framer-klient på en persons maskin; kan ikke kjøre i kø, ikke kjøre når lokket er lukket, og skalerer ikke til 250 forhandlere. Framers offisielle Server API er valgt).
+Hetzner · Coolify · Traefik · NestJS · Encore · BullMQ · QStash · Trigger.dev · Redis (som fast avhengighet) · Unleash · Cloudflare WAF · WAL-G · Lucia · Postmark · dither-kit (fjernet fra UI-et 03.08.2026 — filene ligger, men er ikke eksportert) · Vercel Edge Config (betalt flagg-lagring — DB-basert flagg valgt) · OpenAI (som LLM-leverandør — byttet til Fireworks 14.07.2026; agent-runtime velger Mistral EU fra 02.09.2026) · **Vercel AI Gateway** · **Mistral Agents API** (innebygd web_search/code_interpreter — vi bruker chat completions + egne tools) · Composio Sandbox/e2b (Endwise-agenter kjører ikke vilkårlig kode; Framer-agenten har et FAST verktøysett) · **Framer community-MCP-plugin** (lagt til 11.08.2026 — krever en åpen Framer-klient på en persons maskin; kan ikke kjøre i kø, ikke kjøre når lokket er lukket, og skalerer ikke til 250 forhandlere. Framers offisielle Server API er valgt).
 
 Ser du noen av disse i repoet, er det en rest som skal fjernes.
 

@@ -11,7 +11,8 @@ import { lagerVerktoy } from './lager-verktoy.ts';
  * `dataClass: 'tenant_operational'` — den ser kun forhandlerens egne
  * strukturerte driftsdata. Ingen sluttkunde skriver inn i den; det er en ansatt
  * som spør om sin egen kapasitet.
- * Derfor kan den kjøre på Fireworks. Og derfor må den aldri få et verktøy som
+ * Dataklassen TILLATER global region, men `resolveModelProvider` velger
+ * Mistral EU (Mikael 02.09.2026). Den må aldri få et verktøy som
  * returnerer kundens fritekst. Legger noen til et `lesKundemelding`-verktøy
  * her, må dataklassen endres til `customer_freetext` i samme commit — ellers er
  * det en stille lekkasje.

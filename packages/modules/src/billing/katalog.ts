@@ -79,8 +79,8 @@ const TREDJEPART: Omit<Katalogpost, 'kilde' | 'prisMinor' | 'inkludertI' | 'stat
     key: 'ai-providers',
     navn: 'AI-leverandører',
     beskrivelse:
-      'Modellene AI-funksjonene kjører på. Kundevendt tekst går alltid til EU-leverandør (Mistral); driftsdata kan gå til Fireworks.',
-    leverandor: 'Mistral (EU) · Fireworks',
+      'Modellene AI-funksjonene kjører på. Alle agenter (Ronny, kunde, intern) går til EU-leverandør (Mistral).',
+    leverandor: 'Mistral (EU)',
   },
   {
     key: 'crm-lime',

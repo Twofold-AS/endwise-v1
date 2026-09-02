@@ -5,7 +5,8 @@ import type { ModelRole } from '@endwise/modules';
  * ingen hardkodede modeller. Kallstedene ber om en rolle («fast», «hard» …),
  * og katalogen mapper (leverandør, plan, rolle) → modell-ID.
  * Modell-ID-ene leses fra miljøet, per leverandør:
- * FIREWORKS_MODEL_FAST, MISTRAL_MODEL_FAST, …
+ * MISTRAL_MODEL_FAST / STANDARD / HARD / EMBED / REALTIME
+ * (FIREWORKS_MODEL_* finnes fortsatt for den ubrukte Fireworks-provideren).
  * Grunnen til at de ikke ligger i kode: modellnavn endrer seg raskere enn
  * repoet, og en modell vi gjetter på er en modell som ikke finnes.
  */

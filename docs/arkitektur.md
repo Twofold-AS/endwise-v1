@@ -209,8 +209,8 @@ innloggingen skjer før noen forhandler er valgt. Grensen går i stedet på
 | **Stripe** | Abonnement og betaling. **Webhooken er det eneste som skrur på moduler** | Ja, for salg |
 | **Resend** | E-post: engangskoder ved innlogging, bekreftelser, nyhetsbrev | Ja — innlogging med 2FA feiler uten |
 | **Twilio** | SMS til kunder og engangskoder på telefon | Nei |
-| **Mistral (EU)** | ⚠️ **All AI som ser kundens egne ord.** Ingen reserveløsning — mangler nøkkelen, nekter agenten å starte i produksjon | Ja, for AI mot kunde |
-| **Fireworks** | AI på våre egne driftsdata (antall saker, kapasitet). Aldri kundetekst | Nei |
+| **Mistral (EU)** | ⚠️ **Alle agenter** (Ronny, kunde-support, intern drift). Ingen reserveløsning — mangler nøkkelen, nekter agenten å starte i produksjon | Ja, for AI |
+| **Fireworks** | Ikke valgt av agent-runtime (Mikael 02.09.2026). Pakken står for EU-tester | Nei |
 | **Statens vegvesen** | Regnr → merke, modell, EU-frist. Betales per oppslag | Nei |
 | **Quick** | Synk av kunder og bookinger mot forhandlerens ERP | Nei |
 | **Sentry** | Feilrapportering | Nei |
@@ -220,7 +220,7 @@ innloggingen skjer før noen forhandler er valgt. Grensen går i stedet på
 Kode i `packages/providers/src/data-region.ts` deler data i to klasser:
 
 - `customer_freetext` — kundens egne ord → **må** til EU-leverandør (Mistral)
-- `tenant_operational` — vår egen strukturerte drift → kan gå hvor som helst
+- `tenant_operational` — vår egen strukturerte drift → *kan* region-messig gå globalt, men `resolveModelProvider` ruter den også til Mistral EU (Mikael 02.09.2026)
 
 En feilkonfigurasjon her er ikke en bug, det er et personvernbrudd. Derfor er
 det en type som ikke lar seg kompilere feil, og det finnes ingen fallback fra

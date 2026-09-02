@@ -45,7 +45,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/const RAMME_PX = 18/);
     expect(fab).toMatch(/grid-template-rows/);
     expect(fab).toMatch(/const STRIP_BOT = 28/);
-    expect(fab).toMatch(/const IDLE_MS = 2500/);
+    expect(fab).toMatch(/const IDLE_MS = 5000/);
+    expect(fab).not.toMatch(/const IDLE_MS = 2500/);
     expect(fab).toMatch(/useRonnyIdle\(!klikk\)/);
     expect(fab).not.toMatch(/useRonnyIdle\(!klikk &&/);
     expect(fab).toMatch(/color="#ffffff"/);
@@ -61,6 +62,9 @@ describe('Workshop-stripe i app-skallet', () => {
     expect((fab.match(/expression: 'colere'/g) ?? []).length).toBeGreaterThanOrEqual(3);
     expect(fab).not.toMatch(/expression: 'triste'/);
     expect(fab).not.toMatch(/expression: 'somnolent'/);
+    expect(fab).not.toMatch(/state: 'thinking'/);
+    expect(fab).toMatch(/opptatt\s*\n\s*\? 'thinking'/);
+    expect(fab).toMatch(/submitStatus = opptatt \? status : 'ready'/);
     expect(fab).toMatch(/data-ronny-spin/);
     expect(fab).toMatch(/data-workshop-dock/);
     expect(fab).toMatch(/PromptInput/);
@@ -76,10 +80,26 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).not.toMatch(/PilNed|PilOpp/);
     expect(fab).toMatch(/data-ronny-utvid/);
     expect(fab).toMatch(/data-ronny-handtak/);
+    expect(fab).toMatch(/data-ronny-handtak-rad/);
+    expect(fab).toMatch(/data-ronny-prompt-kort/);
+    expect(fab).toMatch(/PHONE_KORT_FYLL/);
+    expect(fab).toMatch(/PROMPT_KORT_MIN/);
+    expect(fab).toMatch(/8\.75rem/);
+    expect(fab).toMatch(/max-w-\[520px\]/);
     expect(fab).toMatch(/size-6/);
     expect(fab).toMatch(/rounded-full/);
     expect(fab).toMatch(/visHandtak/);
     expect(fab).toMatch(/foldet/);
+    expect(fab).toMatch(/onUtvid/);
+    expect(fab).toMatch(/setVisning\('utvidet'\)/);
+    expect(fab).toMatch(/data-ronny-overlay/);
+    expect(fab).toMatch(/fixed right-0 bottom-0 left-0/);
+    expect(fab).toMatch(/z-\[60\]/);
+    expect(fab).not.toMatch(/calc\(100dvh - \$\{ankerTop\}px - 8px\)/);
+    expect(fab.indexOf('data-ronny-utvid')).toBeGreaterThan(fab.indexOf('data-ronny-prompt-kort'));
+    expect(fab.indexOf('data-ronny-handtak-rad')).toBeGreaterThan(
+      fab.indexOf('data-ronny-kort-padding'),
+    );
     expect(fab).toMatch(/borderRadius: lukket \? 0/);
     expect(fab).toMatch(/rounded-none/);
     expect(fab).toMatch(/data-ronny-kort-padding/);
@@ -107,6 +127,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(submit).toMatch(/text-label/);
     expect(fab).toMatch(/gåTil|gaaTil|erTillattGaaTil/);
     expect(fab).not.toMatch(/fixed inset-x-0 bottom-0/);
+    expect(fab).not.toMatch(/fixed right-3 bottom/);
     expect(fab).toMatch(/text-white/);
     expect(fab).toMatch(/data-workshop-sticky/);
     expect(fab).not.toMatch(/bg-bg\/90/);

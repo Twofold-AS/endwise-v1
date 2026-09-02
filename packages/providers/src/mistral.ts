@@ -4,7 +4,9 @@ import { catalogFromEnv, type ModelCatalog, type PlanKey, resolveModel } from '.
 import type { ModelProvider, ModelRequest } from './provider.ts';
 
 /**
- * F14 — Mistral (EU). Leverandøren for alt som ser sluttkundens fritekst.
+ * F14 / Mikael 02.09.2026 — Mistral (EU). Leverandøren for ALLE agenter
+ * (Ronny/workshop, kunde-support/widget, intern drift). Function calling
+ * via chat completions + våre tools — ikke Mistral Agents API.
  * Base-URL-en er en sikkerhetsgrense, ikke en innstilling.
  * Mistral hoster i EU **som standard** — men de har også et eksplisitt
  * Us-endepunkt, og bruker du det, ligger dataene i usa (deres egen

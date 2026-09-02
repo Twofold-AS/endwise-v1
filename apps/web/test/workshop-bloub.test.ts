@@ -32,7 +32,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(layout).not.toMatch(/bottom-tab|PhoneTab/);
   });
 
-  it('er Grainient-stripe med KI-Ronny til venstre, idle-syklus og bunndock', () => {
+  it('er Grainient-stripe med KI-Ronny midtstilt, idle-syklus og bunndock', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
     const css = les('../app/globals.css');
     expect(fab).toMatch(/data-workshop-strip/);
@@ -74,7 +74,11 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(css).not.toMatch(/rotateX/);
     expect(css).toMatch(/rotateY\(360deg\)/);
     expect(css).toMatch(/ronny-spin/);
+    expect(fab).toMatch(/data-workshop-cluster/);
+    expect(fab).toMatch(/absolute inset-0/);
+    expect(fab).toMatch(/items-center/);
     expect(fab).toMatch(/justify-center/);
+    expect(fab).not.toMatch(/md:justify-start|md:items-start|md:items-end/);
     expect(fab).toMatch(/data-workshop-sticky[\s\S]*La KI-Ronny ta styringen/);
   });
 

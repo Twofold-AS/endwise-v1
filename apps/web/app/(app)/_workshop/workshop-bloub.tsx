@@ -40,7 +40,8 @@ function useRonnyIdle(aktiv: boolean): (typeof RONNY_IDLE)[number] {
 
 /**
  * Grainient-stripe: telefon ~44px, desktop 32px.
- * Statisk «La KI-Ronny ta styringen» + hvit Ronny, midtstilt i stripen (PC og telefon).
+ * Statisk «La KI-Ronny ta styringen» + hvit Ronny, absolutt midtstilt
+ * (vertikalt og horisontalt) i stripen — samme på PC og telefon.
  * Idle: 6 vendor-uttrykk hvert 5. sekund. Klikk: surpris + rotateY-spinn, deretter bunndock.
  * Ingen tekst-blink. Ingen vertikal flip.
  */
@@ -189,7 +190,10 @@ export function WorkshopBloub() {
         </div>
       ) : null}
 
-      <div className="relative z-10 flex h-full w-full items-center justify-center gap-2 px-3">
+      <div
+        data-workshop-cluster
+        className="absolute inset-0 z-10 flex items-center justify-center gap-2"
+      >
         <button
           type="button"
           onClick={onRonny}
@@ -197,7 +201,7 @@ export function WorkshopBloub() {
           aria-label={apen ? 'Lukk KI-Ronny' : 'Åpne KI-Ronny'}
           data-workshop-sticky
           data-ronny-stage
-          className="flex shrink-0 items-center justify-center bg-transparent focus-visible:outline-2 focus-visible:outline-white"
+          className="flex shrink-0 items-center justify-center self-center bg-transparent focus-visible:outline-2 focus-visible:outline-white"
           style={{ width: STRIP_BOT, height: STRIP_BOT }}
         >
           <span data-ronny-spin={klikk ? '' : undefined} className="flex">
@@ -214,7 +218,7 @@ export function WorkshopBloub() {
             />
           </span>
         </button>
-        <p className="min-w-0 truncate text-label text-white">La KI-Ronny ta styringen</p>
+        <p className="truncate leading-none text-label text-white">La KI-Ronny ta styringen</p>
       </div>
     </div>
   );

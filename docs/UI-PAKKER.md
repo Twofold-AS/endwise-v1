@@ -27,7 +27,8 @@
 > `@endwise/ui/grainient.css` og `@endwise/ui/galaxy.css`.
 > `ogl` i både `@endwise/ui` og `@endwise/web`, og i `transpilePackages`. Hvit
 > KI-Ronny (BloubBot) + «La KI-Ronny ta styringen» er **midtstilt** i stripen
-> (`items-center justify-center`) på PC og telefon. Idle-syklus hvert 5. sekund:
+> (`absolute inset-0 items-center justify-center`, samme på PC og telefon —
+> ikke venstrejustert, ikke klistret mot topp/bunn). Idle-syklus hvert 5. sekund:
 > `colere` · `surpris` · `wink` · `curieux` · `attentif` · `heureux`.
 > Oppgrader-CTA: React Bits Galaxy (`@react-bits/Galaxy-JS-CSS`), klippet inne
 > i knappen, svart `#111`. Ikke Grainient på den knappen.
@@ -96,7 +97,7 @@ barrel-eksporten**)
 | **Data** | Recharts (shadcn Chart-mønster) | Søyle-, linje- og arealgrafer. Kun rene typer — se §2 |
 | **Bevegelse (tilstand)** | beUI | Knapper/kontroller som endrer tilstand (idle → loading → success) |
 | **Bevegelse (venting)** | matrix-loaders | «AI tenker»-animasjoner, én loader per SSE-event |
-| **Bakgrunn (AI-stripe)** | Grainient (`ogl`) | KI-Ronny-stripe: 44px telefon / 32px desktop, Ronny+tekst midtstilt. ShaderGradient er ute. Ikke dealer-hero. |
+| **Bakgrunn (AI-stripe)** | Grainient (`ogl`) | KI-Ronny-stripe: 44px telefon / 32px desktop, Ronny+tekst midtstilt (`absolute inset-0`, PC og telefon). ShaderGradient er ute. Ikke dealer-hero. |
 | **Oppgrader-CTA** | Galaxy (`ogl`) | React Bits Galaxy klippet i oval knapp, `#111`. Ikke Grainient. |
 | **Identitet** | bloub (`BloubBot`) | Cercle + store øyne. Én ColorId per ansatt (12 faste). Se §10 |
 | **Maskot-lab** | bloub (`jeremy-prt/bloub`) | Intern `/bot` lever videre. Se §11 |

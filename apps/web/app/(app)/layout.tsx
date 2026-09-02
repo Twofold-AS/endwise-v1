@@ -115,7 +115,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    * Desktop-sidebar er persistent venstre skinne. Overlay/fullskjerm-drawer
    * er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
    * Fast toppbar med 18px-logo på telefon. PhoneBevel er borte.
-   * Workshop-stripen (Grainient, KI-Ronny sentrert) er ~44px på telefon og
+   * Workshop-stripen (Grainient, KI-Ronny midtstilt i stripen) er ~44px på telefon og
    * 32px på desktop. K åpner quick actions i sidebaren på desktop.
    */
   /*

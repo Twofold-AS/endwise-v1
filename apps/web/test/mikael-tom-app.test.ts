@@ -139,12 +139,14 @@ describe('Mikael 02.09 — Ronny sentrert, Galaxy på Oppgrader', () => {
     expect(stripe).toMatch(
       /data-workshop-cluster[\s\S]{0,240}absolute inset-0[\s\S]{0,120}items-center[\s\S]{0,80}justify-center/,
     );
-    expect(stripe).toMatch(/leading-none[\s\S]{0,80}La KI-Ronny ta styringen/);
-    expect(stripe).toMatch(/La KI-Ronny ta styringen/);
+    expect(stripe).toMatch(/IDLE_TEKST = 'Trykk på KI-Ronny'/);
+    expect(stripe).toMatch(/Trykk på KI-Ronny/);
     expect(stripe).not.toMatch(/flex-1 truncate/);
     expect(stripe).not.toMatch(/md:justify-start|md:justify-end|md:items-start|md:items-end/);
     expect(stripe).not.toMatch(/data-workshop-cluster[\s\S]{0,240}justify-start/);
-    expect(stripe).not.toMatch(/data-workshop-cluster[\s\S]{0,240}items-start|data-workshop-cluster[\s\S]{0,240}items-end/);
+    expect(stripe).not.toMatch(
+      /data-workshop-cluster[\s\S]{0,240}items-start|data-workshop-cluster[\s\S]{0,240}items-end/,
+    );
   });
 
   it('Oppgrader bruker Galaxy inne i knappen, ikke Grainient', () => {

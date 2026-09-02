@@ -25,7 +25,9 @@ import {
   useState,
 } from 'react';
 import { PHONE_KORT_FYLL, VERKSTED_INNHOLD } from '../_shell/phone-home';
+import { useSidebarState } from '../_shell/sidebar-state';
 import { erTillattGaaTil } from './gaa-til';
+import { GradualBlur } from './gradual-blur';
 import { norskChatFeil } from './norsk-chat-feil';
 import { RonnyHandtak, RonnyPil } from './ronny-ikoner';
 import { sidekontekst } from './sidekontekst';
@@ -51,6 +53,8 @@ const BOBLE_TEKST = 'text-[14px] leading-snug md:text-body md:leading-relaxed';
 const KORT_KANT = 'overflow-hidden rounded-[18px] border border-[#e0e0e0] shadow-none';
 /** Composer løftet fra skjermkant: safe-area + ekstra inset. */
 const COMPOSER_BUNN = 'calc(env(safe-area-inset-bottom) + 16px)';
+const IDLE_TEKST = 'Trykk på KI-Ronny';
+const TENKER_TEKST = 'Ronny tenker…';
 
 type RonnyVisning = 'stripe' | 'dock' | 'utvidet';
 
@@ -125,17 +129,15 @@ function skallHoyde(visning: RonnyVisning, visPeek: boolean): string {
 }
 
 /**
- * Idle/peek: Verksted-bredde-kort med samme hårlinje+18px som prompt.
- * Full-åpen: grainient under chrome, hele viewport — ikke smalt kort.
- * Stripe-tap åpner sticky Grainient-composer (løftet fra bunn).
- * Tenking vises i stripe-teksten ved avatar, ikke som egen logg-rad.
- * Peek = bare Ronnys svar. Horisontal strek åpner full logg.
- * Full-åpen composer uten eget Grainient (ett fyll).
+ * Åpen (peek/full): fast ugjennomsiktig flate under chrome. Siden låses.
+ * Peek-kort = Verksted-bredde; backdrop dekker resten. Full = viewport-grainient.
+ * Composer-bakgrunn er full bredde. Håndtak over input. Tenking i stripe-tekst.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
   const search = useSearchParams()?.toString() ?? '';
   const router = useRouter();
+  const { phoneOpen } = useSidebarState();
   const [visning, setVisning] = useState<RonnyVisning>('stripe');
   const [klikk, setKlikk] = useState(false);
   const [suksess, setSuksess] = useState(false);
@@ -143,9 +145,11 @@ export function WorkshopBloub() {
   const [promptTekst, setPromptTekst] = useState('');
   const [ankerTop, setAnkerTop] = useState(0);
   const [composerHoyde, setComposerHoyde] = useState(88);
+  const [loggOverflow, setLoggOverflow] = useState(false);
   const spinTimer = useRef<number | null>(null);
   const ankerRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLDivElement>(null);
+  const loggRef = useRef<HTMLDivElement>(null);
   const draStartY = useRef<number | null>(null);
   const sisteGaaTil = useRef<string>('');
   const side = useMemo(() => sidekontekst(pathname, search), [pathname, search]);
@@ -166,7 +170,6 @@ export function WorkshopBloub() {
   const ronnySvar = sisteTurTekst(messages);
   const visPeek = visning === 'dock' && (Boolean(ronnySvar) || Boolean(error));
   const visDockInnhold = visPeek || utvidet;
-  const fastHoyde = visning === 'utvidet';
   const visHandtak = visPeek || utvidet;
   const opptatt = status === 'submitted' || status === 'streaming';
   const idle = useRonnyIdle(!klikk);
@@ -186,6 +189,36 @@ export function WorkshopBloub() {
     };
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: lukk helt ved sidebar-navigasjon
+  useEffect(() => {
+    setVisning('stripe');
+    setKlikk(false);
+    if (spinTimer.current) window.clearTimeout(spinTimer.current);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!phoneOpen) return;
+    setVisning('stripe');
+    setKlikk(false);
+    if (spinTimer.current) window.clearTimeout(spinTimer.current);
+  }, [phoneOpen]);
+
+  useEffect(() => {
+    const scroller = document.querySelector<HTMLElement>('[data-ronny-side-scroll]');
+    if (!scroller) return;
+    if (apen) {
+      scroller.setAttribute('data-ronny-laast', '');
+      scroller.style.overflow = 'hidden';
+    } else {
+      scroller.removeAttribute('data-ronny-laast');
+      scroller.style.overflow = '';
+    }
+    return () => {
+      scroller.removeAttribute('data-ronny-laast');
+      scroller.style.overflow = '';
+    };
+  }, [apen]);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: mål på nytt når composer/peek vises
   useLayoutEffect(() => {
     function maal() {
@@ -194,11 +227,14 @@ export function WorkshopBloub() {
       setAnkerTop(el.getBoundingClientRect().top);
       const composer = composerRef.current;
       if (composer) setComposerHoyde(composer.getBoundingClientRect().height);
+      const logg = loggRef.current;
+      if (logg) setLoggOverflow(logg.scrollHeight > logg.clientHeight + 1);
+      else setLoggOverflow(false);
     }
     maal();
     window.addEventListener('resize', maal);
     return () => window.removeEventListener('resize', maal);
-  }, [apen, promptTekst, visPeek, utvidet]);
+  }, [apen, promptTekst, visPeek, utvidet, messages, visHandtak]);
 
   useEffect(() => {
     if (!apen) return;
@@ -298,265 +334,323 @@ export function WorkshopBloub() {
 
   const submitStatus = opptatt ? status : 'ready';
 
+  const stripe = (
+    <div
+      data-workshop-strip
+      className="relative h-11 max-h-[44px] w-full shrink-0 md:h-control md:max-h-[32px]"
+    >
+      <div
+        data-workshop-cluster
+        className="absolute inset-0 z-10 flex items-center justify-center gap-2"
+      >
+        <button
+          type="button"
+          onClick={onRonny}
+          aria-expanded={apen}
+          aria-label={apen ? 'Lukk KI-Ronny' : 'Åpne KI-Ronny'}
+          data-workshop-sticky
+          data-ronny-stage
+          className="flex shrink-0 items-center justify-center self-center bg-transparent focus-visible:outline-2 focus-visible:outline-white"
+          style={{ width: STRIP_BOT, height: STRIP_BOT }}
+        >
+          <span data-ronny-spin={klikk ? '' : undefined} className="flex">
+            <BloubBot
+              size={STRIP_BOT}
+              shape="cercle"
+              color="#ffffff"
+              paper="#111111"
+              state={tilstand}
+              expression={uttrykk}
+              follow={false}
+              still={false}
+              playing={false}
+            />
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={onTekstEllerPil}
+          aria-expanded={apen}
+          className="flex min-w-0 items-center gap-1.5 bg-transparent text-white focus-visible:outline-2 focus-visible:outline-white"
+        >
+          <span
+            data-ronny-tenker={opptatt ? '' : undefined}
+            className={
+              opptatt
+                ? 'ronny-tenker-tekst truncate leading-none text-label'
+                : 'truncate leading-none text-label text-white'
+            }
+          >
+            {opptatt ? TENKER_TEKST : IDLE_TEKST}
+          </span>
+          <RonnyPil size={14} opp={apen} />
+        </button>
+      </div>
+    </div>
+  );
+
+  const loggUtsnitt = utvidet ? (
+    <div
+      data-ronny-logg-ramme
+      className="relative min-h-0 flex-1 overflow-hidden"
+      style={{ paddingBottom: composerHoyde }}
+    >
+      <div
+        ref={loggRef}
+        data-ronny-traad
+        className="no-scrollbar flex h-full min-h-0 flex-col gap-6 overflow-y-auto px-3 pt-1 pb-1 md:gap-5"
+      >
+        {messages.map((melding) => {
+          const tekstDel = tekstFraMelding(melding);
+          if (!tekstDel) return null;
+          return (
+            <Message key={melding.id} align={melding.role === 'user' ? 'end' : 'start'}>
+              <MessageContent>
+                <MessageBubble egen={melding.role === 'user'} className={BOBLE_TEKST}>
+                  {tekstDel}
+                </MessageBubble>
+              </MessageContent>
+            </Message>
+          );
+        })}
+        {error ? (
+          <Message align="start">
+            <MessageContent>
+              <MessageBubble className={BOBLE_TEKST}>{norskChatFeil(error)}</MessageBubble>
+            </MessageContent>
+          </Message>
+        ) : null}
+      </div>
+      {loggOverflow ? (
+        <>
+          <GradualBlur
+            target="parent"
+            position="top"
+            height="6rem"
+            strength={2}
+            divCount={5}
+            curve="bezier"
+            exponential
+          />
+          <GradualBlur
+            target="parent"
+            position="bottom"
+            height="6rem"
+            strength={2}
+            divCount={5}
+            curve="bezier"
+            exponential
+          />
+        </>
+      ) : null}
+    </div>
+  ) : visPeek ? (
+    <div data-ronny-logg-ramme className="relative overflow-hidden" style={{ maxHeight: PEEK_MAX }}>
+      <div
+        ref={loggRef}
+        data-ronny-traad
+        data-ronny-peek-svar
+        className="no-scrollbar min-h-0 overflow-y-auto px-3 py-0"
+      >
+        {ronnySvar ? (
+          <Message align="start">
+            <MessageContent>
+              <MessageBubble className={BOBLE_TEKST}>{ronnySvar}</MessageBubble>
+            </MessageContent>
+          </Message>
+        ) : error ? (
+          <Message align="start">
+            <MessageContent>
+              <MessageBubble className={BOBLE_TEKST}>{norskChatFeil(error)}</MessageBubble>
+            </MessageContent>
+          </Message>
+        ) : null}
+      </div>
+      {loggOverflow ? (
+        <>
+          <GradualBlur
+            target="parent"
+            position="top"
+            height="6rem"
+            strength={2}
+            divCount={5}
+            curve="bezier"
+            exponential
+          />
+          <GradualBlur
+            target="parent"
+            position="bottom"
+            height="6rem"
+            strength={2}
+            divCount={5}
+            curve="bezier"
+            exponential
+          />
+        </>
+      ) : null}
+    </div>
+  ) : null;
+
   return (
     <>
       <div
         ref={ankerRef}
         className="relative z-40 h-11 max-h-[44px] shrink-0 md:h-control md:max-h-[32px]"
       >
-        <div
-          className={
-            utvidet ? 'fixed right-0 bottom-0 left-0 z-[60]' : 'absolute inset-x-0 top-0 z-40'
-          }
-          style={utvidet ? { top: ankerTop } : undefined}
-        >
-          <div
-            data-ronny-verksted-bredde={utvidet ? undefined : ''}
-            className={utvidet ? 'h-full' : VERKSTED_INNHOLD}
-          >
-            <div
-              data-workshop-shell
-              data-ronny-overlay={utvidet ? '' : undefined}
-              className={utvidet ? 'h-full overflow-hidden shadow-none' : KORT_KANT}
-              style={
-                utvidet
-                  ? { height: '100%', borderRadius: 0 }
-                  : {
-                      height: skallHoyde(visning, visPeek),
-                      borderRadius: RAMME_PX,
-                      transition: PANEL_OVERGANG,
-                    }
-              }
-            >
-              <div className="pointer-events-none absolute inset-0" aria-hidden>
-                <Grainient className="absolute inset-0 h-full w-full" />
-              </div>
-
-              <div className={`relative flex flex-col ${fastHoyde || utvidet ? 'h-full' : ''}`}>
-                <div
-                  data-workshop-strip
-                  className="relative h-11 max-h-[44px] w-full shrink-0 md:h-control md:max-h-[32px]"
-                >
-                  <div
-                    data-workshop-cluster
-                    className="absolute inset-0 z-10 flex items-center justify-center gap-2"
-                  >
-                    <button
-                      type="button"
-                      onClick={onRonny}
-                      aria-expanded={apen}
-                      aria-label={apen ? 'Lukk KI-Ronny' : 'Åpne KI-Ronny'}
-                      data-workshop-sticky
-                      data-ronny-stage
-                      className="flex shrink-0 items-center justify-center self-center bg-transparent focus-visible:outline-2 focus-visible:outline-white"
-                      style={{ width: STRIP_BOT, height: STRIP_BOT }}
-                    >
-                      <span data-ronny-spin={klikk ? '' : undefined} className="flex">
-                        <BloubBot
-                          size={STRIP_BOT}
-                          shape="cercle"
-                          color="#ffffff"
-                          paper="#111111"
-                          state={tilstand}
-                          expression={uttrykk}
-                          follow={false}
-                          still={false}
-                          playing={false}
-                        />
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={onTekstEllerPil}
-                      aria-expanded={apen}
-                      className="flex min-w-0 items-center gap-1.5 bg-transparent text-white focus-visible:outline-2 focus-visible:outline-white"
-                    >
-                      <span
-                        data-ronny-tenker={opptatt ? '' : undefined}
-                        className={
-                          opptatt
-                            ? 'ronny-tenker-tekst truncate leading-none text-label'
-                            : 'truncate leading-none text-label text-white'
-                        }
-                      >
-                        {opptatt ? 'Ronny tenker…' : 'La KI-Ronny ta styringen'}
-                      </span>
-                      <RonnyPil size={14} opp={apen} />
-                    </button>
-                  </div>
+        {apen ? null : (
+          <div className="absolute inset-x-0 top-0 z-40">
+            <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
+              <div
+                data-workshop-shell
+                className={KORT_KANT}
+                style={{ height: '100%', borderRadius: RAMME_PX }}
+              >
+                <div className="pointer-events-none absolute inset-0" aria-hidden>
+                  <Grainient className="absolute inset-0 h-full w-full" />
                 </div>
+                <div className="relative">{stripe}</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
+      {apen ? (
+        <div
+          data-ronny-flate
+          data-ronny-overlay=""
+          data-workshop-shell
+          className="fixed right-0 bottom-0 left-0 z-[60] overflow-hidden shadow-none"
+          style={{ top: ankerTop }}
+        >
+          <div className="pointer-events-none absolute inset-0 bg-[#f5f5f7]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0" aria-hidden>
+            <Grainient className="absolute inset-0 h-full w-full" />
+          </div>
+
+          {utvidet ? (
+            <div className="relative flex h-full flex-col">
+              {stripe}
+              <div
+                data-workshop-dock
+                data-ronny-visning={visning}
+                data-ronny-foldet={foldet ? '' : undefined}
+                className="flex min-h-0 flex-1 flex-col"
+                role="dialog"
+                aria-label="KI-Ronny"
+              >
                 <div
-                  data-workshop-dock
-                  data-ronny-visning={visning}
-                  data-ronny-foldet={foldet ? '' : undefined}
-                  data-ronny-peek={visPeek ? '' : undefined}
-                  className="grid min-h-0 flex-1 transition-[grid-template-rows] duration-200"
-                  style={{
-                    gridTemplateRows: visDockInnhold
-                      ? fastHoyde || utvidet
-                        ? '1fr'
-                        : 'auto'
-                      : '0fr',
-                    transitionTimingFunction: APPLE_EASE,
-                  }}
-                  role="dialog"
-                  aria-label="KI-Ronny"
-                  aria-hidden={!visDockInnhold}
+                  data-ronny-svar-kort
+                  className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"
                 >
+                  {loggUtsnitt}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
+              <div
+                className={KORT_KANT}
+                style={{
+                  height: skallHoyde(visning, visPeek),
+                  borderRadius: RAMME_PX,
+                  transition: PANEL_OVERGANG,
+                }}
+              >
+                <div className="relative flex flex-col">
+                  {stripe}
                   <div
-                    data-ronny-ramme
-                    className={`flex min-h-0 flex-col overflow-hidden ${fastHoyde || utvidet ? 'h-full' : ''}`}
-                    style={
-                      visDockInnhold
-                        ? {
-                            paddingLeft: KORN_RAMME,
-                            paddingRight: KORN_RAMME,
-                            paddingBottom: KORN_RAMME,
-                          }
-                        : undefined
-                    }
+                    data-workshop-dock
+                    data-ronny-visning={visning}
+                    data-ronny-foldet={foldet ? '' : undefined}
+                    data-ronny-peek={visPeek ? '' : undefined}
+                    className="grid min-h-0 transition-[grid-template-rows] duration-200"
+                    style={{
+                      gridTemplateRows: visDockInnhold ? 'auto' : '0fr',
+                      transitionTimingFunction: APPLE_EASE,
+                    }}
+                    role="dialog"
+                    aria-label="KI-Ronny"
+                    aria-hidden={!visDockInnhold}
                   >
                     <div
-                      data-ronny-kort-padding
-                      className={`w-full px-3 ${
-                        fastHoyde || utvidet ? 'flex min-h-0 flex-1 flex-col' : ''
-                      } ${visDockInnhold ? 'opacity-100' : 'opacity-0'} pt-1 transition-opacity duration-200`}
-                      style={{ transitionTimingFunction: APPLE_EASE }}
+                      data-ronny-ramme
+                      className="flex min-h-0 flex-col overflow-hidden"
+                      style={
+                        visDockInnhold
+                          ? {
+                              paddingLeft: KORN_RAMME,
+                              paddingRight: KORN_RAMME,
+                              paddingBottom: KORN_RAMME,
+                            }
+                          : undefined
+                      }
                     >
                       <div
-                        data-ronny-svar-kort
-                        className={`flex flex-col overflow-hidden bg-transparent px-3 pt-0.5 pb-1 text-[#1d1d1f] ${
-                          fastHoyde || utvidet ? 'h-full min-h-0 flex-1' : ''
-                        }`}
-                        style={{
-                          maxHeight: visPeek ? PEEK_MAX : undefined,
-                          paddingBottom: utvidet ? composerHoyde : undefined,
-                        }}
+                        data-ronny-kort-padding
+                        className={`w-full ${visDockInnhold ? 'opacity-100' : 'opacity-0'} pt-1 transition-opacity duration-200`}
+                        style={{ transitionTimingFunction: APPLE_EASE }}
                       >
-                        {utvidet ? (
-                          <div
-                            data-ronny-traad
-                            className="no-scrollbar flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pt-1 pb-0 md:gap-5"
-                          >
-                            {messages.map((melding) => {
-                              const tekstDel = tekstFraMelding(melding);
-                              if (!tekstDel) return null;
-                              return (
-                                <Message
-                                  key={melding.id}
-                                  align={melding.role === 'user' ? 'end' : 'start'}
-                                >
-                                  <MessageContent>
-                                    <MessageBubble
-                                      egen={melding.role === 'user'}
-                                      className={BOBLE_TEKST}
-                                    >
-                                      {tekstDel}
-                                    </MessageBubble>
-                                  </MessageContent>
-                                </Message>
-                              );
-                            })}
-                            {error ? (
-                              <Message align="start">
-                                <MessageContent>
-                                  <MessageBubble className={BOBLE_TEKST}>
-                                    {norskChatFeil(error)}
-                                  </MessageBubble>
-                                </MessageContent>
-                              </Message>
-                            ) : null}
-                          </div>
-                        ) : visPeek ? (
-                          <div
-                            data-ronny-traad
-                            data-ronny-peek-svar
-                            className="no-scrollbar min-h-0 overflow-y-auto py-0"
-                          >
-                            {ronnySvar ? (
-                              <Message align="start">
-                                <MessageContent>
-                                  <MessageBubble className={BOBLE_TEKST}>{ronnySvar}</MessageBubble>
-                                </MessageContent>
-                              </Message>
-                            ) : error ? (
-                              <Message align="start">
-                                <MessageContent>
-                                  <MessageBubble className={BOBLE_TEKST}>
-                                    {norskChatFeil(error)}
-                                  </MessageBubble>
-                                </MessageContent>
-                              </Message>
-                            ) : null}
-                          </div>
-                        ) : null}
+                        <div
+                          data-ronny-svar-kort
+                          className="flex flex-col overflow-hidden bg-transparent pt-0.5 pb-1 text-[#1d1d1f]"
+                        >
+                          {loggUtsnitt}
+                        </div>
                       </div>
                     </div>
-                    {visHandtak ? (
-                      <div data-ronny-handtak-rad className="flex justify-center pt-3 pb-2">
-                        <button
-                          type="button"
-                          data-ronny-utvid
-                          data-ronny-handtak
-                          aria-label={utvidet ? 'Lukk samtale' : 'Se hele'}
-                          title={utvidet ? 'Lukk samtale' : 'Se hele'}
-                          aria-expanded={utvidet}
-                          onPointerDown={onHandtakNed}
-                          onPointerUp={onHandtakOpp}
-                          className="flex cursor-grab touch-none items-center justify-center px-6 py-1 active:cursor-grabbing"
-                        >
-                          <RonnyHandtak />
-                        </button>
-                      </div>
-                    ) : null}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      </div>
+      ) : null}
 
       {apen ? (
         <div
           ref={composerRef}
           data-ronny-composer
-          className="fixed inset-x-0 bottom-0 z-[70] shadow-none"
+          className="fixed inset-x-0 bottom-0 z-[70] w-full shadow-none"
           style={{ paddingBottom: COMPOSER_BUNN }}
         >
-          <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
-            <div className={utvidet ? 'relative bg-transparent' : `relative ${KORT_KANT}`}>
-              {utvidet ? null : (
-                <div className="pointer-events-none absolute inset-0" aria-hidden>
-                  <Grainient className="absolute inset-0 h-full w-full" />
-                </div>
-              )}
-              <div
-                className="relative w-full pt-1.5 pb-1.5"
-                style={{ paddingLeft: KORN_RAMME + 8, paddingRight: KORN_RAMME + 8 }}
+          {visHandtak ? (
+            <div data-ronny-handtak-rad className="flex justify-center pt-3 pb-2">
+              <button
+                type="button"
+                data-ronny-utvid
+                data-ronny-handtak
+                aria-label={utvidet ? 'Lukk samtale' : 'Se hele'}
+                title={utvidet ? 'Lukk samtale' : 'Se hele'}
+                aria-expanded={utvidet}
+                onPointerDown={onHandtakNed}
+                onPointerUp={onHandtakOpp}
+                className="flex cursor-grab touch-none items-center justify-center px-6 py-1 active:cursor-grabbing"
               >
-                <div
-                  data-ronny-prompt-kort
-                  className={`${PHONE_KORT_FYLL} border-[#e0e0e0] bg-[#fff] px-2 py-1.5 text-[#1d1d1f]`}
-                  style={{ borderRadius: RAMME_PX }}
-                >
-                  <PromptInput onSubmit={onPrompt} className="border-0 bg-transparent shadow-none">
-                    <PromptInputBody data-ronny-prompt-linje className="min-w-0 flex-1">
-                      <PromptInputTextarea
-                        value={promptTekst}
-                        onChange={(e) => setPromptTekst(e.target.value)}
-                        placeholder="Spør Ronny …"
-                        disabled={opptatt}
-                        className="bg-transparent text-[16px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/45 md:text-label"
-                      />
-                    </PromptInputBody>
-                    <PromptInputFooter>
-                      <PromptInputSubmit status={submitStatus} />
-                    </PromptInputFooter>
-                  </PromptInput>
-                </div>
-              </div>
+                <RonnyHandtak />
+              </button>
+            </div>
+          ) : null}
+          <div className="relative w-full px-3 pt-1.5 pb-1.5">
+            <div
+              data-ronny-prompt-kort
+              className={`${PHONE_KORT_FYLL} border-[#e0e0e0] bg-[#fff] px-2 py-1.5 text-[#1d1d1f]`}
+              style={{ borderRadius: RAMME_PX }}
+            >
+              <PromptInput onSubmit={onPrompt} className="border-0 bg-transparent shadow-none">
+                <PromptInputBody data-ronny-prompt-linje className="min-w-0 flex-1">
+                  <PromptInputTextarea
+                    value={promptTekst}
+                    onChange={(e) => setPromptTekst(e.target.value)}
+                    placeholder="Spør Ronny …"
+                    disabled={opptatt}
+                    className="bg-transparent text-[16px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/45 md:text-label"
+                  />
+                </PromptInputBody>
+                <PromptInputFooter>
+                  <PromptInputSubmit status={submitStatus} />
+                </PromptInputFooter>
+              </PromptInput>
             </div>
           </div>
         </div>

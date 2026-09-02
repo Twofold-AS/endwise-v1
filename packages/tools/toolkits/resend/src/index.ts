@@ -4,6 +4,7 @@ import type {
   NotificationResult,
 } from '@endwise/modules';
 import { Resend } from 'resend';
+import { byggVarselHtml } from './epost-html.ts';
 
 /**
  * Samme produkt-From som `@endwise/auth` (`RESEND_FROM_KANONISK`).
@@ -70,11 +71,13 @@ export function createResendChannel(config: {
       if (!(await kanSendeTil(to, tenantId))) {
         throw new Error('Mottakeren er ikke en produkt-destinasjon');
       }
+      const subject = stripCrLf(message.subject ?? 'Melding fra Endwise');
       const { data, error } = await client.emails.send({
         from,
         to,
-        subject: stripCrLf(message.subject ?? 'Melding fra Endwise'),
+        subject,
         text: message.body,
+        html: byggVarselHtml({ tittel: subject, tekst: message.body }),
         headers: { 'Idempotency-Key': message.idempotencyKey },
       });
 

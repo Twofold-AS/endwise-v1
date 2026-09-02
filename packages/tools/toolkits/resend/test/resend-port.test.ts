@@ -104,9 +104,20 @@ describe('toolkit-resend From/to-port (Mons dest-lås)', () => {
     });
     expect(resultat.delivered).toBe(true);
     expect(send).toHaveBeenCalledTimes(1);
-    const payload = send.mock.calls[0]?.[0] as { from: string; to: string; subject: string };
+    const payload = send.mock.calls[0]?.[0] as {
+      from: string;
+      to: string;
+      subject: string;
+      html?: string;
+    };
     expect(payload.from).toBe(RESEND_FROM_KANONISK);
     expect(payload.to).toBe('kunde@example.no');
     expect(payload.subject).not.toMatch(/[\r\n]/);
+    expect(payload.html).toContain('#f5f5f7');
+    expect(payload.html).toContain('#ffffff');
+    expect(payload.html).toContain('#1d1d1f');
+    expect(payload.html).toContain('font-size:17px');
+    expect(payload.html).toContain('border-radius:18px');
+    expect(payload.html).not.toMatch(/#0b0b0b|#1ED27D|box-shadow|1Password|passord/i);
   });
 });

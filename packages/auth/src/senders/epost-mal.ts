@@ -1,7 +1,10 @@
 import { LOGO_EPOST_CID } from '../assets/logo-epost.ts';
 
 /**
- * Felles HTML-skall for auth-e-postene (engangskode, passordreset, invitasjon).
+ * Felles HTML-skall for e-postene vi faktisk sender (magic link, bekreftelseskode,
+ * invitasjon, e-postbytte, innboks). Booking-varsler i toolkit-resend speiler
+ * de samme tokenene.
+ *
  * E-post er ikke web. Reglene som styrer valgene her
  * Tabeller, ikke flexbox/grid. Outlook rendrer med Word-motoren.
  * Inline `style`, ikke klasser. Gmail stripper `<style>` i mange
@@ -9,38 +12,36 @@ import { LOGO_EPOST_CID } from '../assets/logo-epost.ts';
  * Ingen SVG. Gmail, Outlook og Apple Mail viser den ikke. Logoen er PNG.
  * Ingen `data:`-URI i `<img src>`. Gmail og Outlook fjerner dem. Logoen
  * sendes derfor som et inline vedlegg med `contentId`, referert som
- * `cid:`. Se `assets/logo-epost.ts` for hvorfor det ikke er samme sak som
- * «inline base64».
+ * `cid:`. Se `assets/logo-epost.ts`.
  * Ingen ekstern URL for logoen. Den ville måttet ligge på et offentlig
  * domene; `BETTER_AUTH_URL` er localhost fram til F13.
- * Mørk modus
- * Gmail, Outlook og Apple Mail inverterer lyse flater på hver sin måte, og
- * `prefers-color-scheme` er upålitelig — Gmail respekterer den ikke i alle
- * klienter. Vi løser det ved ikke å være avhengige av den:
- * Logoen står alltid på sin egen mørke flate. Den er hvit, og blokka bak
- * har eksplisitt `bgcolor="#0b0b0b"` på en `<td>` — det attributtet
- * overlever i praktisk talt alle klienter. Uansett om resten av e-posten
- * inverteres eller ikke, ligger logoen på en kjent bakgrunn.
- * En hvit logo på en lys flate ville vært usynlig i akkurat den klienten som
- * ikke inverterer. En svart logo på en lys flate ville vært usynlig i den som
- * gjør det. Egen flate er den eneste varianten som er trygg i begge.
- * `color-scheme`/`supported-color-schemes` er satt i tillegg — de hjelper der
- * de leses, og skader ingen steder.
+ *
+ * Visuell lås (Mikael 02.09.2026) — samme Apple/shadcn.io-system som appen
+ * Parchment `#f5f5f7` · canvas `#ffffff` · ink `#1d1d1f` · muted `#7a7a7a`
+ * · hairline `#e0e0e0` · Action Blue `#0066cc` på pille-CTA.
+ * Logo på hvit flate (ikke mørk chrome). Ingen drop-shadow. Ingen grønn
+ * aksent. Ingen dealer-fliser. Ingen Morph. Lyst tema only — produktet har
+ * ingen dark-mode-sti, så `color-scheme` er `light`.
+ * Inter er SF Pro-erstatningen; klienter uten Inter faller til system-sans.
+ * Brødtekst 17px / 1.47. Titler 16/20 Semibold. Knapper 32px / pille.
  */
 
 /** Tokens, duplisert som literaler fordi e-post ikke kan lese CSS-variabler. */
-const FARGE = {
-  side: '#f4f4f5',
+export const FARGE = {
+  side: '#f5f5f7',
   kort: '#ffffff',
-  merke: '#0b0b0b',
-  tekst: '#18181b',
-  dempet: '#71717a',
-  kant: '#e4e4e7',
-  kodeflate: '#fafafa',
+  merke: '#ffffff',
+  tekst: '#1d1d1f',
+  dempet: '#7a7a7a',
+  kant: '#e0e0e0',
+  kodeflate: '#fafafc',
+  aksent: '#0066cc',
+  aksentTekst: '#ffffff',
+  utility: '#1d1d1f',
 } as const;
 
 const FONT =
-  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif";
+  "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
 /** Escaper alt som interpoleres, så en verdi aldri kan bli markup. */
 export function esc(s: string): string {
@@ -70,22 +71,21 @@ export function byggEpostHtml(input: {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<meta name="supported-color-schemes" content="light dark">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
 <title>${esc(input.tittel)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:${FARGE.side};">
 <!-- Forhåndsvisningsteksten i innboksen. Uten den viser klienten de første
      ordene i markupen, som ofte er «Endwise-logo». -->
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(input.ingress)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${FARGE.side};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${FARGE.side}" style="background-color:${FARGE.side};">
   <tr>
     <td align="center" style="padding:32px 16px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background-color:${FARGE.kort};border:1px solid ${FARGE.kant};border-radius:14px;overflow:hidden;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${FARGE.kort}" style="max-width:480px;background-color:${FARGE.kort};border:1px solid ${FARGE.kant};border-radius:18px;">
 
- <!-- Logoflata. Eksplisitt bgcolor: se filkommentaren om mørk modus. -->
         <tr>
-          <td align="center" bgcolor="${FARGE.merke}" style="background-color:${FARGE.merke};padding:24px 24px 20px 24px;">
+          <td align="center" bgcolor="${FARGE.merke}" style="background-color:${FARGE.merke};padding:28px 28px 8px 28px;">
             <img src="cid:${LOGO_EPOST_CID}"
                  width="32" height="40"
                  alt="Endwise"
@@ -94,9 +94,9 @@ export function byggEpostHtml(input: {
         </tr>
 
         <tr>
-          <td style="padding:28px 28px 8px 28px;font-family:${FONT};">
-            <h1 style="margin:0 0 8px 0;font-size:19px;line-height:1.3;font-weight:600;color:${FARGE.tekst};">${esc(input.tittel)}</h1>
-            <p style="margin:0;font-size:14px;line-height:1.55;color:${FARGE.dempet};">${esc(input.ingress)}</p>
+          <td style="padding:16px 28px 8px 28px;font-family:${FONT};">
+            <h1 style="margin:0 0 8px 0;font-size:16px;line-height:20px;font-weight:600;letter-spacing:-0.2px;color:${FARGE.tekst};">${esc(input.tittel)}</h1>
+            <p style="margin:0;font-size:17px;line-height:1.47;font-weight:400;letter-spacing:-0.374px;color:${FARGE.dempet};">${esc(input.ingress)}</p>
           </td>
         </tr>
 
@@ -105,13 +105,13 @@ export function byggEpostHtml(input: {
         </tr>
 
         <tr>
-          <td style="padding:12px 28px 28px 28px;font-family:${FONT};">
+          <td style="padding:16px 28px 28px 28px;font-family:${FONT};">
             <p style="margin:0;font-size:12px;line-height:1.55;color:${FARGE.dempet};">${esc(input.fotnote)}</p>
           </td>
         </tr>
       </table>
 
-      <p style="margin:16px 0 0 0;font-family:${FONT};font-size:11px;color:${FARGE.dempet};">Endwise</p>
+      <p style="margin:16px 0 0 0;font-family:${FONT};font-size:12px;line-height:1;letter-spacing:-0.12px;color:${FARGE.dempet};">Endwise</p>
     </td>
   </tr>
 </table>
@@ -123,7 +123,7 @@ export function byggEpostHtml(input: {
 export function kodeboks(kode: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>
-    <td align="center" style="background-color:${FARGE.kodeflate};border:1px solid ${FARGE.kant};border-radius:10px;padding:18px 12px;">
+    <td align="center" style="background-color:${FARGE.kodeflate};border:1px solid ${FARGE.kant};border-radius:8px;padding:18px 12px;">
       <span style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:30px;line-height:1;font-weight:600;letter-spacing:7px;color:${FARGE.tekst};">${esc(kode)}</span>
     </td>
   </tr>
@@ -140,15 +140,15 @@ export function kodeboks(kode: string): string {
 export function meldingsboks(tekst: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>
-    <td style="background-color:${FARGE.kodeflate};border:1px solid ${FARGE.kant};border-radius:10px;padding:16px 18px;">
-      <div style="font-family:${FONT};font-size:14px;line-height:1.6;color:${FARGE.tekst};white-space:pre-wrap;">${esc(tekst)}</div>
+    <td style="background-color:${FARGE.kodeflate};border:1px solid ${FARGE.kant};border-radius:8px;padding:16px 18px;">
+      <div style="font-family:${FONT};font-size:17px;line-height:1.47;color:${FARGE.tekst};white-space:pre-wrap;">${esc(tekst)}</div>
     </td>
   </tr>
 </table>`;
 }
 
 /**
- * Knapp som lenke.
+ * Knapp som lenke — pille-CTA i Action Blue, 32px, som primærknappen i appen.
  * URL-en gjentas som ren tekst under. Mange klienter og bedriftsfiltre
  * gjør knapper uklikkbare eller skriver om lenker, og da er en synlig adresse
  * forskjellen på en e-post som virker og en som ikke gjør det.
@@ -158,13 +158,19 @@ export function knapp(url: string, etikett: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>
     <td align="center" style="padding-bottom:14px;">
-      <a href="${trygg}" style="display:inline-block;background-color:${FARGE.merke};color:#ffffff;font-size:14px;font-weight:600;line-height:1;text-decoration:none;padding:13px 22px;border-radius:10px;">${esc(etikett)}</a>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" bgcolor="${FARGE.aksent}" style="background-color:${FARGE.aksent};border-radius:9999px;">
+            <a href="${trygg}" style="display:inline-block;background-color:${FARGE.aksent};color:${FARGE.aksentTekst};font-family:${FONT};font-size:13px;font-weight:600;line-height:16px;text-decoration:none;padding:8px 22px;border-radius:9999px;">${esc(etikett)}</a>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
   <tr>
-    <td style="font-size:11px;line-height:1.5;color:${FARGE.dempet};word-break:break-all;">
+    <td style="font-size:12px;line-height:1.5;color:${FARGE.dempet};word-break:break-all;font-family:${FONT};">
       Virker ikke knappen? Lim inn denne adressen i nettleseren:<br>
-      <a href="${trygg}" style="color:${FARGE.dempet};">${trygg}</a>
+      <a href="${trygg}" style="color:${FARGE.aksent};">${trygg}</a>
     </td>
   </tr>
 </table>`;

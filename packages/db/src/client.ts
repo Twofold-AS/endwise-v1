@@ -28,6 +28,14 @@ function hostnameFromConnectionString(connectionString: string): string | null {
   }
 }
 
+function portFromConnectionString(connectionString: string): string {
+  try {
+    return new URL(connectionString).port;
+  } catch {
+    return '';
+  }
+}
+
 /**
  * node-postgres overskriver `ssl` når connection-stringen inneholder
  * `sslmode` / `sslrootcert` / `sslcert` / `sslkey`. Fjern dem slik at
@@ -53,7 +61,12 @@ function withoutPgSslQueryParams(connectionString: string): string {
  * `DEPTH_ZERO_SELF_SIGNED_CERT` fra Vercel. Ingen Scaleway-ca i repoet.
  * Fjern host: TLS på, uten ca-sjekk. Localhost/Docker: urørt — Docker-Postgres
  * har typisk ikke TLS, og workarounen ville krevd SSL mot 127.0.0.1.
- * TLS skrus aldri av (`ssl: false`).
+ * PgBouncer :6432: ingen `ssl`-nøkkel. Containeren lytter uten klient-TLS
+ * (`server_tls` gjelder bare bouncer → Postgres). node-pg med
+ * `{ rejectUnauthorized: false }` gir «The server does not support SSL
+ * connections», og `sslmode=disable` i URL-en hjelper ikke fordi
+ * `withoutPgSslQueryParams` fjerner den før `ssl` settes.
+ * TLS skrus aldri av mot Managed Postgres (`ssl: false`).
  */
 export function pgConnectionConfig(connectionString: string): PgConnectionConfig {
   const host = hostnameFromConnectionString(connectionString);
@@ -61,8 +74,13 @@ export function pgConnectionConfig(connectionString: string): PgConnectionConfig
     return { connectionString };
   }
 
+  const cleaned = withoutPgSslQueryParams(connectionString);
+  if (portFromConnectionString(connectionString) === '6432') {
+    return { connectionString: cleaned };
+  }
+
   return {
-    connectionString: withoutPgSslQueryParams(connectionString),
+    connectionString: cleaned,
     ssl: { rejectUnauthorized: false },
   };
 }

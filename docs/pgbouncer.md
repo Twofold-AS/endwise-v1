@@ -5,7 +5,9 @@ PgBouncer som Scaleway Serverless Container (`infra/pgbouncer`):
 
 - `min_scale = 1`, én prosess, port **6432**
 - `pool_mode = transaction`, `max_client_conn = 1000`, `default_pool_size = 20`
-- TLS mot Scaleway (`server_tls_sslmode = require`)
+- TLS mot Scaleway Postgres (`server_tls_sslmode = require`). **Klient-TLS
+  mot bouncer er av** — listen 6432 har ingen `client_tls_*`. node-pg
+  skal derfor **ikke** sende `ssl` mot `:6432`.
 - `auth_type = scram-sha-256` (matcher Managed PostgreSQL)
 - Host/bruker/passord via container-env (`PG_HOST`, `PG_PORT`, `PG_DATABASE`,
   `PG_USER`, `PG_PASSWORD`). Ingenting av det i git.
@@ -16,17 +18,19 @@ PgBouncer som Scaleway Serverless Container (`infra/pgbouncer`):
 
 | Variabel | Hvem | Hvor |
 |---|---|---|
-| `DATABASE_URL` | eier | Scaleway Managed PostgreSQL **:5432**. Blir stående. Migrate, drizzle-kit, `db:grants` / `db:setup`, stream LISTEN (`pg.Client`). |
-| `APP_DATABASE_URL` | app-rolle (RLS) | **Når containeren er oppe:** PgBouncer-hosten **:6432**. Runtime (web / tRPC / auth / magic-link / cron). Lokalt: Docker `:5432`. |
+| `DATABASE_URL` | eier | Scaleway Managed PostgreSQL **:5432** / **:19800** (direkte, med TLS). Blir stående. Migrate, drizzle-kit, `db:grants` / `db:setup`, stream LISTEN (`pg.Client`). |
+| `APP_DATABASE_URL` | app-rolle (RLS) | **Når containeren er oppe:** PgBouncer-hosten **:6432** (klient-TLS av). Runtime (web / tRPC / auth / magic-link / cron). Lokalt: Docker `:5432`. |
 
 ## Mikael — Vercel (preview + production)
 
 Agenten setter ikke secrets. Når containeren svarer på 6432:
 
 1. Sett `APP_DATABASE_URL` i **Preview** og **Production** til pooler-URL-en
-   (app-rolle, port **6432**). Hosten er den Scaleway gir containeren — ikke
-   finn på navn i git.
-2. La `DATABASE_URL` stå på Scaleway **:5432** (eier). Ikke flytt eier gjennom
-   pooleren.
+   (app-rolle, host:**6432**). Hosten er den Scaleway gir containeren — ikke
+   finn på navn i git. Klient-TLS er av; `pgConnectionConfig` setter ikke
+   `ssl` mot port 6432. `sslmode=disable` i URL-en er unødvendig og blir
+   strippet uansett.
+2. La `DATABASE_URL` stå på Scaleway Managed PostgreSQL **:5432** / **:19800**
+   (eier, med TLS). Ikke flytt eier gjennom pooleren.
 
 Pool `max: 1` i `createDb` er plaster til pooleren tar lasten.

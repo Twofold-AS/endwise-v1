@@ -47,6 +47,12 @@ export function useOrgRole(): {
   isAdmin: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /**
+   * Sesjon.me feilet eller frist ute, uten data.
+   * Ikke det samme som «ingen destinasjoner» — chrome skal si ifra, ikke
+   * late som rollen er lastet og tom.
+   */
+  chromeFeilet: boolean;
   /** Kosmetikk. Sperren er server-side på hver skrivesti. */
   devMode: boolean;
   /**
@@ -100,6 +106,7 @@ export function useOrgRole(): {
     isAdmin: role === 'dealer_admin' || role === 'endwise_admin' || role === 'endwise_support',
     isAuthenticated: authed,
     isLoading: isPending || (authed && me.isLoading && !meFristUte),
+    chromeFeilet: Boolean(authed && !me.data && (me.isError || meFristUte)),
     devMode: me.data?.devMode?.enabled ?? false,
     canSwitchDemo: (me.data?.devMode?.flagOn ?? false) && role === 'endwise_admin',
     needsOnboarding: me.data?.needsOnboarding ?? false,

@@ -50,10 +50,12 @@ describe('chrome-first first-paint', () => {
     expect(itemsForRole(FORHANDLER_NAV, 'dealer_admin').length).toBeGreaterThan(4);
   });
 
-  it('providers splitter chrome og sider i to httpBatchLink', () => {
+  it('providers splitter session.me (httpLink) fra chrome-batch og side-batch', () => {
     const providers = utenKommentarer(les('../app/providers.tsx'));
     expect(providers).toMatch(/splitLink/);
+    expect(providers).toMatch(/erSessionMePath/);
     expect(providers).toMatch(/erChromeTrpcPath/);
+    expect(providers).toMatch(/httpLink/);
     expect(providers).toMatch(/httpBatchLink/);
     expect(providers).toMatch(/credentials:\s*['"]include['"]/);
   });
@@ -80,9 +82,16 @@ describe('chrome-first first-paint', () => {
     const rolle = utenKommentarer(les('../app/(app)/_lib/use-org-role.ts'));
     expect(rolle).toMatch(/SESSION_ME_CLIENT_TIMEOUT_MS/);
     expect(rolle).toMatch(/meFristUte/);
+    expect(rolle).toMatch(/chromeFeilet/);
     const timeout = RolleTimeoutMs(rolle);
     expect(timeout).toBeGreaterThanOrEqual(5_000);
     expect(timeout).toBeLessThanOrEqual(10_000);
+  });
+
+  it('sidebar sier ifra når chrome feiler — ikke «Tom foreløpig» som ferdig tilstand', () => {
+    const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
+    expect(sidebar).toMatch(/chromeFeilet/);
+    expect(sidebar).toMatch(/Kunne ikke laste menyen/);
   });
 });
 

@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from 'pg';
 import { describe, expect, it } from 'vitest';
-import { drizzleKitPgCredentials, pgConnectionConfig } from '../src/client.ts';
+import { drizzleKitPgCredentials, pgConnectionConfig, pgPoolConfig } from '../src/client.ts';
 
 /**
  * Vercel → Scaleway Managed PostgreSQL.
@@ -87,5 +87,30 @@ describe('pgConnectionConfig (F13-01 Scaleway TLS)', () => {
     expect(resolvedSsl(config.connectionString)).toEqual({
       rejectUnauthorized: false,
     });
+  });
+});
+
+describe('pgPoolConfig (Vercel / delt Postgres)', () => {
+  it('fjern host: max 1, korte idle/connect-timeouts, TCP-pool (ikke ws)', () => {
+    const pool = pgPoolConfig(
+      'postgresql://endwise_app:hemmelig@xxx.fr-par.pg.rdb.scw.cloud:5432/endwise?sslmode=require',
+    );
+    expect(pool.max).toBe(1);
+    expect(pool.idleTimeoutMillis).toBe(10_000);
+    expect(pool.connectionTimeoutMillis).toBe(5_000);
+    expect(pool.ssl).toEqual({ rejectUnauthorized: false });
+    const kilde = readFileSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), '../src/client.ts'),
+      'utf8',
+    );
+    expect(kilde).toMatch(/new Pool\(pgPoolConfig\(connectionString\)\)/);
+    expect(kilde).not.toMatch(/neon\(|@neondatabase\/serverless|WebsocketDriver|ws\+postgres/);
+  });
+
+  it('localhost: max 5, uten SSL-override', () => {
+    const pool = pgPoolConfig('postgresql://endwise:endwise@localhost:5432/endwise');
+    expect(pool.max).toBe(5);
+    expect(pool).not.toHaveProperty('ssl');
+    expect(pool.connectionString).toBe('postgresql://endwise:endwise@localhost:5432/endwise');
   });
 });

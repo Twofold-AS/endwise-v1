@@ -13,6 +13,12 @@ export type PgConnectionConfig = {
   ssl?: { rejectUnauthorized: false };
 };
 
+export type PgPoolConfig = PgConnectionConfig & {
+  max: number;
+  idleTimeoutMillis: number;
+  connectionTimeoutMillis: number;
+};
+
 function hostnameFromConnectionString(connectionString: string): string | null {
   try {
     const host = new URL(connectionString).hostname.toLowerCase();
@@ -91,9 +97,23 @@ export function drizzleKitPgCredentials(connectionString: string) {
  * session-skopet. Går man gjennom en pooler — og Scaleway tilbyr pgbouncer
  * gjenbrukes forbindelser på tvers av forespørsler, og en session-lås ville
  * fulgt med neste låner. Transaksjonslåsen slippes av commit/rollback uansett.
+ * Vercel: hver isolate fikk default max=10 og tømte max_connections (53300
+ * på magic-link/sign-out mot delt preview/prod-DB). Fjern host: max 1.
+ * Localhost: max 5. Ingen WebSocket/serverless-driver.
  */
+export function pgPoolConfig(connectionString: string): PgPoolConfig {
+  const host = hostnameFromConnectionString(connectionString);
+  const remote = host !== null && !LOCAL_DB_HOSTS.has(host);
+  return {
+    ...pgConnectionConfig(connectionString),
+    max: remote ? 1 : 5,
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 5_000,
+  };
+}
+
 export function createDb(connectionString: string) {
-  const pool = new Pool(pgConnectionConfig(connectionString));
+  const pool = new Pool(pgPoolConfig(connectionString));
   return drizzle({ client: pool, schema, casing: 'snake_case' });
 }
 

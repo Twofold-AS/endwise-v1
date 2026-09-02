@@ -56,6 +56,8 @@ export function LiveSync({ children }: { children: ReactNode }) {
   const utils = trpc.useUtils();
   const { data: session } = useSession();
   const harSesjon = Boolean(session?.user);
+  const me = trpc.session.me.useQuery(undefined, { enabled: harSesjon, retry: false });
+  const chromeKlar = Boolean(me.data);
   const lyd = useLyd();
   const sett = useRef(new Set<string>());
   const sistLyd = useRef(0);
@@ -111,7 +113,7 @@ export function LiveSync({ children }: { children: ReactNode }) {
   const status = useEventStream(apply, harSesjon);
 
   const head = trpc.stream.head.useQuery(undefined, {
-    enabled: harSesjon,
+    enabled: harSesjon && chromeKlar,
     retry: false,
     staleTime: 30_000,
   });
@@ -139,7 +141,7 @@ export function LiveSync({ children }: { children: ReactNode }) {
   const poll = trpc.stream.since.useQuery(
     { lastEventId: cursor ?? 0 },
     {
-      enabled: harSesjon && cursor != null,
+      enabled: harSesjon && chromeKlar && cursor != null,
       refetchInterval: status === 'live' ? LIVE_POLL_MS.live : LIVE_POLL_MS.fallback,
       retry: false,
     },

@@ -36,3 +36,11 @@ Agenten setter ikke secrets. Når containeren svarer på 6432:
 Pool `max: 5` mot PgBouncer `:6432` (låst). Direkte Managed Postgres
 (`:5432` / `:19800`) forblir `max: 1` per isolate — det plasteret gjelder
 fortsatt når runtime peker forbi pooleren.
+
+`withTenant` / `withPlatformAdmin` / `withPlatformInspect` går gjennom
+`tenantTxGate` (`TENANT_TX_CONCURRENCY = 2`, kø-frist 5s, kaster ved nøsting).
+tRPC-batch bruker samme tall (`TRPC_BATCH_CONCURRENCY = 2`). `session.me`
+går på egen `httpLink`. Chrome (`forhandler.kort`, `helpdesk.ulesteAntall`,
+`billing.subscription`) er en egen httpBatch, så sidebaren ikke venter på
+lager/kunder/jobber. `connectionTimeoutMillis` er 5000 (ikke 0).
+`prepare: false` og klient-TLS-hopp mot `:6432` står.

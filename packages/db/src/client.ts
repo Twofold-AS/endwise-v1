@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import { tenantTxGate } from './concurrency.ts';
 import { APP_TENANT_SETTING } from './rls.ts';
 import * as schema from './schema/index.ts';
 
@@ -188,10 +189,12 @@ export async function withTenant<T>(
   tenantId: string,
   fn: (tx: Parameters<Parameters<Database['transaction']>[0]>[0]) => Promise<T>,
 ): Promise<T> {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config(${APP_TENANT_SETTING}, ${tenantId}, true)`);
-    return fn(tx);
-  });
+  return tenantTxGate.run(() =>
+    db.transaction(async (tx) => {
+      await tx.execute(sql`select set_config(${APP_TENANT_SETTING}, ${tenantId}, true)`);
+      return fn(tx);
+    }),
+  );
 }
 
 /**
@@ -219,10 +222,12 @@ export async function withPlatformAdmin<T>(
   db: Database,
   fn: (tx: Parameters<Parameters<Database['transaction']>[0]>[0]) => Promise<T>,
 ): Promise<T> {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
-    return fn(tx);
-  });
+  return tenantTxGate.run(() =>
+    db.transaction(async (tx) => {
+      await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+      return fn(tx);
+    }),
+  );
 }
 
 /**
@@ -238,9 +243,11 @@ export async function withPlatformInspect<T>(
   tenantId: string,
   fn: (tx: Parameters<Parameters<Database['transaction']>[0]>[0]) => Promise<T>,
 ): Promise<T> {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`set transaction read only`);
-    await tx.execute(sql`select set_config('app.platform_inspect', ${tenantId}, true)`);
-    return fn(tx);
-  });
+  return tenantTxGate.run(() =>
+    db.transaction(async (tx) => {
+      await tx.execute(sql`set transaction read only`);
+      await tx.execute(sql`select set_config('app.platform_inspect', ${tenantId}, true)`);
+      return fn(tx);
+    }),
+  );
 }

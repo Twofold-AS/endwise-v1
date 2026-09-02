@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { sammeOsloDag } from '../_lib/oslo-dag';
+import { useMdViewport } from '../_lib/use-md-viewport';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { VERKSTED_INNHOLD } from '../_shell/phone-home';
@@ -32,15 +33,13 @@ import { VerkstedetDag } from './_verkstedet-dag';
 function VerkstedetPageInner() {
   const search = useSearchParams();
   const dag = search?.get('visning') === 'dag';
+  const flate = useMdViewport();
 
-  return (
-    <>
-      {dag ? <VerkstedetDag /> : <PhoneHomeDealer />}
-      <div className="hidden md:block">
-        <VerkstedetDesktop />
-      </div>
-    </>
-  );
+  if (flate === null) {
+    return <div className="px-8 py-7 text-body text-fg-muted">Laster verkstedet …</div>;
+  }
+  if (flate === 'desktop') return <VerkstedetDesktop />;
+  return dag ? <VerkstedetDag /> : <PhoneHomeDealer />;
 }
 
 /**

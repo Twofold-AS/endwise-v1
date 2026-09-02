@@ -59,6 +59,7 @@ export function Sidebar() {
     tenantName,
     shopEnabled,
     isLoading: rolleLaster,
+    chromeFeilet,
     erPlattform,
   } = useOrgRole();
   const inspect = isVerkstedInspectPath(pathname);
@@ -239,9 +240,11 @@ export function Sidebar() {
           ))}
           {items.length === 0 && !smal && (
             <p className="px-2.5 py-6 text-[12px] text-fg-muted leading-relaxed">
-              {shell === 'forhandler' && !shopEnabled
-                ? 'Ingen destinasjoner å vise.'
-                : 'Tom foreløpig.'}
+              {chromeFeilet
+                ? 'Kunne ikke laste menyen. Prøv å oppdatere.'
+                : shell === 'forhandler' && !shopEnabled
+                  ? 'Ingen destinasjoner å vise.'
+                  : 'Tom foreløpig.'}
             </p>
           )}
         </nav>

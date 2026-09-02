@@ -17,15 +17,17 @@ export const publicProcedure = t.procedure;
 /** Krever innlogget bruker med tenant-kontekst (håndheves for alvor i F1). */
 export const protectedProcedure = t.procedure.use(function isAuthed(opts) {
   const { ctx } = opts;
-  if (!ctx.userId || !ctx.tenantId || !ctx.role) {
+  const userId = ctx.userId;
+  const tenantId = ctx.tenantId;
+  const role = ctx.role;
+  if (!userId || !tenantId || !role) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'Du er ikke innlogget.',
     });
   }
-  return opts.next({
-    ctx: { ...ctx, userId: ctx.userId, tenantId: ctx.tenantId, role: ctx.role },
-  });
+  const neste = () => opts.next({ ctx: { ...ctx, userId, tenantId, role } });
+  return ctx.limitBatch ? ctx.limitBatch(neste) : neste();
 });
 
 /**

@@ -91,8 +91,10 @@ describe('Bug B: pakkebytte bekreftes og oppfrisker forhandleren', () => {
     expect(sync).toMatch(/useSession/);
     expect(sync).toMatch(/const harSesjon = Boolean\(session\?\.user\)/);
     expect(sync).toMatch(/useEventStream\(apply,\s*harSesjon\)/);
-    expect(sync).toMatch(/stream\.head\.useQuery\([\s\S]*enabled:\s*harSesjon/);
-    expect(sync).toMatch(/stream\.since\.useQuery\([\s\S]*enabled:\s*harSesjon && cursor != null/);
+    expect(sync).toMatch(/stream\.head\.useQuery\([\s\S]*enabled:\s*harSesjon && chromeKlar/);
+    expect(sync).toMatch(
+      /stream\.since\.useQuery\([\s\S]*enabled:\s*harSesjon && chromeKlar && cursor != null/,
+    );
   });
 
   it('Oppsett-lenke vises bare for aktive tillegg — ikke etter nedgradering', () => {

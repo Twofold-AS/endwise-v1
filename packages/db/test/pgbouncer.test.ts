@@ -77,7 +77,9 @@ describe('createDb mot transaction-pooler', () => {
   it('slår av prepared statements (prepare: false) og beholder TCP-pool', () => {
     expect(client).toMatch(/prepare:\s*false/);
     expect(client).toMatch(/new Pool\(pgPoolConfig\(connectionString\)\)/);
-    expect(client).not.toMatch(/neon\(|@neondatabase\/serverless|WebsocketDriver|ws\+postgres|postgres\(/);
+    expect(client).not.toMatch(
+      /neon\(|@neondatabase\/serverless|WebsocketDriver|ws\+postgres|postgres\(/,
+    );
     expect(client).not.toMatch(/(?:db|tx|client|pool)\.prepare\(/);
   });
 
@@ -85,6 +87,7 @@ describe('createDb mot transaction-pooler', () => {
     const start = client.indexOf('export async function withTenant');
     expect(start).toBeGreaterThan(-1);
     const kropp = client.slice(start, client.indexOf('export async function withPlatformAdmin'));
+    expect(kropp).toMatch(/tenantTxGate\.run/);
     expect(kropp).toMatch(/db\.transaction/);
     expect(kropp).toMatch(/set_config\(\$\{APP_TENANT_SETTING\}, \$\{tenantId\}, true\)/);
   });
@@ -140,7 +143,7 @@ describe('PgBouncer-container (infra/pgbouncer)', () => {
 
   it('ingen hemmeligheter eller oppdiktede hostnavn i git', () => {
     for (const kilde of [iniTpl, dockerfile, entry, note, envExample]) {
-      expect(kilde).not.toMatch(/scw\.cloud|neon\.tech|password\s*=\s*['\"][^'\"_]/i);
+      expect(kilde).not.toMatch(/scw\.cloud|neon\.tech|password\s*=\s*['"][^'"_]/i);
     }
   });
 
@@ -153,6 +156,7 @@ describe('PgBouncer-container (infra/pgbouncer)', () => {
     expect(note).toMatch(/Klient-TLS|klient-TLS|client.?tls/i);
     expect(note).toMatch(/max:\s*5/);
     expect(note).toMatch(/max:\s*1/);
+    expect(note).toMatch(/TENANT_TX_CONCURRENCY/);
     expect(note).toMatch(/min_scale\s*=\s*1/);
     expect(note).toMatch(/ikke.*Serverless SQL|Serverless SQL.*ikke/i);
     expect(note).not.toMatch(/neon\.tech/i);

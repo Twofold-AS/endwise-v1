@@ -1,4 +1,5 @@
 export * from './client.ts';
+export * from './concurrency.ts';
 export * from './crypto.ts';
 export * from './operators.ts';
 export * from './queries/membership.ts';

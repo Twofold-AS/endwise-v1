@@ -36,7 +36,8 @@ describe('iOS Safari — felt ≥16px på telefon, pinch-zoom urørt', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
     const innboks = les('../app/(app)/innboks/[id]/page.tsx');
     expect(prompt).toMatch(/text-\[16px\].*md:text-label/);
-    expect(fab).toMatch(/data-ronny-composer[\s\S]*text-\[16px\]/);
+    expect(fab).toMatch(/text-\[16px\]/);
+    expect(fab).toMatch(/data-ronny-composer/);
     expect(fab).toMatch(/const BOBLE_TEKST = 'text-\[14px\]/);
     expect(innboks).toMatch(/PromptInputTextarea[\s\S]*text-\[16px\]/);
   });

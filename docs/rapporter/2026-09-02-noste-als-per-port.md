@@ -22,4 +22,6 @@ Rotårsaken i #112 var riktig merket. Ingenting blokkerte fiksen. Lefthook `prep
 
 ## 4. Neste fase / neste steg
 
-Ikke merge. Etter deploy: innlogget `session.me` skal ikke kaste nøste-feilen bare fordi den kjørte inne i `limitBatch`. Sidebar skal vise meny (ikke tom + «Prøv å oppdatere») så lenge sesjonen er gyldig.
+PR: https://github.com/Twofold-AS/endwise-v1/pull/113 — ikke merge.
+
+Etter deploy: innlogget `session.me` skal ikke kaste nøste-feilen bare fordi den kjørte inne i `limitBatch`. Sidebar skal vise meny (ikke tom + «Prøv å oppdatere») så lenge sesjonen er gyldig.

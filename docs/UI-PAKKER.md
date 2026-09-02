@@ -70,6 +70,8 @@
 > ### 🔴 EIERENS DESIGN-PRINSIPPER HAR FORRANG (03.08.2026, aksent endret 06.08)
 > ⚠️ **AKSENTEN ER SVART, IKKE GRØNN** (fra 06.08.2026, «foreløpig»). Grønnen ble
 > brukt så bredt at den sluttet å være en aksent. `--ew-accent`/`-strong` er
+> **02.09.2026 (Mikael Apple):** interaktiv aksent er Action Blue `#0066cc` (fokus `#0071e3`).
+> Mørk utility / Oppgrader / Ronny-paper kan fortsatt være `#111`. Tidligere:
 > `#111111` i lyst tema og `#ffffff` i mørkt; switch-track følger aksenten.
 > Suksess-grønnen (`--ew-success`) er BEHOLDT — den er informasjon, ikke merkevare.
 > «Ny»-badgen er RØD (tekstbadge). Tellere er samme røde badge-form med siffer.

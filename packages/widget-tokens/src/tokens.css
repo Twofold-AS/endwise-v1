@@ -4,14 +4,10 @@
  * Verdiene under er gitt av eier og har forrang over ui-pakker.md der de
  * kolliderer (ui-pakker §5 er oppdatert tilsvarende). Snu det ikke tilbake uten
  * ny beskjed — dette er ikke et forslag, det er spesifikasjonen.
- * Typografi Inter. Titler 16/20 Medium · labels 13/16 Medium · brødtekst 14 Regular
- * Knapper 32px høyde, 10px radius
- * Rader 40px (data) · 44px («stores»)
- * Badge 20px høyde, 6px radius (fyll/tekst var #caface/#15B042
- * endret til aksent-tokenene )
- * Switch 24×14px, 10px thumb (track-på var #0077E6 — følger nå aksenten)
- * Tekst #333333 default · #777777 subtle
- * Lyst bakgrunn #ffffff · sidebar #fafafa · valgt i sidebar #ededed
+ * Typografi Inter (SF Pro-erstatning). Titler 16/20 Semibold · labels 13/16
+ * · brødtekst 17/1.47 Regular. Knapper 32px. CTA-pille 9999px · utility 8px · kort 18px.
+ * Apple-flater 02.09.2026 (Mikael): canvas #fff · parchment #f5f5f7 · ink #1d1d1f
+ * · Action Blue #0066cc. Null drop-shadow på chrome. Galaxy på Oppgrader urørt.
  * Mørkt bakgrunn #000000 · sidebar #1a1a1a · valgt i sidebar #292929
  * Hva som er gitt og hva som er utledet
  * Alt over er gitt. Verdier merket «utledet» under er mine, fordi UI-et trenger
@@ -29,22 +25,21 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Flater — gitt */
-  --ew-bg: #ffffff; /* generell bakgrunn */
-  --ew-sidebar: #ffffff; /* sidebar-kolonnen */
-  --ew-sidebar-active: #ededed; /* valgt element i sidebar */
+  /* Flater — Apple canvas / parchment / pearl */
+  --ew-bg: #ffffff;
+  --ew-sidebar: #ffffff;
+  --ew-sidebar-active: #ededed;
+  --ew-surface: #ffffff;
+  --ew-surface-2: #f5f5f7; /* parchment — hover og sekundær skall */
+  --ew-inset: #fafafc; /* pearl */
+  --ew-border: #e0e0e0; /* hairline */
+  --ew-border-strong: #e0e0e0;
+  --ew-divider-soft: #f0f0f0;
 
-  /* Flater — utledet */
-  --ew-surface: #ffffff; /* kortflate (flush med siden; kanten bærer) */
-  --ew-surface-2: #f5f5f5; /* hover — ett hakk før `sidebar-active` */
-  --ew-inset: #fafafa; /* indre panel i kort (CardMedia) */
-  --ew-border: #e5e5e5; /* hårlinjer */
-  --ew-border-strong: #d4d4d4; /* input-kant / fokusert kant */
-
-  /* Tekst — gitt (to farger, ikke tre) */
-  --ew-fg: #333333;
-  --ew-fg-muted: #777777;
-  --ew-fg-faint: #777777; /* alias — se filkommentaren */
+  /* Tekst — ink */
+  --ew-fg: #1d1d1f;
+  --ew-fg-muted: #7a7a7a;
+  --ew-fg-faint: #7a7a7a;
 
   /*
  * Aksent er svart (eierens beslutning, «foreløpig»).
@@ -56,11 +51,12 @@
  * og i merkeboksen, ikke i disse tokenene. Skal grønnen tilbake som aksent,
  * er det disse fire linjene som endres — ingen komponenter.
 */
-  --ew-accent: #111111; /* fyll (primærknapp, aktiv markør) */
-  --ew-accent-strong: #111111; /* aksent som tekst og ikon */
-  --ew-accent-fg: #ffffff; /* tekst oppå --ew-accent */
-  --ew-accent-soft: #ededed; /* aksentfylt flate (badge, egen boble) */
-  --ew-accent-dim: rgba(17, 17, 17, 0.08);
+  --ew-accent: #0066cc; /* Action Blue — lenker, pille-CTA, fokus */
+  --ew-accent-strong: #0071e3;
+  --ew-accent-fg: #ffffff;
+  --ew-accent-soft: #e8f1fb;
+  --ew-accent-dim: rgba(0, 102, 204, 0.12);
+  --ew-ink-utility: #1d1d1f; /* mørk utility / Oppgrader kan fortsatt være #111 */
 
   /* Semantiske statusfarger — utledet, justert for lys bakgrunn */
   --ew-warn: #b45309;
@@ -81,10 +77,10 @@
  * knapp på #fafafa-sidebaren leste som et hull, ikke som en hevet flate.
  * #f2f2f2 gir samme relieff som den mørke varianten.
 */
-  --ew-bevel-face: #f2f2f2;
+  --ew-bevel-face: #f5f5f7;
   --ew-bevel-border: #e0e0e0;
-  --ew-bevel-shadow: 0 1px 2px rgba(17, 17, 17, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --ew-bevel-fg: #333333;
+  --ew-bevel-shadow: none;
+  --ew-bevel-fg: #1d1d1f;
 
   --ew-glass-bg: #ffffff;
   --ew-glass-border: #e5e5e5;
@@ -136,7 +132,7 @@
 
   --ew-bevel-face: #292929;
   --ew-bevel-border: #363636;
-  --ew-bevel-shadow: 0 2px 6px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --ew-bevel-shadow: none;
   --ew-bevel-fg: #ededed;
 
   --ew-glass-bg: #1a1a1a;
@@ -147,7 +143,7 @@
 :root {
   /* Kontrollhøyder og radier — gitt */
   --ew-control-h: 32px; /* knapper, inputs, selects */
-  --ew-radius-control: 10px; /* knapper */
+  --ew-radius-control: 8px; /* utility-rektangel */
   --ew-row-h: 40px; /* datarad */
   --ew-row-h-store: 44px; /* «stores»-rad */
   --ew-badge-h: 20px;
@@ -165,8 +161,8 @@
   --ew-radius-sm: 3px;
   --ew-radius-md: 6px;
   --ew-radius-lg: 8px;
-  --ew-radius-xl: 12px;
-  --ew-radius-pill: 100px;
+  --ew-radius-xl: 18px; /* kort */
+  --ew-radius-pill: 9999px;
 
   /* Spacing (base 4px) */
   --ew-space-1: 4px;

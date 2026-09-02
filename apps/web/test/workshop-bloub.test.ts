@@ -109,6 +109,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/Ronny tenker/);
     expect(fab).toMatch(/data-ronny-tenker/);
     expect(fab).toMatch(/ronny-tenker-tekst/);
+    expect(fab).toMatch(/opptatt \? 'Ronny tenker/);
+    expect(fab).not.toMatch(/RonnyTenkerTekst/);
     expect(fab).not.toMatch(/Ronny skriver/);
     expect(fab).toMatch(/RonnyHandtak/);
     expect(pil).toMatch(/data-ronny-strek/);
@@ -143,10 +145,17 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).not.toMatch(/rounded-none/);
     expect(fab).toMatch(/data-ronny-kort-padding/);
     expect(fab).toMatch(/data-ronny-kort-padding[\s\S]{0,280}pt-1/);
-    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,80}pb-1/);
-    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]*py-0\.5/);
+    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,80}pt-3/);
+    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,80}pb-2/);
+    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]*px-6 py-1/);
+    expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}pb-1/);
     expect(fab).toMatch(/VERKSTED_INNHOLD/);
     expect(fab).toMatch(/data-ronny-verksted-bredde/);
+    expect(fab).toMatch(/utvidet \? 'h-full' : VERKSTED_INNHOLD/);
+    expect(fab).toMatch(/KORT_KANT/);
+    expect(fab).toMatch(/COMPOSER_BUNN/);
+    expect(fab).toMatch(/borderRadius: 0/);
+    expect(fab).not.toMatch(/rounded-t-\[18px\]/);
     expect(fab).toMatch(/data-ronny-prompt-kort[\s\S]{0,160}py-1\.5/);
     expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}bg-transparent/);
     expect(fab).not.toMatch(/data-ronny-svar-kort[\s\S]{0,160}bg-\[#fff\]/);
@@ -180,6 +189,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/gåTil|gaaTil|erTillattGaaTil/);
     expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
     expect(fab).toMatch(/data-ronny-composer[\s\S]{0,200}fixed inset-x-0 bottom-0/);
+    expect(fab).toMatch(/paddingBottom: COMPOSER_BUNN/);
+    expect(fab).toMatch(/safe-area-inset-bottom\) \+ 16px/);
     expect(fab).not.toMatch(/fixed right-3 bottom/);
     expect(fab).toMatch(/text-white/);
     expect(fab).toMatch(/data-workshop-sticky/);

@@ -36,7 +36,7 @@ export const PHONE_KORT_FYLL = 'rounded-xl border border-border bg-card text-fg 
 
 /**
  * Innholdskolonne for det største Verksted-kortet (telefon-hjem + desktop-hero)
- * og Ronny-grainient. Ikke full-bleed.
+ * og Ronny idle/peek-grainient. Full-åpen Ronny er viewport-grainient under chrome.
  */
 export const VERKSTED_INNHOLD = 'mx-auto w-full max-w-[520px] px-3 md:max-w-[1120px] md:px-8';
 

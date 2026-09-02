@@ -47,6 +47,10 @@ const DOCK_SAMTALE = 'auto';
 const PEEK_MAX = 'min(36dvh, 16rem)';
 /** Telefon-chat mindre enn desktop 17px body. */
 const BOBLE_TEKST = 'text-[14px] leading-snug md:text-body md:leading-relaxed';
+/** Samme hårlinje + 18px som prompt-kortet — idle-stripe og peek-panel. */
+const KORT_KANT = 'overflow-hidden rounded-[18px] border border-[#e0e0e0] shadow-none';
+/** Composer løftet fra skjermkant: safe-area + ekstra inset. */
+const COMPOSER_BUNN = 'calc(env(safe-area-inset-bottom) + 16px)';
 
 type RonnyVisning = 'stripe' | 'dock' | 'utvidet';
 
@@ -104,14 +108,6 @@ function sisteTurTekst(
   return '';
 }
 
-function RonnyTenkerTekst() {
-  return (
-    <p className={`ronny-tenker-tekst ${BOBLE_TEKST}`} data-ronny-tenker>
-      Ronny tenker…
-    </p>
-  );
-}
-
 function gaaTilHref(del: { type: string; state?: string; output?: unknown }): string | null {
   // Alias: Mistral får `gaaTil`; eldre/UI-matcher kan fortsatt se `gåTil`.
   if (!del.type.includes('gåTil') && !del.type.includes('gaaTil')) return null;
@@ -129,10 +125,12 @@ function skallHoyde(visning: RonnyVisning, visPeek: boolean): string {
 }
 
 /**
- * Stripe, peek og full logg: 18px radius oppe og nede. Stripe-tap åpner
- * sticky Grainient-composer nederst (overlay). Send: peek under stripen
- * med bare Ronnys svar. Horisontal strek (tap/dra) åpner full logg.
- * Full-åpen composer sitter på panelet uten eget Grainient.
+ * Idle/peek: Verksted-bredde-kort med samme hårlinje+18px som prompt.
+ * Full-åpen: grainient under chrome, hele viewport — ikke smalt kort.
+ * Stripe-tap åpner sticky Grainient-composer (løftet fra bunn).
+ * Tenking vises i stripe-teksten ved avatar, ikke som egen logg-rad.
+ * Peek = bare Ronnys svar. Horisontal strek åpner full logg.
+ * Full-åpen composer uten eget Grainient (ett fyll).
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -166,12 +164,11 @@ export function WorkshopBloub() {
 
   const { messages, sendMessage, status, error } = useChat({ transport });
   const ronnySvar = sisteTurTekst(messages);
-  const visPeek = visning === 'dock' && (Boolean(ronnySvar) || Boolean(error) || foldet);
+  const visPeek = visning === 'dock' && (Boolean(ronnySvar) || Boolean(error));
   const visDockInnhold = visPeek || utvidet;
   const fastHoyde = visning === 'utvidet';
   const visHandtak = visPeek || utvidet;
   const opptatt = status === 'submitted' || status === 'streaming';
-  const visTenker = opptatt && !error && !ronnySvar;
   const idle = useRonnyIdle(!klikk);
 
   useEffect(() => {
@@ -314,16 +311,16 @@ export function WorkshopBloub() {
           style={utvidet ? { top: ankerTop } : undefined}
         >
           <div
-            data-ronny-verksted-bredde
-            className={`${VERKSTED_INNHOLD} ${utvidet ? 'h-full' : ''}`}
+            data-ronny-verksted-bredde={utvidet ? undefined : ''}
+            className={utvidet ? 'h-full' : VERKSTED_INNHOLD}
           >
             <div
               data-workshop-shell
               data-ronny-overlay={utvidet ? '' : undefined}
-              className="overflow-hidden rounded-[18px] shadow-none"
+              className={utvidet ? 'h-full overflow-hidden shadow-none' : KORT_KANT}
               style={
                 utvidet
-                  ? { height: '100%', borderRadius: RAMME_PX }
+                  ? { height: '100%', borderRadius: 0 }
                   : {
                       height: skallHoyde(visning, visPeek),
                       borderRadius: RAMME_PX,
@@ -374,8 +371,15 @@ export function WorkshopBloub() {
                       aria-expanded={apen}
                       className="flex min-w-0 items-center gap-1.5 bg-transparent text-white focus-visible:outline-2 focus-visible:outline-white"
                     >
-                      <span className="truncate leading-none text-label text-white">
-                        La KI-Ronny ta styringen
+                      <span
+                        data-ronny-tenker={opptatt ? '' : undefined}
+                        className={
+                          opptatt
+                            ? 'ronny-tenker-tekst truncate leading-none text-label'
+                            : 'truncate leading-none text-label text-white'
+                        }
+                      >
+                        {opptatt ? 'Ronny tenker…' : 'La KI-Ronny ta styringen'}
                       </span>
                       <RonnyPil size={14} opp={apen} />
                     </button>
@@ -385,6 +389,7 @@ export function WorkshopBloub() {
                 <div
                   data-workshop-dock
                   data-ronny-visning={visning}
+                  data-ronny-foldet={foldet ? '' : undefined}
                   data-ronny-peek={visPeek ? '' : undefined}
                   className="grid min-h-0 flex-1 transition-[grid-template-rows] duration-200"
                   style={{
@@ -421,7 +426,7 @@ export function WorkshopBloub() {
                     >
                       <div
                         data-ronny-svar-kort
-                        className={`flex flex-col overflow-hidden bg-transparent px-3 pt-0.5 pb-0 text-[#1d1d1f] ${
+                        className={`flex flex-col overflow-hidden bg-transparent px-3 pt-0.5 pb-1 text-[#1d1d1f] ${
                           fastHoyde || utvidet ? 'h-full min-h-0 flex-1' : ''
                         }`}
                         style={{
@@ -461,8 +466,6 @@ export function WorkshopBloub() {
                                   </MessageBubble>
                                 </MessageContent>
                               </Message>
-                            ) : visTenker ? (
-                              <RonnyTenkerTekst />
                             ) : null}
                           </div>
                         ) : visPeek ? (
@@ -485,15 +488,13 @@ export function WorkshopBloub() {
                                   </MessageBubble>
                                 </MessageContent>
                               </Message>
-                            ) : visTenker ? (
-                              <RonnyTenkerTekst />
                             ) : null}
                           </div>
                         ) : null}
                       </div>
                     </div>
                     {visHandtak ? (
-                      <div data-ronny-handtak-rad className="flex justify-center pt-0 pb-1">
+                      <div data-ronny-handtak-rad className="flex justify-center pt-3 pb-2">
                         <button
                           type="button"
                           data-ronny-utvid
@@ -503,7 +504,7 @@ export function WorkshopBloub() {
                           aria-expanded={utvidet}
                           onPointerDown={onHandtakNed}
                           onPointerUp={onHandtakOpp}
-                          className="flex cursor-grab touch-none items-center justify-center px-6 py-0.5 active:cursor-grabbing"
+                          className="flex cursor-grab touch-none items-center justify-center px-6 py-1 active:cursor-grabbing"
                         >
                           <RonnyHandtak />
                         </button>
@@ -522,14 +523,10 @@ export function WorkshopBloub() {
           ref={composerRef}
           data-ronny-composer
           className="fixed inset-x-0 bottom-0 z-[70] shadow-none"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          style={{ paddingBottom: COMPOSER_BUNN }}
         >
           <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
-            <div
-              className={
-                utvidet ? 'relative bg-transparent' : 'relative overflow-hidden rounded-t-[18px]'
-              }
-            >
+            <div className={utvidet ? 'relative bg-transparent' : `relative ${KORT_KANT}`}>
               {utvidet ? null : (
                 <div className="pointer-events-none absolute inset-0" aria-hidden>
                   <Grainient className="absolute inset-0 h-full w-full" />

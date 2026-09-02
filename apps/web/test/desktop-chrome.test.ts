@@ -52,6 +52,8 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(rad).not.toMatch(/Avatar|BEVEL|variant === 'phone'/);
     expect(rad).toMatch(/if \(collapsed\)/);
     expect(rad).toMatch(/LogOut/);
+    expect(rad).toMatch(/mx-2/);
+    expect(rad).toMatch(/min-w-0 flex-1 truncate/);
   });
 
   it('app-skall: ingen breadcrumb-topbar, ingen mørkt-toggle, Grainient 32px-stripe', () => {
@@ -71,7 +73,8 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(workshop).toMatch(/data-workshop-strip/);
     expect(workshop).toMatch(/La KI-Ronny ta styringen/);
     expect(workshop).toMatch(/data-workshop-dock/);
-    expect(workshop).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(workshop).not.toMatch(/fixed inset-x-0 bottom-0/);
+    expect(workshop).toMatch(/data-ronny-utvid/);
     expect(workshop).not.toMatch(/ShaderGradient/);
     expect(globals).toMatch(/grainient\.css/);
     expect(profil).not.toMatch(/Mørkt tema|settTema/);

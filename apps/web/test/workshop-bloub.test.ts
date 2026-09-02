@@ -32,7 +32,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(layout).not.toMatch(/bottom-tab|PhoneTab/);
   });
 
-  it('er Grainient-stripe med KI-Ronny midtstilt, idle-syklus og bunndock', () => {
+  it('er Grainient-stripe med KI-Ronny midtstilt, idle-syklus og panel under stripen', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
     const css = les('../app/globals.css');
     expect(fab).toMatch(/data-workshop-strip/);
@@ -58,12 +58,13 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/PromptInputFooter/);
     expect(fab).toMatch(/PromptInputSubmit/);
     expect(fab).not.toMatch(/PromptInputSelect|GlobeIcon|webSearch|model picker/);
-    expect(fab).toMatch(/ForstorIkon|MinimerIkon/);
-    expect(fab).toMatch(/data-ronny-forstor/);
+    expect(fab).toMatch(/PilNed|NedPil|ChevronDown|arrow-dropdown|chevron-down/);
+    expect(fab).toMatch(/data-ronny-utvid/);
+    expect(fab).not.toMatch(/data-ronny-forstor/);
+    expect(fab).not.toMatch(/size-11/);
+    expect(fab).not.toMatch(/210 210 215/);
     expect(fab).toMatch(/#f5f5f7/);
     expect(fab).toMatch(/#e0e0e0/);
-    expect(fab).toMatch(/size-11/);
-    expect(fab).toMatch(/210 210 215/);
     expect(fab).not.toMatch(/#0066cc|#0071e3/);
     expect(fab).toMatch(/shadow-none/);
     const tokens = les('../../../packages/widget-tokens/src/tokens.css');
@@ -74,11 +75,11 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(submit).toMatch(/bg-\[#111\]/);
     expect(submit).not.toMatch(/#0066cc/);
     expect(fab).toMatch(/gåTil|gaaTil|erTillattGaaTil/);
-    expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(fab).not.toMatch(/fixed inset-x-0 bottom-0/);
     expect(fab).toMatch(/text-white/);
     expect(fab).toMatch(/data-workshop-sticky/);
     expect(fab).not.toMatch(/bg-bg\/90|ring-1 ring/);
-    expect(fab).toMatch(/rounded-full text-\[#1d1d1f\]/);
+    expect(fab).toMatch(/data-workshop-cluster/);
     expect(fab).not.toMatch(/Verkstedsassistent|AiDisclosure|MessageScroller/);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
     expect(fab).toMatch(/body: \{ side \}/);

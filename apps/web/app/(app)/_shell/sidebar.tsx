@@ -247,7 +247,7 @@ export function Sidebar() {
         </nav>
 
         {/* Bunn: oppgraderingspille over profil/logg ut. Ingen Hjelp-TipCard. */}
-        <div className="flex flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-3">
           {!smal && shell !== 'endwise' && shell !== 'endwise_partner' && <OppgraderPille />}
           <BrukerRad
             navn={navn}

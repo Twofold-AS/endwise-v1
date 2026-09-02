@@ -22,7 +22,8 @@
 
 > ### ⚠️ Grainient er KUN bot-stripen; Galaxy er KUN Oppgrader-knappen (02.09.2026)
 > Grainient (`react-bits` Grainient-JS-CSS + `ogl` ^1.0.11) er **bare** animert
-> bakgrunn på workshop-stripen (telefon ~44px, desktop `h-control` / 32px).
+> bakgrunn på workshop-stripen (telefon ~44px, desktop `h-control` / 32px) **og
+> rammen** rundt Ronny-panelet under stripen. Innholdet i panelet er canvas/parchment.
 > Ikke forhandler-hero, ikke Oppgrader. ShaderGradient er ute. Importer
 > `@endwise/ui/grainient.css` og `@endwise/ui/galaxy.css`.
 > `ogl` i både `@endwise/ui` og `@endwise/web`, og i `transpilePackages`. Hvit
@@ -454,7 +455,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Dine jobber / Timeplan-stripe / starttid / ferie-mock (`dine-jobber/`, `_shell/timeplan-stripe.tsx`, `bookinger/_starttid-velger.tsx`, `_shell/ferie-mock.tsx`, 29.08.2026 natt) | **Ingen ny pakke.** Jobb-bokser er `Link` + lucide `Bike`/`Sailboat` + `ChevronRight` til eksisterende `/min-dag/[id]`. Timeplan-piler er `ChevronLeft`/`ChevronRight`. Starttid er to native expander-knapper. Ferie er merket mock/kommer. |
 
-| Workshop-stripe (`_workshop/workshop-bloub.tsx` + `grainient.tsx`, 01.09.2026 kveld) | **Grainient** (§1). Telefon ~44px, desktop 32px. Hvit KI-Ronny midtstilt. **02.09.2026:** bunndock er AI Elements-navngitt `PromptInput`. Forstørr/minimer lokale SVG-er. Apple-tokens gjelder hele appen (Action Blue, parchment, hairline, 18px-kort). Stripe forblir Grainient. Submit på Ronny er mørk utility `#111`. Verktøy: `gåTil` + `søkKunder`; skriv parkert. ⛔ Model-picker, globe, vedlegg, andre Grainient. |
+| Workshop-stripe (`_workshop/workshop-bloub.tsx` + `grainient.tsx`, 01.09.2026 kveld) | **Grainient** (§1). Telefon ~44px, desktop 32px. Hvit KI-Ronny midtstilt. **02.09.2026 (Mikael IA):** klusteret (Ronny + «La KI-Ronny ta styringen» + `PilNed`) åpner panelet **under stripen**, ikke nederst i viewport. Grainient er ramme; innhold parchment/canvas. `PilNed` midt på bunnkanten = fullskjerm; Escape: utvidet → dock → stripe. 44px-chip forstørr/minimer ute. Submit `#111`. Verktøy: `gåTil` + `søkKunder`. ⛔ Model-picker, globe, vedlegg, bunndock, lucide-piler. |
 
 | Bot-lab (`apps/web/app/(app)/bot/`, F6-29, 31.08.2026) | **Ingen ny npm-pakke.** Runtime er vendorisert bloub-motor + `BloubBot`. Intern lab lever videre. Produkt-avatar er nå samme motor (se §10). |
 

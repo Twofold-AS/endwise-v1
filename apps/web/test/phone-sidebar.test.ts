@@ -83,7 +83,8 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(workshop).toMatch(/La KI-Ronny ta styringen/);
     expect(workshop).not.toMatch(/hidden h-14/);
     expect(workshop).not.toMatch(/md:block/);
-    expect(workshop).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(workshop).not.toMatch(/fixed inset-x-0 bottom-0/);
+    expect(workshop).toMatch(/data-ronny-utvid/);
     expect(workshop).not.toMatch(/ShaderGradient/);
   });
 
@@ -91,6 +92,8 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(rad).not.toMatch(/Avatar|BEVEL|variant === 'phone'/);
     expect(rad).toMatch(/LogOut/);
     expect(rad).toMatch(/Settings/);
+    expect(rad).toMatch(/mx-2/);
+    expect(rad).toMatch(/min-w-0 flex-1 truncate/);
     expect(sidebar).toMatch(/<BrukerRad/);
   });
 });

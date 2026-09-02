@@ -1,4 +1,8 @@
-import { isVerkstedInspectPath, remapHrefTilInspect, verkstedSlugFromPath } from '../_lib/plattform';
+import {
+  isVerkstedInspectPath,
+  remapHrefTilInspect,
+  verkstedSlugFromPath,
+} from '../_lib/plattform';
 import { INNBOKS_FILTERE, type InboxPart } from './inbox-del';
 import {
   ENDWISE_NAV,
@@ -9,8 +13,8 @@ import {
   type OrgRole,
   PARKED_LABEL,
   pillsForRole,
-  settingsForShell,
   type ShellKey,
+  settingsForShell,
   stierFor,
 } from './nav';
 import { erDealerInnboks } from './seksjon-sti';

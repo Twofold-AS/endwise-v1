@@ -3,8 +3,8 @@
 import { createContext, type ReactNode, useContext, useState } from 'react';
 import type { InboxPart } from './inbox-del';
 
-export type { InboxPart };
 export { INNBOKS_FILTERE } from './inbox-del';
+export type { InboxPart };
 
 export type InboxSortering = 'nyeste' | 'eldste';
 

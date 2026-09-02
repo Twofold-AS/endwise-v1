@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { osloKalenderdag } from '../_lib/oslo-dag';
-import { SidePiller } from '../_shell/side-piller';
 import { TimeplanStripe } from '../_shell/timeplan-stripe';
 import { TimeplanFlate } from '../mekanikere/kapasitet/page';
 import { Kalender } from './_kalender';
@@ -38,15 +37,6 @@ function TimeplanPageInner() {
           </Link>
         </div>
       </div>
-
-      <SidePiller
-        ariaLabel="Timeplan"
-        piller={[
-          { label: 'Liste', href: '/jobber' },
-          { label: 'Kalender', href: '/jobber?visning=kalender' },
-        ]}
-        aktivHref={visning === 'kalender' ? '/jobber?visning=kalender' : '/jobber'}
-      />
 
       <TimeplanStripe valgt={valgt} onValgt={setValgt} />
 

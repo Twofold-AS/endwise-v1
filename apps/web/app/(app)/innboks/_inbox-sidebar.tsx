@@ -5,7 +5,6 @@ import {
   type AvatarValg,
   Button,
   MessageSquare,
-  MessageSquarePlus,
   Trash2,
 } from '@endwise/ui';
 import type { Route } from 'next';
@@ -14,8 +13,9 @@ import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
-import { INNBOKS_FILTERE, useInboxFilter } from '../_shell/inbox-filter';
+import { useInboxFilter } from '../_shell/inbox-filter';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
+import { NyMeldingIkon } from './_ny-melding-ikon';
 import {
   fmtWhen,
   KIND_LABEL,
@@ -33,8 +33,8 @@ import { useInboxModus } from './_modus';
  * hvilken samtale. Samme oppbygning som hoved-sidebaren med vilje: en 56px
  * header med `border-b` som ligger på samme linje som topbarens skillelinje, og
  * innholdet under. To kolonner som er bygget likt leses som ett system.
- * Part-filtrene bor her, ikke i hoved-sidebaren. To kontroller for samme filter
- * ville før eller siden gått ut av synk.
+ * Part-filtrene bor i DestinasjonSeksjonBar under Ronny. To kontroller
+ * for samme filter ville før eller siden gått ut av synk.
  * Navnebytte. Disse filtrene het «kanaler» i koden, men de
  * filtrerer på `thread_kind` — altså hvem samtalen er med. Nå som `channel`
  * finnes som ekte kolonne (SMS/e-post/app/widget) ville to ting med samme navn
@@ -45,7 +45,7 @@ export function InboxSidebar() {
   const aktivId = params?.id;
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, setPart, sortering, setSortering, skjulte, skjul } = useInboxFilter();
+  const { part, sortering, setSortering, skjulte, skjul } = useInboxFilter();
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -199,26 +199,8 @@ export function InboxSidebar() {
             title="Ny melding"
             className="inline-flex size-8 items-center justify-center rounded-control text-fg hover:bg-surface-2"
           >
-            <MessageSquarePlus size={16} strokeWidth={1.75} />
+            <NyMeldingIkon size={16} />
           </Link>
-          {INNBOKS_FILTERE.map((p) => {
-            const aktiv = part === p.key;
-            return (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setPart(p.key)}
-                aria-pressed={aktiv}
-                title={p.label}
-                aria-label={p.label}
-                className={`inline-flex h-control items-center rounded-control px-2.5 text-label transition-colors ${
-                  aktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-                }`}
-              >
-                {p.label}
-              </button>
-            );
-          })}
           <button
             type="button"
             aria-label="Slett valgt samtale"
@@ -440,7 +422,7 @@ function NySamtaleLenke({ href, full }: { href: Route; full?: boolean }) {
   return (
     <Button asChild className={full ? 'w-full' : 'shrink-0'}>
       <Link href={href}>
-        <MessageSquarePlus size={16} strokeWidth={1.75} />
+        <NyMeldingIkon size={16} />
         Ny chat
       </Link>
     </Button>

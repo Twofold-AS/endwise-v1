@@ -1,7 +1,6 @@
 'use client';
 
 import { trpc } from '@/lib/trpc';
-import { LagerPiller } from '../../_shell/ansatte-piller';
 import { BEVEGELSE_LABEL, BEVEGELSE_TONE, Feil, Laster, Sidehode, Tomt } from '../_delt';
 
 /**
@@ -20,8 +19,6 @@ export default function BevegelserPage() {
         tittel="Inn og ut"
         undertittel="Alt som har gått inn og ut. Historikken rettes aldri — den suppleres."
       />
-      <LagerPiller />
-
       {bevegelser.isLoading ? (
         <Laster />
       ) : bevegelser.isError ? (

@@ -169,7 +169,8 @@ describe('telefon-toppbar og sidebar-overlay', () => {
     expect(shell).not.toMatch(/ml-auto/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
-    expect(shell).toMatch(/TilbakePil/);
+    expect(shell).toMatch(/Tilbake/);
+    expect(shell).not.toMatch(/TilbakePil/);
     expect(shell).toMatch(/router\.back\(\)/);
     expect(shell).toMatch(/Tilbake/);
     expect(shell).not.toMatch(/ChevronLeft/);

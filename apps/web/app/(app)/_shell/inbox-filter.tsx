@@ -1,17 +1,10 @@
 'use client';
 
-import { Inbox, LifeBuoy, type LucideIcon, Users, Wrench } from '@endwise/ui';
 import { createContext, type ReactNode, useContext, useState } from 'react';
+import type { InboxPart } from './inbox-del';
 
-/** Filter på lista — ikke egne destinasjoner. */
-export type InboxPart = 'alle' | 'customer_dealer' | 'mechanic_dealer' | 'dealer_admin';
-
-export const INNBOKS_FILTERE: { key: InboxPart; label: string; icon: LucideIcon }[] = [
-  { key: 'alle', label: 'Alle chatter', icon: Inbox },
-  { key: 'customer_dealer', label: 'Kunder', icon: Users },
-  { key: 'mechanic_dealer', label: 'Intern', icon: Wrench },
-  { key: 'dealer_admin', label: 'Endwise', icon: LifeBuoy },
-];
+export type { InboxPart };
+export { INNBOKS_FILTERE } from './inbox-del';
 
 export type InboxSortering = 'nyeste' | 'eldste';
 

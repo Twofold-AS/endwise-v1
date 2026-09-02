@@ -32,10 +32,10 @@ describe('phone-chrome', () => {
     expect(PHONE_H_SCROLL).toContain('overflow-y-hidden');
     expect(PHONE_H_SCROLL).toContain('touch-pan-x');
     expect(PHONE_H_SCROLL).toContain('overscroll-y-none');
-    expect(PHONE_LOGO_PX).toBe(18);
+    expect(PHONE_LOGO_PX).toBe(24);
     expect(SHELL_HEADER_RAD).toBe('flex h-row items-center gap-2 px-3');
     expect(SHELL_LOGO_WRAP).toBe('flex shrink-0 items-center');
-    expect(PHONE_LOGO_KOLONNE).toContain('18px');
+    expect(PHONE_LOGO_KOLONNE).toContain('24px');
     expect(PHONE_LOGO_KOLONNE).toContain('0.75rem');
     expect(PHONE_LOGO_KOLONNE).toContain('0.5rem');
   });
@@ -163,17 +163,18 @@ describe('phone-chrome', () => {
     expect(css).toMatch(/100dvh/);
   });
 
-  it('tilbake i toppbaren er history.back via lokal SVG, ikke PhoneHScroll', () => {
+  it('tilbake i toppbaren er history.back som rent ord, ikke PhoneHScroll', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
     expect(seksjon).not.toMatch(/PhoneHScroll/);
-    expect(seksjon).toMatch(/return null/);
+    expect(seksjon).toMatch(/DestinasjonSeksjonBar/);
     expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).toMatch(/router\.back\(\)/);
-    expect(shell).toMatch(/TilbakePil/);
-    expect(pil).toMatch(/<svg/);
+    expect(shell).toMatch(/Tilbake/);
+    expect(shell).not.toMatch(/TilbakePil/);
+    expect(pil).not.toMatch(/<svg/);
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
-    expect(SHELL_TOGGLE_PX).toBe(16);
+    expect(SHELL_TOGGLE_PX).toBe(24);
   });
 });

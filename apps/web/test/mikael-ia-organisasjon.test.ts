@@ -185,7 +185,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   it('minimize sitter i sidebaren, ikke i top-bar 1', () => {
     expect(header).toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(top).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
-    expect(header).toMatch(/LOGO = 18|width=\{18\}|width=\{LOGO\}/);
+    expect(header).toMatch(/SHELL_LOGO_PX|width=\{24\}|width=\{LOGO\}/);
     expect(header).toMatch(/logo\/logo\.svg/);
     const headerLogoer = header.match(/<Image[\s\S]*?\/>/g) ?? [];
     expect(headerLogoer.length).toBeGreaterThanOrEqual(2);
@@ -211,7 +211,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(layout).not.toMatch(/PhoneNav/);
     expect(layout).toMatch(/WorkshopBloub/);
     expect(layout).not.toMatch(/TopBar/);
-    expect(layout).toMatch(/OrganisasjonSeksjonBar/);
+    expect(layout).toMatch(/DestinasjonSeksjonBar/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/logo\/logo\.svg/);
     expect(shell).toMatch(/logo-invert/);
@@ -288,7 +288,7 @@ describe('Mikael IA — Prisliste på Oversikt, inspect', () => {
     expect(les('../app/(app)/endwise/verksted/[slug]/organisasjon/forhandleren/page.tsx')).toMatch(
       /organisasjon/,
     );
-    expect(les('../app/(app)/_shell/seksjon-bar.tsx')).toMatch(/isVerkstedInspectPath/);
-    expect(les('../app/(app)/_shell/seksjon-bar.tsx')).toMatch(/remapHrefTilInspect/);
+    expect(les('../app/(app)/_shell/seksjon-faner.ts')).toMatch(/isVerkstedInspectPath/);
+    expect(les('../app/(app)/_shell/seksjon-faner.ts')).toMatch(/remapHrefTilInspect/);
   });
 });

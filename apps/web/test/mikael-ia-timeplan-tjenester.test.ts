@@ -112,12 +112,10 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(h1).toBeGreaterThan(-1);
     const etterH1 = side.slice(h1);
     expect(etterH1.indexOf('Opprett jobb')).toBeGreaterThan(-1);
-    expect(etterH1.indexOf('Opprett jobb')).toBeLessThan(etterH1.indexOf('SidePiller'));
     expect(etterH1).not.toMatch(/Prisliste/);
     expect(etterH1).toMatch(/h-control[\s\S]*Opprett jobb/);
     expect(etterH1).toMatch(/\/bookinger\/ny/);
-    expect(etterH1).not.toMatch(/justify-between[\s\S]*SidePiller[\s\S]*Opprett jobb/);
-    expect(etterH1).not.toMatch(/SidePiller[\s\S]*Opprett jobb/);
+    expect(etterH1).not.toMatch(/SidePiller/);
     expect(side.slice(0, h1)).not.toMatch(/Opprett jobb/);
   });
 

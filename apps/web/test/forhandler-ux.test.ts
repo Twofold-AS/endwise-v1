@@ -60,7 +60,8 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
 
   it('Timeplan-siden kaller listevisningen Liste', () => {
     const saker = les('../app/(app)/saker/page.tsx');
-    expect(saker).toMatch(/label: 'Liste'/);
+    const nav = les('../app/(app)/_shell/nav.ts');
+    expect(nav).toMatch(/label: 'Liste'/);
     expect(saker).not.toMatch(/label="Oversikt"/);
   });
 });
@@ -100,8 +101,10 @@ describe('Ny jobb og tomflater', () => {
   it('innboks-filtre er ikon-knapper på desktop, tomflate er postkasse', () => {
     const side = les('../app/(app)/innboks/_inbox-sidebar.tsx');
     const pane = les('../app/(app)/innboks/page.tsx');
-    expect(side).toMatch(/aria-label=\{p\.label\}/);
-    expect(side).not.toMatch(/<span>\{p\.label\}<\/span>/);
+    const bar = les('../app/(app)/_shell/seksjon-bar.tsx');
+    expect(bar).toMatch(/inboxPart/);
+    expect(bar).toMatch(/Alle chatter|setPart/);
+    expect(side).toMatch(/NyMeldingIkon/);
     expect(pane).toMatch(/Ingen valgte meldinger/);
     expect(pane).toMatch(/Ny chat/);
     expect(side).not.toMatch(/SAK-/);

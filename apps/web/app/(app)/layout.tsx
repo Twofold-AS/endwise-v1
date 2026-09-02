@@ -13,7 +13,7 @@ import { erTillattMekanikerSti } from './_shell/nav';
 import { PHONE_SHELL_ROT } from './_shell/phone-home';
 import { PhoneShell } from './_shell/phone-shell';
 import { PwaRegister } from './_shell/pwa-register';
-import { InnboksSeksjonBar, OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
+import { DestinasjonSeksjonBar } from './_shell/seksjon-bar';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
 import { WorkshopBloub } from './_workshop/workshop-bloub';
@@ -114,7 +114,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   /*
    * Desktop-sidebar er persistent venstre skinne. Overlay/fullskjerm-drawer
    * er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
-   * Fast toppbar med 18px-logo på telefon. PhoneBevel er borte.
+   * Fast toppbar med 24px-logo på telefon. Tilbake er ordet uten pil.
+   * PhoneBevel er borte. DestinasjonSeksjonBar under Ronny på alle sider.
    * Workshop-stripen (Grainient, KI-Ronny midtstilt i stripen) er ~44px på telefon og
    * 32px på desktop. K åpner quick actions i sidebaren på desktop.
    */
@@ -146,8 +147,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 >
                   <PhoneShell />
                   <WorkshopBloub />
-                  <OrganisasjonSeksjonBar />
-                  <InnboksSeksjonBar />
+                  <DestinasjonSeksjonBar />
                 </Suspense>
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
                   <main className="min-w-0 flex-1">

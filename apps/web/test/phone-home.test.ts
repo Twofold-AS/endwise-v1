@@ -350,7 +350,8 @@ describe('Verkstedet-dag og Organisasjon på telefon', () => {
 
   it('Organisasjon-piller wrapper på telefon og skjuler Abonnement/Integrasjoner for selger', () => {
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
+    const faner = utenKommentarer(les('../app/(app)/_shell/seksjon-faner.ts'));
     expect(seksjon).toMatch(/flex-wrap/);
-    expect(seksjon).toMatch(/p\.roles/);
+    expect(faner).toMatch(/pillsForRole/);
   });
 });

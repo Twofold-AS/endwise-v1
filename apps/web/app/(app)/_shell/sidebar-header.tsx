@@ -4,11 +4,11 @@ import { PanelLeftClose, PanelLeftOpen } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { SHELL_LOGO_WRAP, SHELL_TOGGLE_PX } from './phone-chrome';
+import { SHELL_LOGO_PX, SHELL_LOGO_WRAP, SHELL_TOGGLE_PX } from './phone-chrome';
 import { useSidebarState } from './sidebar-state';
 
-/** Liten logo — samme 18px i overlay og i lukket toppbar. Forhandlernavn vises ikke. */
-const LOGO = 18;
+/** Samme 24px i overlay og desktop-skinne. Tyngre enn Tilbake-teksten. */
+const LOGO = SHELL_LOGO_PX;
 
 /**
  * Sidebar-topp uten visningsvelger. Ett skall per innlogging.

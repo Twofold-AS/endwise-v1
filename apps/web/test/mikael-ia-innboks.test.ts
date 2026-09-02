@@ -20,7 +20,7 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     const innboks = FORHANDLER_NAV.find((i) => i.key === 'innboks');
     expect(innboks?.href).toBe('/innboks');
     expect(innboks?.pills).toBeUndefined();
-    const filter = utenKommentarer(les('../app/(app)/_shell/inbox-filter.tsx'));
+    const filter = utenKommentarer(les('../app/(app)/_shell/inbox-del.ts'));
     expect(filter).toMatch(/label: 'Alle chatter'/);
     expect(filter).toMatch(/label: 'Kunder'/);
     expect(filter).toMatch(/label: 'Intern'/);
@@ -38,26 +38,22 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     ]);
   });
 
-  it('Innboks-verktøy bor i lista (to linjer), seksjon-bar er no-op', () => {
+  it('Innboks-faner bor under Ronny, lista har compose + sortering', () => {
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
+    const faner = utenKommentarer(les('../app/(app)/_shell/seksjon-faner.ts'));
     const side = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
-    expect(layout).toMatch(/InnboksSeksjonBar/);
-    expect(layout).toMatch(/OrganisasjonSeksjonBar/);
-    expect(seksjon).toMatch(/export function InnboksSeksjonBar/);
-    expect(seksjon).toMatch(/export function OrganisasjonSeksjonBar/);
-    expect(seksjon).toMatch(/return null/);
+    expect(layout).toMatch(/DestinasjonSeksjonBar/);
+    expect(seksjon).toMatch(/export function DestinasjonSeksjonBar/);
     expect(seksjon).not.toMatch(/PhoneHScroll/);
-    expect(seksjon).not.toMatch(/INNBOKS_FILTERE/);
+    expect(faner).toMatch(/INNBOKS_FILTERE/);
     expect(side).toMatch(/aria-label="Innboks"/);
-    expect(side).toMatch(/INNBOKS_FILTERE/);
-    expect(side).toMatch(/MessageSquarePlus/);
+    expect(side).toMatch(/NyMeldingIkon/);
+    expect(side).not.toMatch(/MessageSquarePlus/);
     expect(side).toMatch(/Nyeste/);
     expect(side).toMatch(/Eldste/);
     expect(side).toMatch(/max-md:hidden/);
     expect(side).not.toMatch(/Oversikt/);
-    expect(side).toMatch(/bg-sidebar-active/);
-    expect(side).toMatch(/hover:bg-surface-2/);
   });
 
   it('erInnboksSide dekker dealer og inspect, filterbar er kun dealer', () => {
@@ -80,13 +76,8 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
   const chrome = utenKommentarer(les('../app/(app)/innboks/_chrome.tsx'));
   const hoved = utenKommentarer(les('../app/(app)/innboks/_hovedflate.tsx'));
 
-  it('to linjer uten divider: visning + slett, sortering under', () => {
-    expect(side).toMatch(/INNBOKS_FILTERE/);
-    expect(side).toMatch(/aria-label=\{p\.label\}/);
-    expect(side).toMatch(/title=\{p\.label\}/);
-    expect(side).toMatch(/\{p\.label\}/);
-    expect(side).toMatch(/bg-sidebar-active/);
-    expect(side).toMatch(/hover:bg-surface-2/);
+  it('to linjer uten divider: compose + slett, sortering under', () => {
+    expect(side).toMatch(/NyMeldingIkon/);
     expect(side).toMatch(/Nyeste/);
     expect(side).toMatch(/Eldste/);
     expect(side).toMatch(/Trash2/);
@@ -95,7 +86,7 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
 
   it('Ny melding er ikon, compose åpner Kunde · Intern · Support — ingen Mekaniker', () => {
     expect(side).toMatch(/Ny melding/);
-    expect(side).toMatch(/MessageSquarePlus/);
+    expect(side).toMatch(/NyMeldingIkon/);
     expect(side).toMatch(/\/innboks\?ny=1/);
     expect(samtale).toMatch(/label: 'Kunde'/);
     expect(samtale).toMatch(/label: 'Intern'/);

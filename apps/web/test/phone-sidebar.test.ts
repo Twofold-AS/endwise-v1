@@ -29,15 +29,15 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
-    expect(shell).toMatch(/TilbakePil|data-shell-tilbake/);
+    expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/ml-auto/);
     expect(shell).not.toMatch(/PhoneBevel|BEVEL/);
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).not.toMatch(/PhoneBevel/);
-    expect(chrome).toMatch(/PHONE_LOGO_PX = 18/);
+    expect(chrome).toMatch(/SHELL_LOGO_PX = 24/);
     expect(chrome).toMatch(/SHELL_HEADER_RAD/);
     expect(chrome).toMatch(/flex h-row items-center gap-2 px-3/);
-    expect(header).toMatch(/LOGO = 18/);
+    expect(header).toMatch(/SHELL_LOGO_PX/);
     expect(header).toMatch(/SHELL_LOGO_WRAP/);
     expect(header).not.toMatch(/justify-between px-1/);
     expect(shell).toMatch(/PHONE_LOGO_PX/);

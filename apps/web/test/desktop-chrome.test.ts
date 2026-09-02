@@ -47,7 +47,7 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(sidebar).toMatch(/BrukerRad/);
     expect(sidebar).not.toMatch(/settingsNav \? \(/);
     expect(sidebar).not.toMatch(/-mx-3 h-px bg-border/);
-    expect(header).toMatch(/LOGO = 18/);
+    expect(header).toMatch(/SHELL_LOGO_PX/);
     expect(header).not.toMatch(/text-title text-fg/);
     expect(rad).not.toMatch(/Avatar|BEVEL|variant === 'phone'/);
     expect(rad).toMatch(/if \(collapsed\)/);

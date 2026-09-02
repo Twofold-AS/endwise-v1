@@ -3,62 +3,80 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import {
-  isVerkstedInspectPath,
-  remapHrefTilInspect,
-  verkstedSlugFromPath,
-} from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
-import { ORGANISASJON_SEKSJONER } from './nav';
-import { erOrganisasjonSide } from './seksjon-sti';
-
-export { erInnboksSide, erOrganisasjonSide } from './seksjon-sti';
+import { type InboxPart, useInboxFilter } from './inbox-filter';
+import { shellForBruker } from './nav';
+import { destinasjonFaner } from './seksjon-faner';
 
 /**
- * Top-bar 2 — Organisasjon (alle viewports).
- * text-label, aktiv = sidebar-active, wrap / to rader OK — ingen slider.
- * Innboks-verktøylinjen bor i innboks-lista (to linjer), ikke her.
+ * Top-bar 2 under Ronny på ALLE destinasjoner (Jonas 28.08 / Mikael 02.09).
+ * h-control, text-label, aktiv sidebar-active (#ededed), hover surface-2 (#f5f5f5).
+ * gap-2 telefon / gap-8 desktop. Wrap eller overflow-x — ikke svarte piller,
+ * ikke breadcrumb, ikke PhoneHScroll.
  */
 const PILLE_KLASSE =
-  'inline-flex h-control min-h-control shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label transition-colors max-md:h-auto max-md:min-h-0 max-md:py-1';
+  'inline-flex h-control min-h-control shrink-0 items-center whitespace-nowrap rounded-control px-2.5 text-label transition-colors max-md:h-auto max-md:min-h-0 max-md:py-1';
 
-export function OrganisasjonSeksjonBar() {
+export function DestinasjonSeksjonBar() {
   const pathname = usePathname() ?? '';
-  const search = useSearchParams();
-  const { role } = useOrgRole();
-  if (!erOrganisasjonSide(pathname)) return null;
+  const searchParams = useSearchParams();
+  const search = searchParams?.toString() ?? '';
+  const { role, jobbfunksjon, isMechanic, erPlattform, shopEnabled } = useOrgRole();
+  const { part, setPart } = useInboxFilter();
+  const shell = shellForBruker({
+    role,
+    jobFunction: jobbfunksjon,
+    isMechanic,
+    erPlattform,
+  });
+  const faner = destinasjonFaner({
+    pathname,
+    search,
+    role,
+    shell,
+    shopEnabled,
+    inboxPart: part,
+  });
+  if (faner.length === 0) return null;
 
-  const inspect = isVerkstedInspectPath(pathname);
-  const slug = verkstedSlugFromPath(pathname);
-  const fra = search?.get('fra');
-  const synlige = ORGANISASJON_SEKSJONER.filter(
-    (p) => !p.roles || (role != null && p.roles.includes(role)) || inspect,
-  );
-  const seksjon = search?.get('seksjon');
+  const fra = searchParams?.get('fra');
+  const inboxKnapper = faner.some((f) => f.inboxPart);
 
   return (
     <nav
-      aria-label="Organisasjon"
-      className="flex flex-wrap items-center gap-2 border-border border-b bg-bg px-3 py-1.5 md:h-control md:min-h-control md:flex-nowrap md:px-4 md:py-0"
+      data-destinasjon-bar
+      aria-label="Seksjoner"
+      className="flex flex-wrap items-center gap-2 overflow-x-auto border-border border-b bg-bg px-3 py-1.5 md:h-control md:min-h-control md:flex-nowrap md:gap-8 md:overflow-visible md:px-4 md:py-0"
     >
-      {synlige.map((p) => {
-        const query = p.href.split('?')[1] ?? '';
-        const valgt = query ? seksjon != null && query.includes(`seksjon=${seksjon}`) : !seksjon;
-        const raw = inspect && slug ? remapHrefTilInspect(p.href, slug) : p.href;
+      {faner.map((f) => {
+        const klasse = `${PILLE_KLASSE} ${
+          f.valgt ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+        }`;
+        if (inboxKnapper && f.inboxPart) {
+          return (
+            <button
+              key={f.inboxPart}
+              type="button"
+              aria-current={f.valgt ? 'page' : undefined}
+              onClick={() => setPart(f.inboxPart as InboxPart)}
+              className={klasse}
+            >
+              {f.label}
+            </button>
+          );
+        }
         const href = fra
-          ? `${raw}${raw.includes('?') ? '&' : '?'}fra=${encodeURIComponent(fra)}`
-          : raw;
+          ? `${f.href}${f.href.includes('?') ? '&' : '?'}fra=${encodeURIComponent(fra)}`
+          : f.href;
         return (
           <Link
-            key={p.href}
+            key={`${f.label}:${f.href}`}
             href={href as Route}
             scroll={false}
-            aria-current={valgt ? 'page' : undefined}
-            className={`${PILLE_KLASSE} ${
-              valgt ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-            }`}
+            aria-current={f.valgt ? 'page' : undefined}
+            className={klasse}
           >
-            {p.label}
+            {f.label}
           </Link>
         );
       })}
@@ -66,10 +84,12 @@ export function OrganisasjonSeksjonBar() {
   );
 }
 
-/**
- * Innboks-verktøy bor i lista (to linjer, ingen slider). Beholdt som
- * no-op så layout-importen ikke hopper.
- */
+/** Beholdt navn — samme stripe som DestinasjonSeksjonBar. */
+export function OrganisasjonSeksjonBar() {
+  return <DestinasjonSeksjonBar />;
+}
+
+/** Innboks-faner bor i DestinasjonSeksjonBar. */
 export function InnboksSeksjonBar() {
   return null;
 }

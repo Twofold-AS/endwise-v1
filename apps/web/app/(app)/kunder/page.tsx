@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { KunderPiller } from '../_shell/ansatte-piller';
 import { Feil, Kilde, Laster, Tomt } from './_delt';
 import { NyKunde } from './_ny-kunde';
 
@@ -60,9 +59,6 @@ function KunderInner() {
             Søk opp en kunde for å se kjøretøy, historikk og meldinger samlet. Kunder opprettes her
             — Quick er fakta når det er koblet på.
           </p>
-          <div className="mt-3">
-            <KunderPiller />
-          </div>
         </div>
         {!nyKunde && (
           <Link

@@ -1,7 +1,5 @@
 'use client';
 
-import { Send } from '../icons.ts';
-import { cn } from '../lib/utils.ts';
 import type {
   FormEvent,
   FormEventHandler,
@@ -10,6 +8,8 @@ import type {
   TextareaHTMLAttributes,
 } from 'react';
 import { useCallback, useState } from 'react';
+import { Send } from '../icons.ts';
+import { cn } from '../lib/utils.ts';
 
 /**
  * AI Elements Prompt Input — Ronny-skall (Mikael 02.09.2026).
@@ -28,7 +28,10 @@ export interface PromptInputMessage {
 }
 
 export type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, 'onSubmit'> & {
-  onSubmit: (message: PromptInputMessage, event: FormEvent<HTMLFormElement>) => void | Promise<void>;
+  onSubmit: (
+    message: PromptInputMessage,
+    event: FormEvent<HTMLFormElement>,
+  ) => void | Promise<void>;
 };
 
 export function PromptInput({ className, onSubmit, children, ...props }: PromptInputProps) {
@@ -89,7 +92,7 @@ export function PromptInputTextarea({
       onCompositionStart={() => setComposing(true)}
       onCompositionEnd={() => setComposing(false)}
       className={cn(
-        'field-sizing-content max-h-10 min-h-7 w-full resize-none bg-transparent px-2.5 py-1.5 text-label text-fg outline-none placeholder:text-label placeholder:text-fg-muted disabled:opacity-50',
+        'field-sizing-content max-h-8 min-h-6 w-full resize-none bg-transparent px-2 py-1 text-[16px] text-fg outline-none placeholder:text-[16px] placeholder:text-fg-muted disabled:opacity-50 md:text-label md:placeholder:text-label',
         className,
       )}
       {...props}
@@ -126,7 +129,7 @@ export function PromptInputSubmit({
       aria-label={busy ? 'Sender' : 'Send'}
       disabled={busy || disabled}
       className={cn(
-        'inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#0066cc] text-white transition-opacity hover:opacity-90 disabled:opacity-40',
+        'inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[#0066cc] text-white transition-opacity hover:opacity-90 disabled:opacity-40',
         className,
       )}
       {...props}

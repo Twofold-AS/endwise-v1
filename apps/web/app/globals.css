@@ -33,6 +33,27 @@ body {
   min-height: 100dvh;
 }
 
+/*
+ * iOS Safari zoomer hele siden når et felt med computed font-size < 16px
+ * får fokus. Gulv på telefon. Pinch-zoom beholdes (ingen viewport-tak).
+ * Desktop (md+) beholder text-label 13px. Bobler/logg er ikke felt.
+ */
+@media (max-width: 767.98px) {
+  input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not(
+    [type="radio"]
+  ):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="image"]):not(
+    [type="color"]
+  ),
+  textarea,
+  select,
+  [contenteditable="true"],
+  [contenteditable=""] {
+    /* Tailwind text-label (13px) slår ellers denne. */
+    /* biome-ignore lint/complexity/noImportantStyles: iOS-gulv må slå utility-klasser */
+    font-size: max(16px, 100%) !important;
+  }
+}
+
 /* Skjult scrollbar for sidebar-rail-en (beholder scroll, fjerner sporet). */
 .no-scrollbar {
   scrollbar-width: none;
@@ -57,4 +78,33 @@ body {
 [data-ronny-spin] {
   animation: ronny-spin 0.7s ease-in-out;
   transform-style: preserve-3d;
+}
+
+/*
+ * shadcn Conversation/Shimmer er ikke hentet (UI-PAKKER §7).
+ * Samme shimmer-mønster (gradient + bg-clip-text) på tenke-teksten,
+ * i takt med BloubBot state=thinking — ikke en ekstra spinner.
+ */
+@keyframes ronny-tenker-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Hvit shimmer — tenke-tekst sitter i grainient-stripen ved avataren. */
+.ronny-tenker-tekst {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    #fff 45%,
+    rgba(255, 255, 255, 0.5) 90%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: ronny-tenker-shimmer 1.4s ease-in-out infinite;
 }

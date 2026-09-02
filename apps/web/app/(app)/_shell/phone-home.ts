@@ -34,6 +34,12 @@ export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';
  */
 export const PHONE_KORT_FYLL = 'rounded-xl border border-border bg-card text-fg shadow-none';
 
+/**
+ * Innholdskolonne for det største Verksted-kortet (telefon-hjem + desktop-hero)
+ * og Ronny idle/peek-grainient. Full-åpen Ronny er viewport-grainient under chrome.
+ */
+export const VERKSTED_INNHOLD = 'mx-auto w-full max-w-[520px] px-3 md:max-w-[1120px] md:px-8';
+
 export const FORBUDT_DEALER_HJEM = [
   'book',
   'oppslag',

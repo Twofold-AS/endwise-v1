@@ -71,9 +71,10 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(workshop).toMatch(/md:h-control md:max-h-\[32px\]/);
     expect(workshop).toMatch(/h-11 max-h-\[44px\]/);
     expect(workshop).toMatch(/data-workshop-strip/);
-    expect(workshop).toMatch(/La KI-Ronny ta styringen/);
+    expect(workshop).toMatch(/Trykk på KI-Ronny/);
     expect(workshop).toMatch(/data-workshop-dock/);
-    expect(workshop).not.toMatch(/fixed inset-x-0 bottom-0/);
+    expect(workshop).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(workshop).toMatch(/data-ronny-composer/);
     expect(workshop).toMatch(/data-ronny-utvid/);
     expect(workshop).not.toMatch(/ShaderGradient/);
     expect(globals).toMatch(/grainient\.css/);

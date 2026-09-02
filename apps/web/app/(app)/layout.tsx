@@ -149,7 +149,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <WorkshopBloub />
                   <DestinasjonSeksjonBar />
                 </Suspense>
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+                <div
+                  data-ronny-side-scroll
+                  className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+                >
                   <main className="min-w-0 flex-1">
                     {plattformVarsel ? (
                       <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">

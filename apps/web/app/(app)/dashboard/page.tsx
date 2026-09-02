@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc';
 import { sammeOsloDag } from '../_lib/oslo-dag';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
+import { VERKSTED_INNHOLD } from '../_shell/phone-home';
 import { PhoneHomeDealer } from '../_shell/phone-home-dealer';
 import { fmtServices, fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
 import { AnsattePaJobb } from './_ansatte-pa-jobb';
@@ -89,7 +90,7 @@ function VerkstedetDesktop() {
   }, [mechanics.data]);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
+    <div className={`${VERKSTED_INNHOLD} flex flex-col gap-5 py-7`}>
       {/*
        * Mikael 02.09: synlig hero-tittel er forhandlernavn.
        * «Verkstedet» / «Her er dagen din» beholdes skjult.

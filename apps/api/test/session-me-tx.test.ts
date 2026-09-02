@@ -25,6 +25,7 @@ describe('session.me sender ikke dealer_admin til /oppstart uten tenant', () => 
     expect(kilde).toMatch(/if \(!input\.tenant\) return false/);
     expect(kilde).toMatch(/dealerNeedsOnboarding\(/);
     expect(kilde).toMatch(/landingEtterSesjon\(/);
+    expect(kilde).toMatch(/loggManglendeTenantRad\('session\.me'/);
     expect(kilde).not.toMatch(
       /needsOnboarding = ctx\.role === 'dealer_admin' && !tenant\?\.onboardingCompletedAt/,
     );

@@ -66,8 +66,8 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).not.toMatch(/['"]shop['"]/);
     expect(forhandlere).not.toMatch(/SMS ligger i Pro-bundelen/);
     expect(forhandlere).toMatch(/Ingen forhandlere ennå/);
-    expect(forhandlere).toMatch(/liste\.isError \|\|/);
-    expect(forhandlere).not.toMatch(/liste\.error\.message/);
+    expect(forhandlere).toMatch(/liste\.isError/);
+    expect(forhandlere).toMatch(/liste\.error\.message/);
   });
 
   it('pakkevalget skjuler shop, men viser SMS som avkrysnings-tillegg', () => {

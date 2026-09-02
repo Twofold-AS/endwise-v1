@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDb, type Database, eq, schema } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { MANGLER_TENANT_MELDING, manglendeTenantFeil } from '../src/trpc/manglende-tenant.ts';
 import { appRouter } from '../src/trpc/router.ts';
 import {
   erManglendeDealerProfil,
@@ -12,7 +13,6 @@ import {
   somLeftover,
   tomtForhandlerKort,
 } from '../src/trpc/routers/forhandler.ts';
-import { onboardingStatusUtenTenant } from '../src/trpc/routers/onboarding.ts';
 import { dealerNeedsOnboarding, landingEtterSesjon } from '../src/trpc/routers/session.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -220,7 +220,10 @@ describe('Forhandleren — get uten 500 når profil mangler', () => {
         jobbfunksjon: 'leder',
       }),
     ).toBe('/endwise');
-    expect(onboardingStatusUtenTenant('Yamaha Bergen').complete).toBe(true);
+    expect(manglendeTenantFeil()).toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message: MANGLER_TENANT_MELDING,
+    });
   });
 
   it('get og inspect bruker hentForhandlerKort, ikke rå lesForhandlerKort', () => {
@@ -229,6 +232,7 @@ describe('Forhandleren — get uten 500 når profil mangler', () => {
     expect(get).toMatch(/hentForhandlerKort/);
     expect(get).toMatch(/get:\s*adminProcedure\.query/);
     expect(get).toMatch(/kort:\s*protectedProcedure\.query/);
+    expect(get).toMatch(/loggManglendeTenantRad\('forhandler\.kort'/);
     expect(inspect).toMatch(/hentForhandlerKort/);
     expect(inspect).toMatch(/withPlatformInspect/);
   });
@@ -358,19 +362,21 @@ describeDb('Forhandleren — org uten tenants-rad', () => {
     expect(me.tenantName).toBe(orgNavn);
   });
 
-  it('onboarding.status er complete slik chrome kan forlate /oppstart', async () => {
+  it('onboarding.status er ikke ferdig — raden mangler, ikke fullført', async () => {
     const status = await leder().onboarding.status();
-    expect(status.complete).toBe(true);
-    expect(status.visningsnavn).toBe(orgNavn);
+    expect(status.complete).toBe(false);
+    expect(status.visningsnavn).toBe('');
   });
 
-  it('onboarding.fullfor 404-er ikke', async () => {
-    const ferdig = await leder().onboarding.fullfor({
-      visningsnavn: 'Nytt navn AS',
-      extras: [],
+  it('onboarding.fullfor er PRECONDITION_FAILED, ikke NOT_FOUND eller complete', async () => {
+    await expect(
+      leder().onboarding.fullfor({
+        visningsnavn: 'Nytt navn AS',
+        extras: [],
+      }),
+    ).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message: MANGLER_TENANT_MELDING,
     });
-    expect(ferdig.complete).toBe(true);
-    expect(ferdig.granted).toEqual([]);
-    expect(ferdig.visningsnavn).toBe('Nytt navn AS');
   });
 });

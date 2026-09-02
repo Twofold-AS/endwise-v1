@@ -9,12 +9,15 @@ import {
 } from '@endwise/modules/profil';
 import { resolveDevMode } from '../dev-mode.ts';
 import { protectedProcedure, router } from '../init.ts';
+import { loggManglendeTenantRad } from '../manglende-tenant.ts';
 import { resolveShopFlag } from '../shop-flag.ts';
 
 /**
- * Eier-veiviseren krever en tenants-rad. Uten rad kan hen ikke onboardes —
- * `!tenant?.onboardingCompletedAt` er true og sendte dealer_admin til
- * /oppstart, der fullfor 404-et.
+ * Eier-veiviseren krever en tenants-rad. Uten rad er det ingenting å
+ * onboarde — ikke fordi oppstarten lyktes. `!tenant?.onboardingCompletedAt`
+ * var true og sendte dealer_admin til /oppstart, der fullfor 404-et.
+ * Reparer organization uten speilet tenants-rad (leftover etter slett,
+ * eller createTenant som bare skrev org).
  */
 export function dealerNeedsOnboarding(input: {
   role: string | null | undefined;
@@ -79,6 +82,8 @@ export const sessionRouter = router({
         })
         .from(schema.tenants)
         .where(eq(schema.tenants.id, ctx.tenantId));
+
+      if (!tenant) loggManglendeTenantRad('session.me', ctx.tenantId);
 
       /**
        * Eget kallenavn. Mekanikervisningen er per definisjon intern,

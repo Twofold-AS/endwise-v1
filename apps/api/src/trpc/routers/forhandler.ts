@@ -3,6 +3,7 @@ import { erPlattformTenant } from '@endwise/modules/plattform';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { loggManglendeTenantRad } from '../manglende-tenant.ts';
 import { lesPostgresCause } from '../slett-postgres.ts';
 
 type TenantTx = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -91,7 +92,12 @@ async function lesOrgNavn(tx: TenantTx, tenantId: string) {
   return org ?? null;
 }
 
-/** Tomt kort fra Better-Auth-org (ingen RLS). Plattform = tomt navn. */
+/**
+ * Chrome-fallback når tenants-raden mangler. Better-Auth organization
+ * (ingen RLS) kan finnes uten speilet tenants-rad — leftover etter slett
+ * eller createTenant som bare skrev org. Dette er lesing til chrome, ikke
+ * å dikte opp en forhandler. Reparer org ↔ tenants i databasen.
+ */
 export function kortFraOrgEllerTom(org: { name: string; slug: string } | null): ForhandlerKort {
   if (org && erPlattformTenant(org)) {
     return tomtForhandlerKort({ name: '', slug: '' });
@@ -148,6 +154,7 @@ export async function hentForhandlerKort(
     return await kjor(async (tx) => {
       const tenant = await lesTenantNavnOptional(tx, tenantId);
       if (!tenant) {
+        loggManglendeTenantRad('forhandler.kort', tenantId);
         return kortFraOrgEllerTom(await lesOrgNavn(tx, tenantId));
       }
       if (erPlattformTenant(tenant)) {
@@ -167,6 +174,7 @@ export async function hentForhandlerKort(
       if (tenant && !erPlattformTenant(tenant)) {
         return tomtForhandlerKort(tenant);
       }
+      if (!tenant) loggManglendeTenantRad('forhandler.kort', tenantId);
       return kortFraOrgEllerTom(await lesOrgNavn(tx, tenantId));
     });
   }

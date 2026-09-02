@@ -114,14 +114,16 @@ describe('F5-26 — shop kan ikke tildeles', () => {
     );
   });
 
-  it('onboarding.fullfor 404-er ikke når tenants-rad mangler', async () => {
+  it('onboarding.fullfor på manglende tenant er PRECONDITION_FAILED, ikke NOT_FOUND', async () => {
     const kilde = await import('node:fs').then((fs) =>
       fs.readFileSync(new URL('../src/trpc/routers/onboarding.ts', import.meta.url), 'utf8'),
     );
-    expect(kilde).toMatch(/onboardingStatusUtenTenant/);
+    expect(kilde).toMatch(/manglendeTenantFeil/);
+    expect(kilde).toMatch(/loggManglendeTenantRad\('onboarding\.fullfor'/);
     expect(kilde).not.toMatch(
       /throw new TRPCError\(\{\s*code: 'NOT_FOUND',\s*message: 'Fant ikke forhandleren'/,
     );
+    expect(kilde).not.toMatch(/if \(!tenant\)[\s\S]{0,200}complete:\s*true/);
   });
 
   it('onboarding.fullfor avviser shop i extras', async () => {

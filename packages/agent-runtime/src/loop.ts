@@ -3,6 +3,7 @@ import { DataRegionViolation, type ModelProvider, providerSatisfies } from '@end
 import { isStepCount, type ModelMessage, streamText } from 'ai';
 import { type AgentDefinition, assertEntitled } from './agent.ts';
 import { type AgentContext, sealContext } from './context.ts';
+import { assertAsciiToolNames } from './tool-navn.ts';
 
 export type AgentEvent =
   | { type: 'agent.start'; agent: string }
@@ -57,10 +58,12 @@ export async function runAgent(options: RunOptions): Promise<string> {
     );
   }
 
+  const tools = options.guardrails.wrapTools(options.agent.tools(context), context);
+  assertAsciiToolNames(tools);
   return runAgentWithTools({
     ...options,
     context,
-    tools: options.guardrails.wrapTools(options.agent.tools(context), context),
+    tools,
   });
 }
 

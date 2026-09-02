@@ -41,7 +41,8 @@ export const workshopAgent: AgentDefinition = {
             tx.select().from(schema.mechanics).limit(50),
           ),
       }),
-      gåTil: tool({
+      /** ASCII-nøkkel mot Mistral. UI matcher også `gåTil` i tool-parts. */
+      gaaTil: tool({
         description:
           'Naviger til en kjent side i Endwise. Klienten åpner stien. Ingen eksterne URL-er.',
         inputSchema: z.object({
@@ -54,7 +55,7 @@ export const workshopAgent: AgentDefinition = {
           return { ok: true, href };
         },
       }),
-      søkKunder: tool({
+      sokKunder: tool({
         description: 'Søk i forhandlerens kunder. Tenant-scopet. Returnerer navn og id.',
         inputSchema: z.object({
           sok: z.string().max(120).optional(),
@@ -86,13 +87,13 @@ export const workshopAgent: AgentDefinition = {
         inputSchema: z.object({}),
         execute: async () => ({ status: 'kommer' as const }),
       }),
-      søkJobber: tool({
+      sokJobber: tool({
         description: 'Søk i jobber. Parkert — kommer.',
         inputSchema: z.object({ sok: z.string().max(120).optional() }),
         execute: async () => ({ status: 'kommer' as const }),
       }),
-      åpneInnboks: tool({
-        description: 'Åpne innboks. Parkert — bruk gåTil med /innboks.',
+      aapneInnboks: tool({
+        description: 'Åpne innboks. Parkert — bruk gaaTil med /innboks.',
         inputSchema: z.object({}),
         execute: async () => ({ status: 'kommer' as const }),
       }),

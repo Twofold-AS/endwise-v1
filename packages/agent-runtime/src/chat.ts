@@ -3,6 +3,7 @@ import { DataRegionViolation, type ModelProvider, providerSatisfies } from '@end
 import { isStepCount, type ModelMessage, streamText, type TextStreamPart, type ToolSet } from 'ai';
 import { type AgentDefinition, assertEntitled } from './agent.ts';
 import { type AgentContext, sealContext } from './context.ts';
+import { assertAsciiToolNames } from './tool-navn.ts';
 
 /**
  * Chat-inngangen til agent-runtimen.
@@ -64,6 +65,8 @@ export function streamAgentChat(options: ChatOptions) {
   // 4. Verktøyene bygges ÉN gang, med den frosne konteksten — samme invariant
   // som spawn: det finnes ikke et sted der en tenant-ID kan *settes*.
   const tools = guardrails.wrapTools(agent.tools(context), context);
+  // Mistral 400 02.09: `gåTil` er ugyldig function name. Stopp før HTTP.
+  assertAsciiToolNames(tools);
 
   // Fabrikk, ikke instans: transformen lager én redaktør per tekstblokk.
   const lagRedactor = () =>

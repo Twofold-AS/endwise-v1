@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { norskChatFeil } from '../app/(app)/_workshop/norsk-chat-feil.ts';
 import { sidekontekst } from '../app/(app)/_workshop/sidekontekst.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -9,6 +10,22 @@ const her = dirname(fileURLToPath(import.meta.url));
 function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
+
+describe('norskChatFeil', () => {
+  it('oversetter Mistral function-name 400 og unngår «Noe gikk galt»', () => {
+    expect(
+      norskChatFeil({
+        message: 'Function name was gåTil but must be a-z, A-Z, 0-9, or contain underscores',
+      }),
+    ).toMatch(/verktøy/i);
+    expect(norskChatFeil({ message: 'An error occurred.' })).toMatch(/Mistral/);
+    expect(
+      norskChatFeil({
+        message: 'Ingen modell konfigurert for rollen «fast». Sett MISTRAL_MODEL_FAST.',
+      }),
+    ).toContain('MISTRAL_MODEL_FAST');
+  });
+});
 
 describe('Workshop sidekontekst', () => {
   it('sender pathname, tittel og norsk merkelapp', () => {
@@ -41,7 +58,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/Grainient/);
     expect(fab).toMatch(/h-11 max-h-\[44px\]/);
     expect(fab).toMatch(/md:h-control md:max-h-\[32px\]/);
-    expect(fab).toMatch(/rounded-\[18px\]/);
+    expect(fab).toMatch(/rounded-b-\[18px\]/);
     expect(fab).toMatch(/const RAMME_PX = 18/);
     expect(fab).toMatch(/grid-template-rows/);
     expect(fab).toMatch(/const STRIP_BOT = 28/);
@@ -86,8 +103,9 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/PROMPT_KORT_MIN/);
     expect(fab).toMatch(/8\.75rem/);
     expect(fab).toMatch(/max-w-\[520px\]/);
-    expect(fab).toMatch(/size-6/);
-    expect(fab).toMatch(/rounded-full/);
+    expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,280}rounded-full/);
+    expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,280}ring-1/);
+    expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,80}size-6/);
     expect(fab).toMatch(/visHandtak/);
     expect(fab).toMatch(/foldet/);
     expect(fab).toMatch(/onUtvid/);
@@ -100,7 +118,9 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab.indexOf('data-ronny-handtak-rad')).toBeGreaterThan(
       fab.indexOf('data-ronny-kort-padding'),
     );
-    expect(fab).toMatch(/borderRadius: lukket \? 0/);
+    expect(fab).toMatch(/rounded-t-none/);
+    expect(fab).toMatch(/rounded-b-\[18px\]/);
+    expect(fab).toMatch(/borderTopLeftRadius:\s*0/);
     expect(fab).toMatch(/rounded-none/);
     expect(fab).toMatch(/data-ronny-kort-padding/);
     expect(fab).toMatch(/max-w-\[1120px\]/);
@@ -133,6 +153,13 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).not.toMatch(/bg-bg\/90/);
     expect(fab).toMatch(/data-workshop-cluster/);
     expect(fab).not.toMatch(/Verkstedsassistent|AiDisclosure|MessageScroller/);
+    expect(fab).toMatch(/MessageBubble/);
+    expect(fab).toMatch(/align=\{melding\.role === 'user' \? 'end' : 'start'\}/);
+    expect(fab).toMatch(/placeholder="Spør Ronny/);
+    expect(fab).toMatch(/setPromptTekst\(''\)/);
+    expect(fab).toMatch(/data-ronny-prompt-linje/);
+    expect(fab).toMatch(/norskChatFeil/);
+    expect(fab).not.toMatch(/Noe gikk galt\. Prøv igjen\./);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
     expect(fab).toMatch(/body: \{ side \}/);
     expect(fab).toMatch(/expression=\{uttrykk\}/);
@@ -174,15 +201,19 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(chat).toMatch(/pathname/);
     expect(chat).toMatch(/systemExtra/);
     expect(chat).toMatch(/skriv aldri til Quick/i);
+    expect(chat).toMatch(/ModelNotConfiguredError/);
+    expect(chat).toMatch(/UgyldigToolNavnError/);
   });
 
-  it('workshop-agenten har gåTil, søkKunder og parkerte skriv', () => {
+  it('workshop-agenten har gaaTil, sokKunder og parkerte skriv (ASCII mot Mistral)', () => {
     const agent = les('../../../packages/agents/src/workshop/agent.ts');
-    expect(agent).toMatch(/gåTil:/);
-    expect(agent).toMatch(/søkKunder:/);
+    expect(agent).toMatch(/gaaTil:/);
+    expect(agent).toMatch(/sokKunder:/);
     expect(agent).toMatch(/opprettBooking:/);
-    expect(agent).toMatch(/søkJobber:/);
-    expect(agent).toMatch(/åpneInnboks:/);
+    expect(agent).toMatch(/sokJobber:/);
+    expect(agent).toMatch(/aapneInnboks:/);
+    expect(agent).not.toMatch(/gåTil:/);
+    expect(agent).not.toMatch(/søkKunder:/);
     expect(agent).toMatch(/status: 'kommer'/);
     expect(agent).toMatch(/erTillattGaaTil/);
     expect(agent).toMatch(/schema\.customers/);

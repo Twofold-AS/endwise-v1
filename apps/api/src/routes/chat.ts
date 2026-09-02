@@ -1,9 +1,14 @@
-import { streamAgentChat } from '@endwise/agent-runtime';
+import { streamAgentChat, UgyldigToolNavnError } from '@endwise/agent-runtime';
 import { getAgent, UnknownAgentError } from '@endwise/agents';
 import { TwoFactorRequiredError } from '@endwise/auth';
 import { eq, schema, withTenant } from '@endwise/db';
 import { createGuardrails } from '@endwise/guardrails';
-import { DataRegionViolation, resolveModelProvider } from '@endwise/providers';
+import {
+  DataRegionViolation,
+  MissingEuProviderError,
+  ModelNotConfiguredError,
+  resolveModelProvider,
+} from '@endwise/providers';
 import {
   convertToModelMessages,
   createUIMessageStreamResponse,
@@ -140,6 +145,14 @@ chat.post('/:agent', async (c) => {
         { error: 'Agenten kan ikke kjøre med gjeldende oppsett', kode: error.code },
         500,
       );
+    }
+    if (
+      error instanceof ModelNotConfiguredError ||
+      error instanceof MissingEuProviderError ||
+      error instanceof UgyldigToolNavnError
+    ) {
+      console.error(`[chat] ${error.message}`);
+      return c.json({ error: error.message, kode: error.code }, 500);
     }
     throw error;
   }

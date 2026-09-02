@@ -3,6 +3,9 @@
 import { useChat } from '@ai-sdk/react';
 import {
   Grainient,
+  Message,
+  MessageBubble,
+  MessageContent,
   PromptInput,
   PromptInputBody,
   PromptInputFooter,
@@ -16,6 +19,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PHONE_KORT_FYLL } from '../_shell/phone-home';
 import { erTillattGaaTil } from './gaa-til';
+import { norskChatFeil } from './norsk-chat-feil';
 import { RonnyPil } from './ronny-ikoner';
 import { sidekontekst } from './sidekontekst';
 
@@ -72,6 +76,7 @@ function tekstFraMelding(melding: { parts: Array<{ type: string; text?: string }
 }
 
 function gaaTilHref(del: { type: string; state?: string; output?: unknown }): string | null {
+  // Alias: Mistral får `gaaTil`; eldre/UI-matcher kan fortsatt se `gåTil`.
   if (!del.type.includes('gåTil') && !del.type.includes('gaaTil')) return null;
   if (del.state !== 'output-available') return null;
   const out = del.output as { ok?: boolean; href?: string } | undefined;
@@ -87,9 +92,9 @@ function skallHoyde(visning: RonnyVisning, harSamtale: boolean, foldet: boolean)
 }
 
 /**
- * Lukket = vanlig chrome-stripe (radius 0). Åpen dock = Grainient-kort 18px
- * med Prompt-kort i samme familie som Verksted-hero. «Se hele» = fast overlay
- * under stripen, full viewport-bredde, uten å dytte layout.
+ * Lukket = chrome-stripe (radius 0). Åpen dock: Grainient-ramme med
+ * firkantet topp mot stripen (radius 0 oppe), ev. rund kun nederst.
+ * Prompt-kortet møter stripen firkantet. «Se hele» = overlay under stripen.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -99,6 +104,7 @@ export function WorkshopBloub() {
   const [klikk, setKlikk] = useState(false);
   const [suksess, setSuksess] = useState(false);
   const [foldet, setFoldet] = useState(false);
+  const [promptTekst, setPromptTekst] = useState('');
   const [ankerTop, setAnkerTop] = useState(0);
   const spinTimer = useRef<number | null>(null);
   const ankerRef = useRef<HTMLDivElement>(null);
@@ -187,6 +193,7 @@ export function WorkshopBloub() {
     const rensket = innhold.trim();
     if (!rensket || opptatt) return;
     setFoldet(true);
+    setPromptTekst('');
     void sendMessage({ text: rensket });
   }
 
@@ -244,7 +251,7 @@ export function WorkshopBloub() {
           utvidet
             ? 'fixed right-0 bottom-0 left-0 z-[60] overflow-hidden rounded-none shadow-none'
             : `absolute inset-x-0 top-0 z-40 overflow-hidden shadow-none transition-[height,border-radius] duration-300 ease-out ${
-                lukket ? 'rounded-none' : 'rounded-[18px]'
+                lukket ? 'rounded-none' : 'rounded-t-none rounded-b-[18px]'
               }`
         }
         style={
@@ -252,7 +259,10 @@ export function WorkshopBloub() {
             ? { top: ankerTop, borderRadius: 0 }
             : {
                 height: skallHoyde(visning, harSamtale, foldet),
-                borderRadius: lukket ? 0 : RAMME_PX,
+                borderTopLeftRadius: 0,
+                borderTopRightRadius: 0,
+                borderBottomLeftRadius: lukket ? 0 : RAMME_PX,
+                borderBottomRightRadius: lukket ? 0 : RAMME_PX,
               }
         }
       >
@@ -344,7 +354,10 @@ export function WorkshopBloub() {
                     visTraad ? 'justify-between' : 'justify-end'
                   } ${fastHoyde || utvidet ? 'h-full min-h-0 flex-1' : ''}`}
                   style={{
-                    borderRadius: RAMME_PX,
+                    borderTopLeftRadius: 0,
+                    borderTopRightRadius: 0,
+                    borderBottomLeftRadius: RAMME_PX,
+                    borderBottomRightRadius: RAMME_PX,
                     minHeight: fastHoyde || utvidet ? undefined : PROMPT_KORT_MIN,
                   }}
                 >
@@ -357,28 +370,35 @@ export function WorkshopBloub() {
                         const tekstDel = tekstFraMelding(melding);
                         if (!tekstDel) return null;
                         return (
-                          <p
+                          <Message
                             key={melding.id}
-                            className={`py-1.5 text-label leading-relaxed ${
-                              melding.role === 'user'
-                                ? 'text-right text-[#1d1d1f]'
-                                : 'text-[#1d1d1f]/70'
-                            }`}
+                            align={melding.role === 'user' ? 'end' : 'start'}
                           >
-                            {tekstDel}
-                          </p>
+                            <MessageContent>
+                              <MessageBubble egen={melding.role === 'user'}>
+                                {tekstDel}
+                              </MessageBubble>
+                            </MessageContent>
+                          </Message>
                         );
                       })}
                       {error ? (
-                        <p className="py-1 text-label text-destructive">
-                          Noe gikk galt. Prøv igjen.
-                        </p>
+                        <Message align="start">
+                          <MessageContent>
+                            <MessageBubble>{norskChatFeil(error)}</MessageBubble>
+                          </MessageContent>
+                        </Message>
                       ) : null}
                     </div>
                   ) : null}
                   <PromptInput onSubmit={onPrompt} className="border-0 bg-transparent shadow-none">
-                    <PromptInputBody className="min-w-0 flex-1">
+                    <PromptInputBody
+                      data-ronny-prompt-linje
+                      className="min-w-0 flex-1 border-b border-[#e0e0e0]"
+                    >
                       <PromptInputTextarea
+                        value={promptTekst}
+                        onChange={(e) => setPromptTekst(e.target.value)}
                         placeholder="Spør Ronny …"
                         disabled={opptatt}
                         className="bg-transparent text-label text-[#1d1d1f] placeholder:text-[#1d1d1f]/45"
@@ -399,7 +419,7 @@ export function WorkshopBloub() {
                     aria-label="Se hele"
                     title="Se hele"
                     onClick={onUtvid}
-                    className="flex size-6 items-center justify-center rounded-full text-white ring-1 ring-white/70"
+                    className="p-0.5 text-white"
                   >
                     <RonnyPil size={12} />
                   </button>

@@ -6,8 +6,9 @@ import { workshopAgent } from './workshop/agent.ts';
 
 /**
  * Agent-registeret. «Agent = mappe» (techstack §2).
- * Legg merke til `dataClass` på hver agent — den avgjør hvilken leverandør
- * agenten kan kjøre på (F14). Det er ikke en kommentar; `spawnAgent` nekter å
+ * Legg merke til `dataClass` på hver agent — den styrer EU-vernet (F14),
+ * ikke lenger leverandørvalget. `resolveModelProvider` ruter begge klasser
+ * til Mistral EU (Mikael 02.09.2026). `spawnAgent` nekter fortsatt å
  * starte en `customer_freetext`-agent mot en ikke-EU-leverandør.
  */
 const AGENTS: Record<string, AgentDefinition> = {

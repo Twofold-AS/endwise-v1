@@ -493,8 +493,9 @@ AI-chat-flaten. Hentet med `npx shadcn@latest view <navn>` og lagt i
 | `@ai-sdk/react` | 305 kB | Apache-2.0 | `useChat`. Samme familie som `ai@7` vi alt har |
 | `@shadcn/helpers` | 48 kB | MIT | `createChat()` — forhåndsskrevne demo-strømmer |
 
-⛔ **Ingen Vercel AI Gateway.** Modellrutingen går som før gjennom
-`resolveModelProvider(dataClass)`: kundevendt → Mistral (EU), internt → Fireworks.
+⛔ **Ingen Vercel AI Gateway.** Modellrutingen går gjennom
+`resolveModelProvider(dataClass)`: begge dataklasser → Mistral (EU)
+(Mikael 02.09.2026). Fireworks velges ikke av agent-runtime.
 
 ### ⚠️ Tre avvik du må kjenne til
 

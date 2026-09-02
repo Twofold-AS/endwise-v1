@@ -18,8 +18,9 @@ export interface MockScript {
  * 2. Sikkerhetstestene («kan agenten lese en annen tenants data?») handler om
  * Våre grenser, ikke om modellens oppførsel. De skal kjøre i CI — uten
  * nøkkel, uten nettverk, uten regning.
- * Samme grensesnitt som Fireworks. Legger du inn `FIREWORKS_API_KEY`, kjører
- * nøyaktig samme kode mot ekte modell — ingen kodeendring.
+ * Samme grensesnitt som Mistral. Legger du inn `MISTRAL_API_KEY`, kjører
+ * nøyaktig samme kode mot ekte modell — ingen kodeendring. Agent-runtime
+ * velger ikke Fireworks (Mikael 02.09.2026).
  */
 export function createMockProvider(script: MockScript = {}): ModelProvider {
   // Verktøykallene skjer kun i første steg. Uten dette ville modellen kalt samme

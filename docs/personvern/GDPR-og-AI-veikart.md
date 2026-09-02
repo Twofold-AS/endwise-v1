@@ -60,10 +60,14 @@
 >
 > **Vi bruker Mistral (EU) OG Fireworks (global), delt etter dataklasse.**
 >
-> | Dataklasse | Leverandør | Hvorfor |
+> **🔄 OPPDATERT 02.09.2026 (Mikael):** `resolveModelProvider` ruter **begge** dataklasser til Mistral EU.
+> Fireworks var prisvalg, ikke lovkrav. Agent-runtime velger den ikke. EU-vernet
+> (`customer_freetext` mot ikke-EU) står. `@ai-sdk/fireworks` kan bli stående unused.
+>
+> | Dataklasse | Leverandør (resolve, 02.09) | Hvorfor |
 > |---|---|---|
 > | **Sluttkundens fritekst** (kunde-support-agenten) | **Mistral (EU)** | Ingen tredjelandsoverføring. Problemet forsvinner, det håndteres ikke |
-> | **Tenant-skopede driftsdata** (drifts-agenten) | **Fireworks** | Ingen sluttkunde-fritekst. Overføringen gjelder forhandlerens egne strukturerte driftstall |
+> | **Tenant-skopede driftsdata** (Ronny, drifts-agenten) | **Mistral (EU)** | Samme leverandør. Region-typen tillater fortsatt global; resolve velger den ikke |
 >
 > **Regelen er implementert i KODE, ikke i dette dokumentet:** hver agent erklærer `dataClass`,
 > hver provider erklærer `region`, og `spawnAgent()` **nekter å starte** en `customer_freetext`-agent

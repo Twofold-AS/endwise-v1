@@ -14,6 +14,8 @@
 
 Rotårsaken i #112 var riktig merket. Ingenting blokkerte fiksen. Lefthook `prepare` i dette miljøet feiler mot Cursor-hooks-path; tester kjøres via lokal vitest.
 
+GitHub CI `Lint · Typecheck · Test` er rød på `pnpm lint` (22 biome-formatfeil i `packages/ui` / `packages/modules`) — samme som `main` etter #112. Jobben når aldri `pnpm test`. Concurrency-filene er ikke blant feilene. Security gate: CodeQL/Semgrep grønne; `pnpm audit` og ZAP er pre-eksisterende røde.
+
 ## 3. Hvilke fikser ble gjort
 
 - `packages/db/src/concurrency.ts`: `new AsyncLocalStorage` flyttet inn i `createConcurrencyGate` (per instans).

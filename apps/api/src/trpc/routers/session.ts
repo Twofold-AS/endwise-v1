@@ -25,7 +25,12 @@ export const sessionRouter = router({
     const devMode = await resolveDevMode(ctx);
     const shopEnabled = await resolveShopFlag(ctx);
 
-    return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+    /**
+     * Én tenant-tx, så slipp den. Nestede withTenant / ctx.db-select inne i
+     * åpen transaksjon stjal ekstra pool-slotter (max 5) og kunne dødlåse
+     * first-paint-batchen mot PgBouncer.
+     */
+    const kjerne = await withTenant(ctx.db, ctx.tenantId, async (tx) => {
       const [mech] = await tx
         .select({ id: schema.mechanics.id, name: schema.mechanics.name })
         .from(schema.mechanics)
@@ -89,106 +94,125 @@ export const sessionRouter = router({
         harMekanikerprofil: Boolean(mech),
       });
 
-      /**
-       * brukerens eget navn.
-       * Sidebaren leste tidligere navnet fra Better-Auth sin klientsesjon,
-       * mens `profile.setName` skriver til `user.name` i basen. To hjem for
-       * samme opplysning: lagring virket, men sidebaren viste det gamle navnet
-       * til neste fulle sidelast, fordi ingenting oppdaterte Better-Auth-cachen.
-       * Løsningen er å fjerne det ene hjemmet, ikke å legge til enda en
-       * oppfriskning som noen glemmer neste gang. Navnet kommer nå herfra, og
-       * `profile.setName` invaliderer allerede denne ruta.
-       */
-      const [bruker] = await ctx.db
-        .select({ name: schema.user.name, email: schema.user.email })
-        .from(schema.user)
-        .where(eq(schema.user.id, ctx.userId));
-
-      const medlemskap = await ctx.db
-        .select({
-          id: schema.organization.id,
-          name: schema.organization.name,
-          slug: schema.organization.slug,
-          role: schema.member.role,
-        })
-        .from(schema.member)
-        .innerJoin(schema.organization, eq(schema.organization.id, schema.member.organizationId))
-        .where(eq(schema.member.userId, ctx.userId));
-
-      const aktivOrg = medlemskap.find((m) => m.id === ctx.tenantId);
-      const plattformOrg = medlemskap.find((m) => erPlattformTenant({ slug: m.slug }));
-      const verkstederRaa = medlemskap.filter((m) => !erPlattformTenant({ slug: m.slug }));
-      const verksteder = await Promise.all(
-        verkstederRaa.map(async (v) => {
-          const [mek] = await withTenant(ctx.db, v.id, (tx) =>
-            tx
-              .select({ id: schema.mechanics.id })
-              .from(schema.mechanics)
-              .where(eq(schema.mechanics.userId, ctx.userId))
-              .limit(1),
-          ).catch(() => [null]);
-          return {
-            id: v.id,
-            name: v.name,
-            slug: v.slug,
-            role: v.role,
-            isMechanic: Boolean(mek),
-          };
-        }),
-      );
-
-      const erPlattform = erPlattformTenant({
-        slug: tenant?.slug ?? aktivOrg?.slug,
-        kind: tenant?.kind,
-      });
-      const landing = erPlattform
-        ? (landingForPlatform(ctx.role) ?? '/endwise')
-        : needsOnboarding
-          ? '/oppstart'
-          : landingForJobbfunksjon(jobbfunksjon);
-
-      return {
-        userId: ctx.userId,
-        tenantId: ctx.tenantId,
-        /** Ditt eget visningsnavn. Ikke kallenavn — se `internNavn`. */
-        navn: bruker?.name ?? '',
-        epost: bruker?.email ?? '',
-        jobbfunksjon,
-        landing,
-        needsOnboarding: erPlattform ? false : needsOnboarding,
-        tenantName: tenant?.name ?? null,
-        tenantSlug: tenant?.slug ?? aktivOrg?.slug ?? null,
-        tenantKind: tenant?.kind ?? 'live',
-        aktivOrgSlug: aktivOrg?.slug ?? null,
-        erPlattform,
-        plattformTenantId: plattformOrg?.id ?? null,
-        verksteder,
-        role: ctx.role,
-        isMechanic: Boolean(mech),
-        mechanicId: mech?.id ?? null,
-        mechanicName: mech?.name ?? null,
-        /** Tenant-lokalt kallenavn (`member_profiles.nickname`). */
-        kallenavn: profil?.nickname ?? null,
-        /**
-         * Kort navn i chrome: kallenavn hvis satt, ellers visningsnavn.
-         * Ikke mekanikernavn — chrome er personen, ikke profilraden.
-         */
-        internNavn: visningsnavn(
-          { navn: bruker?.name ?? '', kallenavn: profil?.nickname ?? null },
-          'intern',
-        ),
-        /** Ingen rad = aldri rørt = standard PÅ. */
-        varslingslyder: pref?.notificationSounds ?? true,
-        /** Aktive tillegg (`tenant_modules.enabled`). Basis-moduler står ikke her. */
-        moduler: moduler.map((m) => m.key),
-        devMode,
-        /** Kosmetikk. Sperren er shopProcedure. Fail-safe av. */
-        shopEnabled,
-        /** Alltid false etter innlogging — sidene lastes uten godkjent 2FA. */
-        twoFactorRequired: sessionMeTwoFactorRequired({
-          twoFactorEnabled: undefined,
-        }),
-      };
+      return { mech, tenant, needsOnboarding, profil, pref, moduler, jobbfunksjon };
     });
+
+    /**
+     * brukerens eget navn.
+     * Sidebaren leste tidligere navnet fra Better-Auth sin klientsesjon,
+     * mens `profile.setName` skriver til `user.name` i basen. To hjem for
+     * samme opplysning: lagring virket, men sidebaren viste det gamle navnet
+     * til neste fulle sidelast, fordi ingenting oppdaterte Better-Auth-cachen.
+     * Løsningen er å fjerne det ene hjemmet, ikke å legge til enda en
+     * oppfriskning som noen glemmer neste gang. Navnet kommer nå herfra, og
+     * `profile.setName` invaliderer allerede denne ruta.
+     */
+    const [bruker] = await ctx.db
+      .select({ name: schema.user.name, email: schema.user.email })
+      .from(schema.user)
+      .where(eq(schema.user.id, ctx.userId));
+
+    const medlemskap = await ctx.db
+      .select({
+        id: schema.organization.id,
+        name: schema.organization.name,
+        slug: schema.organization.slug,
+        role: schema.member.role,
+      })
+      .from(schema.member)
+      .innerJoin(schema.organization, eq(schema.organization.id, schema.member.organizationId))
+      .where(eq(schema.member.userId, ctx.userId));
+
+    const aktivOrg = medlemskap.find((m) => m.id === ctx.tenantId);
+    const plattformOrg = medlemskap.find((m) => erPlattformTenant({ slug: m.slug }));
+    const verkstederRaa = medlemskap.filter((m) => !erPlattformTenant({ slug: m.slug }));
+    const verksteder: Array<{
+      id: string;
+      name: string;
+      slug: string;
+      role: string;
+      isMechanic: boolean;
+    }> = [];
+    for (const v of verkstederRaa) {
+      if (v.id === ctx.tenantId) {
+        verksteder.push({
+          id: v.id,
+          name: v.name,
+          slug: v.slug,
+          role: v.role,
+          isMechanic: Boolean(kjerne.mech),
+        });
+        continue;
+      }
+      const [mek] = await withTenant(ctx.db, v.id, (tx) =>
+        tx
+          .select({ id: schema.mechanics.id })
+          .from(schema.mechanics)
+          .where(eq(schema.mechanics.userId, ctx.userId))
+          .limit(1),
+      ).catch(() => [null]);
+      verksteder.push({
+        id: v.id,
+        name: v.name,
+        slug: v.slug,
+        role: v.role,
+        isMechanic: Boolean(mek),
+      });
+    }
+
+    const { mech, tenant, needsOnboarding, profil, pref, moduler, jobbfunksjon } = kjerne;
+
+    const erPlattform = erPlattformTenant({
+      slug: tenant?.slug ?? aktivOrg?.slug,
+      kind: tenant?.kind,
+    });
+    const landing = erPlattform
+      ? (landingForPlatform(ctx.role) ?? '/endwise')
+      : needsOnboarding
+        ? '/oppstart'
+        : landingForJobbfunksjon(jobbfunksjon);
+
+    return {
+      userId: ctx.userId,
+      tenantId: ctx.tenantId,
+      /** Ditt eget visningsnavn. Ikke kallenavn — se `internNavn`. */
+      navn: bruker?.name ?? '',
+      epost: bruker?.email ?? '',
+      jobbfunksjon,
+      landing,
+      needsOnboarding: erPlattform ? false : needsOnboarding,
+      tenantName: tenant?.name ?? null,
+      tenantSlug: tenant?.slug ?? aktivOrg?.slug ?? null,
+      tenantKind: tenant?.kind ?? 'live',
+      aktivOrgSlug: aktivOrg?.slug ?? null,
+      erPlattform,
+      plattformTenantId: plattformOrg?.id ?? null,
+      verksteder,
+      role: ctx.role,
+      isMechanic: Boolean(mech),
+      mechanicId: mech?.id ?? null,
+      mechanicName: mech?.name ?? null,
+      /** Tenant-lokalt kallenavn (`member_profiles.nickname`). */
+      kallenavn: profil?.nickname ?? null,
+      /**
+       * Kort navn i chrome: kallenavn hvis satt, ellers visningsnavn.
+       * Ikke mekanikernavn — chrome er personen, ikke profilraden.
+       */
+      internNavn: visningsnavn(
+        { navn: bruker?.name ?? '', kallenavn: profil?.nickname ?? null },
+        'intern',
+      ),
+      /** Ingen rad = aldri rørt = standard PÅ. */
+      varslingslyder: pref?.notificationSounds ?? true,
+      /** Aktive tillegg (`tenant_modules.enabled`). Basis-moduler står ikke her. */
+      moduler: moduler.map((m) => m.key),
+      devMode,
+      /** Kosmetikk. Sperren er shopProcedure. Fail-safe av. */
+      shopEnabled,
+      /** Alltid false etter innlogging — sidene lastes uten godkjent 2FA. */
+      twoFactorRequired: sessionMeTwoFactorRequired({
+        twoFactorEnabled: undefined,
+      }),
+    };
   }),
 });

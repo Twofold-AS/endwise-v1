@@ -23,6 +23,26 @@ export function harSesjonsCookie(headers: Headers): boolean {
 }
 
 /**
+ * Samme orden som `connectionTimeoutMillis` (5s). Ikke 0 — 0 er «vent evig»
+ * i node-pg. Layout/tRPC skal få nei innen denne fristen, ikke henge.
+ */
+export const SESSION_LOOKUP_TIMEOUT_MS = 5_000;
+
+export async function medTidsfrist<T>(arbeid: Promise<T>, ms: number, melding: string): Promise<T> {
+  let t: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      arbeid,
+      new Promise<T>((_, reject) => {
+        t = setTimeout(() => reject(new Error(melding)), ms);
+      }),
+    ]);
+  } finally {
+    if (t !== undefined) clearTimeout(t);
+  }
+}
+
+/**
  * F1-12 + F1-11 — Serverside sesjonssjekk. Alle beskyttede flater går gjennom
  * denne.
  * Tre grenser, og de feiler ulikt:
@@ -38,7 +58,11 @@ export function harSesjonsCookie(headers: Headers): boolean {
  * kallsted ta stilling, og TypeScript nekter å kompilere hvis noen glemmer.
  */
 export async function requireSession(auth: Auth, db: Database, headers: Headers) {
-  const data = await auth.api.getSession({ headers });
+  const data = await medTidsfrist(
+    auth.api.getSession({ headers }),
+    SESSION_LOOKUP_TIMEOUT_MS,
+    'Sesjonsoppslag tok for lang tid',
+  );
   if (!data) throw new SessionExpiredError('idle');
 
   if (isBeyondAbsoluteLifetime(data.session)) {

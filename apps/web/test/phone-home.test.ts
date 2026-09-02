@@ -315,7 +315,9 @@ describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
 
   it('dealer desktop Verkstedet er uendret bak md:hidden-skillet', () => {
     const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
-    expect(dash).toMatch(/hidden md:block|md:hidden/);
+    expect(dash).toMatch(/useMdViewport/);
+    expect(dash).toMatch(/flate === ['"]desktop['"]/);
+    expect(dash).toMatch(/PhoneHomeDealer/);
     expect(dash).toMatch(/Dagens saker|AnsattePaJobb|Timeplan/);
   });
 

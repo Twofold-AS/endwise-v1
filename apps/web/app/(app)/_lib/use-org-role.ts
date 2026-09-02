@@ -1,9 +1,13 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import type { OrgRole } from '../_shell/nav';
 import { erPlattformIUi } from './plattform';
+
+/** Over serverens 5s-frist, under Vercel-timeout. Layout skal ikke spinne evig. */
+export const SESSION_ME_CLIENT_TIMEOUT_MS = 8_000;
 
 /**
  * Ekte rolle fra sesjonen: Better-Auth sier innlogget/ikke, og
@@ -61,6 +65,17 @@ export function useOrgRole(): {
   const { data: session, isPending } = useSession();
   const authed = Boolean(session?.user);
   const me = trpc.session.me.useQuery(undefined, { enabled: authed, retry: false });
+  const [meFristUte, setMeFristUte] = useState(false);
+
+  useEffect(() => {
+    if (!authed || !me.isLoading) {
+      setMeFristUte(false);
+      return;
+    }
+    const t = window.setTimeout(() => setMeFristUte(true), SESSION_ME_CLIENT_TIMEOUT_MS);
+    return () => window.clearTimeout(t);
+  }, [authed, me.isLoading]);
+
   const role = (me.data?.role as OrgRole | null | undefined) ?? null;
   return {
     userId: me.data?.userId ?? null,
@@ -84,7 +99,7 @@ export function useOrgRole(): {
     isEndwiseTeam: role === 'endwise_admin' || role === 'endwise_support',
     isAdmin: role === 'dealer_admin' || role === 'endwise_admin' || role === 'endwise_support',
     isAuthenticated: authed,
-    isLoading: isPending || (authed && me.isLoading),
+    isLoading: isPending || (authed && me.isLoading && !meFristUte),
     devMode: me.data?.devMode?.enabled ?? false,
     canSwitchDemo: (me.data?.devMode?.flagOn ?? false) && role === 'endwise_admin',
     needsOnboarding: me.data?.needsOnboarding ?? false,

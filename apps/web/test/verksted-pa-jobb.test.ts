@@ -112,7 +112,7 @@ describe('ansattePaJobb — hvem som er på gulvet', () => {
 describe('Verkstedet-flaten — navn og innhold', () => {
   it('er Forhandler › Verkstedet, ikke Kontor eller Gulvet', () => {
     const side = les('../app/(app)/dashboard/page.tsx');
-    expect(side).toMatch(/sr-only">Verkstedet/);
+    expect(side).toMatch(/sr-only[\s\S]*<h1>Verkstedet<\/h1>/);
     expect(side).toMatch(/AnsattePaJobb/);
     expect(side).toMatch(/Timeplan/);
     expect(side).not.toMatch(/Kontor|Gulvet/);

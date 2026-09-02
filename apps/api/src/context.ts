@@ -8,7 +8,14 @@ import {
   TwoFactorRequiredError,
   velgAktivOrganisasjon,
 } from '@endwise/auth';
-import { createDb, type Database, eq, schema, withTenant } from '@endwise/db';
+import {
+  createConcurrencyGate,
+  createDb,
+  type Database,
+  eq,
+  schema,
+  withTenant,
+} from '@endwise/db';
 import { createEventBus, type EventBus } from '@endwise/events';
 
 export interface AppContext {
@@ -24,7 +31,15 @@ export interface AppContext {
   /** Har rad i mechanics med userId. */
   isMechanic: boolean;
   mechanicId: string | null;
+  /**
+   * Begrenser parallelle tRPC-prosedyrer i ÉN HTTP-batch.
+   * Uten port: fetch-adapteren kjører batchen med Promise.all mot pool max 5.
+   */
+  limitBatch?: <T>(fn: () => Promise<T>) => Promise<T>;
 }
+
+/** Samme tall som tenant-tx-porten: 2, ikke gjett-opp av pool-max. */
+export const TRPC_BATCH_CONCURRENCY = 2;
 
 let dbSingleton: Database | undefined;
 
@@ -87,6 +102,7 @@ export function createAppContext(): AppContext {
     jobFunction: null,
     isMechanic: false,
     mechanicId: null,
+    limitBatch: (fn) => fn(),
   };
 }
 
@@ -120,7 +136,14 @@ function getAuthForContext(): Auth {
  */
 export async function createRequestContext(headers: Headers): Promise<AppContext> {
   const base = createAppContext();
-  if (!harSesjonsCookie(headers)) return base;
+  const gate = createConcurrencyGate(TRPC_BATCH_CONCURRENCY);
+  const medPort = (rest: Partial<AppContext> = {}): AppContext => ({
+    ...base,
+    ...rest,
+    limitBatch: (fn) => gate.run(fn),
+  });
+
+  if (!harSesjonsCookie(headers)) return medPort();
   try {
     const data = await requireSession(getAuthForContext(), base.db, headers);
     let tenantId = data.session.activeOrganizationId ?? null;
@@ -146,17 +169,17 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
         }
       }
     }
-    if (!tenantId) return { ...base, userId: data.user.id };
+    if (!tenantId) return medPort({ userId: data.user.id });
     try {
       const role = await assertMember(base.db, data.user.id, tenantId);
       const profil = await lesJobbOgMekaniker(base.db, tenantId, data.user.id);
-      return { ...base, userId: data.user.id, tenantId, role, ...profil };
+      return medPort({ userId: data.user.id, tenantId, role, ...profil });
     } catch {
-      return { ...base, userId: data.user.id };
+      return medPort({ userId: data.user.id });
     }
   } catch (error) {
     // TOTP er valgfri. TWO_FACTOR_REQUIRED tømmer ikke tRPC/REST.
-    if (error instanceof TwoFactorRequiredError) return base;
-    return base;
+    if (error instanceof TwoFactorRequiredError) return medPort();
+    return medPort();
   }
 }

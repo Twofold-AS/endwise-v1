@@ -8,6 +8,7 @@ export default defineConfig({
       'test/crypto.test.ts',
       // Vercel/Scaleway TLS: sslmode=require vs. egen ca.
       'test/pg-ssl.test.ts',
+      'test/concurrency.test.ts',
       'test/pgbouncer.test.ts',
       'test/tenant-isolation.test.ts',
       'test/f2-isolation.test.ts',

@@ -5,3 +5,4 @@ export * from './escalation.ts';
 export * from './loop.ts';
 export * from './spawn.ts';
 export * from './stream-bridge.ts';
+export * from './tool-navn.ts';

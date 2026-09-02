@@ -24,8 +24,10 @@
 > Grainient (`react-bits` Grainient-JS-CSS + `ogl` ^1.0.11) er **bare** animert
 > bakgrunn på workshop-stripen (telefon ~44px, desktop `h-control` / 32px) **og
 > rammen** rundt Ronny-panelet i samme Grainient-boks (overlay, ikke søsken under stripen).
-> Lukket stripe har **radius 0** (vanlig chrome). Åpen boks er `rounded-[18px]`
-> med samme horisontale px som dashboard-kort (`max-w-[1120px] px-3 md:px-8`).
+> Lukket stripe har **radius 0** (vanlig chrome). Åpen boks møter stripen
+> **firkantet oppe** (`rounded-t-none`); ev. rund kun nedre hjørner
+> (`rounded-b-[18px]`). Samme horisontale px som dashboard-kort
+> (`max-w-[1120px] px-3 md:px-8`). Expand er et lite `RonnyPil` uten sirkel-chip.
 > Composer sitter på kortet uten hvit pille. Liten SVG-sirkel bare før første fold.
 > Innholdet i panelet er canvas/parchment.
 > Ikke forhandler-hero, ikke Oppgrader. ShaderGradient er ute. Importer
@@ -34,7 +36,7 @@
 > KI-Ronny (BloubBot) + «La KI-Ronny ta styringen» er **midtstilt** i stripen
 > (`absolute inset-0 items-center justify-center`, samme på PC og telefon —
 > ikke venstrejustert, ikke klistret mot topp/bunn). Én Grainient-boks
-> `rounded-[18px]` (ytre + indre pergament), overlay uten layout-skyv.
+> med firkantet topp mot stripen (ytre + indre pergament), overlay uten layout-skyv.
 > Idle-syklus hvert 2,5 sekund også når panelet er åpent: mer `colere`,
 > `wink`/`burst`/`thinking` — ikke triste/somnolent.
 > Oppgrader-CTA: React Bits Galaxy (`@react-bits/Galaxy-JS-CSS`), klippet inne

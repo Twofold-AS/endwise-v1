@@ -96,7 +96,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **AIProvider** (tynt lag) for latency-sensitive enkeltkall (diagnose, streaming)
 - **LLM-LEVERANDØR: Mistral EU for alle agenter** (Mikael 02.09.2026 — se `docs/personvern/` for historikken 14.07):
   - **Mistral (EU)** — `@ai-sdk/mistral`. Ronny (`/chat/workshop`), kunde-support/widget og intern drift. EU-endepunkt (`https://api.mistral.ai/v1`) er hardkodet som eneste lovlige; Mistrals US-endepunkt er **sperret i kode** (`assertEuEndpoint`)
-  - **Function calling** via chat completions + våre tools (`gåTil`, `søkKunder`, …). ⛔ Ikke Mistral Agents API (innebygd web_search/code_interpreter)
+  - **Function calling** via chat completions + våre tools (`gaaTil`, `sokKunder`, … — ASCII-nøkler; Mistral avviser æ/ø/å i function name). ⛔ Ikke Mistral Agents API (innebygd web_search/code_interpreter)
   - **`@ai-sdk/fireworks` står i repoet** men `resolveModelProvider` velger den **aldri**. Ingen intern fallback til Fireworks når Mistral-nøkkel mangler i prod
   - **EU-vernet står:** hver agent erklærer `dataClass`, hver provider erklærer `region`, og `spawnAgent()` nekter å starte en `customer_freetext`-agent mot en ikke-EU-leverandør. En feilkonfigurasjon her er et personvernbrudd, ikke en bug
   - **Scope-gate (F14-05):** Mistral Moderations (`mistral-moderation-2603`) klassifiserer kundens fritekst **i EU** før den når hoved-modellen. Kategoriene `health`, `pii`, `law`, `selfharm` → eskaler til menneske (F6-05)

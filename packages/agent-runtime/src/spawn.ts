@@ -4,6 +4,7 @@ import type { ModelMessage, Tool } from 'ai';
 import { type AgentDefinition, assertEntitled } from './agent.ts';
 import { type AgentContext, sealContext } from './context.ts';
 import { type AgentEvent, runAgentWithTools } from './loop.ts';
+import { assertAsciiToolNames } from './tool-navn.ts';
 
 /**
  * Spawn: agenten bindes til ÉN tenant, én gang, for alltid.
@@ -72,6 +73,7 @@ export function spawnAgent(options: SpawnOptions): AgentSession {
   // 2. Bygg verktøyene ÉN gang, med den frosne konteksten. Løkka får dem ferdige
   // og kan ikke be om nye med en annen kontekst.
   const tools: Record<string, Tool> = guardrails.wrapTools(agent.tools(context), context);
+  assertAsciiToolNames(tools);
 
   const session: AgentSession = {
     agent: agent.name,

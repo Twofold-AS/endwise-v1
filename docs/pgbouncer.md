@@ -33,4 +33,6 @@ Agenten setter ikke secrets. Når containeren svarer på 6432:
 2. La `DATABASE_URL` stå på Scaleway Managed PostgreSQL **:5432** / **:19800**
    (eier, med TLS). Ikke flytt eier gjennom pooleren.
 
-Pool `max: 1` i `createDb` er plaster til pooleren tar lasten.
+Pool `max: 5` mot PgBouncer `:6432` (låst). Direkte Managed Postgres
+(`:5432` / `:19800`) forblir `max: 1` per isolate — det plasteret gjelder
+fortsatt når runtime peker forbi pooleren.

@@ -2,6 +2,7 @@ import {
   type Auth,
   assertMember,
   createAuth,
+  harSesjonsCookie,
   type Role,
   requireSession,
   TwoFactorRequiredError,
@@ -113,9 +114,13 @@ function getAuthForContext(): Auth {
  * `TwoFactorRequiredError` slippes videre, den svelges ikke som «ikke
  * innlogget». Uten det ville brukeren blitt sendt til innloggingsskjermen hen
  * nettopp kom fra, i en løkke, uten å få vite at det er 2FA som mangler.
+ * Ingen sesjonskake: returner uautentisert uten `requireSession`/`getSession`.
+ * protectedProcedure kaster 401. Produktregler (idle, absolut, 2FA) urørt
+ * når kaken finnes.
  */
 export async function createRequestContext(headers: Headers): Promise<AppContext> {
   const base = createAppContext();
+  if (!harSesjonsCookie(headers)) return base;
   try {
     const data = await requireSession(getAuthForContext(), base.db, headers);
     let tenantId = data.session.activeOrganizationId ?? null;

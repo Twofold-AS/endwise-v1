@@ -141,7 +141,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).not.toMatch(/rounded-t-none/);
     expect(fab).toMatch(/rounded-\[18px\]/);
     expect(fab).not.toMatch(/borderTopLeftRadius:\s*0/);
-    expect(fab).not.toMatch(/rounded-none/);
+    expect(fab).toMatch(/data-ronny-prompt-flate[\s\S]{0,80}rounded-none/);
     expect(fab).toMatch(/data-ronny-kort-padding/);
     expect(fab).toMatch(/data-ronny-kort-padding[\s\S]{0,280}pt-1/);
     expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,220}pt-3/);
@@ -150,6 +150,15 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-handtak-sted=\{utvidet \? 'prompt' : 'peek'\}/);
     expect(fab).toMatch(/visPeek \? loggUtsnitt : null[\s\S]{0,40}visPeek \? handtak : null/);
     expect(fab).toMatch(/data-ronny-prompt-flate/);
+    expect(fab).toMatch(/data-ronny-prompt-flate[\s\S]{0,80}w-full overflow-hidden rounded-none/);
+    expect((fab.match(/<Grainient/g) ?? []).length).toBe(3);
+    const composerKilde = fab.slice(fab.indexOf('data-ronny-composer'));
+    const forsteFlate = composerKilde.indexOf('data-ronny-prompt-flate');
+    const andreFlate = composerKilde.indexOf('data-ronny-prompt-flate', forsteFlate + 1);
+    expect(forsteFlate).toBeGreaterThan(-1);
+    expect(andreFlate).toBeGreaterThan(forsteFlate);
+    expect(composerKilde.slice(forsteFlate, andreFlate)).not.toMatch(/Grainient/);
+    expect(composerKilde.slice(andreFlate)).toMatch(/Grainient/);
     expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}pb-1/);
     expect(fab).toMatch(/VERKSTED_INNHOLD/);
     expect(fab).toMatch(/data-ronny-verksted-bredde/);

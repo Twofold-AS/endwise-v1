@@ -94,9 +94,9 @@ export function drizzleKitPgCredentials(connectionString: string) {
  * som snakker WebSocket til en leverandørs egen proxy er bevisst unngått: de
  * kan ikke koble til en vanlig Postgres, og de ville låst oss til én leverandør.
  * Pooling: låsing bruker `pg_advisory_xact_lock` (transaksjons-skopet), ikke
- * session-skopet. Går man gjennom en pooler — og Scaleway tilbyr pgbouncer
- * gjenbrukes forbindelser på tvers av forespørsler, og en session-lås ville
- * fulgt med neste låner. Transaksjonslåsen slippes av commit/rollback uansett.
+ * session-skopet. Gjennom vår PgBouncer (transaction-mode) gjenbrukes
+ * forbindelser på tvers av forespørsler, og en session-lås ville fulgt med
+ * neste låner. Transaksjonslåsen slippes av commit/rollback uansett.
  * Vercel: hver isolate fikk default max=10 og tømte max_connections (53300
  * på magic-link/sign-out mot delt preview/prod-DB). Fjern host: max 1.
  * Localhost: max 5. Ingen WebSocket/serverless-driver.
@@ -112,9 +112,46 @@ export function pgPoolConfig(connectionString: string): PgPoolConfig {
   };
 }
 
+/**
+ * Runtime (web / tRPC / auth / cron / magic-link): app-rollen, RLS på.
+ * Prod/preview peker `APP_DATABASE_URL` på vår PgBouncer `:6432` når
+ * containeren er oppe. Mangler den lokalt, faller vi tilbake til
+ * `DATABASE_URL` (Docker har begge). Tom streng teller som mangler.
+ * Aldri eier-rollen alene i prod — da er RLS av.
+ */
+export function appDatabaseUrl(env: NodeJS.ProcessEnv = process.env): string {
+  const url = env.APP_DATABASE_URL || env.DATABASE_URL;
+  if (!url) {
+    throw new Error('APP_DATABASE_URL (eller DATABASE_URL) mangler');
+  }
+  return url;
+}
+
+/**
+ * Eier, direkte TCP `:5432`. Migrasjoner, drizzle-kit, grants, stream LISTEN.
+ * Aldri gjennom pooleren — LISTEN og DDL er session-tilstand.
+ */
+export function ownerDatabaseUrl(env: NodeJS.ProcessEnv = process.env): string {
+  const url = env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL mangler');
+  return url;
+}
+
+/**
+ * Driver: node-postgres (`pg`) over vanlig TCP.
+ * `prepare: false` — transaction-pooler (PgBouncer) tåler ikke named PREPARE
+ * på tvers av klienter. drizzle-orm 0.45 `DrizzleConfig` typer ikke feltet;
+ * node-pg navngir bare PREPARE når `QueryConfig.name` er satt. Vi bruker
+ * ikke named prepare-API. Flagget er eksplisitt for pooleren / nyere drizzle.
+ */
 export function createDb(connectionString: string) {
   const pool = new Pool(pgPoolConfig(connectionString));
-  return drizzle({ client: pool, schema, casing: 'snake_case' });
+  return drizzle({
+    client: pool,
+    schema,
+    casing: 'snake_case',
+    prepare: false,
+  } as { client: Pool; schema: typeof schema; casing: 'snake_case' });
 }
 
 /**

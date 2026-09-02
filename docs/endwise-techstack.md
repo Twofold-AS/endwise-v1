@@ -110,6 +110,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 
 ### Database — `packages/db`
 - **Scaleway Managed PostgreSQL (Frankrike, EU)** — Postgres 16, **RLS**, **pgvector** (HNSW-indeks). ⚠️ ERSTATTET Neon 09.08.2026 (brukergodkjent): en vanlig Postgres er påkrevd for langlevde `LISTEN/NOTIFY`-forbindelser, og vi holder oss til to leverandører totalt. Se `docs/deploy-plan.md`
+- **Vår PgBouncer** (`infra/pgbouncer`) som Scaleway Serverless Container (`min_scale=1`, port 6432, `pool_mode=transaction`). App-runtime (`APP_DATABASE_URL`) går hit. Eier (`DATABASE_URL`) og stream LISTEN går direkte `:5432`. Scaleway har ikke innebygd pooler; Serverless SQL er ute (ødelegger LISTEN). Se `docs/pgbouncer.md`
 - **Drizzle ORM** (schema-first, TS-typer genereres)
 - **`pg_advisory_xact_lock`** for slot-låsing (transaksjons-skopet — påkrevd så snart en connection pooler er i bildet)
 - Multi-tenant: `tenant_id` på hver rad, RLS på hver tabell
@@ -206,7 +207,7 @@ endwise/
 
 | Tjeneste | Rolle | Merknad |
 |---|---|---|
-| **Scaleway** | Postgres (Frankrike, EU) + Serverless Container + Key Manager | ⭐ ALL DATA hos én EU-leverandør. Vanlig Postgres → `LISTEN/NOTIFY` er til å stole på. Containeren kjører `apps/stream` med minst én instans |
+| **Scaleway** | Postgres (Frankrike, EU) + Serverless Container + Key Manager | ⭐ ALL DATA hos én EU-leverandør. Vanlig Postgres → `LISTEN/NOTIFY` er til å stole på. Containere: `apps/stream` + vår PgBouncer (`infra/pgbouncer`, :6432) med minst én instans hver |
 | **Resend** | E-post | Transaksjonelt + Broadcasts (nyhetsbrev) + auth-eposter |
 | **Twilio** | SMS / OTP | Verify som 2FA/OTP-sender |
 | **Stripe** | SaaS-fakturering | Abonnement → entitlements (`tenant_modules`) |

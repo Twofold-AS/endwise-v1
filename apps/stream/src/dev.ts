@@ -4,6 +4,7 @@ import { createStreamApp } from './app.ts';
 // Rot-.env lastes av dev-scriptet via `node --env-file-if-exists=../../.env`
 // (Node auto-laster ikke .env). Kjør `cp .env.example .env` og fyll inn verdiene.
 // APP_DATABASE_URL = app-rollen (RLS på). Faller tilbake til DATABASE_URL (eier).
+// LISTEN går alltid på DATABASE_URL, direkte :5432 — aldri gjennom pooleren.
 const databaseUrl = process.env.APP_DATABASE_URL ?? process.env.DATABASE_URL;
 if (!databaseUrl) {
   throw new Error(
@@ -11,8 +12,14 @@ if (!databaseUrl) {
       'eller DATABASE_URL i .env. Se .env.example.',
   );
 }
+const listenUrl = process.env.DATABASE_URL;
+if (!listenUrl) {
+  throw new Error(
+    'DATABASE_URL mangler: stream LISTEN krever eier-URL direkte mot Postgres :5432, aldri PgBouncer.',
+  );
+}
 
-const { app, subscriber } = createStreamApp({ databaseUrl });
+const { app, subscriber } = createStreamApp({ databaseUrl, listenUrl });
 await subscriber.start();
 
 const port = Number(process.env.PORT ?? 3002);

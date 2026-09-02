@@ -52,7 +52,9 @@ export function avsenderErVerifisert(from: string): boolean {
 
 export const authEnv = {
   get databaseUrl() {
-    return required('DATABASE_URL');
+    // Runtime / magic-link: app-rolle (RLS). Fallback til eier lokalt
+    // (Docker). Prod/preview: APP_DATABASE_URL → PgBouncer :6432.
+    return process.env.APP_DATABASE_URL || required('DATABASE_URL');
   },
   get secret() {
     return required('BETTER_AUTH_SECRET');

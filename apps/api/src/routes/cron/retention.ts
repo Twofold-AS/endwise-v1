@@ -12,8 +12,8 @@ import { cronAuth } from '../../lib/cron-auth.ts';
  * Bearer). Ekstra viktig her: dette endepunktet sletter data.
  */
 export const cronRetention = new Hono().use('*', cronAuth).get('/', async (c) => {
-  const url = process.env.DATABASE_URL;
-  if (!url) return c.json({ error: 'DATABASE_URL mangler' }, 500);
+  const url = process.env.APP_DATABASE_URL ?? process.env.DATABASE_URL;
+  if (!url) return c.json({ error: 'APP_DATABASE_URL (eller DATABASE_URL) mangler' }, 500);
 
   const db = createDb(url);
   const tenants = await db.select({ id: schema.tenants.id }).from(schema.tenants);

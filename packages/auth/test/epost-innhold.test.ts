@@ -12,7 +12,7 @@ import { byggEpostHtml, esc, knapp, kodeboks } from '../src/senders/epost-mal.ts
  * feil avsenderdomene → 403 på hver auth-e-post
  * SVG som logo → tomt bilde hos Gmail/Outlook/Apple Mail
  * `data:`-URI i `src` → strippes av Gmail og Outlook
- * logo uten egen flate → usynlig i mørk modus
+ * logo på mørk chrome → bryter Apple-låsen (logo på hvit)
  * HTML uten tekstdel → ingen kode for den som leser i ren tekst
  */
 
@@ -76,7 +76,7 @@ describe('logoen', () => {
     expect(bytes.subarray(0, 4).toString('hex')).toBe('89504e47');
   });
 
-  it('har alfakanal, så den kan ligge på den mørke flata', () => {
+  it('har alfakanal, så den kan ligge på hvit canvas', () => {
     const bytes = Buffer.from(LOGO_EPOST_PNG_BASE64, 'base64');
     // Ihdr: bredde/høyde på byte 16–23, fargetype på byte 25.
     // 6 = rgba, 3 = palett (med tRNS for gjennomsiktighet).
@@ -115,23 +115,33 @@ describe('e-postmalen', () => {
     expect(html).toMatch(/<img[^>]+alt="Endwise"/);
   });
 
-  it('⛔ logoen ligger på en flate med eksplisitt bgcolor — mørk modus', () => {
+  it('⛔ logoen ligger på hvit canvas — ikke mørk chrome', () => {
     /**
-     * Logoen er hvit. Uten en egen mørk flate ville den vært usynlig i enhver
-     * klient som ikke inverterer. `bgcolor` som attributt (ikke bare CSS)
-     * overlever i praktisk talt alle klienter, også Outlooks Word-motor.
+     * Mikael Apple-lås: parchment/white, logo på hvit. `bgcolor` som attributt
+     * (ikke bare CSS) overlever i Outlooks Word-motor.
      */
-    expect(html).toMatch(/<td[^>]+bgcolor="#0b0b0b"/);
-    expect(html).toContain('background-color:#0b0b0b');
+    expect(html).toMatch(/<td[^>]+bgcolor="#ffffff"/);
+    expect(html).toContain('background-color:#ffffff');
+    expect(html).not.toMatch(/#0b0b0b|#1ED27D|#111111/);
+    expect(html).not.toMatch(/box-shadow/);
+  });
+
+  it('bruker Apple/Endwise-tokens: parchment, ink, Action Blue, Inter, 17px', () => {
+    expect(html).toContain('background-color:#f5f5f7');
+    expect(html).toContain('color:#1d1d1f');
+    expect(html).toContain('font-size:17px');
+    expect(html).toContain('font-family:Inter, -apple-system');
+    expect(html).toContain('name="color-scheme" content="light"');
+    expect(html).not.toContain('content="light dark"');
   });
 
   it('oppgir width og height på bildet, så layouten ikke hopper', () => {
     expect(html).toMatch(/<img[^>]+width="32"[^>]*height="40"/);
   });
 
-  it('erklærer at den takler begge fargeskjemaene', () => {
-    expect(html).toContain('name="color-scheme"');
-    expect(html).toContain('name="supported-color-schemes"');
+  it('erklærer lyst fargeskjema — produktet har ingen dark-mode-sti', () => {
+    expect(html).toContain('name="color-scheme" content="light"');
+    expect(html).toContain('name="supported-color-schemes" content="light"');
   });
 
   it('bruker tabeller og inline style — ikke flexbox eller klasser', () => {
@@ -155,9 +165,12 @@ describe('e-postmalen', () => {
   it('knappen gjentar adressen som lesbar tekst', () => {
     // Bedriftsfiltre skriver om og dreper knapper. Da er den synlige
     // adressen forskjellen på en e-post som virker og en som ikke gjør det.
-    const k = knapp('https://endwise.no/nytt-passord?token=abc', 'Velg nytt passord');
-    expect(k).toContain('href="https://endwise.no/nytt-passord?token=abc"');
+    const k = knapp('https://endwise.no/signin?token=abc', 'Logg inn');
+    expect(k).toContain('href="https://endwise.no/signin?token=abc"');
     expect(k).toContain('Lim inn denne adressen');
+    expect(k).toContain('background-color:#0066cc');
+    expect(k).toContain('border-radius:9999px');
+    expect(k).not.toMatch(/passord/i);
   });
 });
 
@@ -204,6 +217,10 @@ describe('engangskode-e-posten', () => {
     expect(p.html).toContain('Koden din er');
     expect(p.html).not.toMatch(/TOTP|app-kode|autentikator/i);
     expect(p.text).not.toMatch(/TOTP|app-kode|autentikator/i);
+    expect(p.html).not.toMatch(/passord|1Password|demo|seed/i);
+    expect(p.text).not.toMatch(/passord|1Password|demo|seed/i);
+    expect(p.html).toContain('#0066cc');
+    expect(p.html).toContain('#f5f5f7');
     vi.doUnmock('resend');
   });
 
@@ -334,7 +351,8 @@ describe('invitasjons-e-posten (F1-10)', () => {
     expect(p.text).toMatch(/godta invitasjonen og logge inn/);
     expect(p.text).not.toMatch(/sett passord/i);
     expect(p.html).toContain('Åpne invitasjonen');
-    expect(p.html).not.toMatch(/sett passord/i);
+    expect(p.html).not.toMatch(/sett passord|1Password|demo|seed/i);
+    expect(p.html).toContain('#0066cc');
     expect(p.html).toContain(`src="cid:${LOGO_EPOST_CID}"`);
     expect(p.html).not.toContain('src="data:');
     expect(p.attachments).toHaveLength(1);
@@ -355,5 +373,47 @@ describe('invitasjons-e-posten (F1-10)', () => {
         from: 'Hacker <evil@evil.no>',
       } as never),
     ).rejects.toThrow(/from settes ikke/);
+  });
+});
+
+describe('e-postbytte-e-posten (F1-27)', () => {
+  async function last() {
+    vi.resetModules();
+    return import('../src/senders/resend.ts');
+  }
+
+  beforeEach(() => {
+    process.env.NODE_ENV = 'test';
+    process.env.RESEND_API_KEY = 'test-nokkel';
+    process.env.RESEND_FROM = 'Endwise <noreply@endwise.no>';
+  });
+
+  it('⛔ nevner ikke passord i bekreftelsen til gammel adresse', async () => {
+    const sendt: Record<string, unknown>[] = [];
+    vi.doMock('resend', () => ({
+      Resend: class {
+        emails = {
+          send: async (payload: Record<string, unknown>) => {
+            sendt.push(payload);
+            return { data: { id: 'x' }, error: null };
+          },
+        };
+      },
+    }));
+
+    const { sendByttEpostBekreftelse } = await last();
+    await sendByttEpostBekreftelse({
+      to: 'gammel@twofold.no',
+      nyEpost: 'ny@twofold.no',
+      lenke: 'https://endwise.no/bekreft-epost?token=eksempel',
+    });
+
+    expect(sendt).toHaveLength(1);
+    const p = sendt[0] as { text: string; html: string };
+    expect(p.text).not.toMatch(/passord|1Password/i);
+    expect(p.html).not.toMatch(/passord|1Password/i);
+    expect(p.html).toContain('#0066cc');
+    expect(p.html).toContain('Bekreft e-postbytte');
+    vi.doUnmock('resend');
   });
 });

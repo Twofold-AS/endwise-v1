@@ -14,8 +14,8 @@ import { useCallback, useState } from 'react';
 /**
  * AI Elements Prompt Input — Ronny-skall (Mikael 02.09.2026).
  * Samme navn og oppførsel som `elements.ai-sdk.dev` PromptInput:
- * textarea med field-sizing, Enter sender, Shift+Enter linjeskift,
- * Footer + Submit. Ikke hentet: model-picker, web-search, attachments,
+ * Kompakt søke-linje (1 linje, maks 2 via field-sizing). Enter sender, Shift+Enter linjeskift,
+ * Footer + Submit på samme rad. Ikke hentet: model-picker, web-search, attachments,
  * command/select (Mikael + UI-PAKKER: ikke to chat-systemer).
  * Submit-ikon er eget `Send`-SVG, ikke lucide CornerDownLeft.
  */
@@ -45,7 +45,7 @@ export function PromptInput({ className, onSubmit, children, ...props }: PromptI
   return (
     <form
       data-slot="prompt-input"
-      className={cn('w-full', className)}
+      className={cn('flex w-full items-end gap-1', className)}
       onSubmit={handleSubmit}
       {...props}
     >
@@ -89,7 +89,7 @@ export function PromptInputTextarea({
       onCompositionStart={() => setComposing(true)}
       onCompositionEnd={() => setComposing(false)}
       className={cn(
-        'field-sizing-content max-h-36 min-h-8 w-full resize-none bg-transparent px-3 py-2 text-label text-fg outline-none placeholder:text-label placeholder:text-fg-muted disabled:opacity-50',
+        'field-sizing-content max-h-10 min-h-7 w-full resize-none bg-transparent px-2.5 py-1.5 text-label text-fg outline-none placeholder:text-label placeholder:text-fg-muted disabled:opacity-50',
         className,
       )}
       {...props}
@@ -101,7 +101,7 @@ export function PromptInputFooter({ className, ...props }: HTMLAttributes<HTMLDi
   return (
     <div
       data-slot="prompt-input-footer"
-      className={cn('flex items-center justify-end gap-1 px-1.5 pb-1.5', className)}
+      className={cn('flex shrink-0 items-center justify-end p-0.5', className)}
       {...props}
     />
   );

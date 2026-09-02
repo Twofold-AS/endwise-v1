@@ -123,6 +123,17 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/justify-center/);
     expect(fab).not.toMatch(/md:justify-start|md:items-start|md:items-end/);
     expect(fab).toMatch(/data-workshop-sticky[\s\S]*La KI-Ronny ta styringen/);
+    expect(fab).toMatch(/const DOCK_KOMPAKT/);
+    expect(fab).toMatch(/const DOCK_SAMTALE/);
+    expect(fab).toMatch(/harSamtale/);
+    expect(fab).toMatch(/no-scrollbar/);
+    expect(fab).toMatch(/data-ronny-traad/);
+    expect(fab).not.toMatch(/max-h-\[28vh\]/);
+    expect(fab).toMatch(/borderRadius: 9999/);
+    expect(submit).toMatch(/max-h-10/);
+    expect(submit).toMatch(/min-h-7/);
+    expect(submit).not.toMatch(/max-h-36/);
+    expect(submit).toMatch(/flex w-full items-end/);
   });
 
   it('chat-ruta tar imot sidekontekst-header', () => {

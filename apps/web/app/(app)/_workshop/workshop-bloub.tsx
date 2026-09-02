@@ -26,6 +26,9 @@ const KORN_RAMME = 3;
 const RAMME_PX = 18;
 const HANDTAK_DRA_DOCK = 40;
 const HANDTAK_DRA_FULL = 110;
+/** Kompakt dock: stripe + én linje-composer. Første send → samtalehøyde. */
+const DOCK_KOMPAKT = '8.25rem';
+const DOCK_SAMTALE = 'min(48dvh, 28rem)';
 
 type RonnyVisning = 'stripe' | 'dock' | 'utvidet';
 
@@ -74,16 +77,17 @@ function gaaTilHref(del: { type: string; state?: string; output?: unknown }): st
   return out.href;
 }
 
-function skallHoyde(visning: RonnyVisning, ankerTop: number): string {
+function skallHoyde(visning: RonnyVisning, ankerTop: number, harSamtale: boolean): string {
   if (visning === 'stripe') return '100%';
-  if (visning === 'dock') return 'min(48dvh, 28rem)';
-  return `calc(100dvh - ${ankerTop}px - 8px)`;
+  if (visning === 'utvidet') return `calc(100dvh - ${ankerTop}px - 8px)`;
+  if (harSamtale) return DOCK_SAMTALE;
+  return DOCK_KOMPAKT;
 }
 
 /**
- * Én Grainient-boks (18px ytre + 18px indre). Stripe + panel er samme skall:
- * lukket = strippehøyde, åpen = høyde folder seg ned som overlay over dest-bar
- * uten å skyve siden. Sirkel-håndtak nederst. Escape: utvidet → dock → stripe.
+ * Én Grainient-boks (18px ytre + 18px indre). Stripe + panel er samme skall.
+ * Åpne = kompakt composer. Første send folder til fast samtalehøyde (scroll
+ * over prompt, skjult scrollbar). Sirkel = fullscreen. Escape: utvidet → dock → stripe.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -112,6 +116,8 @@ export function WorkshopBloub() {
   );
 
   const { messages, sendMessage, status, error } = useChat({ transport });
+  const harSamtale = messages.length > 0 || Boolean(error);
+  const fastHoyde = visning === 'utvidet' || (visning === 'dock' && harSamtale);
   const opptatt = status === 'submitted' || status === 'streaming';
   const idle = useRonnyIdle(!klikk);
 
@@ -235,7 +241,7 @@ export function WorkshopBloub() {
 
   if (pathname.startsWith('/oppstart')) return null;
 
-  const visTraad = visning === 'utvidet' || messages.length > 0 || error;
+  const visTraad = harSamtale || visning === 'utvidet';
 
   return (
     <div
@@ -245,13 +251,13 @@ export function WorkshopBloub() {
       <div
         data-workshop-shell
         className="absolute inset-x-0 top-0 z-40 overflow-hidden rounded-[18px] shadow-none transition-[height] duration-300 ease-out"
-        style={{ height: skallHoyde(visning, ankerTop), borderRadius: RAMME_PX }}
+        style={{ height: skallHoyde(visning, ankerTop, harSamtale), borderRadius: RAMME_PX }}
       >
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Grainient className="absolute inset-0 h-full w-full" />
         </div>
 
-        <div className="relative flex h-full flex-col">
+        <div className={`relative flex flex-col ${fastHoyde ? 'h-full' : ''}`}>
           <div
             data-workshop-strip
             className="relative h-11 max-h-[44px] w-full shrink-0 md:h-control md:max-h-[32px]"
@@ -302,24 +308,23 @@ export function WorkshopBloub() {
             data-workshop-dock
             data-ronny-visning={visning}
             className="grid min-h-0 flex-1 transition-[grid-template-rows] duration-300 ease-out"
-            style={{ gridTemplateRows: visning === 'stripe' ? '0fr' : '1fr' }}
+            style={{ gridTemplateRows: visning === 'stripe' ? '0fr' : fastHoyde ? '1fr' : 'auto' }}
             role="dialog"
             aria-label="KI-Ronny"
             aria-hidden={!apen}
           >
             <div
-              className="min-h-0 overflow-hidden"
+              className={`min-h-0 overflow-hidden ${fastHoyde ? 'h-full' : ''}`}
               style={{ paddingLeft: KORN_RAMME, paddingRight: KORN_RAMME, paddingBottom: KORN_RAMME }}
             >
               <div
-                className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fff]"
+                className={`flex min-h-0 flex-col overflow-hidden bg-[#fff] ${fastHoyde ? 'h-full' : ''}`}
                 style={{ borderRadius: RAMME_PX }}
               >
                 {visTraad ? (
                   <div
-                    className={`overflow-y-auto px-5 ${
-                      visning === 'utvidet' ? 'min-h-0 flex-1 py-4' : 'max-h-[28vh] py-3'
-                    }`}
+                    data-ronny-traad
+                    className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-2"
                   >
                     {messages.map((melding) => {
                       const tekstDel = tekstFraMelding(melding);
@@ -327,7 +332,7 @@ export function WorkshopBloub() {
                       return (
                         <p
                           key={melding.id}
-                          className={`py-2 text-body leading-relaxed ${
+                          className={`py-1.5 text-label leading-relaxed ${
                             melding.role === 'user' ? 'text-right text-[#1d1d1f]' : 'text-[#1d1d1f]/70'
                           }`}
                         >
@@ -336,17 +341,17 @@ export function WorkshopBloub() {
                       );
                     })}
                     {error ? (
-                      <p className="py-1 text-body text-destructive">Noe gikk galt. Prøv igjen.</p>
+                      <p className="py-1 text-label text-destructive">Noe gikk galt. Prøv igjen.</p>
                     ) : null}
                   </div>
                 ) : null}
-                <div className="px-5 pt-2 pb-12">
+                <div className="shrink-0 px-3 pt-1 pb-10">
                   <PromptInput
                     onSubmit={onPrompt}
                     className="border border-[#e0e0e0] bg-[#f5f5f7] shadow-none"
-                    style={{ borderRadius: RAMME_PX }}
+                    style={{ borderRadius: 9999 }}
                   >
-                    <PromptInputBody>
+                    <PromptInputBody className="min-w-0 flex-1">
                       <PromptInputTextarea
                         placeholder="Spør Ronny …"
                         disabled={opptatt}

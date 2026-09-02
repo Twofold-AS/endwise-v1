@@ -68,8 +68,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/shadow-none/);
     const tokens = les('../../../packages/widget-tokens/src/tokens.css');
     const light = tokens.slice(0, tokens.indexOf('[data-theme="dark"]'));
-    expect(light).toMatch(/--ew-accent:\s*#111111/);
-    expect(light).not.toMatch(/--ew-accent:\s*#0066cc/);
+    expect(light).toMatch(/--ew-accent:\s*#0066cc/);
+    expect(light).not.toMatch(/--ew-accent:\s*#111111/);
     const submit = les('../../../packages/ui/src/components/prompt-input.tsx');
     expect(submit).toMatch(/bg-\[#111\]/);
     expect(submit).not.toMatch(/#0066cc/);

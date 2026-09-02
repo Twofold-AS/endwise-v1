@@ -36,7 +36,7 @@ export interface ButtonProps extends Omit<
 type Ripple = { id: number; x: number; y: number; size: number };
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+  primary: "rounded-pill bg-primary text-primary-foreground hover:bg-primary/90",
   secondary: "border border-border bg-card text-foreground hover:border-border",
   ghost: "text-muted-foreground hover:text-foreground hover:bg-primary/5",
   outline:
@@ -44,7 +44,7 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
 };
 
 // Endret fra oppstrøms — eierens designprinsipper:
-// knapper er 32px høye med 10px radius, ikke beUIs 40px pill. Satt her, i
+// knapper er 32px høye; primær er pille-CTA, utility 8px. Satt her, i
 // komponenten, i stedet for som overstyring på hvert kallsted: en spec som må
 // huskes ved hver bruk, er en spec som brytes ved den femte bruken.
 // Se docs/ui-pakker.md §3.

@@ -87,7 +87,7 @@
   --radius-lg: var(--ew-radius-lg);
   --radius-xl: var(--ew-radius-xl);
   --radius-pill: var(--ew-radius-pill);
-  --radius-control: var(--ew-radius-control); /* 10px — knapper */
+  --radius-control: var(--ew-radius-control); /* 8px — utility */
   --radius-badge: var(--ew-badge-radius); /* 6px */
 
   /* Mål (eierens spec) */
@@ -99,19 +99,20 @@
   /*
    * Typeskala
    * Tre roller, ikke ni. Størrelse, linjehøyde og vekt er bakt inn i utilityen,
-   * slik at `text-title` alltid er 16/20/500 — det finnes ikke en variant der
-   * noen glemte vekten. Linjehøyden på brødtekst (20px) er den ene utledede
-   * verdien; de øvrige er gitt.
+   * slik at `text-title` alltid er 16/20/600 — det finnes ikke en variant der
+   * noen glemte vekten. Brødtekst 17/1.47 (Apple). Inter, ikke SF Pro.
    */
   --text-title: 16px;
   --text-title--line-height: 20px;
-  --text-title--font-weight: 500;
+  --text-title--font-weight: 600;
+  --text-title--letter-spacing: -0.02em;
   --text-label: 13px;
   --text-label--line-height: 16px;
-  --text-label--font-weight: 500;
-  --text-body: 14px;
-  --text-body--line-height: 20px;
+  --text-label--font-weight: 400;
+  --text-body: 17px;
+  --text-body--line-height: 1.47;
   --text-body--font-weight: 400;
+  --text-body--letter-spacing: -0.011em;
 
   --font-sans: var(--ew-font-sans);
   --font-mono: var(--ew-font-mono);

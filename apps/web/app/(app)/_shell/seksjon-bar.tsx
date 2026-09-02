@@ -10,9 +10,8 @@ import { destinasjonFaner } from './seksjon-faner';
 
 /**
  * Top-bar 2 under Ronny på ALLE destinasjoner (Jonas 28.08 / Mikael 02.09).
- * h-control, text-label, aktiv sidebar-active (#ededed), hover surface-2 (#f5f5f5).
- * gap-2 telefon / gap-8 desktop. Wrap eller overflow-x — ikke svarte piller,
- * ikke breadcrumb, ikke PhoneHScroll.
+ * h-control, text-label, aktiv sidebar-active (#ededed), hover parchment.
+ * Frosted parchment, ikke svarte piller. gap-2 telefon / gap-8 desktop.
  */
 const PILLE_KLASSE =
   'inline-flex h-control min-h-control shrink-0 items-center whitespace-nowrap rounded-control px-2.5 text-label transition-colors max-md:h-auto max-md:min-h-0 max-md:py-1';
@@ -46,7 +45,7 @@ export function DestinasjonSeksjonBar() {
     <nav
       data-destinasjon-bar
       aria-label="Seksjoner"
-      className="flex flex-wrap items-center gap-2 overflow-x-auto border-border border-b bg-bg px-3 py-1.5 md:h-control md:min-h-control md:flex-nowrap md:gap-8 md:overflow-visible md:px-4 md:py-0"
+      className="flex flex-wrap items-center gap-2 overflow-x-auto border-border border-b bg-surface-2/80 px-3 py-1.5 md:h-control md:min-h-control md:flex-nowrap md:gap-8 md:overflow-visible md:px-4 md:py-0"
     >
       {faner.map((f) => {
         const klasse = `${PILLE_KLASSE} ${

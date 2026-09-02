@@ -80,7 +80,7 @@ export function BevegelseDialog({
         role="dialog"
         aria-modal="true"
         aria-label={`Registrer bevegelse for ${del.name}`}
-        className="w-full max-w-md rounded-xl border border-border bg-bg p-5 shadow-lg"
+        className="w-full max-w-md rounded-xl border border-border bg-bg p-5"
       >
         <form onSubmit={submit} className="flex flex-col gap-4">
           <div>

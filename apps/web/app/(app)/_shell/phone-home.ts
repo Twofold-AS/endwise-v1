@@ -29,7 +29,7 @@ export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';
 /**
  * Samme flate som resten av appen (`CardShell`): `--ew-surface` / `--ew-fg`.
  * Ikke `bg-accent` — i theme.css er `--color-accent` shadcn-hover
- * (`--ew-surface-2`, #f5f5f5 i lyst) mens `text-accent-fg` er `--ew-accent-fg`
+ * (`--ew-surface-2`, parchment #f5f5f7 i lyst) mens `text-accent-fg` er `--ew-accent-fg`
  * (hvit i lyst). Den kombinasjonen er den vaskede «hvite overlay»-en.
  */
 export const PHONE_KORT_FYLL = 'rounded-xl border border-border bg-card text-fg shadow-none';

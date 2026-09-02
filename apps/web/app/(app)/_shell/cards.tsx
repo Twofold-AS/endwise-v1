@@ -15,7 +15,7 @@ export const BEVEL: CSSProperties = {
   color: 'var(--ew-bevel-fg)',
 };
 
-/** Knapp: 32px høyde, 10px radius (eierens spec). */
+/** Knapp: 32px høyde, 8px utility-radius (Apple 02.09). */
 export function BevelButton({
   children,
   onClick,
@@ -81,7 +81,7 @@ export function CountBadge({
 }
 
 /**
- * CardShell — TheFold-kortet: ytre kort (radius 12, 5px padding, kant) rundt en
+ * CardShell — ytre kort (radius 18 via --ew-radius-xl, 5px padding, hairline) rundt en
  * Indre panel. Dobbelt kant-uttrykk: ytre kortkant + indre panel-kant.
  * Bruk med `CardMedia` (innhold øverst) + en tekstdel under.
  */

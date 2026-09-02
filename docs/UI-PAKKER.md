@@ -68,18 +68,16 @@
 > Skillet er innholdet (siffer vs. «Ny»), ikke to ulike former.
 
 > ### 🔴 EIERENS DESIGN-PRINSIPPER HAR FORRANG (03.08.2026, aksent endret 06.08)
-> ⚠️ **AKSENTEN ER SVART, IKKE GRØNN** (fra 06.08.2026, «foreløpig»). Grønnen ble
-> brukt så bredt at den sluttet å være en aksent. `--ew-accent`/`-strong` er
-> `#111111` i lyst tema og `#ffffff` i mørkt; switch-track følger aksenten.
-> **02.09.2026 (Mikael):** Apple-grammatikk er KUN på Ronny-dock (parchment/hairline/44px-chip).
-> Produktaksenten forblir `#111`. Ikke Action Blue `#0066cc` på skallet. Inter, 32/10.
+> ⚠️ **AKSENTEN ER ACTION BLUE, IKKE GRØNN** (02.09.2026, Mikael Apple på hele appen).
+> `--ew-accent` er `#0066cc` / fokus `#0071e3` i lyst tema. Ink `#1d1d1f`, parchment-side
+> `#f5f5f7`, kort/sidebar `#ffffff`. Inter beholdt (ikke SF Pro). Mørk utility / Oppgrader /
+> Ronny-paper kan fortsatt være `#111`. Switch-track følger aksenten.
 > Suksess-grønnen (`--ew-success`) er BEHOLDT — den er informasjon, ikke merkevare.
 > «Ny»-badgen er RØD (tekstbadge). Tellere er samme røde badge-form med siffer.
 > Logogrønnen `#1ED27D` er urørt (bor i logo.svg).
-> Inter · titler 16/20 Medium · labels 13/16 Medium · brødtekst 14 Regular · knapper 32px/10px ·
-> rader 40px (data) og 44px (stores) · badge 20px/6px (farge fra aksent-tokenene) ·
-> switch 24×14/10px (track følger aksenten) · tekst `#333333`/`#777777` · **LYST TEMA ONLY** (`#ffffff`, sidebar
-> `#ffffff`, valgt `#ededed`). Ingen tema-toggle. Ingen `[data-theme=dark]`-brukersti.
+> Inter · titler 16/20 Semibold · labels 13/16 · brødtekst 17/1.47 · knapper 32px / pille-CTA ·
+> rader 40px (data) og 44px (stores) · badge 20px/6px · switch 24×14/10px · tekst ink/muted ·
+> **LYST TEMA ONLY**. Ingen tema-toggle. Ingen `[data-theme=dark]`-brukersti.
 > **Full tabell + hva som er utledet: §6 «Design-prinsipper fra eier».** Kolliderer noe i denne
 > fila med den seksjonen, er det den seksjonen som gjelder.
 
@@ -296,7 +294,7 @@ klartekst ved siden av: «Assistenten tenker …», ikke bare en animasjon.
 
 | Pakke | Rolle |
 |---|---|
-| `@endwise/widget-tokens` | `--ew-*`-tokens (lys/mørk/aksent). ✅ **Lyst tema er standard** (eier 03.08.2026); aksent er **svart `#111111`** i lyst og **hvit** i mørkt (06.08.2026). Logogrønnen `#1ED27D` er merkevare i logo.svg, ikke knappfarge. Nye tokens: `surface-2`, `border-strong`, `fg-faint`, `accent-dim`, `warn/danger/success`, `glass-*`, `radius-xl/pill` |
+| `@endwise/widget-tokens` | `--ew-*`-tokens (lys/mørk/aksent). ✅ **Lyst tema er standard** (eier 03.08.2026). **02.09.2026:** interaktiv aksent er Action Blue `#0066cc` (fokus `#0071e3`). Ink `#1d1d1f`, parchment-side `#f5f5f7`, kort/sidebar `#ffffff`. Inter. Logogrønnen `#1ED27D` er merkevare i logo.svg. Nye tokens: `surface-2`, `border-strong`, `fg-faint`, `accent-dim`, `warn/danger/success`, `glass-*`, `radius-xl/pill` |
 | Tailwind CSS 4 | `@theme inline` i `packages/ui/src/theme.css` |
 | `radix-ui` | Primitivene shadcn bygger på |
 | `lucide-react` | Ikoner. **Eneste ikonbibliotek**. Apper importerer via den kuraterte barrel-en `@endwise/ui/icons.ts` — aldri `lucide-react` direkte. ⚠️ **Fra 06.08.2026 er barrel-en delt:** 26 ikoner kommer fra EGNE SVG-er i `src/assets/icons/` via `scripts/build-icons.ts` → `icons.generated.ts` (F5-20); resten fra lucide inntil egne finnes. `createLucideIcon` gjør at typen er identisk, så ingen kallsteder merker forskjellen. Regenerer: `pnpm --filter @endwise/ui build:icons` |
@@ -312,16 +310,16 @@ klartekst ved siden av: «Assistenten tenker …», ikke bare en animasjon.
 | Rolle | Verdi | Token / utility |
 |---|---|---|
 | **Font** | Inter (SIL OFL) | `--ew-font-sans` |
-| **Titler** | 16px / 20px linjehøyde / Medium (500) | `text-title` |
-| **Labels** | 13px / 16px / Medium (500) | `text-label` |
-| **Brødtekst** | 14px / Regular (400) | `text-body` |
-| **Knapper** | 32px høyde · 10px radius | `h-control` · `rounded-control` |
+| **Titler** | 16px / 20px linjehøyde / Semibold (600), tettere tracking | `text-title` |
+| **Labels** | 13px / 16px / Regular (400) | `text-label` |
+| **Brødtekst** | 17px / 1.47 / Regular (400), lett tight tracking | `text-body` |
+| **Knapper** | 32px høyde · CTA-pille 9999 · utility 8px | `h-control` · `rounded-pill` / `rounded-control` |
 | **Datarad** | 40px | `h-row` |
 | **«Stores»-rad** | 44px | `h-row-store` |
-| **Badge** | 20px høyde · 6px radius · fyll `#CAFACE` · tekst `#15B042` | `h-badge` · `rounded-badge` · `bg-accent-soft` · `text-accent-strong` (eller shadcn `<Badge>`) |
-| **Switch** | 24×14px track · 10px thumb · track-på `#0077E6` | `<Switch>` · `--ew-switch-*` |
-| **Tekst** | `#333333` default · `#777777` subtle | `text-fg` · `text-fg-muted` |
-| **Lyst (ONLY)** | bakgrunn `#ffffff` · sidebar `#ffffff` · valgt i sidebar `#ededed` | `bg-bg` · `bg-sidebar` · `bg-sidebar-active` |
+| **Badge** | 20px høyde · 6px radius · fyll aksent-soft · tekst aksent-strong | `h-badge` · `rounded-badge` · `bg-accent-soft` · `text-accent-strong` (eller shadcn `<Badge>`) |
+| **Switch** | 24×14px track · 10px thumb · track følger aksent | `<Switch>` · `--ew-switch-*` |
+| **Tekst** | ink `#1d1d1f` · muted `#7a7a7a` | `text-fg` · `text-fg-muted` |
+| **Lyst (ONLY)** | parchment-side `#f5f5f7` · sidebar/kort `#ffffff` · valgt `#ededed` | `bg-bg` · `bg-sidebar` · `bg-sidebar-active` |
 
 **Lyst tema er låst** (`<html data-theme="light">`). Ingen ThemeToggle. Ingen bruker-sti til
 `[data-theme=dark]`. Token-fila kan fortsatt ha dark-blokken for widget; produktet bruker den ikke.
@@ -335,8 +333,8 @@ kallsted er en spec som brytes ved den femte bruken:
 
 | Fil | Avvik |
 |---|---|
-| `components/button.tsx` (shadcn) | `rounded-control` + `text-label` + `h-control` i stedet for `rounded-md`/`text-sm`/`h-9` |
-| `components/motion/button/base.tsx` (beUI) | `SIZE_CLASS` gir 32px + 10px radius i stedet for beUIs 40px pill |
+| `components/button.tsx` (shadcn) | `rounded-pill` på primær + `text-label` + `h-control` i stedet for `rounded-md`/`text-sm`/`h-9` |
+| `components/motion/button/base.tsx` (beUI) | `SIZE_CLASS` gir 32px; primær er pille-CTA, utility 8px |
 | `components/badge.tsx` (shadcn) | 20px høyde + 6px radius; `default`-varianten er spec-fargene |
 
 `shadcn add` kan fortsatt brukes for NYE komponenter — kun disse tre er rørt.
@@ -358,12 +356,12 @@ kallsted er en spec som brytes ved den femte bruken:
 ### 🎨 Merkevare-aksent
 
 **Logofargen er `#1ED27D`** (`apps/web/public/logo/logo.svg`). Den er merkevare i logoen,
-ikke UI-aksent. `--ew-accent` er **`#111111`** i lyst tema og **`#ffffff`** i mørkt
-(eierbeslutning 06.08.2026). Primærknapper bruker svart/hvit — ikke grønn, og ikke
-roadmap-rød `#EE2924`.
+ikke UI-aksent. `--ew-accent` er **Action Blue `#0066cc`** i lyst tema (02.09.2026,
+Mikael Apple) og **`#ffffff`** i mørkt. Primærknapper er blå piller. Mørk utility /
+Oppgrader / Ronny-paper kan være `#111` / `#1d1d1f`. Ikke grønn, ikke roadmap-rød `#EE2924`.
 
 `--ew-success` (`#15B042` / `#1ED27D` i mørkt) er informasjon, ikke knappfarge.
-`--ew-accent-soft` = **`#ededed`** i lyst tema (aksentfylt flate).
+`--ew-accent-soft` = **`#e8f1fb`** i lyst tema (aksentfylt flate).
 
 matrix-loaders fargelegges med `color="var(--ew-accent-strong)"` (se §4) — aldri med `colorPreset`,
 som er hardkodede farger fra oppstrøms.
@@ -456,7 +454,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Dine jobber / Timeplan-stripe / starttid / ferie-mock (`dine-jobber/`, `_shell/timeplan-stripe.tsx`, `bookinger/_starttid-velger.tsx`, `_shell/ferie-mock.tsx`, 29.08.2026 natt) | **Ingen ny pakke.** Jobb-bokser er `Link` + lucide `Bike`/`Sailboat` + `ChevronRight` til eksisterende `/min-dag/[id]`. Timeplan-piler er `ChevronLeft`/`ChevronRight`. Starttid er to native expander-knapper. Ferie er merket mock/kommer. |
 
-| Workshop-stripe (`_workshop/workshop-bloub.tsx` + `grainient.tsx`, 01.09.2026 kveld) | **Grainient** (§1). Telefon ~44px, desktop 32px. Hvit KI-Ronny midtstilt. **02.09.2026:** bunndock er AI Elements-navngitt `PromptInput` (textarea, Enter/Shift+Enter, Footer, Submit med eget `Send`-SVG). Forstørr/minimer er lokale SVG-er (ikke lucide Maximize2). Apple-grammatikk kun på dock (parchment `#f5f5f7`, hairline `#e0e0e0`, 18px radius, 44px runde ikonknapper, ingen skygge). Stripe forblir Grainient. Verktøy: `gåTil` (hviteliste) + `søkKunder`; `opprettBooking`/`søkJobber`/`åpneInnboks` parkert. ⛔ Model-picker, globe, vedlegg, andre Grainient. |
+| Workshop-stripe (`_workshop/workshop-bloub.tsx` + `grainient.tsx`, 01.09.2026 kveld) | **Grainient** (§1). Telefon ~44px, desktop 32px. Hvit KI-Ronny midtstilt. **02.09.2026:** bunndock er AI Elements-navngitt `PromptInput`. Forstørr/minimer lokale SVG-er. Apple-tokens gjelder hele appen (Action Blue, parchment, hairline, 18px-kort). Stripe forblir Grainient. Submit på Ronny er mørk utility `#111`. Verktøy: `gåTil` + `søkKunder`; skriv parkert. ⛔ Model-picker, globe, vedlegg, andre Grainient. |
 
 | Bot-lab (`apps/web/app/(app)/bot/`, F6-29, 31.08.2026) | **Ingen ny npm-pakke.** Runtime er vendorisert bloub-motor + `BloubBot`. Intern lab lever videre. Produkt-avatar er nå samme motor (se §10). |
 

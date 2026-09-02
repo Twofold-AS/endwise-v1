@@ -10,10 +10,17 @@ describe('mørk sidebakgrunn er bek', () => {
     expect(dark).not.toMatch(/--ew-bg:\s*#171717/);
   });
 
-  it('lyst --ew-bg og --ew-sidebar er #ffffff', () => {
+  it('lyst parchment-side, hvit sidebar og Action Blue-aksent', () => {
     const light = css.slice(0, css.indexOf('[data-theme="dark"]'));
-    expect(light).toMatch(/--ew-bg:\s*#ffffff/);
+    expect(light).toMatch(/--ew-bg:\s*#f5f5f7/);
     expect(light).toMatch(/--ew-sidebar:\s*#ffffff/);
+    expect(light).toMatch(/--ew-fg:\s*#1d1d1f/);
+    expect(light).toMatch(/--ew-accent:\s*#0066cc/);
+    expect(light).toMatch(/--ew-border:\s*#e0e0e0/);
+    expect(light).toMatch(/--ew-bevel-shadow:\s*none/);
+    expect(css).toMatch(/--ew-radius-xl:\s*18px/);
+    expect(css).toMatch(/--ew-radius-pill:\s*9999px/);
+    expect(css).toMatch(/--ew-radius-control:\s*8px/);
   });
 
   it('sidebar og kortflater er fortsatt løftet i mørkt', () => {

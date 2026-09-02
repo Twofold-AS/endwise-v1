@@ -5,7 +5,7 @@ import type * as React from 'react';
 
 /*
  * Avvik fra kanonisk shadcn: radius og høyder følger eierens
- * designprinsipper — 32px høyde, 10px radius, label-typografi (13/16 Medium)
+ * designprinsipper — 32px høyde, primær som pille-CTA, label-typografi (13/16)
  * i stedet for shadcns `rounded-md` + `text-sm` + `h-9`. Alt annet er urørt, så
  * `shadcn add` fortsatt kan brukes for nye komponenter.
  */
@@ -14,11 +14,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default: 'rounded-pill bg-primary text-primary-foreground hover:bg-primary/90',
         destructive:
           'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
         outline:
-          'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+          'border bg-background hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',

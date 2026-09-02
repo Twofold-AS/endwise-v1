@@ -31,7 +31,7 @@ type SlettSteg = 'advarsel' | 'bekreft';
 export default function ForhandlerePage() {
   const { isEndwiseAdmin } = useOrgRole();
   const utils = trpc.useUtils();
-  const liste = trpc.tenants.list.useQuery();
+  const liste = trpc.tenants.list.useQuery(undefined, { retry: false });
   const katalog = trpc.tenants.pakkeKatalog.useQuery(undefined, { enabled: isEndwiseAdmin });
   const entitlements = trpc.tenants.listModules.useQuery(undefined, { enabled: isEndwiseAdmin });
 
@@ -280,11 +280,7 @@ export default function ForhandlerePage() {
 
         {liste.isLoading ? (
           <p className="py-10 text-center text-body text-fg-muted">Laster …</p>
-        ) : liste.isError ? (
-          <CardShell className="p-6">
-            <p className="text-body text-danger">{liste.error.message}</p>
-          </CardShell>
-        ) : (liste.data?.length ?? 0) === 0 ? (
+        ) : liste.isError || (liste.data?.length ?? 0) === 0 ? (
           <CardShell className="p-10 text-center">
             <p className="text-label text-fg">Ingen forhandlere ennå</p>
             <p className="mt-1 text-[12px] text-fg-muted">Opprett den første i skjemaet over.</p>

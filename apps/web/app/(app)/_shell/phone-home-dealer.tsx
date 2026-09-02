@@ -26,7 +26,7 @@ import { PhoneKort } from './phone-kort';
  */
 export function PhoneHomeDealer() {
   const { shopEnabled, tenantName } = useOrgRole();
-  const kort = trpc.forhandler.kort.useQuery();
+  const kort = trpc.forhandler.kort.useQuery(undefined, { retry: false });
   const bookings = trpc.bookings.list.useQuery({ limit: 100 });
   const threads = trpc.messages.listThreads.useQuery();
   const customers = trpc.customers.list.useQuery({
@@ -71,7 +71,8 @@ export function PhoneHomeDealer() {
       {rader.map((rad) => {
         if (rad.keys[0] === 'verkstedet') {
           const dest = PHONE_KORT_META.verkstedet;
-          const forhandlernavn = tenantName?.trim() || kort.data?.name?.trim() || dest.label;
+          const kortNavn = kort.isError ? '' : (kort.data?.name?.trim() ?? '');
+          const forhandlernavn = tenantName?.trim() || kortNavn || dest.label;
           return (
             <PhoneKort
               key="verkstedet"

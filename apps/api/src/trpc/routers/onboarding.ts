@@ -34,6 +34,30 @@ import { adminProcedure, router } from '../init.ts';
  * Team-invitasjoner går via `invitasjoner.opprett` (F1-10 staff-check).
  */
 
+type TenantTx = Parameters<Parameters<typeof withTenant>[2]>[0];
+
+async function lesOrgNavn(tx: TenantTx, tenantId: string) {
+  const [org] = await tx
+    .select({
+      name: schema.organization.name,
+      slug: schema.organization.slug,
+    })
+    .from(schema.organization)
+    .where(eq(schema.organization.id, tenantId));
+  return org ?? null;
+}
+
+/** Status chrome kan forlate — veiviseren kan ikke skrive en manglende tenant. */
+export function onboardingStatusUtenTenant(visningsnavn: string) {
+  return {
+    complete: true,
+    visningsnavn,
+    nivaa: { key: 'start', name: 'Start' },
+    included: [] as Array<{ key: string; label: string }>,
+    optional: [] as Array<{ key: string; label: string; enabled: boolean }>,
+  };
+}
+
 const extrasSchema = z
   .array(z.string().min(1).max(64))
   .max(40)
@@ -59,6 +83,11 @@ export const onboardingRouter = router({
         })
         .from(schema.tenants)
         .where(eq(schema.tenants.id, ctx.tenantId));
+
+      if (!tenant) {
+        const org = await lesOrgNavn(tx, ctx.tenantId);
+        return onboardingStatusUtenTenant(org?.name ?? '');
+      }
 
       const rader = await tx
         .select({
@@ -180,7 +209,12 @@ export const onboardingRouter = router({
           .where(eq(schema.tenants.id, ctx.tenantId));
 
         if (!tenant) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+          const org = await lesOrgNavn(tx, ctx.tenantId);
+          return {
+            visningsnavn: input.visningsnavn.trim() || org?.name || '',
+            granted: [] as string[],
+            complete: true,
+          };
         }
         if (tenant.onboardingCompletedAt) {
           throw new TRPCError({

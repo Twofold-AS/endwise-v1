@@ -68,6 +68,14 @@ describe('chrome-first first-paint', () => {
     );
   });
 
+  it('dashboard blokkerer ikke Verksted på forhandler.kort-feil', () => {
+    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    expect(dash).toMatch(/forhandler\.kort\.useQuery\([\s\S]*retry:\s*false/);
+    expect(dash).toMatch(/kort\.isError/);
+    const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
+    expect(layout).toMatch(/!needsOnboarding && pathname\.startsWith\('\/oppstart'\)/);
+  });
+
   it('LiveSync venter med stream.* til session.me har svart', () => {
     const sync = utenKommentarer(les('../app/(app)/_lib/live-sync.tsx'));
     expect(sync).toMatch(/session\.me\.useQuery/);

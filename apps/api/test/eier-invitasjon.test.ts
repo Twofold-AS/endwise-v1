@@ -114,6 +114,16 @@ describe('F5-26 — shop kan ikke tildeles', () => {
     );
   });
 
+  it('onboarding.fullfor 404-er ikke når tenants-rad mangler', async () => {
+    const kilde = await import('node:fs').then((fs) =>
+      fs.readFileSync(new URL('../src/trpc/routers/onboarding.ts', import.meta.url), 'utf8'),
+    );
+    expect(kilde).toMatch(/onboardingStatusUtenTenant/);
+    expect(kilde).not.toMatch(
+      /throw new TRPCError\(\{\s*code: 'NOT_FOUND',\s*message: 'Fant ikke forhandleren'/,
+    );
+  });
+
   it('onboarding.fullfor avviser shop i extras', async () => {
     const eier = appRouter.createCaller(
       ctx({} as never, 'dealer_admin', '00000000-0000-0000-0000-000000000001'),

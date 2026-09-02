@@ -7,8 +7,14 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const SHARP = path.resolve('node_modules/.pnpm/sharp@0.34.5/node_modules/sharp');
-const sharp = require(SHARP);
+const { createRequire } = require('node:module');
+const sharpDir = fs
+  .readdirSync(path.resolve('node_modules/.pnpm'))
+  .find((navn) => navn.startsWith('sharp@'));
+if (!sharpDir) throw new Error('sharp ligger ikke i pnpm-storen — kjør pnpm install');
+const sharp = createRequire(
+  path.resolve('node_modules/.pnpm', sharpDir, 'node_modules/sharp/package.json'),
+)('sharp');
 
 const KILDE = 'apps/web/public/logo/logo.svg';
 const UT_PNG = 'apps/web/public/logo/logo-epost.png';
@@ -25,10 +31,10 @@ svg = svg.replace(/<metadata>[\s\S]*?<\/metadata>/, '');
 
 /**
  * Pathene i logo.svg har ingen `fill`, så de rasteriseres som svarte.
- * E-postlogoen skal ligge på en mørk flate (se `epost-mal.ts`), så den må
- * være hvit — ellers er den usynlig nøyaktig der den skal stå.
+ * E-postlogoen ligger på hvit canvas (Mikael Apple-lås, se `epost-mal.ts`),
+ * så den må være ink `#1d1d1f` — samme som logoen på `/signin`.
  */
-svg = svg.replace(/<path /g, '<path fill="#FFFFFF" ');
+svg = svg.replace(/<path /g, '<path fill="#1d1d1f" ');
 
 (async () => {
   const png = await sharp(Buffer.from(svg))
@@ -46,7 +52,7 @@ svg = svg.replace(/<path /g, '<path fill="#FFFFFF" ');
  * Endwise-logoen som PNG, base64, for e-post. **Generert fil — ikke rediger.**
  *
  * Lages av \`scripts/lag-logo-png.js\` fra \`apps/web/public/logo/logo.svg\`.
- * ${BREDDE}×${HOYDE} px (2× av visningsstørrelsen 32×40), hvit, gjennomsiktig bakgrunn.
+ * ${BREDDE}×${HOYDE} px (2× av visningsstørrelsen 32×40), ink #1d1d1f, gjennomsiktig bakgrunn.
  *
  * Hvorfor base64 HER og ikke i \`<img src="data:…">\`
  * De to er ikke det samme. Gmail og Outlook **fjerner** \`data:\`-URI-er i

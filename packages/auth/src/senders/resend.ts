@@ -107,7 +107,6 @@ export async function sendEmail(input: {
   return data?.id;
 }
 
-
 /**
  * Lokal leveranse av engangskoden.
  * Problemet dette løser
@@ -240,7 +239,6 @@ export async function sendPasswordReset(_input?: {
 }): Promise<never> {
   throw new Error('Passordreset er stengt. Innlogging er magic link + TOTP.');
 }
-
 
 /**
  * Invitasjonslenke.
@@ -428,7 +426,7 @@ export async function sendByttEpostBekreftelse(input: {
   }
 
   const fotnote =
-    'Har du ikke bedt om å bytte e-post, kan noen ha passordet ditt. Bytt det med én gang, og se bort fra lenken — adressen din er uendret.';
+    'Har du ikke bedt om å bytte e-post, se bort fra lenken — adressen din er uendret.';
 
   await sendEmail({
     to: input.to,

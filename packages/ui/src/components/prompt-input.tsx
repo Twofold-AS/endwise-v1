@@ -89,7 +89,7 @@ export function PromptInputTextarea({
       onCompositionStart={() => setComposing(true)}
       onCompositionEnd={() => setComposing(false)}
       className={cn(
-        'field-sizing-content max-h-36 min-h-8 w-full resize-none bg-transparent px-3 py-2 text-body text-fg outline-none placeholder:text-fg-muted disabled:opacity-50',
+        'field-sizing-content max-h-36 min-h-8 w-full resize-none bg-transparent px-3 py-2 text-label text-fg outline-none placeholder:text-label placeholder:text-fg-muted disabled:opacity-50',
         className,
       )}
       {...props}
@@ -126,7 +126,7 @@ export function PromptInputSubmit({
       aria-label={busy ? 'Sender' : 'Send'}
       disabled={busy || disabled}
       className={cn(
-        'inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#111] text-white transition-opacity hover:opacity-90 disabled:opacity-40',
+        'inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#0066cc] text-white transition-opacity hover:opacity-90 disabled:opacity-40',
         className,
       )}
       {...props}

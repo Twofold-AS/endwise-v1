@@ -79,3 +79,31 @@ body {
   animation: ronny-spin 0.7s ease-in-out;
   transform-style: preserve-3d;
 }
+
+/*
+ * shadcn Conversation/Shimmer er ikke hentet (UI-PAKKER §7).
+ * Samme shimmer-mønster (gradient + bg-clip-text) på tenke-teksten,
+ * i takt med BloubBot state=thinking — ikke en ekstra spinner.
+ */
+@keyframes ronny-tenker-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.ronny-tenker-tekst {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--muted-foreground) 55%, transparent) 0%,
+    var(--foreground) 45%,
+    color-mix(in srgb, var(--muted-foreground) 55%, transparent) 90%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: ronny-tenker-shimmer 1.4s ease-in-out infinite;
+}

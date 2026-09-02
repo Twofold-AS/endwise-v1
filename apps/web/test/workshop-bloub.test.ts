@@ -58,8 +58,11 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/Grainient/);
     expect(fab).toMatch(/h-11 max-h-\[44px\]/);
     expect(fab).toMatch(/md:h-control md:max-h-\[32px\]/);
-    expect(fab).toMatch(/rounded-b-\[18px\]/);
+    expect(fab).toMatch(/rounded-\[18px\]/);
     expect(fab).toMatch(/const RAMME_PX = 18/);
+    expect(fab).toMatch(/cubic-bezier\(0\.32,\s*0\.72,\s*0,\s*1\)/);
+    expect(fab).not.toMatch(/ease-out/);
+    expect(fab).not.toMatch(/translate-y/);
     expect(fab).toMatch(/grid-template-rows/);
     expect(fab).toMatch(/const STRIP_BOT = 28/);
     expect(fab).toMatch(/const IDLE_MS = 5000/);
@@ -102,7 +105,11 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-composer/);
     expect(fab).toMatch(/data-ronny-peek/);
     expect(fab).toMatch(/data-ronny-peek-svar/);
-    expect(fab).toMatch(/sisteAssistentTekst/);
+    expect(fab).toMatch(/sisteTurTekst/);
+    expect(fab).toMatch(/Ronny tenker/);
+    expect(fab).toMatch(/data-ronny-tenker/);
+    expect(fab).toMatch(/ronny-tenker-tekst/);
+    expect(fab).not.toMatch(/Ronny skriver/);
     expect(fab).toMatch(/RonnyHandtak/);
     expect(pil).toMatch(/data-ronny-strek/);
     expect(pil).toMatch(/RonnyHandtak/);
@@ -130,14 +137,17 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab.indexOf('data-ronny-handtak-rad')).toBeGreaterThan(
       fab.indexOf('data-ronny-kort-padding'),
     );
-    expect(fab).toMatch(/rounded-t-none/);
-    expect(fab).toMatch(/rounded-b-\[18px\]/);
-    expect(fab).toMatch(/borderTopLeftRadius:\s*0/);
-    expect(fab).toMatch(/rounded-none/);
+    expect(fab).not.toMatch(/rounded-t-none/);
+    expect(fab).toMatch(/rounded-\[18px\]/);
+    expect(fab).not.toMatch(/borderTopLeftRadius:\s*0/);
+    expect(fab).not.toMatch(/rounded-none/);
     expect(fab).toMatch(/data-ronny-kort-padding/);
+    expect(fab).toMatch(/data-ronny-kort-padding[\s\S]{0,280}pt-1/);
+    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,80}pb-1\.5/);
+    expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}bg-transparent/);
+    expect(fab).not.toMatch(/data-ronny-svar-kort[\s\S]{0,160}bg-\[#fff\]/);
     expect(fab).toMatch(/max-w-\[1120px\]/);
     expect(fab).toMatch(/md:px-8/);
-    expect(fab).toMatch(/translate-y/);
     expect(fab).toMatch(/opacity-100/);
     expect(fab).toMatch(/bg-transparent/);
     expect(fab).toMatch(/cursor-grab/);
@@ -172,6 +182,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/placeholder="Spør Ronny/);
     expect(fab).toMatch(/setPromptTekst\(''\)/);
     expect(fab).toMatch(/data-ronny-prompt-linje/);
+    expect(fab).not.toMatch(/data-ronny-prompt-linje[\s\S]{0,80}border-b/);
+    expect(fab).toMatch(/utvidet \? null/);
     expect(fab).toMatch(/norskChatFeil/);
     expect(fab).not.toMatch(/Noe gikk galt\. Prøv igjen\./);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
@@ -190,6 +202,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(css).not.toMatch(/rotateX/);
     expect(css).toMatch(/rotateY\(360deg\)/);
     expect(css).toMatch(/ronny-spin/);
+    expect(css).toMatch(/ronny-tenker-shimmer/);
+    expect(css).toMatch(/ronny-tenker-tekst/);
     expect(fab).toMatch(/data-workshop-cluster/);
     expect(fab).toMatch(/absolute inset-0/);
     expect(fab).toMatch(/items-center/);

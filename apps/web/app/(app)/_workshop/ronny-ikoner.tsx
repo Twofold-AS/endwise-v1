@@ -1,7 +1,7 @@
 /**
  * Pil fra `packages/ui/src/assets/icons/chevron-down.svg`
  * (identisk path i `icons-v2/arrow-dropdown.svg`).
- * Samme asset for stripe-pil og panel-håndtak; `opp` = rotate 180.
+ * Ikke brukt i stripen (Mikael 02.09.2026: avatar + tekst).
  * Ikke lucide. Ikke hjemmelaget chevron-path.
  */
 

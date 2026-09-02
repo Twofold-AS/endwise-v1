@@ -29,7 +29,7 @@ import { useSidebarState } from '../_shell/sidebar-state';
 import { erTillattGaaTil } from './gaa-til';
 import { GradualBlur } from './gradual-blur';
 import { norskChatFeil } from './norsk-chat-feil';
-import { RonnyHandtak, RonnyPil } from './ronny-ikoner';
+import { RonnyHandtak } from './ronny-ikoner';
 import { sidekontekst } from './sidekontekst';
 
 /** Får plass i desktop 32px og telefon ~44px uten sirkel-chip. */
@@ -51,8 +51,8 @@ const PEEK_MAX = 'min(36dvh, 16rem)';
 const BOBLE_TEKST = 'text-[14px] leading-snug md:text-body md:leading-relaxed';
 /** Samme hårlinje + 18px som prompt-kortet — idle-stripe og peek-panel. */
 const KORT_KANT = 'overflow-hidden rounded-[18px] border border-[#e0e0e0] shadow-none';
-/** Composer løftet fra skjermkant: safe-area + ekstra inset. */
-const COMPOSER_BUNN = 'calc(env(safe-area-inset-bottom) + 16px)';
+/** Safe-area er padding inne i prompt-baren, ikke et løft fra bunnkanten. */
+const COMPOSER_SAFE = 'max(6px, env(safe-area-inset-bottom))';
 const IDLE_TEKST = 'Trykk på KI-Ronny';
 const TENKER_TEKST = 'Ronny tenker…';
 
@@ -129,9 +129,9 @@ function skallHoyde(visning: RonnyVisning, visPeek: boolean): string {
 }
 
 /**
- * Peek (etter send): svar under stripen, composer-kort alene nederst,
- * siden synlig. Full-dekning kun via strek-ikonet (og samme ikon lukker
- * tilbake til peek). Tenking i stripe-tekst. Håndtak over input.
+ * Peek (etter send): svar under stripen, strek under boblen, prompt-bar
+ * flush nederst med eget Grainient. Siden synlig. Full-dekning kun via
+ * strek (samme ikon over prompt lukker til peek). Stripe = avatar + tekst.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -370,7 +370,7 @@ export function WorkshopBloub() {
           type="button"
           onClick={onTekstEllerPil}
           aria-expanded={apen}
-          className="flex min-w-0 items-center gap-1.5 bg-transparent text-white focus-visible:outline-2 focus-visible:outline-white"
+          className="flex min-w-0 items-center bg-transparent text-white focus-visible:outline-2 focus-visible:outline-white"
         >
           <span
             data-ronny-tenker={opptatt ? '' : undefined}
@@ -382,7 +382,6 @@ export function WorkshopBloub() {
           >
             {opptatt ? TENKER_TEKST : IDLE_TEKST}
           </span>
-          <RonnyPil size={14} opp={apen} />
         </button>
       </div>
     </div>
@@ -491,7 +490,11 @@ export function WorkshopBloub() {
   ) : null;
 
   const handtak = visHandtak ? (
-    <div data-ronny-handtak-rad className="flex justify-center pt-3 pb-2">
+    <div
+      data-ronny-handtak-rad
+      data-ronny-handtak-sted={utvidet ? 'prompt' : 'peek'}
+      className="flex justify-center pt-3 pb-2"
+    >
       <button
         type="button"
         data-ronny-utvid
@@ -591,6 +594,7 @@ export function WorkshopBloub() {
                           className="flex flex-col overflow-hidden bg-transparent pt-0.5 pb-1 text-[#1d1d1f]"
                         >
                           {visPeek ? loggUtsnitt : null}
+                          {visPeek ? handtak : null}
                         </div>
                       </div>
                     </div>
@@ -640,21 +644,26 @@ export function WorkshopBloub() {
           ref={composerRef}
           data-ronny-composer
           className="fixed inset-x-0 bottom-0 z-[70] w-full shadow-none"
-          style={{ paddingBottom: COMPOSER_BUNN }}
         >
           {utvidet ? (
-            <div className="relative w-full px-3">
+            <div className="relative w-full">
               {handtak}
-              <div className="pt-1.5 pb-1.5">{promptKort}</div>
-            </div>
-          ) : (
-            <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
-              <div className={`relative ${KORT_KANT}`}>
+              <div data-ronny-prompt-flate className="relative w-full">
                 <div className="pointer-events-none absolute inset-0" aria-hidden>
                   <Grainient className="absolute inset-0 h-full w-full" />
                 </div>
-                <div className="relative px-3 pt-1.5 pb-1.5">
-                  {handtak}
+                <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
+                  {promptKort}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
+              <div data-ronny-prompt-flate className={`relative ${KORT_KANT}`}>
+                <div className="pointer-events-none absolute inset-0" aria-hidden>
+                  <Grainient className="absolute inset-0 h-full w-full" />
+                </div>
+                <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
                   {promptKort}
                 </div>
               </div>

@@ -49,7 +49,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(layout).not.toMatch(/bottom-tab|PhoneTab/);
   });
 
-  it('er én Grainient-boks med overlay-panel, idle-syklus og SVG-pil', () => {
+  it('er én Grainient-boks med overlay-panel, idle-syklus og strek-håndtak', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
     const pil = les('../app/(app)/_workshop/ronny-ikoner.tsx');
     const css = les('../app/globals.css');
@@ -93,7 +93,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/PromptInputFooter/);
     expect(fab).toMatch(/PromptInputSubmit/);
     expect(fab).not.toMatch(/PromptInputSelect|GlobeIcon|webSearch|model picker/);
-    expect(fab).toMatch(/RonnyPil/);
+    expect(fab).not.toMatch(/RonnyPil/);
+    expect(fab).not.toMatch(/<RonnyPil/);
     expect(pil).toMatch(/chevron-down\.svg/);
     expect(pil).toMatch(/arrow-dropdown\.svg/);
     expect(pil).toMatch(/M16\.2772 9\.74681/);
@@ -143,9 +144,12 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).not.toMatch(/rounded-none/);
     expect(fab).toMatch(/data-ronny-kort-padding/);
     expect(fab).toMatch(/data-ronny-kort-padding[\s\S]{0,280}pt-1/);
-    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,80}pt-3/);
-    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,80}pb-2/);
+    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,220}pt-3/);
+    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,220}pb-2/);
     expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]*px-6 py-1/);
+    expect(fab).toMatch(/data-ronny-handtak-sted=\{utvidet \? 'prompt' : 'peek'\}/);
+    expect(fab).toMatch(/visPeek \? loggUtsnitt : null[\s\S]{0,40}visPeek \? handtak : null/);
+    expect(fab).toMatch(/data-ronny-prompt-flate/);
     expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}pb-1/);
     expect(fab).toMatch(/VERKSTED_INNHOLD/);
     expect(fab).toMatch(/data-ronny-verksted-bredde/);
@@ -162,7 +166,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/position="bottom"/);
     expect(fab).toMatch(/phoneOpen/);
     expect(fab).toMatch(/KORT_KANT/);
-    expect(fab).toMatch(/COMPOSER_BUNN/);
+    expect(fab).toMatch(/COMPOSER_SAFE/);
+    expect(fab).not.toMatch(/COMPOSER_BUNN/);
     expect(fab).not.toMatch(/rounded-t-\[18px\]/);
     expect(fab).toMatch(/data-ronny-prompt-kort[\s\S]{0,160}py-1\.5/);
     expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}bg-transparent/);
@@ -202,8 +207,10 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
     expect(fab).toMatch(/data-ronny-composer[\s\S]{0,200}fixed inset-x-0 bottom-0/);
     expect(fab).toMatch(/data-ronny-composer[\s\S]{0,160}w-full/);
-    expect(fab).toMatch(/paddingBottom: COMPOSER_BUNN/);
-    expect(fab).toMatch(/safe-area-inset-bottom\) \+ 16px/);
+    expect(fab).toMatch(/paddingBottom: COMPOSER_SAFE/);
+    expect(fab).toMatch(/max\(6px, env\(safe-area-inset-bottom\)\)/);
+    expect(fab).not.toMatch(/safe-area-inset-bottom\) \+ 16px/);
+    expect(fab).not.toMatch(/data-ronny-composer[\s\S]{0,200}paddingBottom: COMPOSER_SAFE/);
     expect(fab).not.toMatch(/fixed right-3 bottom/);
     expect(fab).toMatch(/text-white/);
     expect(fab).toMatch(/data-workshop-sticky/);

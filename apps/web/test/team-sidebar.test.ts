@@ -37,13 +37,10 @@ describe('Jonas IA — forhandler sidebar', () => {
       'Innboks',
       'Timeplan',
       'Kunder',
+      'Tjenester',
+      'Organisasjon',
       'Lager',
       'Butikk',
-      'Samarbeid',
-      'Salg',
-      'Organisasjon',
-      'Hjelp',
-      'Bot',
     ]);
     for (const rad of FORHANDLER_NAV) {
       expect(rad.children).toBeUndefined();
@@ -70,9 +67,11 @@ describe('Jonas IA — forhandler sidebar', () => {
     expect(
       FORHANDLER_NAV.find((i) => i.key === 'organisasjon')?.pills?.map((p) => p.label),
     ).toEqual(['Oversikt', 'Ansatte', 'Abonnement', 'Integrasjoner']);
-    expect(FORHANDLER_NAV.find((i) => i.key === 'helpdesk')?.href).toBe('/support');
-    expect(FORHANDLER_NAV.find((i) => i.key === 'samarbeid')?.dividerBefore).toBe(true);
-    expect(FORHANDLER_NAV.find((i) => i.key === 'helpdesk')?.dividerBefore).toBe(true);
+    expect(FORHANDLER_NAV.some((i) => i.key === 'helpdesk')).toBe(false);
+    expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(false);
+    expect(FORHANDLER_NAV.some((i) => i.key === 'bot')).toBe(false);
+    expect(FORHANDLER_NAV.find((i) => i.key === 'tjenester')?.label).toBe('Tjenester');
+    expect(FORHANDLER_NAV.find((i) => i.key === 'tjenester')?.href).toBe('/prisliste');
     expect(FORHANDLER_NAV.some((i) => i.label === 'Forhandleren')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Organisasjon')).toBe(true);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Admin')).toBe(false);
@@ -97,7 +96,7 @@ describe('Jonas IA — forhandler sidebar', () => {
 });
 
 describe('Jonas IA — mekaniker og endwise', () => {
-  it('mekaniker-nav er Dine jobber / jobbene / lager / butikk / kompetanse / timeplan / hjelp / meg', () => {
+  it('mekaniker-nav er Dine jobber / jobbene / lager / butikk / kompetanse / timeplan / meg', () => {
     expect(MEKANIKER_NAV.map((i) => i.label)).toEqual([
       'Dine jobber',
       'Jobbene mine',
@@ -105,7 +104,6 @@ describe('Jonas IA — mekaniker og endwise', () => {
       'Butikk',
       'Kompetanse',
       'Timeplan',
-      'Hjelp',
       'Meg',
     ]);
     expect(MEKANIKER_NAV.find((i) => i.key === 'lager')?.pills?.map((p) => p.label)).toEqual([
@@ -159,7 +157,7 @@ describe('Jonas IA — breadcrumb og piller', () => {
       { label: 'Kalender' },
     ]);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Salg', href: '/prisliste' },
+      { label: 'Tjenester', href: '/prisliste' },
     ]);
     expect(breadcrumbFor('/organisasjon', 'seksjon=ansatte', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },
@@ -169,10 +167,8 @@ describe('Jonas IA — breadcrumb og piller', () => {
       { label: 'Lager', href: '/lager' },
       { label: 'Oversikt' },
     ]);
-    expect(breadcrumbFor('/support', '', 'forhandler')).toEqual([
-      { label: 'Hjelp', href: '/support' },
-    ]);
-    expect(PARKED_LABEL['/prisliste']).toBe('Salg');
+    expect(breadcrumbFor('/support', '', 'forhandler')).toEqual([{ label: 'Hjelp' }]);
+    expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');
   });
 
   it('ingen visningsvelger i sidebaren', () => {

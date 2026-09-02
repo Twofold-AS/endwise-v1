@@ -1,11 +1,7 @@
 /**
- * F1-26 / CWE-215 — skal seed-/demo-hintet på /signin vises?
- * Produksjon (`VERCEL_ENV=production` eller `NODE_ENV=production` uten
- * preview) skal aldri nevne `pnpm db:seed`, demo-kontoer eller passord.
- * Preview og lokal dev kan vise hintet. Sjekken er env, ikke en kommentar.
+ * F1-26 / CWE-215 — seed-/demo-hint på /signin.
+ * Alltid av: preview, prod og lokal. Ingen `pnpm db:seed`, ingen demo-konto.
  */
-export function visDemoHint(env: { NODE_ENV?: string; VERCEL_ENV?: string }): boolean {
-  if (env.VERCEL_ENV === 'production') return false;
-  if (env.NODE_ENV === 'production' && env.VERCEL_ENV !== 'preview') return false;
-  return true;
+export function visDemoHint(_env?: { NODE_ENV?: string; VERCEL_ENV?: string }): boolean {
+  return false;
 }

@@ -16,7 +16,6 @@ export function endwiseAdminUtfall(input: {
   role: string | null;
   twoFactorRequired?: boolean;
 }): EndwiseAdminUtfall {
-  if (input.twoFactorRequired) return 'two_factor';
   if (!input.userId) return 'signin';
   if (input.role !== 'endwise_admin' && input.role !== 'endwise_support') return 'forbidden';
   return 'ok';
@@ -24,7 +23,7 @@ export function endwiseAdminUtfall(input: {
 
 /**
  * Server-gate for layout. Kaster `redirect` før barn (KPI-tall) rendres.
- * Uten sesjon → `/signin`. 2FA-plikt → oppsett.
+ * Uten sesjon → `/signin`. TOTP er valgfri — uenrollert får inn.
  * Innlogget uten Endwise-rolle → `forbidden` (sesjonen beholdes).
  */
 export async function krevEndwiseAdminSide(): Promise<EndwiseAdminUtfall> {
@@ -41,7 +40,7 @@ export async function krevEndwiseAdminSide(): Promise<EndwiseAdminUtfall> {
   }
 
   if (utfall === 'ok') return 'ok';
-  if (utfall === 'two_factor') redirect('/2fa-oppsett' as Route);
+  if (utfall === 'two_factor') return 'ok';
   if (utfall === 'signin') redirect('/signin' as Route);
   return 'forbidden';
 }

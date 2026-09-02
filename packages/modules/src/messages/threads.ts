@@ -4,6 +4,7 @@ import {
   desc,
   eq,
   inArray,
+  or,
   schema,
   sql,
   withPlatformAdmin,
@@ -12,6 +13,39 @@ import {
 import { erPlattformTenant } from '../plattform/index.ts';
 import { visningsnavn } from '../profil/index.ts';
 import { publishEvent } from '../stream/publisher.ts';
+
+/** Utgående e-post per forfatter per minutt. Sperrer åpen send. */
+export const INBOX_SEND_MAX_PER_MINUTT = 10;
+
+/** CWE-770 — innboks-to må være kjent kunde hos forhandleren. */
+export class UkjentInnboksMottakerError extends Error {
+  readonly code = 'UNKNOWN_INBOX_DESTINATION';
+  constructor() {
+    super('Mottakeren er ikke en kjent kunde hos forhandleren.');
+  }
+}
+
+export async function erKjentKundeKontakt(
+  db: Database,
+  tenantId: string,
+  ref: string,
+): Promise<boolean> {
+  const n = ref.trim();
+  if (!n) return false;
+  const [rad] = await withTenant(db, tenantId, (tx) =>
+    tx
+      .select({ id: schema.customers.id })
+      .from(schema.customers)
+      .where(
+        and(
+          eq(schema.customers.tenantId, tenantId),
+          or(eq(schema.customers.email, n), eq(schema.customers.phone, n)),
+        ),
+      )
+      .limit(1),
+  );
+  return Boolean(rad);
+}
 
 export class NotAParticipantError extends Error {
   readonly code = 'NOT_A_PARTICIPANT';
@@ -100,6 +134,30 @@ export class PlatformSupportNoDealerAdminError extends Error {
   constructor() {
     super('Forhandleren har ingen leder å sende til ennå.');
   }
+}
+
+/** Inviter ansatt uten valgte ansatte. */
+export class TomInvitasjonError extends Error {
+  readonly code = 'EMPTY_INVITE';
+  constructor() {
+    super('Velg minst én ansatt å invitere.');
+  }
+}
+
+/** Systemlinje i den gamle tråden når en gruppe forkes ut. */
+export function forkSystemMelding(input: {
+  inviteeNames: string[];
+  newSubject: string | null;
+}): string {
+  const hvem =
+    input.inviteeNames
+      .map((n) => n.trim())
+      .filter(Boolean)
+      .join(', ') || 'flere ansatte';
+  const trad = input.newSubject?.trim();
+  return trad
+    ? `Samtalen ble utvidet med ${hvem}. Fortsett i «${trad}».`
+    : `Samtalen ble utvidet med ${hvem}. Fortsett i den nye gruppesamtalen.`;
 }
 
 /**
@@ -225,14 +283,41 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
 
     const [traad] = await withTenant(db, tenantId, (tx) =>
       tx
-        .select({ subject: schema.threads.subject })
+        .select({ subject: schema.threads.subject, externalRef: schema.threads.externalRef })
         .from(schema.threads)
         .where(eq(schema.threads.id, melding.threadId)),
     );
 
+    const mottaker = traad?.externalRef?.trim() ?? '';
+    if (!mottaker) {
+      await markerFeilet('Tråden har ingen kundeadresse å sende til.');
+      return;
+    }
+    if (!(await erKjentKundeKontakt(db, tenantId, mottaker))) {
+      await markerFeilet('Mottakeren er ikke en kjent kunde hos forhandleren.');
+      return;
+    }
+
+    const [teller] = await withTenant(db, tenantId, (tx) =>
+      tx
+        .select({ n: sql<number>`count(*)::int` })
+        .from(schema.messages)
+        .where(
+          and(
+            eq(schema.messages.authorId, melding.authorId),
+            eq(schema.messages.channel, 'email'),
+            sql`${schema.messages.createdAt} > now() - interval '1 minute'`,
+          ),
+        ),
+    );
+    if ((teller?.n ?? 0) > INBOX_SEND_MAX_PER_MINUTT) {
+      await markerFeilet('For mange e-poster. Vent ett minutt.');
+      return;
+    }
+
     try {
       const providerId = await kanaler.epost.send({
-        to: melding.externalRef ?? '',
+        to: mottaker,
         svarTil: avsender.epost,
         avsenderNavn: avsender.navn ?? 'Endwise',
         forhandler: forhandler?.navn ?? 'verkstedet',
@@ -282,6 +367,13 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       /** Kundens e-post/telefon i den eksterne kanalen. Kroken F6-16 henger på. */
       externalRef?: string | null;
     }) {
+      const kanal = input.channel ?? 'app';
+      const ref = input.externalRef?.trim() || null;
+      if ((kanal === 'email' || kanal === 'sms') && ref) {
+        if (!(await erKjentKundeKontakt(db, input.tenantId, ref))) {
+          throw new UkjentInnboksMottakerError();
+        }
+      }
       return withTenant(db, input.tenantId, async (tx) => {
         const [thread] = await tx
           .insert(schema.threads)
@@ -289,8 +381,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             tenantId: input.tenantId,
             kind: input.kind,
             subject: input.subject ?? null,
-            channel: input.channel ?? 'app',
-            externalRef: input.externalRef ?? null,
+            channel: kanal,
+            externalRef: ref,
           })
           .returning();
         if (!thread) throw new Error('Tråden ble ikke opprettet');
@@ -354,7 +446,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
          * å markere den `pending` for en levering som aldri kan skje.
          */
         const eksternKanal = input.channel ?? thread?.channel ?? 'app';
-        const mottaker = input.externalRef ?? thread?.externalRef ?? null;
+        /** Mottaker er alltid trådens external_ref — aldri klientens to. */
+        const mottaker = thread?.externalRef ?? null;
         const skalSendes =
           input.direction !== 'inbound' && eksternKanal === 'email' && Boolean(mottaker);
 
@@ -551,6 +644,74 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             target: [schema.threadParticipants.threadId, schema.threadParticipants.participantId],
           }),
       );
+    },
+
+    /**
+     * Mikael 02.09: Inviter ansatt FORKER en ny gruppesamtale.
+     * Gammel tråd og medlemsliste står urørt. Ny tråd kopierer kontekst
+     * (kind / subject / channel / externalRef / opprinnelige deltakere)
+     * pluss de inviterte. Ingen e-post.
+     */
+    async forkThread(input: {
+      tenantId: string;
+      threadId: string;
+      callerId: string;
+      inviteeIds: string[];
+      inviteeNames: string[];
+    }) {
+      const invitees = [...new Set(input.inviteeIds.filter((id) => id && id !== input.callerId))];
+      if (invitees.length === 0) throw new TomInvitasjonError();
+
+      return withTenant(db, input.tenantId, async (tx) => {
+        const [traad] = await tx
+          .select()
+          .from(schema.threads)
+          .where(eq(schema.threads.id, input.threadId));
+        if (!traad) throw new Error('Fant ikke tråden');
+        await assertParticipant(tx, input.threadId, input.callerId);
+
+        const gamle = await tx
+          .select({ id: schema.threadParticipants.participantId })
+          .from(schema.threadParticipants)
+          .where(eq(schema.threadParticipants.threadId, input.threadId));
+        const nyeIder = [...new Set([...gamle.map((g) => g.id), ...invitees, input.callerId])];
+
+        const [ny] = await tx
+          .insert(schema.threads)
+          .values({
+            tenantId: input.tenantId,
+            kind: traad.kind,
+            subject: traad.subject,
+            channel: traad.channel,
+            externalRef: traad.externalRef,
+          })
+          .returning();
+        if (!ny) throw new Error('Tråden ble ikke opprettet');
+
+        await tx.insert(schema.threadParticipants).values(
+          nyeIder.map((participantId) => ({
+            tenantId: input.tenantId,
+            threadId: ny.id,
+            participantId,
+          })),
+        );
+
+        await tx.insert(schema.messages).values({
+          tenantId: input.tenantId,
+          threadId: input.threadId,
+          authorId: input.callerId,
+          body: forkSystemMelding({
+            inviteeNames: input.inviteeNames,
+            newSubject: ny.subject,
+          }),
+        });
+        await tx
+          .update(schema.threads)
+          .set({ lastMessageAt: new Date() })
+          .where(eq(schema.threads.id, input.threadId));
+
+        return ny;
+      });
     },
 
     /**

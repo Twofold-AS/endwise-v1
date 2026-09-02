@@ -9,8 +9,19 @@ import {
   generiskAuthFeilForSti,
   TO_FAKTOR_DISABLE_STI,
   TO_FAKTOR_ENABLE_STI,
+  TO_FAKTOR_SEND_OTP_STI,
+  TO_FAKTOR_VERIFY_BACKUP_STI,
+  TO_FAKTOR_VERIFY_TOTP_STI,
 } from './bytt-passord.ts';
 import { eierLasForHook } from './eier-las-server.ts';
+import {
+  enrollSesjonFraKake,
+  slettAndreSesjoner,
+  verifiserFerskTotpMotHemmelighet,
+} from './enroll-server.ts';
+import { utlopFaktorKaker } from './faktor-kaker.ts';
+import { MAGIC_LINK_BE_OM_STI, MAGIC_LINK_CALLBACK, SIGN_OUT_STI } from './magic-link.ts';
+import { slettEldreMagicLinkTokens } from './magic-link-tokens.ts';
 import { skriv2faDisableAudit } from './to-faktor-server.ts';
 
 /**
@@ -25,6 +36,8 @@ const KREDENTIAL_STIER = new Set([
   TO_FAKTOR_ENABLE_STI,
   TO_FAKTOR_DISABLE_STI,
   BYTT_EPOST_STI,
+  TO_FAKTOR_VERIFY_TOTP_STI,
+  TO_FAKTOR_VERIFY_BACKUP_STI,
 ]);
 
 function merket<T extends object>(fn: T, id: string): T & { endwiseId: string } {
@@ -39,13 +52,6 @@ function feilkodeFraReturned(returned: unknown): string | undefined {
     return typeof code === 'string' ? code : undefined;
   }
   return undefined;
-}
-
-function passordFraBody(body: unknown): string | undefined {
-  if (typeof body !== 'object' || body === null) return undefined;
-  if (!('password' in body)) return undefined;
-  const verdi = (body as { password?: unknown }).password;
-  return typeof verdi === 'string' ? verdi : undefined;
 }
 
 function brukerIdFraHook(ctx: {
@@ -65,52 +71,82 @@ function brukerIdFraHook(ctx: {
 export const byttPassordForHook = merket(
   createAuthMiddleware(async (ctx) => {
     await eierLasForHook(ctx);
-    if (ctx.path === TO_FAKTOR_DISABLE_STI || ctx.path === BYTT_EPOST_STI) {
-      const password = passordFraBody(ctx.body);
-      if (password === undefined || password.trim().length === 0) {
-        throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
+    if (ctx.path === TO_FAKTOR_SEND_OTP_STI) {
+      throw new APIError('FORBIDDEN', {
+        message: 'E-postkode er ikke andre faktor.',
+        code: 'TWO_FACTOR_OTP_DISABLED',
+      });
+    }
+    if (ctx.path === TO_FAKTOR_DISABLE_STI) {
+      throw new APIError('FORBIDDEN', {
+        message: 'Tofaktor kan ikke slås av selv. Be en leder om å tilbakestille.',
+        code: 'TWO_FACTOR_DISABLE_FORBIDDEN',
+      });
+    }
+    if (ctx.path === TO_FAKTOR_ENABLE_STI) {
+      const innlogget = await getSessionFromCtx(ctx);
+      if (innlogget?.user?.id) return;
+      const enroll = await enrollSesjonFraKake(ctx);
+      if (!enroll) return;
+      return { context: { session: enroll } };
+    }
+    if (ctx.path === TO_FAKTOR_VERIFY_TOTP_STI || ctx.path === TO_FAKTOR_VERIFY_BACKUP_STI) {
+      const body = ctx.body;
+      if (typeof body !== 'object' || body === null) return;
+      const enroll = await enrollSesjonFraKake(ctx);
+      return {
+        context: {
+          body: {
+            ...body,
+            trustDevice: false,
+          },
+          ...(enroll ? { session: enroll } : {}),
+        },
+      };
+    }
+    if (ctx.path === SIGN_OUT_STI || ctx.path === MAGIC_LINK_BE_OM_STI) {
+      utlopFaktorKaker(ctx);
+    }
+    if (ctx.path === MAGIC_LINK_BE_OM_STI) {
+      const body = ctx.body;
+      if (typeof body !== 'object' || body === null) return;
+      const epost = 'email' in body && typeof body.email === 'string' ? body.email : '';
+      if (epost) await slettEldreMagicLinkTokens(epost);
+      return {
+        context: {
+          body: {
+            ...body,
+            callbackURL: MAGIC_LINK_CALLBACK,
+            errorCallbackURL: MAGIC_LINK_CALLBACK,
+          },
+        },
+      };
+    }
+    if (ctx.path === BYTT_EPOST_STI) {
+      /**
+       * E-postbytte er tostegs (bekreftelse til gammel + ny adresse).
+       * Passord er borte. TOTP må være på — ellers holder stjålet sesjon
+       * (etter magic link uten 2FA) til å peke kontoen mot en fremmed innboks.
+       */
+      const session = await getSessionFromCtx(ctx);
+      if (!session?.user?.id) {
+        throw new APIError('UNAUTHORIZED', { message: 'Unauthorized', code: 'UNAUTHORIZED' });
       }
-      if (ctx.path === BYTT_EPOST_STI) {
-        /**
-         * Session-middleware på `/change-email` kjører etter hooks.before.
-         * Uten `getSessionFromCtx` her er `ctx.context.session` tom, og
-         * `checkPassword` hoppes over — da holder det med en åpen sesjon
-         * pluss en vilkårlig passordstreng.
-         */
-        const session = await getSessionFromCtx(ctx);
-        const userId = session?.user?.id;
-        const check = (
-          ctx as {
-            context?: {
-              password?: { checkPassword?: (id: string, c: unknown) => Promise<unknown> };
-            };
-          }
-        ).context?.password?.checkPassword;
-        if (typeof userId !== 'string' || typeof check !== 'function') {
-          throw new APIError('UNAUTHORIZED', { message: 'Unauthorized', code: 'UNAUTHORIZED' });
-        }
-        try {
-          await check(userId, ctx);
-        } catch (error) {
-          if (erSkjultAuthFeilkode(feilkodeFraReturned(error))) {
-            throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
-          }
-          throw error;
-        }
+      if (session.user.twoFactorEnabled !== true) {
+        throw new APIError('FORBIDDEN', {
+          message: 'Tofaktor må være slått på før du bytter e-post.',
+          code: 'TWO_FACTOR_REQUIRED',
+        });
       }
+      await verifiserFerskTotpMotHemmelighet(ctx, session.user.id, ctx.body);
       return;
     }
-    if (ctx.path !== BYTT_PASSORD_STI) return;
-    const body = ctx.body;
-    if (typeof body !== 'object' || body === null) return;
-    return {
-      context: {
-        body: {
-          ...body,
-          revokeOtherSessions: true,
-        },
-      },
-    };
+    if (ctx.path === BYTT_PASSORD_STI) {
+      throw new APIError('FORBIDDEN', {
+        message: 'Passord er av. Innlogging er magic link + TOTP.',
+        code: 'PASSWORD_DISABLED',
+      });
+    }
   }),
   BYTT_PASSORD_FOR_HOOK_ID,
 );
@@ -120,20 +156,38 @@ export const byttPassordForHook = merket(
  * auth-feil i API-svaret. Valideringsfeil på det nye passordet
  * (`PASSWORD_TOO_SHORT` / `PASSWORD_TOO_LONG`) får stå: de lekker ikke
  * om det gamle var riktig.
- * På `/two-factor/disable` skriver en vellykket avslutting til
- * audit_log (F1-22). `db` er den samme instansen `createAuth` fikk
- * ikke en ny pool mot env.
+ * `/two-factor/disable` er FORBIDDEN i before-hook (Mons).
+ * Audit `two_factor.disabled` skrives av team-reset, ikke denne stien.
  */
 export function createByttPassordEtterHook(db?: Database) {
   return merket(
     createAuthMiddleware(async (ctx) => {
       if (!KREDENTIAL_STIER.has(ctx.path)) return;
-      if (erSkjultAuthFeilkode(feilkodeFraReturned(ctx.context.returned))) {
+      if (
+        ctx.path === BYTT_PASSORD_STI &&
+        erSkjultAuthFeilkode(feilkodeFraReturned(ctx.context.returned))
+      ) {
         throw new APIError('BAD_REQUEST', generiskAuthFeilForSti(ctx.path));
       }
-      if (ctx.path !== TO_FAKTOR_DISABLE_STI || !db) return;
       if (isAPIError(ctx.context.returned)) return;
       const userId = brukerIdFraHook(ctx);
+      if (
+        (ctx.path === TO_FAKTOR_VERIFY_TOTP_STI || ctx.path === TO_FAKTOR_VERIFY_BACKUP_STI) &&
+        userId
+      ) {
+        const token =
+          typeof ctx.context.session?.session?.token === 'string'
+            ? ctx.context.session.session.token
+            : typeof ctx.context.newSession?.session?.token === 'string'
+              ? ctx.context.newSession.session.token
+              : undefined;
+        try {
+          await slettAndreSesjoner(ctx, userId, token);
+        } catch (error) {
+          console.error('[auth] revokeOtherSessions etter TOTP feilet', error);
+        }
+      }
+      if (ctx.path !== TO_FAKTOR_DISABLE_STI || !db) return;
       if (!userId) return;
       try {
         await skriv2faDisableAudit(db, userId);

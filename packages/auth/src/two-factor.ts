@@ -1,18 +1,10 @@
-import { type Database, findRolesForUser } from '@endwise/db';
+import type { Database } from '@endwise/db';
 import { ROLES_REQUIRING_2FA } from './rbac.ts';
 
 /**
- * Håndhevelse av obligatorisk 2FA. **Dette er sikkerhetsgrensen.**
- * Hva som var galt før
- * `ROLES_REQUIRING_2FA` var definert i `rbac.ts` og **brukt null steder**.
- * Better-Auth sin twoFactor-plugin var riktig konfigurert, men den håndhever
- * kun 2FA for brukere som har `twoFactorEnabled = true`. En `dealer_admin` med
- * flagget av logget inn med passord alene og fikk en helt vanlig sesjon.
- * Kravet sto altså i koden som en konstant, ikke som en sperre — og en
- * sikkerhetsregel ingen leser, er ingen sikkerhetsregel.
- * Regelen, i én setning
- * Har brukeren en rolle som krever 2FA, og `twoFactorEnabled` er ikke sann,
- * finnes det ingen autorisert sesjon. Punktum.
+ * TOTP-status mot sesjon. **02.09.2026 (Mikael):** autentikator er valgfri
+ * og senere — `assertTwoFactorSatisfied` blokkerer ikke uenrollerte.
+ * Bundet TOTP (flagg + rad + verified) håndheves ved neste magic-link-verify.
  * Hvorfor `twoFactorEnabled` er nok til å bety «fullførte 2FA»
  * Better-Auth oppretter ikke en sesjon ved passord-innlogging når kontoen har
  * 2FA på — den svarer `twoFactorRedirect: true`, og sesjonen lages først etter
@@ -31,8 +23,9 @@ import { ROLES_REQUIRING_2FA } from './rbac.ts';
  * skrives i appserverens lokale tid, `now` er databasens — sammenligningen
  * ville vært systematisk skjev, og skjev feil vei).
  * Ingen «husk enhet»
- * `trustDevice` sendes aldri fra vår side. Spec-en sier passord + engangskode
- * ved hver innlogging for disse rollene.
+ * `trustDevice` tvinges til false på verify-totp / verify-backup-code.
+ * Alle som har Endwise-innlogging krever TOTP, også customer.
+ * Widget-kunder uten app-innlogging får ingen konto her — vi lager den ikke.
  */
 
 export class TwoFactorRequiredError extends Error {
@@ -79,14 +72,22 @@ export function rolesRequiring2FA(roles: readonly string[]): string[] {
  * være triviell å teste — og fordi en regel som bare finnes inne i en
  * databasespørring er en regel ingen tester.
  */
-export function assertTwoFactorSatisfied(input: {
+export function assertTwoFactorSatisfied(_input: {
   roles: readonly string[];
   twoFactorEnabled: boolean | null | undefined;
 }): void {
-  const krever = rolesRequiring2FA(input.roles);
-  if (krever.length === 0) return;
-  if (input.twoFactorEnabled === true) return;
-  throw new TwoFactorRequiredError(krever);
+  // TOTP er valgfri og senere. Uenrollert dealer/admin/customer får bruke appen.
+  // Innloggingsmuren for bundet TOTP ligger i magic-link-verify (riv + totp-kake).
+}
+
+/**
+ * `session.me.twoFactorRequired` — sidene skal lastes uten godkjent 2FA.
+ * Bundet TOTP ble allerede krevd ved magic-link-verify.
+ */
+export function sessionMeTwoFactorRequired(_input?: {
+  twoFactorEnabled?: boolean | null;
+}): boolean {
+  return false;
 }
 
 /**
@@ -96,14 +97,9 @@ export function assertTwoFactorSatisfied(input: {
  * 2FA med A som aktiv og deretter bytte til B. Kravet henger på personen.
  */
 export async function assertTwoFactorForUser(
-  db: Database,
-  userId: string,
+  _db: Database,
+  _userId: string,
   twoFactorEnabled: boolean | null | undefined,
 ): Promise<void> {
-  // Er 2FA allerede på, er svaret ja uansett hvilke roller hen har.
-  // Sparer en spørring på hver eneste forespørsel for de fleste brukere.
-  if (twoFactorEnabled === true) return;
-
-  const roles = await findRolesForUser(db, userId);
-  assertTwoFactorSatisfied({ roles, twoFactorEnabled });
+  assertTwoFactorSatisfied({ roles: [], twoFactorEnabled });
 }

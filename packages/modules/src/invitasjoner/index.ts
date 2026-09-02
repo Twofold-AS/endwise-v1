@@ -59,14 +59,12 @@ export function normaliserEpost(epost: string): string {
  * deretter invitert) må også sette passord — ellers feiler sign-in med
  * «Credential account not found».
  */
-export function inviteeKreverPassord(input: {
+export function inviteeKreverPassord(_input: {
   kind: Invitasjonskind;
   harBruker: boolean;
   harCredential: boolean;
 }): boolean {
-  if (input.kind === 'owner') return true;
-  if (!input.harBruker) return true;
-  return !input.harCredential;
+  return false;
 }
 
 export interface NyInvitasjon {

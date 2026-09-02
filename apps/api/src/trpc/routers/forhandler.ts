@@ -133,7 +133,7 @@ export const forhandlerRouter = router({
     hentForhandlerKort((fn) => withTenant(ctx.db, ctx.tenantId, fn), ctx.tenantId),
   ),
 
-  /** Les-kort for alle innloggede på tenanten — Grainient-hjem. */
+  /** Les-kort for alle innloggede på tenanten. */
   kort: protectedProcedure.query(({ ctx }) =>
     hentForhandlerKort((fn) => withTenant(ctx.db, ctx.tenantId, fn), ctx.tenantId),
   ),

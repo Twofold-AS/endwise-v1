@@ -9,15 +9,13 @@ export {
  * Hvor en fersk invitee skal etter ekte sesjon (passord + ev. 2FA).
  * Hard navigasjon (`location.assign`) skjer i kallstedet, ikke her.
  * Myk klientnavigasjon er dobbel-login-bugen.
- * `TWO_FACTOR_REQUIRED` slår `/oppstart` og `session.me.landing`.
- * Uferdig 2FA har ingen autorisert tRPC-sesjon — dashbordet laster ingenting.
+ * TOTP er valgfri. `TWO_FACTOR_REQUIRED` tvinger ikke `/2fa-oppsett`.
  */
 export function destinasjonEtterInvite(
   kind: 'owner' | 'staff' | 'platform',
   landing?: string | null,
-  feil?: string | null,
+  _feil?: string | null,
 ): string {
-  if (feil?.includes('TWO_FACTOR_REQUIRED')) return '/2fa-oppsett';
   if (kind === 'platform') return '/endwise';
   if (kind === 'owner') return '/oppstart';
   if (landing?.startsWith('/') && !landing.startsWith('//')) return landing;
@@ -34,8 +32,10 @@ export function trengerKodeSteg(input: {
   twoFactorRedirect?: boolean | null;
   feil?: string | null;
 }): boolean {
-  if (input.twoFactorRedirect === true) return true;
-  return Boolean(input.feil?.includes('TWO_FACTOR_REQUIRED'));
+  // twoFactorRedirect = already enrolled, pending TOTP after magic link.
+  // TWO_FACTOR_REQUIRED = not enrolled → landing, never a code wall.
+  if (input.feil?.includes('TWO_FACTOR_REQUIRED')) return false;
+  return input.twoFactorRedirect === true;
 }
 
 /** Trygg UI-tekst når `revokeOtherSessions` feiler etter invite-OTP. Ingen token. */

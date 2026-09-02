@@ -1,9 +1,10 @@
 /// <reference path="../md.d.ts" />
 import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
-import { schema, withTenant } from '@endwise/db';
+import { ilike, or, schema, withTenant } from '@endwise/db';
 import { tool } from 'ai';
 import { z } from 'zod';
 import { lagerVerktoy } from '../drift-innsikt/lager-verktoy.ts';
+import { erTillattGaaTil } from './gaa-til.ts';
 import instructions from './instructions.md?raw';
 
 /**
@@ -38,6 +39,61 @@ export const workshopAgent: AgentDefinition = {
           withTenant(context.db, context.tenantId, (tx) =>
             tx.select().from(schema.mechanics).limit(50),
           ),
+      }),
+      gåTil: tool({
+        description:
+          'Naviger til en kjent side i Endwise. Klienten åpner stien. Ingen eksterne URL-er.',
+        inputSchema: z.object({
+          href: z.string().max(200).describe('In-app-sti, f.eks. /kunder eller /innboks'),
+        }),
+        execute: async ({ href }) => {
+          if (!erTillattGaaTil(href)) {
+            return { ok: false, feil: 'Stien er ikke tillatt.' };
+          }
+          return { ok: true, href };
+        },
+      }),
+      søkKunder: tool({
+        description: 'Søk i forhandlerens kunder. Tenant-scopet. Returnerer navn og id.',
+        inputSchema: z.object({
+          sok: z.string().max(120).optional(),
+        }),
+        execute: async ({ sok }) => {
+          const q = sok?.trim();
+          const rader = await withTenant(context.db, context.tenantId, (tx) =>
+            tx
+              .select({
+                id: schema.customers.id,
+                navn: schema.customers.name,
+              })
+              .from(schema.customers)
+              .where(
+                q
+                  ? or(
+                      ilike(schema.customers.name, `%${q}%`),
+                      ilike(schema.customers.email, `%${q}%`),
+                    )
+                  : undefined,
+              )
+              .limit(8),
+          );
+          return { kunder: rader };
+        },
+      }),
+      opprettBooking: tool({
+        description: 'Opprett booking. Parkert — krever bekreftelse senere.',
+        inputSchema: z.object({}),
+        execute: async () => ({ status: 'kommer' as const }),
+      }),
+      søkJobber: tool({
+        description: 'Søk i jobber. Parkert — kommer.',
+        inputSchema: z.object({ sok: z.string().max(120).optional() }),
+        execute: async () => ({ status: 'kommer' as const }),
+      }),
+      åpneInnboks: tool({
+        description: 'Åpne innboks. Parkert — bruk gåTil med /innboks.',
+        inputSchema: z.object({}),
+        execute: async () => ({ status: 'kommer' as const }),
       }),
     };
   },

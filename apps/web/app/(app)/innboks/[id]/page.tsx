@@ -7,9 +7,14 @@ import {
   CircleUser,
   HumanHandoverNotice,
   MessageSquare,
+  PromptInput,
+  PromptInputBody,
+  PromptInputFooter,
+  type PromptInputMessage,
+  PromptInputSubmit,
+  PromptInputTextarea,
   RefreshCw,
   Sparkles,
-  StatefulButton,
 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
@@ -73,7 +78,6 @@ export default function TrådPage() {
   const threads = endwise ? platformThreads : dealerThreads;
   const messages = endwise ? platformMessages : dealerMessages;
 
-  const [body, setBody] = useState('');
   const [justEscalated, setJustEscalated] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -96,7 +100,6 @@ export default function TrådPage() {
   });
   const postDealer = trpc.messages.post.useMutation({
     onSuccess: () => {
-      setBody('');
       utils.messages.listMessages.invalidate({ threadId });
       utils.messages.listThreads.invalidate();
       lyd.sendt();
@@ -105,7 +108,6 @@ export default function TrådPage() {
   });
   const postPlatform = trpc.messages.postPlatformSupport.useMutation({
     onSuccess: () => {
-      setBody('');
       utils.messages.listPlatformSupportMessages.invalidate({ threadId });
       utils.messages.listPlatformSupport.invalidate();
       lyd.sendt();
@@ -207,11 +209,13 @@ export default function TrådPage() {
   const hasAgent = rows.some((m) => isAgent(m.authorId));
   const escalated = justEscalated || hasAgent;
 
-  function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    const text = body.trim();
+  function onPrompt(melding: PromptInputMessage, event: FormEvent<HTMLFormElement>) {
+    const text = melding.text.trim();
     if (!text) return;
-    post.mutate({ threadId, body: text });
+    post.mutate(
+      { threadId, body: text },
+      { onSuccess: () => event.currentTarget.reset() },
+    );
   }
 
   const motpartId =
@@ -388,31 +392,25 @@ export default function TrådPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Svarfelt. StatefulButton fordi dette endrer tilstand (ui-pakker §3). */}
-      <form onSubmit={onSubmit} className="flex items-end gap-2">
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onSubmit(e);
-          }}
-          rows={2}
-          maxLength={4000}
-          placeholder="Skriv et svar … (⌘/Ctrl + Enter sender)"
-          aria-label="Svar i tråden"
-          className="min-h-[56px] flex-1 resize-y rounded-control border border-border bg-bg px-3 py-2 text-body text-fg placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-ring"
-        />
-        <StatefulButton
-          type="submit"
-          state={post.isPending ? 'loading' : post.isError ? 'error' : 'idle'}
-          loadingText="Sender…"
-          successText="Sendt"
-          errorText="Feilet"
-          disabled={!body.trim()}
-        >
-          Send
-        </StatefulButton>
-      </form>
+      <PromptInput
+        onSubmit={onPrompt}
+        className="border-0 bg-transparent shadow-none"
+        aria-label="Svar i tråden"
+      >
+        <PromptInputBody className="min-w-0 flex-1">
+          <PromptInputTextarea
+            placeholder="Skriv et svar …"
+            maxLength={4000}
+            disabled={post.isPending}
+            className="bg-transparent text-label text-[#1d1d1f] placeholder:text-[#1d1d1f]/45"
+          />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputSubmit
+            status={post.isPending ? 'submitted' : post.isError ? 'error' : 'ready'}
+          />
+        </PromptInputFooter>
+      </PromptInput>
       {post.isError && <p className="text-[12px] text-danger">{post.error.message}</p>}
     </div>
   );

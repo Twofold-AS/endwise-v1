@@ -2,13 +2,24 @@
  * Telefon-chrome delt mellom hovedmeny og top-bar 2.
  * Logo-kolonnen er pinnest (ikke i scroll), så Oversikt/Timeplan
  * starter under valgt hovedpunkt — samme venstre-innfelt.
- * 22px = samme logo.svg-mål som sidebar-header.
+ * Logo 24px er merkevare. Toggle er IKKE logo — den matcher nav-ikonene.
  */
-export const PHONE_LOGO_PX = 22;
+export const SHELL_LOGO_PX = 24;
+export const PHONE_LOGO_PX = SHELL_LOGO_PX;
 
-/** pl-3 + 22px logo + gap-2. */
+/** Samme 16px som sidebar-rader (`IKON` i sidebar.tsx). PC-skinne og telefon. */
+export const SHELL_TOGGLE_PX = 16;
+
+/**
+ * Samme header-rad i lukket toppbar og åpen overlay — identisk høyde,
+ * venstre-innfelt og vertikal sentrering så logoen ikke hopper.
+ */
+export const SHELL_HEADER_RAD = 'flex h-row items-center gap-2 px-3';
+export const SHELL_LOGO_WRAP = 'flex shrink-0 items-center';
+
+/** pl-3 + 24px logo + gap-2. */
 export const PHONE_LOGO_KOLONNE =
-  'flex h-full w-[calc(0.75rem+22px+0.5rem)] shrink-0 items-center pl-3';
+  'flex h-full w-[calc(0.75rem+24px+0.5rem)] shrink-0 items-center pl-3';
 
 /** Horisontal scroll uten vertikal wiggle. */
 export const PHONE_H_SCROLL = 'overflow-x-auto overflow-y-hidden overscroll-y-none touch-pan-x';

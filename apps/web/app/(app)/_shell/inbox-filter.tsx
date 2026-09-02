@@ -1,27 +1,40 @@
 'use client';
 
-import { Inbox, LifeBuoy, type LucideIcon, Users, Wrench } from '@endwise/ui';
 import { createContext, type ReactNode, useContext, useState } from 'react';
+import type { InboxPart } from './inbox-del';
 
-/** Filter på lista — ikke egne destinasjoner. */
-export type InboxPart = 'alle' | 'customer_dealer' | 'mechanic_dealer' | 'dealer_admin';
+export type { InboxPart };
+export { INNBOKS_FILTERE } from './inbox-del';
 
-export const INNBOKS_FILTERE: { key: InboxPart; label: string; icon: LucideIcon }[] = [
-  { key: 'alle', label: 'Alle chatter', icon: Inbox },
-  { key: 'customer_dealer', label: 'Kunder', icon: Users },
-  { key: 'mechanic_dealer', label: 'Intern', icon: Wrench },
-  { key: 'dealer_admin', label: 'Endwise', icon: LifeBuoy },
-];
+export type InboxSortering = 'nyeste' | 'eldste';
 
 const InboxFilterContext = createContext<{
   part: InboxPart;
   setPart: (part: InboxPart) => void;
+  sortering: InboxSortering;
+  setSortering: (s: InboxSortering) => void;
+  skjulte: ReadonlySet<string>;
+  skjul: (id: string) => void;
+  skjulFlere: (ider: string[]) => void;
 } | null>(null);
 
 export function InboxFilterProvider({ children }: { children: ReactNode }) {
   const [part, setPart] = useState<InboxPart>('alle');
+  const [sortering, setSortering] = useState<InboxSortering>('nyeste');
+  const [skjulte, setSkjulte] = useState<ReadonlySet<string>>(() => new Set());
+  function skjul(id: string) {
+    setSkjulte((forrige) => new Set([...forrige, id]));
+  }
+  function skjulFlere(ider: string[]) {
+    if (ider.length === 0) return;
+    setSkjulte((forrige) => new Set([...forrige, ...ider]));
+  }
   return (
-    <InboxFilterContext.Provider value={{ part, setPart }}>{children}</InboxFilterContext.Provider>
+    <InboxFilterContext.Provider
+      value={{ part, setPart, sortering, setSortering, skjulte, skjul, skjulFlere }}
+    >
+      {children}
+    </InboxFilterContext.Provider>
   );
 }
 

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDb, type Database, eq, schema } from '@endwise/db';
@@ -225,7 +225,7 @@ describe('F1-17: herdingskravene', () => {
     );
   });
 
-  it('auth.ts bruker de navngitte hookene — ikke en anonym wrapper', () => {
+  it('auth.ts bruker de navngitte hookene — etter-hooken er magic-link + bytt-passord', () => {
     const opts = byggAuth().options;
     expect(opts.hooks?.before).toBe(byttPassordForHook);
     expect((opts.hooks?.after as { endwiseId?: string } | undefined)?.endwiseId).toBe(
@@ -233,20 +233,22 @@ describe('F1-17: herdingskravene', () => {
     );
     expect(byttPassordForHook.endwiseId).toBe(BYTT_PASSORD_FOR_HOOK_ID);
     expect(byttPassordEtterHook.endwiseId).toBe(BYTT_PASSORD_ETTER_HOOK_ID);
+    expect(opts.emailAndPassword?.enabled).toBe(false);
   });
 });
 
 describe('F1-17 / F1-20: UI lekker ikke API-orakelet', () => {
   const her = dirname(fileURLToPath(import.meta.url));
 
-  it('⛔ ByttPassordSkjema skiller ikke INVALID_PASSWORD fra annen API-feil', () => {
-    const kilde = readFileSync(
-      resolve(her, '../../../apps/web/app/(app)/_shell/bytt-passord.tsx'),
-      'utf8',
+  it('ByttPassordSkjema er fjernet — ingen passord-UI', () => {
+    expect(existsSync(resolve(her, '../../../apps/web/app/(app)/_shell/bytt-passord.tsx'))).toBe(
+      false,
     );
-    expect(kilde).toMatch(/BYTT_PASSORD_GENERISK_MELDING/);
-    expect(kilde).not.toMatch(/INVALID_PASSWORD/);
-    expect(kilde).not.toMatch(/Feil gjeldende passord/);
+    const felter = readFileSync(resolve(her, '../../../apps/web/app/_auth/felter.tsx'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/[^\n]*/g, '');
+    expect(felter).not.toMatch(/function PassordFelt|export function PassordFelt/);
+    expect(felter).not.toMatch(/current-password|new-password/);
   });
 
   it('2FA-påslag rives av databasetriggeren, ikke av klient-revoke', () => {
@@ -262,7 +264,8 @@ describe('F1-17 / F1-20: UI lekker ikke API-orakelet', () => {
 
 // Endepunktet, mot ekte database.
 const OWNER_URL = OPPRINNELIG.DATABASE_URL;
-const describeDb = OWNER_URL ? describe : describe.skip;
+/** Passord-API er av. change-password mot DB er ikke lenger en innloggingsvei. */
+const describeDb = OWNER_URL ? describe.skip : describe.skip;
 
 describeDb('F1-17: change-password mot ekte database', () => {
   let db: Database;

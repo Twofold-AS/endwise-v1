@@ -47,7 +47,7 @@ export function Avatar({ seed, bevegelse, navn, size = 28, valg, className }: Av
 
   return (
     <span
-      className={cn('inline-grid shrink-0 place-items-center overflow-hidden', className)}
+      className={cn('inline-grid shrink-0 place-items-center overflow-visible', className)}
       style={{ width: size, height: size }}
       title={navn || undefined}
     >

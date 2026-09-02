@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createDb } from '@endwise/db';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { organization, phoneNumber, twoFactor } from 'better-auth/plugins';
+import { magicLink, organization, phoneNumber, twoFactor } from 'better-auth/plugins';
 import { authTrustedOrigins } from './auth-origins.ts';
 import { BEKREFT_EPOST_STI, BYTT_EPOST_RATE_GRENSE, BYTT_EPOST_STI } from './bytt-epost.ts';
 import {
@@ -12,22 +12,23 @@ import {
   TO_FAKTOR_DISABLE_STI,
   TO_FAKTOR_ENABLE_STI,
 } from './bytt-passord.ts';
-import { byttPassordForHook, createByttPassordEtterHook } from './bytt-passord-server.ts';
+import { byttPassordForHook } from './bytt-passord-server.ts';
 import { authEnv } from './env.ts';
 import {
-  NYTT_PASSORD_STI,
-  PASSORD_RESET_TTL_SEKUNDER,
-  RESET_BE_OM_GRENSE,
-  RESET_BE_OM_STI,
-  RESET_SETT_GRENSE,
-  RESET_SETT_STI,
-} from './password-reset.ts';
+  genererMagicLinkKode,
+  MAGIC_LINK_BE_OM_GRENSE,
+  MAGIC_LINK_BE_OM_STI,
+  MAGIC_LINK_TTL_SEKUNDER,
+  MAGIC_LINK_VERIFY_GRENSE,
+  MAGIC_LINK_VERIFY_STI,
+} from './magic-link.ts';
+import { createAuthEtterHook } from './magic-link-2fa.ts';
 import { ac, roles } from './rbac.ts';
+import { erAuthDestinasjon } from './produkt-destinasjon.ts';
 import {
   sendByttEpostBekreftelse,
   sendByttEpostNyAdresse,
-  sendPasswordReset,
-  sendTwoFactorOtp,
+  sendMagicLink,
 } from './senders/resend.ts';
 import { sendPhoneOtp, verifyPhoneOtp } from './senders/twilio.ts';
 import {
@@ -70,92 +71,18 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
     trustedOrigins: authTrustedOrigins(),
 
     /**
-     * CWE-613 / CWE-209. Better-Auths `/change-password` behandler
-     * `revokeOtherSessions` som valgfri request-body (default `false`) og
-     * svarer `INVALID_PASSWORD` når det gjeldende passordet er feil.
-     * Hookene tvinger revoke og mapper auth-feil til én generisk kode.
-     * `byttPassordHull` er testen som gjør et bortfall her til rødt.
+     * Magic link + TOTP. Passord er av.
+     * Etter-hooken river sesjonen fra `/magic-link/verify` når 2FA er på,
+     * ellers holder stjålet innboks. `allowPasswordless` på twoFactor
+     * fordi credential-hashene tømmes.
      */
     hooks: {
       before: byttPassordForHook,
-      after: createByttPassordEtterHook(db),
+      after: createAuthEtterHook(db),
     },
 
     emailAndPassword: {
-      enabled: true,
-      requireEmailVerification: true,
-      minPasswordLength: 12,
-
-      /**
-       * F1-15 / F1-16 — passordreset. Grenseverdiene bor i `password-reset.ts`;
-       * `passordResetHull` er testen som gjør et bortfall her til en rød test.
-       * Hvorfor dette ikke er en vei rundt 2FA
-       * Better-Auths `/reset-password` setter **ingen sesjonscookie** — den
-       * bytter passordet og svarer `{ status: true }`, punktum (lest i
-       * `dist/api/routes/password.mjs`, v1.6.23; det finnes ikke et
-       * `setSessionCookie`-kall i handleren). Brukeren må derfor logge inn
-       * etterpå, og da gjelder F1-11 fullt ut: passord + engangskode.
-       * Det er en egenskap vi arver, ikke en vi har bygget — og arvet
-       * oppførsel kan endre seg i en minor. Derfor står den fast i
-       * `passord-reset.test.ts`, som feiler hvis en resett noen gang begynner
-       * å dele ut sesjoner.
-       * Den ekte svakheten står i `password-reset.ts`: andre faktor er en
-       * kode på e-post, og resetlenka går til samme innboks. Reset gjør det
-       * ikke verre, men løser det heller ikke. F1-21 og F1-24 gjør.
-       */
-      sendResetPassword: async ({ user, token }) => {
-        /**
-         * Vi bygger lenka selv i stedet for å bruke `url`-argumentet.
-         * Better-Auths `url` peker på `/api/auth/reset-password/:token`, som
-         * er et redirect-endepunkt: det slår opp tokenet, og sender deretter
-         * brukeren videre til `callbackURL` med tokenet på query-strengen.
-         * Det ekstra hoppet kjøper oss ingenting — vi validerer uansett i det
-         * `POST /reset-password` konsumerer tokenet — og det koster et ledd
-         * til der tokenet står i en URL, altså et ledd til der det kan havne
-         * i en referrer eller en proxylogg.
-         * Én lenke, rett til sida som spør om passordet.
-         */
-        const lenke = new URL(NYTT_PASSORD_STI, authEnv.baseUrl);
-        lenke.searchParams.set('token', token);
-
-        await sendPasswordReset({
-          to: user.email,
-          lenke: lenke.toString(),
-          utloper: new Date(Date.now() + PASSORD_RESET_TTL_SEKUNDER * 1000),
-        });
-      },
-
-      /** 30 minutter. Begrunnelsen står i `password-reset.ts`. */
-      resetPasswordTokenExpiresIn: PASSORD_RESET_TTL_SEKUNDER,
-
-      /**
-       * Better-Auths default er `false`, og default er feil her.
-       * Den vanligste grunnen til at noen tilbakestiller passordet sitt er at
-       * de tror kontoen er kompromittert. Uten dette flagget beholder
-       * angriperens eksisterende sesjon full tilgang etter resetten — offeret
-       * har «tatt tilbake» kontoen og ingenting har skjedd. Byttet passord
-       * ville da vært en trøstehandling, ikke en sikring.
-       * Prisen er at brukeren selv også logges ut overalt. Det er riktig
-       * pris, og e-posten sier det på forhånd.
-       */
-      revokeSessionsOnPasswordReset: true,
-
-      /**
-       * Ikke en sperre — sperren over er `revokeSessionsOnPasswordReset`.
-       * Dette er sporet: en passordendring skal være synlig i driftsloggen.
-       * Ingen rad i `audit_log`, og det er et bevisst valg. Tabellen har
-       * `tenant_id NOT NULL` med referanse til `tenants` (F1-06), mens en
-       * passordreset er en hendelse på en global identitet: brukeren kan høre
-       * til null forhandlere eller flere. Å velge én tenant ville vært å finne
-       * på et svar, og å skrive én rad per medlemskap er en beslutning om hva
-       * en forhandler har krav på å se om en person — den hører hjemme i F5-05,
-       * ikke i en fiks som skulle gi folk passordet tilbake.
-       * Aldri e-post, token eller passord her. En driftslogg er ikke en
-       * hemmelighet — den leses av flere og lever lenger enn hendelsen.
-       */
-      onPasswordReset: async ({ user }) => {
-        console.warn(`[auth] passord tilbakestilt for bruker ${user.id} — alle sesjoner revokert`);
-      },
+      enabled: false,
     },
 
     /**
@@ -232,26 +159,8 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
       customRules: {
         '/phone-number/send-otp': { window: 60, max: 3 },
         '/phone-number/verify': { window: 60, max: 5 },
-        '/two-factor/send-otp': { window: 60, max: 3 },
-        '/sign-in/email': { window: 60, max: 5 },
-
-        /**
-         * F1-15 / F1-16 — passordreset.
-         * Disse to MÅ stå eksplisitt selv om Better-Auth har en egen
-         * standardregel for `/request-password-reset` (60s/3). `customRules`
-         * vinner over standardreglene (rate-limiter/index.mjs: special →
-         * plugin → custom), så uten en oppføring her arver vi 3 per minutt =
-         * 180 i timen. Se `password-reset.ts` for hvorfor det er for slakt.
-         */
-        [RESET_BE_OM_STI]: { ...RESET_BE_OM_GRENSE },
-        [RESET_SETT_STI]: { ...RESET_SETT_GRENSE },
-
-        /**
-         * CWE-307. Better-Auth har ingen egen standardregel for
-         * `/change-password`. Uten denne oppføringen arver stien den slakke
-         * globalen (60/min) og blir et orakel for gjetting av gjeldende
-         * passord. `enable`/`disable` sjekker passord på samme måte.
-         */
+        [MAGIC_LINK_BE_OM_STI]: { ...MAGIC_LINK_BE_OM_GRENSE },
+        [MAGIC_LINK_VERIFY_STI]: { ...MAGIC_LINK_VERIFY_GRENSE },
         [BYTT_PASSORD_STI]: { ...BYTT_PASSORD_RATE_GRENSE },
         [TO_FAKTOR_ENABLE_STI]: { ...KREDENTIAL_MUTASJON_RATE_GRENSE },
         [TO_FAKTOR_DISABLE_STI]: { ...KREDENTIAL_MUTASJON_RATE_GRENSE },
@@ -272,15 +181,34 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
         verifyOTP: async ({ phoneNumber: to, code }) => verifyPhoneOtp(to, code),
       }),
 
-      // Obligatorisk e-post-2FA. Ingen bypass, ingen «husk enhet»:
-      // trustDevice settes aldri fra vår side. Sesjons-ID roteres av pluginen
-      // ved fullført 2FA (CWE-384).
+      // Magic link (innboks) + TOTP-app. Ingen e-post-OTP — da holder
+      // stjålet mailbox. allowPasswordless: credential-hashene er tømt.
+      // Ingen sendOTP → otp kommer ikke med i twoFactorMethods.
       twoFactor({
         issuer: 'Endwise',
-        otpOptions: {
-          async sendOTP({ user, otp }) {
-            await sendTwoFactorOtp(user.email, otp);
-          },
+        allowPasswordless: true,
+        skipVerificationOnEnable: false,
+      }),
+
+      magicLink({
+        expiresIn: MAGIC_LINK_TTL_SEKUNDER,
+        disableSignUp: true,
+        storeToken: 'hashed',
+        generateToken: async () => genererMagicLinkKode(),
+        rateLimit: MAGIC_LINK_BE_OM_GRENSE,
+        sendMagicLink: async ({ email, url, token }) => {
+          /**
+           * CWE-770 — klientens `email` er ikke en destinasjon.
+           * Resend fyrer bare hvis adressen allerede er en Endwise-bruker.
+           * Ukjent: stille return (samme 200, ingen enumerering).
+           */
+          if (!(await erAuthDestinasjon(db, email))) return;
+          await sendMagicLink({
+            to: email,
+            lenke: url,
+            kode: token,
+            utloper: new Date(Date.now() + MAGIC_LINK_TTL_SEKUNDER * 1000),
+          });
         },
       }),
 

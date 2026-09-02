@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "@endwise/ui/theme.css";
+@import "@endwise/ui/grainient.css";
+@import "@endwise/ui/galaxy.css";
 /*
  * matrix-loaders (ui-pakker.md §4) er ren CSS-animasjon: komponentene setter
  * bare klasser og CSS-variabler, keyframene bor i pakkens egen `styles.css`.
@@ -8,7 +10,6 @@
  * @source-fiksen under. Tatt i bruk første gang på AI-diagnose (F6-04).
  */
 @import "@endwise/ui/matrix-loaders.css";
-@import "@endwise/ui/grainient.css";
 
 /*
  * Tailwind v4 skanner som standard ikke workspace-pakker (de ligger via
@@ -39,4 +40,21 @@ body {
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* KI-Ronny: horisontal spinn (rotateY) ved klikk — ryggen synlig, ikke vertikal flip. */
+[data-ronny-stage] {
+  perspective: 64px;
+}
+@keyframes ronny-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+[data-ronny-spin] {
+  animation: ronny-spin 0.7s ease-in-out;
+  transform-style: preserve-3d;
 }

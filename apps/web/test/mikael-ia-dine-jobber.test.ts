@@ -7,8 +7,6 @@ import {
   adresseLinje,
   FERIE_MOCK,
   formatLeftoverVerdi,
-  GRAINIENT_LYS,
-  GRAINIENT_MORK,
   kjoretoyIkon,
   visKortFelt,
 } from '../app/(app)/_shell/forhandler-kort.ts';
@@ -56,7 +54,6 @@ describe('Dine jobber erstatter Min dag', () => {
       'Butikk',
       'Kompetanse',
       'Timeplan',
-      'Hjelp',
       'Meg',
     ]);
     expect(MEKANIKER_NAV[0]?.href).toBe('/dine-jobber');
@@ -75,7 +72,7 @@ describe('Dine jobber erstatter Min dag', () => {
     expect(hjem).not.toMatch(/Min dag/);
     expect(hjem).not.toMatch(/Detaljer/);
     expect(hjem).not.toMatch(/aria-expanded/);
-    expect(hjem).toMatch(/ForhandlerGrainientKort|forhandler-grainient/);
+    expect(hjem).toMatch(/ForhandlerInfoKort|forhandler-info/);
     expect(hjem).toMatch(/DineJobberHjemKort/);
     expect(erMekanikerPhoneHjem('/min-dag')).toBe(true);
     expect(erMekanikerPhoneHjem('/dine-jobber')).toBe(false);
@@ -86,7 +83,7 @@ describe('Dine jobber erstatter Min dag', () => {
     const flate = utenKommentarer(les('../app/(app)/dine-jobber/_flate.tsx'));
     const rad = utenKommentarer(les('../app/(app)/dine-jobber/_rad.tsx'));
     expect(side + flate).toMatch(/Dine jobber/);
-    expect(flate).toMatch(/ForhandlerGrainientKort|forhandler-grainient/);
+    expect(flate).toMatch(/ForhandlerInfoKort|forhandler-info/);
     expect(flate).not.toMatch(/data-forhandlernavn/);
     expect(rad).toMatch(/\/min-dag\/\$\{/);
     expect(rad).toMatch(/ChevronRight|aria-label="Detaljer/);
@@ -105,28 +102,17 @@ describe('Dine jobber erstatter Min dag', () => {
   });
 });
 
-describe('Grainient forhandler-kort', () => {
-  it('bruker ekte Grainient, ikke en håndrullet gradient', () => {
-    const kort = utenKommentarer(les('../app/(app)/_shell/forhandler-grainient.tsx'));
-    expect(kort).toMatch(/from ['"]@endwise\/ui['"]/);
-    expect(kort).toMatch(/Grainient/);
-    expect(kort).toMatch(/timeSpeed=\{0\.25\}/);
-    expect(kort).toMatch(/colorBalance=\{0\.2\}/);
-    expect(kort).toMatch(/warpStrength=\{1/);
-    expect(kort).toMatch(/GRAINIENT_LYS|GRAINIENT_MORK|GRAINIENT_FARGER/);
-    expect(kort).not.toMatch(/linear-gradient|bg-gradient/);
-    expect(kort).toMatch(/rounded-xl/);
+describe('Forhandler-info uten Grainient', () => {
+  it('er en ren tittel, ikke kort eller Grainient', () => {
+    const kort = utenKommentarer(les('../app/(app)/_shell/forhandler-info-kort.tsx'));
+    expect(kort).toMatch(/data-forhandler-info/);
+    expect(kort).not.toMatch(/Grainient|ShaderGradient/);
+    expect(kort).toMatch(/<h1/);
+    expect(kort).not.toMatch(/rounded-xl/);
+    expect(kort).not.toMatch(/bg-card/);
   });
 
-  it('lys og mørk palett er samme tre grå, uten lys-vask eller hvit overlay', () => {
-    const greyer = { color1: '#777777', color2: '#333333', color3: '#111111' };
-    expect(GRAINIENT_MORK).toEqual(greyer);
-    expect(GRAINIENT_LYS).toEqual(greyer);
-    const kort = utenKommentarer(les('../app/(app)/_shell/forhandler-grainient.tsx'));
-    expect(kort).not.toMatch(/color[123]=\{['"]#(?:ffffff|ededed|f5f5f5)/);
-    expect(kort).not.toMatch(/lightMode=\{(?:true|lys)\}/);
-    expect(kort).toMatch(/text-white/);
-    expect(kort).not.toMatch(/text-\[#111111\]/);
+  it('kortfeltene er uendret', () => {
     expect(visKortFelt({ orgnr: ' 123 ', address: '', phone: '', website: '' })).toEqual([
       { label: 'Orgnr', verdi: '123' },
     ]);
@@ -142,8 +128,6 @@ describe('Grainient forhandler-kort', () => {
       { label: 'guid', verdi: 'cli-1' },
     ]);
     expect(formatLeftoverVerdi('  ')).toBeNull();
-    expect(kort).toMatch(/min-h-\[220px\]/);
-    expect(kort).not.toMatch(/min-h-\[140px\]/);
     expect(adresseLinje({ address: 'Gate 1', postalCode: '0150', city: 'Oslo' })).toBe(
       'Gate 1, 0150 Oslo',
     );
@@ -153,38 +137,48 @@ describe('Grainient forhandler-kort', () => {
     expect(kjoretoyIkon('ukjent')).toBe('mc');
   });
 
-  it('kortet sitter på forhandler-, mekaniker-, selger- og support-hjem', () => {
+  it('kortet sitter på mekaniker- og innboks-hjem — ikke over Verkstedet-hero', () => {
     const dealer = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const mek = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
     const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
     const innboks = utenKommentarer(les('../app/(app)/innboks/page.tsx'));
-    expect(dealer).toMatch(/ForhandlerGrainientKort/);
-    expect(mek).toMatch(/ForhandlerGrainientKort/);
-    expect(dash).toMatch(/ForhandlerGrainientKort/);
-    expect(innboks).toMatch(/ForhandlerGrainientKort/);
+    expect(dealer).not.toMatch(/ForhandlerInfoKort/);
+    expect(dealer).toMatch(/tenantName/);
+    expect(dealer).toMatch(/navn=\{forhandlernavn\}/);
+    expect(mek).toMatch(/ForhandlerInfoKort/);
+    expect(dash).not.toMatch(/ForhandlerInfoKort/);
+    expect(dash).toMatch(/data-verkstedet-hero/);
+    expect(dash).toMatch(/tenantName/);
+    expect(dash).toMatch(/sr-only/);
+    expect(innboks).toMatch(/ForhandlerInfoKort/);
+    expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(/Grainient|grainient/);
   });
 });
 
-describe('telefon-bevel og logo-rad', () => {
-  it('bevel er siste barn i telefon-kolonnen, ikke sticky/fixed', () => {
+describe('telefon-toppbar og sidebar-overlay', () => {
+  it('ingen PhoneBevel — profil/logg ut bor i samme sidebar som desktop', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(layout).toMatch(/<main[\s\S]*<\/main>\s*<PhoneBevel\s*\/>/);
+    expect(layout).not.toMatch(/PhoneBevel/);
     expect(layout).toMatch(/overflow-y-auto/);
     expect(layout).toMatch(/<main className="[^"]*\bflex-1\b/);
     expect(layout).not.toMatch(/<main className="[^"]*\bmd:flex-1\b/);
-    expect(shell).toMatch(/mt-auto/);
-    expect(shell).not.toMatch(/sticky|fixed/);
+    expect(shell).toMatch(/data-phone-top-bar/);
+    expect(shell).toMatch(/sticky top-0/);
     expect(PHONE_SHELL_ROT).toMatch(/min-h-dvh|h-dvh|flex-1/);
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
   });
 
-  it('tilbake sitter på samme rad som logo, til høyre', () => {
+  it('logo til venstre, åpne-sidebar-ikon rett ved logoen, tilbake er history', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/justify-between|ml-auto/);
-    expect(shell).toMatch(/ChevronLeft/);
+    expect(shell).not.toMatch(/ml-auto/);
+    expect(shell).toMatch(/data-phone-sidebar-open/);
+    expect(shell).toMatch(/PanelLeftOpen/);
     expect(shell).toMatch(/Tilbake/);
-    expect(shell).not.toMatch(/border-b[\s\S]*Tilbake/);
+    expect(shell).toMatch(/TilbakePil/);
+    expect(shell).toMatch(/router\.back\(\)/);
+    expect(shell).toMatch(/Tilbake/);
+    expect(shell).not.toMatch(/ChevronLeft/);
   });
 });
 

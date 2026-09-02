@@ -261,8 +261,9 @@ export class BotEngine {
 
   /** Regard effectif a l'instant `now`, rattrapage en cours compris. */
   private lookAtTime(now: number): Look {
+    if (!Number.isFinite(this.lookMorph) || this.lookMorph <= 0) return this.look
     const k = (now - this.lookAt) / this.lookMorph
-    if (k >= 1) return this.look
+    if (!Number.isFinite(k) || k >= 1) return this.look
     return lerpLook(this.lookPrev, this.look, easings.easeOutQuint(clamp(k)))
   }
 

@@ -3,7 +3,6 @@ import {
   Building2,
   CalendarDays,
   ChartColumn,
-  Handshake,
   Inbox,
   LayoutDashboard,
   LifeBuoy,
@@ -16,11 +15,11 @@ import {
 import { type ShellKey, settingsForShell } from './nav';
 
 /**
- * Låst telefon-hjem (Mikael 29.08.2026).
- * Kortene er destinasjoner. Samme funksjoner på PC (sidebar), annen chrome.
+ * Telefon-hjem-kort (Mikael 29.08.2026) er sideinnhold, ikke meny.
+ * Meny: desktop = persistent skinne. Telefon = fullskjerm-overlay.
  */
 
-/** Kort-hjem-rot: #84 dvh/overscroll + #85 min-h-svh. Safe-area sitter på logo/bevel. */
+/** Rot: #84 dvh/overscroll + #85 min-h-svh. Safe-area sitter på toppbar og overlay. */
 export const PHONE_SHELL_ROT =
   'flex h-dvh max-h-dvh min-h-dvh min-h-svh w-full overflow-hidden bg-bg text-fg overscroll-none';
 
@@ -30,7 +29,7 @@ export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';
 /**
  * Samme flate som resten av appen (`CardShell`): `--ew-surface` / `--ew-fg`.
  * Ikke `bg-accent` — i theme.css er `--color-accent` shadcn-hover
- * (`--ew-surface-2`, #f5f5f5 i lyst) mens `text-accent-fg` er `--ew-accent-fg`
+ * (`--ew-surface-2`, parchment #f5f5f7 i lyst) mens `text-accent-fg` er `--ew-accent-fg`
  * (hvit i lyst). Den kombinasjonen er den vaskede «hvite overlay»-en.
  */
 export const PHONE_KORT_FYLL = 'rounded-xl border border-border bg-card text-fg shadow-none';
@@ -53,7 +52,6 @@ export type PhoneKortKey =
   | 'jobber'
   | 'kunder'
   | 'organisasjon'
-  | 'samarbeid'
   | 'hjelp'
   | 'lager'
   | 'butikk'
@@ -72,7 +70,6 @@ export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['innboks', 'timeplan'], kind: 'pair' },
   { keys: ['statistikk', 'tjenester'], kind: 'pair' },
   { keys: ['kunder', 'organisasjon'], kind: 'pair' },
-  { keys: ['samarbeid', 'hjelp'], kind: 'pair' },
   { keys: ['lager'], kind: 'low' },
 ];
 
@@ -86,12 +83,11 @@ export const PHONE_KORT_META: Record<
   verkstedet: { label: 'Verkstedet', href: '/dashboard?visning=dag', icon: LayoutDashboard },
   timeplan: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
   statistikk: { label: 'Statistikk', href: '/rapporter', icon: ChartColumn },
-  tjenester: { label: 'Salg', href: '/prisliste', icon: Wrench },
+  tjenester: { label: 'Tjenester', href: '/prisliste', icon: Wrench },
   innboks: { label: 'Innboks', href: '/innboks', icon: Inbox },
   jobber: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
   kunder: { label: 'Kunder', href: '/kunder', icon: Users },
   organisasjon: { label: 'Organisasjon', href: '/organisasjon', icon: Building2 },
-  samarbeid: { label: 'Samarbeid', href: '/samarbeid', icon: Handshake },
   hjelp: { label: 'Hjelp', href: '/support', icon: LifeBuoy },
   lager: { label: 'Lager', href: '/lager', icon: Package },
   butikk: { label: 'Butikk', href: '/butikk', icon: Store },

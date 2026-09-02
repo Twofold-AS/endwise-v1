@@ -73,15 +73,17 @@ function httpsOrigin(verdi: string | undefined): string | null {
 
 /**
  * Offentlig base-URL for denne kjøringen.
- * Preview: `https://${VERCEL_URL}` — ikke produksjonsdomenet.
- * Prod (eller NODE_ENV=production uten preview): `BETTER_AUTH_URL`, påkrevd.
+ * Preview: `VERCEL_BRANCH_URL` (fast branch-alias) hvis satt, ellers
+ * `VERCEL_URL`. Aldri produksjons-`BETTER_AUTH_URL` — unik dpl-vert i
+ * e-postlenka + kake på unik vert + fane på branch-alias = login-løkke.
+ * Prod: `BETTER_AUTH_URL`, påkrevd.
  * Dev: `BETTER_AUTH_URL` / localhost, som før.
  */
 export function authPublicUrl(env: AuthOriginEnv = process.env): string {
   if (env.VERCEL_ENV === 'preview') {
-    const origin = httpsOrigin(env.VERCEL_URL);
+    const origin = httpsOrigin(env.VERCEL_BRANCH_URL) ?? httpsOrigin(env.VERCEL_URL);
     if (!origin) {
-      throw new Error('Miljøvariabel mangler: VERCEL_URL');
+      throw new Error('Miljøvariabel mangler: VERCEL_BRANCH_URL eller VERCEL_URL');
     }
     return origin;
   }

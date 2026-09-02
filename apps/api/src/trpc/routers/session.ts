@@ -1,3 +1,4 @@
+import { sessionMeTwoFactorRequired } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import { erPlattformTenant, landingForPlatform } from '@endwise/modules/plattform';
 import { landingForJobbfunksjon, resolveJobbfunksjon, visningsnavn } from '@endwise/modules/profil';
@@ -183,6 +184,10 @@ export const sessionRouter = router({
         devMode,
         /** Kosmetikk. Sperren er shopProcedure. Fail-safe av. */
         shopEnabled,
+        /** Alltid false etter innlogging — sidene lastes uten godkjent 2FA. */
+        twoFactorRequired: sessionMeTwoFactorRequired({
+          twoFactorEnabled: undefined,
+        }),
       };
     });
   }),

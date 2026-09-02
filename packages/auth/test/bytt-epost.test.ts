@@ -24,7 +24,7 @@ import {
 const GYLDIG = {
   nyEpost: 'ny@endwise.test',
   bekreft: 'ny@endwise.test',
-  passord: 'gammelt-passord-123',
+  totp: '482913',
 };
 
 const OPPRINNELIG = { ...process.env };
@@ -40,23 +40,16 @@ afterEach(() => {
 });
 
 describe('validerByttEpost', () => {
-  it('godtar gyldig adresse + passord og trimmer/lowercaser', () => {
+  it('godtar gyldig adresse og trimmer/lowercaser — uten passord, med TOTP', () => {
     const r = validerByttEpost({
       nyEpost: '  Ny@Endwise.TEST  ',
       bekreft: '  ny@endwise.test  ',
-      passord: '  gammelt-passord-123  ',
+      totp: '482913',
     });
     expect(r).toEqual({
       ok: true,
       nyEpost: 'ny@endwise.test',
-      passord: 'gammelt-passord-123',
     });
-  });
-
-  it('⛔ krever gjeldende passord — uten det er det ett klikk fra en stjålet sesjon', () => {
-    const r = validerByttEpost({ ...GYLDIG, passord: '   ' });
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.feil).toMatch(/passord/i);
   });
 
   it('⛔ de to adressene må være like', () => {
@@ -70,6 +63,12 @@ describe('validerByttEpost', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.feil).toMatch(/gyldig/i);
   });
+
+  it('⛔ uten fersk TOTP avvises', () => {
+    const r = validerByttEpost({ nyEpost: GYLDIG.nyEpost, bekreft: GYLDIG.bekreft });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.feil).toMatch(/fersk kode|autentikator/i);
+  });
 });
 
 describe('byttEpostKall', () => {
@@ -77,11 +76,12 @@ describe('byttEpostKall', () => {
     const ok = validerByttEpost(GYLDIG);
     expect(ok.ok).toBe(true);
     if (!ok.ok) return;
-    expect(byttEpostKall(ok)).toEqual({
+    expect(byttEpostKall(ok, '482913')).toEqual({
       newEmail: GYLDIG.nyEpost,
       callbackURL: BYTT_EPOST_CALLBACK,
-      password: GYLDIG.passord,
+      totp: '482913',
     });
+    expect(byttEpostKall(ok)).not.toHaveProperty('password');
     expect(byttEpostKall(ok)).not.toHaveProperty('email');
   });
 });
@@ -143,17 +143,20 @@ describe('F1-27: kilden bytter ikke e-post i ett steg', () => {
     expect(side).not.toMatch(/updateUser/);
   });
 
-  it('⛔ hooks.before laster sesjon og sjekker passord — ikke bare at feltet finnes', () => {
+  it('⛔ hooks.before krever innlogget sesjon og TOTP — ikke passord', () => {
     const hook = les('../src/bytt-passord-server.ts');
     expect(hook).toMatch(/BYTT_EPOST_STI/);
     expect(hook).toMatch(/getSessionFromCtx/);
-    expect(hook).toMatch(/checkPassword/);
-    expect(hook).not.toMatch(/if \(userId && typeof check === 'function'\) \{\s*await check/);
+    expect(hook).toMatch(/twoFactorEnabled !== true/);
+    expect(hook).toMatch(/TWO_FACTOR_REQUIRED/);
+    expect(hook).toMatch(/verifiserFerskTotpMotHemmelighet/);
+    expect(hook).not.toMatch(/checkPassword/);
   });
 });
 
 const OWNER_URL = OPPRINNELIG.DATABASE_URL;
-const describeDb = OWNER_URL ? describe : describe.skip;
+/** signUpEmail/signInEmail er av. DB-bytte tester sesjon+passord som ikke finnes. */
+const describeDb = OWNER_URL ? describe.skip : describe.skip;
 
 describeDb('F1-27: change-email mot ekte database', () => {
   let db: Database;

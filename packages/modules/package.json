@@ -16,6 +16,7 @@
     "./erasure": "./src/erasure/index.ts",
     "./retention": "./src/retention/index.ts",
     "./billing": "./src/billing/index.ts",
+    "./billing/plans": "./src/billing/plans.ts",
     "./widget": "./src/widget/index.ts",
     "./vegvesen": "./src/vegvesen/index.ts",
     "./profil": "./src/profil/index.ts",

@@ -12,7 +12,6 @@ import {
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../_lib/lyd';
-import { ByttPassordSkjema } from './bytt-passord';
 import { CardShell } from './cards';
 
 /**
@@ -70,7 +69,6 @@ export function ProfilKort() {
 
       <VisningsnavnSeksjon />
       <KallenavnSeksjon />
-      <ByttPassordSkjema />
     </div>
   );
 }

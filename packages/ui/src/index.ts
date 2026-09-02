@@ -75,7 +75,17 @@ export {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './components/dropdown-menu.tsx';
+export { Galaxy, type GalaxyProps } from './components/galaxy.tsx';
 export { Grainient, type GrainientProps } from './components/grainient.tsx';
+export {
+  type ChatStatus,
+  type PromptInputMessage,
+  PromptInput,
+  PromptInputBody,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+} from './components/prompt-input.tsx';
 // shadcn/ui — chat (ui-pakker §9). Hentet.
 export {
   Message,

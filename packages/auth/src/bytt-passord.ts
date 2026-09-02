@@ -37,6 +37,9 @@ export const BYTT_PASSORD_STI = '/change-password';
  */
 export const TO_FAKTOR_ENABLE_STI = '/two-factor/enable';
 export const TO_FAKTOR_DISABLE_STI = '/two-factor/disable';
+export const TO_FAKTOR_VERIFY_TOTP_STI = '/two-factor/verify-totp';
+export const TO_FAKTOR_VERIFY_BACKUP_STI = '/two-factor/verify-backup-code';
+export const TO_FAKTOR_SEND_OTP_STI = '/two-factor/send-otp';
 
 /**
  * Rate-limit på å bytte passord: 5 per minutt, per IP.

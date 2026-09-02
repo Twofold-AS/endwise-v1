@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { createDb, type Database, schema, sql } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createMessagesModule, NotAParticipantError } from '../src/messages/index.ts';
+import {
+  createMessagesModule,
+  forkSystemMelding,
+  NotAParticipantError,
+} from '../src/messages/index.ts';
 import { readEventsSince } from '../src/stream/index.ts';
 
 /** Tråder og meldinger, med begge tilgangslagene angrepet. */
@@ -142,5 +146,47 @@ describeDb('meldinger (F6-01)', () => {
     const dump = JSON.stringify(events);
     expect(dump).not.toContain('Hallo?');
     expect(dump).not.toContain('Når kan dere ta MC-en?');
+  });
+
+  it('forkThread lager ny gruppe uten å endre gammel medlemsliste', async () => {
+    const messages = createMessagesModule(app);
+    const gammel = await messages.createThread({
+      tenantId: tenantA,
+      kind: 'customer_dealer',
+      subject: 'EU-kontroll',
+      participantIds: [kunde, selger],
+    });
+    const ny = await messages.forkThread({
+      tenantId: tenantA,
+      threadId: gammel.id,
+      callerId: selger,
+      inviteeIds: [utenforstaende],
+      inviteeNames: ['Kari'],
+    });
+    expect(ny.id).not.toBe(gammel.id);
+    expect(ny.kind).toBe('customer_dealer');
+    expect(ny.subject).toBe('EU-kontroll');
+
+    const gammelEtter = await messages.listThreads(tenantA, utenforstaende);
+    expect(gammelEtter.some((t) => t.id === gammel.id)).toBe(false);
+    const nyForNy = await messages.listThreads(tenantA, utenforstaende);
+    expect(nyForNy.some((t) => t.id === ny.id)).toBe(true);
+    const gammelForSelger = await messages.listThreads(tenantA, selger);
+    expect(gammelForSelger.some((t) => t.id === gammel.id)).toBe(true);
+    expect(gammelForSelger.some((t) => t.id === ny.id)).toBe(true);
+
+    const gamleMeldinger = await messages.listMessages(tenantA, gammel.id, selger);
+    expect(gamleMeldinger.some((m) => String(m.body).includes('Kari'))).toBe(true);
+  });
+});
+
+describe('forkSystemMelding', () => {
+  it('navngir inviterte og den nye tråden', () => {
+    expect(forkSystemMelding({ inviteeNames: ['Kari', 'Ola'], newSubject: 'EU-kontroll' })).toBe(
+      'Samtalen ble utvidet med Kari, Ola. Fortsett i «EU-kontroll».',
+    );
+    expect(forkSystemMelding({ inviteeNames: [], newSubject: null })).toMatch(
+      /nye gruppesamtalen/,
+    );
   });
 });

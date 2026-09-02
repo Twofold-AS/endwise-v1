@@ -47,21 +47,21 @@ describe('F1-10: token og validering (uten database)', () => {
     expect(kilde).toMatch(/endwise_support[\s\S]{0,80}support|support[\s\S]{0,80}endwise_support/);
   });
 
-  it('eksisterende bruker uten credential-konto må sette passord (staff og platform)', () => {
+  it('invitee setter aldri passord — magic link', () => {
     expect(inviteeKreverPassord({ kind: 'staff', harBruker: true, harCredential: false })).toBe(
-      true,
+      false,
     );
     expect(inviteeKreverPassord({ kind: 'platform', harBruker: true, harCredential: false })).toBe(
-      true,
+      false,
     );
     expect(inviteeKreverPassord({ kind: 'staff', harBruker: true, harCredential: true })).toBe(
       false,
     );
     expect(inviteeKreverPassord({ kind: 'staff', harBruker: false, harCredential: false })).toBe(
-      true,
+      false,
     );
     expect(inviteeKreverPassord({ kind: 'owner', harBruker: true, harCredential: true })).toBe(
-      true,
+      false,
     );
   });
 

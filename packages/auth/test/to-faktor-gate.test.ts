@@ -26,27 +26,25 @@ describe('F1-11: regelen (uten database)', () => {
     // dealer_staff. Testen låser fasiten, så et framtidig tillegg til
     // rolle-listen ikke stille faller utenfor kravet.
     expect([...ROLES_REQUIRING_2FA].sort()).toEqual([
+      'customer',
       'dealer_admin',
       'dealer_staff',
       'endwise_admin',
       'endwise_support',
     ]);
-    expect(roleRequires2FA('customer')).toBe(false);
+    expect(roleRequires2FA('customer')).toBe(true);
   });
 
-  it('⛔ avviser 2FA-pliktig rolle UTEN 2FA', () => {
-    expect(() =>
-      assertTwoFactorSatisfied({ roles: ['dealer_admin'], twoFactorEnabled: false }),
-    ).toThrow(TwoFactorRequiredError);
-  });
-
-  it('⛔ `null`/`undefined` teller som IKKE oppfylt — feiler lukket', () => {
-    // Kolonnen er nullbar. Ville vi brukt `!== true` feil vei her, ville en rad
-    // med NULL sluppet gjennom — og det er standardverdien på gamle brukere.
+  it('uenrollert dealer/admin/customer får bruke appen — TOTP er valgfri', () => {
+    for (const rolle of ['dealer_admin', 'endwise_admin', 'customer', 'dealer_staff'] as const) {
+      expect(() =>
+        assertTwoFactorSatisfied({ roles: [rolle], twoFactorEnabled: false }),
+      ).not.toThrow();
+    }
     for (const verdi of [null, undefined] as const) {
       expect(() =>
         assertTwoFactorSatisfied({ roles: ['endwise_admin'], twoFactorEnabled: verdi }),
-      ).toThrow(TwoFactorRequiredError);
+      ).not.toThrow();
     }
   });
 
@@ -56,32 +54,11 @@ describe('F1-11: regelen (uten database)', () => {
     ).not.toThrow();
   });
 
-  it('slipper gjennom `customer` uten 2FA — kunder skal ikke tvinges', () => {
-    expect(() =>
-      assertTwoFactorSatisfied({ roles: ['customer'], twoFactorEnabled: false }),
-    ).not.toThrow();
-  });
-
-  /**
-   * Omgåelsen som ville vært lettest å finne: vær `customer` hos verksted A,
-   * `dealer_admin` hos B. Logg inn uten 2FA med A som aktiv, bytt så til B.
-   * Kravet henger på personen, ikke på hvilken fane som er åpen.
-   */
-  it('⛔ ÉN 2FA-pliktig rolle er nok, selv om de andre ikke krever det', () => {
-    expect(() =>
-      assertTwoFactorSatisfied({ roles: ['customer', 'dealer_admin'], twoFactorEnabled: false }),
-    ).toThrow(TwoFactorRequiredError);
-  });
-
-  it('feilen bærer med seg HVILKE roller som utløste kravet', () => {
-    try {
-      assertTwoFactorSatisfied({ roles: ['customer', 'dealer_staff'], twoFactorEnabled: false });
-      expect.unreachable('skulle kastet');
-    } catch (error) {
-      expect(error).toBeInstanceOf(TwoFactorRequiredError);
-      expect((error as TwoFactorRequiredError).roller).toEqual(['dealer_staff']);
-      expect((error as TwoFactorRequiredError).reason).toBe('enrollment');
-    }
+  it('TwoFactorRequiredError finnes fortsatt for e-postbytte, ikke som innloggingsmur', () => {
+    const feil = new TwoFactorRequiredError(['dealer_admin']);
+    expect(feil.code).toBe('TWO_FACTOR_REQUIRED');
+    expect(feil.reason).toBe('enrollment');
+    expect(feil.roller).toEqual(['dealer_admin']);
   });
 });
 
@@ -161,20 +138,16 @@ describeDb('F1-11: håndhevelse mot ekte medlemskap', () => {
     }
   });
 
-  it('⛔ dealer_admin uten 2FA får IKKE en autorisert sesjon', async () => {
-    await expect(assertTwoFactorForUser(owner, adminUser, false)).rejects.toBeInstanceOf(
-      TwoFactorRequiredError,
-    );
+  it('dealer_admin uten 2FA får autorisert sesjon — TOTP er senere', async () => {
+    await expect(assertTwoFactorForUser(owner, adminUser, false)).resolves.toBeUndefined();
   });
 
-  it('customer uten 2FA slipper gjennom', async () => {
+  it('customer uten 2FA får autorisert sesjon', async () => {
     await expect(assertTwoFactorForUser(owner, kundeUser, false)).resolves.toBeUndefined();
   });
 
-  it('⛔ kunde hos A + admin hos B blir stoppet — rollen hos B teller', async () => {
-    await expect(assertTwoFactorForUser(owner, blandetUser, false)).rejects.toBeInstanceOf(
-      TwoFactorRequiredError,
-    );
+  it('kunde hos A + admin hos B slipper gjennom uten TOTP', async () => {
+    await expect(assertTwoFactorForUser(owner, blandetUser, false)).resolves.toBeUndefined();
   });
 
   it('dealer_admin MED 2FA slipper gjennom', async () => {

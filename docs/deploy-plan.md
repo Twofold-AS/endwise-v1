@@ -256,7 +256,10 @@ Vercel (cdg1, Paris EU)   apps/web + tRPC/auth/widget/stripe/cron
                               ↓
 Scaleway (Frankrike, EU)  ├─ Managed PostgreSQL   ← RLS + FORCE RLS
                           │      ↑ LISTEN/NOTIFY
-                          ├─ Serverless Container ← apps/stream (min. 1 instans)
+                          ├─ Serverless Container ← PgBouncer :6432 (min. 1 instans;
+                          │                          APP_DATABASE_URL. Se docs/pgbouncer.md)
+                          ├─ Serverless Container ← apps/stream (min. 1 instans;
+                          │                          LISTEN på DATABASE_URL :5432)
                           ├─ Serverless Container ← apps/framer-agent (F8-09/F13-04,
                           │                          senere — ikke i første deploy)
                           └─ Key Manager          ← ENDWISE_KEK (F1-13)
@@ -266,7 +269,8 @@ Scaleway (Frankrike, EU)  ├─ Managed PostgreSQL   ← RLS + FORCE RLS
 |---|---|
 | `API_INTERNAL_URL` | **Utgår** — api er en del av web |
 | `STREAM_INTERNAL_URL` | Scaleway container-URL, per miljø |
-| `DATABASE_URL` / `APP_DATABASE_URL` | Scaleway Managed PostgreSQL (eier + app-rolle) |
+| `DATABASE_URL` | Scaleway Managed PostgreSQL **:5432** (eier). Migrate, grants, stream LISTEN. Aldri gjennom pooleren. |
+| `APP_DATABASE_URL` | App-rolle (RLS). Prod/preview: vår PgBouncer **:6432** når containeren er oppe. Lokalt: Docker `:5432`. |
 | `ENDWISE_KEK` | Flyttes til Scaleway Key Manager (F1-13, egen sak) |
 | `BETTER_AUTH_URL` | **Production:** `https://endwise.no`. **Preview:** ikke sett til prod-domenet — koden bruker `https://${VERCEL_URL}` |
 
@@ -294,6 +298,10 @@ så sesjonscookien følger med uten CORS og uten token i URL.
 5. **Bygg og deploy `apps/stream` til Scaleway Serverless Container.**
    `min_scale = 1`, `max_scale = 1`. Ekte byggetrinn (Dockerfile), ikke
    `--experimental-strip-types`. Sett `STREAM_INTERNAL_URL`.
+   **Samme økt:** deploy `infra/pgbouncer` som egen Serverless Container
+   (`min_scale = 1`, port 6432). Når den er oppe: `APP_DATABASE_URL` i Vercel
+   Preview + Production → pooler :6432 (app-rolle). `DATABASE_URL` blir på
+   Scaleway :5432 (eier). Se `docs/pgbouncer.md`.
 6. **Verifiser i produksjon:** innlogging holder over refresh · en melding gir
    sanntidsvarsel i et annet vindu · Stripe-webhooken flipper en modul · cron
    kjører · RLS: forhandler A ser ikke forhandler B.

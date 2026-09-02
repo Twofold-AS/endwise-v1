@@ -55,14 +55,12 @@ describe('Bot-lab — bloub', () => {
     expect(BOT_HOVED.find((h) => h.oye === 'lytter')?.uttrykk).toBe('attentif');
   });
 
-  it('sidebar har Bot etter Hjelp, ikke på telefon-hjem', () => {
+  it('sidebar har ikke Bot; laben lever via URL, ikke på telefon-hjem', () => {
     const labels = FORHANDLER_NAV.map((i) => i.label);
-    expect(labels.at(-2)).toBe('Hjelp');
-    expect(labels.at(-1)).toBe('Bot');
-    const bot = FORHANDLER_NAV.find((i) => i.key === 'bot');
-    expect(bot?.href).toBe('/bot');
-    expect(bot?.label).toBe('Bot');
-    expect(breadcrumbFor('/bot', '', 'forhandler')).toEqual([{ label: 'Bot', href: '/bot' }]);
+    expect(labels).not.toContain('Bot');
+    expect(labels).not.toContain('Hjelp');
+    expect(FORHANDLER_NAV.some((i) => i.key === 'bot')).toBe(false);
+    expect(breadcrumbFor('/bot', '', 'forhandler')).toEqual([{ label: 'Bot' }]);
     expect(DEALER_PHONE_HJEM.flatMap((r) => r.keys)).not.toContain('bot');
     expect(Object.keys(PHONE_KORT_META)).not.toContain('bot');
   });
@@ -138,5 +136,23 @@ describe('Bot-lab — bloub', () => {
     engine.setState('orbit', 8);
     const orbit = engine.sample(9.2);
     expect(orbit.arcs.length).toBeGreaterThan(0);
+  });
+
+  it('still-sti med lookMorph 0 gir likevel to øyne (ikke grønn skive)', async () => {
+    const { BotEngine } = await import('../../../packages/ui/src/vendor/bloub/engine.ts');
+    const { SHAPE_BY_ID } = await import('../../../packages/ui/src/vendor/bloub/skins.ts');
+    const { EXPRESSION_BY_ID } = await import(
+      '../../../packages/ui/src/vendor/bloub/expressions.ts'
+    );
+    const engine = new BotEngine(
+      100,
+      'idle',
+      SHAPE_BY_ID.get('cercle')?.radii ?? null,
+      EXPRESSION_BY_ID.get('surpris'),
+    );
+    engine.setLook(null, 0, 0);
+    const still = engine.sample(0.35);
+    expect(still.eyes).toHaveLength(2);
+    expect(still.eyes.every((e) => e.d.length > 0 && Number.isFinite(e.alpha))).toBe(true);
   });
 });

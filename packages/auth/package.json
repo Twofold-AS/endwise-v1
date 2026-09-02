@@ -9,7 +9,8 @@
     "./bytt-epost": "./src/bytt-epost.ts",
     "./password-reset": "./src/password-reset.ts",
     "./tid": "./src/tid.ts",
-    "./to-faktor-oppsett": "./src/to-faktor-oppsett.ts"
+    "./to-faktor-oppsett": "./src/to-faktor-oppsett.ts",
+    "./magic-link": "./src/magic-link.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

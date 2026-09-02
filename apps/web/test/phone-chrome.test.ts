@@ -8,6 +8,10 @@ import {
   laasAktivMotStart,
   PHONE_H_SCROLL,
   PHONE_LOGO_KOLONNE,
+  PHONE_LOGO_PX,
+  SHELL_HEADER_RAD,
+  SHELL_LOGO_WRAP,
+  SHELL_TOGGLE_PX,
   scrollAktivTilStart,
   scrollTilbake,
 } from '../app/(app)/_shell/phone-chrome.ts';
@@ -28,7 +32,10 @@ describe('phone-chrome', () => {
     expect(PHONE_H_SCROLL).toContain('overflow-y-hidden');
     expect(PHONE_H_SCROLL).toContain('touch-pan-x');
     expect(PHONE_H_SCROLL).toContain('overscroll-y-none');
-    expect(PHONE_LOGO_KOLONNE).toContain('22px');
+    expect(PHONE_LOGO_PX).toBe(24);
+    expect(SHELL_HEADER_RAD).toBe('flex h-row items-center gap-2 px-3');
+    expect(SHELL_LOGO_WRAP).toBe('flex shrink-0 items-center');
+    expect(PHONE_LOGO_KOLONNE).toContain('24px');
     expect(PHONE_LOGO_KOLONNE).toContain('0.75rem');
     expect(PHONE_LOGO_KOLONNE).toContain('0.5rem');
   });
@@ -156,18 +163,19 @@ describe('phone-chrome', () => {
     expect(css).toMatch(/100dvh/);
   });
 
-  it('tilbake-pil sitter i end-spacer uten hover eller aktiv-tilstand', () => {
-    const hscroll = utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'));
+  it('tilbake i toppbaren er history.back som rent ord, ikke PhoneHScroll', () => {
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-    expect(seksjon).toMatch(/PhoneHScroll/);
-    expect(hscroll).toMatch(/data-end-spacer/);
-    expect(hscroll).toMatch(/data-scroll-tilbake/);
-    expect(hscroll).toMatch(/Rull tilbake/);
-    expect(hscroll).toMatch(/scrollTilbake/);
-    expect(hscroll).toMatch(/ChevronLeft/);
-    const knapp = hscroll.slice(hscroll.indexOf('data-scroll-tilbake'));
-    expect(knapp).not.toMatch(/hover:/);
-    expect(knapp).not.toMatch(/aria-current|aria-pressed|aria-selected/);
-    expect(knapp).not.toMatch(/bg-sidebar-active|bg-fg/);
+    const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
+    expect(seksjon).not.toMatch(/PhoneHScroll/);
+    expect(seksjon).toMatch(/DestinasjonSeksjonBar/);
+    expect(shell).toMatch(/data-shell-tilbake/);
+    expect(shell).toMatch(/router\.back\(\)/);
+    expect(shell).toMatch(/Tilbake/);
+    expect(shell).toMatch(/TilbakePil/);
+    expect(pil).not.toMatch(/<svg/);
+    expect(pil).not.toMatch(/lucide|ChevronLeft/);
+    expect(pil).toMatch(/text-label/);
+    expect(SHELL_TOGGLE_PX).toBe(16);
   });
 });

@@ -23,45 +23,22 @@ afterEach(() => {
   process.env = { ...OPPRINNELIG };
 });
 
-describe('sendTwoFactorOtp — leveringsvei', () => {
-  it('DEV uten Resend: koden skrives til serverloggen, ingen e-post', async () => {
+describe('sendTwoFactorOtp — stengt (Mons)', () => {
+  it('⛔ kaster alltid — e-postkode er ikke andre faktor', async () => {
     process.env.NODE_ENV = 'development';
     process.env.RESEND_API_KEY = '';
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
     const { sendTwoFactorOtp } = await last();
-    await sendTwoFactorOtp('mikkis@twofold.no', '123456');
-
-    const utskrift = warn.mock.calls.flat().join('\n');
-    expect(utskrift).toContain('123456');
-    expect(utskrift).toContain('KUN DEV');
+    await expect(sendTwoFactorOtp('mikkis@twofold.no', '123456')).rejects.toThrow(
+      /ikke andre faktor/,
+    );
   });
 
-  /**
-   * Den viktigste testen i fila. En feilsatt `NODE_ENV` skal ikke alene være
-   * nok til at engangskoder havner i en driftslogg — derfor krever
-   * dev-leveransen ogsÅ at Resend-nøkkelen mangler.
-   */
-  it('⛔ DEV MED Resend konfigurert: koden skrives IKKE til loggen', async () => {
-    process.env.NODE_ENV = 'development';
-    process.env.RESEND_API_KEY = 'test-nokkel';
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const { sendTwoFactorOtp } = await last();
-    // Resend-kallet feiler (nøkkelen er tull) — det er greit. Poenget er at
-    // koden ikke skal ha vært innom loggen før forsøket.
-    await sendTwoFactorOtp('mikkis@twofold.no', '654321').catch(() => {});
-
-    expect(warn.mock.calls.flat().join('\n')).not.toContain('654321');
-  });
-
-  it('⛔ PRODUKSJON uten Resend: kaster — feiler LUKKET, ingen logg-fallback', async () => {
+  it('⛔ kaster også i prod', async () => {
     process.env.NODE_ENV = 'production';
-    process.env.RESEND_API_KEY = '';
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
+    process.env.RESEND_API_KEY = 'test-nokkel';
     const { sendTwoFactorOtp } = await last();
-    await expect(sendTwoFactorOtp('mikkis@twofold.no', '999999')).rejects.toThrow();
-    expect(warn.mock.calls.flat().join('\n')).not.toContain('999999');
+    await expect(sendTwoFactorOtp('mikkis@twofold.no', '999999')).rejects.toThrow(
+      /ikke andre faktor/,
+    );
   });
 });

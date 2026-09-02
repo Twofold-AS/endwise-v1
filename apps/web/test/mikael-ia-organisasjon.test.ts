@@ -34,13 +34,10 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
       'Innboks',
       'Timeplan',
       'Kunder',
+      'Tjenester',
+      'Organisasjon',
       'Lager',
       'Butikk',
-      'Samarbeid',
-      'Salg',
-      'Organisasjon',
-      'Hjelp',
-      'Bot',
     ]);
     for (const rad of FORHANDLER_NAV) {
       expect(rad.children).toBeUndefined();
@@ -91,7 +88,6 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
       'Butikk',
       'Kompetanse',
       'Timeplan',
-      'Hjelp',
       'Meg',
     ]);
   });
@@ -122,9 +118,9 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
       { label: 'Ansatte' },
     ]);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Salg', href: '/prisliste' },
+      { label: 'Tjenester', href: '/prisliste' },
     ]);
-    expect(PARKED_LABEL['/prisliste']).toBe('Salg');
+    expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');
   });
 
   it('ukjent eller admin-seksjon for selger faller til Oversikt', () => {
@@ -189,7 +185,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   it('minimize sitter i sidebaren, ikke i top-bar 1', () => {
     expect(header).toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(top).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
-    expect(header).toMatch(/width=\{22\}/);
+    expect(header).toMatch(/SHELL_LOGO_PX|width=\{24\}|width=\{LOGO\}/);
     expect(header).toMatch(/logo\/logo\.svg/);
     const headerLogoer = header.match(/<Image[\s\S]*?\/>/g) ?? [];
     expect(headerLogoer.length).toBeGreaterThanOrEqual(2);
@@ -200,27 +196,38 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(header).not.toMatch(/Forhandler/);
   });
 
-  it('brukerchip er bevel uten rolletittel', () => {
-    expect(rad).toMatch(/BEVEL/);
+  it('sidebar-brukerchip er flat uten avatar; ingen telefon-bevel', () => {
+    expect(rad).not.toMatch(/variant === 'phone'/);
+    expect(rad).not.toMatch(/BEVEL/);
+    expect(rad).not.toMatch(/Avatar/);
     expect(rad).not.toMatch(/rolle \?\?/);
     expect(rad).not.toMatch(/UserCog/);
+    expect(rad).toMatch(/LogOut/);
   });
 
-  it('telefon: kort-hjem-shell, ingen top-bar 1, desktop-sidebar urørt', () => {
+  it('telefon: fast toppbar + samme sidebar som overlay, ingen bevel/Mer-ark', () => {
     expect(layout).toMatch(/PhoneShell/);
-    expect(layout).toMatch(/PhoneBevel/);
+    expect(layout).not.toMatch(/PhoneBevel/);
     expect(layout).not.toMatch(/PhoneNav/);
-    expect(layout).toMatch(/hidden md:block/);
-    expect(layout).toMatch(/OrganisasjonSeksjonBar/);
+    expect(layout).toMatch(/WorkshopBloub/);
+    expect(layout).not.toMatch(/TopBar/);
+    expect(layout).toMatch(/DestinasjonSeksjonBar/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/logo\/logo\.svg/);
     expect(shell).toMatch(/logo-invert/);
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
-    expect(shell).toMatch(/PHONE_SAFE_BUNN/);
-    expect(shell).not.toMatch(/PhoneHScroll|hamburger|Handlinger|QUICK_ACTIONS/i);
+    expect(shell).toMatch(/data-phone-sidebar-open/);
+    expect(shell).toMatch(/PanelLeftOpen/);
+    expect(shell).not.toMatch(/ml-auto/);
+    expect(shell).toMatch(/data-shell-tilbake/);
+    expect(shell).not.toMatch(/PHONE_SAFE_BUNN/);
+    expect(shell).not.toMatch(/PhoneHScroll|hamburger|\bMenu\b|Handlinger|QUICK_ACTIONS/i);
     expect(shell).not.toMatch(/recolor|filter:/);
     expect(shell).not.toMatch(/TipCard|helpdesk-slider|visningsvelger/i);
-    expect(sidebar).toMatch(/hidden[\s\S]*md:flex/);
+    expect(sidebar).toMatch(/data-phone-sidebar/);
+    expect(sidebar).toMatch(/fixed inset-0/);
+    expect(sidebar).toMatch(/hidden/);
+    expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/Handlinger/);
     expect(sidebar).toMatch(/min-width:\s*768px/);
     expect(chrome).toMatch(/scrollTo/);
@@ -231,10 +238,10 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   it('top-bar 2 er sidebar-rad, ikke svart pille', () => {
     expect(seksjon).toMatch(/bg-sidebar-active/);
     expect(seksjon).toMatch(/hover:bg-surface-2/);
-    expect(seksjon).toMatch(/PhoneHScroll/);
+    expect(seksjon).not.toMatch(/PhoneHScroll/);
     expect(seksjon).toMatch(/flex-wrap/);
-    expect(seksjon).toMatch(/overflow-y-hidden/);
-    expect(seksjon).toMatch(/touch-pan-x/);
+    expect(seksjon).not.toMatch(/overflow-y-hidden/);
+    expect(seksjon).not.toMatch(/touch-pan-x/);
     expect(seksjon).not.toMatch(/PHONE_LOGO_KOLONNE/);
     expect(hscroll).toMatch(/flex-nowrap/);
     expect(seksjon).toMatch(/whitespace-nowrap/);
@@ -255,12 +262,12 @@ describe('Mikael IA — shell-chrome og telefon', () => {
 });
 
 describe('Mikael IA — Prisliste på Oversikt, inspect', () => {
-  it('Salg er /prisliste, ikke Organisasjon-pille og ikke Timeplan-popup', () => {
+  it('Tjenester er /prisliste, ikke Organisasjon-pille og ikke Timeplan-popup', () => {
     const timeplan = FORHANDLER_NAV.find((i) => i.key === 'saker');
     expect(timeplan?.pills?.some((p) => /prisliste/i.test(p.label))).toBe(false);
     expect(timeplan?.pills?.some((p) => /prisliste/i.test(p.href))).toBe(false);
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/PrislisteFlate/);
-    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/tittel="Salg"/);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/tittel="Tjenester"/);
     expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/redirect\('\/organisasjon'/);
     expect(les('../app/(app)/organisasjon/page.tsx')).not.toMatch(/PrislisteFlate/);
     expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/TjenesterInnhold/);
@@ -281,7 +288,7 @@ describe('Mikael IA — Prisliste på Oversikt, inspect', () => {
     expect(les('../app/(app)/endwise/verksted/[slug]/organisasjon/forhandleren/page.tsx')).toMatch(
       /organisasjon/,
     );
-    expect(les('../app/(app)/_shell/seksjon-bar.tsx')).toMatch(/isVerkstedInspectPath/);
-    expect(les('../app/(app)/_shell/seksjon-bar.tsx')).toMatch(/remapHrefTilInspect/);
+    expect(les('../app/(app)/_shell/seksjon-faner.ts')).toMatch(/isVerkstedInspectPath/);
+    expect(les('../app/(app)/_shell/seksjon-faner.ts')).toMatch(/remapHrefTilInspect/);
   });
 });

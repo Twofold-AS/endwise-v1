@@ -1,14 +1,21 @@
 'use client';
 
-import { Avatar, type AvatarValg, Button, MessageSquare, MessageSquarePlus } from '@endwise/ui';
+import {
+  Avatar,
+  type AvatarValg,
+  Button,
+  MessageSquare,
+  Trash2,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
-import { INNBOKS_FILTERE, useInboxFilter } from '../_shell/inbox-filter';
+import { useInboxFilter } from '../_shell/inbox-filter';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
+import { NyMeldingIkon } from './_ny-melding-ikon';
 import {
   fmtWhen,
   KIND_LABEL,
@@ -26,8 +33,8 @@ import { useInboxModus } from './_modus';
  * hvilken samtale. Samme oppbygning som hoved-sidebaren med vilje: en 56px
  * header med `border-b` som ligger på samme linje som topbarens skillelinje, og
  * innholdet under. To kolonner som er bygget likt leses som ett system.
- * Part-filtrene bor her, ikke i hoved-sidebaren. To kontroller for samme filter
- * ville før eller siden gått ut av synk.
+ * Part-filtrene bor i DestinasjonSeksjonBar under Ronny. To kontroller
+ * for samme filter ville før eller siden gått ut av synk.
  * Navnebytte. Disse filtrene het «kanaler» i koden, men de
  * filtrerer på `thread_kind` — altså hvem samtalen er med. Nå som `channel`
  * finnes som ekte kolonne (SMS/e-post/app/widget) ville to ting med samme navn
@@ -38,7 +45,9 @@ export function InboxSidebar() {
   const aktivId = params?.id;
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, setPart } = useInboxFilter();
+  const { part, sortering, setSortering, skjulte, skjul, skjulFlere } = useInboxFilter();
+  const [velgModus, setVelgModus] = useState(false);
+  const [valgte, setValgte] = useState<ReadonlySet<string>>(() => new Set());
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -83,50 +92,61 @@ export function InboxSidebar() {
   );
 
   const rader = useMemo(() => {
-    return ekte
+    const filtrert = ekte
+      .filter((t) => !skjulte.has(t.id))
       .filter((t) => part === 'alle' || t.kind === part)
-      .map((t) => ({
-        id: t.id,
-        kind: t.kind as ThreadKind,
-        avsender: threadHeading(
-          t.subject,
-          t.kind,
-          t.motparter ?? [],
-          // Kartet velges per tråd, ikke per liste. Dette er hele grunnen til
-          // at det er to oppslag.
-          visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
-          me.data?.userId,
-        ),
-        utdrag: '',
-        nar: fmtWhen(t.lastMessageAt),
-        ulest: t.unread ?? 0,
-        // Ekte kanaldata fra `threads.channel` / siste meldings `channel`.
-        kanal: tilKanal(t.channel),
-        sisteKanal: tilKanal(t.sisteKanal),
-        /**
-         * Ansiktet på raden.
-         * En tråd kan ha flere motparter, men raden har plass til ÉN. Vi tar
-         * den første som verken er deg selv eller en agent — samme person
-         * `threadHeading` navngir raden etter, så bilde og navn ikke peker på
-         * hver sin deltaker.
-         * Seeden kommer fra serveren (`participants.seed`), ikke fra
-         * deltaker-IDen: for en kunde er den `customers.id`, som er den samme
-         * seeden kundekortet bruker. Ellers ville samme menneske hatt to
-         * ansikter på to flater.
-         */
-        motpart: motpartFor(
-          t.motparter ?? [],
-          visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
-          me.data?.userId,
-        ),
-      }));
-  }, [ekte, part, navnIntern.data, navnOffisiell.data, me.data?.userId]);
+      .slice()
+      .sort((a, b) => {
+        const da = new Date(a.lastMessageAt).getTime();
+        const db = new Date(b.lastMessageAt).getTime();
+        return sortering === 'eldste' ? da - db : db - da;
+      });
+    return filtrert.map((t) => ({
+      id: t.id,
+      kind: t.kind as ThreadKind,
+      avsender: threadHeading(
+        t.subject,
+        t.kind,
+        t.motparter ?? [],
+        // Kartet velges per tråd, ikke per liste. Dette er hele grunnen til
+        // at det er to oppslag.
+        visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
+        me.data?.userId,
+      ),
+      utdrag: '',
+      nar: fmtWhen(t.lastMessageAt),
+      ulest: t.unread ?? 0,
+      // Ekte kanaldata fra `threads.channel` / siste meldings `channel`.
+      kanal: tilKanal(t.channel),
+      sisteKanal: tilKanal(t.sisteKanal),
+      /**
+       * Ansiktet på raden.
+       * En tråd kan ha flere motparter, men raden har plass til ÉN. Vi tar
+       * den første som verken er deg selv eller en agent — samme person
+       * `threadHeading` navngir raden etter, så bilde og navn ikke peker på
+       * hver sin deltaker.
+       * Seeden kommer fra serveren (`participants.seed`), ikke fra
+       * deltaker-IDen: for en kunde er den `customers.id`, som er den samme
+       * seeden kundekortet bruker. Ellers ville samme menneske hatt to
+       * ansikter på to flater.
+       */
+      motpart: motpartFor(
+        t.motparter ?? [],
+        visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
+        me.data?.userId,
+      ),
+    }));
+  }, [ekte, part, sortering, skjulte, navnIntern.data, navnOffisiell.data, me.data?.userId]);
 
   if (endwise) {
     const henvendelser = support.data ?? [];
     return (
-      <aside className="flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r">
-        <div className="flex h-14 shrink-0 items-center border-border border-b px-3">
+      <aside
+        className={`flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r ${
+          aktivId ? 'max-md:hidden' : ''
+        }`}
+      >
+        <div className="flex h-14 shrink-0 items-center px-3">
           <h2 className="min-w-0 truncate text-title text-fg">Innboks</h2>
         </div>
         <div className="shrink-0 border-border border-b p-2">
@@ -162,38 +182,80 @@ export function InboxSidebar() {
   }
 
   return (
-    <aside className="flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r">
+    <aside
+      className={`flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r ${
+        aktivId ? 'max-md:hidden' : ''
+      }`}
+    >
       {/**
-       * Desktop list-header: ikon-only filtre + Ny chat.
-       * Telefon-filtrene bor i top-bar 2 (ikon + tekst) — ikke duplisert.
+       * Mikael 02.09: én verktøylinje — Nyeste, Eldste, slett, ny chat, velg kort.
+       * Telefon kan wrappe, men alt sitter i samme stripe (z-20, min 44px).
        */}
-      <div className="hidden shrink-0 items-center gap-2 border-border border-b px-3 py-1.5 md:flex">
+      <div className="relative z-20 flex shrink-0 flex-col overflow-visible px-3 py-1.5">
         <h2 className="sr-only">Samtaler</h2>
         <div
-          className="flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto"
+          data-innboks-verktoy
+          className="relative z-20 flex flex-wrap items-center gap-1.5 overflow-visible"
           role="toolbar"
-          aria-label="Sorter samtaler"
+          aria-label="Innboks"
         >
-          {INNBOKS_FILTERE.map((p) => {
-            const aktiv = part === p.key;
-            return (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setPart(p.key)}
-                aria-pressed={aktiv}
-                title={p.label}
-                aria-label={p.label}
-                className={`inline-flex h-control min-h-control shrink-0 items-center justify-center rounded-control px-2.5 transition-colors ${
-                  aktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-                }`}
-              >
-                <p.icon size={16} strokeWidth={1.75} />
-              </button>
-            );
-          })}
+          {(
+            [
+              ['nyeste', 'Nyeste'],
+              ['eldste', 'Eldste'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setSortering(key)}
+              aria-pressed={sortering === key}
+              className={`inline-flex min-h-11 items-center rounded-control px-2.5 text-label transition-colors md:h-control md:min-h-control ${
+                sortering === key ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+          <button
+            type="button"
+            aria-label="Slett valgt samtale"
+            title="Slett valgt samtale"
+            disabled={velgModus ? valgte.size === 0 : !aktivId}
+            className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-danger hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={() => {
+              if (velgModus) {
+                skjulFlere([...valgte]);
+                setValgte(new Set());
+                return;
+              }
+              if (aktivId) skjul(aktivId);
+            }}
+          >
+            <Trash2 size={16} strokeWidth={1.75} />
+          </button>
+          <Link
+            href={'/innboks?ny=1' as Route}
+            aria-label="Ny melding"
+            title="Ny melding"
+            className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-fg hover:bg-surface-2"
+          >
+            <NyMeldingIkon size={16} />
+          </Link>
+          <button
+            type="button"
+            aria-pressed={velgModus}
+            onClick={() => {
+              setVelgModus((v) => !v);
+              setValgte(new Set());
+            }}
+            className={`inline-flex min-h-11 items-center rounded-control px-2.5 text-label ${
+              velgModus ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+            }`}
+          >
+            Velg kort
+          </button>
         </div>
-        <NySamtaleLenke href={'/innboks?ny=1' as Route} />
       </div>
 
       {/* Samtalene */}
@@ -219,11 +281,38 @@ export function InboxSidebar() {
             )}
           </div>
         ) : (
-          rader.map((t) => (
-            <Link key={t.id} href={`/innboks/${t.id}` as Route} className="block">
-              <SamtaleKort rad={t} aktiv={t.id === aktivId} />
-            </Link>
-          ))
+          rader.map((t) =>
+            velgModus ? (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={valgte.has(t.id)}
+                onClick={() => {
+                  setValgte((forrige) => {
+                    const neste = new Set(forrige);
+                    if (neste.has(t.id)) neste.delete(t.id);
+                    else neste.add(t.id);
+                    return neste;
+                  });
+                }}
+                className="flex w-full items-start gap-2 text-left"
+              >
+                <span
+                  aria-hidden
+                  className={`mt-3 size-4 shrink-0 rounded-sm border ${
+                    valgte.has(t.id) ? 'border-fg bg-fg' : 'border-border bg-bg'
+                  }`}
+                />
+                <span className="min-w-0 flex-1">
+                  <SamtaleKort rad={t} aktiv={valgte.has(t.id)} />
+                </span>
+              </button>
+            ) : (
+              <Link key={t.id} href={`/innboks/${t.id}` as Route} className="block">
+                <SamtaleKort rad={t} aktiv={t.id === aktivId} />
+              </Link>
+            ),
+          )
         )}
       </div>
     </aside>
@@ -378,7 +467,7 @@ function NySamtaleLenke({ href, full }: { href: Route; full?: boolean }) {
   return (
     <Button asChild className={full ? 'w-full' : 'shrink-0'}>
       <Link href={href}>
-        <MessageSquarePlus size={16} strokeWidth={1.75} />
+        <NyMeldingIkon size={16} />
         Ny chat
       </Link>
     </Button>

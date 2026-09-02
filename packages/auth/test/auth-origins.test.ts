@@ -30,7 +30,20 @@ describe('authPublicUrl', () => {
     expect(authPublicUrl(PROD)).toBe('https://endwise.no');
   });
 
-  it('preview bruker VERCEL_URL, ikke produksjons-BETTER_AUTH_URL', () => {
+  it('preview foretrekker VERCEL_BRANCH_URL, ikke unik VERCEL_URL eller prod', () => {
+    expect(
+      authPublicUrl({
+        NODE_ENV: 'production',
+        VERCEL_ENV: 'preview',
+        VERCEL_URL: 'endwise-v1-huyl0g1ly-endwise-twofold.vercel.app',
+        VERCEL_BRANCH_URL:
+          'endwise-v1-web-git-cursor-desktop-chrome-2b74-endwise-twofold.vercel.app',
+        BETTER_AUTH_URL: 'https://endwise.no',
+      }),
+    ).toBe('https://endwise-v1-web-git-cursor-desktop-chrome-2b74-endwise-twofold.vercel.app');
+  });
+
+  it('preview uten branch-URL faller tilbake på VERCEL_URL, aldri prod', () => {
     expect(
       authPublicUrl({
         NODE_ENV: 'production',

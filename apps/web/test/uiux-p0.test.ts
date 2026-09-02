@@ -29,18 +29,16 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(destinasjonEtterInvite('staff', null)).toBe('/dashboard');
   });
 
-  it('2FA-kode vises ved twoFactorRedirect eller TWO_FACTOR_REQUIRED', () => {
+  it('2FA-kode vises bare ved twoFactorRedirect — TWO_FACTOR_REQUIRED er enroll', () => {
     expect(trengerKodeSteg({ twoFactorRedirect: true })).toBe(true);
-    expect(trengerKodeSteg({ feil: 'TWO_FACTOR_REQUIRED' })).toBe(true);
+    expect(trengerKodeSteg({ feil: 'TWO_FACTOR_REQUIRED' })).toBe(false);
     expect(trengerKodeSteg({})).toBe(false);
   });
 
-  it('TWO_FACTOR_REQUIRED lander på /2fa-oppsett — aldri dashboard eller /oppstart', () => {
-    expect(destinasjonEtterInvite('owner', '/oppstart', 'TWO_FACTOR_REQUIRED')).toBe(
-      '/2fa-oppsett',
-    );
-    expect(destinasjonEtterInvite('staff', '/innboks', 'TWO_FACTOR_REQUIRED')).toBe('/2fa-oppsett');
-    expect(destinasjonEtterInvite('staff', null, 'TWO_FACTOR_REQUIRED')).toBe('/2fa-oppsett');
+  it('TWO_FACTOR_REQUIRED tvinger ikke /2fa-oppsett — uenrollert går til landing', () => {
+    expect(destinasjonEtterInvite('owner', '/oppstart', 'TWO_FACTOR_REQUIRED')).toBe('/oppstart');
+    expect(destinasjonEtterInvite('staff', '/innboks', 'TWO_FACTOR_REQUIRED')).toBe('/innboks');
+    expect(destinasjonEtterInvite('staff', null, 'TWO_FACTOR_REQUIRED')).toBe('/dashboard');
     expect(destinasjonEtterInvite('staff', '/dashboard', 'annen feil')).toBe('/dashboard');
   });
 
@@ -52,46 +50,28 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(kilde).not.toMatch(/fetch\(`\/invitasjon\/\$\{/);
   });
 
-  it('fersk invitee går aldri til /signin etter godta + passord', () => {
-    expect(kilde).toMatch(/destinasjonEtterInvite/);
-    expect(kilde).toMatch(/location\.assign/);
-    expect(kilde).toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
-    expect(kilde).toMatch(/Bekrefter …/);
-    expect(kilde).toMatch(/organization\.setActive/);
-    expect(kilde).not.toMatch(/router\.push/);
+  it('fersk invitee sender magic link etter godta — ikke passord+OTP', () => {
+    expect(kilde).toMatch(/signIn\.magicLink|magicLink/);
+    expect(kilde).toMatch(/callbackURL:\s*['"]\/signin['"]/);
+    expect(kilde).not.toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
+    expect(kilde).not.toMatch(/type=["']password["']/);
     expect(kilde).not.toMatch(/if\s*\(\s*!inv\.kreverPassord\s*\)[\s\S]{0,80}\/signin/);
   });
 
-  it('eksisterende konto (/signin) og / sender uferdig 2FA til /2fa-oppsett', () => {
-    expect(destinasjonNarSesjonFeiler(new Error('TWO_FACTOR_REQUIRED'))).toBe('/2fa-oppsett');
+  it('eksisterende konto (/signin) og / sender uenrollert til landing, ikke /2fa-oppsett', () => {
+    expect(destinasjonNarSesjonFeiler(new Error('TWO_FACTOR_REQUIRED'))).toBe('/dashboard');
     expect(destinasjonNarSesjonFeiler(new Error('nettverk nede'))).toBe('/dashboard');
     const signin = readFileSync(resolve(her, '../app/signin/signin-skjema.tsx'), 'utf8');
     const rot = readFileSync(resolve(her, '../app/page.tsx'), 'utf8');
     expect(signin).toMatch(/destinasjonNarSesjonFeiler/);
     expect(rot).toMatch(/destinasjonNarSesjonFeiler/);
-    expect(signin).not.toMatch(/catch[\s\S]{0,180}\/dashboard['"]/);
+    expect(signin).not.toMatch(/catch\s*\(\s*\)\s*=>\s*['"]\/dashboard['"]/);
   });
 
-  it('etter OTP rives andre sesjoner, og land() sender 2FA-feil til destinasjonEtterInvite', () => {
-    expect(kilde).toMatch(/revokeOtherSessions\s*\(/);
+  it('invite-siden logger aldri token og tvinger callback til /signin', () => {
     expect(kilde).not.toMatch(/console\.(log|info|debug)\([^)]*token/i);
-    const landStart = kilde.indexOf('async function land');
-    const landSlutt = kilde.indexOf('async function startKodeSteg', landStart);
-    const land = kilde.slice(landStart, landSlutt);
-    expect(land).toMatch(/destinasjonEtterInvite\(/);
-    expect(land).toMatch(/TWO_FACTOR_REQUIRED|feil/);
-    expect(land).not.toMatch(/catch\s*\(\s*\)\s*=>\s*['"]\/dashboard['"]/);
-    expect(land).toMatch(/krevRevokeAndreSesjoner/);
-    expect(land).not.toMatch(/\.catch\(\s*\(\)\s*=>\s*undefined\s*\)/);
-    expect(land).not.toMatch(/likevel videre/);
-  });
-
-  it('revoke-feil etter brukt OTP kan prøves igjen uten ny verifyOtp', () => {
-    const start = kilde.indexOf('async function bekreftKode');
-    const bekreft = kilde.slice(start, kilde.indexOf('const rolle', start));
-    expect(bekreft).toMatch(/otpFerdigRef|otpBekreftet/);
-    expect(bekreft).toMatch(/verifyOtp/);
-    expect(bekreft).toMatch(/land\(/);
+    expect(kilde).toMatch(/callbackURL:\s*['"]\/signin['"]/);
+    expect(kilde).not.toMatch(/searchParams\.get\(['"]next['"]\)/);
   });
 
   it('revokeOtherSessions etter invite-OTP feiler lukket — klasse logges, ingen token', async () => {
@@ -148,15 +128,10 @@ describe('P0: avatar-onboarding dør ikke på 401', () => {
     expect(MANGLER_SESJON_UI).not.toMatch(/UNAUTHORIZED|#EE2924/i);
   });
 
-  it('etter 2FA aktiveres org og man lander — uten avatar-steg', () => {
-    const start = kilde.indexOf('async function bekreftKode');
-    const bekreft = kilde.slice(start, kilde.indexOf('const rolle', start));
-    expect(bekreft).toMatch(/aktiverOrg\(/);
-    expect(bekreft).toMatch(/land\(/);
+  it('invite-siden har ingen avatar-steg — magic link til /signin', () => {
     expect(kilde).not.toMatch(/setSteg\('avatar'\)/);
-    expect(kilde).toMatch(/erUautorisert/);
-    expect(kilde).toMatch(/destinasjonVedManglendeSesjon|\/signin/);
-    expect(kilde).toMatch(/norskAuthFeil/);
+    expect(kilde).toMatch(/signIn\.magicLink|magicLink/);
+    expect(kilde).toMatch(/callbackURL:\s*['"]\/signin['"]/);
     expect(kilde).not.toMatch(/setFeil\(\(error as Error\)\.message\)/);
   });
 });
@@ -184,11 +159,11 @@ describe('P0: profil uten ansiktsvelger', () => {
     expect(profil).toMatch(/size=\{56\}/);
   });
 
-  it('sidebar-avataren er stille uten tvunget happy', () => {
+  it('sidebar har ingen avatar og tvinger ikke happy', () => {
     const rad = readFileSync(resolve(her, '../app/(app)/_shell/bruker-rad.tsx'), 'utf8');
-    expect(rad).toMatch(/bevegelse="stille"/);
-    expect(rad).toMatch(/valg=\{profil\.data\?\.avatar\}/);
+    expect(rad).not.toMatch(/<Avatar|bevegelse=/);
     expect(rad).not.toMatch(/humor:\s*['"]happy['"]/);
+    expect(rad).toMatch(/LogOut/);
   });
 });
 

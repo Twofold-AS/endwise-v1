@@ -11,12 +11,11 @@ import { useOrgRole } from './_lib/use-org-role';
 import { InboxFilterProvider } from './_shell/inbox-filter';
 import { erTillattMekanikerSti } from './_shell/nav';
 import { PHONE_SHELL_ROT } from './_shell/phone-home';
-import { PhoneBevel, PhoneShell } from './_shell/phone-shell';
+import { PhoneShell } from './_shell/phone-shell';
 import { PwaRegister } from './_shell/pwa-register';
-import { InnboksSeksjonBar, OrganisasjonSeksjonBar } from './_shell/seksjon-bar';
+import { DestinasjonSeksjonBar } from './_shell/seksjon-bar';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
-import { TopBar } from './_shell/top-bar';
 import { WorkshopBloub } from './_workshop/workshop-bloub';
 
 /**
@@ -113,22 +112,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    */
 
   /*
-   * Sidebaren er nå ytterst og går fra topp til bunn. Topbaren ligger
-   * Innenfor innholdskolonnen, ikke over hele skjermen: den beskriver bare hvor
-   * du er i innholdet, ikke i appen. Rekkefølgen i DOM-en sier det samme som
-   * hierarkiet i hodet.
-   * Kommandopaletten (K som globalt søk) er fjernet på eiers
-   * beslutning. K åpner nå quick actions i sidebaren i stedet. Konsekvensen er
-   * at de parkerte rutene (marked/*
-   * , admin/*) ikke lenger har en inngang i UI-et
-   * de nås kun ved å skrive URL-en. Se sesjonsrapporten.
+   * Desktop-sidebar er persistent venstre skinne. Overlay/fullskjerm-drawer
+   * er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
+   * Fast toppbar med 24px-logo på telefon. Tilbake er ordet uten pil.
+   * PhoneBevel er borte. DestinasjonSeksjonBar under Ronny på alle sider.
+   * Workshop-stripen (Grainient, KI-Ronny midtstilt i stripen) er ~44px på telefon og
+   * 32px på desktop. K åpner quick actions i sidebaren på desktop.
    */
   /*
-   * `<Suspense>` rundt Sidebar og TopBar er påkrevd, ikke pynt. Begge leser
-   * `useSearchParams` (kanal-/visningsvalg i navet, breadcrumb), og uten en
-   * suspense-grense trekker det hele app-treet ut av statisk prerender
-   * `next build` feiler med «useSearchParams should be wrapped in a suspense
-   * boundary» på hver eneste side, også de som ikke rører query.
+   * `<Suspense>` rundt Sidebar og WorkshopBloub er påkrevd, ikke pynt. Begge
+   * leser `useSearchParams`, og uten en suspense-grense trekker det hele
+   * app-treet ut av statisk prerender.
    */
   return (
     <LydProvider>
@@ -137,11 +131,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <InboxFilterProvider>
             <PwaRegister />
             <div className={PHONE_SHELL_ROT}>
-              <Suspense
-                fallback={
-                  <div className="hidden w-[248px] shrink-0 border-border border-r bg-sidebar md:block" />
-                }
-              >
+              <Suspense fallback={null}>
                 <PlattformRuteVakt
                   erPlattform={erPlattform}
                   isLoading={isLoading}
@@ -151,14 +141,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </Suspense>
               <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                 <Suspense
-                  fallback={<div className="h-control shrink-0 border-border border-b bg-bg" />}
+                  fallback={
+                    <div className="h-11 max-h-[44px] shrink-0 bg-bg md:h-control md:max-h-[32px]" />
+                  }
                 >
                   <PhoneShell />
-                  <div className="hidden md:block">
-                    <TopBar />
-                  </div>
-                  <OrganisasjonSeksjonBar />
-                  <InnboksSeksjonBar />
+                  <WorkshopBloub />
+                  <DestinasjonSeksjonBar />
                 </Suspense>
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
                   <main className="min-w-0 flex-1">
@@ -176,11 +165,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     ) : null}
                     {children}
                   </main>
-                  <PhoneBevel />
                 </div>
-                <Suspense fallback={null}>
-                  <WorkshopBloub />
-                </Suspense>
               </div>
             </div>
           </InboxFilterProvider>

@@ -70,6 +70,8 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **beUI** (shadcn-registry `@beui`) — tilstands-komponenter (`StatefulButton`) + kanoniske bevegelses-tokens (`lib/ease.ts`)
 - **Charts: Recharts er eneste chart-motor** (05.08.2026, brukergodkjent §2-beslutning). Hentet inn shadcn-stil i `packages/ui/src/components/chart.tsx` — appene importerer aldri `recharts` direkte. **Kun søyle, linje og areal** er eksponert; pai/radar/scatter er bevisst utelatt. Fargene er CSS-variabler mot `--ew-*`-tokenene, så grafene snur med lys/mørk. ~~dither-kit~~ er ute av UI-et (03.08.2026)
 - **cuelume** (mikro-lyder) — valgfri polish, av som default
+- **Grainient** (react-bits Grainient-JS-CSS + `ogl` ^1.0.11) — KI-Ronny-stripe (44px telefon / 32px desktop, 01.09.2026 kveld). ⛔ ShaderGradient ute. ⛔ Ikke dealer-hero. Detaljer i `docs/UI-PAKKER.md`
+- **Galaxy** (react-bits Galaxy-JS-CSS + `ogl`) — kun Oppgrader-CTA i sidebaren, klippet i knappen (`#111`). ⛔ Ikke 1080-side. ⛔ Ikke Grainient på den knappen. Detaljer i `docs/UI-PAKKER.md`
 - **blobatar** + **@blobatar/react** (avatarer, 20.08.2026, brukergodkjent §2-beslutning). MIT, ~4,4 kB, **null avhengigheter**, alt genereres klientside — ingen avatar-URL, ingen tredjepartsforespørsel, ingenting som forlater maskinen. Deterministiske geometriske ansikter fra en streng. ⛔ **Seeden er alltid en stabil ID** (`customers.id`, `mechanics.id`, `user.id`), aldri et navn: en rettet skrivefeil skal ikke bytte ansikt på noen. Hentet inn bak `Avatar` i `packages/ui/src/components/avatar.tsx` — appene importerer aldri pakken direkte, samme regel som for Recharts og lucide. **Kun personer, ikke kjøretøy** (modellbilder er F2-03 med ekte silhuetter) og **kun admin-flatene** — widget og kundevendte flater er utenfor. Detaljer i `docs/UI-PAKKER.md` §10
 
 ### Backend — `apps/api`
@@ -108,14 +110,15 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 
 ### Database — `packages/db`
 - **Scaleway Managed PostgreSQL (Frankrike, EU)** — Postgres 16, **RLS**, **pgvector** (HNSW-indeks). ⚠️ ERSTATTET Neon 09.08.2026 (brukergodkjent): en vanlig Postgres er påkrevd for langlevde `LISTEN/NOTIFY`-forbindelser, og vi holder oss til to leverandører totalt. Se `docs/deploy-plan.md`
+- **Vår PgBouncer** (`infra/pgbouncer`) som Scaleway Serverless Container (`min_scale=1`, port 6432, `pool_mode=transaction`). App-runtime (`APP_DATABASE_URL`) går hit. Eier (`DATABASE_URL`) og stream LISTEN går direkte `:5432`. Scaleway har ikke innebygd pooler; Serverless SQL er ute (ødelegger LISTEN). Se `docs/pgbouncer.md`
 - **Drizzle ORM** (schema-first, TS-typer genereres)
 - **`pg_advisory_xact_lock`** for slot-låsing (transaksjons-skopet — påkrevd så snart en connection pooler er i bildet)
 - Multi-tenant: `tenant_id` på hver rad, RLS på hver tabell
 - Branch-per-PR = preview-miljøer med ekte DB
 
 ### Auth — `packages/auth`
-- **Better-Auth 1.x** (`better-auth` ~1.6.30) — organizations (multi-tenant), phone-number-plugin, twoFactor (e-post-OTP). Schema-CLI er pakken `auth` (samme 1.6.x), ikke det forlatte `@better-auth/cli` som pinner `better-auth@1.4`. Passkey (WebAuthn) er MIDLERTIDIG UTSATT (17.07.2026): `@better-auth/passkey` dro inn et foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt brukte den. Pakke + plugin fjernet, `passkey`-tabellen beholdt dormant. Reaktiveres når WebAuthn-flyten bygges. Se roadmap-endringer.md.
-- **Obligatorisk e-post-2FA** for hver forhandler/admin (ingen bypass)
+- **Better-Auth 1.x** (`better-auth` ~1.6.30) — organizations (multi-tenant), phone-number-plugin, magicLink + twoFactor (TOTP-app, ikke e-post-OTP). `emailAndPassword.enabled` er `false`. Schema-CLI er pakken `auth` (samme 1.6.x), ikke det forlatte `@better-auth/cli` som pinner `better-auth@1.4`. Passkey (WebAuthn) er MIDLERTIDIG UTSATT (17.07.2026): `@better-auth/passkey` dro inn et foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt brukte den. Pakke + plugin fjernet, `passkey`-tabellen beholdt dormant. Reaktiveres når WebAuthn-flyten bygges. Se roadmap-endringer.md.
+- **Innlogging: magic link (innboks) + TOTP-app.** Ingen passord-UI. Andre faktor er ikke e-postkode — stjålet mailbox skal ikke fullføre innlogging. `ROLES_REQUIRING_2FA` håndheves i `requireSession()`. Migrasjon 0035 tømmer passord-hash, **ikke** TOTP. Uenrollert → midlertidig sesjon kun til `/2fa-oppsett`. Enrollert → sesjonen rives, TOTP kreves. `trustDevice` tvinges av. Selvbetjent 2FA-disable er stengt (leder tilbakestiller). Customer uten 2FA er kjent restrisiko. SPF/DKIM ligger hos Resend, ikke i repo.
 - **60-min idle-timeout** (serverside sliding-vindu) + absolutt maks-levetid
 - **Twilio Verify** som OTP-sender
 - **Envelope-crypto** (AES-256-GCM, BYOK) for tenant-secrets — inkl. forhandlerens Quick API-nøkkel
@@ -204,7 +207,7 @@ endwise/
 
 | Tjeneste | Rolle | Merknad |
 |---|---|---|
-| **Scaleway** | Postgres (Frankrike, EU) + Serverless Container + Key Manager | ⭐ ALL DATA hos én EU-leverandør. Vanlig Postgres → `LISTEN/NOTIFY` er til å stole på. Containeren kjører `apps/stream` med minst én instans |
+| **Scaleway** | Postgres (Frankrike, EU) + Serverless Container + Key Manager | ⭐ ALL DATA hos én EU-leverandør. Vanlig Postgres → `LISTEN/NOTIFY` er til å stole på. Containere: `apps/stream` + vår PgBouncer (`infra/pgbouncer`, :6432) med minst én instans hver |
 | **Resend** | E-post | Transaksjonelt + Broadcasts (nyhetsbrev) + auth-eposter |
 | **Twilio** | SMS / OTP | Verify som 2FA/OTP-sender |
 | **Stripe** | SaaS-fakturering | Abonnement → entitlements (`tenant_modules`) |

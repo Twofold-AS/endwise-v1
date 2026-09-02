@@ -1,3 +1,4 @@
+import { erTenantDestinasjon, erTenantTelefonDestinasjon } from '@endwise/auth';
 import { createDb } from '@endwise/db';
 import { createDispatcher, type DispatchInput } from '@endwise/modules/notifications';
 import { createResendChannel } from '@endwise/toolkit-resend';
@@ -21,12 +22,13 @@ async function sendNotification(input: DispatchInput) {
       'Mangler database-URL: sett APP_DATABASE_URL eller DATABASE_URL (se .env.example)',
     );
 
+  const db = createDb(databaseUrl);
   const channels = [];
   if (process.env.RESEND_API_KEY) {
     channels.push(
       createResendChannel({
         apiKey: process.env.RESEND_API_KEY,
-        from: process.env.RESEND_FROM,
+        kanSendeTil: (to, tenantId) => erTenantDestinasjon(db, tenantId, to),
       }),
     );
   }
@@ -36,6 +38,7 @@ async function sendNotification(input: DispatchInput) {
         accountSid: process.env.TWILIO_ACCOUNT_SID,
         authToken: process.env.TWILIO_AUTH_TOKEN,
         from: process.env.TWILIO_FROM,
+        kanSendeTil: (to, tenantId) => erTenantTelefonDestinasjon(db, tenantId, to),
       }),
     );
   }
@@ -45,7 +48,7 @@ async function sendNotification(input: DispatchInput) {
     throw new FatalError('Ingen varslingskanaler er konfigurert');
   }
 
-  const dispatcher = createDispatcher(createDb(databaseUrl), channels);
+  const dispatcher = createDispatcher(db, channels);
 
   try {
     return await dispatcher.dispatch(input);

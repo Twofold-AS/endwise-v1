@@ -1,6 +1,14 @@
 import { Resend } from 'resend';
 import { LOGO_EPOST_CID, LOGO_EPOST_FILNAVN, LOGO_EPOST_PNG_BASE64 } from '../assets/logo-epost.ts';
-import { authEnv } from '../env.ts';
+import { authEnv, avsenderErVerifisert } from '../env.ts';
+import { visMagicLinkKode } from '../magic-link.ts';
+import {
+  avsenderErKanonisk,
+  krevEnkelEpost,
+  produktAvsender,
+  RESEND_FROM_KANONISK,
+  stripCrLf,
+} from '../resend-avsender.ts';
 import { formaterKlokkeslett } from '../tid.ts';
 import { byggEpostHtml, knapp, kodeboks, meldingsboks } from './epost-mal.ts';
 
@@ -58,12 +66,22 @@ export async function sendEmail(input: {
    */
   idempotencyKey?: string;
 }): Promise<string | undefined> {
+  if (Object.hasOwn(input, 'from')) {
+    throw new Error('from settes ikke av kalleren');
+  }
+  const from = produktAvsender();
+  if (!avsenderErKanonisk(from) || !avsenderErVerifisert(from) || from !== RESEND_FROM_KANONISK) {
+    throw new Error(`From er ikke den kanoniske produktadressen (${RESEND_FROM_KANONISK})`);
+  }
+  const to = krevEnkelEpost(input.to, 'to');
+  const replyTo = input.replyTo ? krevEnkelEpost(input.replyTo, 'replyTo') : undefined;
+  const subject = stripCrLf(input.subject);
   const { data, error } = await getClient().emails.send({
-    from: authEnv.resend.from,
-    to: input.to,
-    subject: input.subject,
+    from,
+    to,
+    subject,
     text: input.text,
-    ...(input.replyTo ? { replyTo: input.replyTo } : {}),
+    ...(replyTo ? { replyTo } : {}),
     ...(input.idempotencyKey ? { headers: { 'Idempotency-Key': input.idempotencyKey } } : {}),
     ...(input.html
       ? {
@@ -88,6 +106,7 @@ export async function sendEmail(input: {
   if (error) throw new Error(`Resend feilet: ${feilmeldingFra(error)}`);
   return data?.id;
 }
+
 
 /**
  * Lokal leveranse av engangskoden.
@@ -154,31 +173,33 @@ function devLevering(to: string, otp: string): boolean {
   return true;
 }
 
-export async function sendTwoFactorOtp(to: string, otp: string): Promise<void> {
+/** Stengt. E-postkode er ikke andre faktor. Kall sendBekreftelseskode for leder-handlinger. */
+export async function sendTwoFactorOtp(_to?: string, _otp?: string): Promise<never> {
+  throw new Error('E-postkode er ikke andre faktor. sendTwoFactorOtp er stengt.');
+}
+
+/**
+ * Bekreftelseskode til innlogget leder (slett tenant / slå av 2FA).
+ * Ikke innloggings-OTP. `to` kommer fra DB-e-posten til lederen.
+ */
+export async function sendBekreftelseskode(to: string, otp: string): Promise<void> {
   if (devLevering(to, otp)) return;
 
   const fotnote =
-    'Har du ikke bedt om denne koden, kan noen ha passordet ditt. Bytt det med én gang, og si fra til oss.';
+    'Har du ikke bedt om denne koden, se bort fra e-posten. Den gjelder bare en lederhandling i Endwise.';
 
   await sendEmail({
     to,
-    subject: `${otp} er engangskoden din til Endwise`,
-    /**
-     * Ren tekst sendes alltid ved siden av HTML-en. Noen leser e-post i
-     * klienter uten HTML, noen har slått den av, og noen filtre stripper den.
-     * En engangskode som bare finnes i markupen, finnes ikke for dem.
-     */
+    subject: `${otp} er bekreftelseskoden din i Endwise`,
     text: [
-      `Din engangskode til Endwise er ${otp}.`,
+      `Bekreftelseskoden din i Endwise er ${otp}.`,
       '',
       'Koden er gyldig i 5 minutter og kan brukes én gang.',
       '',
       fotnote,
     ].join('\n'),
     html: byggEpostHtml({
-      tittel: 'Engangskode til Endwise',
-      // Koden står også her, fordi dette er forhåndsvisningsteksten i
-      // innboksen — mange skriver den av uten å åpne e-posten.
+      tittel: 'Bekreft handlingen i Endwise',
       ingress: `Koden din er ${otp}. Den er gyldig i 5 minutter og kan brukes én gang.`,
       innhold: kodeboks(otp),
       fotnote,
@@ -212,54 +233,14 @@ export async function sendTwoFactorOtp(to: string, otp: string): Promise<void> {
  * nøkkel i `.env` som ikke kan sende fra `endwise.no`, får du verken e-post
  * eller logglinje. Fjern `RESEND_API_KEY` for å teste flyten i dev.
  */
-export async function sendPasswordReset(input: {
+export async function sendPasswordReset(_input?: {
   to: string;
   lenke: string;
   utloper: Date;
-}): Promise<void> {
-  const klokkeslett = formaterKlokkeslett(input.utloper);
-
-  if (skalLeggesILogg()) {
-    devRamme(
-      'PASSORDRESET (KUN DEV — Resend er ikke konfigurert)',
-      [
-        ['Til:', input.to],
-        ['Lenke:', input.lenke],
-      ],
-      `Gyldig til kl. ${klokkeslett}. Kan brukes én gang.`,
-    );
-    return;
-  }
-
-  const fotnote =
-    'Har du ikke bedt om dette, kan du se bort fra e-posten. Passordet ditt er uendret så lenge lenken ikke brukes.';
-
-  await sendEmail({
-    to: input.to,
-    subject: 'Tilbakestill passordet ditt i Endwise',
-    text: [
-      'Hei!',
-      '',
-      'Noen har bedt om å tilbakestille passordet til Endwise-kontoen din.',
-      '',
-      'Åpne lenken for å velge et nytt passord:',
-      input.lenke,
-      '',
-      `Lenken kan brukes én gang og er gyldig til kl. ${klokkeslett}.`,
-      '',
-      'Når passordet er byttet, blir du logget ut på alle enheter og må logge',
-      'inn på nytt — med engangskode, som vanlig.',
-      '',
-      fotnote,
-    ].join('\n'),
-    html: byggEpostHtml({
-      tittel: 'Velg nytt passord',
-      ingress: `Lenken kan brukes én gang og er gyldig til kl. ${klokkeslett}. Når passordet er byttet, blir du logget ut på alle enheter.`,
-      innhold: knapp(input.lenke, 'Velg nytt passord'),
-      fotnote,
-    }),
-  });
+}): Promise<never> {
+  throw new Error('Passordreset er stengt. Innlogging er magic link + TOTP.');
 }
+
 
 /**
  * Invitasjonslenke.
@@ -274,6 +255,55 @@ export async function sendPasswordReset(input: {
  * Tokenet skal aldri logges noe annet sted. Ser du en `console.log` med en
  * invitasjonslenke utenfor denne funksjonen, er det en lekkasje.
  */
+export async function sendMagicLink(input: {
+  to: string;
+  lenke: string;
+  kode: string;
+  utloper: Date;
+}): Promise<void> {
+  const klokkeslett = formaterKlokkeslett(input.utloper);
+  const kodeVisning = visMagicLinkKode(input.kode);
+
+  if (skalLeggesILogg()) {
+    devRamme(
+      'MAGIC LINK (KUN DEV — Resend er ikke konfigurert)',
+      [
+        ['Til:', input.to],
+        ['Lenke:', input.lenke],
+        ['Kode:', kodeVisning],
+      ],
+      `Gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
+    );
+    return;
+  }
+
+  const fotnote =
+    'Har du ikke bedt om denne lenken, kan du se bort fra e-posten. Bare den nyeste e-posten gjelder — eldre lenker slutter å virke.';
+
+  await sendEmail({
+    to: input.to,
+    subject: 'Logg inn på Endwise',
+    text: [
+      'Hei!',
+      '',
+      'Åpne lenken for å logge inn på Endwise, eller skriv koden manuelt:',
+      input.lenke,
+      '',
+      `Kode: ${kodeVisning}`,
+      '',
+      `Kan brukes én gang og er gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
+      '',
+      fotnote,
+    ].join('\n'),
+    html: byggEpostHtml({
+      tittel: 'Logg inn på Endwise',
+      ingress: `Koden din er ${kodeVisning}. Trykk på knappen eller skriv den manuelt. Gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
+      innhold: `${kodeboks(kodeVisning)}<div style="height:16px"></div>${knapp(input.lenke, 'Logg inn')}`,
+      fotnote,
+    }),
+  });
+}
+
 export async function sendInvitation(input: {
   to: string;
   lenke: string;
@@ -337,7 +367,7 @@ export async function sendInvitation(input: {
       ``,
       ingress,
       ``,
-      `Åpne lenken for å sette eller bytte passordet ditt:`,
+      `Åpne lenken for å godta invitasjonen og logge inn:`,
       input.lenke,
       ``,
       `Lenken er personlig, kan brukes én gang, og er gyldig til ${dato}.`,

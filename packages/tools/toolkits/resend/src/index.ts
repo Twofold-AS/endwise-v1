@@ -6,46 +6,75 @@ import type {
 import { Resend } from 'resend';
 
 /**
- * Domenet standard-avsenderen bruker når `RESEND_FROM` ikke er satt.
- * Bevisst duplisert fra `packages/auth/src/env.ts`
- * (`RESEND_STANDARD_DOMENE`). Å importere `@endwise/auth` hit ville dratt
- * Better-Auth og hele db-laget inn i en tynn transportpakke, for én streng.
- * Samme avveining som `next.config.ts` gjør mot `dev-origins.ts`.
- * Duplikatet er ikke overlatt til en kommentar: `apps/api/test/
- * utgaaende-epost.test.ts` feiler hvis de to konstantene glir fra hverandre.
+ * Samme produkt-From som `@endwise/auth` (`RESEND_FROM_KANONISK`).
+ * Toolkit importerer ikke auth — det ville dratt Better-Auth inn her.
+ * `apps/api/test/utgaaende-epost.test.ts` feiler hvis strengene glir.
  */
 export const RESEND_STANDARD_DOMENE = 'endwise.no';
+export const RESEND_FROM_KANONISK = `Endwise <noreply@${RESEND_STANDARD_DOMENE}>`;
 
-/** E-postkanalen. Resend (techstack §5). */
+const EPOST = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function erEnkelEpost(adresse: string): boolean {
+  const trimmet = adresse.trim();
+  if (!EPOST.test(trimmet)) return false;
+  if (/[\r\n,;]/.test(trimmet)) return false;
+  return true;
+}
+
+function stripCrLf(verdi: string): string {
+  return verdi.replace(/[\r\n\u2028\u2029]+/g, ' ').trim();
+}
+
+/** Uten predikat: nei. Alltid-sann er ikke default. */
+async function stengtDest(_to: string, _tenantId: string): Promise<boolean> {
+  return false;
+}
+
+export type KanSendeTil = (to: string, tenantId: string) => Promise<boolean>;
+
+/**
+ * E-postkanal for F3-04-varsler. From er hardkodet.
+ * Dest er et eget predikat per kanal — ikke auth-OR-en.
+ * `kanSendeTil` default er false (fail closed). Kalleren må sende
+ * tenant-id inn i predikatet (typisk `erTenantDestinasjon`).
+ */
 export function createResendChannel(config: {
   apiKey: string;
-  from?: string;
+  kanSendeTil?: KanSendeTil;
 }): NotificationChannel {
+  if (Object.hasOwn(config, 'from')) {
+    throw new Error('from settes ikke av kalleren');
+  }
+  const kanSendeTil: KanSendeTil =
+    typeof config.kanSendeTil === 'function' ? config.kanSendeTil : stengtDest;
   const client = new Resend(config.apiKey);
-  /**
-   * `||`, ikke `??`. `??` faller bare tilbake på `null`/`undefined`, så
-   * en tom `RESEND_FROM` ville sluppet gjennom som avsenderadresse. `notify.ts`
-   * sender `process.env.RESEND_FROM` rett inn hit, og en env-variabel satt til
-   * tom streng er en helt vanlig tilstand i et halvkonfigurert miljø. Rettet
-   * ; samme feil sto i `packages/auth/src/env.ts`.
-   * Domenet MÅ være verifisert i Resend, ellers svarer den
-   * `403 validation_error` og hvert varsel denne kanalen sender feiler — stille,
-   * i en Workflow-logg. Se `RESEND_VERIFISERTE_DOMENER` i `@endwise/auth` for
-   * hvilke som er det, og hvorfor den lista er eksakt og ikke en subdomene-regel.
-   */
-  const from = config.from || `Endwise <no-reply@${RESEND_STANDARD_DOMENE}>`;
+  const from = RESEND_FROM_KANONISK;
 
   return {
     kind: 'email',
     name: 'resend',
 
     async send(message: NotificationMessage): Promise<NotificationResult> {
+      if (from !== RESEND_FROM_KANONISK) {
+        throw new Error(`From er ikke den kanoniske produktadressen (${RESEND_FROM_KANONISK})`);
+      }
+      const tenantId = message.tenantId?.trim() ?? '';
+      if (!tenantId) {
+        throw new Error('tenantId er påkrevd — dest er tenant-skopet');
+      }
+      const to = message.to.trim();
+      if (!erEnkelEpost(to)) {
+        throw new Error('Ugyldig to');
+      }
+      if (!(await kanSendeTil(to, tenantId))) {
+        throw new Error('Mottakeren er ikke en produkt-destinasjon');
+      }
       const { data, error } = await client.emails.send({
         from,
-        to: message.to,
-        subject: message.subject ?? 'Melding fra Endwise',
+        to,
+        subject: stripCrLf(message.subject ?? 'Melding fra Endwise'),
         text: message.body,
-        // Resend sin egen idempotens — vår DB-vakt (F3-04) er beltet, denne er selen.
         headers: { 'Idempotency-Key': message.idempotencyKey },
       });
 

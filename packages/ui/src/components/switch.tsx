@@ -30,7 +30,7 @@ export function Switch({ className, ...props }: React.ComponentProps<typeof Swit
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
         className={cn(
-          'pointer-events-none block size-[var(--ew-switch-thumb)] rounded-pill bg-white shadow-sm ring-0 transition-transform',
+          'pointer-events-none block size-[var(--ew-switch-thumb)] rounded-pill bg-white ring-0 transition-transform',
           // Vandring = bredde − thumb − 2×padding = 24 − 10 − 4 = 10px.
           // Literal, ikke calc(var(…)): Tailwind kan generere klassen, men et
           // arbitrært calc over CSS-variabler er en unødvendig indirekte vei for

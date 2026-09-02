@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { breadcrumbFor, FORHANDLER_NAV, MEKANIKER_NAV } from '../app/(app)/_shell/nav.ts';
-import { erDealerInnboks, erInnboksSide } from '../app/(app)/_shell/seksjon-sti.ts';
+import { erDealerInnboks, erInnboksSide, erInnboksTrad } from '../app/(app)/_shell/seksjon-sti.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -20,7 +20,7 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     const innboks = FORHANDLER_NAV.find((i) => i.key === 'innboks');
     expect(innboks?.href).toBe('/innboks');
     expect(innboks?.pills).toBeUndefined();
-    const filter = utenKommentarer(les('../app/(app)/_shell/inbox-filter.tsx'));
+    const filter = utenKommentarer(les('../app/(app)/_shell/inbox-del.ts'));
     expect(filter).toMatch(/label: 'Alle chatter'/);
     expect(filter).toMatch(/label: 'Kunder'/);
     expect(filter).toMatch(/label: 'Intern'/);
@@ -38,27 +38,22 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     ]);
   });
 
-  it('telefon top-bar 2 er filterrad med ikon+tekst og Ny chat — desktop skjuler den', () => {
+  it('Innboks-faner bor under Ronny, lista har compose + sortering', () => {
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
+    const faner = utenKommentarer(les('../app/(app)/_shell/seksjon-faner.ts'));
+    const side = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
-    expect(layout).toMatch(/InnboksSeksjonBar/);
-    expect(layout).toMatch(/OrganisasjonSeksjonBar/);
-    expect(seksjon).toMatch(/export function InnboksSeksjonBar/);
-    expect(seksjon).toMatch(/export function OrganisasjonSeksjonBar/);
-    expect(seksjon).toMatch(/aria-label="Innboks"/);
-    expect(seksjon).toMatch(/md:hidden/);
-    expect(seksjon).toMatch(/INNBOKS_FILTERE/);
-    expect(seksjon).toMatch(/Ny chat/);
-    expect(seksjon).toMatch(/MessageSquarePlus/);
-    expect(seksjon).not.toMatch(/Oversikt/);
-    expect(seksjon).toMatch(/bg-sidebar-active/);
-    expect(seksjon).toMatch(/hover:bg-surface-2/);
-    expect(seksjon).toMatch(/PhoneHScroll/);
-    expect(seksjon).toMatch(/py-1\.5/);
-    expect(seksjon).toMatch(/max-md:py-1/);
-    expect(seksjon).not.toMatch(/bg-fg text-bg/);
-    expect(seksjon).not.toMatch(/h-row-store|h-11/);
-    expect(seksjon).toMatch(/\{p\.label\}/);
+    expect(layout).toMatch(/DestinasjonSeksjonBar/);
+    expect(seksjon).toMatch(/export function DestinasjonSeksjonBar/);
+    expect(seksjon).not.toMatch(/PhoneHScroll/);
+    expect(faner).toMatch(/INNBOKS_FILTERE/);
+    expect(side).toMatch(/aria-label="Innboks"/);
+    expect(side).toMatch(/NyMeldingIkon/);
+    expect(side).not.toMatch(/MessageSquarePlus/);
+    expect(side).toMatch(/Nyeste/);
+    expect(side).toMatch(/Eldste/);
+    expect(side).toMatch(/max-md:hidden/);
+    expect(side).not.toMatch(/Oversikt/);
   });
 
   it('erInnboksSide dekker dealer og inspect, filterbar er kun dealer', () => {
@@ -69,8 +64,49 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     expect(erInnboksSide('/organisasjon')).toBe(false);
     expect(erDealerInnboks('/innboks')).toBe(true);
     expect(erDealerInnboks('/endwise/verksted/acme/innboks')).toBe(false);
+    expect(erInnboksTrad('/innboks')).toBe(false);
+    expect(erInnboksTrad('/innboks/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee')).toBe(true);
+    expect(erInnboksTrad('/innboks/abc')).toBe(true);
+    const sti = utenKommentarer(les('../app/(app)/_shell/seksjon-sti.ts'));
+    expect(sti).toMatch(/erDealerInnboks/);
+    expect(sti).toMatch(/erInnboksTrad/);
+  });
+});
+
+describe('Mikael 02.09 — tråd-chrome og fork', () => {
+  it('dest-bar i åpen tråd er Tilbake + slett + Inviter ansatt', () => {
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-    expect(seksjon).toMatch(/erDealerInnboks/);
+    const inviter = utenKommentarer(les('../app/(app)/innboks/_inviter-ansatt.tsx'));
+    expect(seksjon).toMatch(/erInnboksTrad/);
+    expect(seksjon).toMatch(/Tilbake/);
+    expect(seksjon).toMatch(/InviterAnsatt|Inviter ansatt/);
+    expect(seksjon).toMatch(/Trash2/);
+    expect(seksjon).toMatch(/text-danger/);
+    expect(seksjon).not.toMatch(/ChevronLeft|chevron-left/);
+    expect(inviter).toMatch(/forkThread/);
+    expect(inviter).toMatch(/team\.list/);
+    expect(inviter).not.toMatch(/addParticipants/);
+    expect(inviter).not.toMatch(/sendInboxMessage|RESEND/);
+  });
+
+  it('tråd-composer er samme PromptInput som Ronny', () => {
+    const trad = utenKommentarer(les('../app/(app)/innboks/[id]/page.tsx'));
+    expect(trad).toMatch(/PromptInput/);
+    expect(trad).toMatch(/PromptInputTextarea/);
+    expect(trad).toMatch(/PromptInputSubmit/);
+    expect(trad).not.toMatch(/min-h-\[56px\]/);
+    expect(trad).not.toMatch(/StatefulButton/);
+  });
+
+  it('messages.forkThread validerer tenant-ansatte og muterer ikke gammel tråd', () => {
+    const router = les('../../api/src/trpc/routers/messages.ts');
+    const modul = les('../../../packages/modules/src/messages/threads.ts');
+    expect(router).toMatch(/forkThread:/);
+    expect(router).toMatch(/organizationId, ctx.tenantId/);
+    expect(router).toMatch(/inviteeIds/);
+    expect(modul).toMatch(/async forkThread/);
+    expect(modul).toMatch(/forkSystemMelding/);
+    expect(modul).toMatch(/Gammel tråd og medlemsliste står urørt/);
   });
 });
 
@@ -81,19 +117,22 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
   const chrome = utenKommentarer(les('../app/(app)/innboks/_chrome.tsx'));
   const hoved = utenKommentarer(les('../app/(app)/innboks/_hovedflate.tsx'));
 
-  it('desktop list-header er ikon-only, skjult på telefon', () => {
-    expect(side).toMatch(/INNBOKS_FILTERE/);
-    expect(side).toMatch(/hidden[\s\S]*md:flex/);
-    expect(side).toMatch(/aria-label=\{p\.label\}/);
-    expect(side).toMatch(/title=\{p\.label\}/);
-    expect(side).not.toMatch(/<span>\{p\.label\}<\/span>/);
-    expect(side).toMatch(/bg-sidebar-active/);
-    expect(side).toMatch(/hover:bg-surface-2/);
+  it('én verktøylinje: Nyeste, Eldste, slett, ny chat og velg kort', () => {
+    expect(side).toMatch(/NyMeldingIkon/);
+    expect(side).toMatch(/Nyeste/);
+    expect(side).toMatch(/Eldste/);
+    expect(side).toMatch(/Trash2/);
+    expect(side).toMatch(/velg kort|Velg kort/);
+    expect(side).toMatch(/data-innboks-verktoy/);
+    expect(side).toMatch(/min-h-11/);
+    expect(side).toMatch(/z-20/);
+    expect(side).toMatch(/aktivId \? 'max-md:hidden'/);
+    expect(side).not.toMatch(/To linjer/);
   });
 
-  it('Ny chat åpner Kunde · Intern · Support — ingen Mekaniker', () => {
-    expect(side).toMatch(/Ny chat/);
-    expect(side).toMatch(/NySamtaleLenke/);
+  it('Ny melding er ikon, compose åpner Kunde · Intern · Support — ingen Mekaniker', () => {
+    expect(side).toMatch(/Ny melding/);
+    expect(side).toMatch(/NyMeldingIkon/);
     expect(side).toMatch(/\/innboks\?ny=1/);
     expect(samtale).toMatch(/label: 'Kunde'/);
     expect(samtale).toMatch(/label: 'Intern'/);

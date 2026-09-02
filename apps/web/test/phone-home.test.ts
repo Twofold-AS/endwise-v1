@@ -41,19 +41,20 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('dealer phone home — kortrekkefølge og fyll', () => {
-  it('låser hero → Innboks|Timeplan → Statistikk|Salg → Kunder|Organisasjon → Samarbeid|Hjelp → Lager lavt', () => {
+  it('låser hero → Innboks|Timeplan → Statistikk|Salg → Kunder|Organisasjon → Lager lavt (ingen Samarbeid)', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['verkstedet'],
       ['innboks', 'timeplan'],
       ['statistikk', 'tjenester'],
       ['kunder', 'organisasjon'],
-      ['samarbeid', 'hjelp'],
       ['lager'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(DEALER_PHONE_HJEM[1]?.kind).toBe('pair');
     expect(DEALER_PHONE_HJEM[2]?.kind).toBe('pair');
     expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('low');
+    expect(flatDealerHjemKeys(true)).not.toContain('samarbeid');
+    expect(PHONE_KORT_META).not.toHaveProperty('samarbeid');
   });
 
   it('Innboks|Timeplan og Salg er høyt, Lager er lavt', () => {
@@ -81,7 +82,7 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
 
   it('Timeplan går til /jobber, Salg til /prisliste, Statistikk til /rapporter', () => {
     expect(PHONE_KORT_META.timeplan.href).toBe('/jobber');
-    expect(PHONE_KORT_META.tjenester.label).toBe('Salg');
+    expect(PHONE_KORT_META.tjenester.label).toBe('Tjenester');
     expect(PHONE_KORT_META.tjenester.href).toBe('/prisliste');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     expect(PHONE_KORT_META.verkstedet.href).toContain('visning=dag');
@@ -198,25 +199,27 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(PHONE_SHELL_ROT).toMatch(/min-h-svh/);
   });
 
-  it('safe-area-inset-top over logo, safe-area-inset-bottom under bevel', () => {
+  it('safe-area-inset-top over logo; overlay-sidebar tar bunnen', () => {
     expect(PHONE_SAFE_TOP).toContain('safe-area-inset-top');
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
-    expect(shell).toMatch(/PHONE_SAFE_BUNN/);
+    expect(shell).not.toMatch(/PHONE_SAFE_BUNN/);
     expect(shell).toMatch(/logo\/logo\.svg/);
     expect(shell).toMatch(/logo-invert/);
     expect(shell).toMatch(/bg-bg/);
     expect(shell).not.toMatch(/bg-white/);
-    expect(shell).toMatch(/BrukerRad|Logg ut/);
-    expect(shell).toMatch(/innstillingerHref|phoneInnstillingerHref/);
+    expect(shell).toMatch(/data-phone-sidebar-open/);
+    expect(shell).not.toMatch(/BrukerRad/);
     expect(shell).not.toMatch(/rolle \?\?/);
+    expect(sidebar).toMatch(/safe-area-inset-bottom/);
     expect(PHONE_SHELL_ROT).toMatch(/bg-bg/);
     expect(PHONE_SHELL_ROT).toMatch(/text-fg/);
     expect(PHONE_SHELL_ROT).not.toMatch(/bg-white/);
   });
 
-  it('bevel-raden har Innstillinger-ikon på samme linje som avatar og logg ut', () => {
+  it('profil og logg ut bor i sidebaren, ikke i telefon-bevel', () => {
     expect(phoneInnstillingerHref('forhandler')).toBe('/innstillinger/profil');
     expect(phoneInnstillingerHref('endwise')).toBe('/innstillinger/profil');
     expect(phoneInnstillingerHref('endwise_partner')).toBe('/innstillinger/profil');
@@ -224,10 +227,13 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
     expect(rad).toMatch(/innstillingerHref/);
     expect(rad).toMatch(/Settings/);
-    expect(rad).toMatch(/Innstillinger/);
+    expect(rad).toMatch(/Profil|Innstillinger/);
     expect(rad).toMatch(/LogOut/);
+    expect(rad).not.toMatch(/BEVEL|Avatar|variant === 'phone'/);
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
-    expect(sidebar).not.toMatch(/innstillingerHref/);
+    expect(sidebar).toMatch(/innstillingerHref/);
+    const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
+    expect(layout).not.toMatch(/PhoneBevel/);
   });
 
   it('ingen bunnbar, hamburger, horisontal hovedscroller, Mer-sheet eller visningsvelger', () => {
@@ -236,7 +242,7 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(layout).not.toMatch(/PhoneNav/);
     expect(layout).toMatch(/PhoneShell/);
-    expect(shell).not.toMatch(/hamburger|Menu\b|Sheet|visningsvelger|Kontor|Gulvet/i);
+    expect(shell).not.toMatch(/hamburger|\bMenu\b|Sheet|visningsvelger|Kontor|Gulvet/i);
     expect(shell).not.toMatch(/PhoneHScroll|overflow-x-auto/);
     expect(hjem).not.toMatch(/hamburger|bottom-nav|grid-cols-5/);
     expect(layout).not.toMatch(/MobileShell/);
@@ -267,12 +273,12 @@ describe('mekaniker phone home — Dine jobber, ikke Min dag', () => {
     expect(mekanikerHurtigKort(false)).not.toContain('lager');
   });
 
-  it('ingen Min dag-hero eller Detaljer-accordion — Grainient + stort kort + Lager', () => {
+  it('ingen Min dag-hero eller Detaljer-accordion — forhandler-info + stort kort + Lager', () => {
     const side = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
     expect(side).not.toMatch(/Min dag/);
     expect(side).not.toMatch(/Detaljer/);
     expect(side).not.toMatch(/accordion|aria-expanded/);
-    expect(side).toMatch(/ForhandlerGrainientKort/);
+    expect(side).toMatch(/ForhandlerInfoKort/);
     expect(side).toMatch(/DineJobberHjemKort/);
     expect(side).toMatch(/PhoneKort/);
     expect(side).not.toMatch(/swipe|clock-ring|tidslinje|time-axis/i);
@@ -291,12 +297,18 @@ describe('mekaniker phone home — Dine jobber, ikke Min dag', () => {
   });
 });
 
-describe('desktop sidebar er urørt', () => {
-  it('sidebar er hidden md:flex med Handlinger og BrukerRad', () => {
+describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
+  it('sidebar er overlay på telefon og fast skinne på md+', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
-    expect(sidebar).toMatch(/hidden[\s\S]*md:flex/);
+    expect(sidebar).toMatch(/data-phone-sidebar/);
+    expect(sidebar).toMatch(/fixed inset-0/);
+    expect(sidebar).toMatch(/hidden/);
+    expect(sidebar).toMatch(/md:flex/);
+    expect(sidebar).toMatch(/md:w-\[248px\]/);
+    expect(sidebar).toMatch(/phoneOpen/);
     expect(sidebar).toMatch(/Handlinger/);
     expect(sidebar).toMatch(/BrukerRad/);
+    expect(sidebar).toMatch(/OppgraderPille/);
     expect(sidebar).toMatch(/min-width:\s*768px/);
     expect(sidebar).toMatch(/QUICK_ACTIONS/);
   });
@@ -336,9 +348,18 @@ describe('Verkstedet-dag og Organisasjon på telefon', () => {
     expect(hjem).not.toMatch(/Book for kunde/);
   });
 
+  it('hero-tittel er forhandlernavn, ikke Verkstedet, uten ForhandlerInfoKort over', () => {
+    const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
+    expect(hjem).not.toMatch(/ForhandlerInfoKort/);
+    expect(hjem).toMatch(/tenantName/);
+    expect(hjem).toMatch(/navn=\{forhandlernavn\}/);
+    expect(hjem).toMatch(/visning=dag|dest\.href/);
+  });
+
   it('Organisasjon-piller wrapper på telefon og skjuler Abonnement/Integrasjoner for selger', () => {
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
+    const faner = utenKommentarer(les('../app/(app)/_shell/seksjon-faner.ts'));
     expect(seksjon).toMatch(/flex-wrap/);
-    expect(seksjon).toMatch(/p\.roles/);
+    expect(faner).toMatch(/pillsForRole/);
   });
 });

@@ -18,11 +18,10 @@ describe('Avatar-velgeren er borte', () => {
     expect(profil).toMatch(/Organisasjon/);
   });
 
-  it('sidebar er stille — ikke peker-følge', () => {
+  it('sidebar har ingen avatar — profil-ansikt bor utenfor nav', () => {
     const rad = les('../app/(app)/_shell/bruker-rad.tsx');
-    expect(rad).toMatch(/bevegelse="stille"/);
-    expect(rad).not.toMatch(/bevegelse="alltid"/);
-    expect(rad).toMatch(/valg=\{profil\.data\?\.avatar\}/);
+    expect(rad).not.toMatch(/<Avatar|bevegelse=/);
+    expect(rad).toMatch(/LogOut/);
   });
 
   it('dealer setter farge fra 12 svatsjer', () => {

@@ -1,14 +1,15 @@
 'use client';
 
-import { Button, Inbox, MessageSquarePlus, Sparkles, TriangleAlert } from '@endwise/ui';
+import { Button, Inbox, Sparkles, TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useEventStream } from '../_lib/use-event-stream';
-import { ForhandlerGrainientKort } from '../_shell/forhandler-grainient';
+import { ForhandlerInfoKort } from '../_shell/forhandler-info-kort';
 import { ESCALATION_REASON_LABEL, fmtWhen } from './_lib';
+import { NyMeldingIkon } from './_ny-melding-ikon';
 import { NySamtale } from './_ny-samtale';
 
 /**
@@ -63,7 +64,7 @@ function MeldingerPageInner() {
 
   return (
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-8 py-7">
-      <ForhandlerGrainientKort />
+      <ForhandlerInfoKort />
       {nySamtale && <NySamtale onLukk={() => router.replace('/innboks' as Route)} />}
 
       {/* Eskalert fra AI. Live på SSE mens siden er åpen. */}
@@ -107,7 +108,7 @@ function MeldingerPageInner() {
           <p className="text-title text-fg">Ingen valgte meldinger</p>
           <Button asChild>
             <Link href={'/innboks?ny=1' as Route}>
-              <MessageSquarePlus size={16} strokeWidth={1.75} />
+              <NyMeldingIkon size={16} />
               Ny chat
             </Link>
           </Button>

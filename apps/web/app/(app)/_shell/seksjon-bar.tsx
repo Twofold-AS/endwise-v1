@@ -1,71 +1,116 @@
 'use client';
 
-import { MessageSquarePlus } from '@endwise/ui';
+import { Trash2 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
-import {
-  isVerkstedInspectPath,
-  remapHrefTilInspect,
-  verkstedSlugFromPath,
-} from '../_lib/plattform';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useOrgRole } from '../_lib/use-org-role';
-import { INNBOKS_FILTERE, useInboxFilter } from './inbox-filter';
-import { ORGANISASJON_SEKSJONER } from './nav';
-import { PhoneHScroll } from './phone-h-scroll';
-import { erDealerInnboks, erOrganisasjonSide } from './seksjon-sti';
-
-export { erInnboksSide, erOrganisasjonSide } from './seksjon-sti';
+import { InviterAnsatt } from '../innboks/_inviter-ansatt';
+import { type InboxPart, useInboxFilter } from './inbox-filter';
+import { shellForBruker } from './nav';
+import { destinasjonFaner } from './seksjon-faner';
+import { erInnboksTrad, innboksTradId } from './seksjon-sti';
 
 /**
- * Top-bar 2 — Organisasjon (alle viewports) og Innboks (kun telefon).
- * Desktop: samme 32-rad som top-bar 1 (h-control).
- * Telefon: litt høyere rad (py-1.5) med piller som har py-1 — ikke flush
- * mot barens kant, ikke h-row (40). text-label, aktiv = sidebar-active
- * #ededed, hover = surface-2 #f5f5f5. Ingen svarte piller.
- * Organisasjon: piller wrapper på telefon (eller stables), desktop én rad.
- * Innboks-filter: horisontal scroll som før.
+ * Top-bar 2 under Ronny på ALLE destinasjoner (Jonas 28.08 / Mikael 02.09).
+ * h-control, text-label, aktiv sidebar-active (#ededed), hover parchment.
+ * Frosted parchment, ikke svarte piller. gap-2 telefon / gap-8 desktop.
  */
 const PILLE_KLASSE =
-  'inline-flex h-control min-h-control shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-2.5 text-label transition-colors max-md:h-auto max-md:min-h-0 max-md:py-1';
+  'inline-flex h-control min-h-control shrink-0 items-center whitespace-nowrap rounded-control px-2.5 text-label transition-colors max-md:h-auto max-md:min-h-0 max-md:py-1';
 
-export function OrganisasjonSeksjonBar() {
+export function DestinasjonSeksjonBar() {
   const pathname = usePathname() ?? '';
-  const search = useSearchParams();
-  const { role } = useOrgRole();
-  if (!erOrganisasjonSide(pathname)) return null;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const search = searchParams?.toString() ?? '';
+  const { role, jobbfunksjon, isMechanic, erPlattform, shopEnabled } = useOrgRole();
+  const { part, setPart, skjul } = useInboxFilter();
+  const shell = shellForBruker({
+    role,
+    jobFunction: jobbfunksjon,
+    isMechanic,
+    erPlattform,
+  });
+  const tradId = innboksTradId(pathname);
+  if (erInnboksTrad(pathname) && tradId) {
+    return (
+      <nav
+        data-destinasjon-bar
+        data-trad-chrome
+        aria-label="Tråd"
+        className="relative z-20 flex flex-wrap items-center gap-2 overflow-visible border-border border-b bg-surface-2/80 px-3 py-1.5 md:h-control md:min-h-control md:flex-nowrap md:gap-8 md:px-4 md:py-0"
+      >
+        <Link
+          href={'/innboks' as Route}
+          className="inline-flex min-h-11 shrink-0 items-center rounded-control px-2.5 text-label text-fg hover:bg-surface-2 md:h-control md:min-h-control"
+        >
+          Tilbake
+        </Link>
+        <button
+          type="button"
+          aria-label="Slett samtale"
+          title="Slett samtale"
+          onClick={() => {
+            skjul(tradId);
+            router.push('/innboks' as Route);
+          }}
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-control text-danger hover:bg-surface-2 md:h-control md:min-h-control"
+        >
+          <Trash2 size={16} strokeWidth={1.75} />
+        </button>
+        <InviterAnsatt threadId={tradId} />
+      </nav>
+    );
+  }
+  const faner = destinasjonFaner({
+    pathname,
+    search,
+    role,
+    shell,
+    shopEnabled,
+    inboxPart: part,
+  });
+  if (faner.length === 0) return null;
 
-  const inspect = isVerkstedInspectPath(pathname);
-  const slug = verkstedSlugFromPath(pathname);
-  const fra = search?.get('fra');
-  const synlige = ORGANISASJON_SEKSJONER.filter(
-    (p) => !p.roles || (role != null && p.roles.includes(role)) || inspect,
-  );
-  const seksjon = search?.get('seksjon');
+  const fra = searchParams?.get('fra');
+  const inboxKnapper = faner.some((f) => f.inboxPart);
 
   return (
     <nav
-      aria-label="Organisasjon"
-      className="flex flex-wrap items-center gap-2 border-border border-b bg-bg px-3 py-1.5 md:h-control md:min-h-control md:flex-nowrap md:px-4 md:py-0"
+      data-destinasjon-bar
+      aria-label="Seksjoner"
+      className="flex flex-wrap items-center gap-2 overflow-x-auto border-border border-b bg-surface-2/80 px-3 py-1.5 md:h-control md:min-h-control md:flex-nowrap md:gap-8 md:overflow-visible md:px-4 md:py-0"
     >
-      {synlige.map((p) => {
-        const query = p.href.split('?')[1] ?? '';
-        const valgt = query ? seksjon != null && query.includes(`seksjon=${seksjon}`) : !seksjon;
-        const raw = inspect && slug ? remapHrefTilInspect(p.href, slug) : p.href;
+      {faner.map((f) => {
+        const klasse = `${PILLE_KLASSE} ${
+          f.valgt ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+        }`;
+        if (inboxKnapper && f.inboxPart) {
+          return (
+            <button
+              key={f.inboxPart}
+              type="button"
+              aria-current={f.valgt ? 'page' : undefined}
+              onClick={() => setPart(f.inboxPart as InboxPart)}
+              className={klasse}
+            >
+              {f.label}
+            </button>
+          );
+        }
         const href = fra
-          ? `${raw}${raw.includes('?') ? '&' : '?'}fra=${encodeURIComponent(fra)}`
-          : raw;
+          ? `${f.href}${f.href.includes('?') ? '&' : '?'}fra=${encodeURIComponent(fra)}`
+          : f.href;
         return (
           <Link
-            key={p.href}
+            key={`${f.label}:${f.href}`}
             href={href as Route}
             scroll={false}
-            aria-current={valgt ? 'page' : undefined}
-            className={`${PILLE_KLASSE} ${
-              valgt ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-            }`}
+            aria-current={f.valgt ? 'page' : undefined}
+            className={klasse}
           >
-            {p.label}
+            {f.label}
           </Link>
         );
       })}
@@ -73,47 +118,12 @@ export function OrganisasjonSeksjonBar() {
   );
 }
 
-/**
- * Innboks top-bar 2 — bare telefon.
- * Filterrad: ikon + tekst. Ny chat i samme rad. Ingen landing-pille.
- * Desktop har ingen top-bar 2 her; filtrene bor i list-headeren.
- */
-export function InnboksSeksjonBar() {
-  const pathname = usePathname() ?? '';
-  const { part, setPart } = useInboxFilter();
-  if (!erDealerInnboks(pathname)) return null;
+/** Beholdt navn — samme stripe som DestinasjonSeksjonBar. */
+export function OrganisasjonSeksjonBar() {
+  return <DestinasjonSeksjonBar />;
+}
 
-  return (
-    <nav
-      aria-label="Innboks"
-      className="flex touch-pan-x items-center overflow-y-hidden border-border border-b bg-bg px-3 py-1.5 md:hidden"
-    >
-      <PhoneHScroll lockKey={part} className="pr-3">
-        {INNBOKS_FILTERE.map((p) => {
-          const aktiv = part === p.key;
-          return (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => setPart(p.key)}
-              aria-pressed={aktiv}
-              className={`${PILLE_KLASSE} ${
-                aktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-              }`}
-            >
-              <p.icon size={16} strokeWidth={1.75} />
-              {p.label}
-            </button>
-          );
-        })}
-        <Link
-          href={'/innboks?ny=1' as Route}
-          className={`${PILLE_KLASSE} text-fg hover:bg-surface-2`}
-        >
-          <MessageSquarePlus size={16} strokeWidth={1.75} />
-          Ny chat
-        </Link>
-      </PhoneHScroll>
-    </nav>
-  );
+/** Innboks-faner bor i DestinasjonSeksjonBar. */
+export function InnboksSeksjonBar() {
+  return null;
 }

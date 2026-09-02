@@ -21,6 +21,7 @@ describe('P0: eksisterende bruker må gjennom 2FA ved invitasjon', () => {
 
   it('dealer_staff, dealer_admin og endwise_* krever 2FA', () => {
     expect(ROLES_REQUIRING_2FA).toEqual([
+      'customer',
       'dealer_admin',
       'dealer_staff',
       'endwise_admin',
@@ -28,27 +29,27 @@ describe('P0: eksisterende bruker må gjennom 2FA ved invitasjon', () => {
     ]);
   });
 
-  it('GET krever passord når rollen krever 2FA — også om kontoen finnes', () => {
+  it('GET krever aldri passord — 2FA-flagget følger rollen', () => {
     expect(rute).toMatch(/rolleKrever2FA|ROLES_REQUIRING_2FA/);
     expect(rute).toMatch(/krever2FA/);
-    expect(rute).toMatch(/kreverPassord/);
+    expect(rute).toMatch(/kreverPassord:\s*false/);
     expect(rute).not.toMatch(/kreverPassord:\s*inv\.kind === 'owner' \|\| !eksisterende/);
     expect(rute).not.toMatch(/const kreverPassord = inv\.kind === 'owner' \|\| !eksisterende/);
   });
 
-  it('godta krever passord for 2FA-rolle, skriver e-post og oppdaterer rollen', () => {
+  it('godta skriver e-post og oppdaterer rollen uten passord', () => {
     expect(rute).toMatch(/email:\s*inv\.epost|email:\s*invitasjon\.epost/);
     expect(rute).toMatch(/emailVerified:\s*true/);
     expect(rute).toMatch(/update\(schema\.member\)|role:\s*inv\.rolle/);
     expect(rute).toMatch(/schema\.mechanics/);
     expect(rute).toMatch(/funksjon === 'mekaniker'|inv\.funksjon === 'mekaniker'/);
-    expect(rute).toMatch(/settPassordUtenSesjon|providerId/);
+    expect(rute).not.toMatch(/settPassordUtenSesjon/);
     expect(rute).not.toMatch(/UNAUTHORIZED/);
   });
 
-  it('invite-siden hopper aldri over 2FA fordi kontoen finnes', () => {
-    expect(side).toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
-    expect(side).toMatch(/startKodeSteg|trengerKodeSteg/);
+  it('invite-siden sender magic link — ikke passord + e-post-OTP', () => {
+    expect(side).toMatch(/signIn\.magicLink|magicLink/);
+    expect(side).not.toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
     expect(side).not.toMatch(/if\s*\(\s*!inv\.kreverPassord\s*\)[\s\S]{0,80}\/signin/);
     expect(side).not.toMatch(/konto eksisterer fra før/);
   });

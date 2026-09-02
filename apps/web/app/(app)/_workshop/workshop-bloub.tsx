@@ -14,6 +14,7 @@ import { BloubBot, type ExpressionId, type StateId } from '@endwise/ui/bloub/Blo
 import { DefaultChatTransport } from 'ai';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { PHONE_KORT_FYLL } from '../_shell/phone-home';
 import { erTillattGaaTil } from './gaa-til';
 import { RonnyPil } from './ronny-ikoner';
 import { sidekontekst } from './sidekontekst';
@@ -21,29 +22,32 @@ import { sidekontekst } from './sidekontekst';
 /** Får plass i desktop 32px og telefon ~44px uten sirkel-chip. */
 const STRIP_BOT = 28;
 const SPIN_MS = 700;
-const IDLE_MS = 2500;
+const IDLE_MS = 5000;
 const KORN_RAMME = 3;
 const RAMME_PX = 18;
-/** Kompakt dock: stripe + composer + liten pil. Første send/fold → samtalehøyde. */
-const DOCK_KOMPAKT = '10.5rem';
+/** Kompakt dock: stripe + hero-kort + «se hele» på grainient. Første send → samtalehøyde. */
+const DOCK_KOMPAKT = 'auto';
 const DOCK_SAMTALE = 'min(48dvh, 28rem)';
+/** Samme familie som telefon-hero (forhandlernavn + I dag / Pågår / Fullført). */
+const PROMPT_KORT_MIN = '8.75rem';
 
 type RonnyVisning = 'stripe' | 'dock' | 'utvidet';
 
 /**
- * Idle-syklus ~2.5s — også når panelet er åpent.
- * colere flere ganger. wink/burst/thinking så ansiktet beveger seg.
+ * Idle-syklus ~5s — også når panelet er åpent.
+ * colere flere ganger. wink/burst så ansiktet beveger seg.
+ * Ikke thinking her — tenking er kun submitted/streaming etter send.
  * Ikke triste / peureux / fatigue (triste, somnolent, blase, sleep).
  */
 const RONNY_IDLE: readonly { expression: ExpressionId; state: StateId }[] = [
   { expression: 'colere', state: 'wink' },
   { expression: 'colere', state: 'burst' },
   { expression: 'surpris', state: 'wink' },
-  { expression: 'colere', state: 'thinking' },
+  { expression: 'colere', state: 'wink' },
   { expression: 'heureux', state: 'burst' },
   { expression: 'curieux', state: 'wink' },
   { expression: 'colere', state: 'wink' },
-  { expression: 'attentif', state: 'thinking' },
+  { expression: 'attentif', state: 'wink' },
   { expression: 'excite', state: 'burst' },
   { expression: 'fier', state: 'wink' },
 ];
@@ -75,21 +79,17 @@ function gaaTilHref(del: { type: string; state?: string; output?: unknown }): st
   return out.href;
 }
 
-function skallHoyde(
-  visning: RonnyVisning,
-  ankerTop: number,
-  harSamtale: boolean,
-  foldet: boolean,
-): string {
+function skallHoyde(visning: RonnyVisning, harSamtale: boolean, foldet: boolean): string {
   if (visning === 'stripe') return '100%';
-  if (visning === 'utvidet') return `calc(100dvh - ${ankerTop}px - 8px)`;
+  if (visning === 'utvidet') return '100%';
   if (harSamtale || foldet) return DOCK_SAMTALE;
   return DOCK_KOMPAKT;
 }
 
 /**
- * Lukket = vanlig chrome-stripe (radius 0). Åpen = Grainient-kort 18px,
- * samme px som dashboard-kort. Første send/fold → fast samtalehøyde.
+ * Lukket = vanlig chrome-stripe (radius 0). Åpen dock = Grainient-kort 18px
+ * med Prompt-kort i samme familie som Verksted-hero. «Se hele» = fast overlay
+ * under stripen, full viewport-bredde, uten å dytte layout.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -106,6 +106,7 @@ export function WorkshopBloub() {
   const side = useMemo(() => sidekontekst(pathname, search), [pathname, search]);
   const apen = visning !== 'stripe';
   const lukket = visning === 'stripe';
+  const utvidet = visning === 'utvidet';
 
   const transport = useMemo(
     () =>
@@ -120,7 +121,7 @@ export function WorkshopBloub() {
   const { messages, sendMessage, status, error } = useChat({ transport });
   const harSamtale = messages.length > 0 || Boolean(error);
   const fastHoyde = visning === 'utvidet' || (visning === 'dock' && (harSamtale || foldet));
-  const visHandtak = visning === 'dock' && !harSamtale && !foldet;
+  const visHandtak = visning === 'dock';
   const opptatt = status === 'submitted' || status === 'streaming';
   const idle = useRonnyIdle(!klikk);
 
@@ -148,7 +149,7 @@ export function WorkshopBloub() {
     maal();
     window.addEventListener('resize', maal);
     return () => window.removeEventListener('resize', maal);
-  }, [visning]);
+  }, []);
 
   useEffect(() => {
     if (!apen) return;
@@ -222,13 +223,14 @@ export function WorkshopBloub() {
     setVisning('dock');
   }
 
-  function onForsteFold() {
-    setFoldet(true);
+  function onUtvid() {
+    setVisning('utvidet');
   }
 
   if (pathname.startsWith('/oppstart')) return null;
 
   const visTraad = harSamtale || visning === 'utvidet' || foldet;
+  const submitStatus = opptatt ? status : 'ready';
 
   return (
     <div
@@ -237,19 +239,28 @@ export function WorkshopBloub() {
     >
       <div
         data-workshop-shell
-        className={`absolute inset-x-0 top-0 z-40 overflow-hidden shadow-none transition-[height,border-radius] duration-300 ease-out ${
-          lukket ? 'rounded-none' : 'rounded-[18px]'
-        }`}
-        style={{
-          height: skallHoyde(visning, ankerTop, harSamtale, foldet),
-          borderRadius: lukket ? 0 : RAMME_PX,
-        }}
+        data-ronny-overlay={utvidet ? '' : undefined}
+        className={
+          utvidet
+            ? 'fixed right-0 bottom-0 left-0 z-[60] overflow-hidden rounded-none shadow-none'
+            : `absolute inset-x-0 top-0 z-40 overflow-hidden shadow-none transition-[height,border-radius] duration-300 ease-out ${
+                lukket ? 'rounded-none' : 'rounded-[18px]'
+              }`
+        }
+        style={
+          utvidet
+            ? { top: ankerTop, borderRadius: 0 }
+            : {
+                height: skallHoyde(visning, harSamtale, foldet),
+                borderRadius: lukket ? 0 : RAMME_PX,
+              }
+        }
       >
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Grainient className="absolute inset-0 h-full w-full" />
         </div>
 
-        <div className={`relative flex flex-col ${fastHoyde ? 'h-full' : ''}`}>
+        <div className={`relative flex flex-col ${fastHoyde || utvidet ? 'h-full' : ''}`}>
           <div
             data-workshop-strip
             className="relative h-11 max-h-[44px] w-full shrink-0 md:h-control md:max-h-[32px]"
@@ -300,59 +311,72 @@ export function WorkshopBloub() {
             data-workshop-dock
             data-ronny-visning={visning}
             className="grid min-h-0 flex-1 transition-[grid-template-rows] duration-300 ease-out"
-            style={{ gridTemplateRows: visning === 'stripe' ? '0fr' : fastHoyde ? '1fr' : 'auto' }}
+            style={{
+              gridTemplateRows:
+                visning === 'stripe' ? '0fr' : fastHoyde || utvidet ? '1fr' : 'auto',
+            }}
             role="dialog"
             aria-label="KI-Ronny"
             aria-hidden={!apen}
           >
             <div
-              className={`min-h-0 overflow-hidden ${fastHoyde ? 'h-full' : ''}`}
+              data-ronny-ramme
+              className={`flex min-h-0 flex-col overflow-hidden ${fastHoyde || utvidet ? 'h-full' : ''}`}
               style={
                 lukket
                   ? undefined
-                  : { paddingLeft: KORN_RAMME, paddingRight: KORN_RAMME, paddingBottom: KORN_RAMME }
+                  : {
+                      paddingLeft: KORN_RAMME,
+                      paddingRight: KORN_RAMME,
+                      paddingBottom: KORN_RAMME,
+                    }
               }
             >
               <div
-                className={`flex min-h-0 flex-col overflow-hidden ${fastHoyde ? 'h-full' : ''} ${
-                  lukket ? '' : 'bg-[#fff]'
-                }`}
-                style={lukket ? undefined : { borderRadius: RAMME_PX }}
+                data-ronny-kort-padding
+                className={`mx-auto w-full max-w-[520px] px-3 md:max-w-[1120px] md:px-8 ${
+                  fastHoyde || utvidet ? 'flex min-h-0 flex-1 flex-col' : ''
+                } ${apen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'} pt-3 transition-all duration-300 ease-out`}
               >
-                {visTraad ? (
-                  <div
-                    data-ronny-traad
-                    className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 py-2 md:px-8"
-                  >
-                    {messages.map((melding) => {
-                      const tekstDel = tekstFraMelding(melding);
-                      if (!tekstDel) return null;
-                      return (
-                        <p
-                          key={melding.id}
-                          className={`py-1.5 text-label leading-relaxed ${
-                            melding.role === 'user' ? 'text-right text-[#1d1d1f]' : 'text-[#1d1d1f]/70'
-                          }`}
-                        >
-                          {tekstDel}
-                        </p>
-                      );
-                    })}
-                    {error ? (
-                      <p className="py-1 text-label text-destructive">Noe gikk galt. Prøv igjen.</p>
-                    ) : null}
-                  </div>
-                ) : null}
                 <div
-                  data-ronny-kort-padding
-                  className={`mx-auto w-full max-w-[1120px] shrink-0 px-3 pt-3 pb-6 md:px-8 transition-all duration-300 ease-out ${
-                    apen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
-                  }`}
+                  data-ronny-prompt-kort
+                  className={`${PHONE_KORT_FYLL} flex flex-col overflow-hidden border-[#e0e0e0] bg-[#fff] p-3 text-[#1d1d1f] ${
+                    visTraad ? 'justify-between' : 'justify-end'
+                  } ${fastHoyde || utvidet ? 'h-full min-h-0 flex-1' : ''}`}
+                  style={{
+                    borderRadius: RAMME_PX,
+                    minHeight: fastHoyde || utvidet ? undefined : PROMPT_KORT_MIN,
+                  }}
                 >
-                  <PromptInput
-                    onSubmit={onPrompt}
-                    className="border-0 bg-transparent shadow-none"
-                  >
+                  {visTraad ? (
+                    <div
+                      data-ronny-traad
+                      className="no-scrollbar min-h-0 flex-1 overflow-y-auto py-1"
+                    >
+                      {messages.map((melding) => {
+                        const tekstDel = tekstFraMelding(melding);
+                        if (!tekstDel) return null;
+                        return (
+                          <p
+                            key={melding.id}
+                            className={`py-1.5 text-label leading-relaxed ${
+                              melding.role === 'user'
+                                ? 'text-right text-[#1d1d1f]'
+                                : 'text-[#1d1d1f]/70'
+                            }`}
+                          >
+                            {tekstDel}
+                          </p>
+                        );
+                      })}
+                      {error ? (
+                        <p className="py-1 text-label text-destructive">
+                          Noe gikk galt. Prøv igjen.
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <PromptInput onSubmit={onPrompt} className="border-0 bg-transparent shadow-none">
                     <PromptInputBody className="min-w-0 flex-1">
                       <PromptInputTextarea
                         placeholder="Spør Ronny …"
@@ -361,26 +385,28 @@ export function WorkshopBloub() {
                       />
                     </PromptInputBody>
                     <PromptInputFooter>
-                      <PromptInputSubmit status={status} />
+                      <PromptInputSubmit status={submitStatus} />
                     </PromptInputFooter>
                   </PromptInput>
-                  {visHandtak ? (
-                    <div className="flex justify-center pt-3">
-                      <button
-                        type="button"
-                        data-ronny-utvid
-                        data-ronny-handtak
-                        aria-label="Utvid samtalen"
-                        title="Utvid"
-                        onClick={onForsteFold}
-                        className="flex size-6 items-center justify-center rounded-full text-[#1d1d1f] ring-1 ring-[#e0e0e0]"
-                      >
-                        <RonnyPil size={12} />
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
               </div>
+              {visHandtak ? (
+                <div data-ronny-handtak-rad className="flex justify-center pt-3 pb-4">
+                  <button
+                    type="button"
+                    data-ronny-utvid
+                    data-ronny-handtak
+                    aria-label="Se hele"
+                    title="Se hele"
+                    onClick={onUtvid}
+                    className="flex size-6 items-center justify-center rounded-full text-white ring-1 ring-white/70"
+                  >
+                    <RonnyPil size={12} />
+                  </button>
+                </div>
+              ) : (
+                <div className="pb-4" aria-hidden />
+              )}
             </div>
           </div>
         </div>

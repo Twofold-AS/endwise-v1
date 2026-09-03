@@ -11,7 +11,7 @@ Beholdt: etter send = peek (svar øverst, input alene nederst), full via strek, 
 
 ## 2. Hva gikk galt
 
-Alt gikk som planlagt i koden. Innlogget live-sesjon mot DB mangler i VM; tilstandene er verifisert mot kilde + isolert forhåndsvisning.
+Alt gikk som planlagt i koden. `workshop-bloub` / chrome-tester: 16/16. Innlogget live-sesjon mot DB mangler i VM; peek/full er verifisert mot kilde + isolert forhåndsvisning (Grainient-WebGL maler ikke i headless Chrome — CSS-stand-in på flaten).
 
 ## 3. Hvilke fikser ble gjort
 

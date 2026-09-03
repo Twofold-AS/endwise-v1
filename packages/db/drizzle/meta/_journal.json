@@ -267,6 +267,13 @@
       "when": 1788406000000,
       "tag": "0037_owner_rls_insert",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1788412000000,
+      "tag": "0038_invitations_owner_returning",
+      "breakpoints": true
     }
   ]
 }

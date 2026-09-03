@@ -187,6 +187,66 @@ create policy invitations_platform_admin_insert_owner on invitations
     )
   );
 
+-- INSERT … RETURNING (opprettEier) sjekker også SELECT-policyer.
+-- Uten denne: 42501 etter at WITH CHECK passerte (0037).
+-- CWE-862/863: TO PUBLIC er leveransen (eier ≠ authenticated). Predikatet
+-- er tabelleier + SET LOCAL platform_admin (skrivesti-markør fra
+-- opprettEier, ikke sesjons-authz) + eksplisitt tenant_id. Tom/NULL
+-- tenant-guc matcher aldri. App-rollen bruker tenant_isolation.
+drop policy if exists invitations_platform_admin_select_owner on invitations;
+create policy invitations_platform_admin_select_owner on invitations
+  as permissive
+  for select
+  to public
+  using (
+    current_setting('app.platform_admin', true) = 'on'
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.invitations'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+-- Første 0038-utkast hadde bred eier-UPDATE (alle kolonner). Borte.
+drop policy if exists invitations_platform_admin_update_owner on invitations;
+
+-- Eier-revoke under FORCE RLS: app-kode i withTenant (endwiseAdminProcedure),
+-- ikke DEFINER og ikke caller-satt GUC som authz. Autorisasjon = current_user
+-- er tabelleier og ikke authenticated/endwise_app. Tom tenant avvises
+-- eksplisitt. Kolonne-lås er trigger, ikke RLS.
+drop policy if exists invitations_revoke_owner_update on invitations;
+drop policy if exists invitations_owner_revoke_update on invitations;
+create policy invitations_owner_revoke_update on invitations
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.invitations'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.invitations'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
 drop policy if exists tenants_slett_forhandler_select on tenants;
 create policy tenants_slett_forhandler_select on tenants
   as permissive

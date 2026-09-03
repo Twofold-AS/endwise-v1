@@ -133,6 +133,8 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'tenants_platform_admin_insert_owner',
          'tenant_modules_platform_admin_insert_owner',
          'invitations_platform_admin_insert_owner',
+         'invitations_platform_admin_select_owner',
+         'invitations_owner_revoke_update',
          'audit_log_tenant_insert_owner',
          'tenants_slett_forhandler',
          'tenants_slett_forhandler_select',
@@ -152,6 +154,8 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         'tenants_platform_admin_insert_owner',
         'tenant_modules_platform_admin_insert_owner',
         'invitations_platform_admin_insert_owner',
+        'invitations_platform_admin_select_owner',
+        'invitations_owner_revoke_update',
         'audit_log_tenant_insert_owner',
         'tenants_slett_forhandler',
         'tenants_slett_forhandler_select',
@@ -171,21 +175,35 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'audit_log_tenant_insert_owner',
          'tenants_platform_admin_insert_owner',
          'tenant_modules_platform_admin_insert_owner',
-         'invitations_platform_admin_insert_owner'
+         'invitations_platform_admin_insert_owner',
+         'invitations_platform_admin_select_owner',
+         'invitations_owner_revoke_update'
        )
        order by p.polname
     `);
     const navn = res.rows.map((r) => r.polname);
     expect(navn, 'Mangler eier-INSERT-policyer. Kjør `pnpm db:grants`.').toEqual([
       'audit_log_tenant_insert_owner',
+      'invitations_owner_revoke_update',
+      'invitations_platform_admin_insert_owner',
+      'invitations_platform_admin_select_owner',
+      'tenant_modules_platform_admin_insert_owner',
+      'tenants_platform_admin_insert_owner',
+    ]);
+    const insertNavn = new Set([
+      'audit_log_tenant_insert_owner',
       'invitations_platform_admin_insert_owner',
       'tenant_modules_platform_admin_insert_owner',
       'tenants_platform_admin_insert_owner',
     ]);
     expect(
-      res.rows.every((r) => r.polcmd === 'a'),
-      'Eier-policyene skal være INSERT, ikke ALL/UPDATE/DELETE.',
+      res.rows.filter((r) => insertNavn.has(String(r.polname))).every((r) => r.polcmd === 'a'),
+      'Eier-INSERT-policyene skal være INSERT, ikke ALL/UPDATE/DELETE.',
     ).toBe(true);
+    expect(
+      res.rows.find((r) => r.polname === 'invitations_platform_admin_select_owner')?.polcmd,
+    ).toBe('r');
+    expect(res.rows.find((r) => r.polname === 'invitations_owner_revoke_update')?.polcmd).toBe('w');
   });
 
   it('③d eier av tenants er superuser lokalt — Scaleway-antakelsen står i functions.sql', async () => {

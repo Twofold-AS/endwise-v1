@@ -137,7 +137,9 @@ const ownerInsert = await pool.query<{ polname: string }>(`
        'audit_log_tenant_insert_owner',
        'tenants_platform_admin_insert_owner',
        'tenant_modules_platform_admin_insert_owner',
-       'invitations_platform_admin_insert_owner'
+       'invitations_platform_admin_insert_owner',
+       'invitations_platform_admin_select_owner',
+       'invitations_owner_revoke_update'
      )
 `);
 const ownerNavn = new Set(ownerInsert.rows.map((r) => r.polname));
@@ -146,12 +148,36 @@ const manglerEier = [
   'tenants_platform_admin_insert_owner',
   'tenant_modules_platform_admin_insert_owner',
   'invitations_platform_admin_insert_owner',
+  'invitations_platform_admin_select_owner',
+  'invitations_owner_revoke_update',
 ].filter((n) => !ownerNavn.has(n));
 if (manglerEier.length > 0) {
   console.error(
-    '[db] eier-INSERT-policyer under FORCE RLS mangler: ' +
+    '[db] eier-INSERT/SELECT/revoke-policyer under FORCE RLS mangler: ' +
       manglerEier.join(', ') +
-      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037).',
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038).',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const immutableFn = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'invitations_immutable_fields'
+       and strpos(p.prosrc, 'expires_at') > 0
+       and strpos(p.prosrc, 'created_at') > 0
+       and strpos(p.prosrc, 'old.revoked_at is null') > 0
+       and strpos(p.prosrc, 'old.accepted_at is null') > 0
+  ) as ok
+`);
+if (immutableFn.rows[0]?.ok !== true) {
+  console.error(
+    '[db] invitations_immutable_fields mangler eller låser ikke utløp/created_at (0038). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
   );
   await pool.end();
   process.exit(1);

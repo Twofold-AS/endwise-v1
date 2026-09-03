@@ -33,7 +33,12 @@ import {
   router,
 } from '../init.ts';
 import { hashSlettKode, lagSlettKode, slettKodeErGyldig } from '../slett-otp.ts';
-import { loggSlettPostgresFeil, mapSlettPostgresFeil } from '../slett-postgres.ts';
+import {
+  loggCreatePostgresFeil,
+  loggSlettPostgresFeil,
+  mapCreatePostgresFeil,
+  mapSlettPostgresFeil,
+} from '../slett-postgres.ts';
 
 /**
  * F5-26 / F5-27 — forhandler-oppretting og demo-tenants.
@@ -587,7 +592,8 @@ export const tenantsRouter = router({
             );
           });
         }
-        throw error;
+        loggCreatePostgresFeil(error);
+        throw mapCreatePostgresFeil(error);
       }
     }),
 
@@ -796,13 +802,18 @@ export const tenantsRouter = router({
         });
       }
 
-      return sendEierLenke({
-        db: ctx.db,
-        tenantId: input.tenantId,
-        epost: eier.eierEpost,
-        invitedBy: ctx.userId,
-        forhandler: tenant.name,
-      });
+      try {
+        return await sendEierLenke({
+          db: ctx.db,
+          tenantId: input.tenantId,
+          epost: eier.eierEpost,
+          invitedBy: ctx.userId,
+          forhandler: tenant.name,
+        });
+      } catch (error) {
+        loggCreatePostgresFeil(error);
+        throw mapCreatePostgresFeil(error);
+      }
     }),
 
   /**

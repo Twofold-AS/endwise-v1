@@ -184,6 +184,69 @@ revoke all on function consume_invitation(text) from public;
 grant execute on function lookup_open_invitation(text) to authenticated;
 grant execute on function consume_invitation(text) to authenticated;
 
+-- Eier-tilbakekall under FORCE RLS (tenants.create / resendOwnerInvite).
+
+-- Mons NO-GO 2: SECURITY DEFINER + session_user-allowlist + caller-satt
+-- platform_admin er tautologisk authz (CWE-862/863/807). Revoke skjer i
+-- TypeScript (tilbakekallApneEier) inne i allerede-autorisert
+-- endwiseAdminProcedure + withTenant som eier-rolle. Ingen hjelpe-GUC.
+-- DROP etterlater ikke v2-funksjonen.
+
+drop function if exists revoke_open_owner_invitations(text);
+
+-- Trigger: bare én sanksjonert mutasjon per UPDATE — enten revoked_at
+-- NULL→satt eller accepted_at NULL→satt. Alle andre kolonner er låst
+-- (id, tenant_id, e-post, hash, kind, role, job_function, platform_level,
+-- invited_by, expires_at, created_at). Rearm/forlengelse nektes.
+
+create or replace function invitations_immutable_fields()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  revoke_only boolean;
+  accept_only boolean;
+begin
+  revoke_only :=
+    old.revoked_at is null
+    and new.revoked_at is not null
+    and new.accepted_at is not distinct from old.accepted_at;
+  accept_only :=
+    old.accepted_at is null
+    and new.accepted_at is not null
+    and new.revoked_at is not distinct from old.revoked_at;
+
+  if not revoke_only and not accept_only then
+    raise exception 'invitations: bare engangs revoked_at eller accepted_at'
+      using errcode = '42501';
+  end if;
+
+  if new.id is distinct from old.id
+     or new.tenant_id is distinct from old.tenant_id
+     or new.email is distinct from old.email
+     or new.token_hash is distinct from old.token_hash
+     or new.kind is distinct from old.kind
+     or new.role is distinct from old.role
+     or new.job_function is distinct from old.job_function
+     or new.platform_level is distinct from old.platform_level
+     or new.invited_by is distinct from old.invited_by
+     or new.expires_at is distinct from old.expires_at
+     or new.created_at is distinct from old.created_at then
+    raise exception 'invitations: id, tenant, e-post, hash, kind, rolle, utløp og created_at er låst'
+      using errcode = '42501';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists invitations_immutable_fields_trg on invitations;
+create trigger invitations_immutable_fields_trg
+  before update on invitations
+  for each row
+  execute function invitations_immutable_fields();
+
 -- Widget-nøkkeloppslag før vi vet hvilken forhandler det gjelder.
 
 -- Samme klasse som lookup_open_invitation. `widget_keys` har FORCE RLS og

@@ -23,7 +23,12 @@ import { tenants } from './tenants.ts';
  * Eier-INSERT under FORCE RLS (prod-rolle `endwise`)
  * `invitations_platform_admin_insert_owner` (grants / 0037) er TO PUBLIC.
  * `opprettEier` må kjøre i `withTenant(ny tenant-id)` og sette
- * `app.platform_admin=on` i samme transaksjon. Ikke hopp over inviten.
+ * `app.platform_admin=on` i samme transaksjon. INSERT … RETURNING krever
+ * `invitations_platform_admin_select_owner` (0038): tabelleier +
+ * platform_admin-markør + eksplisitt tenant_id. Tilbakekall er app-kode
+ * (`tilbakekallApneEier`) + `invitations_owner_revoke_update` (tabelleier +
+ * tenant, ikke GUC-authz). Trigger låser alle felt unntatt engangs
+ * `revoked_at` / `accepted_at`. Ikke hopp over inviten.
  * Offentlig oppslag
  * Tenant-policyen over holder lederens liste. Den som åpner lenka har ingen
  * tenant. Unntaket er `lookup_open_invitation` / `invitations_open_by_hash`

@@ -164,11 +164,17 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/density=\{RONNY_GALAXY_TETTHET\}/);
     expect(fab).not.toMatch(/data-ronny-flate[\s\S]{0,800}<Grainient/);
     expect(fab).not.toMatch(/data-workshop-shell[\s\S]{0,600}<Grainient/);
-    const flateKilde = fab.slice(fab.indexOf('data-ronny-flate'), fab.indexOf('data-ronny-composer'));
+    const flateKilde = fab.slice(
+      fab.indexOf('data-ronny-overlay'),
+      fab.indexOf('data-ronny-composer'),
+    );
     expect(flateKilde).toMatch(/<RonnyGalaxy/);
     expect(flateKilde).not.toMatch(/Grainient/);
     expect(flateKilde).not.toMatch(/bg-\[#f5f5f7\]/);
-    const stripeKilde = fab.slice(fab.indexOf('data-workshop-shell'), fab.indexOf('data-ronny-flate'));
+    const stripeKilde = fab.slice(
+      fab.indexOf('data-ronny-verksted-bredde'),
+      fab.indexOf('data-ronny-overlay'),
+    );
     expect(stripeKilde).toMatch(/<RonnyGalaxy/);
     expect(stripeKilde).not.toMatch(/Grainient/);
     const composerKilde = fab.slice(fab.indexOf('data-ronny-composer'));

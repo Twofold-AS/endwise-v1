@@ -12,11 +12,11 @@ Beholdt: flytende prompt, flush 0 radius, tenking i stripe, sidebar lukker Ronny
 
 ## 2. Hva gikk galt
 
-Alt gikk som planlagt. Ingen ny Galaxy-kopi; leftover Grainient i stripe/peek var det som skulle bort.
+Alt gikk som planlagt. Ingen ny Galaxy-kopi; leftover Grainient i stripe/peek var det som skulle bort. Første test-slice traff `data-ronny-flate` i en kommentar — rettet til `data-ronny-verksted-bredde` / `data-ronny-overlay`.
 
 ## 3. Hvilke fikser ble gjort
 
-Byttet `<Grainient>` på stripe/peek-panelet med `<RonnyGalaxy>` (samme props som full-åpen). Full-åpen bruker samme helper. Tester og UI-PAKKER/techstack/roadmap oppdatert.
+Byttet `<Grainient>` på stripe/peek-panelet med `<RonnyGalaxy>` (samme props som full-åpen). Full-åpen bruker samme helper. Tester og UI-PAKKER/techstack/roadmap oppdatert. `workshop-bloub` + chrome/Galaxy-tester: 59/59.
 
 ## 4. Neste fase / neste steg
 

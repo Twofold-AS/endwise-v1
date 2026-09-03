@@ -130,6 +130,10 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         join pg_class c on c.oid = p.polrelid
        where p.polname in (
          'tenants_platform_admin_read_owner',
+         'tenants_platform_admin_insert_owner',
+         'tenant_modules_platform_admin_insert_owner',
+         'invitations_platform_admin_insert_owner',
+         'audit_log_tenant_insert_owner',
          'tenants_slett_forhandler',
          'tenants_slett_forhandler_select',
          'audit_log_slett_update',
@@ -145,6 +149,10 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     expect(navn, 'Mangler slett-policyer. Kjør `pnpm db:grants`.').toEqual(
       expect.arrayContaining([
         'tenants_platform_admin_read_owner',
+        'tenants_platform_admin_insert_owner',
+        'tenant_modules_platform_admin_insert_owner',
+        'invitations_platform_admin_insert_owner',
+        'audit_log_tenant_insert_owner',
         'tenants_slett_forhandler',
         'tenants_slett_forhandler_select',
         'audit_log_slett_update',
@@ -153,6 +161,31 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         'tenant_modules_slett_forhandler',
       ]),
     );
+  });
+
+  it('③f eier-INSERT-policyer for tenants/audit_log/tenant_modules finnes', async () => {
+    const res = await app.execute(sql`
+      select p.polname, p.polcmd
+        from pg_policy p
+       where p.polname in (
+         'audit_log_tenant_insert_owner',
+         'tenants_platform_admin_insert_owner',
+         'tenant_modules_platform_admin_insert_owner',
+         'invitations_platform_admin_insert_owner'
+       )
+       order by p.polname
+    `);
+    const navn = res.rows.map((r) => r.polname);
+    expect(navn, 'Mangler eier-INSERT-policyer. Kjør `pnpm db:grants`.').toEqual([
+      'audit_log_tenant_insert_owner',
+      'invitations_platform_admin_insert_owner',
+      'tenant_modules_platform_admin_insert_owner',
+      'tenants_platform_admin_insert_owner',
+    ]);
+    expect(
+      res.rows.every((r) => r.polcmd === 'a'),
+      'Eier-policyene skal være INSERT, ikke ALL/UPDATE/DELETE.',
+    ).toBe(true);
   });
 
   it('③d eier av tenants er superuser lokalt — Scaleway-antakelsen står i functions.sql', async () => {

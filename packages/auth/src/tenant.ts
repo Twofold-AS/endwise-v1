@@ -5,6 +5,7 @@ import {
   eq,
   findMembership,
   schema,
+  sql,
   type TenantKind,
   withTenant,
 } from '@endwise/db';
@@ -96,6 +97,9 @@ export async function createTenant(
     );
 
   await withTenant(db, tenantId, async (tx) => {
+    // Prod APP er eier `endwise` under FORCE RLS. TO authenticated-policyer
+    // gjelder ikke. Eier-INSERT krever platform_admin + tenant-guc (ny id).
+    await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
     await tx.insert(schema.tenants).values({
       id: tenantId,
       name: input.name,
@@ -132,6 +136,7 @@ export async function createTenantShell(
   });
 
   await withTenant(db, tenantId, async (tx) => {
+    await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
     await tx.insert(schema.tenants).values({
       id: tenantId,
       name: input.name,

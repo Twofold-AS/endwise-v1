@@ -127,5 +127,35 @@ if (widgetLookup.rows[0]?.ok !== true) {
   process.exit(1);
 }
 
+const ownerInsert = await pool.query<{ polname: string }>(`
+  select p.polname
+    from pg_policy p
+    join pg_class c on c.oid = p.polrelid
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public'
+     and p.polname in (
+       'audit_log_tenant_insert_owner',
+       'tenants_platform_admin_insert_owner',
+       'tenant_modules_platform_admin_insert_owner',
+       'invitations_platform_admin_insert_owner'
+     )
+`);
+const ownerNavn = new Set(ownerInsert.rows.map((r) => r.polname));
+const manglerEier = [
+  'audit_log_tenant_insert_owner',
+  'tenants_platform_admin_insert_owner',
+  'tenant_modules_platform_admin_insert_owner',
+  'invitations_platform_admin_insert_owner',
+].filter((n) => !ownerNavn.has(n));
+if (manglerEier.length > 0) {
+  console.error(
+    '[db] eier-INSERT-policyer under FORCE RLS mangler: ' +
+      manglerEier.join(', ') +
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037).',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
 await pool.end();
 console.info('[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0026)');

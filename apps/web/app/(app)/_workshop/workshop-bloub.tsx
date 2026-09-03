@@ -130,8 +130,8 @@ function skallHoyde(visning: RonnyVisning, visPeek: boolean): string {
 
 /**
  * Peek (etter send): svar under stripen, strek under boblen, prompt-bar
- * full-bleed flush nederst (0 radius, eget Grainient). Siden synlig.
- * Full: ett Grainient på flaten; prompt uten eget canvas. Stripe = avatar + tekst.
+ * full-bleed flush nederst (0 radius, transparent — siden synlig gjennom).
+ * Full: ett Grainient på flaten (stripe-koblet); prompt uten eget canvas.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -534,6 +534,17 @@ export function WorkshopBloub() {
     </div>
   );
 
+  const promptFlate = (
+    <div
+      data-ronny-prompt-flate
+      className="relative w-full overflow-hidden rounded-none bg-transparent"
+    >
+      <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
+        {promptKort}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <div
@@ -643,26 +654,15 @@ export function WorkshopBloub() {
         <div
           ref={composerRef}
           data-ronny-composer
-          className="fixed inset-x-0 bottom-0 z-[70] w-full shadow-none"
+          className="fixed inset-x-0 bottom-0 z-[70] w-full bg-transparent shadow-none"
         >
           {utvidet ? (
-            <div className="relative w-full">
+            <div className="relative w-full bg-transparent">
               {handtak}
-              <div data-ronny-prompt-flate className="relative w-full overflow-hidden rounded-none">
-                <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
-                  {promptKort}
-                </div>
-              </div>
+              {promptFlate}
             </div>
           ) : (
-            <div data-ronny-prompt-flate className="relative w-full overflow-hidden rounded-none">
-              <div className="pointer-events-none absolute inset-0" aria-hidden>
-                <Grainient className="absolute inset-0 h-full w-full" />
-              </div>
-              <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
-                {promptKort}
-              </div>
-            </div>
+            promptFlate
           )}
         </div>
       ) : null}

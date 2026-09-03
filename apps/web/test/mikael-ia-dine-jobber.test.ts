@@ -151,7 +151,7 @@ describe('Forhandler-info uten Grainient', () => {
     expect(dash).toMatch(/tenantName/);
     expect(dash).toMatch(/sr-only/);
     expect(innboks).toMatch(/ForhandlerInfoKort/);
-    expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(/Grainient|grainient/);
+    expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(/Grainient|grainient|Galaxy|galaxy/);
   });
 });
 

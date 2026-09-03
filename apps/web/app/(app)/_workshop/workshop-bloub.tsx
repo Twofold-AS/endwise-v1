@@ -2,6 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import {
+  Galaxy,
   Grainient,
   Message,
   MessageBubble,
@@ -55,6 +56,8 @@ const KORT_KANT = 'overflow-hidden rounded-[18px] border border-[#e0e0e0] shadow
 const COMPOSER_SAFE = 'max(6px, env(safe-area-inset-bottom))';
 const IDLE_TEKST = 'Trykk på KI-Ronny';
 const TENKER_TEKST = 'Ronny tenker…';
+/** Oppgrader-pillen bruker density={1}. Full-åpen Ronny skal være tettere. */
+const RONNY_GALAXY_TETTHET = 2.5;
 
 type RonnyVisning = 'stripe' | 'dock' | 'utvidet';
 
@@ -130,8 +133,8 @@ function skallHoyde(visning: RonnyVisning, visPeek: boolean): string {
 
 /**
  * Peek (etter send): svar under stripen, strek under boblen, prompt-bar
- * full-bleed flush nederst (0 radius, eget Grainient). Siden synlig.
- * Full: ett Grainient på flaten; prompt uten eget canvas. Stripe = avatar + tekst.
+ * full-bleed flush nederst (0 radius, transparent — siden synlig gjennom).
+ * Full: Galaxy (tettere enn Oppgrader) på mørk `#111`-flate; prompt uten eget canvas.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -534,6 +537,17 @@ export function WorkshopBloub() {
     </div>
   );
 
+  const promptFlate = (
+    <div
+      data-ronny-prompt-flate
+      className="relative w-full overflow-hidden rounded-none bg-transparent"
+    >
+      <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
+        {promptKort}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <div
@@ -614,9 +628,22 @@ export function WorkshopBloub() {
           className="fixed right-0 bottom-0 left-0 z-[60] overflow-hidden shadow-none"
           style={{ top: ankerTop }}
         >
-          <div className="pointer-events-none absolute inset-0 bg-[#f5f5f7]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 bg-[#111]" aria-hidden />
           <div className="pointer-events-none absolute inset-0" aria-hidden>
-            <Grainient className="absolute inset-0 h-full w-full" />
+            <Galaxy
+              className="absolute inset-0 h-full w-full"
+              density={RONNY_GALAXY_TETTHET}
+              starSpeed={0.2}
+              hueShift={140}
+              speed={1}
+              glowIntensity={0.3}
+              saturation={0}
+              mouseInteraction={false}
+              mouseRepulsion={false}
+              twinkleIntensity={0.3}
+              rotationSpeed={0.1}
+              transparent
+            />
           </div>
           <div className="relative flex h-full flex-col">
             {stripe}
@@ -643,26 +670,15 @@ export function WorkshopBloub() {
         <div
           ref={composerRef}
           data-ronny-composer
-          className="fixed inset-x-0 bottom-0 z-[70] w-full shadow-none"
+          className="fixed inset-x-0 bottom-0 z-[70] w-full bg-transparent shadow-none"
         >
           {utvidet ? (
-            <div className="relative w-full">
+            <div className="relative w-full bg-transparent">
               {handtak}
-              <div data-ronny-prompt-flate className="relative w-full overflow-hidden rounded-none">
-                <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
-                  {promptKort}
-                </div>
-              </div>
+              {promptFlate}
             </div>
           ) : (
-            <div data-ronny-prompt-flate className="relative w-full overflow-hidden rounded-none">
-              <div className="pointer-events-none absolute inset-0" aria-hidden>
-                <Grainient className="absolute inset-0 h-full w-full" />
-              </div>
-              <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
-                {promptKort}
-              </div>
-            </div>
+            promptFlate
           )}
         </div>
       ) : null}

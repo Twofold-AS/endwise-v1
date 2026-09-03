@@ -49,13 +49,14 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(layout).not.toMatch(/bottom-tab|PhoneTab/);
   });
 
-  it('er én Grainient-boks med overlay-panel, idle-syklus og strek-håndtak', () => {
+  it('er én Galaxy-boks med overlay-panel, idle-syklus og strek-håndtak', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
     const pil = les('../app/(app)/_workshop/ronny-ikoner.tsx');
     const css = les('../app/globals.css');
     expect(fab).toMatch(/data-workshop-strip/);
     expect(fab).toMatch(/data-workshop-shell/);
-    expect(fab).toMatch(/Grainient/);
+    expect(fab).not.toMatch(/Grainient/);
+    expect(fab).toMatch(/RonnyGalaxy/);
     expect(fab).toMatch(/h-11 max-h-\[44px\]/);
     expect(fab).toMatch(/md:h-control md:max-h-\[32px\]/);
     expect(fab).toMatch(/rounded-\[18px\]/);
@@ -153,17 +154,23 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(
       /data-ronny-prompt-flate[\s\S]{0,80}w-full overflow-hidden rounded-none bg-transparent/,
     );
-    expect((fab.match(/<Grainient/g) ?? []).length).toBe(1);
-    expect(fab).toMatch(/data-workshop-shell[\s\S]{0,600}<Grainient/);
+    expect(fab).not.toMatch(/Grainient/);
+    expect((fab.match(/<Galaxy/g) ?? []).length).toBe(1);
+    expect((fab.match(/<RonnyGalaxy/g) ?? []).length).toBe(2);
+    expect(fab).toMatch(/data-workshop-shell[\s\S]{0,600}<RonnyGalaxy/);
     expect(fab).toMatch(/const RONNY_GALAXY_TETTHET = 2\.5/);
-    expect(fab).toMatch(/data-ronny-flate[\s\S]{0,800}<Galaxy/);
+    expect(fab).toMatch(/function RonnyGalaxy[\s\S]{0,240}bg-\[#111\]/);
+    expect(fab).toMatch(/data-ronny-flate[\s\S]{0,800}<RonnyGalaxy/);
     expect(fab).toMatch(/density=\{RONNY_GALAXY_TETTHET\}/);
     expect(fab).not.toMatch(/data-ronny-flate[\s\S]{0,800}<Grainient/);
+    expect(fab).not.toMatch(/data-workshop-shell[\s\S]{0,600}<Grainient/);
     const flateKilde = fab.slice(fab.indexOf('data-ronny-flate'), fab.indexOf('data-ronny-composer'));
-    expect(flateKilde).toMatch(/bg-\[#111\]/);
-    expect(flateKilde).toMatch(/<Galaxy/);
+    expect(flateKilde).toMatch(/<RonnyGalaxy/);
     expect(flateKilde).not.toMatch(/Grainient/);
     expect(flateKilde).not.toMatch(/bg-\[#f5f5f7\]/);
+    const stripeKilde = fab.slice(fab.indexOf('data-workshop-shell'), fab.indexOf('data-ronny-flate'));
+    expect(stripeKilde).toMatch(/<RonnyGalaxy/);
+    expect(stripeKilde).not.toMatch(/Grainient/);
     const composerKilde = fab.slice(fab.indexOf('data-ronny-composer'));
     expect(composerKilde).toMatch(/data-ronny-composer[\s\S]{0,220}bg-transparent/);
     expect(composerKilde).not.toMatch(/Grainient/);

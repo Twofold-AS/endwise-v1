@@ -193,7 +193,7 @@ export type GalaxyProps = {
 };
 
 /**
- * React Bits Galaxy (JS+CSS). Én implementasjon: Oppgrader-CTA og Ronny full-åpen.
+ * React Bits Galaxy (JS+CSS). Én implementasjon: Oppgrader-CTA, Ronny-stripe og full-åpen.
  * ⛔ Ikke 1080-side, ikke dealer-pergament. Installert fra @react-bits/Galaxy-JS-CSS.
  */
 export function Galaxy({

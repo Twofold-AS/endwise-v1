@@ -56,7 +56,7 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(rad).toMatch(/min-w-0 flex-1 truncate/);
   });
 
-  it('app-skall: ingen breadcrumb-topbar, ingen mørkt-toggle, Grainient 32px-stripe', () => {
+  it('app-skall: ingen breadcrumb-topbar, ingen mørkt-toggle, Galaxy 32px-stripe', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const rot = les('../app/layout.tsx');
     const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
@@ -67,7 +67,8 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(layout).toMatch(/WorkshopBloub/);
     expect(rot).toMatch(/data-theme="light"/);
     expect(rot).not.toMatch(/TEMA_SKRIPT|endwise:tema/);
-    expect(workshop).toMatch(/Grainient/);
+    expect(workshop).toMatch(/RonnyGalaxy|<Galaxy/);
+    expect(workshop).not.toMatch(/Grainient/);
     expect(workshop).toMatch(/md:h-control md:max-h-\[32px\]/);
     expect(workshop).toMatch(/h-11 max-h-\[44px\]/);
     expect(workshop).toMatch(/data-workshop-strip/);

@@ -73,11 +73,12 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(sidebar).toMatch(/FORHANDLER_NAV|navForShell/);
   });
 
-  it('Grainient-stripe vises under toppbaren, høyere på telefon, ikke som FAB', () => {
+  it('Galaxy-stripe vises under toppbaren, høyere på telefon, ikke som FAB', () => {
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).toMatch(/WorkshopBloub/);
     expect(workshop).toMatch(/data-workshop-strip/);
-    expect(workshop).toMatch(/Grainient/);
+    expect(workshop).toMatch(/RonnyGalaxy|<Galaxy/);
+    expect(workshop).not.toMatch(/Grainient/);
     expect(workshop).toMatch(/h-11 max-h-\[44px\]/);
     expect(workshop).toMatch(/md:h-control md:max-h-\[32px\]/);
     expect(workshop).toMatch(/Trykk på KI-Ronny/);

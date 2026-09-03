@@ -150,15 +150,25 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-handtak-sted=\{utvidet \? 'prompt' : 'peek'\}/);
     expect(fab).toMatch(/visPeek \? loggUtsnitt : null[\s\S]{0,40}visPeek \? handtak : null/);
     expect(fab).toMatch(/data-ronny-prompt-flate/);
-    expect(fab).toMatch(/data-ronny-prompt-flate[\s\S]{0,80}w-full overflow-hidden rounded-none/);
-    expect((fab.match(/<Grainient/g) ?? []).length).toBe(3);
+    expect(fab).toMatch(
+      /data-ronny-prompt-flate[\s\S]{0,80}w-full overflow-hidden rounded-none bg-transparent/,
+    );
+    expect((fab.match(/<Grainient/g) ?? []).length).toBe(1);
+    expect(fab).toMatch(/data-workshop-shell[\s\S]{0,600}<Grainient/);
+    expect(fab).toMatch(/const RONNY_GALAXY_TETTHET = 2\.5/);
+    expect(fab).toMatch(/data-ronny-flate[\s\S]{0,800}<Galaxy/);
+    expect(fab).toMatch(/density=\{RONNY_GALAXY_TETTHET\}/);
+    expect(fab).not.toMatch(/data-ronny-flate[\s\S]{0,800}<Grainient/);
+    const flateKilde = fab.slice(fab.indexOf('data-ronny-flate'), fab.indexOf('data-ronny-composer'));
+    expect(flateKilde).toMatch(/bg-\[#111\]/);
+    expect(flateKilde).toMatch(/<Galaxy/);
+    expect(flateKilde).not.toMatch(/Grainient/);
+    expect(flateKilde).not.toMatch(/bg-\[#f5f5f7\]/);
     const composerKilde = fab.slice(fab.indexOf('data-ronny-composer'));
-    const forsteFlate = composerKilde.indexOf('data-ronny-prompt-flate');
-    const andreFlate = composerKilde.indexOf('data-ronny-prompt-flate', forsteFlate + 1);
-    expect(forsteFlate).toBeGreaterThan(-1);
-    expect(andreFlate).toBeGreaterThan(forsteFlate);
-    expect(composerKilde.slice(forsteFlate, andreFlate)).not.toMatch(/Grainient/);
-    expect(composerKilde.slice(andreFlate)).toMatch(/Grainient/);
+    expect(composerKilde).toMatch(/data-ronny-composer[\s\S]{0,220}bg-transparent/);
+    expect(composerKilde).not.toMatch(/Grainient/);
+    expect(composerKilde).not.toMatch(/Galaxy/);
+    expect(composerKilde).not.toMatch(/bg-\[#f5f5f7\]|bg-\[#fff\]|bg-bg/);
     expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}pb-1/);
     expect(fab).toMatch(/VERKSTED_INNHOLD/);
     expect(fab).toMatch(/data-ronny-verksted-bredde/);
@@ -233,7 +243,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-prompt-linje/);
     expect(fab).not.toMatch(/data-ronny-prompt-linje[\s\S]{0,80}border-b/);
     expect(fab).toMatch(/utvidet \? \(/);
-    expect(fab).toMatch(/data-ronny-composer[\s\S]*Grainient/);
+    expect(fab).not.toMatch(/data-ronny-composer[\s\S]*Grainient/);
+    expect(fab).not.toMatch(/data-ronny-composer[\s\S]*Galaxy/);
     expect(fab).toMatch(/norskChatFeil/);
     expect(fab).not.toMatch(/Noe gikk galt\. Prøv igjen\./);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);

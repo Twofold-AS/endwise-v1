@@ -46,6 +46,9 @@ export const auditLog = pgTable(
     // Ingen UPDATE- eller DELETE-policy for authenticated. Det er
     // append-only-garantien. `slett_forhandler` redigerer via to public-
     // policyer i sql/grants.sql (guc + ikke-authenticated), aldri her.
+    // Eier-INSERT (`audit_log_tenant_insert_owner`) ligger i grants.sql —
+    // TO PUBLIC + current_user <> authenticated/endwise_app + tenant-guc
+    // eller platform_admin. Prod APP kobler som eier `endwise` under FORCE RLS.
   ],
 ).enableRLS();
 

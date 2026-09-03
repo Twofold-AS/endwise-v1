@@ -86,15 +86,15 @@ describe('Bug B: pakkebytte bekreftes og oppfrisker forhandleren', () => {
     expect(live).not.toMatch(/helpdesk/);
   });
 
-  it('poller ikke stream.since / stream.head uten sesjon (401 uten DB-runde)', () => {
+  it('poller ikke stream.since / stream.head uten sesjon+tenant, og stopper på 401', () => {
     const sync = utenKommentarer(les('../app/(app)/_lib/live-sync.tsx'));
     expect(sync).toMatch(/useSession/);
     expect(sync).toMatch(/const harSesjon = Boolean\(session\?\.user\)/);
-    expect(sync).toMatch(/useEventStream\(apply,\s*harSesjon\)/);
-    expect(sync).toMatch(/stream\.head\.useQuery\([\s\S]*enabled:\s*harSesjon && chromeKlar/);
-    expect(sync).toMatch(
-      /stream\.since\.useQuery\([\s\S]*enabled:\s*harSesjon && chromeKlar && cursor != null/,
-    );
+    expect(sync).toMatch(/tenantId/);
+    expect(sync).toMatch(/kanHenteStreamHead|kanPolleStreamSince/);
+    expect(sync).toMatch(/erStreamUautorisert/);
+    expect(sync).toMatch(/streamPollIntervalMs/);
+    expect(sync).not.toMatch(/invalidate\(\).*UNAUTHORIZED|router\.(replace|push).*signin/);
   });
 
   it('Oppsett-lenke vises bare for aktive tillegg — ikke etter nedgradering', () => {

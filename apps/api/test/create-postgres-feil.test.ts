@@ -72,4 +72,19 @@ describe('mapCreatePostgresFeil', () => {
     const original = new TRPCError({ code: 'CONFLICT', message: 'Slug «x» er allerede i bruk' });
     expect(mapCreatePostgresFeil(original)).toBe(original);
   });
+
+  it('resendOwnerInvite-feil lekker ikke SQL eller params (CWE-209/497)', () => {
+    const feil = mapCreatePostgresFeil(
+      drizzlePakket({
+        code: '42501',
+        message: 'new row violates row-level security policy for table "invitations"',
+      }),
+    );
+    expect(feil.message).toMatch(/forhandler-invitasjon/i);
+    expect(feil.message).not.toMatch(/Failed query/);
+    expect(feil.message).not.toMatch(/insert into/i);
+    expect(feil.message).not.toMatch(/params:/i);
+    expect(feil.message).not.toMatch(/mikael_rk@hotmail\.com/);
+    expect(feil.message).not.toMatch(/select revoke_open_owner_invitations/i);
+  });
 });

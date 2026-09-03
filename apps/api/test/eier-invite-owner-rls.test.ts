@@ -140,83 +140,97 @@ describe('FORCE RLS eier-invite på tenants.create', () => {
     expect(kropp).not.toMatch(/or current_setting\('app\.tenant_id'/);
   });
 
-  it('ingen bred eier-UPDATE på invitations (CWE-915)', () => {
+  it('ingen bred eier-UPDATE og ingen DEFINER-revoke (CWE-862/915)', () => {
     expect(grants).not.toMatch(/create policy invitations_platform_admin_update_owner/i);
     expect(grants).toMatch(/drop policy if exists invitations_platform_admin_update_owner/i);
+    expect(grants).toMatch(/drop policy if exists invitations_revoke_owner_update/i);
+    expect(functions).toMatch(/drop function if exists revoke_open_owner_invitations/i);
+    expect(functions).not.toMatch(/create (or replace )?function revoke_open_owner_invitations/i);
+    expect(functions).not.toMatch(/app\.invite_revoke_tenant/);
+    expect(grants).not.toMatch(/app\.invite_revoke_tenant/);
+    expect(m0038).not.toMatch(/create (or replace )?function revoke_open_owner_invitations/i);
   });
 
-  it('0038 + db:grants krever eier-SELECT og revoke-funksjon, skrur ikke av FORCE RLS', () => {
+  it('0038 + db:grants krever eier-SELECT og owner-revoke-policy, skrur ikke av FORCE RLS', () => {
     expect(journal).toMatch(/0038_invitations_owner_returning/);
     expect(grantsTs).toMatch(/invitations_platform_admin_select_owner/);
-    expect(grantsTs).toMatch(/revoke_open_owner_invitations/);
+    expect(grantsTs).toMatch(/invitations_owner_revoke_update/);
+    expect(grantsTs).not.toMatch(/revoke_open_owner_invitations/);
     expect(grantsTs).not.toMatch(/invitations_platform_admin_update_owner/);
     expect(grants).not.toMatch(/no force row level security/i);
     expect(grants).toMatch(/force row level security/);
   });
 
-  it('revoke_open_owner_invitations er SECURITY DEFINER, search_path public, kun revoked_at', () => {
-    expect(functions).toMatch(/create (or replace )?function revoke_open_owner_invitations/i);
-    expect(functions).toMatch(/security definer/i);
-    expect(functions).toMatch(/set search_path = public/i);
-    expect(functions).toMatch(/revoke_open_owner_invitations_rev=0038/);
-    expect(functions).toMatch(/app\.platform_admin/);
-    expect(functions).toMatch(/app\.tenant_id/);
-    expect(functions).toMatch(/app\.invite_revoke_tenant/);
-    expect(functions).toMatch(/set revoked_at = now\(\)/i);
-    expect(functions).not.toMatch(/set email\s*=/i);
-    expect(functions).not.toMatch(/set token_hash\s*=/i);
-    expect(functions).not.toMatch(/set kind\s*=/i);
-    expect(functions).not.toMatch(/set role\s*=/i);
-    expect(functions).toMatch(/revoke all on function revoke_open_owner_invitations/i);
-    expect(functions).not.toMatch(
-      /grant execute on function revoke_open_owner_invitations\(text\) to public/i,
-    );
-    const revoke = functions.search(
-      /revoke all on function revoke_open_owner_invitations\(text\) from public/i,
-    );
-    const grant = functions.search(
-      /grant execute on function revoke_open_owner_invitations\(text\) to authenticated/i,
-    );
-    expect(revoke).toBeGreaterThan(-1);
-    expect(grant).toBeGreaterThan(revoke);
+  it('negativ: user-set platform_admin er ikke revoke-authz', () => {
+    const kropp = policyKropp(grants, 'invitations_owner_revoke_update');
+    expect(kropp).not.toMatch(/app\.platform_admin/);
+    expect(kropp).toMatch(/pg_get_userbyid|relowner/);
+    expect(functions).not.toMatch(/create (or replace )?function revoke_open_owner_invitations/i);
   });
 
-  it('revoke-UPDATE-policy er GUC-bundet, ikke tenant_id alene', () => {
-    const kropp = policyKropp(grants, 'invitations_revoke_owner_update');
+  it('eier-revoke-UPDATE krever tabelleier + eksplisitt tenant, ikke platform_admin-GUC', () => {
+    const kropp = policyKropp(grants, 'invitations_owner_revoke_update');
     expect(kropp).toMatch(/for update/);
-    expect(kropp).toMatch(/app\.invite_revoke_tenant/);
-    expect(kropp).toMatch(/app\.platform_admin/);
+    expect(kropp).toMatch(/pg_get_userbyid|relowner/);
     expect(kropp).toMatch(/current_user is distinct from 'authenticated'/);
+    expect(kropp).toMatch(/current_user is distinct from 'endwise_app'/);
+    expect(kropp).toMatch(/app\.tenant_id/);
+    expect(kropp).toMatch(/is not null/);
+    expect(kropp).not.toMatch(/app\.platform_admin/);
+    expect(kropp).not.toMatch(/app\.invite_revoke_tenant/);
     expect(kropp).not.toMatch(/for all/);
-    expect(kropp).not.toMatch(
-      /tenant_id = nullif\(current_setting\('app\.tenant_id', true\), ''\)::uuid/,
-    );
   });
 
-  it('trigger nekter endring av e-post/hash/kind/rolle (CWE-915)', () => {
-    expect(functions).toMatch(/invitations_immutable_fields/);
-    expect(functions).toMatch(/token_hash/);
-    expect(functions).toMatch(/job_function/);
-    expect(functions).toMatch(/platform_level/);
+  it('SELECT/revoke-policy avviser tom tenant-guc eksplisitt', () => {
+    const select = policyKropp(grants, 'invitations_platform_admin_select_owner');
+    const revoke = policyKropp(grants, 'invitations_owner_revoke_update');
+    expect(select).toMatch(/is not null/);
+    expect(revoke).toMatch(/is not null/);
+  });
+
+  it('trigger låser alt unntatt engangs revoked_at / accepted_at', () => {
+    const start = functions.indexOf('invitations_immutable_fields');
+    expect(start).toBeGreaterThan(-1);
+    const kropp = functions.slice(start, start + 2200);
+    expect(kropp).toMatch(/expires_at/);
+    expect(kropp).toMatch(/created_at/);
+    expect(kropp).toMatch(/old\.revoked_at is null/);
+    expect(kropp).toMatch(/old\.accepted_at is null/);
+    expect(kropp).toMatch(/token_hash/);
+    expect(kropp).toMatch(/job_function/);
+    expect(kropp).toMatch(/platform_level/);
     expect(m0038).toMatch(/invitations_immutable_fields/);
-    expect(m0038).toMatch(/drop policy if exists invitations_platform_admin_update_owner/i);
+    expect(m0038).toMatch(/expires_at/);
+    expect(m0038).toMatch(/old\.revoked_at is null/);
   });
 
-  it('tilbakekallApneEier kaller revoke-funksjonen, ikke fri UPDATE', () => {
+  it('tilbakekallApneEier er app-kode i withTenant, avviser tom tenant, rydder hjelpe-GUC', () => {
     const start = opprettEier.search(/async tilbakekallApneEier\s*\(/);
     expect(start).toBeGreaterThan(-1);
-    const kropp = opprettEier.slice(start, start + 700);
-    expect(kropp).toMatch(/revoke_open_owner_invitations/);
-    expect(kropp).toMatch(/app\.platform_admin/);
-    expect(kropp).not.toMatch(/\.update\(schema\.invitations\)/);
+    const kropp = opprettEier.slice(start, start + 1400);
+    expect(kropp).toMatch(/update\(schema\.invitations\)|update invitations/i);
+    expect(kropp).toMatch(/revokedAt|revoked_at/);
+    expect(kropp).not.toMatch(/revoke_open_owner_invitations/);
+    expect(kropp).not.toMatch(/invite_revoke_tenant/);
+    expect(kropp).toMatch(/tenantId|tenant_id/);
+    expect(kropp).toMatch(/throw|InvitasjonUgyldigError|Mangler tenant/);
+    expect(kropp).toMatch(/set_config\('app\.platform_admin', '', true\)/);
+    expect(kropp).toMatch(/finally/);
     expect(kropp).not.toMatch(/async tilbakekall\(/);
   });
 
-  it('tenants.create logger SQLSTATE internt og lekker ikke Failed query til UI', () => {
-    const start = tenantsRouter.search(/create: endwiseAdminProcedure/);
-    const kropp = tenantsRouter.slice(start, start + 6500);
-    expect(kropp).toMatch(/loggCreatePostgresFeil|lesPostgresCause/);
-    expect(kropp).toMatch(/mapCreatePostgresFeil/);
-    expect(kropp).not.toMatch(/throw error;/);
+  it('tenants.create og resendOwnerInvite logger SQLSTATE og lekker ikke Failed query', () => {
+    const createAt = tenantsRouter.search(/create: endwiseAdminProcedure/);
+    const create = tenantsRouter.slice(createAt, createAt + 6500);
+    expect(create).toMatch(/loggCreatePostgresFeil|lesPostgresCause/);
+    expect(create).toMatch(/mapCreatePostgresFeil/);
+    expect(create).not.toMatch(/throw error;/);
+
+    const resendAt = tenantsRouter.search(/resendOwnerInvite: endwiseAdminProcedure/);
+    expect(resendAt).toBeGreaterThan(-1);
+    const resend = tenantsRouter.slice(resendAt, resendAt + 1800);
+    expect(resend).toMatch(/loggCreatePostgresFeil/);
+    expect(resend).toMatch(/mapCreatePostgresFeil/);
+    expect(resend).not.toMatch(/throw error;/);
   });
 });

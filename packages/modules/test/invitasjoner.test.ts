@@ -65,6 +65,14 @@ describe('F1-10: token og validering (uten database)', () => {
     );
   });
 
+  it('tilbakekallApneEier avviser tom tenant før spørring', async () => {
+    const modul = createInvitasjonsmodul({} as Database);
+    await expect(modul.tilbakekallApneEier('')).rejects.toBeInstanceOf(InvitasjonUgyldigError);
+    await expect(modul.tilbakekallApneEier('   ')).rejects.toMatchObject({
+      message: 'Mangler tenant.',
+    });
+  });
+
   it('oppslaget caster hashen til text (unngår lookup_open_invitation(unknown))', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const kilde = readFileSync(resolve(her, '../src/invitasjoner/index.ts'), 'utf8');

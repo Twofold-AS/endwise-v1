@@ -96,13 +96,13 @@ export function loggSlettPostgresFeil(tenantId: string, error: unknown): void {
 }
 
 /**
- * tenants.create: Drizzle-skallet er «Failed query: insert into …» +
- * params (e-post, tenant_id). SQLSTATE/constraint ligger i cause.
- * Logg bare kode + constraint — aldri query/params/e-post til UI.
+ * tenants.create / resendOwnerInvite: Drizzle-skallet er «Failed query:
+ * insert into …» + params (e-post, tenant_id). SQLSTATE/constraint ligger
+ * i cause. Logg bare kode + constraint — aldri query/params/e-post til UI.
  */
 export function loggCreatePostgresFeil(error: unknown): void {
   const pg = lesPostgresCause(error);
-  console.error('[tenants.create]', {
+  console.error('[tenants.invite]', {
     code: pg.code,
     constraint: pg.constraint,
   });
@@ -121,12 +121,12 @@ export function mapCreatePostgresFeil(error: unknown): TRPCError {
     return new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message:
-        'Kunne ikke opprette forhandleren. Databasen avviste skrivingen. Kjør pnpm db:setup.',
+        'Kunne ikke fullføre forhandler-invitasjonen. Databasen avviste skrivingen. Kjør pnpm db:setup.',
     });
   }
 
   return new TRPCError({
     code: 'INTERNAL_SERVER_ERROR',
-    message: 'Kunne ikke opprette forhandleren.',
+    message: 'Kunne ikke fullføre forhandler-invitasjonen.',
   });
 }

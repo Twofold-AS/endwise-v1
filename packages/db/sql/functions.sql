@@ -186,92 +186,57 @@ grant execute on function consume_invitation(text) to authenticated;
 
 -- Eier-tilbakekall under FORCE RLS (tenants.create / resendOwnerInvite).
 
--- Problemet
-
--- Første 0038-utkast ga eieren FOR UPDATE på hele raden (CWE-915):
--- e-post, token_hash, kind, role kunne endres. RLS kan ikke låse kolonner.
-
--- Løsningen
-
--- SECURITY DEFINER med fast search_path. Tenant fra app.tenant_id, aldri
--- som argument. Krever SET LOCAL platform_admin. Setter
--- app.invite_revoke_tenant (is_local) så invitations_revoke_owner_update
--- slipper akkurat disse radene. UPDATE setter kun revoked_at.
--- REVOKE PUBLIC. Trigger invitations_immutable_fields er belte:
--- e-post/hash/kind/role/job_function/platform_level/tenant_id/invited_by
--- kan ikke endres, heller ikke via tenant_isolation FOR ALL.
+-- Mons NO-GO 2: SECURITY DEFINER + session_user-allowlist + caller-satt
+-- platform_admin er tautologisk authz (CWE-862/863/807). Revoke skjer i
+-- TypeScript (tilbakekallApneEier) inne i allerede-autorisert
+-- endwiseAdminProcedure + withTenant som eier-rolle. Ingen hjelpe-GUC.
+-- DROP etterlater ikke v2-funksjonen.
 
 drop function if exists revoke_open_owner_invitations(text);
 
-create or replace function revoke_open_owner_invitations(p_email text)
-returns integer
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_tenant uuid;
-  v_count integer;
-  v_owner name;
-begin
-  -- revoke_open_owner_invitations_rev=0038
-  if current_setting('app.platform_admin', true) is distinct from 'on' then
-    raise exception 'revoke_open_owner_invitations: krever platform_admin';
-  end if;
-
-  v_tenant := nullif(current_setting('app.tenant_id', true), '')::uuid;
-  if v_tenant is null then
-    raise exception 'revoke_open_owner_invitations: ingen tenant-kontekst';
-  end if;
-
-  select pg_get_userbyid(c.relowner) into v_owner
-    from pg_class c
-   where c.oid = 'public.invitations'::regclass;
-  if session_user is distinct from 'authenticated'
-     and session_user is distinct from 'endwise_app'
-     and session_user is distinct from v_owner then
-    raise exception 'revoke_open_owner_invitations: ikke autorisert';
-  end if;
-
-  perform set_config('app.invite_revoke_tenant', v_tenant::text, true);
-
-  update invitations
-     set revoked_at = now()
-   where tenant_id = v_tenant
-     and kind = 'owner'
-     and accepted_at is null
-     and revoked_at is null
-     and (
-       p_email is null
-       or p_email = ''
-       or email = lower(trim(p_email))
-     );
-
-  get diagnostics v_count = row_count;
-  return v_count;
-end;
-$$;
-
-revoke all on function revoke_open_owner_invitations(text) from public;
-grant execute on function revoke_open_owner_invitations(text) to authenticated;
+-- Trigger: bare én sanksjonert mutasjon per UPDATE — enten revoked_at
+-- NULL→satt eller accepted_at NULL→satt. Alle andre kolonner er låst
+-- (id, tenant_id, e-post, hash, kind, role, job_function, platform_level,
+-- invited_by, expires_at, created_at). Rearm/forlengelse nektes.
 
 create or replace function invitations_immutable_fields()
 returns trigger
 language plpgsql
 set search_path = public
 as $$
+declare
+  revoke_only boolean;
+  accept_only boolean;
 begin
-  if new.email is distinct from old.email
+  revoke_only :=
+    old.revoked_at is null
+    and new.revoked_at is not null
+    and new.accepted_at is not distinct from old.accepted_at;
+  accept_only :=
+    old.accepted_at is null
+    and new.accepted_at is not null
+    and new.revoked_at is not distinct from old.revoked_at;
+
+  if not revoke_only and not accept_only then
+    raise exception 'invitations: bare engangs revoked_at eller accepted_at'
+      using errcode = '42501';
+  end if;
+
+  if new.id is distinct from old.id
+     or new.tenant_id is distinct from old.tenant_id
+     or new.email is distinct from old.email
      or new.token_hash is distinct from old.token_hash
      or new.kind is distinct from old.kind
      or new.role is distinct from old.role
      or new.job_function is distinct from old.job_function
      or new.platform_level is distinct from old.platform_level
-     or new.tenant_id is distinct from old.tenant_id
-     or new.invited_by is distinct from old.invited_by then
-    raise exception 'invitations: e-post, hash, kind, rolle og tenant er låst'
+     or new.invited_by is distinct from old.invited_by
+     or new.expires_at is distinct from old.expires_at
+     or new.created_at is distinct from old.created_at then
+    raise exception 'invitations: id, tenant, e-post, hash, kind, rolle, utløp og created_at er låst'
       using errcode = '42501';
   end if;
+
   return new;
 end;
 $$;

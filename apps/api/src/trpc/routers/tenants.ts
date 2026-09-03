@@ -802,13 +802,18 @@ export const tenantsRouter = router({
         });
       }
 
-      return sendEierLenke({
-        db: ctx.db,
-        tenantId: input.tenantId,
-        epost: eier.eierEpost,
-        invitedBy: ctx.userId,
-        forhandler: tenant.name,
-      });
+      try {
+        return await sendEierLenke({
+          db: ctx.db,
+          tenantId: input.tenantId,
+          epost: eier.eierEpost,
+          invitedBy: ctx.userId,
+          forhandler: tenant.name,
+        });
+      } catch (error) {
+        loggCreatePostgresFeil(error);
+        throw mapCreatePostgresFeil(error);
+      }
     }),
 
   /**

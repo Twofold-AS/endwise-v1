@@ -306,16 +306,37 @@ export function createInvitasjonsmodul(db: Database) {
     /**
      * Tilbakekall åpne eier-invitasjoner for en e-post (eller alle) i tenanten.
      * Brukes før ny utsending, så det ikke ligger flere gyldige eier-lenker.
+     *
+     * App-kode i withTenant — ikke DEFINER, ikke caller-satt GUC som authz.
+     * Kallere er endwiseAdminProcedure (tenants.create / resendOwnerInvite).
+     * UPDATE setter kun revokedAt. Ingen .returning() (unngår SELECT-GUC).
      */
     async tilbakekallApneEier(tenantId: string, epost?: string): Promise<number> {
-      const res = await withTenant(db, tenantId, async (tx) => {
-        await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
-        return tx.execute(
-          sql`select revoke_open_owner_invitations(${epost ? normaliserEpost(epost) : null}::text) as n`,
-        );
+      if (!tenantId?.trim()) {
+        throw new InvitasjonUgyldigError('Mangler tenant.');
+      }
+      const epostNorm = epost ? normaliserEpost(epost) : undefined;
+      return withTenant(db, tenantId, async (tx) => {
+        const ryddHjelpeGuc = () =>
+          tx.execute(sql`select set_config('app.platform_admin', '', true)`);
+        await ryddHjelpeGuc();
+        try {
+          const vilkar = [
+            eq(schema.invitations.tenantId, tenantId),
+            eq(schema.invitations.kind, 'owner'),
+            isNull(schema.invitations.acceptedAt),
+            isNull(schema.invitations.revokedAt),
+          ];
+          if (epostNorm) vilkar.push(eq(schema.invitations.email, epostNorm));
+          const resultat = await tx
+            .update(schema.invitations)
+            .set({ revokedAt: new Date() })
+            .where(and(...vilkar));
+          return resultat.rowCount ?? 0;
+        } finally {
+          await ryddHjelpeGuc();
+        }
       });
-      const rad = (res.rows ?? res)[0] as { n: number | string | null } | undefined;
-      return Number(rad?.n ?? 0);
     },
 
     async sisteEierInvitasjon(tenantId: string) {

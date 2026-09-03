@@ -25,8 +25,10 @@ import { tenants } from './tenants.ts';
  * `opprettEier` må kjøre i `withTenant(ny tenant-id)` og sette
  * `app.platform_admin=on` i samme transaksjon. INSERT … RETURNING krever
  * `invitations_platform_admin_select_owner` (0038): tabelleier +
- * platform_admin + tenant_id. Tilbakekall går via
- * `revoke_open_owner_invitations` (kun `revoked_at`). Ikke hopp over inviten.
+ * platform_admin-markør + eksplisitt tenant_id. Tilbakekall er app-kode
+ * (`tilbakekallApneEier`) + `invitations_owner_revoke_update` (tabelleier +
+ * tenant, ikke GUC-authz). Trigger låser alle felt unntatt engangs
+ * `revoked_at` / `accepted_at`. Ikke hopp over inviten.
  * Offentlig oppslag
  * Tenant-policyen over holder lederens liste. Den som åpner lenka har ingen
  * tenant. Unntaket er `lookup_open_invitation` / `invitations_open_by_hash`

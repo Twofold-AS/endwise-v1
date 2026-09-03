@@ -20,6 +20,10 @@ import { tenants } from './tenants.ts';
  * Endwise-admins forhandler-onboarding. Staff-ruten kan ikke velge owner.
  * `kind = platform` er Endwise-team (administrator | support). Aldri F1-10-
  * funksjoner, aldri «eier». `endwise_support` er en annen rolle enn dealer support.
+ * Eier-INSERT under FORCE RLS (prod-rolle `endwise`)
+ * `invitations_platform_admin_insert_owner` (grants / 0037) er TO PUBLIC.
+ * `opprettEier` må kjøre i `withTenant(ny tenant-id)` og sette
+ * `app.platform_admin=on` i samme transaksjon. Ikke hopp over inviten.
  * Offentlig oppslag
  * Tenant-policyen over holder lederens liste. Den som åpner lenka har ingen
  * tenant. Unntaket er `lookup_open_invitation` / `invitations_open_by_hash`

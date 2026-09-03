@@ -101,6 +101,9 @@ export interface NyEierInvitasjon {
   gyldighetDager?: number;
 }
 
+/** Samme tx-type som `withTenant` — så create kan skrive invite uten å nøste. */
+export type InvitasjonTx = Parameters<Parameters<typeof withTenant>[2]>[0];
+
 export function createInvitasjonsmodul(db: Database) {
   return {
     /**
@@ -164,6 +167,7 @@ export function createInvitasjonsmodul(db: Database) {
      */
     async opprettEier(
       input: NyEierInvitasjon,
+      eksisterendeTx?: InvitasjonTx,
     ): Promise<{ invitasjon: ApenInvitasjon; token: string }> {
       const epost = normaliserEpost(input.epost);
       if (!epost.includes('@')) throw new InvitasjonUgyldigError('Ugyldig e-postadresse.');
@@ -173,8 +177,12 @@ export function createInvitasjonsmodul(db: Database) {
         Date.now() + (input.gyldighetDager ?? INVITASJON_GYLDIGHET_DAGER) * 24 * 60 * 60 * 1000,
       );
 
-      const [rad] = await withTenant(db, input.tenantId, (tx) =>
-        tx
+      const skriv = async (tx: InvitasjonTx) => {
+        // Prod APP er eier `endwise` under FORCE RLS. invitations_platform_admin_insert_owner
+        // krever tenant_id = app.tenant_id ELLER platform_admin. Begge i samme tx
+        // som INSERT — samme mønster som createTenant. Ikke nøst withTenant.
+        await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+        const [rad] = await tx
           .insert(schema.invitations)
           .values({
             tenantId: input.tenantId,
@@ -186,23 +194,25 @@ export function createInvitasjonsmodul(db: Database) {
             invitedBy: input.invitedBy,
             expiresAt: utloper,
           })
-          .returning(),
-      );
-      if (!rad) throw new Error('Eier-invitasjonen ble ikke opprettet');
-
-      return {
-        token,
-        invitasjon: {
-          id: rad.id,
-          tenantId: rad.tenantId,
-          epost: rad.email,
-          funksjon: 'leder',
-          rolle: rad.role,
-          kind: 'owner',
-          platformLevel: null,
-          utloper: rad.expiresAt,
-        },
+          .returning();
+        if (!rad) throw new Error('Eier-invitasjonen ble ikke opprettet');
+        return {
+          token,
+          invitasjon: {
+            id: rad.id,
+            tenantId: rad.tenantId,
+            epost: rad.email,
+            funksjon: 'leder' as const,
+            rolle: rad.role,
+            kind: 'owner' as const,
+            platformLevel: null,
+            utloper: rad.expiresAt,
+          },
+        };
       };
+
+      if (eksisterendeTx) return skriv(eksisterendeTx);
+      return withTenant(db, input.tenantId, skriv);
     },
 
     /**

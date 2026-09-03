@@ -122,21 +122,26 @@ export async function createTenant(
  * med en userId. Organisasjon + tenants-rad + ev. tillegg skrives her;
  * eier-invitasjonen lager medlemskapet når invitee setter passordet.
  */
+/** Samme tx-type som `withTenant` — invite/audit i samme transaksjon som skallet. */
+export type TenantTx = Parameters<Parameters<typeof withTenant>[2]>[0];
+
 export async function createTenantShell(
   db: Database,
   input: Omit<CreateTenantInput, 'ownerUserId'>,
+  inTx?: (tx: TenantTx, tenantId: string) => Promise<void>,
 ): Promise<{ tenantId: string }> {
   const tenantId = randomUUID();
 
-  await db.insert(schema.organization).values({
-    id: tenantId,
-    name: input.name,
-    slug: input.slug,
-    createdAt: new Date(),
-  });
-
   await withTenant(db, tenantId, async (tx) => {
     await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+    // Organization i samme tx som tenants + ev. eier-invite. Utenfor denne
+    // transaksjonen blir slug liggende hvis invite-INSERT kaster.
+    await tx.insert(schema.organization).values({
+      id: tenantId,
+      name: input.name,
+      slug: input.slug,
+      createdAt: new Date(),
+    });
     await tx.insert(schema.tenants).values({
       id: tenantId,
       name: input.name,
@@ -148,9 +153,29 @@ export async function createTenantShell(
 
     const rader = pakkeRader(tenantId, input);
     if (rader.length) await tx.insert(schema.tenantModules).values(rader);
+    if (inTx) await inTx(tx, tenantId);
   });
 
   return { tenantId };
+}
+
+/**
+ * Rydd et skall som ble committet uten ferdig eier-invite (Better Auth
+ * createOrganization-stien kan ikke dele transaksjon med invite).
+ * Organization-slug må vekk, ellers er neste create «allerede i bruk».
+ * FORCE RLS urørt: slett-GUC + platform_admin, samme port som slett_forhandler.
+ */
+export async function slettUferdigForhandler(db: Database, tenantId: string): Promise<void> {
+  await withTenant(db, tenantId, async (tx) => {
+    await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+    await tx.execute(sql`select set_config('app.slett_tenant_id', ${tenantId}, true)`);
+    await tx.delete(schema.invitations).where(eq(schema.invitations.tenantId, tenantId));
+    await tx.delete(schema.tenantModules).where(eq(schema.tenantModules.tenantId, tenantId));
+    await tx.delete(schema.tenants).where(eq(schema.tenants.id, tenantId));
+  });
+  await db.delete(schema.member).where(eq(schema.member.organizationId, tenantId));
+  await db.delete(schema.invitation).where(eq(schema.invitation.organizationId, tenantId));
+  await db.delete(schema.organization).where(eq(schema.organization.id, tenantId));
 }
 
 function pakkeRader(

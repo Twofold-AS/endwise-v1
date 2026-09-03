@@ -3,8 +3,9 @@ import {
   createAuth,
   createTenant,
   createTenantShell,
-  sendInvitation,
   sendBekreftelseskode,
+  sendInvitation,
+  slettUferdigForhandler,
 } from '@endwise/auth';
 import { and, asc, desc, eq, schema, sql, withPlatformAdmin, withTenant } from '@endwise/db';
 import {
@@ -215,23 +216,40 @@ async function sendEierLenke(input: {
     epost: input.epost,
     invitedBy: input.invitedBy,
   });
+  return sendEierEpost({
+    invitasjon,
+    token,
+    forhandler: input.forhandler,
+  });
+}
+
+async function sendEierEpost(input: {
+  invitasjon: { id: string; epost: string; utloper: Date };
+  token: string;
+  forhandler: string;
+}) {
   const base = authEnv.baseUrl;
-  const lenke = `${base.replace(/\/$/, '')}/invitasjon/${token}`;
+  const lenke = `${base.replace(/\/$/, '')}/invitasjon/${input.token}`;
   let sendt = true;
   try {
     await sendInvitation({
-      to: invitasjon.epost,
+      to: input.invitasjon.epost,
       lenke,
       forhandler: input.forhandler,
       funksjon: 'eier',
-      utloper: invitasjon.utloper,
+      utloper: input.invitasjon.utloper,
       kind: 'owner',
     });
   } catch (error) {
     sendt = false;
     console.error(`[eier-invitasjon] e-post feilet: ${(error as Error).message}`);
   }
-  return { id: invitasjon.id, epost: invitasjon.epost, utloper: invitasjon.utloper, sendt };
+  return {
+    id: input.invitasjon.id,
+    epost: input.invitasjon.epost,
+    utloper: input.invitasjon.utloper,
+    sendt,
+  };
 }
 
 export const tenantsRouter = router({
@@ -465,73 +483,112 @@ export const tenantsRouter = router({
         .where(sql`lower(${schema.user.email}) = ${epost}`);
 
       const moduler = included.length ? included : START_MODULER;
-      let tenantId: string;
-      if (eier) {
-        const auth = createAuth(ctx.db);
-        ({ tenantId } = await createTenant(auth, ctx.db, {
-          name: input.name,
-          slug: input.slug,
-          ownerUserId: eier.id,
-          modules: moduler,
-          optionalModules: optional,
-          plan: input.tier,
-          kind: input.kind,
-          onboardingCompleted: false,
-        }));
-      } else {
-        ({ tenantId } = await createTenantShell(ctx.db, {
-          name: input.name,
-          slug: input.slug,
-          modules: moduler,
-          optionalModules: optional,
-          plan: input.tier,
-          kind: input.kind,
-        }));
-      }
-
-      await withTenant(ctx.db, tenantId, async (tx) => {
-        await skrivEntitlementAudit(tx, {
-          tenantId,
-          actor: ctx.userId,
-          action: 'tenant.created',
-          subjectId: tenantId,
-          metadata: {
+      let tenantId: string | undefined;
+      let inviteFerdig = false;
+      try {
+        let invite: Awaited<ReturnType<typeof sendEierLenke>>;
+        if (eier) {
+          const auth = createAuth(ctx.db);
+          const opprettet = await createTenant(auth, ctx.db, {
+            name: input.name,
             slug: input.slug,
-            kind: input.kind,
-            plan: input.tier,
+            ownerUserId: eier.id,
             modules: moduler,
-            optional,
-            ownerEmail: epost,
-          },
-        });
-        for (const key of moduler) {
-          await skrivEntitlementAudit(tx, {
-            tenantId,
-            actor: ctx.userId,
-            action: 'entitlement.granted',
-            subjectId: key,
-            metadata: { moduleKey: key, plan: input.tier, at: 'create' },
+            optionalModules: optional,
+            plan: input.tier,
+            kind: input.kind,
+            onboardingCompleted: false,
+          });
+          tenantId = opprettet.tenantId;
+          invite = await sendEierLenke({
+            db: ctx.db,
+            tenantId: opprettet.tenantId,
+            epost,
+            invitedBy: ctx.userId,
+            forhandler: input.name,
+          });
+          inviteFerdig = true;
+        } else {
+          const modul = createInvitasjonsmodul(ctx.db);
+          let raw: Awaited<ReturnType<typeof modul.opprettEier>> | undefined;
+          const skall = await createTenantShell(
+            ctx.db,
+            {
+              name: input.name,
+              slug: input.slug,
+              modules: moduler,
+              optionalModules: optional,
+              plan: input.tier,
+              kind: input.kind,
+            },
+            async (tx, nyId) => {
+              raw = await modul.opprettEier(
+                {
+                  tenantId: nyId,
+                  epost,
+                  invitedBy: ctx.userId,
+                },
+                tx,
+              );
+            },
+          );
+          tenantId = skall.tenantId;
+          if (!raw) throw new Error('Eier-invitasjonen ble ikke opprettet');
+          inviteFerdig = true;
+          invite = await sendEierEpost({
+            invitasjon: raw.invitasjon,
+            token: raw.token,
+            forhandler: input.name,
           });
         }
-      });
 
-      const invite = await sendEierLenke({
-        db: ctx.db,
-        tenantId,
-        epost,
-        invitedBy: ctx.userId,
-        forhandler: input.name,
-      });
+        if (!tenantId) throw new Error('Tenant ble ikke opprettet');
+        const ferdigId = tenantId;
+        await withTenant(ctx.db, ferdigId, async (tx) => {
+          await skrivEntitlementAudit(tx, {
+            tenantId: ferdigId,
+            actor: ctx.userId,
+            action: 'tenant.created',
+            subjectId: ferdigId,
+            metadata: {
+              slug: input.slug,
+              kind: input.kind,
+              plan: input.tier,
+              modules: moduler,
+              optional,
+              ownerEmail: epost,
+            },
+          });
+          for (const key of moduler) {
+            await skrivEntitlementAudit(tx, {
+              tenantId: ferdigId,
+              actor: ctx.userId,
+              action: 'entitlement.granted',
+              subjectId: key,
+              metadata: { moduleKey: key, plan: input.tier, at: 'create' },
+            });
+          }
+        });
 
-      return {
-        tenantId,
-        name: input.name,
-        slug: input.slug,
-        kind: input.kind,
-        plan: input.tier,
-        existingUser: Boolean(eier),
-        invite,
-      };
+        return {
+          tenantId: ferdigId,
+          name: input.name,
+          slug: input.slug,
+          kind: input.kind,
+          plan: input.tier,
+          existingUser: Boolean(eier),
+          invite,
+        };
+      } catch (error) {
+        if (tenantId && !inviteFerdig) {
+          await slettUferdigForhandler(ctx.db, tenantId).catch((cleanupErr) => {
+            console.error(
+              `[tenants.create] kunne ikke rydde skall ${tenantId}: ${(cleanupErr as Error).message}`,
+            );
+          });
+        }
+        throw error;
+      }
     }),
 
   /**

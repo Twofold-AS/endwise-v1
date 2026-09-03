@@ -134,6 +134,59 @@ create policy tenants_platform_admin_read_owner on tenants
     and current_user is distinct from 'endwise_app'
   );
 
+-- Vanlig API-INSERT under force RLS (prod APP_DATABASE_URL = eier `endwise`).
+-- `tenants_self_isolation` er TO authenticated. Eieren er ikke den rollen,
+-- så FORCE RLS nekter INSERT selv når withTenant har satt app.tenant_id
+-- til den nye id-en. `tenants_platform_admin_read_owner` er SELECT-only —
+-- Mikael så INSERT/UPDATE 0 som eier med begge GUC-er satt.
+-- Samme port som read_owner: TO PUBLIC, eier-only, krever platform_admin.
+-- withCheck krever også at id matcher app.tenant_id (createTenant setter
+-- den til den nye id-en). Ingen UPDATE/DELETE her. App-rollen bruker
+-- fortsatt tenants_self_isolation.
+drop policy if exists tenants_platform_admin_insert_owner on tenants;
+create policy tenants_platform_admin_insert_owner on tenants
+  as permissive
+  for insert
+  to public
+  with check (
+    current_setting('app.platform_admin', true) = 'on'
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+-- createTenant skriver tenant_modules i samme tx (enterprise/pakke).
+-- tenant_modules_tenant_isolation er TO authenticated. Uten eier-INSERT
+-- feiler neste statement etter tenants-raden.
+drop policy if exists tenant_modules_platform_admin_insert_owner on tenant_modules;
+create policy tenant_modules_platform_admin_insert_owner on tenant_modules
+  as permissive
+  for insert
+  to public
+  with check (
+    current_setting('app.platform_admin', true) = 'on'
+    and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+-- tenants.create kaller opprettEier etter tenants-raden. invitations
+-- har FORCE RLS + TO authenticated. Eier-INSERT med tenant-guc (withTenant)
+-- eller platform_admin, samme port som audit_log_tenant_insert_owner.
+drop policy if exists invitations_platform_admin_insert_owner on invitations;
+create policy invitations_platform_admin_insert_owner on invitations
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and (
+      tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+      or current_setting('app.platform_admin', true) = 'on'
+    )
+  );
+
 drop policy if exists tenants_slett_forhandler_select on tenants;
 create policy tenants_slett_forhandler_select on tenants
   as permissive
@@ -194,6 +247,25 @@ create policy audit_log_slett_insert on audit_log
     and (
       tenant_id = nullif(current_setting('app.slett_tenant_id', true), '')::uuid
       or tenant_id = nullif(current_setting('app.slett_endwise_id', true), '')::uuid
+    )
+  );
+
+-- Vanlig audit-INSERT (set_global, tenant.created/deleted, …) under force RLS.
+-- `audit_log_tenant_insert` er TO authenticated. Eieren matcher ikke.
+-- `audit_log_slett_insert` krever slett-GUC — dekker ikke API-mutasjoner.
+-- Eier-only TO PUBLIC: tenant-guc (withTenant) ELLER platform_admin.
+-- Ingen UPDATE/DELETE. Append-only består.
+drop policy if exists audit_log_tenant_insert_owner on audit_log;
+create policy audit_log_tenant_insert_owner on audit_log
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and (
+      tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+      or current_setting('app.platform_admin', true) = 'on'
     )
   );
 

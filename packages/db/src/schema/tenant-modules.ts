@@ -37,6 +37,8 @@ export const tenantModules = pgTable(
   (t) => [
     primaryKey({ columns: [t.tenantId, t.moduleKey] }),
     tenantPolicy('tenant_modules', t.tenantId),
+    // Eier-INSERT (`tenant_modules_platform_admin_insert_owner`) i grants.sql
+    // — createTenant skriver pakke-rader som eier under FORCE RLS.
   ],
 ).enableRLS();
 

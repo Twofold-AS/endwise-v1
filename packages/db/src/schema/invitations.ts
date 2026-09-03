@@ -24,8 +24,9 @@ import { tenants } from './tenants.ts';
  * `invitations_platform_admin_insert_owner` (grants / 0037) er TO PUBLIC.
  * `opprettEier` må kjøre i `withTenant(ny tenant-id)` og sette
  * `app.platform_admin=on` i samme transaksjon. INSERT … RETURNING krever
- * også `invitations_platform_admin_select_owner` (0038) — WITH CHECK alene
- * holder ikke. Ikke hopp over inviten.
+ * `invitations_platform_admin_select_owner` (0038): tabelleier +
+ * platform_admin + tenant_id. Tilbakekall går via
+ * `revoke_open_owner_invitations` (kun `revoked_at`). Ikke hopp over inviten.
  * Offentlig oppslag
  * Tenant-policyen over holder lederens liste. Den som åpner lenka har ingen
  * tenant. Unntaket er `lookup_open_invitation` / `invitations_open_by_hash`

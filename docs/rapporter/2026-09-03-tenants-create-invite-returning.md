@@ -19,7 +19,7 @@
 4. `opprettEier` bruker `.returning()`. Postgres krever at den nye raden også matcher en **SELECT**-policy. Eier `endwise` under FORCE RLS har ingen: `invitations_tenant_isolation` er TO authenticated; `invitations_open_by_hash` krever `app.invitation_hash`; `invitations_slett_forhandler_select` krever slett-GUC. Default deny → 42501. Samme melding som WITH CHECK-brudd. Drizzle viser bare «Failed query: insert into invitations» + params.
 5. `invited_by` er `text` uten FK. CHECKer (`owner`/`leder`/`dealer_admin`) matcher verdiene. `token_hash` er unik per kall.
 
-Fikset: `invitations_platform_admin_select_owner` + tenant-skopet UPDATE (tilbakekall) i grants + **0038**. Ikke `platform_admin` alene (ville lest alle invitasjoner). FORCE RLS urørt. App-rollen bruker fortsatt tenant_isolation. `tenants.create` logger SQLSTATE/constraint og viser ikke SQL/params i UI.
+Fikset (PR #121 v2 etter Mons NO-GO): `invitations_platform_admin_select_owner` krever **tabelleier + `app.platform_admin` + `tenant_id = app.tenant_id`**. Ingen bred eier-UPDATE. Tilbakekall: `revoke_open_owner_invitations` (SECURITY DEFINER, `search_path = public`, kun `revoked_at`) + GUC-bundet `invitations_revoke_owner_update` (`app.invite_revoke_tenant`) + trigger `invitations_immutable_fields`. FORCE RLS urørt. `tenants.create` logger SQLSTATE/constraint, ikke SQL/params i UI.
 
 Etter merge: **`pnpm db:setup`** på Scaleway.
 

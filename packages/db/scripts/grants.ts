@@ -139,7 +139,7 @@ const ownerInsert = await pool.query<{ polname: string }>(`
        'tenant_modules_platform_admin_insert_owner',
        'invitations_platform_admin_insert_owner',
        'invitations_platform_admin_select_owner',
-       'invitations_platform_admin_update_owner'
+       'invitations_revoke_owner_update'
      )
 `);
 const ownerNavn = new Set(ownerInsert.rows.map((r) => r.polname));
@@ -149,13 +149,36 @@ const manglerEier = [
   'tenant_modules_platform_admin_insert_owner',
   'invitations_platform_admin_insert_owner',
   'invitations_platform_admin_select_owner',
-  'invitations_platform_admin_update_owner',
+  'invitations_revoke_owner_update',
 ].filter((n) => !ownerNavn.has(n));
 if (manglerEier.length > 0) {
   console.error(
-    '[db] eier-INSERT/SELECT/UPDATE-policyer under FORCE RLS mangler: ' +
+    '[db] eier-INSERT/SELECT/revoke-policyer under FORCE RLS mangler: ' +
       manglerEier.join(', ') +
       '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038).',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const revokeFn = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'revoke_open_owner_invitations'
+       and p.prosecdef
+       and strpos(p.prosrc, 'revoke_open_owner_invitations_rev=0038') > 0
+       and strpos(p.prosrc, 'app.platform_admin') > 0
+       and strpos(p.prosrc, 'app.invite_revoke_tenant') > 0
+       and strpos(p.prosrc, 'revoked_at') > 0
+  ) as ok
+`);
+if (revokeFn.rows[0]?.ok !== true) {
+  console.error(
+    '[db] revoke_open_owner_invitations mangler eller har feil kontrakt (DEFINER/0038). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
   );
   await pool.end();
   process.exit(1);

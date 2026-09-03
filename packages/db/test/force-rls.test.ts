@@ -134,7 +134,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'tenant_modules_platform_admin_insert_owner',
          'invitations_platform_admin_insert_owner',
          'invitations_platform_admin_select_owner',
-         'invitations_platform_admin_update_owner',
+         'invitations_revoke_owner_update',
          'audit_log_tenant_insert_owner',
          'tenants_slett_forhandler',
          'tenants_slett_forhandler_select',
@@ -155,7 +155,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         'tenant_modules_platform_admin_insert_owner',
         'invitations_platform_admin_insert_owner',
         'invitations_platform_admin_select_owner',
-        'invitations_platform_admin_update_owner',
+        'invitations_revoke_owner_update',
         'audit_log_tenant_insert_owner',
         'tenants_slett_forhandler',
         'tenants_slett_forhandler_select',
@@ -177,7 +177,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'tenant_modules_platform_admin_insert_owner',
          'invitations_platform_admin_insert_owner',
          'invitations_platform_admin_select_owner',
-         'invitations_platform_admin_update_owner'
+         'invitations_revoke_owner_update'
        )
        order by p.polname
     `);
@@ -186,7 +186,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       'audit_log_tenant_insert_owner',
       'invitations_platform_admin_insert_owner',
       'invitations_platform_admin_select_owner',
-      'invitations_platform_admin_update_owner',
+      'invitations_revoke_owner_update',
       'tenant_modules_platform_admin_insert_owner',
       'tenants_platform_admin_insert_owner',
     ]);
@@ -203,9 +203,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     expect(
       res.rows.find((r) => r.polname === 'invitations_platform_admin_select_owner')?.polcmd,
     ).toBe('r');
-    expect(
-      res.rows.find((r) => r.polname === 'invitations_platform_admin_update_owner')?.polcmd,
-    ).toBe('w');
+    expect(res.rows.find((r) => r.polname === 'invitations_revoke_owner_update')?.polcmd).toBe('w');
   });
 
   it('③d eier av tenants er superuser lokalt — Scaleway-antakelsen står i functions.sql', async () => {

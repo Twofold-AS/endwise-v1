@@ -188,36 +188,49 @@ create policy invitations_platform_admin_insert_owner on invitations
   );
 
 -- INSERT … RETURNING (opprettEier) sjekker også SELECT-policyer.
--- Uten denne: 42501 «new row violates row-level security policy» etter at
--- WITH CHECK passerte (0037). Kun tenant-guc — ikke platform_admin alene
--- (det ville lest alle invitasjoner). App-rollen bruker tenant_isolation.
+-- Uten denne: 42501 etter at WITH CHECK passerte (0037).
+-- CWE-862/863: TO PUBLIC er leveransen (eier ≠ authenticated). Predikatet
+-- er tabelleier + SET LOCAL platform_admin + tenant_id. Uten alle tre:
+-- 0 rader, også for eieren. App-rollen bruker tenant_isolation.
 drop policy if exists invitations_platform_admin_select_owner on invitations;
 create policy invitations_platform_admin_select_owner on invitations
   as permissive
   for select
   to public
   using (
-    current_user is distinct from 'authenticated'
+    current_setting('app.platform_admin', true) = 'on'
+    and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.invitations'::regclass
+    )
     and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
   );
 
--- tilbakekallApneEier / resend: UPDATE … RETURNING. Uten eier-UPDATE
--- blir 0 rader (stille) under FORCE RLS. Samme tenant-skop som SELECT.
+-- Første 0038-utkast hadde bred eier-UPDATE (alle kolonner). Borte.
 drop policy if exists invitations_platform_admin_update_owner on invitations;
-create policy invitations_platform_admin_update_owner on invitations
+
+-- FORCE RLS: DEFINER-eieren trenger rad-synlighet for revoke-funksjonen.
+-- Ikke tenant_id alene — kun når funksjonen har satt invite_revoke_tenant.
+-- Kolonne-lås er funksjonen + trigger, ikke denne policyen (RLS ser ikke OLD).
+drop policy if exists invitations_revoke_owner_update on invitations;
+create policy invitations_revoke_owner_update on invitations
   as permissive
   for update
   to public
   using (
-    current_user is distinct from 'authenticated'
+    current_setting('app.platform_admin', true) = 'on'
+    and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
-    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+    and tenant_id = nullif(current_setting('app.invite_revoke_tenant', true), '')::uuid
   )
   with check (
-    current_user is distinct from 'authenticated'
+    current_setting('app.platform_admin', true) = 'on'
+    and current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
-    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+    and tenant_id = nullif(current_setting('app.invite_revoke_tenant', true), '')::uuid
   );
 
 drop policy if exists tenants_slett_forhandler_select on tenants;

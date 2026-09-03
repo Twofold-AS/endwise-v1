@@ -159,7 +159,8 @@ describe('FORCE RLS eier-INSERT (prod-rolle endwise)', () => {
     expect(grantsTs).toMatch(/tenant_modules_platform_admin_insert_owner/);
     expect(grantsTs).toMatch(/invitations_platform_admin_insert_owner/);
     expect(grantsTs).toMatch(/invitations_platform_admin_select_owner/);
-    expect(grantsTs).toMatch(/invitations_platform_admin_update_owner/);
+    expect(grantsTs).toMatch(/revoke_open_owner_invitations/);
+    expect(grantsTs).not.toMatch(/invitations_platform_admin_update_owner/);
     expect(grantsTs).toMatch(/process\.exit\(1\)/);
   });
 
@@ -169,6 +170,6 @@ describe('FORCE RLS eier-INSERT (prod-rolle endwise)', () => {
     expect(forceRls).toMatch(/tenant_modules_platform_admin_insert_owner/);
     expect(forceRls).toMatch(/invitations_platform_admin_insert_owner/);
     expect(forceRls).toMatch(/invitations_platform_admin_select_owner/);
-    expect(forceRls).toMatch(/invitations_platform_admin_update_owner/);
+    expect(forceRls).not.toMatch(/invitations_platform_admin_update_owner/);
   });
 });

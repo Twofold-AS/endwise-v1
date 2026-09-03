@@ -4,14 +4,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createDb, type Database } from '../src/client.ts';
 
 /**
- * Reproduserer prod-500 etter #120: eier-rolle under FORCE RLS.
- * Docker-eieren `endwise` er superuser og bypasser FORCE RLS, så vi
- * SET ROLE til en ikke-superuser som ikke er authenticated/endwise_app
- * — samme predikat som invitations_platform_admin_insert_owner.
- *
- * INSERT uten RETURNING passerer WITH CHECK (0037).
- * INSERT … RETURNING krever også SELECT-policy. Uten
- * invitations_platform_admin_select_owner kaster Postgres 42501.
+ * Reproduserer prod-500 etter #120 og Mons-negativer etter PR #121 v1.
+ * Docker-eieren er superuser, så vi SET ROLE til en ikke-superuser
+ * som ikke eier tabellen — samme predikat som eier-SELECT.
  */
 
 const OWNER_URL = process.env.DATABASE_URL;
@@ -40,6 +35,7 @@ describeDb('FORCE RLS eier INSERT … RETURNING på invitations', () => {
       grant usage on schema public to ${PROBE};
       grant select, insert, update on public.tenants to ${PROBE};
       grant select, insert, update on public.invitations to ${PROBE};
+      grant execute on function revoke_open_owner_invitations(text) to ${PROBE};
       grant usage on type public.job_function to ${PROBE};
     `),
     );
@@ -84,29 +80,65 @@ describeDb('FORCE RLS eier INSERT … RETURNING på invitations', () => {
     });
   });
 
-  it('INSERT … RETURNING som eier-probe krever eier-SELECT (prod-500 etter #120)', async () => {
+  it('negativ: uten platform_admin ser probe-rollen 0 invitations (CWE-862)', async () => {
     const res = await owner.transaction(async (tx) => {
       await tx.execute(sql.raw(`set local role ${PROBE}`));
       await tx.execute(sql`select set_config('app.tenant_id', ${tenantId}, true)`);
-      await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
-      return tx.execute(sql`
-        insert into invitations (
-          tenant_id, email, token_hash, kind, job_function, role, invited_by, expires_at
-        ) values (
-          ${tenantId}::uuid,
-          'probe-returning@example.invalid',
-          ${`hash-ret-${tenantId}`},
-          'owner',
-          'leder',
-          'dealer_admin',
-          ${'06bbcfb0-2c91-4ecc-9f90-b38c1b65f67a'},
-          now() + interval '7 days'
-        )
-        returning id, tenant_id, kind, role
-      `);
+      return tx.execute(sql`select id from invitations where tenant_id = ${tenantId}::uuid`);
     });
-    expect(res.rows).toHaveLength(1);
-    expect(res.rows[0]?.kind).toBe('owner');
-    expect(res.rows[0]?.role).toBe('dealer_admin');
+    expect(res.rows).toHaveLength(0);
+  });
+
+  it('negativ: probe (ikke tabelleier) får ikke INSERT … RETURNING selv med GUC-er', async () => {
+    await expect(
+      owner.transaction(async (tx) => {
+        await tx.execute(sql.raw(`set local role ${PROBE}`));
+        await tx.execute(sql`select set_config('app.tenant_id', ${tenantId}, true)`);
+        await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+        return tx.execute(sql`
+          insert into invitations (
+            tenant_id, email, token_hash, kind, job_function, role, invited_by, expires_at
+          ) values (
+            ${tenantId}::uuid,
+            'probe-returning@example.invalid',
+            ${`hash-ret-${tenantId}`},
+            'owner',
+            'leder',
+            'dealer_admin',
+            ${'06bbcfb0-2c91-4ecc-9f90-b38c1b65f67a'},
+            now() + interval '7 days'
+          )
+          returning id
+        `);
+      }),
+    ).rejects.toThrow();
+  });
+
+  it('negativ: probe kan ikke endre e-post/hash/kind/rolle (CWE-915)', async () => {
+    await expect(
+      owner.transaction(async (tx) => {
+        await tx.execute(sql.raw(`set local role ${PROBE}`));
+        await tx.execute(sql`select set_config('app.tenant_id', ${tenantId}, true)`);
+        await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+        return tx.execute(sql`
+          update invitations
+             set email = 'stjelt@example.invalid',
+                 kind = 'platform',
+                 role = 'endwise_admin',
+                 token_hash = 'mutert'
+           where tenant_id = ${tenantId}::uuid
+        `);
+      }),
+    ).rejects.toThrow(/låst|row-level security|violates/i);
+  });
+
+  it('negativ: revoke uten platform_admin kaster', async () => {
+    await expect(
+      owner.transaction(async (tx) => {
+        await tx.execute(sql.raw(`set local role ${PROBE}`));
+        await tx.execute(sql`select set_config('app.tenant_id', ${tenantId}, true)`);
+        return tx.execute(sql`select revoke_open_owner_invitations(null)`);
+      }),
+    ).rejects.toThrow(/platform_admin/);
   });
 });

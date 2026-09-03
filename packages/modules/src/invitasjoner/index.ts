@@ -308,22 +308,14 @@ export function createInvitasjonsmodul(db: Database) {
      * Brukes før ny utsending, så det ikke ligger flere gyldige eier-lenker.
      */
     async tilbakekallApneEier(tenantId: string, epost?: string): Promise<number> {
-      const rader = await withTenant(db, tenantId, (tx) =>
-        tx
-          .update(schema.invitations)
-          .set({ revokedAt: new Date() })
-          .where(
-            and(
-              eq(schema.invitations.tenantId, tenantId),
-              eq(schema.invitations.kind, 'owner'),
-              isNull(schema.invitations.acceptedAt),
-              isNull(schema.invitations.revokedAt),
-              epost ? eq(schema.invitations.email, normaliserEpost(epost)) : sql`true`,
-            ),
-          )
-          .returning({ id: schema.invitations.id }),
-      );
-      return rader.length;
+      const res = await withTenant(db, tenantId, async (tx) => {
+        await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+        return tx.execute(
+          sql`select revoke_open_owner_invitations(${epost ? normaliserEpost(epost) : null}::text) as n`,
+        );
+      });
+      const rad = (res.rows ?? res)[0] as { n: number | string | null } | undefined;
+      return Number(rad?.n ?? 0);
     },
 
     async sisteEierInvitasjon(tenantId: string) {

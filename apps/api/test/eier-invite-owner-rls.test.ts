@@ -31,6 +31,11 @@ const createTenant = readFileSync(resolve(her, '../../../packages/auth/src/tenan
 const tenantsRouter = readFileSync(resolve(her, '../src/trpc/routers/tenants.ts'), 'utf8');
 const grants = readFileSync(resolve(her, '../../../packages/db/sql/grants.sql'), 'utf8');
 const grantsTs = readFileSync(resolve(her, '../../../packages/db/scripts/grants.ts'), 'utf8');
+const functions = readFileSync(resolve(her, '../../../packages/db/sql/functions.sql'), 'utf8');
+const m0038 = readFileSync(
+  resolve(her, '../../../packages/db/drizzle/0038_invitations_owner_returning.sql'),
+  'utf8',
+);
 const journal = readFileSync(
   resolve(her, '../../../packages/db/drizzle/meta/_journal.json'),
   'utf8',
@@ -117,39 +122,94 @@ describe('FORCE RLS eier-invite på tenants.create', () => {
     expect(kropp).toMatch(/\.returning\(\)/);
   });
 
-  it('eier-SELECT på invitations finnes (INSERT … RETURNING under FORCE RLS)', () => {
+  it('eier-SELECT krever tabelleier + platform_admin + tenant_id (CWE-862/863)', () => {
     const kropp = policyKropp(grants, 'invitations_platform_admin_select_owner');
     expect(kropp).toMatch(/for select/);
     expect(kropp).toMatch(/to public/);
+    expect(kropp).toMatch(/current_setting\('app\.platform_admin', true\) = 'on'/);
     expect(kropp).toMatch(/current_user is distinct from 'authenticated'/);
     expect(kropp).toMatch(/current_user is distinct from 'endwise_app'/);
+    expect(kropp).toMatch(/pg_get_userbyid|relowner/);
     expect(kropp).toMatch(/app\.tenant_id/);
     expect(kropp).not.toMatch(/for insert/);
     expect(kropp).not.toMatch(/for all/);
     expect(kropp).not.toMatch(/disable row level security/i);
     expect(kropp).not.toMatch(/app\.invitation_hash/);
     expect(kropp).not.toMatch(/app\.slett_tenant_id/);
-    // Ikke blanket lesing av alle invitasjoner via platform_admin alene.
     expect(kropp).not.toMatch(/or current_setting\('app\.platform_admin'/);
+    expect(kropp).not.toMatch(/or current_setting\('app\.tenant_id'/);
   });
 
-  it('eier-UPDATE på invitations er tenant-skopet (tilbakekall/resend)', () => {
-    const kropp = policyKropp(grants, 'invitations_platform_admin_update_owner');
-    expect(kropp).toMatch(/for update/);
-    expect(kropp).toMatch(/to public/);
-    expect(kropp).toMatch(/app\.tenant_id/);
-    expect(kropp).toMatch(/current_user is distinct from 'authenticated'/);
-    expect(kropp).toMatch(/current_user is distinct from 'endwise_app'/);
-    expect(kropp).not.toMatch(/for all/);
-    expect(kropp).not.toMatch(/or current_setting\('app\.platform_admin'/);
+  it('ingen bred eier-UPDATE på invitations (CWE-915)', () => {
+    expect(grants).not.toMatch(/create policy invitations_platform_admin_update_owner/i);
+    expect(grants).toMatch(/drop policy if exists invitations_platform_admin_update_owner/i);
   });
 
-  it('0038 + db:grants krever eier-SELECT (RETURNING), skrur ikke av FORCE RLS', () => {
+  it('0038 + db:grants krever eier-SELECT og revoke-funksjon, skrur ikke av FORCE RLS', () => {
     expect(journal).toMatch(/0038_invitations_owner_returning/);
     expect(grantsTs).toMatch(/invitations_platform_admin_select_owner/);
-    expect(grantsTs).toMatch(/invitations_platform_admin_update_owner/);
+    expect(grantsTs).toMatch(/revoke_open_owner_invitations/);
+    expect(grantsTs).not.toMatch(/invitations_platform_admin_update_owner/);
     expect(grants).not.toMatch(/no force row level security/i);
     expect(grants).toMatch(/force row level security/);
+  });
+
+  it('revoke_open_owner_invitations er SECURITY DEFINER, search_path public, kun revoked_at', () => {
+    expect(functions).toMatch(/create (or replace )?function revoke_open_owner_invitations/i);
+    expect(functions).toMatch(/security definer/i);
+    expect(functions).toMatch(/set search_path = public/i);
+    expect(functions).toMatch(/revoke_open_owner_invitations_rev=0038/);
+    expect(functions).toMatch(/app\.platform_admin/);
+    expect(functions).toMatch(/app\.tenant_id/);
+    expect(functions).toMatch(/app\.invite_revoke_tenant/);
+    expect(functions).toMatch(/set revoked_at = now\(\)/i);
+    expect(functions).not.toMatch(/set email\s*=/i);
+    expect(functions).not.toMatch(/set token_hash\s*=/i);
+    expect(functions).not.toMatch(/set kind\s*=/i);
+    expect(functions).not.toMatch(/set role\s*=/i);
+    expect(functions).toMatch(/revoke all on function revoke_open_owner_invitations/i);
+    expect(functions).not.toMatch(
+      /grant execute on function revoke_open_owner_invitations\(text\) to public/i,
+    );
+    const revoke = functions.search(
+      /revoke all on function revoke_open_owner_invitations\(text\) from public/i,
+    );
+    const grant = functions.search(
+      /grant execute on function revoke_open_owner_invitations\(text\) to authenticated/i,
+    );
+    expect(revoke).toBeGreaterThan(-1);
+    expect(grant).toBeGreaterThan(revoke);
+  });
+
+  it('revoke-UPDATE-policy er GUC-bundet, ikke tenant_id alene', () => {
+    const kropp = policyKropp(grants, 'invitations_revoke_owner_update');
+    expect(kropp).toMatch(/for update/);
+    expect(kropp).toMatch(/app\.invite_revoke_tenant/);
+    expect(kropp).toMatch(/app\.platform_admin/);
+    expect(kropp).toMatch(/current_user is distinct from 'authenticated'/);
+    expect(kropp).not.toMatch(/for all/);
+    expect(kropp).not.toMatch(
+      /tenant_id = nullif\(current_setting\('app\.tenant_id', true\), ''\)::uuid/,
+    );
+  });
+
+  it('trigger nekter endring av e-post/hash/kind/rolle (CWE-915)', () => {
+    expect(functions).toMatch(/invitations_immutable_fields/);
+    expect(functions).toMatch(/token_hash/);
+    expect(functions).toMatch(/job_function/);
+    expect(functions).toMatch(/platform_level/);
+    expect(m0038).toMatch(/invitations_immutable_fields/);
+    expect(m0038).toMatch(/drop policy if exists invitations_platform_admin_update_owner/i);
+  });
+
+  it('tilbakekallApneEier kaller revoke-funksjonen, ikke fri UPDATE', () => {
+    const start = opprettEier.search(/async tilbakekallApneEier\s*\(/);
+    expect(start).toBeGreaterThan(-1);
+    const kropp = opprettEier.slice(start, start + 700);
+    expect(kropp).toMatch(/revoke_open_owner_invitations/);
+    expect(kropp).toMatch(/app\.platform_admin/);
+    expect(kropp).not.toMatch(/\.update\(schema\.invitations\)/);
+    expect(kropp).not.toMatch(/async tilbakekall\(/);
   });
 
   it('tenants.create logger SQLSTATE internt og lekker ikke Failed query til UI', () => {

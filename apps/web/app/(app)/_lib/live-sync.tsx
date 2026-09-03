@@ -4,11 +4,14 @@ import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import {
+  erStreamUautorisert,
+  kanHenteStreamHead,
+  kanPolleStreamSince,
   LAST_EVENT_STORAGE_KEY,
-  LIVE_POLL_MS,
   liveFamiliesForEvent,
   parseLastEventId,
   shouldPlayInboundSound,
+  streamPollIntervalMs,
 } from './live-event';
 import { useLyd } from './lyd';
 import { useEventStream } from './use-event-stream';
@@ -19,9 +22,9 @@ import { useEventStream } from './use-event-stream';
  * lista ikke invalidert; sto hen et annet sted, ble verken tråd eller liste
  * oppdatert. Pakkebytte publiserte ingenting. ÉN lytter i shellet fikser begge.
  * SSE er den raske veien. Poll mot `stream.since` er reserven (F13-03) hvis
- * strømmen er nede eller rewriten buffer. Uten sesjon: ingen poll og ingen
- * SSE — uinnlogget app-shell (eller leftover sessionStorage-cursor) skal
- * ikke treffe `protectedProcedure` hvert 8. sekund.
+ * strømmen er nede eller rewriten buffer. Uten sesjon *og* tenantId: ingen
+ * poll og ingen SSE. 401/UNAUTHORIZED på head/since slår av polleren
+ * (ingen refetchInterval, ingen window-focus, ingen innloggings-bounce).
  */
 function invalidateFamily(
   utils: ReturnType<typeof trpc.useUtils>,
@@ -57,7 +60,8 @@ export function LiveSync({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const harSesjon = Boolean(session?.user);
   const me = trpc.session.me.useQuery(undefined, { enabled: harSesjon, retry: false });
-  const chromeKlar = Boolean(me.data);
+  const tenantId = typeof me.data?.tenantId === 'string' ? me.data.tenantId : null;
+  const [stoppet, setStoppet] = useState(false);
   const lyd = useLyd();
   const sett = useRef(new Set<string>());
   const sistLyd = useRef(0);
@@ -110,12 +114,14 @@ export function LiveSync({ children }: { children: ReactNode }) {
     [utils, lyd],
   );
 
-  const status = useEventStream(apply, harSesjon);
+  const status = useEventStream(apply, harSesjon && Boolean(tenantId));
 
   const head = trpc.stream.head.useQuery(undefined, {
-    enabled: harSesjon && chromeKlar,
+    enabled: kanHenteStreamHead({ harSesjon, tenantId, stoppet }),
     retry: false,
     staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   useEffect(() => {
@@ -141,11 +147,24 @@ export function LiveSync({ children }: { children: ReactNode }) {
   const poll = trpc.stream.since.useQuery(
     { lastEventId: cursor ?? 0 },
     {
-      enabled: harSesjon && chromeKlar && cursor != null,
-      refetchInterval: status === 'live' ? LIVE_POLL_MS.live : LIVE_POLL_MS.fallback,
+      enabled: kanPolleStreamSince({ harSesjon, tenantId, cursor, stoppet }),
+      refetchInterval: (query) =>
+        streamPollIntervalMs({
+          stoppet,
+          live: status === 'live',
+          error: query.state.error,
+        }),
       retry: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   );
+
+  useEffect(() => {
+    if (erStreamUautorisert(head.error) || erStreamUautorisert(poll.error)) {
+      setStoppet(true);
+    }
+  }, [head.error, poll.error]);
 
   useEffect(() => {
     const events = poll.data ?? [];

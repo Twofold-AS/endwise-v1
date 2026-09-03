@@ -68,14 +68,14 @@ describe('chrome-first first-paint', () => {
     );
   });
 
-  it('LiveSync venter med stream.* til session.me har svart', () => {
+  it('LiveSync venter med stream.* til session.me har tenantId, og slår av poll ved 401', () => {
     const sync = utenKommentarer(les('../app/(app)/_lib/live-sync.tsx'));
     expect(sync).toMatch(/session\.me\.useQuery/);
-    expect(sync).toMatch(/chromeKlar/);
-    expect(sync).toMatch(/stream\.head\.useQuery\([\s\S]*enabled:\s*harSesjon && chromeKlar/);
-    expect(sync).toMatch(
-      /stream\.since\.useQuery\([\s\S]*enabled:\s*harSesjon && chromeKlar && cursor != null/,
-    );
+    expect(sync).toMatch(/tenantId/);
+    expect(sync).toMatch(/kanHenteStreamHead|kanPolleStreamSince/);
+    expect(sync).toMatch(/erStreamUautorisert/);
+    expect(sync).toMatch(/streamPollIntervalMs/);
+    expect(sync).not.toMatch(/enabled:\s*harSesjon && chromeKlar && cursor != null/);
   });
 
   it('session.me har klient-frist slik layout ikke henger evig', () => {

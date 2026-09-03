@@ -187,6 +187,39 @@ create policy invitations_platform_admin_insert_owner on invitations
     )
   );
 
+-- INSERT … RETURNING (opprettEier) sjekker også SELECT-policyer.
+-- Uten denne: 42501 «new row violates row-level security policy» etter at
+-- WITH CHECK passerte (0037). Kun tenant-guc — ikke platform_admin alene
+-- (det ville lest alle invitasjoner). App-rollen bruker tenant_isolation.
+drop policy if exists invitations_platform_admin_select_owner on invitations;
+create policy invitations_platform_admin_select_owner on invitations
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+-- tilbakekallApneEier / resend: UPDATE … RETURNING. Uten eier-UPDATE
+-- blir 0 rader (stille) under FORCE RLS. Samme tenant-skop som SELECT.
+drop policy if exists invitations_platform_admin_update_owner on invitations;
+create policy invitations_platform_admin_update_owner on invitations
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
 drop policy if exists tenants_slett_forhandler_select on tenants;
 create policy tenants_slett_forhandler_select on tenants
   as permissive

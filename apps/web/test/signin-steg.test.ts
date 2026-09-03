@@ -169,6 +169,56 @@ describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', ()
     expect(kilde).toMatch(/\{!manuell && \(/);
   });
 
+  it('kodefeltet er input-only — Logg inn sitter ikke i samme form/boks', () => {
+    const form = kilde.match(/<form[^>]*onSubmit=\{onSkrivKodeManuelt\}[\s\S]*?<\/form>/)?.[0];
+    expect(form).toBeTruthy();
+    expect(form).toContain('signin-magic-kode');
+    expect(form).not.toContain('SIGNIN_VALG_LOGG_INN');
+    expect(form).not.toContain('StatefulButton');
+    expect(form).not.toMatch(/type=["']submit["']/);
+  });
+
+  it('Logg inn er fullbredde-stakk rett over Send på nytt', () => {
+    const sendIdx = kilde.indexOf('{SIGNIN_VALG_SEND_NYTT}');
+    const stakkStart = kilde.lastIndexOf('flex flex-col gap-2 px-1.5', sendIdx);
+    const stakk = kilde.slice(
+      stakkStart,
+      kilde.indexOf('</StatefulButton>', sendIdx) + '</StatefulButton>'.length,
+    );
+    expect(stakk).toContain('SIGNIN_VALG_LOGG_INN');
+    expect(stakk.indexOf('SIGNIN_VALG_LOGG_INN')).toBeLessThan(
+      stakk.indexOf('SIGNIN_VALG_SEND_NYTT'),
+    );
+    expect(stakk).toMatch(/form=["']signin-manuell-kode["']/);
+    const logg = stakk.match(
+      /<StatefulButton[\s\S]*?SIGNIN_VALG_LOGG_INN[\s\S]*?<\/StatefulButton>/,
+    )?.[0];
+    const send = stakk.match(
+      /<StatefulButton[\s\S]*?SIGNIN_VALG_SEND_NYTT[\s\S]*?<\/StatefulButton>/,
+    )?.[0];
+    expect(logg).toMatch(/className="w-full"/);
+    expect(send).toMatch(/className="w-full"/);
+  });
+
+  it('Send på nytt animerer ikke når Logg inn er pending', () => {
+    const knapper = [...kilde.matchAll(/<StatefulButton[\s\S]*?<\/StatefulButton>/g)].map(
+      (m) => m[0],
+    );
+    const logg = knapper.find((k) => k.includes('SIGNIN_VALG_LOGG_INN'));
+    const send = knapper.find((k) => k.includes('SIGNIN_VALG_SEND_NYTT'));
+    expect(logg).toBeTruthy();
+    expect(send).toBeTruthy();
+    const loggState = logg?.match(/state=\{([^}]+)\}/)?.[1];
+    const sendState = send?.match(/state=\{([^}]+)\}/)?.[1];
+    expect(loggState).toBeTruthy();
+    expect(sendState).toBeTruthy();
+    expect(loggState).not.toBe(sendState);
+    expect(logg).not.toMatch(/state=\{busy\}/);
+    expect(send).not.toMatch(/state=\{busy\}/);
+    expect(kilde).toMatch(/onSkrivKodeManuelt[\s\S]*setHandling\('logg-inn'\)/);
+    expect(kilde).toMatch(/onSendPaNytt[\s\S]*sendLenke\([^)]*'send-nytt'/);
+  });
+
   it('Fortsett / Send på nytt full-laster venteskjerm så leftover totpKlar ikke snapper', () => {
     expect(kilde).toMatch(/location\.assign\(SIGNIN_VALG_STI\)/);
     expect(kilde).toMatch(/flateEtterMagicLinkLanding/);

@@ -65,6 +65,8 @@ function landingTilFlate(steg: string | null, feil: string | null, totpKlar: boo
   return neste === 'enroll' ? 'valg' : neste;
 }
 
+type SignInHandling = 'fortsett' | 'logg-inn' | 'send-nytt' | 'totp';
+
 function landingFeil(steg: string | null, feil: string | null, totpKlar: boolean): string | null {
   if (steg === 'totp' && totpKlar) return null;
   if (skalViseErstattetMelding({ steg, feil, totpKlar, enrollKlar: false })) {
@@ -89,8 +91,13 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     landingFeil(stegQuery, feilQuery, totpKlar),
   );
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [handling, setHandling] = useState<SignInHandling | null>(null);
   const kodeRef = useRef<HTMLInputElement>(null);
   const totpRef = useRef<HTMLInputElement>(null);
+
+  function knappState(hvilken: SignInHandling) {
+    return handling === hvilken ? busy : 'idle';
+  }
 
   useEffect(() => {
     const neste = flateEtterMagicLinkLanding({
@@ -134,7 +141,8 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     window.location.assign(landing ?? '/dashboard');
   }
 
-  async function sendLenke(adresse: string) {
+  async function sendLenke(adresse: string, hvilken: 'fortsett' | 'send-nytt') {
+    setHandling(hvilken);
     setBusy('loading');
     setError(null);
     lagreIdentifisertEpost(adresse);
@@ -153,7 +161,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
 
   async function onEpost(e: FormEvent) {
     e.preventDefault();
-    await sendLenke(email.trim());
+    await sendLenke(email.trim(), 'fortsett');
   }
 
   async function onSendPaNytt() {
@@ -164,7 +172,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
       settStegIUrl(null);
       return;
     }
-    await sendLenke(adresse);
+    await sendLenke(adresse, 'send-nytt');
   }
 
   function onSkrivKodeManuelt(e: FormEvent) {
@@ -174,6 +182,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
       setError('Skriv koden fra den nyeste e-posten.');
       return;
     }
+    setHandling('logg-inn');
     setBusy('loading');
     setError(null);
     window.location.assign(magicLinkVerifySti(token));
@@ -188,6 +197,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
       setBusy('idle');
       return;
     }
+    setHandling('totp');
     setBusy('loading');
     setError(null);
     const res = await authClient.twoFactor.verifyTotp({ code: totp.trim() });
@@ -261,7 +271,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             <div className="px-1.5 pt-1 pb-1">
               <StatefulButton
                 type="submit"
-                state={busy}
+                state={knappState('fortsett')}
                 className="w-full"
                 loadingText="Sender lenke…"
                 successText="Sendt"
@@ -298,7 +308,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             <div className="flex flex-col gap-2 px-1.5 pt-1 pb-1">
               <StatefulButton
                 type="submit"
-                state={busy}
+                state={knappState('totp')}
                 className="w-full"
                 loadingText="Sjekker koden…"
                 successText="Bekreftet"
@@ -320,6 +330,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
             {manuell ? (
               <form
+                id="signin-manuell-kode"
                 onSubmit={onSkrivKodeManuelt}
                 className="flex flex-col gap-3 rounded-lg bg-inset p-4"
               >
@@ -338,17 +349,6 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
                 {error && (
                   <p className="text-[12px] text-danger">{error ?? MAGIC_LINK_ERSTATTET_MELDING}</p>
                 )}
-                <StatefulButton
-                  type="submit"
-                  state={busy}
-                  className="w-full"
-                  loadingText="Sjekker koden…"
-                  successText="Bekreftet"
-                  errorText="Prøv igjen"
-                  icon={<ShieldCheck size={15} />}
-                >
-                  {SIGNIN_VALG_LOGG_INN}
-                </StatefulButton>
               </form>
             ) : error ? (
               <div className="rounded-lg bg-inset p-4">
@@ -367,9 +367,23 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
                   {SIGNIN_VALG_SKRIV_KODE}
                 </button>
               )}
+              {manuell && (
+                <StatefulButton
+                  type="submit"
+                  form="signin-manuell-kode"
+                  state={knappState('logg-inn')}
+                  className="w-full"
+                  loadingText="Sjekker koden…"
+                  successText="Bekreftet"
+                  errorText="Prøv igjen"
+                  icon={<ShieldCheck size={15} />}
+                >
+                  {SIGNIN_VALG_LOGG_INN}
+                </StatefulButton>
+              )}
               <StatefulButton
                 type="button"
-                state={busy}
+                state={knappState('send-nytt')}
                 className="w-full"
                 loadingText="Sender lenke…"
                 successText="Sendt"

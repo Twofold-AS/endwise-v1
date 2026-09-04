@@ -192,6 +192,85 @@ describeDb('SET ROLE endwise — owner INSERT member_profiles under FORCE RLS', 
     ).rejects.toThrow(/job_function og updated_at|42501/i);
   });
 
+  it('uten tenant-GUC avvises UPDATE (upsert-stien er ikke blanket eier-skriv)', async () => {
+    await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      await tx.execute(sql`
+        insert into member_profiles (tenant_id, user_id, job_function)
+        values (${tenantA}::uuid, 'upd-uten-guc', 'selger')
+      `);
+    });
+    await expect(
+      somEier(async (tx) =>
+        tx.execute(sql`
+          update member_profiles
+             set job_function = 'leder'
+           where tenant_id = ${tenantA}::uuid and user_id = 'upd-uten-guc'
+        `),
+      ),
+    ).rejects.toThrow(/row-level security|42501|violates/i);
+  });
+
+  it('tom tenant-GUC matcher ikke UPDATE', async () => {
+    await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      await tx.execute(sql`
+        insert into member_profiles (tenant_id, user_id, job_function)
+        values (${tenantA}::uuid, 'upd-tom-guc', 'selger')
+      `);
+    });
+    await expect(
+      somEier(async (tx) => {
+        await tx.execute(sql`select set_config('app.tenant_id', '', true)`);
+        return tx.execute(sql`
+          update member_profiles
+             set job_function = 'leder'
+           where tenant_id = ${tenantA}::uuid and user_id = 'upd-tom-guc'
+        `);
+      }),
+    ).rejects.toThrow(/row-level security|42501|violates/i);
+  });
+
+  it('tenant-GUC kan ikke UPDATE den andre tenanten', async () => {
+    await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantB}, true)`);
+      await tx.execute(sql`
+        insert into member_profiles (tenant_id, user_id, job_function)
+        values (${tenantB}::uuid, 'upd-cross', 'selger')
+      `);
+    });
+    await expect(
+      somEier(async (tx) => {
+        await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+        return tx.execute(sql`
+          update member_profiles
+             set job_function = 'leder'
+           where tenant_id = ${tenantB}::uuid and user_id = 'upd-cross'
+        `);
+      }),
+    ).rejects.toThrow(/row-level security|42501|violates/i);
+  });
+
+  it('platform_admin alene (uten tenant-guc) gir ikke UPDATE', async () => {
+    await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      await tx.execute(sql`
+        insert into member_profiles (tenant_id, user_id, job_function)
+        values (${tenantA}::uuid, 'upd-admin', 'selger')
+      `);
+    });
+    await expect(
+      somEier(async (tx) => {
+        await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+        return tx.execute(sql`
+          update member_profiles
+             set job_function = 'leder'
+           where tenant_id = ${tenantA}::uuid and user_id = 'upd-admin'
+        `);
+      }),
+    ).rejects.toThrow(/row-level security|42501|violates/i);
+  });
+
   it('eier med tenant-GUC kan INSERT mechanics (mekaniker-godta)', async () => {
     const res = await somEier(async (tx) => {
       await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);

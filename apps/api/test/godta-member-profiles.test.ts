@@ -234,6 +234,8 @@ describe('godta — kontrakt: consume etter profil, samme tx', () => {
       expect(sql).toMatch(/new\.user_id is distinct from old\.user_id/);
     }
     expect(grantsTs).toMatch(/member_profiles_owner_update_guard/);
+    expect(grantsTs).toMatch(/new\.tenant_id is distinct from old\.tenant_id/);
+    expect(grantsTs).toMatch(/new\.user_id is distinct from old\.user_id/);
   });
 });
 

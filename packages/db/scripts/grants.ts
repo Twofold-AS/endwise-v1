@@ -207,6 +207,8 @@ const profileGuard = await pool.query<{ ok: boolean }>(`
      where n.nspname = 'public'
        and p.proname = 'member_profiles_owner_update_guard'
        and strpos(p.prosrc, 'job_function og updated_at') > 0
+       and strpos(p.prosrc, 'new.tenant_id is distinct from old.tenant_id') > 0
+       and strpos(p.prosrc, 'new.user_id is distinct from old.user_id') > 0
        and strpos(p.prosrc, 'new.nickname is distinct from old.nickname') > 0
   ) as ok
 `);

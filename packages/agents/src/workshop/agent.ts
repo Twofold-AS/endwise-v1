@@ -6,7 +6,13 @@ import { z } from 'zod';
 import { lagerVerktoy } from '../drift-innsikt/lager-verktoy.ts';
 import { erTillattGaaTil } from './gaa-til.ts';
 import instructions from './instructions.md?raw';
-import { filtrerRonnyVerktoy } from './scope-lock.ts';
+import {
+  filtrerRonnyVerktoy,
+  RONNY_TILLATTE_VERKTOY,
+  sisteBrukertekst,
+  vurderRonnyInn,
+  vurderRonnySvar,
+} from './scope-lock.ts';
 
 /**
  * Workshop-agenten (Ronny). Samme dataklasse som drift-innsikt
@@ -24,6 +30,14 @@ export const workshopAgent: AgentDefinition = {
   dataClass: 'tenant_operational',
   requiredModule: null,
   maxSteps: 5,
+  toolAllowlist: RONNY_TILLATTE_VERKTOY,
+  preflight: vurderRonnyInn,
+  rewriteOutput: (text, { usedTools, messages }) =>
+    vurderRonnySvar({
+      brukertekst: sisteBrukertekst(messages),
+      svar: text,
+      brukteVerktoy: usedTools,
+    }).svar,
 
   tools(context: AgentContext) {
     return filtrerRonnyVerktoy({

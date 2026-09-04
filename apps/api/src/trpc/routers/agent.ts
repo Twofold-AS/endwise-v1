@@ -88,6 +88,8 @@ export const agentRouter = router({
         },
       });
 
+      // Workshop/Ronny-gaten sitter på agent-definisjonen (preflight,
+      // allowlist, rewriteOutput) — samme sperre som /chat/workshop.
       await runAgent({
         agent,
         context,

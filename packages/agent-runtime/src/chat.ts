@@ -1,9 +1,11 @@
 import { createStreamRedactor, type GuardrailPipeline } from '@endwise/guardrails';
 import { DataRegionViolation, type ModelProvider, providerSatisfies } from '@endwise/providers';
 import { isStepCount, type ModelMessage, streamText, type TextStreamPart, type ToolSet } from 'ai';
-import { type AgentDefinition, assertEntitled } from './agent.ts';
+import { type AgentDefinition, AgentPreflightRefuse, assertEntitled } from './agent.ts';
 import { type AgentContext, sealContext } from './context.ts';
+import { pakkKlientKontekstSomData } from './klient-data.ts';
 import { assertAsciiToolNames } from './tool-navn.ts';
+import { filtrerVerktoyAllowlist } from './verktoy-allowlist.ts';
 
 /**
  * Chat-inngangen til agent-runtimen.
@@ -74,12 +76,11 @@ export function streamAgentChat(options: ChatOptions) {
 
   // 4. Verktøyene bygges ÉN gang, med den frosne konteksten — samme invariant
   // som spawn: det finnes ikke et sted der en tenant-ID kan *settes*.
+  const nekt = agent.preflight?.(options.messages);
+  if (nekt) throw new AgentPreflightRefuse(nekt);
+
   const rawTools = agent.tools(context);
-  const tillatte = options.toolAllowlist
-    ? Object.fromEntries(
-        Object.entries(rawTools).filter(([navn]) => options.toolAllowlist?.includes(navn)),
-      )
-    : rawTools;
+  const tillatte = filtrerVerktoyAllowlist(rawTools, options.toolAllowlist ?? agent.toolAllowlist);
   const tools = guardrails.wrapTools(tillatte, context);
   // Mistral 400 02.09: `gåTil` er ugyldig function name. Stopp før HTTP.
   assertAsciiToolNames(tools);
@@ -89,12 +90,17 @@ export function streamAgentChat(options: ChatOptions) {
     createStreamRedactor(context, (violation) => options.onViolation?.(violation.message));
 
   const usedTools: string[] = [];
-  const rewrite = options.rewriteAssistantText;
+  const rewrite =
+    options.rewriteAssistantText ??
+    (agent.rewriteOutput
+      ? (text: string, ctx: { usedTools: readonly string[] }) =>
+          agent.rewriteOutput?.(text, { ...ctx, messages: options.messages }) ?? text
+      : undefined);
 
   return streamText({
     model: provider.model({ role: agent.role, tenantId: context.tenantId }),
     system: options.systemExtra
-      ? `${agent.instructions}\n\n${options.systemExtra}`
+      ? `${agent.instructions}\n\n${pakkKlientKontekstSomData(options.systemExtra)}`
       : agent.instructions,
     messages: options.messages,
     tools,

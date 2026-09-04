@@ -1,12 +1,9 @@
-import { streamAgentChat, UgyldigToolNavnError } from '@endwise/agent-runtime';
 import {
-  getAgent,
-  RONNY_TILLATTE_VERKTOY,
-  sisteBrukertekst,
-  UnknownAgentError,
-  vurderRonnyInn,
-  vurderRonnySvar,
-} from '@endwise/agents';
+  AgentPreflightRefuse,
+  streamAgentChat,
+  UgyldigToolNavnError,
+} from '@endwise/agent-runtime';
+import { getAgent, pakkSideSomData, UnknownAgentError, vurderRonnyInn } from '@endwise/agents';
 import { TwoFactorRequiredError } from '@endwise/auth';
 import { eq, schema, withTenant } from '@endwise/db';
 import { createGuardrails } from '@endwise/guardrails';
@@ -46,6 +43,18 @@ import { createRequestContext } from '../context.ts';
  * 3. modul — agentens `requiredModule` mot `tenant_modules` (F0-04/16).
  * 4. dataregion — i runtimen. 5. guardrails L1–L5. 6. RLS i basen.
  */
+function ronnyNektRespons(tekst: string) {
+  return createUIMessageStreamResponse({
+    stream: createUIMessageStream({
+      execute({ writer }) {
+        writer.write({ type: 'text-start', id: 'ronny-lock' });
+        writer.write({ type: 'text-delta', id: 'ronny-lock', delta: tekst });
+        writer.write({ type: 'text-end', id: 'ronny-lock' });
+      },
+    }),
+  });
+}
+
 export const chat = new Hono();
 
 const kropp = z.object({
@@ -133,15 +142,7 @@ chat.post('/:agent', async (c) => {
     if (agent.name === 'workshop') {
       const nekt = vurderRonnyInn(modelMessages);
       if (nekt) {
-        return createUIMessageStreamResponse({
-          stream: createUIMessageStream({
-            execute({ writer }) {
-              writer.write({ type: 'text-start', id: 'ronny-lock' });
-              writer.write({ type: 'text-delta', id: 'ronny-lock', delta: nekt });
-              writer.write({ type: 'text-end', id: 'ronny-lock' });
-            },
-          }),
-        });
+        return ronnyNektRespons(nekt);
       }
     }
 
@@ -158,25 +159,7 @@ chat.post('/:agent', async (c) => {
       provider: resolveModelProvider(agent.dataClass),
       guardrails,
       messages,
-      toolAllowlist: agent.name === 'workshop' ? RONNY_TILLATTE_VERKTOY : undefined,
-      rewriteAssistantText:
-        agent.name === 'workshop'
-          ? (text, { usedTools }) =>
-              vurderRonnySvar({
-                brukertekst: sisteBrukertekst(modelMessages),
-                svar: text,
-                brukteVerktoy: usedTools,
-              }).svar
-          : undefined,
-      systemExtra: parsed.data.side
-        ? [
-            'Sidekontekst (den ansatte står her nå):',
-            `Merkelapp: ${parsed.data.side.merkelapp}`,
-            `Tittel: ${parsed.data.side.tittel}`,
-            `Sti: ${parsed.data.side.pathname}`,
-            'Svar på norsk. Snakk om bookinger hvis det er relevant, men skriv aldri til Quick.',
-          ].join('\n')
-        : undefined,
+      systemExtra: parsed.data.side ? pakkSideSomData(parsed.data.side) : undefined,
       onViolation: (message) => console.warn(`[guardrail:${agent.name}] ${message}`),
     });
 
@@ -186,6 +169,9 @@ chat.post('/:agent', async (c) => {
   } catch (error) {
     // En regionsbrudd skal ikke se ut som en tilfeldig 500 i loggen. Det er
     // den ene feilen her som er et personvernproblem, ikke en driftsfeil.
+    if (error instanceof AgentPreflightRefuse) {
+      return ronnyNektRespons(error.text);
+    }
     if (error instanceof DataRegionViolation) {
       console.error(`[dataregion] ${error.message}`);
       return c.json(

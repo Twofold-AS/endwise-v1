@@ -159,7 +159,10 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-flate[\s\S]{0,800}<Galaxy/);
     expect(fab).toMatch(/density=\{RONNY_GALAXY_TETTHET\}/);
     expect(fab).not.toMatch(/data-ronny-flate[\s\S]{0,800}<Grainient/);
-    const flateKilde = fab.slice(fab.indexOf('data-ronny-flate'), fab.indexOf('data-ronny-composer'));
+    const flateKilde = fab.slice(
+      fab.indexOf('data-ronny-flate'),
+      fab.indexOf('data-ronny-composer'),
+    );
     expect(flateKilde).toMatch(/bg-\[#111\]/);
     expect(flateKilde).toMatch(/<Galaxy/);
     expect(flateKilde).not.toMatch(/Grainient/);
@@ -293,15 +296,17 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(chat).toMatch(/merkelapp/);
     expect(chat).toMatch(/pathname/);
     expect(chat).toMatch(/systemExtra/);
-    expect(chat).toMatch(/skriv aldri til Quick/i);
+    expect(chat).toMatch(/pakkSideSomData/);
     expect(chat).toMatch(/ModelNotConfiguredError/);
     expect(chat).toMatch(/UgyldigToolNavnError/);
     expect(chat).toMatch(/vurderRonnyInn/);
-    expect(chat).toMatch(/RONNY_TILLATTE_VERKTOY/);
-    expect(chat).toMatch(/rewriteAssistantText/);
+    expect(chat).toMatch(/AgentPreflightRefuse/);
     expect(chat).toMatch(/filterInput/);
     expect(chat).toMatch(/resolveModelProvider/);
     expect(chat).toMatch(/createUIMessageStream/);
+    const runtimeChat = les('../../../packages/agent-runtime/src/chat.ts');
+    expect(runtimeChat).toMatch(/pakkKlientKontekstSomData\(options\.systemExtra\)/);
+    expect(runtimeChat).not.toMatch(/\n\$\{options\.systemExtra\}`/);
   });
 
   it('workshop-agenten har gaaTil, sokKunder og parkerte skriv (ASCII mot Mistral)', () => {

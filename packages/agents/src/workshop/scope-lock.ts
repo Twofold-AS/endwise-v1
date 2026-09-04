@@ -208,6 +208,19 @@ export function erRonnyTillattVerktoy(navn: string): navn is RonnyVerktoyNavn {
   return (RONNY_TILLATTE_VERKTOY as readonly string[]).includes(navn);
 }
 
+/** Klientens sidefelt som nøkkel/verdi — wrappes som DATA i runtimen. */
+export function pakkSideSomData(side: {
+  pathname: string;
+  tittel: string;
+  merkelapp: string;
+}): string {
+  return [
+    `pathname: ${side.pathname}`,
+    `tittel: ${side.tittel}`,
+    `merkelapp: ${side.merkelapp}`,
+  ].join('\n');
+}
+
 /** Fjerner alt som ikke står på allowlisten. Parkerte skriv beholdes som parkert. */
 export function filtrerRonnyVerktoy(tools: Record<string, Tool>): Record<string, Tool> {
   const ut: Record<string, Tool> = {};

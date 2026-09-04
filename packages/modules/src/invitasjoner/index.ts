@@ -464,9 +464,10 @@ export function createInvitasjonsmodul(db: Database) {
      * samtidige forsøk gir én vinner, avgjort av databasen og ikke av
      * rekkefølgen på to HTTP-kall.
      */
-    async forbruk(token: string): Promise<string | null> {
+    async forbruk(token: string, tx?: InvitasjonTx): Promise<string | null> {
       const hash = hashInvitasjonstoken(token);
-      const res = await db.execute(sql`select consume_invitation(${hash}::text) as id`);
+      const conn = tx ?? db;
+      const res = await conn.execute(sql`select consume_invitation(${hash}::text) as id`);
       const rad = (res.rows ?? res)[0] as { id: string | null } | undefined;
       return rad?.id ?? null;
     },

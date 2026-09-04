@@ -33,6 +33,8 @@ export default defineConfig({
       'test/mekaniker-backfill-kontrakt.test.ts',
       // Prod FORCE RLS: eier-SELECT på withTenant (forhandler.kort).
       'test/tenants-owner-select.test.ts',
+      // Prod FORCE RLS: eier-INSERT på member_profiles (godta).
+      'test/member-profiles-owner-insert.test.ts',
       // #121 RETURNING — eier-SELECT/revoke på invitations.
       'test/invitations-owner-returning.test.ts',
     ],

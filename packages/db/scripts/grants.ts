@@ -144,7 +144,10 @@ const ownerInsert = await pool.query<{ polname: string }>(`
        'dealer_profiles_tenant_select_owner',
        'tenant_modules_tenant_select_owner',
        'member_profiles_tenant_select_owner',
-       'mechanics_tenant_select_owner'
+       'member_profiles_tenant_insert_owner',
+       'member_profiles_tenant_update_owner',
+       'mechanics_tenant_select_owner',
+       'mechanics_tenant_insert_owner'
      )
 `);
 const ownerNavn = new Set(ownerInsert.rows.map((r) => r.polname));
@@ -159,13 +162,16 @@ const manglerEier = [
   'dealer_profiles_tenant_select_owner',
   'tenant_modules_tenant_select_owner',
   'member_profiles_tenant_select_owner',
+  'member_profiles_tenant_insert_owner',
+  'member_profiles_tenant_update_owner',
   'mechanics_tenant_select_owner',
+  'mechanics_tenant_insert_owner',
 ].filter((n) => !ownerNavn.has(n));
 if (manglerEier.length > 0) {
   console.error(
     '[db] eier-INSERT/SELECT/revoke-policyer under FORCE RLS mangler: ' +
       manglerEier.join(', ') +
-      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038+0039).',
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038+0039+0040).',
   );
   await pool.end();
   process.exit(1);
@@ -187,6 +193,28 @@ const immutableFn = await pool.query<{ ok: boolean }>(`
 if (immutableFn.rows[0]?.ok !== true) {
   console.error(
     '[db] invitations_immutable_fields mangler eller låser ikke utløp/created_at (0038). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const profileGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'member_profiles_owner_update_guard'
+       and strpos(p.prosrc, 'job_function og updated_at') > 0
+       and strpos(p.prosrc, 'new.tenant_id is distinct from old.tenant_id') > 0
+       and strpos(p.prosrc, 'new.user_id is distinct from old.user_id') > 0
+       and strpos(p.prosrc, 'new.nickname is distinct from old.nickname') > 0
+  ) as ok
+`);
+if (profileGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] member_profiles_owner_update_guard mangler eller låser ikke nickname/PK (0040). ' +
       'Kjør `pnpm db:grants` mot Scaleway-eieren.',
   );
   await pool.end();

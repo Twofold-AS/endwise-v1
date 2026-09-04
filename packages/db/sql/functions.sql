@@ -157,6 +157,11 @@ $$;
 -- Engangs-garantien ligger her, i `where accepted_at is null`. To samtidige
 -- forsøk på samme token gir én rad tilbake til den ene og null til den andre
 -- databasen avgjør, ikke rekkefølgen på to HTTP-kall.
+
+-- Deltar i kallers transaksjon (ingen autonom commit). godta kaller den
+-- SIST i samme withTenant som bruker/medlem/member_profiles. Feiler
+-- profil-INSERT, rulles accepted_at tilbake. GUC: invitation_hash (is_local)
+-- for hash-policyen; app.tenant_id fra withTenant rører den ikke.
 create or replace function consume_invitation(p_token_hash text)
 returns uuid
 language plpgsql
@@ -246,6 +251,40 @@ create trigger invitations_immutable_fields_trg
   before update on invitations
   for each row
   execute function invitations_immutable_fields();
+
+-- godta-upsert som eier: bare job_function + updated_at. PK og nickname
+-- er låst for tabelleier. authenticated/endwise_app urørt (kallenavn).
+create or replace function member_profiles_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.member_profiles'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.tenant_id is distinct from old.tenant_id
+     or new.user_id is distinct from old.user_id
+     or new.nickname is distinct from old.nickname then
+    raise exception 'member_profiles: eier-UPDATE kan bare sette job_function og updated_at'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists member_profiles_owner_update_guard_trg on member_profiles;
+create trigger member_profiles_owner_update_guard_trg
+  before update on member_profiles
+  for each row
+  execute function member_profiles_owner_update_guard();
 
 -- Widget-nøkkeloppslag før vi vet hvilken forhandler det gjelder.
 

@@ -229,6 +229,8 @@ export const memberProfiles = pgTable(
     tenantPolicy('member_profiles', t.tenantId),
     // Eier-SELECT (`member_profiles_tenant_select_owner`) i grants.sql —
     // session.me leser som eier under FORCE RLS via withTenant.
+    // Eier-INSERT/UPDATE (`member_profiles_tenant_*_owner`, 0040): godta
+    // upsert. Trigger låser PK + nickname for tabelleier.
   ],
 ).enableRLS();
 

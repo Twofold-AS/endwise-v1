@@ -296,6 +296,12 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(chat).toMatch(/skriv aldri til Quick/i);
     expect(chat).toMatch(/ModelNotConfiguredError/);
     expect(chat).toMatch(/UgyldigToolNavnError/);
+    expect(chat).toMatch(/vurderRonnyInn/);
+    expect(chat).toMatch(/RONNY_TILLATTE_VERKTOY/);
+    expect(chat).toMatch(/rewriteAssistantText/);
+    expect(chat).toMatch(/filterInput/);
+    expect(chat).toMatch(/resolveModelProvider/);
+    expect(chat).toMatch(/createUIMessageStream/);
   });
 
   it('workshop-agenten har gaaTil, sokKunder og parkerte skriv (ASCII mot Mistral)', () => {

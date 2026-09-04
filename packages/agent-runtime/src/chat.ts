@@ -43,6 +43,16 @@ export interface ChatOptions {
   /** Sidekontekst og annet som skal inn i systemprompten på hver tur. */
   systemExtra?: string;
   onViolation?: (message: string) => void;
+  /**
+   * Hard allowlist. Verktøy utenfor lista sendes aldri til modellen.
+   * Ronny bruker denne i tillegg til `filtrerRonnyVerktoy` i agenten.
+   */
+  toolAllowlist?: readonly string[];
+  /**
+   * Output-policy etter L4. Hele tekstblokken holdes tilbake til den er
+   * vurdert — ellers rekker et jailbreak-svar ut før vi kan stoppe det.
+   */
+  rewriteAssistantText?: (text: string, ctx: { usedTools: readonly string[] }) => string;
 }
 
 /**
@@ -64,13 +74,22 @@ export function streamAgentChat(options: ChatOptions) {
 
   // 4. Verktøyene bygges ÉN gang, med den frosne konteksten — samme invariant
   // som spawn: det finnes ikke et sted der en tenant-ID kan *settes*.
-  const tools = guardrails.wrapTools(agent.tools(context), context);
+  const rawTools = agent.tools(context);
+  const tillatte = options.toolAllowlist
+    ? Object.fromEntries(
+        Object.entries(rawTools).filter(([navn]) => options.toolAllowlist?.includes(navn)),
+      )
+    : rawTools;
+  const tools = guardrails.wrapTools(tillatte, context);
   // Mistral 400 02.09: `gåTil` er ugyldig function name. Stopp før HTTP.
   assertAsciiToolNames(tools);
 
   // Fabrikk, ikke instans: transformen lager én redaktør per tekstblokk.
   const lagRedactor = () =>
     createStreamRedactor(context, (violation) => options.onViolation?.(violation.message));
+
+  const usedTools: string[] = [];
+  const rewrite = options.rewriteAssistantText;
 
   return streamText({
     model: provider.model({ role: agent.role, tenantId: context.tenantId }),
@@ -80,7 +99,14 @@ export function streamAgentChat(options: ChatOptions) {
     messages: options.messages,
     tools,
     stopWhen: isStepCount(agent.maxSteps),
-    experimental_transform: l4Redaksjon(lagRedactor),
+    experimental_transform: rewrite
+      ? l4MedPolicy(lagRedactor, {
+          rewrite: (text) => rewrite(text, { usedTools }),
+          onTool: (navn) => {
+            usedTools.push(navn);
+          },
+        })
+      : l4Redaksjon(lagRedactor),
   });
 }
 
@@ -102,6 +128,62 @@ export function streamAgentChat(options: ChatOptions) {
  * tømmes rett før `text-end` går ut, med samme `id`. Da er rekkefølgen den
  * SDK-en forventer, og halen havner der den hører hjemme.
  */
+/**
+ * L4 + output-policy. Teksten holdes tilbake til blokken er ferdig, så et
+ * jailbreak-svar ikke rekker ut før vi kan bytte det mot nekt.
+ */
+function l4MedPolicy(
+  lagRedactor: () => ReturnType<typeof createStreamRedactor>,
+  options: {
+    rewrite: (text: string) => string;
+    onTool: (navn: string) => void;
+  },
+) {
+  return <TOOLS extends ToolSet>() => {
+    const blokker = new Map<string, string>();
+
+    return new TransformStream<TextStreamPart<TOOLS>, TextStreamPart<TOOLS>>({
+      transform(chunk, controller) {
+        if (chunk.type === 'tool-call') {
+          options.onTool(chunk.toolName);
+          controller.enqueue(chunk);
+          return;
+        }
+
+        if (chunk.type === 'text-start') {
+          blokker.set(chunk.id, '');
+          controller.enqueue(chunk);
+          return;
+        }
+
+        if (chunk.type === 'text-delta') {
+          blokker.set(chunk.id, (blokker.get(chunk.id) ?? '') + chunk.text);
+          return;
+        }
+
+        if (chunk.type === 'text-end') {
+          const raw = blokker.get(chunk.id) ?? '';
+          blokker.delete(chunk.id);
+          const redaktor = lagRedactor();
+          const l4 = redaktor.push(raw) + redaktor.flush();
+          const ut = options.rewrite(l4);
+          if (ut) {
+            controller.enqueue({
+              type: 'text-delta',
+              id: chunk.id,
+              text: ut,
+            } as TextStreamPart<TOOLS>);
+          }
+          controller.enqueue(chunk);
+          return;
+        }
+
+        controller.enqueue(chunk);
+      },
+    });
+  };
+}
+
 function l4Redaksjon(lagRedactor: () => ReturnType<typeof createStreamRedactor>) {
   return <TOOLS extends ToolSet>() => {
     // Én redaktør per tekstblokk. Et svar kan ha flere (f.eks. tekst før og

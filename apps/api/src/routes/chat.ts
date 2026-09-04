@@ -1,5 +1,12 @@
 import { streamAgentChat, UgyldigToolNavnError } from '@endwise/agent-runtime';
-import { getAgent, UnknownAgentError } from '@endwise/agents';
+import {
+  getAgent,
+  RONNY_TILLATTE_VERKTOY,
+  sisteBrukertekst,
+  UnknownAgentError,
+  vurderRonnyInn,
+  vurderRonnySvar,
+} from '@endwise/agents';
 import { TwoFactorRequiredError } from '@endwise/auth';
 import { eq, schema, withTenant } from '@endwise/db';
 import { createGuardrails } from '@endwise/guardrails';
@@ -11,6 +18,7 @@ import {
 } from '@endwise/providers';
 import {
   convertToModelMessages,
+  createUIMessageStream,
   createUIMessageStreamResponse,
   toUIMessageStream,
   type UIMessage,
@@ -108,6 +116,35 @@ chat.post('/:agent', async (c) => {
   });
 
   try {
+    const modelMessages = (await convertToModelMessages(parsed.data.messages)).filter(
+      (melding) => melding.role !== 'system',
+    );
+
+    // L1 på chat-inngangen. streamAgentChat er synkron og kaller ikke
+    // filterInput selv — samme sperre som runAgent, bare her.
+    const messages = await guardrails.filterInput(modelMessages, {
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      role: ctx.role,
+    });
+
+    // Ronny: nekt utenom-tema og jailbreak FØR Mistral. Modellen skal
+    // ikke få sjansen til å lyde «ignore previous instructions».
+    if (agent.name === 'workshop') {
+      const nekt = vurderRonnyInn(modelMessages);
+      if (nekt) {
+        return createUIMessageStreamResponse({
+          stream: createUIMessageStream({
+            execute({ writer }) {
+              writer.write({ type: 'text-start', id: 'ronny-lock' });
+              writer.write({ type: 'text-delta', id: 'ronny-lock', delta: nekt });
+              writer.write({ type: 'text-end', id: 'ronny-lock' });
+            },
+          }),
+        });
+      }
+    }
+
     const result = streamAgentChat({
       agent,
       context: {
@@ -120,7 +157,17 @@ chat.post('/:agent', async (c) => {
       },
       provider: resolveModelProvider(agent.dataClass),
       guardrails,
-      messages: await convertToModelMessages(parsed.data.messages),
+      messages,
+      toolAllowlist: agent.name === 'workshop' ? RONNY_TILLATTE_VERKTOY : undefined,
+      rewriteAssistantText:
+        agent.name === 'workshop'
+          ? (text, { usedTools }) =>
+              vurderRonnySvar({
+                brukertekst: sisteBrukertekst(modelMessages),
+                svar: text,
+                brukteVerktoy: usedTools,
+              }).svar
+          : undefined,
       systemExtra: parsed.data.side
         ? [
             'Sidekontekst (den ansatte står her nå):',

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { lagerVerktoy } from '../drift-innsikt/lager-verktoy.ts';
 import { erTillattGaaTil } from './gaa-til.ts';
 import instructions from './instructions.md?raw';
+import { filtrerRonnyVerktoy } from './scope-lock.ts';
 
 /**
  * Workshop-agenten (Ronny). Samme dataklasse som drift-innsikt
@@ -13,6 +14,8 @@ import instructions from './instructions.md?raw';
  * til Mistral EU (Mikael 02.09.2026) — ikke Fireworks. Ingen Quick-skriving.
  * `requiredModule: null` — den følger brukeren på hver side, også uten
  * ai-support-modulen.
+ * Scope-lås (Mikael 04.09.2026): systemprompt + `scope-lock.ts` (inn/ut +
+ * tool-allowlist). Parkerte skriv utvides ikke.
  */
 export const workshopAgent: AgentDefinition = {
   name: 'workshop',
@@ -23,7 +26,7 @@ export const workshopAgent: AgentDefinition = {
   maxSteps: 5,
 
   tools(context: AgentContext) {
-    return {
+    return filtrerRonnyVerktoy({
       dagensBookinger: tool({
         description: 'Bookinger for forhandleren. Kun lesing.',
         inputSchema: z.object({ limit: z.number().int().min(1).max(50).default(20) }),
@@ -97,6 +100,6 @@ export const workshopAgent: AgentDefinition = {
         inputSchema: z.object({}),
         execute: async () => ({ status: 'kommer' as const }),
       }),
-    };
+    });
   },
 };

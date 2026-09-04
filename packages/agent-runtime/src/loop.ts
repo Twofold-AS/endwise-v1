@@ -4,6 +4,7 @@ import { isStepCount, type ModelMessage, streamText } from 'ai';
 import { type AgentDefinition, assertEntitled } from './agent.ts';
 import { type AgentContext, sealContext } from './context.ts';
 import { assertAsciiToolNames } from './tool-navn.ts';
+import { filtrerVerktoyAllowlist } from './verktoy-allowlist.ts';
 
 export type AgentEvent =
   | { type: 'agent.start'; agent: string }
@@ -58,7 +59,10 @@ export async function runAgent(options: RunOptions): Promise<string> {
     );
   }
 
-  const tools = options.guardrails.wrapTools(options.agent.tools(context), context);
+  const tools = options.guardrails.wrapTools(
+    filtrerVerktoyAllowlist(options.agent.tools(context), options.agent.toolAllowlist),
+    context,
+  );
   assertAsciiToolNames(tools);
   return runAgentWithTools({
     ...options,
@@ -79,6 +83,15 @@ export async function runAgentWithTools(options: RunWithToolsOptions): Promise<s
   // L1 — inngangsfilter. Brukerinput er ikke instruksjoner.
   const messages = await guardrails.filterInput(options.messages, context);
 
+  // Agent-erklært preflight (Ronny: vurderRonnyInn). Før Mistral, på alle
+  // innganger — ikke bare chat-ruta. Rå meldinger, så wrap ikke skjuler rolle.
+  const nekt = agent.preflight?.(options.messages);
+  if (nekt) {
+    await onEvent({ type: 'agent.start', agent: agent.name });
+    await onEvent({ type: 'agent.done', text: nekt });
+    return nekt;
+  }
+
   await onEvent({ type: 'agent.start', agent: agent.name });
 
   const result = streamText({
@@ -90,6 +103,7 @@ export async function runAgentWithTools(options: RunWithToolsOptions): Promise<s
   });
 
   let text = '';
+  const usedTools: string[] = [];
 
   try {
     for await (const part of result.stream) {
@@ -100,6 +114,7 @@ export async function runAgentWithTools(options: RunWithToolsOptions): Promise<s
           break;
         }
         case 'tool-call': {
+          usedTools.push(part.toolName);
           await onEvent({ type: 'agent.tool_call', tool: part.toolName });
           break;
         }
@@ -120,8 +135,11 @@ export async function runAgentWithTools(options: RunWithToolsOptions): Promise<s
     throw error;
   }
 
-  // L4 — utgangsfilter. Det agenten sier, går gjennom en sil før mennesket ser det.
-  const safe = await guardrails.filterOutput(text, context);
+  // L4 — utgangsfilter. Deretter agent-erklært rewrite (Ronny: vurderRonnySvar).
+  const l4 = await guardrails.filterOutput(text, context);
+  const safe = agent.rewriteOutput
+    ? agent.rewriteOutput(l4, { usedTools, messages: options.messages })
+    : l4;
   await onEvent({ type: 'agent.done', text: safe });
   return safe;
 }

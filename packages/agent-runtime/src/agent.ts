@@ -1,6 +1,6 @@
 import type { ModelRole } from '@endwise/modules';
 import type { DataClass } from '@endwise/providers';
-import type { Tool } from 'ai';
+import type { ModelMessage, Tool } from 'ai';
 import type { AgentContext } from './context.ts';
 
 /**
@@ -25,8 +25,36 @@ export interface AgentDefinition {
   readonly requiredModule: string | null;
   /** Maks antall tool-steg før løkka stopper. Circuit breaker. */
   readonly maxSteps: number;
+  /**
+   * Hard allowlist. Verktøy utenfor lista sendes aldri til modellen.
+   * Null = alle `tools()`-nøklene. Ronny setter denne så chat og `runAgent`
+   * ikke kan glemme filteret.
+   */
+  readonly toolAllowlist?: readonly string[];
+  /**
+   * Kjør før modellen. Returner tekst for å avvise uten Mistral-kall.
+   * Samme funksjon på alle innganger (chat, runAgent, spawn).
+   */
+  preflight?(messages: readonly ModelMessage[]): string | null;
+  /**
+   * Siste sil etter L4. Får originale meldinger + hvilke verktøy som faktisk
+   * ble kalt, så diktat uten oppslag kan byttes ut.
+   */
+  rewriteOutput?(
+    text: string,
+    ctx: { usedTools: readonly string[]; messages: readonly ModelMessage[] },
+  ): string;
   /** Verktøyene agenten får — bygget med konteksten, aldri uten. */
   tools(context: AgentContext): Record<string, Tool>;
+}
+
+export class AgentPreflightRefuse extends Error {
+  readonly code = 'AGENT_PREFLIGHT_REFUSE';
+  readonly text: string;
+  constructor(text: string) {
+    super('Agenten avviste meldingen før modellen');
+    this.text = text;
+  }
 }
 
 export class EntitlementRequiredError extends Error {

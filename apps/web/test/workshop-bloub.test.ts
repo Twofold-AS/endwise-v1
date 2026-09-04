@@ -154,16 +154,25 @@ describe('Workshop-stripe i app-skallet', () => {
       /data-ronny-prompt-flate[\s\S]{0,80}w-full overflow-hidden rounded-none bg-transparent/,
     );
     expect((fab.match(/<Grainient/g) ?? []).length).toBe(1);
-    expect(fab).toMatch(/data-workshop-shell[\s\S]{0,600}<Grainient/);
-    expect(fab).toMatch(/const RONNY_GALAXY_TETTHET = 2\.5/);
-    expect(fab).toMatch(/data-ronny-flate[\s\S]{0,800}<Galaxy/);
-    expect(fab).toMatch(/density=\{RONNY_GALAXY_TETTHET\}/);
+    expect(fab).toMatch(/data-workshop-strip[\s\S]{0,500}<Grainient/);
+    expect(fab).toMatch(/color1=["']#0066cc["']/);
+    expect(fab).toMatch(/color2=["']#0071e3["']/);
+    expect(fab).toMatch(/color3=["']#2997ff["']/);
+    expect(fab).not.toMatch(/#FF9FFC|#5227FF|#B497CF/);
+    expect(fab).not.toMatch(/from ['"]@endwise\/ui['"][\s\S]{0,200}\bGalaxy\b/);
+    expect(fab).not.toMatch(/<Galaxy/);
+    expect(fab).not.toMatch(/RONNY_GALAXY_TETTHET/);
+    expect(fab).not.toMatch(/data-workshop-shell[\s\S]{0,400}<Grainient/);
     expect(fab).not.toMatch(/data-ronny-flate[\s\S]{0,800}<Grainient/);
-    const flateKilde = fab.slice(fab.indexOf('data-ronny-flate'), fab.indexOf('data-ronny-composer'));
-    expect(flateKilde).toMatch(/bg-\[#111\]/);
-    expect(flateKilde).toMatch(/<Galaxy/);
-    expect(flateKilde).not.toMatch(/Grainient/);
-    expect(flateKilde).not.toMatch(/bg-\[#f5f5f7\]/);
+    expect(fab).not.toMatch(/data-ronny-flate[\s\S]{0,800}<Galaxy/);
+    const flateKilde = fab.slice(
+      fab.indexOf('data-ronny-flate'),
+      fab.indexOf('data-ronny-composer'),
+    );
+    expect(flateKilde).toMatch(/bg-\[#f5f5f7\]/);
+    expect(flateKilde).not.toMatch(/<Galaxy/);
+    expect(flateKilde).not.toMatch(/<Grainient/);
+    expect(flateKilde).not.toMatch(/bg-\[#111\]/);
     const composerKilde = fab.slice(fab.indexOf('data-ronny-composer'));
     expect(composerKilde).toMatch(/data-ronny-composer[\s\S]{0,220}bg-transparent/);
     expect(composerKilde).not.toMatch(/Grainient/);
@@ -211,7 +220,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).not.toMatch(/210 210 215/);
     expect(fab).toMatch(/#fff/);
     expect(fab).toMatch(/#e0e0e0/);
-    expect(fab).not.toMatch(/#0066cc|#0071e3/);
+    expect(fab).toMatch(/color1=["']#0066cc["']/);
+    expect(fab).toMatch(/color2=["']#0071e3["']/);
     expect(fab).toMatch(/shadow-none/);
     const tokens = les('../../../packages/widget-tokens/src/tokens.css');
     const light = tokens.slice(0, tokens.indexOf('[data-theme="dark"]'));
@@ -322,6 +332,39 @@ describe('Ronny gåTil-hviteliste', () => {
     expect(erTillattGaaTil('https://evil.example/kunder')).toBe(false);
     expect(erTillattGaaTil('//evil.example')).toBe(false);
     expect(erTillattGaaTil('/admin')).toBe(false);
+  });
+});
+
+describe('Mikael 04.09 — Ronny Grainient-stripe, parchment-kropp', () => {
+  it('Galaxy er borte fra Ronny; Apple-Grainient bare på stripen', () => {
+    const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
+    expect(fab).not.toMatch(/<Galaxy/);
+    expect(fab).not.toMatch(/RONNY_GALAXY/);
+    expect((fab.match(/<Grainient/g) ?? []).length).toBe(1);
+    const stripeKilde = fab.slice(
+      fab.indexOf('data-workshop-strip'),
+      fab.indexOf('data-workshop-cluster'),
+    );
+    expect(stripeKilde).toMatch(/<Grainient/);
+    expect(stripeKilde).toMatch(/#0066cc/);
+    expect(stripeKilde).toMatch(/#0071e3/);
+    expect(stripeKilde).toMatch(/#2997ff/);
+    expect(stripeKilde).not.toMatch(/#FF9FFC|#5227FF/);
+  });
+
+  it('full-åpen og peek-melding bruker parchment, ikke Galaxy/Grainient-kropp', () => {
+    const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
+    const flateKilde = fab.slice(
+      fab.indexOf('data-ronny-flate'),
+      fab.indexOf('data-ronny-composer'),
+    );
+    expect(flateKilde).toMatch(/bg-\[#f5f5f7\]/);
+    expect(flateKilde).not.toMatch(/<Galaxy/);
+    expect(flateKilde).not.toMatch(/<Grainient/);
+    expect(fab).toMatch(/visPeek[\s\S]{0,180}bg-\[#f5f5f7\]/);
+    const composerKilde = fab.slice(fab.indexOf('data-ronny-composer'));
+    expect(composerKilde).not.toMatch(/Grainient|Galaxy/);
+    expect(composerKilde).toMatch(/bg-transparent/);
   });
 });
 

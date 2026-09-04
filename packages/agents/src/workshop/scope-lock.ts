@@ -19,10 +19,7 @@ export const RONNY_LIVE_VERKTOY = [
 
 export const RONNY_PARKERTE_VERKTOY = ['opprettBooking', 'sokJobber', 'aapneInnboks'] as const;
 
-export const RONNY_TILLATTE_VERKTOY = [
-  ...RONNY_LIVE_VERKTOY,
-  ...RONNY_PARKERTE_VERKTOY,
-] as const;
+export const RONNY_TILLATTE_VERKTOY = [...RONNY_LIVE_VERKTOY, ...RONNY_PARKERTE_VERKTOY] as const;
 
 export type RonnyVerktoyNavn = (typeof RONNY_TILLATTE_VERKTOY)[number];
 
@@ -76,7 +73,8 @@ const OFF_TOPIC = [
   /\btrump\b|\bputin\b|\bbiden\b|\berdo[gğ]an\b/i,
   /lekse|homework|innlevering|essay|likning|quadratic/i,
   /hovedstad(en)?|capital of|hvem vant|fotball-?vm|eurovision/i,
-  /skriv (en )?(python|javascript|typescript|react|java|rust)\b/i,
+  /skriv .{0,20}(python|javascript|typescript|react|java|rust)\b/i,
+  /\b(python|javascript|typescript|react)\b.{0,24}(script|kode|parser|program|komponent)/i,
   /implementer|quicksort|fibonacci|hello world/i,
   /oppskrift|\brecipe\b|fortell en vits|skriv et dikt|haiku/i,
   /meningen med livet|kryptovaluta|\bbitcoin\b/i,
@@ -211,9 +209,7 @@ export function erRonnyTillattVerktoy(navn: string): navn is RonnyVerktoyNavn {
 }
 
 /** Fjerner alt som ikke står på allowlisten. Parkerte skriv beholdes som parkert. */
-export function filtrerRonnyVerktoy(
-  tools: Record<string, Tool>,
-): Record<string, Tool> {
+export function filtrerRonnyVerktoy(tools: Record<string, Tool>): Record<string, Tool> {
   const ut: Record<string, Tool> = {};
   for (const navn of RONNY_TILLATTE_VERKTOY) {
     const verktoy = tools[navn];

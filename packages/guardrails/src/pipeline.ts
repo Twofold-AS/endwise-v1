@@ -184,13 +184,14 @@ function brukerTekstFraInnhold(content: ModelMessage['content']): string | null 
 }
 
 function settBrukerTekst(message: ModelMessage, tekst: string): ModelMessage {
+  if (message.role !== 'user') return message;
   if (typeof message.content === 'string') {
-    return { ...message, content: tekst };
+    return { role: 'user', content: tekst };
   }
   return {
-    ...message,
+    role: 'user',
     content: [{ type: 'text', text: tekst }],
-  } as ModelMessage;
+  };
 }
 
 /** Felter modellen aldri får bestemme. Sesjonen eier disse. */

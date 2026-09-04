@@ -227,6 +227,8 @@ export const memberProfiles = pgTable(
     primaryKey({ columns: [t.tenantId, t.userId] }),
     index('member_profiles_user_idx').on(t.userId),
     tenantPolicy('member_profiles', t.tenantId),
+    // Eier-SELECT (`member_profiles_tenant_select_owner`) i grants.sql —
+    // session.me leser som eier under FORCE RLS via withTenant.
   ],
 ).enableRLS();
 

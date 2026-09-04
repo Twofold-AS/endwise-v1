@@ -28,6 +28,8 @@ export const mechanics = pgTable(
     index('mechanics_tenant_active_idx').on(t.tenantId, t.active),
     tenantPolicy('mechanics', t.tenantId),
     inspectSelectPolicy('mechanics', t.tenantId),
+    // Eier-SELECT (`mechanics_tenant_select_owner`) i grants.sql —
+    // session.me leser som eier under FORCE RLS via withTenant.
   ],
 ).enableRLS();
 

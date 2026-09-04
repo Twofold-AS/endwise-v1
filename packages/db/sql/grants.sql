@@ -155,6 +155,101 @@ create policy tenants_platform_admin_insert_owner on tenants
     and id = nullif(current_setting('app.tenant_id', true), '')::uuid
   );
 
+-- Vanlig withTenant-SELECT under force RLS (prod APP_DATABASE_URL = eier
+-- `endwise`). tenants_self_isolation er TO authenticated.
+-- tenants_platform_admin_read_owner krever platform_admin og åpner ALLE
+-- tenants — det er withPlatformAdmin, ikke dealer-login.
+-- withTenant setter bare app.tenant_id. Uten denne: 0 rader →
+-- forhandler.kort / onboarding.fullfor NOT_FOUND.
+-- CWE-862/863: tabelleier + ikke-tom tenant-guc. Ingen platform_admin.
+drop policy if exists tenants_tenant_select_owner on tenants;
+create policy tenants_tenant_select_owner on tenants
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenants'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+-- Login-sti inne i withTenant: forhandler.kort (dealer_profiles),
+-- session.me / onboarding (tenant_modules, member_profiles, mechanics).
+-- Samme eier-SELECT-gap som tenants. Ingen platform_admin.
+drop policy if exists dealer_profiles_tenant_select_owner on dealer_profiles;
+create policy dealer_profiles_tenant_select_owner on dealer_profiles
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.dealer_profiles'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists tenant_modules_tenant_select_owner on tenant_modules;
+create policy tenant_modules_tenant_select_owner on tenant_modules
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_modules'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists member_profiles_tenant_select_owner on member_profiles;
+create policy member_profiles_tenant_select_owner on member_profiles
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.member_profiles'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists mechanics_tenant_select_owner on mechanics;
+create policy mechanics_tenant_select_owner on mechanics
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.mechanics'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
 -- createTenant skriver tenant_modules i samme tx (enterprise/pakke).
 -- tenant_modules_tenant_isolation er TO authenticated. Uten eier-INSERT
 -- feiler neste statement etter tenants-raden.

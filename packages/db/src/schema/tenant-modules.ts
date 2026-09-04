@@ -39,6 +39,8 @@ export const tenantModules = pgTable(
     tenantPolicy('tenant_modules', t.tenantId),
     // Eier-INSERT (`tenant_modules_platform_admin_insert_owner`) i grants.sql
     // — createTenant skriver pakke-rader som eier under FORCE RLS.
+    // Eier-SELECT (`tenant_modules_tenant_select_owner`) — session.me /
+    // onboarding / moduleProcedure leser via withTenant.
   ],
 ).enableRLS();
 

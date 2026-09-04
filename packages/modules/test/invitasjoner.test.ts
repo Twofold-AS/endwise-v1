@@ -79,6 +79,16 @@ describe('F1-10: token og validering (uten database)', () => {
     expect(kilde).toMatch(/lookup_open_invitation\(\$\{hash\}::text\)/);
     expect(kilde).toMatch(/consume_invitation\(\$\{hash\}::text\)/);
   });
+
+  it('forbruk kan kjøre på kallers tx (consume rulles tilbake ved feil)', () => {
+    const her = dirname(fileURLToPath(import.meta.url));
+    const kilde = readFileSync(resolve(her, '../src/invitasjoner/index.ts'), 'utf8');
+    const start = kilde.search(/async forbruk\s*\(/);
+    expect(start).toBeGreaterThan(-1);
+    const kropp = kilde.slice(start, start + 450);
+    expect(kropp).toMatch(/tx\?:/);
+    expect(kropp).toMatch(/tx \?\? db|conn = tx \?\? db|exec = tx \?\? db/);
+  });
 });
 
 const OWNER_URL = process.env.DATABASE_URL;
@@ -243,6 +253,24 @@ describeDb('F1-10: invitasjoner mot database', () => {
     // Andre bruk får ingenting — og oppslaget finner den heller ikke lenger.
     expect(await modul().forbruk(token)).toBeNull();
     expect(await modul().finnApen(token)).toBeNull();
+  });
+
+  it('consume_invitation i en feilet tx etterlater invitasjonen åpen', async () => {
+    const { token } = await modul().opprett({
+      tenantId: tenantA,
+      epost: 'rollback@verksted.no',
+      funksjon: 'selger',
+      invitedBy: leder,
+    });
+    const hash = hashInvitasjonstoken(token);
+    await expect(
+      db.transaction(async (tx) => {
+        await tx.execute(sql`select consume_invitation(${hash}::text) as id`);
+        throw new Error('member_profiles feilet');
+      }),
+    ).rejects.toThrow(/member_profiles feilet/);
+    expect(await modul().finnApen(token)).not.toBeNull();
+    expect(await modul().forbruk(token)).toBeTruthy();
   });
 
   it('⛔ ANGREP: et UTLØPT token avvises', async () => {

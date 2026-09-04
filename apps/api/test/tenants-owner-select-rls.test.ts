@@ -112,6 +112,7 @@ describe('FORCE RLS eier-SELECT på withTenant (prod-rolle endwise)', () => {
     expect(grantsTs).toMatch(/dealer_profiles_tenant_select_owner/);
     expect(grantsTs).toMatch(/tenant_modules_tenant_select_owner/);
     expect(grantsTs).toMatch(/member_profiles_tenant_select_owner/);
+    expect(grantsTs).toMatch(/member_profiles_tenant_insert_owner/);
     expect(grantsTs).toMatch(/mechanics_tenant_select_owner/);
     expect(grantsTs).toMatch(/process\.exit\(1\)/);
     expect(grants).toMatch(/force row level security/);

@@ -139,6 +139,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'dealer_profiles_tenant_select_owner',
          'tenant_modules_tenant_select_owner',
          'member_profiles_tenant_select_owner',
+         'member_profiles_tenant_insert_owner',
          'mechanics_tenant_select_owner',
          'audit_log_tenant_insert_owner',
          'tenants_slett_forhandler',
@@ -165,6 +166,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         'dealer_profiles_tenant_select_owner',
         'tenant_modules_tenant_select_owner',
         'member_profiles_tenant_select_owner',
+        'member_profiles_tenant_insert_owner',
         'mechanics_tenant_select_owner',
         'audit_log_tenant_insert_owner',
         'tenants_slett_forhandler',
@@ -192,6 +194,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'dealer_profiles_tenant_select_owner',
          'tenant_modules_tenant_select_owner',
          'member_profiles_tenant_select_owner',
+         'member_profiles_tenant_insert_owner',
          'mechanics_tenant_select_owner'
        )
        order by p.polname
@@ -204,6 +207,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       'invitations_platform_admin_insert_owner',
       'invitations_platform_admin_select_owner',
       'mechanics_tenant_select_owner',
+      'member_profiles_tenant_insert_owner',
       'member_profiles_tenant_select_owner',
       'tenant_modules_platform_admin_insert_owner',
       'tenant_modules_tenant_select_owner',
@@ -213,6 +217,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     const insertNavn = new Set([
       'audit_log_tenant_insert_owner',
       'invitations_platform_admin_insert_owner',
+      'member_profiles_tenant_insert_owner',
       'tenant_modules_platform_admin_insert_owner',
       'tenants_platform_admin_insert_owner',
     ]);

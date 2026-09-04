@@ -157,6 +157,11 @@ $$;
 -- Engangs-garantien ligger her, i `where accepted_at is null`. To samtidige
 -- forsøk på samme token gir én rad tilbake til den ene og null til den andre
 -- databasen avgjør, ikke rekkefølgen på to HTTP-kall.
+
+-- Deltar i kallers transaksjon (ingen autonom commit). godta kaller den
+-- SIST i samme withTenant som bruker/medlem/member_profiles. Feiler
+-- profil-INSERT, rulles accepted_at tilbake. GUC: invitation_hash (is_local)
+-- for hash-policyen; app.tenant_id fra withTenant rører den ikke.
 create or replace function consume_invitation(p_token_hash text)
 returns uuid
 language plpgsql

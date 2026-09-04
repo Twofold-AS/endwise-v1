@@ -144,6 +144,7 @@ const ownerInsert = await pool.query<{ polname: string }>(`
        'dealer_profiles_tenant_select_owner',
        'tenant_modules_tenant_select_owner',
        'member_profiles_tenant_select_owner',
+       'member_profiles_tenant_insert_owner',
        'mechanics_tenant_select_owner'
      )
 `);
@@ -159,13 +160,14 @@ const manglerEier = [
   'dealer_profiles_tenant_select_owner',
   'tenant_modules_tenant_select_owner',
   'member_profiles_tenant_select_owner',
+  'member_profiles_tenant_insert_owner',
   'mechanics_tenant_select_owner',
 ].filter((n) => !ownerNavn.has(n));
 if (manglerEier.length > 0) {
   console.error(
     '[db] eier-INSERT/SELECT/revoke-policyer under FORCE RLS mangler: ' +
       manglerEier.join(', ') +
-      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038+0039).',
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038+0039+0040).',
   );
   await pool.end();
   process.exit(1);

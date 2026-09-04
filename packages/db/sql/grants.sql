@@ -233,6 +233,26 @@ create policy member_profiles_tenant_select_owner on member_profiles
     and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
   );
 
+-- godta-stien: INSERT member_profiles inne i withTenant (eier-invite =
+-- job_function leder). 0039 er SELECT-only. Ingen platform_admin —
+-- withTenant setter bare app.tenant_id. RETURNING dekkes av SELECT over.
+drop policy if exists member_profiles_tenant_insert_owner on member_profiles;
+create policy member_profiles_tenant_insert_owner on member_profiles
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.member_profiles'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
 drop policy if exists mechanics_tenant_select_owner on mechanics;
 create policy mechanics_tenant_select_owner on mechanics
   as permissive

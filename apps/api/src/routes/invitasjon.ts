@@ -45,6 +45,18 @@ function loggOppslagFeil(error: unknown): void {
   });
 }
 
+function loggGodtaFeil(error: unknown): void {
+  const pg = lesPostgresCause(error);
+  console.error('[invitasjon] godta feilet', {
+    code: pg.code,
+    constraint: pg.constraint,
+  });
+}
+
+class InvitasjonAlleredeBruktError extends Error {
+  readonly code = 'INVITASJON_ALLEREDE_BRUKT';
+}
+
 /**
  * Lat DB. `createAppContext` kaster uten DATABASE_URL — det må ikke
  * skje ved import, ellers feiler `next build` på Vercel (F13-03).
@@ -118,16 +130,13 @@ const godtaKropp = z.object({
 
 /**
  * POST — godta invitasjonen.
- * Rekkefølgen er valgt bevisst:
- * 1. Valider input før noe forbrukes. En for kort passordstreng skal ikke
- * brenne invitasjonen.
- * 2. Slå opp at den er åpen.
- * 3. **Forbruk tokenet** — atomisk, én vinner.
- * 4. Opprett/hent bruker, medlemskap og profil.
- * Feiler steg 4 etter at steg 3 er gjort, er invitasjonen brukt opp uten at
- * kontoen ble ferdig. Det er den trygge feilretningen: aldri to kontoer fra ett
- * token. Lederen kan invitere på nytt. Motsatt rekkefølge ville gjort et
- * kappløp mellom to faner til to medlemskap.
+ * Én transaksjon (withTenant): bruker → medlem → member_profiles →
+ * consume_invitation sist. Feiler profil-INSERT, rulles alt tilbake —
+ * invitasjonen forblir åpen. Klienten kan prøve igjen. Aldri 410 etter
+ * delvis skriving.
+ * consume_invitation setter app.invitation_hash (is_local). withTenant
+ * setter app.tenant_id. De krysser ikke. Nøstet withTenant er forbudt
+ * (tenantTxGate).
  */
 invitasjon.post('/godta', async (c) => {
   const parsed = godtaKropp.safeParse(await c.req.json().catch(() => null));
@@ -160,129 +169,115 @@ invitasjon.post('/godta', async (c) => {
     }
   }
 
-  const [eksisterende] = await db()
-    .select({ id: schema.user.id })
-    .from(schema.user)
-    .where(eq(schema.user.email, inv.epost))
-    .limit(1);
-  // 3. Forbruk. Etter denne linja er tokenet dødt.
-  const forbrukt = await modul.forbruk(parsed.data.token);
-  if (!forbrukt) {
-    // Noen andre kom først — eller den ble tilbakekalt i mellomtiden.
-    return c.json({ error: 'Invitasjonen er ugyldig, brukt eller utløpt.' }, 410);
-  }
-
   try {
-    let userId = eksisterende?.id;
+    const resultat = await withTenant(db(), inv.tenantId, async (tx) => {
+      const [eksisterende] = await tx
+        .select({ id: schema.user.id })
+        .from(schema.user)
+        .where(eq(schema.user.email, inv.epost))
+        .limit(1);
+      let userId = eksisterende?.id;
 
-    if (!userId) {
-      const nyId = randomUUID();
-      await db().insert(schema.user).values({
-        id: nyId,
-        email: inv.epost,
-        name: parsed.data.navn,
-        emailVerified: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      userId = nyId;
-    } else {
-      await db()
-        .update(schema.user)
-        .set({
-          name: parsed.data.navn,
+      if (!userId) {
+        const nyId = randomUUID();
+        await tx.insert(schema.user).values({
+          id: nyId,
           email: inv.epost,
+          name: parsed.data.navn,
           emailVerified: true,
-        })
-        .where(eq(schema.user.id, userId));
-    }
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        userId = nyId;
+      } else {
+        await tx
+          .update(schema.user)
+          .set({
+            name: parsed.data.navn,
+            email: inv.epost,
+            emailVerified: true,
+          })
+          .where(eq(schema.user.id, userId));
+      }
 
-    // 4. Medlemskap + profil, i tenanten fra raden.
-    // Alltid invitert rolle — aldri behold en høyere rolle («ikke elevere»).
-    const [alleredeMedlem] = await db()
-      .select({ id: schema.member.id, role: schema.member.role })
-      .from(schema.member)
-      .where(
-        and(
-          eq(schema.member.organizationId, inv.tenantId),
-          eq(schema.member.userId, userId as string),
-        ),
-      )
-      .limit(1);
+      const [alleredeMedlem] = await tx
+        .select({ id: schema.member.id, role: schema.member.role })
+        .from(schema.member)
+        .where(
+          and(eq(schema.member.organizationId, inv.tenantId), eq(schema.member.userId, userId)),
+        )
+        .limit(1);
 
-    if (!alleredeMedlem) {
-      await db()
-        .insert(schema.member)
-        .values({
+      if (!alleredeMedlem) {
+        await tx.insert(schema.member).values({
           id: randomUUID(),
           organizationId: inv.tenantId,
-          userId: userId as string,
-          // Fra raden, aldri fra forespørselen. Staff er dealer_staff;
-          // owner-sporet kan være dealer_admin — CHECKen skiller på kind.
+          userId,
           role: inv.rolle,
           createdAt: new Date(),
         });
-    } else if (alleredeMedlem.role !== inv.rolle) {
-      await db()
-        .update(schema.member)
-        .set({ role: inv.rolle })
-        .where(eq(schema.member.id, alleredeMedlem.id));
-    }
+      } else if (alleredeMedlem.role !== inv.rolle) {
+        await tx
+          .update(schema.member)
+          .set({ role: inv.rolle })
+          .where(eq(schema.member.id, alleredeMedlem.id));
+      }
 
-    if (inv.kind !== 'platform' && inv.funksjon) {
-      await withTenant(db(), inv.tenantId, (tx) =>
-        tx
+      if (inv.kind !== 'platform' && inv.funksjon) {
+        await tx
           .insert(schema.memberProfiles)
           .values({
             tenantId: inv.tenantId,
-            userId: userId as string,
+            userId,
             jobFunction: inv.funksjon,
           })
           .onConflictDoUpdate({
             target: [schema.memberProfiles.tenantId, schema.memberProfiles.userId],
             set: { jobFunction: inv.funksjon, updatedAt: new Date() },
-          }),
-      );
-    }
+          });
+      }
 
-    if (inv.funksjon === 'mekaniker') {
-      await withTenant(db(), inv.tenantId, async (tx) => {
+      if (inv.funksjon === 'mekaniker') {
         const [finnes] = await tx
           .select({ id: schema.mechanics.id })
           .from(schema.mechanics)
-          .where(eq(schema.mechanics.userId, userId as string))
+          .where(eq(schema.mechanics.userId, userId))
           .limit(1);
         if (!finnes) {
           await tx.insert(schema.mechanics).values({
             tenantId: inv.tenantId,
-            userId: userId as string,
+            userId,
             name: parsed.data.navn,
             capacity: 1,
           });
         }
-      });
-    }
+      }
+
+      const forbrukt = await modul.forbruk(parsed.data.token, tx);
+      if (!forbrukt) throw new InvitasjonAlleredeBruktError();
+
+      return { userId, nyKonto: !eksisterende };
+    });
 
     if (inv.kind !== 'platform') {
-      await tildelAnsattFarge(db(), inv.tenantId, userId as string);
+      try {
+        await tildelAnsattFarge(db(), inv.tenantId, resultat.userId);
+      } catch (error) {
+        loggGodtaFeil(error);
+      }
     }
 
     return c.json({
       ok: true,
       epost: inv.epost,
       funksjon: inv.funksjon,
-      nyKonto: !eksisterende,
+      nyKonto: resultat.nyKonto,
     });
   } catch (error) {
-    // Invitasjonen er forbrukt. Si det rett ut i stedet for å late som om
-    // brukeren kan prøve igjen med samme lenke.
-    console.error(`[invitasjon] godta feilet etter forbruk: ${(error as Error).message}`);
-    return c.json(
-      {
-        error:
-          'Kontoen kunne ikke opprettes, og invitasjonen er brukt opp. Be lederen din om en ny.',
-      },
-      500,
-    );
+    if (error instanceof InvitasjonAlleredeBruktError) {
+      return c.json({ error: 'Invitasjonen er ugyldig, brukt eller utløpt.' }, 410);
+    }
+    loggGodtaFeil(error);
+    return c.json({ error: 'Kontoen kunne ikke opprettes. Prøv igjen.' }, 500);
   }
 });

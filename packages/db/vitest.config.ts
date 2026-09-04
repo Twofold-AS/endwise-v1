@@ -31,6 +31,10 @@ export default defineConfig({
       'test/dealer-profile-kontrakt.test.ts',
       // F1-14 — setFunction-hull: mechanics-rad for job_function=mekaniker.
       'test/mekaniker-backfill-kontrakt.test.ts',
+      // Prod FORCE RLS: eier-SELECT på withTenant (forhandler.kort).
+      'test/tenants-owner-select.test.ts',
+      // #121 RETURNING — eier-SELECT/revoke på invitations.
+      'test/invitations-owner-returning.test.ts',
     ],
     // RLS-testene deler DB-tilstand — serielt, ikke parallelt.
     fileParallelism: false,

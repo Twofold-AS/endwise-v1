@@ -75,12 +75,13 @@ export const tenants = pgTable(
     /**
      * GDPR-slett (`slett_forhandler`) kjører som eier under force RLS.
      * Unntakene (`tenants_platform_admin_read_owner`, `tenants_platform_admin_insert_owner`,
-     * `tenants_slett_forhandler_select`, `tenants_slett_forhandler`)
-     * ligger i `sql/grants.sql` — to public + guc, samme mønster som
-     * `invitations_open_by_hash`. Ikke her: Drizzle-policyer er to authenticated.
+     * `tenants_tenant_select_owner`, `tenants_slett_forhandler_select`,
+     * `tenants_slett_forhandler`) ligger i `sql/grants.sql` — to public + guc.
+     * Ikke her: Drizzle-policyer er to authenticated.
      * `tenants_platform_admin_insert_owner` er INSERT (create dealer).
-     * read_owner er SELECT-only — uten insert-policyen feiler tenants.create
-     * som eier under FORCE RLS selv med platform_admin + tenant_id satt.
+     * `tenants_tenant_select_owner` er withTenant-SELECT (0039) — eier +
+     * `app.tenant_id`, ikke platform_admin. Uten den ser lesTenantNavn 0 rader.
+     * read_owner er SELECT-only for withPlatformAdmin (alle tenants).
      */
   ],
 ).enableRLS();

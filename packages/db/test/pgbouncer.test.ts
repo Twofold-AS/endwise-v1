@@ -90,6 +90,7 @@ describe('createDb mot transaction-pooler', () => {
     expect(kropp).toMatch(/tenantTxGate\.run/);
     expect(kropp).toMatch(/db\.transaction/);
     expect(kropp).toMatch(/set_config\(\$\{APP_TENANT_SETTING\}, \$\{tenantId\}, true\)/);
+    expect(kropp.slice(0, 420)).not.toMatch(/set_config\('app\.platform_admin'/);
   });
 });
 

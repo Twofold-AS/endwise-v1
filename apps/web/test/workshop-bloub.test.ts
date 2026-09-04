@@ -303,9 +303,17 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(chat).toMatch(/merkelapp/);
     expect(chat).toMatch(/pathname/);
     expect(chat).toMatch(/systemExtra/);
-    expect(chat).toMatch(/skriv aldri til Quick/i);
+    expect(chat).toMatch(/pakkSideSomData/);
     expect(chat).toMatch(/ModelNotConfiguredError/);
     expect(chat).toMatch(/UgyldigToolNavnError/);
+    expect(chat).toMatch(/vurderRonnyInn/);
+    expect(chat).toMatch(/AgentPreflightRefuse/);
+    expect(chat).toMatch(/filterInput/);
+    expect(chat).toMatch(/resolveModelProvider/);
+    expect(chat).toMatch(/createUIMessageStream/);
+    const runtimeChat = les('../../../packages/agent-runtime/src/chat.ts');
+    expect(runtimeChat).toMatch(/pakkKlientKontekstSomData\(options\.systemExtra\)/);
+    expect(runtimeChat).not.toMatch(/\n\$\{options\.systemExtra\}`/);
   });
 
   it('workshop-agenten har gaaTil, sokKunder og parkerte skriv (ASCII mot Mistral)', () => {

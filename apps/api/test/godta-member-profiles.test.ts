@@ -122,7 +122,7 @@ function policyKropp(sql: string, navn: string): string {
   const start = sql.indexOf(`create policy ${navn}`);
   expect(start, `mangler create policy ${navn}`).toBeGreaterThan(-1);
   const etter = sql.slice(start);
-  const slutt = etter.search(/\n(?:drop policy|create policy|-- )/);
+  const slutt = etter.search(/\n(?:drop policy|create policy|create or replace|-- )/);
   return slutt === -1 ? etter : etter.slice(0, slutt);
 }
 
@@ -172,30 +172,68 @@ describe('godta — kontrakt: consume etter profil, samme tx', () => {
     expect(godta).not.toMatch(/error\.message/);
   });
 
-  it('0040 eier-INSERT på member_profiles: tenant-guc, eier-only, ingen platform_admin', () => {
+  function assertEierSkriv(sql: string, navn: string, cmd: 'insert' | 'update') {
+    const kropp = policyKropp(sql, navn);
+    expect(kropp).toMatch(new RegExp(`for ${cmd}`));
+    expect(kropp).toMatch(/to public/);
+    expect(kropp).toMatch(/current_user is distinct from 'authenticated'/);
+    expect(kropp).toMatch(/current_user is distinct from 'endwise_app'/);
+    expect(kropp).toMatch(/pg_get_userbyid|relowner/);
+    expect(kropp).toMatch(/nullif\(current_setting\('app\.tenant_id', true\), ''\) is not null/);
+    expect(kropp).toMatch(
+      /tenant_id = nullif\(current_setting\('app\.tenant_id', true\), ''\)::uuid/,
+    );
+    expect(kropp).not.toMatch(/app\.platform_admin/);
+    expect(kropp).not.toMatch(/for all/i);
+    expect(kropp).not.toMatch(/disable row level security/i);
+    expect(kropp).not.toMatch(/no force row level security/i);
+    if (cmd === 'update') {
+      expect(kropp).toMatch(/with check/);
+    }
+  }
+
+  it('0040 eier-INSERT/UPDATE på member_profiles + mechanics INSERT: tenant-guc, eier-only', () => {
     const m0040 = readFileSync(
       resolve(her, '../../../packages/db/drizzle/0040_member_profiles_owner_insert.sql'),
       'utf8',
     );
     expect(journal).toMatch(/0040_member_profiles_owner_insert/);
     for (const sql of [grants, m0040]) {
-      const kropp = policyKropp(sql, 'member_profiles_tenant_insert_owner');
-      expect(kropp).toMatch(/for insert/);
-      expect(kropp).toMatch(/to public/);
-      expect(kropp).toMatch(/current_user is distinct from 'authenticated'/);
-      expect(kropp).toMatch(/current_user is distinct from 'endwise_app'/);
-      expect(kropp).toMatch(/pg_get_userbyid|relowner/);
-      expect(kropp).toMatch(/nullif\(current_setting\('app\.tenant_id', true\), ''\) is not null/);
-      expect(kropp).toMatch(
-        /tenant_id = nullif\(current_setting\('app\.tenant_id', true\), ''\)::uuid/,
-      );
-      expect(kropp).not.toMatch(/app\.platform_admin/);
-      expect(kropp).not.toMatch(/for all/i);
-      expect(kropp).not.toMatch(/disable row level security/i);
-      expect(kropp).not.toMatch(/no force row level security/i);
+      assertEierSkriv(sql, 'member_profiles_tenant_insert_owner', 'insert');
+      assertEierSkriv(sql, 'member_profiles_tenant_update_owner', 'update');
+      assertEierSkriv(sql, 'mechanics_tenant_insert_owner', 'insert');
     }
     expect(grantsTs).toMatch(/member_profiles_tenant_insert_owner/);
+    expect(grantsTs).toMatch(/member_profiles_tenant_update_owner/);
+    expect(grantsTs).toMatch(/mechanics_tenant_insert_owner/);
     expect(grantsTs).toMatch(/process\.exit\(1\)/);
+  });
+
+  it('godta-upsert setter bare jobFunction og updatedAt; mekaniker-INSERT før forbruk', () => {
+    const conflict = godta.slice(godta.search(/onConflictDoUpdate/));
+    expect(conflict).toMatch(/jobFunction/);
+    expect(conflict).toMatch(/updatedAt/);
+    expect(conflict.slice(0, 400)).not.toMatch(/nickname/);
+    const mekAt = godta.search(/insert\(schema\.mechanics\)/);
+    const forbrukAt = godta.search(/modul\.forbruk/);
+    expect(mekAt).toBeGreaterThan(-1);
+    expect(forbrukAt).toBeGreaterThan(mekAt);
+  });
+
+  it('eier-UPDATE på member_profiles låser PK og nickname (kun job_function/updated_at)', () => {
+    const m0040 = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/0040_member_profiles_owner_insert.sql'),
+      'utf8',
+    );
+    const fn = readFileSync(resolve(her, '../../../packages/db/sql/functions.sql'), 'utf8');
+    for (const sql of [m0040, fn]) {
+      expect(sql).toMatch(/member_profiles_owner_update_guard/);
+      expect(sql).toMatch(/job_function og updated_at/);
+      expect(sql).toMatch(/new\.nickname is distinct from old\.nickname/);
+      expect(sql).toMatch(/new\.tenant_id is distinct from old\.tenant_id/);
+      expect(sql).toMatch(/new\.user_id is distinct from old\.user_id/);
+    }
+    expect(grantsTs).toMatch(/member_profiles_owner_update_guard/);
   });
 });
 

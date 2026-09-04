@@ -233,14 +233,43 @@ create policy member_profiles_tenant_select_owner on member_profiles
     and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
   );
 
--- godta-stien: INSERT member_profiles inne i withTenant (eier-invite =
--- job_function leder). 0039 er SELECT-only. Ingen platform_admin —
--- withTenant setter bare app.tenant_id. RETURNING dekkes av SELECT over.
+-- godta-stien: INSERT … ON CONFLICT DO UPDATE (job_function, updated_at).
+-- 0039 er SELECT-only. Ingen platform_admin — withTenant setter bare
+-- app.tenant_id. RETURNING dekkes av SELECT over. Trigger i functions.sql
+-- låser PK + nickname for tabelleier.
 drop policy if exists member_profiles_tenant_insert_owner on member_profiles;
 create policy member_profiles_tenant_insert_owner on member_profiles
   as permissive
   for insert
   to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.member_profiles'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists member_profiles_tenant_update_owner on member_profiles;
+create policy member_profiles_tenant_update_owner on member_profiles
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.member_profiles'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
   with check (
     current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
@@ -259,6 +288,25 @@ create policy mechanics_tenant_select_owner on mechanics
   for select
   to public
   using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.mechanics'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+-- Mekaniker-invite (ikke leder) skriver mechanics inne i withTenant.
+-- SELECT finnes (0039). INSERT manglet. Ingen platform_admin.
+drop policy if exists mechanics_tenant_insert_owner on mechanics;
+create policy mechanics_tenant_insert_owner on mechanics
+  as permissive
+  for insert
+  to public
+  with check (
     current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and current_user = (

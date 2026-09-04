@@ -223,6 +223,8 @@ invitasjon.post('/godta', async (c) => {
           .where(eq(schema.member.id, alleredeMedlem.id));
       }
 
+      // Eier-UPDATE (0040): bare job_function + updated_at. Trigger låser
+      // PK og nickname for tabelleier.
       if (inv.kind !== 'platform' && inv.funksjon) {
         await tx
           .insert(schema.memberProfiles)

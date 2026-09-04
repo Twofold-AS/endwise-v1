@@ -30,6 +30,7 @@ export const mechanics = pgTable(
     inspectSelectPolicy('mechanics', t.tenantId),
     // Eier-SELECT (`mechanics_tenant_select_owner`) i grants.sql —
     // session.me leser som eier under FORCE RLS via withTenant.
+    // Eier-INSERT (`mechanics_tenant_insert_owner`, 0040): mekaniker-godta.
   ],
 ).enableRLS();
 

@@ -5,9 +5,8 @@ import { createDb, type Database } from '../src/client.ts';
 
 /**
  * Prod APP_DATABASE_URL = rolle `endwise` under FORCE RLS.
- * 0039 ga eier-SELECT på member_profiles. godta gjør INSERT
- * (job_function leder på eier-invite). Uten eier-INSERT: 42501 /
- * «Failed query: insert into member_profiles».
+ * 0039 ga eier-SELECT. godta gjør INSERT … ON CONFLICT DO UPDATE
+ * (job_function, updated_at) og mekaniker-invite INSERT mechanics.
  *
  * Docker-eieren er superuser — samme stand-in som tenants-owner-select.
  */
@@ -23,7 +22,7 @@ describeDb('SET ROLE endwise — owner INSERT member_profiles under FORCE RLS', 
   const tenantB = randomUUID();
   let eierRolle = 'endwise';
   let originalEier = 'endwise';
-  const tabeller = ['tenants', 'member_profiles'] as const;
+  const tabeller = ['tenants', 'member_profiles', 'mechanics'] as const;
 
   beforeAll(async () => {
     owner = createDb(OWNER_URL as string);
@@ -65,6 +64,9 @@ describeDb('SET ROLE endwise — owner INSERT member_profiles under FORCE RLS', 
   });
 
   afterAll(async () => {
+    await owner.execute(
+      sql`delete from mechanics where tenant_id in (${tenantA}::uuid, ${tenantB}::uuid)`,
+    );
     await owner.execute(
       sql`delete from member_profiles where tenant_id in (${tenantA}::uuid, ${tenantB}::uuid)`,
     );
@@ -141,6 +143,98 @@ describeDb('SET ROLE endwise — owner INSERT member_profiles under FORCE RLS', 
         return tx.execute(sql`
           insert into member_profiles (tenant_id, user_id, job_function)
           values (${tenantA}::uuid, 'bare-admin', 'leder')
+        `);
+      }),
+    ).rejects.toThrow(/row-level security|42501|violates/i);
+  });
+
+  it('ON CONFLICT DO UPDATE (godta-upsert) kan sette job_function', async () => {
+    await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      await tx.execute(sql`
+        insert into member_profiles (tenant_id, user_id, job_function, nickname)
+        values (${tenantA}::uuid, 'upsert-eier', 'selger', 'Kallenavn')
+      `);
+    });
+    const res = await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      return tx.execute(sql`
+        insert into member_profiles (tenant_id, user_id, job_function)
+        values (${tenantA}::uuid, 'upsert-eier', 'leder')
+        on conflict (tenant_id, user_id) do update
+          set job_function = excluded.job_function, updated_at = now()
+        returning job_function, nickname
+      `);
+    });
+    expect(res.rows).toHaveLength(1);
+    const rad = res.rows[0] as { job_function: string; nickname: string };
+    expect(rad.job_function).toBe('leder');
+    expect(rad.nickname).toBe('Kallenavn');
+  });
+
+  it('eier-UPDATE kan ikke endre nickname eller PK', async () => {
+    await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      await tx.execute(sql`
+        insert into member_profiles (tenant_id, user_id, job_function, nickname)
+        values (${tenantA}::uuid, 'guard-eier', 'selger', 'Behold')
+      `);
+    });
+    await expect(
+      somEier(async (tx) => {
+        await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+        return tx.execute(sql`
+          update member_profiles
+             set nickname = 'Stjålet'
+           where tenant_id = ${tenantA}::uuid and user_id = 'guard-eier'
+        `);
+      }),
+    ).rejects.toThrow(/job_function og updated_at|42501/i);
+  });
+
+  it('eier med tenant-GUC kan INSERT mechanics (mekaniker-godta)', async () => {
+    const res = await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      return tx.execute(sql`
+        insert into mechanics (tenant_id, user_id, name, capacity)
+        values (${tenantA}::uuid, 'mek-eier', 'Kari Mek', 1)
+        returning name, user_id
+      `);
+    });
+    expect(res.rows).toHaveLength(1);
+    expect((res.rows[0] as { name: string }).name).toBe('Kari Mek');
+  });
+
+  it('uten tenant-GUC avvises mechanics INSERT', async () => {
+    await expect(
+      somEier(async (tx) =>
+        tx.execute(sql`
+          insert into mechanics (tenant_id, user_id, name, capacity)
+          values (${tenantA}::uuid, 'mek-uten', 'Nei', 1)
+        `),
+      ),
+    ).rejects.toThrow(/row-level security|42501|violates/i);
+  });
+
+  it('tenant-GUC kan ikke INSERT mechanics i den andre tenanten', async () => {
+    await expect(
+      somEier(async (tx) => {
+        await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+        return tx.execute(sql`
+          insert into mechanics (tenant_id, user_id, name, capacity)
+          values (${tenantB}::uuid, 'mek-cross', 'Nei', 1)
+        `);
+      }),
+    ).rejects.toThrow(/row-level security|42501|violates/i);
+  });
+
+  it('platform_admin alene gir ikke mechanics INSERT', async () => {
+    await expect(
+      somEier(async (tx) => {
+        await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+        return tx.execute(sql`
+          insert into mechanics (tenant_id, user_id, name, capacity)
+          values (${tenantA}::uuid, 'mek-admin', 'Nei', 1)
         `);
       }),
     ).rejects.toThrow(/row-level security|42501|violates/i);

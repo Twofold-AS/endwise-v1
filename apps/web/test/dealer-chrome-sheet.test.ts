@@ -96,8 +96,14 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(bot).toMatch(/\bplaying\b/);
     expect(bot).not.toMatch(/playing=\{false\}/);
     expect(bot).toMatch(/heureux|colere|surpris/);
+    expect(bot).not.toMatch(/'thinking'/);
+    expect(bot).not.toMatch(/'alert'/);
+    expect(bot).not.toMatch(/'notify'/);
+    expect(bot).toMatch(/visState: StateId = 'idle'/);
     const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
     expect(fab).not.toMatch(/playing=\{false\}/);
+    expect(fab).not.toMatch(/'thinking'/);
+    expect(fab).not.toMatch(/'alert'/);
   });
 
   it('dealer-layout har ikke DestinasjonSeksjonBar i treet', () => {

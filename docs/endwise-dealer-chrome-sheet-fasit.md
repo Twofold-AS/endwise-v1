@@ -8,7 +8,7 @@ Kilde: Jonas/Mikael. Overstyrer eldre stripe/peek-IA (#130-era).
 
 ### Top-bar
 
-1. **Logo midt** — kun merke (ink-maske på `logo.svg`), sentrert i baren (`absolute` midt). Ingen «Endwise»-ordmerke. Ink/svart, ikke grønn `#1ED27D`.
+1. **Logo midt** — kun merke (ink-maske på `logo.svg`), sentrert i baren (`absolute` midt). Ingen «Endwise»-ordmerke. Ink/svart, ikke grønn `#1ED27D`. Åpen sidebar flytter ikke merke eller Ronny|toggle (PhoneShell `fixed` z-60; overlay starter under `h-row`).
 2. **Venstre** på undersider: kun tilbake-pil **med hale** (←-form, stroke 2). Ingen «Tilbake»-tekst. `aria-label="Tilbake"`. På hjem: tom / ingen pil.
 3. **Høyre cluster** (ytterst → inn): sidebar-toggle ytterst høyre; **Ronny-avatar rett til venstre for toggle**.
 4. Høyde: eksisterende `h-row` / shell-header + `safe-area-inset-top`. Én rad.
@@ -51,6 +51,7 @@ Desktop Ronny er **ikke** sheet. Se `docs/endwise-dealer-chrome-desktop-ronny-fa
 
 ## Do
 
+- Ronny-avatarer: kun uttrykksbytte (ansikt/humør). ⛔ thinking. ⛔ alert/notify.
 - Tokens / UI-PAKKER Apple.
 - `viewport-fit=cover` + safe-area.
 - Hit targets ≥ 44 på avatar, X, forstørr, toggle.

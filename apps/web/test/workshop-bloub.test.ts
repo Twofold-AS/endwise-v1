@@ -73,7 +73,6 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).not.toMatch(/data-ronny-blink/);
     expect(fab).toMatch(/colere/);
     expect(fab).toMatch(/surpris/);
-    expect(fab).toMatch(/wink/);
     expect(fab).toMatch(/curieux/);
     expect(fab).toMatch(/attentif/);
     expect(fab).toMatch(/heureux/);
@@ -81,7 +80,8 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).not.toMatch(/expression: 'triste'/);
     expect(fab).not.toMatch(/expression: 'somnolent'/);
     expect(fab).not.toMatch(/state: 'thinking'/);
-    expect(fab).toMatch(/opptatt \? 'thinking'/);
+    expect(fab).not.toMatch(/opptatt \? 'thinking'/);
+    expect(fab).not.toMatch(/error \? 'alert'/);
     expect(fab).toMatch(/submitStatus = opptatt \? status : 'ready'/);
     expect(fab).toMatch(/data-ronny-spin/);
     expect(fab).toMatch(/data-workshop-dock/);
@@ -137,9 +137,11 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
     expect(fab).toMatch(/body: \{ side \}/);
     expect(fab).toMatch(/expression=\{uttrykk\}/);
-    expect(fab).toMatch(/thinking/);
-    expect(fab).toMatch(/alert/);
-    expect(fab).toMatch(/burst/);
+    expect(fab).toMatch(/state=\{tilstand\}/);
+    expect(fab).toMatch(/const tilstand: StateId = 'idle'/);
+    expect(fab).not.toMatch(/'thinking'/);
+    expect(fab).not.toMatch(/'alert'/);
+    expect(fab).not.toMatch(/'notify'/);
     expect(fab).not.toMatch(/#1ED27D|#EE2924/);
     expect(fab).not.toMatch(/ShaderGradient/);
     expect(css).not.toMatch(/ronny-blink/);

@@ -5,22 +5,23 @@ import { useEffect, useState } from 'react';
 
 export const IDLE_MS = 5000;
 
-export const RONNY_IDLE: readonly { expression: ExpressionId; state: StateId }[] = [
-  { expression: 'heureux', state: 'wink' },
-  { expression: 'colere', state: 'burst' },
-  { expression: 'surpris', state: 'wide' },
-  { expression: 'hilare', state: 'orbit' },
-  { expression: 'curieux', state: 'wink' },
-  { expression: 'attentif', state: 'idle' },
-  { expression: 'excite', state: 'burst' },
-  { expression: 'fier', state: 'wink' },
-  { expression: 'mefiant', state: 'swirl' },
-  { expression: 'colere', state: 'wink' },
-  { expression: 'heureux', state: 'burst' },
-  { expression: 'colere', state: 'orbit' },
+/** Bare ansikt/humør. Ingen thinking/alert/notify. */
+export const RONNY_IDLE: readonly ExpressionId[] = [
+  'heureux',
+  'colere',
+  'surpris',
+  'hilare',
+  'curieux',
+  'attentif',
+  'excite',
+  'fier',
+  'mefiant',
+  'colere',
+  'heureux',
+  'colere',
 ];
 
-export function useRonnyIdle(aktiv: boolean): (typeof RONNY_IDLE)[number] {
+export function useRonnyIdle(aktiv: boolean): ExpressionId {
   const [steg, setSteg] = useState(0);
   useEffect(() => {
     if (!aktiv) return;
@@ -42,27 +43,23 @@ export function useRonnySpinn(): { spin: boolean; trigg: () => void } {
 }
 
 /**
- * Levende Ronny — eksisterende BloubBot + idle-syklus.
- * Klikk-spinn (rotateY) og thinking ved chat. Ingen nytt karaktersystem.
+ * Levende Ronny — kun uttrykksbytte (ansikt/humør).
+ * Klikk-spinn er rotateY + surpris. Ingen thinking/alert/notify.
  */
 export function RonnyBot({
   size,
   paper,
-  opptatt = false,
   spin = false,
-  state,
   expression,
 }: {
   size: number;
   paper: string;
-  opptatt?: boolean;
   spin?: boolean;
-  state?: StateId;
   expression?: ExpressionId;
 }) {
-  const idle = useRonnyIdle(!opptatt && !spin);
-  const visState: StateId = state ?? (opptatt ? 'thinking' : spin ? 'burst' : idle.state);
-  const visUttrykk: ExpressionId = expression ?? (spin ? 'surpris' : idle.expression);
+  const idle = useRonnyIdle(!spin);
+  const visUttrykk: ExpressionId = expression ?? (spin ? 'surpris' : idle);
+  const visState: StateId = 'idle';
   return (
     <span
       data-ronny-spin
@@ -79,7 +76,7 @@ export function RonnyBot({
         paper={paper}
         state={visState}
         expression={visUttrykk}
-        follow={!opptatt}
+        follow
         still={false}
         playing
       />

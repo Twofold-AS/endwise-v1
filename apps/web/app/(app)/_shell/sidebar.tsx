@@ -161,11 +161,11 @@ export function Sidebar() {
       data-phone-sidebar={phoneOpen ? 'open' : 'closed'}
       className={`flex-col border-border border-r bg-[#ffffff] ${
         phoneOpen
-          ? `fixed inset-0 z-50 flex w-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:static md:inset-auto md:z-auto ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
+          ? `fixed inset-x-0 bottom-0 z-50 flex w-full top-[calc(env(safe-area-inset-top)+var(--ew-row-h))] pb-[env(safe-area-inset-bottom)] md:static md:inset-auto md:top-auto md:z-auto ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
           : `hidden md:flex md:static ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
       }`}
     >
-      <div data-shell-header className={`shrink-0 ${SHELL_HEADER_RAD}`}>
+      <div data-shell-header className={`hidden shrink-0 md:flex ${SHELL_HEADER_RAD}`}>
         {/*
          * `dealerName` er ekte navn fra `tenants.name`. Placeholderen
          * «Endwise-forhandler» sto hardkodet her fram til — den var

@@ -166,7 +166,7 @@ describe('telefon-toppbar og sidebar-overlay', () => {
     expect(layout).toMatch(/<main className="[^"]*\bflex-1\b/);
     expect(layout).not.toMatch(/<main className="[^"]*\bmd:flex-1\b/);
     expect(shell).toMatch(/data-phone-top-bar/);
-    expect(shell).toMatch(/sticky top-0/);
+    expect(shell).toMatch(/fixed inset-x-0 top-0 z-\[60\]/);
     expect(PHONE_SHELL_ROT).toMatch(/min-h-dvh|h-dvh|flex-1/);
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
   });

@@ -49,20 +49,20 @@ const COMPOSER_SAFE = 'max(6px, env(safe-area-inset-bottom))';
 const TENKER_TEKST = 'Ronny tenker…';
 const BOBLE_TEKST = 'text-[14px] leading-snug md:text-body md:leading-relaxed';
 
-const RONNY_IDLE: readonly { expression: ExpressionId; state: StateId }[] = [
-  { expression: 'colere', state: 'wink' },
-  { expression: 'colere', state: 'burst' },
-  { expression: 'surpris', state: 'wink' },
-  { expression: 'colere', state: 'wink' },
-  { expression: 'heureux', state: 'burst' },
-  { expression: 'curieux', state: 'wink' },
-  { expression: 'colere', state: 'wink' },
-  { expression: 'attentif', state: 'wink' },
-  { expression: 'excite', state: 'burst' },
-  { expression: 'fier', state: 'wink' },
+const RONNY_IDLE: readonly { expression: ExpressionId }[] = [
+  { expression: 'colere' },
+  { expression: 'colere' },
+  { expression: 'surpris' },
+  { expression: 'colere' },
+  { expression: 'heureux' },
+  { expression: 'curieux' },
+  { expression: 'colere' },
+  { expression: 'attentif' },
+  { expression: 'excite' },
+  { expression: 'fier' },
 ];
 
-function useRonnyIdle(aktiv: boolean): (typeof RONNY_IDLE)[number] {
+function useRonnyIdle(aktiv: boolean): ExpressionId {
   const [steg, setSteg] = useState(0);
   useEffect(() => {
     if (!aktiv) return;
@@ -71,7 +71,7 @@ function useRonnyIdle(aktiv: boolean): (typeof RONNY_IDLE)[number] {
     }, IDLE_MS);
     return () => window.clearInterval(id);
   }, [aktiv]);
-  return RONNY_IDLE[steg] ?? RONNY_IDLE[0];
+  return RONNY_IDLE[steg]?.expression ?? 'heureux';
 }
 
 function tekstFraMelding(melding: { parts: Array<{ type: string; text?: string }> }): string {
@@ -99,7 +99,6 @@ export function WorkshopBloub() {
   const router = useRouter();
   const { phoneOpen } = useSidebarState();
   const { apen, hoyde, lukk, forstor } = useRonnySheet();
-  const [suksess, setSuksess] = useState(false);
   const [promptTekst, setPromptTekst] = useState('');
   const [synlig, setSynlig] = useState(0);
   const [loggOverflow, setLoggOverflow] = useState(false);
@@ -124,15 +123,6 @@ export function WorkshopBloub() {
   const { messages, sendMessage, status, error } = useChat({ transport });
   const opptatt = status === 'submitted' || status === 'streaming';
   const idle = useRonnyIdle(true);
-
-  useEffect(() => {
-    const onSuksess = () => {
-      setSuksess(true);
-      window.setTimeout(() => setSuksess(false), 1800);
-    };
-    window.addEventListener('endwise:booking-lagret', onSuksess);
-    return () => window.removeEventListener('endwise:booking-lagret', onSuksess);
-  }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: lukk helt ved sidebar-navigasjon
   useEffect(() => {
@@ -200,8 +190,8 @@ export function WorkshopBloub() {
     }
   }, [messages, router]);
 
-  const tilstand: StateId = suksess ? 'burst' : error ? 'alert' : opptatt ? 'thinking' : idle.state;
-  const uttrykk: ExpressionId = idle.expression;
+  const tilstand: StateId = 'idle';
+  const uttrykk: ExpressionId = idle;
 
   function send(innhold: string) {
     const rensket = innhold.trim();

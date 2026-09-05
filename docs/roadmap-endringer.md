@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-05 — F5-35 Apple-markedsside (Jonas-fasit)
+
+**Type:** offentlig flate. Ingen techstack-endring. Ingen ny UI-pakke.
+**Godkjent av:** Jonas-fasit 05.09.2026 (`docs/endwise-landing-fasit.md`). Mikael via Jonas samme dag: primær CTA «Prøv Endwise», ikke «Book demo». H1 «Verkstedet, samlet.» urørt.
+**Endring:** **F5-35** forblir `done`. `/` byttet fra nøktern 720px-side til Apple-markedsflate: H1 «Verkstedet, samlet.», CTA `#111` «Prøv Endwise», tre løfter, desktop+Min dag, TIERS-pris 4490/8490/12490, tillit, footer. Nye ruter `/personvern` `/vilkar` `/kontakt`. Dealer-chrome urørt.
+
+---
+
 ## 2026-08-31 — F6-29 /bot byttet til bloub
 
 **Type:** intern flate, bytte av motor. Ingen techstack-endring. Ingen npm-pakke.

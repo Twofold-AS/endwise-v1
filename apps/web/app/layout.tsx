@@ -29,8 +29,8 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Endwise',
-  description: 'Endwise - booking og verkstedstyring',
+  title: 'Endwise — Verkstedet, samlet.',
+  description: 'Booking, innboks og jobber i ett system for MC-, båt- og ATV-verkstedet.',
   // Ios «Legg til på Hjem-skjerm» (Apple bruker ikke manifest fullt ut).
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Endwise' },
 };

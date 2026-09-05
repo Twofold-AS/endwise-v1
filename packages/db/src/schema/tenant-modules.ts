@@ -41,6 +41,8 @@ export const tenantModules = pgTable(
     // — createTenant skriver pakke-rader som eier under FORCE RLS.
     // Eier-SELECT (`tenant_modules_tenant_select_owner`) — session.me /
     // onboarding / moduleProcedure leser via withTenant.
+    // Eier-UPDATE (`tenant_modules_tenant_update_owner`, 0041) — fullfor
+    // slår på optional; setModules/Stripe skriver enabled/source/plan.
   ],
 ).enableRLS();
 

@@ -81,6 +81,9 @@ export const tenants = pgTable(
      * `tenants_platform_admin_insert_owner` er INSERT (create dealer).
      * `tenants_tenant_select_owner` er withTenant-SELECT (0039) — eier +
      * `app.tenant_id`, ikke platform_admin. Uten den ser lesTenantNavn 0 rader.
+     * `tenants_tenant_update_owner` (0041) er fullfor/setModules/forhandler.update
+     * — samme GUC, USING+WITH CHECK, ingen platform_admin. Trigger låser
+     * id/created_at og nekter kind=platform.
      * read_owner er SELECT-only for withPlatformAdmin (alle tenants).
      */
   ],

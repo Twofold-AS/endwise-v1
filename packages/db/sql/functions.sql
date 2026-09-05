@@ -286,6 +286,77 @@ create trigger member_profiles_owner_update_guard_trg
   for each row
   execute function member_profiles_owner_update_guard();
 
+-- onboarding.fullfor / setModules / forhandler.update som eier.
+-- PK og created_at låst. kind=platform avvist (eskalering).
+-- authenticated/endwise_app urørt — de bruker schema-policyene.
+create or replace function tenants_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.tenants'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.id is distinct from old.id
+     or new.created_at is distinct from old.created_at then
+    raise exception 'tenants: eier-UPDATE kan ikke endre id eller created_at'
+      using errcode = '42501';
+  end if;
+
+  if new.kind = 'platform' and old.kind is distinct from 'platform' then
+    raise exception 'tenants: eier-UPDATE kan ikke sette kind=platform'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists tenants_owner_update_guard_trg on tenants;
+create trigger tenants_owner_update_guard_trg
+  before update on tenants
+  for each row
+  execute function tenants_owner_update_guard();
+
+create or replace function tenant_modules_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.tenant_modules'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.tenant_id is distinct from old.tenant_id
+     or new.module_key is distinct from old.module_key
+     or new.created_at is distinct from old.created_at then
+    raise exception 'tenant_modules: eier-UPDATE kan ikke endre PK eller created_at'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists tenant_modules_owner_update_guard_trg on tenant_modules;
+create trigger tenant_modules_owner_update_guard_trg
+  before update on tenant_modules
+  for each row
+  execute function tenant_modules_owner_update_guard();
+
 -- Widget-nøkkeloppslag før vi vet hvilken forhandler det gjelder.
 
 -- Samme klasse som lookup_open_invitation. `widget_keys` har FORCE RLS og

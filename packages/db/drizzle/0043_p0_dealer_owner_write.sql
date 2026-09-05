@@ -1,5 +1,6 @@
 /*
  * 0043 — eier INSERT/SELECT/UPDATE på P0 dealer-skriv under FORCE RLS.
+ * DELETE: mechanic_skills (removeMechanicSkill).
  *
  * Residual etter #128 (services, 0042 på main). Schema-policyene er
  * TO authenticated FOR ALL. Prod APP er eier `endwise`. withTenant
@@ -361,6 +362,22 @@ create policy mechanic_skills_tenant_update_owner on mechanic_skills
     and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
   )
   with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.mechanic_skills'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );-- > statement-breakpoint
+drop policy if exists mechanic_skills_tenant_delete_owner on mechanic_skills;
+create policy mechanic_skills_tenant_delete_owner on mechanic_skills
+  as permissive
+  for delete
+  to public
+  using (
     current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and current_user = (

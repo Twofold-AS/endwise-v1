@@ -343,6 +343,7 @@ const p0EierNavn = [
   'mechanic_skills_tenant_insert_owner',
   'mechanic_skills_tenant_select_owner',
   'mechanic_skills_tenant_update_owner',
+  'mechanic_skills_tenant_delete_owner',
   'threads_tenant_insert_owner',
   'threads_tenant_select_owner',
   'threads_tenant_update_owner',
@@ -382,7 +383,7 @@ const p0Funnet = new Set(p0Eier.rows.map((r) => r.polname));
 const manglerP0 = p0EierNavn.filter((n) => !p0Funnet.has(n));
 if (manglerP0.length > 0) {
   console.error(
-    '[db] P0 dealer eier-INSERT/SELECT/UPDATE under FORCE RLS mangler: ' +
+    '[db] P0 dealer eier-INSERT/SELECT/UPDATE/DELETE under FORCE RLS mangler: ' +
       manglerP0.join(', ') +
       '. Kjør `pnpm db:grants` mot Scaleway-eieren (0043).',
   );

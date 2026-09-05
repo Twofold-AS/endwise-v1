@@ -758,6 +758,7 @@ create policy erasure_requests_slett_select on erasure_requests
 -- P0 dealer-skriv under FORCE RLS (prod APP = eier `endwise`).
 -- Schema-policyene er TO authenticated. create/RETURNING/update
 -- trenger eier-porter med kun app.tenant_id. Ingen platform_admin.
+-- DELETE: mechanic_skills (removeMechanicSkill).
 -- Append-only uten UPDATE: customer_notes, booking_services,
 -- stock_movements.
 drop policy if exists customers_tenant_insert_owner on customers;
@@ -1127,6 +1128,23 @@ create policy mechanic_skills_tenant_update_owner on mechanic_skills
     and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
   )
   with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.mechanic_skills'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists mechanic_skills_tenant_delete_owner on mechanic_skills;
+create policy mechanic_skills_tenant_delete_owner on mechanic_skills
+  as permissive
+  for delete
+  to public
+  using (
     current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and current_user = (

@@ -102,28 +102,9 @@ describeDb('SET ROLE endwise — owner INSERT/RETURNING P0 dealer-skriv under FO
       returning id
     `);
     serviceVersionId = (ver.rows[0] as { id: string }).id;
-
-    // #128 (services owner SELECT) er ikke merget. FK-sjekk som standin
-    // mot service_versions krever en midlertidig SELECT-port i testdata.
-    await owner.execute(
-      sql.raw(`
-      drop policy if exists p0_test_service_versions_fk_select on service_versions;
-      create policy p0_test_service_versions_fk_select on service_versions
-        as permissive
-        for select
-        to public
-        using (
-          current_user = '${eierRolle}'
-          and tenant_id in ('${tenantA}'::uuid, '${tenantB}'::uuid)
-        );
-    `),
-    );
   });
 
   afterAll(async () => {
-    await owner.execute(
-      sql.raw(`drop policy if exists p0_test_service_versions_fk_select on service_versions`),
-    );
     await owner.execute(
       sql`delete from stock_movements where tenant_id in (${tenantA}::uuid, ${tenantB}::uuid)`,
     );
@@ -431,6 +412,101 @@ describeDb('SET ROLE endwise — owner INSERT/RETURNING P0 dealer-skriv under FO
         `);
       }),
     ).rejects.toThrow(/meldingstekst eller avsender|42501/i);
+  });
+
+  it('eier med tenant-GUC kan DELETE mechanic_skills (removeMechanicSkill)', async () => {
+    await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      await tx.execute(sql`
+        insert into skills (tenant_id, key, name)
+        values (${tenantA}::uuid, 'mc-del', 'Slett-meg')
+      `);
+      await tx.execute(sql`
+        insert into mechanic_skills (tenant_id, mechanic_id, skill_key, level)
+        values (${tenantA}::uuid, ${mechanicId}::uuid, 'mc-del', 3)
+      `);
+    });
+    const res = await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      return tx.execute(sql`
+        delete from mechanic_skills
+         where tenant_id = ${tenantA}::uuid
+           and mechanic_id = ${mechanicId}::uuid
+           and skill_key = 'mc-del'
+        returning skill_key
+      `);
+    });
+    expect(res.rows).toHaveLength(1);
+    expect((res.rows[0] as { skill_key: string }).skill_key).toBe('mc-del');
+  });
+
+  it('uten tenant-GUC avvises mechanic_skills DELETE', async () => {
+    await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      await tx.execute(sql`
+        insert into skills (tenant_id, key, name)
+        values (${tenantA}::uuid, 'mc-del-guc', 'Slett uten GUC')
+      `);
+      await tx.execute(sql`
+        insert into mechanic_skills (tenant_id, mechanic_id, skill_key, level)
+        values (${tenantA}::uuid, ${mechanicId}::uuid, 'mc-del-guc', 3)
+      `);
+    });
+    const res = await somEier(async (tx) =>
+      tx.execute(sql`
+        delete from mechanic_skills
+         where skill_key = 'mc-del-guc'
+        returning skill_key
+      `),
+    );
+    expect(res.rows).toHaveLength(0);
+  });
+
+  it('tom tenant-GUC avviser mechanic_skills DELETE', async () => {
+    await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      await tx.execute(sql`
+        insert into skills (tenant_id, key, name)
+        values (${tenantA}::uuid, 'mc-del-tom', 'Slett tom GUC')
+      `);
+      await tx.execute(sql`
+        insert into mechanic_skills (tenant_id, mechanic_id, skill_key, level)
+        values (${tenantA}::uuid, ${mechanicId}::uuid, 'mc-del-tom', 3)
+      `);
+    });
+    const res = await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', '', true)`);
+      return tx.execute(sql`
+        delete from mechanic_skills
+         where skill_key = 'mc-del-tom'
+        returning skill_key
+      `);
+    });
+    expect(res.rows).toHaveLength(0);
+  });
+
+  it('tenant-GUC kan ikke slette den andre tenantens mechanic_skills', async () => {
+    const res = await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantB}, true)`);
+      return tx.execute(sql`
+        delete from mechanic_skills
+         where tenant_id = ${tenantA}::uuid
+        returning skill_key
+      `);
+    });
+    expect(res.rows).toHaveLength(0);
+  });
+
+  it('platform_admin alene (uten tenant-guc) gir ikke DELETE på mechanic_skills', async () => {
+    const res = await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.platform_admin', 'on', true)`);
+      return tx.execute(sql`
+        delete from mechanic_skills
+         where tenant_id = ${tenantA}::uuid
+        returning skill_key
+      `);
+    });
+    expect(res.rows).toHaveLength(0);
   });
 
   it('uten tenant-GUC avvises customers UPDATE (empty GUC denied)', async () => {

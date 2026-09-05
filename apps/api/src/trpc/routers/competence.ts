@@ -78,14 +78,19 @@ export const competenceRouter = router({
 
   removeMechanicSkill: adminProcedure
     .input(z.object({ mechanicId: z.uuid(), skillKey: z.string() }))
-    .mutation(({ ctx, input }) =>
-      createCompetenceRegistry(ctx.db).removeMechanicSkill(
-        ctx.tenantId,
-        ctx.role,
-        input.mechanicId,
-        input.skillKey,
-      ),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await createCompetenceRegistry(ctx.db).removeMechanicSkill(
+          ctx.tenantId,
+          ctx.role,
+          input.mechanicId,
+          input.skillKey,
+        );
+      } catch (error) {
+        loggDealerWritePostgresFeil('competence', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke fjerne kompetansen. Prøv igjen.');
+      }
+    }),
 
   /** Sertifiseringer som utløper snart — driver varsel i F3-04. */
   expiringCertifications: protectedProcedure

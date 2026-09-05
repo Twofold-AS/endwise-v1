@@ -79,7 +79,11 @@ function policyKropp(sql: string, navn: string): string {
   return slutt === -1 ? etter : etter.slice(0, slutt);
 }
 
-function assertEierTenantPolicy(sql: string, navn: string, cmd: 'insert' | 'select' | 'update') {
+function assertEierTenantPolicy(
+  sql: string,
+  navn: string,
+  cmd: 'insert' | 'select' | 'update' | 'delete',
+) {
   const kropp = policyKropp(sql, navn);
   expect(kropp).toMatch(new RegExp(`for ${cmd}`));
   expect(kropp).toMatch(/to public/);
@@ -113,6 +117,13 @@ function assertEierTenantPolicy(sql: string, navn: string, cmd: 'insert' | 'sele
     expect(kropp).not.toMatch(/for select/);
     expect(kropp).not.toMatch(/for delete/);
   }
+  if (cmd === 'delete') {
+    expect(kropp).toMatch(/using/);
+    expect(kropp).not.toMatch(/with check/);
+    expect(kropp).not.toMatch(/for insert/);
+    expect(kropp).not.toMatch(/for select/);
+    expect(kropp).not.toMatch(/for update/);
+  }
 }
 
 describe('FORCE RLS eier-skriv på P0 dealer-tabeller (prod-rolle endwise)', () => {
@@ -133,6 +144,7 @@ describe('FORCE RLS eier-skriv på P0 dealer-tabeller (prod-rolle endwise)', () 
       for (const tabell of UPDATE) {
         assertEierTenantPolicy(kilde, `${tabell}_tenant_update_owner`, 'update');
       }
+      assertEierTenantPolicy(kilde, 'mechanic_skills_tenant_delete_owner', 'delete');
     }
   });
 
@@ -144,7 +156,11 @@ describe('FORCE RLS eier-skriv på P0 dealer-tabeller (prod-rolle endwise)', () 
   });
 
   it('0043 + db:grants krever eier-policyene, skrur ikke av FORCE RLS', () => {
+    expect(journal).toMatch(/0042_services_owner_write/);
     expect(journal).toMatch(/0043_p0_dealer_owner_write/);
+    expect(journal.indexOf('0042_services_owner_write')).toBeLessThan(
+      journal.indexOf('0043_p0_dealer_owner_write'),
+    );
     expect(journal).not.toMatch(/0042_p0_dealer/);
     for (const tabell of INSERT_SELECT) {
       expect(grantsTs).toMatch(new RegExp(`${tabell}_tenant_insert_owner`));
@@ -154,6 +170,7 @@ describe('FORCE RLS eier-skriv på P0 dealer-tabeller (prod-rolle endwise)', () 
       expect(grantsTs).toMatch(new RegExp(`${tabell}_tenant_update_owner`));
       expect(grantsTs).toMatch(new RegExp(`${tabell}_owner_update_guard`));
     }
+    expect(grantsTs).toMatch(/mechanic_skills_tenant_delete_owner/);
     expect(grants).toMatch(/force row level security/);
     expect(grants).not.toMatch(/no force row level security/i);
     expect(m0043).not.toMatch(/disable row level security/i);
@@ -194,8 +211,10 @@ describe('FORCE RLS eier-skriv på P0 dealer-tabeller (prod-rolle endwise)', () 
     expect(liveTest).toMatch(/insert into messages/);
     expect(liveTest).toMatch(/insert into parts/);
     expect(liveTest).toMatch(/insert into stock_movements/);
+    expect(liveTest).toMatch(/delete from mechanic_skills/i);
     expect(liveTest).toMatch(/uten tenant-GUC|tom tenant-GUC/i);
     expect(liveTest).toMatch(/platform_admin/);
+    expect(liveTest).not.toMatch(/p0_test_service_versions_fk_select/);
     expect(vitestCfg).toMatch(/p0-dealer-owner-write\.test\.ts/);
   });
 
@@ -210,6 +229,10 @@ describe('FORCE RLS eier-skriv på P0 dealer-tabeller (prod-rolle endwise)', () 
     expect(kunder).toMatch(/Kunne ikke lagre kunden/);
     expect(kjoretoy).toMatch(/Kunne ikke lagre kjøretøyet/);
     expect(lager).toMatch(/Kunne ikke lagre/);
+    const fjerne = kompetanse.slice(kompetanse.indexOf('removeMechanicSkill'));
+    expect(fjerne).toMatch(/mapDealerWritePostgresFeil/);
+    expect(fjerne).toMatch(/Kunne ikke fjerne kompetansen/);
+    expect(fjerne).not.toMatch(/Failed query/);
     const mapper = feilHjelper.slice(
       feilHjelper.indexOf('export function mapDealerWritePostgresFeil'),
     );

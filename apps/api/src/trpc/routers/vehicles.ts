@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, ilike, or, schema, withTenant } from '@endwise/db';
 import { z } from 'zod';
 import { protectedProcedure, router, staffProcedure } from '../init.ts';
+import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 const vehicleType = z.enum(['mc', 'boat', 'atv']);
 
@@ -137,31 +138,41 @@ export const vehiclesRouter = router({
         modelYear: z.string().max(8).optional(),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        const [created] = await tx
-          .insert(schema.vehicles)
-          .values({ ...input, tenantId: ctx.tenantId })
-          .returning();
-        return created;
-      }),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [created] = await tx
+            .insert(schema.vehicles)
+            .values({ ...input, tenantId: ctx.tenantId })
+            .returning();
+          return created;
+        });
+      } catch (error) {
+        loggDealerWritePostgresFeil('vehicles', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre kjøretøyet. Prøv igjen.');
+      }
+    }),
 
   assignCustomer: protectedProcedure
     .input(z.object({ vehicleId: z.uuid(), customerId: z.uuid().nullable() }))
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        const [oppdatert] = await tx
-          .update(schema.vehicles)
-          .set({ customerId: input.customerId })
-          .where(
-            and(
-              eq(schema.vehicles.id, input.vehicleId),
-              eq(schema.vehicles.tenantId, ctx.tenantId),
-            ),
-          )
-          .returning();
-        return oppdatert;
-      }),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [oppdatert] = await tx
+            .update(schema.vehicles)
+            .set({ customerId: input.customerId })
+            .where(
+              and(
+                eq(schema.vehicles.id, input.vehicleId),
+                eq(schema.vehicles.tenantId, ctx.tenantId),
+              ),
+            )
+            .returning();
+          return oppdatert;
+        });
+      } catch (error) {
+        loggDealerWritePostgresFeil('vehicles', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre kjøretøyet. Prøv igjen.');
+      }
+    }),
 });

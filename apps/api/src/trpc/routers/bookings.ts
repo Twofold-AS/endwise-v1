@@ -28,6 +28,7 @@ import { lesAvatar } from '@endwise/modules/profil';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, router, staffProcedure } from '../init.ts';
+import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 const status = z.enum(['draft', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show']);
 
@@ -39,7 +40,9 @@ function toTRPCError(error: unknown): never {
   if (error instanceof InvalidTransitionError) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
   }
-  throw error;
+  if (error instanceof TRPCError) throw error;
+  loggDealerWritePostgresFeil('bookings', error);
+  throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre jobben. Prøv igjen.');
 }
 
 /**

@@ -1,6 +1,7 @@
 import { createCompetenceRegistry } from '@endwise/modules/competence';
 import { z } from 'zod';
 import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Må være YYYY-MM-DD');
 
@@ -29,9 +30,14 @@ export const competenceRouter = router({
         requiresCertification: z.boolean().default(false),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      createCompetenceRegistry(ctx.db).upsertSkill(ctx.tenantId, ctx.role, input),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await createCompetenceRegistry(ctx.db).upsertSkill(ctx.tenantId, ctx.role, input);
+      } catch (error) {
+        loggDealerWritePostgresFeil('competence', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre ferdigheten. Prøv igjen.');
+      }
+    }),
 
   // Kompetanse per mekaniker
   listMechanicSkills: protectedProcedure
@@ -57,20 +63,34 @@ export const competenceRouter = router({
         notes: z.string().max(400).optional(),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      createCompetenceRegistry(ctx.db).setMechanicSkill(ctx.tenantId, ctx.role, input),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await createCompetenceRegistry(ctx.db).setMechanicSkill(
+          ctx.tenantId,
+          ctx.role,
+          input,
+        );
+      } catch (error) {
+        loggDealerWritePostgresFeil('competence', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre kompetansen. Prøv igjen.');
+      }
+    }),
 
   removeMechanicSkill: adminProcedure
     .input(z.object({ mechanicId: z.uuid(), skillKey: z.string() }))
-    .mutation(({ ctx, input }) =>
-      createCompetenceRegistry(ctx.db).removeMechanicSkill(
-        ctx.tenantId,
-        ctx.role,
-        input.mechanicId,
-        input.skillKey,
-      ),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await createCompetenceRegistry(ctx.db).removeMechanicSkill(
+          ctx.tenantId,
+          ctx.role,
+          input.mechanicId,
+          input.skillKey,
+        );
+      } catch (error) {
+        loggDealerWritePostgresFeil('competence', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke fjerne kompetansen. Prøv igjen.');
+      }
+    }),
 
   /** Sertifiseringer som utløper snart — driver varsel i F3-04. */
   expiringCertifications: protectedProcedure

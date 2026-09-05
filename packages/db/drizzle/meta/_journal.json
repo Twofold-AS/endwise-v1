@@ -302,6 +302,13 @@
       "when": 1788580800000,
       "tag": "0042_services_owner_write",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1788582000000,
+      "tag": "0043_p0_dealer_owner_write",
+      "breakpoints": true
     }
   ]
 }

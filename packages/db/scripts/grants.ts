@@ -323,5 +323,169 @@ if (versionsGuard.rows[0]?.ok !== true) {
   process.exit(1);
 }
 
+const p0EierNavn = [
+  'customers_tenant_insert_owner',
+  'customers_tenant_select_owner',
+  'customers_tenant_update_owner',
+  'customer_notes_tenant_insert_owner',
+  'customer_notes_tenant_select_owner',
+  'vehicles_tenant_insert_owner',
+  'vehicles_tenant_select_owner',
+  'vehicles_tenant_update_owner',
+  'bookings_tenant_insert_owner',
+  'bookings_tenant_select_owner',
+  'bookings_tenant_update_owner',
+  'booking_services_tenant_insert_owner',
+  'booking_services_tenant_select_owner',
+  'skills_tenant_insert_owner',
+  'skills_tenant_select_owner',
+  'skills_tenant_update_owner',
+  'mechanic_skills_tenant_insert_owner',
+  'mechanic_skills_tenant_select_owner',
+  'mechanic_skills_tenant_update_owner',
+  'mechanic_skills_tenant_delete_owner',
+  'threads_tenant_insert_owner',
+  'threads_tenant_select_owner',
+  'threads_tenant_update_owner',
+  'thread_participants_tenant_insert_owner',
+  'thread_participants_tenant_select_owner',
+  'thread_participants_tenant_update_owner',
+  'messages_tenant_insert_owner',
+  'messages_tenant_select_owner',
+  'messages_tenant_update_owner',
+  'notifications_tenant_insert_owner',
+  'notifications_tenant_select_owner',
+  'notifications_tenant_update_owner',
+  'parts_tenant_insert_owner',
+  'parts_tenant_select_owner',
+  'parts_tenant_update_owner',
+  'stock_locations_tenant_insert_owner',
+  'stock_locations_tenant_select_owner',
+  'stock_locations_tenant_update_owner',
+  'stock_levels_tenant_insert_owner',
+  'stock_levels_tenant_select_owner',
+  'stock_levels_tenant_update_owner',
+  'stock_movements_tenant_insert_owner',
+  'stock_movements_tenant_select_owner',
+];
+const p0Eier = await pool.query<{ polname: string }>(
+  `
+  select p.polname
+    from pg_policy p
+    join pg_class c on c.oid = p.polrelid
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public'
+     and p.polname = any($1::text[])
+`,
+  [p0EierNavn],
+);
+const p0Funnet = new Set(p0Eier.rows.map((r) => r.polname));
+const manglerP0 = p0EierNavn.filter((n) => !p0Funnet.has(n));
+if (manglerP0.length > 0) {
+  console.error(
+    '[db] P0 dealer eier-INSERT/SELECT/UPDATE/DELETE under FORCE RLS mangler: ' +
+      manglerP0.join(', ') +
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0043).',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const p0GuardNavn = [
+  'customers_owner_update_guard',
+  'vehicles_owner_update_guard',
+  'bookings_owner_update_guard',
+  'skills_owner_update_guard',
+  'mechanic_skills_owner_update_guard',
+  'threads_owner_update_guard',
+  'thread_participants_owner_update_guard',
+  'messages_owner_update_guard',
+  'notifications_owner_update_guard',
+  'parts_owner_update_guard',
+  'stock_locations_owner_update_guard',
+  'stock_levels_owner_update_guard',
+];
+const p0GuardFns = await pool.query<{ proname: string }>(
+  `
+  select p.proname
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.proname = any($1::text[])
+`,
+  [p0GuardNavn],
+);
+const p0GuardFunnet = new Set(p0GuardFns.rows.map((r) => r.proname));
+const manglerP0Guard = p0GuardNavn.filter((n) => !p0GuardFunnet.has(n));
+if (manglerP0Guard.length > 0) {
+  console.error(
+    '[db] P0 dealer eier-UPDATE-guard mangler: ' +
+      manglerP0Guard.join(', ') +
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0043).',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const p0Guard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'customers_owner_update_guard'
+       and strpos(p.prosrc, 'eier-UPDATE kan ikke endre id, tenant_id eller created_at') > 0
+       and strpos(p.prosrc, 'new.id is distinct from old.id') > 0
+  ) as ok
+`);
+if (p0Guard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] customers_owner_update_guard mangler eller låser ikke identitet (0043). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const messagesGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'messages_owner_update_guard'
+       and strpos(p.prosrc, 'eier-UPDATE kan ikke endre meldingstekst eller avsender') > 0
+       and strpos(p.prosrc, 'new.body is distinct from old.body') > 0
+  ) as ok
+`);
+if (messagesGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] messages_owner_update_guard mangler eller låser ikke historikk (0043). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const bookingsGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'bookings_owner_update_guard'
+       and strpos(p.prosrc, 'new.service_version_id is distinct from old.service_version_id') > 0
+       and strpos(p.prosrc, 'new.idempotency_key is distinct from old.idempotency_key') > 0
+  ) as ok
+`);
+if (bookingsGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] bookings_owner_update_guard mangler eller låser ikke avtalt versjon (0043). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
 await pool.end();
 console.info('[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0026)');

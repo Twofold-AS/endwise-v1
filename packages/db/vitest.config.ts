@@ -39,6 +39,8 @@ export default defineConfig({
       'test/tenants-owner-update.test.ts',
       // Prod FORCE RLS: eier-INSERT/RETURNING på services (tjenestekatalog).
       'test/services-owner-write.test.ts',
+      // Prod FORCE RLS: eier-INSERT/RETURNING på P0 dealer-skriv.
+      'test/p0-dealer-owner-write.test.ts',
       // #121 RETURNING — eier-SELECT/revoke på invitations.
       'test/invitations-owner-returning.test.ts',
     ],

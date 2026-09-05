@@ -151,3 +151,24 @@ export function mapTjenestePostgresFeil(error: unknown): TRPCError {
     message: 'Kunne ikke lagre tjenesten. Prøv igjen.',
   });
 }
+
+/**
+ * Dealer-skriv (kunder, kjøretøy, bookinger, kompetanse, innboks, lager):
+ * Drizzle pakker SQL + params i feilmeldingen. Logg SQLSTATE —
+ * aldri query/params til UI.
+ */
+export function loggDealerWritePostgresFeil(domene: string, error: unknown): void {
+  const pg = lesPostgresCause(error);
+  console.error(`[${domene}.write]`, {
+    code: pg.code,
+    constraint: pg.constraint,
+  });
+}
+
+export function mapDealerWritePostgresFeil(error: unknown, melding: string): TRPCError {
+  if (error instanceof TRPCError) return error;
+  return new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: melding,
+  });
+}

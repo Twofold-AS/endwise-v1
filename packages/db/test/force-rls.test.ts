@@ -304,6 +304,87 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     ).toBe(true);
   });
 
+  it('③g P0 dealer eier-porter under FORCE RLS (kunder/booking/innboks/lager)', async () => {
+    const p0 = [
+      'customers_tenant_insert_owner',
+      'customers_tenant_select_owner',
+      'customers_tenant_update_owner',
+      'customer_notes_tenant_insert_owner',
+      'customer_notes_tenant_select_owner',
+      'vehicles_tenant_insert_owner',
+      'vehicles_tenant_select_owner',
+      'vehicles_tenant_update_owner',
+      'bookings_tenant_insert_owner',
+      'bookings_tenant_select_owner',
+      'bookings_tenant_update_owner',
+      'booking_services_tenant_insert_owner',
+      'booking_services_tenant_select_owner',
+      'skills_tenant_insert_owner',
+      'skills_tenant_select_owner',
+      'skills_tenant_update_owner',
+      'mechanic_skills_tenant_insert_owner',
+      'mechanic_skills_tenant_select_owner',
+      'mechanic_skills_tenant_update_owner',
+      'mechanic_skills_tenant_delete_owner',
+      'threads_tenant_insert_owner',
+      'threads_tenant_select_owner',
+      'threads_tenant_update_owner',
+      'thread_participants_tenant_insert_owner',
+      'thread_participants_tenant_select_owner',
+      'thread_participants_tenant_update_owner',
+      'messages_tenant_insert_owner',
+      'messages_tenant_select_owner',
+      'messages_tenant_update_owner',
+      'notifications_tenant_insert_owner',
+      'notifications_tenant_select_owner',
+      'notifications_tenant_update_owner',
+      'parts_tenant_insert_owner',
+      'parts_tenant_select_owner',
+      'parts_tenant_update_owner',
+      'stock_locations_tenant_insert_owner',
+      'stock_locations_tenant_select_owner',
+      'stock_locations_tenant_update_owner',
+      'stock_levels_tenant_insert_owner',
+      'stock_levels_tenant_select_owner',
+      'stock_levels_tenant_update_owner',
+      'stock_movements_tenant_insert_owner',
+      'stock_movements_tenant_select_owner',
+    ];
+    const res = await app.execute(
+      sql.raw(`
+      select p.polname, p.polcmd
+        from pg_policy p
+       where p.polname in (${p0.map((n) => `'${n}'`).join(', ')})
+       order by p.polname
+    `),
+    );
+    const navn = res.rows.map((r) => r.polname);
+    expect(navn, 'Mangler P0 eier-porter. Kjør `pnpm db:grants`.').toEqual(
+      expect.arrayContaining(p0),
+    );
+    expect(navn).toHaveLength(p0.length);
+    const insert = new Set(p0.filter((n) => n.endsWith('_insert_owner')));
+    const select = new Set(p0.filter((n) => n.endsWith('_select_owner')));
+    const update = new Set(p0.filter((n) => n.endsWith('_update_owner')));
+    const del = new Set(p0.filter((n) => n.endsWith('_delete_owner')));
+    expect(
+      res.rows.filter((r) => insert.has(String(r.polname))).every((r) => r.polcmd === 'a'),
+    ).toBe(true);
+    expect(
+      res.rows.filter((r) => select.has(String(r.polname))).every((r) => r.polcmd === 'r'),
+    ).toBe(true);
+    expect(
+      res.rows.filter((r) => update.has(String(r.polname))).every((r) => r.polcmd === 'w'),
+    ).toBe(true);
+    expect(res.rows.filter((r) => del.has(String(r.polname))).every((r) => r.polcmd === 'd')).toBe(
+      true,
+    );
+    expect(navn).toContain('mechanic_skills_tenant_delete_owner');
+    expect(navn).not.toContain('customer_notes_tenant_update_owner');
+    expect(navn).not.toContain('stock_movements_tenant_update_owner');
+    expect(navn).not.toContain('booking_services_tenant_update_owner');
+  });
+
   it('③d eier av tenants er superuser lokalt — Scaleway-antakelsen står i functions.sql', async () => {
     // CI/Docker: eieren bypasser force RLS. Vi kan ikke flytte eierskap her
     // uten å ødelegge resten av suiten. Kontraktstestene + ③c er stand-in.

@@ -1,12 +1,13 @@
 # Endwise landing — fasit (2026-09-05)
 
-Låst av Jonas. **Overstyring samme dag:** Mikael via Jonas — primær CTA er «Prøv Endwise».
+Låst av Jonas. **Overstyring samme dag:** Mikael via Jonas — primær CTA er «Prøv Endwise». **Overstyring samme dag (etter #129 / #132):** Mikael/Jonas — primær CTA-fyll er Action Blue `#0066cc`, ikke produkt-`#111`.
 
 Gjelder den offentlige markedssiden `/` i `apps/web` (ikke dealer-chrome).
 
 ## Visual
 
-- Lys default, Inter, aksent `#111`, tokens fra `packages/widget-tokens`
+- Lys default, Inter, parchment `#f5f5f7`, ink `#1d1d1f`, hårlinje `#e0e0e0`
+- Primær CTA: Action Blue `#0066cc` (`--ew-accent` / `bg-primary`), hover/strong `#0071e3`, soft `#e8f1fb` — tokens fra `packages/widget-tokens`
 - Logogrønn `#1ED27D` KUN i logoen — aldri på CTA
 - Mye luft, max innhold ~1120–1200
 - Myke produktrammer 12–16 radius
@@ -18,7 +19,7 @@ Gjelder den offentlige markedssiden `/` i `apps/web` (ikke dealer-chrome).
 
 - H1: **Verkstedet, samlet.**
 - Én linje om booking/innboks/jobber
-- Primær CTA: **Prøv Endwise** (`#111`, hvit tekst) → eksisterende demo-flyt / `hei@endwise.no`
+- Primær CTA: **Prøv Endwise** (Action Blue `#0066cc`, hvit tekst) → eksisterende demo-flyt / `hei@endwise.no`
 - Sekundær: Logg inn
 - Ett produktbilde-spor (plassholder OK)
 - Ingen karusell/video

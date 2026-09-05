@@ -136,13 +136,16 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'invitations_platform_admin_select_owner',
          'invitations_owner_revoke_update',
          'tenants_tenant_select_owner',
+         'tenants_tenant_update_owner',
          'dealer_profiles_tenant_select_owner',
          'tenant_modules_tenant_select_owner',
+         'tenant_modules_tenant_update_owner',
          'member_profiles_tenant_select_owner',
          'member_profiles_tenant_insert_owner',
          'member_profiles_tenant_update_owner',
          'mechanics_tenant_select_owner',
          'mechanics_tenant_insert_owner',
+         'invitations_tenant_select_owner',
          'audit_log_tenant_insert_owner',
          'tenants_slett_forhandler',
          'tenants_slett_forhandler_select',
@@ -165,13 +168,16 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         'invitations_platform_admin_select_owner',
         'invitations_owner_revoke_update',
         'tenants_tenant_select_owner',
+        'tenants_tenant_update_owner',
         'dealer_profiles_tenant_select_owner',
         'tenant_modules_tenant_select_owner',
+        'tenant_modules_tenant_update_owner',
         'member_profiles_tenant_select_owner',
         'member_profiles_tenant_insert_owner',
         'member_profiles_tenant_update_owner',
         'mechanics_tenant_select_owner',
         'mechanics_tenant_insert_owner',
+        'invitations_tenant_select_owner',
         'audit_log_tenant_insert_owner',
         'tenants_slett_forhandler',
         'tenants_slett_forhandler_select',
@@ -195,13 +201,16 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'invitations_platform_admin_select_owner',
          'invitations_owner_revoke_update',
          'tenants_tenant_select_owner',
+         'tenants_tenant_update_owner',
          'dealer_profiles_tenant_select_owner',
          'tenant_modules_tenant_select_owner',
+         'tenant_modules_tenant_update_owner',
          'member_profiles_tenant_select_owner',
          'member_profiles_tenant_insert_owner',
          'member_profiles_tenant_update_owner',
          'mechanics_tenant_select_owner',
-         'mechanics_tenant_insert_owner'
+         'mechanics_tenant_insert_owner',
+         'invitations_tenant_select_owner'
        )
        order by p.polname
     `);
@@ -212,6 +221,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       'invitations_owner_revoke_update',
       'invitations_platform_admin_insert_owner',
       'invitations_platform_admin_select_owner',
+      'invitations_tenant_select_owner',
       'mechanics_tenant_insert_owner',
       'mechanics_tenant_select_owner',
       'member_profiles_tenant_insert_owner',
@@ -219,8 +229,10 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       'member_profiles_tenant_update_owner',
       'tenant_modules_platform_admin_insert_owner',
       'tenant_modules_tenant_select_owner',
+      'tenant_modules_tenant_update_owner',
       'tenants_platform_admin_insert_owner',
       'tenants_tenant_select_owner',
+      'tenants_tenant_update_owner',
     ]);
     const insertNavn = new Set([
       'audit_log_tenant_insert_owner',
@@ -241,12 +253,18 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     expect(res.rows.find((r) => r.polname === 'member_profiles_tenant_update_owner')?.polcmd).toBe(
       'w',
     );
+    expect(res.rows.find((r) => r.polname === 'tenants_tenant_update_owner')?.polcmd).toBe('w');
+    expect(res.rows.find((r) => r.polname === 'tenant_modules_tenant_update_owner')?.polcmd).toBe(
+      'w',
+    );
+    expect(res.rows.find((r) => r.polname === 'invitations_tenant_select_owner')?.polcmd).toBe('r');
     const tenantSelect = new Set([
       'tenants_tenant_select_owner',
       'dealer_profiles_tenant_select_owner',
       'tenant_modules_tenant_select_owner',
       'member_profiles_tenant_select_owner',
       'mechanics_tenant_select_owner',
+      'invitations_tenant_select_owner',
     ]);
     expect(
       res.rows.filter((r) => tenantSelect.has(String(r.polname))).every((r) => r.polcmd === 'r'),

@@ -35,6 +35,8 @@ export default defineConfig({
       'test/tenants-owner-select.test.ts',
       // Prod FORCE RLS: eier-INSERT på member_profiles (godta).
       'test/member-profiles-owner-insert.test.ts',
+      // Prod FORCE RLS: eier-UPDATE tenants/tenant_modules (fullfor).
+      'test/tenants-owner-update.test.ts',
       // #121 RETURNING — eier-SELECT/revoke på invitations.
       'test/invitations-owner-returning.test.ts',
     ],

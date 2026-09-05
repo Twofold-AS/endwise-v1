@@ -141,13 +141,16 @@ const ownerInsert = await pool.query<{ polname: string }>(`
        'invitations_platform_admin_select_owner',
        'invitations_owner_revoke_update',
        'tenants_tenant_select_owner',
+       'tenants_tenant_update_owner',
        'dealer_profiles_tenant_select_owner',
        'tenant_modules_tenant_select_owner',
+       'tenant_modules_tenant_update_owner',
        'member_profiles_tenant_select_owner',
        'member_profiles_tenant_insert_owner',
        'member_profiles_tenant_update_owner',
        'mechanics_tenant_select_owner',
-       'mechanics_tenant_insert_owner'
+       'mechanics_tenant_insert_owner',
+       'invitations_tenant_select_owner'
      )
 `);
 const ownerNavn = new Set(ownerInsert.rows.map((r) => r.polname));
@@ -159,19 +162,22 @@ const manglerEier = [
   'invitations_platform_admin_select_owner',
   'invitations_owner_revoke_update',
   'tenants_tenant_select_owner',
+  'tenants_tenant_update_owner',
   'dealer_profiles_tenant_select_owner',
   'tenant_modules_tenant_select_owner',
+  'tenant_modules_tenant_update_owner',
   'member_profiles_tenant_select_owner',
   'member_profiles_tenant_insert_owner',
   'member_profiles_tenant_update_owner',
   'mechanics_tenant_select_owner',
   'mechanics_tenant_insert_owner',
+  'invitations_tenant_select_owner',
 ].filter((n) => !ownerNavn.has(n));
 if (manglerEier.length > 0) {
   console.error(
-    '[db] eier-INSERT/SELECT/revoke-policyer under FORCE RLS mangler: ' +
+    '[db] eier-INSERT/SELECT/UPDATE/revoke-policyer under FORCE RLS mangler: ' +
       manglerEier.join(', ') +
-      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038+0039+0040).',
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038+0039+0040+0041).',
   );
   await pool.end();
   process.exit(1);
@@ -215,6 +221,48 @@ const profileGuard = await pool.query<{ ok: boolean }>(`
 if (profileGuard.rows[0]?.ok !== true) {
   console.error(
     '[db] member_profiles_owner_update_guard mangler eller låser ikke nickname/PK (0040). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const tenantGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'tenants_owner_update_guard'
+       and strpos(p.prosrc, 'new.plan is distinct from old.plan') > 0
+       and strpos(p.prosrc, 'new.kind is distinct from old.kind') > 0
+       and strpos(p.prosrc, 'new.id is distinct from old.id') > 0
+       and strpos(p.prosrc, 'new.created_at is distinct from old.created_at') > 0
+  ) as ok
+`);
+if (tenantGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] tenants_owner_update_guard mangler eller låser ikke id/created_at/plan/kind (0041). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const modulesGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'tenant_modules_owner_update_guard'
+       and strpos(p.prosrc, 'new.tenant_id is distinct from old.tenant_id') > 0
+       and strpos(p.prosrc, 'new.module_key is distinct from old.module_key') > 0
+  ) as ok
+`);
+if (modulesGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] tenant_modules_owner_update_guard mangler eller låser ikke PK (0041). ' +
       'Kjør `pnpm db:grants` mot Scaleway-eieren.',
   );
   await pool.end();

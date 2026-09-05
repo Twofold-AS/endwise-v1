@@ -288,6 +288,13 @@
       "when": 1788498000000,
       "tag": "0040_member_profiles_owner_insert",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1788576000000,
+      "tag": "0041_tenants_owner_update",
+      "breakpoints": true
     }
   ]
 }

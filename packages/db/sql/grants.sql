@@ -179,6 +179,38 @@ create policy tenants_tenant_select_owner on tenants
     and id = nullif(current_setting('app.tenant_id', true), '')::uuid
   );
 
+-- onboarding.fullfor / forhandler.update / setModules / Quick-navn.
+-- 0039 er SELECT-only. Ingen platform_admin — withTenant setter bare
+-- app.tenant_id. Trigger i functions.sql låser id/created_at/plan/kind.
+-- Tillater name/slug/onboarding_completed_at/updated_at.
+drop policy if exists tenants_tenant_update_owner on tenants;
+create policy tenants_tenant_update_owner on tenants
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenants'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenants'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
 -- Login-sti inne i withTenant: forhandler.kort (dealer_profiles),
 -- session.me / onboarding (tenant_modules, member_profiles, mechanics).
 -- Samme eier-SELECT-gap som tenants. Ingen platform_admin.
@@ -205,6 +237,36 @@ create policy tenant_modules_tenant_select_owner on tenant_modules
   for select
   to public
   using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_modules'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+-- onboarding.fullfor slår på optional tillegg (enabled/source=dealer).
+-- setModules / Stripe skriver enabled/source/plan. Samme eier-port.
+drop policy if exists tenant_modules_tenant_update_owner on tenant_modules;
+create policy tenant_modules_tenant_update_owner on tenant_modules
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_modules'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
     current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and current_user = (
@@ -364,6 +426,26 @@ create policy invitations_platform_admin_select_owner on invitations
   using (
     current_setting('app.platform_admin', true) = 'on'
     and current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.invitations'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+-- Staff-invite (onboarding Team / invitasjoner.opprett) setter bare
+-- app.tenant_id. INSERT … RETURNING og listApne trenger eier-SELECT
+-- uten platform_admin. 0038-select_owner er opprettEier-stien.
+drop policy if exists invitations_tenant_select_owner on invitations;
+create policy invitations_tenant_select_owner on invitations
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
     and current_user is distinct from 'endwise_app'
     and current_user = (
       select pg_get_userbyid(c.relowner)

@@ -25,33 +25,35 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
-  it('telefon-hjem: hero → Innboks|Timeplan → Statistikk|Salg → resten, Lager lavt', () => {
+  it('telefon-hjem: hero → Timeplan|Rapporter → Innboks|Jobber (Tjenester/Salg er ikke hjem-kort)', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['verkstedet'],
-      ['innboks', 'timeplan'],
-      ['statistikk', 'tjenester'],
+      ['timeplan', 'statistikk'],
+      ['innboks', 'jobber'],
       ['kunder', 'organisasjon'],
+      ['samarbeid', 'hjelp'],
       ['lager'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(DEALER_PHONE_HJEM[1]?.kind).toBe('pair');
     expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('low');
     expect(PHONE_KORT_META.timeplan.label).toBe('Timeplan');
-    expect(PHONE_KORT_META.timeplan.href).toBe('/jobber');
+    expect(PHONE_KORT_META.timeplan.href).toBe('/jobber?visning=kalender');
     expect(PHONE_KORT_META.tjenester.label).toBe('Tjenester');
     expect(PHONE_KORT_META.tjenester.href).toBe('/prisliste');
+    expect(PHONE_KORT_META.statistikk.label).toBe('Rapporter');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     const keys = DEALER_PHONE_HJEM.flatMap((r) => r.keys);
-    expect(keys).not.toContain('rapporter');
-    expect(keys).not.toContain('jobber');
+    expect(keys).toContain('jobber');
+    expect(keys).not.toContain('tjenester');
     expect(keys).not.toContain('prisliste');
   });
 
-  it('Timeplan-kortet er ikon+navn uten jobbliste eller Ny jobb', () => {
+  it('Timeplan-kortet har neste rader uten Ny jobb', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem).not.toMatch(/Ny jobb/);
-    expect(hjem).not.toMatch(/plan\.map/);
-    expect(hjem).toMatch(/PHONE_KORT_META\.timeplan|key === 'timeplan'|innboks.*timeplan/);
+    expect(hjem).toMatch(/timeplanRader|plan\.map/);
+    expect(hjem).toMatch(/PHONE_KORT_META|key === 'timeplan'/);
   });
 
   it('PC-sidebar: Timeplan og Salg, Organisasjon uten Timeplan-pille', () => {

@@ -147,9 +147,9 @@ describe('Forhandler-info uten Grainient', () => {
     expect(dealer).toMatch(/navn=\{forhandlernavn\}/);
     expect(mek).toMatch(/ForhandlerInfoKort/);
     expect(dash).not.toMatch(/ForhandlerInfoKort/);
-    expect(dash).toMatch(/data-verkstedet-hero/);
-    expect(dash).toMatch(/tenantName/);
+    expect(dash).toMatch(/DealerDestinasjonskort/);
     expect(dash).toMatch(/sr-only/);
+    expect(dealer).toMatch(/variant="hero"/);
     expect(innboks).toMatch(/ForhandlerInfoKort/);
     expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(
       /Grainient|grainient|Galaxy|galaxy/,

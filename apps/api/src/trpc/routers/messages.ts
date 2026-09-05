@@ -14,6 +14,7 @@ import {
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { endwiseSupportProcedure, protectedProcedure, router } from '../init.ts';
+import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 /**
  * Den konkrete e-postkanalen for utgående meldinger.
@@ -53,7 +54,9 @@ function toTRPCError(error: unknown): never {
   if (error instanceof TomInvitasjonError) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
   }
-  throw error;
+  if (error instanceof TRPCError) throw error;
+  loggDealerWritePostgresFeil('messages', error);
+  throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre meldingen. Prøv igjen.');
 }
 
 export const messagesRouter = router({

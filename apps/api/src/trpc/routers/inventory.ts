@@ -2,6 +2,7 @@ import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, protectedProcedure, router, staffProcedure } from '../init.ts';
+import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 /**
  * Lager. Driftslageret. **kjerne — ingen modul-gate.**
@@ -153,22 +154,27 @@ export const inventoryRouter = router({
         minStock: z.number().int().min(0).optional(),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        const [finnes] = await tx
-          .select({ id: schema.parts.id })
-          .from(schema.parts)
-          .where(and(eq(schema.parts.tenantId, ctx.tenantId), eq(schema.parts.sku, input.sku)));
-        if (finnes) {
-          throw new TRPCError({ code: 'CONFLICT', message: `Delenummer «${input.sku}» finnes` });
-        }
-        const [ny] = await tx
-          .insert(schema.parts)
-          .values({ ...input, tenantId: ctx.tenantId })
-          .returning();
-        return ny;
-      }),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [finnes] = await tx
+            .select({ id: schema.parts.id })
+            .from(schema.parts)
+            .where(and(eq(schema.parts.tenantId, ctx.tenantId), eq(schema.parts.sku, input.sku)));
+          if (finnes) {
+            throw new TRPCError({ code: 'CONFLICT', message: `Delenummer «${input.sku}» finnes` });
+          }
+          const [ny] = await tx
+            .insert(schema.parts)
+            .values({ ...input, tenantId: ctx.tenantId })
+            .returning();
+          return ny;
+        });
+      } catch (error) {
+        loggDealerWritePostgresFeil('inventory', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre delen. Prøv igjen.');
+      }
+    }),
 
   /* Lokasjoner */
 
@@ -184,15 +190,20 @@ export const inventoryRouter = router({
 
   createLocation: adminProcedure
     .input(z.object({ code: z.string().min(1).max(32), name: z.string().min(1).max(120) }))
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        const [ny] = await tx
-          .insert(schema.stockLocations)
-          .values({ ...input, tenantId: ctx.tenantId })
-          .returning();
-        return ny;
-      }),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [ny] = await tx
+            .insert(schema.stockLocations)
+            .values({ ...input, tenantId: ctx.tenantId })
+            .returning();
+          return ny;
+        });
+      } catch (error) {
+        loggDealerWritePostgresFeil('inventory', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre lokasjonen. Prøv igjen.');
+      }
+    }),
 
   /* Bevegelser */
 
@@ -259,7 +270,7 @@ export const inventoryRouter = router({
         note: z.string().max(280).optional(),
       }),
     )
-    .mutation(({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       if (input.kind === 'adjust' && ctx.role !== 'dealer_admin' && ctx.role !== 'endwise_admin') {
         throw new TRPCError({
           code: 'FORBIDDEN',
@@ -267,105 +278,110 @@ export const inventoryRouter = router({
         });
       }
 
-      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        // Begge må høre til tenanten. RLS ville uansett skjult dem, men en
-        // eksplisitt sjekk gir «fant ikke» i stedet for en rar fremmednøkkelfeil.
-        const [del] = await tx
-          .select({ id: schema.parts.id })
-          .from(schema.parts)
-          .where(and(eq(schema.parts.id, input.partId), eq(schema.parts.tenantId, ctx.tenantId)));
-        const [lok] = await tx
-          .select({ id: schema.stockLocations.id })
-          .from(schema.stockLocations)
-          .where(
-            and(
-              eq(schema.stockLocations.id, input.locationId),
-              eq(schema.stockLocations.tenantId, ctx.tenantId),
-            ),
-          );
-        if (!del || !lok) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Ukjent del eller lokasjon' });
-        }
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          // Begge må høre til tenanten. RLS ville uansett skjult dem, men en
+          // eksplisitt sjekk gir «fant ikke» i stedet for en rar fremmednøkkelfeil.
+          const [del] = await tx
+            .select({ id: schema.parts.id })
+            .from(schema.parts)
+            .where(and(eq(schema.parts.id, input.partId), eq(schema.parts.tenantId, ctx.tenantId)));
+          const [lok] = await tx
+            .select({ id: schema.stockLocations.id })
+            .from(schema.stockLocations)
+            .where(
+              and(
+                eq(schema.stockLocations.id, input.locationId),
+                eq(schema.stockLocations.tenantId, ctx.tenantId),
+              ),
+            );
+          if (!del || !lok) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Ukjent del eller lokasjon' });
+          }
 
-        const [eksisterende] = await tx
-          .select()
-          .from(schema.stockLevels)
-          .where(
-            and(
-              eq(schema.stockLevels.tenantId, ctx.tenantId),
-              eq(schema.stockLevels.partId, input.partId),
-              eq(schema.stockLevels.locationId, input.locationId),
-            ),
-          );
+          const [eksisterende] = await tx
+            .select()
+            .from(schema.stockLevels)
+            .where(
+              and(
+                eq(schema.stockLevels.tenantId, ctx.tenantId),
+                eq(schema.stockLevels.partId, input.partId),
+                eq(schema.stockLevels.locationId, input.locationId),
+              ),
+            );
 
-        const naOnHand = eksisterende?.onHand ?? 0;
-        const naReservert = eksisterende?.reserved ?? 0;
+          const naOnHand = eksisterende?.onHand ?? 0;
+          const naReservert = eksisterende?.reserved ?? 0;
 
-        let onHand = naOnHand;
-        let reserved = naReservert;
-        switch (input.kind) {
-          case 'in':
-            onHand = naOnHand + input.quantity;
-            break;
-          case 'out':
-            onHand = naOnHand - input.quantity;
-            reserved = Math.max(0, naReservert - input.quantity);
-            break;
-          case 'adjust':
-            onHand = input.quantity;
-            break;
-          case 'reserve':
-            reserved = naReservert + input.quantity;
-            break;
-          case 'release':
-            reserved = Math.max(0, naReservert - input.quantity);
-            break;
-        }
+          let onHand = naOnHand;
+          let reserved = naReservert;
+          switch (input.kind) {
+            case 'in':
+              onHand = naOnHand + input.quantity;
+              break;
+            case 'out':
+              onHand = naOnHand - input.quantity;
+              reserved = Math.max(0, naReservert - input.quantity);
+              break;
+            case 'adjust':
+              onHand = input.quantity;
+              break;
+            case 'reserve':
+              reserved = naReservert + input.quantity;
+              break;
+            case 'release':
+              reserved = Math.max(0, naReservert - input.quantity);
+              break;
+          }
 
-        if (onHand < 0) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Beholdningen kan ikke bli negativ (har ${naOnHand})`,
-          });
-        }
-        // A08: kan ikke reservere mer enn det som faktisk står på hylla.
-        if (reserved > onHand) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Kan ikke reservere ${reserved} når bare ${onHand} står på lager`,
-          });
-        }
+          if (onHand < 0) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `Beholdningen kan ikke bli negativ (har ${naOnHand})`,
+            });
+          }
+          // A08: kan ikke reservere mer enn det som faktisk står på hylla.
+          if (reserved > onHand) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `Kan ikke reservere ${reserved} når bare ${onHand} står på lager`,
+            });
+          }
 
-        if (eksisterende) {
-          await tx
-            .update(schema.stockLevels)
-            .set({ onHand, reserved, updatedAt: sql`now()` })
-            .where(eq(schema.stockLevels.id, eksisterende.id));
-        } else {
-          await tx.insert(schema.stockLevels).values({
-            tenantId: ctx.tenantId,
-            partId: input.partId,
-            locationId: input.locationId,
-            onHand,
-            reserved,
-          });
-        }
+          if (eksisterende) {
+            await tx
+              .update(schema.stockLevels)
+              .set({ onHand, reserved, updatedAt: sql`now()` })
+              .where(eq(schema.stockLevels.id, eksisterende.id));
+          } else {
+            await tx.insert(schema.stockLevels).values({
+              tenantId: ctx.tenantId,
+              partId: input.partId,
+              locationId: input.locationId,
+              onHand,
+              reserved,
+            });
+          }
 
-        const [bevegelse] = await tx
-          .insert(schema.stockMovements)
-          .values({
-            tenantId: ctx.tenantId,
-            partId: input.partId,
-            locationId: input.locationId,
-            kind: input.kind,
-            quantity: input.quantity,
-            actorUserId: ctx.userId,
-            note: input.note,
-          })
-          .returning();
+          const [bevegelse] = await tx
+            .insert(schema.stockMovements)
+            .values({
+              tenantId: ctx.tenantId,
+              partId: input.partId,
+              locationId: input.locationId,
+              kind: input.kind,
+              quantity: input.quantity,
+              actorUserId: ctx.userId,
+              note: input.note,
+            })
+            .returning();
 
-        return { bevegelse, onHand, reserved, tilgjengelig: onHand - reserved };
-      });
+          return { bevegelse, onHand, reserved, tilgjengelig: onHand - reserved };
+        });
+      } catch (error) {
+        loggDealerWritePostgresFeil('inventory', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre lagerbevegelsen. Prøv igjen.');
+      }
     }),
 
   /** Nøkkeltall til Lager-forsiden. Aggregater, ingen PII. */

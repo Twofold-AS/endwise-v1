@@ -2,6 +2,7 @@ import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { router, staffProcedure } from '../init.ts';
+import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 /**
  * F2-06 / F5-02 — Kunderegister. Alle spørringer går gjennom withTenant → RLS.
@@ -179,49 +180,59 @@ export const customersRouter = router({
         phone: z.string().min(3).max(32).optional(),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        /**
-         * F2-06 / F5-55 — lokal kunde. Quick er fakta når det er koblet på
-         * (pull overskriver speilede rader). Uten Quick lagrer Endwise kunden
-         * selv. Ingen push, ingen modul-gate, ingen speilkrav.
-         */
-        const [created] = await tx
-          .insert(schema.customers)
-          .values({
-            name: input.name,
-            email: input.email,
-            phone: input.phone,
-            tenantId: ctx.tenantId,
-            source: 'endwise',
-          })
-          .returning();
-        return created;
-      }),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          /**
+           * F2-06 / F5-55 — lokal kunde. Quick er fakta når det er koblet på
+           * (pull overskriver speilede rader). Uten Quick lagrer Endwise kunden
+           * selv. Ingen push, ingen modul-gate, ingen speilkrav.
+           */
+          const [created] = await tx
+            .insert(schema.customers)
+            .values({
+              name: input.name,
+              email: input.email,
+              phone: input.phone,
+              tenantId: ctx.tenantId,
+              source: 'endwise',
+            })
+            .returning();
+          return created;
+        });
+      } catch (error) {
+        loggDealerWritePostgresFeil('customers', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre kunden. Prøv igjen.');
+      }
+    }),
 
   addNote: staffProcedure
     .input(z.object({ customerId: z.uuid(), body: z.string().min(1).max(4000) }))
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        const [finnes] = await tx
-          .select({ id: schema.customers.id })
-          .from(schema.customers)
-          .where(
-            and(
-              eq(schema.customers.id, input.customerId),
-              eq(schema.customers.tenantId, ctx.tenantId),
-            ),
-          );
-        if (!finnes) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke kunden' });
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [finnes] = await tx
+            .select({ id: schema.customers.id })
+            .from(schema.customers)
+            .where(
+              and(
+                eq(schema.customers.id, input.customerId),
+                eq(schema.customers.tenantId, ctx.tenantId),
+              ),
+            );
+          if (!finnes) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke kunden' });
 
-        const [note] = await tx
-          .insert(schema.customerNotes)
-          // `authorId` fra sesjonen, aldri fra input — ellers kunne noen
-          // skrevet et notat i en kollegas navn.
-          .values({ ...input, tenantId: ctx.tenantId, authorId: ctx.userId })
-          .returning();
-        return note;
-      }),
-    ),
+          const [note] = await tx
+            .insert(schema.customerNotes)
+            // `authorId` fra sesjonen, aldri fra input — ellers kunne noen
+            // skrevet et notat i en kollegas navn.
+            .values({ ...input, tenantId: ctx.tenantId, authorId: ctx.userId })
+            .returning();
+          return note;
+        });
+      } catch (error) {
+        loggDealerWritePostgresFeil('customers', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre notatet. Prøv igjen.');
+      }
+    }),
 });

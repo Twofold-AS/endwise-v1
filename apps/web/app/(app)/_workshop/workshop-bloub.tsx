@@ -379,11 +379,14 @@ export function WorkshopBloub() {
             <span
               data-ronny-tenker={opptatt ? '' : undefined}
               className={
-                opptatt ? 'ronny-tenker-tekst text-title' : 'truncate text-title text-[#1d1d1f]'
+                opptatt
+                  ? 'ronny-tenker-tekst truncate text-title'
+                  : 'truncate text-title text-[#1d1d1f]'
               }
             >
-              {opptatt ? TENKER_TEKST : 'Ronny'}
+              Ronny
             </span>
+            {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
           </div>
           <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
             <X size={18} strokeWidth={2} />

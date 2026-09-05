@@ -4,13 +4,13 @@ import { CTA_PRIMAR, CTA_SEKUNDAR } from './cta';
 import { DEMO_LENKE } from './demo';
 import { CTA_PRIMAR_TEKST, FOOTER_LENKER } from './innhold';
 
-/** Logogrønn #1ED27D bare i merket. Aldri på CTA. */
+/** Offentlig merke: ink (`bg-fg`). Dealer bruker /logo/logo.svg uten denne masken. */
 export function Merke({ storrelse = 22 }: { storrelse?: number }) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <span
         aria-hidden
-        className="shrink-0 bg-[#1ED27D]"
+        className="shrink-0 bg-fg"
         style={{
           width: storrelse,
           height: Math.round((storrelse * 1152) / 928),

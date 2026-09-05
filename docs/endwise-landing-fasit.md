@@ -1,6 +1,6 @@
 # Endwise landing — fasit (2026-09-05)
 
-Låst av Jonas. **Overstyring samme dag:** Mikael via Jonas — primær CTA er «Prøv Endwise». **Overstyring samme dag (etter #129 / #132):** Mikael/Jonas — primær CTA-fyll er Action Blue `#0066cc`, ikke produkt-`#111`.
+Låst av Jonas. **Overstyring samme dag:** Mikael via Jonas — primær CTA er «Prøv Endwise». **Overstyring samme dag (etter #129 / #132):** Mikael/Jonas — primær CTA-fyll er Action Blue `#0066cc`, ikke produkt-`#111`. **Overstyring 05.09.2026 (etter #133):** Mikael — logo på `/` er svart/ink, ikke logogrønn.
 
 Gjelder den offentlige markedssiden `/` i `apps/web` (ikke dealer-chrome).
 
@@ -8,7 +8,7 @@ Gjelder den offentlige markedssiden `/` i `apps/web` (ikke dealer-chrome).
 
 - Lys default, Inter, parchment `#f5f5f7`, ink `#1d1d1f`, hårlinje `#e0e0e0`
 - Primær CTA: Action Blue `#0066cc` (`--ew-accent` / `bg-primary`), hover/strong `#0071e3`, soft `#e8f1fb` — tokens fra `packages/widget-tokens`
-- Logogrønn `#1ED27D` KUN i logoen — aldri på CTA
+- Logo (merke + wordmark) er ink `#1d1d1f` / `bg-fg` / `text-fg` — aldri `#1ED27D` på landing. CTA forblir Action Blue.
 - Mye luft, max innhold ~1120–1200
 - Myke produktrammer 12–16 radius
 - Ingen blobatar/maskot, ingen roadmap-rød `#EE2924`, ingen grønn CTA

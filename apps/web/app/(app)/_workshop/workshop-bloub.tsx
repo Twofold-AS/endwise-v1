@@ -313,113 +313,113 @@ export function WorkshopBloub() {
 
   return (
     <>
-    <div className="md:hidden">
-      <button
-        type="button"
-        data-ronny-scrim
-        aria-label="Lukk Ronny"
-        className="fixed inset-0 z-[60] bg-fg/25"
-        onClick={lukk}
-      />
-      <div
-        data-ronny-sheet
-        data-ronny-flate
-        data-ronny-hoyde={hoyde}
-        data-workshop-shell
-        className={`fixed inset-x-0 bottom-0 z-[70] flex flex-col overflow-hidden bg-[#fff] shadow-none ${
-          hoyde === 100 ? 'h-[100dvh]' : 'h-[80dvh]'
-        }`}
-        style={{
-          height: sheetHoyde,
-          borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
-          borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
-          transition: `height 200ms ${APPLE_EASE}`,
-        }}
-        role="dialog"
-        aria-label="Ronny"
-      >
-        <div className="flex justify-center pt-2">
-          <button
-            type="button"
-            data-ronny-handtak
-            data-ronny-handtak-rad
-            data-ronny-utvid
-            aria-label="Dra for å lukke eller forstørre"
-            onPointerDown={onHandtakNed}
-            onPointerUp={onHandtakOpp}
-            className="flex min-h-11 cursor-grab touch-none items-center justify-center px-6 py-1 active:cursor-grabbing"
-          >
-            <RonnyHandtak />
-          </button>
-        </div>
+      <div className="md:hidden">
+        <button
+          type="button"
+          data-ronny-scrim
+          aria-label="Lukk Ronny"
+          className="fixed inset-0 z-[60] bg-fg/25"
+          onClick={lukk}
+        />
         <div
-          data-ronny-sheet-header
-          className="flex h-row shrink-0 items-center justify-between px-2"
+          data-ronny-sheet
+          data-ronny-flate
+          data-ronny-hoyde={hoyde}
+          data-workshop-shell
+          className={`fixed inset-x-0 bottom-0 z-[70] flex flex-col overflow-hidden bg-[#fff] shadow-none ${
+            hoyde === 100 ? 'h-[100dvh]' : 'h-[80dvh]'
+          }`}
+          style={{
+            height: sheetHoyde,
+            borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
+            borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
+            transition: `height 200ms ${APPLE_EASE}`,
+          }}
+          role="dialog"
+          aria-label="Ronny"
         >
-          <button
-            type="button"
-            data-ronny-forstor
-            aria-label="Forstørr"
-            aria-pressed={utvidet}
-            className={HIT}
-            onClick={forstor}
-          >
-            <RonnyForstorIkon />
-          </button>
-          <div className="flex min-w-0 items-center gap-2">
-            <span data-ronny-spin className="flex">
-              <BloubBot
-                size={28}
-                shape="cercle"
-                color="#1d1d1f"
-                paper="#ffffff"
-                state={tilstand}
-                expression={uttrykk}
-                follow={false}
-                still={false}
-                playing={false}
-              />
-            </span>
-            <span
-              data-ronny-tenker={opptatt ? '' : undefined}
-              className={
-                opptatt
-                  ? 'ronny-tenker-tekst truncate text-title'
-                  : 'truncate text-title text-[#1d1d1f]'
-              }
+          <div className="flex justify-center pt-2">
+            <button
+              type="button"
+              data-ronny-handtak
+              data-ronny-handtak-rad
+              data-ronny-utvid
+              aria-label="Dra for å lukke eller forstørre"
+              onPointerDown={onHandtakNed}
+              onPointerUp={onHandtakOpp}
+              className="flex min-h-11 cursor-grab touch-none items-center justify-center px-6 py-1 active:cursor-grabbing"
             >
-              Ronny
-            </span>
-            {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
-          </div>
-          <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
-            <X size={18} strokeWidth={2} />
-          </button>
-        </div>
-        <div
-          data-workshop-dock
-          data-ronny-visning={hoyde}
-          className="flex min-h-0 flex-1 flex-col bg-[#fff] text-[#1d1d1f]"
-        >
-          <div
-            data-ronny-svar-kort
-            className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"
-          >
-            {loggUtsnitt(phoneLoggRef)}
+              <RonnyHandtak />
+            </button>
           </div>
           <div
-            ref={composerRef}
-            data-ronny-composer
-            data-ronny-prompt-flate
-            className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
+            data-ronny-sheet-header
+            className="flex h-row shrink-0 items-center justify-between px-2"
           >
-            <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
-              {promptKort()}
+            <button
+              type="button"
+              data-ronny-forstor
+              aria-label="Forstørr"
+              aria-pressed={utvidet}
+              className={HIT}
+              onClick={forstor}
+            >
+              <RonnyForstorIkon />
+            </button>
+            <div className="flex min-w-0 items-center gap-2">
+              <span data-ronny-spin className="flex">
+                <BloubBot
+                  size={28}
+                  shape="cercle"
+                  color="#1d1d1f"
+                  paper="#ffffff"
+                  state={tilstand}
+                  expression={uttrykk}
+                  follow={false}
+                  still={false}
+                  playing={false}
+                />
+              </span>
+              <span
+                data-ronny-tenker={opptatt ? '' : undefined}
+                className={
+                  opptatt
+                    ? 'ronny-tenker-tekst truncate text-title'
+                    : 'truncate text-title text-[#1d1d1f]'
+                }
+              >
+                Ronny
+              </span>
+              {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
+            </div>
+            <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
+              <X size={18} strokeWidth={2} />
+            </button>
+          </div>
+          <div
+            data-workshop-dock
+            data-ronny-visning={hoyde}
+            className="flex min-h-0 flex-1 flex-col bg-[#fff] text-[#1d1d1f]"
+          >
+            <div
+              data-ronny-svar-kort
+              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"
+            >
+              {loggUtsnitt(phoneLoggRef)}
+            </div>
+            <div
+              ref={composerRef}
+              data-ronny-composer
+              data-ronny-prompt-flate
+              className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
+            >
+              <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
+                {promptKort()}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
       <div className="absolute inset-0 z-[60] hidden md:block" data-ronny-desktop>
         <button
           type="button"
@@ -469,10 +469,7 @@ export function WorkshopBloub() {
               <X size={18} strokeWidth={2} />
             </button>
           </div>
-          <div
-            data-workshop-dock
-            className="flex min-h-0 flex-1 flex-col bg-[#fff] text-[#1d1d1f]"
-          >
+          <div data-workshop-dock className="flex min-h-0 flex-1 flex-col bg-[#fff] text-[#1d1d1f]">
             <div
               data-ronny-svar-kort
               className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"

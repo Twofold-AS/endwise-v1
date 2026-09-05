@@ -40,7 +40,7 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   secondary: "border border-border bg-card text-foreground hover:border-border",
   ghost: "text-muted-foreground hover:text-foreground hover:bg-primary/5",
   outline:
-    "border border-border bg-transparent text-foreground hover:bg-primary/5",
+    "rounded-pill border border-[var(--ew-accent)] bg-transparent text-[var(--ew-accent)] hover:bg-[var(--ew-accent-soft)]",
 };
 
 // Endret fra oppstrøms — eierens designprinsipper:

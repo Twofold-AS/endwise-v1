@@ -21,7 +21,7 @@ const buttonVariants = cva(
           'rounded-pill border border-[var(--ew-accent)] bg-transparent text-[var(--ew-accent)] hover:bg-[var(--ew-accent-soft)]',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
-        link: 'text-primary underline-offset-4 hover:underline',
+        link: 'text-[var(--ew-accent)] underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-control px-3.5 has-[>svg]:px-3',

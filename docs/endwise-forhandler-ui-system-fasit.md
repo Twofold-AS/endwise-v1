@@ -1,6 +1,6 @@
 # Forhandler UI-system — designlås (05.09.2026 kveld)
 
-Overstyrer tidligere hjem-fasit for kort-radius og sidebar-skinne. Telefon-chrome og Ronny-låser står.
+Bygger videre på #137 (`47595f4` — hard Apple-hjem). Overstyrer kun kort-radius (8px) og sidebar-skinne. Hero/IA/tomtekst fra #137 står. Telefon-chrome og Ronny-låser står.
 
 ## Tokens (`@endwise/widget-tokens`)
 

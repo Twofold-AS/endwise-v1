@@ -48,6 +48,7 @@ describe('Forhandler UI-system — tokens', () => {
     expect(tema).toMatch(/--text-body--letter-spacing:\s*-0\.016em/);
     expect(knapp).toMatch(/bg-primary/);
     expect(knapp).toMatch(/border-\[var\(--ew-accent\)\]/);
+    expect(knapp).toMatch(/link: 'text-\[var\(--ew-accent\)\]/);
   });
 });
 

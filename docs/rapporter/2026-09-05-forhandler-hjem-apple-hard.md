@@ -17,3 +17,10 @@ Jonas DESIGN hard-fasit på dealer `/dashboard` hovedinnhold. #135 chrome er mer
 ## IA
 Hero → Timeplan|Rapporter → Innboks|Jobber → Kunder|Organisasjon → Hjelp (hopp Samarbeid) → Lager (+Butikk).
 `HJEM_KORT_TOM` uendret fra #136.
+
+## Verifisering
+- 91 tester grønne (inkl. chrome-filer identiske med `origin/main`).
+- Biome rent på PR-filene. CI «Lint · Typecheck · Test» er rød på pre-eksisterende Biome på `main` (ikke denne PR).
+- Preview: https://endwise-v1-web-git-cursor-forhandler-hje-8f19bf-endwise-twofold.vercel.app
+- `/dashboard` uten sesjon → `/signin` (magic link). Innlogget desktop-flate: parchment, hero-plate I dag/Pågår/Fullført, 2-og-2, I dag/Mer-etiketter.
+- #136 lukket som superseded.

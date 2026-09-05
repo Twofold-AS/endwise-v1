@@ -3,6 +3,7 @@ import { DataRegionViolation, type ModelProvider, providerSatisfies } from '@end
 import { isStepCount, type ModelMessage, streamText } from 'ai';
 import { type AgentDefinition, assertEntitled } from './agent.ts';
 import { type AgentContext, sealContext } from './context.ts';
+import { MODELL_MAX_RETRIES } from './modell-retry.ts';
 import { assertAsciiToolNames } from './tool-navn.ts';
 import { filtrerVerktoyAllowlist } from './verktoy-allowlist.ts';
 
@@ -100,6 +101,7 @@ export async function runAgentWithTools(options: RunWithToolsOptions): Promise<s
     messages,
     tools,
     stopWhen: isStepCount(agent.maxSteps),
+    maxRetries: MODELL_MAX_RETRIES,
   });
 
   let text = '';

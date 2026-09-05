@@ -4,6 +4,7 @@ export * from './context.ts';
 export * from './escalation.ts';
 export * from './klient-data.ts';
 export * from './loop.ts';
+export * from './modell-retry.ts';
 export * from './spawn.ts';
 export * from './stream-bridge.ts';
 export * from './tool-navn.ts';

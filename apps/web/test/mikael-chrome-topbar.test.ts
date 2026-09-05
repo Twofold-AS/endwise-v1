@@ -47,13 +47,13 @@ describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
 });
 
 describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', () => {
-  it('layout monterer DestinasjonSeksjonBar under WorkshopBloub', () => {
+  it('dealer-layout monterer ikke DestinasjonSeksjonBar; Endwise gjør det', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
-    const ronny = layout.lastIndexOf('<WorkshopBloub');
-    const bar = layout.lastIndexOf('<DestinasjonSeksjonBar');
-    expect(ronny).toBeGreaterThan(-1);
-    expect(bar).toBeGreaterThan(ronny);
+    const endwise = utenKommentarer(les('../app/(app)/endwise/layout.tsx'));
+    expect(layout).toMatch(/WorkshopBloub/);
+    expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
     expect(layout).not.toMatch(/TopBar/);
+    expect(endwise).toMatch(/DestinasjonSeksjonBar/);
   });
 
   it('stripen er h-control / text-label / sidebar-active / surface-2, ikke svarte piller', () => {

@@ -34,10 +34,8 @@ export function DestinasjonSeksjonBar() {
     erPlattform,
   });
   const tradId = innboksTradId(pathname);
-  /** Jonas 05.09: dealer har ikke top-bar 2 / piller (Organisasjon m.fl.). */
-  if (shell === 'forhandler' && !(erInnboksTrad(pathname) && tradId)) {
-    return null;
-  }
+  /** Dealer-layout monterer ikke denne. Tråd-chrome kun for plattform-inspect. */
+  if (shell === 'forhandler') return null;
   if (erInnboksTrad(pathname) && tradId) {
     return (
       <nav

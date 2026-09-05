@@ -5,7 +5,9 @@ Hører til dealer-chrome PR. **Ikke** Apple-redesign av forhandler-hjem.
 ## Top-bar 2 / piller
 
 - **Fjern** Organisasjon top-bar 2 (Oversikt · Timeplan · Ansatte · Abonnement · Integrasjoner).
-- **Ingen** ny pille-rad noe sted på dealer-flater (samme DestinasjonSeksjonBar-mønster).
+- **Ingen** `DestinasjonSeksjonBar` i `(app)/layout.tsx`. Dealer-stien monterer den ikke.
+- Endwise-admin/partner kan montere den i `endwise/layout`.
+- **Ingen** ny pille-rad noe sted på dealer-flater.
 - Telefon-chrome (merke / Ronny / toggle / tilbake-pil) står.
 
 ## `/organisasjon` (og telefon)

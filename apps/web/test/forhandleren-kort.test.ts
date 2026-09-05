@@ -19,9 +19,9 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
       'Abonnement',
       'Integrasjoner',
     ]);
+    const layout = les('../app/(app)/layout.tsx');
+    expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
     const bar = les('../app/(app)/_shell/seksjon-bar.tsx');
-    expect(bar).toMatch(/shell === 'forhandler'/);
-    expect(bar).toMatch(/return null/);
     expect(bar).not.toMatch(/data-org-piller/);
     const side = les('../app/(app)/organisasjon/page.tsx');
     expect(side).toMatch(/OrganisasjonListe/);

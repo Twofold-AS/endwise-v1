@@ -13,7 +13,6 @@ import { erTillattMekanikerSti } from './_shell/nav';
 import { PHONE_SHELL_ROT } from './_shell/phone-home';
 import { PhoneShell } from './_shell/phone-shell';
 import { PwaRegister } from './_shell/pwa-register';
-import { DestinasjonSeksjonBar } from './_shell/seksjon-bar';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
 import { RonnySheetProvider } from './_workshop/ronny-sheet-state';
@@ -116,7 +115,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    * Desktop-sidebar er persistent venstre skinne. Overlay/fullskjerm-drawer
    * er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
    * Fast toppbar med midtstilt ink-logo på telefon. Tilbake er pil med hale.
-   * PhoneBevel er borte. DestinasjonSeksjonBar under toppbaren. Ronny er
+   * PhoneBevel er borte. Dealer har ikke top-bar 2 / seksjonspiller.
+   * Plattform (Endwise) kan montere seksjonsbar i eget layout. Ronny er
    * telefon-sheet (80/100) og desktop høyre overlay (max 400px), ikke stripe.
    * K åpner quick actions i sidebaren.
    */
@@ -145,7 +145,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <Suspense fallback={null}>
                     <PhoneShell />
                     <WorkshopBloub />
-                    <DestinasjonSeksjonBar />
                   </Suspense>
                   <div
                     data-ronny-side-scroll

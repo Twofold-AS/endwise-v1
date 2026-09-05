@@ -100,6 +100,12 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(fab).not.toMatch(/playing=\{false\}/);
   });
 
+  it('dealer-layout har ikke DestinasjonSeksjonBar i treet', () => {
+    const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
+    expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
+    expect(layout).not.toMatch(/from '\.\/_shell\/seksjon-bar'/);
+  });
+
   it('høyre cluster er avatar rett til venstre for sidebar-toggle', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const avatar = shell.indexOf('data-ronny-avatar');

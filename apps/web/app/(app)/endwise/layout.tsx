@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, Suspense } from 'react';
 import { krevEndwiseAdminSide } from '@/lib/endwise-admin-gate';
 import { IkkeTilgang } from '../_shell/ikke-tilgang';
+import { DestinasjonSeksjonBar } from '../_shell/seksjon-bar';
 
 /**
  * Samme server-gate som `/admin`.
@@ -15,5 +16,12 @@ export const preferredRegion = 'cdg1';
 export default async function EndwiseLayout({ children }: { children: ReactNode }) {
   const utfall = await krevEndwiseAdminSide();
   if (utfall === 'forbidden') return <IkkeTilgang />;
-  return children;
+  return (
+    <>
+      <Suspense fallback={null}>
+        <DestinasjonSeksjonBar />
+      </Suspense>
+      {children}
+    </>
+  );
 }

@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { TIERS } from '@endwise/modules/billing/plans';
 import { describe, expect, it } from 'vitest';
@@ -26,6 +26,27 @@ function utenKommentarer(kilde: string) {
   return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
 
+/** Jonas/Mikael-lås: denne strengen skal aldri rendres som CTA på `/`. */
+const FORBUDT_CTA = /Book\s*demo|BookDemo|book-demo|book_demo/i;
+
+function markedsKilder(): { sti: string; kilde: string }[] {
+  const mappe = resolve(her, '../app/_markeds');
+  const filer = readdirSync(mappe)
+    .filter((f) => /\.(ts|tsx)$/.test(f))
+    .map((f) => ({
+      sti: `_markeds/${f}`,
+      kilde: readFileSync(join(mappe, f), 'utf8'),
+    }));
+  const sider = [
+    '../app/page.tsx',
+    '../app/layout.tsx',
+    '../app/kontakt/page.tsx',
+    '../app/personvern/page.tsx',
+    '../app/vilkar/page.tsx',
+  ].map((rel) => ({ sti: rel, kilde: les(rel) }));
+  return [...filer, ...sider];
+}
+
 describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
   const side = utenKommentarer(les('../app/_markeds/markeds-side.tsx'));
   const chrome = utenKommentarer(les('../app/_markeds/markeds-chrome.tsx'));
@@ -37,11 +58,37 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     expect(CTA_PRIMAR_TEKST).toBe('Prøv Endwise');
     expect(side).toMatch(/data-markeds-seksjon="hero"/);
     expect(chrome).toMatch(/CTA_PRIMAR_TEKST/);
-    expect(chrome).not.toMatch(/Book demo/);
+    expect(chrome).toMatch(/PrimarCtaLenke/);
     expect(chrome).toMatch(/Logg inn/);
     expect(chrome).toMatch(/DEMO_LENKE/);
     expect(DEMO_EPOST).toBe('hei@endwise.no');
     expect(DEMO_LENKE).toMatch(/^mailto:hei@endwise\.no/);
+    expect(decodeURIComponent(DEMO_LENKE)).toContain('subject=Prøv Endwise');
+  });
+
+  it('nav, hero og bunn-CTA bruker Prøv Endwise — priskort bruker Ta kontakt', () => {
+    const hero = side.slice(
+      side.indexOf('data-markeds-seksjon="hero"'),
+      side.indexOf('data-markeds-seksjon="lofter"'),
+    );
+    const pris = side.slice(
+      side.indexOf('data-markeds-seksjon="pris"'),
+      side.indexOf('data-markeds-seksjon="tillit"'),
+    );
+    const bunn = side.slice(side.indexOf('data-markeds-seksjon="bunn-cta"'));
+    expect(chrome).toMatch(/<PrimarCtaLenke \/>/);
+    expect(hero).toMatch(/<PrimarCtaLenke \/>/);
+    expect(bunn).toMatch(/<PrimarCtaLenke \/>/);
+    expect(pris).toMatch(/tekst="Ta kontakt"/);
+    expect(pris).not.toMatch(/<PrimarCtaLenke \/>/);
+    expect(pris).not.toMatch(/Prøv Endwise/);
+  });
+
+  it('null Book demo / BookDemo / book-demo i markedskilden som rendres på /', () => {
+    for (const { sti, kilde } of markedsKilder()) {
+      expect(kilde, sti).not.toMatch(FORBUDT_CTA);
+    }
+    expect(CTA_PRIMAR_TEKST).not.toMatch(FORBUDT_CTA);
   });
 
   it('seksjoner kommer i fasit-rekkefølge', () => {
@@ -101,7 +148,7 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
       utenKommentarer(les('../app/_markeds/cta.ts')),
     ].join('\n');
     expect(markeds).not.toMatch(/Start gratis/);
-    expect(markeds).not.toMatch(/Book demo/);
+    expect(markeds).not.toMatch(FORBUDT_CTA);
     expect(markeds).not.toMatch(/#EE2924|#1ED27D.*cta|bg-success|bg-green/i);
     expect(markeds).not.toMatch(/sticky/);
     expect(markeds).not.toMatch(/blobatar|carousel|<video/i);
@@ -115,6 +162,7 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     expect(les('../app/personvern/page.tsx')).toMatch(/Personvern/);
     expect(les('../app/vilkar/page.tsx')).toMatch(/Vilkår/);
     expect(les('../app/kontakt/page.tsx')).toMatch(/DEMO_EPOST|DEMO_LENKE/);
+    expect(les('../app/kontakt/page.tsx')).toMatch(/Prøv Endwise/);
   });
 
   it('innlogget bruker redirectes fortsatt — sesjonsporten bor i page.tsx', () => {

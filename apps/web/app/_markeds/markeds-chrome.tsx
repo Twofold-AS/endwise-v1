@@ -37,7 +37,11 @@ export function PrimarCtaLenke({
   tekst?: string;
 }) {
   return (
-    <a href={DEMO_LENKE} className={className}>
+    <a
+      href={DEMO_LENKE}
+      className={className}
+      data-markeds-cta={tekst === CTA_PRIMAR_TEKST ? 'prov-endwise' : 'ta-kontakt'}
+    >
       {tekst}
     </a>
   );

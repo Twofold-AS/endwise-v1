@@ -23,20 +23,20 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
   const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
   const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
 
-  it('telefon-toppbar er fast, logo til venstre, åpne-ikon rett ved logoen', () => {
+  it('telefon-toppbar er fast, logo til venstre, åpne-ikon ytterst til høyre', () => {
     expect(shell).toMatch(/data-phone-top-bar/);
     expect(shell).toMatch(/sticky top-0/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
     expect(shell).toMatch(/data-shell-tilbake/);
-    expect(shell).not.toMatch(/ml-auto/);
+    expect(chrome).toMatch(/justify-between/);
     expect(shell).not.toMatch(/PhoneBevel|BEVEL/);
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).not.toMatch(/PhoneBevel/);
     expect(chrome).toMatch(/SHELL_LOGO_PX = 24/);
     expect(chrome).toMatch(/SHELL_HEADER_RAD/);
-    expect(chrome).toMatch(/flex h-row items-center gap-2 px-3/);
+    expect(chrome).toMatch(/flex h-row w-full items-center justify-between gap-2 px-3/);
     expect(header).toMatch(/SHELL_LOGO_PX/);
     expect(header).toMatch(/SHELL_LOGO_WRAP/);
     expect(header).not.toMatch(/justify-between px-1/);

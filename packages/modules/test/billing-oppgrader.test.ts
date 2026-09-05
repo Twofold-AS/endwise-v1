@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { nesteTier, oppgraderKnappetekst } from '../src/billing/plans.ts';
+import {
+  effektivPlanNokkel,
+  nesteTier,
+  oppgraderKnappetekst,
+  visOppgraderCta,
+} from '../src/billing/plans.ts';
 
 describe('oppgraderingspille — TIERS-stigen uten priser', () => {
   it('start og ukjent går til Pro', () => {
@@ -25,5 +30,15 @@ describe('oppgraderingspille — TIERS-stigen uten priser', () => {
       expect(oppgraderKnappetekst(key)).not.toMatch(/\d/);
       expect(oppgraderKnappetekst(key)).not.toMatch(/kr|øre|nok/i);
     }
+  });
+
+  it('billing-nøkkel vinner over tenants.plan, ukjent billing faller tilbake', () => {
+    expect(effektivPlanNokkel(null, 'enterprise')).toBe('enterprise');
+    expect(effektivPlanNokkel('pro', 'enterprise')).toBe('pro');
+    expect(effektivPlanNokkel('ukjent', 'start')).toBe('start');
+    expect(effektivPlanNokkel(null, null)).toBeNull();
+    expect(visOppgraderCta('enterprise')).toBe(false);
+    expect(visOppgraderCta('pro')).toBe(true);
+    expect(visOppgraderCta(null)).toBe(true);
   });
 });

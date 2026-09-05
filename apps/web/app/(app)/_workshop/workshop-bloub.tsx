@@ -24,7 +24,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { PHONE_KORT_FYLL, VERKSTED_INNHOLD } from '../_shell/phone-home';
+import { PHONE_KORT_FYLL } from '../_shell/phone-home';
 import { useSidebarState } from '../_shell/sidebar-state';
 import { erTillattGaaTil } from './gaa-til';
 import { GradualBlur } from './gradual-blur';
@@ -49,8 +49,8 @@ const DOCK_SAMTALE = 'auto';
 const PEEK_MAX = 'min(36dvh, 16rem)';
 /** Telefon-chat mindre enn desktop 17px body. */
 const BOBLE_TEKST = 'text-[14px] leading-snug md:text-body md:leading-relaxed';
-/** Samme hårlinje + 18px som prompt-kortet — idle-stripe og peek-panel. */
-const KORT_KANT = 'overflow-hidden rounded-[18px] border border-[#e0e0e0] shadow-none';
+/** Lukket/peek-skall: full innholdskolonne, samme kant-til-kant som full-åpen. */
+const LUKKET_SKALL = 'w-full overflow-hidden shadow-none';
 /** Safe-area er padding inne i prompt-baren, ikke et løft fra bunnkanten. */
 const COMPOSER_SAFE = 'max(6px, env(safe-area-inset-bottom))';
 const IDLE_TEKST = 'Trykk på KI-Ronny';
@@ -523,7 +523,7 @@ export function WorkshopBloub() {
   const promptKort = (
     <div
       data-ronny-prompt-kort
-      className={`${PHONE_KORT_FYLL} border-[#e0e0e0] bg-[#fff] px-2 py-1.5 text-[#1d1d1f]`}
+      className={`${PHONE_KORT_FYLL} rounded-[18px] border-[#e0e0e0] bg-[#fff] px-2 py-1.5 text-[#1d1d1f]`}
       style={{ borderRadius: RAMME_PX }}
     >
       <PromptInput onSubmit={onPrompt} className="border-0 bg-transparent shadow-none">
@@ -561,14 +561,13 @@ export function WorkshopBloub() {
         className="relative z-40 h-11 max-h-[44px] shrink-0 md:h-control md:max-h-[32px]"
       >
         {utvidet ? null : (
-          <div className="absolute inset-x-0 top-0 z-40">
-            <div data-ronny-verksted-bredde className={VERKSTED_INNHOLD}>
+          <div className="absolute inset-x-0 top-0 z-40 w-full">
+            <div data-ronny-skall-bredde className="w-full">
               <div
                 data-workshop-shell
-                className={`${KORT_KANT}${visPeek ? ' bg-[#f5f5f7]' : ''}`}
+                className={`${LUKKET_SKALL}${visPeek ? ' bg-[#f5f5f7]' : ''}`}
                 style={{
                   height: skallHoyde(visning, visPeek),
-                  borderRadius: RAMME_PX,
                   transition: PANEL_OVERGANG,
                 }}
               >

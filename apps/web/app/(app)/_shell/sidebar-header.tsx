@@ -12,7 +12,7 @@ const LOGO = SHELL_LOGO_PX;
 
 /**
  * Sidebar-topp uten visningsvelger. Ett skall per innlogging.
- * Lukke-ikonet sitter rett ved logoen (ikke ytterst til høyre).
+ * Logo venstre, lukk/åpne ytterst til høyre.
  */
 export function SidebarHeader({
   collapsed,
@@ -48,7 +48,9 @@ export function SidebarHeader({
 
   if (inspect) {
     return (
-      <div className={`flex w-full items-center gap-2 ${collapsed ? 'justify-center' : ''}`}>
+      <div
+        className={`flex w-full items-center justify-between gap-2 ${collapsed ? 'justify-center' : ''}`}
+      >
         <Link
           href={(inspectTilbakeHref ?? '/endwise') as Route}
           data-shell-logo
@@ -75,7 +77,7 @@ export function SidebarHeader({
   }
 
   return (
-    <>
+    <div className="flex w-full items-center justify-between gap-2">
       <span data-shell-logo className={SHELL_LOGO_WRAP} title={navn}>
         <Image
           src="/logo/logo.svg"
@@ -86,6 +88,6 @@ export function SidebarHeader({
         />
       </span>
       {minimer}
-    </>
+    </div>
   );
 }

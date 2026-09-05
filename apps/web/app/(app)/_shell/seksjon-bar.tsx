@@ -10,6 +10,7 @@ import { type InboxPart, useInboxFilter } from './inbox-filter';
 import { shellForBruker } from './nav';
 import { destinasjonFaner } from './seksjon-faner';
 import { erInnboksTrad, innboksTradId } from './seksjon-sti';
+import { TilbakePil } from './tilbake-pil';
 
 /**
  * Top-bar 2 under Ronny på ALLE destinasjoner (Jonas 28.08 / Mikael 02.09).
@@ -43,9 +44,11 @@ export function DestinasjonSeksjonBar() {
       >
         <Link
           href={'/innboks' as Route}
-          className="inline-flex min-h-11 shrink-0 items-center rounded-control px-2.5 text-label text-fg hover:bg-surface-2 md:h-control md:min-h-control"
+          aria-label="Tilbake"
+          title="Tilbake"
+          className="inline-flex min-h-11 shrink-0 items-center rounded-control px-2.5 text-fg hover:bg-surface-2 md:h-control md:min-h-control"
         >
-          Tilbake
+          <TilbakePil />
         </Link>
         <button
           type="button"

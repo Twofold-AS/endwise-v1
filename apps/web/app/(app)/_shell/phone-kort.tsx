@@ -44,7 +44,15 @@ export function PhoneKort({
           </span>
         ) : null}
       </div>
-      {meta ? <p className="text-[12px] text-fg-muted leading-snug">{meta}</p> : null}
+      {meta ? (
+        <p data-phone-kort-meta className="text-[12px] text-fg-muted leading-snug">
+          {meta}
+        </p>
+      ) : children ? null : (
+        <p data-phone-kort-meta className="text-[12px] text-fg-muted leading-snug">
+          Ingen data ennå
+        </p>
+      )}
       {children}
     </Link>
   );

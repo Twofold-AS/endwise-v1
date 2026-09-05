@@ -151,7 +151,9 @@ describe('Forhandler-info uten Grainient', () => {
     expect(dash).toMatch(/tenantName/);
     expect(dash).toMatch(/sr-only/);
     expect(innboks).toMatch(/ForhandlerInfoKort/);
-    expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(/Grainient|grainient|Galaxy|galaxy/);
+    expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(
+      /Grainient|grainient|Galaxy|galaxy/,
+    );
   });
 });
 
@@ -169,15 +171,13 @@ describe('telefon-toppbar og sidebar-overlay', () => {
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
   });
 
-  it('logo til venstre, åpne-sidebar-ikon rett ved logoen, tilbake er history', () => {
+  it('logo til venstre, åpne-sidebar-ikon ytterst til høyre, tilbake er history', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).not.toMatch(/ml-auto/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
-    expect(shell).toMatch(/Tilbake/);
     expect(shell).toMatch(/TilbakePil/);
     expect(shell).toMatch(/router\.back\(\)/);
-    expect(shell).toMatch(/Tilbake/);
+    expect(shell).toMatch(/aria-label="Tilbake"/);
     expect(shell).not.toMatch(/ChevronLeft/);
   });
 });

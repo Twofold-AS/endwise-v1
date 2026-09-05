@@ -133,20 +133,15 @@ describe('Mikael 02.09 — desktop-sidebar er skinne, overlay bare telefon', () 
 });
 
 describe('Mikael 02.09 — Ronny sentrert, Galaxy på Oppgrader', () => {
-  it('Ronny + tekst er absolutt midtstilt i stripen på PC og telefon', () => {
-    const stripe = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
-    expect(stripe).toMatch(/data-workshop-cluster/);
-    expect(stripe).toMatch(
-      /data-workshop-cluster[\s\S]{0,240}absolute inset-0[\s\S]{0,120}items-center[\s\S]{0,80}justify-center/,
-    );
-    expect(stripe).toMatch(/IDLE_TEKST = 'Trykk på KI-Ronny'/);
-    expect(stripe).toMatch(/Trykk på KI-Ronny/);
-    expect(stripe).not.toMatch(/flex-1 truncate/);
-    expect(stripe).not.toMatch(/md:justify-start|md:justify-end|md:items-start|md:items-end/);
-    expect(stripe).not.toMatch(/data-workshop-cluster[\s\S]{0,240}justify-start/);
-    expect(stripe).not.toMatch(
-      /data-workshop-cluster[\s\S]{0,240}items-start|data-workshop-cluster[\s\S]{0,240}items-end/,
-    );
+  it('telefon-logo er midtstilt i toppbaren, uten Ronny-stripe', () => {
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
+    expect(shell).toMatch(/data-shell-logo/);
+    expect(shell).toMatch(/absolute inset-0/);
+    expect(shell).toMatch(/justify-center/);
+    expect(fab).not.toMatch(/data-workshop-cluster/);
+    expect(fab).not.toMatch(/Trykk på KI-Ronny/);
+    expect(fab).not.toMatch(/IDLE_TEKST/);
   });
 
   it('Oppgrader bruker Galaxy inne i knappen, ikke Grainient', () => {

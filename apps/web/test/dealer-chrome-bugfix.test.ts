@@ -24,21 +24,20 @@ function utenKommentarer(kilde: string) {
   return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
 
-describe('Ronny-stripe — lukket/peek er full skallbredde', () => {
-  it('lukket skall er w-full uten Verksted-kort-max-width', () => {
+describe('Ronny — stripe/peek er borte, sheet er full bredde', () => {
+  it('ingen Verksted-kort-max-width og ingen peek-stripe', () => {
     const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
-    const lukket = fab.slice(0, fab.indexOf('data-ronny-flate'));
-    expect(lukket).toMatch(/data-ronny-skall-bredde[\s\S]{0,80}className="w-full"/);
-    expect(lukket).toMatch(/LUKKET_SKALL = 'w-full overflow-hidden shadow-none'/);
-    expect(lukket).not.toMatch(/data-ronny-verksted-bredde/);
-    expect(lukket).not.toMatch(/VERKSTED_INNHOLD/);
-    expect(lukket).not.toMatch(/max-w-\[520px\]/);
-    expect(lukket).not.toMatch(/md:max-w-\[1120px\]/);
+    expect(fab).toMatch(/data-ronny-sheet/);
+    expect(fab).not.toMatch(/data-ronny-verksted-bredde/);
+    expect(fab).not.toMatch(/VERKSTED_INNHOLD/);
+    expect(fab).not.toMatch(/max-w-\[520px\]/);
+    expect(fab).not.toMatch(/md:max-w-\[1120px\]/);
+    expect(fab).not.toMatch(/data-workshop-strip/);
   });
 
-  it('full-åpen stripe er fortsatt viewport-bredde (left-0 right-0)', () => {
+  it('åpen sheet er viewport-bredde (inset-x-0 bottom-0)', () => {
     const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
-    expect(fab).toMatch(/fixed right-0 bottom-0 left-0/);
+    expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
   });
 });
 

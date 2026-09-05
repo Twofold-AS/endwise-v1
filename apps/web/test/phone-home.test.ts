@@ -206,7 +206,9 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
     expect(shell).not.toMatch(/PHONE_SAFE_BUNN/);
     expect(shell).toMatch(/logo\/logo\.svg/);
-    expect(shell).toMatch(/logo-invert/);
+    expect(shell).toMatch(/bg-fg/);
+    expect(shell).toMatch(/maskImage|WebkitMaskImage|mask-image/);
+    expect(shell).not.toMatch(/logo-invert/);
     expect(shell).toMatch(/bg-bg/);
     expect(shell).not.toMatch(/bg-white/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
@@ -241,7 +243,8 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(layout).not.toMatch(/PhoneNav/);
     expect(layout).toMatch(/PhoneShell/);
-    expect(shell).not.toMatch(/hamburger|\bMenu\b|Sheet|visningsvelger|Kontor|Gulvet/i);
+    expect(shell).not.toMatch(/hamburger|\bMenu\b|visningsvelger|Kontor|Gulvet/i);
+    expect(shell).not.toMatch(/<Sheet|PhoneNav|Mer-sheet/);
     expect(shell).not.toMatch(/PhoneHScroll|overflow-x-auto/);
     expect(hjem).not.toMatch(/hamburger|bottom-nav|grid-cols-5/);
     expect(layout).not.toMatch(/MobileShell/);

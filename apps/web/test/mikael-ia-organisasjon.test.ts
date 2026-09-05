@@ -214,7 +214,8 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(layout).toMatch(/DestinasjonSeksjonBar/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/logo\/logo\.svg/);
-    expect(shell).toMatch(/logo-invert/);
+    expect(shell).toMatch(/bg-fg/);
+    expect(shell).not.toMatch(/logo-invert/);
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);

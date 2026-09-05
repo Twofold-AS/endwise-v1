@@ -1,7 +1,6 @@
 /**
- * Tilbake er bare pil — ingen «Tilbake»-tekst.
- * Path fra samme 24px-strekfamilie som `icons/x.svg` / NyMeldingIkon
- * (stroke 2, round). Ingen arrow-left i assets; ikke lucide.
+ * Tilbake er bare pil med hale (←), stroke 2 — ingen «Tilbake»-tekst.
+ * Samme 24px-strekfamilie som `icons/x.svg`. Ikke lucide.
  */
 export function TilbakePil({ size = 16 }: { size?: number }) {
   return (
@@ -15,7 +14,7 @@ export function TilbakePil({ size = 16 }: { size?: number }) {
       aria-hidden
     >
       <path
-        d="M15 6L9 12L15 18"
+        d="M19 12H5M12 19l-7-7 7-7"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"

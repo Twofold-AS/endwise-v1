@@ -16,6 +16,7 @@ import { PwaRegister } from './_shell/pwa-register';
 import { DestinasjonSeksjonBar } from './_shell/seksjon-bar';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
+import { RonnySheetProvider } from './_workshop/ronny-sheet-state';
 import { WorkshopBloub } from './_workshop/workshop-bloub';
 
 /**
@@ -114,10 +115,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   /*
    * Desktop-sidebar er persistent venstre skinne. Overlay/fullskjerm-drawer
    * er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
-   * Fast toppbar med 24px-logo på telefon. Tilbake er pil-SVG uten tekst.
-   * PhoneBevel er borte. DestinasjonSeksjonBar under Ronny på alle sider.
-   * Workshop-stripen (Grainient, KI-Ronny midtstilt i stripen) er ~44px på telefon og
-   * 32px på desktop. K åpner quick actions i sidebaren på desktop.
+   * Fast toppbar med midtstilt ink-logo på telefon. Tilbake er pil med hale.
+   * PhoneBevel er borte. DestinasjonSeksjonBar under toppbaren. Ronny er
+   * telefon-sheet (80/100), ikke stripe. K åpner quick actions i sidebaren.
    */
   /*
    * `<Suspense>` rundt Sidebar og WorkshopBloub er påkrevd, ikke pynt. Begge
@@ -140,15 +140,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Sidebar />
               </Suspense>
               <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                <Suspense
-                  fallback={
-                    <div className="h-11 max-h-[44px] shrink-0 bg-bg md:h-control md:max-h-[32px]" />
-                  }
-                >
-                  <PhoneShell />
-                  <WorkshopBloub />
-                  <DestinasjonSeksjonBar />
-                </Suspense>
+                <RonnySheetProvider>
+                  <Suspense fallback={null}>
+                    <PhoneShell />
+                    <WorkshopBloub />
+                    <DestinasjonSeksjonBar />
+                  </Suspense>
+                </RonnySheetProvider>
                 <div
                   data-ronny-side-scroll
                   className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"

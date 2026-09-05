@@ -56,7 +56,7 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(rad).toMatch(/min-w-0 flex-1 truncate/);
   });
 
-  it('app-skall: ingen breadcrumb-topbar, ingen mørkt-toggle, Grainient 32px-stripe', () => {
+  it('app-skall: ingen breadcrumb-topbar, ingen mørkt-toggle, ingen Ronny-stripe på desktop', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const rot = les('../app/layout.tsx');
     const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
@@ -67,11 +67,11 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(layout).toMatch(/WorkshopBloub/);
     expect(rot).toMatch(/data-theme="light"/);
     expect(rot).not.toMatch(/TEMA_SKRIPT|endwise:tema/);
-    expect(workshop).toMatch(/Grainient/);
-    expect(workshop).toMatch(/md:h-control md:max-h-\[32px\]/);
-    expect(workshop).toMatch(/h-11 max-h-\[44px\]/);
-    expect(workshop).toMatch(/data-workshop-strip/);
-    expect(workshop).toMatch(/Trykk på KI-Ronny/);
+    expect(workshop).not.toMatch(/<Grainient/);
+    expect(workshop).not.toMatch(/data-workshop-strip/);
+    expect(workshop).not.toMatch(/Trykk på KI-Ronny/);
+    expect(workshop).toMatch(/md:hidden/);
+    expect(workshop).toMatch(/data-ronny-sheet/);
     expect(workshop).toMatch(/data-workshop-dock/);
     expect(workshop).toMatch(/fixed inset-x-0 bottom-0/);
     expect(workshop).toMatch(/data-ronny-composer/);

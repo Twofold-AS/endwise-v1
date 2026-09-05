@@ -1,7 +1,7 @@
 /**
  * Pil fra `packages/ui/src/assets/icons/chevron-down.svg`
  * (identisk path i `icons-v2/arrow-dropdown.svg`).
- * Ikke brukt i stripen (Mikael 02.09.2026: avatar + tekst).
+ * Ikke brukt i dealer-chrome (Jonas/Mikael sheet 05.09.2026).
  * Ikke lucide. Ikke hjemmelaget chevron-path.
  */
 
@@ -9,11 +9,36 @@ const RONNY_PIL_D =
   'M16.2772 9.74681C16.3272 9.19679 15.9218 8.71038 15.3718 8.66038C14.8218 8.61038 14.3354 9.01572 14.2854 9.56574L15.2813 9.65627L16.2772 9.74681ZM14.8125 14.8126L14.9031 15.8085C15.3838 15.7647 15.7647 15.3838 15.8084 14.9031L14.8125 14.8126ZM9.5657 14.2854C9.01568 14.3354 8.61034 14.8218 8.66034 15.3718C8.71034 15.9219 9.19675 16.3272 9.74677 16.2772L9.65623 15.2813L9.5657 14.2854ZM9.89459 8.48041C9.50406 8.08989 8.8709 8.08989 8.48037 8.48041C8.08985 8.87094 8.08985 9.5041 8.48037 9.89463L9.18748 9.18752L9.89459 8.48041ZM15.2813 9.65627L14.2854 9.56574L13.8166 14.722L14.8125 14.8126L15.8084 14.9031L16.2772 9.74681L15.2813 9.65627ZM14.8125 14.8126L14.722 13.8167L9.5657 14.2854L9.65623 15.2813L9.74677 16.2772L14.9031 15.8085L14.8125 14.8126ZM14.8125 14.8126L15.5196 14.1055L9.89459 8.48041L9.18748 9.18752L8.48037 9.89463L14.1054 15.5197L14.8125 14.8126ZM21 12H20C20 16.4183 16.4183 20 12 20V21V22C17.5228 22 22 17.5228 22 12H21ZM12 21V20C7.58172 20 4 16.4183 4 12H3H2C2 17.5228 6.47715 22 12 22V21ZM3 12H4C4 7.58172 7.58172 4 12 4V3V2C6.47715 2 2 6.47715 2 12H3ZM12 3V4C16.4183 4 20 7.58172 20 12H21H22C22 6.47715 17.5228 2 12 2V3Z';
 
 /**
- * Horisontal strek (iOS-grabber). Ingen pakke i UI-PAKKER har denne —
- * shadcn Sheet bruker Radix-håndtak vi ikke henter. Se UI-PAKKER §8.
+ * Horisontal strek (iOS-grabber), ~36×5 muted capsule.
+ * Ingen pakke i UI-PAKKER har denne — vaul/shadcn Sheet er ikke hentet.
  */
 export function RonnyHandtak() {
-  return <span data-ronny-strek className="block h-1 w-10 rounded-full bg-white/80" aria-hidden />;
+  return (
+    <span data-ronny-strek className="block h-[5px] w-9 rounded-full bg-fg-muted/50" aria-hidden />
+  );
+}
+
+/** Forstørr til 100 % — ikon, ikke tekst. */
+export function RonnyForstorIkon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      role="presentation"
+      aria-hidden
+    >
+      <path
+        d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 export function RonnyPil({ size = 16, opp = false }: { size?: number; opp?: boolean }) {

@@ -303,7 +303,9 @@ describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
   it('sidebar er overlay på telefon og fast skinne på md+', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     expect(sidebar).toMatch(/data-phone-sidebar/);
-    expect(sidebar).toMatch(/fixed inset-0/);
+    expect(sidebar).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(sidebar).toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
+    expect(sidebar).not.toMatch(/fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/md:w-\[248px\]/);

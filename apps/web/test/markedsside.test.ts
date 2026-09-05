@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { DEMO_EPOST, DEMO_LENKE } from '../app/_markeds/demo';
 import {
   BILDE_SLOTS,
+  CTA_PRIMAR_TEKST,
   FOOTER_LENKER,
   H1,
   LOFTER,
@@ -33,8 +34,10 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
 
   it('rendrer H1 og hero-CTA fra fasiten', () => {
     expect(H1).toBe('Verkstedet, samlet.');
+    expect(CTA_PRIMAR_TEKST).toBe('Prøv Endwise');
     expect(side).toMatch(/data-markeds-seksjon="hero"/);
-    expect(chrome).toMatch(/tekst = 'Book demo'/);
+    expect(chrome).toMatch(/CTA_PRIMAR_TEKST/);
+    expect(chrome).not.toMatch(/Book demo/);
     expect(chrome).toMatch(/Logg inn/);
     expect(chrome).toMatch(/DEMO_LENKE/);
     expect(DEMO_EPOST).toBe('hei@endwise.no');
@@ -98,6 +101,7 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
       utenKommentarer(les('../app/_markeds/cta.ts')),
     ].join('\n');
     expect(markeds).not.toMatch(/Start gratis/);
+    expect(markeds).not.toMatch(/Book demo/);
     expect(markeds).not.toMatch(/#EE2924|#1ED27D.*cta|bg-success|bg-green/i);
     expect(markeds).not.toMatch(/sticky/);
     expect(markeds).not.toMatch(/blobatar|carousel|<video/i);

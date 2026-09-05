@@ -9,6 +9,8 @@ import type { StaticImageData } from 'next/image';
  */
 
 export const H1 = 'Verkstedet, samlet.';
+/** Mikael via Jonas 05.09.2026 — ikke «Book demo». */
+export const CTA_PRIMAR_TEKST = 'Prøv Endwise';
 export const HERO_LINJE =
   'Booking, innboks og jobber i ett system — for MC-, båt- og ATV-verkstedet.';
 

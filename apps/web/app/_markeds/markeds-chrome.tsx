@@ -2,7 +2,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { CTA_PRIMAR, CTA_SEKUNDAR } from './cta';
 import { DEMO_LENKE } from './demo';
-import { FOOTER_LENKER } from './innhold';
+import { CTA_PRIMAR_TEKST, FOOTER_LENKER } from './innhold';
 
 /** Logogrønn #1ED27D bare i merket. Aldri på CTA. */
 export function Merke({ storrelse = 22 }: { storrelse?: number }) {
@@ -29,9 +29,9 @@ export function Merke({ storrelse = 22 }: { storrelse?: number }) {
   );
 }
 
-export function BookDemoLenke({
+export function PrimarCtaLenke({
   className = CTA_PRIMAR,
-  tekst = 'Book demo',
+  tekst = CTA_PRIMAR_TEKST,
 }: {
   className?: string;
   tekst?: string;
@@ -62,7 +62,7 @@ export function MarkedsNav() {
       </Link>
       <nav className="flex items-center gap-1 sm:gap-2" aria-label="Konto">
         <LoggInnLenke />
-        <BookDemoLenke />
+        <PrimarCtaLenke />
       </nav>
     </header>
   );

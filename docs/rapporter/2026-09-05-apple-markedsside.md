@@ -1,7 +1,7 @@
 # Rapport — 05.09.2026 — Apple-markedsside endwise.no (F5-35)
 
 **Roadmap:** F5-35 (`done`, Jonas-fasit 05.09.2026)  
-**Godkjenning:** låst design fra Jonas. Mikael hoppet over H1/CTA-widget — Jonas-default brukt.  
+**Godkjenning:** Jonas-fasit 05.09.2026. Mikael via Jonas samme dag: primær CTA «Prøv Endwise», ikke «Book demo». H1 urørt.  
 **PR:** draft, ikke merge.
 
 ---
@@ -13,7 +13,7 @@
 | **F5-35** | Offentlig `/` byttet til Apple-markedsflate i repoet. Ingen Framer-redirect å erstatte — ruten var allerede Next `apps/web/app/page.tsx`. |
 
 **Flate (rekkefølge låst):**
-1. Hero — H1 «Verkstedet, samlet.» + én linje, primær `Book demo` (`#111`), sekundær Logg inn, ett produktspor
+1. Hero — H1 «Verkstedet, samlet.» + én linje, primær `Prøv Endwise` (`#111`), sekundær Logg inn, ett produktspor
 2. Tre like løfter: Booking · Innboks · Verkstedet
 3. Produktskudd: desktop + telefon Min dag (tekst/bilde veksler én gang)
 4. Pris Start 4 490 / Pro 8 490 / Enterprise 12 490 eks. mva (fra `TIERS`, Pro valgt)
@@ -32,6 +32,7 @@ Alt gikk som planlagt. `endwise-landing-fasit.md` lå ikke i repoet — fasiten 
 - Sesjonsporten i `page.tsx` urørt (innlogget → `session.me.landing`).
 - Pris leses fra `TIERS` (SMS-lås 4490/8490/12490), ikke skrevet inn på nytt.
 - `ProduktRamme`: fast aspect, bytt `kilde` senere uten reflow.
+- Mikael via Jonas: primær CTA hero/nav/footer = «Prøv Endwise». Priskort beholdt «Ta kontakt».
 
 ## 4. Neste steg
 

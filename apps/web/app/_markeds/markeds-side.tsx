@@ -10,7 +10,7 @@ import {
   PRODUKT,
   TILLIT,
 } from './innhold';
-import { BookDemoLenke, LoggInnLenke, MarkedsFooter, MarkedsNav } from './markeds-chrome';
+import { LoggInnLenke, MarkedsFooter, MarkedsNav, PrimarCtaLenke } from './markeds-chrome';
 import { ProduktRamme } from './produkt-ramme';
 
 const KOLONNE = 'mx-auto w-full max-w-[1120px] px-6 md:px-8';
@@ -31,7 +31,7 @@ export function MarkedsSide() {
             {HERO_LINJE}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-            <BookDemoLenke />
+            <PrimarCtaLenke />
             <LoggInnLenke />
           </div>
         </div>
@@ -120,7 +120,7 @@ export function MarkedsSide() {
                 ))}
               </ul>
               <div className="mt-8">
-                <BookDemoLenke tekst="Ta kontakt" />
+                <PrimarCtaLenke tekst="Ta kontakt" />
               </div>
             </li>
           ))}
@@ -139,7 +139,7 @@ export function MarkedsSide() {
             {BUNN_CTA_TITTEL}
           </h2>
           <p className="max-w-[36em] text-body text-fg-muted">{BUNN_CTA_TEKST}</p>
-          <BookDemoLenke />
+          <PrimarCtaLenke />
         </div>
       </section>
 

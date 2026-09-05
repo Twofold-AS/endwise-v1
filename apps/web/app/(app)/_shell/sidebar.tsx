@@ -7,12 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   type LucideIcon,
-  Zap,
+  Plus,
+  SPRING_LAYOUT,
 } from '@endwise/ui';
+import { LayoutGroup, motion } from 'motion/react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import {
@@ -23,9 +25,10 @@ import {
 } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
-import { BEVEL, CountBadge, NewBadge } from './cards';
+import { CountBadge, NewBadge } from './cards';
 import {
   FORHANDLER_NAV,
+  FORHANDLER_NAV_GRUPPER,
   isItemActive,
   itemsForRole,
   type NavItem,
@@ -37,15 +40,19 @@ import {
 import { OppgraderPille } from './oppgrader-pille';
 import { SHELL_HEADER_RAD } from './phone-chrome';
 import { SidebarHeader } from './sidebar-header';
-import { useSidebarState } from './sidebar-state';
+import {
+  SIDEBAR_COLLAPSE_SLOP,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+  useSidebarState,
+} from './sidebar-state';
 
-/** Nav-ikoner 16px. */
+/** Nav-ikoner 16px. Ikon-knapper 24px. */
 const IKON = 16;
 
 /**
- * Desktop: persistent venstre skinne (alltid synlig, innhold ved siden).
- * Telefon: fullskjerm-overlay, lukket default, åpnes fra PhoneShell.
- * Hvit flate. Hjelp-TipCard er ute; nederst sitter Galaxy-oppgraderingspillen.
+ * Desktop: Fluid inset + offcanvas. Ingen ikon-skinne — peek ved hover/klikk.
+ * Telefon: modal drawer under toppbaren, persisteres aldri.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -53,6 +60,7 @@ export function Sidebar() {
   const router = useRouter();
   const {
     navn,
+    userId,
     role,
     isMechanic,
     jobbfunksjon,
@@ -66,8 +74,18 @@ export function Sidebar() {
   const inspectSlug = verkstedSlugFromPath(pathname);
   const fra = searchParams?.get('fra') ?? null;
   const inspectTilbake = tilbakeHref(fra);
-  const { collapsed, phoneOpen, closePhone } = useSidebarState();
-  const smal = collapsed && !phoneOpen;
+  const {
+    open,
+    setOpen,
+    phoneOpen,
+    closePhone,
+    width,
+    setWidth,
+    isPeeking,
+    schedulePeek,
+    scheduleUnpeek,
+    cancelPeek,
+  } = useSidebarState();
 
   const shell = inspect
     ? 'forhandler'
@@ -87,7 +105,8 @@ export function Sidebar() {
         remapNav(item, inspectSlug ?? '', fra),
       )
     : itemsForRole(navForShell(shell), navRolle, shopEnabled);
-  const items = rawItems;
+  const hoved = rawItems.filter((i) => i.group !== 'footer');
+  const footer = rawItems.filter((i) => i.group === 'footer');
   const settingsNav = inspect ? null : settingsForShell(shell);
 
   const threads = trpc.messages.listThreads.useQuery(undefined, {
@@ -97,12 +116,6 @@ export function Sidebar() {
     enabled: Boolean(role) && (shell === 'endwise' || shell === 'endwise_partner') && !inspect,
     retry: false,
   });
-  /**
-   * Uleste hjelpeartikler. Egen, billig telling: badgen står på en rad
-   * som rendres på hver side, og å hente 50 artikler for å telle dem ville vært
-   * å laste innholdet for å vise et tall. Ingen lang staleTime: Ny og slideren
-   * skal treffe nye artikler ved window-focus.
-   */
   const helpdeskUlest = trpc.helpdesk.ulesteAntall.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: true,
@@ -115,9 +128,6 @@ export function Sidebar() {
     return (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0);
   }, [shell, support.data, threads.data]);
 
-  // K åpner quick actions — bare desktop. På telefon er Handlinger borte
-  // (ingen bevel, ingen overflow). Dropdown portaler til body, så ⌘K
-  // må ikke åpne den under md.
   const [quickOpen, setQuickOpen] = useState(false);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -140,183 +150,302 @@ export function Sidebar() {
     return () => document.removeEventListener('keydown', onEscape);
   }, [phoneOpen, closePhone]);
 
-  /**
-   * hard navigasjon, ikke `router.push`.
-   * `router.push` beholder dokumentet — og dermed hele React Query-cachen med
-   * forrige brukers kunder, meldinger og team. Logger noen andre inn på samme
-   * maskin, ser de et glimt av data de ikke har tilgang til før de nye
-   * spørringene lander. RLS hindrer at de henter noe nytt; den kan ikke tømme
-   * en cache som allerede ligger i minnet.
-   * En full sidelast river ned alt. Samme grep som innlogging og
-   * kontekstbytte bruker, av samme grunn.
-   */
+  useEffect(() => {
+    if (open || !isPeeking) return;
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') scheduleUnpeek();
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [open, isPeeking, scheduleUnpeek]);
+
   async function logout() {
     await authClient.signOut();
     window.location.assign('/signin');
   }
 
+  const grupper =
+    shell === 'forhandler'
+      ? FORHANDLER_NAV_GRUPPER.map((g) => ({
+          ...g,
+          items: g.keys
+            .map((k) => hoved.find((i) => i.key === k))
+            .filter((i): i is NavItem => Boolean(i)),
+        })).filter((g) => g.items.length > 0)
+      : [{ id: 'alle', label: null as string | null, items: hoved }];
+
+  const desktopSynlig = open || isPeeking;
+  const peekOverlay = !open && isPeeking;
+
   return (
-    <aside
-      data-sidebar
-      data-phone-sidebar={phoneOpen ? 'open' : 'closed'}
-      className={`flex-col border-border border-r bg-[#ffffff] ${
-        phoneOpen
-          ? `fixed inset-x-0 bottom-0 z-50 flex w-full top-[calc(env(safe-area-inset-top)+var(--ew-row-h))] pb-[env(safe-area-inset-bottom)] md:static md:inset-auto md:top-auto md:z-auto ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
-          : `hidden md:flex md:static ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
-      }`}
-    >
-      <div data-shell-header className={`hidden shrink-0 md:flex ${SHELL_HEADER_RAD}`}>
-        {/*
-         * `dealerName` er ekte navn fra `tenants.name`. Placeholderen
-         * «Endwise-forhandler» sto hardkodet her fram til — den var
-         * ikke bare stygg, den var en påstand om hvor du er logget inn.
-         */}
-        <SidebarHeader
-          collapsed={smal}
-          navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
-          inspect={inspect}
-          inspectTilbakeHref={inspectTilbake}
+    <>
+      {!open ? (
+        <button
+          type="button"
+          data-sidebar-peek-edge
+          aria-label="Vis sidebaren"
+          className="fixed top-0 bottom-0 left-0 z-40 hidden w-3 md:block"
+          onPointerEnter={schedulePeek}
+          onPointerLeave={scheduleUnpeek}
+          onClick={() => setOpen(true)}
         />
-      </div>
+      ) : null}
 
-      {/* Innhold */}
-      <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-3">
-        {shell === 'forhandler' && !inspect && (
-          <DropdownMenu open={quickOpen} onOpenChange={setQuickOpen}>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                style={BEVEL}
-                title={smal ? 'Handlinger (⌘K)' : undefined}
-                className={`flex h-control w-full items-center gap-2 rounded-control text-label transition hover:brightness-[0.98] focus-visible:outline-2 focus-visible:outline-ring ${
-                  smal ? 'justify-center px-0' : 'px-2.5'
-                }`}
-              >
-                <Zap size={IKON} strokeWidth={1.75} className="shrink-0 text-accent-strong" />
-                {!smal && (
-                  <>
-                    <span className="flex-1 text-left">Handlinger</span>
-                    <kbd className="rounded-badge border border-border/60 px-1.5 font-mono text-[11px] text-fg-muted">
-                      ⌘K
-                    </kbd>
-                  </>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="start" sideOffset={16} className="z-50">
-              <DropdownMenuHeader>Handlinger</DropdownMenuHeader>
-              {QUICK_ACTIONS.map((a) => (
-                <DropdownMenuItem
-                  key={a.href}
-                  onSelect={() => {
-                    if (phoneOpen) closePhone();
-                    router.push(a.href as Route);
-                  }}
-                >
-                  <a.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                  <span className="flex-1">{a.label}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+      {phoneOpen ? (
+        <button
+          type="button"
+          data-sidebar-scrim
+          aria-label="Lukk sidebaren"
+          className="fixed inset-x-0 bottom-0 z-40 bg-fg/20 md:hidden top-[calc(env(safe-area-inset-top)+var(--ew-row-h))]"
+          onClick={closePhone}
+        />
+      ) : null}
 
-        <nav
-          aria-label="Hovednavigasjon"
-          className="flex min-h-0 flex-1 flex-col gap-[4px] overflow-y-auto"
+      {peekOverlay ? (
+        <button
+          type="button"
+          data-sidebar-peek-scrim
+          aria-label="Lukk forhåndsvisning"
+          className="fixed inset-0 z-40 hidden bg-fg/10 md:block"
+          onClick={() => scheduleUnpeek()}
+        />
+      ) : null}
+
+      <aside
+        data-sidebar
+        data-sidebar-variant="inset"
+        data-sidebar-collapsible="offcanvas"
+        data-sidebar-state={open ? 'expanded' : 'collapsed'}
+        data-sidebar-peek={isPeeking ? '1' : undefined}
+        data-phone-sidebar={phoneOpen ? 'open' : 'closed'}
+        style={{ ['--sidebar-width' as string]: `${width}px` }}
+        onPointerEnter={() => {
+          if (!open) {
+            cancelPeek();
+            schedulePeek();
+          }
+        }}
+        onPointerLeave={() => {
+          if (!open) scheduleUnpeek();
+        }}
+        className={`flex-col bg-sidebar text-fg ${
+          phoneOpen
+            ? 'fixed inset-x-0 bottom-0 z-50 flex w-full bg-card top-[calc(env(safe-area-inset-top)+var(--ew-row-h))] pb-[env(safe-area-inset-bottom)] md:static md:inset-auto md:top-auto md:z-auto md:bg-sidebar'
+            : 'hidden md:flex'
+        } ${
+          peekOverlay
+            ? 'md:fixed md:inset-y-2 md:left-2 md:z-50 md:rounded-lg md:border md:border-border md:bg-card'
+            : open
+              ? 'md:relative md:z-auto'
+              : 'md:hidden'
+        }`}
+      >
+        <div
+          className={`relative flex h-full min-h-0 flex-col ${desktopSynlig || phoneOpen ? '' : 'md:hidden'}`}
+          style={phoneOpen ? undefined : { width }}
         >
-          {items.map((item) => (
-            <Fragment key={item.key}>
-              {item.dividerBefore ? <hr className="my-1.5 h-px border-0 bg-border" /> : null}
-              <NavRow
-                item={item}
-                pathname={pathname}
-                unread={unread}
-                helpdesk={helpdeskUlest.data ?? 0}
-                collapsed={smal}
+          <div data-shell-header className={`hidden shrink-0 md:flex ${SHELL_HEADER_RAD}`}>
+            <SidebarHeader
+              navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
+              inspect={inspect}
+              inspectTilbakeHref={inspectTilbake}
+            />
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-3">
+            <DropdownMenu open={quickOpen} onOpenChange={setQuickOpen}>
+              <DropdownMenuTrigger asChild>
+                <button type="button" className="sr-only" tabIndex={-1}>
+                  Handlinger
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="start" sideOffset={16} className="z-50">
+                <DropdownMenuHeader>Handlinger</DropdownMenuHeader>
+                {QUICK_ACTIONS.map((a) => (
+                  <DropdownMenuItem
+                    key={a.href}
+                    onSelect={() => {
+                      if (phoneOpen) closePhone();
+                      router.push(a.href as Route);
+                    }}
+                  >
+                    <a.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+                    <span className="flex-1">{a.label}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <LayoutGroup id="dealer-sidebar-active">
+              <nav
+                aria-label="Hovednavigasjon"
+                className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto"
+              >
+                {grupper.map((gruppe) => (
+                  <div key={gruppe.id} data-sidebar-group={gruppe.id} className="flex flex-col gap-1">
+                    {gruppe.label ? (
+                      <p className="px-2.5 text-[12px] text-fg-muted">{gruppe.label}</p>
+                    ) : null}
+                    <div className="flex flex-col gap-[4px]">
+                      {gruppe.items.map((item) => (
+                        <NavRow
+                          key={item.key}
+                          item={item}
+                          pathname={pathname}
+                          unread={unread}
+                          helpdesk={helpdeskUlest.data ?? 0}
+                          onNavigate={phoneOpen ? closePhone : undefined}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {hoved.length === 0 ? (
+                  <p className="px-2.5 py-6 text-[12px] text-fg-muted leading-relaxed">
+                    {chromeFeilet
+                      ? 'Kunne ikke laste menyen. Prøv å oppdatere.'
+                      : shell === 'forhandler' && !shopEnabled
+                        ? 'Ingen destinasjoner å vise.'
+                        : 'Tom foreløpig.'}
+                  </p>
+                ) : null}
+              </nav>
+            </LayoutGroup>
+
+            <div className="flex min-w-0 flex-col gap-3">
+              {footer.map((item) => (
+                <NavRow
+                  key={item.key}
+                  item={item}
+                  pathname={pathname}
+                  unread={unread}
+                  helpdesk={helpdeskUlest.data ?? 0}
+                  onNavigate={phoneOpen ? closePhone : undefined}
+                />
+              ))}
+              {shell !== 'endwise' && shell !== 'endwise_partner' && <OppgraderPille />}
+              <BrukerRad
+                navn={navn}
+                userId={userId}
+                laster={rolleLaster}
+                onLoggUt={logout}
+                innstillingerHref={
+                  settingsNav?.href ??
+                  (shell === 'mekaniker' ? '/min-dag/meg' : '/innstillinger/profil')
+                }
                 onNavigate={phoneOpen ? closePhone : undefined}
               />
-            </Fragment>
-          ))}
-          {items.length === 0 && !smal && (
-            <p className="px-2.5 py-6 text-[12px] text-fg-muted leading-relaxed">
-              {chromeFeilet
-                ? 'Kunne ikke laste menyen. Prøv å oppdatere.'
-                : shell === 'forhandler' && !shopEnabled
-                  ? 'Ingen destinasjoner å vise.'
-                  : 'Tom foreløpig.'}
-            </p>
-          )}
-        </nav>
+            </div>
+          </div>
 
-        {/* Bunn: oppgraderingspille over profil/logg ut. Ingen Hjelp-TipCard. */}
-        <div className="flex min-w-0 flex-col gap-3">
-          {!smal && shell !== 'endwise' && shell !== 'endwise_partner' && <OppgraderPille />}
-          <BrukerRad
-            navn={navn}
-            laster={rolleLaster}
-            collapsed={smal}
-            onLoggUt={logout}
-            innstillingerHref={
-              settingsNav?.href ??
-              (shell === 'mekaniker' ? '/min-dag/meg' : '/innstillinger/profil')
-            }
-            onNavigate={phoneOpen ? closePhone : undefined}
-          />
+          {open ? <SidebarResizeHandle width={width} setWidth={setWidth} setOpen={setOpen} /> : null}
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 
-/**
- * Én nav-rad, 32px. Piller bor på siden — raden er alltid en destinasjon.
- */
+function SidebarResizeHandle({
+  width,
+  setWidth,
+  setOpen,
+}: {
+  width: number;
+  setWidth: (px: number) => void;
+  setOpen: (neste: boolean | ((forrige: boolean) => boolean)) => void;
+}) {
+  const start = useRef({ x: 0, w: width });
+
+  return (
+    <div
+      data-sidebar-resize
+      role="separator"
+      aria-orientation="vertical"
+      aria-valuemin={SIDEBAR_MIN_WIDTH}
+      aria-valuemax={SIDEBAR_MAX_WIDTH}
+      aria-valuenow={width}
+      aria-label="Endre sidebaredde"
+      className="absolute top-0 right-0 bottom-0 z-10 hidden w-2 cursor-col-resize touch-none md:block"
+      onPointerDown={(e) => {
+        e.preventDefault();
+        start.current = { x: e.clientX, w: width };
+        const el = e.currentTarget;
+        el.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+        const neste = start.current.w + (e.clientX - start.current.x);
+        if (neste < SIDEBAR_MIN_WIDTH - SIDEBAR_COLLAPSE_SLOP) {
+          setOpen(false);
+          return;
+        }
+        setWidth(neste);
+      }}
+    />
+  );
+}
+
 function NavRow({
   item,
   pathname,
   unread,
   helpdesk,
-  collapsed,
   onNavigate,
 }: {
   item: NavItem;
   pathname: string;
   unread: number;
   helpdesk: number;
-  collapsed: boolean;
   onNavigate?: () => void;
 }) {
+  const router = useRouter();
   const active = isItemActive(item, pathname);
   const count = item.badge === 'unread' ? unread : item.badge === 'helpdesk' ? helpdesk : 0;
   const teller = (
     <CountBadge count={count} label={item.badge === 'helpdesk' ? 'nye artikler' : 'uleste'} />
   );
-  const innhold = (
-    <>
-      <Ikon icon={item.icon} active={active} />
-      {!collapsed && (
-        <>
-          <span className="flex-1 truncate text-left">{item.label}</span>
-          {item.isNew && <NewBadge />}
-          {count > 0 ? teller : null}
-        </>
-      )}
-    </>
-  );
 
   return (
-    <Link
-      href={item.href as Route}
-      aria-current={active ? 'page' : undefined}
-      title={collapsed ? item.label : undefined}
-      onClick={onNavigate}
-      className={`flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors ${
-        collapsed ? 'justify-center px-0' : 'px-2.5'
-      } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}
-    >
-      {innhold}
-    </Link>
+    <div className="group/nav relative">
+      {active ? (
+        <motion.span
+          layoutId="sidebar-traveling-bg"
+          className="pointer-events-none absolute inset-0 rounded-lg bg-sidebar-active"
+          transition={SPRING_LAYOUT}
+        />
+      ) : null}
+      <div
+        className={`relative z-10 flex h-control w-full items-center gap-2.5 rounded-lg px-2.5 text-label transition-colors ${
+          active ? 'font-semibold text-sidebar-active-fg' : 'text-fg hover:bg-inset'
+        }`}
+      >
+        <Link
+          href={item.href as Route}
+          aria-current={active ? 'page' : undefined}
+          onClick={onNavigate}
+          className="flex min-w-0 flex-1 items-center gap-2.5"
+        >
+          <Ikon icon={item.icon} active={active} />
+          <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
+        </Link>
+        {item.isNew && <NewBadge />}
+        {count > 0 ? teller : null}
+        {item.hoverHref ? (
+          <button
+            type="button"
+            title={item.hoverLabel}
+            aria-label={item.hoverLabel}
+            onClick={() => {
+              onNavigate?.();
+              router.push(item.hoverHref as Route);
+            }}
+            className="hidden size-6 items-center justify-center rounded-lg text-current opacity-0 transition-opacity group-hover/nav:inline-flex group-hover/nav:opacity-100 hover:bg-white/15"
+          >
+            <Plus size={IKON} strokeWidth={1.75} />
+          </button>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -329,6 +458,9 @@ function remapNav(item: NavItem, slug: string, fra: string | null): NavItem {
   return {
     ...item,
     href: medFra(remapHrefTilInspect(item.href, slug), fra),
+    hoverHref: item.hoverHref
+      ? medFra(remapHrefTilInspect(item.hoverHref, slug), fra)
+      : undefined,
     pills: item.pills?.map((c) => ({
       ...c,
       href: medFra(remapHrefTilInspect(c.href, slug), fra),
@@ -342,7 +474,7 @@ function remapNav(item: NavItem, slug: string, fra: string | null): NavItem {
 
 function Ikon({ icon: I, active }: { icon: LucideIcon; active: boolean }) {
   return (
-    <span className={`inline-flex shrink-0 ${active ? 'text-fg' : 'text-fg-muted'}`}>
+    <span className={`inline-flex shrink-0 ${active ? 'text-sidebar-active-fg' : 'text-fg-muted'}`}>
       <I size={IKON} strokeWidth={1.75} />
     </span>
   );

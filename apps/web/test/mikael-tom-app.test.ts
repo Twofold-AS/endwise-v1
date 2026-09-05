@@ -120,15 +120,16 @@ describe('Mikael 02.09 — Endwise-admin landing og nav', () => {
 });
 
 describe('Mikael 02.09 — desktop-sidebar er skinne, overlay bare telefon', () => {
-  it('md+ er persistent rail, telefon er overlay', () => {
+  it('md+ er Fluid inset/offcanvas, telefon er overlay', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(sidebar).toMatch(/md:flex/);
-    expect(sidebar).toMatch(/md:static/);
-    expect(sidebar).toMatch(/md:w-\[248px\]/);
+    expect(sidebar).toMatch(/data-sidebar-variant="inset"/);
+    expect(sidebar).toMatch(/data-sidebar-collapsible="offcanvas"/);
+    expect(sidebar).not.toMatch(/md:w-\[52px\]/);
     expect(sidebar).toMatch(/fixed inset-x-0 bottom-0/);
     expect(sidebar).toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
-    expect(sidebar).not.toMatch(/fixed inset-0/);
+    expect(sidebar).toMatch(/data-sidebar-peek-scrim/);
     expect(sidebar).toMatch(/hidden/);
     expect(shell).toMatch(/md:hidden/);
   });

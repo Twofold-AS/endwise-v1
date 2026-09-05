@@ -29,12 +29,13 @@ function utenKommentarer(kilde: string) {
 
 describe('Mikael IA 28.08 — forhandler-tre', () => {
   it('sidebar er Organisasjon som én rad, ikke Ansatte-dropdown', () => {
-    expect(FORHANDLER_NAV.map((i) => i.label)).toEqual([
+    expect(FORHANDLER_NAV.filter((i) => i.group !== 'footer').map((i) => i.label)).toEqual([
       'Verkstedet',
       'Innboks',
-      'Timeplan',
+      'Jobber',
       'Kunder',
-      'Tjenester',
+      'Samarbeid',
+      'Rapporter',
       'Organisasjon',
       'Lager',
       'Butikk',
@@ -117,9 +118,7 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
       { label: 'Organisasjon', href: '/organisasjon' },
       { label: 'Ansatte' },
     ]);
-    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Tjenester', href: '/prisliste' },
-    ]);
+    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([{ label: 'Tjenester' }]);
     expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');
   });
 
@@ -196,10 +195,11 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(header).not.toMatch(/Forhandler/);
   });
 
-  it('sidebar-brukerchip er flat uten avatar; ingen telefon-bevel', () => {
+  it('sidebar-brukerchip er bevel-avatar; ingen telefon-bevel-variant', () => {
     expect(rad).not.toMatch(/variant === 'phone'/);
-    expect(rad).not.toMatch(/BEVEL/);
-    expect(rad).not.toMatch(/Avatar/);
+    expect(rad).toMatch(/BEVEL/);
+    expect(rad).toMatch(/Avatar/);
+    expect(rad).toMatch(/bevegelse="stille"/);
     expect(rad).not.toMatch(/rolle \?\?/);
     expect(rad).not.toMatch(/UserCog/);
     expect(rad).toMatch(/LogOut/);
@@ -228,7 +228,8 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(sidebar).toMatch(/data-phone-sidebar/);
     expect(sidebar).toMatch(/fixed inset-x-0 bottom-0/);
     expect(sidebar).toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
-    expect(sidebar).not.toMatch(/fixed inset-0/);
+    expect(sidebar).toMatch(/data-sidebar-peek-scrim/);
+    expect(sidebar).not.toMatch(/data-phone-sidebar[\s\S]{0,80}fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/Handlinger/);
@@ -267,7 +268,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
 
 describe('Mikael IA — Prisliste på Oversikt, inspect', () => {
   it('Tjenester er /prisliste, ikke Organisasjon-pille og ikke Timeplan-popup', () => {
-    const timeplan = FORHANDLER_NAV.find((i) => i.key === 'saker');
+    const timeplan = FORHANDLER_NAV.find((i) => i.key === 'jobber');
     expect(timeplan?.pills?.some((p) => /prisliste/i.test(p.label))).toBe(false);
     expect(timeplan?.pills?.some((p) => /prisliste/i.test(p.href))).toBe(false);
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/PrislisteFlate/);

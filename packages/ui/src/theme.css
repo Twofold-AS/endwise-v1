@@ -18,7 +18,7 @@
   --card-foreground: var(--ew-fg);
   --popover: var(--ew-surface);
   --popover-foreground: var(--ew-fg);
-  --primary: var(--ew-accent);
+  --primary: var(--ew-accent-strong);
   --primary-foreground: var(--ew-accent-fg);
   --secondary: var(--ew-surface-2);
   --secondary-foreground: var(--ew-fg);
@@ -39,6 +39,10 @@
   --color-bg: var(--ew-bg);
   --color-sidebar: var(--ew-sidebar);
   --color-sidebar-active: var(--ew-sidebar-active);
+  --color-sidebar-active-fg: var(--ew-sidebar-active-fg);
+  --color-disabled: var(--ew-disabled);
+  --color-link: var(--ew-link);
+  --color-signal: var(--ew-accent-on-dark);
   --color-surface: var(--ew-surface);
   --color-surface-2: var(--ew-surface-2);
   --color-inset: var(--ew-inset);
@@ -86,6 +90,7 @@
   --radius-md: var(--ew-radius-md);
   --radius-lg: var(--ew-radius-lg);
   --radius-xl: var(--ew-radius-xl);
+  --radius-sheet: var(--ew-radius-sheet);
   --radius-pill: var(--ew-radius-pill);
   --radius-control: var(--ew-radius-control); /* 8px — utility */
   --radius-badge: var(--ew-badge-radius); /* 6px */
@@ -112,7 +117,7 @@
   --text-body: 17px;
   --text-body--line-height: 1.47;
   --text-body--font-weight: 400;
-  --text-body--letter-spacing: -0.011em;
+  --text-body--letter-spacing: -0.016em;
 
   --font-sans: var(--ew-font-sans);
   --font-mono: var(--ew-font-mono);

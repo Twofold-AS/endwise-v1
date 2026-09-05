@@ -63,13 +63,13 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(sidebar).toMatch(/phoneOpen[\s\S]*hidden/);
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/md:static/);
-    expect(sidebar).toMatch(/md:w-\[248px\]/);
+    expect(sidebar).toMatch(/--sidebar-width/);
     expect(shell).toMatch(/md:hidden/);
-    expect(sidebar).toMatch(/bg-\[#ffffff\]/);
+    expect(sidebar).toMatch(/data-sidebar-collapsible="offcanvas"/);
     expect(sidebar).toMatch(/OppgraderPille/);
     expect(sidebar).not.toMatch(/<TipCard/);
-    expect(sidebar).not.toMatch(/hidden md:block/);
-    expect(sidebar).toMatch(/smal = collapsed && !phoneOpen/);
+    expect(sidebar).not.toMatch(/md:w-\[52px\]/);
+    expect(sidebar).toMatch(/phoneOpen/);
   });
 
   it('ingen mer-ark, bunnfane, hamburger-drawer eller kort-som-meny', () => {
@@ -96,11 +96,12 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(workshop).not.toMatch(/ShaderGradient/);
   });
 
-  it('profil og logg ut er flat sidebar-rad uten avatar', () => {
-    expect(rad).not.toMatch(/Avatar|BEVEL|variant === 'phone'/);
+  it('profil og logg ut er bevel-avatar i sidebar-footer', () => {
+    expect(rad).toMatch(/Avatar/);
+    expect(rad).toMatch(/BEVEL/);
+    expect(rad).not.toMatch(/variant === 'phone'/);
     expect(rad).toMatch(/LogOut/);
     expect(rad).toMatch(/Settings/);
-    expect(rad).toMatch(/mx-2/);
     expect(rad).toMatch(/min-w-0 flex-1 truncate/);
     expect(sidebar).toMatch(/<BrukerRad/);
   });

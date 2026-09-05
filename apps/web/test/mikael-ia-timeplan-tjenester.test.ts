@@ -57,21 +57,22 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
   });
 
   it('PC-sidebar: Timeplan og Salg, Organisasjon uten Timeplan-pille', () => {
-    expect(FORHANDLER_NAV.map((i) => i.label)).toEqual([
+    expect(FORHANDLER_NAV.filter((i) => i.group !== 'footer').map((i) => i.label)).toEqual([
       'Verkstedet',
       'Innboks',
-      'Timeplan',
+      'Jobber',
       'Kunder',
-      'Tjenester',
+      'Samarbeid',
+      'Rapporter',
       'Organisasjon',
       'Lager',
       'Butikk',
     ]);
-    expect(FORHANDLER_NAV.find((i) => i.key === 'saker')?.pills?.map((p) => p.label)).toEqual([
+    expect(FORHANDLER_NAV.find((i) => i.key === 'jobber')?.pills?.map((p) => p.label)).toEqual([
       'Liste',
       'Kalender',
     ]);
-    expect(FORHANDLER_NAV.find((i) => i.key === 'tjenester')?.href).toBe('/prisliste');
+    expect(FORHANDLER_NAV.some((i) => i.key === 'tjenester')).toBe(false);
     expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',
@@ -141,18 +142,13 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/tittel="Tjenester"/);
     expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/redirect\('\/organisasjon'/);
     expect(les('../app/(app)/tjenester/page.tsx')).toMatch(/seksjon=abonnement/);
-    const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
-    if (!tjenester) throw new Error('mangler Tjenester');
-    expect(tjenester.label).toBe('Tjenester');
+    expect(FORHANDLER_NAV.some((i) => i.key === 'tjenester')).toBe(false);
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     if (!org) throw new Error('mangler Organisasjon');
-    expect(isItemActive(tjenester, '/prisliste')).toBe(true);
     expect(isItemActive(org, '/prisliste')).toBe(false);
-    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Tjenester', href: '/prisliste' },
-    ]);
+    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([{ label: 'Tjenester' }]);
     expect(breadcrumbFor('/jobber', 'visning=kalender', 'forhandler')).toEqual([
-      { label: 'Timeplan', href: '/jobber' },
+      { label: 'Jobber', href: '/jobber' },
       { label: 'Kalender' },
     ]);
     expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');

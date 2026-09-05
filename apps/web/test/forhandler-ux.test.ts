@@ -38,24 +38,19 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
   });
 
   it('gamle /saker /analyse /support aktiverer de nye nav-radene', () => {
-    const jobber = FORHANDLER_NAV.find((i) => i.key === 'saker');
-    const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
+    const jobber = FORHANDLER_NAV.find((i) => i.key === 'jobber');
     expect(jobber && isItemActive(jobber, '/saker')).toBe(true);
-    expect(tjenester && isItemActive(tjenester, '/prisliste')).toBe(true);
+    expect(FORHANDLER_NAV.some((i) => i.key === 'tjenester')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.key === 'helpdesk')).toBe(false);
   });
 
   it('/prisliste treffer Tjenester, /verkstedet treffer Verkstedet', () => {
-    const timeplan = FORHANDLER_NAV.find((i) => i.key === 'saker');
-    const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
+    const jobber = FORHANDLER_NAV.find((i) => i.key === 'jobber');
     const verksted = FORHANDLER_NAV.find((i) => i.key === 'dashboard');
-    expect(timeplan && isItemActive(timeplan, '/prisliste')).toBe(false);
-    expect(tjenester && isItemActive(tjenester, '/innstillinger/tjenestekatalog')).toBe(true);
+    expect(jobber && isItemActive(jobber, '/prisliste')).toBe(false);
     expect(verksted && isItemActive(verksted, '/verkstedet')).toBe(true);
     expect(verksted && isItemActive(verksted, '/prisliste')).toBe(false);
-    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Tjenester', href: '/prisliste' },
-    ]);
+    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([{ label: 'Tjenester' }]);
   });
 
   it('Timeplan-siden kaller listevisningen Liste', () => {

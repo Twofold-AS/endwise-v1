@@ -3,10 +3,12 @@ import {
   Building2,
   CalendarDays,
   Car,
+  ChartColumn,
   CircleUser,
   ClipboardList,
   FilePlus,
   Flag,
+  Handshake,
   HardHat,
   Inbox,
   LayoutDashboard,
@@ -75,6 +77,11 @@ export type NavItem = {
   children?: NavChild[];
   /** Horisontale piller på destinasjonssiden. Ikke barn i sidebaren. */
   pills?: NavChild[];
+  /** Fluid-gruppe. `footer` rendres under hovednavet. */
+  group?: 'drift' | 'mer' | 'footer';
+  /** Hover-handling på raden (Fluid hover action). */
+  hoverHref?: string;
+  hoverLabel?: string;
   /** Visuell skillelinje over raden (Jonas-treet). */
   dividerBefore?: boolean;
   /** Butikk-raden skjules når shop-flagget er av. */
@@ -197,7 +204,8 @@ export const CONTEXTS: AppContext[] = [
 /*
  * AI-verktøy er parkert — ikke i FORHANDLER_NAV.
  * Ruter står: `/ai-innsikt`, `/ai-verktoy/diagnose|nettside|nettbutikk`.
- * Samarbeid, Hjelp-dest og Bot er ute av sidebaren (Mikael desktop-chrome 01.09.2026).
+ * Tjenester (`/prisliste`) er destinasjon via URL, ikke sidebar-rad.
+ * Visningsvelger er ute. Organisasjon er ÉN destinasjon.
  */
 export const FORHANDLER_NAV: NavItem[] = [
   {
@@ -206,6 +214,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: LayoutDashboard,
     href: '/dashboard',
     roles: DRIFT,
+    group: 'drift',
   },
   {
     key: 'innboks',
@@ -213,14 +222,20 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Inbox,
     href: '/innboks',
     roles: DRIFT,
+    group: 'drift',
     badge: 'unread',
+    hoverHref: '/innboks?ny=1',
+    hoverLabel: 'Ny melding',
   },
   {
-    key: 'saker',
-    label: 'Timeplan',
-    icon: CalendarDays,
+    key: 'jobber',
+    label: 'Jobber',
+    icon: ClipboardList,
     href: '/jobber',
     roles: DRIFT,
+    group: 'drift',
+    hoverHref: '/bookinger/ny',
+    hoverLabel: 'Opprett jobb',
     pills: [
       { label: 'Liste', href: '/jobber', icon: ClipboardList },
       { label: 'Kalender', href: '/jobber?visning=kalender', icon: CalendarDays },
@@ -232,17 +247,29 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Users,
     href: '/kunder',
     roles: DRIFT,
+    group: 'drift',
+    hoverHref: '/kunder?ny=1',
+    hoverLabel: 'Ny kunde',
     pills: [
       { label: 'Kunder', href: '/kunder', icon: Users },
       { label: 'Kjøretøy', href: '/kjoretoy', icon: Car },
     ],
   },
   {
-    key: 'tjenester',
-    label: 'Tjenester',
-    icon: Wrench,
-    href: '/prisliste',
+    key: 'samarbeid',
+    label: 'Samarbeid',
+    icon: Handshake,
+    href: '/samarbeid',
     roles: DRIFT,
+    group: 'mer',
+  },
+  {
+    key: 'rapporter',
+    label: 'Rapporter',
+    icon: ChartColumn,
+    href: '/rapporter',
+    roles: DRIFT,
+    group: 'mer',
   },
   {
     key: 'organisasjon',
@@ -250,6 +277,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Building2,
     href: '/organisasjon',
     roles: DRIFT,
+    group: 'mer',
     pills: ORGANISASJON_SEKSJONER,
   },
   {
@@ -258,6 +286,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Package,
     href: '/lager',
     roles: DRIFT,
+    group: 'mer',
     pills: [
       { label: 'Oversikt', href: '/lager', icon: LayoutDashboard },
       { label: 'Deler', href: '/lager/deler', icon: Package },
@@ -271,11 +300,30 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Store,
     href: '/butikk',
     roles: DRIFT,
+    group: 'mer',
     requiresShopFlag: true,
     pills: [
       { label: 'Katalog', href: '/butikk', icon: Package },
       { label: 'Handlekurv / kasse', href: '/butikk/kasse', icon: ShoppingCart },
     ],
+  },
+  {
+    key: 'hjelp',
+    label: 'Hjelp',
+    icon: LifeBuoy,
+    href: '/support',
+    roles: DRIFT,
+    group: 'footer',
+    badge: 'helpdesk',
+  },
+];
+
+export const FORHANDLER_NAV_GRUPPER = [
+  { id: 'drift' as const, label: null as string | null, keys: ['dashboard', 'innboks', 'jobber', 'kunder'] },
+  {
+    id: 'mer' as const,
+    label: 'Mer',
+    keys: ['samarbeid', 'rapporter', 'organisasjon', 'lager', 'butikk'],
   },
 ];
 

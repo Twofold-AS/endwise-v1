@@ -18,9 +18,12 @@ describe('Avatar-velgeren er borte', () => {
     expect(profil).toMatch(/Organisasjon/);
   });
 
-  it('sidebar har ingen avatar — profil-ansikt bor utenfor nav', () => {
+  it('sidebar-footer har stille bevel-avatar, ikke velger eller happy-humor', () => {
     const rad = les('../app/(app)/_shell/bruker-rad.tsx');
-    expect(rad).not.toMatch(/<Avatar|bevegelse=/);
+    expect(rad).toMatch(/<Avatar/);
+    expect(rad).toMatch(/bevegelse="stille"/);
+    expect(rad).not.toMatch(/AvatarVelger/);
+    expect(rad).not.toMatch(/humor:\s*['"]happy['"]/);
     expect(rad).toMatch(/LogOut/);
   });
 

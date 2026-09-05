@@ -34,11 +34,10 @@ export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';
  * (`--ew-surface-2`, parchment #f5f5f7 i lyst) mens `text-accent-fg` er `--ew-accent-fg`
  * (hvit i lyst). Den kombinasjonen er den vaskede «hvite overlay»-en.
  */
-export const PHONE_KORT_FYLL = 'rounded-xl border border-border bg-card text-fg shadow-none';
-/** Hero: radius 16, samme surface/hairline — ikke `#111`. */
-export const PHONE_HERO_FYLL = 'rounded-[16px] border border-border bg-card text-fg shadow-none';
-/** Destinasjonskort på dealer-hjem: radius 14, hvit flate på parchment. */
-export const PHONE_DEST_FYLL = 'rounded-[14px] border border-border bg-card text-fg shadow-none';
+export const PHONE_KORT_FYLL = 'rounded-lg border border-border bg-card text-fg shadow-none';
+/** Hero + destinasjon: radius 8, hvit flate på Frost, ingen skygge. */
+export const PHONE_HERO_FYLL = 'rounded-lg border border-border bg-card text-fg shadow-none';
+export const PHONE_DEST_FYLL = 'rounded-lg border border-border bg-card text-fg shadow-none';
 
 /**
  * Parchment-scroll for dealer-hjem (innholdskolonne, ikke chrome).
@@ -99,9 +98,8 @@ export type PhoneHjemRad = {
 };
 
 /**
- * Jonas 05.09 Apple-hjem: hero → Timeplan|Rapporter → Innboks|Jobber →
- * Kunder|Organisasjon → Samarbeid|Hjelp → Lager. Samarbeid hoppes i
- * `dealerPhoneHjemRader` når raden ikke står i nav.
+ * System-refresh: hero → Timeplan|Rapporter → Innboks|Jobber →
+ * Kunder|Organisasjon → Samarbeid|Hjelp → Lager. Samarbeid er i nav.
  */
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['verkstedet'], kind: 'hero' },

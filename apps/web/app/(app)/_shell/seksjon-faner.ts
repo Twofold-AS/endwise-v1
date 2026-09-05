@@ -105,6 +105,11 @@ export function destinasjonFaner(input: {
     return [{ label: PARKED_LABEL[pathname] ?? 'Endwise', href: pathname, valgt: true }];
   }
 
+  // Organisasjon er én destinasjon — piller bor i sidens liste, ikke top-bar 2.
+  if (item.key === 'organisasjon') {
+    return [{ label: item.label, href: mapHref(item.href), valgt: true }];
+  }
+
   const piller = pillsForRole(item, input.role);
   if (piller.length === 0) {
     return [{ label: item.label, href: mapHref(item.href), valgt: true }];

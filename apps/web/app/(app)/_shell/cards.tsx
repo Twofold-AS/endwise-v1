@@ -81,7 +81,7 @@ export function CountBadge({
 }
 
 /**
- * CardShell — ytre kort (radius 18 via --ew-radius-xl, 5px padding, hairline) rundt en
+ * CardShell — ytre kort (radius 8 via --ew-radius-xl, 5px padding, hairline) rundt en
  * Indre panel. Dobbelt kant-uttrykk: ytre kortkant + indre panel-kant.
  * Bruk med `CardMedia` (innhold øverst) + en tekstdel under.
  */

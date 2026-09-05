@@ -1,5 +1,7 @@
 'use client';
 
+import type { Route } from 'next';
+import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
@@ -21,7 +23,7 @@ import {
   timeplanRader,
   verkstedHeroTall,
 } from './phone-home-data';
-import { PhoneKort } from './phone-kort';
+import { HJEM_CTA_FYLT, HJEM_CTA_OUTLINE, PhoneKort } from './phone-kort';
 
 const IDAG_KEYS = new Set<PhoneKortKey>(['timeplan', 'statistikk', 'innboks', 'jobber']);
 
@@ -109,7 +111,20 @@ export function DealerDestinasjonskort({
               navn={forhandlernavn}
               className="w-full"
               variant="hero"
+              as={tomDag ? 'article' : 'link'}
               meta={tomDag ? HJEM_KORT_TOM.hero : undefined}
+              actions={
+                tomDag ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Link href={'/bookinger/ny' as Route} className={HJEM_CTA_FYLT}>
+                      Opprett jobb
+                    </Link>
+                    <Link href={'/jobber?visning=kalender' as Route} className={HJEM_CTA_OUTLINE}>
+                      Åpne timeplan
+                    </Link>
+                  </div>
+                ) : null
+              }
             >
               <div className="grid grid-cols-3 divide-x divide-border">
                 <HeroTall label="I dag" verdi={hero.idag} laster={bookings.isLoading} />

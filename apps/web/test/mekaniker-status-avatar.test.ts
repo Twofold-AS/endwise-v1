@@ -61,8 +61,9 @@ describe('sidebar og profil viser valgt humor, ikke jobbstatus', () => {
   const meg = readFileSync(resolve(her, '../app/(app)/min-dag/meg/page.tsx'), 'utf8');
   const profil = readFileSync(resolve(her, '../app/(app)/min-dag/profil/page.tsx'), 'utf8');
 
-  it('sidebar har ingen avatar og overstyrer ikke med status', () => {
-    expect(rad).not.toMatch(/<Avatar|bevegelse=/);
+  it('sidebar har stille bevel-avatar og overstyrer ikke med status', () => {
+    expect(rad).toMatch(/<Avatar/);
+    expect(rad).toMatch(/bevegelse="stille"/);
     expect(rad).not.toMatch(/humor:\s*['"]happy['"]/);
     expect(rad).not.toMatch(/statusHumor/);
     expect(rad).toMatch(/LogOut/);

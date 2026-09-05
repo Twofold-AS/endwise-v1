@@ -129,7 +129,7 @@ export function PromptInputSubmit({
       aria-label={busy ? 'Sender' : 'Send'}
       disabled={busy || disabled}
       className={cn(
-        'inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[#0066cc] text-white transition-opacity hover:opacity-90 disabled:opacity-40',
+        'inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:bg-[var(--ew-disabled)] disabled:opacity-40',
         className,
       )}
       {...props}

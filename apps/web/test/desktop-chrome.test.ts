@@ -15,44 +15,43 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('Mikael desktop-chrome 01.09.2026', () => {
-  it('forhandler-nav: Tjenester deretter Organisasjon under Kunder, uten Samarbeid/Bot/Hjelp', () => {
-    expect(FORHANDLER_NAV.map((i) => i.label)).toEqual([
+  it('forhandler-nav: Jobber under Innboks, deretter Samarbeid/Rapporter/Organisasjon, Hjelp i footer', () => {
+    expect(FORHANDLER_NAV.filter((i) => i.group !== 'footer').map((i) => i.label)).toEqual([
       'Verkstedet',
       'Innboks',
-      'Timeplan',
+      'Jobber',
       'Kunder',
-      'Tjenester',
+      'Samarbeid',
+      'Rapporter',
       'Organisasjon',
       'Lager',
       'Butikk',
     ]);
     const kunder = FORHANDLER_NAV.findIndex((i) => i.key === 'kunder');
-    expect(FORHANDLER_NAV[kunder + 1]?.label).toBe('Tjenester');
-    expect(FORHANDLER_NAV[kunder + 2]?.label).toBe('Organisasjon');
-    expect(FORHANDLER_NAV.find((i) => i.key === 'tjenester')?.href).toBe('/prisliste');
-    expect(FORHANDLER_NAV.some((i) => /Samarbeid|Bot|Hjelp|Salg/.test(i.label))).toBe(false);
+    expect(FORHANDLER_NAV[kunder + 1]?.label).toBe('Samarbeid');
+    expect(FORHANDLER_NAV.find((i) => i.group === 'footer')?.label).toBe('Hjelp');
+    expect(FORHANDLER_NAV.some((i) => i.key === 'tjenester')).toBe(false);
+    expect(FORHANDLER_NAV.some((i) => /Bot|Salg/.test(i.label))).toBe(false);
     expect(MEKANIKER_NAV.some((i) => i.label === 'Hjelp')).toBe(false);
   });
 
-  it('sidebar: hvit, ingen header-divider, +2px gap, OppgraderPille, ingen avatar', () => {
+  it('sidebar: inset/offcanvas, grupper, OppgraderPille, bevel-avatar', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
     const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
-    expect(sidebar).toMatch(/bg-\[#ffffff\]/);
+    expect(sidebar).toMatch(/data-sidebar-variant="inset"/);
+    expect(sidebar).toMatch(/data-sidebar-collapsible="offcanvas"/);
+    expect(sidebar).not.toMatch(/md:w-\[52px\]/);
     expect(header).not.toMatch(/border-b/);
-    expect(sidebar).not.toMatch(/min-h-10 shrink-0 items-center py-2[\s\S]{0,80}border-b-/);
     expect(sidebar).toMatch(/gap-\[4px\]/);
     expect(sidebar).toMatch(/OppgraderPille/);
     expect(sidebar).not.toMatch(/<TipCard/);
     expect(sidebar).toMatch(/BrukerRad/);
     expect(sidebar).not.toMatch(/settingsNav \? \(/);
-    expect(sidebar).not.toMatch(/-mx-3 h-px bg-border/);
     expect(header).toMatch(/SHELL_LOGO_PX/);
-    expect(header).not.toMatch(/text-title text-fg/);
-    expect(rad).not.toMatch(/Avatar|BEVEL|variant === 'phone'/);
-    expect(rad).toMatch(/if \(collapsed\)/);
+    expect(rad).toMatch(/Avatar/);
+    expect(rad).toMatch(/BEVEL/);
     expect(rad).toMatch(/LogOut/);
-    expect(rad).toMatch(/mx-2/);
     expect(rad).toMatch(/min-w-0 flex-1 truncate/);
   });
 

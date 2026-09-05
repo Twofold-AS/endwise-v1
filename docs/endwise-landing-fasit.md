@@ -6,9 +6,9 @@ Gjelder den offentlige markedssiden `/` i `apps/web` (ikke dealer-chrome).
 
 ## Visual
 
-- Lys default, Inter, parchment `#f5f5f7`, ink `#1d1d1f`, hårlinje `#e0e0e0`
-- Primær CTA: Action Blue `#0066cc` (`--ew-accent` / `bg-primary`), hover/strong `#0071e3`, soft `#e8f1fb` — tokens fra `packages/widget-tokens`
-- Logo (merke + wordmark) er ink `#1d1d1f` / `bg-fg` / `text-fg` — aldri `#1ED27D` på landing. CTA forblir Action Blue.
+- Lys default, Inter, Frost `#f5f5f7`, Carbon `#1d1d1f`, hårlinje `#d2d2d7`
+- Primær CTA: fylt Apple Blue `#0071e3` (`bg-primary` → `--ew-accent-strong`). Lenker/outline: Link Blue `#0066cc` (`--ew-accent`). Soft `#e8f1fb` — tokens fra `packages/widget-tokens`
+- Logo (merke + wordmark) er ink `#1d1d1f` / `bg-fg` / `text-fg` — aldri `#1ED27D` på landing. Fylt CTA er Apple Blue; lenker/outline er Link Blue.
 - Mye luft, max innhold ~1120–1200
 - Myke produktrammer 12–16 radius
 - Ingen blobatar/maskot, ingen roadmap-rød `#EE2924`, ingen grønn CTA
@@ -19,7 +19,7 @@ Gjelder den offentlige markedssiden `/` i `apps/web` (ikke dealer-chrome).
 
 - H1: **Verkstedet, samlet.**
 - Én linje om booking/innboks/jobber
-- Primær CTA: **Prøv Endwise** (Action Blue `#0066cc`, hvit tekst) → eksisterende demo-flyt / `hei@endwise.no`
+- Primær CTA: **Prøv Endwise** (Apple Blue `#0071e3`, hvit tekst) → eksisterende demo-flyt / `hei@endwise.no`
 - Sekundær: Logg inn
 - Ett produktbilde-spor (plassholder OK)
 - Ingen karusell/video

@@ -6,6 +6,13 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL, PHONE_KORT_FYLL } from './phone-home';
 
+const HJEM_CTA_FYLT =
+  'inline-flex h-control items-center justify-center rounded-pill bg-primary px-4 text-label text-primary-foreground';
+const HJEM_CTA_OUTLINE =
+  'inline-flex h-control items-center justify-center rounded-pill border border-[var(--ew-accent)] px-4 text-label text-[var(--ew-accent)]';
+
+export { HJEM_CTA_FYLT, HJEM_CTA_OUTLINE };
+
 /**
  * Destinasjonskort på telefon-hjem.
  * Mekaniker (`kort`): samme flate som før.
@@ -21,6 +28,8 @@ export function PhoneKort({
   children,
   className,
   variant = 'kort',
+  as = 'link',
+  actions,
 }: {
   href: string;
   icon: LucideIcon;
@@ -30,6 +39,8 @@ export function PhoneKort({
   children?: ReactNode;
   className?: string;
   variant?: 'kort' | 'hero' | 'destinasjon';
+  as?: 'link' | 'article';
+  actions?: ReactNode;
 }) {
   const fyll =
     variant === 'hero'
@@ -44,15 +55,11 @@ export function PhoneKort({
       : variant === 'destinasjon'
         ? 'min-w-0 flex-1 truncate text-[17px] font-semibold leading-snug text-fg'
         : 'min-w-0 flex-1 truncate text-title';
-  const luft = variant === 'hero' ? 'gap-5 p-5' : apple ? 'gap-2.5 p-4' : 'gap-2 p-3';
+  const luft = variant === 'hero' ? 'gap-6 p-6' : apple ? 'gap-3 p-6' : 'gap-2 p-3';
 
-  return (
-    <Link
-      href={href as Route}
-      data-phone-kort={navn}
-      data-verkstedet-hero={variant === 'hero' ? '' : undefined}
-      className={`${fyll} flex min-h-11 flex-col [touch-action:manipulation] ${luft} ${className ?? ''}`}
-    >
+  const klasse = `${fyll} flex min-h-11 flex-col [touch-action:manipulation] ${luft} ${className ?? ''}`;
+  const kropp = (
+    <>
       <div className="flex items-center gap-2">
         {variant === 'hero' ? null : (
           <Icon
@@ -72,7 +79,7 @@ export function PhoneKort({
           <ChevronRight
             size={16}
             strokeWidth={1.75}
-            className="shrink-0 text-primary"
+            className="shrink-0 text-[var(--ew-accent)]"
             aria-hidden
           />
         ) : null}
@@ -87,6 +94,30 @@ export function PhoneKort({
         </p>
       )}
       {children}
+      {actions}
+    </>
+  );
+
+  if (as === 'article') {
+    return (
+      <article
+        data-phone-kort={navn}
+        data-verkstedet-hero={variant === 'hero' ? '' : undefined}
+        className={klasse}
+      >
+        {kropp}
+      </article>
+    );
+  }
+
+  return (
+    <Link
+      href={href as Route}
+      data-phone-kort={navn}
+      data-verkstedet-hero={variant === 'hero' ? '' : undefined}
+      className={klasse}
+    >
+      {kropp}
     </Link>
   );
 }

@@ -58,7 +58,7 @@ describe('Bot-lab — bloub', () => {
   it('sidebar har ikke Bot; laben lever via URL, ikke på telefon-hjem', () => {
     const labels = FORHANDLER_NAV.map((i) => i.label);
     expect(labels).not.toContain('Bot');
-    expect(labels).not.toContain('Hjelp');
+    expect(FORHANDLER_NAV.find((i) => i.label === 'Hjelp')?.group).toBe('footer');
     expect(FORHANDLER_NAV.some((i) => i.key === 'bot')).toBe(false);
     expect(breadcrumbFor('/bot', '', 'forhandler')).toEqual([{ label: 'Bot' }]);
     expect(DEALER_PHONE_HJEM.flatMap((r) => r.keys)).not.toContain('bot');

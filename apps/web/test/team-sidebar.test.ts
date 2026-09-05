@@ -32,12 +32,13 @@ function utenKommentarer(kilde: string) {
 
 describe('Jonas IA — forhandler sidebar', () => {
   it('rader uten barn i sidebaren, piller på siden', () => {
-    expect(FORHANDLER_NAV.map((i) => i.label)).toEqual([
+    expect(FORHANDLER_NAV.filter((i) => i.group !== 'footer').map((i) => i.label)).toEqual([
       'Verkstedet',
       'Innboks',
-      'Timeplan',
+      'Jobber',
       'Kunder',
-      'Tjenester',
+      'Samarbeid',
+      'Rapporter',
       'Organisasjon',
       'Lager',
       'Butikk',
@@ -45,7 +46,7 @@ describe('Jonas IA — forhandler sidebar', () => {
     for (const rad of FORHANDLER_NAV) {
       expect(rad.children).toBeUndefined();
     }
-    expect(FORHANDLER_NAV.find((i) => i.key === 'saker')?.pills?.map((p) => p.label)).toEqual([
+    expect(FORHANDLER_NAV.find((i) => i.key === 'jobber')?.pills?.map((p) => p.label)).toEqual([
       'Liste',
       'Kalender',
     ]);
@@ -68,10 +69,9 @@ describe('Jonas IA — forhandler sidebar', () => {
       FORHANDLER_NAV.find((i) => i.key === 'organisasjon')?.pills?.map((p) => p.label),
     ).toEqual(['Oversikt', 'Ansatte', 'Abonnement', 'Integrasjoner']);
     expect(FORHANDLER_NAV.some((i) => i.key === 'helpdesk')).toBe(false);
-    expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(false);
+    expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(true);
     expect(FORHANDLER_NAV.some((i) => i.key === 'bot')).toBe(false);
-    expect(FORHANDLER_NAV.find((i) => i.key === 'tjenester')?.label).toBe('Tjenester');
-    expect(FORHANDLER_NAV.find((i) => i.key === 'tjenester')?.href).toBe('/prisliste');
+    expect(FORHANDLER_NAV.some((i) => i.key === 'tjenester')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Forhandleren')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Organisasjon')).toBe(true);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Admin')).toBe(false);
@@ -149,16 +149,14 @@ describe('Jonas IA — mekaniker og endwise', () => {
 describe('Jonas IA — breadcrumb og piller', () => {
   it('Timeplan / Ansatte / Lager bruker piller, ikke sidebar-barn', () => {
     expect(breadcrumbFor('/jobber', '', 'forhandler')).toEqual([
-      { label: 'Timeplan', href: '/jobber' },
+      { label: 'Jobber', href: '/jobber' },
       { label: 'Liste' },
     ]);
     expect(breadcrumbFor('/jobber', 'visning=kalender', 'forhandler')).toEqual([
-      { label: 'Timeplan', href: '/jobber' },
+      { label: 'Jobber', href: '/jobber' },
       { label: 'Kalender' },
     ]);
-    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
-      { label: 'Tjenester', href: '/prisliste' },
-    ]);
+    expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([{ label: 'Tjenester' }]);
     expect(breadcrumbFor('/organisasjon', 'seksjon=ansatte', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },
       { label: 'Ansatte' },
@@ -167,7 +165,9 @@ describe('Jonas IA — breadcrumb og piller', () => {
       { label: 'Lager', href: '/lager' },
       { label: 'Oversikt' },
     ]);
-    expect(breadcrumbFor('/support', '', 'forhandler')).toEqual([{ label: 'Hjelp' }]);
+    expect(breadcrumbFor('/support', '', 'forhandler')).toEqual([
+      { label: 'Hjelp', href: '/support' },
+    ]);
     expect(PARKED_LABEL['/prisliste']).toBe('Tjenester');
   });
 

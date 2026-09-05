@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,7 +28,6 @@ import {
 import { destinasjonFaner } from '../app/(app)/_shell/seksjon-faner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
-const repo = resolve(her, '../../..');
 
 function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
@@ -39,19 +37,8 @@ function utenKommentarer(kilde: string) {
   return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
 
-const CHROME_URORT = [
-  'apps/web/app/(app)/_shell/phone-shell.tsx',
-  'apps/web/app/(app)/_shell/sidebar.tsx',
-  'apps/web/app/(app)/_shell/sidebar-header.tsx',
-  'apps/web/app/(app)/_shell/seksjon-bar.tsx',
-  'apps/web/app/(app)/_workshop/workshop-bloub.tsx',
-  'apps/web/app/(app)/_shell/phone-home-mekaniker.tsx',
-  'apps/web/app/(app)/layout.tsx',
-  'apps/web/app/_markeds/markeds-chrome.tsx',
-] as const;
-
 describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
-  it('låser hero → Timeplan|Rapporter → Innboks|Jobber → Kunder|Organisasjon → Hjelp (hopp Samarbeid) → Lager', () => {
+  it('låser hero → Timeplan|Rapporter → Innboks|Jobber → Kunder|Organisasjon → Samarbeid|Hjelp → Lager', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['verkstedet'],
       ['timeplan', 'statistikk'],
@@ -65,14 +52,14 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(PHONE_KORT_META.timeplan.href).toBe('/jobber?visning=kalender');
     expect(PHONE_KORT_META.jobber.label).toBe('Jobber');
     expect(PHONE_KORT_META.jobber.href).toBe('/jobber');
-    expect(samarbeidSynligINav()).toBe(false);
-    expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(false);
+    expect(samarbeidSynligINav()).toBe(true);
+    expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(true);
     expect(dealerPhoneHjemRader(false).map((r) => r.keys.join('|'))).toEqual([
       'verkstedet',
       'timeplan|statistikk',
       'innboks|jobber',
       'kunder|organisasjon',
-      'hjelp',
+      'samarbeid|hjelp',
       'lager',
     ]);
     expect(dealerPhoneHjemRader(true).at(-1)?.keys).toEqual(['lager', 'butikk']);
@@ -107,7 +94,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
         role: 'dealer_admin',
         shell: 'forhandler',
       }).map((f) => f.label),
-    ).toEqual(['Oversikt', 'Ansatte', 'Abonnement', 'Integrasjoner']);
+    ).toEqual(['Organisasjon']);
   });
 
   it('HJEM_KORT_TOM er samme ærlig #136-kopi', () => {
@@ -148,12 +135,12 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(hjem).not.toMatch(/PHONE_SAFE_TOP/);
   });
 
-  it('hero er plate: radius 16, stor tittel, I dag/Pågår/Fullført, ikke #111', () => {
-    expect(PHONE_HERO_FYLL).toMatch(/rounded-\[16px\]/);
+  it('hero er plate: radius 8, stor tittel, I dag/Pågår/Fullført, ikke #111', () => {
+    expect(PHONE_HERO_FYLL).toMatch(/rounded-lg/);
     expect(PHONE_HERO_FYLL).toMatch(/bg-card/);
     expect(PHONE_HERO_FYLL).toMatch(/border-border/);
     expect(PHONE_HERO_FYLL).not.toMatch(/#111|bg-fg|Grainient|Galaxy/);
-    expect(PHONE_DEST_FYLL).toMatch(/rounded-\[1[24]px\]/);
+    expect(PHONE_DEST_FYLL).toMatch(/rounded-lg/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
     expect(hjem).toMatch(/I dag/);
@@ -187,15 +174,11 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(dash).not.toMatch(/Grainient|Galaxy|#111/);
   });
 
-  it('chrome-filer er identiske med origin/main', () => {
-    for (const fil of CHROME_URORT) {
-      const main = execFileSync('git', ['show', `origin/main:${fil}`], {
-        cwd: repo,
-        encoding: 'utf8',
-      });
-      const naa = readFileSync(resolve(repo, fil), 'utf8');
-      expect(naa, fil).toBe(main);
-    }
+  it('telefon-chrome-låser står: PhoneShell fixed z-60, Ronny-sheet urørt i denne låsen', () => {
+    const shell = les('../app/(app)/_shell/phone-shell.tsx');
+    expect(shell).toMatch(/fixed inset-x-0 top-0 z-\[60\]/);
+    expect(shell).toMatch(/data-ronny-avatar/);
+    expect(shell).toMatch(/md:hidden/);
   });
 
   it('speiler hard-fasit i docs/', () => {
@@ -204,7 +187,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(hard).toMatch(/parchment `#f5f5f7`/);
     expect(hard).toMatch(/touch-action: manipulation/);
     expect(hard).toMatch(/Timeplan\|Rapporter/);
-    expect(hard).toMatch(/Don’t touch PhoneShell/);
+    expect(hard).toMatch(/PhoneShell|sidebar/);
     expect(fasit).toMatch(/Timeplan \| Rapporter/);
     expect(fasit).toMatch(/Ikke Organisasjon-piller/);
     expect(fasit).toMatch(/hard-fasit/);

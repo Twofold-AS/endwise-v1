@@ -176,7 +176,7 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     expect(light).toMatch(/--ew-accent:\s*#0066cc/);
     expect(light).toMatch(/--ew-accent-strong:\s*#0071e3/);
     expect(cta).toMatch(/bg-primary/);
-    expect(cta).toMatch(/hover:bg-accent-strong/);
+    expect(cta).toMatch(/hover:bg-primary\/90/);
     expect(cta).not.toMatch(/bg-\[#111\]/);
     expect(cta).not.toMatch(/#1ED27D/);
     expect(chrome).toMatch(/data-markeds-cta/);

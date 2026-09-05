@@ -112,8 +112,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    */
 
   /*
-   * Desktop-sidebar er persistent venstre skinne. Overlay/fullskjerm-drawer
-   * er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
+   * Desktop-sidebar er Fluid inset + offcanvas (ingen ikon-skinne).
+   * Overlay-drawer er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
    * Fast toppbar med midtstilt ink-logo på telefon. Tilbake er pil med hale.
    * PhoneBevel er borte. Dealer har ikke top-bar 2 / seksjonspiller.
    * Plattform (Endwise) kan montere seksjonsbar i eget layout. Ronny er
@@ -141,7 +141,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   />
                   <Sidebar />
                 </Suspense>
-                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden md:p-2">
+                  <div
+                    data-shell-inset
+                    className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-bg md:rounded-lg md:border md:border-border md:bg-card"
+                  >
                   <Suspense fallback={null}>
                     <PhoneShell />
                     <WorkshopBloub />
@@ -165,6 +169,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       ) : null}
                       {children}
                     </main>
+                  </div>
                   </div>
                 </div>
               </div>

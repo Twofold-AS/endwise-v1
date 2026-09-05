@@ -1,11 +1,11 @@
 'use client';
 
 import { PanelLeftOpen } from '@endwise/ui';
-import { BloubBot } from '@endwise/ui/bloub/BloubBot';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useOrgRole } from '../_lib/use-org-role';
+import { RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
 import { shellForBruker } from './nav';
 import { PHONE_LOGO_PX, SHELL_TOGGLE_PX } from './phone-chrome';
@@ -17,7 +17,7 @@ const HIT = 'inline-flex size-11 shrink-0 items-center justify-center rounded-co
 
 /**
  * Fast toppbar på telefon. Overlay-lås er mobil.
- * Logo midt (ink). Tilbake-pil med hale på undersider. Høyre: Ronny-avatar,
+ * Logo midt (kun merke). Tilbake-pil med hale på undersider. Høyre: Ronny-avatar,
  * deretter sidebar-toggle ytterst. Desktop har persistent skinne — `md:hidden`.
  */
 export function PhoneShell() {
@@ -27,6 +27,7 @@ export function PhoneShell() {
   const { role, jobbfunksjon, isMechanic, erPlattform } = useOrgRole();
   const { openPhone } = useSidebarState();
   const { apen, apne, lukk } = useRonnySheet();
+  const { spin, trigg } = useRonnySpinn();
   const shell = shellForBruker({
     role,
     jobFunction: jobbfunksjon,
@@ -61,25 +62,22 @@ export function PhoneShell() {
           data-shell-logo
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
         >
-          <span className="pointer-events-auto inline-flex items-center gap-1.5 text-fg">
-            <span
-              aria-hidden
-              className="shrink-0 bg-fg"
-              style={{
-                width: PHONE_LOGO_PX,
-                height: PHONE_LOGO_PX,
-                maskImage: 'url(/logo/logo.svg)',
-                maskSize: 'contain',
-                maskRepeat: 'no-repeat',
-                maskPosition: 'center',
-                WebkitMaskImage: 'url(/logo/logo.svg)',
-                WebkitMaskSize: 'contain',
-                WebkitMaskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-              }}
-            />
-            <span className="text-title">Endwise</span>
-          </span>
+          <span
+            aria-hidden
+            className="pointer-events-auto inline-flex shrink-0 bg-fg"
+            style={{
+              width: PHONE_LOGO_PX,
+              height: PHONE_LOGO_PX,
+              maskImage: 'url(/logo/logo.svg)',
+              maskSize: 'contain',
+              maskRepeat: 'no-repeat',
+              maskPosition: 'center',
+              WebkitMaskImage: 'url(/logo/logo.svg)',
+              WebkitMaskSize: 'contain',
+              WebkitMaskRepeat: 'no-repeat',
+              WebkitMaskPosition: 'center',
+            }}
+          />
         </Link>
         <div className="relative z-10 ml-auto flex items-center">
           <button
@@ -88,19 +86,13 @@ export function PhoneShell() {
             aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
             aria-expanded={apen}
             className={HIT}
-            onClick={() => (apen ? lukk() : apne())}
+            onClick={() => {
+              trigg();
+              if (apen) lukk();
+              else apne();
+            }}
           >
-            <BloubBot
-              size={28}
-              shape="cercle"
-              color="#1d1d1f"
-              paper="#f5f5f7"
-              state="idle"
-              expression="heureux"
-              follow={false}
-              still
-              playing={false}
-            />
+            <RonnyBot size={28} paper="#f5f5f7" spin={spin} />
           </button>
           <button
             type="button"

@@ -377,7 +377,7 @@ export function WorkshopBloub() {
                   expression={uttrykk}
                   follow={false}
                   still={false}
-                  playing={false}
+                  playing
                 />
               </span>
               <span
@@ -450,7 +450,7 @@ export function WorkshopBloub() {
                   expression={uttrykk}
                   follow={false}
                   still={false}
-                  playing={false}
+                  playing
                 />
               </span>
               <span

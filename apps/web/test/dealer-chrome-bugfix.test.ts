@@ -84,12 +84,14 @@ describe('Oppgrader-CTA følger faktisk nivå', () => {
     expect(oppgraderKnappetekst('enterprise')).not.toMatch(/Oppgrader/);
   });
 
-  it('pillen er Galaxy-CTA under Enterprise og merke uten CTA på Enterprise', () => {
+  it('pillen er Galaxy-CTA under Enterprise og Galaxy-merke på Enterprise', () => {
     const pille = utenKommentarer(les('../app/(app)/_shell/oppgrader-pille.tsx'));
     expect(pille).toMatch(/visOppgraderCta/);
     expect(pille).toMatch(/effektivPlanNokkel|planKey/);
     expect(pille).toMatch(/data-plan-badge/);
-    expect(pille).toMatch(/<Galaxy/);
+    expect((pille.match(/<Galaxy/g) ?? []).length).toBeGreaterThanOrEqual(1);
+    expect(pille).toMatch(/data-plan-badge[\s\S]*GalaxyKlipp|GalaxyKlipp[\s\S]*data-plan-badge/);
+    expect(pille).not.toMatch(/bg-\[#fff\]/);
   });
 
   it('getState faller tilbake til tenants.plan', () => {

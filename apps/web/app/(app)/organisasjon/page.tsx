@@ -7,12 +7,13 @@ import { AbonnementInnhold } from '../abonnement/_innhold';
 import { IntegrasjonerInnhold } from '../integrasjoner/_innhold';
 import { TjenesterInnhold } from '../tjenester/_innhold';
 import { OrganisasjonAnsatte } from './_ansatte';
+import { OrganisasjonListe } from './_liste';
 import { parseOrgSeksjon } from './_seksjoner';
 import { ForhandlerKort } from './forhandleren/_kort';
 
 /**
- * Organisasjon — én side. Top-bar 2 velger seksjon.
- * Landing = Oversikt (forhandlerkort). Timeplan er egen destinasjon. Salg er /prisliste.
+ * Organisasjon — gruppert liste (Ansatte → Timeplan → Abonnement → Integrasjoner).
+ * Ingen top-bar 2 / piller. Landing har valgfri dealer-meta (forhandlerkort).
  */
 export default function OrganisasjonPage() {
   return (
@@ -30,12 +31,9 @@ function OrganisasjonIndre() {
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
       {seksjon === 'oversikt' ? (
-        <section className="flex flex-col gap-8" aria-label="Oversikt">
-          <div>
-            <h1 className="text-title text-fg">Oversikt</h1>
-            <p className="text-body text-fg-muted">Verkstedets firmanavn og kontakt.</p>
-          </div>
+        <section className="flex flex-col gap-8" aria-label="Organisasjon">
           <ForhandlerKort />
+          <OrganisasjonListe isAdmin={isAdmin} />
         </section>
       ) : null}
       {seksjon === 'ansatte' ? <OrganisasjonAnsatte /> : null}

@@ -62,6 +62,7 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(shell).toMatch(/maskImage|WebkitMaskImage|mask-image/);
     expect(shell).not.toMatch(/<Image[\s\S]*logo\.svg/);
     expect(shell).not.toMatch(/#1ED27D/);
+    expect(shell).not.toMatch(/text-title">Endwise</);
   });
 
   it('tilbake er kun pil med hale, uten synlig Tilbake-tekst', () => {
@@ -81,6 +82,22 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
   it('hjem skjuler tilbake-pilen', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/hjem \? null/);
+  });
+
+  it('toppbar- og desktop-avatar er levende Bloub, ikke still/heureux', () => {
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    const knapp = utenKommentarer(les('../app/(app)/_workshop/ronny-avatar-knapp.tsx'));
+    const bot = utenKommentarer(les('../app/(app)/_workshop/ronny-bot.tsx'));
+    expect(shell).toMatch(/RonnyBot/);
+    expect(knapp).toMatch(/RonnyBot/);
+    expect(shell).not.toMatch(/still/);
+    expect(knapp).not.toMatch(/still/);
+    expect(bot).toMatch(/still=\{false\}/);
+    expect(bot).toMatch(/\bplaying\b/);
+    expect(bot).not.toMatch(/playing=\{false\}/);
+    expect(bot).toMatch(/heureux|colere|surpris/);
+    const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
+    expect(fab).not.toMatch(/playing=\{false\}/);
   });
 
   it('høyre cluster er avatar rett til venstre for sidebar-toggle', () => {

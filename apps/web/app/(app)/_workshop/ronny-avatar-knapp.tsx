@@ -1,6 +1,6 @@
 'use client';
 
-import { BloubBot } from '@endwise/ui/bloub/BloubBot';
+import { RonnyBot, useRonnySpinn } from './ronny-bot';
 import { useRonnySheet } from './ronny-sheet-state';
 
 const HIT =
@@ -12,6 +12,7 @@ const HIT =
  */
 export function RonnyAvatarKnapp({ className }: { className?: string }) {
   const { apen, apne, lukk } = useRonnySheet();
+  const { spin, trigg } = useRonnySpinn();
   return (
     <button
       type="button"
@@ -19,19 +20,13 @@ export function RonnyAvatarKnapp({ className }: { className?: string }) {
       aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
       aria-expanded={apen}
       className={className ? `${HIT} ${className}` : HIT}
-      onClick={() => (apen ? lukk() : apne())}
+      onClick={() => {
+        trigg();
+        if (apen) lukk();
+        else apne();
+      }}
     >
-      <BloubBot
-        size={24}
-        shape="cercle"
-        color="#1d1d1f"
-        paper="#f5f5f7"
-        state="idle"
-        expression="heureux"
-        follow={false}
-        still
-        playing={false}
-      />
+      <RonnyBot size={24} paper="#f5f5f7" spin={spin} />
     </button>
   );
 }

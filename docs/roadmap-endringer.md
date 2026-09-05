@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-05 — F3-05 / F5-13 forhandler-hjem hard Apple (etter #135)
+
+**Type:** dealer-hjem innholdskolonne. Ingen techstack-endring. Ingen ny UI-pakke.
+**Godkjent av:** Jonas DESIGN hard-fasit 05.09.2026 (`docs/endwise-forhandler-hjem-apple-hard-fasit.md`).
+**Endring:** **F3-05** forblir `progress`. **F5-13** forblir `done`. Hjem-hub er destinasjonskort (hero I dag/Pågår/Fullført + 2-og-2) med parchment-scroll og hardere Apple-luft. Chrome (PhoneShell, sidebar, Ronny) urørt. Overstyrer mild #136 og desktop KPI-dump på selve hjemmet.
+
+---
+
 ## 2026-09-05 — F5-35 landing CTA Action Blue (etter #129)
 
 **Type:** offentlig flate. Ingen techstack-endring. Ingen ny UI-pakke.

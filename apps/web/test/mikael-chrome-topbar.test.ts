@@ -147,7 +147,7 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
         role: 'dealer_admin',
         shell: 'forhandler',
       }),
-    ).toEqual([{ label: 'Verkstedet', href: '/dashboard', valgt: true }]);
+    ).toEqual([]);
 
     expect(
       destinasjonFaner({

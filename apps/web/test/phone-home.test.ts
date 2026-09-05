@@ -41,27 +41,27 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('dealer phone home — kortrekkefølge og fyll', () => {
-  it('låser hero → Innboks|Timeplan → Statistikk|Salg → Kunder|Organisasjon → Lager lavt (ingen Samarbeid)', () => {
+  it('låser hero → Timeplan|Rapporter → Innboks|Jobber → Kunder|Organisasjon → Samarbeid|Hjelp → Lager', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['verkstedet'],
-      ['innboks', 'timeplan'],
-      ['statistikk', 'tjenester'],
+      ['timeplan', 'statistikk'],
+      ['innboks', 'jobber'],
       ['kunder', 'organisasjon'],
+      ['samarbeid', 'hjelp'],
       ['lager'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(DEALER_PHONE_HJEM[1]?.kind).toBe('pair');
     expect(DEALER_PHONE_HJEM[2]?.kind).toBe('pair');
     expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('low');
-    expect(flatDealerHjemKeys(true)).not.toContain('samarbeid');
-    expect(PHONE_KORT_META).not.toHaveProperty('samarbeid');
+    expect(dealerPhoneHjemRader(false).flatMap((r) => r.keys)).not.toContain('samarbeid');
+    expect(PHONE_KORT_META).toHaveProperty('samarbeid');
   });
 
-  it('Innboks|Timeplan og Salg er høyt, Lager er lavt', () => {
+  it('Timeplan|Rapporter og Innboks|Jobber er høyt, Lager er lavt', () => {
     const keys = DEALER_PHONE_HJEM.map((r) => r.keys.join('|'));
-    expect(keys.indexOf('innboks|timeplan')).toBeLessThan(keys.indexOf('statistikk|tjenester'));
-    expect(keys.indexOf('statistikk|tjenester')).toBeLessThan(keys.indexOf('lager'));
-    expect(keys.indexOf('innboks|timeplan')).toBeLessThan(keys.indexOf('lager'));
+    expect(keys.indexOf('timeplan|statistikk')).toBeLessThan(keys.indexOf('innboks|jobber'));
+    expect(keys.indexOf('innboks|jobber')).toBeLessThan(keys.indexOf('lager'));
     expect(keys.at(-1)).toBe('lager');
   });
 
@@ -80,10 +80,13 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(labels.some((l) => /book|oppslag|prisliste|abonnement|\bai\b/.test(l))).toBe(false);
   });
 
-  it('Timeplan går til /jobber, Salg til /prisliste, Statistikk til /rapporter', () => {
-    expect(PHONE_KORT_META.timeplan.href).toBe('/jobber');
+  it('Timeplan går til kalender, Jobber til liste, Rapporter til /rapporter', () => {
+    expect(PHONE_KORT_META.timeplan.href).toBe('/jobber?visning=kalender');
+    expect(PHONE_KORT_META.jobber.label).toBe('Jobber');
+    expect(PHONE_KORT_META.jobber.href).toBe('/jobber');
     expect(PHONE_KORT_META.tjenester.label).toBe('Tjenester');
     expect(PHONE_KORT_META.tjenester.href).toBe('/prisliste');
+    expect(PHONE_KORT_META.statistikk.label).toBe('Rapporter');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     expect(PHONE_KORT_META.verkstedet.href).toContain('visning=dag');
   });
@@ -135,7 +138,7 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem).not.toMatch(/Ny jobb/);
     expect(hjem).not.toMatch(/bookinger\/ny/);
-    expect(hjem).toMatch(/timeplanMeta|key === 'timeplan'/);
+    expect(hjem).toMatch(/timeplanRader|key === 'timeplan'/);
   });
 
   it('fyller statistikk, innboks, kunder, org, lager og rapporter-setning fra ekte/eksisterende tall', () => {
@@ -151,6 +154,7 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
       ulest: 2,
       linje: 'Bremse',
     });
+    expect(innboksMeta([])).toEqual({ ulest: 0, linje: 'Ingen uleste' });
     expect(
       kunderMeta([
         { name: 'Kari', createdAt: '2026-08-20' },
@@ -158,6 +162,8 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
       ]),
     ).toMatch(/Ola · 2 totalt/);
     expect(organisasjonMeta([{ status: 'på_jobb' }, { status: 'fri' }])).toBe('1 på jobb');
+    expect(organisasjonMeta([])).toBe('Åpne organisasjon');
+    expect(lagerMeta([], [])).toBe('Ingen lave varer');
     expect(lagerMeta([{ name: 'Olje filter', sku: 'OF-1', tilgjengelig: 1 }], [])).toMatch(
       /Olje filter/,
     );
@@ -317,12 +323,13 @@ describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
     expect(sidebar).toMatch(/QUICK_ACTIONS/);
   });
 
-  it('dealer desktop Verkstedet er uendret bak md:hidden-skillet', () => {
+  it('dealer desktop Verkstedet er samme destinasjonskort bak md-skillet', () => {
     const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
     expect(dash).toMatch(/useMdViewport/);
     expect(dash).toMatch(/flate === ['"]desktop['"]/);
     expect(dash).toMatch(/PhoneHomeDealer/);
-    expect(dash).toMatch(/Dagens saker|AnsattePaJobb|Timeplan/);
+    expect(dash).toMatch(/DealerDestinasjonskort/);
+    expect(dash).not.toMatch(/AnsattePaJobb/);
   });
 
   it('dashboard og /verkstedet wrapper useSearchParams i Suspense (next build)', () => {

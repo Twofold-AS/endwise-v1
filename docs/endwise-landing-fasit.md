@@ -1,6 +1,6 @@
 # Endwise landing — fasit (2026-09-05)
 
-Låst av Jonas. **Overstyring samme dag:** Mikael via Jonas — primær CTA er «Prøv Endwise», ikke «Book demo».
+Låst av Jonas. **Overstyring samme dag:** Mikael via Jonas — primær CTA er «Prøv Endwise».
 
 Gjelder den offentlige markedssiden `/` i `apps/web` (ikke dealer-chrome).
 

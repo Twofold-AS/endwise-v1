@@ -1,7 +1,7 @@
 # Rapport — 05.09.2026 — Apple-markedsside endwise.no (F5-35)
 
 **Roadmap:** F5-35 (`done`, Jonas-fasit 05.09.2026)  
-**Godkjenning:** Jonas-fasit 05.09.2026. Mikael via Jonas samme dag: primær CTA «Prøv Endwise», ikke «Book demo». H1 urørt.  
+**Godkjenning:** Jonas-fasit 05.09.2026. Mikael via Jonas samme dag: primær CTA «Prøv Endwise». H1 urørt.  
 **PR:** draft, ikke merge.
 
 ---

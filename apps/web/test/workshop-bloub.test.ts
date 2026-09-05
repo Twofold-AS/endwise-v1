@@ -24,6 +24,11 @@ describe('norskChatFeil', () => {
         message: 'Ingen modell konfigurert for rollen «fast». Sett MISTRAL_MODEL_FAST.',
       }),
     ).toContain('MISTRAL_MODEL_FAST');
+    expect(
+      norskChatFeil({
+        message: 'Rate limit exceeded (code 1300)',
+      }),
+    ).toMatch(/rate limit|opptatt|vent/i);
   });
 });
 

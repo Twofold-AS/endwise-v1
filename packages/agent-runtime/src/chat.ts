@@ -4,6 +4,7 @@ import { isStepCount, type ModelMessage, streamText, type TextStreamPart, type T
 import { type AgentDefinition, AgentPreflightRefuse, assertEntitled } from './agent.ts';
 import { type AgentContext, sealContext } from './context.ts';
 import { pakkKlientKontekstSomData } from './klient-data.ts';
+import { MODELL_MAX_RETRIES } from './modell-retry.ts';
 import { assertAsciiToolNames } from './tool-navn.ts';
 import { filtrerVerktoyAllowlist } from './verktoy-allowlist.ts';
 
@@ -105,6 +106,7 @@ export function streamAgentChat(options: ChatOptions) {
     messages: options.messages,
     tools,
     stopWhen: isStepCount(agent.maxSteps),
+    maxRetries: MODELL_MAX_RETRIES,
     experimental_transform: rewrite
       ? l4MedPolicy(lagRedactor, {
           rewrite: (text) => rewrite(text, { usedTools }),

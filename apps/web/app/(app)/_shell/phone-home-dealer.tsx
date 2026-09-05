@@ -15,16 +15,17 @@ import {
   lagerMeta,
   organisasjonMeta,
   statistikkSetning,
+  timeplanMeta,
+  tjenesterMeta,
   verkstedHeroTall,
 } from './phone-home-data';
 import { PhoneKort } from './phone-kort';
 
 /**
- * Forhandlerens telefon-hjem. Fylte kort med ekte meta.
- * Verkstedet-hero er tellere, ikke en jobbliste. Tap = dagen.
- * Timeplan-kortet er destinasjon (ikon + navn) — ingen jobbliste på kortet.
+ * Forhandlerens destinasjonskort — telefon-hjem og desktop-hjem.
+ * Fylt med ekte meta fra eksisterende tRPC-ruter.
  */
-export function PhoneHomeDealer() {
+export function useDealerHjemKort() {
   const { shopEnabled, tenantName } = useOrgRole();
   const kort = trpc.forhandler.kort.useQuery();
   const bookings = trpc.bookings.list.useQuery({ limit: 100 });
@@ -53,23 +54,41 @@ export function PhoneHomeDealer() {
 
   const metaFor = (key: PhoneKortKey): { text?: string; ulest?: number } => {
     if (key === 'statistikk') return { text: statistikkSetning(jobber, naa) };
-    if (key === 'tjenester') {
-      const n = (tjenester.data ?? []).filter((t) => t.active).length;
-      return { text: n === 0 ? 'Ingen tjenester ennå' : `${n} bookbare` };
-    }
+    if (key === 'tjenester') return { text: tjenesterMeta(tjenester.data ?? []) };
     if (key === 'innboks') return { text: innboks.linje, ulest: innboks.ulest };
-    if (key === 'timeplan') return {};
+    if (key === 'timeplan' || key === 'jobber') return { text: timeplanMeta(jobber, naa) };
     if (key === 'kunder') return { text: kunderMeta(customers.data ?? []) };
     if (key === 'organisasjon') return { text: organisasjonMeta(oversikt.data ?? []) };
     if (key === 'lager') return { text: lagerMeta(lave.data ?? [], bevegelser.data ?? []) };
     if (key === 'butikk') return { text: 'Katalog og kasse' };
-    return {};
+    if (key === 'hjelp') return { text: 'Artikler og support' };
+    return { text: 'Åpne destinasjonen' };
   };
 
+  return {
+    tenantName,
+    kort,
+    bookings,
+    hero,
+    rader,
+    metaFor,
+  };
+}
+
+export function DealerDestinasjonskort({
+  utenHero = false,
+  className,
+}: {
+  utenHero?: boolean;
+  className?: string;
+}) {
+  const { tenantName, kort, bookings, hero, rader, metaFor } = useDealerHjemKort();
+
   return (
-    <div className={`${VERKSTED_INNHOLD} flex flex-col gap-3 py-3 md:hidden`}>
+    <div className={className ?? 'flex flex-col gap-3'}>
       {rader.map((rad) => {
         if (rad.keys[0] === 'verkstedet') {
+          if (utenHero) return null;
           const dest = PHONE_KORT_META.verkstedet;
           const forhandlernavn = tenantName?.trim() || kort.data?.name?.trim() || dest.label;
           return (
@@ -113,6 +132,12 @@ export function PhoneHomeDealer() {
         );
       })}
     </div>
+  );
+}
+
+export function PhoneHomeDealer() {
+  return (
+    <DealerDestinasjonskort className={`${VERKSTED_INNHOLD} flex flex-col gap-3 py-3 md:hidden`} />
   );
 }
 

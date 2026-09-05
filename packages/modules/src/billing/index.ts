@@ -1,7 +1,7 @@
 import { and, type Database, eq, schema, sql, withTenant } from '@endwise/db';
 import type { ModuleKey } from '../entitlements.ts';
 import { publishEvent } from '../stream/publisher.ts';
-import { modulesForSubscription } from './plans.ts';
+import { effektivPlanNokkel, modulesForSubscription } from './plans.ts';
 
 export * from './katalog.ts';
 export * from './plans.ts';
@@ -68,11 +68,15 @@ export function createBillingService(db: Database) {
           .select()
           .from(schema.billingCustomers)
           .where(eq(schema.billingCustomers.tenantId, tenantId));
+        const [tenant] = await tx
+          .select({ plan: schema.tenants.plan })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.id, tenantId));
         const mods = await tx
           .select({ key: schema.tenantModules.moduleKey, enabled: schema.tenantModules.enabled })
           .from(schema.tenantModules);
         return {
-          planKey: row?.planKey ?? null,
+          planKey: effektivPlanNokkel(row?.planKey, tenant?.plan),
           status: row?.status ?? 'none',
           currentPeriodEnd: row?.currentPeriodEnd ?? null,
           modules: mods,

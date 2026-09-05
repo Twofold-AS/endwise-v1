@@ -14,7 +14,7 @@ export const SHELL_TOGGLE_PX = 16;
  * Samme header-rad i lukket toppbar og åpen overlay — identisk høyde,
  * venstre-innfelt og vertikal sentrering så logoen ikke hopper.
  */
-export const SHELL_HEADER_RAD = 'flex h-row items-center gap-2 px-3';
+export const SHELL_HEADER_RAD = 'flex h-row w-full items-center justify-between gap-2 px-3';
 export const SHELL_LOGO_WRAP = 'flex shrink-0 items-center';
 
 /** pl-3 + 24px logo + gap-2. */

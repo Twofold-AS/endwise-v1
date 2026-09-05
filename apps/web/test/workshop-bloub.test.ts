@@ -125,7 +125,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/PHONE_KORT_FYLL/);
     expect(fab).toMatch(/text-\[14px\]/);
     expect(fab).toMatch(/gap-6/);
-    expect(fab).toMatch(/VERKSTED_INNHOLD/);
+    expect(fab).toMatch(/data-ronny-skall-bredde/);
     expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,280}rounded-full/);
     expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,280}ring-1/);
     expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,80}size-6/);
@@ -184,8 +184,8 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(composerKilde).not.toMatch(/Galaxy/);
     expect(composerKilde).not.toMatch(/bg-\[#f5f5f7\]|bg-\[#fff\]|bg-bg/);
     expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}pb-1/);
-    expect(fab).toMatch(/VERKSTED_INNHOLD/);
-    expect(fab).toMatch(/data-ronny-verksted-bredde/);
+    expect(fab).toMatch(/data-ronny-skall-bredde/);
+    expect(fab).not.toMatch(/data-ronny-verksted-bredde/);
     expect(fab).toMatch(/data-ronny-flate/);
     expect(fab).toMatch(/data-ronny-laast/);
     expect(fab).toMatch(/if \(utvidet\) \{\s*scroller.setAttribute\('data-ronny-laast'/);
@@ -198,7 +198,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/position="top"/);
     expect(fab).toMatch(/position="bottom"/);
     expect(fab).toMatch(/phoneOpen/);
-    expect(fab).toMatch(/KORT_KANT/);
+    expect(fab).toMatch(/LUKKET_SKALL/);
     expect(fab).toMatch(/COMPOSER_SAFE/);
     expect(fab).not.toMatch(/COMPOSER_BUNN/);
     expect(fab).not.toMatch(/rounded-t-\[18px\]/);
@@ -215,7 +215,7 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(les('../app/(app)/_workshop/gradual-blur.tsx')).toMatch(/export function GradualBlur/);
     expect(les('../app/(app)/_workshop/gradual-blur.tsx')).toMatch(/target\?: 'parent' \| 'page'/);
     expect(les('../app/(app)/_workshop/gradual-blur.tsx')).not.toMatch(/from ['"]mathjs['"]/);
-    expect(fab).toMatch(/md:px-8|VERKSTED_INNHOLD/);
+    expect(fab).toMatch(/data-ronny-skall-bredde/);
     expect(fab).toMatch(/opacity-100/);
     expect(fab).toMatch(/bg-transparent/);
     expect(fab).toMatch(/cursor-grab/);

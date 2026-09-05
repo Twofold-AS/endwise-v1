@@ -133,10 +133,9 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(rader[0]?.what).toMatch(/EU-kontroll/);
     expect(rader[0]?.time).toMatch(/\d/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).not.toMatch(/Ingen jobber i dag/);
     expect(hjem).not.toMatch(/Ny jobb/);
     expect(hjem).not.toMatch(/bookinger\/ny/);
-    expect(hjem).toMatch(/key === 'timeplan'/);
+    expect(hjem).toMatch(/timeplanMeta|key === 'timeplan'/);
   });
 
   it('fyller statistikk, innboks, kunder, org, lager og rapporter-setning fra ekte/eksisterende tall', () => {

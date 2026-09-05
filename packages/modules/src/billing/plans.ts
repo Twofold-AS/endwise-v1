@@ -310,6 +310,24 @@ export function oppgraderKnappetekst(key: string | null | undefined): string {
   return neste ? `Oppgrader til ${neste.name}` : 'Enterprise';
 }
 
+/**
+ * Stripe-abonnement vinner. Mangler billing-rad (typisk etter onboarding)
+ * faller vi til `tenants.plan` så chrome ikke later som alle er på Start.
+ */
+export function effektivPlanNokkel(
+  billingKey: string | null | undefined,
+  tenantPlan: string | null | undefined,
+): string | null {
+  if (erTierKey(billingKey)) return billingKey;
+  if (erTierKey(tenantPlan)) return tenantPlan;
+  return null;
+}
+
+/** Enterprise (og ukjent-som-enterprise) får merke, ikke Oppgrader-CTA. */
+export function visOppgraderCta(key: string | null | undefined): boolean {
+  return nesteTier(key) !== undefined;
+}
+
 /* Oppslag */
 
 export function tierByKey(key: string | null | undefined): Tier | undefined {

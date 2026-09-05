@@ -146,30 +146,30 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     data-shell-inset
                     className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-bg md:rounded-lg md:border md:border-border md:bg-card"
                   >
-                  <Suspense fallback={null}>
-                    <PhoneShell />
-                    <WorkshopBloub />
-                  </Suspense>
-                  <div
-                    data-ronny-side-scroll
-                    className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
-                  >
-                    <main className="min-w-0 flex-1">
-                      {plattformVarsel ? (
-                        <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
-                          <p className="text-label">{plattformVarsel}</p>
-                          <button
-                            type="button"
-                            className="text-[12px] underline-offset-2 hover:underline"
-                            onClick={() => setPlattformVarsel(null)}
-                          >
-                            Lukk
-                          </button>
-                        </div>
-                      ) : null}
-                      {children}
-                    </main>
-                  </div>
+                    <Suspense fallback={null}>
+                      <PhoneShell />
+                      <WorkshopBloub />
+                    </Suspense>
+                    <div
+                      data-ronny-side-scroll
+                      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+                    >
+                      <main className="min-w-0 flex-1">
+                        {plattformVarsel ? (
+                          <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
+                            <p className="text-label">{plattformVarsel}</p>
+                            <button
+                              type="button"
+                              className="text-[12px] underline-offset-2 hover:underline"
+                              onClick={() => setPlattformVarsel(null)}
+                            >
+                              Lukk
+                            </button>
+                          </div>
+                        ) : null}
+                        {children}
+                      </main>
+                    </div>
                   </div>
                 </div>
               </div>

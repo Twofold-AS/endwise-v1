@@ -282,7 +282,11 @@ export function Sidebar() {
                 className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto"
               >
                 {grupper.map((gruppe) => (
-                  <div key={gruppe.id} data-sidebar-group={gruppe.id} className="flex flex-col gap-1">
+                  <div
+                    key={gruppe.id}
+                    data-sidebar-group={gruppe.id}
+                    className="flex flex-col gap-1"
+                  >
                     {gruppe.label ? (
                       <p className="px-2.5 text-[12px] text-fg-muted">{gruppe.label}</p>
                     ) : null}
@@ -338,7 +342,9 @@ export function Sidebar() {
             </div>
           </div>
 
-          {open ? <SidebarResizeHandle width={width} setWidth={setWidth} setOpen={setOpen} /> : null}
+          {open ? (
+            <SidebarResizeHandle width={width} setWidth={setWidth} setOpen={setOpen} />
+          ) : null}
         </div>
       </aside>
     </>
@@ -357,9 +363,11 @@ function SidebarResizeHandle({
   const start = useRef({ x: 0, w: width });
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: vertikal splitter, ikke <hr>
     <div
       data-sidebar-resize
       role="separator"
+      tabIndex={0}
       aria-orientation="vertical"
       aria-valuemin={SIDEBAR_MIN_WIDTH}
       aria-valuemax={SIDEBAR_MAX_WIDTH}
@@ -380,6 +388,21 @@ function SidebarResizeHandle({
           return;
         }
         setWidth(neste);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          setWidth(width - 16);
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          setWidth(width + 16);
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          setWidth(SIDEBAR_MIN_WIDTH);
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          setWidth(SIDEBAR_MAX_WIDTH);
+        }
       }}
     />
   );
@@ -458,9 +481,7 @@ function remapNav(item: NavItem, slug: string, fra: string | null): NavItem {
   return {
     ...item,
     href: medFra(remapHrefTilInspect(item.href, slug), fra),
-    hoverHref: item.hoverHref
-      ? medFra(remapHrefTilInspect(item.hoverHref, slug), fra)
-      : undefined,
+    hoverHref: item.hoverHref ? medFra(remapHrefTilInspect(item.hoverHref, slug), fra) : undefined,
     pills: item.pills?.map((c) => ({
       ...c,
       href: medFra(remapHrefTilInspect(c.href, slug), fra),

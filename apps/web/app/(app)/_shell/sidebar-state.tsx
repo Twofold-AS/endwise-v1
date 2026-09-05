@@ -40,6 +40,8 @@ function lesCookie(navn: string): string | null {
 
 function skrivDesktopCookie(navn: string, verdi: string) {
   if (!erDesktop()) return;
+  // Fluid-kontrakt: sidebar_state kun desktop. Cookie Store API er ikke i stacken.
+  // biome-ignore lint/suspicious/noDocumentCookie: desktop-only persist av sidebar_state
   document.cookie = `${navn}=${encodeURIComponent(verdi)}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}; SameSite=Lax`;
 }
 
@@ -114,17 +116,14 @@ export function SidebarStateProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setOpen = useCallback(
-    (neste: boolean | ((forrige: boolean) => boolean)) => {
-      setOpenState((forrige) => {
-        const verdi = typeof neste === 'function' ? neste(forrige) : neste;
-        skrivDesktopCookie(SIDEBAR_COOKIE_NAME, verdi ? 'true' : 'false');
-        if (verdi) setIsPeeking(false);
-        return verdi;
-      });
-    },
-    [],
-  );
+  const setOpen = useCallback((neste: boolean | ((forrige: boolean) => boolean)) => {
+    setOpenState((forrige) => {
+      const verdi = typeof neste === 'function' ? neste(forrige) : neste;
+      skrivDesktopCookie(SIDEBAR_COOKIE_NAME, verdi ? 'true' : 'false');
+      if (verdi) setIsPeeking(false);
+      return verdi;
+    });
+  }, []);
 
   const setWidth = useCallback((px: number) => {
     const klemt = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, Math.round(px)));

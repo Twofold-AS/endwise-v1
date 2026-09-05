@@ -319,7 +319,11 @@ export const FORHANDLER_NAV: NavItem[] = [
 ];
 
 export const FORHANDLER_NAV_GRUPPER = [
-  { id: 'drift' as const, label: null as string | null, keys: ['dashboard', 'innboks', 'jobber', 'kunder'] },
+  {
+    id: 'drift' as const,
+    label: null as string | null,
+    keys: ['dashboard', 'innboks', 'jobber', 'kunder'],
+  },
   {
     id: 'mer' as const,
     label: 'Mer',

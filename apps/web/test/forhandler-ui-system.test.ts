@@ -2,10 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import {
-  FORHANDLER_NAV,
-  FORHANDLER_NAV_GRUPPER,
-} from '../app/(app)/_shell/nav.ts';
+import { FORHANDLER_NAV, FORHANDLER_NAV_GRUPPER } from '../app/(app)/_shell/nav.ts';
 import {
   DEALER_PHONE_HJEM,
   dealerPhoneHjemRader,
@@ -13,11 +10,6 @@ import {
   PHONE_HERO_FYLL,
 } from '../app/(app)/_shell/phone-home.ts';
 import { destinasjonFaner } from '../app/(app)/_shell/seksjon-faner.ts';
-import {
-  SIDEBAR_COOKIE_NAME,
-  SIDEBAR_MAX_WIDTH,
-  SIDEBAR_MIN_WIDTH,
-} from '../app/(app)/_shell/sidebar-state.tsx';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -68,12 +60,11 @@ describe('Forhandler UI-system — sidebar Fluid-kontrakt', () => {
     expect(sidebar).toMatch(/data-sidebar-collapsible="offcanvas"/);
     expect(sidebar).toMatch(/data-sidebar-peek-edge/);
     expect(sidebar).not.toMatch(/md:w-\[52px\]/);
-    expect(state).toMatch(/SIDEBAR_COOKIE_NAME/);
-    expect(SIDEBAR_COOKIE_NAME).toBe('sidebar_state');
+    expect(state).toMatch(/SIDEBAR_COOKIE_NAME = 'sidebar_state'/);
     expect(state).toMatch(/erDesktop\(\)/);
     expect(state).toMatch(/phoneOpen/);
-    expect(SIDEBAR_MIN_WIDTH).toBe(160);
-    expect(SIDEBAR_MAX_WIDTH).toBe(360);
+    expect(state).toMatch(/SIDEBAR_MIN_WIDTH = 160/);
+    expect(state).toMatch(/SIDEBAR_MAX_WIDTH = 360/);
     expect(sidebar).toMatch(/data-sidebar-resize/);
     expect(layout).toMatch(/data-shell-inset/);
     expect(layout).toMatch(/md:rounded-lg md:border md:border-border md:bg-card/);

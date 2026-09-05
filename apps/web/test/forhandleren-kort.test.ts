@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { breadcrumbFor, FORHANDLER_NAV } from '../app/(app)/_shell/nav.ts';
-import { ORG_LISTE } from '../app/(app)/organisasjon/_liste.tsx';
+import { ORG_LISTE } from '../app/(app)/organisasjon/_org-liste.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 

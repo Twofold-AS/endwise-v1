@@ -4,25 +4,14 @@ import { CalendarDays, CreditCard, Plug, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { CardShell } from '../_shell/cards';
+import { ORG_LISTE } from './_org-liste';
 
-export const ORG_LISTE = [
-  { id: 'ansatte', label: 'Ansatte', href: '/organisasjon?seksjon=ansatte', icon: Users },
-  { id: 'timeplan', label: 'Timeplan', href: '/jobber', icon: CalendarDays },
-  {
-    id: 'abonnement',
-    label: 'Abonnement',
-    href: '/organisasjon?seksjon=abonnement',
-    icon: CreditCard,
-    admin: true,
-  },
-  {
-    id: 'integrasjoner',
-    label: 'Integrasjoner',
-    href: '/organisasjon?seksjon=integrasjoner',
-    icon: Plug,
-    admin: true,
-  },
-] as const;
+const ORG_IKON = {
+  ansatte: Users,
+  timeplan: CalendarDays,
+  abonnement: CreditCard,
+  integrasjoner: Plug,
+} as const;
 
 /** Gruppert liste — erstatter Organisasjon top-bar 2. Ingen piller. */
 export function OrganisasjonListe({ isAdmin }: { isAdmin: boolean }) {
@@ -32,7 +21,7 @@ export function OrganisasjonListe({ isAdmin }: { isAdmin: boolean }) {
       <CardShell>
         <ul className="flex flex-col">
           {rader.map((rad, i) => {
-            const Ikon = rad.icon;
+            const Ikon = ORG_IKON[rad.id];
             return (
               <li key={rad.id} className={i > 0 ? 'border-border border-t' : undefined}>
                 <Link

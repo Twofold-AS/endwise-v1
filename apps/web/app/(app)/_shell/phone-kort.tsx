@@ -4,12 +4,12 @@ import type { LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { PHONE_KORT_FYLL } from './phone-home';
+import { PHONE_HERO_FYLL, PHONE_KORT_FYLL } from './phone-home';
 
 /**
- * Destinasjonskort på telefon-hjem.
- * Samme flate/tekst som CardShell (bg-card / text-fg), radius 12.
- * Ulest er invertert prikk/tall — ikke Ny-rød.
+ * Destinasjonskort på forhandler-hjem (Jonas Apple 05.09).
+ * Surface/hairline, radius 12 (kort) / 16 (hero). Ulest er invertert prikk — ikke Ny-rød.
+ * Hele kortet er primærhandlingen. Hit ≥44.
  */
 export function PhoneKort({
   href,
@@ -19,6 +19,7 @@ export function PhoneKort({
   ulest,
   children,
   className,
+  variant = 'kort',
 }: {
   href: string;
   icon: LucideIcon;
@@ -27,12 +28,15 @@ export function PhoneKort({
   ulest?: number;
   children?: ReactNode;
   className?: string;
+  variant?: 'kort' | 'hero';
 }) {
+  const fyll = variant === 'hero' ? PHONE_HERO_FYLL : PHONE_KORT_FYLL;
   return (
     <Link
       href={href as Route}
       data-phone-kort={navn}
-      className={`${PHONE_KORT_FYLL} flex flex-col gap-2 p-3 ${className ?? ''}`}
+      data-verkstedet-hero={variant === 'hero' ? '' : undefined}
+      className={`${fyll} flex min-h-11 flex-col gap-2 p-4 ${className ?? ''}`}
     >
       <div className="flex items-center gap-2">
         <Icon size={16} strokeWidth={1.75} className="shrink-0" />

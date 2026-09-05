@@ -113,8 +113,8 @@ describe('Verkstedet-flaten — navn og innhold', () => {
   it('er Forhandler › Verkstedet, ikke Kontor eller Gulvet', () => {
     const side = les('../app/(app)/dashboard/page.tsx');
     expect(side).toMatch(/sr-only[\s\S]*<h1>Verkstedet<\/h1>/);
-    expect(side).toMatch(/AnsattePaJobb/);
-    expect(side).toMatch(/Timeplan/);
+    expect(side).toMatch(/DealerDestinasjonskort/);
+    expect(side).not.toMatch(/AnsattePaJobb/);
     expect(side).not.toMatch(/Kontor|Gulvet/);
     expect(FORHANDLER_NAV.find((i) => i.key === 'dashboard')?.label).toBe('Verkstedet');
     expect(FORHANDLER_NAV.some((i) => /kontor|gulvet/i.test(i.label))).toBe(false);

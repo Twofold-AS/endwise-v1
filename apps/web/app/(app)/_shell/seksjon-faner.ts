@@ -1,4 +1,8 @@
-import { isVerkstedInspectPath, remapHrefTilInspect, verkstedSlugFromPath } from '../_lib/plattform';
+import {
+  isVerkstedInspectPath,
+  remapHrefTilInspect,
+  verkstedSlugFromPath,
+} from '../_lib/plattform';
 import { INNBOKS_FILTERE, type InboxPart } from './inbox-del';
 import {
   ENDWISE_NAV,
@@ -9,10 +13,11 @@ import {
   type OrgRole,
   PARKED_LABEL,
   pillsForRole,
-  settingsForShell,
   type ShellKey,
+  settingsForShell,
   stierFor,
 } from './nav';
+import { erDealerPhoneHjem } from './phone-home';
 import { erDealerInnboks } from './seksjon-sti';
 
 export type DestinasjonFane = {
@@ -67,6 +72,7 @@ export function destinasjonFaner(input: {
     pathname = pathname.replace(/^\/endwise\/verksted\/[^/]+/, '') || '/dashboard';
   }
   if (pathname.startsWith('/oppstart')) return [];
+  if (input.shell === 'forhandler' && erDealerPhoneHjem(pathname, search)) return [];
 
   const mapHref = (href: string) => (inspectSlug ? remapHrefTilInspect(href, inspectSlug) : href);
 

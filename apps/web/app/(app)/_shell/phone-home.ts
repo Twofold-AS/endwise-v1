@@ -3,6 +3,8 @@ import {
   Building2,
   CalendarDays,
   ChartColumn,
+  ClipboardList,
+  Handshake,
   Inbox,
   LayoutDashboard,
   LifeBuoy,
@@ -12,7 +14,7 @@ import {
   Users,
   Wrench,
 } from '@endwise/ui';
-import { type ShellKey, settingsForShell } from './nav';
+import { FORHANDLER_NAV, type ShellKey, settingsForShell } from './nav';
 
 /**
  * Telefon-hjem-kort (Mikael 29.08.2026) er sideinnhold, ikke meny.
@@ -33,6 +35,22 @@ export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';
  * (hvit i lyst). Den kombinasjonen er den vaskede «hvite overlay»-en.
  */
 export const PHONE_KORT_FYLL = 'rounded-xl border border-border bg-card text-fg shadow-none';
+/** Hero: radius 16, samme surface/hairline — ikke `#111`. */
+export const PHONE_HERO_FYLL = 'rounded-[16px] border border-border bg-card text-fg shadow-none';
+
+/** Jonas 05.09 Apple-hjem — ærlig tomtilstand per kort. */
+export const HJEM_KORT_TOM = {
+  hero: 'Ingen jobber i dag',
+  timeplan: 'Ingen jobber i dag',
+  innboks: 'Ingen uleste',
+  jobber: 'Ingen åpne jobber',
+  kunder: 'Ingen kunder ennå',
+  organisasjon: 'Åpne organisasjon',
+  rapporter: 'Ingen tall ennå',
+  lager: 'Ingen lave varer',
+  lagerTomt: 'Ingen deler ennå',
+  hjelp: 'Artikler og support',
+} as const;
 
 /**
  * Innholdskolonne for det største Verksted-kortet (telefon-hjem + desktop-hero)
@@ -58,6 +76,7 @@ export type PhoneKortKey =
   | 'jobber'
   | 'kunder'
   | 'organisasjon'
+  | 'samarbeid'
   | 'hjelp'
   | 'lager'
   | 'butikk'
@@ -70,12 +89,17 @@ export type PhoneHjemRad = {
   kind: 'hero' | 'full' | 'pair' | 'low';
 };
 
-/** Dealer-rekkefølge: hero → Innboks|Timeplan → Statistikk|Salg → … → Lager lavt. */
+/**
+ * Jonas 05.09 Apple-hjem: hero → Timeplan|Rapporter → Innboks|Jobber →
+ * Kunder|Organisasjon → Samarbeid|Hjelp → Lager. Samarbeid hoppes i
+ * `dealerPhoneHjemRader` når raden ikke står i nav.
+ */
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['verkstedet'], kind: 'hero' },
-  { keys: ['innboks', 'timeplan'], kind: 'pair' },
-  { keys: ['statistikk', 'tjenester'], kind: 'pair' },
+  { keys: ['timeplan', 'statistikk'], kind: 'pair' },
+  { keys: ['innboks', 'jobber'], kind: 'pair' },
   { keys: ['kunder', 'organisasjon'], kind: 'pair' },
+  { keys: ['samarbeid', 'hjelp'], kind: 'pair' },
   { keys: ['lager'], kind: 'low' },
 ];
 
@@ -87,13 +111,14 @@ export const PHONE_KORT_META: Record<
   { label: string; href: string; icon: LucideIcon }
 > = {
   verkstedet: { label: 'Verkstedet', href: '/dashboard?visning=dag', icon: LayoutDashboard },
-  timeplan: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
-  statistikk: { label: 'Statistikk', href: '/rapporter', icon: ChartColumn },
+  timeplan: { label: 'Timeplan', href: '/jobber?visning=kalender', icon: CalendarDays },
+  statistikk: { label: 'Rapporter', href: '/rapporter', icon: ChartColumn },
   tjenester: { label: 'Tjenester', href: '/prisliste', icon: Wrench },
   innboks: { label: 'Innboks', href: '/innboks', icon: Inbox },
-  jobber: { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
+  jobber: { label: 'Jobber', href: '/jobber', icon: ClipboardList },
   kunder: { label: 'Kunder', href: '/kunder', icon: Users },
   organisasjon: { label: 'Organisasjon', href: '/organisasjon', icon: Building2 },
+  samarbeid: { label: 'Samarbeid', href: '/samarbeid', icon: Handshake },
   hjelp: { label: 'Hjelp', href: '/support', icon: LifeBuoy },
   lager: { label: 'Lager', href: '/lager', icon: Package },
   butikk: { label: 'Butikk', href: '/butikk', icon: Store },
@@ -104,10 +129,23 @@ export const PHONE_KORT_META: Record<
 
 export const MEKANIKER_TIMEPLAN_HREF = '/min-dag/timeplan';
 
-export function dealerPhoneHjemRader(shopEnabled: boolean): PhoneHjemRad[] {
-  return DEALER_PHONE_HJEM.map((rad) => {
-    if (rad.kind !== 'low') return rad;
-    return shopEnabled ? { ...rad, keys: ['lager', 'butikk'] as PhoneKortKey[] } : rad;
+/** Samarbeid er ute av `FORHANDLER_NAV` (Mikael 01.09) — da hopper hjem-kortet. */
+export function samarbeidSynligINav(): boolean {
+  return FORHANDLER_NAV.some((i) => i.key === 'samarbeid');
+}
+
+export function dealerPhoneHjemRader(
+  shopEnabled: boolean,
+  samarbeidSynlig = samarbeidSynligINav(),
+): PhoneHjemRad[] {
+  return DEALER_PHONE_HJEM.flatMap((rad) => {
+    if (rad.kind === 'low') {
+      return [shopEnabled ? { ...rad, keys: ['lager', 'butikk'] as PhoneKortKey[] } : rad];
+    }
+    if (!rad.keys.includes('samarbeid') || samarbeidSynlig) return [rad];
+    const rest = rad.keys.filter((k) => k !== 'samarbeid');
+    if (rest.length === 0) return [];
+    return [{ keys: rest, kind: rest.length === 1 ? 'full' : rad.kind }];
   });
 }
 

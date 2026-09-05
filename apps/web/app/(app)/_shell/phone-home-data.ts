@@ -1,7 +1,7 @@
 import { nokkeltallFor } from '../analyse/_data';
 import { fmtTime } from '../bookinger/_status';
 import { sammeKalenderdag } from '../dashboard/_pa-jobb';
-import { ukeStartMandag } from './phone-home';
+import { HJEM_KORT_TOM, ukeStartMandag } from './phone-home';
 
 export type PhoneBooking = {
   id: string;
@@ -43,7 +43,7 @@ export type PhoneArtikkel = {
   ulest: boolean;
 };
 
-export type TimeplanRad = { time: string; what: string };
+export type TimeplanRad = { id: string; time: string; what: string };
 
 export function verkstedHeroTall(jobber: PhoneBooking[], naa: Date) {
   const dagens = jobber.filter((j) => sammeKalenderdag(j.startsAt, naa));
@@ -60,6 +60,7 @@ export function timeplanRader(jobber: PhoneBooking[], naa: Date, limit = 4): Tim
     .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
     .slice(0, limit)
     .map((j) => ({
+      id: j.id,
       time: fmtTime(j.startsAt),
       what: jobbHva(j),
     }));
@@ -86,7 +87,7 @@ export function nesteJobb(jobber: PhoneBooking[], naa: Date): TimeplanRad | null
   const neste =
     kommende.find((j) => new Date(j.startsAt).getTime() >= naa.getTime()) ?? kommende[0] ?? null;
   if (!neste) return null;
-  return { time: fmtTime(neste.startsAt), what: jobbHva(neste) };
+  return { id: neste.id, time: fmtTime(neste.startsAt), what: jobbHva(neste) };
 }
 
 export function ukeStatistikk(jobber: PhoneBooking[], naa: Date) {
@@ -103,8 +104,12 @@ export function ukeStatistikk(jobber: PhoneBooking[], naa: Date) {
 
 export function statistikkSetning(jobber: PhoneBooking[], naa: Date): string {
   const { jobber: antall, fullfort } = ukeStatistikk(jobber, naa);
-  if (antall === 0) return 'Ingen jobber denne uken';
+  if (antall === 0) return HJEM_KORT_TOM.rapporter;
   return `${antall} jobber · ${fullfort} fullført denne uken`;
+}
+
+export function rapporterMeta(jobber: PhoneBooking[], naa: Date): string {
+  return statistikkSetning(jobber, naa);
 }
 
 function kroner(ore: number): string {
@@ -121,10 +126,20 @@ export function timeplanMeta(jobber: PhoneBooking[], naa: Date): string {
   const dagens = jobber.filter(
     (j) => sammeKalenderdag(j.startsAt, naa) && j.status !== 'cancelled',
   );
-  if (dagens.length === 0) return 'Ingen jobber i dag';
+  if (dagens.length === 0) return HJEM_KORT_TOM.timeplan;
   const neste = nesteJobb(dagens, naa);
   if (neste) return `${dagens.length} i dag · ${neste.time} ${neste.what}`;
   return `${dagens.length} jobb${dagens.length === 1 ? '' : 'er'} i dag`;
+}
+
+const LUKKET_JOBB = new Set(['cancelled', 'completed', 'no_show']);
+
+export function jobberMeta(jobber: PhoneBooking[], naa: Date): string {
+  const apne = jobber.filter((j) => !LUKKET_JOBB.has(j.status));
+  if (apne.length === 0) return HJEM_KORT_TOM.jobber;
+  const neste = nesteJobb(apne, naa);
+  if (neste) return `Neste ${neste.time} ${neste.what}`;
+  return `${apne.length} åpen${apne.length === 1 ? '' : 'e'} jobb${apne.length === 1 ? '' : 'er'}`;
 }
 
 export function tjenesterMeta(tjenester: PhoneTjeneste[]): string {
@@ -151,14 +166,15 @@ export function innboksMeta(traader: PhoneTraad[]): { ulest: number; linje: stri
     const bt = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
     return bt - at;
   })[0];
+  if (ulest === 0) return { ulest: 0, linje: HJEM_KORT_TOM.innboks };
   return {
     ulest,
-    linje: siste?.subject?.trim() || (ulest > 0 ? `${ulest} uleste` : 'Ingen nye meldinger'),
+    linje: siste?.subject?.trim() || `${ulest} uleste`,
   };
 }
 
 export function kunderMeta(kunder: PhoneKunde[]): string {
-  if (kunder.length === 0) return 'Ingen kunder ennå';
+  if (kunder.length === 0) return HJEM_KORT_TOM.kunder;
   const siste = [...kunder].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   )[0];
@@ -169,13 +185,13 @@ export function organisasjonMeta(
   mekanikere: { status: string; id?: string; name?: string }[],
 ): string {
   const n = mekanikere.filter((m) => m.status !== 'fri').length;
-  if (n === 0) return 'Ingen på jobb';
+  if (n === 0) return HJEM_KORT_TOM.organisasjon;
   return `${n} på jobb`;
 }
 
 export function hjelpMeta(artikler: PhoneArtikkel[]): string {
   const ulest = artikler.find((a) => a.ulest);
-  return ulest?.title ?? 'Spør oss';
+  return ulest?.title ?? HJEM_KORT_TOM.hjelp;
 }
 
 export function lagerMeta(lave: PhoneDel[], bevegelser: PhoneBevegelse[]): string {
@@ -186,7 +202,7 @@ export function lagerMeta(lave: PhoneDel[], bevegelser: PhoneBevegelse[]): strin
     const retning = sist.kind === 'in' ? 'inn' : sist.kind === 'out' ? 'ut' : sist.kind;
     return `${sist.partName} · ${retning} ${sist.quantity}`;
   }
-  return 'Lageret er i orden';
+  return HJEM_KORT_TOM.lager;
 }
 
 export function minDagMeta(jobber: PhoneBooking[], naa: Date): string {

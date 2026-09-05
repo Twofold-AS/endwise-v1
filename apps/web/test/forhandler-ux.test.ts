@@ -91,11 +91,15 @@ describe('Tillit: 403, 404, varsler, identitet', () => {
 });
 
 describe('Ny jobb og tomflater', () => {
-  it('dashboard-tomflate har Ny jobb som primærhandling', () => {
+  it('dashboard-tomflate er destinasjonskort med ærlig tom dag — ikke Ny jobb på hjem', () => {
     const dash = les('../app/(app)/dashboard/page.tsx');
-    expect(dash).toMatch(/Ingen jobber i dag/);
-    expect(dash).toMatch(/Ny jobb/);
-    expect(dash).toMatch(/animate-pulse/);
+    const hjem = les('../app/(app)/_shell/phone-home-dealer.tsx');
+    const data = les('../app/(app)/_shell/phone-home.ts');
+    expect(dash).toMatch(/DealerDestinasjonskort/);
+    expect(dash).not.toMatch(/Ny jobb/);
+    expect(hjem).toMatch(/Ingen jobber i dag|HJEM_KORT_TOM\.hero/);
+    expect(hjem).toMatch(/animate-pulse/);
+    expect(data).toMatch(/Ingen jobber i dag/);
   });
 
   it('innboks-filtre er ikon-knapper på desktop, tomflate er postkasse', () => {

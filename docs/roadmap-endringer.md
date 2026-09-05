@@ -5,11 +5,19 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-05 — F5-35 landing CTA Action Blue (etter #129)
+
+**Type:** offentlig flate. Ingen techstack-endring. Ingen ny UI-pakke.
+**Godkjent av:** Mikael/Jonas etter merge av #129. Offentlig landing følger Apple DESIGN.md — ikke produkt-`#111`.
+**Endring:** **F5-35** forblir `done`. Primær CTA-fyll er Action Blue `#0066cc` via eksisterende `--ew-accent` (`bg-primary`), hover `#0071e3`. Label forblir «Prøv Endwise». Dealer-chrome `#111` (Oppgrader/Ronny) urørt.
+
+---
+
 ## 2026-09-05 — F5-35 Apple-markedsside (Jonas-fasit)
 
 **Type:** offentlig flate. Ingen techstack-endring. Ingen ny UI-pakke.
 **Godkjent av:** Jonas-fasit 05.09.2026 (`docs/endwise-landing-fasit.md`). Mikael via Jonas samme dag: primær CTA «Prøv Endwise». H1 «Verkstedet, samlet.» urørt.
-**Endring:** **F5-35** forblir `done`. `/` byttet fra nøktern 720px-side til Apple-markedsflate: H1 «Verkstedet, samlet.», CTA `#111` «Prøv Endwise», tre løfter, desktop+Min dag, TIERS-pris 4490/8490/12490, tillit, footer. Nye ruter `/personvern` `/vilkar` `/kontakt`. Dealer-chrome urørt.
+**Endring:** **F5-35** forblir `done`. `/` byttet fra nøktern 720px-side til Apple-markedsflate: H1 «Verkstedet, samlet.», CTA «Prøv Endwise» (Action Blue etter senere Mikael/Jonas-lås), tre løfter, desktop+Min dag, TIERS-pris 4490/8490/12490, tillit, footer. Nye ruter `/personvern` `/vilkar` `/kontakt`. Dealer-chrome urørt.
 
 ---
 

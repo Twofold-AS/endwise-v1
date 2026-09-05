@@ -152,9 +152,24 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     expect(markeds).not.toMatch(/#EE2924|#1ED27D.*cta|bg-success|bg-green/i);
     expect(markeds).not.toMatch(/sticky/);
     expect(markeds).not.toMatch(/blobatar|carousel|<video/i);
-    expect(les('../app/_markeds/cta.ts')).toMatch(/bg-\[#111\]/);
     expect(chrome).toMatch(/#1ED27D/);
     expect(chrome).not.toMatch(/sticky/);
+  });
+
+  it('primær CTA er Action Blue-token, ikke produkt-#111', () => {
+    const cta = les('../app/_markeds/cta.ts');
+    const tokens = les('../../../packages/widget-tokens/src/tokens.css');
+    const light = tokens.split('[data-theme="dark"]')[0];
+    expect(light).toMatch(/--ew-accent:\s*#0066cc/);
+    expect(light).toMatch(/--ew-accent-strong:\s*#0071e3/);
+    expect(cta).toMatch(/bg-primary/);
+    expect(cta).toMatch(/hover:bg-accent-strong/);
+    expect(cta).not.toMatch(/bg-\[#111\]/);
+    expect(cta).not.toMatch(/#1ED27D/);
+    expect(chrome).toMatch(/data-markeds-cta/);
+    for (const { sti, kilde } of markedsKilder()) {
+      expect(kilde, sti).not.toMatch(/bg-\[#111\]/);
+    }
   });
 
   it('footer peker på personvern, vilkår og kontakt', () => {

@@ -13,7 +13,6 @@ import {
   PromptInputTextarea,
   X,
 } from '@endwise/ui';
-import { BloubBot, type ExpressionId, type StateId } from '@endwise/ui/bloub/BloubBot';
 import { DefaultChatTransport } from 'ai';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -30,6 +29,7 @@ import { useSidebarState } from '../_shell/sidebar-state';
 import { erTillattGaaTil } from './gaa-til';
 import { GradualBlur } from './gradual-blur';
 import { norskChatFeil } from './norsk-chat-feil';
+import { RonnyBot } from './ronny-bot';
 import { RonnyForstorIkon, RonnyHandtak } from './ronny-ikoner';
 import {
   RONNY_SHEET_RADIUS_PX,
@@ -40,7 +40,6 @@ import {
 import { useRonnySheet } from './ronny-sheet-state';
 import { sidekontekst } from './sidekontekst';
 
-const IDLE_MS = 5000;
 const RAMME_PX = 18;
 const APPLE_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
 const HIT = 'inline-flex size-11 shrink-0 items-center justify-center rounded-control text-fg';
@@ -48,31 +47,6 @@ const HIT = 'inline-flex size-11 shrink-0 items-center justify-center rounded-co
 const COMPOSER_SAFE = 'max(6px, env(safe-area-inset-bottom))';
 const TENKER_TEKST = 'Ronny tenker…';
 const BOBLE_TEKST = 'text-[14px] leading-snug md:text-body md:leading-relaxed';
-
-const RONNY_IDLE: readonly { expression: ExpressionId }[] = [
-  { expression: 'colere' },
-  { expression: 'colere' },
-  { expression: 'surpris' },
-  { expression: 'colere' },
-  { expression: 'heureux' },
-  { expression: 'curieux' },
-  { expression: 'colere' },
-  { expression: 'attentif' },
-  { expression: 'excite' },
-  { expression: 'fier' },
-];
-
-function useRonnyIdle(aktiv: boolean): ExpressionId {
-  const [steg, setSteg] = useState(0);
-  useEffect(() => {
-    if (!aktiv) return;
-    const id = window.setInterval(() => {
-      setSteg((s) => (s + 1) % RONNY_IDLE.length);
-    }, IDLE_MS);
-    return () => window.clearInterval(id);
-  }, [aktiv]);
-  return RONNY_IDLE[steg]?.expression ?? 'heureux';
-}
 
 function tekstFraMelding(melding: { parts: Array<{ type: string; text?: string }> }): string {
   return melding.parts
@@ -122,7 +96,6 @@ export function WorkshopBloub() {
 
   const { messages, sendMessage, status, error } = useChat({ transport });
   const opptatt = status === 'submitted' || status === 'streaming';
-  const idle = useRonnyIdle(true);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: lukk helt ved sidebar-navigasjon
   useEffect(() => {
@@ -189,9 +162,6 @@ export function WorkshopBloub() {
       }
     }
   }, [messages, router]);
-
-  const tilstand: StateId = 'idle';
-  const uttrykk: ExpressionId = idle;
 
   function send(innhold: string) {
     const rensket = innhold.trim();
@@ -357,29 +327,8 @@ export function WorkshopBloub() {
               <RonnyForstorIkon />
             </button>
             <div className="flex min-w-0 items-center gap-2">
-              <span data-ronny-spin className="flex">
-                <BloubBot
-                  size={28}
-                  shape="cercle"
-                  color="#1d1d1f"
-                  paper="#ffffff"
-                  state={tilstand}
-                  expression={uttrykk}
-                  follow={false}
-                  still={false}
-                  playing
-                />
-              </span>
-              <span
-                data-ronny-tenker={opptatt ? '' : undefined}
-                className={
-                  opptatt
-                    ? 'ronny-tenker-tekst truncate text-title'
-                    : 'truncate text-title text-[#1d1d1f]'
-                }
-              >
-                Ronny
-              </span>
+              <RonnyBot size={28} paper="#ffffff" />
+              <span className="truncate text-title text-[#1d1d1f]">Ronny</span>
               {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
             </div>
             <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
@@ -430,29 +379,8 @@ export function WorkshopBloub() {
             className="flex h-row shrink-0 items-center justify-between px-3"
           >
             <div className="flex min-w-0 items-center gap-2">
-              <span data-ronny-spin className="flex">
-                <BloubBot
-                  size={28}
-                  shape="cercle"
-                  color="#1d1d1f"
-                  paper="#ffffff"
-                  state={tilstand}
-                  expression={uttrykk}
-                  follow={false}
-                  still={false}
-                  playing
-                />
-              </span>
-              <span
-                data-ronny-tenker={opptatt ? '' : undefined}
-                className={
-                  opptatt
-                    ? 'ronny-tenker-tekst truncate text-title'
-                    : 'truncate text-title text-[#1d1d1f]'
-                }
-              >
-                Ronny
-              </span>
+              <RonnyBot size={28} paper="#ffffff" />
+              <span className="truncate text-title text-[#1d1d1f]">Ronny</span>
               {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
             </div>
             <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>

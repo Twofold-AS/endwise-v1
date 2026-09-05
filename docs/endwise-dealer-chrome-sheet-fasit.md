@@ -51,7 +51,7 @@ Desktop Ronny er **ikke** sheet. Se `docs/endwise-dealer-chrome-desktop-ronny-fa
 
 ## Do
 
-- Ronny-avatarer: kun uttrykksbytte (ansikt/humør). ⛔ thinking. ⛔ alert/notify.
+- Ronny-avatarer: kun `RonnyBot` (ansikt/humør). ⛔ rå `BloubBot` i sheet/desktop-header. ⛔ `playing` (defaultCycle-reel). ⛔ `ronny-tenker-tekst` på tittel. Spinn kun `data-ronny-spin="1"`.
 - Tokens / UI-PAKKER Apple.
 - `viewport-fit=cover` + safe-area.
 - Hit targets ≥ 44 på avatar, X, forstørr, toggle.

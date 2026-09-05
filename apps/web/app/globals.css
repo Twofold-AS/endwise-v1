@@ -75,15 +75,14 @@ body {
     transform: rotateY(360deg);
   }
 }
-[data-ronny-spin] {
+[data-ronny-spin="1"] {
   animation: ronny-spin 0.7s ease-in-out;
   transform-style: preserve-3d;
 }
 
 /*
  * shadcn Conversation/Shimmer er ikke hentet (UI-PAKKER §7).
- * Samme shimmer-mønster (gradient + bg-clip-text) på tenke-teksten,
- * i takt med BloubBot state=thinking — ikke en ekstra spinner.
+ * Legacy shimmer — chrome-tittel bruker den ikke.
  */
 @keyframes ronny-tenker-shimmer {
   0% {

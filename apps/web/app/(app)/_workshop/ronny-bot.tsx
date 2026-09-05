@@ -1,11 +1,11 @@
 'use client';
 
-import { BloubBot, type ExpressionId, type StateId } from '@endwise/ui/bloub/BloubBot';
+import { BloubBot, type ExpressionId } from '@endwise/ui/bloub/BloubBot';
 import { useEffect, useState } from 'react';
 
 export const IDLE_MS = 5000;
 
-/** Bare ansikt/humør. Ingen thinking/alert/notify. */
+/** Bare ansikt/humør. Ingen tenke-/varsel-state på boten. */
 export const RONNY_IDLE: readonly ExpressionId[] = [
   'heureux',
   'colere',
@@ -43,8 +43,9 @@ export function useRonnySpinn(): { spin: boolean; trigg: () => void } {
 }
 
 /**
- * Levende Ronny — kun uttrykksbytte (ansikt/humør).
- * Klikk-spinn er rotateY + surpris. Ingen thinking/alert/notify.
+ * Chrome-Ronny — kun uttrykksbytte (ansikt/humør).
+ * `playing={false}`: Bloub defaultCycle er tenke-/varsel-reel.
+ * Klikk-spinn er CSS `data-ronny-spin="1"` + surpris.
  */
 export function RonnyBot({
   size,
@@ -59,26 +60,18 @@ export function RonnyBot({
 }) {
   const idle = useRonnyIdle(!spin);
   const visUttrykk: ExpressionId = expression ?? (spin ? 'surpris' : idle);
-  const visState: StateId = 'idle';
   return (
-    <span
-      data-ronny-spin
-      className="inline-flex"
-      style={{
-        transform: spin ? 'rotateY(360deg)' : 'rotateY(0deg)',
-        transition: 'transform 600ms cubic-bezier(0.32, 0.72, 0, 1)',
-      }}
-    >
+    <span data-ronny-spin={spin ? '1' : undefined} className="inline-flex">
       <BloubBot
         size={size}
         shape="cercle"
         color="#1d1d1f"
         paper={paper}
-        state={visState}
+        state="idle"
         expression={visUttrykk}
         follow
         still={false}
-        playing
+        playing={false}
       />
     </span>
   );

@@ -84,26 +84,36 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(shell).toMatch(/hjem \? null/);
   });
 
-  it('toppbar- og desktop-avatar er levende Bloub, ikke still/heureux', () => {
+  it('chrome-avatar er RonnyBot: uttrykk-only, ingen tenke-/varsel-reel', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const knapp = utenKommentarer(les('../app/(app)/_workshop/ronny-avatar-knapp.tsx'));
     const bot = utenKommentarer(les('../app/(app)/_workshop/ronny-bot.tsx'));
+    const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
+    const css = utenKommentarer(les('../app/globals.css'));
     expect(shell).toMatch(/RonnyBot/);
     expect(knapp).toMatch(/RonnyBot/);
+    expect(fab).toMatch(/<RonnyBot/);
+    expect((fab.match(/<RonnyBot/g) ?? []).length).toBe(2);
+    expect(shell).not.toMatch(/BloubBot/);
+    expect(knapp).not.toMatch(/BloubBot/);
+    expect(fab).not.toMatch(/BloubBot/);
     expect(shell).not.toMatch(/still/);
     expect(knapp).not.toMatch(/still/);
     expect(bot).toMatch(/still=\{false\}/);
-    expect(bot).toMatch(/\bplaying\b/);
-    expect(bot).not.toMatch(/playing=\{false\}/);
+    expect(bot).toMatch(/playing=\{false\}/);
+    expect(bot).toMatch(/state="idle"/);
+    expect(bot).toMatch(/data-ronny-spin=\{spin \? '1' : undefined\}/);
     expect(bot).toMatch(/heureux|colere|surpris/);
     expect(bot).not.toMatch(/'thinking'/);
     expect(bot).not.toMatch(/'alert'/);
     expect(bot).not.toMatch(/'notify'/);
-    expect(bot).toMatch(/visState: StateId = 'idle'/);
-    const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
-    expect(fab).not.toMatch(/playing=\{false\}/);
     expect(fab).not.toMatch(/'thinking'/);
     expect(fab).not.toMatch(/'alert'/);
+    expect(fab).not.toMatch(/ronny-tenker-tekst/);
+    expect(fab).not.toMatch(/data-ronny-tenker/);
+    expect(fab).not.toMatch(/data-ronny-spin/);
+    expect(css).toMatch(/\[data-ronny-spin=["']1["']\]/);
+    expect(css).not.toMatch(/\[data-ronny-spin\]\s*\{/);
   });
 
   it('dealer-layout har ikke DestinasjonSeksjonBar i treet', () => {

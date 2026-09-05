@@ -149,11 +149,24 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     ].join('\n');
     expect(markeds).not.toMatch(/Start gratis/);
     expect(markeds).not.toMatch(FORBUDT_CTA);
-    expect(markeds).not.toMatch(/#EE2924|#1ED27D.*cta|bg-success|bg-green/i);
+    expect(markeds).not.toMatch(/#EE2924|#1ED27D|bg-success|bg-green/i);
     expect(markeds).not.toMatch(/sticky/);
     expect(markeds).not.toMatch(/blobatar|carousel|<video/i);
-    expect(chrome).toMatch(/#1ED27D/);
     expect(chrome).not.toMatch(/sticky/);
+  });
+
+  it('offentlig merke er ink/svart, ikke logogrønn', () => {
+    expect(chrome).not.toMatch(/#1ED27D|#1ed27d/i);
+    expect(chrome).toMatch(/className="shrink-0 bg-fg"/);
+    expect(chrome).toMatch(/text-fg tracking-tight">Endwise</);
+    expect(chrome).toMatch(/maskImage/);
+    expect(chrome).toMatch(/url\(\/logo\/logo\.svg\)/);
+    const cta = les('../app/_markeds/cta.ts');
+    expect(cta).toMatch(/bg-primary/);
+    expect(cta).not.toMatch(/#1ED27D/);
+    for (const { sti, kilde } of markedsKilder()) {
+      expect(utenKommentarer(kilde), sti).not.toMatch(/#1ED27D|#1ed27d/i);
+    }
   });
 
   it('primær CTA er Action Blue-token, ikke produkt-#111', () => {

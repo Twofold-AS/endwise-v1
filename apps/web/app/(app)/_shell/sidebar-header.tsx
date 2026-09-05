@@ -4,6 +4,7 @@ import { PanelLeftClose, PanelLeftOpen } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { RonnyAvatarKnapp } from '../_workshop/ronny-avatar-knapp';
 import { SHELL_LOGO_PX, SHELL_LOGO_WRAP, SHELL_TOGGLE_PX } from './phone-chrome';
 import { useSidebarState } from './sidebar-state';
 
@@ -12,7 +13,7 @@ const LOGO = SHELL_LOGO_PX;
 
 /**
  * Sidebar-topp uten visningsvelger. Ett skall per innlogging.
- * Logo venstre, lukk/åpne ytterst til høyre.
+ * Logo venstre. Høyre: Ronny-avatar (desktop) rett til venstre for lukk/åpne.
  */
 export function SidebarHeader({
   collapsed,
@@ -45,6 +46,12 @@ export function SidebarHeader({
       )}
     </button>
   );
+  const hoyre = (
+    <div className="flex shrink-0 items-center">
+      <RonnyAvatarKnapp />
+      {minimer}
+    </div>
+  );
 
   if (inspect) {
     return (
@@ -71,7 +78,7 @@ export function SidebarHeader({
             </span>
           )}
         </Link>
-        {minimer}
+        {hoyre}
       </div>
     );
   }
@@ -87,7 +94,7 @@ export function SidebarHeader({
           className="logo-invert shrink-0"
         />
       </span>
-      {minimer}
+      {hoyre}
     </div>
   );
 }

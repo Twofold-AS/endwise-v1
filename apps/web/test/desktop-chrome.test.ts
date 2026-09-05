@@ -72,6 +72,8 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(workshop).not.toMatch(/Trykk på KI-Ronny/);
     expect(workshop).toMatch(/md:hidden/);
     expect(workshop).toMatch(/data-ronny-sheet/);
+    expect(workshop).toMatch(/data-ronny-desktop-panel/);
+    expect(workshop).toMatch(/max-w-\[400px\]/);
     expect(workshop).toMatch(/data-workshop-dock/);
     expect(workshop).toMatch(/fixed inset-x-0 bottom-0/);
     expect(workshop).toMatch(/data-ronny-composer/);

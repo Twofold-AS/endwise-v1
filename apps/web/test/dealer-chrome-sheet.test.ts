@@ -127,11 +127,47 @@ describe('Ingen Ronny-stripe / peek — sheet kun på telefon', () => {
     expect(fab).toMatch(/aria-label="Lukk"/);
   });
 
-  it('desktop-sidebar er urørt — logo venstre, toggle ytterst', () => {
+  it('desktop-sidebar: avatar rett til venstre for toggle, uten sheet', () => {
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
+    const knapp = utenKommentarer(les('../app/(app)/_workshop/ronny-avatar-knapp.tsx'));
     expect(header).toMatch(/justify-between/);
     expect(header).toMatch(/data-shell-logo/);
-    expect(header).not.toMatch(/data-ronny-avatar/);
+    expect(header).toMatch(/RonnyAvatarKnapp/);
+    expect(knapp).toMatch(/data-ronny-avatar/);
+    expect(knapp).toMatch(/hidden md:inline-flex/);
+    const cluster = header.slice(header.indexOf('const hoyre'));
+    const avatar = cluster.indexOf('RonnyAvatarKnapp');
+    const minimer = cluster.indexOf('{minimer}');
+    expect(avatar).toBeGreaterThan(-1);
+    expect(minimer).toBeGreaterThan(avatar);
     expect(header).not.toMatch(/data-ronny-sheet/);
+  });
+});
+
+describe('Desktop Ronny — overlay-panel, ikke sheet', () => {
+  it('høyre panel 400px med scrim, uten forstørr og handle', () => {
+    const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
+    expect(fab).toMatch(/data-ronny-desktop-panel/);
+    expect(fab).toMatch(/data-ronny-desktop-scrim/);
+    expect(fab).toMatch(/data-ronny-desktop-header/);
+    expect(fab).toMatch(/max-w-\[400px\]/);
+    expect(fab).toMatch(/absolute inset-0/);
+    expect(fab).toMatch(/hidden md:block/);
+    const desktop = fab.slice(fab.indexOf('data-ronny-desktop-panel'));
+    expect(desktop).toMatch(/data-ronny-lukk/);
+    expect(desktop).toMatch(/Ronny/);
+    expect(desktop).not.toMatch(/data-ronny-forstor/);
+    expect(desktop).not.toMatch(/data-ronny-handtak/);
+    expect(desktop).not.toMatch(/data-ronny-sheet/);
+    expect(desktop.slice(0, 400)).not.toMatch(/Forstørr|Full høyde/);
+  });
+
+  it('telefon-sheet er urørt — 80/100, forstørr, handle, md:hidden', () => {
+    const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
+    const sheet = fab.slice(fab.indexOf('data-ronny-sheet'), fab.indexOf('data-ronny-desktop'));
+    expect(sheet).toMatch(/data-ronny-forstor/);
+    expect(sheet).toMatch(/data-ronny-handtak/);
+    expect(sheet).toMatch(/data-ronny-hoyde/);
+    expect(fab).toMatch(/className="md:hidden"/);
   });
 });

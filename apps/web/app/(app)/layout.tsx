@@ -117,7 +117,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    * er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
    * Fast toppbar med midtstilt ink-logo på telefon. Tilbake er pil med hale.
    * PhoneBevel er borte. DestinasjonSeksjonBar under toppbaren. Ronny er
-   * telefon-sheet (80/100), ikke stripe. K åpner quick actions i sidebaren.
+   * telefon-sheet (80/100) og desktop høyre overlay (max 400px), ikke stripe.
+   * K åpner quick actions i sidebaren.
    */
   /*
    * `<Suspense>` rundt Sidebar og WorkshopBloub er påkrevd, ikke pynt. Begge
@@ -130,45 +131,45 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <SidebarStateProvider>
           <InboxFilterProvider>
             <PwaRegister />
-            <div className={PHONE_SHELL_ROT}>
-              <Suspense fallback={null}>
-                <PlattformRuteVakt
-                  erPlattform={erPlattform}
-                  isLoading={isLoading}
-                  onBlokkert={visPlattformVarsel}
-                />
-                <Sidebar />
-              </Suspense>
-              <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                <RonnySheetProvider>
+            <RonnySheetProvider>
+              <div className={PHONE_SHELL_ROT}>
+                <Suspense fallback={null}>
+                  <PlattformRuteVakt
+                    erPlattform={erPlattform}
+                    isLoading={isLoading}
+                    onBlokkert={visPlattformVarsel}
+                  />
+                  <Sidebar />
+                </Suspense>
+                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
                   <Suspense fallback={null}>
                     <PhoneShell />
                     <WorkshopBloub />
                     <DestinasjonSeksjonBar />
                   </Suspense>
-                </RonnySheetProvider>
-                <div
-                  data-ronny-side-scroll
-                  className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
-                >
-                  <main className="min-w-0 flex-1">
-                    {plattformVarsel ? (
-                      <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
-                        <p className="text-label">{plattformVarsel}</p>
-                        <button
-                          type="button"
-                          className="text-[12px] underline-offset-2 hover:underline"
-                          onClick={() => setPlattformVarsel(null)}
-                        >
-                          Lukk
-                        </button>
-                      </div>
-                    ) : null}
-                    {children}
-                  </main>
+                  <div
+                    data-ronny-side-scroll
+                    className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+                  >
+                    <main className="min-w-0 flex-1">
+                      {plattformVarsel ? (
+                        <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
+                          <p className="text-label">{plattformVarsel}</p>
+                          <button
+                            type="button"
+                            className="text-[12px] underline-offset-2 hover:underline"
+                            onClick={() => setPlattformVarsel(null)}
+                          >
+                            Lukk
+                          </button>
+                        </div>
+                      ) : null}
+                      {children}
+                    </main>
+                  </div>
                 </div>
               </div>
-            </div>
+            </RonnySheetProvider>
           </InboxFilterProvider>
         </SidebarStateProvider>
       </LiveSync>

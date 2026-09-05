@@ -84,7 +84,8 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(workshop).toMatch(/md:hidden/);
     expect(workshop).not.toMatch(/Trykk på KI-Ronny/);
     expect(workshop).not.toMatch(/hidden h-14/);
-    expect(workshop).not.toMatch(/md:block/);
+    expect(workshop).toMatch(/hidden md:block/);
+    expect(workshop).toMatch(/data-ronny-desktop-panel/);
     expect(workshop).toMatch(/fixed inset-x-0 bottom-0/);
     expect(workshop).toMatch(/data-ronny-composer/);
     expect(workshop).toMatch(/data-ronny-utvid/);

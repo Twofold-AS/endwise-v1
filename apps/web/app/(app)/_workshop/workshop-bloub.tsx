@@ -18,6 +18,7 @@ import { DefaultChatTransport } from 'ai';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   type PointerEvent as ReactPointerEvent,
+  type RefObject,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -89,9 +90,8 @@ function gaaTilHref(del: { type: string; state?: string; output?: unknown }): st
 }
 
 /**
- * KI-Ronny som bunn-sheet på telefon (Jonas/Mikael 05.09.2026).
- * Ingen stripe, ingen peek. 80 % default, 100 % via forstørr / tydelig swipe opp.
- * Desktop: ingen sheet i denne PR — egen løsning senere.
+ * KI-Ronny: bunn-sheet på telefon (80/100), høyre overlay på desktop (max 400px).
+ * Ingen stripe, ingen peek. Telefon: forstørr / tydelig swipe opp. Desktop: X / Escape.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -104,7 +104,8 @@ export function WorkshopBloub() {
   const [synlig, setSynlig] = useState(0);
   const [loggOverflow, setLoggOverflow] = useState(false);
   const composerRef = useRef<HTMLDivElement>(null);
-  const loggRef = useRef<HTMLDivElement>(null);
+  const phoneLoggRef = useRef<HTMLDivElement>(null);
+  const desktopLoggRef = useRef<HTMLDivElement>(null);
   const draStartY = useRef<number | null>(null);
   const sisteGaaTil = useRef<string>('');
   const side = useMemo(() => sidekontekst(pathname, search), [pathname, search]);
@@ -163,7 +164,9 @@ export function WorkshopBloub() {
   useLayoutEffect(() => {
     function maal() {
       setSynlig(synligViewportHoyde(window.visualViewport, window.innerHeight));
-      const logg = loggRef.current;
+      const logg = window.matchMedia('(min-width: 768px)').matches
+        ? desktopLoggRef.current
+        : phoneLoggRef.current;
       if (logg) setLoggOverflow(logg.scrollHeight > logg.clientHeight + 1);
       else setLoggOverflow(false);
     }
@@ -230,7 +233,7 @@ export function WorkshopBloub() {
   const submitStatus = opptatt ? status : 'ready';
   const sheetHoyde = synlig > 0 ? ronnySheetHoydePx(hoyde, synlig) : undefined;
 
-  const loggUtsnitt = (
+  const loggUtsnitt = (loggRef: RefObject<HTMLDivElement | null>) => (
     <div data-ronny-logg-ramme className="relative min-h-0 flex-1 overflow-hidden">
       <div
         ref={loggRef}
@@ -283,7 +286,7 @@ export function WorkshopBloub() {
     </div>
   );
 
-  const promptKort = (
+  const promptKort = () => (
     <div
       data-ronny-prompt-kort
       className={`${PHONE_KORT_FYLL} rounded-[18px] border-[#e0e0e0] bg-[#fff] px-2 py-1.5 text-[#1d1d1f]`}
@@ -309,6 +312,7 @@ export function WorkshopBloub() {
   if (!apen) return null;
 
   return (
+    <>
     <div className="md:hidden">
       <button
         type="button"
@@ -401,7 +405,7 @@ export function WorkshopBloub() {
             data-ronny-svar-kort
             className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"
           >
-            {loggUtsnitt}
+            {loggUtsnitt(phoneLoggRef)}
           </div>
           <div
             ref={composerRef}
@@ -410,11 +414,81 @@ export function WorkshopBloub() {
             className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
           >
             <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
-              {promptKort}
+              {promptKort()}
             </div>
           </div>
         </div>
       </div>
     </div>
+      <div className="absolute inset-0 z-[60] hidden md:block" data-ronny-desktop>
+        <button
+          type="button"
+          data-ronny-desktop-scrim
+          aria-label="Lukk Ronny"
+          className="absolute inset-0 bg-fg/15"
+          onClick={lukk}
+        />
+        <aside
+          data-ronny-desktop-panel
+          data-ronny-flate
+          className="absolute inset-y-0 right-0 z-10 flex w-full max-w-[400px] flex-col overflow-hidden bg-[#fff]"
+          role="dialog"
+          aria-label="Ronny"
+        >
+          <div
+            data-ronny-desktop-header
+            className="flex h-row shrink-0 items-center justify-between px-3"
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <span data-ronny-spin className="flex">
+                <BloubBot
+                  size={28}
+                  shape="cercle"
+                  color="#1d1d1f"
+                  paper="#ffffff"
+                  state={tilstand}
+                  expression={uttrykk}
+                  follow={false}
+                  still={false}
+                  playing={false}
+                />
+              </span>
+              <span
+                data-ronny-tenker={opptatt ? '' : undefined}
+                className={
+                  opptatt
+                    ? 'ronny-tenker-tekst truncate text-title'
+                    : 'truncate text-title text-[#1d1d1f]'
+                }
+              >
+                Ronny
+              </span>
+              {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
+            </div>
+            <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
+              <X size={18} strokeWidth={2} />
+            </button>
+          </div>
+          <div
+            data-workshop-dock
+            className="flex min-h-0 flex-1 flex-col bg-[#fff] text-[#1d1d1f]"
+          >
+            <div
+              data-ronny-svar-kort
+              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"
+            >
+              {loggUtsnitt(desktopLoggRef)}
+            </div>
+            <div
+              data-ronny-composer
+              data-ronny-prompt-flate
+              className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
+            >
+              <div className="relative px-3 pt-1.5 pb-3">{promptKort()}</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </>
   );
 }

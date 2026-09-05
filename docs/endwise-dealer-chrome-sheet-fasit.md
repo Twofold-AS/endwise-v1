@@ -33,10 +33,12 @@ Kilde: Jonas/Mikael. Overstyrer eldre stripe/peek-IA (#130-era).
 
 ## Desktop
 
-- **Persistent sidebar** som i dag (logo venstre i sidebar-header, toggle ytterst høyre — urørt).
+Desktop Ronny er **ikke** sheet. Se `docs/endwise-dealer-chrome-desktop-ronny-fasit.md`.
+
+- **Persistent sidebar** (logo venstre). Avatar rett til venstre for sidebar-toggle i sidebar-header (`hidden md:inline-flex`).
 - **Ingen** midt-logo-toppbar som erstatter sidebar.
-- **Sheet kun på telefon** (`md:hidden` / phone shell).
-- Desktop i denne PR: stripen er fjernet. **Ingen** ny desktop-dock/stripe. Åpne Ronny på desktop er **utsatt** — egen løsning senere. Telefon-avatar bor i `PhoneShell` (`md:hidden`), så desktop har midlertidig ingen inngang.
+- **Sheet kun på telefon** (`md:hidden` / phone shell). Ikke endre 80/100, radius 16, midt-logo, forstørr, handle.
+- Høyre overlay-panel over main (max 400px), lett scrim, Escape/X. Ingen forstørr, ingen drag-handle, ingen stripe/peek, ingen midt-modal.
 
 ## Don't
 

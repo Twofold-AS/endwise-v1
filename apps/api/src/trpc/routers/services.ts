@@ -1,6 +1,8 @@
 import { and, asc, desc, eq, isNull, schema, withTenant } from '@endwise/db';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { loggTjenestePostgresFeil, mapTjenestePostgresFeil } from '../slett-postgres.ts';
 
 const vehicleType = z.enum(['mc', 'boat', 'atv']);
 
@@ -94,30 +96,35 @@ export const servicesRouter = router({
         description: z.string().optional(),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        const [service] = await tx
-          .insert(schema.services)
-          .values({ tenantId: ctx.tenantId, name: input.name, vehicleType: input.vehicleType })
-          .returning();
-        if (!service) throw new Error('Kunne ikke opprette tjeneste');
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [service] = await tx
+            .insert(schema.services)
+            .values({ tenantId: ctx.tenantId, name: input.name, vehicleType: input.vehicleType })
+            .returning();
+          if (!service) throw new Error('Kunne ikke opprette tjeneste');
 
-        const [version] = await tx
-          .insert(schema.serviceVersions)
-          .values({
-            tenantId: ctx.tenantId,
-            serviceId: service.id,
-            version: 1,
-            durationMinutes: input.durationMinutes,
-            priceMinor: input.priceMinor ?? null,
-            skills: input.skills,
-            description: input.description ?? null,
-          })
-          .returning();
+          const [version] = await tx
+            .insert(schema.serviceVersions)
+            .values({
+              tenantId: ctx.tenantId,
+              serviceId: service.id,
+              version: 1,
+              durationMinutes: input.durationMinutes,
+              priceMinor: input.priceMinor ?? null,
+              skills: input.skills,
+              description: input.description ?? null,
+            })
+            .returning();
 
-        return { service, version };
-      }),
-    ),
+          return { service, version };
+        });
+      } catch (error) {
+        loggTjenestePostgresFeil(error);
+        throw mapTjenestePostgresFeil(error);
+      }
+    }),
 
   /** Ny versjon. Den forrige lukkes med `validTo` — den slettes ikke. */
   update: adminProcedure
@@ -134,51 +141,63 @@ export const servicesRouter = router({
         description: z.string().optional(),
       }),
     )
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        const [current] = await tx
-          .select()
-          .from(schema.serviceVersions)
-          .where(eq(schema.serviceVersions.serviceId, input.serviceId))
-          .orderBy(desc(schema.serviceVersions.version))
-          .limit(1);
-        if (!current) throw new Error('Tjenesten finnes ikke');
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [current] = await tx
+            .select()
+            .from(schema.serviceVersions)
+            .where(eq(schema.serviceVersions.serviceId, input.serviceId))
+            .orderBy(desc(schema.serviceVersions.version))
+            .limit(1);
+          if (!current) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Tjenesten finnes ikke' });
+          }
 
-        const now = new Date();
-        await tx
-          .update(schema.serviceVersions)
-          .set({ validTo: now })
-          .where(eq(schema.serviceVersions.id, current.id));
+          const now = new Date();
+          await tx
+            .update(schema.serviceVersions)
+            .set({ validTo: now })
+            .where(eq(schema.serviceVersions.id, current.id));
 
-        const [next] = await tx
-          .insert(schema.serviceVersions)
-          .values({
-            tenantId: ctx.tenantId,
-            serviceId: input.serviceId,
-            version: current.version + 1,
-            durationMinutes: input.durationMinutes,
-            priceMinor: input.priceMinor ?? null,
-            skills: input.skills,
-            description: input.description ?? null,
-            validFrom: now,
-          })
-          .returning();
+          const [next] = await tx
+            .insert(schema.serviceVersions)
+            .values({
+              tenantId: ctx.tenantId,
+              serviceId: input.serviceId,
+              version: current.version + 1,
+              durationMinutes: input.durationMinutes,
+              priceMinor: input.priceMinor ?? null,
+              skills: input.skills,
+              description: input.description ?? null,
+              validFrom: now,
+            })
+            .returning();
 
-        return next;
-      }),
-    ),
+          return next;
+        });
+      } catch (error) {
+        loggTjenestePostgresFeil(error);
+        throw mapTjenestePostgresFeil(error);
+      }
+    }),
 
   /** Deaktiver — aldri slett. Historikken skal overleve. */
   deactivate: adminProcedure
     .input(z.object({ serviceId: z.uuid() }))
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, (tx) =>
-        tx
-          .update(schema.services)
-          .set({ active: false })
-          .where(eq(schema.services.id, input.serviceId)),
-      ),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, (tx) =>
+          tx
+            .update(schema.services)
+            .set({ active: false })
+            .where(eq(schema.services.id, input.serviceId)),
+        );
+      } catch (error) {
+        loggTjenestePostgresFeil(error);
+        throw mapTjenestePostgresFeil(error);
+      }
+    }),
 
   /**
    * Angre en deaktivering.
@@ -189,12 +208,17 @@ export const servicesRouter = router({
    */
   reactivate: adminProcedure
     .input(z.object({ serviceId: z.uuid() }))
-    .mutation(({ ctx, input }) =>
-      withTenant(ctx.db, ctx.tenantId, (tx) =>
-        tx
-          .update(schema.services)
-          .set({ active: true })
-          .where(eq(schema.services.id, input.serviceId)),
-      ),
-    ),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, (tx) =>
+          tx
+            .update(schema.services)
+            .set({ active: true })
+            .where(eq(schema.services.id, input.serviceId)),
+        );
+      } catch (error) {
+        loggTjenestePostgresFeil(error);
+        throw mapTjenestePostgresFeil(error);
+      }
+    }),
 });

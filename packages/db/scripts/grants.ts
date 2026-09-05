@@ -150,7 +150,13 @@ const ownerInsert = await pool.query<{ polname: string }>(`
        'member_profiles_tenant_update_owner',
        'mechanics_tenant_select_owner',
        'mechanics_tenant_insert_owner',
-       'invitations_tenant_select_owner'
+       'invitations_tenant_select_owner',
+       'services_tenant_insert_owner',
+       'services_tenant_select_owner',
+       'services_tenant_update_owner',
+       'service_versions_tenant_insert_owner',
+       'service_versions_tenant_select_owner',
+       'service_versions_tenant_update_owner'
      )
 `);
 const ownerNavn = new Set(ownerInsert.rows.map((r) => r.polname));
@@ -172,12 +178,18 @@ const manglerEier = [
   'mechanics_tenant_select_owner',
   'mechanics_tenant_insert_owner',
   'invitations_tenant_select_owner',
+  'services_tenant_insert_owner',
+  'services_tenant_select_owner',
+  'services_tenant_update_owner',
+  'service_versions_tenant_insert_owner',
+  'service_versions_tenant_select_owner',
+  'service_versions_tenant_update_owner',
 ].filter((n) => !ownerNavn.has(n));
 if (manglerEier.length > 0) {
   console.error(
     '[db] eier-INSERT/SELECT/UPDATE/revoke-policyer under FORCE RLS mangler: ' +
       manglerEier.join(', ') +
-      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038+0039+0040+0041).',
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0037+0038+0039+0040+0041+0042).',
   );
   await pool.end();
   process.exit(1);
@@ -263,6 +275,48 @@ const modulesGuard = await pool.query<{ ok: boolean }>(`
 if (modulesGuard.rows[0]?.ok !== true) {
   console.error(
     '[db] tenant_modules_owner_update_guard mangler eller låser ikke PK (0041). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const servicesGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'services_owner_update_guard'
+       and strpos(p.prosrc, 'eier-UPDATE kan bare sette active') > 0
+       and strpos(p.prosrc, 'new.name is distinct from old.name') > 0
+       and strpos(p.prosrc, 'new.vehicle_type is distinct from old.vehicle_type') > 0
+  ) as ok
+`);
+if (servicesGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] services_owner_update_guard mangler eller låser ikke identitet (0042). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const versionsGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'service_versions_owner_update_guard'
+       and strpos(p.prosrc, 'eier-UPDATE kan bare sette valid_to') > 0
+       and strpos(p.prosrc, 'new.price_minor is distinct from old.price_minor') > 0
+       and strpos(p.prosrc, 'new.valid_from is distinct from old.valid_from') > 0
+  ) as ok
+`);
+if (versionsGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] service_versions_owner_update_guard mangler eller låser ikke historikk (0042). ' +
       'Kjør `pnpm db:grants` mot Scaleway-eieren.',
   );
   await pool.end();

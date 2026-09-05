@@ -37,6 +37,8 @@ export default defineConfig({
       'test/member-profiles-owner-insert.test.ts',
       // Prod FORCE RLS: eier-UPDATE tenants/tenant_modules (fullfor).
       'test/tenants-owner-update.test.ts',
+      // Prod FORCE RLS: eier-INSERT/RETURNING på services (tjenestekatalog).
+      'test/services-owner-write.test.ts',
       // #121 RETURNING — eier-SELECT/revoke på invitations.
       'test/invitations-owner-returning.test.ts',
     ],

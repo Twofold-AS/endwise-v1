@@ -456,6 +456,135 @@ create policy invitations_tenant_select_owner on invitations
     and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
   );
 
+-- Tjenestekatalog under FORCE RLS (prod APP = eier `endwise`).
+-- services_tenant_isolation / service_versions_tenant_isolation er TO
+-- authenticated. create: INSERT services RETURNING + INSERT
+-- service_versions (pris/beskrivelse). update: UPDATE valid_to + INSERT.
+-- deactivate/reactivate: UPDATE active. Ingen platform_admin.
+drop policy if exists services_tenant_insert_owner on services;
+create policy services_tenant_insert_owner on services
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.services'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists services_tenant_select_owner on services;
+create policy services_tenant_select_owner on services
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.services'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists services_tenant_update_owner on services;
+create policy services_tenant_update_owner on services
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.services'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.services'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists service_versions_tenant_insert_owner on service_versions;
+create policy service_versions_tenant_insert_owner on service_versions
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.service_versions'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists service_versions_tenant_select_owner on service_versions;
+create policy service_versions_tenant_select_owner on service_versions
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.service_versions'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists service_versions_tenant_update_owner on service_versions;
+create policy service_versions_tenant_update_owner on service_versions
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.service_versions'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.service_versions'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
 -- Første 0038-utkast hadde bred eier-UPDATE (alle kolonner). Borte.
 drop policy if exists invitations_platform_admin_update_owner on invitations;
 

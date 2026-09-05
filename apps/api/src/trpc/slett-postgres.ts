@@ -130,3 +130,24 @@ export function mapCreatePostgresFeil(error: unknown): TRPCError {
     message: 'Kunne ikke fullføre forhandler-invitasjonen.',
   });
 }
+
+/**
+ * Tjenestekatalog (services.create/update/deactivate/reactivate):
+ * Drizzle pakker SQL + params i feilmeldingen. Logg SQLSTATE —
+ * aldri query/params til UI.
+ */
+export function loggTjenestePostgresFeil(error: unknown): void {
+  const pg = lesPostgresCause(error);
+  console.error('[services.write]', {
+    code: pg.code,
+    constraint: pg.constraint,
+  });
+}
+
+export function mapTjenestePostgresFeil(error: unknown): TRPCError {
+  if (error instanceof TRPCError) return error;
+  return new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'Kunne ikke lagre tjenesten. Prøv igjen.',
+  });
+}

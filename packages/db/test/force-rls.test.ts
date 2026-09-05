@@ -146,6 +146,12 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'mechanics_tenant_select_owner',
          'mechanics_tenant_insert_owner',
          'invitations_tenant_select_owner',
+         'services_tenant_insert_owner',
+         'services_tenant_select_owner',
+         'services_tenant_update_owner',
+         'service_versions_tenant_insert_owner',
+         'service_versions_tenant_select_owner',
+         'service_versions_tenant_update_owner',
          'audit_log_tenant_insert_owner',
          'tenants_slett_forhandler',
          'tenants_slett_forhandler_select',
@@ -178,6 +184,12 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         'mechanics_tenant_select_owner',
         'mechanics_tenant_insert_owner',
         'invitations_tenant_select_owner',
+        'services_tenant_insert_owner',
+        'services_tenant_select_owner',
+        'services_tenant_update_owner',
+        'service_versions_tenant_insert_owner',
+        'service_versions_tenant_select_owner',
+        'service_versions_tenant_update_owner',
         'audit_log_tenant_insert_owner',
         'tenants_slett_forhandler',
         'tenants_slett_forhandler_select',
@@ -210,7 +222,13 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'member_profiles_tenant_update_owner',
          'mechanics_tenant_select_owner',
          'mechanics_tenant_insert_owner',
-         'invitations_tenant_select_owner'
+         'invitations_tenant_select_owner',
+         'services_tenant_insert_owner',
+         'services_tenant_select_owner',
+         'services_tenant_update_owner',
+         'service_versions_tenant_insert_owner',
+         'service_versions_tenant_select_owner',
+         'service_versions_tenant_update_owner'
        )
        order by p.polname
     `);
@@ -227,6 +245,12 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       'member_profiles_tenant_insert_owner',
       'member_profiles_tenant_select_owner',
       'member_profiles_tenant_update_owner',
+      'service_versions_tenant_insert_owner',
+      'service_versions_tenant_select_owner',
+      'service_versions_tenant_update_owner',
+      'services_tenant_insert_owner',
+      'services_tenant_select_owner',
+      'services_tenant_update_owner',
       'tenant_modules_platform_admin_insert_owner',
       'tenant_modules_tenant_select_owner',
       'tenant_modules_tenant_update_owner',
@@ -239,6 +263,8 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       'invitations_platform_admin_insert_owner',
       'mechanics_tenant_insert_owner',
       'member_profiles_tenant_insert_owner',
+      'service_versions_tenant_insert_owner',
+      'services_tenant_insert_owner',
       'tenant_modules_platform_admin_insert_owner',
       'tenants_platform_admin_insert_owner',
     ]);
@@ -257,6 +283,10 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     expect(res.rows.find((r) => r.polname === 'tenant_modules_tenant_update_owner')?.polcmd).toBe(
       'w',
     );
+    expect(res.rows.find((r) => r.polname === 'services_tenant_update_owner')?.polcmd).toBe('w');
+    expect(res.rows.find((r) => r.polname === 'service_versions_tenant_update_owner')?.polcmd).toBe(
+      'w',
+    );
     expect(res.rows.find((r) => r.polname === 'invitations_tenant_select_owner')?.polcmd).toBe('r');
     const tenantSelect = new Set([
       'tenants_tenant_select_owner',
@@ -265,6 +295,8 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       'member_profiles_tenant_select_owner',
       'mechanics_tenant_select_owner',
       'invitations_tenant_select_owner',
+      'services_tenant_select_owner',
+      'service_versions_tenant_select_owner',
     ]);
     expect(
       res.rows.filter((r) => tenantSelect.has(String(r.polname))).every((r) => r.polcmd === 'r'),

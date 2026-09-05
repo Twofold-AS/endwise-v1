@@ -49,7 +49,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
 
   it('Timeplan-kortet er ikon+navn uten jobbliste eller Ny jobb', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).not.toMatch(/timeplanRader|Ingen jobber i dag|Ny jobb/);
+    expect(hjem).not.toMatch(/Ny jobb/);
     expect(hjem).not.toMatch(/plan\.map/);
     expect(hjem).toMatch(/PHONE_KORT_META\.timeplan|key === 'timeplan'|innboks.*timeplan/);
   });

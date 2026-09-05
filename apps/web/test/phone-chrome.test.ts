@@ -33,7 +33,7 @@ describe('phone-chrome', () => {
     expect(PHONE_H_SCROLL).toContain('touch-pan-x');
     expect(PHONE_H_SCROLL).toContain('overscroll-y-none');
     expect(PHONE_LOGO_PX).toBe(24);
-    expect(SHELL_HEADER_RAD).toBe('flex h-row items-center gap-2 px-3');
+    expect(SHELL_HEADER_RAD).toBe('flex h-row w-full items-center justify-between gap-2 px-3');
     expect(SHELL_LOGO_WRAP).toBe('flex shrink-0 items-center');
     expect(PHONE_LOGO_KOLONNE).toContain('24px');
     expect(PHONE_LOGO_KOLONNE).toContain('0.75rem');
@@ -163,7 +163,7 @@ describe('phone-chrome', () => {
     expect(css).toMatch(/100dvh/);
   });
 
-  it('tilbake i toppbaren er history.back som rent ord, ikke PhoneHScroll', () => {
+  it('tilbake i toppbaren er history.back som pil-SVG, ikke PhoneHScroll', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
@@ -171,11 +171,11 @@ describe('phone-chrome', () => {
     expect(seksjon).toMatch(/DestinasjonSeksjonBar/);
     expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).toMatch(/router\.back\(\)/);
-    expect(shell).toMatch(/Tilbake/);
     expect(shell).toMatch(/TilbakePil/);
-    expect(pil).not.toMatch(/<svg/);
+    expect(shell).toMatch(/aria-label="Tilbake"/);
+    expect(pil).toMatch(/<svg/);
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
-    expect(pil).toMatch(/text-label/);
+    expect(pil).not.toMatch(/>Tilbake</);
     expect(SHELL_TOGGLE_PX).toBe(16);
   });
 });

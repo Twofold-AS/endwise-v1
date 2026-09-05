@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { destinasjonFaner } from '../app/(app)/_shell/seksjon-faner.ts';
 import { SHELL_LOGO_PX, SHELL_TOGGLE_PX } from '../app/(app)/_shell/phone-chrome.ts';
+import { destinasjonFaner } from '../app/(app)/_shell/seksjon-faner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -16,19 +16,16 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
-  it('Tilbake er bare ordet, uten SVG/lucide/chevron', () => {
+  it('Tilbake er pil-SVG uten ordet Tilbake', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
     expect(shell).toMatch(/data-shell-tilbake/);
-    expect(shell).toMatch(/Tilbake/);
     expect(shell).toMatch(/TilbakePil/);
-    expect(shell).not.toMatch(/<svg/);
+    expect(shell).toMatch(/aria-label="Tilbake"/);
     expect(shell).not.toMatch(/ChevronLeft|lucide/);
-    expect(pil).not.toMatch(/<svg/);
-    expect(pil).toMatch(/Tilbake/);
-    expect(pil).toMatch(/text-label/);
-    expect(pil).toMatch(/text-fg/);
-    expect(pil).not.toMatch(/uppercase|tracking-|text-title|text-\[/);
+    expect(pil).toMatch(/<svg/);
+    expect(pil).not.toMatch(/>Tilbake</);
+    expect(pil).not.toMatch(/lucide|ChevronLeft/);
   });
 
   it('logo er 24px merke; sidebar-toggle er 16px som nav-ikonene', () => {

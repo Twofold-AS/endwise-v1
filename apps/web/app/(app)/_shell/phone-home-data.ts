@@ -103,7 +103,39 @@ export function ukeStatistikk(jobber: PhoneBooking[], naa: Date) {
 
 export function statistikkSetning(jobber: PhoneBooking[], naa: Date): string {
   const { jobber: antall, fullfort } = ukeStatistikk(jobber, naa);
+  if (antall === 0) return 'Ingen jobber denne uken';
   return `${antall} jobber · ${fullfort} fullført denne uken`;
+}
+
+function kroner(ore: number): string {
+  return `${(ore / 100).toLocaleString('nb-NO')} kr`;
+}
+
+export type PhoneTjeneste = {
+  name: string;
+  active: boolean;
+  priceMinor?: number | null;
+};
+
+export function timeplanMeta(jobber: PhoneBooking[], naa: Date): string {
+  const dagens = jobber.filter(
+    (j) => sammeKalenderdag(j.startsAt, naa) && j.status !== 'cancelled',
+  );
+  if (dagens.length === 0) return 'Ingen jobber i dag';
+  const neste = nesteJobb(dagens, naa);
+  if (neste) return `${dagens.length} i dag · ${neste.time} ${neste.what}`;
+  return `${dagens.length} jobb${dagens.length === 1 ? '' : 'er'} i dag`;
+}
+
+export function tjenesterMeta(tjenester: PhoneTjeneste[]): string {
+  const aktive = tjenester.filter((t) => t.active);
+  if (aktive.length === 0) return 'Ingen tjenester ennå';
+  const forste = aktive[0];
+  if (!forste) return 'Ingen tjenester ennå';
+  const pris =
+    forste.priceMinor != null && forste.priceMinor > 0 ? ` · ${kroner(forste.priceMinor)}` : '';
+  if (aktive.length === 1) return `${forste.name}${pris}`;
+  return `${forste.name}${pris} · ${aktive.length} bookbare`;
 }
 
 export function rapporterSetning(): string {

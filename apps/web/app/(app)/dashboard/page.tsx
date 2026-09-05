@@ -11,7 +11,7 @@ import { useMdViewport } from '../_lib/use-md-viewport';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { VERKSTED_INNHOLD } from '../_shell/phone-home';
-import { PhoneHomeDealer } from '../_shell/phone-home-dealer';
+import { DealerDestinasjonskort, PhoneHomeDealer } from '../_shell/phone-home-dealer';
 import { fmtServices, fmtTime, STATUS_LABEL, STATUS_TONE } from '../bookinger/_status';
 import { AnsattePaJobb } from './_ansatte-pa-jobb';
 import { Timeplan } from './_timeplan';
@@ -120,6 +120,8 @@ function VerkstedetDesktop() {
           laster={bookings.isLoading}
         />
       </div>
+
+      <DealerDestinasjonskort utenHero className="flex flex-col gap-3" />
 
       <AnsattePaJobb
         mekanikere={oversikt.data}

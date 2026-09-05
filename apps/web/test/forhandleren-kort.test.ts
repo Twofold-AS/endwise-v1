@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { breadcrumbFor, FORHANDLER_NAV } from '../app/(app)/_shell/nav.ts';
+import { ORG_LISTE } from '../app/(app)/organisasjon/_org-liste.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -11,7 +12,26 @@ function les(rel: string) {
 }
 
 describe('Organisasjon › Oversikt (forhandlerkort)', () => {
-  it('Organisasjon-piller er Oversikt Ansatte Abonnement Integrasjoner', () => {
+  it('Organisasjon-liste er Ansatte Timeplan Abonnement Integrasjoner, uten piller', () => {
+    expect(ORG_LISTE.map((r) => r.label)).toEqual([
+      'Ansatte',
+      'Timeplan',
+      'Abonnement',
+      'Integrasjoner',
+    ]);
+    const layout = les('../app/(app)/layout.tsx');
+    expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
+    const bar = les('../app/(app)/_shell/seksjon-bar.tsx');
+    expect(bar).not.toMatch(/data-org-piller/);
+    const side = les('../app/(app)/organisasjon/page.tsx');
+    expect(side).toMatch(/OrganisasjonListe/);
+    expect(side).not.toMatch(/data-destinasjon-bar/);
+    const liste = les('../app/(app)/organisasjon/_liste.tsx');
+    expect(liste).toMatch(/data-org-liste/);
+    expect(liste).not.toMatch(/data-destinasjon-bar/);
+  });
+
+  it('Organisasjon-nav-piller i nav.ts er uendret bak dest-bar-gaten', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     expect(org?.label).toBe('Organisasjon');
     expect(org?.pills?.map((c) => c.label)).toEqual([
@@ -26,6 +46,7 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
     const side = les('../app/(app)/organisasjon/page.tsx');
     const kort = les('../app/(app)/organisasjon/forhandleren/_kort.tsx');
     expect(side).toMatch(/ForhandlerKort/);
+    expect(side).toMatch(/OrganisasjonListe/);
     expect(side).not.toMatch(/PrislisteFlate/);
     expect(kort).toMatch(/Firmanavn/);
     expect(kort).toMatch(/Adresse/);

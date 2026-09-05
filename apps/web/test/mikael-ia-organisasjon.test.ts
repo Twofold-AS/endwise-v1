@@ -211,10 +211,11 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(layout).not.toMatch(/PhoneNav/);
     expect(layout).toMatch(/WorkshopBloub/);
     expect(layout).not.toMatch(/TopBar/);
-    expect(layout).toMatch(/DestinasjonSeksjonBar/);
+    expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/logo\/logo\.svg/);
-    expect(shell).toMatch(/logo-invert/);
+    expect(shell).toMatch(/bg-fg/);
+    expect(shell).not.toMatch(/logo-invert/);
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
     expect(shell).toMatch(/data-phone-sidebar-open/);
     expect(shell).toMatch(/PanelLeftOpen/);
@@ -225,7 +226,9 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(shell).not.toMatch(/recolor|filter:/);
     expect(shell).not.toMatch(/TipCard|helpdesk-slider|visningsvelger/i);
     expect(sidebar).toMatch(/data-phone-sidebar/);
-    expect(sidebar).toMatch(/fixed inset-0/);
+    expect(sidebar).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(sidebar).toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
+    expect(sidebar).not.toMatch(/fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/Handlinger/);

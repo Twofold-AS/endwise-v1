@@ -43,7 +43,7 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     const faner = utenKommentarer(les('../app/(app)/_shell/seksjon-faner.ts'));
     const side = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
-    expect(layout).toMatch(/DestinasjonSeksjonBar/);
+    expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
     expect(seksjon).toMatch(/export function DestinasjonSeksjonBar/);
     expect(seksjon).not.toMatch(/PhoneHScroll/);
     expect(faner).toMatch(/INNBOKS_FILTERE/);

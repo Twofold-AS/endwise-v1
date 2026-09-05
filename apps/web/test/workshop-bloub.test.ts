@@ -46,7 +46,7 @@ describe('Workshop sidekontekst', () => {
   });
 });
 
-describe('Workshop-stripe i app-skallet', () => {
+describe('Workshop-sheet i app-skallet', () => {
   it('er montert én gang i (app)/layout, uten breadcrumb-topbar', () => {
     const layout = les('../app/(app)/layout.tsx');
     expect(layout).toMatch(/WorkshopBloub/);
@@ -54,44 +54,39 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(layout).not.toMatch(/bottom-tab|PhoneTab/);
   });
 
-  it('er én Grainient-boks med overlay-panel, idle-syklus og strek-håndtak', () => {
+  it('er telefon-sheet med idle-syklus, Prompt Input og strek-håndtak', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
     const pil = les('../app/(app)/_workshop/ronny-ikoner.tsx');
     const css = les('../app/globals.css');
-    expect(fab).toMatch(/data-workshop-strip/);
+    expect(fab).toMatch(/data-ronny-sheet/);
     expect(fab).toMatch(/data-workshop-shell/);
-    expect(fab).toMatch(/Grainient/);
-    expect(fab).toMatch(/h-11 max-h-\[44px\]/);
-    expect(fab).toMatch(/md:h-control md:max-h-\[32px\]/);
+    expect(fab).toMatch(/md:hidden/);
+    expect(fab).not.toMatch(/data-workshop-strip/);
+    expect(fab).not.toMatch(/<Grainient/);
     expect(fab).toMatch(/rounded-\[18px\]/);
     expect(fab).toMatch(/const RAMME_PX = 18/);
     expect(fab).toMatch(/cubic-bezier\(0\.32,\s*0\.72,\s*0,\s*1\)/);
-    expect(fab).not.toMatch(/ease-out/);
-    expect(fab).not.toMatch(/translate-y/);
-    expect(fab).toMatch(/grid-template-rows/);
-    expect(fab).toMatch(/const STRIP_BOT = 28/);
-    expect(fab).toMatch(/const IDLE_MS = 5000/);
-    expect(fab).not.toMatch(/const IDLE_MS = 2500/);
-    expect(fab).toMatch(/useRonnyIdle\(!klikk\)/);
-    expect(fab).not.toMatch(/useRonnyIdle\(!klikk &&/);
-    expect(fab).toMatch(/color="#ffffff"/);
-    expect(fab).toMatch(/paper="#111111"/);
-    expect(fab).toMatch(/Trykk på KI-Ronny/);
-    expect(fab).toMatch(/IDLE_TEKST/);
+    const bot = les('../app/(app)/_workshop/ronny-bot.tsx');
+    expect(bot).toMatch(/const IDLE_MS = 5000/);
+    expect(bot).toMatch(/useRonnyIdle/);
+    expect(bot).toMatch(/color="#1d1d1f"/);
+    expect(fab).toMatch(/paper="#ffffff"/);
+    expect(fab).toMatch(/<RonnyBot/);
+    expect(fab).not.toMatch(/BloubBot/);
     expect(fab).not.toMatch(/data-ronny-blink/);
-    expect(fab).toMatch(/colere/);
-    expect(fab).toMatch(/surpris/);
-    expect(fab).toMatch(/wink/);
-    expect(fab).toMatch(/curieux/);
-    expect(fab).toMatch(/attentif/);
-    expect(fab).toMatch(/heureux/);
-    expect((fab.match(/expression: 'colere'/g) ?? []).length).toBeGreaterThanOrEqual(3);
-    expect(fab).not.toMatch(/expression: 'triste'/);
-    expect(fab).not.toMatch(/expression: 'somnolent'/);
+    expect(bot).toMatch(/colere/);
+    expect(bot).toMatch(/surpris/);
+    expect(bot).toMatch(/curieux/);
+    expect(bot).toMatch(/attentif/);
+    expect(bot).toMatch(/heureux/);
+    expect((bot.match(/'colere'/g) ?? []).length).toBeGreaterThanOrEqual(3);
+    expect(bot).not.toMatch(/expression: 'triste'/);
+    expect(bot).not.toMatch(/expression: 'somnolent'/);
     expect(fab).not.toMatch(/state: 'thinking'/);
-    expect(fab).toMatch(/opptatt\s*\n\s*\? 'thinking'/);
+    expect(fab).not.toMatch(/opptatt \? 'thinking'/);
+    expect(fab).not.toMatch(/error \? 'alert'/);
     expect(fab).toMatch(/submitStatus = opptatt \? status : 'ready'/);
-    expect(fab).toMatch(/data-ronny-spin/);
+    expect(bot).toMatch(/data-ronny-spin=\{spin \? '1' : undefined\}/);
     expect(fab).toMatch(/data-workshop-dock/);
     expect(fab).toMatch(/PromptInput/);
     expect(fab).toMatch(/PromptInputTextarea/);
@@ -110,13 +105,10 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-handtak-rad/);
     expect(fab).toMatch(/data-ronny-prompt-kort/);
     expect(fab).toMatch(/data-ronny-composer/);
-    expect(fab).toMatch(/data-ronny-peek/);
-    expect(fab).toMatch(/data-ronny-peek-svar/);
-    expect(fab).toMatch(/sisteTurTekst/);
+    expect(fab).not.toMatch(/data-ronny-peek/);
     expect(fab).toMatch(/Ronny tenker/);
-    expect(fab).toMatch(/data-ronny-tenker/);
-    expect(fab).toMatch(/ronny-tenker-tekst/);
-    expect(fab).toMatch(/opptatt \? TENKER_TEKST/);
+    expect(fab).not.toMatch(/data-ronny-tenker/);
+    expect(fab).not.toMatch(/ronny-tenker-tekst/);
     expect(fab).not.toMatch(/RonnyTenkerTekst/);
     expect(fab).not.toMatch(/Ronny skriver/);
     expect(fab).toMatch(/RonnyHandtak/);
@@ -125,182 +117,70 @@ describe('Workshop-stripe i app-skallet', () => {
     expect(fab).toMatch(/PHONE_KORT_FYLL/);
     expect(fab).toMatch(/text-\[14px\]/);
     expect(fab).toMatch(/gap-6/);
-    expect(fab).toMatch(/data-ronny-skall-bredde/);
-    expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,280}rounded-full/);
-    expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,280}ring-1/);
-    expect(fab).not.toMatch(/data-ronny-utvid[\s\S]{0,80}size-6/);
-    expect(fab).toMatch(/visHandtak/);
-    expect(fab).toMatch(/visPeek/);
-    expect(fab).toMatch(/foldet/);
-    expect(fab).toMatch(/onUtvid/);
-    expect(fab).toMatch(/onHandtakNed/);
-    expect(fab).toMatch(/setVisning\('utvidet'\)/);
-    expect(fab).toMatch(/data-ronny-overlay/);
-    expect(fab).toMatch(/fixed right-0 bottom-0 left-0/);
-    expect(fab).toMatch(/z-\[60\]/);
-    expect(fab).toMatch(/z-\[70\]/);
-    expect(fab).not.toMatch(/calc\(100dvh - \$\{ankerTop\}px - 8px\)/);
-    expect(fab.indexOf('data-ronny-prompt-kort')).toBeGreaterThan(
-      fab.indexOf('data-ronny-handtak-rad'),
-    );
-    expect(fab).not.toMatch(/rounded-t-none/);
-    expect(fab).toMatch(/rounded-\[18px\]/);
-    expect(fab).not.toMatch(/borderTopLeftRadius:\s*0/);
-    expect(fab).toMatch(/data-ronny-prompt-flate[\s\S]{0,80}rounded-none/);
-    expect(fab).toMatch(/data-ronny-kort-padding/);
-    expect(fab).toMatch(/data-ronny-kort-padding[\s\S]{0,280}pt-1/);
-    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,220}pt-3/);
-    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]{0,220}pb-2/);
-    expect(fab).toMatch(/data-ronny-handtak-rad[\s\S]*px-6 py-1/);
-    expect(fab).toMatch(/data-ronny-handtak-sted=\{utvidet \? 'prompt' : 'peek'\}/);
-    expect(fab).toMatch(/visPeek \? loggUtsnitt : null[\s\S]{0,40}visPeek \? handtak : null/);
-    expect(fab).toMatch(/data-ronny-prompt-flate/);
-    expect(fab).toMatch(
-      /data-ronny-prompt-flate[\s\S]{0,80}w-full overflow-hidden rounded-none bg-transparent/,
-    );
-    expect((fab.match(/<Grainient/g) ?? []).length).toBe(1);
-    expect(fab).toMatch(/data-workshop-strip[\s\S]{0,500}<Grainient/);
-    expect(fab).toMatch(/color1=["']#0066cc["']/);
-    expect(fab).toMatch(/color2=["']#0071e3["']/);
-    expect(fab).toMatch(/color3=["']#2997ff["']/);
-    expect(fab).not.toMatch(/#FF9FFC|#5227FF|#B497CF/);
-    expect(fab).not.toMatch(/from ['"]@endwise\/ui['"][\s\S]{0,200}\bGalaxy\b/);
+    expect(fab).toMatch(/data-ronny-forstor/);
+    expect(fab).toMatch(/data-ronny-lukk/);
+    expect(fab).toMatch(/data-ronny-scrim/);
+    expect(fab).toMatch(/ronnySheetHoydePx/);
     expect(fab).not.toMatch(/<Galaxy/);
     expect(fab).not.toMatch(/RONNY_GALAXY_TETTHET/);
-    expect(fab).not.toMatch(/data-workshop-shell[\s\S]{0,400}<Grainient/);
-    expect(fab).not.toMatch(/data-ronny-flate[\s\S]{0,800}<Grainient/);
-    expect(fab).not.toMatch(/data-ronny-flate[\s\S]{0,800}<Galaxy/);
-    const flateKilde = fab.slice(
-      fab.indexOf('data-ronny-flate'),
-      fab.indexOf('data-ronny-composer'),
-    );
-    expect(flateKilde).toMatch(/bg-\[#f5f5f7\]/);
-    expect(flateKilde).not.toMatch(/<Galaxy/);
-    expect(flateKilde).not.toMatch(/<Grainient/);
-    expect(flateKilde).not.toMatch(/bg-\[#111\]/);
-    const composerKilde = fab.slice(fab.indexOf('data-ronny-composer'));
-    expect(composerKilde).toMatch(/data-ronny-composer[\s\S]{0,220}bg-transparent/);
-    expect(composerKilde).not.toMatch(/Grainient/);
-    expect(composerKilde).not.toMatch(/Galaxy/);
-    expect(composerKilde).not.toMatch(/bg-\[#f5f5f7\]|bg-\[#fff\]|bg-bg/);
-    expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}pb-1/);
-    expect(fab).toMatch(/data-ronny-skall-bredde/);
-    expect(fab).not.toMatch(/data-ronny-verksted-bredde/);
-    expect(fab).toMatch(/data-ronny-flate/);
-    expect(fab).toMatch(/data-ronny-laast/);
-    expect(fab).toMatch(/if \(utvidet\) \{\s*scroller.setAttribute\('data-ronny-laast'/);
-    expect(fab).not.toMatch(/if \(apen\) \{\s*scroller.setAttribute\('data-ronny-laast'/);
-    expect(fab).toMatch(/data-ronny-side-scroll/);
-    expect(fab).toMatch(/data-ronny-logg-ramme/);
-    expect(fab).toMatch(/loggOverflow/);
-    expect(fab).toMatch(/GradualBlur/);
-    expect(fab).toMatch(/target="parent"/);
-    expect(fab).toMatch(/position="top"/);
-    expect(fab).toMatch(/position="bottom"/);
-    expect(fab).toMatch(/phoneOpen/);
-    expect(fab).toMatch(/LUKKET_SKALL/);
+    expect(fab).toMatch(/bg-\[#fff\]/);
+    expect(fab).toMatch(/#e0e0e0/);
     expect(fab).toMatch(/COMPOSER_SAFE/);
     expect(fab).not.toMatch(/COMPOSER_BUNN/);
-    expect(fab).not.toMatch(/rounded-t-\[18px\]/);
     expect(fab).toMatch(/data-ronny-prompt-kort[\s\S]{0,160}py-1\.5/);
-    expect(fab).toMatch(/data-ronny-svar-kort[\s\S]{0,160}bg-transparent/);
-    expect(fab).not.toMatch(/data-ronny-svar-kort[\s\S]{0,160}bg-\[#fff\]/);
+    expect(fab).toMatch(/paddingBottom: COMPOSER_SAFE/);
+    expect(fab).toMatch(/max\(6px, env\(safe-area-inset-bottom\)\)/);
+    expect(fab).toMatch(/data-ronny-prompt-flate/);
+    expect(fab).toMatch(/MessageBubble/);
+    expect(fab).toMatch(/align=\{melding\.role === 'user' \? 'end' : 'start'\}/);
+    expect(fab).toMatch(/placeholder="Spør Ronny/);
+    expect(fab).toMatch(/setPromptTekst\(''\)/);
+    expect(fab).toMatch(/norskChatFeil/);
+    expect(fab).not.toMatch(/Noe gikk galt\. Prøv igjen\./);
+    expect(fab).toMatch(/api: '\/chat\/workshop'/);
+    expect(fab).toMatch(/body: \{ side \}/);
+    expect(fab).toMatch(/<RonnyBot size=\{28\} paper="#ffffff"/);
+    expect((fab.match(/<RonnyBot/g) ?? []).length).toBe(2);
+    expect(fab).not.toMatch(/'thinking'/);
+    expect(fab).not.toMatch(/'alert'/);
+    expect(fab).not.toMatch(/'notify'/);
+    expect(fab).not.toMatch(/#1ED27D|#EE2924/);
+    expect(fab).not.toMatch(/ShaderGradient/);
+    expect(css).not.toMatch(/ronny-blink/);
+    expect(css).toMatch(/rotateY\(360deg\)/);
+    expect(css).toMatch(/\[data-ronny-spin=["']1["']\]/);
+    expect(css).not.toMatch(/\[data-ronny-spin\]\s*\{/);
+    expect(css).toMatch(/ronny-spin/);
+    expect(css).toMatch(/ronny-tenker-shimmer/);
+    expect(css).toMatch(/ronny-tenker-tekst/);
+    expect(fab).toMatch(/data-ronny-traad/);
+    expect(fab).toMatch(/no-scrollbar/);
+    expect(fab).toMatch(/GradualBlur/);
+    expect(fab).toMatch(/phoneOpen/);
+    expect(fab).toMatch(/data-ronny-laast/);
+    expect(fab).toMatch(/data-ronny-side-scroll/);
     const hjem = les('../app/(app)/_shell/phone-home.ts');
     expect(hjem).toMatch(
       /VERKSTED_INNHOLD = 'mx-auto w-full max-w-\[520px\] px-3 md:max-w-\[1120px\] md:px-8'/,
     );
-    expect(les('../app/(app)/_shell/phone-home-dealer.tsx')).toMatch(/VERKSTED_INNHOLD/);
-    expect(les('../app/(app)/dashboard/page.tsx')).toMatch(/VERKSTED_INNHOLD/);
     expect(les('../app/(app)/layout.tsx')).toMatch(/data-ronny-side-scroll/);
     expect(les('../app/(app)/_workshop/gradual-blur.tsx')).toMatch(/export function GradualBlur/);
-    expect(les('../app/(app)/_workshop/gradual-blur.tsx')).toMatch(/target\?: 'parent' \| 'page'/);
     expect(les('../app/(app)/_workshop/gradual-blur.tsx')).not.toMatch(/from ['"]mathjs['"]/);
-    expect(fab).toMatch(/data-ronny-skall-bredde/);
-    expect(fab).toMatch(/opacity-100/);
-    expect(fab).toMatch(/bg-transparent/);
-    expect(fab).toMatch(/cursor-grab/);
-    expect(fab).not.toMatch(/data-ronny-forstor/);
-    expect(fab).not.toMatch(/size-11/);
-    expect(fab).not.toMatch(/size-10/);
-    expect(fab).not.toMatch(/210 210 215/);
-    expect(fab).toMatch(/#fff/);
-    expect(fab).toMatch(/#e0e0e0/);
-    expect(fab).toMatch(/color1=["']#0066cc["']/);
-    expect(fab).toMatch(/color2=["']#0071e3["']/);
-    expect(fab).toMatch(/shadow-none/);
     const tokens = les('../../../packages/widget-tokens/src/tokens.css');
     const light = tokens.slice(0, tokens.indexOf('[data-theme="dark"]'));
     expect(light).toMatch(/--ew-accent:\s*#0066cc/);
-    expect(light).not.toMatch(/--ew-accent:\s*#111111/);
     const submit = les('../../../packages/ui/src/components/prompt-input.tsx');
     expect(submit).toMatch(/bg-\[#0066cc\]/);
     expect(submit).not.toMatch(/bg-\[#111\]/);
     expect(submit).toMatch(/text-\[16px\]/);
     expect(submit).toMatch(/md:text-label/);
-    expect(fab).toMatch(/gåTil|gaaTil|erTillattGaaTil/);
-    expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
-    expect(fab).toMatch(/data-ronny-composer[\s\S]{0,200}fixed inset-x-0 bottom-0/);
-    expect(fab).toMatch(/data-ronny-composer[\s\S]{0,160}w-full/);
-    expect(fab).toMatch(/paddingBottom: COMPOSER_SAFE/);
-    expect(fab).toMatch(/max\(6px, env\(safe-area-inset-bottom\)\)/);
-    expect(fab).not.toMatch(/safe-area-inset-bottom\) \+ 16px/);
-    expect(fab).not.toMatch(/data-ronny-composer[\s\S]{0,200}paddingBottom: COMPOSER_SAFE/);
-    expect(fab).not.toMatch(/fixed right-3 bottom/);
-    expect(fab).toMatch(/text-white/);
-    expect(fab).toMatch(/data-workshop-sticky/);
-    expect(fab).not.toMatch(/bg-bg\/90/);
-    expect(fab).toMatch(/data-workshop-cluster/);
-    expect(fab).not.toMatch(/Verkstedsassistent|AiDisclosure|MessageScroller/);
-    expect(fab).toMatch(/MessageBubble/);
-    expect(fab).toMatch(/align=\{melding\.role === 'user' \? 'end' : 'start'\}/);
-    expect(fab).toMatch(/placeholder="Spør Ronny/);
-    expect(fab).toMatch(/setPromptTekst\(''\)/);
-    expect(fab).toMatch(/data-ronny-prompt-linje/);
-    expect(fab).not.toMatch(/data-ronny-prompt-linje[\s\S]{0,80}border-b/);
-    expect(fab).toMatch(/utvidet \? \(/);
-    expect(fab).not.toMatch(/data-ronny-composer[\s\S]*Grainient/);
-    expect(fab).not.toMatch(/data-ronny-composer[\s\S]*Galaxy/);
-    expect(fab).toMatch(/norskChatFeil/);
-    expect(fab).not.toMatch(/Noe gikk galt\. Prøv igjen\./);
-    expect(fab).toMatch(/api: '\/chat\/workshop'/);
-    expect(fab).toMatch(/body: \{ side \}/);
-    expect(fab).toMatch(/expression=\{uttrykk\}/);
-    expect(fab).toMatch(/thinking/);
-    expect(fab).toMatch(/alert/);
-    expect(fab).toMatch(/burst/);
-    expect(fab).not.toMatch(/hidden h-14 w-full shrink-0 md:block/);
-    expect(fab).not.toMatch(/className="relative hidden /);
-    expect(fab).not.toMatch(/fixed right-3 bottom/);
-    expect(fab).not.toMatch(/size=\{320\}/);
-    expect(fab).not.toMatch(/#1ED27D|#EE2924/);
-    expect(fab).not.toMatch(/ShaderGradient/);
-    expect(css).not.toMatch(/ronny-blink/);
-    expect(css).not.toMatch(/rotateX/);
-    expect(css).toMatch(/rotateY\(360deg\)/);
-    expect(css).toMatch(/ronny-spin/);
-    expect(css).toMatch(/ronny-tenker-shimmer/);
-    expect(css).toMatch(/ronny-tenker-tekst/);
-    expect(fab).toMatch(/data-workshop-cluster/);
-    expect(fab).toMatch(/absolute inset-0/);
-    expect(fab).toMatch(/items-center/);
-    expect(fab).toMatch(/justify-center/);
-    expect(fab).not.toMatch(/md:justify-start|md:items-start|md:items-end/);
-    expect(fab).toMatch(/data-workshop-sticky[\s\S]*IDLE_TEKST/);
-    expect(fab).toMatch(/const DOCK_KOMPAKT/);
-    expect(fab).toMatch(/const DOCK_SAMTALE/);
-    expect(fab).toMatch(/const PEEK_MAX/);
-    expect(fab).toMatch(/visPeek/);
-    expect(fab).toMatch(/no-scrollbar/);
-    expect(fab).toMatch(/data-ronny-traad/);
-    expect(fab).toMatch(/data-ronny-peek-svar/);
-    expect(fab).not.toMatch(/max-h-\[28vh\]/);
-    expect(fab).not.toMatch(/borderRadius: 9999/);
     expect(submit).toMatch(/max-h-8/);
     expect(submit).toMatch(/min-h-6/);
     expect(submit).not.toMatch(/max-h-10/);
     expect(submit).not.toMatch(/max-h-36/);
     expect(submit).toMatch(/size-7/);
     expect(submit).toMatch(/flex w-full items-end/);
+    expect(fab).toMatch(/gåTil|gaaTil|erTillattGaaTil/);
   });
 
   it('chat-ruta tar imot sidekontekst-header', () => {
@@ -348,33 +228,21 @@ describe('Ronny gåTil-hviteliste', () => {
   });
 });
 
-describe('Mikael 04.09 — Ronny Grainient-stripe, parchment-kropp', () => {
-  it('Galaxy er borte fra Ronny; Apple-Grainient bare på stripen', () => {
+describe('Jonas/Mikael 05.09 — Ronny-sheet uten Grainient/Galaxy', () => {
+  it('Galaxy og Grainient er borte fra Ronny', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
     expect(fab).not.toMatch(/<Galaxy/);
     expect(fab).not.toMatch(/RONNY_GALAXY/);
-    expect((fab.match(/<Grainient/g) ?? []).length).toBe(1);
-    const stripeKilde = fab.slice(
-      fab.indexOf('data-workshop-strip'),
-      fab.indexOf('data-workshop-cluster'),
-    );
-    expect(stripeKilde).toMatch(/<Grainient/);
-    expect(stripeKilde).toMatch(/#0066cc/);
-    expect(stripeKilde).toMatch(/#0071e3/);
-    expect(stripeKilde).toMatch(/#2997ff/);
-    expect(stripeKilde).not.toMatch(/#FF9FFC|#5227FF/);
+    expect(fab).not.toMatch(/<Grainient/);
+    expect(fab).not.toMatch(/#FF9FFC|#5227FF/);
   });
 
-  it('full-åpen og peek-melding bruker parchment, ikke Galaxy/Grainient-kropp', () => {
+  it('sheet er hvit flate, composer transparent, uten peek', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
-    const flateKilde = fab.slice(
-      fab.indexOf('data-ronny-flate'),
-      fab.indexOf('data-ronny-composer'),
-    );
-    expect(flateKilde).toMatch(/bg-\[#f5f5f7\]/);
-    expect(flateKilde).not.toMatch(/<Galaxy/);
-    expect(flateKilde).not.toMatch(/<Grainient/);
-    expect(fab).toMatch(/visPeek[\s\S]{0,180}bg-\[#f5f5f7\]/);
+    expect(fab).toMatch(/data-ronny-sheet[\s\S]{0,400}bg-\[#fff\]/);
+    expect(fab).not.toMatch(/<Galaxy/);
+    expect(fab).not.toMatch(/<Grainient/);
+    expect(fab).not.toMatch(/visPeek/);
     const composerKilde = fab.slice(fab.indexOf('data-ronny-composer'));
     expect(composerKilde).not.toMatch(/Grainient|Galaxy/);
     expect(composerKilde).toMatch(/bg-transparent/);

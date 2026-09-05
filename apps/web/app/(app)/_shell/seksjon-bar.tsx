@@ -34,6 +34,8 @@ export function DestinasjonSeksjonBar() {
     erPlattform,
   });
   const tradId = innboksTradId(pathname);
+  /** Dealer-layout monterer ikke denne. Tråd-chrome kun for plattform-inspect. */
+  if (shell === 'forhandler') return null;
   if (erInnboksTrad(pathname) && tradId) {
     return (
       <nav

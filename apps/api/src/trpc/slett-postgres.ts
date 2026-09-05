@@ -133,8 +133,8 @@ export function mapCreatePostgresFeil(error: unknown): TRPCError {
 
 /**
  * Tjenestekatalog (services.create/update/deactivate/reactivate):
- * Drizzle-skallet er «Failed query: insert into "services" …» + params
- * (tenant_id, navn, vehicle_type). Logg SQLSTATE — aldri query/params til UI.
+ * Drizzle pakker SQL + params i feilmeldingen. Logg SQLSTATE —
+ * aldri query/params til UI.
  */
 export function loggTjenestePostgresFeil(error: unknown): void {
   const pg = lesPostgresCause(error);

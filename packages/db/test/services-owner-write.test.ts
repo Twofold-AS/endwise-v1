@@ -268,7 +268,7 @@ describeDb('SET ROLE endwise — owner INSERT/RETURNING services under FORCE RLS
     ).rejects.toThrow(/bare sette valid_to|42501/i);
   });
 
-  it('uten tenant-GUC avvises services UPDATE', async () => {
+  it('uten tenant-GUC avvises services UPDATE (empty GUC denied)', async () => {
     const opprettet = await somEier(async (tx) => {
       await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
       return tx.execute(sql`
@@ -278,14 +278,14 @@ describeDb('SET ROLE endwise — owner INSERT/RETURNING services under FORCE RLS
       `);
     });
     const serviceId = (opprettet.rows[0] as { id: string }).id;
-    await expect(
-      somEier(async (tx) =>
-        tx.execute(sql`
-          update services
-             set active = false
-           where id = ${serviceId}::uuid
-        `),
-      ),
-    ).rejects.toThrow(/row-level security|42501|violates/i);
+    const res = await somEier(async (tx) =>
+      tx.execute(sql`
+        update services
+           set active = false
+         where id = ${serviceId}::uuid
+        returning id
+      `),
+    );
+    expect(res.rows).toHaveLength(0);
   });
 });

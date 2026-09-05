@@ -41,11 +41,7 @@ function policyKropp(sql: string, navn: string): string {
   return slutt === -1 ? etter : etter.slice(0, slutt);
 }
 
-function assertEierTenantPolicy(
-  sql: string,
-  navn: string,
-  cmd: 'insert' | 'select' | 'update',
-) {
+function assertEierTenantPolicy(sql: string, navn: string, cmd: 'insert' | 'select' | 'update') {
   const kropp = policyKropp(sql, navn);
   expect(kropp).toMatch(new RegExp(`for ${cmd}`));
   expect(kropp).toMatch(/to public/);
@@ -172,6 +168,10 @@ describe('FORCE RLS eier-skriv på tjenestekatalog (prod-rolle endwise)', () => 
     expect(ruter).toMatch(/loggTjenestePostgresFeil/);
     expect(feilHjelper).toMatch(/export function mapTjenestePostgresFeil/);
     expect(feilHjelper).toMatch(/Kunne ikke lagre tjenesten/);
-    expect(feilHjelper).not.toMatch(/Failed query: insert into "services"/);
+    const mapper = feilHjelper.slice(
+      feilHjelper.indexOf('export function mapTjenestePostgresFeil'),
+    );
+    expect(mapper).not.toMatch(/Failed query/);
+    expect(mapper).not.toMatch(/params:/);
   });
 });

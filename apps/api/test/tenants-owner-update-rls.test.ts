@@ -123,13 +123,18 @@ describe('FORCE RLS eier-UPDATE på onboarding.fullfor (prod-rolle endwise)', ()
     expect(forceRls).toMatch(/tenants_tenant_update_owner/);
   });
 
-  it('trigger låser PK/created_at og nekter kind=platform (ikke blanket eier-skriv)', () => {
+  it('trigger låser id/created_at/plan/kind (dealer kan ikke flippe pakke)', () => {
     expect(functionsSql).toMatch(/tenants_owner_update_guard/);
     expect(functionsSql).toMatch(/tenant_modules_owner_update_guard/);
     expect(m0041).toMatch(/tenants_owner_update_guard/);
-    expect(m0041).toMatch(/new\.kind = 'platform'/);
     expect(m0041).toMatch(/new\.id is distinct from old\.id/);
+    expect(m0041).toMatch(/new\.created_at is distinct from old\.created_at/);
+    expect(m0041).toMatch(/new\.plan is distinct from old\.plan/);
+    expect(m0041).toMatch(/new\.kind is distinct from old\.kind/);
+    expect(m0041).not.toMatch(/new\.kind = 'platform'/);
+    expect(functionsSql).toMatch(/new\.plan is distinct from old\.plan/);
     expect(m0041).toMatch(/new\.tenant_id is distinct from old\.tenant_id/);
+    expect(liveTest).toMatch(/ikke endre plan eller kind/);
   });
 
   it('SET ROLE-regresjon: fullfor UPDATE + tom GUC avvist', () => {

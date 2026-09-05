@@ -15,8 +15,8 @@
  *
  * CWE-862/863: TO PUBLIC, tabelleier, ≠ authenticated/endwise_app,
  * ikke-tom app.tenant_id, id/tenant_id = guc. Ingen platform_admin.
- * USING + WITH CHECK. Trigger låser PK/created_at og nekter
- * kind=platform. FORCE RLS urørt. Idempotent. Etter merge:
+ * USING + WITH CHECK. Trigger låser id/created_at/plan/kind
+ * (dealer kan ikke flippe pakke). FORCE RLS urørt. Idempotent. Etter merge:
  * `pnpm db:setup`.
  */
 drop policy if exists tenants_tenant_update_owner on tenants;-- > statement-breakpoint
@@ -109,13 +109,10 @@ begin
   end if;
 
   if new.id is distinct from old.id
-     or new.created_at is distinct from old.created_at then
-    raise exception 'tenants: eier-UPDATE kan ikke endre id eller created_at'
-      using errcode = '42501';
-  end if;
-
-  if new.kind = 'platform' and old.kind is distinct from 'platform' then
-    raise exception 'tenants: eier-UPDATE kan ikke sette kind=platform'
+     or new.created_at is distinct from old.created_at
+     or new.plan is distinct from old.plan
+     or new.kind is distinct from old.kind then
+    raise exception 'tenants: eier-UPDATE kan ikke endre id, created_at, plan eller kind'
       using errcode = '42501';
   end if;
   return new;

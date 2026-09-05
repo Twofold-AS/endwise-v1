@@ -200,17 +200,46 @@ describeDb('SET ROLE endwise — owner UPDATE under FORCE RLS (fullfor)', () => 
     expect(res.rows).toHaveLength(0);
   });
 
-  it('eier-UPDATE kan ikke sette kind=platform', async () => {
+  it('eier-UPDATE kan ikke endre plan eller kind', async () => {
     await expect(
       somEier(async (tx) => {
         await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
         return tx.execute(sql`
           update tenants
-             set kind = 'platform', updated_at = now()
+             set kind = 'demo', updated_at = now()
            where id = ${tenantA}::uuid
         `);
       }),
-    ).rejects.toThrow(/kind=platform|42501/i);
+    ).rejects.toThrow(/plan eller kind|42501/i);
+
+    await expect(
+      somEier(async (tx) => {
+        await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+        return tx.execute(sql`
+          update tenants
+             set plan = 'pro', updated_at = now()
+           where id = ${tenantA}::uuid
+        `);
+      }),
+    ).rejects.toThrow(/plan eller kind|42501/i);
+  });
+
+  it('eier-UPDATE kan sette slug (name/onboarding_completed_at allerede dekket)', async () => {
+    const res = await somEier(async (tx) => {
+      await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+      return tx.execute(sql`
+        update tenants
+           set slug = ${`upd-slug-${tenantA.slice(0, 8)}`},
+               updated_at = now()
+         where id = ${tenantA}::uuid
+        returning slug, kind, plan
+      `);
+    });
+    expect(res.rows).toHaveLength(1);
+    const rad = res.rows[0] as { slug: string; kind: string; plan: string | null };
+    expect(rad.slug).toBe(`upd-slug-${tenantA.slice(0, 8)}`);
+    expect(rad.kind).toBe('live');
+    expect(rad.plan).toBeNull();
   });
 
   it('staff-invite: eier med tenant-GUC kan INSERT … RETURNING uten platform_admin', async () => {

@@ -181,8 +181,8 @@ create policy tenants_tenant_select_owner on tenants
 
 -- onboarding.fullfor / forhandler.update / setModules / Quick-navn.
 -- 0039 er SELECT-only. Ingen platform_admin — withTenant setter bare
--- app.tenant_id. Trigger i functions.sql låser id/created_at og nekter
--- kind=platform. Admin kan fremdeles sette name/slug/kind/plan.
+-- app.tenant_id. Trigger i functions.sql låser id/created_at/plan/kind.
+-- Tillater name/slug/onboarding_completed_at/updated_at.
 drop policy if exists tenants_tenant_update_owner on tenants;
 create policy tenants_tenant_update_owner on tenants
   as permissive

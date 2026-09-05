@@ -83,7 +83,7 @@ export const tenants = pgTable(
      * `app.tenant_id`, ikke platform_admin. Uten den ser lesTenantNavn 0 rader.
      * `tenants_tenant_update_owner` (0041) er fullfor/setModules/forhandler.update
      * — samme GUC, USING+WITH CHECK, ingen platform_admin. Trigger låser
-     * id/created_at og nekter kind=platform.
+     * id/created_at/plan/kind. Tillater name/slug/onboarding_completed_at.
      * read_owner er SELECT-only for withPlatformAdmin (alle tenants).
      */
   ],

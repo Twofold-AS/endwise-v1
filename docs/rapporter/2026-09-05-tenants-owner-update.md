@@ -42,8 +42,8 @@ Symptom på Fullfør etter 0039-setup er derfor **fortsatt SELECT** (GUC ikke sa
 
 Trigger (eier-only; `authenticated`/`endwise_app` urørt):
 
-- `tenants_owner_update_guard` — låser `id`/`created_at`; nekter `kind=platform`. Tillater `name`/`slug`/`kind` live\|demo/`plan`/`onboarding_completed_at` (setModules + `tenants.update` + fullfor + Quick).
-- `tenant_modules_owner_update_guard` — låser PK + `created_at`. Tillater `enabled`/`source`/`plan` (fullfor + setModules + Stripe).
+- `tenants_owner_update_guard` — låser `id`/`created_at`/`plan`/`kind` (Mons: dealer kan ikke flippe pakke). Tillater `name`/`slug`/`onboarding_completed_at`/`updated_at` (fullfor + `forhandler.update` + Quick + `tenants.update` navn/slug).
+- `tenant_modules_owner_update_guard` — uendret. Låser PK + `created_at`. Tillater `enabled`/`source`/`plan` (fullfor + setModules + Stripe på *modul*-raden, ikke `tenants.plan`).
 
 Ingen `platform_admin` på disse policyene. FORCE RLS urørt. `withTenant` setter **ikke** `platform_admin`. `db:grants` exit 1 hvis policyene/triggerne mangler.
 
@@ -60,8 +60,8 @@ Ingenting i implementasjonen. Context7 ble ikke brukt (etablert Postgres RLS-mø
 ## 3. Hvilke fikser ble gjort
 
 1. 0041 eier-UPDATE på tenants/tenant_modules + eier-SELECT på invitations (staff).
-2. Kolonne-lås via trigger (PK/`created_at`; `kind=platform` avvist).
-3. Kontrakt + SET ROLE: GUC-SELECT egen tenant; fullfor UPDATE; tom/uten/feil GUC = 0; `platform_admin` alene = 0; staff RETURNING uten `platform_admin`.
+2. Kolonne-lås via trigger (`id`/`created_at`/`plan`/`kind`). `tenant_modules`-guard uendret.
+3. Kontrakt + SET ROLE: GUC-SELECT egen tenant; fullfor UPDATE; tom/uten/feil GUC = 0; `platform_admin` alene = 0; staff RETURNING uten `platform_admin`; plan/kind-UPDATE avvist.
 4. FORCE RLS urørt. #114 ikke merget.
 
 ---

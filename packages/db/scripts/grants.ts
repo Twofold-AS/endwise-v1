@@ -234,14 +234,15 @@ const tenantGuard = await pool.query<{ ok: boolean }>(`
       join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'public'
        and p.proname = 'tenants_owner_update_guard'
-       and strpos(p.prosrc, 'kind=platform') > 0
+       and strpos(p.prosrc, 'new.plan is distinct from old.plan') > 0
+       and strpos(p.prosrc, 'new.kind is distinct from old.kind') > 0
        and strpos(p.prosrc, 'new.id is distinct from old.id') > 0
        and strpos(p.prosrc, 'new.created_at is distinct from old.created_at') > 0
   ) as ok
 `);
 if (tenantGuard.rows[0]?.ok !== true) {
   console.error(
-    '[db] tenants_owner_update_guard mangler eller låser ikke id/created_at/kind=platform (0041). ' +
+    '[db] tenants_owner_update_guard mangler eller låser ikke id/created_at/plan/kind (0041). ' +
       'Kjør `pnpm db:grants` mot Scaleway-eieren.',
   );
   await pool.end();

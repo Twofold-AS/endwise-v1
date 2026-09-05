@@ -295,6 +295,13 @@
       "when": 1788576000000,
       "tag": "0041_tenants_owner_update",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1788580800000,
+      "tag": "0042_services_owner_write",
+      "breakpoints": true
     }
   ]
 }

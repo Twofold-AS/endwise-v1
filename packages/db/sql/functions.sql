@@ -355,6 +355,83 @@ create trigger tenant_modules_owner_update_guard_trg
   for each row
   execute function tenant_modules_owner_update_guard();
 
+-- Tjenestekatalog som eier: deactivate/reactivate setter bare active.
+-- Identitet (id/tenant_id/name/vehicle_type/created_at) er låst.
+-- authenticated/endwise_app urørt — de bruker schema-policyene.
+create or replace function services_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.services'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.id is distinct from old.id
+     or new.tenant_id is distinct from old.tenant_id
+     or new.name is distinct from old.name
+     or new.vehicle_type is distinct from old.vehicle_type
+     or new.created_at is distinct from old.created_at then
+    raise exception 'services: eier-UPDATE kan bare sette active'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists services_owner_update_guard_trg on services;
+create trigger services_owner_update_guard_trg
+  before update on services
+  for each row
+  execute function services_owner_update_guard();
+
+-- Versjonslukking: eier kan bare sette valid_to. Historisk pris/varighet
+-- er låst — ny versjon er INSERT, ikke in-place UPDATE.
+create or replace function service_versions_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.service_versions'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.id is distinct from old.id
+     or new.tenant_id is distinct from old.tenant_id
+     or new.service_id is distinct from old.service_id
+     or new.version is distinct from old.version
+     or new.skills is distinct from old.skills
+     or new.duration_minutes is distinct from old.duration_minutes
+     or new.price_minor is distinct from old.price_minor
+     or new.description is distinct from old.description
+     or new.valid_from is distinct from old.valid_from then
+    raise exception 'service_versions: eier-UPDATE kan bare sette valid_to'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists service_versions_owner_update_guard_trg on service_versions;
+create trigger service_versions_owner_update_guard_trg
+  before update on service_versions
+  for each row
+  execute function service_versions_owner_update_guard();
+
 -- Widget-nøkkeloppslag før vi vet hvilken forhandler det gjelder.
 
 -- Samme klasse som lookup_open_invitation. `widget_keys` har FORCE RLS og

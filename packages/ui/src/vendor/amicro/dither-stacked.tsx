@@ -5,7 +5,10 @@ import { clamp, hash } from './dither-math.ts';
 import { useCanvasSetup } from './use-canvas-setup.ts';
 
 export type DitherStackedBand = { key: string; label: string; color: string };
-export type DitherStackedRow = { label: string } & Record<string, number>;
+export type DitherStackedRow = {
+  label: string;
+  [band: string]: string | number;
+};
 
 export type DitherStackedChartProps = {
   theme?: 'dark' | 'light';

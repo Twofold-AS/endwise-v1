@@ -143,7 +143,12 @@ function AnalysePageInner() {
               forklaring={KILDE.bookingvolum.forklaring}
             >
               <div className="h-52 w-full">
-                <DitherStackedChart theme="light" compact rows={volumRader} bands={[...VOLUM_BANDS]} />
+                <DitherStackedChart
+                  theme="light"
+                  compact
+                  rows={volumRader}
+                  bands={[...VOLUM_BANDS]}
+                />
               </div>
               <SerieMerke
                 poster={[

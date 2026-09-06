@@ -37,10 +37,10 @@ export {
   DitherDonutChart,
   type DitherDonutSlice,
   DitherGrowthChart,
-  DitherStackedChart,
-  type DitherStackedBand,
-  type DitherStackedRow,
   type DitherRevenueSeries,
+  type DitherStackedBand,
+  DitherStackedChart,
+  type DitherStackedRow,
   RevenueLineChart,
 } from './components/amicro.ts';
 // Recharts via shadcn Chart-mønsteret — beholdt for kallsteder som ikke er byttet

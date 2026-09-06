@@ -12,13 +12,13 @@ export {
   type DitherGrowthChartProps,
 } from '../vendor/amicro/dither-growth.tsx';
 export {
-  RevenueLineChart,
   type DitherRevenueSeries,
+  RevenueLineChart,
   type RevenueLineChartProps,
 } from '../vendor/amicro/dither-revenue.tsx';
 export {
-  DitherStackedChart,
   type DitherStackedBand,
+  DitherStackedChart,
   type DitherStackedChartProps,
   type DitherStackedRow,
 } from '../vendor/amicro/dither-stacked.tsx';

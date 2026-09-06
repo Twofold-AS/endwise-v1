@@ -6,15 +6,26 @@ import {
   DESKTOP_AXIS_W,
   DESKTOP_BOX2_W,
   DESKTOP_BOX3_W,
+  DESKTOP_KORT_H,
+  DESKTOP_KORT_PX,
+  DESKTOP_KORT_PY,
+  DESKTOP_KORT_W,
+  DESKTOP_LOGO_H,
   DESKTOP_NAV_BTN_H,
+  DESKTOP_NAV_BTN_PAD,
   DESKTOP_NAV_BTN_W,
   DESKTOP_NAV_IKON,
   DESKTOP_NAV_LABEL_H,
   DESKTOP_NAV_LABEL_W,
+  DESKTOP_PEOPLE_H,
+  DESKTOP_PEOPLE_IKON_H,
+  DESKTOP_PEOPLE_IKON_W,
+  DESKTOP_PEOPLE_W,
   DESKTOP_PROFIL_H,
   DESKTOP_PROFIL_W,
+  DESKTOP_SIDEBAR_CHROME_W,
   DESKTOP_SIDEBAR_INNER_W,
-  DESKTOP_SIDEBAR_INSET,
+  DESKTOP_SIDEBAR_PAD,
   DESKTOP_SIDEBAR_W,
   DESKTOP_TOPBAR_H,
 } from '../app/(app)/_shell/desktop-shell.ts';
@@ -34,8 +45,12 @@ function utenKommentarer(kilde: string) {
 describe('Mikael desktop tre-kolonner + /home', () => {
   it('låser 389 + 598 + 452 = 1439, akse 1050, toppbar 53', () => {
     expect(DESKTOP_SIDEBAR_W).toBe(389);
+    expect(DESKTOP_SIDEBAR_CHROME_W).toBe(275);
+    expect(DESKTOP_SIDEBAR_PAD).toBe(8);
     expect(DESKTOP_SIDEBAR_INNER_W).toBe(259);
-    expect(DESKTOP_SIDEBAR_INSET).toBe(26);
+    expect(DESKTOP_SIDEBAR_PAD + DESKTOP_SIDEBAR_INNER_W + DESKTOP_SIDEBAR_PAD).toBe(
+      DESKTOP_SIDEBAR_CHROME_W,
+    );
     expect(DESKTOP_BOX2_W).toBe(598);
     expect(DESKTOP_BOX3_W).toBe(452);
     expect(DESKTOP_AXIS_W).toBe(1050);
@@ -44,10 +59,20 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(DESKTOP_NAV_IKON).toBe(26);
     expect(DESKTOP_NAV_BTN_W).toBe(141);
     expect(DESKTOP_NAV_BTN_H).toBe(50);
+    expect(DESKTOP_NAV_BTN_PAD).toBe(12);
     expect(DESKTOP_NAV_LABEL_W).toBe(55);
     expect(DESKTOP_NAV_LABEL_H).toBe(24);
     expect(DESKTOP_PROFIL_W).toBe(259);
     expect(DESKTOP_PROFIL_H).toBe(65);
+    expect(DESKTOP_LOGO_H).toBe(30);
+    expect(DESKTOP_KORT_W).toBe(348);
+    expect(DESKTOP_KORT_H).toBe(160);
+    expect(DESKTOP_KORT_PX).toBe(16);
+    expect(DESKTOP_KORT_PY).toBe(20);
+    expect(DESKTOP_PEOPLE_W).toBe(182);
+    expect(DESKTOP_PEOPLE_H).toBe(40);
+    expect(DESKTOP_PEOPLE_IKON_W).toBe(20);
+    expect(DESKTOP_PEOPLE_IKON_H).toBe(19);
   });
 
   it('layout splitter toppbar over boks 2 og tom standby over boks 3', () => {
@@ -73,20 +98,45 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(standby).not.toMatch(/Ronny|Grainient|Galaxy|frost|fluid/);
   });
 
-  it('sidebar desktop: 389 / inner 259 / inset 26 / nav 141×50 / gap-0 / profil 259×65', () => {
+  it('sidebar desktop: 389 / chrome 275 flush-right / 8+259+8 / nav 141×50 pad 12 / gap-0 / logo 30', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
     expect(sidebar).toMatch(/data-shell-box="1"/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
+    expect(sidebar).toMatch(/md:w-\[275px\]/);
+    expect(sidebar).toMatch(/md:ml-auto/);
+    expect(sidebar).toMatch(/md:px-2/);
     expect(sidebar).toMatch(/md:w-\[259px\]/);
-    expect(sidebar).toMatch(/md:ml-\[26px\]/);
+    expect(sidebar).not.toMatch(/md:ml-\[26px\]/);
     expect(sidebar).toMatch(/md:h-\[50px\]/);
     expect(sidebar).toMatch(/md:w-\[141px\]/);
+    expect(sidebar).toMatch(/md:px-3/);
+    expect(sidebar).toMatch(/md:justify-between/);
+    expect(sidebar).toMatch(/md:text-right/);
     expect(sidebar).toMatch(/md:gap-0/);
+    expect(sidebar).toMatch(/\[&_img\]:h-\[30px\]/);
     expect(sidebar).toMatch(/IKON_DESKTOP = 26/);
     expect(sidebar).toMatch(/const IKON = 16/);
     expect(rad).toMatch(/md:h-\[65px\]/);
     expect(rad).toMatch(/md:w-\[259px\]/);
+  });
+
+  it('hjem-kort 348×160 py-20 px-16; people-showcase 182×40 ikon 20×19', () => {
+    const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
+    const people = utenKommentarer(les('../app/(app)/_shell/people-showcase.tsx'));
+    const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
+    expect(kort).toMatch(/md:h-\[160px\]/);
+    expect(kort).toMatch(/md:w-\[348px\]/);
+    expect(kort).toMatch(/md:px-4/);
+    expect(kort).toMatch(/md:py-5/);
+    expect(people).toMatch(/data-people-showcase/);
+    expect(people).toMatch(/h-10/);
+    expect(people).toMatch(/w-\[182px\]/);
+    expect(people).toMatch(/h-\[19px\]/);
+    expect(people).toMatch(/w-5/);
+    expect(people).toMatch(/hidden[\s\S]*md:flex/);
+    expect(hjem).toMatch(/<PeopleShowcase/);
+    expect(hjem).not.toMatch(/AnsattePaJobb/);
   });
 
   it('kanonisk landing er /home; /dashboard redirecter og beholdes som alias', () => {

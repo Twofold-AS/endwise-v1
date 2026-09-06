@@ -167,31 +167,45 @@ export function Sidebar() {
           : `hidden md:flex md:static ${smal ? 'md:w-[52px]' : 'md:w-[389px]'}`
       }`}
     >
-      <div
-        data-shell-header
-        className={`hidden shrink-0 md:flex ${
-          smal ? SHELL_HEADER_RAD : 'h-row w-[259px] items-center justify-between gap-2 ml-[26px]'
-        }`}
-      >
-        {/*
-         * `dealerName` er ekte navn fra `tenants.name`. Placeholderen
-         * «Endwise-forhandler» sto hardkodet her fram til — den var
-         * ikke bare stygg, den var en påstand om hvor du er logget inn.
-         */}
-        <SidebarHeader
-          collapsed={smal}
-          navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
-          inspect={inspect}
-          inspectTilbakeHref={inspectTilbake}
-        />
-      </div>
+      {smal ? (
+        <div data-shell-header className={`hidden shrink-0 md:flex ${SHELL_HEADER_RAD}`}>
+          <SidebarHeader
+            collapsed
+            navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
+            inspect={inspect}
+            inspectTilbakeHref={inspectTilbake}
+          />
+        </div>
+      ) : null}
 
-      {/* Innhold: telefon-overlay beholder px-3. Desktop: 26px fra kant, inner 259. */}
+      {/*
+       * Telefon-overlay: px-3. Desktop: 275 flush-right i 389 (8+259+8).
+       * Tom skinne til venstre mot viewport-kanten — ikke speilet.
+       */}
       <div
+        data-shell-chrome={smal ? undefined : '275'}
         className={`flex min-h-0 flex-1 flex-col gap-2 py-3 ${
-          smal ? 'px-3' : 'px-3 md:ml-[26px] md:w-[259px] md:px-0'
+          smal ? 'px-3' : 'px-3 md:ml-auto md:w-[275px] md:px-2'
         }`}
       >
+        {!smal ? (
+          <div
+            data-shell-header
+            className="hidden h-row items-center justify-between gap-2 md:flex md:w-[259px] [&_img]:h-[30px] [&_img]:w-[30px]"
+          >
+            {/*
+             * `dealerName` er ekte navn fra `tenants.name`. Placeholderen
+             * «Endwise-forhandler» sto hardkodet her fram til — den var
+             * ikke bare stygg, den var en påstand om hvor du er logget inn.
+             */}
+            <SidebarHeader
+              collapsed={false}
+              navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
+              inspect={inspect}
+              inspectTilbakeHref={inspectTilbake}
+            />
+          </div>
+        ) : null}
         {shell === 'forhandler' && !inspect && (
           <DropdownMenu open={quickOpen} onOpenChange={setQuickOpen}>
             <DropdownMenuTrigger asChild>
@@ -308,7 +322,7 @@ function NavRow({
       <Ikon icon={item.icon} active={active} collapsed={collapsed} />
       {!collapsed && (
         <>
-          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-6 md:w-[55px] md:flex-none">
+          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-6 md:w-[55px] md:flex-none md:text-right">
             {item.label}
           </span>
           {item.isNew && <NewBadge />}
@@ -325,7 +339,7 @@ function NavRow({
       title={collapsed ? item.label : undefined}
       onClick={onNavigate}
       className={`flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors md:h-[50px] md:gap-0 ${
-        collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[141px] md:px-0'
+        collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[141px] md:justify-between md:px-3'
       } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}
     >
       {innhold}

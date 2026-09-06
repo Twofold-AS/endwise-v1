@@ -196,11 +196,13 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     }
   });
 
-  it('sidebar-skall arver Attio-wash og desktop-lås 389/259', () => {
+  it('sidebar-skall arver Attio-wash og desktop-lås 389/275 flush-right', () => {
     const naa = les('../app/(app)/_shell/sidebar.tsx');
     expect(naa).toMatch(/bg-sidebar/);
     expect(naa).not.toMatch(/bg-\[#ffffff\]/);
     expect(naa).toMatch(/md:w-\[389px\]/);
+    expect(naa).toMatch(/md:w-\[275px\]/);
+    expect(naa).toMatch(/md:ml-auto/);
     expect(naa).toMatch(/md:w-\[259px\]/);
   });
 

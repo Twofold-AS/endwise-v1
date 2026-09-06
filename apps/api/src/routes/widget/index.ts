@@ -7,6 +7,7 @@ import {
   signWidgetToken,
   WIDGET_SLOT_STEP_MINUTES,
   WidgetBookingError,
+  WidgetBookingIdentity,
   widgetWorkingDay,
 } from '@endwise/modules/widget';
 import { Hono } from 'hono';
@@ -146,7 +147,11 @@ app.post('/booking', async (c) => {
       regNumber: parsed.data.regNumber ?? null,
       notes: parsed.data.notes ?? null,
       // Idempotens bindes til den anonyme økten + tid + tjeneste (hindrer dobbeltbooking).
-      idempotencyKey: `widget:${cid}:${parsed.data.serviceVersionId}:${parsed.data.startsAt.toISOString()}`,
+      idempotencyKey: WidgetBookingIdentity.idempotencyKey({
+        cid,
+        serviceVersionId: parsed.data.serviceVersionId,
+        startsAt: parsed.data.startsAt,
+      }),
     });
     return c.json(result);
   } catch (error) {

@@ -46,9 +46,9 @@ export function PhoneKort({
         : 'min-w-0 flex-1 truncate text-title';
   const luft =
     variant === 'hero'
-      ? 'gap-5 p-5 md:h-[160px] md:w-[348px] md:px-4 md:py-5'
+      ? 'gap-5 p-5 md:h-[140px] md:w-[300px] md:px-3.5 md:py-4'
       : apple
-        ? 'gap-2.5 p-4 md:h-[160px] md:w-[348px] md:px-4 md:py-5'
+        ? 'gap-2.5 p-4 md:h-[140px] md:w-[300px] md:px-3.5 md:py-4'
         : 'gap-2 p-3';
 
   return (

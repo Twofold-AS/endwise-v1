@@ -1,3 +1,8 @@
+/** Mikael: «Verkstedet» ut av boks 2-toppbaren. Annet chrome står. */
+export function utenVerkstedetCrumb<T extends { label: string }>(crumbs: T[]): T[] {
+  return crumbs.filter((c) => c.label !== 'Verkstedet');
+}
+
 /** Hvilken destinasjon skal vise top-bar 2. */
 
 export function erOrganisasjonSide(pathname: string): boolean {

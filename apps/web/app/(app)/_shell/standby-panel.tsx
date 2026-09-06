@@ -1,6 +1,9 @@
+import { RonnyAvatarKnapp } from '../_workshop/ronny-avatar-knapp';
+
 /**
- * Box 3 — empty standby for future detail panes.
- * Desktop only. Hairline against box 2. No fake content.
+ * Box 3 — standby for future detail panes.
+ * Desktop only. Hairline against box 2. Ronny-avatar øverst
+ * (Mikael desktop polish). Ingen bot-panel-arbeid her.
  */
 export function StandbyPanel() {
   return (
@@ -11,8 +14,10 @@ export function StandbyPanel() {
     >
       <header
         data-shell-topbar="3"
-        className="h-[53px] w-[452px] shrink-0 border-border border-b bg-bg"
-      />
+        className="flex h-[53px] w-[452px] shrink-0 items-center justify-end border-border border-b bg-bg px-4"
+      >
+        <RonnyAvatarKnapp />
+      </header>
       <div data-standby-body className="min-h-0 w-[452px] flex-1" />
     </aside>
   );

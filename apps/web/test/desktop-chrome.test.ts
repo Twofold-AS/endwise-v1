@@ -34,11 +34,12 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(MEKANIKER_NAV.some((i) => i.label === 'Hjelp')).toBe(false);
   });
 
-  it('sidebar: hvit, ingen header-divider, +2px gap, OppgraderPille, ingen avatar', () => {
+  it('sidebar: Attio-wash, ingen header-divider, +2px gap, OppgraderPille, ingen avatar', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
     const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
-    expect(sidebar).toMatch(/bg-\[#ffffff\]/);
+    expect(sidebar).toMatch(/bg-sidebar/);
+    expect(sidebar).not.toMatch(/bg-\[#ffffff\]/);
     expect(header).not.toMatch(/border-b/);
     expect(sidebar).not.toMatch(/min-h-10 shrink-0 items-center py-2[\s\S]{0,80}border-b-/);
     expect(sidebar).toMatch(/gap-\[4px\]/);

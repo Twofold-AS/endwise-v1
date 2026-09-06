@@ -41,6 +41,8 @@ export default defineConfig({
       'test/services-owner-write.test.ts',
       // Prod FORCE RLS: eier-INSERT/RETURNING på P0 dealer-skriv.
       'test/p0-dealer-owner-write.test.ts',
+      // Prod FORCE RLS: residual eier-porter (#131 Utsatt).
+      'test/p1-residual-owner-write.test.ts',
       // #121 RETURNING — eier-SELECT/revoke på invitations.
       'test/invitations-owner-returning.test.ts',
     ],

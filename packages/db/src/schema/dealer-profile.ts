@@ -32,8 +32,10 @@ export const dealerProfiles = pgTable(
   (t) => [
     tenantPolicy('dealer_profiles', t.tenantId),
     inspectSelectPolicy('dealer_profiles', t.tenantId),
-    // Eier-SELECT (`dealer_profiles_tenant_select_owner`) i grants.sql —
+    // Eier-SELECT (`dealer_profiles_tenant_select_owner`, 0039) —
     // forhandler.kort leser som eier under FORCE RLS via withTenant.
+    // Eier-INSERT/UPDATE (`dealer_profiles_tenant_*_owner`, 0044) —
+    // forhandler.update / applyQuickDealerProfile.
   ],
 ).enableRLS();
 

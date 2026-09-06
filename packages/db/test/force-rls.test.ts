@@ -385,6 +385,64 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     expect(navn).not.toContain('booking_services_tenant_update_owner');
   });
 
+  it('③h residual eier-porter under FORCE RLS (#131 Utsatt)', async () => {
+    const residual = [
+      'dealer_profiles_tenant_insert_owner',
+      'dealer_profiles_tenant_update_owner',
+      'integration_config_tenant_insert_owner',
+      'integration_config_tenant_select_owner',
+      'integration_config_tenant_update_owner',
+      'widget_keys_tenant_insert_owner',
+      'widget_keys_tenant_select_owner',
+      'widget_keys_tenant_update_owner',
+      'mechanics_tenant_update_owner',
+      'billing_customers_tenant_insert_owner',
+      'billing_customers_tenant_select_owner',
+      'billing_customers_tenant_update_owner',
+      'tenant_modules_tenant_insert_owner',
+      'sync_conflicts_tenant_insert_owner',
+      'sync_conflicts_tenant_select_owner',
+      'sync_conflicts_tenant_update_owner',
+      'stream_events_tenant_insert_owner',
+      'stream_events_tenant_select_owner',
+      'shop_orders_tenant_insert_owner',
+      'shop_orders_tenant_select_owner',
+      'shop_orders_tenant_update_owner',
+      'shop_order_lines_tenant_insert_owner',
+      'shop_order_lines_tenant_select_owner',
+      'feature_flag_overrides_tenant_insert_owner',
+      'feature_flag_overrides_tenant_select_owner',
+      'feature_flag_overrides_tenant_update_owner',
+    ];
+    const res = await app.execute(
+      sql.raw(`
+      select p.polname, p.polcmd
+        from pg_policy p
+       where p.polname in (${residual.map((n) => `'${n}'`).join(', ')})
+       order by p.polname
+    `),
+    );
+    const navn = res.rows.map((r) => r.polname);
+    expect(navn, 'Mangler residual eier-porter. Kjør `pnpm db:grants`.').toEqual(
+      expect.arrayContaining(residual),
+    );
+    expect(navn).toHaveLength(residual.length);
+    const insert = new Set(residual.filter((n) => n.endsWith('_insert_owner')));
+    const select = new Set(residual.filter((n) => n.endsWith('_select_owner')));
+    const update = new Set(residual.filter((n) => n.endsWith('_update_owner')));
+    expect(
+      res.rows.filter((r) => insert.has(String(r.polname))).every((r) => r.polcmd === 'a'),
+    ).toBe(true);
+    expect(
+      res.rows.filter((r) => select.has(String(r.polname))).every((r) => r.polcmd === 'r'),
+    ).toBe(true);
+    expect(
+      res.rows.filter((r) => update.has(String(r.polname))).every((r) => r.polcmd === 'w'),
+    ).toBe(true);
+    expect(navn).not.toContain('stream_events_tenant_update_owner');
+    expect(navn).not.toContain('shop_order_lines_tenant_update_owner');
+  });
+
   it('③d eier av tenants er superuser lokalt — Scaleway-antakelsen står i functions.sql', async () => {
     // CI/Docker: eieren bypasser force RLS. Vi kan ikke flytte eierskap her
     // uten å ødelegge resten av suiten. Kontraktstestene + ③c er stand-in.

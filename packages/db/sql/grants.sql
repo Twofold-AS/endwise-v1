@@ -1624,6 +1624,534 @@ create policy stock_movements_tenant_select_owner on stock_movements
     and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
   );
 
+
+-- Residual eier-porter under FORCE RLS (prod APP = eier `endwise`).
+-- #131 Utsatt / P1: dealer_profiles INSERT/UPDATE, widget_keys,
+-- integration_config, shop_*, stream_events, sync_conflicts,
+-- billing_customers, feature_flag_overrides, mechanics UPDATE,
+-- tenant_modules INSERT uten platform_admin.
+-- Samme primitiv som 0039–0043. Ingen platform_admin. FORCE RLS urørt.
+drop policy if exists dealer_profiles_tenant_insert_owner on dealer_profiles;
+create policy dealer_profiles_tenant_insert_owner on dealer_profiles
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.dealer_profiles'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists dealer_profiles_tenant_select_owner on dealer_profiles;
+create policy dealer_profiles_tenant_select_owner on dealer_profiles
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.dealer_profiles'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists dealer_profiles_tenant_update_owner on dealer_profiles;
+create policy dealer_profiles_tenant_update_owner on dealer_profiles
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.dealer_profiles'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.dealer_profiles'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists integration_config_tenant_insert_owner on integration_config;
+create policy integration_config_tenant_insert_owner on integration_config
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.integration_config'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists integration_config_tenant_select_owner on integration_config;
+create policy integration_config_tenant_select_owner on integration_config
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.integration_config'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists integration_config_tenant_update_owner on integration_config;
+create policy integration_config_tenant_update_owner on integration_config
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.integration_config'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.integration_config'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists widget_keys_tenant_insert_owner on widget_keys;
+create policy widget_keys_tenant_insert_owner on widget_keys
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.widget_keys'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists widget_keys_tenant_select_owner on widget_keys;
+create policy widget_keys_tenant_select_owner on widget_keys
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.widget_keys'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists widget_keys_tenant_update_owner on widget_keys;
+create policy widget_keys_tenant_update_owner on widget_keys
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.widget_keys'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.widget_keys'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists billing_customers_tenant_insert_owner on billing_customers;
+create policy billing_customers_tenant_insert_owner on billing_customers
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.billing_customers'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists billing_customers_tenant_select_owner on billing_customers;
+create policy billing_customers_tenant_select_owner on billing_customers
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.billing_customers'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists billing_customers_tenant_update_owner on billing_customers;
+create policy billing_customers_tenant_update_owner on billing_customers
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.billing_customers'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.billing_customers'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists sync_conflicts_tenant_insert_owner on sync_conflicts;
+create policy sync_conflicts_tenant_insert_owner on sync_conflicts
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.sync_conflicts'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists sync_conflicts_tenant_select_owner on sync_conflicts;
+create policy sync_conflicts_tenant_select_owner on sync_conflicts
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.sync_conflicts'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists sync_conflicts_tenant_update_owner on sync_conflicts;
+create policy sync_conflicts_tenant_update_owner on sync_conflicts
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.sync_conflicts'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.sync_conflicts'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists stream_events_tenant_insert_owner on stream_events;
+create policy stream_events_tenant_insert_owner on stream_events
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.stream_events'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists stream_events_tenant_select_owner on stream_events;
+create policy stream_events_tenant_select_owner on stream_events
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.stream_events'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists shop_orders_tenant_insert_owner on shop_orders;
+create policy shop_orders_tenant_insert_owner on shop_orders
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.shop_orders'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists shop_orders_tenant_select_owner on shop_orders;
+create policy shop_orders_tenant_select_owner on shop_orders
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.shop_orders'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists shop_orders_tenant_update_owner on shop_orders;
+create policy shop_orders_tenant_update_owner on shop_orders
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.shop_orders'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.shop_orders'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists shop_order_lines_tenant_insert_owner on shop_order_lines;
+create policy shop_order_lines_tenant_insert_owner on shop_order_lines
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.shop_order_lines'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists shop_order_lines_tenant_select_owner on shop_order_lines;
+create policy shop_order_lines_tenant_select_owner on shop_order_lines
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.shop_order_lines'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists feature_flag_overrides_tenant_insert_owner on feature_flag_overrides;
+create policy feature_flag_overrides_tenant_insert_owner on feature_flag_overrides
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.feature_flag_overrides'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists feature_flag_overrides_tenant_select_owner on feature_flag_overrides;
+create policy feature_flag_overrides_tenant_select_owner on feature_flag_overrides
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.feature_flag_overrides'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists feature_flag_overrides_tenant_update_owner on feature_flag_overrides;
+create policy feature_flag_overrides_tenant_update_owner on feature_flag_overrides
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.feature_flag_overrides'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.feature_flag_overrides'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists tenant_modules_tenant_insert_owner on tenant_modules;
+create policy tenant_modules_tenant_insert_owner on tenant_modules
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_modules'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists mechanics_tenant_update_owner on mechanics;
+create policy mechanics_tenant_update_owner on mechanics
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.mechanics'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.mechanics'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
 -- DELETE på øvrige RLS-tabeller med tenant_id. Dynamisk: nye tabeller dekkes
 -- neste `pnpm db:grants`. Hopper over audit_log / erasure_requests / tenants
 -- (håndteres over). Tabeller uten RLS (tenant_delete_challenges) trenger

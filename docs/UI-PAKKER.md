@@ -111,10 +111,11 @@
 > Skillet er innholdet (siffer vs. «Ny»), ikke to ulike former.
 
 > ### 🔴 EIERENS DESIGN-PRINSIPPER HAR FORRANG (03.08.2026, aksent endret 06.08)
-> ⚠️ **AKSENT-ROLLER ER ATTIO (06.09.2026, Mikael).** CTA-fyll er ink `#1c1d1f`
+> ⚠️ **AKSENT-ROLLER ER ATTIO (06.09.2026, Jonas token-fasit / Mikael).** CTA-fyll er ink `#1c1d1f`
 > (`--ew-ink-utility` / `--primary`). Action Blue `#407ff2` er **kun** lenker/aktiv/fokus-tekst.
-> Focus Blue `#94b9ff` er ring. Ash-panel `#f3f4f6`, canvas `#ffffff`, stone/slate
-> `#e4e7ec` / `#d3d8df`, Overcast `#8f99a8`. Inter beholdt. ⛔ Attio-layout / Fluid / frost (#138).
+> Focus Blue `#94b9ff` er ring. Ash-panel `#f3f4f6`, canvas `#ffffff`, sidebar-wash `#f8f8f8`,
+> aktiv-wash `#eaf1ff`, stone/slate `#e4e7ec` / `#d3d8df`, Overcast `#8f99a8`. Inter beholdt.
+> Landing holder Apple `#0066cc`. ⛔ Attio-layout / Fluid / frost (#138).
 > ⛔ Ronny-kropp / logogrønn `#1ED27D`. Switch-track følger Action Blue.
 > Suksess-grønnen (`--ew-success`) er BEHOLDT — den er informasjon, ikke merkevare.
 > «Ny»-badgen er RØD (tekstbadge). Tellere er samme røde badge-form med siffer.

@@ -1,7 +1,7 @@
 # Rapport — 06.09.2026 — Attio-farger only på eksisterende chrome (F0-11 / F5-10)
 
 **Roadmap:** F0-11 (`done` — hex oppdatert), F5-10 (`progress`), F5-13 (`done` — struktur urørt)  
-**Godkjenning:** Mikael-lås 06.09.2026 — dropp Attio-layout-preview; behold Attio-farger.
+**Godkjenning:** Mikael-lås 06.09.2026 — dropp Attio-layout-preview; behold Attio-farger. Jonas Design token-fasit samme dag (sidebar-wash `#f8f8f8`, aktiv-wash `#eaf1ff`, landing Apple).
 
 ## 1. Hva er gjort
 

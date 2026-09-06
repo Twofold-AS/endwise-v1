@@ -9,7 +9,7 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 **Type:** token-remap. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
 **Godkjent av:** Mikael-lås 06.09.2026 — dropp Attio-layout-preview; behold Attio-farger; han går UI selv.
-**Endring:** **F0-11** forblir `done` (hex oppdatert). **F5-10** forblir `progress`. **F5-13** forblir `done` (struktur urørt). Dealer-chrome arver Attio-palett via eksisterende `--ew-*` / `--primary` / `--ring`. CTA = ink `#1c1d1f`. Lenker/aktiv = Action Blue `#407ff2`. Ring = Focus Blue `#94b9ff`. ⛔ #138 Fluid/frost/tabell-sidebar. ⛔ Ronny-kropp. ⛔ #114/#119.
+**Endring:** **F0-11** forblir `done` (hex oppdatert). **F5-10** forblir `progress`. **F5-13** forblir `done` (struktur urørt). Dealer-chrome arver Attio-palett via eksisterende `--ew-*` / `--primary` / `--ring`. CTA = ink `#1c1d1f`. Lenker/aktiv = Action Blue `#407ff2`. Ring = Focus Blue `#94b9ff`. Sidebar-wash `#f8f8f8`, aktiv-wash `#eaf1ff`. Landing-CTA scoped til Apple `#0066cc`. ⛔ #138 Fluid/frost/tabell-sidebar. ⛔ Ronny-kropp. ⛔ #114/#119.
 
 ---
 

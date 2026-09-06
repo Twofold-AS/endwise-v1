@@ -198,10 +198,14 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
   });
 
   it('sidebar-skall er uendret bortsett fra Attio-wash-token', () => {
-    const main = execFileSync('git', ['show', 'origin/main:apps/web/app/(app)/_shell/sidebar.tsx'], {
-      cwd: repo,
-      encoding: 'utf8',
-    });
+    const main = execFileSync(
+      'git',
+      ['show', 'origin/main:apps/web/app/(app)/_shell/sidebar.tsx'],
+      {
+        cwd: repo,
+        encoding: 'utf8',
+      },
+    );
     const naa = les('../app/(app)/_shell/sidebar.tsx');
     expect(naa).toMatch(/bg-sidebar/);
     expect(naa).not.toMatch(/bg-\[#ffffff\]/);

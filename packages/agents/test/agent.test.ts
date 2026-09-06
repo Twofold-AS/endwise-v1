@@ -30,6 +30,12 @@ describeDb('agent-runtime (F6-13)', () => {
   const tenantB = randomUUID();
   const bookingA = randomUUID();
   const bookingB = randomUUID();
+  /** Annen widget-økt hos samme forhandler — skal aldri lekke til `cidMine`. */
+  const bookingOther = randomUUID();
+  const cidMine = `customer:${randomUUID()}`;
+  const cidOther = `customer:${randomUUID()}`;
+  const startsMine = new Date('2026-11-01T09:00:00Z');
+  const startsOther = new Date('2026-11-01T11:00:00Z');
 
   const ctx = (over: Partial<AgentContext> = {}): AgentContext => ({
     db: app,
@@ -50,6 +56,8 @@ describeDb('agent-runtime (F6-13)', () => {
       { id: tenantB, name: 'B', slug: `ab-${tenantB.slice(0, 8)}` },
     ]);
 
+    let mechanicA = '';
+    let versionA = '';
     for (const [t, bookingId, navn] of [
       [tenantA, bookingA, 'Kari hos A'],
       [tenantB, bookingB, 'Bob hos B'],
@@ -73,10 +81,29 @@ describeDb('agent-runtime (F6-13)', () => {
         tenantId: t,
         mechanicId,
         serviceVersionId: versionId,
-        startsAt: new Date('2026-11-01T09:00:00Z'),
+        startsAt: startsMine,
         endsAt: new Date('2026-11-01T10:00:00Z'),
+        // Samme nøkkelkontrakt som POST /widget/booking: widget:${cid}:${version}:${iso}
+        idempotencyKey:
+          t === tenantA ? `widget:${cidMine}:${versionId}:${startsMine.toISOString()}` : null,
       });
+      if (t === tenantA) {
+        mechanicA = mechanicId;
+        versionA = versionId;
+      }
     }
+
+    await owner.insert(schema.bookings).values({
+      id: bookingOther,
+      tenantId: tenantA,
+      mechanicId: mechanicA,
+      serviceVersionId: versionA,
+      startsAt: startsOther,
+      endsAt: new Date('2026-11-01T12:00:00Z'),
+      source: 'widget',
+      notes: 'hemmelig merknad fra annen kunde',
+      idempotencyKey: `widget:${cidOther}:${versionA}:${startsOther.toISOString()}`,
+    });
   });
 
   afterAll(async () => {
@@ -146,7 +173,7 @@ describeDb('agent-runtime (F6-13)', () => {
 
     const toolResults: unknown[] = [];
     const guardrails = createGuardrails();
-    const context = ctx();
+    const context = ctx({ userId: cidMine });
 
     // Vi kjører verktøyet slik runtimen ville gjort det, og inspiserer hva det ga.
     const tools = guardrails.wrapTools(kundeSupportAgent.tools(context), context);
@@ -175,6 +202,36 @@ describeDb('agent-runtime (F6-13)', () => {
       ],
       onEvent: () => {},
     });
+  });
+
+  /**
+   * P0 — kryss-kunde inne i tenanten.
+   * Widget-chat setter userId til anonym `cid` (`customer:<uuid>`), ikke
+   * `customers.id`. Bookingen eies via idempotensnøkkelen fra /widget/booking
+   * (`widget:${cid}:…`). mineBookinger skal bare returnere den øktens rader —
+   * ikke naboens tider, mekaniker eller notater hos samme forhandler.
+   */
+  it('ANGREP: widget-sesjon kan IKKE hente en annen kundes bookinger hos samme forhandler', async () => {
+    const context = ctx({ userId: cidMine });
+    const tools = createGuardrails().wrapTools(kundeSupportAgent.tools(context), context);
+    const result = (await tools.mineBookinger?.execute?.({ limit: 10 }, {} as never)) as {
+      data: Array<{ id: string; notes: string | null; mechanicId: string }>;
+    };
+
+    const ids = result.data.map((b) => b.id);
+    expect(ids).toContain(bookingA);
+    expect(ids).not.toContain(bookingOther);
+    expect(ids).not.toContain(bookingB);
+    expect(result.data.some((b) => (b.notes ?? '').includes('hemmelig'))).toBe(false);
+  });
+
+  it('uten pålitelig widget-cid feiler mineBookinger lukket (tomt, ikke dealer-tabellen)', async () => {
+    const context = ctx({ userId: 'kunde-1' });
+    const tools = createGuardrails().wrapTools(kundeSupportAgent.tools(context), context);
+    const result = (await tools.mineBookinger?.execute?.({ limit: 10 }, {} as never)) as {
+      data: Array<{ id: string }>;
+    };
+    expect(result.data).toEqual([]);
   });
 
   it('SSE-broen: agent-hendelser havner på samme strøm som meldingene (F6-02)', async () => {

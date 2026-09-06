@@ -1,6 +1,7 @@
 /// <reference path="../md.d.ts" />
 import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
-import { schema, withTenant } from '@endwise/db';
+import { schema, sql, withTenant } from '@endwise/db';
+import { WidgetBookingIdentity } from '@endwise/modules/widget';
 import { tool } from 'ai';
 import { z } from 'zod';
 import instructions from './instructions.md?raw';
@@ -36,10 +37,19 @@ export const kundeSupportAgent: AgentDefinition = {
           // Ingen tenantId. Ingen customerId. Bevisst.
           limit: z.number().int().min(1).max(20).default(5),
         }),
-        execute: async ({ limit }) =>
-          withTenant(context.db, context.tenantId, (tx) =>
-            tx.select().from(schema.bookings).limit(limit),
-          ),
+        execute: async ({ limit }) => {
+          // Widget-chat setter userId = anonym cid. Uten den lenken: tomt,
+          // aldri hele forhandlerens bookings-tabell (kryss-kunde inne i tenant).
+          const prefix = WidgetBookingIdentity.sessionKeyPrefix(context.userId);
+          if (!prefix) return [];
+          return withTenant(context.db, context.tenantId, (tx) =>
+            tx
+              .select()
+              .from(schema.bookings)
+              .where(sql`starts_with(${schema.bookings.idempotencyKey}, ${prefix})`)
+              .limit(limit),
+          );
+        },
       }),
 
       tjenester: tool({

@@ -1200,3 +1200,264 @@ create trigger stock_levels_owner_update_guard_trg
   before update on stock_levels
   for each row
   execute function stock_levels_owner_update_guard();
+
+-- Residual eier-UPDATE-guard (0044). Authenticated/endwise_app urørt.
+create or replace function dealer_profiles_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.dealer_profiles'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.tenant_id is distinct from old.tenant_id
+     or new.created_at is distinct from old.created_at then
+    raise exception 'dealer_profiles: eier-UPDATE kan ikke endre tenant_id eller created_at'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists dealer_profiles_owner_update_guard_trg on dealer_profiles;
+create trigger dealer_profiles_owner_update_guard_trg
+  before update on dealer_profiles
+  for each row
+  execute function dealer_profiles_owner_update_guard();
+
+create or replace function integration_config_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.integration_config'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.tenant_id is distinct from old.tenant_id
+     or new.provider is distinct from old.provider
+     or new.created_at is distinct from old.created_at then
+    raise exception 'integration_config: eier-UPDATE kan ikke endre PK eller created_at'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists integration_config_owner_update_guard_trg on integration_config;
+create trigger integration_config_owner_update_guard_trg
+  before update on integration_config
+  for each row
+  execute function integration_config_owner_update_guard();
+
+create or replace function widget_keys_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.widget_keys'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.id is distinct from old.id
+     or new.tenant_id is distinct from old.tenant_id
+     or new.created_at is distinct from old.created_at
+     or new.publishable_key is distinct from old.publishable_key then
+    raise exception 'widget_keys: eier-UPDATE kan ikke endre id, tenant_id, created_at eller publishable_key'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists widget_keys_owner_update_guard_trg on widget_keys;
+create trigger widget_keys_owner_update_guard_trg
+  before update on widget_keys
+  for each row
+  execute function widget_keys_owner_update_guard();
+
+create or replace function mechanics_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.mechanics'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.id is distinct from old.id
+     or new.tenant_id is distinct from old.tenant_id
+     or new.created_at is distinct from old.created_at
+     or new.user_id is distinct from old.user_id then
+    raise exception 'mechanics: eier-UPDATE kan ikke endre id, tenant_id, created_at eller user_id'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists mechanics_owner_update_guard_trg on mechanics;
+create trigger mechanics_owner_update_guard_trg
+  before update on mechanics
+  for each row
+  execute function mechanics_owner_update_guard();
+
+create or replace function billing_customers_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.billing_customers'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.tenant_id is distinct from old.tenant_id then
+    raise exception 'billing_customers: eier-UPDATE kan ikke endre tenant_id'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists billing_customers_owner_update_guard_trg on billing_customers;
+create trigger billing_customers_owner_update_guard_trg
+  before update on billing_customers
+  for each row
+  execute function billing_customers_owner_update_guard();
+
+create or replace function sync_conflicts_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.sync_conflicts'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.id is distinct from old.id
+     or new.tenant_id is distinct from old.tenant_id
+     or new.created_at is distinct from old.created_at
+     or new.provider is distinct from old.provider
+     or new.entity is distinct from old.entity
+     or new.entity_id is distinct from old.entity_id
+     or new.field is distinct from old.field then
+    raise exception 'sync_conflicts: eier-UPDATE kan ikke endre identitet eller konfliktfelt'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists sync_conflicts_owner_update_guard_trg on sync_conflicts;
+create trigger sync_conflicts_owner_update_guard_trg
+  before update on sync_conflicts
+  for each row
+  execute function sync_conflicts_owner_update_guard();
+
+create or replace function shop_orders_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.shop_orders'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.id is distinct from old.id
+     or new.tenant_id is distinct from old.tenant_id
+     or new.created_at is distinct from old.created_at
+     or new.created_by_user_id is distinct from old.created_by_user_id then
+    raise exception 'shop_orders: eier-UPDATE kan ikke endre id, tenant_id, created_at eller created_by'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists shop_orders_owner_update_guard_trg on shop_orders;
+create trigger shop_orders_owner_update_guard_trg
+  before update on shop_orders
+  for each row
+  execute function shop_orders_owner_update_guard();
+
+create or replace function feature_flag_overrides_owner_update_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  eier text;
+begin
+  select pg_get_userbyid(c.relowner) into eier
+    from pg_class c
+   where c.oid = 'public.feature_flag_overrides'::regclass;
+
+  if current_user is distinct from eier then
+    return new;
+  end if;
+
+  if new.flag_key is distinct from old.flag_key
+     or new.tenant_id is distinct from old.tenant_id then
+    raise exception 'feature_flag_overrides: eier-UPDATE kan ikke endre PK'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists feature_flag_overrides_owner_update_guard_trg on feature_flag_overrides;
+create trigger feature_flag_overrides_owner_update_guard_trg
+  before update on feature_flag_overrides
+  for each row
+  execute function feature_flag_overrides_owner_update_guard();
+

@@ -37,8 +37,9 @@ export const tenantModules = pgTable(
   (t) => [
     primaryKey({ columns: [t.tenantId, t.moduleKey] }),
     tenantPolicy('tenant_modules', t.tenantId),
-    // Eier-INSERT (`tenant_modules_platform_admin_insert_owner`) i grants.sql
-    // — createTenant skriver pakke-rader som eier under FORCE RLS.
+    // Eier-INSERT (`tenant_modules_platform_admin_insert_owner`) — createTenant
+    // (platform_admin). `tenant_modules_tenant_insert_owner` (0044) —
+    // setModules / Stripe applySubscription via withTenant uten platform_admin.
     // Eier-SELECT (`tenant_modules_tenant_select_owner`) — session.me /
     // onboarding / moduleProcedure leser via withTenant.
     // Eier-UPDATE (`tenant_modules_tenant_update_owner`, 0041) — fullfor

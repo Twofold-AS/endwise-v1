@@ -487,5 +487,152 @@ if (bookingsGuard.rows[0]?.ok !== true) {
   process.exit(1);
 }
 
+const residualEierNavn = [
+  'dealer_profiles_tenant_insert_owner',
+  'dealer_profiles_tenant_update_owner',
+  'integration_config_tenant_insert_owner',
+  'integration_config_tenant_select_owner',
+  'integration_config_tenant_update_owner',
+  'widget_keys_tenant_insert_owner',
+  'widget_keys_tenant_select_owner',
+  'widget_keys_tenant_update_owner',
+  'mechanics_tenant_update_owner',
+  'billing_customers_tenant_insert_owner',
+  'billing_customers_tenant_select_owner',
+  'billing_customers_tenant_update_owner',
+  'tenant_modules_tenant_insert_owner',
+  'sync_conflicts_tenant_insert_owner',
+  'sync_conflicts_tenant_select_owner',
+  'sync_conflicts_tenant_update_owner',
+  'stream_events_tenant_insert_owner',
+  'stream_events_tenant_select_owner',
+  'shop_orders_tenant_insert_owner',
+  'shop_orders_tenant_select_owner',
+  'shop_orders_tenant_update_owner',
+  'shop_order_lines_tenant_insert_owner',
+  'shop_order_lines_tenant_select_owner',
+  'feature_flag_overrides_tenant_insert_owner',
+  'feature_flag_overrides_tenant_select_owner',
+  'feature_flag_overrides_tenant_update_owner',
+];
+const residualEier = await pool.query<{ polname: string }>(
+  `
+  select p.polname
+    from pg_policy p
+    join pg_class c on c.oid = p.polrelid
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public'
+     and p.polname = any($1::text[])
+`,
+  [residualEierNavn],
+);
+const residualFunnet = new Set(residualEier.rows.map((r) => r.polname));
+const manglerResidual = residualEierNavn.filter((n) => !residualFunnet.has(n));
+if (manglerResidual.length > 0) {
+  console.error(
+    '[db] residual eier-INSERT/SELECT/UPDATE under FORCE RLS mangler: ' +
+      manglerResidual.join(', ') +
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0044).',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const residualGuardNavn = [
+  'dealer_profiles_owner_update_guard',
+  'integration_config_owner_update_guard',
+  'widget_keys_owner_update_guard',
+  'mechanics_owner_update_guard',
+  'billing_customers_owner_update_guard',
+  'sync_conflicts_owner_update_guard',
+  'shop_orders_owner_update_guard',
+  'feature_flag_overrides_owner_update_guard',
+];
+const residualGuardFns = await pool.query<{ proname: string }>(
+  `
+  select p.proname
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.proname = any($1::text[])
+`,
+  [residualGuardNavn],
+);
+const residualGuardFunnet = new Set(residualGuardFns.rows.map((r) => r.proname));
+const manglerResidualGuard = residualGuardNavn.filter((n) => !residualGuardFunnet.has(n));
+if (manglerResidualGuard.length > 0) {
+  console.error(
+    '[db] residual eier-UPDATE-guard mangler: ' +
+      manglerResidualGuard.join(', ') +
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0044).',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const residualGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'dealer_profiles_owner_update_guard'
+       and strpos(p.prosrc, 'eier-UPDATE kan ikke endre tenant_id eller created_at') > 0
+       and strpos(p.prosrc, 'new.tenant_id is distinct from old.tenant_id') > 0
+  ) as ok
+`);
+if (residualGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] dealer_profiles_owner_update_guard mangler eller låser ikke identitet (0044). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const mechanicsGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'mechanics_owner_update_guard'
+       and strpos(p.prosrc, 'new.user_id is distinct from old.user_id') > 0
+       and strpos(p.prosrc, 'eier-UPDATE kan ikke endre id, tenant_id, created_at eller user_id') > 0
+  ) as ok
+`);
+if (mechanicsGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] mechanics_owner_update_guard mangler eller låser ikke user_id (0044). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
+const modulesInsert = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_policy p
+      join pg_class c on c.oid = p.polrelid
+      join pg_namespace n on n.oid = c.relnamespace
+     where n.nspname = 'public'
+       and c.relname = 'tenant_modules'
+       and p.polname = 'tenant_modules_tenant_insert_owner'
+       and p.polcmd = 'a'
+       and pg_get_expr(p.polqual, p.polrelid) is null
+       and strpos(pg_get_expr(p.polwithcheck, p.polrelid), 'app.platform_admin') = 0
+       and strpos(pg_get_expr(p.polwithcheck, p.polrelid), 'app.tenant_id') > 0
+  ) as ok
+`);
+if (modulesInsert.rows[0]?.ok !== true) {
+  console.error(
+    '[db] tenant_modules_tenant_insert_owner mangler eller krever platform_admin (0044). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
 await pool.end();
 console.info('[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0026)');

@@ -75,6 +75,7 @@ describe('landing og kopi', () => {
 
   it('stale forhandler-kontekst får plattform-toast', () => {
     expect(plattformToast()).toBe('Endwise er plattformen, ikke et verksted.');
+    expect(erForhandlerRutePaaPlattform('/home')).toBe(true);
     expect(erForhandlerRutePaaPlattform('/dashboard')).toBe(true);
     expect(erForhandlerRutePaaPlattform('/endwise')).toBe(false);
     expect(erForhandlerRutePaaPlattform('/endwise/verksted/yamaha/dashboard')).toBe(false);
@@ -95,6 +96,7 @@ describe('landing og kopi', () => {
 
 describe('Se verkstedet — URL, ikke sesjon', () => {
   it('remap persisterer under /endwise/verksted/[slug]', () => {
+    expect(remapHrefTilInspect('/home', 'yamaha')).toBe('/endwise/verksted/yamaha/home');
     expect(remapHrefTilInspect('/dashboard', 'yamaha')).toBe('/endwise/verksted/yamaha/dashboard');
     expect(remapHrefTilInspect('/saker?visning=kalender', 'yamaha')).toBe(
       '/endwise/verksted/yamaha/saker?visning=kalender',

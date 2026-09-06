@@ -43,6 +43,7 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(header).not.toMatch(/border-b/);
     expect(sidebar).not.toMatch(/min-h-10 shrink-0 items-center py-2[\s\S]{0,80}border-b-/);
     expect(sidebar).toMatch(/gap-\[4px\]/);
+    expect(sidebar).toMatch(/md:gap-0/);
     expect(sidebar).toMatch(/OppgraderPille/);
     expect(sidebar).not.toMatch(/<TipCard/);
     expect(sidebar).toMatch(/BrukerRad/);
@@ -53,18 +54,22 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(rad).not.toMatch(/Avatar|BEVEL|variant === 'phone'/);
     expect(rad).toMatch(/if \(collapsed\)/);
     expect(rad).toMatch(/LogOut/);
-    expect(rad).toMatch(/mx-2/);
+    expect(rad).toMatch(/mx-2|md:mx-0/);
     expect(rad).toMatch(/min-w-0 flex-1 truncate/);
   });
 
-  it('app-skall: ingen breadcrumb-topbar, ingen mørkt-toggle, ingen Ronny-stripe på desktop', () => {
+  it('app-skall: breadcrumb-topbar over boks 2, ingen mørkt-toggle, ingen Ronny-stripe på desktop', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const rot = les('../app/layout.tsx');
     const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
     const globals = les('../app/globals.css');
     const profil = utenKommentarer(les('../app/(app)/innstillinger/_profil-fane.tsx'));
     const meg = utenKommentarer(les('../app/(app)/min-dag/meg/page.tsx'));
-    expect(layout).not.toMatch(/TopBar/);
+    expect(layout).toMatch(/TopBar/);
+    expect(layout).toMatch(/StandbyPanel/);
+    expect(layout).toMatch(/data-desktop-axis/);
+    expect(layout).toMatch(/md:w-\[1050px\]/);
+    expect(layout).toMatch(/md:w-\[598px\]/);
     expect(layout).toMatch(/WorkshopBloub/);
     expect(rot).toMatch(/data-theme="light"/);
     expect(rot).not.toMatch(/TEMA_SKRIPT|endwise:tema/);

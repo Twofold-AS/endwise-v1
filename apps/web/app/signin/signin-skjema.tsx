@@ -138,7 +138,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
       .fetch()
       .then((me) => me.landing)
       .catch((err: unknown) => destinasjonNarSesjonFeiler(err));
-    window.location.assign(landing ?? '/dashboard');
+    window.location.assign(landing ?? '/home');
   }
 
   async function sendLenke(adresse: string, hvilken: 'fortsett' | 'send-nytt') {

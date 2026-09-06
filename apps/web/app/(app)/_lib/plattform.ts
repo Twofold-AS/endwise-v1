@@ -10,7 +10,8 @@ const INSPECT_KANONISK: Record<string, string> = {
   '/jobber': '/saker',
   '/rapporter': '/analyse',
   '/hjelp': '/support',
-  '/verkstedet': '/dashboard',
+  '/verkstedet': '/home',
+  '/dashboard': '/home',
   '/prisliste': '/organisasjon',
   '/forhandleren': '/organisasjon',
   '/organisasjon': '/organisasjon',
@@ -67,6 +68,7 @@ export function erForhandlerRutePaaPlattform(pathname: string, search = ''): boo
   if (pathname.startsWith('/2fa')) return false;
   if (pathname.startsWith('/oppstart')) return false;
   return (
+    pathname.startsWith('/home') ||
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/innboks') ||
     pathname.startsWith('/saker') ||

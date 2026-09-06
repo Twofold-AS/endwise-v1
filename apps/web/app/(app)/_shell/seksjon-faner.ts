@@ -69,7 +69,7 @@ export function destinasjonFaner(input: {
   let inspectSlug: string | null = null;
   if (isVerkstedInspectPath(pathname)) {
     inspectSlug = verkstedSlugFromPath(pathname);
-    pathname = pathname.replace(/^\/endwise\/verksted\/[^/]+/, '') || '/dashboard';
+    pathname = pathname.replace(/^\/endwise\/verksted\/[^/]+/, '') || '/home';
   }
   if (pathname.startsWith('/oppstart')) return [];
   if (input.shell === 'forhandler' && erDealerPhoneHjem(pathname, search)) return [];

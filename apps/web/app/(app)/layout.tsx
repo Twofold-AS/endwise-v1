@@ -15,6 +15,8 @@ import { PhoneShell } from './_shell/phone-shell';
 import { PwaRegister } from './_shell/pwa-register';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
+import { StandbyPanel } from './_shell/standby-panel';
+import { TopBar } from './_shell/top-bar';
 import { RonnySheetProvider } from './_workshop/ronny-sheet-state';
 import { WorkshopBloub } from './_workshop/workshop-bloub';
 
@@ -112,10 +114,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    */
 
   /*
-   * Desktop-sidebar er persistent venstre skinne. Overlay/fullskjerm-drawer
+   * Desktop: tre kolonner — sidebar 389 · innhold 598 · standby 452
+   * (akse 1050). Toppbarer 53px over boks 2 og 3. Overlay/fullskjerm-drawer
    * er telefon. PhoneShell (logo/tilbake/åpne) er `md:hidden`.
    * Fast toppbar med midtstilt ink-logo på telefon. Tilbake er pil med hale.
-   * PhoneBevel er borte. Dealer har ikke top-bar 2 / seksjonspiller.
+   * PhoneBevel er borte. Dealer har ikke seksjonspiller i toppbaren.
    * Plattform (Endwise) kan montere seksjonsbar i eget layout. Ronny er
    * telefon-sheet (80/100) og desktop høyre overlay (max 400px), ikke stripe.
    * K åpner quick actions i sidebaren.
@@ -141,30 +144,44 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   />
                   <Sidebar />
                 </Suspense>
-                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+                <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                   <Suspense fallback={null}>
                     <PhoneShell />
                     <WorkshopBloub />
                   </Suspense>
                   <div
-                    data-ronny-side-scroll
-                    className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+                    data-desktop-axis
+                    className="flex min-h-0 min-w-0 flex-1 md:w-[1050px] md:flex-none"
                   >
-                    <main className="min-w-0 flex-1">
-                      {plattformVarsel ? (
-                        <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
-                          <p className="text-label">{plattformVarsel}</p>
-                          <button
-                            type="button"
-                            className="text-[12px] underline-offset-2 hover:underline"
-                            onClick={() => setPlattformVarsel(null)}
-                          >
-                            Lukk
-                          </button>
-                        </div>
-                      ) : null}
-                      {children}
-                    </main>
+                    <div
+                      data-shell-box="2"
+                      className="flex min-h-0 min-w-0 flex-1 flex-col md:w-[598px] md:flex-none"
+                    >
+                      <Suspense fallback={null}>
+                        <TopBar />
+                      </Suspense>
+                      <div
+                        data-ronny-side-scroll
+                        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+                      >
+                        <main className="min-w-0 flex-1 md:w-[598px]">
+                          {plattformVarsel ? (
+                            <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
+                              <p className="text-label">{plattformVarsel}</p>
+                              <button
+                                type="button"
+                                className="text-[12px] underline-offset-2 hover:underline"
+                                onClick={() => setPlattformVarsel(null)}
+                              >
+                                Lukk
+                              </button>
+                            </div>
+                          ) : null}
+                          {children}
+                        </main>
+                      </div>
+                    </div>
+                    <StandbyPanel />
                   </div>
                 </div>
               </div>

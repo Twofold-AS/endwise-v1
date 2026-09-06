@@ -13,7 +13,7 @@ export function IkkeTilgang() {
         Denne siden er for Endwise, ikke for verkstedet. Du er fortsatt innlogget.
       </p>
       <Link
-        href={'/dashboard' as Route}
+        href={'/home' as Route}
         className="mt-2 inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg"
       >
         Tilbake til Verkstedet

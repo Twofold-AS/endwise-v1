@@ -61,7 +61,7 @@ describe('chrome-first first-paint', () => {
   });
 
   it('dashboard monterer ikke telefon-hjem og desktop-verksted samtidig', () => {
-    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     expect(dash).toMatch(/useMdViewport|flate === ['"]desktop['"]|flate === ['"]phone['"]/);
     expect(dash).not.toMatch(
       /dag \? <VerkstedetDag \/> : <PhoneHomeDealer \/>\s*<div className="hidden md:block">/,

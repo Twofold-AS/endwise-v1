@@ -107,8 +107,8 @@ describe('resolveJobbfunksjon — to dimensjoner, aldri blandet', () => {
 
 describe('landingForJobbfunksjon', () => {
   it('hver funksjon lander der jobben begynner', () => {
-    expect(landingForJobbfunksjon('leder')).toBe('/dashboard');
-    expect(landingForJobbfunksjon('selger')).toBe('/dashboard');
+    expect(landingForJobbfunksjon('leder')).toBe('/home');
+    expect(landingForJobbfunksjon('selger')).toBe('/home');
     expect(landingForJobbfunksjon('support')).toBe('/innboks');
     expect(landingForJobbfunksjon('mekaniker')).toBe('/min-dag');
   });

@@ -85,7 +85,7 @@ export function fortsettEtter2faKvittering(landing?: string | null): { destinasj
   if (landing?.startsWith('/') && !landing.startsWith('//')) {
     return { destinasjon: landing };
   }
-  return { destinasjon: '/dashboard' };
+  return { destinasjon: '/home' };
 }
 
 export function toFaktorStatusTekst(enabled: boolean | undefined): string {

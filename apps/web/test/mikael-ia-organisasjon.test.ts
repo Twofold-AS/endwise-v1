@@ -210,7 +210,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(layout).not.toMatch(/PhoneBevel/);
     expect(layout).not.toMatch(/PhoneNav/);
     expect(layout).toMatch(/WorkshopBloub/);
-    expect(layout).not.toMatch(/TopBar/);
+    expect(layout).toMatch(/TopBar/);
     expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/logo\/logo\.svg/);

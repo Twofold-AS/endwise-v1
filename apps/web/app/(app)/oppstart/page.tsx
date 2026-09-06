@@ -104,7 +104,7 @@ export default function OppstartPage() {
           : {}),
       });
       void utils.session.me.invalidate();
-      window.location.assign('/dashboard');
+      window.location.assign('/home');
     } catch (error) {
       setFeil((error as Error).message);
     }
@@ -134,7 +134,7 @@ export default function OppstartPage() {
         <h1 className="text-title text-fg">Oppstarten er ferdig</h1>
         <p className="text-body text-fg-muted">Du kan gå videre til verkstedet.</p>
         <a
-          href="/dashboard"
+          href="/home"
           className="inline-flex h-control w-fit items-center rounded-control bg-fg px-4 text-bg text-label"
         >
           Til oversikten

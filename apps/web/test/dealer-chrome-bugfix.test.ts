@@ -161,7 +161,7 @@ describe('Hjem-kort fylles fra eksisterende API-er', () => {
   });
 
   it('desktop Verkstedet viser samme destinasjonskort-fyll', () => {
-    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     expect(dash).toMatch(/DealerDestinasjonskort|PhoneHomeDealer|timeplanMeta/);
   });
 });

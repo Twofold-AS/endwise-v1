@@ -115,7 +115,7 @@ export function landingForJobbfunksjon(funksjon: Jobbfunksjon): string {
       return '/innboks';
     default:
       // leder og selger starter begge i verkstedets oversikt.
-      return '/dashboard';
+      return '/home';
   }
 }
 

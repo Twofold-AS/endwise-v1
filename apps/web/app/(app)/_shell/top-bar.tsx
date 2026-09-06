@@ -7,8 +7,8 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { breadcrumbFor, contextForPath } from './nav';
 
 /**
- * Top-bar 1 — breadcrumb. Kollaps bor i sidebaren.
- * Jonas 28.08: én 32-rad (h-control), ikke 56px med 16+16 padding.
+ * Top-bar over box 2 — 598×53. Place-you-are-skilt.
+ * Telefon bruker PhoneShell; denne er `hidden md:flex`.
  */
 export function TopBar() {
   const pathname = usePathname() ?? '';
@@ -16,7 +16,10 @@ export function TopBar() {
   const crumbs = breadcrumbFor(pathname, searchParams?.toString() ?? '', contextForPath(pathname));
 
   return (
-    <header className="flex h-control shrink-0 items-center gap-2 border-border border-b bg-bg px-4">
+    <header
+      data-shell-topbar="2"
+      className="hidden h-[53px] w-full shrink-0 items-center gap-2 border-border border-b bg-bg px-4 md:flex md:w-[598px]"
+    >
       <nav aria-label="Du er her" className="flex min-w-0 items-center gap-1.5">
         {crumbs.length === 0 ? (
           <span className="text-fg-muted text-label">Endwise</span>

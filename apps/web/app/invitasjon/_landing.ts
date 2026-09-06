@@ -19,7 +19,7 @@ export function destinasjonEtterInvite(
   if (kind === 'platform') return '/endwise';
   if (kind === 'owner') return '/oppstart';
   if (landing?.startsWith('/') && !landing.startsWith('//')) return landing;
-  return '/dashboard';
+  return '/home';
 }
 
 /** Samme regel som `land` — brukt av `/signin` og `/` etter innlogging. */

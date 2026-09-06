@@ -41,7 +41,10 @@ export function BrukerRad({
   }
 
   return (
-    <div className="mx-2 flex h-control min-w-0 items-center gap-2">
+    <div
+      data-shell-profil
+      className="mx-2 flex h-control min-w-0 items-center gap-2 md:mx-0 md:h-[65px] md:w-[259px]"
+    >
       <span className="min-w-0 flex-1 truncate text-left text-label text-fg">
         {laster ? (
           <span className="inline-block h-3.5 w-24 animate-pulse rounded-sm bg-surface-2" />

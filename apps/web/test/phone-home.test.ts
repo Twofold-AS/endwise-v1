@@ -314,7 +314,7 @@ describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
     expect(sidebar).not.toMatch(/fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
     expect(sidebar).toMatch(/md:flex/);
-    expect(sidebar).toMatch(/md:w-\[248px\]/);
+    expect(sidebar).toMatch(/md:w-\[389px\]/);
     expect(sidebar).toMatch(/phoneOpen/);
     expect(sidebar).toMatch(/Handlinger/);
     expect(sidebar).toMatch(/BrukerRad/);
@@ -324,7 +324,7 @@ describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
   });
 
   it('dealer desktop Verkstedet er samme destinasjonskort bak md-skillet', () => {
-    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     expect(dash).toMatch(/useMdViewport/);
     expect(dash).toMatch(/flate === ['"]desktop['"]/);
     expect(dash).toMatch(/PhoneHomeDealer/);
@@ -332,13 +332,16 @@ describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
     expect(dash).not.toMatch(/AnsattePaJobb/);
   });
 
-  it('dashboard og /verkstedet wrapper useSearchParams i Suspense (next build)', () => {
-    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+  it('/home og /verkstedet wrapper useSearchParams i Suspense; /dashboard redirecter', () => {
+    const hjem = utenKommentarer(les('../app/(app)/home/page.tsx'));
     const alias = les('../app/(app)/verkstedet/page.tsx');
-    expect(dash).toMatch(/useSearchParams/);
-    expect(dash).toMatch(/<Suspense[\s\S]*VerkstedetPageInner/);
-    expect(dash).toMatch(/export default function VerkstedetPage/);
-    expect(alias).toMatch(/from ['"]\.\.\/dashboard\/page['"]/);
+    const gammel = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    expect(hjem).toMatch(/useSearchParams/);
+    expect(hjem).toMatch(/<Suspense[\s\S]*VerkstedetPageInner/);
+    expect(hjem).toMatch(/export default function VerkstedetPage/);
+    expect(alias).toMatch(/from ['"]\.\.\/home\/page['"]/);
+    expect(gammel).toMatch(/redirect\(/);
+    expect(gammel).toMatch(/\/home/);
   });
 });
 
@@ -350,7 +353,9 @@ describe('Verkstedet-dag og Organisasjon på telefon', () => {
     expect(dag).toMatch(/Kalender/);
     expect(dag).not.toMatch(/>Timeplan</);
     expect(dag).toMatch(/bookinger\/\$\{|bookinger\//);
+    expect(erDealerPhoneHjem('/home', '')).toBe(true);
     expect(erDealerPhoneHjem('/dashboard', '')).toBe(true);
+    expect(erDealerPhoneHjem('/home', 'visning=dag')).toBe(false);
     expect(erDealerPhoneHjem('/dashboard', 'visning=dag')).toBe(false);
     expect(erMekanikerPhoneHjem('/min-dag')).toBe(true);
     expect(erMekanikerPhoneHjem('/min-dag/kompetanse')).toBe(false);

@@ -139,7 +139,7 @@ export const CONTEXTS: AppContext[] = [
     hint: 'Drift, timeplan og kunder',
     icon: Building2,
     roles: DRIFT,
-    landing: '/dashboard',
+    landing: '/home',
   },
   {
     key: 'mekaniker',
@@ -201,10 +201,10 @@ export const CONTEXTS: AppContext[] = [
  */
 export const FORHANDLER_NAV: NavItem[] = [
   {
-    key: 'dashboard',
+    key: 'home',
     label: 'Verkstedet',
     icon: LayoutDashboard,
-    href: '/dashboard',
+    href: '/home',
     roles: DRIFT,
   },
   {
@@ -586,8 +586,9 @@ export const STI_ALIAS: Readonly<Record<string, string>> = {
   '/analyse': '/rapporter',
   '/hjelp': '/support',
   '/support': '/hjelp',
-  '/verkstedet': '/dashboard',
-  '/dashboard': '/verkstedet',
+  '/verkstedet': '/home',
+  '/home': '/verkstedet',
+  '/dashboard': '/home',
   '/prisliste': '/innstillinger/tjenestekatalog',
   '/innstillinger/tjenestekatalog': '/prisliste',
   '/forhandleren': '/organisasjon',
@@ -687,7 +688,7 @@ export function landingForRole(role: OrgRole | null, isMechanic: boolean): strin
   if (role === 'endwise_admin' || role === 'endwise_support') return '/endwise';
   const kunMekaniker = isMechanic && role !== 'dealer_admin';
   if (kunMekaniker) return '/min-dag';
-  return '/dashboard';
+  return '/home';
 }
 
 /**
@@ -701,7 +702,7 @@ export function breadcrumbFor(
   context: ContextKey,
 ): { label: string; href?: string }[] {
   if (pathname.startsWith('/endwise/verksted/')) {
-    const rest = pathname.replace(/^\/endwise\/verksted\/[^/]+/, '') || '/dashboard';
+    const rest = pathname.replace(/^\/endwise\/verksted\/[^/]+/, '') || '/home';
     return breadcrumbFor(rest, search, 'forhandler');
   }
   const settings = settingsForContext(context);

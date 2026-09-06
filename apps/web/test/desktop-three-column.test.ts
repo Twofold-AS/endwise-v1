@@ -81,7 +81,7 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(DESKTOP_LOGO_H).toBe(40);
     expect(DESKTOP_KORT_W).toBe(300);
     expect(DESKTOP_KORT_H).toBe(140);
-    expect(DESKTOP_KORT_PX).toBe(14);
+    expect(DESKTOP_KORT_PX).toBe(12);
     expect(DESKTOP_KORT_PY).toBe(16);
     expect(DESKTOP_PEOPLE_W).toBe(182);
     expect(DESKTOP_PEOPLE_H).toBe(40);
@@ -151,13 +151,13 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(pille).toMatch(/md:text-\[18px\]/);
   });
 
-  it('hjem-kort 300×140 py-16 px-14; people-showcase 182×40 ikon 20×19', () => {
+  it('hjem-kort 300×140 py-16 px-12; people-showcase 182×40 ikon 20×19', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
     const people = utenKommentarer(les('../app/(app)/_shell/people-showcase.tsx'));
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(kort).toMatch(/md:h-\[140px\]/);
     expect(kort).toMatch(/md:w-\[300px\]/);
-    expect(kort).toMatch(/md:px-3\.5/);
+    expect(kort).toMatch(/md:px-3 md:py-4/);
     expect(kort).toMatch(/md:py-4/);
     expect(people).toMatch(/data-people-showcase/);
     expect(people).toMatch(/h-10/);

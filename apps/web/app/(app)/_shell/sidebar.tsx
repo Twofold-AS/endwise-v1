@@ -159,7 +159,7 @@ export function Sidebar() {
     <aside
       data-sidebar
       data-phone-sidebar={phoneOpen ? 'open' : 'closed'}
-      className={`flex-col border-border border-r bg-[#ffffff] ${
+      className={`flex-col border-border border-r bg-sidebar ${
         phoneOpen
           ? `fixed inset-x-0 bottom-0 z-50 flex w-full top-[calc(env(safe-area-inset-top)+var(--ew-row-h))] pb-[env(safe-area-inset-bottom)] md:static md:inset-auto md:top-auto md:z-auto ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
           : `hidden md:flex md:static ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`

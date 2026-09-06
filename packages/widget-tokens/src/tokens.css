@@ -29,8 +29,8 @@
 
   /* Flater — ash-panel-side, hvit sidebar/kort (canvas) */
   --ew-bg: #f3f4f6;
-  --ew-sidebar: #ffffff;
-  --ew-sidebar-active: #ededed;
+  --ew-sidebar: #f8f8f8;
+  --ew-sidebar-active: #eaf1ff;
   --ew-surface: #ffffff;
   --ew-surface-2: #f3f4f6; /* ash — hover og sekundær skall */
   --ew-inset: #fafafc; /* pearl */
@@ -53,7 +53,7 @@
   --ew-accent: #407ff2; /* Action Blue — lenker, aktiv, fokus-tekst */
   --ew-accent-strong: #407ff2;
   --ew-accent-fg: #ffffff;
-  --ew-accent-soft: #e8effc;
+  --ew-accent-soft: #eaf1ff;
   --ew-accent-dim: rgba(64, 127, 242, 0.12);
   --ew-accent-on-dark: #94b9ff;
   --ew-focus: #94b9ff; /* Focus Blue — ring */

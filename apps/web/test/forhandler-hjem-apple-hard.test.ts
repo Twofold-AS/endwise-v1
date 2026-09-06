@@ -41,7 +41,6 @@ function utenKommentarer(kilde: string) {
 
 const CHROME_URORT = [
   'apps/web/app/(app)/_shell/phone-shell.tsx',
-  'apps/web/app/(app)/_shell/sidebar.tsx',
   'apps/web/app/(app)/_shell/sidebar-header.tsx',
   'apps/web/app/(app)/_shell/seksjon-bar.tsx',
   'apps/web/app/(app)/_workshop/workshop-bloub.tsx',
@@ -196,6 +195,17 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
       const naa = readFileSync(resolve(repo, fil), 'utf8');
       expect(naa, fil).toBe(main);
     }
+  });
+
+  it('sidebar-skall er uendret bortsett fra Attio-wash-token', () => {
+    const main = execFileSync('git', ['show', 'origin/main:apps/web/app/(app)/_shell/sidebar.tsx'], {
+      cwd: repo,
+      encoding: 'utf8',
+    });
+    const naa = les('../app/(app)/_shell/sidebar.tsx');
+    expect(naa).toMatch(/bg-sidebar/);
+    expect(naa).not.toMatch(/bg-\[#ffffff\]/);
+    expect(naa.replace('bg-sidebar', 'bg-[#ffffff]')).toBe(main);
   });
 
   it('speiler hard-fasit i docs/', () => {

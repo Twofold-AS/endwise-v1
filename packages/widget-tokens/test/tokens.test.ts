@@ -10,10 +10,12 @@ describe('mørk sidebakgrunn er bek', () => {
     expect(dark).not.toMatch(/--ew-bg:\s*#171717/);
   });
 
-  it('lyst ash-panel, hvit sidebar, ink-CTA og Action Blue-lenker', () => {
+  it('lyst ash-panel, sidebar-wash, ink-CTA og Action Blue-lenker', () => {
     const light = css.slice(0, css.indexOf('[data-theme="dark"]'));
     expect(light).toMatch(/--ew-bg:\s*#f3f4f6/);
-    expect(light).toMatch(/--ew-sidebar:\s*#ffffff/);
+    expect(light).toMatch(/--ew-sidebar:\s*#f8f8f8/);
+    expect(light).toMatch(/--ew-sidebar-active:\s*#eaf1ff/);
+    expect(light).toMatch(/--ew-surface:\s*#ffffff/);
     expect(light).toMatch(/--ew-fg:\s*#1c1d1f/);
     expect(light).toMatch(/--ew-ink-utility:\s*#1c1d1f/);
     expect(light).toMatch(/--ew-accent:\s*#407ff2/);

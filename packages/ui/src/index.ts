@@ -32,7 +32,18 @@ export {
 export { Badge, type BadgeProps, badgeVariants } from './components/badge.tsx';
 // shadcn/ui — struktur
 export { Button, buttonVariants } from './components/button.tsx';
-// Recharts via shadcn Chart-mønsteret — eneste chart-motor (ui-pakker §2)
+// Amicro dither charts — produkt-grafer på Analyse/Rapporter (ui-pakker §2)
+export {
+  DitherDonutChart,
+  type DitherDonutSlice,
+  DitherGrowthChart,
+  DitherStackedChart,
+  type DitherStackedBand,
+  type DitherStackedRow,
+  type DitherRevenueSeries,
+  RevenueLineChart,
+} from './components/amicro.ts';
+// Recharts via shadcn Chart-mønsteret — beholdt for kallsteder som ikke er byttet
 export {
   Area,
   AreaChart,
@@ -115,10 +126,10 @@ export {
  * modulgrafen inn i klient-bundelen selv når ingen komponent bruker den. Målt:
  * dither-kit-koden lå fortsatt i bundelen etter at siste bruk var fjernet.
  * Å eksportere noe ingen skal bruke er å sende det til hver eneste besøkende.
- * Filene er ikke slettet (`src/components/dither-kit/`, 40 filer), og
- * dither-kit står fortsatt i techstacken som chart-motor. Skal det reverseres:
- * lim tilbake blokka under. Skal det ut for godt, er det en techstack-endring
- * (§1/§2) — da må det avklares hva som tegner charts i stedet.
+ * Filene er ikke slettet (`src/components/dither-kit/`, 40 filer).
+ * Chart-motor på Analyse/Rapporter er Amicro (`./components/amicro.ts`).
+ * ⛔ Ikke lim tilbake dither-kit — Mikael 06.09.2026 pekte på
+ * https://amicro.vercel.app/dither-charts, ikke tripwire.
  * export { Area, type AreaProps, Line } from './components/dither-kit/area.tsx';
  * export { AreaChart, type AreaChartProps, LineChart } from './components/dither-kit/area-chart.tsx';
  * export { DitherAvatar } from './components/dither-kit/avatar.tsx';

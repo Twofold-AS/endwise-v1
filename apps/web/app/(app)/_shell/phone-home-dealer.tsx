@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
+import { PeopleShowcase } from './people-showcase';
 import {
   dealerPhoneHjemRader,
   HJEM_KORT_TOM,
@@ -79,6 +80,7 @@ export function useDealerHjemKort() {
     hero,
     plan,
     rader,
+    oversikt,
     metaFor,
   };
 }
@@ -90,7 +92,7 @@ export function DealerDestinasjonskort({
   utenHero?: boolean;
   className?: string;
 }) {
-  const { tenantName, kort, bookings, hero, plan, rader, metaFor } = useDealerHjemKort();
+  const { tenantName, kort, bookings, hero, plan, rader, oversikt, metaFor } = useDealerHjemKort();
   let vistSeksjon: 'idag' | 'mer' | null = null;
 
   return (
@@ -165,6 +167,7 @@ export function DealerDestinasjonskort({
                         ))}
                       </ul>
                     ) : null}
+                    {key === 'organisasjon' ? <PeopleShowcase folk={oversikt.data ?? []} /> : null}
                   </PhoneKort>
                 );
               })}

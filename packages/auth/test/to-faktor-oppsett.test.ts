@@ -8,11 +8,11 @@ import {
   fortsettEtter2faKvittering,
   KODER_FILNAVN,
   kanFullforeKoder,
+  kanStarteTotpOppsett,
   koderSomTekstfil,
   plukkBackupKoder,
   plukkTotpUri,
   secretFraTotpUri,
-  kanStarteTotpOppsett,
   TO_FAKTOR_DISABLE_AUDIT_ACTION,
   TO_FAKTOR_OPPSETT_STI,
   TOTP_OPPSETT_INGRESS,
@@ -59,13 +59,13 @@ describe('F1-23: kvittering før navigasjon', () => {
   });
 
   it('Fortsett navigerer til dashbordet — først da', () => {
-    expect(fortsettEtter2faKvittering()).toEqual({ destinasjon: '/dashboard' });
+    expect(fortsettEtter2faKvittering()).toEqual({ destinasjon: '/home' });
   });
 
   it('Fortsett kan følge session.me.landing (eier-veiviser)', () => {
     expect(fortsettEtter2faKvittering('/oppstart')).toEqual({ destinasjon: '/oppstart' });
     expect(fortsettEtter2faKvittering('https://evil.example')).toEqual({
-      destinasjon: '/dashboard',
+      destinasjon: '/home',
     });
   });
 

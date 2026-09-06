@@ -9,7 +9,7 @@ import { ANALYTICS_KPIS, BOOKING_KPIS, REFERRERS, REVENUE_KPIS, TOP_PAGES } from
 /**
  * Endwise-oversikt (endwise_admin) — Endwise-intern forretningsoversikt: hva vi
  * tjener + plattformtall på tvers av forhandlere. Distinkt fra forhandlerens
- * egen Forhandler→Oversikt (/dashboard), som viser forhandlerens egne tall.
+ * egen Forhandler→Oversikt (/home), som viser forhandlerens egne tall.
  * Web Analytics (krever Vercel-deploy, F13-02) + Stripe-inntekt (krever
  * nøkler, F5-09). Ekte struktur: booking-aggregat (bookings-ruteren finnes).
  */

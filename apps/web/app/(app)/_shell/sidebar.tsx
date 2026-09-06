@@ -1,18 +1,10 @@
 'use client';
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuHeader,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  type LucideIcon,
-  Zap,
-} from '@endwise/ui';
+import type { LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { Fragment, useEffect, useMemo } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import {
@@ -23,14 +15,13 @@ import {
 } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
-import { BEVEL, CountBadge, NewBadge } from './cards';
+import { CountBadge, NewBadge } from './cards';
 import {
   FORHANDLER_NAV,
   isItemActive,
   itemsForRole,
   type NavItem,
   navForShell,
-  QUICK_ACTIONS,
   settingsForShell,
   shellForBruker,
 } from './nav';
@@ -39,18 +30,19 @@ import { SHELL_HEADER_RAD } from './phone-chrome';
 import { SidebarHeader } from './sidebar-header';
 import { useSidebarState } from './sidebar-state';
 
-/** Nav-ikoner 16px. */
+/** Nav-ikoner: 16px på telefon-overlay, 26×26 på desktop-skinnen. */
 const IKON = 16;
+const IKON_DESKTOP = 26;
 
 /**
  * Desktop: persistent venstre skinne (alltid synlig, innhold ved siden).
- * Telefon: fullskjerm-overlay, lukket default, åpnes fra PhoneShell.
- * Hvit flate. Hjelp-TipCard er ute; nederst sitter Galaxy-oppgraderingspillen.
+ * Ingen collapse/expand på desktop. Telefon: fullskjerm-overlay, lukket
+ * default, åpnes fra PhoneShell. Hvit flate. Hjelp-TipCard er ute;
+ * nederst sitter Galaxy-oppgraderingspillen.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
   const searchParams = useSearchParams();
-  const router = useRouter();
   const {
     navn,
     role,
@@ -115,22 +107,6 @@ export function Sidebar() {
     return (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0);
   }, [shell, support.data, threads.data]);
 
-  // K åpner quick actions — bare desktop. På telefon er Handlinger borte
-  // (ingen bevel, ingen overflow). Dropdown portaler til body, så ⌘K
-  // må ikke åpne den under md.
-  const [quickOpen, setQuickOpen] = useState(false);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
-        if (!window.matchMedia('(min-width: 768px)').matches) return;
-        e.preventDefault();
-        setQuickOpen((o) => !o);
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, []);
-
   useEffect(() => {
     if (!phoneOpen) return;
     const onEscape = (e: KeyboardEvent) => {
@@ -158,72 +134,57 @@ export function Sidebar() {
   return (
     <aside
       data-sidebar
+      data-shell-box="1"
       data-phone-sidebar={phoneOpen ? 'open' : 'closed'}
       className={`flex-col border-border border-r bg-sidebar ${
         phoneOpen
-          ? `fixed inset-x-0 bottom-0 z-50 flex w-full top-[calc(env(safe-area-inset-top)+var(--ew-row-h))] pb-[env(safe-area-inset-bottom)] md:static md:inset-auto md:top-auto md:z-auto ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
-          : `hidden md:flex md:static ${smal ? 'md:w-[52px]' : 'md:w-[248px]'}`
+          ? `fixed inset-x-0 bottom-0 z-50 flex w-full top-[calc(env(safe-area-inset-top)+var(--ew-row-h))] pb-[env(safe-area-inset-bottom)] md:static md:inset-auto md:top-auto md:z-auto ${smal ? 'md:w-[52px]' : 'md:w-[389px]'}`
+          : `hidden md:flex md:static ${smal ? 'md:w-[52px]' : 'md:w-[389px]'}`
       }`}
     >
-      <div data-shell-header className={`hidden shrink-0 md:flex ${SHELL_HEADER_RAD}`}>
-        {/*
-         * `dealerName` er ekte navn fra `tenants.name`. Placeholderen
-         * «Endwise-forhandler» sto hardkodet her fram til — den var
-         * ikke bare stygg, den var en påstand om hvor du er logget inn.
-         */}
-        <SidebarHeader
-          collapsed={smal}
-          navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
-          inspect={inspect}
-          inspectTilbakeHref={inspectTilbake}
-        />
-      </div>
+      {smal ? (
+        <div data-shell-header className={`hidden shrink-0 md:flex ${SHELL_HEADER_RAD}`}>
+          <SidebarHeader
+            collapsed
+            navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
+            inspect={inspect}
+            inspectTilbakeHref={inspectTilbake}
+          />
+        </div>
+      ) : null}
 
-      {/* Innhold */}
-      <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-3">
-        {shell === 'forhandler' && !inspect && (
-          <DropdownMenu open={quickOpen} onOpenChange={setQuickOpen}>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                style={BEVEL}
-                title={smal ? 'Handlinger (⌘K)' : undefined}
-                className={`flex h-control w-full items-center gap-2 rounded-control text-label transition hover:brightness-[0.98] focus-visible:outline-2 focus-visible:outline-ring ${
-                  smal ? 'justify-center px-0' : 'px-2.5'
-                }`}
-              >
-                <Zap size={IKON} strokeWidth={1.75} className="shrink-0 text-accent-strong" />
-                {!smal && (
-                  <>
-                    <span className="flex-1 text-left">Handlinger</span>
-                    <kbd className="rounded-badge border border-border/60 px-1.5 font-mono text-[11px] text-fg-muted">
-                      ⌘K
-                    </kbd>
-                  </>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="start" sideOffset={16} className="z-50">
-              <DropdownMenuHeader>Handlinger</DropdownMenuHeader>
-              {QUICK_ACTIONS.map((a) => (
-                <DropdownMenuItem
-                  key={a.href}
-                  onSelect={() => {
-                    if (phoneOpen) closePhone();
-                    router.push(a.href as Route);
-                  }}
-                >
-                  <a.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                  <span className="flex-1">{a.label}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+      {/*
+       * Telefon-overlay: px-3. Desktop: 275 flush-right i 389 (8+259+8).
+       * Tom skinne til venstre er 114 (389−275) — ikke 26.
+       */}
+      <div
+        data-shell-chrome={smal ? undefined : '275'}
+        className={`flex min-h-0 flex-1 flex-col gap-2 py-3 ${
+          smal ? 'px-3' : 'px-3 md:ml-auto md:w-[275px] md:px-2'
+        }`}
+      >
+        {!smal ? (
+          <div
+            data-shell-header
+            className="hidden h-row items-center justify-between gap-2 md:flex md:w-[259px] [&_img]:h-[30px] [&_img]:w-[30px]"
+          >
+            {/*
+             * `dealerName` er ekte navn fra `tenants.name`. Placeholderen
+             * «Endwise-forhandler» sto hardkodet her fram til — den var
+             * ikke bare stygg, den var en påstand om hvor du er logget inn.
+             */}
+            <SidebarHeader
+              collapsed={false}
+              navn={erPlattform ? 'Endwise' : (tenantName ?? '—')}
+              inspect={inspect}
+              inspectTilbakeHref={inspectTilbake}
+            />
+          </div>
+        ) : null}
 
         <nav
           aria-label="Hovednavigasjon"
-          className="flex min-h-0 flex-1 flex-col gap-[4px] overflow-y-auto"
+          className="flex min-h-0 flex-1 flex-col gap-[4px] overflow-y-auto md:gap-0"
         >
           {items.map((item) => (
             <Fragment key={item.key}>
@@ -294,10 +255,12 @@ function NavRow({
   );
   const innhold = (
     <>
-      <Ikon icon={item.icon} active={active} />
+      <Ikon icon={item.icon} active={active} collapsed={collapsed} />
       {!collapsed && (
         <>
-          <span className="flex-1 truncate text-left">{item.label}</span>
+          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-[26px] md:text-right md:text-[21px] md:leading-[26px]">
+            {item.label}
+          </span>
           {item.isNew && <NewBadge />}
           {count > 0 ? teller : null}
         </>
@@ -311,8 +274,8 @@ function NavRow({
       aria-current={active ? 'page' : undefined}
       title={collapsed ? item.label : undefined}
       onClick={onNavigate}
-      className={`flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors ${
-        collapsed ? 'justify-center px-0' : 'px-2.5'
+      className={`flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors md:h-[50px] md:gap-0 ${
+        collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[259px] md:justify-between md:px-3'
       } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}
     >
       {innhold}
@@ -340,10 +303,19 @@ function remapNav(item: NavItem, slug: string, fra: string | null): NavItem {
   };
 }
 
-function Ikon({ icon: I, active }: { icon: LucideIcon; active: boolean }) {
+function Ikon({
+  icon: I,
+  active,
+  collapsed,
+}: {
+  icon: LucideIcon;
+  active: boolean;
+  collapsed: boolean;
+}) {
   return (
     <span className={`inline-flex shrink-0 ${active ? 'text-fg' : 'text-fg-muted'}`}>
-      <I size={IKON} strokeWidth={1.75} />
+      <I size={IKON} strokeWidth={1.75} className="md:hidden" />
+      <I size={collapsed ? IKON : IKON_DESKTOP} strokeWidth={1.75} className="hidden md:inline" />
     </span>
   );
 }

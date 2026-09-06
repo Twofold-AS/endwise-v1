@@ -14,5 +14,5 @@ export default async function VerkstedInspectIndex({
     redirect('/endwise' as Route);
   }
   const q = fra ? `?fra=${encodeURIComponent(fra)}` : '';
-  redirect(`/endwise/verksted/${slug}/dashboard${q}` as Route);
+  redirect(`/endwise/verksted/${slug}/home${q}` as Route);
 }

@@ -63,7 +63,7 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(sidebar).toMatch(/phoneOpen[\s\S]*hidden/);
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/md:static/);
-    expect(sidebar).toMatch(/md:w-\[248px\]/);
+    expect(sidebar).toMatch(/md:w-\[389px\]/);
     expect(shell).toMatch(/md:hidden/);
     expect(sidebar).toMatch(/bg-sidebar/);
     expect(sidebar).not.toMatch(/bg-\[#ffffff\]/);

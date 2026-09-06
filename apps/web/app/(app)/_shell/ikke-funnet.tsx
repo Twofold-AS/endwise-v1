@@ -10,7 +10,7 @@ export function IkkeFunnet() {
         Adressen peker ikke på en side i Endwise. Gå tilbake til verkstedet.
       </p>
       <Link
-        href={'/dashboard' as Route}
+        href={'/home' as Route}
         className="mt-2 inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg"
       >
         Tilbake til Verkstedet

@@ -7,7 +7,7 @@ const HIT =
   'hidden md:inline-flex size-8 shrink-0 items-center justify-center rounded-control text-fg';
 
 /**
- * Desktop-inngang til Ronny — sitter rett til venstre for sidebar-toggle.
+ * Desktop-inngang til Ronny — sitter i sidebar-header til høyre for logo.
  * Skjult på telefon (`hidden md:inline-flex`); telefon bruker PhoneShell.
  */
 export function RonnyAvatarKnapp({ className }: { className?: string }) {

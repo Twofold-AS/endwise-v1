@@ -33,10 +33,11 @@ describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
     expect(SHELL_LOGO_PX).toBe(24);
     expect(SHELL_TOGGLE_PX).toBe(16);
     expect(sidebar).toMatch(/const IKON = 16/);
+    expect(sidebar).toMatch(/IKON_DESKTOP = 26/);
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
-    expect(header).toMatch(/SHELL_TOGGLE_PX/);
+    expect(header).not.toMatch(/SHELL_TOGGLE_PX|PanelLeftClose|PanelLeftOpen/);
     expect(shell).toMatch(/SHELL_TOGGLE_PX/);
     expect(header).toMatch(/SHELL_LOGO_PX|width=\{24\}|LOGO = 24/);
     expect(shell).toMatch(/SHELL_LOGO_PX|PHONE_LOGO_PX|width=\{24\}/);
@@ -52,7 +53,7 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
     const endwise = utenKommentarer(les('../app/(app)/endwise/layout.tsx'));
     expect(layout).toMatch(/WorkshopBloub/);
     expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
-    expect(layout).not.toMatch(/TopBar/);
+    expect(layout).toMatch(/TopBar/);
     expect(endwise).toMatch(/DestinasjonSeksjonBar/);
   });
 
@@ -143,7 +144,7 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
 
     expect(
       destinasjonFaner({
-        pathname: '/dashboard',
+        pathname: '/home',
         role: 'dealer_admin',
         shell: 'forhandler',
       }),

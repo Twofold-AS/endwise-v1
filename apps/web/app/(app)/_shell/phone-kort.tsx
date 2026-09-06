@@ -44,14 +44,19 @@ export function PhoneKort({
       : variant === 'destinasjon'
         ? 'min-w-0 flex-1 truncate text-[17px] font-semibold leading-snug text-fg'
         : 'min-w-0 flex-1 truncate text-title';
-  const luft = variant === 'hero' ? 'gap-5 p-5' : apple ? 'gap-2.5 p-4' : 'gap-2 p-3';
+  const luft =
+    variant === 'hero'
+      ? 'gap-5 p-5 md:h-[160px] md:w-[348px] md:px-4 md:py-5'
+      : apple
+        ? 'gap-2.5 p-4 md:h-[160px] md:w-[348px] md:px-4 md:py-5'
+        : 'gap-2 p-3';
 
   return (
     <Link
       href={href as Route}
       data-phone-kort={navn}
       data-verkstedet-hero={variant === 'hero' ? '' : undefined}
-      className={`${fyll} flex min-h-11 flex-col [touch-action:manipulation] ${luft} ${className ?? ''}`}
+      className={`${fyll} flex min-h-11 flex-col overflow-hidden [touch-action:manipulation] ${luft} ${className ?? ''}`}
     >
       <div className="flex items-center gap-2">
         {variant === 'hero' ? null : (

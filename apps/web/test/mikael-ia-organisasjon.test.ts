@@ -183,7 +183,8 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
 
   it('minimize sitter i sidebaren, ikke i top-bar 1', () => {
-    expect(header).toMatch(/PanelLeftClose|PanelLeftOpen/);
+    expect(header).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
+    expect(shell).toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(top).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(header).toMatch(/SHELL_LOGO_PX|width=\{24\}|width=\{LOGO\}/);
     expect(header).toMatch(/logo\/logo\.svg/);
@@ -210,7 +211,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(layout).not.toMatch(/PhoneBevel/);
     expect(layout).not.toMatch(/PhoneNav/);
     expect(layout).toMatch(/WorkshopBloub/);
-    expect(layout).not.toMatch(/TopBar/);
+    expect(layout).toMatch(/TopBar/);
     expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/logo\/logo\.svg/);
@@ -231,8 +232,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(sidebar).not.toMatch(/fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
     expect(sidebar).toMatch(/md:flex/);
-    expect(sidebar).toMatch(/Handlinger/);
-    expect(sidebar).toMatch(/min-width:\s*768px/);
+    expect(sidebar).not.toMatch(/Handlinger/);
     expect(chrome).toMatch(/scrollTo/);
     expect(chrome).not.toMatch(/scrollIntoView/);
     expect(hscroll).toMatch(/data-end-spacer/);

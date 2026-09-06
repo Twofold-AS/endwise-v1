@@ -140,7 +140,7 @@ describe('Forhandler-info uten Grainient', () => {
   it('kortet sitter på mekaniker- og innboks-hjem — ikke over Verkstedet-hero', () => {
     const dealer = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const mek = utenKommentarer(les('../app/(app)/_shell/phone-home-mekaniker.tsx'));
-    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     const innboks = utenKommentarer(les('../app/(app)/innboks/page.tsx'));
     expect(dealer).not.toMatch(/ForhandlerInfoKort/);
     expect(dealer).toMatch(/tenantName/);

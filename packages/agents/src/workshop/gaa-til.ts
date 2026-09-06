@@ -6,6 +6,7 @@ export const GAA_TIL_HVITE: readonly string[] = [
   '/lager',
   '/butikk',
   '/organisasjon',
+  '/home',
   '/dashboard',
   '/dine-jobber',
   '/endwise',

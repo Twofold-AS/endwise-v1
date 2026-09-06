@@ -43,7 +43,7 @@ export default function BasePage() {
         .then((me) => me.landing)
         .catch((error: unknown) => destinasjonNarSesjonFeiler(error));
       if (avbrutt) return;
-      router.replace((landing ?? '/dashboard') as Route);
+      router.replace((landing ?? '/home') as Route);
     })();
 
     return () => {

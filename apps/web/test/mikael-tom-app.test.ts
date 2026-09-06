@@ -125,7 +125,7 @@ describe('Mikael 02.09 — desktop-sidebar er skinne, overlay bare telefon', () 
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/md:static/);
-    expect(sidebar).toMatch(/md:w-\[248px\]/);
+    expect(sidebar).toMatch(/md:w-\[389px\]/);
     expect(sidebar).toMatch(/fixed inset-x-0 bottom-0/);
     expect(sidebar).toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
     expect(sidebar).not.toMatch(/fixed inset-0/);

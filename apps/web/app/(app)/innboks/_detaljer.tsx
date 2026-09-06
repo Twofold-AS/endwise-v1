@@ -519,7 +519,7 @@ export function EndwiseForhandlerDetaljer({ navn, slug }: { navn: string; slug: 
         Alle forhandlere
       </Link>
       <Link
-        href={`/endwise/verksted/${slug}/dashboard?fra=innboks` as Route}
+        href={`/endwise/verksted/${slug}/home?fra=innboks` as Route}
         className="flex h-control items-center justify-center rounded-control border border-border bg-bg px-2.5 text-label text-fg transition-colors hover:bg-sidebar-active"
       >
         Se verkstedet

@@ -25,8 +25,8 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(destinasjonEtterInvite('owner', null)).toBe('/oppstart');
     expect(destinasjonEtterInvite('staff', '/innboks')).toBe('/innboks');
     expect(destinasjonEtterInvite('staff', '/min-dag')).toBe('/min-dag');
-    expect(destinasjonEtterInvite('staff', 'https://evil.example')).toBe('/dashboard');
-    expect(destinasjonEtterInvite('staff', null)).toBe('/dashboard');
+    expect(destinasjonEtterInvite('staff', 'https://evil.example')).toBe('/home');
+    expect(destinasjonEtterInvite('staff', null)).toBe('/home');
   });
 
   it('2FA-kode vises bare ved twoFactorRedirect — TWO_FACTOR_REQUIRED er enroll', () => {
@@ -38,8 +38,8 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
   it('TWO_FACTOR_REQUIRED tvinger ikke /2fa-oppsett — uenrollert går til landing', () => {
     expect(destinasjonEtterInvite('owner', '/oppstart', 'TWO_FACTOR_REQUIRED')).toBe('/oppstart');
     expect(destinasjonEtterInvite('staff', '/innboks', 'TWO_FACTOR_REQUIRED')).toBe('/innboks');
-    expect(destinasjonEtterInvite('staff', null, 'TWO_FACTOR_REQUIRED')).toBe('/dashboard');
-    expect(destinasjonEtterInvite('staff', '/dashboard', 'annen feil')).toBe('/dashboard');
+    expect(destinasjonEtterInvite('staff', null, 'TWO_FACTOR_REQUIRED')).toBe('/home');
+    expect(destinasjonEtterInvite('staff', '/home', 'annen feil')).toBe('/home');
   });
 
   it('hent-feil (42883 / ikke-JSON) viser «Klarte ikke hente», API er flertall', () => {
@@ -59,12 +59,13 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
   });
 
   it('eksisterende konto (/signin) og / sender uenrollert til landing, ikke /2fa-oppsett', () => {
-    expect(destinasjonNarSesjonFeiler(new Error('TWO_FACTOR_REQUIRED'))).toBe('/dashboard');
-    expect(destinasjonNarSesjonFeiler(new Error('nettverk nede'))).toBe('/dashboard');
+    expect(destinasjonNarSesjonFeiler(new Error('TWO_FACTOR_REQUIRED'))).toBe('/home');
+    expect(destinasjonNarSesjonFeiler(new Error('nettverk nede'))).toBe('/home');
     const signin = readFileSync(resolve(her, '../app/signin/signin-skjema.tsx'), 'utf8');
     const rot = readFileSync(resolve(her, '../app/page.tsx'), 'utf8');
     expect(signin).toMatch(/destinasjonNarSesjonFeiler/);
     expect(rot).toMatch(/destinasjonNarSesjonFeiler/);
+    expect(signin).not.toMatch(/catch\s*\(\s*\)\s*=>\s*['"]\/home['"]/);
     expect(signin).not.toMatch(/catch\s*\(\s*\)\s*=>\s*['"]\/dashboard['"]/);
   });
 

@@ -39,6 +39,7 @@ describe('Workshop sidekontekst', () => {
     expect(sidekontekst('/kunder').merkelapp).toBe('Kunder');
     expect(sidekontekst('/organisasjon', 'seksjon=ansatte').merkelapp).toBe('Organisasjon');
     expect(sidekontekst('/dine-jobber').merkelapp).toBe('Jobber');
+    expect(sidekontekst('/home').merkelapp).toBe('Verkstedet');
     expect(sidekontekst('/dashboard').merkelapp).toBe('Verkstedet');
     const timeplan = sidekontekst('/jobber');
     expect(timeplan.pathname).toBe('/jobber');
@@ -50,7 +51,7 @@ describe('Workshop-sheet i app-skallet', () => {
   it('er montert én gang i (app)/layout, uten breadcrumb-topbar', () => {
     const layout = les('../app/(app)/layout.tsx');
     expect(layout).toMatch(/WorkshopBloub/);
-    expect(layout).not.toMatch(/TopBar/);
+    expect(layout).toMatch(/TopBar/);
     expect(layout).not.toMatch(/bottom-tab|PhoneTab/);
   });
 

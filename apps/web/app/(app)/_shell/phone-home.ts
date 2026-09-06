@@ -119,7 +119,7 @@ export const PHONE_KORT_META: Record<
   PhoneKortKey,
   { label: string; href: string; icon: LucideIcon }
 > = {
-  verkstedet: { label: 'Verkstedet', href: '/dashboard?visning=dag', icon: LayoutDashboard },
+  verkstedet: { label: 'Verkstedet', href: '/home?visning=dag', icon: LayoutDashboard },
   timeplan: { label: 'Timeplan', href: '/jobber?visning=kalender', icon: CalendarDays },
   statistikk: { label: 'Rapporter', href: '/rapporter', icon: ChartColumn },
   tjenester: { label: 'Tjenester', href: '/prisliste', icon: Wrench },
@@ -168,7 +168,7 @@ export function flatDealerHjemKeys(shopEnabled: boolean): PhoneKortKey[] {
 }
 
 export function erDealerPhoneHjem(pathname: string, search = ''): boolean {
-  const hjem = pathname === '/dashboard' || pathname === '/verkstedet';
+  const hjem = pathname === '/home' || pathname === '/dashboard' || pathname === '/verkstedet';
   if (!hjem) return false;
   return (
     new URLSearchParams(search.startsWith('?') ? search.slice(1) : search).get('visning') !== 'dag'
@@ -188,7 +188,7 @@ export function erPhoneHjem(pathname: string, search: string, shell: ShellKey): 
 export function phoneHjemHref(shell: ShellKey): string {
   if (shell === 'mekaniker') return '/min-dag';
   if (shell === 'endwise' || shell === 'endwise_partner') return '/endwise';
-  return '/dashboard';
+  return '/home';
 }
 
 /** Innstillinger på telefon-bevel: Profil + Varsler, eller Meg for mekaniker. */

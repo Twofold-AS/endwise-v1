@@ -315,7 +315,7 @@ export default function ForhandlerePage() {
                     {t.kind === 'demo' ? <Badge variant="secondary">Demo</Badge> : null}
                     {planNavn ? <Badge variant="outline">{planNavn}</Badge> : null}
                     <Link
-                      href={`/endwise/verksted/${t.slug}/dashboard?fra=forhandlere` as Route}
+                      href={`/endwise/verksted/${t.slug}/home?fra=forhandlere` as Route}
                       className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline"
                     >
                       Se verkstedet

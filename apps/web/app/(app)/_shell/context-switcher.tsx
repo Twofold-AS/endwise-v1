@@ -220,9 +220,7 @@ export function ContextSwitcher({
                     <DropdownMenuItem
                       key={t.id}
                       onSelect={() => {
-                        router.push(
-                          `/endwise/verksted/${t.slug}/dashboard?fra=forhandlere` as Route,
-                        );
+                        router.push(`/endwise/verksted/${t.slug}/home?fra=forhandlere` as Route);
                       }}
                     >
                       <span className="flex min-w-0 flex-1 flex-col">
@@ -242,7 +240,7 @@ export function ContextSwitcher({
                   <DropdownMenuHeader>Dine verksteder</DropdownMenuHeader>
                   {verksteder.flatMap((v) => {
                     const rader = [
-                      { key: `${v.id}-forhandler`, label: 'Forhandler', landing: '/dashboard' },
+                      { key: `${v.id}-forhandler`, label: 'Forhandler', landing: '/home' },
                       { key: `${v.id}-lager`, label: 'Lager', landing: '/lager' },
                     ];
                     if (v.isMechanic) {
@@ -274,10 +272,7 @@ export function ContextSwitcher({
                   <DropdownMenuSeparator />
                   <DropdownMenuHeader>Demo-tenants (dev-mode)</DropdownMenuHeader>
                   {demoTenants.data?.map((t) => (
-                    <DropdownMenuItem
-                      key={t.id}
-                      onSelect={() => void byttTenant(t.id, '/dashboard')}
-                    >
+                    <DropdownMenuItem key={t.id} onSelect={() => void byttTenant(t.id, '/home')}>
                       <span className="flex min-w-0 flex-1 flex-col">
                         <span className="truncate text-label text-fg">{t.name}</span>
                         <span className="truncate text-[12px] text-fg-muted">{t.slug}</span>

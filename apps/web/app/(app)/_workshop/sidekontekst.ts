@@ -28,7 +28,10 @@ const MERKELAPP: Array<{ test: (path: string) => boolean; label: string }> = [
       p.startsWith('/dine-jobber') || p.startsWith('/min-dag') || p.startsWith('/mekaniker'),
     label: 'Jobber',
   },
-  { test: (p) => p === '/dashboard' || p.startsWith('/verkstedet'), label: 'Verkstedet' },
+  {
+    test: (p) => p === '/home' || p === '/dashboard' || p.startsWith('/verkstedet'),
+    label: 'Verkstedet',
+  },
   { test: (p) => p.startsWith('/innstillinger'), label: 'Innstillinger' },
   { test: (p) => p.startsWith('/lager'), label: 'Lager' },
   { test: (p) => p.startsWith('/butikk'), label: 'Butikk' },

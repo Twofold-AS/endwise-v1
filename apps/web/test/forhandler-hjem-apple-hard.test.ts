@@ -41,11 +41,9 @@ function utenKommentarer(kilde: string) {
 
 const CHROME_URORT = [
   'apps/web/app/(app)/_shell/phone-shell.tsx',
-  'apps/web/app/(app)/_shell/sidebar-header.tsx',
   'apps/web/app/(app)/_shell/seksjon-bar.tsx',
   'apps/web/app/(app)/_workshop/workshop-bloub.tsx',
   'apps/web/app/(app)/_shell/phone-home-mekaniker.tsx',
-  'apps/web/app/(app)/layout.tsx',
   'apps/web/app/_markeds/markeds-chrome.tsx',
 ] as const;
 
@@ -88,7 +86,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
   it('ingen Organisasjon-piller på dealer-hjem', () => {
     expect(
       destinasjonFaner({
-        pathname: '/dashboard',
+        pathname: '/home',
         role: 'dealer_admin',
         shell: 'forhandler',
       }),
@@ -140,7 +138,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(HJEM_SCROLL_FLATE).not.toMatch(/safe-area-inset-top/);
     expect(HJEM_SCROLL_FLATE).not.toMatch(/#111|Grainient|Galaxy/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     expect(hjem).toMatch(/HJEM_SCROLL_FLATE/);
     expect(dash).toMatch(/HJEM_SCROLL_FLATE/);
     expect(hjem).toMatch(/gap-5/);
@@ -178,7 +176,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
   });
 
   it('desktop er samme destinasjonskort — ikke KPI-dump', () => {
-    const dash = utenKommentarer(les('../app/(app)/dashboard/page.tsx'));
+    const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     expect(dash).toMatch(/DealerDestinasjonskort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
     expect(dash).not.toMatch(/AnsattePaJobb/);
@@ -197,19 +195,14 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     }
   });
 
-  it('sidebar-skall er uendret bortsett fra Attio-wash-token', () => {
-    const main = execFileSync(
-      'git',
-      ['show', 'origin/main:apps/web/app/(app)/_shell/sidebar.tsx'],
-      {
-        cwd: repo,
-        encoding: 'utf8',
-      },
-    );
+  it('sidebar-skall arver Attio-wash og desktop-lås 389/275 flush-right', () => {
     const naa = les('../app/(app)/_shell/sidebar.tsx');
     expect(naa).toMatch(/bg-sidebar/);
     expect(naa).not.toMatch(/bg-\[#ffffff\]/);
-    expect(naa.replace('bg-sidebar', 'bg-[#ffffff]')).toBe(main);
+    expect(naa).toMatch(/md:w-\[389px\]/);
+    expect(naa).toMatch(/md:w-\[275px\]/);
+    expect(naa).toMatch(/md:ml-auto/);
+    expect(naa).toMatch(/md:w-\[259px\]/);
   });
 
   it('speiler hard-fasit i docs/', () => {

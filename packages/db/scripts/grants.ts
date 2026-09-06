@@ -590,6 +590,26 @@ if (residualGuard.rows[0]?.ok !== true) {
   process.exit(1);
 }
 
+const mechanicsGuard = await pool.query<{ ok: boolean }>(`
+  select exists (
+    select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.proname = 'mechanics_owner_update_guard'
+       and strpos(p.prosrc, 'new.user_id is distinct from old.user_id') > 0
+       and strpos(p.prosrc, 'eier-UPDATE kan ikke endre id, tenant_id, created_at eller user_id') > 0
+  ) as ok
+`);
+if (mechanicsGuard.rows[0]?.ok !== true) {
+  console.error(
+    '[db] mechanics_owner_update_guard mangler eller låser ikke user_id (0044). ' +
+      'Kjør `pnpm db:grants` mot Scaleway-eieren.',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
 const modulesInsert = await pool.query<{ ok: boolean }>(`
   select exists (
     select 1

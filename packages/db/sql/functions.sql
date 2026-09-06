@@ -1316,8 +1316,9 @@ begin
 
   if new.id is distinct from old.id
      or new.tenant_id is distinct from old.tenant_id
-     or new.created_at is distinct from old.created_at then
-    raise exception 'mechanics: eier-UPDATE kan ikke endre id, tenant_id eller created_at'
+     or new.created_at is distinct from old.created_at
+     or new.user_id is distinct from old.user_id then
+    raise exception 'mechanics: eier-UPDATE kan ikke endre id, tenant_id, created_at eller user_id'
       using errcode = '42501';
   end if;
   return new;

@@ -38,7 +38,7 @@ Samme klasse som #121–#131. Schema-policyene er TO `authenticated` FOR ALL. Pr
 
 **Net-new som var uunngåelig:** `tenant_modules_tenant_insert_owner`. createTenant skriver med `platform_admin`. setModules og Stripe `applySubscription` gjør INSERT inne i `withTenant` uten den GUC-en. Uten tenant-guc-port fail-closed.
 
-**Trigger-lås:** identitet/PK der UPDATE finnes (`tenant_id`/`created_at`/`publishable_key`/`created_by` …).
+**Trigger-lås:** identitet/PK der UPDATE finnes (`tenant_id`/`created_at`/`publishable_key`/`created_by` …). `mechanics` låser også `user_id` (Mons CWE-863 — eier kan ikke rebinde mekaniker→auth-bruker).
 
 `db:grants` exit 1 hvis residual-policyene/triggerne mangler.
 
@@ -60,6 +60,7 @@ CI på #140 er rød på **samme tre sjekker som main** (`0f60e4e` / #139): Biome
 2. `tenant_modules_tenant_insert_owner` uten `platform_admin`.
 3. Trigger-lås på UPDATE-tabellene.
 4. Kontrakt + SET ROLE-regresjon (INSERT…RETURNING, mechanics UPDATE, tom/uten/feil GUC og `platform_admin` alene avvist).
+5. Mons CODE-GO-with-fixes: `mechanics_owner_update_guard` avviser `user_id`-rebind. Kontrakt + live `eier-UPDATE kan ikke rebinde mechanics.user_id`.
 
 ---
 

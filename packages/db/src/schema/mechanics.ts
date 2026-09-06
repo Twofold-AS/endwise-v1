@@ -32,6 +32,7 @@ export const mechanics = pgTable(
     // session.me leser som eier under FORCE RLS via withTenant.
     // Eier-INSERT (`mechanics_tenant_insert_owner`, 0040): mekaniker-godta.
     // Eier-UPDATE (`mechanics_tenant_update_owner`, 0044): updateMechanicCapacity.
+    // Guard låser id/tenant_id/created_at/user_id (CWE-863 — ikke rebind auth).
   ],
 ).enableRLS();
 

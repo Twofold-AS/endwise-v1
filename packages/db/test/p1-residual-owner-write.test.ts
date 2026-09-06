@@ -79,8 +79,8 @@ describeDb('SET ROLE endwise — residual owner INSERT/UPDATE under FORCE RLS', 
     `);
 
     const mech = await owner.execute(sql`
-      insert into mechanics (tenant_id, name, capacity)
-      values (${tenantA}::uuid, 'P1 mekaniker', 1)
+      insert into mechanics (tenant_id, name, capacity, user_id)
+      values (${tenantA}::uuid, 'P1 mekaniker', 1, 'p1-mek-user')
       returning id
     `);
     mechanicId = (mech.rows[0] as { id: string }).id;
@@ -356,6 +356,19 @@ describeDb('SET ROLE endwise — residual owner INSERT/UPDATE under FORCE RLS', 
         `);
       }),
     ).rejects.toThrow(/ikke endre tenant_id eller created_at|42501/i);
+  });
+
+  it('eier-UPDATE kan ikke rebinde mechanics.user_id', async () => {
+    await expect(
+      somEier(async (tx) => {
+        await tx.execute(sql`select set_config('app.tenant_id', ${tenantA}, true)`);
+        return tx.execute(sql`
+          update mechanics
+             set user_id = 'other-user'
+           where id = ${mechanicId}::uuid
+        `);
+      }),
+    ).rejects.toThrow(/ikke endre id, tenant_id, created_at eller user_id|42501/i);
   });
 
   it('uten tenant-GUC avvises mechanics UPDATE (0 rader)', async () => {

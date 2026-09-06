@@ -176,6 +176,12 @@ describe('FORCE RLS residual eier-skriv (#131 Utsatt, prod-rolle endwise)', () =
     expect(functionsSql).toMatch(
       /eier-UPDATE kan ikke endre id, tenant_id, created_at eller publishable_key/,
     );
+    expect(functionsSql).toMatch(/new\.user_id is distinct from old\.user_id/);
+    expect(functionsSql).toMatch(
+      /eier-UPDATE kan ikke endre id, tenant_id, created_at eller user_id/,
+    );
+    expect(m0044).toMatch(/new\.user_id is distinct from old\.user_id/);
+    expect(grantsTs).toMatch(/new\.user_id is distinct from old\.user_id/);
     expect(functionsSql).not.toMatch(/stream_events_owner_update_guard/);
     expect(functionsSql).not.toMatch(/shop_order_lines_owner_update_guard/);
   });
@@ -205,6 +211,8 @@ describe('FORCE RLS residual eier-skriv (#131 Utsatt, prod-rolle endwise)', () =
     expect(liveTest).toMatch(/insert into shop_order_lines/);
     expect(liveTest).toMatch(/insert into feature_flag_overrides/);
     expect(liveTest).toMatch(/update mechanics/);
+    expect(liveTest).toMatch(/eier-UPDATE kan ikke rebinde mechanics\.user_id/);
+    expect(liveTest).toMatch(/set user_id = 'other-user'/);
     expect(liveTest).toMatch(/uten tenant-GUC|tom tenant-GUC/i);
     expect(liveTest).toMatch(/platform_admin/);
     expect(vitestCfg).toMatch(/p1-residual-owner-write\.test\.ts/);

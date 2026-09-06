@@ -216,7 +216,7 @@ export default function ForhandlerePage() {
                 type="checkbox"
                 checked={demo}
                 onChange={(e) => setDemo(e.target.checked)}
-                className="size-4 accent-[#111]"
+                className="size-4 accent-[var(--ew-ink-utility)]"
               />
               <span className="flex flex-col">
                 Demo-tenant
@@ -607,7 +607,7 @@ function EndreForhandler({
           type="checkbox"
           checked={demoFelt}
           onChange={(e) => setDemoFelt(e.target.checked)}
-          className="size-4 accent-[#111]"
+          className="size-4 accent-[var(--ew-ink-utility)]"
         />
         Demo-tenant
       </label>

@@ -18,7 +18,7 @@
   --card-foreground: var(--ew-fg);
   --popover: var(--ew-surface);
   --popover-foreground: var(--ew-fg);
-  --primary: var(--ew-accent);
+  --primary: var(--ew-ink-utility);
   --primary-foreground: var(--ew-accent-fg);
   --secondary: var(--ew-surface-2);
   --secondary-foreground: var(--ew-fg);
@@ -30,7 +30,7 @@
   --destructive-foreground: var(--ew-bg);
   --border: var(--ew-border);
   --input: var(--ew-border-strong);
-  --ring: var(--ew-accent-strong);
+  --ring: var(--ew-focus);
   --radius: var(--ew-radius-control);
 }
 
@@ -49,6 +49,7 @@
   --color-accent-strong: var(--ew-accent-strong);
   --color-accent-soft: var(--ew-accent-soft);
   --color-accent-dim: var(--ew-accent-dim);
+  --color-focus: var(--ew-focus);
   --color-warn: var(--ew-warn);
   --color-warn-soft: var(--ew-warn-soft);
   --color-danger: var(--ew-danger);

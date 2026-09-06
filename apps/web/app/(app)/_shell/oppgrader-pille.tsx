@@ -27,7 +27,7 @@ function GalaxyKlipp() {
 }
 
 /**
- * Oval Galaxy-knapp (React Bits, klippet inne). Svart `#111`.
+ * Oval Galaxy-knapp (React Bits, klippet inne). Ink `#1c1d1f` (Attio CTA).
  * Tekst følger TIERS-stigen via `billing.subscription.planKey`
  * (billing-rad, ellers tenants.plan). Galaxy på både Oppgrader-CTA
  * og Enterprise-merke. Merke er uten lenke.
@@ -38,7 +38,7 @@ export function OppgraderPille() {
   const tekst = oppgraderKnappetekst(planKey);
   const cta = visOppgraderCta(planKey);
   const skall =
-    'relative mx-2 mb-1 flex h-9 items-center justify-center overflow-hidden rounded-full bg-[#111] px-4 text-label text-white';
+    'relative mx-2 mb-1 flex h-9 items-center justify-center overflow-hidden rounded-full bg-primary px-4 text-label text-primary-foreground';
 
   if (!cta) {
     return (

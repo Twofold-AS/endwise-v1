@@ -1,6 +1,6 @@
 # Dealer-chrome — Ronny-sheet (lås 2026-09-05)
 
-Apple-tokens: parchment `#f5f5f7`, ink `#1d1d1f`, Action Blue `#0066cc`.
+Attio-farger (06.09.2026, layout urørt): ash `#f3f4f6`, ink `#1c1d1f`, Action Blue `#407ff2`.
 
 Kilde: Jonas/Mikael. Overstyrer eldre stripe/peek-IA (#130-era).
 

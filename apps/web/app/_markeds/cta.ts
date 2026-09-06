@@ -1,11 +1,10 @@
 /**
- * Mikael/Jonas 05.09.2026 (etter #129): offentlig landing CTA er Action Blue.
- * `bg-primary` → `--ew-accent` #0066cc. Hover `bg-accent-strong` → #0071e3.
- * Ikke produkt-#111, ikke `bg-accent` (shadcn-hover / parchment), ikke logogrønn.
- * `h-control` + `rounded-pill` er eierens knappe-tokens.
+ * Offentlig landing holder Apple Action Blue (Jonas 06.09.2026).
+ * Dealer-chrome CTA er ink via `--ew-ink-utility`.
+ * Landing piller `#0066cc` / hover `#0071e3` — ikke produkt-ink, ikke logogrønn.
  */
 export const CTA_PRIMAR =
-  'inline-flex h-control items-center justify-center rounded-pill bg-primary px-5 text-label text-primary-foreground transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
+  'inline-flex h-control items-center justify-center rounded-pill bg-[#0066cc] px-5 text-label text-white transition-colors hover:bg-[#0071e3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 
 export const CTA_SEKUNDAR =
-  'inline-flex h-control items-center justify-center rounded-pill px-5 text-label text-fg transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
+  'inline-flex h-control items-center justify-center rounded-pill border border-[#e0e0e0] bg-white px-5 text-label text-[#1d1d1f] transition-colors hover:bg-[#f5f5f7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';

@@ -37,10 +37,10 @@ type Ripple = { id: number; x: number; y: number; size: number };
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary: "rounded-pill bg-primary text-primary-foreground hover:bg-primary/90",
-  secondary: "border border-border bg-card text-foreground hover:border-border",
+  secondary: "border border-border-strong bg-card text-foreground hover:bg-surface-2",
   ghost: "text-muted-foreground hover:text-foreground hover:bg-primary/5",
   outline:
-    "border border-border bg-transparent text-foreground hover:bg-primary/5",
+    "border border-border-strong bg-card text-foreground hover:bg-surface-2",
 };
 
 // Endret fra oppstrøms — eierens designprinsipper:

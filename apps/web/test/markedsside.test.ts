@@ -162,21 +162,18 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     expect(chrome).toMatch(/maskImage/);
     expect(chrome).toMatch(/url\(\/logo\/logo\.svg\)/);
     const cta = les('../app/_markeds/cta.ts');
-    expect(cta).toMatch(/bg-primary/);
+    expect(cta).toMatch(/bg-\[#0066cc\]/);
     expect(cta).not.toMatch(/#1ED27D/);
     for (const { sti, kilde } of markedsKilder()) {
       expect(utenKommentarer(kilde), sti).not.toMatch(/#1ED27D|#1ed27d/i);
     }
   });
 
-  it('primær CTA er Action Blue-token, ikke produkt-#111', () => {
+  it('primær CTA er Apple Action Blue, ikke produkt-ink/#111', () => {
     const cta = les('../app/_markeds/cta.ts');
-    const tokens = les('../../../packages/widget-tokens/src/tokens.css');
-    const light = tokens.split('[data-theme="dark"]')[0];
-    expect(light).toMatch(/--ew-accent:\s*#0066cc/);
-    expect(light).toMatch(/--ew-accent-strong:\s*#0071e3/);
-    expect(cta).toMatch(/bg-primary/);
-    expect(cta).toMatch(/hover:bg-accent-strong/);
+    expect(cta).toMatch(/bg-\[#0066cc\]/);
+    expect(cta).toMatch(/hover:bg-\[#0071e3\]/);
+    expect(utenKommentarer(cta)).not.toMatch(/bg-primary/);
     expect(cta).not.toMatch(/bg-\[#111\]/);
     expect(cta).not.toMatch(/#1ED27D/);
     expect(chrome).toMatch(/data-markeds-cta/);

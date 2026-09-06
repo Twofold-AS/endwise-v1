@@ -5,9 +5,11 @@
  * kolliderer (ui-pakker §5 er oppdatert tilsvarende). Snu det ikke tilbake uten
  * ny beskjed — dette er ikke et forslag, det er spesifikasjonen.
  * Typografi Inter (SF Pro-erstatning). Titler 16/20 Semibold · labels 13/16
- * · brødtekst 17/1.47 Regular. Knapper 32px. CTA-pille 9999px · utility 8px · kort 18px.
- * Apple-flater 02.09.2026 (Mikael): canvas #fff · parchment #f5f5f7 · ink #1d1d1f
- * · Action Blue #0066cc. Null drop-shadow på chrome. Galaxy på Oppgrader urørt.
+ * · brødtekst 17/1.47 Regular. Knapper 32px. CTA-pille 9999px · utility 10px · kort 18px.
+ * Attio-farger 06.09.2026 (Mikael): canvas #fff · ash-panel #f3f4f6 · ink #1c1d1f
+ * · Action Blue #407ff2 (lenker/aktiv/fokus-tekst) · Focus Blue #94b9ff (ring).
+ * CTA-fyll er ink, ikke blå. Null drop-shadow på chrome. Galaxy på Oppgrader urørt.
+ * ⛔ Ikke Attio-layout / Fluid / frost (#138). #135/#137-struktur står.
  * Mørkt bakgrunn #000000 · sidebar #1a1a1a · valgt i sidebar #292929
  * Hva som er gitt og hva som er utledet
  * Alt over er gitt. Verdier merket «utledet» under er mine, fordi UI-et trenger
@@ -25,34 +27,37 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Flater — parchment-side, hvit sidebar/kort (canvas) */
-  --ew-bg: #f5f5f7;
-  --ew-sidebar: #ffffff;
-  --ew-sidebar-active: #ededed;
+  /* Flater — ash-panel-side, hvit sidebar/kort (canvas) */
+  --ew-bg: #f3f4f6;
+  --ew-sidebar: #f8f8f8;
+  --ew-sidebar-active: #eaf1ff;
   --ew-surface: #ffffff;
-  --ew-surface-2: #f5f5f7; /* parchment — hover og sekundær skall */
+  --ew-surface-2: #f3f4f6; /* ash — hover og sekundær skall */
   --ew-inset: #fafafc; /* pearl */
-  --ew-border: #e0e0e0; /* hairline */
-  --ew-border-strong: #e0e0e0;
-  --ew-divider-soft: #f0f0f0;
+  --ew-border: #e4e7ec; /* stone */
+  --ew-border-strong: #d3d8df; /* slate */
+  --ew-divider-soft: #e4e7ec;
 
-  /* Tekst — ink */
-  --ew-fg: #1d1d1f;
-  --ew-fg-muted: #7a7a7a;
-  --ew-fg-faint: #7a7a7a;
+  /* Tekst — ink + Overcast */
+  --ew-fg: #1c1d1f;
+  --ew-fg-muted: #8f99a8;
+  --ew-fg-faint: #8f99a8;
 
   /*
- * Interaktiv aksent er Action Blue (Mikael 02.09.2026, Apple på hele appen).
- * Logogrønnen #1ED27D er urørt i logo.svg. Mørk utility / Oppgrader / Ronny
- * kan fortsatt være #111. Suksess-grønn er informasjon, ikke merkevare.
+ * 06.09.2026 (Mikael Attio-farger, ikke Attio-layout):
+ * Ink #1c1d1f er tekst + primær CTA-fyll. Action Blue #407ff2 er kun
+ * lenker/aktiv/fokus-tekst. Focus Blue #94b9ff er ring. Logogrønnen
+ * #1ED27D er urørt i logo.svg. Ronny-kropp røres ikke. Suksess-grønn
+ * er informasjon, ikke merkevare.
 */
-  --ew-accent: #0066cc; /* Action Blue — lenker, pille-CTA, fokus */
-  --ew-accent-strong: #0071e3;
+  --ew-accent: #407ff2; /* Action Blue — lenker, aktiv, fokus-tekst */
+  --ew-accent-strong: #407ff2;
   --ew-accent-fg: #ffffff;
-  --ew-accent-soft: #e8f1fb;
-  --ew-accent-dim: rgba(0, 102, 204, 0.12);
-  --ew-accent-on-dark: #2997ff;
-  --ew-ink-utility: #1d1d1f; /* mørk utility / Oppgrader kan fortsatt være #111 */
+  --ew-accent-soft: #eaf1ff;
+  --ew-accent-dim: rgba(64, 127, 242, 0.12);
+  --ew-accent-on-dark: #94b9ff;
+  --ew-focus: #94b9ff; /* Focus Blue — ring */
+  --ew-ink-utility: #1c1d1f; /* primær CTA-fyll */
 
   /* Semantiske statusfarger — utledet, justert for lys bakgrunn */
   --ew-warn: #b45309;
@@ -73,10 +78,10 @@
  * knapp på #fafafa-sidebaren leste som et hull, ikke som en hevet flate.
  * #f2f2f2 gir samme relieff som den mørke varianten.
 */
-  --ew-bevel-face: #f5f5f7;
-  --ew-bevel-border: #e0e0e0;
+  --ew-bevel-face: #f3f4f6;
+  --ew-bevel-border: #d3d8df;
   --ew-bevel-shadow: none;
-  --ew-bevel-fg: #1d1d1f;
+  --ew-bevel-fg: #1c1d1f;
 
   --ew-glass-bg: #ffffff;
   --ew-glass-border: #e5e5e5;
@@ -118,6 +123,8 @@
   --ew-accent-fg: #111111;
   --ew-accent-soft: rgba(255, 255, 255, 0.12);
   --ew-accent-dim: rgba(255, 255, 255, 0.1);
+  --ew-focus: #94b9ff;
+  --ew-ink-utility: #ededed;
 
   --ew-warn: #e0a04a;
   --ew-warn-soft: rgba(224, 160, 74, 0.14);
@@ -139,7 +146,7 @@
 :root {
   /* Kontrollhøyder og radier — gitt */
   --ew-control-h: 32px; /* knapper, inputs, selects */
-  --ew-radius-control: 8px; /* utility-rektangel */
+  --ew-radius-control: 10px; /* utility-rektangel — Attio ~10px */
   --ew-row-h: 40px; /* datarad */
   --ew-row-h-store: 44px; /* «stores»-rad */
   --ew-badge-h: 20px;

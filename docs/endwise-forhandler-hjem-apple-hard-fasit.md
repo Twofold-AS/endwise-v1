@@ -8,7 +8,7 @@
 - Skill apple-web-app: layout/safe-area/touch on **content scroll** only — not new chrome.
 
 ## Harder than #136
-1. Scroll-root: one clear column under fixed top-bar; overscroll-none / no rubber-band revealing wrong bg; parchment `#f5f5f7` behind cards.
+1. Scroll-root: one clear column under fixed top-bar; overscroll-none / no rubber-band revealing wrong bg; ash `#f3f4f6` (`--ew-bg`) behind cards.
 2. Air: larger vertical rhythm (gap 16–20); hero more “plate”; clearer hierarchy.
 3. Hero: keep I dag/Pågår/Fullført; Apple typography/spacing (meta 12 muted, tall title); no `#111` fill.
 4. Cards: radius 16 hero / 12–14 grid; hairline; optional light grouped sections (“I dag” / “Mer”) without new destinations — optional.

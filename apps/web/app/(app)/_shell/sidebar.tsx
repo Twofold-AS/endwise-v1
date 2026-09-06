@@ -1,6 +1,6 @@
 'use client';
 
-import { type LucideIcon } from '@endwise/ui';
+import type { LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';

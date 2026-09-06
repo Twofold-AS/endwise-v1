@@ -180,7 +180,7 @@ export function Sidebar() {
 
       {/*
        * Telefon-overlay: px-3. Desktop: 275 flush-right i 389 (8+259+8).
-       * Tom skinne til venstre mot viewport-kanten — ikke speilet.
+       * Tom skinne til venstre er 114 (389−275) — ikke 26.
        */}
       <div
         data-shell-chrome={smal ? undefined : '275'}

@@ -26,6 +26,7 @@ import {
   DESKTOP_SIDEBAR_CHROME_W,
   DESKTOP_SIDEBAR_INNER_W,
   DESKTOP_SIDEBAR_PAD,
+  DESKTOP_SIDEBAR_RAIL_W,
   DESKTOP_SIDEBAR_W,
   DESKTOP_TOPBAR_H,
 } from '../app/(app)/_shell/desktop-shell.ts';
@@ -46,6 +47,8 @@ describe('Mikael desktop tre-kolonner + /home', () => {
   it('låser 389 + 598 + 452 = 1439, akse 1050, toppbar 53', () => {
     expect(DESKTOP_SIDEBAR_W).toBe(389);
     expect(DESKTOP_SIDEBAR_CHROME_W).toBe(275);
+    expect(DESKTOP_SIDEBAR_RAIL_W).toBe(114);
+    expect(DESKTOP_SIDEBAR_W - DESKTOP_SIDEBAR_CHROME_W).toBe(DESKTOP_SIDEBAR_RAIL_W);
     expect(DESKTOP_SIDEBAR_PAD).toBe(8);
     expect(DESKTOP_SIDEBAR_INNER_W).toBe(259);
     expect(DESKTOP_SIDEBAR_PAD + DESKTOP_SIDEBAR_INNER_W + DESKTOP_SIDEBAR_PAD).toBe(

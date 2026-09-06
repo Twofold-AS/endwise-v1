@@ -4,10 +4,11 @@
  * Top-bars over box 2 and box 3 are 53px. Phone overlay is unchanged.
  *
  * Sidebar chrome (supersedes left-26 inset): 275 flush-right in 389,
- * 8+259+8. Empty rail is on the left toward the viewport edge.
+ * 8+259+8. Left empty rail is 389−275 = 114, not 26.
  */
 export const DESKTOP_SIDEBAR_W = 389;
 export const DESKTOP_SIDEBAR_CHROME_W = 275;
+export const DESKTOP_SIDEBAR_RAIL_W = 114;
 export const DESKTOP_SIDEBAR_PAD = 8;
 export const DESKTOP_SIDEBAR_INNER_W = 259;
 export const DESKTOP_NAV_IKON = 26;

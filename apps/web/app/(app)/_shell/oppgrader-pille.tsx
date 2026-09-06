@@ -44,7 +44,9 @@ export function OppgraderPille() {
     return (
       <div data-oppgrader-pille data-plan-badge data-shell-enterprise className={skall}>
         <GalaxyKlipp />
-        <span className="pointer-events-none relative z-10 truncate">{tekst}</span>
+        <span className="pointer-events-none relative z-10 truncate md:text-[18px] md:leading-[22px]">
+          {tekst}
+        </span>
       </div>
     );
   }
@@ -57,7 +59,9 @@ export function OppgraderPille() {
       className={skall}
     >
       <GalaxyKlipp />
-      <span className="pointer-events-none relative z-10 truncate">{tekst}</span>
+      <span className="pointer-events-none relative z-10 truncate md:text-[18px] md:leading-[22px]">
+        {tekst}
+      </span>
     </Link>
   );
 }

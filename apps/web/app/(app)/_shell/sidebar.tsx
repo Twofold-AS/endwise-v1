@@ -30,9 +30,9 @@ import { SHELL_HEADER_RAD } from './phone-chrome';
 import { SidebarHeader } from './sidebar-header';
 import { useSidebarState } from './sidebar-state';
 
-/** Nav-ikoner: 16px på telefon-overlay, 26×26 på desktop-skinnen. */
+/** Nav-ikoner: 16px på telefon-overlay, 20×20 på desktop-skinnen. */
 const IKON = 16;
-const IKON_DESKTOP = 26;
+const IKON_DESKTOP = 20;
 
 /**
  * Desktop: persistent venstre skinne (alltid synlig, innhold ved siden).
@@ -166,7 +166,7 @@ export function Sidebar() {
         {!smal ? (
           <div
             data-shell-header
-            className="hidden h-row items-center justify-between gap-2 md:flex md:w-[259px] [&_img]:h-[30px] [&_img]:w-[30px]"
+            className="hidden h-row items-center justify-between gap-2 md:flex md:h-10 md:w-[259px] [&_img]:h-[40px] [&_img]:w-[40px]"
           >
             {/*
              * `dealerName` er ekte navn fra `tenants.name`. Placeholderen
@@ -258,7 +258,7 @@ function NavRow({
       <Ikon icon={item.icon} active={active} collapsed={collapsed} />
       {!collapsed && (
         <>
-          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-[26px] md:text-right md:text-[21px] md:leading-[26px]">
+          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-[20px] md:text-right md:text-[16px] md:leading-[20px]">
             {item.label}
           </span>
           {item.isNew && <NewBadge />}

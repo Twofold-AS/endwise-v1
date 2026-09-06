@@ -7,6 +7,7 @@ import {
   DESKTOP_BOX2_W,
   DESKTOP_BOX3_W,
   DESKTOP_ENTERPRISE_H,
+  DESKTOP_ENTERPRISE_LABEL,
   DESKTOP_ENTERPRISE_PX,
   DESKTOP_ENTERPRISE_W,
   DESKTOP_KORT_H,
@@ -36,6 +37,7 @@ import {
 } from '../app/(app)/_shell/desktop-shell.ts';
 import { FORHANDLER_NAV, landingForRole } from '../app/(app)/_shell/nav.ts';
 import { erDealerPhoneHjem, phoneHjemHref } from '../app/(app)/_shell/phone-home.ts';
+import { utenVerkstedetCrumb } from '../app/(app)/_shell/seksjon-sti.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -63,23 +65,24 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(DESKTOP_AXIS_W).toBe(1050);
     expect(DESKTOP_BOX2_W + DESKTOP_BOX3_W).toBe(DESKTOP_AXIS_W);
     expect(DESKTOP_TOPBAR_H).toBe(53);
-    expect(DESKTOP_NAV_IKON).toBe(26);
+    expect(DESKTOP_NAV_IKON).toBe(20);
     expect(DESKTOP_NAV_BTN_W).toBe(259);
     expect(DESKTOP_NAV_BTN_H).toBe(50);
     expect(DESKTOP_NAV_BTN_PAD).toBe(12);
-    expect(DESKTOP_NAV_LABEL_H).toBe(26);
-    expect(DESKTOP_NAV_LABEL_SIZE).toBe(21);
+    expect(DESKTOP_NAV_LABEL_H).toBe(20);
+    expect(DESKTOP_NAV_LABEL_SIZE).toBe(16);
     expect(DESKTOP_PROFIL_W).toBe(259);
     expect(DESKTOP_PROFIL_H).toBe(65);
     expect(DESKTOP_PROFIL_PAD).toBe(12);
     expect(DESKTOP_ENTERPRISE_W).toBe(233);
     expect(DESKTOP_ENTERPRISE_H).toBe(52);
     expect(DESKTOP_ENTERPRISE_PX).toBe(32);
-    expect(DESKTOP_LOGO_H).toBe(30);
-    expect(DESKTOP_KORT_W).toBe(348);
-    expect(DESKTOP_KORT_H).toBe(160);
-    expect(DESKTOP_KORT_PX).toBe(16);
-    expect(DESKTOP_KORT_PY).toBe(20);
+    expect(DESKTOP_ENTERPRISE_LABEL).toBe(18);
+    expect(DESKTOP_LOGO_H).toBe(40);
+    expect(DESKTOP_KORT_W).toBe(300);
+    expect(DESKTOP_KORT_H).toBe(140);
+    expect(DESKTOP_KORT_PX).toBe(12);
+    expect(DESKTOP_KORT_PY).toBe(16);
     expect(DESKTOP_PEOPLE_W).toBe(182);
     expect(DESKTOP_PEOPLE_H).toBe(40);
     expect(DESKTOP_PEOPLE_IKON_W).toBe(20);
@@ -106,7 +109,8 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(standby).toMatch(/w-\[452px\]/);
     expect(standby).toMatch(/h-\[53px\]/);
     expect(standby).toMatch(/hidden[\s\S]*md:flex/);
-    expect(standby).not.toMatch(/Ronny|Grainient|Galaxy|frost|fluid/);
+    expect(standby).toMatch(/RonnyAvatarKnapp/);
+    expect(standby).not.toMatch(/Grainient|Galaxy|frost|fluid/);
   });
 
   it('sidebar desktop: 389 / chrome 275 flush-right / nav 259×50 pad 12 / enterprise 233×52 / ingen Handlinger eller toggle', () => {
@@ -126,13 +130,14 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(sidebar).toMatch(/md:px-3/);
     expect(sidebar).toMatch(/md:justify-between/);
     expect(sidebar).toMatch(/md:text-right/);
-    expect(sidebar).toMatch(/md:text-\[21px\]/);
-    expect(sidebar).toMatch(/md:leading-\[26px\]/);
-    expect(sidebar).toMatch(/md:h-\[26px\]/);
+    expect(sidebar).toMatch(/md:text-\[16px\]/);
+    expect(sidebar).toMatch(/md:leading-\[20px\]/);
+    expect(sidebar).toMatch(/md:h-\[20px\]/);
     expect(sidebar).toMatch(/md:gap-0/);
-    expect(sidebar).toMatch(/\[&_img\]:h-\[30px\]/);
-    expect(sidebar).toMatch(/IKON_DESKTOP = 26/);
+    expect(sidebar).toMatch(/\[&_img\]:h-\[40px\]/);
+    expect(sidebar).toMatch(/IKON_DESKTOP = 20/);
     expect(sidebar).toMatch(/const IKON = 16/);
+    expect(header).not.toMatch(/RonnyAvatarKnapp/);
     expect(sidebar).not.toMatch(/Handlinger/);
     expect(sidebar).not.toMatch(/QUICK_ACTIONS/);
     expect(header).not.toMatch(/PanelLeftClose|PanelLeftOpen|SHELL_TOGGLE_PX/);
@@ -143,16 +148,17 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(pille).toMatch(/md:h-\[52px\]/);
     expect(pille).toMatch(/md:w-\[233px\]/);
     expect(pille).toMatch(/md:px-8/);
+    expect(pille).toMatch(/md:text-\[18px\]/);
   });
 
-  it('hjem-kort 348×160 py-20 px-16; people-showcase 182×40 ikon 20×19', () => {
+  it('hjem-kort 300×140 py-16 px-12; people-showcase 182×40 ikon 20×19', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
     const people = utenKommentarer(les('../app/(app)/_shell/people-showcase.tsx'));
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(kort).toMatch(/md:h-\[160px\]/);
-    expect(kort).toMatch(/md:w-\[348px\]/);
-    expect(kort).toMatch(/md:px-4/);
-    expect(kort).toMatch(/md:py-5/);
+    expect(kort).toMatch(/md:h-\[140px\]/);
+    expect(kort).toMatch(/md:w-\[300px\]/);
+    expect(kort).toMatch(/md:px-3 md:py-4/);
+    expect(kort).toMatch(/md:py-4/);
     expect(people).toMatch(/data-people-showcase/);
     expect(people).toMatch(/h-10/);
     expect(people).toMatch(/w-\[182px\]/);
@@ -175,6 +181,19 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     const inspect = utenKommentarer(les('../app/(app)/endwise/verksted/[slug]/dashboard/page.tsx'));
     expect(inspect).toMatch(/redirect\(/);
     expect(inspect).toMatch(/\/home/);
+  });
+
+  it('boks 2 toppbar skjuler Verkstedet, beholder annet chrome', () => {
+    const topbar = utenKommentarer(les('../app/(app)/_shell/top-bar.tsx'));
+    expect(topbar).toMatch(/data-shell-topbar="2"/);
+    expect(topbar).toMatch(/h-\[53px\]/);
+    expect(topbar).toMatch(/md:w-\[598px\]/);
+    expect(topbar).toMatch(/utenVerkstedetCrumb|label !== ['"]Verkstedet['"]/);
+    expect(topbar).toMatch(/aria-label="Du er her"/);
+    expect(utenVerkstedetCrumb([{ label: 'Verkstedet', href: '/home' }])).toEqual([]);
+    expect(utenVerkstedetCrumb([{ label: 'Innboks', href: '/innboks' }])).toEqual([
+      { label: 'Innboks', href: '/innboks' },
+    ]);
   });
 
   it('⛔ ikke Attio HTML-preview, Fluid eller frost', () => {

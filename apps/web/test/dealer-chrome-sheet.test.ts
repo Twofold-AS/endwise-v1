@@ -166,12 +166,14 @@ describe('Ingen Ronny-stripe / peek — sheet kun på telefon', () => {
     expect(fab).toMatch(/aria-label="Lukk"/);
   });
 
-  it('desktop-sidebar: avatar i header, uten collapse-toggle og uten sheet', () => {
+  it('desktop: Ronny-avatar i boks 3, ikke sidebar-header; uten collapse-toggle og uten sheet', () => {
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
+    const standby = utenKommentarer(les('../app/(app)/_shell/standby-panel.tsx'));
     const knapp = utenKommentarer(les('../app/(app)/_workshop/ronny-avatar-knapp.tsx'));
-    expect(header).toMatch(/justify-between/);
     expect(header).toMatch(/data-shell-logo/);
-    expect(header).toMatch(/RonnyAvatarKnapp/);
+    expect(header).not.toMatch(/RonnyAvatarKnapp/);
+    expect(standby).toMatch(/RonnyAvatarKnapp/);
+    expect(standby).toMatch(/data-shell-topbar="3"/);
     expect(header).not.toMatch(/PanelLeftClose|PanelLeftOpen|minimer|SHELL_TOGGLE_PX/);
     expect(knapp).toMatch(/data-ronny-avatar/);
     expect(knapp).toMatch(/hidden md:inline-flex/);

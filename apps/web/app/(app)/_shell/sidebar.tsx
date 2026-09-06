@@ -1,18 +1,10 @@
 'use client';
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuHeader,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  type LucideIcon,
-  Zap,
-} from '@endwise/ui';
+import { type LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { Fragment, useEffect, useMemo } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import {
@@ -23,14 +15,13 @@ import {
 } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
-import { BEVEL, CountBadge, NewBadge } from './cards';
+import { CountBadge, NewBadge } from './cards';
 import {
   FORHANDLER_NAV,
   isItemActive,
   itemsForRole,
   type NavItem,
   navForShell,
-  QUICK_ACTIONS,
   settingsForShell,
   shellForBruker,
 } from './nav';
@@ -45,13 +36,13 @@ const IKON_DESKTOP = 26;
 
 /**
  * Desktop: persistent venstre skinne (alltid synlig, innhold ved siden).
- * Telefon: fullskjerm-overlay, lukket default, åpnes fra PhoneShell.
- * Hvit flate. Hjelp-TipCard er ute; nederst sitter Galaxy-oppgraderingspillen.
+ * Ingen collapse/expand på desktop. Telefon: fullskjerm-overlay, lukket
+ * default, åpnes fra PhoneShell. Hvit flate. Hjelp-TipCard er ute;
+ * nederst sitter Galaxy-oppgraderingspillen.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
   const searchParams = useSearchParams();
-  const router = useRouter();
   const {
     navn,
     role,
@@ -115,22 +106,6 @@ export function Sidebar() {
     }
     return (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0);
   }, [shell, support.data, threads.data]);
-
-  // K åpner quick actions — bare desktop. På telefon er Handlinger borte
-  // (ingen bevel, ingen overflow). Dropdown portaler til body, så ⌘K
-  // må ikke åpne den under md.
-  const [quickOpen, setQuickOpen] = useState(false);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
-        if (!window.matchMedia('(min-width: 768px)').matches) return;
-        e.preventDefault();
-        setQuickOpen((o) => !o);
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, []);
 
   useEffect(() => {
     if (!phoneOpen) return;
@@ -206,45 +181,6 @@ export function Sidebar() {
             />
           </div>
         ) : null}
-        {shell === 'forhandler' && !inspect && (
-          <DropdownMenu open={quickOpen} onOpenChange={setQuickOpen}>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                style={BEVEL}
-                title={smal ? 'Handlinger (⌘K)' : undefined}
-                className={`flex h-control w-full items-center gap-2 rounded-control text-label transition hover:brightness-[0.98] focus-visible:outline-2 focus-visible:outline-ring ${
-                  smal ? 'justify-center px-0' : 'px-2.5'
-                }`}
-              >
-                <Zap size={IKON} strokeWidth={1.75} className="shrink-0 text-accent-strong" />
-                {!smal && (
-                  <>
-                    <span className="flex-1 text-left">Handlinger</span>
-                    <kbd className="rounded-badge border border-border/60 px-1.5 font-mono text-[11px] text-fg-muted">
-                      ⌘K
-                    </kbd>
-                  </>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="start" sideOffset={16} className="z-50">
-              <DropdownMenuHeader>Handlinger</DropdownMenuHeader>
-              {QUICK_ACTIONS.map((a) => (
-                <DropdownMenuItem
-                  key={a.href}
-                  onSelect={() => {
-                    if (phoneOpen) closePhone();
-                    router.push(a.href as Route);
-                  }}
-                >
-                  <a.icon size={IKON} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                  <span className="flex-1">{a.label}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
 
         <nav
           aria-label="Hovednavigasjon"
@@ -322,7 +258,7 @@ function NavRow({
       <Ikon icon={item.icon} active={active} collapsed={collapsed} />
       {!collapsed && (
         <>
-          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-6 md:w-[55px] md:flex-none md:text-right">
+          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-[26px] md:text-right md:text-[21px] md:leading-[26px]">
             {item.label}
           </span>
           {item.isNew && <NewBadge />}
@@ -339,7 +275,7 @@ function NavRow({
       title={collapsed ? item.label : undefined}
       onClick={onNavigate}
       className={`flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors md:h-[50px] md:gap-0 ${
-        collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[141px] md:justify-between md:px-3'
+        collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[259px] md:justify-between md:px-3'
       } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}
     >
       {innhold}

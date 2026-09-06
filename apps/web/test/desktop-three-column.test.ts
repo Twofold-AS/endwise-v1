@@ -16,12 +16,16 @@ import {
   DESKTOP_NAV_BTN_W,
   DESKTOP_NAV_IKON,
   DESKTOP_NAV_LABEL_H,
-  DESKTOP_NAV_LABEL_W,
+  DESKTOP_NAV_LABEL_SIZE,
   DESKTOP_PEOPLE_H,
   DESKTOP_PEOPLE_IKON_H,
   DESKTOP_PEOPLE_IKON_W,
   DESKTOP_PEOPLE_W,
+  DESKTOP_ENTERPRISE_H,
+  DESKTOP_ENTERPRISE_PX,
+  DESKTOP_ENTERPRISE_W,
   DESKTOP_PROFIL_H,
+  DESKTOP_PROFIL_PAD,
   DESKTOP_PROFIL_W,
   DESKTOP_SIDEBAR_CHROME_W,
   DESKTOP_SIDEBAR_INNER_W,
@@ -60,13 +64,17 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(DESKTOP_BOX2_W + DESKTOP_BOX3_W).toBe(DESKTOP_AXIS_W);
     expect(DESKTOP_TOPBAR_H).toBe(53);
     expect(DESKTOP_NAV_IKON).toBe(26);
-    expect(DESKTOP_NAV_BTN_W).toBe(141);
+    expect(DESKTOP_NAV_BTN_W).toBe(259);
     expect(DESKTOP_NAV_BTN_H).toBe(50);
     expect(DESKTOP_NAV_BTN_PAD).toBe(12);
-    expect(DESKTOP_NAV_LABEL_W).toBe(55);
-    expect(DESKTOP_NAV_LABEL_H).toBe(24);
+    expect(DESKTOP_NAV_LABEL_H).toBe(26);
+    expect(DESKTOP_NAV_LABEL_SIZE).toBe(21);
     expect(DESKTOP_PROFIL_W).toBe(259);
     expect(DESKTOP_PROFIL_H).toBe(65);
+    expect(DESKTOP_PROFIL_PAD).toBe(12);
+    expect(DESKTOP_ENTERPRISE_W).toBe(233);
+    expect(DESKTOP_ENTERPRISE_H).toBe(52);
+    expect(DESKTOP_ENTERPRISE_PX).toBe(32);
     expect(DESKTOP_LOGO_H).toBe(30);
     expect(DESKTOP_KORT_W).toBe(348);
     expect(DESKTOP_KORT_H).toBe(160);
@@ -101,9 +109,11 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(standby).not.toMatch(/Ronny|Grainient|Galaxy|frost|fluid/);
   });
 
-  it('sidebar desktop: 389 / chrome 275 flush-right / 8+259+8 / nav 141×50 pad 12 / gap-0 / logo 30', () => {
+  it('sidebar desktop: 389 / chrome 275 flush-right / nav 259×50 pad 12 / enterprise 233×52 / ingen Handlinger eller toggle', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
+    const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
     const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
+    const pille = utenKommentarer(les('../app/(app)/_shell/oppgrader-pille.tsx'));
     expect(sidebar).toMatch(/data-shell-box="1"/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
     expect(sidebar).toMatch(/md:w-\[275px\]/);
@@ -112,16 +122,27 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(sidebar).toMatch(/md:w-\[259px\]/);
     expect(sidebar).not.toMatch(/md:ml-\[26px\]/);
     expect(sidebar).toMatch(/md:h-\[50px\]/);
-    expect(sidebar).toMatch(/md:w-\[141px\]/);
+    expect(sidebar).not.toMatch(/md:w-\[141px\]/);
     expect(sidebar).toMatch(/md:px-3/);
     expect(sidebar).toMatch(/md:justify-between/);
     expect(sidebar).toMatch(/md:text-right/);
+    expect(sidebar).toMatch(/md:text-\[21px\]/);
+    expect(sidebar).toMatch(/md:leading-\[26px\]/);
+    expect(sidebar).toMatch(/md:h-\[26px\]/);
     expect(sidebar).toMatch(/md:gap-0/);
     expect(sidebar).toMatch(/\[&_img\]:h-\[30px\]/);
     expect(sidebar).toMatch(/IKON_DESKTOP = 26/);
     expect(sidebar).toMatch(/const IKON = 16/);
+    expect(sidebar).not.toMatch(/Handlinger/);
+    expect(sidebar).not.toMatch(/QUICK_ACTIONS/);
+    expect(header).not.toMatch(/PanelLeftClose|PanelLeftOpen|SHELL_TOGGLE_PX/);
     expect(rad).toMatch(/md:h-\[65px\]/);
     expect(rad).toMatch(/md:w-\[259px\]/);
+    expect(rad).toMatch(/md:p-3/);
+    expect(pille).toMatch(/data-shell-enterprise/);
+    expect(pille).toMatch(/md:h-\[52px\]/);
+    expect(pille).toMatch(/md:w-\[233px\]/);
+    expect(pille).toMatch(/md:px-8/);
   });
 
   it('hjem-kort 348×160 py-20 px-16; people-showcase 182×40 ikon 20×19', () => {

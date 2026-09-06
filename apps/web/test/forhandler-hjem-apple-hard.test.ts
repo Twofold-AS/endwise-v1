@@ -41,7 +41,6 @@ function utenKommentarer(kilde: string) {
 
 const CHROME_URORT = [
   'apps/web/app/(app)/_shell/phone-shell.tsx',
-  'apps/web/app/(app)/_shell/sidebar-header.tsx',
   'apps/web/app/(app)/_shell/seksjon-bar.tsx',
   'apps/web/app/(app)/_workshop/workshop-bloub.tsx',
   'apps/web/app/(app)/_shell/phone-home-mekaniker.tsx',

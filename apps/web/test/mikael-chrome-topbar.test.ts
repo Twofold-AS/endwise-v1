@@ -37,7 +37,7 @@ describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
-    expect(header).toMatch(/SHELL_TOGGLE_PX/);
+    expect(header).not.toMatch(/SHELL_TOGGLE_PX|PanelLeftClose|PanelLeftOpen/);
     expect(shell).toMatch(/SHELL_TOGGLE_PX/);
     expect(header).toMatch(/SHELL_LOGO_PX|width=\{24\}|LOGO = 24/);
     expect(shell).toMatch(/SHELL_LOGO_PX|PHONE_LOGO_PX|width=\{24\}/);

@@ -43,7 +43,7 @@ export function BrukerRad({
   return (
     <div
       data-shell-profil
-      className="mx-2 flex h-control min-w-0 items-center gap-2 md:mx-0 md:h-[65px] md:w-[259px]"
+      className="mx-2 flex h-control min-w-0 items-center gap-2 md:mx-0 md:h-[65px] md:w-[259px] md:p-3"
     >
       <span className="min-w-0 flex-1 truncate text-left text-label text-fg">
         {laster ? (

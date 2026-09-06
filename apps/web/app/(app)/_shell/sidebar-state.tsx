@@ -3,8 +3,9 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 
 /**
- * Overlay-sidebar er telefon. Desktop-kollaps (`collapsed`) er en smalere
- * skinne, ikke en skjult overlay. Overlay starter lukket.
+ * Overlay-sidebar er telefon. Desktop har ingen collapse/expand-kontroll;
+ * `collapsed` blir stående for eventuell inspect/legacy-sti, men har ingen
+ * knapp. Overlay starter lukket.
  */
 type SidebarState = {
   collapsed: boolean;

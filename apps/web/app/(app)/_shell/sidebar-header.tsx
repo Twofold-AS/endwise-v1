@@ -1,19 +1,18 @@
 'use client';
 
-import { PanelLeftClose, PanelLeftOpen } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { RonnyAvatarKnapp } from '../_workshop/ronny-avatar-knapp';
-import { SHELL_LOGO_PX, SHELL_LOGO_WRAP, SHELL_TOGGLE_PX } from './phone-chrome';
-import { useSidebarState } from './sidebar-state';
+import { SHELL_LOGO_PX, SHELL_LOGO_WRAP } from './phone-chrome';
 
-/** Logo 24px. Toggle er 16px — samme som destinasjonsikonene i sidebaren. */
+/** Logo 24px i header-fila; desktop wrapper skalerer merket til 30px. */
 const LOGO = SHELL_LOGO_PX;
 
 /**
  * Sidebar-topp uten visningsvelger. Ett skall per innlogging.
- * Logo venstre. Høyre: Ronny-avatar (desktop) rett til venstre for lukk/åpne.
+ * Logo venstre. Høyre: Ronny-avatar (desktop). Ingen collapse/expand
+ * på desktop — telefon-overlay lukkes fra PhoneShell.
  */
 export function SidebarHeader({
   collapsed,
@@ -26,30 +25,9 @@ export function SidebarHeader({
   inspect?: boolean;
   inspectTilbakeHref?: string;
 }) {
-  const { toggle, phoneOpen, closePhone } = useSidebarState();
-  const minimer = (
-    <button
-      type="button"
-      onClick={phoneOpen ? closePhone : toggle}
-      aria-label={
-        phoneOpen ? 'Lukk sidebaren' : collapsed ? 'Utvid sidebaren' : 'Gjør sidebaren mindre'
-      }
-      title={phoneOpen ? 'Lukk sidebaren' : collapsed ? 'Utvid sidebaren' : 'Gjør sidebaren mindre'}
-      aria-expanded={phoneOpen ? true : !collapsed}
-      data-phone-sidebar-close={phoneOpen ? '' : undefined}
-      className="flex size-8 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active hover:text-fg"
-    >
-      {collapsed && !phoneOpen ? (
-        <PanelLeftOpen size={SHELL_TOGGLE_PX} strokeWidth={1.75} />
-      ) : (
-        <PanelLeftClose size={SHELL_TOGGLE_PX} strokeWidth={1.75} />
-      )}
-    </button>
-  );
   const hoyre = (
     <div className="flex shrink-0 items-center">
       <RonnyAvatarKnapp />
-      {minimer}
     </div>
   );
 

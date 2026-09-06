@@ -316,11 +316,10 @@ describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
     expect(sidebar).toMatch(/phoneOpen/);
-    expect(sidebar).toMatch(/Handlinger/);
+    expect(sidebar).not.toMatch(/Handlinger/);
     expect(sidebar).toMatch(/BrukerRad/);
     expect(sidebar).toMatch(/OppgraderPille/);
-    expect(sidebar).toMatch(/min-width:\s*768px/);
-    expect(sidebar).toMatch(/QUICK_ACTIONS/);
+    expect(sidebar).not.toMatch(/QUICK_ACTIONS/);
   });
 
   it('dealer desktop Verkstedet er samme destinasjonskort bak md-skillet', () => {

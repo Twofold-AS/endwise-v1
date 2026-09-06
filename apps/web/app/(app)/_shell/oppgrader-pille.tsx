@@ -38,11 +38,11 @@ export function OppgraderPille() {
   const tekst = oppgraderKnappetekst(planKey);
   const cta = visOppgraderCta(planKey);
   const skall =
-    'relative mx-2 mb-1 flex h-9 items-center justify-center overflow-hidden rounded-full bg-primary px-4 text-label text-primary-foreground';
+    'relative mx-2 mb-1 flex h-9 items-center justify-center overflow-hidden rounded-full bg-primary px-4 text-label text-primary-foreground md:mx-0 md:h-[52px] md:w-[233px] md:px-8';
 
   if (!cta) {
     return (
-      <div data-oppgrader-pille data-plan-badge className={skall}>
+      <div data-oppgrader-pille data-plan-badge data-shell-enterprise className={skall}>
         <GalaxyKlipp />
         <span className="pointer-events-none relative z-10 truncate">{tekst}</span>
       </div>
@@ -50,7 +50,12 @@ export function OppgraderPille() {
   }
 
   return (
-    <Link href={'/organisasjon?seksjon=abonnement' as Route} data-oppgrader-pille className={skall}>
+    <Link
+      href={'/organisasjon?seksjon=abonnement' as Route}
+      data-oppgrader-pille
+      data-shell-enterprise
+      className={skall}
+    >
       <GalaxyKlipp />
       <span className="pointer-events-none relative z-10 truncate">{tekst}</span>
     </Link>

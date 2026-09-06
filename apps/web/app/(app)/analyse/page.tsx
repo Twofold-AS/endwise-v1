@@ -1,33 +1,19 @@
 'use client';
 
 import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  CHART_COLORS,
   ChartColumn,
-  type ChartConfig,
-  ChartContainer,
-  ChartLegendContent,
   ChartLine,
-  ChartTooltip,
-  ChartTooltipContent,
+  DitherDonutChart,
+  DitherGrowthChart,
+  DitherStackedChart,
   Globe,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
+  RevenueLineChart,
   Users,
-  XAxis,
-  YAxis,
 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { LiveVisitorsGlobe } from '../marked/live/_globe';
 import {
@@ -44,41 +30,22 @@ import {
 import { AnalyseKort } from './_kort';
 
 /**
- * Analyse. Forhandlerens egne tall: drift og nettside.
- * Ingen h1 med «Analyse». Breadcrumben i topbaren sier det allerede
- * to like titler over hverandre er samme informasjon to ganger. Plassen brukes
- * i stedet til periodevelgeren, som faktisk gjør noe.
- * Chart-motor: Recharts via shadcns Chart-mønster. Fargene er CSS-variabler
- * mot token-laget, så grafene snur med lys/mørk uten betinget farge her.
- * Ingen kunde-PII. Alt er aggregater.
+ * Analyse / Rapporter. Forhandlerens egne tall: drift og nettside.
+ * Chart-motor: Amicro dither charts (canvas), Attio-seriehex.
  * Alle tall er mock — se `_data.ts` og «Mock»-merket på hvert kort.
  */
-const CFG_VOLUM: ChartConfig = {
-  fullfort: { label: 'Fullførte', color: CHART_COLORS.accent },
-  avlyst: { label: 'Avlyste', color: CHART_COLORS.muted },
-};
-const CFG_BELEGG: ChartConfig = {
-  belegg: { label: 'Belegg', color: CHART_COLORS.accent },
-  avlysning: { label: 'Avlysningsrate', color: CHART_COLORS.warn },
-};
-const CFG_TRAFIKK: ChartConfig = {
-  visninger: { label: 'Sidevisninger', color: CHART_COLORS.blue },
-  bookingstart: { label: 'Startet booking', color: CHART_COLORS.accent },
-};
+const INK = '#1c1d1f';
+const ACTION = '#407ff2';
+const FOCUS = '#94b9ff';
+const OVERCAST = '#8f99a8';
+const SLATE = '#d3d8df';
 
-/** Paiskivenes farger. Fem skiver, fem toner — ingen gjentakelse. */
-const PAI_FARGER = [
-  CHART_COLORS.accent,
-  CHART_COLORS.blue,
-  CHART_COLORS.warn,
-  CHART_COLORS.danger,
-  CHART_COLORS.muted,
-];
-const CFG_KILDER: ChartConfig = Object.fromEntries(
-  KILDER.map((k, i) => [k.kilde, { label: k.kilde, color: PAI_FARGER[i] }]),
-);
+const VOLUM_BANDS = [
+  { key: 'fullfort', label: 'Fullførte', color: ACTION },
+  { key: 'avlyst', label: 'Avlyste', color: OVERCAST },
+] as const;
 
-const AKSE = { tickLine: false, axisLine: false, tickMargin: 8 } as const;
+const DONUT_FARGER = [ACTION, INK, FOCUS, OVERCAST, SLATE];
 
 function AnalysePageInner() {
   const params = useSearchParams();
@@ -91,6 +58,20 @@ function AnalysePageInner() {
   const belegg = beleggFor(periode);
   const trafikk = trafikkFor(periode);
   const tomt = bookings.isSuccess && (bookings.data?.length ?? 0) === 0;
+
+  const volumRader = useMemo(
+    () => volum.map((d) => ({ label: d.dag, fullfort: d.fullfort, avlyst: d.avlyst })),
+    [volum],
+  );
+  const kilderSlices = useMemo(
+    () =>
+      KILDER.map((k, i) => ({
+        name: k.kilde,
+        value: k.besok,
+        color: DONUT_FARGER[i] ?? OVERCAST,
+      })),
+    [],
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
@@ -115,12 +96,6 @@ function AnalysePageInner() {
         <div className="h-40 animate-pulse rounded-xl bg-surface-2" />
       )}
 
-      {/*
-       * Ingen fane-velger for Rapporter/Direkte data (fjernet ).
-       * Sidebaren eier navigasjonen — en tab-rad som gjør det samme er to
-       * kontroller for én beslutning, og de går ut av synk.
-       * Periodevelgeren står: den filtrerer, den navigerer ikke.
-       */}
       {visning === 'rapporter' && !tomt && !bookings.isLoading && (
         <div className="flex justify-end">
           <Velger
@@ -145,7 +120,6 @@ function AnalysePageInner() {
         </AnalyseKort>
       ) : tomt || bookings.isLoading ? null : (
         <>
-          {/* Nøkkeltall — tallet før grafen. */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {nokkeltall.map((k) => (
               <AnalyseKort
@@ -168,30 +142,20 @@ function AnalysePageInner() {
               tittel="Bookingvolum"
               forklaring={KILDE.bookingvolum.forklaring}
             >
-              <ChartContainer config={CFG_VOLUM} className="aspect-auto h-52 w-full">
-                <BarChart data={volum} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                  <XAxis dataKey="dag" {...AKSE} interval={periode === '30d' ? 6 : 0} />
-                  <YAxis {...AKSE} width={40} />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent config={CFG_VOLUM} />}
-                  />
-                  <Bar
-                    dataKey="fullfort"
-                    fill="var(--color-fullfort)"
-                    radius={[3, 3, 0, 0]}
-                    isAnimationActive={false}
-                  />
-                  <Bar
-                    dataKey="avlyst"
-                    fill="var(--color-avlyst)"
-                    radius={[3, 3, 0, 0]}
-                    isAnimationActive={false}
-                  />
-                </BarChart>
-              </ChartContainer>
-              <ChartLegendContent config={CFG_VOLUM} />
+              <div className="h-52 w-full">
+                <DitherStackedChart
+                  theme="light"
+                  compact
+                  rows={volumRader}
+                  bands={[...VOLUM_BANDS]}
+                />
+              </div>
+              <SerieMerke
+                poster={[
+                  { label: 'Fullførte', color: ACTION },
+                  { label: 'Avlyste', color: OVERCAST },
+                ]}
+              />
             </AnalyseKort>
 
             <AnalyseKort
@@ -200,31 +164,34 @@ function AnalysePageInner() {
               tittel="Belegg og avlysningsrate"
               forklaring={KILDE.belegg.forklaring}
             >
-              <ChartContainer config={CFG_BELEGG} className="aspect-auto h-52 w-full">
-                <LineChart data={belegg} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                  <XAxis dataKey="uke" {...AKSE} />
-                  <YAxis {...AKSE} width={40} domain={[0, 100]} />
-                  <ChartTooltip
-                    content={<ChartTooltipContent config={CFG_BELEGG} valueSuffix=" %" />}
-                  />
-                  <Line
-                    dataKey="belegg"
-                    stroke="var(--color-belegg)"
-                    strokeWidth={2}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                  <Line
-                    dataKey="avlysning"
-                    stroke="var(--color-avlysning)"
-                    strokeWidth={2}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                </LineChart>
-              </ChartContainer>
-              <ChartLegendContent config={CFG_BELEGG} />
+              <div className="h-52 w-full">
+                <RevenueLineChart
+                  theme="light"
+                  compact
+                  series={[
+                    {
+                      key: 'belegg',
+                      label: 'Belegg',
+                      color: ACTION,
+                      data: belegg.map((b) => b.belegg),
+                      fill: true,
+                    },
+                    {
+                      key: 'avlysning',
+                      label: 'Avlysningsrate',
+                      color: INK,
+                      data: belegg.map((b) => b.avlysning),
+                      fill: false,
+                    },
+                  ]}
+                />
+              </div>
+              <SerieMerke
+                poster={[
+                  { label: 'Belegg', color: ACTION },
+                  { label: 'Avlysningsrate', color: INK },
+                ]}
+              />
             </AnalyseKort>
 
             <AnalyseKort
@@ -233,37 +200,18 @@ function AnalysePageInner() {
               tittel="Sidevisninger"
               forklaring={KILDE.sidevisninger.forklaring}
             >
-              <ChartContainer config={CFG_TRAFIKK} className="aspect-auto h-52 w-full">
-                <AreaChart data={trafikk} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                  <XAxis dataKey="dag" {...AKSE} interval={periode === '30d' ? 6 : 0} />
-                  <YAxis {...AKSE} width={48} />
-                  <ChartTooltip content={<ChartTooltipContent config={CFG_TRAFIKK} />} />
-                  <Area
-                    dataKey="visninger"
-                    stroke="var(--color-visninger)"
-                    fill="var(--color-visninger)"
-                    fillOpacity={0.12}
-                    strokeWidth={2}
-                    isAnimationActive={false}
-                  />
-                  <Area
-                    dataKey="bookingstart"
-                    stroke="var(--color-bookingstart)"
-                    fill="var(--color-bookingstart)"
-                    fillOpacity={0.18}
-                    strokeWidth={2}
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ChartContainer>
-              <ChartLegendContent config={CFG_TRAFIKK} />
+              <div className="h-52 w-full">
+                <DitherGrowthChart
+                  theme="light"
+                  compact
+                  values={trafikk.map((t) => t.visninger)}
+                  labels={trafikk.map((t) => t.dag)}
+                  color={ACTION}
+                />
+              </div>
+              <SerieMerke poster={[{ label: 'Sidevisninger', color: ACTION }]} />
             </AnalyseKort>
 
-            {/*
-             * Paigraf: fordeling er nettopp det pai er god til — andel av en
-             * helhet. Tallene står i lista ved siden av, ikke bare i skivene.
-             */}
             <AnalyseKort
               id="kilder"
               icon={Users}
@@ -271,35 +219,16 @@ function AnalysePageInner() {
               forklaring={KILDE.kilder.forklaring}
             >
               <div className="flex items-center gap-4">
-                <ChartContainer config={CFG_KILDER} className="aspect-square h-40 w-40 shrink-0">
-                  <PieChart>
-                    <ChartTooltip
-                      content={<ChartTooltipContent config={CFG_KILDER} valueSuffix=" besøk" />}
-                    />
-                    <Pie
-                      data={KILDER}
-                      dataKey="besok"
-                      nameKey="kilde"
-                      innerRadius={38}
-                      outerRadius={70}
-                      paddingAngle={2}
-                      strokeWidth={0}
-                      isAnimationActive={false}
-                    >
-                      {KILDER.map((k, i) => (
-                        <Cell key={k.kilde} fill={PAI_FARGER[i]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ChartContainer>
-
+                <div className="aspect-square h-40 w-40 shrink-0">
+                  <DitherDonutChart theme="light" compact slices={kilderSlices} />
+                </div>
                 <ul className="flex min-w-0 flex-1 flex-col gap-1.5">
                   {KILDER.map((k, i) => (
                     <li key={k.kilde} className="flex items-center gap-2">
                       <span
                         aria-hidden
                         className="size-2 shrink-0 rounded-[2px]"
-                        style={{ background: PAI_FARGER[i] }}
+                        style={{ background: DONUT_FARGER[i] }}
                       />
                       <span className="min-w-0 flex-1 truncate text-[12px] text-fg-muted">
                         {k.kilde}
@@ -324,7 +253,19 @@ function AnalysePageInner() {
   );
 }
 
-/** Knapperad for et valg. Samme form som visningsbytte i Saker. */
+function SerieMerke({ poster }: { poster: { label: string; color: string }[] }) {
+  return (
+    <div className="flex flex-wrap gap-3 px-1">
+      {poster.map((p) => (
+        <span key={p.label} className="inline-flex items-center gap-1.5 text-[12px] text-fg-muted">
+          <span className="size-2 rounded-[2px]" style={{ background: p.color }} aria-hidden />
+          {p.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function Velger({
   valg,
   aktiv,
@@ -361,7 +302,6 @@ function Velger({
   );
 }
 
-/** Suspense-grense er påkrevd: siden leser `useSearchParams`. */
 export default function Page() {
   return (
     <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster analyse …</div>}>

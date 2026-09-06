@@ -32,7 +32,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 | Lucia (hånd-rullet auth) | **Better-Auth 1.x** | Produksjonsbevist i TheFold; organizations + passkey + phone-OTP innebygd |
 | Postmark (e-post) | **Resend** | Transaksjonelt + Broadcasts (nyhetsbrev) hos én leverandør |
 | OpenAI (LLM) | **Fireworks** | Leverandørvalg. Hele poenget med modellkatalogen + AIProvider-abstraksjonen er at dette koster én fil. Brukergodkjent 14.07.2026 |
-| dither-kit (charts) | **Recharts** | ⚠️ REVERSERT 05.08.2026. dither-kit erstattet Recharts 14.07, men ble deretter fjernet fra UI-et 03.08 på eiers ønske — og lot flaten stå uten chart-motor. Recharts er nå motoren, via shadcns Chart-mønster i `packages/ui/src/components/chart.tsx`. Brukergodkjent §2-beslutning |
+| dither-kit (charts) | **Amicro dither charts** (`@subhanhq/amicro` / Subhan-code/Amicro) | 06.09.2026: Mikael pekte på https://amicro.vercel.app/dither-charts — **ikke** Boring-Software/tripwire dither-kit. Analyse/Rapporter tegnes med Amicro-canvas (stacked / growth / spline / donut). Recharts-wrapperen i `chart.tsx` står, men er ikke motor på disse flatene. ⛔ dither-kit forblir ute |
 
 **Redis:** ikke lenger påkrevd. Pub/sub-behovet dekkes av Postgres LISTEN/NOTIFY (SSE-tjenesten). Legges kun til (Upstash) hvis app-nivå rate-limiting senere trenger det.
 
@@ -68,7 +68,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **Container queries** (`@container`) — dock-layout responderer på plassen den får, ikke viewport
 - **lucide-react** (ikoner) — eneste ikonbibliotek
 - **beUI** (shadcn-registry `@beui`) — tilstands-komponenter (`StatefulButton`) + kanoniske bevegelses-tokens (`lib/ease.ts`)
-- **Charts: Recharts er eneste chart-motor** (05.08.2026, brukergodkjent §2-beslutning). Hentet inn shadcn-stil i `packages/ui/src/components/chart.tsx` — appene importerer aldri `recharts` direkte. **Kun søyle, linje og areal** er eksponert; pai/radar/scatter er bevisst utelatt. Fargene er CSS-variabler mot `--ew-*`-tokenene, så grafene snur med lys/mørk. ~~dither-kit~~ er ute av UI-et (03.08.2026)
+- **Charts: Amicro dither charts** (06.09.2026, Mikael — https://amicro.vercel.app/dither-charts). Vendorisert i `packages/ui/src/vendor/amicro/` (CLI-bin finnes ikke på `@subhanhq/amicro@1.0.1`). Produkt-flaten er Analyse/Rapporter: stacked bar, area growth, spline line, donut. Seriehex er Attio (ink `#1c1d1f`, Action Blue `#407ff2`). ⛔ Boring-Software dither-kit. Recharts/`chart.tsx` er ikke lenger motoren på disse flatene
 - **cuelume** (mikro-lyder) — valgfri polish, av som default
 - **Grainient** (react-bits Grainient-JS-CSS + `ogl` ^1.0.11) — KI-Ronny-stripe KUN (44px telefon / 32px desktop). Apple `color1/2/3` `#0066cc` / `#0071e3` / `#2997ff`. ⛔ Ikke peek/full-kropp. ⛔ Ikke composer. ⛔ ShaderGradient ute. ⛔ Ikke dealer-hero. Detaljer i `docs/UI-PAKKER.md`
 - **Gradual Blur** (react-bits, lokal kopi i `_workshop/gradual-blur.tsx`, uten `mathjs`) — fade på Ronny-loggen når den overlapper stripe/composer. Detaljer i `docs/UI-PAKKER.md`
@@ -226,7 +226,7 @@ endwise/
 
 ## 6. Hva vi bevisst IKKE bruker
 
-Hetzner · Coolify · Traefik · NestJS · Encore · BullMQ · QStash · Trigger.dev · Redis (som fast avhengighet) · Unleash · Cloudflare WAF · WAL-G · Lucia · Postmark · dither-kit (fjernet fra UI-et 03.08.2026 — filene ligger, men er ikke eksportert) · Vercel Edge Config (betalt flagg-lagring — DB-basert flagg valgt) · OpenAI (som LLM-leverandør — byttet til Fireworks 14.07.2026; agent-runtime velger Mistral EU fra 02.09.2026) · **Vercel AI Gateway** · **Mistral Agents API** (innebygd web_search/code_interpreter — vi bruker chat completions + egne tools) · Composio Sandbox/e2b (Endwise-agenter kjører ikke vilkårlig kode; Framer-agenten har et FAST verktøysett) · **Framer community-MCP-plugin** (lagt til 11.08.2026 — krever en åpen Framer-klient på en persons maskin; kan ikke kjøre i kø, ikke kjøre når lokket er lukket, og skalerer ikke til 250 forhandlere. Framers offisielle Server API er valgt).
+Hetzner · Coolify · Traefik · NestJS · Encore · BullMQ · QStash · Trigger.dev · Redis (som fast avhengighet) · Unleash · Cloudflare WAF · WAL-G · Lucia · Postmark · dither-kit / tripwire (⛔ ikke Amicro — Mikael 06.09.2026 pekte på amicro.vercel.app/dither-charts) · Vercel Edge Config (betalt flagg-lagring — DB-basert flagg valgt) · OpenAI (som LLM-leverandør — byttet til Fireworks 14.07.2026; agent-runtime velger Mistral EU fra 02.09.2026) · **Vercel AI Gateway** · **Mistral Agents API** (innebygd web_search/code_interpreter — vi bruker chat completions + egne tools) · Composio Sandbox/e2b (Endwise-agenter kjører ikke vilkårlig kode; Framer-agenten har et FAST verktøysett) · **Framer community-MCP-plugin** (lagt til 11.08.2026 — krever en åpen Framer-klient på en persons maskin; kan ikke kjøre i kø, ikke kjøre når lokket er lukket, og skalerer ikke til 250 forhandlere. Framers offisielle Server API er valgt).
 
 Ser du noen av disse i repoet, er det en rest som skal fjernes.
 

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-06 — F5-18 Amicro dither charts (ikke dither-kit)
+
+**Type:** techstack §2 + UI-pakke. Ingen DB. Ingen 3-kolonne-shell.
+**Godkjent av:** Mikael — pekte på https://amicro.vercel.app/dither-charts (Amicro / `@subhanhq/amicro`), ikke Boring-Software dither-kit / tripwire.
+**Endring:** **F5-18** forblir `done`. Mock-grafer på `/analyse` + `/rapporter` tegnes med Amicro-canvas: `DitherStackedChart` (bookingvolum) · `RevenueLineChart` (belegg) · `DitherGrowthChart` (sidevisninger) · `DitherDonutChart` (trafikkilder). Attio-hex ink `#1c1d1f` / Action Blue `#407ff2`. `npx @subhanhq/amicro@latest add` har ingen bin i 1.0.1 — kilden er vendorisert fra GitHub-pin `86b55340`. ⛔ dither-kit. ⛔ #142 desktop 3-col.
+
+---
+
 ## 2026-09-06 — F0-11 / F5-10 Attio-farger only (ikke #138-layout)
 
 **Type:** token-remap. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

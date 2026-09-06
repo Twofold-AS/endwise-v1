@@ -60,7 +60,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
               key={t.href}
               href={t.href}
               className={`flex flex-col items-center gap-1 py-2.5 text-[10px] transition-colors ${
-                active ? 'text-primary' : 'text-fg-faint'
+                active ? 'text-accent-strong' : 'text-fg-faint'
               }`}
             >
               <Icon size={20} />

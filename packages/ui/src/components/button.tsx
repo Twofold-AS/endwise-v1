@@ -18,10 +18,11 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
         outline:
-          'border bg-background hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+          'border border-border-strong bg-card hover:bg-surface-2 hover:text-fg dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+        secondary:
+          'border border-border-strong bg-card text-fg hover:bg-surface-2 dark:border-input',
         ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
-        link: 'text-primary underline-offset-4 hover:underline',
+        link: 'text-accent-strong underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-control px-3.5 has-[>svg]:px-3',

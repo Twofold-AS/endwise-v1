@@ -218,7 +218,7 @@ export default function OppstartPage() {
                     checked={extras.has(m.key) || m.enabled}
                     disabled={m.enabled}
                     onChange={() => toggle(m.key)}
-                    className="size-4 accent-[#111]"
+                    className="size-4 accent-[var(--ew-ink-utility)]"
                   />
                   {m.label}
                 </label>

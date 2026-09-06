@@ -201,7 +201,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
   it('speiler hard-fasit i docs/', () => {
     const hard = les('../../../docs/endwise-forhandler-hjem-apple-hard-fasit.md');
     const fasit = les('../../../docs/endwise-forhandler-hjem-apple-fasit.md');
-    expect(hard).toMatch(/parchment `#f5f5f7`/);
+    expect(hard).toMatch(/ash `#f3f4f6`/);
     expect(hard).toMatch(/touch-action: manipulation/);
     expect(hard).toMatch(/Timeplan\|Rapporter/);
     expect(hard).toMatch(/Don’t touch PhoneShell/);

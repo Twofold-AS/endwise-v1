@@ -73,7 +73,7 @@ export function NivaaValg({
                   value={n.key}
                   checked={aktiv}
                   onChange={() => onChange(n.key)}
-                  className="size-4 accent-[#111]"
+                  className="size-4 accent-[var(--ew-ink-utility)]"
                   required
                 />
                 <span className="text-label text-fg">{n.name}</span>
@@ -135,7 +135,7 @@ export function TilleggListe({
                 type="checkbox"
                 checked={valgte.has(t.key)}
                 onChange={() => onToggle(t.key)}
-                className="size-4 accent-[#111]"
+                className="size-4 accent-[var(--ew-ink-utility)]"
               />
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-label">{t.name}</span>

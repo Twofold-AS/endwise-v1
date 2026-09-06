@@ -15,8 +15,8 @@ Gjelder forhandlerens destinasjonskort på `/dashboard` og `/verkstedet`
 
 - **Telefon:** store kort-hjem (ikke sidebar-liste, ikke bunnbar).
 - **Desktop:** samme destinasjonskort i innholdskolonnen. Sidebar urørt.
-- **Tokens:** parchment `#f5f5f7`, surface `#fff`, ink `#1d1d1f`, muted `#7a7a7a`,
-  hairline `#e0e0e0`. Action Blue `#0066cc` sparsomt. Inter. Ingen chrome-skygg.
+- **Tokens:** ash `#f3f4f6`, surface `#fff`, ink `#1c1d1f`, muted `#8f99a8`,
+  stone/slate `#e4e7ec` / `#d3d8df`. Action Blue `#407ff2` på lenker. Inter. Ingen chrome-skygg.
 
 ## Hero — Verkstedet (full bredde)
 

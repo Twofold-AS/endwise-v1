@@ -72,7 +72,7 @@ export function PhoneKort({
           <ChevronRight
             size={16}
             strokeWidth={1.75}
-            className="shrink-0 text-primary"
+            className="shrink-0 text-accent-strong"
             aria-hidden
           />
         ) : null}

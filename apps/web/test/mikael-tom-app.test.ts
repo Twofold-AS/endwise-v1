@@ -162,7 +162,7 @@ describe('Mikael 02.09 — Ronny sentrert, Galaxy på Oppgrader', () => {
     expect(pille).toMatch(/rotationSpeed=\{0\.1\}/);
     expect(pille).toMatch(/\btransparent\b/);
     expect(pille).toMatch(/overflow-hidden/);
-    expect(pille).toMatch(/bg-\[#111\]/);
+    expect(pille).toMatch(/bg-primary/);
     expect(pille).toMatch(/relative z-10/);
     expect(pille).not.toMatch(/pointer-events-none absolute inset-0/);
     expect(pille).not.toMatch(/1080/);

@@ -407,7 +407,7 @@ bruker `logo.svg` uten markeds-masken. `--primary` / `--ew-ink-utility` er **ink
 Ikke grønn, ikke roadmap-rød `#EE2924`. ⛔ Ronny-kropp.
 
 `--ew-success` (`#15B042` / `#1ED27D` i mørkt) er informasjon, ikke knappfarge.
-`--ew-accent-soft` = **`#e8f1fb`** i lyst tema (aksentfylt flate).
+`--ew-accent-soft` = **`#e8effc`** i lyst tema (Action Blue-fylt flate).
 
 matrix-loaders fargelegges med `color="var(--ew-accent-strong)"` (se §4) — aldri med `colorPreset`,
 som er hardkodede farger fra oppstrøms.

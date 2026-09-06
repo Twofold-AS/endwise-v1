@@ -16,6 +16,8 @@ export const tokenNames = [
   'ew-accent',
   'ew-accent-fg',
   'ew-accent-dim',
+  'ew-focus',
+  'ew-ink-utility',
   'ew-warn',
   'ew-danger',
   'ew-success',

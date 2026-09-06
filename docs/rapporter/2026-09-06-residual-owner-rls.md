@@ -50,6 +50,8 @@ Context7 MCP krevde auth i denne økten — ikke brukt. Mønsteret er identisk m
 
 Live SET ROLE skippes uten `DATABASE_URL` i denne VM (samme som 0042/0043).
 
+CI på #140 er rød på **samme tre sjekker som main** (`0f60e4e` / #139): Biome i `packages/ui` (17 feil, ikke 0044), transitive `pnpm audit` high (`browserslist`), ZAP mot `example.invalid`. CodeQL + Semgrep grønne. Ingen nye deps.
+
 ---
 
 ## 3. Hvilke fikser ble gjort

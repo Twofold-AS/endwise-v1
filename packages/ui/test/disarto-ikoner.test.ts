@@ -60,6 +60,13 @@ describe('Disarto Regular — kuratert chrome (F5-20)', () => {
     }
   });
 
+  it('beholder lucide-eksportene som appen fortsatt importerer', () => {
+    for (const navn of ['PanelRightClose', 'PanelRightOpen', 'MessageSquarePlus', 'Plus']) {
+      expect(barrel).toMatch(new RegExp(`\\b${navn}\\b`));
+      expect(generert).not.toMatch(`export const ${navn}`);
+    }
+  });
+
   it('lucide-blokka har sluppet erstattede chrome-ikoner', () => {
     const lucideBlokk = barrel.slice(0, barrel.indexOf("from 'lucide-react'"));
     for (const navn of [

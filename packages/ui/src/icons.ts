@@ -47,6 +47,8 @@ export {
   Newspaper,
   PanelLeftClose,
   PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   Plug,
   Plus,
   Sailboat,

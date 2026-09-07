@@ -157,7 +157,7 @@ describe('Forhandler-info uten Grainient', () => {
   });
 });
 
-describe('telefon-toppbar og sidebar-overlay', () => {
+describe('telefon-toppbar og skjult sidebar', () => {
   it('ingen PhoneBevel — profil/logg ut bor i samme sidebar som desktop', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
@@ -171,13 +171,14 @@ describe('telefon-toppbar og sidebar-overlay', () => {
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
   });
 
-  it('logo til venstre, åpne-sidebar-ikon ytterst til høyre, tilbake er history', () => {
+  it('logo til venstre, søk, Ronny og profil — dest-piller i top-bar 2', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/data-phone-sidebar-open/);
-    expect(shell).toMatch(/PanelLeftOpen/);
-    expect(shell).toMatch(/TilbakePil/);
-    expect(shell).toMatch(/router\.back\(\)/);
-    expect(shell).toMatch(/aria-label="Tilbake"/);
+    expect(shell).not.toMatch(/data-phone-sidebar-open/);
+    expect(shell).not.toMatch(/PanelLeftOpen/);
+    expect(shell).not.toMatch(/TilbakePil/);
+    expect(shell).toMatch(/data-phone-search/);
+    expect(shell).toMatch(/data-phone-profile/);
+    expect(shell).toMatch(/data-phone-dest/);
     expect(shell).not.toMatch(/ChevronLeft/);
   });
 });

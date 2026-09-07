@@ -28,7 +28,7 @@ const IDAG_KEYS = new Set<PhoneKortKey>(['timeplan', 'statistikk', 'innboks', 'j
 
 /**
  * Forhandlerens destinasjonskort — telefon-hjem og desktop-hjem.
- * Jonas hard-fasit: parchment-scroll, hero-plate, 2-og-2, ærlig tomtilstand.
+ * Mobbin-kort: 24px, tint-fill hero, hairline-soft dest, 2-og-2, ærlig tomtilstand.
  */
 export function useDealerHjemKort() {
   const { shopEnabled, tenantName } = useOrgRole();
@@ -113,7 +113,7 @@ export function DealerDestinasjonskort({
               variant="hero"
               meta={tomDag ? HJEM_KORT_TOM.hero : undefined}
             >
-              <div className="grid grid-cols-3 divide-x divide-border">
+              <div className="grid grid-cols-3 divide-x divide-divide">
                 <HeroTall label="I dag" verdi={hero.idag} laster={bookings.isLoading} />
                 <HeroTall label="Pågår" verdi={hero.paagaar} laster={bookings.isLoading} />
                 <HeroTall label="Fullført" verdi={hero.fullfort} laster={bookings.isLoading} />

@@ -13,7 +13,7 @@ function utenKommentarer(kilde: string) {
   return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
 
-describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () => {
+describe('Mikael telefon-chrome — to toppbarer, sidebar skjult (07.09.2026)', () => {
   const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
   const state = utenKommentarer(les('../app/(app)/_shell/sidebar-state.tsx'));
   const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
@@ -23,44 +23,52 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
   const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
   const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
 
-  it('telefon-toppbar er fast, logo midt, åpne-ikon ytterst til høyre', () => {
+  it('telefon-chrome er to faste toppbarer: merke, søk, Ronny, profil + dest-piller', () => {
     expect(shell).toMatch(/data-phone-top-bar/);
+    expect(shell).toMatch(/data-phone-top-bar="1"/);
+    expect(shell).toMatch(/data-phone-top-bar="2"/);
+    expect(shell).toMatch(/data-phone-search/);
+    expect(shell).toMatch(/data-phone-profile/);
+    expect(shell).toMatch(/data-phone-dest/);
+    expect(shell).toMatch(/data-ronny-avatar/);
     expect(shell).toMatch(/fixed inset-x-0 top-0 z-\[60\]/);
     expect(shell).toMatch(/md:hidden/);
-    expect(shell).toMatch(/data-phone-sidebar-open/);
-    expect(shell).toMatch(/PanelLeftOpen/);
-    expect(shell).toMatch(/data-shell-tilbake/);
-    expect(chrome).toMatch(/justify-between/);
+    expect(shell).toMatch(/rounded-sm/);
+    expect(shell).toMatch(/bg-inset/);
+    expect(shell).toMatch(/border-0/);
+    expect(shell).toMatch(/rounded-full/);
+    expect(shell).toMatch(/bg-sidebar-active/);
+    expect(shell).not.toMatch(/border-l-|accent-pip|border-left/);
+    expect(shell).not.toMatch(/data-phone-sidebar-open/);
+    expect(shell).not.toMatch(/PanelLeftOpen|PanelLeftClose/);
+    expect(shell).not.toMatch(/data-shell-tilbake|TilbakePil/);
     expect(shell).not.toMatch(/PhoneBevel|BEVEL/);
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).not.toMatch(/PhoneBevel/);
     expect(chrome).toMatch(/SHELL_LOGO_PX = 24/);
+    expect(chrome).toMatch(/PHONE_AVATAR_PX = 40/);
     expect(chrome).toMatch(/SHELL_HEADER_RAD/);
-    expect(chrome).toMatch(/flex h-row w-full items-center justify-between gap-2 px-3/);
     expect(header).toMatch(/SHELL_LOGO_PX/);
     expect(header).toMatch(/SHELL_LOGO_WRAP/);
-    expect(header).not.toMatch(/justify-between px-1/);
-    expect(shell).toMatch(/PHONE_LOGO_PX/);
+    expect(shell).toMatch(/PHONE_LOGO_PX|PHONE_AVATAR_PX/);
     expect(shell).toMatch(/h-row/);
     expect(shell).toMatch(/data-shell-logo/);
-    expect(shell).toMatch(/absolute inset-0/);
+    expect(shell).not.toMatch(/absolute inset-0/);
     expect(sidebar).toMatch(/SHELL_HEADER_RAD/);
     expect(sidebar).toMatch(/data-shell-header/);
     expect(sidebar).toMatch(/hidden shrink-0 md:flex/);
     expect(shell).toMatch(/data-phone-top-bar-spacer/);
-    expect(shell).toMatch(/PanelLeftClose/);
+    expect(shell).toMatch(/data-phone-chrome-hairline|h-px bg-border/);
     expect(sidebar).not.toMatch(/min-h-10 shrink-0 items-center py-2/);
   });
 
-  it('sidebar er lukket som default på telefon og dekker hele viewport når åpen', () => {
+  it('sidebar er skjult på telefon og fast skinne på md+', () => {
     expect(state).toMatch(/useState\(false\)/);
     expect(state).toMatch(/phoneOpen/);
-    expect(state).toMatch(/openPhone/);
-    expect(state).toMatch(/closePhone/);
-    expect(sidebar).toMatch(/data-phone-sidebar=\{phoneOpen \? 'open' : 'closed'\}/);
-    expect(sidebar).toMatch(/fixed inset-x-0 bottom-0 z-50 flex w-full/);
-    expect(sidebar).toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
-    expect(sidebar).toMatch(/phoneOpen[\s\S]*hidden/);
+    expect(sidebar).toMatch(/data-phone-sidebar="closed"/);
+    expect(sidebar).not.toMatch(/fixed inset-x-0 bottom-0 z-50 flex w-full/);
+    expect(sidebar).not.toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
+    expect(sidebar).toMatch(/hidden/);
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/md:static/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
@@ -69,14 +77,17 @@ describe('Mikael telefon-chrome — samme sidebar som desktop (01.09.2026)', () 
     expect(sidebar).not.toMatch(/bg-\[#ffffff\]/);
     expect(sidebar).toMatch(/OppgraderPille/);
     expect(sidebar).not.toMatch(/<TipCard/);
-    expect(sidebar).not.toMatch(/hidden md:block/);
-    expect(sidebar).toMatch(/smal = collapsed && !phoneOpen/);
+    expect(sidebar).toMatch(/smal = collapsed/);
+    expect(sidebar).not.toMatch(/smal = collapsed && !phoneOpen/);
   });
 
   it('ingen mer-ark, bunnfane, hamburger-drawer eller kort-som-meny', () => {
     expect(layout).not.toMatch(/PhoneNav|PhoneBevel|Mer-ark|bottom-tab|PhoneTab/);
     expect(shell).not.toMatch(/hamburger|\bMenu\b|visningsvelger/i);
     expect(shell).not.toMatch(/<Sheet|PhoneNav/);
+    expect(shell).toMatch(/navForShell/);
+    expect(shell).toMatch(/itemsForRole/);
+    expect(shell).toMatch(/isItemActive/);
     expect(sidebar).toMatch(/FORHANDLER_NAV|navForShell/);
   });
 

@@ -19,6 +19,10 @@ Live `/home`-chrome er auth-låst i dette miljøet. Lys/mørk verifiseres på of
 - Tester som låste Synara/Geist/Attio-hex er oppdatert.
 - `#0066ff` ligger ikke på CTA, switch, fokus eller sidebar.
 
+## Telefon-chrome (samme dag, samme PR)
+
+Se `docs/rapporter/2026-09-07-mobbin-telefon-chrome.md`. To toppbarer, sidebar skjult på smalt, Mobbin-hjemkort 24px. Desktop urørt.
+
 ## Neste
 
 - Jonas visual GO på draft-PR (ikke merge).

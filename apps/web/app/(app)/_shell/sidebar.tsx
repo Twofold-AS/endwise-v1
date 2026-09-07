@@ -4,7 +4,7 @@ import type { LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Fragment, useEffect, useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 import { TemaToggle } from '@/app/_lib/tema-toggle';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
@@ -37,9 +37,9 @@ const IKON_DESKTOP = 20;
 
 /**
  * Desktop: persistent venstre skinne (alltid synlig, innhold ved siden).
- * Ingen collapse/expand på desktop. Telefon: fullskjerm-overlay, lukket
- * default, åpnes fra PhoneShell. Mobbin canvas. Hjelp-TipCard er ute;
- * nederst sitter Galaxy-oppgraderingspillen.
+ * Ingen collapse/expand på desktop. Telefon: sidebaren er skjult
+ * (`hidden md:flex`) — destinasjoner bor i PhoneShell top-bar 2.
+ * Mobbin canvas. Hjelp-TipCard er ute; nederst Galaxy-oppgraderingspillen.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -59,8 +59,8 @@ export function Sidebar() {
   const inspectSlug = verkstedSlugFromPath(pathname);
   const fra = searchParams?.get('fra') ?? null;
   const inspectTilbake = tilbakeHref(fra);
-  const { collapsed, phoneOpen, closePhone } = useSidebarState();
-  const smal = collapsed && !phoneOpen;
+  const { collapsed } = useSidebarState();
+  const smal = collapsed;
 
   const shell = inspect
     ? 'forhandler'
@@ -108,15 +108,6 @@ export function Sidebar() {
     return (threads.data ?? []).reduce((sum, t) => sum + (t.unread ?? 0), 0);
   }, [shell, support.data, threads.data]);
 
-  useEffect(() => {
-    if (!phoneOpen) return;
-    const onEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closePhone();
-    };
-    document.addEventListener('keydown', onEscape);
-    return () => document.removeEventListener('keydown', onEscape);
-  }, [phoneOpen, closePhone]);
-
   /**
    * hard navigasjon, ikke `router.push`.
    * `router.push` beholder dokumentet — og dermed hele React Query-cachen med
@@ -136,11 +127,9 @@ export function Sidebar() {
     <aside
       data-sidebar
       data-shell-box="1"
-      data-phone-sidebar={phoneOpen ? 'open' : 'closed'}
-      className={`flex-col border-border border-r bg-sidebar ${
-        phoneOpen
-          ? `fixed inset-x-0 bottom-0 z-50 flex w-full top-[calc(env(safe-area-inset-top)+var(--ew-row-h))] pb-[env(safe-area-inset-bottom)] md:static md:inset-auto md:top-auto md:z-auto ${smal ? 'md:w-[52px]' : 'md:w-[389px]'}`
-          : `hidden md:flex md:static ${smal ? 'md:w-[52px]' : 'md:w-[389px]'}`
+      data-phone-sidebar="closed"
+      className={`hidden flex-col border-border border-r bg-sidebar md:static md:flex ${
+        smal ? 'md:w-[52px]' : 'md:w-[389px]'
       }`}
     >
       {smal ? (
@@ -207,7 +196,6 @@ export function Sidebar() {
                   unread={unread}
                   helpdesk={helpdeskUlest.data ?? 0}
                   collapsed={smal}
-                  onNavigate={phoneOpen ? closePhone : undefined}
                 />
               </Fragment>
             );
@@ -238,7 +226,6 @@ export function Sidebar() {
               settingsNav?.href ??
               (shell === 'mekaniker' ? '/min-dag/meg' : '/innstillinger/profil')
             }
-            onNavigate={phoneOpen ? closePhone : undefined}
           />
         </div>
       </div>

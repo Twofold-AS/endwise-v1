@@ -119,15 +119,15 @@ describe('Mikael 02.09 — Endwise-admin landing og nav', () => {
   });
 });
 
-describe('Mikael 02.09 — desktop-sidebar er skinne, overlay bare telefon', () => {
-  it('md+ er persistent rail, telefon er overlay', () => {
+describe('Mikael 02.09 — desktop-sidebar er skinne, skjult på telefon', () => {
+  it('md+ er persistent rail, telefon skjuler sidebaren', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/md:static/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
-    expect(sidebar).toMatch(/fixed inset-x-0 bottom-0/);
-    expect(sidebar).toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
+    expect(sidebar).not.toMatch(/fixed inset-x-0 bottom-0/);
+    expect(sidebar).not.toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
     expect(sidebar).not.toMatch(/fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
     expect(shell).toMatch(/md:hidden/);
@@ -135,12 +135,11 @@ describe('Mikael 02.09 — desktop-sidebar er skinne, overlay bare telefon', () 
 });
 
 describe('Mikael 02.09 — Ronny sentrert, Galaxy på Oppgrader', () => {
-  it('telefon-logo er midtstilt i toppbaren, uten Ronny-stripe', () => {
+  it('telefon-logo er merke til venstre, uten Ronny-stripe', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
     expect(shell).toMatch(/data-shell-logo/);
-    expect(shell).toMatch(/absolute inset-0/);
-    expect(shell).toMatch(/justify-center/);
+    expect(shell).not.toMatch(/absolute inset-0/);
     expect(fab).not.toMatch(/data-workshop-cluster/);
     expect(fab).not.toMatch(/Trykk på KI-Ronny/);
     expect(fab).not.toMatch(/IDLE_TEKST/);

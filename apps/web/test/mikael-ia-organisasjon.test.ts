@@ -182,9 +182,9 @@ describe('Mikael IA — shell-chrome og telefon', () => {
   const hscroll = utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'));
   const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
 
-  it('minimize sitter i sidebaren, ikke i top-bar 1', () => {
+  it('minimize sitter ikke i top-bar 1; telefon har ikke sidebar-toggle', () => {
     expect(header).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
-    expect(shell).toMatch(/PanelLeftClose|PanelLeftOpen/);
+    expect(shell).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(top).not.toMatch(/PanelLeftClose|PanelLeftOpen/);
     expect(header).toMatch(/SHELL_LOGO_PX|width=\{24\}|width=\{LOGO\}/);
     expect(header).toMatch(/logo\/logo\.svg/);
@@ -206,7 +206,7 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(rad).toMatch(/LogOut/);
   });
 
-  it('telefon: fast toppbar + samme sidebar som overlay, ingen bevel/Mer-ark', () => {
+  it('telefon: to toppbarer + dest-piller, sidebar skjult, ingen bevel/Mer-ark', () => {
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).not.toMatch(/PhoneBevel/);
     expect(layout).not.toMatch(/PhoneNav/);
@@ -218,17 +218,20 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(shell).toMatch(/bg-fg/);
     expect(shell).not.toMatch(/logo-invert/);
     expect(shell).toMatch(/PHONE_SAFE_TOP/);
-    expect(shell).toMatch(/data-phone-sidebar-open/);
-    expect(shell).toMatch(/PanelLeftOpen/);
+    expect(shell).not.toMatch(/data-phone-sidebar-open/);
+    expect(shell).not.toMatch(/PanelLeftOpen/);
+    expect(shell).toMatch(/data-phone-search/);
+    expect(shell).toMatch(/data-phone-dest/);
     expect(chrome).toMatch(/justify-between/);
-    expect(shell).toMatch(/data-shell-tilbake/);
+    expect(shell).not.toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/PHONE_SAFE_BUNN/);
-    expect(shell).not.toMatch(/PhoneHScroll|hamburger|\bMenu\b|Handlinger|QUICK_ACTIONS/i);
+    expect(shell).toMatch(/PhoneHScroll/);
+    expect(shell).not.toMatch(/hamburger|\bMenu\b|Handlinger|QUICK_ACTIONS/i);
     expect(shell).not.toMatch(/recolor|filter:/);
     expect(shell).not.toMatch(/TipCard|helpdesk-slider|visningsvelger/i);
-    expect(sidebar).toMatch(/data-phone-sidebar/);
-    expect(sidebar).toMatch(/fixed inset-x-0 bottom-0/);
-    expect(sidebar).toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
+    expect(sidebar).toMatch(/data-phone-sidebar="closed"/);
+    expect(sidebar).not.toMatch(/fixed inset-x-0 bottom-0/);
+    expect(sidebar).not.toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
     expect(sidebar).not.toMatch(/fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
     expect(sidebar).toMatch(/md:flex/);

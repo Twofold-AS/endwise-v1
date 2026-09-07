@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-07 — F5-13 / F5-01 Mobbin telefon-chrome (to toppbarer)
+
+**Type:** telefon-chrome-restyle. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael CODE-GO (phone chrome lock — superseder overlay/toggle/hjem-kort-only).
+**Endring:** **F5-13** done (telefon: sidebar skjult; top-bar 1 merke+søk+Ronny+profil; top-bar 2 dest-piller; hårlinje; Mobbin-kort 24px). **F5-01** note (telefon-overlay borte). Desktop 389/598/452 urørt. Mobbin-fargelås urørt. ⛔ nye destinasjoner. ⛔ #114/#119.
+
+---
+
 ## 2026-09-07 — F0-11 / F5-10 / F5-13 / F5-35 Mobbin design lock
 
 **Type:** token-remap + chrome/landing-restyle. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

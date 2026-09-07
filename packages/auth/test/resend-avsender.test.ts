@@ -1,5 +1,10 @@
 import { createHmac } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
+import { byggEnrollIdentifier, byggEnrollSesjon, erEnrollIdentifier } from '../src/enroll.ts';
+import { erProduktDestinasjon } from '../src/produkt-destinasjon.ts';
 import {
   avsenderErKanonisk,
   erEnkelEpost,
@@ -7,13 +12,8 @@ import {
   RESEND_FROM_KANONISK,
   stripCrLf,
 } from '../src/resend-avsender.ts';
-import { byggEnrollIdentifier, byggEnrollSesjon, erEnrollIdentifier } from '../src/enroll.ts';
-import { erProduktDestinasjon } from '../src/produkt-destinasjon.ts';
 import { krevFerskTotpFraBody, TOTP_STEP_UP_KODE } from '../src/totp-steg.ts';
 import { verifiserTotpKode } from '../src/totp-verify.ts';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const OPPRINNELIG = { ...process.env };
 
@@ -83,12 +83,18 @@ describe('TOTP step-up', () => {
     const teller = Buffer.alloc(8);
     teller.writeBigUInt64BE(BigInt(counter));
     const hmac = createHmac('sha1', hemmelighet).update(teller).digest();
-    const offset = hmac[hmac.length - 1]! & 15;
+    const siste = hmac.at(-1);
+    if (siste === undefined) {
+      throw new Error('hotp-test: digest for kort');
+    }
+    const offset = siste & 15;
+    const b = (i: number) => {
+      const v = hmac.at(offset + i);
+      if (v === undefined) throw new Error('hotp-test: digest for kort');
+      return v;
+    };
     const trunkert =
-      ((hmac[offset]! & 127) << 24) |
-      ((hmac[offset + 1]! & 255) << 16) |
-      ((hmac[offset + 2]! & 255) << 8) |
-      (hmac[offset + 3]! & 255);
+      ((b(0) & 127) << 24) | ((b(1) & 255) << 16) | ((b(2) & 255) << 8) | (b(3) & 255);
     const kode = (trunkert % 1_000_000).toString().padStart(6, '0');
     expect(verifiserTotpKode(hemmelighet, kode)).toBe(true);
     expect(verifiserTotpKode(hemmelighet, '000000')).toBe(false);

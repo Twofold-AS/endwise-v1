@@ -13,6 +13,17 @@ export {
   type DisclosureLocale,
   HumanHandoverNotice,
 } from './compliance/ai-disclosure.tsx';
+// Amicro dither charts — produkt-grafer på Analyse/Rapporter (ui-pakker §2)
+export {
+  DitherDonutChart,
+  type DitherDonutSlice,
+  DitherGrowthChart,
+  type DitherRevenueSeries,
+  type DitherStackedBand,
+  DitherStackedChart,
+  type DitherStackedRow,
+  RevenueLineChart,
+} from './components/amicro.ts';
 // Endwise-primitiver (F0-12)
 export {
   Avatar,
@@ -32,17 +43,6 @@ export {
 export { Badge, type BadgeProps, badgeVariants } from './components/badge.tsx';
 // shadcn/ui — struktur
 export { Button, buttonVariants } from './components/button.tsx';
-// Amicro dither charts — produkt-grafer på Analyse/Rapporter (ui-pakker §2)
-export {
-  DitherDonutChart,
-  type DitherDonutSlice,
-  DitherGrowthChart,
-  type DitherRevenueSeries,
-  type DitherStackedBand,
-  DitherStackedChart,
-  type DitherStackedRow,
-  RevenueLineChart,
-} from './components/amicro.ts';
 // Recharts via shadcn Chart-mønsteret — beholdt for kallsteder som ikke er byttet
 export {
   Area,
@@ -88,15 +88,6 @@ export {
 } from './components/dropdown-menu.tsx';
 export { Galaxy, type GalaxyProps } from './components/galaxy.tsx';
 export { Grainient, type GrainientProps } from './components/grainient.tsx';
-export {
-  type ChatStatus,
-  type PromptInputMessage,
-  PromptInput,
-  PromptInputBody,
-  PromptInputFooter,
-  PromptInputSubmit,
-  PromptInputTextarea,
-} from './components/prompt-input.tsx';
 // shadcn/ui — chat (ui-pakker §9). Hentet.
 export {
   Message,
@@ -157,6 +148,15 @@ export {
   StatefulButton,
   type StatefulButtonProps,
 } from './components/motion/button/stateful.tsx';
+export {
+  type ChatStatus,
+  PromptInput,
+  PromptInputBody,
+  PromptInputFooter,
+  type PromptInputMessage,
+  PromptInputSubmit,
+  PromptInputTextarea,
+} from './components/prompt-input.tsx';
 export {
   Questionnaire,
   QuestionnaireActions,

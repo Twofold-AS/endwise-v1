@@ -181,9 +181,9 @@ describeDb('Team-detalj — adminhandlinger', () => {
   it('⛔ leder kan ikke endre e-post uten fersk TOTP', async () => {
     const api = appRouter.createCaller(ctx(LEDER, 'dealer_admin'));
     const ny = `kari-${tenantA.slice(0, 8)}@verksted.test`;
-    await expect(api.team.endreEpost({ userId: ANSATT, epost: ny, totp: '000000' })).rejects.toThrow(
-      /fersk kode|FORBIDDEN|TOTP/i,
-    );
+    await expect(
+      api.team.endreEpost({ userId: ANSATT, epost: ny, totp: '000000' }),
+    ).rejects.toThrow(/fersk kode|FORBIDDEN|TOTP/i);
     const [rad] = await owner
       .select({ id: schema.user.id, email: schema.user.email })
       .from(schema.user)

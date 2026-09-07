@@ -41,7 +41,9 @@ describe('TOTP enable med ekte sesjon (Mikael 02.09)', () => {
       KREDENTIAL_MUTASJON_GENERISK_MELDING,
     );
     expect(norskTotpEnableFeil({ message: 'INVALID_ORIGIN' })).toMatch(/adresse|opprinnelse|last/i);
-    expect(norskTotpEnableFeil({ code: 'UNAUTHORIZED' })).toMatch(/Logg inn først|innlogget|sesjon/i);
+    expect(norskTotpEnableFeil({ code: 'UNAUTHORIZED' })).toMatch(
+      /Logg inn først|innlogget|sesjon/i,
+    );
     expect(norskTotpEnableFeil({ message: 'CSRF token mismatch' })).toMatch(/last|prøv/i);
     expect(norskTotpEnableFeil({ message: 'Kunne ikke bekrefte handlingen.' })).not.toBe(
       KREDENTIAL_MUTASJON_GENERISK_MELDING,

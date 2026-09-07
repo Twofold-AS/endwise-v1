@@ -1,5 +1,7 @@
 /**
  * Mikael desktop three-column lock.
+ * Synara 07.09.2026: geometri uendret (389 / 598 / 452). Kun flate/hårlinje
+ * /seksjonsetikett — ingen ny kolonnebredde.
  * Sidebar 389 · content 598 · standby 452. Non-sidebar axis = 1050.
  * Top-bars over box 2 and box 3 are 53px. Phone overlay is unchanged
  * except shared `md:` sizes on the same Sidebar.

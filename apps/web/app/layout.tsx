@@ -1,21 +1,27 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Inter, JetBrains_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { TEMA_SKRIPT } from './(app)/_lib/tema';
 import { Providers } from './providers';
 import './globals.css';
 
 /*
- * Typografi — inter (eierens designprinsipper). Erstatter Google
- * Sans Flex. Inter er sil Open Font License, variabel (hele wght-aksen), og
- * finnes i next/font-katalogen med ekte fallback-metrics — derfor trenger den
- * ikke `adjustFontFallback: false` slik forgjengeren gjorde.
- * Selvhostet ved build: ingen fout, ingen layout-shift, ingen runtime-kall til
- * Google. Mono: JetBrains Mono (ofl) — beholdt for tall og tabeller.
- * Skalaen (16/20 titler, 13/16 labels, 14 brødtekst) bor i
- * `packages/ui/src/theme.css` som `text-title`/`text-label`/`text-body` — ikke
- * her, og ikke som løse utilities i komponentene.
+ * Synara-typografi: Geist + Geist Mono (next/font, selvhostet).
+ * Inter og JetBrains Mono lastes som fallback-variabler — ikke primær UI-font.
  */
-const sans = Inter({
+const geistSans = Geist({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-geist-sans',
+  display: 'swap',
+});
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+  display: 'swap',
+});
+
+const inter = Inter({
   subsets: ['latin', 'latin-ext'],
   variable: '--font-inter',
   display: 'swap',
@@ -31,27 +37,35 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Endwise — Verkstedet, samlet.',
   description: 'Booking, innboks og jobber i ett system for MC-, båt- og ATV-verkstedet.',
-  // Ios «Legg til på Hjem-skjerm» (Apple bruker ikke manifest fullt ut).
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Endwise' },
 };
 
-// PWA-tema (Next 14+: themeColor hører til viewport, ikke metadata).
-// Pinch-zoom beholdes. iOS-fokuszoom fikses med felt ≥16px, ikke viewport-tak.
 export const viewport: Viewport = {
-  themeColor: '#ffffff',
-  colorScheme: 'light',
-  // Chrome/iOS: uten cover er env(safe-area-inset-*) 0 og 100vh går under UI.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f5f4f2' },
+    { media: '(prefers-color-scheme: dark)', color: '#121110' },
+  ],
+  colorScheme: 'light dark',
   viewportFit: 'cover',
+  // Pinch-zoom beholdes. Ingen zoom-lås i viewport.
 };
 
 /**
- * Produktet er lys-only. Ingen tema-toggle, ingen localStorage-sti til dark.
- * `data-theme="light"` er låst — widget-tokens har fortsatt dark-blokken
- * for eventuell widget, men appen har ingen bruker-sti dit.
+ * Dual theme: FOUC-skript setter `.dark` + `data-theme` før paint.
+ * Uten lagret valg følger vi `prefers-color-scheme`.
  */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="nb" data-theme="light" className={`${sans.variable} ${mono.variable}`}>
+    <html
+      lang="nb"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${mono.variable}`}
+    >
+      <head>
+        {/* FOUC: setter .dark / data-theme før paint. Konstant, ikke brukerinput. */}
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: statisk tema-skript */}
+        <script dangerouslySetInnerHTML={{ __html: TEMA_SKRIPT }} />
+      </head>
       <body className="bg-bg font-sans text-body text-fg antialiased">
         <Providers>{children}</Providers>
       </body>

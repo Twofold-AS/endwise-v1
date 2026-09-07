@@ -1,8 +1,9 @@
 import type { Route } from 'next';
 import Link from 'next/link';
+import { TemaToggle } from '@/app/_lib/tema-toggle';
 import { CTA_PRIMAR, CTA_SEKUNDAR } from './cta';
 import { DEMO_LENKE } from './demo';
-import { CTA_PRIMAR_TEKST, FOOTER_LENKER } from './innhold';
+import { CTA_PRIMAR_TEKST, FOOTER_LENKER, NAV_LENKER } from './innhold';
 
 /** Offentlig merke: ink (`bg-fg`). Dealer bruker /logo/logo.svg uten denne masken. */
 export function Merke({ storrelse = 22 }: { storrelse?: number }) {
@@ -56,7 +57,8 @@ export function LoggInnLenke({ className = CTA_SEKUNDAR }: { className?: string 
 }
 
 /**
- * Topp: logo + Logg inn + primær CTA. Ikke sticky, ikke megameny.
+ * Topp: logo + destinasjoner + tema + Logg inn + primær CTA.
+ * Ikke sticky, ikke megameny.
  */
 export function MarkedsNav() {
   return (
@@ -64,7 +66,24 @@ export function MarkedsNav() {
       <Link href={'/' as Route} className="shrink-0" aria-label="Endwise — forside">
         <Merke />
       </Link>
+      <nav
+        className="hidden items-center gap-6 text-[13px] text-fg-muted md:flex"
+        aria-label="Marked"
+      >
+        {NAV_LENKER.map((l) =>
+          l.href.startsWith('#') ? (
+            <a key={l.href} href={l.href} className="hover:text-fg">
+              {l.tekst}
+            </a>
+          ) : (
+            <Link key={l.href} href={l.href as Route} className="hover:text-fg">
+              {l.tekst}
+            </Link>
+          ),
+        )}
+      </nav>
       <nav className="flex items-center gap-1 sm:gap-2" aria-label="Konto">
+        <TemaToggle />
         <LoggInnLenke />
         <PrimarCtaLenke />
       </nav>
@@ -74,7 +93,7 @@ export function MarkedsNav() {
 
 export function MarkedsFooter() {
   return (
-    <footer className="flex flex-col gap-8 border-border border-t pt-10 pb-16">
+    <footer className="flex flex-col gap-8 border-divide border-t pt-10 pb-16">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Merke storrelse={18} />
         <nav

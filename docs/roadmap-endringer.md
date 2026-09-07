@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-07 — F0-11 / F5-10 / F5-13 / F5-35 Synara dual theme
+
+**Type:** token-remap + chrome/landing-restyle. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael CODE-GO etter #147-revert (Linear/Disarto).
+**Endring:** **F0-11** done (Synara-hex). **F5-10** done (dual theme). **F5-13** done (Synara-listemønster, geometri 389/598/452 uendret). **F5-35** done (warm stone landing, ink-pille, ikke Action Blue). Geist via `next/font/google`. ⛔ acid-lime. ⛔ Action Blue som primær. ⛔ Threads/Kanban. ⛔ next-themes.
+
+---
+
 ## 2026-09-06 — F5-18 Amicro dither charts (ikke dither-kit)
 
 **Type:** techstack §2 + UI-pakke. Ingen DB. Ingen 3-kolonne-shell.

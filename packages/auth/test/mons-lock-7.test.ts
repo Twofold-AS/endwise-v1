@@ -127,7 +127,10 @@ describe('Mons lock 1–7 (ikke merge før disse er grønne)', () => {
     ).rejects.toMatchObject({ status: 'FORBIDDEN', body: { code: 'PASSWORD_DISABLED' } });
     await expect(
       byttPassordForHook({ path: TO_FAKTOR_DISABLE_STI, body: {} } as never),
-    ).rejects.toMatchObject({ status: 'FORBIDDEN', body: { code: 'TWO_FACTOR_DISABLE_FORBIDDEN' } });
+    ).rejects.toMatchObject({
+      status: 'FORBIDDEN',
+      body: { code: 'TWO_FACTOR_DISABLE_FORBIDDEN' },
+    });
     expect(existsSync(resolve(her, '../../../apps/web/app/(app)/_shell/bytt-passord.tsx'))).toBe(
       false,
     );

@@ -31,14 +31,14 @@ import { AnalyseKort } from './_kort';
 
 /**
  * Analyse / Rapporter. Forhandlerens egne tall: drift og nettside.
- * Chart-motor: Amicro dither charts (canvas), Attio-seriehex.
+ * Chart-motor: Amicro dither charts (canvas), Synara-seriehex.
  * Alle tall er mock — se `_data.ts` og «Mock»-merket på hvert kort.
  */
-const INK = '#1c1d1f';
-const ACTION = '#407ff2';
-const FOCUS = '#94b9ff';
-const OVERCAST = '#8f99a8';
-const SLATE = '#d3d8df';
+const INK = '#141413';
+const ACTION = '#a43a0a';
+const FOCUS = '#c45a1a';
+const OVERCAST = '#5b5955';
+const SLATE = '#ddd9d3';
 
 const VOLUM_BANDS = [
   { key: 'fullfort', label: 'Fullførte', color: ACTION },

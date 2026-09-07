@@ -1,8 +1,8 @@
 /**
  * Token-kontrakten i TS (navnene er kanoniske, verdiene bor i tokens.css).
- * Verdier bor i tokens.css. Standard er lyst tema. CTA-fyll er ink #1c1d1f;
- * Action Blue #407ff2 er lenker/aktiv. Logogrønnen #1ED27D er merkevare i
- * logo.svg, ikke UI-aksent.
+ * Synara 07.09.2026: CTA-fyll er `--ew-ink-utility` (#1c1917 / mørkt #fafaf9).
+ * Lenker/pip er varm terracotta `#a43a0a` / `#ffb27f`. Inter er fallback.
+ * ⛔ Action Blue. ⛔ acid-lime. Logogrønnen #1ED27D er merkevare i logo.svg.
  */
 export const tokenNames = [
   'ew-bg',
@@ -18,6 +18,9 @@ export const tokenNames = [
   'ew-accent-dim',
   'ew-focus',
   'ew-ink-utility',
+  'ew-sidebar-section',
+  'ew-accent-pip',
+  'ew-divide',
   'ew-warn',
   'ew-danger',
   'ew-success',

@@ -84,10 +84,10 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     expect(MEKANIKER_NAV.map((i) => i.label)).toEqual([
       'Dine jobber',
       'Jobbene mine',
+      'Timeplan',
       'Lager',
       'Butikk',
       'Kompetanse',
-      'Timeplan',
       'Meg',
     ]);
   });

@@ -185,8 +185,6 @@ describe('forkSystemMelding', () => {
     expect(forkSystemMelding({ inviteeNames: ['Kari', 'Ola'], newSubject: 'EU-kontroll' })).toBe(
       'Samtalen ble utvidet med Kari, Ola. Fortsett i «EU-kontroll».',
     );
-    expect(forkSystemMelding({ inviteeNames: [], newSubject: null })).toMatch(
-      /nye gruppesamtalen/,
-    );
+    expect(forkSystemMelding({ inviteeNames: [], newSubject: null })).toMatch(/nye gruppesamtalen/);
   });
 });

@@ -1,22 +1,44 @@
 /**
- * Produktet er lys-only. Ingen bruker-sti til `[data-theme=dark]`.
- * Nøklene beholdes så gammel localStorage ikke kaster — men lesing
- * og skriving tvinger alltid light.
+ * Dual theme (Synara): light | dark | system.
+ * System er default. Eksplisitt valg skrives til localStorage.
+ * På html: både `data-theme` (eksisterende CSS) og klasse `.dark`.
  */
 
-export type Tema = 'light';
+export type Tema = 'light' | 'dark' | 'system';
+export type LosTema = 'light' | 'dark';
 
 export const TEMA_NOKKEL = 'endwise:tema';
 
+export const TEMA_SKRIPT = `(function(){try{var k=${JSON.stringify(TEMA_NOKKEL)};var t=localStorage.getItem(k);var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.dataset.theme=d?'dark':'light';r.classList.toggle('dark',d);}catch(e){document.documentElement.dataset.theme='light';}})();`;
+
 export function lesTema(): Tema {
-  return 'light';
+  if (typeof window === 'undefined') return 'system';
+  try {
+    const v = localStorage.getItem(TEMA_NOKKEL);
+    if (v === 'light' || v === 'dark' || v === 'system') return v;
+  } catch {
+    /* privat modus */
+  }
+  return 'system';
 }
 
-export function settTema(_t: 'light' | 'dark'): void {
+export function losTema(valg: Tema): LosTema {
+  if (valg === 'light' || valg === 'dark') return valg;
+  if (typeof window === 'undefined') return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+export function skrivTemaPaRot(los: LosTema): void {
   if (typeof document === 'undefined') return;
-  document.documentElement.dataset.theme = 'light';
+  const rot = document.documentElement;
+  rot.dataset.theme = los;
+  rot.classList.toggle('dark', los === 'dark');
+}
+
+export function settTema(valg: Tema): void {
+  skrivTemaPaRot(losTema(valg));
   try {
-    localStorage.setItem(TEMA_NOKKEL, 'light');
+    localStorage.setItem(TEMA_NOKKEL, valg);
   } catch {
     /* privat modus */
   }

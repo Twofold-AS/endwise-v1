@@ -169,8 +169,8 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(les('../app/(app)/_workshop/gradual-blur.tsx')).not.toMatch(/from ['"]mathjs['"]/);
     const tokens = les('../../../packages/widget-tokens/src/tokens.css');
     const light = tokens.slice(0, tokens.indexOf('[data-theme="dark"]'));
-    expect(light).toMatch(/--ew-accent:\s*#407ff2/);
-    expect(light).toMatch(/--ew-ink-utility:\s*#1c1d1f/);
+    expect(light).toMatch(/--ew-accent:\s*#a43a0a/);
+    expect(light).toMatch(/--ew-ink-utility:\s*#1c1917/);
     const submit = les('../../../packages/ui/src/components/prompt-input.tsx');
     expect(submit).toMatch(/bg-primary/);
     expect(submit).not.toMatch(/bg-\[#0066cc\]/);

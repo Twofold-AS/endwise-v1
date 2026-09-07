@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Avatar,
-  type AvatarValg,
-  Button,
-  MessageSquare,
-  Trash2,
-} from '@endwise/ui';
+import { Avatar, type AvatarValg, Button, MessageSquare, Trash2 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -15,7 +9,6 @@ import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
 import { useInboxFilter } from '../_shell/inbox-filter';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
-import { NyMeldingIkon } from './_ny-melding-ikon';
 import {
   fmtWhen,
   KIND_LABEL,
@@ -26,6 +19,7 @@ import {
   visningForTraadtype,
 } from './_lib';
 import { useInboxModus } from './_modus';
+import { NyMeldingIkon } from './_ny-melding-ikon';
 
 /**
  * F6-01 / F5-14 — innboksens egen sidebar.

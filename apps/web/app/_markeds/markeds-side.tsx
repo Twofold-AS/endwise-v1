@@ -3,6 +3,7 @@ import {
   BUNN_CTA_TEKST,
   BUNN_CTA_TITTEL,
   H1,
+  HERO_BEVIS,
   HERO_LINJE,
   LOFTER,
   PRIS_FOT,
@@ -34,6 +35,9 @@ export function MarkedsSide() {
             <PrimarCtaLenke />
             <LoggInnLenke />
           </div>
+          <p data-markeds-bevis className="mt-5 text-[13px] text-fg-faint">
+            {HERO_BEVIS}
+          </p>
         </div>
         <div className="mx-auto mt-14 max-w-[1120px]">
           <ProduktRamme slot={BILDE_SLOTS.hero} prioritet />
@@ -41,12 +45,9 @@ export function MarkedsSide() {
       </section>
 
       <section data-markeds-seksjon="lofter" className={`${KOLONNE} pb-20 md:pb-28`}>
-        <ul className="grid gap-4 md:grid-cols-3">
+        <ul className="grid gap-px overflow-hidden rounded-[0.625rem] border border-divide bg-divide md:grid-cols-3">
           {LOFTER.map((kort) => (
-            <li
-              key={kort.tittel}
-              className="flex flex-col gap-3 rounded-[14px] border border-border bg-surface p-7"
-            >
+            <li key={kort.tittel} className="flex flex-col gap-3 bg-surface p-7">
               <h2 className="font-semibold text-[21px] text-fg tracking-tight">{kort.tittel}</h2>
               <p className="text-body text-fg-muted leading-relaxed">{kort.tekst}</p>
             </li>
@@ -55,6 +56,7 @@ export function MarkedsSide() {
       </section>
 
       <section
+        id="produkt"
         data-markeds-seksjon="produkt"
         className={`${KOLONNE} flex flex-col gap-20 pb-20 md:gap-28 md:pb-28`}
       >
@@ -90,20 +92,18 @@ export function MarkedsSide() {
         })}
       </section>
 
-      <section data-markeds-seksjon="pris" className={`${KOLONNE} pb-16 md:pb-24`}>
+      <section id="pris" data-markeds-seksjon="pris" className={`${KOLONNE} pb-16 md:pb-24`}>
         <div className="mx-auto mb-10 max-w-[36em] text-center">
           <h2 className="font-semibold text-[28px] text-fg tracking-tight sm:text-[32px]">Pris</h2>
           <p className="mt-3 text-body text-fg-muted">{PRIS_FOT}</p>
         </div>
-        <ul className="grid gap-4 md:grid-cols-3">
+        <ul className="grid gap-px overflow-hidden rounded-[0.625rem] border border-divide bg-divide md:grid-cols-3">
           {PRIS_KORT.map((kort) => (
             <li
               key={kort.key}
               data-pris-nivaa={kort.key}
               data-pris-valgt={kort.valgt ? 'true' : 'false'}
-              className={`flex flex-col rounded-[14px] border p-7 ${
-                kort.valgt ? 'border-fg bg-surface-2' : 'border-border bg-surface'
-              }`}
+              className={`flex flex-col p-7 ${kort.valgt ? 'bg-surface-2' : 'bg-surface'}`}
             >
               <p className="text-label text-fg">{kort.navn}</p>
               <p className="mt-4 font-semibold text-[36px] text-fg tracking-tight">
@@ -134,7 +134,7 @@ export function MarkedsSide() {
       </section>
 
       <section data-markeds-seksjon="bunn-cta" className={`${KOLONNE} pb-8`}>
-        <div className="flex flex-col items-center gap-5 rounded-[16px] border border-border bg-surface px-6 py-16 text-center">
+        <div className="flex flex-col items-center gap-5 bg-surface px-6 py-16 text-center">
           <h2 className="font-semibold text-[28px] text-fg tracking-tight sm:text-[32px]">
             {BUNN_CTA_TITTEL}
           </h2>

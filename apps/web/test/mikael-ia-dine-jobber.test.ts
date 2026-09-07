@@ -50,10 +50,10 @@ describe('Dine jobber erstatter Min dag', () => {
     expect(MEKANIKER_NAV.map((i) => i.label)).toEqual([
       'Dine jobber',
       'Jobbene mine',
+      'Timeplan',
       'Lager',
       'Butikk',
       'Kompetanse',
-      'Timeplan',
       'Meg',
     ]);
     expect(MEKANIKER_NAV[0]?.href).toBe('/dine-jobber');

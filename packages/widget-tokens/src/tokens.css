@@ -1,173 +1,137 @@
 /*
  * @endwise/widget-tokens.
- * Status: design-prinsipper fra eier. **lyst tema er standard.**
- * Verdiene under er gitt av eier og har forrang over ui-pakker.md der de
- * kolliderer (ui-pakker §5 er oppdatert tilsvarende). Snu det ikke tilbake uten
- * ny beskjed — dette er ikke et forslag, det er spesifikasjonen.
- * Typografi Inter (SF Pro-erstatning). Titler 16/20 Semibold · labels 13/16
- * · brødtekst 17/1.47 Regular. Knapper 32px. CTA-pille 9999px · utility 10px · kort 18px.
- * Attio-farger 06.09.2026 (Mikael): canvas #fff · ash-panel #f3f4f6 · ink #1c1d1f
- * · Action Blue #407ff2 (lenker/aktiv/fokus-tekst) · Focus Blue #94b9ff (ring).
- * CTA-fyll er ink, ikke blå. Null drop-shadow på chrome. Galaxy på Oppgrader urørt.
- * ⛔ Ikke Attio-layout / Fluid / frost (#138). #135/#137-struktur står.
- * Mørkt bakgrunn #000000 · sidebar #1a1a1a · valgt i sidebar #292929
- * Hva som er gitt og hva som er utledet
- * Alt over er gitt. Verdier merket «utledet» under er mine, fordi UI-et trenger
- * dem og spesifikasjonen ikke nevner dem (hårlinjer, hover-flate, kortflate,
- * mørk tekstrampe). De er markert eksplisitt, slik at de er lette å overstyre.
- * Merk: spesifikasjonen har nøyaktig to tekstfarger. `--ew-fg-faint` er derfor
- * aliasert til subtle (#777777) i stedet for at jeg fant på en tredje. Vil du ha
- * et tredje nivå, sett verdien her — ingen komponent trenger å endres.
+ * Status: Synara-språk (Mikael CODE-GO 07.09.2026) etter #147-revert.
+ * Dual theme: lyst + mørkt. Klasse `.dark` og `[data-theme=dark]` er likeverdige.
+ * Standard uten lagret valg: system (`prefers-color-scheme`).
+ *
+ * Lys: page #f5f4f2 · text #141413 / #5b5955 / #66635e · card #fbfaf8
+ *   · elevated #e8e6e2 · mock #ddd9d3 · CTA #1c1917 / #fafaf9
+ *   · lenke #a43a0a · hårlinje color-mix(oklab, text 12%/28%, transparent)
+ * Mørk: page #121110 · text #f5f4f2 / #aaa8a3 · card #1a1918
+ *   · CTA invertert #fafaf9 på #121110 · lenke #ffb27f
+ *
+ * Geist + Geist Mono (Inter / JetBrains Mono er fallback). Radius-base .625rem.
+ * Pille-CTA 9999px. Hårlinjer > skygge. ⛔ Linear acid-lime. ⛔ Attio Action Blue.
+ * ⛔ Ronny-kropp / logogrønn som UI-aksent. Suksess-grønn er informasjon.
+ *
  * Tailwind 4 leser disse via @theme (packages/ui/src/theme.css). Bytt verdier
  * her, ikke navn — og ikke i theme.css. Dette er den ene sannheten for farge/font.
  */
 
-/* Lyst (standard) */
+/* Lyst (standard på :root; system kan overstyre til .dark) */
 :root,
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Flater — ash-panel-side, hvit sidebar/kort (canvas) */
-  --ew-bg: #f3f4f6;
-  --ew-sidebar: #f8f8f8;
-  --ew-sidebar-active: #eaf1ff;
-  --ew-surface: #ffffff;
-  --ew-surface-2: #f3f4f6; /* ash — hover og sekundær skall */
-  --ew-inset: #fafafc; /* pearl */
-  --ew-border: #e4e7ec; /* stone */
-  --ew-border-strong: #d3d8df; /* slate */
-  --ew-divider-soft: #e4e7ec;
+  --ew-bg: #f5f4f2;
+  --ew-sidebar: #fbfaf8;
+  --ew-sidebar-active: #e8e6e2;
+  --ew-sidebar-section: #66635e;
+  --ew-surface: #fbfaf8;
+  --ew-surface-2: #e8e6e2;
+  --ew-inset: #ddd9d3;
+  --ew-fg: #141413;
+  --ew-fg-muted: #5b5955;
+  --ew-fg-faint: #66635e;
+  --ew-border: color-mix(in oklab, #141413 12%, transparent);
+  --ew-border-strong: color-mix(in oklab, #141413 28%, transparent);
+  --ew-divider-soft: color-mix(in oklab, #141413 12%, transparent);
+  --ew-divide: color-mix(in oklab, #141413 12%, transparent);
 
-  /* Tekst — ink + Overcast */
-  --ew-fg: #1c1d1f;
-  --ew-fg-muted: #8f99a8;
-  --ew-fg-faint: #8f99a8;
+  --ew-accent: #a43a0a;
+  --ew-accent-strong: #a43a0a;
+  --ew-accent-fg: #fafaf9;
+  --ew-accent-soft: color-mix(in oklab, #a43a0a 12%, transparent);
+  --ew-accent-dim: color-mix(in oklab, #a43a0a 10%, transparent);
+  --ew-accent-on-dark: #ffb27f;
+  --ew-accent-pip: #c45a1a;
+  --ew-focus: #a43a0a;
+  --ew-ink-utility: #1c1917;
+  --ew-ink-hover: #292524;
 
-  /*
- * 06.09.2026 (Mikael Attio-farger, ikke Attio-layout):
- * Ink #1c1d1f er tekst + primær CTA-fyll. Action Blue #407ff2 er kun
- * lenker/aktiv/fokus-tekst. Focus Blue #94b9ff er ring. Logogrønnen
- * #1ED27D er urørt i logo.svg. Ronny-kropp røres ikke. Suksess-grønn
- * er informasjon, ikke merkevare.
-*/
-  --ew-accent: #407ff2; /* Action Blue — lenker, aktiv, fokus-tekst */
-  --ew-accent-strong: #407ff2;
-  --ew-accent-fg: #ffffff;
-  --ew-accent-soft: #eaf1ff;
-  --ew-accent-dim: rgba(64, 127, 242, 0.12);
-  --ew-accent-on-dark: #94b9ff;
-  --ew-focus: #94b9ff; /* Focus Blue — ring */
-  --ew-ink-utility: #1c1d1f; /* primær CTA-fyll */
-
-  /* Semantiske statusfarger — utledet, justert for lys bakgrunn */
   --ew-warn: #b45309;
   --ew-warn-soft: #fef3c7;
   --ew-danger: #c8332b;
   --ew-danger-soft: #fdecea;
-  /*
- * Suksess-grønnen er beholdt, selv om aksenten ble svart. Den er
- * informasjon (+12 %, «Region OK»), ikke merkevare — og nå som den er den
- * eneste grønnen på skjermen, betyr den endelig noe.
-*/
   --ew-success: #15b042;
   --ew-success-soft: #caface;
 
-  /* Bevel (TheFold-knappeflaten) — lys variant */
-  /*
- * Bevel-flaten er ikke ren hvit i lyst tema (endret ): en hvit
- * knapp på #fafafa-sidebaren leste som et hull, ikke som en hevet flate.
- * #f2f2f2 gir samme relieff som den mørke varianten.
-*/
-  --ew-bevel-face: #f3f4f6;
-  --ew-bevel-border: #d3d8df;
+  --ew-bevel-face: #e8e6e2;
+  --ew-bevel-border: color-mix(in oklab, #141413 28%, transparent);
   --ew-bevel-shadow: none;
-  --ew-bevel-fg: #1c1d1f;
+  --ew-bevel-fg: #141413;
 
-  --ew-glass-bg: #ffffff;
-  --ew-glass-border: #e5e5e5;
+  --ew-glass-bg: #fbfaf8;
+  --ew-glass-border: color-mix(in oklab, #141413 12%, transparent);
   --ew-glass-blur: 0px;
 }
 
-/* Mørkt (toggle) */
+/* Mørkt — `.dark` på html (Synara) og `[data-theme=dark]` (eksisterende kontrakt) */
+.dark,
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Flater — gitt */
-  --ew-bg: #000000; /* sidebakgrunn — bek, ikke kull */
-  --ew-sidebar: #1a1a1a;
-  --ew-sidebar-active: #292929;
+  --ew-bg: #121110;
+  --ew-sidebar: #1a1918;
+  --ew-sidebar-active: color-mix(in oklab, #f5f4f2 8%, #1a1918);
+  --ew-sidebar-section: #aaa8a3;
+  --ew-surface: #1a1918;
+  --ew-surface-2: color-mix(in oklab, #f5f4f2 8%, #121110);
+  --ew-inset: #121110;
+  --ew-fg: #f5f4f2;
+  --ew-fg-muted: #aaa8a3;
+  --ew-fg-faint: #aaa8a3;
+  --ew-border: color-mix(in oklab, #f5f4f2 12%, transparent);
+  --ew-border-strong: color-mix(in oklab, #f5f4f2 28%, transparent);
+  --ew-divider-soft: color-mix(in oklab, #f5f4f2 12%, transparent);
+  --ew-divide: color-mix(in oklab, #f5f4f2 12%, transparent);
 
-  /* Flater — utledet */
-  --ew-surface: #1f1f1f;
-  --ew-surface-2: #292929; /* samme tone som valgt element — én hover-sannhet */
-  --ew-inset: #141414;
-  --ew-border: #2a2a2a;
-  --ew-border-strong: #363636;
-
-  /*
- * Tekst — utledet. #333333/#777777 er lyst-tema-verdier og ville vært
- * uleselige her; rampen er speilet med samme to-nivå-struktur.
-*/
-  --ew-fg: #ededed;
-  --ew-fg-muted: #8f8f8f;
-  --ew-fg-faint: #8f8f8f;
-
-  /*
- * I mørkt tema er «svart aksent» hvit. En svart aksent på #000000 ville
- * vært usynlig — det er ikke en farge, det er et hull. Inversjonen holder
- * både kontrasten og betydningen: aksenten er den nøytrale, sterkeste tonen
- * i temaet. Endret sammen med den lyse.
-*/
-  --ew-accent: #ffffff;
-  --ew-accent-strong: #ffffff;
-  --ew-accent-fg: #111111;
-  --ew-accent-soft: rgba(255, 255, 255, 0.12);
-  --ew-accent-dim: rgba(255, 255, 255, 0.1);
-  --ew-focus: #94b9ff;
-  --ew-ink-utility: #ededed;
+  --ew-accent: #ffb27f;
+  --ew-accent-strong: #ffb27f;
+  --ew-accent-fg: #121110;
+  --ew-accent-soft: color-mix(in oklab, #ffb27f 16%, transparent);
+  --ew-accent-dim: color-mix(in oklab, #ffb27f 12%, transparent);
+  --ew-accent-on-dark: #ffd0b5;
+  --ew-accent-pip: #ffb27f;
+  --ew-focus: #ffb27f;
+  --ew-ink-utility: #fafaf9;
+  --ew-ink-hover: #e7e5e4;
 
   --ew-warn: #e0a04a;
   --ew-warn-soft: rgba(224, 160, 74, 0.14);
   --ew-danger: #e5695f;
   --ew-danger-soft: rgba(229, 105, 95, 0.14);
-  --ew-success: #1ed27d;
-  --ew-success-soft: rgba(30, 210, 125, 0.16);
+  --ew-success: #15b042;
+  --ew-success-soft: rgba(21, 176, 66, 0.16);
 
-  --ew-bevel-face: #292929;
-  --ew-bevel-border: #363636;
+  --ew-bevel-face: color-mix(in oklab, #f5f4f2 8%, #121110);
+  --ew-bevel-border: color-mix(in oklab, #f5f4f2 28%, transparent);
   --ew-bevel-shadow: none;
-  --ew-bevel-fg: #ededed;
+  --ew-bevel-fg: #f5f4f2;
 
-  --ew-glass-bg: #1a1a1a;
-  --ew-glass-border: #2a2a2a;
+  --ew-glass-bg: #1a1918;
+  --ew-glass-border: color-mix(in oklab, #f5f4f2 12%, transparent);
 }
 
 /* Form og mål — temauavhengig */
 :root {
-  /* Kontrollhøyder og radier — gitt */
-  --ew-control-h: 32px; /* knapper, inputs, selects */
-  --ew-radius-control: 10px; /* utility-rektangel — Attio ~10px */
-  --ew-row-h: 40px; /* datarad */
-  --ew-row-h-store: 44px; /* «stores»-rad */
+  --ew-control-h: 32px;
+  --ew-radius-control: 0.625rem;
+  --ew-row-h: 40px;
+  --ew-row-h-store: 44px;
   --ew-badge-h: 20px;
   --ew-badge-radius: 6px;
   --ew-switch-w: 24px;
   --ew-switch-h: 14px;
   --ew-switch-thumb: 10px;
-  /*
- * Følger aksenten (svart i lyst, hvit i mørkt) — eierens beslutning
- * . Var #0077E6.
-*/
   --ew-switch-track-on: var(--ew-accent);
 
-  /* Øvrig radius-skala */
   --ew-radius-sm: 3px;
   --ew-radius-md: 6px;
-  --ew-radius-lg: 8px;
-  --ew-radius-xl: 18px; /* kort */
+  --ew-radius-lg: 0.625rem;
+  --ew-radius-xl: 0.625rem;
   --ew-radius-pill: 9999px;
 
-  /* Spacing (base 4px) */
   --ew-space-1: 4px;
   --ew-space-2: 8px;
   --ew-space-3: 12px;
@@ -175,11 +139,11 @@
   --ew-space-6: 24px;
   --ew-space-8: 32px;
 
-  /* Typografi — Inter (gitt). next/font-variabel m/ systemfallback. */
+  /* Geist først. Inter / JetBrains Mono er fallback only. */
   --ew-font-sans:
-    var(--font-inter, "Inter"), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    sans-serif;
+    var(--font-geist-sans, "Geist"), var(--font-inter, "Inter"), ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, sans-serif;
   --ew-font-mono:
-    var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, Consolas,
-    monospace;
+    var(--font-geist-mono, "Geist Mono"), var(--font-jetbrains-mono, "JetBrains Mono"),
+    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }

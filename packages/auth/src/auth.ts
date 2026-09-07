@@ -23,8 +23,8 @@ import {
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
 import { createAuthEtterHook } from './magic-link-2fa.ts';
-import { ac, roles } from './rbac.ts';
 import { erAuthDestinasjon } from './produkt-destinasjon.ts';
+import { ac, roles } from './rbac.ts';
 import {
   sendByttEpostBekreftelse,
   sendByttEpostNyAdresse,

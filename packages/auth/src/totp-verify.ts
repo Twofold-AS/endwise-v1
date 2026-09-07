@@ -24,16 +24,24 @@ export function verifiserTotpKode(hemmelighet: string, totp: string): boolean {
   return treff;
 }
 
+function lesByte(buf: Buffer, i: number): number {
+  const v = buf.at(i);
+  if (v === undefined) {
+    throw new Error('hotp: digest for kort');
+  }
+  return v;
+}
+
 function hotp(hemmelighet: string, counter: number): string {
   const teller = Buffer.alloc(8);
   teller.writeBigUInt64BE(BigInt(counter));
   const hmac = createHmac('sha1', hemmelighet).update(teller).digest();
-  const offset = hmac[hmac.length - 1]! & 15;
+  const offset = lesByte(hmac, hmac.length - 1) & 15;
   const trunkert =
-    ((hmac[offset]! & 127) << 24) |
-    ((hmac[offset + 1]! & 255) << 16) |
-    ((hmac[offset + 2]! & 255) << 8) |
-    (hmac[offset + 3]! & 255);
+    ((lesByte(hmac, offset) & 127) << 24) |
+    ((lesByte(hmac, offset + 1) & 255) << 16) |
+    ((lesByte(hmac, offset + 2) & 255) << 8) |
+    (lesByte(hmac, offset + 3) & 255);
   const otp = trunkert % 10 ** SIFFER;
   return otp.toString().padStart(SIFFER, '0');
 }

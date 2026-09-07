@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-07 — F3-05 forhandler pulse-hjem (Mikael CODE-GO)
+
+**Type:** dealer-hjem innholdskolonne. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB-tabell.
+**Godkjent av:** Mikael defaults after skipped widget.
+**Endring:** **F3-05** `progress` (Jonas visual GO). Seks operative kort + footer-tekst på forhandler `/home` (B2 + telefon). Chrome 389/598/452 + top-bar 1+2 urørt. Svarhastighet = ny `messages.svarhastighet` (median førstesvar 7d). Deler = reserved/lav på åpne jobber, ikke hele lageret. Amicro `DitherGrowthChart` på I dag-spark. ⛔ #114/#119. ⛔ sales/support/mekaniker-hjem. Draft, ikke merge.
+
+---
+
 ## 2026-09-07 — F5-13 telefon-logo noe større i top-bar 1
 
 **Type:** telefon-chrome-polish. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

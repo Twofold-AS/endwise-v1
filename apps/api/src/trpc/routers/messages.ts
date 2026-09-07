@@ -64,6 +64,11 @@ export const messagesRouter = router({
     meldinger(ctx.db).listThreads(ctx.tenantId, ctx.userId),
   ),
 
+  /** Median førstesvar, rolling 7 dager. Tom = For lite data. */
+  svarhastighet: protectedProcedure.query(({ ctx }) =>
+    meldinger(ctx.db).svarhastighet(ctx.tenantId, ctx.userId),
+  ),
+
   listMessages: protectedProcedure
     .input(z.object({ threadId: z.uuid() }))
     .query(async ({ ctx, input }) => {

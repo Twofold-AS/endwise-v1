@@ -4,14 +4,14 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useMdViewport } from '../_lib/use-md-viewport';
 import { HJEM_SCROLL_FLATE, VERKSTED_INNHOLD } from '../_shell/phone-home';
-import { DealerDestinasjonskort, PhoneHomeDealer } from '../_shell/phone-home-dealer';
+import { DealerPulseKort, PhoneHomeDealer } from '../_shell/phone-home-dealer';
 import { VerkstedetDag } from '../dashboard/_verkstedet-dag';
 
 /**
  * Verkstedet (F3-05/F5-01) — forhandlerens landingsside.
  * Kanonisk rute er `/home`. `/dashboard` og `/verkstedet` er alias.
- * Jonas Apple-hjem (hard-fasit): destinasjonskort (hero-plate + 2-og-2) på
- * telefon og desktop. Dag-flaten (`?visning=dag`) er uendret bak hero-tap.
+ * Mikael pulse-hjem: seks operative kort + footer på telefon og desktop.
+ * Dag-flaten (`?visning=dag`) er uendret bak I dag-tap. Chrome urørt.
  */
 function VerkstedetPageInner() {
   const search = useSearchParams();
@@ -47,7 +47,7 @@ function VerkstedetDesktop() {
         <p>Her er dagen din, sjef 👋</p>
         <p>Alt under er hentet fra dine egne saker.</p>
       </div>
-      <DealerDestinasjonskort className="flex flex-col gap-5" />
+      <DealerPulseKort className="flex flex-col gap-5" />
     </div>
   );
 }

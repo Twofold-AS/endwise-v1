@@ -1,203 +1,171 @@
 'use client';
 
+import { DitherGrowthChart } from '@endwise/ui';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
-import { useOrgRole } from '../_lib/use-org-role';
+import { osloKalenderdag, osloPlusDager, osloStartAvDag } from '../_lib/oslo-dag';
 import { PeopleShowcase } from './people-showcase';
+import { HJEM_KORT_TOM, HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
 import {
-  dealerPhoneHjemRader,
-  HJEM_KORT_TOM,
-  HJEM_SCROLL_FLATE,
-  PHONE_KORT_META,
-  type PhoneKortKey,
-  VERKSTED_INNHOLD,
-} from './phone-home';
-import {
-  innboksMeta,
-  jobberMeta,
-  kunderMeta,
-  lagerMeta,
-  organisasjonMeta,
-  statistikkSetning,
-  timeplanRader,
-  verkstedHeroTall,
-} from './phone-home-data';
-import { PhoneKort } from './phone-kort';
+  delerPaApneJobber,
+  ferdigSpark7d,
+  idagTall,
+  innboksPulse,
+  nesteTreJobber,
+  svarhastighetVisning,
+  teamPulse,
+} from './phone-home-pulse';
+import { PulseFooter, PulseKort, PulseTall } from './pulse-kort';
 
-const IDAG_KEYS = new Set<PhoneKortKey>(['timeplan', 'statistikk', 'innboks', 'jobber']);
+const INK = '#141414';
 
 /**
- * Forhandlerens destinasjonskort — telefon-hjem og desktop-hjem.
- * Mobbin-kort: 24px, tint-fill hero, hairline-soft dest, 2-og-2, ærlig tomtilstand.
+ * Forhandler-pulse hjem — Verkstedet / `/home`.
+ * Seks operative kort + footer-tekst. Chrome urørt.
  */
 export function useDealerHjemKort() {
-  const { shopEnabled, tenantName } = useOrgRole();
-  const kort = trpc.forhandler.kort.useQuery();
-  const bookings = trpc.bookings.list.useQuery({ limit: 100 });
-  const threads = trpc.messages.listThreads.useQuery();
-  const customers = trpc.customers.list.useQuery({
-    sorter: 'opprettet',
-    retning: 'desc',
-    kilde: 'alle',
-    limit: 50,
+  const fra = useMemo(() => osloStartAvDag(osloPlusDager(osloKalenderdag(new Date()), -6)), []);
+  const til = useMemo(() => osloStartAvDag(osloPlusDager(osloKalenderdag(new Date()), 8)), []);
+
+  const bookings = trpc.bookings.list.useQuery({
+    from: fra,
+    to: til,
+    limit: 200,
   });
+  const threads = trpc.messages.listThreads.useQuery();
+  const svar = trpc.messages.svarhastighet.useQuery();
   const oversikt = trpc.mechanics.oversikt.useQuery();
-  const lave = trpc.inventory.listParts.useQuery({
-    kunLav: true,
+  const deler = trpc.inventory.listParts.useQuery({
+    kunLav: false,
     sorter: 'sku',
     retning: 'asc',
-    limit: 5,
+    limit: 100,
   });
-  const bevegelser = trpc.inventory.listMovements.useQuery({ limit: 5 });
 
   const naa = useMemo(() => new Date(), []);
   const jobber = bookings.data ?? [];
-  const hero = verkstedHeroTall(jobber, naa);
-  const innboks = innboksMeta(threads.data ?? []);
-  const plan = timeplanRader(jobber, naa, 4);
-  const rader = dealerPhoneHjemRader(shopEnabled);
-
-  const metaFor = (key: PhoneKortKey): { text?: string; ulest?: number } => {
-    if (key === 'statistikk') return { text: statistikkSetning(jobber, naa) };
-    if (key === 'innboks') return { text: innboks.linje, ulest: innboks.ulest };
-    if (key === 'timeplan') {
-      return { text: plan.length === 0 ? HJEM_KORT_TOM.timeplan : undefined };
-    }
-    if (key === 'jobber') return { text: jobberMeta(jobber, naa) };
-    if (key === 'kunder') return { text: kunderMeta(customers.data ?? []) };
-    if (key === 'organisasjon') return { text: organisasjonMeta(oversikt.data ?? []) };
-    if (key === 'lager') return { text: lagerMeta(lave.data ?? [], bevegelser.data ?? []) };
-    if (key === 'butikk') return { text: 'Katalog og kasse' };
-    if (key === 'hjelp') return { text: HJEM_KORT_TOM.hjelp };
-    if (key === 'samarbeid') return { text: 'Åpne samarbeid' };
-    return { text: 'Åpne destinasjonen' };
-  };
+  const idag = idagTall(jobber, naa);
+  const spark = ferdigSpark7d(jobber, naa);
+  const innboks = innboksPulse(threads.data ?? [], naa);
+  const delerKort = delerPaApneJobber(deler.data ?? [], jobber);
+  const svarKort = svarhastighetVisning(svar.data?.medianMs ?? null);
+  const plan = nesteTreJobber(jobber, naa, 3);
+  const team = teamPulse(oversikt.data ?? []);
 
   return {
-    tenantName,
-    kort,
     bookings,
-    hero,
-    plan,
-    rader,
+    threads,
+    svar,
     oversikt,
-    metaFor,
+    idag,
+    spark,
+    innboks,
+    delerKort,
+    svarKort,
+    plan,
+    team,
   };
 }
 
-export function DealerDestinasjonskort({
-  utenHero = false,
-  className,
-}: {
-  utenHero?: boolean;
-  className?: string;
-}) {
-  const { tenantName, kort, bookings, hero, plan, rader, oversikt, metaFor } = useDealerHjemKort();
-  let vistSeksjon: 'idag' | 'mer' | null = null;
+export function DealerPulseKort({ className }: { className?: string }) {
+  const {
+    bookings,
+    threads,
+    svar,
+    oversikt,
+    idag,
+    spark,
+    innboks,
+    delerKort,
+    svarKort,
+    plan,
+    team,
+  } = useDealerHjemKort();
+  const lasterJobber = bookings.isLoading;
 
   return (
     <div className={className ?? 'flex flex-col gap-5'}>
-      {rader.map((rad) => {
-        if (rad.keys[0] === 'verkstedet') {
-          if (utenHero) return null;
-          const dest = PHONE_KORT_META.verkstedet;
-          const forhandlernavn = tenantName?.trim() || kort.data?.name?.trim() || dest.label;
-          const tomDag = !bookings.isLoading && hero.idag === 0;
-          return (
-            <PhoneKort
-              key="verkstedet"
-              href={dest.href}
-              icon={dest.icon}
-              navn={forhandlernavn}
-              className="w-full"
-              variant="hero"
-              meta={tomDag ? HJEM_KORT_TOM.hero : undefined}
-            >
-              <div className="grid grid-cols-3 divide-x divide-divide">
-                <HeroTall label="I dag" verdi={hero.idag} laster={bookings.isLoading} />
-                <HeroTall label="Pågår" verdi={hero.paagaar} laster={bookings.isLoading} />
-                <HeroTall label="Fullført" verdi={hero.fullfort} laster={bookings.isLoading} />
-              </div>
-            </PhoneKort>
-          );
-        }
+      <PulseKort href={PHONE_KORT_META.idag.href} navn="I dag" variant="hero">
+        <div className="grid grid-cols-3 divide-x divide-divide">
+          <PulseTall label="Starter" verdi={idag.starter} laster={lasterJobber} />
+          <PulseTall label="Pågår" verdi={idag.paagaar} laster={lasterJobber} />
+          <PulseTall label="Ferdig" verdi={idag.ferdig} laster={lasterJobber} />
+        </div>
+        <div className="pointer-events-none h-12 w-full" aria-hidden>
+          <DitherGrowthChart
+            theme="light"
+            compact
+            values={spark.values}
+            labels={spark.labels}
+            color={INK}
+          />
+        </div>
+      </PulseKort>
 
-        const par = rad.keys;
-        const seksjon: 'idag' | 'mer' = par.some((k) => IDAG_KEYS.has(k)) ? 'idag' : 'mer';
-        const visOverskrift = seksjon !== vistSeksjon;
-        vistSeksjon = seksjon;
+      <PulseKort
+        href={PHONE_KORT_META.innboks.href}
+        navn="Innboks"
+        verdi={innboks.ulest}
+        meta={innboks.sla}
+        laster={threads.isLoading}
+      />
 
-        return (
-          <div key={par.join('|')} className="flex flex-col gap-4">
-            {visOverskrift ? (
-              <p
-                data-hjem-seksjon={seksjon}
-                className="px-1 text-[12px] text-fg-muted tracking-wide"
-              >
-                {seksjon === 'idag' ? 'I dag' : 'Mer'}
-              </p>
-            ) : null}
-            <div
-              data-hjem-rad={par.join('|')}
-              className={par.length === 1 ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-2 gap-4'}
-            >
-              {par.map((key) => {
-                const dest = PHONE_KORT_META[key];
-                const fyll = metaFor(key);
-                return (
-                  <PhoneKort
-                    key={key}
-                    href={dest.href}
-                    icon={dest.icon}
-                    navn={dest.label}
-                    meta={fyll.text}
-                    ulest={fyll.ulest}
-                    variant="destinasjon"
-                  >
-                    {key === 'timeplan' && plan.length > 0 ? (
-                      <ul className="flex flex-col gap-1.5">
-                        {plan.map((radRad) => (
-                          <li
-                            key={radRad.id}
-                            className="flex gap-2 text-[12px] text-fg-muted leading-snug"
-                          >
-                            <span className="shrink-0 text-fg tabular-nums">{radRad.time}</span>
-                            <span className="min-w-0 truncate">{radRad.what}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                    {key === 'organisasjon' ? <PeopleShowcase folk={oversikt.data ?? []} /> : null}
-                  </PhoneKort>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
+      <PulseKort
+        href={PHONE_KORT_META.deler.href}
+        navn="Deler"
+        verdi={delerKort.antall}
+        meta={delerKort.meta}
+        laster={lasterJobber}
+      />
+
+      <PulseKort
+        href={PHONE_KORT_META.svarhastighet.href}
+        navn="Svarhastighet"
+        verdi={svarKort.tall}
+        meta={svarKort.meta}
+        laster={svar.isLoading}
+      />
+
+      <PulseKort
+        href={PHONE_KORT_META.timeplan.href}
+        navn="Timeplan-gulv"
+        meta={plan.length === 0 ? HJEM_KORT_TOM.timeplan : undefined}
+      >
+        {plan.length > 0 ? (
+          <ul className="flex flex-col gap-1.5">
+            {plan.map((rad) => (
+              <li key={rad.id} className="flex gap-2 text-[12px] text-fg-muted leading-snug">
+                <span className="shrink-0 text-fg tabular-nums">{rad.time}</span>
+                <span className="min-w-0 truncate">{rad.what}</span>
+                <span className="shrink-0 text-fg-faint">{rad.who}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </PulseKort>
+
+      <PulseKort
+        href={PHONE_KORT_META.team.href}
+        navn="Team"
+        verdi={oversikt.isLoading ? undefined : `${team.ledig}/${team.opptatt}`}
+        meta={team.meta}
+        laster={oversikt.isLoading}
+      >
+        <PeopleShowcase folk={oversikt.data ?? []} />
+      </PulseKort>
+
+      <PulseFooter />
     </div>
   );
 }
+
+/** Bakoverkompatibelt alias — samme pulse-flate. */
+export const DealerDestinasjonskort = DealerPulseKort;
 
 export function PhoneHomeDealer() {
   return (
-    <DealerDestinasjonskort
+    <DealerPulseKort
       className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-5 py-5 md:hidden`}
     />
-  );
-}
-
-function HeroTall({ label, verdi, laster }: { label: string; verdi: number; laster: boolean }) {
-  return (
-    <div className="flex flex-col gap-1 px-3 first:pl-0 last:pr-0">
-      <p className="text-[12px] text-fg-muted">{label}</p>
-      <p className="text-[28px] font-semibold leading-none text-fg tabular-nums">
-        {laster ? (
-          <span className="inline-block h-7 w-8 animate-pulse rounded-sm bg-border" />
-        ) : (
-          verdi
-        )}
-      </p>
-    </div>
   );
 }

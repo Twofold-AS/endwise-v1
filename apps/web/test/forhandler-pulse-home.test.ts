@@ -19,8 +19,12 @@ import {
   ferdigSpark7d,
   formatVarighetNb,
   idagTall,
+  idagVisning,
   innboksPulse,
   nesteTreJobber,
+  PULSE_MOCK_IDAG,
+  PULSE_MOCK_SPARK,
+  sparkVisning,
   svarhastighetVisning,
   teamPulse,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
@@ -69,6 +73,7 @@ describe('forhandler pulse-hjem — seks kort + footer', () => {
     expect(hjem).toMatch(/Timeplan-gulv/);
     expect(hjem).toMatch(/DitherGrowthChart/);
     expect(hjem).not.toMatch(/dither-kit|DitherGradient/);
+    expect(hjem).not.toMatch(/For lite data/);
   });
 
   it('I dag er Starter / Pågår / Ferdig + 7d-spark, ikke hele-dagen-totalt', () => {
@@ -135,13 +140,39 @@ describe('forhandler pulse-hjem — seks kort + footer', () => {
     ).toBe(1);
   });
 
-  it('Svarhastighet er median 7d eller For lite data', () => {
-    expect(svarhastighetVisning(null)).toEqual({ tall: '—', meta: 'For lite data' });
+  it('Svarhastighet er median 7d, ellers 14 min + mock', () => {
+    expect(svarhastighetVisning(null)).toEqual({
+      tall: '14 min',
+      meta: 'Median førstesvar · 7 dager',
+      mock: true,
+    });
     expect(svarhastighetVisning(12 * 60_000)).toEqual({
       tall: '12 min',
       meta: 'Median førstesvar · 7 dager',
+      mock: false,
     });
     expect(formatVarighetNb(2 * 3_600_000 + 12 * 60_000)).toBe('2 t 12 min');
+  });
+
+  it('I dag uten historikk er mock-tall + mock-spark, ikke For lite data', () => {
+    const naa = new Date('2026-08-29T10:00:00');
+    expect(idagVisning([], naa)).toEqual({ ...PULSE_MOCK_IDAG, mock: true });
+    expect(
+      idagVisning([{ id: '1', status: 'confirmed', startsAt: '2026-08-29T08:00:00' }], naa),
+    ).toEqual({
+      starter: 1,
+      paagaar: 0,
+      ferdig: 0,
+      mock: false,
+    });
+    const tomSpark = sparkVisning(ferdigSpark7d([], naa));
+    expect(tomSpark.mock).toBe(true);
+    expect(tomSpark.values).toEqual(PULSE_MOCK_SPARK);
+    const ekteSpark = sparkVisning(
+      ferdigSpark7d([{ id: '3', status: 'completed', startsAt: '2026-08-29T07:00:00' }], naa),
+    );
+    expect(ekteSpark.mock).toBe(false);
+    expect(ekteSpark.values.at(-1)).toBe(1);
   });
 
   it('Timeplan-gulv er neste 3 med tid · hva · mekaniker', () => {
@@ -205,7 +236,12 @@ describe('forhandler pulse-hjem — seks kort + footer', () => {
     expect(kort).not.toMatch(/shadow-sm|shadow-md|border-left|border-l-/);
     expect(kort).toMatch(/touch-action:\s*manipulation|\[touch-action:manipulation\]/);
     expect(HJEM_KORT_TOM.innboks).toBe('Ingen uleste');
-    expect(HJEM_KORT_TOM.svarhastighet).toBe('For lite data');
+    expect(HJEM_KORT_TOM.svarhastighet).toBe('Median førstesvar · 7 dager');
+    expect(HJEM_KORT_TOM.svarhastighet).not.toMatch(/For lite data|for lite/);
+    expect(kort).toMatch(/PulseMockBadge|data-pulse-mock-badge/);
+    expect(kort).toMatch(/variant="secondary"/);
+    expect(kort).not.toMatch(/#0066ff|For lite data/);
+    expect(kort).toMatch(/>\s*mock\s*</);
   });
 
   it('desktop og telefon deler pulse-kort; chrome-skall røres ikke', () => {

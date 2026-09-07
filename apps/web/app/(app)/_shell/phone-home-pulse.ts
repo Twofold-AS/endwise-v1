@@ -31,6 +31,12 @@ export function idagTall(jobber: PhoneBooking[], naa: Date) {
   };
 }
 
+/** Jonas-skisse: 14 min når 7d-utvalget er for tynt. */
+export const PULSE_MOCK_SVAR_MS = 14 * 60_000;
+/** Plausibel 7d-spark når ingen completed-historikk finnes. */
+export const PULSE_MOCK_SPARK = [1, 2, 1, 3, 2, 4, 3];
+export const PULSE_MOCK_IDAG = { starter: 3, paagaar: 2, ferdig: 1 };
+
 export function ferdigSpark7d(jobber: PhoneBooking[], naa: Date) {
   const iDag = osloKalenderdag(naa);
   const labels: string[] = [];
@@ -43,6 +49,19 @@ export function ferdigSpark7d(jobber: PhoneBooking[], naa: Date) {
     );
   }
   return { labels, values };
+}
+
+/** Tom 7d-historikk → mock-spark, ikke flat null-linje. */
+export function sparkVisning(spark: { labels: string[]; values: number[] }) {
+  if (spark.values.some((v) => v > 0)) return { ...spark, mock: false };
+  return { labels: spark.labels, values: PULSE_MOCK_SPARK, mock: true };
+}
+
+/** Ingen jobber i vinduet = ingen historikk → mock I dag-tall + badge. */
+export function idagVisning(jobber: PhoneBooking[], naa: Date) {
+  const tall = idagTall(jobber, naa);
+  if (jobber.length === 0) return { ...PULSE_MOCK_IDAG, mock: true };
+  return { ...tall, mock: false };
 }
 
 export function formatVarighetNb(ms: number): string {
@@ -89,8 +108,14 @@ export function delerPaApneJobber(deler: PhoneDelPulse[], jobber: PhoneBooking[]
 }
 
 export function svarhastighetVisning(medianMs: number | null) {
-  if (medianMs == null) return { tall: '—', meta: 'For lite data' };
-  return { tall: formatVarighetNb(medianMs), meta: 'Median førstesvar · 7 dager' };
+  if (medianMs == null) {
+    return {
+      tall: formatVarighetNb(PULSE_MOCK_SVAR_MS),
+      meta: 'Median førstesvar · 7 dager',
+      mock: true,
+    };
+  }
+  return { tall: formatVarighetNb(medianMs), meta: 'Median førstesvar · 7 dager', mock: false };
 }
 
 export type TimeplanGulvRad = { id: string; time: string; what: string; who: string };

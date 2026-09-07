@@ -9,9 +9,10 @@ import { HJEM_KORT_TOM, HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } f
 import {
   delerPaApneJobber,
   ferdigSpark7d,
-  idagTall,
+  idagVisning,
   innboksPulse,
   nesteTreJobber,
+  sparkVisning,
   svarhastighetVisning,
   teamPulse,
 } from './phone-home-pulse';
@@ -44,8 +45,8 @@ export function useDealerHjemKort() {
 
   const naa = useMemo(() => new Date(), []);
   const jobber = bookings.data ?? [];
-  const idag = idagTall(jobber, naa);
-  const spark = ferdigSpark7d(jobber, naa);
+  const idag = idagVisning(jobber, naa);
+  const spark = sparkVisning(ferdigSpark7d(jobber, naa));
   const innboks = innboksPulse(threads.data ?? [], naa);
   const delerKort = delerPaApneJobber(deler.data ?? [], jobber);
   const svarKort = svarhastighetVisning(svar.data?.medianMs ?? null);
@@ -85,7 +86,12 @@ export function DealerPulseKort({ className }: { className?: string }) {
 
   return (
     <div className={className ?? 'flex flex-col gap-5'}>
-      <PulseKort href={PHONE_KORT_META.idag.href} navn="I dag" variant="hero">
+      <PulseKort
+        href={PHONE_KORT_META.idag.href}
+        navn="I dag"
+        variant="hero"
+        mock={!lasterJobber && (idag.mock || spark.mock)}
+      >
         <div className="grid grid-cols-3 divide-x divide-divide">
           <PulseTall label="Starter" verdi={idag.starter} laster={lasterJobber} />
           <PulseTall label="Pågår" verdi={idag.paagaar} laster={lasterJobber} />
@@ -124,6 +130,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
         verdi={svarKort.tall}
         meta={svarKort.meta}
         laster={svar.isLoading}
+        mock={svarKort.mock && !svar.isLoading}
       />
 
       <PulseKort

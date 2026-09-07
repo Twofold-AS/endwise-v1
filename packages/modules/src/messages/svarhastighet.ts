@@ -1,7 +1,7 @@
 /**
  * Svarhastighet — median førstesvar.
  * En prøve er tiden fra første inbound i en tråd til første outbound etterpå.
- * Rolling 7 dager. Tom mengde = «For lite data», ikke 0.
+ * Rolling 7 dager. Tom mengde = null (UI viser mock + badge).
  */
 
 export function medianTall(values: readonly number[]): number | null {

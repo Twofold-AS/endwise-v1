@@ -109,7 +109,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
 
   it('HJEM_KORT_TOM er ærlig pulse-kopi', () => {
     expect(HJEM_KORT_TOM.innboks).toBe('Ingen uleste');
-    expect(HJEM_KORT_TOM.svarhastighet).toBe('For lite data');
+    expect(HJEM_KORT_TOM.svarhastighet).toBe('Median førstesvar · 7 dager');
     expect(HJEM_KORT_TOM.timeplan).toBe('Ingen jobber');
     expect(HJEM_KORT_TOM.deler).toBe('Ingen mangler på åpne jobber');
     const naa = new Date('2026-08-29T10:00:00');

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-07 — F3-05 pulse mock-badge (Mikael CODE GO)
+
+**Type:** tom-UX på pulse-hjem. Ingen techstack-endring. Ingen ny UI-pakke.
+**Godkjent av:** Mikael CODE GO på #151.
+**Endring:** **F3-05** `done`. «For lite data» / `—` på Svarhastighet (og I dag uten historikk) erstattet av plausibelt mock (14 min / fixture-spark) + shadcn `Badge` `mock` (canvas-soft, ikke `#0066ff`). Ærlig tom står: Ingen uleste, Ingen jobber, Ingen mangler. Squash-merge #151.
+
+---
+
 ## 2026-09-07 — F3-05 forhandler pulse-hjem (Mikael CODE-GO)
 
 **Type:** dealer-hjem innholdskolonne. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB-tabell.

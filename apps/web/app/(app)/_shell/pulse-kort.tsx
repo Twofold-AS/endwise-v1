@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -18,6 +19,7 @@ export function PulseKort({
   children,
   variant = 'hvile',
   laster = false,
+  mock = false,
 }: {
   href: string;
   navn: string;
@@ -26,17 +28,22 @@ export function PulseKort({
   children?: ReactNode;
   variant?: 'hero' | 'hvile';
   laster?: boolean;
+  mock?: boolean;
 }) {
   const fyll = variant === 'hero' ? PHONE_HERO_FYLL : PHONE_DEST_FYLL;
   return (
     <Link
       href={href as Route}
       data-pulse-kort={navn}
+      data-pulse-mock={mock ? '' : undefined}
       data-verkstedet-hero={variant === 'hero' ? '' : undefined}
       className={`${fyll} flex min-h-11 w-full flex-col gap-3 p-5 [touch-action:manipulation]`}
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-title text-fg">{navn}</p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <p className="text-title text-fg">{navn}</p>
+          {mock ? <PulseMockBadge /> : null}
+        </div>
         {verdi != null ? (
           <p className="text-[28px] font-semibold leading-none text-fg tabular-nums">
             {laster ? (
@@ -50,6 +57,19 @@ export function PulseKort({
       {meta ? <p className="text-[12px] text-fg-muted leading-snug">{meta}</p> : null}
       {children}
     </Link>
+  );
+}
+
+/** Mangel på historikk — ikke «For lite data». Canvas-soft, ikke Popular-blå. */
+export function PulseMockBadge() {
+  return (
+    <Badge
+      variant="secondary"
+      data-pulse-mock-badge
+      className="border-transparent bg-surface-2 text-fg-muted"
+    >
+      mock
+    </Badge>
   );
 }
 

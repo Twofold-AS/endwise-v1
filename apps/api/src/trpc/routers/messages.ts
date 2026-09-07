@@ -64,7 +64,7 @@ export const messagesRouter = router({
     meldinger(ctx.db).listThreads(ctx.tenantId, ctx.userId),
   ),
 
-  /** Median førstesvar, rolling 7 dager. Tom = For lite data. */
+  /** Median førstesvar, rolling 7 dager. Tom = null (UI: mock + badge). */
   svarhastighet: protectedProcedure.query(({ ctx }) =>
     meldinger(ctx.db).svarhastighet(ctx.tenantId, ctx.userId),
   ),

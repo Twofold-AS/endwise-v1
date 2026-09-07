@@ -629,7 +629,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
     /**
      * Median førstesvar, rolling 7 dager.
      * Første inbound i customer_dealer-tråder leseren er med i,
-     * mot første outbound etterpå. Tom = For lite data.
+     * mot første outbound etterpå. Tom = null (UI: mock + badge).
      */
     async svarhastighet(tenantId: string, participantId: string, naa = new Date()) {
       const fra = new Date(naa.getTime() - 7 * 86_400_000);

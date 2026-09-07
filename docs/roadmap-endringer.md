@@ -5,6 +5,30 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-07 — F5-13 telefon-logo noe større i top-bar 1
+
+**Type:** telefon-chrome-polish. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael add-on på draft #150.
+**Endring:** **F5-13** `progress`. `PHONE_LOGO_PX=32` kun i telefon top-bar 1. Søk/Ronny/profil forblir 28/`h-8`. Desktop/sidebar-merke `SHELL_LOGO_PX=24` urørt. Draft, ikke merge.
+
+---
+
+## 2026-09-07 — F5-13 telefon-chrome CODE-GO kveld (28px + søk + Ronny-sheet)
+
+**Type:** telefon-chrome-polish. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael CODE-GO (eier) — utvider draft #150. Dest-nav-fiks beholdt.
+**Endring:** **F5-13** `progress` (Jonas visual GO). Søk `h-8`, Ronny/profil 28px-sirkler. `RONNY_PHONE_IDLE` uten `colere`. `PhoneSokOverlay`: Avbryt · nylige · dest-ikoner · dest-rader. Sheet: tettere håndtak, kompakt «Ronny» uten bot, full = forminsk / Ronny på logg-topp. Desktop 389/598/452 urørt. ⛔ pip/border-left. ⛔ #114/#119. Draft, ikke merge.
+
+---
+
+## 2026-09-07 — F5-13 dest-nav tom etter #149 (chrome-first)
+
+**Type:** bugfix i delt destinasjonsliste. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Jonas NO-GO etter merge av #149 (tom top-bar 2 + «Ingen destinasjoner å vise.»).
+**Endring:** **F5-13** `progress` (visual re-GO). `destinasjonerForShell` / `rolleForNav` gir Endwise-IA til telefon top-bar 2 og desktop-sidebar når `session.me` mangler, eller Better-Auth gir `owner`/`admin`. Shop-av skjuler bare Butikk. ⛔ pip/border-left. ⛔ #114/#119. Draft, ikke merge.
+
+---
+
 ## 2026-09-07 — F5-13 / F5-01 Mobbin telefon-chrome (to toppbarer)
 
 **Type:** telefon-chrome-restyle. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

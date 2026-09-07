@@ -2,35 +2,23 @@
 
 import { BloubBot, type ExpressionId } from '@endwise/ui/bloub/BloubBot';
 import { useEffect, useState } from 'react';
+import { IDLE_MS, RONNY_IDLE } from './ronny-idle';
 
-export const IDLE_MS = 5000;
+export { IDLE_MS, RONNY_IDLE, RONNY_PHONE_IDLE } from './ronny-idle';
 
-/** Bare ansikt/humør. Ingen tenke-/varsel-state på boten. */
-export const RONNY_IDLE: readonly ExpressionId[] = [
-  'heureux',
-  'colere',
-  'surpris',
-  'hilare',
-  'curieux',
-  'attentif',
-  'excite',
-  'fier',
-  'mefiant',
-  'colere',
-  'heureux',
-  'colere',
-];
-
-export function useRonnyIdle(aktiv: boolean): ExpressionId {
+export function useRonnyIdle(
+  aktiv: boolean,
+  sett: readonly ExpressionId[] = RONNY_IDLE,
+): ExpressionId {
   const [steg, setSteg] = useState(0);
   useEffect(() => {
     if (!aktiv) return;
     const id = window.setInterval(() => {
-      setSteg((s) => (s + 1) % RONNY_IDLE.length);
+      setSteg((s) => (s + 1) % sett.length);
     }, IDLE_MS);
     return () => window.clearInterval(id);
-  }, [aktiv]);
-  return RONNY_IDLE[steg] ?? RONNY_IDLE[0];
+  }, [aktiv, sett]);
+  return sett[steg % sett.length] ?? sett[0] ?? 'heureux';
 }
 
 export function useRonnySpinn(): { spin: boolean; trigg: () => void } {
@@ -52,13 +40,15 @@ export function RonnyBot({
   paper,
   spin = false,
   expression,
+  idleSett,
 }: {
   size: number;
   paper: string;
   spin?: boolean;
   expression?: ExpressionId;
+  idleSett?: readonly ExpressionId[];
 }) {
-  const idle = useRonnyIdle(!spin);
+  const idle = useRonnyIdle(!spin && !expression, idleSett ?? RONNY_IDLE);
   const visUttrykk: ExpressionId = expression ?? (spin ? 'surpris' : idle);
   return (
     <span data-ronny-spin={spin ? '1' : undefined} className="inline-flex">

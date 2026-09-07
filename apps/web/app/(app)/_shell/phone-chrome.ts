@@ -2,13 +2,15 @@
  * Telefon-chrome delt mellom hovedmeny og top-bar 2.
  * Logo-kolonnen er pinnest (ikke i scroll), så Oversikt/Timeplan
  * starter under valgt hovedpunkt — samme venstre-innfelt.
- * Logo 24px er merkevare. Toggle er IKKE logo — den matcher nav-ikonene.
+ * Sidebar/desktop-merke er 24px. Telefon top-bar 1 er noe større (Mikael 07.09).
+ * Toggle er IKKE logo — den matcher nav-ikonene.
  */
 export const SHELL_LOGO_PX = 24;
-export const PHONE_LOGO_PX = SHELL_LOGO_PX;
+/** Telefon top-bar 1 — merkbart større enn 24, fortsatt under h-row 40. */
+export const PHONE_LOGO_PX = 32;
 
-/** Ronny- og profil-sirkel i telefon top-bar 1 — samme mål. */
-export const PHONE_AVATAR_PX = 40;
+/** Ronny- og profil-sirkel i telefon top-bar 1 — samme mål. Mikael 07.09 kveld: 28, ikke 40. */
+export const PHONE_AVATAR_PX = 28;
 
 /** Samme 16px som sidebar-rader (`IKON` i sidebar.tsx). PC-skinne. */
 export const SHELL_TOGGLE_PX = 16;

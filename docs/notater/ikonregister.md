@@ -1,10 +1,5 @@
 # Ikonregister — sidebar-først-shellet (F5-20)
 
-> **07.09.2026 — Disarto Regular (Mikael GO).** Chrome / sidebar / hjem er byttet
-> til kuraterte Disarto Regular-SVG-er (filled-path, MIT, pin `d536bd5`).
-> Ikke en lucide-wipe. Mapping: `docs/notater/disarto-ikoner.md`.
-> Fem står: `hard-hat` · `handshake` · `bike` · `sailboat` · `clock-arrow-up`.
-
 Komplett liste over ikonene den nye sidebaren og dens destinasjoner trenger, per 04.08.2026.
 Hører til roadmap-punkt **F5-20** (innkobling) og **F5-13** (strukturen som bestiller dem).
 

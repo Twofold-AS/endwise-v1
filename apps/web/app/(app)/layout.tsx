@@ -135,7 +135,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <InboxFilterProvider>
             <PwaRegister />
             <RonnySheetProvider>
-              <div data-theme="dark" data-app-theme="linear" className={PHONE_SHELL_ROT}>
+              <div className={PHONE_SHELL_ROT}>
                 <Suspense fallback={null}>
                   <PlattformRuteVakt
                     erPlattform={erPlattform}

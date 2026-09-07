@@ -76,7 +76,7 @@ export type NavItem = {
   /** Horisontale piller på destinasjonssiden. Ikke barn i sidebaren. */
   pills?: NavChild[];
   /**
-   * Synara-seksjonsetikett. Ikke en destinasjon — grupperer eksisterende
+   * Seksjonsetikett. Ikke en destinasjon — grupperer eksisterende
    * Endwise-rader (Verkstedet / Kunder / Organisasjon). Ikke kodeagent-IA.
    */
   section?: string;

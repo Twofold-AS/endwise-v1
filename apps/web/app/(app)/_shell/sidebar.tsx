@@ -38,7 +38,7 @@ const IKON_DESKTOP = 20;
 /**
  * Desktop: persistent venstre skinne (alltid synlig, innhold ved siden).
  * Ingen collapse/expand på desktop. Telefon: fullskjerm-overlay, lukket
- * default, åpnes fra PhoneShell. Synara-steinflate. Hjelp-TipCard er ute;
+ * default, åpnes fra PhoneShell. Mobbin canvas. Hjelp-TipCard er ute;
  * nederst sitter Galaxy-oppgraderingspillen.
  */
 export function Sidebar() {
@@ -185,7 +185,7 @@ export function Sidebar() {
 
         <nav
           aria-label="Hovednavigasjon"
-          className="flex min-h-0 flex-1 flex-col gap-[4px] overflow-y-auto md:gap-0"
+          className="flex min-h-0 flex-1 flex-col gap-[4px] overflow-y-auto"
         >
           {items.map((item, i) => {
             const forrige = items[i - 1];
@@ -271,13 +271,6 @@ function NavRow({
   );
   const innhold = (
     <>
-      {active && !collapsed ? (
-        <span
-          aria-hidden
-          data-sidebar-pip
-          className="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent-pip"
-        />
-      ) : null}
       <Ikon icon={item.icon} active={active} collapsed={collapsed} />
       {!collapsed && (
         <>
@@ -297,7 +290,7 @@ function NavRow({
       aria-current={active ? 'page' : undefined}
       title={collapsed ? item.label : undefined}
       onClick={onNavigate}
-      className={`relative flex h-control w-full items-center gap-2.5 border-divide border-b text-label text-fg transition-colors last:border-b-0 md:h-[50px] ${
+      className={`relative flex h-control w-full items-center gap-2.5 rounded-pill text-label text-fg transition-colors md:h-[50px] ${
         collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[259px] md:justify-start md:px-3'
       } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}
     >

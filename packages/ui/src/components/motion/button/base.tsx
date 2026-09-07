@@ -37,10 +37,9 @@ type Ripple = { id: number; x: number; y: number; size: number };
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary: "rounded-pill bg-primary text-primary-foreground hover:bg-primary/90",
-  secondary: "border border-border-strong bg-card text-foreground hover:bg-surface-2",
-  ghost: "text-muted-foreground hover:text-foreground hover:bg-primary/5",
-  outline:
-    "border border-border-strong bg-card text-foreground hover:bg-surface-2",
+  secondary: "rounded-pill bg-surface-2 text-foreground hover:bg-inset",
+  ghost: "rounded-pill text-muted-foreground hover:text-foreground hover:bg-surface-2",
+  outline: "rounded-pill border border-border bg-bg text-foreground hover:bg-surface-2",
 };
 
 // Endret fra oppstrøms — eierens designprinsipper:
@@ -49,10 +48,10 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
 // huskes ved hver bruk, er en spec som brytes ved den femte bruken.
 // Se docs/ui-pakker.md §3.
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: "h-7 px-2.5 text-label gap-1.5 rounded-control",
-  md: "h-control px-3.5 text-label gap-2 rounded-control",
-  lg: "h-row px-4 text-body gap-2 rounded-control",
-  icon: "size-control rounded-control",
+  sm: "h-7 px-2.5 text-label gap-1.5 rounded-pill",
+  md: "h-control px-3.5 text-label gap-2 rounded-pill",
+  lg: "h-row px-4 text-body gap-2 rounded-pill",
+  icon: "size-control rounded-pill",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

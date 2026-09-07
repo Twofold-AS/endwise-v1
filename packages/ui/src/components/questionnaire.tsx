@@ -113,9 +113,9 @@ export function QuestionnaireChoice({
     <Primitive.Choice
       data-slot="questionnaire-choice"
       className={cn(
-        'flex min-h-row cursor-pointer items-center gap-3 rounded-control border border-border px-3 py-2 text-body text-fg transition-colors',
+        'flex min-h-row cursor-pointer items-center gap-3 rounded-pill border-0 bg-inset px-3 py-2 text-body text-fg transition-colors',
         'hover:bg-surface-2 has-focus-visible:outline-2 has-focus-visible:outline-ring',
-        'data-[checked=true]:border-accent-strong data-[checked=true]:bg-accent-soft data-[checked=true]:text-accent-strong',
+        'data-[checked=true]:bg-surface-2 data-[checked=true]:text-fg',
         className,
       )}
       {...props}

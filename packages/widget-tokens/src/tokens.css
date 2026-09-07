@@ -1,17 +1,20 @@
 /*
  * @endwise/widget-tokens.
- * Status: Synara-språk (Mikael CODE-GO 07.09.2026) etter #147-revert.
- * Dual theme: lyst + mørkt. Klasse `.dark` og `[data-theme=dark]` er likeverdige.
+ * Status: Mobbin-språk (Mikael CODE-GO 07.09.2026) — endelig fargelås.
+ * Dual theme: lyst først. Mørkt = polaritetsinversjon (ink ↔ canvas),
+ * ikke Synara-stein. Klasse `.dark` og `[data-theme=dark]` er likeverdige.
  * Standard uten lagret valg: system (`prefers-color-scheme`).
  *
- * Lys: page #f5f4f2 · text #141413 / #5b5955 / #66635e · card #fbfaf8
- *   · elevated #e8e6e2 · mock #ddd9d3 · CTA #1c1917 / #fafaf9
- *   · lenke #a43a0a · hårlinje color-mix(oklab, text 12%/28%, transparent)
- * Mørk: page #121110 · text #f5f4f2 / #aaa8a3 · card #1a1918
- *   · CTA invertert #fafaf9 på #121110 · lenke #ffb27f
+ * Lys: canvas #ffffff · canvas-soft #f3f3f3 · field/hairline-soft #f0f0f0
+ *   · hairline #e0e0e0 · ink #141414 / #262626 / #707070 / #adadad
+ *   · CTA #141414 / #ffffff · aksent #0066ff KUN Popular/savings
+ * Mørk: samme stige invertert (canvas↔ink, canvas-soft↔ink-soft)
  *
- * Geist + Geist Mono (Inter / JetBrains Mono er fallback). Radius-base .625rem.
- * Pille-CTA 9999px. Hårlinjer > skygge. ⛔ Linear acid-lime. ⛔ Attio Action Blue.
+ * Inter variabel 650/450/300 (Saans 652/456/300). Fallback:
+ * -apple-system, "Helvetica Neue", Arial, sans-serif.
+ * Stadium-pille 9999px på kontroller. Kort 24px. Felt 16px.
+ * Skyggefri — tint-stige + hårlinjer. ⛔ Synara-stein / terracotta-pip.
+ * ⛔ Attio/Apple Action Blue som CTA. ⛔ Linear acid-lime.
  * ⛔ Ronny-kropp / logogrønn som UI-aksent. Suksess-grønn er informasjon.
  *
  * Tailwind 4 leser disse via @theme (packages/ui/src/theme.css). Bytt verdier
@@ -23,31 +26,30 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --ew-bg: #f5f4f2;
-  --ew-sidebar: #fbfaf8;
-  --ew-sidebar-active: #e8e6e2;
-  --ew-sidebar-section: #66635e;
-  --ew-surface: #fbfaf8;
-  --ew-surface-2: #e8e6e2;
-  --ew-inset: #ddd9d3;
-  --ew-fg: #141413;
-  --ew-fg-muted: #5b5955;
-  --ew-fg-faint: #66635e;
-  --ew-border: color-mix(in oklab, #141413 12%, transparent);
-  --ew-border-strong: color-mix(in oklab, #141413 28%, transparent);
-  --ew-divider-soft: color-mix(in oklab, #141413 12%, transparent);
-  --ew-divide: color-mix(in oklab, #141413 12%, transparent);
+  --ew-bg: #ffffff;
+  --ew-sidebar: #ffffff;
+  --ew-sidebar-active: #f3f3f3;
+  --ew-sidebar-section: #707070;
+  --ew-surface: #ffffff;
+  --ew-surface-2: #f3f3f3;
+  --ew-inset: #f0f0f0;
+  --ew-fg: #141414;
+  --ew-fg-muted: #707070;
+  --ew-fg-faint: #adadad;
+  --ew-border: #e0e0e0;
+  --ew-border-strong: #e0e0e0;
+  --ew-divider-soft: #f0f0f0;
+  --ew-divide: #f0f0f0;
 
-  --ew-accent: #a43a0a;
-  --ew-accent-strong: #a43a0a;
-  --ew-accent-fg: #fafaf9;
-  --ew-accent-soft: color-mix(in oklab, #a43a0a 12%, transparent);
-  --ew-accent-dim: color-mix(in oklab, #a43a0a 10%, transparent);
-  --ew-accent-on-dark: #ffb27f;
-  --ew-accent-pip: #c45a1a;
-  --ew-focus: #a43a0a;
-  --ew-ink-utility: #1c1917;
-  --ew-ink-hover: #292524;
+  --ew-accent: #0066ff;
+  --ew-accent-strong: #0066ff;
+  --ew-accent-fg: #ffffff;
+  --ew-accent-soft: color-mix(in oklab, #0066ff 12%, transparent);
+  --ew-accent-dim: color-mix(in oklab, #0066ff 10%, transparent);
+  --ew-accent-on-dark: #0066ff;
+  --ew-focus: #141414;
+  --ew-ink-utility: #141414;
+  --ew-ink-hover: #262626;
 
   --ew-warn: #b45309;
   --ew-warn-soft: #fef3c7;
@@ -56,46 +58,45 @@
   --ew-success: #15b042;
   --ew-success-soft: #caface;
 
-  --ew-bevel-face: #e8e6e2;
-  --ew-bevel-border: color-mix(in oklab, #141413 28%, transparent);
+  --ew-bevel-face: #f3f3f3;
+  --ew-bevel-border: #e0e0e0;
   --ew-bevel-shadow: none;
-  --ew-bevel-fg: #141413;
+  --ew-bevel-fg: #141414;
 
-  --ew-glass-bg: #fbfaf8;
-  --ew-glass-border: color-mix(in oklab, #141413 12%, transparent);
+  --ew-glass-bg: #ffffff;
+  --ew-glass-border: #e0e0e0;
   --ew-glass-blur: 0px;
 }
 
-/* Mørkt — `.dark` på html (Synara) og `[data-theme=dark]` (eksisterende kontrakt) */
+/* Mørkt — polaritetsinversjon av Mobbin, ikke Synara-stein */
 .dark,
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --ew-bg: #121110;
-  --ew-sidebar: #1a1918;
-  --ew-sidebar-active: color-mix(in oklab, #f5f4f2 8%, #1a1918);
-  --ew-sidebar-section: #aaa8a3;
-  --ew-surface: #1a1918;
-  --ew-surface-2: color-mix(in oklab, #f5f4f2 8%, #121110);
-  --ew-inset: #121110;
-  --ew-fg: #f5f4f2;
-  --ew-fg-muted: #aaa8a3;
-  --ew-fg-faint: #aaa8a3;
-  --ew-border: color-mix(in oklab, #f5f4f2 12%, transparent);
-  --ew-border-strong: color-mix(in oklab, #f5f4f2 28%, transparent);
-  --ew-divider-soft: color-mix(in oklab, #f5f4f2 12%, transparent);
-  --ew-divide: color-mix(in oklab, #f5f4f2 12%, transparent);
+  --ew-bg: #141414;
+  --ew-sidebar: #141414;
+  --ew-sidebar-active: #262626;
+  --ew-sidebar-section: #adadad;
+  --ew-surface: #262626;
+  --ew-surface-2: #262626;
+  --ew-inset: #262626;
+  --ew-fg: #ffffff;
+  --ew-fg-muted: #adadad;
+  --ew-fg-faint: #707070;
+  --ew-border: #262626;
+  --ew-border-strong: #3d3d3d;
+  --ew-divider-soft: #262626;
+  --ew-divide: #262626;
 
-  --ew-accent: #ffb27f;
-  --ew-accent-strong: #ffb27f;
-  --ew-accent-fg: #121110;
-  --ew-accent-soft: color-mix(in oklab, #ffb27f 16%, transparent);
-  --ew-accent-dim: color-mix(in oklab, #ffb27f 12%, transparent);
-  --ew-accent-on-dark: #ffd0b5;
-  --ew-accent-pip: #ffb27f;
-  --ew-focus: #ffb27f;
-  --ew-ink-utility: #fafaf9;
-  --ew-ink-hover: #e7e5e4;
+  --ew-accent: #0066ff;
+  --ew-accent-strong: #0066ff;
+  --ew-accent-fg: #141414;
+  --ew-accent-soft: color-mix(in oklab, #0066ff 16%, transparent);
+  --ew-accent-dim: color-mix(in oklab, #0066ff 12%, transparent);
+  --ew-accent-on-dark: #0066ff;
+  --ew-focus: #ffffff;
+  --ew-ink-utility: #ffffff;
+  --ew-ink-hover: #f3f3f3;
 
   --ew-warn: #e0a04a;
   --ew-warn-soft: rgba(224, 160, 74, 0.14);
@@ -104,19 +105,19 @@
   --ew-success: #15b042;
   --ew-success-soft: rgba(21, 176, 66, 0.16);
 
-  --ew-bevel-face: color-mix(in oklab, #f5f4f2 8%, #121110);
-  --ew-bevel-border: color-mix(in oklab, #f5f4f2 28%, transparent);
+  --ew-bevel-face: #262626;
+  --ew-bevel-border: #3d3d3d;
   --ew-bevel-shadow: none;
-  --ew-bevel-fg: #f5f4f2;
+  --ew-bevel-fg: #ffffff;
 
-  --ew-glass-bg: #1a1918;
-  --ew-glass-border: color-mix(in oklab, #f5f4f2 12%, transparent);
+  --ew-glass-bg: #262626;
+  --ew-glass-border: #3d3d3d;
 }
 
 /* Form og mål — temauavhengig */
 :root {
   --ew-control-h: 32px;
-  --ew-radius-control: 0.625rem;
+  --ew-radius-control: 9999px;
   --ew-row-h: 40px;
   --ew-row-h-store: 44px;
   --ew-badge-h: 20px;
@@ -124,12 +125,12 @@
   --ew-switch-w: 24px;
   --ew-switch-h: 14px;
   --ew-switch-thumb: 10px;
-  --ew-switch-track-on: var(--ew-accent);
+  --ew-switch-track-on: var(--ew-ink-utility);
 
-  --ew-radius-sm: 3px;
-  --ew-radius-md: 6px;
-  --ew-radius-lg: 0.625rem;
-  --ew-radius-xl: 0.625rem;
+  --ew-radius-sm: 16px;
+  --ew-radius-md: 24px;
+  --ew-radius-lg: 24px;
+  --ew-radius-xl: 24px;
   --ew-radius-pill: 9999px;
 
   --ew-space-1: 4px;
@@ -139,11 +140,9 @@
   --ew-space-6: 24px;
   --ew-space-8: 32px;
 
-  /* Geist først. Inter / JetBrains Mono er fallback only. */
-  --ew-font-sans:
-    var(--font-geist-sans, "Geist"), var(--font-inter, "Inter"), ui-sans-serif, system-ui,
-    -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Inter variabel (650/450/300). Saans-erstatning. */
+  --ew-font-sans: var(--font-inter, "Inter"), -apple-system, "Helvetica Neue", Arial, sans-serif;
   --ew-font-mono:
-    var(--font-geist-mono, "Geist Mono"), var(--font-jetbrains-mono, "JetBrains Mono"),
-    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
 }

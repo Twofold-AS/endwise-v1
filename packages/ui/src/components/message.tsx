@@ -118,7 +118,7 @@ export function MessageBubble({
       data-slot="message-bubble"
       className={cn(
         'w-fit max-w-[min(42rem,100%)] rounded-xl px-3 py-2 text-body leading-relaxed',
-        egen ? 'bg-accent-soft text-accent-strong' : 'bg-surface-2 text-fg',
+        egen ? 'bg-[var(--ew-ink-utility)] text-[var(--ew-accent-fg)]' : 'bg-surface-2 text-fg',
         className,
       )}
       {...props}

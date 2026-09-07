@@ -30,9 +30,9 @@
   --destructive: var(--ew-danger);
   --destructive-foreground: var(--ew-bg);
   --border: var(--ew-border);
-  --input: var(--ew-border-strong);
   --ring: var(--ew-focus);
-  --radius: var(--ew-radius-control);
+  --radius: var(--ew-radius-md);
+  --input: var(--ew-inset);
 }
 
 @theme inline {
@@ -41,7 +41,6 @@
   --color-sidebar: var(--ew-sidebar);
   --color-sidebar-active: var(--ew-sidebar-active);
   --color-sidebar-section: var(--ew-sidebar-section);
-  --color-accent-pip: var(--ew-accent-pip);
   --color-divide: var(--ew-divide);
   --color-ink-hover: var(--ew-ink-hover);
   --color-surface: var(--ew-surface);
@@ -93,7 +92,7 @@
   --radius-lg: var(--ew-radius-lg);
   --radius-xl: var(--ew-radius-xl);
   --radius-pill: var(--ew-radius-pill);
-  --radius-control: var(--ew-radius-control); /* 8px — utility */
+  --radius-control: var(--ew-radius-control); /* stadium 9999px */
   --radius-badge: var(--ew-badge-radius); /* 6px */
 
   /* Mål (eierens spec) */
@@ -105,20 +104,20 @@
   /*
    * Typeskala
    * Tre roller, ikke ni. Størrelse, linjehøyde og vekt er bakt inn i utilityen,
-   * slik at `text-title` alltid er 16/20/600 — det finnes ikke en variant der
-   * noen glemte vekten. Brødtekst 17/1.47 (Apple). Inter, ikke SF Pro.
+   * slik at `text-title` alltid er 16/20/650 — det finnes ikke en variant der
+   * noen glemte vekten. Inter-variabel (Saans 652/456/300 → 650/450/300).
    */
   --text-title: 16px;
   --text-title--line-height: 20px;
-  --text-title--font-weight: 600;
-  --text-title--letter-spacing: -0.02em;
+  --text-title--font-weight: 650;
+  --text-title--letter-spacing: 0;
   --text-label: 13px;
   --text-label--line-height: 16px;
-  --text-label--font-weight: 400;
+  --text-label--font-weight: 450;
   --text-body: 17px;
-  --text-body--line-height: 1.47;
-  --text-body--font-weight: 400;
-  --text-body--letter-spacing: -0.011em;
+  --text-body--line-height: 1.38;
+  --text-body--font-weight: 450;
+  --text-body--letter-spacing: 0;
 
   --font-sans: var(--ew-font-sans);
   --font-mono: var(--ew-font-mono);

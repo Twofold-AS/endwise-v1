@@ -1,3 +1,4 @@
+import { CTA_PRIMAR, CTA_SEKUNDAR } from './cta';
 import {
   BILDE_SLOTS,
   BUNN_CTA_TEKST,
@@ -25,10 +26,8 @@ export function MarkedsSide() {
 
       <section data-markeds-seksjon="hero" className={`${KOLONNE} pt-10 pb-20 md:pt-16 md:pb-28`}>
         <div className="mx-auto flex max-w-[720px] flex-col items-center text-center">
-          <h1 className="font-semibold text-[44px] text-fg leading-[1.05] tracking-[-0.03em] sm:text-[64px]">
-            {H1}
-          </h1>
-          <p className="mt-5 max-w-[36em] text-[17px] text-fg-muted leading-relaxed sm:text-[19px]">
+          <h1 className="font-[650] text-[44px] text-fg leading-none sm:text-[64px]">{H1}</h1>
+          <p className="mt-5 max-w-[36em] font-[300] text-[17px] text-fg-muted leading-[1.38] sm:text-[20px]">
             {HERO_LINJE}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
@@ -45,11 +44,11 @@ export function MarkedsSide() {
       </section>
 
       <section data-markeds-seksjon="lofter" className={`${KOLONNE} pb-20 md:pb-28`}>
-        <ul className="grid gap-px overflow-hidden rounded-[0.625rem] border border-divide bg-divide md:grid-cols-3">
+        <ul className="grid gap-3 md:grid-cols-3">
           {LOFTER.map((kort) => (
-            <li key={kort.tittel} className="flex flex-col gap-3 bg-surface p-7">
-              <h2 className="font-semibold text-[21px] text-fg tracking-tight">{kort.tittel}</h2>
-              <p className="text-body text-fg-muted leading-relaxed">{kort.tekst}</p>
+            <li key={kort.tittel} className="flex flex-col gap-3 rounded-[24px] bg-surface-2 p-7">
+              <h2 className="font-[650] text-[21px] text-fg">{kort.tittel}</h2>
+              <p className="text-body text-fg-muted">{kort.tekst}</p>
             </li>
           ))}
         </ul>
@@ -63,10 +62,10 @@ export function MarkedsSide() {
         {PRODUKT.map((rad) => {
           const tekst = (
             <div className="flex max-w-[38ch] flex-col gap-3">
-              <h2 className="font-semibold text-[28px] text-fg leading-tight tracking-tight sm:text-[32px]">
+              <h2 className="font-[650] text-[28px] text-fg leading-[1.13] sm:text-[32px]">
                 {rad.tittel}
               </h2>
-              <p className="text-[17px] text-fg-muted leading-relaxed">{rad.tekst}</p>
+              <p className="font-[450] text-[17px] text-fg-muted leading-[1.38]">{rad.tekst}</p>
             </div>
           );
           const bilde = (
@@ -94,24 +93,36 @@ export function MarkedsSide() {
 
       <section id="pris" data-markeds-seksjon="pris" className={`${KOLONNE} pb-16 md:pb-24`}>
         <div className="mx-auto mb-10 max-w-[36em] text-center">
-          <h2 className="font-semibold text-[28px] text-fg tracking-tight sm:text-[32px]">Pris</h2>
+          <h2 className="font-[650] text-[28px] text-fg sm:text-[32px]">Pris</h2>
           <p className="mt-3 text-body text-fg-muted">{PRIS_FOT}</p>
         </div>
-        <ul className="grid gap-px overflow-hidden rounded-[0.625rem] border border-divide bg-divide md:grid-cols-3">
+        <ul className="grid gap-3 md:grid-cols-3">
           {PRIS_KORT.map((kort) => (
             <li
               key={kort.key}
               data-pris-nivaa={kort.key}
               data-pris-valgt={kort.valgt ? 'true' : 'false'}
-              className={`flex flex-col p-7 ${kort.valgt ? 'bg-surface-2' : 'bg-surface'}`}
+              className={`flex flex-col rounded-[24px] p-7 ${
+                kort.valgt ? 'bg-surface-2' : 'border border-[var(--ew-divider-soft)] bg-bg'
+              }`}
             >
-              <p className="text-label text-fg">{kort.navn}</p>
-              <p className="mt-4 font-semibold text-[36px] text-fg tracking-tight">
+              <div className="flex items-center gap-2">
+                <p className="text-label text-fg">{kort.navn}</p>
+                {kort.valgt ? (
+                  <span
+                    data-pris-popular
+                    className="inline-flex h-5 items-center rounded-pill bg-[var(--ew-accent)] px-2 font-[600] text-[11px] text-[var(--ew-accent-fg)]"
+                  >
+                    Populær
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-4 font-[650] text-[36px] text-fg">
                 {kort.pris}
-                <span className="ml-1 font-normal text-[13px] text-fg-muted">kr/mnd</span>
+                <span className="ml-1 font-[450] text-[13px] text-fg-muted">kr/mnd</span>
               </p>
               <p className="text-[12px] text-fg-muted">eks. mva</p>
-              <p className="mt-3 text-body text-fg-muted leading-relaxed">{kort.pitch}</p>
+              <p className="mt-3 text-body text-fg-muted">{kort.pitch}</p>
               <ul className="mt-5 flex flex-col gap-2">
                 {kort.punkter.map((p) => (
                   <li key={p} className="text-[13px] text-fg leading-snug">
@@ -120,7 +131,10 @@ export function MarkedsSide() {
                 ))}
               </ul>
               <div className="mt-8">
-                <PrimarCtaLenke tekst="Ta kontakt" />
+                <PrimarCtaLenke
+                  tekst="Ta kontakt"
+                  className={kort.valgt ? CTA_PRIMAR : CTA_SEKUNDAR}
+                />
               </div>
             </li>
           ))}
@@ -134,18 +148,14 @@ export function MarkedsSide() {
       </section>
 
       <section data-markeds-seksjon="bunn-cta" className={`${KOLONNE} pb-8`}>
-        <div className="flex flex-col items-center gap-5 bg-surface px-6 py-16 text-center">
-          <h2 className="font-semibold text-[28px] text-fg tracking-tight sm:text-[32px]">
-            {BUNN_CTA_TITTEL}
-          </h2>
+        <div className="flex flex-col items-center gap-5 rounded-[24px] bg-surface-2 px-6 py-16 text-center">
+          <h2 className="font-[650] text-[28px] text-fg sm:text-[32px]">{BUNN_CTA_TITTEL}</h2>
           <p className="max-w-[36em] text-body text-fg-muted">{BUNN_CTA_TEKST}</p>
           <PrimarCtaLenke />
         </div>
       </section>
 
-      <div className={KOLONNE}>
-        <MarkedsFooter />
-      </div>
+      <MarkedsFooter />
     </main>
   );
 }

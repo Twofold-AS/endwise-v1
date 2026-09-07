@@ -61,7 +61,7 @@ function StatusIkon({ status }: { status: ToolPartStatus }) {
   if (status === 'output-denied') {
     return <X className="size-3.5 shrink-0 text-fg-muted" aria-hidden />;
   }
-  return <Check className="size-3.5 shrink-0 text-accent-strong" aria-hidden />;
+  return <Check className="size-3.5 shrink-0 text-fg" aria-hidden />;
 }
 
 /**

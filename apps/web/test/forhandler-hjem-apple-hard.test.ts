@@ -44,7 +44,7 @@ const CHROME_URORT = [
   'apps/web/app/(app)/_shell/seksjon-bar.tsx',
   'apps/web/app/(app)/_workshop/workshop-bloub.tsx',
   'apps/web/app/(app)/_shell/phone-home-mekaniker.tsx',
-  // markeds-chrome.tsx er Synara-restylet (F5-35) — ikke Apple-låst.
+  // markeds-chrome.tsx er Mobbin-restylet (F5-35) — ikke Apple-låst.
 ] as const;
 
 describe('Jonas hard-fasit — forhandler-hjem Apple', () => {

@@ -259,9 +259,7 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
 
   it('svart logo.svg inverteres til hvit i mørkt tema, uten hvit sidebakgrunn', () => {
     const tema = les('../../../packages/ui/src/theme.css');
-    expect(tema).toMatch(
-      /\.logo-invert[\s\S]{0,80}filter:\s*brightness\(0\)\s+invert\(1\)/,
-    );
+    expect(tema).toMatch(/\.logo-invert[\s\S]{0,80}filter:\s*brightness\(0\)\s+invert\(1\)/);
     expect(PHONE_SHELL_ROT).toMatch(/bg-bg/);
     expect(PHONE_SHELL_ROT).not.toMatch(/bg-white/);
   });

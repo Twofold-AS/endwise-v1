@@ -1,8 +1,8 @@
 /**
  * Token-kontrakten i TS (navnene er kanoniske, verdiene bor i tokens.css).
- * Verdier bor i tokens.css. Standard er lyst tema. CTA-fyll er ink #1c1d1f;
- * Action Blue #407ff2 er lenker/aktiv. Logogrønnen #1ED27D er merkevare i
- * logo.svg, ikke UI-aksent.
+ * Lyst tema (html / marketing / widget): Attio-ink CTA, Action Blue-lenker.
+ * Mørkt tema (dealer/app-skall): Linear midnight — Acid Lime CTA, void-tekst.
+ * Logogrønnen #1ED27D er merkevare i logo.svg, ikke UI-aksent.
  */
 export const tokenNames = [
   'ew-bg',
@@ -13,6 +13,7 @@ export const tokenNames = [
   'ew-fg',
   'ew-fg-muted',
   'ew-fg-faint',
+  'ew-heading',
   'ew-accent',
   'ew-accent-fg',
   'ew-accent-dim',

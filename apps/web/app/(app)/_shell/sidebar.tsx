@@ -37,8 +37,9 @@ const IKON_DESKTOP = 20;
 /**
  * Desktop: persistent venstre skinne (alltid synlig, innhold ved siden).
  * Ingen collapse/expand på desktop. Telefon: fullskjerm-overlay, lukket
- * default, åpnes fra PhoneShell. Hvit flate. Hjelp-TipCard er ute;
- * nederst sitter Galaxy-oppgraderingspillen.
+ * default, åpnes fra PhoneShell. Linear carbon-nav (arver data-theme=dark).
+ * Nav-boks flush-right; tekst venstre, ikon høyre, synlig gap.
+ * Hjelp-TipCard er ute; nederst sitter oppgraderingspillen.
  */
 export function Sidebar() {
   const pathname = usePathname() ?? '';
@@ -255,16 +256,16 @@ function NavRow({
   );
   const innhold = (
     <>
-      <Ikon icon={item.icon} active={active} collapsed={collapsed} />
       {!collapsed && (
-        <>
-          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-[20px] md:text-right md:text-[16px] md:leading-[20px]">
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="h-6 min-w-0 truncate text-left md:h-[20px] md:text-[16px] md:leading-[20px]">
             {item.label}
           </span>
           {item.isNew && <NewBadge />}
           {count > 0 ? teller : null}
-        </>
+        </span>
       )}
+      <Ikon icon={item.icon} active={active} collapsed={collapsed} />
     </>
   );
 
@@ -274,9 +275,13 @@ function NavRow({
       aria-current={active ? 'page' : undefined}
       title={collapsed ? item.label : undefined}
       onClick={onNavigate}
-      className={`flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors md:h-[50px] md:gap-0 ${
-        collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[259px] md:justify-between md:px-3'
-      } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}
+      className={`relative flex h-control w-full items-center rounded-control text-label text-fg transition-colors md:h-[50px] ${
+        collapsed ? 'justify-center px-0' : 'justify-between gap-3 px-2.5 md:w-[259px] md:px-3'
+      } ${
+        active
+          ? 'bg-sidebar-active before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
+          : 'hover:bg-sidebar-active/60'
+      }`}
     >
       {innhold}
     </Link>
@@ -313,7 +318,7 @@ function Ikon({
   collapsed: boolean;
 }) {
   return (
-    <span className={`inline-flex shrink-0 ${active ? 'text-fg' : 'text-fg-muted'}`}>
+    <span className={`inline-flex shrink-0 ${active ? 'text-primary' : 'text-fg-muted'}`}>
       <I size={IKON} strokeWidth={1.75} className="md:hidden" />
       <I size={collapsed ? IKON : IKON_DESKTOP} strokeWidth={1.75} className="hidden md:inline" />
     </span>

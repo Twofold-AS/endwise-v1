@@ -9,6 +9,7 @@ type RonnySheetState = {
   apne: () => void;
   lukk: () => void;
   forstor: () => void;
+  forminsk: () => void;
 };
 
 const fallback: RonnySheetState = {
@@ -17,6 +18,7 @@ const fallback: RonnySheetState = {
   apne: () => {},
   lukk: () => {},
   forstor: () => {},
+  forminsk: () => {},
 };
 
 const Ctx = createContext<RonnySheetState>(fallback);
@@ -36,9 +38,12 @@ export function RonnySheetProvider({ children }: { children: ReactNode }) {
     setHoyde(100);
     setApen(true);
   }, []);
+  const forminsk = useCallback(() => {
+    setHoyde(80);
+  }, []);
   const value = useMemo(
-    () => ({ apen, hoyde, apne, lukk, forstor }),
-    [apen, hoyde, apne, lukk, forstor],
+    () => ({ apen, hoyde, apne, lukk, forstor, forminsk }),
+    [apen, hoyde, apne, lukk, forstor, forminsk],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

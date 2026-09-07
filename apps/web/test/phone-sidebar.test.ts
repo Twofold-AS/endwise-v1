@@ -46,7 +46,7 @@ describe('Mikael telefon-chrome — to toppbarer, sidebar skjult (07.09.2026)', 
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).not.toMatch(/PhoneBevel/);
     expect(chrome).toMatch(/SHELL_LOGO_PX = 24/);
-    expect(chrome).toMatch(/PHONE_AVATAR_PX = 40/);
+    expect(chrome).toMatch(/PHONE_AVATAR_PX = 28/);
     expect(chrome).toMatch(/SHELL_HEADER_RAD/);
     expect(header).toMatch(/SHELL_LOGO_PX/);
     expect(header).toMatch(/SHELL_LOGO_WRAP/);

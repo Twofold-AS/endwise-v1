@@ -30,7 +30,7 @@ import { erTillattGaaTil } from './gaa-til';
 import { GradualBlur } from './gradual-blur';
 import { norskChatFeil } from './norsk-chat-feil';
 import { RonnyBot } from './ronny-bot';
-import { RonnyForstorIkon, RonnyHandtak } from './ronny-ikoner';
+import { RonnyForminskIkon, RonnyForstorIkon, RonnyHandtak } from './ronny-ikoner';
 import {
   RONNY_SHEET_RADIUS_PX,
   ronnySheetEtterDra,
@@ -72,10 +72,11 @@ export function WorkshopBloub() {
   const search = useSearchParams()?.toString() ?? '';
   const router = useRouter();
   const { phoneOpen } = useSidebarState();
-  const { apen, hoyde, lukk, forstor } = useRonnySheet();
+  const { apen, hoyde, lukk, forstor, forminsk } = useRonnySheet();
   const [promptTekst, setPromptTekst] = useState('');
   const [synlig, setSynlig] = useState(0);
   const [loggOverflow, setLoggOverflow] = useState(false);
+  const [paaTopp, setPaaTopp] = useState(true);
   const composerRef = useRef<HTMLDivElement>(null);
   const phoneLoggRef = useRef<HTMLDivElement>(null);
   const desktopLoggRef = useRef<HTMLDivElement>(null);
@@ -106,6 +107,11 @@ export function WorkshopBloub() {
     if (!phoneOpen) return;
     lukk();
   }, [phoneOpen, lukk]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset topp-plass når sheet åpnes eller hopper 80↔100
+  useEffect(() => {
+    if (apen) setPaaTopp(true);
+  }, [apen, hoyde]);
 
   useEffect(() => {
     const scroller = document.querySelector<HTMLElement>('[data-ronny-side-scroll]');
@@ -199,6 +205,9 @@ export function WorkshopBloub() {
         ref={loggRef}
         data-ronny-traad
         className="no-scrollbar flex h-full min-h-0 flex-col gap-6 overflow-y-auto px-3 pt-1 pb-1 md:gap-5"
+        onScroll={(e) => {
+          setPaaTopp(e.currentTarget.scrollTop <= 2);
+        }}
       >
         {messages.map((melding) => {
           const tekstDel = tekstFraMelding(melding);
@@ -298,7 +307,7 @@ export function WorkshopBloub() {
           role="dialog"
           aria-label="Ronny"
         >
-          <div className="flex justify-center pt-2">
+          <div className="flex justify-center pt-0.5">
             <button
               type="button"
               data-ronny-handtak
@@ -307,7 +316,7 @@ export function WorkshopBloub() {
               aria-label="Dra for å lukke eller forstørre"
               onPointerDown={onHandtakNed}
               onPointerUp={onHandtakOpp}
-              className="flex min-h-11 cursor-grab touch-none items-center justify-center px-6 py-1 active:cursor-grabbing"
+              className="flex min-h-8 cursor-grab touch-none items-center justify-center px-6 py-0.5 active:cursor-grabbing"
             >
               <RonnyHandtak />
             </button>
@@ -316,18 +325,33 @@ export function WorkshopBloub() {
             data-ronny-sheet-header
             className="flex h-row shrink-0 items-center justify-between px-2"
           >
-            <button
-              type="button"
-              data-ronny-forstor
-              aria-label="Forstørr"
-              aria-pressed={utvidet}
-              className={HIT}
-              onClick={forstor}
-            >
-              <RonnyForstorIkon />
-            </button>
+            {!utvidet ? (
+              <button
+                type="button"
+                data-ronny-forstor
+                aria-label="Forstørr"
+                aria-pressed={utvidet}
+                className={HIT}
+                onClick={forstor}
+              >
+                <RonnyForstorIkon />
+              </button>
+            ) : paaTopp ? (
+              <span data-ronny-topp className="inline-flex size-11 items-center justify-center">
+                <RonnyBot size={28} paper="#ffffff" expression="heureux" />
+              </span>
+            ) : (
+              <button
+                type="button"
+                data-ronny-forminsk
+                aria-label="Forminsk chat"
+                className={HIT}
+                onClick={forminsk}
+              >
+                <RonnyForminskIkon />
+              </button>
+            )}
             <div className="flex min-w-0 items-center gap-2">
-              <RonnyBot size={28} paper="#ffffff" />
               <span className="truncate text-title text-[#1d1d1f]">Ronny</span>
               {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
             </div>

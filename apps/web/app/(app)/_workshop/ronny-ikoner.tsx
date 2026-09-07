@@ -41,6 +41,29 @@ export function RonnyForstorIkon({ size = 18 }: { size?: number }) {
   );
 }
 
+/** Forminsk fra 100 % — hjørner peker inn. Speil av RonnyForstorIkon. */
+export function RonnyForminskIkon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      role="presentation"
+      aria-hidden
+    >
+      <path
+        d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function RonnyPil({ size = 16, opp = false }: { size?: number; opp?: boolean }) {
   return (
     <svg

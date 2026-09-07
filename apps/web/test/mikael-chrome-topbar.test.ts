@@ -26,7 +26,7 @@ describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
   });
 
-  it('logo er 24px merke; Ronny/profil er 40px-sirkler; desktop-ikon 16/20', () => {
+  it('logo er 24px merke; Ronny/profil er 28px-sirkler; desktop-ikon 16/20', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     expect(SHELL_LOGO_PX).toBe(24);
     expect(SHELL_TOGGLE_PX).toBe(16);
@@ -39,7 +39,7 @@ describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
     expect(shell).not.toMatch(/SHELL_TOGGLE_PX/);
     expect(header).toMatch(/SHELL_LOGO_PX|width=\{24\}|LOGO = 24/);
     expect(shell).toMatch(/SHELL_LOGO_PX|PHONE_LOGO_PX|width=\{24\}/);
-    expect(chrome).toMatch(/PHONE_AVATAR_PX = 40/);
+    expect(chrome).toMatch(/PHONE_AVATAR_PX = 28/);
     expect(chrome).toMatch(/SHELL_TOGGLE_PX = 16/);
     expect(chrome).not.toMatch(/SHELL_TOGGLE_PX = 24/);
     expect(header).not.toMatch(/LOGO = 18/);

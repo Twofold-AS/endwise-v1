@@ -7,8 +7,8 @@
 export const SHELL_LOGO_PX = 24;
 export const PHONE_LOGO_PX = SHELL_LOGO_PX;
 
-/** Ronny- og profil-sirkel i telefon top-bar 1 — samme mål. */
-export const PHONE_AVATAR_PX = 40;
+/** Ronny- og profil-sirkel i telefon top-bar 1 — samme mål. Mikael 07.09 kveld: 28, ikke 40. */
+export const PHONE_AVATAR_PX = 28;
 
 /** Samme 16px som sidebar-rader (`IKON` i sidebar.tsx). PC-skinne. */
 export const SHELL_TOGGLE_PX = 16;

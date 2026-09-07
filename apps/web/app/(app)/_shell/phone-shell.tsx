@@ -6,16 +6,17 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { isVerkstedInspectPath } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
-import { RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
+import { RONNY_PHONE_IDLE, RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
 import { destinasjonerForShell, isItemActive, shellForBruker } from './nav';
 import { PHONE_AVATAR_PX, PHONE_LOGO_PX } from './phone-chrome';
 import { PhoneHScroll } from './phone-h-scroll';
 import { PHONE_SAFE_TOP, phoneHjemHref, phoneInnstillingerHref } from './phone-home';
+import { PhoneSokOverlay } from './phone-sok-overlay';
 
-const HIT = 'inline-flex size-10 shrink-0 items-center justify-center rounded-full text-fg';
+const HIT = 'inline-flex size-7 shrink-0 items-center justify-center rounded-full text-fg';
 const SIRKEL =
-  'inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-2 text-label text-fg';
+  'inline-flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-2 text-label text-fg';
 
 /**
  * Telefon-chrome (Mikael 07.09.2026): to toppbarer, sidebar skjult.
@@ -30,6 +31,7 @@ export function PhoneShell() {
   const { apen, apne, lukk } = useRonnySheet();
   const { spin, trigg } = useRonnySpinn();
   const [sok, setSok] = useState('');
+  const [sokApen, setSokApen] = useState(false);
   const shell = shellForBruker({
     role,
     jobFunction: jobbfunksjon,
@@ -105,9 +107,10 @@ export function PhoneShell() {
               type="search"
               value={sok}
               onChange={(e) => setSok(e.target.value)}
+              onFocus={() => setSokApen(true)}
               placeholder="Søk"
               aria-label="Søk destinasjoner"
-              className="h-10 w-full rounded-sm border-0 bg-inset px-3 text-label text-fg placeholder:text-fg-faint outline-none focus-visible:outline-2 focus-visible:outline-ring"
+              className="h-8 w-full rounded-sm border-0 bg-inset px-3 text-label text-fg placeholder:text-fg-faint outline-none focus-visible:outline-2 focus-visible:outline-ring"
             />
           </form>
           <button
@@ -122,7 +125,12 @@ export function PhoneShell() {
               else apne();
             }}
           >
-            <RonnyBot size={PHONE_AVATAR_PX} paper="var(--ew-bg)" spin={spin} />
+            <RonnyBot
+              size={PHONE_AVATAR_PX}
+              paper="var(--ew-bg)"
+              spin={spin}
+              idleSett={RONNY_PHONE_IDLE}
+            />
           </button>
           <Link
             href={phoneInnstillingerHref(shell) as Route}
@@ -155,6 +163,20 @@ export function PhoneShell() {
         </div>
         <div data-phone-chrome-hairline className="h-px bg-border" />
       </header>
+      <PhoneSokOverlay
+        apen={sokApen}
+        verdi={sok}
+        onVerdi={setSok}
+        onAvbryt={() => {
+          setSokApen(false);
+          setSok('');
+        }}
+        dest={dest}
+        onVelg={(href) => {
+          setSokApen(false);
+          router.push(href as Route);
+        }}
+      />
     </>
   );
 }

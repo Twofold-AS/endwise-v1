@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-07 — F5-13 telefon-chrome CODE-GO kveld (28px + søk + Ronny-sheet)
+
+**Type:** telefon-chrome-polish. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael CODE-GO (eier) — utvider draft #150. Dest-nav-fiks beholdt.
+**Endring:** **F5-13** `progress` (Jonas visual GO). Søk `h-8`, Ronny/profil 28px-sirkler. `RONNY_PHONE_IDLE` uten `colere`. `PhoneSokOverlay`: Avbryt · nylige · dest-ikoner · dest-rader. Sheet: tettere håndtak, kompakt «Ronny» uten bot, full = forminsk / Ronny på logg-topp. Desktop 389/598/452 urørt. ⛔ pip/border-left. ⛔ #114/#119. Draft, ikke merge.
+
+---
+
 ## 2026-09-07 — F5-13 dest-nav tom etter #149 (chrome-first)
 
 **Type:** bugfix i delt destinasjonsliste. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

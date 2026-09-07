@@ -1,4 +1,10 @@
-<!-- Disarto Regular (MIT) pin d536bd59ae5c1baa8e7d07b599bb51946e113eb9 — source: sign-out.svg -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <path fill="currentColor" fill-rule="evenodd" d="M5.5 4.75c-.69 0-1.25.56-1.25 1.25v12c0 .69.56 1.25 1.25 1.25h6a.75.75 0 0 1 0 1.5h-6A2.75 2.75 0 0 1 2.75 18V6A2.75 2.75 0 0 1 5.5 3.25h6a.75.75 0 0 1 0 1.5z" clip-rule="evenodd"/><path fill="currentColor" fill-rule="evenodd" d="M15.572 7.494a.75.75 0 0 1 1.06-.048l4.374 4a.75.75 0 0 1 0 1.108l-4.375 4a.75.75 0 1 1-1.012-1.107l2.95-2.697H10.5a.75.75 0 0 1 0-1.5h8.068l-2.95-2.696a.75.75 0 0 1-.046-1.06" clip-rule="evenodd"/>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_16_51)">
+<path d="M14.6471 7.8V5.7C14.6471 5.14304 14.424 4.6089 14.0268 4.21507C13.6297 3.82125 13.091 3.6 12.5294 3.6H5.11765C4.55601 3.6 4.01738 3.82125 3.62024 4.21507C3.22311 4.6089 3 5.14304 3 5.7V18.3C3 18.857 3.22311 19.3911 3.62024 19.7849C4.01738 20.1787 4.55601 20.4 5.11765 20.4H12.5294C13.091 20.4 13.6297 20.1787 14.0268 19.7849C14.424 19.3911 14.6471 18.857 14.6471 18.3V16.2M8.29412 12H21M17.8235 15.15L21 12L17.8235 8.85" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_16_51">
+<rect width="24" height="24" fill="white"/>
+</clipPath>
+</defs>
 </svg>

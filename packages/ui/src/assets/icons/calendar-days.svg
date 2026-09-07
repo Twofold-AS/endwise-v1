@@ -1,4 +1,10 @@
-<!-- Disarto Regular (MIT) pin d536bd59ae5c1baa8e7d07b599bb51946e113eb9 — source: calendar-dots.svg -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <path fill="currentColor" d="M9 16.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0M12 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2M13 16.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0M16 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/><path fill="currentColor" fill-rule="evenodd" d="M8.75 1.8a.75.75 0 0 0-1.5 0v.95H7A4.25 4.25 0 0 0 2.75 7v10A4.25 4.25 0 0 0 7 21.25h10A4.25 4.25 0 0 0 21.25 17V7A4.25 4.25 0 0 0 17 2.75h-.25V1.8a.75.75 0 0 0-1.5 0v.95h-6.5zm6.5 3v-.55h-6.5v.55a.75.75 0 0 1-1.5 0v-.55H7A2.75 2.75 0 0 0 4.25 7v1.25h15.5V7A2.75 2.75 0 0 0 17 4.25h-.25v.55a.75.75 0 0 1-1.5 0m4.5 4.95H4.25V17A2.75 2.75 0 0 0 7 19.75h10A2.75 2.75 0 0 0 19.75 17z" clip-rule="evenodd"/>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_3_113)">
+<path d="M7.75 17.2202V17.1428M12.25 17.2202V17.1428M12.25 13.0286V12.9512M16.25 13.0286V12.9512M4.75 8.91425H18.75M6.55952 3V4.54304M16.75 3V4.54285M16.75 4.54285H6.75C5.09315 4.54285 3.75 5.92436 3.75 7.62855V17.9143C3.75 19.6185 5.09315 21 6.75 21H16.75C18.4069 21 19.75 19.6185 19.75 17.9143L19.75 7.62855C19.75 5.92436 18.4069 4.54285 16.75 4.54285Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_3_113">
+<rect width="24" height="24" fill="white"/>
+</clipPath>
+</defs>
 </svg>

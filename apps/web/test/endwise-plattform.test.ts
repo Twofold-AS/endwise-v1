@@ -118,9 +118,12 @@ describe('Se verkstedet er URL-lesing', () => {
 
   it('sidebar remap-er FORHANDLER_NAV under /endwise/verksted/[slug]', () => {
     const sidebar = les('../app/(app)/_shell/sidebar.tsx');
+    const nav = les('../app/(app)/_shell/nav.ts');
     expect(sidebar).toMatch(/remapHrefTilInspect/);
-    expect(sidebar).toMatch(/FORHANDLER_NAV/);
+    expect(sidebar).toMatch(/destinasjonerForShell/);
     expect(sidebar).toMatch(/inspect \? null/);
+    expect(nav).toMatch(/FORHANDLER_NAV/);
+    expect(nav).toMatch(/if \(input\.inspect\)/);
   });
 
   it('stale Forhandler-kontekst på plattform redirecter med toast', () => {
@@ -155,9 +158,12 @@ describe('Se verkstedet er URL-lesing', () => {
 
   it('sidebar tvinger Endwise-nav på plattform — også når rollen er dealer_admin', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
+    const nav = utenKommentarer(les('../app/(app)/_shell/nav.ts'));
     expect(sidebar).toMatch(/shellForBruker/);
     expect(sidebar).toMatch(/erPlattform/);
-    expect(sidebar).toMatch(/endwise_admin/);
+    expect(sidebar).toMatch(/destinasjonerForShell/);
+    expect(nav).toMatch(/endwise_admin/);
+    expect(nav).toMatch(/if \(input\.erPlattform\)/);
     expect(sidebar).not.toMatch(/ContextSwitcher/);
   });
 });

@@ -88,6 +88,14 @@ describe('destinasjonerForShell — delt chrome-nav (F5-13 dest-bug)', () => {
         shopEnabled: false,
       }).map((i) => i.label),
     ).toEqual([...DEALER_IA]);
+    expect(
+      destinasjonerForShell({
+        shell: 'endwise',
+        role: 'dealer_admin',
+        erPlattform: true,
+        shopEnabled: false,
+      }).map((i) => i.label),
+    ).toEqual(['Oversikt', 'Innboks', 'Forhandlere', 'Team', 'Hjelpeartikler', 'Flagg']);
   });
 
   it('PhoneShell og Sidebar deler destinasjonerForShell — ikke rå itemsForRole(role)', () => {

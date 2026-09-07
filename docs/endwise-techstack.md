@@ -66,7 +66,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **matrix-loaders** (portet fra TheFold) — «AI tenker»-animasjon per SSE-event; **beUI**-loader der det passer
 - **slot-text** — rullende KPI-siffer
 - **Container queries** (`@container`) — dock-layout responderer på plassen den får, ikke viewport
-- **lucide-react** (ikoner) — eneste ikonbibliotek
+- **lucide-react** (ikon-wrapper / `LucideIcon`) — eneste ikon-*API*. Chrome / sidebar / hjem-kunst er **Disarto Regular** (MIT, vendorisert SVG, F5-20). ⛔ Ikke `disarto-icons-react` som andre barrel. Mapping: `docs/notater/disarto-ikoner.md`
 - **beUI** (shadcn-registry `@beui`) — tilstands-komponenter (`StatefulButton`) + kanoniske bevegelses-tokens (`lib/ease.ts`)
 - **Charts: Amicro dither charts** (06.09.2026, Mikael — https://amicro.vercel.app/dither-charts). Vendorisert i `packages/ui/src/vendor/amicro/` (CLI-bin finnes ikke på `@subhanhq/amicro@1.0.1`). Produkt-flaten er Analyse/Rapporter: stacked bar, area growth, spline line, donut. Seriehex er Attio (ink `#1c1d1f`, Action Blue `#407ff2`). ⛔ Boring-Software dither-kit. Recharts/`chart.tsx` er ikke lenger motoren på disse flatene
 - **cuelume** (mikro-lyder) — valgfri polish, av som default

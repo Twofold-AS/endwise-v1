@@ -17,7 +17,9 @@
 
 ## Hva gikk galt
 
-Alt gikk som planlagt. Ingen Linear/Disarto-rest. Ingen ny stack-pakke.
+Alt gikk som planlagt for tokens, sidebar-mønster og landing. Ingen Linear/Disarto-rest. Ingen ny stack-pakke.
+
+Live `/home`-chrome er auth-låst i dette miljøet (ingen sesjon/DB). Lys/mørk ble verifisert på ekte `MarkedsSide` og på samme nav-data/rad-klasser som dealer-sidebaren.
 
 ## Fikser
 

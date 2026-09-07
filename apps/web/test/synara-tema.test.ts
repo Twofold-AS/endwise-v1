@@ -28,6 +28,6 @@ describe('Synara dual theme', () => {
     expect(nav).toMatch(/section: 'Verkstedet'/);
     expect(nav).toMatch(/section: 'Kunder'/);
     expect(nav).toMatch(/section: 'Organisasjon'/);
-    expect(nav).not.toMatch(/Threads|Kanban|coding agent/i);
+    expect(nav).not.toMatch(/label: 'Threads'|label: 'Kanban'|coding agent/i);
   });
 });

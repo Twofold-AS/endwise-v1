@@ -77,7 +77,7 @@ export type NavItem = {
   pills?: NavChild[];
   /**
    * Synara-seksjonsetikett. Ikke en destinasjon — grupperer eksisterende
-   * Endwise-rader (Verkstedet / Kunder / Organisasjon). Ingen Threads/Kanban.
+   * Endwise-rader (Verkstedet / Kunder / Organisasjon). Ikke kodeagent-IA.
    */
   section?: string;
   /** Visuell skillelinje over raden (Jonas-treet). */

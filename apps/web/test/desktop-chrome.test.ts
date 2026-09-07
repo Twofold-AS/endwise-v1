@@ -34,7 +34,7 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(MEKANIKER_NAV.some((i) => i.label === 'Hjelp')).toBe(false);
   });
 
-  it('sidebar: Synara-seksjon, pip, tekst venstre, OppgraderPille, ingen avatar', () => {
+  it('sidebar: seksjon, canvas-soft aktiv uten pip, tekst venstre, OppgraderPille, ingen avatar', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
     const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
@@ -43,10 +43,12 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(header).not.toMatch(/border-b/);
     expect(sidebar).not.toMatch(/min-h-10 shrink-0 items-center py-2[\s\S]{0,80}border-b-/);
     expect(sidebar).toMatch(/gap-\[4px\]/);
-    expect(sidebar).toMatch(/md:gap-0/);
     expect(sidebar).toMatch(/data-sidebar-section/);
-    expect(sidebar).toMatch(/data-sidebar-pip/);
-    expect(sidebar).toMatch(/bg-accent-pip/);
+    expect(sidebar).toMatch(/bg-sidebar-active/);
+    expect(sidebar).toMatch(/rounded-pill/);
+    expect(sidebar).not.toMatch(/data-sidebar-pip/);
+    expect(sidebar).not.toMatch(/bg-accent-pip/);
+    expect(sidebar).not.toMatch(/border-l-|border-left/);
     expect(sidebar).toMatch(/text-left/);
     expect(sidebar).not.toMatch(/md:text-right/);
     expect(sidebar).toMatch(/TemaToggle/);
@@ -66,7 +68,7 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
 
   it('app-skall: breadcrumb-topbar over boks 2, dual theme, ingen Ronny-stripe på desktop', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
-    const rot = les('../app/layout.tsx');
+    const rot = utenKommentarer(les('../app/layout.tsx'));
     const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
     const globals = les('../app/globals.css');
     const tema = les('../app/(app)/_lib/tema.ts');
@@ -77,7 +79,8 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(layout).toMatch(/md:w-\[598px\]/);
     expect(layout).toMatch(/WorkshopBloub/);
     expect(rot).toMatch(/TEMA_SKRIPT/);
-    expect(rot).toMatch(/Geist/);
+    expect(rot).toMatch(/Inter/);
+    expect(rot).not.toMatch(/Geist/);
     expect(rot).toMatch(/suppressHydrationWarning/);
     expect(tema).toMatch(/endwise:tema/);
     expect(tema).toMatch(/classList.toggle\('dark'/);

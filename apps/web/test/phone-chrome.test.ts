@@ -163,16 +163,17 @@ describe('phone-chrome', () => {
     expect(css).toMatch(/100dvh/);
   });
 
-  it('tilbake i toppbaren er history.back som pil-SVG, ikke PhoneHScroll', () => {
+  it('telefon top-bar 2 bruker PhoneHScroll for dest-piller; tilbake er ute', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
     expect(seksjon).not.toMatch(/PhoneHScroll/);
     expect(seksjon).toMatch(/DestinasjonSeksjonBar/);
-    expect(shell).toMatch(/data-shell-tilbake/);
-    expect(shell).toMatch(/router\.back\(\)/);
-    expect(shell).toMatch(/TilbakePil/);
-    expect(shell).toMatch(/aria-label="Tilbake"/);
+    expect(shell).toMatch(/PhoneHScroll/);
+    expect(shell).toMatch(/data-phone-dest/);
+    expect(shell).not.toMatch(/data-shell-tilbake/);
+    expect(shell).not.toMatch(/router\.back\(\)/);
+    expect(shell).not.toMatch(/TilbakePil/);
     expect(pil).toMatch(/<svg/);
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
     expect(pil).not.toMatch(/>Tilbake</);

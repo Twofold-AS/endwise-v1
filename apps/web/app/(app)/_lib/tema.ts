@@ -1,5 +1,5 @@
 /**
- * Dual theme (Synara): light | dark | system.
+ * Dual theme (Mobbin, lys først): light | dark | system.
  * System er default. Eksplisitt valg skrives til localStorage.
  * På html: både `data-theme` (eksisterende CSS) og klasse `.dark`.
  */

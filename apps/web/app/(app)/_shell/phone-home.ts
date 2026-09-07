@@ -17,8 +17,9 @@ import {
 import { FORHANDLER_NAV, type ShellKey, settingsForShell } from './nav';
 
 /**
- * Telefon-hjem-kort (Mikael 29.08.2026) er sideinnhold, ikke meny.
- * Meny: desktop = persistent skinne. Telefon = fullskjerm-overlay.
+ * Telefon-hjem-kort er sideinnhold, ikke meny.
+ * Meny: desktop = persistent skinne. Telefon = to toppbarer (dest-piller).
+ * Sidebaren er `hidden` under md — ingen overlay.
  */
 
 /** Rot: #84 dvh/overscroll + #85 min-h-svh. Safe-area sitter på toppbar og overlay. */
@@ -34,11 +35,12 @@ export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';
  * (`--ew-surface-2`, ash #f3f4f6 i lyst) mens `text-accent-fg` er `--ew-accent-fg`
  * (hvit i lyst). Den kombinasjonen er den vaskede «hvite overlay»-en.
  */
-export const PHONE_KORT_FYLL = 'rounded-xl border border-border bg-card text-fg shadow-none';
-/** Hero: radius 16, samme surface/hairline — ikke `#111`. */
-export const PHONE_HERO_FYLL = 'rounded-[16px] border border-border bg-card text-fg shadow-none';
-/** Destinasjonskort på dealer-hjem: radius 14, hvit flate på parchment. */
-export const PHONE_DEST_FYLL = 'rounded-[14px] border border-border bg-card text-fg shadow-none';
+/** Hvilekort: 24px, canvas + hairline-soft (`--ew-divide` #f0f0f0). */
+export const PHONE_KORT_FYLL = 'rounded-[24px] border border-divide bg-card text-fg shadow-none';
+/** Hero / featured: 24px, canvas-soft tint uten kant. */
+export const PHONE_HERO_FYLL = 'rounded-[24px] bg-surface-2 text-fg shadow-none';
+/** Destinasjonskort: samme hvileflate som PHONE_KORT_FYLL. */
+export const PHONE_DEST_FYLL = 'rounded-[24px] border border-divide bg-card text-fg shadow-none';
 
 /**
  * Parchment-scroll for dealer-hjem (innholdskolonne, ikke chrome).

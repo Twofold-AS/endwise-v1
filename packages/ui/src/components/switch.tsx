@@ -9,10 +9,8 @@ import type * as React from 'react';
  * shadcn selv bruker, og allerede en avhengighet. Ikke egen kode i betydningen
  * «ny primitiv»; kun shadcn-oppskriften med eierens mål.
  * Mål (eierens designprinsip, låst i widget-tokens):
- * track 24×14px · thumb 10px · track-på #0077E6
- * Merk at track-farge-på er en egen blå (`--ew-switch-track-on`), ikke
- * merkevareaksenten. Det er spesifisert slik, og det er faktisk fornuftig: en
- * bryter som er på skal lese som «på», ikke som «Endwise».
+ * track 24×14px · thumb 10px · track-på er ink (`--ew-ink-utility`).
+ * ⛔ #0066ff på bryteren — aksent er kun Popular/savings.
  */
 export function Switch({ className, ...props }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
   return (

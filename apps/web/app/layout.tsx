@@ -1,26 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { TEMA_SKRIPT } from './(app)/_lib/tema';
 import { Providers } from './providers';
 import './globals.css';
 
 /*
- * Synara-typografi: Geist + Geist Mono (next/font, selvhostet).
- * Inter og JetBrains Mono lastes som fallback-variabler — ikke primær UI-font.
+ * Mobbin-typografi: Inter variabel (Saans 652/456/300 → 650/450/300).
+ * Fallback-stabelen bor i widget-tokens. Ikke Synara-font.
  */
-const geistSans = Geist({
-  subsets: ['latin', 'latin-ext'],
-  variable: '--font-geist-sans',
-  display: 'swap',
-});
-
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-  display: 'swap',
-});
-
 const inter = Inter({
   subsets: ['latin', 'latin-ext'],
   variable: '--font-inter',
@@ -42,8 +30,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f5f4f2' },
-    { media: '(prefers-color-scheme: dark)', color: '#121110' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#141414' },
   ],
   colorScheme: 'light dark',
   viewportFit: 'cover',
@@ -56,11 +44,7 @@ export const viewport: Viewport = {
  */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html
-      lang="nb"
-      suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${mono.variable}`}
-    >
+    <html lang="nb" suppressHydrationWarning className={`${inter.variable} ${mono.variable}`}>
       <head>
         {/* FOUC: setter .dark / data-theme før paint. Konstant, ikke brukerinput. */}
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: statisk tema-skript */}

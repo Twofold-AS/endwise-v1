@@ -41,21 +41,25 @@ describe('Ronny — stripe/peek er borte, sheet er full bredde', () => {
   });
 });
 
-describe('Sidebar-toggle ytterst til høyre', () => {
-  it('toppbar-raden er justify-between — logo venstre, toggle høyre', () => {
+describe('Telefon top-bar 1 — merke, søk, Ronny, profil', () => {
+  it('desktop-header-raden er fortsatt justify-between', () => {
     const chrome = utenKommentarer(les('../app/(app)/_shell/phone-chrome.ts'));
     expect(chrome).toMatch(
       /SHELL_HEADER_RAD = 'flex h-row w-full items-center justify-between gap-2 px-3'/,
     );
   });
 
-  it('telefon: logo(+tilbake) i venstregruppe, åpne-ikon sist', () => {
+  it('telefon: logo først, deretter søk, Ronny, profil — uten sidebar-toggle', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/data-phone-sidebar-open/);
+    expect(shell).not.toMatch(/data-phone-sidebar-open/);
     const logo = shell.indexOf('data-shell-logo');
-    const toggle = shell.indexOf('data-phone-sidebar-open');
+    const sok = shell.indexOf('data-phone-search');
+    const ronny = shell.indexOf('data-ronny-avatar');
+    const profil = shell.indexOf('data-phone-profile');
     expect(logo).toBeGreaterThan(-1);
-    expect(toggle).toBeGreaterThan(logo);
+    expect(sok).toBeGreaterThan(logo);
+    expect(ronny).toBeGreaterThan(sok);
+    expect(profil).toBeGreaterThan(ronny);
   });
 
   it('sidebar-header: logo først, minimer sist — ikke klistret mot logo uten spacer', () => {
@@ -111,11 +115,10 @@ describe('Tilbake er bare pil-SVG', () => {
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
   });
 
-  it('telefon-toppbar og tråd-chrome bruker TilbakePil uten synlig Tilbake-tekst', () => {
+  it('tråd-chrome bruker TilbakePil uten synlig Tilbake-tekst; telefon-chrome har den ikke', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-    expect(shell).toMatch(/<TilbakePil/);
-    expect(shell).toMatch(/aria-label="Tilbake"/);
+    expect(shell).not.toMatch(/<TilbakePil/);
     expect(shell).not.toMatch(/>Tilbake</);
     expect(seksjon).toMatch(/<TilbakePil/);
     expect(seksjon).not.toMatch(/>Tilbake</);

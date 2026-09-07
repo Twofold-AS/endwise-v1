@@ -21,7 +21,7 @@ export function DitherGrowthChart({
   className = '',
   values,
   labels,
-  color = '#a43a0a',
+  color = '#141414',
   valueSuffix = '',
 }: DitherGrowthChartProps) {
   const { canvasRef, rect, isVisible, reducedMotion } = useCanvasSetup();
@@ -179,11 +179,11 @@ export function DitherGrowthChart({
       {scrubIndex !== null && (
         <>
           <motion.div
-            className="pointer-events-none absolute top-0 bottom-0 z-10 w-px bg-[#a43a0a]/80"
+            className="pointer-events-none absolute top-0 bottom-0 z-10 w-px bg-[#141414]/80"
             style={{ left: xPos }}
           />
           <motion.div
-            className="pointer-events-none absolute z-20 h-3 w-3 -mt-1.5 -ml-1.5 rounded-full border-2 border-white bg-[#a43a0a] shadow-sm"
+            className="pointer-events-none absolute z-20 h-3 w-3 -mt-1.5 -ml-1.5 rounded-full border-2 border-white bg-[#141414]"
             style={{ left: xPos, top: yPos }}
           />
           {!compact && (

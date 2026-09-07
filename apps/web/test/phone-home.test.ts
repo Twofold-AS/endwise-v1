@@ -171,10 +171,10 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
   });
 
   it('kort bruker appens flate/tekst-tokens — ikke shadcn accent (vasket hvit-på-grå)', () => {
-    expect(PHONE_KORT_FYLL).toMatch(/rounded-xl/);
+    expect(PHONE_KORT_FYLL).toMatch(/rounded-\[24px\]/);
     expect(PHONE_KORT_FYLL).toMatch(/bg-card/);
     expect(PHONE_KORT_FYLL).toMatch(/text-fg/);
-    expect(PHONE_KORT_FYLL).toMatch(/border-border/);
+    expect(PHONE_KORT_FYLL).toMatch(/border-divide/);
     expect(PHONE_KORT_FYLL).not.toMatch(/bg-accent(?!-|soft|strong|dim|fg)/);
     expect(PHONE_KORT_FYLL).not.toMatch(/text-accent-fg/);
     expect(PHONE_KORT_FYLL).not.toMatch(/bg-white|bg-accent-fg/);
@@ -204,7 +204,7 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(PHONE_SHELL_ROT).toMatch(/min-h-svh/);
   });
 
-  it('safe-area-inset-top over logo; overlay-sidebar tar bunnen', () => {
+  it('safe-area-inset-top over to toppbarer; sidebar er skjult på telefon', () => {
     expect(PHONE_SAFE_TOP).toContain('safe-area-inset-top');
     expect(PHONE_SAFE_BUNN).toContain('safe-area-inset-bottom');
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
@@ -217,10 +217,13 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(shell).not.toMatch(/logo-invert/);
     expect(shell).toMatch(/bg-bg/);
     expect(shell).not.toMatch(/bg-white/);
-    expect(shell).toMatch(/data-phone-sidebar-open/);
+    expect(shell).not.toMatch(/data-phone-sidebar-open/);
+    expect(shell).toMatch(/data-phone-search/);
+    expect(shell).toMatch(/data-phone-profile/);
     expect(shell).not.toMatch(/BrukerRad/);
     expect(shell).not.toMatch(/rolle \?\?/);
-    expect(sidebar).toMatch(/safe-area-inset-bottom/);
+    expect(sidebar).toMatch(/hidden/);
+    expect(sidebar).toMatch(/md:flex/);
     expect(PHONE_SHELL_ROT).toMatch(/bg-bg/);
     expect(PHONE_SHELL_ROT).toMatch(/text-fg/);
     expect(PHONE_SHELL_ROT).not.toMatch(/bg-white/);
@@ -243,7 +246,7 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(layout).not.toMatch(/PhoneBevel/);
   });
 
-  it('ingen bunnbar, hamburger, horisontal hovedscroller, Mer-sheet eller visningsvelger', () => {
+  it('ingen bunnbar, hamburger, Mer-sheet eller visningsvelger — dest-piller i top-bar 2', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
@@ -251,7 +254,7 @@ describe('phone shell — safe-area, høyde, ingen gammel chrome', () => {
     expect(layout).toMatch(/PhoneShell/);
     expect(shell).not.toMatch(/hamburger|\bMenu\b|visningsvelger|Kontor|Gulvet/i);
     expect(shell).not.toMatch(/<Sheet|PhoneNav|Mer-sheet/);
-    expect(shell).not.toMatch(/PhoneHScroll|overflow-x-auto/);
+    expect(shell).toMatch(/PhoneHScroll/);
     expect(hjem).not.toMatch(/hamburger|bottom-nav|grid-cols-5/);
     expect(layout).not.toMatch(/MobileShell/);
     expect(shell).not.toMatch(/grid-cols-5/);
@@ -303,17 +306,17 @@ describe('mekaniker phone home — Dine jobber, ikke Min dag', () => {
   });
 });
 
-describe('desktop sidebar er persistent rail, overlay bare telefon', () => {
-  it('sidebar er overlay på telefon og fast skinne på md+', () => {
+describe('desktop sidebar er persistent rail, skjult på telefon', () => {
+  it('sidebar er hidden under md og fast skinne på md+', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
-    expect(sidebar).toMatch(/data-phone-sidebar/);
-    expect(sidebar).toMatch(/fixed inset-x-0 bottom-0/);
-    expect(sidebar).toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
+    expect(sidebar).toMatch(/data-phone-sidebar="closed"/);
+    expect(sidebar).not.toMatch(/fixed inset-x-0 bottom-0/);
+    expect(sidebar).not.toMatch(/top-\[calc\(env\(safe-area-inset-top\)\+var\(--ew-row-h\)\)\]/);
     expect(sidebar).not.toMatch(/fixed inset-0/);
     expect(sidebar).toMatch(/hidden/);
     expect(sidebar).toMatch(/md:flex/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
-    expect(sidebar).toMatch(/phoneOpen/);
+    expect(sidebar).not.toMatch(/phoneOpen/);
     expect(sidebar).not.toMatch(/Handlinger/);
     expect(sidebar).toMatch(/BrukerRad/);
     expect(sidebar).toMatch(/OppgraderPille/);

@@ -139,7 +139,10 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     expect(utenKommentarer(innhold)).not.toMatch(/from ['"]@\/public\/images\//);
     expect(les('../app/_markeds/produkt-ramme.tsx')).toMatch(/aspect-\[16\/10\]/);
     expect(les('../app/_markeds/produkt-ramme.tsx')).toMatch(/aspect-\[9\/19\]/);
-    expect(les('../app/_markeds/produkt-ramme.tsx')).toMatch(/rounded-\[14px\]/);
+    expect(les('../app/_markeds/produkt-ramme.tsx')).toMatch(/rounded-\[24px\]/);
+    expect(les('../app/_markeds/produkt-ramme.tsx')).not.toMatch(
+      /bg-accent-pip|data-sidebar-pip|border-l-/,
+    );
   });
 
   it('ingen forbudt merkevare: grønn CTA, Start gratis, roadmap-rød, sticky megameny, blobatar', () => {
@@ -159,8 +162,8 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
 
   it('offentlig merke er ink/svart, ikke logogrønn', () => {
     expect(chrome).not.toMatch(/#1ED27D|#1ed27d/i);
-    expect(chrome).toMatch(/className="shrink-0 bg-fg"/);
-    expect(chrome).toMatch(/text-fg tracking-tight">Endwise</);
+    expect(chrome).toMatch(/bg-fg/);
+    expect(chrome).toMatch(/>Endwise</);
     expect(chrome).toMatch(/maskImage/);
     expect(chrome).toMatch(/url\(\/logo\/logo\.svg\)/);
     const cta = les('../app/_markeds/cta.ts');
@@ -171,14 +174,19 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     }
   });
 
-  it('primær CTA er Synara-ink-pille, ikke Action Blue', () => {
-    const cta = les('../app/_markeds/cta.ts');
+  it('primær CTA er Mobbin-ink-pille, ikke Action Blue / #0066ff', () => {
+    const cta = utenKommentarer(les('../app/_markeds/cta.ts'));
     expect(cta).toMatch(/--ew-ink-utility/);
     expect(cta).toMatch(/rounded-pill/);
-    expect(cta).not.toMatch(/#0066cc|#407ff2|#0071e3|#e4f222/);
+    expect(cta).toMatch(/CTA_TERTIAER/);
+    expect(cta).not.toMatch(/#0066cc|#407ff2|#0071e3|#e4f222|#0066ff/);
     expect(cta).not.toMatch(/bg-\[#111\]/);
     expect(cta).not.toMatch(/#1ED27D/);
     expect(chrome).toMatch(/data-markeds-cta/);
+    expect(chrome).toMatch(/rounded-t-\[24px\]/);
+    expect(chrome).toMatch(/--ew-ink-utility/);
+    expect(side).toMatch(/data-pris-popular/);
+    expect(side).toMatch(/--ew-accent/);
     for (const { sti, kilde } of markedsKilder()) {
       expect(kilde, sti).not.toMatch(/bg-\[#111\]/);
     }

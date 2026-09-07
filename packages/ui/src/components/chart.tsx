@@ -36,8 +36,8 @@ export type ChartConfig = Record<
 
 /** Fargene grafene skal bruke. Peker inn i token-laget, aldri hardkodet hex. */
 export const CHART_COLORS = {
-  accent: 'var(--ew-accent-strong)',
-  blue: 'var(--ew-switch-track-on)',
+  accent: 'var(--ew-fg)',
+  blue: 'var(--ew-fg-muted)',
   warn: 'var(--ew-warn)',
   danger: 'var(--ew-danger)',
   muted: 'var(--ew-fg-muted)',

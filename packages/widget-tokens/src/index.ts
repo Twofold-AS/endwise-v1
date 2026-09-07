@@ -1,8 +1,10 @@
 /**
  * Token-kontrakten i TS (navnene er kanoniske, verdiene bor i tokens.css).
- * Synara 07.09.2026: CTA-fyll er `--ew-ink-utility` (#1c1917 / mørkt #fafaf9).
- * Lenker/pip er varm terracotta `#a43a0a` / `#ffb27f`. Inter er fallback.
- * ⛔ Action Blue. ⛔ acid-lime. Logogrønnen #1ED27D er merkevare i logo.svg.
+ * Mobbin 07.09.2026: CTA-fyll er `--ew-ink-utility` (#141414 / mørkt #ffffff).
+ * `#0066ff` er `--ew-accent` — KUN Popular/savings. Aldri CTA, pip eller fokus-bar.
+ * Aktiv nav = canvas-soft tint, ingen border-left / pip.
+ * Inter 650/450/300. ⛔ Synara-stein. ⛔ Attio/Apple Action Blue som CTA.
+ * Logogrønnen #1ED27D er merkevare i logo.svg.
  */
 export const tokenNames = [
   'ew-bg',
@@ -19,7 +21,6 @@ export const tokenNames = [
   'ew-focus',
   'ew-ink-utility',
   'ew-sidebar-section',
-  'ew-accent-pip',
   'ew-divide',
   'ew-warn',
   'ew-danger',

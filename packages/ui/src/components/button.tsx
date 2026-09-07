@@ -10,19 +10,17 @@ import type * as React from 'react';
  * `shadcn add` fortsatt kan brukes for nye komponenter.
  */
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-control text-label whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-pill text-label whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default: 'rounded-pill bg-primary text-primary-foreground hover:bg-primary/90',
         destructive:
-          'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
-        outline:
-          'border border-border-strong bg-card hover:bg-surface-2 hover:text-fg dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
-        secondary:
-          'border border-border-strong bg-card text-fg hover:bg-surface-2 dark:border-input',
-        ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
-        link: 'text-accent-strong underline-offset-4 hover:underline',
+          'rounded-pill bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
+        outline: 'rounded-pill border border-border bg-bg hover:bg-surface-2 hover:text-fg',
+        secondary: 'rounded-pill bg-surface-2 text-fg hover:bg-inset',
+        ghost: 'rounded-pill hover:bg-surface-2 hover:text-fg',
+        link: 'text-fg underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-control px-3.5 has-[>svg]:px-3',

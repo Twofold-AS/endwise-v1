@@ -40,11 +40,11 @@ function utenKommentarer(kilde: string) {
 }
 
 const CHROME_URORT = [
-  'apps/web/app/(app)/_shell/phone-shell.tsx',
   'apps/web/app/(app)/_shell/seksjon-bar.tsx',
   'apps/web/app/(app)/_workshop/workshop-bloub.tsx',
   'apps/web/app/(app)/_shell/phone-home-mekaniker.tsx',
-  // markeds-chrome.tsx er Synara-restylet (F5-35) — ikke Apple-låst.
+  // phone-shell.tsx er Mobbin to-bar-chrome (07.09) — ikke Apple-låst.
+  // markeds-chrome.tsx er Mobbin-restylet (F5-35) — ikke Apple-låst.
 ] as const;
 
 describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
@@ -145,12 +145,13 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(hjem).not.toMatch(/PHONE_SAFE_TOP/);
   });
 
-  it('hero er plate: radius 16, stor tittel, I dag/Pågår/Fullført, ikke #111', () => {
-    expect(PHONE_HERO_FYLL).toMatch(/rounded-\[16px\]/);
-    expect(PHONE_HERO_FYLL).toMatch(/bg-card/);
-    expect(PHONE_HERO_FYLL).toMatch(/border-border/);
+  it('hero er Mobbin featured-kort: radius 24, tint uten kant, I dag/Pågår/Fullført', () => {
+    expect(PHONE_HERO_FYLL).toMatch(/rounded-\[24px\]/);
+    expect(PHONE_HERO_FYLL).toMatch(/bg-surface-2/);
+    expect(PHONE_HERO_FYLL).not.toMatch(/border-border|border-divide/);
     expect(PHONE_HERO_FYLL).not.toMatch(/#111|bg-fg|Grainient|Galaxy/);
-    expect(PHONE_DEST_FYLL).toMatch(/rounded-\[1[24]px\]/);
+    expect(PHONE_DEST_FYLL).toMatch(/rounded-\[24px\]/);
+    expect(PHONE_DEST_FYLL).toMatch(/border-divide/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
     expect(hjem).toMatch(/I dag/);

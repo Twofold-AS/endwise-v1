@@ -52,12 +52,11 @@ describe('Ronny-sheet høyder — kun 80 og 100', () => {
 });
 
 describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
-  it('logo er midtstilt, ink, uten grønn logo-fil som Image', () => {
+  it('logo er merke til venstre, ink, uten grønn logo-fil som Image', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/data-phone-top-bar/);
     expect(shell).toMatch(/data-shell-logo/);
-    expect(shell).toMatch(/absolute inset-0/);
-    expect(shell).toMatch(/justify-center/);
+    expect(shell).not.toMatch(/absolute inset-0/);
     expect(shell).toMatch(/bg-fg/);
     expect(shell).toMatch(/maskImage|WebkitMaskImage|mask-image/);
     expect(shell).not.toMatch(/<Image[\s\S]*logo\.svg/);
@@ -65,13 +64,11 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(shell).not.toMatch(/text-title">Endwise</);
   });
 
-  it('tilbake er kun pil med hale, uten synlig Tilbake-tekst', () => {
+  it('tilbake-pilen er ute av telefon-chrome; TilbakePil-SVG finnes fortsatt', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
-    expect(shell).toMatch(/data-shell-tilbake/);
-    expect(shell).toMatch(/aria-label="Tilbake"/);
+    expect(shell).not.toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/>Tilbake</);
-    expect(shell).not.toMatch(/title="Tilbake"[\s\S]{0,80}Tilbake/);
     expect(pil).toMatch(/<svg/);
     expect(pil).toMatch(/strokeWidth="2"/);
     expect(pil).toMatch(/M19 12H5|M5 12h14/i);
@@ -79,9 +76,11 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
   });
 
-  it('hjem skjuler tilbake-pilen', () => {
+  it('telefon-chrome har søkefelt og dest-piller, ikke tilbake-gren', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/hjem \? null/);
+    expect(shell).toMatch(/data-phone-search/);
+    expect(shell).toMatch(/data-phone-dest/);
+    expect(shell).not.toMatch(/hjem \? null/);
   });
 
   it('chrome-avatar er RonnyBot: uttrykk-only, ingen tenke-/varsel-reel', () => {
@@ -97,8 +96,8 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(shell).not.toMatch(/BloubBot/);
     expect(knapp).not.toMatch(/BloubBot/);
     expect(fab).not.toMatch(/BloubBot/);
-    expect(shell).not.toMatch(/still/);
-    expect(knapp).not.toMatch(/still/);
+    expect(shell).not.toMatch(/still=\{|still="/);
+    expect(knapp).not.toMatch(/still=\{|still="/);
     expect(bot).toMatch(/still=\{false\}/);
     expect(bot).toMatch(/playing=\{false\}/);
     expect(bot).toMatch(/state="idle"/);
@@ -122,13 +121,14 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(layout).not.toMatch(/from '\.\/_shell\/seksjon-bar'/);
   });
 
-  it('høyre cluster er avatar rett til venstre for sidebar-toggle', () => {
+  it('høyre cluster er Ronny-sirkel rett til venstre for profil-sirkel', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const avatar = shell.indexOf('data-ronny-avatar');
-    const toggle = shell.indexOf('data-phone-sidebar-open');
+    const profil = shell.indexOf('data-phone-profile');
     expect(avatar).toBeGreaterThan(-1);
-    expect(toggle).toBeGreaterThan(avatar);
-    expect(shell).toMatch(/min-h-11|size-11/);
+    expect(profil).toBeGreaterThan(avatar);
+    expect(shell).toMatch(/size-10|PHONE_AVATAR_PX/);
+    expect(shell).not.toMatch(/data-phone-sidebar-open/);
   });
 });
 

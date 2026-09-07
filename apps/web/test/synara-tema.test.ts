@@ -10,7 +10,7 @@ function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
 
-describe('Synara dual theme', () => {
+describe('Mobbin dual theme', () => {
   it('FOUC-skript setter .dark og data-theme fra system eller lagret valg', () => {
     expect(TEMA_NOKKEL).toBe('endwise:tema');
     expect(TEMA_SKRIPT).toMatch(/prefers-color-scheme: dark/);
@@ -23,7 +23,7 @@ describe('Synara dual theme', () => {
     expect(les('../app/(app)/_shell/sidebar.tsx')).toMatch(/TemaToggle/);
   });
 
-  it('forhandler-nav har Synara-seksjoner uten Threads/Kanban', () => {
+  it('forhandler-nav har Endwise-seksjoner uten Threads/Kanban', () => {
     const nav = les('../app/(app)/_shell/nav.ts');
     expect(nav).toMatch(/section: 'Verkstedet'/);
     expect(nav).toMatch(/section: 'Kunder'/);

@@ -117,10 +117,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
    * Desktop: tre kolonner — sidebar 389 · innhold 598 · standby 452
    * (akse 1050). Toppbarer 53px over boks 2 og 3. Telefon: sidebar skjult.
    * PhoneShell er to toppbarer (merke+søk+Ronny+profil / dest-piller) +
-   * hårlinje, `md:hidden`. PhoneBevel er borte. Dealer har ikke
-   * DestinasjonSeksjonBar. Plattform (Endwise) kan montere seksjonsbar
-   * i eget layout. Ronny er telefon-sheet (80/100) og desktop høyre
-   * overlay (max 400px), ikke stripe.
+   * hårlinje, `md:hidden`. PhoneBevel er borte. Dealer-layout monterer
+   * ikke seksjonsbaren. Plattform (Endwise) kan montere den i eget
+   * layout. Ronny er telefon-sheet (80/100) og desktop høyre overlay
+   * (max 400px), ikke stripe.
    */
   /*
    * `<Suspense>` rundt Sidebar og WorkshopBloub er påkrevd, ikke pynt. Begge

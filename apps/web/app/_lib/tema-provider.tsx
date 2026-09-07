@@ -10,9 +10,9 @@ import {
   useState,
 } from 'react';
 import {
+  type LosTema,
   lesTema,
   losTema,
-  type LosTema,
   settTema,
   skrivTemaPaRot,
   type Tema,

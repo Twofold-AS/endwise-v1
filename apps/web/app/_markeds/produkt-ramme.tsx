@@ -96,7 +96,10 @@ function Plassholder({ format, merkelapp }: { format: BildeFormat; merkelapp: st
         <p className="mt-1 text-[11px] text-fg-muted">I dag · 4 jobber</p>
         <div className="mt-3 grid flex-1 grid-cols-3 gap-2 md:grid-cols-5">
           {['09', '10', '11', '12', '13'].map((time) => (
-            <div key={time} className="flex flex-col gap-2 border-divide border-r p-1 last:border-r-0">
+            <div
+              key={time}
+              className="flex flex-col gap-2 border-divide border-r p-1 last:border-r-0"
+            >
               <span className="font-mono text-[10px] text-fg-muted tabular-nums">{time}:00</span>
               <div className="h-8 rounded-md bg-surface-2" />
               <div className="h-5 rounded-md bg-sidebar-active" />

@@ -61,6 +61,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${mono.variable}`}
     >
       <head>
+        {/* FOUC: setter .dark / data-theme før paint. Konstant, ikke brukerinput. */}
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: statisk tema-skript */}
         <script dangerouslySetInnerHTML={{ __html: TEMA_SKRIPT }} />
       </head>
       <body className="bg-bg font-sans text-body text-fg antialiased">

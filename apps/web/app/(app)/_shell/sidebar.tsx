@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Fragment, useEffect, useMemo } from 'react';
+import { TemaToggle } from '@/app/_lib/tema-toggle';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import {
@@ -25,7 +26,6 @@ import {
   settingsForShell,
   shellForBruker,
 } from './nav';
-import { TemaToggle } from '@/app/_lib/tema-toggle';
 import { OppgraderPille } from './oppgrader-pille';
 import { SHELL_HEADER_RAD } from './phone-chrome';
 import { SidebarHeader } from './sidebar-header';
@@ -189,9 +189,7 @@ export function Sidebar() {
         >
           {items.map((item, i) => {
             const forrige = items[i - 1];
-            const visSeksjon = Boolean(
-              !smal && item.section && item.section !== forrige?.section,
-            );
+            const visSeksjon = Boolean(!smal && item.section && item.section !== forrige?.section);
             return (
               <Fragment key={item.key}>
                 {visSeksjon ? (

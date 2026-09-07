@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink, httpLink, splitLink } from '@trpc/client';
 import { type ReactNode, useState } from 'react';
+import { TemaProvider } from '@/app/_lib/tema-provider';
 import { trpc } from '@/lib/trpc';
 import { erChromeTrpcPath, erSessionMePath } from '@/lib/trpc-chrome';
 
@@ -50,7 +51,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <TemaProvider>{children}</TemaProvider>
+      </QueryClientProvider>
     </trpc.Provider>
   );
 }

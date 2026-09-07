@@ -1,38 +1,37 @@
-# Endwise landing — fasit (2026-09-05)
+# Endwise landing — fasit (2026-09-07 Synara)
 
-Låst av Jonas. **Overstyring samme dag:** Mikael via Jonas — primær CTA er «Prøv Endwise». **Overstyring 06.09.2026:** Landing beholder Apple Action Blue `#0066cc` (dealer-chrome er Attio-ink). **Overstyring 05.09.2026 (etter #133):** Mikael — logo på `/` er svart/ink, ikke logogrønn.
+Låst av Jonas 05.09. Overstyring **07.09.2026 (Mikael Synara CODE-GO):** Apple Action Blue-landing
+erstattes av Synara warm stone. Copy er fortsatt Endwise (forhandlere / verksted) — ikke
+coding-agent.
 
 Gjelder den offentlige markedssiden `/` i `apps/web` (ikke dealer-chrome).
 
 ## Visual
 
-- Lys default, Inter, parchment `#f5f5f7`, ink `#1d1d1f`, hårlinje `#e0e0e0`
-- Primær CTA: Action Blue `#0066cc` (hardkodet på landing), hover `#0071e3` — ikke dealer-ink, ikke logogrønn
-- Logo (merke + wordmark) er ink `#1d1d1f` / `bg-fg` / `text-fg` — aldri `#1ED27D` på landing. CTA forblir Action Blue.
-- Mye luft, max innhold ~1120–1200
-- Myke produktrammer 12–16 radius
-- Ingen blobatar/maskot, ingen roadmap-rød `#EE2924`, ingen grønn CTA
+- Warm stone canvas `#f5f4f2` (mørkt `#121110`), Geist, hårlinjer
+- Primær CTA: token-ink-pille `--ew-ink-utility` / `--ew-accent-fg` (lys `#1c1917` / `#fafaf9`)
+- ⛔ Action Blue `#0066cc` / `#407ff2`. ⛔ acid-lime. ⛔ logogrønn
+- Logo (merke + wordmark) er ink `bg-fg` / `text-fg`
+- Mye luft, max innhold ~1120
+- Produktrammer 14px, 3-kolonne mock uten stock-mekaniker
+- Ingen blobatar/maskot, ingen roadmap-rød, ingen grønn CTA
 - Ingen «Start gratis», ingen sticky megameny
-- Topp: logo + Logg inn + primær CTA
+- Topp: logo + Produkt/Pris/Kontakt + måne-toggle + Logg inn + primær CTA
 
 ## Hero
 
 - H1: **Verkstedet, samlet.**
 - Én linje om booking/innboks/jobber
-- Primær CTA: **Prøv Endwise** (Action Blue `#0066cc`, hvit tekst) → eksisterende demo-flyt / `hei@endwise.no`
-- Sekundær: Logg inn
-- Ett produktbilde-spor (plassholder OK)
-- Ingen karusell/video
+- Primær CTA: **Prøv Endwise** → `hei@endwise.no`
+- Sekundær: Logg inn (lys pille, hårlinje)
+- Sosialt bevis under knappene (ingen falske nedlastingstall)
+- Ett produktbilde-spor (Synara-aktig 3-kolonne mock OK)
 
 ## Seksjoner KUN i denne rekkefølgen
 
 1. Hero
 2. Tre like løfter: Booking · Innboks · Verkstedet
 3. Produktskudd: stort desktop-UI + telefon Min dag (tekst/bilde veksler én gang)
-4. Pris tre kort: Start 4 490 / Pro 8 490 / Enterprise 12 490 (eks. mva); valgt = `border-fg` + soft; CTA «Ta kontakt» / samme destinasjon; ingen setepris
-5. Kort tillitslinje (norsk, Quick, Vegvesen/Autosys hvis sant — ingen falsk logo-vegg)
-6. Footer-CTA (samme primær: **Prøv Endwise**) + footer-lenker (personvern, vilkår, kontakt)
-
-## Bilder
-
-3–5 faste spor til midlertidige UI-skjermbilder. Lyse plassholdere OK. Layout skal tåle bytte uten reflow. Ikke stock-mekanikerfoto.
+4. Pris tre kort: Start 4 490 / Pro 8 490 / Enterprise 12 490 (eks. mva); CTA «Ta kontakt»
+5. Kort tillitslinje
+6. Footer-CTA + footer-lenker

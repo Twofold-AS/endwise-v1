@@ -13,8 +13,8 @@ describe('Amicro dither charts på Rapporter', () => {
     expect(analyse).toMatch(/DitherGrowthChart/);
     expect(analyse).toMatch(/RevenueLineChart/);
     expect(analyse).toMatch(/DitherDonutChart/);
-    expect(analyse).toMatch(/#407ff2/);
-    expect(analyse).toMatch(/#1c1d1f/);
+    expect(analyse).toMatch(/#a43a0a/);
+    expect(analyse).toMatch(/#141413/);
     expect(analyse).not.toMatch(/ChartContainer/);
     expect(analyse).not.toMatch(/from 'recharts'/);
   });

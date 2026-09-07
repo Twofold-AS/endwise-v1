@@ -61,6 +61,8 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     expect(chrome).toMatch(/PrimarCtaLenke/);
     expect(chrome).toMatch(/Logg inn/);
     expect(chrome).toMatch(/DEMO_LENKE/);
+    expect(side).toMatch(/data-markeds-bevis/);
+    expect(chrome).toMatch(/TemaToggle/);
     expect(DEMO_EPOST).toBe('hei@endwise.no');
     expect(DEMO_LENKE).toMatch(/^mailto:hei@endwise\.no/);
     expect(decodeURIComponent(DEMO_LENKE)).toContain('subject=Prøv Endwise');
@@ -162,18 +164,18 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     expect(chrome).toMatch(/maskImage/);
     expect(chrome).toMatch(/url\(\/logo\/logo\.svg\)/);
     const cta = les('../app/_markeds/cta.ts');
-    expect(cta).toMatch(/bg-\[#0066cc\]/);
-    expect(cta).not.toMatch(/#1ED27D/);
+    expect(cta).toMatch(/--ew-ink-utility/);
+    expect(cta).not.toMatch(/#0066cc|#407ff2|#1ED27D/);
     for (const { sti, kilde } of markedsKilder()) {
       expect(utenKommentarer(kilde), sti).not.toMatch(/#1ED27D|#1ed27d/i);
     }
   });
 
-  it('primær CTA er Apple Action Blue, ikke produkt-ink/#111', () => {
+  it('primær CTA er Synara-ink-pille, ikke Action Blue', () => {
     const cta = les('../app/_markeds/cta.ts');
-    expect(cta).toMatch(/bg-\[#0066cc\]/);
-    expect(cta).toMatch(/hover:bg-\[#0071e3\]/);
-    expect(utenKommentarer(cta)).not.toMatch(/bg-primary/);
+    expect(cta).toMatch(/--ew-ink-utility/);
+    expect(cta).toMatch(/rounded-pill/);
+    expect(cta).not.toMatch(/#0066cc|#407ff2|#0071e3|#e4f222/);
     expect(cta).not.toMatch(/bg-\[#111\]/);
     expect(cta).not.toMatch(/#1ED27D/);
     expect(chrome).toMatch(/data-markeds-cta/);

@@ -34,7 +34,7 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(MEKANIKER_NAV.some((i) => i.label === 'Hjelp')).toBe(false);
   });
 
-  it('sidebar: Attio-wash, ingen header-divider, +2px gap, OppgraderPille, ingen avatar', () => {
+  it('sidebar: Synara-seksjon, pip, tekst venstre, OppgraderPille, ingen avatar', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     const header = utenKommentarer(les('../app/(app)/_shell/sidebar-header.tsx'));
     const rad = utenKommentarer(les('../app/(app)/_shell/bruker-rad.tsx'));
@@ -44,6 +44,12 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(sidebar).not.toMatch(/min-h-10 shrink-0 items-center py-2[\s\S]{0,80}border-b-/);
     expect(sidebar).toMatch(/gap-\[4px\]/);
     expect(sidebar).toMatch(/md:gap-0/);
+    expect(sidebar).toMatch(/data-sidebar-section/);
+    expect(sidebar).toMatch(/data-sidebar-pip/);
+    expect(sidebar).toMatch(/bg-accent-pip/);
+    expect(sidebar).toMatch(/text-left/);
+    expect(sidebar).not.toMatch(/md:text-right/);
+    expect(sidebar).toMatch(/TemaToggle/);
     expect(sidebar).toMatch(/OppgraderPille/);
     expect(sidebar).not.toMatch(/<TipCard/);
     expect(sidebar).toMatch(/BrukerRad/);
@@ -58,21 +64,23 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(rad).toMatch(/min-w-0 flex-1 truncate/);
   });
 
-  it('app-skall: breadcrumb-topbar over boks 2, ingen mørkt-toggle, ingen Ronny-stripe på desktop', () => {
+  it('app-skall: breadcrumb-topbar over boks 2, dual theme, ingen Ronny-stripe på desktop', () => {
     const layout = utenKommentarer(les('../app/(app)/layout.tsx'));
     const rot = les('../app/layout.tsx');
     const workshop = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
     const globals = les('../app/globals.css');
-    const profil = utenKommentarer(les('../app/(app)/innstillinger/_profil-fane.tsx'));
-    const meg = utenKommentarer(les('../app/(app)/min-dag/meg/page.tsx'));
+    const tema = les('../app/(app)/_lib/tema.ts');
     expect(layout).toMatch(/TopBar/);
     expect(layout).toMatch(/StandbyPanel/);
     expect(layout).toMatch(/data-desktop-axis/);
     expect(layout).toMatch(/md:w-\[1050px\]/);
     expect(layout).toMatch(/md:w-\[598px\]/);
     expect(layout).toMatch(/WorkshopBloub/);
-    expect(rot).toMatch(/data-theme="light"/);
-    expect(rot).not.toMatch(/TEMA_SKRIPT|endwise:tema/);
+    expect(rot).toMatch(/TEMA_SKRIPT/);
+    expect(rot).toMatch(/Geist/);
+    expect(rot).toMatch(/suppressHydrationWarning/);
+    expect(tema).toMatch(/endwise:tema/);
+    expect(tema).toMatch(/classList.toggle\('dark'/);
     expect(workshop).not.toMatch(/<Grainient/);
     expect(workshop).not.toMatch(/data-workshop-strip/);
     expect(workshop).not.toMatch(/Trykk på KI-Ronny/);
@@ -86,7 +94,5 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(workshop).toMatch(/data-ronny-utvid/);
     expect(workshop).not.toMatch(/ShaderGradient/);
     expect(globals).toMatch(/grainient\.css/);
-    expect(profil).not.toMatch(/Mørkt tema|settTema/);
-    expect(meg).not.toMatch(/Mørkt tema|byttTema/);
   });
 });

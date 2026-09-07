@@ -128,8 +128,9 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(sidebar).toMatch(/md:h-\[50px\]/);
     expect(sidebar).not.toMatch(/md:w-\[141px\]/);
     expect(sidebar).toMatch(/md:px-3/);
-    expect(sidebar).toMatch(/md:justify-between/);
-    expect(sidebar).toMatch(/md:text-right/);
+    expect(sidebar).toMatch(/md:justify-start/);
+    expect(sidebar).toMatch(/text-left/);
+    expect(sidebar).not.toMatch(/md:text-right/);
     expect(sidebar).toMatch(/md:text-\[16px\]/);
     expect(sidebar).toMatch(/md:leading-\[20px\]/);
     expect(sidebar).toMatch(/md:h-\[20px\]/);

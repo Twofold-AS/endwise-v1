@@ -14,6 +14,15 @@ export const CTA_PRIMAR_TEKST = 'Prøv Endwise';
 export const HERO_LINJE =
   'Booking, innboks og jobber i ett system — for MC-, båt- og ATV-verkstedet.';
 
+/** Sosialt bevis under hero-CTA. Ingen falske nedlastingstall. */
+export const HERO_BEVIS = 'Bygget for MC-, båt- og ATV-forhandlere i Norge.';
+
+export const NAV_LENKER: { href: string; tekst: string }[] = [
+  { href: '#produkt', tekst: 'Produkt' },
+  { href: '#pris', tekst: 'Pris' },
+  { href: '/kontakt', tekst: 'Kontakt' },
+];
+
 export const LOFTER: { tittel: string; tekst: string }[] = [
   {
     tittel: 'Booking',

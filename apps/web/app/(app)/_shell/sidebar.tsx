@@ -25,6 +25,7 @@ import {
   settingsForShell,
   shellForBruker,
 } from './nav';
+import { TemaToggle } from '@/app/_lib/tema-toggle';
 import { OppgraderPille } from './oppgrader-pille';
 import { SHELL_HEADER_RAD } from './phone-chrome';
 import { SidebarHeader } from './sidebar-header';
@@ -186,19 +187,33 @@ export function Sidebar() {
           aria-label="Hovednavigasjon"
           className="flex min-h-0 flex-1 flex-col gap-[4px] overflow-y-auto md:gap-0"
         >
-          {items.map((item) => (
-            <Fragment key={item.key}>
-              {item.dividerBefore ? <hr className="my-1.5 h-px border-0 bg-border" /> : null}
-              <NavRow
-                item={item}
-                pathname={pathname}
-                unread={unread}
-                helpdesk={helpdeskUlest.data ?? 0}
-                collapsed={smal}
-                onNavigate={phoneOpen ? closePhone : undefined}
-              />
-            </Fragment>
-          ))}
+          {items.map((item, i) => {
+            const forrige = items[i - 1];
+            const visSeksjon = Boolean(
+              !smal && item.section && item.section !== forrige?.section,
+            );
+            return (
+              <Fragment key={item.key}>
+                {visSeksjon ? (
+                  <p
+                    data-sidebar-section={item.section}
+                    className="px-2.5 pt-3 pb-1 font-medium text-[11px] text-sidebar-section uppercase tracking-[0.06em] md:w-[259px] md:px-3"
+                  >
+                    {item.section}
+                  </p>
+                ) : null}
+                {item.dividerBefore ? <hr className="my-1.5 h-px border-0 bg-divide" /> : null}
+                <NavRow
+                  item={item}
+                  pathname={pathname}
+                  unread={unread}
+                  helpdesk={helpdeskUlest.data ?? 0}
+                  collapsed={smal}
+                  onNavigate={phoneOpen ? closePhone : undefined}
+                />
+              </Fragment>
+            );
+          })}
           {items.length === 0 && !smal && (
             <p className="px-2.5 py-6 text-[12px] text-fg-muted leading-relaxed">
               {chromeFeilet
@@ -211,8 +226,11 @@ export function Sidebar() {
         </nav>
 
         {/* Bunn: oppgraderingspille over profil/logg ut. Ingen Hjelp-TipCard. */}
-        <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-3 border-divide border-t pt-3">
           {!smal && shell !== 'endwise' && shell !== 'endwise_partner' && <OppgraderPille />}
+          <div className="flex items-center justify-between gap-2 md:w-[259px]">
+            <TemaToggle />
+          </div>
           <BrukerRad
             navn={navn}
             laster={rolleLaster}
@@ -255,10 +273,17 @@ function NavRow({
   );
   const innhold = (
     <>
+      {active && !collapsed ? (
+        <span
+          aria-hidden
+          data-sidebar-pip
+          className="absolute top-1/2 left-0 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent-pip"
+        />
+      ) : null}
       <Ikon icon={item.icon} active={active} collapsed={collapsed} />
       {!collapsed && (
         <>
-          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-[20px] md:text-right md:text-[16px] md:leading-[20px]">
+          <span className="h-6 min-w-0 flex-1 truncate text-left md:h-[20px] md:text-[16px] md:leading-[20px]">
             {item.label}
           </span>
           {item.isNew && <NewBadge />}
@@ -274,8 +299,8 @@ function NavRow({
       aria-current={active ? 'page' : undefined}
       title={collapsed ? item.label : undefined}
       onClick={onNavigate}
-      className={`flex h-control w-full items-center gap-2.5 rounded-control text-label text-fg transition-colors md:h-[50px] md:gap-0 ${
-        collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[259px] md:justify-between md:px-3'
+      className={`relative flex h-control w-full items-center gap-2.5 border-divide border-b text-label text-fg transition-colors last:border-b-0 md:h-[50px] ${
+        collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[259px] md:justify-start md:px-3'
       } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}
     >
       {innhold}

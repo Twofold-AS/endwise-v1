@@ -10,7 +10,8 @@
 
 :root,
 [data-theme="light"],
-[data-theme="dark"] {
+[data-theme="dark"],
+.dark {
   /* shadcn/ui-semantikk -> Endwise-tokens */
   --background: var(--ew-bg);
   --foreground: var(--ew-fg);
@@ -39,6 +40,10 @@
   --color-bg: var(--ew-bg);
   --color-sidebar: var(--ew-sidebar);
   --color-sidebar-active: var(--ew-sidebar-active);
+  --color-sidebar-section: var(--ew-sidebar-section);
+  --color-accent-pip: var(--ew-accent-pip);
+  --color-divide: var(--ew-divide);
+  --color-ink-hover: var(--ew-ink-hover);
   --color-surface: var(--ew-surface);
   --color-surface-2: var(--ew-surface-2);
   --color-inset: var(--ew-inset);
@@ -142,6 +147,7 @@
  * grønne farge. Mørkt tema: inverteres til hvit, ellers konkurrerer den med
  * den grønne aksenten ellers på skjermen.
  */
+.dark .logo-invert,
 [data-theme="dark"] .logo-invert {
   filter: brightness(0) invert(1);
 }

@@ -75,6 +75,11 @@ export type NavItem = {
   children?: NavChild[];
   /** Horisontale piller på destinasjonssiden. Ikke barn i sidebaren. */
   pills?: NavChild[];
+  /**
+   * Synara-seksjonsetikett. Ikke en destinasjon — grupperer eksisterende
+   * Endwise-rader (Verkstedet / Kunder / Organisasjon). Ingen Threads/Kanban.
+   */
+  section?: string;
   /** Visuell skillelinje over raden (Jonas-treet). */
   dividerBefore?: boolean;
   /** Butikk-raden skjules når shop-flagget er av. */
@@ -206,6 +211,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: LayoutDashboard,
     href: '/home',
     roles: DRIFT,
+    section: 'Verkstedet',
   },
   {
     key: 'innboks',
@@ -214,6 +220,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/innboks',
     roles: DRIFT,
     badge: 'unread',
+    section: 'Verkstedet',
   },
   {
     key: 'saker',
@@ -221,6 +228,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: CalendarDays,
     href: '/jobber',
     roles: DRIFT,
+    section: 'Verkstedet',
     pills: [
       { label: 'Liste', href: '/jobber', icon: ClipboardList },
       { label: 'Kalender', href: '/jobber?visning=kalender', icon: CalendarDays },
@@ -232,6 +240,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Users,
     href: '/kunder',
     roles: DRIFT,
+    section: 'Kunder',
     pills: [
       { label: 'Kunder', href: '/kunder', icon: Users },
       { label: 'Kjøretøy', href: '/kjoretoy', icon: Car },
@@ -243,6 +252,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Wrench,
     href: '/prisliste',
     roles: DRIFT,
+    section: 'Kunder',
   },
   {
     key: 'organisasjon',
@@ -250,6 +260,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Building2,
     href: '/organisasjon',
     roles: DRIFT,
+    section: 'Organisasjon',
     pills: ORGANISASJON_SEKSJONER,
   },
   {
@@ -258,6 +269,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     icon: Package,
     href: '/lager',
     roles: DRIFT,
+    section: 'Organisasjon',
     pills: [
       { label: 'Oversikt', href: '/lager', icon: LayoutDashboard },
       { label: 'Deler', href: '/lager/deler', icon: Package },
@@ -272,6 +284,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/butikk',
     roles: DRIFT,
     requiresShopFlag: true,
+    section: 'Organisasjon',
     pills: [
       { label: 'Katalog', href: '/butikk', icon: Package },
       { label: 'Handlekurv / kasse', href: '/butikk/kasse', icon: ShoppingCart },
@@ -304,6 +317,7 @@ export const MEKANIKER_NAV: NavItem[] = [
     icon: CalendarDays,
     href: '/dine-jobber',
     roles: DRIFT,
+    section: 'Jobb',
   },
   {
     key: 'arbeidsflate',
@@ -311,6 +325,15 @@ export const MEKANIKER_NAV: NavItem[] = [
     icon: Wrench,
     href: '/mekaniker/arbeid',
     roles: DRIFT,
+    section: 'Jobb',
+  },
+  {
+    key: 'min-timeplan',
+    label: 'Timeplan',
+    icon: CalendarDays,
+    href: '/min-dag/timeplan',
+    roles: DRIFT,
+    section: 'Jobb',
   },
   {
     key: 'lager',
@@ -318,6 +341,7 @@ export const MEKANIKER_NAV: NavItem[] = [
     icon: Package,
     href: '/lager',
     roles: DRIFT,
+    section: 'Verksted',
     pills: [{ label: 'Oversikt', href: '/lager', icon: LayoutDashboard }],
   },
   {
@@ -327,6 +351,7 @@ export const MEKANIKER_NAV: NavItem[] = [
     href: '/butikk',
     roles: DRIFT,
     requiresShopFlag: true,
+    section: 'Verksted',
     pills: [{ label: 'Katalog', href: '/butikk', icon: Package }],
   },
   {
@@ -335,15 +360,16 @@ export const MEKANIKER_NAV: NavItem[] = [
     icon: Tags,
     href: '/min-dag/kompetanse',
     roles: DRIFT,
+    section: 'Verksted',
   },
   {
-    key: 'min-timeplan',
-    label: 'Timeplan',
-    icon: CalendarDays,
-    href: '/min-dag/timeplan',
+    key: 'min-meg',
+    label: 'Meg',
+    icon: CircleUser,
+    href: '/min-dag/meg',
     roles: DRIFT,
+    section: 'Konto',
   },
-  { key: 'min-meg', label: 'Meg', icon: CircleUser, href: '/min-dag/meg', roles: DRIFT },
 ];
 
 /*
@@ -400,6 +426,7 @@ export const ENDWISE_NAV: NavItem[] = [
     icon: LayoutDashboard,
     href: '/endwise',
     roles: ENDWISE,
+    section: 'Plattform',
   },
   {
     key: 'endwise-innboks',
@@ -409,6 +436,7 @@ export const ENDWISE_NAV: NavItem[] = [
     roles: ENDWISE,
     badge: 'unread',
     countKey: 'endwise',
+    section: 'Plattform',
   },
   {
     key: 'endwise-forhandlere',
@@ -416,6 +444,7 @@ export const ENDWISE_NAV: NavItem[] = [
     icon: Building2,
     href: '/endwise/forhandlere',
     roles: ENDWISE,
+    section: 'Plattform',
   },
   {
     key: 'endwise-team',
@@ -423,6 +452,7 @@ export const ENDWISE_NAV: NavItem[] = [
     icon: Users,
     href: '/endwise/team',
     roles: ENDWISE_STYRING,
+    section: 'Styring',
   },
   /**
    * Hjelpeartiklene skrives her, ikke i forhandlerens Innstillinger.
@@ -435,6 +465,7 @@ export const ENDWISE_NAV: NavItem[] = [
     icon: LifeBuoy,
     href: '/endwise/helpdesk',
     roles: ENDWISE_STYRING,
+    section: 'Styring',
   },
   /**
    * Release-toggles, ikke entitlements. Kjøpte moduler skrives av
@@ -446,6 +477,7 @@ export const ENDWISE_NAV: NavItem[] = [
     icon: Flag,
     href: '/endwise/flagg',
     roles: ENDWISE_STYRING,
+    section: 'Styring',
   },
 ];
 

@@ -96,14 +96,14 @@ describe('Jonas IA — forhandler sidebar', () => {
 });
 
 describe('Jonas IA — mekaniker og endwise', () => {
-  it('mekaniker-nav er Dine jobber / jobbene / lager / butikk / kompetanse / timeplan / meg', () => {
+  it('mekaniker-nav er Dine jobber / jobbene / timeplan / lager / butikk / kompetanse / meg', () => {
     expect(MEKANIKER_NAV.map((i) => i.label)).toEqual([
       'Dine jobber',
       'Jobbene mine',
+      'Timeplan',
       'Lager',
       'Butikk',
       'Kompetanse',
-      'Timeplan',
       'Meg',
     ]);
     expect(MEKANIKER_NAV.find((i) => i.key === 'lager')?.pills?.map((p) => p.label)).toEqual([

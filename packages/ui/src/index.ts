@@ -184,7 +184,7 @@ export {
 } from './components/tool-part.tsx';
 export { useBloubIdleLiv } from './hooks/use-bloub-idle-liv.ts';
 export { useBloubPapir } from './hooks/use-bloub-papir.ts';
-// Kuratert ikon-barrel (Disarto Regular + eier-SVG + lucide-rest)
+// lucide-react — eneste ikonbibliotek (kuratert barrel)
 export * from './icons.ts';
 /** Kanoniske bevegelses-tokens (SPRING_PRESS, SPRING_SWAP, EASE_OUT …). Ikke funn opp egne. */
 export * from './lib/ease.ts';

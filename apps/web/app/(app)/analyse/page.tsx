@@ -31,23 +31,21 @@ import { AnalyseKort } from './_kort';
 
 /**
  * Analyse / Rapporter. Forhandlerens egne tall: drift og nettside.
- * Chart-motor: Amicro dither charts (canvas).
- * Seriehex er Linear støttende aksenter (ikke Acid Lime — den er CTA only).
+ * Chart-motor: Amicro dither charts (canvas), Attio-seriehex.
  * Alle tall er mock — se `_data.ts` og «Mock»-merket på hvert kort.
  */
-const PULSE = '#27a644';
-const TEAL = '#02b8cc';
-const IRIS = '#6366f1';
-const LAVENDER = '#8b5cf6';
-const FOG = '#8a8f98';
-const SMOKE = '#383b3f';
+const INK = '#1c1d1f';
+const ACTION = '#407ff2';
+const FOCUS = '#94b9ff';
+const OVERCAST = '#8f99a8';
+const SLATE = '#d3d8df';
 
 const VOLUM_BANDS = [
-  { key: 'fullfort', label: 'Fullførte', color: PULSE },
-  { key: 'avlyst', label: 'Avlyste', color: FOG },
+  { key: 'fullfort', label: 'Fullførte', color: ACTION },
+  { key: 'avlyst', label: 'Avlyste', color: OVERCAST },
 ] as const;
 
-const DONUT_FARGER = [TEAL, IRIS, LAVENDER, FOG, SMOKE];
+const DONUT_FARGER = [ACTION, INK, FOCUS, OVERCAST, SLATE];
 
 function AnalysePageInner() {
   const params = useSearchParams();
@@ -70,7 +68,7 @@ function AnalysePageInner() {
       KILDER.map((k, i) => ({
         name: k.kilde,
         value: k.besok,
-        color: DONUT_FARGER[i] ?? FOG,
+        color: DONUT_FARGER[i] ?? OVERCAST,
       })),
     [],
   );
@@ -146,7 +144,7 @@ function AnalysePageInner() {
             >
               <div className="h-52 w-full">
                 <DitherStackedChart
-                  theme="dark"
+                  theme="light"
                   compact
                   rows={volumRader}
                   bands={[...VOLUM_BANDS]}
@@ -154,8 +152,8 @@ function AnalysePageInner() {
               </div>
               <SerieMerke
                 poster={[
-                  { label: 'Fullførte', color: PULSE },
-                  { label: 'Avlyste', color: FOG },
+                  { label: 'Fullførte', color: ACTION },
+                  { label: 'Avlyste', color: OVERCAST },
                 ]}
               />
             </AnalyseKort>
@@ -168,20 +166,20 @@ function AnalysePageInner() {
             >
               <div className="h-52 w-full">
                 <RevenueLineChart
-                  theme="dark"
+                  theme="light"
                   compact
                   series={[
                     {
                       key: 'belegg',
                       label: 'Belegg',
-                      color: TEAL,
+                      color: ACTION,
                       data: belegg.map((b) => b.belegg),
                       fill: true,
                     },
                     {
                       key: 'avlysning',
                       label: 'Avlysningsrate',
-                      color: IRIS,
+                      color: INK,
                       data: belegg.map((b) => b.avlysning),
                       fill: false,
                     },
@@ -190,8 +188,8 @@ function AnalysePageInner() {
               </div>
               <SerieMerke
                 poster={[
-                  { label: 'Belegg', color: TEAL },
-                  { label: 'Avlysningsrate', color: IRIS },
+                  { label: 'Belegg', color: ACTION },
+                  { label: 'Avlysningsrate', color: INK },
                 ]}
               />
             </AnalyseKort>
@@ -204,14 +202,14 @@ function AnalysePageInner() {
             >
               <div className="h-52 w-full">
                 <DitherGrowthChart
-                  theme="dark"
+                  theme="light"
                   compact
                   values={trafikk.map((t) => t.visninger)}
                   labels={trafikk.map((t) => t.dag)}
-                  color={TEAL}
+                  color={ACTION}
                 />
               </div>
-              <SerieMerke poster={[{ label: 'Sidevisninger', color: TEAL }]} />
+              <SerieMerke poster={[{ label: 'Sidevisninger', color: ACTION }]} />
             </AnalyseKort>
 
             <AnalyseKort
@@ -222,7 +220,7 @@ function AnalysePageInner() {
             >
               <div className="flex items-center gap-4">
                 <div className="aspect-square h-40 w-40 shrink-0">
-                  <DitherDonutChart theme="dark" compact slices={kilderSlices} />
+                  <DitherDonutChart theme="light" compact slices={kilderSlices} />
                 </div>
                 <ul className="flex min-w-0 flex-1 flex-col gap-1.5">
                   {KILDER.map((k, i) => (

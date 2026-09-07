@@ -1,49 +1,28 @@
 /*
  * @endwise/widget-tokens.
- * Status: design-prinsipper fra eier.
- *
- * To scoped paletter, én fil:
- * 1) :root / [data-theme="light"] — Attio-lys + Apple-landing.
- *    Offentlig marketing holder Apple Action Blue #0066cc i _markeds/cta.ts.
- *    --ew-accent i lyst er Attio Action Blue #407ff2 (widget / lys flate).
- * 2) [data-theme="dark"] — Linear midnight (Mikael DESIGN.md 07.09.2026).
- *    Dealer/app-skallet setter data-theme="dark" på chrome-roten.
- *    Acid Lime #e4f222 er eneste fylte kromatiske CTA / aktiv-nav-indikator.
- *    Tekst på CTA = void #08090a. Aldri Action Blue eller ink som app-CTA.
- *
- * Typografi Inter. UI-vekter 300 / 400 / 510 / 590 (aldri 700+).
- * Titler 16/20/590 · labels 13/16/400 · brødtekst 17/1.47/400.
- * App-knapper 14/510, radius 6, pad ~10×16. Kort 12px. Badge 4px. Pille 9999.
- * Hårlinjer + subtil inset — ikke drop-shadow på chrome.
- * ⛔ Ikke Attio-layout / Fluid / frost (#138). ⛔ Ronny-kropp / logogrønn.
- * ⛔ Ikke tvinge lime på offentlig Apple-landing.
- * Tailwind 4 leser disse via @theme (packages/ui/src/theme.css).
+ * Status: design-prinsipper fra eier. **lyst tema er standard.**
+ * Verdiene under er gitt av eier og har forrang over ui-pakker.md der de
+ * kolliderer (ui-pakker §5 er oppdatert tilsvarende). Snu det ikke tilbake uten
+ * ny beskjed — dette er ikke et forslag, det er spesifikasjonen.
+ * Typografi Inter (SF Pro-erstatning). Titler 16/20 Semibold · labels 13/16
+ * · brødtekst 17/1.47 Regular. Knapper 32px. CTA-pille 9999px · utility 10px · kort 18px.
+ * Attio-farger 06.09.2026 (Mikael): canvas #fff · ash-panel #f3f4f6 · ink #1c1d1f
+ * · Action Blue #407ff2 (lenker/aktiv/fokus-tekst) · Focus Blue #94b9ff (ring).
+ * CTA-fyll er ink, ikke blå. Null drop-shadow på chrome. Galaxy på Oppgrader urørt.
+ * ⛔ Ikke Attio-layout / Fluid / frost (#138). #135/#137-struktur står.
+ * Mørkt bakgrunn #000000 · sidebar #1a1a1a · valgt i sidebar #292929
+ * Hva som er gitt og hva som er utledet
+ * Alt over er gitt. Verdier merket «utledet» under er mine, fordi UI-et trenger
+ * dem og spesifikasjonen ikke nevner dem (hårlinjer, hover-flate, kortflate,
+ * mørk tekstrampe). De er markert eksplisitt, slik at de er lette å overstyre.
+ * Merk: spesifikasjonen har nøyaktig to tekstfarger. `--ew-fg-faint` er derfor
+ * aliasert til subtle (#777777) i stedet for at jeg fant på en tredje. Vil du ha
+ * et tredje nivå, sett verdien her — ingen komponent trenger å endres.
+ * Tailwind 4 leser disse via @theme (packages/ui/src/theme.css). Bytt verdier
+ * her, ikke navn — og ikke i theme.css. Dette er den ene sannheten for farge/font.
  */
 
-/*
- * Linear — Style Reference / midnight precision instrument.
- * Kanoniske navn. Lyst --ew-* remappes IKKE hit; bare mørkt app-skall.
- */
-:root {
-  --color-void: #08090a;
-  --color-carbon: #0f1011;
-  --color-obsidian: #161718;
-  --color-graphite: #23252a;
-  --color-smoke: #383b3f;
-  --color-ash: #62666d;
-  --color-fog: #8a8f98;
-  --color-mist: #d0d6e0;
-  --color-bone: #e5e5e6;
-  --color-paper: #ffffff;
-  --color-acid-lime: #e4f222;
-  --color-pulse-green: #27a644;
-  --color-coral-red: #eb5757;
-  --color-signal-teal: #02b8cc;
-  --color-iris-violet: #6366f1;
-  --color-lavender: #8b5cf6;
-}
-
-/* Lyst (standard for html / marketing / widget) */
+/* Lyst (standard) */
 :root,
 [data-theme="light"] {
   color-scheme: light;
@@ -63,14 +42,14 @@
   --ew-fg: #1c1d1f;
   --ew-fg-muted: #8f99a8;
   --ew-fg-faint: #8f99a8;
-  --ew-heading: #1c1d1f;
 
   /*
-   * 06.09.2026 (Mikael Attio-farger, ikke Attio-layout):
-   * Ink #1c1d1f er tekst + primær CTA-fyll på LYSE flater (widget/marketing).
-   * Action Blue #407ff2 er kun lenker/aktiv/fokus-tekst der.
-   * Offentlig landing-CTA er hardkodet Apple #0066cc — ikke denne tokenen.
-   */
+ * 06.09.2026 (Mikael Attio-farger, ikke Attio-layout):
+ * Ink #1c1d1f er tekst + primær CTA-fyll. Action Blue #407ff2 er kun
+ * lenker/aktiv/fokus-tekst. Focus Blue #94b9ff er ring. Logogrønnen
+ * #1ED27D er urørt i logo.svg. Ronny-kropp røres ikke. Suksess-grønn
+ * er informasjon, ikke merkevare.
+*/
   --ew-accent: #407ff2; /* Action Blue — lenker, aktiv, fokus-tekst */
   --ew-accent-strong: #407ff2;
   --ew-accent-fg: #ffffff;
@@ -78,20 +57,27 @@
   --ew-accent-dim: rgba(64, 127, 242, 0.12);
   --ew-accent-on-dark: #94b9ff;
   --ew-focus: #94b9ff; /* Focus Blue — ring */
-  --ew-ink-utility: #1c1d1f; /* primær CTA-fyll på lys flate */
+  --ew-ink-utility: #1c1d1f; /* primær CTA-fyll */
 
   /* Semantiske statusfarger — utledet, justert for lys bakgrunn */
   --ew-warn: #b45309;
   --ew-warn-soft: #fef3c7;
   --ew-danger: #c8332b;
   --ew-danger-soft: #fdecea;
+  /*
+ * Suksess-grønnen er beholdt, selv om aksenten ble svart. Den er
+ * informasjon (+12 %, «Region OK»), ikke merkevare — og nå som den er den
+ * eneste grønnen på skjermen, betyr den endelig noe.
+*/
   --ew-success: #15b042;
   --ew-success-soft: #caface;
 
-  --ew-tag-teal: #02b8cc;
-  --ew-tag-iris: #6366f1;
-  --ew-tag-lavender: #8b5cf6;
-
+  /* Bevel (TheFold-knappeflaten) — lys variant */
+  /*
+ * Bevel-flaten er ikke ren hvit i lyst tema (endret ): en hvit
+ * knapp på #fafafa-sidebaren leste som et hull, ikke som en hevet flate.
+ * #f2f2f2 gir samme relieff som den mørke varianten.
+*/
   --ew-bevel-face: #f3f4f6;
   --ew-bevel-border: #d3d8df;
   --ew-bevel-shadow: none;
@@ -102,92 +88,94 @@
   --ew-glass-blur: 0px;
 }
 
-/*
- * Linear dark — dealer/app-chrome.
- * Void canvas → Carbon kort/nav → Obsidian løftet → Graphite interaktiv tint.
- * Paper-overskrift, mist-brød, fog/ash dempet. Hårlinje graphite/smoke.
- */
+/* Mørkt (toggle) */
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --ew-bg: var(--color-void);
-  --ew-sidebar: var(--color-carbon);
-  --ew-sidebar-active: var(--color-graphite);
-  --ew-surface: var(--color-carbon);
-  --ew-surface-2: var(--color-obsidian);
-  --ew-inset: var(--color-obsidian);
-  --ew-border: var(--color-graphite);
-  --ew-border-strong: var(--color-smoke);
-  --ew-divider-soft: var(--color-graphite);
+  /* Flater — gitt */
+  --ew-bg: #000000; /* sidebakgrunn — bek, ikke kull */
+  --ew-sidebar: #1a1a1a;
+  --ew-sidebar-active: #292929;
 
-  --ew-fg: var(--color-mist);
-  --ew-fg-muted: var(--color-fog);
-  --ew-fg-faint: var(--color-ash);
-  --ew-heading: var(--color-paper);
+  /* Flater — utledet */
+  --ew-surface: #1f1f1f;
+  --ew-surface-2: #292929; /* samme tone som valgt element — én hover-sannhet */
+  --ew-inset: #141414;
+  --ew-border: #2a2a2a;
+  --ew-border-strong: #363636;
 
-  --ew-accent: var(--color-acid-lime);
-  --ew-accent-strong: var(--color-acid-lime);
-  --ew-accent-fg: var(--color-void);
-  --ew-accent-soft: color-mix(in srgb, var(--color-acid-lime) 16%, transparent);
-  --ew-accent-dim: color-mix(in srgb, var(--color-acid-lime) 12%, transparent);
-  --ew-accent-on-dark: var(--color-acid-lime);
-  --ew-focus: var(--color-acid-lime);
-  --ew-ink-utility: var(--color-acid-lime);
+  /*
+ * Tekst — utledet. #333333/#777777 er lyst-tema-verdier og ville vært
+ * uleselige her; rampen er speilet med samme to-nivå-struktur.
+*/
+  --ew-fg: #ededed;
+  --ew-fg-muted: #8f8f8f;
+  --ew-fg-faint: #8f8f8f;
+
+  /*
+ * I mørkt tema er «svart aksent» hvit. En svart aksent på #000000 ville
+ * vært usynlig — det er ikke en farge, det er et hull. Inversjonen holder
+ * både kontrasten og betydningen: aksenten er den nøytrale, sterkeste tonen
+ * i temaet. Endret sammen med den lyse.
+*/
+  --ew-accent: #ffffff;
+  --ew-accent-strong: #ffffff;
+  --ew-accent-fg: #111111;
+  --ew-accent-soft: rgba(255, 255, 255, 0.12);
+  --ew-accent-dim: rgba(255, 255, 255, 0.1);
+  --ew-focus: #94b9ff;
+  --ew-ink-utility: #ededed;
 
   --ew-warn: #e0a04a;
-  --ew-warn-soft: color-mix(in srgb, #e0a04a 16%, transparent);
-  --ew-danger: var(--color-coral-red);
-  --ew-danger-soft: color-mix(in srgb, var(--color-coral-red) 16%, transparent);
-  --ew-success: var(--color-pulse-green);
-  --ew-success-soft: color-mix(in srgb, var(--color-pulse-green) 16%, transparent);
+  --ew-warn-soft: rgba(224, 160, 74, 0.14);
+  --ew-danger: #e5695f;
+  --ew-danger-soft: rgba(229, 105, 95, 0.14);
+  --ew-success: #1ed27d;
+  --ew-success-soft: rgba(30, 210, 125, 0.16);
 
-  --ew-tag-teal: var(--color-signal-teal);
-  --ew-tag-iris: var(--color-iris-violet);
-  --ew-tag-lavender: var(--color-lavender);
-
-  --ew-bevel-face: var(--color-obsidian);
-  --ew-bevel-border: var(--color-graphite);
+  --ew-bevel-face: #292929;
+  --ew-bevel-border: #363636;
   --ew-bevel-shadow: none;
-  --ew-bevel-fg: var(--color-mist);
+  --ew-bevel-fg: #ededed;
 
-  --ew-glass-bg: var(--color-carbon);
-  --ew-glass-border: var(--color-graphite);
-
-  /* Kompakt Linear-tetthet — kun app/dark, ikke landing */
-  --ew-control-h: 36px;
-  --ew-radius-control: 6px;
-  --ew-badge-radius: 4px;
-  --ew-radius-xl: 12px;
+  --ew-glass-bg: #1a1a1a;
+  --ew-glass-border: #2a2a2a;
 }
 
-/* Form og mål — temauavhengig (dark overstyrer radius/kontroll over) */
+/* Form og mål — temauavhengig */
 :root {
-  --ew-control-h: 32px;
-  --ew-radius-control: 10px;
-  --ew-row-h: 40px;
-  --ew-row-h-store: 44px;
+  /* Kontrollhøyder og radier — gitt */
+  --ew-control-h: 32px; /* knapper, inputs, selects */
+  --ew-radius-control: 10px; /* utility-rektangel — Attio ~10px */
+  --ew-row-h: 40px; /* datarad */
+  --ew-row-h-store: 44px; /* «stores»-rad */
   --ew-badge-h: 20px;
   --ew-badge-radius: 6px;
   --ew-switch-w: 24px;
   --ew-switch-h: 14px;
   --ew-switch-thumb: 10px;
+  /*
+ * Følger aksenten (svart i lyst, hvit i mørkt) — eierens beslutning
+ * . Var #0077E6.
+*/
   --ew-switch-track-on: var(--ew-accent);
 
+  /* Øvrig radius-skala */
   --ew-radius-sm: 3px;
   --ew-radius-md: 6px;
   --ew-radius-lg: 8px;
-  --ew-radius-xl: 18px;
+  --ew-radius-xl: 18px; /* kort */
   --ew-radius-pill: 9999px;
 
-  /* Spacing (4 / 8 / 12 / 16 / 24 / 32 / 96) */
+  /* Spacing (base 4px) */
   --ew-space-1: 4px;
   --ew-space-2: 8px;
   --ew-space-3: 12px;
   --ew-space-4: 16px;
   --ew-space-6: 24px;
   --ew-space-8: 32px;
-  --ew-space-24: 96px;
 
+  /* Typografi — Inter (gitt). next/font-variabel m/ systemfallback. */
   --ew-font-sans:
     var(--font-inter, "Inter"), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;

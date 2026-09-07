@@ -45,10 +45,9 @@ export const viewport: Viewport = {
 };
 
 /**
- * `<html data-theme="light">` er låst for offentlig landing (Apple Action Blue).
- * Dealer/app-skallet overstyrer med `data-theme="dark"` (Linear midnight)
- * på chrome-roten — ikke på html — så lime ikke treffer markeds-CTA.
- * Ingen tema-toggle.
+ * Produktet er lys-only. Ingen tema-toggle, ingen localStorage-sti til dark.
+ * `data-theme="light"` er låst — widget-tokens har fortsatt dark-blokken
+ * for eventuell widget, men appen har ingen bruker-sti dit.
  */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

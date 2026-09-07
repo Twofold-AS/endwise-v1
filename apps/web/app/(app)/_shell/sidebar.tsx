@@ -38,7 +38,7 @@ const IKON_DESKTOP = 20;
 /**
  * Desktop: persistent venstre skinne (alltid synlig, innhold ved siden).
  * Ingen collapse/expand på desktop. Telefon: fullskjerm-overlay, lukket
- * default, åpnes fra PhoneShell. Hvit flate. Hjelp-TipCard er ute;
+ * default, åpnes fra PhoneShell. Synara-steinflate. Hjelp-TipCard er ute;
  * nederst sitter Galaxy-oppgraderingspillen.
  */
 export function Sidebar() {

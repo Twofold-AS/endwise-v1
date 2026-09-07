@@ -47,6 +47,7 @@ export const viewport: Viewport = {
   ],
   colorScheme: 'light dark',
   viewportFit: 'cover',
+  // Pinch-zoom beholdes. Ingen zoom-lås i viewport.
 };
 
 /**

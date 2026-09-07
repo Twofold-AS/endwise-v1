@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-07 — F5-13 dest-nav tom etter #149 (chrome-first)
+
+**Type:** bugfix i delt destinasjonsliste. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Jonas NO-GO etter merge av #149 (tom top-bar 2 + «Ingen destinasjoner å vise.»).
+**Endring:** **F5-13** `progress` (visual re-GO). `destinasjonerForShell` / `rolleForNav` gir Endwise-IA til telefon top-bar 2 og desktop-sidebar når `session.me` mangler, eller Better-Auth gir `owner`/`admin`. Shop-av skjuler bare Butikk. ⛔ pip/border-left. ⛔ #114/#119. Draft, ikke merge.
+
+---
+
 ## 2026-09-07 — F5-13 / F5-01 Mobbin telefon-chrome (to toppbarer)
 
 **Type:** telefon-chrome-restyle. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

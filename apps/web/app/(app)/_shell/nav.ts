@@ -590,6 +590,55 @@ export function itemsForRole(
   );
 }
 
+/**
+ * Better-Auth kan fortsatt gi `owner` / `admin` (createOrganization-default).
+ * De er ikke i OrgRole — `itemsForRole` matcher da ingenting, og chrome
+ * tegner tom dest-liste (Yamaha Bergen / Jonas NO-GO etter #149).
+ */
+const DEALER_ADMIN_ALIAS = new Set(['owner', 'admin']);
+
+export function rolleForNav(input: {
+  role: OrgRole | string | null;
+  shell: ShellKey;
+  erPlattform?: boolean;
+}): OrgRole {
+  if (input.erPlattform) {
+    return input.role === 'endwise_support' ? 'endwise_support' : 'endwise_admin';
+  }
+  if (
+    input.role === 'dealer_staff' ||
+    input.role === 'dealer_admin' ||
+    input.role === 'endwise_admin' ||
+    input.role === 'endwise_support' ||
+    input.role === 'customer'
+  ) {
+    return input.role;
+  }
+  if (input.role && DEALER_ADMIN_ALIAS.has(input.role)) return 'dealer_admin';
+  if (input.shell === 'mekaniker') return 'dealer_staff';
+  if (input.shell === 'endwise') return 'endwise_admin';
+  if (input.shell === 'endwise_partner') return 'endwise_support';
+  return 'dealer_admin';
+}
+
+/**
+ * Delt destinasjonsliste for telefon top-bar 2 og desktop-sidebar.
+ * Chrome-first: null-rolle gir skall-default, ikke tom liste.
+ * Shop-flagg skjuler bare Butikk — aldri hele IA-en.
+ */
+export function destinasjonerForShell(input: {
+  shell: ShellKey;
+  role: OrgRole | string | null;
+  shopEnabled?: boolean;
+  erPlattform?: boolean;
+  inspect?: boolean;
+}): NavItem[] {
+  if (input.inspect) {
+    return itemsForRole(FORHANDLER_NAV, 'dealer_admin', input.shopEnabled ?? true);
+  }
+  return itemsForRole(navForShell(input.shell), rolleForNav(input), input.shopEnabled ?? true);
+}
+
 /** Underpunktene i en destinasjon som rollen skal se. */
 export function childrenForRole(item: NavItem, role: OrgRole | null): NavChild[] {
   if (!item.children) return [];

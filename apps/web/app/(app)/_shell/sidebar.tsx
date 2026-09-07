@@ -18,11 +18,9 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
 import { CountBadge, NewBadge } from './cards';
 import {
-  FORHANDLER_NAV,
+  destinasjonerForShell,
   isItemActive,
-  itemsForRole,
   type NavItem,
-  navForShell,
   settingsForShell,
   shellForBruker,
 } from './nav';
@@ -70,17 +68,14 @@ export function Sidebar() {
         isMechanic,
         erPlattform,
       });
-  const navRolle = erPlattform
-    ? role === 'endwise_support'
-      ? 'endwise_support'
-      : 'endwise_admin'
-    : role;
-  const rawItems = inspect
-    ? itemsForRole(FORHANDLER_NAV, 'dealer_admin', shopEnabled).map((item) =>
-        remapNav(item, inspectSlug ?? '', fra),
-      )
-    : itemsForRole(navForShell(shell), navRolle, shopEnabled);
-  const items = rawItems;
+  const rawItems = destinasjonerForShell({
+    shell,
+    role,
+    shopEnabled,
+    erPlattform,
+    inspect,
+  });
+  const items = inspect ? rawItems.map((item) => remapNav(item, inspectSlug ?? '', fra)) : rawItems;
   const settingsNav = inspect ? null : settingsForShell(shell);
 
   const threads = trpc.messages.listThreads.useQuery(undefined, {
@@ -202,11 +197,7 @@ export function Sidebar() {
           })}
           {items.length === 0 && !smal && (
             <p className="px-2.5 py-6 text-[12px] text-fg-muted leading-relaxed">
-              {chromeFeilet
-                ? 'Kunne ikke laste menyen. Prøv å oppdatere.'
-                : shell === 'forhandler' && !shopEnabled
-                  ? 'Ingen destinasjoner å vise.'
-                  : 'Tom foreløpig.'}
+              {chromeFeilet ? 'Kunne ikke laste menyen. Prøv å oppdatere.' : 'Tom foreløpig.'}
             </p>
           )}
         </nav>

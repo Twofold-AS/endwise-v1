@@ -85,10 +85,10 @@ describe('Mikael telefon-chrome — to toppbarer, sidebar skjult (07.09.2026)', 
     expect(layout).not.toMatch(/PhoneNav|PhoneBevel|Mer-ark|bottom-tab|PhoneTab/);
     expect(shell).not.toMatch(/hamburger|\bMenu\b|visningsvelger/i);
     expect(shell).not.toMatch(/<Sheet|PhoneNav/);
-    expect(shell).toMatch(/navForShell/);
-    expect(shell).toMatch(/itemsForRole/);
+    expect(shell).toMatch(/destinasjonerForShell/);
     expect(shell).toMatch(/isItemActive/);
-    expect(sidebar).toMatch(/FORHANDLER_NAV|navForShell/);
+    expect(sidebar).toMatch(/destinasjonerForShell/);
+    expect(shell).toMatch(/destinasjonerForShell/);
   });
 
   it('Ronny er telefon-sheet, ikke Grainient-stripe eller FAB', () => {

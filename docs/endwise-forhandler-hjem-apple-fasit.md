@@ -9,7 +9,10 @@ Gjelder forhandlerens destinasjonskort på `/dashboard` og `/verkstedet`
 (`apps/web/app/(app)/_shell/phone-home*.ts(x)` + `dashboard/page.tsx`).
 
 **Hardere visuelt pass** (etter mild #136): se
-`docs/endwise-forhandler-hjem-apple-hard-fasit.md`. IA under er uendret.
+`docs/endwise-forhandler-hjem-apple-hard-fasit.md`.
+
+**07.09.2026 (Mikael pulse CODE-GO):** Innhold er pulse-kort, ikke 2-og-2 destinasjonsrutenett.
+Timeplan / Rapporter-parret er erstattet. Chrome urørt.
 
 ## Scope
 

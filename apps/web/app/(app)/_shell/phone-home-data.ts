@@ -13,6 +13,7 @@ export type PhoneBooking = {
   serviceNames?: readonly (string | null)[] | null;
   customerName?: string | null;
   mechanicId?: string | null;
+  mechanicName?: string | null;
 };
 
 export type PhoneTraad = {

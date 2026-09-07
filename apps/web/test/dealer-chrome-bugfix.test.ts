@@ -142,8 +142,8 @@ describe('Hjem-kort fylles fra eksisterende API-er', () => {
         naa,
       ),
     ).toMatch(/EU-kontroll|13|1 i dag/);
-    expect(timeplanMeta([], naa)).toBe('Ingen jobber i dag');
-    expect(statistikkSetning([], naa)).toBe('Ingen tall ennå');
+    expect(timeplanMeta([], naa)).toBe('Ingen jobber');
+    expect(statistikkSetning([], naa)).toBe('For lite data');
     expect(tjenesterMeta([])).toBe('Ingen tjenester ennå');
     expect(tjenesterMeta([{ name: 'EU-kontroll', active: true, priceMinor: 149000 }])).toMatch(
       /EU-kontroll/,
@@ -156,8 +156,8 @@ describe('Hjem-kort fylles fra eksisterende API-er', () => {
   it('dealer-hjem mapper timeplan/jobber og viser designet tomtilstand', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
-    expect(hjem).toMatch(/timeplanRader/);
-    expect(hjem).toMatch(/jobberMeta/);
+    expect(hjem).toMatch(/nesteTreJobber|plan\.map/);
+    expect(hjem).toMatch(/Timeplan-gulv|innboksPulse/);
     expect(hjem).not.toMatch(/tjenesterMeta/);
     expect(hjem).not.toMatch(/key === 'timeplan'\) return \{\}/);
     expect(kort).toMatch(/data-phone-kort-meta|Ingen data/);

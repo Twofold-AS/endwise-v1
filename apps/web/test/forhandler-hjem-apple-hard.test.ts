@@ -48,14 +48,14 @@ const CHROME_URORT = [
 ] as const;
 
 describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
-  it('låser hero → Timeplan|Rapporter → Innboks|Jobber → Kunder|Organisasjon → Hjelp (hopp Samarbeid) → Lager', () => {
+  it('låser pulse I dag · Innboks · Deler · Svarhastighet · Timeplan · Team', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
-      ['verkstedet'],
-      ['timeplan', 'statistikk'],
-      ['innboks', 'jobber'],
-      ['kunder', 'organisasjon'],
-      ['samarbeid', 'hjelp'],
-      ['lager'],
+      ['idag'],
+      ['innboks'],
+      ['deler'],
+      ['svarhastighet'],
+      ['timeplan'],
+      ['team'],
     ]);
     expect(PHONE_KORT_META.statistikk.label).toBe('Rapporter');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
@@ -65,14 +65,14 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(samarbeidSynligINav()).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(false);
     expect(dealerPhoneHjemRader(false).map((r) => r.keys.join('|'))).toEqual([
-      'verkstedet',
-      'timeplan|statistikk',
-      'innboks|jobber',
-      'kunder|organisasjon',
-      'hjelp',
-      'lager',
+      'idag',
+      'innboks',
+      'deler',
+      'svarhastighet',
+      'timeplan',
+      'team',
     ]);
-    expect(dealerPhoneHjemRader(true).at(-1)?.keys).toEqual(['lager', 'butikk']);
+    expect(dealerPhoneHjemRader(true).at(-1)?.keys).toEqual(['team']);
   });
 
   it('ingen hjem-kort for Book / Oppslag / AI / Kompetanse / Prisliste / Abonnement', () => {
@@ -107,19 +107,11 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     ).toEqual(['Oversikt', 'Ansatte', 'Abonnement', 'Integrasjoner']);
   });
 
-  it('HJEM_KORT_TOM er samme ærlig #136-kopi', () => {
-    expect(HJEM_KORT_TOM).toEqual({
-      hero: 'Ingen jobber i dag',
-      timeplan: 'Ingen jobber i dag',
-      innboks: 'Ingen uleste',
-      jobber: 'Ingen åpne jobber',
-      kunder: 'Ingen kunder ennå',
-      organisasjon: 'Åpne organisasjon',
-      rapporter: 'Ingen tall ennå',
-      lager: 'Ingen lave varer',
-      lagerTomt: 'Ingen deler ennå',
-      hjelp: 'Artikler og support',
-    });
+  it('HJEM_KORT_TOM er ærlig pulse-kopi', () => {
+    expect(HJEM_KORT_TOM.innboks).toBe('Ingen uleste');
+    expect(HJEM_KORT_TOM.svarhastighet).toBe('Median førstesvar · 7 dager');
+    expect(HJEM_KORT_TOM.timeplan).toBe('Ingen jobber');
+    expect(HJEM_KORT_TOM.deler).toBe('Ingen mangler på åpne jobber');
     const naa = new Date('2026-08-29T10:00:00');
     expect(verkstedHeroTall([], naa)).toEqual({ idag: 0, paagaar: 0, fullfort: 0 });
     expect(jobberMeta([], naa)).toBe(HJEM_KORT_TOM.jobber);
@@ -145,7 +137,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(hjem).not.toMatch(/PHONE_SAFE_TOP/);
   });
 
-  it('hero er Mobbin featured-kort: radius 24, tint uten kant, I dag/Pågår/Fullført', () => {
+  it('hero er Mobbin featured-kort: radius 24, tint uten kant, Starter/Pågår/Ferdig', () => {
     expect(PHONE_HERO_FYLL).toMatch(/rounded-\[24px\]/);
     expect(PHONE_HERO_FYLL).toMatch(/bg-surface-2/);
     expect(PHONE_HERO_FYLL).not.toMatch(/border-border|border-divide/);
@@ -153,14 +145,13 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(PHONE_DEST_FYLL).toMatch(/rounded-\[24px\]/);
     expect(PHONE_DEST_FYLL).toMatch(/border-divide/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
+    const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     expect(hjem).toMatch(/I dag/);
     expect(hjem).toMatch(/Pågår/);
-    expect(hjem).toMatch(/Fullført/);
+    expect(hjem).toMatch(/Ferdig/);
     expect(hjem).toMatch(/variant="hero"/);
-    expect(hjem).toMatch(/HJEM_KORT_TOM\.hero/);
-    expect(hjem).toMatch(/data-hjem-seksjon=\{seksjon\}/);
-    expect(hjem).toMatch(/seksjon === 'idag' \? 'I dag' : 'Mer'/);
+    expect(hjem).toMatch(/HJEM_KORT_TOM\.timeplan/);
+    expect(hjem).not.toMatch(/data-hjem-seksjon/);
     expect(kort).toMatch(/text-\[28px\]/);
     expect(kort).toMatch(/min-h-11/);
     expect(kort).toMatch(/touch-action:\s*manipulation|\[touch-action:manipulation\]/);
@@ -168,7 +159,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
   });
 
   it('kortlenker har touch-action manipulation; viewport tillater zoom', () => {
-    const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
+    const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const rot = les('../app/layout.tsx');
     expect(kort).toMatch(/touch-action:\s*manipulation|\[touch-action:manipulation\]/);
     expect(rot).not.toMatch(/user-scalable\s*[:=]\s*['"]?no/);
@@ -178,7 +169,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
 
   it('desktop er samme destinasjonskort — ikke KPI-dump', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
-    expect(dash).toMatch(/DealerDestinasjonskort/);
+    expect(dash).toMatch(/DealerPulseKort|DealerDestinasjonskort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
     expect(dash).not.toMatch(/AnsattePaJobb/);
     expect(dash).not.toMatch(/Dagens saker/);
@@ -219,9 +210,9 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     const fasit = les('../../../docs/endwise-forhandler-hjem-apple-fasit.md');
     expect(hard).toMatch(/ash `#f3f4f6`/);
     expect(hard).toMatch(/touch-action: manipulation/);
-    expect(hard).toMatch(/Timeplan\|Rapporter/);
     expect(hard).toMatch(/Don’t touch PhoneShell/);
-    expect(fasit).toMatch(/Timeplan \| Rapporter/);
+    expect(hard).toMatch(/pulse|Timeplan/);
+    expect(fasit).toMatch(/pulse|Timeplan/);
     expect(fasit).toMatch(/Ikke Organisasjon-piller/);
     expect(fasit).toMatch(/hard-fasit/);
   });

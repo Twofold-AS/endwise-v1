@@ -94,10 +94,11 @@ describe('Ny jobb og tomflater', () => {
   it('dashboard-tomflate har Ny jobb som primærhandling', () => {
     const hjem = les('../app/(app)/_shell/phone-home.ts');
     const dealer = les('../app/(app)/_shell/phone-home-dealer.tsx');
+    const pulse = les('../app/(app)/_shell/pulse-kort.tsx');
     const dag = les('../app/(app)/dashboard/_verkstedet-dag.tsx');
-    expect(hjem).toMatch(/Ingen jobber i dag/);
+    expect(hjem).toMatch(/Ingen jobber/);
     expect(dag).toMatch(/Ny jobb/);
-    expect(dealer).toMatch(/animate-pulse/);
+    expect(`${dealer}\n${pulse}`).toMatch(/animate-pulse/);
   });
 
   it('innboks-filtre er ikon-knapper på desktop, tomflate er postkasse', () => {

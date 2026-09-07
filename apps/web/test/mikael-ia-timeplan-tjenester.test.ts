@@ -25,18 +25,16 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
-  it('telefon-hjem: hero → Timeplan|Rapporter → Innboks|Jobber (Tjenester/Salg er ikke hjem-kort)', () => {
+  it('telefon-hjem: pulse-kort, Tjenester/Salg er ikke hjem-kort', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
-      ['verkstedet'],
-      ['timeplan', 'statistikk'],
-      ['innboks', 'jobber'],
-      ['kunder', 'organisasjon'],
-      ['samarbeid', 'hjelp'],
-      ['lager'],
+      ['idag'],
+      ['innboks'],
+      ['deler'],
+      ['svarhastighet'],
+      ['timeplan'],
+      ['team'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
-    expect(DEALER_PHONE_HJEM[1]?.kind).toBe('pair');
-    expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('low');
     expect(PHONE_KORT_META.timeplan.label).toBe('Timeplan');
     expect(PHONE_KORT_META.timeplan.href).toBe('/jobber?visning=kalender');
     expect(PHONE_KORT_META.tjenester.label).toBe('Tjenester');
@@ -44,7 +42,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(PHONE_KORT_META.statistikk.label).toBe('Rapporter');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     const keys = DEALER_PHONE_HJEM.flatMap((r) => r.keys);
-    expect(keys).toContain('jobber');
+    expect(keys).toContain('timeplan');
     expect(keys).not.toContain('tjenester');
     expect(keys).not.toContain('prisliste');
   });
@@ -52,8 +50,8 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
   it('Timeplan-kortet har neste rader uten Ny jobb', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem).not.toMatch(/Ny jobb/);
-    expect(hjem).toMatch(/timeplanRader|plan\.map/);
-    expect(hjem).toMatch(/PHONE_KORT_META|key === 'timeplan'/);
+    expect(hjem).toMatch(/nesteTreJobber|plan\.map/);
+    expect(hjem).toMatch(/PHONE_KORT_META|Timeplan-gulv/);
   });
 
   it('PC-sidebar: Timeplan og Salg, Organisasjon uten Timeplan-pille', () => {

@@ -3,6 +3,7 @@ import {
   type Database,
   desc,
   eq,
+  gte,
   inArray,
   or,
   schema,
@@ -13,6 +14,7 @@ import {
 import { erPlattformTenant } from '../plattform/index.ts';
 import { visningsnavn } from '../profil/index.ts';
 import { publishEvent } from '../stream/publisher.ts';
+import { svarhastighetFraPar } from './svarhastighet.ts';
 
 /** Utgående e-post per forfatter per minutt. Sperrer åpen send. */
 export const INBOX_SEND_MAX_PER_MINUTT = 10;
@@ -622,6 +624,71 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
           )
           .orderBy(desc(schema.threads.lastMessageAt)),
       );
+    },
+
+    /**
+     * Median førstesvar, rolling 7 dager.
+     * Første inbound i customer_dealer-tråder leseren er med i,
+     * mot første outbound etterpå. Tom = null (UI: mock + badge).
+     */
+    async svarhastighet(tenantId: string, participantId: string, naa = new Date()) {
+      const fra = new Date(naa.getTime() - 7 * 86_400_000);
+      return withTenant(db, tenantId, async (tx) => {
+        const inbound = await tx
+          .select({
+            threadId: schema.messages.threadId,
+            inboundAt: sql<Date>`min(${schema.messages.createdAt})`,
+          })
+          .from(schema.messages)
+          .innerJoin(schema.threads, eq(schema.threads.id, schema.messages.threadId))
+          .innerJoin(
+            schema.threadParticipants,
+            and(
+              eq(schema.threadParticipants.threadId, schema.messages.threadId),
+              eq(schema.threadParticipants.participantId, participantId),
+            ),
+          )
+          .where(
+            and(
+              eq(schema.messages.tenantId, tenantId),
+              eq(schema.messages.direction, 'inbound'),
+              eq(schema.threads.kind, 'customer_dealer'),
+              gte(schema.messages.createdAt, fra),
+            ),
+          )
+          .groupBy(schema.messages.threadId);
+
+        if (inbound.length === 0) return { medianMs: null, n: 0 };
+
+        const threadIds = inbound.map((r) => r.threadId);
+        const outbound = await tx
+          .select({
+            threadId: schema.messages.threadId,
+            createdAt: schema.messages.createdAt,
+          })
+          .from(schema.messages)
+          .where(
+            and(
+              inArray(schema.messages.threadId, threadIds),
+              eq(schema.messages.direction, 'outbound'),
+            ),
+          );
+
+        const par: { inboundAt: Date; outboundAt: Date }[] = [];
+        for (const inn of inbound) {
+          const kandidater = outbound
+            .filter(
+              (o) =>
+                o.threadId === inn.threadId &&
+                new Date(o.createdAt).getTime() > new Date(inn.inboundAt).getTime(),
+            )
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          const forste = kandidater[0];
+          if (!forste) continue;
+          par.push({ inboundAt: new Date(inn.inboundAt), outboundAt: new Date(forste.createdAt) });
+        }
+        return svarhastighetFraPar(par);
+      });
     },
 
     /**

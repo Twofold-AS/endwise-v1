@@ -21,7 +21,8 @@
 > siden shadcn/beUI-komponentene har samme problem.
 
 > ### ⚠️ Mikael telefon-chrome CODE-GO kveld (07.09.2026)
-> Søk/Ronny/profil merkbart mindre: felt `h-8`, sirkler `size-7` /
+> Telefon-merke i top-bar 1 er `PHONE_LOGO_PX=32` (noe større enn
+> desktop/sidebar 24). Søk/Ronny/profil merkbart mindre: felt `h-8`, sirkler `size-7` /
 > `PHONE_AVATAR_PX=28` (samme mål, runde). Telefon-chrome Ronny sykler
 > `RONNY_PHONE_IDLE` — aldri `colere`/sint; bare uttrykk (`playing={false}`).
 > Fokus på søk åpner `PhoneSokOverlay` (fullskjerm `z-80`): mindre felt

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-07 — F5-13 telefon-logo noe større i top-bar 1
+
+**Type:** telefon-chrome-polish. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael add-on på draft #150.
+**Endring:** **F5-13** `progress`. `PHONE_LOGO_PX=32` kun i telefon top-bar 1. Søk/Ronny/profil forblir 28/`h-8`. Desktop/sidebar-merke `SHELL_LOGO_PX=24` urørt. Draft, ikke merge.
+
+---
+
 ## 2026-09-07 — F5-13 telefon-chrome CODE-GO kveld (28px + søk + Ronny-sheet)
 
 **Type:** telefon-chrome-polish. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

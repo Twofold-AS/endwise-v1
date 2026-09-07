@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { destinasjonerForShell } from '../app/(app)/_shell/nav.ts';
-import { PHONE_AVATAR_PX } from '../app/(app)/_shell/phone-chrome.ts';
+import { PHONE_AVATAR_PX, PHONE_LOGO_PX, SHELL_LOGO_PX } from '../app/(app)/_shell/phone-chrome.ts';
 import { huskSok, lesNyligeSok, PHONE_SOK_MAX } from '../app/(app)/_shell/phone-sok.ts';
 import { RONNY_IDLE, RONNY_PHONE_IDLE } from '../app/(app)/_workshop/ronny-idle.ts';
 
@@ -30,6 +30,16 @@ describe('Mikael telefon-chrome — mindre søk/avatar + søk-overlay (07.09 kve
     expect(shell).toMatch(/PHONE_AVATAR_PX/);
     expect(shell).toMatch(/data-phone-profile/);
     expect(shell).toMatch(/data-ronny-avatar/);
+  });
+
+  it('telefon-logo er noe større enn desktop-merket; søk/Ronny/profil forblir små', () => {
+    expect(PHONE_LOGO_PX).toBeGreaterThan(SHELL_LOGO_PX);
+    expect(PHONE_LOGO_PX).toBeGreaterThan(PHONE_AVATAR_PX);
+    expect(PHONE_LOGO_PX).toBeLessThanOrEqual(36);
+    expect(PHONE_AVATAR_PX).toBe(28);
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    expect(shell).toMatch(/PHONE_LOGO_PX/);
+    expect(shell).toMatch(/h-8/);
   });
 
   it('telefon-avatar sykler aldri colere/sint — kun rolige uttrykk', () => {

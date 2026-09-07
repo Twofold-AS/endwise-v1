@@ -32,7 +32,7 @@ describe('phone-chrome', () => {
     expect(PHONE_H_SCROLL).toContain('overflow-y-hidden');
     expect(PHONE_H_SCROLL).toContain('touch-pan-x');
     expect(PHONE_H_SCROLL).toContain('overscroll-y-none');
-    expect(PHONE_LOGO_PX).toBe(24);
+    expect(PHONE_LOGO_PX).toBe(32);
     expect(SHELL_HEADER_RAD).toBe('flex h-row w-full items-center justify-between gap-2 px-3');
     expect(SHELL_LOGO_WRAP).toBe('flex shrink-0 items-center');
     expect(PHONE_LOGO_KOLONNE).toContain('24px');

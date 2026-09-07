@@ -72,6 +72,7 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(layout).toMatch(/md:w-\[598px\]/);
     expect(layout).toMatch(/WorkshopBloub/);
     expect(rot).toMatch(/data-theme="light"/);
+    expect(layout).toMatch(/data-theme="dark"/);
     expect(rot).not.toMatch(/TEMA_SKRIPT|endwise:tema/);
     expect(workshop).not.toMatch(/<Grainient/);
     expect(workshop).not.toMatch(/data-workshop-strip/);

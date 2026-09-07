@@ -1,6 +1,6 @@
 /**
  * Offentlig landing holder Apple Action Blue (Jonas 06.09.2026).
- * Dealer-chrome CTA er ink via `--ew-ink-utility`.
+ * Dealer-chrome CTA er Acid Lime via `--ew-ink-utility` (data-theme=dark).
  * Landing piller `#0066cc` / hover `#0071e3` — ikke produkt-ink, ikke logogrønn.
  */
 export const CTA_PRIMAR =

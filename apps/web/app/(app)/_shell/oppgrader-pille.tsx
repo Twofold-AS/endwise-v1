@@ -27,10 +27,9 @@ function GalaxyKlipp() {
 }
 
 /**
- * Oval Galaxy-knapp (React Bits, klippet inne). Ink `#1c1d1f` (Attio CTA).
- * Tekst følger TIERS-stigen via `billing.subscription.planKey`
- * (billing-rad, ellers tenants.plan). Galaxy på både Oppgrader-CTA
- * og Enterprise-merke. Merke er uten lenke.
+ * Enterprise-merke: Galaxy på carbon (ikke lime — merke er ikke CTA).
+ * Oppgrader-CTA: én acid-lime flate, void-tekst, uten Galaxy-dekor.
+ * Tekst følger TIERS-stigen via `billing.subscription.planKey`.
  */
 export function OppgraderPille() {
   const sub = trpc.billing.subscription.useQuery(undefined, { retry: false });
@@ -38,11 +37,19 @@ export function OppgraderPille() {
   const tekst = oppgraderKnappetekst(planKey);
   const cta = visOppgraderCta(planKey);
   const skall =
-    'relative mx-2 mb-1 flex h-9 items-center justify-center overflow-hidden rounded-full bg-primary px-4 text-label text-primary-foreground md:mx-0 md:h-[52px] md:w-[233px] md:px-8';
+    'relative mx-2 mb-1 flex h-9 items-center justify-center overflow-hidden rounded-full px-4 text-label md:mx-0 md:h-[52px] md:w-[233px] md:px-8';
+  const fyll = cta
+    ? 'bg-primary text-primary-foreground'
+    : 'border border-border bg-surface text-fg';
 
   if (!cta) {
     return (
-      <div data-oppgrader-pille data-plan-badge data-shell-enterprise className={skall}>
+      <div
+        data-oppgrader-pille
+        data-plan-badge
+        data-shell-enterprise
+        className={`${skall} ${fyll}`}
+      >
         <GalaxyKlipp />
         <span className="pointer-events-none relative z-10 truncate md:text-[18px] md:leading-[22px]">
           {tekst}
@@ -56,10 +63,9 @@ export function OppgraderPille() {
       href={'/organisasjon?seksjon=abonnement' as Route}
       data-oppgrader-pille
       data-shell-enterprise
-      className={skall}
+      className={`${skall} ${fyll}`}
     >
-      <GalaxyKlipp />
-      <span className="pointer-events-none relative z-10 truncate md:text-[18px] md:leading-[22px]">
+      <span className="pointer-events-none relative z-10 truncate md:text-[18px] md:font-[510] md:leading-[22px]">
         {tekst}
       </span>
     </Link>

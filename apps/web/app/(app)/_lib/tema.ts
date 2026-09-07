@@ -1,7 +1,7 @@
 /**
- * Produktet er lys-only. Ingen bruker-sti til `[data-theme=dark]`.
- * Nøklene beholdes så gammel localStorage ikke kaster — men lesing
- * og skriving tvinger alltid light.
+ * `<html>` forblir `data-theme="light"` (Apple-landing / offentlig).
+ * Dealer/app-skallet setter `data-theme="dark"` (Linear) på chrome-roten.
+ * Ingen bruker-toggle — localStorage tvinger ikke lenger tema.
  */
 
 export type Tema = 'light';

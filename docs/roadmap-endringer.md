@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-07 — F0-11 / F5-10 / F5-13 Linear dark dealer-chrome
+
+**Type:** token-remap + sidebar-align. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael Linear Style Reference (DESIGN.md — midnight precision instrument).
+**Endring:** **F0-11** forblir `done` (Linear `--color-*` på `:root`, `--ew-*` i `[data-theme=dark]`). **F5-10** forblir `progress`. **F5-13** forblir `done` (3-kolonne urørt; nav-tekst venstre / ikon høyre). Dealer/app-skall setter `data-theme="dark"` på chrome-roten. `<html>` forblir light så offentlig landing holder Apple `#0066cc`. App-CTA = Acid Lime `#e4f222` / void-tekst. ⛔ Action Blue / ink som app-CTA. ⛔ lime på Apple-landing. ⛔ #138 Fluid/frost. ⛔ Ronny-kropp. ⛔ #114/#119.
+
+---
+
 ## 2026-09-06 — F5-18 Amicro dither charts (ikke dither-kit)
 
 **Type:** techstack §2 + UI-pakke. Ingen DB. Ingen 3-kolonne-shell.

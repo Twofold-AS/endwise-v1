@@ -40,9 +40,9 @@ export function PhoneKort({
   const apple = variant === 'hero' || variant === 'destinasjon';
   const tittel =
     variant === 'hero'
-      ? 'min-w-0 flex-1 truncate text-[28px] font-semibold leading-tight tracking-tight text-fg'
+      ? 'min-w-0 flex-1 truncate text-[28px] font-[590] leading-tight tracking-tight text-heading'
       : variant === 'destinasjon'
-        ? 'min-w-0 flex-1 truncate text-[17px] font-semibold leading-snug text-fg'
+        ? 'min-w-0 flex-1 truncate text-[17px] font-[590] leading-snug text-heading'
         : 'min-w-0 flex-1 truncate text-title';
   const luft =
     variant === 'hero'

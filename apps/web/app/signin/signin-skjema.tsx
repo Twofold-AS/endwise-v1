@@ -350,9 +350,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
                 placeholder="•••••"
               />
             </Field>
-            {error && (
-              <p className="text-[13px] text-danger">{error ?? MAGIC_LINK_ERSTATTET_MELDING}</p>
-            )}
+            {error && <p className="text-[13px] text-danger">{error}</p>}
             <StatefulButton
               type="submit"
               state={knappState('logg-inn')}

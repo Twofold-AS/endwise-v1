@@ -8,6 +8,8 @@ export type PhoneBooking = {
   status: string;
   startsAt: Date | string;
   endsAt?: Date | string;
+  createdAt?: Date | string | null;
+  source?: string | null;
   regNumber?: string | null;
   serviceName?: string | null;
   serviceNames?: readonly (string | null)[] | null;

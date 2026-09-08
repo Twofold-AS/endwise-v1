@@ -1,32 +1,34 @@
 'use client';
 
-import { DitherGrowthChart } from '@endwise/ui';
+import { Inbox, Package, Plus, Users } from '@endwise/ui';
 import { useMemo } from 'react';
+import { useTema } from '@/app/_lib/tema-provider';
 import { trpc } from '@/lib/trpc';
-import { osloKalenderdag, osloPlusDager, osloStartAvDag } from '../_lib/oslo-dag';
-import { PeopleShowcase } from './people-showcase';
-import { HJEM_KORT_TOM, HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
+import { osloKalenderdag, osloStartAvDag } from '../_lib/oslo-dag';
+import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
 import {
-  delerPaApneJobber,
-  ferdigSpark7d,
+  ansattePaJobb,
+  bookingMaanedVsForrige,
+  foresporselTrend,
   idagVisning,
-  innboksPulse,
-  nesteTreJobber,
-  sparkVisning,
-  svarhastighetVisning,
-  teamPulse,
+  lagerVenter,
+  maanedSparkVisning,
+  osloForrigeMaanedStart,
+  osloNesteMaanedStart,
+  sisteMeldinger,
 } from './phone-home-pulse';
-import { PulseFooter, PulseKort, PulseTall } from './pulse-kort';
-
-const INK = '#141414';
+import { PulseFooter, PulseKort, PulseLinjeKort, PulseMaanedBoble, PulseTall } from './pulse-kort';
 
 /**
- * Forhandler-pulse hjem — Verkstedet / `/home`.
- * Seks operative kort + footer-tekst. Chrome urørt.
+ * Forhandler-pulse hjem v2 — Verkstedet / `/home`.
+ * I dag + Innboks/Lager/Ansatte/+Jobb. Chrome urørt.
  */
 export function useDealerHjemKort() {
-  const fra = useMemo(() => osloStartAvDag(osloPlusDager(osloKalenderdag(new Date()), -6)), []);
-  const til = useMemo(() => osloStartAvDag(osloPlusDager(osloKalenderdag(new Date()), 8)), []);
+  const fra = useMemo(
+    () => osloStartAvDag(osloForrigeMaanedStart(osloKalenderdag(new Date()))),
+    [],
+  );
+  const til = useMemo(() => osloStartAvDag(osloNesteMaanedStart(osloKalenderdag(new Date()))), []);
 
   const bookings = trpc.bookings.list.useQuery({
     from: fra,
@@ -34,7 +36,6 @@ export function useDealerHjemKort() {
     limit: 200,
   });
   const threads = trpc.messages.listThreads.useQuery();
-  const svar = trpc.messages.svarhastighet.useQuery();
   const oversikt = trpc.mechanics.oversikt.useQuery();
   const deler = trpc.inventory.listParts.useQuery({
     kunLav: false,
@@ -46,24 +47,22 @@ export function useDealerHjemKort() {
   const naa = useMemo(() => new Date(), []);
   const jobber = bookings.data ?? [];
   const idag = idagVisning(jobber, naa);
-  const spark = sparkVisning(ferdigSpark7d(jobber, naa));
-  const innboks = innboksPulse(threads.data ?? [], naa);
-  const delerKort = delerPaApneJobber(deler.data ?? [], jobber);
-  const svarKort = svarhastighetVisning(svar.data?.medianMs ?? null);
-  const plan = nesteTreJobber(jobber, naa, 3);
-  const team = teamPulse(oversikt.data ?? []);
+  const maaned = maanedSparkVisning(bookingMaanedVsForrige(jobber, naa));
+  const innboks = sisteMeldinger(threads.data ?? []);
+  const foresporsel = foresporselTrend(jobber, naa);
+  const lager = lagerVenter(deler.data ?? []);
+  const team = ansattePaJobb(oversikt.data ?? []);
 
   return {
     bookings,
     threads,
-    svar,
     oversikt,
+    deler,
     idag,
-    spark,
+    maaned,
     innboks,
-    delerKort,
-    svarKort,
-    plan,
+    foresporsel,
+    lager,
     team,
   };
 }
@@ -72,16 +71,16 @@ export function DealerPulseKort({ className }: { className?: string }) {
   const {
     bookings,
     threads,
-    svar,
     oversikt,
+    deler,
     idag,
-    spark,
+    maaned,
     innboks,
-    delerKort,
-    svarKort,
-    plan,
+    foresporsel,
+    lager,
     team,
   } = useDealerHjemKort();
+  const { los } = useTema();
   const lasterJobber = bookings.isLoading;
 
   return (
@@ -90,76 +89,50 @@ export function DealerPulseKort({ className }: { className?: string }) {
         href={PHONE_KORT_META.idag.href}
         navn="I dag"
         variant="hero"
-        mock={!lasterJobber && (idag.mock || spark.mock)}
+        mock={!lasterJobber && (idag.mock || maaned.mock)}
       >
-        <div className="grid grid-cols-3 divide-x divide-divide">
-          <PulseTall label="Starter" verdi={idag.starter} laster={lasterJobber} />
-          <PulseTall label="Pågår" verdi={idag.paagaar} laster={lasterJobber} />
-          <PulseTall label="Ferdig" verdi={idag.ferdig} laster={lasterJobber} />
-        </div>
-        <div className="pointer-events-none h-12 w-full" aria-hidden>
-          <DitherGrowthChart
-            theme="light"
-            compact
-            values={spark.values}
-            labels={spark.labels}
-            color={INK}
-          />
+        <div className="flex items-end justify-between gap-4">
+          <div className="grid min-w-0 flex-1 grid-cols-3 divide-x divide-divide">
+            <PulseTall label="Planlagt" verdi={idag.planlagt} laster={lasterJobber} />
+            <PulseTall label="Pågår" verdi={idag.paagaar} laster={lasterJobber} />
+            <PulseTall label="Ferdig" verdi={idag.ferdig} laster={lasterJobber} />
+          </div>
+          <PulseMaanedBoble denne={maaned.denne} forrige={maaned.forrige} mork={los === 'dark'} />
         </div>
       </PulseKort>
 
-      <PulseKort
+      <PulseLinjeKort
         href={PHONE_KORT_META.innboks.href}
-        navn="Innboks"
-        verdi={innboks.ulest}
-        meta={innboks.sla}
+        ikon={Inbox}
+        tekst="Les alle siste meldinger"
+        tall={innboks.ulest}
         laster={threads.isLoading}
+        mock={!threads.isLoading && foresporsel.mock}
+        trend={foresporsel}
       />
 
-      <PulseKort
-        href={PHONE_KORT_META.deler.href}
-        navn="Deler"
-        verdi={delerKort.antall}
-        meta={delerKort.meta}
-        laster={lasterJobber}
+      <PulseLinjeKort
+        href={PHONE_KORT_META.lager.href}
+        ikon={Package}
+        tekst={lager.tekst}
+        tall={lager.antall}
+        laster={deler.isLoading}
       />
 
-      <PulseKort
-        href={PHONE_KORT_META.svarhastighet.href}
-        navn="Svarhastighet"
-        verdi={svarKort.tall}
-        meta={svarKort.meta}
-        laster={svar.isLoading}
-        mock={svarKort.mock && !svar.isLoading}
-      />
-
-      <PulseKort
-        href={PHONE_KORT_META.timeplan.href}
-        navn="Timeplan-gulv"
-        meta={plan.length === 0 ? HJEM_KORT_TOM.timeplan : undefined}
-      >
-        {plan.length > 0 ? (
-          <ul className="flex flex-col gap-1.5">
-            {plan.map((rad) => (
-              <li key={rad.id} className="flex gap-2 text-[12px] text-fg-muted leading-snug">
-                <span className="shrink-0 text-fg tabular-nums">{rad.time}</span>
-                <span className="min-w-0 truncate">{rad.what}</span>
-                <span className="shrink-0 text-fg-faint">{rad.who}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </PulseKort>
-
-      <PulseKort
+      <PulseLinjeKort
         href={PHONE_KORT_META.team.href}
-        navn="Team"
-        verdi={oversikt.isLoading ? undefined : `${team.ledig}/${team.opptatt}`}
-        meta={team.meta}
+        ikon={Users}
+        tekst={team.tekst}
+        tall={oversikt.isLoading ? undefined : team.tall}
         laster={oversikt.isLoading}
-      >
-        <PeopleShowcase folk={oversikt.data ?? []} />
-      </PulseKort>
+      />
+
+      <PulseLinjeKort
+        href={PHONE_KORT_META.jobb.href}
+        ikon={Plus}
+        ikonVariant="box"
+        tekst="Jobb"
+      />
 
       <PulseFooter />
     </div>

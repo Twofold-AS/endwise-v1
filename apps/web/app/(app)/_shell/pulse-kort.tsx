@@ -1,10 +1,14 @@
 'use client';
 
-import { Badge } from '@endwise/ui';
+import { Badge, DitherDonutChart, type LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL } from './phone-home';
+
+const INK = '#141414';
+const FAINT = '#adadad';
+const WHITE = '#ffffff';
 
 /**
  * Operativt pulse-kort på forhandler-hjem.
@@ -91,6 +95,179 @@ export function PulseTall({
         ) : (
           verdi
         )}
+      </p>
+    </div>
+  );
+}
+
+/** Hvit sirkel (mørkt: hvit) rundt ikon — ink-strek så ikonet synes. */
+export function PulseIkonFlate({
+  variant = 'circle',
+  children,
+}: {
+  variant?: 'circle' | 'box';
+  children: ReactNode;
+}) {
+  return (
+    <span
+      data-pulse-ikon-flate={variant}
+      className={`flex size-9 shrink-0 items-center justify-center bg-white text-[#141414] ${
+        variant === 'circle' ? 'rounded-full' : 'rounded-[10px]'
+      }`}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Pil med hale mot telleren — speil av TilbakePil. */
+export function PulsePilHale({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      role="presentation"
+      aria-hidden
+      data-pulse-pil-hale
+    >
+      <path
+        d="M5 12h14M12 5l7 7-7 7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export type PulseTrend = {
+  antall: number;
+  tone: 'green' | 'red' | 'neutral';
+  ratio: number;
+  mock: boolean;
+};
+
+/** Mini-statlinje. Grønn/rød kun her — ikke merkevare-CTA. */
+export function PulseTrendBar({ trend }: { trend: PulseTrend }) {
+  const fyll =
+    trend.tone === 'green' ? 'bg-success' : trend.tone === 'red' ? 'bg-danger' : 'bg-fg-faint';
+  return (
+    <span
+      data-pulse-trend={trend.tone}
+      data-pulse-trend-mock={trend.mock ? '' : undefined}
+      className="flex shrink-0 items-center gap-1"
+      title="Nye forespørsler mot vanlig dagsnitt"
+    >
+      <span className="relative block h-1 w-7 overflow-hidden rounded-full bg-inset">
+        <span
+          className={`absolute inset-y-0 left-0 rounded-full ${fyll}`}
+          style={{ width: `${Math.round(trend.ratio * 100)}%` }}
+        />
+      </span>
+      <span
+        className={`text-[12px] leading-none tabular-nums ${
+          trend.tone === 'green'
+            ? 'text-success'
+            : trend.tone === 'red'
+              ? 'text-danger'
+              : 'text-fg-muted'
+        }`}
+      >
+        {trend.antall}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Én horisontal linje: hvit ikonflate · tekst · pil+teller · ev. trend.
+ * Mørk-modus: sirkel/boks forblir hvit.
+ */
+export function PulseLinjeKort({
+  href,
+  ikon: Ikon,
+  ikonVariant = 'circle',
+  tekst,
+  tall,
+  laster = false,
+  mock = false,
+  trend,
+}: {
+  href: string;
+  ikon: LucideIcon;
+  ikonVariant?: 'circle' | 'box';
+  tekst: string;
+  tall?: string | number;
+  laster?: boolean;
+  mock?: boolean;
+  trend?: PulseTrend;
+}) {
+  return (
+    <Link
+      href={href as Route}
+      data-pulse-kort={tekst}
+      data-pulse-linje=""
+      data-pulse-mock={mock ? '' : undefined}
+      className={`${PHONE_DEST_FYLL} flex min-h-11 w-full items-center gap-2.5 px-4 py-3 [touch-action:manipulation]`}
+    >
+      <PulseIkonFlate variant={ikonVariant}>
+        <Ikon className="size-4" strokeWidth={2} aria-hidden />
+      </PulseIkonFlate>
+      <span className="min-w-0 flex-1 truncate text-label text-fg">{tekst}</span>
+      {mock ? <PulseMockBadge /> : null}
+      {tall != null ? (
+        <span className="flex shrink-0 items-center gap-1.5 text-fg">
+          <PulsePilHale />
+          <span className="text-title tabular-nums">
+            {laster ? (
+              <span className="inline-block h-4 w-6 animate-pulse rounded-sm bg-border" />
+            ) : (
+              tall
+            )}
+          </span>
+        </span>
+      ) : null}
+      {trend ? <PulseTrendBar trend={trend} /> : null}
+    </Link>
+  );
+}
+
+/** Mini Amicro-donut: denne måneden vs forrige. Tall i klartekst ved siden av. */
+export function PulseMaanedBoble({
+  denne,
+  forrige,
+  mork,
+}: {
+  denne: number;
+  forrige: number;
+  mork: boolean;
+}) {
+  const denneFarge = mork ? WHITE : INK;
+  const forrigeFarge = mork ? FAINT : FAINT;
+  return (
+    <div
+      data-pulse-maaned-boble
+      className="flex shrink-0 flex-col items-center gap-1"
+      aria-label={`${denne} bookinger denne måneden, ${forrige} forrige`}
+    >
+      <div className="size-16 overflow-hidden rounded-full">
+        <DitherDonutChart
+          compact
+          className="h-full w-full"
+          slices={[
+            { name: 'Denne', value: Math.max(0, denne), color: denneFarge },
+            { name: 'Forrige', value: Math.max(0, forrige), color: forrigeFarge },
+          ]}
+        />
+      </div>
+      <p className="text-[11px] leading-none text-fg-muted tabular-nums">
+        {denne}
+        <span className="text-fg-faint"> · </span>
+        {forrige}
       </p>
     </div>
   );

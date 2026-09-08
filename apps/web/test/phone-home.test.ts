@@ -41,25 +41,25 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('dealer phone home — kortrekkefølge og fyll', () => {
-  it('låser pulse I dag · Innboks · Deler · Svarhastighet · Timeplan · Team', () => {
+  it('låser pulse I dag · Innboks · Lager · Team · Jobb', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
       ['innboks'],
-      ['deler'],
-      ['svarhastighet'],
-      ['timeplan'],
+      ['lager'],
       ['team'],
+      ['jobb'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(dealerPhoneHjemRader(false).flatMap((r) => r.keys)).not.toContain('samarbeid');
     expect(PHONE_KORT_META).toHaveProperty('samarbeid');
   });
 
-  it('Timeplan kommer etter Svarhastighet, Team er sist — ikke Lager-kort', () => {
+  it('Jobb er sist, Lager før Team — Svarhastighet og Timeplan-gulv er ute', () => {
     const keys = DEALER_PHONE_HJEM.map((r) => r.keys.join('|'));
-    expect(keys.indexOf('svarhastighet')).toBeLessThan(keys.indexOf('timeplan'));
-    expect(keys.indexOf('timeplan')).toBeLessThan(keys.indexOf('team'));
-    expect(keys.at(-1)).toBe('team');
+    expect(keys).not.toContain('svarhastighet');
+    expect(keys).not.toContain('timeplan');
+    expect(keys.indexOf('lager')).toBeLessThan(keys.indexOf('team'));
+    expect(keys.at(-1)).toBe('jobb');
   });
 
   it('Butikk er ikke et pulse-kort, uansett shop-flagg', () => {
@@ -133,9 +133,9 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(rader[0]?.what).toMatch(/EU-kontroll/);
     expect(rader[0]?.time).toMatch(/\d/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).not.toMatch(/Ny jobb/);
-    expect(hjem).not.toMatch(/bookinger\/ny/);
-    expect(hjem).toMatch(/nesteTreJobber|plan\.map/);
+    expect(hjem).toMatch(/bookinger\/ny|PHONE_KORT_META\.jobb/);
+    expect(hjem).toMatch(/tekst="Jobb"/);
+    expect(hjem).not.toMatch(/nesteTreJobber|Timeplan-gulv/);
   });
 
   it('fyller statistikk, innboks, kunder, org, lager og rapporter-setning fra ekte/eksisterende tall', () => {

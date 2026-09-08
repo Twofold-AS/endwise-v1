@@ -158,8 +158,8 @@ describe('Hjem-kort fylles fra eksisterende API-er', () => {
   it('dealer-hjem mapper timeplan/jobber og viser designet tomtilstand', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
-    expect(hjem).toMatch(/nesteTreJobber|plan\.map/);
-    expect(hjem).toMatch(/Timeplan-gulv|innboksPulse/);
+    expect(hjem).toMatch(/sisteMeldinger|PulseLinjeKort/);
+    expect(hjem).toMatch(/Les alle siste meldinger|innboks/);
     expect(hjem).not.toMatch(/tjenesterMeta/);
     expect(hjem).not.toMatch(/key === 'timeplan'\) return \{\}/);
     expect(kort).toMatch(/data-phone-kort-meta|Ingen data/);

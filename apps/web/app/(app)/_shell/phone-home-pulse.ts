@@ -1,11 +1,8 @@
 import { osloKalenderdag, osloPlusDager } from '../_lib/oslo-dag';
-import { fmtTime } from '../bookinger/_status';
 import { sammeKalenderdag } from '../dashboard/_pa-jobb';
-import { jobbHva, type PhoneBooking, type PhoneTraad } from './phone-home-data';
+import type { PhoneBooking, PhoneTraad } from './phone-home-data';
 
-export const APEN_JOBB = new Set(['draft', 'confirmed', 'in_progress']);
-const STARTER_STATUS = new Set(['draft', 'confirmed']);
-const LUKKET_JOBB = new Set(['cancelled', 'completed', 'no_show']);
+const PLANLAGT_STATUS = new Set(['draft', 'confirmed']);
 
 export type PhoneDelPulse = {
   name: string;
@@ -25,36 +22,60 @@ export function idagTall(jobber: PhoneBooking[], naa: Date) {
     (j) => sammeKalenderdag(j.startsAt, naa) && j.status !== 'cancelled',
   );
   return {
-    starter: dagens.filter((j) => STARTER_STATUS.has(j.status)).length,
+    planlagt: dagens.filter((j) => PLANLAGT_STATUS.has(j.status)).length,
     paagaar: dagens.filter((j) => j.status === 'in_progress').length,
     ferdig: dagens.filter((j) => j.status === 'completed').length,
   };
 }
 
-/** Jonas-skisse: 14 min når 7d-utvalget er for tynt. */
-export const PULSE_MOCK_SVAR_MS = 14 * 60_000;
-/** Plausibel 7d-spark når ingen completed-historikk finnes. */
-export const PULSE_MOCK_SPARK = [1, 2, 1, 3, 2, 4, 3];
-export const PULSE_MOCK_IDAG = { starter: 3, paagaar: 2, ferdig: 1 };
+/** Plausibel dag når vinduet er tomt — aldri «For lite data». */
+export const PULSE_MOCK_IDAG = { planlagt: 3, paagaar: 2, ferdig: 1 };
+/** Denne / forrige måned når begge er null. */
+export const PULSE_MOCK_MAANED = { denne: 12, forrige: 8 };
+/** Ny-forespørsel når historikken er for tynn. */
+export const PULSE_MOCK_FORESPORSEL = { antall: 5, tone: 'green' as const, ratio: 0.72 };
 
-export function ferdigSpark7d(jobber: PhoneBooking[], naa: Date) {
-  const iDag = osloKalenderdag(naa);
-  const labels: string[] = [];
-  const values: number[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const dag = osloPlusDager(iDag, -i);
-    labels.push(dag.slice(5));
-    values.push(
-      jobber.filter((j) => osloKalenderdag(j.startsAt) === dag && j.status === 'completed').length,
-    );
-  }
-  return { labels, values };
+export function osloMaanedStart(ymd: string): string {
+  return `${ymd.slice(0, 7)}-01`;
 }
 
-/** Tom 7d-historikk → mock-spark, ikke flat null-linje. */
-export function sparkVisning(spark: { labels: string[]; values: number[] }) {
-  if (spark.values.some((v) => v > 0)) return { ...spark, mock: false };
-  return { labels: spark.labels, values: PULSE_MOCK_SPARK, mock: true };
+export function osloNesteMaanedStart(ymd: string): string {
+  const [y, m] = ymd.split('-').map(Number);
+  const nesteM = m === 12 ? 1 : m + 1;
+  const nesteY = m === 12 ? y + 1 : y;
+  return `${nesteY}-${String(nesteM).padStart(2, '0')}-01`;
+}
+
+export function osloForrigeMaanedStart(ymd: string): string {
+  return osloMaanedStart(osloPlusDager(osloMaanedStart(ymd), -1));
+}
+
+function iMaaned(dag: string, fra: string, til: string) {
+  return dag >= fra && dag < til;
+}
+
+/** Bookinger denne måneden vs forrige (startsAt, uten cancelled). */
+export function bookingMaanedVsForrige(jobber: PhoneBooking[], naa: Date) {
+  const idag = osloKalenderdag(naa);
+  const denneStart = osloMaanedStart(idag);
+  const nesteStart = osloNesteMaanedStart(idag);
+  const forrigeStart = osloForrigeMaanedStart(idag);
+  const tell = (fra: string, til: string) =>
+    jobber.filter((j) => {
+      if (j.status === 'cancelled') return false;
+      return iMaaned(osloKalenderdag(j.startsAt), fra, til);
+    }).length;
+  return {
+    denne: tell(denneStart, nesteStart),
+    forrige: tell(forrigeStart, denneStart),
+    labels: [forrigeStart.slice(0, 7), denneStart.slice(0, 7)] as const,
+  };
+}
+
+/** Tom månedshistorikk → mock-boble, ikke flat null. */
+export function maanedSparkVisning(raw: ReturnType<typeof bookingMaanedVsForrige>) {
+  if (raw.denne > 0 || raw.forrige > 0) return { ...raw, mock: false };
+  return { ...raw, denne: PULSE_MOCK_MAANED.denne, forrige: PULSE_MOCK_MAANED.forrige, mock: true };
 }
 
 /** Ingen jobber i vinduet = ingen historikk → mock I dag-tall + badge. */
@@ -76,71 +97,66 @@ export function formatVarighetNb(ms: number): string {
   return restT ? `${dager} d ${restT} t` : `${dager} d`;
 }
 
-export function innboksPulse(traader: PhoneTraad[], naa: Date) {
-  const ulest = traader.reduce((sum, t) => sum + (t.unread ?? 0), 0);
-  const uleste = traader.filter((t) => (t.unread ?? 0) > 0);
-  if (ulest === 0) return { ulest: 0, sla: 'Ingen uleste', eldsteAt: null as Date | null };
-  const eldste = [...uleste].sort((a, b) => {
-    const at = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : Number.POSITIVE_INFINITY;
-    const bt = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : Number.POSITIVE_INFINITY;
-    return at - bt;
-  })[0];
-  const eldsteAt = eldste?.lastMessageAt ? new Date(eldste.lastMessageAt) : null;
-  const sla = eldsteAt
-    ? `Eldste uleste · ${formatVarighetNb(naa.getTime() - eldsteAt.getTime())}`
-    : 'Uleste';
-  return { ulest, sla, eldsteAt };
+function erForesporsel(j: PhoneBooking) {
+  return j.status === 'draft' || j.source === 'widget';
+}
+
+function foresporselDag(j: PhoneBooking) {
+  return osloKalenderdag(j.createdAt ?? j.startsAt);
 }
 
 /**
- * Deler på åpne jobber — ikke hele lageret.
- * Uten booking_parts er `reserved` det eneste jobbsignalet i skjemaet.
- * Lav/mangler uten reserved telles ikke.
+ * Nye forespørsler i dag mot snitt per dag siste 14 dager.
+ * Flere enn vanlig → grønn; færre → rød. Tynn historikk → mock + badge.
  */
-export function delerPaApneJobber(deler: PhoneDelPulse[], jobber: PhoneBooking[]) {
-  const apne = jobber.filter((j) => APEN_JOBB.has(j.status));
-  if (apne.length === 0) return { antall: 0, meta: 'Ingen åpne jobber' };
-  const relevante = deler.filter((d) => d.reserved > 0 && (d.underMinimum || d.tilgjengelig <= 0));
-  if (relevante.length === 0) return { antall: 0, meta: 'Ingen mangler på åpne jobber' };
-  const forste = relevante[0];
-  const extra = relevante.length > 1 ? ` · ${relevante.length} deler` : '';
-  return { antall: relevante.length, meta: `${forste?.name ?? 'Del'}${extra}` };
-}
-
-export function svarhastighetVisning(medianMs: number | null) {
-  if (medianMs == null) {
-    return {
-      tall: formatVarighetNb(PULSE_MOCK_SVAR_MS),
-      meta: 'Median førstesvar · 7 dager',
-      mock: true,
-    };
+export function foresporselTrend(jobber: PhoneBooking[], naa: Date, dager = 14) {
+  const idag = osloKalenderdag(naa);
+  const reqs = jobber.filter(erForesporsel);
+  const iDag = reqs.filter((j) => foresporselDag(j) === idag).length;
+  const perDag = new Map<string, number>();
+  for (let i = 1; i <= dager; i++) {
+    perDag.set(osloPlusDager(idag, -i), 0);
   }
-  return { tall: formatVarighetNb(medianMs), meta: 'Median førstesvar · 7 dager', mock: false };
+  for (const j of reqs) {
+    const d = foresporselDag(j);
+    if (perDag.has(d)) perDag.set(d, (perDag.get(d) ?? 0) + 1);
+  }
+  const verdier = [...perDag.values()];
+  const dagerMedData = verdier.filter((v) => v > 0).length;
+  if (dagerMedData < 3) {
+    return { ...PULSE_MOCK_FORESPORSEL, mock: true };
+  }
+  const usual = verdier.reduce((a, b) => a + b, 0) / dager;
+  const tone = iDag > usual * 1.15 ? 'green' : iDag < usual * 0.85 ? 'red' : 'neutral';
+  const ratio = usual <= 0 ? (iDag > 0 ? 1 : 0.2) : Math.min(1, Math.max(0.12, iDag / (usual * 2)));
+  return { antall: iDag, tone, ratio, mock: false };
 }
 
-export type TimeplanGulvRad = { id: string; time: string; what: string; who: string };
-
-export function nesteTreJobber(jobber: PhoneBooking[], naa: Date, limit = 3): TimeplanGulvRad[] {
-  return jobber
-    .filter((j) => !LUKKET_JOBB.has(j.status))
-    .filter((j) => {
-      const start = new Date(j.startsAt).getTime();
-      return start >= naa.getTime() || sammeKalenderdag(j.startsAt, naa);
-    })
-    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
-    .slice(0, limit)
-    .map((j) => ({
-      id: j.id,
-      time: fmtTime(j.startsAt),
-      what: jobbHva(j),
-      who: j.mechanicName?.trim() || '—',
-    }));
+/** Uleste = «siste meldinger»-telleren pilen peker på. */
+export function sisteMeldinger(traader: PhoneTraad[]) {
+  const ulest = traader.reduce((sum, t) => sum + (t.unread ?? 0), 0);
+  return { ulest };
 }
 
-export function teamPulse(mekanikere: PulseTeamMedlem[]) {
-  const ledig = mekanikere.filter((m) => m.status === 'ledig').length;
-  const opptatt = mekanikere.filter((m) => m.status === 'opptatt' || m.status === 'på_jobb').length;
-  if (mekanikere.length === 0) return { ledig: 0, opptatt: 0, meta: 'Ingen mekanikere' };
-  if (ledig + opptatt === 0) return { ledig: 0, opptatt: 0, meta: 'Ingen på jobb' };
-  return { ledig, opptatt, meta: `${ledig} ledig · ${opptatt} opptatt` };
+/**
+ * Deler som venter på bestilling / trenger godkjenning.
+ * Lav beholdning (`underMinimum`) eller reservert uten tilgjengelig.
+ */
+export function lagerVenter(deler: PhoneDelPulse[]) {
+  const venter = deler.filter((d) => d.underMinimum || (d.reserved > 0 && d.tilgjengelig <= 0));
+  return {
+    antall: venter.length,
+    tekst: 'Trenger godkjenning',
+  };
+}
+
+export function ansattePaJobb(mekanikere: PulseTeamMedlem[]) {
+  const total = mekanikere.length;
+  const paJobb = mekanikere.filter((m) => m.status === 'opptatt' || m.status === 'på_jobb').length;
+  return {
+    paJobb,
+    total,
+    tekst: 'Ansatte på jobb',
+    tall: `${paJobb}/${total}`,
+  };
 }

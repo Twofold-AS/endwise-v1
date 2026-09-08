@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   Package,
+  Plus,
   ShieldCheck,
   Store,
   Users,
@@ -63,8 +64,10 @@ export const HJEM_KORT_TOM = {
   lagerTomt: 'Ingen deler ennå',
   hjelp: 'Artikler og support',
   deler: 'Ingen mangler på åpne jobber',
+  lager: 'Trenger godkjenning',
   svarhastighet: 'Median førstesvar · 7 dager',
-  team: 'Ingen mekanikere',
+  team: 'Ansatte på jobb',
+  jobb: 'Jobb',
 } as const;
 
 /**
@@ -98,6 +101,7 @@ export type PhoneKortKey =
   | 'deler'
   | 'svarhastighet'
   | 'team'
+  | 'jobb'
   | 'butikk'
   | 'min-dag'
   | 'dine-jobber'
@@ -109,16 +113,16 @@ export type PhoneHjemRad = {
 };
 
 /**
- * Mikael CODE-GO pulse-hjem: I dag · Innboks · Deler · Svarhastighet ·
- * Timeplan-gulv · Team. Organisasjon/Hjelp er footer-tekst, ikke kort.
+ * Mikael CODE-GO pulse v2: I dag · Innboks · Lager · Ansatte på jobb · +Jobb.
+ * Svarhastighet / Timeplan-gulv / gammel Team-flate er foldet inn.
+ * Organisasjon/Hjelp er footer-tekst, ikke kort.
  */
 export const DEALER_PULSE_KEYS = [
   'idag',
   'innboks',
-  'deler',
-  'svarhastighet',
-  'timeplan',
+  'lager',
   'team',
+  'jobb',
 ] as const satisfies readonly PhoneKortKey[];
 
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = DEALER_PULSE_KEYS.map((key) => ({
@@ -152,7 +156,8 @@ export const PHONE_KORT_META: Record<
   lager: { label: 'Lager', href: '/lager', icon: Package },
   deler: { label: 'Deler', href: '/lager', icon: Package },
   svarhastighet: { label: 'Svarhastighet', href: '/innboks', icon: Inbox },
-  team: { label: 'Team', href: '/organisasjon?seksjon=ansatte', icon: Users },
+  team: { label: 'Ansatte på jobb', href: '/organisasjon?seksjon=ansatte', icon: Users },
+  jobb: { label: 'Jobb', href: '/bookinger/ny', icon: Plus },
   butikk: { label: 'Butikk', href: '/butikk', icon: Store },
   'min-dag': { label: 'Dine jobber', href: '/dine-jobber', icon: CalendarDays },
   'dine-jobber': { label: 'Dine jobber', href: '/dine-jobber', icon: CalendarDays },

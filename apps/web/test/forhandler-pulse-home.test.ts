@@ -15,18 +15,18 @@ import {
   PHONE_KORT_META,
 } from '../app/(app)/_shell/phone-home.ts';
 import {
-  delerPaApneJobber,
-  ferdigSpark7d,
+  ansattePaJobb,
+  bookingMaanedVsForrige,
+  foresporselTrend,
   formatVarighetNb,
   idagTall,
   idagVisning,
-  innboksPulse,
-  nesteTreJobber,
+  lagerVenter,
+  maanedSparkVisning,
+  PULSE_MOCK_FORESPORSEL,
   PULSE_MOCK_IDAG,
-  PULSE_MOCK_SPARK,
-  sparkVisning,
-  svarhastighetVisning,
-  teamPulse,
+  PULSE_MOCK_MAANED,
+  sisteMeldinger,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -39,44 +39,44 @@ function utenKommentarer(kilde: string) {
   return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
 
-describe('forhandler pulse-hjem — seks kort + footer', () => {
-  it('låser I dag · Innboks · Deler · Svarhastighet · Timeplan-gulv · Team', () => {
-    expect([...DEALER_PULSE_KEYS]).toEqual([
-      'idag',
-      'innboks',
-      'deler',
-      'svarhastighet',
-      'timeplan',
-      'team',
-    ]);
+describe('forhandler pulse-hjem v2 — I dag + linjekort', () => {
+  it('låser I dag · Innboks · Lager · Team · Jobb', () => {
+    expect([...DEALER_PULSE_KEYS]).toEqual(['idag', 'innboks', 'lager', 'team', 'jobb']);
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual(DEALER_PULSE_KEYS.map((k) => [k]));
     expect(dealerPhoneHjemRader(true).flatMap((r) => r.keys)).toEqual([...DEALER_PULSE_KEYS]);
     expect(dealerPhoneHjemRader(true).flatMap((r) => r.keys)).not.toContain('butikk');
     expect(HJEM_FOOTER_LENKER.map((l) => l.label)).toEqual(['Organisasjon', 'Hjelp']);
   });
 
-  it('dreper døde nav-kort og holder forbudte destinasjoner ute', () => {
+  it('fjerner Svarhastighet / Timeplan-gulv / gammel Team-flate og døde nav-kort', () => {
     const keys = flatDealerHjemKeys(true);
     for (const forbudt of FORBUDT_DEALER_HJEM) {
       expect(keys).not.toContain(forbudt);
     }
+    expect(keys).not.toContain('svarhastighet');
+    expect(keys).not.toContain('timeplan');
+    expect(keys).not.toContain('deler');
     expect(keys).not.toContain('hjelp');
     expect(keys).not.toContain('organisasjon');
     expect(keys).not.toContain('kunder');
-    expect(keys).not.toContain('samarbeid');
-    expect(keys).not.toContain('statistikk');
-    expect(keys).not.toContain('jobber');
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem).not.toMatch(/Ingen kunder ennå|Åpne organisasjon|Artikler og support/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
+    expect(hjem).not.toMatch(/Timeplan-gulv|Svarhastighet|PeopleShowcase/);
+    expect(hjem).not.toMatch(/messages\.svarhastighet/);
+    expect(hjem).not.toMatch(/DitherGrowthChart|ferdigSpark7d/);
     expect(hjem).toMatch(/PulseFooter|Organisasjon/);
-    expect(hjem).toMatch(/Timeplan-gulv/);
-    expect(hjem).toMatch(/DitherGrowthChart/);
+    expect(hjem).toMatch(/PulseLinjeKort/);
+    expect(hjem).toMatch(/Les alle siste meldinger/);
+    expect(hjem).toMatch(/Trenger godkjenning/);
+    expect(hjem).toMatch(/Ansatte på jobb/);
+    expect(hjem).toMatch(/tekst="Jobb"/);
+    expect(hjem).toMatch(/DitherDonutChart|PulseMaanedBoble/);
     expect(hjem).not.toMatch(/dither-kit|DitherGradient/);
     expect(hjem).not.toMatch(/For lite data/);
   });
 
-  it('I dag er Starter / Pågår / Ferdig + 7d-spark, ikke hele-dagen-totalt', () => {
+  it('I dag er Planlagt / Pågår / Ferdig — ikke Starter, ikke 7d-spark', () => {
     const naa = new Date('2026-08-29T10:00:00');
     expect(
       idagTall(
@@ -93,141 +93,118 @@ describe('forhandler pulse-hjem — seks kort + footer', () => {
         ],
         naa,
       ),
-    ).toEqual({ starter: 1, paagaar: 1, ferdig: 1 });
-    const spark = ferdigSpark7d(
+    ).toEqual({ planlagt: 1, paagaar: 1, ferdig: 1 });
+    expect(PHONE_KORT_META.idag.href).toContain('visning=dag');
+    const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
+    expect(hjem).toMatch(/Planlagt/);
+    expect(hjem).not.toMatch(/Starter/);
+  });
+
+  it('månedsboble er denne vs forrige, mock når begge er null', () => {
+    const naa = new Date('2026-08-29T10:00:00');
+    const raw = bookingMaanedVsForrige(
       [
-        { id: '3', status: 'completed', startsAt: '2026-08-29T07:00:00' },
-        { id: '5', status: 'completed', startsAt: '2026-08-28T07:00:00' },
+        { id: '1', status: 'confirmed', startsAt: '2026-08-05T08:00:00' },
+        { id: '2', status: 'completed', startsAt: '2026-08-20T08:00:00' },
+        { id: '3', status: 'confirmed', startsAt: '2026-07-12T08:00:00' },
+        { id: '4', status: 'cancelled', startsAt: '2026-08-10T08:00:00' },
       ],
       naa,
     );
-    expect(spark.values).toHaveLength(7);
-    expect(spark.values.at(-1)).toBe(1);
-    expect(spark.values.at(-2)).toBe(1);
-    expect(PHONE_KORT_META.idag.href).toContain('visning=dag');
+    expect(raw.denne).toBe(2);
+    expect(raw.forrige).toBe(1);
+    expect(maanedSparkVisning(raw).mock).toBe(false);
+    const tom = maanedSparkVisning(bookingMaanedVsForrige([], naa));
+    expect(tom.mock).toBe(true);
+    expect(tom.denne).toBe(PULSE_MOCK_MAANED.denne);
+    expect(tom.forrige).toBe(PULSE_MOCK_MAANED.forrige);
   });
 
-  it('Innboks SLA er eldste uleste, ellers Ingen uleste', () => {
-    const naa = new Date('2026-08-29T12:00:00');
-    expect(innboksPulse([], naa)).toEqual({ ulest: 0, sla: 'Ingen uleste', eldsteAt: null });
-    const pulse = innboksPulse(
-      [
+  it('Innboks-teller er uleste siste meldinger', () => {
+    expect(sisteMeldinger([])).toEqual({ ulest: 0 });
+    expect(
+      sisteMeldinger([
         { subject: 'Ny', unread: 1, lastMessageAt: '2026-08-29T11:00:00' },
         { subject: 'Gammel', unread: 2, lastMessageAt: '2026-08-29T08:00:00' },
+      ]),
+    ).toEqual({ ulest: 3 });
+  });
+
+  it('forespørsel-trend er grønn over snitt, rød under, ellers mock', () => {
+    const naa = new Date('2026-08-29T12:00:00');
+    expect(foresporselTrend([], naa)).toMatchObject({ ...PULSE_MOCK_FORESPORSEL, mock: true });
+    const historikk: { id: string; status: string; startsAt: string; source: string }[] = [];
+    for (let i = 1; i <= 14; i++) {
+      const dag = String(29 - i).padStart(2, '0');
+      historikk.push({
+        id: `h${i}`,
+        status: 'draft',
+        startsAt: `2026-08-${dag}T09:00:00`,
+        source: 'widget',
+      });
+    }
+    const mange = foresporselTrend(
+      [
+        ...historikk,
+        { id: 'i dag', status: 'draft', startsAt: '2026-08-29T08:00:00', source: 'widget' },
+        { id: 'i dag 2', status: 'draft', startsAt: '2026-08-29T09:00:00', source: 'widget' },
+        { id: 'i dag 3', status: 'draft', startsAt: '2026-08-29T10:00:00', source: 'widget' },
       ],
       naa,
     );
-    expect(pulse.ulest).toBe(3);
-    expect(pulse.sla).toMatch(/Eldste uleste/);
-    expect(pulse.sla).toMatch(/4 t/);
+    expect(mange.mock).toBe(false);
+    expect(mange.antall).toBe(3);
+    expect(mange.tone).toBe('green');
+    const faa = foresporselTrend(historikk, naa);
+    expect(faa.mock).toBe(false);
+    expect(faa.antall).toBe(0);
+    expect(faa.tone).toBe('red');
   });
 
-  it('Deler teller kun reserved+lav når det finnes åpne jobber', () => {
-    const apen = [{ id: '1', status: 'confirmed', startsAt: '2026-08-29T08:00:00' }];
-    expect(delerPaApneJobber([], []).antall).toBe(0);
-    expect(delerPaApneJobber([], []).meta).toBe('Ingen åpne jobber');
+  it('Lager teller deler som venter / trenger godkjenning', () => {
+    expect(lagerVenter([]).antall).toBe(0);
+    expect(lagerVenter([]).tekst).toBe('Trenger godkjenning');
     expect(
-      delerPaApneJobber(
-        [{ name: 'Filter', reserved: 0, tilgjengelig: 0, underMinimum: true }],
-        apen,
-      ),
-    ).toEqual({ antall: 0, meta: 'Ingen mangler på åpne jobber' });
+      lagerVenter([{ name: 'Filter', reserved: 0, tilgjengelig: 4, underMinimum: false }]).antall,
+    ).toBe(0);
     expect(
-      delerPaApneJobber(
-        [{ name: 'Olje filter', reserved: 2, tilgjengelig: 0, underMinimum: true }],
-        apen,
-      ).antall,
+      lagerVenter([{ name: 'Olje filter', reserved: 2, tilgjengelig: 0, underMinimum: true }])
+        .antall,
     ).toBe(1);
   });
 
-  it('Svarhastighet er median 7d, ellers 14 min + mock', () => {
-    expect(svarhastighetVisning(null)).toEqual({
-      tall: '14 min',
-      meta: 'Median førstesvar · 7 dager',
-      mock: true,
-    });
-    expect(svarhastighetVisning(12 * 60_000)).toEqual({
-      tall: '12 min',
-      meta: 'Median førstesvar · 7 dager',
-      mock: false,
-    });
-    expect(formatVarighetNb(2 * 3_600_000 + 12 * 60_000)).toBe('2 t 12 min');
-  });
-
-  it('I dag uten historikk er mock-tall + mock-spark, ikke For lite data', () => {
+  it('I dag uten historikk er mock-tall + mock-måned, ikke For lite data', () => {
     const naa = new Date('2026-08-29T10:00:00');
     expect(idagVisning([], naa)).toEqual({ ...PULSE_MOCK_IDAG, mock: true });
     expect(
       idagVisning([{ id: '1', status: 'confirmed', startsAt: '2026-08-29T08:00:00' }], naa),
     ).toEqual({
-      starter: 1,
+      planlagt: 1,
       paagaar: 0,
       ferdig: 0,
       mock: false,
     });
-    const tomSpark = sparkVisning(ferdigSpark7d([], naa));
-    expect(tomSpark.mock).toBe(true);
-    expect(tomSpark.values).toEqual(PULSE_MOCK_SPARK);
-    const ekteSpark = sparkVisning(
-      ferdigSpark7d([{ id: '3', status: 'completed', startsAt: '2026-08-29T07:00:00' }], naa),
-    );
-    expect(ekteSpark.mock).toBe(false);
-    expect(ekteSpark.values.at(-1)).toBe(1);
+    expect(formatVarighetNb(2 * 3_600_000 + 12 * 60_000)).toBe('2 t 12 min');
   });
 
-  it('Timeplan-gulv er neste 3 med tid · hva · mekaniker', () => {
-    const naa = new Date('2026-08-29T06:00:00');
-    const rader = nesteTreJobber(
-      [
-        {
-          id: '1',
-          status: 'confirmed',
-          startsAt: '2026-08-29T08:00:00',
-          serviceName: 'EU-kontroll',
-          mechanicName: 'Kari',
-        },
-        {
-          id: '2',
-          status: 'confirmed',
-          startsAt: '2026-08-29T10:00:00',
-          serviceName: 'Olje',
-          mechanicName: 'Jonas',
-        },
-        {
-          id: '3',
-          status: 'confirmed',
-          startsAt: '2026-08-29T14:00:00',
-          serviceName: 'Dekk',
-        },
-        {
-          id: '4',
-          status: 'confirmed',
-          startsAt: '2026-08-29T16:00:00',
-          serviceName: 'Ekstra',
-        },
-      ],
-      naa,
-      3,
-    );
-    expect(rader).toHaveLength(3);
-    expect(rader[0]).toMatchObject({ what: 'EU-kontroll', who: 'Kari' });
-    expect(rader[1]?.who).toBe('Jonas');
-    expect(rader[2]?.who).toBe('—');
-  });
-
-  it('Team er ledig/opptatt, på_jobb teller som opptatt', () => {
-    expect(teamPulse([])).toEqual({ ledig: 0, opptatt: 0, meta: 'Ingen mekanikere' });
+  it('Ansatte på jobb er på_jobb+opptatt av totalt', () => {
+    expect(ansattePaJobb([])).toEqual({
+      paJobb: 0,
+      total: 0,
+      tekst: 'Ansatte på jobb',
+      tall: '0/0',
+    });
     expect(
-      teamPulse([
+      ansattePaJobb([
         { id: '1', status: 'ledig' },
         { id: '2', status: 'på_jobb' },
         { id: '3', status: 'opptatt' },
         { id: '4', status: 'fri' },
       ]),
-    ).toEqual({ ledig: 1, opptatt: 2, meta: '1 ledig · 2 opptatt' });
+    ).toEqual({ paJobb: 2, total: 4, tekst: 'Ansatte på jobb', tall: '2/4' });
   });
 
-  it('kort er Mobbin 24px uten skygge og uten pip', () => {
+  it('kort er Mobbin 24px uten skygge og uten pip; grønn/rød kun på trend', () => {
     expect(PHONE_HERO_FYLL).toMatch(/rounded-\[24px\]/);
     expect(PHONE_HERO_FYLL).toMatch(/shadow-none/);
     expect(PHONE_DEST_FYLL).toMatch(/border-divide/);
@@ -235,13 +212,19 @@ describe('forhandler pulse-hjem — seks kort + footer', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     expect(kort).not.toMatch(/shadow-sm|shadow-md|border-left|border-l-/);
     expect(kort).toMatch(/touch-action:\s*manipulation|\[touch-action:manipulation\]/);
-    expect(HJEM_KORT_TOM.innboks).toBe('Ingen uleste');
-    expect(HJEM_KORT_TOM.svarhastighet).toBe('Median førstesvar · 7 dager');
-    expect(HJEM_KORT_TOM.svarhastighet).not.toMatch(/For lite data|for lite/);
     expect(kort).toMatch(/PulseMockBadge|data-pulse-mock-badge/);
     expect(kort).toMatch(/variant="secondary"/);
     expect(kort).not.toMatch(/#0066ff|For lite data/);
     expect(kort).toMatch(/>\s*mock\s*</);
+    expect(kort).toMatch(/data-pulse-linje/);
+    expect(kort).toMatch(/data-pulse-pil-hale/);
+    expect(kort).toMatch(/bg-white/);
+    expect(kort).toMatch(/bg-success/);
+    expect(kort).toMatch(/bg-danger/);
+    expect(kort).toMatch(/DitherDonutChart/);
+    expect(HJEM_KORT_TOM.lager).toBe('Trenger godkjenning');
+    expect(HJEM_KORT_TOM.jobb).toBe('Jobb');
+    expect(PHONE_KORT_META.jobb.href).toBe('/bookinger/ny');
   });
 
   it('desktop og telefon deler pulse-kort; chrome-skall røres ikke', () => {
@@ -249,11 +232,13 @@ describe('forhandler pulse-hjem — seks kort + footer', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
+    const profil = utenKommentarer(les('../app/(app)/_shell/phone-profil-meny.tsx'));
     expect(dash).toMatch(/DealerPulseKort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
-    expect(hjem).toMatch(/messages\.svarhastighet/);
-    expect(hjem).toMatch(/DitherGrowthChart/);
+    expect(hjem).toMatch(/PulseMaanedBoble/);
+    expect(hjem).not.toMatch(/phone-profil-meny|RonnyAvatarKnapp/);
     expect(shell).toMatch(/data-phone-search/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
+    expect(profil).toMatch(/LogOut/);
   });
 });

@@ -15,7 +15,7 @@
 
 > ### ⚠️ Mikael pulse-hjem v2 (08.09.2026)
 > Forhandler `/home`: I dag (Planlagt · Pågår · Ferdig + Amicro
-> `DitherDonutChart`-boble denne/forrige måned) · Innboks-linje («Les alle
+> `DitherGrowthChart`-boble denne/forrige måned) · Innboks-linje («Les alle
 > siste meldinger» + pil-hale + ulest + mini-trend for nye forespørsler) ·
 > Lager-linje (trenger godkjenning) · Ansatte på jobb · +Jobb.
 > Hvit ikon-sirkel (mørkt: hvit). Grønn/rød kun på forespørsel-baren.
@@ -224,7 +224,7 @@ peker inn i `--ew-*`-tokens. **Ingen komponent hardkoder farge.**
 | **Pin** | commit `86b55340bfb939b8e93bb53aa46ba017c3449f1c` |
 | **Ligger i** | `packages/ui/src/vendor/amicro/` · re-eksport `packages/ui/src/components/amicro.ts` |
 | **Lisens** | MIT |
-| **Hentet inn** | `DitherStackedChart` · `DitherGrowthChart` · `RevenueLineChart` · `DitherDonutChart` + `useCanvasSetup`. **08.09:** `DitherDonutChart` compact som mini-boble (denne vs forrige måned) på forhandler I dag-kort (F3-05). 7d-spark er ute. |
+| **Hentet inn** | `DitherStackedChart` · `DitherGrowthChart` · `RevenueLineChart` · `DitherDonutChart` + `useCanvasSetup`. **08.09:** `DitherGrowthChart` compact som mini-boble (denne vs forrige måned) på forhandler I dag-kort (F3-05). 7d-spark er ute. |
 | **Ikke hentet** | heatmap, gauge, scatter, funnel, device-donut, storage, uptime |
 | **Farger** | Mobbin-hex i kallstedet: ink `#141414`, ink-soft `#262626`, muted `#707070`, faint `#adadad`, field `#f0f0f0`. ⛔ `#0066ff` på grafer |
 | **Status** | Mikael 06.09.2026. ⛔ Boring-Software dither-kit / tripwire |
@@ -570,7 +570,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Verkstedet timeplan + ansatte på jobb (`apps/web/app/(app)/dashboard/_timeplan.tsx`, `_ansatte-pa-jobb.tsx`, F3-05 25.08.2026) | **Ingen ny pakke.** Timeplanen er samme 07–18-raster som Jobber › Kalender (F3-07), komponert av `CardShell` + `Link` + status-tokens. Ansatte på jobb er `Avatar` + native `<details>` (samme expand-grep som Profil). shadcn har ingen verksted-timeplan; å hente `calendar` ville vært en §2-pakke for en dagsstripe. Kompetanse/Timeplan under Ansatte røres ikke. |
 
-| Forhandler pulse-hjem (`_shell/phone-home-dealer.tsx`, `_shell/pulse-kort.tsx`, `_shell/phone-home-pulse.ts`, F3-05 08.09.2026 v2) | **Ingen ny pakke.** I dag + fire linjekort + footer. Flate = Mobbin-tokens (`PHONE_HERO_FYLL` / `PHONE_DEST_FYLL`). Månedsboble = Amicro `DitherDonutChart` compact (allerede i §2). Linje = hvit ikonflate + tekst + pil-hale + teller; Innboks har mini-trend (grønn/rød kun der). Mangel på historikk: shadcn `Badge` `variant="secondary"`-pille `mock`. ⛔ «For lite data». ⛔ dither-kit. ⛔ pip. ⛔ Ronny/profil. Chrome urørt. |
+| Forhandler pulse-hjem (`_shell/phone-home-dealer.tsx`, `_shell/pulse-kort.tsx`, `_shell/phone-home-pulse.ts`, F3-05 08.09.2026 v2) | **Ingen ny pakke.** I dag + fire linjekort + footer. Flate = Mobbin-tokens (`PHONE_HERO_FYLL` / `PHONE_DEST_FYLL`). Månedsboble = Amicro `DitherGrowthChart` compact i sirkel (allerede i §2). Linje = hvit ikonflate + tekst + pil-hale + teller; Innboks har mini-trend (grønn/rød kun der). Mangel på historikk: shadcn `Badge` `variant="secondary"`-pille `mock`. ⛔ «For lite data». ⛔ dither-kit. ⛔ pip. ⛔ Ronny/profil. Chrome urørt. |
 | Telefon kort-hjem + mekaniker-accordion (`_shell/phone-home*.tsx`, `_shell/phone-kort.tsx`, `_shell/phone-shell.tsx`, F5-13 29.08.2026) | **Ingen ny pakke for kortene.** Destinasjonskort er samme token-komposisjon som `CardShell`. **07.09.2026 (Mikael pulse-hjem):** dealer-innhold er F3-05 pulse, ikke 2-og-2 dest-rutenett. **07.09.2026 (Mikael telefon-chrome):** PhoneShell er to toppbarer (søk + dest-piller); sidebar `hidden md:flex`. Hjem-kort er Mobbin 24px — hero `bg-surface-2` uten kant, dest `border-divide`. **06.09.2026:** scroll-flate følger `--ew-bg`. **05.09.2026 (Jonas hard-fasit, dealer-hjem only):** I dag/Pågår/Fullført, hit ≥44 / `touch-action: manipulation`. Historisk IA: Timeplan\|Rapporter · Innboks\|Jobber · Kunder\|Organisasjon · Hjelp (hopp Samarbeid) · Lager. ⛔ Galaxy/Grainient/`#111` på hjem-kort. ⛔ Mekaniker-hjem. ⛔ Attio-tabell/sidebar (#138). Fasit: `docs/endwise-forhandler-hjem-apple-hard-fasit.md` (innhold overstyrt 07.09 pulse; chrome-delen er overstyrt 07.09). |
 
 | Dine jobber / Timeplan-stripe / starttid / ferie-mock (`dine-jobber/`, `_shell/timeplan-stripe.tsx`, `bookinger/_starttid-velger.tsx`, `_shell/ferie-mock.tsx`, 29.08.2026 natt) | **Ingen ny pakke.** Jobb-bokser er `Link` + lucide `Bike`/`Sailboat` + `ChevronRight` til eksisterende `/min-dag/[id]`. Timeplan-piler er `ChevronLeft`/`ChevronRight`. Starttid er to native expander-knapper. Ferie er merket mock/kommer. |

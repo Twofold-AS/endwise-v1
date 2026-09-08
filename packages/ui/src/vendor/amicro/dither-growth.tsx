@@ -13,6 +13,9 @@ export type DitherGrowthChartProps = {
   labels: string[];
   color?: string;
   valueSuffix?: string;
+  /** Låst CSS-størrelse i px — pulse-boble og andre mini-flater. */
+  width?: number;
+  height?: number;
 };
 
 /** Amicro Dither Area Growth — tiled dither under a growth curve. */
@@ -23,8 +26,14 @@ export function DitherGrowthChart({
   labels,
   color = '#141414',
   valueSuffix = '',
+  width,
+  height,
 }: DitherGrowthChartProps) {
-  const { canvasRef, rect, isVisible, reducedMotion } = useCanvasSetup();
+  const locked =
+    width != null && height != null && width > 0 && height > 0
+      ? { width, height }
+      : undefined;
+  const { canvasRef, rect, isVisible, reducedMotion } = useCanvasSetup(locked);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scrubIndex, setScrubIndex] = useState<number | null>(null);
   const targetX = useSpring(0, { stiffness: 650, damping: 42, mass: 0.5 });
@@ -69,9 +78,15 @@ export function DitherGrowthChart({
         return;
       }
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {
+        requestRef.current = requestAnimationFrame(draw);
+        return;
+      }
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        requestRef.current = requestAnimationFrame(draw);
+        return;
+      }
       const { width: w, height: h } = rect.current;
       if (w === 0 || h === 0) {
         requestRef.current = requestAnimationFrame(draw);
@@ -80,7 +95,8 @@ export function DitherGrowthChart({
 
       timeRef.current += reducedMotion ? 0 : 0.03;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const cell = Math.max(3, Math.round(w / 180));
+      const tiny = w < 100 || h < 100;
+      const cell = Math.max(tiny ? 5 : 3, Math.round(w / 180));
       ctx.save();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.scale(dpr, dpr);
@@ -124,8 +140,8 @@ export function DitherGrowthChart({
           }
           const shimmer = reducedMotion ? 0 : Math.sin(y * 0.1 - t2 * 2) * 0.07;
           ctx.fillStyle = color;
-          const sz = cell * (0.7 + shimmer + glow * 0.3);
-          ctx.globalAlpha = 0.6 + glow * 0.4;
+          const sz = cell * ((tiny ? 0.82 : 0.7) + shimmer + glow * 0.3);
+          ctx.globalAlpha = (tiny ? 0.88 : 0.6) + glow * 0.4;
           const offset = (cell - sz) / 2;
           ctx.fillRect(x + offset, y + offset, sz, sz);
           ctx.globalAlpha = 1;
@@ -165,17 +181,23 @@ export function DitherGrowthChart({
   const xPos = useTransform(targetX, (x) => `${x}px`);
   const yPos = useTransform(targetY, (y) => `${y}px`);
 
+  const boxStyle =
+    locked != null
+      ? { width: locked.width, height: locked.height }
+      : { width: '100%' as const, height: '100%' as const };
+
   return (
     <div
       ref={wrapperRef}
-      className={`relative h-full w-full touch-none ${className}`}
+      className={`relative touch-none ${locked ? 'shrink-0' : 'h-full w-full'} ${className}`}
+      style={boxStyle}
       onPointerMove={handlePointer}
       onPointerLeave={() => {
         pointerActiveRef.current = false;
         setScrubIndex(null);
       }}
     >
-      <canvas ref={canvasRef} className="block h-full w-full" />
+      <canvas ref={canvasRef} className="block" style={boxStyle} />
       {scrubIndex !== null && (
         <>
           <motion.div

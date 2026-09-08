@@ -22,4 +22,13 @@ describe('Amicro dither charts på Rapporter', () => {
   it('/rapporter peker fortsatt på Analyse-flaten', () => {
     expect(les('../app/(app)/rapporter/page.tsx')).toMatch(/from '\.\.\/analyse\/page'/);
   });
+
+  it('Growth-chart kan låse px-størrelse for mini-boble', () => {
+    const growth = les('../../../packages/ui/src/vendor/amicro/dither-growth.tsx');
+    const setup = les('../../../packages/ui/src/vendor/amicro/use-canvas-setup.ts');
+    expect(growth).toMatch(/width\?: number/);
+    expect(growth).toMatch(/useCanvasSetup\(locked\)/);
+    expect(setup).toMatch(/useLayoutEffect/);
+    expect(setup).toMatch(/initial\?: CanvasRect/);
+  });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { type RefObject, useEffect, useRef, useState } from 'react';
+import { type RefObject, useLayoutEffect, useRef, useState } from 'react';
 
 export type CanvasRect = { width: number; height: number };
 
@@ -11,13 +11,27 @@ export type UseCanvasSetupResult = {
   reducedMotion: boolean;
 };
 
+function applyCanvasSize(canvas: HTMLCanvasElement, rect: CanvasRect, width: number, height: number) {
+  if (width <= 0 || height <= 0) return;
+  rect.width = width;
+  rect.height = height;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+}
+
 /**
  * Amicro canvas hook: ResizeObserver for size, IntersectionObserver to pause
  * off-screen, visibilitychange for hidden tabs, prefers-reduced-motion once.
+ * `initial` locks CSS-piksler før første paint — 72px-bobler kan ikke vente
+ * på h-full + ResizeObserver (0-flate ⇒ IntersectionObserver = hidden).
  */
-export function useCanvasSetup(): UseCanvasSetupResult {
+export function useCanvasSetup(initial?: CanvasRect): UseCanvasSetupResult {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const rect = useRef<CanvasRect>({ width: 0, height: 0 });
+  const rect = useRef<CanvasRect>({
+    width: initial?.width ?? 0,
+    height: initial?.height ?? 0,
+  });
   const isVisible = useRef(true);
 
   const [reducedMotion] = useState(() => {
@@ -29,23 +43,38 @@ export function useCanvasSetup(): UseCanvasSetupResult {
     );
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    if (initial && initial.width > 0 && initial.height > 0) {
+      applyCanvasSize(canvas, rect.current, initial.width, initial.height);
+    } else {
+      const box = canvas.getBoundingClientRect();
+      applyCanvasSize(canvas, rect.current, box.width, box.height);
+      const parent = canvas.parentElement;
+      if (rect.current.width === 0 && parent) {
+        applyCanvasSize(canvas, rect.current, parent.clientWidth, parent.clientHeight);
+      }
+    }
+
+    const locked = Boolean(initial && initial.width > 0 && initial.height > 0);
     const ro = new ResizeObserver((entries) => {
+      if (locked) return;
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
-        rect.current = { width, height };
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvas.width = Math.round(width * dpr);
-        canvas.height = Math.round(height * dpr);
+        applyCanvasSize(canvas, rect.current, width, height);
       }
     });
-    ro.observe(canvas);
+    if (!locked) {
+      ro.observe(canvas.parentElement ?? canvas);
+    }
 
     const io = new IntersectionObserver(
       ([entry]) => {
+        const { width, height } = entry.boundingClientRect;
+        // 0-flate rapporteres ofte som «ikke synlig» — ikke slå av tegning da.
+        if (width === 0 && height === 0) return;
         isVisible.current = entry.isIntersecting;
       },
       { rootMargin: '100px' },
@@ -62,7 +91,7 @@ export function useCanvasSetup(): UseCanvasSetupResult {
       io.disconnect();
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, []);
+  }, [initial?.height, initial?.width]);
 
   return { canvasRef, rect, isVisible, reducedMotion };
 }

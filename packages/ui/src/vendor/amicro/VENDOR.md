@@ -37,6 +37,10 @@ hvit dither (laget for mørk bakgrunn). Endwise er lyst-only + Attio-farger:
 
 - Valgfri `rows` / `values` / `series` / `slices` så mock-data kan mates inn
 - `compact` er produkt-stien (kun canvas — `AnalyseKort` eier chrome)
+- `DitherGrowthChart` tar valgfri `width`/`height` (px) så mini-bobler ikke
+  avhenger av `h-full` + ResizeObserver (0-flate = tom sirkel)
+- `useCanvasSetup(initial?)` måler i `useLayoutEffect` og ignorerer
+  IntersectionObserver på 0×0-flate
 - Dither-fyll bruker seriehex (ink `#1c1d1f`, Action Blue `#407ff2`, …),
   ikke `#FFFFFF`
 - `theme` default `light`

@@ -78,6 +78,13 @@ export function maanedSparkVisning(raw: ReturnType<typeof bookingMaanedVsForrige
   return { ...raw, denne: PULSE_MOCK_MAANED.denne, forrige: PULSE_MOCK_MAANED.forrige, mock: true };
 }
 
+/** Fire punkter så Amicro-growth leser som kurve, ikke to stolper. */
+export function maanedSparkSerie(forrige: number, denne: number): number[] {
+  const a = Math.max(0, forrige);
+  const b = Math.max(0, denne);
+  return [a, a * 0.72 + b * 0.28, a * 0.32 + b * 0.68, b];
+}
+
 /** Ingen jobber i vinduet = ingen historikk → mock I dag-tall + badge. */
 export function idagVisning(jobber: PhoneBooking[], naa: Date) {
   const tall = idagTall(jobber, naa);

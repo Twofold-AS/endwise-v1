@@ -22,6 +22,7 @@ import {
   idagTall,
   idagVisning,
   lagerVenter,
+  maanedSparkSerie,
   maanedSparkVisning,
   PULSE_MOCK_FORESPORSEL,
   PULSE_MOCK_IDAG,
@@ -118,6 +119,7 @@ describe('forhandler pulse-hjem v2 — I dag + linjekort', () => {
     expect(tom.mock).toBe(true);
     expect(tom.denne).toBe(PULSE_MOCK_MAANED.denne);
     expect(tom.forrige).toBe(PULSE_MOCK_MAANED.forrige);
+    expect(maanedSparkSerie(8, 12)).toEqual([8, 8 * 0.72 + 12 * 0.28, 8 * 0.32 + 12 * 0.68, 12]);
   });
 
   it('Innboks-teller er uleste siste meldinger', () => {
@@ -222,6 +224,8 @@ describe('forhandler pulse-hjem v2 — I dag + linjekort', () => {
     expect(kort).toMatch(/bg-success/);
     expect(kort).toMatch(/bg-danger/);
     expect(kort).toMatch(/DitherGrowthChart/);
+    expect(kort).toMatch(/width=\{MAANED_BOBLE_PX\}|width=\{72\}/);
+    expect(kort).toMatch(/maanedSparkSerie/);
     expect(HJEM_KORT_TOM.lagerVenter).toBe('Trenger godkjenning');
     expect(HJEM_KORT_TOM.jobb).toBe('Jobb');
     expect(PHONE_KORT_META.jobb.href).toBe('/bookinger/ny');

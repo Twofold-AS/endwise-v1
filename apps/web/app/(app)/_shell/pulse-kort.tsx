@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL } from './phone-home';
+import { maanedSparkSerie } from './phone-home-pulse';
 
 const INK = '#141414';
 const WHITE = '#ffffff';
@@ -235,6 +236,8 @@ export function PulseLinjeKort({
   );
 }
 
+const MAANED_BOBLE_PX = 72;
+
 /** Mini Amicro-dither-boble: denne måneden vs forrige. Tall i klartekst under. */
 export function PulseMaanedBoble({
   denne,
@@ -253,17 +256,16 @@ export function PulseMaanedBoble({
       </p>
       <div
         className="relative shrink-0 overflow-hidden rounded-full bg-bg ring-1 ring-divide"
-        style={{ width: 72, height: 72 }}
+        style={{ width: MAANED_BOBLE_PX, height: MAANED_BOBLE_PX }}
       >
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <DitherGrowthChart
-            compact
-            className="h-full w-full"
-            values={[Math.max(0, forrige), Math.max(0, denne)]}
-            labels={['Forrige', 'Denne']}
-            color={denneFarge}
-          />
-        </div>
+        <DitherGrowthChart
+          compact
+          width={MAANED_BOBLE_PX}
+          height={MAANED_BOBLE_PX}
+          values={maanedSparkSerie(forrige, denne)}
+          labels={['Forrige', '', '', 'Denne']}
+          color={denneFarge}
+        />
       </div>
       <p className="text-[11px] leading-none text-fg-muted tabular-nums">
         {denne}

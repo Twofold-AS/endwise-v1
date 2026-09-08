@@ -91,7 +91,8 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).toMatch(/PulseAnalyserKort|Analyser/);
     expect(hjem).toMatch(/invalidateHjemPulse|bookings\.list/);
     expect(hjem).toMatch(/flex-1 basis-0/);
-    expect(hjem).toMatch(/Planlagt/);
+    expect(hjem).toMatch(/planlagt=\{idag\.planlagt\}/);
+    expect(kort).toMatch(/Planlagt/);
     expect(hjem).not.toMatch(/dither-kit|DitherGradient/);
     expect(hjem).not.toMatch(/pulse-preview/);
     expect(hjem).not.toMatch(/For lite data/);

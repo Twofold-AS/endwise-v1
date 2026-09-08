@@ -4,7 +4,7 @@ export const IDLE_MS = 5000;
 
 /**
  * Chrome-Ronny: kun uttrykk. wink er StateId (ett øye), ikke ExpressionId.
- * Ingen colere / sinte blikk. Ingen thinking/alert/notify.
+ * Ingen sinne. Ingen thinking/alert/notify.
  */
 export type RonnyAnsikt = ExpressionId | 'wink';
 

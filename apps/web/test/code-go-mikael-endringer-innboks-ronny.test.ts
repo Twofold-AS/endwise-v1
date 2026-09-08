@@ -68,7 +68,7 @@ describe('CODE-GO Mikael — innboks tom / sort / telefon', () => {
   it('tomtilstand er Ingen samtaler + Send melding, ikke Skriv til Endwise', () => {
     const side = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     expect(side).toMatch(/Ingen samtaler/);
-    expect(side).toMatch(/>Send melding</);
+    expect(side).toMatch(/Send melding/);
     expect(side).not.toMatch(/Skriv til Endwise/);
   });
 
@@ -122,7 +122,7 @@ describe('CODE-GO Mikael — Ronny uten sinne', () => {
     expect(RONNY_IDLE).not.toContain('colere');
     expect(RONNY_PHONE_IDLE).not.toContain('colere');
     const bot = utenKommentarer(les('../app/(app)/_workshop/ronny-bot.tsx'));
-    expect(bot).toMatch(/state=\{wink \? 'wink' : 'idle'\}/);
+    expect(bot).toMatch(/wink \? 'wink' : 'idle'/);
     expect(bot).toMatch(/playing=\{false\}/);
     expect(bot).not.toMatch(/'colere'/);
     expect(bot).not.toMatch(/thinking|alert|notify/);

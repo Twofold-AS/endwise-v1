@@ -2,7 +2,7 @@
 
 **Dato:** 8. september 2026  
 **Roadmap:** F3-05, F5-13, F5-14, F5-19, F5-23, F5-18  
-**Base:** `main` `b50d5cb` / #160. Draft. ⛔ #114/#119.
+**Base:** `main` `b50d5cb` / #160. Draft PR **#161**. ⛔ #114/#119.
 
 ## 1. Hva er gjort
 
@@ -48,6 +48,7 @@
 
 ## 4. Neste fase / neste steg
 
-- Draft PR — Mikael GO, ikke squash-merge før CODE-GO.
+- Draft **#161** — Mikael GO, ikke squash-merge før CODE-GO.
+- Skjermbilder (pulse-preview + chrome uten innlogging): hjem uke+Analyser, innboks-sort, Innstillinger-tittel, Hjelp Artikler/Forespørsler, Statistikk-faner. Profilmeny-popup ble ikke fanget i browser (Chrome-OS-meny); låst i tester (Hjelp, Vilkår 17/700).
 - Koble ekte nettsidevisninger når analyse-data finnes (F5-18 / F13-02).
 - Ikke #114/#119.

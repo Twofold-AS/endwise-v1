@@ -13,14 +13,37 @@ export const PHONE_LOGO_PX = 32;
 export const PHONE_AVATAR_PX = 28;
 
 /**
+ * Bloub viewBox er DEMI_VIEWBOX=158 rundt kroppen RAYON=100.
+ * `size={28}` tegner disken på ~18px. Skaler så Ronny fyller samme sirkel som profil.
+ */
+export const RONNY_VIEWBOX_PER_KROPP = 158 / 100;
+
+export function ronnySizeForSirkel(sirkelPx: number): number {
+  return Math.round(sirkelPx * RONNY_VIEWBOX_PER_KROPP);
+}
+
+/** Felles 28px-sirkel (`size-7`) — Ronny og profil deler nøyaktig samme klasse/mål. */
+export const PHONE_AVATAR_KLASSE =
+  'inline-flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full';
+
+export const PHONE_RONNY_SIRKEL = `${PHONE_AVATAR_KLASSE} text-fg`;
+
+/**
  * Top-bar 2 (08.09 Mikael): mer luft over og under dest-piller / settings-nav.
  * Samme klasse på spacer og header, så innholdet ikke hopper.
+ * py-2.5 er dest-pille-topp — profilmeny nedover skal treffe den, ikke padding-boksen.
  */
-export const PHONE_BAR2 = 'flex min-h-row w-full min-w-0 items-center px-3 py-2.5';
+export const PHONE_BAR2_PY = 'py-2.5';
+export const PHONE_BAR2 = `flex min-h-row w-full min-w-0 items-center px-3 ${PHONE_BAR2_PY}`;
+
+/** Popup-topp linjer dest-piller (samme som PHONE_BAR2_PY), ikke `mt-1` over padding. */
+export const PHONE_PROFIL_MENY_TOPP = 'top-full mt-2.5';
+
+/** Smalere enn 320 — Mobbin-meny skal ikke spise hele skjermen. */
+export const PHONE_PROFIL_MENY_BREDDE = 'w-[min(100%-1.5rem,260px)]';
 
 /** Profil-bokstav: hvit på mørkt, mørk på lyst (token-aware). */
-export const PHONE_PROFIL_SIRKEL =
-  'inline-flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-fg text-label text-bg';
+export const PHONE_PROFIL_SIRKEL = `${PHONE_AVATAR_KLASSE} bg-fg text-label text-bg`;
 
 /** Samme 16px som sidebar-rader (`IKON` i sidebar.tsx). PC-skinne. */
 export const SHELL_TOGGLE_PX = 16;

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { authClient } from '@/lib/auth-client';
+import { PHONE_PROFIL_MENY_BREDDE, PHONE_PROFIL_MENY_TOPP } from './phone-chrome';
 import { PhoneTemaRad } from './phone-tema-rad';
 
 export function PhoneProfilMeny({
@@ -53,7 +54,7 @@ export function PhoneProfilMeny({
         data-phone-profil-meny
         role="menu"
         aria-label="Profil"
-        className="absolute top-full right-3 z-[75] mt-1 flex max-h-[min(72dvh,560px)] w-[min(100%-1.5rem,320px)] flex-col overflow-y-auto rounded-[16px] border border-border bg-card py-3 shadow-lg md:hidden"
+        className={`absolute right-3 z-[75] ${PHONE_PROFIL_MENY_TOPP} flex max-h-[min(72dvh,560px)] ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-y-auto rounded-[16px] border border-border bg-card py-3 shadow-lg md:hidden`}
       >
         <div className="px-4 pb-3">
           <p className="truncate text-[16px] font-[650] text-fg">{navn?.trim() || '—'}</p>
@@ -89,7 +90,9 @@ export function PhoneProfilMeny({
           <Settings size={16} strokeWidth={1.6} />
           Innstillinger
         </Link>
+        <div data-phone-profil-modus-over className="mx-4 h-px bg-border" />
         <PhoneTemaRad />
+        <div data-phone-profil-modus-under className="mx-4 h-px bg-border" />
         <Link
           href={'/veikart' as Route}
           role="menuitem"
@@ -116,12 +119,13 @@ export function PhoneProfilMeny({
           <LogOut size={16} strokeWidth={1.6} />
           Logg ut
         </button>
-        <div className="mx-4 my-1 h-px bg-border" />
+        <div data-phone-profil-vilkar-skille className="mx-4 my-1 h-px bg-border" />
         <Link
           href={'/vilkar' as Route}
           role="menuitem"
+          data-phone-profil-vilkar
           onClick={onLukk}
-          className="flex h-11 items-center px-4 text-label text-fg-muted"
+          className="flex h-11 items-center px-4 text-[14px] font-[550] text-fg-muted"
         >
           Vilkår
         </Link>

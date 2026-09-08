@@ -47,9 +47,9 @@ describe('iOS Safari — felt ≥16px på telefon, pinch-zoom urørt', () => {
     const signin = les('../app/signin/signin-skjema.tsx');
     const totp = les('../app/2fa-oppsett/page.tsx');
     const bytt = les('../app/(app)/_shell/bytt-epost.tsx');
-    expect(felter).toMatch(/text-body/);
-    expect(signin).toMatch(/signin-totp[\s\S]*text-\[16px\]/);
-    expect(signin).toMatch(/signin-magic-kode[\s\S]*text-\[16px\]/);
+    expect(felter).toMatch(/text-\[17px\]/);
+    expect(signin).toMatch(/signin-totp[\s\S]*INPUT/);
+    expect(signin).toMatch(/signin-magic-kode[\s\S]*INPUT/);
     expect(totp).toMatch(/tfa-kode[\s\S]*text-\[16px\]/);
     expect(bytt).toMatch(/bytt-epost-totp[\s\S]*text-\[16px\]/);
   });

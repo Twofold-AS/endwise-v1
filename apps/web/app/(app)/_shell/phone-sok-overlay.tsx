@@ -1,9 +1,9 @@
 'use client';
 
+import { normaliserSok } from '@endwise/modules/sok';
 import { Search } from '@endwise/ui';
 import { useEffect, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { normaliserSok } from '@endwise/modules/sok';
 import type { NavItem } from './nav';
 import { PHONE_SAFE_TOP } from './phone-home';
 import { huskSok, lesNyligeSok, PHONE_SOK_LAGER, slaaSammenSok } from './phone-sok';
@@ -135,9 +135,7 @@ export function PhoneSokOverlay({
                     onClick={() => velg(t.href, t.tittel)}
                   >
                     <span className="text-label text-fg">{t.tittel}</span>
-                    {t.under ? (
-                      <span className="text-[12px] text-fg-muted">{t.under}</span>
-                    ) : null}
+                    {t.under ? <span className="text-[12px] text-fg-muted">{t.under}</span> : null}
                   </button>
                 </li>
               ))}

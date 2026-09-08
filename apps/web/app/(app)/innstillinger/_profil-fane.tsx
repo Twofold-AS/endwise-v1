@@ -80,11 +80,7 @@ export function ProfilFane() {
           <KontoRad
             label="Autentikator"
             verdi={
-              twoFactorEnabled === true
-                ? 'På'
-                : twoFactorEnabled === false
-                  ? 'Ikke satt opp'
-                  : '—'
+              twoFactorEnabled === true ? 'På' : twoFactorEnabled === false ? 'Ikke satt opp' : '—'
             }
             apen={apen === 'autentikator'}
             onEndre={() => setApen(apen === 'autentikator' ? null : 'autentikator')}

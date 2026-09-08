@@ -42,11 +42,7 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
       </div>
 
       {faner.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Innstillinger"
-          className="hidden flex-wrap gap-5 md:flex"
-        >
+        <div role="tablist" aria-label="Innstillinger" className="hidden flex-wrap gap-5 md:flex">
           {faner.map((f) => {
             const valgt = f.id === aktiv;
             return (

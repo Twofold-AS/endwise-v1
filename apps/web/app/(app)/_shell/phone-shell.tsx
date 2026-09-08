@@ -9,7 +9,7 @@ import { isVerkstedInspectPath } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { RONNY_PHONE_IDLE, RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
-import { innstillingerHref, parseFane, synligeFaner, type FaneId } from '../innstillinger/_faner';
+import { type FaneId, innstillingerHref, parseFane, synligeFaner } from '../innstillinger/_faner';
 import { destinasjonerForShell, erSettingsSti, isItemActive, shellForBruker } from './nav';
 import { PHONE_AVATAR_PX, PHONE_BAR2, PHONE_LOGO_PX, PHONE_PROFIL_SIRKEL } from './phone-chrome';
 import { PhoneHScroll } from './phone-h-scroll';
@@ -236,9 +236,7 @@ export function PhoneShell() {
                     data-phone-settings-fane={f.id}
                     aria-current={aktiv ? 'page' : undefined}
                     className={`shrink-0 border-b-2 pb-1 text-label ${
-                      aktiv
-                        ? 'border-fg font-[650] text-fg'
-                        : 'border-transparent text-fg-muted'
+                      aktiv ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
                     }`}
                   >
                     {f.label}

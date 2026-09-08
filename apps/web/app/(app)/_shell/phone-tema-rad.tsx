@@ -6,13 +6,8 @@ import type { Tema } from '../_lib/tema';
 
 function SystemIkon({ size = 16 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" role="img">
+      <title>System</title>
       <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.6" />
       <path d="M12 3.75v16.5A8.25 8.25 0 0 0 12 3.75Z" fill="currentColor" />
     </svg>
@@ -34,11 +29,7 @@ export function PhoneTemaRad() {
       className="flex items-center justify-between gap-3 border-border border-y px-3 py-2.5"
     >
       <span className="text-label text-fg">Theme</span>
-      <div
-        role="radiogroup"
-        aria-label="Tema"
-        className="inline-flex items-center rounded-full bg-inset p-0.5"
-      >
+      <div className="inline-flex items-center rounded-full bg-inset p-0.5">
         {VALG.map((v) => {
           const I = v.ikon;
           const aktiv = valg === v.id;
@@ -46,8 +37,7 @@ export function PhoneTemaRad() {
             <button
               key={v.id}
               type="button"
-              role="radio"
-              aria-checked={aktiv}
+              aria-pressed={aktiv}
               aria-label={v.label}
               data-tema-valg={v.id}
               onClick={() => sett(v.id)}

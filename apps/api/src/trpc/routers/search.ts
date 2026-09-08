@@ -304,9 +304,7 @@ export const searchRouter = router({
         },
         {
           kategori: 'Tjenester',
-          treff: kjerne.tjenester.map((s) =>
-            treff(s.id, s.name, '/prisliste', s.vehicleType),
-          ),
+          treff: kjerne.tjenester.map((s) => treff(s.id, s.name, '/prisliste', s.vehicleType)),
         },
         {
           kategori: 'Hjelp',

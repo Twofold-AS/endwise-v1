@@ -11,6 +11,7 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useLayoutEffect } from 'react';
 import { useTema } from '@/app/_lib/tema-provider';
+import { FORHANDLER_NAV } from '@/app/(app)/_shell/nav';
 import {
   PHONE_AVATAR_PX,
   PHONE_BAR2,
@@ -19,6 +20,7 @@ import {
   PHONE_RONNY_SIRKEL,
   ronnySizeForSirkel,
 } from '@/app/(app)/_shell/phone-chrome';
+import { PhoneHScroll } from '@/app/(app)/_shell/phone-h-scroll';
 import { PHONE_SAFE_TOP } from '@/app/(app)/_shell/phone-home';
 import { PhoneProfilMeny } from '@/app/(app)/_shell/phone-profil-meny';
 import { PhoneSokFelt } from '@/app/(app)/_shell/phone-sok-felt';
@@ -28,12 +30,12 @@ import { RONNY_SHEET_RADIUS_PX } from '@/app/(app)/_workshop/ronny-sheet';
 
 /**
  * Uinnlogget visuell GO — ekte chrome/sheet/felt, ikke HTML-mock.
- * ?tema=light|dark  ?vis=chrome|meny|sheet
+ * ?tema=light|dark  ?vis=chrome|meny|sheet|sok
  */
-type Vis = 'chrome' | 'meny' | 'sheet';
+type Vis = 'chrome' | 'meny' | 'sheet' | 'sok';
 
 function lesVis(raw: string | null): Vis {
-  if (raw === 'meny' || raw === 'sheet') return raw;
+  if (raw === 'meny' || raw === 'sheet' || raw === 'sok') return raw;
   return 'chrome';
 }
 
@@ -51,6 +53,7 @@ function MikaelGoInnhold() {
     <div className={`min-h-dvh bg-bg text-fg ${PHONE_SAFE_TOP}`}>
       <Chrome vis={vis} />
       {vis === 'sheet' ? <Sheet /> : null}
+      {vis === 'sok' ? <SokGo /> : null}
     </div>
   );
 }
@@ -91,10 +94,64 @@ function Chrome({ vis }: { vis: Vis }) {
         innstillingerHref="/innstillinger?fane=konto"
       />
       <div data-phone-top-bar="2" className={PHONE_BAR2}>
-        <span className="text-label text-fg">Verkstedet</span>
+        <PhoneHScroll>
+          {FORHANDLER_NAV.filter((d) => !d.requiresShopFlag).map((item, i) => (
+            <span
+              key={item.key}
+              data-phone-dest={item.key}
+              className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg ${
+                i === 0 ? 'bg-sidebar-active' : ''
+              }`}
+            >
+              {item.label}
+            </span>
+          ))}
+        </PhoneHScroll>
       </div>
       <div className="ew-haarlinje" />
     </header>
+  );
+}
+
+function SokGo() {
+  const dest = FORHANDLER_NAV.filter((d) => !d.requiresShopFlag);
+  return (
+    <div
+      data-phone-search-overlay
+      className="fixed inset-0 z-[80] flex flex-col bg-bg md:static md:min-h-[70dvh]"
+    >
+      <div className="flex h-row shrink-0 items-center gap-2 px-3">
+        <PhoneSokFelt defaultValue="kar" readOnly />
+        <span className="shrink-0 px-1 text-label text-fg">Avbryt</span>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-8">
+        <div
+          data-phone-sok-dest-stripe
+          className="flex gap-3 overflow-x-auto overflow-y-hidden py-3 touch-pan-x"
+        >
+          {dest.map((item) => {
+            const I = item.icon;
+            return (
+              <span
+                key={item.key}
+                data-phone-sok-dest-ikon={item.key}
+                className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-inset text-fg"
+              >
+                <I size={20} strokeWidth={1.75} />
+              </span>
+            );
+          })}
+        </div>
+        <section data-phone-sok-gruppe="Kunde" className="pt-4">
+          <h2 className="pb-1 text-[12px] font-[650] text-fg-muted">Kunde</h2>
+          <p className="flex min-h-11 items-center text-label text-fg">Kari Nordmann</p>
+        </section>
+        <section data-phone-sok-gruppe="Sider" className="pt-4">
+          <h2 className="pb-1 text-[12px] font-[650] text-fg-muted">Sider</h2>
+          <p className="flex min-h-11 items-center text-label text-fg">Kunder</p>
+        </section>
+      </div>
+    </div>
   );
 }
 

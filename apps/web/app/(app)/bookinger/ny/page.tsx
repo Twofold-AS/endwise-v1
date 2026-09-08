@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, Check, hexForFarge, Search, Sparkles, staffFargeStil } from '@endwise/ui';
+import { Car, Check, FELT_MD, hexForFarge, Search, Sparkles, staffFargeStil } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -376,10 +376,8 @@ export default function NyJobbPage() {
   );
 }
 
-const inputCls =
-  'h-9 w-full rounded-md border border-border bg-bg px-3 text-fg text-sm placeholder:text-fg-faint focus-visible:outline-2 focus-visible:outline-accent';
-const selectCls =
-  'h-9 w-full rounded-md border border-border bg-bg px-3 text-fg text-sm focus-visible:outline-2 focus-visible:outline-accent';
+const inputCls = FELT_MD;
+const selectCls = FELT_MD;
 
 function KundeIFlyt({
   customerId,

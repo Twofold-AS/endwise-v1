@@ -66,7 +66,7 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
             onChange={(e) => setNavn(e.target.value)}
             maxLength={160}
             placeholder="Kari Nordmann"
-            className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+            className="h-control ew-felt ew-felt-md px-2.5"
           />
         </label>
 
@@ -78,7 +78,7 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
               onChange={(e) => setTelefon(e.target.value)}
               maxLength={32}
               placeholder="+4790000000"
-              className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+              className="h-control ew-felt ew-felt-md px-2.5"
             />
           </label>
           <label className="flex flex-col gap-1.5">
@@ -88,7 +88,7 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
               value={epost}
               onChange={(e) => setEpost(e.target.value)}
               placeholder="kari@example.no"
-              className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+              className="h-control ew-felt ew-felt-md px-2.5"
             />
           </label>
         </div>

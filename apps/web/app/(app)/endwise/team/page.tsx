@@ -134,7 +134,7 @@ export default function EndwiseTeamPage() {
                 {m.hovedAdmin ? <Badge variant="secondary">Hoved-admin</Badge> : null}
                 {m.kanEndres ? (
                   <select
-                    className="h-control rounded-control border border-border bg-bg px-2 text-[12px]"
+                    className="h-control ew-felt ew-felt-md px-2 text-[12px]"
                     value={m.niva === 'support' ? 'support' : 'administrator'}
                     onChange={(ev) =>
                       settNiva.mutate({

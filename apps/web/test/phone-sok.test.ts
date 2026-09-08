@@ -74,7 +74,7 @@ describe('Mikael telefon-chrome — mindre søk/avatar + søk-overlay (07.09 kve
     expect(overlay).not.toMatch(/data-phone-sok-dest-ikon/);
     expect(overlay).not.toMatch(/data-phone-sok-dest-rad/);
     expect(overlay).toMatch(/data-phone-sok-gruppe/);
-    expect(overlay).toMatch(/bg-inset|f0f0f0/);
+    expect(overlay).toMatch(/ew-felt/);
     expect(overlay).not.toMatch(/accent-pip|border-l-/);
     expect(
       destinasjonerForShell({ shell: 'forhandler', role: null, shopEnabled: false }).length,

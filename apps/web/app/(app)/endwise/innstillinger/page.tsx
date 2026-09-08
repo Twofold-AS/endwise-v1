@@ -158,7 +158,7 @@ export default function EndwiseInnstillingerPage() {
             <select
               value={aktivId}
               onChange={(e) => setValgtId(e.target.value)}
-              className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none focus-visible:border-fg"
+              className="h-control ew-felt ew-felt-md px-2.5"
             >
               {demoTenants.map((t) => (
                 <option key={t.id} value={t.id}>

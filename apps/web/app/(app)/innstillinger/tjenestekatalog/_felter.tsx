@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, TriangleAlert } from '@endwise/ui';
+import { CircleAlert, FELT_MD, TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
@@ -31,8 +31,7 @@ export const TOMME_FELTER: Versjonsfelter = {
   beskrivelse: '',
 };
 
-const INPUT =
-  'h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg';
+const INPUT = FELT_MD;
 
 export function TjenesteFelter({
   verdier,
@@ -168,7 +167,7 @@ export function TjenesteFelter({
           rows={2}
           maxLength={600}
           placeholder="Hva er inkludert? Vises til kunden ved booking."
-          className="rounded-control border border-border bg-bg px-2.5 py-2 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+          className={`${FELT_MD} min-h-[4.5rem] py-2`}
         />
       </label>
     </div>

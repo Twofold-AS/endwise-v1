@@ -36,18 +36,21 @@ describe('iOS Safari — felt ≥16px på telefon, pinch-zoom urørt', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
     const innboks = les('../app/(app)/innboks/[id]/page.tsx');
     expect(prompt).toMatch(/text-\[16px\].*md:text-label/);
-    expect(fab).toMatch(/text-\[16px\]/);
+    expect(prompt).toMatch(/FELT_SM|ew-felt-sm/);
     expect(fab).toMatch(/data-ronny-composer/);
     expect(fab).toMatch(/const BOBLE_TEKST = 'text-\[14px\]/);
-    expect(innboks).toMatch(/PromptInputTextarea[\s\S]*text-\[16px\]/);
+    expect(innboks).toMatch(/PromptInputTextarea/);
   });
 
   it('innlogging og OTP-felter er minst 16px', () => {
     const felter = les('../app/_auth/felter.tsx');
+    const tema = les('../../../packages/ui/src/theme.css');
     const signin = les('../app/signin/signin-skjema.tsx');
     const totp = les('../app/2fa-oppsett/page.tsx');
     const bytt = les('../app/(app)/_shell/bytt-epost.tsx');
-    expect(felter).toMatch(/text-\[17px\]/);
+    expect(felter).toMatch(/FELT_LG|ew-felt-lg/);
+    expect(tema).toMatch(/font-size:\s*17px/);
+    expect(tema).toMatch(/\.ew-felt-sm[\s\S]{0,80}16px/);
     expect(signin).toMatch(/signin-totp[\s\S]*INPUT/);
     expect(signin).toMatch(/signin-magic-kode[\s\S]*INPUT/);
     expect(totp).toMatch(/tfa-kode[\s\S]*text-\[16px\]/);

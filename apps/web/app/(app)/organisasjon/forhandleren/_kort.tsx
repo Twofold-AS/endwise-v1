@@ -1,13 +1,12 @@
 'use client';
 
-import { StatefulButton } from '@endwise/ui';
+import { FELT_MD, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../../_lib/lyd';
 import { CardShell } from '../../_shell/cards';
 
-const INPUT =
-  'h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg disabled:bg-surface-2 disabled:text-fg-muted';
+const INPUT = `${FELT_MD} disabled:bg-surface-2 disabled:text-fg-muted`;
 
 type Skjema = {
   name: string;

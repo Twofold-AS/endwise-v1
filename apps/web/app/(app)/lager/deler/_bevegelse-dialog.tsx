@@ -116,7 +116,7 @@ export function BevegelseDialog({
               value={valgtLokasjon}
               onChange={(e) => setLocationId(e.target.value)}
               required
-              className="h-control rounded-control border border-border bg-bg px-2 text-body text-fg outline-none focus-visible:border-fg"
+              className="h-control ew-felt ew-felt-md px-2"
             >
               {lokasjoner.data?.map((l) => (
                 <option key={l.id} value={l.id}>
@@ -141,7 +141,7 @@ export function BevegelseDialog({
               value={antall}
               onChange={(e) => setAntall(e.target.value)}
               required
-              className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg tabular-nums outline-none focus-visible:border-fg"
+              className="h-control ew-felt ew-felt-md px-2.5 tabular-nums"
             />
           </label>
 
@@ -152,7 +152,7 @@ export function BevegelseDialog({
               onChange={(e) => setNote(e.target.value)}
               maxLength={280}
               placeholder="Valgfritt — f.eks. hvilken jobb"
-              className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+              className="h-control ew-felt ew-felt-md px-2.5"
             />
           </label>
 

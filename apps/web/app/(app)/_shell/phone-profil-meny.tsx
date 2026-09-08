@@ -90,9 +90,9 @@ export function PhoneProfilMeny({
           <Settings size={16} strokeWidth={1.6} />
           Innstillinger
         </Link>
-        <div data-phone-profil-modus-over className="mx-4 h-px bg-border" />
+        <div data-phone-profil-modus-over className="ew-haarlinje mx-4" />
         <PhoneTemaRad />
-        <div data-phone-profil-modus-under className="mx-4 h-px bg-border" />
+        <div data-phone-profil-modus-under className="ew-haarlinje mx-4" />
         <Link
           href={'/veikart' as Route}
           role="menuitem"
@@ -119,13 +119,13 @@ export function PhoneProfilMeny({
           <LogOut size={16} strokeWidth={1.6} />
           Logg ut
         </button>
-        <div data-phone-profil-vilkar-skille className="mx-4 my-1 h-px bg-border" />
+        <div data-phone-profil-vilkar-skille className="ew-haarlinje mx-4 my-1" />
         <Link
           href={'/vilkar' as Route}
           role="menuitem"
           data-phone-profil-vilkar
           onClick={onLukk}
-          className="flex h-11 items-center px-4 text-[14px] font-[550] text-fg-muted"
+          className="flex h-11 items-center px-4 text-[17px] font-[700] text-fg"
         >
           Vilkår
         </Link>

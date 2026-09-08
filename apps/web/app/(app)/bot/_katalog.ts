@@ -27,7 +27,6 @@ export type BotHoved = (typeof BOT_HOVED)[number]['oye'];
 
 export const BOT_STORRELSER = [240, 280, 320] as const;
 
-export const FELT =
-  'h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none focus-visible:border-fg';
+export const FELT = 'ew-felt ew-felt-md';
 
 export { DEFAULT_EXPRESSION, SEQUENCE };

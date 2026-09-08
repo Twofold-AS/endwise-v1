@@ -9,6 +9,7 @@ import type {
 } from 'react';
 import { useCallback, useState } from 'react';
 import { Send } from '../icons.ts';
+import { FELT_SM } from '../lib/felt.ts';
 import { cn } from '../lib/utils.ts';
 
 /**
@@ -48,7 +49,7 @@ export function PromptInput({ className, onSubmit, children, ...props }: PromptI
   return (
     <form
       data-slot="prompt-input"
-      className={cn('flex w-full items-end gap-1', className)}
+      className={cn(FELT_SM, 'flex w-full items-end gap-1', className)}
       onSubmit={handleSubmit}
       {...props}
     >

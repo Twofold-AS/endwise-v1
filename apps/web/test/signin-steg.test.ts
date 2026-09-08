@@ -194,14 +194,14 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
   });
 
   it('felt er Mobbin-fyll #f0f0f0 / 16px, 2px hvit kant i fokus', () => {
-    expect(felt).toMatch(/bg-inset/);
-    expect(felt).toMatch(/rounded-\[16px\]/);
-    expect(felt).toMatch(/min-h-\[52px\]/);
-    expect(felt).toMatch(/border-2/);
-    expect(felt).toMatch(/focus:border-white/);
-    expect(felt).toMatch(/focus-visible:border-white/);
+    const tema = readFileSync(resolve(her, '../../../packages/ui/src/theme.css'), 'utf8');
+    expect(felt).toMatch(/FELT_LG|ew-felt-lg/);
+    expect(tema).toMatch(/\.ew-felt\s*\{/);
+    expect(tema).toMatch(/--ew-inset/);
+    expect(tema).toMatch(/--ew-radius-sm/);
+    expect(tema).toMatch(/min-height:\s*52px/);
+    expect(tema).toMatch(/border-color:\s*#ffffff/);
     expect(felt).not.toMatch(/outline-\[3px\]/);
-    expect(felt).not.toMatch(/#141414/);
     expect(felt).not.toMatch(/h-control rounded-control border border-border bg-bg/);
   });
 

@@ -194,7 +194,7 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
                 type="email"
                 value={epost}
                 onChange={(e) => setEpost(e.target.value)}
-                className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                className="h-control ew-felt ew-felt-md px-3"
               />
             </label>
             {epostEndret ? (
@@ -206,7 +206,7 @@ function Hvem({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
                   maxLength={6}
                   value={totp}
                   onChange={(e) => setTotp(e.target.value.replace(/\D/g, ''))}
-                  className="h-control rounded-control border border-border bg-bg px-3 font-mono text-body text-fg tracking-[0.4em]"
+                  className="h-control ew-felt ew-felt-md px-3 font-mono tracking-[0.4em]"
                   placeholder="••••••"
                 />
               </label>
@@ -417,7 +417,7 @@ function SlaAv2fa({ userId, navn }: { userId: string; navn: string }) {
                   maxLength={6}
                   value={totp}
                   onChange={(e) => setTotp(e.target.value.replace(/\D/g, ''))}
-                  className="h-control rounded-control border border-border bg-bg px-3 font-mono text-body text-fg tracking-[0.4em]"
+                  className="h-control ew-felt ew-felt-md px-3 font-mono tracking-[0.4em]"
                   placeholder="••••••"
                 />
               </label>
@@ -597,7 +597,7 @@ function TimeplanSeksjon({ rad, kanEndre }: { rad: Rad; kanEndre: boolean }) {
                 inputMode="numeric"
                 defaultValue={String(mek.capacity)}
                 onChange={(e) => setKapasitet(e.target.value)}
-                className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg"
+                className="h-control ew-felt ew-felt-md px-3"
               />
             </label>
             <button

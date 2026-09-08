@@ -157,7 +157,7 @@ export function VisningsnavnFelt() {
           minLength={2}
           maxLength={80}
           aria-label="Visningsnavn"
-          className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none focus-visible:border-fg"
+          className="h-control min-w-0 flex-1 ew-felt ew-felt-md px-2.5"
         />
         <StatefulButton
           type="submit"
@@ -222,7 +222,7 @@ export function KallenavnFelt() {
           maxLength={24}
           placeholder="F.eks. «Skiftenøkkelen»"
           aria-label="Kallenavn"
-          className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+          className="h-control min-w-0 flex-1 ew-felt ew-felt-md px-2.5"
         />
         <StatefulButton
           type="submit"

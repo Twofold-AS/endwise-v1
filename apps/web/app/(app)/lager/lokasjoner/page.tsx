@@ -55,7 +55,7 @@ export default function LokasjonerPage() {
                   required
                   maxLength={32}
                   placeholder="A-03"
-                  className="h-control rounded-control border border-border bg-bg px-2.5 font-mono text-body text-fg outline-none placeholder:font-sans placeholder:text-fg-muted/60 focus-visible:border-fg"
+                  className="h-control ew-felt ew-felt-md px-2.5 font-mono placeholder:font-sans"
                 />
               </label>
               <label className="flex flex-col gap-1.5">
@@ -66,7 +66,7 @@ export default function LokasjonerPage() {
                   required
                   maxLength={120}
                   placeholder="Hylle A, rad 3"
-                  className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+                  className="h-control ew-felt ew-felt-md px-2.5"
                 />
               </label>
             </div>

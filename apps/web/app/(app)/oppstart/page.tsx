@@ -185,7 +185,7 @@ export default function OppstartPage() {
               value={visningsnavn}
               onChange={(e) => setNavn(e.target.value)}
               minLength={2}
-              className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-fg"
+              className="h-control ew-felt ew-felt-md px-3"
             />
           </label>
           <div className="flex justify-end">
@@ -235,7 +235,7 @@ export default function OppstartPage() {
                         onChange={(e) => setQuickBaseUrl(e.target.value)}
                         placeholder="https://q3.quick.no/…"
                         spellCheck={false}
-                        className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-fg"
+                        className="h-control ew-felt ew-felt-md px-3"
                       />
                     </label>
                     <label className="flex flex-col gap-1.5">
@@ -246,7 +246,7 @@ export default function OppstartPage() {
                         onChange={(e) => setQuickToken(e.target.value)}
                         autoComplete="off"
                         spellCheck={false}
-                        className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-fg"
+                        className="h-control ew-felt ew-felt-md px-3"
                       />
                     </label>
                   </div>
@@ -292,7 +292,7 @@ export default function OppstartPage() {
                 value={epost}
                 onChange={(e) => setEpost(e.target.value)}
                 placeholder="fornavn@verksted.no"
-                className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-fg"
+                className="h-control ew-felt ew-felt-md px-3"
               />
             </label>
             <fieldset className="flex flex-col gap-1.5 border-0 p-0">

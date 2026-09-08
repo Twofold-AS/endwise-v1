@@ -99,7 +99,7 @@ export function Etterspor({
           maxLength={2000}
           placeholder="Valgfritt: hva trenger dere det til?"
           aria-label={`Melding om ${hva}`}
-          className="resize-y rounded-control border border-border bg-bg px-3 py-2 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+          className="resize-y ew-felt ew-felt-md px-3 py-2"
         />
 
         {feil && (

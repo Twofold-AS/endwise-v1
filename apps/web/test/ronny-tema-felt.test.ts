@@ -17,7 +17,9 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     const profil = les('../app/(app)/_shell/phone-chrome.ts');
     expect(bot).not.toMatch(/ink-invert/);
     expect(bot).toMatch(/ronnyTemaFarger/);
-    expect(bot).toMatch(/lesDomLos/);
+    expect(bot).toMatch(/data-ronny-los/);
+    expect(bot).toMatch(/dark:hidden/);
+    expect(bot).toMatch(/dark:inline-flex/);
     expect(bot).toMatch(/follow=\{false\}/);
     expect(farger).toMatch(/#141414/);
     expect(farger).toMatch(/#f3f3f3/);

@@ -8,7 +8,9 @@ import { StatistikkInnhold } from './_innhold';
 
 export function StatistikkSkall() {
   return (
-    <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster statistikk …</div>}>
+    <Suspense
+      fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster statistikk …</div>}
+    >
       <StatistikkSkallIndre />
     </Suspense>
   );

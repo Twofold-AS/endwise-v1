@@ -1,10 +1,10 @@
+import { HJELP_FANER, type HjelpFaneId, hjelpHref, parseHjelpFane } from '../hjelp/_faner';
 import { type FaneId, innstillingerHref, parseFane, synligeFaner } from '../innstillinger/_faner';
-import { HJELP_FANER, hjelpHref, type HjelpFaneId, parseHjelpFane } from '../hjelp/_faner';
 import {
   parseStatistikkFane,
   STATISTIKK_FANER,
-  statistikkHref,
   type StatistikkFaneId,
+  statistikkHref,
 } from '../statistikk/_faner';
 import { erSettingsSti } from './nav';
 

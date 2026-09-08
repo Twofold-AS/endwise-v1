@@ -9,7 +9,6 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { RONNY_PHONE_IDLE, RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
 import { destinasjonerForShell, isItemActive, shellForBruker } from './nav';
-import { phoneSideChrome } from './phone-side-chrome';
 import {
   PHONE_AVATAR_PX,
   PHONE_BAR2,
@@ -21,6 +20,7 @@ import {
 import { PhoneHScroll } from './phone-h-scroll';
 import { PHONE_SAFE_TOP, phoneHjemHref, phoneInnstillingerHref } from './phone-home';
 import { PhoneProfilMeny } from './phone-profil-meny';
+import { phoneSideChrome } from './phone-side-chrome';
 import { PhoneSokFelt } from './phone-sok-felt';
 import { PhoneSokOverlay } from './phone-sok-overlay';
 import { TilbakePil } from './tilbake-pil';

@@ -4,8 +4,8 @@ import { ArrowUpRight, Badge, DitherGrowthChart, type LucideIcon, Plus } from '@
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import type { AnalyserMockStat } from './phone-home-pulse';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL } from './phone-home';
+import type { AnalyserMockStat } from './phone-home-pulse';
 
 const WHITE = '#ffffff';
 /** Mobbin-aksent — tillatt på hjem-spark (Mikael CODE-GO). */
@@ -188,13 +188,7 @@ export function PulseJobbFlis() {
  * Analyser — to deler over Innboks/Lager/Jobb.
  * Del 1: tittel + Se tall. Del 2: dither-rutenett (nettsidevisninger, mock).
  */
-export function PulseAnalyserKort({
-  stats,
-  href,
-}: {
-  stats: AnalyserMockStat[];
-  href: string;
-}) {
+export function PulseAnalyserKort({ stats, href }: { stats: AnalyserMockStat[]; href: string }) {
   return (
     <Link
       href={href as Route}

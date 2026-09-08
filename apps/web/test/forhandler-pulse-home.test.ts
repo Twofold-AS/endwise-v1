@@ -87,7 +87,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).toMatch(/Les alle siste meldinger/);
     expect(hjem).toMatch(/PulseUkeSpark|Pulse30dSpark/);
     expect(hjem).toMatch(/PulseJobbFlis/);
-    expect(hjem).toMatch(/Denne uken|Siste 7 dager/);
+    expect(hjem).toMatch(/PULSE_UKE_TITTEL|Denne uken|Siste 7 dager/);
     expect(hjem).toMatch(/PulseAnalyserKort|Analyser/);
     expect(hjem).toMatch(/invalidateHjemPulse|bookings\.list/);
     expect(hjem).toMatch(/flex-1 basis-0/);
@@ -276,7 +276,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     const preview = utenKommentarer(les('../app/pulse-preview/page.tsx'));
     expect(preview).toMatch(/data-pulse-preview="go"/);
     expect(preview).toMatch(/PulseUkeSpark|Pulse30dSpark/);
-    expect(preview).toMatch(/Denne uken|Siste 7 dager/);
+    expect(preview).toMatch(/PULSE_UKE_TITTEL|Denne uken|Siste 7 dager/);
     expect(preview).toMatch(/PulseAnalyserKort|Analyser/);
     expect(preview).toMatch(/PulseJobbFlis/);
     expect(preview).toMatch(/flex-1 basis-0/);

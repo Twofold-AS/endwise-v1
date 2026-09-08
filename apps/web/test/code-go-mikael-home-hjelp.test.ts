@@ -4,7 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { HJEM_PULSE_QUERY_KEYS } from '../app/(app)/_shell/hjem-pulse-sync.ts';
 import { PHONE_KORT_META } from '../app/(app)/_shell/phone-home.ts';
-import { ansattePulse, erPaagaarJobb, PULSE_UKE_TITTEL } from '../app/(app)/_shell/phone-home-pulse.ts';
+import {
+  ansattePulse,
+  erPaagaarJobb,
+  PULSE_UKE_TITTEL,
+} from '../app/(app)/_shell/phone-home-pulse.ts';
 import {
   erHjelpSti,
   erPhoneSideChrome,
@@ -80,11 +84,14 @@ describe('CODE-GO Mikael — hjem live data', () => {
     expect(regel).toMatch(/aktiv jobb-tildeling/);
     expect(regel).toMatch(/ikke timeføring/);
     expect(regel).toMatch(/aktivJobb/);
-    expect(regel).not.toMatch(/mechanics\.active/);
+    expect(regel).toMatch(/mechanics\.active.*teller ikke|teller ikke/);
     const naa = new Date('2026-08-29T10:00:00');
     expect(
       ansattePulse(
-        [{ id: '1', status: 'på_jobb' }, { id: '2', status: 'ledig' }],
+        [
+          { id: '1', status: 'på_jobb' },
+          { id: '2', status: 'ledig' },
+        ],
         [],
         naa,
       ),

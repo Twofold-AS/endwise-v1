@@ -50,8 +50,7 @@ export function idagTall(jobber: PhoneBooking[], naa: Date) {
   const dagens = jobber.filter(
     (j) =>
       j.status !== 'cancelled' &&
-      (sammeKalenderdag(j.startsAt, naa) ||
-        (j.status === 'in_progress' && overlapperNaa(j, naa))),
+      (sammeKalenderdag(j.startsAt, naa) || (j.status === 'in_progress' && overlapperNaa(j, naa))),
   );
   const paagaarJobber = dagens.filter((j) => erPaagaarJobb(j, naa));
   const paagaarIds = new Set(paagaarJobber.map((j) => j.id));

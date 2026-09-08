@@ -28,10 +28,10 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
   it('telefon-hjem: pulse-kort, Tjenester/Salg er ikke hjem-kort', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
-      ['analyser'],
       ['innboks'],
       ['lager'],
       ['team', 'jobb'],
+      ['analyser'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(PHONE_KORT_META.timeplan.label).toBe('Timeplan');

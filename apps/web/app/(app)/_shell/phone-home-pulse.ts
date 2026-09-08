@@ -1,5 +1,6 @@
-import { osloKalenderdag, osloPlusDager, osloStartAvDag } from '../_lib/oslo-dag';
+import { osloKalenderdag, osloPlusDager, osloStartAvDag, osloVeggtid } from '../_lib/oslo-dag';
 import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
+import { VERKSTED_DAG_SLUTT, VERKSTED_DAG_START } from '../dashboard/_timeplan-layout';
 import type { PhoneBooking, PhoneTraad } from './phone-home-data';
 
 const PLANLAGT_STATUS = new Set(['draft', 'confirmed']);
@@ -21,6 +22,33 @@ export type PulseTeamMedlem = {
 /** Uke-vindu på toppkortet — Mikael: tallene for den uken. */
 export const PULSE_DAGER = 7;
 export const PULSE_UKE_TITTEL = 'Denne uken';
+
+/**
+ * Verksteddagen på uke-kortets sirkel — samme 08–20 Oslo som Timeplan
+ * og widget. Ingen per-forhandler åpningstid i skjemaet.
+ */
+export const PULSE_DAG_START = VERKSTED_DAG_START;
+export const PULSE_DAG_SLUTT = VERKSTED_DAG_SLUTT;
+
+export function fmtPulseKlokke(hour: number, minute = 0): string {
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+/** Andel av verksteddagen som er passert (0 før start, 1 etter slutt). */
+export function dagFremgang(naa: Date, startHour = PULSE_DAG_START, sluttHour = PULSE_DAG_SLUTT) {
+  const vegg = osloVeggtid(naa);
+  const naaMin = vegg.hour * 60 + vegg.minute;
+  const startMin = startHour * 60;
+  const sluttMin = sluttHour * 60;
+  const span = Math.max(1, sluttMin - startMin);
+  const andel = Math.min(1, Math.max(0, (naaMin - startMin) / span));
+  return {
+    startLabel: fmtPulseKlokke(startHour),
+    sluttLabel: fmtPulseKlokke(sluttHour),
+    naaLabel: fmtPulseKlokke(vegg.hour, vegg.minute),
+    andel,
+  };
+}
 
 /** Plausibel dag når det ikke finnes jobber i vinduet — uten mock-merke. */
 export const PULSE_PLAUSIBEL_IDAG = { planlagt: 3, paagaar: 2, ferdig: 1 };

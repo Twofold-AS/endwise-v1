@@ -44,21 +44,22 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
   it('låser pulse Planlagt · Analyser · Innboks · Lager · ansatte + Jobb', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
-      ['analyser'],
       ['innboks'],
       ['lager'],
       ['team', 'jobb'],
+      ['analyser'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(dealerPhoneHjemRader(false).flatMap((r) => r.keys)).not.toContain('samarbeid');
     expect(PHONE_KORT_META).toHaveProperty('samarbeid');
   });
 
-  it('Lager kommer etter Innboks, ansatte+Jobb er sist — ikke Svarhastighet/Timeplan', () => {
+  it('Lager kommer etter Innboks, Analyser er sist — ikke Svarhastighet/Timeplan', () => {
     const keys = DEALER_PHONE_HJEM.map((r) => r.keys.join('|'));
     expect(keys.indexOf('innboks')).toBeLessThan(keys.indexOf('lager'));
     expect(keys.indexOf('lager')).toBeLessThan(keys.indexOf('team|jobb'));
-    expect(keys.at(-1)).toBe('team|jobb');
+    expect(keys.indexOf('team|jobb')).toBeLessThan(keys.indexOf('analyser'));
+    expect(keys.at(-1)).toBe('analyser');
     expect(keys).not.toContain('svarhastighet');
     expect(keys).not.toContain('timeplan');
   });

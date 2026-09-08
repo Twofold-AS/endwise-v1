@@ -113,25 +113,31 @@ export type PhoneHjemRad = {
 };
 
 /**
- * Mikael CODE-GO 08.09: låste flater + Analyser — toppkort · Analyser ·
- * Innboks-rad · Lager-rad · ansatte/totalt + Jobb. Ingen gamle pulse-kort.
+ * Mikael CODE-GO 08.09: låste flater + Analyser nederst — toppkort ·
+ * Innboks-rad · Lager-rad · ansatte/totalt + Jobb · Analyser.
+ * Ingen gamle pulse-kort.
  */
 export const DEALER_PULSE_KEYS = [
   'idag',
-  'analyser',
   'innboks',
   'lager',
   'team',
   'jobb',
+  'analyser',
 ] as const satisfies readonly PhoneKortKey[];
 
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['idag'], kind: 'hero' },
-  { keys: ['analyser'], kind: 'full' },
   { keys: ['innboks'], kind: 'full' },
   { keys: ['lager'], kind: 'full' },
   { keys: ['team', 'jobb'], kind: 'pair' },
+  { keys: ['analyser'], kind: 'full' },
 ];
+
+/** Ikon på uke-kortet. Ingen dealer-avviksliste ennå (F7-05) — stub-rute. */
+export const PULSE_AVVIK_HREF = '/avvik';
+/** Ikon på uke-kortet → Hjelp › Forespørsler. */
+export const PULSE_FORESPORSEL_HREF = '/hjelp?fane=forespor';
 
 /** Små destinasjonskort under Lager. Dine jobber og Lager er egne flater. */
 export const MEKANIKER_PHONE_HURTIG: PhoneKortKey[] = ['kompetanse', 'timeplan', 'hjelp'];

@@ -12,7 +12,7 @@ export const SIGNIN_ENROLL_STI = '/2fa-oppsett';
 export const SIGNIN_EPOST_KEY = 'endwise.signin.epost';
 export const SIGNIN_VILKAR_STI = '/vilkar';
 
-export const SIGNIN_TITTEL = 'Logg inn på Endwise';
+export const SIGNIN_TITTEL = 'Velkommen tilbake';
 export const SIGNIN_KODE_INGRESS = 'Vi har sendt en midlertidig kode til';
 export const SIGNIN_IKKE_DEG = 'Ikke deg?';
 export const SIGNIN_FYLL_KODE = 'Fyll inn kode';

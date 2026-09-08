@@ -56,7 +56,7 @@ describe('signin-steg: kode-steg etter e-post, TOTP bare med kake', () => {
     expect(SIGNIN_STI).toBe('/signin');
     expect(SIGNIN_VALG_STI).toBe('/signin?steg=valg');
     expect(SIGNIN_TOTP_STI).toBe('/signin?steg=totp');
-    expect(SIGNIN_TITTEL).toBe('Logg inn på Endwise');
+    expect(SIGNIN_TITTEL).toBe('Velkommen tilbake');
     expect(SIGNIN_KODE_INGRESS).toBe('Vi har sendt en midlertidig kode til');
     expect(SIGNIN_IKKE_DEG).toBe('Ikke deg?');
     expect(SIGNIN_FYLL_KODE).toBe('Fyll inn kode');
@@ -160,13 +160,27 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
   const merke = readFileSync(resolve(her, '../app/_auth/merke.tsx'), 'utf8');
   const felt = readFileSync(resolve(her, '../app/_auth/felter.tsx'), 'utf8');
 
-  it('kort+logo sitter høyt — ikke midtstilt midt på skjermen', () => {
-    expect(kilde).toMatch(/pt-8 pb-16/);
-    expect(kilde).not.toMatch(/items-center justify-center/);
-    expect(kilde).toMatch(/text-\[32px\].*font-\[650\]/);
-    expect(kilde).toMatch(/bg-bg p-4/);
+  it('innhold på lerret uten ytterkort, horisontalt sentrert, litt over midten', () => {
+    expect(kilde).toMatch(/items-center justify-center/);
+    expect(kilde).toMatch(/pb-\[14vh\]/);
+    expect(kilde).not.toMatch(/pt-8 pb-16/);
+    expect(kilde).not.toMatch(/rounded-\[24px\]/);
+    expect(kilde).not.toMatch(/border-\[var\(--ew-border-strong\)\]/);
+    expect(kilde).not.toMatch(/data-auth-kort/);
     expect(kilde).not.toMatch(/bg-card/);
-    expect(kilde).toMatch(/SIGNIN_TITTEL|Logg inn på Endwise/);
+    expect(kilde).toMatch(/text-\[32px\].*font-\[650\]/);
+    expect(kilde).toMatch(/SIGNIN_TITTEL|Velkommen tilbake/);
+    expect(kilde).not.toMatch(/Logg inn på Endwise/);
+    expect(kilde).not.toMatch(/Logg inn på['"]/);
+  });
+
+  it('logo har mer luft over og under', () => {
+    expect(kilde).toMatch(/mt-8 mb-10/);
+  });
+
+  it('Fortsett har mer vertikal padding enn h-control', () => {
+    expect(kilde).toMatch(/AUTH_FORTSETT = 'h-auto w-full py-4'/);
+    expect(kilde).toMatch(/className=\{AUTH_FORTSETT\}/);
   });
 
   it('logo er token-aware (mask + bg-fg), ikke svart Image', () => {
@@ -177,11 +191,14 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
     expect(merke).toMatch(/bg-fg/);
   });
 
-  it('felt er Mobbin-fyll #f0f0f0 / 16px, tykk canvas-ramme i fokus', () => {
+  it('felt er Mobbin-fyll #f0f0f0 / 16px, 2px hvit kant i fokus', () => {
     expect(felt).toMatch(/bg-inset/);
     expect(felt).toMatch(/rounded-\[16px\]/);
     expect(felt).toMatch(/min-h-\[52px\]/);
-    expect(felt).toMatch(/outline-white/);
+    expect(felt).toMatch(/border-2/);
+    expect(felt).toMatch(/focus:border-white/);
+    expect(felt).toMatch(/focus-visible:border-white/);
+    expect(felt).not.toMatch(/outline-\[3px\]/);
     expect(felt).not.toMatch(/h-control rounded-control border border-border bg-bg/);
   });
 

@@ -223,7 +223,8 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(shell).toMatch(/data-phone-search/);
     expect(shell).toMatch(/data-phone-dest/);
     expect(chrome).toMatch(/justify-between/);
-    expect(shell).not.toMatch(/data-shell-tilbake/);
+    expect(shell).toMatch(/erSettingsSti/);
+    expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/PHONE_SAFE_BUNN/);
     expect(shell).toMatch(/PhoneHScroll/);
     expect(shell).not.toMatch(/hamburger|\bMenu\b|Handlinger|QUICK_ACTIONS/i);

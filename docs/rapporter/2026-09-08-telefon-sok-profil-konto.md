@@ -9,10 +9,15 @@
 ## Hva gikk galt
 - Context7 MCP krevde auth og ble ikke brukt. Stacken fulgte eksisterende tRPC/Drizzle-mønster.
 - `personvern.slettMeg` finnes ikke. Slett-knappen er ærlig hvis Better-Auth `deleteUser` mangler.
+- Eldre chrome-tester krevde at `data-shell-tilbake` aldri fantes — Settings-chrome brøt dem.
+- `global-search.test.ts` matchet ordet «fake» i kommentaren «Ingen fake treff».
+- `phone-profil-settings` matchet ikke `'Slett'` i ternær (`{… ? 'Sletter …' : 'Slett'}`).
 
 ## Fikser
 - Dest-ikonstripe fjernet fra overlay (låst i tester).
 - `?fane=konto` alias til intern id `profil`.
+- Tilbake-tester oppdatert: pil kun bak `erSettingsSti`.
+- Søke-test unngår kommentaren; Slett-sjekk er `/['"]Slett['"]/`.
 
 ## Neste
 - Eier merger draft PR. Visuell GO på telefon: søk-grupper, profilmeny, Konto.

@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { FANER, innstillingerHref, parseFane } from '../app/(app)/innstillinger/_faner.ts';
-import { slaaSammenSok } from '../app/(app)/_shell/phone-sok.ts';
 import { PHONE_BAR2, PHONE_PROFIL_SIRKEL } from '../app/(app)/_shell/phone-chrome.ts';
+import { slaaSammenSok } from '../app/(app)/_shell/phone-sok.ts';
+import { FANER, innstillingerHref, parseFane } from '../app/(app)/innstillinger/_faner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -39,7 +39,12 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
 
   it('slår server-treff og sider sammen under kategoritittel', () => {
     const grupper = slaaSammenSok(
-      [{ kategori: 'Kunde', treff: [{ id: '1', tittel: 'Kari Nordmann', under: null, href: '/kunder/1' }] }],
+      [
+        {
+          kategori: 'Kunde',
+          treff: [{ id: '1', tittel: 'Kari Nordmann', under: null, href: '/kunder/1' }],
+        },
+      ],
       [{ key: 'kunder', label: 'Kunder', href: '/kunder' }],
       'kari',
     );
@@ -86,7 +91,7 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(fane).toMatch(/Du vil bli logget ut på alle enheter/);
     expect(fane).toMatch(/Slett hele kontoen din fra Endwise/);
     expect(fane).toMatch(/bg-danger/);
-    expect(fane).toMatch(/>Slett</);
+    expect(fane).toMatch(/['"]Slett['"]/);
     expect(fane).toMatch(/Ingen filopplasting|bevegelse="stille"/);
   });
 

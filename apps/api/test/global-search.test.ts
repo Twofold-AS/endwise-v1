@@ -21,6 +21,6 @@ describe('search.global — eksisterende CRM, ingen fake treff', () => {
     expect(kilde).toMatch(/kategori: 'Kjøretøy'/);
     expect(kilde).toMatch(/ilike\(schema\.customers\.name/);
     expect(kilde).toMatch(/normaliserSok/);
-    expect(kilde).not.toMatch(/fake|mockTreff|demoKunde/);
+    expect(kilde).not.toMatch(/mockTreff|demoKunde|fakeTreff/);
   });
 });

@@ -219,9 +219,9 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
   const tittel = flate === 'totp' ? 'Bekreft med autentikator' : SIGNIN_TITTEL;
 
   return (
-    <main className="flex min-h-dvh justify-center bg-bg px-4 pt-[max(2.5rem,12vh)] pb-16 text-fg">
+    <main className="flex min-h-dvh justify-center bg-bg px-4 pt-8 pb-16 text-fg sm:pt-10">
       <div className="w-full max-w-sm">
-        <div className="mb-5 flex justify-center">
+        <div className="mb-3 flex justify-center">
           <AuthMerke />
         </div>
 
@@ -229,9 +229,9 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
           <form
             onSubmit={onEpost}
             data-auth-kort
-            className="flex flex-col gap-2 rounded-[24px] border border-border bg-card p-4"
+            className="flex flex-col gap-2 rounded-[24px] border border-[var(--ew-border-strong)] bg-bg p-4"
           >
-            <h1 className="mb-1 text-[28px] font-[650] leading-[34px] tracking-[-0.03em] text-fg">
+            <h1 className="text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg">
               {tittel}
             </h1>
             <Field id="signin-email" label="E-post">
@@ -272,9 +272,9 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
           <form
             onSubmit={(e) => void onTotp(e)}
             data-auth-kort
-            className="flex flex-col gap-2 rounded-[24px] border border-border bg-card p-4"
+            className="flex flex-col gap-2 rounded-[24px] border border-[var(--ew-border-strong)] bg-bg p-4"
           >
-            <h1 className="mb-1 text-[28px] font-[650] leading-[34px] tracking-[-0.03em] text-fg">
+            <h1 className="text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg">
               {tittel}
             </h1>
             <p className="mb-1 text-[15px] font-[450] leading-[22px] text-fg-muted">
@@ -320,9 +320,9 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             onSubmit={onSkrivKode}
             data-auth-kort
             data-auth-kode-steg
-            className="flex flex-col gap-2 rounded-[24px] border border-border bg-card p-4"
+            className="flex flex-col gap-2 rounded-[24px] border border-[var(--ew-border-strong)] bg-bg p-4"
           >
-            <h1 className="mb-1 text-[28px] font-[650] leading-[34px] tracking-[-0.03em] text-fg">
+            <h1 className="text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg">
               {tittel}
             </h1>
             <p className="text-[15px] font-[450] leading-[22px] text-fg-muted">

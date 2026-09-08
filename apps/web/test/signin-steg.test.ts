@@ -161,9 +161,11 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
   const felt = readFileSync(resolve(her, '../app/_auth/felter.tsx'), 'utf8');
 
   it('kort+logo sitter høyt — ikke midtstilt midt på skjermen', () => {
-    expect(kilde).toMatch(/pt-\[max\(2\.5rem,12vh\)\]/);
+    expect(kilde).toMatch(/pt-8 pb-16/);
     expect(kilde).not.toMatch(/items-center justify-center/);
-    expect(kilde).toMatch(/text-\[28px\].*font-\[650\]/);
+    expect(kilde).toMatch(/text-\[32px\].*font-\[650\]/);
+    expect(kilde).toMatch(/bg-bg p-4/);
+    expect(kilde).not.toMatch(/bg-card/);
     expect(kilde).toMatch(/SIGNIN_TITTEL|Logg inn på Endwise/);
   });
 

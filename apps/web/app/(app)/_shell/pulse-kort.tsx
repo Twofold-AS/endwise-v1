@@ -1,14 +1,14 @@
 'use client';
 
-import { ArrowUpRight, Badge, DitherDonutChart, type LucideIcon, Plus } from '@endwise/ui';
+import { ArrowUpRight, Badge, DitherGrowthChart, type LucideIcon, Plus } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL } from './phone-home';
-import type { InnboksBarPunkt, InnboksTone } from './phone-home-pulse';
+import { manedSparkVerdier } from './phone-home-pulse';
 
 const INK = '#141414';
-const FAINT = '#adadad';
+const WHITE = '#ffffff';
 
 /**
  * Operativt pulse-kort på forhandler-hjem.
@@ -102,7 +102,23 @@ export function PulseTall({
   );
 }
 
-/** Amicro dither-donut som mini-boble: denne måneden vs forrige. */
+/**
+ * Fast lys ikonplate — alltid hvit, også i mørk modus.
+ * Ikke `bg-card` / `bg-canvas` (de går mørke med tema).
+ */
+export function PulseIkonFlate({ children }: { children: ReactNode }) {
+  return (
+    <span
+      data-pulse-ikonboks
+      className="flex size-11 shrink-0 items-center justify-center rounded-[12px] text-[#141414] shadow-none ring-1 ring-divide"
+      style={{ backgroundColor: WHITE }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Amicro linje/growth som mini-boble: denne måneden vs forrige. Ikke donut. */
 export function PulseManedBoble({
   denne,
   forrige,
@@ -118,14 +134,18 @@ export function PulseManedBoble({
       className="flex shrink-0 flex-col items-center gap-1"
       title={`Denne måneden ${denne} · forrige ${forrige}`}
     >
-      <div className="pointer-events-none size-16" aria-hidden>
-        <DitherDonutChart
+      <div
+        className="pointer-events-none h-12 w-[4.75rem] overflow-hidden rounded-[16px] ring-1 ring-divide"
+        style={{ backgroundColor: WHITE }}
+        aria-hidden
+      >
+        <DitherGrowthChart
           theme="light"
           compact
-          slices={[
-            { name: 'Denne måneden', value: Math.max(denne, 0.01), color: INK },
-            { name: 'Forrige måned', value: Math.max(forrige, 0.01), color: FAINT },
-          ]}
+          className="h-full w-full"
+          values={manedSparkVerdier(forrige, denne)}
+          labels={['Forrige', 'Denne']}
+          color={INK}
         />
       </div>
       <p className="text-[11px] text-fg-muted tabular-nums">
@@ -138,39 +158,15 @@ export function PulseManedBoble({
   );
 }
 
-function PulseMiniBar({ values }: { values: InnboksBarPunkt[] }) {
-  const max = Math.max(1, ...values.map((v) => v.n));
-  return (
-    <div data-pulse-stats-bar className="flex h-4 items-end gap-px" aria-hidden>
-      {values.map((v) => (
-        <span
-          key={v.dag}
-          className="w-[3px] rounded-full bg-fg-faint"
-          style={{ height: `${Math.max(18, Math.round((v.n / max) * 100))}%` }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function toneKlasse(tone?: InnboksTone) {
-  if (tone === 'ok') return 'text-success';
-  if (tone === 'fare') return 'text-danger';
-  return 'text-fg';
-}
-
 /**
- * Én-linjes radkort: hvit rund ikonboks · tittel · hale-pil · teller
- * · valgfri mini-stats + farget ny-forespørsel.
+ * Én-linjes radkort: hvit ikonboks · tittel · hale-pil · teller.
+ * Ingen mini-stats / trend.
  */
 export function PulseRadKort({
   href,
   ikon: Ikon,
   tittel,
   teller,
-  bar,
-  nye,
-  tone,
   mock = false,
   laster = false,
 }: {
@@ -178,9 +174,6 @@ export function PulseRadKort({
   ikon: LucideIcon;
   tittel: string;
   teller?: string | number;
-  bar?: InnboksBarPunkt[];
-  nye?: number;
-  tone?: InnboksTone;
   mock?: boolean;
   laster?: boolean;
 }) {
@@ -191,12 +184,9 @@ export function PulseRadKort({
       data-pulse-mock={mock ? '' : undefined}
       className={`${PHONE_DEST_FYLL} flex min-h-11 w-full items-center gap-3 px-4 py-3 [touch-action:manipulation]`}
     >
-      <span
-        data-pulse-ikonboks
-        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-fg shadow-none ring-1 ring-divide"
-      >
-        <Ikon size={16} strokeWidth={1.75} aria-hidden />
-      </span>
+      <PulseIkonFlate>
+        <Ikon size={22} strokeWidth={1.75} aria-hidden />
+      </PulseIkonFlate>
       <span className="min-w-0 flex-1 truncate text-label text-fg">{tittel}</span>
       <ArrowUpRight size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" aria-hidden />
       <span className="shrink-0 text-label text-fg tabular-nums">
@@ -206,29 +196,22 @@ export function PulseRadKort({
           teller
         )}
       </span>
-      {bar && bar.length > 0 ? <PulseMiniBar values={bar} /> : null}
-      {nye != null && !laster ? (
-        <span
-          data-pulse-nye={tone}
-          className={`shrink-0 text-label tabular-nums ${toneKlasse(tone)}`}
-        >
-          {nye}
-        </span>
-      ) : null}
       {mock ? <PulseMockBadge /> : null}
     </Link>
   );
 }
 
-/** Hvit boks med + og «Jobb» — ny jobb. */
+/** Én linje: hvit ikonboks med + og «Jobb» ved siden av — samme mønster som Innboks/Lager. */
 export function PulseJobbFlis() {
   return (
     <Link
       href={'/bookinger/ny' as Route}
       data-pulse-jobb
-      className={`${PHONE_DEST_FYLL} flex min-h-11 min-w-[92px] flex-col items-center justify-center gap-1 px-5 py-4 text-fg [touch-action:manipulation]`}
+      className={`${PHONE_DEST_FYLL} flex min-h-11 items-center gap-3 px-4 py-3 text-fg [touch-action:manipulation]`}
     >
-      <Plus size={20} strokeWidth={1.75} aria-hidden />
+      <PulseIkonFlate>
+        <Plus size={22} strokeWidth={1.75} aria-hidden />
+      </PulseIkonFlate>
       <span className="text-label">Jobb</span>
     </Link>
   );

@@ -21,13 +21,12 @@ import {
   innboksRad,
   lagerRad,
   manedBookingTall,
+  manedSparkVerdier,
   manedVindu,
   osloManedKey,
   osloStartAvManed,
   PULSE_MOCK_IDAG,
-  PULSE_MOCK_INNBOKS_BAR,
   PULSE_MOCK_INNBOKS_MELDINGER,
-  PULSE_MOCK_INNBOKS_NYE,
   PULSE_MOCK_MANED,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
 
@@ -44,6 +43,7 @@ function utenKommentarer(kilde: string) {
 describe('forhandler pulse-hjem — fem flater', () => {
   it('låser Planlagt-kort · Innboks · Lager · ansatte + Jobb', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual(['idag', 'innboks', 'lager', 'team', 'jobb']);
+    expect(DEALER_PULSE_KEYS).toHaveLength(5);
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
       ['innboks'],
@@ -76,11 +76,13 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).not.toMatch(/Ingen kunder ennå|Åpne organisasjon|Artikler og support/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
     expect(hjem).toMatch(/Les alle siste meldinger/);
-    expect(hjem).toMatch(/PulseManedBoble|DitherDonutChart/);
+    expect(hjem).toMatch(/PulseManedBoble/);
     expect(hjem).toMatch(/PulseJobbFlis/);
     expect(hjem).toMatch(/Planlagt/);
-    expect(hjem).not.toMatch(/dither-kit|DitherGradient|DitherGrowthChart/);
+    expect(hjem).not.toMatch(/dither-kit|DitherGradient|DitherDonutChart/);
+    expect(hjem).not.toMatch(/pulse-preview/);
     expect(hjem).not.toMatch(/For lite data/);
+    expect(hjem).not.toMatch(/bar=\{|nye=\{|tone=\{/);
     expect(kort).not.toMatch(/PulseFooter/);
     expect(kort).toMatch(/Les alle siste meldinger|PulseRadKort/);
   });
@@ -124,61 +126,24 @@ describe('forhandler pulse-hjem — fem flater', () => {
         naa,
       ),
     ).toEqual({ denne: 2, forrige: 1, mock: false });
+    expect(manedSparkVerdier(14, 18)).toEqual([14, 18]);
+    expect(manedSparkVerdier(-1, 4)).toEqual([0, 4]);
   });
 
-  it('Innboks-rad teller siste meldinger + nye vs vanlig, mock uten historikk', () => {
-    const naa = new Date('2026-08-29T12:00:00');
-    expect(innboksRad([], naa)).toEqual({
+  it('Innboks-rad viser kun meldingstall, mock uten historikk', () => {
+    expect(innboksRad([])).toEqual({
       meldinger: PULSE_MOCK_INNBOKS_MELDINGER,
-      nye: PULSE_MOCK_INNBOKS_NYE,
-      bar: PULSE_MOCK_INNBOKS_BAR,
-      tone: 'ok',
       mock: true,
     });
-    const flere = innboksRad(
-      [
+    expect(
+      innboksRad([
         { subject: 'A', unread: 2, lastMessageAt: '2026-08-29T11:00:00' },
         { subject: 'B', unread: 1, lastMessageAt: '2026-08-28T11:00:00' },
-        { subject: 'C', unread: 0, lastMessageAt: '2026-08-27T11:00:00' },
-        { subject: 'D', unread: 0, lastMessageAt: '2026-08-26T11:00:00' },
-        { subject: 'E', unread: 0, lastMessageAt: '2026-08-25T11:00:00' },
-        { subject: 'F', unread: 0, lastMessageAt: '2026-08-24T11:00:00' },
-        { subject: 'G', unread: 0, lastMessageAt: '2026-08-23T11:00:00' },
-      ],
-      naa,
-    );
-    expect(flere.meldinger).toBe(3);
-    expect(flere.nye).toBe(1);
-    expect(flere.mock).toBe(false);
-    expect(flere.tone).toBe('noytral');
-
-    const faerre = innboksRad(
-      [
-        { subject: 'I dag', unread: 1, lastMessageAt: '2026-08-29T11:00:00' },
-        ...['23', '24', '25', '26', '27', '28'].flatMap((d) =>
-          [10, 11, 12].map((h) => ({
-            subject: `Mye ${d}-${h}`,
-            unread: 0,
-            lastMessageAt: `2026-08-${d}T${h}:00:00`,
-          })),
-        ),
-      ],
-      naa,
-    );
-    expect(faerre.nye).toBe(1);
-    expect(faerre.tone).toBe('fare');
-
-    const mange = innboksRad(
-      [
-        { subject: '1', unread: 1, lastMessageAt: '2026-08-29T08:00:00' },
-        { subject: '2', unread: 1, lastMessageAt: '2026-08-29T09:00:00' },
-        { subject: '3', unread: 1, lastMessageAt: '2026-08-29T10:00:00' },
-        { subject: 'Gammel', unread: 0, lastMessageAt: '2026-08-28T10:00:00' },
-      ],
-      naa,
-    );
-    expect(mange.nye).toBe(3);
-    expect(mange.tone).toBe('ok');
+      ]),
+    ).toEqual({ meldinger: 3, mock: false });
+    expect(
+      innboksRad([{ subject: 'Tom', unread: 0, lastMessageAt: '2026-08-28T11:00:00' }]),
+    ).toEqual({ meldinger: 0, mock: false });
   });
 
   it('Lager-rad er venter på bestilling / trenger godkjenning', () => {
@@ -239,7 +204,15 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(kort).toMatch(/>\s*mock\s*</);
     expect(kort).toMatch(/ArrowUpRight/);
     expect(kort).toMatch(/PulseJobbFlis|data-pulse-jobb/);
-    expect(kort).toMatch(/DitherDonutChart/);
+    expect(kort).toMatch(/DitherGrowthChart/);
+    expect(kort).not.toMatch(/DitherDonutChart/);
+    expect(kort).not.toMatch(/PulseMiniBar|data-pulse-nye|data-pulse-stats-bar/);
+    expect(kort).toMatch(/data-pulse-ikonboks/);
+    expect(kort).toMatch(/size=\{22\}/);
+    expect(kort).toMatch(/#ffffff/);
+    expect(kort).not.toMatch(/bg-canvas|bg-card text-fg shadow-none ring-1/);
+    expect(kort).toMatch(/flex min-h-11 items-center gap-3/);
+    expect(kort).not.toMatch(/flex-col items-center justify-center gap-1/);
     expect(HJEM_KORT_TOM.svarhastighet).not.toMatch(/For lite data|for lite/);
   });
 
@@ -251,10 +224,19 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(dash).toMatch(/DealerPulseKort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
     expect(hjem).not.toMatch(/messages\.svarhastighet/);
-    expect(hjem).toMatch(/DitherDonutChart|PulseManedBoble/);
+    expect(hjem).toMatch(/PulseManedBoble/);
     expect(hjem).toMatch(/bookinger\/ny|PulseJobbFlis/);
     expect(shell).toMatch(/data-phone-search/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
+  });
+
+  it('pulse-preview er visuell GO, ikke et sjette hjem-kort', () => {
+    const preview = utenKommentarer(les('../app/pulse-preview/page.tsx'));
+    expect(preview).toMatch(/data-pulse-preview="go"/);
+    expect(preview).toMatch(/PulseManedBoble/);
+    expect(preview).toMatch(/PulseJobbFlis/);
+    expect(preview).not.toMatch(/DitherDonutChart|PulseMiniBar|data-pulse-nye/);
+    expect(DEALER_PULSE_KEYS).not.toContain('preview');
   });
 
   it('+ Jobb peker på ny jobb, ikke Timeplan-liste', () => {

@@ -17,9 +17,6 @@ export type PulseTeamMedlem = {
   name?: string;
 };
 
-export type InnboksTone = 'ok' | 'fare' | 'noytral';
-export type InnboksBarPunkt = { dag: string; n: number };
-
 export function idagTall(jobber: PhoneBooking[], naa: Date) {
   const dagens = jobber.filter(
     (j) => sammeKalenderdag(j.startsAt, naa) && j.status !== 'cancelled',
@@ -35,18 +32,13 @@ export function idagTall(jobber: PhoneBooking[], naa: Date) {
 export const PULSE_MOCK_IDAG = { planlagt: 3, paagaar: 2, ferdig: 1 };
 /** Plausibel månedsboble uten historikk. */
 export const PULSE_MOCK_MANED = { denne: 18, forrige: 14 };
-/** Plausibel innboks-rad uten historikk. */
+/** Plausibel innboks-rad uten historikk — kun meldingstall. */
 export const PULSE_MOCK_INNBOKS_MELDINGER = 7;
-export const PULSE_MOCK_INNBOKS_NYE = 3;
-export const PULSE_MOCK_INNBOKS_BAR: InnboksBarPunkt[] = [
-  { dag: 'm-6', n: 1 },
-  { dag: 'm-5', n: 2 },
-  { dag: 'm-4', n: 1 },
-  { dag: 'm-3', n: 2 },
-  { dag: 'm-2', n: 3 },
-  { dag: 'm-1', n: 2 },
-  { dag: 'm-0', n: 3 },
-];
+
+/** Linje/growth-serie forrige → denne måned. Ikke donut. */
+export function manedSparkVerdier(forrige: number, denne: number): number[] {
+  return [Math.max(0, forrige), Math.max(0, denne)];
+}
 
 export function osloManedKey(from: Date | string): string {
   return osloKalenderdag(from).slice(0, 7);
@@ -86,44 +78,16 @@ export function idagVisning(jobber: PhoneBooking[], naa: Date) {
   return { ...tall, mock: false };
 }
 
-function nyePerDag(traader: PhoneTraad[], naa: Date, dager = 7): InnboksBarPunkt[] {
-  const iDag = osloKalenderdag(naa);
-  const values: InnboksBarPunkt[] = [];
-  for (let i = dager - 1; i >= 0; i--) {
-    const dag = osloPlusDager(iDag, -i);
-    values.push({
-      dag,
-      n: traader.filter((t) => t.lastMessageAt && osloKalenderdag(t.lastMessageAt) === dag).length,
-    });
-  }
-  return values;
-}
-
 /**
- * Innboks-rad: siste meldinger + ny-forespørsel vs vanlig per dag.
- * Grønn når det er klart flere enn vanlig, rød når det er færre.
+ * Innboks-rad: kun meldingstall. Ingen mini-stats / trend.
+ * Tom historikk = mock-tall + badge.
  */
-export function innboksRad(traader: PhoneTraad[], naa: Date) {
+export function innboksRad(traader: PhoneTraad[]) {
   const meldinger = traader.reduce((sum, t) => sum + (t.unread ?? 0), 0);
-  const bar = nyePerDag(traader, naa);
-  const nye = bar.at(-1)?.n ?? 0;
-  const historikk = bar.slice(0, -1);
-  const harHistorikk = meldinger > 0 || bar.some((v) => v.n > 0);
-  if (!harHistorikk) {
-    return {
-      meldinger: PULSE_MOCK_INNBOKS_MELDINGER,
-      nye: PULSE_MOCK_INNBOKS_NYE,
-      bar: PULSE_MOCK_INNBOKS_BAR,
-      tone: 'ok' as InnboksTone,
-      mock: true,
-    };
+  if (traader.length === 0) {
+    return { meldinger: PULSE_MOCK_INNBOKS_MELDINGER, mock: true };
   }
-  const usual = historikk.reduce((sum, v) => sum + v.n, 0) / Math.max(historikk.length, 1);
-  let tone: InnboksTone = 'noytral';
-  if (usual === 0) tone = nye > 0 ? 'ok' : 'noytral';
-  else if (nye > usual * 1.25) tone = 'ok';
-  else if (nye < usual * 0.75) tone = 'fare';
-  return { meldinger, nye, bar, tone, mock: false };
+  return { meldinger, mock: false };
 }
 
 /**

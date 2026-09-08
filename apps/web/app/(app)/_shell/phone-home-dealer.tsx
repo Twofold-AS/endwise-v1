@@ -40,7 +40,7 @@ export function useDealerHjemKort() {
   const jobber = bookings.data ?? [];
   const idag = idagVisning(jobber, naa);
   const maned = manedBookingTall(jobber, naa);
-  const innboks = innboksRad(threads.data ?? [], naa);
+  const innboks = innboksRad(threads.data ?? []);
   const lager = lagerRad(deler.data ?? []);
   const ansatte = ansattePulse(oversikt.data ?? []);
 
@@ -81,9 +81,6 @@ export function DealerPulseKort({ className }: { className?: string }) {
         ikon={Inbox}
         tittel="Les alle siste meldinger"
         teller={innboks.meldinger}
-        bar={innboks.bar}
-        nye={innboks.nye}
-        tone={innboks.tone}
         laster={threads.isLoading}
         mock={!threads.isLoading && innboks.mock}
       />
@@ -93,7 +90,6 @@ export function DealerPulseKort({ className }: { className?: string }) {
         ikon={Package}
         tittel={lager.tittel}
         teller={lager.antall}
-        nye={lager.godkjenning > 0 ? lager.godkjenning : undefined}
         laster={deler.isLoading}
       />
 

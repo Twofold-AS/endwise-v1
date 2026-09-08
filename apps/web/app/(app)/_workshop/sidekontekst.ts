@@ -38,6 +38,7 @@ const MERKELAPP: Array<{ test: (path: string) => boolean; label: string }> = [
   { test: (p) => p.startsWith('/bot'), label: 'Bot' },
   { test: (p) => p.startsWith('/endwise'), label: 'Endwise' },
   { test: (p) => p.startsWith('/support') || p.startsWith('/hjelp'), label: 'Hjelp' },
+  { test: (p) => p.startsWith('/avvik'), label: 'Avvik' },
 ];
 
 export type Sidekontekst = {

@@ -1,11 +1,31 @@
 'use client';
 
-import { ArrowUpRight, Badge, DitherGrowthChart, type LucideIcon, Plus } from '@endwise/ui';
+import {
+  ArrowUpRight,
+  Badge,
+  DitherGrowthChart,
+  EASE_OUT_CSS,
+  type LucideIcon,
+  MessageSquare,
+  Plus,
+  TriangleAlert,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
-import { PHONE_DEST_FYLL, PHONE_HERO_FYLL } from './phone-home';
-import type { AnalyserMockStat } from './phone-home-pulse';
+import { type ReactNode, useEffect, useState } from 'react';
+import {
+  PHONE_DEST_FYLL,
+  PHONE_HERO_FYLL,
+  PULSE_AVVIK_HREF,
+  PULSE_FORESPORSEL_HREF,
+} from './phone-home';
+import {
+  type AnalyserMockStat,
+  dagFremgang,
+  fmtPulseKlokke,
+  PULSE_DAG_SLUTT,
+  PULSE_DAG_START,
+} from './phone-home-pulse';
 
 const WHITE = '#ffffff';
 /** Mobbin-aksent — tillatt på hjem-spark (Mikael CODE-GO). */
@@ -24,6 +44,7 @@ export function PulseKort({
   children,
   variant = 'hvile',
   laster = false,
+  actions,
 }: {
   href: string;
   navn?: string;
@@ -33,15 +54,12 @@ export function PulseKort({
   variant?: 'hero' | 'hvile';
   laster?: boolean;
   mock?: boolean;
+  /** Ikoner utenpå uke-lenken — unngår nestede <a>. */
+  actions?: ReactNode;
 }) {
   const fyll = variant === 'hero' ? PHONE_HERO_FYLL : PHONE_DEST_FYLL;
-  return (
-    <Link
-      href={href as Route}
-      data-pulse-kort={navn ?? 'hero'}
-      data-verkstedet-hero={variant === 'hero' ? '' : undefined}
-      className={`${fyll} flex min-h-11 w-full flex-col gap-3 p-5 [touch-action:manipulation]`}
-    >
+  const kropp = (
+    <>
       {navn || verdi != null ? (
         <div className="flex items-center justify-between gap-3">
           {navn ? <p className="text-title text-fg">{navn}</p> : null}
@@ -58,7 +76,150 @@ export function PulseKort({
       ) : null}
       {meta ? <p className="text-[12px] text-fg-muted leading-snug">{meta}</p> : null}
       {children}
+    </>
+  );
+  if (actions) {
+    return (
+      <div
+        data-pulse-kort={navn ?? 'hero'}
+        data-verkstedet-hero={variant === 'hero' ? '' : undefined}
+        className={`${fyll} relative flex min-h-11 w-full flex-col gap-3 p-5`}
+      >
+        <div
+          data-pulse-hero-ikoner
+          className="absolute top-4 right-4 z-10 flex items-center gap-1.5"
+        >
+          {actions}
+        </div>
+        <Link
+          href={href as Route}
+          className="flex min-w-0 flex-col gap-3 [touch-action:manipulation]"
+        >
+          {kropp}
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <Link
+      href={href as Route}
+      data-pulse-kort={navn ?? 'hero'}
+      data-verkstedet-hero={variant === 'hero' ? '' : undefined}
+      className={`${fyll} flex min-h-11 w-full flex-col gap-3 p-5 [touch-action:manipulation]`}
+    >
+      {kropp}
     </Link>
+  );
+}
+
+function PulseIkonLenke({
+  href,
+  label,
+  ikon: Ikon,
+}: {
+  href: string;
+  label: string;
+  ikon: LucideIcon;
+}) {
+  return (
+    <Link
+      href={href as Route}
+      aria-label={label}
+      data-pulse-ikon={label}
+      className="flex size-9 items-center justify-center rounded-[12px] text-[#141414] shadow-none ring-1 ring-divide [touch-action:manipulation]"
+      style={{ backgroundColor: WHITE }}
+    >
+      <Ikon size={18} strokeWidth={1.75} aria-hidden />
+    </Link>
+  );
+}
+
+/** Avvik + Forespørsel — øvre høyre hjørne på uke-kortet. */
+export function PulseHeroIkoner() {
+  return (
+    <>
+      <PulseIkonLenke href={PULSE_AVVIK_HREF} label="Avvik" ikon={TriangleAlert} />
+      <PulseIkonLenke href={PULSE_FORESPORSEL_HREF} label="Forespørsel" ikon={MessageSquare} />
+    </>
+  );
+}
+
+const SIRKEL_R = 46;
+const SIRKEL_C = 2 * Math.PI * SIRKEL_R;
+
+/**
+ * Dagsfremgang på uke-kortet. Ink-strek, canvas-fyll, 08–20 Oslo.
+ * shadcn Progress er lineær; Amicro-donut er dither — ingen av dem er denne ringen.
+ */
+export function PulseDagSirkel({
+  startHour = PULSE_DAG_START,
+  sluttHour = PULSE_DAG_SLUTT,
+}: {
+  startHour?: number;
+  sluttHour?: number;
+}) {
+  const [andel, setAndel] = useState(0);
+  const [naaLabel, setNaaLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    function tick() {
+      const d = dagFremgang(new Date(), startHour, sluttHour);
+      setAndel(d.andel);
+      setNaaLabel(d.naaLabel);
+    }
+    const raf = window.requestAnimationFrame(tick);
+    const id = window.setInterval(tick, 60_000);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.clearInterval(id);
+    };
+  }, [startHour, sluttHour]);
+
+  const startLabel = fmtPulseKlokke(startHour);
+  const sluttLabel = fmtPulseKlokke(sluttHour);
+
+  return (
+    <div data-pulse-dag-sirkel className="flex flex-col items-center gap-2 pt-1">
+      <svg
+        viewBox="0 0 120 120"
+        className="size-[148px]"
+        role="img"
+        aria-label={`Verksteddagen ${startLabel}–${sluttLabel}${naaLabel ? `, klokken ${naaLabel}` : ''}`}
+      >
+        <title>{`Verksteddagen ${startLabel}–${sluttLabel}`}</title>
+        <circle cx="60" cy="60" r={SIRKEL_R} fill="#ffffff" stroke="#e0e0e0" strokeWidth="6" />
+        <circle
+          cx="60"
+          cy="60"
+          r={SIRKEL_R}
+          fill="none"
+          stroke="#141414"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={SIRKEL_C}
+          strokeDashoffset={SIRKEL_C * (1 - andel)}
+          transform="rotate(-90 60 60)"
+          style={{ transition: `stroke-dashoffset 900ms ${EASE_OUT_CSS}` }}
+        />
+        {naaLabel ? (
+          <text
+            x="60"
+            y="65"
+            textAnchor="middle"
+            fill="#141414"
+            fontSize="13"
+            fontWeight="650"
+            fontFamily="inherit"
+          >
+            {naaLabel}
+          </text>
+        ) : null}
+      </svg>
+      <div className="flex w-[148px] justify-between text-[12px] text-fg-muted tabular-nums">
+        <span data-pulse-dag-start>{startLabel}</span>
+        <span data-pulse-dag-slutt>{sluttLabel}</span>
+      </div>
+    </div>
   );
 }
 
@@ -185,7 +346,7 @@ export function PulseJobbFlis() {
 }
 
 /**
- * Analyser — to deler over Innboks/Lager/Jobb.
+ * Analyser — to deler nederst i hjem-stakken (under Innboks/Lager/Jobb).
  * Del 1: tittel + Se tall. Del 2: dither-rutenett (nettsidevisninger, mock).
  */
 export function PulseAnalyserKort({ stats, href }: { stats: AnalyserMockStat[]; href: string }) {

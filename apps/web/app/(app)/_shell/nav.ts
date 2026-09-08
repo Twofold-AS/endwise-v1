@@ -853,6 +853,7 @@ export const PARKED_LABEL: Record<string, string> = {
   '/integrasjoner': 'Organisasjon · Integrasjoner',
   '/support': 'Hjelp',
   '/hjelp': 'Hjelp',
+  '/avvik': 'Avvik',
   '/jobber': 'Timeplan',
   '/rapporter': 'Statistikk',
   '/verkstedet': 'Verkstedet',

@@ -174,7 +174,8 @@ describe('telefon-toppbar og skjult sidebar', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).not.toMatch(/data-phone-sidebar-open/);
     expect(shell).not.toMatch(/PanelLeftOpen/);
-    expect(shell).not.toMatch(/TilbakePil/);
+    expect(shell).toMatch(/erSettingsSti/);
+    expect(shell).toMatch(/TilbakePil/);
     expect(shell).toMatch(/data-phone-search/);
     expect(shell).toMatch(/data-phone-profile/);
     expect(shell).toMatch(/data-phone-dest/);

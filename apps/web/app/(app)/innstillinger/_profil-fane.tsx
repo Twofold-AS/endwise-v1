@@ -7,10 +7,10 @@ import { type ReactNode, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { ByttEpostSkjema } from '../_shell/bytt-epost';
-import { VisningsnavnFelt } from '../_shell/profil-kort';
+import { KallenavnFelt, VisningsnavnFelt } from '../_shell/profil-kort';
 import { ToFaktorRad } from '../_shell/to-faktor-rad';
 
-type RadNokkel = 'navn' | 'epost' | 'passord' | 'autentikator' | null;
+type RadNokkel = 'navn' | 'kallenavn' | 'epost' | 'passord' | 'autentikator' | null;
 
 /**
  * F5-19 — Settings › Konto (Mikael 08.09).
@@ -28,6 +28,7 @@ export function ProfilFane() {
       : undefined;
 
   const navn = meg.data?.navn ?? me.data?.navn ?? '';
+  const kallenavn = meg.data?.kallenavn ?? '';
   const epost = meg.data?.epost ?? me.data?.epost ?? '';
 
   return (
@@ -58,6 +59,14 @@ export function ProfilFane() {
             onEndre={() => setApen(apen === 'navn' ? null : 'navn')}
           >
             <VisningsnavnFelt />
+          </KontoRad>
+          <KontoRad
+            label="Kallenavn"
+            verdi={kallenavn || '—'}
+            apen={apen === 'kallenavn'}
+            onEndre={() => setApen(apen === 'kallenavn' ? null : 'kallenavn')}
+          >
+            <KallenavnFelt />
           </KontoRad>
           <KontoRad
             label="E-post"

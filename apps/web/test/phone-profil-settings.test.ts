@@ -2,7 +2,17 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { PHONE_BAR2, PHONE_PROFIL_SIRKEL } from '../app/(app)/_shell/phone-chrome.ts';
+import {
+  PHONE_AVATAR_KLASSE,
+  PHONE_AVATAR_PX,
+  PHONE_BAR2,
+  PHONE_BAR2_PY,
+  PHONE_PROFIL_MENY_BREDDE,
+  PHONE_PROFIL_MENY_TOPP,
+  PHONE_PROFIL_SIRKEL,
+  PHONE_RONNY_SIRKEL,
+  ronnySizeForSirkel,
+} from '../app/(app)/_shell/phone-chrome.ts';
 import { slaaSammenSok } from '../app/(app)/_shell/phone-sok.ts';
 import { FANER, innstillingerHref, parseFane } from '../app/(app)/innstillinger/_faner.ts';
 
@@ -53,19 +63,53 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(sider[0]?.kategori).toBe('Sider');
   });
 
-  it('profilmeny er Mobbin-struktur på norsk med blå Oppgrader-CTA', () => {
+  it('Ronny og profil deler samme 28px size-7-sirkel; Ronny fyller disken', () => {
+    expect(PHONE_AVATAR_PX).toBe(28);
+    expect(PHONE_AVATAR_KLASSE).toMatch(/size-7/);
+    expect(PHONE_RONNY_SIRKEL).toContain(PHONE_AVATAR_KLASSE);
+    expect(PHONE_PROFIL_SIRKEL).toContain(PHONE_AVATAR_KLASSE);
+    expect(ronnySizeForSirkel(PHONE_AVATAR_PX)).toBe(44);
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    expect(shell).toMatch(/PHONE_RONNY_SIRKEL/);
+    expect(shell).toMatch(/PHONE_PROFIL_SIRKEL/);
+    expect(shell).toMatch(/ronnySizeForSirkel\(PHONE_AVATAR_PX\)/);
+    expect(shell.match(/PHONE_RONNY_SIRKEL/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(shell.match(/PHONE_PROFIL_SIRKEL/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('profilmeny er smalere Mobbin-struktur med Modus-segment og vilkår-tykkelse', () => {
     const meny = utenKommentarer(les('../app/(app)/_shell/phone-profil-meny.tsx'));
+    const tema = utenKommentarer(les('../app/(app)/_shell/phone-tema-rad.tsx'));
     expect(meny).toMatch(/data-phone-profil-meny/);
     expect(meny).toMatch(/Oppgrader abonnement/);
     expect(meny).toMatch(/#0066ff/);
     expect(meny).toMatch(/Forespørsel/);
     expect(meny).toMatch(/Innstillinger/);
-    expect(meny).toMatch(/PhoneTemaRad|Theme/);
+    expect(meny).toMatch(/PhoneTemaRad/);
+    expect(meny).toMatch(/PHONE_PROFIL_MENY_BREDDE|260px/);
+    expect(meny).toMatch(/PHONE_PROFIL_MENY_TOPP|mt-2\.5/);
+    expect(meny).not.toMatch(/320px/);
+    expect(meny).not.toMatch(/top-full right-3[\s\S]*mt-1/);
+    expect(meny).toMatch(/data-phone-profil-modus-over/);
+    expect(meny).toMatch(/data-phone-profil-modus-under/);
+    expect(meny).toMatch(/data-phone-profil-vilkar-skille/);
+    expect(meny).toMatch(/data-phone-profil-vilkar/);
+    expect(meny).toMatch(/text-\[14px\]/);
+    expect(meny).toMatch(/font-\[550\]/);
     expect(meny).toMatch(/Veikart/);
     expect(meny).toMatch(/Oppdateringer/);
     expect(meny).toMatch(/Logg ut/);
     expect(meny).toMatch(/Vilkår/);
     expect(meny).not.toMatch(/data-ronny-sheet/);
+    expect(tema).toMatch(/>Modus</);
+    expect(tema).not.toMatch(/>Theme</);
+    expect(tema).toMatch(/data-phone-modus-segment/);
+    expect(tema).toMatch(/data-modus-sirkel/);
+    expect(tema).toMatch(/border border-fg/);
+    expect(PHONE_PROFIL_MENY_BREDDE).toMatch(/260px/);
+    expect(PHONE_PROFIL_MENY_TOPP).toBe('top-full mt-2.5');
+    expect(PHONE_BAR2).toContain(PHONE_BAR2_PY);
+    expect(PHONE_BAR2_PY).toBe('py-2.5');
   });
 
   it('settings-chrome: tilbake med hale, Konto først, underline på aktiv', () => {

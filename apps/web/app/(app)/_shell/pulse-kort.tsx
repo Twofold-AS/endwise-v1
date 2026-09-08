@@ -1,14 +1,13 @@
 'use client';
 
-import { Badge, DitherGrowthChart, type LucideIcon } from '@endwise/ui';
+import { Badge, type LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { type ReactNode, useLayoutEffect, useRef } from 'react';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL } from './phone-home';
 import { maanedSparkSerie } from './phone-home-pulse';
 
 const INK = '#141414';
-const WHITE = '#ffffff';
 
 /**
  * Operativt pulse-kort på forhandler-hjem.
@@ -238,34 +237,84 @@ export function PulseLinjeKort({
 
 const MAANED_BOBLE_PX = 72;
 
-/** Mini Amicro-dither-boble: denne måneden vs forrige. Tall i klartekst under. */
+/** Amicro DitherGrowthChart-algoritme på låst bitmap.
+ * DitherGrowthChart sin rAF/RO-sti maler ikke i 72px-boblen (canvas blir 300×150, 0 piksler).
+ */
+function malMaanedDither(
+  ctx: CanvasRenderingContext2D,
+  values: number[],
+  size: number,
+  dpr: number,
+) {
+  const data = values.length > 0 ? values : [0];
+  const maxVal = Math.max(1, ...data);
+  const cell = 6;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, size, size);
+  for (let x = 0; x < size; x += cell) {
+    const t = x / Math.max(1, size - 1);
+    const exactIdx = t * (data.length - 1);
+    const i0 = Math.floor(exactIdx);
+    const i1 = Math.min(i0 + 1, data.length - 1);
+    const frac = exactIdx - i0;
+    const val = (data[i0] ?? 0) + ((data[i1] ?? 0) - (data[i0] ?? 0)) * frac;
+    const curveY = size - size * 0.9 * (val / maxVal);
+    for (let y = size; y >= 0; y -= cell) {
+      if (y < curveY) continue;
+      ctx.fillStyle = INK;
+      ctx.globalAlpha = 1;
+      ctx.fillRect(x, y - cell, cell - 1, cell - 1);
+    }
+  }
+}
+
+function PulseMaanedDither({ forrige, denne }: { forrige: number; denne: number }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useLayoutEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(MAANED_BOBLE_PX * dpr);
+    canvas.height = Math.round(MAANED_BOBLE_PX * dpr);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    malMaanedDither(ctx, maanedSparkSerie(forrige, denne), MAANED_BOBLE_PX, dpr);
+  }, [denne, forrige]);
+  return (
+    <canvas
+      ref={ref}
+      data-pulse-maaned-canvas
+      data-pulse-amicro="DitherGrowthChart"
+      width={MAANED_BOBLE_PX * 2}
+      height={MAANED_BOBLE_PX * 2}
+      style={{ width: MAANED_BOBLE_PX, height: MAANED_BOBLE_PX, display: 'block' }}
+      aria-hidden
+    />
+  );
+}
+
+/** Mini Amicro-dither-boble: denne måneden vs forrige. Tall i klartekst under.
+ * Alltid hvit flate + ink-dither (samme språk som ikon-sirkelen).
+ */
 export function PulseMaanedBoble({
   denne,
   forrige,
-  mork,
+  mork: _mork = false,
 }: {
   denne: number;
   forrige: number;
-  mork: boolean;
+  mork?: boolean;
 }) {
-  const denneFarge = mork ? WHITE : INK;
   return (
     <div data-pulse-maaned-boble className="flex shrink-0 flex-col items-center gap-1">
       <p className="sr-only">
         {denne} bookinger denne måneden, {forrige} forrige
       </p>
       <div
-        className="relative shrink-0 overflow-hidden rounded-full bg-bg ring-1 ring-divide"
+        className="relative shrink-0 overflow-hidden rounded-full bg-white ring-1 ring-divide"
         style={{ width: MAANED_BOBLE_PX, height: MAANED_BOBLE_PX }}
       >
-        <DitherGrowthChart
-          compact
-          width={MAANED_BOBLE_PX}
-          height={MAANED_BOBLE_PX}
-          values={maanedSparkSerie(forrige, denne)}
-          labels={['Forrige', '', '', 'Denne']}
-          color={denneFarge}
-        />
+        <PulseMaanedDither forrige={forrige} denne={denne} />
       </div>
       <p className="text-[11px] leading-none text-fg-muted tabular-nums">
         {denne}

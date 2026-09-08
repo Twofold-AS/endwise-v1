@@ -10,6 +10,7 @@ export {
 export {
   DitherGrowthChart,
   type DitherGrowthChartProps,
+  paintDitherGrowth,
 } from '../vendor/amicro/dither-growth.tsx';
 export {
   type DitherRevenueSeries,

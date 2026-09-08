@@ -22,6 +22,7 @@ export {
   type DitherStackedBand,
   DitherStackedChart,
   type DitherStackedRow,
+  paintDitherGrowth,
   RevenueLineChart,
 } from './components/amicro.ts';
 // Endwise-primitiver (F0-12)

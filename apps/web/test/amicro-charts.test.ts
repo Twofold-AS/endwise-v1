@@ -28,6 +28,7 @@ describe('Amicro dither charts på Rapporter', () => {
     const setup = les('../../../packages/ui/src/vendor/amicro/use-canvas-setup.ts');
     expect(growth).toMatch(/width\?: number/);
     expect(growth).toMatch(/useCanvasSetup\(locked\)/);
+    expect(growth).toMatch(/export function paintDitherGrowth/);
     expect(setup).toMatch(/useLayoutEffect/);
     expect(setup).toMatch(/initial\?: CanvasRect/);
   });

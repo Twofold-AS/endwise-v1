@@ -1,9 +1,77 @@
 'use client';
 
 import { motion, useSpring, useTransform } from 'motion/react';
-import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type PointerEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { clamp, smoothstep } from './dither-math.ts';
 import { useCanvasSetup } from './use-canvas-setup.ts';
+
+export function paintDitherGrowth(
+  ctx: CanvasRenderingContext2D,
+  opts: {
+    width: number;
+    height: number;
+    data: number[];
+    color: string;
+    dpr?: number;
+    time?: number;
+    reducedMotion?: boolean;
+    pointer?: { x: number; y: number; active: boolean };
+  },
+) {
+  const w = opts.width;
+  const h = opts.height;
+  const dpr = opts.dpr ?? 1;
+  const data = opts.data.length > 0 ? opts.data : [0];
+  const curMax = Math.max(1, ...data);
+  const tiny = w < 100 || h < 100;
+  const cell = Math.max(tiny ? 6 : 3, Math.round(w / 180));
+  const t2 = opts.time ?? 0;
+  const px = opts.pointer?.x ?? -100;
+  const py = opts.pointer?.y ?? -100;
+  const isActive = opts.pointer?.active ?? false;
+  const reducedMotion = opts.reducedMotion ?? true;
+
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.scale(dpr, dpr);
+
+  for (let x = 0; x < w; x += cell) {
+    const t = x / w;
+    const exactIdx = t * (data.length - 1);
+    const i0 = Math.floor(exactIdx);
+    const i1 = Math.min(i0 + 1, data.length - 1);
+    const frac = exactIdx - i0;
+    const val = (data[i0] ?? 0) + ((data[i1] ?? 0) - (data[i0] ?? 0)) * frac;
+    const headroom = (tiny ? 0.08 : 0.16) * h;
+    const plotH = h - headroom;
+    const curveY = h - plotH * (val / curMax);
+
+    for (let y = h; y >= 0; y -= cell) {
+      if (!tiny) {
+        ctx.fillStyle = 'rgba(28, 29, 31, 0.04)';
+        ctx.fillRect(x + 1, y + 1, cell - 1, cell - 1);
+      }
+      if (y < curveY) continue;
+
+      const dx = x - px;
+      const dy = y - py;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      let glow = 0;
+      if (isActive && !reducedMotion) {
+        glow = 1 - smoothstep(0, h * 0.35, dist);
+      }
+      const shimmer = reducedMotion ? 0 : Math.sin(y * 0.1 - t2 * 2) * 0.07;
+      ctx.fillStyle = opts.color;
+      const sz = cell * ((tiny ? 0.92 : 0.7) + shimmer + glow * 0.3);
+      ctx.globalAlpha = (tiny ? 1 : 0.6) + glow * 0.4;
+      const offset = (cell - sz) / 2;
+      ctx.fillRect(x + offset, y + offset, sz, sz);
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.restore();
+}
 
 export type DitherGrowthChartProps = {
   theme?: 'dark' | 'light';
@@ -54,6 +122,25 @@ export function DitherGrowthChart({
   const targetMaxRef = useRef(maxVal);
   const morphStartTimeRef = useRef(0);
 
+  useLayoutEffect(() => {
+    if (!locked) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(locked.width * dpr);
+    canvas.height = Math.round(locked.height * dpr);
+    paintDitherGrowth(ctx, {
+      width: locked.width,
+      height: locked.height,
+      data,
+      color,
+      dpr,
+      reducedMotion: true,
+    });
+  }, [canvasRef, color, data, locked?.height, locked?.width]);
+
   useEffect(() => {
     const old = targetDataRef.current;
     fromMaxRef.current = targetMaxRef.current;
@@ -95,59 +182,29 @@ export function DitherGrowthChart({
 
       timeRef.current += reducedMotion ? 0 : 0.03;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const tiny = w < 100 || h < 100;
-      const cell = Math.max(tiny ? 5 : 3, Math.round(w / 180));
-      ctx.save();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.scale(dpr, dpr);
 
       let prog = 1;
       if (!reducedMotion && morphStartTimeRef.current > 0) {
         prog = Math.min(1, (performance.now() - morphStartTimeRef.current) / 460);
       }
-      const curMax = fromMaxRef.current + (targetMaxRef.current - fromMaxRef.current) * prog;
       const curData = targetDataRef.current.map(
         (v, i) => (fromDataRef.current[i] ?? 0) + (v - (fromDataRef.current[i] ?? 0)) * prog,
       );
 
-      const px = pointerPosRef.current.x;
-      const py = pointerPosRef.current.y;
-      const isActive = pointerActiveRef.current;
-      const t2 = timeRef.current;
-
-      for (let x = 0; x < w; x += cell) {
-        const t = x / w;
-        const exactIdx = t * (curData.length - 1);
-        const i0 = Math.floor(exactIdx);
-        const i1 = Math.min(i0 + 1, curData.length - 1);
-        const frac = exactIdx - i0;
-        const val = (curData[i0] ?? 0) + ((curData[i1] ?? 0) - (curData[i0] ?? 0)) * frac;
-        const headroom = 0.16 * h;
-        const plotH = h - headroom;
-        const curveY = h - plotH * (val / curMax);
-
-        for (let y = h; y >= 0; y -= cell) {
-          ctx.fillStyle = 'rgba(28, 29, 31, 0.04)';
-          ctx.fillRect(x + 1, y + 1, cell - 1, cell - 1);
-          if (y < curveY) continue;
-
-          const dx = x - px;
-          const dy = y - py;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          let glow = 0;
-          if (isActive && !reducedMotion) {
-            glow = 1 - smoothstep(0, h * 0.35, dist);
-          }
-          const shimmer = reducedMotion ? 0 : Math.sin(y * 0.1 - t2 * 2) * 0.07;
-          ctx.fillStyle = color;
-          const sz = cell * ((tiny ? 0.82 : 0.7) + shimmer + glow * 0.3);
-          ctx.globalAlpha = (tiny ? 0.88 : 0.6) + glow * 0.4;
-          const offset = (cell - sz) / 2;
-          ctx.fillRect(x + offset, y + offset, sz, sz);
-          ctx.globalAlpha = 1;
-        }
-      }
-      ctx.restore();
+      paintDitherGrowth(ctx, {
+        width: w,
+        height: h,
+        data: curData.length > 0 ? curData : [0],
+        color,
+        dpr,
+        time: timeRef.current,
+        reducedMotion,
+        pointer: {
+          x: pointerPosRef.current.x,
+          y: pointerPosRef.current.y,
+          active: pointerActiveRef.current,
+        },
+      });
       requestRef.current = requestAnimationFrame(draw);
     };
 

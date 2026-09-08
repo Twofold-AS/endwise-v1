@@ -224,8 +224,10 @@ describe('forhandler pulse-hjem v2 — I dag + linjekort', () => {
     expect(kort).toMatch(/bg-success/);
     expect(kort).toMatch(/bg-danger/);
     expect(kort).toMatch(/DitherGrowthChart/);
-    expect(kort).toMatch(/width=\{MAANED_BOBLE_PX\}|width=\{72\}/);
+    expect(kort).toMatch(/malMaanedDither|data-pulse-maaned-canvas/);
+    expect(kort).toMatch(/MAANED_BOBLE_PX/);
     expect(kort).toMatch(/maanedSparkSerie/);
+    expect(kort).toMatch(/bg-white/);
     expect(HJEM_KORT_TOM.lagerVenter).toBe('Trenger godkjenning');
     expect(HJEM_KORT_TOM.jobb).toBe('Jobb');
     expect(PHONE_KORT_META.jobb.href).toBe('/bookinger/ny');

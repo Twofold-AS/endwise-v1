@@ -49,4 +49,22 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(prompt).toMatch(/FELT_SM/);
     expect(auth).toMatch(/FELT_LG/);
   });
+
+  it('profilmeny-hårlinjer bruker .ew-haarlinje (border-strong, synlig i mørkt)', () => {
+    const tema = les('../../../packages/ui/src/theme.css');
+    const meny = les('../app/(app)/_shell/phone-profil-meny.tsx');
+    expect(tema).toMatch(/\.ew-haarlinje\s*\{/);
+    expect(tema).toMatch(/border-top:\s*1px solid var\(--ew-border-strong\)/);
+    expect(meny).toMatch(/ew-haarlinje/);
+    expect(meny).not.toMatch(/h-px bg-border/);
+  });
+
+  it('visuell GO-side monterer ekte Ronny, profilmeny og PromptInput', () => {
+    const go = les('../app/__go/mikael/page.tsx');
+    expect(go).toMatch(/RonnyBot/);
+    expect(go).toMatch(/PhoneProfilMeny/);
+    expect(go).toMatch(/PromptInput/);
+    expect(go).toMatch(/bg-surface text-fg/);
+    expect(go).toMatch(/ew-felt ew-felt-sm/);
+  });
 });

@@ -206,6 +206,20 @@
 }
 
 /*
+ * Synlig hårlinje på surface/card.
+ * `--ew-border` er lik `--ew-surface` i mørkt (#262626) — `bg-border` forsvinner.
+ * `--ew-border-strong` er #e0e0e0 lyst / #3d3d3d mørkt. `border-top` overlever
+ * subpiksel (h-px + bakgrunn kan kollapse).
+ */
+.ew-haarlinje {
+  display: block;
+  height: 0;
+  flex-shrink: 0;
+  border: 0;
+  border-top: 1px solid var(--ew-border-strong);
+}
+
+/*
  * Logoen i sidebarens merkeboks. Boksen er alltid svart — i begge temaer — så
  * logoen skal alltid være hvit. Derfor en egen klasse og ikke `.logo-invert`,
  * som er tema-betinget. Kilden `logo.svg` er svart (F5-21); dette snur den.

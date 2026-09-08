@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-08 — F5-13 profilmeny-hårlinje + vilkår (Mikael oppfølging)
+
+**Type:** telefon-profilmeny polish. Ingen techstack-endring. Ingen ny UI-pakke.
+**Godkjent av:** Mikael follow-up på samme CODE-GO-gren.
+**Endring:** **F5-13** `progress`. `.ew-haarlinje` på `--ew-border-strong` (synlig over/under Modus og over Vilkår i mørkt). Vilkår 16/650. Ronny-tema + `.ew-felt` uendret. ⛔ #114/#119. Draft, ikke merge.
+
+---
+
 ## 2026-09-08 — F5-13/F5-10 Ronny-tema + standardfelt (Mikael CODE-GO)
 
 **Type:** chrome + designsystem-polish. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

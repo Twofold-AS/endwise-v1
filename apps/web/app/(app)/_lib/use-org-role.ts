@@ -25,6 +25,7 @@ export function useOrgRole(): {
    * Ikke Better-Auth-sesjonen. Se `routers/session.ts`.
    */
   navn: string | null;
+  epost: string | null;
   role: OrgRole | null;
   tenantName: string | null;
   tenantKind: 'live' | 'demo' | 'platform';
@@ -86,6 +87,7 @@ export function useOrgRole(): {
   return {
     userId: me.data?.userId ?? null,
     navn: me.data?.internNavn || me.data?.navn || null,
+    epost: me.data?.epost ?? null,
     role,
     tenantName: me.data?.tenantName ?? null,
     tenantKind: (me.data?.tenantKind as 'live' | 'demo' | 'platform' | undefined) ?? 'live',

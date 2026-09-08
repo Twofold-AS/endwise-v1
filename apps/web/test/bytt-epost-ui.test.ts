@@ -15,10 +15,12 @@ function les(rel: string) {
 }
 
 describe('F1-27: e-postbytte er to steg i UI-et', () => {
-  it('profil-fanen har ByttEpostSkjema og leser e-post readOnly', () => {
+  it('profil-fanen har ByttEpostSkjema; gjeldende e-post er ikke et skrivbart felt i fanen', () => {
     const fane = les('../app/(app)/innstillinger/_profil-fane.tsx');
+    const skjema = les('../app/(app)/_shell/bytt-epost.tsx');
     expect(fane).toMatch(/ByttEpostSkjema/);
-    expect(fane).toMatch(/readOnly/);
+    expect(fane).not.toMatch(/type=['"]email['"]/);
+    expect(skjema).toMatch(/readOnly|changeEmail/);
     expect(fane).not.toMatch(/authClient\.updateUser/);
     expect(fane).not.toMatch(/set\(\s*\{\s*email/);
   });

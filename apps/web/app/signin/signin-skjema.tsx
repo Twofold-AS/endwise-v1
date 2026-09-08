@@ -29,6 +29,7 @@ import {
   SIGNIN_KODE_INGRESS,
   SIGNIN_STI,
   SIGNIN_TITTEL,
+  SIGNIN_TOTP_TITTEL,
   SIGNIN_VALG_STI,
   SIGNIN_VILKAR,
   SIGNIN_VILKAR_STI,
@@ -220,7 +221,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     window.location.assign(SIGNIN_STI);
   }
 
-  const tittel = flate === 'totp' ? 'Bekreft med autentikator' : SIGNIN_TITTEL;
+  const tittel = flate === 'totp' ? SIGNIN_TOTP_TITTEL : SIGNIN_TITTEL;
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-bg px-4 pb-[14vh] text-fg">

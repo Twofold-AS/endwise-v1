@@ -22,6 +22,7 @@
     "./profil": "./src/profil/index.ts",
     "./invitasjoner": "./src/invitasjoner/index.ts",
     "./plattform": "./src/plattform/index.ts",
+    "./sok": "./src/sok/index.ts",
     "./tid": "./src/tid.ts"
   },
   "scripts": {

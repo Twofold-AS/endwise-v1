@@ -10,5 +10,6 @@ export * from './notifications/index.ts';
 export * from './plattform/index.ts';
 export * from './quick/index.ts';
 export * from './retention/index.ts';
+export * from './sok/index.ts';
 export * from './stream/index.ts';
 export * from './vegvesen/index.ts';

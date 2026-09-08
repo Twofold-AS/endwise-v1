@@ -64,18 +64,18 @@ describe('Mikael telefon-chrome — mindre søk/avatar + søk-overlay (07.09 kve
     expect(lang).toHaveLength(PHONE_SOK_MAX);
   });
 
-  it('søk-overlay: Avbryt, nylige, dest-ikoner, store dest-knapper — Mobbin uten blå CTA', () => {
+  it('søk-overlay: Avbryt, nylige, kategoriserte treff — uten dest-ikonstripe', () => {
     const overlay = utenKommentarer(les('../app/(app)/_shell/phone-sok-overlay.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/data-phone-search-overlay|PhoneSokOverlay/);
     expect(overlay).toMatch(/data-phone-search-overlay/);
     expect(overlay).toMatch(/Avbryt/);
     expect(overlay).toMatch(/data-phone-sok-nylig/);
-    expect(overlay).toMatch(/data-phone-sok-dest-ikon/);
-    expect(overlay).toMatch(/data-phone-sok-dest-rad/);
+    expect(overlay).not.toMatch(/data-phone-sok-dest-ikon/);
+    expect(overlay).not.toMatch(/data-phone-sok-dest-rad/);
+    expect(overlay).toMatch(/data-phone-sok-gruppe/);
     expect(overlay).toMatch(/bg-inset|f0f0f0/);
-    expect(overlay).toMatch(/velg\(item\.href/);
-    expect(overlay).not.toMatch(/#0066ff|bg-primary|accent-pip|border-l-/);
+    expect(overlay).not.toMatch(/accent-pip|border-l-/);
     expect(
       destinasjonerForShell({ shell: 'forhandler', role: null, shopEnabled: false }).length,
     ).toBeGreaterThan(4);

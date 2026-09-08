@@ -52,10 +52,11 @@ describe('Telefon top-bar 1 — merke, søk, Ronny, profil', () => {
   it('telefon: logo først, deretter søk, Ronny, profil — uten sidebar-toggle', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).not.toMatch(/data-phone-sidebar-open/);
-    const logo = shell.indexOf('data-shell-logo');
-    const sok = shell.indexOf('data-phone-search');
-    const ronny = shell.indexOf('data-ronny-avatar');
-    const profil = shell.indexOf('data-phone-profile');
+    const hjem = shell.slice(shell.indexOf('data-shell-logo'));
+    const logo = hjem.indexOf('data-shell-logo');
+    const sok = hjem.indexOf('data-phone-search');
+    const ronny = hjem.indexOf('data-ronny-avatar');
+    const profil = hjem.indexOf('data-phone-profile');
     expect(logo).toBeGreaterThan(-1);
     expect(sok).toBeGreaterThan(logo);
     expect(ronny).toBeGreaterThan(sok);
@@ -115,10 +116,11 @@ describe('Tilbake er bare pil-SVG', () => {
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
   });
 
-  it('tråd-chrome bruker TilbakePil uten synlig Tilbake-tekst; telefon-chrome har den ikke', () => {
+  it('tråd-chrome bruker TilbakePil uten synlig Tilbake-tekst; telefon kun på Settings', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-    expect(shell).not.toMatch(/<TilbakePil/);
+    expect(shell).toMatch(/erSettingsSti/);
+    expect(shell).toMatch(/<TilbakePil/);
     expect(shell).not.toMatch(/>Tilbake</);
     expect(seksjon).toMatch(/<TilbakePil/);
     expect(seksjon).not.toMatch(/>Tilbake</);

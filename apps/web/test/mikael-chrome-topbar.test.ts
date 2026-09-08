@@ -16,11 +16,12 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
-  it('TilbakePil er SVG uten ordet Tilbake — ikke i telefon-chrome', () => {
+  it('TilbakePil er SVG uten ordet Tilbake — kun Settings-chrome', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
-    expect(shell).not.toMatch(/data-shell-tilbake/);
-    expect(shell).not.toMatch(/TilbakePil/);
+    expect(shell).toMatch(/erSettingsSti/);
+    expect(shell).toMatch(/data-shell-tilbake/);
+    expect(shell).toMatch(/TilbakePil/);
     expect(pil).toMatch(/<svg/);
     expect(pil).not.toMatch(/>Tilbake</);
     expect(pil).not.toMatch(/lucide|ChevronLeft/);

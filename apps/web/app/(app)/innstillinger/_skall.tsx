@@ -11,7 +11,7 @@ import { ProfilFane } from './_profil-fane';
 import { VarslerInnhold } from './varsler/_innhold';
 
 /**
- * Innstillinger: Profil + Varsler. Ingen Abonnement/Koblinger/Tjenester her.
+ * Innstillinger: Konto + Varsler. Telefon-faner bor i PhoneShell top-bar 2.
  */
 export function InnstillingerSkall({ startFane }: { startFane?: FaneId }) {
   return (
@@ -33,16 +33,16 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
   const def = faner.find((f) => f.id === aktiv) ?? faner[0];
 
   return (
-    <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
-      <div>
+    <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-4 py-6 md:px-8 md:py-7">
+      <div className="hidden md:block">
         <h1 className="text-title text-fg">Innstillinger</h1>
         <p className="text-body text-fg-muted">
-          Profil og varsler. Organisasjon ligger i sidebaren.
+          Konto og varsler. Organisasjon ligger i sidebaren.
         </p>
       </div>
 
       {faner.length > 1 && (
-        <div role="tablist" aria-label="Innstillinger" className="flex flex-wrap gap-1.5">
+        <div role="tablist" aria-label="Innstillinger" className="hidden flex-wrap gap-5 md:flex">
           {faner.map((f) => {
             const valgt = f.id === aktiv;
             return (
@@ -52,8 +52,8 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
                 role="tab"
                 aria-selected={valgt}
                 scroll={false}
-                className={`inline-flex h-control items-center rounded-control px-2.5 text-label transition-colors ${
-                  valgt ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+                className={`inline-flex items-center border-b-2 pb-1 text-label ${
+                  valgt ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
                 }`}
               >
                 {f.label}
@@ -63,9 +63,9 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
         </div>
       )}
 
-      <section role="tabpanel" aria-label={def?.label ?? 'Profil'} className="flex flex-col gap-5">
-        <div>
-          <h2 className="text-title text-fg">{def?.label ?? 'Profil'}</h2>
+      <section role="tabpanel" aria-label={def?.label ?? 'Konto'} className="flex flex-col gap-5">
+        <div className="hidden md:block">
+          <h2 className="text-title text-fg">{def?.label ?? 'Konto'}</h2>
           <p className="text-body text-fg-muted">{def?.ingress}</p>
         </div>
         <FaneInnhold fane={aktiv} />

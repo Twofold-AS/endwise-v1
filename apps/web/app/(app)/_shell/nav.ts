@@ -304,7 +304,7 @@ export const SETTINGS_NAV: NavItem = {
   href: '/innstillinger/profil',
   roles: DRIFT,
   pills: [
-    { label: 'Profil', href: '/innstillinger/profil' },
+    { label: 'Konto', href: '/innstillinger/profil' },
     { label: 'Varsler', href: '/innstillinger/varsler' },
   ],
 };
@@ -724,7 +724,7 @@ export function erSettingsSti(pathname: string): boolean {
 }
 
 const SETTINGS_CRUMB: Record<string, string> = {
-  '/innstillinger/profil': 'Profil',
+  '/innstillinger/profil': 'Konto',
   '/innstillinger/varsler': 'Varsler',
 };
 
@@ -846,7 +846,7 @@ export const PARKED_LABEL: Record<string, string> = {
   '/mekanikere/kompetanse': 'Organisasjon · Ansatte',
   '/mekanikere/kapasitet': 'Timeplan',
   '/tjenester': 'Organisasjon · Abonnement',
-  '/innstillinger/profil': 'Innstillinger · Profil',
+  '/innstillinger/profil': 'Innstillinger · Konto',
   '/innstillinger/varsler': 'Innstillinger · Varsler',
   '/innstillinger/tjenester': 'Organisasjon · Abonnement',
   '/abonnement': 'Organisasjon · Abonnement',

@@ -156,8 +156,8 @@ describe('P0: profil uten ansiktsvelger', () => {
 
   it('profil viser bloub, ikke velger', () => {
     expect(profil).not.toMatch(/AvatarVelger/);
-    expect(profil).toMatch(/bevegelse="alltid"/);
-    expect(profil).toMatch(/size=\{56\}/);
+    expect(profil).toMatch(/bevegelse="stille"/);
+    expect(profil).toMatch(/size=\{88\}/);
   });
 
   it('sidebar har ingen avatar og tvinger ikke happy', () => {

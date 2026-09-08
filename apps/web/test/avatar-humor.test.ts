@@ -14,8 +14,8 @@ describe('Avatar-velgeren er borte', () => {
     const profil = les('../app/(app)/innstillinger/_profil-fane.tsx');
     expect(profil).not.toMatch(/AvatarVelger/);
     expect(profil).not.toMatch(/Ny tilfeldig/);
-    expect(profil).toMatch(/bevegelse="alltid"/);
-    expect(profil).toMatch(/Organisasjon/);
+    expect(profil).toMatch(/bevegelse="stille"/);
+    expect(profil).toMatch(/Personlige detaljer/);
   });
 
   it('sidebar har ingen avatar — profil-ansikt bor utenfor nav', () => {

@@ -95,7 +95,7 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
   it('Innstillinger er kun Profil + Varsler', () => {
     expect(SETTINGS_NAV.href).toBe('/innstillinger/profil');
     expect([...FANE_IDS]).toEqual(['profil', 'varsler']);
-    expect(FANER.map((f) => f.label)).toEqual(['Profil', 'Varsler']);
+    expect(FANER.map((f) => f.label)).toEqual(['Konto', 'Varsler']);
     expect(synligeFaner(true).map((f) => f.id)).toEqual(['profil', 'varsler']);
     expect(erSettingsSti('/abonnement')).toBe(false);
     expect(erSettingsSti('/innstillinger/koblinger')).toBe(false);
@@ -223,7 +223,8 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(shell).toMatch(/data-phone-search/);
     expect(shell).toMatch(/data-phone-dest/);
     expect(chrome).toMatch(/justify-between/);
-    expect(shell).not.toMatch(/data-shell-tilbake/);
+    expect(shell).toMatch(/erSettingsSti/);
+    expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/PHONE_SAFE_BUNN/);
     expect(shell).toMatch(/PhoneHScroll/);
     expect(shell).not.toMatch(/hamburger|\bMenu\b|Handlinger|QUICK_ACTIONS/i);

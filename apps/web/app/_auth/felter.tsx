@@ -9,9 +9,11 @@
  * Felt på lerret (`bg-bg`) — ikke kort-chrome.
  */
 
-/** Mobbin text-input: feltfyll, 16px radius, mer vertikal padding, ≥16px (iOS-zoom). */
+/** Mobbin text-input: feltfyll, 16px radius, mer vertikal padding, ≥16px (iOS-zoom).
+ * Fokus: 2px hvit kant rundt hele feltet. På lyst lerret følger en ink-ytrekant
+ * så den hvite ringen ikke forsvinner mot `#ffffff`. */
 export const INPUT =
-  'min-h-[52px] w-full rounded-[16px] border-2 border-transparent bg-inset px-4 py-3.5 text-[17px] font-[450] leading-[22px] text-fg outline-none placeholder:text-fg-muted focus:border-white focus-visible:border-white';
+  'min-h-[52px] w-full rounded-[16px] border-2 border-transparent bg-inset px-4 py-3.5 text-[17px] font-[450] leading-[22px] text-fg outline-none placeholder:text-fg-muted focus:border-white focus:shadow-[0_0_0_2px_#ffffff,0_0_0_4px_#141414] focus-visible:border-white focus-visible:shadow-[0_0_0_2px_#ffffff,0_0_0_4px_#141414] dark:focus:shadow-[0_0_0_2px_#ffffff] dark:focus-visible:shadow-[0_0_0_2px_#ffffff]';
 
 export function Field({
   id,

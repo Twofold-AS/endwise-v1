@@ -1,6 +1,7 @@
 'use client';
 
 import { Inbox, Package, Plus, Users } from '@endwise/ui';
+import { useEffect } from 'react';
 import { useTema } from '../_lib/tema-provider';
 import {
   PulseFooter,
@@ -15,7 +16,10 @@ import {
  * Ikke en produkt-rute.
  */
 export default function PulseV2Preview() {
-  const { los, veksle } = useTema();
+  const { los, sett, veksle } = useTema();
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has('mork')) sett('dark');
+  }, [sett]);
   return (
     <div className="min-h-dvh bg-bg text-fg">
       <div className="mx-auto flex w-full max-w-[520px] flex-col gap-5 px-3 py-5 md:max-w-[1120px] md:px-8 md:py-7">

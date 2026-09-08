@@ -1,13 +1,12 @@
 'use client';
 
-import { Badge, DitherDonutChart, type LucideIcon } from '@endwise/ui';
+import { Badge, DitherGrowthChart, type LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL } from './phone-home';
 
 const INK = '#141414';
-const FAINT = '#adadad';
 const WHITE = '#ffffff';
 
 /**
@@ -236,7 +235,7 @@ export function PulseLinjeKort({
   );
 }
 
-/** Mini Amicro-donut: denne måneden vs forrige. Tall i klartekst ved siden av. */
+/** Mini Amicro-dither-boble: denne måneden vs forrige. Tall i klartekst under. */
 export function PulseMaanedBoble({
   denne,
   forrige,
@@ -247,21 +246,22 @@ export function PulseMaanedBoble({
   mork: boolean;
 }) {
   const denneFarge = mork ? WHITE : INK;
-  const forrigeFarge = mork ? FAINT : FAINT;
   return (
     <div data-pulse-maaned-boble className="flex shrink-0 flex-col items-center gap-1">
       <p className="sr-only">
         {denne} bookinger denne måneden, {forrige} forrige
       </p>
-      <div className="relative size-16 shrink-0 overflow-hidden rounded-full bg-inset">
-        <div className="absolute inset-0 h-16 w-16">
-          <DitherDonutChart
+      <div
+        className="relative shrink-0 overflow-hidden rounded-full bg-bg ring-1 ring-divide"
+        style={{ width: 72, height: 72 }}
+      >
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <DitherGrowthChart
             compact
-            className="h-16 w-16"
-            slices={[
-              { name: 'Denne', value: Math.max(0, denne), color: denneFarge },
-              { name: 'Forrige', value: Math.max(0, forrige), color: forrigeFarge },
-            ]}
+            className="h-full w-full"
+            values={[Math.max(0, forrige), Math.max(0, denne)]}
+            labels={['Forrige', 'Denne']}
+            color={denneFarge}
           />
         </div>
       </div>

@@ -71,7 +71,7 @@ describe('forhandler pulse-hjem v2 — I dag + linjekort', () => {
     expect(hjem).toMatch(/Trenger godkjenning/);
     expect(hjem).toMatch(/Ansatte på jobb/);
     expect(hjem).toMatch(/tekst="Jobb"/);
-    expect(hjem).toMatch(/DitherDonutChart|PulseMaanedBoble/);
+    expect(hjem).toMatch(/PulseMaanedBoble/);
     expect(hjem).not.toMatch(/dither-kit|DitherGradient/);
     expect(hjem).not.toMatch(/For lite data/);
   });
@@ -221,7 +221,7 @@ describe('forhandler pulse-hjem v2 — I dag + linjekort', () => {
     expect(kort).toMatch(/bg-white/);
     expect(kort).toMatch(/bg-success/);
     expect(kort).toMatch(/bg-danger/);
-    expect(kort).toMatch(/DitherDonutChart/);
+    expect(kort).toMatch(/DitherGrowthChart/);
     expect(HJEM_KORT_TOM.lagerVenter).toBe('Trenger godkjenning');
     expect(HJEM_KORT_TOM.jobb).toBe('Jobb');
     expect(PHONE_KORT_META.jobb.href).toBe('/bookinger/ny');

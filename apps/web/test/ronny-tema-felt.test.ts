@@ -60,7 +60,7 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
   });
 
   it('visuell GO-side monterer ekte Ronny, profilmeny og PromptInput', () => {
-    const go = les('../app/__go/mikael/page.tsx');
+    const go = les('../app/visuell/mikael/page.tsx');
     expect(go).toMatch(/RonnyBot/);
     expect(go).toMatch(/PhoneProfilMeny/);
     expect(go).toMatch(/PromptInput/);

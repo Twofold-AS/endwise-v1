@@ -10,7 +10,7 @@ import {
   X,
 } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useLayoutEffect } from 'react';
 import { useTema } from '@/app/_lib/tema-provider';
 import {
   PHONE_AVATAR_PX,
@@ -43,7 +43,7 @@ function MikaelGoInnhold() {
   const temaParam = params?.get('tema');
   const vis = lesVis(params?.get('vis') ?? null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (temaParam === 'light' || temaParam === 'dark') sett(temaParam);
   }, [sett, temaParam]);
 

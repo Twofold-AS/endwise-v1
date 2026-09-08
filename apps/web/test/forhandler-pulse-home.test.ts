@@ -28,7 +28,6 @@ import {
   PULSE_PLAUSIBEL_INNBOKS_MELDINGER,
   plausibelSpark,
   siste7dSpark,
-  siste30dSpark,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));

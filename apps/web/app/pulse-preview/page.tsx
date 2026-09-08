@@ -3,7 +3,11 @@
 import { Inbox, Package, Users } from '@endwise/ui';
 import { useMemo } from 'react';
 import { useTema } from '../_lib/tema-provider';
-import { analyserMockStats, plausibelSpark, PULSE_UKE_TITTEL } from '../(app)/_shell/phone-home-pulse';
+import {
+  analyserMockStats,
+  PULSE_UKE_TITTEL,
+  plausibelSpark,
+} from '../(app)/_shell/phone-home-pulse';
 import {
   PulseAnalyserKort,
   PulseJobbFlis,

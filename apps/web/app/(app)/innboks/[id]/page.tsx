@@ -389,17 +389,12 @@ export default function TrådPage() {
         <div ref={bottomRef} />
       </div>
 
-      <PromptInput
-        onSubmit={onPrompt}
-        className="border-0 bg-transparent shadow-none"
-        aria-label="Svar i tråden"
-      >
+      <PromptInput onSubmit={onPrompt} aria-label="Svar i tråden">
         <PromptInputBody className="min-w-0 flex-1">
           <PromptInputTextarea
             placeholder="Skriv et svar …"
             maxLength={4000}
             disabled={post.isPending}
-            className="bg-transparent text-[16px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/45 md:text-label"
           />
         </PromptInputBody>
         <PromptInputFooter>

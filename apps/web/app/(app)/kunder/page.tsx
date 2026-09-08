@@ -87,7 +87,7 @@ function KunderInner() {
             onChange={(e) => setSok(e.target.value)}
             placeholder="Søk på navn, e-post eller telefon"
             aria-label="Søk i kunder"
-            className="h-control w-full rounded-control border border-border bg-bg pr-3 pl-8 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+            className="h-control w-full ew-felt ew-felt-md pr-3 pl-8"
           />
         </label>
 

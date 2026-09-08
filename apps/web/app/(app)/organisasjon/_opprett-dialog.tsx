@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@endwise/ui';
+import { Dialog, DialogContent, DialogDescription, DialogTitle, FELT_MD } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
@@ -25,8 +25,7 @@ function somFunksjon(verdi: string): Funksjon | null {
   return null;
 }
 
-const FELT =
-  'h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:bg-surface-2 disabled:text-fg-muted';
+const FELT = `${FELT_MD} disabled:bg-surface-2 disabled:text-fg-muted`;
 
 /**
  * Opprett ansatt som dialog. Gjenbruker invitasjon / team.opprett.

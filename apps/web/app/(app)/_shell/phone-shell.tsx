@@ -114,7 +114,6 @@ export function PhoneShell() {
               >
                 <RonnyBot
                   size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
-                  paper="var(--ew-bg)"
                   spin={spin}
                   idleSett={RONNY_PHONE_IDLE}
                 />
@@ -182,7 +181,7 @@ export function PhoneShell() {
                     onFocus={() => setSokApen(true)}
                     placeholder="Søk"
                     aria-label="Søk"
-                    className="h-8 w-full rounded-sm border-0 bg-inset pr-3 pl-9 text-label text-fg placeholder:text-fg-faint outline-none focus-visible:outline-2 focus-visible:outline-ring"
+                    className="ew-felt ew-felt-sm h-8 pr-3 pl-9 text-label"
                   />
                 </label>
               </form>
@@ -200,7 +199,6 @@ export function PhoneShell() {
               >
                 <RonnyBot
                   size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
-                  paper="var(--ew-bg)"
                   spin={spin}
                   idleSett={RONNY_PHONE_IDLE}
                 />

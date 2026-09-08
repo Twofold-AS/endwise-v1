@@ -216,7 +216,7 @@ export function AgentChat({
           onChange={(e) => setTekst(e.target.value)}
           placeholder="Beskriv problemet …"
           disabled={opptatt}
-          className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50"
+          className="h-control min-w-0 flex-1 ew-felt ew-felt-md px-3 disabled:opacity-50"
         />
         <button
           type="submit"

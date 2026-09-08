@@ -188,6 +188,7 @@ export { useBloubPapir } from './hooks/use-bloub-papir.ts';
 export * from './icons.ts';
 /** Kanoniske bevegelses-tokens (SPRING_PRESS, SPRING_SWAP, EASE_OUT …). Ikke funn opp egne. */
 export * from './lib/ease.ts';
+export { FELT, FELT_LG, FELT_MD, FELT_SM } from './lib/felt.ts';
 export { useHoverCapable } from './lib/hooks/use-hover-capable.ts';
 export { cn } from './lib/utils.ts';
 export { Btn, type BtnProps } from './primitives/btn.tsx';

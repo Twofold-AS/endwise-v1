@@ -56,7 +56,7 @@ function KjoretoyInner() {
             onChange={(e) => setSok(e.target.value)}
             placeholder="AB12345, understellsnr, Yamaha …"
             aria-label="Søk i kjøretøy"
-            className="h-control w-full rounded-control border border-border bg-bg pr-3 pl-8 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+            className="h-control w-full ew-felt ew-felt-md pr-3 pl-8"
           />
         </label>
 

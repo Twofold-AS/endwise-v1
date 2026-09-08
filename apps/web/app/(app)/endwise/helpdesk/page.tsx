@@ -161,7 +161,7 @@ export default function EndwiseHelpdeskPage() {
               onChange={(e) => setSkjema((s) => ({ ...s, title: e.target.value }))}
               maxLength={120}
               placeholder="Slik fungerer tjenestekatalogen"
-              className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+              className="h-control ew-felt ew-felt-md px-2.5"
             />
             {/* Eier ba eksplisitt om at overskriften også er den som vises i
                 slideren. Den står derfor ett sted og gjenbrukes — ikke to felt
@@ -184,7 +184,7 @@ export default function EndwiseHelpdeskPage() {
               rows={2}
               maxLength={240}
               placeholder="Én til to setninger. Vises i kortet og i lista."
-              className="rounded-control border border-border bg-bg px-2.5 py-2 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+              className="ew-felt ew-felt-md min-h-[4.5rem] py-2"
             />
           </label>
 
@@ -220,7 +220,7 @@ export default function EndwiseHelpdeskPage() {
               rows={10}
               maxLength={20_000}
               placeholder="Skriv i avsnitt. Én blank linje mellom hvert avsnitt."
-              className="rounded-control border border-border bg-bg px-2.5 py-2 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+              className="ew-felt ew-felt-md min-h-[4.5rem] py-2"
             />
             <span className="text-[12px] text-fg-muted">
               Ren tekst. Blank linje starter et nytt avsnitt — ingen formatering utover det.

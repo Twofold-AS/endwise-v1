@@ -79,7 +79,7 @@ export default function FramerAgentPage() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Skriv til Framer-agenten…"
-            className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border border-border bg-inset px-3 py-2 text-[13px] text-fg outline-none placeholder:text-fg-faint"
+            className="ew-felt ew-felt-md max-h-40 min-h-11 flex-1 resize-none py-2"
           />
           <BevelButton onClick={send}>Send</BevelButton>
         </form>

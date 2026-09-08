@@ -287,7 +287,7 @@ export default function JobbDetaljPage() {
                 onChange={(e) => setDeviationText(e.target.value)}
                 rows={3}
                 placeholder="Hva er avviket? (varsler selgeren)"
-                className="w-full resize-none rounded-md border border-border bg-bg p-2 text-fg text-sm"
+                className="ew-felt ew-felt-md min-h-[4.5rem] resize-none py-2"
               />
               <div className="flex gap-2">
                 <button

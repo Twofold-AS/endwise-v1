@@ -183,7 +183,7 @@ export function OpprettAnsatt() {
             onChange={(e) => setNavn(e.target.value)}
             maxLength={160}
             placeholder="Kari Mekaniker"
-            className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            className="h-control ew-felt ew-felt-md px-3"
           />
         </div>
 
@@ -197,7 +197,7 @@ export function OpprettAnsatt() {
             value={epost}
             onChange={(e) => setEpost(e.target.value)}
             placeholder="fornavn@verksted.no"
-            className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            className="h-control ew-felt ew-felt-md px-3"
           />
         </div>
 
@@ -240,7 +240,7 @@ export function OpprettAnsatt() {
                 inputMode="numeric"
                 value={kapasitet}
                 onChange={(e) => setKapasitet(e.target.value)}
-                className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                className="h-control ew-felt ew-felt-md px-3"
               />
             </label>
             <KompetanseVelger valgte={kompetanse} onEndre={setKompetanse} />

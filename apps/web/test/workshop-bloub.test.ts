@@ -64,15 +64,14 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).toMatch(/md:hidden/);
     expect(fab).not.toMatch(/data-workshop-strip/);
     expect(fab).not.toMatch(/<Grainient/);
-    expect(fab).toMatch(/rounded-\[18px\]/);
-    expect(fab).toMatch(/const RAMME_PX = 18/);
     expect(fab).toMatch(/cubic-bezier\(0\.32,\s*0\.72,\s*0,\s*1\)/);
     const bot = les('../app/(app)/_workshop/ronny-bot.tsx');
     const idle = les('../app/(app)/_workshop/ronny-idle.ts');
     expect(idle).toMatch(/const IDLE_MS = 5000/);
     expect(bot).toMatch(/useRonnyIdle/);
-    expect(bot).toMatch(/color="#1d1d1f"/);
-    expect(fab).toMatch(/paper="#ffffff"/);
+    expect(bot).toMatch(/ink-invert/);
+    expect(bot).toMatch(/#141414/);
+    expect(bot).toMatch(/#ffffff/);
     expect(fab).toMatch(/<RonnyBot/);
     expect(fab).not.toMatch(/BloubBot/);
     expect(fab).not.toMatch(/data-ronny-blink/);
@@ -116,7 +115,7 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).toMatch(/RonnyHandtak/);
     expect(pil).toMatch(/data-ronny-strek/);
     expect(pil).toMatch(/RonnyHandtak/);
-    expect(fab).toMatch(/PHONE_KORT_FYLL/);
+    expect(fab).toMatch(/data-ronny-prompt-kort/);
     expect(fab).toMatch(/text-\[14px\]/);
     expect(fab).toMatch(/gap-6/);
     expect(fab).toMatch(/data-ronny-forstor/);
@@ -125,11 +124,13 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).toMatch(/ronnySheetHoydePx/);
     expect(fab).not.toMatch(/<Galaxy/);
     expect(fab).not.toMatch(/RONNY_GALAXY_TETTHET/);
-    expect(fab).toMatch(/bg-\[#fff\]/);
-    expect(fab).toMatch(/#e0e0e0/);
+    expect(fab).toMatch(/bg-surface/);
+    expect(fab).toMatch(/text-fg/);
+    expect(fab).not.toMatch(/bg-\[#fff\]/);
+    expect(fab).not.toMatch(/#1d1d1f/);
     expect(fab).toMatch(/COMPOSER_SAFE/);
     expect(fab).not.toMatch(/COMPOSER_BUNN/);
-    expect(fab).toMatch(/data-ronny-prompt-kort[\s\S]{0,160}py-1\.5/);
+    expect(fab).toMatch(/data-ronny-prompt-kort/);
     expect(fab).toMatch(/paddingBottom: COMPOSER_SAFE/);
     expect(fab).toMatch(/max\(6px, env\(safe-area-inset-bottom\)\)/);
     expect(fab).toMatch(/data-ronny-prompt-flate/);
@@ -141,7 +142,7 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).not.toMatch(/Noe gikk galt\. Prøv igjen\./);
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
     expect(fab).toMatch(/body: \{ side \}/);
-    expect(fab).toMatch(/<RonnyBot size=\{28\} paper="#ffffff"/);
+    expect(fab).toMatch(/<RonnyBot size=\{28\}/);
     expect((fab.match(/<RonnyBot/g) ?? []).length).toBe(2);
     expect(fab).not.toMatch(/'thinking'/);
     expect(fab).not.toMatch(/'alert'/);
@@ -241,9 +242,9 @@ describe('Jonas/Mikael 05.09 — Ronny-sheet uten Grainient/Galaxy', () => {
     expect(fab).not.toMatch(/#FF9FFC|#5227FF/);
   });
 
-  it('sheet er hvit flate, composer transparent, uten peek', () => {
+  it('sheet følger tema (surface/fg), composer transparent, uten peek', () => {
     const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
-    expect(fab).toMatch(/data-ronny-sheet[\s\S]{0,400}bg-\[#fff\]/);
+    expect(fab).toMatch(/data-ronny-sheet[\s\S]{0,400}bg-surface/);
     expect(fab).not.toMatch(/<Galaxy/);
     expect(fab).not.toMatch(/<Grainient/);
     expect(fab).not.toMatch(/visPeek/);

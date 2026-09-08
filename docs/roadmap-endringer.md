@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-08 — F5-13/F5-10 Ronny-tema + standardfelt (Mikael CODE-GO)
+
+**Type:** chrome + designsystem-polish. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael CODE-GO etter #157.
+**Endring:** **F5-13** `progress`, **F5-10** note. Ronny `.ink-invert` (hvit på mørkt). Sheet `bg-surface text-fg`. Standardfelt `.ew-felt` overalt. ⛔ #114/#119. Draft, ikke merge.
+
+---
+
 ## 2026-09-08 — F3-05 forhandler-hjem kun fem flater (Mikael CODE-GO)
 
 **Type:** dealer-hjem innholdskolonne. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB-tabell.

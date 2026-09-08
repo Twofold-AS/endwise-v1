@@ -142,13 +142,67 @@
 }
 
 /*
- * Logo-farging per tema. Lyst tema (standard): logoen står i sin naturlige
- * grønne farge. Mørkt tema: inverteres til hvit, ellers konkurrerer den med
- * den grønne aksenten ellers på skjermen.
+ * Ink-på-lerret: samme polaritet som profil-sirkel (`bg-fg` / `text-bg`).
+ * Lyst: mørk/ink. Mørkt: hvit/lys via brightness+invert.
+ * Delt av logo (`logo-invert`) og Ronny (`ink-invert`) — ikke én-off-filter.
  */
 .dark .logo-invert,
-[data-theme="dark"] .logo-invert {
+.dark .ink-invert,
+[data-theme="dark"] .logo-invert,
+[data-theme="dark"] .ink-invert {
   filter: brightness(0) invert(1);
+}
+
+/*
+ * Standardfelt (Mobbin e-post/kode): inset-fyll, 16px, 2px hvit fokus.
+ * Fyll følger `--ew-inset` (#f0f0f0 lyst / #262626 mørkt).
+ * Bruk `.ew-felt` + størrelse (`.ew-felt-lg` innlogging, `.ew-felt-sm` chrome/prompt).
+ */
+.ew-felt {
+  width: 100%;
+  border-radius: var(--ew-radius-sm);
+  border: 2px solid transparent;
+  background: var(--ew-inset);
+  color: var(--ew-fg);
+  outline: none;
+  box-shadow: none;
+}
+
+.ew-felt::placeholder {
+  color: var(--ew-fg-muted);
+}
+
+.ew-felt:focus,
+.ew-felt:focus-visible {
+  border-color: #ffffff;
+}
+
+.ew-felt:disabled {
+  opacity: 0.55;
+}
+
+.ew-felt-lg {
+  min-height: 52px;
+  padding: 0.875rem 1rem;
+  font-size: 17px;
+  font-weight: 450;
+  line-height: 22px;
+}
+
+.ew-felt-md {
+  min-height: var(--ew-row-h);
+  padding: 0.5rem 0.75rem;
+  font-size: 17px;
+  font-weight: 450;
+  line-height: 1.38;
+}
+
+.ew-felt-sm {
+  min-height: var(--ew-control-h);
+  padding: 0.375rem 0.75rem;
+  font-size: 16px;
+  font-weight: 450;
+  line-height: 20px;
 }
 
 /*

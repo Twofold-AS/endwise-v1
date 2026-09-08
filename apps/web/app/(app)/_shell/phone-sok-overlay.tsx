@@ -80,7 +80,7 @@ export function PhoneSokOverlay({
             onChange={(e) => onVerdi(e.target.value)}
             placeholder="Søk"
             aria-label="Søk"
-            className="h-8 w-full rounded-sm border-0 bg-inset pr-3 pl-9 text-label text-fg placeholder:text-fg-faint outline-none focus-visible:outline-2 focus-visible:outline-ring"
+            className="ew-felt ew-felt-sm h-8 pr-3 pl-9 text-label"
           />
         </label>
         <button

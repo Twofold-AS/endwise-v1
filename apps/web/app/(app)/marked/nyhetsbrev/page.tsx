@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail } from '@endwise/ui';
+import { FELT_MD, Mail } from '@endwise/ui';
 import { useState } from 'react';
 import { BevelButton, CardShell, NewBadge } from '../../_shell/cards';
 
@@ -31,7 +31,7 @@ export default function NyhetsbrevPage() {
             <select
               value={segment}
               onChange={(e) => setSegment(e.target.value)}
-              className="rounded-lg border border-border bg-card px-3 py-2 text-[13px] text-fg outline-none"
+              className={FELT_MD}
             >
               {SEGMENTS.map((s) => (
                 <option key={s} value={s}>
@@ -46,7 +46,7 @@ export default function NyhetsbrevPage() {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Vårservice-kampanje …"
-              className="rounded-lg border border-border bg-card px-3 py-2 text-[13px] text-fg outline-none placeholder:text-fg-faint"
+              className={FELT_MD}
             />
           </label>
           <label className="flex flex-col gap-1 text-fg-muted text-xs">
@@ -55,7 +55,7 @@ export default function NyhetsbrevPage() {
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Skriv nyhetsbrevet …"
-              className="min-h-40 resize-none rounded-lg border border-border bg-card px-3 py-2 text-[13px] text-fg outline-none placeholder:text-fg-faint"
+              className={`${FELT_MD} min-h-40 resize-none py-2`}
             />
           </label>
         </div>

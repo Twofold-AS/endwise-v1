@@ -216,7 +216,7 @@ function RolleDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLukk: (
               const neste = somJobFunksjon(e.target.value);
               if (neste) setFunksjon(neste);
             }}
-            className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg"
+            className="h-control ew-felt ew-felt-md px-3"
           >
             {ROLLE_VALG.map((r) => (
               <option key={r.verdi} value={r.verdi}>

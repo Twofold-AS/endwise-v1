@@ -24,7 +24,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { PHONE_KORT_FYLL } from '../_shell/phone-home';
 import { useSidebarState } from '../_shell/sidebar-state';
 import { erTillattGaaTil } from './gaa-til';
 import { GradualBlur } from './gradual-blur';
@@ -40,7 +39,6 @@ import {
 import { useRonnySheet } from './ronny-sheet-state';
 import { sidekontekst } from './sidekontekst';
 
-const RAMME_PX = 18;
 const APPLE_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
 const HIT = 'inline-flex size-11 shrink-0 items-center justify-center rounded-control text-fg';
 /** Safe-area er padding inne i composer, ikke et løft fra bunnkanten. */
@@ -256,19 +254,14 @@ export function WorkshopBloub() {
   );
 
   const promptKort = () => (
-    <div
-      data-ronny-prompt-kort
-      className={`${PHONE_KORT_FYLL} rounded-[18px] border-[#e0e0e0] bg-[#fff] px-2 py-1.5 text-[#1d1d1f]`}
-      style={{ borderRadius: RAMME_PX }}
-    >
-      <PromptInput onSubmit={onPrompt} className="border-0 bg-transparent shadow-none">
+    <div data-ronny-prompt-kort className="w-full">
+      <PromptInput onSubmit={onPrompt}>
         <PromptInputBody data-ronny-prompt-linje className="min-w-0 flex-1">
           <PromptInputTextarea
             value={promptTekst}
             onChange={(e) => setPromptTekst(e.target.value)}
             placeholder="Spør Ronny …"
             disabled={opptatt}
-            className="bg-transparent text-[16px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/45 md:text-label"
           />
         </PromptInputBody>
         <PromptInputFooter>
@@ -295,7 +288,7 @@ export function WorkshopBloub() {
           data-ronny-flate
           data-ronny-hoyde={hoyde}
           data-workshop-shell
-          className={`fixed inset-x-0 bottom-0 z-[70] flex flex-col overflow-hidden bg-[#fff] shadow-none ${
+          className={`fixed inset-x-0 bottom-0 z-[70] flex flex-col overflow-hidden bg-surface text-fg shadow-none ${
             hoyde === 100 ? 'h-[100dvh]' : 'h-[80dvh]'
           }`}
           style={{
@@ -338,7 +331,7 @@ export function WorkshopBloub() {
               </button>
             ) : paaTopp ? (
               <span data-ronny-topp className="inline-flex size-11 items-center justify-center">
-                <RonnyBot size={28} paper="#ffffff" expression="heureux" />
+                <RonnyBot size={28} expression="heureux" />
               </span>
             ) : (
               <button
@@ -352,7 +345,7 @@ export function WorkshopBloub() {
               </button>
             )}
             <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate text-title text-[#1d1d1f]">Ronny</span>
+              <span className="truncate text-title text-fg">Ronny</span>
               {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
             </div>
             <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
@@ -362,11 +355,11 @@ export function WorkshopBloub() {
           <div
             data-workshop-dock
             data-ronny-visning={hoyde}
-            className="flex min-h-0 flex-1 flex-col bg-[#fff] text-[#1d1d1f]"
+            className="flex min-h-0 flex-1 flex-col bg-surface text-fg"
           >
             <div
               data-ronny-svar-kort
-              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-fg"
             >
               {loggUtsnitt(phoneLoggRef)}
             </div>
@@ -394,7 +387,7 @@ export function WorkshopBloub() {
         <aside
           data-ronny-desktop-panel
           data-ronny-flate
-          className="absolute inset-y-0 right-0 z-10 flex w-full max-w-[400px] flex-col overflow-hidden bg-[#fff]"
+          className="absolute inset-y-0 right-0 z-10 flex w-full max-w-[400px] flex-col overflow-hidden bg-surface text-fg"
           role="dialog"
           aria-label="Ronny"
         >
@@ -403,18 +396,18 @@ export function WorkshopBloub() {
             className="flex h-row shrink-0 items-center justify-between px-3"
           >
             <div className="flex min-w-0 items-center gap-2">
-              <RonnyBot size={28} paper="#ffffff" />
-              <span className="truncate text-title text-[#1d1d1f]">Ronny</span>
+              <RonnyBot size={28} />
+              <span className="truncate text-title text-fg">Ronny</span>
               {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
             </div>
             <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
               <X size={18} strokeWidth={2} />
             </button>
           </div>
-          <div data-workshop-dock className="flex min-h-0 flex-1 flex-col bg-[#fff] text-[#1d1d1f]">
+          <div data-workshop-dock className="flex min-h-0 flex-1 flex-col bg-surface text-fg">
             <div
               data-ronny-svar-kort
-              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-[#1d1d1f]"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-fg"
             >
               {loggUtsnitt(desktopLoggRef)}
             </div>

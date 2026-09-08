@@ -34,8 +34,7 @@ export function sertStatus(expiresAt: string | Date | null | undefined): {
   return { tone: 'text-fg-faint', tekst: `sert. t.o.m. ${dato}` };
 }
 
-export const FELT =
-  'h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg';
+export const FELT = 'ew-felt ew-felt-md';
 
 /** Maskinnøkkel fra visningsnavn. `skills.key` er det matcheren og prislisten peker på. */
 export function tilNokkel(navn: string): string {

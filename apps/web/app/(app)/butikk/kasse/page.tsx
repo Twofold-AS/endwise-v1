@@ -122,7 +122,7 @@ function KasseInner() {
                       settKurvAntall(r.partId, Math.min(r.del.tilgjengelig, Math.max(0, n))),
                     );
                   }}
-                  className="h-control w-16 rounded-control border border-border bg-bg px-2 text-right text-body text-fg tabular-nums outline-none focus-visible:border-fg"
+                  className="h-control w-16 ew-felt ew-felt-md px-2 text-right tabular-nums"
                 />
                 <Button
                   type="button"

@@ -734,7 +734,7 @@ function Felt({
         placeholder={placeholder}
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
-        className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+        className="h-control ew-felt ew-felt-md px-2.5"
       />
       <span className="text-[12px] text-fg-muted">{hint}</span>
     </label>

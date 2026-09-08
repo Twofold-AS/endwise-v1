@@ -254,7 +254,7 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
             onChange={(e) => setSok(e.target.value)}
             placeholder="Søk i lista"
             aria-label="Søk i mottakerlista"
-            className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-ring"
+            className="h-control ew-felt ew-felt-md px-3"
           />
 
           <div className="max-h-56 overflow-y-auto rounded-control border border-border">
@@ -307,7 +307,7 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
             onChange={(e) => setEmne(e.target.value)}
             maxLength={140}
             placeholder="Valgfritt"
-            className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-ring"
+            className="h-control ew-felt ew-felt-md px-3"
           />
         </label>
 
@@ -320,7 +320,7 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
             maxLength={4000}
             required
             placeholder="Skriv meldingen …"
-            className="min-h-[96px] resize-y rounded-control border border-border bg-bg px-3 py-2 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-ring"
+            className="min-h-[96px] resize-y ew-felt ew-felt-md px-3 py-2"
           />
         </label>
 

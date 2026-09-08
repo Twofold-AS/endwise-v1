@@ -26,7 +26,7 @@ export function RonnyAvatarKnapp({ className }: { className?: string }) {
         else apne();
       }}
     >
-      <RonnyBot size={24} paper="#f5f5f7" spin={spin} />
+      <RonnyBot size={24} spin={spin} />
     </button>
   );
 }

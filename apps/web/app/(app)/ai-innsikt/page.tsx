@@ -265,7 +265,7 @@ export default function AiDiagnosePage() {
                 value={selected?.name ?? ''}
                 onChange={(e) => setAgent(e.target.value)}
                 disabled={!agents.data?.length}
-                className="h-control rounded-control border border-border bg-bg px-3 text-body text-fg focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
+                className="h-control ew-felt ew-felt-md px-3 disabled:opacity-50"
                 aria-label="Velg agent"
               >
                 {(agents.data ?? []).map((a) => (
@@ -280,7 +280,7 @@ export default function AiDiagnosePage() {
                 maxLength={4000}
                 placeholder="F.eks. «hvor mange bookinger har vi i dag?»"
                 aria-label="Spørsmål til agenten"
-                className="h-control flex-1 rounded-control border border-border bg-bg px-3 text-body text-fg placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                className="h-control flex-1 ew-felt ew-felt-md px-3"
               />
               <StatefulButton
                 type="submit"

@@ -210,7 +210,7 @@ export default function EndwiseFlaggPage() {
               <select
                 value={valgtTenant}
                 onChange={(e) => setValgtTenant(e.target.value)}
-                className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none focus-visible:border-fg"
+                className="h-control ew-felt ew-felt-md px-2.5"
               >
                 {tenants.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -270,7 +270,7 @@ export default function EndwiseFlaggPage() {
                 onChange={(e) => setNyNokkel(e.target.value)}
                 maxLength={FLAG_KEY_MAX}
                 placeholder="canary-booking"
-                className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+                className="h-control ew-felt ew-felt-md px-2.5"
               />
               <span className="text-[12px] text-fg-muted">
                 Små bokstaver, tall og bindestrek. Samme form som slug.
@@ -282,7 +282,7 @@ export default function EndwiseFlaggPage() {
                 value={nyBeskrivelse}
                 onChange={(e) => setNyBeskrivelse(e.target.value)}
                 placeholder="Hva flagget styrer"
-                className="h-control rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+                className="h-control ew-felt ew-felt-md px-2.5"
               />
             </label>
           </div>

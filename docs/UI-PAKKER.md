@@ -20,6 +20,15 @@
 > styling. Gjelder ENHVER ny app som konsumerer `@endwise/ui` — også etter at dither-kit ble fjernet,
 > siden shadcn/beUI-komponentene har samme problem.
 
+> ### ⚠️ Mikael Ronny-tema + standardfelt (08.09.2026)
+> Ronny-kropp er ink `#141414` på lyst og hvit på mørkt via delt
+> `.ink-invert` (samme polaritet som profil `bg-fg text-bg` / `.logo-invert`).
+> Sheet/desktop-panel er `bg-surface text-fg` — ikke `#fff`. Prompt og alle
+> skjemafelt bruker `.ew-felt` i `packages/ui/src/theme.css` (`--ew-inset`
+> `#f0f0f0`/`#262626`, `rounded-sm` 16, 2px hvit fokus). Variantar:
+> `FELT_LG` innlogging, `FELT_MD` skjema, `FELT_SM` chrome/prompt.
+> Ingen ny pakke. ⛔ #114/#119.
+>
 > ### ⚠️ Mikael Ronny-størrelse + profilmeny (08.09.2026)
 > Ronny og profil er samme `size-7` / 28px-sirkel. Bloub viewBox (158/100)
 > skaleres med `ronnySizeForSirkel` så kroppen fyller sirkelen. Profilmeny
@@ -528,7 +537,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Komponent | Hvorfor ikke en pakke? |
 |---|---|
-| `Btn`, `Badge`, `Chip`, `Card`, `Input` (`packages/ui/src/primitives/`) | Roadmap **F0-12** navngir dem eksplisitt som «primitiver fra komponentgalleriet». De er tynne skall over token-laget. **Når prototypen er inne bør de revurderes** — dekker shadcn dem, skal de bort |
+| `Btn`, `Badge`, `Chip`, `Card`, `Input` (`packages/ui/src/primitives/`) | Roadmap **F0-12** navngir dem eksplisitt som «primitiver fra komponentgalleriet». `Input` er tynt skall over `.ew-felt` / `FELT_MD` (Mobbin inset + 16px + hvit fokus). **Når prototypen er inne bør de revurderes** — dekker shadcn dem, skal de bort |
 | `LydProvider` / `useLyd` (`apps/web/app/(app)/_lib/lyd.tsx`) og `ProfilKort` (`_shell/profil-kort.tsx`) | **Ingen ny UI-pakke** — `cuelume` er en LYD-motor. Av/på er shadcn `Switch` i samme radmønster som Settings › Varsler (`h-row-store` i `rounded-xl border-border`). Track følger `--ew-accent`. ⛔ `bind()` fra cuelume brukes ikke: automatiske hover-/klikklyder over hele panelet er nettopp det som får folk til å skru av lyden helt, og da mister de varselet som betyr noe. `lyd.test()` spilles når bryteren skrus PÅ |
 | `NewBadge` / `CountBadge` (`apps/web/app/(app)/_shell/cards.tsx`) | **Ingen ny pakke.** Begge er shadcn `Badge variant="destructive"` (20px/6px, `h-badge`/`rounded-badge`). `NewBadge` viser «Ny»; `CountBadge` viser siffer + sr-only-label og skjuler 0. Mikael 25.08.2026: samme form, ikke 18px-sirkel. Wrapperen finnes fordi 0-skjul og skjermleser-label ikke hører hjemme i CVA-en. |
 | `KanalMerke` / `KanalLinje` (`apps/web/app/(app)/innboks/_kanal.tsx`) | **Ingen ny pakke.** Kanal-indikatoren er sammensatt av det vi allerede har: badge-tokenene fra §5 (`h-badge` · `rounded-badge` · `bg-accent-soft`/`bg-warn-soft`/`bg-surface-2`) og ikoner fra `@endwise/ui`-barrelen (`Phone`, `Mail`, `MessageSquare`, `Globe`). shadcn `Badge` dekker ikke ikon + kanaltone + `title`-setning i ett, og resten av innboksen bruker allerede inline token-badger (`KIND_TONE`) — å blande to badge-mønstre i samme liste ville sett ut som to systemer. Kanalen bæres av IKONET, ikke fargen, så indikatoren fungerer også for fargeblinde |
@@ -557,7 +566,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Team-redesign (`apps/web/app/(app)/innstillinger/team/`, F1-10/F1-14/F5-19, 26.08.2026) | **Ingen ny pakke.** Piller er samme `role="tablist"` / `?fane=` som Innstillinger. Detalj-ruten kopierer Innboks-panelet (320px, overlay under `xl`, `PanelRightClose`). Bekreftelser er shadcn `Dialog` som slett-forhandler. Mekanikere-pillen gjenbruker `mechanics.oversikt` (ledig/belastning). Kompetanse i panelet er `MekanikerKompetanse`. Egen kode bare for å komponere eksisterende flater — shadcn `Tabs`/`Sheet` ville gitt et annet system enn resten av Ansatte. Sidebar Kompetanse/Timeplan urørt. |
 
-| Auth-feltene (`apps/web/app/_auth/felter.tsx`: `Field`, `INPUT`) + `AuthMerke` | **Ingen ny pakke.** 08.09.2026 Mobbin + polish: felt er `bg-inset` (`#f0f0f0` / mørk `#262626`), `rounded-[16px]`, `min-h-[52px]` padding sm/md, fokus **2px hvit kant** (`border-2` / `focus:border-white`). `/signin` er uten ytterkort — innhold på lerret, horisontalt sentrert, litt over midten. `AuthMerke` er mask + `bg-fg` (synlig i mørkt). `packages/ui` sin `Input` er `h-10`/`rounded-md` — feil mål. |
+| Auth-feltene (`apps/web/app/_auth/felter.tsx`: `Field`, `INPUT`) + `AuthMerke` | **Ingen ny pakke.** 08.09.2026: `INPUT` = `FELT_LG` (`.ew-felt` i `theme.css`). Samme klasse som prompt/skjema. Innlogging er stor variant (52px / 17px). `/signin` uten ytterkort. `AuthMerke` er mask + `bg-fg`. |
 
 | Transaksjonell e-post (`packages/auth/src/senders/epost-mal.ts`, `toolkit-resend/src/epost-html.ts`) | **Ingen ny pakke, og ingen react-email.** Techstack er Resend + tabell-HTML (Outlook/Gmail). shadcn/beUI kan ikke brukes i innboksen. **Login-e-post (08.09 Mobbin):** `byggInnloggingsEpostHtml` — alltid hvit `#ffffff`, ink `#141414`, svart cid-logo, tykk «Hei {navn}», stor 5-sifret kode, understreket «lenka». Ingen Action Blue-CTA. Andre maler (invite, bytte, innboks) beholdt Apple-skallet: parchment `#f5f5f7`, Action Blue-pille `#0066cc`. ⛔ Ikke mørk chrome, ikke Synara, ikke Linear-lime. |
 
@@ -573,7 +582,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Dine jobber / Timeplan-stripe / starttid / ferie-mock (`dine-jobber/`, `_shell/timeplan-stripe.tsx`, `bookinger/_starttid-velger.tsx`, `_shell/ferie-mock.tsx`, 29.08.2026 natt) | **Ingen ny pakke.** Jobb-bokser er `Link` + lucide `Bike`/`Sailboat` + `ChevronRight` til eksisterende `/min-dag/[id]`. Timeplan-piler er `ChevronLeft`/`ChevronRight`. Starttid er to native expander-knapper. Ferie er merket mock/kommer. |
 
-| Workshop-sheet (`_workshop/workshop-bloub.tsx` + `ronny-sheet.ts`, 05.09.2026) | **Ingen ny pakke.** Jonas/Mikael sheet-lås: Grainient-stripe og peek-dock er slettet. Telefon-avatar i `PhoneShell` åpner bunn-sheet (`data-ronny-sheet`, 80/100, radius 16, `#fff`, scrim). **07.09.2026 kveld:** tettere håndtak, kompakt bare «Ronny» uten bot, full = forminsk / Ronny på logg-topp (`RonnyForstorIkon` / `RonnyForminskIkon`). Header: forstørr · Ronny · X. Composer med safe-area. `md:hidden`. Desktop uten inngang i denne PR. Gradual Blur på overlapping logg. Prompt Input uendret. ⛔ Stripe. ⛔ Peek. ⛔ Galaxy/Grainient på sheet. ⛔ Model-picker, globe, vedlegg, Morph. |
+| Workshop-sheet (`_workshop/workshop-bloub.tsx` + `ronny-sheet.ts`, 05.09.2026) | **Ingen ny pakke.** Jonas/Mikael sheet-lås: Grainient-stripe og peek-dock er slettet. Telefon-avatar i `PhoneShell` åpner bunn-sheet (`data-ronny-sheet`, 80/100, radius 16, scrim). **08.09.2026:** flate `bg-surface text-fg` (følger tema). Prompt = `.ew-felt` / `FELT_SM`. Ronny `.ink-invert`. **07.09.2026 kveld:** tettere håndtak, kompakt bare «Ronny» uten bot, full = forminsk / Ronny på logg-topp. Header: forstørr · Ronny · X. Composer med safe-area. `md:hidden`. Gradual Blur på overlapping logg. ⛔ Stripe. ⛔ Peek. ⛔ Galaxy/Grainient på sheet. ⛔ `#fff`-tvang. ⛔ Model-picker, globe, vedlegg, Morph. |
 
 | Bot-lab (`apps/web/app/(app)/bot/`, F6-29, 31.08.2026) | **Ingen ny npm-pakke.** Runtime er vendorisert bloub-motor + `BloubBot`. Intern lab lever videre. Produkt-avatar er nå samme motor (se §10). |
 

@@ -245,7 +245,7 @@ export default function KundekortPage() {
               onChange={(e) => setNotat(e.target.value)}
               maxLength={4000}
               placeholder="Skriv et internt notat om kunden"
-              className="h-control min-w-0 flex-1 rounded-control border border-border bg-bg px-2.5 text-body text-fg outline-none placeholder:text-fg-muted/60 focus-visible:border-fg"
+              className="h-control min-w-0 flex-1 ew-felt ew-felt-md px-2.5"
             />
             <StatefulButton
               type="submit"

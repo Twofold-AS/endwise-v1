@@ -66,5 +66,8 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(go).toMatch(/PromptInput/);
     expect(go).toMatch(/bg-surface text-fg/);
     expect(go).toMatch(/ew-felt ew-felt-sm/);
+    const layout = les('../app/visuell/layout.tsx');
+    expect(layout).toMatch(/endwise:tema/);
+    expect(layout).toMatch(/tema/);
   });
 });

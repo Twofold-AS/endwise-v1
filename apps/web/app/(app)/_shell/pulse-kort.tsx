@@ -111,8 +111,8 @@ export function PulseIkonFlate({
   return (
     <span
       data-pulse-ikon-flate={variant}
-      className={`flex size-9 shrink-0 items-center justify-center bg-white text-[#141414] ${
-        variant === 'circle' ? 'rounded-full' : 'rounded-[10px]'
+      className={`flex size-9 shrink-0 items-center justify-center bg-white text-[#141414] ring-1 ring-divide ${
+        variant === 'circle' ? 'rounded-full' : 'rounded-[6px]'
       }`}
     >
       {children}
@@ -212,7 +212,7 @@ export function PulseLinjeKort({
       data-pulse-kort={tekst}
       data-pulse-linje=""
       data-pulse-mock={mock ? '' : undefined}
-      className={`${PHONE_DEST_FYLL} flex min-h-11 w-full items-center gap-2.5 px-4 py-3 [touch-action:manipulation]`}
+      className="flex min-h-11 w-full items-center gap-2.5 rounded-[24px] border border-divide bg-surface-2 px-4 py-3 text-fg shadow-none [touch-action:manipulation]"
     >
       <PulseIkonFlate variant={ikonVariant}>
         <Ikon className="size-4" strokeWidth={2} aria-hidden />
@@ -249,20 +249,21 @@ export function PulseMaanedBoble({
   const denneFarge = mork ? WHITE : INK;
   const forrigeFarge = mork ? FAINT : FAINT;
   return (
-    <div
-      data-pulse-maaned-boble
-      className="flex shrink-0 flex-col items-center gap-1"
-      aria-label={`${denne} bookinger denne måneden, ${forrige} forrige`}
-    >
-      <div className="size-16 overflow-hidden rounded-full">
-        <DitherDonutChart
-          compact
-          className="h-full w-full"
-          slices={[
-            { name: 'Denne', value: Math.max(0, denne), color: denneFarge },
-            { name: 'Forrige', value: Math.max(0, forrige), color: forrigeFarge },
-          ]}
-        />
+    <div data-pulse-maaned-boble className="flex shrink-0 flex-col items-center gap-1">
+      <p className="sr-only">
+        {denne} bookinger denne måneden, {forrige} forrige
+      </p>
+      <div className="relative size-16 shrink-0 overflow-hidden rounded-full bg-inset">
+        <div className="absolute inset-0 h-16 w-16">
+          <DitherDonutChart
+            compact
+            className="h-16 w-16"
+            slices={[
+              { name: 'Denne', value: Math.max(0, denne), color: denneFarge },
+              { name: 'Forrige', value: Math.max(0, forrige), color: forrigeFarge },
+            ]}
+          />
+        </div>
       </div>
       <p className="text-[11px] leading-none text-fg-muted tabular-nums">
         {denne}

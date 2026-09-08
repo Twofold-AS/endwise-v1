@@ -64,9 +64,10 @@ export const HJEM_KORT_TOM = {
   lagerTomt: 'Ingen deler ennå',
   hjelp: 'Artikler og support',
   deler: 'Ingen mangler på åpne jobber',
-  lager: 'Trenger godkjenning',
+  lagerVenter: 'Trenger godkjenning',
   svarhastighet: 'Median førstesvar · 7 dager',
-  team: 'Ansatte på jobb',
+  team: 'Ingen mekanikere',
+  ansatte: 'Ansatte på jobb',
   jobb: 'Jobb',
 } as const;
 

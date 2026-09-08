@@ -68,18 +68,8 @@ export function useDealerHjemKort() {
 }
 
 export function DealerPulseKort({ className }: { className?: string }) {
-  const {
-    bookings,
-    threads,
-    oversikt,
-    deler,
-    idag,
-    maaned,
-    innboks,
-    foresporsel,
-    lager,
-    team,
-  } = useDealerHjemKort();
+  const { bookings, threads, oversikt, deler, idag, maaned, innboks, foresporsel, lager, team } =
+    useDealerHjemKort();
   const { los } = useTema();
   const lasterJobber = bookings.isLoading;
 
@@ -114,7 +104,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
       <PulseLinjeKort
         href={PHONE_KORT_META.lager.href}
         ikon={Package}
-        tekst={lager.tekst}
+        tekst="Trenger godkjenning"
         tall={lager.antall}
         laster={deler.isLoading}
       />
@@ -122,17 +112,12 @@ export function DealerPulseKort({ className }: { className?: string }) {
       <PulseLinjeKort
         href={PHONE_KORT_META.team.href}
         ikon={Users}
-        tekst={team.tekst}
+        tekst="Ansatte på jobb"
         tall={oversikt.isLoading ? undefined : team.tall}
         laster={oversikt.isLoading}
       />
 
-      <PulseLinjeKort
-        href={PHONE_KORT_META.jobb.href}
-        ikon={Plus}
-        ikonVariant="box"
-        tekst="Jobb"
-      />
+      <PulseLinjeKort href={PHONE_KORT_META.jobb.href} ikon={Plus} ikonVariant="box" tekst="Jobb" />
 
       <PulseFooter />
     </div>

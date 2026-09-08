@@ -109,7 +109,11 @@ function foresporselDag(j: PhoneBooking) {
  * Nye forespørsler i dag mot snitt per dag siste 14 dager.
  * Flere enn vanlig → grønn; færre → rød. Tynn historikk → mock + badge.
  */
-export function foresporselTrend(jobber: PhoneBooking[], naa: Date, dager = 14) {
+export function foresporselTrend(
+  jobber: PhoneBooking[],
+  naa: Date,
+  dager = 14,
+): { antall: number; tone: 'green' | 'red' | 'neutral'; ratio: number; mock: boolean } {
   const idag = osloKalenderdag(naa);
   const reqs = jobber.filter(erForesporsel);
   const iDag = reqs.filter((j) => foresporselDag(j) === idag).length;
@@ -127,7 +131,8 @@ export function foresporselTrend(jobber: PhoneBooking[], naa: Date, dager = 14) 
     return { ...PULSE_MOCK_FORESPORSEL, mock: true };
   }
   const usual = verdier.reduce((a, b) => a + b, 0) / dager;
-  const tone = iDag > usual * 1.15 ? 'green' : iDag < usual * 0.85 ? 'red' : 'neutral';
+  const tone: 'green' | 'red' | 'neutral' =
+    iDag > usual * 1.15 ? 'green' : iDag < usual * 0.85 ? 'red' : 'neutral';
   const ratio = usual <= 0 ? (iDag > 0 ? 1 : 0.2) : Math.min(1, Math.max(0.12, iDag / (usual * 2)));
   return { antall: iDag, tone, ratio, mock: false };
 }

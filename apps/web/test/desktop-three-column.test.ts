@@ -166,7 +166,9 @@ describe('Mikael desktop tre-kolonner + /home', () => {
     expect(people).toMatch(/h-\[19px\]/);
     expect(people).toMatch(/w-5/);
     expect(people).toMatch(/hidden[\s\S]*md:flex/);
-    expect(hjem).toMatch(/<PeopleShowcase/);
+    expect(hjem).toMatch(/PulseLinjeKort/);
+    expect(hjem).toMatch(/Ansatte på jobb/);
+    expect(hjem).not.toMatch(/<PeopleShowcase/);
     expect(hjem).not.toMatch(/AnsattePaJobb/);
   });
 

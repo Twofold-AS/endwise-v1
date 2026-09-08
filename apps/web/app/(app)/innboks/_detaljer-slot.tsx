@@ -54,33 +54,44 @@ export function DetaljerSlot() {
 
   if (!apen) {
     /**
-     * Lukket: en smal skinne med åpne-knappen, på linje med de tre andre
-     * sidebar-headerne. Ikke en flytende knapp over innholdet — en kontroll som
-     * ligger der kolonnen pleide å være, er lettere å finne igjen enn en som
-     * svever et sted man ikke assosierer med panelet.
+     * Lukket: desktop-skinne + telefon-chip. Skinna er skjult på telefon
+     * (tok bredde og dyttet tråden ut av viewport). Chipen ligger i chrome.
      */
     return (
-      <div className="flex w-11 shrink-0 flex-col border-border border-l bg-sidebar">
-        <div className="flex h-14 shrink-0 items-center justify-center border-border border-b">
-          <button
-            type="button"
-            onClick={() => sett(true)}
-            title="Vis detaljer om samtalen"
-            aria-label="Vis detaljer om samtalen"
-            aria-expanded={false}
-            className="flex size-7 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active/60 hover:text-fg"
-          >
-            <PanelRightOpen size={16} strokeWidth={1.75} />
-          </button>
+      <>
+        <button
+          type="button"
+          data-innboks-detaljer-chip
+          onClick={() => sett(true)}
+          title="Vis detaljer om samtalen"
+          aria-label="Vis detaljer om samtalen"
+          aria-expanded={false}
+          className="absolute top-2 right-2 z-20 inline-flex h-8 items-center rounded-full bg-fg px-3 text-[12px] font-[650] text-bg md:hidden"
+        >
+          Detaljer
+        </button>
+        <div className="hidden w-11 shrink-0 flex-col border-border border-l bg-sidebar md:flex">
+          <div className="flex h-14 shrink-0 items-center justify-center border-border border-b">
+            <button
+              type="button"
+              onClick={() => sett(true)}
+              title="Vis detaljer om samtalen"
+              aria-label="Vis detaljer om samtalen"
+              aria-expanded={false}
+              className="flex size-7 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active/60 hover:text-fg"
+            >
+              <PanelRightOpen size={16} strokeWidth={1.75} />
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (endwise) {
     return (
       <aside
-        className="fixed top-0 right-0 bottom-0 z-40 flex h-[calc(100dvh-3.5rem)] w-[320px] shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar xl:static xl:z-auto"
+        className="absolute inset-0 z-40 flex h-full w-full shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar md:left-auto md:w-[320px] xl:static xl:z-auto"
         aria-label="Detaljer om samtalen"
       >
         <div className="flex h-14 shrink-0 items-center gap-2 border-border border-b px-3">

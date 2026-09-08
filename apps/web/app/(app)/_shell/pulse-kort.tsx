@@ -1,24 +1,18 @@
 'use client';
 
 import {
+  ArrowLeftRight,
   ArrowUpRight,
   Badge,
+  DitherDonutChart,
   DitherGrowthChart,
-  EASE_OUT_CSS,
   type LucideIcon,
-  MessageSquare,
   Plus,
-  TriangleAlert,
 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { type ReactNode, useEffect, useState } from 'react';
-import {
-  PHONE_DEST_FYLL,
-  PHONE_HERO_FYLL,
-  PULSE_AVVIK_HREF,
-  PULSE_FORESPORSEL_HREF,
-} from './phone-home';
+import { PHONE_DEST_FYLL, PHONE_HERO_FYLL, PULSE_ENDRINGER_HREF } from './phone-home';
 import {
   type AnalyserMockStat,
   dagFremgang,
@@ -112,44 +106,47 @@ export function PulseKort({
   );
 }
 
-function PulseIkonLenke({
-  href,
-  label,
-  ikon: Ikon,
+/**
+ * Endringer — øvre høyre på toppkortets del 2.
+ * Badge er ekte telling (0 vises). Ingen mock.
+ */
+export function PulseEndringerLenke({
+  antall,
+  laster = false,
 }: {
-  href: string;
-  label: string;
-  ikon: LucideIcon;
+  antall: number;
+  laster?: boolean;
 }) {
+  const n = Math.max(0, antall);
   return (
     <Link
-      href={href as Route}
-      aria-label={label}
-      data-pulse-ikon={label}
-      className="flex size-9 items-center justify-center rounded-[12px] text-[#141414] shadow-none ring-1 ring-divide [touch-action:manipulation]"
+      href={PULSE_ENDRINGER_HREF as Route}
+      aria-label={`Endringer, ${n} ventende`}
+      data-pulse-ikon="Endringer"
+      data-pulse-endringer
+      className="relative inline-flex h-9 items-center gap-1.5 rounded-[12px] px-2.5 text-[#141414] shadow-none ring-1 ring-divide [touch-action:manipulation]"
       style={{ backgroundColor: WHITE }}
     >
-      <Ikon size={18} strokeWidth={1.75} aria-hidden />
+      <ArrowLeftRight size={16} strokeWidth={1.75} aria-hidden />
+      <span className="text-[12px] font-[650]">Endringer</span>
+      <span
+        data-pulse-endringer-tall
+        className="inline-flex min-w-5 items-center justify-center rounded-[6px] bg-fg px-1 text-[11px] font-[650] text-bg tabular-nums"
+      >
+        {laster ? '·' : n}
+      </span>
     </Link>
   );
 }
 
-/** Avvik + Forespørsel — øvre høyre hjørne på uke-kortet. */
+/** @deprecated Avvik+Forespørsel erstattet av PulseEndringerLenke. */
 export function PulseHeroIkoner() {
-  return (
-    <>
-      <PulseIkonLenke href={PULSE_AVVIK_HREF} label="Avvik" ikon={TriangleAlert} />
-      <PulseIkonLenke href={PULSE_FORESPORSEL_HREF} label="Forespørsel" ikon={MessageSquare} />
-    </>
-  );
+  return <PulseEndringerLenke antall={0} />;
 }
 
-const SIRKEL_R = 46;
-const SIRKEL_C = 2 * Math.PI * SIRKEL_R;
-
 /**
- * Dagsfremgang på uke-kortet. Ink-strek, canvas-fyll, 08–20 Oslo.
- * shadcn Progress er lineær; Amicro-donut er dither — ingen av dem er denne ringen.
+ * Dagsfremgang — Amicro dither-donut (ikke ren ink-strek).
+ * Fyller 08–20 Oslo. Ingen per-forhandler åpningstid i skjemaet.
  */
 export function PulseDagSirkel({
   startHour = PULSE_DAG_START,
@@ -177,47 +174,89 @@ export function PulseDagSirkel({
 
   const startLabel = fmtPulseKlokke(startHour);
   const sluttLabel = fmtPulseKlokke(sluttHour);
+  const passert = Math.max(0.001, andel);
+  const igjen = Math.max(0.001, 1 - andel);
 
   return (
-    <div data-pulse-dag-sirkel className="flex flex-col items-center gap-2 pt-1">
-      <svg
-        viewBox="0 0 120 120"
-        className="size-[148px]"
+    <div data-pulse-dag-sirkel className="flex flex-col items-center gap-1.5">
+      <div
+        className="relative size-[132px]"
         role="img"
         aria-label={`Verksteddagen ${startLabel}–${sluttLabel}${naaLabel ? `, klokken ${naaLabel}` : ''}`}
       >
-        <title>{`Verksteddagen ${startLabel}–${sluttLabel}`}</title>
-        <circle cx="60" cy="60" r={SIRKEL_R} fill="#ffffff" stroke="#e0e0e0" strokeWidth="6" />
-        <circle
-          cx="60"
-          cy="60"
-          r={SIRKEL_R}
-          fill="none"
-          stroke="#141414"
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeDasharray={SIRKEL_C}
-          strokeDashoffset={SIRKEL_C * (1 - andel)}
-          transform="rotate(-90 60 60)"
-          style={{ transition: `stroke-dashoffset 900ms ${EASE_OUT_CSS}` }}
+        <DitherDonutChart
+          compact
+          className="size-full"
+          slices={[
+            { name: 'passert', value: passert, color: '#141414' },
+            { name: 'igjen', value: igjen, color: '#e0e0e0' },
+          ]}
         />
         {naaLabel ? (
-          <text
-            x="60"
-            y="65"
-            textAnchor="middle"
-            fill="#141414"
-            fontSize="13"
-            fontWeight="650"
-            fontFamily="inherit"
-          >
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[13px] font-[650] text-fg tabular-nums">
             {naaLabel}
-          </text>
+          </span>
         ) : null}
-      </svg>
-      <div className="flex w-[148px] justify-between text-[12px] text-fg-muted tabular-nums">
+      </div>
+      <div className="flex w-[132px] justify-between text-[12px] text-fg-muted tabular-nums">
         <span data-pulse-dag-start>{startLabel}</span>
         <span data-pulse-dag-slutt>{sluttLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+/** To-delt toppkort: dag+tall venstre, Endringer + dither-sirkel høyre. */
+export function PulseHeroFlate({
+  ukedag,
+  dato,
+  planlagt,
+  paagaar,
+  ferdig,
+  lasterJobber,
+  endringer,
+  lasterEndringer,
+  href,
+}: {
+  ukedag: string;
+  dato: string;
+  planlagt: number;
+  paagaar: number;
+  ferdig: number;
+  lasterJobber: boolean;
+  endringer: number;
+  lasterEndringer: boolean;
+  href: string;
+}) {
+  return (
+    <div
+      data-pulse-kort="hero"
+      data-verkstedet-hero=""
+      data-pulse-hero-todelt
+      className={`${PHONE_HERO_FYLL} relative flex min-h-11 w-full gap-3 p-5`}
+    >
+      <Link
+        href={href as Route}
+        data-pulse-del="1"
+        className="flex min-w-0 flex-1 flex-col gap-3 [touch-action:manipulation]"
+      >
+        <div>
+          <p data-pulse-ukedag className="text-title text-fg">
+            {ukedag}
+          </p>
+          <p data-pulse-dato className="text-[12px] text-fg-muted">
+            {dato}
+          </p>
+        </div>
+        <div className="grid min-w-0 grid-cols-3 divide-x divide-divide">
+          <PulseTall label="Planlagt" verdi={planlagt} laster={lasterJobber} />
+          <PulseTall label="Pågår" verdi={paagaar} laster={lasterJobber} />
+          <PulseTall label="Ferdig" verdi={ferdig} laster={lasterJobber} />
+        </div>
+      </Link>
+      <div data-pulse-del="2" className="flex w-[148px] shrink-0 flex-col items-end gap-2">
+        <PulseEndringerLenke antall={endringer} laster={lasterEndringer} />
+        <PulseDagSirkel />
       </div>
     </div>
   );

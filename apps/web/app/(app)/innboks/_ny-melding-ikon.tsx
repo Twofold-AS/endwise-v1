@@ -1,6 +1,6 @@
 /**
- * Compose-ikon fra `packages/ui/src/assets/icons-v2/Messages-plus.svg`.
- * Ikke lucide MessageSquarePlus — Mikael 02.09.2026.
+ * Compose-ikon — penn på ark, ikke Messages-plus-boble.
+ * Mikael CODE-GO 08.09.2026: nytt SVG, sitter ytterst til høyre.
  */
 export function NyMeldingIkon({ size = 16 }: { size?: number }) {
   return (
@@ -14,12 +14,12 @@ export function NyMeldingIkon({ size = 16 }: { size?: number }) {
     >
       <title>Ny melding</title>
       <path
-        d="M11.9991 14.25V12M11.9991 12V9.75M11.9991 12H9.74936M11.9991 12H14.2489M20.9983 12C20.9983 13.2938 20.7253 14.5238 20.2338 15.6356L21 20.9991L16.4039 19.85C15.1019 20.5823 13.5993 21 11.9991 21C7.02906 21 3 16.9706 3 12C3 7.02944 7.02906 3 11.9991 3C16.9692 3 20.9983 7.02944 20.9983 12Z"
+        d="M4 16.5 15.5 5a2.1 2.1 0 0 1 3 3L7 19.5H4v-3Z"
         stroke="currentColor"
         strokeWidth="2"
-        strokeLinecap="round"
         strokeLinejoin="round"
       />
+      <path d="M13.2 6.8 17.2 10.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }

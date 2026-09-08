@@ -74,10 +74,10 @@ export function DetaljerPanel({
         type="button"
         aria-label="Lukk detaljer"
         onClick={onLukk}
-        className="fixed inset-0 z-30 bg-fg/20 xl:hidden"
+        className="absolute inset-0 z-30 bg-fg/20 xl:hidden"
       />
       <aside
-        className={`${BREDDE} fixed top-0 right-0 bottom-0 z-40 flex h-[calc(100dvh-3.5rem)] shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar xl:static xl:z-auto`}
+        className={`${BREDDE} absolute inset-0 z-40 flex h-full shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar md:left-auto xl:static xl:z-auto`}
         aria-label="Detaljer om samtalen"
       >
         {/* Header: 56px + border-b, på linje med topbaren og de to andre

@@ -85,14 +85,15 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).not.toMatch(/Ingen kunder ennå|Åpne organisasjon|Artikler og support/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
     expect(hjem).toMatch(/Les alle siste meldinger/);
-    expect(hjem).toMatch(/PulseDagSirkel/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/PulseJobbFlis/);
-    expect(hjem).toMatch(/PULSE_UKE_TITTEL|Denne uken|Siste 7 dager/);
+    expect(hjem).toMatch(/PulseHeroFlate|endringerTeller/);
     expect(hjem).toMatch(/PulseAnalyserKort|Analyser/);
     expect(hjem).toMatch(/invalidateHjemPulse|bookings\.list/);
     expect(hjem).toMatch(/flex-1 basis-0/);
-    expect(hjem).toMatch(/Planlagt/);
-    expect(hjem).not.toMatch(/dither-kit|DitherGradient|DitherDonutChart/);
+    expect(hjem).toMatch(/planlagt=\{idag\.planlagt\}/);
+    expect(kort).toMatch(/Planlagt/);
+    expect(hjem).not.toMatch(/dither-kit|DitherGradient/);
     expect(hjem).not.toMatch(/pulse-preview/);
     expect(hjem).not.toMatch(/For lite data/);
     expect(hjem).not.toMatch(/bar=\{|nye=\{|tone=\{/);
@@ -245,7 +246,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(kort).toMatch(/ArrowUpRight/);
     expect(kort).toMatch(/PulseJobbFlis|data-pulse-jobb/);
     expect(kort).toMatch(/DitherGrowthChart/);
-    expect(kort).not.toMatch(/DitherDonutChart/);
+    expect(kort).toMatch(/DitherDonutChart/);
     expect(kort).not.toMatch(/PulseMiniBar|data-pulse-nye|data-pulse-stats-bar/);
     expect(kort).toMatch(/data-pulse-ikonboks/);
     expect(kort).toMatch(/h-9 w-14/);
@@ -266,7 +267,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(dash).toMatch(/DealerPulseKort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
     expect(hjem).not.toMatch(/messages\.svarhastighet/);
-    expect(hjem).toMatch(/PulseDagSirkel/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/bookinger\/ny|PulseJobbFlis/);
     expect(shell).toMatch(/data-phone-search/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
@@ -275,12 +276,11 @@ describe('forhandler pulse-hjem — fem flater', () => {
   it('pulse-preview er visuell GO, ikke et sjette hjem-kort', () => {
     const preview = utenKommentarer(les('../app/pulse-preview/page.tsx'));
     expect(preview).toMatch(/data-pulse-preview="go"/);
-    expect(preview).toMatch(/PulseDagSirkel/);
-    expect(preview).toMatch(/PULSE_UKE_TITTEL|Denne uken|Siste 7 dager/);
+    expect(preview).toMatch(/PulseHeroFlate/);
     expect(preview).toMatch(/PulseAnalyserKort|Analyser/);
     expect(preview).toMatch(/PulseJobbFlis/);
     expect(preview).toMatch(/flex-1 basis-0/);
-    expect(preview).not.toMatch(/DitherDonutChart|PulseMiniBar|data-pulse-nye/);
+    expect(preview).not.toMatch(/PulseMiniBar|data-pulse-nye/);
     expect(DEALER_PULSE_KEYS).not.toContain('preview');
   });
 

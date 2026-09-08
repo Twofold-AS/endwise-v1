@@ -1,21 +1,9 @@
 'use client';
 
-import {
-  Avatar,
-  type AvatarValg,
-  Button,
-  Check,
-  ChevronDown,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  MessageSquare,
-  Trash2,
-} from '@endwise/ui';
+import { Avatar, type AvatarValg, Button, Check, MessageSquare, Trash2 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
@@ -32,6 +20,7 @@ import {
 } from './_lib';
 import { useInboxModus } from './_modus';
 import { NyMeldingIkon } from './_ny-melding-ikon';
+import { InboxSorteringVelger } from './_sortering';
 
 /**
  * F6-01 / F5-14 — innboksens egen sidebar.
@@ -48,10 +37,13 @@ import { NyMeldingIkon } from './_ny-melding-ikon';
  */
 export function InboxSidebar() {
   const params = useParams<{ id?: string }>();
+  const search = useSearchParams();
   const aktivId = params?.id;
+  const nySamtale = search?.get('ny') === '1';
+  const skjulTelefonListe = Boolean(aktivId || nySamtale);
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, sortering, setSortering, skjulte, skjul, skjulFlere } = useInboxFilter();
+  const { part, sortering, skjulte, skjul, skjulFlere } = useInboxFilter();
   const [velgModus, setVelgModus] = useState(false);
   const [valgte, setValgte] = useState<ReadonlySet<string>>(() => new Set());
 
@@ -149,7 +141,7 @@ export function InboxSidebar() {
     return (
       <aside
         className={`flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r ${
-          aktivId ? 'max-md:hidden' : ''
+          skjulTelefonListe ? 'max-md:hidden' : ''
         }`}
       >
         <div className="flex h-14 shrink-0 items-center px-3">
@@ -190,45 +182,22 @@ export function InboxSidebar() {
   return (
     <aside
       className={`flex min-h-0 w-full shrink-0 flex-col border-border bg-sidebar md:w-[320px] md:border-r ${
-        aktivId ? 'max-md:hidden' : ''
+        skjulTelefonListe ? 'max-md:hidden' : ''
       }`}
     >
       {/**
-       * Mikael 08.09: én stripe — Ny samtale · sort midt · velg + slett høyre.
-       * Ingen Nyeste/Eldste-par under dest-pillene.
+       * Mikael CODE-GO 08.09: sort (Modus-plate) · velg + slett · Ny samtale ytterst høyre.
        */}
       <div className="relative z-20 flex shrink-0 flex-col overflow-visible px-3 py-1.5">
         <h2 className="sr-only">Samtaler</h2>
         <div
           data-innboks-verktoy
-          className="relative z-20 grid grid-cols-[auto_1fr_auto] items-center gap-1 overflow-visible"
+          className="relative z-20 flex items-center gap-1 overflow-visible"
           role="toolbar"
           aria-label="Innboks"
         >
-          <Link
-            href={'/innboks?ny=1' as Route}
-            aria-label="Ny samtale"
-            title="Ny samtale"
-            className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-fg hover:bg-surface-2"
-          >
-            <NyMeldingIkon size={16} />
-          </Link>
-          <div className="flex justify-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                aria-label="Sorter samtaler"
-                className="inline-flex min-h-11 items-center gap-1 rounded-control px-2.5 text-label text-fg hover:bg-surface-2"
-              >
-                {sortering === 'eldste' ? 'Eldste' : 'Nyeste'}
-                <ChevronDown size={14} strokeWidth={2} aria-hidden />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                <DropdownMenuItem onSelect={() => setSortering('nyeste')}>Nyeste</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSortering('eldste')}>Eldste</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className="flex items-center justify-end">
+          <InboxSorteringVelger />
+          <div className="ml-auto flex items-center justify-end">
             <button
               type="button"
               aria-label="Velg samtaler"
@@ -261,6 +230,15 @@ export function InboxSidebar() {
             >
               <Trash2 size={16} strokeWidth={1.75} />
             </button>
+            <Link
+              href={'/innboks?ny=1' as Route}
+              aria-label="Ny samtale"
+              title="Ny samtale"
+              data-innboks-ny-samtale
+              className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-fg hover:bg-surface-2"
+            >
+              <NyMeldingIkon size={16} />
+            </Link>
           </div>
         </div>
       </div>
@@ -274,16 +252,14 @@ export function InboxSidebar() {
             <MessageSquare size={20} className="text-fg-muted" />
             <p className="text-label text-fg">Ingen samtaler</p>
             <p className="text-[12px] text-fg-muted">
-              {part === 'alle'
-                ? 'Innboksen er tom. Skriv til Endwise hvis du lurer på noe.'
-                : 'Ingen samtaler for denne parten.'}
+              {part === 'alle' ? 'Innboksen er tom.' : 'Ingen samtaler for denne parten.'}
             </p>
             {part === 'alle' && (
               <Link
                 href={'/innboks?ny=1' as Route}
                 className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[12px] text-bg"
               >
-                Skriv til Endwise
+                Send melding
               </Link>
             )}
           </div>

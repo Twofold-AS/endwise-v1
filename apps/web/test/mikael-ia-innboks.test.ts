@@ -50,9 +50,7 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     expect(side).toMatch(/aria-label="Innboks"/);
     expect(side).toMatch(/NyMeldingIkon/);
     expect(side).not.toMatch(/MessageSquarePlus/);
-    expect(side).toMatch(/Nyeste/);
-    expect(side).toMatch(/Eldste/);
-    expect(side).toMatch(/DropdownMenu|Sorter samtaler/);
+    expect(side).toMatch(/InboxSorteringVelger|Sorter samtaler/);
     expect(side).toMatch(/Ny samtale/);
     expect(side).toMatch(/max-md:hidden/);
     expect(side).not.toMatch(/Oversikt/);
@@ -119,21 +117,21 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
   const chrome = utenKommentarer(les('../app/(app)/innboks/_chrome.tsx'));
   const hoved = utenKommentarer(les('../app/(app)/innboks/_hovedflate.tsx'));
 
-  it('én verktøylinje: Ny samtale, sort midt, velg + slett høyre', () => {
+  it('én verktøylinje: sort venstre, velg + slett, Ny samtale ytterst høyre', () => {
     expect(side).toMatch(/NyMeldingIkon/);
     expect(side).toMatch(/Ny samtale/);
-    expect(side).toMatch(/Nyeste/);
-    expect(side).toMatch(/Eldste/);
-    expect(side).toMatch(/DropdownMenu/);
+    expect(side).toMatch(/InboxSorteringVelger/);
     expect(side).toMatch(/Trash2/);
     expect(side).toMatch(/Velg samtaler/);
     expect(side).toMatch(/data-innboks-verktoy/);
+    expect(side).toMatch(/data-innboks-ny-samtale/);
     expect(side).toMatch(/min-h-11/);
     expect(side).toMatch(/z-20/);
-    expect(side).toMatch(/grid-cols-\[auto_1fr_auto\]/);
-    expect(side).toMatch(/aktivId \? 'max-md:hidden'/);
+    expect(side).toMatch(/ml-auto flex items-center/);
+    expect(side).toMatch(/skjulTelefonListe \? 'max-md:hidden'/);
     expect(side).not.toMatch(/To linjer/);
     expect(side).not.toMatch(/Velg kort/);
+    expect(side).not.toMatch(/DropdownMenu/);
   });
 
   it('Ny melding er ikon, compose åpner Kunde · Intern · Support — ingen Mekaniker', () => {
@@ -152,7 +150,7 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
     expect(side).toMatch(/t\.unread/);
     expect(pane).toMatch(/Ingen valgte meldinger/);
     expect(pane).toMatch(/<Inbox /);
-    expect(pane).toMatch(/Ny chat/);
+    expect(pane).toMatch(/Send melding/);
     expect(pane).not.toMatch(/Oversikt/);
     expect(chrome).toMatch(/InboxHovedflate/);
     expect(chrome).toMatch(/InboxSidebar/);

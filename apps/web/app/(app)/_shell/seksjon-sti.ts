@@ -14,6 +14,12 @@ export function erDealerInnboks(pathname: string): boolean {
   return pathname === '/innboks' || pathname.startsWith('/innboks/');
 }
 
+/** Dealer- eller Endwise-innboks — lås scroll i app-skallet. */
+export function erInnboksFlate(pathname: string): boolean {
+  if (erDealerInnboks(pathname)) return true;
+  return pathname === '/endwise/innboks' || pathname.startsWith('/endwise/innboks/');
+}
+
 /** Åpen dealer-tråd (`/innboks/:id`), ikke lista. */
 export function innboksTradId(pathname: string): string | null {
   const treff = pathname.match(/^\/innboks\/([^/]+)$/);

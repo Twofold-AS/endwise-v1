@@ -25,6 +25,7 @@ import { PHONE_SAFE_TOP } from '@/app/(app)/_shell/phone-home';
 import { PhoneProfilMeny } from '@/app/(app)/_shell/phone-profil-meny';
 import { PhoneSokFelt } from '@/app/(app)/_shell/phone-sok-felt';
 import { RONNY_PHONE_IDLE, RonnyBot } from '@/app/(app)/_workshop/ronny-bot';
+import type { RonnyAnsikt } from '@/app/(app)/_workshop/ronny-idle';
 import { RonnyForstorIkon, RonnyHandtak } from '@/app/(app)/_workshop/ronny-ikoner';
 import { RONNY_SHEET_RADIUS_PX } from '@/app/(app)/_workshop/ronny-sheet';
 
@@ -32,10 +33,10 @@ import { RONNY_SHEET_RADIUS_PX } from '@/app/(app)/_workshop/ronny-sheet';
  * Uinnlogget visuell GO — ekte chrome/sheet/felt, ikke HTML-mock.
  * ?tema=light|dark  ?vis=chrome|meny|sheet|sok
  */
-type Vis = 'chrome' | 'meny' | 'sheet' | 'sok';
+type Vis = 'chrome' | 'meny' | 'sheet' | 'sok' | 'ansikt';
 
 function lesVis(raw: string | null): Vis {
-  if (raw === 'meny' || raw === 'sheet' || raw === 'sok') return raw;
+  if (raw === 'meny' || raw === 'sheet' || raw === 'sok' || raw === 'ansikt') return raw;
   return 'chrome';
 }
 
@@ -51,9 +52,38 @@ function MikaelGoInnhold() {
 
   return (
     <div className={`min-h-dvh bg-bg text-fg ${PHONE_SAFE_TOP}`}>
-      <Chrome vis={vis} />
+      {vis === 'ansikt' ? <AnsiktGo /> : <Chrome vis={vis} />}
       {vis === 'sheet' ? <Sheet /> : null}
       {vis === 'sok' ? <SokGo /> : null}
+    </div>
+  );
+}
+
+const RONNY_ANSIKT: { id: RonnyAnsikt; label: string }[] = [
+  { id: 'curieux', label: 'Nysgjerrig' },
+  { id: 'heureux', label: 'Glad' },
+  { id: 'wink', label: 'Blunk' },
+  { id: 'surpris', label: 'Overrasket' },
+];
+
+function AnsiktGo() {
+  return (
+    <div data-ronny-ansikt-go className="mx-auto flex max-w-[390px] flex-col gap-6 px-4 py-8">
+      <p className="text-title text-fg">Ronny — tillatte ansikt</p>
+      <div className="grid grid-cols-2 gap-4">
+        {RONNY_ANSIKT.map((a) => (
+          <div
+            key={a.id}
+            data-ronny-ansikt-kort={a.id}
+            className="flex flex-col items-center gap-2 rounded-[24px] border border-divide bg-card px-3 py-5"
+          >
+            <span className="inline-flex size-16 items-center justify-center rounded-full bg-fg">
+              <RonnyBot size={ronnySizeForSirkel(56)} ansikt={a.id} />
+            </span>
+            <p className="text-label text-fg">{a.label}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

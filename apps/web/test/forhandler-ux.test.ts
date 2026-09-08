@@ -110,7 +110,7 @@ describe('Ny jobb og tomflater', () => {
     expect(bar).toMatch(/Alle chatter|setPart/);
     expect(side).toMatch(/NyMeldingIkon/);
     expect(pane).toMatch(/Ingen valgte meldinger/);
-    expect(pane).toMatch(/Ny chat/);
+    expect(pane).toMatch(/Send melding/);
     expect(side).not.toMatch(/SAK-/);
   });
 

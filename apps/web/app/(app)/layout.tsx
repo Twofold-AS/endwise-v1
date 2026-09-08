@@ -13,6 +13,7 @@ import { erTillattMekanikerSti } from './_shell/nav';
 import { PHONE_SHELL_ROT } from './_shell/phone-home';
 import { PhoneShell } from './_shell/phone-shell';
 import { PwaRegister } from './_shell/pwa-register';
+import { erInnboksFlate } from './_shell/seksjon-sti';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
 import { StandbyPanel } from './_shell/standby-panel';
@@ -29,6 +30,7 @@ import { WorkshopBloub } from './_workshop/workshop-bloub';
 export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? '';
+  const innboksFlate = erInnboksFlate(pathname);
   const { data: session, isPending } = useSession();
   const { isMechanic, isAdmin, isLoading, needsOnboarding, erPlattform } = useOrgRole();
   const [plattformVarsel, setPlattformVarsel] = useState<string | null>(null);
@@ -161,9 +163,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       </Suspense>
                       <div
                         data-ronny-side-scroll
-                        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
+                        className={`flex min-h-0 min-w-0 flex-1 flex-col ${
+                          innboksFlate ? 'overflow-hidden' : 'overflow-y-auto'
+                        }`}
                       >
-                        <main className="min-w-0 flex-1 md:w-[598px]">
+                        <main
+                          className={`min-w-0 flex-1 md:w-[598px] ${
+                            innboksFlate ? 'flex min-h-0 flex-col overflow-hidden' : ''
+                          }`}
+                        >
                           {plattformVarsel ? (
                             <div className="flex h-row items-center justify-between bg-warn-soft px-4 text-warn">
                               <p className="text-label">{plattformVarsel}</p>

@@ -79,7 +79,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).toMatch(/Pulse30dSpark/);
     expect(hjem).toMatch(/PulseJobbFlis/);
     expect(hjem).toMatch(/Siste 30 dager/);
-    expect(hjem).toMatch(/grid-cols-2/);
+    expect(hjem).toMatch(/flex-1 basis-0/);
     expect(hjem).toMatch(/Planlagt/);
     expect(hjem).not.toMatch(/dither-kit|DitherGradient|DitherDonutChart/);
     expect(hjem).not.toMatch(/pulse-preview/);
@@ -213,7 +213,8 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(kort).toMatch(/size=\{22\}/);
     expect(kort).toMatch(/#ffffff/);
     expect(kort).not.toMatch(/bg-canvas|bg-card text-fg shadow-none ring-1/);
-    expect(kort).toMatch(/flex min-h-11 w-full min-w-0 items-center gap-3/);
+    expect(kort).toMatch(/flex h-full min-h-11 w-full min-w-0 items-center/);
+    expect(kort).toMatch(/kompakt/);
     expect(kort).not.toMatch(/flex-col items-center justify-center gap-1/);
     expect(HJEM_KORT_TOM.svarhastighet).not.toMatch(/For lite data|for lite/);
   });
@@ -238,7 +239,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(preview).toMatch(/Pulse30dSpark/);
     expect(preview).toMatch(/Siste 30 dager/);
     expect(preview).toMatch(/PulseJobbFlis/);
-    expect(preview).toMatch(/grid-cols-2/);
+    expect(preview).toMatch(/flex-1 basis-0/);
     expect(preview).not.toMatch(/DitherDonutChart|PulseMiniBar|data-pulse-nye/);
     expect(DEALER_PULSE_KEYS).not.toContain('preview');
   });

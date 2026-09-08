@@ -89,15 +89,20 @@ export function DealerPulseKort({ className }: { className?: string }) {
         laster={deler.isLoading}
       />
 
-      <div data-pulse-bunn className="grid grid-cols-2 gap-3">
-        <PulseRadKort
-          href={PHONE_KORT_META.team.href}
-          ikon={Users}
-          tittel="På jobb"
-          teller={oversikt.isLoading ? undefined : `${ansatte.paJobb} / ${ansatte.totalt}`}
-          laster={oversikt.isLoading}
-        />
-        <PulseJobbFlis />
+      <div data-pulse-bunn className="flex w-full gap-3">
+        <div className="min-w-0 flex-1 basis-0">
+          <PulseRadKort
+            href={PHONE_KORT_META.team.href}
+            ikon={Users}
+            tittel="På jobb"
+            teller={oversikt.isLoading ? undefined : `${ansatte.paJobb} / ${ansatte.totalt}`}
+            laster={oversikt.isLoading}
+            kompakt
+          />
+        </div>
+        <div className="min-w-0 flex-1 basis-0">
+          <PulseJobbFlis />
+        </div>
       </div>
     </div>
   );

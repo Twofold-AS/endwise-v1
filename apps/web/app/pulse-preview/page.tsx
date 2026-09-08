@@ -45,9 +45,13 @@ export default function PulsePreview() {
 
         <PulseRadKort href="#innboks" ikon={Inbox} tittel="Les alle siste meldinger" teller={7} />
         <PulseRadKort href="#lager" ikon={Package} tittel="Venter på bestilling" teller={3} />
-        <div data-pulse-bunn className="grid grid-cols-2 gap-3">
-          <PulseRadKort href="#team" ikon={Users} tittel="På jobb" teller="2 / 4" />
-          <PulseJobbFlis />
+        <div data-pulse-bunn className="flex w-full gap-3">
+          <div className="min-w-0 flex-1 basis-0">
+            <PulseRadKort href="#team" ikon={Users} tittel="På jobb" teller="2 / 4" kompakt />
+          </div>
+          <div className="min-w-0 flex-1 basis-0">
+            <PulseJobbFlis />
+          </div>
         </div>
       </div>
     </div>

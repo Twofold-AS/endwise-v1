@@ -17,9 +17,11 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     const profil = les('../app/(app)/_shell/phone-chrome.ts');
     expect(bot).not.toMatch(/ink-invert/);
     expect(bot).toMatch(/ronnyTemaFarger/);
+    expect(bot).toMatch(/lesDomLos/);
     expect(bot).toMatch(/follow=\{false\}/);
     expect(farger).toMatch(/#141414/);
     expect(farger).toMatch(/#f3f3f3/);
+    expect(farger).toMatch(/lesDomLos/);
     expect(farger).not.toMatch(/#ffffff/);
     expect(bot).not.toMatch(/#1d1d1f/);
     expect(tema).toMatch(/\.ink-invert/);
@@ -53,6 +55,8 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(input).toMatch(/FELT_MD/);
     expect(prompt).toMatch(/FELT_SM/);
     expect(auth).toMatch(/FELT_LG/);
+    expect(tema).toMatch(/\.ew-felt-sok/);
+    expect(tema).toMatch(/\.ew-modus-plate/);
   });
 
   it('profilmeny-hårlinjer bruker .ew-haarlinje (fg-faint, synlig mot surface)', () => {
@@ -63,14 +67,14 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(meny).toMatch(/ew-haarlinje/);
     expect(meny).not.toMatch(/h-px bg-border/);
     expect(meny).toMatch(/PHONE_PROFIL_VILKAR/);
-    expect(meny).not.toMatch(/text-\[17px\]/);
-    expect(meny).not.toMatch(/font-\[700\]/);
+    expect(meny).toMatch(/PHONE_PROFIL_RAD/);
   });
 
   it('visuell GO-side monterer ekte Ronny, profilmeny og PromptInput', () => {
     const go = les('../app/visuell/mikael/page.tsx');
     expect(go).toMatch(/RonnyBot/);
     expect(go).toMatch(/PhoneProfilMeny/);
+    expect(go).toMatch(/tvingVis/);
     expect(go).toMatch(/PromptInput/);
     expect(go).toMatch(/bg-surface text-fg/);
     expect(go).toMatch(/PhoneSokFelt|ew-felt ew-felt-sm/);

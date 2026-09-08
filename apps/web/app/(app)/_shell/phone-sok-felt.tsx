@@ -15,21 +15,23 @@ export function PhoneSokFelt({
   'className' | 'type'
 >) {
   return (
-    <label className="ew-felt ew-felt-sm flex h-8 min-w-0 flex-1 items-center gap-2 px-2.5">
+    <label className="ew-felt ew-felt-sm ew-felt-sok flex h-8 min-w-0 flex-1 items-center">
       <Search
         size={16}
         strokeWidth={1.75}
         data-phone-sok-ikon
-        className="shrink-0 text-fg"
+        className="pointer-events-none shrink-0 text-fg"
         aria-hidden
       />
       <input
         ref={inputRef}
         data-phone-search
-        type="search"
+        type="text"
+        inputMode="search"
+        autoComplete="off"
         placeholder="Søk"
         aria-label="Søk"
-        className="min-w-0 flex-1 border-0 bg-transparent p-0 text-label text-fg outline-none placeholder:text-fg-muted"
+        className="w-0 min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-label text-fg outline-none placeholder:text-fg-muted"
         {...props}
       />
     </label>

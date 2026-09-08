@@ -1,12 +1,11 @@
 'use client';
 
 import { BloubBot, type ExpressionId } from '@endwise/ui/bloub/BloubBot';
-import { useEffect, useState } from 'react';
-import { useTema } from '@/app/_lib/tema-provider';
-import { ronnyTemaFarger } from './ronny-farger';
+import { useEffect, useLayoutEffect, useState } from 'react';
+import { lesDomLos, ronnyTemaFarger } from './ronny-farger';
 import { IDLE_MS, RONNY_IDLE } from './ronny-idle';
 
-export { ronnyTemaFarger } from './ronny-farger';
+export { lesDomLos, ronnyTemaFarger } from './ronny-farger';
 export { IDLE_MS, RONNY_IDLE, RONNY_PHONE_IDLE } from './ronny-idle';
 
 export function useRonnyIdle(
@@ -52,7 +51,17 @@ export function RonnyBot({
   expression?: ExpressionId;
   idleSett?: readonly ExpressionId[];
 }) {
-  const { los } = useTema();
+  const [los, setLos] = useState(lesDomLos);
+  useLayoutEffect(() => {
+    const sync = () => setLos(lesDomLos());
+    sync();
+    const mo = new MutationObserver(sync);
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme'],
+    });
+    return () => mo.disconnect();
+  }, []);
   const { kropp, oye } = ronnyTemaFarger(los);
   const idle = useRonnyIdle(!spin && !expression, idleSett ?? RONNY_IDLE);
   const visUttrykk: ExpressionId = expression ?? (spin ? 'surpris' : idle);

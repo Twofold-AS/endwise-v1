@@ -11,6 +11,14 @@ export const RONNY_OYE_LYS = '#f3f3f3';
 export const RONNY_KROPP_MORK = '#f3f3f3';
 export const RONNY_OYE_MORK = '#141414';
 
+/** Les resolved tema fra DOM — `useTema().los` starter som light før hydrate. */
+export function lesDomLos(): LosTema {
+  if (typeof document === 'undefined') return 'light';
+  const rot = document.documentElement;
+  if (rot.classList.contains('dark') || rot.dataset.theme === 'dark') return 'dark';
+  return 'light';
+}
+
 export function ronnyTemaFarger(los: LosTema): { kropp: string; oye: string } {
   return los === 'dark'
     ? { kropp: RONNY_KROPP_MORK, oye: RONNY_OYE_MORK }

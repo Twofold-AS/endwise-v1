@@ -125,6 +125,7 @@ export function PulseRadKort({
   tittel,
   teller,
   laster = false,
+  kompakt = false,
 }: {
   href: string;
   ikon: LucideIcon;
@@ -132,18 +133,24 @@ export function PulseRadKort({
   teller?: string | number;
   mock?: boolean;
   laster?: boolean;
+  /** Par-flis: skjul pil så 50/50-sporet ikke sprekker. */
+  kompakt?: boolean;
 }) {
   return (
     <Link
       href={href as Route}
       data-pulse-rad={tittel}
-      className={`${PHONE_DEST_FYLL} flex min-h-11 w-full min-w-0 items-center gap-3 px-4 py-3 [touch-action:manipulation]`}
+      className={`${PHONE_DEST_FYLL} flex h-full min-h-11 w-full min-w-0 items-center overflow-hidden py-3 [touch-action:manipulation] ${
+        kompakt ? 'gap-2 px-3' : 'gap-3 px-4'
+      }`}
     >
       <PulseIkonFlate>
         <Ikon size={22} strokeWidth={1.75} aria-hidden />
       </PulseIkonFlate>
       <span className="min-w-0 flex-1 truncate text-label text-fg">{tittel}</span>
-      <ArrowUpRight size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" aria-hidden />
+      {kompakt ? null : (
+        <ArrowUpRight size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" aria-hidden />
+      )}
       <span className="shrink-0 text-label text-fg tabular-nums">
         {laster ? (
           <span className="inline-block h-4 w-6 animate-pulse rounded-sm bg-border" />
@@ -155,18 +162,18 @@ export function PulseRadKort({
   );
 }
 
-/** +Jobb — samme bredde som På jobb (50/50). Litt større enn radkortene. */
+/** +Jobb — samme spor som På jobb (50/50). Litt større enn radkortene. */
 export function PulseJobbFlis() {
   return (
     <Link
       href={'/bookinger/ny' as Route}
       data-pulse-jobb
-      className={`${PHONE_DEST_FYLL} flex min-h-14 w-full min-w-0 items-center gap-3 px-4 py-3.5 text-fg [touch-action:manipulation]`}
+      className={`${PHONE_DEST_FYLL} flex h-full min-h-14 w-full min-w-0 items-center gap-3 overflow-hidden px-3 py-3.5 text-fg [touch-action:manipulation]`}
     >
       <PulseIkonFlate>
         <Plus size={22} strokeWidth={1.75} aria-hidden />
       </PulseIkonFlate>
-      <span className="text-[15px] font-[650]">Jobb</span>
+      <span className="truncate text-[15px] font-[650]">Jobb</span>
     </Link>
   );
 }

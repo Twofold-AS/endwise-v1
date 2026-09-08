@@ -20,12 +20,15 @@ export function PhoneProfilMeny({
   navn,
   epost,
   innstillingerHref,
+  tvingVis = false,
 }: {
   apen: boolean;
   onLukk: () => void;
   navn: string | null;
   epost: string | null;
   innstillingerHref: string;
+  /** Visuell GO på desktop — produktet holder `md:hidden`. */
+  tvingVis?: boolean;
 }) {
   const router = useRouter();
 
@@ -39,6 +42,7 @@ export function PhoneProfilMeny({
   }, [apen, onLukk]);
 
   if (!apen) return null;
+  const kunTelefon = tvingVis ? '' : 'md:hidden';
 
   async function loggUt() {
     onLukk();
@@ -52,14 +56,14 @@ export function PhoneProfilMeny({
         type="button"
         data-phone-profil-scrim
         aria-label="Lukk meny"
-        className="fixed inset-0 z-[70] bg-transparent md:hidden"
+        className={`fixed inset-0 z-[70] bg-transparent ${kunTelefon}`}
         onClick={onLukk}
       />
       <div
         data-phone-profil-meny
         role="menu"
         aria-label="Profil"
-        className={`absolute right-3 z-[75] ${PHONE_PROFIL_MENY_TOPP} flex max-h-[min(72dvh,560px)] ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-y-auto rounded-[16px] border border-border bg-card py-2 shadow-lg md:hidden`}
+        className={`absolute right-3 z-[75] ${PHONE_PROFIL_MENY_TOPP} flex max-h-[min(72dvh,560px)] ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-y-auto rounded-[16px] border border-border bg-card py-1.5 shadow-lg ${kunTelefon}`}
       >
         <div className="px-4 pb-2">
           <p className="truncate text-[16px] font-[650] text-fg">{navn?.trim() || '—'}</p>
@@ -82,7 +86,7 @@ export function PhoneProfilMeny({
           onClick={onLukk}
           className={PHONE_PROFIL_RAD}
         >
-          <MessageCirclePlus size={16} strokeWidth={1.75} />
+          <MessageCirclePlus size={18} strokeWidth={2} />
           Forespørsel
         </Link>
         <Link
@@ -92,7 +96,7 @@ export function PhoneProfilMeny({
           onClick={onLukk}
           className={PHONE_PROFIL_RAD}
         >
-          <Settings size={16} strokeWidth={1.75} />
+          <Settings size={18} strokeWidth={2} />
           Innstillinger
         </Link>
         <div data-phone-profil-modus-over className="ew-haarlinje" />
@@ -122,7 +126,7 @@ export function PhoneProfilMeny({
           onClick={() => void loggUt()}
           className={`${PHONE_PROFIL_RAD} w-full text-left`}
         >
-          <LogOut size={16} strokeWidth={1.75} />
+          <LogOut size={18} strokeWidth={2} />
           Logg ut
         </button>
         <div data-phone-profil-vilkar-skille className="ew-haarlinje" />
@@ -135,7 +139,7 @@ export function PhoneProfilMeny({
         >
           Vilkår
         </Link>
-        <p data-phone-profil-copy className="px-4 pt-1.5 pb-0.5 text-[11px] text-fg-faint">
+        <p data-phone-profil-copy className="px-4 pt-1 pb-0.5 text-[11px] text-fg-faint">
           © Twofold
         </p>
       </div>

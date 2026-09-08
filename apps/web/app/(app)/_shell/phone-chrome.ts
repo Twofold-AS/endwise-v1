@@ -48,11 +48,11 @@ export const PHONE_PROFIL_MENY_BREDDE = 'w-[min(100%-1.5rem,260px)]';
  */
 export const PHONE_PROFIL_SIRKEL = `${PHONE_AVATAR_KLASSE} bg-fg text-label text-bg dark:bg-[#f3f3f3] dark:text-[#141414]`;
 
-/** Meny-rader: samme mål, tykk tekst. Vilkår er slankere. */
+/** Meny-rader: 17/700 som øvrige knapper, tettere. Vilkår slankere. */
 export const PHONE_PROFIL_RAD =
-  'flex h-9 items-center gap-2.5 px-4 text-[15px] font-[650] leading-none text-fg';
+  'flex h-8 items-center gap-2 px-4 text-[17px] font-[700] leading-none text-fg';
 export const PHONE_PROFIL_VILKAR =
-  'flex h-8 items-center px-4 text-[13px] font-[450] leading-none text-fg-muted';
+  'flex h-7 items-center px-4 text-[13px] font-[450] leading-none text-fg-muted';
 
 /** Samme 16px som sidebar-rader (`IKON` i sidebar.tsx). PC-skinne. */
 export const SHELL_TOGGLE_PX = 16;

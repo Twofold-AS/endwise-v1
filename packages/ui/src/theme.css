@@ -207,6 +207,16 @@
   padding-inline: 0.75rem;
 }
 
+/* Chrome-søk: ikon + tekst i flex — ikke shorthand som dekker placeholder. */
+.ew-felt-sok {
+  padding-inline: 0.625rem;
+  gap: 0.625rem;
+}
+.ew-felt-sok input {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 /*
  * Synlig hårlinje på surface/card.
  * `--ew-border` / `--ew-border-strong` er for nære flaten (mørkt #262626/#3d3d3d)
@@ -214,10 +224,24 @@
  */
 .ew-haarlinje {
   display: block;
+  width: 100%;
   height: 0;
   flex-shrink: 0;
   border: 0;
   border-top: 1px solid var(--ew-fg-faint);
+}
+
+/*
+ * Modus-segmentplate. `--ew-inset` == `--ew-surface` i mørkt (#262626),
+ * så `bg-inset` forsvinner mot card. Lyst: inset. Mørkt: canvas (`--ew-bg`).
+ */
+.ew-modus-plate {
+  background: var(--ew-inset);
+}
+.dark .ew-modus-plate,
+[data-theme="dark"] .ew-modus-plate {
+  background: var(--ew-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ew-fg) 16%, transparent);
 }
 
 /*

@@ -101,8 +101,6 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(meny).not.toMatch(/h-px bg-border/);
     expect(meny).not.toMatch(/mx-4/);
     expect(meny).toMatch(/PHONE_PROFIL_VILKAR/);
-    expect(meny).not.toMatch(/text-\[17px\]/);
-    expect(meny).not.toMatch(/font-\[700\]/);
     expect(meny).toMatch(/data-phone-profil-ut-skille/);
     expect(meny).toMatch(/Twofold/);
     expect(meny).toMatch(/Veikart/);
@@ -115,12 +113,13 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(tema).toMatch(/data-phone-modus-segment/);
     expect(tema).toMatch(/data-modus-sirkel/);
     expect(tema).toMatch(/border border-fg/);
-    expect(tema).toMatch(/bg-inset/);
-    expect(tema).toMatch(/dark:bg-bg/);
+    expect(tema).toMatch(/ew-modus-plate/);
+    expect(tema).not.toMatch(/bg-inset/);
+    expect(les('../../../packages/ui/src/theme.css')).toMatch(/\.ew-modus-plate/);
     expect(meny).toMatch(/PHONE_PROFIL_RAD/);
-    expect(PHONE_PROFIL_RAD).toMatch(/h-9/);
-    expect(PHONE_PROFIL_RAD).toMatch(/text-\[15px\]/);
-    expect(PHONE_PROFIL_RAD).toMatch(/font-\[650\]/);
+    expect(PHONE_PROFIL_RAD).toMatch(/h-8/);
+    expect(PHONE_PROFIL_RAD).toMatch(/text-\[17px\]/);
+    expect(PHONE_PROFIL_RAD).toMatch(/font-\[700\]/);
     expect(PHONE_PROFIL_VILKAR).toMatch(/text-\[13px\]/);
     expect(PHONE_PROFIL_VILKAR).not.toMatch(/font-\[700\]/);
     expect(PHONE_PROFIL_MENY_BREDDE).toMatch(/260px/);

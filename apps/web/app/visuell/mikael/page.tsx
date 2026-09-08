@@ -92,6 +92,7 @@ function Chrome({ vis }: { vis: Vis }) {
         navn="Mikael"
         epost="mikael@verksted.test"
         innstillingerHref="/innstillinger?fane=konto"
+        tvingVis
       />
       <div data-phone-top-bar="2" className={PHONE_BAR2}>
         <PhoneHScroll>

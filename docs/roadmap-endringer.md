@@ -9,7 +9,7 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 **Type:** telefon-profilmeny polish. Ingen techstack-endring. Ingen ny UI-pakke.
 **Godkjent av:** Mikael follow-up på samme CODE-GO-gren.
-**Endring:** **F5-13** `progress`. `.ew-haarlinje` på `--ew-border-strong` (synlig over/under Modus og over Vilkår i mørkt). Vilkår 16/650. Ronny-tema + `.ew-felt` uendret. ⛔ #114/#119. Draft, ikke merge.
+**Endring:** **F5-13** `progress`. `.ew-haarlinje` på `--ew-fg-faint` (#adadad/#707070) — `--ew-border-strong` var fortsatt usynlig mot surface. Vilkår 17/700. Ronny-tema + `.ew-felt` uendret. ⛔ #114/#119. Draft, ikke merge.
 
 ---
 

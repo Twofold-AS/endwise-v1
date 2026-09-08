@@ -50,13 +50,15 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(auth).toMatch(/FELT_LG/);
   });
 
-  it('profilmeny-hårlinjer bruker .ew-haarlinje (border-strong, synlig i mørkt)', () => {
+  it('profilmeny-hårlinjer bruker .ew-haarlinje (fg-faint, synlig mot surface)', () => {
     const tema = les('../../../packages/ui/src/theme.css');
     const meny = les('../app/(app)/_shell/phone-profil-meny.tsx');
     expect(tema).toMatch(/\.ew-haarlinje\s*\{/);
-    expect(tema).toMatch(/border-top:\s*1px solid var\(--ew-border-strong\)/);
+    expect(tema).toMatch(/border-top:\s*1px solid var\(--ew-fg-faint\)/);
     expect(meny).toMatch(/ew-haarlinje/);
     expect(meny).not.toMatch(/h-px bg-border/);
+    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}text-\[17px\]/);
+    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}font-\[700\]/);
   });
 
   it('visuell GO-side monterer ekte Ronny, profilmeny og PromptInput', () => {

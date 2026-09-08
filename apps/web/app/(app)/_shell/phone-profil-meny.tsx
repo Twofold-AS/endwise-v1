@@ -125,7 +125,7 @@ export function PhoneProfilMeny({
           role="menuitem"
           data-phone-profil-vilkar
           onClick={onLukk}
-          className="flex h-11 items-center px-4 text-[16px] font-[650] text-fg"
+          className="flex h-11 items-center px-4 text-[17px] font-[700] text-fg"
         >
           Vilkår
         </Link>

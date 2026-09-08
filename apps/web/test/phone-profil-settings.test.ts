@@ -96,8 +96,8 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(meny).toMatch(/data-phone-profil-vilkar/);
     expect(meny).toMatch(/ew-haarlinje/);
     expect(meny).not.toMatch(/h-px bg-border/);
-    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}text-\[16px\]/);
-    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}font-\[650\]/);
+    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}text-\[17px\]/);
+    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}font-\[700\]/);
     expect(meny).toMatch(/Veikart/);
     expect(meny).toMatch(/Oppdateringer/);
     expect(meny).toMatch(/Logg ut/);

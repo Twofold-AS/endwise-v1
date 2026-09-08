@@ -33,8 +33,8 @@
 > Ronny og profil er samme `size-7` / 28px-sirkel. Bloub viewBox (158/100)
 > skaleres med `ronnySizeForSirkel` så kroppen fyller sirkelen. Profilmeny
 > 260px, Theme→**Modus**, hårlinje over/under Modus, segment med sirkel på
-> aktivt ikon, hårlinje over vilkår (`.ew-haarlinje` / `--ew-border-strong`,
-> synlig i mørkt), vilkår 16/650. Popup-topp = dest-pille-topp
+> aktivt ikon, hårlinje over vilkår (`.ew-haarlinje` / `--ew-fg-faint`,
+> synlig mot surface), vilkår 17/700. Popup-topp = dest-pille-topp
 > (`mt-2.5` = `PHONE_BAR2_PY`), ikke bar-2-padding. Ink/canvas, blå Oppgrader
 > OK. Ingen ny pakke. ⛔ pulse-kort-redesign. ⛔ Synara. ⛔ #114/#119.
 >

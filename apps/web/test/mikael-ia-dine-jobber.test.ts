@@ -143,7 +143,7 @@ describe('Forhandler-info uten Grainient', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     const innboks = utenKommentarer(les('../app/(app)/innboks/page.tsx'));
     expect(dealer).not.toMatch(/ForhandlerInfoKort/);
-    expect(dealer).toMatch(/navn="I dag"/);
+    expect(dealer).toMatch(/Planlagt/);
     expect(mek).toMatch(/ForhandlerInfoKort/);
     expect(dash).not.toMatch(/ForhandlerInfoKort/);
     expect(dash).toMatch(/DealerPulseKort|DealerDestinasjonskort/);

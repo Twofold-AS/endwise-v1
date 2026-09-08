@@ -2,7 +2,9 @@
 
 #135 merget (chrome). #136 = mild kort-pass. **This PR:** hardere Apple on **main content / card surface only**.
 
-**07.09.2026 (Mikael pulse CODE-GO):** Innholdskolonnen er operative pulse-kort (I dag · Innboks · Deler · Svarhastighet · Timeplan-gulv · Team + footer Organisasjon · Hjelp). Destinasjonsrutenettet under er historikk. Chrome-låsen («Don’t touch PhoneShell») gjelder fortsatt.
+**08.09.2026 (Mikael CODE-GO):** Innholdskolonnen er **kun fem flater** — Planlagt/Pågår/Ferdig + månedsboble · Innboks-rad · Lager-rad · ansatte/totalt · + Jobb. Svarhastighet, Timeplan-gulv, Team-liste og Org/Hjelp-footer er borte. Chrome-låsen («Don’t touch PhoneShell») gjelder fortsatt. Ronny/profil urørt.
+
+**07.09.2026 (Mikael pulse CODE-GO):** Innholdskolonnen var seks operative pulse-kort (historikk). Destinasjonsrutenettet under er eldre historikk.
 
 ## Scope lock
 - IN: dealer destination cards (`phone-home*` + dashboard content column).

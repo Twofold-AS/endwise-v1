@@ -158,8 +158,8 @@ describe('Hjem-kort fylles fra eksisterende API-er', () => {
   it('dealer-hjem mapper timeplan/jobber og viser designet tomtilstand', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/phone-kort.tsx'));
-    expect(hjem).toMatch(/nesteTreJobber|plan\.map/);
-    expect(hjem).toMatch(/Timeplan-gulv|innboksPulse/);
+    expect(hjem).toMatch(/innboksRad|lagerRad|ansattePulse/);
+    expect(hjem).not.toMatch(/Timeplan-gulv|nesteTreJobber/);
     expect(hjem).not.toMatch(/tjenesterMeta/);
     expect(hjem).not.toMatch(/key === 'timeplan'\) return \{\}/);
     expect(kort).toMatch(/data-phone-kort-meta|Ingen data/);
@@ -167,6 +167,6 @@ describe('Hjem-kort fylles fra eksisterende API-er', () => {
 
   it('desktop Verkstedet viser samme destinasjonskort-fyll', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
-    expect(dash).toMatch(/DealerDestinasjonskort|PhoneHomeDealer|timeplanMeta/);
+    expect(dash).toMatch(/DealerDestinasjonskort|PhoneHomeDealer|DealerPulseKort/);
   });
 });

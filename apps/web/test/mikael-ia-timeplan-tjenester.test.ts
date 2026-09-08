@@ -29,10 +29,8 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
       ['innboks'],
-      ['deler'],
-      ['svarhastighet'],
-      ['timeplan'],
-      ['team'],
+      ['lager'],
+      ['team', 'jobb'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(PHONE_KORT_META.timeplan.label).toBe('Timeplan');
@@ -42,16 +40,16 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(PHONE_KORT_META.statistikk.label).toBe('Rapporter');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     const keys = DEALER_PHONE_HJEM.flatMap((r) => r.keys);
-    expect(keys).toContain('timeplan');
+    expect(keys).not.toContain('timeplan');
     expect(keys).not.toContain('tjenester');
     expect(keys).not.toContain('prisliste');
+    expect(keys).toContain('jobb');
   });
 
-  it('Timeplan-kortet har neste rader uten Ny jobb', () => {
+  it('Timeplan-gulv er borte; + Jobb er ny jobb', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).not.toMatch(/Ny jobb/);
-    expect(hjem).toMatch(/nesteTreJobber|plan\.map/);
-    expect(hjem).toMatch(/PHONE_KORT_META|Timeplan-gulv/);
+    expect(hjem).toMatch(/PulseJobbFlis|bookinger\/ny/);
+    expect(hjem).not.toMatch(/Timeplan-gulv|nesteTreJobber/);
   });
 
   it('PC-sidebar: Timeplan og Salg, Organisasjon uten Timeplan-pille', () => {

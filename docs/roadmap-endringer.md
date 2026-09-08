@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-08 — F3-05 forhandler-hjem kun fem flater (Mikael CODE-GO)
+
+**Type:** dealer-hjem innholdskolonne. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB-tabell.
+**Godkjent av:** Mikael CODE-GO — only what he described.
+**Endring:** **F3-05** `progress`. Forhandler `/home` viser KUN toppkort (Planlagt · Pågår · Ferdig + Amicro-donut denne vs forrige måned) · Innboks-rad · Lager-rad · ansatte på jobb/totalt · + Jobb. Fjernet Svarhastighet, Timeplan-gulv, Team-liste, Org/Hjelp-footer. Desktop B2 + telefon under chrome. Mock+badge uten historikk. ⛔ Ronny/profil. ⛔ #114/#119. Draft, ikke merge.
+
+---
+
 ## 2026-09-08 — F1-02 Mobbin sign-in polish (Mikael CODE-GO)
 
 **Type:** visuell polish på `/signin`. Ingen techstack-endring. Ingen ny UI-pakke. Ingen auth-mekanikk.

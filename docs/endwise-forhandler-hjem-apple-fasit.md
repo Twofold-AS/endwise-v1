@@ -11,8 +11,9 @@ Gjelder forhandlerens destinasjonskort på `/dashboard` og `/verkstedet`
 **Hardere visuelt pass** (etter mild #136): se
 `docs/endwise-forhandler-hjem-apple-hard-fasit.md`.
 
-**07.09.2026 (Mikael pulse CODE-GO):** Innhold er pulse-kort, ikke 2-og-2 destinasjonsrutenett.
-Timeplan / Rapporter-parret er erstattet. Chrome urørt.
+**08.09.2026 (Mikael CODE-GO):** Innhold er fem flater (Planlagt + Innboks-rad + Lager-rad + ansatte/+Jobb), ikke 2-og-2 destinasjonsrutenett. Chrome urørt.
+
+**07.09.2026 (Mikael pulse CODE-GO):** Innhold var seks pulse-kort. Timeplan / Rapporter-parret er erstattet. Chrome urørt.
 
 ## Scope
 

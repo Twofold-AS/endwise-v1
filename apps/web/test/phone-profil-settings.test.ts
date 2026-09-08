@@ -9,7 +9,9 @@ import {
   PHONE_BAR2_PY,
   PHONE_PROFIL_MENY_BREDDE,
   PHONE_PROFIL_MENY_TOPP,
+  PHONE_PROFIL_RAD,
   PHONE_PROFIL_SIRKEL,
+  PHONE_PROFIL_VILKAR,
   PHONE_RONNY_SIRKEL,
   ronnySizeForSirkel,
 } from '../app/(app)/_shell/phone-chrome.ts';
@@ -29,22 +31,22 @@ function utenKommentarer(kilde: string) {
 describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
   it('top-bar 2 har mer luft; profil-sirkel er token-invertert', () => {
     expect(PHONE_BAR2).toMatch(/py-2\.5/);
-    expect(PHONE_PROFIL_SIRKEL).toMatch(/bg-fg/);
-    expect(PHONE_PROFIL_SIRKEL).toMatch(/text-bg/);
+    expect(PHONE_PROFIL_SIRKEL).toMatch(/ew-profil-sirkel/);
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/PHONE_BAR2/);
     expect(shell).toMatch(/PHONE_PROFIL_SIRKEL/);
     expect(shell).toMatch(/data-phone-sok-ikon|Search/);
   });
 
-  it('søk-overlay har ikke dest-ikonstripe eller store dest-rader', () => {
+  it('søk-overlay har dest-ikonstripe og kategoriserte treff', () => {
     const overlay = utenKommentarer(les('../app/(app)/_shell/phone-sok-overlay.tsx'));
     expect(overlay).toMatch(/search\.global|trpc\.search/);
     expect(overlay).toMatch(/data-phone-sok-gruppe/);
     expect(overlay).toMatch(/Ingen treff/);
-    expect(overlay).not.toMatch(/data-phone-sok-dest-ikon/);
+    expect(overlay).toMatch(/data-phone-sok-dest-ikon/);
+    expect(overlay).toMatch(/data-phone-sok-dest-stripe/);
     expect(overlay).not.toMatch(/data-phone-sok-dest-rad/);
-    expect(overlay).toMatch(/data-phone-sok-ikon/);
+    expect(overlay).toMatch(/PhoneSokFelt|data-phone-sok-ikon/);
   });
 
   it('slår server-treff og sider sammen under kategoritittel', () => {
@@ -96,8 +98,10 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(meny).toMatch(/data-phone-profil-vilkar/);
     expect(meny).toMatch(/ew-haarlinje/);
     expect(meny).not.toMatch(/h-px bg-border/);
-    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}text-\[17px\]/);
-    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}font-\[700\]/);
+    expect(meny).not.toMatch(/mx-4/);
+    expect(meny).toMatch(/PHONE_PROFIL_VILKAR/);
+    expect(meny).toMatch(/data-phone-profil-ut-skille/);
+    expect(meny).toMatch(/Twofold/);
     expect(meny).toMatch(/Veikart/);
     expect(meny).toMatch(/Oppdateringer/);
     expect(meny).toMatch(/Logg ut/);
@@ -108,6 +112,15 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(tema).toMatch(/data-phone-modus-segment/);
     expect(tema).toMatch(/data-modus-sirkel/);
     expect(tema).toMatch(/border border-fg/);
+    expect(tema).toMatch(/ew-modus-plate/);
+    expect(tema).not.toMatch(/bg-inset/);
+    expect(les('../../../packages/ui/src/theme.css')).toMatch(/\.ew-modus-plate/);
+    expect(meny).toMatch(/PHONE_PROFIL_RAD/);
+    expect(PHONE_PROFIL_RAD).toMatch(/h-8/);
+    expect(PHONE_PROFIL_RAD).toMatch(/text-\[17px\]/);
+    expect(PHONE_PROFIL_RAD).toMatch(/font-\[700\]/);
+    expect(PHONE_PROFIL_VILKAR).toMatch(/text-\[13px\]/);
+    expect(PHONE_PROFIL_VILKAR).not.toMatch(/font-\[700\]/);
     expect(PHONE_PROFIL_MENY_BREDDE).toMatch(/260px/);
     expect(PHONE_PROFIL_MENY_TOPP).toBe('top-full mt-2.5');
     expect(PHONE_BAR2).toContain(PHONE_BAR2_PY);

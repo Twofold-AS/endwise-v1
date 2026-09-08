@@ -10,17 +10,26 @@ function les(rel: string) {
 }
 
 describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
-  it('Ronny bruker ink-invert (samme polaritet som profil bg-fg)', () => {
+  it('Ronny bruker tema-farger uten ink-invert (øyne synlige i begge modi)', () => {
     const bot = les('../app/(app)/_workshop/ronny-bot.tsx');
+    const farger = les('../app/(app)/_workshop/ronny-farger.ts');
     const tema = les('../../../packages/ui/src/theme.css');
     const profil = les('../app/(app)/_shell/phone-chrome.ts');
-    expect(bot).toMatch(/ink-invert/);
-    expect(bot).toMatch(/#141414/);
+    expect(bot).not.toMatch(/ink-invert/);
+    expect(bot).toMatch(/ronnyTemaFarger/);
+    expect(bot).toMatch(/data-ronny-los/);
+    expect(bot).toMatch(/follow=\{false\}/);
+    expect(tema).toMatch(/\[data-ronny-los="dark"\]/);
+    expect(tema).toMatch(/\.ew-profil-sirkel/);
+    const globals = les('../app/globals.css');
+    expect(globals).toMatch(/@custom-variant dark/);
+    expect(farger).toMatch(/#141414/);
+    expect(farger).toMatch(/#f3f3f3/);
+    expect(farger).toMatch(/lesDomLos/);
+    expect(farger).not.toMatch(/#ffffff/);
     expect(bot).not.toMatch(/#1d1d1f/);
     expect(tema).toMatch(/\.ink-invert/);
-    expect(tema).toMatch(/\.dark \.ink-invert/);
-    expect(tema).toMatch(/brightness\(0\) invert\(1\)/);
-    expect(profil).toMatch(/PHONE_PROFIL_SIRKEL[\s\S]*bg-fg[\s\S]*text-bg/);
+    expect(profil).toMatch(/PHONE_PROFIL_SIRKEL[\s\S]*ew-profil-sirkel/);
   });
 
   it('Ronny-sheet og desktop-panel følger surface/fg, ikke #fff', () => {
@@ -48,6 +57,8 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(input).toMatch(/FELT_MD/);
     expect(prompt).toMatch(/FELT_SM/);
     expect(auth).toMatch(/FELT_LG/);
+    expect(tema).toMatch(/\.ew-felt-sok/);
+    expect(tema).toMatch(/\.ew-modus-plate/);
   });
 
   it('profilmeny-hårlinjer bruker .ew-haarlinje (fg-faint, synlig mot surface)', () => {
@@ -57,17 +68,18 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(tema).toMatch(/border-top:\s*1px solid var\(--ew-fg-faint\)/);
     expect(meny).toMatch(/ew-haarlinje/);
     expect(meny).not.toMatch(/h-px bg-border/);
-    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}text-\[17px\]/);
-    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}font-\[700\]/);
+    expect(meny).toMatch(/PHONE_PROFIL_VILKAR/);
+    expect(meny).toMatch(/PHONE_PROFIL_RAD/);
   });
 
   it('visuell GO-side monterer ekte Ronny, profilmeny og PromptInput', () => {
     const go = les('../app/visuell/mikael/page.tsx');
     expect(go).toMatch(/RonnyBot/);
     expect(go).toMatch(/PhoneProfilMeny/);
+    expect(go).toMatch(/tvingVis/);
     expect(go).toMatch(/PromptInput/);
     expect(go).toMatch(/bg-surface text-fg/);
-    expect(go).toMatch(/ew-felt ew-felt-sm/);
+    expect(go).toMatch(/PhoneSokFelt|ew-felt ew-felt-sm/);
     const layout = les('../app/visuell/layout.tsx');
     expect(layout).toMatch(/endwise:tema/);
     expect(layout).toMatch(/tema/);

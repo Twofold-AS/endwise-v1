@@ -21,6 +21,9 @@
  */
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
 
+/* App-tema, ikke prefers-color-scheme — ellers blir dark: OS-styrt. */
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
 /*
  * Chrome-mobil: 100vh inkluderer den kollapsende adresselinjen.
  * html/body følger synlig viewport (dvh) så app-skallet ikke stikker

@@ -20,6 +20,21 @@
 > styling. Gjelder ENHVER ny app som konsumerer `@endwise/ui` — også etter at dither-kit ble fjernet,
 > siden shadcn/beUI-komponentene har samme problem.
 
+> ### ⚠️ Mikael CODE-GO polish (08.09.2026 kveld)
+> Ronny/profil: tema-farger, **ikke** `#ffffff` og **ikke** `.ink-invert`
+> (invert jevnet øynene). Lyst ink / canvas-soft; mørkt canvas-soft / ink.
+> Samme `size-7`. Ronny: to flater + tema-CSS (`data-ronny-los`).
+> `@custom-variant dark` følger `.dark`/`data-theme`, ikke OS.
+> Profilmeny: hårlinje
+> edge-to-edge, tettere 17/700-rader, Vilkår 13/450, skille over Logg ut,
+> `© Twofold`, Modus-plate `.ew-modus-plate` (inset lyst, `--ew-bg` mørkt
+> — `--ew-inset` er lik card i mørkt). Hjem: avlange ikonplater,
+> +Jobb større, På jobb/+Jobb **50/50** (`flex-1 basis-0`), spark *under*
+> tall med «Siste 30 dager» over, blå `#0066ff` 30d-serie, **ingen mock-badge**.
+> Søk: ikon i egen kolonne (`.ew-felt-sok`). Top-bar 2 uten tilbake-pil /
+> end-spacer. Overlay: dest-ikonstripe + kategoriserte treff. Ingen ny pakke.
+> ⛔ #114/#119.
+>
 > ### ⚠️ Mikael forhandler-hjem fem-flater korreksjon (08.09.2026)
 > Toppkort-spark er Amicro `DitherGrowthChart` linje/growth (forrige →
 > denne måned) i mini avrundet boble — **ikke** `DitherDonutChart` / sirkel.

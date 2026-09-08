@@ -69,9 +69,9 @@ describe('Workshop-sheet i app-skallet', () => {
     const idle = les('../app/(app)/_workshop/ronny-idle.ts');
     expect(idle).toMatch(/const IDLE_MS = 5000/);
     expect(bot).toMatch(/useRonnyIdle/);
-    expect(bot).toMatch(/ink-invert/);
-    expect(bot).toMatch(/#141414/);
-    expect(bot).toMatch(/#ffffff/);
+    expect(bot).not.toMatch(/ink-invert/);
+    expect(bot).toMatch(/ronnyTemaFarger/);
+    expect(bot).toMatch(/follow=\{false\}/);
     expect(fab).toMatch(/<RonnyBot/);
     expect(fab).not.toMatch(/BloubBot/);
     expect(fab).not.toMatch(/data-ronny-blink/);

@@ -2,8 +2,11 @@
 
 import { BloubBot, type ExpressionId } from '@endwise/ui/bloub/BloubBot';
 import { useEffect, useState } from 'react';
+import type { LosTema } from '../_lib/tema';
+import { ronnyTemaFarger } from './ronny-farger';
 import { IDLE_MS, RONNY_IDLE } from './ronny-idle';
 
+export { lesDomLos, ronnyTemaFarger } from './ronny-farger';
 export { IDLE_MS, RONNY_IDLE, RONNY_PHONE_IDLE } from './ronny-idle';
 
 export function useRonnyIdle(
@@ -30,19 +33,16 @@ export function useRonnySpinn(): { spin: boolean; trigg: () => void } {
   return { spin, trigg };
 }
 
-/** Lyst ink / lerret. Mørkt inverteres av `.ink-invert` (samme som profil `bg-fg`). */
-const RONNY_INK = '#141414';
-const RONNY_PAPIR = '#ffffff';
-
 /**
  * Chrome-Ronny — kun uttrykksbytte (ansikt/humør).
  * `playing={false}`: Bloub defaultCycle er tenke-/varsel-reel.
  * Klikk-spinn er CSS `data-ronny-spin="1"` + surpris.
- * Kropp er ink på lyst, hvit på mørkt (`.ink-invert` = profil-sirkel-polaritet).
+ * Kropp/øyne følger `ronnyTemaFarger` — ikke hvit, ikke CSS-filter
+ * som jevner øynene bort. `follow={false}` så øynene ikke flyr ut av 28px.
+ * To tegninger + `dark:` — SSR/hydrat holder feil JS-tema; CSS velger flaten.
  */
 export function RonnyBot({
   size,
-  paper = RONNY_PAPIR,
   spin = false,
   expression,
   idleSett,
@@ -56,15 +56,33 @@ export function RonnyBot({
   const idle = useRonnyIdle(!spin && !expression, idleSett ?? RONNY_IDLE);
   const visUttrykk: ExpressionId = expression ?? (spin ? 'surpris' : idle);
   return (
-    <span data-ronny-spin={spin ? '1' : undefined} className="ink-invert inline-flex">
+    <span data-ronny-spin={spin ? '1' : undefined} className="inline-flex">
+      <RonnyTegning size={size} los="light" expression={visUttrykk} />
+      <RonnyTegning size={size} los="dark" expression={visUttrykk} />
+    </span>
+  );
+}
+
+function RonnyTegning({
+  size,
+  los,
+  expression,
+}: {
+  size: number;
+  los: LosTema;
+  expression: ExpressionId;
+}) {
+  const { kropp, oye } = ronnyTemaFarger(los);
+  return (
+    <span data-ronny-los={los} className="inline-flex">
       <BloubBot
         size={size}
         shape="cercle"
-        color={RONNY_INK}
-        paper={paper}
+        color={kropp}
+        paper={oye}
         state="idle"
-        expression={visUttrykk}
-        follow
+        expression={expression}
+        follow={false}
         still={false}
         playing={false}
       />

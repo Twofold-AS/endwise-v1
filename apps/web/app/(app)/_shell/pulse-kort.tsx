@@ -3,7 +3,7 @@
 import { Badge, type LucideIcon } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { type ReactNode, useLayoutEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL } from './phone-home';
 import { maanedSparkSerie } from './phone-home-pulse';
 
@@ -237,20 +237,15 @@ export function PulseLinjeKort({
 
 const MAANED_BOBLE_PX = 72;
 
-/** Amicro DitherGrowthChart-algoritme på låst bitmap.
- * DitherGrowthChart sin rAF/RO-sti maler ikke i 72px-boblen (canvas blir 300×150, 0 piksler).
+/** Amicro DitherGrowthChart-algoritme som SVG (tiled under kurve).
+ * Canvas/rAF maler ikke i 72px-boblen (bitmap 300×150, 0 piksler) og synes
+ * ikke før hydrering — SVG er samme dither-språk og synlig i SSR.
  */
-function malMaanedDither(
-  ctx: CanvasRenderingContext2D,
-  values: number[],
-  size: number,
-  dpr: number,
-) {
-  const data = values.length > 0 ? values : [0];
+function maanedDitherCeller(forrige: number, denne: number, size: number) {
+  const data = maanedSparkSerie(forrige, denne);
   const maxVal = Math.max(1, ...data);
   const cell = 6;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, size, size);
+  const celler: { x: number; y: number }[] = [];
   for (let x = 0; x < size; x += cell) {
     const t = x / Math.max(1, size - 1);
     const exactIdx = t * (data.length - 1);
@@ -261,35 +256,28 @@ function malMaanedDither(
     const curveY = size - size * 0.9 * (val / maxVal);
     for (let y = size; y >= 0; y -= cell) {
       if (y < curveY) continue;
-      ctx.fillStyle = INK;
-      ctx.globalAlpha = 1;
-      ctx.fillRect(x, y - cell, cell - 1, cell - 1);
+      celler.push({ x, y: y - cell });
     }
   }
+  return celler;
 }
 
 function PulseMaanedDither({ forrige, denne }: { forrige: number; denne: number }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useLayoutEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(MAANED_BOBLE_PX * dpr);
-    canvas.height = Math.round(MAANED_BOBLE_PX * dpr);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    malMaanedDither(ctx, maanedSparkSerie(forrige, denne), MAANED_BOBLE_PX, dpr);
-  }, [denne, forrige]);
+  const celler = maanedDitherCeller(forrige, denne, MAANED_BOBLE_PX);
   return (
-    <canvas
-      ref={ref}
+    <svg
       data-pulse-maaned-canvas
       data-pulse-amicro="DitherGrowthChart"
-      width={MAANED_BOBLE_PX * 2}
-      height={MAANED_BOBLE_PX * 2}
-      style={{ width: MAANED_BOBLE_PX, height: MAANED_BOBLE_PX, display: 'block' }}
+      width={MAANED_BOBLE_PX}
+      height={MAANED_BOBLE_PX}
+      viewBox={`0 0 ${MAANED_BOBLE_PX} ${MAANED_BOBLE_PX}`}
+      role="presentation"
       aria-hidden
-    />
+    >
+      {celler.map((c) => (
+        <rect key={`${c.x}-${c.y}`} x={c.x} y={c.y} width={5} height={5} fill={INK} />
+      ))}
+    </svg>
   );
 }
 

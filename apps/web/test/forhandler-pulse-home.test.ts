@@ -224,7 +224,8 @@ describe('forhandler pulse-hjem v2 — I dag + linjekort', () => {
     expect(kort).toMatch(/bg-success/);
     expect(kort).toMatch(/bg-danger/);
     expect(kort).toMatch(/DitherGrowthChart/);
-    expect(kort).toMatch(/malMaanedDither|data-pulse-maaned-canvas/);
+    expect(kort).toMatch(/maanedDitherCeller|data-pulse-maaned-canvas/);
+    expect(kort).toMatch(/<svg/);
     expect(kort).toMatch(/MAANED_BOBLE_PX/);
     expect(kort).toMatch(/maanedSparkSerie/);
     expect(kort).toMatch(/bg-white/);

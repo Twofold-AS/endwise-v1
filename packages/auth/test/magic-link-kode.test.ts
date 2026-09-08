@@ -13,22 +13,23 @@ import {
 } from '../src/magic-link.ts';
 
 describe('magic-link-kode', () => {
-  it('genererer typebar kode uten 0/O/1/I', () => {
+  it('genererer 5-sifret PIN', () => {
     const kode = genererMagicLinkKode();
     expect(kode).toHaveLength(MAGIC_LINK_KODE_LENGDE);
-    expect(kode).toMatch(/^[A-Z2-9]+$/);
-    expect(kode).not.toMatch(/[01OI]/);
+    expect(MAGIC_LINK_KODE_LENGDE).toBe(5);
+    expect(kode).toMatch(/^\d{5}$/);
   });
 
-  it('normaliserer og grupperer visning', () => {
-    expect(normaliserMagicLinkKode('ab-cd ef')).toBe('ABCDEF');
-    expect(visMagicLinkKode('abcdefghijkl')).toBe('ABCD-EFGH-IJKL');
+  it('normaliserer til siffer og viser uten gruppering', () => {
+    expect(normaliserMagicLinkKode('48-29 1')).toBe('48291');
+    expect(visMagicLinkKode('48291')).toBe('48291');
+    expect(visMagicLinkKode('48 291')).toBe('48291');
   });
 
   it('verify-sti er samme endepunkt som e-postlenka, uten klient-next', () => {
-    const sti = magicLinkVerifySti('abcd-efgh-ijkl');
+    const sti = magicLinkVerifySti('48-291');
     expect(sti).toMatch(/^\/api\/auth\/magic-link\/verify\?/);
-    expect(sti).toMatch(/token=ABCDEFGHIJKL/);
+    expect(sti).toMatch(/token=48291/);
     expect(sti).toMatch(/callbackURL=%2Fsignin/);
     expect(sti).not.toMatch(/next=/);
   });

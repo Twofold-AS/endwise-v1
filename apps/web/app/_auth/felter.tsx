@@ -4,14 +4,14 @@
  * Feltene de uinnloggede skjermene deler (magic link, 2FA, invitasjon, e-post).
  * Hvorfor de bor her og ikke i `packages/ui`
  * Ui-pakker §4 sier at UI hentes fra pakker. `packages/ui` har en `Input`,
- * men den er `h-10` med `rounded-md` — mens `/signin` bruker eierens
- * kontrollspec (`h-control` = 32px, `rounded-control` = 10px). De to er ikke
- * samme kontroll. Innlogging er magic link + TOTP, uten passordfelt.
+ * men den er `h-10` med `rounded-md`. Innlogging følger Mobbin text-input:
+ * feltfyll `#f0f0f0` (`bg-inset`), `rounded-sm` 16px, padding sm/md.
+ * Canvas-felt på canvas-kort — ikke `bg-bg` som smelter inn i sida.
  */
 
-/** Input = kontrollhøyde 32px, radius 10px, brødtekst 17px (≥16px så iOS ikke zoomer). */
+/** Mobbin text-input: feltfyll, 16px radius, mer vertikal padding, ≥16px (iOS-zoom). */
 export const INPUT =
-  'h-control rounded-control border border-border bg-bg px-3 text-body text-fg outline-none placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring';
+  'min-h-[52px] w-full rounded-[16px] border-0 bg-inset px-4 py-3.5 text-[17px] font-[450] leading-[22px] text-fg outline-none placeholder:text-fg-muted focus-visible:outline-[3px] focus-visible:outline-offset-0 focus-visible:outline-white';
 
 export function Field({
   id,
@@ -24,7 +24,7 @@ export function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-label text-fg-muted">
+      <label htmlFor={id} className="text-[15px] font-[450] leading-5 text-fg-muted">
         {label}
       </label>
       {children}

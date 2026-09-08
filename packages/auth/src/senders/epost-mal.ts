@@ -1,8 +1,9 @@
 import { LOGO_EPOST_CID } from '../assets/logo-epost.ts';
 
 /**
- * Felles HTML-skall for e-postene vi faktisk sender (magic link, bekreftelseskode,
- * invitasjon, e-postbytte, innboks). Booking-varsler i toolkit-resend speiler
+ * Felles HTML-skall for e-postene vi faktisk sender (bekreftelseskode,
+ * invitasjon, e-postbytte, innboks). Login-e-posten har eget Mobbin-skall
+ * (`byggInnloggingsEpostHtml`). Booking-varsler i toolkit-resend speiler
  * de samme tokenene.
  *
  * E-post er ikke web. Reglene som styrer valgene her
@@ -174,4 +175,96 @@ export function knapp(url: string, etikett: string): string {
     </td>
   </tr>
 </table>`;
+}
+
+/** Mobbin-lås for innloggings-e-posten (Mikael 08.09.2026). Alltid hvit — ikke app-tema. */
+export const INNLOGGING_FARGE = {
+  side: '#ffffff',
+  tekst: '#141414',
+  dempet: '#7a7a7a',
+} as const;
+
+export function innloggingsEpostEmne(kode: string): string {
+  return `Din midlertidige Endwise kode er ${kode}`;
+}
+
+/**
+ * Innloggings-e-post: hvit canvas, svart logo, tykk hilsen, stor kode, understreket «lenka».
+ * Ingen Action Blue-CTA. Ingen parchment. Tabeller + inline style som resten.
+ */
+export function byggInnloggingsEpostHtml(input: {
+  navn: string;
+  kode: string;
+  lenke: string;
+}): string {
+  const navn = input.navn.trim();
+  const hei = navn ? `Hei ${esc(navn)},` : 'Hei,';
+  const kode = esc(input.kode);
+  const lenke = esc(input.lenke);
+  return `<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>${esc(innloggingsEpostEmne(input.kode))}</title>
+</head>
+<body style="margin:0;padding:0;background-color:${INNLOGGING_FARGE.side};">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Her er koden for å logge inn</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INNLOGGING_FARGE.side}" style="background-color:${INNLOGGING_FARGE.side};">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INNLOGGING_FARGE.side}" style="max-width:480px;background-color:${INNLOGGING_FARGE.side};">
+
+        <tr>
+          <td align="left" bgcolor="${INNLOGGING_FARGE.side}" style="background-color:${INNLOGGING_FARGE.side};padding:8px 8px 24px 8px;">
+            <img src="cid:${LOGO_EPOST_CID}"
+                 width="32" height="40"
+                 alt="Endwise"
+                 style="display:block;width:32px;height:40px;border:0;outline:none;text-decoration:none;">
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 8px 12px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:22px;line-height:28px;font-weight:650;letter-spacing:-0.3px;color:${INNLOGGING_FARGE.tekst};">${hei}</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 8px 20px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:17px;line-height:1.47;font-weight:450;color:${INNLOGGING_FARGE.dempet};">Her er koden for å logge inn</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 8px 24px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:36px;line-height:1;font-weight:650;letter-spacing:4px;color:${INNLOGGING_FARGE.tekst};">${kode}</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 8px 12px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:17px;line-height:1.47;font-weight:450;color:${INNLOGGING_FARGE.tekst};">Du kan også bruke denne <a href="${lenke}" style="color:${INNLOGGING_FARGE.tekst};text-decoration:underline;">lenka</a></p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 8px 16px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:17px;line-height:1.47;font-weight:450;color:${INNLOGGING_FARGE.tekst};">Du kan også lage et passord under Innstillinger → Konto</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:8px 8px 8px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:15px;line-height:1.47;font-weight:450;color:${INNLOGGING_FARGE.dempet};">Om dette ikke var deg kan du trygt ignorere denne e-posten.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>`;
 }

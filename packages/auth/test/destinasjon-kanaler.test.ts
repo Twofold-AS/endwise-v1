@@ -48,6 +48,7 @@ describe('dest-kanaler: auth ≠ varsel (Mons dest-lås)', () => {
       dest.indexOf('export async function erTenantDestinasjon'),
     );
     expect(auth).toMatch(/erAuthDestinasjon\(db, email\)/);
+    expect(auth).toMatch(/lesAuthBrukerNavn\(db, email\)/);
     expect(fn).toMatch(/schema\.user\.email/);
     expect(fn).toMatch(/schema\.invitation/);
     expect(fn).toMatch(/schema\.invitations/);

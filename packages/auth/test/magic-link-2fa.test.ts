@@ -199,9 +199,9 @@ describe('magic link + TOTP (Mons-lås)', () => {
     );
     expect(signin).toMatch(/signIn\.magicLink/);
     expect(signin).toMatch(/verifyTotp/);
-    expect(signin).toMatch(/SIGNIN_VALG_SKRIV_KODE|Skriv kode manuelt/);
-    expect(signin).toMatch(/SIGNIN_VALG_BYTT_KONTO|Bytt konto/);
-    expect(signin).toMatch(/Trykk på lenken i e-posten|SIGNIN_VENT_TITTEL/);
+    expect(signin).toMatch(/SIGNIN_FYLL_KODE|Fyll inn kode/);
+    expect(signin).toMatch(/SIGNIN_IKKE_DEG|Ikke deg/);
+    expect(signin).toMatch(/SIGNIN_TITTEL|Logg inn på Endwise/);
     expect(signin).not.toMatch(/Logg inn med magiclink/);
     expect(signin).toMatch(/magicLinkVerifySti/);
     expect(signin).not.toMatch(/type=["']password["']/);

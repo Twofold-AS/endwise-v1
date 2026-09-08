@@ -20,6 +20,7 @@
 
 // LUCIDE — venter på egne SVG-er
 export {
+  ArrowRight,
   ArrowUpRight,
   BellRing,
   Bike,

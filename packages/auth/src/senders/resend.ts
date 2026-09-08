@@ -10,7 +10,14 @@ import {
   stripCrLf,
 } from '../resend-avsender.ts';
 import { formaterKlokkeslett } from '../tid.ts';
-import { byggEpostHtml, knapp, kodeboks, meldingsboks } from './epost-mal.ts';
+import {
+  byggEpostHtml,
+  byggInnloggingsEpostHtml,
+  innloggingsEpostEmne,
+  knapp,
+  kodeboks,
+  meldingsboks,
+} from './epost-mal.ts';
 
 /** E-post-2FA og auth-eposter går via Resend (techstack §5). */
 let client: Resend | undefined;
@@ -258,9 +265,12 @@ export async function sendMagicLink(input: {
   lenke: string;
   kode: string;
   utloper: Date;
+  navn?: string;
 }): Promise<void> {
   const klokkeslett = formaterKlokkeslett(input.utloper);
   const kodeVisning = visMagicLinkKode(input.kode);
+  const navn = input.navn?.trim() ?? '';
+  const hei = navn ? `Hei ${navn},` : 'Hei,';
 
   if (skalLeggesILogg()) {
     devRamme(
@@ -275,29 +285,26 @@ export async function sendMagicLink(input: {
     return;
   }
 
-  const fotnote =
-    'Har du ikke bedt om denne lenken, kan du se bort fra e-posten. Bare den nyeste e-posten gjelder — eldre lenker slutter å virke.';
-
   await sendEmail({
     to: input.to,
-    subject: 'Logg inn på Endwise',
+    subject: innloggingsEpostEmne(kodeVisning),
     text: [
-      'Hei!',
+      hei,
       '',
-      'Åpne lenken for å logge inn på Endwise, eller skriv koden manuelt:',
-      input.lenke,
+      'Her er koden for å logge inn',
       '',
-      `Kode: ${kodeVisning}`,
+      kodeVisning,
       '',
-      `Kan brukes én gang og er gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
+      `Du kan også bruke denne lenka: ${input.lenke}`,
       '',
-      fotnote,
+      'Du kan også lage et passord under Innstillinger → Konto',
+      '',
+      'Om dette ikke var deg kan du trygt ignorere denne e-posten.',
     ].join('\n'),
-    html: byggEpostHtml({
-      tittel: 'Logg inn på Endwise',
-      ingress: `Koden din er ${kodeVisning}. Trykk på knappen eller skriv den manuelt. Gyldig til kl. ${klokkeslett}. Bare den nyeste e-posten gjelder.`,
-      innhold: `${kodeboks(kodeVisning)}<div style="height:16px"></div>${knapp(input.lenke, 'Logg inn')}`,
-      fotnote,
+    html: byggInnloggingsEpostHtml({
+      navn,
+      kode: kodeVisning,
+      lenke: input.lenke,
     }),
   });
 }

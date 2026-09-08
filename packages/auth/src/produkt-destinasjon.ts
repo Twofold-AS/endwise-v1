@@ -42,6 +42,22 @@ export async function erAuthDestinasjon(db: Database, epost: string): Promise<bo
   }
 }
 
+/** Visningsnavn til innloggings-e-post. Tom streng hvis ukjent (invitee uten user-rad). */
+export async function lesAuthBrukerNavn(db: Database, epost: string): Promise<string> {
+  const norm = epost.trim().toLowerCase();
+  if (!erEnkelEpost(norm)) return '';
+  try {
+    const [bruker] = await db
+      .select({ name: schema.user.name })
+      .from(schema.user)
+      .where(eq(schema.user.email, norm))
+      .limit(1);
+    return bruker?.name?.trim() ?? '';
+  } catch {
+    return '';
+  }
+}
+
 /** @deprecated Bruk `erAuthDestinasjon`. Auth-kanal, ikke varsel-kanal. */
 export const erProduktDestinasjon = erAuthDestinasjon;
 

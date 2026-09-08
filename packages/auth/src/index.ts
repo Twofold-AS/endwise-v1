@@ -16,6 +16,7 @@ export {
   erProduktDestinasjon,
   erTenantDestinasjon,
   erTenantTelefonDestinasjon,
+  lesAuthBrukerNavn,
 } from './produkt-destinasjon.ts';
 export * from './rbac.ts';
 export {

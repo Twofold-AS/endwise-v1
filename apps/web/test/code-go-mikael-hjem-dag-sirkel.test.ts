@@ -44,22 +44,23 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
     expect(dagFremgang(osloVeggklokke('2026-08-29', 22, 0)).andel).toBe(1);
   });
 
-  it('Avvik er stub /avvik, Forespørsel er Hjelp › Forespørsler', () => {
+  it('Avvik-stub består; toppkort peker på Timeplan › Endringer', () => {
     expect(PULSE_AVVIK_HREF).toBe('/avvik');
     expect(PULSE_FORESPORSEL_HREF).toBe(hjelpHref('forespor'));
     expect(PARKED_LABEL['/avvik']).toBe('Avvik');
+    expect(PARKED_LABEL['/timeplan/endringer']).toBe('Endringer');
     expect(les('../app/(app)/avvik/page.tsx')).toMatch(/data-avvik-stub/);
     expect(les('../app/(app)/avvik/page.tsx')).toMatch(/F7-05/);
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(kort).toMatch(/PulseHeroIkoner/);
-    expect(kort).toMatch(/data-pulse-hero-ikoner/);
-    expect(kort).toMatch(/TriangleAlert/);
-    expect(kort).toMatch(/MessageSquare/);
-    expect(kort).toMatch(/PULSE_AVVIK_HREF/);
-    expect(kort).toMatch(/PULSE_FORESPORSEL_HREF/);
+    expect(kort).toMatch(/PulseEndringerLenke/);
+    expect(kort).toMatch(/data-pulse-endringer/);
+    expect(kort).toMatch(/PULSE_ENDRINGER_HREF/);
+    expect(kort).not.toMatch(/TriangleAlert/);
+    expect(kort).not.toMatch(/PULSE_AVVIK_HREF/);
+    expect(kort).not.toMatch(/PULSE_FORESPORSEL_HREF/);
   });
 
-  it('toppkort bytter dither mot ink-sirkel; Analyser ligger sist', () => {
+  it('toppkort er to-delt med dither-donut; Analyser ligger sist', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
       'innboks',
@@ -72,8 +73,7 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const preview = utenKommentarer(les('../app/pulse-preview/page.tsx'));
-    expect(hjem).toMatch(/PulseDagSirkel/);
-    expect(hjem).toMatch(/PulseHeroIkoner/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/PulseAnalyserKort/);
     expect(hjem).not.toMatch(/PulseUkeSpark|Pulse30dSpark/);
     expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeGreaterThan(
@@ -82,9 +82,8 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
     expect(kort).toMatch(/#141414/);
     expect(kort).toMatch(/#ffffff/);
     expect(kort).toMatch(/data-pulse-dag-sirkel/);
-    expect(kort).not.toMatch(/DitherDonutChart/);
-    expect(preview).toMatch(/PulseDagSirkel/);
-    expect(preview).toMatch(/PulseHeroIkoner/);
+    expect(kort).toMatch(/DitherDonutChart/);
+    expect(preview).toMatch(/PulseHeroFlate/);
     expect(preview.lastIndexOf('PulseAnalyserKort')).toBeGreaterThan(
       preview.lastIndexOf('PulseJobbFlis'),
     );

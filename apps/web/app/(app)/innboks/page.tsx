@@ -63,7 +63,7 @@ function MeldingerPageInner() {
   useEventStream(onStreamEvent);
 
   return (
-    <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-8 py-7">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-[820px] flex-col gap-5 overflow-y-auto px-8 py-7 max-md:px-3 max-md:py-3">
       <ForhandlerInfoKort />
       {nySamtale && <NySamtale onLukk={() => router.replace('/innboks' as Route)} />}
 
@@ -109,7 +109,7 @@ function MeldingerPageInner() {
           <Button asChild>
             <Link href={'/innboks?ny=1' as Route}>
               <NyMeldingIkon size={16} />
-              Ny chat
+              Send melding
             </Link>
           </Button>
         </div>

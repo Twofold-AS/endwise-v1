@@ -17,7 +17,7 @@ function EndwiseInnboksInner() {
   const nySamtale = params?.get('ny') === '1';
 
   return (
-    <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 px-8 py-7">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-[820px] flex-col gap-5 overflow-y-auto px-8 py-7 max-md:px-3 max-md:py-3">
       <div>
         <h1 className="text-title text-fg">Innboks</h1>
         <p className="text-body text-fg-muted">

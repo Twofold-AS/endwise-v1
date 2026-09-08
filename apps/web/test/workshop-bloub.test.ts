@@ -75,12 +75,12 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).toMatch(/<RonnyBot/);
     expect(fab).not.toMatch(/BloubBot/);
     expect(fab).not.toMatch(/data-ronny-blink/);
-    expect(idle).toMatch(/colere/);
+    expect(idle).not.toMatch(/colere/);
     expect(idle).toMatch(/surpris/);
     expect(idle).toMatch(/curieux/);
-    expect(idle).toMatch(/attentif/);
     expect(idle).toMatch(/heureux/);
-    expect((idle.match(/'colere'/g) ?? []).length).toBeGreaterThanOrEqual(3);
+    expect(idle).toMatch(/wink/);
+    expect(idle).not.toMatch(/attentif/);
     expect(bot).not.toMatch(/expression: 'triste'/);
     expect(bot).not.toMatch(/expression: 'somnolent'/);
     expect(fab).not.toMatch(/state: 'thinking'/);

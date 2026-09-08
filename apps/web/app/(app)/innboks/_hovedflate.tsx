@@ -13,6 +13,11 @@ export function InboxHovedflate({ children }: { children: ReactNode }) {
   const vis = Boolean(params?.id) || search?.get('ny') === '1';
 
   return (
-    <div className={`min-w-0 flex-1 overflow-y-auto ${vis ? '' : 'max-md:hidden'}`}>{children}</div>
+    <div
+      data-innboks-hoved
+      className={`min-h-0 min-w-0 flex-1 overflow-hidden ${vis ? 'flex flex-col' : 'max-md:hidden'}`}
+    >
+      {children}
+    </div>
   );
 }

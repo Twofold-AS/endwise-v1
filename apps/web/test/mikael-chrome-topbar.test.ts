@@ -171,7 +171,8 @@ describe('Mikael 02.09 03:23 — Ny melding er eget SVG', () => {
     expect(pane).toMatch(/NyMeldingIkon/);
     expect(pane).not.toMatch(/MessageSquarePlus/);
     expect(ikon).toMatch(/<svg/);
-    expect(ikon).toMatch(/11\.9991 14\.25/);
+    expect(ikon).toMatch(/15\.5 5/);
+    expect(ikon).not.toMatch(/11\.9991 14\.25/);
     expect(ikon).not.toMatch(/lucide|MessageSquarePlus/);
   });
 });

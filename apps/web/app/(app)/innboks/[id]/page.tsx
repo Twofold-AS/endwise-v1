@@ -267,7 +267,7 @@ export default function TrådPage() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-[820px] flex-col gap-4 px-8 py-7">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-[820px] flex-col gap-4 overflow-hidden px-8 py-7 max-md:px-3 max-md:py-3">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           {/**

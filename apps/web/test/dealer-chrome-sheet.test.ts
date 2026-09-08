@@ -103,7 +103,7 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(bot).toMatch(/playing=\{false\}/);
     expect(bot).toMatch(/state="idle"/);
     expect(bot).toMatch(/data-ronny-spin=\{spin \? '1' : undefined\}/);
-    expect(bot).toMatch(/heureux|colere|surpris/);
+    expect(bot).toMatch(/heureux|surpris|curieux|wink/);
     expect(bot).not.toMatch(/'thinking'/);
     expect(bot).not.toMatch(/'alert'/);
     expect(bot).not.toMatch(/'notify'/);

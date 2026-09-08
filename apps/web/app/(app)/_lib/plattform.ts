@@ -82,6 +82,7 @@ export function erForhandlerRutePaaPlattform(pathname: string, search = ''): boo
     pathname.startsWith('/support') ||
     pathname.startsWith('/hjelp') ||
     pathname.startsWith('/avvik') ||
+    pathname.startsWith('/timeplan') ||
     pathname.startsWith('/verkstedet') ||
     pathname.startsWith('/prisliste') ||
     pathname.startsWith('/lager') ||

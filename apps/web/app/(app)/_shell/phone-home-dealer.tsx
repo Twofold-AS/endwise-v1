@@ -8,21 +8,14 @@ import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-ho
 import {
   analyserMockStats,
   ansattePulse,
-  dagerVindu,
+  endringerTeller,
+  endringerVindu,
   idagVisning,
   innboksRad,
   lagerRad,
-  PULSE_UKE_TITTEL,
+  pulsdagOverskrift,
 } from './phone-home-pulse';
-import {
-  PulseAnalyserKort,
-  PulseDagSirkel,
-  PulseHeroIkoner,
-  PulseJobbFlis,
-  PulseKort,
-  PulseRadKort,
-  PulseTall,
-} from './pulse-kort';
+import { PulseAnalyserKort, PulseHeroFlate, PulseJobbFlis, PulseRadKort } from './pulse-kort';
 
 /**
  * Forhandler-hjem — Verkstedet / `/home`.
@@ -30,7 +23,7 @@ import {
  */
 export function useDealerHjemKort() {
   const utils = trpc.useUtils();
-  const vindu = useMemo(() => dagerVindu(new Date()), []);
+  const vindu = useMemo(() => endringerVindu(new Date()), []);
 
   const bookings = trpc.bookings.list.useQuery(
     {
@@ -65,6 +58,8 @@ export function useDealerHjemKort() {
   const naa = useMemo(() => new Date(), []);
   const jobber = bookings.data ?? [];
   const idag = idagVisning(jobber, naa);
+  const dag = pulsdagOverskrift(naa);
+  const endringer = endringerTeller(jobber);
   const innboks = innboksRad(threads.data ?? []);
   const lager = lagerRad(deler.data ?? []);
   const ansatte = ansattePulse(oversikt.data ?? [], jobber, naa);
@@ -76,6 +71,8 @@ export function useDealerHjemKort() {
     oversikt,
     deler,
     idag,
+    dag,
+    endringer,
     innboks,
     lager,
     ansatte,
@@ -84,21 +81,23 @@ export function useDealerHjemKort() {
 }
 
 export function DealerPulseKort({ className }: { className?: string }) {
-  const { bookings, threads, oversikt, deler, idag, innboks, lager, ansatte, analyser } =
+  const { bookings, threads, oversikt, deler, idag, dag, endringer, innboks, lager, ansatte, analyser } =
     useDealerHjemKort();
   const lasterJobber = bookings.isLoading;
 
   return (
     <div className={className ?? 'flex flex-col gap-5'}>
-      <PulseKort href={PHONE_KORT_META.idag.href} variant="hero" actions={<PulseHeroIkoner />}>
-        <p className="px-16 text-center text-label font-[650] text-fg">{PULSE_UKE_TITTEL}</p>
-        <div className="grid min-w-0 grid-cols-3 divide-x divide-divide">
-          <PulseTall label="Planlagt" verdi={idag.planlagt} laster={lasterJobber} />
-          <PulseTall label="Pågår" verdi={idag.paagaar} laster={lasterJobber} />
-          <PulseTall label="Ferdig" verdi={idag.ferdig} laster={lasterJobber} />
-        </div>
-        <PulseDagSirkel />
-      </PulseKort>
+      <PulseHeroFlate
+        href={PHONE_KORT_META.idag.href}
+        ukedag={dag.ukedag}
+        dato={dag.dato}
+        planlagt={idag.planlagt}
+        paagaar={idag.paagaar}
+        ferdig={idag.ferdig}
+        lasterJobber={lasterJobber}
+        endringer={endringer}
+        lasterEndringer={lasterJobber}
+      />
 
       <PulseRadKort
         href={PHONE_KORT_META.innboks.href}

@@ -10,7 +10,8 @@ const MERKELAPP: Array<{ test: (path: string) => boolean; label: string }> = [
       p.startsWith('/jobber') ||
       p.startsWith('/saker') ||
       p.startsWith('/kalender') ||
-      p.startsWith('/bookinger'),
+      p.startsWith('/bookinger') ||
+      p.startsWith('/timeplan'),
     label: 'Timeplan',
   },
   { test: (p) => p.startsWith('/innboks'), label: 'Innboks' },

@@ -138,6 +138,11 @@ export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
 export const PULSE_AVVIK_HREF = '/avvik';
 /** Ikon på uke-kortet → Hjelp › Forespørsler. */
 export const PULSE_FORESPORSEL_HREF = '/hjelp?fane=forespor';
+/**
+ * Endringer under Timeplan. Avvik + forespørsler i én destinasjon.
+ * Avvik- og Forespørsel-ikonene på toppkortet er erstattet (Mikael CODE-GO).
+ */
+export const PULSE_ENDRINGER_HREF = '/timeplan/endringer';
 
 /** Små destinasjonskort under Lager. Dine jobber og Lager er egne flater. */
 export const MEKANIKER_PHONE_HURTIG: PhoneKortKey[] = ['kompetanse', 'timeplan', 'hjelp'];

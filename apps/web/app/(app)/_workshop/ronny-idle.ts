@@ -2,30 +2,17 @@ import type { ExpressionId } from '@endwise/ui/bloub/BloubBot';
 
 export const IDLE_MS = 5000;
 
-export const RONNY_IDLE: readonly ExpressionId[] = [
-  'heureux',
-  'colere',
-  'surpris',
-  'hilare',
-  'curieux',
-  'attentif',
-  'excite',
-  'fier',
-  'mefiant',
-  'colere',
-  'heureux',
-  'colere',
-];
+/**
+ * Chrome-Ronny: kun uttrykk. wink er StateId (ett øye), ikke ExpressionId.
+ * Ingen colere / sinte blikk. Ingen thinking/alert/notify.
+ */
+export type RonnyAnsikt = ExpressionId | 'wink';
 
-/** Telefon-chrome: aldri sint/colere. Store/små øyne, nysgjerrig, glad, mystisk. */
-export const RONNY_PHONE_IDLE: readonly ExpressionId[] = [
-  'surpris',
-  'attentif',
-  'curieux',
-  'heureux',
-  'hilare',
-  'mefiant',
-  'excite',
-  'fier',
-  'neutre',
-];
+export const RONNY_IDLE: readonly RonnyAnsikt[] = ['curieux', 'heureux', 'wink', 'surpris'];
+
+/** Samme sett på telefon — aldri sint. */
+export const RONNY_PHONE_IDLE: readonly RonnyAnsikt[] = ['curieux', 'heureux', 'wink', 'surpris'];
+
+export function erRonnyWink(ansikt: RonnyAnsikt): ansikt is 'wink' {
+  return ansikt === 'wink';
+}

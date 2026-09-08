@@ -1,7 +1,37 @@
-import { osloKalenderdag, osloPlusDager, osloStartAvDag, osloVeggtid } from '../_lib/oslo-dag';
+import {
+  osloDatoLang,
+  osloKalenderdag,
+  osloPlusDager,
+  osloStartAvDag,
+  osloUkedagNavn,
+  osloVeggtid,
+} from '../_lib/oslo-dag';
 import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
 import { VERKSTED_DAG_SLUTT, VERKSTED_DAG_START } from '../dashboard/_timeplan-layout';
 import type { PhoneBooking, PhoneTraad } from './phone-home-data';
+
+/** Mekaniker-avvik i booking-notat — `mechanic.reportDeviation`. */
+export const AVVIK_NOTAT_PREFIKS = '[AVVIK ';
+
+export function harAvvikNotat(notes: string | null | undefined): boolean {
+  return Boolean(notes?.includes(AVVIK_NOTAT_PREFIKS));
+}
+
+/**
+ * Ventende endringer på hjem-kortet. Kilde: booking-notat med `[AVVIK `.
+ * Ekstra-tid-forespørsel fra Min dag er simulert (ikke persistert) — teller 0.
+ * Godkjenning skrives ikke ennå (F7-05 selger-konsument).
+ */
+export function endringerTeller(jobber: PhoneBooking[]): number {
+  return jobber.filter((j) => j.status !== 'cancelled' && harAvvikNotat(j.notes)).length;
+}
+
+export function pulsdagOverskrift(naa: Date) {
+  return {
+    ukedag: osloUkedagNavn(naa),
+    dato: osloDatoLang(naa),
+  };
+}
 
 const PLANLAGT_STATUS = new Set(['draft', 'confirmed']);
 const LEVENDE = new Set(['draft', 'confirmed', 'in_progress']);
@@ -119,6 +149,18 @@ export function dagerVindu(naa: Date) {
   return {
     fra: osloStartAvDag(osloPlusDager(iDag, -(PULSE_DAGER - 1))),
     til: osloStartAvDag(osloPlusDager(iDag, 1)),
+  };
+}
+
+/**
+ * Endringer-liste og hjem-badge: 30 døgn bak / 14 fram.
+ * Samme vindu som `/timeplan/endringer`.
+ */
+export function endringerVindu(naa: Date) {
+  const iDag = osloKalenderdag(naa);
+  return {
+    fra: osloStartAvDag(osloPlusDager(iDag, -30)),
+    til: osloStartAvDag(osloPlusDager(iDag, 14)),
   };
 }
 

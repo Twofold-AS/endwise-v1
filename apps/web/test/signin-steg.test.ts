@@ -197,9 +197,9 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
     expect(felt).toMatch(/min-h-\[52px\]/);
     expect(felt).toMatch(/border-2/);
     expect(felt).toMatch(/focus:border-white/);
-    expect(felt).toMatch(/0_0_0_2px_#ffffff/);
     expect(felt).toMatch(/focus-visible:border-white/);
     expect(felt).not.toMatch(/outline-\[3px\]/);
+    expect(felt).not.toMatch(/#141414/);
     expect(felt).not.toMatch(/h-control rounded-control border border-border bg-bg/);
   });
 

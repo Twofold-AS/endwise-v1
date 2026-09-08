@@ -59,8 +59,6 @@ export function PulseKort({
             </p>
           ) : null}
         </div>
-      ) : mock ? (
-        <PulseMockBadge />
       ) : null}
       {meta ? <p className="text-[12px] text-fg-muted leading-snug">{meta}</p> : null}
       {children}

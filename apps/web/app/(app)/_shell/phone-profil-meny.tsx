@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  FileText,
-  LogOut,
-  MessageCirclePlus,
-  Settings,
-} from '@endwise/ui';
+import { LogOut, MessageCirclePlus, Settings } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -126,9 +121,8 @@ export function PhoneProfilMeny({
           href={'/vilkar' as Route}
           role="menuitem"
           onClick={onLukk}
-          className="flex h-11 items-center gap-3 px-4 text-label text-fg-muted"
+          className="flex h-11 items-center px-4 text-label text-fg-muted"
         >
-          <FileText size={16} strokeWidth={1.6} />
           Vilkår
         </Link>
       </div>

@@ -12,6 +12,7 @@
 - Eldre chrome-tester krevde at `data-shell-tilbake` aldri fantes — Settings-chrome brøt dem.
 - `global-search.test.ts` matchet ordet «fake» i kommentaren «Ingen fake treff».
 - `phone-profil-settings` matchet ikke `'Slett'` i ternær (`{… ? 'Sletter …' : 'Slett'}`).
+- Vercel-preview feilet: `FileText` finnes ikke i `@endwise/ui` (62 kuraterte ikoner). Vilkår er tekstlenke som Mobbin-footer.
 
 ## Fikser
 - Dest-ikonstripe fjernet fra overlay (låst i tester).

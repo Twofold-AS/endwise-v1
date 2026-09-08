@@ -10,8 +10,8 @@ import { VerkstedetDag } from '../dashboard/_verkstedet-dag';
 /**
  * Verkstedet (F3-05/F5-01) — forhandlerens landingsside.
  * Kanonisk rute er `/home`. `/dashboard` og `/verkstedet` er alias.
- * Mikael pulse-hjem: seks operative kort + footer på telefon og desktop.
- * Dag-flaten (`?visning=dag`) er uendret bak I dag-tap. Chrome urørt.
+ * Mikael CODE-GO: fem flater på telefon og desktop B2.
+ * Dag-flaten (`?visning=dag`) er uendret bak toppkort-tap. Chrome urørt.
  */
 function VerkstedetPageInner() {
   const search = useSearchParams();

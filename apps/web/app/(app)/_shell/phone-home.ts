@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   Package,
+  Plus,
   ShieldCheck,
   Store,
   Users,
@@ -64,7 +65,8 @@ export const HJEM_KORT_TOM = {
   hjelp: 'Artikler og support',
   deler: 'Ingen mangler på åpne jobber',
   svarhastighet: 'Median førstesvar · 7 dager',
-  team: 'Ingen mekanikere',
+  team: 'Ingen ansatte',
+  jobb: 'Ny jobb',
 } as const;
 
 /**
@@ -98,6 +100,7 @@ export type PhoneKortKey =
   | 'deler'
   | 'svarhastighet'
   | 'team'
+  | 'jobb'
   | 'butikk'
   | 'min-dag'
   | 'dine-jobber'
@@ -109,27 +112,23 @@ export type PhoneHjemRad = {
 };
 
 /**
- * Mikael CODE-GO pulse-hjem: I dag · Innboks · Deler · Svarhastighet ·
- * Timeplan-gulv · Team. Organisasjon/Hjelp er footer-tekst, ikke kort.
+ * Mikael CODE-GO 08.09: kun fem flater — toppkort · Innboks-rad ·
+ * Lager-rad · ansatte/totalt + Jobb. Ingen footer, ingen Team-liste.
  */
 export const DEALER_PULSE_KEYS = [
   'idag',
   'innboks',
-  'deler',
-  'svarhastighet',
-  'timeplan',
+  'lager',
   'team',
+  'jobb',
 ] as const satisfies readonly PhoneKortKey[];
 
-export const DEALER_PHONE_HJEM: PhoneHjemRad[] = DEALER_PULSE_KEYS.map((key) => ({
-  keys: [key],
-  kind: key === 'idag' ? 'hero' : 'full',
-}));
-
-export const HJEM_FOOTER_LENKER = [
-  { label: 'Organisasjon', href: '/organisasjon' },
-  { label: 'Hjelp', href: '/support' },
-] as const;
+export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
+  { keys: ['idag'], kind: 'hero' },
+  { keys: ['innboks'], kind: 'full' },
+  { keys: ['lager'], kind: 'full' },
+  { keys: ['team', 'jobb'], kind: 'pair' },
+];
 
 /** Små destinasjonskort under Lager. Dine jobber og Lager er egne flater. */
 export const MEKANIKER_PHONE_HURTIG: PhoneKortKey[] = ['kompetanse', 'timeplan', 'hjelp'];
@@ -139,7 +138,7 @@ export const PHONE_KORT_META: Record<
   { label: string; href: string; icon: LucideIcon }
 > = {
   verkstedet: { label: 'Verkstedet', href: '/home?visning=dag', icon: LayoutDashboard },
-  idag: { label: 'I dag', href: '/home?visning=dag', icon: LayoutDashboard },
+  idag: { label: 'Planlagt', href: '/home?visning=dag', icon: LayoutDashboard },
   timeplan: { label: 'Timeplan', href: '/jobber?visning=kalender', icon: CalendarDays },
   statistikk: { label: 'Rapporter', href: '/rapporter', icon: ChartColumn },
   tjenester: { label: 'Tjenester', href: '/prisliste', icon: Wrench },
@@ -152,7 +151,8 @@ export const PHONE_KORT_META: Record<
   lager: { label: 'Lager', href: '/lager', icon: Package },
   deler: { label: 'Deler', href: '/lager', icon: Package },
   svarhastighet: { label: 'Svarhastighet', href: '/innboks', icon: Inbox },
-  team: { label: 'Team', href: '/organisasjon?seksjon=ansatte', icon: Users },
+  team: { label: 'På jobb', href: '/organisasjon?seksjon=ansatte', icon: Users },
+  jobb: { label: 'Jobb', href: '/bookinger/ny', icon: Plus },
   butikk: { label: 'Butikk', href: '/butikk', icon: Store },
   'min-dag': { label: 'Dine jobber', href: '/dine-jobber', icon: CalendarDays },
   'dine-jobber': { label: 'Dine jobber', href: '/dine-jobber', icon: CalendarDays },

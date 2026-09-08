@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { BevelButton } from '../../_shell/cards';
+import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import {
   ALLOWED_TRANSITIONS,
   type BookingStatus,
@@ -32,7 +33,8 @@ export default function BookingDetaljPage() {
   const transition = trpc.bookings.transition.useMutation({
     onSuccess: () => {
       utils.bookings.byId.invalidate({ id: params.id });
-      utils.bookings.list.invalidate();
+      invalidateHjemPulse(utils);
+      meldingBookingLagret();
     },
   });
 

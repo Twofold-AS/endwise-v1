@@ -1,10 +1,11 @@
 'use client';
 
-import { ArrowUpRight, DitherGrowthChart, type LucideIcon, Plus } from '@endwise/ui';
+import { ArrowUpRight, Badge, DitherGrowthChart, type LucideIcon, Plus } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL } from './phone-home';
+import type { AnalyserMockStat } from './phone-home-pulse';
 
 const WHITE = '#ffffff';
 /** Mobbin-aksent — tillatt på hjem-spark (Mikael CODE-GO). */
@@ -71,8 +72,7 @@ export function PulseTall({
   laster: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1 px-3 first:pl-0 last:pr-0">
-      <p className="text-[12px] text-fg-muted">{label}</p>
+    <div className="flex flex-col items-center gap-1 px-3 text-center first:pl-0 last:pr-0">
       <p className="text-[28px] font-semibold leading-none text-fg tabular-nums">
         {laster ? (
           <span className="inline-block h-7 w-8 animate-pulse rounded-sm bg-border" />
@@ -80,6 +80,7 @@ export function PulseTall({
           verdi
         )}
       </p>
+      <p className="text-[12px] text-fg-muted">{label}</p>
     </div>
   );
 }
@@ -100,8 +101,8 @@ export function PulseIkonFlate({ children }: { children: ReactNode }) {
   );
 }
 
-/** Amicro dither under tallene — siste 30 dager, blå linje. */
-export function Pulse30dSpark({ verdier }: { verdier: number[] }) {
+/** Amicro dither under tallene — denne uken, blå linje. */
+export function PulseUkeSpark({ verdier }: { verdier: number[] }) {
   return (
     <div data-pulse-spark className="h-14 w-full overflow-hidden rounded-[16px]" aria-hidden>
       <DitherGrowthChart
@@ -113,6 +114,11 @@ export function Pulse30dSpark({ verdier }: { verdier: number[] }) {
       />
     </div>
   );
+}
+
+/** @deprecated Bruk PulseUkeSpark. */
+export function Pulse30dSpark({ verdier }: { verdier: number[] }) {
+  return <PulseUkeSpark verdier={verdier} />;
 }
 
 /**
@@ -174,6 +180,58 @@ export function PulseJobbFlis() {
         <Plus size={22} strokeWidth={1.75} aria-hidden />
       </PulseIkonFlate>
       <span className="truncate text-[15px] font-[650]">Jobb</span>
+    </Link>
+  );
+}
+
+/**
+ * Analyser — to deler over Innboks/Lager/Jobb.
+ * Del 1: tittel + Se tall. Del 2: dither-rutenett (nettsidevisninger, mock).
+ */
+export function PulseAnalyserKort({ stats, href }: { stats: AnalyserMockStat[]; href: string }) {
+  return (
+    <Link
+      href={href as Route}
+      data-pulse-analyser
+      className={`${PHONE_DEST_FYLL} flex min-h-[220px] w-full flex-1 flex-col overflow-hidden [touch-action:manipulation]`}
+    >
+      <div
+        data-analyser-del="1"
+        className="flex shrink-0 items-center justify-between gap-3 px-4 py-3"
+      >
+        <p className="text-title text-fg">Analyser</p>
+        <span className="inline-flex h-8 items-center rounded-full bg-fg px-3 text-[13px] font-[650] text-bg">
+          Se tall
+        </span>
+      </div>
+      <div
+        data-analyser-del="2"
+        className="grid min-h-0 flex-1 grid-cols-2 gap-2 border-divide border-t px-3 py-3"
+      >
+        {stats.map((s) => (
+          <div key={s.id} data-analyser-stat={s.id} className="flex min-h-0 flex-col gap-1">
+            <div className="flex items-center justify-between gap-1">
+              <span className="truncate text-[11px] text-fg-muted">{s.label}</span>
+              <Badge
+                variant={s.opp ? 'default' : 'destructive'}
+                className={s.opp ? 'border-transparent bg-success-soft text-success' : undefined}
+              >
+                {s.delta}
+              </Badge>
+            </div>
+            <p className="text-[18px] font-[650] leading-none text-fg tabular-nums">{s.verdi}</p>
+            <div className="min-h-[44px] flex-1 overflow-hidden rounded-[10px]" aria-hidden>
+              <DitherGrowthChart
+                compact
+                className="h-full w-full"
+                values={s.serie}
+                labels={s.serie.map((_, i) => String(i + 1))}
+                color={PULSE_SPARK_BLA}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     </Link>
   );
 }

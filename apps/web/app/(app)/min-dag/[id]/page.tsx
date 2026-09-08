@@ -12,6 +12,7 @@ import {
 } from '../../_lib/offline-queue';
 import { useOnline } from '../../_lib/use-online';
 import { BEVEL, BevelButton, CardShell } from '../../_shell/cards';
+import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import { estMinutes, fmtTime, jobbStatusKnapper, STATUS_LABEL } from '../_status';
 
 /** Prototype: valgene mekanikeren kan be om. Ingen backend bak dem. */
@@ -57,6 +58,8 @@ export default function JobbDetaljPage() {
     },
     onSettled: () => {
       void utils.mechanic.myDay.invalidate();
+      invalidateHjemPulse(utils);
+      meldingBookingLagret();
     },
   });
   const deviation = trpc.mechanic.reportDeviation.useMutation();

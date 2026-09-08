@@ -8,8 +8,7 @@ import { isVerkstedInspectPath } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { RONNY_PHONE_IDLE, RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
-import { type FaneId, innstillingerHref, parseFane, synligeFaner } from '../innstillinger/_faner';
-import { destinasjonerForShell, erSettingsSti, isItemActive, shellForBruker } from './nav';
+import { destinasjonerForShell, isItemActive, shellForBruker } from './nav';
 import {
   PHONE_AVATAR_PX,
   PHONE_BAR2,
@@ -21,6 +20,7 @@ import {
 import { PhoneHScroll } from './phone-h-scroll';
 import { PHONE_SAFE_TOP, phoneHjemHref, phoneInnstillingerHref } from './phone-home';
 import { PhoneProfilMeny } from './phone-profil-meny';
+import { phoneSideChrome } from './phone-side-chrome';
 import { PhoneSokFelt } from './phone-sok-felt';
 import { PhoneSokOverlay } from './phone-sok-overlay';
 import { TilbakePil } from './tilbake-pil';
@@ -28,8 +28,8 @@ import { TilbakePil } from './tilbake-pil';
 /**
  * Telefon-chrome (Mikael 08.09.2026): to toppbarer, sidebar skjult.
  * Bar 1: merke · Mobbin-søk · Ronny-sirkel · profil-sirkel (samme size-7 / 28px).
- * På Innstillinger: tilbake · tittel · Ronny · profil.
- * Bar 2: dest-piller, eller settings-nav med underline på aktiv.
+ * På Innstillinger / Hjelp / Statistikk: tilbake · midtstilt tittel · Ronny · profil.
+ * Bar 2: dest-piller, eller underline-nav på aktiv.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -61,14 +61,10 @@ export function PhoneShell() {
       }),
     [shell, role, shopEnabled, erPlattform, inspect],
   );
-  const innstillinger = erSettingsSti(pathname);
-  const settingsFaner = synligeFaner(isAdmin, !erPlattform);
-  const aktivFane: FaneId = parseFane(
-    params?.get('fane') ?? (pathname.includes('/varsler') ? 'varsler' : 'profil'),
+  const sideChrome = phoneSideChrome(pathname, params, {
     isAdmin,
-    'profil',
-    !erPlattform,
-  );
+    erForhandler: !erPlattform,
+  });
   const bokstav = profilBokstav(navn);
   const profilHref = phoneInnstillingerHref(shell);
 
@@ -84,50 +80,55 @@ export function PhoneShell() {
         className={`fixed inset-x-0 top-0 z-[60] shrink-0 bg-bg md:hidden ${PHONE_SAFE_TOP}`}
       >
         <div className="relative">
-          {innstillinger ? (
+          {sideChrome ? (
             <div
               data-phone-top-bar="1"
               data-shell-header
-              className="flex h-row w-full items-center gap-2 px-3"
+              data-phone-side-chrome={sideChrome.id}
+              className="relative flex h-row w-full items-center gap-2 px-3"
             >
               <button
                 type="button"
                 data-shell-tilbake
                 aria-label="Tilbake"
-                className="inline-flex size-8 shrink-0 items-center justify-start text-fg"
+                className="relative z-10 inline-flex size-8 shrink-0 items-center justify-start text-fg"
                 onClick={() => router.push(hjemHref as Route)}
               >
                 <TilbakePil size={20} />
               </button>
-              <p className="min-w-0 flex-1 truncate text-title text-fg">Innstillinger</p>
-              <button
-                type="button"
-                data-ronny-avatar
-                aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
-                aria-expanded={apen}
-                className={PHONE_RONNY_SIRKEL}
-                onClick={() => {
-                  trigg();
-                  if (apen) lukk();
-                  else apne();
-                }}
-              >
-                <RonnyBot
-                  size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
-                  spin={spin}
-                  idleSett={RONNY_PHONE_IDLE}
-                />
-              </button>
-              <button
-                type="button"
-                data-phone-profile
-                aria-label="Profil"
-                aria-expanded={profilApen}
-                className={PHONE_PROFIL_SIRKEL}
-                onClick={() => setProfilApen((v) => !v)}
-              >
-                {bokstav}
-              </button>
+              <p className="pointer-events-none absolute inset-x-10 truncate text-center text-title text-fg">
+                {sideChrome.tittel}
+              </p>
+              <div className="relative z-10 ml-auto flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  data-ronny-avatar
+                  aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
+                  aria-expanded={apen}
+                  className={PHONE_RONNY_SIRKEL}
+                  onClick={() => {
+                    trigg();
+                    if (apen) lukk();
+                    else apne();
+                  }}
+                >
+                  <RonnyBot
+                    size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
+                    spin={spin}
+                    idleSett={RONNY_PHONE_IDLE}
+                  />
+                </button>
+                <button
+                  type="button"
+                  data-phone-profile
+                  aria-label="Profil"
+                  aria-expanded={profilApen}
+                  className={PHONE_PROFIL_SIRKEL}
+                  onClick={() => setProfilApen((v) => !v)}
+                >
+                  {bokstav}
+                </button>
+              </div>
             </div>
           ) : (
             <div
@@ -211,18 +212,19 @@ export function PhoneShell() {
           />
         </div>
         <div data-phone-top-bar="2" className={PHONE_BAR2}>
-          {innstillinger ? (
+          {sideChrome ? (
             <nav
               data-phone-settings-nav
-              aria-label="Innstillinger"
+              data-phone-side-nav={sideChrome.id}
+              aria-label={sideChrome.tittel}
               className="flex min-w-0 flex-1 items-end gap-5 overflow-x-auto"
             >
-              {settingsFaner.map((f) => {
-                const aktiv = f.id === aktivFane;
+              {sideChrome.faner.map((f) => {
+                const aktiv = f.id === sideChrome.aktiv;
                 return (
                   <Link
                     key={f.id}
-                    href={innstillingerHref(f.id) as Route}
+                    href={f.href as Route}
                     data-phone-settings-fane={f.id}
                     aria-current={aktiv ? 'page' : undefined}
                     className={`shrink-0 border-b-2 pb-1 text-label ${

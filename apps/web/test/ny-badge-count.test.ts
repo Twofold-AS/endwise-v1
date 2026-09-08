@@ -38,7 +38,7 @@ describe('NewBadge er norsk «Ny»-tekstbadge', () => {
 
   it('tip-kort og helpdesk-artikler gjenbruker NewBadge', () => {
     const tip = utenKommentarer(les('../app/(app)/_shell/tip-card.tsx'));
-    const support = utenKommentarer(les('../app/(app)/support/page.tsx'));
+    const support = utenKommentarer(les('../app/(app)/hjelp/_artikler.tsx'));
     expect(tip).toMatch(/<NewBadge/);
     expect(support).toMatch(/<NewBadge/);
     expect(tip).not.toMatch(/>\s*New\s*</);
@@ -67,7 +67,7 @@ describe('CountBadge er samme badge-form som Ny', () => {
   it('nav, innboks og helpdesk-header bruker CountBadge — ikke grå pille', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     const innboks = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
-    const support = utenKommentarer(les('../app/(app)/support/page.tsx'));
+    const support = utenKommentarer(les('../app/(app)/hjelp/_artikler.tsx'));
     expect(sidebar).toMatch(/<CountBadge/);
     expect(innboks).toMatch(/<CountBadge/);
     expect(support).toMatch(/<CountBadge/);

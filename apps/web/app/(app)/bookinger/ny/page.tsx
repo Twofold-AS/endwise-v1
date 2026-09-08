@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import { StarttidVelger } from '../_starttid-velger';
 import { fmtMinor } from '../_status';
 
@@ -84,8 +85,8 @@ export default function NyJobbPage() {
 
   const create = trpc.bookings.create.useMutation({
     onSuccess: (booking) => {
-      utils.bookings.list.invalidate();
-      globalThis.dispatchEvent(new Event('endwise:booking-lagret'));
+      invalidateHjemPulse(utils);
+      meldingBookingLagret();
       router.push(`/bookinger/${booking.id}` as Route);
     },
   });

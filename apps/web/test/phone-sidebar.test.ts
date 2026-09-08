@@ -41,7 +41,7 @@ describe('Mikael telefon-chrome — to toppbarer, sidebar skjult (07.09.2026)', 
     expect(shell).not.toMatch(/data-phone-sidebar-open/);
     expect(shell).not.toMatch(/PanelLeftOpen|PanelLeftClose/);
     expect(shell).toMatch(
-      /erSettingsSti[\s\S]*data-shell-tilbake|data-shell-tilbake[\s\S]*erSettingsSti/,
+      /phoneSideChrome[\s\S]*data-shell-tilbake|data-shell-tilbake[\s\S]*phoneSideChrome/,
     );
     expect(shell).toMatch(/TilbakePil/);
     expect(shell).not.toMatch(/PhoneBevel|BEVEL/);

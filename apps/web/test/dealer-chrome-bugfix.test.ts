@@ -119,7 +119,7 @@ describe('Tilbake er bare pil-SVG', () => {
   it('tråd-chrome bruker TilbakePil uten synlig Tilbake-tekst; telefon kun på Settings', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
-    expect(shell).toMatch(/erSettingsSti/);
+    expect(shell).toMatch(/phoneSideChrome/);
     expect(shell).toMatch(/<TilbakePil/);
     expect(shell).not.toMatch(/>Tilbake</);
     expect(seksjon).toMatch(/<TilbakePil/);

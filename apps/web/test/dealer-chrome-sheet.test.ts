@@ -67,7 +67,7 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
   it('tilbake-pilen er kun på Settings; TilbakePil-SVG finnes fortsatt', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
-    expect(shell).toMatch(/erSettingsSti/);
+    expect(shell).toMatch(/phoneSideChrome/);
     expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/>Tilbake</);
     expect(pil).toMatch(/<svg/);

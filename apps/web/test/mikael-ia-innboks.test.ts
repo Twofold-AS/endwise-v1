@@ -52,6 +52,8 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     expect(side).not.toMatch(/MessageSquarePlus/);
     expect(side).toMatch(/Nyeste/);
     expect(side).toMatch(/Eldste/);
+    expect(side).toMatch(/DropdownMenu|Sorter samtaler/);
+    expect(side).toMatch(/Ny samtale/);
     expect(side).toMatch(/max-md:hidden/);
     expect(side).not.toMatch(/Oversikt/);
   });
@@ -117,21 +119,25 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
   const chrome = utenKommentarer(les('../app/(app)/innboks/_chrome.tsx'));
   const hoved = utenKommentarer(les('../app/(app)/innboks/_hovedflate.tsx'));
 
-  it('én verktøylinje: Nyeste, Eldste, slett, ny chat og velg kort', () => {
+  it('én verktøylinje: Ny samtale, sort midt, velg + slett høyre', () => {
     expect(side).toMatch(/NyMeldingIkon/);
+    expect(side).toMatch(/Ny samtale/);
     expect(side).toMatch(/Nyeste/);
     expect(side).toMatch(/Eldste/);
+    expect(side).toMatch(/DropdownMenu/);
     expect(side).toMatch(/Trash2/);
-    expect(side).toMatch(/velg kort|Velg kort/);
+    expect(side).toMatch(/Velg samtaler/);
     expect(side).toMatch(/data-innboks-verktoy/);
     expect(side).toMatch(/min-h-11/);
     expect(side).toMatch(/z-20/);
+    expect(side).toMatch(/grid-cols-\[auto_1fr_auto\]/);
     expect(side).toMatch(/aktivId \? 'max-md:hidden'/);
     expect(side).not.toMatch(/To linjer/);
+    expect(side).not.toMatch(/Velg kort/);
   });
 
   it('Ny melding er ikon, compose åpner Kunde · Intern · Support — ingen Mekaniker', () => {
-    expect(side).toMatch(/Ny melding/);
+    expect(side).toMatch(/Ny samtale/);
     expect(side).toMatch(/NyMeldingIkon/);
     expect(side).toMatch(/\/innboks\?ny=1/);
     expect(samtale).toMatch(/label: 'Kunde'/);

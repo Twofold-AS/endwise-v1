@@ -19,7 +19,7 @@ describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
   it('TilbakePil er SVG uten ordet Tilbake — kun Settings-chrome', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
-    expect(shell).toMatch(/erSettingsSti/);
+    expect(shell).toMatch(/phoneSideChrome/);
     expect(shell).toMatch(/data-shell-tilbake/);
     expect(shell).toMatch(/TilbakePil/);
     expect(pil).toMatch(/<svg/);

@@ -17,12 +17,13 @@
 
 ## 2. Hva gikk galt
 
-Alt gikk som planlagt. Ingen blokkering. Amicro har ingen egen bubble — `DitherDonutChart` er den sirkulære sammenligningen («Amicro if present»).
+CodeQL (alert 84) fant en død `else mock`-gren i `PulseKort` — første visningsgren dekket allerede `mock`. Ingen funksjonell feil.
 
 ## 3. Hvilke fikser ble gjort
 
 - `phone-home-pulse.ts` teller nå månedsvindu, innboks-rad og lager/ansatte i stedet for 7d-spark / SLA / Timeplan-gulv.
 - `pulse-kort.tsx`: `PulseRadKort`, `PulseManedBoble`, `PulseJobbFlis`. `PulseFooter` slettet.
+- Død mock-gren i `PulseKort` fjernet (CodeQL).
 - Tester låst til de fem flatene.
 
 ## 4. Neste fase / neste steg

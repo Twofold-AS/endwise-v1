@@ -72,6 +72,10 @@ function landingTilFlate(steg: string | null, feil: string | null, totpKlar: boo
 
 type SignInHandling = 'fortsett' | 'logg-inn' | 'totp';
 
+const AUTH_FLATE = 'flex flex-col gap-4';
+const AUTH_TITTEL = 'text-center text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg';
+const AUTH_FORTSETT = 'h-auto w-full py-4';
+
 function landingFeil(steg: string | null, feil: string | null, totpKlar: boolean): string | null {
   if (steg === 'totp' && totpKlar) return null;
   if (skalViseErstattetMelding({ steg, feil, totpKlar, enrollKlar: false })) {
@@ -219,21 +223,15 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
   const tittel = flate === 'totp' ? 'Bekreft med autentikator' : SIGNIN_TITTEL;
 
   return (
-    <main className="flex min-h-dvh justify-center bg-bg px-4 pt-8 pb-16 text-fg sm:pt-10">
+    <main className="flex min-h-dvh items-center justify-center bg-bg px-4 pb-[14vh] text-fg">
       <div className="w-full max-w-sm">
-        <div className="mb-3 flex justify-center">
+        <div className="mt-8 mb-10 flex justify-center">
           <AuthMerke />
         </div>
 
         {flate === 'epost' ? (
-          <form
-            onSubmit={onEpost}
-            data-auth-kort
-            className="flex flex-col gap-2 rounded-[24px] border border-[var(--ew-border-strong)] bg-bg p-4"
-          >
-            <h1 className="text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg">
-              {tittel}
-            </h1>
+          <form onSubmit={onEpost} className={AUTH_FLATE}>
+            <h1 className={AUTH_TITTEL}>{tittel}</h1>
             <Field id="signin-email" label="E-post">
               <input
                 id="signin-email"
@@ -250,7 +248,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             <StatefulButton
               type="submit"
               state={knappState('fortsett')}
-              className="w-full"
+              className={AUTH_FORTSETT}
               loadingText="Sender…"
               successText="Sendt"
               errorText="Prøv igjen"
@@ -269,15 +267,9 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             </p>
           </form>
         ) : flate === 'totp' ? (
-          <form
-            onSubmit={(e) => void onTotp(e)}
-            data-auth-kort
-            className="flex flex-col gap-2 rounded-[24px] border border-[var(--ew-border-strong)] bg-bg p-4"
-          >
-            <h1 className="text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg">
-              {tittel}
-            </h1>
-            <p className="mb-1 text-[15px] font-[450] leading-[22px] text-fg-muted">
+          <form onSubmit={(e) => void onTotp(e)} className={AUTH_FLATE}>
+            <h1 className={AUTH_TITTEL}>{tittel}</h1>
+            <p className="mb-1 text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
               Skriv den 6-sifrede koden fra autentikator-appen. Ikke en e-postkode.
             </p>
             <Field id="signin-totp" label="App-kode">
@@ -299,7 +291,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             <StatefulButton
               type="submit"
               state={knappState('totp')}
-              className="w-full"
+              className={AUTH_FORTSETT}
               loadingText="Sjekker koden…"
               successText="Bekreftet"
               errorText="Prøv igjen"
@@ -316,23 +308,16 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             </button>
           </form>
         ) : (
-          <form
-            onSubmit={onSkrivKode}
-            data-auth-kort
-            data-auth-kode-steg
-            className="flex flex-col gap-2 rounded-[24px] border border-[var(--ew-border-strong)] bg-bg p-4"
-          >
-            <h1 className="text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg">
-              {tittel}
-            </h1>
-            <p className="text-[15px] font-[450] leading-[22px] text-fg-muted">
+          <form onSubmit={onSkrivKode} data-auth-kode-steg className={AUTH_FLATE}>
+            <h1 className={AUTH_TITTEL}>{tittel}</h1>
+            <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
               {SIGNIN_KODE_INGRESS}{' '}
               <span className="font-[650] text-fg">{email || 'e-posten din'}</span>.
             </p>
             <button
               type="button"
               onClick={() => void byttKonto()}
-              className="mb-1 self-start text-[15px] font-[650] text-fg underline underline-offset-2"
+              className="mb-1 w-full text-center text-[15px] font-[650] text-fg underline underline-offset-2"
             >
               {SIGNIN_IKKE_DEG}
             </button>
@@ -354,7 +339,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             <StatefulButton
               type="submit"
               state={knappState('logg-inn')}
-              className="w-full"
+              className={AUTH_FORTSETT}
               loadingText="Sjekker koden…"
               successText="Bekreftet"
               errorText="Prøv igjen"

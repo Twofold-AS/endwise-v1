@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-08 — F1-02 Mobbin sign-in polish (Mikael CODE-GO)
+
+**Type:** visuell polish på `/signin`. Ingen techstack-endring. Ingen ny UI-pakke. Ingen auth-mekanikk.
+**Godkjent av:** Mikael CODE-GO oppfølging etter #152.
+**Endring:** **F1-02** done. Fjernet ytterkort. Innhold sentrert horisontalt, litt over midten. Mer luft over/under logo. Heading «Velkommen tilbake». Feltfokus 2px hvit kant. Fortsett mer vertikal padding. 5-siffer / spinner / vilkår / mørk-logo / e-postmal urørt. ⛔ #114/#119. Eier: klar + squash, ikke Jonas-skudd.
+
+---
+
 ## 2026-09-07 — F3-05 pulse mock-badge (Mikael CODE GO)
 
 **Type:** tom-UX på pulse-hjem. Ingen techstack-endring. Ingen ny UI-pakke.

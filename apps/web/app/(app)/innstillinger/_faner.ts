@@ -1,5 +1,5 @@
 /**
- * Innstillinger — kun Profil + Varsler.
+ * Innstillinger — Konto + Varsler.
  * Abonnement, Tjenester & priser og Koblinger bor på Organisasjon.
  */
 
@@ -17,8 +17,8 @@ export type FaneDef = {
 export const FANER: readonly FaneDef[] = [
   {
     id: 'profil',
-    label: 'Profil',
-    ingress: 'Navn, avatar, varslingslyder, sikkerhet og utseende.',
+    label: 'Konto',
+    ingress: 'Personlige detaljer og konto.',
   },
   {
     id: 'varsler',
@@ -40,7 +40,8 @@ export function parseFane(
   erForhandler = true,
 ): FaneId {
   if (!erForhandler) return 'profil';
-  const kandidat: FaneId = erFaneId(raw) ? raw : fallback;
+  const normalisert = raw === 'konto' ? 'profil' : raw;
+  const kandidat: FaneId = erFaneId(normalisert) ? normalisert : fallback;
   const def = FANER.find((f) => f.id === kandidat);
   if (!def) return 'profil';
   return kandidat;
@@ -52,7 +53,7 @@ export function synligeFaner(_isAdmin: boolean, erForhandler = true): FaneDef[] 
 }
 
 export function innstillingerHref(fane: FaneId): string {
-  return `/innstillinger?fane=${fane}`;
+  return `/innstillinger?fane=${fane === 'profil' ? 'konto' : fane}`;
 }
 
 /**

@@ -13,6 +13,7 @@ import {
   SIGNIN_KODE_INGRESS,
   SIGNIN_STI,
   SIGNIN_TITTEL,
+  SIGNIN_TOTP_TITTEL,
   SIGNIN_TOTP_STI,
   SIGNIN_VALG_STI,
   SIGNIN_VILKAR,
@@ -57,6 +58,7 @@ describe('signin-steg: kode-steg etter e-post, TOTP bare med kake', () => {
     expect(SIGNIN_VALG_STI).toBe('/signin?steg=valg');
     expect(SIGNIN_TOTP_STI).toBe('/signin?steg=totp');
     expect(SIGNIN_TITTEL).toBe('Velkommen tilbake');
+    expect(SIGNIN_TOTP_TITTEL).toBe('Bekreftelse');
     expect(SIGNIN_KODE_INGRESS).toBe('Vi har sendt en midlertidig kode til');
     expect(SIGNIN_IKKE_DEG).toBe('Ikke deg?');
     expect(SIGNIN_FYLL_KODE).toBe('Fyll inn kode');

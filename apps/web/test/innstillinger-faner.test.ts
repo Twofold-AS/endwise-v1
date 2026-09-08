@@ -21,7 +21,7 @@ function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
 
-describe('F5-19: innstillinger er Profil + Varsler', () => {
+describe('F5-19: innstillinger er Konto + Varsler', () => {
   const page = les('../app/(app)/innstillinger/page.tsx');
   const skall = les('../app/(app)/innstillinger/_skall.tsx');
   const profilFane = les('../app/(app)/innstillinger/_profil-fane.tsx');
@@ -41,10 +41,10 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
     expect(page).not.toMatch(/>Settings</);
   });
 
-  it('har kun Profil og Varsler — Abonnement/Koblinger/Tjenester er flyttet', () => {
+  it('har kun Konto og Varsler — Abonnement/Koblinger/Tjenester er flyttet', () => {
     expect(skall).toMatch(/role="tablist"/);
     expect([...FANE_IDS]).toEqual(['profil', 'varsler']);
-    expect(FANER.map((f) => f.label)).toEqual(['Profil', 'Varsler']);
+    expect(FANER.map((f) => f.label)).toEqual(['Konto', 'Varsler']);
     expect(FANER.map((f) => f.id)).not.toContain('team');
     expect(FANER.map((f) => f.id)).not.toContain('abonnement');
     expect(FANER.map((f) => f.label)).not.toContain('Team & tilgang');
@@ -68,7 +68,8 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
   });
 
   it('kanonisk fane-URL er ?fane=, gamle dealer-stier er ikke lenger alias', () => {
-    expect(innstillingerHref('profil')).toBe('/innstillinger?fane=profil');
+    expect(innstillingerHref('profil')).toBe('/innstillinger?fane=konto');
+    expect(parseFane('konto', true)).toBe('profil');
     expect(FANE_ALIAS['/innstillinger/profil']).toBe('profil');
     expect(FANE_ALIAS['/innstillinger/team']).toBeUndefined();
     expect(FANE_ALIAS['/innstillinger/varsler']).toBe('varsler');
@@ -111,12 +112,12 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
     );
   });
 
-  it('profil-fanen viser bloub og har ikke filopplasting', () => {
+  it('konto-fanen viser stille bloub og har ikke filopplasting', () => {
     expect(profilFane).toMatch(/<Avatar/);
+    expect(profilFane).toMatch(/bevegelse="stille"/);
     expect(profilFane).not.toMatch(/AvatarVelger/);
     expect(profilFane).toMatch(/ToFaktorRad/);
     expect(profilFane).toMatch(/twoFactorEnabled/);
-    expect(profilFane).toMatch(/VarslingslyderRad/);
     expect(profilFane).not.toMatch(/Mørkt tema/);
     expect(profilFane).not.toMatch(/type=['"]file['"]/);
     expect(profilFane).toMatch(/Ingen filopplasting/);
@@ -124,13 +125,13 @@ describe('F5-19: innstillinger er Profil + Varsler', () => {
     expect(profilFane).not.toMatch(/Search settings|Pinned|PRO-badge/i);
   });
 
-  it('profil-raden har avatar + endre-knapp øverst, feltene stables under uten kort', () => {
-    expect(profilFane).toMatch(/size=\{56\}/);
+  it('konto-rader: Navn/E-post/Passord/Autentikator med Endre, uten fargevelger', () => {
+    expect(profilFane).toMatch(/bevegelse="stille"/);
     expect(profilFane).not.toMatch(/foldFormer/);
     expect(profilFane).toMatch(/VisningsnavnFelt/);
-    expect(profilFane).toMatch(/KallenavnFelt/);
     expect(profilFane).toMatch(/ByttEpostSkjema/);
-    expect(profilFane).toMatch(/readOnly/);
+    expect(profilFane).toMatch(/Personlige detaljer/);
+    expect(profilFane).toMatch(/Administrer konto/);
     expect(profilFane).not.toMatch(/AvatarVelger/);
     expect(profilFane).not.toMatch(/sm:grid-cols-2/);
   });

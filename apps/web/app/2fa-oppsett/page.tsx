@@ -179,7 +179,7 @@ export default function ToFaktorOppsettPage() {
       : steg === 'koder'
         ? 'Lagre gjenopprettingskodene'
         : steg === 'kode'
-          ? 'Bekreft med autentikator'
+          ? 'Bekreftelse'
           : steg === 'av'
             ? 'Tofaktor er på'
             : 'Sett opp autentikator';

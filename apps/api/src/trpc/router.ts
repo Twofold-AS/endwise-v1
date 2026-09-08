@@ -21,6 +21,7 @@ import { personvernRouter } from './routers/personvern.ts';
 import { platformTeamRouter } from './routers/platform-team.ts';
 import { profileRouter } from './routers/profile.ts';
 import { quickRouter } from './routers/quick.ts';
+import { searchRouter } from './routers/search.ts';
 import { servicesRouter } from './routers/services.ts';
 import { sessionRouter } from './routers/session.ts';
 import { shopRouter } from './routers/shop.ts';
@@ -42,6 +43,7 @@ export const appRouter = router({
   stream: streamRouter,
   tenants: tenantsRouter,
   customers: customersRouter,
+  search: searchRouter,
   directory: directoryRouter,
   profile: profileRouter,
   inboxContext: inboxContextRouter,

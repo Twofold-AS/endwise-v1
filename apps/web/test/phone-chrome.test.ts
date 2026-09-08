@@ -163,7 +163,7 @@ describe('phone-chrome', () => {
     expect(css).toMatch(/100dvh/);
   });
 
-  it('telefon top-bar 2 bruker PhoneHScroll for dest-piller; tilbake er ute', () => {
+  it('telefon top-bar 2 bruker PhoneHScroll for dest-piller; tilbake kun på settings', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
@@ -171,9 +171,9 @@ describe('phone-chrome', () => {
     expect(seksjon).toMatch(/DestinasjonSeksjonBar/);
     expect(shell).toMatch(/PhoneHScroll/);
     expect(shell).toMatch(/data-phone-dest/);
-    expect(shell).not.toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/router\.back\(\)/);
-    expect(shell).not.toMatch(/TilbakePil/);
+    expect(shell).toMatch(/TilbakePil/);
+    expect(shell).toMatch(/data-shell-tilbake/);
     expect(pil).toMatch(/<svg/);
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
     expect(pil).not.toMatch(/>Tilbake</);

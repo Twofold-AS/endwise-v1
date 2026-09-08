@@ -2,8 +2,10 @@
  * Innlogging etter identifisert e-post: kode-steg, ikke TOTP-vegg.
  * Magic-lenka og den manuelle 5-sifrede koden er samme engangsbevis.
  * TOTP-flaten vises bare når Better-Auth allerede har satt two_factor-kaken
- * (appen er bundet). Uenrollert lander aldri på «Bekreft med autentikator».
+ * (appen er bundet). Uenrollert lander aldri på «Bekreftelse».
  */
+
+export const SIGNIN_TOTP_TITTEL = 'Bekreftelse';
 
 export const SIGNIN_STI = '/signin';
 export const SIGNIN_VALG_STI = '/signin?steg=valg';

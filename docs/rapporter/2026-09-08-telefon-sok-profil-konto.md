@@ -13,6 +13,7 @@
 - `global-search.test.ts` matchet ordet «fake» i kommentaren «Ingen fake treff».
 - `phone-profil-settings` matchet ikke `'Slett'` i ternær (`{… ? 'Sletter …' : 'Slett'}`).
 - Vercel-preview feilet: `FileText` finnes ikke i `@endwise/ui` (62 kuraterte ikoner). Vilkår er tekstlenke som Mobbin-footer.
+- CI Lint: Biome import/format + a11y på Theme-rad (`role="radio"` / SVG uten title).
 
 ## Fikser
 - Dest-ikonstripe fjernet fra overlay (låst i tester).

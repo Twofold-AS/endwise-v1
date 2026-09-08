@@ -7,7 +7,13 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { byggVarselHtml } from '../../tools/toolkits/resend/src/epost-html.ts';
 import { LOGO_EPOST_CID, LOGO_EPOST_PNG_BASE64 } from '../src/assets/logo-epost.ts';
-import { byggEpostHtml, knapp, kodeboks, meldingsboks } from '../src/senders/epost-mal.ts';
+import {
+  byggEpostHtml,
+  byggInnloggingsEpostHtml,
+  knapp,
+  kodeboks,
+  meldingsboks,
+} from '../src/senders/epost-mal.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 const ut = resolve(her, '../../../docs/epost-forhaandvisning');
@@ -15,13 +21,10 @@ const ut = resolve(her, '../../../docs/epost-forhaandvisning');
 const maler: Array<{ id: string; html: string }> = [
   {
     id: 'magic-link',
-    html: byggEpostHtml({
-      tittel: 'Logg inn på Endwise',
-      ingress:
-        'Koden din er ABCD-EFGH-2345. Trykk på knappen eller skriv den manuelt. Gyldig til kl. 21:00. Bare den nyeste e-posten gjelder.',
-      innhold: `${kodeboks('ABCD-EFGH-2345')}<div style="height:16px"></div>${knapp('https://endwise.no/api/auth/magic-link/verify?token=eksempel', 'Logg inn')}`,
-      fotnote:
-        'Har du ikke bedt om denne lenken, kan du se bort fra e-posten. Bare den nyeste e-posten gjelder — eldre lenker slutter å virke.',
+    html: byggInnloggingsEpostHtml({
+      navn: 'Mikael',
+      kode: '48291',
+      lenke: 'https://endwise.no/api/auth/magic-link/verify?token=48291',
     }),
   },
   {

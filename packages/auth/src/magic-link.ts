@@ -19,9 +19,13 @@ export const MAGIC_LINK_APP_LANDING = '/';
 export const MAGIC_LINK_BE_OM_GRENSE = { window: 60, max: 5 } as const;
 export const MAGIC_LINK_VERIFY_GRENSE = { window: 60, max: 5 } as const;
 
-/** Typebar kode (lenka bærer den samme). Ingen 0/O/1/I. */
-export const MAGIC_LINK_KODE_ALFABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-export const MAGIC_LINK_KODE_LENGDE = 12;
+/**
+ * Typebar PIN (lenka bærer den samme). 5 siffer — Mikael Mobbin CODE-GO 08.09.2026.
+ * Bedre-Auth `generateToken` + `storeToken: 'hashed'`. Rate-limit 5/min (samme tak).
+ * Entropi 10^5; brute-force holdes av verify-grensen, ikke av alfabetlengde.
+ */
+export const MAGIC_LINK_KODE_ALFABET = '0123456789';
+export const MAGIC_LINK_KODE_LENGDE = 5;
 
 export const MAGIC_LINK_ERSTATTET_MELDING =
   'Lenken er utløpt eller erstattet. Åpne den nyeste e-posten fra Endwise.';
@@ -40,12 +44,15 @@ export function genererMagicLinkKode(): string {
 }
 
 export function normaliserMagicLinkKode(input: string): string {
-  return input.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  return input.replace(/\D/g, '');
 }
 
 export function visMagicLinkKode(kode: string): string {
-  const n = normaliserMagicLinkKode(kode);
-  return n.match(/.{1,4}/g)?.join('-') ?? n;
+  return normaliserMagicLinkKode(kode);
+}
+
+export function erMagicLinkKode(kode: string): boolean {
+  return new RegExp(`^\\d{${MAGIC_LINK_KODE_LENGDE}}$`).test(normaliserMagicLinkKode(kode));
 }
 
 export function magicLinkVerifySti(token: string): string {

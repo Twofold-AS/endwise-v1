@@ -1,7 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LOGO_EPOST_CID, LOGO_EPOST_PNG_BASE64 } from '../src/assets/logo-epost.ts';
 import { avsenderDomene, avsenderErVerifisert, RESEND_VERIFISERTE_DOMENER } from '../src/env.ts';
-import { byggEpostHtml, esc, knapp, kodeboks } from '../src/senders/epost-mal.ts';
+import {
+  byggEpostHtml,
+  byggInnloggingsEpostHtml,
+  esc,
+  innloggingsEpostEmne,
+  knapp,
+  kodeboks,
+} from '../src/senders/epost-mal.ts';
 
 /**
  * F1-11 / F1-16 — **e-postinnholdet, låst.**
@@ -88,6 +95,34 @@ describe('logoen', () => {
 
   it('er liten nok til å sendes med hver e-post', () => {
     expect(LOGO_EPOST_PNG_BASE64.length).toBeLessThan(10 * 1024);
+  });
+});
+
+describe('innloggings-e-postmalen', () => {
+  const html = byggInnloggingsEpostHtml({
+    navn: 'Mikael',
+    kode: '48291',
+    lenke: 'https://endwise.no/api/auth/magic-link/verify?token=48291',
+  });
+
+  it('emnet bærer koden', () => {
+    expect(innloggingsEpostEmne('48291')).toBe('Din midlertidige Endwise kode er 48291');
+  });
+
+  it('er alltid hvit — uavhengig av app-tema', () => {
+    expect(html).toContain('background-color:#ffffff');
+    expect(html).toContain('bgcolor="#ffffff"');
+    expect(html).toContain('name="color-scheme" content="light"');
+    expect(html).not.toContain('#f5f5f7');
+    expect(html).not.toContain('#0066cc');
+  });
+
+  it('har svart logo via cid, tykk hilsen og understreket lenka', () => {
+    expect(html).toContain(`src="cid:${LOGO_EPOST_CID}"`);
+    expect(html).toContain('Hei Mikael,');
+    expect(html).toContain('font-weight:650');
+    expect(html).toContain('font-size:36px');
+    expect(html).toMatch(/<a href="https:\/\/endwise\.no[^"]+"[^>]*>lenka<\/a>/);
   });
 });
 
@@ -186,7 +221,7 @@ describe('engangskode-e-posten', () => {
     process.env.RESEND_FROM = 'Endwise <noreply@endwise.no>';
   });
 
-  it('magic-link-e-posten er gammel OTP-stil: synlig kode + Logg inn, ikke TOTP', async () => {
+  it('magic-link-e-posten er Mobbin: 5-sifret kode, hvit bakgrunn, ikke TOTP', async () => {
     const sendt: Record<string, unknown>[] = [];
     vi.doMock('resend', () => ({
       Resend: class {
@@ -202,25 +237,38 @@ describe('engangskode-e-posten', () => {
     const { sendMagicLink } = await last();
     await sendMagicLink({
       to: 'mikkis@twofold.no',
-      lenke: 'https://endwise.no/api/auth/magic-link/verify?token=ABCD',
-      kode: 'ABCDEFGH2345',
+      lenke: 'https://endwise.no/api/auth/magic-link/verify?token=48291',
+      kode: '48291',
+      navn: 'Mikael',
       utloper: new Date('2026-09-01T19:00:00.000Z'),
     });
 
     expect(sendt).toHaveLength(1);
     const p = sendt[0] as { from: string; text: string; html: string; subject: string };
     expect(p.from).toBe('Endwise <noreply@endwise.no>');
-    expect(p.subject).toBe('Logg inn på Endwise');
-    expect(p.text).toMatch(/Kode:\s*ABCD-EFGH-2345/);
-    expect(p.html).toContain('ABCD-EFGH-2345');
-    expect(p.html).toContain('Logg inn');
-    expect(p.html).toContain('Koden din er');
+    expect(p.subject).toBe('Din midlertidige Endwise kode er 48291');
+    expect(p.text).toMatch(/Hei Mikael,/);
+    expect(p.text).toMatch(/Her er koden for å logge inn/);
+    expect(p.text).toContain('48291');
+    expect(p.text).toMatch(/denne lenka/);
+    expect(p.text).toMatch(/Innstillinger → Konto/);
+    expect(p.text).toMatch(/ikke var deg kan du trygt ignorere/);
+    expect(p.html).toContain('Hei Mikael,');
+    expect(p.html).toContain('48291');
+    expect(p.html).toContain('Her er koden for å logge inn');
+    expect(p.html).toMatch(/<a[^>]*>lenka<\/a>/);
+    expect(p.html).toMatch(/text-decoration:underline/);
+    expect(p.html).toContain('Innstillinger → Konto');
+    expect(p.html).toContain('Om dette ikke var deg kan du trygt ignorere denne e-posten.');
+    expect(p.html).toContain('background-color:#ffffff');
+    expect(p.html).toContain('color:#141414');
     expect(p.html).not.toMatch(/TOTP|app-kode|autentikator/i);
     expect(p.text).not.toMatch(/TOTP|app-kode|autentikator/i);
-    expect(p.html).not.toMatch(/passord|1Password|demo|seed/i);
-    expect(p.text).not.toMatch(/passord|1Password|demo|seed/i);
-    expect(p.html).toContain('#0066cc');
-    expect(p.html).toContain('#f5f5f7');
+    expect(p.html).not.toMatch(/1Password|demo|seed/i);
+    expect(p.text).not.toMatch(/1Password|demo|seed/i);
+    expect(p.html).not.toContain('#0066cc');
+    expect(p.html).not.toContain('#f5f5f7');
+    expect(p.html).not.toMatch(/#1ED27D|#caface/);
     vi.doUnmock('resend');
   });
 

@@ -57,17 +57,14 @@ describe('Mikael 02.09 — visDemoHint er av overalt på /signin', () => {
   });
 });
 
-describe('Mikael 02.09 — Skriv kode manuelt er sekundær', () => {
-  it('er hvit/secondary som Bytt konto, ikke StatefulButton-primær', () => {
+describe('Mikael 08.09 — kode-steg er 5 siffer, ikke venteskjerm', () => {
+  it('Ikke deg er understreket tekst, Fortsett er primær', () => {
     const kilde = utenKommentarer(les('../app/signin/signin-skjema.tsx'));
-    const start = kilde.indexOf('{!manuell && (');
-    const slutt = kilde.indexOf('SIGNIN_VALG_SKRIV_KODE', start);
-    const blokk = kilde.slice(start, slutt + 'SIGNIN_VALG_SKRIV_KODE'.length);
-    expect(blokk).toContain('SIGNIN_VALG_SKRIV_KODE');
-    expect(blokk).not.toMatch(/StatefulButton/);
-    expect(blokk).toMatch(/border-border/);
-    expect(kilde).toMatch(/StatefulButton[\s\S]*Fortsett/);
-    expect(kilde).toMatch(/SIGNIN_VALG_SEND_NYTT/);
+    expect(kilde).toMatch(/SIGNIN_IKKE_DEG/);
+    expect(kilde).toMatch(/data-auth-kode-steg/);
+    expect(kilde).toMatch(/StatefulButton[\s\S]*SIGNIN_FORTSETT/);
+    expect(kilde).not.toMatch(/Skriv kode manuelt/);
+    expect(kilde).not.toMatch(/SIGNIN_VALG_SEND_NYTT/);
   });
 });
 

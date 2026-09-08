@@ -1,6 +1,6 @@
 /**
- * Innlogging etter identifisert e-post: venteskjerm, ikke TOTP-vegg.
- * Magic-lenka og den manuelle koden er samme engangsbevis.
+ * Innlogging etter identifisert e-post: kode-steg, ikke TOTP-vegg.
+ * Magic-lenka og den manuelle 5-sifrede koden er samme engangsbevis.
  * TOTP-flaten vises bare når Better-Auth allerede har satt two_factor-kaken
  * (appen er bundet). Uenrollert lander aldri på «Bekreft med autentikator».
  */
@@ -10,11 +10,20 @@ export const SIGNIN_VALG_STI = '/signin?steg=valg';
 export const SIGNIN_TOTP_STI = '/signin?steg=totp';
 export const SIGNIN_ENROLL_STI = '/2fa-oppsett';
 export const SIGNIN_EPOST_KEY = 'endwise.signin.epost';
+export const SIGNIN_VILKAR_STI = '/vilkar';
 
-export const SIGNIN_VENT_TITTEL = 'Trykk på lenken i e-posten';
-export const SIGNIN_VALG_SKRIV_KODE = 'Skriv kode manuelt';
-export const SIGNIN_VALG_BYTT_KONTO = 'Bytt konto';
-export const SIGNIN_VALG_LOGG_INN = 'Logg inn';
+export const SIGNIN_TITTEL = 'Logg inn på Endwise';
+export const SIGNIN_KODE_INGRESS = 'Vi har sendt en midlertidig kode til';
+export const SIGNIN_IKKE_DEG = 'Ikke deg?';
+export const SIGNIN_FYLL_KODE = 'Fyll inn kode';
+export const SIGNIN_FORTSETT = 'Fortsett';
+export const SIGNIN_VILKAR = 'Ved å fortsette godtar du vilkårene.';
+
+/** @deprecated Venteskjerm er erstattet av kode-steget (Mobbin 08.09.2026). */
+export const SIGNIN_VENT_TITTEL = SIGNIN_TITTEL;
+export const SIGNIN_VALG_SKRIV_KODE = SIGNIN_FYLL_KODE;
+export const SIGNIN_VALG_BYTT_KONTO = SIGNIN_IKKE_DEG;
+export const SIGNIN_VALG_LOGG_INN = SIGNIN_FORTSETT;
 export const SIGNIN_VALG_SEND_NYTT = 'Send på nytt';
 
 export type SignInFlate = 'epost' | 'valg' | 'totp';

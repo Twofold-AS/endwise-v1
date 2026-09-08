@@ -1,18 +1,21 @@
 'use client';
 
 import {
+  erMagicLinkKode,
   MAGIC_LINK_ERSTATTET_MELDING,
   magicLinkVerifySti,
   meldingForMagicLinkFeil,
   normaliserMagicLinkKode,
 } from '@endwise/auth/magic-link';
-import { Mail, ShieldCheck, StatefulButton } from '@endwise/ui';
-import Image from 'next/image';
+import { ArrowRight, ShieldCheck, StatefulButton } from '@endwise/ui';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { authClient, signIn } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { Field, INPUT } from '../_auth/felter';
+import { AuthMerke } from '../_auth/merke';
 import { destinasjonNarSesjonFeiler } from '../invitasjon/_landing';
 import {
   flateEtterMagicLinkLanding,
@@ -20,22 +23,24 @@ import {
   lesIdentifisertEpost,
   meldingForTotpFeil,
   SIGNIN_ENROLL_STI,
+  SIGNIN_FORTSETT,
+  SIGNIN_FYLL_KODE,
+  SIGNIN_IKKE_DEG,
+  SIGNIN_KODE_INGRESS,
   SIGNIN_STI,
-  SIGNIN_VALG_BYTT_KONTO,
-  SIGNIN_VALG_LOGG_INN,
-  SIGNIN_VALG_SEND_NYTT,
-  SIGNIN_VALG_SKRIV_KODE,
+  SIGNIN_TITTEL,
   SIGNIN_VALG_STI,
-  SIGNIN_VENT_TITTEL,
+  SIGNIN_VILKAR,
+  SIGNIN_VILKAR_STI,
   type SignInFlate,
   skalViseErstattetMelding,
   toemIdentifisertEpost,
 } from './signin-steg';
 
 /**
- * Etter e-post: venteskjerm (lenke i innboksen). Manuell kode er samme
- * engangsbevis — ett felt, ikke to. TOTP-app kommer først etter verify
- * av en bruker som allerede har bundet autentikator.
+ * Etter e-post: kode-steg (5 siffer). Magic-lenka er samme engangsbevis.
+ * TOTP-app kommer først etter verify av en bruker som allerede har bundet
+ * autentikator.
  */
 function feilmelding(res: {
   error?: { status?: number; code?: string; message?: string } | null;
@@ -65,7 +70,7 @@ function landingTilFlate(steg: string | null, feil: string | null, totpKlar: boo
   return neste === 'enroll' ? 'valg' : neste;
 }
 
-type SignInHandling = 'fortsett' | 'logg-inn' | 'send-nytt' | 'totp';
+type SignInHandling = 'fortsett' | 'logg-inn' | 'totp';
 
 function landingFeil(steg: string | null, feil: string | null, totpKlar: boolean): string | null {
   if (steg === 'totp' && totpKlar) return null;
@@ -86,7 +91,6 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
   const [email, setEmail] = useState('');
   const [kode, setKode] = useState('');
   const [totp, setTotp] = useState('');
-  const [manuell, setManuell] = useState(false);
   const [error, setError] = useState<string | null>(() =>
     landingFeil(stegQuery, feilQuery, totpKlar),
   );
@@ -124,9 +128,9 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
   }, []);
 
   useEffect(() => {
-    if (flate === 'valg' && manuell) kodeRef.current?.focus();
+    if (flate === 'valg') kodeRef.current?.focus();
     if (flate === 'totp') totpRef.current?.focus();
-  }, [flate, manuell]);
+  }, [flate]);
 
   async function finishSignIn() {
     const orgs = await authClient.organization.list();
@@ -141,7 +145,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     window.location.assign(landing ?? '/home');
   }
 
-  async function sendLenke(adresse: string, hvilken: 'fortsett' | 'send-nytt') {
+  async function sendLenke(adresse: string, hvilken: 'fortsett') {
     setHandling(hvilken);
     setBusy('loading');
     setError(null);
@@ -164,22 +168,11 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     await sendLenke(email.trim(), 'fortsett');
   }
 
-  async function onSendPaNytt() {
-    const adresse = email.trim() || lesIdentifisertEpost();
-    if (!adresse) {
-      setError('Skriv e-posten til kontoen på nytt.');
-      setFlate('epost');
-      settStegIUrl(null);
-      return;
-    }
-    await sendLenke(adresse, 'send-nytt');
-  }
-
-  function onSkrivKodeManuelt(e: FormEvent) {
+  function onSkrivKode(e: FormEvent) {
     e.preventDefault();
     const token = normaliserMagicLinkKode(kode);
-    if (token.length === 0) {
-      setError('Skriv koden fra den nyeste e-posten.');
+    if (!erMagicLinkKode(token)) {
+      setError('Skriv den 5-sifrede koden fra e-posten.');
       return;
     }
     setHandling('logg-inn');
@@ -223,185 +216,153 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     window.location.assign(SIGNIN_STI);
   }
 
-  const tittel =
-    flate === 'epost'
-      ? 'Logg inn på Endwise'
-      : flate === 'totp'
-        ? 'Bekreft med autentikator'
-        : SIGNIN_VENT_TITTEL /* Trykk på lenken i e-posten */;
-
-  const ingress =
-    flate === 'epost'
-      ? 'Skriv e-posten til kontoen. Vi sender en innloggingslenke — ingen passord.'
-      : flate === 'totp'
-        ? 'Skriv den 6-sifrede koden fra autentikator-appen. Ikke en e-postkode.'
-        : email
-          ? `Vi sendte en innloggingslenke til ${email}. Åpne den nyeste e-posten.`
-          : 'Åpne den nyeste e-posten fra Endwise.';
+  const tittel = flate === 'totp' ? 'Bekreft med autentikator' : SIGNIN_TITTEL;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg px-4 text-fg">
+    <main className="flex min-h-dvh justify-center bg-bg px-4 pt-8 pb-16 text-fg sm:pt-10">
       <div className="w-full max-w-sm">
-        <div className="mb-6 flex flex-col items-center gap-3">
-          <Image src="/logo/logo.svg" alt="Endwise" width={44} height={44} priority />
-          <h1 className="text-title text-fg">{tittel}</h1>
-          <p className="text-center text-body text-fg-muted">{ingress}</p>
+        <div className="mb-3 flex justify-center">
+          <AuthMerke />
         </div>
 
         {flate === 'epost' ? (
           <form
             onSubmit={onEpost}
-            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
+            data-auth-kort
+            className="flex flex-col gap-2 rounded-[24px] border border-[var(--ew-border-strong)] bg-bg p-4"
           >
-            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              <Field id="signin-email" label="E-post">
-                <input
-                  id="signin-email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(ev) => setEmail(ev.target.value)}
-                  className={INPUT}
-                  placeholder="deg@twofold.no"
-                />
-              </Field>
-              {error && <p className="text-[12px] text-danger">{error}</p>}
-            </div>
-            <div className="px-1.5 pt-1 pb-1">
-              <StatefulButton
-                type="submit"
-                state={knappState('fortsett')}
-                className="w-full"
-                loadingText="Sender lenke…"
-                successText="Sendt"
-                errorText="Prøv igjen"
-                icon={<Mail size={15} />}
+            <h1 className="text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg">
+              {tittel}
+            </h1>
+            <Field id="signin-email" label="E-post">
+              <input
+                id="signin-email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(ev) => setEmail(ev.target.value)}
+                className={INPUT}
+                placeholder="deg@twofold.no"
+              />
+            </Field>
+            {error && <p className="text-[13px] text-danger">{error}</p>}
+            <StatefulButton
+              type="submit"
+              state={knappState('fortsett')}
+              className="w-full"
+              loadingText="Sender…"
+              successText="Sendt"
+              errorText="Prøv igjen"
+              icon={<ArrowRight size={16} />}
+            >
+              {SIGNIN_FORTSETT}
+            </StatefulButton>
+            <p className="pt-1 text-center text-[13px] font-[450] leading-5 text-fg-muted">
+              {SIGNIN_VILKAR}{' '}
+              <Link
+                href={SIGNIN_VILKAR_STI as Route}
+                className="font-[650] text-fg underline underline-offset-2"
               >
-                Fortsett
-              </StatefulButton>
-            </div>
+                Vilkår
+              </Link>
+            </p>
           </form>
         ) : flate === 'totp' ? (
           <form
             onSubmit={(e) => void onTotp(e)}
-            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
+            data-auth-kort
+            className="flex flex-col gap-2 rounded-[24px] border border-[var(--ew-border-strong)] bg-bg p-4"
           >
-            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              <Field id="signin-totp" label="App-kode">
-                <input
-                  id="signin-totp"
-                  ref={totpRef}
-                  autoComplete="one-time-code"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  required
-                  value={totp}
-                  onChange={(ev) => setTotp(ev.target.value.replace(/\D/g, ''))}
-                  className={`${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`}
-                  placeholder="••••••"
-                />
-              </Field>
-              {error && <p className="text-[12px] text-danger">{error}</p>}
-            </div>
-            <div className="flex flex-col gap-2 px-1.5 pt-1 pb-1">
-              <StatefulButton
-                type="submit"
-                state={knappState('totp')}
-                className="w-full"
-                loadingText="Sjekker koden…"
-                successText="Bekreftet"
-                errorText="Prøv igjen"
-                icon={<ShieldCheck size={15} />}
-              >
-                Bekreft
-              </StatefulButton>
-              <button
-                type="button"
-                onClick={() => void byttKonto()}
-                className="inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
-              >
-                {SIGNIN_VALG_BYTT_KONTO}
-              </button>
-            </div>
+            <h1 className="text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg">
+              {tittel}
+            </h1>
+            <p className="mb-1 text-[15px] font-[450] leading-[22px] text-fg-muted">
+              Skriv den 6-sifrede koden fra autentikator-appen. Ikke en e-postkode.
+            </p>
+            <Field id="signin-totp" label="App-kode">
+              <input
+                id="signin-totp"
+                ref={totpRef}
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                required
+                value={totp}
+                onChange={(ev) => setTotp(ev.target.value.replace(/\D/g, ''))}
+                className={`${INPUT} text-center tabular-nums tracking-[0.35em]`}
+                placeholder="••••••"
+              />
+            </Field>
+            {error && <p className="text-[13px] text-danger">{error}</p>}
+            <StatefulButton
+              type="submit"
+              state={knappState('totp')}
+              className="w-full"
+              loadingText="Sjekker koden…"
+              successText="Bekreftet"
+              errorText="Prøv igjen"
+              icon={<ShieldCheck size={15} />}
+            >
+              Bekreft
+            </StatefulButton>
+            <button
+              type="button"
+              onClick={() => void byttKonto()}
+              className="pt-1 text-center text-[15px] font-[650] text-fg underline underline-offset-2"
+            >
+              {SIGNIN_IKKE_DEG}
+            </button>
           </form>
         ) : (
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
-            {manuell ? (
-              <form
-                id="signin-manuell-kode"
-                onSubmit={onSkrivKodeManuelt}
-                className="flex flex-col gap-3 rounded-lg bg-inset p-4"
-              >
-                <Field id="signin-magic-kode" label="Kode fra e-posten">
-                  <input
-                    id="signin-magic-kode"
-                    ref={kodeRef}
-                    autoComplete="one-time-code"
-                    inputMode="text"
-                    value={kode}
-                    onChange={(ev) => setKode(ev.target.value.toUpperCase())}
-                    className={`${INPUT} text-center font-mono text-[16px] tracking-[0.2em] tabular-nums`}
-                    placeholder="ABCD-EFGH-IJKL"
-                  />
-                </Field>
-                {error && (
-                  <p className="text-[12px] text-danger">{error ?? MAGIC_LINK_ERSTATTET_MELDING}</p>
-                )}
-              </form>
-            ) : error ? (
-              <div className="rounded-lg bg-inset p-4">
-                <p className="text-[12px] text-danger">{error ?? MAGIC_LINK_ERSTATTET_MELDING}</p>
-              </div>
-            ) : null}
-            <div className="flex flex-col gap-2 px-1.5 pt-1 pb-1">
-              {!manuell && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setManuell(true);
-                  }}
-                  className="inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
-                >
-                  {SIGNIN_VALG_SKRIV_KODE}
-                </button>
-              )}
-              {manuell && (
-                <StatefulButton
-                  type="submit"
-                  form="signin-manuell-kode"
-                  state={knappState('logg-inn')}
-                  className="w-full"
-                  loadingText="Sjekker koden…"
-                  successText="Bekreftet"
-                  errorText="Prøv igjen"
-                  icon={<ShieldCheck size={15} />}
-                >
-                  {SIGNIN_VALG_LOGG_INN}
-                </StatefulButton>
-              )}
-              <StatefulButton
-                type="button"
-                state={knappState('send-nytt')}
-                className="w-full"
-                loadingText="Sender lenke…"
-                successText="Sendt"
-                errorText="Prøv igjen"
-                icon={<Mail size={15} />}
-                onClick={() => void onSendPaNytt()}
-              >
-                {SIGNIN_VALG_SEND_NYTT}
-              </StatefulButton>
-              <button
-                type="button"
-                onClick={() => void byttKonto()}
-                className="inline-flex h-control w-full items-center justify-center rounded-control border border-border px-3 text-fg text-label hover:bg-surface-2"
-              >
-                {SIGNIN_VALG_BYTT_KONTO}
-              </button>
-            </div>
-          </div>
+          <form
+            onSubmit={onSkrivKode}
+            data-auth-kort
+            data-auth-kode-steg
+            className="flex flex-col gap-2 rounded-[24px] border border-[var(--ew-border-strong)] bg-bg p-4"
+          >
+            <h1 className="text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg">
+              {tittel}
+            </h1>
+            <p className="text-[15px] font-[450] leading-[22px] text-fg-muted">
+              {SIGNIN_KODE_INGRESS}{' '}
+              <span className="font-[650] text-fg">{email || 'e-posten din'}</span>.
+            </p>
+            <button
+              type="button"
+              onClick={() => void byttKonto()}
+              className="mb-1 self-start text-[15px] font-[650] text-fg underline underline-offset-2"
+            >
+              {SIGNIN_IKKE_DEG}
+            </button>
+            <Field id="signin-magic-kode" label={SIGNIN_FYLL_KODE}>
+              <input
+                id="signin-magic-kode"
+                ref={kodeRef}
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={5}
+                value={kode}
+                onChange={(ev) => setKode(normaliserMagicLinkKode(ev.target.value))}
+                className={`${INPUT} tabular-nums tracking-[0.35em]`}
+                placeholder="•••••"
+              />
+            </Field>
+            {error && <p className="text-[13px] text-danger">{error}</p>}
+            <StatefulButton
+              type="submit"
+              state={knappState('logg-inn')}
+              className="w-full"
+              loadingText="Sjekker koden…"
+              successText="Bekreftet"
+              errorText="Prøv igjen"
+              icon={<ArrowRight size={16} />}
+            >
+              {SIGNIN_FORTSETT}
+            </StatefulButton>
+          </form>
         )}
       </div>
     </main>

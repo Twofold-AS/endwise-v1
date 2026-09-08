@@ -7,22 +7,24 @@ import {
   harEnrollVindu,
   harTotpVindu,
   meldingForTotpFeil,
+  SIGNIN_FORTSETT,
+  SIGNIN_FYLL_KODE,
+  SIGNIN_IKKE_DEG,
+  SIGNIN_KODE_INGRESS,
   SIGNIN_STI,
+  SIGNIN_TITTEL,
   SIGNIN_TOTP_STI,
-  SIGNIN_VALG_BYTT_KONTO,
-  SIGNIN_VALG_LOGG_INN,
-  SIGNIN_VALG_SEND_NYTT,
-  SIGNIN_VALG_SKRIV_KODE,
   SIGNIN_VALG_STI,
-  SIGNIN_VENT_TITTEL,
+  SIGNIN_VILKAR,
+  SIGNIN_VILKAR_STI,
   signInFlateFraQuery,
   skalViseErstattetMelding,
 } from '../app/signin/signin-steg.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
-describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
-  it('tom query er e-postflaten; totp uten kake er venteskjerm', () => {
+describe('signin-steg: kode-steg etter e-post, TOTP bare med kake', () => {
+  it('tom query er e-postflaten; totp uten kake er kode-steg', () => {
     expect(signInFlateFraQuery(null)).toBe('epost');
     expect(signInFlateFraQuery('valg')).toBe('valg');
     expect(signInFlateFraQuery('sendt')).toBe('valg');
@@ -50,15 +52,17 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
     expect(meldingForTotpFeil({ message: 'wrong' })).toMatch(/app-kode/);
   });
 
-  it('kanoniske stier og venteskjerm-tekst', () => {
+  it('kanoniske stier og Mobbin-copy', () => {
     expect(SIGNIN_STI).toBe('/signin');
     expect(SIGNIN_VALG_STI).toBe('/signin?steg=valg');
     expect(SIGNIN_TOTP_STI).toBe('/signin?steg=totp');
-    expect(SIGNIN_VENT_TITTEL).toBe('Trykk på lenken i e-posten');
-    expect(SIGNIN_VALG_SKRIV_KODE).toBe('Skriv kode manuelt');
-    expect(SIGNIN_VALG_BYTT_KONTO).toBe('Bytt konto');
-    expect(SIGNIN_VALG_LOGG_INN).toBe('Logg inn');
-    expect(SIGNIN_VALG_SEND_NYTT).toBe('Send på nytt');
+    expect(SIGNIN_TITTEL).toBe('Logg inn på Endwise');
+    expect(SIGNIN_KODE_INGRESS).toBe('Vi har sendt en midlertidig kode til');
+    expect(SIGNIN_IKKE_DEG).toBe('Ikke deg?');
+    expect(SIGNIN_FYLL_KODE).toBe('Fyll inn kode');
+    expect(SIGNIN_FORTSETT).toBe('Fortsett');
+    expect(SIGNIN_VILKAR).toMatch(/vilkårene/);
+    expect(SIGNIN_VILKAR_STI).toBe('/vilkar');
   });
 
   it('enroll-kake gjenkjennes separat fra two_factor', () => {
@@ -70,7 +74,7 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
     expect(harEnrollVindu('')).toBe(false);
   });
 
-  it('leftover two_factor-kake etter Fortsett (steg=valg) er venteskjerm, ikke totp', () => {
+  it('leftover two_factor-kake etter Fortsett (steg=valg) er kode-steg, ikke totp', () => {
     expect(flateEtterMagicLinkLanding({ steg: 'valg', totpKlar: true, enrollKlar: false })).toBe(
       'valg',
     );
@@ -87,7 +91,7 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
     );
   });
 
-  it('steg=totp + kake er totp; steg=totp uten kake er venteskjerm', () => {
+  it('steg=totp + kake er totp; steg=totp uten kake er kode-steg', () => {
     expect(flateEtterMagicLinkLanding({ steg: 'totp', totpKlar: true, enrollKlar: false })).toBe(
       'totp',
     );
@@ -151,75 +155,75 @@ describe('signin-steg: venteskjerm etter e-post, TOTP bare med kake', () => {
   });
 });
 
-describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', () => {
+describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => {
   const kilde = readFileSync(resolve(her, '../app/signin/signin-skjema.tsx'), 'utf8');
+  const merke = readFileSync(resolve(her, '../app/_auth/merke.tsx'), 'utf8');
+  const felt = readFileSync(resolve(her, '../app/_auth/felter.tsx'), 'utf8');
 
-  it('venteskjerm etter Fortsett — heading og de to valgene', () => {
-    expect(kilde).toMatch(/SIGNIN_VENT_TITTEL|Trykk på lenken i e-posten/);
-    expect(kilde).toContain('SIGNIN_VALG_SKRIV_KODE');
-    expect(kilde).toContain('SIGNIN_VALG_BYTT_KONTO');
-    expect(kilde).not.toMatch(/Logg inn med magiclink/);
-    expect(kilde).not.toMatch(/Sjekk e-posten/);
+  it('kort+logo sitter høyt — ikke midtstilt midt på skjermen', () => {
+    expect(kilde).toMatch(/pt-8 pb-16/);
+    expect(kilde).not.toMatch(/items-center justify-center/);
+    expect(kilde).toMatch(/text-\[32px\].*font-\[650\]/);
+    expect(kilde).toMatch(/bg-bg p-4/);
+    expect(kilde).not.toMatch(/bg-card/);
+    expect(kilde).toMatch(/SIGNIN_TITTEL|Logg inn på Endwise/);
   });
 
-  it('Skriv kode manuelt står ett sted — ikke gruppert felt + samme knapp', () => {
-    expect(kilde).toContain('setManuell(true)');
-    expect(kilde).toContain('SIGNIN_VALG_LOGG_INN');
-    expect(kilde).not.toMatch(/XXXX-XXXX-XXXX/);
-    expect(kilde).toMatch(/\{!manuell && \(/);
+  it('logo er token-aware (mask + bg-fg), ikke svart Image', () => {
+    expect(kilde).toMatch(/AuthMerke/);
+    expect(kilde).not.toMatch(/next\/image/);
+    expect(kilde).not.toMatch(/logo\/logo\.svg/);
+    expect(merke).toMatch(/maskImage:\s*['"]url\(\/logo\/logo\.svg\)['"]/);
+    expect(merke).toMatch(/bg-fg/);
   });
 
-  it('kodefeltet er input-only — Logg inn sitter ikke i samme form/boks', () => {
-    const form = kilde.match(/<form[^>]*onSubmit=\{onSkrivKodeManuelt\}[\s\S]*?<\/form>/)?.[0];
+  it('felt er Mobbin-fyll #f0f0f0 / 16px, tykk canvas-ramme i fokus', () => {
+    expect(felt).toMatch(/bg-inset/);
+    expect(felt).toMatch(/rounded-\[16px\]/);
+    expect(felt).toMatch(/min-h-\[52px\]/);
+    expect(felt).toMatch(/outline-white/);
+    expect(felt).not.toMatch(/h-control rounded-control border border-border bg-bg/);
+  });
+
+  it('Fortsett har pil, ikke konvolutt — spinner via StatefulButton loading', () => {
+    expect(kilde).toMatch(/ArrowRight/);
+    expect(kilde).not.toMatch(/\bMail\b/);
+    expect(kilde).toMatch(/SIGNIN_FORTSETT/);
+    expect(kilde).toMatch(/loadingText=/);
+    expect(kilde).toMatch(/<StatefulButton[\s\S]*state=\{knappState\('fortsett'\)\}/);
+    expect(kilde).toMatch(/<StatefulButton[\s\S]*state=\{knappState\('logg-inn'\)\}/);
+  });
+
+  it('vilkår-linje peker på eksisterende /vilkar', () => {
+    expect(kilde).toMatch(/SIGNIN_VILKAR/);
+    expect(kilde).toMatch(/SIGNIN_VILKAR_STI/);
+    expect(kilde).toMatch(/Vilkår/);
+  });
+
+  it('kode-steg: heading, e-post, Ikke deg, ett 5-sifret felt — ikke OTP-bokser', () => {
+    expect(kilde).toMatch(/data-auth-kode-steg/);
+    expect(kilde).toMatch(/SIGNIN_KODE_INGRESS/);
+    expect(kilde).toMatch(/SIGNIN_IKKE_DEG/);
+    expect(kilde).toMatch(/SIGNIN_FYLL_KODE/);
+    expect(kilde).toMatch(/maxLength=\{5\}/);
+    expect(kilde).toMatch(/erMagicLinkKode/);
+    expect(kilde).not.toMatch(/otp-slot|OTPInput|InputOTP/);
+    expect(kilde).not.toMatch(/ABCD-EFGH/);
+    expect(kilde).not.toMatch(/Skriv kode manuelt/);
+    expect(kilde).not.toMatch(/Trykk på lenken i e-posten/);
+  });
+
+  it('kodefelt og Fortsett sitter i samme form — spinner på verify', () => {
+    const form = kilde.match(/data-auth-kode-steg[\s\S]*?<\/form>/)?.[0];
     expect(form).toBeTruthy();
     expect(form).toContain('signin-magic-kode');
-    expect(form).not.toContain('SIGNIN_VALG_LOGG_INN');
-    expect(form).not.toContain('StatefulButton');
-    expect(form).not.toMatch(/type=["']submit["']/);
+    expect(form).toContain('SIGNIN_FORTSETT');
+    expect(form).toContain('StatefulButton');
+    expect(form).toMatch(/type=["']submit["']/);
+    expect(form).toMatch(/knappState\('logg-inn'\)/);
   });
 
-  it('Logg inn er fullbredde-stakk rett over Send på nytt', () => {
-    const sendIdx = kilde.indexOf('{SIGNIN_VALG_SEND_NYTT}');
-    const stakkStart = kilde.lastIndexOf('flex flex-col gap-2 px-1.5', sendIdx);
-    const stakk = kilde.slice(
-      stakkStart,
-      kilde.indexOf('</StatefulButton>', sendIdx) + '</StatefulButton>'.length,
-    );
-    expect(stakk).toContain('SIGNIN_VALG_LOGG_INN');
-    expect(stakk.indexOf('SIGNIN_VALG_LOGG_INN')).toBeLessThan(
-      stakk.indexOf('SIGNIN_VALG_SEND_NYTT'),
-    );
-    expect(stakk).toMatch(/form=["']signin-manuell-kode["']/);
-    const logg = stakk.match(
-      /<StatefulButton[\s\S]*?SIGNIN_VALG_LOGG_INN[\s\S]*?<\/StatefulButton>/,
-    )?.[0];
-    const send = stakk.match(
-      /<StatefulButton[\s\S]*?SIGNIN_VALG_SEND_NYTT[\s\S]*?<\/StatefulButton>/,
-    )?.[0];
-    expect(logg).toMatch(/className="w-full"/);
-    expect(send).toMatch(/className="w-full"/);
-  });
-
-  it('Send på nytt animerer ikke når Logg inn er pending', () => {
-    const knapper = [...kilde.matchAll(/<StatefulButton[\s\S]*?<\/StatefulButton>/g)].map(
-      (m) => m[0],
-    );
-    const logg = knapper.find((k) => k.includes('SIGNIN_VALG_LOGG_INN'));
-    const send = knapper.find((k) => k.includes('SIGNIN_VALG_SEND_NYTT'));
-    expect(logg).toBeTruthy();
-    expect(send).toBeTruthy();
-    const loggState = logg?.match(/state=\{([^}]+)\}/)?.[1];
-    const sendState = send?.match(/state=\{([^}]+)\}/)?.[1];
-    expect(loggState).toBeTruthy();
-    expect(sendState).toBeTruthy();
-    expect(loggState).not.toBe(sendState);
-    expect(logg).not.toMatch(/state=\{busy\}/);
-    expect(send).not.toMatch(/state=\{busy\}/);
-    expect(kilde).toMatch(/onSkrivKodeManuelt[\s\S]*setHandling\('logg-inn'\)/);
-    expect(kilde).toMatch(/onSendPaNytt[\s\S]*sendLenke\([^)]*'send-nytt'/);
-  });
-
-  it('Fortsett / Send på nytt full-laster venteskjerm så leftover totpKlar ikke snapper', () => {
+  it('Fortsett / kode-steg full-laster så leftover totpKlar ikke snapper', () => {
     expect(kilde).toMatch(/location\.assign\(SIGNIN_VALG_STI\)/);
     expect(kilde).toMatch(/flateEtterMagicLinkLanding/);
     expect(kilde).toMatch(/totpKlar/);
@@ -227,21 +231,21 @@ describe('signin-skjema: venteskjerm, ingen dobbel manuell, ingen TOTP-vegg', ()
     expect(kilde).not.toMatch(/lesTotpVindu/);
   });
 
-  it('Bytt konto tømmer HttpOnly-kaker og full-laster epost-flaten', () => {
+  it('Ikke deg tømmer HttpOnly-kaker og full-laster epost-flaten', () => {
     expect(kilde).toMatch(/async function byttKonto/);
     expect(kilde).toMatch(/location\.assign\(SIGNIN_STI\)/);
     expect(kilde).toMatch(/signOut/);
+    expect(kilde).toMatch(/SIGNIN_IKKE_DEG/);
   });
 
-  it('venteskjerm fyrer ikke magic-link på mount — bare Fortsett / Send på nytt', () => {
+  it('kode-steg fyrer ikke magic-link på mount — bare Fortsett på e-post', () => {
     const effekter = [...kilde.matchAll(/useEffect\(([\s\S]*?)\n {2}\},/g)].map((m) => m[1] ?? '');
     expect(effekter.join('\n')).not.toMatch(/signIn\.magicLink/);
     expect(kilde).toMatch(/async function sendLenke/);
-    expect(kilde).toMatch(/SIGNIN_VALG_SEND_NYTT|Send på nytt/);
     expect(kilde).toMatch(/signIn\.magicLink/);
   });
 
-  it('error-query med totp-kake går ikke tilbake til venteskjerm', () => {
+  it('error-query med totp-kake går ikke tilbake til kode-steg', () => {
     expect(kilde).not.toMatch(/if \(feilQuery\) \{\s*setFlate\('valg'\)/);
     expect(kilde).toMatch(/flateEtterMagicLinkLanding/);
   });

@@ -23,7 +23,7 @@ import {
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
 import { createAuthEtterHook } from './magic-link-2fa.ts';
-import { erAuthDestinasjon } from './produkt-destinasjon.ts';
+import { erAuthDestinasjon, lesAuthBrukerNavn } from './produkt-destinasjon.ts';
 import { ac, roles } from './rbac.ts';
 import {
   sendByttEpostBekreftelse,
@@ -203,10 +203,12 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
            * Ukjent: stille return (samme 200, ingen enumerering).
            */
           if (!(await erAuthDestinasjon(db, email))) return;
+          const navn = await lesAuthBrukerNavn(db, email);
           await sendMagicLink({
             to: email,
             lenke: url,
             kode: token,
+            navn,
             utloper: new Date(Date.now() + MAGIC_LINK_TTL_SEKUNDER * 1000),
           });
         },

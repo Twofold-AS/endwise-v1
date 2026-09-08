@@ -59,7 +59,7 @@ describe('F5-51 — faste helpdesk-kategorier', () => {
   });
 
   it('forhandler-helpdesk filtrerer på kategoriene — ingen ny Admin-fane', () => {
-    const support = les('../app/(app)/support/page.tsx');
+    const support = les('../app/(app)/hjelp/_artikler.tsx');
     const labels = les('../app/(app)/support/_kategorier.ts');
     const admin = les('../app/(app)/endwise/helpdesk/page.tsx');
     const nav = les('../app/(app)/_shell/nav.ts');

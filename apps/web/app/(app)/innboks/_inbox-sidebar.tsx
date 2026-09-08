@@ -1,6 +1,18 @@
 'use client';
 
-import { Avatar, type AvatarValg, Button, MessageSquare, Trash2 } from '@endwise/ui';
+import {
+  Avatar,
+  type AvatarValg,
+  Button,
+  Check,
+  ChevronDown,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  MessageSquare,
+  Trash2,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -182,73 +194,74 @@ export function InboxSidebar() {
       }`}
     >
       {/**
-       * Mikael 02.09: én verktøylinje — Nyeste, Eldste, slett, ny chat, velg kort.
-       * Telefon kan wrappe, men alt sitter i samme stripe (z-20, min 44px).
+       * Mikael 08.09: én stripe — Ny samtale · sort midt · velg + slett høyre.
+       * Ingen Nyeste/Eldste-par under dest-pillene.
        */}
       <div className="relative z-20 flex shrink-0 flex-col overflow-visible px-3 py-1.5">
         <h2 className="sr-only">Samtaler</h2>
         <div
           data-innboks-verktoy
-          className="relative z-20 flex flex-wrap items-center gap-1.5 overflow-visible"
+          className="relative z-20 grid grid-cols-[auto_1fr_auto] items-center gap-1 overflow-visible"
           role="toolbar"
           aria-label="Innboks"
         >
-          {(
-            [
-              ['nyeste', 'Nyeste'],
-              ['eldste', 'Eldste'],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setSortering(key)}
-              aria-pressed={sortering === key}
-              className={`inline-flex min-h-11 items-center rounded-control px-2.5 text-label transition-colors md:h-control md:min-h-control ${
-                sortering === key ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-          <button
-            type="button"
-            aria-label="Slett valgt samtale"
-            title="Slett valgt samtale"
-            disabled={velgModus ? valgte.size === 0 : !aktivId}
-            className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-danger hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
-            onClick={() => {
-              if (velgModus) {
-                skjulFlere([...valgte]);
-                setValgte(new Set());
-                return;
-              }
-              if (aktivId) skjul(aktivId);
-            }}
-          >
-            <Trash2 size={16} strokeWidth={1.75} />
-          </button>
           <Link
             href={'/innboks?ny=1' as Route}
-            aria-label="Ny melding"
-            title="Ny melding"
+            aria-label="Ny samtale"
+            title="Ny samtale"
             className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-fg hover:bg-surface-2"
           >
             <NyMeldingIkon size={16} />
           </Link>
-          <button
-            type="button"
-            aria-pressed={velgModus}
-            onClick={() => {
-              setVelgModus((v) => !v);
-              setValgte(new Set());
-            }}
-            className={`inline-flex min-h-11 items-center rounded-control px-2.5 text-label ${
-              velgModus ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-            }`}
-          >
-            Velg kort
-          </button>
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label="Sorter samtaler"
+                className="inline-flex min-h-11 items-center gap-1 rounded-control px-2.5 text-label text-fg hover:bg-surface-2"
+              >
+                {sortering === 'eldste' ? 'Eldste' : 'Nyeste'}
+                <ChevronDown size={14} strokeWidth={2} aria-hidden />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center">
+                <DropdownMenuItem onSelect={() => setSortering('nyeste')}>Nyeste</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSortering('eldste')}>Eldste</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="flex items-center justify-end">
+            <button
+              type="button"
+              aria-label="Velg samtaler"
+              title="Velg samtaler"
+              aria-pressed={velgModus}
+              onClick={() => {
+                setVelgModus((v) => !v);
+                setValgte(new Set());
+              }}
+              className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-control ${
+                velgModus ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+              }`}
+            >
+              <Check size={16} strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              aria-label="Slett valgt samtale"
+              title="Slett valgt samtale"
+              disabled={velgModus ? valgte.size === 0 : !aktivId}
+              className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-danger hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => {
+                if (velgModus) {
+                  skjulFlere([...valgte]);
+                  setValgte(new Set());
+                  return;
+                }
+                if (aktivId) skjul(aktivId);
+              }}
+            >
+              <Trash2 size={16} strokeWidth={1.75} />
+            </button>
+          </div>
         </div>
       </div>
 

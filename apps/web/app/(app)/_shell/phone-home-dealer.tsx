@@ -1,47 +1,75 @@
 'use client';
 
 import { Inbox, Package, Users } from '@endwise/ui';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { BOOKING_LAGRET_EVENT, HJEM_PULSE_REFETCH, invalidateHjemPulse } from './hjem-pulse-sync';
 import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
 import {
+  analyserMockStats,
   ansattePulse,
   dagerVindu,
   idagVisning,
   innboksRad,
   lagerRad,
-  siste30dSpark,
+  PULSE_UKE_TITTEL,
+  siste7dSpark,
 } from './phone-home-pulse';
-import { Pulse30dSpark, PulseJobbFlis, PulseKort, PulseRadKort, PulseTall } from './pulse-kort';
+import {
+  PulseAnalyserKort,
+  PulseJobbFlis,
+  PulseKort,
+  PulseRadKort,
+  PulseTall,
+  PulseUkeSpark,
+} from './pulse-kort';
 
 /**
  * Forhandler-hjem — Verkstedet / `/home`.
- * Fem flater: toppkort · Innboks-rad · Lager-rad · ansatte + Jobb 50/50.
+ * Låste flater + Analyser: toppkort · Analyser · Innboks · Lager · ansatte + Jobb.
  */
 export function useDealerHjemKort() {
+  const utils = trpc.useUtils();
   const vindu = useMemo(() => dagerVindu(new Date()), []);
 
-  const bookings = trpc.bookings.list.useQuery({
-    from: vindu.fra,
-    to: vindu.til,
-    limit: 200,
-  });
-  const threads = trpc.messages.listThreads.useQuery();
-  const oversikt = trpc.mechanics.oversikt.useQuery();
-  const deler = trpc.inventory.listParts.useQuery({
-    kunLav: true,
-    sorter: 'sku',
-    retning: 'asc',
-    limit: 100,
-  });
+  const bookings = trpc.bookings.list.useQuery(
+    {
+      from: vindu.fra,
+      to: vindu.til,
+      limit: 200,
+    },
+    HJEM_PULSE_REFETCH,
+  );
+  const threads = trpc.messages.listThreads.useQuery(undefined, HJEM_PULSE_REFETCH);
+  const oversikt = trpc.mechanics.oversikt.useQuery(undefined, HJEM_PULSE_REFETCH);
+  const deler = trpc.inventory.listParts.useQuery(
+    {
+      kunLav: true,
+      sorter: 'sku',
+      retning: 'asc',
+      limit: 100,
+    },
+    HJEM_PULSE_REFETCH,
+  );
+
+  useEffect(() => {
+    function oppfrisk() {
+      invalidateHjemPulse(utils);
+      void bookings.refetch();
+      void oversikt.refetch();
+    }
+    window.addEventListener(BOOKING_LAGRET_EVENT, oppfrisk);
+    return () => window.removeEventListener(BOOKING_LAGRET_EVENT, oppfrisk);
+  }, [utils, bookings, oversikt]);
 
   const naa = useMemo(() => new Date(), []);
   const jobber = bookings.data ?? [];
   const idag = idagVisning(jobber, naa);
-  const spark = siste30dSpark(jobber, naa);
+  const spark = siste7dSpark(jobber, naa);
   const innboks = innboksRad(threads.data ?? []);
   const lager = lagerRad(deler.data ?? []);
-  const ansatte = ansattePulse(oversikt.data ?? []);
+  const ansatte = ansattePulse(oversikt.data ?? [], jobber, naa);
+  const analyser = analyserMockStats(naa);
 
   return {
     bookings,
@@ -53,25 +81,28 @@ export function useDealerHjemKort() {
     innboks,
     lager,
     ansatte,
+    analyser,
   };
 }
 
 export function DealerPulseKort({ className }: { className?: string }) {
-  const { bookings, threads, oversikt, deler, idag, spark, innboks, lager, ansatte } =
+  const { bookings, threads, oversikt, deler, idag, spark, innboks, lager, ansatte, analyser } =
     useDealerHjemKort();
   const lasterJobber = bookings.isLoading;
 
   return (
     <div className={className ?? 'flex flex-col gap-5'}>
       <PulseKort href={PHONE_KORT_META.idag.href} variant="hero">
-        <p className="text-label font-[650] text-fg">Siste 30 dager</p>
+        <p className="text-center text-label font-[650] text-fg">{PULSE_UKE_TITTEL}</p>
         <div className="grid min-w-0 grid-cols-3 divide-x divide-divide">
           <PulseTall label="Planlagt" verdi={idag.planlagt} laster={lasterJobber} />
           <PulseTall label="Pågår" verdi={idag.paagaar} laster={lasterJobber} />
           <PulseTall label="Ferdig" verdi={idag.ferdig} laster={lasterJobber} />
         </div>
-        <Pulse30dSpark verdier={spark} />
+        <PulseUkeSpark verdier={spark} />
       </PulseKort>
+
+      <PulseAnalyserKort stats={analyser} href={PHONE_KORT_META.analyser.href} />
 
       <PulseRadKort
         href={PHONE_KORT_META.innboks.href}

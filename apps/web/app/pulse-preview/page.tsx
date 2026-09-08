@@ -3,13 +3,14 @@
 import { Inbox, Package, Users } from '@endwise/ui';
 import { useMemo } from 'react';
 import { useTema } from '../_lib/tema-provider';
-import { plausibelSpark } from '../(app)/_shell/phone-home-pulse';
+import { analyserMockStats, plausibelSpark, PULSE_UKE_TITTEL } from '../(app)/_shell/phone-home-pulse';
 import {
-  Pulse30dSpark,
+  PulseAnalyserKort,
   PulseJobbFlis,
   PulseKort,
   PulseRadKort,
   PulseTall,
+  PulseUkeSpark,
 } from '../(app)/_shell/pulse-kort';
 
 /**
@@ -18,7 +19,9 @@ import {
  */
 export default function PulsePreview() {
   const { los, sett } = useTema();
-  const spark = useMemo(() => plausibelSpark(new Date('2026-09-08T10:00:00')), []);
+  const naa = useMemo(() => new Date('2026-09-08T10:00:00'), []);
+  const spark = useMemo(() => plausibelSpark(naa), [naa]);
+  const analyser = useMemo(() => analyserMockStats(naa), [naa]);
   return (
     <div className="min-h-dvh bg-bg text-fg" data-pulse-preview="go">
       <div className="mx-auto flex w-full max-w-[520px] flex-col gap-5 px-3 py-5">
@@ -34,14 +37,16 @@ export default function PulsePreview() {
         </div>
 
         <PulseKort href="#idag" variant="hero">
-          <p className="text-label font-[650] text-fg">Siste 30 dager</p>
+          <p className="text-center text-label font-[650] text-fg">{PULSE_UKE_TITTEL}</p>
           <div className="grid min-w-0 grid-cols-3 divide-x divide-divide">
             <PulseTall label="Planlagt" verdi={3} laster={false} />
             <PulseTall label="Pågår" verdi={2} laster={false} />
             <PulseTall label="Ferdig" verdi={1} laster={false} />
           </div>
-          <Pulse30dSpark verdier={spark} />
+          <PulseUkeSpark verdier={spark} />
         </PulseKort>
+
+        <PulseAnalyserKort stats={analyser} href="#statistikk" />
 
         <PulseRadKort href="#innboks" ikon={Inbox} tittel="Les alle siste meldinger" teller={7} />
         <PulseRadKort href="#lager" ikon={Package} tittel="Venter på bestilling" teller={3} />

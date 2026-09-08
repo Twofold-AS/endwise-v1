@@ -85,7 +85,8 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(meny).toMatch(/data-phone-profil-meny/);
     expect(meny).toMatch(/Oppgrader abonnement/);
     expect(meny).toMatch(/#0066ff/);
-    expect(meny).toMatch(/Forespørsel/);
+    expect(meny).toMatch(/Hjelp/);
+    expect(meny).not.toMatch(/Forespørsel/);
     expect(meny).toMatch(/Innstillinger/);
     expect(meny).toMatch(/PhoneTemaRad/);
     expect(meny).toMatch(/PHONE_PROFIL_MENY_BREDDE|260px/);
@@ -119,8 +120,10 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(PHONE_PROFIL_RAD).toMatch(/h-8/);
     expect(PHONE_PROFIL_RAD).toMatch(/text-\[17px\]/);
     expect(PHONE_PROFIL_RAD).toMatch(/font-\[700\]/);
-    expect(PHONE_PROFIL_VILKAR).toMatch(/text-\[13px\]/);
-    expect(PHONE_PROFIL_VILKAR).not.toMatch(/font-\[700\]/);
+    expect(PHONE_PROFIL_VILKAR).toMatch(/text-\[17px\]/);
+    expect(PHONE_PROFIL_VILKAR).toMatch(/font-\[700\]/);
+    expect(PHONE_PROFIL_VILKAR).toMatch(/text-\[17px\]/);
+    expect(PHONE_PROFIL_RAD).toMatch(/text-\[17px\]/);
     expect(PHONE_PROFIL_MENY_BREDDE).toMatch(/260px/);
     expect(PHONE_PROFIL_MENY_TOPP).toBe('top-full mt-2.5');
     expect(PHONE_BAR2).toContain(PHONE_BAR2_PY);
@@ -131,7 +134,8 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/TilbakePil/);
     expect(shell).toMatch(/data-shell-tilbake/);
-    expect(shell).toMatch(/>Innstillinger</);
+    expect(shell).toMatch(/sideChrome\.tittel|Innstillinger/);
+    expect(les('../app/(app)/_shell/phone-side-chrome.ts')).toMatch(/tittel: 'Innstillinger'/);
     expect(shell).toMatch(/data-phone-settings-nav/);
     expect(shell).toMatch(/border-b-2/);
     expect(FANER[0]?.label).toBe('Konto');

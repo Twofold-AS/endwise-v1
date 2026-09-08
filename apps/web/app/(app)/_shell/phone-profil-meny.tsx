@@ -81,13 +81,14 @@ export function PhoneProfilMeny({
           </Link>
         </div>
         <Link
-          href={'/support' as Route}
+          href={'/hjelp' as Route}
           role="menuitem"
+          data-phone-profil-hjelp
           onClick={onLukk}
           className={PHONE_PROFIL_RAD}
         >
           <MessageCirclePlus size={18} strokeWidth={2} />
-          Forespørsel
+          Hjelp
         </Link>
         <Link
           href={innstillingerHref as Route}

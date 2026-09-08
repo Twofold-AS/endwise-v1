@@ -48,9 +48,10 @@ const CHROME_URORT = [
 ] as const;
 
 describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
-  it('låser pulse Planlagt · Innboks · Lager · ansatte + Jobb', () => {
+  it('låser pulse Planlagt · Analyser · Innboks · Lager · ansatte + Jobb', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
+      ['analyser'],
       ['innboks'],
       ['lager'],
       ['team', 'jobb'],
@@ -64,6 +65,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(false);
     expect(dealerPhoneHjemRader(false).map((r) => r.keys.join('|'))).toEqual([
       'idag',
+      'analyser',
       'innboks',
       'lager',
       'team|jobb',

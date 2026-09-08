@@ -41,9 +41,10 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('dealer phone home — kortrekkefølge og fyll', () => {
-  it('låser pulse Planlagt · Innboks · Lager · ansatte + Jobb', () => {
+  it('låser pulse Planlagt · Analyser · Innboks · Lager · ansatte + Jobb', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
+      ['analyser'],
       ['innboks'],
       ['lager'],
       ['team', 'jobb'],

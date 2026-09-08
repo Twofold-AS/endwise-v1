@@ -88,6 +88,7 @@ export type PhoneKortKey =
   | 'verkstedet'
   | 'idag'
   | 'timeplan'
+  | 'analyser'
   | 'statistikk'
   | 'tjenester'
   | 'innboks'
@@ -112,11 +113,12 @@ export type PhoneHjemRad = {
 };
 
 /**
- * Mikael CODE-GO 08.09: kun fem flater — toppkort · Innboks-rad ·
- * Lager-rad · ansatte/totalt + Jobb. Ingen footer, ingen Team-liste.
+ * Mikael CODE-GO 08.09: låste flater + Analyser — toppkort · Analyser ·
+ * Innboks-rad · Lager-rad · ansatte/totalt + Jobb. Ingen gamle pulse-kort.
  */
 export const DEALER_PULSE_KEYS = [
   'idag',
+  'analyser',
   'innboks',
   'lager',
   'team',
@@ -125,6 +127,7 @@ export const DEALER_PULSE_KEYS = [
 
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['idag'], kind: 'hero' },
+  { keys: ['analyser'], kind: 'full' },
   { keys: ['innboks'], kind: 'full' },
   { keys: ['lager'], kind: 'full' },
   { keys: ['team', 'jobb'], kind: 'pair' },
@@ -140,6 +143,7 @@ export const PHONE_KORT_META: Record<
   verkstedet: { label: 'Verkstedet', href: '/home?visning=dag', icon: LayoutDashboard },
   idag: { label: 'Planlagt', href: '/home?visning=dag', icon: LayoutDashboard },
   timeplan: { label: 'Timeplan', href: '/jobber?visning=kalender', icon: CalendarDays },
+  analyser: { label: 'Analyser', href: '/statistikk', icon: ChartColumn },
   statistikk: { label: 'Rapporter', href: '/rapporter', icon: ChartColumn },
   tjenester: { label: 'Tjenester', href: '/prisliste', icon: Wrench },
   innboks: { label: 'Innboks', href: '/innboks', icon: Inbox },

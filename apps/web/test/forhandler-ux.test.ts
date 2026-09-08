@@ -20,7 +20,8 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
   it('har alias-sider så URL-navn matcher uten rename', () => {
     expect(les('../app/(app)/jobber/page.tsx')).toMatch(/from '\.\.\/saker\/page'/);
     expect(les('../app/(app)/rapporter/page.tsx')).toMatch(/from '\.\.\/analyse\/page'/);
-    expect(les('../app/(app)/hjelp/page.tsx')).toMatch(/from '\.\.\/support\/page'/);
+    expect(les('../app/(app)/hjelp/page.tsx')).toMatch(/HjelpSkall/);
+    expect(les('../app/(app)/support/page.tsx')).toMatch(/from '\.\.\/hjelp\/page'/);
     expect(les('../app/(app)/verkstedet/page.tsx')).toMatch(/from '\.\.\/home\/page'/);
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/PrislisteFlate/);
     expect(les('../app/(app)/innstillinger/tjenestekatalog/page.tsx')).toMatch(/PrislisteFlate/);

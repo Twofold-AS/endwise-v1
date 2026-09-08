@@ -1,8 +1,9 @@
 import { osloKalenderdag, osloPlusDager, osloStartAvDag } from '../_lib/oslo-dag';
-import { sammeKalenderdag } from '../dashboard/_pa-jobb';
+import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
 import type { PhoneBooking, PhoneTraad } from './phone-home-data';
 
 const PLANLAGT_STATUS = new Set(['draft', 'confirmed']);
+const LEVENDE = new Set(['draft', 'confirmed', 'in_progress']);
 
 export type PhoneDelPulse = {
   name: string;
@@ -17,7 +18,9 @@ export type PulseTeamMedlem = {
   name?: string;
 };
 
-export const PULSE_DAGER = 30;
+/** Uke-vindu på toppkortet — Mikael: tallene for den uken. */
+export const PULSE_DAGER = 7;
+export const PULSE_UKE_TITTEL = 'Denne uken';
 
 /** Plausibel dag når det ikke finnes jobber i vinduet — uten mock-merke. */
 export const PULSE_PLAUSIBEL_IDAG = { planlagt: 3, paagaar: 2, ferdig: 1 };
@@ -29,13 +32,32 @@ export const PULSE_MOCK_IDAG = PULSE_PLAUSIBEL_IDAG;
 export const PULSE_MOCK_INNBOKS_MELDINGER = PULSE_PLAUSIBEL_INNBOKS_MELDINGER;
 export const PULSE_MOCK_MANED = { denne: 18, forrige: 14 };
 
+function overlapperNaa(j: PhoneBooking, naa: Date): boolean {
+  if (!j.endsAt) return false;
+  const start = new Date(j.startsAt).getTime();
+  const slutt = new Date(j.endsAt).getTime();
+  return start <= naa.getTime() && slutt > naa.getTime();
+}
+
+/** Pågår = in_progress, eller levende jobb som overlapper nå. */
+export function erPaagaarJobb(j: PhoneBooking, naa: Date): boolean {
+  if (j.status === 'cancelled' || j.status === 'completed') return false;
+  if (j.status === 'in_progress') return true;
+  return LEVENDE.has(j.status) && overlapperNaa(j, naa);
+}
+
 export function idagTall(jobber: PhoneBooking[], naa: Date) {
   const dagens = jobber.filter(
-    (j) => sammeKalenderdag(j.startsAt, naa) && j.status !== 'cancelled',
+    (j) =>
+      j.status !== 'cancelled' &&
+      (sammeKalenderdag(j.startsAt, naa) ||
+        (j.status === 'in_progress' && overlapperNaa(j, naa))),
   );
+  const paagaarJobber = dagens.filter((j) => erPaagaarJobb(j, naa));
+  const paagaarIds = new Set(paagaarJobber.map((j) => j.id));
   return {
-    planlagt: dagens.filter((j) => PLANLAGT_STATUS.has(j.status)).length,
-    paagaar: dagens.filter((j) => j.status === 'in_progress').length,
+    planlagt: dagens.filter((j) => PLANLAGT_STATUS.has(j.status) && !paagaarIds.has(j.id)).length,
+    paagaar: paagaarJobber.length,
     ferdig: dagens.filter((j) => j.status === 'completed').length,
   };
 }
@@ -51,12 +73,20 @@ export function plausibelTall(seed: string, min: number, max: number): number {
   return min + ((h >>> 0) % span);
 }
 
+/**
+ * Uke-serie med høyere, mer spredt fyll — dither skal dekke flaten,
+ * ikke sitte som en tynn merke-stripe nederst.
+ */
 export function plausibelSpark(naa: Date): number[] {
   const base = osloKalenderdag(naa);
-  return Array.from({ length: PULSE_DAGER }, (_, i) => plausibelTall(`${base}:spark:${i}`, 1, 5));
+  return Array.from({ length: PULSE_DAGER }, (_, i) => {
+    const bunn = plausibelTall(`${base}:spark:${i}`, 4, 11);
+    const topp = plausibelTall(`${base}:fill:${i}`, 0, 9);
+    return bunn + topp;
+  });
 }
 
-/** Vindu: i dag minus 29 døgn → i morgen (30 kalenderdager, Oslo). */
+/** Vindu: i dag minus 6 døgn → i morgen (7 kalenderdager, Oslo). */
 export function dagerVindu(naa: Date) {
   const iDag = osloKalenderdag(naa);
   return {
@@ -65,7 +95,7 @@ export function dagerVindu(naa: Date) {
   };
 }
 
-/** @deprecated Bruk dagerVindu — 30 dager, ikke måned mot forrige. */
+/** @deprecated Bruk dagerVindu — 7 dager, ikke måned mot forrige. */
 export function manedVindu(naa: Date) {
   return dagerVindu(naa);
 }
@@ -83,7 +113,7 @@ export function forrigeManedStart(naa: Date): Date {
   return osloStartAvManed(osloPlusDager(osloKalenderdag(denne), -1));
 }
 
-export function siste30dSpark(jobber: PhoneBooking[], naa: Date): number[] {
+export function siste7dSpark(jobber: PhoneBooking[], naa: Date): number[] {
   const iDag = osloKalenderdag(naa);
   const perDag = new Map<string, number>();
   for (const j of jobber) {
@@ -97,6 +127,11 @@ export function siste30dSpark(jobber: PhoneBooking[], naa: Date): number[] {
   });
   if (serie.every((n) => n === 0)) return plausibelSpark(naa);
   return serie;
+}
+
+/** @deprecated Bruk siste7dSpark. */
+export function siste30dSpark(jobber: PhoneBooking[], naa: Date): number[] {
+  return siste7dSpark(jobber, naa);
 }
 
 /** Linje-serie — beholdt for eldre tester. */
@@ -149,9 +184,80 @@ export function lagerRad(deler: PhoneDelPulse[]) {
   return { antall: vente.length, godkjenning: godkjenning.length, tittel };
 }
 
-/** Ansatte på jobb / totalt. */
-export function ansattePulse(mekanikere: PulseTeamMedlem[]) {
+/**
+ * På jobb = aktiv jobb-tildeling, ikke timeføring / stempelklokke.
+ *
+ * Regel (F3-05, Mikael CODE-GO):
+ * En ansatt er «på jobb» når hen har en *aktiv tildeling* nå —
+ * `aktivJobb` i `_pa-jobb.ts`: `in_progress`, eller levende booking
+ * (draft/confirmed/in_progress) som overlapper nå, ellers neste levende i dag.
+ * `mechanics.active`, ferie og planlegging uten tildeling teller ikke.
+ * Status-humor (`på_jobb` / `ledig`) kommer fra time-/belastningsfelt og
+ * brukes ikke her — verkstedet har ikke timeføring.
+ */
+export function ansattePulse(
+  mekanikere: PulseTeamMedlem[],
+  jobber: PhoneBooking[] = [],
+  naa: Date = new Date(),
+) {
   const totalt = mekanikere.length;
-  const paJobb = mekanikere.filter((m) => m.status === 'på_jobb' || m.status === 'opptatt').length;
+  const tildelt = jobber.map((j) => ({
+    ...j,
+    mechanicId: j.mechanicId ?? null,
+    endsAt: j.endsAt ?? j.startsAt,
+  }));
+  const paJobb = mekanikere.filter((m) => aktivJobb(tildelt, m.id, naa) != null).length;
   return { paJobb, totalt };
+}
+
+export type AnalyserMockStat = {
+  id: string;
+  label: string;
+  verdi: number;
+  delta: string;
+  opp: boolean;
+  serie: number[];
+};
+
+/** Mock nettsidevisninger til ekte analyse finnes. Stabil per uke. */
+export function analyserMockStats(naa: Date): AnalyserMockStat[] {
+  const uke = osloKalenderdag(naa);
+  const vis = plausibelTall(`${uke}:vis`, 180, 420);
+  const start = plausibelTall(`${uke}:start`, 8, 28);
+  const retur = plausibelTall(`${uke}:retur`, 12, 40);
+  const tid = plausibelTall(`${uke}:tid`, 40, 95);
+  return [
+    {
+      id: 'visninger',
+      label: 'Visninger',
+      verdi: vis,
+      delta: '+11 %',
+      opp: true,
+      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:v:${i}`, 18, 72)),
+    },
+    {
+      id: 'start',
+      label: 'Bookingstart',
+      verdi: start,
+      delta: '+4 %',
+      opp: true,
+      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:s:${i}`, 2, 12)),
+    },
+    {
+      id: 'retur',
+      label: 'Retur',
+      verdi: retur,
+      delta: '−3 %',
+      opp: false,
+      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:r:${i}`, 4, 16)),
+    },
+    {
+      id: 'tid',
+      label: 'Tid på siden',
+      verdi: tid,
+      delta: '+8 %',
+      opp: true,
+      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:t:${i}`, 20, 90)),
+    },
+  ];
 }

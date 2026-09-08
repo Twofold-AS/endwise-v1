@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-08 — F3-05/F5-13/F5-14/F5-18/F5-19/F5-23 CODE-GO Mikael home + Hjelp
+
+**Type:** forhandler-hjem live data + chrome/Hjelp/Statistikk. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael CODE-GO etter #160.
+**Endring:** **F3-05** `done` (live invalidate, Pågår, på-jobb = tildeling, uke-spark, Analyser-blokk). **F5-13** `progress` (midtstilt Innstillinger, Vilkår 17/700, Hjelp i profil). **F5-14** `progress` (én sort midt i innboks-stripe). **F5-18** `done` (hjem-Analyser + `/statistikk`). **F5-19** `done` (midtstilt tittel). **F5-23** `progress` (`/hjelp` settings-chrome + Forespørsler). ⛔ #114/#119. Draft, ikke merge.
+
+---
+
 ## 2026-09-08 — F3-05 fem-flater korreksjon (linje-dither + hvite ikonplater)
 
 **Type:** dealer-hjem visuell korreksjon. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

@@ -11,6 +11,7 @@ import {
   subscribeQueue,
 } from '../../_lib/offline-queue';
 import { useOnline } from '../../_lib/use-online';
+import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import { BEVEL, BevelButton, CardShell } from '../../_shell/cards';
 import { estMinutes, fmtTime, jobbStatusKnapper, STATUS_LABEL } from '../_status';
 
@@ -57,6 +58,8 @@ export default function JobbDetaljPage() {
     },
     onSettled: () => {
       void utils.mechanic.myDay.invalidate();
+      invalidateHjemPulse(utils);
+      meldingBookingLagret();
     },
   });
   const deviation = trpc.mechanic.reportDeviation.useMutation();

@@ -28,6 +28,5 @@ CodeQL (alert 84) fant en død `else mock`-gren i `PulseKort` — første visnin
 
 ## 4. Neste fase / neste steg
 
-- Visuell GO på draft-PR (desktop B2 + telefon).
-- Ikke merge før Mikael har sett skjermbildene.
-- Ronny/profil er eget spor. Ikke #114/#119.
+- Squash-merge #157 inn i `main` (Mikael CODE GO).
+- Ronny/profil er eget spor (#155). Ikke #114/#119.

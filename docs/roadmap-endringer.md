@@ -9,7 +9,15 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 **Type:** dealer-hjem innholdskolonne. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB-tabell.
 **Godkjent av:** Mikael CODE-GO — only what he described.
-**Endring:** **F3-05** `progress`. Forhandler `/home` viser KUN toppkort (Planlagt · Pågår · Ferdig + Amicro-donut denne vs forrige måned) · Innboks-rad · Lager-rad · ansatte på jobb/totalt · + Jobb. Fjernet Svarhastighet, Timeplan-gulv, Team-liste, Org/Hjelp-footer. Desktop B2 + telefon under chrome. Mock+badge uten historikk. ⛔ Ronny/profil. ⛔ #114/#119. Draft, ikke merge.
+**Endring:** **F3-05** `done`. Forhandler `/home` viser KUN toppkort (Planlagt · Pågår · Ferdig + Amicro-donut denne vs forrige måned) · Innboks-rad · Lager-rad · ansatte på jobb/totalt · + Jobb. Fjernet Svarhastighet, Timeplan-gulv, Team-liste, Org/Hjelp-footer. Desktop B2 + telefon under chrome. Mock+badge uten historikk. ⛔ Ronny/profil. ⛔ #114/#119. Squash-merge #157.
+
+---
+
+## 2026-09-08 — F5-13 Ronny-størrelse + profilmeny Modus (Mikael CODE-GO)
+
+**Type:** telefon-chrome-polish. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael CODE-GO etter #154.
+**Endring:** **F5-13** `progress`. Ronny og profil samme 28px/`size-7`. Profilmeny smalere, Theme→Modus, hårlinjer, segment-sirkel, vilkår 14/550, popup linjer dest-piller. ⛔ pulse-kort. ⛔ #114/#119. Squash-merge #155.
 
 ---
 

@@ -11,18 +11,23 @@ import { RONNY_PHONE_IDLE, RonnyBot, useRonnySpinn } from '../_workshop/ronny-bo
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
 import { type FaneId, innstillingerHref, parseFane, synligeFaner } from '../innstillinger/_faner';
 import { destinasjonerForShell, erSettingsSti, isItemActive, shellForBruker } from './nav';
-import { PHONE_AVATAR_PX, PHONE_BAR2, PHONE_LOGO_PX, PHONE_PROFIL_SIRKEL } from './phone-chrome';
+import {
+  PHONE_AVATAR_PX,
+  PHONE_BAR2,
+  PHONE_LOGO_PX,
+  PHONE_PROFIL_SIRKEL,
+  PHONE_RONNY_SIRKEL,
+  ronnySizeForSirkel,
+} from './phone-chrome';
 import { PhoneHScroll } from './phone-h-scroll';
 import { PHONE_SAFE_TOP, phoneHjemHref, phoneInnstillingerHref } from './phone-home';
 import { PhoneProfilMeny } from './phone-profil-meny';
 import { PhoneSokOverlay } from './phone-sok-overlay';
 import { TilbakePil } from './tilbake-pil';
 
-const HIT = 'inline-flex size-7 shrink-0 items-center justify-center rounded-full text-fg';
-
 /**
  * Telefon-chrome (Mikael 08.09.2026): to toppbarer, sidebar skjult.
- * Bar 1: merke · Mobbin-søk · Ronny-sirkel · profil-sirkel (samme mål).
+ * Bar 1: merke · Mobbin-søk · Ronny-sirkel · profil-sirkel (samme size-7 / 28px).
  * På Innstillinger: tilbake · tittel · Ronny · profil.
  * Bar 2: dest-piller, eller settings-nav med underline på aktiv.
  */
@@ -100,7 +105,7 @@ export function PhoneShell() {
                 data-ronny-avatar
                 aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
                 aria-expanded={apen}
-                className={HIT}
+                className={PHONE_RONNY_SIRKEL}
                 onClick={() => {
                   trigg();
                   if (apen) lukk();
@@ -108,7 +113,7 @@ export function PhoneShell() {
                 }}
               >
                 <RonnyBot
-                  size={PHONE_AVATAR_PX}
+                  size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
                   paper="var(--ew-bg)"
                   spin={spin}
                   idleSett={RONNY_PHONE_IDLE}
@@ -186,7 +191,7 @@ export function PhoneShell() {
                 data-ronny-avatar
                 aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
                 aria-expanded={apen}
-                className={HIT}
+                className={PHONE_RONNY_SIRKEL}
                 onClick={() => {
                   trigg();
                   if (apen) lukk();
@@ -194,7 +199,7 @@ export function PhoneShell() {
                 }}
               >
                 <RonnyBot
-                  size={PHONE_AVATAR_PX}
+                  size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
                   paper="var(--ew-bg)"
                   spin={spin}
                   idleSett={RONNY_PHONE_IDLE}

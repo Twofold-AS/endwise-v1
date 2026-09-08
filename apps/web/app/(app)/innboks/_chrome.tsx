@@ -13,10 +13,7 @@ import { type InboxModus, InboxModusProvider } from './_modus';
 export function InboxChrome({ modus, children }: { modus: InboxModus; children: ReactNode }) {
   return (
     <InboxModusProvider modus={modus}>
-      <div
-        data-innboks-chrome
-        className="relative flex h-full min-h-0 flex-1 overflow-hidden"
-      >
+      <div data-innboks-chrome className="relative flex h-full min-h-0 flex-1 overflow-hidden">
         <Suspense fallback={<aside className="flex min-h-0 w-full shrink-0 md:w-[320px]" />}>
           <InboxSidebar />
         </Suspense>

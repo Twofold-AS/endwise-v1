@@ -44,7 +44,9 @@ describe('Mikael telefon-chrome — mindre søk/avatar + søk-overlay (07.09 kve
 
   it('telefon-avatar sykler aldri colere/sint — kun rolige uttrykk', () => {
     expect(RONNY_PHONE_IDLE).not.toContain('colere');
-    expect(RONNY_PHONE_IDLE).toEqual(expect.arrayContaining(['heureux', 'curieux', 'surpris', 'wink']));
+    expect(RONNY_PHONE_IDLE).toEqual(
+      expect.arrayContaining(['heureux', 'curieux', 'surpris', 'wink']),
+    );
     expect(RONNY_IDLE).not.toContain('colere');
     expect(RONNY_IDLE).toEqual(expect.arrayContaining(['heureux', 'curieux', 'surpris', 'wink']));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));

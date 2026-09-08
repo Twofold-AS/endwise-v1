@@ -9,8 +9,8 @@ import {
   endringerTeller,
   endringerVindu,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
-import { RONNY_IDLE, RONNY_PHONE_IDLE } from '../app/(app)/_workshop/ronny-idle.ts';
 import { erInnboksFlate } from '../app/(app)/_shell/seksjon-sti.ts';
+import { RONNY_IDLE, RONNY_PHONE_IDLE } from '../app/(app)/_workshop/ronny-idle.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -57,7 +57,9 @@ describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
     expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/endringerTeller/);
     expect(hjem).toMatch(/PulseAnalyserKort/);
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeGreaterThan(hjem.lastIndexOf('PulseJobbFlis'));
+    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeGreaterThan(
+      hjem.lastIndexOf('PulseJobbFlis'),
+    );
     expect(side).toMatch(/data-timeplan-endringer/);
     expect(side).toMatch(/Godkjenn/);
     expect(side).toMatch(/F7-05/);

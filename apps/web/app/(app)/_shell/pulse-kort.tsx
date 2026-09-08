@@ -110,7 +110,13 @@ export function PulseKort({
  * Endringer — øvre høyre på toppkortets del 2.
  * Badge er ekte telling (0 vises). Ingen mock.
  */
-export function PulseEndringerLenke({ antall, laster = false }: { antall: number; laster?: boolean }) {
+export function PulseEndringerLenke({
+  antall,
+  laster = false,
+}: {
+  antall: number;
+  laster?: boolean;
+}) {
   const n = Math.max(0, antall);
   return (
     <Link

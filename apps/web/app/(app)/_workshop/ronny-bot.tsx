@@ -4,11 +4,11 @@ import { BloubBot, type ExpressionId, type StateId } from '@endwise/ui/bloub/Blo
 import { useEffect, useState } from 'react';
 import type { LosTema } from '../_lib/tema';
 import { ronnyTemaFarger } from './ronny-farger';
-import { erRonnyWink, IDLE_MS, type RonnyAnsikt, RONNY_IDLE } from './ronny-idle';
+import { erRonnyWink, IDLE_MS, RONNY_IDLE, type RonnyAnsikt } from './ronny-idle';
 
 export { lesDomLos, ronnyTemaFarger } from './ronny-farger';
-export { IDLE_MS, RONNY_IDLE, RONNY_PHONE_IDLE } from './ronny-idle';
 export type { RonnyAnsikt } from './ronny-idle';
+export { IDLE_MS, RONNY_IDLE, RONNY_PHONE_IDLE } from './ronny-idle';
 
 export function useRonnyIdle(
   aktiv: boolean,
@@ -65,15 +65,7 @@ export function RonnyBot({
   );
 }
 
-function RonnyTegning({
-  size,
-  los,
-  ansikt,
-}: {
-  size: number;
-  los: LosTema;
-  ansikt: RonnyAnsikt;
-}) {
+function RonnyTegning({ size, los, ansikt }: { size: number; los: LosTema; ansikt: RonnyAnsikt }) {
   const { kropp, oye } = ronnyTemaFarger(los);
   const wink = erRonnyWink(ansikt);
   const state: StateId = wink ? 'wink' : 'idle';

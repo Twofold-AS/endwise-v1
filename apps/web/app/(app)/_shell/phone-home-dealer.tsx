@@ -81,8 +81,19 @@ export function useDealerHjemKort() {
 }
 
 export function DealerPulseKort({ className }: { className?: string }) {
-  const { bookings, threads, oversikt, deler, idag, dag, endringer, innboks, lager, ansatte, analyser } =
-    useDealerHjemKort();
+  const {
+    bookings,
+    threads,
+    oversikt,
+    deler,
+    idag,
+    dag,
+    endringer,
+    innboks,
+    lager,
+    ansatte,
+    analyser,
+  } = useDealerHjemKort();
   const lasterJobber = bookings.isLoading;
 
   return (

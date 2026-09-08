@@ -33,7 +33,7 @@ export function InboxSorteringVelger({ startApen = false }: { startApen?: boolea
       <button
         type="button"
         aria-expanded={apen}
-        aria-haspopup="listbox"
+        aria-haspopup="true"
         aria-label="Sorter samtaler"
         onClick={() => setApen((v) => !v)}
         className="inline-flex min-h-11 items-center gap-1 rounded-control px-2.5 text-label text-fg hover:bg-surface-2"
@@ -57,8 +57,6 @@ export function InboxSorteringVelger({ startApen = false }: { startApen?: boolea
                 <button
                   key={v.id}
                   type="button"
-                  role="option"
-                  aria-selected={valgt}
                   aria-pressed={valgt}
                   onClick={() => {
                     setSortering(v.id);

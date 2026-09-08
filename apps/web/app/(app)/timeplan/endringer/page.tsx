@@ -4,10 +4,10 @@ import { ArrowLeftRight, CircleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { trpc } from '@/lib/trpc';
 import { HJEM_PULSE_REFETCH } from '../../_shell/hjem-pulse-sync';
 import { VERKSTED_INNHOLD } from '../../_shell/phone-home';
 import { AVVIK_NOTAT_PREFIKS, endringerVindu, harAvvikNotat } from '../../_shell/phone-home-pulse';
-import { trpc } from '@/lib/trpc';
 
 /**
  * Timeplan › Endringer — dealer-godkjenning av ventende endringer.
@@ -40,17 +40,14 @@ export default function TimeplanEndringerPage() {
       <div className="flex items-center gap-2">
         <ArrowLeftRight size={18} strokeWidth={1.75} aria-hidden />
         <h1 className="text-title text-fg">Endringer</h1>
-        <span
-          data-endringer-antall
-          className="ml-auto text-[12px] text-fg-muted tabular-nums"
-        >
+        <span data-endringer-antall className="ml-auto text-[12px] text-fg-muted tabular-nums">
           {bookings.isLoading ? '…' : `${rader.length} ventende`}
         </span>
       </div>
       <p className="text-[12px] text-fg-muted leading-relaxed">
-        Forespørsler og avvik mekanikere logger på jobben. Telleren på hjem er
-        ekte <code className="text-fg">{AVVIK_NOTAT_PREFIKS.trim()}</code>-notat
-        — ikke mock. Godkjenning skrives ikke tilbake ennå (F7-05).
+        Forespørsler og avvik mekanikere logger på jobben. Telleren på hjem er ekte{' '}
+        <code className="text-fg">{AVVIK_NOTAT_PREFIKS.trim()}</code>-notat — ikke mock. Godkjenning
+        skrives ikke tilbake ennå (F7-05).
       </p>
 
       {bookings.isLoading ? (
@@ -102,8 +99,8 @@ export default function TimeplanEndringerPage() {
 
       <p className="flex items-start gap-2 text-[12px] text-fg-muted">
         <CircleAlert size={14} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-        Godkjenn er lokal stub i denne økta. Ekstra tid fra mekaniker er prototype
-        og teller ikke. Avvik-listen leser ekte booking-notat.
+        Godkjenn er lokal stub i denne økta. Ekstra tid fra mekaniker er prototype og teller ikke.
+        Avvik-listen leser ekte booking-notat.
       </p>
     </div>
   );

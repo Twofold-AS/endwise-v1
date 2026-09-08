@@ -53,13 +53,14 @@ function ListeGo({ sorterApen }: { sorterApen: boolean }) {
           <span className="inline-flex min-h-11 min-w-11 items-center justify-center text-danger">
             ⌫
           </span>
-          <span
+          <button
+            type="button"
             data-innboks-ny-samtale
             className="inline-flex min-h-11 min-w-11 items-center justify-center text-fg"
             aria-label="Ny samtale"
           >
             <NyMeldingIkon size={16} />
-          </span>
+          </button>
         </div>
       </div>
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 py-10 text-center">
@@ -76,7 +77,10 @@ function ListeGo({ sorterApen }: { sorterApen: boolean }) {
 
 function TradGo() {
   return (
-    <div data-innboks-hoved className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-3">
+    <div
+      data-innboks-hoved
+      className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-3"
+    >
       <button
         type="button"
         data-innboks-detaljer-chip

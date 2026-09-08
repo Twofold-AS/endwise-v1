@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  Avatar,
-  type AvatarValg,
-  Button,
-  Check,
-  MessageSquare,
-  Trash2,
-} from '@endwise/ui';
+import { Avatar, type AvatarValg, Button, Check, MessageSquare, Trash2 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';

@@ -23,7 +23,9 @@
 > ### ⚠️ Mikael CODE-GO polish (08.09.2026 kveld)
 > Ronny/profil: tema-farger, **ikke** `#ffffff` og **ikke** `.ink-invert`
 > (invert jevnet øynene). Lyst ink / canvas-soft; mørkt canvas-soft / ink.
-> Samme `size-7`. Ronny leser DOM-tema (`lesDomLos`). Profilmeny: hårlinje
+> Samme `size-7`. Ronny: to flater + tema-CSS (`data-ronny-los`).
+> `@custom-variant dark` følger `.dark`/`data-theme`, ikke OS.
+> Profilmeny: hårlinje
 > edge-to-edge, tettere 17/700-rader, Vilkår 13/450, skille over Logg ut,
 > `© Twofold`, Modus-plate `.ew-modus-plate` (inset lyst, `--ew-bg` mørkt
 > — `--ew-inset` er lik card i mørkt). Hjem: avlange ikonplater,

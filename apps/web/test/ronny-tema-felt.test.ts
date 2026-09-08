@@ -18,18 +18,18 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(bot).not.toMatch(/ink-invert/);
     expect(bot).toMatch(/ronnyTemaFarger/);
     expect(bot).toMatch(/data-ronny-los/);
-    expect(bot).toMatch(/dark:hidden/);
-    expect(bot).toMatch(/dark:inline-flex/);
     expect(bot).toMatch(/follow=\{false\}/);
+    expect(tema).toMatch(/\[data-ronny-los="dark"\]/);
+    expect(tema).toMatch(/\.ew-profil-sirkel/);
+    const globals = les('../app/globals.css');
+    expect(globals).toMatch(/@custom-variant dark/);
     expect(farger).toMatch(/#141414/);
     expect(farger).toMatch(/#f3f3f3/);
     expect(farger).toMatch(/lesDomLos/);
     expect(farger).not.toMatch(/#ffffff/);
     expect(bot).not.toMatch(/#1d1d1f/);
     expect(tema).toMatch(/\.ink-invert/);
-    expect(profil).toMatch(/PHONE_PROFIL_SIRKEL[\s\S]*bg-fg[\s\S]*text-bg/);
-    expect(profil).toMatch(/dark:bg-\[#f3f3f3\]/);
-    expect(profil).toMatch(/dark:text-\[#141414\]/);
+    expect(profil).toMatch(/PHONE_PROFIL_SIRKEL[\s\S]*ew-profil-sirkel/);
   });
 
   it('Ronny-sheet og desktop-panel følger surface/fg, ikke #fff', () => {

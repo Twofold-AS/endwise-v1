@@ -46,7 +46,7 @@ export const PHONE_PROFIL_MENY_BREDDE = 'w-[min(100%-1.5rem,260px)]';
  * Profil-bokstav: ink-sirkel på lyst (`bg-fg text-bg`).
  * Mørkt: canvas-soft `#f3f3f3` + ink-bokstav — ikke svart, ikke `#ffffff`.
  */
-export const PHONE_PROFIL_SIRKEL = `${PHONE_AVATAR_KLASSE} bg-fg text-label text-bg dark:bg-[#f3f3f3] dark:text-[#141414]`;
+export const PHONE_PROFIL_SIRKEL = `${PHONE_AVATAR_KLASSE} ew-profil-sirkel text-label`;
 
 /** Meny-rader: 17/700 som øvrige knapper, tettere. Vilkår slankere. */
 export const PHONE_PROFIL_RAD =

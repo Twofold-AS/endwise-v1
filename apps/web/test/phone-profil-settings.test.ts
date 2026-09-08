@@ -31,8 +31,7 @@ function utenKommentarer(kilde: string) {
 describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
   it('top-bar 2 har mer luft; profil-sirkel er token-invertert', () => {
     expect(PHONE_BAR2).toMatch(/py-2\.5/);
-    expect(PHONE_PROFIL_SIRKEL).toMatch(/bg-fg/);
-    expect(PHONE_PROFIL_SIRKEL).toMatch(/text-bg/);
+    expect(PHONE_PROFIL_SIRKEL).toMatch(/ew-profil-sirkel/);
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/PHONE_BAR2/);
     expect(shell).toMatch(/PHONE_PROFIL_SIRKEL/);

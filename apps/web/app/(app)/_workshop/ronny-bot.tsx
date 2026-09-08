@@ -74,10 +74,7 @@ function RonnyTegning({
 }) {
   const { kropp, oye } = ronnyTemaFarger(los);
   return (
-    <span
-      data-ronny-los={los}
-      className={los === 'dark' ? 'hidden dark:inline-flex' : 'inline-flex dark:hidden'}
-    >
+    <span data-ronny-los={los} className="inline-flex">
       <BloubBot
         size={size}
         shape="cercle"

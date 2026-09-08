@@ -16,8 +16,7 @@ export const PHONE_AVATAR_PX = 28;
  * Top-bar 2 (08.09 Mikael): mer luft over og under dest-piller / settings-nav.
  * Samme klasse på spacer og header, så innholdet ikke hopper.
  */
-export const PHONE_BAR2 =
-  'flex min-h-row w-full min-w-0 items-center px-3 py-2.5';
+export const PHONE_BAR2 = 'flex min-h-row w-full min-w-0 items-center px-3 py-2.5';
 
 /** Profil-bokstav: hvit på mørkt, mørk på lyst (token-aware). */
 export const PHONE_PROFIL_SIRKEL =

@@ -1,12 +1,12 @@
 'use client';
 
 import { normaliserSok } from '@endwise/modules/sok';
-import { Search } from '@endwise/ui';
 import { useEffect, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import type { NavItem } from './nav';
 import { PHONE_SAFE_TOP } from './phone-home';
 import { huskSok, lesNyligeSok, PHONE_SOK_LAGER, slaaSammenSok } from './phone-sok';
+import { PhoneSokFelt } from './phone-sok-felt';
 
 export function PhoneSokOverlay({
   apen,
@@ -64,25 +64,7 @@ export function PhoneSokOverlay({
       className={`fixed inset-0 z-[80] flex flex-col bg-bg md:hidden ${PHONE_SAFE_TOP}`}
     >
       <div className="flex h-row shrink-0 items-center gap-2 px-3">
-        <label className="relative min-w-0 flex-1">
-          <Search
-            size={16}
-            strokeWidth={1.75}
-            data-phone-sok-ikon
-            className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-fg"
-            aria-hidden
-          />
-          <input
-            ref={felt}
-            data-phone-search
-            type="search"
-            value={verdi}
-            onChange={(e) => onVerdi(e.target.value)}
-            placeholder="Søk"
-            aria-label="Søk"
-            className="ew-felt ew-felt-sm h-8 pr-3 pl-9 text-label"
-          />
-        </label>
+        <PhoneSokFelt inputRef={felt} value={verdi} onChange={(e) => onVerdi(e.target.value)} />
         <button
           type="button"
           data-phone-sok-avbryt
@@ -115,6 +97,27 @@ export function PhoneSokOverlay({
             })}
           </ul>
         ) : null}
+
+        <div
+          data-phone-sok-dest-stripe
+          className="flex gap-3 overflow-x-auto overflow-y-hidden py-3 touch-pan-x"
+        >
+          {dest.map((item) => {
+            const I = item.icon;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                data-phone-sok-dest-ikon={item.key}
+                aria-label={item.label}
+                onClick={() => velg(item.href, item.label)}
+                className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-inset text-fg"
+              >
+                <I size={20} strokeWidth={1.75} />
+              </button>
+            );
+          })}
+        </div>
 
         {venter ? <p className="py-6 text-label text-fg-muted">Søker …</p> : null}
         {sok.isError ? (

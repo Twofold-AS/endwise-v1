@@ -64,17 +64,20 @@ describe('Mikael telefon-chrome — mindre søk/avatar + søk-overlay (07.09 kve
     expect(lang).toHaveLength(PHONE_SOK_MAX);
   });
 
-  it('søk-overlay: Avbryt, nylige, kategoriserte treff — uten dest-ikonstripe', () => {
+  it('søk-overlay: Avbryt, dest-ikonstripe og kategoriserte treff', () => {
     const overlay = utenKommentarer(les('../app/(app)/_shell/phone-sok-overlay.tsx'));
+    const felt = utenKommentarer(les('../app/(app)/_shell/phone-sok-felt.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/data-phone-search-overlay|PhoneSokOverlay/);
     expect(overlay).toMatch(/data-phone-search-overlay/);
     expect(overlay).toMatch(/Avbryt/);
     expect(overlay).toMatch(/data-phone-sok-nylig/);
-    expect(overlay).not.toMatch(/data-phone-sok-dest-ikon/);
+    expect(overlay).toMatch(/data-phone-sok-dest-ikon/);
+    expect(overlay).toMatch(/data-phone-sok-dest-stripe/);
     expect(overlay).not.toMatch(/data-phone-sok-dest-rad/);
     expect(overlay).toMatch(/data-phone-sok-gruppe/);
-    expect(overlay).toMatch(/ew-felt/);
+    expect(felt).toMatch(/ew-felt/);
+    expect(felt).not.toMatch(/absolute top-1\/2/);
     expect(overlay).not.toMatch(/accent-pip|border-l-/);
     expect(
       destinasjonerForShell({ shell: 'forhandler', role: null, shopEnabled: false }).length,

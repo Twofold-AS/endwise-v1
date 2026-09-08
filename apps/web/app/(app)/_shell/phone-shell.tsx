@@ -1,6 +1,5 @@
 'use client';
 
-import { Search } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -22,6 +21,7 @@ import {
 import { PhoneHScroll } from './phone-h-scroll';
 import { PHONE_SAFE_TOP, phoneHjemHref, phoneInnstillingerHref } from './phone-home';
 import { PhoneProfilMeny } from './phone-profil-meny';
+import { PhoneSokFelt } from './phone-sok-felt';
 import { PhoneSokOverlay } from './phone-sok-overlay';
 import { TilbakePil } from './tilbake-pil';
 
@@ -159,31 +159,18 @@ export function PhoneShell() {
                 />
               </Link>
               <form
+                data-phone-search
                 className="min-w-0 flex-1"
                 onSubmit={(e) => {
                   e.preventDefault();
                   setSokApen(true);
                 }}
               >
-                <label className="relative block">
-                  <Search
-                    size={16}
-                    strokeWidth={1.75}
-                    data-phone-sok-ikon
-                    className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-fg"
-                    aria-hidden
-                  />
-                  <input
-                    data-phone-search
-                    type="search"
-                    value={sok}
-                    onChange={(e) => setSok(e.target.value)}
-                    onFocus={() => setSokApen(true)}
-                    placeholder="Søk"
-                    aria-label="Søk"
-                    className="ew-felt ew-felt-sm h-8 pr-3 pl-9 text-label"
-                  />
-                </label>
+                <PhoneSokFelt
+                  value={sok}
+                  onChange={(e) => setSok(e.target.value)}
+                  onFocus={() => setSokApen(true)}
+                />
               </form>
               <button
                 type="button"

@@ -239,7 +239,8 @@ describe('Mikael IA — shell-chrome og telefon', () => {
     expect(sidebar).not.toMatch(/Handlinger/);
     expect(chrome).toMatch(/scrollTo/);
     expect(chrome).not.toMatch(/scrollIntoView/);
-    expect(hscroll).toMatch(/data-end-spacer/);
+    expect(hscroll).not.toMatch(/data-end-spacer/);
+    expect(hscroll).not.toMatch(/data-scroll-tilbake/);
   });
 
   it('top-bar 2 er sidebar-rad, ikke svart pille', () => {

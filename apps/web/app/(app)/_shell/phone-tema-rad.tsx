@@ -24,11 +24,11 @@ export function PhoneTemaRad() {
   const { valg, sett } = useTema();
 
   return (
-    <div data-phone-profil-tema className="flex items-center justify-between gap-3 px-3 py-2.5">
-      <span className="text-label text-fg">Modus</span>
+    <div data-phone-profil-tema className="flex items-center justify-between gap-3 px-3 py-1.5">
+      <span className="text-[15px] font-[650] text-fg">Modus</span>
       <div
         data-phone-modus-segment
-        className="inline-flex items-center rounded-full bg-inset p-0.5"
+        className="inline-flex items-center rounded-full bg-inset p-0.5 dark:bg-bg"
       >
         {VALG.map((v) => {
           const I = v.ikon;

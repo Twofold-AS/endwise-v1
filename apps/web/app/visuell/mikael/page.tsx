@@ -6,7 +6,6 @@ import {
   PromptInputFooter,
   PromptInputSubmit,
   PromptInputTextarea,
-  Search,
   X,
 } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
@@ -22,6 +21,7 @@ import {
 } from '@/app/(app)/_shell/phone-chrome';
 import { PHONE_SAFE_TOP } from '@/app/(app)/_shell/phone-home';
 import { PhoneProfilMeny } from '@/app/(app)/_shell/phone-profil-meny';
+import { PhoneSokFelt } from '@/app/(app)/_shell/phone-sok-felt';
 import { RONNY_PHONE_IDLE, RonnyBot } from '@/app/(app)/_workshop/ronny-bot';
 import { RonnyForstorIkon, RonnyHandtak } from '@/app/(app)/_workshop/ronny-ikoner';
 import { RONNY_SHEET_RADIUS_PX } from '@/app/(app)/_workshop/ronny-sheet';
@@ -75,22 +75,7 @@ function Chrome({ vis }: { vis: Vis }) {
             WebkitMaskPosition: 'center',
           }}
         />
-        <label className="relative min-w-0 flex-1">
-          <Search
-            size={16}
-            strokeWidth={1.75}
-            className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-fg"
-            aria-hidden
-          />
-          <input
-            data-phone-search
-            type="search"
-            placeholder="Søk"
-            aria-label="Søk"
-            readOnly
-            className="ew-felt ew-felt-sm h-8 pr-3 pl-9 text-label"
-          />
-        </label>
+        <PhoneSokFelt readOnly />
         <span data-ronny-avatar className={PHONE_RONNY_SIRKEL}>
           <RonnyBot size={ronnySizeForSirkel(PHONE_AVATAR_PX)} idleSett={RONNY_PHONE_IDLE} />
         </span>

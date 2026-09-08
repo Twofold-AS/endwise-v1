@@ -10,17 +10,22 @@ function les(rel: string) {
 }
 
 describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
-  it('Ronny bruker ink-invert (samme polaritet som profil bg-fg)', () => {
+  it('Ronny bruker tema-farger uten ink-invert (øyne synlige i begge modi)', () => {
     const bot = les('../app/(app)/_workshop/ronny-bot.tsx');
+    const farger = les('../app/(app)/_workshop/ronny-farger.ts');
     const tema = les('../../../packages/ui/src/theme.css');
     const profil = les('../app/(app)/_shell/phone-chrome.ts');
-    expect(bot).toMatch(/ink-invert/);
-    expect(bot).toMatch(/#141414/);
+    expect(bot).not.toMatch(/ink-invert/);
+    expect(bot).toMatch(/ronnyTemaFarger/);
+    expect(bot).toMatch(/follow=\{false\}/);
+    expect(farger).toMatch(/#141414/);
+    expect(farger).toMatch(/#f3f3f3/);
+    expect(farger).not.toMatch(/#ffffff/);
     expect(bot).not.toMatch(/#1d1d1f/);
     expect(tema).toMatch(/\.ink-invert/);
-    expect(tema).toMatch(/\.dark \.ink-invert/);
-    expect(tema).toMatch(/brightness\(0\) invert\(1\)/);
     expect(profil).toMatch(/PHONE_PROFIL_SIRKEL[\s\S]*bg-fg[\s\S]*text-bg/);
+    expect(profil).toMatch(/dark:bg-\[#f3f3f3\]/);
+    expect(profil).toMatch(/dark:text-\[#141414\]/);
   });
 
   it('Ronny-sheet og desktop-panel følger surface/fg, ikke #fff', () => {
@@ -57,8 +62,9 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(tema).toMatch(/border-top:\s*1px solid var\(--ew-fg-faint\)/);
     expect(meny).toMatch(/ew-haarlinje/);
     expect(meny).not.toMatch(/h-px bg-border/);
-    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}text-\[17px\]/);
-    expect(meny).toMatch(/data-phone-profil-vilkar[\s\S]{0,220}font-\[700\]/);
+    expect(meny).toMatch(/PHONE_PROFIL_VILKAR/);
+    expect(meny).not.toMatch(/text-\[17px\]/);
+    expect(meny).not.toMatch(/font-\[700\]/);
   });
 
   it('visuell GO-side monterer ekte Ronny, profilmeny og PromptInput', () => {
@@ -67,7 +73,7 @@ describe('Mikael 08.09 — Ronny tema + standardfelt', () => {
     expect(go).toMatch(/PhoneProfilMeny/);
     expect(go).toMatch(/PromptInput/);
     expect(go).toMatch(/bg-surface text-fg/);
-    expect(go).toMatch(/ew-felt ew-felt-sm/);
+    expect(go).toMatch(/PhoneSokFelt|ew-felt ew-felt-sm/);
     const layout = les('../app/visuell/layout.tsx');
     expect(layout).toMatch(/endwise:tema/);
     expect(layout).toMatch(/tema/);

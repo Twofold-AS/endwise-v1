@@ -6,7 +6,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { authClient } from '@/lib/auth-client';
-import { PHONE_PROFIL_MENY_BREDDE, PHONE_PROFIL_MENY_TOPP } from './phone-chrome';
+import {
+  PHONE_PROFIL_MENY_BREDDE,
+  PHONE_PROFIL_MENY_TOPP,
+  PHONE_PROFIL_RAD,
+  PHONE_PROFIL_VILKAR,
+} from './phone-chrome';
 import { PhoneTemaRad } from './phone-tema-rad';
 
 export function PhoneProfilMeny({
@@ -54,13 +59,13 @@ export function PhoneProfilMeny({
         data-phone-profil-meny
         role="menu"
         aria-label="Profil"
-        className={`absolute right-3 z-[75] ${PHONE_PROFIL_MENY_TOPP} flex max-h-[min(72dvh,560px)] ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-y-auto rounded-[16px] border border-border bg-card py-3 shadow-lg md:hidden`}
+        className={`absolute right-3 z-[75] ${PHONE_PROFIL_MENY_TOPP} flex max-h-[min(72dvh,560px)] ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-y-auto rounded-[16px] border border-border bg-card py-2 shadow-lg md:hidden`}
       >
-        <div className="px-4 pb-3">
+        <div className="px-4 pb-2">
           <p className="truncate text-[16px] font-[650] text-fg">{navn?.trim() || '—'}</p>
           <p className="truncate text-[13px] text-fg-muted">{epost?.trim() || '—'}</p>
         </div>
-        <div className="px-3 pb-3">
+        <div className="px-3 pb-2">
           <Link
             href={'/organisasjon?seksjon=abonnement' as Route}
             data-phone-profil-oppgrader
@@ -75,9 +80,9 @@ export function PhoneProfilMeny({
           href={'/support' as Route}
           role="menuitem"
           onClick={onLukk}
-          className="flex h-11 items-center gap-3 px-4 text-label text-fg"
+          className={PHONE_PROFIL_RAD}
         >
-          <MessageCirclePlus size={16} strokeWidth={1.6} />
+          <MessageCirclePlus size={16} strokeWidth={1.75} />
           Forespørsel
         </Link>
         <Link
@@ -85,19 +90,19 @@ export function PhoneProfilMeny({
           role="menuitem"
           data-phone-profil-innstillinger
           onClick={onLukk}
-          className="flex h-11 items-center gap-3 px-4 text-label text-fg"
+          className={PHONE_PROFIL_RAD}
         >
-          <Settings size={16} strokeWidth={1.6} />
+          <Settings size={16} strokeWidth={1.75} />
           Innstillinger
         </Link>
-        <div data-phone-profil-modus-over className="ew-haarlinje mx-4" />
+        <div data-phone-profil-modus-over className="ew-haarlinje" />
         <PhoneTemaRad />
-        <div data-phone-profil-modus-under className="ew-haarlinje mx-4" />
+        <div data-phone-profil-modus-under className="ew-haarlinje" />
         <Link
           href={'/veikart' as Route}
           role="menuitem"
           onClick={onLukk}
-          className="flex h-11 items-center px-4 text-label text-fg"
+          className={PHONE_PROFIL_RAD}
         >
           Veikart
         </Link>
@@ -105,30 +110,34 @@ export function PhoneProfilMeny({
           href={'/support?kategori=oppdateringer' as Route}
           role="menuitem"
           onClick={onLukk}
-          className="flex h-11 items-center px-4 text-label text-fg"
+          className={PHONE_PROFIL_RAD}
         >
           Oppdateringer
         </Link>
+        <div data-phone-profil-ut-skille className="ew-haarlinje" />
         <button
           type="button"
           role="menuitem"
           data-phone-profil-ut
           onClick={() => void loggUt()}
-          className="flex h-11 items-center gap-3 px-4 text-left text-label text-fg"
+          className={`${PHONE_PROFIL_RAD} w-full text-left`}
         >
-          <LogOut size={16} strokeWidth={1.6} />
+          <LogOut size={16} strokeWidth={1.75} />
           Logg ut
         </button>
-        <div data-phone-profil-vilkar-skille className="ew-haarlinje mx-4 my-1" />
+        <div data-phone-profil-vilkar-skille className="ew-haarlinje" />
         <Link
           href={'/vilkar' as Route}
           role="menuitem"
           data-phone-profil-vilkar
           onClick={onLukk}
-          className="flex h-11 items-center px-4 text-[17px] font-[700] text-fg"
+          className={PHONE_PROFIL_VILKAR}
         >
           Vilkår
         </Link>
+        <p data-phone-profil-copy className="px-4 pt-1.5 pb-0.5 text-[11px] text-fg-faint">
+          © Twofold
+        </p>
       </div>
     </>
   );

@@ -173,7 +173,8 @@
 }
 
 .ew-felt:focus,
-.ew-felt:focus-visible {
+.ew-felt:focus-visible,
+.ew-felt:focus-within {
   border-color: #ffffff;
 }
 
@@ -199,10 +200,11 @@
 
 .ew-felt-sm {
   min-height: var(--ew-control-h);
-  padding: 0.375rem 0.75rem;
   font-size: 16px;
   font-weight: 450;
   line-height: 20px;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
 }
 
 /*

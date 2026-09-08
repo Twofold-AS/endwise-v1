@@ -42,8 +42,17 @@ export const PHONE_PROFIL_MENY_TOPP = 'top-full mt-2.5';
 /** Smalere enn 320 — Mobbin-meny skal ikke spise hele skjermen. */
 export const PHONE_PROFIL_MENY_BREDDE = 'w-[min(100%-1.5rem,260px)]';
 
-/** Profil-bokstav: hvit på mørkt, mørk på lyst (token-aware). */
-export const PHONE_PROFIL_SIRKEL = `${PHONE_AVATAR_KLASSE} bg-fg text-label text-bg`;
+/**
+ * Profil-bokstav: ink-sirkel på lyst (`bg-fg text-bg`).
+ * Mørkt: canvas-soft `#f3f3f3` + ink-bokstav — ikke svart, ikke `#ffffff`.
+ */
+export const PHONE_PROFIL_SIRKEL = `${PHONE_AVATAR_KLASSE} bg-fg text-label text-bg dark:bg-[#f3f3f3] dark:text-[#141414]`;
+
+/** Meny-rader: samme mål, tykk tekst. Vilkår er slankere. */
+export const PHONE_PROFIL_RAD =
+  'flex h-9 items-center gap-2.5 px-4 text-[15px] font-[650] leading-none text-fg';
+export const PHONE_PROFIL_VILKAR =
+  'flex h-8 items-center px-4 text-[13px] font-[450] leading-none text-fg-muted';
 
 /** Samme 16px som sidebar-rader (`IKON` i sidebar.tsx). PC-skinne. */
 export const SHELL_TOGGLE_PX = 16;

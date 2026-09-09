@@ -83,7 +83,9 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     const meny = utenKommentarer(les('../app/(app)/_shell/phone-profil-meny.tsx'));
     const tema = utenKommentarer(les('../app/(app)/_shell/phone-tema-rad.tsx'));
     expect(meny).toMatch(/data-phone-profil-meny/);
-    expect(meny).toMatch(/Oppgrader abonnement/);
+    expect(meny).toMatch(/Ditt abonnement/);
+    expect(meny).not.toMatch(/Oppgrader abonnement/);
+    expect(meny).toMatch(/text-\[17px\] font-\[700\]/);
     expect(meny).toMatch(/#0066ff/);
     expect(meny).toMatch(/Hjelp/);
     expect(meny).not.toMatch(/Forespørsel/);

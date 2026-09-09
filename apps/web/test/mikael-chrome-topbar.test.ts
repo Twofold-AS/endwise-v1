@@ -82,15 +82,14 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
     expect(
       destinasjonFaner({
         pathname: '/jobber',
-        search: 'fane=avvik',
+        search: 'fane=endringer',
         role: 'dealer_admin',
         shell: 'forhandler',
       }).map((f) => ({ label: f.label, valgt: f.valgt })),
     ).toEqual([
       { label: 'Timeplan', valgt: false },
       { label: 'Opprett jobb', valgt: false },
-      { label: 'Avvik', valgt: true },
-      { label: 'Forespørsler', valgt: false },
+      { label: 'Endringer', valgt: true },
     ]);
 
     expect(

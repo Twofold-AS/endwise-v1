@@ -134,15 +134,12 @@ export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['analyser'], kind: 'full' },
 ];
 
-/** Toppkort: Avvik → Timeplan › Avvik. */
+/** Toppkort: Avvik-telling (ikke lenke). Listen bor på Timeplan › Endringer. */
 export const PULSE_AVVIK_HREF = '/jobber?fane=avvik';
-/** Toppkort: Forespørsler → Timeplan › Forespørsler. */
+/** Toppkort: Forespørsler-telling (ikke lenke). Listen bor på Timeplan › Endringer. */
 export const PULSE_FORESPORSEL_HREF = '/jobber?fane=forespor';
-/**
- * Tidligere Endringer-knapp (fjernet fra toppkortet).
- * Avvik-listen bor på Timeplan › Avvik.
- */
-export const PULSE_ENDRINGER_HREF = '/jobber?fane=avvik';
+/** Toppkort: Endringer → Timeplan › Endringer (Avvik + Forespørsler). */
+export const PULSE_ENDRINGER_HREF = '/jobber?fane=endringer';
 
 /** Små destinasjonskort under Lager. Dine jobber og Lager er egne flater. */
 export const MEKANIKER_PHONE_HURTIG: PhoneKortKey[] = ['kompetanse', 'timeplan', 'hjelp'];

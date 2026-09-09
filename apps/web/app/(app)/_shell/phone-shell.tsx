@@ -8,6 +8,7 @@ import { isVerkstedInspectPath } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
 import { RONNY_PHONE_IDLE, RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
+import { InboxTopBar2 } from '../innboks/_top-bar2';
 import { destinasjonerForShell, isItemActive, shellForBruker } from './nav';
 import {
   PHONE_AVATAR_PX,
@@ -212,7 +213,9 @@ export function PhoneShell() {
           />
         </div>
         <div data-phone-top-bar="2" className={PHONE_BAR2}>
-          {sideChrome ? (
+          {sideChrome?.bar2 === 'innboks' ? (
+            <InboxTopBar2 />
+          ) : sideChrome ? (
             <nav
               data-phone-settings-nav
               data-phone-side-nav={sideChrome.id}

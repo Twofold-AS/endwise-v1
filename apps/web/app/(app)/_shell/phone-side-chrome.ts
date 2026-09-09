@@ -33,6 +33,7 @@ import {
   statistikkHref,
 } from '../statistikk/_faner';
 import { erSettingsSti } from './nav';
+import { erDealerInnboks } from './seksjon-sti';
 
 export type PhoneSideChromeFane = {
   id: string;
@@ -48,10 +49,13 @@ export type PhoneSideChrome = {
     | 'timeplan'
     | 'kunder'
     | 'tjenester'
-    | 'organisasjon';
+    | 'organisasjon'
+    | 'innboks';
   tittel: string;
   faner: PhoneSideChromeFane[];
   aktiv: string;
+  /** Innboks har egen bar 2 (Ny melding · Tid · Gruppe · Slett), ikke underline-faner. */
+  bar2?: 'faner' | 'innboks';
 };
 
 export function erHjelpSti(pathname: string): boolean {
@@ -70,7 +74,8 @@ export function erPhoneSideChrome(pathname: string): boolean {
     erTimeplanSti(pathname) ||
     erKunderSti(pathname) ||
     erTjenesterSti(pathname) ||
-    erOrganisasjonChromeSti(pathname)
+    erOrganisasjonChromeSti(pathname) ||
+    erDealerInnboks(pathname)
   );
 }
 
@@ -79,6 +84,16 @@ export function phoneSideChrome(
   search: { get: (k: string) => string | null } | null,
   opts: { isAdmin: boolean; erForhandler: boolean },
 ): PhoneSideChrome | null {
+  if (erDealerInnboks(pathname)) {
+    const ny = search?.get('ny') === '1';
+    return {
+      id: 'innboks',
+      tittel: 'Innboks',
+      aktiv: ny ? 'ny' : 'liste',
+      bar2: 'innboks',
+      faner: [],
+    };
+  }
   if (erSettingsSti(pathname)) {
     const fraQuery = search?.get('fane');
     const aktiv: FaneId = parseFane(

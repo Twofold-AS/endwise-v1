@@ -24,7 +24,7 @@ function utenKommentarer(kilde: string) {
 
 describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
   it('Endringer-rute og ekte avvik-telling, 0 vises', () => {
-    expect(PULSE_ENDRINGER_HREF).toBe('/jobber?fane=avvik');
+    expect(PULSE_ENDRINGER_HREF).toBe('/jobber?fane=endringer');
     expect(PARKED_LABEL['/timeplan/endringer']).toBe('Endringer');
     expect(AVVIK_NOTAT_PREFIKS).toBe('[AVVIK ');
     expect(
@@ -48,20 +48,21 @@ describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
     expect(kort).toMatch(/data-pulse-hero-todelt/);
     expect(kort).toMatch(/data-pulse-ukedag/);
     expect(kort).toMatch(/data-pulse-dato/);
-    expect(kort).not.toMatch(/PulseEndringerLenke/);
-    expect(kort).toMatch(/PulseValgLenke/);
+    expect(kort).toMatch(/PulseEndringerLenke/);
+    expect(kort).toMatch(/PulseAvvikForesporBoks/);
+    expect(kort).not.toMatch(/PulseValgLenke/);
     expect(kort).toMatch(/DitherDonutChart/);
     expect(kort).toMatch(/#141414/);
     expect(kort).toMatch(/#e0e0e0/);
     expect(kort).toMatch(/data-pulse-hero-bunn/);
     expect(kort).toMatch(/TriangleAlert/);
     expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/endringerTeller/);
+    expect(hjem).toMatch(/avvikTeller/);
     expect(hjem).toMatch(/PulseAnalyserKort/);
     expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeGreaterThan(
       hjem.lastIndexOf('PulseJobbFlis'),
     );
-    expect(side).toMatch(/jobber\?fane=avvik/);
+    expect(side).toMatch(/jobber\?fane=endringer/);
     expect(les('../app/(app)/jobber/_avvik.tsx')).toMatch(/data-timeplan-endringer/);
     expect(les('../app/(app)/jobber/_avvik.tsx')).toMatch(/Godkjenn/);
     expect(les('../app/(app)/jobber/_avvik.tsx')).toMatch(/F7-05/);
@@ -76,19 +77,16 @@ describe('CODE-GO Mikael — innboks tom / sort / telefon', () => {
     expect(side).not.toMatch(/Skriv til Endwise/);
   });
 
-  it('sortering er Modus-plate, Ny samtale ytterst høyre, nytt penn-SVG', () => {
-    const side = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
-    const sort = utenKommentarer(les('../app/(app)/innboks/_sortering.tsx'));
+  it('sortering bor i Tid-popup; Ny melding først i top-bar 2; penn-SVG beholdt', () => {
+    const bar = utenKommentarer(les('../app/(app)/innboks/_top-bar2.tsx'));
     const ikon = utenKommentarer(les('../app/(app)/innboks/_ny-melding-ikon.tsx'));
-    expect(sort).toMatch(/ew-modus-plate/);
-    expect(sort).toMatch(/Nyeste/);
-    expect(sort).toMatch(/Eldste/);
-    expect(sort).not.toMatch(/DropdownMenu/);
-    expect(side).toMatch(/InboxSorteringVelger/);
-    expect(side).toMatch(/data-innboks-ny-samtale/);
-    expect(side).toMatch(/ml-auto flex items-center/);
-    expect(side).not.toMatch(/DropdownMenu/);
-    expect(side).not.toMatch(/grid-cols-\[auto_1fr_auto\]/);
+    expect(bar).toMatch(/Ny melding/);
+    expect(bar).toMatch(/Nyeste/);
+    expect(bar).toMatch(/Eldste/);
+    expect(bar).toMatch(/InboxChromePopup/);
+    expect(bar).not.toMatch(/ChevronDown/);
+    expect(bar).not.toMatch(/DropdownMenu/);
+    expect(bar).toMatch(/data-innboks-ny-samtale/);
     expect(ikon).toMatch(/15\.5 5/);
     expect(ikon).not.toMatch(/11\.9991 14\.25/);
     expect(ikon).not.toMatch(/MessageSquarePlus/);
@@ -103,7 +101,7 @@ describe('CODE-GO Mikael — innboks tom / sort / telefon', () => {
     expect(side).toMatch(/skjulTelefonListe/);
     expect(side).toMatch(/nySamtale/);
     expect(chrome).toMatch(/data-innboks-chrome/);
-    expect(chrome).toMatch(/relative flex h-full min-h-0 flex-1 overflow-hidden/);
+    expect(chrome).toMatch(/relative flex h-full min-h-0 flex-1 flex-col overflow-hidden/);
     expect(slot).toMatch(/data-innboks-detaljer-chip/);
     expect(slot).toMatch(/hidden w-11/);
     expect(slot).toMatch(/absolute inset-0/);

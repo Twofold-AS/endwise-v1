@@ -25,6 +25,19 @@ export function endringerTeller(jobber: PhoneBooking[]): number {
   return jobber.filter((j) => j.status !== 'cancelled' && harAvvikNotat(j.notes)).length;
 }
 
+/** Avvik på hjem-kortet — samme kilde som Endringer-listen. */
+export function avvikTeller(jobber: PhoneBooking[]): number {
+  return endringerTeller(jobber);
+}
+
+/**
+ * Forespørsler på hjem-kortet. Ekstra tid fra Min dag er prototype
+ * og har ingen rad i basen ennå — 0 er ærlig.
+ */
+export function foresporTeller(_jobber: PhoneBooking[] = []): number {
+  return 0;
+}
+
 export function pulsdagOverskrift(naa: Date) {
   return {
     ukedag: osloUkedagNavn(naa),
@@ -61,9 +74,16 @@ export const PULSE_DAG_START = 8;
 export const PULSE_DAG_SLUTT = 19;
 /** Venstre (9-retning). Buen går klokkevis mot høyre, med klokka. */
 export const PULSE_DAG_BUE_START = Math.PI;
+/** Halvsirkel (øvre bue 08→19). */
+export const PULSE_DAG_BUE_SWEEP = Math.PI;
 
 export function fmtPulseKlokke(hour: number, minute = 0): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+/** Kort time-etikett på halvsirkelen (08 … 19). */
+export function fmtPulseTime(hour: number): string {
+  return String(hour).padStart(2, '0');
 }
 
 /** Andel av verksteddagen som er passert (0 før start, 1 etter slutt). */

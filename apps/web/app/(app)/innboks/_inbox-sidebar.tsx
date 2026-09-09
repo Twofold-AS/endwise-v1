@@ -1,10 +1,10 @@
 'use client';
 
-import { Avatar, type AvatarValg, Button, Check, MessageSquare, Trash2 } from '@endwise/ui';
+import { Avatar, type AvatarValg, Button, MessageSquare } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
 import { useInboxFilter } from '../_shell/inbox-filter';
@@ -20,7 +20,6 @@ import {
 } from './_lib';
 import { useInboxModus } from './_modus';
 import { NyMeldingIkon } from './_ny-melding-ikon';
-import { InboxSorteringVelger } from './_sortering';
 
 /**
  * F6-01 / F5-14 — innboksens egen sidebar.
@@ -43,9 +42,7 @@ export function InboxSidebar() {
   const skjulTelefonListe = Boolean(aktivId || nySamtale);
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, sortering, skjulte, skjul, skjulFlere } = useInboxFilter();
-  const [velgModus, setVelgModus] = useState(false);
-  const [valgte, setValgte] = useState<ReadonlySet<string>>(() => new Set());
+  const { part, sortering, skjulte, velgModus, valgte, toggleValgt } = useInboxFilter();
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -185,65 +182,7 @@ export function InboxSidebar() {
         skjulTelefonListe ? 'max-md:hidden' : ''
       }`}
     >
-      {/**
-       * Mikael CODE-GO 08.09: sort (Modus-plate) · velg + slett · Ny samtale ytterst høyre.
-       */}
-      <div className="relative z-20 flex shrink-0 flex-col overflow-visible px-3 py-1.5">
-        <h2 className="sr-only">Samtaler</h2>
-        <div
-          data-innboks-verktoy
-          className="relative z-20 flex items-center gap-1 overflow-visible"
-          role="toolbar"
-          aria-label="Innboks"
-        >
-          <InboxSorteringVelger />
-          <div className="ml-auto flex items-center justify-end">
-            <button
-              type="button"
-              aria-label="Velg samtaler"
-              title="Velg samtaler"
-              aria-pressed={velgModus}
-              onClick={() => {
-                setVelgModus((v) => !v);
-                setValgte(new Set());
-              }}
-              className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-control ${
-                velgModus ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
-              }`}
-            >
-              <Check size={16} strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              aria-label="Slett valgt samtale"
-              title="Slett valgt samtale"
-              disabled={velgModus ? valgte.size === 0 : !aktivId}
-              className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-danger hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
-              onClick={() => {
-                if (velgModus) {
-                  skjulFlere([...valgte]);
-                  setValgte(new Set());
-                  return;
-                }
-                if (aktivId) skjul(aktivId);
-              }}
-            >
-              <Trash2 size={16} strokeWidth={1.75} />
-            </button>
-            <Link
-              href={'/innboks?ny=1' as Route}
-              aria-label="Ny samtale"
-              title="Ny samtale"
-              data-innboks-ny-samtale
-              className="relative z-20 inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-fg hover:bg-surface-2"
-            >
-              <NyMeldingIkon size={16} />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Samtalene */}
+      <h2 className="sr-only">Samtaler</h2>
       <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
         {threads.isLoading ? (
           <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
@@ -270,14 +209,8 @@ export function InboxSidebar() {
                 key={t.id}
                 type="button"
                 aria-pressed={valgte.has(t.id)}
-                onClick={() => {
-                  setValgte((forrige) => {
-                    const neste = new Set(forrige);
-                    if (neste.has(t.id)) neste.delete(t.id);
-                    else neste.add(t.id);
-                    return neste;
-                  });
-                }}
+                data-innboks-velg={t.id}
+                onClick={() => toggleValgt(t.id)}
                 className="flex w-full items-start gap-2 text-left"
               >
                 <span

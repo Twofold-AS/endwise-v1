@@ -60,11 +60,12 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     ]);
   });
 
-  it('Timeplan-siden bruker Innstillinger-chrome med Avvik-fane', () => {
+  it('Timeplan-siden bruker Innstillinger-chrome med Endringer-fane', () => {
     const saker = les('../app/(app)/saker/page.tsx');
     const nav = les('../app/(app)/_shell/nav.ts');
-    expect(nav).toMatch(/label: 'Avvik'/);
+    expect(nav).toMatch(/label: 'Endringer'/);
     expect(saker).toMatch(/SideChromeSkall/);
+    expect(saker).toMatch(/TimeplanEndringer/);
     expect(saker).not.toMatch(/label="Oversikt"/);
   });
 });

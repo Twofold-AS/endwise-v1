@@ -17,18 +17,36 @@ export type OrgChromeFane = {
   id: OrgChromeId;
   label: string;
   href: string;
+  ingress?: string;
   admin?: boolean;
 };
 
 export const ORG_CHROME_FANER: readonly OrgChromeFane[] = [
-  { id: 'oversikt', label: 'Oversikt', href: '/organisasjon' },
-  { id: 'ansatte', label: 'Ansatte', href: '/organisasjon?seksjon=ansatte' },
-  { id: 'timeplan', label: 'Timeplan', href: '/jobber' },
-  { id: 'abonnement', label: 'Abonnement', href: '/organisasjon?seksjon=abonnement', admin: true },
+  {
+    id: 'oversikt',
+    label: 'Oversikt',
+    href: '/organisasjon',
+    ingress: 'Navn, org.nr og kontakt som vises i appen.',
+  },
+  {
+    id: 'ansatte',
+    label: 'Ansatte',
+    href: '/organisasjon?seksjon=ansatte',
+    ingress: 'Teamet på verkstedet.',
+  },
+  { id: 'timeplan', label: 'Timeplan', href: '/jobber', ingress: 'Kapasitet og kalender.' },
+  {
+    id: 'abonnement',
+    label: 'Abonnement',
+    href: '/organisasjon?seksjon=abonnement',
+    ingress: 'Plan og tjenester.',
+    admin: true,
+  },
   {
     id: 'integrasjoner',
     label: 'Integrasjoner',
     href: '/organisasjon?seksjon=integrasjoner',
+    ingress: 'Koblinger mot Quick og andre systemer.',
     admin: true,
   },
 ];

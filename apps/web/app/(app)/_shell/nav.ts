@@ -233,8 +233,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     pills: [
       { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
       { label: 'Opprett jobb', href: '/bookinger/ny', icon: FilePlus },
-      { label: 'Avvik', href: '/jobber?fane=avvik', icon: ClipboardList },
-      { label: 'Forespørsler', href: '/jobber?fane=forespor', icon: MessageSquarePlus },
+      { label: 'Endringer', href: '/jobber?fane=endringer', icon: ClipboardList },
     ],
   },
   {

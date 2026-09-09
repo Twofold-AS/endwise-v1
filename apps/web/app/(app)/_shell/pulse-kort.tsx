@@ -188,16 +188,19 @@ export function PulseHeroIkoner() {
 export function PulseDagSirkel({
   startHour = PULSE_DAG_START,
   sluttHour = PULSE_DAG_SLUTT,
+  naa,
 }: {
   startHour?: number;
   sluttHour?: number;
+  /** Fast klokke (preview). Tom = live Oslo-tid. */
+  naa?: Date;
 }) {
   const [andel, setAndel] = useState(0);
   const [naaLabel, setNaaLabel] = useState<string | null>(null);
 
   useEffect(() => {
     function tick() {
-      const d = dagFremgang(new Date(), startHour, sluttHour);
+      const d = dagFremgang(naa ?? new Date(), startHour, sluttHour);
       setAndel(d.andel);
       setNaaLabel(d.naaLabel);
     }
@@ -207,7 +210,7 @@ export function PulseDagSirkel({
       window.cancelAnimationFrame(raf);
       window.clearInterval(id);
     };
-  }, [startHour, sluttHour]);
+  }, [startHour, sluttHour, naa]);
 
   const startLabel = fmtPulseKlokke(startHour);
   const sluttLabel = fmtPulseKlokke(sluttHour);
@@ -255,6 +258,7 @@ export function PulseHeroFlate({
   endringer,
   lasterEndringer,
   href,
+  sirkelNaa,
 }: {
   ukedag: string;
   dato: string;
@@ -265,6 +269,7 @@ export function PulseHeroFlate({
   endringer: number;
   lasterEndringer: boolean;
   href: string;
+  sirkelNaa?: Date;
 }) {
   return (
     <div
@@ -294,7 +299,7 @@ export function PulseHeroFlate({
           </div>
         </Link>
         <div data-pulse-del="2" className="flex w-[148px] shrink-0 flex-col items-end gap-2">
-          <PulseDagSirkel />
+          <PulseDagSirkel naa={sirkelNaa} />
           <PulseEndringerLenke antall={endringer} laster={lasterEndringer} />
         </div>
       </div>

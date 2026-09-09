@@ -43,37 +43,30 @@ function funksjon(kilde: string, navn: string) {
 }
 
 describe('CODE-GO Mikael — IA + chrome', () => {
-  it('toppkort: ingen Endringer, Modus-plate Avvik/Forespørsler → Timeplan-faner', () => {
+  it('toppkort: halvsirkel + Avvik/Forespørsler-boks + Endringer → Timeplan › Endringer', () => {
     expect(PULSE_AVVIK_HREF).toBe(TIMEPLAN_AVVIK_HREF);
     expect(PULSE_FORESPORSEL_HREF).toBe(TIMEPLAN_FORESPOR_HREF);
     expect(PULSE_AVVIK_HREF).toBe('/jobber?fane=avvik');
     expect(PULSE_FORESPORSEL_HREF).toBe('/jobber?fane=forespor');
-    expect(PULSE_ENDRINGER_HREF).toBe('/jobber?fane=avvik');
-    expect(timeplanHref('avvik')).toBe('/jobber?fane=avvik');
-    expect(timeplanHref('forespor')).toBe('/jobber?fane=forespor');
+    expect(PULSE_ENDRINGER_HREF).toBe('/jobber?fane=endringer');
+    expect(timeplanHref('endringer')).toBe('/jobber?fane=endringer');
     expect(timeplanHref('opprett')).toBe('/bookinger/ny');
-    expect(parseTimeplanFane('/jobber', 'avvik')).toBe('avvik');
-    expect(parseTimeplanFane('/jobber', 'forespor')).toBe('forespor');
+    expect(parseTimeplanFane('/jobber', 'avvik')).toBe('endringer');
+    expect(parseTimeplanFane('/jobber', 'forespor')).toBe('endringer');
     expect(parseTimeplanFane('/bookinger/ny', null)).toBe('opprett');
-    expect(TIMEPLAN_FANER.map((f) => f.label)).toEqual([
-      'Timeplan',
-      'Opprett jobb',
-      'Avvik',
-      'Forespørsler',
-    ]);
+    expect(TIMEPLAN_FANER.map((f) => f.label)).toEqual(['Timeplan', 'Opprett jobb', 'Endringer']);
 
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     expect(hero).toMatch(/data-pulse-del="1"/);
     expect(hero).toMatch(/PulseDagSirkel/);
-    expect(hero).toMatch(/PulseValgLenke/);
-    expect(kort).toMatch(/ew-modus-plate/);
-    expect(hero).not.toMatch(/PulseEndringerLenke/);
-    expect(hero).not.toMatch(/Endringer/);
-    expect(hero).toMatch(/PULSE_AVVIK_HREF/);
-    expect(hero).toMatch(/PULSE_FORESPORSEL_HREF/);
+    expect(hero).toMatch(/PulseAvvikForesporBoks/);
+    expect(hero).toMatch(/PulseEndringerLenke/);
+    expect(hero).toMatch(/Endringer/);
+    expect(hero).not.toMatch(/PulseValgLenke/);
+    expect(kort).not.toMatch(/ew-modus-plate/);
     expect(les('../app/(app)/avvik/page.tsx')).toMatch(/jobber\?fane=avvik/);
-    expect(les('../app/(app)/timeplan/endringer/page.tsx')).toMatch(/jobber\?fane=avvik/);
+    expect(les('../app/(app)/timeplan/endringer/page.tsx')).toMatch(/jobber\?fane=endringer/);
   });
 
   it('Jobb-rad: etikett venstre, ikon flush høyre', () => {
@@ -94,17 +87,12 @@ describe('CODE-GO Mikael — IA + chrome', () => {
 
     const tp = phoneSideChrome(
       '/jobber',
-      { get: () => 'avvik' },
+      { get: () => 'endringer' },
       { isAdmin: true, erForhandler: true },
     );
     expect(tp?.tittel).toBe('Timeplan');
-    expect(tp?.aktiv).toBe('avvik');
-    expect(tp?.faner.map((f) => f.label)).toEqual([
-      'Timeplan',
-      'Opprett jobb',
-      'Avvik',
-      'Forespørsler',
-    ]);
+    expect(tp?.aktiv).toBe('endringer');
+    expect(tp?.faner.map((f) => f.label)).toEqual(['Timeplan', 'Opprett jobb', 'Endringer']);
 
     const ku = phoneSideChrome(
       '/kunder',
@@ -156,8 +144,7 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     expect(timeplan?.pills?.map((p) => p.label)).toEqual([
       'Timeplan',
       'Opprett jobb',
-      'Avvik',
-      'Forespørsler',
+      'Endringer',
     ]);
     const kunder = FORHANDLER_NAV.find((i) => i.key === 'kunder');
     expect(kunder?.pills?.map((p) => p.label)).toEqual([

@@ -13,6 +13,8 @@ export type DitherDonutChartProps = {
   slices: DitherDonutSlice[];
   /** Canvas-radianer. Default −π/2 = kl. 12. π = venstre, klokkevis mot høyre. */
   startAngle?: number;
+  /** Buelengde i radianer. Default 2π (hel ring). π = halvsirkel. */
+  sweep?: number;
 };
 
 function drawRoundedWedge(
@@ -71,8 +73,10 @@ export function DitherDonutChart({
   className = '',
   slices,
   startAngle = -Math.PI / 2,
+  sweep = Math.PI * 2,
 }: DitherDonutChartProps) {
   const startAngleProp = startAngle;
+  const sweepProp = sweep > 0 ? sweep : Math.PI * 2;
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const { canvasRef, rect, isVisible, reducedMotion } = useCanvasSetup();
 
@@ -148,9 +152,9 @@ export function DitherDonutChart({
       for (let i = 0; i < dispSharesRef.current.length; i++) {
         const share = dispSharesRef.current[i] ?? 0;
         if (share === 0) continue;
-        const sweep = share * Math.PI * 2;
+        const sliceSweep = share * sweepProp;
         const aStart = startAngle + gap / 2;
-        let aEnd = startAngle + sweep - gap / 2;
+        let aEnd = startAngle + sliceSweep - gap / 2;
         if (aEnd < aStart) aEnd = aStart;
         const sliceColor = slices[i]?.color ?? '#8f99a8';
 
@@ -199,7 +203,7 @@ export function DitherDonutChart({
           }
         }
         ctx.restore();
-        startAngle += sweep;
+        startAngle += sliceSweep;
       }
       ctx.restore();
       requestRef.current = requestAnimationFrame(draw);
@@ -209,7 +213,7 @@ export function DitherDonutChart({
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [canvasRef, isVisible, rect, reducedMotion, slices, startAngleProp]);
+  }, [canvasRef, isVisible, rect, reducedMotion, slices, startAngleProp, sweepProp]);
 
   return (
     <div
@@ -234,7 +238,7 @@ export function DitherDonutChart({
           let acc = 0;
           let found = null as number | null;
           for (let i = 0; i < shares.length; i++) {
-            acc += (shares[i] ?? 0) * Math.PI * 2;
+            acc += (shares[i] ?? 0) * sweepProp;
             if (angle <= acc) {
               found = i;
               break;

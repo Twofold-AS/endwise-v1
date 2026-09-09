@@ -8,8 +8,9 @@ import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-ho
 import {
   analyserMockStats,
   ansattePulse,
-  endringerTeller,
+  avvikTeller,
   endringerVindu,
+  foresporTeller,
   idagVisning,
   innboksRad,
   lagerRad,
@@ -59,7 +60,8 @@ export function useDealerHjemKort() {
   const jobber = bookings.data ?? [];
   const idag = idagVisning(jobber, naa);
   const dag = pulsdagOverskrift(naa);
-  const endringer = endringerTeller(jobber);
+  const avvik = avvikTeller(jobber);
+  const forespor = foresporTeller(jobber);
   const innboks = innboksRad(threads.data ?? []);
   const lager = lagerRad(deler.data ?? []);
   const ansatte = ansattePulse(oversikt.data ?? [], jobber, naa);
@@ -72,7 +74,8 @@ export function useDealerHjemKort() {
     deler,
     idag,
     dag,
-    endringer,
+    avvik,
+    forespor,
     innboks,
     lager,
     ansatte,
@@ -81,8 +84,20 @@ export function useDealerHjemKort() {
 }
 
 export function DealerPulseKort({ className }: { className?: string }) {
-  const { bookings, threads, oversikt, deler, idag, dag, innboks, lager, ansatte, analyser } =
-    useDealerHjemKort();
+  const {
+    bookings,
+    threads,
+    oversikt,
+    deler,
+    idag,
+    dag,
+    avvik,
+    forespor,
+    innboks,
+    lager,
+    ansatte,
+    analyser,
+  } = useDealerHjemKort();
   const lasterJobber = bookings.isLoading;
 
   return (
@@ -95,6 +110,9 @@ export function DealerPulseKort({ className }: { className?: string }) {
         paagaar={idag.paagaar}
         ferdig={idag.ferdig}
         lasterJobber={lasterJobber}
+        avvik={avvik}
+        forespor={forespor}
+        lasterEndringer={lasterJobber}
       />
 
       <PulseRadKort

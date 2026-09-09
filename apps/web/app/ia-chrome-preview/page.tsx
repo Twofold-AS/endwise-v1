@@ -1,22 +1,28 @@
 'use client';
 
+import { InboxFilterProvider } from '../(app)/_shell/inbox-filter';
 import { PHONE_BAR2, PHONE_PROFIL_SIRKEL, PHONE_RONNY_SIRKEL } from '../(app)/_shell/phone-chrome';
+import { PhoneProfilMeny } from '../(app)/_shell/phone-profil-meny';
 import { phoneSideChrome } from '../(app)/_shell/phone-side-chrome';
 import { PulseJobbFlis } from '../(app)/_shell/pulse-kort';
 import { SideChromeSkall } from '../(app)/_shell/side-chrome-skall';
 import { RonnyBot } from '../(app)/_workshop/ronny-bot';
 import type { RonnyAnsikt } from '../(app)/_workshop/ronny-idle';
+import { InboxTopBar2 } from '../(app)/innboks/_top-bar2';
+import { OrgRad } from '../(app)/organisasjon/_org-rad';
 
 /**
  * Midlertidig visuell GO-flate (uten innlogging). Ikke en produkt-rute.
- * Viser Innstillinger-chrome for Timeplan / Kunder / Tjenester / Org + Ronny.
+ * Viser Innstillinger-chrome for Timeplan / Kunder / Tjenester / Org / Innboks + profil.
  */
 
 const SIDER: { sti: string; query?: Record<string, string> }[] = [
   { sti: '/jobber' },
+  { sti: '/jobber', query: { fane: 'endringer' } },
   { sti: '/kunder' },
   { sti: '/prisliste' },
   { sti: '/organisasjon' },
+  { sti: '/innboks' },
 ];
 
 const RONNY_ANSIKT: { id: RonnyAnsikt; label: string }[] = [
@@ -58,28 +64,34 @@ function PhoneChromeMock({ sti, query }: { sti: string; query?: Record<string, s
         </div>
       </div>
       <div data-phone-top-bar="2" className={PHONE_BAR2}>
-        <nav
-          data-phone-settings-nav
-          data-phone-side-nav={chrome.id}
-          aria-label={chrome.tittel}
-          className="flex min-w-0 flex-1 items-end gap-5 overflow-x-auto"
-        >
-          {chrome.faner.map((f) => {
-            const aktiv = f.id === chrome.aktiv;
-            return (
-              <span
-                key={f.id}
-                data-phone-settings-fane={f.id}
-                aria-current={aktiv ? 'page' : undefined}
-                className={`shrink-0 border-b-2 pb-1 text-label ${
-                  aktiv ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
-                }`}
-              >
-                {f.label}
-              </span>
-            );
-          })}
-        </nav>
+        {chrome.bar2 === 'innboks' ? (
+          <InboxFilterProvider>
+            <InboxTopBar2 />
+          </InboxFilterProvider>
+        ) : (
+          <nav
+            data-phone-settings-nav
+            data-phone-side-nav={chrome.id}
+            aria-label={chrome.tittel}
+            className="flex min-w-0 flex-1 items-end gap-5 overflow-x-auto"
+          >
+            {chrome.faner.map((f) => {
+              const aktiv = f.id === chrome.aktiv;
+              return (
+                <span
+                  key={f.id}
+                  data-phone-settings-fane={f.id}
+                  aria-current={aktiv ? 'page' : undefined}
+                  className={`shrink-0 border-b-2 pb-1 text-label ${
+                    aktiv ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
+                  }`}
+                >
+                  {f.label}
+                </span>
+              );
+            })}
+          </nav>
+        )}
       </div>
       <div className="h-px bg-border" />
     </div>
@@ -93,7 +105,7 @@ export default function IaChromePreview() {
         <p className="text-title text-fg">IA-chrome preview</p>
 
         {SIDER.map((s) => (
-          <PhoneChromeMock key={s.sti} sti={s.sti} query={s.query} />
+          <PhoneChromeMock key={`${s.sti}:${s.query?.fane ?? ''}`} sti={s.sti} query={s.query} />
         ))}
 
         <section data-ia-chrome-preview="ronny" className="flex flex-col gap-3">
@@ -121,13 +133,68 @@ export default function IaChromePreview() {
           faner={[
             { id: 'timeplan', label: 'Timeplan', href: '/jobber' },
             { id: 'opprett', label: 'Opprett jobb', href: '/bookinger/ny' },
-            { id: 'avvik', label: 'Avvik', href: '/jobber?fane=avvik' },
-            { id: 'forespor', label: 'Forespørsler', href: '/jobber?fane=forespor' },
+            { id: 'endringer', label: 'Endringer', href: '/jobber?fane=endringer' },
           ]}
-          aktiv="timeplan"
+          aktiv="endringer"
         >
-          <p className="text-body text-fg-muted">Innhold utelatt — kun chrome.</p>
+          <div data-timeplan-endringer-flate className="flex flex-col gap-5">
+            <div className="flex flex-wrap gap-5">
+              <span
+                data-endringer-fane="avvik"
+                className="inline-flex items-center border-fg border-b-2 pb-1 text-label font-[650] text-fg"
+              >
+                Avvik
+              </span>
+              <span
+                data-endringer-fane="forespor"
+                className="inline-flex items-center border-transparent border-b-2 pb-1 text-label text-fg-muted"
+              >
+                Forespørsler
+              </span>
+            </div>
+            <p className="text-body text-fg-muted">Ingen ventende avvik.</p>
+          </div>
         </SideChromeSkall>
+
+        <SideChromeSkall
+          tittel="Organisasjon"
+          ingress="Ansatte, abonnement og integrasjoner."
+          faner={[
+            {
+              id: 'oversikt',
+              label: 'Oversikt',
+              href: '/organisasjon',
+              ingress: 'Navn, org.nr og kontakt som vises i appen.',
+            },
+          ]}
+          aktiv="oversikt"
+        >
+          <div data-org-oversikt className="flex flex-col">
+            <OrgRad label="Firmanavn" verdi="Endwise Demo" onEndre={() => undefined} />
+            <OrgRad label="Slug" verdi="endwise-demo" lesing />
+            <OrgRad label="Orgnr" verdi="999 999 999" onEndre={() => undefined} />
+            <OrgRad label="Telefon" verdi="22 00 00 00" onEndre={() => undefined} siste />
+          </div>
+        </SideChromeSkall>
+
+        <section data-ia-chrome-preview="profil" className="relative min-h-[420px]">
+          <p className="mb-3 text-title text-fg">Profilmeny</p>
+          <div className="relative overflow-visible rounded-[16px] bg-bg ring-1 ring-divide">
+            <div data-phone-top-bar="1" className="relative flex h-row w-full items-center px-3">
+              <span className="ml-auto">
+                <span className={PHONE_PROFIL_SIRKEL}>M</span>
+              </span>
+              <PhoneProfilMeny
+                apen
+                onLukk={() => undefined}
+                navn="Mikael"
+                epost="mikael@twofold.no"
+                innstillingerHref="/innstillinger"
+                tvingVis
+              />
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -4,18 +4,18 @@ import { MessageSquare } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { InboxFilterProvider } from '../(app)/_shell/inbox-filter';
+import { PHONE_BAR2, PHONE_PROFIL_SIRKEL, PHONE_RONNY_SIRKEL } from '../(app)/_shell/phone-chrome';
 import { PHONE_SAFE_TOP } from '../(app)/_shell/phone-home';
-import { NyMeldingIkon } from '../(app)/innboks/_ny-melding-ikon';
-import { InboxSorteringVelger } from '../(app)/innboks/_sortering';
+import { InboxTopBar2 } from '../(app)/innboks/_top-bar2';
 
 /**
- * Uinnlogget visuell GO for innboks (tom, sort, telefon-tråd).
- * ?vis=tom|sorter|trad
+ * Uinnlogget visuell GO for innboks (Settings-chrome + top-bar 2).
+ * ?vis=tom|sorter|gruppe|slett|trad
  */
-type Vis = 'tom' | 'sorter' | 'trad';
+type Vis = 'tom' | 'sorter' | 'gruppe' | 'slett' | 'trad';
 
 function lesVis(raw: string | null): Vis {
-  if (raw === 'sorter' || raw === 'trad') return raw;
+  if (raw === 'sorter' || raw === 'gruppe' || raw === 'slett' || raw === 'trad') return raw;
   return 'tom';
 }
 
@@ -27,50 +27,55 @@ function InnboksPreviewInner() {
         data-innboks-preview={vis}
         className={`mx-auto flex min-h-dvh w-full max-w-[390px] flex-col bg-bg text-fg ${PHONE_SAFE_TOP}`}
       >
-        <header className="shrink-0 border-border border-b px-3 py-2">
-          <p className="text-title text-fg">Innboks</p>
-        </header>
-        {vis === 'trad' ? <TradGo /> : <ListeGo sorterApen={vis === 'sorter'} />}
+        <div data-phone-top-bar="1" className="relative flex h-row w-full items-center gap-2 px-3">
+          <span className="relative z-10 inline-flex size-8 shrink-0 items-center justify-start text-fg">
+            ←
+          </span>
+          <p className="pointer-events-none absolute inset-x-10 truncate text-center text-title text-fg">
+            Innboks
+          </p>
+          <div className="relative z-10 ml-auto flex shrink-0 items-center gap-2">
+            <span className={PHONE_RONNY_SIRKEL} />
+            <span className={PHONE_PROFIL_SIRKEL}>M</span>
+          </div>
+        </div>
+        <div data-phone-top-bar="2" className={PHONE_BAR2}>
+          <InboxTopBar2 />
+        </div>
+        <div className="h-px bg-border" />
+        {vis === 'trad' ? <TradGo /> : <ListeGo vis={vis} />}
       </div>
     </InboxFilterProvider>
   );
 }
 
-function ListeGo({ sorterApen }: { sorterApen: boolean }) {
+function ListeGo({ vis }: { vis: Vis }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div
-        data-innboks-verktoy
-        className="flex shrink-0 items-center gap-1 px-3 py-1.5"
-        role="toolbar"
-        aria-label="Innboks"
-      >
-        <InboxSorteringVelger startApen={sorterApen} />
-        <div className="ml-auto flex items-center">
-          <span className="inline-flex min-h-11 min-w-11 items-center justify-center text-fg">
-            ✓
-          </span>
-          <span className="inline-flex min-h-11 min-w-11 items-center justify-center text-danger">
-            ⌫
-          </span>
+      {vis === 'slett' ? (
+        <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
           <button
             type="button"
-            data-innboks-ny-samtale
-            className="inline-flex min-h-11 min-w-11 items-center justify-center text-fg"
-            aria-label="Ny samtale"
+            data-innboks-velg="preview-1"
+            className="flex w-full items-start gap-2 text-left"
           >
-            <NyMeldingIkon size={16} />
+            <span className="mt-3 size-4 shrink-0 rounded-sm border border-fg bg-fg" aria-hidden />
+            <span className="min-w-0 flex-1 rounded-control border border-border px-3 py-2.5">
+              <p className="text-label text-fg">Kari Nordmann</p>
+              <p className="text-[12px] text-fg-muted">EU-kontroll i morgen?</p>
+            </span>
           </button>
         </div>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 py-10 text-center">
-        <MessageSquare size={20} className="text-fg-muted" />
-        <p className="text-label text-fg">Ingen samtaler</p>
-        <p className="text-[12px] text-fg-muted">Innboksen er tom.</p>
-        <span className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[12px] text-bg">
-          Send melding
-        </span>
-      </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 py-10 text-center">
+          <MessageSquare size={20} className="text-fg-muted" />
+          <p className="text-label text-fg">Ingen samtaler</p>
+          <p className="text-[12px] text-fg-muted">Innboksen er tom.</p>
+          <span className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[12px] text-bg">
+            Send melding
+          </span>
+        </div>
+      )}
     </div>
   );
 }

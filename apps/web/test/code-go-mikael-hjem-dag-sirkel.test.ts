@@ -44,18 +44,17 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
     expect(dagFremgang(osloVeggklokke('2026-08-29', 22, 0)).andel).toBe(1);
   });
 
-  it('Avvik og Forespørsler sitter nederst og peker på Timeplan-faner', () => {
+  it('Avvik og Forespørsler er visningstall; Endringer peker på Timeplan', () => {
     expect(PULSE_AVVIK_HREF).toBe('/jobber?fane=avvik');
     expect(PULSE_FORESPORSEL_HREF).toBe('/jobber?fane=forespor');
     expect(PARKED_LABEL['/avvik']).toBe('Avvik');
     expect(PARKED_LABEL['/timeplan/endringer']).toBe('Endringer');
     expect(les('../app/(app)/avvik/page.tsx')).toMatch(/jobber\?fane=avvik/);
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(kort).not.toMatch(/PulseEndringerLenke/);
-    expect(kort).toMatch(/PulseValgLenke/);
+    expect(kort).toMatch(/PulseEndringerLenke/);
+    expect(kort).toMatch(/PulseAvvikForesporBoks/);
+    expect(kort).not.toMatch(/PulseValgLenke/);
     expect(kort).toMatch(/TriangleAlert/);
-    expect(kort).toMatch(/PULSE_AVVIK_HREF/);
-    expect(kort).toMatch(/PULSE_FORESPORSEL_HREF/);
     expect(kort).toMatch(/data-pulse-hero-bunn/);
   });
 

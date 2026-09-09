@@ -48,8 +48,7 @@ describe('Jonas IA — forhandler sidebar', () => {
     expect(FORHANDLER_NAV.find((i) => i.key === 'saker')?.pills?.map((p) => p.label)).toEqual([
       'Timeplan',
       'Opprett jobb',
-      'Avvik',
-      'Forespørsler',
+      'Endringer',
     ]);
     expect(FORHANDLER_NAV.find((i) => i.key === 'kunder')?.pills?.map((p) => p.label)).toEqual([
       'Alle kunder',
@@ -154,9 +153,9 @@ describe('Jonas IA — breadcrumb og piller', () => {
     expect(breadcrumbFor('/jobber', '', 'forhandler')).toEqual([
       { label: 'Timeplan', href: '/jobber' },
     ]);
-    expect(breadcrumbFor('/jobber', 'fane=avvik', 'forhandler')).toEqual([
+    expect(breadcrumbFor('/jobber', 'fane=endringer', 'forhandler')).toEqual([
       { label: 'Timeplan', href: '/jobber' },
-      { label: 'Avvik' },
+      { label: 'Endringer' },
     ]);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
       { label: 'Tjenester', href: '/prisliste' },

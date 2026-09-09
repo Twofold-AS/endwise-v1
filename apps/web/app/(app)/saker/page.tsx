@@ -6,20 +6,25 @@ import { Suspense, useEffect, useState } from 'react';
 import { osloKalenderdag } from '../_lib/oslo-dag';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { TimeplanStripe } from '../_shell/timeplan-stripe';
-import { TimeplanAvvik } from '../jobber/_avvik';
-import { parseTimeplanFane, TIMEPLAN_FANER, timeplanHref } from '../jobber/_faner';
-import { TimeplanForespor } from '../jobber/_forespor';
+import { TimeplanEndringer } from '../jobber/_endringer';
+import {
+  parseEndringerDel,
+  parseTimeplanFane,
+  TIMEPLAN_FANER,
+  timeplanHref,
+} from '../jobber/_faner';
 import { TimeplanFlate } from '../mekanikere/kapasitet/page';
 import { Kalender } from './_kalender';
 
 /**
- * Timeplan. Chrome: Timeplan · Opprett jobb · Avvik · Forespørsler.
- * Liste/kalender bor i Timeplan-fanen. Opprett jobb er /bookinger/ny.
+ * Timeplan. Chrome: Timeplan · Opprett jobb · Endringer.
+ * Endringer lister Avvik og Forespørsler med Innstillinger-inndeling.
  */
 function TimeplanPageInner() {
   const params = useSearchParams();
   const router = useRouter();
   const aktiv = parseTimeplanFane('/jobber', params?.get('fane'));
+  const endringerDel = parseEndringerDel('/jobber', params?.get('fane'));
   const visning = params?.get('visning') === 'kalender' ? 'kalender' : 'liste';
   const [valgt, setValgt] = useState(() => osloKalenderdag(new Date()));
 
@@ -34,8 +39,7 @@ function TimeplanPageInner() {
       faner={TIMEPLAN_FANER.map((f) => ({ ...f, href: timeplanHref(f.id) }))}
       aktiv={aktiv}
     >
-      {aktiv === 'avvik' ? <TimeplanAvvik /> : null}
-      {aktiv === 'forespor' ? <TimeplanForespor /> : null}
+      {aktiv === 'endringer' ? <TimeplanEndringer del={endringerDel} /> : null}
       {aktiv === 'timeplan' ? (
         <div className="flex flex-col gap-5">
           <TimeplanStripe valgt={valgt} onValgt={setValgt} />

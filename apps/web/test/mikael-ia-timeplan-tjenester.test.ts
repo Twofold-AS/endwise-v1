@@ -67,8 +67,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(FORHANDLER_NAV.find((i) => i.key === 'saker')?.pills?.map((p) => p.label)).toEqual([
       'Timeplan',
       'Opprett jobb',
-      'Avvik',
-      'Forespørsler',
+      'Endringer',
     ]);
     expect(FORHANDLER_NAV.find((i) => i.key === 'tjenester')?.href).toBe('/prisliste');
     expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([

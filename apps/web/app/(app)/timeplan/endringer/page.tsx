@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 
-/** Endringer-ruten peker på Timeplan › Avvik. */
+/** Endringer-ruten peker på Timeplan › Endringer. */
 export default function TimeplanEndringerAlias() {
-  redirect('/jobber?fane=avvik' as Route);
+  redirect('/jobber?fane=endringer' as Route);
 }

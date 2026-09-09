@@ -4,7 +4,7 @@ import { FELT_MD, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../../_lib/lyd';
-import { CardShell } from '../../_shell/cards';
+import { OrgRad } from '../_org-rad';
 
 const INPUT = `${FELT_MD} disabled:bg-surface-2 disabled:text-fg-muted`;
 
@@ -30,6 +30,12 @@ const TOMT: Skjema = {
   website: '',
 };
 
+type RadNokkel = keyof Skjema | null;
+
+/**
+ * Organisasjon › Oversikt — Innstillinger-rader (label · verdi · Endre).
+ * Ikke CardShell-skjema. Slug er lesing.
+ */
 export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slug?: string }) {
   const utils = trpc.useUtils();
   const lyd = useLyd();
@@ -42,6 +48,7 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
   const laster = lesing ? inspect.isLoading : dealer.isLoading;
 
   const [skjema, setSkjema] = useState<Skjema>(TOMT);
+  const [apen, setApen] = useState<RadNokkel>(null);
 
   useEffect(() => {
     if (!data) return;
@@ -61,10 +68,15 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
     onSuccess: () => {
       void utils.forhandler.get.invalidate();
       void utils.session.me.invalidate();
+      setApen(null);
       lyd.suksess();
     },
     onError: () => lyd.feil(),
   });
+
+  function toggle(nokkel: RadNokkel) {
+    setApen((forrige) => (forrige === nokkel ? null : nokkel));
+  }
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -102,137 +114,185 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
   const leftoverKeys = Object.keys(leftover);
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <CardShell className="flex flex-col gap-4 p-4">
-        <Felt
+    <div data-org-oversikt className="flex flex-col">
+      <form onSubmit={onSubmit} className="flex flex-col">
+        <OrgRad
           label="Firmanavn"
-          value={skjema.name}
-          onChange={(name) => setSkjema((s) => ({ ...s, name }))}
-          disabled={lesing}
-        />
-        <label className="flex flex-col gap-1.5">
-          <span className="text-label text-fg">Slug</span>
-          <input value={vis.slug} readOnly disabled className={INPUT} aria-label="Slug" />
-          <span className="text-[12px] text-fg-muted">
-            Settes ved opprettelse. Quick overskriver den ikke.
-          </span>
-        </label>
-        <Felt
+          verdi={skjema.name}
+          apen={apen === 'name'}
+          onEndre={() => toggle('name')}
+          lesing={lesing}
+        >
+          <OrgFelt
+            label="Firmanavn"
+            value={skjema.name}
+            onChange={(name) => setSkjema((s) => ({ ...s, name }))}
+          />
+        </OrgRad>
+        <OrgRad label="Slug" verdi={vis.slug || '—'} lesing />
+        <OrgRad
           label="Orgnr"
-          value={skjema.orgnr}
-          onChange={(orgnr) => setSkjema((s) => ({ ...s, orgnr }))}
-          disabled={lesing}
-        />
-        <Felt
+          verdi={skjema.orgnr}
+          apen={apen === 'orgnr'}
+          onEndre={() => toggle('orgnr')}
+          lesing={lesing}
+        >
+          <OrgFelt
+            label="Orgnr"
+            value={skjema.orgnr}
+            onChange={(orgnr) => setSkjema((s) => ({ ...s, orgnr }))}
+          />
+        </OrgRad>
+        <OrgRad
           label="Adresse"
-          value={skjema.address}
-          onChange={(address) => setSkjema((s) => ({ ...s, address }))}
-          disabled={lesing}
-        />
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Felt
+          verdi={skjema.address}
+          apen={apen === 'address'}
+          onEndre={() => toggle('address')}
+          lesing={lesing}
+        >
+          <OrgFelt
+            label="Adresse"
+            value={skjema.address}
+            onChange={(address) => setSkjema((s) => ({ ...s, address }))}
+          />
+        </OrgRad>
+        <OrgRad
+          label="Postnr"
+          verdi={skjema.postalCode}
+          apen={apen === 'postalCode'}
+          onEndre={() => toggle('postalCode')}
+          lesing={lesing}
+        >
+          <OrgFelt
             label="Postnr"
             value={skjema.postalCode}
             onChange={(postalCode) => setSkjema((s) => ({ ...s, postalCode }))}
-            disabled={lesing}
           />
-          <Felt
+        </OrgRad>
+        <OrgRad
+          label="Poststed"
+          verdi={skjema.city}
+          apen={apen === 'city'}
+          onEndre={() => toggle('city')}
+          lesing={lesing}
+        >
+          <OrgFelt
             label="Poststed"
             value={skjema.city}
             onChange={(city) => setSkjema((s) => ({ ...s, city }))}
-            disabled={lesing}
           />
-        </div>
-        <Felt
+        </OrgRad>
+        <OrgRad
           label="Telefon"
-          value={skjema.phone}
-          onChange={(phone) => setSkjema((s) => ({ ...s, phone }))}
-          disabled={lesing}
-        />
-        <Felt
+          verdi={skjema.phone}
+          apen={apen === 'phone'}
+          onEndre={() => toggle('phone')}
+          lesing={lesing}
+        >
+          <OrgFelt
+            label="Telefon"
+            value={skjema.phone}
+            onChange={(phone) => setSkjema((s) => ({ ...s, phone }))}
+          />
+        </OrgRad>
+        <OrgRad
           label="Forhandler-epost"
-          value={skjema.email}
-          onChange={(email) => setSkjema((s) => ({ ...s, email }))}
-          disabled={lesing}
-          type="email"
-        />
-        <Felt
+          verdi={skjema.email}
+          apen={apen === 'email'}
+          onEndre={() => toggle('email')}
+          lesing={lesing}
+        >
+          <OrgFelt
+            label="Forhandler-epost"
+            value={skjema.email}
+            onChange={(email) => setSkjema((s) => ({ ...s, email }))}
+            type="email"
+          />
+        </OrgRad>
+        <OrgRad
           label="Nettside"
-          value={skjema.website}
-          onChange={(website) => setSkjema((s) => ({ ...s, website }))}
-          disabled={lesing}
-        />
-      </CardShell>
+          verdi={skjema.website}
+          apen={apen === 'website'}
+          onEndre={() => toggle('website')}
+          lesing={lesing}
+          siste={leftoverKeys.length === 0 && lesing}
+        >
+          <OrgFelt
+            label="Nettside"
+            value={skjema.website}
+            onChange={(website) => setSkjema((s) => ({ ...s, website }))}
+          />
+        </OrgRad>
 
-      {leftoverKeys.length > 0 ? (
-        <details className="rounded-xl border border-border px-4 py-3">
-          <summary className="cursor-pointer text-label text-fg">Mer fra Quick</summary>
-          <ul className="mt-3 flex flex-col gap-1.5 text-[12px] text-fg-muted">
-            {leftoverKeys.map((key) => (
-              <li key={key}>
-                <span className="text-fg">{key}</span>
-                {': '}
-                {formatLeftover(leftover[key])}
-              </li>
-            ))}
-          </ul>
-        </details>
-      ) : null}
+        {leftoverKeys.length > 0 ? (
+          <details className="border-border border-b px-0 py-4">
+            <summary className="cursor-pointer text-label text-fg">Mer fra Quick</summary>
+            <ul className="mt-3 flex flex-col gap-1.5 text-[12px] text-fg-muted">
+              {leftoverKeys.map((key) => (
+                <li key={key}>
+                  <span className="text-fg">{key}</span>
+                  {': '}
+                  {formatLeftover(leftover[key])}
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
 
-      {lesing ? null : (
-        <div className="flex flex-col gap-2">
-          <StatefulButton
-            type="submit"
-            disabled={lagre.isPending || !skjema.name.trim()}
-            state={
-              lagre.isPending
-                ? 'loading'
-                : lagre.isError
-                  ? 'error'
-                  : lagre.isSuccess
-                    ? 'success'
-                    : 'idle'
-            }
-            loadingText="Lagrer…"
-            successText="Lagret"
-            errorText="Feilet"
-          >
-            Lagre
-          </StatefulButton>
-          {lagre.error ? (
-            <p className="text-body text-danger">{lagre.error.message}</p>
-          ) : (
-            <p className="text-[11px] text-fg-muted">
-              Dette er verkstedets kontakt, ikke innloggings-e-posten din.
-            </p>
-          )}
-        </div>
-      )}
-    </form>
+        {lesing ? null : (
+          <div className="flex flex-col gap-2 py-4">
+            <div className="flex justify-end">
+              <StatefulButton
+                type="submit"
+                disabled={lagre.isPending || !skjema.name.trim()}
+                state={
+                  lagre.isPending
+                    ? 'loading'
+                    : lagre.isError
+                      ? 'error'
+                      : lagre.isSuccess
+                        ? 'success'
+                        : 'idle'
+                }
+                loadingText="Lagrer…"
+                successText="Lagret"
+                errorText="Feilet"
+              >
+                Lagre
+              </StatefulButton>
+            </div>
+            {lagre.error ? (
+              <p className="text-body text-danger">{lagre.error.message}</p>
+            ) : (
+              <p className="text-[11px] text-fg-muted">
+                Dette er verkstedets kontakt, ikke innloggings-e-posten din.
+              </p>
+            )}
+          </div>
+        )}
+      </form>
+    </div>
   );
 }
 
-function Felt({
+function OrgFelt({
   label,
   value,
   onChange,
-  disabled,
   type = 'text',
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
-  disabled?: boolean;
   type?: string;
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-label text-fg">{label}</span>
+      <span className="sr-only">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
         aria-label={label}
         className={INPUT}
       />

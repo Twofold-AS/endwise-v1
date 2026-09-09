@@ -58,6 +58,7 @@ describe('CODE-GO Mikael — toppkort polish 08–19 + bunn-ikoner + Jobb', () =
     const sirkel = funksjon(kort, 'PulseDagSirkel');
     expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).toMatch(/startAngle=\{PULSE_DAG_BUE_START\}/);
+    expect(sirkel).toMatch(/sweep=\{PULSE_DAG_BUE_SWEEP\}/);
     expect(sirkel).toMatch(/#141414/);
     expect(sirkel).not.toMatch(/#0066ff/);
     const donut = les('../../../packages/ui/src/vendor/amicro/dither-donut.tsx');
@@ -65,30 +66,28 @@ describe('CODE-GO Mikael — toppkort polish 08–19 + bunn-ikoner + Jobb', () =
     expect(donut).toMatch(/let startAngle = startAngleProp/);
   });
 
-  it('sirkel sitter ved siden av Del 1; Avvik og Forespørsler er Modus-plater mot Timeplan', () => {
+  it('halvsirkel sitter på teller-rad; Avvik/Forespørsler-boks + Endringer nederst', () => {
     expect(PULSE_AVVIK_HREF).toBe('/jobber?fane=avvik');
     expect(PULSE_FORESPORSEL_HREF).toBe('/jobber?fane=forespor');
-    expect(PULSE_ENDRINGER_HREF).toBe('/jobber?fane=avvik');
+    expect(PULSE_ENDRINGER_HREF).toBe('/jobber?fane=endringer');
     expect(PARKED_LABEL['/avvik']).toBe('Avvik');
     expect(PARKED_LABEL['/timeplan/endringer']).toBe('Endringer');
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     expect(hero.indexOf('PulseDagSirkel')).toBeGreaterThan(-1);
     expect(hero.indexOf('PulseDagSirkel')).toBeLessThan(hero.indexOf('data-pulse-hero-bunn'));
-    expect(hero).not.toMatch(/PulseEndringerLenke/);
+    expect(hero).toMatch(/PulseEndringerLenke/);
+    expect(hero).toMatch(/PulseAvvikForesporBoks/);
+    expect(hero).toMatch(/data-pulse-teller-rad/);
     expect(hero).toMatch(/data-pulse-del="1"/);
     expect(hero).toMatch(/data-pulse-ukedag/);
     expect(hero).toMatch(/data-pulse-dato/);
     expect(hero).toMatch(/Planlagt/);
     expect(hero).toMatch(/Pågår/);
     expect(hero).toMatch(/Ferdig/);
-    expect(hero).toMatch(/PULSE_AVVIK_HREF/);
-    expect(hero).toMatch(/PULSE_FORESPORSEL_HREF/);
-    expect(hero).toMatch(/["']Avvik["']/);
-    expect(hero).toMatch(/["']Forespørsler["']/);
-    expect(hero).toMatch(/TriangleAlert/);
-    expect(hero).toMatch(/MessageSquare/);
-    expect(kort).toMatch(/ew-modus-plate/);
+    expect(kort).toMatch(/TriangleAlert/);
+    expect(kort).toMatch(/MessageSquare/);
+    expect(kort).not.toMatch(/ew-modus-plate/);
     expect(kort).not.toMatch(/PulseMockBadge/);
   });
 

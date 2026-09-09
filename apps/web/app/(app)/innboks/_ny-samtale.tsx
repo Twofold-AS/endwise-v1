@@ -214,40 +214,20 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
           </button>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <p className="text-label text-fg-muted">Til</p>
+        <section className="flex flex-col gap-3">
+          <h2 className="text-title text-fg">Til</h2>
+          <NySamtaleKnapperad
+            valg={PILLER.map((p) => ({ key: p.key, label: p.label }))}
+            aktiv={pille}
+            onVelg={(k) => velgPille(k as Pille)}
+          />
           <p className="h-control rounded-control border border-border bg-surface-2 px-3 text-body text-fg leading-8">
             {mottaker ? mottaker.navn : 'Velg i lista under'}
           </p>
-        </div>
+        </section>
 
-        <div
-          role="tablist"
-          aria-label="Filtrer mottakere"
-          className="flex rounded-pill border border-border bg-surface-2 p-1"
-        >
-          {PILLER.map((p) => {
-            const aktiv = pille === p.key;
-            const primær = p.key === 'support';
-            return (
-              <button
-                key={p.key}
-                type="button"
-                role="tab"
-                aria-selected={aktiv}
-                onClick={() => velgPille(p.key)}
-                className={`flex min-w-0 items-center justify-center gap-1.5 rounded-pill px-2.5 py-1.5 text-label transition-colors ${
-                  primær ? 'flex-[1.2]' : 'flex-1'
-                } ${pilleKlasse(aktiv, primær)}`}
-              >
-                <p.icon size={14} strokeWidth={1.75} className="shrink-0" />
-                <span className="truncate">{p.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-col gap-2">
+        <section className="flex flex-col gap-2">
+          <h2 className="text-title text-fg">Mottaker</h2>
           <input
             type="search"
             value={sok}
@@ -298,7 +278,7 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
               </ul>
             )}
           </div>
-        </div>
+        </section>
 
         <label className="flex flex-col gap-1.5">
           <span className="text-label text-fg-muted">Emne</span>
@@ -347,12 +327,39 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
   );
 }
 
-/** Support = fylt bg-fg. Kunde/Intern = outline, også når de er valgt. */
-function pilleKlasse(aktiv: boolean, primær: boolean): string {
-  if (primær && aktiv) return 'bg-fg text-bg';
-  if (primær) return 'text-fg-muted hover:text-fg';
-  if (aktiv) return 'border border-fg bg-bg text-fg';
-  return 'border border-transparent text-fg-muted hover:text-fg';
+/** Samme knapperad som Kunder (kilde/sorter) — ikke piller i en hub. */
+function NySamtaleKnapperad({
+  valg,
+  aktiv,
+  onVelg,
+}: {
+  valg: readonly { key: string; label: string }[];
+  aktiv: string;
+  onVelg: (key: string) => void;
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Mottakergruppe"
+      data-ny-samtale-knapperad
+      className="inline-flex h-control items-center gap-0.5 rounded-control border border-border bg-bg p-0.5"
+    >
+      {valg.map((v) => (
+        <button
+          key={v.key}
+          type="button"
+          role="tab"
+          aria-selected={aktiv === v.key}
+          onClick={() => onVelg(v.key)}
+          className={`inline-flex h-7 items-center rounded-[7px] px-2.5 text-label transition-colors ${
+            aktiv === v.key ? 'bg-sidebar-active text-fg' : 'text-fg-muted hover:text-fg'
+          }`}
+        >
+          {v.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function tommelding(pille: Pille, endwise: boolean): string {

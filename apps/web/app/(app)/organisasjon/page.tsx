@@ -35,11 +35,7 @@ function OrganisasjonIndre() {
       faner={synligeOrgChrome(isAdmin)}
       aktiv={seksjon}
     >
-      {seksjon === 'oversikt' ? (
-        <section className="flex flex-col gap-8" aria-label="Organisasjon">
-          <ForhandlerKort />
-        </section>
-      ) : null}
+      {seksjon === 'oversikt' ? <ForhandlerKort /> : null}
       {seksjon === 'ansatte' ? <OrganisasjonAnsatte /> : null}
       {seksjon === 'abonnement' ? (
         <section className="flex flex-col gap-8" aria-label="Abonnement">

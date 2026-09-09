@@ -55,8 +55,9 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
     expect(kort).toMatch(/Adresse/);
     expect(kort).toMatch(/Forhandler-epost/);
     expect(kort).toMatch(/forhandler\.update/);
-    expect(kort).toMatch(/aria-label="Slug"/);
-    expect(kort).toMatch(/readOnly/);
+    expect(kort).toMatch(/label="Slug"/);
+    expect(kort).toMatch(/OrgRad/);
+    expect(kort).toMatch(/data-org-oversikt/);
     expect(kort).not.toMatch(/aria-label="Kallenavn"|label="Kallenavn"/);
     expect(kort).not.toMatch(/ToFaktorRad|twoFactorEnabled|setNickname/);
     expect(kort).toMatch(/!Array\.isArray\(vis\.leftover\)/);

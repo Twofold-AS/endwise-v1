@@ -2,8 +2,8 @@
 
 import { Inbox, Package, Users } from '@endwise/ui';
 import { useMemo } from 'react';
-import { osloVeggklokke } from '../(app)/_lib/oslo-dag';
 import { useTema } from '../_lib/tema-provider';
+import { osloVeggklokke } from '../(app)/_lib/oslo-dag';
 import { analyserMockStats, pulsdagOverskrift } from '../(app)/_shell/phone-home-pulse';
 import {
   PulseAnalyserKort,

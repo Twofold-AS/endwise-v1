@@ -3,6 +3,7 @@
 import { Inbox, Package, Users } from '@endwise/ui';
 import { useMemo } from 'react';
 import { useTema } from '../_lib/tema-provider';
+import { osloVeggklokke } from '../(app)/_lib/oslo-dag';
 import { analyserMockStats, pulsdagOverskrift } from '../(app)/_shell/phone-home-pulse';
 import {
   PulseAnalyserKort,
@@ -19,6 +20,8 @@ export default function PulsePreview() {
   const { los, sett } = useTema();
   const analyser = useMemo(() => analyserMockStats(new Date('2026-09-08T10:00:00')), []);
   const dag = useMemo(() => pulsdagOverskrift(new Date('2026-09-08T10:00:00')), []);
+  /** Midt i 08–19 så GO-skjermbildet viser klokkevis bue venstre→høyre. */
+  const sirkelNaa = useMemo(() => osloVeggklokke('2026-09-08', 13, 30), []);
   return (
     <div className="min-h-dvh bg-bg text-fg" data-pulse-preview="go">
       <div className="mx-auto flex w-full max-w-[520px] flex-col gap-5 px-3 py-5">
@@ -43,6 +46,7 @@ export default function PulsePreview() {
           lasterJobber={false}
           endringer={0}
           lasterEndringer={false}
+          sirkelNaa={sirkelNaa}
         />
 
         <PulseRadKort href="#innboks" ikon={Inbox} tittel="Les alle siste meldinger" teller={7} />

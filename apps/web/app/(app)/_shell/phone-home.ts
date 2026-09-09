@@ -134,13 +134,13 @@ export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['analyser'], kind: 'full' },
 ];
 
-/** Ikon på uke-kortet. Ingen dealer-avviksliste ennå (F7-05) — stub-rute. */
+/** Ikon nederst på toppkortet. Ingen dealer-avviksliste ennå (F7-05) — stub-rute. */
 export const PULSE_AVVIK_HREF = '/avvik';
-/** Ikon på uke-kortet → Hjelp › Forespørsler. */
+/** Ikon nederst på toppkortet → Hjelp › Forespørsler. */
 export const PULSE_FORESPORSEL_HREF = '/hjelp?fane=forespor';
 /**
- * Endringer under Timeplan. Avvik + forespørsler i én destinasjon.
- * Avvik- og Forespørsel-ikonene på toppkortet er erstattet (Mikael CODE-GO).
+ * Endringer under Timeplan. Ekte `[AVVIK `-telling på badge.
+ * Avvik- og Forespørsler-ikonene sitter nederst på samme toppkort.
  */
 export const PULSE_ENDRINGER_HREF = '/timeplan/endringer';
 

@@ -29,22 +29,23 @@ function utenKommentarer(kilde: string) {
 }
 
 describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
-  it('dagvindu er Timeplan 08–20 Oslo, ikke per-forhandler åpningstid', () => {
-    expect(PULSE_DAG_START).toBe(VERKSTED_DAG_START);
-    expect(PULSE_DAG_SLUTT).toBe(VERKSTED_DAG_SLUTT);
+  it('dagvindu på hjem-sirkelen er 08–19 Oslo, Timeplan-rutenett er 08–20', () => {
     expect(PULSE_DAG_START).toBe(8);
-    expect(PULSE_DAG_SLUTT).toBe(20);
+    expect(PULSE_DAG_SLUTT).toBe(19);
+    expect(VERKSTED_DAG_START).toBe(8);
+    expect(VERKSTED_DAG_SLUTT).toBe(20);
+    expect(PULSE_DAG_SLUTT).not.toBe(VERKSTED_DAG_SLUTT);
     const start = dagFremgang(osloVeggklokke('2026-08-29', 8, 0));
     expect(start.andel).toBe(0);
     expect(start.startLabel).toBe('08:00');
-    expect(start.sluttLabel).toBe('20:00');
-    expect(dagFremgang(osloVeggklokke('2026-08-29', 14, 0)).andel).toBeCloseTo(0.5);
-    expect(dagFremgang(osloVeggklokke('2026-08-29', 20, 0)).andel).toBe(1);
+    expect(start.sluttLabel).toBe('19:00');
+    expect(dagFremgang(osloVeggklokke('2026-08-29', 13, 30)).andel).toBeCloseTo(0.5);
+    expect(dagFremgang(osloVeggklokke('2026-08-29', 19, 0)).andel).toBe(1);
     expect(dagFremgang(osloVeggklokke('2026-08-29', 6, 0)).andel).toBe(0);
     expect(dagFremgang(osloVeggklokke('2026-08-29', 22, 0)).andel).toBe(1);
   });
 
-  it('Avvik-stub består; toppkort peker på Timeplan › Endringer', () => {
+  it('Avvik-stub og Hjelp-forespørsler sitter nederst; Endringer har ekte teller', () => {
     expect(PULSE_AVVIK_HREF).toBe('/avvik');
     expect(PULSE_FORESPORSEL_HREF).toBe(hjelpHref('forespor'));
     expect(PARKED_LABEL['/avvik']).toBe('Avvik');
@@ -55,9 +56,10 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
     expect(kort).toMatch(/PulseEndringerLenke/);
     expect(kort).toMatch(/data-pulse-endringer/);
     expect(kort).toMatch(/PULSE_ENDRINGER_HREF/);
-    expect(kort).not.toMatch(/TriangleAlert/);
-    expect(kort).not.toMatch(/PULSE_AVVIK_HREF/);
-    expect(kort).not.toMatch(/PULSE_FORESPORSEL_HREF/);
+    expect(kort).toMatch(/TriangleAlert/);
+    expect(kort).toMatch(/PULSE_AVVIK_HREF/);
+    expect(kort).toMatch(/PULSE_FORESPORSEL_HREF/);
+    expect(kort).toMatch(/data-pulse-hero-bunn/);
   });
 
   it('toppkort er to-delt med dither-donut; Analyser ligger sist', () => {

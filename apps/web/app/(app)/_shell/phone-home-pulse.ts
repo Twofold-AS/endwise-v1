@@ -7,7 +7,6 @@ import {
   osloVeggtid,
 } from '../_lib/oslo-dag';
 import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
-import { VERKSTED_DAG_SLUTT, VERKSTED_DAG_START } from '../dashboard/_timeplan-layout';
 import type { PhoneBooking, PhoneTraad } from './phone-home-data';
 
 /** Mekaniker-avvik i booking-notat — `mechanic.reportDeviation`. */
@@ -54,11 +53,14 @@ export const PULSE_DAGER = 7;
 export const PULSE_UKE_TITTEL = 'Denne uken';
 
 /**
- * Verksteddagen på uke-kortets sirkel — samme 08–20 Oslo som Timeplan
- * og widget. Ingen per-forhandler åpningstid i skjemaet.
+ * Verksteddagen på hjem-sirkelen: 08–19 Oslo.
+ * Timeplan-rutenettet er fortsatt 08–20 (`VERKSTED_DAG_*`).
+ * Ingen per-forhandler åpningstid i skjemaet.
  */
-export const PULSE_DAG_START = VERKSTED_DAG_START;
-export const PULSE_DAG_SLUTT = VERKSTED_DAG_SLUTT;
+export const PULSE_DAG_START = 8;
+export const PULSE_DAG_SLUTT = 19;
+/** Venstre (9-retning). Buen går klokkevis mot høyre, med klokka. */
+export const PULSE_DAG_BUE_START = Math.PI;
 
 export function fmtPulseKlokke(hour: number, minute = 0): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;

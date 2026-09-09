@@ -40,6 +40,8 @@ hvit dither (laget for mørk bakgrunn). Endwise er lyst-only + Attio-farger:
 - Dither-fyll bruker seriehex (ink `#1c1d1f`, Action Blue `#407ff2`, …),
   ikke `#FFFFFF`
 - `theme` default `light`
+- Valgfri `startAngle` (default −π/2 = kl. 12). Hjem-dagsirkelen bruker π
+  (venstre, klokkevis mot høyre)
 
 Canvas-motoren (Bayer-lignende hash + rAF-dither) er den samme.
 

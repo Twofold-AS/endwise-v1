@@ -20,15 +20,7 @@ export {
   sammeOsloDag,
 } from '@endwise/modules/tid';
 
-const UKEDAG_NB = [
-  'Mandag',
-  'Tirsdag',
-  'Onsdag',
-  'Torsdag',
-  'Fredag',
-  'Lørdag',
-  'Søndag',
-] as const;
+const UKEDAG_NB = ['Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag', 'Søndag'] as const;
 
 const MAANED_NB = [
   'januar',

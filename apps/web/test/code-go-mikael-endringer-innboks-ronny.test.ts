@@ -40,7 +40,7 @@ describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
     expect(vindu.til).toBeInstanceOf(Date);
   });
 
-  it('to-delt toppkort: dag+tall venstre, Endringer + DitherDonut høyre', () => {
+  it('to-delt toppkort: dag+tall venstre, DitherDonut over Endringer, Avvik/Forespørsler nederst', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const side = utenKommentarer(les('../app/(app)/timeplan/endringer/page.tsx'));
@@ -53,7 +53,8 @@ describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
     expect(kort).toMatch(/DitherDonutChart/);
     expect(kort).toMatch(/#141414/);
     expect(kort).toMatch(/#e0e0e0/);
-    expect(kort).not.toMatch(/TriangleAlert/);
+    expect(kort).toMatch(/data-pulse-hero-bunn/);
+    expect(kort).toMatch(/TriangleAlert/);
     expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/endringerTeller/);
     expect(hjem).toMatch(/PulseAnalyserKort/);

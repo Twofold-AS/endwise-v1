@@ -11,6 +11,8 @@ export type DitherDonutChartProps = {
   compact?: boolean;
   className?: string;
   slices: DitherDonutSlice[];
+  /** Canvas-radianer. Default −π/2 = kl. 12. π = venstre, klokkevis mot høyre. */
+  startAngle?: number;
 };
 
 function drawRoundedWedge(
@@ -68,7 +70,9 @@ export function DitherDonutChart({
   compact: _compact = true,
   className = '',
   slices,
+  startAngle = -Math.PI / 2,
 }: DitherDonutChartProps) {
+  const startAngleProp = startAngle;
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const { canvasRef, rect, isVisible, reducedMotion } = useCanvasSetup();
 
@@ -136,7 +140,7 @@ export function DitherDonutChart({
           ((targetSharesRef.current[i] ?? 0) - (fromSharesRef.current[i] ?? 0)) * e;
       }
 
-      let startAngle = -Math.PI / 2;
+      let startAngle = startAngleProp;
       const gap = 0.07;
       const currentHover = hoverRef.current;
       const t2 = timeRef.current;
@@ -205,7 +209,7 @@ export function DitherDonutChart({
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [canvasRef, isVisible, rect, reducedMotion, slices]);
+  }, [canvasRef, isVisible, rect, reducedMotion, slices, startAngleProp]);
 
   return (
     <div
@@ -225,7 +229,7 @@ export function DitherDonutChart({
             setHoverIndex(null);
             return;
           }
-          let angle = Math.atan2(y, x) + Math.PI / 2;
+          let angle = Math.atan2(y, x) - startAngleProp;
           if (angle < 0) angle += Math.PI * 2;
           let acc = 0;
           let found = null as number | null;

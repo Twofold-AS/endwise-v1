@@ -83,11 +83,11 @@ export const EXPRESSIONS: BotExpression[] = [
     eyes: pair(0.4, 0.56, -10)
   },
   {
-    // yeux plissés en arc : les hauts convergent légèrement
+    // Mikael CODE-GO: happy uten pliss/små øyne — åpne, normal høyde.
     id: 'heureux',
     gaze: { yaw: 5, pitch: 9, roll: 0 },
     split: 17,
-    eyes: pair(0.27, 0.17, 14)
+    eyes: pair(0.28, 0.42, 8)
   },
   {
     id: 'hilare',

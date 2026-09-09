@@ -104,6 +104,7 @@ const ADMIN_KUN: OrgRole[] = ['dealer_admin'];
 export const ORGANISASJON_SEKSJONER: NavChild[] = [
   { label: 'Oversikt', href: '/organisasjon' },
   { label: 'Ansatte', href: '/organisasjon?seksjon=ansatte' },
+  { label: 'Timeplan', href: '/jobber' },
   { label: 'Abonnement', href: '/organisasjon?seksjon=abonnement', roles: ADMIN_KUN },
   { label: 'Integrasjoner', href: '/organisasjon?seksjon=integrasjoner', roles: ADMIN_KUN },
 ];
@@ -230,8 +231,10 @@ export const FORHANDLER_NAV: NavItem[] = [
     roles: DRIFT,
     section: 'Verkstedet',
     pills: [
-      { label: 'Liste', href: '/jobber', icon: ClipboardList },
-      { label: 'Kalender', href: '/jobber?visning=kalender', icon: CalendarDays },
+      { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
+      { label: 'Opprett jobb', href: '/bookinger/ny', icon: FilePlus },
+      { label: 'Avvik', href: '/jobber?fane=avvik', icon: ClipboardList },
+      { label: 'Forespørsler', href: '/jobber?fane=forespor', icon: MessageSquarePlus },
     ],
   },
   {
@@ -242,8 +245,9 @@ export const FORHANDLER_NAV: NavItem[] = [
     roles: DRIFT,
     section: 'Kunder',
     pills: [
-      { label: 'Kunder', href: '/kunder', icon: Users },
-      { label: 'Kjøretøy', href: '/kjoretoy', icon: Car },
+      { label: 'Alle kunder', href: '/kunder', icon: Users },
+      { label: 'Opprett kunde', href: '/kunder?fane=opprett', icon: UserPlus },
+      { label: 'Registrer kjøretøy', href: '/kunder?fane=kjoretoy', icon: Car },
     ],
   },
   {
@@ -253,6 +257,10 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/prisliste',
     roles: DRIFT,
     section: 'Kunder',
+    pills: [
+      { label: 'Alle tjenester', href: '/prisliste', icon: Wrench },
+      { label: 'Opprett tjenester', href: '/prisliste?fane=opprett', icon: FilePlus },
+    ],
   },
   {
     key: 'organisasjon',
@@ -731,6 +739,22 @@ const SETTINGS_CRUMB: Record<string, string> = {
 /** Er denne destinasjonen den aktive? */
 export function isItemActive(item: NavItem, pathname: string): boolean {
   if (item.key === 'organisasjon') return erOrganisasjonSti(pathname);
+  if (item.key === 'kunder') {
+    return (
+      pathname === '/kunder' || pathname.startsWith('/kunder/') || pathname.startsWith('/kjoretoy')
+    );
+  }
+  if (item.key === 'saker') {
+    return (
+      pathname === '/jobber' ||
+      pathname.startsWith('/jobber/') ||
+      pathname === '/saker' ||
+      pathname.startsWith('/saker/') ||
+      pathname === '/bookinger/ny' ||
+      pathname.startsWith('/avvik') ||
+      pathname.startsWith('/timeplan')
+    );
+  }
   if (item.key === 'settings') return erSettingsSti(pathname);
   if (item.key === 'endwise-settings') {
     return (

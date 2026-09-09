@@ -56,13 +56,15 @@ describe('F5-13 Forhandler-nav 26.08.2026', () => {
     expect(verksted && isItemActive(verksted, '/prisliste')).toBe(false);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
       { label: 'Tjenester', href: '/prisliste' },
+      { label: 'Alle tjenester' },
     ]);
   });
 
-  it('Timeplan-siden kaller listevisningen Liste', () => {
+  it('Timeplan-siden bruker Innstillinger-chrome med Avvik-fane', () => {
     const saker = les('../app/(app)/saker/page.tsx');
     const nav = les('../app/(app)/_shell/nav.ts');
-    expect(nav).toMatch(/label: 'Liste'/);
+    expect(nav).toMatch(/label: 'Avvik'/);
+    expect(saker).toMatch(/SideChromeSkall/);
     expect(saker).not.toMatch(/label="Oversikt"/);
   });
 });

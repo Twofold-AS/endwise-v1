@@ -46,12 +46,15 @@ describe('Jonas IA — forhandler sidebar', () => {
       expect(rad.children).toBeUndefined();
     }
     expect(FORHANDLER_NAV.find((i) => i.key === 'saker')?.pills?.map((p) => p.label)).toEqual([
-      'Liste',
-      'Kalender',
+      'Timeplan',
+      'Opprett jobb',
+      'Avvik',
+      'Forespørsler',
     ]);
     expect(FORHANDLER_NAV.find((i) => i.key === 'kunder')?.pills?.map((p) => p.label)).toEqual([
-      'Kunder',
-      'Kjøretøy',
+      'Alle kunder',
+      'Opprett kunde',
+      'Registrer kjøretøy',
     ]);
     expect(FORHANDLER_NAV.find((i) => i.key === 'lager')?.pills?.map((p) => p.label)).toEqual([
       'Oversikt',
@@ -66,7 +69,7 @@ describe('Jonas IA — forhandler sidebar', () => {
     expect(FORHANDLER_NAV.find((i) => i.key === 'organisasjon')?.label).toBe('Organisasjon');
     expect(
       FORHANDLER_NAV.find((i) => i.key === 'organisasjon')?.pills?.map((p) => p.label),
-    ).toEqual(['Oversikt', 'Ansatte', 'Abonnement', 'Integrasjoner']);
+    ).toEqual(['Oversikt', 'Ansatte', 'Timeplan', 'Abonnement', 'Integrasjoner']);
     expect(FORHANDLER_NAV.some((i) => i.key === 'helpdesk')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.key === 'bot')).toBe(false);
@@ -150,14 +153,14 @@ describe('Jonas IA — breadcrumb og piller', () => {
   it('Timeplan / Ansatte / Lager bruker piller, ikke sidebar-barn', () => {
     expect(breadcrumbFor('/jobber', '', 'forhandler')).toEqual([
       { label: 'Timeplan', href: '/jobber' },
-      { label: 'Liste' },
     ]);
-    expect(breadcrumbFor('/jobber', 'visning=kalender', 'forhandler')).toEqual([
+    expect(breadcrumbFor('/jobber', 'fane=avvik', 'forhandler')).toEqual([
       { label: 'Timeplan', href: '/jobber' },
-      { label: 'Kalender' },
+      { label: 'Avvik' },
     ]);
     expect(breadcrumbFor('/prisliste', '', 'forhandler')).toEqual([
       { label: 'Tjenester', href: '/prisliste' },
+      { label: 'Alle tjenester' },
     ]);
     expect(breadcrumbFor('/organisasjon', 'seksjon=ansatte', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },

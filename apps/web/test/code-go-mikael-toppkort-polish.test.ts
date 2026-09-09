@@ -16,7 +16,6 @@ import {
   PULSE_DAG_START,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
 import { VERKSTED_DAG_SLUTT } from '../app/(app)/dashboard/_timeplan-layout.ts';
-import { hjelpHref } from '../app/(app)/hjelp/_faner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -66,17 +65,17 @@ describe('CODE-GO Mikael — toppkort polish 08–19 + bunn-ikoner + Jobb', () =
     expect(donut).toMatch(/let startAngle = startAngleProp/);
   });
 
-  it('sirkel sitter over Endringer; Avvik og Forespørsler nederst på samme boks', () => {
-    expect(PULSE_AVVIK_HREF).toBe('/avvik');
-    expect(PULSE_FORESPORSEL_HREF).toBe(hjelpHref('forespor'));
-    expect(PULSE_ENDRINGER_HREF).toBe('/timeplan/endringer');
+  it('sirkel sitter ved siden av Del 1; Avvik og Forespørsler er Modus-plater mot Timeplan', () => {
+    expect(PULSE_AVVIK_HREF).toBe('/jobber?fane=avvik');
+    expect(PULSE_FORESPORSEL_HREF).toBe('/jobber?fane=forespor');
+    expect(PULSE_ENDRINGER_HREF).toBe('/jobber?fane=avvik');
     expect(PARKED_LABEL['/avvik']).toBe('Avvik');
     expect(PARKED_LABEL['/timeplan/endringer']).toBe('Endringer');
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     expect(hero.indexOf('PulseDagSirkel')).toBeGreaterThan(-1);
-    expect(hero.indexOf('PulseDagSirkel')).toBeLessThan(hero.indexOf('PulseEndringerLenke'));
-    expect(hero.indexOf('PulseEndringerLenke')).toBeLessThan(hero.indexOf('data-pulse-hero-bunn'));
+    expect(hero.indexOf('PulseDagSirkel')).toBeLessThan(hero.indexOf('data-pulse-hero-bunn'));
+    expect(hero).not.toMatch(/PulseEndringerLenke/);
     expect(hero).toMatch(/data-pulse-del="1"/);
     expect(hero).toMatch(/data-pulse-ukedag/);
     expect(hero).toMatch(/data-pulse-dato/);
@@ -89,7 +88,7 @@ describe('CODE-GO Mikael — toppkort polish 08–19 + bunn-ikoner + Jobb', () =
     expect(hero).toMatch(/["']Forespørsler["']/);
     expect(hero).toMatch(/TriangleAlert/);
     expect(hero).toMatch(/MessageSquare/);
-    expect(kort).toMatch(/data-pulse-endringer-tall/);
+    expect(kort).toMatch(/ew-modus-plate/);
     expect(kort).not.toMatch(/PulseMockBadge/);
   });
 

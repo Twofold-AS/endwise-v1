@@ -19,8 +19,12 @@ import { useParams } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import { SideChromeSkall } from '../../_shell/side-chrome-skall';
 import { STATUS_LABEL, STATUS_TONE } from '../../bookinger/_status';
 import { dato, datoTid, EuFrist, Feil, Kilde, kroner, Laster, Seksjon, TYPE_LABEL } from '../_delt';
+import { KundeEndre, sisteAdresse } from '../_endre';
+import { KUNDER_FANER, kunderHref } from '../_faner';
+import { RegistrerKjoretoy } from '../_registrer-kjoretoy';
 
 /**
  * Kundekortet. «Søk opp en kunde og se alt.»
@@ -78,7 +82,12 @@ export default function KundekortPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[900px] flex-col gap-5 px-8 py-7">
+    <SideChromeSkall
+      tittel="Kunder"
+      ingress="Kundekort — kontakt, kjøretøy og historikk."
+      faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
+      aktiv="alle"
+    >
       {/* Hvem */}
       <div className="flex items-start gap-4">
         {/*
@@ -114,45 +123,52 @@ export default function KundekortPage() {
         </div>
       </div>
 
+      <KundeEndre
+        id={k.id}
+        navn={k.name}
+        telefon={k.phone}
+        epost={k.email}
+        adresse={sisteAdresse(k.notater)}
+      />
+
       {/* Kjøretøy */}
       <Seksjon tittel="Kjøretøy" antall={k.kjoretoy.length}>
         {k.kjoretoy.length === 0 ? (
-          <CardShell className="p-6 text-center">
-            <p className="text-[12px] text-fg-muted">
-              Ingen kjøretøy registrert på denne kunden ennå.
-            </p>
-          </CardShell>
+          <RegistrerKjoretoy fastKundeId={k.id} />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border">
-            {k.kjoretoy.map((v, i) => (
-              <Link key={v.id} href={`/kjoretoy/${v.id}` as Route} className="group block">
-                <div
-                  className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
-                    i > 0 ? 'border-border border-t' : ''
-                  }`}
-                >
-                  <Car size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                  <span className="w-24 shrink-0 font-mono text-label text-fg">
-                    {v.regNumber ?? '—'}
-                  </span>
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-label text-fg">
-                      {[v.make, v.model].filter(Boolean).join(' ') || TYPE_LABEL[v.type]}
+          <>
+            <div className="overflow-hidden rounded-xl border border-border">
+              {k.kjoretoy.map((v, i) => (
+                <Link key={v.id} href={`/kjoretoy/${v.id}` as Route} className="group block">
+                  <div
+                    className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
+                      i > 0 ? 'border-border border-t' : ''
+                    }`}
+                  >
+                    <Car size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+                    <span className="w-24 shrink-0 font-mono text-label text-fg">
+                      {v.regNumber ?? '—'}
                     </span>
-                    <span className="truncate text-[12px] text-fg-muted">
-                      {TYPE_LABEL[v.type]}
-                      {v.modelYear ? ` · ${v.modelYear}` : ''}
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="truncate text-label text-fg">
+                        {[v.make, v.model].filter(Boolean).join(' ') || TYPE_LABEL[v.type]}
+                      </span>
+                      <span className="truncate text-[12px] text-fg-muted">
+                        {TYPE_LABEL[v.type]}
+                        {v.modelYear ? ` · ${v.modelYear}` : ''}
+                      </span>
+                    </div>
+                    <span className="w-32 shrink-0 text-right text-[12px] tabular-nums">
+                      <span className="text-fg-muted">EU: </span>
+                      <EuFrist dato={v.inspectionDue} />
                     </span>
+                    <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
                   </div>
-                  <span className="w-32 shrink-0 text-right text-[12px] tabular-nums">
-                    <span className="text-fg-muted">EU: </span>
-                    <EuFrist dato={v.inspectionDue} />
-                  </span>
-                  <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+            <RegistrerKjoretoy fastKundeId={k.id} />
+          </>
         )}
       </Seksjon>
 
@@ -290,6 +306,6 @@ export default function KundekortPage() {
       >
         <ClipboardList size={14} />← Alle kunder
       </Link>
-    </div>
+    </SideChromeSkall>
   );
 }

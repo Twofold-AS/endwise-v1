@@ -81,6 +81,19 @@ describeDb('F5-55 — opprett kunde uten Quick', () => {
     expect(cfg).toBeUndefined();
   });
 
+  it('leder kan oppdatere telefon og få endringsnotat', async () => {
+    const kunde = await leder().customers.create({ name: 'Endre Meg', phone: '+4790000010' });
+    const oppdatert = await leder().customers.update({
+      id: kunde.id,
+      phone: '+4790000011',
+    });
+    expect(oppdatert.phone).toBe('+4790000011');
+    const kort = await leder().customers.byId({ id: kunde.id });
+    expect(
+      kort?.notater.some((n) => n.body.includes('[ENDRING]') && n.body.includes('Telefon')),
+    ).toBe(true);
+  });
+
   it('⛔ naboen ser ikke kunden', async () => {
     const liste = await nabo().customers.list({ kilde: 'alle' });
     expect(liste.some((k) => k.name === 'Kari Nordmann')).toBe(false);

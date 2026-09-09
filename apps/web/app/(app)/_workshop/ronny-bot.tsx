@@ -69,7 +69,8 @@ function RonnyTegning({ size, los, ansikt }: { size: number; los: LosTema; ansik
   const { kropp, oye } = ronnyTemaFarger(los);
   const wink = erRonnyWink(ansikt);
   const state: StateId = wink ? 'wink' : 'idle';
-  const expression: ExpressionId = wink ? 'heureux' : ansikt;
+  /** wink = ett åpent øye (normal størrelse) + ett lukket. Ikke heureux-pliss. */
+  const expression: ExpressionId = wink ? 'neutre' : ansikt;
   return (
     <span data-ronny-los={los} data-ronny-ansikt={ansikt} className="inline-flex">
       <BloubBot

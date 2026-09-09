@@ -20,9 +20,11 @@ const FILTRE = [{ key: 'alle', label: 'Alle' }, ...TYPE_VALG] as const;
 export function PrislisteFlate({
   skjulPiller = false,
   tittel = 'Prisliste',
+  skjulNy = false,
 }: {
   skjulPiller?: boolean;
   tittel?: string;
+  skjulNy?: boolean;
 }) {
   const { isAdmin } = useOrgRole();
   const [filter, setFilter] = useState<string>('alle');
@@ -50,17 +52,19 @@ export function PrislisteFlate({
           : 'mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7'
       }
     >
-      <div>
-        <h1 className="sr-only">{tittel}</h1>
-        <p className="flex items-center gap-2 text-title text-fg">
-          <Wrench size={18} strokeWidth={1.75} className="text-fg-muted" />
-          {tittel}
-        </p>
-        <p className="text-body text-fg-muted">
-          Tjenestene kunden kan bestille hos dere, med varighet, pris og hvilke ferdigheter jobben
-          krever.
-        </p>
-      </div>
+      {skjulPiller ? null : (
+        <div>
+          <h1 className="sr-only">{tittel}</h1>
+          <p className="flex items-center gap-2 text-title text-fg">
+            <Wrench size={18} strokeWidth={1.75} className="text-fg-muted" />
+            {tittel}
+          </p>
+          <p className="text-body text-fg-muted">
+            Tjenestene kunden kan bestille hos dere, med varighet, pris og hvilke ferdigheter jobben
+            krever.
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <div
@@ -86,7 +90,7 @@ export function PrislisteFlate({
 
         <div className="flex-1" />
 
-        {isAdmin && !nyApen && (
+        {isAdmin && !nyApen && !skjulNy && (
           <button
             type="button"
             onClick={() => setNyApen(true)}

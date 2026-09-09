@@ -16,7 +16,6 @@ import {
   PULSE_DAG_START,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
 import { VERKSTED_DAG_SLUTT, VERKSTED_DAG_START } from '../app/(app)/dashboard/_timeplan-layout.ts';
-import { hjelpHref } from '../app/(app)/hjelp/_faner.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -45,17 +44,15 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
     expect(dagFremgang(osloVeggklokke('2026-08-29', 22, 0)).andel).toBe(1);
   });
 
-  it('Avvik-stub og Hjelp-forespørsler sitter nederst; Endringer har ekte teller', () => {
-    expect(PULSE_AVVIK_HREF).toBe('/avvik');
-    expect(PULSE_FORESPORSEL_HREF).toBe(hjelpHref('forespor'));
+  it('Avvik og Forespørsler sitter nederst og peker på Timeplan-faner', () => {
+    expect(PULSE_AVVIK_HREF).toBe('/jobber?fane=avvik');
+    expect(PULSE_FORESPORSEL_HREF).toBe('/jobber?fane=forespor');
     expect(PARKED_LABEL['/avvik']).toBe('Avvik');
     expect(PARKED_LABEL['/timeplan/endringer']).toBe('Endringer');
-    expect(les('../app/(app)/avvik/page.tsx')).toMatch(/data-avvik-stub/);
-    expect(les('../app/(app)/avvik/page.tsx')).toMatch(/F7-05/);
+    expect(les('../app/(app)/avvik/page.tsx')).toMatch(/jobber\?fane=avvik/);
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(kort).toMatch(/PulseEndringerLenke/);
-    expect(kort).toMatch(/data-pulse-endringer/);
-    expect(kort).toMatch(/PULSE_ENDRINGER_HREF/);
+    expect(kort).not.toMatch(/PulseEndringerLenke/);
+    expect(kort).toMatch(/PulseValgLenke/);
     expect(kort).toMatch(/TriangleAlert/);
     expect(kort).toMatch(/PULSE_AVVIK_HREF/);
     expect(kort).toMatch(/PULSE_FORESPORSEL_HREF/);

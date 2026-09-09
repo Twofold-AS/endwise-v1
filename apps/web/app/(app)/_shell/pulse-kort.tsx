@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  ArrowLeftRight,
   ArrowUpRight,
   Badge,
   DitherDonutChart,
@@ -18,7 +17,6 @@ import {
   PHONE_DEST_FYLL,
   PHONE_HERO_FYLL,
   PULSE_AVVIK_HREF,
-  PULSE_ENDRINGER_HREF,
   PULSE_FORESPORSEL_HREF,
 } from './phone-home';
 import {
@@ -116,39 +114,10 @@ export function PulseKort({
 }
 
 /**
- * Endringer — øvre høyre på toppkortets del 2.
- * Badge er ekte telling (0 vises). Ingen mock.
+ * Avvik / Forespørsler — Modus-plate (valgknapp), ikke ikon-chip.
+ * Samme `.ew-modus-plate` som profil › Modus.
  */
-export function PulseEndringerLenke({
-  antall,
-  laster = false,
-}: {
-  antall: number;
-  laster?: boolean;
-}) {
-  const n = Math.max(0, antall);
-  return (
-    <Link
-      href={PULSE_ENDRINGER_HREF as Route}
-      aria-label={`Endringer, ${n} ventende`}
-      data-pulse-ikon="Endringer"
-      data-pulse-endringer
-      className="relative inline-flex h-9 items-center gap-1.5 rounded-[12px] px-2.5 text-[#141414] shadow-none ring-1 ring-divide [touch-action:manipulation]"
-      style={{ backgroundColor: WHITE }}
-    >
-      <ArrowLeftRight size={16} strokeWidth={1.75} aria-hidden />
-      <span className="text-[12px] font-[650]">Endringer</span>
-      <span
-        data-pulse-endringer-tall
-        className="inline-flex min-w-5 items-center justify-center rounded-[6px] bg-fg px-1 text-[11px] font-[650] text-bg tabular-nums"
-      >
-        {laster ? '·' : n}
-      </span>
-    </Link>
-  );
-}
-
-function PulseIkonLenke({
+export function PulseValgLenke({
   href,
   label,
   ikon: Ikon,
@@ -162,11 +131,11 @@ function PulseIkonLenke({
       href={href as Route}
       aria-label={label}
       data-pulse-ikon={label}
-      className="inline-flex h-9 items-center gap-1.5 rounded-[12px] px-2.5 text-[#141414] shadow-none ring-1 ring-divide [touch-action:manipulation]"
-      style={{ backgroundColor: WHITE }}
+      data-pulse-valg={label}
+      className="ew-modus-plate flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-[16px] px-3 py-2.5 text-fg shadow-none [touch-action:manipulation]"
     >
-      <Ikon size={16} strokeWidth={1.75} aria-hidden />
-      <span className="text-[12px] font-[650]">{label}</span>
+      <Ikon size={18} strokeWidth={1.75} aria-hidden />
+      <span className="text-[15px] font-[650]">{label}</span>
     </Link>
   );
 }
@@ -174,9 +143,9 @@ function PulseIkonLenke({
 /** @deprecated Avvik+Forespørsler sitter nederst på PulseHeroFlate. */
 export function PulseHeroIkoner() {
   return (
-    <div data-pulse-hero-bunn className="flex w-full items-center justify-between gap-3">
-      <PulseIkonLenke href={PULSE_AVVIK_HREF} label="Avvik" ikon={TriangleAlert} />
-      <PulseIkonLenke href={PULSE_FORESPORSEL_HREF} label="Forespørsler" ikon={MessageSquare} />
+    <div data-pulse-hero-bunn className="flex w-full items-center gap-3">
+      <PulseValgLenke href={PULSE_AVVIK_HREF} label="Avvik" ikon={TriangleAlert} />
+      <PulseValgLenke href={PULSE_FORESPORSEL_HREF} label="Forespørsler" ikon={MessageSquare} />
     </div>
   );
 }
@@ -247,7 +216,7 @@ export function PulseDagSirkel({
   );
 }
 
-/** To-delt toppkort: dag+tall venstre, dither-sirkel over Endringer, Avvik/Forespørsler nederst. */
+/** To-delt toppkort: dag+tall venstre, dither-sirkel høyre, Avvik/Forespørsler nederst. */
 export function PulseHeroFlate({
   ukedag,
   dato,
@@ -255,8 +224,6 @@ export function PulseHeroFlate({
   paagaar,
   ferdig,
   lasterJobber,
-  endringer,
-  lasterEndringer,
   href,
   sirkelNaa,
 }: {
@@ -266,8 +233,6 @@ export function PulseHeroFlate({
   paagaar: number;
   ferdig: number;
   lasterJobber: boolean;
-  endringer: number;
-  lasterEndringer: boolean;
   href: string;
   sirkelNaa?: Date;
 }) {
@@ -300,12 +265,11 @@ export function PulseHeroFlate({
         </Link>
         <div data-pulse-del="2" className="flex w-[148px] shrink-0 flex-col items-end gap-2">
           <PulseDagSirkel naa={sirkelNaa} />
-          <PulseEndringerLenke antall={endringer} laster={lasterEndringer} />
         </div>
       </div>
-      <div data-pulse-hero-bunn className="flex w-full items-center justify-between gap-3">
-        <PulseIkonLenke href={PULSE_AVVIK_HREF} label="Avvik" ikon={TriangleAlert} />
-        <PulseIkonLenke href={PULSE_FORESPORSEL_HREF} label="Forespørsler" ikon={MessageSquare} />
+      <div data-pulse-hero-bunn className="flex w-full items-center gap-3">
+        <PulseValgLenke href={PULSE_AVVIK_HREF} label="Avvik" ikon={TriangleAlert} />
+        <PulseValgLenke href={PULSE_FORESPORSEL_HREF} label="Forespørsler" ikon={MessageSquare} />
       </div>
     </div>
   );
@@ -423,7 +387,7 @@ export function PulseJobbFlis() {
     <Link
       href={'/bookinger/ny' as Route}
       data-pulse-jobb
-      className={`${PHONE_DEST_FYLL} flex h-full min-h-14 w-full min-w-0 items-center gap-3 overflow-hidden px-3 py-3.5 text-fg [touch-action:manipulation]`}
+      className={`${PHONE_DEST_FYLL} flex h-full min-h-14 w-full min-w-0 items-center justify-between gap-3 overflow-hidden px-3 py-3.5 text-fg [touch-action:manipulation]`}
     >
       <span className="min-w-0 truncate text-[15px] font-[650]">Jobb</span>
       <PulseIkonFlate>

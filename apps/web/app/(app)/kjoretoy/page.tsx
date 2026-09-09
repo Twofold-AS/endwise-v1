@@ -6,7 +6,10 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { EuFrist, Feil, Laster, Tomt, TYPE_LABEL } from '../kunder/_delt';
+import { KUNDER_FANER, kunderHref } from '../kunder/_faner';
+import { RegistrerKjoretoy } from '../kunder/_registrer-kjoretoy';
 
 /**
  * Kjøretøy. Liste med søk på **regnr og understellsnummer**.
@@ -34,14 +37,13 @@ function KjoretoyInner() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-[1050px] flex-col gap-5 px-8 py-7">
-      <div>
-        <h1 className="sr-only">Kjøretøy</h1>
-        <p className="text-title text-fg">Kjøretøy</p>
-        <p className="text-body text-fg-muted">
-          Søk på registreringsnummer, understellsnummer, merke eller modell.
-        </p>
-      </div>
+    <SideChromeSkall
+      tittel="Kunder"
+      ingress="Søk på registreringsnummer, understellsnummer, merke eller modell."
+      faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
+      aktiv="kjoretoy"
+    >
+      <RegistrerKjoretoy />
 
       <div className="flex flex-wrap items-center gap-2">
         <label className="relative flex h-control min-w-[260px] flex-1 items-center">
@@ -156,7 +158,7 @@ function KjoretoyInner() {
           ? 'Laster kjøretøy …'
           : `${kjoretoy.data?.length ?? 0} kjøretøy vist. Merke, modell og EU-frist er speilet fra Vegvesenet — ikke redigert av oss.`}
       </p>
-    </div>
+    </SideChromeSkall>
   );
 }
 

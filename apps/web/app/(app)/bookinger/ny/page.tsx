@@ -2,11 +2,12 @@
 
 import { Car, Check, FELT_MD, hexForFarge, Search, Sparkles, staffFargeStil } from '@endwise/ui';
 import type { Route } from 'next';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
+import { SideChromeSkall } from '../../_shell/side-chrome-skall';
+import { TIMEPLAN_FANER, timeplanHref } from '../../jobber/_faner';
 import { StarttidVelger } from '../_starttid-velger';
 import { fmtMinor } from '../_status';
 
@@ -146,234 +147,234 @@ export default function NyJobbPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 px-8 py-7">
-      <div>
-        <Link href={'/saker' as Route} className="text-fg-faint text-xs hover:text-fg">
-          ← Timeplan
-        </Link>
-        <h1 className="mt-1 font-semibold text-fg text-xl tracking-tight">Opprett jobb</h1>
-        <p className="text-fg-muted text-sm">
-          Velg én eller flere tjenester og tid — matcheren foreslår mekaniker, motoren låser slotet.
-        </p>
-      </div>
+    <SideChromeSkall
+      tittel="Timeplan"
+      ingress="Ny jobb mot ledig slot."
+      faner={TIMEPLAN_FANER.map((f) => ({ ...f, href: timeplanHref(f.id) }))}
+      aktiv="opprett"
+    >
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5">
+        <Section step={1} title="Kunde og kjøretøy">
+          <KundeIFlyt
+            customerId={customerId}
+            vehicleId={vehicleId}
+            onCustomer={(id) => {
+              setCustomerId(id);
+              setVehicleId('');
+            }}
+            onVehicle={setVehicleId}
+          />
 
-      <Section step={1} title="Kunde og kjøretøy">
-        <KundeIFlyt
-          customerId={customerId}
-          vehicleId={vehicleId}
-          onCustomer={(id) => {
-            setCustomerId(id);
-            setVehicleId('');
-          }}
-          onVehicle={setVehicleId}
-        />
-
-        <div className="flex items-end gap-2">
-          <Field label="Slå opp regnr (Vegvesen)">
-            <div className="relative">
-              <Car
-                size={14}
-                className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 text-fg-faint"
-              />
-              <input
-                value={regNumber}
-                onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
-                placeholder="EK12345"
-                className={`${inputCls} pl-9`}
-              />
-            </div>
-          </Field>
-          <button
-            type="button"
-            disabled={regNumber.trim().length < 2 || lookup.isFetching}
-            onClick={() => lookup.refetch()}
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-border bg-bg px-3 text-fg text-sm hover:bg-surface-2 disabled:opacity-50"
-          >
-            <Search size={14} />
-            {lookup.isFetching ? 'Slår opp …' : 'Slå opp'}
-          </button>
-        </div>
-        {lookup.isError && (
-          <p className="text-fg-faint text-xs">Klarte ikke slå opp regnr akkurat nå.</p>
-        )}
-        {lookup.data && (
-          <p className="text-success text-xs">
-            {lookup.data.make} {lookup.data.model} ({lookup.data.modelYear}) — EU-frist{' '}
-            {lookup.data.inspectionDue ?? '—'}
-          </p>
-        )}
-      </Section>
-
-      <Section step={2} title="Tjenester og tid">
-        <fieldset className="flex flex-col gap-1.5">
-          <legend className="text-fg-faint text-xs">Tjenester</legend>
-          {(services.data ?? []).length === 0 ? (
-            <p className="text-fg-faint text-xs">Ingen aktive tjenester i katalogen.</p>
-          ) : (
-            (services.data ?? []).map((s) => {
-              const on = serviceIds.includes(s.id);
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => toggleService(s.id)}
-                  className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${
-                    on ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-surface-2'
-                  }`}
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] text-fg">{s.name}</span>
-                    <span className="text-fg-faint text-xs">
-                      {s.durationMinutes} min · {fmtMinor(s.priceMinor)}
-                    </span>
-                  </span>
-                  {on && <Check size={15} className="shrink-0 text-primary" />}
-                </button>
-              );
-            })
+          <div className="flex items-end gap-2">
+            <Field label="Slå opp regnr (Vegvesen)">
+              <div className="relative">
+                <Car
+                  size={14}
+                  className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 text-fg-faint"
+                />
+                <input
+                  value={regNumber}
+                  onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
+                  placeholder="EK12345"
+                  className={`${inputCls} pl-9`}
+                />
+              </div>
+            </Field>
+            <button
+              type="button"
+              disabled={regNumber.trim().length < 2 || lookup.isFetching}
+              onClick={() => lookup.refetch()}
+              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-border bg-bg px-3 text-fg text-sm hover:bg-surface-2 disabled:opacity-50"
+            >
+              <Search size={14} />
+              {lookup.isFetching ? 'Slår opp …' : 'Slå opp'}
+            </button>
+          </div>
+          {lookup.isError && (
+            <p className="text-fg-faint text-xs">Klarte ikke slå opp regnr akkurat nå.</p>
           )}
-        </fieldset>
+          {lookup.data && (
+            <p className="text-success text-xs">
+              {lookup.data.make} {lookup.data.model} ({lookup.data.modelYear}) — EU-frist{' '}
+              {lookup.data.inspectionDue ?? '—'}
+            </p>
+          )}
+        </Section>
 
-        <Field label="Varighet (minutter)">
+        <Section step={2} title="Tjenester og tid">
+          <fieldset className="flex flex-col gap-1.5">
+            <legend className="text-fg-faint text-xs">Tjenester</legend>
+            {(services.data ?? []).length === 0 ? (
+              <p className="text-fg-faint text-xs">Ingen aktive tjenester i katalogen.</p>
+            ) : (
+              (services.data ?? []).map((s) => {
+                const on = serviceIds.includes(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => toggleService(s.id)}
+                    className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${
+                      on
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border bg-card hover:bg-surface-2'
+                    }`}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] text-fg">{s.name}</span>
+                      <span className="text-fg-faint text-xs">
+                        {s.durationMinutes} min · {fmtMinor(s.priceMinor)}
+                      </span>
+                    </span>
+                    {on && <Check size={15} className="shrink-0 text-primary" />}
+                  </button>
+                );
+              })
+            )}
+          </fieldset>
+
+          <Field label="Varighet (minutter)">
+            <input
+              type="number"
+              min={5}
+              max={720}
+              step={5}
+              value={durationManual ? durationMinutes : catalogSum || ''}
+              onChange={(e) => onDurationChange(e.target.value)}
+              placeholder={catalogSum ? String(catalogSum) : 'Velg tjenester'}
+              className={inputCls}
+            />
+          </Field>
+          {selected.length > 0 && (
+            <p className="text-fg-muted text-xs">
+              Katalogtid {catalogSum} min
+              {selected.length > 1 ? ` (sum av ${selected.length} tjenester)` : ''}.
+              {durationManual
+                ? ' Justeres manuelt for denne jobben.'
+                : ' Du kan overstyre tiden selv.'}
+              {durationManual && (
+                <>
+                  {' '}
+                  <button
+                    type="button"
+                    onClick={resetDuration}
+                    className="text-fg underline decoration-border underline-offset-2 hover:text-fg"
+                  >
+                    Bruk katalogtid
+                  </button>
+                </>
+              )}
+            </p>
+          )}
+
+          <Field label="Starttid">
+            <StarttidVelger
+              value={startsAt}
+              onChange={(iso) => {
+                setStartsAt(iso);
+                setMechanicId('');
+              }}
+            />
+          </Field>
+          {window && selected.length > 0 && (
+            <p className="text-fg-muted text-xs">
+              Slutter{' '}
+              {window.to.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} ·{' '}
+              {slotMinutes} min
+              {requiredSkills.length > 0 && ` · krever: ${requiredSkills.join(', ')}`}
+            </p>
+          )}
+        </Section>
+
+        <Section step={3} title="Mekaniker">
+          {!primary || !window ? (
+            <p className="text-fg-faint text-xs">Velg tjenester og tid, så foreslår matcheren.</p>
+          ) : match.isLoading ? (
+            <p className="text-fg-faint text-xs">Matcher …</p>
+          ) : (match.data ?? []).length === 0 ? (
+            <p className="text-warn text-xs">
+              Ingen kvalifisert mekaniker er ledig i dette tidsrommet. Prøv en annen tid.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {(match.data ?? []).map((cand, i) => {
+                const selectedMech = mechanicId === cand.mechanicId;
+                return (
+                  <button
+                    key={cand.mechanicId}
+                    type="button"
+                    onClick={() => setMechanicId(cand.mechanicId)}
+                    className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${
+                      selectedMech ? 'ring-2 ring-fg ring-offset-1' : ''
+                    }`}
+                    style={staffFargeStil(
+                      mechanics.data?.find((m) => m.id === cand.mechanicId)?.farge,
+                      cand.mechanicId,
+                    )}
+                  >
+                    <span
+                      aria-hidden
+                      className="size-2.5 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor: hexForFarge(
+                          mechanics.data?.find((m) => m.id === cand.mechanicId)?.farge,
+                          cand.mechanicId,
+                        ),
+                      }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 text-[13px] text-fg">
+                        {mechName.get(cand.mechanicId) ?? cand.mechanicId}
+                        {i === 0 && (
+                          <span className="inline-flex items-center gap-0.5 rounded bg-primary/15 px-1.5 py-0.5 text-[10px] text-primary">
+                            <Sparkles size={9} /> best treff
+                          </span>
+                        )}
+                      </p>
+                      {cand.reasons.length > 0 && (
+                        <p className="truncate text-fg-faint text-xs">{cand.reasons.join(' · ')}</p>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-fg-muted text-xs tabular-nums">
+                      {Math.round(cand.score * 100)}%
+                    </span>
+                    {selectedMech && <Check size={15} className="shrink-0 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </Section>
+
+        <Field label="Notat (valgfritt)">
           <input
-            type="number"
-            min={5}
-            max={720}
-            step={5}
-            value={durationManual ? durationMinutes : catalogSum || ''}
-            onChange={(e) => onDurationChange(e.target.value)}
-            placeholder={catalogSum ? String(catalogSum) : 'Velg tjenester'}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Intern beskjed til mekanikeren …"
             className={inputCls}
           />
         </Field>
-        {selected.length > 0 && (
-          <p className="text-fg-muted text-xs">
-            Katalogtid {catalogSum} min
-            {selected.length > 1 ? ` (sum av ${selected.length} tjenester)` : ''}.
-            {durationManual
-              ? ' Justeres manuelt for denne jobben.'
-              : ' Du kan overstyre tiden selv.'}
-            {durationManual && (
-              <>
-                {' '}
-                <button
-                  type="button"
-                  onClick={resetDuration}
-                  className="text-fg underline decoration-border underline-offset-2 hover:text-fg"
-                >
-                  Bruk katalogtid
-                </button>
-              </>
-            )}
+
+        {create.isError && (
+          <p className="text-danger text-sm">
+            {create.error.data?.code === 'CONFLICT'
+              ? 'Mekanikeren er allerede opptatt i dette tidsrommet. Velg en annen tid eller mekaniker.'
+              : create.error.message}
           </p>
         )}
 
-        <Field label="Starttid">
-          <StarttidVelger
-            value={startsAt}
-            onChange={(iso) => {
-              setStartsAt(iso);
-              setMechanicId('');
-            }}
-          />
-        </Field>
-        {window && selected.length > 0 && (
-          <p className="text-fg-muted text-xs">
-            Slutter {window.to.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}{' '}
-            · {slotMinutes} min
-            {requiredSkills.length > 0 && ` · krever: ${requiredSkills.join(', ')}`}
-          </p>
-        )}
-      </Section>
-
-      <Section step={3} title="Mekaniker">
-        {!primary || !window ? (
-          <p className="text-fg-faint text-xs">Velg tjenester og tid, så foreslår matcheren.</p>
-        ) : match.isLoading ? (
-          <p className="text-fg-faint text-xs">Matcher …</p>
-        ) : (match.data ?? []).length === 0 ? (
-          <p className="text-warn text-xs">
-            Ingen kvalifisert mekaniker er ledig i dette tidsrommet. Prøv en annen tid.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-1.5">
-            {(match.data ?? []).map((cand, i) => {
-              const selectedMech = mechanicId === cand.mechanicId;
-              return (
-                <button
-                  key={cand.mechanicId}
-                  type="button"
-                  onClick={() => setMechanicId(cand.mechanicId)}
-                  className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${
-                    selectedMech ? 'ring-2 ring-fg ring-offset-1' : ''
-                  }`}
-                  style={staffFargeStil(
-                    mechanics.data?.find((m) => m.id === cand.mechanicId)?.farge,
-                    cand.mechanicId,
-                  )}
-                >
-                  <span
-                    aria-hidden
-                    className="size-2.5 shrink-0 rounded-full"
-                    style={{
-                      backgroundColor: hexForFarge(
-                        mechanics.data?.find((m) => m.id === cand.mechanicId)?.farge,
-                        cand.mechanicId,
-                      ),
-                    }}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 text-[13px] text-fg">
-                      {mechName.get(cand.mechanicId) ?? cand.mechanicId}
-                      {i === 0 && (
-                        <span className="inline-flex items-center gap-0.5 rounded bg-primary/15 px-1.5 py-0.5 text-[10px] text-primary">
-                          <Sparkles size={9} /> best treff
-                        </span>
-                      )}
-                    </p>
-                    {cand.reasons.length > 0 && (
-                      <p className="truncate text-fg-faint text-xs">{cand.reasons.join(' · ')}</p>
-                    )}
-                  </div>
-                  <span className="shrink-0 text-fg-muted text-xs tabular-nums">
-                    {Math.round(cand.score * 100)}%
-                  </span>
-                  {selectedMech && <Check size={15} className="shrink-0 text-primary" />}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </Section>
-
-      <Field label="Notat (valgfritt)">
-        <input
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Intern beskjed til mekanikeren …"
-          className={inputCls}
-        />
-      </Field>
-
-      {create.isError && (
-        <p className="text-danger text-sm">
-          {create.error.data?.code === 'CONFLICT'
-            ? 'Mekanikeren er allerede opptatt i dette tidsrommet. Velg en annen tid eller mekaniker.'
-            : create.error.message}
-        </p>
-      )}
-
-      <button
-        type="button"
-        disabled={!canBook || create.isPending}
-        onClick={book}
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-6 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-      >
-        <Check size={16} />
-        {create.isPending ? 'Oppretter …' : 'Opprett jobb'}
-      </button>
-    </div>
+        <button
+          type="button"
+          disabled={!canBook || create.isPending}
+          onClick={book}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-6 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
+        >
+          <Check size={16} />
+          {create.isPending ? 'Oppretter …' : 'Opprett jobb'}
+        </button>
+      </div>
+    </SideChromeSkall>
   );
 }
 

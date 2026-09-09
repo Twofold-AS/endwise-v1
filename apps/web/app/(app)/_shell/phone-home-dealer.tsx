@@ -81,19 +81,8 @@ export function useDealerHjemKort() {
 }
 
 export function DealerPulseKort({ className }: { className?: string }) {
-  const {
-    bookings,
-    threads,
-    oversikt,
-    deler,
-    idag,
-    dag,
-    endringer,
-    innboks,
-    lager,
-    ansatte,
-    analyser,
-  } = useDealerHjemKort();
+  const { bookings, threads, oversikt, deler, idag, dag, innboks, lager, ansatte, analyser } =
+    useDealerHjemKort();
   const lasterJobber = bookings.isLoading;
 
   return (
@@ -106,8 +95,6 @@ export function DealerPulseKort({ className }: { className?: string }) {
         paagaar={idag.paagaar}
         ferdig={idag.ferdig}
         lasterJobber={lasterJobber}
-        endringer={endringer}
-        lasterEndringer={lasterJobber}
       />
 
       <PulseRadKort

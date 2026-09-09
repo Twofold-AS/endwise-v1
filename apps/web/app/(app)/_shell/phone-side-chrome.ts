@@ -1,6 +1,32 @@
 import { HJELP_FANER, type HjelpFaneId, hjelpHref, parseHjelpFane } from '../hjelp/_faner';
 import { type FaneId, innstillingerHref, parseFane, synligeFaner } from '../innstillinger/_faner';
 import {
+  erTimeplanSti,
+  parseTimeplanFane,
+  TIMEPLAN_FANER,
+  type TimeplanFaneId,
+  timeplanHref,
+} from '../jobber/_faner';
+import {
+  erKunderSti,
+  KUNDER_FANER,
+  type KunderFaneId,
+  kunderHref,
+  parseKunderFane,
+} from '../kunder/_faner';
+import {
+  erOrganisasjonChromeSti,
+  parseOrgChrome,
+  synligeOrgChrome,
+} from '../organisasjon/_seksjoner';
+import {
+  erTjenesterSti,
+  parseTjenesterFane,
+  TJENESTER_FANER,
+  type TjenesterFaneId,
+  tjenesterHref,
+} from '../prisliste/_faner';
+import {
   parseStatistikkFane,
   STATISTIKK_FANER,
   type StatistikkFaneId,
@@ -15,7 +41,14 @@ export type PhoneSideChromeFane = {
 };
 
 export type PhoneSideChrome = {
-  id: 'innstillinger' | 'hjelp' | 'statistikk';
+  id:
+    | 'innstillinger'
+    | 'hjelp'
+    | 'statistikk'
+    | 'timeplan'
+    | 'kunder'
+    | 'tjenester'
+    | 'organisasjon';
   tittel: string;
   faner: PhoneSideChromeFane[];
   aktiv: string;
@@ -30,7 +63,15 @@ export function erStatistikkSti(pathname: string): boolean {
 }
 
 export function erPhoneSideChrome(pathname: string): boolean {
-  return erSettingsSti(pathname) || erHjelpSti(pathname) || erStatistikkSti(pathname);
+  return (
+    erSettingsSti(pathname) ||
+    erHjelpSti(pathname) ||
+    erStatistikkSti(pathname) ||
+    erTimeplanSti(pathname) ||
+    erKunderSti(pathname) ||
+    erTjenesterSti(pathname) ||
+    erOrganisasjonChromeSti(pathname)
+  );
 }
 
 export function phoneSideChrome(
@@ -80,6 +121,57 @@ export function phoneSideChrome(
         id: f.id,
         label: f.label,
         href: statistikkHref(f.id),
+      })),
+    };
+  }
+  if (erTimeplanSti(pathname)) {
+    const aktiv: TimeplanFaneId = parseTimeplanFane(pathname, search?.get('fane'));
+    return {
+      id: 'timeplan',
+      tittel: 'Timeplan',
+      aktiv,
+      faner: TIMEPLAN_FANER.map((f) => ({
+        id: f.id,
+        label: f.label,
+        href: timeplanHref(f.id),
+      })),
+    };
+  }
+  if (erKunderSti(pathname)) {
+    const aktiv: KunderFaneId = parseKunderFane(pathname, search?.get('fane'), search?.get('ny'));
+    return {
+      id: 'kunder',
+      tittel: 'Kunder',
+      aktiv,
+      faner: KUNDER_FANER.map((f) => ({
+        id: f.id,
+        label: f.label,
+        href: kunderHref(f.id),
+      })),
+    };
+  }
+  if (erTjenesterSti(pathname)) {
+    const aktiv: TjenesterFaneId = parseTjenesterFane(search?.get('fane'));
+    return {
+      id: 'tjenester',
+      tittel: 'Tjenester',
+      aktiv,
+      faner: TJENESTER_FANER.map((f) => ({
+        id: f.id,
+        label: f.label,
+        href: tjenesterHref(f.id),
+      })),
+    };
+  }
+  if (erOrganisasjonChromeSti(pathname)) {
+    return {
+      id: 'organisasjon',
+      tittel: 'Organisasjon',
+      aktiv: parseOrgChrome(pathname, search?.get('seksjon'), opts.isAdmin),
+      faner: synligeOrgChrome(opts.isAdmin).map((f) => ({
+        id: f.id,
+        label: f.label,
+        href: f.href,
       })),
     };
   }

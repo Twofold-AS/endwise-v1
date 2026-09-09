@@ -44,8 +44,6 @@ export default function PulsePreview() {
           paagaar={2}
           ferdig={1}
           lasterJobber={false}
-          endringer={0}
-          lasterEndringer={false}
           sirkelNaa={sirkelNaa}
         />
 

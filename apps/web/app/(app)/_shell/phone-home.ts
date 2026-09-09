@@ -134,15 +134,15 @@ export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['analyser'], kind: 'full' },
 ];
 
-/** Ikon nederst på toppkortet. Ingen dealer-avviksliste ennå (F7-05) — stub-rute. */
-export const PULSE_AVVIK_HREF = '/avvik';
-/** Ikon nederst på toppkortet → Hjelp › Forespørsler. */
-export const PULSE_FORESPORSEL_HREF = '/hjelp?fane=forespor';
+/** Toppkort: Avvik → Timeplan › Avvik. */
+export const PULSE_AVVIK_HREF = '/jobber?fane=avvik';
+/** Toppkort: Forespørsler → Timeplan › Forespørsler. */
+export const PULSE_FORESPORSEL_HREF = '/jobber?fane=forespor';
 /**
- * Endringer under Timeplan. Ekte `[AVVIK `-telling på badge.
- * Avvik- og Forespørsler-ikonene sitter nederst på samme toppkort.
+ * Tidligere Endringer-knapp (fjernet fra toppkortet).
+ * Avvik-listen bor på Timeplan › Avvik.
  */
-export const PULSE_ENDRINGER_HREF = '/timeplan/endringer';
+export const PULSE_ENDRINGER_HREF = '/jobber?fane=avvik';
 
 /** Små destinasjonskort under Lager. Dine jobber og Lager er egne flater. */
 export const MEKANIKER_PHONE_HURTIG: PhoneKortKey[] = ['kompetanse', 'timeplan', 'hjelp'];

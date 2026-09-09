@@ -77,18 +77,20 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
         role: 'dealer_admin',
         shell: 'forhandler',
       }).map((f) => f.label),
-    ).toEqual(['Oversikt', 'Ansatte', 'Abonnement', 'Integrasjoner']);
+    ).toEqual(['Oversikt', 'Ansatte', 'Timeplan', 'Abonnement', 'Integrasjoner']);
 
     expect(
       destinasjonFaner({
         pathname: '/jobber',
-        search: 'visning=kalender',
+        search: 'fane=avvik',
         role: 'dealer_admin',
         shell: 'forhandler',
       }).map((f) => ({ label: f.label, valgt: f.valgt })),
     ).toEqual([
-      { label: 'Liste', valgt: false },
-      { label: 'Kalender', valgt: true },
+      { label: 'Timeplan', valgt: false },
+      { label: 'Opprett jobb', valgt: false },
+      { label: 'Avvik', valgt: true },
+      { label: 'Forespørsler', valgt: false },
     ]);
 
     expect(
@@ -97,7 +99,7 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
         role: 'dealer_staff',
         shell: 'forhandler',
       }).map((f) => f.label),
-    ).toEqual(['Kunder', 'Kjøretøy']);
+    ).toEqual(['Alle kunder', 'Opprett kunde', 'Registrer kjøretøy']);
 
     expect(
       destinasjonFaner({
@@ -157,7 +159,10 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
         role: 'dealer_admin',
         shell: 'forhandler',
       }),
-    ).toEqual([{ label: 'Tjenester', href: '/prisliste', valgt: true }]);
+    ).toEqual([
+      { label: 'Alle tjenester', href: '/prisliste', valgt: true },
+      { label: 'Opprett tjenester', href: '/prisliste?fane=opprett', valgt: false },
+    ]);
   });
 });
 

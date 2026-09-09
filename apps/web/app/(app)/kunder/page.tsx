@@ -6,8 +6,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { Feil, Kilde, Laster, Tomt } from './_delt';
+import { KUNDER_FANER, kunderHref, parseKunderFane } from './_faner';
 import { NyKunde } from './_ny-kunde';
+import { RegistrerKjoretoy } from './_registrer-kjoretoy';
 
 /**
  * Kunder. Liste med søk og filtrering.
@@ -37,7 +40,8 @@ function KunderInner() {
    * ingenting den parameteren — knappen gikk til en side som så uendret ut.
    * Samme feil som /innboks?ny=1 hadde. Se `_ny-kunde.tsx`.
    */
-  const nyKunde = params?.get('ny') === '1';
+  const aktiv = parseKunderFane('/kunder', params?.get('fane'), params?.get('ny'));
+  const nyKunde = aktiv === 'opprett';
   const [sorter, setSorter] = useState<'navn' | 'opprettet'>('navn');
   const [kilde, setKilde] = useState<'alle' | 'endwise' | 'quick'>('alle');
 
@@ -50,141 +54,130 @@ function KunderInner() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="sr-only">Kunder</h1>
-          <p className="text-title text-fg">Kunder</p>
-          <p className="text-body text-fg-muted">
-            Søk opp en kunde for å se kjøretøy, historikk og meldinger samlet. Kunder opprettes her
-            — Quick er fakta når det er koblet på.
-          </p>
-        </div>
-        {!nyKunde && (
-          <Link
-            href={'/kunder?ny=1' as Route}
-            className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
-          >
-            <Plus size={14} strokeWidth={1.75} />
-            Ny kunde
-          </Link>
-        )}
-      </div>
-
-      {nyKunde && <NyKunde onLukk={() => router.replace('/kunder' as Route)} />}
-
-      {/* Søk + filtre */}
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="relative flex h-control min-w-[260px] flex-1 items-center">
-          <Search
-            size={15}
-            strokeWidth={1.75}
-            className="pointer-events-none absolute left-2.5 text-fg-muted"
-            aria-hidden
-          />
-          <input
-            value={sok}
-            onChange={(e) => setSok(e.target.value)}
-            placeholder="Søk på navn, e-post eller telefon"
-            aria-label="Søk i kunder"
-            className="h-control w-full ew-felt ew-felt-md pr-3 pl-8"
-          />
-        </label>
-
-        <Knapperad
-          aria-label="Kilde"
-          valg={KILDER}
-          aktiv={kilde}
-          onVelg={(k) => setKilde(k as typeof kilde)}
-        />
-        <Knapperad
-          aria-label="Sortering"
-          valg={SORTERINGER}
-          aktiv={sorter}
-          onVelg={(k) => setSorter(k as typeof sorter)}
-        />
-      </div>
-
-      {kunder.isLoading ? (
-        <Laster />
-      ) : kunder.isError ? (
-        <Feil melding={kunder.error.message} />
-      ) : (kunder.data?.length ?? 0) === 0 ? (
+    <SideChromeSkall
+      tittel="Kunder"
+      ingress="Søk, opprett og endre kunder. Quick er fakta når det er koblet på."
+      faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
+      aktiv={aktiv}
+    >
+      {nyKunde ? <NyKunde onLukk={() => router.replace('/kunder' as Route)} /> : null}
+      {aktiv === 'kjoretoy' ? <RegistrerKjoretoy /> : null}
+      {aktiv === 'alle' ? (
         <>
-          <Tomt
-            tittel={sok ? 'Ingen treff' : 'Ingen kunder ennå'}
-            hint={
-              sok
-                ? 'Prøv et annet søk, eller fjern filteret.'
-                : 'Opprett kunden her. Uten Quick lagrer Endwise kunden selv — ingen synk kreves.'
-            }
-          />
-          {!sok && !nyKunde && (
-            <div className="-mt-2 flex justify-center">
-              <Link
-                href={'/kunder?ny=1' as Route}
-                className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
-              >
-                <Plus size={14} strokeWidth={1.75} />
-                Ny kunde
-              </Link>
+          {/* Søk + filtre */}
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="relative flex h-control min-w-[260px] flex-1 items-center">
+              <Search
+                size={15}
+                strokeWidth={1.75}
+                className="pointer-events-none absolute left-2.5 text-fg-muted"
+                aria-hidden
+              />
+              <input
+                value={sok}
+                onChange={(e) => setSok(e.target.value)}
+                placeholder="Søk på navn, e-post eller telefon"
+                aria-label="Søk i kunder"
+                className="h-control w-full ew-felt ew-felt-md pr-3 pl-8"
+              />
+            </label>
+
+            <Knapperad
+              aria-label="Kilde"
+              valg={KILDER}
+              aktiv={kilde}
+              onVelg={(k) => setKilde(k as typeof kilde)}
+            />
+            <Knapperad
+              aria-label="Sortering"
+              valg={SORTERINGER}
+              aktiv={sorter}
+              onVelg={(k) => setSorter(k as typeof sorter)}
+            />
+          </div>
+
+          {kunder.isLoading ? (
+            <Laster />
+          ) : kunder.isError ? (
+            <Feil melding={kunder.error.message} />
+          ) : (kunder.data?.length ?? 0) === 0 ? (
+            <>
+              <Tomt
+                tittel={sok ? 'Ingen treff' : 'Ingen kunder ennå'}
+                hint={
+                  sok
+                    ? 'Prøv et annet søk, eller fjern filteret.'
+                    : 'Opprett kunden her. Uten Quick lagrer Endwise kunden selv — ingen synk kreves.'
+                }
+              />
+              {!sok && !nyKunde && (
+                <div className="-mt-2 flex justify-center">
+                  <Link
+                    href={'/kunder?ny=1' as Route}
+                    className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
+                  >
+                    <Plus size={14} strokeWidth={1.75} />
+                    Ny kunde
+                  </Link>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-border">
+              {kunder.data?.map((k, i) => (
+                <Link key={k.id} href={`/kunder/${k.id}` as Route} className="group block">
+                  <div
+                    className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
+                      i > 0 ? 'border-border border-t' : ''
+                    }`}
+                  >
+                    {/* Samme seed som kundekortet raden lenker til. */}
+                    <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
+
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="flex items-center gap-2 truncate text-label text-fg">
+                        {k.name}
+                        <Kilde source={k.source} />
+                      </span>
+                      <span className="flex items-center gap-3 truncate text-[12px] text-fg-muted">
+                        {k.phone && (
+                          <span className="inline-flex items-center gap-1">
+                            <Phone size={12} strokeWidth={1.75} />
+                            {k.phone}
+                          </span>
+                        )}
+                        {k.email && (
+                          <span className="inline-flex items-center gap-1 truncate">
+                            <Mail size={12} strokeWidth={1.75} />
+                            {k.email}
+                          </span>
+                        )}
+                        {!k.phone && !k.email && 'Ingen kontaktinfo'}
+                      </span>
+                    </div>
+
+                    {k.antallKjoretoy > 0 && (
+                      <span className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-fg-muted tabular-nums">
+                        <Car size={14} strokeWidth={1.75} />
+                        {k.antallKjoretoy}
+                      </span>
+                    )}
+                    <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
+                  </div>
+                </Link>
+              ))}
             </div>
           )}
+
+          <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
+            <Users size={14} />
+            {kunder.isLoading
+              ? 'Laster kunder …'
+              : `${kunder.data?.length ?? 0} kunder vist. Filtrene over gjelder kun denne lista.`}
+          </p>
         </>
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
-          {kunder.data?.map((k, i) => (
-            <Link key={k.id} href={`/kunder/${k.id}` as Route} className="group block">
-              <div
-                className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
-                  i > 0 ? 'border-border border-t' : ''
-                }`}
-              >
-                {/* Samme seed som kundekortet raden lenker til. */}
-                <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
-
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="flex items-center gap-2 truncate text-label text-fg">
-                    {k.name}
-                    <Kilde source={k.source} />
-                  </span>
-                  <span className="flex items-center gap-3 truncate text-[12px] text-fg-muted">
-                    {k.phone && (
-                      <span className="inline-flex items-center gap-1">
-                        <Phone size={12} strokeWidth={1.75} />
-                        {k.phone}
-                      </span>
-                    )}
-                    {k.email && (
-                      <span className="inline-flex items-center gap-1 truncate">
-                        <Mail size={12} strokeWidth={1.75} />
-                        {k.email}
-                      </span>
-                    )}
-                    {!k.phone && !k.email && 'Ingen kontaktinfo'}
-                  </span>
-                </div>
-
-                {k.antallKjoretoy > 0 && (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-fg-muted tabular-nums">
-                    <Car size={14} strokeWidth={1.75} />
-                    {k.antallKjoretoy}
-                  </span>
-                )}
-                <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
-        <Users size={14} />
-        {kunder.isLoading
-          ? 'Laster kunder …'
-          : `${kunder.data?.length ?? 0} kunder vist. Filtrene over gjelder kun denne lista.`}
-      </p>
-    </div>
+      ) : null}
+    </SideChromeSkall>
   );
 }
 

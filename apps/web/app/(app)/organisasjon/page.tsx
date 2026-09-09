@@ -3,17 +3,17 @@
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useOrgRole } from '../_lib/use-org-role';
+import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { AbonnementInnhold } from '../abonnement/_innhold';
 import { IntegrasjonerInnhold } from '../integrasjoner/_innhold';
 import { TjenesterInnhold } from '../tjenester/_innhold';
 import { OrganisasjonAnsatte } from './_ansatte';
-import { OrganisasjonListe } from './_liste';
-import { parseOrgSeksjon } from './_seksjoner';
+import { parseOrgSeksjon, synligeOrgChrome } from './_seksjoner';
 import { ForhandlerKort } from './forhandleren/_kort';
 
 /**
- * Organisasjon — gruppert liste (Ansatte → Timeplan → Abonnement → Integrasjoner).
- * Ingen top-bar 2 / piller. Landing har valgfri dealer-meta (forhandlerkort).
+ * Organisasjon — Innstillinger-chrome.
+ * Bunnknappene (Ansatte / Timeplan / …) sitter i top-bar 2.
  */
 export default function OrganisasjonPage() {
   return (
@@ -29,22 +29,20 @@ function OrganisasjonIndre() {
   const seksjon = parseOrgSeksjon(params?.get('seksjon'), isAdmin);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
+    <SideChromeSkall
+      tittel="Organisasjon"
+      ingress="Ansatte, abonnement og integrasjoner."
+      faner={synligeOrgChrome(isAdmin)}
+      aktiv={seksjon}
+    >
       {seksjon === 'oversikt' ? (
         <section className="flex flex-col gap-8" aria-label="Organisasjon">
           <ForhandlerKort />
-          <OrganisasjonListe isAdmin={isAdmin} />
         </section>
       ) : null}
       {seksjon === 'ansatte' ? <OrganisasjonAnsatte /> : null}
       {seksjon === 'abonnement' ? (
         <section className="flex flex-col gap-8" aria-label="Abonnement">
-          <div>
-            <h1 className="text-title text-fg">Abonnement</h1>
-            <p className="text-body text-fg-muted">
-              Hva dere betaler Endwise. Tjenester & priser ligger på samme flate.
-            </p>
-          </div>
           <AbonnementInnhold />
           <div>
             <h2 className="text-title text-fg">Tjenester & priser</h2>
@@ -57,15 +55,9 @@ function OrganisasjonIndre() {
       ) : null}
       {seksjon === 'integrasjoner' ? (
         <section className="flex flex-col gap-5" aria-label="Integrasjoner">
-          <div>
-            <h1 className="text-title text-fg">Integrasjoner</h1>
-            <p className="text-body text-fg-muted">
-              Verktøy fra andre leverandører som Endwise snakker med.
-            </p>
-          </div>
           <IntegrasjonerInnhold />
         </section>
       ) : null}
-    </div>
+    </SideChromeSkall>
   );
 }

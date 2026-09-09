@@ -13,6 +13,14 @@
 >
 > Fila oppdateres **hver gang** en ny UI-pakke tas inn. Ingen unntak.
 
+> ### ⚠️ Mikael CODE-GO IA + chrome (09.09.2026)
+> Toppkort: **ingen Endringer-knapp**. Del 1 + dagsirkel 08–19 urørt. Avvik og
+> Forespørsler er **Modus-plater** (`.ew-modus-plate`) → Timeplan-faner
+> (`/jobber?fane=avvik` · `/jobber?fane=forespor`). Timeplan / Kunder /
+> Tjenester / Organisasjon deler Innstillinger-chrome (midtstilt tittel +
+> underline-faner). Jobb-ikon flush høyre. Ronny `heureux` uten pliss
+> (åpne øyne). Ingen ny pakke. ⛔ #114/#119. ⛔ `#0066ff` på dagsirkelen.
+>
 > ### ⚠️ Tailwind-gotcha (16.07.2026)
 > `apps/web` MÅ ha `@source "../../../packages/ui/src/**/*.{ts,tsx}"` i `globals.css`. Tailwind v4
 > skanner ikke workspace-pakker automatisk — uten dette genereres ikke klasser som brukes KUN inne i

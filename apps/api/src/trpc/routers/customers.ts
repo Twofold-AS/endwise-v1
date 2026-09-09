@@ -206,6 +206,59 @@ export const customersRouter = router({
       }
     }),
 
+  update: staffProcedure
+    .input(
+      z.object({
+        id: z.uuid(),
+        name: z.string().min(1).max(160).optional(),
+        email: z.email().nullable().optional(),
+        phone: z.string().min(3).max(32).nullable().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [forrige] = await tx
+            .select()
+            .from(schema.customers)
+            .where(
+              and(eq(schema.customers.id, input.id), eq(schema.customers.tenantId, ctx.tenantId)),
+            )
+            .limit(1);
+          if (!forrige) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke kunden' });
+
+          const [oppdatert] = await tx
+            .update(schema.customers)
+            .set({
+              name: input.name ?? forrige.name,
+              email: input.email === undefined ? forrige.email : input.email,
+              phone: input.phone === undefined ? forrige.phone : input.phone,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(eq(schema.customers.id, input.id), eq(schema.customers.tenantId, ctx.tenantId)),
+            )
+            .returning();
+          if (!oppdatert) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke kunden' });
+
+          const logg = endringslogg(forrige, oppdatert);
+          if (logg) {
+            await tx.insert(schema.customerNotes).values({
+              customerId: input.id,
+              tenantId: ctx.tenantId,
+              authorId: ctx.userId,
+              body: logg,
+            });
+          }
+          return oppdatert;
+        });
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        loggDealerWritePostgresFeil('customers', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke oppdatere kunden. Prøv igjen.');
+      }
+    }),
+
   addNote: staffProcedure
     .input(z.object({ customerId: z.uuid(), body: z.string().min(1).max(4000) }))
     .mutation(async ({ ctx, input }) => {
@@ -236,3 +289,18 @@ export const customersRouter = router({
       }
     }),
 });
+
+function endringslogg(
+  forrige: { name: string; email: string | null; phone: string | null },
+  neste: { name: string; email: string | null; phone: string | null },
+): string | null {
+  const linjer: string[] = [];
+  if (forrige.name !== neste.name) linjer.push(`Navn: ${forrige.name} → ${neste.name}`);
+  if (forrige.phone !== neste.phone) {
+    linjer.push(`Telefon: ${forrige.phone ?? '—'} → ${neste.phone ?? '—'}`);
+  }
+  if (forrige.email !== neste.email) {
+    linjer.push(`E-post: ${forrige.email ?? '—'} → ${neste.email ?? '—'}`);
+  }
+  return linjer.length ? `[ENDRING]\n${linjer.join('\n')}` : null;
+}

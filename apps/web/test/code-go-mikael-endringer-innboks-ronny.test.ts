@@ -24,7 +24,7 @@ function utenKommentarer(kilde: string) {
 
 describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
   it('Endringer-rute og ekte avvik-telling, 0 vises', () => {
-    expect(PULSE_ENDRINGER_HREF).toBe('/timeplan/endringer');
+    expect(PULSE_ENDRINGER_HREF).toBe('/jobber?fane=avvik');
     expect(PARKED_LABEL['/timeplan/endringer']).toBe('Endringer');
     expect(AVVIK_NOTAT_PREFIKS).toBe('[AVVIK ');
     expect(
@@ -48,8 +48,8 @@ describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
     expect(kort).toMatch(/data-pulse-hero-todelt/);
     expect(kort).toMatch(/data-pulse-ukedag/);
     expect(kort).toMatch(/data-pulse-dato/);
-    expect(kort).toMatch(/PulseEndringerLenke/);
-    expect(kort).toMatch(/data-pulse-endringer-tall/);
+    expect(kort).not.toMatch(/PulseEndringerLenke/);
+    expect(kort).toMatch(/PulseValgLenke/);
     expect(kort).toMatch(/DitherDonutChart/);
     expect(kort).toMatch(/#141414/);
     expect(kort).toMatch(/#e0e0e0/);
@@ -61,9 +61,10 @@ describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
     expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeGreaterThan(
       hjem.lastIndexOf('PulseJobbFlis'),
     );
-    expect(side).toMatch(/data-timeplan-endringer/);
-    expect(side).toMatch(/Godkjenn/);
-    expect(side).toMatch(/F7-05/);
+    expect(side).toMatch(/jobber\?fane=avvik/);
+    expect(les('../app/(app)/jobber/_avvik.tsx')).toMatch(/data-timeplan-endringer/);
+    expect(les('../app/(app)/jobber/_avvik.tsx')).toMatch(/Godkjenn/);
+    expect(les('../app/(app)/jobber/_avvik.tsx')).toMatch(/F7-05/);
   });
 });
 

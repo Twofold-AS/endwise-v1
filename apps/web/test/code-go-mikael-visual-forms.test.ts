@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { velgKjoretoyForJobb } from '../app/(app)/bookinger/_knytt-kjoretoy.ts';
 import { DEALER_PULSE_KEYS } from '../app/(app)/_shell/phone-home.ts';
 import { fmtPulseTime } from '../app/(app)/_shell/phone-home-pulse.ts';
+import { velgKjoretoyForJobb } from '../app/(app)/bookinger/_knytt-kjoretoy.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -83,7 +83,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(popup).toMatch(/PHONE_PROFIL_RAD/);
     const samtale = utenKommentarer(les('../app/(app)/innboks/_ny-samtale.tsx'));
     expect(samtale).toMatch(/data-ny-melding-send/);
-    expect(samtale).toMatch(/>Send</);
+    expect(samtale).toMatch(/Send\s*<\/StatefulButton>/);
     expect(samtale).toMatch(/InnstillingSeksjon/);
     expect(samtale).toMatch(/data-ny-samtale-knapperad/);
   });

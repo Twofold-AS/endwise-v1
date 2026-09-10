@@ -5,8 +5,8 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
+import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
 import { TIMEPLAN_FANER, timeplanHref } from '../../jobber/_faner';
 import { velgKjoretoyForJobb } from '../_knytt-kjoretoy';
@@ -147,9 +147,9 @@ export default function NyJobbPage() {
         customerId: customerId || undefined,
         type: 'mc',
         regNumber: valg.regNumber,
-        make: lookup.data?.make,
-        model: lookup.data?.model,
-        modelYear: lookup.data?.modelYear,
+        make: lookup.data?.make ?? undefined,
+        model: lookup.data?.model ?? undefined,
+        modelYear: lookup.data?.modelYear ?? undefined,
       });
       festetId = v?.id;
       if (festetId) setVehicleId(festetId);
@@ -192,7 +192,11 @@ export default function NyJobbPage() {
               if (reg) setRegNumber(reg);
             }}
           />
-          <InnstillingRad label="Registreringsnummer" hint="Følger jobben. Vegvesen fyller merke/modell." siste>
+          <InnstillingRad
+            label="Registreringsnummer"
+            hint="Følger jobben. Vegvesen fyller merke/modell."
+            siste
+          >
             <div className="flex items-end gap-2" data-opprett-jobb-kjoretoy>
               <div className="relative min-w-0 flex-1">
                 <Car
@@ -378,14 +382,14 @@ export default function NyJobbPage() {
         </InnstillingSeksjon>
 
         <InnstillingSeksjon tittel="Notat">
-        <InnstillingRad label="Intern beskjed" siste>
-          <input
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Intern beskjed til mekanikeren …"
-            className={inputCls}
-          />
-        </InnstillingRad>
+          <InnstillingRad label="Intern beskjed" siste>
+            <input
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Intern beskjed til mekanikeren …"
+              className={inputCls}
+            />
+          </InnstillingRad>
         </InnstillingSeksjon>
 
         {create.isError && (

@@ -127,7 +127,7 @@ export function PulseEndringerLenke() {
       data-pulse-ikon="Endringer"
       className="inline-flex shrink-0 items-center gap-1 text-label font-normal text-fg [touch-action:manipulation]"
     >
-      Endringer
+      <span>Endringer</span>
       <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
     </Link>
   );
@@ -224,7 +224,7 @@ export function PulseDagSirkel({
             sweep={PULSE_DAG_BUE_SWEEP}
             slices={[
               { name: 'passert', value: passert, color: PULSE_DAG_FYLL_INK },
-              { name: 'igjen', value: igjen, color: PULSE_DAG_FYLL_HAIRLINE },
+              { name: 'igjen', value: igjen, color: PULSE_DAG_FYLL_HAIRLINE ?? '#e0e0e0' },
               { name: 'bunn', value: 0.001, color: PULSE_DAG_FYLL_SOFT },
             ]}
           />

@@ -107,40 +107,40 @@ export function NyTjeneste({ onLukk }: { onLukk: () => void }) {
         </div>
       </InnstillingSeksjon>
 
-        {(prisfeil || opprett.error) && (
-          <p className="flex items-start gap-2 text-body text-danger">
-            <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-            {prisfeil ?? opprett.error?.message}
-          </p>
-        )}
+      {(prisfeil || opprett.error) && (
+        <p className="flex items-start gap-2 text-body text-danger">
+          <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+          {prisfeil ?? opprett.error?.message}
+        </p>
+      )}
 
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onLukk}
-            className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-          >
-            Avbryt
-          </button>
-          <StatefulButton
-            type="submit"
-            disabled={!kanLagre}
-            state={
-              opprett.isPending
-                ? 'loading'
-                : opprett.isError
-                  ? 'error'
-                  : opprett.isSuccess
-                    ? 'success'
-                    : 'idle'
-            }
-            loadingText="Oppretter…"
-            successText="Opprettet"
-            errorText="Feilet"
-          >
-            Opprett tjeneste
-          </StatefulButton>
-        </div>
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onLukk}
+          className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
+        >
+          Avbryt
+        </button>
+        <StatefulButton
+          type="submit"
+          disabled={!kanLagre}
+          state={
+            opprett.isPending
+              ? 'loading'
+              : opprett.isError
+                ? 'error'
+                : opprett.isSuccess
+                  ? 'success'
+                  : 'idle'
+          }
+          loadingText="Oppretter…"
+          successText="Opprettet"
+          errorText="Feilet"
+        >
+          Opprett tjeneste
+        </StatefulButton>
+      </div>
     </form>
   );
 }

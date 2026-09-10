@@ -62,6 +62,7 @@ describe('CODE-GO Mikael — toppkort GO (blå fill, Modus, tettere dag)', () =>
     const boks = funksjon(kort, 'PulseAvvikForesporBoks');
     expect(boks).toMatch(/ew-modus-plate/);
     expect(boks).toMatch(/rounded-full/);
+    expect(boks).toMatch(/ring-1 ring-divide/);
     expect(boks).toMatch(/CircleQuestionMark/);
     expect(boks).toMatch(/TriangleAlert/);
     expect(boks).not.toMatch(/MessageSquare/);

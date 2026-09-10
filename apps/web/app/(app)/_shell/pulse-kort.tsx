@@ -153,7 +153,7 @@ export function PulseAvvikForesporBoks({
     <fieldset
       data-pulse-avvik-boks
       data-pulse-hero-bunn
-      className="ew-modus-plate m-0 flex min-h-11 min-w-0 flex-1 items-stretch overflow-hidden rounded-full border-0 p-0.5"
+      className="ew-modus-plate m-0 flex min-h-11 min-w-0 flex-1 items-stretch overflow-hidden rounded-full border-0 p-0.5 ring-1 ring-divide"
     >
       <legend className="sr-only">{`Avvik ${avvik}, Forespørsler ${forespor}`}</legend>
       <div
@@ -272,7 +272,7 @@ export function PulseDagSirkel({
           <time
             data-pulse-dag-naa
             dateTime={naaLabel}
-            className="pointer-events-none absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[15px] font-[650] leading-none text-fg tabular-nums"
+            className="pointer-events-none absolute top-[44%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-[15px] font-[650] leading-none text-fg tabular-nums"
           >
             {naaLabel}
           </time>

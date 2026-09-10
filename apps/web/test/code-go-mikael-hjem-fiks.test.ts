@@ -66,6 +66,12 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     expect(sirkel).not.toMatch(/halvBue/);
     expect(sirkel).not.toMatch(/strokeWidth/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
+    const hook = utenKommentarer(les('../../../packages/ui/src/vendor/amicro/use-canvas-setup.ts'));
+    expect(hook).toMatch(/getBoundingClientRect/);
+    expect(hook).toMatch(/AmicroCanvasRef/);
+    expect(hook).toMatch(/requestAnimationFrame/);
+    const donut = utenKommentarer(les('../../../packages/ui/src/vendor/amicro/dither-donut.tsx'));
+    expect(donut).toMatch(/requestAnimationFrame\(draw\)/);
   });
 
   it('Analyser er kort, uten anførsel, med Revenue Line uten hover', () => {

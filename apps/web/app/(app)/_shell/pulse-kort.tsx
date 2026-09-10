@@ -484,7 +484,7 @@ export function PulseAnalyserKort({
         className="pointer-events-none relative flex min-h-11 min-w-0 flex-1 basis-0 items-center overflow-hidden border-divide border-l"
         aria-hidden
       >
-        <div className="h-9 w-full px-3" data-analyser-revenue>
+        <div className="h-full min-h-9 w-full self-stretch px-3 py-1" data-analyser-revenue>
           <RevenueLineChart
             compact
             className="pointer-events-none h-full w-full"

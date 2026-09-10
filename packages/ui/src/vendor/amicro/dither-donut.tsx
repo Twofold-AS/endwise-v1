@@ -117,9 +117,15 @@ export function DitherDonutChart({
         return;
       }
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {
+        requestRef.current = requestAnimationFrame(draw);
+        return;
+      }
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        requestRef.current = requestAnimationFrame(draw);
+        return;
+      }
       const { width: logW, height: logH } = rect.current;
       if (logW === 0 || logH === 0) {
         requestRef.current = requestAnimationFrame(draw);

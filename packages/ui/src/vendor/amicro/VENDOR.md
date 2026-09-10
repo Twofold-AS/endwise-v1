@@ -43,6 +43,11 @@ hvit dither (laget for mørk bakgrunn). Endwise er lyst-only + Attio-farger:
 - Valgfri `startAngle` (default −π/2 = kl. 12). Hjem-dagsbuen bruker π
   (venstre, klokkevis mot høyre)
 - Valgfri `sweep` (default 2π). Hjem-dagsbuen bruker π (halvsirkel)
+- `useCanvasSetup` er callback-ref + `getBoundingClientRect` (med rAF-retry
+  om størrelsen er 0). Objekt-ref + `useEffect` traff tom node på hjem-kortene
+  — bitmap ble værende 300×150 og dither tegnet aldri. IntersectionObserver
+  behandler delvis klippet bue (`ratio > 0`) som synlig. Tegneloopen retrier
+  når canvas-ref ennå ikke er satt.
 
 Canvas-motoren (Bayer-lignende hash + rAF-dither) er den samme.
 

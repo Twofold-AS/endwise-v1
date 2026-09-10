@@ -69,9 +69,15 @@ export function DitherGrowthChart({
         return;
       }
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {
+        requestRef.current = requestAnimationFrame(draw);
+        return;
+      }
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        requestRef.current = requestAnimationFrame(draw);
+        return;
+      }
       const { width: w, height: h } = rect.current;
       if (w === 0 || h === 0) {
         requestRef.current = requestAnimationFrame(draw);

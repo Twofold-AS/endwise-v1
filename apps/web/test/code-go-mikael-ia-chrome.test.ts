@@ -64,7 +64,7 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     expect(hero).toMatch(/PulseEndringerLenke/);
     expect(hero).toMatch(/Endringer/);
     expect(hero).not.toMatch(/PulseValgLenke/);
-    expect(kort).not.toMatch(/ew-modus-plate/);
+    expect(kort).toMatch(/ew-modus-plate/);
     expect(les('../app/(app)/avvik/page.tsx')).toMatch(/jobber\?fane=avvik/);
     expect(les('../app/(app)/timeplan/endringer/page.tsx')).toMatch(/jobber\?fane=endringer/);
   });
@@ -141,11 +141,7 @@ describe('CODE-GO Mikael — IA + chrome', () => {
 
   it('desktop dest-piller matcher chrome-fanene', () => {
     const timeplan = FORHANDLER_NAV.find((i) => i.key === 'saker');
-    expect(timeplan?.pills?.map((p) => p.label)).toEqual([
-      'Timeplan',
-      'Opprett jobb',
-      'Endringer',
-    ]);
+    expect(timeplan?.pills?.map((p) => p.label)).toEqual(['Timeplan', 'Opprett jobb', 'Endringer']);
     const kunder = FORHANDLER_NAV.find((i) => i.key === 'kunder');
     expect(kunder?.pills?.map((p) => p.label)).toEqual([
       'Alle kunder',

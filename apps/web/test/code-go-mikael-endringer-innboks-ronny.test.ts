@@ -53,7 +53,7 @@ describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
     expect(kort).not.toMatch(/PulseValgLenke/);
     expect(kort).toMatch(/DitherDonutChart/);
     expect(kort).toMatch(/#141414/);
-    expect(kort).toMatch(/#e0e0e0/);
+    expect(kort).toMatch(/PULSE_DAG_FYLL_HAIRLINE|#e0e0e0/);
     expect(kort).toMatch(/data-pulse-hero-bunn/);
     expect(kort).toMatch(/TriangleAlert/);
     expect(hjem).toMatch(/PulseHeroFlate/);

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { hash, smoothstep } from './dither-math.ts';
-import { useCanvasSetup } from './use-canvas-setup.ts';
+import { syncCanvasSize, useCanvasSetup } from './use-canvas-setup.ts';
 
 export type DitherRevenueSeries = {
   key: string;
@@ -53,9 +53,16 @@ export function RevenueLineChart({
         return;
       }
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {
+        req = requestAnimationFrame(draw);
+        return;
+      }
+      syncCanvasSize(canvas, rect);
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        req = requestAnimationFrame(draw);
+        return;
+      }
       const { width: w, height: h } = rect.current;
       if (w === 0 || h === 0 || points < 2) {
         req = requestAnimationFrame(draw);

@@ -40,6 +40,13 @@ function utenKommentarer(kilde: string) {
   return kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 }
 
+function funksjon(kilde: string, navn: string) {
+  const start = kilde.indexOf(`export function ${navn}`);
+  expect(start).toBeGreaterThan(-1);
+  const neste = kilde.slice(start + 1).search(/\nexport function |\nexport const /);
+  return neste === -1 ? kilde.slice(start) : kilde.slice(start, start + 1 + neste);
+}
+
 describe('forhandler pulse-hjem — fem flater', () => {
   it('låser Planlagt-kort · Analyser · Innboks · Lager · ansatte + Jobb', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
@@ -242,7 +249,8 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(kort).not.toMatch(/PulseMockBadge|data-pulse-mock-badge/);
     expect(kort).not.toMatch(/>\s*mock\s*</);
     expect(kort).toMatch(/#141414/);
-    expect(kort).not.toMatch(/#0066ff/);
+    expect(funksjon(kort, 'PulseDagSirkel')).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
+    expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
     expect(kort).not.toMatch(/For lite data/);
     expect(kort).toMatch(/ArrowUpRight/);
     expect(kort).toMatch(/PulseJobbFlis|data-pulse-jobb/);

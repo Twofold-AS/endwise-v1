@@ -65,10 +65,11 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(sirkel).toMatch(/data-pulse-dag-halvsirkel/);
     expect(sirkel).toMatch(/sweep=\{PULSE_DAG_BUE_SWEEP\}/);
     expect(sirkel).toMatch(/fmtPulseTime/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
     expect(sirkel).toMatch(/data-pulse-dag-dither/);
+    expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
-    expect(sirkel).not.toMatch(/#0066ff/);
+    expect(sirkel).not.toMatch(/<svg|halvBue|strokeWidth/);
     expect(hero).toMatch(/data-pulse-teller-rad/);
     expect(hero).toMatch(/PulseDagSirkel/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);

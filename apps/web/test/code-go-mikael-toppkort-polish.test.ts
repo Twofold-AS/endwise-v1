@@ -59,10 +59,10 @@ describe('CODE-GO Mikael — toppkort polish 08–19 + bunn-ikoner + Jobb', () =
     expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).toMatch(/startAngle=\{PULSE_DAG_BUE_START\}/);
     expect(sirkel).toMatch(/sweep=\{PULSE_DAG_BUE_SWEEP\}/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
     expect(sirkel).toMatch(/data-pulse-dag-dither/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
-    expect(sirkel).not.toMatch(/#0066ff/);
+    expect(sirkel).not.toMatch(/<svg|halvBue|strokeWidth/);
     const donut = les('../../../packages/ui/src/vendor/amicro/dither-donut.tsx');
     expect(donut).toMatch(/startAngle\s*=\s*-Math\.PI \/ 2/);
     expect(donut).toMatch(/let startAngle = startAngleProp/);

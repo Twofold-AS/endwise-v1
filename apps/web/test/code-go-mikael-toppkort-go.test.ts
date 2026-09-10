@@ -34,7 +34,7 @@ function funksjon(kilde: string, navn: string) {
 }
 
 describe('CODE-GO Mikael — toppkort uten blå nål', () => {
-  it('halvsirkel er Mobbin ink/hairline/soft — ingen klokke, ingen #0066ff-strek', () => {
+  it('halvsirkel er kun Amicro med blått fyll — ingen klokke, ingen ekstra strek', () => {
     expect(PULSE_DAG_FYLL_INK).toBe('#141414');
     expect(PULSE_DAG_FYLL_HAIRLINE).toBe('#e0e0e0');
     expect(PULSE_DAG_FYLL_SOFT).toBe('#f0f0f0');
@@ -55,10 +55,11 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const sirkel = funksjon(kort, 'PulseDagSirkel');
     expect(sirkel).toMatch(/data-pulse-dag-dither/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
+    expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
     expect(sirkel).not.toMatch(/strokeDasharray/);
-    expect(sirkel).not.toMatch(/#0066ff/);
+    expect(sirkel).not.toMatch(/<svg|halvBue|strokeWidth/);
     expect(sirkel).toMatch(/data-pulse-dag-start/);
     expect(sirkel).toMatch(/data-pulse-dag-slutt/);
   });
@@ -69,7 +70,9 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
     expect(boks).toMatch(/ew-modus-plate/);
     expect(boks).toMatch(/rounded-full/);
     expect(boks).toMatch(/p-0\.5/);
-    expect(boks).toMatch(/h-7/);
+    expect(boks).toMatch(/size-7|h-7/);
+    expect(boks).toMatch(/max-w-\[50%\]/);
+    expect(boks).not.toMatch(/w-px/);
     expect(boks).not.toMatch(/ring-1 ring-divide/);
     expect(boks).toMatch(/CircleQuestionMark/);
     expect(boks).toMatch(/TriangleAlert/);
@@ -86,7 +89,8 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
     const hero = funksjon(kort, 'PulseHeroFlate');
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
     expect(hero).toMatch(/text-label font-normal/);
-    expect(hero).toMatch(/items-end/);
+    expect(hero).toMatch(/items-center/);
+    expect(hero).not.toMatch(/items-end/);
     expect(hero).toMatch(/PulseEndringerLenke/);
   });
 });

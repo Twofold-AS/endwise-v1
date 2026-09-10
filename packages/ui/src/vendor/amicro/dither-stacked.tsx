@@ -2,7 +2,7 @@
 
 import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp, hash } from './dither-math.ts';
-import { useCanvasSetup } from './use-canvas-setup.ts';
+import { syncCanvasSize, useCanvasSetup } from './use-canvas-setup.ts';
 
 export type DitherStackedBand = { key: string; label: string; color: string };
 export type DitherStackedRow = {
@@ -98,9 +98,16 @@ export function DitherStackedChart({
         return;
       }
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {
+        requestRef.current = requestAnimationFrame(draw);
+        return;
+      }
+      syncCanvasSize(canvas, rect);
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        requestRef.current = requestAnimationFrame(draw);
+        return;
+      }
       const { width: w, height: h } = rect.current;
       if (w === 0 || h === 0) {
         requestRef.current = requestAnimationFrame(draw);

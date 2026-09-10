@@ -113,25 +113,24 @@ export type PhoneHjemRad = {
 };
 
 /**
- * Mikael CODE-GO 08.09: låste flater + Analyser nederst — toppkort ·
- * Innboks-rad · Lager-rad · ansatte/totalt + Jobb · Analyser.
- * Ingen gamle pulse-kort.
+ * Mikael CODE-GO 10.09: låste flater — toppkort · Innboks · Lager ·
+ * Analyser (over Jobb) · På jobb + Jobb. Ingen gamle pulse-kort.
  */
 export const DEALER_PULSE_KEYS = [
   'idag',
   'innboks',
   'lager',
+  'analyser',
   'team',
   'jobb',
-  'analyser',
 ] as const satisfies readonly PhoneKortKey[];
 
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['idag'], kind: 'hero' },
   { keys: ['innboks'], kind: 'full' },
   { keys: ['lager'], kind: 'full' },
-  { keys: ['team', 'jobb'], kind: 'pair' },
   { keys: ['analyser'], kind: 'full' },
+  { keys: ['team', 'jobb'], kind: 'pair' },
 ];
 
 /** Toppkort: Avvik-telling (ikke lenke). Listen bor på Timeplan › Endringer. */

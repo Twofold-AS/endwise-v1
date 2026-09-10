@@ -14,7 +14,7 @@ import {
 
 /**
  * Midlertidig visuell GO-flate (uten innlogging). Ikke en produkt-rute.
- * Forhandler-hjem: to-delt toppkort + Analyser nederst.
+ * Forhandler-hjem: toppkort + Analyser over Jobb.
  */
 export default function PulsePreview() {
   const { los, sett } = useTema();
@@ -51,6 +51,7 @@ export default function PulsePreview() {
 
         <PulseRadKort href="#innboks" ikon={Inbox} tittel="Les alle siste meldinger" teller={7} />
         <PulseRadKort href="#lager" ikon={Package} tittel="Venter på bestilling" teller={3} />
+        <PulseAnalyserKort stats={analyser} href="#statistikk" forhandlerNavn="Nordvik MC" />
         <div data-pulse-bunn className="flex w-full gap-3">
           <div className="min-w-0 flex-1 basis-0">
             <PulseRadKort href="#team" ikon={Users} tittel="På jobb" teller="2 / 4" kompakt />
@@ -59,8 +60,6 @@ export default function PulsePreview() {
             <PulseJobbFlis />
           </div>
         </div>
-
-        <PulseAnalyserKort stats={analyser} href="#statistikk" />
       </div>
     </div>
   );

@@ -63,26 +63,24 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
       'idag',
       'innboks',
       'lager',
+      'analyser',
       'team',
       'jobb',
-      'analyser',
     ]);
-    expect(DEALER_PHONE_HJEM.at(-1)?.keys).toEqual(['analyser']);
+    expect(DEALER_PHONE_HJEM.at(-1)?.keys).toEqual(['team', 'jobb']);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const preview = utenKommentarer(les('../app/pulse-preview/page.tsx'));
     expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/PulseAnalyserKort/);
     expect(hjem).not.toMatch(/PulseUkeSpark|Pulse30dSpark/);
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeGreaterThan(
-      hjem.lastIndexOf('PulseJobbFlis'),
-    );
+    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
     expect(kort).toMatch(/#141414/);
     expect(kort).toMatch(/#ffffff/);
     expect(kort).toMatch(/data-pulse-dag-sirkel/);
     expect(kort).toMatch(/DitherDonutChart/);
     expect(preview).toMatch(/PulseHeroFlate/);
-    expect(preview.lastIndexOf('PulseAnalyserKort')).toBeGreaterThan(
+    expect(preview.lastIndexOf('PulseAnalyserKort')).toBeLessThan(
       preview.lastIndexOf('PulseJobbFlis'),
     );
   });

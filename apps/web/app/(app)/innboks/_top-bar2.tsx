@@ -4,7 +4,7 @@ import { Trash2 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { INNBOKS_GRUPPER, useInboxFilter } from '../_shell/inbox-filter';
 import { InboxChromePopup, InboxPopupValg } from './_popup';
 
@@ -17,7 +17,14 @@ const TID_VALG = [
  * Innboks top-bar 2: Ny melding · Tid · Gruppe · Slett.
  * Ny melding først og aktiv på lista / ny-flyt. Tid og Gruppe åpner profil-popup.
  */
-export function InboxTopBar2({ desktop = false }: { desktop?: boolean }) {
+export function InboxTopBar2({
+  desktop = false,
+  startPopup,
+}: {
+  desktop?: boolean;
+  /** Visuell GO — åpne Tid/Gruppe uten klikk. */
+  startPopup?: 'tid' | 'gruppe';
+}) {
   const pathname = usePathname() ?? '';
   const {
     sortering,
@@ -32,6 +39,13 @@ export function InboxTopBar2({ desktop = false }: { desktop?: boolean }) {
   } = useInboxFilter();
   const [tidApen, setTidApen] = useState(false);
   const [gruppeApen, setGruppeApen] = useState(false);
+  const tidRef = useRef<HTMLDivElement>(null);
+  const gruppeRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (startPopup === 'tid') setTidApen(true);
+    if (startPopup === 'gruppe') setGruppeApen(true);
+  }, [startPopup]);
   const nyHref = pathname.startsWith('/endwise') ? '/endwise/innboks?ny=1' : '/innboks?ny=1';
   const nyAktiv = !tidApen && !gruppeApen && !velgModus;
 
@@ -73,7 +87,7 @@ export function InboxTopBar2({ desktop = false }: { desktop?: boolean }) {
         Ny melding
       </Link>
 
-      <div className="relative">
+      <div ref={tidRef} className="relative">
         <button
           type="button"
           data-innboks-tid
@@ -88,7 +102,12 @@ export function InboxTopBar2({ desktop = false }: { desktop?: boolean }) {
         >
           Tid
         </button>
-        <InboxChromePopup apen={tidApen} onLukk={() => setTidApen(false)} label="Sorter samtaler">
+        <InboxChromePopup
+          apen={tidApen}
+          onLukk={() => setTidApen(false)}
+          label="Sorter samtaler"
+          anker={tidRef.current}
+        >
           {TID_VALG.map((v) => (
             <InboxPopupValg
               key={v.id}
@@ -104,7 +123,7 @@ export function InboxTopBar2({ desktop = false }: { desktop?: boolean }) {
         </InboxChromePopup>
       </div>
 
-      <div className="relative">
+      <div ref={gruppeRef} className="relative">
         <button
           type="button"
           data-innboks-gruppe
@@ -119,7 +138,12 @@ export function InboxTopBar2({ desktop = false }: { desktop?: boolean }) {
         >
           Gruppe
         </button>
-        <InboxChromePopup apen={gruppeApen} onLukk={() => setGruppeApen(false)} label="Gruppe">
+        <InboxChromePopup
+          apen={gruppeApen}
+          onLukk={() => setGruppeApen(false)}
+          label="Gruppe"
+          anker={gruppeRef.current}
+        >
           {INNBOKS_GRUPPER.map((v) => (
             <InboxPopupValg
               key={v.key}

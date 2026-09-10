@@ -30,8 +30,8 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
       ['idag'],
       ['innboks'],
       ['lager'],
-      ['team', 'jobb'],
       ['analyser'],
+      ['team', 'jobb'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(PHONE_KORT_META.timeplan.label).toBe('Timeplan');

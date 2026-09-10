@@ -13,7 +13,7 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { CardShell } from '../_shell/cards';
+import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
 import { useInboxModus } from './_modus';
 
 /**
@@ -196,38 +196,30 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
   }
 
   return (
-    <CardShell className="p-5">
-      <form onSubmit={send} className="flex flex-col gap-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-label text-fg">Ny chat</p>
-            <p className="text-[12px] text-fg-muted">
-              Velg mottaker i lista — som en e-post, ikke en hub.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onLukk}
-            className="h-control shrink-0 rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-          >
-            Avbryt
-          </button>
+    <form data-ny-melding-skjema onSubmit={send} className="flex flex-col gap-8">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-title text-fg">Ny melding</p>
+          <p className="mt-1 text-[13px] text-fg-muted">Velg mottaker, skriv, send.</p>
         </div>
+        <button
+          type="button"
+          onClick={onLukk}
+          className="h-control shrink-0 rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
+        >
+          Avbryt
+        </button>
+      </div>
 
-        <section className="flex flex-col gap-3">
-          <h2 className="text-title text-fg">Til</h2>
+      <InnstillingSeksjon tittel="Mottaker" ingress="Gruppe og person i samme feltgruppe.">
+        <InnstillingRad label="Gruppe">
           <NySamtaleKnapperad
             valg={PILLER.map((p) => ({ key: p.key, label: p.label }))}
             aktiv={pille}
             onVelg={(k) => velgPille(k as Pille)}
           />
-          <p className="h-control rounded-control border border-border bg-surface-2 px-3 text-body text-fg leading-8">
-            {mottaker ? mottaker.navn : 'Velg i lista under'}
-          </p>
-        </section>
-
-        <section className="flex flex-col gap-2">
-          <h2 className="text-title text-fg">Mottaker</h2>
+        </InnstillingRad>
+        <InnstillingRad label="Valgt" hint={mottaker ? mottaker.navn : 'Velg i lista under'}>
           <input
             type="search"
             value={sok}
@@ -236,26 +228,25 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
             aria-label="Søk i mottakerlista"
             className="h-control ew-felt ew-felt-md px-3"
           />
-
-          <div className="max-h-56 overflow-y-auto rounded-control border border-border">
+          <div className="mt-2 max-h-56 overflow-y-auto">
             {laster ? (
-              <p className="px-3 py-6 text-center text-[12px] text-fg-muted">Laster …</p>
+              <p className="py-6 text-center text-[12px] text-fg-muted">Laster …</p>
             ) : liste.length === 0 ? (
-              <p className="px-3 py-6 text-center text-[12px] text-fg-muted leading-relaxed">
+              <p className="py-6 text-center text-[12px] text-fg-muted leading-relaxed">
                 {tommelding(pille, endwise)}
               </p>
             ) : (
-              <ul className="flex flex-col p-1">
+              <ul className="flex flex-col">
                 {liste.map((m) => {
                   const aktiv = mottaker?.id === m.id;
                   return (
-                    <li key={m.id}>
+                    <li key={m.id} className="border-border border-b last:border-0">
                       <button
                         type="button"
                         onClick={() => setValgt(m)}
                         aria-pressed={aktiv}
-                        className={`flex w-full items-center gap-2 rounded-control px-3 py-2 text-left transition-colors ${
-                          aktiv ? 'bg-sidebar-active text-fg' : 'text-fg hover:bg-surface-2'
+                        className={`flex w-full items-center gap-2 py-3 text-left transition-colors ${
+                          aktiv ? 'text-fg' : 'text-fg-muted hover:text-fg'
                         }`}
                       >
                         {pille === 'support' && endwise ? (
@@ -267,7 +258,7 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
                         ) : null}
                         <span className="min-w-0 flex-1 truncate text-label">{m.navn}</span>
                         {m.undertekst && (
-                          <span className="max-w-[40%] shrink-0 truncate text-[11px] text-fg-muted">
+                          <span className="max-w-[40%] shrink-0 truncate text-[13px] text-fg-muted">
                             {m.undertekst}
                           </span>
                         )}
@@ -278,10 +269,11 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
               </ul>
             )}
           </div>
-        </section>
+        </InnstillingRad>
+      </InnstillingSeksjon>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-label text-fg-muted">Emne</span>
+      <InnstillingSeksjon tittel="Melding">
+        <InnstillingRad label="Emne" hint="Valgfritt">
           <input
             value={emne}
             onChange={(e) => setEmne(e.target.value)}
@@ -289,10 +281,8 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
             placeholder="Valgfritt"
             className="h-control ew-felt ew-felt-md px-3"
           />
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-label text-fg-muted">Melding</span>
+        </InnstillingRad>
+        <InnstillingRad label="Tekst" siste>
           <textarea
             value={tekst}
             onChange={(e) => setTekst(e.target.value)}
@@ -302,28 +292,28 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
             placeholder="Skriv meldingen …"
             className="min-h-[96px] resize-y ew-felt ew-felt-md px-3 py-2"
           />
-        </label>
+        </InnstillingRad>
+      </InnstillingSeksjon>
 
-        {feil && (
-          <p className="flex items-start gap-2 text-body text-danger">
-            <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-            {feil.message}
-          </p>
-        )}
+      {feil && (
+        <p className="flex items-start gap-2 text-body text-danger">
+          <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+          {feil.message}
+        </p>
+      )}
 
-        <div className="flex justify-end">
-          <StatefulButton
-            type="submit"
-            disabled={jobber || !mottaker || !tekst.trim()}
-            state={jobber ? 'loading' : feil ? 'error' : 'idle'}
-            loadingText="Sender…"
-            errorText="Feilet"
-          >
-            Send
-          </StatefulButton>
-        </div>
-      </form>
-    </CardShell>
+      <div className="flex justify-end" data-ny-melding-send>
+        <StatefulButton
+          type="submit"
+          disabled={jobber || !mottaker || !tekst.trim()}
+          state={jobber ? 'loading' : feil ? 'error' : 'idle'}
+          loadingText="Sender…"
+          errorText="Feilet"
+        >
+          Send
+        </StatefulButton>
+      </div>
+    </form>
   );
 }
 

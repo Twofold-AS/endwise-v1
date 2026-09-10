@@ -19,7 +19,8 @@ describe('Ny jobb — flere tjenester og manuell varighet', () => {
 
   it('siden heter Opprett jobb og peker tilbake til Timeplan, ikke tickets', () => {
     expect(ny).toMatch(/Opprett jobb/);
-    expect(ny).toMatch(/← Timeplan/);
+    expect(ny).toMatch(/TIMEPLAN_FANER|timeplanHref/);
+    expect(ny).toMatch(/SideChromeSkall/);
     expect(ny).not.toMatch(/← Jobber/);
     expect(ny).not.toMatch(/ticket/i);
     expect(ny).not.toMatch(/Ny booking/);

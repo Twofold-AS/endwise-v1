@@ -46,8 +46,8 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
       ['idag'],
       ['innboks'],
       ['lager'],
-      ['team', 'jobb'],
       ['analyser'],
+      ['team', 'jobb'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(dealerPhoneHjemRader(false).flatMap((r) => r.keys)).not.toContain('samarbeid');
@@ -57,9 +57,9 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
   it('Lager kommer etter Innboks, Analyser er sist — ikke Svarhastighet/Timeplan', () => {
     const keys = DEALER_PHONE_HJEM.map((r) => r.keys.join('|'));
     expect(keys.indexOf('innboks')).toBeLessThan(keys.indexOf('lager'));
-    expect(keys.indexOf('lager')).toBeLessThan(keys.indexOf('team|jobb'));
-    expect(keys.indexOf('team|jobb')).toBeLessThan(keys.indexOf('analyser'));
-    expect(keys.at(-1)).toBe('analyser');
+    expect(keys.indexOf('lager')).toBeLessThan(keys.indexOf('analyser'));
+    expect(keys.indexOf('analyser')).toBeLessThan(keys.indexOf('team|jobb'));
+    expect(keys.at(-1)).toBe('team|jobb');
     expect(keys).not.toContain('svarhastighet');
     expect(keys).not.toContain('timeplan');
   });

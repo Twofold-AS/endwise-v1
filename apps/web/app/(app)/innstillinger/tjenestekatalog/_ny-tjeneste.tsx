@@ -3,7 +3,7 @@
 import { CircleAlert, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { CardShell } from '../../_shell/cards';
+import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
 import { type Kjoretoytype, parsePris, TYPE_VALG } from './_felles';
 import { TjenesteFelter, TOMME_FELTER, type Versjonsfelter } from './_felter';
 
@@ -62,97 +62,85 @@ export function NyTjeneste({ onLukk }: { onLukk: () => void }) {
     !opprett.isPending;
 
   return (
-    <CardShell className="p-5">
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <div>
-          <p className="text-label text-fg">Ny tjeneste</p>
-          <p className="text-[12px] text-fg-muted">
-            Dette blir versjon 1. Senere endringer lager nye versjoner — den første blir stående.
-          </p>
+    <form data-ny-tjeneste onSubmit={submit} className="flex flex-col gap-8">
+      <InnstillingSeksjon
+        tittel="Ny tjeneste"
+        ingress="Dette blir versjon 1. Senere endringer lager nye versjoner — den første blir stående."
+      >
+        <InnstillingRad label="Navn">
+          <input
+            value={navn}
+            onChange={(e) => setNavn(e.target.value)}
+            maxLength={120}
+            placeholder="EU-kontroll MC"
+            className="h-control ew-felt ew-felt-md px-2.5"
+          />
+        </InnstillingRad>
+        <InnstillingRad label="Gjelder" hint="Kan ikke endres senere." siste>
+          <fieldset className="inline-flex h-control w-fit items-center gap-0.5 rounded-control border border-border bg-bg p-0.5">
+            <legend className="sr-only">Kjøretøytype</legend>
+            {TYPE_VALG.map((v) => (
+              <label
+                key={v.key}
+                className={`inline-flex h-7 cursor-pointer items-center rounded-[7px] px-2.5 text-label transition-colors ${
+                  type === v.key ? 'bg-sidebar-active text-fg' : 'text-fg-muted hover:text-fg'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="kjoretoytype"
+                  value={v.key}
+                  checked={type === v.key}
+                  onChange={() => setType(v.key)}
+                  className="sr-only"
+                />
+                {v.label}
+              </label>
+            ))}
+          </fieldset>
+        </InnstillingRad>
+      </InnstillingSeksjon>
+
+      <InnstillingSeksjon tittel="Pris og varighet">
+        <div className="py-2">
+          <TjenesteFelter verdier={felter} onEndre={setFelter} />
         </div>
+      </InnstillingSeksjon>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Navn</span>
-            <input
-              value={navn}
-              onChange={(e) => setNavn(e.target.value)}
-              maxLength={120}
-              placeholder="EU-kontroll MC"
-              className="h-control ew-felt ew-felt-md px-2.5"
-            />
-          </label>
+      {(prisfeil || opprett.error) && (
+        <p className="flex items-start gap-2 text-body text-danger">
+          <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+          {prisfeil ?? opprett.error?.message}
+        </p>
+      )}
 
-          <div className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Gjelder</span>
-            {/*
-             * Ekte <input type="radio">, ikke knapper med role="radio": dette er
-             * et skjemafelt, og da skal tastaturet oppføre seg som i et skjema
-             * (piltaster velger, feltet er ett tabbstopp). Pillene ellers i appen
-             * er filtre — der er tablist riktig. Utseendet er identisk.
-             */}
-            <fieldset className="inline-flex h-control w-fit items-center gap-0.5 rounded-control border border-border bg-bg p-0.5">
-              <legend className="sr-only">Kjøretøytype</legend>
-              {TYPE_VALG.map((v) => (
-                <label
-                  key={v.key}
-                  className={`inline-flex h-7 cursor-pointer items-center rounded-[7px] px-2.5 text-label transition-colors ${
-                    type === v.key ? 'bg-sidebar-active text-fg' : 'text-fg-muted hover:text-fg'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="kjoretoytype"
-                    value={v.key}
-                    checked={type === v.key}
-                    onChange={() => setType(v.key)}
-                    className="sr-only"
-                  />
-                  {v.label}
-                </label>
-              ))}
-            </fieldset>
-            <span className="text-[12px] text-fg-muted">Kan ikke endres senere.</span>
-          </div>
-        </div>
-
-        <TjenesteFelter verdier={felter} onEndre={setFelter} />
-
-        {(prisfeil || opprett.error) && (
-          <p className="flex items-start gap-2 text-body text-danger">
-            <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-            {prisfeil ?? opprett.error?.message}
-          </p>
-        )}
-
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onLukk}
-            className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-          >
-            Avbryt
-          </button>
-          <StatefulButton
-            type="submit"
-            disabled={!kanLagre}
-            state={
-              opprett.isPending
-                ? 'loading'
-                : opprett.isError
-                  ? 'error'
-                  : opprett.isSuccess
-                    ? 'success'
-                    : 'idle'
-            }
-            loadingText="Oppretter…"
-            successText="Opprettet"
-            errorText="Feilet"
-          >
-            Opprett tjeneste
-          </StatefulButton>
-        </div>
-      </form>
-    </CardShell>
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onLukk}
+          className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
+        >
+          Avbryt
+        </button>
+        <StatefulButton
+          type="submit"
+          disabled={!kanLagre}
+          state={
+            opprett.isPending
+              ? 'loading'
+              : opprett.isError
+                ? 'error'
+                : opprett.isSuccess
+                  ? 'success'
+                  : 'idle'
+          }
+          loadingText="Oppretter…"
+          successText="Opprettet"
+          errorText="Feilet"
+        >
+          Opprett tjeneste
+        </StatefulButton>
+      </div>
+    </form>
   );
 }

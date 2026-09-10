@@ -109,7 +109,7 @@ describe('F5-14: Ny samtale — Kunde · Intern · Support', () => {
     expect(kilde).toMatch(/label:\s*'Intern'/);
     expect(kilde).toMatch(/label:\s*'Support'/);
     expect(kilde).toMatch(/useState<Pille>\('support'\)/);
-    expect(kilde).toMatch(/bg-fg text-bg/);
+    expect(kilde).toMatch(/bg-sidebar-active text-fg/);
     expect(kilde).not.toMatch(/Mekaniker|Skriv til Endwise|Annen samtale/);
   });
 

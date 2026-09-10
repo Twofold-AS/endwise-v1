@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
+import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
 import { TIMEPLAN_FANER, timeplanHref } from '../../jobber/_faner';
+import { velgKjoretoyForJobb } from '../_knytt-kjoretoy';
 import { StarttidVelger } from '../_starttid-velger';
 import { fmtMinor } from '../_status';
 
@@ -34,6 +36,8 @@ export default function NyJobbPage() {
 
   const services = trpc.services.list.useQuery();
   const mechanics = trpc.mechanics.oversikt.useQuery();
+  const alleKjoretoy = trpc.vehicles.list.useQuery({ limit: 200 });
+  const opprettKjoretoy = trpc.vehicles.create.useMutation();
 
   const selected = useMemo(
     () => (services.data ?? []).filter((s) => serviceIds.includes(s.id)),
@@ -126,12 +130,30 @@ export default function NyJobbPage() {
     setMechanicId('');
   }
 
-  function book() {
+  async function book() {
     if (!primary || !window || !mechanicId) return;
     const extra = selected
       .slice(1)
       .map((s) => s.serviceVersionId)
       .filter(Boolean);
+    const valg = velgKjoretoyForJobb({
+      vehicleId,
+      regNumber,
+      kjoretoy: alleKjoretoy.data ?? [],
+    });
+    let festetId = valg.vehicleId;
+    if (valg.maaOpprette) {
+      const v = await opprettKjoretoy.mutateAsync({
+        customerId: customerId || undefined,
+        type: 'mc',
+        regNumber: valg.regNumber,
+        make: lookup.data?.make ?? undefined,
+        model: lookup.data?.model ?? undefined,
+        modelYear: lookup.data?.modelYear ?? undefined,
+      });
+      festetId = v?.id;
+      if (festetId) setVehicleId(festetId);
+    }
     create.mutate({
       mechanicId,
       serviceVersionId: primary.serviceVersionId,
@@ -140,7 +162,7 @@ export default function NyJobbPage() {
       endsAt: window.to.toISOString(),
       durationMinutes: slotMinutes,
       customerId: customerId || undefined,
-      vehicleId: vehicleId || undefined,
+      vehicleId: festetId || undefined,
       notes: notes.trim() || undefined,
       source: 'admin',
     });
@@ -154,7 +176,10 @@ export default function NyJobbPage() {
       aktiv="opprett"
     >
       <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5">
-        <Section step={1} title="Kunde og kjøretøy">
+        <InnstillingSeksjon
+          tittel="Kunde og kjøretøy"
+          ingress="Regnr festes på jobben. Slå opp eller velg — kjøretøyet følger med."
+        >
           <KundeIFlyt
             customerId={customerId}
             vehicleId={vehicleId}
@@ -162,46 +187,55 @@ export default function NyJobbPage() {
               setCustomerId(id);
               setVehicleId('');
             }}
-            onVehicle={setVehicleId}
+            onVehicle={(id, reg) => {
+              setVehicleId(id);
+              if (reg) setRegNumber(reg);
+            }}
           />
-
-          <div className="flex items-end gap-2">
-            <Field label="Slå opp regnr (Vegvesen)">
-              <div className="relative">
+          <InnstillingRad
+            label="Registreringsnummer"
+            hint="Følger jobben. Vegvesen fyller merke/modell."
+            siste
+          >
+            <div className="flex items-end gap-2" data-opprett-jobb-kjoretoy>
+              <div className="relative min-w-0 flex-1">
                 <Car
                   size={14}
                   className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 text-fg-faint"
                 />
                 <input
                   value={regNumber}
-                  onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    setRegNumber(e.target.value.toUpperCase());
+                    setVehicleId('');
+                  }}
                   placeholder="EK12345"
                   className={`${inputCls} pl-9`}
                 />
               </div>
-            </Field>
-            <button
-              type="button"
-              disabled={regNumber.trim().length < 2 || lookup.isFetching}
-              onClick={() => lookup.refetch()}
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-border bg-bg px-3 text-fg text-sm hover:bg-surface-2 disabled:opacity-50"
-            >
-              <Search size={14} />
-              {lookup.isFetching ? 'Slår opp …' : 'Slå opp'}
-            </button>
-          </div>
-          {lookup.isError && (
-            <p className="text-fg-faint text-xs">Klarte ikke slå opp regnr akkurat nå.</p>
-          )}
-          {lookup.data && (
-            <p className="text-success text-xs">
-              {lookup.data.make} {lookup.data.model} ({lookup.data.modelYear}) — EU-frist{' '}
-              {lookup.data.inspectionDue ?? '—'}
-            </p>
-          )}
-        </Section>
+              <button
+                type="button"
+                disabled={regNumber.trim().length < 2 || lookup.isFetching}
+                onClick={() => lookup.refetch()}
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-border bg-bg px-3 text-fg text-sm hover:bg-surface-2 disabled:opacity-50"
+              >
+                <Search size={14} />
+                {lookup.isFetching ? 'Slår opp …' : 'Slå opp'}
+              </button>
+            </div>
+            {lookup.isError && (
+              <p className="mt-2 text-fg-faint text-xs">Klarte ikke slå opp regnr akkurat nå.</p>
+            )}
+            {lookup.data && (
+              <p className="mt-2 text-success text-xs">
+                {lookup.data.make} {lookup.data.model} ({lookup.data.modelYear}) — EU-frist{' '}
+                {lookup.data.inspectionDue ?? '—'}
+              </p>
+            )}
+          </InnstillingRad>
+        </InnstillingSeksjon>
 
-        <Section step={2} title="Tjenester og tid">
+        <InnstillingSeksjon tittel="Tjenester og tid">
           <fieldset className="flex flex-col gap-1.5">
             <legend className="text-fg-faint text-xs">Tjenester</legend>
             {(services.data ?? []).length === 0 ? (
@@ -285,9 +319,9 @@ export default function NyJobbPage() {
               {requiredSkills.length > 0 && ` · krever: ${requiredSkills.join(', ')}`}
             </p>
           )}
-        </Section>
+        </InnstillingSeksjon>
 
-        <Section step={3} title="Mekaniker">
+        <InnstillingSeksjon tittel="Mekaniker">
           {!primary || !window ? (
             <p className="text-fg-faint text-xs">Velg tjenester og tid, så foreslår matcheren.</p>
           ) : match.isLoading ? (
@@ -345,16 +379,18 @@ export default function NyJobbPage() {
               })}
             </div>
           )}
-        </Section>
+        </InnstillingSeksjon>
 
-        <Field label="Notat (valgfritt)">
-          <input
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Intern beskjed til mekanikeren …"
-            className={inputCls}
-          />
-        </Field>
+        <InnstillingSeksjon tittel="Notat">
+          <InnstillingRad label="Intern beskjed" siste>
+            <input
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Intern beskjed til mekanikeren …"
+              className={inputCls}
+            />
+          </InnstillingRad>
+        </InnstillingSeksjon>
 
         {create.isError && (
           <p className="text-danger text-sm">
@@ -366,12 +402,12 @@ export default function NyJobbPage() {
 
         <button
           type="button"
-          disabled={!canBook || create.isPending}
+          disabled={!canBook || create.isPending || opprettKjoretoy.isPending}
           onClick={book}
           className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-6 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           <Check size={16} />
-          {create.isPending ? 'Oppretter …' : 'Opprett jobb'}
+          {create.isPending || opprettKjoretoy.isPending ? 'Oppretter …' : 'Opprett jobb'}
         </button>
       </div>
     </SideChromeSkall>
@@ -390,7 +426,7 @@ function KundeIFlyt({
   customerId: string;
   vehicleId: string;
   onCustomer: (id: string) => void;
-  onVehicle: (id: string) => void;
+  onVehicle: (id: string, regNumber?: string) => void;
 }) {
   const utils = trpc.useUtils();
   const [sok, setSok] = useState('');
@@ -419,7 +455,7 @@ function KundeIFlyt({
   const opprettKjoretoy = trpc.vehicles.create.useMutation({
     onSuccess: (v) => {
       void utils.vehicles.list.invalidate();
-      if (v?.id) onVehicle(v.id);
+      if (v?.id) onVehicle(v.id, v.regNumber ?? undefined);
       setNyttKjoretoy(false);
       setRegnr('');
     },
@@ -494,7 +530,11 @@ function KundeIFlyt({
       <Field label="Kjøretøy">
         <select
           value={vehicleId}
-          onChange={(e) => onVehicle(e.target.value)}
+          onChange={(e) => {
+            const id = e.target.value;
+            const treff = (vehicles.data ?? []).find((v) => v.id === id);
+            onVehicle(id, treff?.regNumber ?? undefined);
+          }}
           className={selectCls}
           disabled={!customerId}
         >
@@ -545,28 +585,6 @@ function KundeIFlyt({
         </div>
       )}
     </>
-  );
-}
-
-function Section({
-  step,
-  title,
-  children,
-}: {
-  step: number;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-      <div className="flex items-center gap-2">
-        <span className="flex size-5 items-center justify-center rounded-full bg-surface-2 text-[11px] text-fg-muted tabular-nums">
-          {step}
-        </span>
-        <h2 className="font-medium text-fg text-sm">{title}</h2>
-      </div>
-      {children}
-    </div>
   );
 }
 

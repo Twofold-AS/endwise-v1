@@ -46,22 +46,22 @@ describe('forhandler pulse-hjem — fem flater', () => {
       'idag',
       'innboks',
       'lager',
+      'analyser',
       'team',
       'jobb',
-      'analyser',
     ]);
     expect(DEALER_PULSE_KEYS).toHaveLength(6);
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
       ['innboks'],
       ['lager'],
-      ['team', 'jobb'],
       ['analyser'],
+      ['team', 'jobb'],
     ]);
     expect(dealerPhoneHjemRader(true).flatMap((r) => r.keys)).toEqual([...DEALER_PULSE_KEYS]);
     expect(dealerPhoneHjemRader(true).flatMap((r) => r.keys)).not.toContain('butikk');
-    expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('full');
-    expect(DEALER_PHONE_HJEM.at(-1)?.keys).toEqual(['analyser']);
+    expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('pair');
+    expect(DEALER_PHONE_HJEM.at(-1)?.keys).toEqual(['team', 'jobb']);
   });
 
   it('dreper Svarhastighet, Timeplan-gulv, Team-liste, footer og døde nav-kort', () => {
@@ -241,7 +241,8 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(kort).toMatch(/touch-action:\s*manipulation|\[touch-action:manipulation\]/);
     expect(kort).not.toMatch(/PulseMockBadge|data-pulse-mock-badge/);
     expect(kort).not.toMatch(/>\s*mock\s*</);
-    expect(kort).toMatch(/#0066ff/);
+    expect(kort).toMatch(/#141414/);
+    expect(kort).not.toMatch(/#0066ff/);
     expect(kort).not.toMatch(/For lite data/);
     expect(kort).toMatch(/ArrowUpRight/);
     expect(kort).toMatch(/PulseJobbFlis|data-pulse-jobb/);

@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 /** Vises øverst. Oppdater når lista endres. */
-const SIST_OPPDATERT = '9. august 2026';
+const SIST_OPPDATERT = '10. september 2026';
 
 type Punkt = { tittel: string; tekst: string };
 type Bolk = { overskrift: string; ingress: string; punkter: Punkt[] };
@@ -164,6 +164,11 @@ const VEIKART: Bolk[] = [
         tittel: 'Deling mellom verksteder',
         tekst:
           'Å dele rutiner og servicehistorikk på tvers av forhandlere reiser juridiske spørsmål vi må avklare først. Ingenting deles uten at det er avklart.',
+      },
+      {
+        tittel: 'Sikkerhetsstyring og HMS',
+        tekst:
+          'Valgfri modul for AMU, verneombud, HMS-møter og risikovurdering i verkstedet. Slås på per forhandler — den fyller ikke plattformen før dere aktiverer den. Ikke påbegynt.',
       },
     ],
   },

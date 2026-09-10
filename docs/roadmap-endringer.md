@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-10 — F15 Sikkerhetsstyringssystem / HMS (veikart bak flagg)
+
+**Type:** ny fase/epic i veikartet. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB. Ingen HMS-UI.
+**Godkjent av:** Mikael — fremtidig verkstedmodul bak flagg, ikke kjerne.
+**Endring:** Ny fase **F15**. **F15-01** `done` (v0: veikart + flaggnavn `hms` + IA-skisse). **F15-02…F15-05** `planned` (AMU/verneombud/møter → risiko/HMS-avvik → dokumentasjon/PVU/utstyr → arbeidsmiljøfaktorer). Kryssref på **F7-05** (jobb-avvik ≠ HMS-hendelse) og **F3-12** (jobb-kompetanse ≠ HMS-opplæring). Kanon: `docs/hms-sikkerhetsstyring.md`. Offentlig `/veikart` fikk ett Planlagt-punkt. ⛔ Ingen `FLAG_KEYS`/`ADDON_MODULES`-wiring. ⛔ #114/#119. Draft, ikke merge.
+
+---
+
 ## 2026-09-08 — F3-05/F5-13/F5-14/F5-18/F5-19/F5-23 CODE-GO Mikael home + Hjelp
 
 **Type:** forhandler-hjem live data + chrome/Hjelp/Statistikk. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB.

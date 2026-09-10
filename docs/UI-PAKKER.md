@@ -1,5 +1,12 @@
 # UI-pakker — les denne FØR du bygger UI
 
+> ### ⚠️ F15 HMS / Sikkerhetsstyring (10.09.2026) — ikke bygget
+> Fremtidig verkstedmodul bak flagg `hms` (F15-01). **Ingen HMS-UI i denne
+> runden.** Når F15-02+ bygges: les denne fila først, bruk Innstillinger-chrome
+> + shadcn/beUI som Timeplan/Organisasjon. Ingen ny pakke uten §2-vedtak.
+> ⛔ Ikke fyll sidebaren for tenants uten flagg. ⛔ #114/#119.
+> Kanon: `docs/hms-sikkerhetsstyring.md`.
+
 > ## Regelen
 >
 > **Endwise bygger UI av eksterne pakker. Ikke av egne primitiver.**

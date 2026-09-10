@@ -103,6 +103,15 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/skjulNy=\{aktiv/);
     expect(les('../app/(app)/kunder/page.tsx')).toMatch(/PhoneSokFelt/);
     expect(les('../app/(app)/kunder/page.tsx')).toMatch(/data-kunder-sok/);
+    const preview = utenKommentarer(les('../app/visual-forms-preview/page.tsx'));
+    expect(preview).toMatch(/data-kunder-sok/);
+    expect(preview).toMatch(/data-opprett-jobb-kjoretoy/);
+    expect(preview).toMatch(/Opprett tjenester/);
+    expect(preview).not.toMatch(/Ny tjeneste/);
+    const innboks = utenKommentarer(les('../app/innboks-preview/page.tsx'));
+    expect(innboks).toMatch(/vis === 'ny'/);
+    expect(innboks).toMatch(/data-innboks-rad/);
+    expect(innboks).toMatch(/data-ny-melding-send/);
   });
 
   it('velgKjoretoyForJobb gjenbruker regnr eller ber om opprett', () => {

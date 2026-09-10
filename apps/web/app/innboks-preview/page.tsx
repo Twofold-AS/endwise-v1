@@ -4,18 +4,28 @@ import { MessageSquare } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { InboxFilterProvider } from '../(app)/_shell/inbox-filter';
+import { InnstillingRad, InnstillingSeksjon } from '../(app)/_shell/innstilling-gruppe';
 import { PHONE_BAR2, PHONE_PROFIL_SIRKEL, PHONE_RONNY_SIRKEL } from '../(app)/_shell/phone-chrome';
 import { PHONE_SAFE_TOP } from '../(app)/_shell/phone-home';
 import { InboxTopBar2 } from '../(app)/innboks/_top-bar2';
 
 /**
  * Uinnlogget visuell GO for innboks (Settings-chrome + top-bar 2).
- * ?vis=tom|sorter|gruppe|slett|trad
+ * ?vis=tom|sorter|gruppe|slett|trad|liste|ny
  */
-type Vis = 'tom' | 'sorter' | 'gruppe' | 'slett' | 'trad';
+type Vis = 'tom' | 'sorter' | 'gruppe' | 'slett' | 'trad' | 'liste' | 'ny';
 
 function lesVis(raw: string | null): Vis {
-  if (raw === 'sorter' || raw === 'gruppe' || raw === 'slett' || raw === 'trad') return raw;
+  if (
+    raw === 'sorter' ||
+    raw === 'gruppe' ||
+    raw === 'slett' ||
+    raw === 'trad' ||
+    raw === 'liste' ||
+    raw === 'ny'
+  ) {
+    return raw;
+  }
   return 'tom';
 }
 
@@ -43,28 +53,53 @@ function InnboksPreviewInner() {
           <InboxTopBar2 />
         </div>
         <div className="h-px bg-border" />
-        {vis === 'trad' ? <TradGo /> : <ListeGo vis={vis} />}
+        {vis === 'trad' ? <TradGo /> : vis === 'ny' ? <NyMeldingGo /> : <ListeGo vis={vis} />}
       </div>
     </InboxFilterProvider>
   );
 }
 
+const PREVIEW_TRADER = [
+  { id: '1', navn: 'Kari Nordmann', utdrag: 'EU-kontroll i morgen?', nar: '12.09', ulest: true },
+  { id: '2', navn: 'Support', utdrag: 'Takket for oppdateringen.', nar: '11.09', ulest: false },
+  { id: '3', navn: 'Intern · Mek', utdrag: 'Trenger del til EL12345.', nar: '10.09', ulest: false },
+] as const;
+
 function ListeGo({ vis }: { vis: Vis }) {
+  const visRader = vis === 'slett' || vis === 'liste' || vis === 'sorter' || vis === 'gruppe';
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      {vis === 'slett' ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
-          <button
-            type="button"
-            data-innboks-velg="preview-1"
-            className="flex w-full items-start gap-2 text-left"
-          >
-            <span className="mt-3 size-4 shrink-0 rounded-sm border border-fg bg-fg" aria-hidden />
-            <span className="min-w-0 flex-1 rounded-control border border-border px-3 py-2.5">
-              <p className="text-label text-fg">Kari Nordmann</p>
-              <p className="text-[12px] text-fg-muted">EU-kontroll i morgen?</p>
-            </span>
-          </button>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3">
+      {visRader ? (
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {PREVIEW_TRADER.map((t, i) => (
+            <button
+              key={t.id}
+              type="button"
+              data-innboks-velg={`preview-${t.id}`}
+              className="flex w-full items-start gap-2 text-left"
+            >
+              {vis === 'slett' ? (
+                <span
+                  className={`mt-5 size-4 shrink-0 rounded-sm border ${
+                    i === 0 ? 'border-fg bg-fg' : 'border-border bg-bg'
+                  }`}
+                  aria-hidden
+                />
+              ) : null}
+              <span
+                data-innboks-rad
+                className={`min-w-0 flex-1 border-border border-b py-4 ${
+                  i === 0 ? 'bg-sidebar-active' : 'bg-transparent'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate text-label text-fg">{t.navn}</span>
+                  <span className="shrink-0 text-[11px] text-fg-muted tabular-nums">{t.nar}</span>
+                </span>
+                <span className="mt-1 block truncate text-[12px] text-fg-muted">{t.utdrag}</span>
+              </span>
+            </button>
+          ))}
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 py-10 text-center">
@@ -77,6 +112,61 @@ function ListeGo({ vis }: { vis: Vis }) {
         </div>
       )}
     </div>
+  );
+}
+
+function NyMeldingGo() {
+  return (
+    <form data-ny-melding-skjema className="flex flex-col gap-8 px-3 py-4">
+      <InnstillingSeksjon tittel="Mottaker" ingress="Gruppe og person i samme feltgruppe.">
+        <InnstillingRad label="Gruppe">
+          <div
+            data-ny-samtale-knapperad
+            className="inline-flex h-control items-center gap-0.5 rounded-control border border-border bg-bg p-0.5"
+          >
+            <span className="inline-flex h-7 items-center rounded-[7px] bg-sidebar-active px-2.5 text-label text-fg">
+              Kunder
+            </span>
+            <span className="inline-flex h-7 items-center rounded-[7px] px-2.5 text-label text-fg-muted">
+              Internt
+            </span>
+            <span className="inline-flex h-7 items-center rounded-[7px] px-2.5 text-label text-fg-muted">
+              Support
+            </span>
+          </div>
+        </InnstillingRad>
+        <InnstillingRad label="Valgt" hint="Kari Nordmann">
+          <input
+            readOnly
+            defaultValue="Kari"
+            aria-label="Søk i mottakerlista"
+            className="h-control ew-felt ew-felt-md px-3"
+          />
+        </InnstillingRad>
+      </InnstillingSeksjon>
+      <InnstillingSeksjon tittel="Melding">
+        <InnstillingRad label="Emne" hint="Valgfritt">
+          <input
+            readOnly
+            defaultValue="EU-kontroll"
+            className="h-control ew-felt ew-felt-md px-3"
+          />
+        </InnstillingRad>
+        <InnstillingRad label="Tekst" siste>
+          <textarea
+            readOnly
+            rows={3}
+            defaultValue="Kan dere ta EU i morgen?"
+            className="min-h-[96px] resize-y ew-felt ew-felt-md px-3 py-2"
+          />
+        </InnstillingRad>
+      </InnstillingSeksjon>
+      <div className="flex justify-end" data-ny-melding-send>
+        <span className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg">
+          Send
+        </span>
+      </div>
+    </form>
   );
 }
 

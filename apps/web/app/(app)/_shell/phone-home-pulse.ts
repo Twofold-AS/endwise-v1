@@ -76,14 +76,16 @@ export const PULSE_DAG_SLUTT = 19;
 export const PULSE_DAG_BUE_START = Math.PI;
 /** Halvsirkel (øvre bue 08→19). */
 export const PULSE_DAG_BUE_SWEEP = Math.PI;
-/** Mobbin-ink — dagsfyll (ikke aksent `#0066ff`). */
+/** Mobbin-ink — spark / Revenue Line (ikke dagsbue). */
 export const PULSE_DAG_FYLL_INK = '#141414';
+/** Mobbin-aksent — hvor full dagen er på Amicro-halvsirkelen (data viz, ikke CTA). */
+export const PULSE_DAG_FYLL_BLA = '#0066ff';
 /** Mobbin-hairline — gjenstående bue. */
 export const PULSE_DAG_FYLL_HAIRLINE = '#e0e0e0';
 /** Mobbin-soft — dither-bunn. */
 export const PULSE_DAG_FYLL_SOFT = '#f0f0f0';
-/** @deprecated Aksent er kommersiell (#0066ff Popular/savings) — ikke dagsbue. */
-export const PULSE_DAG_FREMGANG_BLA = '#141414';
+/** Alias — samme blå dagsfyll. */
+export const PULSE_DAG_FREMGANG_BLA = PULSE_DAG_FYLL_BLA;
 /** ViewBox 148 — midt i Amicro-ringen (rIn 55 / rOut 86 i 200). */
 export const PULSE_DAG_BUE_CX = 74;
 export const PULSE_DAG_BUE_CY = 74;

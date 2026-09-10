@@ -34,9 +34,10 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     const avvik = funksjon(kort, 'PulseAvvikForesporBoks');
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
     expect(hero).toMatch(/text-label font-normal/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
     expect(sirkel).toMatch(/PULSE_DAG_FYLL_HAIRLINE/);
-    expect(sirkel).not.toMatch(/#0066ff/);
+    expect(sirkel).toMatch(/DitherDonutChart/);
+    expect(sirkel).not.toMatch(/<svg|halvBue|strokeWidth/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
     expect(endringer).toMatch(/ArrowUpRight/);
     expect(endringer).toMatch(/text-label font-normal/);
@@ -44,8 +45,10 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(endringer).not.toMatch(/ChevronRight/);
     expect(avvik).toMatch(/ew-modus-plate/);
     expect(avvik).toMatch(/p-0\.5/);
-    expect(avvik).toMatch(/h-7/);
-    expect(kort).not.toMatch(/#0066ff/);
+    expect(avvik).toMatch(/size-7|h-7/);
+    expect(avvik).toMatch(/max-w-\[50%\]/);
+    expect(avvik).not.toMatch(/w-px/);
+    expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
   });
 
   it('Analyser er 50/50 over Jobb med forhandlernavn og Alle tall-lenke', () => {
@@ -63,7 +66,13 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     expect(analyser).toMatch(/flex-1 basis-0/);
-    expect(analyser).toMatch(/Tall for/);
+    expect(analyser).toMatch(/Tall for \$\{navn\}/);
+    expect(analyser).not.toMatch(/«|»|&laquo;|&raquo;/);
+    expect(analyser).toMatch(/RevenueLineChart/);
+    expect(analyser).toMatch(/pointer-events-none/);
+    expect(analyser).toMatch(/min-h-11/);
+    expect(analyser).not.toMatch(/min-h-\[168px\]/);
+    expect(analyser).not.toMatch(/scale-\[1\.65\]/);
     expect(analyser).toMatch(/Alle tall/);
     expect(analyser).toMatch(/data-analyser-alle-tall/);
     expect(analyser).toMatch(/ArrowUpRight/);

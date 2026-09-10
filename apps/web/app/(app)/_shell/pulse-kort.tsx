@@ -8,6 +8,7 @@ import {
   DitherGrowthChart,
   type LucideIcon,
   Plus,
+  RevenueLineChart,
   TriangleAlert,
 } from '@endwise/ui';
 import type { Route } from 'next';
@@ -21,23 +22,13 @@ import {
   fmtPulseTime,
   PULSE_DAG_BUE_START,
   PULSE_DAG_BUE_SWEEP,
+  PULSE_DAG_FYLL_BLA,
   PULSE_DAG_FYLL_HAIRLINE,
-  PULSE_DAG_FYLL_INK,
-  PULSE_DAG_FYLL_SOFT,
   PULSE_DAG_SLUTT,
   PULSE_DAG_START,
 } from './phone-home-pulse';
 
 const WHITE = '#ffffff';
-
-function halvBue(cx: number, cy: number, r: number, a0: number, a1: number) {
-  const x0 = cx + r * Math.cos(a0);
-  const y0 = cy + r * Math.sin(a0);
-  const x1 = cx + r * Math.cos(a1);
-  const y1 = cy + r * Math.sin(a1);
-  const large = a1 - a0 > Math.PI ? 1 : 0;
-  return `M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1}`;
-}
 
 /** Mobbin-ink på hjem-spark — `#0066ff` er kommersiell. */
 export const PULSE_SPARK_INK = '#141414';
@@ -144,7 +135,8 @@ export function PulseEndringerLenke() {
 }
 
 /**
- * Avvik | Forespørsler — samme plate som Modus i profil (`ew-modus-plate` + p-0.5 + h-7).
+ * Avvik og Forespørsler — to separate Modus-sirkler + tall ved siden.
+ * Ikke én avrundet boks med loddrett skille. Samlet maks 50 % av raden.
  */
 export function PulseAvvikForesporBoks({
   avvik,
@@ -158,25 +150,35 @@ export function PulseAvvikForesporBoks({
   return (
     <fieldset
       data-pulse-avvik-boks
-      data-pulse-hero-bunn
-      className="ew-modus-plate m-0 inline-flex min-w-0 flex-1 items-center overflow-hidden rounded-full border-0 p-0.5"
+      className="m-0 flex w-max max-w-[50%] min-w-0 items-center gap-2 border-0 p-0"
     >
       <legend className="sr-only">{`Avvik ${avvik}, Forespørsler ${forespor}`}</legend>
-      <div
-        data-pulse-avvik-felt
-        className="inline-flex h-7 min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-fg"
-      >
-        <TriangleAlert size={14} strokeWidth={1.6} aria-hidden />
+      <div data-pulse-avvik-felt className="inline-flex min-w-0 items-center gap-1.5">
+        <span
+          data-pulse-modus-ikon="avvik"
+          className="ew-modus-plate inline-flex items-center rounded-full p-0.5"
+        >
+          <span className="inline-flex size-7 h-7 w-7 items-center justify-center text-fg">
+            <span className="inline-flex size-6 items-center justify-center rounded-full">
+              <TriangleAlert size={14} strokeWidth={1.6} aria-hidden />
+            </span>
+          </span>
+        </span>
         <span data-pulse-avvik-tall className="text-label font-normal tabular-nums">
           {laster ? '·' : avvik}
         </span>
       </div>
-      <div className="h-7 w-px shrink-0 bg-divide" aria-hidden />
-      <div
-        data-pulse-forespor-felt
-        className="inline-flex h-7 min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-fg"
-      >
-        <CircleQuestionMark size={14} strokeWidth={1.6} aria-hidden />
+      <div data-pulse-forespor-felt className="inline-flex min-w-0 items-center gap-1.5">
+        <span
+          data-pulse-modus-ikon="forespor"
+          className="ew-modus-plate inline-flex items-center rounded-full p-0.5"
+        >
+          <span className="inline-flex size-7 h-7 w-7 items-center justify-center text-fg">
+            <span className="inline-flex size-6 items-center justify-center rounded-full">
+              <CircleQuestionMark size={14} strokeWidth={1.6} aria-hidden />
+            </span>
+          </span>
+        </span>
         <span data-pulse-forespor-tall className="text-label font-normal tabular-nums">
           {laster ? '·' : forespor}
         </span>
@@ -186,8 +188,9 @@ export function PulseAvvikForesporBoks({
 }
 
 /**
- * Dagsfremgang — Amicro dither-halvsirkel (øvre bue), Mobbin ink/hairline/soft.
- * Ingen midt-klokke, ingen blå fill-linje/nål. Fot `08.00` / `19.00`.
+ * Dagsfremgang — kun Amicro-halvsirkel (`DitherDonutChart` + sweep π).
+ * Blått `#0066ff`-fyll for hvor full dagen er. Ingen ekstra SVG-strek/nål.
+ * Fot `08.00` / `19.00`.
  */
 export function PulseDagSirkel({
   startHour = PULSE_DAG_START,
@@ -218,50 +221,16 @@ export function PulseDagSirkel({
   const sluttLabel = fmtPulseKlokke(sluttHour);
   const startKort = fmtPulseTime(startHour);
   const sluttKort = fmtPulseTime(sluttHour);
-  const passert = Math.max(0.18, andel);
-  const igjen = Math.max(0.12, 1 - andel);
-  const cx = 74;
-  const cy = 74;
-  const r = 58;
-  const a0 = PULSE_DAG_BUE_START;
-  const a1 = a0 + PULSE_DAG_BUE_SWEEP;
-  const aInk = a0 + Math.min(1, Math.max(0.12, andel)) * PULSE_DAG_BUE_SWEEP;
+  const passert = Math.max(0.001, andel);
+  const igjen = Math.max(0.001, 1 - andel);
 
   return (
     <div data-pulse-dag-sirkel data-pulse-dag-halvsirkel className="flex w-[148px] flex-col">
       <div
-        className="relative h-[78px] w-full overflow-hidden"
+        className="pointer-events-none relative h-[78px] w-full overflow-hidden"
         role="img"
         aria-label={`Verksteddagen ${startLabel}–${sluttLabel}`}
       >
-        <svg
-          viewBox="0 0 148 148"
-          className="absolute inset-x-0 top-0 h-[148px] w-full"
-          role="presentation"
-          aria-hidden
-        >
-          <path
-            d={halvBue(cx, cy, r, a0, a1)}
-            fill="none"
-            stroke={PULSE_DAG_FYLL_SOFT}
-            strokeWidth="22"
-            strokeLinecap="butt"
-          />
-          <path
-            d={halvBue(cx, cy, r, a0, a1)}
-            fill="none"
-            stroke={PULSE_DAG_FYLL_HAIRLINE ?? '#e0e0e0'}
-            strokeWidth="16"
-            strokeLinecap="butt"
-          />
-          <path
-            d={halvBue(cx, cy, r, a0, aInk)}
-            fill="none"
-            stroke={PULSE_DAG_FYLL_INK}
-            strokeWidth="16"
-            strokeLinecap="butt"
-          />
-        </svg>
         <div className="absolute inset-x-0 top-0 h-[148px] w-full" data-pulse-dag-dither>
           <DitherDonutChart
             compact
@@ -269,9 +238,8 @@ export function PulseDagSirkel({
             startAngle={PULSE_DAG_BUE_START}
             sweep={PULSE_DAG_BUE_SWEEP}
             slices={[
-              { name: 'passert', value: passert, color: PULSE_DAG_FYLL_INK },
-              { name: 'igjen', value: igjen, color: PULSE_DAG_FYLL_HAIRLINE ?? '#e0e0e0' },
-              { name: 'bunn', value: 0.001, color: PULSE_DAG_FYLL_SOFT },
+              { name: 'passert', value: passert, color: PULSE_DAG_FYLL_BLA },
+              { name: 'igjen', value: igjen, color: PULSE_DAG_FYLL_HAIRLINE },
             ]}
           />
         </div>
@@ -285,7 +253,8 @@ export function PulseDagSirkel({
 }
 
 /**
- * Toppkort: ukedag+dato · PPF + halvsirkel · Avvik/Forespørsler-boks + Endringer.
+ * Toppkort: ukedag+dato · PPF loddrett midt mellom dato og Avvik-rad ·
+ * to Modus-sirkler + Endringer.
  */
 export function PulseHeroFlate({
   ukedag,
@@ -322,26 +291,28 @@ export function PulseHeroFlate({
       <Link
         href={href as Route}
         data-pulse-del="1"
-        className="flex min-w-0 flex-col gap-3 [touch-action:manipulation]"
+        className="flex min-w-0 items-stretch gap-3 [touch-action:manipulation]"
       >
-        <p data-pulse-ukedag className="text-label font-normal text-fg">
-          {ukedag}{' '}
-          <span data-pulse-dato className="text-label font-normal text-fg-muted">
-            {dato}
-          </span>
-        </p>
-        <div data-pulse-teller-rad className="flex w-full items-end gap-3">
-          <div className="grid min-w-0 flex-1 grid-cols-3 divide-x divide-divide">
-            <PulseTall label="Planlagt" verdi={planlagt} laster={lasterJobber} />
-            <PulseTall label="Pågår" verdi={paagaar} laster={lasterJobber} />
-            <PulseTall label="Ferdig" verdi={ferdig} laster={lasterJobber} />
-          </div>
-          <div data-pulse-del="2" className="shrink-0 self-end">
-            <PulseDagSirkel naa={sirkelNaa} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <p data-pulse-ukedag className="text-label font-normal text-fg">
+            {ukedag}{' '}
+            <span data-pulse-dato className="text-label font-normal text-fg-muted">
+              {dato}
+            </span>
+          </p>
+          <div data-pulse-teller-rad className="flex min-h-0 flex-1 items-center">
+            <div className="grid min-w-0 flex-1 grid-cols-3 divide-x divide-divide">
+              <PulseTall label="Planlagt" verdi={planlagt} laster={lasterJobber} />
+              <PulseTall label="Pågår" verdi={paagaar} laster={lasterJobber} />
+              <PulseTall label="Ferdig" verdi={ferdig} laster={lasterJobber} />
+            </div>
           </div>
         </div>
+        <div data-pulse-del="2" className="shrink-0">
+          <PulseDagSirkel naa={sirkelNaa} />
+        </div>
       </Link>
-      <div data-pulse-hero-bunn className="flex w-full items-center gap-3">
+      <div data-pulse-hero-bunn className="flex w-full items-center justify-between gap-3">
         <PulseAvvikForesporBoks avvik={avvik} forespor={forespor} laster={lasterEndringer} />
         <PulseEndringerLenke />
       </div>
@@ -473,7 +444,8 @@ export function PulseJobbFlis() {
 
 /**
  * Analyser — 50/50 venstre | høyre, over Jobb / På jobb.
- * Venstre: Tall for «forhandler» + Alle tall-lenke. Høyre: zoomet dither, ingen tittel.
+ * Venstre: `Tall for {forhandler}` (uten anførsel) + Alle tall-lenke.
+ * Høyre: Amicro Revenue Line, ikke hover/klikk. Høyde som Innboks-rad.
  */
 export function PulseAnalyserKort({
   stats,
@@ -485,19 +457,19 @@ export function PulseAnalyserKort({
   forhandlerNavn?: string | null;
 }) {
   const navn = forhandlerNavn?.trim() || 'forhandleren';
-  const rutenett = stats.slice(0, 2);
+  const serie = stats[0]?.serie ?? [];
   const vekst = stats.find((s) => s.opp)?.delta ?? '+12 %';
 
   return (
     <div
       data-pulse-analyser
-      className={`${PHONE_DEST_FYLL} flex min-h-[168px] w-full overflow-hidden`}
+      className={`${PHONE_DEST_FYLL} flex min-h-11 w-full items-center overflow-hidden`}
     >
       <div
         data-analyser-del="1"
-        className="flex min-w-0 flex-1 basis-0 flex-col justify-center gap-2 px-4 py-4"
+        className="flex min-w-0 flex-1 basis-0 flex-col justify-center gap-1 px-4 py-3"
       >
-        <p className="text-title text-fg">{`Tall for «${navn}»`}</p>
+        <p className="truncate text-title text-fg">{`Tall for ${navn}`}</p>
         <Link
           href={href as Route}
           data-analyser-alle-tall
@@ -509,25 +481,28 @@ export function PulseAnalyserKort({
       </div>
       <div
         data-analyser-del="2"
-        className="relative min-h-[168px] min-w-0 flex-1 basis-0 overflow-hidden border-divide border-l"
+        className="pointer-events-none relative flex min-h-11 min-w-0 flex-1 basis-0 items-center overflow-hidden border-divide border-l"
+        aria-hidden
       >
-        <div className="absolute -inset-8 grid scale-[1.65] grid-cols-2 gap-1" aria-hidden>
-          {rutenett.map((s) => (
-            <div key={s.id} data-analyser-stat={s.id} className="min-h-0 overflow-hidden">
-              <DitherGrowthChart
-                compact
-                className="h-full min-h-[90px] w-full"
-                values={s.serie}
-                labels={s.serie.map((_, i) => String(i + 1))}
-                color={PULSE_SPARK_INK}
-              />
-            </div>
-          ))}
+        <div className="h-9 w-full px-3" data-analyser-revenue>
+          <RevenueLineChart
+            compact
+            className="pointer-events-none h-full w-full"
+            series={[
+              {
+                key: 'visninger',
+                label: 'Visninger',
+                color: PULSE_SPARK_INK,
+                data: serie,
+                fill: true,
+              },
+            ]}
+          />
         </div>
         <Badge
           data-analyser-vekst
           variant="default"
-          className="absolute top-2 right-2 border-transparent bg-success-soft text-success"
+          className="pointer-events-none absolute top-2 right-2 border-transparent bg-success-soft text-success"
         >
           {vekst}
         </Badge>

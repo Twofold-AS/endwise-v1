@@ -22,8 +22,8 @@ CODE-GO-tester krevde `#e0e0e0` som literal i `pulse-kort.tsx` (konstanten bor i
 
 ## Hvilke fikser ble gjort
 
-Fixed + scrim som profilmenyen. `velgKjoretoyForJobb` gjenbruker regnr eller oppretter kjøretøy før `bookings.create`. Blå `#0066ff` fjernet fra dagsbuen (kun kommersiell). Hairline-hex i dither-slice + Send på én linje så CODE-GO-testene går.
+Fixed + scrim som profilmenyen. `velgKjoretoyForJobb` gjenbruker regnr eller oppretter kjøretøy før `bookings.create`. Blå `#0066ff` fjernet fra dagsbuen (kun kommersiell). Hairline-hex i dither-slice. Halvsirkel fikk SVG-underlag i ink/hairline/soft så fyllet er lesbart uten nål. Send-knapp på Ny melding.
 
 ## Neste
 
-Nettleser: toppkort, Analyser 50/50, innboks-liste + Ny melding, Opprett jobb med kjøretøy, tjenester uten dup-knapp, Kunder-søk. Ingen #114/#119. Draft PR.
+Draft PR #168. Ingen #114/#119. Vercel på første commit feilet på `vehicles.create`-null (fikset). Pre-eksisterende apple-hard / org-Timeplan-tester på main står.

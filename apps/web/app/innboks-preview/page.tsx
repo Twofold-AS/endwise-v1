@@ -50,7 +50,9 @@ function InnboksPreviewInner() {
           </div>
         </div>
         <div data-phone-top-bar="2" className={PHONE_BAR2}>
-          <InboxTopBar2 />
+          <InboxTopBar2
+            startPopup={vis === 'sorter' ? 'tid' : vis === 'gruppe' ? 'gruppe' : undefined}
+          />
         </div>
         <div className="h-px bg-border" />
         {vis === 'trad' ? <TradGo /> : vis === 'ny' ? <NyMeldingGo /> : <ListeGo vis={vis} />}

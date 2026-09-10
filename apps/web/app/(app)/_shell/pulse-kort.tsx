@@ -29,6 +29,16 @@ import {
 } from './phone-home-pulse';
 
 const WHITE = '#ffffff';
+
+function halvBue(cx: number, cy: number, r: number, a0: number, a1: number) {
+  const x0 = cx + r * Math.cos(a0);
+  const y0 = cy + r * Math.sin(a0);
+  const x1 = cx + r * Math.cos(a1);
+  const y1 = cy + r * Math.sin(a1);
+  const large = a1 - a0 > Math.PI ? 1 : 0;
+  return `M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1}`;
+}
+
 /** Mobbin-ink på hjem-spark — `#0066ff` er kommersiell. */
 export const PULSE_SPARK_INK = '#141414';
 /** @deprecated Aksent er Popular/savings, ikke hjem-spark. */
@@ -189,7 +199,9 @@ export function PulseDagSirkel({
   /** Fast klokke (preview). Tom = live Oslo-tid. */
   naa?: Date;
 }) {
-  const [andel, setAndel] = useState(0);
+  const [andel, setAndel] = useState(
+    () => dagFremgang(naa ?? new Date(), startHour, sluttHour).andel,
+  );
 
   useEffect(() => {
     function tick() {
@@ -206,8 +218,14 @@ export function PulseDagSirkel({
   const sluttLabel = fmtPulseKlokke(sluttHour);
   const startKort = fmtPulseTime(startHour);
   const sluttKort = fmtPulseTime(sluttHour);
-  const passert = Math.max(0.08, andel);
-  const igjen = Math.max(0.08, 1 - andel);
+  const passert = Math.max(0.18, andel);
+  const igjen = Math.max(0.12, 1 - andel);
+  const cx = 74;
+  const cy = 74;
+  const r = 58;
+  const a0 = PULSE_DAG_BUE_START;
+  const a1 = a0 + PULSE_DAG_BUE_SWEEP;
+  const aInk = a0 + Math.min(1, Math.max(0.12, andel)) * PULSE_DAG_BUE_SWEEP;
 
   return (
     <div data-pulse-dag-sirkel data-pulse-dag-halvsirkel className="flex w-[148px] flex-col">
@@ -216,6 +234,34 @@ export function PulseDagSirkel({
         role="img"
         aria-label={`Verksteddagen ${startLabel}–${sluttLabel}`}
       >
+        <svg
+          viewBox="0 0 148 148"
+          className="absolute inset-x-0 top-0 h-[148px] w-full"
+          role="presentation"
+          aria-hidden
+        >
+          <path
+            d={halvBue(cx, cy, r, a0, a1)}
+            fill="none"
+            stroke={PULSE_DAG_FYLL_SOFT}
+            strokeWidth="22"
+            strokeLinecap="butt"
+          />
+          <path
+            d={halvBue(cx, cy, r, a0, a1)}
+            fill="none"
+            stroke={PULSE_DAG_FYLL_HAIRLINE ?? '#e0e0e0'}
+            strokeWidth="16"
+            strokeLinecap="butt"
+          />
+          <path
+            d={halvBue(cx, cy, r, a0, aInk)}
+            fill="none"
+            stroke={PULSE_DAG_FYLL_INK}
+            strokeWidth="16"
+            strokeLinecap="butt"
+          />
+        </svg>
         <div className="absolute inset-x-0 top-0 h-[148px] w-full" data-pulse-dag-dither>
           <DitherDonutChart
             compact

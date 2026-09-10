@@ -1,5 +1,5 @@
 import {
-  osloDatoLang,
+  osloDatoKort,
   osloKalenderdag,
   osloPlusDager,
   osloStartAvDag,
@@ -41,7 +41,7 @@ export function foresporTeller(_jobber: PhoneBooking[] = []): number {
 export function pulsdagOverskrift(naa: Date) {
   return {
     ukedag: osloUkedagNavn(naa),
-    dato: osloDatoLang(naa),
+    dato: osloDatoKort(naa),
   };
 }
 
@@ -76,6 +76,22 @@ export const PULSE_DAG_SLUTT = 19;
 export const PULSE_DAG_BUE_START = Math.PI;
 /** Halvsirkel (øvre bue 08→19). */
 export const PULSE_DAG_BUE_SWEEP = Math.PI;
+/** Mobbin-aksent — dagsfremgang (data viz), ikke CTA. */
+export const PULSE_DAG_FREMGANG_BLA = '#0066ff';
+/** ViewBox 148 — midt i Amicro-ringen (rIn 55 / rOut 86 i 200). */
+export const PULSE_DAG_BUE_CX = 74;
+export const PULSE_DAG_BUE_CY = 74;
+export const PULSE_DAG_BUE_R = 52;
+
+/** Punkt på øvre bue for andel 0–1 (08→19). */
+export function dagBuePunkt(andel: number) {
+  const t = Math.min(1, Math.max(0, andel));
+  const theta = PULSE_DAG_BUE_START + t * PULSE_DAG_BUE_SWEEP;
+  return {
+    x: PULSE_DAG_BUE_CX + PULSE_DAG_BUE_R * Math.cos(theta),
+    y: PULSE_DAG_BUE_CY + PULSE_DAG_BUE_R * Math.sin(theta),
+  };
+}
 
 export function fmtPulseKlokke(hour: number, minute = 0): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;

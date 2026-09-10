@@ -37,6 +37,21 @@ const MAANED_NB = [
   'desember',
 ] as const;
 
+const MAANED_KORT = [
+  'jan',
+  'feb',
+  'mar',
+  'apr',
+  'mai',
+  'jun',
+  'jul',
+  'aug',
+  'sep',
+  'okt',
+  'nov',
+  'des',
+] as const;
+
 /** Ukedagsnavn i Europe/Oslo («Tirsdag»). */
 export function osloUkedagNavn(from: Date | string): string {
   return UKEDAG_NB[osloUkedagMandag0(from)] ?? 'Mandag';
@@ -46,4 +61,10 @@ export function osloUkedagNavn(from: Date | string): string {
 export function osloDatoLang(from: Date | string): string {
   const { d, m } = osloVegg(from);
   return `${d}. ${MAANED_NB[m - 1] ?? ''}`;
+}
+
+/** Kort dato uten år, Oslo («9. sep») — samme rad som ukedag. */
+export function osloDatoKort(from: Date | string): string {
+  const { d, m } = osloVegg(from);
+  return `${d}. ${MAANED_KORT[m - 1] ?? ''}`;
 }

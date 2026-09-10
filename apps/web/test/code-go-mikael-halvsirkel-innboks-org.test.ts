@@ -65,17 +65,18 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(sirkel).toMatch(/data-pulse-dag-halvsirkel/);
     expect(sirkel).toMatch(/sweep=\{PULSE_DAG_BUE_SWEEP\}/);
     expect(sirkel).toMatch(/fmtPulseTime/);
-    expect(sirkel).toMatch(/#141414/);
-    expect(sirkel).not.toMatch(/#0066ff/);
+    expect(sirkel).toMatch(/PULSE_DAG_FREMGANG_BLA|#0066ff/);
+    expect(sirkel).toMatch(/data-pulse-dag-fyll/);
+    expect(sirkel).toMatch(/data-pulse-dag-naa/);
     expect(hero).toMatch(/data-pulse-teller-rad/);
     expect(hero).toMatch(/PulseDagSirkel/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
     expect(hero).toMatch(/PulseEndringerLenke/);
     expect(hero).not.toMatch(/PulseValgLenke/);
-    expect(hero).not.toMatch(/ew-modus-plate/);
+    expect(kort).toMatch(/ew-modus-plate/);
     expect(kort).toMatch(/data-pulse-avvik-boks/);
-    expect(kort).toMatch(/text-danger/);
-    expect(kort).toMatch(/text-warn/);
+    expect(kort).toMatch(/CircleQuestionMark/);
+    expect(funksjon(kort, 'PulseAvvikForesporBoks')).not.toMatch(/text-danger|text-warn/);
     expect(kort).toMatch(/>Endringer</);
     expect(kort).toMatch(/ChevronRight/);
     expect(les('../../../packages/ui/src/vendor/amicro/dither-donut.tsx')).toMatch(

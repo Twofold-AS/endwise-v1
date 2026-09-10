@@ -24,7 +24,7 @@ function TjenesterIndre() {
       {aktiv === 'opprett' ? (
         <NyTjeneste onLukk={() => router.replace('/prisliste' as Route)} />
       ) : null}
-      <PrislisteFlate skjulPiller tittel="Tjenester" skjulNy={aktiv === 'opprett'} />
+      <PrislisteFlate skjulPiller tittel="Tjenester" skjulNy />
     </SideChromeSkall>
   );
 }

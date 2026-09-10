@@ -1,60 +1,69 @@
 'use client';
 
-import { type ReactNode, useEffect, useRef } from 'react';
-import {
-  PHONE_PROFIL_MENY_BREDDE,
-  PHONE_PROFIL_MENY_TOPP,
-  PHONE_PROFIL_RAD,
-} from '../_shell/phone-chrome';
+import { type ReactNode, useLayoutEffect, useState } from 'react';
+import { PHONE_PROFIL_MENY_BREDDE, PHONE_PROFIL_RAD } from '../_shell/phone-chrome';
 
 /**
- * Plate som profilmenyen — ikke dropdown-chevron, ikke Modus-piller.
+ * Plate som profilmenyen — fixed + scrim, så Tid/Gruppe ikke klippes
+ * av overflow-hidden på innboks-chrome.
  */
 export function InboxChromePopup({
   apen,
   onLukk,
   label,
-  align = 'left',
+  anker,
   children,
 }: {
   apen: boolean;
   onLukk: () => void;
   label: string;
-  align?: 'left' | 'right';
+  anker: HTMLElement | null;
   children: ReactNode;
 }) {
-  const rot = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
 
-  useEffect(() => {
-    if (!apen) return;
-    function lukk(e: PointerEvent) {
-      if (!rot.current?.contains(e.target as Node)) onLukk();
+  useLayoutEffect(() => {
+    if (!apen || !anker) return;
+    function plasser() {
+      if (!anker) return;
+      const r = anker.getBoundingClientRect();
+      const bredde = Math.min(260, window.innerWidth - 24);
+      const left = Math.min(Math.max(12, r.left), window.innerWidth - bredde - 12);
+      setPos({ top: r.bottom + 10, left });
     }
+    plasser();
     function tast(e: KeyboardEvent) {
       if (e.key === 'Escape') onLukk();
     }
-    document.addEventListener('pointerdown', lukk);
+    window.addEventListener('resize', plasser);
     window.addEventListener('keydown', tast);
     return () => {
-      document.removeEventListener('pointerdown', lukk);
+      window.removeEventListener('resize', plasser);
       window.removeEventListener('keydown', tast);
     };
-  }, [apen, onLukk]);
+  }, [apen, anker, onLukk]);
 
   if (!apen) return null;
 
   return (
-    <div
-      ref={rot}
-      data-innboks-popup={label}
-      role="listbox"
-      aria-label={label}
-      className={`absolute z-[75] ${PHONE_PROFIL_MENY_TOPP} ${
-        align === 'right' ? 'right-0' : 'left-0'
-      } flex ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-hidden rounded-[16px] border border-border bg-card py-1.5 shadow-lg`}
-    >
-      {children}
-    </div>
+    <>
+      <button
+        type="button"
+        data-innboks-popup-scrim
+        aria-label="Lukk"
+        className="fixed inset-0 z-[70] bg-transparent"
+        onClick={onLukk}
+      />
+      <div
+        data-innboks-popup={label}
+        role="listbox"
+        aria-label={label}
+        className={`fixed z-[75] flex ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-hidden rounded-[16px] border border-border bg-card py-1.5 shadow-lg`}
+        style={{ top: pos.top, left: pos.left, width: 260 }}
+      >
+        {children}
+      </div>
+    </>
   );
 }
 

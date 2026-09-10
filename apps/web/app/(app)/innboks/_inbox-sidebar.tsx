@@ -183,7 +183,7 @@ export function InboxSidebar() {
       }`}
     >
       <h2 className="sr-only">Samtaler</h2>
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3">
         {threads.isLoading ? (
           <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
         ) : rader.length === 0 ? (
@@ -257,8 +257,9 @@ function SupportKort({
 }) {
   return (
     <div
-      className={`flex flex-col gap-1 rounded-control border px-3 py-2.5 transition-colors ${
-        aktiv ? 'border-border-strong bg-sidebar-active' : 'border-border bg-bg hover:bg-surface-2'
+      data-innboks-rad
+      className={`flex flex-col gap-1 border-border border-b py-4 transition-colors ${
+        aktiv ? 'bg-sidebar-active' : 'bg-transparent hover:bg-surface-2/60'
       }`}
     >
       <div className="flex items-center gap-2">
@@ -312,8 +313,9 @@ function SamtaleKort({
 }) {
   return (
     <div
-      className={`flex flex-col gap-1 rounded-control border px-3 py-2.5 transition-colors ${
-        aktiv ? 'border-border-strong bg-sidebar-active' : 'border-border bg-bg hover:bg-surface-2'
+      data-innboks-rad
+      className={`flex flex-col gap-1 border-border border-b py-4 transition-colors ${
+        aktiv ? 'bg-sidebar-active' : 'bg-transparent hover:bg-surface-2/60'
       }`}
     >
       <div className="flex items-center gap-2">

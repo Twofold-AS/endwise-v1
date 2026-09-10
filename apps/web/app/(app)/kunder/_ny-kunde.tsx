@@ -5,18 +5,11 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { CardShell } from '../_shell/cards';
+import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
 
 /**
  * «ny kunde». Quick action-en som ikke gjorde noe.
- * Dette var en død knapp. «Ny kunde» i Handlinger-menyen pekte på
- * `/kunder?ny=1`, men kundesiden leste aldri den parameteren — akkurat samme
- * feil som `/innboks?ny=1` hadde fram til. Du trykket, siden lastet,
- * og ingenting skjedde. `customers.create` har eksistert i backend hele tiden.
- * Skjemaet er med vilje minimalt: navn er det eneste som kreves for å ha en
- * kunde i registeret. Telefon og e-post er valgfrie fordi de faktisk er det
- * en kunde som kommer inn døra med en sykkel har ikke alltid oppgitt noen av
- * delene, og et påkrevd felt ville tvunget fram en oppdiktet verdi.
+ * Innstillinger-inndeling: identitet og kontakt i egne grupper.
  */
 export function NyKunde({ onLukk }: { onLukk: () => void }) {
   const router = useRouter();
@@ -29,8 +22,6 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
   const opprett = trpc.customers.create.useMutation({
     onSuccess: (kunde) => {
       void utils.customers.list.invalidate();
-      // Rett inn på kundekortet: den som nettopp opprettet en kunde skal som
-      // regel gjøre noe mer med den (legge inn kjøretøy, en sak).
       if (kunde?.id) router.replace(`/kunder/${kunde.id}` as Route);
       else onLukk();
     },
@@ -42,25 +33,18 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
     if (!n) return;
     opprett.mutate({
       name: n,
-      // Tomme strenger må bli `undefined`, ikke ''. Zod-skjemaet krever en
-      // gyldig e-post hvis feltet er med — en tom streng ville blitt avvist.
       phone: telefon.trim() || undefined,
       email: epost.trim() || undefined,
     });
   }
 
   return (
-    <CardShell className="p-5">
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <div>
-          <p className="text-label text-fg">Ny kunde</p>
-          <p className="text-[12px] text-fg-muted">
-            Bare navnet er påkrevd. Telefon og e-post kan legges til senere.
-          </p>
-        </div>
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-label text-fg">Navn</span>
+    <form data-ny-kunde onSubmit={submit} className="flex flex-col gap-8">
+      <InnstillingSeksjon
+        tittel="Ny kunde"
+        ingress="Bare navnet er påkrevd. Telefon og e-post kan legges til senere."
+      >
+        <InnstillingRad label="Navn" siste>
           <input
             value={navn}
             onChange={(e) => setNavn(e.target.value)}
@@ -68,66 +52,64 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
             placeholder="Kari Nordmann"
             className="h-control ew-felt ew-felt-md px-2.5"
           />
-        </label>
+        </InnstillingRad>
+      </InnstillingSeksjon>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Telefon</span>
-            <input
-              value={telefon}
-              onChange={(e) => setTelefon(e.target.value)}
-              maxLength={32}
-              placeholder="+4790000000"
-              className="h-control ew-felt ew-felt-md px-2.5"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">E-post</span>
-            <input
-              type="email"
-              value={epost}
-              onChange={(e) => setEpost(e.target.value)}
-              placeholder="kari@example.no"
-              className="h-control ew-felt ew-felt-md px-2.5"
-            />
-          </label>
-        </div>
+      <InnstillingSeksjon tittel="Kontakt">
+        <InnstillingRad label="Telefon">
+          <input
+            value={telefon}
+            onChange={(e) => setTelefon(e.target.value)}
+            maxLength={32}
+            placeholder="+4790000000"
+            className="h-control ew-felt ew-felt-md px-2.5"
+          />
+        </InnstillingRad>
+        <InnstillingRad label="E-post" siste>
+          <input
+            type="email"
+            value={epost}
+            onChange={(e) => setEpost(e.target.value)}
+            placeholder="kari@example.no"
+            className="h-control ew-felt ew-felt-md px-2.5"
+          />
+        </InnstillingRad>
+      </InnstillingSeksjon>
 
-        {opprett.error && (
-          <p className="flex items-start gap-2 text-body text-danger">
-            <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-            {opprett.error.message}
-          </p>
-        )}
+      {opprett.error && (
+        <p className="flex items-start gap-2 text-body text-danger">
+          <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+          {opprett.error.message}
+        </p>
+      )}
 
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onLukk}
-            className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-          >
-            Avbryt
-          </button>
-          <StatefulButton
-            type="submit"
-            disabled={!navn.trim() || opprett.isPending}
-            state={
-              opprett.isPending
-                ? 'loading'
-                : opprett.isError
-                  ? 'error'
-                  : opprett.isSuccess
-                    ? 'success'
-                    : 'idle'
-            }
-            loadingText="Oppretter…"
-            successText="Opprettet"
-            errorText="Feilet"
-          >
-            Opprett kunde
-          </StatefulButton>
-        </div>
-      </form>
-    </CardShell>
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onLukk}
+          className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
+        >
+          Avbryt
+        </button>
+        <StatefulButton
+          type="submit"
+          disabled={!navn.trim() || opprett.isPending}
+          state={
+            opprett.isPending
+              ? 'loading'
+              : opprett.isError
+                ? 'error'
+                : opprett.isSuccess
+                  ? 'success'
+                  : 'idle'
+          }
+          loadingText="Oppretter…"
+          successText="Opprettet"
+          errorText="Feilet"
+        >
+          Opprett kunde
+        </StatefulButton>
+      </div>
+    </form>
   );
 }

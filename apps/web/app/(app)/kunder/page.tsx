@@ -1,11 +1,12 @@
 'use client';
 
-import { Avatar, Car, ChevronRight, Mail, Phone, Plus, Search, Users } from '@endwise/ui';
+import { Avatar, Car, ChevronRight, Mail, Phone, Plus, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { Feil, Kilde, Laster, Tomt } from './_delt';
 import { KUNDER_FANER, kunderHref, parseKunderFane } from './_faner';
@@ -66,21 +67,14 @@ function KunderInner() {
         <>
           {/* Søk + filtre */}
           <div className="flex flex-wrap items-center gap-2">
-            <label className="relative flex h-control min-w-[260px] flex-1 items-center">
-              <Search
-                size={15}
-                strokeWidth={1.75}
-                className="pointer-events-none absolute left-2.5 text-fg-muted"
-                aria-hidden
-              />
-              <input
+            <div className="min-w-[260px] flex-1" data-kunder-sok>
+              <PhoneSokFelt
                 value={sok}
                 onChange={(e) => setSok(e.target.value)}
                 placeholder="Søk på navn, e-post eller telefon"
                 aria-label="Søk i kunder"
-                className="h-control w-full ew-felt ew-felt-md pr-3 pl-8"
               />
-            </label>
+            </div>
 
             <Knapperad
               aria-label="Kilde"

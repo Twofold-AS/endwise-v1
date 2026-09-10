@@ -76,8 +76,14 @@ export const PULSE_DAG_SLUTT = 19;
 export const PULSE_DAG_BUE_START = Math.PI;
 /** Halvsirkel (øvre bue 08→19). */
 export const PULSE_DAG_BUE_SWEEP = Math.PI;
-/** Mobbin-aksent — dagsfremgang (data viz), ikke CTA. */
-export const PULSE_DAG_FREMGANG_BLA = '#0066ff';
+/** Mobbin-ink — dagsfyll (ikke aksent `#0066ff`). */
+export const PULSE_DAG_FYLL_INK = '#141414';
+/** Mobbin-hairline — gjenstående bue. */
+export const PULSE_DAG_FYLL_HAIRLINE = '#e0e0e0';
+/** Mobbin-soft — dither-bunn. */
+export const PULSE_DAG_FYLL_SOFT = '#f0f0f0';
+/** @deprecated Aksent er kommersiell (#0066ff Popular/savings) — ikke dagsbue. */
+export const PULSE_DAG_FREMGANG_BLA = '#141414';
 /** ViewBox 148 — midt i Amicro-ringen (rIn 55 / rOut 86 i 200). */
 export const PULSE_DAG_BUE_CX = 74;
 export const PULSE_DAG_BUE_CY = 74;
@@ -97,9 +103,9 @@ export function fmtPulseKlokke(hour: number, minute = 0): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
-/** Kort time-etikett på halvsirkelen (08 … 19). */
+/** Fot-etikett på halvsirkelen (`08.00` … `19.00`). */
 export function fmtPulseTime(hour: number): string {
-  return String(hour).padStart(2, '0');
+  return `${String(hour).padStart(2, '0')}.00`;
 }
 
 /** Andel av verksteddagen som er passert (0 før start, 1 etter slutt). */

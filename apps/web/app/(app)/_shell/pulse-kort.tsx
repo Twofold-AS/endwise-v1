@@ -3,7 +3,6 @@
 import {
   ArrowUpRight,
   Badge,
-  ChevronRight,
   CircleQuestionMark,
   DitherDonutChart,
   DitherGrowthChart,
@@ -17,23 +16,23 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { PHONE_DEST_FYLL, PHONE_HERO_FYLL, PULSE_ENDRINGER_HREF } from './phone-home';
 import {
   type AnalyserMockStat,
-  dagBuePunkt,
   dagFremgang,
   fmtPulseKlokke,
   fmtPulseTime,
-  PULSE_DAG_BUE_CX,
-  PULSE_DAG_BUE_CY,
-  PULSE_DAG_BUE_R,
   PULSE_DAG_BUE_START,
   PULSE_DAG_BUE_SWEEP,
-  PULSE_DAG_FREMGANG_BLA,
+  PULSE_DAG_FYLL_HAIRLINE,
+  PULSE_DAG_FYLL_INK,
+  PULSE_DAG_FYLL_SOFT,
   PULSE_DAG_SLUTT,
   PULSE_DAG_START,
 } from './phone-home-pulse';
 
 const WHITE = '#ffffff';
-/** Mobbin-aksent — tillatt på hjem-spark (Mikael CODE-GO). */
-export const PULSE_SPARK_BLA = '#0066ff';
+/** Mobbin-ink på hjem-spark — `#0066ff` er kommersiell. */
+export const PULSE_SPARK_INK = '#141414';
+/** @deprecated Aksent er Popular/savings, ikke hjem-spark. */
+export const PULSE_SPARK_BLA = '#141414';
 
 /**
  * Operativt pulse-kort på forhandler-hjem.
@@ -117,8 +116,7 @@ export function PulseKort({
 }
 
 /**
- * Endringer — hvit knapp, tekst + høyre-pil.
- * Samme linje som Avvik/Forespørsler-boksen.
+ * Endringer — lenke som Innboks-raden: text-label, ikke fet, hale-pil høyre.
  */
 export function PulseEndringerLenke() {
   return (
@@ -127,18 +125,16 @@ export function PulseEndringerLenke() {
       aria-label="Endringer"
       data-pulse-endringer
       data-pulse-ikon="Endringer"
-      className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-[16px] px-3.5 text-[#141414] shadow-none ring-1 ring-divide [touch-action:manipulation]"
-      style={{ backgroundColor: WHITE }}
+      className="inline-flex shrink-0 items-center gap-1 text-label font-normal text-fg [touch-action:manipulation]"
     >
-      <span className="text-[15px] font-[650]">Endringer</span>
-      <ChevronRight size={16} strokeWidth={1.75} aria-hidden />
+      Endringer
+      <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
     </Link>
   );
 }
 
 /**
- * Avvik | Forespørsler — visningstall, ikke knapper.
- * Samme plate som Modus (`.ew-modus-plate` / valgknapp-look).
+ * Avvik | Forespørsler — samme plate som Modus i profil (`ew-modus-plate` + p-0.5 + h-7).
  */
 export function PulseAvvikForesporBoks({
   avvik,
@@ -153,25 +149,25 @@ export function PulseAvvikForesporBoks({
     <fieldset
       data-pulse-avvik-boks
       data-pulse-hero-bunn
-      className="ew-modus-plate m-0 flex min-h-11 min-w-0 flex-1 items-stretch overflow-hidden rounded-full border-0 p-0.5 ring-1 ring-divide"
+      className="ew-modus-plate m-0 inline-flex min-w-0 flex-1 items-center overflow-hidden rounded-full border-0 p-0.5"
     >
       <legend className="sr-only">{`Avvik ${avvik}, Forespørsler ${forespor}`}</legend>
       <div
         data-pulse-avvik-felt
-        className="flex min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-fg"
+        className="inline-flex h-7 min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-fg"
       >
-        <TriangleAlert size={16} strokeWidth={1.75} aria-hidden />
-        <span data-pulse-avvik-tall className="text-[15px] font-[650] tabular-nums">
+        <TriangleAlert size={14} strokeWidth={1.6} aria-hidden />
+        <span data-pulse-avvik-tall className="text-label font-normal tabular-nums">
           {laster ? '·' : avvik}
         </span>
       </div>
-      <div className="w-px shrink-0 self-stretch bg-divide" aria-hidden />
+      <div className="h-7 w-px shrink-0 bg-divide" aria-hidden />
       <div
         data-pulse-forespor-felt
-        className="flex min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-fg"
+        className="inline-flex h-7 min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-fg"
       >
-        <CircleQuestionMark size={16} strokeWidth={1.75} aria-hidden />
-        <span data-pulse-forespor-tall className="text-[15px] font-[650] tabular-nums">
+        <CircleQuestionMark size={14} strokeWidth={1.6} aria-hidden />
+        <span data-pulse-forespor-tall className="text-label font-normal tabular-nums">
           {laster ? '·' : forespor}
         </span>
       </div>
@@ -180,8 +176,8 @@ export function PulseAvvikForesporBoks({
 }
 
 /**
- * Dagsfremgang — Amicro dither-halvsirkel (øvre bue) + blå fill-linje.
- * Fyller 08–19 Oslo, klokkevis fra venstre mot høyre. Klokke i midten.
+ * Dagsfremgang — Amicro dither-halvsirkel (øvre bue), Mobbin ink/hairline/soft.
+ * Ingen midt-klokke, ingen blå fill-linje/nål. Fot `08.00` / `19.00`.
  */
 export function PulseDagSirkel({
   startHour = PULSE_DAG_START,
@@ -194,17 +190,15 @@ export function PulseDagSirkel({
   naa?: Date;
 }) {
   const [andel, setAndel] = useState(0);
-  const [naaLabel, setNaaLabel] = useState<string | null>(null);
 
   useEffect(() => {
     function tick() {
       const d = dagFremgang(naa ?? new Date(), startHour, sluttHour);
       setAndel(d.andel);
-      setNaaLabel(d.naaLabel);
     }
     tick();
     if (naa) return;
-    const id = window.setInterval(tick, 1000);
+    const id = window.setInterval(tick, 30_000);
     return () => window.clearInterval(id);
   }, [startHour, sluttHour, naa]);
 
@@ -212,71 +206,29 @@ export function PulseDagSirkel({
   const sluttLabel = fmtPulseKlokke(sluttHour);
   const startKort = fmtPulseTime(startHour);
   const sluttKort = fmtPulseTime(sluttHour);
-  const passert = Math.max(0.001, andel);
-  const igjen = Math.max(0.001, 1 - andel);
-  const bue = Math.PI * PULSE_DAG_BUE_R;
-  const fyll = bue * andel;
-  const naal = dagBuePunkt(andel);
+  const passert = Math.max(0.08, andel);
+  const igjen = Math.max(0.08, 1 - andel);
 
   return (
     <div data-pulse-dag-sirkel data-pulse-dag-halvsirkel className="flex w-[148px] flex-col">
       <div
         className="relative h-[78px] w-full overflow-hidden"
         role="img"
-        aria-label={`Verksteddagen ${startLabel}–${sluttLabel}${naaLabel ? `, klokken ${naaLabel}` : ''}`}
+        aria-label={`Verksteddagen ${startLabel}–${sluttLabel}`}
       >
-        <div className="absolute inset-x-0 top-0 h-[148px] w-full">
+        <div className="absolute inset-x-0 top-0 h-[148px] w-full" data-pulse-dag-dither>
           <DitherDonutChart
             compact
             className="size-full"
             startAngle={PULSE_DAG_BUE_START}
             sweep={PULSE_DAG_BUE_SWEEP}
             slices={[
-              { name: 'passert', value: passert, color: PULSE_DAG_FREMGANG_BLA },
-              { name: 'igjen', value: igjen, color: '#e0e0e0' },
+              { name: 'passert', value: passert, color: PULSE_DAG_FYLL_INK },
+              { name: 'igjen', value: igjen, color: PULSE_DAG_FYLL_HAIRLINE },
+              { name: 'bunn', value: 0.001, color: PULSE_DAG_FYLL_SOFT },
             ]}
           />
-          <svg
-            data-pulse-dag-fyll
-            className="pointer-events-none absolute inset-0 size-full"
-            viewBox="0 0 148 148"
-            aria-hidden
-          >
-            <title>Dagsfremgang</title>
-            <path
-              d={`M ${PULSE_DAG_BUE_CX - PULSE_DAG_BUE_R} ${PULSE_DAG_BUE_CY} A ${PULSE_DAG_BUE_R} ${PULSE_DAG_BUE_R} 0 0 1 ${PULSE_DAG_BUE_CX + PULSE_DAG_BUE_R} ${PULSE_DAG_BUE_CY}`}
-              fill="none"
-              stroke="#e0e0e0"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            <path
-              d={`M ${PULSE_DAG_BUE_CX - PULSE_DAG_BUE_R} ${PULSE_DAG_BUE_CY} A ${PULSE_DAG_BUE_R} ${PULSE_DAG_BUE_R} 0 0 1 ${PULSE_DAG_BUE_CX + PULSE_DAG_BUE_R} ${PULSE_DAG_BUE_CY}`}
-              fill="none"
-              stroke={PULSE_DAG_FREMGANG_BLA}
-              strokeWidth="5"
-              strokeLinecap="round"
-              strokeDasharray={`${fyll} ${bue}`}
-            />
-            <circle
-              cx={naal.x}
-              cy={naal.y}
-              r="5"
-              fill={PULSE_DAG_FREMGANG_BLA}
-              stroke="#ffffff"
-              strokeWidth="1.5"
-            />
-          </svg>
         </div>
-        {naaLabel ? (
-          <time
-            data-pulse-dag-naa
-            dateTime={naaLabel}
-            className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 text-[15px] font-[650] leading-none text-fg tabular-nums"
-          >
-            {naaLabel}
-          </time>
-        ) : null}
       </div>
       <div className="-mt-1 flex w-full justify-between text-[12px] text-fg-muted tabular-nums">
         <span data-pulse-dag-start>{startKort}</span>
@@ -324,21 +276,19 @@ export function PulseHeroFlate({
       <Link
         href={href as Route}
         data-pulse-del="1"
-        className="flex min-w-0 flex-col [touch-action:manipulation]"
+        className="flex min-w-0 flex-col gap-3 [touch-action:manipulation]"
       >
+        <p data-pulse-ukedag className="text-label font-normal text-fg">
+          {ukedag}{' '}
+          <span data-pulse-dato className="text-label font-normal text-fg-muted">
+            {dato}
+          </span>
+        </p>
         <div data-pulse-teller-rad className="flex w-full items-end gap-3">
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <p data-pulse-ukedag className="text-title text-fg">
-              {ukedag}{' '}
-              <span data-pulse-dato className="text-title text-fg-muted">
-                {dato}
-              </span>
-            </p>
-            <div className="grid min-w-0 grid-cols-3 divide-x divide-divide">
-              <PulseTall label="Planlagt" verdi={planlagt} laster={lasterJobber} />
-              <PulseTall label="Pågår" verdi={paagaar} laster={lasterJobber} />
-              <PulseTall label="Ferdig" verdi={ferdig} laster={lasterJobber} />
-            </div>
+          <div className="grid min-w-0 flex-1 grid-cols-3 divide-x divide-divide">
+            <PulseTall label="Planlagt" verdi={planlagt} laster={lasterJobber} />
+            <PulseTall label="Pågår" verdi={paagaar} laster={lasterJobber} />
+            <PulseTall label="Ferdig" verdi={ferdig} laster={lasterJobber} />
           </div>
           <div data-pulse-del="2" className="shrink-0 self-end">
             <PulseDagSirkel naa={sirkelNaa} />
@@ -392,7 +342,7 @@ export function PulseIkonFlate({ children }: { children: ReactNode }) {
   );
 }
 
-/** Amicro dither under tallene — denne uken, blå linje. */
+/** Amicro dither under tallene — Mobbin-ink. */
 export function PulseUkeSpark({ verdier }: { verdier: number[] }) {
   return (
     <div data-pulse-spark className="h-14 w-full overflow-hidden rounded-[16px]" aria-hidden>
@@ -401,7 +351,7 @@ export function PulseUkeSpark({ verdier }: { verdier: number[] }) {
         className="h-full w-full"
         values={verdier}
         labels={verdier.map((_, i) => String(i + 1))}
-        color={PULSE_SPARK_BLA}
+        color={PULSE_SPARK_INK}
       />
     </div>
   );
@@ -476,53 +426,66 @@ export function PulseJobbFlis() {
 }
 
 /**
- * Analyser — to deler nederst i hjem-stakken (under Innboks/Lager/Jobb).
- * Del 1: tittel + Se tall. Del 2: dither-rutenett (nettsidevisninger, mock).
+ * Analyser — 50/50 venstre | høyre, over Jobb / På jobb.
+ * Venstre: Tall for «forhandler» + Alle tall-lenke. Høyre: zoomet dither, ingen tittel.
  */
-export function PulseAnalyserKort({ stats, href }: { stats: AnalyserMockStat[]; href: string }) {
+export function PulseAnalyserKort({
+  stats,
+  href,
+  forhandlerNavn,
+}: {
+  stats: AnalyserMockStat[];
+  href: string;
+  forhandlerNavn?: string | null;
+}) {
+  const navn = forhandlerNavn?.trim() || 'forhandleren';
+  const rutenett = stats.slice(0, 2);
+  const vekst = stats.find((s) => s.opp)?.delta ?? '+12 %';
+
   return (
-    <Link
-      href={href as Route}
+    <div
       data-pulse-analyser
-      className={`${PHONE_DEST_FYLL} flex min-h-[220px] w-full flex-1 flex-col overflow-hidden [touch-action:manipulation]`}
+      className={`${PHONE_DEST_FYLL} flex min-h-[168px] w-full overflow-hidden`}
     >
       <div
         data-analyser-del="1"
-        className="flex shrink-0 items-center justify-between gap-3 px-4 py-3"
+        className="flex min-w-0 flex-1 basis-0 flex-col justify-center gap-2 px-4 py-4"
       >
-        <p className="text-title text-fg">Analyser</p>
-        <span className="inline-flex h-8 items-center rounded-full bg-fg px-3 text-[13px] font-[650] text-bg">
-          Se tall
-        </span>
+        <p className="text-title text-fg">{`Tall for «${navn}»`}</p>
+        <Link
+          href={href as Route}
+          data-analyser-alle-tall
+          className="inline-flex items-center gap-1 text-label font-normal text-fg [touch-action:manipulation]"
+        >
+          Alle tall
+          <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
+        </Link>
       </div>
       <div
         data-analyser-del="2"
-        className="grid min-h-0 flex-1 grid-cols-2 gap-2 border-divide border-t px-3 py-3"
+        className="relative min-h-[168px] min-w-0 flex-1 basis-0 overflow-hidden border-divide border-l"
       >
-        {stats.map((s) => (
-          <div key={s.id} data-analyser-stat={s.id} className="flex min-h-0 flex-col gap-1">
-            <div className="flex items-center justify-between gap-1">
-              <span className="truncate text-[11px] text-fg-muted">{s.label}</span>
-              <Badge
-                variant={s.opp ? 'default' : 'destructive'}
-                className={s.opp ? 'border-transparent bg-success-soft text-success' : undefined}
-              >
-                {s.delta}
-              </Badge>
-            </div>
-            <p className="text-[18px] font-[650] leading-none text-fg tabular-nums">{s.verdi}</p>
-            <div className="min-h-[44px] flex-1 overflow-hidden rounded-[10px]" aria-hidden>
+        <div className="absolute -inset-8 grid scale-[1.65] grid-cols-2 gap-1" aria-hidden>
+          {rutenett.map((s) => (
+            <div key={s.id} data-analyser-stat={s.id} className="min-h-0 overflow-hidden">
               <DitherGrowthChart
                 compact
-                className="h-full w-full"
+                className="h-full min-h-[90px] w-full"
                 values={s.serie}
                 labels={s.serie.map((_, i) => String(i + 1))}
-                color={PULSE_SPARK_BLA}
+                color={PULSE_SPARK_INK}
               />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        <Badge
+          data-analyser-vekst
+          variant="default"
+          className="absolute top-2 right-2 border-transparent bg-success-soft text-success"
+        >
+          {vekst}
+        </Badge>
       </div>
-    </Link>
+    </div>
   );
 }

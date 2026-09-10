@@ -65,9 +65,10 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(sirkel).toMatch(/data-pulse-dag-halvsirkel/);
     expect(sirkel).toMatch(/sweep=\{PULSE_DAG_BUE_SWEEP\}/);
     expect(sirkel).toMatch(/fmtPulseTime/);
-    expect(sirkel).toMatch(/PULSE_DAG_FREMGANG_BLA|#0066ff/);
-    expect(sirkel).toMatch(/data-pulse-dag-fyll/);
-    expect(sirkel).toMatch(/data-pulse-dag-naa/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
+    expect(sirkel).toMatch(/data-pulse-dag-dither/);
+    expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
+    expect(sirkel).not.toMatch(/#0066ff/);
     expect(hero).toMatch(/data-pulse-teller-rad/);
     expect(hero).toMatch(/PulseDagSirkel/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
@@ -78,7 +79,7 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(kort).toMatch(/CircleQuestionMark/);
     expect(funksjon(kort, 'PulseAvvikForesporBoks')).not.toMatch(/text-danger|text-warn/);
     expect(kort).toMatch(/>Endringer</);
-    expect(kort).toMatch(/ChevronRight/);
+    expect(kort).toMatch(/ArrowUpRight/);
     expect(les('../../../packages/ui/src/vendor/amicro/dither-donut.tsx')).toMatch(
       /sweep\s*=\s*Math\.PI \* 2/,
     );
@@ -155,6 +156,8 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     const popup = utenKommentarer(les('../app/(app)/innboks/_popup.tsx'));
     expect(popup).toMatch(/PHONE_PROFIL_MENY_BREDDE/);
     expect(popup).toMatch(/PHONE_PROFIL_RAD/);
+    expect(popup).toMatch(/data-innboks-popup-scrim/);
+    expect(popup).toMatch(/fixed inset-0 z-\[70\]/);
 
     const side = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     expect(side).toMatch(/data-innboks-velg/);

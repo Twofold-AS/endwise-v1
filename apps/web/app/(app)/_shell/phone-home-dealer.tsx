@@ -3,6 +3,7 @@
 import { Inbox, Package, Users } from '@endwise/ui';
 import { useEffect, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useOrgRole } from '../_lib/use-org-role';
 import { BOOKING_LAGRET_EVENT, HJEM_PULSE_REFETCH, invalidateHjemPulse } from './hjem-pulse-sync';
 import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
 import {
@@ -20,7 +21,7 @@ import { PulseAnalyserKort, PulseHeroFlate, PulseJobbFlis, PulseRadKort } from '
 
 /**
  * Forhandler-hjem — Verkstedet / `/home`.
- * Låste flater: toppkort · Innboks · Lager · ansatte + Jobb · Analyser nederst.
+ * Låste flater: toppkort · Innboks · Lager · Analyser · På jobb + Jobb.
  */
 export function useDealerHjemKort() {
   const utils = trpc.useUtils();
@@ -98,6 +99,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
     ansatte,
     analyser,
   } = useDealerHjemKort();
+  const { tenantName } = useOrgRole();
   const lasterJobber = bookings.isLoading;
 
   return (
@@ -131,6 +133,12 @@ export function DealerPulseKort({ className }: { className?: string }) {
         laster={deler.isLoading}
       />
 
+      <PulseAnalyserKort
+        stats={analyser}
+        href={PHONE_KORT_META.analyser.href}
+        forhandlerNavn={tenantName}
+      />
+
       <div data-pulse-bunn className="flex w-full gap-3">
         <div className="min-w-0 flex-1 basis-0">
           <PulseRadKort
@@ -146,8 +154,6 @@ export function DealerPulseKort({ className }: { className?: string }) {
           <PulseJobbFlis />
         </div>
       </div>
-
-      <PulseAnalyserKort stats={analyser} href={PHONE_KORT_META.analyser.href} />
     </div>
   );
 }

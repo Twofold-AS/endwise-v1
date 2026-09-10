@@ -5,11 +5,11 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { CardShell } from '../_shell/cards';
+import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
 import { TYPE_LABEL } from './_delt';
 
 /**
- * Registrer kjøretøy — Settings-felt, ikke et dump av alle skjema.
+ * Registrer kjøretøy — Innstillinger-feltgrupper, ikke CardShell-dump.
  */
 export function RegistrerKjoretoy({
   fastKundeId,
@@ -54,101 +54,88 @@ export function RegistrerKjoretoy({
   }
 
   return (
-    <div data-registrer-kjoretoy>
-      <CardShell className="p-5">
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <div>
-            <p className="text-label text-fg">Registrer kjøretøy</p>
-            <p className="text-[12px] text-fg-muted">
-              Regnr er påkrevd. Merke og modell kan fylles senere fra Vegvesenet.
-            </p>
-          </div>
-
-          {fastKundeId ? null : (
-            <label className="flex flex-col gap-1.5">
-              <span className="text-label text-fg">Kunde</span>
-              <select
-                value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
-                className="h-control ew-felt ew-felt-md px-2.5"
-              >
-                <option value="">Ingen eier ennå</option>
-                {(kunder.data ?? []).map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Type</span>
+    <form data-registrer-kjoretoy onSubmit={submit} className="flex flex-col gap-8">
+      <InnstillingSeksjon
+        tittel="Registrer kjøretøy"
+        ingress="Regnr er påkrevd. Merke og modell kan fylles senere fra Vegvesenet."
+      >
+        {fastKundeId ? null : (
+          <InnstillingRad label="Kunde">
             <select
-              value={type}
-              onChange={(e) => setType(e.target.value as typeof type)}
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
               className="h-control ew-felt ew-felt-md px-2.5"
             >
-              {(['mc', 'boat', 'atv'] as const).map((t) => (
-                <option key={t} value={t}>
-                  {TYPE_LABEL[t]}
+              <option value="">Ingen eier ennå</option>
+              {(kunder.data ?? []).map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.name}
                 </option>
               ))}
             </select>
-          </label>
+          </InnstillingRad>
+        )}
+        <InnstillingRad label="Type">
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value as typeof type)}
+            className="h-control ew-felt ew-felt-md px-2.5"
+          >
+            {(['mc', 'boat', 'atv'] as const).map((t) => (
+              <option key={t} value={t}>
+                {TYPE_LABEL[t]}
+              </option>
+            ))}
+          </select>
+        </InnstillingRad>
+        <InnstillingRad label="Registreringsnummer" siste>
+          <input
+            value={regNumber}
+            onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
+            maxLength={10}
+            placeholder="AB12345"
+            className="h-control ew-felt ew-felt-md px-2.5"
+          />
+        </InnstillingRad>
+      </InnstillingSeksjon>
 
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Registreringsnummer</span>
-            <input
-              value={regNumber}
-              onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
-              maxLength={10}
-              placeholder="AB12345"
-              className="h-control ew-felt ew-felt-md px-2.5"
-            />
-          </label>
+      <InnstillingSeksjon tittel="Kjennetegn">
+        <InnstillingRad label="Merke">
+          <input
+            value={make}
+            onChange={(e) => setMake(e.target.value)}
+            maxLength={64}
+            className="h-control ew-felt ew-felt-md px-2.5"
+          />
+        </InnstillingRad>
+        <InnstillingRad label="Modell" siste>
+          <input
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            maxLength={64}
+            className="h-control ew-felt ew-felt-md px-2.5"
+          />
+        </InnstillingRad>
+      </InnstillingSeksjon>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5">
-              <span className="text-label text-fg">Merke</span>
-              <input
-                value={make}
-                onChange={(e) => setMake(e.target.value)}
-                maxLength={64}
-                className="h-control ew-felt ew-felt-md px-2.5"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-label text-fg">Modell</span>
-              <input
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                maxLength={64}
-                className="h-control ew-felt ew-felt-md px-2.5"
-              />
-            </label>
-          </div>
+      {opprett.error ? (
+        <p className="flex items-start gap-2 text-body text-danger">
+          <CircleAlert size={15} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+          {opprett.error.message}
+        </p>
+      ) : null}
 
-          {opprett.error ? (
-            <p className="flex items-start gap-2 text-body text-danger">
-              <CircleAlert size={15} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-              {opprett.error.message}
-            </p>
-          ) : null}
-
-          <div className="flex justify-end">
-            <StatefulButton
-              type="submit"
-              disabled={!regNumber.trim() || opprett.isPending}
-              state={opprett.isPending ? 'loading' : opprett.isError ? 'error' : 'idle'}
-              loadingText="Lagrer…"
-              errorText="Feilet"
-            >
-              Registrer
-            </StatefulButton>
-          </div>
-        </form>
-      </CardShell>
-    </div>
+      <div className="flex justify-end">
+        <StatefulButton
+          type="submit"
+          disabled={!regNumber.trim() || opprett.isPending}
+          state={opprett.isPending ? 'loading' : opprett.isError ? 'error' : 'idle'}
+          loadingText="Lagrer…"
+          errorText="Feilet"
+        >
+          Registrer
+        </StatefulButton>
+      </div>
+    </form>
   );
 }

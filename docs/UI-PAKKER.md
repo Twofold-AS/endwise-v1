@@ -13,13 +13,26 @@
 >
 > Fila oppdateres **hver gang** en ny UI-pakke tas inn. Ingen unntak.
 
+> ### ⚠️ Mikael CODE-GO visual + forms (10.09.2026)
+> Toppkort: ukedag+dato øvre venstre i `text-label` (samme som Innboks-rad,
+> ikke fet). Halvsirkel uten midt-klokke og uten blå strek/nål — dither
+> ink `#141414` / hairline `#e0e0e0` / soft `#f0f0f0`. Fot **`08.00` /
+> `19.00`** på samme linje som Planlagt/Pågår/Ferdig. Avvik | Forespørsler
+> = Modus-plate (`p-0.5` + `h-7`, ingen ekstra ring). Endringer =
+> text-label + hale-pil (`ArrowUpRight`), ikke hvit knapp. Analyser 50/50
+> (Tall for «forhandler» + Alle tall | zoomet dither) **over** Jobb/På
+> jobb. Innboks-rader = Innstillinger-hårlinje. Tid/Gruppe = profil-popup
+> (fixed + scrim). Skjemaer (Ny melding / kunde / kjøretøy / jobb /
+> tjeneste) = `InnstillingSeksjon`. Jobb fester regnr på bookingen. Ingen
+> ny pakke. ⛔ #114/#119. ⛔ `#0066ff` på dagsbuen.
+>
 > ### ⚠️ Mikael CODE-GO toppkort GO (10.09.2026)
 > Halvsirkel 08–19: synlig **fill-linje + nål** i Mobbin-aksent `#0066ff`
 > (data viz — ikke CTA-pille) + **Oslo-klokke i midten**. 08/19 på samme
 > linje som Planlagt/Pågår/Ferdig. Avvik | Forespørsler = `.ew-modus-plate`
 > (samme look som Modus, spørsmålstegn — ikke rød/gul). Dato på samme rad
 > som ukedag («Tirsdag 9. sep»). Endringer-knapp etter #166. Ingen ny pakke.
-> ⛔ #114/#119.
+> ⛔ #114/#119. **Overstyrt samme dag** av visual + forms (ingen blå nål).
 >
 > ### ⚠️ Mikael CODE-GO halvsirkel + Endringer + innboks (09.09.2026)
 > Toppkort: dither-**halvsirkel** (`sweep={π}`) på samme linje som

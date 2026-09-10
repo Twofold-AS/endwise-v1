@@ -1,32 +1,45 @@
 'use client';
 
-import { type RefObject, useMemo, useRef, useState } from 'react';
+import { type RefObject, useLayoutEffect, useRef, useState } from 'react';
 
 export type CanvasRect = { width: number; height: number };
 
-export type AmicroCanvasRef = ((node: HTMLCanvasElement | null) => void) & {
-  current: HTMLCanvasElement | null;
-};
-
 export type UseCanvasSetupResult = {
-  canvasRef: AmicroCanvasRef;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   rect: RefObject<CanvasRect>;
   isVisible: RefObject<boolean>;
   reducedMotion: boolean;
 };
 
+/** Sett bitmap fra CSS-boks. Tegneloopen kaller dette hver frame. */
+export function syncCanvasSize(
+  canvas: HTMLCanvasElement,
+  rect: RefObject<CanvasRect>,
+): boolean {
+  if (typeof window === 'undefined') return false;
+  const box = canvas.getBoundingClientRect();
+  if (box.width <= 0 || box.height <= 0) return false;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(box.width * dpr);
+  const h = Math.round(box.height * dpr);
+  rect.current = { width: box.width, height: box.height };
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  canvas.dataset.amicroReady = '1';
+  return true;
+}
+
 /**
- * Amicro canvas hook: ResizeObserver for size, IntersectionObserver to pause
- * off-screen, visibilitychange for hidden tabs, prefers-reduced-motion once.
- *
- * `canvasRef` is both a callback ref (noden bindes når canvas mountes)
- * og `{ current }` til rAF-tegneloopen. Objekt-ref + useEffect traff tom
- * node på hjem-kortene — bitmap ble værende 300×150 og dither tegnet aldri.
+ * Amicro canvas hook: plain object-ref + ResizeObserver / IntersectionObserver.
+ * Tegneloopen synker også størrelse selv (`syncCanvasSize`) — hjem-kortene
+ * ble stående på default 300×150 når setup-effect traff tom node.
  */
 export function useCanvasSetup(): UseCanvasSetupResult {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rect = useRef<CanvasRect>({ width: 0, height: 0 });
   const isVisible = useRef(true);
-  const stopRef = useRef<(() => void) | undefined>(undefined);
 
   const [reducedMotion] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -37,70 +50,48 @@ export function useCanvasSetup(): UseCanvasSetupResult {
     );
   });
 
-  const canvasRef = useMemo<AmicroCanvasRef>(() => {
-    const bind = ((node: HTMLCanvasElement | null) => {
-      stopRef.current?.();
-      stopRef.current = undefined;
-      bind.current = node;
-      if (!node || typeof window === 'undefined') return;
+  useLayoutEffect(() => {
+    let ro: ResizeObserver | undefined;
+    let io: IntersectionObserver | undefined;
+    let raf = 0;
+    let tries = 0;
 
-      const applySize = (width: number, height: number) => {
-        if (width <= 0 || height <= 0) return false;
-        rect.current = { width, height };
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        node.width = Math.round(width * dpr);
-        node.height = Math.round(height * dpr);
-        node.dataset.amicroReady = '1';
-        return true;
-      };
-
-      const measure = () => {
-        const box = node.getBoundingClientRect();
-        return applySize(box.width, box.height);
-      };
-
-      measure();
-      let raf = 0;
-      if (rect.current.width === 0 || rect.current.height === 0) {
-        raf = requestAnimationFrame(() => {
-          if (!measure()) {
-            raf = requestAnimationFrame(() => {
-              measure();
-            });
-          }
-        });
-      }
-
-      const ro = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          const { width, height } = entry.contentRect;
-          if (!applySize(width, height)) measure();
-        }
+    const attach = (node: HTMLCanvasElement) => {
+      syncCanvasSize(node, rect);
+      ro = new ResizeObserver(() => {
+        syncCanvasSize(node, rect);
       });
       ro.observe(node);
-
-      const io = new IntersectionObserver(
+      io = new IntersectionObserver(
         ([entry]) => {
           isVisible.current = entry.isIntersecting || entry.intersectionRatio > 0;
         },
         { rootMargin: '100px', threshold: [0, 0.01, 0.1, 0.5, 1] },
       );
       io.observe(node);
+    };
 
-      const handleVisibility = () => {
-        isVisible.current = document.visibilityState === 'visible';
-      };
-      document.addEventListener('visibilitychange', handleVisibility);
+    const wait = () => {
+      const node = canvasRef.current;
+      if (node) {
+        attach(node);
+        return;
+      }
+      if (tries++ < 60) raf = requestAnimationFrame(wait);
+    };
+    wait();
 
-      stopRef.current = () => {
-        if (raf) cancelAnimationFrame(raf);
-        ro.disconnect();
-        io.disconnect();
-        document.removeEventListener('visibilitychange', handleVisibility);
-      };
-    }) as AmicroCanvasRef;
-    bind.current = null;
-    return bind;
+    const handleVisibility = () => {
+      isVisible.current = document.visibilityState === 'visible';
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      ro?.disconnect();
+      io?.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   return { canvasRef, rect, isVisible, reducedMotion };

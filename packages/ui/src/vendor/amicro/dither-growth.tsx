@@ -3,7 +3,7 @@
 import { motion, useSpring, useTransform } from 'motion/react';
 import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp, smoothstep } from './dither-math.ts';
-import { useCanvasSetup } from './use-canvas-setup.ts';
+import { syncCanvasSize, useCanvasSetup } from './use-canvas-setup.ts';
 
 export type DitherGrowthChartProps = {
   theme?: 'dark' | 'light';
@@ -73,6 +73,7 @@ export function DitherGrowthChart({
         requestRef.current = requestAnimationFrame(draw);
         return;
       }
+      syncCanvasSize(canvas, rect);
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         requestRef.current = requestAnimationFrame(draw);

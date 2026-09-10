@@ -46,6 +46,7 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
       hero.indexOf('data-pulse-hero-bunn'),
     );
     expect(hero).toMatch(/items-stretch/);
+    expect(hero).toMatch(/min-h-\[94px\]/);
     expect(hero).toMatch(/flex-1 items-center/);
     expect(hero).not.toMatch(/items-end/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
@@ -68,10 +69,10 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
     const hook = utenKommentarer(les('../../../packages/ui/src/vendor/amicro/use-canvas-setup.ts'));
     expect(hook).toMatch(/getBoundingClientRect/);
-    expect(hook).toMatch(/AmicroCanvasRef/);
-    expect(hook).toMatch(/requestAnimationFrame/);
+    expect(hook).toMatch(/syncCanvasSize/);
+    expect(hook).toMatch(/useLayoutEffect/);
     const donut = utenKommentarer(les('../../../packages/ui/src/vendor/amicro/dither-donut.tsx'));
-    expect(donut).toMatch(/requestAnimationFrame\(draw\)/);
+    expect(donut).toMatch(/syncCanvasSize/);
   });
 
   it('Analyser er kort, uten anførsel, med Revenue Line uten hover', () => {

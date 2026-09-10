@@ -293,7 +293,7 @@ export function PulseHeroFlate({
         data-pulse-del="1"
         className="flex min-w-0 items-stretch gap-3 [touch-action:manipulation]"
       >
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-[94px] min-w-0 flex-1 flex-col self-stretch">
           <p data-pulse-ukedag className="text-label font-normal text-fg">
             {ukedag}{' '}
             <span data-pulse-dato className="text-label font-normal text-fg-muted">
@@ -467,7 +467,7 @@ export function PulseAnalyserKort({
     >
       <div
         data-analyser-del="1"
-        className="flex min-w-0 flex-1 basis-0 flex-col justify-center gap-1 px-4 py-3"
+        className="flex min-h-11 min-w-0 flex-1 basis-0 flex-col justify-center gap-0.5 px-4 py-2"
       >
         <p className="truncate text-title text-fg">{`Tall for ${navn}`}</p>
         <Link
@@ -484,7 +484,7 @@ export function PulseAnalyserKort({
         className="pointer-events-none relative flex min-h-11 min-w-0 flex-1 basis-0 items-center overflow-hidden border-divide border-l"
         aria-hidden
       >
-        <div className="h-full min-h-9 w-full self-stretch px-3 py-1" data-analyser-revenue>
+        <div className="h-9 w-full px-3" data-analyser-revenue>
           <RevenueLineChart
             compact
             className="pointer-events-none h-full w-full"

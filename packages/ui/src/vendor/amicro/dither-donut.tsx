@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { hash, hexToRgba, smoothstep } from './dither-math.ts';
-import { useCanvasSetup } from './use-canvas-setup.ts';
+import { syncCanvasSize, useCanvasSetup } from './use-canvas-setup.ts';
 
 export type DitherDonutSlice = { name: string; value: number; color: string };
 
@@ -121,6 +121,7 @@ export function DitherDonutChart({
         requestRef.current = requestAnimationFrame(draw);
         return;
       }
+      syncCanvasSize(canvas, rect);
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         requestRef.current = requestAnimationFrame(draw);

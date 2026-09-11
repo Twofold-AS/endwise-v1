@@ -84,11 +84,7 @@ export function PrislisteFlate({
           >
             Sortering
           </button>
-          <SorteringArk
-            apen={sorterApen}
-            onLukk={() => setSorterApen(false)}
-            anker={sorterRef.current}
-          >
+          <SorteringArk apen={sorterApen} onLukk={() => setSorterApen(false)} anker={sorterRef}>
             {FILTRE.map((f) => (
               <SorteringValg
                 key={f.key}

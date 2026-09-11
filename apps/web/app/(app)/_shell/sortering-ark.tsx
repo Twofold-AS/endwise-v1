@@ -1,7 +1,13 @@
 'use client';
 
-import { type ReactNode, useLayoutEffect, useState } from 'react';
+import { type ReactNode, type RefObject, useLayoutEffect, useState } from 'react';
 import { PHONE_PROFIL_MENY_BREDDE } from './phone-chrome';
+
+function lesAnker(anker: HTMLElement | null | RefObject<HTMLElement | null>): HTMLElement | null {
+  if (!anker) return null;
+  if (typeof anker === 'object' && 'current' in anker) return anker.current;
+  return anker;
+}
 
 /**
  * Ett Sortering-ark — Tid/Gruppe, kjøretøytype eller kunde-filter
@@ -15,16 +21,18 @@ export function SorteringArk({
 }: {
   apen: boolean;
   onLukk: () => void;
-  anker: HTMLElement | null;
+  anker: HTMLElement | null | RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
   useLayoutEffect(() => {
-    if (!apen || !anker) return;
+    const el = lesAnker(anker);
+    if (!apen || !el) return;
     function plasser() {
-      if (!anker) return;
-      const r = anker.getBoundingClientRect();
+      const node = lesAnker(anker);
+      if (!node) return;
+      const r = node.getBoundingClientRect();
       const bredde = Math.min(260, window.innerWidth - 24);
       const left = Math.min(Math.max(12, r.left), window.innerWidth - bredde - 12);
       setPos({ top: r.bottom + 10, left });

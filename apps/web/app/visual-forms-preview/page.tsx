@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowUpRight, Car } from '@endwise/ui';
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { InnstillingRad, InnstillingSeksjon } from '../(app)/_shell/innstilling-gruppe';
 import { PhoneSokFelt } from '../(app)/_shell/phone-sok-felt';
 import { SideChromeSkall } from '../(app)/_shell/side-chrome-skall';
@@ -20,9 +20,12 @@ function SorteringGo({
   grupper: { tittel?: string; valg: string[] }[];
   startApen?: boolean;
 }) {
-  const [apen, setApen] = useState(startApen);
+  const [apen, setApen] = useState(false);
   const [valgt, setValgt] = useState(grupper[0]?.valg[0] ?? '');
   const anker = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (startApen) setApen(true);
+  }, [startApen]);
   return (
     <div ref={anker} className="relative">
       <button
@@ -38,7 +41,7 @@ function SorteringGo({
       >
         Sortering
       </button>
-      <SorteringArk apen={apen} onLukk={() => setApen(false)} anker={anker.current}>
+      <SorteringArk apen={apen} onLukk={() => setApen(false)} anker={anker}>
         {grupper.map((g) => {
           const rader = g.valg.map((v) => (
             <SorteringValg
@@ -149,11 +152,7 @@ export default function VisualFormsPreview() {
           aktiv="alle"
         >
           <div data-tjenester-alle className="flex flex-col gap-3">
-            <SorteringGo
-              id="tjenester"
-              startApen
-              grupper={[{ valg: ['Alle', 'MC', 'Båt', 'ATV'] }]}
-            />
+            <SorteringGo id="tjenester" grupper={[{ valg: ['Alle', 'MC', 'Båt', 'ATV'] }]} />
             <p className="text-label text-fg">Ingen ekstra opprett-knapp på Alle-flaten.</p>
             <p className="text-[13px] text-fg-muted">
               Opprettelse åpnes bare fra <span className="text-fg">Opprett tjenester</span> i

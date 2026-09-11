@@ -93,11 +93,7 @@ function KunderInner() {
               >
                 Sortering
               </button>
-              <SorteringArk
-                apen={sorterApen}
-                onLukk={() => setSorterApen(false)}
-                anker={sorterRef.current}
-              >
+              <SorteringArk apen={sorterApen} onLukk={() => setSorterApen(false)} anker={sorterRef}>
                 <SorteringGruppe tittel="Type">
                   {KILDER.map((v) => (
                     <SorteringValg

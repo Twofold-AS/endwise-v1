@@ -225,9 +225,13 @@ export function PulseDagSirkel({
   const igjen = Math.max(0.001, 1 - andel);
 
   return (
-    <div data-pulse-dag-sirkel data-pulse-dag-halvsirkel className="flex w-[148px] flex-col">
+    <div
+      data-pulse-dag-sirkel
+      data-pulse-dag-halvsirkel
+      className="flex w-[148px] shrink-0 flex-col"
+    >
       <div
-        className="pointer-events-none relative h-[78px] w-full overflow-hidden"
+        className="pointer-events-none relative h-[78px] min-h-[78px] w-full shrink-0 overflow-hidden"
         role="img"
         aria-label={`Verksteddagen ${startLabel}–${sluttLabel}`}
       >

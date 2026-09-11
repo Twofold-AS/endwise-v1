@@ -12,6 +12,7 @@ import {
   PHONE_SIDE_UNDER,
 } from '../(app)/_shell/phone-chrome';
 import { PHONE_SAFE_TOP } from '../(app)/_shell/phone-home';
+import { RonnyBot } from '../(app)/_workshop/ronny-bot';
 import { InboxTopBar2 } from '../(app)/innboks/_top-bar2';
 
 /**
@@ -47,7 +48,9 @@ function InnboksPreviewInner() {
           <span className="min-w-0 flex-1 rounded-full bg-inset px-3 py-1 text-label text-fg-muted">
             Søk
           </span>
-          <span className={PHONE_RONNY_SIRKEL} />
+          <span className={PHONE_RONNY_SIRKEL}>
+            <RonnyBot size={44} ansikt="heureux" />
+          </span>
           <span className={PHONE_PROFIL_SIRKEL}>M</span>
         </div>
         <div data-phone-top-bar="2" className={PHONE_BAR2}>

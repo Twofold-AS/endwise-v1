@@ -230,45 +230,51 @@ function SheetInnhold({ forstor }: { forstor: boolean }) {
 
 function Sheet() {
   return (
-    <div
-      data-ronny-sheet
-      data-ronny-flate
-      data-ronny-hoyde={80}
-      className="fixed inset-x-0 bottom-0 z-[70] flex h-[80dvh] flex-col overflow-hidden bg-surface text-fg shadow-none"
-      style={{
-        borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
-        borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-      }}
-      role="dialog"
-      aria-label="Ronny"
-    >
-      <SheetInnhold forstor />
-    </div>
+    <>
+      <div className="fixed inset-0 z-[60] bg-fg/25" data-ronny-scrim />
+      <div
+        data-ronny-sheet
+        data-ronny-flate
+        data-ronny-hoyde={80}
+        className="fixed inset-x-0 bottom-0 z-[70] flex h-[80dvh] flex-col overflow-hidden bg-surface text-fg shadow-none"
+        style={{
+          borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
+          borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+        }}
+        role="dialog"
+        aria-label="Ronny"
+      >
+        <SheetInnhold forstor />
+      </div>
+    </>
   );
 }
 
 function SheetFull() {
   return (
-    <div
-      data-ronny-sheet
-      data-ronny-flate
-      data-ronny-hoyde={100}
-      className="fixed inset-x-0 top-0 z-[70] flex h-[100dvh] flex-col overflow-hidden bg-surface text-fg shadow-none"
-      style={{
-        height: '100dvh',
-        top: 0,
-        borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
-        borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-      }}
-      role="dialog"
-      aria-label="Ronny"
-    >
-      <SheetInnhold forstor={false} />
-    </div>
+    <>
+      <div className="fixed inset-0 z-[60] bg-fg/25" data-ronny-scrim />
+      <div
+        data-ronny-sheet
+        data-ronny-flate
+        data-ronny-hoyde={100}
+        className="fixed inset-x-0 top-0 z-[70] flex h-[100dvh] flex-col overflow-hidden bg-surface text-fg shadow-none"
+        style={{
+          height: '100dvh',
+          top: 0,
+          borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
+          borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+        }}
+        role="dialog"
+        aria-label="Ronny"
+      >
+        <SheetInnhold forstor={false} />
+      </div>
+    </>
   );
 }
 

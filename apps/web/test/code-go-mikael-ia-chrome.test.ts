@@ -197,4 +197,23 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     expect(preview).toMatch(/surpris/);
     expect(preview).toMatch(/PulseJobbFlis/);
   });
+
+  it('preview-sider som leser useSearchParams har Suspense-grense', () => {
+    const sider = [
+      '../app/ia-chrome-preview/page.tsx',
+      '../app/innboks-preview/page.tsx',
+      '../app/pulse-preview/page.tsx',
+      '../app/visual-forms-preview/page.tsx',
+    ] as const;
+    for (const rel of sider) {
+      const kilde = utenKommentarer(les(rel));
+      const trengerGrense = /useSearchParams/.test(kilde) || /InboxTopBar2/.test(kilde);
+      if (!trengerGrense) {
+        expect(kilde).not.toMatch(/useSearchParams/);
+        continue;
+      }
+      expect(kilde, rel).toMatch(/<Suspense/);
+      expect(kilde, rel).toMatch(/export default function \w+\(\) \{\s*return \(\s*<Suspense/);
+    }
+  });
 });

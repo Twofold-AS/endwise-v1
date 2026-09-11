@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { InboxFilterProvider } from '../(app)/_shell/inbox-filter';
 import { PHONE_BAR2, PHONE_PROFIL_SIRKEL, PHONE_RONNY_SIRKEL } from '../(app)/_shell/phone-chrome';
 import { PhoneProfilMeny } from '../(app)/_shell/phone-profil-meny';
@@ -97,7 +98,7 @@ function PhoneChromeMock({ sti, query }: { sti: string; query?: Record<string, s
   );
 }
 
-export default function IaChromePreview() {
+function IaChromePreviewInner() {
   return (
     <div className="min-h-dvh bg-bg text-fg" data-ia-chrome-preview="go">
       <div className="mx-auto flex w-full max-w-[520px] flex-col gap-8 px-3 py-5">
@@ -196,5 +197,17 @@ export default function IaChromePreview() {
         </section>
       </div>
     </div>
+  );
+}
+
+/**
+ * Suspense-grense er påkrevd: InboxTopBar2 leser `useSearchParams`.
+ * Uten den faller /ia-chrome-preview ut av prerender og `next build` feiler.
+ */
+export default function IaChromePreview() {
+  return (
+    <Suspense>
+      <IaChromePreviewInner />
+    </Suspense>
   );
 }

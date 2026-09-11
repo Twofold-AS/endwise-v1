@@ -138,7 +138,7 @@ describe('CODE-GO Mikael 11.09.2026 tillegg — Jobb-vekt, Ronny uten strek, 100
     expect(sheet).not.toMatch(/data-ronny-strek/);
     expect(sheet).toMatch(/hoyde === 100/);
     expect(sheet).toMatch(/100dvh/);
-    expect(sheet).toMatch(/top: 0/);
+    expect(sheet).toMatch(/top: hoyde === 100 \? 0/);
     expect(sheet).toMatch(/RONNY_SHEET_RADIUS_PX/);
     expect(sheet).toMatch(/borderBottomLeftRadius: 0/);
     const go = utenKommentarer(les('../app/visuell/mikael/page.tsx'));

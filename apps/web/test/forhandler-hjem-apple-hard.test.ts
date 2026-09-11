@@ -41,9 +41,9 @@ function utenKommentarer(kilde: string) {
 
 const CHROME_URORT = [
   'apps/web/app/(app)/_shell/seksjon-bar.tsx',
-  'apps/web/app/(app)/_workshop/workshop-bloub.tsx',
   'apps/web/app/(app)/_shell/phone-home-mekaniker.tsx',
   // phone-shell.tsx er Mobbin to-bar-chrome (07.09) — ikke Apple-låst.
+  // workshop-bloub.tsx er Mikael Ronny-sheet (11.09 tillegg) — ikke Apple-låst.
   // markeds-chrome.tsx er Mobbin-restylet (F5-35) — ikke Apple-låst.
 ] as const;
 

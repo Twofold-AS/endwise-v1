@@ -209,7 +209,7 @@ describe('Desktop Ronny — overlay-panel, ikke sheet', () => {
     expect(sheet).not.toMatch(/data-ronny-handtak/);
     expect(sheet).toMatch(/data-ronny-hoyde/);
     expect(sheet).toMatch(/100dvh/);
-    expect(sheet).toMatch(/top: 0/);
+    expect(sheet).toMatch(/top: hoyde === 100 \? 0/);
     expect(sheet).toMatch(/RONNY_SHEET_RADIUS_PX/);
     expect(fab).toMatch(/className="md:hidden"/);
   });

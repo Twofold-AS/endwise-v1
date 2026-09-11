@@ -261,8 +261,8 @@ export function WorkshopBloub() {
           data-ronny-flate
           data-ronny-hoyde={hoyde}
           data-workshop-shell
-          className={`fixed inset-x-0 z-[70] flex flex-col overflow-hidden bg-surface text-fg shadow-none ${
-            hoyde === 100 ? 'top-0 h-[100dvh]' : 'bottom-0 h-[80dvh]'
+          className={`fixed inset-x-0 bottom-0 z-[70] flex flex-col overflow-hidden bg-surface text-fg shadow-none ${
+            hoyde === 100 ? 'top-0 h-[100dvh]' : 'h-[80dvh]'
           }`}
           style={{
             height: hoyde === 100 ? '100dvh' : sheetHoyde,

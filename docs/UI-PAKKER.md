@@ -20,6 +20,16 @@
 >
 > Fila oppdateres **hver gang** en ny UI-pakke tas inn. Ingen unntak.
 
+> ### ⚠️ Mikael CODE-GO PPF + Analyse + chrome 1+2 (11.09.2026 oppfølging)
+> PPF-**siffer** sentrert mot halvsirkelens midtlinje (`h-[78px]`). Etiketter
+> Planlagt/Pågår/Ferdig blir på `08.00` / `19.00`. Analyser = **én** boks:
+> hvit ikonboks + «Analyse» + «siste 30 dager» + «Se tallene», fire KPI-rader
+> med % grønn/rød — **ingen** dither. Undersider: top-bar 1 (logo/søk/Ronny)
+> **og** top-bar 2 (dest-piller) alltid synlige; tittel + verktøy tett under
+> (`PHONE_SIDE_UNDER` `pt-1`). Ikke tilbake+midtstilt tittel som erstatter
+> dest-barene. Sortering-ark uten heading/Tid/Gruppe, `text-label`. Ingen ny
+> pakke. ⛔ #114/#119. ⛔ Boring dither-kit. ⛔ Revenue Line på hjem-Analyser.
+>
 > ### ⚠️ Mikael CODE-GO hjem + chrome + Sortering (11.09.2026)
 > Innlogging: ingen heading «Velkommen tilbake» / «Bekreftelse». Toppkort:
 > Endringer øvre høyre mot ukedag+dato; PPF-etiketter på samme linje som
@@ -29,7 +39,8 @@
 > tittel + verktøy under — ikke tilbake+midtstilt tittel som eneste toppbar.
 > Innboks: Alle meldinger · Ny melding · Sortering (Tid+Gruppe) · Slett.
 > Tjenester/Kunder: ett Sortering-ark (kjøretøytype / type+nyeste/eldste).
-> Popup-rader = `text-body` 17/450. Ingen ny pakke. ⛔ #114/#119. ⛔ Boring
+> Popup-rader = `text-body` 17/450. **Overstyrt samme dag** av PPF/Analyse/
+> chrome 1+2-oppfølgingen. Ingen ny pakke. ⛔ #114/#119. ⛔ Boring
 > dither-kit. ⛔ Revenue Line på hjem-Analyser.
 >
 > ### ⚠️ Mikael CODE-GO hjem-fiks (10.09.2026)

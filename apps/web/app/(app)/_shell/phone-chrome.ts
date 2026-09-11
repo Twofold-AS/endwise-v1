@@ -36,6 +36,12 @@ export const PHONE_RONNY_SIRKEL = `${PHONE_AVATAR_KLASSE} text-fg`;
 export const PHONE_BAR2_PY = 'py-2.5';
 export const PHONE_BAR2 = `flex min-h-row w-full min-w-0 items-center px-3 ${PHONE_BAR2_PY}`;
 
+/**
+ * Tittel + verktøylinje under dest-piller (top-bar 2).
+ * Tettere enn en ekstra h-8-rad — dest-piller er allerede synlige.
+ */
+export const PHONE_SIDE_UNDER = 'flex flex-col gap-0.5 px-3 pt-1 pb-1.5';
+
 /** Popup-topp linjer dest-piller (samme som PHONE_BAR2_PY), ikke `mt-1` over padding. */
 export const PHONE_PROFIL_MENY_TOPP = 'top-full mt-2.5';
 

@@ -5,7 +5,12 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { InboxFilterProvider } from '../(app)/_shell/inbox-filter';
 import { InnstillingRad, InnstillingSeksjon } from '../(app)/_shell/innstilling-gruppe';
-import { PHONE_BAR2, PHONE_PROFIL_SIRKEL, PHONE_RONNY_SIRKEL } from '../(app)/_shell/phone-chrome';
+import {
+  PHONE_BAR2,
+  PHONE_PROFIL_SIRKEL,
+  PHONE_RONNY_SIRKEL,
+  PHONE_SIDE_UNDER,
+} from '../(app)/_shell/phone-chrome';
 import { PHONE_SAFE_TOP } from '../(app)/_shell/phone-home';
 import { InboxTopBar2 } from '../(app)/innboks/_top-bar2';
 
@@ -45,13 +50,43 @@ function InnboksPreviewInner() {
           <span className={PHONE_RONNY_SIRKEL} />
           <span className={PHONE_PROFIL_SIRKEL}>M</span>
         </div>
-        <div data-phone-side-tittel className="flex h-8 items-end px-3">
-          <h1 className="text-title text-fg">Innboks</h1>
-        </div>
         <div data-phone-top-bar="2" className={PHONE_BAR2}>
-          <InboxTopBar2
-            startPopup={vis === 'sorter' || vis === 'gruppe' ? 'sortering' : undefined}
-          />
+          <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
+            <span
+              data-phone-dest="home"
+              className="inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg"
+            >
+              Verkstedet
+            </span>
+            <span
+              data-phone-dest="innboks"
+              className="inline-flex h-8 shrink-0 items-center rounded-full bg-sidebar-active px-3 text-label text-fg"
+            >
+              Innboks
+            </span>
+            <span
+              data-phone-dest="saker"
+              className="inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg"
+            >
+              Timeplan
+            </span>
+            <span
+              data-phone-dest="kunder"
+              className="inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg"
+            >
+              Kunder
+            </span>
+          </div>
+        </div>
+        <div data-phone-side-under className={PHONE_SIDE_UNDER}>
+          <h1 data-phone-side-tittel className="truncate text-title font-[650] leading-6 text-fg">
+            Innboks
+          </h1>
+          <div data-phone-side-verktoy className="flex min-h-8 min-w-0 items-end">
+            <InboxTopBar2
+              startPopup={vis === 'sorter' || vis === 'gruppe' ? 'sortering' : undefined}
+            />
+          </div>
         </div>
         <div className="h-px bg-border" />
         {vis === 'trad' ? <TradGo /> : vis === 'ny' ? <NyMeldingGo /> : <ListeGo vis={vis} />}

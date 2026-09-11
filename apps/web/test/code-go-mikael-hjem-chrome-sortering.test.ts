@@ -59,12 +59,12 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(kort).toMatch(/ew-modus-plate/);
   });
 
-  it('Analyser er to loddrette bokser: Analyse + fire KPI uten dither', () => {
+  it('Analyser er én boks: Analyse + fire KPI uten dither', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     expect(analyser).toMatch(/data-analyser-tittel/);
     expect(analyser).toMatch(/Analyse/);
-    expect(analyser).toMatch(/font-\[300\]/);
+    expect(analyser).toMatch(/PulseIkonFlate/);
     expect(analyser).toMatch(/siste 30 dager/);
     expect(analyser).toMatch(/Se tallene/);
     expect(analyser).toMatch(/data-analyser-se-tallene/);
@@ -72,12 +72,12 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(analyser).not.toMatch(/DitherGrowthChart/);
     expect(analyser).not.toMatch(/DitherDonutChart/);
     expect(analyser).not.toMatch(/#0066ff/);
-    expect(analyser).toMatch(/flex-col/);
     expect(analyser).toMatch(/data-analyser-kpi/);
     expect(analyser).toMatch(/TrendingUp/);
     expect(analyser).toMatch(/TrendingDown/);
     expect(analyser).toMatch(/text-success/);
     expect(analyser).toMatch(/text-danger/);
+    expect(analyser.match(/PHONE_DEST_FYLL/g)?.length).toBe(1);
     const stats = analyserMockStats(new Date('2026-09-08T10:00:00Z'));
     expect(stats.map((s) => s.label)).toEqual([
       'Besøk på nettsiden',
@@ -92,15 +92,20 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(hjem).toMatch(/gap-2\.5/);
   });
 
-  it('telefon-chrome beholder logo-bar; tittel + verktøy under', () => {
+  it('telefon-chrome beholder logo-bar og dest-piller; tittel + verktøy under', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/data-shell-logo/);
     expect(shell).toMatch(/data-phone-search/);
+    expect(shell).toMatch(/data-phone-dest/);
     expect(shell).toMatch(/data-phone-side-tittel/);
+    expect(shell).toMatch(/data-phone-side-under/);
     expect(shell).toMatch(/InboxTopBar2/);
     expect(shell).not.toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/TilbakePil/);
     expect(shell).toMatch(/sideChrome\.tittel/);
+    expect(shell.indexOf('data-phone-top-bar="2"')).toBeLessThan(
+      shell.indexOf('data-phone-side-under'),
+    );
   });
 
   it('Innboks: Alle meldinger + Ny melding, Sortering før Slett', () => {
@@ -110,8 +115,8 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(bar).toMatch(/Ny melding/);
     expect(bar).toMatch(/data-innboks-sortering/);
     expect(bar).toMatch(/SorteringArk/);
-    expect(bar).toMatch(/tittel="Tid"/);
-    expect(bar).toMatch(/tittel="Gruppe"/);
+    expect(bar).not.toMatch(/tittel="Tid"/);
+    expect(bar).not.toMatch(/tittel="Gruppe"/);
     expect(bar).toMatch(/data-innboks-slett/);
     expect(bar).not.toMatch(/data-innboks-tid/);
     expect(bar).not.toMatch(/data-innboks-gruppe/);
@@ -145,9 +150,10 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(PHONE_PROFIL_RAD).not.toMatch(/font-\[700\]/);
     expect(PHONE_PROFIL_VILKAR).toMatch(/text-body/);
     const ark = utenKommentarer(les('../app/(app)/_shell/sortering-ark.tsx'));
-    expect(ark).toMatch(/data-sortering-tittel/);
-    expect(ark).toMatch(/Sortering/);
-    expect(ark).toMatch(/text-body/);
+    expect(ark).not.toMatch(/data-sortering-tittel/);
+    expect(ark).not.toMatch(/>Sortering</);
+    expect(ark).toMatch(/text-label/);
+    expect(ark).not.toMatch(/text-body/);
     expect(ark).not.toMatch(/font-\[700\]/);
     expect(ark).toMatch(/shadow-none/);
   });

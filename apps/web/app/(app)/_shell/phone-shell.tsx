@@ -16,6 +16,7 @@ import {
   PHONE_LOGO_PX,
   PHONE_PROFIL_SIRKEL,
   PHONE_RONNY_SIRKEL,
+  PHONE_SIDE_UNDER,
   ronnySizeForSirkel,
 } from './phone-chrome';
 import { PhoneHScroll } from './phone-h-scroll';
@@ -26,9 +27,10 @@ import { PhoneSokFelt } from './phone-sok-felt';
 import { PhoneSokOverlay } from './phone-sok-overlay';
 
 /**
- * Telefon-chrome: original toppbar (logo · søk · Ronny · profil) alltid synlig.
- * På destinasjon: tittel under logo-baren, deretter verktøylinje / dest-piller.
- * Ingen tilbake+midtstilt tittel som eneste toppbar.
+ * Telefon-chrome: original toppbar 1 (logo · søk · Ronny · profil) og
+ * toppbar 2 (dest-piller) alltid synlige — også på undersider.
+ * Tittel + verktøylinje sitter tett under dest-pillene.
+ * Ingen tilbake+midtstilt tittel som erstatter destinasjonsbarene.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -71,8 +73,13 @@ export function PhoneShell() {
     <>
       <div data-phone-top-bar-spacer className={`shrink-0 md:hidden ${PHONE_SAFE_TOP}`} aria-hidden>
         <div className="h-row" />
-        {sideChrome ? <div className="h-8" /> : null}
         <div className={PHONE_BAR2} />
+        {sideChrome ? (
+          <div className={PHONE_SIDE_UNDER}>
+            <div className="h-6" />
+            <div className="h-8" />
+          </div>
+        ) : null}
         <div className="h-px bg-border" />
       </div>
       <header
@@ -159,63 +166,68 @@ export function PhoneShell() {
             innstillingerHref={profilHref}
           />
         </div>
+        <div data-phone-top-bar="2" className={PHONE_BAR2}>
+          <PhoneHScroll lockKey={`${pathname}|${sok}`}>
+            {dest.map((item) => {
+              const aktiv = isItemActive(item, pathname);
+              return (
+                <Link
+                  key={item.key}
+                  href={item.href as Route}
+                  aria-current={aktiv ? 'page' : undefined}
+                  data-phone-dest={item.key}
+                  className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg ${
+                    aktiv ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </PhoneHScroll>
+        </div>
         {sideChrome ? (
           <div
-            data-phone-side-tittel
+            data-phone-side-under
             data-phone-side-chrome={sideChrome.id}
-            className="flex h-8 items-end px-3"
+            className={PHONE_SIDE_UNDER}
           >
-            <h1 className="truncate text-title font-[650] text-fg">{sideChrome.tittel}</h1>
+            <h1 data-phone-side-tittel className="truncate text-title font-[650] leading-6 text-fg">
+              {sideChrome.tittel}
+            </h1>
+            <div data-phone-side-verktoy className="flex min-h-8 min-w-0 items-end">
+              {sideChrome.bar2 === 'innboks' ? (
+                <InboxTopBar2 />
+              ) : (
+                <nav
+                  data-phone-settings-nav
+                  data-phone-side-nav={sideChrome.id}
+                  aria-label={sideChrome.tittel}
+                  className="flex min-w-0 flex-1 items-end gap-5 overflow-x-auto"
+                >
+                  {sideChrome.faner.map((f) => {
+                    const aktiv = f.id === sideChrome.aktiv;
+                    return (
+                      <Link
+                        key={f.id}
+                        href={f.href as Route}
+                        data-phone-settings-fane={f.id}
+                        aria-current={aktiv ? 'page' : undefined}
+                        className={`shrink-0 border-b-2 pb-1 text-label ${
+                          aktiv
+                            ? 'border-fg font-[650] text-fg'
+                            : 'border-transparent text-fg-muted'
+                        }`}
+                      >
+                        {f.label}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              )}
+            </div>
           </div>
         ) : null}
-        <div data-phone-top-bar="2" className={PHONE_BAR2}>
-          {sideChrome?.bar2 === 'innboks' ? (
-            <InboxTopBar2 />
-          ) : sideChrome ? (
-            <nav
-              data-phone-settings-nav
-              data-phone-side-nav={sideChrome.id}
-              aria-label={sideChrome.tittel}
-              className="flex min-w-0 flex-1 items-end gap-5 overflow-x-auto"
-            >
-              {sideChrome.faner.map((f) => {
-                const aktiv = f.id === sideChrome.aktiv;
-                return (
-                  <Link
-                    key={f.id}
-                    href={f.href as Route}
-                    data-phone-settings-fane={f.id}
-                    aria-current={aktiv ? 'page' : undefined}
-                    className={`shrink-0 border-b-2 pb-1 text-label ${
-                      aktiv ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
-                    }`}
-                  >
-                    {f.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          ) : (
-            <PhoneHScroll lockKey={`${pathname}|${sok}`}>
-              {dest.map((item) => {
-                const aktiv = isItemActive(item, pathname);
-                return (
-                  <Link
-                    key={item.key}
-                    href={item.href as Route}
-                    aria-current={aktiv ? 'page' : undefined}
-                    data-phone-dest={item.key}
-                    className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg ${
-                      aktiv ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </PhoneHScroll>
-          )}
-        </div>
         <div data-phone-chrome-hairline className="h-px bg-border" />
       </header>
       <PhoneSokOverlay

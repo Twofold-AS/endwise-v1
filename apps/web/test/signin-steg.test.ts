@@ -57,8 +57,8 @@ describe('signin-steg: kode-steg etter e-post, TOTP bare med kake', () => {
     expect(SIGNIN_STI).toBe('/signin');
     expect(SIGNIN_VALG_STI).toBe('/signin?steg=valg');
     expect(SIGNIN_TOTP_STI).toBe('/signin?steg=totp');
-    expect(SIGNIN_TITTEL).toBe('Velkommen tilbake');
-    expect(SIGNIN_TOTP_TITTEL).toBe('Bekreftelse');
+    expect(SIGNIN_TITTEL).toBe('');
+    expect(SIGNIN_TOTP_TITTEL).toBe('');
     expect(SIGNIN_KODE_INGRESS).toBe('Vi har sendt en midlertidig kode til');
     expect(SIGNIN_IKKE_DEG).toBe('Ikke deg?');
     expect(SIGNIN_FYLL_KODE).toBe('Fyll inn kode');
@@ -170,8 +170,8 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
     expect(kilde).not.toMatch(/border-\[var\(--ew-border-strong\)\]/);
     expect(kilde).not.toMatch(/data-auth-kort/);
     expect(kilde).not.toMatch(/bg-card/);
-    expect(kilde).toMatch(/text-\[32px\].*font-\[650\]/);
-    expect(kilde).toMatch(/SIGNIN_TITTEL|Velkommen tilbake/);
+    expect(kilde).not.toMatch(/text-\[32px\].*font-\[650\]/);
+    expect(kilde).not.toMatch(/Velkommen tilbake/);
     expect(kilde).not.toMatch(/Logg inn på Endwise/);
     expect(kilde).not.toMatch(/Logg inn på['"]/);
   });

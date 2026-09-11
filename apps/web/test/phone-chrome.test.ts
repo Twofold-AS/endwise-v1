@@ -172,8 +172,9 @@ describe('phone-chrome', () => {
     expect(shell).toMatch(/PhoneHScroll/);
     expect(shell).toMatch(/data-phone-dest/);
     expect(shell).not.toMatch(/router\.back\(\)/);
-    expect(shell).toMatch(/TilbakePil/);
-    expect(shell).toMatch(/data-shell-tilbake/);
+    expect(shell).not.toMatch(/TilbakePil/);
+    expect(shell).not.toMatch(/data-shell-tilbake/);
+    expect(shell).toMatch(/data-phone-side-tittel/);
     expect(pil).toMatch(/<svg/);
     expect(pil).not.toMatch(/lucide|ChevronLeft/);
     expect(pil).not.toMatch(/>Tilbake</);

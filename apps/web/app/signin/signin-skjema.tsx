@@ -28,8 +28,6 @@ import {
   SIGNIN_IKKE_DEG,
   SIGNIN_KODE_INGRESS,
   SIGNIN_STI,
-  SIGNIN_TITTEL,
-  SIGNIN_TOTP_TITTEL,
   SIGNIN_VALG_STI,
   SIGNIN_VILKAR,
   SIGNIN_VILKAR_STI,
@@ -74,7 +72,6 @@ function landingTilFlate(steg: string | null, feil: string | null, totpKlar: boo
 type SignInHandling = 'fortsett' | 'logg-inn' | 'totp';
 
 const AUTH_FLATE = 'flex flex-col gap-4';
-const AUTH_TITTEL = 'text-center text-[32px] font-[650] leading-[38px] tracking-[-0.03em] text-fg';
 const AUTH_FORTSETT = 'h-auto w-full py-4';
 
 function landingFeil(steg: string | null, feil: string | null, totpKlar: boolean): string | null {
@@ -221,8 +218,6 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     window.location.assign(SIGNIN_STI);
   }
 
-  const tittel = flate === 'totp' ? SIGNIN_TOTP_TITTEL : SIGNIN_TITTEL;
-
   return (
     <main className="flex min-h-dvh items-center justify-center bg-bg px-4 pb-[14vh] text-fg">
       <div className="w-full max-w-sm">
@@ -232,7 +227,6 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
 
         {flate === 'epost' ? (
           <form onSubmit={onEpost} className={AUTH_FLATE}>
-            <h1 className={AUTH_TITTEL}>{tittel}</h1>
             <Field id="signin-email" label="E-post">
               <input
                 id="signin-email"
@@ -269,7 +263,6 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
           </form>
         ) : flate === 'totp' ? (
           <form onSubmit={(e) => void onTotp(e)} className={AUTH_FLATE}>
-            <h1 className={AUTH_TITTEL}>{tittel}</h1>
             <p className="mb-1 text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
               Skriv den 6-sifrede koden fra autentikator-appen. Ikke en e-postkode.
             </p>
@@ -310,7 +303,6 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
           </form>
         ) : (
           <form onSubmit={onSkrivKode} data-auth-kode-steg className={AUTH_FLATE}>
-            <h1 className={AUTH_TITTEL}>{tittel}</h1>
             <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
               {SIGNIN_KODE_INGRESS}{' '}
               <span className="font-[650] text-fg">{email || 'e-posten din'}</span>.

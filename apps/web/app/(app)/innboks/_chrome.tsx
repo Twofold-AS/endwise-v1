@@ -22,7 +22,9 @@ export function InboxChrome({ modus, children }: { modus: InboxModus; children: 
           className="hidden shrink-0 flex-col gap-4 px-8 pt-7 pb-3 md:flex"
         >
           <h1 className="text-title text-fg">Innboks</h1>
-          <InboxTopBar2 desktop />
+          <Suspense fallback={null}>
+            <InboxTopBar2 desktop />
+          </Suspense>
         </div>
         <div className="relative flex min-h-0 flex-1 overflow-hidden">
           <Suspense fallback={<aside className="flex min-h-0 w-full shrink-0 md:w-[320px]" />}>

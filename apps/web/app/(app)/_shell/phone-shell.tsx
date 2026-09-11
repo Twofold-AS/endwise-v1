@@ -24,13 +24,11 @@ import { PhoneProfilMeny } from './phone-profil-meny';
 import { phoneSideChrome } from './phone-side-chrome';
 import { PhoneSokFelt } from './phone-sok-felt';
 import { PhoneSokOverlay } from './phone-sok-overlay';
-import { TilbakePil } from './tilbake-pil';
 
 /**
- * Telefon-chrome (Mikael 08.09.2026): to toppbarer, sidebar skjult.
- * Bar 1: merke · Mobbin-søk · Ronny-sirkel · profil-sirkel (samme size-7 / 28px).
- * På Innstillinger / Hjelp / Statistikk: tilbake · midtstilt tittel · Ronny · profil.
- * Bar 2: dest-piller, eller underline-nav på aktiv.
+ * Telefon-chrome: original toppbar (logo · søk · Ronny · profil) alltid synlig.
+ * På destinasjon: tittel under logo-baren, deretter verktøylinje / dest-piller.
+ * Ingen tilbake+midtstilt tittel som eneste toppbar.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -73,6 +71,7 @@ export function PhoneShell() {
     <>
       <div data-phone-top-bar-spacer className={`shrink-0 md:hidden ${PHONE_SAFE_TOP}`} aria-hidden>
         <div className="h-row" />
+        {sideChrome ? <div className="h-8" /> : null}
         <div className={PHONE_BAR2} />
         <div className="h-px bg-border" />
       </div>
@@ -81,129 +80,77 @@ export function PhoneShell() {
         className={`fixed inset-x-0 top-0 z-[60] shrink-0 bg-bg md:hidden ${PHONE_SAFE_TOP}`}
       >
         <div className="relative">
-          {sideChrome ? (
-            <div
-              data-phone-top-bar="1"
-              data-shell-header
-              data-phone-side-chrome={sideChrome.id}
-              className="relative flex h-row w-full items-center gap-2 px-3"
+          <div
+            data-phone-top-bar="1"
+            data-shell-header
+            className="flex h-row w-full items-center gap-2 px-3"
+          >
+            <Link
+              href={hjemHref as Route}
+              aria-label="Hjem"
+              data-shell-logo
+              className="inline-flex shrink-0 items-center"
             >
-              <button
-                type="button"
-                data-shell-tilbake
-                aria-label="Tilbake"
-                className="relative z-10 inline-flex size-8 shrink-0 items-center justify-start text-fg"
-                onClick={() => router.push(hjemHref as Route)}
-              >
-                <TilbakePil size={20} />
-              </button>
-              <p className="pointer-events-none absolute inset-x-10 truncate text-center text-title text-fg">
-                {sideChrome.tittel}
-              </p>
-              <div className="relative z-10 ml-auto flex shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  data-ronny-avatar
-                  aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
-                  aria-expanded={apen}
-                  className={PHONE_RONNY_SIRKEL}
-                  onClick={() => {
-                    trigg();
-                    if (apen) lukk();
-                    else apne();
-                  }}
-                >
-                  <RonnyBot
-                    size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
-                    spin={spin}
-                    idleSett={RONNY_PHONE_IDLE}
-                  />
-                </button>
-                <button
-                  type="button"
-                  data-phone-profile
-                  aria-label="Profil"
-                  aria-expanded={profilApen}
-                  className={PHONE_PROFIL_SIRKEL}
-                  onClick={() => setProfilApen((v) => !v)}
-                >
-                  {bokstav}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div
-              data-phone-top-bar="1"
-              data-shell-header
-              className="flex h-row w-full items-center gap-2 px-3"
+              <span
+                aria-hidden
+                className="inline-flex shrink-0 bg-fg"
+                style={{
+                  width: PHONE_LOGO_PX,
+                  height: PHONE_LOGO_PX,
+                  maskImage: 'url(/logo/logo.svg)',
+                  maskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                  WebkitMaskImage: 'url(/logo/logo.svg)',
+                  WebkitMaskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                }}
+              />
+            </Link>
+            <form
+              data-phone-search
+              className="min-w-0 flex-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setSokApen(true);
+              }}
             >
-              <Link
-                href={hjemHref as Route}
-                aria-label="Hjem"
-                data-shell-logo
-                className="inline-flex shrink-0 items-center"
-              >
-                <span
-                  aria-hidden
-                  className="inline-flex shrink-0 bg-fg"
-                  style={{
-                    width: PHONE_LOGO_PX,
-                    height: PHONE_LOGO_PX,
-                    maskImage: 'url(/logo/logo.svg)',
-                    maskSize: 'contain',
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center',
-                    WebkitMaskImage: 'url(/logo/logo.svg)',
-                    WebkitMaskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                  }}
-                />
-              </Link>
-              <form
-                data-phone-search
-                className="min-w-0 flex-1"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setSokApen(true);
-                }}
-              >
-                <PhoneSokFelt
-                  value={sok}
-                  onChange={(e) => setSok(e.target.value)}
-                  onFocus={() => setSokApen(true)}
-                />
-              </form>
-              <button
-                type="button"
-                data-ronny-avatar
-                aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
-                aria-expanded={apen}
-                className={PHONE_RONNY_SIRKEL}
-                onClick={() => {
-                  trigg();
-                  if (apen) lukk();
-                  else apne();
-                }}
-              >
-                <RonnyBot
-                  size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
-                  spin={spin}
-                  idleSett={RONNY_PHONE_IDLE}
-                />
-              </button>
-              <button
-                type="button"
-                data-phone-profile
-                aria-label="Profil"
-                aria-expanded={profilApen}
-                className={PHONE_PROFIL_SIRKEL}
-                onClick={() => setProfilApen((v) => !v)}
-              >
-                {bokstav}
-              </button>
-            </div>
-          )}
+              <PhoneSokFelt
+                value={sok}
+                onChange={(e) => setSok(e.target.value)}
+                onFocus={() => setSokApen(true)}
+              />
+            </form>
+            <button
+              type="button"
+              data-ronny-avatar
+              aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
+              aria-expanded={apen}
+              className={PHONE_RONNY_SIRKEL}
+              onClick={() => {
+                trigg();
+                if (apen) lukk();
+                else apne();
+              }}
+            >
+              <RonnyBot
+                size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
+                spin={spin}
+                idleSett={RONNY_PHONE_IDLE}
+              />
+            </button>
+            <button
+              type="button"
+              data-phone-profile
+              aria-label="Profil"
+              aria-expanded={profilApen}
+              className={PHONE_PROFIL_SIRKEL}
+              onClick={() => setProfilApen((v) => !v)}
+            >
+              {bokstav}
+            </button>
+          </div>
           <PhoneProfilMeny
             apen={profilApen}
             onLukk={() => setProfilApen(false)}
@@ -212,6 +159,15 @@ export function PhoneShell() {
             innstillingerHref={profilHref}
           />
         </div>
+        {sideChrome ? (
+          <div
+            data-phone-side-tittel
+            data-phone-side-chrome={sideChrome.id}
+            className="flex h-8 items-end px-3"
+          >
+            <h1 className="truncate text-title font-[650] text-fg">{sideChrome.tittel}</h1>
+          </div>
+        ) : null}
         <div data-phone-top-bar="2" className={PHONE_BAR2}>
           {sideChrome?.bar2 === 'innboks' ? (
             <InboxTopBar2 />

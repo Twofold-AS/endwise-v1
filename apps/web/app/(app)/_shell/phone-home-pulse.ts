@@ -344,19 +344,27 @@ export function analyserMockStats(naa: Date): AnalyserMockStat[] {
   return [
     {
       id: 'visninger',
-      label: 'Visninger',
+      label: 'Besøk på nettsiden',
       verdi: vis,
       delta: '+11 %',
       opp: true,
       serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:v:${i}`, 18, 72)),
     },
     {
-      id: 'start',
-      label: 'Bookingstart',
+      id: 'jobber',
+      label: 'Jobber',
       verdi: start,
       delta: '+4 %',
       opp: true,
       serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:s:${i}`, 2, 12)),
+    },
+    {
+      id: 'bookinger',
+      label: 'Bookinger',
+      verdi: tid,
+      delta: '+8 %',
+      opp: true,
+      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:t:${i}`, 20, 90)),
     },
     {
       id: 'retur',
@@ -365,14 +373,6 @@ export function analyserMockStats(naa: Date): AnalyserMockStat[] {
       delta: '−3 %',
       opp: false,
       serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:r:${i}`, 4, 16)),
-    },
-    {
-      id: 'tid',
-      label: 'Tid på siden',
-      verdi: tid,
-      delta: '+8 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:t:${i}`, 20, 90)),
     },
   ];
 }

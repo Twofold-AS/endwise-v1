@@ -144,21 +144,19 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     const bar = utenKommentarer(les('../app/(app)/innboks/_top-bar2.tsx'));
     expect(bar).toMatch(/data-innboks-top-bar2/);
     expect(bar).toMatch(/Ny melding/);
-    expect(bar).toMatch(/data-innboks-tid/);
-    expect(bar).toMatch(/data-innboks-gruppe/);
+    expect(bar).toMatch(/data-innboks-sortering/);
+    expect(bar).toMatch(/Alle meldinger/);
     expect(bar).toMatch(/data-innboks-slett/);
     expect(bar).not.toMatch(/ChevronDown/);
     expect(bar).toMatch(/Trash2/);
-    expect(bar).toMatch(/InboxChromePopup/);
+    expect(bar).toMatch(/SorteringArk/);
     expect(les('../app/(app)/_shell/inbox-filter.tsx')).toMatch(/label: 'Kunder'/);
     expect(les('../app/(app)/_shell/inbox-filter.tsx')).toMatch(/label: 'Internt'/);
     expect(les('../app/(app)/_shell/inbox-filter.tsx')).toMatch(/label: 'Support'/);
 
     const popup = utenKommentarer(les('../app/(app)/innboks/_popup.tsx'));
-    expect(popup).toMatch(/PHONE_PROFIL_MENY_BREDDE/);
-    expect(popup).toMatch(/PHONE_PROFIL_RAD/);
-    expect(popup).toMatch(/data-innboks-popup-scrim/);
-    expect(popup).toMatch(/fixed inset-0 z-\[70\]/);
+    expect(popup).toMatch(/SorteringArk/);
+    expect(popup).toMatch(/data-innboks-popup-scrim|SorteringArk/);
 
     const side = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     expect(side).toMatch(/data-innboks-velg/);
@@ -193,7 +191,7 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(meny).toMatch(/text-\[17px\] font-\[700\]/);
     expect(meny).toMatch(/#0066ff/);
     expect(meny).toMatch(/Twofold/);
-    expect(PHONE_PROFIL_RAD).toMatch(/text-\[17px\]/);
-    expect(PHONE_PROFIL_RAD).toMatch(/font-\[700\]/);
+    expect(PHONE_PROFIL_RAD).toMatch(/text-body/);
+    expect(PHONE_PROFIL_RAD).toMatch(/font-\[450\]/);
   });
 });

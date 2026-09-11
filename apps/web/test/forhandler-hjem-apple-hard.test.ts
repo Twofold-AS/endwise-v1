@@ -102,7 +102,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
         role: 'dealer_admin',
         shell: 'forhandler',
       }).map((f) => f.label),
-    ).toEqual(['Oversikt', 'Ansatte', 'Abonnement', 'Integrasjoner']);
+    ).toEqual(['Oversikt', 'Ansatte', 'Timeplan', 'Abonnement', 'Integrasjoner']);
   });
 
   it('HJEM_KORT_TOM er ærlig pulse-kopi', () => {
@@ -131,7 +131,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     expect(hjem).toMatch(/HJEM_SCROLL_FLATE/);
     expect(dash).toMatch(/HJEM_SCROLL_FLATE/);
-    expect(hjem).toMatch(/gap-5/);
+    expect(hjem).toMatch(/gap-2\.5/);
     expect(hjem).not.toMatch(/PHONE_SAFE_TOP/);
   });
 
@@ -144,10 +144,10 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(PHONE_DEST_FYLL).toMatch(/border-divide/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(hjem).toMatch(/Planlagt/);
-    expect(hjem).toMatch(/Pågår/);
-    expect(hjem).toMatch(/Ferdig/);
-    expect(hjem).toMatch(/variant="hero"/);
+    expect(kort).toMatch(/Planlagt/);
+    expect(kort).toMatch(/Pågår/);
+    expect(kort).toMatch(/Ferdig/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).not.toMatch(/HJEM_KORT_TOM\.timeplan/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
     expect(kort).toMatch(/text-\[28px\]/);

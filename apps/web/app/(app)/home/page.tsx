@@ -41,13 +41,15 @@ export default function VerkstedetPage() {
 
 function VerkstedetDesktop() {
   return (
-    <div className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-5 py-7`}>
+    <div
+      className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex h-full min-h-0 flex-col gap-2.5 py-3`}
+    >
       <div className="sr-only">
         <h1>Verkstedet</h1>
         <p>Her er dagen din, sjef 👋</p>
         <p>Alt under er hentet fra dine egne saker.</p>
       </div>
-      <DealerPulseKort className="flex flex-col gap-5" />
+      <DealerPulseKort className="flex flex-col gap-2.5" />
     </div>
   );
 }

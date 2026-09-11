@@ -40,10 +40,10 @@ describe('Mikael telefon-chrome — to toppbarer, sidebar skjult (07.09.2026)', 
     expect(shell).not.toMatch(/border-l-|accent-pip|border-left/);
     expect(shell).not.toMatch(/data-phone-sidebar-open/);
     expect(shell).not.toMatch(/PanelLeftOpen|PanelLeftClose/);
-    expect(shell).toMatch(
-      /phoneSideChrome[\s\S]*data-shell-tilbake|data-shell-tilbake[\s\S]*phoneSideChrome/,
-    );
-    expect(shell).toMatch(/TilbakePil/);
+    expect(shell).toMatch(/phoneSideChrome/);
+    expect(shell).toMatch(/data-phone-side-tittel/);
+    expect(shell).not.toMatch(/data-shell-tilbake/);
+    expect(shell).not.toMatch(/TilbakePil/);
     expect(shell).not.toMatch(/PhoneBevel|BEVEL/);
     expect(layout).toMatch(/PhoneShell/);
     expect(layout).not.toMatch(/PhoneBevel/);

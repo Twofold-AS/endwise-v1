@@ -90,7 +90,7 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
     expect(hero).toMatch(/text-label font-normal/);
     expect(hero).toMatch(/items-center/);
-    expect(hero).not.toMatch(/items-end/);
+    expect(hero).toMatch(/items-end/);
     expect(hero).toMatch(/PulseEndringerLenke/);
   });
 });

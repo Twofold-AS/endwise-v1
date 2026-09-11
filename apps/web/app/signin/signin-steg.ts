@@ -2,10 +2,11 @@
  * Innlogging etter identifisert e-post: kode-steg, ikke TOTP-vegg.
  * Magic-lenka og den manuelle 5-sifrede koden er samme engangsbevis.
  * TOTP-flaten vises bare når Better-Auth allerede har satt two_factor-kaken
- * (appen er bundet). Uenrollert lander aldri på «Bekreftelse».
+ * (appen er bundet). Uenrollert lander aldri på TOTP-flaten.
  */
 
-export const SIGNIN_TOTP_TITTEL = 'Bekreftelse';
+/** Heading fjernet (CODE-GO 11.09.2026) — OTP-flyten står. */
+export const SIGNIN_TOTP_TITTEL = '';
 
 export const SIGNIN_STI = '/signin';
 export const SIGNIN_VALG_STI = '/signin?steg=valg';
@@ -14,7 +15,8 @@ export const SIGNIN_ENROLL_STI = '/2fa-oppsett';
 export const SIGNIN_EPOST_KEY = 'endwise.signin.epost';
 export const SIGNIN_VILKAR_STI = '/vilkar';
 
-export const SIGNIN_TITTEL = 'Velkommen tilbake';
+/** Heading fjernet (CODE-GO 11.09.2026) — e-postfeltet er første innhold. */
+export const SIGNIN_TITTEL = '';
 export const SIGNIN_KODE_INGRESS = 'Vi har sendt en midlertidig kode til';
 export const SIGNIN_IKKE_DEG = 'Ikke deg?';
 export const SIGNIN_FYLL_KODE = 'Fyll inn kode';

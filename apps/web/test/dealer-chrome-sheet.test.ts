@@ -64,11 +64,13 @@ describe('Telefon-toppbar — Jonas/Mikael sheet-fasit', () => {
     expect(shell).not.toMatch(/text-title">Endwise</);
   });
 
-  it('tilbake-pilen er kun på Settings; TilbakePil-SVG finnes fortsatt', () => {
+  it('logo-bar alltid synlig; TilbakePil-SVG finnes men brukes ikke på destinasjon', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
     expect(shell).toMatch(/phoneSideChrome/);
-    expect(shell).toMatch(/data-shell-tilbake/);
+    expect(shell).toMatch(/data-shell-logo/);
+    expect(shell).toMatch(/data-phone-side-tittel/);
+    expect(shell).not.toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/>Tilbake</);
     expect(pil).toMatch(/<svg/);
     expect(pil).toMatch(/strokeWidth="2"/);

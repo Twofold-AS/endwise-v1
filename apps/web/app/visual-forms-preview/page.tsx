@@ -1,14 +1,70 @@
 'use client';
 
 import { ArrowUpRight, Car } from '@endwise/ui';
+import { useRef, useState } from 'react';
 import { InnstillingRad, InnstillingSeksjon } from '../(app)/_shell/innstilling-gruppe';
 import { PhoneSokFelt } from '../(app)/_shell/phone-sok-felt';
 import { SideChromeSkall } from '../(app)/_shell/side-chrome-skall';
+import { SorteringArk, SorteringGruppe, SorteringValg } from '../(app)/_shell/sortering-ark';
 
 /**
  * Uinnlogget visuell GO for skjema/chrome (Kunder-søk, Opprett jobb, Tjenester).
  * Ikke en produkt-rute.
  */
+function SorteringGo({
+  id,
+  grupper,
+  startApen = false,
+}: {
+  id: string;
+  grupper: { tittel?: string; valg: string[] }[];
+  startApen?: boolean;
+}) {
+  const [apen, setApen] = useState(startApen);
+  const [valgt, setValgt] = useState(grupper[0]?.valg[0] ?? '');
+  const anker = useRef<HTMLDivElement>(null);
+  return (
+    <div ref={anker} className="relative">
+      <button
+        type="button"
+        data-preview-sortering={id}
+        aria-expanded={apen}
+        aria-haspopup="true"
+        aria-label="Sortering"
+        onClick={() => setApen((v) => !v)}
+        className={`shrink-0 border-b-2 pb-1 text-label ${
+          apen ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
+        }`}
+      >
+        Sortering
+      </button>
+      <SorteringArk apen={apen} onLukk={() => setApen(false)} anker={anker.current}>
+        {grupper.map((g) => {
+          const rader = g.valg.map((v) => (
+            <SorteringValg
+              key={v}
+              valgt={valgt === v}
+              onVelg={() => {
+                setValgt(v);
+                setApen(false);
+              }}
+            >
+              {v}
+            </SorteringValg>
+          ));
+          return g.tittel ? (
+            <SorteringGruppe key={g.tittel} tittel={g.tittel}>
+              {rader}
+            </SorteringGruppe>
+          ) : (
+            <div key={g.valg.join('-')}>{rader}</div>
+          );
+        })}
+      </SorteringArk>
+    </div>
+  );
+}
+
 export default function VisualFormsPreview() {
   return (
     <div className="min-h-dvh bg-bg text-fg" data-visual-forms-preview="go">
@@ -24,12 +80,22 @@ export default function VisualFormsPreview() {
           ]}
           aktiv="alle"
         >
-          <div className="min-w-[260px] flex-1" data-kunder-sok>
-            <PhoneSokFelt
-              defaultValue=""
-              placeholder="Søk på navn, e-post eller telefon"
-              aria-label="Søk i kunder"
-              readOnly
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="min-w-[220px] flex-1" data-kunder-sok>
+              <PhoneSokFelt
+                defaultValue=""
+                placeholder="Søk på navn, e-post eller telefon"
+                aria-label="Søk i kunder"
+                readOnly
+              />
+            </div>
+            <SorteringGo
+              id="kunder"
+              startApen
+              grupper={[
+                { tittel: 'Type', valg: ['Alle', 'Endwise', 'Quick'] },
+                { tittel: 'Tid', valg: ['Nyeste', 'Eldste'] },
+              ]}
             />
           </div>
         </SideChromeSkall>
@@ -83,6 +149,11 @@ export default function VisualFormsPreview() {
           aktiv="alle"
         >
           <div data-tjenester-alle className="flex flex-col gap-3">
+            <SorteringGo
+              id="tjenester"
+              startApen
+              grupper={[{ valg: ['Alle', 'MC', 'Båt', 'ATV'] }]}
+            />
             <p className="text-label text-fg">Ingen ekstra opprett-knapp på Alle-flaten.</p>
             <p className="text-[13px] text-fg-muted">
               Opprettelse åpnes bare fra <span className="text-fg">Opprett tjenester</span> i

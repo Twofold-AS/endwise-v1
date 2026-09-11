@@ -120,22 +120,21 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(les('../../../packages/ui/src/theme.css')).toMatch(/\.ew-modus-plate/);
     expect(meny).toMatch(/PHONE_PROFIL_RAD/);
     expect(PHONE_PROFIL_RAD).toMatch(/h-8/);
-    expect(PHONE_PROFIL_RAD).toMatch(/text-\[17px\]/);
-    expect(PHONE_PROFIL_RAD).toMatch(/font-\[700\]/);
-    expect(PHONE_PROFIL_VILKAR).toMatch(/text-\[17px\]/);
-    expect(PHONE_PROFIL_VILKAR).toMatch(/font-\[700\]/);
-    expect(PHONE_PROFIL_VILKAR).toMatch(/text-\[17px\]/);
-    expect(PHONE_PROFIL_RAD).toMatch(/text-\[17px\]/);
+    expect(PHONE_PROFIL_RAD).toMatch(/text-body/);
+    expect(PHONE_PROFIL_RAD).toMatch(/font-\[450\]/);
+    expect(PHONE_PROFIL_VILKAR).toMatch(/text-body/);
+    expect(PHONE_PROFIL_VILKAR).toMatch(/font-\[450\]/);
     expect(PHONE_PROFIL_MENY_BREDDE).toMatch(/260px/);
     expect(PHONE_PROFIL_MENY_TOPP).toBe('top-full mt-2.5');
     expect(PHONE_BAR2).toContain(PHONE_BAR2_PY);
     expect(PHONE_BAR2_PY).toBe('py-2.5');
   });
 
-  it('settings-chrome: tilbake med hale, Konto først, underline på aktiv', () => {
+  it('settings-chrome: logo-bar + tittel under, Konto først, underline på aktiv', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/TilbakePil/);
-    expect(shell).toMatch(/data-shell-tilbake/);
+    expect(shell).toMatch(/data-shell-logo/);
+    expect(shell).toMatch(/data-phone-side-tittel/);
+    expect(shell).not.toMatch(/data-shell-tilbake/);
     expect(shell).toMatch(/sideChrome\.tittel|Innstillinger/);
     expect(les('../app/(app)/_shell/phone-side-chrome.ts')).toMatch(/tittel: 'Innstillinger'/);
     expect(shell).toMatch(/data-phone-settings-nav/);
@@ -160,14 +159,14 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(fane).toMatch(/Ingen filopplasting|bevegelse="stille"/);
   });
 
-  it('autentikator-bekreftelse heter bare Bekreftelse', () => {
+  it('autentikator-bekreftelse har ingen Bekreftelse-heading', () => {
     const steg = les('../app/signin/signin-steg.ts');
     const skjema = utenKommentarer(les('../app/signin/signin-skjema.tsx'));
     const totp = utenKommentarer(les('../app/2fa-oppsett/page.tsx'));
-    expect(steg).toMatch(/SIGNIN_TOTP_TITTEL = 'Bekreftelse'/);
-    expect(skjema).toMatch(/SIGNIN_TOTP_TITTEL/);
+    expect(steg).toMatch(/SIGNIN_TOTP_TITTEL = ''/);
+    expect(skjema).not.toMatch(/Bekreftelse/);
     expect(skjema).not.toMatch(/Bekreft med autentikator/);
-    expect(totp).toMatch(/'Bekreftelse'/);
+    expect(totp).not.toMatch(/'Bekreftelse'/);
     expect(totp).not.toMatch(/Bekreft med autentikator/);
   });
 });

@@ -75,13 +75,14 @@ describe('CODE-GO Mikael — innboks tom / sort / telefon', () => {
     expect(side).not.toMatch(/Skriv til Endwise/);
   });
 
-  it('sortering bor i Tid-popup; Ny melding først i top-bar 2; penn-SVG beholdt', () => {
+  it('sortering bor i Sortering-ark; Alle meldinger først; penn-SVG beholdt', () => {
     const bar = utenKommentarer(les('../app/(app)/innboks/_top-bar2.tsx'));
     const ikon = utenKommentarer(les('../app/(app)/innboks/_ny-melding-ikon.tsx'));
+    expect(bar).toMatch(/Alle meldinger/);
     expect(bar).toMatch(/Ny melding/);
     expect(bar).toMatch(/Nyeste/);
     expect(bar).toMatch(/Eldste/);
-    expect(bar).toMatch(/InboxChromePopup/);
+    expect(bar).toMatch(/SorteringArk/);
     expect(bar).not.toMatch(/ChevronDown/);
     expect(bar).not.toMatch(/DropdownMenu/);
     expect(bar).toMatch(/data-innboks-ny-samtale/);

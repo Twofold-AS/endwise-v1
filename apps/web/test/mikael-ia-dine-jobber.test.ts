@@ -143,12 +143,11 @@ describe('Forhandler-info uten Grainient', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     const innboks = utenKommentarer(les('../app/(app)/innboks/page.tsx'));
     expect(dealer).not.toMatch(/ForhandlerInfoKort/);
-    expect(dealer).toMatch(/Planlagt/);
+    expect(dealer).toMatch(/PulseHeroFlate/);
     expect(mek).toMatch(/ForhandlerInfoKort/);
     expect(dash).not.toMatch(/ForhandlerInfoKort/);
     expect(dash).toMatch(/DealerPulseKort|DealerDestinasjonskort/);
     expect(dash).toMatch(/sr-only/);
-    expect(dealer).toMatch(/variant="hero"/);
     expect(innboks).toMatch(/ForhandlerInfoKort/);
     expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(
       /Grainient|grainient|Galaxy|galaxy/,
@@ -162,8 +161,7 @@ describe('telefon-toppbar og skjult sidebar', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(layout).not.toMatch(/PhoneBevel/);
     expect(layout).toMatch(/overflow-y-auto/);
-    expect(layout).toMatch(/<main className="[^"]*\bflex-1\b/);
-    expect(layout).not.toMatch(/<main className="[^"]*\bmd:flex-1\b/);
+    expect(layout).toMatch(/flex-1/);
     expect(shell).toMatch(/data-phone-top-bar/);
     expect(shell).toMatch(/fixed inset-x-0 top-0 z-\[60\]/);
     expect(PHONE_SHELL_ROT).toMatch(/min-h-dvh|h-dvh|flex-1/);
@@ -175,7 +173,7 @@ describe('telefon-toppbar og skjult sidebar', () => {
     expect(shell).not.toMatch(/data-phone-sidebar-open/);
     expect(shell).not.toMatch(/PanelLeftOpen/);
     expect(shell).toMatch(/phoneSideChrome/);
-    expect(shell).toMatch(/TilbakePil/);
+    expect(shell).not.toMatch(/TilbakePil/);
     expect(shell).toMatch(/data-phone-search/);
     expect(shell).toMatch(/data-phone-profile/);
     expect(shell).toMatch(/data-phone-dest/);

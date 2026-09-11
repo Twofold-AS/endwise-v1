@@ -179,7 +179,7 @@ export default function ToFaktorOppsettPage() {
       : steg === 'koder'
         ? 'Lagre gjenopprettingskodene'
         : steg === 'kode'
-          ? 'Bekreftelse'
+          ? ''
           : steg === 'av'
             ? 'Tofaktor er på'
             : 'Sett opp autentikator';
@@ -199,7 +199,7 @@ export default function ToFaktorOppsettPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3">
           <Image src="/logo/logo.svg" alt="Endwise" width={44} height={44} priority />
-          <h1 className="text-title text-fg">{tittel}</h1>
+          {tittel ? <h1 className="text-title text-fg">{tittel}</h1> : null}
           <p className="text-center text-body text-fg-muted">{ingress}</p>
         </div>
 

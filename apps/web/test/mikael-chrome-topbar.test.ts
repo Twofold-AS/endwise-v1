@@ -20,8 +20,9 @@ describe('Mikael 02.09 03:23 — Tilbake uten ikon, større logo', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const pil = utenKommentarer(les('../app/(app)/_shell/tilbake-pil.tsx'));
     expect(shell).toMatch(/phoneSideChrome/);
-    expect(shell).toMatch(/data-shell-tilbake/);
-    expect(shell).toMatch(/TilbakePil/);
+    expect(shell).toMatch(/data-phone-side-tittel/);
+    expect(shell).not.toMatch(/data-shell-tilbake/);
+    expect(shell).not.toMatch(/TilbakePil/);
     expect(pil).toMatch(/<svg/);
     expect(pil).not.toMatch(/>Tilbake</);
     expect(pil).not.toMatch(/lucide|ChevronLeft/);

@@ -3,10 +3,10 @@
 import { Trash2 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { INNBOKS_GRUPPER, useInboxFilter } from '../_shell/inbox-filter';
-import { InboxChromePopup, InboxPopupValg } from './_popup';
+import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
 
 const TID_VALG = [
   { id: 'nyeste' as const, label: 'Nyeste' },
@@ -14,18 +14,19 @@ const TID_VALG = [
 ];
 
 /**
- * Innboks top-bar 2: Ny melding · Tid · Gruppe · Slett.
- * Ny melding først og aktiv på lista / ny-flyt. Tid og Gruppe åpner profil-popup.
+ * Innboks-verktøylinje: Alle meldinger · Ny melding · Sortering · Slett.
+ * Sortering åpner ett ark med Tid + Gruppe.
  */
 export function InboxTopBar2({
   desktop = false,
   startPopup,
 }: {
   desktop?: boolean;
-  /** Visuell GO — åpne Tid/Gruppe uten klikk. */
-  startPopup?: 'tid' | 'gruppe';
+  /** Visuell GO — åpne Sortering uten klikk. */
+  startPopup?: 'sortering' | 'tid' | 'gruppe';
 }) {
   const pathname = usePathname() ?? '';
+  const params = useSearchParams();
   const {
     sortering,
     setSortering,
@@ -37,17 +38,19 @@ export function InboxTopBar2({
     skjulFlere,
     toemValgte,
   } = useInboxFilter();
-  const [tidApen, setTidApen] = useState(false);
-  const [gruppeApen, setGruppeApen] = useState(false);
-  const tidRef = useRef<HTMLDivElement>(null);
-  const gruppeRef = useRef<HTMLDivElement>(null);
+  const [sorterApen, setSorterApen] = useState(false);
+  const sorterRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (startPopup === 'tid') setTidApen(true);
-    if (startPopup === 'gruppe') setGruppeApen(true);
+    if (startPopup === 'sortering' || startPopup === 'tid' || startPopup === 'gruppe') {
+      setSorterApen(true);
+    }
   }, [startPopup]);
-  const nyHref = pathname.startsWith('/endwise') ? '/endwise/innboks?ny=1' : '/innboks?ny=1';
-  const nyAktiv = !tidApen && !gruppeApen && !velgModus;
+
+  const listeHref = pathname.startsWith('/endwise') ? '/endwise/innboks' : '/innboks';
+  const nyHref = `${listeHref}?ny=1`;
+  const nyAktiv = params?.get('ny') === '1';
+  const alleAktiv = !nyAktiv && !sorterApen && !velgModus;
 
   function faneKlasse(aktiv: boolean) {
     return `shrink-0 border-b-2 pb-1 text-label ${
@@ -78,6 +81,16 @@ export function InboxTopBar2({
       aria-label="Innboks"
     >
       <Link
+        href={listeHref as Route}
+        data-innboks-alle
+        aria-current={alleAktiv ? 'page' : undefined}
+        onClick={() => setPart('alle')}
+        className={faneKlasse(alleAktiv)}
+      >
+        Alle meldinger
+      </Link>
+
+      <Link
         href={nyHref as Route}
         data-innboks-ny-melding
         data-innboks-ny-samtale
@@ -87,91 +100,66 @@ export function InboxTopBar2({
         Ny melding
       </Link>
 
-      <div ref={tidRef} className="relative">
+      <div ref={sorterRef} className="relative ml-auto flex items-end gap-5">
         <button
           type="button"
-          data-innboks-tid
-          aria-expanded={tidApen}
+          data-innboks-sortering
+          aria-expanded={sorterApen}
           aria-haspopup="true"
-          aria-label="Tid"
-          onClick={() => {
-            setTidApen((v) => !v);
-            setGruppeApen(false);
-          }}
-          className={faneKlasse(tidApen)}
+          aria-label="Sortering"
+          onClick={() => setSorterApen((v) => !v)}
+          className={faneKlasse(sorterApen)}
         >
-          Tid
+          Sortering
         </button>
-        <InboxChromePopup
-          apen={tidApen}
-          onLukk={() => setTidApen(false)}
-          label="Sorter samtaler"
-          anker={tidRef.current}
+        <SorteringArk
+          apen={sorterApen}
+          onLukk={() => setSorterApen(false)}
+          anker={sorterRef.current}
         >
-          {TID_VALG.map((v) => (
-            <InboxPopupValg
-              key={v.id}
-              valgt={sortering === v.id}
-              onVelg={() => {
-                setSortering(v.id);
-                setTidApen(false);
-              }}
-            >
-              {v.label}
-            </InboxPopupValg>
-          ))}
-        </InboxChromePopup>
-      </div>
-
-      <div ref={gruppeRef} className="relative">
+          <SorteringGruppe tittel="Tid">
+            {TID_VALG.map((v) => (
+              <SorteringValg
+                key={v.id}
+                valgt={sortering === v.id}
+                onVelg={() => {
+                  setSortering(v.id);
+                  setSorterApen(false);
+                }}
+              >
+                {v.label}
+              </SorteringValg>
+            ))}
+          </SorteringGruppe>
+          <SorteringGruppe tittel="Gruppe">
+            {INNBOKS_GRUPPER.map((v) => (
+              <SorteringValg
+                key={v.key}
+                valgt={part === v.key}
+                onVelg={() => {
+                  setPart(part === v.key ? 'alle' : v.key);
+                  setSorterApen(false);
+                }}
+              >
+                {v.label}
+              </SorteringValg>
+            ))}
+          </SorteringGruppe>
+        </SorteringArk>
         <button
           type="button"
-          data-innboks-gruppe
-          aria-expanded={gruppeApen}
-          aria-haspopup="true"
-          aria-label="Gruppe"
-          onClick={() => {
-            setGruppeApen((v) => !v);
-            setTidApen(false);
-          }}
-          className={faneKlasse(gruppeApen)}
+          data-innboks-slett
+          aria-label={velgModus ? 'Slett valgte samtaler' : 'Velg samtaler å slette'}
+          aria-pressed={velgModus}
+          onClick={slett}
+          className={`inline-flex shrink-0 items-center gap-1.5 border-b-2 pb-1 text-label ${
+            velgModus ? 'border-danger font-[650] text-danger' : 'border-transparent text-fg-muted'
+          }`}
         >
-          Gruppe
+          Slett
+          {velgModus ? <Trash2 size={16} strokeWidth={1.75} aria-hidden /> : null}
         </button>
-        <InboxChromePopup
-          apen={gruppeApen}
-          onLukk={() => setGruppeApen(false)}
-          label="Gruppe"
-          anker={gruppeRef.current}
-        >
-          {INNBOKS_GRUPPER.map((v) => (
-            <InboxPopupValg
-              key={v.key}
-              valgt={part === v.key}
-              onVelg={() => {
-                setPart(part === v.key ? 'alle' : v.key);
-                setGruppeApen(false);
-              }}
-            >
-              {v.label}
-            </InboxPopupValg>
-          ))}
-        </InboxChromePopup>
       </div>
-
-      <button
-        type="button"
-        data-innboks-slett
-        aria-label={velgModus ? 'Slett valgte samtaler' : 'Velg samtaler å slette'}
-        aria-pressed={velgModus}
-        onClick={slett}
-        className={`ml-auto inline-flex shrink-0 items-center gap-1.5 border-b-2 pb-1 text-label ${
-          velgModus ? 'border-danger font-[650] text-danger' : 'border-transparent text-fg-muted'
-        }`}
-      >
-        Slett
-        {velgModus ? <Trash2 size={16} strokeWidth={1.75} aria-hidden /> : null}
-      </button>
     </div>
   );
 }

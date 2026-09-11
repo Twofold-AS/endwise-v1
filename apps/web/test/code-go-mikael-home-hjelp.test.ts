@@ -126,8 +126,10 @@ describe('CODE-GO Mikael — Hjelp / Statistikk / chrome', () => {
     const stat = phoneSideChrome('/statistikk', null, { isAdmin: false, erForhandler: true });
     expect(stat?.tittel).toBe('Statistikk');
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/absolute inset-x-10 truncate text-center/);
+    expect(shell).toMatch(/data-phone-side-tittel/);
     expect(shell).toMatch(/sideChrome\.tittel/);
+    expect(shell).toMatch(/data-shell-logo/);
+    expect(shell).not.toMatch(/absolute inset-x-10 truncate text-center/);
   });
 
   it('Hjelp-rute: Artikler · Forespørsler, inngang i artikler', () => {

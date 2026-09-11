@@ -51,7 +51,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
   });
 
-  it('Analyser er 50/50 over Jobb med forhandlernavn og Alle tall-lenke', () => {
+  it('Analyser er to loddrette bokser over Jobb med Se tallene', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
       'innboks',
@@ -62,22 +62,17 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     ]);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
-    expect(hjem).toMatch(/forhandlerNavn=\{tenantName\}/);
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const analyser = funksjon(kort, 'PulseAnalyserKort');
-    expect(analyser).toMatch(/flex-1 basis-0/);
-    expect(analyser).toMatch(/Tall for \$\{navn\}/);
+    expect(analyser).toMatch(/flex-col/);
+    expect(analyser).toMatch(/Analyse/);
     expect(analyser).not.toMatch(/«|»|&laquo;|&raquo;/);
-    expect(analyser).toMatch(/RevenueLineChart/);
-    expect(analyser).toMatch(/pointer-events-none/);
-    expect(analyser).toMatch(/min-h-11/);
+    expect(analyser).not.toMatch(/RevenueLineChart/);
     expect(analyser).not.toMatch(/min-h-\[168px\]/);
     expect(analyser).not.toMatch(/scale-\[1\.65\]/);
-    expect(analyser).toMatch(/Alle tall/);
+    expect(analyser).toMatch(/Se tallene/);
     expect(analyser).toMatch(/data-analyser-alle-tall/);
     expect(analyser).toMatch(/ArrowUpRight/);
-    expect(analyser).toMatch(/data-analyser-vekst/);
-    expect(analyser).not.toMatch(/Se tall/);
     expect(analyser).not.toMatch(/>Analyser</);
   });
 
@@ -87,9 +82,12 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(side).toMatch(/border-border border-b/);
     expect(side).not.toMatch(/rounded-control border px-3 py-2\.5/);
     const popup = utenKommentarer(les('../app/(app)/innboks/_popup.tsx'));
-    expect(popup).toMatch(/data-innboks-popup-scrim/);
-    expect(popup).toMatch(/fixed inset-0 z-\[70\]/);
-    expect(popup).toMatch(/PHONE_PROFIL_RAD/);
+    const ark = utenKommentarer(les('../app/(app)/_shell/sortering-ark.tsx'));
+    expect(popup).toMatch(/InboxChromePopup/);
+    expect(popup).toMatch(/SorteringArk/);
+    expect(ark).toMatch(/data-innboks-popup-scrim/);
+    expect(ark).toMatch(/fixed inset-0 z-\[70\]/);
+    expect(ark).toMatch(/text-body/);
     const samtale = utenKommentarer(les('../app/(app)/innboks/_ny-samtale.tsx'));
     expect(samtale).toMatch(/data-ny-melding-send/);
     expect(samtale).toMatch(/Send\s*<\/StatefulButton>/);

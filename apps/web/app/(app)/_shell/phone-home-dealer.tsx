@@ -103,7 +103,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
   const lasterJobber = bookings.isLoading;
 
   return (
-    <div className={className ?? 'flex flex-col gap-5'}>
+    <div className={className ?? 'flex flex-col gap-2.5'}>
       <PulseHeroFlate
         href={PHONE_KORT_META.idag.href}
         ukedag={dag.ukedag}
@@ -164,7 +164,7 @@ export const DealerDestinasjonskort = DealerPulseKort;
 export function PhoneHomeDealer() {
   return (
     <DealerPulseKort
-      className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-5 py-5 md:hidden`}
+      className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-2.5 py-3 md:hidden`}
     />
   );
 }

@@ -50,7 +50,7 @@ describe('Mikael IA 28.08 kveld — Innboks uten Oversikt', () => {
     expect(faner).toMatch(/INNBOKS_FILTERE/);
     expect(bar).toMatch(/aria-label="Innboks"/);
     expect(bar).toMatch(/Ny melding/);
-    expect(bar).toMatch(/InboxChromePopup/);
+    expect(bar).toMatch(/SorteringArk/);
     expect(side).not.toMatch(/MessageSquarePlus/);
     expect(side).toMatch(/max-md:hidden/);
     expect(side).not.toMatch(/Oversikt/);
@@ -117,11 +117,11 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
   const chrome = utenKommentarer(les('../app/(app)/innboks/_chrome.tsx'));
   const hoved = utenKommentarer(les('../app/(app)/innboks/_hovedflate.tsx'));
 
-  it('én top-bar 2: Ny melding · Tid · Gruppe · Slett', () => {
+  it('én top-bar 2: Alle meldinger · Ny melding · Sortering · Slett', () => {
     const bar = utenKommentarer(les('../app/(app)/innboks/_top-bar2.tsx'));
+    expect(bar).toMatch(/Alle meldinger/);
     expect(bar).toMatch(/Ny melding/);
-    expect(bar).toMatch(/data-innboks-tid/);
-    expect(bar).toMatch(/data-innboks-gruppe/);
+    expect(bar).toMatch(/data-innboks-sortering/);
     expect(bar).toMatch(/data-innboks-slett/);
     expect(bar).toMatch(/Trash2/);
     expect(bar).toMatch(/data-innboks-verktoy/);
@@ -133,10 +133,12 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
     expect(side).not.toMatch(/DropdownMenu/);
   });
 
-  it('Ny melding er første fane, compose åpner Kunde · Intern · Support — ingen Mekaniker', () => {
+  it('Alle meldinger er første fane; Ny melding ved siden; compose åpner Kunde · Intern · Support', () => {
     const bar = utenKommentarer(les('../app/(app)/innboks/_top-bar2.tsx'));
+    expect(bar).toMatch(/Alle meldinger/);
     expect(bar).toMatch(/Ny melding/);
-    expect(bar).toMatch(/\/innboks\?ny=1/);
+    expect(bar).toMatch(/\?ny=1/);
+    expect(bar).toMatch(/listeHref/);
     expect(samtale).toMatch(/label: 'Kunde'/);
     expect(samtale).toMatch(/label: 'Intern'/);
     expect(samtale).toMatch(/label: 'Support'/);

@@ -54,7 +54,7 @@ export type PhoneSideChrome = {
   tittel: string;
   faner: PhoneSideChromeFane[];
   aktiv: string;
-  /** Innboks har egen bar 2 (Ny melding · Tid · Gruppe · Slett), ikke underline-faner. */
+  /** Innboks har egen bar 2 (Alle meldinger · Ny melding · Sortering · Slett). */
   bar2?: 'faner' | 'innboks';
 };
 

@@ -37,21 +37,20 @@ function InnboksPreviewInner() {
         data-innboks-preview={vis}
         className={`mx-auto flex min-h-dvh w-full max-w-[390px] flex-col bg-bg text-fg ${PHONE_SAFE_TOP}`}
       >
-        <div data-phone-top-bar="1" className="relative flex h-row w-full items-center gap-2 px-3">
-          <span className="relative z-10 inline-flex size-8 shrink-0 items-center justify-start text-fg">
-            ←
+        <div data-phone-top-bar="1" className="flex h-row w-full items-center gap-2 px-3">
+          <span data-shell-logo className="inline-flex size-8 shrink-0 rounded-sm bg-fg" />
+          <span className="min-w-0 flex-1 rounded-full bg-inset px-3 py-1 text-label text-fg-muted">
+            Søk
           </span>
-          <p className="pointer-events-none absolute inset-x-10 truncate text-center text-title text-fg">
-            Innboks
-          </p>
-          <div className="relative z-10 ml-auto flex shrink-0 items-center gap-2">
-            <span className={PHONE_RONNY_SIRKEL} />
-            <span className={PHONE_PROFIL_SIRKEL}>M</span>
-          </div>
+          <span className={PHONE_RONNY_SIRKEL} />
+          <span className={PHONE_PROFIL_SIRKEL}>M</span>
+        </div>
+        <div data-phone-side-tittel className="flex h-8 items-end px-3">
+          <h1 className="text-title text-fg">Innboks</h1>
         </div>
         <div data-phone-top-bar="2" className={PHONE_BAR2}>
           <InboxTopBar2
-            startPopup={vis === 'sorter' ? 'tid' : vis === 'gruppe' ? 'gruppe' : undefined}
+            startPopup={vis === 'sorter' || vis === 'gruppe' ? 'sortering' : undefined}
           />
         </div>
         <div className="h-px bg-border" />

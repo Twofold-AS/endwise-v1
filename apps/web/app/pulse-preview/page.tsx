@@ -24,7 +24,7 @@ export default function PulsePreview() {
   const sirkelNaa = useMemo(() => osloVeggklokke('2026-09-08', 13, 30), []);
   return (
     <div className="min-h-dvh bg-bg text-fg" data-pulse-preview="go">
-      <div className="mx-auto flex w-full max-w-[520px] flex-col gap-5 px-3 py-5">
+      <div className="mx-auto flex min-h-dvh w-full max-w-[520px] flex-col gap-2.5 px-3 py-3">
         <div className="flex items-center justify-between gap-3">
           <p className="text-title text-fg">Forhandler-hjem preview</p>
           <button

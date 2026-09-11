@@ -4,10 +4,11 @@ import { Avatar, Car, ChevronRight, Mail, Phone, Plus, Users } from '@endwise/ui
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
+import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
 import { Feil, Kilde, Laster, Tomt } from './_delt';
 import { KUNDER_FANER, kunderHref, parseKunderFane } from './_faner';
 import { NyKunde } from './_ny-kunde';
@@ -21,9 +22,9 @@ import { RegistrerKjoretoy } from './_registrer-kjoretoy';
  * Sorteringen er en allowlist server-side (A03); knappene her er bare de samme
  * to verdiene serveren allerede godtar.
  */
-const SORTERINGER = [
-  { key: 'navn', label: 'Navn' },
-  { key: 'opprettet', label: 'Nyeste' },
+const TID_VALG = [
+  { key: 'nyeste', label: 'Nyeste', sorter: 'opprettet' as const, retning: 'desc' as const },
+  { key: 'eldste', label: 'Eldste', sorter: 'opprettet' as const, retning: 'asc' as const },
 ] as const;
 
 const KILDER = [
@@ -43,13 +44,16 @@ function KunderInner() {
    */
   const aktiv = parseKunderFane('/kunder', params?.get('fane'), params?.get('ny'));
   const nyKunde = aktiv === 'opprett';
-  const [sorter, setSorter] = useState<'navn' | 'opprettet'>('navn');
-  const [kilde, setKilde] = useState<'alle' | 'endwise' | 'quick'>('alle');
+  const [tid, setTid] = useState<(typeof TID_VALG)[number]['key']>('nyeste');
+  const [kilde, setKilde] = useState<(typeof KILDER)[number]['key']>('alle');
+  const [sorterApen, setSorterApen] = useState(false);
+  const sorterRef = useRef<HTMLDivElement>(null);
+  const tidValg = TID_VALG.find((v) => v.key === tid) ?? TID_VALG[0];
 
   const kunder = trpc.customers.list.useQuery({
     sok: sok.trim() || undefined,
-    sorter,
-    retning: sorter === 'opprettet' ? 'desc' : 'asc',
+    sorter: tidValg.sorter,
+    retning: tidValg.retning,
     kilde,
     limit: 200,
   });
@@ -66,8 +70,8 @@ function KunderInner() {
       {aktiv === 'alle' ? (
         <>
           {/* Søk + filtre */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="min-w-[260px] flex-1" data-kunder-sok>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="min-w-[220px] flex-1" data-kunder-sok>
               <PhoneSokFelt
                 value={sok}
                 onChange={(e) => setSok(e.target.value)}
@@ -75,19 +79,51 @@ function KunderInner() {
                 aria-label="Søk i kunder"
               />
             </div>
-
-            <Knapperad
-              aria-label="Kilde"
-              valg={KILDER}
-              aktiv={kilde}
-              onVelg={(k) => setKilde(k as typeof kilde)}
-            />
-            <Knapperad
-              aria-label="Sortering"
-              valg={SORTERINGER}
-              aktiv={sorter}
-              onVelg={(k) => setSorter(k as typeof sorter)}
-            />
+            <div ref={sorterRef} className="relative">
+              <button
+                type="button"
+                data-kunder-sortering
+                aria-expanded={sorterApen}
+                aria-haspopup="true"
+                aria-label="Sortering"
+                onClick={() => setSorterApen((v) => !v)}
+                className={`shrink-0 border-b-2 pb-1 text-label ${
+                  sorterApen ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
+                }`}
+              >
+                Sortering
+              </button>
+              <SorteringArk apen={sorterApen} onLukk={() => setSorterApen(false)} anker={sorterRef}>
+                <SorteringGruppe tittel="Type">
+                  {KILDER.map((v) => (
+                    <SorteringValg
+                      key={v.key}
+                      valgt={kilde === v.key}
+                      onVelg={() => {
+                        setKilde(v.key);
+                        setSorterApen(false);
+                      }}
+                    >
+                      {v.label}
+                    </SorteringValg>
+                  ))}
+                </SorteringGruppe>
+                <SorteringGruppe tittel="Tid">
+                  {TID_VALG.map((v) => (
+                    <SorteringValg
+                      key={v.key}
+                      valgt={tid === v.key}
+                      onVelg={() => {
+                        setTid(v.key);
+                        setSorterApen(false);
+                      }}
+                    >
+                      {v.label}
+                    </SorteringValg>
+                  ))}
+                </SorteringGruppe>
+              </SorteringArk>
+            </div>
           </div>
 
           {kunder.isLoading ? (
@@ -172,41 +208,6 @@ function KunderInner() {
         </>
       ) : null}
     </SideChromeSkall>
-  );
-}
-
-function Knapperad({
-  valg,
-  aktiv,
-  onVelg,
-  'aria-label': label,
-}: {
-  valg: readonly { key: string; label: string }[];
-  aktiv: string;
-  onVelg: (key: string) => void;
-  'aria-label': string;
-}) {
-  return (
-    <div
-      role="tablist"
-      aria-label={label}
-      className="inline-flex h-control items-center gap-0.5 rounded-control border border-border bg-bg p-0.5"
-    >
-      {valg.map((v) => (
-        <button
-          key={v.key}
-          type="button"
-          role="tab"
-          aria-selected={aktiv === v.key}
-          onClick={() => onVelg(v.key)}
-          className={`inline-flex h-7 items-center rounded-[7px] px-2.5 text-label transition-colors ${
-            aktiv === v.key ? 'bg-sidebar-active text-fg' : 'text-fg-muted hover:text-fg'
-          }`}
-        >
-          {v.label}
-        </button>
-      ))}
-    </div>
   );
 }
 

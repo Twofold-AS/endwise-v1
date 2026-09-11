@@ -38,18 +38,16 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     expect(avvik).not.toMatch(/flex-1/);
   });
 
-  it('PPF er loddrett sentrert mellom dato og Avvik-rad', () => {
+  it('PPF-etiketter sitter på samme linje som 08.00/19.00', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
     expect(hero.indexOf('data-pulse-teller-rad')).toBeLessThan(
       hero.indexOf('data-pulse-hero-bunn'),
     );
-    expect(hero).toMatch(/items-stretch/);
-    expect(hero).toMatch(/min-h-\[94px\]/);
-    expect(hero).toMatch(/flex-1 items-center/);
-    expect(hero).not.toMatch(/items-end/);
+    expect(hero).toMatch(/items-end/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
+    expect(hero).toMatch(/PulseEndringerLenke/);
   });
 
   it('dagsbuen er kun Amicro-halvsirkel med blått fyll og 08.00/19.00', () => {
@@ -75,18 +73,13 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     expect(donut).toMatch(/syncCanvasSize/);
   });
 
-  it('Analyser er kort, uten anførsel, med Revenue Line uten hover', () => {
+  it('Analyser er to loddrette bokser uten dither', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const analyser = funksjon(kort, 'PulseAnalyserKort');
-    expect(analyser).toMatch(/Tall for \$\{navn\}/);
-    expect(analyser).not.toMatch(/«|»|&laquo;|&raquo;|&ldquo;|&rdquo;/);
-    expect(analyser).toMatch(/min-h-11/);
-    expect(analyser).not.toMatch(/min-h-\[168px\]/);
-    expect(analyser).toMatch(/RevenueLineChart/);
-    expect(analyser).toMatch(/pointer-events-none/);
-    expect(analyser).toMatch(/data-analyser-revenue/);
-    expect(analyser).toMatch(/Alle tall/);
-    expect(analyser).toMatch(/flex-1 basis-0/);
+    expect(analyser).toMatch(/Analyse/);
+    expect(analyser).toMatch(/siste 30 dager/);
+    expect(analyser).toMatch(/Se tallene/);
+    expect(analyser).not.toMatch(/RevenueLineChart/);
     expect(analyser).not.toMatch(/DitherGrowthChart/);
     expect(analyser).not.toMatch(/scale-\[1\.65\]/);
     expect(analyser).not.toMatch(/#0066ff/);

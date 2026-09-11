@@ -3,9 +3,10 @@
 import { ArrowUpRight, Plus, Wrench } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { SorteringArk, SorteringValg } from '../../_shell/sortering-ark';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
 import { TYPE_VALG } from './_felles';
 import { NyTjeneste } from './_ny-tjeneste';
@@ -29,6 +30,8 @@ export function PrislisteFlate({
   const { isAdmin } = useOrgRole();
   const [filter, setFilter] = useState<string>('alle');
   const [nyApen, setNyApen] = useState(false);
+  const [sorterApen, setSorterApen] = useState(false);
+  const sorterRef = useRef<HTMLDivElement>(null);
 
   /**
    * `inkluderInaktive` er sann her, og usann alle andre steder.
@@ -67,25 +70,34 @@ export function PrislisteFlate({
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <div
-          role="tablist"
-          aria-label="Kjøretøytype"
-          className="inline-flex h-control items-center gap-0.5 rounded-control border border-border bg-bg p-0.5"
-        >
-          {FILTRE.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              role="tab"
-              aria-selected={filter === f.key}
-              onClick={() => setFilter(f.key)}
-              className={`inline-flex h-7 items-center rounded-[7px] px-2.5 text-label transition-colors ${
-                filter === f.key ? 'bg-sidebar-active text-fg' : 'text-fg-muted hover:text-fg'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div ref={sorterRef} className="relative">
+          <button
+            type="button"
+            data-tjenester-sortering
+            aria-expanded={sorterApen}
+            aria-haspopup="true"
+            aria-label="Sortering"
+            onClick={() => setSorterApen((v) => !v)}
+            className={`shrink-0 border-b-2 pb-1 text-label ${
+              sorterApen ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
+            }`}
+          >
+            Sortering
+          </button>
+          <SorteringArk apen={sorterApen} onLukk={() => setSorterApen(false)} anker={sorterRef}>
+            {FILTRE.map((f) => (
+              <SorteringValg
+                key={f.key}
+                valgt={filter === f.key}
+                onVelg={() => {
+                  setFilter(f.key);
+                  setSorterApen(false);
+                }}
+              >
+                {f.label}
+              </SorteringValg>
+            ))}
+          </SorteringArk>
         </div>
 
         <div className="flex-1" />

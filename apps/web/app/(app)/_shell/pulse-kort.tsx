@@ -2,13 +2,13 @@
 
 import {
   ArrowUpRight,
-  Badge,
   CircleQuestionMark,
   DitherDonutChart,
   DitherGrowthChart,
   type LucideIcon,
   Plus,
-  RevenueLineChart,
+  TrendingDown,
+  TrendingUp,
   TriangleAlert,
 } from '@endwise/ui';
 import type { Route } from 'next';
@@ -225,9 +225,13 @@ export function PulseDagSirkel({
   const igjen = Math.max(0.001, 1 - andel);
 
   return (
-    <div data-pulse-dag-sirkel data-pulse-dag-halvsirkel className="flex w-[148px] flex-col">
+    <div
+      data-pulse-dag-sirkel
+      data-pulse-dag-halvsirkel
+      className="flex w-[148px] shrink-0 flex-col"
+    >
       <div
-        className="pointer-events-none relative h-[78px] w-full overflow-hidden"
+        className="pointer-events-none relative h-[78px] min-h-[78px] w-full shrink-0 overflow-hidden"
         role="img"
         aria-label={`Verksteddagen ${startLabel}–${sluttLabel}`}
       >
@@ -244,7 +248,10 @@ export function PulseDagSirkel({
           />
         </div>
       </div>
-      <div className="-mt-1 flex w-full justify-between text-[12px] text-fg-muted tabular-nums">
+      <div
+        data-pulse-dag-fot
+        className="flex h-[16px] w-full items-end justify-between text-[12px] leading-4 text-fg-muted tabular-nums"
+      >
         <span data-pulse-dag-start>{startKort}</span>
         <span data-pulse-dag-slutt>{sluttKort}</span>
       </div>
@@ -253,8 +260,8 @@ export function PulseDagSirkel({
 }
 
 /**
- * Toppkort: ukedag+dato · PPF loddrett midt mellom dato og Avvik-rad ·
- * to Modus-sirkler + Endringer.
+ * Toppkort: ukedag+dato og Endringer på samme rad ·
+ * PPF-etiketter på samme linje som 08.00/19.00 · to Modus-sirkler nederst.
  */
 export function PulseHeroFlate({
   ukedag,
@@ -286,35 +293,39 @@ export function PulseHeroFlate({
       data-pulse-kort="hero"
       data-verkstedet-hero=""
       data-pulse-hero-todelt
-      className={`${PHONE_HERO_FYLL} relative flex min-h-11 w-full flex-col gap-3 p-4`}
+      className={`${PHONE_HERO_FYLL} relative flex min-h-11 w-full flex-col gap-2 p-3`}
     >
-      <Link
-        href={href as Route}
-        data-pulse-del="1"
-        className="flex min-w-0 items-stretch gap-3 [touch-action:manipulation]"
-      >
-        <div className="flex min-h-[94px] min-w-0 flex-1 flex-col self-stretch">
+      <div data-pulse-hero-topp className="flex items-center justify-between gap-3">
+        <Link
+          href={href as Route}
+          data-pulse-del="1"
+          className="min-w-0 [touch-action:manipulation]"
+        >
           <p data-pulse-ukedag className="text-label font-normal text-fg">
             {ukedag}{' '}
             <span data-pulse-dato className="text-label font-normal text-fg-muted">
               {dato}
             </span>
           </p>
-          <div data-pulse-teller-rad className="flex min-h-0 flex-1 items-center">
-            <div className="grid min-w-0 flex-1 grid-cols-3 divide-x divide-divide">
-              <PulseTall label="Planlagt" verdi={planlagt} laster={lasterJobber} />
-              <PulseTall label="Pågår" verdi={paagaar} laster={lasterJobber} />
-              <PulseTall label="Ferdig" verdi={ferdig} laster={lasterJobber} />
-            </div>
-          </div>
+        </Link>
+        <PulseEndringerLenke />
+      </div>
+      <Link
+        href={href as Route}
+        data-pulse-teller-rad
+        className="flex min-w-0 items-end gap-3 [touch-action:manipulation]"
+      >
+        <div className="grid min-w-0 flex-1 grid-cols-3 divide-x divide-divide">
+          <PulseTall label="Planlagt" verdi={planlagt} laster={lasterJobber} />
+          <PulseTall label="Pågår" verdi={paagaar} laster={lasterJobber} />
+          <PulseTall label="Ferdig" verdi={ferdig} laster={lasterJobber} />
         </div>
-        <div data-pulse-del="2" className="shrink-0">
+        <div data-pulse-del="2" className="shrink-0 self-end">
           <PulseDagSirkel naa={sirkelNaa} />
         </div>
       </Link>
       <div data-pulse-hero-bunn className="flex w-full items-center justify-between gap-3">
         <PulseAvvikForesporBoks avvik={avvik} forespor={forespor} laster={lasterEndringer} />
-        <PulseEndringerLenke />
       </div>
     </div>
   );
@@ -330,7 +341,7 @@ export function PulseTall({
   laster: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 px-3 text-center first:pl-0 last:pr-0">
+    <div className="flex flex-col items-center justify-end gap-1 px-2 text-center first:pl-0 last:pr-0">
       <p className="text-[28px] font-semibold leading-none text-fg tabular-nums">
         {laster ? (
           <span className="inline-block h-7 w-8 animate-pulse rounded-sm bg-border" />
@@ -338,7 +349,9 @@ export function PulseTall({
           verdi
         )}
       </p>
-      <p className="text-[12px] text-fg-muted">{label}</p>
+      <p data-pulse-tall-etikett className="h-[16px] text-[12px] leading-4 text-fg-muted">
+        {label}
+      </p>
     </div>
   );
 }
@@ -443,70 +456,73 @@ export function PulseJobbFlis() {
 }
 
 /**
- * Analyser — 50/50 venstre | høyre, over Jobb / På jobb.
- * Venstre: `Tall for {forhandler}` (uten anførsel) + Alle tall-lenke.
- * Høyre: Amicro Revenue Line, ikke hover/klikk. Høyde som Innboks-rad.
+ * Analyser — to bokser loddrett, over Jobb / På jobb.
+ * Øverst: «Analyse» (lett vekt) + «siste 30 dager» + Se tallene.
+ * Under: fire KPI-tall med %-endring (grønn opp / rød ned). Ingen dither/Amicro.
  */
 export function PulseAnalyserKort({
   stats,
   href,
-  forhandlerNavn,
 }: {
   stats: AnalyserMockStat[];
   href: string;
   forhandlerNavn?: string | null;
 }) {
-  const navn = forhandlerNavn?.trim() || 'forhandleren';
-  const serie = stats[0]?.serie ?? [];
-  const vekst = stats.find((s) => s.opp)?.delta ?? '+12 %';
+  const kpis = stats.slice(0, 4);
 
   return (
-    <div
-      data-pulse-analyser
-      className={`${PHONE_DEST_FYLL} flex min-h-11 w-full items-center overflow-hidden`}
-    >
+    <div data-pulse-analyser className="flex w-full flex-col gap-2">
       <div
         data-analyser-del="1"
-        className="flex min-h-11 min-w-0 flex-1 basis-0 flex-col justify-center gap-0.5 px-4 py-2"
+        className={`${PHONE_DEST_FYLL} flex min-h-0 w-full items-center justify-between gap-3 px-3 py-2`}
       >
-        <p className="truncate text-title text-fg">{`Tall for ${navn}`}</p>
+        <div className="min-w-0">
+          <p data-analyser-tittel className="text-body font-[300] leading-none text-fg">
+            Analyse
+          </p>
+          <p data-analyser-periode className="mt-1 text-label font-normal text-fg-muted">
+            siste 30 dager
+          </p>
+        </div>
         <Link
           href={href as Route}
           data-analyser-alle-tall
-          className="inline-flex items-center gap-1 text-label font-normal text-fg [touch-action:manipulation]"
+          data-analyser-se-tallene
+          className="inline-flex shrink-0 items-center gap-1 text-label font-normal text-fg [touch-action:manipulation]"
         >
-          Alle tall
+          Se tallene
           <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
         </Link>
       </div>
       <div
         data-analyser-del="2"
-        className="pointer-events-none relative flex min-h-11 min-w-0 flex-1 basis-0 items-center overflow-hidden border-divide border-l"
-        aria-hidden
+        className={`${PHONE_DEST_FYLL} grid w-full grid-cols-2 gap-x-3 gap-y-1.5 px-3 py-2`}
       >
-        <div className="h-9 w-full px-3" data-analyser-revenue>
-          <RevenueLineChart
-            compact
-            className="pointer-events-none h-full w-full"
-            series={[
-              {
-                key: 'visninger',
-                label: 'Visninger',
-                color: PULSE_SPARK_INK,
-                data: serie,
-                fill: true,
-              },
-            ]}
-          />
-        </div>
-        <Badge
-          data-analyser-vekst
-          variant="default"
-          className="pointer-events-none absolute top-2 right-2 border-transparent bg-success-soft text-success"
-        >
-          {vekst}
-        </Badge>
+        {kpis.map((s) => (
+          <PulseAnalyseKpi key={s.id} stat={s} />
+        ))}
       </div>
+    </div>
+  );
+}
+
+function PulseAnalyseKpi({ stat }: { stat: AnalyserMockStat }) {
+  const Ikon = stat.opp ? TrendingUp : TrendingDown;
+  return (
+    <div data-analyser-kpi={stat.id} className="min-w-0 py-0.5">
+      <div className="flex items-baseline gap-1.5">
+        <p className="text-[22px] font-semibold leading-none text-fg tabular-nums">{stat.verdi}</p>
+        <span
+          data-analyser-delta={stat.opp ? 'opp' : 'ned'}
+          className={`inline-flex items-center gap-0.5 text-[12px] leading-none tabular-nums ${
+            stat.opp ? 'text-success' : 'text-danger'
+          }`}
+        >
+          <Ikon size={12} strokeWidth={2} aria-hidden />
+          {stat.delta}
+        </span>
+      </div>
+      <p className="mt-0.5 truncate text-[12px] leading-4 text-fg-muted">{stat.label}</p>
     </div>
   );
 }

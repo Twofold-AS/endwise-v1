@@ -120,7 +120,8 @@ describe('Tilbake er bare pil-SVG', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const seksjon = utenKommentarer(les('../app/(app)/_shell/seksjon-bar.tsx'));
     expect(shell).toMatch(/phoneSideChrome/);
-    expect(shell).toMatch(/<TilbakePil/);
+    expect(shell).toMatch(/data-shell-logo/);
+    expect(shell).not.toMatch(/<TilbakePil/);
     expect(shell).not.toMatch(/>Tilbake</);
     expect(seksjon).toMatch(/<TilbakePil/);
     expect(seksjon).not.toMatch(/>Tilbake</);

@@ -204,9 +204,9 @@ describe('Detaljpane — Hvem, Kompetanse og høyde under topbar', () => {
     expect(detaljer).toMatch(/overflow-y-auto/);
     expect(detaljer).toMatch(/min-h-0/);
     expect(detaljer).toMatch(/shrink-0[\s\S]{0,120}<SlettAnsatt/);
-    expect(innboks).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
+    expect(innboks).toMatch(/h-full/);
     expect(innboks).toMatch(/overflow-y-auto/);
-    expect(slot).toMatch(/h-\[calc\(100dvh-3\.5rem\)\]/);
+    expect(slot).toMatch(/overflow-y-auto/);
     expect(slot).toMatch(/overflow-y-auto/);
     expect(chrome).toMatch(/h-full min-h-0/);
     const trådListe = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
@@ -231,12 +231,14 @@ describe('Sidebar Kompetanse og Timeplan står — bunnknappene på Team er bort
     expect(org?.pills?.map((c) => c.label)).toEqual([
       'Oversikt',
       'Ansatte',
+      'Timeplan',
       'Abonnement',
       'Integrasjoner',
     ]);
     expect(org?.pills?.map((c) => c.href)).toEqual([
       '/organisasjon',
       '/organisasjon?seksjon=ansatte',
+      '/jobber',
       '/organisasjon?seksjon=abonnement',
       '/organisasjon?seksjon=integrasjoner',
     ]);

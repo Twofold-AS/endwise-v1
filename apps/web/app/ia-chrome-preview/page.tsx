@@ -49,19 +49,18 @@ function PhoneChromeMock({ sti, query }: { sti: string; query?: Record<string, s
       data-ia-chrome-preview={chrome.id}
       className="overflow-hidden rounded-[16px] bg-bg ring-1 ring-divide"
     >
-      <div data-phone-top-bar="1" className="relative flex h-row w-full items-center gap-2 px-3">
-        <span className="relative z-10 inline-flex size-8 shrink-0 items-center justify-start text-fg">
-          ←
+      <div data-phone-top-bar="1" className="flex h-row w-full items-center gap-2 px-3">
+        <span data-shell-logo className="inline-flex size-8 shrink-0 rounded-sm bg-fg" />
+        <span className="min-w-0 flex-1 rounded-full bg-inset px-3 py-1 text-label text-fg-muted">
+          Søk
         </span>
-        <p className="pointer-events-none absolute inset-x-10 truncate text-center text-title text-fg">
-          {chrome.tittel}
-        </p>
-        <div className="relative z-10 ml-auto flex shrink-0 items-center gap-2">
-          <span className={PHONE_RONNY_SIRKEL}>
-            <RonnyBot size={44} ansikt="heureux" />
-          </span>
-          <span className={PHONE_PROFIL_SIRKEL}>M</span>
-        </div>
+        <span className={PHONE_RONNY_SIRKEL}>
+          <RonnyBot size={44} ansikt="heureux" />
+        </span>
+        <span className={PHONE_PROFIL_SIRKEL}>M</span>
+      </div>
+      <div data-phone-side-tittel className="flex h-8 items-end px-3">
+        <h1 className="truncate text-title text-fg">{chrome.tittel}</h1>
       </div>
       <div data-phone-top-bar="2" className={PHONE_BAR2}>
         {chrome.bar2 === 'innboks' ? (

@@ -94,7 +94,7 @@ function KunderInner() {
                 Sortering
               </button>
               <SorteringArk apen={sorterApen} onLukk={() => setSorterApen(false)} anker={sorterRef}>
-                <SorteringGruppe tittel="Type">
+                <SorteringGruppe>
                   {KILDER.map((v) => (
                     <SorteringValg
                       key={v.key}
@@ -108,7 +108,7 @@ function KunderInner() {
                     </SorteringValg>
                   ))}
                 </SorteringGruppe>
-                <SorteringGruppe tittel="Tid">
+                <SorteringGruppe>
                   {TID_VALG.map((v) => (
                     <SorteringValg
                       key={v.key}

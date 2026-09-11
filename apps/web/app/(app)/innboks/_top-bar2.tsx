@@ -113,7 +113,7 @@ export function InboxTopBar2({
           Sortering
         </button>
         <SorteringArk apen={sorterApen} onLukk={() => setSorterApen(false)} anker={sorterRef}>
-          <SorteringGruppe tittel="Tid">
+          <SorteringGruppe>
             {TID_VALG.map((v) => (
               <SorteringValg
                 key={v.id}
@@ -127,7 +127,7 @@ export function InboxTopBar2({
               </SorteringValg>
             ))}
           </SorteringGruppe>
-          <SorteringGruppe tittel="Gruppe">
+          <SorteringGruppe>
             {INNBOKS_GRUPPER.map((v) => (
               <SorteringValg
                 key={v.key}

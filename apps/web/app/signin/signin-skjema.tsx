@@ -72,7 +72,7 @@ function landingTilFlate(steg: string | null, feil: string | null, totpKlar: boo
 type SignInHandling = 'fortsett' | 'logg-inn' | 'totp';
 
 const AUTH_FLATE = 'flex flex-col gap-4';
-const AUTH_FORTSETT = 'h-auto w-full py-4';
+const AUTH_FORTSETT = 'h-auto w-full py-5';
 
 function landingFeil(steg: string | null, feil: string | null, totpKlar: boolean): string | null {
   if (steg === 'totp' && totpKlar) return null;

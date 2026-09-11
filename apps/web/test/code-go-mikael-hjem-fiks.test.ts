@@ -73,7 +73,7 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     expect(donut).toMatch(/syncCanvasSize/);
   });
 
-  it('Analyser er to loddrette bokser uten dither', () => {
+  it('Analyser er én boks uten dither', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     expect(analyser).toMatch(/Analyse/);

@@ -5,7 +5,8 @@ import { PHONE_PROFIL_MENY_BREDDE, PHONE_PROFIL_MENY_TOPP } from './phone-chrome
 
 /**
  * Ett Sortering-ark — Tid/Gruppe, kjøretøytype eller kunde-filter
- * i samme plate under knappen. Tittel «Sortering». Brødtekst som Innstillinger.
+ * i samme plate under knappen. Ingen «Sortering»-heading, ingen seksjons-
+ * etiketter. Mindre tekst (`text-label`) så radene får plass.
  * `absolute` (ikke viewport-fixed) så arket følger ankeret i 390-kolonnen.
  */
 export function SorteringArk({
@@ -47,21 +48,17 @@ export function SorteringArk({
         data-innboks-popup="Sortering"
         role="dialog"
         aria-label="Sortering"
-        className={`absolute ${PHONE_PROFIL_MENY_TOPP} left-0 z-[75] flex ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-hidden rounded-[16px] border border-border bg-card py-2 shadow-none`}
+        className={`absolute ${PHONE_PROFIL_MENY_TOPP} left-0 z-[75] flex ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-hidden rounded-[16px] border border-border bg-card py-1.5 shadow-none`}
       >
-        <p data-sortering-tittel className="px-4 pb-1 text-body font-[450] text-fg">
-          Sortering
-        </p>
         {children}
       </div>
     </>
   );
 }
 
-export function SorteringGruppe({ tittel, children }: { tittel: string; children: ReactNode }) {
+export function SorteringGruppe({ children }: { tittel?: string; children: ReactNode }) {
   return (
-    <div data-sortering-gruppe={tittel} className="pt-1">
-      <p className="px-4 pt-1 pb-0.5 text-label text-fg-muted">{tittel}</p>
+    <div data-sortering-gruppe className="pt-0.5">
       {children}
     </div>
   );
@@ -82,7 +79,7 @@ export function SorteringValg({
       role="option"
       aria-selected={valgt}
       onClick={onVelg}
-      className={`flex h-8 w-full items-center px-4 text-left text-body font-[450] leading-none ${
+      className={`flex h-7 w-full items-center px-4 text-left text-label font-[450] leading-none ${
         valgt ? 'text-fg' : 'text-fg-muted'
       }`}
     >

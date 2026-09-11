@@ -102,8 +102,8 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(pil).not.toMatch(/M6 9l6 6 6-6/);
     expect(fab).not.toMatch(/PilNed|PilOpp/);
     expect(fab).toMatch(/data-ronny-utvid/);
-    expect(fab).toMatch(/data-ronny-handtak/);
-    expect(fab).toMatch(/data-ronny-handtak-rad/);
+    expect(fab).not.toMatch(/data-ronny-handtak/);
+    expect(fab).not.toMatch(/data-ronny-handtak-rad/);
     expect(fab).toMatch(/data-ronny-prompt-kort/);
     expect(fab).toMatch(/data-ronny-composer/);
     expect(fab).not.toMatch(/data-ronny-peek/);
@@ -112,7 +112,7 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).not.toMatch(/ronny-tenker-tekst/);
     expect(fab).not.toMatch(/RonnyTenkerTekst/);
     expect(fab).not.toMatch(/Ronny skriver/);
-    expect(fab).toMatch(/RonnyHandtak/);
+    expect(fab).not.toMatch(/RonnyHandtak/);
     expect(pil).toMatch(/data-ronny-strek/);
     expect(pil).toMatch(/RonnyHandtak/);
     expect(fab).toMatch(/data-ronny-prompt-kort/);

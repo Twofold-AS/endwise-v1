@@ -90,6 +90,8 @@ export const PULSE_DAG_FREMGANG_BLA = PULSE_DAG_FYLL_BLA;
 export const PULSE_DAG_BUE_CX = 74;
 export const PULSE_DAG_BUE_CY = 74;
 export const PULSE_DAG_BUE_R = 52;
+/** Synlig buehøyde (halv av 148px-donuten). PPF-siffer sentreres her. */
+export const PULSE_DAG_BUE_HOYDE = 78;
 
 /** Punkt på øvre bue for andel 0–1 (08→19). */
 export function dagBuePunkt(andel: number) {

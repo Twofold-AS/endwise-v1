@@ -2,6 +2,7 @@
 
 import {
   ArrowUpRight,
+  ChartColumn,
   CircleQuestionMark,
   DitherDonutChart,
   DitherGrowthChart,
@@ -261,7 +262,7 @@ export function PulseDagSirkel({
 
 /**
  * Toppkort: ukedag+dato og Endringer på samme rad ·
- * PPF-etiketter på samme linje som 08.00/19.00 · to Modus-sirkler nederst.
+ * PPF-siffer sentrert mot buehøyde · etiketter på 08.00/19.00 · Modus nederst.
  */
 export function PulseHeroFlate({
   ukedag,
@@ -341,14 +342,16 @@ export function PulseTall({
   laster: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center justify-end gap-1 px-2 text-center first:pl-0 last:pr-0">
-      <p className="text-[28px] font-semibold leading-none text-fg tabular-nums">
-        {laster ? (
-          <span className="inline-block h-7 w-8 animate-pulse rounded-sm bg-border" />
-        ) : (
-          verdi
-        )}
-      </p>
+    <div className="flex flex-col items-center justify-end px-2 text-center first:pl-0 last:pr-0">
+      <div data-pulse-tall-siffer className="flex h-[78px] w-full items-center justify-center">
+        <p className="text-[28px] font-semibold leading-none text-fg tabular-nums">
+          {laster ? (
+            <span className="inline-block h-7 w-8 animate-pulse rounded-sm bg-border" />
+          ) : (
+            verdi
+          )}
+        </p>
+      </div>
       <p data-pulse-tall-etikett className="h-[16px] text-[12px] leading-4 text-fg-muted">
         {label}
       </p>
@@ -447,7 +450,7 @@ export function PulseJobbFlis() {
       data-pulse-jobb
       className={`${PHONE_DEST_FYLL} flex h-full min-h-14 w-full min-w-0 items-center justify-between gap-3 overflow-hidden px-3 py-3.5 text-fg [touch-action:manipulation]`}
     >
-      <span className="min-w-0 truncate text-[15px] font-[650]">Jobb</span>
+      <span className="min-w-0 truncate text-[15px] font-normal">Jobb</span>
       <PulseIkonFlate>
         <Plus size={22} strokeWidth={1.75} aria-hidden />
       </PulseIkonFlate>
@@ -456,9 +459,9 @@ export function PulseJobbFlis() {
 }
 
 /**
- * Analyser — to bokser loddrett, over Jobb / På jobb.
- * Øverst: «Analyse» (lett vekt) + «siste 30 dager» + Se tallene.
- * Under: fire KPI-tall med %-endring (grønn opp / rød ned). Ingen dither/Amicro.
+ * Analyser — én boks over Jobb / På jobb.
+ * Topp som Innboks: hvit ikonboks · «Analyse» · «siste 30 dager» · Se tallene.
+ * Under: fire kompakte KPI-rader med %-endring (grønn opp / rød ned). Ingen dither.
  */
 export function PulseAnalyserKort({
   stats,
@@ -471,16 +474,16 @@ export function PulseAnalyserKort({
   const kpis = stats.slice(0, 4);
 
   return (
-    <div data-pulse-analyser className="flex w-full flex-col gap-2">
-      <div
-        data-analyser-del="1"
-        className={`${PHONE_DEST_FYLL} flex min-h-0 w-full items-center justify-between gap-3 px-3 py-2`}
-      >
-        <div className="min-w-0">
-          <p data-analyser-tittel className="text-body font-[300] leading-none text-fg">
+    <div data-pulse-analyser className={`${PHONE_DEST_FYLL} flex w-full flex-col px-4 py-3`}>
+      <div className="flex min-h-11 w-full min-w-0 items-center gap-3">
+        <PulseIkonFlate>
+          <ChartColumn size={22} strokeWidth={1.75} aria-hidden />
+        </PulseIkonFlate>
+        <div className="min-w-0 flex-1">
+          <p data-analyser-tittel className="truncate text-label leading-none text-fg">
             Analyse
           </p>
-          <p data-analyser-periode className="mt-1 text-label font-normal text-fg-muted">
+          <p data-analyser-periode className="mt-1 truncate text-[12px] leading-4 text-fg-muted">
             siste 30 dager
           </p>
         </div>
@@ -494,10 +497,7 @@ export function PulseAnalyserKort({
           <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
         </Link>
       </div>
-      <div
-        data-analyser-del="2"
-        className={`${PHONE_DEST_FYLL} grid w-full grid-cols-2 gap-x-3 gap-y-1.5 px-3 py-2`}
-      >
+      <div data-analyser-kpi-liste className="mt-2 flex flex-col">
         {kpis.map((s) => (
           <PulseAnalyseKpi key={s.id} stat={s} />
         ))}
@@ -509,20 +509,23 @@ export function PulseAnalyserKort({
 function PulseAnalyseKpi({ stat }: { stat: AnalyserMockStat }) {
   const Ikon = stat.opp ? TrendingUp : TrendingDown;
   return (
-    <div data-analyser-kpi={stat.id} className="min-w-0 py-0.5">
-      <div className="flex items-baseline gap-1.5">
-        <p className="text-[22px] font-semibold leading-none text-fg tabular-nums">{stat.verdi}</p>
+    <div
+      data-analyser-kpi={stat.id}
+      className="flex h-7 min-w-0 items-center justify-between gap-2"
+    >
+      <p className="min-w-0 truncate text-[12px] leading-4 text-fg-muted">{stat.label}</p>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <p className="text-[15px] font-semibold leading-none text-fg tabular-nums">{stat.verdi}</p>
         <span
           data-analyser-delta={stat.opp ? 'opp' : 'ned'}
-          className={`inline-flex items-center gap-0.5 text-[12px] leading-none tabular-nums ${
+          className={`inline-flex items-center gap-0.5 text-[11px] leading-none tabular-nums ${
             stat.opp ? 'text-success' : 'text-danger'
           }`}
         >
-          <Ikon size={12} strokeWidth={2} aria-hidden />
+          <Ikon size={11} strokeWidth={2} aria-hidden />
           {stat.delta}
         </span>
       </div>
-      <p className="mt-0.5 truncate text-[12px] leading-4 text-fg-muted">{stat.label}</p>
     </div>
   );
 }

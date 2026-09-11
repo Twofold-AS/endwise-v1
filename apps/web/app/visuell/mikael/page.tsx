@@ -26,17 +26,24 @@ import { PhoneProfilMeny } from '@/app/(app)/_shell/phone-profil-meny';
 import { PhoneSokFelt } from '@/app/(app)/_shell/phone-sok-felt';
 import { RONNY_PHONE_IDLE, RonnyBot } from '@/app/(app)/_workshop/ronny-bot';
 import type { RonnyAnsikt } from '@/app/(app)/_workshop/ronny-idle';
-import { RonnyForstorIkon, RonnyHandtak } from '@/app/(app)/_workshop/ronny-ikoner';
+import { RonnyForminskIkon, RonnyForstorIkon } from '@/app/(app)/_workshop/ronny-ikoner';
 import { RONNY_SHEET_RADIUS_PX } from '@/app/(app)/_workshop/ronny-sheet';
 
 /**
  * Uinnlogget visuell GO — ekte chrome/sheet/felt, ikke HTML-mock.
- * ?tema=light|dark  ?vis=chrome|meny|sheet|sok
+ * ?tema=light|dark  ?vis=chrome|meny|sheet|sheet-full|sok
  */
-type Vis = 'chrome' | 'meny' | 'sheet' | 'sok' | 'ansikt';
+type Vis = 'chrome' | 'meny' | 'sheet' | 'sheet-full' | 'sok' | 'ansikt';
 
 function lesVis(raw: string | null): Vis {
-  if (raw === 'meny' || raw === 'sheet' || raw === 'sok' || raw === 'ansikt') return raw;
+  if (
+    raw === 'meny' ||
+    raw === 'sheet' ||
+    raw === 'sheet-full' ||
+    raw === 'sok' ||
+    raw === 'ansikt'
+  )
+    return raw;
   return 'chrome';
 }
 
@@ -54,6 +61,7 @@ function MikaelGoInnhold() {
     <div className={`min-h-dvh bg-bg text-fg ${PHONE_SAFE_TOP}`}>
       {vis === 'ansikt' ? <AnsiktGo /> : <Chrome vis={vis} />}
       {vis === 'sheet' ? <Sheet /> : null}
+      {vis === 'sheet-full' ? <SheetFull /> : null}
       {vis === 'sok' ? <SokGo /> : null}
     </div>
   );
@@ -186,30 +194,15 @@ function SokGo() {
   );
 }
 
-function Sheet() {
+function SheetInnhold({ forstor }: { forstor: boolean }) {
   return (
-    <div
-      data-ronny-sheet
-      data-ronny-flate
-      className="fixed inset-x-0 bottom-0 z-[70] flex h-[80dvh] flex-col overflow-hidden bg-surface text-fg shadow-none"
-      style={{
-        borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
-        borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
-      }}
-      role="dialog"
-      aria-label="Ronny"
-    >
-      <div className="flex justify-center pt-0.5">
-        <span className="flex min-h-8 items-center justify-center px-6 py-0.5">
-          <RonnyHandtak />
-        </span>
-      </div>
+    <>
       <div
         data-ronny-sheet-header
         className="flex h-row shrink-0 items-center justify-between px-2"
       >
         <span className="inline-flex size-11 items-center justify-center text-fg">
-          <RonnyForstorIkon />
+          {forstor ? <RonnyForstorIkon /> : <RonnyForminskIkon />}
         </span>
         <span className="truncate text-title text-fg">Ronny</span>
         <span className="inline-flex size-11 items-center justify-center text-fg">
@@ -231,7 +224,57 @@ function Sheet() {
           </PromptInput>
         </div>
       </div>
-    </div>
+    </>
+  );
+}
+
+function Sheet() {
+  return (
+    <>
+      <div className="fixed inset-0 z-[60] bg-fg/25" data-ronny-scrim />
+      <div
+        data-ronny-sheet
+        data-ronny-flate
+        data-ronny-hoyde={80}
+        className="fixed inset-x-0 bottom-0 z-[70] flex h-[80dvh] flex-col overflow-hidden bg-surface text-fg shadow-none"
+        style={{
+          borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
+          borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+        }}
+        role="dialog"
+        aria-label="Ronny"
+      >
+        <SheetInnhold forstor />
+      </div>
+    </>
+  );
+}
+
+function SheetFull() {
+  return (
+    <>
+      <div className="fixed inset-0 z-[60] bg-fg/25" data-ronny-scrim />
+      <div
+        data-ronny-sheet
+        data-ronny-flate
+        data-ronny-hoyde={100}
+        className="fixed inset-x-0 top-0 z-[70] flex h-[100dvh] flex-col overflow-hidden bg-surface text-fg shadow-none"
+        style={{
+          height: '100dvh',
+          top: 0,
+          borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
+          borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+        }}
+        role="dialog"
+        aria-label="Ronny"
+      >
+        <SheetInnhold forstor={false} />
+      </div>
+    </>
   );
 }
 

@@ -95,10 +95,7 @@ export default function VisualFormsPreview() {
             <SorteringGo
               id="kunder"
               startApen
-              grupper={[
-                { tittel: 'Type', valg: ['Alle', 'Endwise', 'Quick'] },
-                { tittel: 'Tid', valg: ['Nyeste', 'Eldste'] },
-              ]}
+              grupper={[{ valg: ['Alle', 'Endwise', 'Quick'] }, { valg: ['Nyeste', 'Eldste'] }]}
             />
           </div>
         </SideChromeSkall>

@@ -51,7 +51,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
   });
 
-  it('Analyser er to loddrette bokser over Jobb med Se tallene', () => {
+  it('Analyser er én boks over Jobb med Se tallene', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
       'innboks',
@@ -87,7 +87,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(popup).toMatch(/SorteringArk/);
     expect(ark).toMatch(/data-innboks-popup-scrim/);
     expect(ark).toMatch(/fixed inset-0 z-\[70\]/);
-    expect(ark).toMatch(/text-body/);
+    expect(ark).toMatch(/text-label/);
     const samtale = utenKommentarer(les('../app/(app)/innboks/_ny-samtale.tsx'));
     expect(samtale).toMatch(/data-ny-melding-send/);
     expect(samtale).toMatch(/Send\s*<\/StatefulButton>/);

@@ -2,7 +2,12 @@
 
 import { Suspense } from 'react';
 import { InboxFilterProvider } from '../(app)/_shell/inbox-filter';
-import { PHONE_BAR2, PHONE_PROFIL_SIRKEL, PHONE_RONNY_SIRKEL } from '../(app)/_shell/phone-chrome';
+import {
+  PHONE_BAR2,
+  PHONE_PROFIL_SIRKEL,
+  PHONE_RONNY_SIRKEL,
+  PHONE_SIDE_UNDER,
+} from '../(app)/_shell/phone-chrome';
 import { PhoneProfilMeny } from '../(app)/_shell/phone-profil-meny';
 import { phoneSideChrome } from '../(app)/_shell/phone-side-chrome';
 import { PulseJobbFlis } from '../(app)/_shell/pulse-kort';
@@ -25,6 +30,14 @@ const SIDER: { sti: string; query?: Record<string, string> }[] = [
   { sti: '/organisasjon' },
   { sti: '/innboks' },
 ];
+
+const PREVIEW_DEST = [
+  { key: 'home', label: 'Verkstedet' },
+  { key: 'innboks', label: 'Innboks' },
+  { key: 'saker', label: 'Timeplan' },
+  { key: 'kunder', label: 'Kunder' },
+  { key: 'tjenester', label: 'Tjenester' },
+] as const;
 
 const RONNY_ANSIKT: { id: RonnyAnsikt; label: string }[] = [
   { id: 'curieux', label: 'Curious' },
@@ -60,38 +73,57 @@ function PhoneChromeMock({ sti, query }: { sti: string; query?: Record<string, s
         </span>
         <span className={PHONE_PROFIL_SIRKEL}>M</span>
       </div>
-      <div data-phone-side-tittel className="flex h-8 items-end px-3">
-        <h1 className="truncate text-title text-fg">{chrome.tittel}</h1>
-      </div>
       <div data-phone-top-bar="2" className={PHONE_BAR2}>
-        {chrome.bar2 === 'innboks' ? (
-          <InboxFilterProvider>
-            <InboxTopBar2 />
-          </InboxFilterProvider>
-        ) : (
-          <nav
-            data-phone-settings-nav
-            data-phone-side-nav={chrome.id}
-            aria-label={chrome.tittel}
-            className="flex min-w-0 flex-1 items-end gap-5 overflow-x-auto"
-          >
-            {chrome.faner.map((f) => {
-              const aktiv = f.id === chrome.aktiv;
-              return (
-                <span
-                  key={f.id}
-                  data-phone-settings-fane={f.id}
-                  aria-current={aktiv ? 'page' : undefined}
-                  className={`shrink-0 border-b-2 pb-1 text-label ${
-                    aktiv ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
-                  }`}
-                >
-                  {f.label}
-                </span>
-              );
-            })}
-          </nav>
-        )}
+        <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
+          {PREVIEW_DEST.map((d) => (
+            <span
+              key={d.key}
+              data-phone-dest={d.key}
+              className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg ${
+                d.key === chrome.id || (chrome.id === 'timeplan' && d.key === 'saker')
+                  ? 'bg-sidebar-active'
+                  : ''
+              }`}
+            >
+              {d.label}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div data-phone-side-under className={PHONE_SIDE_UNDER}>
+        <h1 data-phone-side-tittel className="truncate text-title font-[650] leading-6 text-fg">
+          {chrome.tittel}
+        </h1>
+        <div data-phone-side-verktoy className="flex min-h-8 min-w-0 items-end">
+          {chrome.bar2 === 'innboks' ? (
+            <InboxFilterProvider>
+              <InboxTopBar2 />
+            </InboxFilterProvider>
+          ) : (
+            <nav
+              data-phone-settings-nav
+              data-phone-side-nav={chrome.id}
+              aria-label={chrome.tittel}
+              className="flex min-w-0 flex-1 items-end gap-5 overflow-x-auto"
+            >
+              {chrome.faner.map((f) => {
+                const aktiv = f.id === chrome.aktiv;
+                return (
+                  <span
+                    key={f.id}
+                    data-phone-settings-fane={f.id}
+                    aria-current={aktiv ? 'page' : undefined}
+                    className={`shrink-0 border-b-2 pb-1 text-label ${
+                      aktiv ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
+                    }`}
+                  >
+                    {f.label}
+                  </span>
+                );
+              })}
+            </nav>
+          )}
+        </div>
       </div>
       <div className="h-px bg-border" />
     </div>

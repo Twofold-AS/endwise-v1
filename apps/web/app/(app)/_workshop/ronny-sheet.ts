@@ -1,6 +1,7 @@
 /**
  * Ronny-sheet — kun 80 % og 100 % av synlig høyde.
- * Ingen peek. Høyde følger visualViewport / dvh, ikke rå 100vh alene.
+ * Ingen peek. 80 % følger visualViewport / dvh. 100 % er full viewport
+ * (`100dvh` + `top: 0`), med radius bare i toppen.
  */
 
 export const RONNY_SHEET_SNAPS = [80, 100] as const;

@@ -202,12 +202,15 @@ describe('Desktop Ronny — overlay-panel, ikke sheet', () => {
     expect(desktop.slice(0, 400)).not.toMatch(/Forstørr|Full høyde/);
   });
 
-  it('telefon-sheet er urørt — 80/100, forstørr, handle, md:hidden', () => {
+  it('telefon-sheet er 80/100, forstørr, uten grabber, md:hidden', () => {
     const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
     const sheet = fab.slice(fab.indexOf('data-ronny-sheet'), fab.indexOf('data-ronny-desktop'));
     expect(sheet).toMatch(/data-ronny-forstor/);
-    expect(sheet).toMatch(/data-ronny-handtak/);
+    expect(sheet).not.toMatch(/data-ronny-handtak/);
     expect(sheet).toMatch(/data-ronny-hoyde/);
+    expect(sheet).toMatch(/100dvh/);
+    expect(sheet).toMatch(/top: 0/);
+    expect(sheet).toMatch(/RONNY_SHEET_RADIUS_PX/);
     expect(fab).toMatch(/className="md:hidden"/);
   });
 });

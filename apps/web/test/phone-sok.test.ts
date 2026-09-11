@@ -92,8 +92,8 @@ describe('Mikael Ronny-sheet — kompakt etikett + full forminsk (07.09 kveld)',
   it('kompakt sheet har mindre topp-luft og bare Ronny-tekst uten bot-animasjon', () => {
     const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
     const sheet = fab.slice(fab.indexOf('data-ronny-sheet'), fab.indexOf('data-ronny-desktop'));
-    expect(sheet).toMatch(/data-ronny-handtak/);
-    expect(sheet).toMatch(/pt-0\.5|pt-1|pt-px/);
+    expect(sheet).not.toMatch(/data-ronny-handtak/);
+    expect(sheet).not.toMatch(/RonnyHandtak/);
     expect(sheet).not.toMatch(/flex justify-center pt-2/);
     expect(sheet).toMatch(/>Ronny</);
     expect(sheet).toMatch(/hoyde === 80|!utvidet/);

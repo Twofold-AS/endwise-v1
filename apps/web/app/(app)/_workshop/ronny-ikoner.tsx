@@ -10,6 +10,7 @@ const RONNY_PIL_D =
 
 /**
  * Horisontal strek (iOS-grabber), ~36×5 muted capsule.
+ * Ikke montert i åpen sheet (Mikael 11.09.2026). Asset beholdt.
  * Ingen pakke i UI-PAKKER har denne — vaul/shadcn Sheet er ikke hentet.
  */
 export function RonnyHandtak() {

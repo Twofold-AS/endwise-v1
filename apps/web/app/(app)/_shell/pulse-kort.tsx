@@ -450,7 +450,7 @@ export function PulseJobbFlis() {
       data-pulse-jobb
       className={`${PHONE_DEST_FYLL} flex h-full min-h-14 w-full min-w-0 items-center justify-between gap-3 overflow-hidden px-3 py-3.5 text-fg [touch-action:manipulation]`}
     >
-      <span className="min-w-0 truncate text-[15px] font-[650]">Jobb</span>
+      <span className="min-w-0 truncate text-[15px] font-normal">Jobb</span>
       <PulseIkonFlate>
         <Plus size={22} strokeWidth={1.75} aria-hidden />
       </PulseIkonFlate>

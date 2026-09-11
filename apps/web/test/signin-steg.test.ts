@@ -181,7 +181,7 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
   });
 
   it('Fortsett har mer vertikal padding enn h-control', () => {
-    expect(kilde).toMatch(/AUTH_FORTSETT = 'h-auto w-full py-4'/);
+    expect(kilde).toMatch(/AUTH_FORTSETT = 'h-auto w-full py-5'/);
     expect(kilde).toMatch(/className=\{AUTH_FORTSETT\}/);
   });
 

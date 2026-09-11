@@ -15,27 +15,14 @@ import {
 } from '@endwise/ui';
 import { DefaultChatTransport } from 'ai';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { type RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useSidebarState } from '../_shell/sidebar-state';
 import { erTillattGaaTil } from './gaa-til';
 import { GradualBlur } from './gradual-blur';
 import { norskChatFeil } from './norsk-chat-feil';
 import { RonnyBot } from './ronny-bot';
-import { RonnyForminskIkon, RonnyForstorIkon, RonnyHandtak } from './ronny-ikoner';
-import {
-  RONNY_SHEET_RADIUS_PX,
-  ronnySheetEtterDra,
-  ronnySheetHoydePx,
-  synligViewportHoyde,
-} from './ronny-sheet';
+import { RonnyForminskIkon, RonnyForstorIkon } from './ronny-ikoner';
+import { RONNY_SHEET_RADIUS_PX, ronnySheetHoydePx, synligViewportHoyde } from './ronny-sheet';
 import { useRonnySheet } from './ronny-sheet-state';
 import { sidekontekst } from './sidekontekst';
 
@@ -63,7 +50,8 @@ function gaaTilHref(del: { type: string; state?: string; output?: unknown }): st
 
 /**
  * KI-Ronny: bunn-sheet på telefon (80/100), høyre overlay på desktop (max 400px).
- * Ingen stripe, ingen peek. Telefon: forstørr / tydelig swipe opp. Desktop: X / Escape.
+ * Ingen stripe, ingen peek, ingen iOS-grabber. Telefon: forstørr → 100dvh.
+ * Desktop: X / Escape.
  */
 export function WorkshopBloub() {
   const pathname = usePathname() ?? '';
@@ -78,7 +66,6 @@ export function WorkshopBloub() {
   const composerRef = useRef<HTMLDivElement>(null);
   const phoneLoggRef = useRef<HTMLDivElement>(null);
   const desktopLoggRef = useRef<HTMLDivElement>(null);
-  const draStartY = useRef<number | null>(null);
   const sisteGaaTil = useRef<string>('');
   const side = useMemo(() => sidekontekst(pathname, search), [pathname, search]);
   const utvidet = hoyde === 100;
@@ -178,20 +165,6 @@ export function WorkshopBloub() {
     send(melding.text);
   }
 
-  function onHandtakNed(e: ReactPointerEvent<HTMLButtonElement>) {
-    draStartY.current = e.clientY;
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-
-  function onHandtakOpp(e: ReactPointerEvent<HTMLButtonElement>) {
-    if (draStartY.current == null) return;
-    const dy = e.clientY - draStartY.current;
-    draStartY.current = null;
-    const gest = ronnySheetEtterDra(dy);
-    if (gest === 'lukk') lukk();
-    else if (gest === 'forstor') forstor();
-  }
-
   if (pathname.startsWith('/oppstart')) return null;
 
   const submitStatus = opptatt ? status : 'ready';
@@ -288,32 +261,21 @@ export function WorkshopBloub() {
           data-ronny-flate
           data-ronny-hoyde={hoyde}
           data-workshop-shell
-          className={`fixed inset-x-0 bottom-0 z-[70] flex flex-col overflow-hidden bg-surface text-fg shadow-none ${
-            hoyde === 100 ? 'h-[100dvh]' : 'h-[80dvh]'
+          className={`fixed inset-x-0 z-[70] flex flex-col overflow-hidden bg-surface text-fg shadow-none ${
+            hoyde === 100 ? 'top-0 h-[100dvh]' : 'bottom-0 h-[80dvh]'
           }`}
           style={{
-            height: sheetHoyde,
+            height: hoyde === 100 ? '100dvh' : sheetHoyde,
+            top: hoyde === 100 ? 0 : undefined,
             borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
             borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
+            borderBottomLeftRadius: 0,
+            borderBottomRightRadius: 0,
             transition: `height 200ms ${APPLE_EASE}`,
           }}
           role="dialog"
           aria-label="Ronny"
         >
-          <div className="flex justify-center pt-0.5">
-            <button
-              type="button"
-              data-ronny-handtak
-              data-ronny-handtak-rad
-              data-ronny-utvid
-              aria-label="Dra for å lukke eller forstørre"
-              onPointerDown={onHandtakNed}
-              onPointerUp={onHandtakOpp}
-              className="flex min-h-8 cursor-grab touch-none items-center justify-center px-6 py-0.5 active:cursor-grabbing"
-            >
-              <RonnyHandtak />
-            </button>
-          </div>
           <div
             data-ronny-sheet-header
             className="flex h-row shrink-0 items-center justify-between px-2"
@@ -322,6 +284,7 @@ export function WorkshopBloub() {
               <button
                 type="button"
                 data-ronny-forstor
+                data-ronny-utvid
                 aria-label="Forstørr"
                 aria-pressed={utvidet}
                 className={HIT}

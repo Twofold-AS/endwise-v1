@@ -118,3 +118,37 @@ describe('CODE-GO Mikael 11.09.2026 oppfølging — PPF, Analyse, chrome 1+2, So
     expect(ku).toMatch(/Endwise/);
   });
 });
+
+describe('CODE-GO Mikael 11.09.2026 tillegg — Jobb-vekt, Ronny uten strek, 100dvh', () => {
+  it('Jobb-etikett er font-normal, ikke 650/700', () => {
+    const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
+    const jobb = funksjon(kort, 'PulseJobbFlis');
+    expect(jobb).toMatch(/>Jobb</);
+    expect(jobb).toMatch(/font-normal/);
+    expect(jobb).not.toMatch(/font-\[650\]/);
+    expect(jobb).not.toMatch(/font-\[700\]/);
+    expect(jobb).not.toMatch(/font-bold/);
+  });
+
+  it('åpen Ronny-sheet har ingen grabber-strek; 100 % er 100dvh med topp-radius', () => {
+    const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
+    const sheet = fab.slice(fab.indexOf('data-ronny-sheet'), fab.indexOf('data-ronny-desktop'));
+    expect(sheet).not.toMatch(/RonnyHandtak/);
+    expect(sheet).not.toMatch(/data-ronny-handtak/);
+    expect(sheet).not.toMatch(/data-ronny-strek/);
+    expect(sheet).toMatch(/hoyde === 100/);
+    expect(sheet).toMatch(/100dvh/);
+    expect(sheet).toMatch(/top: 0/);
+    expect(sheet).toMatch(/RONNY_SHEET_RADIUS_PX/);
+    expect(sheet).toMatch(/borderBottomLeftRadius: 0/);
+    const go = utenKommentarer(les('../app/visuell/mikael/page.tsx'));
+    expect(go).toMatch(/sheet-full/);
+    expect(go).toMatch(/SheetFull/);
+    expect(go).not.toMatch(/RonnyHandtak/);
+  });
+
+  it('Fortsett-knapper har py-5, ikke py-4', () => {
+    const kilde = les('../app/signin/signin-skjema.tsx');
+    expect(kilde).toMatch(/AUTH_FORTSETT = 'h-auto w-full py-5'/);
+  });
+});

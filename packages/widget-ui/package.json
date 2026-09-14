@@ -12,6 +12,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@endwise/events": "workspace:*",
     "@endwise/widget-tokens": "workspace:*"
   },
   "peerDependencies": {

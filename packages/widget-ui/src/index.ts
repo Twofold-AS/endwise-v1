@@ -5,3 +5,4 @@
 export * from './client.ts';
 export * from './EndwiseWidget.tsx';
 export * from './embed.ts';
+export * from './modes.ts';

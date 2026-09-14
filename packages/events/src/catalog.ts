@@ -4,6 +4,8 @@
  * Hvert event er tenant-skopet (multi-tenant, techstack §2 Database).
  */
 
+import type { WidgetFunnelProps } from './widget-funnel.ts';
+
 export interface EventMeta {
   /** Tenant som eier hendelsen. Obligatorisk på alle events. */
   tenantId: string;
@@ -22,6 +24,14 @@ export interface EventMeta {
 export interface EventCatalog {
   'tenant.created': { tenantId: string; name: string };
   'tenant.modules.changed': { tenantId: string; modules: string[] };
+  /** F4-14 — cookieless funnel. Payload er allowlistet i widget-funnel.ts. */
+  'widget.viewed': WidgetFunnelProps;
+  'widget.tab': WidgetFunnelProps;
+  'widget.booking.step': WidgetFunnelProps;
+  'widget.booking.submitted': WidgetFunnelProps;
+  'widget.chat.sent': WidgetFunnelProps;
+  'widget.shop.viewed': WidgetFunnelProps;
+  'widget.shop.blocked': WidgetFunnelProps;
 }
 
 export type EventName = keyof EventCatalog;

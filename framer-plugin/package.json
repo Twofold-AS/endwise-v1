@@ -1,14 +1,16 @@
 {
   "name": "@endwise/framer-plugin",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@endwise/widget-ui": "workspace:*",
     "framer-plugin": "^3.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -18,6 +20,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.9.3",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^4.1.10"
   }
 }

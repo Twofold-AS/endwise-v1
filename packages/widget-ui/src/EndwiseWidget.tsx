@@ -4,8 +4,11 @@ import {
   type ChatReply,
   createWidgetClient,
   WIDGET_DISCLOSURE_TEXT,
+  type WidgetClient,
   type WidgetService,
+  type WidgetShopItem,
 } from './client.ts';
+import type { WidgetMode } from './modes.ts';
 import { WIDGET_FALLBACK as fb } from './widget-fallbacks.ts';
 
 /**
@@ -18,6 +21,13 @@ export interface EndwiseWidgetProps {
   apiBase: string;
   publishableKey: string;
   locale?: 'no' | 'en';
+  /**
+   * Framer-modus (F4-09). Uten modus vises chat + booking som før (/butikk).
+   * `webshop` feiler lukket uten shop-flagg. `tracking` skrur på funnel-hooks.
+   */
+  mode?: WidgetMode;
+  /** F4-14. Av som default utenom tracking-modus, så /butikk ikke spammer stream. */
+  trackEvents?: boolean;
   /**
    * Samme katalog som Tjenester (`services.list` / `service_versions`).
    * Brukes som start og som fallback når `/widget/services` ikke svarer.
@@ -49,10 +59,14 @@ export function EndwiseWidget({
   apiBase,
   publishableKey,
   locale = 'no',
+  mode,
+  trackEvents,
   initialServices,
 }: EndwiseWidgetProps) {
   const clientRef = useRef(createWidgetClient({ apiBase, publishableKey }));
-  const [tab, setTab] = useState<'chat' | 'booking'>('chat');
+  const instrument = trackEvents === true || mode === 'tracking';
+  const initialTab: 'chat' | 'booking' = mode === 'booking' ? 'booking' : 'chat';
+  const [tab, setTab] = useState<'chat' | 'booking'>(initialTab);
   const [messages, setMessages] = useState<{ from: 'you' | 'ai'; text: string }[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -85,6 +99,11 @@ export function EndwiseWidget({
     lastTjenester();
   }, [lastTjenester]);
 
+  useEffect(() => {
+    if (!instrument) return;
+    void clientRef.current.track('widget.viewed', { mode: mode ?? 'full', locale });
+  }, [instrument, locale, mode]);
+
   async function send() {
     const text = input.trim();
     if (!text || busy) return;
@@ -92,6 +111,9 @@ export function EndwiseWidget({
     setMessages((m) => [...m, { from: 'you', text }]);
     setBusy(true);
     try {
+      if (instrument) {
+        void clientRef.current.track('widget.chat.sent', { mode: mode ?? 'ai', locale });
+      }
       const reply: ChatReply = await clientRef.current.chat(text, locale);
       setMessages((m) => [...m, { from: 'ai', text: reply.reply }]);
     } catch {
@@ -126,122 +148,161 @@ export function EndwiseWidget({
         <span>{WIDGET_DISCLOSURE_TEXT[locale]}</span>
       </div>
 
-      {/* Faner */}
-      <div style={{ display: 'flex', borderBottom: `1px solid var(--ew-border, ${fb.border})` }}>
-        {(['chat', 'booking'] as const).map((t) => (
-          <button
-            type="button"
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              flex: 1,
-              padding: '10px 0',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: tab === t ? `2px solid ${accent}` : '2px solid transparent',
-              color: tab === t ? `var(--ew-fg, ${fb.fg})` : `var(--ew-fg-muted, ${fb.fgMuted})`,
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-            }}
-          >
-            {t === 'chat'
-              ? locale === 'no'
-                ? 'Chat'
-                : 'Chat'
-              : locale === 'no'
-                ? 'Book time'
-                : 'Book'}
-          </button>
-        ))}
-      </div>
+      {mode === 'tracking' && (
+        <p
+          style={{
+            margin: 0,
+            padding: '8px 12px',
+            fontSize: 12,
+            color: `var(--ew-fg-muted, ${fb.fgMuted})`,
+            borderBottom: `1px solid var(--ew-border, ${fb.border})`,
+          }}
+        >
+          {locale === 'no'
+            ? 'Funnel-måling på (uten cookies). Steg sendes til /widget/events.'
+            : 'Cookieless funnel is on. Steps go to /widget/events.'}
+        </p>
+      )}
 
-      {tab === 'chat' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', height: 380 }}>
+      {mode === 'webshop' ? (
+        <ShopPanel client={clientRef.current} locale={locale} instrument={instrument} />
+      ) : (
+        <>
+          {/* Faner */}
           <div
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: 12,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-            }}
+            style={{ display: 'flex', borderBottom: `1px solid var(--ew-border, ${fb.border})` }}
           >
-            {messages.length === 0 && (
-              <p style={{ fontSize: 13, color: `var(--ew-fg-muted, ${fb.fgMuted})` }}>
-                {locale === 'no'
-                  ? 'Spør oss om verkstedtjenester, priser eller ledig tid.'
-                  : 'Ask us about services, prices or availability.'}
-              </p>
-            )}
-            {messages.map((m, i) => (
-              <div
-                // biome-ignore lint/suspicious/noArrayIndexKey: append-only chat-logg
-                key={i}
+            {(mode === 'booking'
+              ? (['booking'] as const)
+              : mode === 'ai'
+                ? (['chat'] as const)
+                : (['chat', 'booking'] as const)
+            ).map((t) => (
+              <button
+                type="button"
+                key={t}
+                onClick={() => {
+                  setTab(t);
+                  if (instrument) {
+                    void clientRef.current.track('widget.tab', {
+                      tab: t,
+                      mode: mode ?? 'full',
+                      locale,
+                    });
+                  }
+                }}
                 style={{
-                  alignSelf: m.from === 'you' ? 'flex-end' : 'flex-start',
-                  maxWidth: '80%',
-                  padding: '8px 10px',
-                  borderRadius: 10,
+                  flex: 1,
+                  padding: '10px 0',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: tab === t ? `2px solid ${accent}` : '2px solid transparent',
+                  color: tab === t ? `var(--ew-fg, ${fb.fg})` : `var(--ew-fg-muted, ${fb.fgMuted})`,
+                  cursor: 'pointer',
+                  fontWeight: 600,
                   fontSize: 13,
-                  background: m.from === 'you' ? accent : `var(--ew-surface, ${fb.surface})`,
-                  color: m.from === 'you' ? accentFg : `var(--ew-fg, ${fb.fg})`,
                 }}
               >
-                {m.text}
-              </div>
+                {t === 'chat'
+                  ? locale === 'no'
+                    ? 'Chat'
+                    : 'Chat'
+                  : locale === 'no'
+                    ? 'Book time'
+                    : 'Book'}
+              </button>
             ))}
           </div>
-          <div
-            style={{
-              display: 'flex',
-              gap: 8,
-              padding: 12,
-              borderTop: `1px solid var(--ew-border, ${fb.border})`,
-            }}
-          >
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && send()}
-              placeholder={locale === 'no' ? 'Skriv en melding…' : 'Type a message…'}
-              style={{
-                flex: 1,
-                padding: '8px 10px',
-                borderRadius: 8,
-                border: `1px solid var(--ew-border, ${fb.border})`,
-                background: `var(--ew-bg, ${fb.bg})`,
-                color: `var(--ew-fg, ${fb.fg})`,
-                fontSize: 16,
-              }}
+
+          {tab === 'chat' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', height: 380 }}>
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: 12,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}
+              >
+                {messages.length === 0 && (
+                  <p style={{ fontSize: 13, color: `var(--ew-fg-muted, ${fb.fgMuted})` }}>
+                    {locale === 'no'
+                      ? 'Spør oss om verkstedtjenester, priser eller ledig tid.'
+                      : 'Ask us about services, prices or availability.'}
+                  </p>
+                )}
+                {messages.map((m, i) => (
+                  <div
+                    // biome-ignore lint/suspicious/noArrayIndexKey: append-only chat-logg
+                    key={i}
+                    style={{
+                      alignSelf: m.from === 'you' ? 'flex-end' : 'flex-start',
+                      maxWidth: '80%',
+                      padding: '8px 10px',
+                      borderRadius: 10,
+                      fontSize: 13,
+                      background: m.from === 'you' ? accent : `var(--ew-surface, ${fb.surface})`,
+                      color: m.from === 'you' ? accentFg : `var(--ew-fg, ${fb.fg})`,
+                    }}
+                  >
+                    {m.text}
+                  </div>
+                ))}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  padding: 12,
+                  borderTop: `1px solid var(--ew-border, ${fb.border})`,
+                }}
+              >
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && send()}
+                  placeholder={locale === 'no' ? 'Skriv en melding…' : 'Type a message…'}
+                  style={{
+                    flex: 1,
+                    padding: '8px 10px',
+                    borderRadius: 8,
+                    border: `1px solid var(--ew-border, ${fb.border})`,
+                    background: `var(--ew-bg, ${fb.bg})`,
+                    color: `var(--ew-fg, ${fb.fg})`,
+                    fontSize: 16,
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={send}
+                  disabled={busy}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: accent,
+                    color: accentFg,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    opacity: busy ? 0.5 : 1,
+                  }}
+                >
+                  {locale === 'no' ? 'Send' : 'Send'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <BookingPanel
+              client={clientRef.current}
+              state={servicesState}
+              locale={locale}
+              onRetry={lastTjenester}
+              instrument={instrument}
             />
-            <button
-              type="button"
-              onClick={send}
-              disabled={busy}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 8,
-                border: 'none',
-                background: accent,
-                color: accentFg,
-                fontWeight: 600,
-                cursor: 'pointer',
-                opacity: busy ? 0.5 : 1,
-              }}
-            >
-              {locale === 'no' ? 'Send' : 'Send'}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <BookingPanel
-          client={clientRef.current}
-          state={servicesState}
-          locale={locale}
-          onRetry={lastTjenester}
-        />
+          )}
+        </>
       )}
     </div>
   );
@@ -253,11 +314,13 @@ function BookingPanel({
   state,
   locale,
   onRetry,
+  instrument,
 }: {
   client: ReturnType<typeof createWidgetClient>;
   state: ServicesState;
   locale: 'no' | 'en';
   onRetry: () => void;
+  instrument: boolean;
 }) {
   const services = state.status === 'ready' ? state.services : [];
   const [serviceVersionId, setServiceVersionId] = useState('');
@@ -278,6 +341,7 @@ function BookingPanel({
     setChosen('');
     setHentet(false);
     if (!serviceVersionId) return;
+    if (instrument) void client.track('widget.booking.step', { step: 'availability', locale });
     try {
       const r = await client.availability(serviceVersionId, date);
       setSlots(r.slots);
@@ -296,6 +360,7 @@ function BookingPanel({
         startsAt: chosen,
         customer: { name, phone },
       });
+      if (instrument) void client.track('widget.booking.submitted', { step: 'confirm', locale });
       setDone(r.bookingId);
     } catch (e) {
       setError((e as Error).message);
@@ -384,6 +449,9 @@ function BookingPanel({
           setSlots(cleared.slots);
           setChosen(cleared.chosen);
           setHentet(false);
+          if (instrument && e.target.value) {
+            void client.track('widget.booking.step', { step: 'service', locale });
+          }
         }}
         style={field}
       >
@@ -501,5 +569,120 @@ function BookingPanel({
         </div>
       )}
     </div>
+  );
+}
+
+/** Webshop: samme lagerkatalog som /butikk. Feiler lukket uten shop-flagg. */
+function ShopPanel({
+  client,
+  locale,
+  instrument,
+}: {
+  client: WidgetClient;
+  locale: 'no' | 'en';
+  instrument: boolean;
+}) {
+  const [state, setState] = useState<
+    | { status: 'loading' }
+    | { status: 'ready'; items: WidgetShopItem[] }
+    | { status: 'blocked'; message: string }
+    | { status: 'error' }
+  >({ status: 'loading' });
+
+  const last = useCallback(() => {
+    setState({ status: 'loading' });
+    client
+      .shopCatalog()
+      .then((r) => {
+        setState({ status: 'ready', items: r.items });
+        if (instrument) void client.track('widget.shop.viewed', { locale });
+      })
+      .catch((e) => {
+        const msg = e instanceof Error ? e.message : '';
+        if (/ikke aktiv/i.test(msg)) {
+          if (instrument) void client.track('widget.shop.blocked', { locale, reason: 'flag' });
+          setState({
+            status: 'blocked',
+            message:
+              locale === 'no'
+                ? 'Nettbutikk er ikke aktiv for denne forhandleren.'
+                : 'Webshop is not enabled for this dealer.',
+          });
+          return;
+        }
+        setState({ status: 'error' });
+      });
+  }, [client, instrument, locale]);
+
+  useEffect(() => {
+    last();
+  }, [last]);
+
+  if (state.status === 'loading') {
+    return (
+      <div style={{ padding: 16, fontSize: 13, color: `var(--ew-fg-muted, ${fb.fgMuted})` }}>
+        {locale === 'no' ? 'Henter katalog …' : 'Loading catalog…'}
+      </div>
+    );
+  }
+  if (state.status === 'blocked') {
+    return (
+      <div style={{ padding: 16, fontSize: 13, color: `var(--ew-fg, ${fb.fg})` }}>
+        {state.message}
+      </div>
+    );
+  }
+  if (state.status === 'error') {
+    return (
+      <div style={{ padding: 16 }}>
+        <p style={{ fontSize: 13, marginBottom: 10 }}>
+          {locale === 'no' ? 'Kunne ikke hente katalogen.' : 'Could not load catalog.'}
+        </p>
+        <button
+          type="button"
+          onClick={last}
+          style={{
+            padding: '8px 14px',
+            borderRadius: 8,
+            border: `1px solid var(--ew-border, ${fb.border})`,
+            background: `var(--ew-surface, ${fb.surface})`,
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 13,
+          }}
+        >
+          {locale === 'no' ? 'Prøv igjen' : 'Try again'}
+        </button>
+      </div>
+    );
+  }
+  if (state.items.length === 0) {
+    return (
+      <div style={{ padding: 16, fontSize: 13, color: `var(--ew-fg-muted, ${fb.fgMuted})` }}>
+        {locale === 'no' ? 'Ingen varer i katalogen ennå.' : 'No products in the catalog yet.'}
+      </div>
+    );
+  }
+  return (
+    <ul style={{ listStyle: 'none', margin: 0, padding: 12, display: 'grid', gap: 8 }}>
+      {state.items.map((item) => (
+        <li
+          key={item.id}
+          style={{
+            padding: 10,
+            border: `1px solid var(--ew-border, ${fb.border})`,
+            borderRadius: 8,
+            fontSize: 13,
+          }}
+        >
+          <div style={{ fontWeight: 600 }}>{item.name}</div>
+          <div style={{ color: `var(--ew-fg-muted, ${fb.fgMuted})` }}>
+            {item.sku} · {(item.priceMinor / 100).toLocaleString(locale === 'no' ? 'nb-NO' : 'en')}{' '}
+            kr
+            {item.available ? '' : locale === 'no' ? ' · ikke på lager' : ' · out of stock'}
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }

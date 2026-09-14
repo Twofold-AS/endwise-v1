@@ -2,14 +2,40 @@
  * F4 — Widget API-klient (framework-agnostisk, ren fetch).
  * Veksler publishable key inn i et kortlevd token via `/widget/init`, og bærer
  * tokenet på alle etterfølgende kall. Ingen hemmeligheter her — kun den offentlige
- * publishable key-en (trygg i en publisert side).
+ * publishable key-en (trygg i en publisert side). Tenant velges av nøkkelen
+ * server-side — klienten sender aldri tenantId.
  */
 
+import {
+  sanitizeWidgetFunnelEvent,
+  type WidgetFunnelEventName,
+  type WidgetFunnelProps,
+} from '@endwise/events';
+
 export interface WidgetClientOptions {
-  /** Base-URL til Endwise-API-et, f.eks. `https://api.endwise.no`. */
+  /** Base-URL til Endwise-API-et. Prod: `https://endwise.no` (`/widget/*` på web). */
   apiBase: string;
   /** Publishable key (pk_live_…). Offentlig. */
   publishableKey: string;
+}
+
+export interface WidgetCapabilities {
+  shop: boolean;
+}
+
+export interface WidgetInitResult {
+  token: string;
+  expiresIn: number;
+  cid: string;
+  capabilities: WidgetCapabilities;
+}
+
+export interface WidgetShopItem {
+  id: string;
+  sku: string;
+  name: string;
+  priceMinor: number;
+  available: boolean;
 }
 
 export interface WidgetService {
@@ -31,16 +57,25 @@ export class WidgetClientError extends Error {}
 
 export function createWidgetClient(opts: WidgetClientOptions) {
   let token: string | null = null;
+  let capabilities: WidgetCapabilities = { shop: false };
 
-  async function init(): Promise<void> {
+  async function init(): Promise<WidgetInitResult> {
     const res = await fetch(`${opts.apiBase}/widget/init`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ publishableKey: opts.publishableKey }),
     });
     if (!res.ok) throw new WidgetClientError('Kunne ikke starte widget (init)');
-    const data = (await res.json()) as { token: string };
+    const data = (await res.json()) as Partial<WidgetInitResult> & { token?: string };
+    if (!data.token) throw new WidgetClientError('Kunne ikke starte widget (init)');
     token = data.token;
+    capabilities = { shop: data.capabilities?.shop === true };
+    return {
+      token: data.token,
+      expiresIn: typeof data.expiresIn === 'number' ? data.expiresIn : 900,
+      cid: typeof data.cid === 'string' ? data.cid : '',
+      capabilities,
+    };
   }
 
   async function authed<T>(path: string, init2?: RequestInit): Promise<T> {
@@ -66,12 +101,12 @@ export function createWidgetClient(opts: WidgetClientOptions) {
     return (await res.json()) as T;
   }
 
-  let initPromise: Promise<void> | null = null;
+  let initPromise: Promise<WidgetInitResult> | null = null;
   function ensureToken(): Promise<void> {
     initPromise ??= init().finally(() => {
       initPromise = null;
     });
-    return initPromise;
+    return initPromise.then(() => undefined);
   }
 
   return {
@@ -97,6 +132,16 @@ export function createWidgetClient(opts: WidgetClientOptions) {
         method: 'POST',
         body: JSON.stringify({ message, locale }),
       }),
+    capabilities: () => capabilities,
+    track: (name: WidgetFunnelEventName, props: WidgetFunnelProps = {}) => {
+      const event = sanitizeWidgetFunnelEvent({ name, props });
+      if (!event) return Promise.resolve();
+      return authed<{ ok: boolean }>('/widget/events', {
+        method: 'POST',
+        body: JSON.stringify(event),
+      }).then(() => undefined);
+    },
+    shopCatalog: () => authed<{ items: WidgetShopItem[] }>('/widget/shop/catalog'),
   };
 }
 

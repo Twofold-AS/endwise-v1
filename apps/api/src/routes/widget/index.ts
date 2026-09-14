@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { sanitizeWidgetFunnelEvent, WIDGET_FUNNEL_AUDIENCE } from '@endwise/events';
+import { publishEvent } from '@endwise/modules/stream';
 import {
   createRateLimiter,
   createWidgetKeyService,
@@ -13,6 +15,7 @@ import {
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createAppContext } from '../../context.ts';
+import { lesShopKatalog } from '../../lib/shop.ts';
 import {
   clientIp,
   type WidgetVars,
@@ -20,6 +23,7 @@ import {
   widgetCors,
   widgetTokenSecret,
 } from '../../lib/widget-auth.ts';
+import { resolveShopFlag } from '../../trpc/shop-flag.ts';
 import { widgetChat } from './chat.ts';
 
 /**
@@ -38,6 +42,7 @@ import { widgetChat } from './chat.ts';
 const initLimiter = createRateLimiter({ windowMs: 5 * 60_000, max: 30 });
 const readLimiter = createRateLimiter({ windowMs: 60_000, max: 60 });
 const bookingLimiter = createRateLimiter({ windowMs: 10 * 60_000, max: 5 });
+const eventLimiter = createRateLimiter({ windowMs: 60_000, max: 40 });
 
 function lazyDb() {
   return createAppContext().db;
@@ -73,7 +78,9 @@ app.post('/init', async (c) => {
 
   const cid = `customer:${randomUUID()}`;
   const token = signWidgetToken({ tid: resolution.tenantId, cid }, widgetTokenSecret());
-  return c.json({ token, expiresIn: 900, cid });
+  const shop = await resolveShopFlag({ db: lazyDb(), tenantId: resolution.tenantId });
+  // Tenant kommer fra nøkkelen — aldri tilbake til klienten (IDOR).
+  return c.json({ token, expiresIn: 900, cid, capabilities: { shop } });
 });
 
 // Fra her krever alt et gyldig token
@@ -81,6 +88,8 @@ app.use('/services', widgetAuth);
 app.use('/availability', widgetAuth);
 app.use('/booking', widgetAuth);
 app.use('/chat', widgetAuth);
+app.use('/events', widgetAuth);
+app.use('/shop/catalog', widgetAuth);
 
 /** Aktive tjenester (public-safe felt). */
 app.get('/services', async (c) => {
@@ -163,5 +172,53 @@ app.post('/booking', async (c) => {
 
 /** Kundevendt AI-chat (Mistral EU + scope-gate + art.50). Se chat.ts. */
 app.post('/chat', (c) => widgetChat(c));
+
+/**
+ * F4-14 — cookieless funnel. Tenant fra tokenet. Audience `widget:funnel`
+ * så live-innboksen ikke spilles av (ingen message.created).
+ */
+app.post('/events', async (c) => {
+  const tenantId = c.get('widgetTenantId');
+  const cid = c.get('widgetCid');
+  if (!eventLimiter.check(`ev:${cid}`).allowed) {
+    return c.json({ error: 'For mange hendelser' }, 429);
+  }
+  const body = await c.req.json().catch(() => null);
+  const event = sanitizeWidgetFunnelEvent(body);
+  if (!event) return c.json({ error: 'Ugyldig hendelse' }, 400);
+  await publishEvent(lazyDb(), {
+    tenantId,
+    type: event.name,
+    payload: { ...event.props, cid },
+    audienceId: WIDGET_FUNNEL_AUDIENCE,
+    subjectId: event.name,
+  });
+  return c.json({ ok: true });
+});
+
+/**
+ * Nettbutikk-katalog bak shop-flagget. Feiler lukket (403) uten entitlement.
+ * Samme lagerkatalog som /butikk — ikke en egen butikk-motor.
+ */
+app.get('/shop/catalog', async (c) => {
+  const tenantId = c.get('widgetTenantId');
+  if (!readLimiter.check(`shop:${c.get('widgetCid')}`).allowed) {
+    return c.json({ error: 'For mange forespørsler' }, 429);
+  }
+  const shop = await resolveShopFlag({ db: lazyDb(), tenantId });
+  if (!shop) {
+    return c.json({ error: 'Butikk er ikke aktiv for denne forhandleren' }, 403);
+  }
+  const rader = await lesShopKatalog(lazyDb(), tenantId);
+  return c.json({
+    items: rader.map((r) => ({
+      id: r.id,
+      sku: r.sku,
+      name: r.name,
+      priceMinor: r.sellPriceMinor,
+      available: r.tilgjengelig > 0,
+    })),
+  });
+});
 
 export const widget = app;

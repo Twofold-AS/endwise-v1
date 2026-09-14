@@ -24,5 +24,10 @@ export default defineConfig({
     esbuildOptions: {
       target: 'es2022',
     },
+    include: ['framer-plugin'],
+  },
+  server: {
+    port: 5173,
+    host: true,
   },
 });

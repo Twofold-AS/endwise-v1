@@ -21,7 +21,8 @@ import { AnsattePiller } from '../../_shell/ansatte-piller';
 import { CardShell } from '../../_shell/cards';
 import { TimeplanStripe } from '../../_shell/timeplan-stripe';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
-import { estMinutes, fmtTime, STATUS_LABEL } from '../../min-dag/_status';
+import { StatusMerke } from '../../_innbygging/status-merke';
+import { estMinutes, fmtTime } from '../../min-dag/_status';
 import { FELT } from '../kompetanse/_niva';
 
 const TELLER_STATUS = new Set(['draft', 'confirmed', 'in_progress']);
@@ -275,9 +276,7 @@ function MekanikerTimeplan({
                     {estMinutes(job.startsAt, job.endsAt)} min
                   </p>
                 </div>
-                <span className="shrink-0 rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-fg-muted">
-                  {STATUS_LABEL[job.status] ?? job.status}
-                </span>
+                <StatusMerke status={job.status} />
               </div>
             </Link>
           ))

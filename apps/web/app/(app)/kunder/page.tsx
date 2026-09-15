@@ -57,6 +57,17 @@ function KunderInner() {
     kilde,
     limit: 200,
   });
+  const kjoretoy = trpc.vehicles.list.useQuery({ limit: 200 });
+  const kjoretoyPerKunde = new Map<
+    string,
+    { id: string; make: string | null; model: string | null; regNumber: string | null }[]
+  >();
+  for (const v of kjoretoy.data ?? []) {
+    if (!v.customerId) continue;
+    const liste = kjoretoyPerKunde.get(v.customerId) ?? [];
+    liste.push({ id: v.id, make: v.make, model: v.model, regNumber: v.regNumber });
+    kjoretoyPerKunde.set(v.customerId, liste);
+  }
 
   return (
     <SideChromeSkall
@@ -69,6 +80,26 @@ function KunderInner() {
       {aktiv === 'kjoretoy' ? <RegistrerKjoretoy /> : null}
       {aktiv === 'alle' ? (
         <>
+          <div data-kunder-handlinger className="flex flex-wrap gap-2">
+            <Link
+              href={'/kunder?fane=opprett' as Route}
+              className="inline-flex h-control items-center rounded-full bg-fg px-3 text-label text-bg"
+            >
+              Opprett kunde
+            </Link>
+            <Link
+              href={'/kunder?fane=kjoretoy' as Route}
+              className="inline-flex h-control items-center rounded-full border border-divide px-3 text-label text-fg"
+            >
+              Legg til kjøretøy
+            </Link>
+            <Link
+              href={'/bookinger/ny' as Route}
+              className="inline-flex h-control items-center rounded-full border border-divide px-3 text-label text-fg"
+            >
+              Ny jobb
+            </Link>
+          </div>
           {/* Søk + filtre */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="min-w-[220px] flex-1" data-kunder-sok>
@@ -153,49 +184,68 @@ function KunderInner() {
               )}
             </>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-border">
-              {kunder.data?.map((k, i) => (
-                <Link key={k.id} href={`/kunder/${k.id}` as Route} className="group block">
-                  <div
-                    className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
-                      i > 0 ? 'border-border border-t' : ''
-                    }`}
+            <div data-kunder-kortliste className="grid gap-2">
+              {kunder.data?.map((k) => {
+                const biler = kjoretoyPerKunde.get(k.id) ?? [];
+                return (
+                  <article
+                    key={k.id}
+                    data-kunde-kort={k.id}
+                    className="flex flex-col gap-3 rounded-[24px] border border-divide bg-card px-4 py-3 shadow-none"
                   >
-                    {/* Samme seed som kundekortet raden lenker til. */}
-                    <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
-
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="flex items-center gap-2 truncate text-label text-fg">
-                        {k.name}
-                        <Kilde source={k.source} />
-                      </span>
-                      <span className="flex items-center gap-3 truncate text-[12px] text-fg-muted">
-                        {k.phone && (
-                          <span className="inline-flex items-center gap-1">
-                            <Phone size={12} strokeWidth={1.75} />
-                            {k.phone}
+                    <Link href={`/kunder/${k.id}` as Route} className="flex items-start gap-3">
+                      <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
+                      <div className="min-w-0 flex-1">
+                        <p className="flex items-center gap-2 truncate text-label text-fg">
+                          {k.name}
+                          <Kilde source={k.source} />
+                        </p>
+                        <p className="flex flex-wrap items-center gap-3 text-[12px] text-fg-muted">
+                          {k.phone ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Phone size={12} strokeWidth={1.75} />
+                              {k.phone}
+                            </span>
+                          ) : null}
+                          {k.email ? (
+                            <span className="inline-flex items-center gap-1 truncate">
+                              <Mail size={12} strokeWidth={1.75} />
+                              {k.email}
+                            </span>
+                          ) : null}
+                          {!k.phone && !k.email ? 'Ingen kontaktinfo' : null}
+                        </p>
+                      </div>
+                      <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
+                    </Link>
+                    {biler.length > 0 ? (
+                      <div data-kunde-kjoretoy-chips className="flex flex-wrap gap-1.5">
+                        {biler.map((bil) => (
+                          <span
+                            key={bil.id}
+                            className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-fg"
+                          >
+                            <Car size={12} strokeWidth={1.75} />
+                            {[bil.make, bil.model, bil.regNumber].filter(Boolean).join(' ') ||
+                              'Kjøretøy'}
                           </span>
-                        )}
-                        {k.email && (
-                          <span className="inline-flex items-center gap-1 truncate">
-                            <Mail size={12} strokeWidth={1.75} />
-                            {k.email}
-                          </span>
-                        )}
-                        {!k.phone && !k.email && 'Ingen kontaktinfo'}
-                      </span>
-                    </div>
-
-                    {k.antallKjoretoy > 0 && (
-                      <span className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-fg-muted tabular-nums">
+                        ))}
+                      </div>
+                    ) : k.antallKjoretoy > 0 ? (
+                      <span className="inline-flex items-center gap-1 text-[12px] text-fg-muted">
                         <Car size={14} strokeWidth={1.75} />
                         {k.antallKjoretoy}
                       </span>
-                    )}
-                    <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
-                  </div>
-                </Link>
-              ))}
+                    ) : null}
+                    <Link
+                      href={`/bookinger/ny?customerId=${k.id}` as Route}
+                      className="self-start text-[12px] text-fg underline-offset-2 hover:underline"
+                    >
+                      Ny jobb
+                    </Link>
+                  </article>
+                );
+              })}
             </div>
           )}
 

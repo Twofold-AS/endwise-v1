@@ -131,7 +131,10 @@ function AnsattKort({
           bevegelse="stille"
         />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-label text-fg">{rad.navn}</p>
+          <p data-ansatt-tittel className="truncate text-label text-fg">
+            {rad.kallenavn?.trim() || rad.navn}
+          </p>
+          <p className="truncate text-[12px] text-fg-muted">{rad.navn}</p>
           <div className="mt-1">
             <AktivitetMerke status={rad.status} label={rad.statusLabel} />
           </div>
@@ -143,6 +146,23 @@ function AnsattKort({
       </p>
       <p className="text-label text-fg-muted">
         Jobber <span className="text-fg">{rad.jobberIDag}</span>
+      </p>
+      <p data-ansatt-rolle className="text-label text-fg-muted">
+        Rolle{' '}
+        <span className="text-fg">{FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}</span>
+      </p>
+      <p data-ansatt-tilgang className="text-label text-fg-muted">
+        Tilgang{' '}
+        <span className="text-fg">
+          {rad.rolle}
+          {rad.kanLoggeInn ? ' · innlogging' : ' · uten innlogging'}
+        </span>
+      </p>
+      <p data-ansatt-tid className="text-label text-fg-muted">
+        Tid per tjeneste{' '}
+        <span className="text-fg">
+          {rad.harMekanikerprofil ? `${rad.jobberIDag} jobber i dag` : 'Ikke mekaniker'}
+        </span>
       </p>
 
       <div className="flex items-center gap-2">
@@ -165,7 +185,7 @@ function AnsattKort({
         <FargeSvatser userId={rad.userId} valgt={rad.farge ?? rad.avatar?.farge} />
       ) : null}
 
-      <div className="flex items-center gap-2">
+      <div data-ansatt-kvalifikasjoner className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-label text-fg-muted">
           Kompetanse{' '}
           <span className="text-fg">

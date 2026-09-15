@@ -261,8 +261,8 @@ export function PulseDagSirkel({
 }
 
 /**
- * Toppkort: ukedag+dato og Endringer på samme rad ·
- * PPF-siffer sentrert mot buehøyde · etiketter på 08.00/19.00 · Modus nederst.
+ * Toppkort: ukedag+dato · PPF-siffer sentrert mot buehøyde ·
+ * etiketter på 08.00/19.00 · Modus + stille Endringer-lenke nederst.
  */
 export function PulseHeroFlate({
   ukedag,
@@ -309,7 +309,6 @@ export function PulseHeroFlate({
             </span>
           </p>
         </Link>
-        <PulseEndringerLenke />
       </div>
       <Link
         href={href as Route}
@@ -327,6 +326,7 @@ export function PulseHeroFlate({
       </Link>
       <div data-pulse-hero-bunn className="flex w-full items-center justify-between gap-3">
         <PulseAvvikForesporBoks avvik={avvik} forespor={forespor} laster={lasterEndringer} />
+        <PulseEndringerLenke />
       </div>
     </div>
   );
@@ -442,15 +442,16 @@ export function PulseRadKort({
   );
 }
 
-/** +Jobb — samme spor som På jobb (50/50). Litt større enn radkortene. */
+/** Timeplan-gulv: primær «+ Jobb» — ikke hero-CTA. */
 export function PulseJobbFlis() {
   return (
     <Link
       href={'/bookinger/ny' as Route}
       data-pulse-jobb
+      data-pulse-timeplan-gulv
       className={`${PHONE_DEST_FYLL} flex h-full min-h-14 w-full min-w-0 items-center justify-between gap-3 overflow-hidden px-3 py-3.5 text-fg [touch-action:manipulation]`}
     >
-      <span className="min-w-0 truncate text-[15px] font-normal">Jobb</span>
+      <span className="min-w-0 truncate text-[15px] font-normal">+ Jobb</span>
       <PulseIkonFlate>
         <Plus size={22} strokeWidth={1.75} aria-hidden />
       </PulseIkonFlate>

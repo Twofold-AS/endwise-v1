@@ -7,7 +7,8 @@ import { useMemo } from 'react';
 import { PRODUKT_TIDSSONE } from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
 import { klossSporStil, pakkKlosser } from '../_shell/timeplan-dager';
-import { fmtServices, STATUS_LABEL } from '../bookinger/_status';
+import { JOBB_STATUS_LABEL, StatusMerke } from '../_innbygging/status-merke';
+import { fmtServices } from '../bookinger/_status';
 import {
   dagensSaker,
   timeplanKloss,
@@ -118,7 +119,7 @@ export function Timeplan({
                       ...staffFargeStil(b.farge, b.mechanicId ?? undefined),
                     }}
                     className="absolute overflow-hidden rounded-control border px-2 py-1 text-fg transition-colors hover:brightness-[0.97]"
-                    title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit', timeZone: PRODUKT_TIDSSONE })} · ${STATUS_LABEL[b.status] ?? b.status}`}
+                    title={`${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit', timeZone: PRODUKT_TIDSSONE })} · ${JOBB_STATUS_LABEL[b.status as keyof typeof JOBB_STATUS_LABEL] ?? b.status}`}
                   >
                     <div className="truncate font-medium text-[11px] tabular-nums">
                       {start.toLocaleTimeString('nb-NO', {
@@ -133,7 +134,7 @@ export function Timeplan({
                         {fmtServices(b)}
                         {navn ? ` · ${navn}` : ''}
                         {' · '}
-                        {STATUS_LABEL[b.status] ?? b.status}
+                        <StatusMerke status={b.status} />
                       </div>
                     )}
                   </Link>

@@ -73,8 +73,8 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const jobb = funksjon(kort, 'PulseJobbFlis');
     expect(jobb).toMatch(/justify-between/);
-    expect(jobb.indexOf('>Jobb<')).toBeGreaterThan(-1);
-    expect(jobb.indexOf('>Jobb<')).toBeLessThan(jobb.indexOf('PulseIkonFlate'));
+    expect(jobb.indexOf('>+ Jobb<') > -1 || jobb.indexOf('>Jobb<') > -1).toBe(true);
+    expect(jobb).toMatch(/bookinger\/ny/);
   });
 
   it('Timeplan/Kunder/Tjenester/Org deler Innstillinger-chrome', () => {

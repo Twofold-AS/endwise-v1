@@ -4,6 +4,7 @@ import { Button, Package, Store } from '@endwise/ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { ButikkKjoretoySalg } from '../_innbygging/butikk-kjoretoy';
 import { CardShell } from '../_shell/cards';
 import { ButikkBookingWidget } from './_booking-widget';
 import { antallIKurv, leggIKurv } from './_kurv';
@@ -19,6 +20,7 @@ function kroner(ore: number): string {
  */
 export default function ButikkKatalogPage() {
   const katalog = trpc.shop.catalog.useQuery();
+  const kjoretoy = trpc.vehicles.list.useQuery({ limit: 50 });
   const [kurvAntall, setKurvAntall] = useState(0);
 
   useEffect(() => {
@@ -50,6 +52,13 @@ export default function ButikkKatalogPage() {
 
       <ButikkBookingWidget />
 
+      <ButikkKjoretoySalg kjoretoy={kjoretoy.data ?? []} />
+
+      <section data-butikk-katalog className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-title text-fg">Produktkatalog</h2>
+          <p className="text-[12px] text-fg-muted">Aktive deler med utsalgspris.</p>
+        </div>
       {katalog.isError ? (
         <CardShell className="p-6">
           <p className="text-body text-danger">{katalog.error.message}</p>
@@ -111,6 +120,7 @@ export default function ButikkKatalogPage() {
           ))}
         </div>
       )}
+      </section>
     </div>
   );
 }

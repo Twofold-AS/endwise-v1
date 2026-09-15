@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { sammeOsloDag } from '../_lib/oslo-dag';
-import { fmtServices, fmtTime, STATUS_LABEL } from '../bookinger/_status';
+import { StatusMerke } from '../_innbygging/status-merke';
+import { fmtServices, fmtTime } from '../bookinger/_status';
 import { Timeplan } from './_timeplan';
 
 /**
@@ -57,9 +58,11 @@ export function VerkstedetDag() {
                 {b.regNumber ?? 'Uten regnr'}
               </span>
             </div>
-            <p className="text-[12px] opacity-90">
-              {fmtServices(b)} · {mekName.get(b.mechanicId) ?? b.mechanicName ?? '—'} ·{' '}
-              {STATUS_LABEL[b.status] ?? b.status}
+            <p className="flex flex-wrap items-center gap-1.5 text-[12px] opacity-90">
+              <span>
+                {fmtServices(b)} · {mekName.get(b.mechanicId) ?? b.mechanicName ?? '—'}
+              </span>
+              <StatusMerke status={b.status} />
             </p>
           </Link>
           <div className="flex flex-wrap gap-2">

@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { BestillDelArk, EndreMinimumArk } from '../../_innbygging/lager-ark';
+import { LagerStatusMerke, lagerStatusFor } from '../../_innbygging/lager-status';
 import { Beholdning, Feil, kroner, Laster, Sidehode, Tomt } from '../_delt';
 import { BevegelseDialog } from './_bevegelse-dialog';
 
@@ -34,6 +36,16 @@ function DelerInner() {
   const [sorter, setSorter] = useState<Sortering>('sku');
   const [retning, setRetning] = useState<'asc' | 'desc'>('asc');
   const [valgtDel, setValgtDel] = useState<{ id: string; sku: string; name: string } | null>(null);
+  const [bestillDel, setBestillDel] = useState<{ id: string; sku: string; name: string } | null>(
+    null,
+  );
+  const [minimumDel, setMinimumDel] = useState<{
+    id: string;
+    name: string;
+    minStock: number | null;
+  } | null>(null);
+  const [bestilt, setBestilt] = useState<ReadonlySet<string>>(() => new Set());
+  const [minLokalt, setMinLokalt] = useState<ReadonlyMap<string, number>>(() => new Map());
 
   const deler = trpc.inventory.listParts.useQuery({
     sok: sok.trim() || undefined,
@@ -122,6 +134,7 @@ function DelerInner() {
             <span className="w-28 shrink-0">Kategori</span>
             {isAdmin && <span className="w-24 shrink-0 text-right">Kostpris</span>}
             <span className="w-24 shrink-0 text-right">Tilgjengelig</span>
+            <span className="w-32 shrink-0">Status</span>
             <span className="w-8 shrink-0" />
           </div>
 
@@ -149,8 +162,44 @@ function DelerInner() {
                 <Beholdning
                   tilgjengelig={d.tilgjengelig}
                   reservert={d.reserved}
-                  lav={d.underMinimum}
+                  lav={minLokalt.get(d.id) != null ? d.tilgjengelig < (minLokalt.get(d.id) ?? 0) : d.underMinimum}
                 />
+              </span>
+              <span className="flex w-32 shrink-0 flex-col items-start gap-1">
+                <LagerStatusMerke
+                  status={lagerStatusFor({
+                    underMinimum:
+                      minLokalt.get(d.id) != null
+                        ? d.tilgjengelig < (minLokalt.get(d.id) ?? 0)
+                        : d.underMinimum,
+                    tilgjengelig: d.tilgjengelig,
+                    bestilt: bestilt.has(d.id),
+                  })}
+                />
+                <span className="flex gap-1">
+                  <button
+                    type="button"
+                    data-lager-bestill
+                    onClick={() => setBestillDel({ id: d.id, sku: d.sku, name: d.name })}
+                    className="text-[11px] text-fg underline-offset-2 hover:underline"
+                  >
+                    Bestill
+                  </button>
+                  <button
+                    type="button"
+                    data-lager-minimum
+                    onClick={() =>
+                      setMinimumDel({
+                        id: d.id,
+                        name: d.name,
+                        minStock: minLokalt.get(d.id) ?? d.minStock,
+                      })
+                    }
+                    className="text-[11px] text-fg underline-offset-2 hover:underline"
+                  >
+                    Endre minimum
+                  </button>
+                </span>
               </span>
               <button
                 type="button"
@@ -181,6 +230,22 @@ function DelerInner() {
           }}
         />
       )}
+      {bestillDel ? (
+        <BestillDelArk
+          del={bestillDel}
+          onBestilt={(id) => setBestilt((forrige) => new Set([...forrige, id]))}
+          onLukk={() => setBestillDel(null)}
+        />
+      ) : null}
+      {minimumDel ? (
+        <EndreMinimumArk
+          del={minimumDel}
+          onLagre={(id, min) => {
+            setMinLokalt((forrige) => new Map(forrige).set(id, min));
+          }}
+          onLukk={() => setMinimumDel(null)}
+        />
+      ) : null}
     </div>
   );
 }

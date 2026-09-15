@@ -44,6 +44,8 @@ import {
   tilDeltakerRolle,
   visningForTraadtype,
 } from '../_lib';
+import { DeltakerArk } from '../../_innbygging/deltaker-ark';
+import { useInboxFilter } from '../../_shell/inbox-filter';
 import { useInboxModus } from '../_modus';
 
 /**
@@ -63,6 +65,7 @@ export default function TrådPage() {
   const lyd = useLyd();
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
+  const { lostte, markerLost, gjenapne } = useInboxFilter();
 
   const me = trpc.session.me.useQuery();
   const dealerThreads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -140,6 +143,11 @@ export default function TrådPage() {
    * en kundetråd før riktig svar kom.
    */
   const visning = thread ? visningForTraadtype(thread.kind) : 'offisiell';
+
+  const kontekst = trpc.inboxContext.forThread.useQuery(
+    { threadId },
+    { enabled: !endwise, retry: false },
+  );
 
   const navn = trpc.directory.participants.useQuery(
     { ids: deltakerIder, visning },
@@ -279,6 +287,14 @@ export default function TrådPage() {
            * du er et annet sted enn du er.
            */}
           <h1 className="truncate text-title text-fg">{tradTittel}</h1>
+          {kontekst.data?.type === 'kunde' ? (
+            <p data-trad-kjoretoy className="mt-1 truncate text-label text-fg-muted">
+              {kontekst.data.kunde.navn}
+              {kontekst.data.kjoretoy[0]
+                ? ` · ${[kontekst.data.kjoretoy[0].make, kontekst.data.kjoretoy[0].model, kontekst.data.kjoretoy[0].regNumber].filter(Boolean).join(' ')}`
+                : ''}
+            </p>
+          ) : null}
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {/*
              * Kanalen står i hodet, ikke nede ved svarfeltet: den skal være
@@ -313,6 +329,14 @@ export default function TrådPage() {
             )}
           </div>
         </div>
+        {!endwise ? (
+          <DeltakerArk
+            threadId={threadId}
+            lost={lostte.has(threadId)}
+            onLost={() => markerLost(threadId)}
+            onGjenapne={() => gjenapne(threadId)}
+          />
+        ) : null}
       </div>
 
       {/*

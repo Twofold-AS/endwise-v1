@@ -3,6 +3,7 @@
 import { CircleAlert, ExternalLink, Plug } from '@endwise/ui';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
+import { InnbyggingIntegrasjonRader } from '../_innbygging/integrasjon-rader';
 import { CardShell } from '../_shell/cards';
 import { Etterspor } from '../_shell/etterspor';
 
@@ -41,6 +42,15 @@ export function IntegrasjonerInnhold() {
 
   return (
     <div className="flex flex-col gap-6">
+      <InnbyggingIntegrasjonRader
+        aktiveNokler={mine
+          .map((i) => {
+            if (i.key === 'vegvesen') return 'svv';
+            if (i.key === 'finn') return 'finn';
+            return i.key;
+          })
+          .filter((k) => ['hellanor', 'finn', 'vipps', 'tripletex', 'svv'].includes(k))}
+      />
       <section className="flex flex-col gap-2">
         <h3 className="text-label text-fg">Dine integrasjoner ({mine.length})</h3>
         {mine.length === 0 ? (

@@ -2,8 +2,8 @@
 
 import { Car, Check, FELT_MD, hexForFarge, Search, Sparkles, staffFargeStil } from '@endwise/ui';
 import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
@@ -20,11 +20,28 @@ import { fmtMinor } from '../_status';
  * varighet er katalogsum, overstyrbar manuelt. Vegvesen-oppslag (F2-08) som
  * smart default på regnr. Serveren eier valget og låsen — vi foreslår bare.
  */
+const NY_JOBB_STEG = [
+  { id: 1, label: 'Kunde+kjøretøy' },
+  { id: 2, label: 'Tjenester+varighet' },
+  { id: 3, label: 'Dato/klokke' },
+  { id: 4, label: 'Bekreft' },
+] as const;
+
 export default function NyJobbPage() {
+  return (
+    <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster ny jobb …</div>}>
+      <NyJobbSkjema />
+    </Suspense>
+  );
+}
+
+function NyJobbSkjema() {
   const router = useRouter();
   const utils = trpc.useUtils();
+  const params = useSearchParams();
 
-  const [customerId, setCustomerId] = useState('');
+  const [steg, setSteg] = useState(1);
+  const [customerId, setCustomerId] = useState(params?.get('customerId') ?? '');
   const [vehicleId, setVehicleId] = useState('');
   const [serviceIds, setServiceIds] = useState<string[]>([]);
   const [startsAt, setStartsAt] = useState('');
@@ -33,6 +50,7 @@ export default function NyJobbPage() {
   const [regNumber, setRegNumber] = useState('');
   const [durationMinutes, setDurationMinutes] = useState<number | ''>('');
   const [durationManual, setDurationManual] = useState(false);
+  const [bildeNavn, setBildeNavn] = useState<string | null>(null);
 
   const services = trpc.services.list.useQuery();
   const mechanics = trpc.mechanics.oversikt.useQuery();
@@ -176,6 +194,24 @@ export default function NyJobbPage() {
       aktiv="opprett"
     >
       <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5">
+        <ol data-ny-jobb-steg className="flex flex-wrap gap-2" aria-label="Steg">
+          {NY_JOBB_STEG.map((s) => (
+            <li key={s.id}>
+              <button
+                type="button"
+                data-ny-jobb-steg-knapp={s.id}
+                aria-current={steg === s.id ? 'step' : undefined}
+                onClick={() => setSteg(s.id)}
+                className={`inline-flex h-7 items-center rounded-full px-2.5 text-label ${
+                  steg === s.id ? 'bg-fg text-bg' : 'bg-surface-2 text-fg'
+                }`}
+              >
+                {s.id} {s.label}
+              </button>
+            </li>
+          ))}
+        </ol>
+        {steg === 1 ? (
         <InnstillingSeksjon
           tittel="Kunde og kjøretøy"
           ingress="Regnr festes på jobben. Slå opp eller velg — kjøretøyet følger med."
@@ -234,7 +270,9 @@ export default function NyJobbPage() {
             )}
           </InnstillingRad>
         </InnstillingSeksjon>
+        ) : null}
 
+        {steg === 2 ? (
         <InnstillingSeksjon tittel="Tjenester og tid">
           <fieldset className="flex flex-col gap-1.5">
             <legend className="text-fg-faint text-xs">Tjenester</legend>
@@ -302,6 +340,12 @@ export default function NyJobbPage() {
             </p>
           )}
 
+        </InnstillingSeksjon>
+        ) : null}
+
+        {steg === 3 ? (
+        <>
+        <InnstillingSeksjon tittel="Dato/klokke">
           <Field label="Starttid">
             <StarttidVelger
               value={startsAt}
@@ -380,7 +424,22 @@ export default function NyJobbPage() {
             </div>
           )}
         </InnstillingSeksjon>
+        </>
+        ) : null}
 
+        {steg === 4 ? (
+        <>
+        <InnstillingSeksjon tittel="Bekreft">
+          <p className="text-label text-fg">
+            {[
+              customerId ? 'Kunde valgt' : 'Uten kunde',
+              regNumber || 'Uten regnr',
+              selected.map((s) => s.name).join(' + ') || 'Ingen tjeneste',
+              startsAt ? new Date(startsAt).toLocaleString('nb-NO') : 'Ingen tid',
+              mechanicId ? (mechName.get(mechanicId) ?? 'Mekaniker') : 'Ingen mekaniker',
+            ].join(' · ')}
+          </p>
+        </InnstillingSeksjon>
         <InnstillingSeksjon tittel="Notat">
           <InnstillingRad label="Intern beskjed" siste>
             <input
@@ -390,7 +449,23 @@ export default function NyJobbPage() {
               className={inputCls}
             />
           </InnstillingRad>
+          <InnstillingRad label="Bilde (valgfritt)" siste>
+            <input
+              type="file"
+              accept="image/*"
+              data-ny-jobb-bilde
+              onChange={(e) => setBildeNavn(e.target.files?.[0]?.name ?? null)}
+              className="text-label text-fg"
+            />
+            <p className="mt-1 text-[12px] text-fg-muted">
+              {bildeNavn
+                ? `${bildeNavn} · vises lokalt, lastes ikke opp ennå`
+                : 'Valgfritt. Ingen opplastings-API ennå.'}
+            </p>
+          </InnstillingRad>
         </InnstillingSeksjon>
+        </>
+        ) : null}
 
         {create.isError && (
           <p className="text-danger text-sm">
@@ -400,15 +475,37 @@ export default function NyJobbPage() {
           </p>
         )}
 
-        <button
-          type="button"
-          disabled={!canBook || create.isPending || opprettKjoretoy.isPending}
-          onClick={book}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-6 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-        >
-          <Check size={16} />
-          {create.isPending || opprettKjoretoy.isPending ? 'Oppretter …' : 'Opprett jobb'}
-        </button>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <button
+            type="button"
+            data-ny-jobb-tilbake
+            disabled={steg === 1}
+            onClick={() => setSteg((s) => Math.max(1, s - 1))}
+            className="inline-flex h-10 items-center rounded-full border border-divide px-4 text-label text-fg disabled:opacity-40"
+          >
+            Tilbake
+          </button>
+          {steg < 4 ? (
+            <button
+              type="button"
+              data-ny-jobb-neste
+              onClick={() => setSteg((s) => Math.min(4, s + 1))}
+              className="inline-flex h-10 items-center rounded-full bg-fg px-4 text-label text-bg"
+            >
+              Neste
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={!canBook || create.isPending || opprettKjoretoy.isPending}
+              onClick={book}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-6 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
+            >
+              <Check size={16} />
+              {create.isPending || opprettKjoretoy.isPending ? 'Oppretter …' : 'Opprett jobb'}
+            </button>
+          )}
+        </div>
       </div>
     </SideChromeSkall>
   );

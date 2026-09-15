@@ -5,6 +5,8 @@ import { useMemo } from 'react';
 import { useTema } from '../_lib/tema-provider';
 import { osloVeggklokke } from '../(app)/_lib/oslo-dag';
 import { analyserMockStats, pulsdagOverskrift } from '../(app)/_shell/phone-home-pulse';
+import { PulseTallKort, pulseTallCeller } from '../(app)/_innbygging/pulse-tall';
+import { PulseTekstFooter } from '../(app)/_innbygging/pulse-footer';
 import {
   PulseAnalyserKort,
   PulseHeroFlate,
@@ -60,6 +62,16 @@ export default function PulsePreview() {
             <PulseJobbFlis />
           </div>
         </div>
+        <PulseTallKort
+          href="#analyse"
+          celler={pulseTallCeller({
+            visninger: 312,
+            bookinger: 48,
+            returer: 6,
+            credits: 120,
+          })}
+        />
+        <PulseTekstFooter />
       </div>
     </div>
   );

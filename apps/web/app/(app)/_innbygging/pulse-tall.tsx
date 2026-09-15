@@ -32,9 +32,13 @@ export function PulseTallKort({
       <p className="text-label text-fg">Tall</p>
       <div data-pulse-tall-rutenett className="grid grid-cols-2 gap-2">
         {synlige.map((c) => (
-          <div key={c.id} data-pulse-tall-celle={c.id} className="min-w-0">
-            <p className="text-[12px] leading-4 text-fg-muted">{c.label}</p>
-            <p className="text-title tabular-nums text-fg">{c.verdi}</p>
+          <div
+            key={c.id}
+            data-pulse-tall-celle={c.id}
+            className="min-w-0 rounded-[16px] bg-surface-2 px-3 py-2 shadow-none"
+          >
+            <p className="text-[12px] font-[300] leading-4 text-fg-muted">{c.label}</p>
+            <p className="text-title font-[650] tabular-nums text-fg">{c.verdi}</p>
           </div>
         ))}
       </div>

@@ -93,6 +93,7 @@ describe('Claude-innbygging — full content under existing chrome', () => {
     ).toContain('credits');
     const tall = les('../app/(app)/_innbygging/pulse-tall.tsx');
     expect(tall).toMatch(/grid-cols-2/);
+    expect(tall).toMatch(/bg-surface-2/);
     expect(tall).not.toMatch(/#0066ff/);
   });
 
@@ -132,6 +133,9 @@ describe('Claude-innbygging — full content under existing chrome', () => {
       'avvik',
     ]);
     expect(les('../app/(app)/jobber/_endringer.tsx')).toMatch(/TimeplanAlleEndringer/);
+    const endringerFlate = les('../app/(app)/jobber/_endringer.tsx');
+    expect(endringerFlate).toMatch(/innholdPilleKlasse/);
+    expect(endringerFlate).not.toMatch(/border-b-2/);
     const ui = les('../app/(app)/_innbygging/endringer-kort.tsx');
     expect(ui).toMatch(/Godkjenn/);
     expect(ui).toMatch(/Avslå/);
@@ -146,6 +150,7 @@ describe('Claude-innbygging — full content under existing chrome', () => {
     expect(piller).toMatch(/Intern/);
     expect(piller).toMatch(/Support/);
     expect(piller).toMatch(/Løst/);
+    expect(piller).toMatch(/innholdPilleKlasse/);
     expect(les('../app/(app)/innboks/_top-bar2.tsx')).toMatch(/Uleste først/);
     expect(les('../app/(app)/innboks/[id]/page.tsx')).toMatch(/data-trad-kjoretoy/);
     expect(les('../app/(app)/innboks/[id]/page.tsx')).toMatch(/DeltakerArk/);

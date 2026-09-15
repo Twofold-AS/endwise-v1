@@ -105,6 +105,7 @@ export function timeplanHref(fane: TimeplanFaneId): string {
 }
 
 export function endringerHref(del: EndringerDelId): string {
+  if (del === 'alle') return '/jobber?fane=endringer';
   return del === 'avvik' ? '/jobber?fane=avvik' : '/jobber?fane=forespor';
 }
 

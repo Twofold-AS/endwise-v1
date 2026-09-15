@@ -1,6 +1,7 @@
 'use client';
 
 import type { InboxListeFilter } from '../_shell/inbox-filter';
+import { innholdPilleKlasse } from './innhold-piller';
 
 export const INNBOKS_INNHOLD_PILLER: { key: InboxListeFilter; label: string }[] = [
   { key: 'alle', label: 'Alle' },
@@ -38,9 +39,7 @@ export function InnboksFilterPiller({
             aria-selected={valgt}
             data-innboks-pille={p.key}
             onClick={() => onVelg(p.key)}
-            className={`inline-flex h-7 items-center rounded-full px-2.5 text-label ${
-              valgt ? 'bg-fg text-bg' : 'bg-surface-2 text-fg'
-            }`}
+            className={innholdPilleKlasse(valgt)}
           >
             {p.label}
           </button>

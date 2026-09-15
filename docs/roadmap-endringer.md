@@ -5,9 +5,11 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
-## 2026-09-15 — Claude-innbygging (ekstra fasit ikke på disk)
+## 2026-09-15 — Claude-innbygging (pulse-base + katalog-piller)
 
-**Type:** merknad. `uploads/endwise-forhandler-pulse-fasit.md` og `Endwise Mobile.dc.html` ble bedt om i follow-up, men fantes ikke i workspace. Pulse-base er allerede 6 kjernekort + Tall #7. Innhold følger OVERRIDE Mobbin (24 / tint / ink-piller / ingen pip) under eksisterende chrome. Ingen ny pakke.
+**Type:** innhold under eksisterende chrome. Ingen ny pakke. Ingen Claude-chrome.
+**Godkjent av:** Mikael follow-up — pulse-fasit (6 kjernekort + Tall #7) + match katalog-UI under Endwise/Mobbin.
+**Endring:** Tall #7 fikk 2×2 surface-2-plater. Endringer Alle|Avvik|Forespørsler = ink-piller (samme som innboks/Ny jobb), ikke dest-underline. `uploads/endwise-forhandler-pulse-fasit.md` og `Endwise Mobile.dc.html` var fortsatt ikke på disk — mønster fra OVERRIDE + eksisterende Mobbin. Seks kjernekort urørt. Chrome urørt.
 
 ---
 

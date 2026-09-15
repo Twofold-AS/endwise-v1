@@ -2,9 +2,10 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
+import { innholdPilleKlasse } from '../_innbygging/innhold-piller';
 import { TimeplanAlleEndringer } from './_alle-endringer';
 import { TimeplanAvvik } from './_avvik';
-import { ENDRINGER_DELER, type EndringerDelId, endringerHref, timeplanHref } from './_faner';
+import { ENDRINGER_DELER, type EndringerDelId, endringerHref } from './_faner';
 import { TimeplanForespor } from './_forespor';
 
 /**
@@ -22,16 +23,14 @@ export function TimeplanEndringer({ del }: { del: EndringerDelId }) {
       : (ENDRINGER_DELER.find((f) => f.id === del) ?? ENDRINGER_DELER[0]);
   return (
     <div data-timeplan-endringer-flate className="flex flex-col gap-5">
-      <div role="tablist" aria-label="Endringer" className="flex flex-wrap gap-5">
+      <div role="tablist" aria-label="Endringer" className="flex flex-wrap gap-1.5">
         <Link
-          href={timeplanHref('endringer') as Route}
+          href={endringerHref('alle') as Route}
           role="tab"
           aria-selected={del === 'alle'}
           scroll={false}
           data-endringer-fane="alle"
-          className={`inline-flex items-center border-b-2 pb-1 text-label ${
-            del === 'alle' ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
-          }`}
+          className={innholdPilleKlasse(del === 'alle')}
         >
           Alle
         </Link>
@@ -45,9 +44,7 @@ export function TimeplanEndringer({ del }: { del: EndringerDelId }) {
               aria-selected={valgt}
               scroll={false}
               data-endringer-fane={f.id}
-              className={`inline-flex items-center border-b-2 pb-1 text-label ${
-                valgt ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
-              }`}
+              className={innholdPilleKlasse(valgt)}
             >
               {f.label}
             </Link>

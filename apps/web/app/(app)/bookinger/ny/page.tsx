@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { innholdPilleKlasse } from '../../_innbygging/innhold-piller';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
@@ -202,9 +203,7 @@ function NyJobbSkjema() {
                 data-ny-jobb-steg-knapp={s.id}
                 aria-current={steg === s.id ? 'step' : undefined}
                 onClick={() => setSteg(s.id)}
-                className={`inline-flex h-7 items-center rounded-full px-2.5 text-label ${
-                  steg === s.id ? 'bg-fg text-bg' : 'bg-surface-2 text-fg'
-                }`}
+                className={innholdPilleKlasse(steg === s.id)}
               >
                 {s.id} {s.label}
               </button>

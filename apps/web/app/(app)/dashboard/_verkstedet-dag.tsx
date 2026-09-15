@@ -4,8 +4,8 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
-import { sammeOsloDag } from '../_lib/oslo-dag';
 import { StatusMerke } from '../_innbygging/status-merke';
+import { sammeOsloDag } from '../_lib/oslo-dag';
 import { fmtServices, fmtTime } from '../bookinger/_status';
 import { Timeplan } from './_timeplan';
 

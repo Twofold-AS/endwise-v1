@@ -3,6 +3,8 @@
 import { Inbox, Package, Users } from '@endwise/ui';
 import { useEffect, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { PulseTekstFooter } from '../_innbygging/pulse-footer';
+import { PulseTallKort, pulseTallCeller } from '../_innbygging/pulse-tall';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BOOKING_LAGRET_EVENT, HJEM_PULSE_REFETCH, invalidateHjemPulse } from './hjem-pulse-sync';
 import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
@@ -17,8 +19,6 @@ import {
   lagerRad,
   pulsdagOverskrift,
 } from './phone-home-pulse';
-import { PulseTallKort, pulseTallCeller } from '../_innbygging/pulse-tall';
-import { PulseTekstFooter } from '../_innbygging/pulse-footer';
 import { PulseAnalyserKort, PulseHeroFlate, PulseJobbFlis, PulseRadKort } from './pulse-kort';
 
 /**

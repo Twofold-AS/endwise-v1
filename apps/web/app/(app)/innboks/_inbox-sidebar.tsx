@@ -43,7 +43,7 @@ export function InboxSidebar() {
   const skjulTelefonListe = Boolean(aktivId || nySamtale);
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, setPart, sortering, skjulte, lostte, velgModus, valgte, toggleValgt } =
+  const { part, innhold, setInnhold, sortering, skjulte, lostte, velgModus, valgte, toggleValgt } =
     useInboxFilter();
 
   const me = trpc.session.me.useQuery();
@@ -93,7 +93,7 @@ export function InboxSidebar() {
       .filter((t) => !skjulte.has(t.id))
       .filter((t) => {
         const lost = lostte.has(t.id);
-        if (part === 'lost') return lost;
+        if (innhold === 'lost') return lost;
         if (lost) return false;
         return part === 'alle' || t.kind === part;
       })
@@ -143,7 +143,17 @@ export function InboxSidebar() {
         me.data?.userId,
       ),
     }));
-  }, [ekte, part, sortering, skjulte, lostte, navnIntern.data, navnOffisiell.data, me.data?.userId]);
+  }, [
+    ekte,
+    part,
+    innhold,
+    sortering,
+    skjulte,
+    lostte,
+    navnIntern.data,
+    navnOffisiell.data,
+    me.data?.userId,
+  ]);
 
   if (endwise) {
     const henvendelser = support.data ?? [];
@@ -195,7 +205,7 @@ export function InboxSidebar() {
       }`}
     >
       <h2 className="sr-only">Samtaler</h2>
-      <InnboksFilterPiller aktiv={part} onVelg={setPart} />
+      <InnboksFilterPiller aktiv={innhold} onVelg={setInnhold} />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3">
         {threads.isLoading ? (
           <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
@@ -204,9 +214,9 @@ export function InboxSidebar() {
             <MessageSquare size={20} className="text-fg-muted" />
             <p className="text-label text-fg">Ingen samtaler</p>
             <p className="text-[12px] text-fg-muted">
-              {part === 'alle' ? 'Innboksen er tom.' : 'Ingen samtaler for denne parten.'}
+              {innhold === 'alle' ? 'Innboksen er tom.' : 'Ingen samtaler for denne parten.'}
             </p>
-            {part === 'alle' && (
+            {innhold === 'alle' && (
               <Link
                 href={'/innboks?ny=1' as Route}
                 className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[12px] text-bg"

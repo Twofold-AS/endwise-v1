@@ -2,10 +2,10 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
+import { TimeplanAlleEndringer } from './_alle-endringer';
 import { TimeplanAvvik } from './_avvik';
 import { ENDRINGER_DELER, type EndringerDelId, endringerHref, timeplanHref } from './_faner';
 import { TimeplanForespor } from './_forespor';
-import { TimeplanAlleEndringer } from './_alle-endringer';
 
 /**
  * Timeplan › Endringer — Innstillinger-inndeling (underline-faner + panel).
@@ -54,7 +54,11 @@ export function TimeplanEndringer({ del }: { del: EndringerDelId }) {
           );
         })}
       </div>
-      <section role="tabpanel" aria-label={def?.label ?? 'Endringer'} className="flex flex-col gap-5">
+      <section
+        role="tabpanel"
+        aria-label={def?.label ?? 'Endringer'}
+        className="flex flex-col gap-5"
+      >
         <div>
           <h2 className="text-title text-fg">{def?.label ?? 'Endringer'}</h2>
           {def?.ingress ? <p className="text-body text-fg-muted">{def.ingress}</p> : null}

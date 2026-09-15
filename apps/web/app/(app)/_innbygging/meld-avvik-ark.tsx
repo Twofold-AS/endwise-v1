@@ -94,9 +94,7 @@ export function MeldAvvikForesporsel({
               Forespørsel lagres lokalt i denne økta — ingen egen API ennå.
             </p>
           ) : null}
-          {sendtLokal ? (
-            <p className="mt-2 text-[12px] text-fg">Sendt i forhåndsvisning.</p>
-          ) : null}
+          {sendtLokal ? <p className="mt-2 text-[12px] text-fg">Sendt i forhåndsvisning.</p> : null}
           {avvik.isError ? (
             <p className="mt-2 text-[12px] text-danger">{avvik.error.message}</p>
           ) : null}

@@ -4,11 +4,10 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { PHONE_DEST_FYLL } from '../_shell/phone-home';
 
-export type PulseTallCelle = {
-  id: string;
-  label: string;
-  verdi: string | number;
-};
+import type { PulseTallCelle } from './pulse-tall-celler';
+
+export type { PulseTallCelle } from './pulse-tall-celler';
+export { pulseTallCeller } from './pulse-tall-celler';
 
 /**
  * Pulse-kort #7 «Tall» — kompakt 2×2 Mobbin.
@@ -41,21 +40,4 @@ export function PulseTallKort({
       </div>
     </Link>
   );
-}
-
-export function pulseTallCeller(args: {
-  visninger: number;
-  bookinger: number;
-  returer: number;
-  credits?: number | null;
-}): PulseTallCelle[] {
-  const celler: PulseTallCelle[] = [
-    { id: 'visninger', label: 'Visninger', verdi: args.visninger },
-    { id: 'bookinger', label: 'Bookinger', verdi: args.bookinger },
-    { id: 'returer', label: 'Returer', verdi: args.returer },
-  ];
-  if (args.credits != null) {
-    celler.push({ id: 'credits', label: 'Credits', verdi: args.credits });
-  }
-  return celler;
 }

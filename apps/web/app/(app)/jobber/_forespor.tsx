@@ -1,13 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { EndringKortRad } from '../_innbygging/endringer-kort';
+import { trpc } from '@/lib/trpc';
 import {
-  type EndringBehandling,
   ENDRINGER_MOCK_EKSEMPEL,
+  type EndringBehandling,
   endringerFraBookinger,
 } from '../_innbygging/endringer';
-import { trpc } from '@/lib/trpc';
+import { EndringKortRad } from '../_innbygging/endringer-kort';
 import { HJEM_PULSE_REFETCH } from '../_shell/hjem-pulse-sync';
 import { endringerVindu } from '../_shell/phone-home-pulse';
 
@@ -27,8 +27,7 @@ export function TimeplanForespor() {
   const ekte = endringerFraBookinger(bookings.data ?? [], behandling).filter(
     (k) => k.type !== 'avvik',
   );
-  const rader =
-    ekte.length > 0 ? ekte : ENDRINGER_MOCK_EKSEMPEL.filter((k) => k.type !== 'avvik');
+  const rader = ekte.length > 0 ? ekte : ENDRINGER_MOCK_EKSEMPEL.filter((k) => k.type !== 'avvik');
 
   return (
     <div data-timeplan-forespor className="flex flex-col gap-3">

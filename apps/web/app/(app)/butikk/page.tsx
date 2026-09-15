@@ -59,67 +59,67 @@ export default function ButikkKatalogPage() {
           <h2 className="text-title text-fg">Produktkatalog</h2>
           <p className="text-[12px] text-fg-muted">Aktive deler med utsalgspris.</p>
         </div>
-      {katalog.isError ? (
-        <CardShell className="p-6">
-          <p className="text-body text-danger">{katalog.error.message}</p>
-        </CardShell>
-      ) : katalog.isLoading ? (
-        <p className="py-12 text-center text-body text-fg-muted">Laster …</p>
-      ) : (katalog.data?.length ?? 0) === 0 ? (
-        <CardShell className="p-10 text-center">
-          <p className="text-label text-fg">Ingen deler til salg</p>
-          <p className="mt-1 text-[12px] text-fg-muted">
-            Aktive deler trenger utsalgspris for å vises her.
-          </p>
-        </CardShell>
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
-          <div className="flex h-9 items-center gap-4 border-border border-b bg-surface-2 px-4 text-[12px] text-fg-muted">
-            <span className="w-28 shrink-0">Delenummer</span>
-            <span className="min-w-0 flex-1">Navn</span>
-            <span className="w-28 shrink-0">Kategori</span>
-            <span className="w-24 shrink-0 text-right">Pris</span>
-            <span className="w-24 shrink-0 text-right">Tilgjengelig</span>
-            <span className="w-28 shrink-0" />
-          </div>
-          {katalog.data?.map((d, i) => (
-            <div
-              key={d.id}
-              className={`flex h-row-store items-center gap-4 bg-bg px-4 ${
-                i > 0 ? 'border-border border-t' : ''
-              }`}
-            >
-              <span className="w-28 shrink-0 truncate font-mono text-[12px] text-fg-muted">
-                {d.sku}
-              </span>
-              <span className="min-w-0 flex-1 truncate text-label text-fg">{d.name}</span>
-              <span className="w-28 shrink-0 truncate text-[12px] text-fg-muted">
-                {d.category ?? '—'}
-              </span>
-              <span className="w-24 shrink-0 text-right text-[12px] text-fg tabular-nums">
-                {kroner(d.sellPriceMinor)}
-              </span>
-              <span className="w-24 shrink-0 text-right text-label text-fg tabular-nums">
-                {d.tilgjengelig}
-              </span>
-              <span className="flex w-28 shrink-0 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={d.tilgjengelig < 1}
-                  onClick={() => {
-                    leggIKurv(d.id, d.tilgjengelig);
-                    setKurvAntall(antallIKurv());
-                  }}
-                >
-                  <Package size={14} strokeWidth={1.75} />
-                  Legg i kurv
-                </Button>
-              </span>
+        {katalog.isError ? (
+          <CardShell className="p-6">
+            <p className="text-body text-danger">{katalog.error.message}</p>
+          </CardShell>
+        ) : katalog.isLoading ? (
+          <p className="py-12 text-center text-body text-fg-muted">Laster …</p>
+        ) : (katalog.data?.length ?? 0) === 0 ? (
+          <CardShell className="p-10 text-center">
+            <p className="text-label text-fg">Ingen deler til salg</p>
+            <p className="mt-1 text-[12px] text-fg-muted">
+              Aktive deler trenger utsalgspris for å vises her.
+            </p>
+          </CardShell>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-border">
+            <div className="flex h-9 items-center gap-4 border-border border-b bg-surface-2 px-4 text-[12px] text-fg-muted">
+              <span className="w-28 shrink-0">Delenummer</span>
+              <span className="min-w-0 flex-1">Navn</span>
+              <span className="w-28 shrink-0">Kategori</span>
+              <span className="w-24 shrink-0 text-right">Pris</span>
+              <span className="w-24 shrink-0 text-right">Tilgjengelig</span>
+              <span className="w-28 shrink-0" />
             </div>
-          ))}
-        </div>
-      )}
+            {katalog.data?.map((d, i) => (
+              <div
+                key={d.id}
+                className={`flex h-row-store items-center gap-4 bg-bg px-4 ${
+                  i > 0 ? 'border-border border-t' : ''
+                }`}
+              >
+                <span className="w-28 shrink-0 truncate font-mono text-[12px] text-fg-muted">
+                  {d.sku}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-label text-fg">{d.name}</span>
+                <span className="w-28 shrink-0 truncate text-[12px] text-fg-muted">
+                  {d.category ?? '—'}
+                </span>
+                <span className="w-24 shrink-0 text-right text-[12px] text-fg tabular-nums">
+                  {kroner(d.sellPriceMinor)}
+                </span>
+                <span className="w-24 shrink-0 text-right text-label text-fg tabular-nums">
+                  {d.tilgjengelig}
+                </span>
+                <span className="flex w-28 shrink-0 justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={d.tilgjengelig < 1}
+                    onClick={() => {
+                      leggIKurv(d.id, d.tilgjengelig);
+                      setKurvAntall(antallIKurv());
+                    }}
+                  >
+                    <Package size={14} strokeWidth={1.75} />
+                    Legg i kurv
+                  </Button>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

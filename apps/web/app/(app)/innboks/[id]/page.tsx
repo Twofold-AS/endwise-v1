@@ -21,9 +21,11 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { DeltakerArk } from '../../_innbygging/deltaker-ark';
 import { useLyd } from '../../_lib/lyd';
 import { useEventStream } from '../../_lib/use-event-stream';
 import { CardShell } from '../../_shell/cards';
+import { useInboxFilter } from '../../_shell/inbox-filter';
 import { type Kanal, KanalLinje, KanalMerke, tilKanal } from '../_kanal';
 import {
   agentName,
@@ -44,8 +46,6 @@ import {
   tilDeltakerRolle,
   visningForTraadtype,
 } from '../_lib';
-import { DeltakerArk } from '../../_innbygging/deltaker-ark';
-import { useInboxFilter } from '../../_shell/inbox-filter';
 import { useInboxModus } from '../_modus';
 
 /**

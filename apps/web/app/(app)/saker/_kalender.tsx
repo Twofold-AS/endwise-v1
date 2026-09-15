@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { StatusMerke } from '../_innbygging/status-merke';
 import { osloDagsvindu, osloVeggtid, PRODUKT_TIDSSONE } from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
 import {
@@ -15,7 +16,6 @@ import {
   TIMEPLAN_PX_PER_TIME,
   TIMEPLAN_TIMELISTE,
 } from '../_shell/timeplan-dager';
-import { StatusMerke } from '../_innbygging/status-merke';
 import { fmtServices } from '../bookinger/_status';
 
 /**

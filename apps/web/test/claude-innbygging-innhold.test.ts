@@ -2,17 +2,17 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import {
+  ENDRINGER_MOCK_EKSEMPEL,
+  endringerFraBookinger,
+  endringTypeFraNotat,
+} from '../app/(app)/_innbygging/endringer.ts';
+import { lagerStatusFor } from '../app/(app)/_innbygging/lager-katalog.ts';
+import { pulseTallCeller } from '../app/(app)/_innbygging/pulse-tall-celler.ts';
+import { JOBB_STATUS_LABEL, jobbStatusFraNotat } from '../app/(app)/_innbygging/status-katalog.ts';
 import { FORHANDLER_NAV } from '../app/(app)/_shell/nav.ts';
 import { DEALER_PULSE_KEYS, PULSE_ENDRINGER_HREF } from '../app/(app)/_shell/phone-home.ts';
 import { parseTimeplanFane } from '../app/(app)/jobber/_faner.ts';
-import {
-  ENDRINGER_MOCK_EKSEMPEL,
-  endringTypeFraNotat,
-  endringerFraBookinger,
-} from '../app/(app)/_innbygging/endringer.ts';
-import { pulseTallCeller } from '../app/(app)/_innbygging/pulse-tall.tsx';
-import { JOBB_STATUS_LABEL, jobbStatusFraNotat } from '../app/(app)/_innbygging/status-merke.tsx';
-import { lagerStatusFor } from '../app/(app)/_innbygging/lager-status.tsx';
 
 const her = dirname(fileURLToPath(import.meta.url));
 

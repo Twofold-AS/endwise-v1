@@ -3,10 +3,10 @@
 import { Inbox, Package, Users } from '@endwise/ui';
 import { useMemo } from 'react';
 import { useTema } from '../_lib/tema-provider';
+import { PulseTekstFooter } from '../(app)/_innbygging/pulse-footer';
+import { PulseTallKort, pulseTallCeller } from '../(app)/_innbygging/pulse-tall';
 import { osloVeggklokke } from '../(app)/_lib/oslo-dag';
 import { analyserMockStats, pulsdagOverskrift } from '../(app)/_shell/phone-home-pulse';
-import { PulseTallKort, pulseTallCeller } from '../(app)/_innbygging/pulse-tall';
-import { PulseTekstFooter } from '../(app)/_innbygging/pulse-footer';
 import {
   PulseAnalyserKort,
   PulseHeroFlate,

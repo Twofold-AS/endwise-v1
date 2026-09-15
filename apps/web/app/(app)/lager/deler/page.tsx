@@ -4,9 +4,9 @@ import { ArrowLeftRight, ChevronDown, Package, Search } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { useOrgRole } from '../../_lib/use-org-role';
 import { BestillDelArk, EndreMinimumArk } from '../../_innbygging/lager-ark';
 import { LagerStatusMerke, lagerStatusFor } from '../../_innbygging/lager-status';
+import { useOrgRole } from '../../_lib/use-org-role';
 import { Beholdning, Feil, kroner, Laster, Sidehode, Tomt } from '../_delt';
 import { BevegelseDialog } from './_bevegelse-dialog';
 
@@ -162,7 +162,11 @@ function DelerInner() {
                 <Beholdning
                   tilgjengelig={d.tilgjengelig}
                   reservert={d.reserved}
-                  lav={minLokalt.get(d.id) != null ? d.tilgjengelig < (minLokalt.get(d.id) ?? 0) : d.underMinimum}
+                  lav={
+                    minLokalt.get(d.id) != null
+                      ? d.tilgjengelig < (minLokalt.get(d.id) ?? 0)
+                      : d.underMinimum
+                  }
                 />
               </span>
               <span className="flex w-32 shrink-0 flex-col items-start gap-1">

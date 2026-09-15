@@ -2,8 +2,8 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
-import { StatusMerke } from './status-merke';
 import type { EndringBehandling, EndringKort } from './endringer';
+import { StatusMerke } from './status-merke';
 
 /**
  * Endringer-kort: type · meldt av · jobb · foreslått dato/mekaniker ·

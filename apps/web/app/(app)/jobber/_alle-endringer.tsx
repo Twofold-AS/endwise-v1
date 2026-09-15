@@ -1,13 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { EndringKortRad } from '../_innbygging/endringer-kort';
+import { trpc } from '@/lib/trpc';
 import {
-  type EndringBehandling,
   ENDRINGER_MOCK_EKSEMPEL,
+  type EndringBehandling,
   endringerFraBookinger,
 } from '../_innbygging/endringer';
-import { trpc } from '@/lib/trpc';
+import { EndringKortRad } from '../_innbygging/endringer-kort';
 import { HJEM_PULSE_REFETCH } from '../_shell/hjem-pulse-sync';
 import { endringerVindu } from '../_shell/phone-home-pulse';
 

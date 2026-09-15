@@ -4,10 +4,10 @@ import { CalendarDays, staffFargeStil } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { JOBB_STATUS_LABEL, StatusMerke } from '../_innbygging/status-merke';
 import { PRODUKT_TIDSSONE } from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
 import { klossSporStil, pakkKlosser } from '../_shell/timeplan-dager';
-import { JOBB_STATUS_LABEL, StatusMerke } from '../_innbygging/status-merke';
 import { fmtServices } from '../bookinger/_status';
 import {
   dagensSaker,

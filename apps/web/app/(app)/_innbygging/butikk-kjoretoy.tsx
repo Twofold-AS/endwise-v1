@@ -48,7 +48,7 @@ export function ButikkKjoretoySalg({
     make?: string | null;
     model?: string | null;
     regNumber?: string | null;
-    modelYear?: number | null;
+    modelYear?: string | number | null;
   }[];
 }) {
   const [reservert, setReservert] = useState<ReadonlySet<string>>(() => new Set());

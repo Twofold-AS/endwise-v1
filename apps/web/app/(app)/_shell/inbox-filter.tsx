@@ -16,8 +16,10 @@ export const INNBOKS_GRUPPER: { key: InboxPart; label: string }[] = [
 ];
 
 const InboxFilterContext = createContext<{
-  part: InboxListeFilter;
-  setPart: (part: InboxListeFilter) => void;
+  part: InboxPart;
+  setPart: (part: InboxPart) => void;
+  innhold: InboxListeFilter;
+  setInnhold: (f: InboxListeFilter) => void;
   sortering: InboxSortering;
   setSortering: (s: InboxSortering) => void;
   skjulte: ReadonlySet<string>;
@@ -34,7 +36,8 @@ const InboxFilterContext = createContext<{
 } | null>(null);
 
 export function InboxFilterProvider({ children }: { children: ReactNode }) {
-  const [part, setPart] = useState<InboxListeFilter>('alle');
+  const [part, setPartState] = useState<InboxPart>('alle');
+  const [innhold, setInnholdState] = useState<InboxListeFilter>('alle');
   const [sortering, setSortering] = useState<InboxSortering>('nyeste');
   const [skjulte, setSkjulte] = useState<ReadonlySet<string>>(() => new Set());
   const [lostte, setLostte] = useState<ReadonlySet<string>>(() => new Set());
@@ -73,12 +76,22 @@ export function InboxFilterProvider({ children }: { children: ReactNode }) {
       return neste;
     });
   }
+  function setPart(neste: InboxPart) {
+    setPartState(neste);
+    setInnholdState(neste);
+  }
+  function setInnhold(neste: InboxListeFilter) {
+    setInnholdState(neste);
+    if (neste !== 'lost') setPartState(neste);
+  }
 
   return (
     <InboxFilterContext.Provider
       value={{
         part,
         setPart,
+        innhold,
+        setInnhold,
         sortering,
         setSortering,
         skjulte,

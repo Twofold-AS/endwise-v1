@@ -148,8 +148,7 @@ function AnsattKort({
         Jobber <span className="text-fg">{rad.jobberIDag}</span>
       </p>
       <p data-ansatt-rolle className="text-label text-fg-muted">
-        Rolle{' '}
-        <span className="text-fg">{FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}</span>
+        Rolle <span className="text-fg">{FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}</span>
       </p>
       <p data-ansatt-tilgang className="text-label text-fg-muted">
         Tilgang{' '}

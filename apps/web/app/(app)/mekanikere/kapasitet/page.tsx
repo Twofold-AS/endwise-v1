@@ -15,14 +15,14 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
+import { StatusMerke } from '../../_innbygging/status-merke';
 import { osloDagsvindu, osloKalenderdag } from '../../_lib/oslo-dag';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { AnsattePiller } from '../../_shell/ansatte-piller';
 import { CardShell } from '../../_shell/cards';
 import { TimeplanStripe } from '../../_shell/timeplan-stripe';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
-import { StatusMerke } from '../../_innbygging/status-merke';
-import { estMinutes, fmtTime } from '../../min-dag/_status';
+import { estMinutes, fmtTime, STATUS_LABEL } from '../../min-dag/_status';
 import { FELT } from '../kompetanse/_niva';
 
 const TELLER_STATUS = new Set(['draft', 'confirmed', 'in_progress']);
@@ -276,7 +276,9 @@ function MekanikerTimeplan({
                     {estMinutes(job.startsAt, job.endsAt)} min
                   </p>
                 </div>
-                <StatusMerke status={job.status} />
+                <span title={STATUS_LABEL[job.status] ?? job.status}>
+                  <StatusMerke status={job.status} />
+                </span>
               </div>
             </Link>
           ))

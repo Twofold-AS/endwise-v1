@@ -121,7 +121,7 @@ function AnsattKort({
       : '—';
 
   return (
-    <CardShell className="flex flex-col gap-3 p-4">
+    <CardShell className="flex flex-col gap-3 rounded-[24px] border-divide p-4 shadow-none">
       <div className="flex items-start gap-3">
         <Avatar
           seed={rad.userId}

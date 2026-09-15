@@ -5,6 +5,12 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-15 — Claude-innbygging (ekstra fasit ikke på disk)
+
+**Type:** merknad. `uploads/endwise-forhandler-pulse-fasit.md` og `Endwise Mobile.dc.html` ble bedt om i follow-up, men fantes ikke i workspace. Pulse-base er allerede 6 kjernekort + Tall #7. Innhold følger OVERRIDE Mobbin (24 / tint / ink-piller / ingen pip) under eksisterende chrome. Ingen ny pakke.
+
+---
+
 ## 2026-09-15 — Claude-innbygging full content (Mikael OVERRIDE)
 
 **Type:** innhold under eksisterende chrome. Ingen techstack-endring. Ingen ny UI-pakke. Ingen ny destinasjon.

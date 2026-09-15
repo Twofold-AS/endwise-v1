@@ -261,8 +261,8 @@ export function PulseDagSirkel({
 }
 
 /**
- * Toppkort: ukedag+dato og Endringer på samme rad ·
- * PPF-siffer sentrert mot buehøyde · etiketter på 08.00/19.00 · Modus nederst.
+ * Toppkort: ukedag+dato · PPF-siffer sentrert mot buehøyde ·
+ * etiketter på 08.00/19.00 · Modus + stille Endringer-lenke nederst.
  */
 export function PulseHeroFlate({
   ukedag,
@@ -309,7 +309,6 @@ export function PulseHeroFlate({
             </span>
           </p>
         </Link>
-        <PulseEndringerLenke />
       </div>
       <Link
         href={href as Route}
@@ -327,6 +326,7 @@ export function PulseHeroFlate({
       </Link>
       <div data-pulse-hero-bunn className="flex w-full items-center justify-between gap-3">
         <PulseAvvikForesporBoks avvik={avvik} forespor={forespor} laster={lasterEndringer} />
+        <PulseEndringerLenke />
       </div>
     </div>
   );

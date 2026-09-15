@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-15 — F3-05 innbygging PR1 (Endringer-lenke nederst i I dag)
+
+**Type:** content-only på forhandler-hjem I dag-kort. Ingen techstack-endring. Ingen ny UI-pakke. Ingen chrome.
+**Godkjent av:** Mikael CODE-GO innbygging §4 / §7 PR1.
+**Endring:** **F3-05** `done` (PR1). Stille tekstlenke «Endringer» nederst i I dag-kortet (`PulseHeroFlate` bunn-rad) → `/jobber?fane=endringer`. Planlagt/Pågår/Ferdig + Avvik/Forespørsel-tall beholdt. Chrome (top-bar 1+2, FORHANDLER_NAV, sidebar) urørt. ⛔ PR2–PR10. ⛔ #114/#119. Draft, ikke merge.
+
+---
+
 ## 2026-09-10 — F15 Sikkerhetsstyringssystem / HMS (veikart bak flagg)
 
 **Type:** ny fase/epic i veikartet. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB. Ingen HMS-UI.

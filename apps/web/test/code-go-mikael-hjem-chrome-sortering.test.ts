@@ -38,7 +38,7 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(skjema).toMatch(/signin-totp/);
   });
 
-  it('toppkort: Endringer mot dato, PPF-etikett på 08.00/19.00-linje', () => {
+  it('toppkort: PPF-etikett på 08.00/19.00-linje; Endringer nederst (innbygging)', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     const sirkel = funksjon(kort, 'PulseDagSirkel');
@@ -47,11 +47,11 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
       hero.indexOf('data-pulse-teller-rad'),
     );
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('PulseEndringerLenke'));
-    expect(hero.indexOf('PulseEndringerLenke')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
+    expect(hero.indexOf('data-pulse-teller-rad')).toBeLessThan(hero.indexOf('PulseEndringerLenke'));
     expect(hero).toMatch(/items-end/);
     expect(hero).toMatch(/data-pulse-hero-bunn/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
-    expect(hero.slice(hero.indexOf('data-pulse-hero-bunn'))).not.toMatch(/PulseEndringerLenke/);
+    expect(hero.slice(hero.indexOf('data-pulse-hero-bunn'))).toMatch(/PulseEndringerLenke/);
     expect(tall).toMatch(/data-pulse-tall-etikett/);
     expect(tall).toMatch(/h-\[16px\]/);
     expect(sirkel).toMatch(/data-pulse-dag-fot/);
@@ -135,11 +135,10 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(tjFelles).toMatch(/ATV/);
     expect(tj).not.toMatch(/role="tablist"/);
     const ku = utenKommentarer(les('../app/(app)/kunder/page.tsx'));
-    expect(ku).toMatch(/data-kunder-sortering/);
-    expect(ku).toMatch(/SorteringArk/);
-    expect(ku).toMatch(/Nyeste/);
-    expect(ku).toMatch(/Eldste/);
-    expect(ku).toMatch(/Endwise/);
+    const kuListe = utenKommentarer(les('../app/(app)/_innbygging/kunder-liste.tsx'));
+    expect(ku).toMatch(/KunderListe/);
+    expect(kuListe).toMatch(/data-kunde-alfa/);
+    expect(kuListe).toMatch(/PhoneSokFelt/);
     expect(ku).not.toMatch(/role="tablist"/);
     expect(ku).not.toMatch(/function Knapperad/);
   });

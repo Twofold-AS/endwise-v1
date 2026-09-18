@@ -16,6 +16,7 @@
       "!**/drizzle",
       "!docs",
       "!apps/web/public",
+      "!**/next-env.d.ts",
       "!packages/ui/src/components/dither-kit",
       "!packages/ui/src/vendor",
       "!packages/ui/src/assets/icons",

@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { StatusMerke } from '../_innbygging/status-merke';
 import { osloDagsvindu, osloVeggtid, PRODUKT_TIDSSONE } from '../_lib/oslo-dag';
 import { CardShell } from '../_shell/cards';
 import {
@@ -222,9 +223,12 @@ function Kloss({
         {booking.regNumber ?? 'Uten regnr'}
       </div>
       {height > 34 && (
-        <div className="truncate text-[11px] opacity-80">
-          {fmtServices(booking)}
-          {booking.mechanicName ? ` · ${booking.mechanicName}` : ''}
+        <div className="flex items-center gap-1 truncate text-[11px] opacity-80">
+          <span className="min-w-0 truncate">
+            {fmtServices(booking)}
+            {booking.mechanicName ? ` · ${booking.mechanicName}` : ''}
+          </span>
+          <StatusMerke status={booking.status} />
         </div>
       )}
     </Link>

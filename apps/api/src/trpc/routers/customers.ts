@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise/db';
+import { and, asc, desc, eq, ilike, inArray, or, schema, sql, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { router, staffProcedure } from '../init.ts';
@@ -33,15 +33,15 @@ export const customersRouter = router({
           /** Skill Quick-speilede kunder fra dem som er født her. */
           kilde: z.enum(['alle', 'endwise', 'quick']).default('alle'),
           limit: z.number().int().min(1).max(200).default(100),
+          offset: z.number().int().min(0).max(10_000).default(0),
         })
-        .default({ sorter: 'navn', retning: 'asc', kilde: 'alle', limit: 100 }),
+        .default({ sorter: 'navn', retning: 'asc', kilde: 'alle', limit: 100, offset: 0 }),
     )
     .query(({ ctx, input }) =>
       withTenant(ctx.db, ctx.tenantId, async (tx) => {
         const kolonne = KUNDE_SORT[input.sorter];
         const sortering = input.retning === 'desc' ? desc(kolonne) : asc(kolonne);
-        const q = input.sok?.trim();
-
+        const filter = await kundeListeFilter(tx, ctx.tenantId, input);
         return tx
           .select({
             id: schema.customers.id,
@@ -61,21 +61,31 @@ export const customersRouter = router({
             )`,
           })
           .from(schema.customers)
-          .where(
-            and(
-              eq(schema.customers.tenantId, ctx.tenantId),
-              input.kilde === 'alle' ? undefined : eq(schema.customers.source, input.kilde),
-              q
-                ? or(
-                    ilike(schema.customers.name, `%${q}%`),
-                    ilike(schema.customers.email, `%${q}%`),
-                    ilike(schema.customers.phone, `%${q}%`),
-                  )
-                : undefined,
-            ),
-          )
+          .where(filter)
           .orderBy(sortering)
-          .limit(input.limit);
+          .limit(input.limit)
+          .offset(input.offset);
+      }),
+    ),
+
+  /** Samme filter som list — til pager «Viser X–Y av Z». */
+  antall: staffProcedure
+    .input(
+      z
+        .object({
+          sok: z.string().max(120).optional(),
+          kilde: z.enum(['alle', 'endwise', 'quick']).default('alle'),
+        })
+        .default({ kilde: 'alle' }),
+    )
+    .query(({ ctx, input }) =>
+      withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const filter = await kundeListeFilter(tx, ctx.tenantId, input);
+        const [rad] = await tx
+          .select({ n: sql<number>`count(*)::int` })
+          .from(schema.customers)
+          .where(filter);
+        return rad?.n ?? 0;
       }),
     ),
 
@@ -288,7 +298,94 @@ export const customersRouter = router({
         throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre notatet. Prøv igjen.');
       }
     }),
+
+  /**
+   * Slett kunde. Notater følger med (cascade). Kjøretøy og jobber mister eier
+   * (set null) — historikken blir stående. Angre = restore med samme id.
+   */
+  remove: staffProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ ctx, input }) => {
+    try {
+      return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [slettet] = await tx
+          .delete(schema.customers)
+          .where(
+            and(eq(schema.customers.id, input.id), eq(schema.customers.tenantId, ctx.tenantId)),
+          )
+          .returning();
+        if (!slettet) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke kunden' });
+        return slettet;
+      });
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      loggDealerWritePostgresFeil('customers', error);
+      throw mapDealerWritePostgresFeil(error, 'Kunne ikke slette kunden. Prøv igjen.');
+    }
+  }),
+
+  restore: staffProcedure
+    .input(
+      z.object({
+        id: z.uuid(),
+        name: z.string().min(1).max(160),
+        email: z.email().nullable().optional(),
+        phone: z.string().min(3).max(32).nullable().optional(),
+        source: z.string().max(32).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [created] = await tx
+            .insert(schema.customers)
+            .values({
+              id: input.id,
+              name: input.name,
+              email: input.email ?? undefined,
+              phone: input.phone ?? undefined,
+              tenantId: ctx.tenantId,
+              source: input.source || 'endwise',
+            })
+            .returning();
+          return created;
+        });
+      } catch (error) {
+        loggDealerWritePostgresFeil('customers', error);
+        throw mapDealerWritePostgresFeil(error, 'Kunne ikke angre slettingen. Prøv igjen.');
+      }
+    }),
 });
+
+type KundeTx = Parameters<Parameters<typeof withTenant>[2]>[0];
+
+async function kundeListeFilter(
+  tx: KundeTx,
+  tenantId: string,
+  input: { sok?: string; kilde?: 'alle' | 'endwise' | 'quick' },
+) {
+  const q = input.sok?.trim();
+  let viaReg: string[] = [];
+  if (q) {
+    const rader = await tx
+      .select({ id: schema.vehicles.customerId })
+      .from(schema.vehicles)
+      .where(
+        and(eq(schema.vehicles.tenantId, tenantId), ilike(schema.vehicles.regNumber, `%${q}%`)),
+      );
+    viaReg = rader.map((r) => r.id).filter((id): id is string => Boolean(id));
+  }
+  return and(
+    eq(schema.customers.tenantId, tenantId),
+    input.kilde && input.kilde !== 'alle' ? eq(schema.customers.source, input.kilde) : undefined,
+    q
+      ? or(
+          ilike(schema.customers.name, `%${q}%`),
+          ilike(schema.customers.email, `%${q}%`),
+          ilike(schema.customers.phone, `%${q}%`),
+          viaReg.length ? inArray(schema.customers.id, viaReg) : undefined,
+        )
+      : undefined,
+  );
+}
 
 function endringslogg(
   forrige: { name: string; email: string | null; phone: string | null },

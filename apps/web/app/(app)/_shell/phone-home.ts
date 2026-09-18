@@ -102,6 +102,7 @@ export type PhoneKortKey =
   | 'svarhastighet'
   | 'team'
   | 'jobb'
+  | 'tall'
   | 'butikk'
   | 'min-dag'
   | 'dine-jobber'
@@ -164,6 +165,7 @@ export const PHONE_KORT_META: Record<
   svarhastighet: { label: 'Svarhastighet', href: '/innboks', icon: Inbox },
   team: { label: 'På jobb', href: '/organisasjon?seksjon=ansatte', icon: Users },
   jobb: { label: 'Jobb', href: '/bookinger/ny', icon: Plus },
+  tall: { label: 'Tall', href: '/statistikk', icon: ChartColumn },
   butikk: { label: 'Butikk', href: '/butikk', icon: Store },
   'min-dag': { label: 'Dine jobber', href: '/dine-jobber', icon: CalendarDays },
   'dine-jobber': { label: 'Dine jobber', href: '/dine-jobber', icon: CalendarDays },

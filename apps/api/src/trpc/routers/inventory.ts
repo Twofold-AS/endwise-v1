@@ -408,11 +408,34 @@ export const inventoryRouter = router({
         .from(schema.stockLocations)
         .where(eq(schema.stockLocations.tenantId, ctx.tenantId));
 
+      const lave = await tx
+        .select({
+          minStock: schema.parts.minStock,
+          onHand: sql<number>`coalesce(sum(${schema.stockLevels.onHand}), 0)::int`,
+          reserved: sql<number>`coalesce(sum(${schema.stockLevels.reserved}), 0)::int`,
+        })
+        .from(schema.parts)
+        .leftJoin(
+          schema.stockLevels,
+          and(
+            eq(schema.stockLevels.partId, schema.parts.id),
+            eq(schema.stockLevels.tenantId, ctx.tenantId),
+          ),
+        )
+        .where(eq(schema.parts.tenantId, ctx.tenantId))
+        .groupBy(schema.parts.id, schema.parts.minStock);
+
+      const underMinimum = lave.filter(
+        (r) => r.minStock != null && r.onHand - r.reserved < r.minStock,
+      ).length;
+
       return {
         antallDeler: tall?.antallDeler ?? 0,
         totaltAntall: tall?.totaltAntall ?? 0,
+        paLager: tall?.totaltAntall ?? 0,
         reservert: tall?.reservert ?? 0,
         tilgjengelig: (tall?.totaltAntall ?? 0) - (tall?.reservert ?? 0),
+        underMinimum,
         antallLokasjoner: lok?.antall ?? 0,
       };
     }),

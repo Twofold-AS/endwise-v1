@@ -1,19 +1,17 @@
 'use client';
 
-import { ArrowLeftRight, MapPin, Package, TriangleAlert } from '@endwise/ui';
+import { TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
+import { LAGER_HUB_LENKER, LAGER_HUB_STATUS } from '../_innbygging/lager-hub';
 import { useOrgRole } from '../_lib/use-org-role';
-import { CardShell } from '../_shell/cards';
 import { shellForBruker } from '../_shell/nav';
 import { Beholdning, Feil, Laster, Sidehode, Tomt } from './_delt';
 
 /**
- * Lager · Oversikt. Alt her er ekte data fra `inventory`-ruteren.
- * Fire tellere, og «Tilgjengelig» er den som betyr noe: en reservert del står
- * på hylla, men er lovet bort. Så «Lav beholdning» rett under — det eneste på
- * siden som krever en handling.
+ * Lager-hub. Statusblokk + lenker Deler / Inn- og utlogg.
+ * Bestill/minimum bor på /lager/deler. Chrome-piller urørt.
  */
 export default function LagerOversiktPage() {
   const { role, jobbfunksjon, isMechanic, erPlattform } = useOrgRole();
@@ -33,6 +31,12 @@ export default function LagerOversiktPage() {
   });
 
   const s = oppsummering.data;
+  const verdier: Record<(typeof LAGER_HUB_STATUS)[number], number | undefined> = {
+    'På lager': s?.paLager ?? s?.totaltAntall,
+    Tilgjengelig: s?.tilgjengelig,
+    Reservert: s?.reservert,
+    'Under minimum': s?.underMinimum,
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
@@ -43,37 +47,34 @@ export default function LagerOversiktPage() {
       {oppsummering.isError ? (
         <Feil melding={oppsummering.error.message} />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Teller
-            icon={Package}
-            label="Deler"
-            verdi={s?.antallDeler}
-            laster={oppsummering.isLoading}
-          />
-          <Teller
-            icon={Package}
-            label="Tilgjengelig"
-            verdi={s?.tilgjengelig}
-            laster={oppsummering.isLoading}
-            hint="På lager minus reservert"
-          />
-          <Teller
-            icon={ArrowLeftRight}
-            label="Reservert"
-            verdi={s?.reservert}
-            laster={oppsummering.isLoading}
-            hint="Står fysisk, men er lovet bort"
-          />
-          <Teller
-            icon={MapPin}
-            label="Plass"
-            verdi={s?.antallLokasjoner}
-            laster={oppsummering.isLoading}
-          />
+        <div data-lager-hub-status className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {LAGER_HUB_STATUS.map((label) => (
+            <div
+              key={label}
+              data-lager-hub-celle={label}
+              className="rounded-[24px] border border-divide bg-card px-4 py-3 shadow-none"
+            >
+              <p className="text-label text-fg-muted">{label}</p>
+              <p className="mt-1 font-medium text-[28px] text-fg leading-none tabular-nums">
+                {oppsummering.isLoading ? '—' : (verdier[label] ?? 0)}
+              </p>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Lav beholdning — det eneste på siden som krever handling. */}
+      <nav data-lager-hub-lenker className="flex flex-wrap gap-2">
+        {LAGER_HUB_LENKER.map((lenke) => (
+          <Link
+            key={lenke.href}
+            href={lenke.href as Route}
+            className="inline-flex h-control items-center rounded-full border border-divide px-3 text-label text-fg"
+          >
+            {lenke.label}
+          </Link>
+        ))}
+      </nav>
+
       <section className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-title text-fg">Må bestilles</h2>
@@ -125,34 +126,5 @@ export default function LagerOversiktPage() {
         )}
       </section>
     </div>
-  );
-}
-
-function Teller({
-  icon: Icon,
-  label,
-  verdi,
-  laster,
-  hint,
-}: {
-  icon: typeof Package;
-  label: string;
-  verdi: number | undefined;
-  laster: boolean;
-  hint?: string;
-}) {
-  return (
-    <CardShell>
-      <div className="flex flex-col gap-2 p-3">
-        <p className="flex items-center gap-2 text-label text-fg-muted">
-          <Icon size={16} strokeWidth={1.75} className="shrink-0" />
-          {label}
-        </p>
-        <p className="font-medium text-[28px] text-fg leading-none tabular-nums">
-          {laster ? '—' : (verdi ?? 0)}
-        </p>
-        {hint && <p className="text-[12px] text-fg-muted">{hint}</p>}
-      </div>
-    </CardShell>
   );
 }

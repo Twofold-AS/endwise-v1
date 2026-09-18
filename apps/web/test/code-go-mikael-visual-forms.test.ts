@@ -108,8 +108,8 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(jobb).toMatch(/vehicleId: festetId/);
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/skjulNy/);
     expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/skjulNy=\{aktiv/);
-    expect(les('../app/(app)/kunder/page.tsx')).toMatch(/PhoneSokFelt/);
-    expect(les('../app/(app)/kunder/page.tsx')).toMatch(/data-kunder-sok/);
+    expect(les('../app/(app)/_innbygging/kunder-liste.tsx')).toMatch(/PhoneSokFelt/);
+    expect(les('../app/(app)/_innbygging/kunder-liste.tsx')).toMatch(/data-kunder-sok/);
     const preview = utenKommentarer(les('../app/visual-forms-preview/page.tsx'));
     expect(preview).toMatch(/data-kunder-sok/);
     expect(preview).toMatch(/data-opprett-jobb-kjoretoy/);

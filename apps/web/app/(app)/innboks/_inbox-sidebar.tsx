@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { InnboksFilterPiller } from '../_innbygging/innboks-piller';
 import { CountBadge } from '../_shell/cards';
 import { useInboxFilter } from '../_shell/inbox-filter';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
@@ -42,7 +43,8 @@ export function InboxSidebar() {
   const skjulTelefonListe = Boolean(aktivId || nySamtale);
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, sortering, skjulte, velgModus, valgte, toggleValgt } = useInboxFilter();
+  const { part, innhold, setInnhold, sortering, skjulte, lostte, velgModus, valgte, toggleValgt } =
+    useInboxFilter();
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -89,9 +91,19 @@ export function InboxSidebar() {
   const rader = useMemo(() => {
     const filtrert = ekte
       .filter((t) => !skjulte.has(t.id))
-      .filter((t) => part === 'alle' || t.kind === part)
+      .filter((t) => {
+        const lost = lostte.has(t.id);
+        if (innhold === 'lost') return lost;
+        if (lost) return false;
+        return part === 'alle' || t.kind === part;
+      })
       .slice()
       .sort((a, b) => {
+        if (sortering === 'uleste') {
+          const ua = a.unread ? 1 : 0;
+          const ub = b.unread ? 1 : 0;
+          if (ua !== ub) return ub - ua;
+        }
         const da = new Date(a.lastMessageAt).getTime();
         const db = new Date(b.lastMessageAt).getTime();
         return sortering === 'eldste' ? da - db : db - da;
@@ -131,7 +143,17 @@ export function InboxSidebar() {
         me.data?.userId,
       ),
     }));
-  }, [ekte, part, sortering, skjulte, navnIntern.data, navnOffisiell.data, me.data?.userId]);
+  }, [
+    ekte,
+    part,
+    innhold,
+    sortering,
+    skjulte,
+    lostte,
+    navnIntern.data,
+    navnOffisiell.data,
+    me.data?.userId,
+  ]);
 
   if (endwise) {
     const henvendelser = support.data ?? [];
@@ -183,6 +205,7 @@ export function InboxSidebar() {
       }`}
     >
       <h2 className="sr-only">Samtaler</h2>
+      <InnboksFilterPiller aktiv={innhold} onVelg={setInnhold} />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3">
         {threads.isLoading ? (
           <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
@@ -191,9 +214,9 @@ export function InboxSidebar() {
             <MessageSquare size={20} className="text-fg-muted" />
             <p className="text-label text-fg">Ingen samtaler</p>
             <p className="text-[12px] text-fg-muted">
-              {part === 'alle' ? 'Innboksen er tom.' : 'Ingen samtaler for denne parten.'}
+              {innhold === 'alle' ? 'Innboksen er tom.' : 'Ingen samtaler for denne parten.'}
             </p>
-            {part === 'alle' && (
+            {innhold === 'alle' && (
               <Link
                 href={'/innboks?ny=1' as Route}
                 className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[12px] text-bg"

@@ -15,13 +15,14 @@ import {
 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { lagreKundeAngre } from '../../_innbygging/kunder-katalog';
+import { StatusMerke } from '../../_innbygging/status-merke';
 import { CardShell } from '../../_shell/cards';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
-import { STATUS_LABEL, STATUS_TONE } from '../../bookinger/_status';
-import { dato, datoTid, EuFrist, Feil, Kilde, kroner, Laster, Seksjon, TYPE_LABEL } from '../_delt';
+import { dato, datoTid, EuFrist, Feil, Kilde, Laster, Seksjon, TYPE_LABEL } from '../_delt';
 import { KundeEndre, sisteAdresse } from '../_endre';
 import { KUNDER_FANER, kunderHref } from '../_faner';
 import { RegistrerKjoretoy } from '../_registrer-kjoretoy';
@@ -36,16 +37,32 @@ import { RegistrerKjoretoy } from '../_registrer-kjoretoy';
  */
 export default function KundekortPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = params?.id ?? '';
   const utils = trpc.useUtils();
 
   const kunde = trpc.customers.byId.useQuery({ id }, { enabled: Boolean(id) });
   const [notat, setNotat] = useState('');
+  const [leggTilKjoretoy, setLeggTilKjoretoy] = useState(false);
+  const [slettApen, setSlettApen] = useState(false);
 
   const leggTilNotat = trpc.customers.addNote.useMutation({
     onSuccess: () => {
       void utils.customers.byId.invalidate({ id });
       setNotat('');
+    },
+  });
+  const fjernKjoretoy = trpc.vehicles.assignCustomer.useMutation({
+    onSuccess: () => {
+      void utils.customers.byId.invalidate({ id });
+      void utils.vehicles.list.invalidate();
+    },
+  });
+  const slettKunde = trpc.customers.remove.useMutation({
+    onSuccess: () => {
+      void utils.customers.list.invalidate();
+      void utils.customers.antall.invalidate();
+      router.replace('/kunder' as Route);
     },
   });
 
@@ -133,51 +150,76 @@ export default function KundekortPage() {
 
       {/* Kjøretøy */}
       <Seksjon tittel="Kjøretøy" antall={k.kjoretoy.length}>
-        {k.kjoretoy.length === 0 ? (
-          <RegistrerKjoretoy fastKundeId={k.id} />
-        ) : (
-          <>
-            <div className="overflow-hidden rounded-xl border border-border">
-              {k.kjoretoy.map((v, i) => (
-                <Link key={v.id} href={`/kjoretoy/${v.id}` as Route} className="group block">
-                  <div
-                    className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
-                      i > 0 ? 'border-border border-t' : ''
-                    }`}
-                  >
-                    <Car size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                    <span className="w-24 shrink-0 font-mono text-label text-fg">
-                      {v.regNumber ?? '—'}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            data-kunde-legg-til-kjoretoy
+            onClick={() => setLeggTilKjoretoy((v) => !v)}
+            className="text-label text-fg"
+          >
+            {leggTilKjoretoy ? 'Lukk' : '+ Legg til'}
+          </button>
+        </div>
+        {k.kjoretoy.length === 0 && !leggTilKjoretoy ? (
+          <p className="text-[12px] text-fg-muted">Ingen kjøretøy på denne kunden.</p>
+        ) : k.kjoretoy.length > 0 ? (
+          <div className="overflow-hidden rounded-xl border border-border">
+            {k.kjoretoy.map((v, i) => (
+              <div
+                key={v.id}
+                className={`flex h-row-store items-center gap-3 bg-bg px-4 ${
+                  i > 0 ? 'border-border border-t' : ''
+                }`}
+              >
+                <Link
+                  href={`/kjoretoy/${v.id}` as Route}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <Car size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+                  <span className="w-24 shrink-0 font-mono text-label text-fg">
+                    {v.regNumber ?? '—'}
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="truncate text-label text-fg">
+                      {[v.make, v.model].filter(Boolean).join(' ') || TYPE_LABEL[v.type]}
                     </span>
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="truncate text-label text-fg">
-                        {[v.make, v.model].filter(Boolean).join(' ') || TYPE_LABEL[v.type]}
-                      </span>
-                      <span className="truncate text-[12px] text-fg-muted">
-                        {TYPE_LABEL[v.type]}
-                        {v.modelYear ? ` · ${v.modelYear}` : ''}
-                      </span>
-                    </div>
-                    <span className="w-32 shrink-0 text-right text-[12px] tabular-nums">
-                      <span className="text-fg-muted">EU: </span>
+                    <span className="truncate text-[12px] text-fg-muted">
+                      {TYPE_LABEL[v.type]}
+                      {v.modelYear ? ` · ${v.modelYear}` : ''}
+                      {' · EU: '}
                       <EuFrist dato={v.inspectionDue} />
                     </span>
-                    <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
                   </div>
+                  <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
                 </Link>
-              ))}
-            </div>
-            <RegistrerKjoretoy fastKundeId={k.id} />
-          </>
-        )}
+                <button
+                  type="button"
+                  data-kunde-fjern-kjoretoy={v.id}
+                  disabled={fjernKjoretoy.isPending}
+                  onClick={() => fjernKjoretoy.mutate({ vehicleId: v.id, customerId: null })}
+                  className="shrink-0 text-[12px] text-fg-muted hover:text-fg"
+                >
+                  Fjern
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {leggTilKjoretoy ? (
+          <RegistrerKjoretoy
+            fastKundeId={k.id}
+            onFerdig={() => {
+              setLeggTilKjoretoy(false);
+              void utils.customers.byId.invalidate({ id: k.id });
+            }}
+          />
+        ) : null}
       </Seksjon>
 
-      {/* Servicehistorikk */}
-      <Seksjon tittel="Servicehistorikk" antall={k.saker.length}>
+      {/* Jobber */}
+      <Seksjon tittel="Jobber" antall={k.saker.length}>
         {k.saker.length === 0 ? (
-          <CardShell className="p-6 text-center">
-            <p className="text-[12px] text-fg-muted">Ingen saker registrert ennå.</p>
-          </CardShell>
+          <p className="text-[12px] text-fg-muted">Ingen jobber registrert ennå.</p>
         ) : (
           <div className="overflow-hidden rounded-xl border border-border">
             {k.saker.map((s, i) => (
@@ -197,19 +239,9 @@ export default function KundekortPage() {
                     <span className="truncate text-[12px] text-fg-muted">
                       {s.regNumber ?? 'Uten regnr'}
                       {s.mechanicName ? ` · ${s.mechanicName}` : ''}
-                      {s.notes ? ` · ${s.notes}` : ''}
                     </span>
                   </div>
-                  <span className="w-20 shrink-0 text-right text-[12px] text-fg-muted tabular-nums">
-                    {kroner(s.priceMinor)}
-                  </span>
-                  <span
-                    className={`inline-flex h-badge shrink-0 items-center rounded-badge px-2 font-medium text-[11px] ${
-                      STATUS_TONE[s.status] ?? 'bg-surface-2 text-fg-muted'
-                    }`}
-                  >
-                    {STATUS_LABEL[s.status] ?? s.status}
-                  </span>
+                  <StatusMerke status={s.status} notes={s.notes} />
                 </div>
               </Link>
             ))}
@@ -299,6 +331,63 @@ export default function KundekortPage() {
           </div>
         )}
       </Seksjon>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Link
+          href={`/bookinger/ny?customerId=${k.id}` as Route}
+          className="inline-flex h-control items-center rounded-full bg-fg px-3 text-label text-bg"
+        >
+          Ny jobb
+        </Link>
+        <button
+          type="button"
+          data-slett-kunde
+          onClick={() => setSlettApen(true)}
+          className="inline-flex h-control items-center rounded-full border border-divide px-3 text-label text-fg"
+        >
+          Slett kunde
+        </button>
+      </div>
+
+      {slettApen ? (
+        <div
+          data-slett-kunde-bekreft
+          className="rounded-[24px] border border-divide bg-card px-4 py-3"
+        >
+          <p className="text-label text-fg">
+            Slette {k.name}? Jobber og kjøretøy mister eier, ikke historikk.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSlettApen(false)}
+              className="text-label text-fg-muted"
+            >
+              Avbryt
+            </button>
+            <button
+              type="button"
+              disabled={slettKunde.isPending}
+              onClick={() => {
+                lagreKundeAngre({
+                  id: k.id,
+                  name: k.name,
+                  email: k.email,
+                  phone: k.phone,
+                  source: k.source,
+                });
+                slettKunde.mutate({ id: k.id });
+              }}
+              className="text-label font-[650] text-danger"
+            >
+              {slettKunde.isPending ? 'Sletter…' : 'Slett'}
+            </button>
+          </div>
+          {slettKunde.isError ? (
+            <p className="mt-2 text-[12px] text-danger">{slettKunde.error.message}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       <Link
         href={'/kunder' as Route}

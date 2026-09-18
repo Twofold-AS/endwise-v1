@@ -87,8 +87,9 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(keys).not.toContain('jobber');
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(hjem).not.toMatch(/Svarhastighet|Timeplan-gulv|PulseFooter|PeopleShowcase/);
-    expect(hjem).not.toMatch(/Organisasjon|Hjelp|svarhastighet/);
+    expect(hjem).not.toMatch(/Svarhastighet|PeopleShowcase/);
+    expect(hjem).not.toMatch(/nesteTreJobber|svarhastighet/);
+    expect(hjem).toMatch(/PulseTekstFooter|PulseTallKort/);
     expect(hjem).not.toMatch(/Ingen kunder ennå|Åpne organisasjon|Artikler og support/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
     expect(hjem).toMatch(/Les alle siste meldinger/);
@@ -104,7 +105,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).not.toMatch(/pulse-preview/);
     expect(hjem).not.toMatch(/For lite data/);
     expect(hjem).not.toMatch(/bar=\{|nye=\{|tone=\{/);
-    expect(kort).not.toMatch(/PulseFooter/);
+    expect(kort).not.toMatch(/PulseTekstFooter/);
     expect(kort).toMatch(/Les alle siste meldinger|PulseRadKort/);
   });
 

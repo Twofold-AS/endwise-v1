@@ -5,6 +5,22 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-09-15 — Claude-innbygging (pulse-base + katalog-piller)
+
+**Type:** innhold under eksisterende chrome. Ingen ny pakke. Ingen Claude-chrome.
+**Godkjent av:** Mikael follow-up — pulse-fasit (6 kjernekort + Tall #7) + match katalog-UI under Endwise/Mobbin.
+**Endring:** Tall #7 fikk 2×2 surface-2-plater. Endringer Alle|Avvik|Forespørsler = ink-piller (samme som innboks/Ny jobb), ikke dest-underline. `uploads/endwise-forhandler-pulse-fasit.md` og `Endwise Mobile.dc.html` var fortsatt ikke på disk — mønster fra OVERRIDE + eksisterende Mobbin. Seks kjernekort urørt. Chrome urørt.
+
+---
+
+## 2026-09-15 — Claude-innbygging full content (Mikael OVERRIDE)
+
+**Type:** innhold under eksisterende chrome. Ingen techstack-endring. Ingen ny UI-pakke. Ingen ny destinasjon.
+**Godkjent av:** Mikael OVERRIDE 2026-09-15 — én PR (PR1–PR9 / fasit §7+§9), ikke chrome PR10.
+**Endring:** **F3-05** note (Endringer-lenke nederst, +Jobb på Timeplan-gulv, Tall #7, footer). **F3-06** note (statusmerker uten pip). **F3-09** note (4-stegs Ny jobb). **F5-14** note (innboks-piller, Uleste først, trådhode, deltaker-ark). **F5-16** note (kundekort + handlinger). **F5-19** note (ansatte-kort + integrasjon-rader). **F2-09** note (lager-status + ark). **F7-05** note (Endringer-kort + meld-avvik-ark). **F10-03** note (kjøretøy til salgs + produktkatalog). Chrome urørt. ⛔ #114/#119. Draft #175 Endringer-lenke dekkes herfra (ikke merge #175). Én preview, ikke merge.
+
+---
+
 ## 2026-09-10 — F15 Sikkerhetsstyringssystem / HMS (veikart bak flagg)
 
 **Type:** ny fase/epic i veikartet. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB. Ingen HMS-UI.

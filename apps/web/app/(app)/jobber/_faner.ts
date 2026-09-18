@@ -31,7 +31,7 @@ export const TIMEPLAN_FANER: readonly TimeplanFaneDef[] = [
   },
 ];
 
-export const ENDRINGER_DEL_IDS = ['avvik', 'forespor'] as const;
+export const ENDRINGER_DEL_IDS = ['alle', 'avvik', 'forespor'] as const;
 
 export type EndringerDelId = (typeof ENDRINGER_DEL_IDS)[number];
 
@@ -95,7 +95,7 @@ export function parseEndringerDel(
   if (pathname === '/avvik' || pathname.startsWith('/avvik/')) return 'avvik';
   if (raw === 'foresporsler' || raw === 'forespørsler' || raw === 'forespor') return 'forespor';
   if (raw === 'avvik') return 'avvik';
-  return 'avvik';
+  return 'alle';
 }
 
 export function timeplanHref(fane: TimeplanFaneId): string {
@@ -105,6 +105,7 @@ export function timeplanHref(fane: TimeplanFaneId): string {
 }
 
 export function endringerHref(del: EndringerDelId): string {
+  if (del === 'alle') return '/jobber?fane=endringer';
   return del === 'avvik' ? '/jobber?fane=avvik' : '/jobber?fane=forespor';
 }
 

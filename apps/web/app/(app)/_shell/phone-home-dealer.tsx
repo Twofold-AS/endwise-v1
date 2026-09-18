@@ -3,6 +3,8 @@
 import { Inbox, Package, Users } from '@endwise/ui';
 import { useEffect, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { PulseTekstFooter } from '../_innbygging/pulse-footer';
+import { PulseTallKort, pulseTallCeller } from '../_innbygging/pulse-tall';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BOOKING_LAGRET_EVENT, HJEM_PULSE_REFETCH, invalidateHjemPulse } from './hjem-pulse-sync';
 import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
@@ -99,8 +101,11 @@ export function DealerPulseKort({ className }: { className?: string }) {
     ansatte,
     analyser,
   } = useDealerHjemKort();
-  const { tenantName } = useOrgRole();
+  const { tenantName, shopEnabled } = useOrgRole();
   const lasterJobber = bookings.isLoading;
+  const visninger = analyser.find((s) => s.id === 'visninger')?.verdi ?? 0;
+  const bookingerTall = analyser.find((s) => s.id === 'bookinger')?.verdi ?? 0;
+  const returer = analyser.find((s) => s.id === 'retur')?.verdi ?? 0;
 
   return (
     <div className={className ?? 'flex flex-col gap-2.5'}>
@@ -154,6 +159,18 @@ export function DealerPulseKort({ className }: { className?: string }) {
           <PulseJobbFlis />
         </div>
       </div>
+
+      <PulseTallKort
+        href={PHONE_KORT_META.analyser.href}
+        celler={pulseTallCeller({
+          visninger,
+          bookinger: bookingerTall,
+          returer,
+          credits: shopEnabled ? 120 : null,
+        })}
+      />
+
+      <PulseTekstFooter />
     </div>
   );
 }

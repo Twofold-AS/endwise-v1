@@ -5,6 +5,8 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
+import { MeldAvvikForesporsel } from '../../_innbygging/meld-avvik-ark';
+import { StatusMerke } from '../../_innbygging/status-merke';
 import { BevelButton } from '../../_shell/cards';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import {
@@ -17,7 +19,6 @@ import {
   fmtTime,
   overgangLabel,
   STATUS_LABEL,
-  STATUS_TONE,
 } from '../_status';
 
 /**
@@ -68,12 +69,9 @@ export default function BookingDetaljPage() {
           {b.regNumber ?? 'Uten regnr'}
         </h1>
         {b.vehicleType && <span className="text-fg-faint text-xs uppercase">{b.vehicleType}</span>}
-        <span
-          className={`ml-auto rounded-md px-2.5 py-1 font-medium text-xs ${STATUS_TONE[b.status] ?? 'bg-surface-2 text-fg-muted'}`}
-        >
-          {STATUS_LABEL[b.status] ?? b.status}
-        </span>
+        <StatusMerke status={b.status} notes={b.notes} className="ml-auto" />
       </div>
+      <MeldAvvikForesporsel bookingId={b.id} />
 
       {/* Statusknapper — kun lovlige overganger. */}
       {allowed.length > 0 && (

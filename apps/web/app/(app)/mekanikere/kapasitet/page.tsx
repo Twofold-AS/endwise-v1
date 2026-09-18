@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
+import { StatusMerke } from '../../_innbygging/status-merke';
 import { osloDagsvindu, osloKalenderdag } from '../../_lib/oslo-dag';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { AnsattePiller } from '../../_shell/ansatte-piller';
@@ -275,8 +276,8 @@ function MekanikerTimeplan({
                     {estMinutes(job.startsAt, job.endsAt)} min
                   </p>
                 </div>
-                <span className="shrink-0 rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-fg-muted">
-                  {STATUS_LABEL[job.status] ?? job.status}
+                <span title={STATUS_LABEL[job.status] ?? job.status}>
+                  <StatusMerke status={job.status} />
                 </span>
               </div>
             </Link>

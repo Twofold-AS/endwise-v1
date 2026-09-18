@@ -18,10 +18,31 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
   const [navn, setNavn] = useState('');
   const [telefon, setTelefon] = useState('');
   const [epost, setEpost] = useState('');
+  const [regNumber, setRegNumber] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [type, setType] = useState<'mc' | 'boat' | 'atv'>('mc');
 
+  const opprettKjoretoy = trpc.vehicles.create.useMutation();
   const opprett = trpc.customers.create.useMutation({
-    onSuccess: (kunde) => {
+    onSuccess: async (kunde) => {
       void utils.customers.list.invalidate();
+      void utils.customers.antall.invalidate();
+      const reg = regNumber.trim();
+      if (kunde?.id && reg) {
+        try {
+          await opprettKjoretoy.mutateAsync({
+            type,
+            regNumber: reg,
+            customerId: kunde.id,
+            make: make.trim() || undefined,
+            model: model.trim() || undefined,
+          });
+          void utils.vehicles.list.invalidate();
+        } catch {
+          /* Kunden er lagret — kjøretøy kan legges til på kortet. */
+        }
+      }
       if (kunde?.id) router.replace(`/kunder/${kunde.id}` as Route);
       else onLukk();
     },
@@ -76,6 +97,45 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
         </InnstillingRad>
       </InnstillingSeksjon>
 
+      <InnstillingSeksjon tittel="Kjøretøy" ingress="Valgfritt. Kan legges til senere.">
+        <InnstillingRad label="Type">
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value as typeof type)}
+            className="h-control ew-felt ew-felt-md px-2.5"
+          >
+            <option value="mc">MC</option>
+            <option value="boat">Båt</option>
+            <option value="atv">ATV</option>
+          </select>
+        </InnstillingRad>
+        <InnstillingRad label="Registreringsnummer">
+          <input
+            value={regNumber}
+            onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
+            maxLength={10}
+            placeholder="AB12345"
+            className="h-control ew-felt ew-felt-md px-2.5"
+          />
+        </InnstillingRad>
+        <InnstillingRad label="Merke">
+          <input
+            value={make}
+            onChange={(e) => setMake(e.target.value)}
+            maxLength={64}
+            className="h-control ew-felt ew-felt-md px-2.5"
+          />
+        </InnstillingRad>
+        <InnstillingRad label="Modell" siste>
+          <input
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            maxLength={64}
+            className="h-control ew-felt ew-felt-md px-2.5"
+          />
+        </InnstillingRad>
+      </InnstillingSeksjon>
+
       {opprett.error && (
         <p className="flex items-start gap-2 text-body text-danger">
           <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
@@ -107,7 +167,7 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
           successText="Opprettet"
           errorText="Feilet"
         >
-          Opprett kunde
+          Lagre kunde
         </StatefulButton>
       </div>
     </form>

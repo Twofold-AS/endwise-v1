@@ -11,6 +11,7 @@ import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sorterin
 const TID_VALG = [
   { id: 'nyeste' as const, label: 'Nyeste' },
   { id: 'eldste' as const, label: 'Eldste' },
+  { id: 'uleste' as const, label: 'Uleste først' },
 ];
 
 /**

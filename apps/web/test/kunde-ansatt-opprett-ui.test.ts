@@ -17,16 +17,17 @@ describe('F5-55 — Ny kunde på kundesiden', () => {
   const side = les('../app/(app)/kunder/page.tsx');
   const skjema = les('../app/(app)/kunder/_ny-kunde.tsx');
 
-  it('har Ny kunde-knapp på sida, ikke bare i navet', () => {
-    expect(side).toMatch(/Ny kunde/);
-    expect(side).toMatch(/\/kunder\?ny=1/);
-    expect(side).toMatch(/Opprett kunden her/);
+  it('har Ny-knapp på sida, ikke bare i navet', () => {
+    expect(side).toMatch(/KunderListe/);
+    expect(les('../app/(app)/_innbygging/kunder-liste.tsx')).toMatch(/\bNy\b/);
+    expect(les('../app/(app)/_innbygging/kunder-liste.tsx')).toMatch(/\/kunder\?fane=opprett/);
     expect(side).not.toMatch(/Kunder opprettes når en booking kommer inn, eller synkes fra Quick/);
   });
 
   it('skjemaet kaller customers.create og er på norsk', () => {
     expect(skjema).toMatch(/customers\.create/);
-    expect(skjema).toMatch(/Opprett kunde/);
+    expect(skjema).toMatch(/Lagre kunde/);
+    expect(skjema).toMatch(/Kjøretøy/);
     expect(skjema).toMatch(/Bare navnet er påkrevd/);
     expect(skjema).not.toMatch(/Kontor|Gulvet/);
   });

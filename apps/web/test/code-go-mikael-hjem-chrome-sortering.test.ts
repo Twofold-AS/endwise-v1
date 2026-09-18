@@ -135,11 +135,10 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(tjFelles).toMatch(/ATV/);
     expect(tj).not.toMatch(/role="tablist"/);
     const ku = utenKommentarer(les('../app/(app)/kunder/page.tsx'));
-    expect(ku).toMatch(/data-kunder-sortering/);
-    expect(ku).toMatch(/SorteringArk/);
-    expect(ku).toMatch(/Nyeste/);
-    expect(ku).toMatch(/Eldste/);
-    expect(ku).toMatch(/Endwise/);
+    const kuListe = utenKommentarer(les('../app/(app)/_innbygging/kunder-liste.tsx'));
+    expect(ku).toMatch(/KunderListe/);
+    expect(kuListe).toMatch(/data-kunde-alfa/);
+    expect(kuListe).toMatch(/PhoneSokFelt/);
     expect(ku).not.toMatch(/role="tablist"/);
     expect(ku).not.toMatch(/function Knapperad/);
   });

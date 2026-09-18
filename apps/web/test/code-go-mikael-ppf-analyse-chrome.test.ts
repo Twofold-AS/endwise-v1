@@ -111,11 +111,11 @@ describe('CODE-GO Mikael 11.09.2026 oppfølging — PPF, Analyse, chrome 1+2, So
     expect(bar).toMatch(/Eldste/);
     expect(bar).toMatch(/INNBOKS_GRUPPER/);
     const ku = utenKommentarer(les('../app/(app)/kunder/page.tsx'));
+    const kuListe = utenKommentarer(les('../app/(app)/_innbygging/kunder-liste.tsx'));
     expect(ku).not.toMatch(/tittel="Type"/);
     expect(ku).not.toMatch(/tittel="Tid"/);
-    expect(ku).toMatch(/Nyeste/);
-    expect(ku).toMatch(/Eldste/);
-    expect(ku).toMatch(/Endwise/);
+    expect(kuListe).toMatch(/data-kunde-alfa/);
+    expect(kuListe).toMatch(/kunderPageSub/);
   });
 });
 

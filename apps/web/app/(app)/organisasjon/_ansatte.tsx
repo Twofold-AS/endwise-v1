@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { FargeSvatser } from '../_avatar/farge-svatser';
+import { ansattVaktLabel } from '../_innbygging/ansatt-vakt';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
@@ -135,8 +136,10 @@ function AnsattKort({
             {rad.kallenavn?.trim() || rad.navn}
           </p>
           <p className="truncate text-[12px] text-fg-muted">{rad.navn}</p>
-          <div className="mt-1">
-            <AktivitetMerke status={rad.status} label={rad.statusLabel} />
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <span data-ansatt-vakt>
+              <AktivitetMerke status={rad.status} label={ansattVaktLabel(rad.status)} />
+            </span>
           </div>
         </div>
       </div>

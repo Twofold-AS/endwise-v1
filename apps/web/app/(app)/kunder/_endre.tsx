@@ -50,7 +50,7 @@ export function KundeEndre({
 
   return (
     <section data-kunde-endre className="flex flex-col">
-      <h2 className="text-title text-fg">Kontakt og adresse</h2>
+      <h2 className="text-title text-fg">Kontakt</h2>
       <KundeRad
         label="Navn"
         verdi={navn || '—'}

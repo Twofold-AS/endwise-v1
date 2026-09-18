@@ -46,6 +46,7 @@ describeDb('F5-55 — opprett kunde uten Quick', () => {
   });
 
   afterAll(async () => {
+    await owner.delete(schema.vehicles).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
     await owner.delete(schema.customers).where(sql`tenant_id in (${tenantA}, ${tenantB})`);
     await owner.delete(schema.tenants).where(sql`id in (${tenantA}, ${tenantB})`);
   });
@@ -97,5 +98,38 @@ describeDb('F5-55 — opprett kunde uten Quick', () => {
   it('⛔ naboen ser ikke kunden', async () => {
     const liste = await nabo().customers.list({ kilde: 'alle' });
     expect(liste.some((k) => k.name === 'Kari Nordmann')).toBe(false);
+  });
+
+  it('søk treffer reg.nr, pager teller, slett+angre', async () => {
+    const kunde = await leder().customers.create({
+      name: 'Regnr Eier',
+      phone: '+4790000099',
+    });
+    await leder().vehicles.create({
+      type: 'mc',
+      regNumber: 'EL42424',
+      customerId: kunde.id,
+    });
+    const viaReg = await leder().customers.list({ sok: 'EL42424', sorter: 'navn' });
+    expect(viaReg.some((k) => k.id === kunde.id)).toBe(true);
+    const antall = await leder().customers.antall({ sok: 'Regnr Eier' });
+    expect(antall).toBeGreaterThanOrEqual(1);
+    const side = await leder().customers.list({
+      sok: 'Regnr Eier',
+      sorter: 'navn',
+      limit: 1,
+      offset: 0,
+    });
+    expect(side.length).toBe(1);
+    const slettet = await leder().customers.remove({ id: kunde.id });
+    expect(slettet.id).toBe(kunde.id);
+    expect(await leder().customers.byId({ id: kunde.id })).toBeNull();
+    const tilbake = await leder().customers.restore({
+      id: kunde.id,
+      name: 'Regnr Eier',
+      phone: '+4790000099',
+    });
+    expect(tilbake.id).toBe(kunde.id);
+    expect((await leder().customers.byId({ id: kunde.id }))?.name).toBe('Regnr Eier');
   });
 });

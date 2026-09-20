@@ -18,6 +18,8 @@ const KUNDE_SORT = {
   opprettet: schema.customers.createdAt,
 } as const;
 
+const KUNDE_ALFA = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''), 'Æ', 'Ø', 'Å'] as const;
+
 export const customersRouter = router({
   /**
    * Kundeliste med søk. Søket treffer navn, e-post og telefon — det er de tre
@@ -28,6 +30,8 @@ export const customersRouter = router({
       z
         .object({
           sok: z.string().max(120).optional(),
+          /** Førstebokstav i navn. `#` = ikke A–Å. */
+          bokstav: z.enum(KUNDE_ALFA).optional(),
           sorter: z.enum(['navn', 'opprettet']).default('navn'),
           retning: z.enum(['asc', 'desc']).default('asc'),
           /** Skill Quick-speilede kunder fra dem som er født her. */
@@ -75,6 +79,7 @@ export const customersRouter = router({
         .object({
           sok: z.string().max(120).optional(),
           kilde: z.enum(['alle', 'endwise', 'quick']).default('alle'),
+          bokstav: z.enum(KUNDE_ALFA).optional(),
         })
         .default({ kilde: 'alle' }),
     )
@@ -162,6 +167,10 @@ export const customersRouter = router({
               kind: schema.threads.kind,
               subject: schema.threads.subject,
               createdAt: schema.threads.createdAt,
+              deltakere: sql<number>`(
+                select count(*)::int from thread_participants tp
+                where tp.thread_id = ${schema.threads.id}
+              )`,
             })
             .from(schema.threads)
             .innerJoin(
@@ -357,10 +366,22 @@ export const customersRouter = router({
 
 type KundeTx = Parameters<Parameters<typeof withTenant>[2]>[0];
 
+function kundeAlfaVilkar(bokstav?: (typeof KUNDE_ALFA)[number]) {
+  if (!bokstav) return undefined;
+  if (bokstav === '#') {
+    return sql`left(btrim(${schema.customers.name}), 1) !~* '[A-ZÆØÅ]'`;
+  }
+  return sql`left(btrim(${schema.customers.name}), 1) ILIKE ${bokstav}`;
+}
+
 async function kundeListeFilter(
   tx: KundeTx,
   tenantId: string,
-  input: { sok?: string; kilde?: 'alle' | 'endwise' | 'quick' },
+  input: {
+    sok?: string;
+    kilde?: 'alle' | 'endwise' | 'quick';
+    bokstav?: (typeof KUNDE_ALFA)[number];
+  },
 ) {
   const q = input.sok?.trim();
   let viaReg: string[] = [];
@@ -376,6 +397,7 @@ async function kundeListeFilter(
   return and(
     eq(schema.customers.tenantId, tenantId),
     input.kilde && input.kilde !== 'alle' ? eq(schema.customers.source, input.kilde) : undefined,
+    kundeAlfaVilkar(input.bokstav),
     q
       ? or(
           ilike(schema.customers.name, `%${q}%`),

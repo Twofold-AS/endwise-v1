@@ -4,7 +4,8 @@ import { TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
-import { LAGER_HUB_LENKER, LAGER_HUB_STATUS } from '../_innbygging/lager-hub';
+import { LAGER_HUB_LENKER, LAGER_HUB_STATUS, lagerPageSub } from '../_innbygging/lager-hub';
+import { PageSub } from '../_innbygging/page-sub';
 import { useOrgRole } from '../_lib/use-org-role';
 import { shellForBruker } from '../_shell/nav';
 import { Beholdning, Feil, Laster, Sidehode, Tomt } from './_delt';
@@ -44,36 +45,49 @@ export default function LagerOversiktPage() {
         tittel="Lager"
         undertittel="Deler, beholdning og inn og ut. Kjerne — ikke et tillegg."
       />
+      <PageSub>{lagerPageSub(s?.antallDeler ?? 0)}</PageSub>
       {oppsummering.isError ? (
         <Feil melding={oppsummering.error.message} />
       ) : (
-        <div data-lager-hub-status className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {LAGER_HUB_STATUS.map((label) => (
-            <div
-              key={label}
-              data-lager-hub-celle={label}
-              className="rounded-[24px] border border-divide bg-card px-4 py-3 shadow-none"
-            >
-              <p className="text-label text-fg-muted">{label}</p>
-              <p className="mt-1 font-medium text-[28px] text-fg leading-none tabular-nums">
-                {oppsummering.isLoading ? '—' : (verdier[label] ?? 0)}
-              </p>
-            </div>
-          ))}
-        </div>
+        <section data-lager-hub-status className="flex flex-col gap-3">
+          <h2 className="text-title text-fg">Lagerstatus</h2>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {LAGER_HUB_STATUS.map((label) => (
+              <div
+                key={label}
+                data-lager-hub-celle={label}
+                className="rounded-[24px] border border-divide bg-card px-4 py-3 shadow-none"
+              >
+                <p className="text-label text-fg-muted">{label}</p>
+                <p className="mt-1 font-medium text-[26px] text-fg leading-none tabular-nums">
+                  {oppsummering.isLoading ? '—' : (verdier[label] ?? 0)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      <nav data-lager-hub-lenker className="flex flex-wrap gap-2">
+      <section data-lager-hub-lenker className="flex flex-col gap-2">
+        <h2 className="text-title text-fg">Lagerstyring</h2>
         {LAGER_HUB_LENKER.map((lenke) => (
           <Link
             key={lenke.href}
             href={lenke.href as Route}
-            className="inline-flex h-control items-center rounded-full border border-divide px-3 text-label text-fg"
+            className="flex min-h-row-store items-center justify-between gap-3 rounded-[24px] border border-divide bg-card px-4 py-3 shadow-none"
           >
-            {lenke.label}
+            <span className="min-w-0">
+              <span className="block text-label font-[650] text-fg">{lenke.label}</span>
+              <span className="block text-[12px] text-fg-muted">{lenke.sub}</span>
+            </span>
+            {lenke.label === 'Deler' ? (
+              <span className="shrink-0 text-[12px] text-fg-muted tabular-nums">
+                {s?.antallDeler ?? 0}
+              </span>
+            ) : null}
           </Link>
         ))}
-      </nav>
+      </section>
 
       <section className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-3">

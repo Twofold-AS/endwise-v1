@@ -172,8 +172,11 @@ describe('Claude-innbygging — full content under existing chrome', () => {
     expect(les('../app/(app)/_innbygging/kunder-katalog.ts')).toMatch(/Ingen kunder matcher søket/);
     expect(les('../app/(app)/_innbygging/kunder-liste.tsx')).toMatch(/kunderTomTekst/);
     expect(les('../app/(app)/_innbygging/kunder-liste.tsx')).toMatch(/data-kunde-alfa/);
+    expect(les('../app/(app)/_innbygging/kunder-liste.tsx')).toMatch(
+      /absolute top-0 right-1 bottom-0/,
+    );
     expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/Slett kunde/);
-    expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/Ny jobb/);
+    expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/Ny jobb på kunde/);
     expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/StatusMerke/);
     expect(les('../app/(app)/kunder/_ny-kunde.tsx')).toMatch(/Lagre kunde/);
     expect(les('../app/(app)/kunder/_ny-kunde.tsx')).toMatch(/Kjøretøy/);
@@ -185,7 +188,7 @@ describe('Claude-innbygging — full content under existing chrome', () => {
     expect(lagerStatusFor({ underMinimum: true })).toBe('under_minimum');
     expect(lagerStatusFor({ bestilt: true })).toBe('bestilt');
     expect(les('../app/(app)/butikk/page.tsx')).toMatch(/butikkPageSub/);
-    expect(les('../app/(app)/butikk/page.tsx')).toMatch(/Se alle/);
+    expect(les('../app/(app)/butikk/page.tsx')).toMatch(/butikkSeAlleVarer|Se alle/);
     expect(les('../app/(app)/butikk/page.tsx')).toMatch(/Varer/);
     expect(les('../app/(app)/_innbygging/butikk-kjoretoy.tsx')).toMatch(/Kjøretøy til salgs/);
     expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/data-ansatt-tittel/);

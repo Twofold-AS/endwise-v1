@@ -6,7 +6,14 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { butikkPageSub, hubForhandsvisning, visSeAlle } from '../_innbygging/butikk-hub';
+import {
+  butikkPageSub,
+  butikkSeAlleKjoretoy,
+  butikkSeAlleVarer,
+  butikkVareUndertekst,
+  hubForhandsvisning,
+  visSeAlle,
+} from '../_innbygging/butikk-hub';
 import { ButikkKjoretoySalg } from '../_innbygging/butikk-kjoretoy';
 import { PageSub } from '../_innbygging/page-sub';
 import { CardShell } from '../_shell/cards';
@@ -48,12 +55,21 @@ function ButikkHubInner() {
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-[12px] text-fg-muted">Intern testbutikk. Stripe testmodus.</p>
-        <Link
-          href="/butikk/kasse"
-          className="inline-flex h-control items-center rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2"
-        >
-          Handlekurv / kasse{kurvAntall > 0 ? ` (${kurvAntall})` : ''}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={'/lager/deler' as Route}
+            data-butikk-ny
+            className="inline-flex h-control items-center rounded-full bg-fg px-3 text-label text-bg"
+          >
+            Ny
+          </Link>
+          <Link
+            href="/butikk/kasse"
+            className="inline-flex h-control items-center rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2"
+          >
+            Handlekurv / kasse{kurvAntall > 0 ? ` (${kurvAntall})` : ''}
+          </Link>
+        </div>
       </div>
 
       <ButikkBookingWidget />
@@ -68,7 +84,7 @@ function ButikkHubInner() {
                 data-butikk-se-alle="kjoretoy"
                 className="text-[12px] text-fg underline-offset-2 hover:underline"
               >
-                Se alle
+                {butikkSeAlleKjoretoy(biler.length)}
               </Link>
             ) : null
           }
@@ -79,7 +95,7 @@ function ButikkHubInner() {
         <section data-butikk-katalog className="flex flex-col gap-3">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <h2 className="text-title text-fg">Varer</h2>
+              <h2 className="text-title text-fg">Varer i nettbutikk</h2>
               <p className="text-[12px] text-fg-muted">Aktive deler med utsalgspris.</p>
             </div>
             {hub && visSeAlle(varer.length) ? (
@@ -88,7 +104,7 @@ function ButikkHubInner() {
                 data-butikk-se-alle="varer"
                 className="text-[12px] text-fg underline-offset-2 hover:underline"
               >
-                Se alle
+                {butikkSeAlleVarer(varer.length)}
               </Link>
             ) : null}
           </div>
@@ -114,10 +130,12 @@ function ButikkHubInner() {
                     i > 0 ? 'border-border border-t' : ''
                   }`}
                 >
-                  <span className="w-28 shrink-0 truncate font-mono text-[12px] text-fg-muted">
-                    {d.sku}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-label text-fg">{d.name}</span>
+                    <span className="block truncate text-[12px] text-fg-muted">
+                      {butikkVareUndertekst(d.category, d.onHand)}
+                    </span>
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-label text-fg">{d.name}</span>
                   <span className="w-24 shrink-0 text-right text-[12px] text-fg tabular-nums">
                     {kroner(d.sellPriceMinor)}
                   </span>

@@ -7,7 +7,8 @@ import { useParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 
 /**
- * Butikk · salgsdetalj. Ekte kjøretøy via tRPC. Pris/Finn er ærlig tomme.
+ * Butikk · salgsdetalj. Ekte kjøretøy via tRPC.
+ * Pris · Kjørt · Kanal · Beskrivelse er ærlige tomme — salgs-API finnes ikke.
  */
 export default function ButikkSalgDetaljPage() {
   const params = useParams<{ id: string }>();
@@ -52,12 +53,34 @@ export default function ButikkSalgDetaljPage() {
           </p>
         </div>
       </div>
-      <section className="flex flex-col gap-2 rounded-[24px] border border-divide bg-card px-4 py-3 shadow-none">
-        <p className="text-label text-fg">Salgspris</p>
-        <p className="text-[12px] text-fg-muted">Ingen salgspris registrert.</p>
-        <p className="mt-2 text-label text-fg">Finn.no</p>
-        <p className="text-[12px] text-fg-muted">Ikke koblet. Ingen publisering herfra.</p>
+
+      <section data-butikk-salg-annonse className="flex flex-col">
+        <h2 className="text-title text-fg">Annonse</h2>
+        <div className="mt-2 flex flex-col">
+          <div className="flex h-row-store items-center justify-between gap-3 border-divide border-b">
+            <span className="text-label text-fg-muted">Pris</span>
+            <span className="text-label text-fg">Ingen salgspris registrert</span>
+          </div>
+          <div className="flex h-row-store items-center justify-between gap-3 border-divide border-b">
+            <span className="text-label text-fg-muted">Kjørt</span>
+            <span className="text-label text-fg">Ikke registrert</span>
+          </div>
+          <div className="flex h-row-store items-center justify-between gap-3">
+            <span className="text-label text-fg-muted">Kanal</span>
+            <span className="text-label text-fg">Ikke koblet</span>
+          </div>
+        </div>
       </section>
+
+      <section data-butikk-salg-beskrivelse className="flex flex-col gap-2">
+        <h2 className="text-title text-fg">Beskrivelse</h2>
+        <p className="text-[12px] text-fg-muted">Ingen beskrivelse registrert.</p>
+      </section>
+
+      <p data-butikk-salg-rediger className="text-[12px] text-fg-muted">
+        Rediger annonse er ikke koblet. Salgspris, km og kanal finnes ikke i registeret ennå.
+      </p>
+
       <Link
         href={`/kjoretoy/${k.id}` as Route}
         className="text-label text-fg underline-offset-2 hover:underline"

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { FargeSvatser } from '../_avatar/farge-svatser';
-import { ansattVaktLabel } from '../_innbygging/ansatt-vakt';
+import { ansattInitialer, ansattVaktLabel } from '../_innbygging/ansatt-vakt';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
@@ -64,10 +64,11 @@ export function OrganisasjonAnsatte() {
         {isAdmin ? (
           <button
             type="button"
+            data-ansatt-ny
             onClick={() => setOpprett(true)}
-            className="inline-flex h-control items-center rounded-control bg-fg px-3 text-label text-bg"
+            className="inline-flex h-control items-center rounded-full bg-fg px-3 text-label text-bg"
           >
-            Opprett ansatt
+            Ny
           </button>
         ) : null}
       </div>
@@ -78,7 +79,7 @@ export function OrganisasjonAnsatte() {
           <p className="mt-1 text-[12px] text-fg-muted">Opprett ansatt — med eller uten e-post.</p>
         </CardShell>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div data-ansatt-liste className="flex flex-col">
           {rader.map((rad) => (
             <AnsattKort
               key={rad.userId}
@@ -123,25 +124,32 @@ function AnsattKort({
 
   return (
     <CardShell className="flex flex-col gap-3 rounded-[24px] border-divide p-4 shadow-none">
-      <div className="flex items-start gap-3">
-        <Avatar
-          seed={rad.userId}
-          valg={{ ...rad.avatar, humor: rad.statusHumor ?? rad.avatar.humor }}
-          navn={rad.navn}
-          size={32}
-          bevegelse="stille"
-        />
+      <div className="flex items-center gap-3">
+        <span className="relative flex size-8 shrink-0 items-center justify-center">
+          <Avatar
+            seed={rad.userId}
+            valg={{ ...rad.avatar, humor: rad.statusHumor ?? rad.avatar.humor }}
+            navn={rad.navn}
+            size={32}
+            bevegelse="stille"
+          />
+          <span data-ansatt-initialer className="sr-only">
+            {ansattInitialer(rad.kallenavn?.trim() || rad.navn)}
+          </span>
+        </span>
         <div className="min-w-0 flex-1">
           <p data-ansatt-tittel className="truncate text-label text-fg">
             {rad.kallenavn?.trim() || rad.navn}
           </p>
-          <p className="truncate text-[12px] text-fg-muted">{rad.navn}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <span data-ansatt-vakt>
-              <AktivitetMerke status={rad.status} label={ansattVaktLabel(rad.status)} />
-            </span>
-          </div>
+          <p className="truncate text-[12px] text-fg-muted">
+            {FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}
+            {' · '}
+            {rad.rolle}
+          </p>
         </div>
+        <span data-ansatt-vakt className="shrink-0">
+          <AktivitetMerke status={rad.status} label={ansattVaktLabel(rad.status)} />
+        </span>
       </div>
 
       <p className="text-label text-fg-muted">

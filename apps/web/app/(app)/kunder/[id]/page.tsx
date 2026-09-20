@@ -18,7 +18,11 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { lagreKundeAngre } from '../../_innbygging/kunder-katalog';
+import {
+  jobbRadUndertekst,
+  lagreKundeAngre,
+  meldingTraadStatus,
+} from '../../_innbygging/kunder-katalog';
 import { StatusMerke } from '../../_innbygging/status-merke';
 import { CardShell } from '../../_shell/cards';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
@@ -140,6 +144,19 @@ export default function KundekortPage() {
         </div>
       </div>
 
+      <Seksjon tittel="Kontakt">
+        <div data-kunde-kontakt className="flex flex-col">
+          <div className="flex h-row-store items-center justify-between gap-3 border-divide border-b">
+            <span className="text-label text-fg-muted">Telefon</span>
+            <span className="text-label text-fg tabular-nums">{k.phone || '—'}</span>
+          </div>
+          <div className="flex h-row-store items-center justify-between gap-3">
+            <span className="text-label text-fg-muted">E-post</span>
+            <span className="truncate text-label text-fg">{k.email || '—'}</span>
+          </div>
+        </div>
+      </Seksjon>
+
       <KundeEndre
         id={k.id}
         navn={k.name}
@@ -157,7 +174,7 @@ export default function KundekortPage() {
             onClick={() => setLeggTilKjoretoy((v) => !v)}
             className="text-label text-fg"
           >
-            {leggTilKjoretoy ? 'Lukk' : '+ Legg til'}
+            {leggTilKjoretoy ? 'Lukk' : 'Legg til kjøretøy'}
           </button>
         </div>
         {k.kjoretoy.length === 0 && !leggTilKjoretoy ? (
@@ -229,16 +246,12 @@ export default function KundekortPage() {
                     i > 0 ? 'border-border border-t' : ''
                   }`}
                 >
-                  <span className="w-28 shrink-0 text-[12px] text-fg-muted tabular-nums">
-                    {dato(s.startsAt)}
-                  </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="truncate text-label text-fg">
                       {s.serviceName ?? 'Tjeneste'}
                     </span>
                     <span className="truncate text-[12px] text-fg-muted">
-                      {s.regNumber ?? 'Uten regnr'}
-                      {s.mechanicName ? ` · ${s.mechanicName}` : ''}
+                      {jobbRadUndertekst(s.startsAt, s.mechanicName)}
                     </span>
                   </div>
                   <StatusMerke status={s.status} notes={s.notes} />
@@ -270,11 +283,13 @@ export default function KundekortPage() {
                   }`}
                 >
                   <MessageSquare size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                  <span className="min-w-0 flex-1 truncate text-label text-fg">
-                    {t.subject ?? 'Samtale'}
-                  </span>
-                  <span className="shrink-0 text-[12px] text-fg-muted tabular-nums">
-                    {dato(t.createdAt)}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-label text-fg">
+                      {t.subject ?? 'Samtale'}
+                    </span>
+                    <span className="block truncate text-[12px] text-fg-muted">
+                      {datoTid(t.createdAt)} · {meldingTraadStatus(t.deltakere ?? 0)}
+                    </span>
                   </span>
                   <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
                 </div>
@@ -337,7 +352,7 @@ export default function KundekortPage() {
           href={`/bookinger/ny?customerId=${k.id}` as Route}
           className="inline-flex h-control items-center rounded-full bg-fg px-3 text-label text-bg"
         >
-          Ny jobb
+          Ny jobb på kunde
         </Link>
         <button
           type="button"

@@ -64,6 +64,26 @@ export function kunderTomTekst(harSok: boolean): string {
   return harSok ? 'Ingen kunder matcher søket.' : 'Ingen kunder ennå';
 }
 
+export function kunderAngreTekst(navn: string): string {
+  return `${navn} er slettet`;
+}
+
+export function jobbRadUndertekst(
+  startsAt: Date | string | null | undefined,
+  mekaniker?: string | null,
+): string {
+  if (!startsAt) return mekaniker?.trim() ? `Uten tid · ${mekaniker.trim()}` : 'Uten tid';
+  const d = new Date(startsAt);
+  const dato = d.toLocaleDateString('nb-NO', { day: '2-digit', month: '2-digit' });
+  const tid = d.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+  const mek = mekaniker?.trim();
+  return mek ? `${dato} kl. ${tid} · ${mek}` : `${dato} kl. ${tid}`;
+}
+
+export function meldingTraadStatus(deltakere: number): string {
+  return deltakere > 2 ? 'Gruppesamtale' : 'Åpen samtale';
+}
+
 export function lagreKundeAngre(snapshot: KundeAngreSnapshot) {
   if (typeof sessionStorage === 'undefined') return;
   sessionStorage.setItem(KUNDE_ANGRE_NOKKEL, JSON.stringify(snapshot));

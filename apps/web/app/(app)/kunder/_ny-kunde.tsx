@@ -6,10 +6,37 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
+import { TYPE_LABEL } from './_delt';
+
+type KjoretoyType = 'mc' | 'boat' | 'atv';
+
+type UtkastKjoretoy = {
+  nøkkel: string;
+  type: KjoretoyType;
+  reg: string;
+  merke: string;
+  modell: string;
+  aar: string;
+};
+
+function tomtKjoretoy(): UtkastKjoretoy {
+  return {
+    nøkkel: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    type: 'mc',
+    reg: '',
+    merke: '',
+    modell: '',
+    aar: '',
+  };
+}
+
+function harKjoretoyInnhold(v: UtkastKjoretoy): boolean {
+  return Boolean(v.reg.trim() || v.merke.trim() || v.modell.trim());
+}
 
 /**
  * «ny kunde». Quick action-en som ikke gjorde noe.
- * Innstillinger-inndeling: identitet og kontakt i egne grupper.
+ * Innstillinger-inndeling: identitet, kontakt og kjøretøy (legg til / fjern).
  */
 export function NyKunde({ onLukk }: { onLukk: () => void }) {
   const router = useRouter();
@@ -18,33 +45,31 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
   const [navn, setNavn] = useState('');
   const [telefon, setTelefon] = useState('');
   const [epost, setEpost] = useState('');
-  const [regNumber, setRegNumber] = useState('');
-  const [make, setMake] = useState('');
-  const [model, setModel] = useState('');
-  const [type, setType] = useState<'mc' | 'boat' | 'atv'>('mc');
+  const [kjoretoy, setKjoretoy] = useState<UtkastKjoretoy[]>([]);
 
   const opprettKjoretoy = trpc.vehicles.create.useMutation();
   const opprett = trpc.customers.create.useMutation({
     onSuccess: async (kunde) => {
       void utils.customers.list.invalidate();
       void utils.customers.antall.invalidate();
-      const reg = regNumber.trim();
-      if (kunde?.id && reg) {
-        try {
-          await opprettKjoretoy.mutateAsync({
-            type,
-            regNumber: reg,
-            customerId: kunde.id,
-            make: make.trim() || undefined,
-            model: model.trim() || undefined,
-          });
-          void utils.vehicles.list.invalidate();
-        } catch {
-          /* Kunden er lagret — kjøretøy kan legges til på kortet. */
+      if (kunde?.id) {
+        for (const v of kjoretoy.filter(harKjoretoyInnhold)) {
+          try {
+            await opprettKjoretoy.mutateAsync({
+              type: v.type,
+              customerId: kunde.id,
+              regNumber: v.reg.trim() || undefined,
+              make: v.merke.trim() || undefined,
+              model: v.modell.trim() || undefined,
+              modelYear: v.aar.trim() || undefined,
+            });
+          } catch {
+            /* Kunden er lagret — kjøretøy kan legges til på kortet. */
+          }
         }
-      }
-      if (kunde?.id) router.replace(`/kunder/${kunde.id}` as Route);
-      else onLukk();
+        void utils.vehicles.list.invalidate();
+        router.replace(`/kunder/${kunde.id}` as Route);
+      } else onLukk();
     },
   });
 
@@ -98,42 +123,116 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
       </InnstillingSeksjon>
 
       <InnstillingSeksjon tittel="Kjøretøy" ingress="Valgfritt. Kan legges til senere.">
-        <InnstillingRad label="Type">
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as typeof type)}
-            className="h-control ew-felt ew-felt-md px-2.5"
-          >
-            <option value="mc">MC</option>
-            <option value="boat">Båt</option>
-            <option value="atv">ATV</option>
-          </select>
-        </InnstillingRad>
-        <InnstillingRad label="Registreringsnummer">
-          <input
-            value={regNumber}
-            onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
-            maxLength={10}
-            placeholder="AB12345"
-            className="h-control ew-felt ew-felt-md px-2.5"
-          />
-        </InnstillingRad>
-        <InnstillingRad label="Merke">
-          <input
-            value={make}
-            onChange={(e) => setMake(e.target.value)}
-            maxLength={64}
-            className="h-control ew-felt ew-felt-md px-2.5"
-          />
-        </InnstillingRad>
-        <InnstillingRad label="Modell" siste>
-          <input
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            maxLength={64}
-            className="h-control ew-felt ew-felt-md px-2.5"
-          />
-        </InnstillingRad>
+        {kjoretoy.length === 0 ? (
+          <p className="px-1 py-2 text-[12px] text-fg-muted">Ingen kjøretøy lagt til ennå.</p>
+        ) : (
+          kjoretoy.map((v, i) => (
+            <div key={v.nøkkel} data-ny-kunde-kjoretoy={v.nøkkel} className="flex flex-col">
+              <InnstillingRad label="Type">
+                <select
+                  value={v.type}
+                  onChange={(e) =>
+                    setKjoretoy((liste) =>
+                      liste.map((x) =>
+                        x.nøkkel === v.nøkkel ? { ...x, type: e.target.value as KjoretoyType } : x,
+                      ),
+                    )
+                  }
+                  className="h-control ew-felt ew-felt-md px-2.5"
+                >
+                  <option value="mc">MC</option>
+                  <option value="boat">Båt</option>
+                  <option value="atv">ATV</option>
+                </select>
+              </InnstillingRad>
+              <InnstillingRad label="Registreringsnummer">
+                <input
+                  value={v.reg}
+                  onChange={(e) =>
+                    setKjoretoy((liste) =>
+                      liste.map((x) =>
+                        x.nøkkel === v.nøkkel ? { ...x, reg: e.target.value.toUpperCase() } : x,
+                      ),
+                    )
+                  }
+                  maxLength={10}
+                  placeholder="AB12345"
+                  className="h-control ew-felt ew-felt-md px-2.5"
+                />
+              </InnstillingRad>
+              <InnstillingRad label="Merke">
+                <input
+                  value={v.merke}
+                  onChange={(e) =>
+                    setKjoretoy((liste) =>
+                      liste.map((x) =>
+                        x.nøkkel === v.nøkkel ? { ...x, merke: e.target.value } : x,
+                      ),
+                    )
+                  }
+                  maxLength={64}
+                  className="h-control ew-felt ew-felt-md px-2.5"
+                />
+              </InnstillingRad>
+              <InnstillingRad label="Modell">
+                <input
+                  value={v.modell}
+                  onChange={(e) =>
+                    setKjoretoy((liste) =>
+                      liste.map((x) =>
+                        x.nøkkel === v.nøkkel ? { ...x, modell: e.target.value } : x,
+                      ),
+                    )
+                  }
+                  maxLength={64}
+                  className="h-control ew-felt ew-felt-md px-2.5"
+                />
+              </InnstillingRad>
+              <InnstillingRad label="År" siste={i === kjoretoy.length - 1}>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={v.aar}
+                    onChange={(e) =>
+                      setKjoretoy((liste) =>
+                        liste.map((x) =>
+                          x.nøkkel === v.nøkkel ? { ...x, aar: e.target.value } : x,
+                        ),
+                      )
+                    }
+                    maxLength={8}
+                    placeholder="2021"
+                    className="h-control min-w-0 flex-1 ew-felt ew-felt-md px-2.5"
+                  />
+                  <button
+                    type="button"
+                    data-ny-kunde-fjern-kjoretoy={v.nøkkel}
+                    onClick={() =>
+                      setKjoretoy((liste) => liste.filter((x) => x.nøkkel !== v.nøkkel))
+                    }
+                    className="shrink-0 text-[12px] text-fg-muted hover:text-fg"
+                  >
+                    Fjern
+                  </button>
+                </div>
+              </InnstillingRad>
+              {v.merke || v.modell ? (
+                <p className="px-1 pb-2 text-[12px] text-fg-muted">
+                  {[v.merke, v.modell].filter(Boolean).join(' ')} · {TYPE_LABEL[v.type]}
+                  {v.aar ? ` · ${v.aar}` : ''}
+                  {v.reg ? ` · ${v.reg}` : ' · uten reg.nr'}
+                </p>
+              ) : null}
+            </div>
+          ))
+        )}
+        <button
+          type="button"
+          data-ny-kunde-legg-til-kjoretoy
+          onClick={() => setKjoretoy((liste) => [...liste, tomtKjoretoy()])}
+          className="mt-2 text-label text-fg"
+        >
+          Legg til kjøretøy
+        </button>
       </InnstillingSeksjon>
 
       {opprett.error && (

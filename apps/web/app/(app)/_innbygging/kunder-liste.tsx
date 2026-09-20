@@ -8,12 +8,11 @@ import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { Feil, Laster } from '../kunder/_delt';
 import { AngreToast } from './angre-toast';
 import {
-  grupperKunderAlfa,
   KUNDE_ALFA,
   KUNDE_SIDE_STORRELSE,
   type KundeAlfaBokstav,
-  kundeAlfaNokkel,
   kundeInitialer,
+  kunderAngreTekst,
   kunderPagerTekst,
   kunderPageSub,
   kunderTomTekst,
@@ -22,6 +21,10 @@ import {
 } from './kunder-katalog';
 import { PageSub } from './page-sub';
 
+/**
+ * Claude Kunder-liste. Alfaindeks er HØYRE side-rail inne i liste-viewport
+ * (absolute top/right/bottom, 26px). Aldri horisontal wrap under søk.
+ */
 export function KunderListe() {
   const utils = trpc.useUtils();
   const [sok, setSok] = useState('');
@@ -33,13 +36,18 @@ export function KunderListe() {
 
   const kunder = trpc.customers.list.useQuery({
     sok: q,
+    bokstav: bokstav ?? undefined,
     sorter: 'navn',
     retning: 'asc',
     kilde: 'alle',
     limit: KUNDE_SIDE_STORRELSE,
     offset,
   });
-  const antall = trpc.customers.antall.useQuery({ sok: q, kilde: 'alle' });
+  const antall = trpc.customers.antall.useQuery({
+    sok: q,
+    kilde: 'alle',
+    bokstav: bokstav ?? undefined,
+  });
   const restore = trpc.customers.restore.useMutation({
     onSuccess: () => {
       toemKundeAngre();
@@ -51,9 +59,6 @@ export function KunderListe() {
 
   const total = antall.data ?? 0;
   const rader = kunder.data ?? [];
-  const grupper = grupperKunderAlfa(
-    bokstav ? rader.filter((k) => kundeAlfaNokkel(k.name) === bokstav) : rader,
-  );
   const tom = !kunder.isLoading && !kunder.isError && rader.length === 0;
 
   return (
@@ -80,51 +85,24 @@ export function KunderListe() {
         />
       </div>
 
-      <nav data-kunde-alfa aria-label="Alfabet" className="flex flex-wrap gap-1">
-        {KUNDE_ALFA.map((tegn) => {
-          const valgt = bokstav === tegn;
-          return (
-            <button
-              key={tegn}
-              type="button"
-              data-kunde-alfa-tegn={tegn}
-              aria-pressed={valgt}
-              onClick={() => setBokstav((forrige) => (forrige === tegn ? null : tegn))}
-              className={`inline-flex size-7 items-center justify-center rounded-full text-[11px] ${
-                valgt ? 'bg-fg text-bg' : 'bg-surface-2 text-fg'
-              }`}
-            >
-              {tegn}
-            </button>
-          );
-        })}
-      </nav>
-
-      {kunder.isLoading ? (
-        <Laster />
-      ) : kunder.isError ? (
-        <Feil melding={kunder.error.message} />
-      ) : tom ? (
-        <p data-kunder-tom className="py-10 text-center text-label text-fg-muted">
-          {kunderTomTekst(Boolean(q))}
-        </p>
-      ) : (
-        <div data-kunder-kortliste className="flex flex-col">
-          {grupper.map((gruppe) => (
-            <section
-              key={gruppe.bokstav}
-              id={`kunde-bokstav-${gruppe.bokstav}`}
-              className="flex flex-col"
-            >
-              <h3 className="sticky top-0 bg-bg py-1 text-[11px] text-fg-muted">
-                {gruppe.bokstav}
-              </h3>
-              {gruppe.kunder.map((k) => (
+      <div data-kunder-viewport className="relative min-h-[280px]">
+        <div data-kunder-liste-innhold className="pr-[30px]">
+          {kunder.isLoading ? (
+            <Laster />
+          ) : kunder.isError ? (
+            <Feil melding={kunder.error.message} />
+          ) : tom ? (
+            <p data-kunder-tom className="py-10 text-center text-label text-fg-muted">
+              {kunderTomTekst(Boolean(q) || Boolean(bokstav))}
+            </p>
+          ) : (
+            <div data-kunder-kortliste className="flex flex-col">
+              {rader.map((k) => (
                 <Link
                   key={k.id}
                   href={`/kunder/${k.id}` as Route}
                   data-kunde-rad={k.id}
-                  className="flex h-row-store items-center gap-3 border-divide border-b"
+                  className="flex min-h-row-store items-center gap-3 border-divide border-b py-2"
                 >
                   <span
                     data-kunde-initialer
@@ -132,44 +110,73 @@ export function KunderListe() {
                   >
                     {kundeInitialer(k.name)}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-label text-fg">{k.name}</span>
-                  <span className="shrink-0 text-[12px] text-fg-muted tabular-nums">
-                    {k.phone || '—'}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-label text-fg">{k.name}</span>
+                    <span className="block truncate text-[12px] text-fg-muted tabular-nums">
+                      {k.phone || '—'}
+                    </span>
                   </span>
                 </Link>
               ))}
-            </section>
-          ))}
-        </div>
-      )}
+            </div>
+          )}
 
-      <p data-kunder-pager className="text-[12px] text-fg-muted">
-        {kunderPagerTekst(offset, rader.length, total)}
-      </p>
-      {total > KUNDE_SIDE_STORRELSE ? (
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            disabled={side === 0}
-            onClick={() => setSide((v) => Math.max(0, v - 1))}
-            className="text-label text-fg disabled:text-fg-muted"
-          >
-            Forrige
-          </button>
-          <button
-            type="button"
-            disabled={offset + rader.length >= total}
-            onClick={() => setSide((v) => v + 1)}
-            className="text-label text-fg disabled:text-fg-muted"
-          >
-            Neste
-          </button>
+          <p data-kunder-pager className="mt-3 text-[12px] text-fg-muted">
+            {kunderPagerTekst(offset, rader.length, total)}
+          </p>
+          {total > KUNDE_SIDE_STORRELSE ? (
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                disabled={side === 0}
+                onClick={() => setSide((v) => Math.max(0, v - 1))}
+                className="text-label text-fg disabled:text-fg-muted"
+              >
+                Forrige
+              </button>
+              <button
+                type="button"
+                disabled={offset + rader.length >= total}
+                onClick={() => setSide((v) => v + 1)}
+                className="text-label text-fg disabled:text-fg-muted"
+              >
+                Neste
+              </button>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+
+        <nav
+          data-kunde-alfa
+          aria-label="Alfabet"
+          className="absolute top-0 right-1 bottom-0 z-[3] flex w-[26px] flex-col items-center justify-center gap-[3px]"
+        >
+          {KUNDE_ALFA.map((tegn) => {
+            const valgt = bokstav === tegn;
+            return (
+              <button
+                key={tegn}
+                type="button"
+                data-kunde-alfa-tegn={tegn}
+                aria-pressed={valgt}
+                onClick={() => {
+                  setBokstav((forrige) => (forrige === tegn ? null : tegn));
+                  setSide(0);
+                }}
+                className={`flex h-[15px] w-5 items-center justify-center border-0 bg-transparent p-0 font-sans text-[11px] leading-none ${
+                  valgt ? 'font-bold text-fg' : 'font-medium text-fg-muted'
+                }`}
+              >
+                {tegn}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
       {angre ? (
         <AngreToast
-          tekst={`${angre.name} slettet`}
+          tekst={kunderAngreTekst(angre.name)}
           onAngre={() =>
             restore.mutate({
               id: angre.id,

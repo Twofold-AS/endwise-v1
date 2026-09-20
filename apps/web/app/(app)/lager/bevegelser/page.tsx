@@ -16,8 +16,8 @@ export default function BevegelserPage() {
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
       <Sidehode
-        tittel="Inn og ut"
-        undertittel="Alt som har gått inn og ut. Historikken rettes aldri — den suppleres."
+        tittel="Inn- og utlogg"
+        undertittel="Siste bevegelser på lageret. Historikken rettes aldri — den suppleres."
       />
       {bevegelser.isLoading ? (
         <Laster />

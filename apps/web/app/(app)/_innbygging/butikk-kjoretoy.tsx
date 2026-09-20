@@ -38,7 +38,7 @@ export function ButikkKjoretoySalg({
         <div>
           <h2 className="text-title text-fg">Kjøretøy til salgs</h2>
           <p className="text-[12px] text-fg-muted">
-            Registeret. Salgspris og Finn.no finnes ikke ennå.
+            Registeret. Kjørt og kanal er ikke registrert ennå.
           </p>
         </div>
         {seAlle}
@@ -53,8 +53,13 @@ export function ButikkKjoretoySalg({
                 href={k.href as Route}
                 className="flex items-center justify-between gap-3 rounded-[24px] border border-divide bg-card px-4 py-3 shadow-none"
               >
-                <p className="min-w-0 truncate text-label font-[650] text-fg">{k.tittel}</p>
-                <span className="shrink-0 text-[12px] text-fg-muted">Detalj</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-label font-[650] text-fg">{k.tittel}</span>
+                  <span className="block text-[12px] text-fg-muted">
+                    Ikke registrert · Ingen kanal
+                  </span>
+                </span>
+                <span className="shrink-0 text-[12px] text-fg-muted">Ingen pris</span>
               </Link>
             </li>
           ))}

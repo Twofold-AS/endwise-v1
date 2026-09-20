@@ -1,5 +1,14 @@
 # UI-pakker — les denne FØR du bygger UI
 
+> ### ⚠️ Mikael OVERRIDE Claude-innbygging (20.09.2026 dest-hub follow-up)
+> Kunder-alfaindeks er **høyre side-rail** (`absolute; top:0; right:4px;
+> bottom:0; width:26px; flex-direction:column`) inne i liste-viewport.
+> 11px Inter, 700 aktiv / 500 hvile, transparent bakgrunn. Liste har
+> `padding-right: 30px`. Aldri horisontal wrap under søk. Øvrige dest-flater
+> (Lager-hub, Inn/utlogg, Butikk 3+Se alle + salgsdetalj, Ansatte På jobb/Av
+> vakt) under eksisterende chrome. **Ingen ny UI-pakke.**
+> ⛔ #114/#119. ⛔ Ny destinasjon.
+>
 > ### ⚠️ Mikael OVERRIDE Claude-innbygging (18.09.2026 dest-hub)
 > Store destinasjonsflater under eksisterende chrome: Kunder-liste (pageSub,
 > Ny, alfa, pager, angre), kundekort (Kontakt/Kjøretøy/Jobber/Meldinger),
@@ -737,7 +746,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Verkstedet timeplan + ansatte på jobb (`apps/web/app/(app)/dashboard/_timeplan.tsx`, `_ansatte-pa-jobb.tsx`, F3-05 25.08.2026) | **Ingen ny pakke.** Timeplanen er samme 07–18-raster som Jobber › Kalender (F3-07), komponert av `CardShell` + `Link` + status-tokens. Ansatte på jobb er `Avatar` + native `<details>` (samme expand-grep som Profil). shadcn har ingen verksted-timeplan; å hente `calendar` ville vært en §2-pakke for en dagsstripe. Kompetanse/Timeplan under Ansatte røres ikke. |
 
-| Claude-innbygging innhold (`apps/web/app/(app)/_innbygging/`, 15–18.09.2026 Mikael OVERRIDE) | **Ingen ny pakke.** 18.09: Kunder-liste/profil/opprett, Lager-hub, Butikk-hub + salgsdetalj, Ansatte På jobb/Av vakt — komposisjon av `PhoneSokFelt`, `InnstillingSeksjon`, `StatusMerke`, `CardShell`. Egen kode fordi Claude-katalogene (alfa, pageSub, pager, hub-kutt) ikke finnes i shadcn. Chrome urørt. 15.09: `Dialog`/`Switch`/`Button`, `innholdPilleKlasse`, Tall #7. |
+| Claude-innbygging innhold (`apps/web/app/(app)/_innbygging/`, 15–20.09.2026 Mikael OVERRIDE) | **Ingen ny pakke.** 20.09: Kunder-alfa er høyre rail (ikke wrap), liste `pr-[30px]`. 18.09: Kunder-liste/profil/opprett, Lager-hub, Butikk-hub + salgsdetalj, Ansatte På jobb/Av vakt — komposisjon av `PhoneSokFelt`, `InnstillingSeksjon`, `StatusMerke`, `CardShell`. Egen kode fordi Claude-katalogene (alfa-rail, pageSub, pager, hub-kutt) ikke finnes i shadcn. Chrome urørt. 15.09: `Dialog`/`Switch`/`Button`, `innholdPilleKlasse`, Tall #7. |
 | Forhandler pulse-hjem (`_shell/phone-home-dealer.tsx`, `_shell/pulse-kort.tsx`, `_shell/phone-home-pulse.ts`, F3-05 10.09.2026) | **Ingen ny pakke.** **11.09 (CODE-GO tillegg):** Jobb-etikett `font-normal` (ikke 650/700). **10.09 (CODE-GO hjem-fiks):** To separate Modus-sirkler (ikon + tall ved siden, maks 50 % rad). PPF loddrett midt mellom dato og Avvik-rad. Kun Amicro `DitherDonutChart` med `#0066ff`-fyll — ingen SVG-strek. Analyser: `Tall for {navn}` uten anførsel, `min-h-11` som Innboks, Amicro `RevenueLineChart` med `pointer-events-none`. **10.09 (CODE-GO GO):** Halvsirkel med blå fill-linje/nål `#0066ff` (data viz) + Oslo-klokke i midten — **overstyrt** av hjem-fiks (ingen strek/nål). Avvik\|Forespørsler = `.ew-modus-plate` + `CircleQuestionMark`. Dato på samme rad som ukedag. **09.09 (CODE-GO):** Amicro-halvsirkel (`sweep={π}`) på samme linje som Planlagt/Pågår/Ferdig, etiketter 08…19. Hvit Endringer + `ChevronRight` → `/jobber?fane=endringer`. **08.09 natt (CODE-GO polish):** sirkel over Endringer, 08–19, `startAngle={π}` klokkevis venstre→høyre. Jobb: etikett venstre, +ikon høyre. **08.09 kveld (CODE-GO):** to-delt toppkort (`PulseHeroFlate`). Analyser nederst. Ikonplater `#ffffff`. ⛔ mock-badge. ⛔ #114/#119. |
 | Timeplan › Endringer (`jobber/_endringer.tsx`, `timeplan/endringer/page.tsx`, F7-05 stub) | **Ingen ny pakke.** Innstillinger-inndeling (underline Avvik \| Forespørsler) inne i Timeplan-chrome. Alias `/timeplan/endringer` → `/jobber?fane=endringer`. Godkjenn-stub. shadcn Table/Tabs er New York-boxed. |
 | Innboks Settings-chrome + top-bar 2 (`innboks/_top-bar2.tsx`, `_popup.tsx`, `_chrome.tsx`, F5-14) | **Ingen ny pakke.** Telefon: PhoneShell Settings-chrome (`bar2: 'innboks'`). Bar 2 = Ny melding · Tid · Gruppe · Slett. Tid/Gruppe = profilmeny-plate (`PHONE_PROFIL_*`), ikke chevron/DropdownMenu/Modus-piller. Slett expander med rød `Trash2` + velg-ikoner på trådene. Ny melding = Kunder-knapperad (Kunde · Intern · Support), ikke hub-piller. |

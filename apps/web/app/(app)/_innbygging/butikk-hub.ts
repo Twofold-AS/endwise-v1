@@ -13,3 +13,16 @@ export function hubForhandsvisning<T>(rader: readonly T[], tak = BUTIKK_HUB_TAK)
 export function visSeAlle(antall: number, tak = BUTIKK_HUB_TAK): boolean {
   return antall > tak;
 }
+
+export function butikkSeAlleVarer(antall: number): string {
+  return `Se alle varer (${antall})`;
+}
+
+export function butikkSeAlleKjoretoy(antall: number): string {
+  return `Se alle kjøretøy (${antall})`;
+}
+
+export function butikkVareUndertekst(kategori: string | null | undefined, paLager: number): string {
+  const kat = kategori?.trim() || 'Uten kategori';
+  return `${kat} · ${paLager} på lager`;
+}

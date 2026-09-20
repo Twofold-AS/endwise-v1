@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent, DialogTitle, Plus } from '@endwise/ui';
+import { Avatar, Dialog, DialogContent, DialogTitle, Plus } from '@endwise/ui';
 import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
@@ -132,11 +132,17 @@ function AnsattKort({
   return (
     <CardShell className="flex flex-col gap-3 rounded-[24px] border-divide p-4 shadow-none">
       <div className="flex items-center gap-3">
-        <span
-          data-ansatt-initialer
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[11px] font-[650] text-fg"
-        >
-          {ansattInitialer(rad.kallenavn?.trim() || rad.navn)}
+        <span className="relative flex size-8 shrink-0 items-center justify-center">
+          <Avatar
+            seed={rad.userId}
+            valg={{ ...rad.avatar, humor: rad.statusHumor ?? rad.avatar.humor }}
+            navn={rad.navn}
+            size={32}
+            bevegelse="stille"
+          />
+          <span data-ansatt-initialer className="sr-only">
+            {ansattInitialer(rad.kallenavn?.trim() || rad.navn)}
+          </span>
         </span>
         <div className="min-w-0 flex-1">
           <p data-ansatt-tittel className="truncate text-label text-fg">

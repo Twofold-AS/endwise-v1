@@ -149,8 +149,8 @@ describe('Claude dest — Lager / Butikk / Ansatte', () => {
         { navn: 'Ola', status: 'fri' },
       ]).map((r) => r.navn),
     ).toEqual(['Kari', 'Ola', 'Åse']);
+    expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/<Avatar/);
     expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/data-ansatt-initialer/);
     expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/data-ansatt-ny/);
-    expect(les('../app/(app)/organisasjon/_ansatte.tsx')).not.toMatch(/sr-only/);
   });
 });

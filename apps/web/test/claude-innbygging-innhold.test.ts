@@ -177,6 +177,9 @@ describe('Claude-innbygging — full content under existing chrome', () => {
     );
     expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/Slett kunde/);
     expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/Ny jobb på kunde/);
+    expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/kjoretoyRadUndertekst/);
+    expect(les('../app/(app)/_innbygging/lager-hub.ts')).toMatch(/Bestill deler/);
+    expect(les('../app/(app)/_innbygging/lager-hub.ts')).toMatch(/Kjøretøy til salgs/);
     expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/StatusMerke/);
     expect(les('../app/(app)/kunder/_ny-kunde.tsx')).toMatch(/Lagre kunde/);
     expect(les('../app/(app)/kunder/_ny-kunde.tsx')).toMatch(/Kjøretøy/);

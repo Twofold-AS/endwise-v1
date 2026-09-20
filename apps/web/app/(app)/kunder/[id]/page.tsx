@@ -20,13 +20,15 @@ import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import {
   jobbRadUndertekst,
+  kjoretoyRadTittel,
+  kjoretoyRadUndertekst,
   lagreKundeAngre,
   meldingTraadStatus,
 } from '../../_innbygging/kunder-katalog';
 import { StatusMerke } from '../../_innbygging/status-merke';
 import { CardShell } from '../../_shell/cards';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
-import { dato, datoTid, EuFrist, Feil, Kilde, Laster, Seksjon, TYPE_LABEL } from '../_delt';
+import { dato, datoTid, Feil, Kilde, Laster, Seksjon, TYPE_LABEL } from '../_delt';
 import { KundeEndre, sisteAdresse } from '../_endre';
 import { KUNDER_FANER, kunderHref } from '../_faner';
 import { RegistrerKjoretoy } from '../_registrer-kjoretoy';
@@ -184,7 +186,8 @@ export default function KundekortPage() {
             {k.kjoretoy.map((v, i) => (
               <div
                 key={v.id}
-                className={`flex h-row-store items-center gap-3 bg-bg px-4 ${
+                data-kunde-kjoretoy={v.id}
+                className={`flex min-h-row-store items-center gap-3 bg-bg px-4 py-2 ${
                   i > 0 ? 'border-border border-t' : ''
                 }`}
               >
@@ -193,20 +196,14 @@ export default function KundekortPage() {
                   className="flex min-w-0 flex-1 items-center gap-3"
                 >
                   <Car size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                  <span className="w-24 shrink-0 font-mono text-label text-fg">
-                    {v.regNumber ?? '—'}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-label text-fg">
+                      {kjoretoyRadTittel(v.make, v.model, TYPE_LABEL[v.type])}
+                    </span>
+                    <span className="block truncate text-[12px] text-fg-muted">
+                      {kjoretoyRadUndertekst(TYPE_LABEL[v.type], v.modelYear, v.regNumber)}
+                    </span>
                   </span>
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-label text-fg">
-                      {[v.make, v.model].filter(Boolean).join(' ') || TYPE_LABEL[v.type]}
-                    </span>
-                    <span className="truncate text-[12px] text-fg-muted">
-                      {TYPE_LABEL[v.type]}
-                      {v.modelYear ? ` · ${v.modelYear}` : ''}
-                      {' · EU: '}
-                      <EuFrist dato={v.inspectionDue} />
-                    </span>
-                  </div>
                   <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
                 </Link>
                 <button

@@ -4,7 +4,12 @@ import { TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
-import { LAGER_HUB_LENKER, LAGER_HUB_STATUS, lagerPageSub } from '../_innbygging/lager-hub';
+import {
+  LAGER_HUB_LENKER,
+  LAGER_HUB_STATUS,
+  lagerBestillSub,
+  lagerPageSub,
+} from '../_innbygging/lager-hub';
 import { PageSub } from '../_innbygging/page-sub';
 import { useOrgRole } from '../_lib/use-org-role';
 import { shellForBruker } from '../_shell/nav';
@@ -30,6 +35,7 @@ export default function LagerOversiktPage() {
     kunLav: true,
     limit: 100,
   });
+  const kjoretoy = trpc.vehicles.list.useQuery({ limit: 50 });
 
   const s = oppsummering.data;
   const verdier: Record<(typeof LAGER_HUB_STATUS)[number], number | undefined> = {
@@ -70,23 +76,41 @@ export default function LagerOversiktPage() {
 
       <section data-lager-hub-lenker className="flex flex-col gap-2">
         <h2 className="text-title text-fg">Lagerstyring</h2>
-        {LAGER_HUB_LENKER.map((lenke) => (
-          <Link
-            key={lenke.href}
-            href={lenke.href as Route}
-            className="flex min-h-row-store items-center justify-between gap-3 rounded-[24px] border border-divide bg-card px-4 py-3 shadow-none"
-          >
-            <span className="min-w-0">
-              <span className="block text-label font-[650] text-fg">{lenke.label}</span>
-              <span className="block text-[12px] text-fg-muted">{lenke.sub}</span>
-            </span>
-            {lenke.label === 'Deler' ? (
-              <span className="shrink-0 text-[12px] text-fg-muted tabular-nums">
-                {s?.antallDeler ?? 0}
+        {LAGER_HUB_LENKER.map((lenke) => {
+          const sub = lenke.id === 'bestill' ? lagerBestillSub(s?.underMinimum ?? 0) : lenke.sub;
+          const hoyre =
+            lenke.id === 'deler'
+              ? String(s?.antallDeler ?? 0)
+              : lenke.id === 'bestill'
+                ? 'Bestill'
+                : lenke.id === 'salg'
+                  ? String(kjoretoy.data?.length ?? 0)
+                  : null;
+          return (
+            <Link
+              key={lenke.id}
+              href={lenke.href as Route}
+              data-lager-hub-lenke={lenke.id}
+              className="flex min-h-row-store items-center justify-between gap-3 rounded-[24px] border border-divide bg-card px-4 py-3 shadow-none"
+            >
+              <span className="min-w-0">
+                <span className="block text-label font-[650] text-fg">{lenke.label}</span>
+                <span className="block text-[12px] text-fg-muted">{sub}</span>
               </span>
-            ) : null}
-          </Link>
-        ))}
+              {hoyre ? (
+                <span
+                  className={`shrink-0 text-[12px] tabular-nums ${
+                    lenke.id === 'bestill' && (s?.underMinimum ?? 0) > 0
+                      ? 'text-warn'
+                      : 'text-fg-muted'
+                  }`}
+                >
+                  {hoyre}
+                </span>
+              ) : null}
+            </Link>
+          );
+        })}
       </section>
 
       <section className="flex flex-col gap-2">

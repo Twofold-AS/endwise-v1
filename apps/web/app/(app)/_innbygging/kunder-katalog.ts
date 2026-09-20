@@ -80,8 +80,27 @@ export function jobbRadUndertekst(
   return mek ? `${dato} kl. ${tid} · ${mek}` : `${dato} kl. ${tid}`;
 }
 
-export function meldingTraadStatus(deltakere: number): string {
+export function meldingTraadStatus(deltakere: number, lost?: boolean): string {
+  if (lost) return 'Løst';
   return deltakere > 2 ? 'Gruppesamtale' : 'Åpen samtale';
+}
+
+export function kjoretoyRadTittel(
+  merke?: string | null,
+  modell?: string | null,
+  typeLabel?: string | null,
+): string {
+  return [merke, modell].filter(Boolean).join(' ') || typeLabel?.trim() || 'Kjøretøy';
+}
+
+export function kjoretoyRadUndertekst(
+  typeLabel: string,
+  aar?: string | number | null,
+  reg?: string | null,
+): string {
+  const ar = aar != null && String(aar).trim() ? String(aar).trim() : '—';
+  const regn = reg?.trim() ? reg.trim() : 'uten reg.nr';
+  return `${typeLabel} · ${ar} · ${regn}`;
 }
 
 export function lagreKundeAngre(snapshot: KundeAngreSnapshot) {

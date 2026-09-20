@@ -1,11 +1,17 @@
 'use client';
 
-import { Avatar, Dialog, DialogContent, DialogTitle, Plus } from '@endwise/ui';
+import { Dialog, DialogContent, DialogTitle, Plus } from '@endwise/ui';
 import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { FargeSvatser } from '../_avatar/farge-svatser';
-import { ansattInitialer, ansattVaktLabel } from '../_innbygging/ansatt-vakt';
+import {
+  ansattePageSub,
+  ansattInitialer,
+  ansattVaktLabel,
+  sorterAnsatteEtterVakt,
+} from '../_innbygging/ansatt-vakt';
+import { PageSub } from '../_innbygging/page-sub';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
@@ -52,14 +58,15 @@ export function OrganisasjonAnsatte() {
     return <p className="text-body text-danger">{team.error.message}</p>;
   }
 
-  const rader = team.data ?? [];
+  const rader = sorterAnsatteEtterVakt(team.data ?? []);
+  const paJobb = rader.filter((r) => ansattVaktLabel(r.status) === 'På jobb').length;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-title text-fg">Ansatte</h2>
-          <p className="text-body text-fg-muted">Hvem som jobber her.</p>
+          <PageSub>{ansattePageSub(rader.length, paJobb)}</PageSub>
         </div>
         {isAdmin ? (
           <button
@@ -125,17 +132,11 @@ function AnsattKort({
   return (
     <CardShell className="flex flex-col gap-3 rounded-[24px] border-divide p-4 shadow-none">
       <div className="flex items-center gap-3">
-        <span className="relative flex size-8 shrink-0 items-center justify-center">
-          <Avatar
-            seed={rad.userId}
-            valg={{ ...rad.avatar, humor: rad.statusHumor ?? rad.avatar.humor }}
-            navn={rad.navn}
-            size={32}
-            bevegelse="stille"
-          />
-          <span data-ansatt-initialer className="sr-only">
-            {ansattInitialer(rad.kallenavn?.trim() || rad.navn)}
-          </span>
+        <span
+          data-ansatt-initialer
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[11px] font-[650] text-fg"
+        >
+          {ansattInitialer(rad.kallenavn?.trim() || rad.navn)}
         </span>
         <div className="min-w-0 flex-1">
           <p data-ansatt-tittel className="truncate text-label text-fg">

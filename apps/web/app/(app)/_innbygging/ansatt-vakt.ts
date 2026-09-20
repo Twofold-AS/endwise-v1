@@ -14,3 +14,17 @@ export function ansattInitialer(navn: string): string {
   const andre = deler[1] ?? '';
   return `${forste.slice(0, 1)}${andre.slice(0, 1)}`.toLocaleUpperCase('nb-NO');
 }
+
+export function ansattePageSub(antall: number, paJobb: number): string {
+  return `${antall} ansatte · ${paJobb} på jobb nå`;
+}
+
+export function sorterAnsatteEtterVakt<T extends { status?: string | null; navn: string }>(
+  rader: readonly T[],
+): T[] {
+  return [...rader].sort((a, b) => {
+    const da = ansattVaktLabel(a.status) === 'På jobb' ? 0 : 1;
+    const db = ansattVaktLabel(b.status) === 'På jobb' ? 0 : 1;
+    return da - db || a.navn.localeCompare(b.navn, 'nb');
+  });
+}

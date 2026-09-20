@@ -77,9 +77,19 @@ export default function ButikkSalgDetaljPage() {
         <p className="text-[12px] text-fg-muted">Ingen beskrivelse registrert.</p>
       </section>
 
-      <p data-butikk-salg-rediger className="text-[12px] text-fg-muted">
-        Rediger annonse er ikke koblet. Salgspris, km og kanal finnes ikke i registeret ennå.
-      </p>
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          data-butikk-salg-rediger
+          disabled
+          className="inline-flex h-control w-fit items-center rounded-full bg-fg px-3 text-label text-bg disabled:opacity-40"
+        >
+          Rediger annonse
+        </button>
+        <p className="text-[12px] text-fg-muted">
+          Rediger annonse er ikke koblet. Salgspris, km og kanal finnes ikke i registeret ennå.
+        </p>
+      </div>
 
       <Link
         href={`/kjoretoy/${k.id}` as Route}

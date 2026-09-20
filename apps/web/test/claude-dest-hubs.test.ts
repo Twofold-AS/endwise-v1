@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { ansattInitialer, ansattVaktLabel } from '../app/(app)/_innbygging/ansatt-vakt';
+import {
+  ansattePageSub,
+  ansattInitialer,
+  ansattVaktLabel,
+  sorterAnsatteEtterVakt,
+} from '../app/(app)/_innbygging/ansatt-vakt';
 import {
   BUTIKK_HUB_TAK,
   butikkPageSub,
@@ -16,6 +21,8 @@ import {
   jobbRadUndertekst,
   KUNDE_ALFA,
   KUNDE_SIDE_STORRELSE,
+  kjoretoyRadTittel,
+  kjoretoyRadUndertekst,
   kundeAlfaNokkel,
   kundeInitialer,
   kunderAngreTekst,
@@ -27,6 +34,7 @@ import {
 import {
   LAGER_HUB_LENKER,
   LAGER_HUB_STATUS,
+  lagerBestillSub,
   lagerPageSub,
 } from '../app/(app)/_innbygging/lager-hub';
 
@@ -57,6 +65,10 @@ describe('Claude dest — Kunder-katalog', () => {
     expect(jobbRadUndertekst('2026-09-20T08:30:00', 'Kari')).toMatch(/Kari/);
     expect(meldingTraadStatus(3)).toBe('Gruppesamtale');
     expect(meldingTraadStatus(2)).toBe('Åpen samtale');
+    expect(meldingTraadStatus(2, true)).toBe('Løst');
+    expect(kjoretoyRadTittel('Yamaha', 'MT-07', 'MC')).toBe('Yamaha MT-07');
+    expect(kjoretoyRadUndertekst('MC', 2021, 'AB12345')).toBe('MC · 2021 · AB12345');
+    expect(kjoretoyRadUndertekst('MC', 2021, null)).toBe('MC · 2021 · uten reg.nr');
   });
 
   it('alfaindeks er høyre side-rail, aldri wrap under søk', () => {
@@ -87,12 +99,20 @@ describe('Claude dest — Lager / Butikk / Ansatte', () => {
       'Reservert',
       'Under minimum',
     ]);
-    expect(LAGER_HUB_LENKER.map((l) => l.label)).toEqual(['Deler', 'Inn- og utlogg']);
+    expect(LAGER_HUB_LENKER.map((l) => l.label)).toEqual([
+      'Deler',
+      'Inn- og utlogg',
+      'Bestill deler',
+      'Kjøretøy til salgs',
+    ]);
     expect(LAGER_HUB_LENKER.map((l) => l.sub)).toEqual([
       'Beholdning, plassering og minimum',
       'Siste bevegelser på lageret',
+      'Under minimum',
+      'Beholdning for salg',
     ]);
     expect(lagerPageSub(18)).toBe('18 delenummer');
+    expect(lagerBestillSub(3)).toBe('3 under minimum');
     expect(les('../app/(app)/lager/page.tsx')).toMatch(/Lagerstatus/);
     expect(les('../app/(app)/lager/bevegelser/page.tsx')).toMatch(/Inn- og utlogg/);
   });
@@ -119,7 +139,16 @@ describe('Claude dest — Lager / Butikk / Ansatte', () => {
     expect(ansattVaktLabel('fri')).toBe('Av vakt');
     expect(ansattVaktLabel(null)).toBe('Av vakt');
     expect(ansattInitialer('Kari Nordmann')).toBe('KN');
+    expect(ansattePageSub(4, 2)).toBe('4 ansatte · 2 på jobb nå');
+    expect(
+      sorterAnsatteEtterVakt([
+        { navn: 'Åse', status: 'fri' },
+        { navn: 'Kari', status: 'på_jobb' },
+        { navn: 'Ola', status: 'fri' },
+      ]).map((r) => r.navn),
+    ).toEqual(['Kari', 'Ola', 'Åse']);
     expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/data-ansatt-initialer/);
     expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/data-ansatt-ny/);
+    expect(les('../app/(app)/organisasjon/_ansatte.tsx')).not.toMatch(/sr-only/);
   });
 });

@@ -85,7 +85,7 @@ export function KunderListe() {
         />
       </div>
 
-      <div data-kunder-viewport className="relative min-h-[280px]">
+      <div data-kunder-viewport className="relative min-h-[540px] overflow-hidden">
         <div data-kunder-liste-innhold className="pr-[30px]">
           {kunder.isLoading ? (
             <Laster />

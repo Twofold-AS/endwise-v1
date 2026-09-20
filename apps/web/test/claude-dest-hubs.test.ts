@@ -79,6 +79,8 @@ describe('Claude dest — Kunder-katalog', () => {
     expect(liste).toMatch(/w-\[26px\]/);
     expect(liste).toMatch(/flex-col/);
     expect(liste).toMatch(/pr-\[30px\]/);
+    expect(liste).toMatch(/min-h-\[540px\]/);
+    expect(liste).toMatch(/overflow-hidden/);
     expect(liste).toMatch(/font-bold/);
     expect(liste).toMatch(/font-medium/);
     expect(liste).toMatch(/text-\[11px\]/);

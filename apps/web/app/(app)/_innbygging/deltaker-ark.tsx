@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogTitle } from '@endwise/ui';
 import { useState } from 'react';
+import { useOrgRole } from '../_lib/use-org-role';
 import { InviterAnsatt } from '../innboks/_inviter-ansatt';
 
 /**
@@ -19,6 +20,7 @@ export function DeltakerArk({
   onLost: () => void;
   onGjenapne: () => void;
 }) {
+  const { isAdmin } = useOrgRole();
   const [apen, setApen] = useState(false);
   const [lokal, setLokal] = useState<string | null>(null);
 
@@ -37,14 +39,18 @@ export function DeltakerArk({
           <DialogTitle className="text-title text-fg">Deltakere</DialogTitle>
           <div className="mt-3 flex flex-col gap-2" data-deltaker-ark>
             <InviterAnsatt threadId={threadId} />
-            <button
-              type="button"
-              data-deltaker-fjern
-              onClick={() => setLokal('Fjernet i denne økta — ingen API ennå.')}
-              className="h-10 rounded-[16px] bg-surface-2 px-3 text-left text-label text-fg"
-            >
-              Fjern
-            </button>
+            {isAdmin ? (
+              <button
+                type="button"
+                data-deltaker-fjern
+                onClick={() => setLokal('Fjern deltaker krever egen API — ikke tilgjengelig ennå.')}
+                className="h-10 rounded-[16px] bg-surface-2 px-3 text-left text-label text-fg"
+              >
+                Fjern
+              </button>
+            ) : (
+              <p className="text-[12px] text-fg-muted">Fjern deltaker krever leder-tilgang.</p>
+            )}
             <button
               type="button"
               data-deltaker-forlat

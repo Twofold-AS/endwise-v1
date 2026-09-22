@@ -67,6 +67,9 @@ export function OrganisasjonAnsatte() {
         <div>
           <h2 className="text-title text-fg">Ansatte</h2>
           <PageSub>{ansattePageSub(rader.length, paJobb)}</PageSub>
+          <p data-ansatt-vaktplan className="mt-1 text-[12px] text-fg-muted">
+            Vaktplan per uke har ingen API ennå. «På jobb» er status nå, ikke skiftplan.
+          </p>
         </div>
         {isAdmin ? (
           <button

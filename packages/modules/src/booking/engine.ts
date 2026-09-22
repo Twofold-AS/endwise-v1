@@ -216,6 +216,94 @@ export async function transitionBooking(
   });
 }
 
+export interface RescheduleBookingInput {
+  tenantId: string;
+  bookingId: string;
+  actor: string;
+  startsAt?: Date;
+  endsAt?: Date;
+  mechanicId?: string;
+  notes?: string | null;
+}
+
+/**
+ * Flytt / bytt mekaniker på en eksisterende jobb.
+ * Samme slot-lås som `createBooking`. Overlapp sjekkes mot ny tid/mekaniker,
+ * uten å telle den jobben som flyttes.
+ */
+export async function rescheduleBooking(db: Database, input: RescheduleBookingInput) {
+  return withTenant(db, input.tenantId, async (tx) => {
+    const [booking] = await tx
+      .select()
+      .from(schema.bookings)
+      .where(eq(schema.bookings.id, input.bookingId))
+      .limit(1);
+    if (!booking) throw new BookingNotFoundError(input.bookingId);
+
+    const mechanicId = input.mechanicId ?? booking.mechanicId;
+    const startsAt = input.startsAt ?? booking.startsAt;
+    const endsAt = input.endsAt ?? booking.endsAt;
+    if (endsAt <= startsAt) {
+      throw new Error('endsAt må være etter startsAt');
+    }
+
+    await tx.execute(lockShopSlots(input.tenantId));
+    await tx.execute(lockMechanic(input.tenantId, mechanicId));
+    if (booking.mechanicId !== mechanicId) {
+      await tx.execute(lockMechanic(input.tenantId, booking.mechanicId));
+    }
+
+    const [mech] = await tx
+      .select({ capacity: schema.mechanics.capacity })
+      .from(schema.mechanics)
+      .where(eq(schema.mechanics.id, mechanicId))
+      .limit(1);
+    const cap = mech?.capacity ?? 1;
+
+    const overlapping = await tx
+      .select({ id: schema.bookings.id })
+      .from(schema.bookings)
+      .where(
+        and(
+          eq(schema.bookings.mechanicId, mechanicId),
+          inArray(schema.bookings.status, [...OCCUPYING_STATUSES]),
+          sql`${schema.bookings.id} <> ${input.bookingId}`,
+          sql`${schema.bookings.startsAt} < ${endsAt.toISOString()}`,
+          sql`${schema.bookings.endsAt} > ${startsAt.toISOString()}`,
+        ),
+      );
+    if (overlapping.length >= cap) throw new SlotConflictError(mechanicId);
+
+    const [updated] = await tx
+      .update(schema.bookings)
+      .set({
+        mechanicId,
+        startsAt,
+        endsAt,
+        notes: input.notes === undefined ? booking.notes : input.notes,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.bookings.id, input.bookingId))
+      .returning();
+
+    await tx.insert(schema.auditLog).values({
+      tenantId: input.tenantId,
+      actor: input.actor,
+      action: 'booking.reschedule',
+      subjectType: 'booking',
+      subjectId: input.bookingId,
+      metadata: {
+        fromStartsAt: booking.startsAt.toISOString(),
+        toStartsAt: startsAt.toISOString(),
+        fromMechanicId: booking.mechanicId,
+        toMechanicId: mechanicId,
+      },
+    });
+
+    return updated;
+  });
+}
+
 /**
  * Kalender-API: bookinger i et tidsvindu, valgfritt per mekaniker.
  */

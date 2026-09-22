@@ -206,5 +206,6 @@ describe('Claude-innbygging — full content under existing chrome', () => {
     expect(ny).toMatch(/Bekreft/);
     expect(ny).toMatch(/Suspense/);
     expect(ny).toMatch(/data-ny-jobb-bilde/);
+    expect(ny).toMatch(/JobSlotsVelger/);
   });
 });

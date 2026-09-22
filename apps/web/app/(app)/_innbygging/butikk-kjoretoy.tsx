@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { butikkSalgStatus, butikkSalgStatusLabel } from './butikk-hub';
 
 export type SalgsKjoretoy = {
   id: string;
@@ -38,7 +39,7 @@ export function ButikkKjoretoySalg({
         <div>
           <h2 className="text-title text-fg">Kjøretøy til salgs</h2>
           <p className="text-[12px] text-fg-muted">
-            Registeret. Kjørt og kanal er ikke registrert ennå.
+            Finn.no · Butikk · Reservert — salgskanal-API finnes ikke.
           </p>
         </div>
         {seAlle}
@@ -55,8 +56,8 @@ export function ButikkKjoretoySalg({
               >
                 <span className="min-w-0">
                   <span className="block truncate text-label font-[650] text-fg">{k.tittel}</span>
-                  <span className="block text-[12px] text-fg-muted">
-                    Ikke registrert · Ingen kanal
+                  <span data-butikk-salg-status className="block text-[12px] text-fg-muted">
+                    {butikkSalgStatusLabel(butikkSalgStatus())}
                   </span>
                 </span>
                 <span className="shrink-0 text-[12px] text-fg-muted">Ingen pris</span>

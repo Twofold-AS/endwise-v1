@@ -328,6 +328,20 @@ export default function TrådPage() {
               </span>
             )}
           </div>
+          {motparter.length > 0 ? (
+            <ul data-samtale-deltakere className="mt-2 flex flex-wrap gap-1.5">
+              {motparter
+                .filter((id) => id && !id.startsWith('agent:'))
+                .map((id) => (
+                  <li
+                    key={id}
+                    className="inline-flex h-7 items-center rounded-full bg-surface-2 px-2.5 text-[11px] text-fg"
+                  >
+                    {navnKart?.[id]?.navn ?? 'Deltaker'}
+                  </li>
+                ))}
+            </ul>
+          ) : null}
         </div>
         {!endwise ? (
           <DeltakerArk
@@ -413,20 +427,29 @@ export default function TrådPage() {
         <div ref={bottomRef} />
       </div>
 
-      <PromptInput onSubmit={onPrompt} aria-label="Svar i tråden">
-        <PromptInputBody className="min-w-0 flex-1">
-          <PromptInputTextarea
-            placeholder="Skriv et svar …"
-            maxLength={4000}
-            disabled={post.isPending}
-          />
-        </PromptInputBody>
-        <PromptInputFooter>
-          <PromptInputSubmit
-            status={post.isPending ? 'submitted' : post.isError ? 'error' : 'ready'}
-          />
-        </PromptInputFooter>
-      </PromptInput>
+      {lostte.has(threadId) ? (
+        <p
+          data-samtale-last
+          className="rounded-[16px] bg-surface-2 px-3 py-2 text-[12px] text-fg-muted"
+        >
+          Tråden er merket løst. Skrivfeltet er låst til den gjenåpnes.
+        </p>
+      ) : (
+        <PromptInput onSubmit={onPrompt} aria-label="Svar i tråden">
+          <PromptInputBody className="min-w-0 flex-1">
+            <PromptInputTextarea
+              placeholder="Skriv et svar …"
+              maxLength={4000}
+              disabled={post.isPending}
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputSubmit
+              status={post.isPending ? 'submitted' : post.isError ? 'error' : 'ready'}
+            />
+          </PromptInputFooter>
+        </PromptInput>
+      )}
       {post.isError && <p className="text-[12px] text-danger">{post.error.message}</p>}
     </div>
   );

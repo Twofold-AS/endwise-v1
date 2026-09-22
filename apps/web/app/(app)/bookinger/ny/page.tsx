@@ -1,17 +1,18 @@
 'use client';
 
-import { Car, Check, FELT_MD, hexForFarge, Search, Sparkles, staffFargeStil } from '@endwise/ui';
+import { Car, Check, FELT_MD, Search } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { innholdPilleKlasse } from '../../_innbygging/innhold-piller';
+import { osloKalenderdag } from '../../_lib/oslo-dag';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
 import { TIMEPLAN_FANER, timeplanHref } from '../../jobber/_faner';
+import { JobSlotsVelger } from '../_job-slots-velger';
 import { velgKjoretoyForJobb } from '../_knytt-kjoretoy';
-import { StarttidVelger } from '../_starttid-velger';
 import { fmtMinor } from '../_status';
 
 /**
@@ -46,6 +47,7 @@ function NyJobbSkjema() {
   const [vehicleId, setVehicleId] = useState('');
   const [serviceIds, setServiceIds] = useState<string[]>([]);
   const [startsAt, setStartsAt] = useState('');
+  const [slotDato, setSlotDato] = useState(() => osloKalenderdag(new Date()));
   const [mechanicId, setMechanicId] = useState('');
   const [notes, setNotes] = useState('');
   const [regNumber, setRegNumber] = useState('');
@@ -343,89 +345,40 @@ function NyJobbSkjema() {
 
         {steg === 3 ? (
           <>
-            <InnstillingSeksjon tittel="Dato/klokke">
-              <Field label="Starttid">
-                <StarttidVelger
-                  value={startsAt}
-                  onChange={(iso) => {
-                    setStartsAt(iso);
-                    setMechanicId('');
-                  }}
-                />
-              </Field>
-              {window && selected.length > 0 && (
-                <p className="text-fg-muted text-xs">
-                  Slutter{' '}
-                  {window.to.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} ·{' '}
-                  {slotMinutes} min
-                  {requiredSkills.length > 0 && ` · krever: ${requiredSkills.join(', ')}`}
-                </p>
-              )}
-            </InnstillingSeksjon>
-
-            <InnstillingSeksjon tittel="Mekaniker">
-              {!primary || !window ? (
-                <p className="text-fg-faint text-xs">
-                  Velg tjenester og tid, så foreslår matcheren.
-                </p>
-              ) : match.isLoading ? (
-                <p className="text-fg-faint text-xs">Matcher …</p>
-              ) : (match.data ?? []).length === 0 ? (
-                <p className="text-warn text-xs">
-                  Ingen kvalifisert mekaniker er ledig i dette tidsrommet. Prøv en annen tid.
-                </p>
-              ) : (
-                <div className="flex flex-col gap-1.5">
-                  {(match.data ?? []).map((cand, i) => {
-                    const selectedMech = mechanicId === cand.mechanicId;
-                    return (
-                      <button
-                        key={cand.mechanicId}
-                        type="button"
-                        onClick={() => setMechanicId(cand.mechanicId)}
-                        className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${
-                          selectedMech ? 'ring-2 ring-fg ring-offset-1' : ''
-                        }`}
-                        style={staffFargeStil(
-                          mechanics.data?.find((m) => m.id === cand.mechanicId)?.farge,
-                          cand.mechanicId,
-                        )}
-                      >
-                        <span
-                          aria-hidden
-                          className="size-2.5 shrink-0 rounded-full"
-                          style={{
-                            backgroundColor: hexForFarge(
-                              mechanics.data?.find((m) => m.id === cand.mechanicId)?.farge,
-                              cand.mechanicId,
-                            ),
-                          }}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="flex items-center gap-2 text-[13px] text-fg">
-                            {mechName.get(cand.mechanicId) ?? cand.mechanicId}
-                            {i === 0 && (
-                              <span className="inline-flex items-center gap-0.5 rounded bg-primary/15 px-1.5 py-0.5 text-[10px] text-primary">
-                                <Sparkles size={9} /> best treff
-                              </span>
-                            )}
-                          </p>
-                          {cand.reasons.length > 0 && (
-                            <p className="truncate text-fg-faint text-xs">
-                              {cand.reasons.join(' · ')}
-                            </p>
-                          )}
-                        </div>
-                        <span className="shrink-0 text-fg-muted text-xs tabular-nums">
-                          {Math.round(cand.score * 100)}%
-                        </span>
-                        {selectedMech && <Check size={15} className="shrink-0 text-primary" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </InnstillingSeksjon>
+            {selected.length === 0 || slotMinutes < 5 ? (
+              <InnstillingSeksjon tittel="Dato/klokke">
+                <p className="text-fg-faint text-xs">Velg tjenester i steg 2 først.</p>
+              </InnstillingSeksjon>
+            ) : (
+              <JobSlotsVelger
+                date={slotDato}
+                onDate={(ymd) => {
+                  setSlotDato(ymd);
+                  setStartsAt('');
+                  setMechanicId('');
+                }}
+                durationMinutes={slotMinutes}
+                requiredSkills={requiredSkills}
+                startsAt={startsAt}
+                mechanicId={mechanicId}
+                onPick={(iso, id) => {
+                  setStartsAt(iso);
+                  setMechanicId(id);
+                }}
+              />
+            )}
+            {window && selected.length > 0 && (
+              <p className="text-fg-muted text-xs">
+                Slutter{' '}
+                {window.to.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} ·{' '}
+                {slotMinutes} min
+                {requiredSkills.length > 0 && ` · krever: ${requiredSkills.join(', ')}`}
+                {mechanicId ? ` · ${mechName.get(mechanicId) ?? 'mekaniker'}` : ''}
+              </p>
+            )}
+            {startsAt && match.isFetching ? (
+              <p className="text-fg-faint text-xs">Sjekker matcheren …</p>
+            ) : null}
           </>
         ) : null}
 

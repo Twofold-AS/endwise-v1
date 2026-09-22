@@ -1,6 +1,8 @@
 'use client';
 
 import { FELT_MD, StatefulButton } from '@endwise/ui';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../../_lib/lyd';
@@ -238,6 +240,22 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
             </ul>
           </details>
         ) : null}
+
+        {lesing ? null : (
+          <div data-org-tjenester className="border-border border-b py-4">
+            <Link
+              href={'/prisliste' as Route}
+              className="flex items-center justify-between gap-3 text-label text-fg"
+            >
+              <span>Tjenestekatalog</span>
+              <span className="text-[12px] text-fg-muted">Åpne</span>
+            </Link>
+            <p className="mt-1 text-[12px] text-fg-muted">
+              Bookbare tjenester med sertifikatkrav. Samme rute som Tjenester i chrome — ikke en ny
+              pille.
+            </p>
+          </div>
+        )}
 
         {lesing ? null : (
           <div className="flex flex-col gap-2 py-4">

@@ -1,6 +1,7 @@
 import {
   osloKalenderdag,
   osloPlusDager,
+  osloStartAvUke,
   osloVeggklokke,
   osloVeggtid,
   PRODUKT_TIDSSONE,
@@ -28,8 +29,14 @@ export type TimeplanManed = {
   aktiv: boolean;
 };
 
+/** Uke som inneholder valgt dag (mandag først). Claude: 7 dager. */
+export function timeplanUkeFra(valgtYmd: string): TimeplanDag[] {
+  const mandag = osloKalenderdag(osloStartAvUke(valgtYmd));
+  return timeplanDagerFra(mandag, 7);
+}
+
 /** Valgt dag først, deretter de neste dagene i Europe/Oslo. */
-export function timeplanDagerFra(valgtYmd: string, antall = 3): TimeplanDag[] {
+export function timeplanDagerFra(valgtYmd: string, antall = 7): TimeplanDag[] {
   const start = osloKalenderdag(valgtYmd);
   const out: TimeplanDag[] = [];
   for (let i = 0; i < antall; i++) {

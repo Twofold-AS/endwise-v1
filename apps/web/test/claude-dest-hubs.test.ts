@@ -127,6 +127,7 @@ describe('Claude dest — Lager / Butikk / Ansatte', () => {
     expect(butikkSeAlleVarer(12)).toBe('Se alle varer (12)');
     expect(butikkSeAlleKjoretoy(5)).toBe('Se alle kjøretøy (5)');
     expect(les('../app/(app)/butikk/page.tsx')).toMatch(/Varer i nettbutikk/);
+    expect(les('../app/(app)/butikk/page.tsx')).toMatch(/grupperVarerEtterKategori/);
     expect(les('../app/(app)/butikk/page.tsx')).toMatch(/data-butikk-ny/);
     expect(les('../app/(app)/butikk/salg/[id]/page.tsx')).toMatch(/Pris/);
     expect(les('../app/(app)/butikk/salg/[id]/page.tsx')).toMatch(/Kjørt/);
@@ -152,5 +153,7 @@ describe('Claude dest — Lager / Butikk / Ansatte', () => {
     expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/<Avatar/);
     expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/data-ansatt-initialer/);
     expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/data-ansatt-ny/);
+    expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/data-ansatt-vaktplan/);
+    expect(les('../app/(app)/organisasjon/forhandleren/_kort.tsx')).toMatch(/data-org-tjenester/);
   });
 });

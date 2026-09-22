@@ -24,8 +24,6 @@ import {
   osloManedKey,
   osloStartAvManed,
   PULSE_DAGER,
-  PULSE_PLAUSIBEL_IDAG,
-  PULSE_PLAUSIBEL_INNBOKS_MELDINGER,
   plausibelSpark,
   siste7dSpark,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
@@ -153,9 +151,9 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(manedSparkVerdier(-1, 4)).toEqual([0, 4]);
   });
 
-  it('Innboks-rad viser kun meldingstall, plausibel uten historikk', () => {
+  it('Innboks-rad viser kun meldingstall, 0 uten historikk', () => {
     expect(innboksRad([])).toEqual({
-      meldinger: PULSE_PLAUSIBEL_INNBOKS_MELDINGER,
+      meldinger: 0,
     });
     expect(
       innboksRad([
@@ -187,9 +185,9 @@ describe('forhandler pulse-hjem — fem flater', () => {
     );
   });
 
-  it('I dag uten historikk er plausibel tall, ikke For lite data', () => {
+  it('I dag uten historikk er 0, ikke plausibel mock', () => {
     const naa = new Date('2026-08-29T10:00:00');
-    expect(idagVisning([], naa)).toEqual({ ...PULSE_PLAUSIBEL_IDAG });
+    expect(idagVisning([], naa)).toEqual({ planlagt: 0, paagaar: 0, ferdig: 0 });
     expect(
       idagVisning([{ id: '1', status: 'confirmed', startsAt: '2026-08-29T08:00:00' }], naa),
     ).toEqual({

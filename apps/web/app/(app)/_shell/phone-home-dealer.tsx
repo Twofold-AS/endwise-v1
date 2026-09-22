@@ -9,7 +9,7 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { BOOKING_LAGRET_EVENT, HJEM_PULSE_REFETCH, invalidateHjemPulse } from './hjem-pulse-sync';
 import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
 import {
-  analyserMockStats,
+  analyserFraBookinger,
   ansattePulse,
   avvikTeller,
   endringerVindu,
@@ -68,7 +68,7 @@ export function useDealerHjemKort() {
   const innboks = innboksRad(threads.data ?? []);
   const lager = lagerRad(deler.data ?? []);
   const ansatte = ansattePulse(oversikt.data ?? [], jobber, naa);
-  const analyser = analyserMockStats(naa);
+  const analyser = analyserFraBookinger(jobber, naa);
 
   return {
     bookings,
@@ -101,7 +101,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
     ansatte,
     analyser,
   } = useDealerHjemKort();
-  const { tenantName, shopEnabled } = useOrgRole();
+  const { tenantName } = useOrgRole();
   const lasterJobber = bookings.isLoading;
   const visninger = analyser.find((s) => s.id === 'visninger')?.verdi ?? 0;
   const bookingerTall = analyser.find((s) => s.id === 'bookinger')?.verdi ?? 0;
@@ -166,7 +166,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
           visninger,
           bookinger: bookingerTall,
           returer,
-          credits: shopEnabled ? 120 : null,
+          credits: null,
         })}
       />
 

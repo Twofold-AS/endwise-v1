@@ -14,8 +14,8 @@ const TYPER = [
 
 /**
  * «Meld avvik eller forespørsel» fra jobbdetalj.
- * Avvik går mot mechanic.reportDeviation når bookingId finnes;
- * forespørsel-typene er økt-lokal til F7-05 har egen rute.
+ * Avvik fra mekaniker → reportDeviation.
+ * Forespørsel / staff → bookings.requestChange (Godkjenn kan skrive om jobben).
  */
 export function MeldAvvikForesporsel({
   bookingId,
@@ -28,11 +28,22 @@ export function MeldAvvikForesporsel({
   const [apen, setApen] = useState(false);
   const [type, setType] = useState<(typeof TYPER)[number]['id']>('avvik');
   const [tekst, setTekst] = useState('');
-  const [sendtLokal, setSendtLokal] = useState(false);
+  const [nyStart, setNyStart] = useState('');
+  const [mekanikerId, setMekanikerId] = useState('');
+  const [ekstraMin, setEkstraMin] = useState('30');
+  const mekanikere = trpc.mechanics.oversikt.useQuery();
   const avvik = trpc.mechanic.reportDeviation.useMutation({
     onSuccess: () => {
       invalidateHjemPulse(utils);
       meldingBookingLagret();
+      setApen(false);
+      setTekst('');
+    },
+  });
+  const forespor = trpc.bookings.requestChange.useMutation({
+    onSuccess: () => {
+      invalidateHjemPulse(utils);
+      void utils.bookings.byId.invalidate({ id: bookingId });
       setApen(false);
       setTekst('');
     },
@@ -45,18 +56,27 @@ export function MeldAvvikForesporsel({
       avvik.mutate({ bookingId, message: melding });
       return;
     }
-    setSendtLokal(true);
+    const proposedStartsAt = type === 'flytte' && nyStart ? new Date(nyStart) : undefined;
+    const proposedMechanicId = type === 'bytte' && mekanikerId ? mekanikerId : undefined;
+    const meldingUt =
+      type === 'utvidet' && Number(ekstraMin) > 0 ? `${melding} (+${ekstraMin} min)` : melding;
+    forespor.mutate({
+      bookingId,
+      type,
+      message: meldingUt,
+      proposedStartsAt,
+      proposedMechanicId,
+    });
   }
+
+  const pending = avvik.isPending || forespor.isPending;
 
   return (
     <>
       <button
         type="button"
         data-meld-avvik-apne
-        onClick={() => {
-          setSendtLokal(false);
-          setApen(true);
-        }}
+        onClick={() => setApen(true)}
         className="inline-flex h-control items-center rounded-full border border-divide px-3 text-label text-fg"
       >
         Meld avvik eller forespørsel
@@ -81,6 +101,47 @@ export function MeldAvvikForesporsel({
               </button>
             ))}
           </fieldset>
+          {type === 'flytte' ? (
+            <label className="mt-3 flex flex-col gap-1 text-[12px] text-fg-muted">
+              Foreslått start
+              <input
+                type="datetime-local"
+                value={nyStart}
+                onChange={(e) => setNyStart(e.target.value)}
+                className="ew-felt ew-felt-md"
+              />
+            </label>
+          ) : null}
+          {type === 'bytte' ? (
+            <label className="mt-3 flex flex-col gap-1 text-[12px] text-fg-muted">
+              Foreslått mekaniker
+              <select
+                value={mekanikerId}
+                onChange={(e) => setMekanikerId(e.target.value)}
+                className="ew-felt ew-felt-md"
+              >
+                <option value="">— velg —</option>
+                {(mekanikere.data ?? []).map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          {type === 'utvidet' ? (
+            <label className="mt-3 flex flex-col gap-1 text-[12px] text-fg-muted">
+              Ekstra minutter
+              <input
+                type="number"
+                min={15}
+                step={15}
+                value={ekstraMin}
+                onChange={(e) => setEkstraMin(e.target.value)}
+                className="ew-felt ew-felt-md"
+              />
+            </label>
+          ) : null}
           <textarea
             data-meld-tekst
             value={tekst}
@@ -89,14 +150,16 @@ export function MeldAvvikForesporsel({
             placeholder="Hva skal selgeren vite?"
             className="ew-felt ew-felt-md mt-3 min-h-[4.5rem] w-full resize-none py-2"
           />
-          {type !== 'avvik' || !kanSendeAvvik ? (
+          {type === 'avvik' && !kanSendeAvvik ? (
             <p className="mt-2 text-[12px] text-fg-muted">
-              Forespørsel lagres lokalt i denne økta — ingen egen API ennå.
+              Lagres som forespørsel på jobben (ikke mekaniker-avvik).
             </p>
           ) : null}
-          {sendtLokal ? <p className="mt-2 text-[12px] text-fg">Sendt i forhåndsvisning.</p> : null}
           {avvik.isError ? (
             <p className="mt-2 text-[12px] text-danger">{avvik.error.message}</p>
+          ) : null}
+          {forespor.isError ? (
+            <p className="mt-2 text-[12px] text-danger">{forespor.error.message}</p>
           ) : null}
           <div className="mt-4 flex justify-end gap-2">
             <button
@@ -109,11 +172,11 @@ export function MeldAvvikForesporsel({
             <button
               type="button"
               data-meld-send
-              disabled={!tekst.trim() || avvik.isPending}
+              disabled={!tekst.trim() || pending}
               onClick={send}
               className="inline-flex h-8 items-center rounded-full bg-fg px-3 text-[12px] font-[650] text-bg disabled:opacity-40"
             >
-              {avvik.isPending ? 'Sender …' : 'Send'}
+              {pending ? 'Sender …' : 'Send'}
             </button>
           </div>
         </DialogContent>

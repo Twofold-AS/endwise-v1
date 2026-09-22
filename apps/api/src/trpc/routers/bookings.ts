@@ -15,16 +15,31 @@ import {
   withTenant,
 } from '@endwise/db';
 import {
+  BookingNotFoundError,
+  computeJobSlots,
   createBooking,
+  ENDRING_TYPE_IDER,
+  erBehandletNotat,
   formatServiceNames,
   InvalidTransitionError,
   MAX_DURATION_MINUTES,
   MIN_DURATION_MINUTES,
+  rescheduleBooking,
   SlotConflictError,
+  serialiserBehandling,
+  serialiserForespor,
+  sisteForespor,
   type TenantTx,
   transitionBooking,
 } from '@endwise/modules/booking';
 import { lesAvatar } from '@endwise/modules/profil';
+import {
+  osloDagsvindu,
+  osloKalenderdag,
+  osloUkedagMandag0,
+  osloVeggklokke,
+  osloVeggtid,
+} from '@endwise/modules/tid';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, router, staffProcedure } from '../init.ts';
@@ -36,6 +51,9 @@ const status = z.enum(['draft', 'confirmed', 'in_progress', 'completed', 'cancel
 function toTRPCError(error: unknown): never {
   if (error instanceof SlotConflictError) {
     throw new TRPCError({ code: 'CONFLICT', message: error.message, cause: error });
+  }
+  if (error instanceof BookingNotFoundError) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: error.message, cause: error });
   }
   if (error instanceof InvalidTransitionError) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
@@ -377,4 +395,294 @@ export const bookingsRouter = router({
         return attachFarger(ctx.db, await attachJobLines(tx, rows));
       }),
     ),
+
+  /**
+   * Claude `jobSlots()` for Ny jobb steg 3.
+   * Åpningstid · aktive mekanikere (ingen vaktplan-API) · sertifisering ·
+   * overlapp · 30-min. Tom liste når ingen kvalifiserer — tilsiktet.
+   */
+  jobSlots: staffProcedure
+    .input(
+      z.object({
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        durationMinutes: z.number().int().min(MIN_DURATION_MINUTES).max(MAX_DURATION_MINUTES),
+        requiredSkills: z.array(z.string()).default([]),
+      }),
+    )
+    .query(({ ctx, input }) =>
+      withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const ymd = osloKalenderdag(input.date);
+        const weekdayMon0 = osloUkedagMandag0(osloVeggklokke(ymd, 12, 0));
+        const vindu = osloDagsvindu(ymd);
+        const idag = osloKalenderdag(new Date());
+
+        const meks = await tx
+          .select({
+            id: schema.mechanics.id,
+            name: schema.mechanics.name,
+            active: schema.mechanics.active,
+          })
+          .from(schema.mechanics);
+
+        const ferdigheter = await tx
+          .select({
+            key: schema.skills.key,
+            requiresCertification: schema.skills.requiresCertification,
+          })
+          .from(schema.skills);
+        const kreverSert = new Set(
+          ferdigheter.filter((s) => s.requiresCertification).map((s) => s.key),
+        );
+
+        const kompetanse =
+          meks.length === 0
+            ? []
+            : await tx
+                .select({
+                  mechanicId: schema.mechanicSkills.mechanicId,
+                  skillKey: schema.mechanicSkills.skillKey,
+                  certificationExpiresAt: schema.mechanicSkills.certificationExpiresAt,
+                })
+                .from(schema.mechanicSkills)
+                .where(
+                  inArray(
+                    schema.mechanicSkills.mechanicId,
+                    meks.map((m) => m.id),
+                  ),
+                );
+
+        const skillsByMech = new Map<string, { keys: string[]; expired: string[] }>();
+        for (const rad of kompetanse) {
+          const cur = skillsByMech.get(rad.mechanicId) ?? { keys: [], expired: [] };
+          cur.keys.push(rad.skillKey);
+          if (kreverSert.has(rad.skillKey)) {
+            const utloper = rad.certificationExpiresAt;
+            if (!utloper || utloper < idag) cur.expired.push(rad.skillKey);
+          }
+          skillsByMech.set(rad.mechanicId, cur);
+        }
+
+        const jobber =
+          meks.length === 0
+            ? []
+            : await tx
+                .select({
+                  mechanicId: schema.bookings.mechanicId,
+                  startsAt: schema.bookings.startsAt,
+                  endsAt: schema.bookings.endsAt,
+                  status: schema.bookings.status,
+                })
+                .from(schema.bookings)
+                .where(
+                  and(
+                    lt(schema.bookings.startsAt, vindu.to),
+                    gt(schema.bookings.endsAt, vindu.from),
+                    inArray(schema.bookings.status, [
+                      'draft',
+                      'confirmed',
+                      'in_progress',
+                      'completed',
+                    ]),
+                  ),
+                );
+
+        const busy = jobber
+          .filter((j): j is typeof j & { mechanicId: string } => Boolean(j.mechanicId))
+          .map((j) => {
+            const s = osloVeggtid(j.startsAt);
+            const e = osloVeggtid(j.endsAt);
+            return {
+              mechanicId: j.mechanicId,
+              startMin: s.hour * 60 + s.minute,
+              endMin: Math.max(s.hour * 60 + s.minute + 1, e.hour * 60 + e.minute),
+            };
+          });
+
+        const mechanics = meks.map((m) => {
+          const komp = skillsByMech.get(m.id);
+          return {
+            id: m.id,
+            name: m.name,
+            active: m.active,
+            skillKeys: komp?.keys ?? [],
+            expiredSkillKeys: komp?.expired ?? [],
+          };
+        });
+
+        const slots = computeJobSlots({
+          weekdayMon0,
+          durationMinutes: input.durationMinutes,
+          requiredSkills: input.requiredSkills,
+          mechanics,
+          busy,
+        });
+
+        const onShift = mechanics.filter((m) => m.active);
+        const qualified = onShift.filter((m) =>
+          input.requiredSkills.every(
+            (k) => m.skillKeys.includes(k) && !m.expiredSkillKeys.includes(k),
+          ),
+        );
+
+        return {
+          date: ymd,
+          weekdayMon0,
+          vaktNote:
+            'Ingen vaktplan-API — alle aktive mekanikere teller som på vakt i åpningstiden.',
+          onShiftCount: onShift.length,
+          qualifiedCount: qualified.length,
+          slots: slots.map((s) => ({
+            ...s,
+            startsAt: osloVeggklokke(ymd, Math.floor(s.startMin / 60), s.startMin % 60),
+            endsAt: osloVeggklokke(ymd, Math.floor(s.endMin / 60), s.endMin % 60),
+          })),
+        };
+      }),
+    ),
+
+  /** Forespørsel som strukturert notat — Godkjenn kan skrive om bookingen. */
+  requestChange: staffProcedure
+    .input(
+      z.object({
+        bookingId: z.uuid(),
+        type: z.enum(ENDRING_TYPE_IDER),
+        message: z.string().min(1).max(500),
+        proposedStartsAt: z.coerce.date().optional(),
+        proposedEndsAt: z.coerce.date().optional(),
+        proposedMechanicId: z.uuid().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [b] = await tx
+            .select({ notes: schema.bookings.notes })
+            .from(schema.bookings)
+            .where(eq(schema.bookings.id, input.bookingId))
+            .limit(1);
+          if (!b) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke jobben.' });
+          }
+          const linje = serialiserForespor({
+            type: input.type,
+            message: input.message,
+            proposedStartsAt: input.proposedStartsAt?.toISOString(),
+            proposedEndsAt: input.proposedEndsAt?.toISOString(),
+            proposedMechanicId: input.proposedMechanicId,
+          });
+          const notes = b.notes ? `${b.notes}\n${linje}` : linje;
+          const [updated] = await tx
+            .update(schema.bookings)
+            .set({ notes, updatedAt: new Date() })
+            .where(eq(schema.bookings.id, input.bookingId))
+            .returning({ id: schema.bookings.id, notes: schema.bookings.notes });
+          await tx.insert(schema.auditLog).values({
+            tenantId: ctx.tenantId,
+            actor: ctx.userId,
+            action: 'booking.change.request',
+            subjectType: 'booking',
+            subjectId: input.bookingId,
+            metadata: { type: input.type },
+          });
+          return updated;
+        });
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
+
+  /**
+   * Godkjenn / avslå. Godkjent med parsebart forslag kaller `rescheduleBooking`.
+   */
+  settleChange: staffProcedure
+    .input(
+      z.object({
+        bookingId: z.uuid(),
+        decision: z.enum(['godkjent', 'avslatt']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const [b] = await withTenant(ctx.db, ctx.tenantId, (tx) =>
+          tx
+            .select({
+              notes: schema.bookings.notes,
+              startsAt: schema.bookings.startsAt,
+              endsAt: schema.bookings.endsAt,
+            })
+            .from(schema.bookings)
+            .where(eq(schema.bookings.id, input.bookingId))
+            .limit(1),
+        );
+        if (!b) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke jobben.' });
+        }
+        if (erBehandletNotat(b.notes)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Endringen er allerede behandlet.',
+          });
+        }
+
+        const forslag = sisteForespor(b.notes);
+        const merknad = serialiserBehandling(input.decision);
+        const notes = b.notes ? `${b.notes}\n${merknad}` : merknad;
+
+        if (input.decision === 'godkjent' && forslag) {
+          const startsAt = forslag.proposedStartsAt
+            ? new Date(forslag.proposedStartsAt)
+            : undefined;
+          const endsAt = forslag.proposedEndsAt ? new Date(forslag.proposedEndsAt) : undefined;
+          const harFlytt = Boolean(startsAt || endsAt || forslag.proposedMechanicId);
+          if (harFlytt) {
+            await rescheduleBooking(ctx.db, {
+              tenantId: ctx.tenantId,
+              bookingId: input.bookingId,
+              actor: ctx.userId,
+              startsAt,
+              endsAt:
+                startsAt && !endsAt
+                  ? new Date(startsAt.getTime() + (b.endsAt.getTime() - b.startsAt.getTime()))
+                  : endsAt,
+              mechanicId: forslag.proposedMechanicId,
+              notes,
+            });
+          } else {
+            await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+              await tx
+                .update(schema.bookings)
+                .set({ notes, updatedAt: new Date() })
+                .where(eq(schema.bookings.id, input.bookingId));
+              await tx.insert(schema.auditLog).values({
+                tenantId: ctx.tenantId,
+                actor: ctx.userId,
+                action: 'booking.change.settle',
+                subjectType: 'booking',
+                subjectId: input.bookingId,
+                metadata: { decision: input.decision, skrevOm: false },
+              });
+            });
+          }
+        } else {
+          await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+            await tx
+              .update(schema.bookings)
+              .set({ notes, updatedAt: new Date() })
+              .where(eq(schema.bookings.id, input.bookingId));
+            await tx.insert(schema.auditLog).values({
+              tenantId: ctx.tenantId,
+              actor: ctx.userId,
+              action: 'booking.change.settle',
+              subjectType: 'booking',
+              subjectId: input.bookingId,
+              metadata: { decision: input.decision, skrevOm: false },
+            });
+          });
+        }
+
+        return { ok: true as const, decision: input.decision };
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
 });

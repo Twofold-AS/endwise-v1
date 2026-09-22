@@ -115,10 +115,14 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
             <span className="tabular-nums">
               {tjeneste.priceMinor == null ? 'Pris på forespørsel' : kroner(tjeneste.priceMinor)}
             </span>
-            {(tjeneste.skills?.length ?? 0) > 0 && (
-              <span className="inline-flex items-center gap-1">
+            {(tjeneste.skills?.length ?? 0) > 0 ? (
+              <span data-tjeneste-sertifikat className="inline-flex items-center gap-1">
                 <Tags size={12} strokeWidth={1.75} />
-                {tjeneste.skills.length}
+                {tjeneste.skills.join(', ')}
+              </span>
+            ) : (
+              <span data-tjeneste-sertifikat className="text-fg-muted">
+                Ingen sertifikatkrav
               </span>
             )}
           </span>

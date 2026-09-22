@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, type ReactNode, useContext, useState } from 'react';
+import { INNBOKS_SIDE_STORRELSE } from '../_innbygging/innboks-katalog';
 import type { InboxPart } from './inbox-del';
 
 export { INNBOKS_FILTERE } from './inbox-del';
@@ -33,6 +34,14 @@ const InboxFilterContext = createContext<{
   valgte: ReadonlySet<string>;
   toggleValgt: (id: string) => void;
   toemValgte: () => void;
+  sok: string;
+  setSok: (q: string) => void;
+  side: number;
+  setSide: (n: number) => void;
+  sideStorrelse: number;
+  gjenopprett: (ider: string[]) => void;
+  sisteSlettet: readonly string[];
+  toemSisteSlettet: () => void;
 } | null>(null);
 
 export function InboxFilterProvider({ children }: { children: ReactNode }) {
@@ -43,6 +52,9 @@ export function InboxFilterProvider({ children }: { children: ReactNode }) {
   const [lostte, setLostte] = useState<ReadonlySet<string>>(() => new Set());
   const [velgModus, setVelgModusState] = useState(false);
   const [valgte, setValgte] = useState<ReadonlySet<string>>(() => new Set());
+  const [sok, setSokState] = useState('');
+  const [side, setSideState] = useState(0);
+  const [sisteSlettet, setSisteSlettet] = useState<readonly string[]>([]);
 
   function skjul(id: string) {
     setSkjulte((forrige) => new Set([...forrige, id]));
@@ -50,6 +62,26 @@ export function InboxFilterProvider({ children }: { children: ReactNode }) {
   function skjulFlere(ider: string[]) {
     if (ider.length === 0) return;
     setSkjulte((forrige) => new Set([...forrige, ...ider]));
+    setSisteSlettet(ider);
+  }
+  function gjenopprett(ider: string[]) {
+    if (ider.length === 0) return;
+    setSkjulte((forrige) => {
+      const neste = new Set(forrige);
+      for (const id of ider) neste.delete(id);
+      return neste;
+    });
+    setSisteSlettet([]);
+  }
+  function toemSisteSlettet() {
+    setSisteSlettet([]);
+  }
+  function setSok(q: string) {
+    setSokState(q);
+    setSideState(0);
+  }
+  function setSide(n: number) {
+    setSideState(Math.max(0, n));
   }
   function setVelgModus(v: boolean) {
     setVelgModusState(v);
@@ -79,10 +111,12 @@ export function InboxFilterProvider({ children }: { children: ReactNode }) {
   function setPart(neste: InboxPart) {
     setPartState(neste);
     setInnholdState(neste);
+    setSideState(0);
   }
   function setInnhold(neste: InboxListeFilter) {
     setInnholdState(neste);
     if (neste !== 'lost') setPartState(neste);
+    setSideState(0);
   }
 
   return (
@@ -105,6 +139,14 @@ export function InboxFilterProvider({ children }: { children: ReactNode }) {
         valgte,
         toggleValgt,
         toemValgte,
+        sok,
+        setSok,
+        side,
+        setSide,
+        sideStorrelse: INNBOKS_SIDE_STORRELSE,
+        gjenopprett,
+        sisteSlettet,
+        toemSisteSlettet,
       }}
     >
       {children}

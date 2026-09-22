@@ -37,7 +37,10 @@ const TYPE_FRA_NOTAT: { needle: string; type: EndringTypeId }[] = [
 ];
 
 export function endringTypeFraNotat(notes: string | null | undefined): EndringTypeId {
-  const lav = (notes ?? '').toLowerCase();
+  const raw = notes ?? '';
+  const forespor = raw.match(/\[FORESPOR\s+(utvidet|bytte|flytte|avvik)\]/i);
+  if (forespor?.[1]) return forespor[1].toLowerCase() as EndringTypeId;
+  const lav = raw.toLowerCase();
   for (const rad of TYPE_FRA_NOTAT) {
     if (lav.includes(rad.needle)) return rad.type;
   }
@@ -67,14 +70,26 @@ type BookingRad = {
   customerName?: string | null;
 };
 
+function harEndringNotat(notes: string | null | undefined): boolean {
+  const n = notes ?? '';
+  return n.includes('[AVVIK') || n.includes('[FORESPOR ');
+}
+
+function behandlingFraNotat(notes: string | null | undefined): EndringBehandling {
+  if ((notes ?? '').includes('[ENDRING godkjent]')) return 'godkjent';
+  if ((notes ?? '').includes('[ENDRING avslatt]')) return 'avslatt';
+  return 'venter';
+}
+
 export function endringerFraBookinger(
   jobber: readonly BookingRad[],
   behandlet: ReadonlyMap<string, EndringBehandling>,
 ): EndringKort[] {
   return jobber
-    .filter((j) => j.status !== 'cancelled' && (j.notes ?? '').includes('[AVVIK'))
+    .filter((j) => j.status !== 'cancelled' && harEndringNotat(j.notes))
     .map((j) => {
       const type = endringTypeFraNotat(j.notes);
+      const fraNotat = behandlingFraNotat(j.notes);
       return {
         id: j.id,
         type,
@@ -83,7 +98,7 @@ export function endringerFraBookinger(
         jobb: [j.serviceName ?? 'Jobb', j.regNumber].filter(Boolean).join(' · '),
         jobbId: j.id,
         forslag: forslagFraNotat(j.notes),
-        behandling: behandlet.get(j.id) ?? 'venter',
+        behandling: behandlet.get(j.id) ?? fraNotat,
         notes: j.notes,
       };
     });

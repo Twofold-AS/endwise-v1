@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { innboksPagerTekst, innboksTrefferSok } from '../_innbygging/innboks-katalog';
 import { InnboksFilterPiller } from '../_innbygging/innboks-piller';
 import { CountBadge } from '../_shell/cards';
 import { useInboxFilter } from '../_shell/inbox-filter';
@@ -43,8 +44,22 @@ export function InboxSidebar() {
   const skjulTelefonListe = Boolean(aktivId || nySamtale);
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, innhold, setInnhold, sortering, skjulte, lostte, velgModus, valgte, toggleValgt } =
-    useInboxFilter();
+  const {
+    part,
+    innhold,
+    setInnhold,
+    sortering,
+    skjulte,
+    lostte,
+    velgModus,
+    valgte,
+    toggleValgt,
+    sok,
+    setSok,
+    side,
+    setSide,
+    sideStorrelse,
+  } = useInboxFilter();
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -97,6 +112,24 @@ export function InboxSidebar() {
         if (lost) return false;
         return part === 'alle' || t.kind === part;
       })
+      .filter((t) =>
+        innboksTrefferSok(
+          {
+            id: t.id,
+            kind: t.kind,
+            subject: t.subject,
+            motparter: t.motparter,
+            heading: threadHeading(
+              t.subject,
+              t.kind,
+              t.motparter ?? [],
+              visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
+              me.data?.userId,
+            ),
+          },
+          sok,
+        ),
+      )
       .slice()
       .sort((a, b) => {
         if (sortering === 'uleste') {
@@ -153,7 +186,13 @@ export function InboxSidebar() {
     navnIntern.data,
     navnOffisiell.data,
     me.data?.userId,
+    sok,
   ]);
+
+  const total = rader.length;
+  const offset = side * sideStorrelse;
+  const sideRader = rader.slice(offset, offset + sideStorrelse);
+  const sider = Math.max(1, Math.ceil(total / sideStorrelse));
 
   if (endwise) {
     const henvendelser = support.data ?? [];
@@ -206,6 +245,15 @@ export function InboxSidebar() {
     >
       <h2 className="sr-only">Samtaler</h2>
       <InnboksFilterPiller aktiv={innhold} onVelg={setInnhold} />
+      <div className="px-3 pb-2">
+        <input
+          data-innboks-sok
+          value={sok}
+          onChange={(e) => setSok(e.target.value)}
+          placeholder="Søk emne eller deltaker"
+          className="ew-felt ew-felt-md w-full"
+        />
+      </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3">
         {threads.isLoading ? (
           <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
@@ -214,7 +262,11 @@ export function InboxSidebar() {
             <MessageSquare size={20} className="text-fg-muted" />
             <p className="text-label text-fg">Ingen samtaler</p>
             <p className="text-[12px] text-fg-muted">
-              {innhold === 'alle' ? 'Innboksen er tom.' : 'Ingen samtaler for denne parten.'}
+              {sok.trim()
+                ? 'Ingen samtaler matcher søket.'
+                : innhold === 'alle'
+                  ? 'Innboksen er tom.'
+                  : 'Ingen samtaler for denne parten.'}
             </p>
             {innhold === 'alle' && (
               <Link
@@ -226,7 +278,7 @@ export function InboxSidebar() {
             )}
           </div>
         ) : (
-          rader.map((t) =>
+          sideRader.map((t) =>
             velgModus ? (
               <button
                 key={t.id}
@@ -254,6 +306,34 @@ export function InboxSidebar() {
           )
         )}
       </div>
+      {total > 0 ? (
+        <div data-innboks-pager className="flex items-center justify-between gap-2 px-3 py-2">
+          <p className="text-[11px] text-fg-muted">
+            {innboksPagerTekst(offset, sideRader.length, total)}
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={side <= 0}
+              onClick={() => setSide(side - 1)}
+              className="rounded-full px-2 py-1 text-[11px] text-fg disabled:opacity-40"
+            >
+              Forrige
+            </button>
+            <span className="text-[11px] text-fg-muted">
+              {side + 1}/{sider}
+            </span>
+            <button
+              type="button"
+              disabled={side + 1 >= sider}
+              onClick={() => setSide(side + 1)}
+              className="rounded-full px-2 py-1 text-[11px] text-fg disabled:opacity-40"
+            >
+              Neste
+            </button>
+          </div>
+        </div>
+      ) : null}
     </aside>
   );
 }

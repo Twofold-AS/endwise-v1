@@ -102,7 +102,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(side).not.toMatch(/Ny jobb/);
     expect(side).not.toMatch(/Prisliste/);
     expect(side).not.toMatch(/Dialog|PrislisteDialog|prislisteApen|PrislisteFlate/);
-    expect(side).toMatch(/TimeplanFlate/);
+    expect(side).toMatch(/TimeplanDagListe|TimeplanFlate/);
     expect(side).toMatch(/TimeplanStripe/);
     expect(side).not.toMatch(/Saker|Kontor|Gulvet/);
     expect(kalender).toMatch(/TimeplanStripe|TIMEPLAN_DAG_START|osloDagsvindu/);
@@ -120,19 +120,20 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(side).not.toMatch(/SidePiller/);
   });
 
-  it('TimeplanStripe viser tre hele dager uten klipp, samme stripe på Liste og Kalender', () => {
+  it('TimeplanStripe viser ukesrail 7 dager + månedspopover, samme stripe på Liste og Kalender', () => {
     const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
     const stripe = utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'));
     const dager = utenKommentarer(les('../app/(app)/_shell/timeplan-dager.ts'));
     expect(side).toMatch(/TimeplanStripe/);
     expect(side).toMatch(/visning === 'kalender'/);
-    expect(stripe).toMatch(/timeplanDagerFra\(valgt(?:, 3)?\)/);
-    expect(stripe).not.toMatch(/timeplanDagerFra\(valgt, 7\)/);
-    expect(dager).toMatch(/antall = 3/);
+    expect(stripe).toMatch(/timeplanUkeFra\(valgt\)/);
+    expect(dager).toMatch(/antall = 7/);
+    expect(dager).toMatch(/timeplanUkeFra/);
     expect(stripe).not.toMatch(/overflow-hidden/);
     expect(stripe).not.toMatch(/overflow-x/);
     expect(stripe).toMatch(/aria-label="Forrige måned"/);
     expect(stripe).toMatch(/timeplanManedNavn/);
+    expect(stripe).toMatch(/data-timeplan-maned-popover/);
   });
 
   it('Tjenester er /prisliste (samme services.list), /tjenester forblir abonnement', () => {

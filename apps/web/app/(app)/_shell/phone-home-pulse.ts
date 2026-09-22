@@ -30,12 +30,15 @@ export function avvikTeller(jobber: PhoneBooking[]): number {
   return endringerTeller(jobber);
 }
 
-/**
- * Forespørsler på hjem-kortet. Ekstra tid fra Min dag er prototype
- * og har ingen rad i basen ennå — 0 er ærlig.
- */
-export function foresporTeller(_jobber: PhoneBooking[] = []): number {
-  return 0;
+const FORESPOR_NOTAT_PREFIKS = '[FORESPOR ';
+
+export function harForesporNotat(notes: string | null | undefined): boolean {
+  return Boolean(notes?.includes(FORESPOR_NOTAT_PREFIKS));
+}
+
+/** Forespørsler på hjem-kortet — `[FORESPOR ` i booking-notat. */
+export function foresporTeller(jobber: PhoneBooking[] = []): number {
+  return jobber.filter((j) => j.status !== 'cancelled' && harForesporNotat(j.notes)).length;
 }
 
 export function pulsdagOverskrift(naa: Date) {
@@ -266,21 +269,14 @@ export function manedBookingTall(jobber: PhoneBooking[], naa: Date) {
   return { denne, forrige };
 }
 
-/** Ingen jobber i vinduet = plausibel dag, uten badge. */
+/** Tom liste = 0, ikke plausibel 3/2/1. */
 export function idagVisning(jobber: PhoneBooking[], naa: Date) {
-  const tall = idagTall(jobber, naa);
-  if (jobber.length === 0) return { ...PULSE_PLAUSIBEL_IDAG };
-  return tall;
+  return idagTall(jobber, naa);
 }
 
-/**
- * Innboks-rad: kun meldingstall. Tom historikk = plausibelt tall, uten badge.
- */
+/** Innboks-rad: kun ulest-tall. Tom historikk = 0. */
 export function innboksRad(traader: PhoneTraad[]) {
   const meldinger = traader.reduce((sum, t) => sum + (t.unread ?? 0), 0);
-  if (traader.length === 0) {
-    return { meldinger: PULSE_PLAUSIBEL_INNBOKS_MELDINGER };
-  }
   return { meldinger };
 }
 
@@ -335,6 +331,54 @@ export type AnalyserMockStat = {
   opp: boolean;
   serie: number[];
 };
+
+/** 30 dager fra live bookinger. Visninger har ingen API — 0 + ærlig merke. */
+export function analyserFraBookinger(jobber: PhoneBooking[], naa: Date): AnalyserMockStat[] {
+  const iDag = osloKalenderdag(naa);
+  const fra = osloPlusDager(iDag, -29);
+  const iVindu = jobber.filter((j) => {
+    const dag = osloKalenderdag(j.startsAt);
+    return dag >= fra && dag <= iDag;
+  });
+  const bookinger = iVindu.filter((j) => j.status !== 'cancelled').length;
+  const ferdige = iVindu.filter((j) => j.status === 'completed').length;
+  const retur = iVindu.filter((j) => j.status === 'cancelled').length;
+  const tomSerie = Array.from({ length: 7 }, () => 0);
+  return [
+    {
+      id: 'visninger',
+      label: 'Besøk på nettsiden',
+      verdi: 0,
+      delta: 'Ingen API',
+      opp: false,
+      serie: tomSerie,
+    },
+    {
+      id: 'jobber',
+      label: 'Jobber',
+      verdi: ferdige,
+      delta: '30 dager',
+      opp: true,
+      serie: tomSerie,
+    },
+    {
+      id: 'bookinger',
+      label: 'Bookinger',
+      verdi: bookinger,
+      delta: '30 dager',
+      opp: true,
+      serie: tomSerie,
+    },
+    {
+      id: 'retur',
+      label: 'Retur',
+      verdi: retur,
+      delta: '30 dager',
+      opp: false,
+      serie: tomSerie,
+    },
+  ];
+}
 
 /** Mock nettsidevisninger til ekte analyse finnes. Stabil per uke. */
 export function analyserMockStats(naa: Date): AnalyserMockStat[] {

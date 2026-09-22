@@ -5,6 +5,8 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useLayoutEffect, useRef, useState } from 'react';
+import { AngreToast } from '../_innbygging/angre-toast';
+import { innboksAngreTekst } from '../_innbygging/innboks-katalog';
 import { INNBOKS_GRUPPER, useInboxFilter } from '../_shell/inbox-filter';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
 
@@ -38,6 +40,9 @@ export function InboxTopBar2({
     valgte,
     skjulFlere,
     toemValgte,
+    gjenopprett,
+    sisteSlettet,
+    toemSisteSlettet,
   } = useInboxFilter();
   const [sorterApen, setSorterApen] = useState(false);
   const sorterRef = useRef<HTMLDivElement>(null);
@@ -157,6 +162,13 @@ export function InboxTopBar2({
           {velgModus ? <Trash2 size={16} strokeWidth={1.75} aria-hidden /> : null}
         </button>
       </div>
+      {sisteSlettet.length > 0 ? (
+        <AngreToast
+          tekst={`${innboksAngreTekst(sisteSlettet.length)} · gjemt i denne økta`}
+          onAngre={() => gjenopprett([...sisteSlettet])}
+          onLukk={toemSisteSlettet}
+        />
+      ) : null}
     </div>
   );
 }

@@ -185,10 +185,10 @@ describe('Timeplan — piler, valgt dag først, måned, 08–20', () => {
   it('valgt dag er først, og stripen har 08–20', () => {
     const valgt = '2026-08-29';
     const dager = timeplanDagerFra(valgt);
-    expect(dager).toHaveLength(3);
+    expect(dager).toHaveLength(7);
     expect(dager[0]?.ymd).toBe(valgt);
     expect(dager[1]?.ymd).toBe(osloPlusDager(valgt, 1));
-    expect(dager[2]?.ymd).toBe(osloPlusDager(valgt, 2));
+    expect(dager[6]?.ymd).toBe(osloPlusDager(valgt, 6));
     expect(TIMEPLAN_DAG_START).toBe(8);
     expect(TIMEPLAN_DAG_SLUTT).toBe(20);
     expect(timeplanManedNavn(valgt)).toMatch(/august/i);
@@ -202,8 +202,8 @@ describe('Timeplan — piler, valgt dag først, måned, 08–20', () => {
     const stripe = utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'));
     expect(side).toMatch(/TimeplanStripe|timeplanDagerFra/);
     expect(side).toMatch(/08:00|TIMEPLAN_DAG_START/);
-    expect(stripe).toMatch(/aria-label="Forrige dag"/);
-    expect(stripe).toMatch(/aria-label="Neste dag"/);
+    expect(stripe).toMatch(/aria-label="Forrige uke"/);
+    expect(stripe).toMatch(/aria-label="Neste uke"/);
     expect(stripe).toMatch(/aria-label="Forrige måned"/);
     expect(stripe).toMatch(/aria-label="Neste måned"/);
     expect(stripe).toMatch(/timeplanManedNavn|capitalize/);

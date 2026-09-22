@@ -31,7 +31,7 @@ function OrganisasjonIndre() {
   return (
     <SideChromeSkall
       tittel="Organisasjon"
-      ingress="Ansatte, abonnement og integrasjoner."
+      ingress="Firma, ansatte, tjenester, abonnement og integrasjoner."
       faner={synligeOrgChrome(isAdmin)}
       aktiv={seksjon}
     >

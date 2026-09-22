@@ -26,3 +26,36 @@ export function butikkVareUndertekst(kategori: string | null | undefined, paLage
   const kat = kategori?.trim() || 'Uten kategori';
   return `${kat} · ${paLager} på lager`;
 }
+
+export function vareKategoriNokkel(kategori: string | null | undefined): string {
+  return kategori?.trim() || 'Uten kategori';
+}
+
+/** Varer gruppert etter kategori — Claude butikk-katalog. */
+export function grupperVarerEtterKategori<T extends { category?: string | null }>(
+  varer: readonly T[],
+): { kategori: string; varer: T[] }[] {
+  const map = new Map<string, T[]>();
+  for (const v of varer) {
+    const kat = vareKategoriNokkel(v.category);
+    const liste = map.get(kat) ?? [];
+    liste.push(v);
+    map.set(kat, liste);
+  }
+  return [...map.entries()]
+    .sort(([a], [b]) => a.localeCompare(b, 'nb'))
+    .map(([kategori, gruppe]) => ({ kategori, varer: gruppe }));
+}
+
+/** Salgskanaler i katalogen. Ingen API — alltid ærlig «ikke registrert». */
+export const BUTIKK_SALG_KANALER = ['Finn.no', 'Butikk', 'Reservert'] as const;
+
+export type ButikkSalgStatus = (typeof BUTIKK_SALG_KANALER)[number] | 'ikke_registrert';
+
+export function butikkSalgStatus(_kjoretoy?: { leftover?: unknown }): ButikkSalgStatus {
+  return 'ikke_registrert';
+}
+
+export function butikkSalgStatusLabel(status: ButikkSalgStatus = 'ikke_registrert'): string {
+  return status === 'ikke_registrert' ? 'Ikke registrert · Ingen kanal' : status;
+}

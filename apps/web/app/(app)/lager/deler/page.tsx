@@ -2,9 +2,15 @@
 
 import { ArrowLeftRight, ChevronDown, Package, Search } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { BestillDelArk, EndreMinimumArk } from '../../_innbygging/lager-ark';
+import {
+  lagreLagerBestilt,
+  lagreLagerMin,
+  lesLagerBestilt,
+  lesLagerMin,
+} from '../../_innbygging/lager-katalog';
 import { LagerStatusMerke, lagerStatusFor } from '../../_innbygging/lager-status';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { Beholdning, Feil, kroner, Laster, Sidehode, Tomt } from '../_delt';
@@ -44,8 +50,18 @@ function DelerInner() {
     name: string;
     minStock: number | null;
   } | null>(null);
-  const [bestilt, setBestilt] = useState<ReadonlySet<string>>(() => new Set());
-  const [minLokalt, setMinLokalt] = useState<ReadonlyMap<string, number>>(() => new Map());
+  const [bestilt, setBestilt] = useState<ReadonlySet<string>>(() => new Set(lesLagerBestilt()));
+  const [minLokalt, setMinLokalt] = useState<ReadonlyMap<string, number>>(
+    () => new Map(Object.entries(lesLagerMin())),
+  );
+
+  useEffect(() => {
+    lagreLagerBestilt([...bestilt]);
+  }, [bestilt]);
+
+  useEffect(() => {
+    lagreLagerMin(minLokalt);
+  }, [minLokalt]);
 
   const deler = trpc.inventory.listParts.useQuery({
     sok: sok.trim() || undefined,

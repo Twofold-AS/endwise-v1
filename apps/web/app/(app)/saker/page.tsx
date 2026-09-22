@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { TimeplanDagListe } from '../_innbygging/timeplan-dag-liste';
 import { osloKalenderdag } from '../_lib/oslo-dag';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { TimeplanStripe } from '../_shell/timeplan-stripe';
@@ -13,7 +14,6 @@ import {
   TIMEPLAN_FANER,
   timeplanHref,
 } from '../jobber/_faner';
-import { TimeplanFlate } from '../mekanikere/kapasitet/page';
 import { Kalender } from './_kalender';
 
 /**
@@ -43,11 +43,7 @@ function TimeplanPageInner() {
       {aktiv === 'timeplan' ? (
         <div className="flex flex-col gap-5">
           <TimeplanStripe valgt={valgt} onValgt={setValgt} />
-          {visning === 'kalender' ? (
-            <Kalender valgt={valgt} />
-          ) : (
-            <TimeplanFlate skjulPiller skjulStripe valgt={valgt} onValgt={setValgt} />
-          )}
+          {visning === 'kalender' ? <Kalender valgt={valgt} /> : <TimeplanDagListe valgt={valgt} />}
         </div>
       ) : null}
     </SideChromeSkall>

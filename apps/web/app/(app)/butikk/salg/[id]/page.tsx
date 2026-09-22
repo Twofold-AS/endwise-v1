@@ -5,6 +5,11 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
+import {
+  BUTIKK_SALG_KANALER,
+  butikkSalgStatus,
+  butikkSalgStatusLabel,
+} from '../../../_innbygging/butikk-hub';
 
 /**
  * Butikk · salgsdetalj. Ekte kjøretøy via tRPC.
@@ -67,7 +72,9 @@ export default function ButikkSalgDetaljPage() {
           </div>
           <div className="flex h-row-store items-center justify-between gap-3">
             <span className="text-label text-fg-muted">Kanal</span>
-            <span className="text-label text-fg">Ikke koblet</span>
+            <span data-butikk-salg-status className="text-label text-fg">
+              {butikkSalgStatusLabel(butikkSalgStatus())}
+            </span>
           </div>
         </div>
       </section>
@@ -87,7 +94,8 @@ export default function ButikkSalgDetaljPage() {
           Rediger annonse
         </button>
         <p className="text-[12px] text-fg-muted">
-          Rediger annonse er ikke koblet. Salgspris, km og kanal finnes ikke i registeret ennå.
+          Rediger annonse er ikke koblet. Salgspris, km og kanal ({BUTIKK_SALG_KANALER.join(' / ')})
+          finnes ikke i registeret ennå.
         </p>
       </div>
 

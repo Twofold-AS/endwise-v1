@@ -11,6 +11,7 @@ import {
   butikkSeAlleKjoretoy,
   butikkSeAlleVarer,
   butikkVareUndertekst,
+  grupperVarerEtterKategori,
   hubForhandsvisning,
   visSeAlle,
 } from '../_innbygging/butikk-hub';
@@ -121,6 +122,54 @@ function ButikkHubInner() {
                 Aktive deler trenger utsalgspris for å vises her.
               </p>
             </CardShell>
+          ) : visVarer ? (
+            <div data-butikk-kategori-liste className="flex flex-col gap-4">
+              {grupperVarerEtterKategori(varerVist).map((gruppe) => (
+                <div
+                  key={gruppe.kategori}
+                  className="overflow-hidden rounded-xl border border-border"
+                >
+                  <p
+                    data-butikk-kategori
+                    className="border-border border-b bg-surface-2 px-4 py-2 text-[12px] text-fg-muted"
+                  >
+                    {gruppe.kategori}
+                  </p>
+                  {gruppe.varer.map((d, i) => (
+                    <div
+                      key={d.id}
+                      className={`flex h-row-store items-center gap-4 bg-bg px-4 ${
+                        i > 0 ? 'border-border border-t' : ''
+                      }`}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-label text-fg">{d.name}</span>
+                        <span className="block truncate text-[12px] text-fg-muted">
+                          {butikkVareUndertekst(d.category, d.onHand)}
+                        </span>
+                      </span>
+                      <span className="w-24 shrink-0 text-right text-[12px] text-fg tabular-nums">
+                        {kroner(d.sellPriceMinor)}
+                      </span>
+                      <span className="flex w-28 shrink-0 justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={d.tilgjengelig < 1}
+                          onClick={() => {
+                            leggIKurv(d.id, d.tilgjengelig);
+                            setKurvAntall(antallIKurv());
+                          }}
+                        >
+                          <Package size={14} strokeWidth={1.75} />
+                          Legg i kurv
+                        </Button>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-border">
               {varerVist.map((d, i) => (

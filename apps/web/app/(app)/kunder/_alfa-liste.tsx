@@ -78,6 +78,9 @@ export function KunderAlfaListe<T extends { id: string; name: string }>({
             ))}
           </div>
         )}
+        {kunder.length > 0 ? (
+          <div data-kunder-liste-hale className="min-h-[calc(100%-2rem)]" aria-hidden />
+        ) : null}
       </div>
       <KunderAlfaRail aktiv={aktiv} tomme={tomme} onVelg={hoppTil} />
     </div>

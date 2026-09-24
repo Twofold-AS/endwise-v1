@@ -136,6 +136,7 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(skall).toMatch(/data-kunder-seksjon/);
     expect(skall).toMatch(/data-kunder-seksjon-hode/);
     expect(skall).toMatch(/overflow-y-auto/);
+    expect(skall).toMatch(/data-kunder-liste-hale/);
     expect(skall).not.toMatch(/min-h-\[420px\]/);
   });
 

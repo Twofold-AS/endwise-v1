@@ -14,10 +14,10 @@ export default function BevegelserPage() {
   const bevegelser = trpc.inventory.listMovements.useQuery({ limit: 200 });
 
   return (
-    <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
+    <div data-lager-logg className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
       <Sidehode
         tittel="Inn og ut"
-        undertittel="Alt som har gått inn og ut. Historikken rettes aldri — den suppleres."
+        undertittel="Siste bevegelser. Historikken rettes aldri — den suppleres."
       />
       {bevegelser.isLoading ? (
         <Laster />

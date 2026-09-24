@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { FORHANDLER_NAV, ORGANISASJON_SEKSJONER } from '../app/(app)/_shell/nav.ts';
 import { DEALER_PULSE_KEYS } from '../app/(app)/_shell/phone-home.ts';
 import { TIMEPLAN_FANER } from '../app/(app)/jobber/_faner.ts';
-import { INGEN_API as LAGER_INGEN_API, LAGER_HUB_SEKSJONER } from '../app/(app)/lager/_hub.ts';
+import { LAGER_HUB_SEKSJONER, INGEN_API as LAGER_INGEN_API } from '../app/(app)/lager/_hub.ts';
 import {
   aboPageSub,
   ansattePageSub,
@@ -71,9 +71,9 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(
       trefferTjenesteSok({ name: 'EU-kontroll MC', description: 'EU', vehicleType: 'mc' }, 'eu'),
     ).toBe(true);
-    expect(trefferTjenesteSok({ name: 'Service ATV', description: null, vehicleType: 'atv' }, 'båt')).toBe(
-      false,
-    );
+    expect(
+      trefferTjenesteSok({ name: 'Service ATV', description: null, vehicleType: 'atv' }, 'båt'),
+    ).toBe(false);
     const flate = utenKommentarer(les('../app/(app)/innstillinger/tjenestekatalog/_flate.tsx'));
     expect(flate).toMatch(/tjenesterPageSub/);
     expect(flate).toMatch(/trefferTjenesteSok/);
@@ -87,7 +87,9 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(side).toMatch(/NyTjeneste/);
     expect(side).toMatch(/skjulNy/);
     expect(side).not.toMatch(/label: 'Tjenester'/);
-    const kort = utenKommentarer(les('../app/(app)/innstillinger/tjenestekatalog/_tjeneste-kort.tsx'));
+    const kort = utenKommentarer(
+      les('../app/(app)/innstillinger/tjenestekatalog/_tjeneste-kort.tsx'),
+    );
     expect(kort).toMatch(/durationMinutes/);
     expect(kort).toMatch(/priceMinor/);
     expect(kort).toMatch(/skills/);

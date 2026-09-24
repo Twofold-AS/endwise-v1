@@ -1,8 +1,8 @@
 'use client';
 
 import { useTema } from '../_lib/tema-provider';
-import { tjenesterPageSub } from '../(app)/prisliste/_hub';
 import { TJENESTER_FANER } from '../(app)/prisliste/_faner';
+import { tjenesterPageSub } from '../(app)/prisliste/_hub';
 
 /**
  * Uinnlogget visuell GO for Tjenester (BIT 7). Live: /prisliste

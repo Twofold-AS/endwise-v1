@@ -119,11 +119,7 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
 
   const antallAnsatte = team.data?.length;
   const ansatteVerdi =
-    lesing || team.isLoading
-      ? '—'
-      : team.isError
-        ? '—'
-        : String(antallAnsatte ?? 0);
+    lesing || team.isLoading ? '—' : team.isError ? '—' : String(antallAnsatte ?? 0);
 
   return (
     <div data-org-oversikt className="flex flex-col gap-5">

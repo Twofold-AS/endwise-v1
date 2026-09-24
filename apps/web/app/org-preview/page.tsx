@@ -2,11 +2,11 @@
 
 import { useTema } from '../_lib/tema-provider';
 import {
+  aboPageSub,
   ansattePageSub,
   INGEN_API,
   INTEGRASJONER_PAGE_SUB,
   ORG_HUB_SEKSJONER,
-  aboPageSub,
 } from '../(app)/organisasjon/_hub';
 
 /**

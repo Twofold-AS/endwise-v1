@@ -108,6 +108,25 @@ function ListeGo({ vis }: { vis: Vis }) {
   const visRader = vis === 'slett' || vis === 'liste' || vis === 'sorter' || vis === 'gruppe';
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3">
+      <div
+        data-innboks-filter-chips
+        className="flex flex-wrap items-center gap-1.5 py-2"
+        aria-label="Vis"
+      >
+        {['Alle', 'Kunder', 'Intern', 'Support', 'Løst'].map((label, i) => (
+          <span
+            key={label}
+            data-innboks-chip={
+              ['alle', 'customer_dealer', 'mechanic_dealer', 'dealer_admin', 'lost'][i]
+            }
+            className={`inline-flex h-7 items-center rounded-full px-2.5 text-[12px] ${
+              i === 0 ? 'bg-sidebar-active font-[650] text-fg' : 'text-fg-muted'
+            }`}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
       {visRader ? (
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           {PREVIEW_TRADER.map((t, i) => (
@@ -127,9 +146,10 @@ function ListeGo({ vis }: { vis: Vis }) {
               ) : null}
               <span
                 data-innboks-rad
-                className={`min-w-0 flex-1 border-border border-b py-4 ${
-                  i === 0 ? 'bg-sidebar-active' : 'bg-transparent'
-                }`}
+                data-innboks-ulest={t.ulest ? '1' : undefined}
+                className={`min-w-0 flex-1 border-border border-b border-l-2 py-4 ${
+                  t.ulest ? 'border-l-fg' : 'border-l-transparent'
+                } ${i === 0 ? 'bg-sidebar-active' : 'bg-transparent'}`}
               >
                 <span className="flex items-center gap-2">
                   <span className="min-w-0 flex-1 truncate text-label text-fg">{t.navn}</span>
@@ -139,6 +159,10 @@ function ListeGo({ vis }: { vis: Vis }) {
               </span>
             </button>
           ))}
+          <div data-innboks-pager className="flex items-center justify-between gap-2 py-3">
+            <span className="text-[12px] text-fg-muted">Viser 1–3 av 3</span>
+            <span className="text-[12px] text-fg-muted">Forrige side · Neste side</span>
+          </div>
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 py-10 text-center">
@@ -224,6 +248,26 @@ function TradGo() {
       </button>
       <h1 className="pr-24 text-title text-fg">Kari Nordmann</h1>
       <p className="mt-1 text-[12px] text-fg-muted">1 melding</p>
+      <div data-innboks-deltakere className="mt-2 flex flex-wrap items-center gap-1.5">
+        <span className="inline-flex h-7 items-center rounded-full bg-sidebar-active px-2.5 text-[12px] text-fg">
+          Du
+        </span>
+        <span className="inline-flex h-7 items-center rounded-full bg-surface-2 px-2.5 text-[12px] text-fg">
+          Kari Nordmann
+        </span>
+      </div>
+      <div data-innboks-trad-handlinger className="mt-2 flex flex-wrap gap-1.5 text-[12px]">
+        <span className="text-fg">Inviter ansatt</span>
+        <span data-innboks-ingen-api="fjern" className="text-fg-muted">
+          Fjern — ingen API
+        </span>
+        <span data-innboks-ingen-api="forlat" className="text-fg-muted">
+          Forlat — ingen API
+        </span>
+        <span data-innboks-ingen-api="lost" className="text-fg-muted">
+          Løst — ingen API
+        </span>
+      </div>
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-bg p-3">
         <p className="text-label text-fg">Hei, kan dere ta EU-kontroll i morgen?</p>
       </div>

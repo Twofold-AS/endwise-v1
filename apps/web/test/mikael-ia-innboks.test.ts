@@ -147,7 +147,7 @@ describe('Mikael IA — telefon vs desktop innboks', () => {
   });
 
   it('landing er alle chatter, desktop tomflate er postkasse', () => {
-    expect(side).toMatch(/part === 'alle' \|\| t\.kind === part/);
+    expect(side).toMatch(/filtrerInboxTrader/);
     expect(side).toMatch(/listThreads/);
     expect(side).toMatch(/t\.unread/);
     expect(pane).toMatch(/Ingen valgte meldinger/);

@@ -7,7 +7,15 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
+import {
+  filtrerInboxTrader,
+  inboxSide,
+  inboxSideEtikett,
+  inboxSider,
+  sorterInboxTrader,
+} from '../_shell/inbox-del';
 import { useInboxFilter } from '../_shell/inbox-filter';
+import { InboxFilterChips } from './_filter-chips';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
 import {
   fmtWhen,
@@ -42,7 +50,8 @@ export function InboxSidebar() {
   const skjulTelefonListe = Boolean(aktivId || nySamtale);
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, sortering, skjulte, velgModus, valgte, toggleValgt } = useInboxFilter();
+  const { chip, sortering, skjulte, side, setSide, velgModus, valgte, toggleValgt } =
+    useInboxFilter();
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -86,17 +95,14 @@ export function InboxSidebar() {
     { enabled: offisielleIder.length > 0, staleTime: 5 * 60_000 },
   );
 
+  const alleFiltrert = useMemo(
+    () => sorterInboxTrader(filtrerInboxTrader(ekte, chip, skjulte), sortering),
+    [ekte, chip, skjulte, sortering],
+  );
+  const sider = inboxSider(alleFiltrert.length);
+  const sideIndeks = Math.min(Math.max(1, side), sider);
   const rader = useMemo(() => {
-    const filtrert = ekte
-      .filter((t) => !skjulte.has(t.id))
-      .filter((t) => part === 'alle' || t.kind === part)
-      .slice()
-      .sort((a, b) => {
-        const da = new Date(a.lastMessageAt).getTime();
-        const db = new Date(b.lastMessageAt).getTime();
-        return sortering === 'eldste' ? da - db : db - da;
-      });
-    return filtrert.map((t) => ({
+    return inboxSide(alleFiltrert, sideIndeks - 1).map((t) => ({
       id: t.id,
       kind: t.kind as ThreadKind,
       avsender: threadHeading(
@@ -108,7 +114,7 @@ export function InboxSidebar() {
         visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
         me.data?.userId,
       ),
-      utdrag: '',
+      utdrag: ('sisteTekst' in t ? t.sisteTekst : '')?.trim() || t.subject?.trim() || '',
       nar: fmtWhen(t.lastMessageAt),
       ulest: t.unread ?? 0,
       // Ekte kanaldata fra `threads.channel` / siste meldings `channel`.
@@ -131,7 +137,7 @@ export function InboxSidebar() {
         me.data?.userId,
       ),
     }));
-  }, [ekte, part, sortering, skjulte, navnIntern.data, navnOffisiell.data, me.data?.userId]);
+  }, [alleFiltrert, sideIndeks, navnIntern.data, navnOffisiell.data, me.data?.userId]);
 
   if (endwise) {
     const henvendelser = support.data ?? [];
@@ -184,16 +190,23 @@ export function InboxSidebar() {
     >
       <h2 className="sr-only">Samtaler</h2>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3">
+        <InboxFilterChips />
         {threads.isLoading ? (
           <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
         ) : rader.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
             <MessageSquare size={20} className="text-fg-muted" />
-            <p className="text-label text-fg">Ingen samtaler</p>
-            <p className="text-[12px] text-fg-muted">
-              {part === 'alle' ? 'Innboksen er tom.' : 'Ingen samtaler for denne parten.'}
+            <p className="text-label text-fg">
+              {chip === 'lost' ? 'Løst — ingen API' : 'Ingen samtaler'}
             </p>
-            {part === 'alle' && (
+            <p className="text-[12px] text-fg-muted">
+              {chip === 'lost'
+                ? 'Ingen resolved-kolonne. Filteret viser ingenting.'
+                : chip === 'alle'
+                  ? 'Innboksen er tom.'
+                  : 'Ingen samtaler for denne parten.'}
+            </p>
+            {chip === 'alle' && (
               <Link
                 href={'/innboks?ny=1' as Route}
                 className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[12px] text-bg"
@@ -230,6 +243,34 @@ export function InboxSidebar() {
             ),
           )
         )}
+        {alleFiltrert.length > 0 ? (
+          <div
+            data-innboks-pager
+            className="flex shrink-0 flex-wrap items-center justify-between gap-2 py-3"
+          >
+            <span className="text-[12px] text-fg-muted">
+              {inboxSideEtikett(alleFiltrert.length, sideIndeks - 1)}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={sideIndeks <= 1}
+                onClick={() => setSide(sideIndeks - 1)}
+                className="text-[12px] text-fg-muted disabled:opacity-40"
+              >
+                Forrige side
+              </button>
+              <button
+                type="button"
+                disabled={sideIndeks >= sider}
+                onClick={() => setSide(sideIndeks + 1)}
+                className="text-[12px] text-fg-muted disabled:opacity-40"
+              >
+                Neste side
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </aside>
   );
@@ -314,9 +355,10 @@ function SamtaleKort({
   return (
     <div
       data-innboks-rad
-      className={`flex flex-col gap-1 border-border border-b py-4 transition-colors ${
-        aktiv ? 'bg-sidebar-active' : 'bg-transparent hover:bg-surface-2/60'
-      }`}
+      data-innboks-ulest={rad.ulest > 0 ? '1' : undefined}
+      className={`flex flex-col gap-1 border-border border-b border-l-2 py-4 transition-colors ${
+        rad.ulest > 0 ? 'border-l-fg' : 'border-l-transparent'
+      } ${aktiv ? 'bg-sidebar-active' : 'bg-transparent hover:bg-surface-2/60'}`}
     >
       <div className="flex items-center gap-2">
         {/*

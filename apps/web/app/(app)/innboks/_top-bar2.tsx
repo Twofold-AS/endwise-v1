@@ -11,6 +11,7 @@ import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sorterin
 const TID_VALG = [
   { id: 'nyeste' as const, label: 'Nyeste' },
   { id: 'eldste' as const, label: 'Eldste' },
+  { id: 'uleste' as const, label: 'Uleste først' },
 ];
 
 /**
@@ -37,6 +38,8 @@ export function InboxTopBar2({
     valgte,
     skjulFlere,
     toemValgte,
+    sisteSkjulte,
+    angreSkjul,
   } = useInboxFilter();
   const [sorterApen, setSorterApen] = useState(false);
   const sorterRef = useRef<HTMLDivElement>(null);
@@ -155,6 +158,16 @@ export function InboxTopBar2({
           Slett
           {velgModus ? <Trash2 size={16} strokeWidth={1.75} aria-hidden /> : null}
         </button>
+        {sisteSkjulte.length > 0 ? (
+          <button
+            type="button"
+            data-innboks-angre
+            onClick={angreSkjul}
+            className="inline-flex shrink-0 items-center border-b-2 border-transparent pb-1 text-label text-fg-muted"
+          >
+            Angre
+          </button>
+        ) : null}
       </div>
     </div>
   );

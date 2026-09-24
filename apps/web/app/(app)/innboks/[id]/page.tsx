@@ -45,6 +45,7 @@ import {
   visningForTraadtype,
 } from '../_lib';
 import { useInboxModus } from '../_modus';
+import { TradHandlinger } from '../_trad-handlinger';
 
 /**
  * Tråden. F6-05 — overtakelsen fra AI, i samme tråd.
@@ -269,7 +270,7 @@ export default function TrådPage() {
   return (
     <div className="mx-auto flex h-full min-h-0 w-full max-w-[820px] flex-col gap-4 overflow-hidden px-8 py-7 max-md:px-3 max-md:py-3">
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {/**
            * «← Meldinger» sto her fram til og er fjernet.
            * Innboksen har tre kolonner, og `layout.tsx` holder samtalelista
@@ -311,6 +312,28 @@ export default function TrådPage() {
                 · {threadHeading(null, thread.kind, motparter, navnKart, me.data?.userId)}
               </span>
             )}
+          </div>
+          <div
+            data-innboks-deltakere
+            className="mt-2 flex flex-wrap items-center gap-1.5"
+            aria-label="Deltakere"
+          >
+            <span className="inline-flex h-7 items-center rounded-full bg-sidebar-active px-2.5 text-[12px] text-fg">
+              Du
+            </span>
+            {motparter
+              .filter((id) => id && id !== me.data?.userId && !isAgent(id))
+              .map((id) => (
+                <span
+                  key={id}
+                  className="inline-flex h-7 items-center rounded-full bg-surface-2 px-2.5 text-[12px] text-fg"
+                >
+                  {navnKart?.[id]?.navn?.trim() || `Deltaker ${id.slice(0, 6)}`}
+                </span>
+              ))}
+          </div>
+          <div className="mt-2">
+            <TradHandlinger threadId={threadId} />
           </div>
         </div>
       </div>

@@ -7,7 +7,8 @@ import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { shellForBruker } from '../_shell/nav';
-import { Beholdning, Feil, Laster, Sidehode, Tomt } from './_delt';
+import { ClaudePageHead, ClaudeSection } from '../_shell/claude-flate';
+import { Beholdning, Feil, Laster, Tomt } from './_delt';
 
 /**
  * Lager · Oversikt. Alt her er ekte data fra `inventory`-ruteren.
@@ -36,10 +37,18 @@ export default function LagerOversiktPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
-      <Sidehode
-        tittel="Lager"
-        undertittel="Deler, beholdning og inn og ut. Kjerne — ikke et tillegg."
+      <ClaudePageHead
+        title="Lager"
+        sub={`${s?.antallDeler ?? 0} delenummer`}
+        primary={kunMekaniker ? undefined : 'Ny del'}
+        primaryHref={kunMekaniker ? undefined : '/lager/deler'}
       />
+      <ClaudeSection heading="Lagerstatus">
+        <p className="text-[13px] text-fg-muted">
+          På lager {s?.totaltAntall ?? '—'} · Tilgjengelig {s?.tilgjengelig ?? '—'} · Reservert{' '}
+          {s?.reservert ?? '—'} · Under minimum {lave.data?.length ?? '—'}
+        </p>
+      </ClaudeSection>
       {oppsummering.isError ? (
         <Feil melding={oppsummering.error.message} />
       ) : (
@@ -76,7 +85,7 @@ export default function LagerOversiktPage() {
       {/* Lav beholdning — det eneste på siden som krever handling. */}
       <section className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-title text-fg">Må bestilles</h2>
+          <h2 className="text-title text-fg">Deler</h2>
           {!kunMekaniker ? (
             <Link
               href={'/lager/deler' as Route}
@@ -124,6 +133,11 @@ export default function LagerOversiktPage() {
           </div>
         )}
       </section>
+      <ClaudeSection heading="Inn- og utlogg">
+        <Link href={'/lager/bevegelser' as Route} className="text-[15px] text-fg underline-offset-2 hover:underline">
+          Se siste bevegelser
+        </Link>
+      </ClaudeSection>
     </div>
   );
 }

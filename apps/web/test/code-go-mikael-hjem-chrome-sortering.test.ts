@@ -59,36 +59,25 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(kort).toMatch(/ew-modus-plate/);
   });
 
-  it('Analyser er én boks: Analyse + fire KPI uten dither', () => {
+  it('Tall er én 2×2-boks uten dither', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    const analyser = funksjon(kort, 'PulseAnalyserKort');
-    expect(analyser).toMatch(/data-analyser-tittel/);
-    expect(analyser).toMatch(/Analyse/);
-    expect(analyser).toMatch(/PulseIkonFlate/);
-    expect(analyser).toMatch(/siste 30 dager/);
-    expect(analyser).toMatch(/Se tallene/);
-    expect(analyser).toMatch(/data-analyser-se-tallene/);
-    expect(analyser).not.toMatch(/RevenueLineChart/);
-    expect(analyser).not.toMatch(/DitherGrowthChart/);
-    expect(analyser).not.toMatch(/DitherDonutChart/);
-    expect(analyser).not.toMatch(/#0066ff/);
-    expect(analyser).toMatch(/data-analyser-kpi/);
-    expect(analyser).toMatch(/TrendingUp/);
-    expect(analyser).toMatch(/TrendingDown/);
-    expect(analyser).toMatch(/text-success/);
-    expect(analyser).toMatch(/text-danger/);
-    expect(analyser.match(/PHONE_DEST_FYLL/g)?.length).toBe(1);
+    const tall = funksjon(kort, 'PulseTallKort');
+    expect(tall).toMatch(/data-tall-tittel/);
+    expect(tall).toMatch(/Tall/);
+    expect(tall).toMatch(/siste 30 dager/);
+    expect(tall).toMatch(/Alle tall/);
+    expect(tall).toMatch(/data-tall-alle/);
+    expect(tall).not.toMatch(/RevenueLineChart/);
+    expect(tall).not.toMatch(/DitherGrowthChart/);
+    expect(tall).not.toMatch(/DitherDonutChart/);
+    expect(tall).not.toMatch(/#0066ff/);
+    expect(tall).toMatch(/text-success/);
+    expect(tall).toMatch(/text-danger/);
+    expect(tall.match(/PHONE_DEST_FYLL/g)?.length).toBe(1);
     const stats = analyserMockStats(new Date('2026-09-08T10:00:00Z'));
-    expect(stats.map((s) => s.label)).toEqual([
-      'Besøk på nettsiden',
-      'Jobber',
-      'Bookinger',
-      'Retur',
-    ]);
-    expect(stats.some((s) => s.opp)).toBe(true);
-    expect(stats.some((s) => !s.opp)).toBe(true);
+    expect(stats.map((s) => s.label)).toEqual(['Visninger', 'Bookinger', 'Returer']);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
+    expect(hjem.lastIndexOf('PulseTeamKort')).toBeLessThan(hjem.lastIndexOf('PulseTallKort'));
     expect(hjem).toMatch(/gap-2\.5/);
   });
 

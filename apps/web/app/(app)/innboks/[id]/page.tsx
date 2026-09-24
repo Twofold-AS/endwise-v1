@@ -44,7 +44,9 @@ import {
   tilDeltakerRolle,
   visningForTraadtype,
 } from '../_lib';
+import { DeltakerArk } from '../_deltaker-ark';
 import { useInboxModus } from '../_modus';
+import { TradHodeKjoretoy } from '../_trad-hode';
 
 /**
  * Tråden. F6-05 — overtakelsen fra AI, i samme tråd.
@@ -279,6 +281,7 @@ export default function TrådPage() {
            * du er et annet sted enn du er.
            */}
           <h1 className="truncate text-title text-fg">{tradTittel}</h1>
+          {!endwise ? <TradHodeKjoretoy threadId={threadId} /> : null}
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {/*
              * Kanalen står i hodet, ikke nede ved svarfeltet: den skal være
@@ -312,6 +315,16 @@ export default function TrådPage() {
               </span>
             )}
           </div>
+          {!endwise ? (
+            <div className="mt-3">
+              <DeltakerArk
+                threadId={threadId}
+                motparter={motparter}
+                navn={navnKart}
+                meId={me.data?.userId}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
 

@@ -70,6 +70,12 @@ export const customersRouter = router({
                     ilike(schema.customers.name, `%${q}%`),
                     ilike(schema.customers.email, `%${q}%`),
                     ilike(schema.customers.phone, `%${q}%`),
+                    sql`exists (
+                      select 1 from vehicles v
+                      where v.customer_id = ${schema.customers.id}
+                        and v.tenant_id = ${ctx.tenantId}
+                        and v.reg_number ilike ${`%${q}%`}
+                    )`,
                   )
                 : undefined,
             ),

@@ -19,6 +19,7 @@ import { useParams } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import { ClaudeAct, ClaudePageHead } from '../../_shell/claude-flate';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
 import { STATUS_LABEL, STATUS_TONE } from '../../bookinger/_status';
 import { dato, datoTid, EuFrist, Feil, Kilde, kroner, Laster, Seksjon, TYPE_LABEL } from '../_delt';
@@ -88,6 +89,8 @@ export default function KundekortPage() {
       faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
       aktiv="alle"
     >
+      <ClaudePageHead title={k.name} sub={k.phone ?? k.email ?? 'Kunde'} />
+
       {/* Hvem */}
       <div className="flex items-start gap-4">
         {/*
@@ -172,8 +175,8 @@ export default function KundekortPage() {
         )}
       </Seksjon>
 
-      {/* Servicehistorikk */}
-      <Seksjon tittel="Servicehistorikk" antall={k.saker.length}>
+      {/* Jobber */}
+      <Seksjon tittel={`Jobber (${k.saker.length})`} antall={k.saker.length}>
         {k.saker.length === 0 ? (
           <CardShell className="p-6 text-center">
             <p className="text-[12px] text-fg-muted">Ingen saker registrert ennå.</p>
@@ -300,12 +303,12 @@ export default function KundekortPage() {
         )}
       </Seksjon>
 
-      <Link
-        href={'/kunder' as Route}
-        className="inline-flex items-center gap-1.5 text-[12px] text-fg-muted transition-colors hover:text-fg"
-      >
-        <ClipboardList size={14} />← Alle kunder
-      </Link>
+      <div className="flex flex-wrap gap-2">
+        <ClaudeAct href={`/bookinger/ny?kunde=${k.id}`}>Ny jobb på kunde</ClaudeAct>
+        <ClaudeAct kind="ghost" href="/kunder">
+          Alle kunder
+        </ClaudeAct>
+      </div>
     </SideChromeSkall>
   );
 }

@@ -1,6 +1,7 @@
 import {
   osloKalenderdag,
   osloPlusDager,
+  osloUkedagMandag0,
   osloVeggklokke,
   osloVeggtid,
   PRODUKT_TIDSSONE,
@@ -27,6 +28,13 @@ export type TimeplanManed = {
   label: string;
   aktiv: boolean;
 };
+
+/** Ukesrail: mandag i valgt uke, deretter 6 dager. */
+export function timeplanUkeFra(valgtYmd: string): TimeplanDag[] {
+  const ymd = osloKalenderdag(valgtYmd);
+  const wd = osloUkedagMandag0(osloVeggklokke(ymd, 12, 0));
+  return timeplanDagerFra(osloPlusDager(ymd, -wd), 7);
+}
 
 /** Valgt dag først, deretter de neste dagene i Europe/Oslo. */
 export function timeplanDagerFra(valgtYmd: string, antall = 3): TimeplanDag[] {

@@ -58,30 +58,29 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
     expect(kort).toMatch(/data-pulse-hero-bunn/);
   });
 
-  it('toppkort er to-delt med dither-donut; Analyser ligger sist', () => {
+  it('toppkort er to-delt med dither-donut; Tall ligger sist', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
       'innboks',
-      'lager',
-      'analyser',
+      'deler',
+      'svarhastighet',
+      'timeplan',
       'team',
-      'jobb',
+      'tall',
     ]);
-    expect(DEALER_PHONE_HJEM.at(-1)?.keys).toEqual(['team', 'jobb']);
+    expect(DEALER_PHONE_HJEM.at(-1)?.keys).toEqual(['tall']);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const preview = utenKommentarer(les('../app/pulse-preview/page.tsx'));
     expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/PulseAnalyserKort/);
-    expect(hjem).not.toMatch(/PulseUkeSpark|Pulse30dSpark/);
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
+    expect(hjem).toMatch(/PulseTallKort/);
+    expect(hjem).toMatch(/PulseUkeSpark|spark=\{spark\}/);
+    expect(hjem.lastIndexOf('PulseTeamKort')).toBeLessThan(hjem.lastIndexOf('PulseTallKort'));
     expect(kort).toMatch(/#141414/);
     expect(kort).toMatch(/#ffffff/);
     expect(kort).toMatch(/data-pulse-dag-sirkel/);
     expect(kort).toMatch(/DitherDonutChart/);
     expect(preview).toMatch(/PulseHeroFlate/);
-    expect(preview.lastIndexOf('PulseAnalyserKort')).toBeLessThan(
-      preview.lastIndexOf('PulseJobbFlis'),
-    );
+    expect(preview.lastIndexOf('PulseTeamKort')).toBeLessThan(preview.lastIndexOf('PulseTallKort'));
   });
 });

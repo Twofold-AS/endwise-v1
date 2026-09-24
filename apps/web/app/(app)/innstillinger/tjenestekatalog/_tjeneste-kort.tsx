@@ -80,16 +80,17 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
   }
 
   return (
-    <CardShell className={tjeneste.active ? '' : 'opacity-60'}>
-      {/* Hodet: alt man trenger for å kjenne igjen tjenesten */}
+    <CardShell className={`${tjeneste.active ? '' : 'opacity-60'} rounded-[24px] shadow-none`}>
+      {/* Hodet: Claude list-row — navn · kat · min · pris · krav */}
       <button
         type="button"
         onClick={() => setApen((v) => !v)}
         aria-expanded={apen}
-        className="flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-surface-2"
+        data-tjeneste-rad={tjeneste.id}
+        className="flex w-full items-center gap-4 px-4 py-3 text-left [touch-action:manipulation] hover:bg-surface-2"
       >
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="flex flex-wrap items-center gap-2 text-label text-fg">
+          <span className="flex flex-wrap items-center gap-2 text-[17px] font-[450] text-fg">
             {tjeneste.name}
             <span className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
               {TYPE_LABEL[tjeneste.vehicleType] ?? tjeneste.vehicleType}

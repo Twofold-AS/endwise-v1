@@ -22,8 +22,8 @@ function StatistikkSkallIndre() {
 
   return (
     <SideChromeSkall
-      tittel="Statistikk"
-      ingress="Tall for uken. Nettsidevisninger når data finnes — ellers mock."
+      tittel="Tall"
+      ingress="Siste 30 dager. Bookinger er live. Visninger og returer når de er tilkoblet."
       faner={STATISTIKK_FANER.map((f) => ({ ...f, href: statistikkHref(f.id) }))}
       aktiv={aktiv}
     >

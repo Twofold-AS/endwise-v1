@@ -73,17 +73,17 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     expect(donut).toMatch(/syncCanvasSize/);
   });
 
-  it('Analyser er én boks uten dither', () => {
+  it('Tall er én 2×2-boks uten dither', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    const analyser = funksjon(kort, 'PulseAnalyserKort');
-    expect(analyser).toMatch(/Analyse/);
-    expect(analyser).toMatch(/siste 30 dager/);
-    expect(analyser).toMatch(/Se tallene/);
-    expect(analyser).not.toMatch(/RevenueLineChart/);
-    expect(analyser).not.toMatch(/DitherGrowthChart/);
-    expect(analyser).not.toMatch(/scale-\[1\.65\]/);
-    expect(analyser).not.toMatch(/#0066ff/);
+    const tall = funksjon(kort, 'PulseTallKort');
+    expect(tall).toMatch(/Tall/);
+    expect(tall).toMatch(/siste 30 dager/);
+    expect(tall).toMatch(/Alle tall/);
+    expect(tall).not.toMatch(/RevenueLineChart/);
+    expect(tall).not.toMatch(/DitherGrowthChart/);
+    expect(tall).not.toMatch(/scale-\[1\.65\]/);
+    expect(tall).not.toMatch(/#0066ff/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
+    expect(hjem.lastIndexOf('PulseTeamKort')).toBeLessThan(hjem.lastIndexOf('PulseTallKort'));
   });
 });

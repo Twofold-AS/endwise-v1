@@ -2,14 +2,15 @@
 
 import { Car, Check, FELT_MD, hexForFarge, Search, Sparkles, staffFargeStil } from '@endwise/ui';
 import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
 import { TIMEPLAN_FANER, timeplanHref } from '../../jobber/_faner';
 import { velgKjoretoyForJobb } from '../_knytt-kjoretoy';
+import { JobSlotsVelger } from '../_job-slots-velger';
 import { StarttidVelger } from '../_starttid-velger';
 import { fmtMinor } from '../_status';
 
@@ -20,8 +21,9 @@ import { fmtMinor } from '../_status';
  * varighet er katalogsum, overstyrbar manuelt. Vegvesen-oppslag (F2-08) som
  * smart default på regnr. Serveren eier valget og låsen — vi foreslår bare.
  */
-export default function NyJobbPage() {
+function NyJobbPageInner() {
   const router = useRouter();
+  const params = useSearchParams();
   const utils = trpc.useUtils();
 
   const [customerId, setCustomerId] = useState('');
@@ -38,6 +40,11 @@ export default function NyJobbPage() {
   const mechanics = trpc.mechanics.oversikt.useQuery();
   const alleKjoretoy = trpc.vehicles.list.useQuery({ limit: 200 });
   const opprettKjoretoy = trpc.vehicles.create.useMutation();
+
+  useEffect(() => {
+    const kunde = params?.get('kunde')?.trim();
+    if (kunde) setCustomerId(kunde);
+  }, [params]);
 
   const selected = useMemo(
     () => (services.data ?? []).filter((s) => serviceIds.includes(s.id)),
@@ -311,6 +318,18 @@ export default function NyJobbPage() {
               }}
             />
           </Field>
+          {startsAt && slotMinutes >= 30 ? (
+            <JobSlotsVelger
+              ymd={startsAt}
+              durationMin={slotMinutes}
+              requiredQuals={requiredSkills}
+              value={startsAt}
+              onPick={(iso, mid) => {
+                setStartsAt(iso);
+                if (mid) setMechanicId(mid);
+              }}
+            />
+          ) : null}
           {window && selected.length > 0 && (
             <p className="text-fg-muted text-xs">
               Slutter{' '}
@@ -585,6 +604,14 @@ function KundeIFlyt({
         </div>
       )}
     </>
+  );
+}
+
+export default function NyJobbPage() {
+  return (
+    <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster ny jobb …</div>}>
+      <NyJobbPageInner />
+    </Suspense>
   );
 }
 

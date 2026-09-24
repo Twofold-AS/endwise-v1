@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { ClaudePageHead } from '../_shell/claude-flate';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { PrislisteFlate } from '../innstillinger/tjenestekatalog/_flate';
 import { NyTjeneste } from '../innstillinger/tjenestekatalog/_ny-tjeneste';
@@ -23,6 +24,14 @@ function TjenesterIndre() {
     >
       {aktiv === 'opprett' ? (
         <NyTjeneste onLukk={() => router.replace('/prisliste' as Route)} />
+      ) : null}
+      {aktiv === 'alle' ? (
+        <ClaudePageHead
+          title="Tjenester"
+          sub="Katalog under Organisasjon — ikke egen toppbar-pille."
+          primary="Ny"
+          primaryHref="/prisliste?fane=opprett"
+        />
       ) : null}
       <PrislisteFlate skjulPiller tittel="Tjenester" skjulNy />
     </SideChromeSkall>

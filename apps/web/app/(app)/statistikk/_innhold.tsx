@@ -1,119 +1,40 @@
 'use client';
 
-import { DitherGrowthChart, DitherStackedChart, RevenueLineChart } from '@endwise/ui';
 import { useMemo } from 'react';
-import { beleggFor, KILDE, trafikkFor, volumFor } from '../analyse/_data';
+import { trpc } from '@/lib/trpc';
+import { PulseTallKort } from '../_shell/pulse-kort';
+import { tallCeller, tallVindu } from '../_shell/phone-home-pulse';
 import type { StatistikkFaneId } from './_faner';
 
-const INK = '#141414';
-const ACTION = '#262626';
-const OVERCAST = '#adadad';
-const BLA = '#0066ff';
-
-const VOLUM_BANDS = [
-  { key: 'fullfort', label: 'Fullførte', color: ACTION },
-  { key: 'avlyst', label: 'Avlyste', color: OVERCAST },
-] as const;
-
+/**
+ * Alle tall — samme Claude 2×2 som hjem. Faner er chrome, innholdet er Tall.
+ */
 export function StatistikkInnhold({ fane }: { fane: StatistikkFaneId }) {
-  const volum = volumFor('7d');
-  const belegg = beleggFor('7d');
-  const trafikk = trafikkFor('7d');
-  const volumRader = useMemo(
-    () => volum.map((d) => ({ label: d.dag, fullfort: d.fullfort, avlyst: d.avlyst })),
-    [volum],
-  );
+  const vindu = useMemo(() => tallVindu(new Date()), []);
+  const bookings = trpc.bookings.list.useQuery({
+    from: vindu.fra,
+    to: vindu.til,
+    limit: 200,
+  });
+  const celler = tallCeller(bookings.data ?? [], new Date());
 
-  if (fane === 'bookinger') {
-    return (
-      <Flate tittel="Bookingvolum" forklaring={KILDE.bookingvolum.forklaring}>
-        <div className="h-52 w-full">
-          <DitherStackedChart theme="light" compact rows={volumRader} bands={[...VOLUM_BANDS]} />
-        </div>
-      </Flate>
-    );
-  }
-
-  if (fane === 'salg') {
-    return (
-      <Flate tittel="Belegg" forklaring={KILDE.belegg.forklaring}>
-        <div className="h-52 w-full">
-          <RevenueLineChart
-            theme="light"
-            compact
-            series={[
-              {
-                key: 'belegg',
-                label: 'Belegg',
-                color: ACTION,
-                data: belegg.map((b) => b.belegg),
-                fill: true,
-              },
-            ]}
-          />
-        </div>
-      </Flate>
-    );
-  }
-
-  if (fane === 'nettside') {
-    return (
-      <Flate tittel="Sidevisninger" forklaring={KILDE.sidevisninger.forklaring}>
-        <div className="h-52 w-full">
-          <DitherGrowthChart
-            theme="light"
-            compact
-            values={trafikk.map((t) => t.visninger)}
-            labels={trafikk.map((t) => t.dag)}
-            color={BLA}
-          />
-        </div>
-      </Flate>
-    );
-  }
+  const forklaring =
+    fane === 'nettside'
+      ? 'Sidevisninger er ikke tilkoblet ennå.'
+      : fane === 'salg'
+        ? 'Salgstall venter på kasse-API.'
+        : fane === 'effektivitet'
+          ? 'Effektivitet beregnes når nok jobber er fullført.'
+          : 'Bookinger siste 30 dager mot forrige 30.';
 
   return (
-    <Flate tittel="Effektivitet" forklaring={KILDE.belegg.forklaring}>
-      <div className="h-52 w-full">
-        <RevenueLineChart
-          theme="light"
-          compact
-          series={[
-            {
-              key: 'belegg',
-              label: 'Belegg',
-              color: ACTION,
-              data: belegg.map((b) => b.belegg),
-              fill: true,
-            },
-            {
-              key: 'avlysning',
-              label: 'Avlysningsrate',
-              color: INK,
-              data: belegg.map((b) => b.avlysning),
-              fill: false,
-            },
-          ]}
-        />
-      </div>
-    </Flate>
-  );
-}
-
-function Flate({
-  tittel,
-  forklaring,
-  children,
-}: {
-  tittel: string;
-  forklaring: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-title text-fg md:hidden">{tittel}</p>
-      <p className="text-[12px] text-fg-muted leading-relaxed">{forklaring}</p>
-      {children}
+    <div data-statistikk-tall className="flex flex-col gap-4">
+      <p className="text-[15px] text-fg-muted">{forklaring}</p>
+      {bookings.isLoading ? (
+        <div className="h-40 animate-pulse rounded-[24px] bg-surface-2" />
+      ) : (
+        <PulseTallKort celler={celler} href="/statistikk" />
+      )}
     </div>
   );
 }

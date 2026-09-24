@@ -10,6 +10,7 @@ export const HJEM_PULSE_QUERY_KEYS = [
   'bookings.list',
   'mechanics.oversikt',
   'messages.listThreads',
+  'messages.svarhastighet',
   'inventory.listParts',
 ] as const;
 

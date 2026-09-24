@@ -1,10 +1,11 @@
 'use client';
 
-import { Button, Package, Store } from '@endwise/ui';
+import { Button, Package } from '@endwise/ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
+import { ClaudePageHead, ClaudeSection } from '../_shell/claude-flate';
 import { ButikkBookingWidget } from './_booking-widget';
 import { antallIKurv, leggIKurv } from './_kurv';
 
@@ -29,13 +30,12 @@ export default function ButikkKatalogPage() {
     <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5 px-8 py-7">
       <div>
         <h1 className="sr-only">Butikk · Katalog</h1>
-        <p className="flex items-center gap-2 text-title text-fg">
-          <Store size={18} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-          Katalog
-        </p>
-        <p className="text-body text-fg-muted">
-          Aktive deler med utsalgspris. Tilgjengelig = på lager minus reservert.
-        </p>
+        <ClaudePageHead
+          title="Butikk"
+          sub={`${katalog.data?.length ?? 0} varer · 0 kjøretøy`}
+          primary="Ny"
+          primaryHref="/lager/deler"
+        />
       </div>
 
       <div className="flex items-center justify-between gap-3">
@@ -48,6 +48,14 @@ export default function ButikkKatalogPage() {
         </Link>
       </div>
 
+      <ClaudeSection heading="Varer i nettbutikk">
+        <p className="text-[13px] text-fg-muted">Aktive deler med utsalgspris.</p>
+      </ClaudeSection>
+      <ClaudeSection heading="Kjøretøy til salgs">
+        <p className="text-[13px] text-fg-muted">
+          Ingen kjøretøy-til-salgs-API ennå. Annonser vises her når lageret har salgsenheter.
+        </p>
+      </ClaudeSection>
       <ButikkBookingWidget />
 
       {katalog.isError ? (

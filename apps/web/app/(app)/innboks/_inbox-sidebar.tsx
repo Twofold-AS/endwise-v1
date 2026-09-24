@@ -4,9 +4,10 @@ import { Avatar, type AvatarValg, Button, MessageSquare } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
+import { ClaudeChip, ClaudePager, ClaudeUndoToast } from '../_shell/claude-flate';
 import { useInboxFilter } from '../_shell/inbox-filter';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
 import {
@@ -42,7 +43,11 @@ export function InboxSidebar() {
   const skjulTelefonListe = Boolean(aktivId || nySamtale);
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, sortering, skjulte, velgModus, valgte, toggleValgt } = useInboxFilter();
+  const { part, setPart, sortering, skjulte, sisteSkjulte, angreSkjul, velgModus, valgte, toggleValgt } =
+    useInboxFilter();
+  const [side, setSide] = useState(0);
+  const [lostStub, setLostStub] = useState(false);
+  const PER = 12;
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -92,6 +97,11 @@ export function InboxSidebar() {
       .filter((t) => part === 'alle' || t.kind === part)
       .slice()
       .sort((a, b) => {
+        if (sortering === 'uleste') {
+          const ua = a.unread ?? 0;
+          const ub = b.unread ?? 0;
+          if (ub !== ua) return ub - ua;
+        }
         const da = new Date(a.lastMessageAt).getTime();
         const db = new Date(b.lastMessageAt).getTime();
         return sortering === 'eldste' ? da - db : db - da;
@@ -132,6 +142,12 @@ export function InboxSidebar() {
       ),
     }));
   }, [ekte, part, sortering, skjulte, navnIntern.data, navnOffisiell.data, me.data?.userId]);
+
+  const sider = Math.max(1, Math.ceil(rader.length / PER));
+  const sideNr = Math.min(side, sider - 1);
+  const synlige = rader.slice(sideNr * PER, sideNr * PER + PER);
+  const fra = rader.length === 0 ? 0 : sideNr * PER + 1;
+  const til = Math.min(rader.length, sideNr * PER + PER);
 
   if (endwise) {
     const henvendelser = support.data ?? [];
@@ -183,6 +199,39 @@ export function InboxSidebar() {
       }`}
     >
       <h2 className="sr-only">Samtaler</h2>
+      <div className="flex flex-wrap gap-2 px-3 pt-3">
+        <ClaudeChip active={part === 'alle'} onClick={() => setPart('alle')}>
+          Alle
+        </ClaudeChip>
+        <ClaudeChip active={part === 'customer_dealer'} onClick={() => setPart('customer_dealer')}>
+          Kunder
+        </ClaudeChip>
+        <ClaudeChip active={part === 'mechanic_dealer'} onClick={() => setPart('mechanic_dealer')}>
+          Intern
+        </ClaudeChip>
+        <ClaudeChip active={part === 'dealer_admin'} onClick={() => setPart('dealer_admin')}>
+          Support
+        </ClaudeChip>
+        <ClaudeChip
+          active={lostStub}
+          onClick={() => setLostStub((v) => !v)}
+        >
+          Løst
+        </ClaudeChip>
+      </div>
+      {lostStub ? (
+        <p className="px-3 pt-2 text-[12px] text-fg-muted">
+          Løst-filter er ikke koblet til API ennå.
+        </p>
+      ) : null}
+      {sisteSkjulte.length > 0 ? (
+        <div className="px-3 pt-2">
+          <ClaudeUndoToast
+            label={`${sisteSkjulte.length} samtale${sisteSkjulte.length === 1 ? '' : 'r'} skjult — sletting er ikke koblet til API.`}
+            onAngre={angreSkjul}
+          />
+        </div>
+      ) : null}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3">
         {threads.isLoading ? (
           <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
@@ -203,7 +252,7 @@ export function InboxSidebar() {
             )}
           </div>
         ) : (
-          rader.map((t) =>
+          synlige.map((t) =>
             velgModus ? (
               <button
                 key={t.id}
@@ -230,6 +279,17 @@ export function InboxSidebar() {
             ),
           )
         )}
+        {rader.length > 0 ? (
+          <div className="py-3">
+            <ClaudePager
+              label={`Viser ${fra}–${til} av ${rader.length}`}
+              harForrige={sideNr > 0}
+              harNeste={sideNr < sider - 1}
+              onForrige={() => setSide((s) => Math.max(0, s - 1))}
+              onNeste={() => setSide((s) => s + 1)}
+            />
+          </div>
+        ) : null}
       </div>
     </aside>
   );

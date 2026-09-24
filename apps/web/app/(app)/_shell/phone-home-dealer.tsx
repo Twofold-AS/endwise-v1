@@ -1,36 +1,56 @@
 'use client';
 
-import { Inbox, Package, Users } from '@endwise/ui';
+import { Inbox, Package } from '@endwise/ui';
 import { useEffect, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
-import { useOrgRole } from '../_lib/use-org-role';
+import { fmtSlaAlder, fmtSvarMs } from './claude-tokens';
 import { BOOKING_LAGRET_EVENT, HJEM_PULSE_REFETCH, invalidateHjemPulse } from './hjem-pulse-sync';
 import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
 import {
-  analyserMockStats,
-  ansattePulse,
   avvikTeller,
   endringerVindu,
   foresporTeller,
+  gulvRader,
   idagVisning,
   innboksRad,
   lagerRad,
   pulsdagOverskrift,
+  siste7dSpark,
+  tallCeller,
+  tallVindu,
+  teamRader,
 } from './phone-home-pulse';
-import { PulseAnalyserKort, PulseHeroFlate, PulseJobbFlis, PulseRadKort } from './pulse-kort';
+import {
+  PulseFooter,
+  PulseGulvKort,
+  PulseHeroFlate,
+  PulseRadKort,
+  PulseSvarKort,
+  PulseTallKort,
+  PulseTeamKort,
+} from './pulse-kort';
 
 /**
  * Forhandler-hjem — Verkstedet / `/home`.
- * Låste flater: toppkort · Innboks · Lager · Analyser · På jobb + Jobb.
+ * Claude-stack: I dag · Innboks · Deler · Svarhastighet · Gulv · Team · Tall · footer.
  */
 export function useDealerHjemKort() {
   const utils = trpc.useUtils();
   const vindu = useMemo(() => endringerVindu(new Date()), []);
+  const tall = useMemo(() => tallVindu(new Date()), []);
 
   const bookings = trpc.bookings.list.useQuery(
     {
       from: vindu.fra,
       to: vindu.til,
+      limit: 200,
+    },
+    HJEM_PULSE_REFETCH,
+  );
+  const tallBookings = trpc.bookings.list.useQuery(
+    {
+      from: tall.fra,
+      to: tall.til,
       limit: 200,
     },
     HJEM_PULSE_REFETCH,
@@ -46,16 +66,18 @@ export function useDealerHjemKort() {
     },
     HJEM_PULSE_REFETCH,
   );
+  const svar = trpc.messages.svarhastighet.useQuery(undefined, HJEM_PULSE_REFETCH);
 
   useEffect(() => {
     function oppfrisk() {
       invalidateHjemPulse(utils);
       void bookings.refetch();
+      void tallBookings.refetch();
       void oversikt.refetch();
     }
     window.addEventListener(BOOKING_LAGRET_EVENT, oppfrisk);
     return () => window.removeEventListener(BOOKING_LAGRET_EVENT, oppfrisk);
-  }, [utils, bookings, oversikt]);
+  }, [utils, bookings, tallBookings, oversikt]);
 
   const naa = useMemo(() => new Date(), []);
   const jobber = bookings.data ?? [];
@@ -63,24 +85,29 @@ export function useDealerHjemKort() {
   const dag = pulsdagOverskrift(naa);
   const avvik = avvikTeller(jobber);
   const forespor = foresporTeller(jobber);
-  const innboks = innboksRad(threads.data ?? []);
+  const innboks = innboksRad(threads.data ?? [], naa);
   const lager = lagerRad(deler.data ?? []);
-  const ansatte = ansattePulse(oversikt.data ?? [], jobber, naa);
-  const analyser = analyserMockStats(naa);
+  const spark = siste7dSpark(jobber, naa);
+  const gulv = gulvRader(jobber, naa, 3);
+  const team = teamRader(oversikt.data ?? [], jobber, naa);
+  const celler = tallCeller(tallBookings.data ?? [], naa);
 
   return {
     bookings,
     threads,
     oversikt,
     deler,
+    svar,
     idag,
     dag,
     avvik,
     forespor,
     innboks,
     lager,
-    ansatte,
-    analyser,
+    spark,
+    gulv,
+    team,
+    celler,
   };
 }
 
@@ -90,16 +117,18 @@ export function DealerPulseKort({ className }: { className?: string }) {
     threads,
     oversikt,
     deler,
+    svar,
     idag,
     dag,
     avvik,
     forespor,
     innboks,
     lager,
-    ansatte,
-    analyser,
+    spark,
+    gulv,
+    team,
+    celler,
   } = useDealerHjemKort();
-  const { tenantName } = useOrgRole();
   const lasterJobber = bookings.isLoading;
 
   return (
@@ -115,45 +144,44 @@ export function DealerPulseKort({ className }: { className?: string }) {
         avvik={avvik}
         forespor={forespor}
         lasterEndringer={lasterJobber}
+        spark={spark}
       />
 
       <PulseRadKort
         href={PHONE_KORT_META.innboks.href}
         ikon={Inbox}
-        tittel="Les alle siste meldinger"
-        teller={innboks.meldinger}
+        tittel={innboks.meldinger > 0 ? 'Uleste meldinger' : 'Ingen uleste'}
+        teller={
+          threads.isLoading
+            ? undefined
+            : innboks.meldinger > 0
+              ? `${innboks.meldinger}${innboks.slaMs != null ? ` · ${fmtSlaAlder(new Date(Date.now() - innboks.slaMs))}` : ''}`
+              : 0
+        }
         laster={threads.isLoading}
       />
 
       <PulseRadKort
-        href={PHONE_KORT_META.lager.href}
+        href={PHONE_KORT_META.deler.href}
         ikon={Package}
         tittel={lager.tittel}
         teller={lager.antall}
         laster={deler.isLoading}
       />
 
-      <PulseAnalyserKort
-        stats={analyser}
-        href={PHONE_KORT_META.analyser.href}
-        forhandlerNavn={tenantName}
+      <PulseSvarKort
+        verdi={
+          svar.data?.medianMs == null
+            ? 'For lite data'
+            : `${fmtSvarMs(svar.data.medianMs)} · 7 dager`
+        }
+        laster={svar.isLoading}
       />
 
-      <div data-pulse-bunn className="flex w-full gap-3">
-        <div className="min-w-0 flex-1 basis-0">
-          <PulseRadKort
-            href={PHONE_KORT_META.team.href}
-            ikon={Users}
-            tittel="På jobb"
-            teller={oversikt.isLoading ? undefined : `${ansatte.paJobb} / ${ansatte.totalt}`}
-            laster={oversikt.isLoading}
-            kompakt
-          />
-        </div>
-        <div className="min-w-0 flex-1 basis-0">
-          <PulseJobbFlis />
-        </div>
-      </div>
+      <PulseGulvKort rader={gulv} laster={lasterJobber} />
+      <PulseTeamKort medlemmer={team} laster={oversikt.isLoading} />
+      <PulseTallKort celler={celler} href={PHONE_KORT_META.tall.href} />
+      <PulseFooter />
     </div>
   );
 }

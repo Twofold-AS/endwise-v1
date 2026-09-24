@@ -19,6 +19,7 @@ import { osloDagsvindu, osloKalenderdag } from '../../_lib/oslo-dag';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { AnsattePiller } from '../../_shell/ansatte-piller';
 import { CardShell } from '../../_shell/cards';
+import { ClaudeChip } from '../../_shell/claude-flate';
 import { TimeplanStripe } from '../../_shell/timeplan-stripe';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
 import { estMinutes, fmtTime, STATUS_LABEL } from '../../min-dag/_status';
@@ -49,6 +50,9 @@ export function TimeplanFlate({
 }) {
   const { isAdmin } = useOrgRole();
   const [internValgt, setInternValgt] = useState(() => osloKalenderdag(new Date()));
+  const [statusFilter, setStatusFilter] = useState<
+    'alle' | 'planlagt' | 'paagaar' | 'ferdig'
+  >('alle');
   const valgt = valgtUtenfra ?? internValgt;
   const setValgt = onValgt ?? setInternValgt;
   const vindu = osloDagsvindu(valgt);
@@ -95,6 +99,25 @@ export function TimeplanFlate({
 
       {skjulStripe ? null : <TimeplanStripe valgt={valgt} onValgt={setValgt} />}
 
+      <div data-timeplan-filtre className="flex flex-wrap gap-2">
+        {(
+          [
+            ['alle', 'Alle'],
+            ['planlagt', 'Planlagt'],
+            ['paagaar', 'Pågår'],
+            ['ferdig', 'Ferdig'],
+          ] as const
+        ).map(([id, label]) => (
+          <ClaudeChip
+            key={id}
+            active={statusFilter === id}
+            onClick={() => setStatusFilter(id)}
+          >
+            {label}
+          </ClaudeChip>
+        ))}
+      </div>
+
       {laster ? (
         <Laster />
       ) : feil ? (
@@ -110,7 +133,12 @@ export function TimeplanFlate({
             <MekanikerTimeplan
               key={m.id}
               mekaniker={m}
-              jobber={jobberPer.get(m.id) ?? []}
+              jobber={(jobberPer.get(m.id) ?? []).filter((j) => {
+                if (statusFilter === 'alle') return true;
+                if (statusFilter === 'planlagt') return j.status === 'draft' || j.status === 'confirmed';
+                if (statusFilter === 'paagaar') return j.status === 'in_progress';
+                return j.status === 'completed';
+              })}
               kanEndre={isAdmin}
             />
           ))}

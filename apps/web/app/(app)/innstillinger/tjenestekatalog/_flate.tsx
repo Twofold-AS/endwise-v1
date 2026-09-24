@@ -131,7 +131,7 @@ export function PrislisteFlate({
         />
       ) : (
         <>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2" data-tjenester-claude>
             {aktive.map((t) => (
               <TjenesteKort key={t.id} tjeneste={t} kanEndre={isAdmin} />
             ))}

@@ -52,9 +52,11 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
       ['innboks'],
-      ['lager'],
-      ['analyser'],
-      ['team', 'jobb'],
+      ['deler'],
+      ['svarhastighet'],
+      ['timeplan'],
+      ['team'],
+      ['tall'],
     ]);
     expect(PHONE_KORT_META.statistikk.label).toBe('Rapporter');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
@@ -66,11 +68,13 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(dealerPhoneHjemRader(false).map((r) => r.keys.join('|'))).toEqual([
       'idag',
       'innboks',
-      'lager',
-      'analyser',
-      'team|jobb',
+      'deler',
+      'svarhastighet',
+      'timeplan',
+      'team',
+      'tall',
     ]);
-    expect(dealerPhoneHjemRader(true).at(-1)?.keys).toEqual(['team', 'jobb']);
+    expect(dealerPhoneHjemRader(true).at(-1)?.keys).toEqual(['tall']);
   });
 
   it('ingen hjem-kort for Book / Oppslag / AI / Kompetanse / Prisliste / Abonnement', () => {

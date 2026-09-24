@@ -48,37 +48,40 @@ function funksjon(kilde: string, navn: string) {
 }
 
 describe('forhandler pulse-hjem — fem flater', () => {
-  it('låser Planlagt-kort · Analyser · Innboks · Lager · ansatte + Jobb', () => {
+  it('låser I dag · Innboks · Deler · Svarhastighet · Gulv · Team · Tall', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
       'innboks',
-      'lager',
-      'analyser',
+      'deler',
+      'svarhastighet',
+      'timeplan',
       'team',
-      'jobb',
+      'tall',
     ]);
-    expect(DEALER_PULSE_KEYS).toHaveLength(6);
+    expect(DEALER_PULSE_KEYS).toHaveLength(7);
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
       ['innboks'],
-      ['lager'],
-      ['analyser'],
-      ['team', 'jobb'],
+      ['deler'],
+      ['svarhastighet'],
+      ['timeplan'],
+      ['team'],
+      ['tall'],
     ]);
     expect(dealerPhoneHjemRader(true).flatMap((r) => r.keys)).toEqual([...DEALER_PULSE_KEYS]);
     expect(dealerPhoneHjemRader(true).flatMap((r) => r.keys)).not.toContain('butikk');
-    expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('pair');
-    expect(DEALER_PHONE_HJEM.at(-1)?.keys).toEqual(['team', 'jobb']);
+    expect(DEALER_PHONE_HJEM.at(-1)?.kind).toBe('full');
+    expect(DEALER_PHONE_HJEM.at(-1)?.keys).toEqual(['tall']);
   });
 
-  it('dreper Svarhastighet, Timeplan-gulv, Team-liste, footer og døde nav-kort', () => {
+  it('holder kjerne-pulse og dreper døde nav-kort', () => {
     const keys = flatDealerHjemKeys(true);
     for (const forbudt of FORBUDT_DEALER_HJEM) {
       expect(keys).not.toContain(forbudt);
     }
-    expect(keys).not.toContain('svarhastighet');
-    expect(keys).not.toContain('timeplan');
-    expect(keys).not.toContain('deler');
+    expect(keys).toContain('svarhastighet');
+    expect(keys).toContain('timeplan');
+    expect(keys).toContain('deler');
     expect(keys).not.toContain('hjelp');
     expect(keys).not.toContain('organisasjon');
     expect(keys).not.toContain('kunder');
@@ -87,25 +90,21 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(keys).not.toContain('jobber');
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(hjem).not.toMatch(/Svarhastighet|Timeplan-gulv|PulseFooter|PeopleShowcase/);
-    expect(hjem).not.toMatch(/Organisasjon|Hjelp|svarhastighet/);
+    expect(hjem).toMatch(/PulseSvarKort|PulseFooter|PulseGulvKort/);
+    expect(hjem).toMatch(/svarhastighet/);
     expect(hjem).not.toMatch(/Ingen kunder ennå|Åpne organisasjon|Artikler og support/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
-    expect(hjem).toMatch(/Les alle siste meldinger/);
     expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/PulseJobbFlis/);
-    expect(hjem).toMatch(/PulseHeroFlate|endringerTeller/);
-    expect(hjem).toMatch(/PulseAnalyserKort|Analyser/);
+    expect(hjem).toMatch(/PulseTallKort/);
+    expect(hjem).toMatch(/PulseHeroFlate|endringerTeller|avvikTeller/);
     expect(hjem).toMatch(/invalidateHjemPulse|bookings\.list/);
-    expect(hjem).toMatch(/flex-1 basis-0/);
     expect(hjem).toMatch(/planlagt=\{idag\.planlagt\}/);
     expect(kort).toMatch(/Planlagt/);
     expect(hjem).not.toMatch(/dither-kit|DitherGradient/);
     expect(hjem).not.toMatch(/pulse-preview/);
-    expect(hjem).not.toMatch(/For lite data/);
     expect(hjem).not.toMatch(/bar=\{|nye=\{|tone=\{/);
-    expect(kort).not.toMatch(/PulseFooter/);
-    expect(kort).toMatch(/Les alle siste meldinger|PulseRadKort/);
+    expect(kort).toMatch(/PulseFooter/);
+    expect(kort).toMatch(/PulseRadKort/);
   });
 
   it('I dag er Planlagt / Pågår / Ferdig, ikke hele-dagen-totalt', () => {
@@ -135,7 +134,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(osloStartAvManed(naa).toISOString()).toMatch(/2026-07-31|2026-08-01/);
     const vindu = dagerVindu(naa);
     expect(vindu.til.getTime()).toBeGreaterThan(vindu.fra.getTime());
-    expect(siste7dSpark([], naa)).toEqual(plausibelSpark(naa));
+    expect(siste7dSpark([], naa)).toEqual([0, 0, 0, 0, 0, 0, 0]);
     expect(siste7dSpark([], naa)).toHaveLength(PULSE_DAGER);
     const serie = siste7dSpark(
       [
@@ -147,24 +146,25 @@ describe('forhandler pulse-hjem — fem flater', () => {
       naa,
     );
     expect(serie).toHaveLength(PULSE_DAGER);
-    expect(serie.reduce((a, b) => a + b, 0)).toBe(2);
+    expect(serie.reduce((a, b) => a + b, 0)).toBe(1);
     expect(manedSparkVerdier(14, 18)).toEqual([14, 18]);
     expect(manedSparkVerdier(-1, 4)).toEqual([0, 4]);
   });
 
-  it('Innboks-rad viser kun meldingstall, plausibel uten historikk', () => {
+  it('Innboks-rad viser kun meldingstall, ærlig 0 uten historikk', () => {
     expect(innboksRad([])).toEqual({
-      meldinger: PULSE_PLAUSIBEL_INNBOKS_MELDINGER,
+      meldinger: 0,
+      slaMs: null,
     });
     expect(
       innboksRad([
         { subject: 'A', unread: 2, lastMessageAt: '2026-08-29T11:00:00' },
         { subject: 'B', unread: 1, lastMessageAt: '2026-08-28T11:00:00' },
       ]),
-    ).toEqual({ meldinger: 3 });
+    ).toMatchObject({ meldinger: 3 });
     expect(
       innboksRad([{ subject: 'Tom', unread: 0, lastMessageAt: '2026-08-28T11:00:00' }]),
-    ).toEqual({ meldinger: 0 });
+    ).toMatchObject({ meldinger: 0 });
   });
 
   it('Lager-rad er venter på bestilling / trenger godkjenning', () => {
@@ -188,7 +188,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
 
   it('I dag uten historikk er plausibel tall, ikke For lite data', () => {
     const naa = new Date('2026-08-29T10:00:00');
-    expect(idagVisning([], naa)).toEqual({ ...PULSE_PLAUSIBEL_IDAG });
+    expect(idagVisning([], naa)).toEqual({ planlagt: 0, paagaar: 0, ferdig: 0 });
     expect(
       idagVisning([{ id: '1', status: 'confirmed', startsAt: '2026-08-29T08:00:00' }], naa),
     ).toEqual({
@@ -250,8 +250,8 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(kort).not.toMatch(/>\s*mock\s*</);
     expect(kort).toMatch(/#141414/);
     expect(funksjon(kort, 'PulseDagSirkel')).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
-    expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
-    expect(kort).not.toMatch(/For lite data/);
+    expect(funksjon(kort, 'PulseTallKort')).not.toMatch(/#0066ff/);
+    expect(kort).toMatch(/For lite data|Ikke tilkoblet/);
     expect(kort).toMatch(/ArrowUpRight/);
     expect(kort).toMatch(/PulseJobbFlis|data-pulse-jobb/);
     expect(kort).toMatch(/DitherGrowthChart/);
@@ -275,7 +275,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
     expect(dash).toMatch(/DealerPulseKort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
-    expect(hjem).not.toMatch(/messages\.svarhastighet/);
+    expect(hjem).toMatch(/messages\.svarhastighet/);
     expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/bookinger\/ny|PulseJobbFlis/);
     expect(shell).toMatch(/data-phone-search/);
@@ -286,9 +286,8 @@ describe('forhandler pulse-hjem — fem flater', () => {
     const preview = utenKommentarer(les('../app/pulse-preview/page.tsx'));
     expect(preview).toMatch(/data-pulse-preview="go"/);
     expect(preview).toMatch(/PulseHeroFlate/);
-    expect(preview).toMatch(/PulseAnalyserKort|Analyser/);
-    expect(preview).toMatch(/PulseJobbFlis/);
-    expect(preview).toMatch(/flex-1 basis-0/);
+    expect(preview).toMatch(/PulseTallKort/);
+    expect(preview).toMatch(/PulseGulvKort|PulseFooter/);
     expect(preview).not.toMatch(/PulseMiniBar|data-pulse-nye/);
     expect(DEALER_PULSE_KEYS).not.toContain('preview');
   });

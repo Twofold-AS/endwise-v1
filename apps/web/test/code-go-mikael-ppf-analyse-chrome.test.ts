@@ -43,25 +43,21 @@ describe('CODE-GO Mikael 11.09.2026 oppfølging — PPF, Analyse, chrome 1+2, So
     );
   });
 
-  it('Analyser er én boks: Innboks-hode + fire KPI-rader uten dither', () => {
+  it('Tall er én 2×2-boks uten dither og uten #0066ff', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    const analyser = funksjon(kort, 'PulseAnalyserKort');
-    expect(analyser).toMatch(/PulseIkonFlate/);
-    expect(analyser).toMatch(/ChartColumn/);
-    expect(analyser).toMatch(/data-analyser-tittel/);
-    expect(analyser).toMatch(/Analyse/);
-    expect(analyser).toMatch(/siste 30 dager/);
-    expect(analyser).toMatch(/Se tallene/);
-    expect(analyser).toMatch(/data-analyser-kpi/);
-    expect(analyser).toMatch(/TrendingUp/);
-    expect(analyser).toMatch(/TrendingDown/);
-    expect(analyser).not.toMatch(/RevenueLineChart/);
-    expect(analyser).not.toMatch(/DitherGrowthChart/);
-    expect(analyser).not.toMatch(/DitherDonutChart/);
-    expect(analyser).not.toMatch(/#0066ff/);
-    expect(analyser.match(/PHONE_DEST_FYLL/g)?.length).toBe(1);
-    expect(analyser).not.toMatch(/data-analyser-del="1"/);
-    expect(analyser).not.toMatch(/data-analyser-del="2"/);
+    const tall = funksjon(kort, 'PulseTallKort');
+    expect(tall).toMatch(/data-tall-tittel/);
+    expect(tall).toMatch(/Tall/);
+    expect(tall).toMatch(/siste 30 dager/);
+    expect(tall).toMatch(/Alle tall/);
+    expect(tall).toMatch(/data-tall-rutenett/);
+    expect(tall).not.toMatch(/RevenueLineChart/);
+    expect(tall).not.toMatch(/DitherGrowthChart/);
+    expect(tall).not.toMatch(/DitherDonutChart/);
+    expect(tall).not.toMatch(/#0066ff/);
+    expect(tall.match(/PHONE_DEST_FYLL/g)?.length).toBe(1);
+    expect(tall).not.toMatch(/data-analyser-del="1"/);
+    expect(tall).not.toMatch(/data-analyser-del="2"/);
   });
 
   it('undersider beholder dest-piller i top-bar 2; tittel + verktøy under og tettere', () => {

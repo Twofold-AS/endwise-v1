@@ -2,22 +2,18 @@
 
 import {
   ArrowUpRight,
-  ChartColumn,
   CircleQuestionMark,
   DitherDonutChart,
   DitherGrowthChart,
   type LucideIcon,
   Plus,
-  TrendingDown,
-  TrendingUp,
   TriangleAlert,
 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { type ReactNode, useEffect, useState } from 'react';
-import { PHONE_DEST_FYLL, PHONE_HERO_FYLL, PULSE_ENDRINGER_HREF } from './phone-home';
+import { PHONE_DEST_FYLL, PHONE_HERO_FYLL, PHONE_KORT_META, PULSE_ENDRINGER_HREF } from './phone-home';
 import {
-  type AnalyserMockStat,
   dagFremgang,
   fmtPulseKlokke,
   fmtPulseTime,
@@ -27,7 +23,10 @@ import {
   PULSE_DAG_FYLL_HAIRLINE,
   PULSE_DAG_SLUTT,
   PULSE_DAG_START,
+  type TallCelle,
 } from './phone-home-pulse';
+import { fmtDelta, fmtNorskTall } from './claude-tokens';
+import type { TimeplanRad } from './phone-home-data';
 
 const WHITE = '#ffffff';
 
@@ -276,6 +275,7 @@ export function PulseHeroFlate({
   lasterEndringer = false,
   href,
   sirkelNaa,
+  spark,
 }: {
   ukedag: string;
   dato: string;
@@ -288,6 +288,7 @@ export function PulseHeroFlate({
   lasterEndringer?: boolean;
   href: string;
   sirkelNaa?: Date;
+  spark?: number[];
 }) {
   return (
     <div
@@ -328,6 +329,11 @@ export function PulseHeroFlate({
       <div data-pulse-hero-bunn className="flex w-full items-center justify-between gap-3">
         <PulseAvvikForesporBoks avvik={avvik} forespor={forespor} laster={lasterEndringer} />
       </div>
+      {spark && spark.length > 0 ? (
+        <div data-pulse-idag-spark className="pt-1">
+          <PulseUkeSpark verdier={spark} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -459,73 +465,202 @@ export function PulseJobbFlis() {
 }
 
 /**
- * Analyser — én boks over Jobb / På jobb.
- * Topp som Innboks: hvit ikonboks · «Analyse» · «siste 30 dager» · Se tallene.
- * Under: fire kompakte KPI-rader med %-endring (grønn opp / rød ned). Ingen dither.
+ * Tall — Claude 2×2 (Visninger · Bookinger · Returer · Credits).
+ * Erstatter Analyse/Analyser. `#0066ff` brukes ikke her.
  */
-export function PulseAnalyserKort({
-  stats,
+export function PulseTallKort({
+  celler,
   href,
 }: {
-  stats: AnalyserMockStat[];
+  celler: TallCelle[];
   href: string;
-  forhandlerNavn?: string | null;
 }) {
-  const kpis = stats.slice(0, 4);
-
   return (
-    <div data-pulse-analyser className={`${PHONE_DEST_FYLL} flex w-full flex-col px-4 py-3`}>
-      <div className="flex min-h-11 w-full min-w-0 items-center gap-3">
-        <PulseIkonFlate>
-          <ChartColumn size={22} strokeWidth={1.75} aria-hidden />
-        </PulseIkonFlate>
-        <div className="min-w-0 flex-1">
-          <p data-analyser-tittel className="truncate text-label leading-none text-fg">
-            Analyse
-          </p>
-          <p data-analyser-periode className="mt-1 truncate text-[12px] leading-4 text-fg-muted">
-            siste 30 dager
-          </p>
-        </div>
+    <div data-pulse-tall className={`${PHONE_DEST_FYLL} flex w-full flex-col gap-2.5 px-5 py-4`}>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <p data-tall-tittel className="text-[19px] font-[650] leading-none tracking-[-0.01em] text-fg">
+          Tall
+        </p>
+        <span data-tall-periode className="text-[15px] text-fg-muted">
+          siste 30 dager
+        </span>
         <Link
           href={href as Route}
-          data-analyser-alle-tall
-          data-analyser-se-tallene
-          className="inline-flex shrink-0 items-center gap-1 text-label font-normal text-fg [touch-action:manipulation]"
+          data-tall-alle
+          className="ml-auto inline-flex shrink-0 items-center gap-1 text-[15px] text-fg-muted [touch-action:manipulation]"
         >
-          Se tallene
-          <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
+          Alle tall
+          <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
         </Link>
       </div>
-      <div data-analyser-kpi-liste className="mt-2 flex flex-col">
-        {kpis.map((s) => (
-          <PulseAnalyseKpi key={s.id} stat={s} />
+      <div
+        data-tall-rutenett
+        className="grid grid-cols-2 gap-x-[18px] gap-y-2.5 border-divide border-t pt-3"
+      >
+        {celler.map((c) => (
+          <PulseTallCelle key={c.id} celle={c} />
         ))}
       </div>
     </div>
   );
 }
 
-function PulseAnalyseKpi({ stat }: { stat: AnalyserMockStat }) {
-  const Ikon = stat.opp ? TrendingUp : TrendingDown;
+function PulseTallCelle({ celle }: { celle: TallCelle }) {
+  const delta = fmtDelta(celle.delta);
   return (
-    <div
-      data-analyser-kpi={stat.id}
-      className="flex h-7 min-w-0 items-center justify-between gap-2"
-    >
-      <p className="min-w-0 truncate text-[12px] leading-4 text-fg-muted">{stat.label}</p>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <p className="text-[15px] font-semibold leading-none text-fg tabular-nums">{stat.verdi}</p>
-        <span
-          data-analyser-delta={stat.opp ? 'opp' : 'ned'}
-          className={`inline-flex items-center gap-0.5 text-[11px] leading-none tabular-nums ${
-            stat.opp ? 'text-success' : 'text-danger'
-          }`}
-        >
-          <Ikon size={11} strokeWidth={2} aria-hidden />
-          {stat.delta}
+    <div data-tall-celle={celle.id} className="flex min-w-0 flex-col gap-1">
+      <span className="text-[14px] leading-none text-fg-muted">{celle.label}</span>
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-[22px] font-[650] leading-none tracking-[-0.02em] text-fg tabular-nums">
+          {celle.verdi == null ? '—' : fmtNorskTall(celle.verdi)}
         </span>
+        {delta ? (
+          <span
+            data-tall-delta={delta.opp ? 'opp' : 'ned'}
+            className={`text-[13px] font-[500] leading-none tabular-nums ${
+              delta.opp ? 'text-success' : 'text-danger'
+            }`}
+          >
+            {delta.tekst}
+          </span>
+        ) : celle.stub ? (
+          <span className="text-[12px] text-fg-muted">{celle.stub}</span>
+        ) : null}
       </div>
     </div>
+  );
+}
+
+export function PulseGulvKort({
+  rader,
+  laster,
+}: {
+  rader: TimeplanRad[];
+  laster?: boolean;
+}) {
+  return (
+    <div data-pulse-gulv className={`${PHONE_DEST_FYLL} flex w-full flex-col px-4 py-3`}>
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href={PHONE_KORT_META.timeplan.href as Route}
+          className="min-w-0 text-label text-fg [touch-action:manipulation]"
+        >
+          Gulv
+        </Link>
+        <Link
+          href={'/bookinger/ny' as Route}
+          data-pulse-jobb
+          className="inline-flex h-8 items-center gap-1 rounded-full bg-fg px-3 text-[13px] font-[450] text-bg [touch-action:manipulation]"
+        >
+          <Plus size={14} strokeWidth={1.75} aria-hidden />
+          Jobb
+        </Link>
+      </div>
+      {laster ? (
+        <p className="mt-2 text-[13px] text-fg-muted">Laster jobber …</p>
+      ) : rader.length === 0 ? (
+        <p className="mt-2 text-[13px] text-fg-muted">Ingen jobber i dag</p>
+      ) : (
+        <ul className="mt-2 flex flex-col">
+          {rader.map((r) => (
+            <li key={r.id}>
+              <Link
+                href={`/bookinger/${r.id}` as Route}
+                data-pulse-gulv-rad={r.id}
+                className="flex min-h-10 items-center justify-between gap-3 [touch-action:manipulation]"
+              >
+                <span className="text-[15px] tabular-nums text-fg">{r.time}</span>
+                <span className="min-w-0 flex-1 truncate text-[15px] text-fg-muted">{r.what}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export function PulseSvarKort({
+  verdi,
+  laster,
+}: {
+  verdi: string;
+  laster?: boolean;
+}) {
+  return (
+    <Link
+      href={PHONE_KORT_META.svarhastighet.href as Route}
+      data-pulse-svarhastighet
+      className={`${PHONE_DEST_FYLL} flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 [touch-action:manipulation]`}
+    >
+      <span className="text-label text-fg">Svarhastighet</span>
+      <span className="text-label tabular-nums text-fg">
+        {laster ? (
+          <span className="inline-block h-4 w-10 animate-pulse rounded-sm bg-border" />
+        ) : (
+          verdi
+        )}
+      </span>
+    </Link>
+  );
+}
+
+export function PulseTeamKort({
+  medlemmer,
+  laster,
+}: {
+  medlemmer: { id: string; name: string; paJobb: boolean }[];
+  laster?: boolean;
+}) {
+  return (
+    <Link
+      href={PHONE_KORT_META.team.href as Route}
+      data-pulse-team
+      className={`${PHONE_DEST_FYLL} flex w-full flex-col gap-2 px-4 py-3 [touch-action:manipulation]`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-label text-fg">Team</span>
+        <span className="text-[13px] tabular-nums text-fg-muted">
+          {laster ? '…' : `${medlemmer.filter((m) => m.paJobb).length} / ${medlemmer.length}`}
+        </span>
+      </div>
+      {laster ? (
+        <p className="text-[13px] text-fg-muted">Laster ansatte …</p>
+      ) : medlemmer.length === 0 ? (
+        <p className="text-[13px] text-fg-muted">Ingen mekanikere lagt inn</p>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {medlemmer.slice(0, 6).map((m) => (
+            <li key={m.id} className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[14px] text-fg">{m.name}</span>
+              <span
+                data-team-status={m.paJobb ? 'pa-jobb' : 'ledig'}
+                className="shrink-0 rounded-full bg-field px-2 py-0.5 text-[11px] text-fg-muted"
+              >
+                {m.paJobb ? 'Opptatt' : 'Ledig'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Link>
+  );
+}
+
+export function PulseFooter() {
+  return (
+    <nav
+      data-pulse-footer
+      aria-label="Mer"
+      className="flex items-center justify-center gap-4 py-2 text-[14px] text-fg-muted"
+    >
+      <Link href={'/organisasjon' as Route} className="hover:text-fg">
+        Organisasjon
+      </Link>
+      <span aria-hidden>·</span>
+      <Link href={'/hjelp' as Route} className="hover:text-fg">
+        Hjelp
+      </Link>
+    </nav>
   );
 }

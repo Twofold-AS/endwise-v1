@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { BevelButton } from '../../_shell/cards';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
+import { MeldEndring } from '../_meld-endring';
 import {
   ALLOWED_TRANSITIONS,
   type BookingStatus,
@@ -147,6 +148,8 @@ export default function BookingDetaljPage() {
           <p className="text-fg text-sm">{b.notes}</p>
         </div>
       )}
+
+      <MeldEndring bookingId={b.id} />
 
       {/* Historikk (audit-loggen, append-only F1-06). */}
       <div className="rounded-lg border border-border bg-card p-4">

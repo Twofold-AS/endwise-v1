@@ -45,9 +45,11 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
       ['innboks'],
-      ['lager'],
-      ['analyser'],
-      ['team', 'jobb'],
+      ['deler'],
+      ['svarhastighet'],
+      ['timeplan'],
+      ['team'],
+      ['tall'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(dealerPhoneHjemRader(false).flatMap((r) => r.keys)).not.toContain('samarbeid');
@@ -56,12 +58,12 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
 
   it('Lager kommer etter Innboks, Analyser er sist — ikke Svarhastighet/Timeplan', () => {
     const keys = DEALER_PHONE_HJEM.map((r) => r.keys.join('|'));
-    expect(keys.indexOf('innboks')).toBeLessThan(keys.indexOf('lager'));
-    expect(keys.indexOf('lager')).toBeLessThan(keys.indexOf('analyser'));
-    expect(keys.indexOf('analyser')).toBeLessThan(keys.indexOf('team|jobb'));
-    expect(keys.at(-1)).toBe('team|jobb');
-    expect(keys).not.toContain('svarhastighet');
-    expect(keys).not.toContain('timeplan');
+    expect(keys.indexOf('innboks')).toBeLessThan(keys.indexOf('deler'));
+    expect(keys.indexOf('deler')).toBeLessThan(keys.indexOf('svarhastighet'));
+    expect(keys.indexOf('team')).toBeLessThan(keys.indexOf('tall'));
+    expect(keys.at(-1)).toBe('tall');
+    expect(keys).toContain('svarhastighet');
+    expect(keys).toContain('timeplan');
   });
 
   it('Butikk er ikke et pulse-kort, uansett shop-flagg', () => {
@@ -111,7 +113,7 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(hjem).not.toMatch(/jobb-liste|Dagens saker/);
   });
 
-  it('Timeplan-gulv er borte; + Jobb åpner ny jobb', () => {
+  it('Timeplan-gulv viser neste jobber; + Jobb åpner ny jobb', () => {
     const naa = new Date('2026-08-29T06:00:00');
     const rader = timeplanRader(
       [
@@ -137,8 +139,8 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(rader[0]?.what).toMatch(/EU-kontroll/);
     expect(rader[0]?.time).toMatch(/\d/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/PulseJobbFlis|bookinger\/ny/);
-    expect(hjem).not.toMatch(/Timeplan-gulv|nesteTreJobber/);
+    expect(hjem).toMatch(/PulseGulvKort|bookinger\/ny/);
+    expect(hjem).not.toMatch(/nesteTreJobber/);
   });
 
   it('fyller statistikk, innboks, kunder, org, lager og rapporter-setning fra ekte/eksisterende tall', () => {

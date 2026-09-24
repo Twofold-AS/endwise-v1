@@ -12,6 +12,7 @@ import {
   lte,
   or,
   schema,
+  sql,
   withTenant,
 } from '@endwise/db';
 import {
@@ -377,4 +378,63 @@ export const bookingsRouter = router({
         return attachFarger(ctx.db, await attachJobLines(tx, rows));
       }),
     ),
+
+  /**
+   * Meld avvik/forespørsel fra jobbdetalj (forhandler).
+   * Skriver merket notat — samme `[AVVIK `-prefiks som mekaniker.
+   */
+  reportChange: protectedProcedure
+    .input(
+      z.object({
+        bookingId: z.uuid(),
+        type: z.enum(['avvik', 'foresporsel']),
+        message: z.string().min(1).max(500),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const merke = input.type === 'avvik' ? 'AVVIK' : 'FORESPØRSEL';
+      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [b] = await tx
+          .select({ notes: schema.bookings.notes })
+          .from(schema.bookings)
+          .where(eq(schema.bookings.id, input.bookingId))
+          .limit(1);
+        if (!b) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke jobben' });
+        const line = `[${merke} ${new Date().toLocaleString('nb-NO')}] ${input.message}`;
+        await tx
+          .update(schema.bookings)
+          .set({ notes: b.notes ? `${b.notes}\n${line}` : line, updatedAt: sql`now()` })
+          .where(eq(schema.bookings.id, input.bookingId));
+        return { ok: true as const };
+      });
+    }),
+
+  /**
+   * Godkjenn / avslå avvik. Skriver `[BEHANDLET ` i notatet.
+   * Ny tid/mekaniker skrives ikke her — det er egen booking-oppdatering.
+   */
+  resolveChange: protectedProcedure
+    .input(
+      z.object({
+        bookingId: z.uuid(),
+        action: z.enum(['godkjenn', 'avsla']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const verb = input.action === 'godkjenn' ? 'godkjent' : 'avslått';
+      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [b] = await tx
+          .select({ notes: schema.bookings.notes })
+          .from(schema.bookings)
+          .where(eq(schema.bookings.id, input.bookingId))
+          .limit(1);
+        if (!b) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke jobben' });
+        const line = `[BEHANDLET ${verb} ${new Date().toLocaleString('nb-NO')}]`;
+        await tx
+          .update(schema.bookings)
+          .set({ notes: b.notes ? `${b.notes}\n${line}` : line, updatedAt: sql`now()` })
+          .where(eq(schema.bookings.id, input.bookingId));
+        return { ok: true as const, action: input.action };
+      });
+    }),
 });

@@ -48,32 +48,34 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(avvik).toMatch(/size-7|h-7/);
     expect(avvik).toMatch(/max-w-\[50%\]/);
     expect(avvik).not.toMatch(/w-px/);
-    expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
+    expect(funksjon(kort, 'PulseTallKort')).not.toMatch(/#0066ff/);
   });
 
-  it('Analyser er én boks over Jobb med Se tallene', () => {
+  it('Tall er én 2×2-boks etter Team, ikke Analyse/Se tallene', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
       'innboks',
-      'lager',
-      'analyser',
+      'deler',
+      'svarhastighet',
+      'timeplan',
       'team',
-      'jobb',
+      'tall',
     ]);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
+    expect(hjem).toMatch(/PulseTallKort/);
+    expect(hjem.lastIndexOf('PulseTeamKort')).toBeLessThan(hjem.lastIndexOf('PulseTallKort'));
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    const analyser = funksjon(kort, 'PulseAnalyserKort');
-    expect(analyser).toMatch(/flex-col/);
-    expect(analyser).toMatch(/Analyse/);
-    expect(analyser).not.toMatch(/«|»|&laquo;|&raquo;/);
-    expect(analyser).not.toMatch(/RevenueLineChart/);
-    expect(analyser).not.toMatch(/min-h-\[168px\]/);
-    expect(analyser).not.toMatch(/scale-\[1\.65\]/);
-    expect(analyser).toMatch(/Se tallene/);
-    expect(analyser).toMatch(/data-analyser-alle-tall/);
-    expect(analyser).toMatch(/ArrowUpRight/);
-    expect(analyser).not.toMatch(/>Analyser</);
+    const tall = funksjon(kort, 'PulseTallKort');
+    expect(tall).toMatch(/flex-col/);
+    expect(tall).toMatch(/Tall/);
+    expect(tall).not.toMatch(/«|»|&laquo;|&raquo;/);
+    expect(tall).not.toMatch(/RevenueLineChart/);
+    expect(tall).not.toMatch(/min-h-\[168px\]/);
+    expect(tall).not.toMatch(/scale-\[1\.65\]/);
+    expect(tall).toMatch(/Alle tall/);
+    expect(tall).toMatch(/data-tall-alle/);
+    expect(tall).toMatch(/ArrowUpRight/);
+    expect(tall).not.toMatch(/>Analyser</);
   });
 
   it('Innboks: Settings-rader, profil-popup, Ny melding med Send', () => {

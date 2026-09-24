@@ -7,6 +7,7 @@ import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
 import { TYPE_LABEL } from './_delt';
+import { arsmodeller, merkerFor, modellerFor, type KjoretoyTypeKey } from './_kjoretoy-kaskade';
 
 /**
  * Registrer kjøretøy — Innstillinger-feltgrupper, ikke CardShell-dump.
@@ -23,10 +24,11 @@ export function RegistrerKjoretoy({
   const kunder = trpc.customers.list.useQuery({ sorter: 'navn', limit: 200 });
 
   const [customerId, setCustomerId] = useState(fastKundeId ?? '');
-  const [type, setType] = useState<'mc' | 'boat' | 'atv'>('mc');
+  const [type, setType] = useState<KjoretoyTypeKey>('mc');
   const [regNumber, setRegNumber] = useState('');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
+  const [year, setYear] = useState('');
 
   const opprett = trpc.vehicles.create.useMutation({
     onSuccess: (v) => {
@@ -50,6 +52,7 @@ export function RegistrerKjoretoy({
       customerId: customerId || undefined,
       make: make.trim() || undefined,
       model: model.trim() || undefined,
+      modelYear: year || undefined,
     });
   }
 
@@ -78,7 +81,11 @@ export function RegistrerKjoretoy({
         <InnstillingRad label="Type">
           <select
             value={type}
-            onChange={(e) => setType(e.target.value as typeof type)}
+            onChange={(e) => {
+              setType(e.target.value as KjoretoyTypeKey);
+              setMake('');
+              setModel('');
+            }}
             className="h-control ew-felt ew-felt-md px-2.5"
           >
             {(['mc', 'boat', 'atv'] as const).map((t) => (
@@ -99,22 +106,51 @@ export function RegistrerKjoretoy({
         </InnstillingRad>
       </InnstillingSeksjon>
 
-      <InnstillingSeksjon tittel="Kjennetegn">
+      <InnstillingSeksjon tittel="Kjennetegn" ingress="Kaskade: merke → modell → år. Lokal katalog, ikke Vegvesen.">
         <InnstillingRad label="Merke">
-          <input
+          <select
             value={make}
-            onChange={(e) => setMake(e.target.value)}
-            maxLength={64}
+            onChange={(e) => {
+              setMake(e.target.value);
+              setModel('');
+            }}
             className="h-control ew-felt ew-felt-md px-2.5"
-          />
+          >
+            <option value="">Velg merke</option>
+            {merkerFor(type).map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
         </InnstillingRad>
-        <InnstillingRad label="Modell" siste>
-          <input
+        <InnstillingRad label="Modell">
+          <select
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            maxLength={64}
             className="h-control ew-felt ew-felt-md px-2.5"
-          />
+          >
+            <option value="">Velg modell</option>
+            {modellerFor(type, make).map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </InnstillingRad>
+        <InnstillingRad label="Årsmodell" siste>
+          <select
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            className="h-control ew-felt ew-felt-md px-2.5"
+          >
+            <option value="">År</option>
+            {arsmodeller().map((y) => (
+              <option key={y} value={String(y)}>
+                {y}
+              </option>
+            ))}
+          </select>
         </InnstillingRad>
       </InnstillingSeksjon>
 

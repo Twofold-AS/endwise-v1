@@ -7,13 +7,23 @@ import {
   osloVeggtid,
 } from '../_lib/oslo-dag';
 import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
-import type { PhoneBooking, PhoneTraad } from './phone-home-data';
+import { jobbHva, type PhoneBooking, type PhoneTraad, type TimeplanRad } from './phone-home-data';
+import { fmtTime } from '../bookinger/_status';
+import { prosentEndring } from './claude-tokens';
 
 /** Mekaniker-avvik i booking-notat — `mechanic.reportDeviation`. */
 export const AVVIK_NOTAT_PREFIKS = '[AVVIK ';
+export const FORESPOR_NOTAT_PREFIKS = '[FORESPØRSEL ';
+export const BEHANDLET_NOTAT_PREFIKS = '[BEHANDLET ';
 
 export function harAvvikNotat(notes: string | null | undefined): boolean {
-  return Boolean(notes?.includes(AVVIK_NOTAT_PREFIKS));
+  return Boolean(notes?.includes(AVVIK_NOTAT_PREFIKS)) && !notes?.includes(BEHANDLET_NOTAT_PREFIKS);
+}
+
+export function harForesporNotat(notes: string | null | undefined): boolean {
+  return (
+    Boolean(notes?.includes(FORESPOR_NOTAT_PREFIKS)) && !notes?.includes(BEHANDLET_NOTAT_PREFIKS)
+  );
 }
 
 /**
@@ -34,8 +44,8 @@ export function avvikTeller(jobber: PhoneBooking[]): number {
  * Forespørsler på hjem-kortet. Ekstra tid fra Min dag er prototype
  * og har ingen rad i basen ennå — 0 er ærlig.
  */
-export function foresporTeller(_jobber: PhoneBooking[] = []): number {
-  return 0;
+export function foresporTeller(jobber: PhoneBooking[] = []): number {
+  return jobber.filter((j) => j.status !== 'cancelled' && harForesporNotat(j.notes)).length;
 }
 
 export function pulsdagOverskrift(naa: Date) {
@@ -230,20 +240,19 @@ export function forrigeManedStart(naa: Date): Date {
   return osloStartAvManed(osloPlusDager(osloKalenderdag(denne), -1));
 }
 
+/** 7d spark = fullført (completed), ærlig null-serie når tomt. */
 export function siste7dSpark(jobber: PhoneBooking[], naa: Date): number[] {
   const iDag = osloKalenderdag(naa);
   const perDag = new Map<string, number>();
   for (const j of jobber) {
-    if (j.status === 'cancelled') continue;
+    if (j.status !== 'completed') continue;
     const dag = osloKalenderdag(j.startsAt);
     perDag.set(dag, (perDag.get(dag) ?? 0) + 1);
   }
-  const serie = Array.from({ length: PULSE_DAGER }, (_, i) => {
+  return Array.from({ length: PULSE_DAGER }, (_, i) => {
     const dag = osloPlusDager(iDag, -(PULSE_DAGER - 1 - i));
     return perDag.get(dag) ?? 0;
   });
-  if (serie.every((n) => n === 0)) return plausibelSpark(naa);
-  return serie;
 }
 
 /** @deprecated Bruk siste7dSpark. */
@@ -266,22 +275,28 @@ export function manedBookingTall(jobber: PhoneBooking[], naa: Date) {
   return { denne, forrige };
 }
 
-/** Ingen jobber i vinduet = plausibel dag, uten badge. */
+/** Ærlige 0-tall når det ikke er jobber. Ingen fake «plausibel dag». */
 export function idagVisning(jobber: PhoneBooking[], naa: Date) {
-  const tall = idagTall(jobber, naa);
-  if (jobber.length === 0) return { ...PULSE_PLAUSIBEL_IDAG };
-  return tall;
+  return idagTall(jobber, naa);
 }
 
 /**
- * Innboks-rad: kun meldingstall. Tom historikk = plausibelt tall, uten badge.
+ * Innboks-rad: ulest + SLA på eldste uleste. Ærlig 0 når tomt.
  */
-export function innboksRad(traader: PhoneTraad[]) {
-  const meldinger = traader.reduce((sum, t) => sum + (t.unread ?? 0), 0);
-  if (traader.length === 0) {
-    return { meldinger: PULSE_PLAUSIBEL_INNBOKS_MELDINGER };
-  }
-  return { meldinger };
+export function innboksRad(
+  traader: Array<PhoneTraad & { lastMessageAt?: Date | string | null }>,
+  naa = new Date(),
+) {
+  const uleste = traader.filter((t) => (t.unread ?? 0) > 0);
+  const meldinger = uleste.reduce((sum, t) => sum + (t.unread ?? 0), 0);
+  const eldste = uleste
+    .map((t) => (t.lastMessageAt ? new Date(t.lastMessageAt).getTime() : NaN))
+    .filter((t) => Number.isFinite(t))
+    .sort((a, b) => a - b)[0];
+  return {
+    meldinger,
+    slaMs: eldste != null ? Math.max(0, naa.getTime() - eldste) : null,
+  };
 }
 
 /**
@@ -330,51 +345,127 @@ export function ansattePulse(
 export type AnalyserMockStat = {
   id: string;
   label: string;
-  verdi: number;
-  delta: string;
+  verdi: number | null;
+  delta: string | null;
   opp: boolean;
   serie: number[];
+  stub?: string;
 };
 
-/** Mock nettsidevisninger til ekte analyse finnes. Stabil per uke. */
-export function analyserMockStats(naa: Date): AnalyserMockStat[] {
-  const uke = osloKalenderdag(naa);
-  const vis = plausibelTall(`${uke}:vis`, 180, 420);
-  const start = plausibelTall(`${uke}:start`, 8, 28);
-  const retur = plausibelTall(`${uke}:retur`, 12, 40);
-  const tid = plausibelTall(`${uke}:tid`, 40, 95);
-  return [
+export type TallCelle = {
+  id: 'visninger' | 'bookinger' | 'returer' | 'credits';
+  label: string;
+  verdi: number | null;
+  delta: number | null;
+  stub?: string;
+};
+
+const TALL_DAGER = 30;
+
+export function tallVindu(naa: Date) {
+  const iDag = osloKalenderdag(naa);
+  return {
+    fra: osloStartAvDag(osloPlusDager(iDag, -(TALL_DAGER * 2 - 1))),
+    til: osloStartAvDag(osloPlusDager(iDag, 1)),
+    denneFra: osloStartAvDag(osloPlusDager(iDag, -(TALL_DAGER - 1))),
+    forrigeFra: osloStartAvDag(osloPlusDager(iDag, -(TALL_DAGER * 2 - 1))),
+    forrigeTil: osloStartAvDag(osloPlusDager(iDag, -(TALL_DAGER - 1))),
+  };
+}
+
+function iVindu(j: PhoneBooking, fra: Date, til: Date): boolean {
+  const t = new Date(j.startsAt).getTime();
+  return t >= fra.getTime() && t < til.getTime();
+}
+
+/** 30d kommersielle tall. Visninger/returer/credits er ærlig stub uten API. */
+export function tallCeller(
+  jobber: PhoneBooking[],
+  naa: Date,
+  opts?: { visCredits?: boolean },
+): TallCelle[] {
+  const v = tallVindu(naa);
+  const aktive = jobber.filter((j) => j.status !== 'cancelled');
+  const denne = aktive.filter((j) => iVindu(j, v.denneFra, v.til)).length;
+  const forrige = aktive.filter((j) => iVindu(j, v.forrigeFra, v.forrigeTil)).length;
+  const celler: TallCelle[] = [
     {
       id: 'visninger',
-      label: 'Besøk på nettsiden',
-      verdi: vis,
-      delta: '+11 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:v:${i}`, 18, 72)),
-    },
-    {
-      id: 'jobber',
-      label: 'Jobber',
-      verdi: start,
-      delta: '+4 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:s:${i}`, 2, 12)),
+      label: 'Visninger',
+      verdi: null,
+      delta: null,
+      stub: 'Ikke tilkoblet',
     },
     {
       id: 'bookinger',
       label: 'Bookinger',
-      verdi: tid,
-      delta: '+8 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:t:${i}`, 20, 90)),
+      verdi: denne,
+      delta: prosentEndring(denne, forrige),
     },
     {
-      id: 'retur',
-      label: 'Retur',
-      verdi: retur,
-      delta: '−3 %',
-      opp: false,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:r:${i}`, 4, 16)),
+      id: 'returer',
+      label: 'Returer',
+      verdi: null,
+      delta: null,
+      stub: 'Ingen retur-API',
     },
   ];
+  if (opts?.visCredits) {
+    celler.push({
+      id: 'credits',
+      label: 'Credits',
+      verdi: null,
+      delta: null,
+      stub: 'Ingen saldo-API',
+    });
+  }
+  return celler;
+}
+
+/** @deprecated Tall erstatter Analyse — beholdt så eldre kallsteder kompilerer. */
+export function analyserMockStats(naa: Date): AnalyserMockStat[] {
+  return tallCeller([], naa).map((c) => ({
+    id: c.id,
+    label: c.label,
+    verdi: c.verdi,
+    delta: null,
+    opp: true,
+    serie: [],
+    stub: c.stub,
+  }));
+}
+
+export function gulvRader(jobber: PhoneBooking[], naa: Date, limit = 3): TimeplanRad[] {
+  const kommende = jobber
+    .filter(
+      (j) =>
+        j.status !== 'cancelled' &&
+        j.status !== 'completed' &&
+        j.status !== 'no_show' &&
+        new Date(j.startsAt).getTime() >= naa.getTime() - 30 * 60_000,
+    )
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
+    .slice(0, limit);
+  return kommende.map((j) => ({
+    id: j.id,
+    time: fmtTime(j.startsAt),
+    what: [j.mechanicName, jobbHva(j)].filter(Boolean).join(' · '),
+  }));
+}
+
+export function teamRader(
+  mekanikere: PulseTeamMedlem[],
+  jobber: PhoneBooking[],
+  naa: Date,
+): { id: string; name: string; paJobb: boolean }[] {
+  const tildelt = jobber.map((j) => ({
+    ...j,
+    mechanicId: j.mechanicId ?? null,
+    endsAt: j.endsAt ?? j.startsAt,
+  }));
+  return mekanikere.map((m) => ({
+    id: m.id,
+    name: m.name?.trim() || 'Ansatt',
+    paJobb: aktivJobb(tildelt, m.id, naa) != null,
+  }));
 }

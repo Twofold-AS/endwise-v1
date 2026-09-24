@@ -56,6 +56,7 @@ export const HJEM_KORT_TOM = {
   idag: '0',
   timeplan: 'Ingen jobber',
   innboks: 'Ingen uleste',
+  tall: 'Siste 30 dager',
   jobber: 'Ingen åpne jobber',
   kunder: 'Ingen kunder ennå',
   organisasjon: 'Åpne organisasjon',
@@ -105,7 +106,8 @@ export type PhoneKortKey =
   | 'butikk'
   | 'min-dag'
   | 'dine-jobber'
-  | 'kompetanse';
+  | 'kompetanse'
+  | 'tall';
 
 export type PhoneHjemRad = {
   keys: PhoneKortKey[];
@@ -113,24 +115,27 @@ export type PhoneHjemRad = {
 };
 
 /**
- * Mikael CODE-GO 10.09: låste flater — toppkort · Innboks · Lager ·
- * Analyser (over Jobb) · På jobb + Jobb. Ingen gamle pulse-kort.
+ * Claude-innbygging (Mikael 24.09): I dag · Innboks · Deler · Svarhastighet ·
+ * Gulv · Team · Tall. +Jobb sitter på gulv. Footer er tekst, ikke kort.
  */
 export const DEALER_PULSE_KEYS = [
   'idag',
   'innboks',
-  'lager',
-  'analyser',
+  'deler',
+  'svarhastighet',
+  'timeplan',
   'team',
-  'jobb',
+  'tall',
 ] as const satisfies readonly PhoneKortKey[];
 
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['idag'], kind: 'hero' },
   { keys: ['innboks'], kind: 'full' },
-  { keys: ['lager'], kind: 'full' },
-  { keys: ['analyser'], kind: 'full' },
-  { keys: ['team', 'jobb'], kind: 'pair' },
+  { keys: ['deler'], kind: 'full' },
+  { keys: ['svarhastighet'], kind: 'full' },
+  { keys: ['timeplan'], kind: 'full' },
+  { keys: ['team'], kind: 'full' },
+  { keys: ['tall'], kind: 'full' },
 ];
 
 /** Toppkort: Avvik-telling (ikke lenke). Listen bor på Timeplan › Endringer. */
@@ -150,7 +155,8 @@ export const PHONE_KORT_META: Record<
   verkstedet: { label: 'Verkstedet', href: '/home?visning=dag', icon: LayoutDashboard },
   idag: { label: 'Planlagt', href: '/home?visning=dag', icon: LayoutDashboard },
   timeplan: { label: 'Timeplan', href: '/jobber?visning=kalender', icon: CalendarDays },
-  analyser: { label: 'Analyser', href: '/statistikk', icon: ChartColumn },
+  analyser: { label: 'Tall', href: '/statistikk', icon: ChartColumn },
+  tall: { label: 'Tall', href: '/statistikk', icon: ChartColumn },
   statistikk: { label: 'Rapporter', href: '/rapporter', icon: ChartColumn },
   tjenester: { label: 'Tjenester', href: '/prisliste', icon: Wrench },
   innboks: { label: 'Innboks', href: '/innboks', icon: Inbox },

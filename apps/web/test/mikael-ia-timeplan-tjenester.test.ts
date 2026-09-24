@@ -29,9 +29,11 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
       ['innboks'],
-      ['lager'],
-      ['analyser'],
-      ['team', 'jobb'],
+      ['deler'],
+      ['svarhastighet'],
+      ['timeplan'],
+      ['team'],
+      ['tall'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
     expect(PHONE_KORT_META.timeplan.label).toBe('Timeplan');
@@ -41,10 +43,10 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(PHONE_KORT_META.statistikk.label).toBe('Rapporter');
     expect(PHONE_KORT_META.statistikk.href).toBe('/rapporter');
     const keys = DEALER_PHONE_HJEM.flatMap((r) => r.keys);
-    expect(keys).not.toContain('timeplan');
+    expect(keys).toContain('timeplan');
     expect(keys).not.toContain('tjenester');
     expect(keys).not.toContain('prisliste');
-    expect(keys).toContain('jobb');
+    expect(keys).toContain('tall');
   });
 
   it('Timeplan-gulv er borte; + Jobb er ny jobb', () => {

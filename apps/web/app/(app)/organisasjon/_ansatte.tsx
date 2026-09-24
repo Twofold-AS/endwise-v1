@@ -132,6 +132,9 @@ function AnsattKort({
         />
         <div className="min-w-0 flex-1">
           <p className="truncate text-label text-fg">{rad.navn}</p>
+          <p className="mt-0.5 truncate text-[13px] text-fg-muted">
+            {FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}
+          </p>
           <div className="mt-1">
             <AktivitetMerke status={rad.status} label={rad.statusLabel} />
           </div>

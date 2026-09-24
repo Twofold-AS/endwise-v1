@@ -128,7 +128,7 @@ describe('Ny jobb og tomflater', () => {
     const analyse = les('../app/(app)/analyse/page.tsx');
     expect(analyse).not.toMatch(/analyse\/_data\.ts/);
     expect(analyse).toMatch(/Ingen rapporter ennå/);
-    expect(analyse).toMatch(/Eksempel — ikke live verkstedstall/);
+    expect(analyse).toMatch(/PulseTallKort/);
   });
 
   it('Opprett ansatt forklarer at e-post er valgfri', () => {

@@ -1,35 +1,41 @@
 'use client';
 
-import { CircleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
-import { HJEM_PULSE_REFETCH } from '../_shell/hjem-pulse-sync';
+import { ClaudeAct, ClaudeListRow, ClaudeTag } from '../_shell/claude-flate';
+import { HJEM_PULSE_REFETCH, invalidateHjemPulse } from '../_shell/hjem-pulse-sync';
 import { AVVIK_NOTAT_PREFIKS, endringerVindu, harAvvikNotat } from '../_shell/phone-home-pulse';
 
 /**
- * Timeplan › Avvik — ekte `[AVVIK `-notat fra mechanic.reportDeviation (F7-05).
- * Godkjenn er stub (ingen notes-update ennå).
+ * Timeplan › Avvik — ekte `[AVVIK `-notat.
+ * Godkjenn/Avslå skriver `[BEHANDLET ` via bookings.resolveChange (F7-05).
  */
 export function TimeplanAvvik() {
+  const utils = trpc.useUtils();
   const vindu = useMemo(() => endringerVindu(new Date()), []);
   const bookings = trpc.bookings.list.useQuery(
     { from: vindu.fra, to: vindu.til, limit: 200 },
     HJEM_PULSE_REFETCH,
   );
-  const [stubGodkjent, setStubGodkjent] = useState<ReadonlySet<string>>(() => new Set());
+  const resolve = trpc.bookings.resolveChange.useMutation({
+    onSuccess: () => {
+      void bookings.refetch();
+      invalidateHjemPulse(utils);
+    },
+  });
 
   const rader = (bookings.data ?? []).filter(
-    (j) => j.status !== 'cancelled' && harAvvikNotat(j.notes) && !stubGodkjent.has(j.id),
+    (j) => j.status !== 'cancelled' && harAvvikNotat(j.notes),
   );
 
   return (
     <div data-timeplan-avvik data-timeplan-endringer className="flex flex-col gap-4">
       <p className="text-[12px] text-fg-muted leading-relaxed">
         Avvik mekanikere logger på jobben. Telleren leser ekte{' '}
-        <code className="text-fg">{AVVIK_NOTAT_PREFIKS.trim()}</code>-notat — ikke mock. Godkjenning
-        skrives ikke tilbake ennå (F7-05).
+        <code className="text-fg">{AVVIK_NOTAT_PREFIKS.trim()}</code>-notat. Godkjenn/Avslå skriver
+        behandlet-merke på bookingen.
       </p>
 
       {bookings.isLoading ? (
@@ -41,57 +47,49 @@ export function TimeplanAvvik() {
       ) : (
         <ul className="flex flex-col gap-2">
           {rader.map((j) => (
-            <li
-              key={j.id}
-              data-endringer-rad={j.id}
-              className="flex flex-col gap-2 rounded-[16px] border border-divide bg-card px-4 py-3"
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <p className="min-w-0 truncate text-label text-fg">
-                  {j.serviceName ?? 'Jobb'}
-                  {j.regNumber ? ` · ${j.regNumber}` : ''}
-                </p>
-                <span className="shrink-0 text-[11px] text-fg-muted">{j.status}</span>
-              </div>
-              <p className="whitespace-pre-wrap text-[12px] text-fg-muted">
+            <li key={j.id} data-endringer-rad={j.id} className="flex flex-col gap-2">
+              <ClaudeListRow
+                href={`/bookinger/${j.id}`}
+                title={j.serviceName ?? 'Jobb'}
+                sub={`${j.customerName ?? 'Kunde'}${j.regNumber ? ` · ${j.regNumber}` : ''} · ${j.mechanicName ?? ''}`}
+                right={j.status}
+              />
+              <p className="whitespace-pre-wrap px-1 text-[12px] text-fg-muted">
                 {avvikUtdrag(j.notes)}
               </p>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2 px-1">
+                <ClaudeTag tone="warn">Avvik</ClaudeTag>
+                <ClaudeAct
+                  kind="primary"
+                  disabled={resolve.isPending}
+                  onClick={() => resolve.mutate({ bookingId: j.id, action: 'godkjenn' })}
+                >
+                  Godkjenn
+                </ClaudeAct>
+                <ClaudeAct
+                  kind="warn"
+                  disabled={resolve.isPending}
+                  onClick={() => resolve.mutate({ bookingId: j.id, action: 'avsla' })}
+                >
+                  Avslå
+                </ClaudeAct>
                 <Link
                   href={`/bookinger/${j.id}` as Route}
-                  className="text-[12px] text-fg underline-offset-2 hover:underline"
+                  className="text-[12px] text-fg-muted underline-offset-2 hover:underline"
                 >
                   Åpne jobb
                 </Link>
-                <button
-                  type="button"
-                  data-endringer-godkjenn
-                  className="inline-flex h-8 items-center rounded-full bg-fg px-3 text-[12px] font-[650] text-bg"
-                  onClick={() => {
-                    setStubGodkjent((forrige) => new Set([...forrige, j.id]));
-                  }}
-                >
-                  Godkjenn
-                </button>
               </div>
             </li>
           ))}
         </ul>
       )}
-
-      <p className="flex items-start gap-2 text-[12px] text-fg-muted">
-        <CircleAlert size={14} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-        Godkjenn er lokal stub i denne økta. Ekstra tid fra mekaniker er prototype og teller ikke.
-      </p>
     </div>
   );
 }
 
 function avvikUtdrag(notes: string | null | undefined): string {
-  if (!notes) return 'Avvik uten tekst.';
-  const linjer = notes
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l.includes(AVVIK_NOTAT_PREFIKS.trim()));
-  return linjer.join('\n') || notes;
+  if (!notes) return '';
+  const linjer = notes.split('\n').filter((l) => l.includes(AVVIK_NOTAT_PREFIKS));
+  return linjer.at(-1) ?? notes;
 }

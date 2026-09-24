@@ -1,8 +1,10 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from '@endwise/ui';
-import { osloPlusDager } from '../_lib/oslo-dag';
-import { timeplanDagerFra, timeplanManedNavn, timeplanSkiftManed } from './timeplan-dager';
+import { useState } from 'react';
+import { osloKalenderdag, osloPlusDager } from '../_lib/oslo-dag';
+import { TimeplanManedGitter } from './timeplan-maned';
+import { timeplanManedNavn, timeplanSkiftManed, timeplanUkeFra } from './timeplan-dager';
 
 const PIL =
   'inline-flex size-control shrink-0 items-center justify-center rounded-control border border-border bg-card text-fg';
@@ -11,7 +13,7 @@ const CHIP =
   'flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl border px-3 py-2 text-label';
 
 /**
- * Timeplan-stripe: én måned i midten med piler, tre hele dag-chips uten klipp.
+ * Timeplan-stripe: måned + ukesrail (7 dager), Claude-mønster.
  */
 export function TimeplanStripe({
   valgt,
@@ -20,7 +22,8 @@ export function TimeplanStripe({
   valgt: string;
   onValgt: (ymd: string) => void;
 }) {
-  const dager = timeplanDagerFra(valgt, 3);
+  const dager = timeplanUkeFra(valgt);
+  const [manedApen, setManedApen] = useState(false);
 
   return (
     <div className="flex flex-col gap-2">
@@ -33,9 +36,15 @@ export function TimeplanStripe({
         >
           <ChevronLeft size={16} strokeWidth={1.75} />
         </button>
-        <p className="min-w-0 flex-1 text-center text-label text-fg capitalize">
+        <button
+          type="button"
+          data-timeplan-maned
+          aria-expanded={manedApen}
+          onClick={() => setManedApen((v) => !v)}
+          className="min-w-0 flex-1 text-center text-label text-fg capitalize"
+        >
           {timeplanManedNavn(valgt)}
-        </p>
+        </button>
         <button
           type="button"
           aria-label="Neste måned"
@@ -45,6 +54,15 @@ export function TimeplanStripe({
           <ChevronRight size={16} strokeWidth={1.75} />
         </button>
       </nav>
+      {manedApen ? (
+        <TimeplanManedGitter
+          valgt={valgt}
+          onValgt={(ymd) => {
+            onValgt(osloKalenderdag(ymd));
+            setManedApen(false);
+          }}
+        />
+      ) : null}
 
       <div className="flex items-center gap-1">
         <button

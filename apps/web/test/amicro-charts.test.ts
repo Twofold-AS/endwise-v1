@@ -7,13 +7,11 @@ const rot = dirname(fileURLToPath(import.meta.url));
 const les = (rel: string) => readFileSync(join(rot, rel), 'utf8');
 
 describe('Amicro dither charts på Rapporter', () => {
-  it('Analyse bruker Amicro-canvas, ikke Recharts ChartContainer', () => {
+  it('Tall erstatter Analyse-canvas; ingen Recharts', () => {
     const analyse = les('../app/(app)/analyse/page.tsx');
-    expect(analyse).toMatch(/DitherStackedChart/);
-    expect(analyse).toMatch(/DitherGrowthChart/);
-    expect(analyse).toMatch(/RevenueLineChart/);
-    expect(analyse).toMatch(/DitherDonutChart/);
-    expect(analyse).toMatch(/#141414/);
+    expect(analyse).toMatch(/PulseTallKort/);
+    expect(analyse).not.toMatch(/DitherStackedChart/);
+    expect(analyse).not.toMatch(/RevenueLineChart/);
     expect(analyse).not.toMatch(/#a43a0a|#407ff2|#0066ff/);
     expect(analyse).not.toMatch(/ChartContainer/);
     expect(analyse).not.toMatch(/from 'recharts'/);

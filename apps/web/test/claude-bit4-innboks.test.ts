@@ -54,9 +54,10 @@ describe('Claude Design BIT 4 — Innboks / samtale', () => {
       'Support',
       'Løst',
     ]);
+    expect(INNBOKS_CHIPS.some((c) => c.key === 'lost' && c.label === 'Løst')).toBe(true);
     const chips = utenKommentarer(les('../app/(app)/innboks/_filter-chips.tsx'));
     expect(chips).toMatch(/data-innboks-filter-chips/);
-    expect(chips).toMatch(/Løst/);
+    expect(chips).toMatch(/INNBOKS_CHIPS/);
     expect(chips).not.toMatch(/DestinasjonSeksjonBar/);
     const side = utenKommentarer(les('../app/(app)/innboks/_inbox-sidebar.tsx'));
     expect(side).toMatch(/InboxFilterChips/);

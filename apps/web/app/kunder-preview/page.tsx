@@ -3,15 +3,8 @@
 import { useMemo, useState } from 'react';
 import { useTema } from '../_lib/tema-provider';
 import { PhoneSokFelt } from '../(app)/_shell/phone-sok-felt';
-import {
-  filtrerKunderAlfa,
-  KUNDER_SIDE_STORRELSE,
-  type KunderAlfa,
-  kunderSide,
-  kunderSideEtikett,
-  kunderSider,
-} from '../(app)/kunder/_alfa';
-import { KunderAlfaRail } from '../(app)/kunder/_alfa-rail';
+import { KunderAlfaListe } from '../(app)/kunder/_alfa-liste';
+import './preview.css';
 
 const MOCK = [
   { id: '1', name: 'Anne Gill', phone: '900 11 001' },
@@ -40,33 +33,26 @@ const MOCK = [
   { id: '24', name: 'Arne Lien', phone: '900 11 024' },
   { id: '25', name: 'Bente Mo', phone: '900 11 025' },
   { id: '26', name: 'Christian Dahl', phone: '900 11 026' },
+  { id: '27', name: 'Øyvind Lien', phone: '900 11 027' },
 ];
 
 /**
  * Midlertidig visuell GO-flate (uten innlogging). Ikke en produkt-rute.
- * Claude BIT 2: høyre alfa-rail + 25-pager på eksisterende Kunder-rader.
+ * Fix A: Apple Contacts-rail i list-viewport. nextjs-portal skjules i CSS.
  */
 export default function KunderPreview() {
   const { los, sett } = useTema();
   const [sok, setSok] = useState('');
-  const [bokstav, setBokstav] = useState<KunderAlfa>('#');
-  const [side, setSide] = useState(0);
 
   const treff = useMemo(() => {
     const q = sok.trim().toLowerCase();
-    const sokt = q ? MOCK.filter((k) => `${k.name} ${k.phone}`.toLowerCase().includes(q)) : MOCK;
-    return filtrerKunderAlfa(sokt, bokstav);
-  }, [sok, bokstav]);
-
-  const sider = kunderSider(treff.length);
-  const aktivSide = Math.min(side, sider - 1);
-  const vist = kunderSide(treff, aktivSide);
-  const harPager = treff.length > KUNDER_SIDE_STORRELSE;
+    return q ? MOCK.filter((k) => `${k.name} ${k.phone}`.toLowerCase().includes(q)) : MOCK;
+  }, [sok]);
 
   return (
-    <div className="min-h-dvh bg-bg text-fg" data-kunder-preview="go">
-      <div className="mx-auto flex min-h-dvh w-full max-w-[520px] flex-col gap-3 px-3 py-3">
-        <div className="flex items-center justify-between gap-3">
+    <div className="h-dvh bg-bg text-fg" data-kunder-preview="go" data-skjul="nextjs-portal">
+      <div className="mx-auto flex h-dvh w-full max-w-[520px] flex-col gap-3 px-3 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-3">
           <p className="text-title text-fg">Kunder-liste preview</p>
           <button
             type="button"
@@ -77,72 +63,38 @@ export default function KunderPreview() {
           </button>
         </div>
 
-        <PhoneSokFelt
-          value={sok}
-          onChange={(e) => {
-            setSok(e.target.value);
-            setSide(0);
-          }}
-          placeholder="Søk på navn, e-post eller telefon"
-          aria-label="Søk i kunder"
-        />
-
-        <div data-kunder-liste className="relative min-h-[420px] pr-[30px]">
-          <KunderAlfaRail
-            valgt={bokstav}
-            onVelg={(neste) => {
-              setBokstav(neste);
-              setSide(0);
-            }}
+        <div className="shrink-0">
+          <PhoneSokFelt
+            value={sok}
+            onChange={(e) => setSok(e.target.value)}
+            placeholder="Navn, telefon, e-post eller reg.nr"
+            aria-label="Søk i kunder"
           />
-          {vist.length === 0 ? (
+        </div>
+
+        <KunderAlfaListe
+          kunder={treff}
+          tom={
             <p className="py-8 text-center text-body text-fg-muted">Ingen kunder matcher søket.</p>
-          ) : (
-            <div className="overflow-hidden rounded-xl border border-border">
-              {vist.map((k, i) => (
-                <div
-                  key={k.id}
-                  data-kunder-rad
-                  className={`flex h-row-store items-center gap-4 bg-bg px-4 ${
-                    i > 0 ? 'border-border border-t' : ''
-                  }`}
-                >
-                  <span className="flex size-8 items-center justify-center rounded-full bg-surface-2 text-[12px] text-fg">
-                    {k.name.charAt(0)}
-                  </span>
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-label text-fg">{k.name}</span>
-                    <span className="truncate text-[12px] text-fg-muted">{k.phone}</span>
-                  </div>
-                </div>
-              ))}
+          }
+          renderRad={(k, i) => (
+            <div
+              key={k.id}
+              data-kunder-rad
+              className={`flex h-row-store items-center gap-4 bg-bg px-4 ${
+                i > 0 ? 'border-border border-t' : ''
+              }`}
+            >
+              <span className="flex size-8 items-center justify-center rounded-full bg-surface-2 text-[12px] text-fg">
+                {k.name.charAt(0)}
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-label text-fg">{k.name}</span>
+                <span className="truncate text-[12px] text-fg-muted">{k.phone}</span>
+              </div>
             </div>
           )}
-          {harPager ? (
-            <div
-              data-kunder-pager
-              className="mt-3 flex items-center justify-between gap-3 text-[12px] text-fg-muted"
-            >
-              <button
-                type="button"
-                disabled={aktivSide <= 0}
-                onClick={() => setSide((s) => Math.max(0, s - 1))}
-                className="text-label text-fg disabled:text-fg-faint"
-              >
-                Forrige
-              </button>
-              <p className="tabular-nums">{kunderSideEtikett(treff.length, aktivSide)}</p>
-              <button
-                type="button"
-                disabled={aktivSide >= sider - 1}
-                onClick={() => setSide((s) => Math.min(sider - 1, s + 1))}
-                className="text-label text-fg disabled:text-fg-faint"
-              >
-                Neste
-              </button>
-            </div>
-          ) : null}
-        </div>
+        />
       </div>
     </div>
   );

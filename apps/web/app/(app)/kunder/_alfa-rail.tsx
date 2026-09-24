@@ -3,34 +3,46 @@
 import { KUNDER_ALFA, type KunderAlfa } from './_alfa';
 
 /**
- * Claude §4.9 — bokstaver ned høyre kant (absolute), ikke topp-chips.
- * Mobbin-tokens: aktiv `text-fg` 700, ellers `text-fg-muted` 500.
+ * Apple Contacts-skinne: like spor i list-viewport (`flex-1`),
+ * sticky i lista — ikke `absolute`/`justify-center` (da forsvinner A–F
+ * ved siden av første rader). z-[4] over rader, under chrome/modaler.
  */
 export function KunderAlfaRail({
-  valgt,
+  aktiv,
+  tomme,
   onVelg,
 }: {
-  valgt: KunderAlfa;
+  aktiv: KunderAlfa;
+  tomme: ReadonlySet<string>;
   onVelg: (bokstav: KunderAlfa) => void;
 }) {
   return (
     <nav
       data-kunder-alfa-rail
       aria-label="Alfabet"
-      className="absolute top-0 right-1 bottom-0 z-[3] flex w-[26px] flex-col items-center justify-center gap-[3px]"
+      className="sticky top-0 z-[4] flex h-full w-4 shrink-0 flex-col items-center self-stretch"
     >
       {KUNDER_ALFA.map((bokstav) => {
-        const aktiv = bokstav === valgt;
+        const tom = tomme.has(bokstav);
+        const valgt = bokstav === aktiv;
         return (
           <button
             key={bokstav}
             type="button"
             data-kunder-alfa={bokstav}
-            aria-pressed={aktiv}
-            aria-label={bokstav === '#' ? 'Alle bokstaver' : `Bokstav ${bokstav}`}
-            onClick={() => onVelg(bokstav)}
-            className={`flex h-[15px] w-5 items-center justify-center p-0 text-[11px] leading-none ${
-              aktiv ? 'font-[700] text-fg' : 'font-[500] text-fg-muted'
+            data-kunder-alfa-tom={tom ? '' : undefined}
+            aria-pressed={valgt}
+            aria-label={bokstav === '#' ? 'Til toppen' : `Gå til ${bokstav}`}
+            onClick={() => {
+              if (tom) return;
+              onVelg(bokstav);
+            }}
+            className={`flex min-h-0 w-full flex-1 items-center justify-center p-0 text-[10px] leading-none ${
+              tom
+                ? 'font-[500] text-fg-faint'
+                : valgt
+                  ? 'font-[700] text-fg'
+                  : 'font-[500] text-fg-muted'
             }`}
           >
             {bokstav}

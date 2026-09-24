@@ -31,9 +31,10 @@ export const TIMEPLAN_FANER: readonly TimeplanFaneDef[] = [
   },
 ];
 
-export const ENDRINGER_DEL_IDS = ['avvik', 'forespor', 'logg'] as const;
+export const ENDRINGER_DEL_IDS = ['avvik', 'forespor'] as const;
+export const ENDRINGER_LOGG_ID = 'logg' as const;
 
-export type EndringerDelId = (typeof ENDRINGER_DEL_IDS)[number];
+export type EndringerDelId = (typeof ENDRINGER_DEL_IDS)[number] | typeof ENDRINGER_LOGG_ID;
 
 export type EndringerDelDef = {
   id: EndringerDelId;
@@ -52,12 +53,13 @@ export const ENDRINGER_DELER: readonly EndringerDelDef[] = [
     label: 'Forespørsler',
     ingress: 'Forespørsler om tid og endring på jobben.',
   },
-  {
-    id: 'logg',
-    label: 'Logg',
-    ingress: 'Behandlede avvik og forespørsler.',
-  },
 ];
+
+export const ENDRINGER_LOGG: EndringerDelDef = {
+  id: ENDRINGER_LOGG_ID,
+  label: 'Logg',
+  ingress: 'Behandlede avvik og forespørsler.',
+};
 
 const SETT = new Set<string>(TIMEPLAN_FANE_IDS);
 

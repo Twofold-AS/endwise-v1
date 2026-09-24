@@ -3,7 +3,7 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import { TimeplanAvvik } from './_avvik';
-import { ENDRINGER_DELER, type EndringerDelId, endringerHref } from './_faner';
+import { ENDRINGER_DELER, ENDRINGER_LOGG, type EndringerDelId, endringerHref } from './_faner';
 import { TimeplanForespor } from './_forespor';
 import { TimeplanLogg } from './_logg';
 
@@ -18,7 +18,10 @@ export function TimeplanEndringer({
   del: EndringerDelId;
   endringId?: string | null;
 }) {
-  const def = ENDRINGER_DELER.find((f) => f.id === del) ?? ENDRINGER_DELER[0];
+  const def =
+    del === 'logg'
+      ? ENDRINGER_LOGG
+      : (ENDRINGER_DELER.find((f) => f.id === del) ?? ENDRINGER_DELER[0]);
   return (
     <div data-timeplan-endringer-flate className="flex flex-col gap-5">
       <div role="tablist" aria-label="Endringer" className="flex flex-wrap gap-5">
@@ -54,6 +57,15 @@ export function TimeplanEndringer({
           <TimeplanLogg endringId={endringId} />
         ) : (
           <TimeplanAvvik endringId={endringId} />
+        )}
+        {endringId || del === 'logg' ? null : (
+          <Link
+            href={endringerHref('logg') as Route}
+            data-endringer-logg
+            className="text-[12px] text-fg-muted underline-offset-2 hover:underline"
+          >
+            Logg — behandlede avvik og forespørsler
+          </Link>
         )}
       </section>
     </div>

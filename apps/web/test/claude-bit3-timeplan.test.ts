@@ -30,7 +30,8 @@ describe('Claude Design BIT 3 — Timeplan / Endringer', () => {
       'Opprett jobb',
       'Endringer',
     ]);
-    expect(ENDRINGER_DELER.map((d) => d.id)).toEqual(['avvik', 'forespor', 'logg']);
+    expect(ENDRINGER_DELER.map((d) => d.id)).toEqual(['avvik', 'forespor']);
+    expect(endringerHref('logg')).toBe('/jobber?fane=logg');
   });
 
   it('uke-rail er mandag–søndag + månedspicker', () => {

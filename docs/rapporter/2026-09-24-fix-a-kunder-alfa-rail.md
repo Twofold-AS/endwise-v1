@@ -18,6 +18,7 @@
 - `PhoneSokFelt` `flex-1` som direkte barn av `flex-col min-h-dvh` vokste til stripe — wrappet i `shrink-0`.
 - `min-h-[420px]` + bokstavfilter fjernet (fantom-spacer).
 - Next.js 16 Dev Tools (`nextjs-portal`) skjult på preview.
+- Bunnsinnfelt i list-scrollporten så S/Ø/Å pinner flush (Contacts).
 
 ## Neste steg
 

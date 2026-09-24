@@ -5,6 +5,7 @@ import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
 import { Etterspor } from '../_shell/etterspor';
+import { INTEGRASJONER_PAGE_SUB } from '../organisasjon/_hub';
 
 /**
  * Integrasjoner: **tredjeparts** verktøy. Informativ oversikt
@@ -41,6 +42,10 @@ export function IntegrasjonerInnhold() {
 
   return (
     <div className="flex flex-col gap-6">
+      <p data-integrasjoner-pagesub className="text-[12px] text-fg-muted">
+        {INTEGRASJONER_PAGE_SUB}
+        {alle.length > 0 ? ` · ${mine.length}/${alle.length}` : ''}
+      </p>
       <section className="flex flex-col gap-2">
         <h3 className="text-label text-fg">Dine integrasjoner ({mine.length})</h3>
         {mine.length === 0 ? (

@@ -8,7 +8,7 @@ import { InviterAnsatt } from './_inviter-ansatt';
  */
 export function TradHandlinger({ threadId }: { threadId: string }) {
   return (
-    <div
+    <nav
       data-innboks-trad-handlinger
       className="flex flex-wrap items-center gap-1.5"
       aria-label="Samtale"
@@ -35,6 +35,6 @@ export function TradHandlinger({ threadId }: { threadId: string }) {
       >
         Løst — ingen API
       </span>
-    </div>
+    </nav>
   );
 }

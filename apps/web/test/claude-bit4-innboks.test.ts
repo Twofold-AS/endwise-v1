@@ -4,11 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   filtrerInboxTrader,
-  inboxSide,
-  inboxSideEtikett,
   INNBOKS_CHIPS,
   INNBOKS_FILTERE,
   INNBOKS_SIDE_STORRELSE,
+  inboxSide,
+  inboxSideEtikett,
   sorterInboxTrader,
 } from '../app/(app)/_shell/inbox-del.ts';
 import { FORHANDLER_NAV } from '../app/(app)/_shell/nav.ts';

@@ -108,7 +108,7 @@ function ListeGo({ vis }: { vis: Vis }) {
   const visRader = vis === 'slett' || vis === 'liste' || vis === 'sorter' || vis === 'gruppe';
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3">
-      <div
+      <nav
         data-innboks-filter-chips
         className="flex flex-wrap items-center gap-1.5 py-2"
         aria-label="Vis"
@@ -126,7 +126,7 @@ function ListeGo({ vis }: { vis: Vis }) {
             {label}
           </span>
         ))}
-      </div>
+      </nav>
       {visRader ? (
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           {PREVIEW_TRADER.map((t, i) => (

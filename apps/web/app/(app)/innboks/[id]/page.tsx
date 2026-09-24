@@ -313,7 +313,7 @@ export default function TrådPage() {
               </span>
             )}
           </div>
-          <div
+          <nav
             data-innboks-deltakere
             className="mt-2 flex flex-wrap items-center gap-1.5"
             aria-label="Deltakere"
@@ -331,7 +331,7 @@ export default function TrådPage() {
                   {navnKart?.[id]?.navn?.trim() || `Deltaker ${id.slice(0, 6)}`}
                 </span>
               ))}
-          </div>
+          </nav>
           <div className="mt-2">
             <TradHandlinger threadId={threadId} />
           </div>

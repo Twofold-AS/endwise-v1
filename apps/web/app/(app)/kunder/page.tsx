@@ -4,11 +4,20 @@ import { Avatar, Car, ChevronRight, Mail, Phone, Plus, Users } from '@endwise/ui
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useMemo, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
+import {
+  filtrerKunderAlfa,
+  KUNDER_SIDE_STORRELSE,
+  type KunderAlfa,
+  kunderSide,
+  kunderSideEtikett,
+  kunderSider,
+} from './_alfa';
+import { KunderAlfaRail } from './_alfa-rail';
 import { Feil, Kilde, Laster, Tomt } from './_delt';
 import { KUNDER_FANER, kunderHref, parseKunderFane } from './_faner';
 import { NyKunde } from './_ny-kunde';
@@ -46,6 +55,8 @@ function KunderInner() {
   const nyKunde = aktiv === 'opprett';
   const [tid, setTid] = useState<(typeof TID_VALG)[number]['key']>('nyeste');
   const [kilde, setKilde] = useState<(typeof KILDER)[number]['key']>('alle');
+  const [bokstav, setBokstav] = useState<KunderAlfa>('#');
+  const [side, setSide] = useState(0);
   const [sorterApen, setSorterApen] = useState(false);
   const sorterRef = useRef<HTMLDivElement>(null);
   const tidValg = TID_VALG.find((v) => v.key === tid) ?? TID_VALG[0];
@@ -57,6 +68,15 @@ function KunderInner() {
     kilde,
     limit: 200,
   });
+
+  const filtrert = useMemo(
+    () => filtrerKunderAlfa(kunder.data ?? [], bokstav),
+    [kunder.data, bokstav],
+  );
+  const sider = kunderSider(filtrert.length);
+  const aktivSide = Math.min(side, sider - 1);
+  const vist = kunderSide(filtrert, aktivSide);
+  const harPager = filtrert.length > KUNDER_SIDE_STORRELSE;
 
   return (
     <SideChromeSkall
@@ -74,7 +94,10 @@ function KunderInner() {
             <div className="min-w-[220px] flex-1" data-kunder-sok>
               <PhoneSokFelt
                 value={sok}
-                onChange={(e) => setSok(e.target.value)}
+                onChange={(e) => {
+                  setSok(e.target.value);
+                  setSide(0);
+                }}
                 placeholder="Søk på navn, e-post eller telefon"
                 aria-label="Søk i kunder"
               />
@@ -101,6 +124,7 @@ function KunderInner() {
                       valgt={kilde === v.key}
                       onVelg={() => {
                         setKilde(v.key);
+                        setSide(0);
                         setSorterApen(false);
                       }}
                     >
@@ -115,6 +139,7 @@ function KunderInner() {
                       valgt={tid === v.key}
                       onVelg={() => {
                         setTid(v.key);
+                        setSide(0);
                         setSorterApen(false);
                       }}
                     >
@@ -130,72 +155,114 @@ function KunderInner() {
             <Laster />
           ) : kunder.isError ? (
             <Feil melding={kunder.error.message} />
-          ) : (kunder.data?.length ?? 0) === 0 ? (
-            <>
-              <Tomt
-                tittel={sok ? 'Ingen treff' : 'Ingen kunder ennå'}
-                hint={
-                  sok
-                    ? 'Prøv et annet søk, eller fjern filteret.'
-                    : 'Opprett kunden her. Uten Quick lagrer Endwise kunden selv — ingen synk kreves.'
-                }
+          ) : (
+            <div data-kunder-liste className="relative pr-[30px]">
+              <KunderAlfaRail
+                valgt={bokstav}
+                onVelg={(neste) => {
+                  setBokstav(neste);
+                  setSide(0);
+                }}
               />
-              {!sok && !nyKunde && (
-                <div className="-mt-2 flex justify-center">
-                  <Link
-                    href={'/kunder?ny=1' as Route}
-                    className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
-                  >
-                    <Plus size={14} strokeWidth={1.75} />
-                    Ny kunde
-                  </Link>
+              {filtrert.length === 0 ? (
+                <>
+                  <Tomt
+                    tittel={
+                      sok || bokstav !== '#' ? 'Ingen kunder matcher søket.' : 'Ingen kunder ennå'
+                    }
+                    hint={
+                      sok || bokstav !== '#'
+                        ? 'Prøv et annet søk, eller fjern bokstavfilteret.'
+                        : 'Opprett kunden her. Uten Quick lagrer Endwise kunden selv — ingen synk kreves.'
+                    }
+                  />
+                  {!sok && bokstav === '#' && !nyKunde && (
+                    <div className="-mt-2 flex justify-center">
+                      <Link
+                        href={'/kunder?ny=1' as Route}
+                        className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
+                      >
+                        <Plus size={14} strokeWidth={1.75} />
+                        Ny kunde
+                      </Link>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="overflow-hidden rounded-xl border border-border">
+                  {vist.map((k, i) => (
+                    <Link
+                      key={k.id}
+                      href={`/kunder/${k.id}` as Route}
+                      data-kunder-rad
+                      className="group block"
+                    >
+                      <div
+                        className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
+                          i > 0 ? 'border-border border-t' : ''
+                        }`}
+                      >
+                        {/* Samme seed som kundekortet raden lenker til. */}
+                        <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
+
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="flex items-center gap-2 truncate text-label text-fg">
+                            {k.name}
+                            <Kilde source={k.source} />
+                          </span>
+                          <span className="flex items-center gap-3 truncate text-[12px] text-fg-muted">
+                            {k.phone && (
+                              <span className="inline-flex items-center gap-1">
+                                <Phone size={12} strokeWidth={1.75} />
+                                {k.phone}
+                              </span>
+                            )}
+                            {k.email && (
+                              <span className="inline-flex items-center gap-1 truncate">
+                                <Mail size={12} strokeWidth={1.75} />
+                                {k.email}
+                              </span>
+                            )}
+                            {!k.phone && !k.email && 'Ingen kontaktinfo'}
+                          </span>
+                        </div>
+
+                        {k.antallKjoretoy > 0 && (
+                          <span className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-fg-muted tabular-nums">
+                            <Car size={14} strokeWidth={1.75} />
+                            {k.antallKjoretoy}
+                          </span>
+                        )}
+                        <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               )}
-            </>
-          ) : (
-            <div className="overflow-hidden rounded-xl border border-border">
-              {kunder.data?.map((k, i) => (
-                <Link key={k.id} href={`/kunder/${k.id}` as Route} className="group block">
-                  <div
-                    className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
-                      i > 0 ? 'border-border border-t' : ''
-                    }`}
+              {harPager ? (
+                <div
+                  data-kunder-pager
+                  className="mt-3 flex items-center justify-between gap-3 text-[12px] text-fg-muted"
+                >
+                  <button
+                    type="button"
+                    disabled={aktivSide <= 0}
+                    onClick={() => setSide((s) => Math.max(0, s - 1))}
+                    className="text-label text-fg disabled:text-fg-faint"
                   >
-                    {/* Samme seed som kundekortet raden lenker til. */}
-                    <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
-
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="flex items-center gap-2 truncate text-label text-fg">
-                        {k.name}
-                        <Kilde source={k.source} />
-                      </span>
-                      <span className="flex items-center gap-3 truncate text-[12px] text-fg-muted">
-                        {k.phone && (
-                          <span className="inline-flex items-center gap-1">
-                            <Phone size={12} strokeWidth={1.75} />
-                            {k.phone}
-                          </span>
-                        )}
-                        {k.email && (
-                          <span className="inline-flex items-center gap-1 truncate">
-                            <Mail size={12} strokeWidth={1.75} />
-                            {k.email}
-                          </span>
-                        )}
-                        {!k.phone && !k.email && 'Ingen kontaktinfo'}
-                      </span>
-                    </div>
-
-                    {k.antallKjoretoy > 0 && (
-                      <span className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-fg-muted tabular-nums">
-                        <Car size={14} strokeWidth={1.75} />
-                        {k.antallKjoretoy}
-                      </span>
-                    )}
-                    <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
-                  </div>
-                </Link>
-              ))}
+                    Forrige
+                  </button>
+                  <p className="tabular-nums">{kunderSideEtikett(filtrert.length, aktivSide)}</p>
+                  <button
+                    type="button"
+                    disabled={aktivSide >= sider - 1}
+                    onClick={() => setSide((s) => Math.min(sider - 1, s + 1))}
+                    className="text-label text-fg disabled:text-fg-faint"
+                  >
+                    Neste
+                  </button>
+                </div>
+              ) : null}
             </div>
           )}
 
@@ -203,7 +270,7 @@ function KunderInner() {
             <Users size={14} />
             {kunder.isLoading
               ? 'Laster kunder …'
-              : `${kunder.data?.length ?? 0} kunder vist. Filtrene over gjelder kun denne lista.`}
+              : `${filtrert.length} kunder vist. Filtrene over gjelder kun denne lista.`}
           </p>
         </>
       ) : null}

@@ -311,7 +311,7 @@ export default function KundekortPage() {
       </Seksjon>
 
       <Link
-        href={'/bookinger/ny' as Route}
+        href={`/bookinger/ny?kunde=${k.id}` as Route}
         data-kunde-ny-jobb
         className="inline-flex h-control items-center rounded-control border border-border px-2.5 text-label text-fg"
       >

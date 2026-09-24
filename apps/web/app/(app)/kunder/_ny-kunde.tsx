@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
+import { KjoretoyKaskade } from '../bookinger/_kjoretoy-kaskade';
+import type { KjoretoyType } from '../bookinger/_kjoretoy-katalog';
 
 /**
  * «ny kunde». Quick action-en som ikke gjorde noe.
@@ -18,10 +20,29 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
   const [navn, setNavn] = useState('');
   const [telefon, setTelefon] = useState('');
   const [epost, setEpost] = useState('');
+  const [leggTilKjoretoy, setLeggTilKjoretoy] = useState(false);
+  const [regnr, setRegnr] = useState('');
+  const [vehType, setVehType] = useState<KjoretoyType>('mc');
+  const [vehMerke, setVehMerke] = useState('');
+  const [vehModell, setVehModell] = useState('');
+  const [vehAr, setVehAr] = useState('');
+  const alleKjoretoy = trpc.vehicles.list.useQuery({ limit: 200 });
+  const opprettKjoretoy = trpc.vehicles.create.useMutation();
 
   const opprett = trpc.customers.create.useMutation({
-    onSuccess: (kunde) => {
+    onSuccess: async (kunde) => {
       void utils.customers.list.invalidate();
+      if (kunde?.id && leggTilKjoretoy && regnr.trim().length >= 2) {
+        await opprettKjoretoy.mutateAsync({
+          customerId: kunde.id,
+          type: vehType,
+          regNumber: regnr.trim(),
+          make: vehMerke.trim() || undefined,
+          model: vehModell.trim() || undefined,
+          modelYear: vehAr.trim() || undefined,
+        });
+        void utils.vehicles.list.invalidate();
+      }
       if (kunde?.id) router.replace(`/kunder/${kunde.id}` as Route);
       else onLukk();
     },
@@ -74,6 +95,42 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
             className="h-control ew-felt ew-felt-md px-2.5"
           />
         </InnstillingRad>
+      </InnstillingSeksjon>
+
+      <InnstillingSeksjon
+        tittel="Kjøretøy"
+        ingress="Valgfritt. Parent-skjemaet står mens du legger til."
+      >
+        <button
+          type="button"
+          onClick={() => setLeggTilKjoretoy((v) => !v)}
+          className="self-start text-xs text-fg underline decoration-border underline-offset-2"
+        >
+          {leggTilKjoretoy ? 'Skjul kjøretøy' : 'Legg til kjøretøy'}
+        </button>
+        {leggTilKjoretoy ? (
+          <div data-parent-park="veh" className="mt-3 flex flex-col gap-2">
+            <InnstillingRad label="Regnr">
+              <input
+                value={regnr}
+                onChange={(e) => setRegnr(e.target.value.toUpperCase())}
+                className="h-control ew-felt ew-felt-md px-2.5"
+                placeholder="EK12345"
+              />
+            </InnstillingRad>
+            <KjoretoyKaskade
+              type={vehType}
+              merke={vehMerke}
+              modell={vehModell}
+              ar={vehAr}
+              rader={alleKjoretoy.data ?? []}
+              onType={setVehType}
+              onMerke={setVehMerke}
+              onModell={setVehModell}
+              onAr={setVehAr}
+            />
+          </div>
+        ) : null}
       </InnstillingSeksjon>
 
       {opprett.error && (

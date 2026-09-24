@@ -31,7 +31,7 @@ export const TIMEPLAN_FANER: readonly TimeplanFaneDef[] = [
   },
 ];
 
-export const ENDRINGER_DEL_IDS = ['avvik', 'forespor'] as const;
+export const ENDRINGER_DEL_IDS = ['avvik', 'forespor', 'logg'] as const;
 
 export type EndringerDelId = (typeof ENDRINGER_DEL_IDS)[number];
 
@@ -51,6 +51,11 @@ export const ENDRINGER_DELER: readonly EndringerDelDef[] = [
     id: 'forespor',
     label: 'Forespørsler',
     ingress: 'Forespørsler om tid og endring på jobben.',
+  },
+  {
+    id: 'logg',
+    label: 'Logg',
+    ingress: 'Behandlede avvik og forespørsler.',
   },
 ];
 
@@ -84,7 +89,7 @@ export function parseTimeplanFane(
     return 'endringer';
   }
   if (raw === 'foresporsler' || raw === 'forespørsler' || raw === 'forespor') return 'endringer';
-  if (raw === 'avvik' || raw === 'endringer') return 'endringer';
+  if (raw === 'avvik' || raw === 'endringer' || raw === 'logg') return 'endringer';
   return erTimeplanFaneId(raw) ? raw : 'timeplan';
 }
 
@@ -95,6 +100,7 @@ export function parseEndringerDel(
   if (pathname === '/avvik' || pathname.startsWith('/avvik/')) return 'avvik';
   if (raw === 'foresporsler' || raw === 'forespørsler' || raw === 'forespor') return 'forespor';
   if (raw === 'avvik') return 'avvik';
+  if (raw === 'logg') return 'logg';
   return 'avvik';
 }
 
@@ -104,8 +110,14 @@ export function timeplanHref(fane: TimeplanFaneId): string {
   return '/jobber?fane=endringer';
 }
 
-export function endringerHref(del: EndringerDelId): string {
-  return del === 'avvik' ? '/jobber?fane=avvik' : '/jobber?fane=forespor';
+export function endringerHref(del: EndringerDelId, endringId?: string): string {
+  const base =
+    del === 'avvik'
+      ? '/jobber?fane=avvik'
+      : del === 'forespor'
+        ? '/jobber?fane=forespor'
+        : '/jobber?fane=logg';
+  return endringId ? `${base}&endring=${encodeURIComponent(endringId)}` : base;
 }
 
 /** Hjem-kortet: Avvik-listen på Timeplan › Endringer › Avvik. */

@@ -120,19 +120,19 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(side).not.toMatch(/SidePiller/);
   });
 
-  it('TimeplanStripe viser tre hele dager uten klipp, samme stripe på Liste og Kalender', () => {
+  it('TimeplanStripe viser uke-rail uten klipp, samme stripe på Liste og Kalender', () => {
     const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
     const stripe = utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'));
     const dager = utenKommentarer(les('../app/(app)/_shell/timeplan-dager.ts'));
     expect(side).toMatch(/TimeplanStripe/);
     expect(side).toMatch(/visning === 'kalender'/);
-    expect(stripe).toMatch(/timeplanDagerFra\(valgt(?:, 3)?\)/);
-    expect(stripe).not.toMatch(/timeplanDagerFra\(valgt, 7\)/);
-    expect(dager).toMatch(/antall = 3/);
+    expect(stripe).toMatch(/timeplanUkeFra\(valgt\)/);
+    expect(dager).toMatch(/timeplanDagerFra\(mandag, 7\)/);
     expect(stripe).not.toMatch(/overflow-hidden/);
     expect(stripe).not.toMatch(/overflow-x/);
     expect(stripe).toMatch(/aria-label="Forrige måned"/);
     expect(stripe).toMatch(/timeplanManedNavn/);
+    expect(stripe).toMatch(/Lukk måned/);
   });
 
   it('Tjenester er /prisliste (samme services.list), /tjenester forblir abonnement', () => {

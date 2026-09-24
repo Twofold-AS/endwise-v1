@@ -12,19 +12,26 @@ import {
   lte,
   or,
   schema,
+  sql,
   withTenant,
 } from '@endwise/db';
 import {
+  appendEndringNotat,
   createBooking,
+  type EndringDecision,
+  type EndringKind,
   formatServiceNames,
+  harVentendeEndring,
   InvalidTransitionError,
   MAX_DURATION_MINUTES,
   MIN_DURATION_MINUTES,
+  markerEndringBehandlet,
   SlotConflictError,
   type TenantTx,
   transitionBooking,
 } from '@endwise/modules/booking';
 import { lesAvatar } from '@endwise/modules/profil';
+import { publishEvent } from '@endwise/modules/stream';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, router, staffProcedure } from '../init.ts';
@@ -341,6 +348,115 @@ export const bookingsRouter = router({
    * være med i dagens kalender; ellers forsvinner den nettopp den dagen den er
    * i veien.
    */
+  /**
+   * F7-05 / BIT 3 — desk melder avvik eller forespørsel på en jobb.
+   * Samme notat-prefiks som mechanic.reportDeviation (`[AVVIK ` / `[FORESPOR `).
+   */
+  reportChange: staffProcedure
+    .input(
+      z.object({
+        bookingId: z.uuid(),
+        kind: z.enum(['avvik', 'forespor']),
+        message: z.string().trim().min(1).max(500),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const kind = input.kind as EndringKind;
+      try {
+        await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [b] = await tx
+            .select({ notes: schema.bookings.notes })
+            .from(schema.bookings)
+            .where(eq(schema.bookings.id, input.bookingId))
+            .limit(1);
+          if (!b) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke jobben.' });
+          }
+          const notes = appendEndringNotat(b.notes, kind, input.message);
+          await tx
+            .update(schema.bookings)
+            .set({ notes, updatedAt: sql`now()` })
+            .where(eq(schema.bookings.id, input.bookingId));
+          await tx.insert(schema.auditLog).values({
+            tenantId: ctx.tenantId,
+            actor: ctx.userId,
+            action: `booking.change.report.${kind}`,
+            subjectType: 'booking',
+            subjectId: input.bookingId,
+            metadata: { kind },
+          });
+        });
+      } catch (error) {
+        return toTRPCError(error);
+      }
+
+      await publishEvent(ctx.db, {
+        tenantId: ctx.tenantId,
+        type: kind === 'avvik' ? 'booking.deviation' : 'booking.change',
+        payload: { bookingId: input.bookingId, kind },
+        subjectId: input.bookingId,
+      });
+      return { ok: true as const };
+    }),
+
+  /**
+   * F7-05 / BIT 3 — Godkjenn / Avslå ventende avvik eller forespørsel.
+   * Skriver notatet om til `[AVVIK-BEHANDLET` / `[FORESPOR-BEHANDLET`.
+   */
+  resolveChange: staffProcedure
+    .input(
+      z.object({
+        bookingId: z.uuid(),
+        kind: z.enum(['avvik', 'forespor']),
+        decision: z.enum(['godkjent', 'avslatt']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const kind = input.kind as EndringKind;
+      const decision = input.decision as EndringDecision;
+      try {
+        await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [b] = await tx
+            .select({ notes: schema.bookings.notes })
+            .from(schema.bookings)
+            .where(eq(schema.bookings.id, input.bookingId))
+            .limit(1);
+          if (!b) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke jobben.' });
+          }
+          if (!harVentendeEndring(b.notes, kind)) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Ingen ventende endring å behandle på denne jobben.',
+            });
+          }
+          const notes = markerEndringBehandlet(b.notes ?? '', kind, decision);
+          await tx
+            .update(schema.bookings)
+            .set({ notes, updatedAt: sql`now()` })
+            .where(eq(schema.bookings.id, input.bookingId));
+          await tx.insert(schema.auditLog).values({
+            tenantId: ctx.tenantId,
+            actor: ctx.userId,
+            action: `booking.change.${decision}`,
+            subjectType: 'booking',
+            subjectId: input.bookingId,
+            metadata: { kind, decision, from: 'pending' },
+          });
+        });
+      } catch (error) {
+        return toTRPCError(error);
+      }
+
+      await publishEvent(ctx.db, {
+        tenantId: ctx.tenantId,
+        type: 'booking.change',
+        payload: { bookingId: input.bookingId, kind, decision },
+        subjectId: input.bookingId,
+      });
+      return { ok: true as const, decision };
+    }),
+
   calendar: protectedProcedure
     .input(
       z.object({

@@ -1,5 +1,14 @@
 # UI-pakker — les denne FØR du bygger UI
 
+> ### ⚠️ Mikael Claude Design BIT 3 — Timeplan / Endringer (24.09.2026)
+> Timeplan-stripe er **uke-rail** (7 dager, mandag først) + **månedspicker**.
+> Dagsliste med sortering tid/kunde/status/mekaniker på `bookings.calendar`.
+> Endringer: Avvik · Forespørsler · Logg. Godkjenn/Avslå kaller
+> `bookings.resolveChange` (ikke stub). Meld-skjema på jobbdetalj via
+> `bookings.reportChange`. Chrome 1+2 + `TIMEPLAN_FANER` urørt. Kalender
+> og booking-status urørt. Preview: `/jobber-preview`. Live: `/jobber`.
+> Ingen ny pakke. ⛔ Bit 4–7. ⛔ #176/#177.
+>
 > ### ⚠️ Mikael Claude Design BIT 2 — Kunder alfa-rail + profil (24.09.2026)
 > Kunder-listen får Claude §4.9 **høyre absolute alfa-rail** (`#` + A–Å,
 > mangler Q/W/X/Z/Ø) — **ikke** topp-chips. Live søk + eksisterende
@@ -132,7 +141,7 @@
 > Toppkort er **to deler**: venstre ukedag + grå dato + Planlagt/Pågår/Ferdig
 > (live #161); høyre **Endringer** med ekte badge (0 vises, `[AVVIK ` fra
 > `bookings.list`) + Amicro `DitherDonutChart` for 08–20 Oslo. Rute:
-> `/timeplan/endringer` (godkjenn-stub, F7-05). Analyser nederst. Innboks:
+> `/timeplan/endringer` (Godkjenn via `bookings.resolveChange`, F7-05). Analyser nederst. Innboks:
 > «Ingen samtaler» + «Send melding»; sort = `.ew-modus-plate` (ikke piller);
 > penn-SVG ytterst høyre; telefon-split låst i viewport. Ronny-idle:
 > `curieux` / `heureux` / `wink` / `surpris` — **ingen colere**. Ingen ny pakke.
@@ -740,7 +749,8 @@ Kun disse. Hver enkelt har en grunn.
 
 | Kunder alfa-rail (`kunder/_alfa.ts`, `kunder/_alfa-rail.tsx`, F5-02 24.09.2026) | **Ingen ny pakke.** Claude §4.9 indeks-skinne (`position:absolute; right`) finnes ikke i shadcn/beUI. Bokstaver er `button` + Mobbin-tokens. Filter/pager er rene funksjoner over allerede hentet `customers.list`. Preview: `/kunder-preview`. |
 | Forhandler pulse-hjem (`_shell/phone-home-dealer.tsx`, `_shell/pulse-kort.tsx`, `_shell/phone-home-pulse.ts`, F3-05 10.09.2026) | **Ingen ny pakke.** **24.09 (Claude BIT 1):** `PulseAnalyserKort` er «Tall» + 2×2 Visninger/Bookinger/Returer/Credits. Live bookinger 30d, ærlige stubber. Låst stabel urørt. `/analyse` + Amicro urørt. **11.09 (CODE-GO tillegg):** Jobb-etikett `font-normal` (ikke 650/700). **10.09 (CODE-GO hjem-fiks):** To separate Modus-sirkler (ikon + tall ved siden, maks 50 % rad). PPF loddrett midt mellom dato og Avvik-rad. Kun Amicro `DitherDonutChart` med `#0066ff`-fyll — ingen SVG-strek. Analyser: `Tall for {navn}` uten anførsel, `min-h-11` som Innboks, Amicro `RevenueLineChart` med `pointer-events-none`. **10.09 (CODE-GO GO):** Halvsirkel med blå fill-linje/nål `#0066ff` (data viz) + Oslo-klokke i midten — **overstyrt** av hjem-fiks (ingen strek/nål). Avvik\|Forespørsler = `.ew-modus-plate` + `CircleQuestionMark`. Dato på samme rad som ukedag. **09.09 (CODE-GO):** Amicro-halvsirkel (`sweep={π}`) på samme linje som Planlagt/Pågår/Ferdig, etiketter 08…19. Hvit Endringer + `ChevronRight` → `/jobber?fane=endringer`. **08.09 natt (CODE-GO polish):** sirkel over Endringer, 08–19, `startAngle={π}` klokkevis venstre→høyre. Jobb: etikett venstre, +ikon høyre. **08.09 kveld (CODE-GO):** to-delt toppkort (`PulseHeroFlate`). Analyser nederst. Ikonplater `#ffffff`. ⛔ mock-badge. ⛔ #114/#119. |
-| Timeplan › Endringer (`jobber/_endringer.tsx`, `timeplan/endringer/page.tsx`, F7-05 stub) | **Ingen ny pakke.** Innstillinger-inndeling (underline Avvik \| Forespørsler) inne i Timeplan-chrome. Alias `/timeplan/endringer` → `/jobber?fane=endringer`. Godkjenn-stub. shadcn Table/Tabs er New York-boxed. |
+| Timeplan › Endringer (`jobber/_endringer.tsx`, `timeplan/endringer/page.tsx`, F7-05) | **Ingen ny pakke.** Innstillinger-inndeling (underline Avvik \| Forespørsler \| Logg) inne i Timeplan-chrome. Alias `/timeplan/endringer` → `/jobber?fane=endringer`. Godkjenn/Avslå = `bookings.resolveChange`. shadcn Table/Tabs er New York-boxed. |
+| Timeplan uke-rail + dagsliste (`_shell/timeplan-stripe.tsx`, `jobber/_dagsliste.tsx`, F3-07/F5-15, 24.09.2026) | **Ingen ny pakke.** 7 dag-chips + native månedsgitter. Sortering gjenbruker `SorteringArk`. shadcn `calendar` er ikke hentet — ville gitt et annet system enn Timeplan-stripen. |
 | Innboks Settings-chrome + top-bar 2 (`innboks/_top-bar2.tsx`, `_popup.tsx`, `_chrome.tsx`, F5-14) | **Ingen ny pakke.** Telefon: PhoneShell Settings-chrome (`bar2: 'innboks'`). Bar 2 = Ny melding · Tid · Gruppe · Slett. Tid/Gruppe = profilmeny-plate (`PHONE_PROFIL_*`), ikke chevron/DropdownMenu/Modus-piller. Slett expander med rød `Trash2` + velg-ikoner på trådene. Ny melding = Kunder-knapperad (Kunde · Intern · Support), ikke hub-piller. |
 | Organisasjon › Oversikt (`organisasjon/_org-rad.tsx`, `forhandleren/_kort.tsx`) | **Ingen ny pakke.** Samme rad + Endre som Innstillinger › Konto (`border-b`, label, muted verdi). CardShell-skjema fjernet fra oversikten. Slug er lesing. |
 | Telefon kort-hjem + mekaniker-accordion (`_shell/phone-home*.tsx`, `_shell/phone-kort.tsx`, `_shell/phone-shell.tsx`, F5-13 29.08.2026) | **Ingen ny pakke for kortene.** Destinasjonskort er samme token-komposisjon som `CardShell`. **07.09.2026 (Mikael pulse-hjem):** dealer-innhold er F3-05 pulse, ikke 2-og-2 dest-rutenett. **07.09.2026 (Mikael telefon-chrome):** PhoneShell er to toppbarer (søk + dest-piller); sidebar `hidden md:flex`. Hjem-kort er Mobbin 24px — hero `bg-surface-2` uten kant, dest `border-divide`. **06.09.2026:** scroll-flate følger `--ew-bg`. **05.09.2026 (Jonas hard-fasit, dealer-hjem only):** I dag/Pågår/Fullført, hit ≥44 / `touch-action: manipulation`. Historisk IA: Timeplan\|Rapporter · Innboks\|Jobber · Kunder\|Organisasjon · Hjelp (hopp Samarbeid) · Lager. ⛔ Galaxy/Grainient/`#111` på hjem-kort. ⛔ Mekaniker-hjem. ⛔ Attio-tabell/sidebar (#138). Fasit: `docs/endwise-forhandler-hjem-apple-hard-fasit.md` (innhold overstyrt 07.09 pulse; chrome-delen er overstyrt 07.09). |

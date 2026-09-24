@@ -1,4 +1,13 @@
 import {
+  AVVIK_BEHANDLET_PREFIKS,
+  AVVIK_NOTAT_PREFIKS,
+  FORESPOR_BEHANDLET_PREFIKS,
+  FORESPOR_NOTAT_PREFIKS,
+  harBehandletEndring,
+  harVentendeAvvik,
+  harVentendeForespor,
+} from '@endwise/modules/booking/changes';
+import {
   osloDatoKort,
   osloKalenderdag,
   osloPlusDager,
@@ -9,17 +18,25 @@ import {
 import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
 import type { PhoneBooking, PhoneTraad } from './phone-home-data';
 
-/** Mekaniker-avvik i booking-notat — `mechanic.reportDeviation`. */
-export const AVVIK_NOTAT_PREFIKS = '[AVVIK ';
+export {
+  AVVIK_BEHANDLET_PREFIKS,
+  AVVIK_NOTAT_PREFIKS,
+  FORESPOR_BEHANDLET_PREFIKS,
+  FORESPOR_NOTAT_PREFIKS,
+  harBehandletEndring,
+  harVentendeAvvik,
+  harVentendeForespor,
+};
 
+/** Mekaniker-avvik i booking-notat — `mechanic.reportDeviation` / `bookings.reportChange`. */
 export function harAvvikNotat(notes: string | null | undefined): boolean {
-  return Boolean(notes?.includes(AVVIK_NOTAT_PREFIKS));
+  return harVentendeAvvik(notes);
 }
 
 /**
- * Ventende endringer på hjem-kortet. Kilde: booking-notat med `[AVVIK `.
- * Ekstra-tid-forespørsel fra Min dag er simulert (ikke persistert) — teller 0.
- * Godkjenning skrives ikke ennå (F7-05 selger-konsument).
+ * Ventende avvik på hjem-kortet. Kilde: booking-notat med `[AVVIK `.
+ * Behandlede (`[AVVIK-BEHANDLET`) teller ikke. Ekstra-tid fra Min dag
+ * som bare er lokal prototype teller ikke.
  */
 export function endringerTeller(jobber: PhoneBooking[]): number {
   return jobber.filter((j) => j.status !== 'cancelled' && harAvvikNotat(j.notes)).length;
@@ -31,11 +48,11 @@ export function avvikTeller(jobber: PhoneBooking[]): number {
 }
 
 /**
- * Forespørsler på hjem-kortet. Ekstra tid fra Min dag er prototype
- * og har ingen rad i basen ennå — 0 er ærlig.
+ * Forespørsler på hjem-kortet. Ekte `[FORESPOR `-notat via
+ * `bookings.reportChange`. Ekstra tid fra Min dag uten notat teller 0.
  */
-export function foresporTeller(_jobber: PhoneBooking[] = []): number {
-  return 0;
+export function foresporTeller(jobber: PhoneBooking[] = []): number {
+  return jobber.filter((j) => j.status !== 'cancelled' && harVentendeForespor(j.notes)).length;
 }
 
 export function pulsdagOverskrift(naa: Date) {

@@ -57,7 +57,7 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     const hero = funksjon(kort, 'PulseHeroFlate');
     expect(analyser).toMatch(/data-tall-kort/);
-    expect(analyser).toMatch(/>Tall</);
+    expect(analyser).toMatch(/data-analyser-tittel[\s\S]*\n\s*Tall\s*\n/);
     expect(analyser).toMatch(/siste 30 dager/);
     expect(analyser).toMatch(/Alle tall/);
     expect(analyser).toMatch(/data-analyser-kpi-rutenett/);

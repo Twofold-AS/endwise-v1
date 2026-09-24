@@ -518,8 +518,7 @@ export function PulseAnalyserKort({
 
 function PulseAnalyseKpi({ stat, laster = false }: { stat: AnalyserMockStat; laster?: boolean }) {
   const Ikon = stat.opp ? TrendingUp : TrendingDown;
-  const verdi =
-    typeof stat.verdi === 'number' ? stat.verdi.toLocaleString('nb-NO') : stat.verdi;
+  const verdi = typeof stat.verdi === 'number' ? stat.verdi.toLocaleString('nb-NO') : stat.verdi;
   return (
     <div data-analyser-kpi={stat.id} className="flex min-w-0 flex-col gap-1">
       <p className="min-w-0 truncate text-[12px] leading-4 text-fg-muted">{stat.label}</p>
@@ -530,10 +529,7 @@ function PulseAnalyseKpi({ stat, laster = false }: { stat: AnalyserMockStat; las
           <p className="text-[15px] font-semibold leading-none text-fg tabular-nums">{verdi}</p>
         )}
         {stat.stub ? (
-          <span
-            data-analyser-stub
-            className="truncate text-[11px] leading-none text-fg-faint"
-          >
+          <span data-analyser-stub className="truncate text-[11px] leading-none text-fg-faint">
             {stat.stub}
           </span>
         ) : stat.delta ? (

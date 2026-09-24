@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
-import { PulseTallKort } from '../_shell/pulse-kort';
 import { tallCeller, tallVindu } from '../_shell/phone-home-pulse';
+import { PulseTallKort } from '../_shell/pulse-kort';
 import type { StatistikkFaneId } from './_faner';
 
 /**

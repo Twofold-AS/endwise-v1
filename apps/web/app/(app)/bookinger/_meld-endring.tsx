@@ -1,11 +1,11 @@
 'use client';
 
+import { FELT_MD } from '@endwise/ui';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { ClaudeAct, ClaudeChip } from '../_shell/claude-flate';
-import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
 import { invalidateHjemPulse } from '../_shell/hjem-pulse-sync';
-import { FELT_MD } from '@endwise/ui';
+import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
 
 /**
  * Jobbdetalj — meld avvik eller forespørsel.
@@ -64,9 +64,7 @@ export function MeldEndring({ bookingId }: { bookingId: string }) {
           <div className="flex flex-wrap gap-2">
             <ClaudeAct
               disabled={!melding.trim() || report.isPending}
-              onClick={() =>
-                report.mutate({ bookingId, type, message: melding.trim() })
-              }
+              onClick={() => report.mutate({ bookingId, type, message: melding.trim() })}
             >
               {report.isPending ? 'Sender …' : 'Send'}
             </ClaudeAct>

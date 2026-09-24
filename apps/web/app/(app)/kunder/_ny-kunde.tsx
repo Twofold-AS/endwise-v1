@@ -7,7 +7,7 @@ import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { ClaudeAct } from '../_shell/claude-flate';
 import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
-import { arsmodeller, merkerFor, modellerFor, type KjoretoyTypeKey } from './_kjoretoy-kaskade';
+import { arsmodeller, type KjoretoyTypeKey, merkerFor, modellerFor } from './_kjoretoy-kaskade';
 
 /**
  * «ny kunde». Quick action-en som ikke gjorde noe.
@@ -21,7 +21,7 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
   const [telefon, setTelefon] = useState('');
   const [epost, setEpost] = useState('');
   const [kjoretoy, setKjoretoy] = useState<
-    { type: KjoretoyTypeKey; make: string; model: string; year: string; reg: string }[]
+    { id: string; type: KjoretoyTypeKey; make: string; model: string; year: string; reg: string }[]
   >([]);
   const opprettKjoretoy = trpc.vehicles.create.useMutation();
 
@@ -95,15 +95,17 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
       </InnstillingSeksjon>
 
       <InnstillingSeksjon tittel="Kjøretøy" ingress="Valgfritt. Type → merke → modell → år.">
-        {kjoretoy.map((v, i) => (
-          <div key={`v-${i}`} className="flex flex-col gap-2 border-divide border-b py-3 last:border-0">
+        {kjoretoy.map((v) => (
+          <div key={v.id} className="flex flex-col gap-2 border-divide border-b py-3 last:border-0">
             <InnstillingRad label="Type">
               <select
                 value={v.type}
                 onChange={(e) => {
                   const type = e.target.value as KjoretoyTypeKey;
                   setKjoretoy((alle) =>
-                    alle.map((x, j) => (j === i ? { type, make: '', model: '', year: '', reg: x.reg } : x)),
+                    alle.map((x) =>
+                      x.id === v.id ? { ...x, type, make: '', model: '', year: '' } : x,
+                    ),
                   );
                 }}
                 className="h-control ew-felt ew-felt-md px-2.5"
@@ -118,7 +120,9 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
                 value={v.make}
                 onChange={(e) =>
                   setKjoretoy((alle) =>
-                    alle.map((x, j) => (j === i ? { ...x, make: e.target.value, model: '' } : x)),
+                    alle.map((x) =>
+                      x.id === v.id ? { ...x, make: e.target.value, model: '' } : x,
+                    ),
                   )
                 }
                 className="h-control ew-felt ew-felt-md px-2.5"
@@ -135,7 +139,9 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
               <select
                 value={v.model}
                 onChange={(e) =>
-                  setKjoretoy((alle) => alle.map((x, j) => (j === i ? { ...x, model: e.target.value } : x)))
+                  setKjoretoy((alle) =>
+                    alle.map((x) => (x.id === v.id ? { ...x, model: e.target.value } : x)),
+                  )
                 }
                 className="h-control ew-felt ew-felt-md px-2.5"
               >
@@ -151,7 +157,9 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
               <select
                 value={v.year}
                 onChange={(e) =>
-                  setKjoretoy((alle) => alle.map((x, j) => (j === i ? { ...x, year: e.target.value } : x)))
+                  setKjoretoy((alle) =>
+                    alle.map((x) => (x.id === v.id ? { ...x, year: e.target.value } : x)),
+                  )
                 }
                 className="h-control ew-felt ew-felt-md px-2.5"
               >
@@ -168,7 +176,9 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
                 value={v.reg}
                 onChange={(e) =>
                   setKjoretoy((alle) =>
-                    alle.map((x, j) => (j === i ? { ...x, reg: e.target.value.toUpperCase() } : x)),
+                    alle.map((x) =>
+                      x.id === v.id ? { ...x, reg: e.target.value.toUpperCase() } : x,
+                    ),
                   )
                 }
                 placeholder="uten reg.nr"
@@ -178,7 +188,7 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
             <button
               type="button"
               className="self-start text-[13px] text-fg-muted"
-              onClick={() => setKjoretoy((alle) => alle.filter((_, j) => j !== i))}
+              onClick={() => setKjoretoy((alle) => alle.filter((x) => x.id !== v.id))}
             >
               Fjern
             </button>
@@ -188,7 +198,10 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
           <ClaudeAct
             kind="ghost"
             onClick={() =>
-              setKjoretoy((alle) => [...alle, { type: 'mc', make: '', model: '', year: '', reg: '' }])
+              setKjoretoy((alle) => [
+                ...alle,
+                { id: crypto.randomUUID(), type: 'mc', make: '', model: '', year: '', reg: '' },
+              ])
             }
           >
             Legg til kjøretøy
@@ -227,7 +240,7 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
           successText="Opprettet"
           errorText="Feilet"
         >
-          Lagre kunde
+          Opprett kunde
         </StatefulButton>
       </div>
     </form>

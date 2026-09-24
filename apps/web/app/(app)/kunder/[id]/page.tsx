@@ -5,7 +5,6 @@ import {
   Car,
   ChevronRight,
   CircleAlert,
-  ClipboardList,
   Inbox,
   Mail,
   MessageSquare,

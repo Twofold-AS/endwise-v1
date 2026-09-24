@@ -9,8 +9,8 @@ import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pul
 import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
 import { TIMEPLAN_FANER, timeplanHref } from '../../jobber/_faner';
-import { velgKjoretoyForJobb } from '../_knytt-kjoretoy';
 import { JobSlotsVelger } from '../_job-slots-velger';
+import { velgKjoretoyForJobb } from '../_knytt-kjoretoy';
 import { StarttidVelger } from '../_starttid-velger';
 import { fmtMinor } from '../_status';
 

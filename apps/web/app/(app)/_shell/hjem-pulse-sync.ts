@@ -10,8 +10,8 @@ export const HJEM_PULSE_QUERY_KEYS = [
   'bookings.list',
   'mechanics.oversikt',
   'messages.listThreads',
-  'messages.svarhastighet',
   'inventory.listParts',
+  'messages.svarhastighet',
 ] as const;
 
 export const HJEM_PULSE_REFETCH = {
@@ -29,6 +29,7 @@ export function invalidateHjemPulse(utils: Utils) {
   void utils.bookings.list.invalidate();
   void utils.bookings.calendar.invalidate();
   void utils.mechanics.oversikt.invalidate();
+  void utils.messages.svarhastighet.invalidate();
 }
 
 export function meldingBookingLagret() {

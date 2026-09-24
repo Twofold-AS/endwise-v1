@@ -3,7 +3,6 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import {
   ClaudeAlphaRail,
   ClaudeInitialer,
@@ -27,13 +26,11 @@ export function KundeListe({
   laster,
   feil,
   sok,
-  onSok,
 }: {
   kunder: KundeListeRad[];
   laster: boolean;
   feil?: string;
   sok: string;
-  onSok: (v: string) => void;
 }) {
   const [bokstav, setBokstav] = useState<NorskBokstav>('#');
   const [side, setSide] = useState(0);
@@ -48,8 +45,7 @@ export function KundeListe({
       .filter((k) => {
         if (!q) return true;
         return `${k.name} ${k.phone ?? ''} ${k.email ?? ''}`.toLowerCase().includes(q);
-      })
-      .sort((a, b) => a.name.localeCompare(b.name, 'nb'));
+      });
   }, [kunder, sok, bokstav, skjulte]);
 
   const sider = Math.max(1, Math.ceil(filtrert.length / PER));
@@ -64,19 +60,9 @@ export function KundeListe({
   }
 
   return (
-    <div data-kunder-claude className="relative flex min-h-[420px] flex-col gap-3 pr-8">
-      <ClaudeAlphaRail aktiv={bokstav} onVelg={velgBokstav} />
-
-      <div data-kunder-sok>
-        <PhoneSokFelt
-          value={sok}
-          onChange={(e) => {
-            onSok(e.target.value);
-            setSide(0);
-          }}
-          placeholder="Navn, telefon, e-post eller reg.nr"
-          aria-label="Søk i kunder"
-        />
+    <div data-kunder-claude className="relative flex min-h-[420px] flex-col gap-3 pr-[26px]">
+      <div className="absolute top-0 right-1 bottom-0 z-10 w-[26px]">
+        <ClaudeAlphaRail aktiv={bokstav} onVelg={velgBokstav} />
       </div>
 
       {slettet ? (

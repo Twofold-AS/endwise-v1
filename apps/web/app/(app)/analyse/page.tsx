@@ -6,8 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { ClaudePageHead } from '../_shell/claude-flate';
-import { PulseTallKort } from '../_shell/pulse-kort';
 import { tallCeller, tallVindu } from '../_shell/phone-home-pulse';
+import { PulseTallKort } from '../_shell/pulse-kort';
 
 /**
  * Tall — Claude 2×2 (erstatter Analyse / Rapporter).

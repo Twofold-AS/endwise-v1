@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { osloKalenderdag, osloPlusDager, osloStartAvDag } from '../_lib/oslo-dag';
 import { ClaudeChip } from '../_shell/claude-flate';
-import { osloKalenderdag, osloStartAvDag, osloPlusDager } from '../_lib/oslo-dag';
 import { jobSlots } from './_job-slots';
 import { osloStartFraFelt } from './_starttid';
 

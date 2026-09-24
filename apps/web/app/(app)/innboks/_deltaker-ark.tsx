@@ -32,7 +32,10 @@ export function DeltakerArk({
   }
 
   return (
-    <div data-deltaker-ark className="flex flex-col gap-3 rounded-[24px] border border-divide bg-card p-4">
+    <div
+      data-deltaker-ark
+      className="flex flex-col gap-3 rounded-[24px] border border-divide bg-card p-4"
+    >
       <ClaudeSection heading="Deltakere">
         {andre.length === 0 ? (
           <p className="text-[13px] text-fg-muted">Ingen andre deltakere i tråden ennå.</p>
@@ -52,7 +55,10 @@ export function DeltakerArk({
       </ClaudeSection>
       <div className="flex flex-wrap gap-2">
         <InviterAnsatt threadId={threadId} />
-        <ClaudeAct kind="ghost" onClick={() => setStub('Fjern deltaker er ikke koblet til API ennå.')}>
+        <ClaudeAct
+          kind="ghost"
+          onClick={() => setStub('Fjern deltaker er ikke koblet til API ennå.')}
+        >
           Fjern
         </ClaudeAct>
         <ClaudeAct kind="ghost" onClick={() => setStub('Forlat tråd er ikke koblet til API ennå.')}>

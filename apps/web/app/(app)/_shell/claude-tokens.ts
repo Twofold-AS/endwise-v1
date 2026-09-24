@@ -54,10 +54,7 @@ export const NORSK_ALPHA = [
 export type NorskBokstav = (typeof NORSK_ALPHA)[number];
 
 export function initialer(navn: string): string {
-  const deler = navn
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const deler = navn.trim().split(/\s+/).filter(Boolean);
   if (deler.length === 0) return '?';
   const forste = deler[0]?.[0] ?? '';
   const siste = deler.length > 1 ? (deler[deler.length - 1]?.[0] ?? '') : '';
@@ -75,7 +72,9 @@ export function forbokstav(navn: string): NorskBokstav {
 /** Norsk tall med hardt mellomrom (4 820). */
 export function fmtNorskTall(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—';
-  return Math.round(n).toLocaleString('nb-NO').replace(/\u00a0/g, ' ');
+  return Math.round(n)
+    .toLocaleString('nb-NO')
+    .replace(/\u00a0/g, ' ');
 }
 
 export function fmtDelta(prosent: number | null): { tekst: string; opp: boolean } | null {

@@ -128,7 +128,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     const dager = utenKommentarer(les('../app/(app)/_shell/timeplan-dager.ts'));
     expect(side).toMatch(/TimeplanStripe/);
     expect(side).toMatch(/visning === 'kalender'/);
-    expect(stripe).toMatch(/timeplanDagerFra\(valgt(?:, 3)?\)/);
+    expect(stripe).toMatch(/timeplanUkeFra\(valgt\)/);
     expect(stripe).not.toMatch(/timeplanDagerFra\(valgt, 7\)/);
     expect(dager).toMatch(/antall = 3/);
     expect(stripe).not.toMatch(/overflow-hidden/);

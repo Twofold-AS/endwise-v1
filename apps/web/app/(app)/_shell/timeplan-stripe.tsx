@@ -3,8 +3,8 @@
 import { ChevronLeft, ChevronRight } from '@endwise/ui';
 import { useState } from 'react';
 import { osloKalenderdag, osloPlusDager } from '../_lib/oslo-dag';
-import { TimeplanManedGitter } from './timeplan-maned';
 import { timeplanManedNavn, timeplanSkiftManed, timeplanUkeFra } from './timeplan-dager';
+import { TimeplanManedGitter } from './timeplan-maned';
 
 const PIL =
   'inline-flex size-control shrink-0 items-center justify-center rounded-control border border-border bg-card text-fg';

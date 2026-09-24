@@ -7,7 +7,7 @@ import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
 import { TYPE_LABEL } from './_delt';
-import { arsmodeller, merkerFor, modellerFor, type KjoretoyTypeKey } from './_kjoretoy-kaskade';
+import { arsmodeller, type KjoretoyTypeKey, merkerFor, modellerFor } from './_kjoretoy-kaskade';
 
 /**
  * Registrer kjøretøy — Innstillinger-feltgrupper, ikke CardShell-dump.
@@ -106,7 +106,10 @@ export function RegistrerKjoretoy({
         </InnstillingRad>
       </InnstillingSeksjon>
 
-      <InnstillingSeksjon tittel="Kjennetegn" ingress="Kaskade: merke → modell → år. Lokal katalog, ikke Vegvesen.">
+      <InnstillingSeksjon
+        tittel="Kjennetegn"
+        ingress="Kaskade: merke → modell → år. Lokal katalog, ikke Vegvesen."
+      >
         <InnstillingRad label="Merke">
           <select
             value={make}

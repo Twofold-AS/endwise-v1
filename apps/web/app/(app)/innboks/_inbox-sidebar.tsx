@@ -43,8 +43,17 @@ export function InboxSidebar() {
   const skjulTelefonListe = Boolean(aktivId || nySamtale);
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, setPart, sortering, skjulte, sisteSkjulte, angreSkjul, velgModus, valgte, toggleValgt } =
-    useInboxFilter();
+  const {
+    part,
+    setPart,
+    sortering,
+    skjulte,
+    sisteSkjulte,
+    angreSkjul,
+    velgModus,
+    valgte,
+    toggleValgt,
+  } = useInboxFilter();
   const [side, setSide] = useState(0);
   const [lostStub, setLostStub] = useState(false);
   const PER = 12;
@@ -212,10 +221,7 @@ export function InboxSidebar() {
         <ClaudeChip active={part === 'dealer_admin'} onClick={() => setPart('dealer_admin')}>
           Support
         </ClaudeChip>
-        <ClaudeChip
-          active={lostStub}
-          onClick={() => setLostStub((v) => !v)}
-        >
+        <ClaudeChip active={lostStub} onClick={() => setLostStub((v) => !v)}>
           Løst
         </ClaudeChip>
       </div>

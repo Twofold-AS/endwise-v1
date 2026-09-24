@@ -48,7 +48,11 @@ export function TimeplanManedGitter({
             data-timeplan-maned-dag={d.ymd}
             onClick={() => onValgt(d.ymd)}
             className={`${CLAUDE_CHIP} h-8 w-full justify-center px-0 ${
-              aktiv ? 'bg-fg text-bg' : d.annen ? 'bg-transparent text-fg-faint' : 'bg-field text-fg'
+              aktiv
+                ? 'bg-fg text-bg'
+                : d.annen
+                  ? 'bg-transparent text-fg-faint'
+                  : 'bg-field text-fg'
             }`}
           >
             {d.dag}

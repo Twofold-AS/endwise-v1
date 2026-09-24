@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { forbokstav, NORSK_ALPHA } from '../app/(app)/_shell/claude-tokens.ts';
 import {
   DEALER_PHONE_HJEM,
   DEALER_PULSE_KEYS,
@@ -14,7 +15,6 @@ import {
   tallCeller,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
 import { jobSlots, openingHours } from '../app/(app)/bookinger/_job-slots.ts';
-import { forbokstav, NORSK_ALPHA } from '../app/(app)/_shell/claude-tokens.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 function les(rel: string) {

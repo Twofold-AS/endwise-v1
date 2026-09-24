@@ -25,7 +25,7 @@ const KATALOG: Record<KjoretoyTypeKey, Record<string, string[]>> = {
     Yamaha: ['Grizzly 700', 'Kodiak 700'],
     Honda: ['TRX520', 'Pioneer 700'],
     Polaris: ['Sportsman 570', 'Ranger 1000'],
-    Can-Am: ['Outlander 700', 'Defender HD9'],
+    'Can-Am': ['Outlander 700', 'Defender HD9'],
   },
 };
 

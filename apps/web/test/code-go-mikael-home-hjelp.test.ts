@@ -35,6 +35,7 @@ describe('CODE-GO Mikael — hjem live data', () => {
       'mechanics.oversikt',
       'messages.listThreads',
       'inventory.listParts',
+      'messages.svarhastighet',
     ]);
     const sync = utenKommentarer(les('../app/(app)/_shell/hjem-pulse-sync.ts'));
     expect(sync).toMatch(/utils\.bookings\.list\.invalidate/);

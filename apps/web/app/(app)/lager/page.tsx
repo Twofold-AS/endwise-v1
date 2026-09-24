@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
-import { shellForBruker } from '../_shell/nav';
 import { ClaudePageHead, ClaudeSection } from '../_shell/claude-flate';
+import { shellForBruker } from '../_shell/nav';
 import { Beholdning, Feil, Laster, Tomt } from './_delt';
 
 /**
@@ -134,7 +134,10 @@ export default function LagerOversiktPage() {
         )}
       </section>
       <ClaudeSection heading="Inn- og utlogg">
-        <Link href={'/lager/bevegelser' as Route} className="text-[15px] text-fg underline-offset-2 hover:underline">
+        <Link
+          href={'/lager/bevegelser' as Route}
+          className="text-[15px] text-fg underline-offset-2 hover:underline"
+        >
           Se siste bevegelser
         </Link>
       </ClaudeSection>

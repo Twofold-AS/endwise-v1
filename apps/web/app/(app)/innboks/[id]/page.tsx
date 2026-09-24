@@ -24,6 +24,7 @@ import { trpc } from '@/lib/trpc';
 import { useLyd } from '../../_lib/lyd';
 import { useEventStream } from '../../_lib/use-event-stream';
 import { CardShell } from '../../_shell/cards';
+import { DeltakerArk } from '../_deltaker-ark';
 import { type Kanal, KanalLinje, KanalMerke, tilKanal } from '../_kanal';
 import {
   agentName,
@@ -44,7 +45,6 @@ import {
   tilDeltakerRolle,
   visningForTraadtype,
 } from '../_lib';
-import { DeltakerArk } from '../_deltaker-ark';
 import { useInboxModus } from '../_modus';
 import { TradHodeKjoretoy } from '../_trad-hode';
 

@@ -178,7 +178,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
         laster={svar.isLoading}
       />
 
-      <PulseGulvKort rader={gulv} laster={lasterJobber} />
+      <PulseGulvKort rader={gulv} laster={lasterJobber} jobbHref="/bookinger/ny" />
       <PulseTeamKort medlemmer={team} laster={oversikt.isLoading} />
       <PulseTallKort celler={celler} href={PHONE_KORT_META.tall.href} />
       <PulseFooter />

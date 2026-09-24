@@ -45,7 +45,12 @@ export function ClaudePageHead({
         {primary}
       </Link>
     ) : (
-      <button type="button" data-claude-primary onClick={onPrimary} className={`${CLAUDE_ACT} bg-fg text-bg`}>
+      <button
+        type="button"
+        data-claude-primary
+        onClick={onPrimary}
+        className={`${CLAUDE_ACT} bg-fg text-bg`}
+      >
         {primary}
       </button>
     )
@@ -106,11 +111,7 @@ export function ClaudeListRow({
   onRemove?: () => void;
 }) {
   const tone =
-    rightTone === 'ok'
-      ? 'text-success'
-      : rightTone === 'warn'
-        ? 'text-danger'
-        : 'text-fg-muted';
+    rightTone === 'ok' ? 'text-success' : rightTone === 'warn' ? 'text-danger' : 'text-fg-muted';
   const kropp = (
     <>
       {icon ? <span className="shrink-0">{icon}</span> : null}
@@ -129,11 +130,20 @@ export function ClaudeListRow({
   return (
     <div className="flex items-stretch gap-2">
       {href ? (
-        <Link href={href as Route} data-claude-row={title} className={`${radKlasse} min-w-0 flex-1`}>
+        <Link
+          href={href as Route}
+          data-claude-row={title}
+          className={`${radKlasse} min-w-0 flex-1`}
+        >
           {kropp}
         </Link>
       ) : onClick ? (
-        <button type="button" data-claude-row={title} onClick={onClick} className={`${radKlasse} min-w-0 flex-1`}>
+        <button
+          type="button"
+          data-claude-row={title}
+          onClick={onClick}
+          className={`${radKlasse} min-w-0 flex-1`}
+        >
           {kropp}
         </button>
       ) : (
@@ -188,9 +198,7 @@ export function ClaudeChip({
       data-claude-chip={active ? '1' : '0'}
       aria-pressed={active}
       onClick={onClick}
-      className={`${CLAUDE_CHIP} ${
-        active ? 'bg-fg text-bg' : 'bg-field text-fg'
-      }`}
+      className={`${CLAUDE_CHIP} ${active ? 'bg-fg text-bg' : 'bg-field text-fg'}`}
     >
       {children}
     </button>
@@ -225,7 +233,13 @@ export function ClaudeAct({
     );
   }
   return (
-    <button type="button" data-claude-act={kind} disabled={disabled} onClick={onClick} className={klasse}>
+    <button
+      type="button"
+      data-claude-act={kind}
+      disabled={disabled}
+      onClick={onClick}
+      className={klasse}
+    >
       {children}
     </button>
   );
@@ -306,7 +320,7 @@ export function ClaudeAlphaRail({
     <nav
       data-claude-alpha-rail
       aria-label="Alfabet"
-      className="absolute top-0 right-1 bottom-0 z-10 flex w-[26px] flex-col items-center justify-center"
+      className="absolute top-0 right-1 bottom-0 z-10 flex h-full w-[26px] flex-col items-center justify-center"
     >
       {NORSK_ALPHA.map((l) => {
         const on = l === aktiv;
@@ -342,10 +356,7 @@ export function ClaudeUndoToast({
   onLukk?: () => void;
 }) {
   return (
-    <div
-      data-claude-undo
-      className={`${CLAUDE_CARD} flex items-center gap-3 px-4 py-3`}
-    >
+    <div data-claude-undo className={`${CLAUDE_CARD} flex items-center gap-3 px-4 py-3`}>
       <p className="min-w-0 flex-1 text-[14px] text-fg">{label}</p>
       <button
         type="button"

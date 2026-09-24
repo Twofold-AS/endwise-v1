@@ -6,10 +6,10 @@ import {
   osloUkedagNavn,
   osloVeggtid,
 } from '../_lib/oslo-dag';
-import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
-import { jobbHva, type PhoneBooking, type PhoneTraad, type TimeplanRad } from './phone-home-data';
 import { fmtTime } from '../bookinger/_status';
+import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
 import { prosentEndring } from './claude-tokens';
+import { jobbHva, type PhoneBooking, type PhoneTraad, type TimeplanRad } from './phone-home-data';
 
 /** Mekaniker-avvik i booking-notat — `mechanic.reportDeviation`. */
 export const AVVIK_NOTAT_PREFIKS = '[AVVIK ';

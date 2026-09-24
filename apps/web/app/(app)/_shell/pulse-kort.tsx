@@ -12,7 +12,14 @@ import {
 import type { Route } from 'next';
 import Link from 'next/link';
 import { type ReactNode, useEffect, useState } from 'react';
-import { PHONE_DEST_FYLL, PHONE_HERO_FYLL, PHONE_KORT_META, PULSE_ENDRINGER_HREF } from './phone-home';
+import { fmtDelta, fmtNorskTall } from './claude-tokens';
+import {
+  PHONE_DEST_FYLL,
+  PHONE_HERO_FYLL,
+  PHONE_KORT_META,
+  PULSE_ENDRINGER_HREF,
+} from './phone-home';
+import type { TimeplanRad } from './phone-home-data';
 import {
   dagFremgang,
   fmtPulseKlokke,
@@ -25,8 +32,6 @@ import {
   PULSE_DAG_START,
   type TallCelle,
 } from './phone-home-pulse';
-import { fmtDelta, fmtNorskTall } from './claude-tokens';
-import type { TimeplanRad } from './phone-home-data';
 
 const WHITE = '#ffffff';
 
@@ -464,21 +469,25 @@ export function PulseJobbFlis() {
   );
 }
 
+const TALL_LABEL: Record<TallCelle['id'], string> = {
+  visninger: 'Visninger',
+  bookinger: 'Bookinger',
+  returer: 'Returer',
+  credits: 'Credits',
+};
+
 /**
  * Tall — Claude 2×2 (Visninger · Bookinger · Returer · Credits).
  * Erstatter Analyse/Analyser. `#0066ff` brukes ikke her.
  */
-export function PulseTallKort({
-  celler,
-  href,
-}: {
-  celler: TallCelle[];
-  href: string;
-}) {
+export function PulseTallKort({ celler, href }: { celler: TallCelle[]; href: string }) {
   return (
     <div data-pulse-tall className={`${PHONE_DEST_FYLL} flex w-full flex-col gap-2.5 px-5 py-4`}>
       <div className="flex min-w-0 items-center gap-2.5">
-        <p data-tall-tittel className="text-[19px] font-[650] leading-none tracking-[-0.01em] text-fg">
+        <p
+          data-tall-tittel
+          className="text-[19px] font-[650] leading-none tracking-[-0.01em] text-fg"
+        >
           Tall
         </p>
         <span data-tall-periode className="text-[15px] text-fg-muted">
@@ -507,9 +516,12 @@ export function PulseTallKort({
 
 function PulseTallCelle({ celle }: { celle: TallCelle }) {
   const delta = fmtDelta(celle.delta);
+  const stub = celle.stub ?? (celle.verdi == null ? 'Ikke tilkoblet' : undefined);
   return (
     <div data-tall-celle={celle.id} className="flex min-w-0 flex-col gap-1">
-      <span className="text-[14px] leading-none text-fg-muted">{celle.label}</span>
+      <span className="text-[14px] leading-none text-fg-muted">
+        {celle.label || TALL_LABEL[celle.id]}
+      </span>
       <div className="flex items-baseline gap-1.5">
         <span className="text-[22px] font-[650] leading-none tracking-[-0.02em] text-fg tabular-nums">
           {celle.verdi == null ? '—' : fmtNorskTall(celle.verdi)}
@@ -523,8 +535,8 @@ function PulseTallCelle({ celle }: { celle: TallCelle }) {
           >
             {delta.tekst}
           </span>
-        ) : celle.stub ? (
-          <span className="text-[12px] text-fg-muted">{celle.stub}</span>
+        ) : stub ? (
+          <span className="text-[12px] text-fg-muted">{stub}</span>
         ) : null}
       </div>
     </div>
@@ -534,9 +546,11 @@ function PulseTallCelle({ celle }: { celle: TallCelle }) {
 export function PulseGulvKort({
   rader,
   laster,
+  jobbHref = '/bookinger/ny',
 }: {
   rader: TimeplanRad[];
   laster?: boolean;
+  jobbHref?: string;
 }) {
   return (
     <div data-pulse-gulv className={`${PHONE_DEST_FYLL} flex w-full flex-col px-4 py-3`}>
@@ -548,7 +562,7 @@ export function PulseGulvKort({
           Gulv
         </Link>
         <Link
-          href={'/bookinger/ny' as Route}
+          href={jobbHref as Route}
           data-pulse-jobb
           className="inline-flex h-8 items-center gap-1 rounded-full bg-fg px-3 text-[13px] font-[450] text-bg [touch-action:manipulation]"
         >
@@ -580,13 +594,7 @@ export function PulseGulvKort({
   );
 }
 
-export function PulseSvarKort({
-  verdi,
-  laster,
-}: {
-  verdi: string;
-  laster?: boolean;
-}) {
+export function PulseSvarKort({ verdi, laster }: { verdi: string; laster?: boolean }) {
   return (
     <Link
       href={PHONE_KORT_META.svarhastighet.href as Route}
@@ -598,7 +606,7 @@ export function PulseSvarKort({
         {laster ? (
           <span className="inline-block h-4 w-10 animate-pulse rounded-sm bg-border" />
         ) : (
-          verdi
+          verdi || 'For lite data'
         )}
       </span>
     </Link>

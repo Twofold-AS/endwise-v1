@@ -113,8 +113,8 @@ export type PhoneHjemRad = {
 };
 
 /**
- * Mikael CODE-GO 10.09: låste flater — toppkort · Innboks · Lager ·
- * Analyser (over Jobb) · På jobb + Jobb. Ingen gamle pulse-kort.
+ * Mikael CODE-GO 10.09 + Claude BIT 1: låste flater — toppkort · Innboks ·
+ * Lager · Tall (over Jobb) · På jobb + Jobb. Ingen gamle pulse-kort.
  */
 export const DEALER_PULSE_KEYS = [
   'idag',

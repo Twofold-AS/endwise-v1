@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { PHONE_PROFIL_RAD, PHONE_PROFIL_VILKAR } from '../app/(app)/_shell/phone-chrome.ts';
-import { analyserMockStats } from '../app/(app)/_shell/phone-home-pulse.ts';
+import { tallKortStats } from '../app/(app)/_shell/phone-home-pulse.ts';
 import { SIGNIN_TITTEL, SIGNIN_TOTP_TITTEL } from '../app/signin/signin-steg.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -66,7 +66,7 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(analyser).toMatch(/Analyse/);
     expect(analyser).toMatch(/PulseIkonFlate/);
     expect(analyser).toMatch(/siste 30 dager/);
-    expect(analyser).toMatch(/Se tallene/);
+    expect(analyser).toMatch(/Alle tall/);
     expect(analyser).toMatch(/data-analyser-se-tallene/);
     expect(analyser).not.toMatch(/RevenueLineChart/);
     expect(analyser).not.toMatch(/DitherGrowthChart/);
@@ -78,15 +78,19 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(analyser).toMatch(/text-success/);
     expect(analyser).toMatch(/text-danger/);
     expect(analyser.match(/PHONE_DEST_FYLL/g)?.length).toBe(1);
-    const stats = analyserMockStats(new Date('2026-09-08T10:00:00Z'));
+    const stats = tallKortStats([], new Date('2026-09-08T10:00:00Z'));
     expect(stats.map((s) => s.label)).toEqual([
-      'Besøk på nettsiden',
-      'Jobber',
+      'Visninger',
       'Bookinger',
-      'Retur',
+      'Returer',
+      'Credits',
     ]);
-    expect(stats.some((s) => s.opp)).toBe(true);
-    expect(stats.some((s) => !s.opp)).toBe(true);
+    expect(stats.filter((s) => s.stub).map((s) => s.id)).toEqual([
+      'visninger',
+      'returer',
+      'credits',
+    ]);
+    expect(stats.find((s) => s.id === 'bookinger')?.verdi).toBe(0);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
     expect(hjem).toMatch(/gap-2\.5/);

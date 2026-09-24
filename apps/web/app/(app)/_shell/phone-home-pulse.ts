@@ -330,51 +330,61 @@ export function ansattePulse(
 export type AnalyserMockStat = {
   id: string;
   label: string;
-  verdi: number;
-  delta: string;
-  opp: boolean;
+  verdi: number | string;
+  delta?: string;
+  opp?: boolean;
+  /** Ærlig merke når API mangler — ikke et falskt tall. */
+  stub?: string;
   serie: number[];
 };
 
-/** Mock nettsidevisninger til ekte analyse finnes. Stabil per uke. */
-export function analyserMockStats(naa: Date): AnalyserMockStat[] {
-  const uke = osloKalenderdag(naa);
-  const vis = plausibelTall(`${uke}:vis`, 180, 420);
-  const start = plausibelTall(`${uke}:start`, 8, 28);
-  const retur = plausibelTall(`${uke}:retur`, 12, 40);
-  const tid = plausibelTall(`${uke}:tid`, 40, 95);
+/** Claude §4.1 / BIT 1 — Visninger · Bookinger · Returer · Credits. */
+export const TALL_KPI_IDS = ['visninger', 'bookinger', 'returer', 'credits'] as const;
+export const TALL_STUB_INGEN_API = 'Ingen API';
+
+/**
+ * Bookinger siste 30 kalenderdager i Oslo, ekskl. cancelled.
+ * Samme vindu som hjem-spørringen (`endringerVindu` bakover).
+ */
+export function bookingerSiste30d(jobber: PhoneBooking[], naa: Date): number {
+  const iDag = osloKalenderdag(naa);
+  const fra = osloKalenderdag(osloPlusDager(iDag, -30));
+  return jobber.filter((j) => {
+    if (j.status === 'cancelled') return false;
+    const dag = osloKalenderdag(j.startsAt);
+    return dag >= fra && dag <= iDag;
+  }).length;
+}
+
+function tallStubCelle(id: (typeof TALL_KPI_IDS)[number], label: string): AnalyserMockStat {
+  return {
+    id,
+    label,
+    verdi: '—',
+    stub: TALL_STUB_INGEN_API,
+    serie: [],
+  };
+}
+
+/**
+ * Hjem-Tall (Claude 2×2). Bookinger er live 30d; Visninger/Returer/Credits
+ * er ærlige stubber til API finnes. Ingen falske %-trender.
+ */
+export function tallKortStats(jobber: PhoneBooking[], naa: Date): AnalyserMockStat[] {
   return [
-    {
-      id: 'visninger',
-      label: 'Besøk på nettsiden',
-      verdi: vis,
-      delta: '+11 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:v:${i}`, 18, 72)),
-    },
-    {
-      id: 'jobber',
-      label: 'Jobber',
-      verdi: start,
-      delta: '+4 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:s:${i}`, 2, 12)),
-    },
+    tallStubCelle('visninger', 'Visninger'),
     {
       id: 'bookinger',
       label: 'Bookinger',
-      verdi: tid,
-      delta: '+8 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:t:${i}`, 20, 90)),
+      verdi: bookingerSiste30d(jobber, naa),
+      serie: [],
     },
-    {
-      id: 'retur',
-      label: 'Retur',
-      verdi: retur,
-      delta: '−3 %',
-      opp: false,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:r:${i}`, 4, 16)),
-    },
+    tallStubCelle('returer', 'Returer'),
+    tallStubCelle('credits', 'Credits'),
   ];
+}
+
+/** Bakoverkompatibelt alias — samme Tall-celler, uten live bookinger. */
+export function analyserMockStats(naa: Date): AnalyserMockStat[] {
+  return tallKortStats([], naa);
 }

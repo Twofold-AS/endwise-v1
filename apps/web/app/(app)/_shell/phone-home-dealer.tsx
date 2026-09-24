@@ -7,7 +7,6 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { BOOKING_LAGRET_EVENT, HJEM_PULSE_REFETCH, invalidateHjemPulse } from './hjem-pulse-sync';
 import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
 import {
-  analyserMockStats,
   ansattePulse,
   avvikTeller,
   endringerVindu,
@@ -16,12 +15,13 @@ import {
   innboksRad,
   lagerRad,
   pulsdagOverskrift,
+  tallKortStats,
 } from './phone-home-pulse';
 import { PulseAnalyserKort, PulseHeroFlate, PulseJobbFlis, PulseRadKort } from './pulse-kort';
 
 /**
  * Forhandler-hjem — Verkstedet / `/home`.
- * Låste flater: toppkort · Innboks · Lager · Analyser · På jobb + Jobb.
+ * Låste flater: toppkort · Innboks · Lager · Tall · På jobb + Jobb.
  */
 export function useDealerHjemKort() {
   const utils = trpc.useUtils();
@@ -66,7 +66,7 @@ export function useDealerHjemKort() {
   const innboks = innboksRad(threads.data ?? []);
   const lager = lagerRad(deler.data ?? []);
   const ansatte = ansattePulse(oversikt.data ?? [], jobber, naa);
-  const analyser = analyserMockStats(naa);
+  const analyser = tallKortStats(jobber, naa);
 
   return {
     bookings,
@@ -137,6 +137,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
         stats={analyser}
         href={PHONE_KORT_META.analyser.href}
         forhandlerNavn={tenantName}
+        laster={lasterJobber}
       />
 
       <div data-pulse-bunn className="flex w-full gap-3">

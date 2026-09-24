@@ -78,7 +78,7 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     expect(analyser).toMatch(/Analyse/);
     expect(analyser).toMatch(/siste 30 dager/);
-    expect(analyser).toMatch(/Se tallene/);
+    expect(analyser).toMatch(/Alle tall/);
     expect(analyser).not.toMatch(/RevenueLineChart/);
     expect(analyser).not.toMatch(/DitherGrowthChart/);
     expect(analyser).not.toMatch(/scale-\[1\.65\]/);

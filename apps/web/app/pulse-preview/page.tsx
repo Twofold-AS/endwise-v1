@@ -4,7 +4,7 @@ import { Inbox, Package, Users } from '@endwise/ui';
 import { useMemo } from 'react';
 import { useTema } from '../_lib/tema-provider';
 import { osloVeggklokke } from '../(app)/_lib/oslo-dag';
-import { analyserMockStats, pulsdagOverskrift } from '../(app)/_shell/phone-home-pulse';
+import { pulsdagOverskrift, tallKortStats } from '../(app)/_shell/phone-home-pulse';
 import {
   PulseAnalyserKort,
   PulseHeroFlate,
@@ -14,11 +14,22 @@ import {
 
 /**
  * Midlertidig visuell GO-flate (uten innlogging). Ikke en produkt-rute.
- * Forhandler-hjem: toppkort + Analyser over Jobb.
+ * Forhandler-hjem: toppkort + Tall over Jobb.
  */
 export default function PulsePreview() {
   const { los, sett } = useTema();
-  const analyser = useMemo(() => analyserMockStats(new Date('2026-09-08T10:00:00')), []);
+  const analyser = useMemo(
+    () =>
+      tallKortStats(
+        [
+          { id: '1', status: 'confirmed', startsAt: '2026-09-01T08:00:00' },
+          { id: '2', status: 'completed', startsAt: '2026-08-20T08:00:00' },
+          { id: '3', status: 'cancelled', startsAt: '2026-09-02T08:00:00' },
+        ],
+        new Date('2026-09-08T10:00:00'),
+      ),
+    [],
+  );
   const dag = useMemo(() => pulsdagOverskrift(new Date('2026-09-08T10:00:00')), []);
   /** Midt i 08–19 så GO-skjermbildet viser klokkevis bue venstre→høyre. */
   const sirkelNaa = useMemo(() => osloVeggklokke('2026-09-08', 13, 30), []);

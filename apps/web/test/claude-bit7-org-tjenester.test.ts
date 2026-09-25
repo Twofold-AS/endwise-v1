@@ -94,9 +94,6 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(kort).toMatch(/priceMinor/);
     expect(kort).toMatch(/skills/);
     expect(kort).toMatch(/services\.update/);
-    const preview = utenKommentarer(les('../app/tjenester-preview/page.tsx'));
-    expect(preview).toMatch(/data-tjenester-preview/);
-    expect(preview).toMatch(/tjenesterPageSub/);
   });
 
   it('Org-hub peker på eksisterende destinasjoner — ingen vakt-/Hellanor-live', () => {
@@ -158,10 +155,5 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(integ).toMatch(/billing\.katalog/);
     expect(integ).not.toMatch(/type="checkbox"|type="switch"/);
     expect(integ).not.toMatch(/Hellanor|Mailchimp/);
-
-    const preview = utenKommentarer(les('../app/org-preview/page.tsx'));
-    expect(preview).toMatch(/data-org-preview/);
-    expect(preview).toMatch(/ORG_HUB_SEKSJONER/);
-    expect(preview).toMatch(/Hellanor\/Mailchimp/);
   });
 });

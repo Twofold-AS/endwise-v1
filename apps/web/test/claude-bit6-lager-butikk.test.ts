@@ -96,9 +96,5 @@ describe('Claude Design BIT 6 — Lager + Butikk', () => {
     expect(butikk).toMatch(/Se alle varer|varerPreview/);
     expect(butikk).toMatch(/ButikkBookingWidget/);
     expect(butikk).toMatch(/leggIKurv/);
-    const previewL = utenKommentarer(les('../app/lager-preview/page.tsx'));
-    const previewB = utenKommentarer(les('../app/butikk-preview/page.tsx'));
-    expect(previewL).toMatch(/data-lager-preview/);
-    expect(previewB).toMatch(/data-butikk-preview/);
   });
 });

@@ -1,10 +1,13 @@
 # UI-pakker — les denne FØR du bygger UI
 
-> ### ⚠️ Mikael PR #178 review-side `/pr-review` (25.09.2026)
-> Offentlig samleside uten innlogging. Live iframe 390×844 mot
-> eksisterende `*-preview`. Norsk tekst per bit + Fix A.
-> Ingen nye chrome-piller. Ingen endring av eksisterende skjermer.
-> nextjs-portal skjult. ⛔ ikke merge #178.
+> ### ⚠️ Mikael PR #178 — Claude på ekte ruter (25.09.2026)
+> Bit 1–7 + Fix A ligger på produkt-rutene (`/home`, `/kunder`,
+> `/jobber`, `/innboks`, `/bookinger/ny`, `/lager`, `/butikk`,
+> `/prisliste`, `/organisasjon`). `/pr-review` og PR-only
+> `*-preview` er fjernet. Eldre GO-previews fra main beholdt
+> (`/pulse-preview`, `/innboks-preview`, `/visual-forms-preview`,
+> `/ia-chrome-preview`). Ingen nye chrome-piller. Ingen bypass.
+> ⛔ ikke merge #178.
 >
 > ### ⚠️ Mikael Claude Design BIT 7 — Org / Tjenester (24.09.2026)
 > Tjenester på eksisterende `/prisliste`: pageSub `N tjenester tilbys`,
@@ -14,8 +17,8 @@
 > Abonnement · Integrasjoner. Firmaopplysninger fra `forhandler.get`.
 > Ansatte `N ansatte · M på jobb nå` fra `team.list`-status (bookinger
 > i dag). Sett tid = «ingen API». Slett = `team.fjern`. Vaktliste per
-> ukedag = ærlig tom. Integrasjoner uten av/på-brytere. Preview:
-> `/tjenester-preview` · `/org-preview`. Ingen ny pakke.
+> ukedag = ærlig tom. Integrasjoner uten av/på-brytere.
+> Live: `/prisliste` · `/organisasjon`. Ingen ny pakke.
 > ⛔ #176/#177. ⛔ Hellanor/Mailchimp live. Venter Mikael browser-review.
 >
 > ### ⚠️ Mikael Claude Design BIT 6 — Lager + Butikk (24.09.2026)
@@ -26,7 +29,7 @@
 > salgskanaler (Finn.no · Butikk · Reservert) = ærlig «ingen API».
 > Butikk-hub: pageTitle Butikk, `N varer · M kjøretøy`, preview 3 +
 > Se alle mot `shop.catalog`. Katalog + kasse + widget urørt.
-> Chrome-piller urørt. Preview: `/lager-preview` · `/butikk-preview`.
+> Chrome-piller urørt. Live: `/lager` · `/butikk`.
 > Ingen ny pakke. Bit 7 samme PR. ⛔ #176/#177. ⛔ Hellanor/MC-Import live.
 >
 > ### ⚠️ Mikael Claude Design BIT 5 — Ny jobb / jobSlots (24.09.2026)
@@ -57,16 +60,16 @@
 > Endringer: Avvik · Forespørsler · Logg. Godkjenn/Avslå kaller
 > `bookings.resolveChange` (ikke stub). Meld-skjema på jobbdetalj via
 > `bookings.reportChange`. Chrome 1+2 + `TIMEPLAN_FANER` urørt. Kalender
-> og booking-status urørt. Preview: `/jobber-preview`. Live: `/jobber`.
+> og booking-status urørt. Live: `/jobber`.
 > Ingen ny pakke. ⛔ Bit 4–7. ⛔ #176/#177.
 >
 > ### ⚠️ Mikael Fix A — Kunder alfa-rail Apple Contacts (24.09.2026)
 > Rail i **list-viewport** (sticky + like `flex-1`-spor), ikke
 > `absolute`/`justify-center`. Full norsk indeks `#` + A–Å (Q/W/X/Z/Æ/Ø),
 > tomme dimmet. **Scroll-to-seksjon** + sticky hoder; `#` = topp.
-> Søket `shrink-0` (ingen grå flex-1-stripe). Next.js Dev Tools
-> (`nextjs-portal`) skjult på `/kunder-preview`. Pager/filter-UX vekk
-> fra lista (hjelpere i `_alfa.ts` beholdt). ⛔ ikke merge #178.
+> Søket `shrink-0` (ingen grå flex-1-stripe). Pager/filter-UX vekk
+> fra lista (hjelpere i `_alfa.ts` beholdt). Live: `/kunder`.
+> ⛔ ikke merge #178.
 >
 > ### ⚠️ Mikael Claude Design BIT 2 — Kunder alfa-rail + profil (24.09.2026)
 > Kunder-listen får Claude §4.9 **høyre alfa-rail** (`#` + A–Å) —
@@ -806,8 +809,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Verkstedet timeplan + ansatte på jobb (`apps/web/app/(app)/dashboard/_timeplan.tsx`, `_ansatte-pa-jobb.tsx`, F3-05 25.08.2026) | **Ingen ny pakke.** Timeplanen er samme 07–18-raster som Jobber › Kalender (F3-07), komponert av `CardShell` + `Link` + status-tokens. Ansatte på jobb er `Avatar` + native `<details>` (samme expand-grep som Profil). shadcn har ingen verksted-timeplan; å hente `calendar` ville vært en §2-pakke for en dagsstripe. Kompetanse/Timeplan under Ansatte røres ikke. |
 
-| PR #178 review (`pr-review/`, F5-01 25.09.2026) | **Ingen ny pakke.** Telefonramme er `border` + `iframe` 390×844 (samme 24px-radius som markeds-`ProduktRamme`). shadcn har ingen review-hub. Eksisterende `*-preview` iframes, ikke kopiert UI. |
-| Kunder alfa-rail (`kunder/_alfa.ts`, `kunder/_alfa-rail.tsx`, `kunder/_alfa-liste.tsx`, F5-02 24.09.2026) | **Ingen ny pakke.** Apple Contacts-indeks i list-viewport (`sticky` + like `flex-1`-spor). Full NO `#` A–Å med dimmete tomme. Scroll-to + sticky seksjonshoder. shadcn/beUI har ingen norsk indeks-skinne. Preview: `/kunder-preview` (skjuler `nextjs-portal`). |
+| Kunder alfa-rail (`kunder/_alfa.ts`, `kunder/_alfa-rail.tsx`, `kunder/_alfa-liste.tsx`, F5-02 24.09.2026) | **Ingen ny pakke.** Apple Contacts-indeks i list-viewport (`sticky` + like `flex-1`-spor). Full NO `#` A–Å med dimmete tomme. Scroll-to + sticky seksjonshoder. shadcn/beUI har ingen norsk indeks-skinne. Live: `/kunder`. |
 | Forhandler pulse-hjem (`_shell/phone-home-dealer.tsx`, `_shell/pulse-kort.tsx`, `_shell/phone-home-pulse.ts`, F3-05 10.09.2026) | **Ingen ny pakke.** **24.09 (Claude BIT 1):** `PulseAnalyserKort` er «Tall» + 2×2 Visninger/Bookinger/Returer/Credits. Live bookinger 30d, ærlige stubber. Låst stabel urørt. `/analyse` + Amicro urørt. **11.09 (CODE-GO tillegg):** Jobb-etikett `font-normal` (ikke 650/700). **10.09 (CODE-GO hjem-fiks):** To separate Modus-sirkler (ikon + tall ved siden, maks 50 % rad). PPF loddrett midt mellom dato og Avvik-rad. Kun Amicro `DitherDonutChart` med `#0066ff`-fyll — ingen SVG-strek. Analyser: `Tall for {navn}` uten anførsel, `min-h-11` som Innboks, Amicro `RevenueLineChart` med `pointer-events-none`. **10.09 (CODE-GO GO):** Halvsirkel med blå fill-linje/nål `#0066ff` (data viz) + Oslo-klokke i midten — **overstyrt** av hjem-fiks (ingen strek/nål). Avvik\|Forespørsler = `.ew-modus-plate` + `CircleQuestionMark`. Dato på samme rad som ukedag. **09.09 (CODE-GO):** Amicro-halvsirkel (`sweep={π}`) på samme linje som Planlagt/Pågår/Ferdig, etiketter 08…19. Hvit Endringer + `ChevronRight` → `/jobber?fane=endringer`. **08.09 natt (CODE-GO polish):** sirkel over Endringer, 08–19, `startAngle={π}` klokkevis venstre→høyre. Jobb: etikett venstre, +ikon høyre. **08.09 kveld (CODE-GO):** to-delt toppkort (`PulseHeroFlate`). Analyser nederst. Ikonplater `#ffffff`. ⛔ mock-badge. ⛔ #114/#119. |
 | Timeplan › Endringer (`jobber/_endringer.tsx`, `timeplan/endringer/page.tsx`, F7-05) | **Ingen ny pakke.** Innstillinger-inndeling (underline Avvik \| Forespørsler) inne i Timeplan-chrome. Logg er hale-lenke, ikke chrome-fane. Alias `/timeplan/endringer` → `/jobber?fane=endringer`. Godkjenn/Avslå = `bookings.resolveChange`. shadcn Table/Tabs er New York-boxed. |
 | Timeplan uke-rail + dagsliste (`_shell/timeplan-stripe.tsx`, `jobber/_dagsliste.tsx`, F3-07/F5-15, 24.09.2026) | **Ingen ny pakke.** 7 dag-chips + native månedsgitter. Sortering gjenbruker `SorteringArk`. shadcn `calendar` er ikke hentet — ville gitt et annet system enn Timeplan-stripen. |

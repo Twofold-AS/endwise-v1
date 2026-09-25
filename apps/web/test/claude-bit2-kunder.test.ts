@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -140,38 +140,53 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(skall).not.toMatch(/min-h-\[420px\]/);
   });
 
-  it('preview fyller list-viewport — ingen grå søk-stripe, ingen Next-portal over rail', () => {
-    const preview = utenKommentarer(les('../app/kunder-preview/page.tsx'));
-    expect(preview).toMatch(/KunderAlfaListe/);
-    expect(preview).toMatch(/shrink-0/);
-    expect(preview).toMatch(/h-dvh|min-h-0 flex-1/);
-    expect(preview).not.toMatch(/min-h-\[420px\]/);
-    expect(preview).not.toMatch(/filtrerKunderAlfa/);
-    expect(preview).not.toMatch(/data-kunder-pager/);
-    expect(preview).not.toMatch(/pr-\[30px\]/);
-    expect(preview).toMatch(/Navn, telefon, e-post eller reg\.nr/);
-    expect(preview).toMatch(/nextjs-portal/);
-    const css = les('../app/kunder-preview/preview.css');
-    expect(css).toMatch(/nextjs-portal/);
-    expect(css).toMatch(/display:\s*none/i);
+  it('live /kunder fyller list-viewport — ingen grå søk-stripe', () => {
+    const liste = utenKommentarer(les('../app/(app)/kunder/page.tsx'));
+    const skall = utenKommentarer(les('../app/(app)/kunder/_alfa-liste.tsx'));
+    expect(liste).toMatch(/KunderAlfaListe/);
+    expect(liste).toMatch(/shrink-0/);
+    expect(liste).toMatch(/min-h-\[calc\(100dvh/);
+    expect(liste).toMatch(/customers\.list/);
+    expect(liste).not.toMatch(/min-h-\[420px\]/);
+    expect(liste).not.toMatch(/filtrerKunderAlfa/);
+    expect(liste).not.toMatch(/data-kunder-pager/);
+    expect(liste).not.toMatch(/pr-\[30px\]/);
+    expect(liste).toMatch(/Navn, telefon, e-post eller reg\.nr/);
+    expect(skall).toMatch(/min-h-0 flex-1/);
+    expect(skall).toMatch(/data-kunder-liste-hale/);
   });
 
-  it('FIX B: ingen klone-rails i andre Bit-previews', () => {
+  it('FIX B: ingen klone-rails i eldre GO-previews fra main', () => {
     const previews = [
-      '../app/lager-preview/page.tsx',
-      '../app/butikk-preview/page.tsx',
       '../app/visual-forms-preview/page.tsx',
       '../app/innboks-preview/page.tsx',
-      '../app/jobber-preview/page.tsx',
       '../app/pulse-preview/page.tsx',
-      '../app/tjenester-preview/page.tsx',
-      '../app/org-preview/page.tsx',
+      '../app/ia-chrome-preview/page.tsx',
     ];
     for (const rel of previews) {
       const kilde = utenKommentarer(les(rel));
       expect(kilde).not.toMatch(/data-kunder-alfa-rail/);
       expect(kilde).not.toMatch(/absolute top-0 right-1 bottom-0/);
     }
+  });
+
+  it('PR-only preview-ruter er fjernet — Claude ligger på ekte ruter', () => {
+    const fjernet = [
+      '../app/pr-review/page.tsx',
+      '../app/kunder-preview/page.tsx',
+      '../app/jobber-preview/page.tsx',
+      '../app/lager-preview/page.tsx',
+      '../app/butikk-preview/page.tsx',
+      '../app/tjenester-preview/page.tsx',
+      '../app/org-preview/page.tsx',
+    ];
+    for (const rel of fjernet) {
+      expect(existsSync(resolve(her, rel))).toBe(false);
+    }
+    expect(existsSync(resolve(her, '../app/pulse-preview/page.tsx'))).toBe(true);
+    expect(existsSync(resolve(her, '../app/innboks-preview/page.tsx'))).toBe(true);
+    expect(existsSync(resolve(her, '../app/visual-forms-preview/page.tsx'))).toBe(true);
+    expect(existsSync(resolve(her, '../app/ia-chrome-preview/page.tsx'))).toBe(true);
   });
 
   it('profil har Kontakt · Kjøretøy · Jobber · Meldinger uten å rive skjemaer', () => {

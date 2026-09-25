@@ -6,7 +6,7 @@
 - Rail i list-viewport: `sticky` + like `flex-1`-spor. Ikke `absolute`/`justify-center`.
 - Scroll-to-seksjon + sticky seksjonshoder. `#` = topp. Filter/pager vekk fra lista.
 - Preview: `h-dvh` + søk `shrink-0` (ingen grå flex-1-stripe). `nextjs-portal` skjult.
-- Live `/kunder` + `/kunder-preview` deler `KunderAlfaListe`.
+- Live `/kunder` bruker `KunderAlfaListe` (PR-only `/kunder-preview` fjernet 25.09).
 - FIX B: ingen klone-rails i andre Bit-previews.
 
 ## Hva gikk galt
@@ -22,4 +22,4 @@
 
 ## Neste steg
 
-- Mikael browser-review på `/kunder-preview`. **Ikke merge #178.**
+- Mikael browser-review på `/kunder` (innlogget preview). **Ikke merge #178.**

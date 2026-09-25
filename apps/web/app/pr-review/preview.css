@@ -1,0 +1,5 @@
+/* Next.js 16 Dev Tools — ikke over review-innhold eller midt-rail i iframe. */
+nextjs-portal {
+  /* biome-ignore lint/complexity/noImportantStyles: portalen setter egen display */
+  display: none !important;
+}

@@ -80,12 +80,29 @@ const nextConfig: NextConfig = {
       { key: 'CDN-Cache-Control', value: 'no-store' },
       { key: 'Vercel-CDN-Cache-Control', value: 'no-store' },
     ];
+    const sameOriginFrame = [
+      { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+      { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+    ];
+    const previewKilder = [
+      '/pr-review',
+      '/pulse-preview',
+      '/kunder-preview',
+      '/jobber-preview',
+      '/innboks-preview',
+      '/visual-forms-preview',
+      '/lager-preview',
+      '/butikk-preview',
+      '/tjenester-preview',
+      '/org-preview',
+    ];
     return [
       { source: '/signin', headers: noStore },
       { source: '/signin/:path*', headers: noStore },
       { source: '/2fa-oppsett', headers: noStore },
       { source: '/2fa-oppsett/:path*', headers: noStore },
       { source: '/api/auth/:path*', headers: noStore },
+      ...previewKilder.map((source) => ({ source, headers: sameOriginFrame })),
     ];
   },
   // Agent-instruksjonene (instructions.md ved siden av agent.ts)

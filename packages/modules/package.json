@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./contracts": "./src/contracts/index.ts",
     "./booking": "./src/booking/index.ts",
+    "./booking/changes": "./src/booking/changes.ts",
     "./matching": "./src/matching/index.ts",
     "./notifications": "./src/notifications/index.ts",
     "./quick": "./src/quick/index.ts",

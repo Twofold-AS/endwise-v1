@@ -88,6 +88,30 @@ describe('mekaniker API deny', () => {
     });
   });
 
+  it('bookings.reportChange og resolveChange 403 for mekaniker', async () => {
+    const endring = {
+      bookingId: '00000000-0000-0000-0000-000000000005',
+      kind: 'avvik' as const,
+      message: 'Sen',
+    };
+    await expect(
+      appRouter.createCaller(mekaniker()).bookings.reportChange(endring),
+    ).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+      message: expect.stringMatching(/mekaniker|tilgang/i),
+    });
+    await expect(
+      appRouter.createCaller(mekaniker()).bookings.resolveChange({
+        bookingId: endring.bookingId,
+        kind: 'avvik',
+        decision: 'godkjent',
+      }),
+    ).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+      message: expect.stringMatching(/mekaniker|tilgang/i),
+    });
+  });
+
   it('selger kan passere desk-gaten på bookings.create (feiler ikke som FORBIDDEN)', async () => {
     await expect(appRouter.createCaller(selger()).bookings.create(jobb)).rejects.not.toMatchObject({
       code: 'FORBIDDEN',

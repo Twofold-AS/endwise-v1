@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
+import { KjoretoyKaskade } from '../bookinger/_kjoretoy-kaskade';
+import type { KjoretoyType } from '../bookinger/_kjoretoy-katalog';
 import { TYPE_LABEL } from './_delt';
 
 /**
@@ -23,10 +25,12 @@ export function RegistrerKjoretoy({
   const kunder = trpc.customers.list.useQuery({ sorter: 'navn', limit: 200 });
 
   const [customerId, setCustomerId] = useState(fastKundeId ?? '');
-  const [type, setType] = useState<'mc' | 'boat' | 'atv'>('mc');
+  const [type, setType] = useState<KjoretoyType>('mc');
   const [regNumber, setRegNumber] = useState('');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
+  const [ar, setAr] = useState('');
+  const alleKjoretoy = trpc.vehicles.list.useQuery({ limit: 200 });
 
   const opprett = trpc.vehicles.create.useMutation({
     onSuccess: (v) => {
@@ -50,6 +54,7 @@ export function RegistrerKjoretoy({
       customerId: customerId || undefined,
       make: make.trim() || undefined,
       model: model.trim() || undefined,
+      modelYear: ar.trim() || undefined,
     });
   }
 
@@ -76,17 +81,18 @@ export function RegistrerKjoretoy({
           </InnstillingRad>
         )}
         <InnstillingRad label="Type">
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as typeof type)}
-            className="h-control ew-felt ew-felt-md px-2.5"
-          >
-            {(['mc', 'boat', 'atv'] as const).map((t) => (
-              <option key={t} value={t}>
-                {TYPE_LABEL[t]}
-              </option>
-            ))}
-          </select>
+          <span className="sr-only">{TYPE_LABEL[type]}</span>
+          <KjoretoyKaskade
+            type={type}
+            merke={make}
+            modell={model}
+            ar={ar}
+            rader={alleKjoretoy.data ?? []}
+            onType={setType}
+            onMerke={setMake}
+            onModell={setModel}
+            onAr={setAr}
+          />
         </InnstillingRad>
         <InnstillingRad label="Registreringsnummer" siste>
           <input
@@ -94,25 +100,6 @@ export function RegistrerKjoretoy({
             onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
             maxLength={10}
             placeholder="AB12345"
-            className="h-control ew-felt ew-felt-md px-2.5"
-          />
-        </InnstillingRad>
-      </InnstillingSeksjon>
-
-      <InnstillingSeksjon tittel="Kjennetegn">
-        <InnstillingRad label="Merke">
-          <input
-            value={make}
-            onChange={(e) => setMake(e.target.value)}
-            maxLength={64}
-            className="h-control ew-felt ew-felt-md px-2.5"
-          />
-        </InnstillingRad>
-        <InnstillingRad label="Modell" siste>
-          <input
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            maxLength={64}
             className="h-control ew-felt ew-felt-md px-2.5"
           />
         </InnstillingRad>

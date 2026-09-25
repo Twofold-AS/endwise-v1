@@ -10,6 +10,7 @@ import { CardShell } from '../_shell/cards';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
 import { nivaTekst } from '../mekanikere/kompetanse/_niva';
 import { AktivitetMerke } from './_aktivitet';
+import { ansattePageSub, erPaJobbNaa, INGEN_API } from './_hub';
 import { OpprettAnsattDialog } from './_opprett-dialog';
 
 type Rad = RouterOutput['team']['list'][number];
@@ -52,13 +53,16 @@ export function OrganisasjonAnsatte() {
   }
 
   const rader = team.data ?? [];
+  const paJobb = rader.filter((r) => erPaJobbNaa(r.status)).length;
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-title text-fg">Ansatte</h2>
-          <p className="text-body text-fg-muted">Hvem som jobber her.</p>
+          <p data-ansatte-pagesub className="text-body text-fg-muted">
+            {ansattePageSub(rader.length, paJobb)}
+          </p>
         </div>
         {isAdmin ? (
           <button
@@ -186,9 +190,68 @@ function AnsattKort({
         ) : null}
       </div>
 
+      <p className="text-label text-fg-muted" data-ansatt-tjenestetid>
+        Egne tjenestetider <span className="text-fg">{INGEN_API}</span>
+      </p>
+
+      {kanEndre && rad.kanEndres ? <SlettAnsatt rad={rad} /> : null}
+
       <RolleDialog rad={rad} apen={rolleApen} onLukk={() => setRolleApen(false)} />
       <KompetanseDialog rad={rad} apen={kompApen} onLukk={() => setKompApen(false)} />
     </CardShell>
+  );
+}
+
+function SlettAnsatt({ rad }: { rad: Rad }) {
+  const utils = trpc.useUtils();
+  const [apen, setApen] = useState(false);
+  const fjern = trpc.team.fjern.useMutation({
+    onSuccess: () => {
+      setApen(false);
+      void utils.team.list.invalidate();
+      void utils.mechanics.list.invalidate();
+      void utils.mechanics.oversikt.invalidate();
+    },
+  });
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={() => setApen(true)}
+        className="inline-flex h-control items-center self-start rounded-control border border-border px-2.5 text-label text-fg-muted hover:text-danger"
+      >
+        Slett ansatt
+      </button>
+      <Dialog open={apen} onOpenChange={setApen}>
+        <DialogContent className="top-1/2 left-1/2 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-5">
+          <DialogTitle className="text-title text-fg">Fjerne {rad.navn} fra teamet?</DialogTitle>
+          <p className="mt-2 text-body text-fg-muted">
+            Personen deaktiveres og forsvinner fra teamet. Kontoen slettes ikke.
+          </p>
+          {fjern.isError ? (
+            <p className="mt-2 text-[12px] text-danger">{fjern.error.message}</p>
+          ) : null}
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setApen(false)}
+              className="h-control px-3 text-label text-fg-muted"
+            >
+              Avbryt
+            </button>
+            <button
+              type="button"
+              disabled={fjern.isPending}
+              onClick={() => fjern.mutate({ userId: rad.userId })}
+              className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
+            >
+              {fjern.isPending ? 'Fjerner …' : 'Bekreft'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 

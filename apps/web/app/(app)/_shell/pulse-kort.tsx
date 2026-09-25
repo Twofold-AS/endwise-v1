@@ -459,29 +459,35 @@ export function PulseJobbFlis() {
 }
 
 /**
- * Analyser — én boks over Jobb / På jobb.
- * Topp som Innboks: hvit ikonboks · «Analyse» · «siste 30 dager» · Se tallene.
- * Under: fire kompakte KPI-rader med %-endring (grønn opp / rød ned). Ingen dither.
+ * Tall — én boks over Jobb / På jobb (Claude §4.1 på Endwise-kortet).
+ * Topp som Innboks: hvit ikonboks · «Tall» · «siste 30 dager» · Alle tall.
+ * Under: 2×2 Visninger · Bookinger · Returer · Credits. Ingen dither.
  */
 export function PulseAnalyserKort({
   stats,
   href,
+  laster = false,
 }: {
   stats: AnalyserMockStat[];
   href: string;
   forhandlerNavn?: string | null;
+  laster?: boolean;
 }) {
   const kpis = stats.slice(0, 4);
 
   return (
-    <div data-pulse-analyser className={`${PHONE_DEST_FYLL} flex w-full flex-col px-4 py-3`}>
+    <div
+      data-pulse-analyser
+      data-tall-kort
+      className={`${PHONE_DEST_FYLL} flex w-full flex-col px-4 py-3`}
+    >
       <div className="flex min-h-11 w-full min-w-0 items-center gap-3">
         <PulseIkonFlate>
           <ChartColumn size={22} strokeWidth={1.75} aria-hidden />
         </PulseIkonFlate>
         <div className="min-w-0 flex-1">
           <p data-analyser-tittel className="truncate text-label leading-none text-fg">
-            Analyse
+            Tall
           </p>
           <p data-analyser-periode className="mt-1 truncate text-[12px] leading-4 text-fg-muted">
             siste 30 dager
@@ -493,38 +499,50 @@ export function PulseAnalyserKort({
           data-analyser-se-tallene
           className="inline-flex shrink-0 items-center gap-1 text-label font-normal text-fg [touch-action:manipulation]"
         >
-          Se tallene
+          Alle tall
           <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
         </Link>
       </div>
-      <div data-analyser-kpi-liste className="mt-2 flex flex-col">
+      <div
+        data-analyser-kpi-liste
+        data-analyser-kpi-rutenett
+        className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-divide pt-3"
+      >
         {kpis.map((s) => (
-          <PulseAnalyseKpi key={s.id} stat={s} />
+          <PulseAnalyseKpi key={s.id} stat={s} laster={laster && s.id === 'bookinger'} />
         ))}
       </div>
     </div>
   );
 }
 
-function PulseAnalyseKpi({ stat }: { stat: AnalyserMockStat }) {
+function PulseAnalyseKpi({ stat, laster = false }: { stat: AnalyserMockStat; laster?: boolean }) {
   const Ikon = stat.opp ? TrendingUp : TrendingDown;
+  const verdi = typeof stat.verdi === 'number' ? stat.verdi.toLocaleString('nb-NO') : stat.verdi;
   return (
-    <div
-      data-analyser-kpi={stat.id}
-      className="flex h-7 min-w-0 items-center justify-between gap-2"
-    >
+    <div data-analyser-kpi={stat.id} className="flex min-w-0 flex-col gap-1">
       <p className="min-w-0 truncate text-[12px] leading-4 text-fg-muted">{stat.label}</p>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <p className="text-[15px] font-semibold leading-none text-fg tabular-nums">{stat.verdi}</p>
-        <span
-          data-analyser-delta={stat.opp ? 'opp' : 'ned'}
-          className={`inline-flex items-center gap-0.5 text-[11px] leading-none tabular-nums ${
-            stat.opp ? 'text-success' : 'text-danger'
-          }`}
-        >
-          <Ikon size={11} strokeWidth={2} aria-hidden />
-          {stat.delta}
-        </span>
+      <div className="flex min-w-0 items-baseline gap-1.5">
+        {laster ? (
+          <span className="inline-block h-4 w-8 animate-pulse rounded-sm bg-border" />
+        ) : (
+          <p className="text-[15px] font-semibold leading-none text-fg tabular-nums">{verdi}</p>
+        )}
+        {stat.stub ? (
+          <span data-analyser-stub className="truncate text-[11px] leading-none text-fg-faint">
+            {stat.stub}
+          </span>
+        ) : stat.delta ? (
+          <span
+            data-analyser-delta={stat.opp ? 'opp' : 'ned'}
+            className={`inline-flex items-center gap-0.5 text-[11px] leading-none tabular-nums ${
+              stat.opp ? 'text-success' : 'text-danger'
+            }`}
+          >
+            <Ikon size={11} strokeWidth={2} aria-hidden />
+            {stat.delta}
+          </span>
+        ) : null}
       </div>
     </div>
   );

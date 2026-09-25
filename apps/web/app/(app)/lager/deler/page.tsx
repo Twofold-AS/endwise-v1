@@ -7,6 +7,8 @@ import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { Beholdning, Feil, kroner, Laster, Sidehode, Tomt } from '../_delt';
 import { BevegelseDialog } from './_bevegelse-dialog';
+import { DelDetalj } from './_del-detalj';
+import { NyDel } from './_ny-del';
 
 /**
  * Lager · Deler.
@@ -34,6 +36,8 @@ function DelerInner() {
   const [sorter, setSorter] = useState<Sortering>('sku');
   const [retning, setRetning] = useState<'asc' | 'desc'>('asc');
   const [valgtDel, setValgtDel] = useState<{ id: string; sku: string; name: string } | null>(null);
+  const [detaljId, setDetaljId] = useState<string | null>(null);
+  const [nyDel, setNyDel] = useState(false);
 
   const deler = trpc.inventory.listParts.useQuery({
     sok: sok.trim() || undefined,
@@ -44,11 +48,22 @@ function DelerInner() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5 px-8 py-7">
+    <div data-lager-deler className="mx-auto flex w-full max-w-[1100px] flex-col gap-5 px-8 py-7">
       <Sidehode
         tittel="Deler"
         undertittel="Tilgjengelig = på lager minus reservert. Det er tallet som gjelder."
       />
+      {isAdmin ? (
+        <button
+          type="button"
+          data-ny-del-knapp
+          onClick={() => setNyDel((v) => !v)}
+          className="self-start text-xs text-fg underline decoration-border underline-offset-2"
+        >
+          {nyDel ? 'Skjul ny del' : 'Ny'}
+        </button>
+      ) : null}
+      {nyDel && isAdmin ? <NyDel onFerdig={() => setNyDel(false)} /> : null}
       {/* Søk + sortering */}
       <div className="flex flex-wrap items-center gap-2">
         <label className="relative flex h-control min-w-[240px] flex-1 items-center">
@@ -131,11 +146,18 @@ function DelerInner() {
               className={`flex h-row-store items-center gap-4 bg-bg px-4 ${
                 i > 0 ? 'border-border border-t' : ''
               }`}
+              data-below-min={d.underMinimum ? '1' : undefined}
             >
               <span className="w-28 shrink-0 truncate font-mono text-[12px] text-fg-muted">
                 {d.sku}
               </span>
-              <span className="min-w-0 flex-1 truncate text-label text-fg">{d.name}</span>
+              <button
+                type="button"
+                onClick={() => setDetaljId((id) => (id === d.id ? null : d.id))}
+                className="min-w-0 flex-1 truncate text-left text-label text-fg hover:underline"
+              >
+                {d.name}
+              </button>
               <span className="w-28 shrink-0 truncate text-[12px] text-fg-muted">
                 {d.category ?? '—'}
               </span>
@@ -165,6 +187,16 @@ function DelerInner() {
           ))}
         </div>
       )}
+
+      {detaljId ? (
+        <DelDetalj
+          delId={detaljId}
+          onBevegelse={() => {
+            const treff = (deler.data ?? []).find((d) => d.id === detaljId);
+            if (treff) setValgtDel({ id: treff.id, sku: treff.sku, name: treff.name });
+          }}
+        />
+      ) : null}
 
       <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
         <Package size={14} />

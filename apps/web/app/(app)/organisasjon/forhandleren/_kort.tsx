@@ -4,6 +4,8 @@ import { FELT_MD, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../../_lib/lyd';
+import { useOrgRole } from '../../_lib/use-org-role';
+import { OrgHubSeksjoner, TimeplanAnsatteNotat } from '../_hub-flate';
 import { OrgRad } from '../_org-rad';
 
 const INPUT = `${FELT_MD} disabled:bg-surface-2 disabled:text-fg-muted`;
@@ -39,6 +41,8 @@ type RadNokkel = keyof Skjema | null;
 export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slug?: string }) {
   const utils = trpc.useUtils();
   const lyd = useLyd();
+  const { isAdmin } = useOrgRole();
+  const team = trpc.team.list.useQuery(undefined, { enabled: !lesing && !slug });
   const dealer = trpc.forhandler.get.useQuery(undefined, { enabled: !lesing && !slug });
   const inspect = trpc.verksted.forhandleren.useQuery(
     { slug: slug ?? '' },
@@ -113,9 +117,25 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
       : {};
   const leftoverKeys = Object.keys(leftover);
 
+  const antallAnsatte = team.data?.length;
+  const ansatteVerdi =
+    lesing || team.isLoading ? '—' : team.isError ? '—' : String(antallAnsatte ?? 0);
+
   return (
-    <div data-org-oversikt className="flex flex-col">
+    <div data-org-oversikt className="flex flex-col gap-5">
+      {lesing ? null : (
+        <div data-org-hub className="flex flex-col gap-3">
+          {skjema.name ? (
+            <p data-org-pagesub className="text-[12px] text-fg-muted">
+              {skjema.name}
+            </p>
+          ) : null}
+          <OrgHubSeksjoner isAdmin={isAdmin} />
+          <TimeplanAnsatteNotat />
+        </div>
+      )}
       <form onSubmit={onSubmit} className="flex flex-col">
+        <h3 className="pb-1 text-label text-fg">Firmaopplysninger</h3>
         <OrgRad
           label="Firmanavn"
           verdi={skjema.name}
@@ -215,7 +235,6 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
           apen={apen === 'website'}
           onEndre={() => toggle('website')}
           lesing={lesing}
-          siste={leftoverKeys.length === 0 && lesing}
         >
           <OrgFelt
             label="Nettside"
@@ -223,6 +242,7 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
             onChange={(website) => setSkjema((s) => ({ ...s, website }))}
           />
         </OrgRad>
+        <OrgRad label="Antall ansatte" verdi={ansatteVerdi} lesing />
 
         {leftoverKeys.length > 0 ? (
           <details className="border-border border-b px-0 py-4">

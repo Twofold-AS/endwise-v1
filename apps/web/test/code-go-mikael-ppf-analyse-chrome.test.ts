@@ -51,7 +51,7 @@ describe('CODE-GO Mikael 11.09.2026 oppfølging — PPF, Analyse, chrome 1+2, So
     expect(analyser).toMatch(/data-analyser-tittel/);
     expect(analyser).toMatch(/Analyse/);
     expect(analyser).toMatch(/siste 30 dager/);
-    expect(analyser).toMatch(/Se tallene/);
+    expect(analyser).toMatch(/Alle tall/);
     expect(analyser).toMatch(/data-analyser-kpi/);
     expect(analyser).toMatch(/TrendingUp/);
     expect(analyser).toMatch(/TrendingDown/);

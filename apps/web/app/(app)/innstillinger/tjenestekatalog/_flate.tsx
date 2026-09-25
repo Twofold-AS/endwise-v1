@@ -6,8 +6,10 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { PhoneSokFelt } from '../../_shell/phone-sok-felt';
 import { SorteringArk, SorteringValg } from '../../_shell/sortering-ark';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
+import { tjenesterPageSub, trefferTjenesteSok } from '../../prisliste/_hub';
 import { TYPE_VALG } from './_felles';
 import { NyTjeneste } from './_ny-tjeneste';
 import { TjenesteKort } from './_tjeneste-kort';
@@ -29,6 +31,7 @@ export function PrislisteFlate({
 }) {
   const { isAdmin } = useOrgRole();
   const [filter, setFilter] = useState<string>('alle');
+  const [sok, setSok] = useState('');
   const [nyApen, setNyApen] = useState(false);
   const [sorterApen, setSorterApen] = useState(false);
   const sorterRef = useRef<HTMLDivElement>(null);
@@ -41,14 +44,17 @@ export function PrislisteFlate({
    */
   const tjenester = trpc.services.list.useQuery({ inkluderInaktive: true });
 
-  const synlige = (tjenester.data ?? []).filter(
+  const etterType = (tjenester.data ?? []).filter(
     (t) => filter === 'alle' || t.vehicleType === filter,
   );
+  const synlige = etterType.filter((t) => trefferTjenesteSok(t, sok));
   const aktive = synlige.filter((t) => t.active);
   const inaktive = synlige.filter((t) => !t.active);
+  const tilbys = etterType.filter((t) => t.active).length;
 
   return (
     <div
+      data-tjenester-liste
       className={
         skjulPiller
           ? 'flex flex-col gap-5'
@@ -69,7 +75,19 @@ export function PrislisteFlate({
         </div>
       )}
 
+      <p data-tjenester-pagesub className="text-[12px] text-fg-muted">
+        {tjenester.isLoading ? 'Laster tjenester …' : tjenesterPageSub(tilbys)}
+      </p>
+
       <div className="flex flex-wrap items-center gap-2">
+        <div data-tjenester-sok className="min-w-[180px] flex-1">
+          <PhoneSokFelt
+            value={sok}
+            onChange={(e) => setSok(e.target.value)}
+            placeholder="Søk tjeneste"
+            aria-label="Søk tjeneste"
+          />
+        </div>
         <div ref={sorterRef} className="relative">
           <button
             type="button"

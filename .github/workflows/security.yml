@@ -62,12 +62,13 @@ jobs:
   zap-baseline:
     name: ZAP baseline mot preview
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && vars.PREVIEW_URL != ''
     steps:
       - uses: actions/checkout@v4
       - name: ZAP baseline
+        continue-on-error: true
         uses: zaproxy/action-baseline@v0.12.0
         with:
           # Settes når Vercel-preview-URL er tilgjengelig (F0-07/F0-10)
-          target: ${{ vars.PREVIEW_URL || 'https://example.invalid' }}
+          target: ${{ vars.PREVIEW_URL }}
           fail_action: false

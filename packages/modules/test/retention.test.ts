@@ -32,10 +32,11 @@ describe('retensjonspolicy (F14-03)', () => {
     expect(prunableRules().map((r) => r.table)).not.toContain('erasure_requests');
   });
 
-  it('stream_events og AI-logger slettes automatisk (konfigurerbar, default 30 dager)', () => {
+  it('stream_events og AI-logger slettes automatisk (konfigurerbar, default 7 dager)', () => {
     expect(ruleFor('stream_events')?.mode).toBe('delete');
     expect(ruleFor('stream_events')?.days).toBeGreaterThan(0);
     expect(ruleFor('stream_events')?.days).toBeLessThanOrEqual(365);
+    expect(AI_LOG_RETENTION_DAYS_DEFAULT).toBe(7);
     expect(aiLogRetentionDays({})).toBe(AI_LOG_RETENTION_DAYS_DEFAULT);
     expect(aiLogRetentionDays({ AI_LOG_RETENTION_DAYS: '14' })).toBe(14);
     expect(aiLogRetentionDays({ AI_LOG_RETENTION_DAYS: 'nei' })).toBe(

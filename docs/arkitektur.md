@@ -210,7 +210,7 @@ innloggingen skjer før noen forhandler er valgt. Grensen går i stedet på
 | **Resend** | E-post: engangskoder ved innlogging, bekreftelser, nyhetsbrev | Ja — innlogging med 2FA feiler uten |
 | **Twilio** | SMS til kunder og engangskoder på telefon | Nei |
 | **Mistral (EU)** | ⚠️ **Alle agenter** (Ronny, kunde-support, intern drift). Ingen reserveløsning — mangler nøkkelen, nekter agenten å starte i produksjon | Ja, for AI |
-| **Fireworks** | Ikke valgt av agent-runtime (Mikael 02.09.2026). Pakken står for EU-tester | Nei |
+| **Fireworks** | Fjernet. Agent-runtime ruter kun Mistral EU | Nei |
 | **Statens vegvesen** | Regnr → merke, modell, EU-frist. Betales per oppslag | Nei |
 | **Quick** | Synk av kunder og bookinger mot forhandlerens ERP | Nei |
 | **Sentry** | Feilrapportering | Nei |

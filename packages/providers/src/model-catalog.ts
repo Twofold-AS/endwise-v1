@@ -6,7 +6,6 @@ import type { ModelRole } from '@endwise/modules';
  * og katalogen mapper (leverandør, plan, rolle) → modell-ID.
  * Modell-ID-ene leses fra miljøet, per leverandør:
  * MISTRAL_MODEL_FAST / STANDARD / HARD / EMBED / REALTIME
- * (FIREWORKS_MODEL_* finnes fortsatt for den ubrukte Fireworks-provideren).
  * Grunnen til at de ikke ligger i kode: modellnavn endrer seg raskere enn
  * repoet, og en modell vi gjetter på er en modell som ikke finnes.
  */
@@ -38,7 +37,7 @@ function envVarFor(vendor: string, role: ModelRole): string {
 
 /**
  * Bygger katalogen fra miljøet for én leverandør.
- * `vendor` er prefikset: 'FIREWORKS' → FIREWORKS_MODEL_FAST, 'MISTRAL' → MISTRAL_MODEL_FAST.
+ * `vendor` er prefikset: 'MISTRAL' → MISTRAL_MODEL_FAST.
  */
 export function catalogFromEnv(vendor: string, env: NodeJS.ProcessEnv = process.env): ModelCatalog {
   const map = {} as RoleMap;

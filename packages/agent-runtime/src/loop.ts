@@ -79,13 +79,6 @@ export async function runAgent(options: RunOptions): Promise<string> {
   const pseudo =
     options.pseudonymizer ?? createPseudonymizer({ knownNames: knownNames ? [...knownNames] : [] });
   const masked = maskMessages(options.messages, pseudo);
-  const onEvent = async (event: AgentEvent) => {
-    if (event.type === 'agent.token' || event.type === 'agent.done') {
-      await options.onEvent({ ...event, text: pseudo.unmask(event.text) });
-      return;
-    }
-    await options.onEvent(event);
-  };
 
   return pseudo.unmask(
     await runAgentWithTools({
@@ -93,7 +86,8 @@ export async function runAgent(options: RunOptions): Promise<string> {
       context,
       tools,
       messages: masked,
-      onEvent,
+      // SSE / stream_events får maskert tekst. Unmask skjer i returverdien
+      // og i chat-strømmen — ikke før persistens.
     }),
   );
 }

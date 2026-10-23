@@ -11,9 +11,9 @@ import { createGuardrails } from '@endwise/guardrails';
 import { createMessagesModule } from '@endwise/modules/messages';
 import { readEventsSince } from '@endwise/modules/stream';
 import {
-  createFireworksProvider,
   createMistralProvider,
   createMockProvider,
+  createNonEuTestProvider,
   DataRegionViolation,
 } from '@endwise/providers';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -274,17 +274,17 @@ describe('dataregion-håndheving ved spawn (F14)', () => {
   /**
    * Kjernen I hele F14.
    * Kunde-support-agenten ser sluttkundens fritekst. Den skal ikke kunne
-   * spawnes mot Fireworks (usa) — uansett hvor mange som prøver, uansett hvor
-   * fristende det er å «bare teste raskt».
+   * spawnes mot en ikke-EU-leverandør — uansett hvor mange som prøver, uansett
+   * hvor fristende det er å «bare teste raskt».
    * En feilkonfigurasjon her er ikke en bug. Det er norske kunders
    * helseopplysninger sendt ut av EU.
    */
-  it('ANGREP: kunde-support-agenten kan IKKE spawnes mot Fireworks', () => {
+  it('ANGREP: kunde-support-agenten kan IKKE spawnes mot en ikke-EU-leverandør', () => {
     expect(() =>
       spawnAgent({
         agent: kundeSupportAgent,
         context: dummyContext(),
-        provider: createFireworksProvider({ apiKey: 'x' }),
+        provider: createNonEuTestProvider(),
         guardrails: createGuardrails(),
       }),
     ).toThrow(DataRegionViolation);
@@ -301,12 +301,12 @@ describe('dataregion-håndheving ved spawn (F14)', () => {
     ).not.toThrow();
   });
 
-  it('ANGREP: drifts-agenten kan IKKE spawnes mot Fireworks (EU-lås)', () => {
+  it('ANGREP: drifts-agenten kan IKKE spawnes mot en ikke-EU-leverandør (EU-lås)', () => {
     expect(() =>
       spawnAgent({
         agent: driftInnsiktAgent,
         context: dummyContext(),
-        provider: createFireworksProvider({ apiKey: 'x' }),
+        provider: createNonEuTestProvider(),
         guardrails: createGuardrails(),
       }),
     ).toThrow(DataRegionViolation);
@@ -317,7 +317,7 @@ describe('dataregion-håndheving ved spawn (F14)', () => {
       spawnAgent({
         agent: kundeSupportAgent,
         context: dummyContext(),
-        provider: createFireworksProvider({ apiKey: 'x' }),
+        provider: createNonEuTestProvider(),
         guardrails: createGuardrails(),
       });
       expect.unreachable('skulle kastet');

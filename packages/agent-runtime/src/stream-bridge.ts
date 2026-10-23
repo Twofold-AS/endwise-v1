@@ -5,8 +5,8 @@ import type { AgentEvent } from './loop.ts';
 
 /**
  * F6-13 × F6-02 — AI-streamingen går på samme SSE-kanal som meldingene.
- * Token-tekst beholdes i `stream_events` for live avspilling (ai-innsikt),
- * og slettes av retensjons-cron (`AI_LOG_RETENTION_DAYS`, default 30).
+ * Token-tekst i `stream_events` er maskert (live avspilling / ai-innsikt),
+ * og slettes av retensjons-cron (`AI_LOG_RETENTION_DAYS`, default 7).
  * Den parallelle AI-audit-raden i `audit_log` har aldri prompt- eller svartekst.
  */
 function auditMetadata(event: AgentEvent): Record<string, unknown> {
@@ -37,7 +37,7 @@ export function createStreamBridge(context: AgentContext) {
         subjectType: 'agent',
         subjectId: context.threadId ?? (event.type === 'agent.start' ? event.agent : null),
         metadata: auditMetadata(event),
-      }).catch(() => undefined);
+      });
     }
 
     await publishEvent(context.db, {

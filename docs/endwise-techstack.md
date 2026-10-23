@@ -98,7 +98,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **LLM-LEVERANDØR: Mistral EU for alle agenter** (Mikael 02.09.2026 — se `docs/personvern/` for historikken 14.07):
   - **Mistral (EU)** — `@ai-sdk/mistral`. Ronny (`/chat/workshop`), kunde-support/widget og intern drift. Eneste lovlige host er `api.eu.mistral.ai` (allowlist i `assertEuEndpoint`). `api.mistral.ai` (global, ingen lokasjonsgaranti) og `api.us.mistral.ai` feiler ved oppstart. Region utledes fra URL. Function calling via chat completions. ⛔ Agents/Batch/Files-API (ikke støttet på regionalt endepunkt)
   - **Function calling** via chat completions + våre tools (`gaaTil`, `sokKunder`, … — ASCII-nøkler; Mistral avviser æ/ø/å i function name). ⛔ Ikke Mistral Agents API (innebygd web_search/code_interpreter)
-  - **`@ai-sdk/fireworks` står i repoet** men `resolveModelProvider` velger den **aldri**. Ingen intern fallback til Fireworks når Mistral-nøkkel mangler i prod
+  - **Fireworks er fjernet** (`@ai-sdk/fireworks` er ikke lenger en avhengighet). Ingen intern fallback når Mistral-nøkkel mangler i prod
   - **EU-vernet står:** hver agent erklærer `dataClass`, hver provider erklærer `region`, og `spawnAgent()` nekter å starte **begge** dataklasser mot en ikke-EU-leverandør. En feilkonfigurasjon her er et personvernbrudd, ikke en bug
   - **Scope-gate (F14-05):** Mistral Moderations (`mistral-moderation-2603`) klassifiserer kundens fritekst **i EU** før den når hoved-modellen. Kategoriene `health`, `pii`, `law`, `selfharm` → eskaler til menneske (F6-05)
 - **Ingen hardkodede modell-ID-er.** Modellkatalogen leser `MISTRAL_MODEL_<ROLLE>` fra miljøet (`FAST` / `STANDARD` / `HARD` / `EMBED` / `REALTIME`). Eksempel i `.env.example`: `mistral-small-2603` (Small 4, tool calling) for FAST og STANDARD
@@ -215,10 +215,10 @@ endwise/
 | **Framer 3.0** | Widget-distribusjon + hovedside-agent | Plugin (widgets) + **Server API** (sideendring via chat, server-side). ⛔ Ikke community-MCP-pluginen — krever åpen klient, skalerer ikke til 250 forhandlere |
 | **Composio** | Long-tail OAuth | Utsatt til konkret behov (f.eks. forhandlers Google Calendar) |
 | **Mistral (EU)** | LLM | **Alle agenter** (Ronny, kunde, intern). Allowlist `api.eu.mistral.ai`. Katalog: `MISTRAL_MODEL_*`. Moderations-API-et driver scope-gaten (F14-05) |
-| **Fireworks (serverless)** | LLM | **Ikke valgt av agent-runtime** (Mikael 02.09.2026). Pakken `@ai-sdk/fireworks` står for EU-tester. Ingen region-pinning |
+| **Fireworks (serverless)** | LLM | **Fjernet.** Ikke en avhengighet. Agent-runtime ruter kun Mistral EU. |
 | **OpenRouter** | LLM | Kun for Fusion/Council (planlegging) — aldri i booking-stien |
 
-**⚠️ Fireworks serverless (historikk 14.07.2026):** var prisvalg for intern drift, ikke lovkrav. Fra 02.09.2026 ruter `resolveModelProvider` intern og kunde til Mistral EU. Pakken kan bli stående unused. GDPR-åpningen (ingen region-pin på serverless) gjelder derfor ikke agent-stiene. **Eier låst (Mikael 02.09.2026).**
+**⚠️ Fireworks serverless (historikk 14.07.2026):** var prisvalg for intern drift, ikke lovkrav. Fra 02.09.2026 ruter `resolveModelProvider` intern og kunde til Mistral EU. Pakken `@ai-sdk/fireworks` er slettet. **Eier låst (Mikael 02.09.2026).**
 
 **Betaling sluttkunde→forhandler (forskudd i widget):** ADR-001 fortsatt åpen — Nets Easy vs Stripe+Vipps, tiltet mot Stripe+Vipps siden Stripe alt er valgt for fakturering.
 

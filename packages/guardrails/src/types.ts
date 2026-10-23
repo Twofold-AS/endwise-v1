@@ -5,6 +5,8 @@ export interface GuardContext {
   readonly tenantId: string;
   readonly userId: string;
   readonly role: string;
+  /** Kjente kundenavn som skal maskeres i verktøyresultater. */
+  readonly knownCustomerNames?: readonly string[];
 }
 
 export interface GuardrailPipeline {

@@ -5,7 +5,7 @@
 - **F14-02:** `assertEuEndpoint` er allowlist (`api.eu.mistral.ai`). `api.mistral.ai` og `api.us.mistral.ai` feiler ved oppstart. Region utledes fra URL. `tenant_operational = eu`.
 - **F14-01:** Pseudonymisering utvidet (fnr, små bokstaver i regnr, kjente navn) og koblet inn i `streamAgentChat` / `runAgent` / `spawn`. Maskeres før moderasjon.
 - **F14-05:** Scope-gate på `/chat`, widget, `agent.run` og ai-diagnose. Moderasjonsfeil blokkerer.
-- **F14-03:** `AI_LOG_RETENTION_DAYS` (default 30) for `stream_events`. AI-audit uten promptinnhold.
+- **F14-03:** `AI_LOG_RETENTION_DAYS` (default 7) for `stream_events` (maskert tekst). AI-audit uten promptinnhold (rekursiv allowlist).
 - **F0-14:** Guardrail-brudd skrives til `audit_log` i tillegg til `console.warn`.
 - **F14-15 / F14-06:** Underdatabehandlerliste i kode uten Fireworks; Mistral merket EU-endepunkt.
 - **F14-eval:** Ronny eval-sett i CI mot mock.

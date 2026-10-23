@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   assertEuEndpoint,
-  createFireworksProvider,
   createMistralProvider,
   createMockProvider,
+  createNonEuTestProvider,
   DataRegionViolation,
   MISTRAL_EU_BASE_URL,
   MissingEuProviderError,
@@ -26,13 +26,13 @@ describe('dataregion (F14)', () => {
     expect(regionSatisfies('global', 'tenant_operational')).toBe(false);
   });
 
-  it('Fireworks erklærer seg global og får derfor ingen dataklasse', () => {
-    const fw = createFireworksProvider({ apiKey: 'x' });
+  it('en global provider får ingen dataklasse', () => {
+    const global = createNonEuTestProvider();
     const mi = createMistralProvider({ apiKey: 'x' });
-    expect(fw.region).toBe('global');
+    expect(global.region).toBe('global');
     expect(mi.region).toBe('eu');
-    expect(providerSatisfies(fw, 'customer_freetext')).toBe(false);
-    expect(providerSatisfies(fw, 'tenant_operational')).toBe(false);
+    expect(providerSatisfies(global, 'customer_freetext')).toBe(false);
+    expect(providerSatisfies(global, 'tenant_operational')).toBe(false);
     expect(providerSatisfies(mi, 'customer_freetext')).toBe(true);
     expect(providerSatisfies(mi, 'tenant_operational')).toBe(true);
   });
@@ -45,7 +45,7 @@ describe('dataregion (F14)', () => {
     const error = new DataRegionViolation(
       'kunde-support',
       'customer_freetext',
-      'fireworks',
+      'non-eu-test',
       'global',
     );
     expect(error.message).toContain('personvernbrudd');
@@ -57,7 +57,26 @@ describe('Mistral EU-endepunkt (F14-02)', () => {
   it('kun det regionale EU-endepunktet godtas', () => {
     expect(() => assertEuEndpoint(MISTRAL_EU_BASE_URL)).not.toThrow();
     expect(() => assertEuEndpoint('https://api.eu.mistral.ai/v1')).not.toThrow();
+    expect(() => assertEuEndpoint('https://api.eu.mistral.ai/v1/')).not.toThrow();
+    expect(() => assertEuEndpoint('https://api.eu.mistral.ai:443/v1')).not.toThrow();
     expect(regionFromMistralUrl(MISTRAL_EU_BASE_URL)).toBe('eu');
+  });
+
+  it('ANGREP: http:// og ws:// avvises selv med EU-host', () => {
+    expect(() => assertEuEndpoint('http://api.eu.mistral.ai/v1')).toThrow(NonEuEndpointError);
+    expect(() => assertEuEndpoint('ws://api.eu.mistral.ai/v1')).toThrow(NonEuEndpointError);
+  });
+
+  it('ANGREP: userinfo i URL avvises', () => {
+    expect(() => assertEuEndpoint('https://user:pass@api.eu.mistral.ai/v1')).toThrow(
+      NonEuEndpointError,
+    );
+    expect(() => assertEuEndpoint('https://lekk@api.eu.mistral.ai/v1')).toThrow(NonEuEndpointError);
+  });
+
+  it('ANGREP: vilkårlig port avvises', () => {
+    expect(() => assertEuEndpoint('https://api.eu.mistral.ai:8443/v1')).toThrow(NonEuEndpointError);
+    expect(() => assertEuEndpoint('https://api.eu.mistral.ai:80/v1')).toThrow(NonEuEndpointError);
   });
 
   it('ANGREP: globalt endepunkt (api.mistral.ai) avvises', () => {
@@ -96,11 +115,10 @@ describe('Mistral EU-endepunkt (F14-02)', () => {
 });
 
 describe('resolveModelProvider ruter begge dataklasser til Mistral', () => {
-  it('fritekst uten Mistral-nøkkel i PRODUKSJON = feil, ikke fallback til Fireworks', () => {
+  it('fritekst uten Mistral-nøkkel i PRODUKSJON = feil, ikke fallback', () => {
     expect(() =>
       resolveModelProvider('customer_freetext', {
         NODE_ENV: 'production',
-        FIREWORKS_API_KEY: 'har-denne',
       } as NodeJS.ProcessEnv),
     ).toThrow(MissingEuProviderError);
   });
@@ -112,24 +130,22 @@ describe('resolveModelProvider ruter begge dataklasser til Mistral', () => {
     expect(p.name).toBe('mistral');
   });
 
-  it('intern (Ronny/drift) med Mistral-nøkkel → Mistral, ikke Fireworks', () => {
+  it('intern (Ronny/drift) med Mistral-nøkkel → Mistral', () => {
     const p = resolveModelProvider('tenant_operational', {
       MISTRAL_API_KEY: 'x',
-      FIREWORKS_API_KEY: 'også-denne',
     } as NodeJS.ProcessEnv);
     expect(p.name).toBe('mistral');
   });
 
-  it('intern uten Mistral-nøkkel i PRODUKSJON = feil, selv med Fireworks-nøkkel', () => {
+  it('intern uten Mistral-nøkkel i PRODUKSJON = feil', () => {
     expect(() =>
       resolveModelProvider('tenant_operational', {
         NODE_ENV: 'production',
-        FIREWORKS_API_KEY: 'har-denne',
       } as NodeJS.ProcessEnv),
     ).toThrow(MissingEuProviderError);
   });
 
-  it('uten nøkler (dev) → mock for begge klasser, aldri Fireworks', () => {
+  it('uten nøkler (dev) → mock for begge klasser', () => {
     expect(resolveModelProvider('customer_freetext', {} as NodeJS.ProcessEnv).name).toBe('mock');
     expect(resolveModelProvider('tenant_operational', {} as NodeJS.ProcessEnv).name).toBe('mock');
   });

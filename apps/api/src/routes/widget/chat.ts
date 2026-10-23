@@ -1,11 +1,7 @@
 import { type AgentContext, runAgent } from '@endwise/agent-runtime';
 import { getAgent } from '@endwise/agents';
 import { eq, schema, withTenant } from '@endwise/db';
-import {
-  createGuardrails,
-  type PreparedModelMessages,
-  ScopeGateViolation,
-} from '@endwise/guardrails';
+import { createGuardrails, ScopeGateViolation } from '@endwise/guardrails';
 import { writeAiAudit } from '@endwise/modules/audit';
 import {
   createRateLimiter,
@@ -26,7 +22,7 @@ import type { WidgetVars } from '../../lib/widget-auth.ts';
  * 1. Art. 50 (F14-04): opplysningen «du snakker med en AI» returneres som det
  * Første feltet i hvert svar — server-håndhevet, kan ikke fjernes av klienten.
  * 2. Dataregion (F14-02): provider = `resolveModelProvider('customer_freetext')`
- * ⇒ Mistral (EU), aldri Fireworks. `runAgent` dobbeltsjekker via
+ * ⇒ Mistral (EU). `runAgent` dobbeltsjekker via
  * `providerSatisfies`; uten EU-provider i prod kaster resolveren.
  * 3. Scope-gate (F14-05): sensitive kategorier (helse/pii/jus/selvskading) →
  * eskaler til menneske før teksten når AI-en. Moderasjonsfeil blokkerer.
@@ -71,7 +67,7 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
   const db = createAppContext().db;
 
   // (3)+(4) Masker FØR moderasjon. Feiler lukket: moderator-feil → menneske.
-  let prepared: PreparedModelMessages;
+  let prepared: Awaited<ReturnType<typeof forberedAiMeldinger>>;
   try {
     prepared = await forberedAiMeldinger({
       db,
@@ -99,6 +95,7 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
     userId: cid,
     role: 'customer',
     entitlements: modules.map((m) => m.key),
+    knownCustomerNames: prepared.knownNames,
   };
 
   const guardrails = createGuardrails({
@@ -111,7 +108,7 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
         subjectType: 'agent',
         subjectId: 'kunde-support',
         metadata: { level: v.level, code: v.code },
-      }).catch(() => undefined);
+      });
     },
   });
 

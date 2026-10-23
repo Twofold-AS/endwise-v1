@@ -134,7 +134,7 @@ chat.post('/:agent', async (c) => {
         subjectType: 'agent',
         subjectId: agent.name,
         metadata: { level: violation.level, code: violation.code },
-      }).catch(() => undefined);
+      });
     },
   });
 
@@ -181,6 +181,7 @@ chat.post('/:agent', async (c) => {
         role: ctx.role,
         threadId: parsed.data.threadId,
         entitlements,
+        knownCustomerNames: prepared.knownNames,
       },
       provider: resolveModelProvider(agent.dataClass),
       guardrails,
@@ -196,7 +197,7 @@ chat.post('/:agent', async (c) => {
           subjectType: 'agent',
           subjectId: agent.name,
           metadata: { source: 'stream' },
-        }).catch(() => undefined);
+        });
       },
     });
 

@@ -29,23 +29,45 @@ export class NonEuEndpointError extends Error {
   }
 }
 
-export function mistralHostname(baseUrl: string): string {
+export function parseMistralUrl(baseUrl: string): URL {
   try {
-    return new URL(baseUrl).hostname.toLowerCase();
+    return new URL(baseUrl);
   } catch {
     throw new NonEuEndpointError(baseUrl);
   }
 }
 
-/** Allowlist: kun `api.eu.mistral.ai`. Alt annet feiler ved oppstart. */
+export function mistralHostname(baseUrl: string): string {
+  return parseMistralUrl(baseUrl).hostname.toLowerCase();
+}
+
+/**
+ * Allowlist: kun det regionale EU-endepunktet.
+ * Host alene er ikke nok — `http://`, `ws://`, userinfo og vilkårlig port
+ * skal ikke kunne omgå låsen. Foretrukket verdi er nøyaktig
+ * `https://api.eu.mistral.ai/v1` (trailing slash og :443 tillates).
+ */
 export function assertEuEndpoint(baseUrl: string): void {
-  if (mistralHostname(baseUrl) !== MISTRAL_EU_HOST) {
+  const parsed = parseMistralUrl(baseUrl);
+  const portOk = parsed.port === '' || parsed.port === '443';
+  const path = parsed.pathname.replace(/\/+$/, '') || '/';
+  if (
+    parsed.protocol !== 'https:' ||
+    parsed.username !== '' ||
+    parsed.password !== '' ||
+    !portOk ||
+    parsed.hostname.toLowerCase() !== MISTRAL_EU_HOST ||
+    path !== '/v1' ||
+    parsed.search !== '' ||
+    parsed.hash !== ''
+  ) {
     throw new NonEuEndpointError(baseUrl);
   }
 }
 
 /** Region fra URL-ens host-etiketter, ikke en hardkodet konstant. */
 export function regionFromMistralUrl(baseUrl: string): DataRegion {
+  assertEuEndpoint(baseUrl);
   const labels = mistralHostname(baseUrl).split('.');
   if (labels.includes('eu')) return 'eu';
   throw new NonEuEndpointError(baseUrl);

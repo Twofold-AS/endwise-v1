@@ -75,15 +75,6 @@ export const agentRouter = router({
           .where(eq(schema.tenantModules.enabled, true)),
       ).catch(() => [] as Array<{ key: string }>);
 
-      const context: AgentContext = {
-        db: ctx.db,
-        tenantId: ctx.tenantId,
-        userId: ctx.userId,
-        role: ctx.role,
-        threadId: input.threadId,
-        entitlements: modules.map((m) => m.key),
-      };
-
       const guardrails = createGuardrails({
         onViolation: (violation) => {
           console.warn(`[guardrail] ${violation.message}`);
@@ -94,7 +85,7 @@ export const agentRouter = router({
             subjectType: 'agent',
             subjectId: agent.name,
             metadata: { level: violation.level, code: violation.code },
-          }).catch(() => undefined);
+          });
         },
       });
 
@@ -115,6 +106,16 @@ export const agentRouter = router({
           message: 'Meldingen ble stoppet. En medarbeider må ta over.',
         });
       }
+
+      const context: AgentContext = {
+        db: ctx.db,
+        tenantId: ctx.tenantId,
+        userId: ctx.userId,
+        role: ctx.role,
+        threadId: input.threadId,
+        entitlements: modules.map((m) => m.key),
+        knownCustomerNames: prepared.knownNames,
+      };
 
       // Workshop/Ronny-gaten sitter på agent-definisjonen (preflight,
       // allowlist, rewriteOutput) — samme sperre som /chat/workshop.

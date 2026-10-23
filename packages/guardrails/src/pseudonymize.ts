@@ -19,8 +19,12 @@ import type { ModelMessage } from 'ai';
  */
 
 const PATTERNS: Array<{ label: string; regex: RegExp; canonical?: (v: string) => string }> = [
-  // Fødselsnummer (11 siffer) FØR telefon, ellers spiser 8-siffer-regexen prefikset.
-  { label: 'FNR', regex: /\b\d{11}\b/g },
+  // Fødselsnummer (11 siffer) FØR telefon, også med mellomrom/bindestrek.
+  {
+    label: 'FNR',
+    regex: /\b\d{2}[\s-]?\d{2}[\s-]?\d{2}[\s-]?\d{5}\b/g,
+    canonical: (v) => v.replace(/\D/g, ''),
+  },
   { label: 'EPOST', regex: /\b[\w.+-]+@[\w-]+\.[\w.-]+\b/g, canonical: (v) => v.toLowerCase() },
   // Norske telefonnummer: 8 siffer, evt. med +47 og mellomrom.
   { label: 'TLF', regex: /(?:\+47[\s]?)?\b\d{2}[\s]?\d{2}[\s]?\d{2}[\s]?\d{2}\b/g },
@@ -125,15 +129,46 @@ export function brukerTekstFraMelding(message: ModelMessage): string | null {
   return deler.length > 0 ? deler.join('\n') : null;
 }
 
-function settBrukerTekst(message: ModelMessage, tekst: string): ModelMessage {
+/**
+ * Transformerer bare tekstdeler i en brukermelding.
+ * Ikke-tekst (bilde, fil, …) beholdes urørt — de skal ikke kastes i stillhet.
+ */
+export function mapBrukerTekst(
+  message: ModelMessage,
+  transform: (tekst: string) => string,
+): ModelMessage {
   if (message.role !== 'user') return message;
   if (typeof message.content === 'string') {
-    return { role: 'user', content: tekst };
+    return { role: 'user', content: transform(message.content) };
   }
+  if (!Array.isArray(message.content)) return message;
   return {
-    role: 'user',
-    content: [{ type: 'text', text: tekst }],
+    ...message,
+    content: message.content.map((part) => {
+      if (typeof part === 'string') return { type: 'text' as const, text: transform(part) };
+      if (part && typeof part === 'object' && 'text' in part) {
+        const tekst = (part as { text: unknown }).text;
+        if (typeof tekst === 'string') {
+          return { ...part, text: transform(tekst) };
+        }
+      }
+      return part;
+    }),
   };
+}
+
+/** Maskerer strenger rekursivt i JSON (verktøyresultater). */
+export function maskJson(value: unknown, pseudonymizer: Pseudonymizer): unknown {
+  if (typeof value === 'string') return pseudonymizer.mask(value);
+  if (Array.isArray(value)) return value.map((item) => maskJson(item, pseudonymizer));
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(value)) {
+      out[key] = maskJson(nested, pseudonymizer);
+    }
+    return out;
+  }
+  return value;
 }
 
 /** Maskerer alle brukermeldinger før de sendes. Systemmeldinger røres ikke. */
@@ -144,6 +179,6 @@ export function maskMessages(
   return messages.map((message) => {
     const tekst = brukerTekstFraMelding(message);
     if (tekst === null) return message;
-    return settBrukerTekst(message, pseudonymizer.mask(tekst));
+    return mapBrukerTekst(message, (del) => pseudonymizer.mask(del));
   });
 }

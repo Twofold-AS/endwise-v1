@@ -58,7 +58,7 @@ export function spawnAgent(options: SpawnOptions): AgentSession {
   // hvilken region den kjører i. Passer de ikke sammen, starter ikke agenten.
 
   // Dette er grunnen til at regelen ligger her og ikke i en readme: en
-  // kunde-support-agent konfigurert mot Fireworks er ikke en bug man retter i
+  // kunde-support-agent konfigurert mot en ikke-EU-leverandør er ikke en bug man retter i
   // neste sprint — det er norske kunders helseopplysninger sendt til usa.
   // Den skal ikke kunne spawnes.
   if (!providerSatisfies(provider, agent.dataClass)) {
@@ -105,13 +105,7 @@ export function spawnAgent(options: SpawnOptions): AgentSession {
           guardrails,
           tools,
           messages: masked,
-          onEvent: async (event) => {
-            if (event.type === 'agent.token' || event.type === 'agent.done') {
-              await onEvent({ ...event, text: pseudo.unmask(event.text) });
-              return;
-            }
-            await onEvent(event);
-          },
+          onEvent,
         }),
       );
     },

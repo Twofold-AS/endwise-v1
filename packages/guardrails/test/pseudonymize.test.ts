@@ -22,6 +22,15 @@ describe('pseudonymisering (F14-01)', () => {
     expect(masked).toContain('[FNR_1]');
   });
 
+  it('maskerer fødselsnummer med mellomrom', () => {
+    const p = createPseudonymizer();
+    const masked = p.mask('Fnr 010190 12345 og 01 01 90 12345 er samme');
+    expect(masked).not.toMatch(/010190\s*12345/);
+    expect(masked).not.toMatch(/01\s*01\s*90\s*12345/);
+    expect(masked).toContain('[FNR_1]');
+    expect(p.size).toBe(1);
+  });
+
   it('maskerer regnr med små bokstaver', () => {
     const p = createPseudonymizer();
     const masked = p.mask('MC-en er ab12345 og AB12345 er samme');
@@ -72,5 +81,27 @@ describe('pseudonymisering (F14-01)', () => {
     // Systeminstruksjonen er vår — den skal ikke maskeres.
     expect(masked[0]?.content).toContain('drift@endwise.no');
     expect(masked[1]?.content).not.toContain('ola@example.no');
+  });
+
+  it('beholder ikke-tekstdeler når brukermeldingen har parts', () => {
+    const p = createPseudonymizer();
+    const masked = maskMessages(
+      [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Jeg er ola@example.no' },
+            { type: 'file', mediaType: 'image/png', url: 'https://eksempel.no/x.png' },
+          ],
+        },
+      ],
+      p,
+    );
+    const content = masked[0]?.content;
+    expect(Array.isArray(content)).toBe(true);
+    if (!Array.isArray(content)) return;
+    expect(content).toHaveLength(2);
+    expect(JSON.stringify(content[0])).toContain('[EPOST_1]');
+    expect(JSON.stringify(content[1])).toContain('https://eksempel.no/x.png');
   });
 });

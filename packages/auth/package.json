@@ -21,7 +21,7 @@
     "@endwise/db": "workspace:*",
     "better-auth": "~1.6.30",
     "resend": "^6.17.2",
-    "twilio": "^6.0.2",
+    "twilio": "^6.2.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

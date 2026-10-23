@@ -55,6 +55,9 @@ jobs:
           project: endwise
           path: "."
           format: SARIF
+          # pnpm-repo: Yarn-analysatoren krever `yarn` og feiler jobben
+          # etter ferdig SARIF («Unable to determine yarn executable»).
+          args: --disableYarnAudit
       - uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: reports/dependency-check-report.sarif
@@ -63,11 +66,45 @@ jobs:
     name: ZAP baseline mot preview
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      deployments: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
+      - name: Vent på Vercel-preview-URL
+        id: preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHA="${{ github.event.pull_request.head.sha }}"
+          REPO="${{ github.repository }}"
+          echo "Leter etter Vercel-preview for ${SHA}"
+          for i in $(seq 1 90); do
+            ids=$(gh api "repos/${REPO}/deployments?sha=${SHA}&per_page=20" --jq '.[].id' || true)
+            for id in ${ids}; do
+              url=$(gh api "repos/${REPO}/deployments/${id}/statuses" --jq '[.[] | select(.state=="success" and .environment_url != null and .environment_url != "")] | .[0].environment_url // empty' || true)
+              if [ -n "${url:-}" ]; then
+                echo "url=${url}" >> "$GITHUB_OUTPUT"
+                echo "Fant preview via deployment: ${url}"
+                exit 0
+              fi
+            done
+            echo "Venter på Vercel-preview (${i}/90)…"
+            sleep 10
+          done
+          echo "::error::Fant ingen Vercel-preview-URL for ${SHA} innen 15 min. ZAP skal ikke falle tilbake på example.invalid."
+          exit 1
       - name: ZAP baseline
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
-          # Settes når Vercel-preview-URL er tilgjengelig (F0-07/F0-10)
-          target: ${{ vars.PREVIEW_URL || 'https://example.invalid' }}
+          target: ${{ steps.preview.outputs.url }}
           fail_action: false
+          # Default oppretter GitHub-issue og krever issues:write.
+          # Workflow-tokenet har bare contents/deployments — 403 felte jobben
+          # etter 0 FAIL-NEW mot preview. Rapport ligger i zap-scan-artifact.
+          allow_issue_writing: false
+          # v0.12.0 bruker utgått artifact-API («zap_scan is not valid»).
+          artifact_name: zap-scan

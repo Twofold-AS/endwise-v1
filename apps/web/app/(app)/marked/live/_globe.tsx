@@ -2,8 +2,15 @@
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { StyleSpecification } from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 import { subscribeVisitors } from './_visitors';
+
+// v6 er ESM-only. Bundlere (Next/Turbopack) må få worker-URL eksplisitt —
+// se maplibre.org installasjon, «Turbopack»-fanen. Ingen visuell endring.
+maplibregl.setWorkerUrl(
+  new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString(),
+);
 
 /**
  * Globe-kart bygget på MapLibre gl JS (open-source, ingen API-nøkkel)
@@ -73,47 +80,40 @@ export function LiveVisitorsGlobe() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `tema` er med vilje eneste avhengighet — den tvinger en full ombygging av kartet
   useEffect(() => {
-    let cancelled = false;
-    // biome-ignore lint/suspicious/noExplicitAny: MapLibre-typer lastes dynamisk
-    let map: any;
+    if (!ref.current) return;
+    let map: maplibregl.Map | undefined;
     let unsub: (() => void) | undefined;
-    // biome-ignore lint/suspicious/noExplicitAny: markør-refs
-    const markers = new Map<string, any>();
+    const markers = new Map<string, maplibregl.Marker>();
 
-    (async () => {
-      const maplibregl = (await import('maplibre-gl')).default;
-      if (cancelled || !ref.current) return;
-      map = new maplibregl.Map({
-        container: ref.current,
-        style: globeStyle(),
-        center: [10, 55],
-        zoom: 1.4,
-        attributionControl: false,
+    map = new maplibregl.Map({
+      container: ref.current,
+      style: globeStyle(),
+      center: [10, 55],
+      zoom: 1.4,
+      attributionControl: false,
+    });
+    map.on('style.load', () => map?.setProjection({ type: 'globe' }));
+
+    unsub = subscribeVisitors((ev) => {
+      const el = document.createElement('div');
+      Object.assign(el.style, {
+        width: '10px',
+        height: '10px',
+        borderRadius: '9999px',
+        background: '#1ED27D',
+        boxShadow: '0 0 0 4px rgba(30,210,125,0.25), 0 0 10px 2px rgba(30,210,125,0.6)',
       });
-      map.on('style.load', () => map.setProjection({ type: 'globe' }));
-
-      unsub = subscribeVisitors((ev) => {
-        const el = document.createElement('div');
-        Object.assign(el.style, {
-          width: '10px',
-          height: '10px',
-          borderRadius: '9999px',
-          background: '#1ED27D',
-          boxShadow: '0 0 0 4px rgba(30,210,125,0.25), 0 0 10px 2px rgba(30,210,125,0.6)',
-        });
-        const m = new maplibregl.Marker({ element: el }).setLngLat([ev.lng, ev.lat]).addTo(map);
-        markers.set(ev.id, m);
+      const m = new maplibregl.Marker({ element: el }).setLngLat([ev.lng, ev.lat]).addTo(map);
+      markers.set(ev.id, m);
+      setCount(markers.size);
+      setTimeout(() => {
+        m.remove();
+        markers.delete(ev.id);
         setCount(markers.size);
-        setTimeout(() => {
-          m.remove();
-          markers.delete(ev.id);
-          setCount(markers.size);
-        }, ev.ttlMs ?? 8000);
-      });
-    })();
+      }, ev.ttlMs ?? 8000);
+    });
 
     return () => {
-      cancelled = true;
       unsub?.();
       for (const m of markers.values()) m.remove();
       map?.remove();

@@ -91,21 +91,22 @@ describe('streamAgentChat (F6-18)', () => {
     ).rejects.toBeInstanceOf(DataRegionViolation);
   });
 
-  it('tillater tenant_operational mot en global leverandør', async () => {
+  it('ANGREP: nekter tenant_operational mot en global leverandør', async () => {
     const globalProvider: ModelProvider = {
       ...createMockProvider(),
       name: 'fake-us',
       region: 'global',
     };
 
-    const result = streamAgentChat({
-      agent: agent({ dataClass: 'tenant_operational' }),
-      context: ctx(),
-      provider: globalProvider,
-      guardrails: createGuardrails(),
-      messages: await meldinger('hei'),
-    });
-    expect(await lesTekst(result)).toContain('Hei');
+    await expect(async () =>
+      streamAgentChat({
+        agent: agent({ dataClass: 'tenant_operational' }),
+        context: ctx(),
+        provider: globalProvider,
+        guardrails: createGuardrails(),
+        messages: await meldinger('hei'),
+      }),
+    ).rejects.toBeInstanceOf(DataRegionViolation);
   });
 
   it('⛔ nekter en agent forhandleren ikke har betalt for', async () => {

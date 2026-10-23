@@ -69,16 +69,19 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
 
   // (3) Scope-gate før AI. Ekte moderasjon når Mistral er konfigurert (EU); ellers
   // audit-modus (dev uten nøkkel) — permissiv, men da kjører uansett mock-provider.
+  // Moderasjonsfeil = blokker og rut til menneske. Fail-open er et personvernbrudd.
   const mistralConfigured = Boolean(process.env.MISTRAL_API_KEY);
   // Fallback-moderator (dev uten Mistral-nøkkel): må matche `Moderator`-typen
   // eksakt — `categories` er et objekt (Partial<Record<..., boolean>>), ikke en array.
   const noopModerator: Moderator = async (_text) => ({ categories: {} });
-  const moderate: Moderator = mistralConfigured ? createMistralModerator() : noopModerator;
-  const gate = createScopeGate({ moderate, mode: mistralConfigured ? 'escalate' : 'audit' });
-  // GuardContext = { tenantId, userId, role } — kundeøkten er en «customer».
-  const scope = await gate
-    .check(message, { tenantId, userId: cid, role: 'customer' })
-    .catch(() => ({ allowed: true, triggered: [] as never[] }));
+  let scope: Awaited<ReturnType<ReturnType<typeof createScopeGate>['check']>>;
+  try {
+    const moderate: Moderator = mistralConfigured ? createMistralModerator() : noopModerator;
+    const gate = createScopeGate({ moderate, mode: mistralConfigured ? 'escalate' : 'audit' });
+    scope = await gate.check(message, { tenantId, userId: cid, role: 'customer' });
+  } catch {
+    return c.json({ disclosure, escalated: true, reply: WIDGET_AI_HANDOVER[locale] });
+  }
   if (!scope.allowed) {
     return c.json({ disclosure, escalated: true, reply: WIDGET_AI_HANDOVER[locale] });
   }

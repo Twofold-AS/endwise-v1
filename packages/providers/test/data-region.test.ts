@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
   assertEuEndpoint,
   createFireworksProvider,
+  createMistralModerator,
   createMistralProvider,
   createMockProvider,
   DataRegionViolation,
   MissingEuProviderError,
   NonEuEndpointError,
   providerSatisfies,
+  regionFromEndpoint,
   regionSatisfies,
   resolveModelProvider,
 } from '../src/index.ts';
@@ -19,9 +21,9 @@ describe('dataregion (F14)', () => {
     expect(regionSatisfies('eu', 'tenant_operational')).toBe(true);
   });
 
-  it('ANGREP: global provider kan IKKE betjene sluttkundens fritekst', () => {
+  it('ANGREP: global provider kan IKKE betjene noen dataklasse', () => {
     expect(regionSatisfies('global', 'customer_freetext')).toBe(false);
-    expect(regionSatisfies('global', 'tenant_operational')).toBe(true);
+    expect(regionSatisfies('global', 'tenant_operational')).toBe(false);
   });
 
   it('Fireworks erklærer seg global, Mistral EU', () => {
@@ -30,7 +32,9 @@ describe('dataregion (F14)', () => {
     expect(fw.region).toBe('global');
     expect(mi.region).toBe('eu');
     expect(providerSatisfies(fw, 'customer_freetext')).toBe(false);
+    expect(providerSatisfies(fw, 'tenant_operational')).toBe(false);
     expect(providerSatisfies(mi, 'customer_freetext')).toBe(true);
+    expect(providerSatisfies(mi, 'tenant_operational')).toBe(true);
   });
 
   it('mock er trygg for alt (den går ingen steder)', () => {
@@ -50,8 +54,12 @@ describe('dataregion (F14)', () => {
 });
 
 describe('Mistral EU-endepunkt (F14-02)', () => {
-  it('EU-endepunktet godtas', () => {
-    expect(() => assertEuEndpoint('https://api.mistral.ai/v1')).not.toThrow();
+  it('kun det dedikerte EU-endepunktet godtas', () => {
+    expect(() => assertEuEndpoint('https://api.eu.mistral.ai/v1')).not.toThrow();
+  });
+
+  it('ANGREP: globalt endepunkt avvises', () => {
+    expect(() => assertEuEndpoint('https://api.mistral.ai/v1')).toThrow(NonEuEndpointError);
   });
 
   it('ANGREP: US-endepunktet avvises', () => {
@@ -62,10 +70,37 @@ describe('Mistral EU-endepunkt (F14-02)', () => {
     expect(() => assertEuEndpoint('ikke-en-url')).toThrow(NonEuEndpointError);
   });
 
+  it('ANGREP: vilkårlig MISTRAL_BASE_URL-override avvises', () => {
+    expect(() => assertEuEndpoint('https://evil.example/v1')).toThrow(NonEuEndpointError);
+    expect(() => assertEuEndpoint('https://api.eu.mistral.ai.evil.example/v1')).toThrow(
+      NonEuEndpointError,
+    );
+    expect(() => assertEuEndpoint('https://eu.api.mistral.ai/v1')).toThrow(NonEuEndpointError);
+  });
+
   it('provideren nekter å bli OPPRETTET med feil endepunkt', () => {
     expect(() =>
       createMistralProvider({ apiKey: 'x', baseUrl: 'https://api.us.mistral.ai/v1' }),
     ).toThrow(NonEuEndpointError);
+    expect(() =>
+      createMistralProvider({ apiKey: 'x', baseUrl: 'https://api.mistral.ai/v1' }),
+    ).toThrow(NonEuEndpointError);
+  });
+
+  it('moderatoren nekter å bli OPPRETTET med feil endepunkt', () => {
+    expect(() =>
+      createMistralModerator({ apiKey: 'x', baseUrl: 'https://api.mistral.ai/v1' }),
+    ).toThrow(NonEuEndpointError);
+    expect(() =>
+      createMistralModerator({ apiKey: 'x', baseUrl: 'https://api.us.mistral.ai/v1' }),
+    ).toThrow(NonEuEndpointError);
+  });
+
+  it('region utledes fra URL — bare api.eu.mistral.ai er eu', () => {
+    expect(regionFromEndpoint('https://api.eu.mistral.ai/v1')).toBe('eu');
+    expect(regionFromEndpoint('https://api.mistral.ai/v1')).toBe('global');
+    expect(regionFromEndpoint('https://api.us.mistral.ai/v1')).toBe('global');
+    expect(createMistralProvider({ apiKey: 'x' }).region).toBe('eu');
   });
 });
 

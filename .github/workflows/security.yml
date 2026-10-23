@@ -70,6 +70,7 @@ jobs:
     permissions:
       contents: read
       deployments: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
       - name: Vent på Vercel-preview-URL
@@ -97,11 +98,13 @@ jobs:
           echo "::error::Fant ingen Vercel-preview-URL for ${SHA} innen 15 min. ZAP skal ikke falle tilbake på example.invalid."
           exit 1
       - name: ZAP baseline
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: ${{ steps.preview.outputs.url }}
           fail_action: false
           # Default oppretter GitHub-issue og krever issues:write.
           # Workflow-tokenet har bare contents/deployments — 403 felte jobben
-          # etter 0 FAIL-NEW mot preview. Rapport ligger i zap_scan-artifact.
+          # etter 0 FAIL-NEW mot preview. Rapport ligger i zap-scan-artifact.
           allow_issue_writing: false
+          # v0.12.0 bruker utgått artifact-API («zap_scan is not valid»).
+          artifact_name: zap-scan

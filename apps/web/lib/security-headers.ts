@@ -47,7 +47,12 @@ export function sentryIngestFraDsn(dsn: string | undefined | null): string | nul
 /** EU-Sentry bruker `ingest.de.sentry.io` (eller `.eu.`). US/global er `ingest.sentry.io`. */
 export function sentryErEu(host: string | null): boolean {
   if (!host) return false;
-  return host.includes('.de.sentry.io') || host.includes('.eu.sentry.io');
+  return (
+    host === 'ingest.de.sentry.io' ||
+    host.endsWith('.ingest.de.sentry.io') ||
+    host === 'ingest.eu.sentry.io' ||
+    host.endsWith('.ingest.eu.sentry.io')
+  );
 }
 
 export function innholdssikkerhetsPolicy(valg: SikkerhetsHeaderValg = {}): string {

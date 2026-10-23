@@ -19,7 +19,7 @@ Egen PR mot `main` (#182), startet fra `cursor/avhengigheter-sikkerhet-6935` for
 
 ## 2. Hva gikk galt
 
-Alt gikk som planlagt for punktene som kunne gjøres på denne basen. GDPR-fiksene fra #180 er bevisst ikke kopiert inn. Context7 MCP krevde auth; Hono-CSP-API verifisert mot kjøring (`/health`). `gh` kan ikke opprette issues — oppfølging ligger i docs.
+Første CI på review-headen (`b43f0c9`): `@endwise/web#test` rød fordi `signin-steg.test.ts` lette etter literal `no-store`-streng i `next.config.ts` etter at verdien flyttet til `AUTH_NO_STORE`. GitHub CodeQL (ikke Security-gate-jobben) flagget `host.includes('.de.sentry.io')` som incomplete URL substring sanitization. Begge fikset. ZAP var grønn med WARN + `-I`. GDPR-fiksene fra #180 er bevisst ikke kopiert inn. Context7 MCP krevde auth. `gh` kan ikke opprette issues — oppfølging ligger i docs.
 
 ## 3. Fikser
 

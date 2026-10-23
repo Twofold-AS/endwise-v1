@@ -1,9 +1,12 @@
 import { type AgentContext, createStreamBridge, runAgent } from '@endwise/agent-runtime';
 import { getAgent, listAgents } from '@endwise/agents';
 import { eq, schema, withTenant } from '@endwise/db';
-import { createGuardrails } from '@endwise/guardrails';
+import { createGuardrails, ScopeGateViolation } from '@endwise/guardrails';
+import { writeAiAudit } from '@endwise/modules/audit';
 import { REQUIRED_REGION, resolveModelProvider } from '@endwise/providers';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import { forberedAiMeldinger } from '../../lib/ai-inngang.ts';
 import { moduleAdminProcedure, moduleProcedure, router } from '../init.ts';
 
 /**
@@ -83,20 +86,46 @@ export const agentRouter = router({
 
       const guardrails = createGuardrails({
         onViolation: (violation) => {
-          // TODO(F0-14): til Sentry + audit-loggen (F1-06).
           console.warn(`[guardrail] ${violation.message}`);
+          void writeAiAudit(ctx.db, {
+            tenantId: ctx.tenantId,
+            actor: ctx.userId,
+            action: 'ai.guardrail',
+            subjectType: 'agent',
+            subjectId: agent.name,
+            metadata: { level: violation.level, code: violation.code },
+          }).catch(() => undefined);
         },
       });
+
+      let prepared: Awaited<ReturnType<typeof forberedAiMeldinger>>;
+      try {
+        prepared = await forberedAiMeldinger({
+          db: ctx.db,
+          messages: [{ role: 'user', content: input.message }],
+          context: { tenantId: ctx.tenantId, userId: ctx.userId, role: ctx.role },
+          agent: agent.name,
+        });
+      } catch (error) {
+        if (!(error instanceof ScopeGateViolation)) {
+          console.warn(`[agent.run-moderation] feilet lukket`, error);
+        }
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Meldingen ble stoppet. En medarbeider må ta over.',
+        });
+      }
 
       // Workshop/Ronny-gaten sitter på agent-definisjonen (preflight,
       // allowlist, rewriteOutput) — samme sperre som /chat/workshop.
       await runAgent({
         agent,
         context,
-        // F14 / Mikael 02.09.2026: resolve ruter begge dataklasser til Mistral EU.
+        // F14: resolve ruter begge dataklasser til Mistral EU.
         provider: resolveModelProvider(agent.dataClass),
         guardrails,
-        messages: [{ role: 'user', content: input.message }],
+        messages: prepared.messages,
+        pseudonymizer: prepared.pseudonymizer,
         onEvent: createStreamBridge(context),
       });
 

@@ -1,4 +1,5 @@
 import { asc, type Database, gt, STREAM_CHANNEL, schema, sql, withTenant } from '@endwise/db';
+import { aiLogRetentionDays } from '../retention/policy.ts';
 
 export interface PublishInput {
   tenantId: string;
@@ -89,7 +90,11 @@ export async function headEventId(db: Database, tenantId: string): Promise<numbe
 }
 
 /** Eventer eldre enn N dager ryddes av cron (F0-13). Loggen er en buffer, ikke et arkiv. */
-export async function pruneEvents(db: Database, tenantId: string, olderThanDays = 7) {
+export async function pruneEvents(
+  db: Database,
+  tenantId: string,
+  olderThanDays = aiLogRetentionDays(),
+) {
   return withTenant(db, tenantId, (tx) =>
     tx
       .delete(schema.streamEvents)

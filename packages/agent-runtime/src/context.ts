@@ -23,9 +23,17 @@ export interface AgentContext {
   readonly threadId?: string;
   /** Moduler tenanten har betalt for (F0-04). Verktøy kan være entitlement-gated. */
   readonly entitlements: readonly string[];
+  /** Kjente kundenavn som skal maskeres før prompt (F14-01). */
+  readonly knownCustomerNames?: readonly string[];
 }
 
 /** Fryser konteksten. Et verktøy skal ikke kunne skrive om sin egen tenant. */
 export function sealContext(context: AgentContext): AgentContext {
-  return Object.freeze({ ...context, entitlements: Object.freeze([...context.entitlements]) });
+  return Object.freeze({
+    ...context,
+    entitlements: Object.freeze([...context.entitlements]),
+    knownCustomerNames: context.knownCustomerNames
+      ? Object.freeze([...context.knownCustomerNames])
+      : undefined,
+  });
 }

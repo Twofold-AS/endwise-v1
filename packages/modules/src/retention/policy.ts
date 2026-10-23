@@ -29,15 +29,27 @@ export interface RetentionRule {
   mode: 'delete' | 'redact';
 }
 
+export const AI_LOG_RETENTION_DAYS_ENV = 'AI_LOG_RETENTION_DAYS';
+export const AI_LOG_RETENTION_DAYS_DEFAULT = 30;
+
+/** Konfigurerbar retensjon for stream-bridge og AI-logger. Default 30 dager. */
+export function aiLogRetentionDays(env: NodeJS.ProcessEnv = process.env): number {
+  const raw = env[AI_LOG_RETENTION_DAYS_ENV];
+  if (raw === undefined || raw === '') return AI_LOG_RETENTION_DAYS_DEFAULT;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : AI_LOG_RETENTION_DAYS_DEFAULT;
+}
+
 export const RETENTION_POLICY: readonly RetentionRule[] = [
   {
     table: 'stream_events',
     timestampColumn: 'created_at',
-    days: 7,
+    days: aiLogRetentionDays(),
     basis: 'buffer',
     rationale:
-      'Kun en avspillingsbuffer for SSE-reconnect (F6-02). Sannheten ligger i domenetabellene. ' +
-      'En uke dekker enhver rimelig frakobling; alt utover er hamstring.',
+      'Avspillingsbuffer for SSE (F6-02) og AI-token-hendelser fra stream-bridge. ' +
+      `Slettes automatisk etter ${AI_LOG_RETENTION_DAYS_ENV} dager (default ${AI_LOG_RETENTION_DAYS_DEFAULT}). ` +
+      'Promptinnhold hører ikke hjemme i audit_log — bare her, og bare midlertidig.',
     access: 'App-rollen (RLS-skopet). Ingen manuell tilgang i produksjon.',
     mode: 'delete',
   },

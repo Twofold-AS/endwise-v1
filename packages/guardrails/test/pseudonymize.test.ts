@@ -15,6 +15,30 @@ describe('pseudonymisering (F14-01)', () => {
     expect(masked).toContain('[REGNR_1]');
   });
 
+  it('maskerer fødselsnummer', () => {
+    const p = createPseudonymizer();
+    const masked = p.mask('Fnr 01019012345 må ikke til modellen');
+    expect(masked).not.toContain('01019012345');
+    expect(masked).toContain('[FNR_1]');
+  });
+
+  it('maskerer regnr med små bokstaver', () => {
+    const p = createPseudonymizer();
+    const masked = p.mask('MC-en er ab12345 og AB12345 er samme');
+    expect(masked).not.toMatch(/ab12345/i);
+    expect(masked).toContain('[REGNR_1]');
+    expect(p.size).toBe(1);
+  });
+
+  it('maskerer kjente kundenavn fra kontekst', () => {
+    const p = createPseudonymizer({ knownNames: ['Ola Nordmann', 'Kari'] });
+    const masked = p.mask('Ola Nordmann ringer, og kari også');
+    expect(masked).not.toContain('Ola Nordmann');
+    expect(masked).not.toContain('kari');
+    expect(masked).toContain('[NAVN_1]');
+    expect(masked).toContain('[NAVN_2]');
+  });
+
   it('samme verdi gir samme plassholder — modellen skal kunne resonnere om «samme kunde»', () => {
     const p = createPseudonymizer();
     const masked = p.mask('ola@example.no og ola@example.no er samme person');

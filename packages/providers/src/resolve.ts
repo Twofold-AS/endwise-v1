@@ -36,7 +36,10 @@ export function resolveModelProvider(
     if (isProd) throw new MissingEuProviderError();
     return createMockProvider();
   }
-  return createMistralProvider({ apiKey: env.MISTRAL_API_KEY });
+  return createMistralProvider({
+    apiKey: env.MISTRAL_API_KEY,
+    baseUrl: env.MISTRAL_BASE_URL,
+  });
 }
 
 /** Sanity-sjekk brukt av runtimen. Eksportert for test. */

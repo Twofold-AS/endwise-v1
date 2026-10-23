@@ -1,7 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { createDb, type Database, schema, sql } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { prunableRules, pruneExpired, RETENTION_POLICY, ruleFor } from '../src/retention/index.ts';
+import {
+  AI_LOG_RETENTION_DAYS_DEFAULT,
+  aiLogRetentionDays,
+  prunableRules,
+  pruneExpired,
+  RETENTION_POLICY,
+  ruleFor,
+} from '../src/retention/index.ts';
 
 /** Logg-policyen. Implementert, ikke bare dokumentert. */
 const OWNER_URL = process.env.DATABASE_URL;
@@ -25,8 +32,15 @@ describe('retensjonspolicy (F14-03)', () => {
     expect(prunableRules().map((r) => r.table)).not.toContain('erasure_requests');
   });
 
-  it('stream_events er en buffer, ikke et arkiv', () => {
-    expect(ruleFor('stream_events')?.days).toBeLessThanOrEqual(7);
+  it('stream_events og AI-logger slettes automatisk (konfigurerbar, default 30 dager)', () => {
+    expect(ruleFor('stream_events')?.mode).toBe('delete');
+    expect(ruleFor('stream_events')?.days).toBeGreaterThan(0);
+    expect(ruleFor('stream_events')?.days).toBeLessThanOrEqual(365);
+    expect(aiLogRetentionDays({})).toBe(AI_LOG_RETENTION_DAYS_DEFAULT);
+    expect(aiLogRetentionDays({ AI_LOG_RETENTION_DAYS: '14' })).toBe(14);
+    expect(aiLogRetentionDays({ AI_LOG_RETENTION_DAYS: 'nei' })).toBe(
+      AI_LOG_RETENTION_DAYS_DEFAULT,
+    );
   });
 });
 
@@ -44,11 +58,13 @@ describeDb('automatisk sletting (F14-03)', () => {
       { id: tenantB, name: 'RB', slug: `retb-${tenantB.slice(0, 8)}` },
     ]);
 
-    // Ett gammelt event (8 dager) og ett ferskt, i hver tenant.
+    const rule = ruleFor('stream_events');
+    const gammelDager = (rule?.days ?? 30) + 1;
+    // Ett gammelt event (retensjon + 1 dag) og ett ferskt, i hver tenant.
     for (const t of [tenantId, tenantB]) {
       await owner.execute(sql`
         insert into stream_events (tenant_id, type, payload, created_at)
-        values (${t}, 'gammel', '{}'::jsonb, now() - interval '8 days'),
+        values (${t}, 'gammel', '{}'::jsonb, now() - ${gammelDager} * interval '1 day'),
                (${t}, 'fersk',  '{}'::jsonb, now())
       `);
     }

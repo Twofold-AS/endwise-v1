@@ -467,8 +467,7 @@ underdatabehandlere.
 | **Neon** | Postgres-database (EU) | All tenant-/kundedata | EU-region | DPA |
 | **Resend** | Transaksjons-e-post + nyhetsbrev | E-postadresser + innhold | US | DPA + SCC |
 | **Twilio** | SMS-varsler | Telefonnummer + meldingsinnhold | US | DPA + SCC |
-| **Fireworks** | AI — tenant-driftsdata | Strukturerte driftstall (ingen sluttkunde-fritekst) | US | SCC + TIA + DPA (F14-12/13). ZDR standard |
-| **Mistral** | AI — kunde-fritekst | Sluttkundens fritekst | EU | DPA (F14-09). ZDR søkt (F14-11) |
+| **Mistral** | AI — alle agenter (Ronny, kunde, intern) + moderasjon | Maskert fritekst og tenant-skopede driftsfelt | EU (`api.eu.mistral.ai`) | DPA (F14-09). ZDR søkes (F14-11). Inferens i EU/EFTA |
 | **Stripe** 🆕 | Betaling/fakturering (forhandler-abonnement) | Betalings-/personopplysninger (navn, e-post, kortdata håndteres av Stripe) | US-selskap m/ EU-entitet | SCC + **PCI-DSS** (F14-19) |
 
 🆕 = lagt til 16.07.2026 (brukergodkjent). Kortdata lagres aldri hos Endwise — de går direkte til

@@ -14,6 +14,8 @@
     "./stream": "./src/stream/index.ts",
     "./messages": "./src/messages/index.ts",
     "./erasure": "./src/erasure/index.ts",
+    "./audit": "./src/audit/index.ts",
+    "./compliance": "./src/compliance/index.ts",
     "./retention": "./src/retention/index.ts",
     "./billing": "./src/billing/index.ts",
     "./billing/plans": "./src/billing/plans.ts",

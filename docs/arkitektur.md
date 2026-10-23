@@ -219,8 +219,8 @@ innloggingen skjer før noen forhandler er valgt. Grensen går i stedet på
 
 Kode i `packages/providers/src/data-region.ts` deler data i to klasser:
 
-- `customer_freetext` — kundens egne ord → **må** til EU-leverandør (Mistral)
-- `tenant_operational` — vår egen strukturerte drift → *kan* region-messig gå globalt, men `resolveModelProvider` ruter den også til Mistral EU (Mikael 02.09.2026)
+- `customer_freetext` — kundens egne ord → **må** til EU-leverandør (Mistral, `api.eu.mistral.ai`)
+- `tenant_operational` — vår egen strukturerte drift → **må** også til EU. Fireworks er ikke lenger tillatt.
 
 En feilkonfigurasjon her er ikke en bug, det er et personvernbrudd. Derfor er
 det en type som ikke lar seg kompilere feil, og det finnes ingen fallback fra

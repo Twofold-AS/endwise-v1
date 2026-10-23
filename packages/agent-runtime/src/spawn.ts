@@ -1,4 +1,4 @@
-import type { GuardrailPipeline } from '@endwise/guardrails';
+import { createPseudonymizer, type GuardrailPipeline, maskMessages } from '@endwise/guardrails';
 import { DataRegionViolation, type ModelProvider, providerSatisfies } from '@endwise/providers';
 import type { ModelMessage, Tool } from 'ai';
 import { type AgentDefinition, assertEntitled } from './agent.ts';
@@ -92,15 +92,28 @@ export function spawnAgent(options: SpawnOptions): AgentSession {
         throw new TenantBindingError(boundTenantId, context.tenantId);
       }
 
-      return runAgentWithTools({
-        agent,
-        context,
-        provider,
-        guardrails,
-        tools,
-        messages,
-        onEvent,
+      const knownNames = context.knownCustomerNames;
+      const pseudo = createPseudonymizer({
+        knownNames: knownNames ? [...knownNames] : [],
       });
+      const masked = maskMessages(messages, pseudo);
+      return pseudo.unmask(
+        await runAgentWithTools({
+          agent,
+          context,
+          provider,
+          guardrails,
+          tools,
+          messages: masked,
+          onEvent: async (event) => {
+            if (event.type === 'agent.token' || event.type === 'agent.done') {
+              await onEvent({ ...event, text: pseudo.unmask(event.text) });
+              return;
+            }
+            await onEvent(event);
+          },
+        }),
+      );
     },
   };
 

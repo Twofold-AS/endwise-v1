@@ -23,19 +23,6 @@ export interface VendorErasureFact {
 
 export const VENDOR_ERASURE_FACTS: readonly VendorErasureFact[] = [
   {
-    vendor: 'fireworks',
-    capability: 'nothing_stored',
-    whatIsStored:
-      'Ingenting. Zero Data Retention er STANDARD for chat completions: prompt og svar finnes ' +
-      'kun i flyktig minne under forespørselen. Kun metadata (antall tokens) logges.',
-    whatWeCanDo:
-      'Ingenting — og det er riktig svar. Det finnes ikke noe å slette. ' +
-      'MERK: dette forutsetter at vi ALDRI tar i bruk deres «Response API», som lagrer i 30 dager ' +
-      'med store=True som default (F14-12).',
-    maxDaysUntilGone: 0,
-    source: 'docs.fireworks.ai/guides/security_compliance/data_handling',
-  },
-  {
     vendor: 'mistral',
     capability: 'auto_expires',
     whatIsStored:

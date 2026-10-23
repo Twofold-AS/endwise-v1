@@ -4,6 +4,11 @@ import { ilike, or, schema, withTenant } from '@endwise/db';
 import { tool } from 'ai';
 import { z } from 'zod';
 import { lagerVerktoy } from '../drift-innsikt/lager-verktoy.ts';
+import {
+  BOOKING_MODELL_FELT,
+  CUSTOMER_MODELL_FELT,
+  MECHANIC_MODELL_FELT,
+} from '../verktoy-felt.ts';
 import { erTillattGaaTil } from './gaa-til.ts';
 import instructions from './instructions.md?raw';
 import {
@@ -46,7 +51,7 @@ export const workshopAgent: AgentDefinition = {
         inputSchema: z.object({ limit: z.number().int().min(1).max(50).default(20) }),
         execute: async ({ limit }) =>
           withTenant(context.db, context.tenantId, (tx) =>
-            tx.select().from(schema.bookings).limit(limit),
+            tx.select(BOOKING_MODELL_FELT).from(schema.bookings).limit(limit),
           ),
       }),
       ...lagerVerktoy(context),
@@ -55,7 +60,7 @@ export const workshopAgent: AgentDefinition = {
         inputSchema: z.object({}),
         execute: async () =>
           withTenant(context.db, context.tenantId, (tx) =>
-            tx.select().from(schema.mechanics).limit(50),
+            tx.select(MECHANIC_MODELL_FELT).from(schema.mechanics).limit(50),
           ),
       }),
       /** ASCII-nøkkel mot Mistral. UI matcher også `gåTil` i tool-parts. */
@@ -81,10 +86,7 @@ export const workshopAgent: AgentDefinition = {
           const q = sok?.trim();
           const rader = await withTenant(context.db, context.tenantId, (tx) =>
             tx
-              .select({
-                id: schema.customers.id,
-                navn: schema.customers.name,
-              })
+              .select(CUSTOMER_MODELL_FELT)
               .from(schema.customers)
               .where(
                 q

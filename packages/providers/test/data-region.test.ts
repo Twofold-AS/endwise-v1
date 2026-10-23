@@ -5,9 +5,11 @@ import {
   createMistralProvider,
   createMockProvider,
   DataRegionViolation,
+  MISTRAL_EU_BASE_URL,
   MissingEuProviderError,
   NonEuEndpointError,
   providerSatisfies,
+  regionFromMistralUrl,
   regionSatisfies,
   resolveModelProvider,
 } from '../src/index.ts';
@@ -19,18 +21,20 @@ describe('dataregion (F14)', () => {
     expect(regionSatisfies('eu', 'tenant_operational')).toBe(true);
   });
 
-  it('ANGREP: global provider kan IKKE betjene sluttkundens fritekst', () => {
+  it('ANGREP: global provider kan IKKE betjene noen dataklasse', () => {
     expect(regionSatisfies('global', 'customer_freetext')).toBe(false);
-    expect(regionSatisfies('global', 'tenant_operational')).toBe(true);
+    expect(regionSatisfies('global', 'tenant_operational')).toBe(false);
   });
 
-  it('Fireworks erklærer seg global, Mistral EU', () => {
+  it('Fireworks erklærer seg global og får derfor ingen dataklasse', () => {
     const fw = createFireworksProvider({ apiKey: 'x' });
     const mi = createMistralProvider({ apiKey: 'x' });
     expect(fw.region).toBe('global');
     expect(mi.region).toBe('eu');
     expect(providerSatisfies(fw, 'customer_freetext')).toBe(false);
+    expect(providerSatisfies(fw, 'tenant_operational')).toBe(false);
     expect(providerSatisfies(mi, 'customer_freetext')).toBe(true);
+    expect(providerSatisfies(mi, 'tenant_operational')).toBe(true);
   });
 
   it('mock er trygg for alt (den går ingen steder)', () => {
@@ -50,12 +54,25 @@ describe('dataregion (F14)', () => {
 });
 
 describe('Mistral EU-endepunkt (F14-02)', () => {
-  it('EU-endepunktet godtas', () => {
-    expect(() => assertEuEndpoint('https://api.mistral.ai/v1')).not.toThrow();
+  it('kun det regionale EU-endepunktet godtas', () => {
+    expect(() => assertEuEndpoint(MISTRAL_EU_BASE_URL)).not.toThrow();
+    expect(() => assertEuEndpoint('https://api.eu.mistral.ai/v1')).not.toThrow();
+    expect(regionFromMistralUrl(MISTRAL_EU_BASE_URL)).toBe('eu');
+  });
+
+  it('ANGREP: globalt endepunkt (api.mistral.ai) avvises', () => {
+    expect(() => assertEuEndpoint('https://api.mistral.ai/v1')).toThrow(NonEuEndpointError);
   });
 
   it('ANGREP: US-endepunktet avvises', () => {
     expect(() => assertEuEndpoint('https://api.us.mistral.ai/v1')).toThrow(NonEuEndpointError);
+  });
+
+  it('ANGREP: vilkårlig MISTRAL_BASE_URL-override avvises', () => {
+    expect(() => assertEuEndpoint('https://evil.example/v1')).toThrow(NonEuEndpointError);
+    expect(() => assertEuEndpoint('https://api.mistral.ai.evil.example/v1')).toThrow(
+      NonEuEndpointError,
+    );
   });
 
   it('søppel-URL avvises', () => {
@@ -66,6 +83,15 @@ describe('Mistral EU-endepunkt (F14-02)', () => {
     expect(() =>
       createMistralProvider({ apiKey: 'x', baseUrl: 'https://api.us.mistral.ai/v1' }),
     ).toThrow(NonEuEndpointError);
+    expect(() =>
+      createMistralProvider({ apiKey: 'x', baseUrl: 'https://api.mistral.ai/v1' }),
+    ).toThrow(NonEuEndpointError);
+  });
+
+  it('region utledes fra URL, ikke hardkodes i provideren', () => {
+    const mi = createMistralProvider({ apiKey: 'x', baseUrl: MISTRAL_EU_BASE_URL });
+    expect(mi.region).toBe(regionFromMistralUrl(MISTRAL_EU_BASE_URL));
+    expect(mi.region).toBe('eu');
   });
 });
 

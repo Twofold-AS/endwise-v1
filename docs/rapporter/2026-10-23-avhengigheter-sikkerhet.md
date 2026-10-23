@@ -10,8 +10,8 @@ Egen PR mot `main` (ikke #178 / #180). Mål: `pnpm audit --audit-level high` ute
 - **Twilio** `^6.0.2` → **`^6.2.0`**. **Vite** (framer-plugin) `^6.0.0` → **`^6.4.5`**.
 - Transitive highs via overrides: sharp ≥0.35.5, postcss ≥8.5.23, brace-expansion 2.1.7/5.0.12, undici ≥7.29.1, axios ≥1.20.0, follow-redirects, devalue, source-map-js, http-cache-semantics, browserslist, vite 6.4.5/8.3.5, piscina, proxy-addr, `@xhmikosr/decompress`, fast-uri 3.1.9.
 - Next 16.4-breaking: fjernet inert `experimental.viewTransition` (flagget leses ikke lenger; View Transitions er stabile uten Next-flagg).
-- ZAP venter på Vercel-preview via GitHub Deployments API — ikke `example.invalid`. Verifisert på #181: traff `*.vercel.app`, 0 FAIL-NEW. Jobben falt først på å opprette GitHub-issue (`allow_issue_writing` slått av).
-- OWASP DC: `pnpm audit` grønn i CI. Docker-steget krasjet på Yarn-analysator i pnpm-repo (`--disableYarnAudit`).
+- ZAP venter på Vercel-preview via GitHub Deployments API — ikke `example.invalid`. Verifisert på #181: traff `*.vercel.app`, 0 FAIL-NEW. Først 403 på GitHub-issue (`allow_issue_writing` av), deretter ugyldig artifact-API i `action-baseline@v0.12.0` — bumpet til **v0.15.0**.
+- OWASP DC: grønn etter `--disableYarnAudit`. `pnpm audit` grønn i CI.
 - Biome ignorerer `next-env.d.ts` (Next-generert, «skal ikke redigeres»).
 
 `pnpm audit --audit-level high` avslutter 0. Lokalt: lint, typecheck, test og `next build` (Turbopack 16.4.2) grønne.

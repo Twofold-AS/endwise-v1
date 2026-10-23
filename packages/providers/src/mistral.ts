@@ -1,44 +1,58 @@
 import { createMistral } from '@ai-sdk/mistral';
 import type { LanguageModel } from 'ai';
+import type { DataRegion } from './data-region.ts';
 import { catalogFromEnv, type ModelCatalog, type PlanKey, resolveModel } from './model-catalog.ts';
 import type { ModelProvider, ModelRequest } from './provider.ts';
 
 /**
- * F14 / Mikael 02.09.2026 — Mistral (EU). Leverandøren for ALLE agenter
- * (Ronny/workshop, kunde-support/widget, intern drift). Function calling
- * via chat completions + våre tools — ikke Mistral Agents API.
- * Base-URL-en er en sikkerhetsgrense, ikke en innstilling.
- * Mistral hoster i EU **som standard** — men de har også et eksplisitt
- * Us-endepunkt, og bruker du det, ligger dataene i usa (deres egen
- * dokumentasjon sier det rett ut). Derfor:
- * vi setter base-URL eksplisitt til EU-endepunktet
- * vi nekter å starte hvis noen har overstyrt den til noe annet
- * En feilstavet miljøvariabel skal ikke kunne flytte norske kunders
- * helseopplysninger over Atlanteren i stillhet.
+ * F14 / Mikael 23.10.2026 — Mistral (dedikert EU-endepunkt).
+ * Leverandøren for ALLE agenter (Ronny/workshop, kunde-support/widget,
+ * intern drift). Function calling via chat completions + våre tools —
+ * ikke Mistral Agents API (EU-endepunktet støtter uansett ikke Agents,
+ * Batch eller Files).
+ * `api.mistral.ai` er globalt og lover ikke inferens-sted. Kun
+ * `api.eu.mistral.ai` er allowlistet. En `MISTRAL_BASE_URL`-override
+ * til noe annet skal ikke kunne flytte norske kunders helseopplysninger
+ * ut av EU i stillhet.
  */
-export const MISTRAL_EU_BASE_URL = 'https://api.mistral.ai/v1';
-
-/** Kjente ikke-EU-endepunkter. Treffer vi ett av disse, stopper vi. */
-const NON_EU_HOSTS = ['api.us.mistral.ai'];
+export const MISTRAL_EU_HOST = 'api.eu.mistral.ai';
+export const MISTRAL_EU_BASE_URL = 'https://api.eu.mistral.ai/v1';
 
 export class NonEuEndpointError extends Error {
   readonly code = 'NON_EU_ENDPOINT';
   constructor(url: string) {
     super(
-      `Mistral-endepunktet «${url}» er ikke EU. Mistral tilbyr et eksplisitt ` +
-        'US-endepunkt — det skal aldri brukes av Endwise. Se docs/personvern/.',
+      `Mistral-endepunktet «${url}» er ikke det dedikerte EU-endepunktet. ` +
+        'Kun api.eu.mistral.ai er tillatt. api.mistral.ai (global) og ' +
+        'api.us.mistral.ai skal aldri brukes av Endwise. Se docs/personvern/.',
     );
   }
 }
 
+function endpointHost(baseUrl: string): string {
+  return new URL(baseUrl).hostname.toLowerCase();
+}
+
+/** Region utledet fra URL. Bare host `api.eu.mistral.ai` er `eu`. */
+export function regionFromEndpoint(baseUrl: string): DataRegion {
+  let host: string;
+  try {
+    host = endpointHost(baseUrl);
+  } catch {
+    return 'global';
+  }
+  return host === MISTRAL_EU_HOST ? 'eu' : 'global';
+}
+
+/** Allowlist: kun host `api.eu.mistral.ai`. Alt annet kaster ved oppstart. */
 export function assertEuEndpoint(baseUrl: string): void {
   let host: string;
   try {
-    host = new URL(baseUrl).host;
+    host = endpointHost(baseUrl);
   } catch {
     throw new NonEuEndpointError(baseUrl);
   }
-  if (NON_EU_HOSTS.some((bad) => host === bad || host.endsWith(`.${bad}`))) {
+  if (host !== MISTRAL_EU_HOST) {
     throw new NonEuEndpointError(baseUrl);
   }
 }
@@ -60,7 +74,7 @@ export function createMistralProvider(options?: {
 
   return {
     name: 'mistral',
-    region: 'eu',
+    region: regionFromEndpoint(baseURL),
 
     isConfigured() {
       return apiKey.length > 0;

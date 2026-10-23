@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-10-23 — F14-02/F14-05 all AI kun via Mistral EU-endepunkt
+
+**Type:** personvern / AI-ruting. Ingen ny UI-pakke. Ingen DB.
+**Godkjent av:** Mikael — all AI kun via Mistral EU.
+**Endring:** **F14-02** `progress` (dedikert `https://api.eu.mistral.ai/v1`, allowlist-host `api.eu.mistral.ai`, `tenant_operational` krever `eu`, region fra URL). **F14-05** `progress` (widget-moderasjon fail-closed til menneske). Techstack oppdatert. ⛔ #178. Ingen merge.
+
+---
+
 ## 2026-09-10 — F15 Sikkerhetsstyringssystem / HMS (veikart bak flagg)
 
 **Type:** ny fase/epic i veikartet. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB. Ingen HMS-UI.

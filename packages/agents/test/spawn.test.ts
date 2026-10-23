@@ -301,9 +301,7 @@ describe('dataregion-håndheving ved spawn (F14)', () => {
     ).not.toThrow();
   });
 
-  // Region-typen tillater global for intern data. resolveModelProvider velger
-  // likevel aldri Fireworks (Mikael 02.09.2026) — se data-region.test.ts.
-  it('drifts-agenten (kun tenant-data) kan kjøre på Fireworks', () => {
+  it('ANGREP: drifts-agenten kan IKKE kjøre på Fireworks', () => {
     expect(() =>
       spawnAgent({
         agent: driftInnsiktAgent,
@@ -311,7 +309,7 @@ describe('dataregion-håndheving ved spawn (F14)', () => {
         provider: createFireworksProvider({ apiKey: 'x' }),
         guardrails: createGuardrails(),
       }),
-    ).not.toThrow();
+    ).toThrow(DataRegionViolation);
   });
 
   it('feilmeldingen forteller HVA som er galt, ikke bare AT noe er galt', () => {

@@ -11,7 +11,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ai-sdk/fireworks": "^3.0.10",
     "@ai-sdk/mistral": "^4.0.10",
     "@ai-sdk/provider": "^4.0.3",
     "@endwise/db": "workspace:*",

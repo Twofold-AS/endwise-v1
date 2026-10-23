@@ -1,23 +1,19 @@
 import { type AgentContext, runAgent } from '@endwise/agent-runtime';
 import { getAgent } from '@endwise/agents';
 import { eq, schema, withTenant } from '@endwise/db';
-import {
-  createGuardrails,
-  createPseudonymizer,
-  createScopeGate,
-  type Moderator,
-  maskMessages,
-} from '@endwise/guardrails';
+import { createGuardrails, ScopeGateViolation } from '@endwise/guardrails';
+import { writeAiAudit } from '@endwise/modules/audit';
 import {
   createRateLimiter,
   type DisclosureLocale,
   WIDGET_AI_DISCLOSURE,
   WIDGET_AI_HANDOVER,
 } from '@endwise/modules/widget';
-import { createMistralModerator, resolveModelProvider } from '@endwise/providers';
+import { resolveModelProvider } from '@endwise/providers';
 import type { Context } from 'hono';
 import { z } from 'zod';
 import { createAppContext } from '../../context.ts';
+import { forberedAiMeldinger } from '../../lib/ai-inngang.ts';
 import type { WidgetVars } from '../../lib/widget-auth.ts';
 
 /**
@@ -26,11 +22,12 @@ import type { WidgetVars } from '../../lib/widget-auth.ts';
  * 1. Art. 50 (F14-04): opplysningen «du snakker med en AI» returneres som det
  * Første feltet i hvert svar — server-håndhevet, kan ikke fjernes av klienten.
  * 2. Dataregion (F14-02): provider = `resolveModelProvider('customer_freetext')`
- * ⇒ Mistral (EU), aldri Fireworks. `runAgent` dobbeltsjekker via
+ * ⇒ Mistral (EU). `runAgent` dobbeltsjekker via
  * `providerSatisfies`; uten EU-provider i prod kaster resolveren.
  * 3. Scope-gate (F14-05): sensitive kategorier (helse/pii/jus/selvskading) →
- * eskaler til menneske før teksten når AI-en.
- * 4. Pseudonymisering (F14-01): kundefritekst maskeres før prompt, unmaskes i svaret.
+ * eskaler til menneske før teksten når AI-en. Moderasjonsfeil blokkerer.
+ * 4. Pseudonymisering (F14-01): kundefritekst maskeres før prompt og før
+ * moderasjon, unmaskes i svaret.
  */
 
 const chatLimiter = createRateLimiter({ windowMs: 5 * 60_000, max: 20 });
@@ -67,24 +64,25 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
     );
   }
 
-  // (3) Scope-gate før AI. Ekte moderasjon når Mistral er konfigurert (EU); ellers
-  // audit-modus (dev uten nøkkel) — permissiv, men da kjører uansett mock-provider.
-  const mistralConfigured = Boolean(process.env.MISTRAL_API_KEY);
-  // Fallback-moderator (dev uten Mistral-nøkkel): må matche `Moderator`-typen
-  // eksakt — `categories` er et objekt (Partial<Record<..., boolean>>), ikke en array.
-  const noopModerator: Moderator = async (_text) => ({ categories: {} });
-  const moderate: Moderator = mistralConfigured ? createMistralModerator() : noopModerator;
-  const gate = createScopeGate({ moderate, mode: mistralConfigured ? 'escalate' : 'audit' });
-  // GuardContext = { tenantId, userId, role } — kundeøkten er en «customer».
-  const scope = await gate
-    .check(message, { tenantId, userId: cid, role: 'customer' })
-    .catch(() => ({ allowed: true, triggered: [] as never[] }));
-  if (!scope.allowed) {
+  const db = createAppContext().db;
+
+  // (3)+(4) Masker FØR moderasjon. Feiler lukket: moderator-feil → menneske.
+  let prepared: Awaited<ReturnType<typeof forberedAiMeldinger>>;
+  try {
+    prepared = await forberedAiMeldinger({
+      db,
+      messages: [{ role: 'user', content: message }],
+      context: { tenantId, userId: cid, role: 'customer' },
+      agent: 'kunde-support',
+      cacheKnownNames: true,
+    });
+  } catch (error) {
+    if (!(error instanceof ScopeGateViolation)) {
+      console.warn('[widget-moderation] feilet lukket', error);
+    }
     return c.json({ disclosure, escalated: true, reply: WIDGET_AI_HANDOVER[locale] });
   }
 
-  // Entitlements fra DB (ikke klient). RLS-scopet.
-  const db = createAppContext().db;
   const modules = await withTenant(db, tenantId, (tx) =>
     tx
       .select({ key: schema.tenantModules.moduleKey })
@@ -98,13 +96,21 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
     userId: cid,
     role: 'customer',
     entitlements: modules.map((m) => m.key),
+    knownCustomerNames: prepared.knownNames,
   };
 
-  // (4) Pseudonymiser fritekst før prompt; unmask i svaret.
-  const pseudo = createPseudonymizer();
-  const masked = maskMessages([{ role: 'user', content: message }], pseudo);
   const guardrails = createGuardrails({
-    onViolation: (v) => console.warn(`[widget-guardrail] ${v.message}`),
+    onViolation: (v) => {
+      console.warn(`[widget-guardrail] ${v.message}`);
+      void writeAiAudit(db, {
+        tenantId,
+        actor: cid,
+        action: 'ai.guardrail',
+        subjectType: 'agent',
+        subjectId: 'kunde-support',
+        metadata: { level: v.level, code: v.code },
+      });
+    },
   });
 
   let reply = '';
@@ -114,7 +120,8 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
       context,
       provider,
       guardrails,
-      messages: masked,
+      messages: prepared.messages,
+      pseudonymizer: prepared.pseudonymizer,
       onEvent: (e) => {
         if (e.type === 'agent.token') reply += e.text;
         else if (e.type === 'agent.done' && !reply) reply = e.text;
@@ -129,5 +136,5 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
     });
   }
 
-  return c.json({ disclosure, escalated: false, reply: pseudo.unmask(reply) });
+  return c.json({ disclosure, escalated: false, reply: prepared.pseudonymizer.unmask(reply) });
 }

@@ -20,7 +20,7 @@ export interface MockScript {
  * nøkkel, uten nettverk, uten regning.
  * Samme grensesnitt som Mistral. Legger du inn `MISTRAL_API_KEY`, kjører
  * nøyaktig samme kode mot ekte modell — ingen kodeendring. Agent-runtime
- * velger ikke Fireworks (Mikael 02.09.2026).
+ * velger Mistral EU (Mikael 02.09.2026). Fireworks er fjernet.
  */
 export function createMockProvider(script: MockScript = {}): ModelProvider {
   // Verktøykallene skjer kun i første steg. Uten dette ville modellen kalt samme
@@ -64,5 +64,14 @@ export function createMockProvider(script: MockScript = {}): ModelProvider {
         doStream: async () => ({ stream: simulateReadableStream({ chunks: parts }) }),
       });
     },
+  };
+}
+
+/** Test-dobbelt: en leverandør som erklærer seg utenfor EU. */
+export function createNonEuTestProvider(script: MockScript = {}): ModelProvider {
+  return {
+    ...createMockProvider(script),
+    name: 'non-eu-test',
+    region: 'global',
   };
 }

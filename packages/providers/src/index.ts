@@ -1,5 +1,4 @@
 export * from './data-region.ts';
-export * from './fireworks.ts';
 export * from './mistral.ts';
 export * from './mock.ts';
 export * from './model-catalog.ts';

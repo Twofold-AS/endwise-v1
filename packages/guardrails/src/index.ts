@@ -1,3 +1,4 @@
+export * from './ai-hygiene.ts';
 export * from './pipeline.ts';
 export * from './pseudonymize.ts';
 export * from './scope-gate.ts';

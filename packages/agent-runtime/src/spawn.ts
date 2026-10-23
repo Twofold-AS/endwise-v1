@@ -1,4 +1,4 @@
-import type { GuardrailPipeline } from '@endwise/guardrails';
+import { createPseudonymizer, type GuardrailPipeline, maskMessages } from '@endwise/guardrails';
 import { DataRegionViolation, type ModelProvider, providerSatisfies } from '@endwise/providers';
 import type { ModelMessage, Tool } from 'ai';
 import { type AgentDefinition, assertEntitled } from './agent.ts';
@@ -58,7 +58,7 @@ export function spawnAgent(options: SpawnOptions): AgentSession {
   // hvilken region den kjører i. Passer de ikke sammen, starter ikke agenten.
 
   // Dette er grunnen til at regelen ligger her og ikke i en readme: en
-  // kunde-support-agent konfigurert mot Fireworks er ikke en bug man retter i
+  // kunde-support-agent konfigurert mot en ikke-EU-leverandør er ikke en bug man retter i
   // neste sprint — det er norske kunders helseopplysninger sendt til usa.
   // Den skal ikke kunne spawnes.
   if (!providerSatisfies(provider, agent.dataClass)) {
@@ -71,13 +71,13 @@ export function spawnAgent(options: SpawnOptions): AgentSession {
 
   assertEntitled(agent, context);
 
-  // 2. Bygg verktøyene ÉN gang, med den frosne konteksten. Løkka får dem ferdige
-  // og kan ikke be om nye med en annen kontekst.
-  const tools: Record<string, Tool> = guardrails.wrapTools(
-    filtrerVerktoyAllowlist(agent.tools(context), agent.toolAllowlist),
-    context,
+  // 2. Bygg rå-verktøyene ÉN gang, med den frosne konteksten. wrapTools
+  // skjer per kjøring, så L3 deler kart med maskMessages.
+  const rawTools: Record<string, Tool> = filtrerVerktoyAllowlist(
+    agent.tools(context),
+    agent.toolAllowlist,
   );
-  assertAsciiToolNames(tools);
+  assertAsciiToolNames(rawTools);
 
   const session: AgentSession = {
     agent: agent.name,
@@ -92,15 +92,23 @@ export function spawnAgent(options: SpawnOptions): AgentSession {
         throw new TenantBindingError(boundTenantId, context.tenantId);
       }
 
-      return runAgentWithTools({
-        agent,
-        context,
-        provider,
-        guardrails,
-        tools,
-        messages,
-        onEvent,
+      const knownNames = context.knownCustomerNames;
+      const pseudo = createPseudonymizer({
+        knownNames: knownNames ? [...knownNames] : [],
       });
+      const tools = guardrails.wrapTools(rawTools, context, pseudo);
+      const masked = maskMessages(messages, pseudo);
+      return pseudo.unmask(
+        await runAgentWithTools({
+          agent,
+          context,
+          provider,
+          guardrails,
+          tools,
+          messages: masked,
+          onEvent,
+        }),
+      );
     },
   };
 

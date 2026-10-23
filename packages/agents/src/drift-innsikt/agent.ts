@@ -3,6 +3,7 @@ import type { AgentContext, AgentDefinition } from '@endwise/agent-runtime';
 import { schema, withTenant } from '@endwise/db';
 import { tool } from 'ai';
 import { z } from 'zod';
+import { BOOKING_MODELL_FELT, MECHANIC_MODELL_FELT } from '../verktoy-felt.ts';
 import instructions from './instructions.md?raw';
 import { lagerVerktoy } from './lager-verktoy.ts';
 
@@ -11,11 +12,10 @@ import { lagerVerktoy } from './lager-verktoy.ts';
  * `dataClass: 'tenant_operational'` — den ser kun forhandlerens egne
  * strukturerte driftsdata. Ingen sluttkunde skriver inn i den; det er en ansatt
  * som spør om sin egen kapasitet.
- * Dataklassen TILLATER global region, men `resolveModelProvider` velger
- * Mistral EU (Mikael 02.09.2026). Den må aldri få et verktøy som
- * returnerer kundens fritekst. Legger noen til et `lesKundemelding`-verktøy
- * her, må dataklassen endres til `customer_freetext` i samme commit — ellers er
- * det en stille lekkasje.
+ * Dataklassen krever EU. `resolveModelProvider` velger Mistral
+ * (`api.eu.mistral.ai`). Den må aldri få et verktøy som returnerer kundens
+ * fritekst. Legger noen til et `lesKundemelding`-verktøy her, må dataklassen
+ * endres til `customer_freetext` i samme commit — ellers er det en stille lekkasje.
  */
 export const driftInnsiktAgent: AgentDefinition = {
   name: 'drift-innsikt',
@@ -32,7 +32,7 @@ export const driftInnsiktAgent: AgentDefinition = {
         inputSchema: z.object({ limit: z.number().int().min(1).max(50).default(20) }),
         execute: async ({ limit }) =>
           withTenant(context.db, context.tenantId, (tx) =>
-            tx.select().from(schema.bookings).limit(limit),
+            tx.select(BOOKING_MODELL_FELT).from(schema.bookings).limit(limit),
           ),
       }),
 
@@ -45,7 +45,7 @@ export const driftInnsiktAgent: AgentDefinition = {
         inputSchema: z.object({}),
         execute: async () =>
           withTenant(context.db, context.tenantId, (tx) =>
-            tx.select().from(schema.mechanics).limit(50),
+            tx.select(MECHANIC_MODELL_FELT).from(schema.mechanics).limit(50),
           ),
       }),
     };

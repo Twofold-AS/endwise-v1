@@ -91,21 +91,39 @@ describe('streamAgentChat (F6-18)', () => {
     ).rejects.toBeInstanceOf(DataRegionViolation);
   });
 
-  it('tillater tenant_operational mot en global leverandør', async () => {
+  it('⛔ nekter tenant_operational mot en leverandør utenfor EU', async () => {
     const globalProvider: ModelProvider = {
       ...createMockProvider(),
       name: 'fake-us',
       region: 'global',
     };
 
+    await expect(async () =>
+      streamAgentChat({
+        agent: agent({ dataClass: 'tenant_operational' }),
+        context: ctx(),
+        provider: globalProvider,
+        guardrails: createGuardrails(),
+        messages: await meldinger('hei'),
+      }),
+    ).rejects.toBeInstanceOf(DataRegionViolation);
+  });
+
+  it('unmasker plassholdere i svaret etter at modellen har snakket', async () => {
+    const { createPseudonymizer } = await import('@endwise/guardrails');
+    const pseudo = createPseudonymizer();
+    pseudo.mask('ola@example.no');
+
     const result = streamAgentChat({
-      agent: agent({ dataClass: 'tenant_operational' }),
+      agent: agent(),
       context: ctx(),
-      provider: globalProvider,
+      provider: createMockProvider({ chunks: ['Jeg sender til [EPOST_1].'] }),
       guardrails: createGuardrails(),
       messages: await meldinger('hei'),
+      pseudonymizer: pseudo,
     });
-    expect(await lesTekst(result)).toContain('Hei');
+
+    expect(await lesTekst(result)).toBe('Jeg sender til ola@example.no.');
   });
 
   it('⛔ nekter en agent forhandleren ikke har betalt for', async () => {

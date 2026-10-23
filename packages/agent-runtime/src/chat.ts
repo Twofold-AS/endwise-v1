@@ -1,4 +1,10 @@
-import { createStreamRedactor, type GuardrailPipeline } from '@endwise/guardrails';
+import {
+  createPseudonymizer,
+  createStreamRedactor,
+  type GuardrailPipeline,
+  maskMessages,
+  type Pseudonymizer,
+} from '@endwise/guardrails';
 import { DataRegionViolation, type ModelProvider, providerSatisfies } from '@endwise/providers';
 import { isStepCount, type ModelMessage, streamText, type TextStreamPart, type ToolSet } from 'ai';
 import { type AgentDefinition, AgentPreflightRefuse, assertEntitled } from './agent.ts';
@@ -43,6 +49,10 @@ export interface ChatOptions {
   guardrails: GuardrailPipeline;
   /** Historikken, allerede konvertert fra UI-meldinger av kallstedet. */
   messages: ModelMessage[];
+  /** Valgfritt delt kart — ellers opprettes ett per tur. */
+  pseudonymizer?: Pseudonymizer;
+  /** Kjente kundenavn fra kontekst, maskeres som [NAVN_n]. */
+  knownNames?: readonly string[];
   /** Sidekontekst og annet som skal inn i systemprompten på hver tur. */
   systemExtra?: string;
   onViolation?: (message: string) => void;
@@ -82,9 +92,14 @@ export function streamAgentChat(options: ChatOptions) {
 
   const rawTools = agent.tools(context);
   const tillatte = filtrerVerktoyAllowlist(rawTools, options.toolAllowlist ?? agent.toolAllowlist);
-  const tools = guardrails.wrapTools(tillatte, context);
+  const knownNames = options.knownNames ?? context.knownCustomerNames;
+  const pseudo =
+    options.pseudonymizer ?? createPseudonymizer({ knownNames: knownNames ? [...knownNames] : [] });
+  const tools = guardrails.wrapTools(tillatte, context, pseudo);
   // Mistral 400 02.09: `gåTil` er ugyldig function name. Stopp før HTTP.
   assertAsciiToolNames(tools);
+
+  const masked = maskMessages(options.messages, pseudo);
 
   // Fabrikk, ikke instans: transformen lager én redaktør per tekstblokk.
   const lagRedactor = () =>
@@ -97,24 +112,25 @@ export function streamAgentChat(options: ChatOptions) {
       ? (text: string, ctx: { usedTools: readonly string[] }) =>
           agent.rewriteOutput?.(text, { ...ctx, messages: options.messages }) ?? text
       : undefined);
+  const vis = (text: string) => pseudo.unmask(text);
 
   return streamText({
     model: provider.model({ role: agent.role, tenantId: context.tenantId }),
     system: options.systemExtra
       ? `${agent.instructions}\n\n${pakkKlientKontekstSomData(options.systemExtra)}`
       : agent.instructions,
-    messages: options.messages,
+    messages: masked,
     tools,
     stopWhen: isStepCount(agent.maxSteps),
     maxRetries: MODELL_MAX_RETRIES,
     experimental_transform: rewrite
       ? l4MedPolicy(lagRedactor, {
-          rewrite: (text) => rewrite(text, { usedTools }),
+          rewrite: (text) => vis(rewrite(text, { usedTools })),
           onTool: (navn) => {
             usedTools.push(navn);
           },
         })
-      : l4Redaksjon(lagRedactor),
+      : l4Redaksjon(lagRedactor, vis),
   });
 }
 
@@ -192,7 +208,10 @@ function l4MedPolicy(
   };
 }
 
-function l4Redaksjon(lagRedactor: () => ReturnType<typeof createStreamRedactor>) {
+function l4Redaksjon(
+  lagRedactor: () => ReturnType<typeof createStreamRedactor>,
+  vis: (text: string) => string = (text) => text,
+) {
   return <TOOLS extends ToolSet>() => {
     // Én redaktør per tekstblokk. Et svar kan ha flere (f.eks. tekst før og
     // etter et verktøykall), og de skal ikke dele holdback-vindu.
@@ -212,11 +231,11 @@ function l4Redaksjon(lagRedactor: () => ReturnType<typeof createStreamRedactor>)
             // Ingen `text-start` sett. Da vet vi ikke hva som er trygt å holde
             // tilbake — men vi skal ikke slippe teksten uredigert heller.
             const engangs = lagRedactor();
-            const alt = engangs.push(chunk.text) + engangs.flush();
+            const alt = vis(engangs.push(chunk.text) + engangs.flush());
             if (alt) controller.enqueue({ ...chunk, text: alt });
             return;
           }
-          const trygg = r.push(chunk.text);
+          const trygg = vis(r.push(chunk.text));
           // Tom bit = alt holdes fortsatt tilbake. Da sender vi ingenting heller
           // enn en tom delta, som ville blitt en usynlig, meningsløs hendelse.
           if (trygg) controller.enqueue({ ...chunk, text: trygg });
@@ -226,7 +245,7 @@ function l4Redaksjon(lagRedactor: () => ReturnType<typeof createStreamRedactor>)
         if (chunk.type === 'text-end') {
           const r = blokker.get(chunk.id);
           if (r) {
-            const rest = r.flush();
+            const rest = vis(r.flush());
             // Resten først, så `text-end`. Motsatt rekkefølge er nøyaktig
             // bugen kommentaren over beskriver.
             if (rest) {
@@ -250,7 +269,7 @@ function l4Redaksjon(lagRedactor: () => ReturnType<typeof createStreamRedactor>)
       // synlig, og det er riktig vei å feile.
       flush(controller) {
         for (const [id, r] of blokker) {
-          const rest = r.flush();
+          const rest = vis(r.flush());
           if (rest) {
             controller.enqueue({ type: 'text-delta', id, text: rest } as TextStreamPart<TOOLS>);
           }

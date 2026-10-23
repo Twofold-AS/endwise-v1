@@ -6,7 +6,8 @@ import {
 import { getAgent, pakkSideSomData, UnknownAgentError, vurderRonnyInn } from '@endwise/agents';
 import { TwoFactorRequiredError } from '@endwise/auth';
 import { eq, schema, withTenant } from '@endwise/db';
-import { createGuardrails } from '@endwise/guardrails';
+import { createGuardrails, ScopeGateViolation } from '@endwise/guardrails';
+import { writeAiAudit } from '@endwise/modules/audit';
 import {
   DataRegionViolation,
   MissingEuProviderError,
@@ -23,6 +24,7 @@ import {
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createRequestContext } from '../context.ts';
+import { AI_HANDOVER_NO, forberedAiMeldinger } from '../lib/ai-inngang.ts';
 
 /**
  * Strømmende chat-endepunkt for `useChat`.
@@ -117,10 +119,22 @@ chat.post('/:agent', async (c) => {
     );
   }
 
+  const guardContext = {
+    tenantId: ctx.tenantId,
+    userId: ctx.userId,
+    role: ctx.role,
+  };
   const guardrails = createGuardrails({
     onViolation: (violation) => {
-      // TODO(F0-14): til Sentry + audit-loggen (F1-06). Samme TODO som i agent.ts.
       console.warn(`[guardrail:${agent.name}] ${violation.message}`);
+      void writeAiAudit(ctx.db, {
+        tenantId: guardContext.tenantId,
+        actor: guardContext.userId,
+        action: 'ai.guardrail',
+        subjectType: 'agent',
+        subjectId: agent.name,
+        metadata: { level: violation.level, code: violation.code },
+      });
     },
   });
 
@@ -131,11 +145,7 @@ chat.post('/:agent', async (c) => {
 
     // L1 på chat-inngangen. streamAgentChat er synkron og kaller ikke
     // filterInput selv — samme sperre som runAgent, bare her.
-    const messages = await guardrails.filterInput(modelMessages, {
-      tenantId: ctx.tenantId,
-      userId: ctx.userId,
-      role: ctx.role,
-    });
+    const filtered = await guardrails.filterInput(modelMessages, guardContext);
 
     // Ronny: nekt utenom-tema og jailbreak FØR Mistral. Modellen skal
     // ikke få sjansen til å lyde «ignore previous instructions».
@@ -144,6 +154,22 @@ chat.post('/:agent', async (c) => {
       if (nekt) {
         return ronnyNektRespons(nekt);
       }
+    }
+
+    // Masker FØR moderasjon. Gjelder /chat, inkl. ai-diagnose. Feiler lukket.
+    let prepared: Awaited<ReturnType<typeof forberedAiMeldinger>>;
+    try {
+      prepared = await forberedAiMeldinger({
+        db: ctx.db,
+        messages: filtered,
+        context: guardContext,
+        agent: agent.name,
+      });
+    } catch (error) {
+      if (!(error instanceof ScopeGateViolation)) {
+        console.warn(`[chat-moderation:${agent.name}] feilet lukket`, error);
+      }
+      return ronnyNektRespons(AI_HANDOVER_NO);
     }
 
     const result = streamAgentChat({
@@ -155,12 +181,24 @@ chat.post('/:agent', async (c) => {
         role: ctx.role,
         threadId: parsed.data.threadId,
         entitlements,
+        knownCustomerNames: prepared.knownNames,
       },
       provider: resolveModelProvider(agent.dataClass),
       guardrails,
-      messages,
+      messages: prepared.messages,
+      pseudonymizer: prepared.pseudonymizer,
       systemExtra: parsed.data.side ? pakkSideSomData(parsed.data.side) : undefined,
-      onViolation: (message) => console.warn(`[guardrail:${agent.name}] ${message}`),
+      onViolation: (message) => {
+        console.warn(`[guardrail:${agent.name}] ${message}`);
+        void writeAiAudit(ctx.db, {
+          tenantId: guardContext.tenantId,
+          actor: guardContext.userId,
+          action: 'ai.guardrail',
+          subjectType: 'agent',
+          subjectId: agent.name,
+          metadata: { source: 'stream' },
+        });
+      },
     });
 
     return createUIMessageStreamResponse({
@@ -169,6 +207,9 @@ chat.post('/:agent', async (c) => {
   } catch (error) {
     // En regionsbrudd skal ikke se ut som en tilfeldig 500 i loggen. Det er
     // den ene feilen her som er et personvernproblem, ikke en driftsfeil.
+    if (error instanceof ScopeGateViolation) {
+      return ronnyNektRespons(AI_HANDOVER_NO);
+    }
     if (error instanceof AgentPreflightRefuse) {
       return ronnyNektRespons(error.text);
     }

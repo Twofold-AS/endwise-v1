@@ -1,4 +1,9 @@
-import type { GuardrailPipeline } from '@endwise/guardrails';
+import {
+  createPseudonymizer,
+  type GuardrailPipeline,
+  maskMessages,
+  type Pseudonymizer,
+} from '@endwise/guardrails';
 import { DataRegionViolation, type ModelProvider, providerSatisfies } from '@endwise/providers';
 import { isStepCount, type ModelMessage, streamText } from 'ai';
 import { type AgentDefinition, assertEntitled } from './agent.ts';
@@ -21,6 +26,10 @@ export interface RunOptions {
   provider: ModelProvider;
   guardrails: GuardrailPipeline;
   messages: ModelMessage[];
+  /** Valgfritt delt kart — ellers opprettes ett per tur. */
+  pseudonymizer?: Pseudonymizer;
+  /** Kjente kundenavn fra kontekst, maskeres som [NAVN_n]. */
+  knownNames?: readonly string[];
   /** Hver hendelse pushes hit — normalt rett videre til SSE (F6-02). */
   onEvent: (event: AgentEvent) => void | Promise<void>;
 }
@@ -60,16 +69,28 @@ export async function runAgent(options: RunOptions): Promise<string> {
     );
   }
 
+  const knownNames = options.knownNames ?? context.knownCustomerNames;
+  const pseudo =
+    options.pseudonymizer ?? createPseudonymizer({ knownNames: knownNames ? [...knownNames] : [] });
   const tools = options.guardrails.wrapTools(
     filtrerVerktoyAllowlist(options.agent.tools(context), options.agent.toolAllowlist),
     context,
+    pseudo,
   );
   assertAsciiToolNames(tools);
-  return runAgentWithTools({
-    ...options,
-    context,
-    tools,
-  });
+
+  const masked = maskMessages(options.messages, pseudo);
+
+  return pseudo.unmask(
+    await runAgentWithTools({
+      ...options,
+      context,
+      tools,
+      messages: masked,
+      // SSE / stream_events får maskert tekst. Unmask skjer i returverdien
+      // og i chat-strømmen — ikke før persistens.
+    }),
+  );
 }
 
 /**

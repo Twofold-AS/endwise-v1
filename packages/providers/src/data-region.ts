@@ -1,8 +1,8 @@
 /**
  * F14 — Dataregion. Dette er en sikkerhetstype, ikke en etikett.
  * Rutingregelen, i klartekst:
- * Agenter som kan motta sluttkundens fritekst **må** kjøre på en EU-provider.
- * Agenter som kun ser tenant-skopede driftsdata kan kjøre hvor som helst.
+ * Alle agenter — både sluttkundens fritekst og tenant-skopet drift —
+ * **må** kjøre på en EU-provider. Ingen unntak, ingen «intern er greit globalt».
  * Grunnen til at dette er en type og ikke en kommentar: en feilkonfigurasjon her
  * er ikke en bug — det er et personvernbrudd. Å sende en norsk kundes fritekst
  * (som kan inneholde helseopplysninger, jf. art. 9) til en amerikansk
@@ -20,8 +20,8 @@ export type DataClass = 'tenant_operational' | 'customer_freetext';
 
 /** Regionen en datklasse krever. Ingen skjønn, ingen overstyring. */
 export const REQUIRED_REGION: Record<DataClass, DataRegion> = {
-  // Bookinger, tjenester, mekanikere — vår egen strukturerte drift.
-  tenant_operational: 'global',
+  // Bookinger, tjenester, mekanikere — vår egen strukturerte drift. Også EU.
+  tenant_operational: 'eu',
   // Kundens egne ord. EU. Punktum.
   customer_freetext: 'eu',
 };
@@ -40,6 +40,6 @@ export class DataRegionViolation extends Error {
 /** Kan en provider i denne regionen betjene denne dataklassen? */
 export function regionSatisfies(region: DataRegion, dataClass: DataClass): boolean {
   const required = REQUIRED_REGION[dataClass];
-  // 'eu' tilfredsstiller både 'eu' og 'global'. 'global' tilfredsstiller kun 'global'.
+  // 'eu' tilfredsstiller både 'eu' og ev. 'global'. 'global' tilfredsstiller kun 'global'.
   return required === 'global' || region === 'eu';
 }

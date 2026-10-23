@@ -31,13 +31,15 @@ export interface RetentionRule {
 
 export const AI_LOG_RETENTION_DAYS_ENV = 'AI_LOG_RETENTION_DAYS';
 export const AI_LOG_RETENTION_DAYS_DEFAULT = 7;
+export const AI_LOG_RETENTION_DAYS_MAX = 7;
 
-/** Konfigurerbar retensjon for stream-bridge og AI-logger. Default 7 dager. */
+/** Konfigurerbar retensjon for stream-bridge og AI-logger. Default og tak: 7 dager. */
 export function aiLogRetentionDays(env: NodeJS.ProcessEnv = process.env): number {
   const raw = env[AI_LOG_RETENTION_DAYS_ENV];
   if (raw === undefined || raw === '') return AI_LOG_RETENTION_DAYS_DEFAULT;
   const n = Number(raw);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : AI_LOG_RETENTION_DAYS_DEFAULT;
+  if (!Number.isFinite(n) || n <= 0) return AI_LOG_RETENTION_DAYS_DEFAULT;
+  return Math.min(Math.floor(n), AI_LOG_RETENTION_DAYS_MAX);
 }
 
 export const RETENTION_POLICY: readonly RetentionRule[] = [
@@ -48,7 +50,7 @@ export const RETENTION_POLICY: readonly RetentionRule[] = [
     basis: 'buffer',
     rationale:
       'Avspillingsbuffer for SSE (F6-02) og AI-token-hendelser fra stream-bridge. ' +
-      `Slettes automatisk etter ${AI_LOG_RETENTION_DAYS_ENV} dager (default ${AI_LOG_RETENTION_DAYS_DEFAULT}). ` +
+      `Slettes automatisk etter ${AI_LOG_RETENTION_DAYS_ENV} dager (default og tak ${AI_LOG_RETENTION_DAYS_DEFAULT}). ` +
       'Token-tekst i bufferen er maskert. Promptinnhold hører ikke hjemme i audit_log.',
     access: 'App-rollen (RLS-skopet). Ingen manuell tilgang i produksjon.',
     mode: 'delete',

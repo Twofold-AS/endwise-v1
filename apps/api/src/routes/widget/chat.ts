@@ -74,6 +74,7 @@ export async function widgetChat(c: Context<{ Variables: WidgetVars }>): Promise
       messages: [{ role: 'user', content: message }],
       context: { tenantId, userId: cid, role: 'customer' },
       agent: 'kunde-support',
+      cacheKnownNames: true,
     });
   } catch (error) {
     if (!(error instanceof ScopeGateViolation)) {

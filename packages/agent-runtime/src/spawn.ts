@@ -71,13 +71,13 @@ export function spawnAgent(options: SpawnOptions): AgentSession {
 
   assertEntitled(agent, context);
 
-  // 2. Bygg verktøyene ÉN gang, med den frosne konteksten. Løkka får dem ferdige
-  // og kan ikke be om nye med en annen kontekst.
-  const tools: Record<string, Tool> = guardrails.wrapTools(
-    filtrerVerktoyAllowlist(agent.tools(context), agent.toolAllowlist),
-    context,
+  // 2. Bygg rå-verktøyene ÉN gang, med den frosne konteksten. wrapTools
+  // skjer per kjøring, så L3 deler kart med maskMessages.
+  const rawTools: Record<string, Tool> = filtrerVerktoyAllowlist(
+    agent.tools(context),
+    agent.toolAllowlist,
   );
-  assertAsciiToolNames(tools);
+  assertAsciiToolNames(rawTools);
 
   const session: AgentSession = {
     agent: agent.name,
@@ -96,6 +96,7 @@ export function spawnAgent(options: SpawnOptions): AgentSession {
       const pseudo = createPseudonymizer({
         knownNames: knownNames ? [...knownNames] : [],
       });
+      const tools = guardrails.wrapTools(rawTools, context, pseudo);
       const masked = maskMessages(messages, pseudo);
       return pseudo.unmask(
         await runAgentWithTools({

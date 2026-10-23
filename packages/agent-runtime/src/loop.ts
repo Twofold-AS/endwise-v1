@@ -69,15 +69,16 @@ export async function runAgent(options: RunOptions): Promise<string> {
     );
   }
 
-  const tools = options.guardrails.wrapTools(
-    filtrerVerktoyAllowlist(options.agent.tools(context), options.agent.toolAllowlist),
-    context,
-  );
-  assertAsciiToolNames(tools);
-
   const knownNames = options.knownNames ?? context.knownCustomerNames;
   const pseudo =
     options.pseudonymizer ?? createPseudonymizer({ knownNames: knownNames ? [...knownNames] : [] });
+  const tools = options.guardrails.wrapTools(
+    filtrerVerktoyAllowlist(options.agent.tools(context), options.agent.toolAllowlist),
+    context,
+    pseudo,
+  );
+  assertAsciiToolNames(tools);
+
   const masked = maskMessages(options.messages, pseudo);
 
   return pseudo.unmask(

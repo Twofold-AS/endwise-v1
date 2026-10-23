@@ -3,6 +3,7 @@ import { createDb, type Database, schema, sql } from '@endwise/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   AI_LOG_RETENTION_DAYS_DEFAULT,
+  AI_LOG_RETENTION_DAYS_MAX,
   aiLogRetentionDays,
   prunableRules,
   pruneExpired,
@@ -38,7 +39,9 @@ describe('retensjonspolicy (F14-03)', () => {
     expect(ruleFor('stream_events')?.days).toBeLessThanOrEqual(365);
     expect(AI_LOG_RETENTION_DAYS_DEFAULT).toBe(7);
     expect(aiLogRetentionDays({})).toBe(AI_LOG_RETENTION_DAYS_DEFAULT);
-    expect(aiLogRetentionDays({ AI_LOG_RETENTION_DAYS: '14' })).toBe(14);
+    expect(AI_LOG_RETENTION_DAYS_MAX).toBe(7);
+    expect(aiLogRetentionDays({ AI_LOG_RETENTION_DAYS: '14' })).toBe(AI_LOG_RETENTION_DAYS_MAX);
+    expect(aiLogRetentionDays({ AI_LOG_RETENTION_DAYS: '3' })).toBe(3);
     expect(aiLogRetentionDays({ AI_LOG_RETENTION_DAYS: 'nei' })).toBe(
       AI_LOG_RETENTION_DAYS_DEFAULT,
     );

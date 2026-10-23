@@ -1,4 +1,5 @@
 import type { ModelMessage, Tool } from 'ai';
+import type { Pseudonymizer } from './pseudonymize.ts';
 
 /** Minimum agent-runtimen trenger å vite. Guardrails kjenner ikke DB-en. */
 export interface GuardContext {
@@ -11,7 +12,15 @@ export interface GuardContext {
 
 export interface GuardrailPipeline {
   filterInput(messages: ModelMessage[], context: GuardContext): Promise<ModelMessage[]>;
-  wrapTools(tools: Record<string, Tool>, context: GuardContext): Record<string, Tool>;
+  /**
+   * L2/L3/L5. `pseudonymizer` skal være kjøringens kart — ellers starter
+   * verktøyresultater på [NAVN_1] og unmask kan bytte kundenavn.
+   */
+  wrapTools(
+    tools: Record<string, Tool>,
+    context: GuardContext,
+    pseudonymizer?: Pseudonymizer,
+  ): Record<string, Tool>;
   filterOutput(text: string, context: GuardContext): Promise<string>;
 }
 

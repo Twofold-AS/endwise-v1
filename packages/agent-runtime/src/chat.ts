@@ -92,13 +92,13 @@ export function streamAgentChat(options: ChatOptions) {
 
   const rawTools = agent.tools(context);
   const tillatte = filtrerVerktoyAllowlist(rawTools, options.toolAllowlist ?? agent.toolAllowlist);
-  const tools = guardrails.wrapTools(tillatte, context);
-  // Mistral 400 02.09: `gåTil` er ugyldig function name. Stopp før HTTP.
-  assertAsciiToolNames(tools);
-
   const knownNames = options.knownNames ?? context.knownCustomerNames;
   const pseudo =
     options.pseudonymizer ?? createPseudonymizer({ knownNames: knownNames ? [...knownNames] : [] });
+  const tools = guardrails.wrapTools(tillatte, context, pseudo);
+  // Mistral 400 02.09: `gåTil` er ugyldig function name. Stopp før HTTP.
+  assertAsciiToolNames(tools);
+
   const masked = maskMessages(options.messages, pseudo);
 
   // Fabrikk, ikke instans: transformen lager én redaktør per tekstblokk.

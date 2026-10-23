@@ -1,8 +1,12 @@
-import type { ModelMessage } from 'ai';
-import { tool } from 'ai';
+import { type ModelMessage, tool } from 'ai';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { createGuardrails, GuardrailViolation } from '../src/index.ts';
+import {
+  createGuardrails,
+  createPseudonymizer,
+  GuardrailViolation,
+  maskMessages,
+} from '../src/index.ts';
 
 const ctx = { tenantId: 't-a', userId: 'u-1', role: 'customer' };
 
@@ -137,6 +141,36 @@ describe('guardrails L1–L5 (F6-14)', () => {
 
     expect(result.data.kunder[0]?.navn).toBe('[NAVN_1]');
     expect(result.data.kunder[0]?.epost).toBe('[EPOST_1]');
+  });
+
+  it('L3: delt kart — navn i melding og verktøyresultat kolliderer ikke', async () => {
+    const known = ['Ola Nordmann', 'Kari Hansen'];
+    const pseudo = createPseudonymizer({ knownNames: known });
+    const masked = maskMessages([{ role: 'user', content: 'Hjelp Ola Nordmann' }], pseudo);
+    expect(masked[0]?.content).toBe('Hjelp [NAVN_1]');
+
+    const g = createGuardrails();
+    const tools = g.wrapTools(
+      {
+        sok: tool({
+          description: 'x',
+          inputSchema: z.object({}),
+          execute: async () => ({ navn: 'Kari Hansen' }),
+        }),
+      },
+      { ...ctx, knownCustomerNames: known },
+      pseudo,
+    );
+
+    const result = (await tools.sok?.execute?.({} as never, {} as never)) as {
+      data: { navn: string };
+    };
+
+    expect(result.data.navn).toBe('[NAVN_2]');
+    expect(result.data.navn).not.toBe('[NAVN_1]');
+    expect(pseudo.unmask('Snakk med [NAVN_1] om [NAVN_2]')).toBe(
+      'Snakk med Ola Nordmann om Kari Hansen',
+    );
   });
 
   // L4: hemmeligheter ut

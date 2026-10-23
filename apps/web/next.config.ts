@@ -1,5 +1,5 @@
 import { networkInterfaces } from 'node:os';
-import { withSentryConfig } from '@sentry/nextjs';
+import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 import { streamRewrites } from './lib/rewrites.ts';
 
@@ -96,7 +96,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     rules: {
       '*.md': {
-        // Next 16.2.10 (Vercel preview) godtar `raw`, ikke `text`.
+        // Next 16.x (Vercel preview / Turbopack) godtar `raw`, ikke `text`.
         type: 'raw',
       },
     },
@@ -108,10 +108,8 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
-  experimental: {
-    // React 19.2 native View Transitions (techstack §2 Frontend)
-    viewTransition: true,
-  },
+  // Next 16.4 fjernet inert `experimental.viewTransition` — View Transitions
+  // er stabile og krever ingen Next-flagg (React ViewTransition + CSS).
 };
 
 export default withSentryConfig(nextConfig, {

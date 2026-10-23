@@ -35,7 +35,10 @@ export function createWidgetClient(opts: WidgetClientOptions) {
   async function init(): Promise<void> {
     const res = await fetch(`${opts.apiBase}/widget/init`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        'x-widget-key': opts.publishableKey,
+      },
       body: JSON.stringify({ publishableKey: opts.publishableKey }),
     });
     if (!res.ok) throw new WidgetClientError('Kunne ikke starte widget (init)');
@@ -50,6 +53,7 @@ export function createWidgetClient(opts: WidgetClientOptions) {
       headers: {
         'content-type': 'application/json',
         authorization: `Bearer ${token}`,
+        'x-widget-key': opts.publishableKey,
         ...(init2?.headers ?? {}),
       },
     });

@@ -16,5 +16,8 @@ describe('handleHono /health (F13-03)', () => {
     const res = await handleHono(new Request('http://endwise.test/health'));
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ ok: true, service: 'api' });
+    expect(res.headers.get('Content-Security-Policy')).toMatch(/default-src 'none'/);
+    expect(res.headers.get('Content-Security-Policy')).toMatch(/frame-ancestors 'none'/);
+    expect(res.headers.get('X-Frame-Options')).toBe('DENY');
   });
 });

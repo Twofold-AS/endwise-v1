@@ -102,10 +102,10 @@ jobs:
         with:
           target: ${{ steps.preview.outputs.url }}
           fail_action: true
-          # Header-regler vi nå PASS-er er FAIL i .zap/rules.tsv.
-          # Residual WARN (Vercel CORS, cache, unsafe-inline, COEP) er IGNORE.
-          # Uten rules-fil er alle alerts WARN; fail_action true felte da på WARN
-          # (docker exit 2) selv med 0 FAIL-NEW.
+          # -I = ignorer WARN (docker exit 2). FAIL i .zap/rules.tsv blokkerer.
+          # 10015/10055/10098 er WARN (synlige, ikke røde). Uten -I felte
+          # fail_action true på WARN-NEW selv med 0 FAIL-NEW.
+          cmd_options: '-I'
           rules_file_name: .zap/rules.tsv
           # Default oppretter GitHub-issue og krever issues:write.
           # Workflow-tokenet har bare contents/deployments — 403 felte jobben

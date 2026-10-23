@@ -2,7 +2,7 @@ import { networkInterfaces } from 'node:os';
 import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 import { streamRewrites } from './lib/rewrites.ts';
-import { sikkerhetsHeadere } from './lib/security-headers.ts';
+import { AUTH_NO_STORE, sikkerhetsHeadere } from './lib/security-headers.ts';
 
 /**
  * Maskinens private IPv4-adresser — for `allowedDevOrigins` under.
@@ -77,7 +77,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const noStore = [
-      { key: 'Cache-Control', value: 'private, no-store, no-cache, must-revalidate' },
+      { key: 'Cache-Control', value: AUTH_NO_STORE },
       { key: 'CDN-Cache-Control', value: 'no-store' },
       { key: 'Vercel-CDN-Cache-Control', value: 'no-store' },
     ];

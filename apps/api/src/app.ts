@@ -26,8 +26,13 @@ app.use(
   '*',
   secureHeaders({
     // Samme clickjacking-vern som Next `headers()`. Widget er JS+CORS, ikke iframe.
+    // API-svar er JSON — CSP stenger alt som default.
     xFrameOptions: 'DENY',
     referrerPolicy: 'strict-origin-when-cross-origin',
+    contentSecurityPolicy: {
+      defaultSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    },
   }),
 );
 

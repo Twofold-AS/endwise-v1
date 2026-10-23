@@ -13,6 +13,10 @@ describe('Widget tjenester — tom/retry, ikke «feil»', () => {
   const widget = les('../src/EndwiseWidget.tsx');
   const client = les('../src/client.ts');
 
+  it('sender X-Widget-Key så CORS kan slå opp allowedOrigins', () => {
+    expect(client).toMatch(/['"]x-widget-key['"]:\s*opts\.publishableKey/);
+  });
+
   it('kaller ikke forhandler.get og dumper ikke tRPC-feil som «feil»', () => {
     const kode = widget.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
     expect(kode).not.toMatch(/forhandler\.get|trpc\./);

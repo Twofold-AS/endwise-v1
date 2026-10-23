@@ -1,0 +1,15 @@
+# ZAP baseline-regler. FAIL = blokkerer CI (fail_action true).
+# WARN = synlig residual; blokkerer ikke (cmd_options: -I i security.yml).
+# IGNORE = kjent residual som ikke skal i rapporten.
+# Bare regel-ID brukes; navn er dokumentasjon.
+10015	WARN	(Cache-control på HTML/statiske assets — Vercel CDN; auth-ruter har no-store)
+10020	FAIL	(Anti-clickjacking / X-Frame-Options)
+10021	FAIL	(X-Content-Type-Options nosniff)
+10038	FAIL	(CSP-header mangler)
+10049	IGNORE	(_next/static er ment å caches)
+10050	IGNORE	(Retrieved from Cache — CDN)
+10055	WARN	(CSP script-src unsafe-inline — Next uten nonce; se docs/sikkerhet/oppfolging-f0-15.md)
+10063	FAIL	(Permissions-Policy)
+10098	WARN	(Vercel ACAO * på preview OG prod endwise.no — ikke Next headers())
+10109	IGNORE	(Modern Web Application — SPA-informasjon)
+90004	IGNORE	(COEP — bevisst ikke satt; knekker MapLibre/Sentry)

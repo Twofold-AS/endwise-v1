@@ -1,7 +1,8 @@
 import { networkInterfaces } from 'node:os';
-import { withSentryConfig } from '@sentry/nextjs';
+import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 import { streamRewrites } from './lib/rewrites.ts';
+import { AUTH_NO_STORE, sikkerhetsHeadere } from './lib/security-headers.ts';
 
 /**
  * Maskinens private IPv4-adresser — for `allowedDevOrigins` under.
@@ -76,11 +77,17 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const noStore = [
-      { key: 'Cache-Control', value: 'private, no-store, no-cache, must-revalidate' },
+      { key: 'Cache-Control', value: AUTH_NO_STORE },
       { key: 'CDN-Cache-Control', value: 'no-store' },
       { key: 'Vercel-CDN-Cache-Control', value: 'no-store' },
     ];
+    // CSP + clickjacking-vern på hele appen. /widget/* er JSON-API (CORS i
+    // Hono), ikke iframe-embed — DENY / frame-ancestors 'none' er tiltenkt.
+    const security = sikkerhetsHeadere({
+      development: process.env.NODE_ENV !== 'production',
+    });
     return [
+      { source: '/:path*', headers: security },
       { source: '/signin', headers: noStore },
       { source: '/signin/:path*', headers: noStore },
       { source: '/2fa-oppsett', headers: noStore },
@@ -96,7 +103,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     rules: {
       '*.md': {
-        // Next 16.2.10 (Vercel preview) godtar `raw`, ikke `text`.
+        // Next 16.x (Vercel preview / Turbopack) godtar `raw`, ikke `text`.
         type: 'raw',
       },
     },
@@ -108,10 +115,8 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
-  experimental: {
-    // React 19.2 native View Transitions (techstack §2 Frontend)
-    viewTransition: true,
-  },
+  // Next 16.4 fjernet inert `experimental.viewTransition` — View Transitions
+  // er stabile og krever ingen Next-flagg (React ViewTransition + CSS).
 };
 
 export default withSentryConfig(nextConfig, {

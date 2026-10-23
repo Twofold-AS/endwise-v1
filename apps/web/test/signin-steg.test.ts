@@ -21,6 +21,7 @@ import {
   signInFlateFraQuery,
   skalViseErstattetMelding,
 } from '../app/signin/signin-steg.ts';
+import { AUTH_NO_STORE } from '../lib/security-headers.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -315,7 +316,8 @@ describe('auth-sider er ukachebare (ikke prerender på branch-alias)', () => {
   const oppsett = `${readFileSync(resolve(her, '../app/2fa-oppsett/page.tsx'), 'utf8')}\n${readFileSync(resolve(her, '../app/2fa-oppsett/layout.tsx'), 'utf8')}`;
 
   it('next.config og proxy setter Cache-Control no-store på /signin /2fa-oppsett /api/auth', () => {
-    expect(nextCfg).toMatch(/private, no-store, no-cache, must-revalidate/);
+    expect(nextCfg).toMatch(/AUTH_NO_STORE/);
+    expect(AUTH_NO_STORE).toMatch(/no-store/);
     expect(nextCfg).toMatch(/\/signin/);
     expect(nextCfg).toMatch(/\/2fa-oppsett/);
     expect(nextCfg).toMatch(/\/api\/auth/);

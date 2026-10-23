@@ -1,5 +1,12 @@
-import { verifyWidgetToken, WidgetTokenError } from '@endwise/modules/widget';
+import {
+  createWidgetKeyService,
+  normalizeOrigin,
+  originAllowed,
+  verifyWidgetToken,
+  WidgetTokenError,
+} from '@endwise/modules/widget';
 import type { MiddlewareHandler } from 'hono';
+import { createAppContext } from '../context.ts';
 
 /**
  * Auth/CORS-lag for de offentlige `/widget/*`-endepunktene.
@@ -26,24 +33,82 @@ export function widgetTokenSecret(): string {
   return s;
 }
 
-/**
- * CORS for `/widget/*`. Ekko-er request-origin (embed-en er cross-origin) og
- * svarer på preflight. Ingen credentials (token ligger i Authorization-headeren,
- * ikke i en cookie) — så vi trenger ikke `Allow-Credentials`, og den ekte
- * tenant-grensen håndheves av origin-sjekk ved `/init` + token, ikke av CORS.
- */
-export const widgetCors: MiddlewareHandler = async (c, next) => {
-  const origin = c.req.header('origin');
-  if (origin) {
-    c.header('Access-Control-Allow-Origin', origin);
-    c.header('Vary', 'Origin');
+export interface WidgetCorsValg {
+  /** Returner nøkkelens allowedOrigins. Null nøkkel = ikke funnet. */
+  hentTillatteOrigins?: (nokkel: string) => Promise<readonly string[] | null>;
+  erProduksjon?: boolean;
+}
+
+async function defaultHentOrigins(nokkel: string): Promise<readonly string[] | null> {
+  try {
+    const r = await createWidgetKeyService(createAppContext().db).resolveByPublishableKey(nokkel);
+    return r?.allowedOrigins ?? [];
+  } catch {
+    return [];
   }
-  c.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Widget-Key');
-  c.header('Access-Control-Max-Age', '600');
-  if (c.req.method === 'OPTIONS') return c.body(null, 204);
-  await next();
-};
+}
+
+async function publishableKeyFraRequest(c: {
+  req: {
+    header: (n: string) => string | undefined;
+    method: string;
+    raw: Request;
+  };
+}): Promise<string | null> {
+  const header = c.req.header('x-widget-key');
+  if (header?.startsWith('pk_')) return header;
+  if (c.req.method !== 'POST') return null;
+  const ct = c.req.header('content-type') ?? '';
+  if (!ct.includes('application/json')) return null;
+  try {
+    const body = (await c.req.raw.clone().json()) as { publishableKey?: unknown };
+    if (typeof body.publishableKey === 'string' && body.publishableKey.startsWith('pk_')) {
+      return body.publishableKey;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function avvisHttpIProd(origin: string, erProduksjon: boolean): boolean {
+  return erProduksjon && origin.startsWith('http:');
+}
+
+/**
+ * CORS for `/widget/*`. Speiler kun origins i nøkkelens `allowedOrigins`.
+ * Alltid `Vary: Origin`. Aldri `*`. `http:` avvises i produksjon.
+ * Preflight (OPTIONS) uten nøkkelverdi speiler kun gyldig `https:` — nettleseren
+ * sender ikke `X-Widget-Key`-verdien på preflight. Ekte respons slår opp nøkkelen.
+ */
+export function createWidgetCors(valg: WidgetCorsValg = {}): MiddlewareHandler {
+  const erProduksjon = valg.erProduksjon ?? process.env.NODE_ENV === 'production';
+  const hent = valg.hentTillatteOrigins ?? defaultHentOrigins;
+
+  return async (c, next) => {
+    c.header('Vary', 'Origin');
+    const origin = normalizeOrigin(c.req.header('origin'));
+    if (origin && !avvisHttpIProd(origin, erProduksjon)) {
+      const nokkel = await publishableKeyFraRequest(c);
+      if (nokkel) {
+        const allowed = (await hent(nokkel)) ?? [];
+        if (originAllowed(origin, allowed)) {
+          c.header('Access-Control-Allow-Origin', origin);
+        }
+      } else if (c.req.method === 'OPTIONS') {
+        // Preflight har ikke nøkkelverdi. https alltid; http kun utenfor prod.
+        c.header('Access-Control-Allow-Origin', origin);
+      }
+    }
+    c.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Widget-Key');
+    c.header('Access-Control-Max-Age', '600');
+    if (c.req.method === 'OPTIONS') return c.body(null, 204);
+    await next();
+  };
+}
+
+export const widgetCors: MiddlewareHandler = createWidgetCors();
 
 /**
  * Verifiserer widget-tokenet (Authorization: Bearer <token>). Feiler lukket (401).

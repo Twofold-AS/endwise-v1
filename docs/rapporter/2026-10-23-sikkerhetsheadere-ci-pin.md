@@ -6,7 +6,7 @@ Egen PR mot `main`, startet fra `cursor/avhengigheter-sikkerhet-6935` fordi #181
 
 - **Sikkerhetsheadere** i `apps/web/next.config.ts` `headers()`: CSP (det appen trenger i nettleseren), `frame-ancestors 'none'` + `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`. Mistral-kall er server-side og står ikke i `connect-src`. Widget/Framer er JS+CORS, ikke iframe — DENY gjelder også `/widget/*` (JSON-API).
 - **CORS (ZAP 10098):** Ingen `Access-Control-Allow-Origin: *`. `widgetCors` ekko-er kun `normalizeOrigin` (http/https). `Origin: null` og `*` settes ikke.
-- **ZAP** `fail_action: true` (0 FAIL-NEW på #181). Fjernet `actions: write` på ZAP-jobben.
+- **ZAP** `fail_action: true` + `.zap/rules.tsv`: header-regler vi nå PASS-er (CSP/XFO/nosniff/Permissions-Policy) er FAIL. Residual WARN (Vercel `ACAO: *`, cache, `unsafe-inline`, COEP, SPA) er IGNORE. Uten rules-fil felte `fail_action: true` på WARN (docker exit 2) selv med 0 FAIL-NEW.
 - **pnpm-workspace.yaml:** overrides fra `>=` til `^`. `minimumReleaseAge: 1440`.
 - **GitHub Actions** pinnet til SHA i `security.yml` og `ci.yml`. `dependency-check/Dependency-Check_Action` pinnet til `1e54355…` (main@2025-12-10; tag 1.1.0 er fra 2021).
 - **Hono** `^4.12.30` → `^4.13.11` (løst **4.13.13**, GHSA-5r4p-p66f-jhc7 / GHSA-crvj-82cr-hjcx). `@hono/node-server` `^2.1.3` (løst 2.1.5). Overrides: vitest `^4.1.11` (4.1.12), esbuild `^0.28.1`, qs `^6.16.0` (6.16.1). `pnpm audit` er **0** (også low/moderate).

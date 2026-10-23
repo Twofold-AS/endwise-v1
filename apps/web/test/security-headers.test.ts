@@ -68,8 +68,15 @@ describe('CI-kontrakt (F0-15)', () => {
 
   it('ZAP er blokkerende og uten actions: write', () => {
     expect(security).toMatch(/fail_action:\s*true/);
+    expect(security).toMatch(/rules_file_name:\s*\.zap\/rules\.tsv/);
     expect(security).not.toMatch(/actions:\s*write/);
     expect(security).toMatch(/allow_issue_writing:\s*false/);
+    const rules = les('../../../.zap/rules.tsv');
+    expect(rules).toMatch(/^10020\tFAIL/m);
+    expect(rules).toMatch(/^10021\tFAIL/m);
+    expect(rules).toMatch(/^10038\tFAIL/m);
+    expect(rules).toMatch(/^10063\tFAIL/m);
+    expect(rules).toMatch(/^10098\tIGNORE/m);
   });
 
   it('Actions er pinnet til 40-tegns SHA, ikke floating tag/main', () => {

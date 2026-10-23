@@ -55,6 +55,9 @@ jobs:
           project: endwise
           path: "."
           format: SARIF
+          # pnpm-repo: Yarn-analysatoren krever `yarn` og feiler jobben
+          # etter ferdig SARIF («Unable to determine yarn executable»).
+          args: --disableYarnAudit
       - uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: reports/dependency-check-report.sarif
@@ -98,3 +101,7 @@ jobs:
         with:
           target: ${{ steps.preview.outputs.url }}
           fail_action: false
+          # Default oppretter GitHub-issue og krever issues:write.
+          # Workflow-tokenet har bare contents/deployments — 403 felte jobben
+          # etter 0 FAIL-NEW mot preview. Rapport ligger i zap_scan-artifact.
+          allow_issue_writing: false

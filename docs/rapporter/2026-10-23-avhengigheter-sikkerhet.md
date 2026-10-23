@@ -10,7 +10,8 @@ Egen PR mot `main` (ikke #178 / #180). Mål: `pnpm audit --audit-level high` ute
 - **Twilio** `^6.0.2` → **`^6.2.0`**. **Vite** (framer-plugin) `^6.0.0` → **`^6.4.5`**.
 - Transitive highs via overrides: sharp ≥0.35.5, postcss ≥8.5.23, brace-expansion 2.1.7/5.0.12, undici ≥7.29.1, axios ≥1.20.0, follow-redirects, devalue, source-map-js, http-cache-semantics, browserslist, vite 6.4.5/8.3.5, piscina, proxy-addr, `@xhmikosr/decompress`, fast-uri 3.1.9.
 - Next 16.4-breaking: fjernet inert `experimental.viewTransition` (flagget leses ikke lenger; View Transitions er stabile uten Next-flagg).
-- ZAP venter på Vercel-preview via GitHub Deployments API — ikke `example.invalid`.
+- ZAP venter på Vercel-preview via GitHub Deployments API — ikke `example.invalid`. Verifisert på #181: traff `*.vercel.app`, 0 FAIL-NEW. Jobben falt først på å opprette GitHub-issue (`allow_issue_writing` slått av).
+- OWASP DC: `pnpm audit` grønn i CI. Docker-steget krasjet på Yarn-analysator i pnpm-repo (`--disableYarnAudit`).
 - Biome ignorerer `next-env.d.ts` (Next-generert, «skal ikke redigeres»).
 
 `pnpm audit --audit-level high` avslutter 0. Lokalt: lint, typecheck, test og `next build` (Turbopack 16.4.2) grønne.
@@ -34,7 +35,7 @@ Alt gikk som planlagt etter at `experimental.viewTransition` ble fjernet (eneste
 
 ## 4. Neste steg
 
-- F0-15 forblir **progress**: OWASP Dependency-Check i samme CI-jobb (nås nå fordi audit er grønn), pentest, rød-team-evals.
+- F0-15 forblir **progress**: pentest, rød-team-evals. ZAP WARN-NEW på preview (ikke FAIL): manglende CSP / X-Frame-Options / X-Content-Type-Options / Permissions-Policy / COEP, cache-control på HTML, Vercel CORS på statiske assets. Ikke denne PR-ens flate — header-herding er eget arbeid.
 - Low/moderate står (Hono 4.12.x, vitest 4.1.10, esbuild, qs, baseline-browser-mapping). Ikke hevet Hono — offentlig API-flate.
 - Dependency-Check (NVD) kan fortsatt flagge CVE-er audit ikke kjenner. Begrunnelse: pnpm-gaten er den kanoniske high/critical-gaten; DC-funn vurderes i CI-loggen.
 - Ikke merge. Vercel-preview og Security-gate må bli grønne på PR-en.

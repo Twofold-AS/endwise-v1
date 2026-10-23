@@ -18,12 +18,12 @@ jobs:
     name: CodeQL (CWE-mappet)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: github/codeql-action/init@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
         with:
           languages: javascript-typescript
           queries: security-and-quality
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
 
   semgrep:
     name: Semgrep (OWASP + CWE)
@@ -31,9 +31,9 @@ jobs:
     container:
       image: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - run: semgrep ci --config p/owasp-top-ten --config p/typescript --config p/secrets --sarif --output semgrep.sarif || true
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
         with:
           sarif_file: semgrep.sarif
 
@@ -41,8 +41,8 @@ jobs:
     name: Dependency-Check (pnpm audit + OWASP)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
       - run: corepack enable
@@ -50,7 +50,8 @@ jobs:
       - name: pnpm audit (fail på high/critical)
         run: pnpm audit --audit-level high
       - name: OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
+        # Pinnet til SHA på main (ingen nyere tag enn 1.1.0 fra 2021).
+        uses: dependency-check/Dependency-Check_Action@1e54355a8b4c8abaa8cc7d0b70aa655a3bb15a6c # main@2025-12-10
         with:
           project: endwise
           path: "."
@@ -58,7 +59,7 @@ jobs:
           # pnpm-repo: Yarn-analysatoren krever `yarn` og feiler jobben
           # etter ferdig SARIF («Unable to determine yarn executable»).
           args: --disableYarnAudit
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
         with:
           sarif_file: reports/dependency-check-report.sarif
 
@@ -70,9 +71,8 @@ jobs:
     permissions:
       contents: read
       deployments: read
-      actions: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Vent på Vercel-preview-URL
         id: preview
         env:
@@ -98,10 +98,10 @@ jobs:
           echo "::error::Fant ingen Vercel-preview-URL for ${SHA} innen 15 min. ZAP skal ikke falle tilbake på example.invalid."
           exit 1
       - name: ZAP baseline
-        uses: zaproxy/action-baseline@v0.15.0
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
         with:
           target: ${{ steps.preview.outputs.url }}
-          fail_action: false
+          fail_action: true
           # Default oppretter GitHub-issue og krever issues:write.
           # Workflow-tokenet har bare contents/deployments — 403 felte jobben
           # etter 0 FAIL-NEW mot preview. Rapport ligger i zap-scan-artifact.

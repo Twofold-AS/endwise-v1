@@ -2,6 +2,7 @@ import { networkInterfaces } from 'node:os';
 import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 import { streamRewrites } from './lib/rewrites.ts';
+import { sikkerhetsHeadere } from './lib/security-headers.ts';
 
 /**
  * Maskinens private IPv4-adresser — for `allowedDevOrigins` under.
@@ -80,7 +81,13 @@ const nextConfig: NextConfig = {
       { key: 'CDN-Cache-Control', value: 'no-store' },
       { key: 'Vercel-CDN-Cache-Control', value: 'no-store' },
     ];
+    // CSP + clickjacking-vern på hele appen. /widget/* er JSON-API (CORS i
+    // Hono), ikke iframe-embed — DENY / frame-ancestors 'none' er tiltenkt.
+    const security = sikkerhetsHeadere({
+      development: process.env.NODE_ENV !== 'production',
+    });
     return [
+      { source: '/:path*', headers: security },
       { source: '/signin', headers: noStore },
       { source: '/signin/:path*', headers: noStore },
       { source: '/2fa-oppsett', headers: noStore },

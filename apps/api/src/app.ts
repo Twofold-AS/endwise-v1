@@ -22,7 +22,14 @@ import { widget } from './routes/widget/index.ts';
 const app = new Hono();
 
 app.use('*', logger());
-app.use('*', secureHeaders());
+app.use(
+  '*',
+  secureHeaders({
+    // Samme clickjacking-vern som Next `headers()`. Widget er JS+CORS, ikke iframe.
+    xFrameOptions: 'DENY',
+    referrerPolicy: 'strict-origin-when-cross-origin',
+  }),
+);
 
 // F1-01/F1-03 — Better-Auth eier hele /api/auth/*-flaten (sign-in, OTP, 2FA, passkey).
 app.on(['GET', 'POST'], '/api/auth/*', (c) => handleAuth(c.req.raw));

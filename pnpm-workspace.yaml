@@ -20,30 +20,36 @@ packages:
 # axios/follow-redirects via twilio (GHSA-c29m-xwm3-cm6r, GHSA-q3jh-wrc6-jgq8, …)
 # devalue via workflow (GHSA-r9w8-h9r3-54w4 m.fl.)
 # vite via vitest / framer-plugin (GHSA-587h-7wmj-h5pm)
+# hono 4.13.11 (GHSA-5r4p-p66f-jhc7 / GHSA-crvj-82cr-hjcx)
+# vitest 4.1.11 (GHSA-82fw-gwwq-j7x9) · esbuild 0.28.1 · qs 6.16.0
 # better-auth er IKKE overstyrt — runtime + CLI er ekte 1.6.30-bumps.
 overrides:
   drizzle-orm: 0.45.2
   next: 16.4.2
   lodash: 4.18.1
   fast-uri: 3.1.9
-  sharp: ">=0.35.5"
-  postcss: ">=8.5.23"
+  sharp: "^0.35.5"
+  postcss: "^8.5.23"
   "brace-expansion@^2.0.0": "2.1.7"
   "brace-expansion@^5.0.0": "5.0.12"
   undici: "^7.29.1"
   "nanoid@^3.0.0": "3.3.18"
   "nanoid@^5.0.0": "5.1.16"
-  axios: ">=1.20.0"
-  follow-redirects: ">=1.16.1"
-  devalue: ">=5.9.3"
-  source-map-js: ">=1.2.2"
-  http-cache-semantics: ">=4.2.1"
-  browserslist: ">=4.28.7"
+  axios: "^1.20.0"
+  follow-redirects: "^1.16.1"
+  devalue: "^5.9.3"
+  source-map-js: "^1.2.2"
+  http-cache-semantics: "^4.2.1"
+  browserslist: "^4.28.7"
   "vite@^6.0.0": "6.4.5"
   "vite@^8.0.0": "8.3.5"
-  piscina: ">=4.9.4"
-  proxy-addr: ">=2.0.8"
-  "@xhmikosr/decompress": ">=11.1.4"
+  piscina: "^4.9.4"
+  proxy-addr: "^2.0.8"
+  "@xhmikosr/decompress": "^11.1.4"
+  hono: "^4.13.11"
+  vitest: "^4.1.11"
+  esbuild: "^0.28.1"
+  qs: "^6.16.0"
 
 allowBuilds:
   '@prisma/client': false
@@ -55,4 +61,7 @@ allowBuilds:
   lefthook: true
   sharp: false
 
-minimumReleaseAge: 0
+minimumReleaseAge: 1440
+# Allerede i #181-lockfilen; publisert <24 t før denne PR-en.
+minimumReleaseAgeExclude:
+  - baseline-browser-mapping@2.11.31

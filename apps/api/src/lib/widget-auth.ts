@@ -1,4 +1,4 @@
-import { verifyWidgetToken, WidgetTokenError } from '@endwise/modules/widget';
+import { normalizeOrigin, verifyWidgetToken, WidgetTokenError } from '@endwise/modules/widget';
 import type { MiddlewareHandler } from 'hono';
 
 /**
@@ -27,13 +27,15 @@ export function widgetTokenSecret(): string {
 }
 
 /**
- * CORS for `/widget/*`. Ekko-er request-origin (embed-en er cross-origin) og
- * svarer på preflight. Ingen credentials (token ligger i Authorization-headeren,
- * ikke i en cookie) — så vi trenger ikke `Allow-Credentials`, og den ekte
- * tenant-grensen håndheves av origin-sjekk ved `/init` + token, ikke av CORS.
+ * CORS for `/widget/*`. Ekko-er kun en normalisert http(s)-origin (embed-en
+ * er cross-origin JS, ikke iframe) og svarer på preflight.
+ * Aldri `Access-Control-Allow-Origin: *` (ZAP 10098) og aldri `Origin: null`
+ * eller vilkårlig tekst. Ingen credentials (token ligger i Authorization,
+ * ikke i en cookie). Tenant-grensen håndheves av origin-sjekk ved `/init`
+ * + token, ikke av CORS.
  */
 export const widgetCors: MiddlewareHandler = async (c, next) => {
-  const origin = c.req.header('origin');
+  const origin = normalizeOrigin(c.req.header('origin'));
   if (origin) {
     c.header('Access-Control-Allow-Origin', origin);
     c.header('Vary', 'Origin');

@@ -1,7 +1,7 @@
 import { signWidgetToken } from '@endwise/modules/widget';
 import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { type WidgetVars, widgetAuth } from '../src/lib/widget-auth.ts';
+import { type WidgetVars, widgetAuth, widgetCors } from '../src/lib/widget-auth.ts';
 
 /**
  * Widget-auth-middleware. In-memory Hono (`app.request`), ingen Docker.
@@ -43,5 +43,37 @@ describe('widgetAuth-middleware', () => {
     const res = await app.request('/', { headers: { authorization: `Bearer ${token}` } });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ tid: 'tenant-a', cid: 'customer:42' });
+  });
+});
+
+describe('widgetCors (ZAP 10098)', () => {
+  const app = new Hono().use('*', widgetCors).get('/', (c) => c.json({ ok: true }));
+
+  it('ekko-er kun normalisert http(s)-origin — aldri *', async () => {
+    const res = await app.request('/', { headers: { origin: 'https://Verksted.NO/booking' } });
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://verksted.no');
+    expect(res.headers.get('Vary')).toBe('Origin');
+    expect(res.headers.get('Access-Control-Allow-Origin')).not.toBe('*');
+  });
+
+  it('setter ikke ACAO for manglende, null eller ugyldig origin', async () => {
+    const uten = await app.request('/');
+    expect(uten.headers.get('Access-Control-Allow-Origin')).toBeNull();
+
+    const noll = await app.request('/', { headers: { origin: 'null' } });
+    expect(noll.headers.get('Access-Control-Allow-Origin')).toBeNull();
+
+    const stjerne = await app.request('/', { headers: { origin: '*' } });
+    expect(stjerne.headers.get('Access-Control-Allow-Origin')).toBeNull();
+  });
+
+  it('svarer 204 på preflight', async () => {
+    const res = await app.request('/', {
+      method: 'OPTIONS',
+      headers: { origin: 'https://verksted.no' },
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://verksted.no');
+    expect(res.headers.get('Access-Control-Allow-Methods')).toMatch(/GET/);
   });
 });

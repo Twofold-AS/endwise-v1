@@ -132,7 +132,8 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(ansatte).toMatch(/ansattePageSub/);
     expect(ansatte).toMatch(/erPaJobbNaa/);
     expect(ansatte).toMatch(/data-ansatte-pagesub/);
-    expect(ansatte).toMatch(/ikke tilgjengelig/);
+    expect(ansatte).toMatch(/DeaktivertHandling/);
+    expect(ansatte).toMatch(/Kommer senere/);
     expect(ansatte).not.toMatch(/ingen API|INGEN_API/);
     expect(ansatte).toMatch(/team\.fjern/);
     expect(ansatte).toMatch(/competence\.setMechanicSkill/);
@@ -140,7 +141,8 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
 
     const timeplan = utenKommentarer(les('../app/(app)/organisasjon/_hub-flate.tsx'));
     expect(timeplan).toMatch(/data-org-timeplan-ansatte/);
-    expect(timeplan).toMatch(/ikke tilgjengelig/);
+    expect(timeplan).toMatch(/DeaktivertHandling/);
+    expect(timeplan).toMatch(/Kommer senere/);
     expect(timeplan).not.toMatch(/ingen API|INGEN_API/);
     expect(timeplan).not.toMatch(/SHIFTS/);
 

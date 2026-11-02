@@ -82,11 +82,13 @@ describe('Claude Design BIT 6 — Lager + Butikk', () => {
     expect(logg).toMatch(/inventory\.listMovements/);
     expect(logg).toMatch(/Siste bevegelser/);
     const bestill = utenKommentarer(les('../app/(app)/lager/bestill/page.tsx'));
-    expect(bestill).toMatch(/ikke tilgjengelig/);
+    expect(bestill).toMatch(/DeaktivertHandling/);
+    expect(bestill).toMatch(/Kommer senere/);
     expect(bestill).not.toMatch(/ingen API|INGEN_API/);
     expect(bestill).not.toMatch(/inventory\.order|createOrder/);
     const salg = utenKommentarer(les('../app/(app)/lager/_kjoretoy-salg.tsx'));
-    expect(salg).toMatch(/ikke tilgjengelig/);
+    expect(salg).toMatch(/DeaktivertHandling/);
+    expect(salg).toMatch(/Kommer senere/);
     expect(salg).not.toMatch(/ingen API|INGEN_API/);
     expect(salg).not.toMatch(/Yamaha MT-09|Hellanor/);
     const butikk = utenKommentarer(les('../app/(app)/butikk/page.tsx'));

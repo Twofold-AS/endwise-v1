@@ -34,7 +34,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     const avvik = funksjon(kort, 'PulseAvvikForesporBoks');
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
     expect(hero).toMatch(/text-label font-normal/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
     expect(sirkel).toMatch(/PULSE_DAG_FYLL_HAIRLINE/);
     expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).not.toMatch(/<svg|halvBue|strokeWidth/);
@@ -86,7 +86,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(popup).toMatch(/InboxChromePopup/);
     expect(popup).toMatch(/SorteringArk/);
     expect(ark).toMatch(/data-innboks-popup-scrim/);
-    expect(ark).toMatch(/fixed inset-0 z-\[70\]/);
+    expect(ark).toMatch(/Popover/);
     expect(ark).toMatch(/text-label/);
     const samtale = utenKommentarer(les('../app/(app)/innboks/_ny-samtale.tsx'));
     expect(samtale).toMatch(/data-ny-melding-send/);

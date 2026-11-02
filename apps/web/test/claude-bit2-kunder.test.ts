@@ -204,8 +204,11 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(kort).toMatch(/KundeEndre/);
     expect(kort).toMatch(/data-kunde-ny-jobb/);
     expect(kort).toMatch(/\/bookinger\/ny/);
-    expect(kort).not.toMatch(/Slett kunde/);
+    expect(kort).toMatch(/data-slett-kunde/);
+    expect(kort).toMatch(/Slett kunde/);
+    expect(kort).toMatch(/Kommer senere/);
     expect(kort).not.toMatch(/custTrash/);
+    expect(kort).not.toMatch(/customers\.delete/);
     expect(kort).toMatch(/customers\.addNote/);
   });
 

@@ -55,7 +55,7 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const sirkel = funksjon(kort, 'PulseDagSirkel');
     expect(sirkel).toMatch(/data-pulse-dag-dither/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
     expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
     expect(sirkel).not.toMatch(/strokeDasharray/);

@@ -249,7 +249,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(kort).not.toMatch(/PulseMockBadge|data-pulse-mock-badge/);
     expect(kort).not.toMatch(/>\s*mock\s*</);
     expect(kort).toMatch(/#141414/);
-    expect(funksjon(kort, 'PulseDagSirkel')).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
+    expect(funksjon(kort, 'PulseDagSirkel')).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
     expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
     expect(kort).not.toMatch(/For lite data/);
     expect(kort).toMatch(/ArrowUpRight/);

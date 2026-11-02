@@ -95,7 +95,11 @@ describe('Claude Design BIT 4 — Innboks / samtale', () => {
     const handlinger = utenKommentarer(les('../app/(app)/innboks/_trad-handlinger.tsx'));
     expect(handlinger).toMatch(/InviterAnsatt/);
     expect(handlinger).toMatch(/forkThread|Inviter/);
-    expect(handlinger).not.toMatch(/Fjern|Forlat|Løst|ingen API/);
+    expect(handlinger).toMatch(/DeaktivertHandling/);
+    expect(handlinger).toMatch(/Fjern/);
+    expect(handlinger).toMatch(/Forlat/);
+    expect(handlinger).toMatch(/Marker som løst/);
+    expect(handlinger).not.toMatch(/ingen API|INGEN_API/);
     expect(handlinger).not.toMatch(/resolveThread|leaveThread|deleteThread/);
     const router = les('../../api/src/trpc/routers/messages.ts');
     expect(router).toMatch(/forkThread:/);

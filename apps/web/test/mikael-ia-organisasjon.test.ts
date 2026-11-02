@@ -145,13 +145,13 @@ describe('Mikael IA — Opprett ansatt-dialog og kort', () => {
   const aktivitet = les('../app/(app)/organisasjon/_aktivitet.tsx');
 
   it('Opprett ansatt er dialog med påkrevde felt og disabled Tilganger', () => {
-    expect(dialog).toMatch(/DialogTitle/);
-    expect(dialog).toMatch(/>Opprett ansatt</);
+    expect(dialog).toMatch(/ModalHeader/);
+    expect(dialog).toMatch(/Opprett ansatt/);
     expect(dialog).toMatch(/Navn og etternavn/);
     expect(dialog).toMatch(/E-post adresse/);
     expect(dialog).toMatch(/Jobb tittel/);
     expect(dialog).toMatch(/Rolle/);
-    expect(dialog).toMatch(/<select/);
+    expect(dialog).toMatch(/FeltSelect/);
     expect(dialog).toMatch(/Tilganger/);
     expect(dialog).toMatch(/disabled/);
     expect(dialog).toMatch(/invitasjoner\.opprett/);

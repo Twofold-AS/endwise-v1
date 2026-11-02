@@ -104,7 +104,7 @@ describe('CODE-GO Mikael — hjem live data', () => {
     expect(kort).toMatch(/flex flex-col items-center/);
     expect(kort).toMatch(/text-center/);
     expect(kort).toMatch(/#141414/);
-    expect(kort).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
+    expect(kort).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/avvikTeller/);

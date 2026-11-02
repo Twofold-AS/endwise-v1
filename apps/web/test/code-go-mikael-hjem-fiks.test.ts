@@ -57,7 +57,7 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const sirkel = funksjon(kort, 'PulseDagSirkel');
     expect(sirkel).toMatch(/DitherDonutChart/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_BLA/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK/);
     expect(sirkel).toMatch(/sweep=\{PULSE_DAG_BUE_SWEEP\}/);
     expect(sirkel).toMatch(/data-pulse-dag-start/);
     expect(sirkel).toMatch(/data-pulse-dag-slutt/);

@@ -9,6 +9,7 @@ import { LydProvider } from './_lib/lyd';
 import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
 import { InboxFilterProvider } from './_shell/inbox-filter';
+import { Kommandopalett } from './_shell/kommandopalett';
 import { erTillattMekanikerSti } from './_shell/nav';
 import { PHONE_SHELL_ROT } from './_shell/phone-home';
 import { PhoneShell } from './_shell/phone-shell';
@@ -135,6 +136,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <SidebarStateProvider>
           <InboxFilterProvider>
             <PwaRegister />
+            <Kommandopalett />
             <RonnySheetProvider>
               <div className={PHONE_SHELL_ROT}>
                 <Suspense fallback={null}>

@@ -66,8 +66,9 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **matrix-loaders** (portet fra TheFold) — «AI tenker»-animasjon per SSE-event; **beUI**-loader der det passer
 - **slot-text** — rullende KPI-siffer
 - **Container queries** (`@container`) — dock-layout responderer på plassen den får, ikke viewport
-- **lucide-react** (ikoner) — eneste ikonbibliotek
+- **lucide-react** (ikoner) — eneste ikonbibliotek. Remixicon kommer kun transitivt med Board UI (byttes til lucide i kilden vi eier)
 - **beUI** (shadcn-registry `@beui`) — tilstands-komponenter (`StatefulButton`) + kanoniske bevegelses-tokens (`lib/ease.ts`)
+- **Board UI** (MIT, gratis registry, `npx boardui@latest`) — skjemafelt, overlay, chips, dato/tid. Kilde eid i `packages/ui/src/components/base/`. **react-aria-components** er skjemamotor. Tokens pekes inn i `--ew-*` (ink-CTA, ingen skygger, `#0066ff` aldri på CTA). ⛔ Pro-items (public repo). ⛔ Board `globals.css`, `avatar`, `status-dot`, `theme-toggle`, `sidebar`, `app-shell`. Detaljer i `docs/UI-PAKKER.md` og `docs/boardui-audit.md`
 - **Charts: Amicro dither charts** (06.09.2026, Mikael — https://amicro.vercel.app/dither-charts). Vendorisert i `packages/ui/src/vendor/amicro/` (CLI-bin finnes ikke på `@subhanhq/amicro@1.0.1`). Produkt-flaten er Analyse/Rapporter: stacked bar, area growth, spline line, donut. Seriehex er Mobbin-ink-stige (`#141414` / `#262626` / `#707070` / `#adadad`). ⛔ `#0066ff` på grafer. ⛔ Boring-Software dither-kit. Recharts/`chart.tsx` er ikke lenger motoren på disse flatene
 - **cuelume** (mikro-lyder) — valgfri polish, av som default
 - **Grainient** (react-bits Grainient-JS-CSS + `ogl` ^1.0.11) — KI-Ronny-stripe KUN (44px telefon / 32px desktop). Apple `color1/2/3` `#0066cc` / `#0071e3` / `#2997ff`. ⛔ Ikke peek/full-kropp. ⛔ Ikke composer. ⛔ ShaderGradient ute. ⛔ Ikke dealer-hero. Detaljer i `docs/UI-PAKKER.md`

@@ -1,5 +1,18 @@
 # UI-pakker — les denne FØR du bygger UI
 
+> ### ⚠️ Mikael 02.11.2026 — Board UI (gratis) + Claude-mapping
+> Board UI MIT-kilde ligger i `packages/ui/src/components/base/`
+> (CLI `npx boardui@latest`, pin via lockfile). Tokens omkoblet til
+> `--ew-*` i `theme.css`. Fasade i `packages/ui/src/flate/`
+> (`Side`, `Seksjon`, `ListeRad`, `TomFlate`, `LasterFlate`, `FeilFlate`,
+> `StatusChip`, `FilterChips`, `Felt*`, `DeaktivertHandling`).
+> Remix-ikoner byttet til lucide. Switch 24×14 ink. Chip = stadium.
+> ⛔ Pro. ⛔ Board `globals.css`. ⛔ Board-avatar (bloub beholdes).
+> Mapping: `docs/claude-boardui-mapping.md`. Audit: `docs/boardui-audit.md`.
+> Egen fasade (ingen Board-item): `Side`/`Seksjon`/`ListeRad`, `TomFlate`/
+> `FeilFlate`, `DeaktivertHandling`. Board har ingen sidemal, empty-state
+> eller deaktivert handling med tooltip. Bygget på Board-primitiver.
+>
 > ### ⚠️ Mikael PR #178 — Claude på ekte ruter (25.09.2026)
 > Bit 1–7 + Fix A ligger på produkt-rutene (`/home`, `/kunder`,
 > `/jobber`, `/innboks`, `/bookinger/ny`, `/lager`, `/butikk`,
@@ -769,6 +782,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Komponent | Hvorfor ikke en pakke? |
 |---|---|
+| `Side` / `Seksjon` / `ListeRad` / `TomFlate` / `LasterFlate` / `FeilFlate` / `FilterChips` / `DeaktivertHandling` (`packages/ui/src/flate/`) | Board har ingen sidemal, liste-rad, empty-state eller deaktivert-handling med tooltip. Bygget på Board-primitiver (button, skeleton, chip, tooltip). Chrome-lås: `sidebar`, `app-shell` og `settings-modal` brukes ikke. |
 | `Btn`, `Badge`, `Chip`, `Card`, `Input` (`packages/ui/src/primitives/`) | Roadmap **F0-12** navngir dem eksplisitt som «primitiver fra komponentgalleriet». `Input` er tynt skall over `.ew-felt` / `FELT_MD` (Mobbin inset + 16px + hvit fokus). **Når prototypen er inne bør de revurderes** — dekker shadcn dem, skal de bort |
 | `LydProvider` / `useLyd` (`apps/web/app/(app)/_lib/lyd.tsx`) og `ProfilKort` (`_shell/profil-kort.tsx`) | **Ingen ny UI-pakke** — `cuelume` er en LYD-motor. Av/på er shadcn `Switch` i samme radmønster som Settings › Varsler (`h-row-store` i `rounded-xl border-border`). Track følger `--ew-accent`. ⛔ `bind()` fra cuelume brukes ikke: automatiske hover-/klikklyder over hele panelet er nettopp det som får folk til å skru av lyden helt, og da mister de varselet som betyr noe. `lyd.test()` spilles når bryteren skrus PÅ |
 | `NewBadge` / `CountBadge` (`apps/web/app/(app)/_shell/cards.tsx`) | **Ingen ny pakke.** Begge er shadcn `Badge variant="destructive"` (20px/6px, `h-badge`/`rounded-badge`). `NewBadge` viser «Ny»; `CountBadge` viser siffer + sr-only-label og skjuler 0. Mikael 25.08.2026: samme form, ikke 18px-sirkel. Wrapperen finnes fordi 0-skjul og skjermleser-label ikke hører hjemme i CVA-en. |

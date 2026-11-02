@@ -20,6 +20,7 @@
 
 // LUCIDE — venter på egne SVG-er
 export {
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   BellRing,
@@ -31,12 +32,14 @@ export {
   // som en dott. Se ikonregisteret; en ekte hjerne må tegnes.
   Brain,
   Building2,
+  Calendar,
   CalendarCheck,
   ChartColumn,
   ChevronLeft,
   ChevronRight,
   Command,
   Copy,
+  CornerDownLeft,
   Download,
   ExternalLink,
   // Vis/skjul passord. Ingen UI-pakke i §-kartet dekker et
@@ -52,6 +55,7 @@ export {
   MapPin,
   Megaphone,
   MessageSquarePlus,
+  Minus,
   Newspaper,
   Package,
   PanelLeftClose,

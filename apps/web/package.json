@@ -18,6 +18,8 @@
     "@endwise/ui": "workspace:*",
     "@endwise/widget-tokens": "workspace:*",
     "@endwise/widget-ui": "workspace:*",
+    "@internationalized/date": "^3.12.4",
+    "@remixicon/react": "^4.9.0",
     "@sentry/nextjs": "^10.65.0",
     "@shadcn/helpers": "0.2.0",
     "@tanstack/react-query": "^5.80.3",
@@ -33,6 +35,7 @@
     "next": "16.2.11",
     "ogl": "^1.0.11",
     "react": "19.2.7",
+    "react-aria-components": "^1.17.0",
     "react-dom": "19.2.7",
     "recharts": "^3.10.1"
   },

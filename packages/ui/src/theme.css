@@ -7,6 +7,12 @@
  * ÉN sannhet for farge: widget-tokens. Bytt verdiene der, ikke her.
  */
 @import "@endwise/widget-tokens/tokens.css";
+/*
+ * Board UI-utilities (src/styles/theme.css). Ikke globals.css — det er et
+ * helt stylesheet. Tokenene pekes inn i --ew-* lenger ned, så CTA blir ink,
+ * ikke Board-blå, og skygger slås av.
+ */
+@import "./styles/theme.css";
 
 :root,
 [data-theme="light"],
@@ -278,4 +284,44 @@
  */
 .logo-on-dark {
   filter: brightness(0) invert(1);
+}
+
+:root,
+[data-theme="light"],
+[data-theme="dark"],
+.dark {
+  /* CTA: Board @utility bg-button-primary leser denne. Solid ink. */
+  --gradient-button-primary-default: var(--ew-ink-utility);
+  --gradient-button-primary-hover: var(--ew-ink-hover);
+  --gradient-button-primary-active: var(--ew-ink-utility);
+  --gradient-button-primary-disabled: var(--ew-surface-2);
+
+  /* Fokus / valgt kontroll — ink, ikke accent-500. */
+  --color-border-focus-ring: var(--ew-focus);
+
+  --color-background-full: var(--ew-bg);
+  --color-background-primary-default: var(--ew-surface);
+  --color-background-secondary-default: var(--ew-surface-2);
+  --color-background-tertiary-default: var(--ew-inset);
+  --color-text-primary: var(--ew-fg);
+  --color-text-secondary: var(--ew-fg-muted);
+  --color-text-tertiary: var(--ew-fg-faint);
+  --color-separator-border: var(--ew-border);
+
+  /* Switch / checkbox / radio «on» — ink, ikke blå gradient */
+  --color-switch-on-chip-start: var(--ew-ink-utility);
+  --color-switch-on-chip-end: var(--ew-ink-utility);
+  --shadow-checkbox-selected: none;
+
+  /* Switch 24×14 ink (Mobbin). Board sm-størrelse leser disse. */
+  --ew-switch-h: 14px;
+  --ew-switch-w: 24px;
+  --ew-switch-thumb: 10px;
+
+  /* Tint, ikke skygge */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-card: none;
+  --shadow-dropdown: none;
+  --shadow-sidebar: none;
 }

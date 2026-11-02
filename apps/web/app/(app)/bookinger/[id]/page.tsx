@@ -1,6 +1,16 @@
 'use client';
 
-import { Activity, Car, CreditCard, hexForFarge, Users, Wrench } from '@endwise/ui';
+import {
+  Activity,
+  Car,
+  CreditCard,
+  DeaktivertHandling,
+  hexForFarge,
+  StatusChip,
+  statusFraBooking,
+  Users,
+  Wrench,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -18,7 +28,6 @@ import {
   fmtTime,
   overgangLabel,
   STATUS_LABEL,
-  STATUS_TONE,
 } from '../_status';
 
 /**
@@ -69,33 +78,40 @@ export default function BookingDetaljPage() {
           {b.regNumber ?? 'Uten regnr'}
         </h1>
         {b.vehicleType && <span className="text-fg-faint text-xs uppercase">{b.vehicleType}</span>}
-        <span
-          className={`ml-auto rounded-md px-2.5 py-1 font-medium text-xs ${STATUS_TONE[b.status] ?? 'bg-surface-2 text-fg-muted'}`}
-        >
-          {STATUS_LABEL[b.status] ?? b.status}
+        <span className="ml-auto">
+          <StatusChip status={statusFraBooking(b.status)}>
+            {STATUS_LABEL[b.status] ?? b.status}
+          </StatusChip>
         </span>
       </div>
 
       {/* Statusknapper — kun lovlige overganger. */}
-      {allowed.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {allowed.map((to) => (
-            <BevelButton
-              key={to}
-              className={to === 'cancelled' || to === 'no_show' ? 'opacity-90' : ''}
-              onClick={() => setStatus(to)}
-            >
-              {overgangLabel(b.status, to)}
-            </BevelButton>
-          ))}
-          {transition.isPending && (
-            <span className="self-center text-fg-faint text-xs">Lagrer …</span>
-          )}
-          {transition.isError && (
-            <span className="self-center text-danger text-xs">{transition.error.message}</span>
-          )}
-        </div>
-      )}
+      <div className="flex flex-wrap gap-2" data-jobb-status-ekstra>
+        {allowed.map((to) => (
+          <BevelButton
+            key={to}
+            className={to === 'cancelled' || to === 'no_show' ? 'opacity-90' : ''}
+            onClick={() => setStatus(to)}
+          >
+            {overgangLabel(b.status, to)}
+          </BevelButton>
+        ))}
+        <DeaktivertHandling forklaring="Kommer senere">Flyttet</DeaktivertHandling>
+        <DeaktivertHandling forklaring="Kommer senere">Hentet</DeaktivertHandling>
+        <Link
+          href={`/innboks?ny=1&jobb=${encodeURIComponent(b.id)}` as Route}
+          data-jobb-send-melding
+          className="inline-flex h-control items-center rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2"
+        >
+          Send melding om jobben
+        </Link>
+        {transition.isPending && (
+          <span className="self-center text-fg-faint text-xs">Lagrer …</span>
+        )}
+        {transition.isError && (
+          <span className="self-center text-danger text-xs">{transition.error.message}</span>
+        )}
+      </div>
 
       {/* Fakta-rutenett */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

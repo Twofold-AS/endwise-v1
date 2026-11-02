@@ -23,8 +23,8 @@ import {
   fmtPulseTime,
   PULSE_DAG_BUE_START,
   PULSE_DAG_BUE_SWEEP,
-  PULSE_DAG_FYLL_BLA,
   PULSE_DAG_FYLL_HAIRLINE,
+  PULSE_DAG_FYLL_INK,
   PULSE_DAG_SLUTT,
   PULSE_DAG_START,
 } from './phone-home-pulse';
@@ -190,7 +190,7 @@ export function PulseAvvikForesporBoks({
 
 /**
  * Dagsfremgang — kun Amicro-halvsirkel (`DitherDonutChart` + sweep π).
- * Blått `#0066ff`-fyll for hvor full dagen er. Ingen ekstra SVG-strek/nål.
+ * Ink-fyll for hvor full dagen er. Ingen `#0066ff`. Ingen ekstra SVG-strek/nål.
  * Fot `08.00` / `19.00`.
  */
 export function PulseDagSirkel({
@@ -243,7 +243,7 @@ export function PulseDagSirkel({
             startAngle={PULSE_DAG_BUE_START}
             sweep={PULSE_DAG_BUE_SWEEP}
             slices={[
-              { name: 'passert', value: passert, color: PULSE_DAG_FYLL_BLA },
+              { name: 'passert', value: passert, color: PULSE_DAG_FYLL_INK },
               { name: 'igjen', value: igjen, color: PULSE_DAG_FYLL_HAIRLINE },
             ]}
           />

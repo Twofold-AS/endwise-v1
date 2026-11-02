@@ -11,7 +11,7 @@ import type { CSSProperties, ReactNode } from 'react';
 export const BEVEL: CSSProperties = {
   background: 'var(--ew-bevel-face)',
   border: '1px solid var(--ew-bevel-border)',
-  boxShadow: 'var(--ew-bevel-shadow)',
+  boxShadow: 'none',
   color: 'var(--ew-bevel-fg)',
 };
 

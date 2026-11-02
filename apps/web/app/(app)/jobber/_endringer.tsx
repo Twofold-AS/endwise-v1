@@ -1,11 +1,19 @@
 'use client';
 
+import { FilterChips } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
+import { useState } from 'react';
 import { TimeplanAvvik } from './_avvik';
 import { ENDRINGER_DELER, ENDRINGER_LOGG, type EndringerDelId, endringerHref } from './_faner';
 import { TimeplanForespor } from './_forespor';
 import { TimeplanLogg } from './_logg';
+
+const ENDRINGER_CHIPS = [
+  { key: 'alle', label: 'Alle' },
+  { key: 'avvik', label: 'Avvik' },
+  { key: 'forespor', label: 'Forespørsler' },
+] as const;
 
 /**
  * Timeplan › Endringer — Innstillinger-inndeling (underline-faner + panel).
@@ -22,8 +30,14 @@ export function TimeplanEndringer({
     del === 'logg'
       ? ENDRINGER_LOGG
       : (ENDRINGER_DELER.find((f) => f.id === del) ?? ENDRINGER_DELER[0]);
+  const [vis, setVis] = useState<'alle' | 'avvik' | 'forespor'>(
+    del === 'forespor' ? 'forespor' : del === 'avvik' ? 'avvik' : 'alle',
+  );
   return (
     <div data-timeplan-endringer-flate className="flex flex-col gap-5">
+      {del === 'logg' ? null : (
+        <FilterChips chips={ENDRINGER_CHIPS} valgt={vis} onChange={setVis} ariaLabel="Vis" />
+      )}
       <div role="tablist" aria-label="Endringer" className="flex flex-wrap gap-5">
         {ENDRINGER_DELER.map((f) => {
           const valgt = f.id === del;
@@ -51,10 +65,15 @@ export function TimeplanEndringer({
             {def?.ingress ? <p className="text-body text-fg-muted">{def.ingress}</p> : null}
           </div>
         )}
-        {del === 'forespor' ? (
-          <TimeplanForespor endringId={endringId} />
-        ) : del === 'logg' ? (
+        {del === 'logg' ? (
           <TimeplanLogg endringId={endringId} />
+        ) : vis === 'alle' ? (
+          <>
+            <TimeplanAvvik endringId={endringId} />
+            <TimeplanForespor endringId={endringId} />
+          </>
+        ) : vis === 'forespor' || del === 'forespor' ? (
+          <TimeplanForespor endringId={endringId} />
         ) : (
           <TimeplanAvvik endringId={endringId} />
         )}

@@ -1,6 +1,17 @@
 'use client';
 
-import { Avatar, Dialog, DialogContent, DialogTitle, Plus } from '@endwise/ui';
+import {
+  AlertDialog,
+  Avatar,
+  DeaktivertHandling,
+  FeltSelect,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  Plus,
+  SelectItem,
+} from '@endwise/ui';
 import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
@@ -190,9 +201,10 @@ function AnsattKort({
         ) : null}
       </div>
 
-      <p className="text-label text-fg-muted" data-ansatt-tjenestetid>
-        Egne tjenestetider — ikke tilgjengelig
-      </p>
+      <div className="flex items-center gap-2" data-ansatt-tjenestetid>
+        <span className="text-label text-fg-muted">Egne tjenestetider</span>
+        <DeaktivertHandling forklaring="Kommer senere">Sett tid</DeaktivertHandling>
+      </div>
 
       {kanEndre && rad.kanEndres ? <SlettAnsatt rad={rad} /> : null}
 
@@ -223,34 +235,16 @@ function SlettAnsatt({ rad }: { rad: Rad }) {
       >
         Slett ansatt
       </button>
-      <Dialog open={apen} onOpenChange={setApen}>
-        <DialogContent className="top-1/2 left-1/2 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-5">
-          <DialogTitle className="text-title text-fg">Fjerne {rad.navn} fra teamet?</DialogTitle>
-          <p className="mt-2 text-body text-fg-muted">
-            Personen deaktiveres og forsvinner fra teamet. Kontoen slettes ikke.
-          </p>
-          {fjern.isError ? (
-            <p className="mt-2 text-[12px] text-danger">{fjern.error.message}</p>
-          ) : null}
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setApen(false)}
-              className="h-control px-3 text-label text-fg-muted"
-            >
-              Avbryt
-            </button>
-            <button
-              type="button"
-              disabled={fjern.isPending}
-              onClick={() => fjern.mutate({ userId: rad.userId })}
-              className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
-            >
-              {fjern.isPending ? 'Fjerner …' : 'Bekreft'}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AlertDialog
+        isOpen={apen}
+        onOpenChange={setApen}
+        title={`Fjerne ${rad.navn} fra teamet?`}
+        description="Personen deaktiveres og forsvinner fra teamet. Kontoen slettes ikke."
+        confirmLabel="Bekreft"
+        cancelLabel="Avbryt"
+        pendingLabel="Fjerner …"
+        onConfirm={() => fjern.mutateAsync({ userId: rad.userId })}
+      />
     </div>
   );
 }
@@ -268,51 +262,54 @@ function RolleDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLukk: (
   });
 
   return (
-    <Dialog open={apen} onOpenChange={(o) => !o && onLukk()}>
-      <DialogContent className="top-1/2 left-1/2 w-[min(360px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-5">
-        <DialogTitle className="text-title text-fg">Rolle</DialogTitle>
-        <label className="mt-3 flex flex-col gap-1.5">
-          <span className="text-label text-fg">Rolle</span>
-          <select
-            value={funksjon}
-            onChange={(e) => {
-              const neste = somJobFunksjon(e.target.value);
-              if (neste) setFunksjon(neste);
-            }}
-            className="h-control ew-felt ew-felt-md px-3"
-          >
-            {ROLLE_VALG.map((r) => (
-              <option key={r.verdi} value={r.verdi}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onLukk}
-            className="h-control px-3 text-label text-fg-muted"
-          >
-            Avbryt
-          </button>
-          <button
-            type="button"
-            disabled={sett.isPending || funksjon === rad.funksjon}
-            onClick={() =>
-              sett.mutate({
-                userId: rad.userId,
-                funksjon: funksjon as (typeof ROLLE_VALG)[number]['verdi'],
-              })
-            }
-            className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
-          >
-            {sett.isPending ? 'Lagrer …' : 'Lagre'}
-          </button>
-        </div>
-        {sett.isError ? <p className="mt-2 text-[12px] text-danger">{sett.error.message}</p> : null}
-      </DialogContent>
-    </Dialog>
+    <Modal isOpen={apen} onOpenChange={(o) => !o && onLukk()} size="sm">
+      {({ close }) => (
+        <>
+          <ModalHeader title="Rolle" />
+          <ModalBody>
+            <FeltSelect
+              label="Rolle"
+              selectedKey={funksjon}
+              onSelectionChange={(key) => {
+                const neste = somJobFunksjon(String(key ?? ''));
+                if (neste) setFunksjon(neste);
+              }}
+            >
+              {ROLLE_VALG.map((r) => (
+                <SelectItem key={r.verdi} id={r.verdi}>
+                  {r.label}
+                </SelectItem>
+              ))}
+            </FeltSelect>
+            {sett.isError ? (
+              <p className="mt-2 text-[12px] text-danger">{sett.error.message}</p>
+            ) : null}
+          </ModalBody>
+          <ModalFooter>
+            <button
+              type="button"
+              onClick={close}
+              className="h-control px-3 text-label text-fg-muted"
+            >
+              Avbryt
+            </button>
+            <button
+              type="button"
+              disabled={sett.isPending || funksjon === rad.funksjon}
+              onClick={() =>
+                sett.mutate({
+                  userId: rad.userId,
+                  funksjon: funksjon as (typeof ROLLE_VALG)[number]['verdi'],
+                })
+              }
+              className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
+            >
+              {sett.isPending ? 'Lagrer …' : 'Lagre'}
+            </button>
+          </ModalFooter>
+        </>
+      )}
+    </Modal>
   );
 }
 
@@ -332,16 +329,24 @@ function KompetanseDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLu
   }
 
   return (
-    <Dialog open={apen} onOpenChange={(o) => !o && onLukk()}>
-      <DialogContent className="top-1/2 left-1/2 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-5">
-        <DialogTitle className="text-title text-fg">Kompetanse</DialogTitle>
-        {rad.mechanicId ? (
-          <div className="mt-3">
-            <KompetanseVelger valgte={valgte} onEndre={setValgte} />
-            <div className="mt-4 flex justify-end gap-2">
+    <Modal isOpen={apen} onOpenChange={(o) => !o && onLukk()} size="sm">
+      {({ close }) => (
+        <>
+          <ModalHeader title="Kompetanse" />
+          <ModalBody>
+            {rad.mechanicId ? (
+              <KompetanseVelger valgte={valgte} onEndre={setValgte} />
+            ) : (
+              <p className="text-body text-fg-muted">
+                Kompetanse tildeles mekanikere. Gi hen rollen mekaniker først.
+              </p>
+            )}
+          </ModalBody>
+          {rad.mechanicId ? (
+            <ModalFooter>
               <button
                 type="button"
-                onClick={onLukk}
+                onClick={close}
                 className="h-control px-3 text-label text-fg-muted"
               >
                 Avbryt
@@ -354,14 +359,10 @@ function KompetanseDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLu
               >
                 {sett.isPending ? 'Lagrer …' : 'Lagre'}
               </button>
-            </div>
-          </div>
-        ) : (
-          <p className="mt-3 text-body text-fg-muted">
-            Kompetanse tildeles mekanikere. Gi hen rollen mekaniker først.
-          </p>
-        )}
-      </DialogContent>
-    </Dialog>
+            </ModalFooter>
+          ) : null}
+        </>
+      )}
+    </Modal>
   );
 }

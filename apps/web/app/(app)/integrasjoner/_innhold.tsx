@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, ExternalLink, Plug } from '@endwise/ui';
+import { BoardChip, CircleAlert, ExternalLink, Plug } from '@endwise/ui';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
@@ -109,18 +109,14 @@ function Rad({ post, forste }: { post: Post; forste: boolean }) {
         <span className="flex flex-wrap items-center gap-2 text-label text-fg">
           {post.navn}
           {post.har && (
-            <span
-              className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-[11px] ${
-                post.aktiv ? 'bg-accent-soft text-accent-strong' : 'bg-surface-2 text-fg-muted'
-              }`}
-            >
-              {post.aktiv ? 'Koblet' : 'Har tilgang · ikke i bruk'}
-            </span>
+            <BoardChip variant="caption" color={post.aktiv ? 'lime' : 'soft'}>
+              {post.aktiv ? 'På' : 'Av'}
+            </BoardChip>
           )}
           {!post.har && post.status === 'coming' && (
-            <span className="inline-flex h-badge items-center rounded-badge bg-warn-soft px-1.5 font-medium text-[11px] text-warn">
-              Ikke bygget ennå
-            </span>
+            <BoardChip variant="caption" color="yellow">
+              Kommer senere
+            </BoardChip>
           )}
         </span>
         <span className="text-[12px] text-fg-muted leading-relaxed">{post.beskrivelse}</span>

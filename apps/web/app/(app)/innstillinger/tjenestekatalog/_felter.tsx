@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, FELT_MD, TriangleAlert } from '@endwise/ui';
+import { CircleAlert, FeltInput, FeltTall, FeltTekst, TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
@@ -30,8 +30,6 @@ export const TOMME_FELTER: Versjonsfelter = {
   ferdigheter: [],
   beskrivelse: '',
 };
-
-const INPUT = FELT_MD;
 
 export function TjenesteFelter({
   verdier,
@@ -69,36 +67,32 @@ export function TjenesteFelter({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-label text-fg">Varighet (minutter)</span>
-          <input
-            inputMode="numeric"
-            value={verdier.varighet}
-            onChange={(e) => onEndre({ ...verdier, varighet: e.target.value })}
-            placeholder="60"
-            className={INPUT}
-          />
-          <span className="text-[12px] text-fg-muted">
-            {varighetGyldig
+        <FeltTall
+          label="Varighet (minutter)"
+          value={Number.isFinite(varighetTall) ? varighetTall : undefined}
+          minValue={5}
+          maxValue={480}
+          onChange={(v) =>
+            onEndre({
+              ...verdier,
+              varighet: Number.isFinite(v) ? String(v) : '',
+            })
+          }
+          hint={
+            varighetGyldig
               ? `${visVarighet(varighetTall)} — styrer hvor lang tiden blir i kalenderen.`
-              : 'Mellom 5 og 480 minutter.'}
-          </span>
-        </label>
+              : 'Mellom 5 og 480 minutter.'
+          }
+        />
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-label text-fg">Pris til kunde (kr)</span>
-          <input
-            inputMode="decimal"
-            value={verdier.pris}
-            onChange={(e) => onEndre({ ...verdier, pris: e.target.value })}
-            placeholder="1450"
-            className={INPUT}
-          />
-          {/* Tomt felt er en gyldig og meningsbærende tilstand — ikke gratis. */}
-          <span className="text-[12px] text-fg-muted">
-            La feltet stå tomt for «pris på forespørsel».
-          </span>
-        </label>
+        <FeltInput
+          label="Pris til kunde (kr)"
+          inputMode="decimal"
+          value={verdier.pris}
+          onChange={(v) => onEndre({ ...verdier, pris: v })}
+          placeholder="1450"
+          hint="La feltet stå tomt for «pris på forespørsel»."
+        />
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -159,17 +153,14 @@ export function TjenesteFelter({
         )}
       </div>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-label text-fg">Beskrivelse</span>
-        <textarea
-          value={verdier.beskrivelse}
-          onChange={(e) => onEndre({ ...verdier, beskrivelse: e.target.value })}
-          rows={2}
-          maxLength={600}
-          placeholder="Hva er inkludert? Vises til kunden ved booking."
-          className={`${FELT_MD} min-h-[4.5rem] py-2`}
-        />
-      </label>
+      <FeltTekst
+        label="Beskrivelse"
+        value={verdier.beskrivelse}
+        onChange={(v) => onEndre({ ...verdier, beskrivelse: v })}
+        rows={2}
+        maxLength={600}
+        placeholder="Hva er inkludert? Vises til kunden ved booking."
+      />
     </div>
   );
 }

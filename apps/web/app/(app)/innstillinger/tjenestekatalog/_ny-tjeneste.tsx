@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, StatefulButton } from '@endwise/ui';
+import { CircleAlert, FeltInput, FilterChips, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
@@ -68,36 +68,16 @@ export function NyTjeneste({ onLukk }: { onLukk: () => void }) {
         ingress="Dette blir versjon 1. Senere endringer lager nye versjoner — den første blir stående."
       >
         <InnstillingRad label="Navn">
-          <input
+          <FeltInput
+            aria-label="Navn"
             value={navn}
-            onChange={(e) => setNavn(e.target.value)}
+            onChange={setNavn}
             maxLength={120}
             placeholder="EU-kontroll MC"
-            className="h-control ew-felt ew-felt-md px-2.5"
           />
         </InnstillingRad>
         <InnstillingRad label="Gjelder" hint="Kan ikke endres senere." siste>
-          <fieldset className="inline-flex h-control w-fit items-center gap-0.5 rounded-control border border-border bg-bg p-0.5">
-            <legend className="sr-only">Kjøretøytype</legend>
-            {TYPE_VALG.map((v) => (
-              <label
-                key={v.key}
-                className={`inline-flex h-7 cursor-pointer items-center rounded-[7px] px-2.5 text-label transition-colors ${
-                  type === v.key ? 'bg-sidebar-active text-fg' : 'text-fg-muted hover:text-fg'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="kjoretoytype"
-                  value={v.key}
-                  checked={type === v.key}
-                  onChange={() => setType(v.key)}
-                  className="sr-only"
-                />
-                {v.label}
-              </label>
-            ))}
-          </fieldset>
+          <FilterChips chips={TYPE_VALG} valgt={type} onChange={setType} ariaLabel="Kjøretøytype" />
         </InnstillingRad>
       </InnstillingSeksjon>
 

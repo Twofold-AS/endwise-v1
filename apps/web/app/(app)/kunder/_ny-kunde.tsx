@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, StatefulButton } from '@endwise/ui';
+import { CircleAlert, FeltInput, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
@@ -66,33 +66,33 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
         ingress="Bare navnet er påkrevd. Telefon og e-post kan legges til senere."
       >
         <InnstillingRad label="Navn" siste>
-          <input
+          <FeltInput
+            aria-label="Navn"
             value={navn}
-            onChange={(e) => setNavn(e.target.value)}
+            onChange={setNavn}
             maxLength={160}
             placeholder="Kari Nordmann"
-            className="h-control ew-felt ew-felt-md px-2.5"
           />
         </InnstillingRad>
       </InnstillingSeksjon>
 
       <InnstillingSeksjon tittel="Kontakt">
         <InnstillingRad label="Telefon">
-          <input
+          <FeltInput
+            aria-label="Telefon"
             value={telefon}
-            onChange={(e) => setTelefon(e.target.value)}
+            onChange={setTelefon}
             maxLength={32}
             placeholder="+4790000000"
-            className="h-control ew-felt ew-felt-md px-2.5"
           />
         </InnstillingRad>
         <InnstillingRad label="E-post" siste>
-          <input
+          <FeltInput
+            aria-label="E-post"
             type="email"
             value={epost}
-            onChange={(e) => setEpost(e.target.value)}
+            onChange={setEpost}
             placeholder="kari@example.no"
-            className="h-control ew-felt ew-felt-md px-2.5"
           />
         </InnstillingRad>
       </InnstillingSeksjon>
@@ -111,10 +111,10 @@ export function NyKunde({ onLukk }: { onLukk: () => void }) {
         {leggTilKjoretoy ? (
           <div data-parent-park="veh" className="mt-3 flex flex-col gap-2">
             <InnstillingRad label="Regnr">
-              <input
+              <FeltInput
+                aria-label="Regnr"
                 value={regnr}
-                onChange={(e) => setRegnr(e.target.value.toUpperCase())}
-                className="h-control ew-felt ew-felt-md px-2.5"
+                onChange={(v) => setRegnr(v.toUpperCase())}
                 placeholder="EK12345"
               />
             </InnstillingRad>

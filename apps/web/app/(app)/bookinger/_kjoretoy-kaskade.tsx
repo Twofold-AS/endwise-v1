@@ -1,6 +1,6 @@
 'use client';
 
-import { FELT_MD } from '@endwise/ui';
+import { FeltInput, FeltSelect, SelectItem } from '@endwise/ui';
 import { useMemo } from 'react';
 import {
   type KatalogKjoretoy,
@@ -68,83 +68,77 @@ export function KjoretoyKaskade({
         })}
       </fieldset>
       {merker.length > 0 ? (
-        <select
+        <FeltSelect
           aria-label="Merke"
-          value={merke}
-          onChange={(e) => {
-            onMerke(e.target.value);
+          selectedKey={merke || null}
+          onSelectionChange={(key) => {
+            onMerke(String(key ?? ''));
             onModell('');
             onAr('');
           }}
-          className={FELT_MD}
+          placeholder="— merke —"
         >
-          <option value="">— merke —</option>
           {merker.map((m) => (
-            <option key={m} value={m}>
+            <SelectItem key={m} id={m}>
               {m}
-            </option>
+            </SelectItem>
           ))}
-        </select>
+        </FeltSelect>
       ) : (
-        <input
+        <FeltInput
           aria-label="Merke"
           value={merke}
-          onChange={(e) => onMerke(e.target.value)}
+          onChange={onMerke}
           placeholder="Merke (ingen katalog)"
-          className={FELT_MD}
         />
       )}
       {modeller.length > 0 ? (
-        <select
+        <FeltSelect
           aria-label="Modell"
-          value={modell}
-          onChange={(e) => {
-            onModell(e.target.value);
+          selectedKey={modell || null}
+          onSelectionChange={(key) => {
+            onModell(String(key ?? ''));
             onAr('');
           }}
-          className={FELT_MD}
-          disabled={!merke}
+          placeholder="— modell —"
+          isDisabled={!merke}
         >
-          <option value="">— modell —</option>
           {modeller.map((m) => (
-            <option key={m} value={m}>
+            <SelectItem key={m} id={m}>
               {m}
-            </option>
+            </SelectItem>
           ))}
-        </select>
+        </FeltSelect>
       ) : (
-        <input
+        <FeltInput
           aria-label="Modell"
           value={modell}
-          onChange={(e) => onModell(e.target.value)}
+          onChange={onModell}
           placeholder="Modell"
-          className={FELT_MD}
-          disabled={!merke}
+          isDisabled={!merke}
         />
       )}
       {arene.length > 0 ? (
-        <select
+        <FeltSelect
           aria-label="Årsmodell"
-          value={ar}
-          onChange={(e) => onAr(e.target.value)}
-          className={FELT_MD}
-          disabled={!modell}
+          selectedKey={ar || null}
+          onSelectionChange={(key) => onAr(String(key ?? ''))}
+          placeholder="— år —"
+          isDisabled={!modell}
         >
-          <option value="">— år —</option>
           {arene.map((a) => (
-            <option key={a} value={a}>
+            <SelectItem key={a} id={a}>
               {a}
-            </option>
+            </SelectItem>
           ))}
-        </select>
+        </FeltSelect>
       ) : (
-        <input
+        <FeltInput
           aria-label="Årsmodell"
           value={ar}
-          onChange={(e) => onAr(e.target.value)}
+          onChange={onAr}
           placeholder="Årsmodell"
-          className={FELT_MD}
-          disabled={!modell}
+          isDisabled={!modell}
         />
       )}
     </div>

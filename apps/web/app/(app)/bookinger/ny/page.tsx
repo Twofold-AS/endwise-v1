@@ -1,6 +1,17 @@
 'use client';
 
-import { Car, Check, FELT_MD, hexForFarge, Search, Sparkles, staffFargeStil } from '@endwise/ui';
+import {
+  Car,
+  Check,
+  FELT_MD,
+  FeltSelect,
+  FeltSok,
+  hexForFarge,
+  Search,
+  SelectItem,
+  Sparkles,
+  staffFargeStil,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useState } from 'react';
@@ -513,7 +524,6 @@ export default function NyJobbPage() {
 }
 
 const inputCls = FELT_MD;
-const selectCls = FELT_MD;
 
 function KundeIFlyt({
   customerId,
@@ -574,29 +584,25 @@ function KundeIFlyt({
 
   return (
     <>
-      <Field label="Søk kunde">
-        <input
-          value={sok}
-          onChange={(e) => setSok(e.target.value)}
-          placeholder="Navn eller telefon"
-          className={inputCls}
-        />
-      </Field>
-      <Field label="Kunde">
-        <select
-          value={customerId}
-          onChange={(e) => onCustomer(e.target.value)}
-          className={selectCls}
-        >
-          <option value="">— velg kunde —</option>
-          {(customers.data ?? []).map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-              {c.phone ? ` · ${c.phone}` : ''}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <FeltSok
+        label="Søk kunde"
+        value={sok}
+        onChange={setSok}
+        placeholder="Navn, telefon eller reg.nr"
+      />
+      <FeltSelect
+        label="Kunde"
+        selectedKey={customerId || null}
+        onSelectionChange={(key) => onCustomer(String(key ?? ''))}
+        placeholder="— velg kunde —"
+      >
+        {(customers.data ?? []).map((c) => (
+          <SelectItem key={c.id} id={c.id}>
+            {c.name}
+            {c.phone ? ` · ${c.phone}` : ''}
+          </SelectItem>
+        ))}
+      </FeltSelect>
       <button
         type="button"
         onClick={() => setNyKunde((v) => !v)}
@@ -654,26 +660,23 @@ function KundeIFlyt({
         </div>
       )}
 
-      <Field label="Kjøretøy">
-        <select
-          value={vehicleId}
-          onChange={(e) => {
-            const id = e.target.value;
-            const treff = (vehicles.data ?? []).find((v) => v.id === id);
-            onVehicle(id, treff?.regNumber ?? undefined);
-          }}
-          className={selectCls}
-          disabled={!customerId}
-        >
-          <option value="">{customerId ? '— velg kjøretøy —' : 'Velg kunde først'}</option>
-          {(vehicles.data ?? []).map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.regNumber ?? 'Uten regnr'} ·{' '}
-              {[v.make, v.model].filter(Boolean).join(' ') || v.type}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <FeltSelect
+        label="Kjøretøy"
+        selectedKey={vehicleId || null}
+        onSelectionChange={(key) => {
+          const id = String(key ?? '');
+          const treff = (vehicles.data ?? []).find((v) => v.id === id);
+          onVehicle(id, treff?.regNumber ?? undefined);
+        }}
+        placeholder={customerId ? '— velg kjøretøy —' : 'Velg kunde først'}
+        isDisabled={!customerId}
+      >
+        {(vehicles.data ?? []).map((v) => (
+          <SelectItem key={v.id} id={v.id}>
+            {v.regNumber ?? 'Uten regnr'} · {[v.make, v.model].filter(Boolean).join(' ') || v.type}
+          </SelectItem>
+        ))}
+      </FeltSelect>
       <button
         type="button"
         disabled={!customerId}

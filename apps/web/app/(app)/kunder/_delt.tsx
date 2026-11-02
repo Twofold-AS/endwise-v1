@@ -1,30 +1,19 @@
 'use client';
 
-import { Badge, CircleAlert } from '@endwise/ui';
-import { CardShell } from '../_shell/cards';
+import { Badge, FeilFlate, LasterFlate, TomFlate } from '@endwise/ui';
 
 /** F5-02/F5-03 — Små byggeklosser kunde- og kjøretøyflatene deler. */
 
 export function Laster() {
-  return <p className="py-12 text-center text-body text-fg-muted">Laster …</p>;
+  return <LasterFlate label="Laster" />;
 }
 
 export function Feil({ melding }: { melding: string }) {
-  return (
-    <CardShell className="flex items-start gap-3 p-6">
-      <CircleAlert size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-danger" />
-      <p className="text-body text-danger">{melding}</p>
-    </CardShell>
-  );
+  return <FeilFlate melding={melding} />;
 }
 
 export function Tomt({ tittel, hint }: { tittel: string; hint: string }) {
-  return (
-    <CardShell className="p-10 text-center">
-      <p className="text-label text-fg">{tittel}</p>
-      <p className="mt-1 text-[12px] text-fg-muted">{hint}</p>
-    </CardShell>
-  );
+  return <TomFlate tittel={tittel} hint={hint} />;
 }
 
 /** Seksjonsoverskrift med valgfri teller — brukes på begge detaljkortene. */

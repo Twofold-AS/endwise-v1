@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, StatefulButton } from '@endwise/ui';
+import { CircleAlert, FeltSelect, SelectItem, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
@@ -66,18 +66,18 @@ export function RegistrerKjoretoy({
       >
         {fastKundeId ? null : (
           <InnstillingRad label="Kunde">
-            <select
-              value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
-              className="h-control ew-felt ew-felt-md px-2.5"
+            <FeltSelect
+              aria-label="Kunde"
+              selectedKey={customerId || null}
+              onSelectionChange={(key) => setCustomerId(String(key ?? ''))}
+              placeholder="Ingen eier ennå"
             >
-              <option value="">Ingen eier ennå</option>
               {(kunder.data ?? []).map((k) => (
-                <option key={k.id} value={k.id}>
+                <SelectItem key={k.id} id={k.id}>
                   {k.name}
-                </option>
+                </SelectItem>
               ))}
-            </select>
+            </FeltSelect>
           </InnstillingRad>
         )}
         <InnstillingRad label="Type">

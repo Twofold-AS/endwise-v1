@@ -1,11 +1,13 @@
 'use client';
 
 import {
+  AlertDialog,
   Avatar,
   Car,
   ChevronRight,
   CircleAlert,
   ClipboardList,
+  DeaktivertHandling,
   Inbox,
   Mail,
   MessageSquare,
@@ -310,13 +312,16 @@ export default function KundekortPage() {
         )}
       </Seksjon>
 
-      <Link
-        href={`/bookinger/ny?kunde=${k.id}` as Route}
-        data-kunde-ny-jobb
-        className="inline-flex h-control items-center rounded-control border border-border px-2.5 text-label text-fg"
-      >
-        Ny jobb på kunde
-      </Link>
+      <div className="flex flex-wrap items-center gap-2">
+        <Link
+          href={`/bookinger/ny?kunde=${k.id}` as Route}
+          data-kunde-ny-jobb
+          className="inline-flex h-control items-center rounded-control border border-border px-2.5 text-label text-fg"
+        >
+          Ny jobb på kunde
+        </Link>
+        <SlettKunde navn={k.name} />
+      </div>
 
       <Link
         href={'/kunder' as Route}
@@ -325,5 +330,33 @@ export default function KundekortPage() {
         <ClipboardList size={14} />← Alle kunder
       </Link>
     </SideChromeSkall>
+  );
+}
+
+function SlettKunde({ navn }: { navn: string }) {
+  const [apen, setApen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        data-slett-kunde
+        onClick={() => setApen(true)}
+        className="inline-flex h-control items-center rounded-control px-2.5 text-label text-fg-muted hover:text-fg"
+      >
+        Slett kunde
+      </button>
+      <AlertDialog
+        isOpen={apen}
+        onOpenChange={setApen}
+        title={`Slett ${navn}?`}
+        description="Kunden og tilknyttede data fjernes."
+        confirmLabel="Slett"
+        cancelLabel="Avbryt"
+        isConfirmDisabled
+      >
+        <p className="text-[12px] text-fg-muted">Kommer senere.</p>
+        <DeaktivertHandling forklaring="Kommer senere">Slett</DeaktivertHandling>
+      </AlertDialog>
+    </>
   );
 }

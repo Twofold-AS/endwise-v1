@@ -4,8 +4,7 @@ import { FELT_MD, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../../_lib/lyd';
-import { useOrgRole } from '../../_lib/use-org-role';
-import { OrgHubSeksjoner, TimeplanAnsatteNotat } from '../_hub-flate';
+import { TimeplanAnsatteNotat } from '../_hub-flate';
 import { OrgRad } from '../_org-rad';
 
 const INPUT = `${FELT_MD} disabled:bg-surface-2 disabled:text-fg-muted`;
@@ -41,7 +40,6 @@ type RadNokkel = keyof Skjema | null;
 export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slug?: string }) {
   const utils = trpc.useUtils();
   const lyd = useLyd();
-  const { isAdmin } = useOrgRole();
   const team = trpc.team.list.useQuery(undefined, { enabled: !lesing && !slug });
   const dealer = trpc.forhandler.get.useQuery(undefined, { enabled: !lesing && !slug });
   const inspect = trpc.verksted.forhandleren.useQuery(
@@ -126,11 +124,10 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
       {lesing ? null : (
         <div data-org-hub className="flex flex-col gap-3">
           {skjema.name ? (
-            <p data-org-pagesub className="text-[12px] text-fg-muted">
+            <p data-org-pagesub className="text-[13px] text-fg-muted">
               {skjema.name}
             </p>
           ) : null}
-          <OrgHubSeksjoner isAdmin={isAdmin} />
           <TimeplanAnsatteNotat />
         </div>
       )}
@@ -247,7 +244,7 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
         {leftoverKeys.length > 0 ? (
           <details className="border-border border-b px-0 py-4">
             <summary className="cursor-pointer text-label text-fg">Mer fra Quick</summary>
-            <ul className="mt-3 flex flex-col gap-1.5 text-[12px] text-fg-muted">
+            <ul className="mt-3 flex flex-col gap-1.5 text-[13px] text-fg-muted">
               {leftoverKeys.map((key) => (
                 <li key={key}>
                   <span className="text-fg">{key}</span>
@@ -284,7 +281,7 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
             {lagre.error ? (
               <p className="text-body text-danger">{lagre.error.message}</p>
             ) : (
-              <p className="text-[11px] text-fg-muted">
+              <p className="text-[13px] text-fg-muted">
                 Dette er verkstedets kontakt, ikke innloggings-e-posten din.
               </p>
             )}

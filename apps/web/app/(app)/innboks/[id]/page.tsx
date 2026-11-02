@@ -14,6 +14,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
   RefreshCw,
+  Side,
   Sparkles,
 } from '@endwise/ui';
 import type { Route } from 'next';
@@ -45,6 +46,7 @@ import {
   visningForTraadtype,
 } from '../_lib';
 import { useInboxModus } from '../_modus';
+import { SamtaleDetaljerPille } from '../_samtale-detaljer';
 import { TradHandlinger } from '../_trad-handlinger';
 
 /**
@@ -268,165 +270,168 @@ export default function TrådPage() {
   }
 
   return (
-    <div className="mx-auto flex h-full min-h-0 w-full max-w-[820px] flex-col gap-4 overflow-hidden px-8 py-7 max-md:px-3 max-md:py-3">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          {/**
-           * «← Meldinger» sto her fram til og er fjernet.
-           * Innboksen har tre kolonner, og `layout.tsx` holder samtalelista
-           * Montert på tvers av trådbytter. Lista står altså allerede til
-           * venstre mens du leser tråden. En knapp som «tar deg tilbake» til
-           * noe du aldri forlot, er ikke navigasjon — den er en påstand om at
-           * du er et annet sted enn du er.
+    <div data-samtale className="h-full min-h-0">
+      <Side
+        tittel={tradTittel}
+        handling={<SamtaleDetaljerPille threadId={threadId} />}
+        className="mx-auto h-full min-h-0 w-full max-w-[820px] overflow-hidden px-8 py-7 max-md:gap-3 max-md:px-4 max-md:py-4"
+      >
+        {/**
+         * «← Meldinger» sto her fram til og er fjernet.
+         * Innboksen har tre kolonner, og `layout.tsx` holder samtalelista
+         * Montert på tvers av trådbytter. Lista står altså allerede til
+         * venstre mens du leser tråden. En knapp som «tar deg tilbake» til
+         * noe du aldri forlot, er ikke navigasjon — den er en påstand om at
+         * du er et annet sted enn du er.
+         */}
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 max-md:hidden">
+          {/*
+           * Kanalen står i hodet, ikke nede ved svarfeltet: den skal være
+           * lest før man begynner å skrive, ikke etterpå.
            */}
-          <h1 className="truncate text-title text-fg">{tradTittel}</h1>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2">
-            {/*
-             * Kanalen står i hodet, ikke nede ved svarfeltet: den skal være
-             * lest før man begynner å skrive, ikke etterpå.
-             */}
-            {thread && (
-              <KanalLinje
-                traad={tilKanal(thread.channel)}
-                siste={tilKanal('sisteKanal' in thread ? thread.sisteKanal : thread.channel)}
-              />
-            )}
-            {thread && (
-              <span
-                className={`inline-flex h-badge items-center rounded-badge px-2 font-medium text-[11px] ${
-                  tradRolleEtikett
-                    ? 'bg-surface-2 text-fg-muted'
-                    : (KIND_TONE[thread.kind] ?? 'bg-surface-2 text-fg-muted')
-                }`}
-              >
-                {tradRolleEtikett ?? KIND_LABEL[thread.kind] ?? thread.kind}
-              </span>
-            )}
-            <span className="text-[12px] text-fg-muted">{rows.length} meldinger</span>
-            {/*
-             * Med emne står motpartene ellers ingen steder — og «hvem snakker
-             * jeg med» er halve spørsmålet når du åpner en tråd.
-             */}
-            {thread && 'motparter' in thread && thread.subject?.trim() && motparter.length > 0 && (
-              <span className="min-w-0 truncate text-[12px] text-fg-muted">
-                · {threadHeading(null, thread.kind, motparter, navnKart, me.data?.userId)}
-              </span>
-            )}
-          </div>
-          <nav
-            data-innboks-deltakere
-            className="mt-2 flex flex-wrap items-center gap-1.5"
-            aria-label="Deltakere"
-          >
-            <span className="inline-flex h-7 items-center rounded-full bg-sidebar-active px-2.5 text-[12px] text-fg">
-              Du
+          {thread && (
+            <KanalLinje
+              traad={tilKanal(thread.channel)}
+              siste={tilKanal('sisteKanal' in thread ? thread.sisteKanal : thread.channel)}
+            />
+          )}
+          {thread && (
+            <span
+              className={`inline-flex h-badge items-center rounded-badge px-2 font-medium text-[13px] ${
+                tradRolleEtikett
+                  ? 'bg-surface-2 text-fg-muted'
+                  : (KIND_TONE[thread.kind] ?? 'bg-surface-2 text-fg-muted')
+              }`}
+            >
+              {tradRolleEtikett ?? KIND_LABEL[thread.kind] ?? thread.kind}
             </span>
-            {motparter
-              .filter((id) => id && id !== me.data?.userId && !isAgent(id))
-              .map((id) => (
-                <span
-                  key={id}
-                  className="inline-flex h-7 items-center rounded-full bg-surface-2 px-2.5 text-[12px] text-fg"
-                >
-                  {navnKart?.[id]?.navn?.trim() || `Deltaker ${id.slice(0, 6)}`}
-                </span>
-              ))}
-          </nav>
-          <div className="mt-2">
-            <TradHandlinger threadId={threadId} />
-          </div>
+          )}
+          <span className="text-[13px] text-fg-muted">{rows.length} meldinger</span>
+          {/*
+           * Med emne står motpartene ellers ingen steder — og «hvem snakker
+           * jeg med» er halve spørsmålet når du åpner en tråd.
+           */}
+          {thread && 'motparter' in thread && thread.subject?.trim() && motparter.length > 0 && (
+            <span className="min-w-0 truncate text-[13px] text-fg-muted">
+              · {threadHeading(null, thread.kind, motparter, navnKart, me.data?.userId)}
+            </span>
+          )}
         </div>
-      </div>
-
-      {/*
-       * [ART50-UI] F6-05 — brukeren skal vite når det skifter fra maskin til
-       * menneske. Teksten er lovtekst; plasseringen (i tråden, over meldingene
-       * som kom etter) er design.
-       */}
-      {escalated && (
-        <div className="flex flex-col gap-2">
-          <HumanHandoverNotice className="rounded-control bg-warn-soft text-body" />
-          <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
-            <Sparkles size={14} className="shrink-0 text-warn" />
-            Assistenten står fortsatt i tråden. Historikken over er konteksten din — kunden skal
-            ikke måtte gjenta seg.
-          </p>
+        <nav
+          data-innboks-deltakere
+          className="mt-2 flex flex-wrap items-center gap-1.5 max-md:hidden"
+          aria-label="Deltakere"
+        >
+          <span className="inline-flex h-7 items-center rounded-full bg-sidebar-active px-2.5 text-[13px] text-fg">
+            Du
+          </span>
+          {motparter
+            .filter((id) => id && id !== me.data?.userId && !isAgent(id))
+            .map((id) => (
+              <span
+                key={id}
+                className="inline-flex h-7 items-center rounded-full bg-surface-2 px-2.5 text-[13px] text-fg"
+              >
+                {navnKart?.[id]?.navn?.trim() || `Deltaker ${id.slice(0, 6)}`}
+              </span>
+            ))}
+        </nav>
+        <div className="mt-2 max-md:hidden">
+          <TradHandlinger threadId={threadId} />
         </div>
-      )}
 
-      {/* Meldingene */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-border bg-bg p-4">
-        {rows.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-center">
-            <MessageSquare size={24} className="text-fg-muted" />
-            <p className="text-body text-fg-muted">Ingen meldinger i tråden ennå.</p>
+        {/*
+         * [ART50-UI] F6-05 — brukeren skal vite når det skifter fra maskin til
+         * menneske. Teksten er lovtekst; plasseringen (i tråden, over meldingene
+         * som kom etter) er design.
+         */}
+        {escalated && (
+          <div className="flex flex-col gap-2">
+            <HumanHandoverNotice className="rounded-control bg-warn-soft text-body" />
+            <p className="flex items-center gap-1.5 text-[13px] text-fg-muted">
+              <Sparkles size={14} className="shrink-0 text-warn" />
+              Assistenten står fortsatt i tråden. Historikken over er konteksten din — kunden skal
+              ikke måtte gjenta seg.
+            </p>
           </div>
-        ) : (
-          rows.map((m, i) => {
-            const prev = rows[i - 1];
-            const newDay =
-              !prev ||
-              new Date(prev.createdAt).toDateString() !== new Date(m.createdAt).toDateString();
-            const mine = m.authorId === me.data?.userId;
-            return (
-              <div key={m.id} className="flex flex-col gap-3">
-                {newDay && (
-                  <div className="flex items-center gap-3">
-                    <span className="h-px flex-1 bg-border" />
-                    <span className="text-[12px] text-fg-muted">{fmtDayHeading(m.createdAt)}</span>
-                    <span className="h-px flex-1 bg-border" />
-                  </div>
-                )}
-                <Message
-                  mine={mine}
-                  agent={isAgent(m.authorId)}
-                  author={authorLabel(m.authorId, me.data?.userId, navnKart)}
-                  rolle={navnKart?.[m.authorId]?.rolle}
-                  rolleEtikett={
-                    supportRolleEtikett(navnKart?.[m.authorId]?.rolle) ??
-                    (navnKart?.[m.authorId]?.rolle === 'mekaniker' ||
-                    navnKart?.[m.authorId]?.rolle === 'kunde'
-                      ? (ROLLE_LABEL[navnKart[m.authorId]?.rolle ?? ''] ?? null)
-                      : null)
-                  }
-                  authorId={m.authorId}
-                  seed={navn.data?.[m.authorId]?.seed ?? null}
-                  avatar={navn.data?.[m.authorId]?.avatar ?? null}
-                  body={m.body}
-                  at={m.createdAt}
-                  kanal={tilKanal(m.channel)}
-                  utenfor={m.direction === 'inbound'}
-                  levering={m.deliveryStatus}
-                  leveringsfeil={m.deliveryError}
-                  paaNytt={
-                    m.deliveryStatus === 'failed'
-                      ? () => resend.mutate({ messageId: m.id })
-                      : undefined
-                  }
-                  sender={resend.isPending && resend.variables?.messageId === m.id}
-                />
-              </div>
-            );
-          })
         )}
-        <div ref={bottomRef} />
-      </div>
 
-      <PromptInput onSubmit={onPrompt} aria-label="Svar i tråden">
-        <PromptInputBody className="min-w-0 flex-1">
-          <PromptInputTextarea
-            placeholder="Skriv et svar …"
-            maxLength={4000}
-            disabled={post.isPending}
-          />
-        </PromptInputBody>
-        <PromptInputFooter>
-          <PromptInputSubmit
-            status={post.isPending ? 'submitted' : post.isError ? 'error' : 'ready'}
-          />
-        </PromptInputFooter>
-      </PromptInput>
-      {post.isError && <p className="text-[12px] text-danger">{post.error.message}</p>}
+        {/* Meldingene */}
+        <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto rounded-[24px] border border-border bg-bg p-4 max-md:border-0 max-md:px-0">
+          {rows.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-center">
+              <MessageSquare size={24} className="text-fg-muted" />
+              <p className="text-body text-fg-muted">Ingen meldinger i tråden ennå.</p>
+            </div>
+          ) : (
+            rows.map((m, i) => {
+              const prev = rows[i - 1];
+              const newDay =
+                !prev ||
+                new Date(prev.createdAt).toDateString() !== new Date(m.createdAt).toDateString();
+              const mine = m.authorId === me.data?.userId;
+              return (
+                <div key={m.id} className="flex flex-col gap-3">
+                  {newDay && (
+                    <div className="flex items-center gap-3">
+                      <span className="h-px flex-1 bg-border" />
+                      <span className="text-[13px] text-fg-muted">
+                        {fmtDayHeading(m.createdAt)}
+                      </span>
+                      <span className="h-px flex-1 bg-border" />
+                    </div>
+                  )}
+                  <Message
+                    mine={mine}
+                    agent={isAgent(m.authorId)}
+                    author={authorLabel(m.authorId, me.data?.userId, navnKart)}
+                    rolle={navnKart?.[m.authorId]?.rolle}
+                    rolleEtikett={
+                      supportRolleEtikett(navnKart?.[m.authorId]?.rolle) ??
+                      (navnKart?.[m.authorId]?.rolle === 'mekaniker' ||
+                      navnKart?.[m.authorId]?.rolle === 'kunde'
+                        ? (ROLLE_LABEL[navnKart[m.authorId]?.rolle ?? ''] ?? null)
+                        : null)
+                    }
+                    authorId={m.authorId}
+                    seed={navn.data?.[m.authorId]?.seed ?? null}
+                    avatar={navn.data?.[m.authorId]?.avatar ?? null}
+                    body={m.body}
+                    at={m.createdAt}
+                    kanal={tilKanal(m.channel)}
+                    utenfor={m.direction === 'inbound'}
+                    levering={m.deliveryStatus}
+                    leveringsfeil={m.deliveryError}
+                    paaNytt={
+                      m.deliveryStatus === 'failed'
+                        ? () => resend.mutate({ messageId: m.id })
+                        : undefined
+                    }
+                    sender={resend.isPending && resend.variables?.messageId === m.id}
+                  />
+                </div>
+              );
+            })
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        <PromptInput onSubmit={onPrompt} aria-label="Svar i tråden">
+          <PromptInputBody className="min-w-0 flex-1">
+            <PromptInputTextarea
+              placeholder="Skriv et svar …"
+              maxLength={4000}
+              disabled={post.isPending}
+            />
+          </PromptInputBody>
+          <PromptInputFooter>
+            <PromptInputSubmit
+              status={post.isPending ? 'submitted' : post.isError ? 'error' : 'ready'}
+            />
+          </PromptInputFooter>
+        </PromptInput>
+        {post.isError && <p className="text-[13px] text-danger">{post.error.message}</p>}
+      </Side>
     </div>
   );
 }
@@ -509,7 +514,7 @@ function Message({
             <Sparkles size={16} />
           </span>
         ) : mine ? (
-          <span className="grid size-7 place-items-center rounded-control bg-accent-soft font-medium text-[11px] text-accent-strong">
+          <span className="grid size-7 place-items-center rounded-control bg-surface-2 font-medium text-[13px] text-fg">
             Du
           </span>
         ) : kjent && seed ? (
@@ -530,19 +535,19 @@ function Message({
       </span>
       <div className={`flex min-w-0 max-w-[78%] flex-col gap-1 ${mine ? 'items-end' : ''}`}>
         <div className="flex items-baseline gap-2">
-          <span className="text-[12px] text-fg-muted">{author}</span>
+          <span className="text-[13px] text-fg-muted">{author}</span>
           {/*
            * Rollen står bare på andre enn deg selv: «Kunde» eller «Mekaniker»
            * endrer hvordan svaret skal formuleres.
            */}
           {rolleEtikett && (
-            <span className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
+            <span className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 text-[13px] text-fg-muted">
               {rolleEtikett}
             </span>
           )}
           {/* Bare når kanalen er noe annet enn app — se doc over. */}
           {kanal !== 'app' && <KanalMerke kanal={kanal} />}
-          <span className="text-[12px] text-fg-muted tabular-nums">{fmtTime(at)}</span>
+          <span className="text-[13px] text-fg-muted tabular-nums">{fmtTime(at)}</span>
         </div>
         {/*
          * Innkommende meldinger fra en ekstern kanal får en tydelig venstre
@@ -551,13 +556,13 @@ function Message({
          * være synlig uten å lese merket.
          */}
         <p
-          className={`whitespace-pre-wrap break-words rounded-control px-3 py-2 text-body text-fg ${
+          className={`whitespace-pre-wrap break-words rounded-[20px] px-3 py-2 text-body text-fg ${
             mine
-              ? 'bg-accent-soft'
+              ? 'bg-surface-2'
               : agent
-                ? 'border border-warn/20 bg-warn-soft'
-                : 'border border-border bg-surface-2'
-          } ${utenfor && kanal !== 'app' ? 'border-l-2 border-l-fg-muted' : ''}`}
+                ? 'border border-border bg-surface-2'
+                : 'border border-border bg-[#f3f3f3]'
+          } ${utenfor && kanal !== 'app' ? 'border-l border-l-fg-muted' : ''}`}
         >
           {body}
         </p>
@@ -571,7 +576,7 @@ function Message({
          */}
         {levering === 'failed' && (
           <div className="flex w-full flex-col gap-1.5 rounded-control border border-danger/25 bg-danger-soft px-2.5 py-2">
-            <span className="flex items-start gap-1.5 text-[12px] text-danger">
+            <span className="flex items-start gap-1.5 text-[13px] text-danger">
               <CircleAlert size={13} strokeWidth={1.75} className="mt-0.5 shrink-0" />
               <span>
                 <b>Ikke levert.</b> Meldingen står i tråden, men e-posten gikk ikke ut.
@@ -583,7 +588,7 @@ function Message({
                 type="button"
                 onClick={paaNytt}
                 disabled={sender}
-                className="inline-flex h-7 w-fit items-center gap-1.5 rounded-control border border-danger/30 px-2 text-[12px] text-danger transition-colors hover:bg-danger/10 disabled:opacity-60"
+                className="inline-flex h-7 w-fit items-center gap-1.5 rounded-control border border-danger/30 px-2 text-[13px] text-danger transition-colors hover:bg-danger/10 disabled:opacity-60"
               >
                 <RefreshCw size={12} strokeWidth={1.75} className={sender ? 'animate-spin' : ''} />
                 {sender ? 'Sender …' : 'Send på nytt'}
@@ -592,7 +597,7 @@ function Message({
           </div>
         )}
         {(levering === 'pending' || levering === 'sending') && (
-          <span className="text-[12px] text-fg-muted">Sender e-post …</span>
+          <span className="text-[13px] text-fg-muted">Sender e-post …</span>
         )}
       </div>
     </div>

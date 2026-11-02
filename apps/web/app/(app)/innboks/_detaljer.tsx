@@ -52,10 +52,13 @@ export function DetaljerPanel({
   threadId,
   apen,
   onLukk,
+  innebygd = false,
 }: {
   threadId: string;
   apen: boolean;
   onLukk: () => void;
+  /** Uten overlay/aside — innhold i bunn-Drawer på telefon. */
+  innebygd?: boolean;
 }) {
   const ctx = trpc.inboxContext.forThread.useQuery(
     { threadId },
@@ -63,6 +66,28 @@ export function DetaljerPanel({
   );
 
   if (!apen) return null;
+
+  const innhold = (
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
+      {ctx.isLoading ? (
+        <p className="px-1 py-6 text-center text-[13px] text-fg-muted">Henter kontekst …</p>
+      ) : ctx.isError ? (
+        <Nøktern tittel="Kunne ikke hente detaljer" tekst={ctx.error.message} />
+      ) : ctx.data?.type === 'kunde' ? (
+        <Kundekontekst data={ctx.data} />
+      ) : ctx.data?.type === 'mekaniker' ? (
+        <Mekanikerkontekst data={ctx.data} />
+      ) : ctx.data?.type === 'konto' ? (
+        <Kontokontekst data={ctx.data} />
+      ) : (
+        <UkjentKontekst grunn={ctx.data?.grunn} />
+      )}
+    </div>
+  );
+
+  if (innebygd) {
+    return <div data-detaljer-innebygd>{innhold}</div>;
+  }
 
   return (
     <>
@@ -74,10 +99,10 @@ export function DetaljerPanel({
         type="button"
         aria-label="Lukk detaljer"
         onClick={onLukk}
-        className="absolute inset-0 z-30 bg-fg/20 xl:hidden"
+        className="absolute inset-0 z-30 bg-fg/20 xl:hidden max-md:hidden"
       />
       <aside
-        className={`${BREDDE} absolute inset-0 z-40 flex h-full shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar md:left-auto xl:static xl:z-auto`}
+        className={`${BREDDE} absolute inset-0 z-40 hidden h-full shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar md:left-auto md:flex xl:static xl:z-auto`}
         aria-label="Detaljer om samtalen"
       >
         {/* Header: 56px + border-b, på linje med topbaren og de to andre
@@ -96,21 +121,7 @@ export function DetaljerPanel({
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
-          {ctx.isLoading ? (
-            <p className="px-1 py-6 text-center text-[12px] text-fg-muted">Henter kontekst …</p>
-          ) : ctx.isError ? (
-            <Nøktern tittel="Kunne ikke hente detaljer" tekst={ctx.error.message} />
-          ) : ctx.data?.type === 'kunde' ? (
-            <Kundekontekst data={ctx.data} />
-          ) : ctx.data?.type === 'mekaniker' ? (
-            <Mekanikerkontekst data={ctx.data} />
-          ) : ctx.data?.type === 'konto' ? (
-            <Kontokontekst data={ctx.data} />
-          ) : (
-            <UkjentKontekst grunn={ctx.data?.grunn} />
-          )}
-        </div>
+        {innhold}
       </aside>
     </>
   );
@@ -129,7 +140,7 @@ function Seksjon({
 }) {
   return (
     <section className="flex flex-col gap-1.5">
-      <h3 className="flex items-center gap-1.5 px-1 text-[11px] text-fg-muted uppercase tracking-wide">
+      <h3 className="flex items-center gap-1.5 px-1 text-[13px] text-fg-muted uppercase tracking-wide">
         {tittel}
         {antall !== undefined && <span className="tabular-nums">({antall})</span>}
       </h3>
@@ -141,7 +152,7 @@ function Seksjon({
 /** Tomt er ikke en feil — men det skal stå hvorfor det er tomt. */
 function Tom({ tekst }: { tekst: string }) {
   return (
-    <p className="rounded-control border border-border border-dashed px-3 py-3 text-[12px] text-fg-muted">
+    <p className="rounded-control border border-border border-dashed px-3 py-3 text-[13px] text-fg-muted">
       {tekst}
     </p>
   );
@@ -158,7 +169,7 @@ function Nøktern({ tittel, tekst }: { tittel: string; tekst: string }) {
       <CircleAlert size={15} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
       <div className="min-w-0">
         <p className="text-label text-fg">{tittel}</p>
-        <p className="mt-0.5 text-[12px] text-fg-muted leading-relaxed">{tekst}</p>
+        <p className="mt-0.5 text-[13px] text-fg-muted leading-relaxed">{tekst}</p>
       </div>
     </div>
   );
@@ -219,14 +230,14 @@ function Kundekontekst({ data }: { data: KundeData }) {
               {k.navn}
               <Kilde source={k.kilde} />
             </span>
-            <span className="truncate text-[12px] text-fg-muted">
+            <span className="truncate text-[13px] text-fg-muted">
               {[k.telefon, k.epost].filter(Boolean).join(' · ') || 'Ingen kontaktinfo'}
             </span>
           </div>
           <ChevronRight size={15} className="shrink-0 text-fg-muted" aria-hidden />
         </div>
       </Link>
-      <p className="-mt-2 px-1 text-[11px] text-fg-muted">
+      <p className="-mt-2 px-1 text-[13px] text-fg-muted">
         Kunde siden {dato(k.kundeSiden)}
         {k.harInnlogging ? ' · har «Min side»' : ''}
       </p>
@@ -245,14 +256,14 @@ function Kundekontekst({ data }: { data: KundeData }) {
                 >
                   <Car size={14} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate font-mono text-[12px] text-fg">
+                    <span className="truncate font-mono text-[13px] text-fg">
                       {v.regNumber ?? 'Uten regnr'}
                     </span>
-                    <span className="truncate text-[11px] text-fg-muted">
+                    <span className="truncate text-[13px] text-fg-muted">
                       {[v.make, v.model].filter(Boolean).join(' ') || TYPE_LABEL[v.type]}
                     </span>
                   </div>
-                  <span className="shrink-0 text-right text-[11px] tabular-nums">
+                  <span className="shrink-0 text-right text-[13px] tabular-nums">
                     <EuFrist dato={v.inspectionDue} />
                   </span>
                 </div>
@@ -294,10 +305,10 @@ function Kundekontekst({ data }: { data: KundeData }) {
                     }`}
                   >
                     <Ikon size={13} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                    <span className="min-w-0 flex-1 truncate text-[12px] text-fg">
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-fg">
                       {t.subject?.trim() || 'Samtale'}
                     </span>
-                    <span className="shrink-0 text-[11px] text-fg-muted tabular-nums">
+                    <span className="shrink-0 text-[13px] text-fg-muted tabular-nums">
                       {fmtWhen(t.lastMessageAt)}
                     </span>
                   </div>
@@ -310,7 +321,7 @@ function Kundekontekst({ data }: { data: KundeData }) {
          * Står her med vilje: panelet viser at dere har snakket sammen, ikke
          * Hva som ble sagt.
          */}
-        <p className="px-1 text-[11px] text-fg-muted">Emne og tidspunkt — ikke meldingstekst.</p>
+        <p className="px-1 text-[13px] text-fg-muted">Emne og tidspunkt — ikke meldingstekst.</p>
       </Seksjon>
     </>
   );
@@ -337,14 +348,14 @@ function SakListe({
             }`}
           >
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="truncate text-[12px] text-fg">{s.serviceName ?? 'Tjeneste'}</span>
-              <span className="truncate text-[11px] text-fg-muted tabular-nums">
+              <span className="truncate text-[13px] text-fg">{s.serviceName ?? 'Tjeneste'}</span>
+              <span className="truncate text-[13px] text-fg-muted tabular-nums">
                 {dato(s.startsAt)}
                 {s.regNumber ? ` · ${s.regNumber}` : ''}
               </span>
             </div>
             <span
-              className={`inline-flex h-badge shrink-0 items-center rounded-badge px-1.5 font-medium text-[11px] ${
+              className={`inline-flex h-badge shrink-0 items-center rounded-badge px-1.5 font-medium text-[13px] ${
                 STATUS_TONE[s.status] ?? 'bg-surface-2 text-fg-muted'
               }`}
             >
@@ -379,7 +390,7 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
         />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-label text-fg">{data.navn}</span>
-          <span className="flex items-center gap-1.5 text-[12px] text-fg-muted">
+          <span className="flex items-center gap-1.5 text-[13px] text-fg-muted">
             <span
               aria-hidden
               className="inline-block size-2 rounded-full"
@@ -393,7 +404,7 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
       <Seksjon tittel="Belastning i dag">
         <div className="flex items-center gap-3 rounded-control border border-border bg-bg p-3">
           <Timer size={15} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-          <p className="text-[12px] text-fg">
+          <p className="text-[13px] text-fg">
             <span className="font-medium text-label">{data.jobberIDag}</span> jobber i dag ·
             kapasitet <span className="font-medium">{data.kapasitet}</span> samtidig
           </p>
@@ -402,7 +413,7 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
          * Kapasitet er «samtidige jobber», ikke «per dag». Å regne det om til
          * en prosent ville gitt tallet en presisjon det ikke har.
          */}
-        <p className="px-1 text-[11px] text-fg-muted leading-relaxed">
+        <p className="px-1 text-[13px] text-fg-muted leading-relaxed">
           Kapasitet betyr hvor mange jobber som kan gå samtidig, ikke hvor mange som får plass i
           løpet av dagen. Tallene er en pekepinn, ikke en fasit.
         </p>
@@ -420,22 +431,22 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
                     i > 0 ? 'border-border border-t' : ''
                   }`}
                 >
-                  <span className="w-10 shrink-0 text-[11px] text-fg-muted tabular-nums">
+                  <span className="w-10 shrink-0 text-[13px] text-fg-muted tabular-nums">
                     {new Date(j.startsAt).toLocaleTimeString('nb-NO', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-[12px] text-fg">
+                    <span className="truncate text-[13px] text-fg">
                       {j.serviceName ?? 'Tjeneste'}
                     </span>
-                    <span className="truncate font-mono text-[11px] text-fg-muted">
+                    <span className="truncate font-mono text-[13px] text-fg-muted">
                       {j.regNumber ?? '—'}
                     </span>
                   </div>
                   <span
-                    className={`inline-flex h-badge shrink-0 items-center rounded-badge px-1.5 font-medium text-[11px] ${
+                    className={`inline-flex h-badge shrink-0 items-center rounded-badge px-1.5 font-medium text-[13px] ${
                       STATUS_TONE[j.status] ?? 'bg-surface-2 text-fg-muted'
                     }`}
                   >
@@ -465,7 +476,7 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
                       ? `Sertifisering går ut ${dato(k.certificationExpiresAt)}`
                       : 'Ingen sertifisering registrert'
                   }
-                  className={`inline-flex h-badge items-center gap-1 rounded-badge px-1.5 font-medium text-[11px] ${
+                  className={`inline-flex h-badge items-center gap-1 rounded-badge px-1.5 font-medium text-[13px] ${
                     utloper ? 'bg-warn-soft text-warn' : 'bg-surface-2 text-fg-muted'
                   }`}
                 >
@@ -480,7 +491,7 @@ function Mekanikerkontekst({ data }: { data: MekData }) {
 
       <Link
         href={'/mekanikere' as Route}
-        className="mx-1 inline-flex items-center gap-1.5 text-[12px] text-fg-muted transition-colors hover:text-fg"
+        className="mx-1 inline-flex items-center gap-1.5 text-[13px] text-fg-muted transition-colors hover:text-fg"
       >
         <ClipboardList size={13} />
         Alle mekanikere
@@ -510,11 +521,11 @@ export function EndwiseForhandlerDetaljer({ navn, slug }: { navn: string; slug: 
     <>
       <div className="flex flex-col gap-1 rounded-control border border-border bg-bg p-3">
         <p className="truncate text-label text-fg">{navn}</p>
-        <p className="truncate font-mono text-[12px] text-fg-muted">{slug}</p>
+        <p className="truncate font-mono text-[13px] text-fg-muted">{slug}</p>
       </div>
       <Link
         href={'/endwise/forhandlere' as Route}
-        className="mx-1 inline-flex items-center gap-1.5 text-[12px] text-fg-muted transition-colors hover:text-fg"
+        className="mx-1 inline-flex items-center gap-1.5 text-[13px] text-fg-muted transition-colors hover:text-fg"
       >
         Alle forhandlere
       </Link>
@@ -537,7 +548,7 @@ function Kontokontekst({ data }: { data: KontoData }) {
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-label text-fg">{data.tenantNavn ?? 'Forhandler'}</span>
-          <span className="truncate text-[12px] text-fg-muted">
+          <span className="truncate text-[13px] text-fg-muted">
             {data.tenantKind === 'demo' ? 'Demo-konto' : 'Aktiv konto'}
           </span>
         </div>
@@ -546,12 +557,12 @@ function Kontokontekst({ data }: { data: KontoData }) {
       <Seksjon tittel="Abonnement">
         {data.planKey ? (
           <div className="flex flex-col gap-2 rounded-control border border-border bg-bg p-3">
-            <p className="flex items-center gap-2 text-[12px] text-fg">
+            <p className="flex items-center gap-2 text-[13px] text-fg">
               <CreditCard size={14} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
               <span className="font-medium text-label capitalize">{data.planKey}</span>
               {data.status && (
                 <span
-                  className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-[11px] ${
+                  className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-[13px] ${
                     data.status === 'active' || data.status === 'trialing'
                       ? 'bg-accent-soft text-accent-strong'
                       : 'bg-warn-soft text-warn'
@@ -562,7 +573,7 @@ function Kontokontekst({ data }: { data: KontoData }) {
               )}
             </p>
             {data.currentPeriodEnd && (
-              <p className="text-[11px] text-fg-muted tabular-nums">
+              <p className="text-[13px] text-fg-muted tabular-nums">
                 Perioden løper til {datoTid(data.currentPeriodEnd)}
               </p>
             )}
@@ -580,7 +591,7 @@ function Kontokontekst({ data }: { data: KontoData }) {
             {data.moduler.map((m) => (
               <span
                 key={m}
-                className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 font-medium text-[11px] text-fg-muted"
+                className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 font-medium text-[13px] text-fg-muted"
               >
                 {m}
               </span>
@@ -592,13 +603,13 @@ function Kontokontekst({ data }: { data: KontoData }) {
       <div className="flex flex-col gap-1.5">
         <Link
           href={'/abonnement' as Route}
-          className="mx-1 inline-flex items-center gap-1.5 text-[12px] text-fg-muted transition-colors hover:text-fg"
+          className="mx-1 inline-flex items-center gap-1.5 text-[13px] text-fg-muted transition-colors hover:text-fg"
         >
           <CreditCard size={13} />
           Abonnement og tillegg
         </Link>
         {/* Grensen mot oss står i klartekst, også her. */}
-        <p className="mx-1 flex items-start gap-1.5 text-[11px] text-fg-muted leading-relaxed">
+        <p className="mx-1 flex items-start gap-1.5 text-[13px] text-fg-muted leading-relaxed">
           <MessageSquare size={12} strokeWidth={1.75} className="mt-0.5 shrink-0" />
           Endwise ser kontoopplysningene dine for å kunne hjelpe — aldri innholdet i samtalene dine
           med kunder eller mekanikere.

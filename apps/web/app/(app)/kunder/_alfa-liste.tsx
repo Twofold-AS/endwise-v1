@@ -69,7 +69,7 @@ export function KunderAlfaListe<T extends { id: string; name: string }>({
               <section key={g.bokstav} data-kunder-seksjon={g.bokstav}>
                 <h3
                   data-kunder-seksjon-hode
-                  className="sticky top-0 z-[2] bg-surface-2 px-4 py-1 text-[12px] font-[650] text-fg-muted"
+                  className="sticky top-0 z-[2] bg-surface-2 px-4 py-1 text-[13px] font-[650] text-fg-muted"
                 >
                   {g.bokstav}
                 </h3>

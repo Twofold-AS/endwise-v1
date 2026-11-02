@@ -4,7 +4,7 @@ import { KUNDER_ALFA, type KunderAlfa } from './_alfa';
 
 /**
  * Apple Contacts-skinne: absolute på høyre kant av list-viewport.
- * Ikke i top-bar. 26px bred, 11px. z-[4] over rader, under chrome/modaler.
+ * Ikke i top-bar. 26px bred, 13px. z-[4] over rader, under chrome/modaler.
  */
 export function KunderAlfaRail({
   aktiv,
@@ -36,7 +36,7 @@ export function KunderAlfaRail({
               if (tom) return;
               onVelg(bokstav);
             }}
-            className={`flex min-h-0 w-full flex-1 items-center justify-center p-0 text-[11px] leading-none ${
+            className={`flex min-h-0 w-full flex-1 items-center justify-center p-0 text-[13px] leading-none ${
               tom
                 ? 'font-[500] text-fg-faint'
                 : valgt

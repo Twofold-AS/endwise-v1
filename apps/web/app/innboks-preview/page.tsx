@@ -239,24 +239,26 @@ function TradGo() {
       data-innboks-hoved
       className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-3"
     >
-      <button
-        type="button"
-        data-innboks-detaljer-chip
-        className="absolute top-2 right-2 z-20 inline-flex h-8 items-center rounded-full bg-fg px-3 text-[12px] font-[650] text-bg"
-      >
-        Detaljer
-      </button>
-      <h1 className="pr-24 text-title text-fg">Kari Nordmann</h1>
-      <p className="mt-1 text-[12px] text-fg-muted">1 melding</p>
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="min-w-0 truncate text-title text-fg">Kari Nordmann</h1>
+        <button
+          type="button"
+          data-innboks-detaljer-chip
+          className="inline-flex h-10 shrink-0 items-center rounded-pill border border-fg bg-bg px-4 text-[13px] font-[650] text-fg"
+        >
+          Detaljer
+        </button>
+      </div>
+      <p className="mt-1 text-[13px] text-fg-muted">1 melding</p>
       <div data-innboks-deltakere className="mt-2 flex flex-wrap items-center gap-1.5">
-        <span className="inline-flex h-7 items-center rounded-full bg-sidebar-active px-2.5 text-[12px] text-fg">
+        <span className="inline-flex h-7 items-center rounded-full bg-sidebar-active px-2.5 text-[13px] text-fg">
           Du
         </span>
-        <span className="inline-flex h-7 items-center rounded-full bg-surface-2 px-2.5 text-[12px] text-fg">
+        <span className="inline-flex h-7 items-center rounded-full bg-surface-2 px-2.5 text-[13px] text-fg">
           Kari Nordmann
         </span>
       </div>
-      <div data-innboks-trad-handlinger className="mt-2 flex flex-wrap gap-1.5 text-[12px]">
+      <div data-innboks-trad-handlinger className="mt-2 flex flex-wrap gap-1.5 text-[13px]">
         <span className="text-fg">Inviter ansatt</span>
       </div>
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-bg p-3">

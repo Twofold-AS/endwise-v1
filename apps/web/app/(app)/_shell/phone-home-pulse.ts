@@ -94,7 +94,8 @@ export const PULSE_DAG_BUE_START = Math.PI;
 /** Halvsirkel (øvre bue 08→19). */
 export const PULSE_DAG_BUE_SWEEP = Math.PI;
 /** Mobbin-ink — spark / Revenue Line (ikke dagsbue). */
-export const PULSE_DAG_FYLL_INK = '#141414';
+/** Tynn ink — dagsbuen er dempet grå/ink, ikke fyllt plate. */
+export const PULSE_DAG_FYLL_INK = '#616161';
 /** Mobbin-aksent — hvor full dagen er på Amicro-halvsirkelen (data viz, ikke CTA). */
 export const PULSE_DAG_FYLL_BLA = '#0066ff';
 /** Mobbin-hairline — gjenstående bue. */

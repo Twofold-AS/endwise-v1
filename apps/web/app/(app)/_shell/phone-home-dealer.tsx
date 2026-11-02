@@ -1,6 +1,6 @@
 'use client';
 
-import { Inbox, Package, Users } from '@endwise/ui';
+import { Inbox, Package, Side, Users } from '@endwise/ui';
 import { useEffect, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
@@ -164,8 +164,14 @@ export const DealerDestinasjonskort = DealerPulseKort;
 
 export function PhoneHomeDealer() {
   return (
-    <DealerPulseKort
-      className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-2.5 py-3 md:hidden`}
-    />
+    <Side
+      tittel="Verkstedet"
+      className="md:hidden [&>header]:sr-only"
+      undertekst="Her er dagen din."
+    >
+      <DealerPulseKort
+        className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-4 py-0`}
+      />
+    </Side>
   );
 }

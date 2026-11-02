@@ -23,8 +23,8 @@ import {
   fmtPulseTime,
   PULSE_DAG_BUE_START,
   PULSE_DAG_BUE_SWEEP,
-  PULSE_DAG_FYLL_HAIRLINE,
   PULSE_DAG_FYLL_INK,
+  PULSE_DAG_FYLL_SOFT,
   PULSE_DAG_SLUTT,
   PULSE_DAG_START,
 } from './phone-home-pulse';
@@ -79,7 +79,7 @@ export function PulseKort({
           ) : null}
         </div>
       ) : null}
-      {meta ? <p className="text-[12px] text-fg-muted leading-snug">{meta}</p> : null}
+      {meta ? <p className="text-[13px] text-fg-muted leading-snug">{meta}</p> : null}
       {children}
     </>
   );
@@ -244,14 +244,14 @@ export function PulseDagSirkel({
             sweep={PULSE_DAG_BUE_SWEEP}
             slices={[
               { name: 'passert', value: passert, color: PULSE_DAG_FYLL_INK },
-              { name: 'igjen', value: igjen, color: PULSE_DAG_FYLL_HAIRLINE },
+              { name: 'igjen', value: igjen, color: PULSE_DAG_FYLL_SOFT },
             ]}
           />
         </div>
       </div>
       <div
         data-pulse-dag-fot
-        className="flex h-[16px] w-full items-end justify-between text-[12px] leading-4 text-fg-muted tabular-nums"
+        className="flex h-[16px] w-full items-end justify-between text-[13px] leading-none text-fg-muted tabular-nums"
       >
         <span data-pulse-dag-start>{startKort}</span>
         <span data-pulse-dag-slutt>{sluttKort}</span>
@@ -352,7 +352,7 @@ export function PulseTall({
           )}
         </p>
       </div>
-      <p data-pulse-tall-etikett className="h-[16px] text-[12px] leading-4 text-fg-muted">
+      <p data-pulse-tall-etikett className="h-[16px] text-[13px] leading-none text-fg-muted">
         {label}
       </p>
     </div>
@@ -490,7 +490,7 @@ export function PulseAnalyserKort({
           <p data-analyser-tittel className="truncate text-label leading-none text-fg">
             Tall
           </p>
-          <p data-analyser-periode className="mt-1 truncate text-[12px] leading-4 text-fg-muted">
+          <p data-analyser-periode className="mt-1 truncate text-[13px] leading-4 text-fg-muted">
             siste 30 dager
           </p>
         </div>
@@ -526,7 +526,7 @@ function PulseAnalyseKpi({ stat, laster = false }: { stat: AnalyserMockStat; las
   const verdi = typeof stat.verdi === 'number' ? stat.verdi.toLocaleString('nb-NO') : stat.verdi;
   return (
     <div data-analyser-kpi={stat.id} className="flex min-w-0 flex-col gap-1">
-      <p className="min-w-0 truncate text-[12px] leading-4 text-fg-muted">{stat.label}</p>
+      <p className="min-w-0 truncate text-[13px] leading-4 text-fg-muted">{stat.label}</p>
       <div className="flex min-w-0 items-baseline gap-1.5">
         {laster ? (
           <span className="inline-block h-4 w-8 animate-pulse rounded-sm bg-border" />
@@ -534,13 +534,13 @@ function PulseAnalyseKpi({ stat, laster = false }: { stat: AnalyserMockStat; las
           <p className="text-[15px] font-semibold leading-none text-fg tabular-nums">{verdi}</p>
         )}
         {stat.stub ? (
-          <span data-analyser-stub className="truncate text-[11px] leading-none text-fg-faint">
+          <span data-analyser-stub className="truncate text-[13px] leading-none text-fg-faint">
             {stat.stub}
           </span>
         ) : stat.delta ? (
           <span
             data-analyser-delta={stat.opp ? 'opp' : 'ned'}
-            className={`inline-flex items-center gap-0.5 text-[11px] leading-none tabular-nums ${
+            className={`inline-flex items-center gap-0.5 text-[13px] leading-none tabular-nums ${
               stat.opp ? 'text-success' : 'text-danger'
             }`}
           >

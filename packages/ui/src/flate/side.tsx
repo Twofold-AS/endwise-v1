@@ -19,10 +19,12 @@ export function Side({
   className?: string;
 }) {
   return (
-    <div data-side className={cn('flex flex-col gap-4', className)}>
+    <div data-side className={cn('flex flex-col gap-4 max-md:px-4 max-md:py-4', className)}>
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-title text-fg">{tittel}</h1>
+          <h1 className="text-title text-fg max-md:text-[24px] max-md:leading-[1.2] max-md:font-[650]">
+            {tittel}
+          </h1>
           {undertekst ? <p className="mt-0.5 text-body text-fg-muted">{undertekst}</p> : null}
         </div>
         {handling ? <div className="shrink-0">{handling}</div> : null}
@@ -48,10 +50,10 @@ export function Seksjon({
   return (
     <section data-seksjon={tittel} className={cn('flex flex-col gap-2', className)}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 text-title text-fg">
+        <h2 className="flex items-center gap-2 text-title text-fg max-md:text-[18px] max-md:font-[650]">
           {tittel}
           {antall != null && antall > 0 ? (
-            <span className="text-[12px] text-fg-muted tabular-nums">{antall}</span>
+            <span className="text-[13px] text-fg-muted tabular-nums">{antall}</span>
           ) : null}
         </h2>
         {handling}
@@ -98,7 +100,7 @@ export function ListeRad({
       <span className="min-w-0 flex-1">
         <span className="block truncate text-body text-fg">{tittel}</span>
         {undertekst ? (
-          <span className="mt-0.5 block truncate text-[12px] text-fg-muted">{undertekst}</span>
+          <span className="mt-0.5 block truncate text-[13px] text-fg-muted">{undertekst}</span>
         ) : null}
         {children}
       </span>

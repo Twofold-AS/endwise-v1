@@ -26,7 +26,7 @@ export function OrgHubSeksjoner({ isAdmin }: { isAdmin: boolean }) {
           }`}
         >
           <span className="text-label text-fg">{sek.label}</span>
-          <span className="text-[12px] text-fg-muted">{sek.sub}</span>
+          <span className="text-[13px] text-fg-muted">{sek.sub}</span>
         </Link>
       ))}
     </nav>
@@ -41,7 +41,7 @@ export function TimeplanAnsatteNotat() {
       className="flex flex-col gap-1 rounded-xl border border-border px-4 py-3"
     >
       <h3 className="text-label text-fg">Timeplan ansatte</h3>
-      <p className="text-[12px] text-fg-muted">Dagens bookinger og kapasitet ligger på Timeplan.</p>
+      <p className="text-[13px] text-fg-muted">Dagens bookinger og kapasitet ligger på Timeplan.</p>
       <DeaktivertHandling forklaring="Kommer senere">Vaktliste per ukedag</DeaktivertHandling>
     </section>
   );

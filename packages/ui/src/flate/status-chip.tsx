@@ -31,7 +31,12 @@ export function StatusChip({
 }) {
   const def = STATUS_CHIP[status];
   return (
-    <Chip data-status-chip={status} variant="caption" color={def.color} className="gap-1">
+    <Chip
+      data-status-chip={status}
+      variant="caption"
+      color={def.color}
+      className="gap-1 rounded-pill"
+    >
       {IKON[status]}
       {children ?? def.label}
     </Chip>

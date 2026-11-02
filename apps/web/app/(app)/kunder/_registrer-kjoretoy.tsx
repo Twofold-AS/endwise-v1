@@ -1,6 +1,15 @@
 'use client';
 
-import { CircleAlert, FeltSelect, SelectItem, StatefulButton } from '@endwise/ui';
+import {
+  CircleAlert,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  FeltInput,
+  FeltSelect,
+  SelectItem,
+  StatefulButton,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
@@ -11,9 +20,56 @@ import type { KjoretoyType } from '../bookinger/_kjoretoy-katalog';
 import { TYPE_LABEL } from './_delt';
 
 /**
- * Registrer kjøretøy — Innstillinger-feltgrupper, ikke CardShell-dump.
+ * Registrer kjøretøy — Innstillinger-feltgrupper.
+ * Mobil: bunn-Drawer. Desktop: inline.
  */
 export function RegistrerKjoretoy({
+  fastKundeId,
+  onFerdig,
+}: {
+  fastKundeId?: string;
+  onFerdig?: () => void;
+}) {
+  const [apen, setApen] = useState(false);
+  const skjema = (
+    <RegistrerKjoretoySkjema
+      fastKundeId={fastKundeId}
+      onFerdig={() => {
+        setApen(false);
+        onFerdig?.();
+      }}
+    />
+  );
+
+  return (
+    <div data-registrer-kjoretoy-wrap>
+      <div className="md:hidden">
+        <button
+          type="button"
+          data-registrer-kjoretoy-apne
+          onClick={() => setApen(true)}
+          className="inline-flex h-10 items-center rounded-pill border border-fg bg-bg px-4 text-[13px] font-[650] text-fg"
+        >
+          Registrer kjøretøy
+        </button>
+        {apen ? (
+          <Drawer
+            placement="bottom"
+            isOpen={apen}
+            onOpenChange={setApen}
+            aria-label="Registrer kjøretøy"
+          >
+            <DrawerHeader title="Registrer kjøretøy" />
+            <DrawerBody className="px-3 pb-6">{skjema}</DrawerBody>
+          </Drawer>
+        ) : null}
+      </div>
+      <div className="max-md:hidden">{skjema}</div>
+    </div>
+  );
+}
+
+function RegistrerKjoretoySkjema({
   fastKundeId,
   onFerdig,
 }: {
@@ -95,12 +151,12 @@ export function RegistrerKjoretoy({
           />
         </InnstillingRad>
         <InnstillingRad label="Registreringsnummer" siste>
-          <input
+          <FeltInput
+            aria-label="Registreringsnummer"
             value={regNumber}
-            onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
+            onChange={(v) => setRegNumber(v.toUpperCase())}
             maxLength={10}
             placeholder="AB12345"
-            className="h-control ew-felt ew-felt-md px-2.5"
           />
         </InnstillingRad>
       </InnstillingSeksjon>

@@ -165,7 +165,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       </Suspense>
                       <div
                         data-ronny-side-scroll
-                        className={`flex min-h-0 min-w-0 flex-1 flex-col ${
+                        className={`no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col ${
                           innboksFlate ? 'overflow-hidden' : 'overflow-y-auto'
                         }`}
                       >
@@ -179,7 +179,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                               <p className="text-label">{plattformVarsel}</p>
                               <button
                                 type="button"
-                                className="text-[12px] underline-offset-2 hover:underline"
+                                className="text-[13px] underline-offset-2 hover:underline"
                                 onClick={() => setPlattformVarsel(null)}
                               >
                                 Lukk

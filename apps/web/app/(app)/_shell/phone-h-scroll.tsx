@@ -18,7 +18,7 @@ export function PhoneHScroll({
 }) {
   return (
     <div
-      className={`flex min-h-0 min-w-0 flex-1 flex-nowrap items-center gap-2 ${PHONE_H_SCROLL} ${className}`}
+      className={`no-scrollbar flex min-h-0 min-w-0 flex-1 flex-nowrap items-center gap-2 ${PHONE_H_SCROLL} ${className}`}
     >
       {children}
     </div>

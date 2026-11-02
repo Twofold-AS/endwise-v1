@@ -7,6 +7,7 @@ import {
   LasterFlate,
   MessageSquare,
   Pagination,
+  Side,
 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
@@ -162,12 +163,12 @@ export function InboxSidebar() {
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
           {support.isLoading ? (
-            <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster henvendelser …</p>
+            <p className="px-2 py-8 text-center text-[13px] text-fg-muted">Laster henvendelser …</p>
           ) : henvendelser.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
               <MessageSquare size={20} className="text-fg-muted" />
               <p className="text-label text-fg">Ingen henvendelser ennå</p>
-              <p className="text-[12px] text-fg-muted leading-relaxed">
+              <p className="text-[13px] text-fg-muted leading-relaxed">
                 Når et verksted skriver til Endwise, lander det her.
               </p>
             </div>
@@ -196,7 +197,10 @@ export function InboxSidebar() {
       }`}
     >
       <h2 className="sr-only">Samtaler</h2>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3">
+      <Side
+        tittel="Innboks"
+        className="[&>header]:sr-only min-h-0 flex-1 overflow-y-auto px-3 py-0"
+      >
         <InboxFilterChips />
         {threads.isLoading ? (
           <LasterFlate label="Laster samtaler" linjer={6} />
@@ -206,7 +210,7 @@ export function InboxSidebar() {
             <p className="text-label text-fg">
               {chip === 'lost' ? 'Ingen løste samtaler' : 'Ingen samtaler'}
             </p>
-            <p className="text-[12px] text-fg-muted">
+            <p className="text-[13px] text-fg-muted">
               {chip === 'lost'
                 ? 'Løste samtaler vises når de kan markeres.'
                 : chip === 'alle'
@@ -216,7 +220,7 @@ export function InboxSidebar() {
             {chip === 'alle' && (
               <Link
                 href={'/innboks?ny=1' as Route}
-                className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[12px] text-bg"
+                className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[13px] text-bg"
               >
                 Send melding
               </Link>
@@ -255,7 +259,7 @@ export function InboxSidebar() {
             data-innboks-pager
             className="flex shrink-0 flex-wrap items-center justify-between gap-2 py-3"
           >
-            <span className="text-[12px] text-fg-muted">
+            <span className="text-[13px] text-fg-muted">
               {inboxSideEtikett(alleFiltrert.length, sideIndeks - 1)}
             </span>
             <Pagination
@@ -268,7 +272,7 @@ export function InboxSidebar() {
             />
           </div>
         ) : null}
-      </div>
+      </Side>
     </aside>
   );
 }
@@ -310,9 +314,9 @@ function SupportKort({
           />
         )}
         {ulest && <span className="sr-only">Ulest</span>}
-        <span className="shrink-0 text-[11px] text-fg-muted tabular-nums">{nar}</span>
+        <span className="shrink-0 text-[13px] text-fg-muted tabular-nums">{nar}</span>
       </div>
-      {utdrag && <p className="truncate text-[12px] text-fg-muted">{utdrag}</p>}
+      {utdrag && <p className="truncate text-[13px] text-fg-muted">{utdrag}</p>}
     </div>
   );
 }
@@ -363,7 +367,7 @@ function SamtaleKort({
          * avgjør hvordan man svarer — se `_kanal.tsx`.
          */}
         <KanalMerke kanal={rad.sisteKanal} kunIkon />
-        <span className="ml-auto shrink-0 text-[11px] text-fg-muted tabular-nums">{rad.nar}</span>
+        <span className="ml-auto shrink-0 text-[13px] text-fg-muted tabular-nums">{rad.nar}</span>
       </div>
 
       <div className="flex items-center gap-2">
@@ -397,12 +401,12 @@ function SamtaleKort({
       </div>
 
       {rad.utdrag && (
-        <p className="line-clamp-2 text-[12px] text-fg-muted leading-snug">{rad.utdrag}</p>
+        <p className="line-clamp-2 text-[13px] text-fg-muted leading-snug">{rad.utdrag}</p>
       )}
 
       <div className="flex flex-wrap items-center gap-1.5">
         <span
-          className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-[11px] ${
+          className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-[13px] ${
             KIND_TONE[rad.kind] ?? 'bg-surface-2 text-fg-muted'
           }`}
         >
@@ -413,7 +417,7 @@ function SamtaleKort({
          * åpner tråden og svarer feil sted.
          */}
         {rad.sisteKanal !== rad.kanal && (
-          <span className="inline-flex h-badge items-center gap-1 rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
+          <span className="inline-flex h-badge items-center gap-1 rounded-badge bg-surface-2 px-1.5 text-[13px] text-fg-muted">
             svar som
             <KanalMerke kanal={rad.kanal} kunIkon />
           </span>

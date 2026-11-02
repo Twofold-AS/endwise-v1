@@ -13,6 +13,9 @@
  * ikke Board-blå, og skygger slås av.
  */
 @import "./styles/theme.css";
+/* Board text-* utilities (text-body-medium …). Uten denne resolver ikke klassene. */
+@import "./styles/typography.css";
+@import "./styles/mobil.css";
 
 :root,
 [data-theme="light"],
@@ -318,10 +321,29 @@
   --ew-switch-w: 24px;
   --ew-switch-thumb: 10px;
 
-  /* Tint, ikke skygge */
+  /* Tint, ikke skygge — hele Board-rampen */
+  --shadow-2xs: none;
   --shadow-xs: none;
   --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
   --shadow-card: none;
   --shadow-dropdown: none;
   --shadow-sidebar: none;
+  --shadow-waitlist: none;
+  --shadow-nav-selected: none;
+
+  --color-accent-50: #f3f3f3;
+  --color-accent-100: #f0f0f0;
+  --color-accent-200: #e0e0e0;
+  --color-accent-300: #adadad;
+  --color-accent-400: #707070;
+  --color-accent-500: var(--ew-ink-utility);
+  --color-accent-600: var(--ew-ink-utility);
+  --color-accent-700: var(--ew-ink-utility);
+  --color-accent-800: var(--ew-ink-utility);
+  --color-accent-900: var(--ew-ink-utility);
+  --color-accent-950: var(--ew-ink-utility);
 }

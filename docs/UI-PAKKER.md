@@ -1,5 +1,15 @@
 # UI-pakker — les denne FØR du bygger UI
 
+> ### ⚠️ Mikael 02.11.2026 — PR #184 mobil (50+)
+> `typography.css` importeres + `@utility`-alias for Board-tekst.
+> Board-aksent → ink, skygger av. Mobil-skala §6 (36/24/18/17/16/14/13,
+> 450/650, 4pt, margin/pad 16, kort 24, felt 16, stadium, 48/44/40,
+> muted `#616161`) under 768px — desktop restaureres over.
+> `Side`/`Seksjon`/`ListeRad` på hjem, innboks, samtale, kunder, jobb,
+> lager, butikk, org. Samtale: Detaljer-outline → bunn-Drawer.
+> Valgt chip = hvit + ink-kant. Ingen `#0066ff` på CTA. Badge stadium.
+> Dagsbue tynn grå/ink. Org-hub-liste og Butikk-widget fjernet.
+>
 > ### ⚠️ Mikael 02.11.2026 — Board UI (gratis) + Claude-mapping
 > Board UI MIT-kilde ligger i `packages/ui/src/components/base/`
 > (CLI `npx boardui@latest`, pin via lockfile). Tokens omkoblet til
@@ -804,7 +814,7 @@ Kun disse. Hver enkelt har en grunn.
 | Tjenestekatalogen (`apps/web/app/(app)/innstillinger/tjenestekatalog/`: `page.tsx`, `_felter.tsx`, `_ny-tjeneste.tsx`, `_tjeneste-kort.tsx`, `_felles.ts`, `prisliste/_hub.ts`) | App-nivå **komposisjon** (F2-05/F5-04), ingen ny pakke. <b>24.09.2026 (Claude BIT 7):</b> søk (`PhoneSokFelt`) + pageSub `N tjenester tilbys` på eksisterende `/prisliste`. Ny via chrome `?fane=opprett`. Ingen ny pille. Bygget av `StatefulButton` (beUI), `CardShell` og ikon-barrelen, med de samme input-klassene som `kunder/_ny-kunde.tsx` — feltene er kopiert i klassestreng, ikke i komponent, fordi shadcn `form`/`input` ikke er hentet inn og resten av appen ikke bruker dem. ⚠️ Kjøretøytype-velgeren er **ekte `<input type="radio">`** og ikke pille-knapper med `role="radio"`, som ellers i appen: pillene andre steder er FILTRE (tablist er riktig der), denne er et skjemafelt, og biome avviste `role="radio"` med rette. Utseendet er likt. `_felter.tsx` finnes for at «opprett» og «ny versjon» skal dele ÉN definisjon av versjonsfeltene — to skjemaer for samme fire kolonner ville før eller siden fått ulik validering |
 | Ny jobb — flere tjenester (`apps/web/app/(app)/bookinger/ny/page.tsx`, F3-09/P3) | **Ingen ny pakke.** Flervalget er samme radmønster som mekanikervelgeren på samme side (`aria-pressed` + `Check`), ikke shadcn `checkbox` (ikke hentet inn). Varighet er native `input type="number"` — shadcn `input` er ikke hentet, og feltet deler klassestreng med resten av skjemaet. En egen multi-select ville vært en ny primitiv uten grunn. |
 
-| Intern testbutikk (`apps/web/app/(app)/butikk/`: `page.tsx`, `kasse/page.tsx`, `_kurv.ts`, `_booking-widget.tsx`, F10-03) | App-nivå **komposisjon**, ingen ny pakke. Samme skall som Lager › Deler: `CardShell`, shadcn `Button`, beUI `StatefulButton`, native `input type="number"` med `h-control`/`rounded-control`. Handlekurven er `sessionStorage` — shadcn har ingen handlekurv, og en egen cart-pakke ville vært en §2-sak for en intern preview. Egen kode fordi ingen pakke dekker «lagerkatalog + Stripe test-kasse». Ikonet `ShoppingCart` lagt i lucide-barrelen. <b>29.08.2026:</b> midlertidig testplassering av eksisterende `EndwiseWidget` (`@endwise/widget-ui`, F4-03) på `/butikk` — ikke en ny booking, ikke en ny UI-pakke. |
+| Intern testbutikk (`apps/web/app/(app)/butikk/`: `page.tsx`, `kasse/page.tsx`, `_kurv.ts`, F10-03) | App-nivå **komposisjon**, ingen ny pakke. `Side`/`Seksjon`/`ListeRad` på katalogen. Handlekurven er `sessionStorage`. <b>02.11.2026 (PR #184):</b> midlertidig blå booking-widget fjernet fra `/butikk`. `_booking-widget.tsx` ligger igjen ubrukt. |
 
 | Ansatte › Kompetanse og Timeplan (`apps/web/app/(app)/mekanikere/kompetanse/`, `mekanikere/kapasitet/`, F3-08/F3-12) | App-nivå **komposisjon**, ingen ny pakke. Samme skall som Prislisten og mekanikerlista: `CardShell`, `Avatar`, `StatefulButton`, native `<input>`/`<select>` med `FELT`-klassen (shadcn `form`/`select` er ikke hentet). Kompetanse viser nivå som ord (`SKILL_LEVELS`) og sert. t.o.m. med samme 60-dagers varsel som Min kompetanse. Timeplan gjenbruker 7-dagers strip + jobb-radene fra mekanikerens Timeplan (`fmtTime` / `STATUS_LABEL`). Egen kode fordi ingen pakke dekker «ferdighet per ansatt med utløpsdato» eller «kapasitet + dagens jobber» — og å hente shadcn `table`/`calendar` for to rader ville gitt et annet visuelt system enn resten av Ansatte |
 

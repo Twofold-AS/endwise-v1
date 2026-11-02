@@ -28,7 +28,7 @@ const TEXT_FAMILIES = [
 ] as const;
 
 /** Endwise Mobbin-skala. Uten disse kaster tailwind-merge text-label mot text-fg. */
-const ENDWISE_TEXT = ['title', 'label', 'body'] as const;
+const ENDWISE_TEXT = ['title', 'label', 'body', 'display', 'section', 'secondary'] as const;
 
 const TEXT_WEIGHTS = ['regular', 'medium', 'semibold', 'bold'] as const;
 

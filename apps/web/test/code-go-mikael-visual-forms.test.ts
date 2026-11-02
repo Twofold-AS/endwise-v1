@@ -35,7 +35,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
     expect(hero).toMatch(/text-label font-normal/);
     expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_HAIRLINE/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_SOFT/);
     expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).not.toMatch(/<svg|halvBue|strokeWidth/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);

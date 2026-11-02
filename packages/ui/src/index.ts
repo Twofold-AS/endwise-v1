@@ -59,7 +59,13 @@ export { DateCalendar } from './components/base/date-picker/date-calendar.tsx';
 export { DatePicker } from './components/base/date-picker/date-picker.tsx';
 export { MeetingScheduler } from './components/base/date-picker/meeting-scheduler.tsx';
 export { Divider } from './components/base/divider/divider.tsx';
-export { Drawer } from './components/base/drawer/drawer.tsx';
+export {
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTrigger,
+} from './components/base/drawer/drawer.tsx';
 export {
   Dropdown,
   DropdownDivider,

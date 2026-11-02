@@ -1,5 +1,6 @@
 'use client';
 
+import { Side } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useOrgRole } from '../_lib/use-org-role';
@@ -35,25 +36,27 @@ function OrganisasjonIndre() {
       faner={synligeOrgChrome(isAdmin)}
       aktiv={seksjon}
     >
-      {seksjon === 'oversikt' ? <ForhandlerKort /> : null}
-      {seksjon === 'ansatte' ? <OrganisasjonAnsatte /> : null}
-      {seksjon === 'abonnement' ? (
-        <section className="flex flex-col gap-8" aria-label="Abonnement">
-          <AbonnementInnhold />
-          <div>
-            <h2 className="text-title text-fg">Tjenester & priser</h2>
-            <p className="mt-1 text-body text-fg-muted">
-              Funksjonene Endwise har bygget, og hva de koster.
-            </p>
-          </div>
-          <TjenesterInnhold />
-        </section>
-      ) : null}
-      {seksjon === 'integrasjoner' ? (
-        <section className="flex flex-col gap-5" aria-label="Integrasjoner">
-          <IntegrasjonerInnhold />
-        </section>
-      ) : null}
+      <Side tittel="Organisasjon" className="[&>header]:sr-only max-md:px-0">
+        {seksjon === 'oversikt' ? <ForhandlerKort /> : null}
+        {seksjon === 'ansatte' ? <OrganisasjonAnsatte /> : null}
+        {seksjon === 'abonnement' ? (
+          <section className="flex flex-col gap-8" aria-label="Abonnement">
+            <AbonnementInnhold />
+            <div>
+              <h2 className="text-title text-fg">Tjenester & priser</h2>
+              <p className="mt-1 text-body text-fg-muted">
+                Funksjonene Endwise har bygget, og hva de koster.
+              </p>
+            </div>
+            <TjenesterInnhold />
+          </section>
+        ) : null}
+        {seksjon === 'integrasjoner' ? (
+          <section className="flex flex-col gap-5" aria-label="Integrasjoner">
+            <IntegrasjonerInnhold />
+          </section>
+        ) : null}
+      </Side>
     </SideChromeSkall>
   );
 }

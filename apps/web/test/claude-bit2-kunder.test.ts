@@ -66,7 +66,7 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(rail).toMatch(/data-kunder-alfa-rail/);
     expect(rail).toMatch(/absolute top-0 right-0 bottom-0/);
     expect(rail).toMatch(/w-\[26px\]/);
-    expect(rail).toMatch(/text-\[11px\]/);
+    expect(rail).toMatch(/text-\[13px\]/);
     expect(rail).toMatch(/flex-1/);
     expect(rail).toMatch(/text-fg-faint/);
     expect(rail).not.toMatch(/sticky/);

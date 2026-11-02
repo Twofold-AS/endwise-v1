@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Car, ChevronRight, Mail, Phone, Plus, Users } from '@endwise/ui';
+import { Avatar, Car, ChevronRight, Mail, Phone, Plus, Side, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -71,152 +71,158 @@ function KunderInner() {
       {nyKunde ? <NyKunde onLukk={() => router.replace('/kunder' as Route)} /> : null}
       {aktiv === 'kjoretoy' ? <RegistrerKjoretoy /> : null}
       {aktiv === 'alle' ? (
-        <div
-          data-kunder-flate
-          className="flex min-h-[calc(100dvh-11rem)] flex-col gap-3 md:min-h-[calc(100dvh-14rem)]"
-        >
-          <div className="flex shrink-0 flex-wrap items-center gap-3">
-            <div className="min-w-[220px] flex-1" data-kunder-sok>
-              <PhoneSokFelt
-                value={sok}
-                onChange={(e) => setSok(e.target.value)}
-                placeholder="Navn, telefon, e-post eller reg.nr"
-                aria-label="Søk i kunder"
-              />
-            </div>
-            <div ref={sorterRef} className="relative">
-              <button
-                type="button"
-                data-kunder-sortering
-                aria-expanded={sorterApen}
-                aria-haspopup="true"
-                aria-label="Sortering"
-                onClick={() => setSorterApen((v) => !v)}
-                className={`shrink-0 border-b-2 pb-1 text-label ${
-                  sorterApen ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
-                }`}
-              >
-                Sortering
-              </button>
-              <SorteringArk apen={sorterApen} onLukk={() => setSorterApen(false)} anker={sorterRef}>
-                <SorteringGruppe>
-                  {KILDER.map((v) => (
-                    <SorteringValg
-                      key={v.key}
-                      valgt={kilde === v.key}
-                      onVelg={() => {
-                        setKilde(v.key);
-                        setSorterApen(false);
-                      }}
-                    >
-                      {v.label}
-                    </SorteringValg>
-                  ))}
-                </SorteringGruppe>
-                <SorteringGruppe>
-                  {TID_VALG.map((v) => (
-                    <SorteringValg
-                      key={v.key}
-                      valgt={tid === v.key}
-                      onVelg={() => {
-                        setTid(v.key);
-                        setSorterApen(false);
-                      }}
-                    >
-                      {v.label}
-                    </SorteringValg>
-                  ))}
-                </SorteringGruppe>
-              </SorteringArk>
-            </div>
-          </div>
-
-          {kunder.isLoading ? (
-            <Laster />
-          ) : kunder.isError ? (
-            <Feil melding={kunder.error.message} />
-          ) : (
-            <KunderAlfaListe
-              kunder={liste}
-              tom={
-                <>
-                  <Tomt
-                    tittel={sok ? 'Ingen kunder matcher søket.' : 'Ingen kunder ennå'}
-                    hint={
-                      sok
-                        ? 'Prøv et annet søk.'
-                        : 'Opprett kunden her. Uten Quick lagrer Endwise kunden selv — ingen synk kreves.'
-                    }
-                  />
-                  {!sok && !nyKunde && (
-                    <div className="-mt-2 flex justify-center">
-                      <Link
-                        href={'/kunder?ny=1' as Route}
-                        className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
-                      >
-                        <Plus size={14} strokeWidth={1.75} />
-                        Ny kunde
-                      </Link>
-                    </div>
-                  )}
-                </>
-              }
-              renderRad={(k, i) => (
-                <Link
-                  key={k.id}
-                  href={`/kunder/${k.id}` as Route}
-                  data-kunder-rad
-                  className="group block"
+        <Side tittel="Kunder" className="[&>header]:sr-only max-md:px-0">
+          <div
+            data-kunder-flate
+            className="flex min-h-[calc(100dvh-11rem)] flex-col gap-3 md:min-h-[calc(100dvh-14rem)]"
+          >
+            <div className="flex shrink-0 flex-wrap items-center gap-3">
+              <div className="min-w-[220px] flex-1" data-kunder-sok>
+                <PhoneSokFelt
+                  value={sok}
+                  onChange={(e) => setSok(e.target.value)}
+                  placeholder="Navn, telefon, e-post eller reg.nr"
+                  aria-label="Søk i kunder"
+                />
+              </div>
+              <div ref={sorterRef} className="relative">
+                <button
+                  type="button"
+                  data-kunder-sortering
+                  aria-expanded={sorterApen}
+                  aria-haspopup="true"
+                  aria-label="Sortering"
+                  onClick={() => setSorterApen((v) => !v)}
+                  className={`shrink-0 border-b-2 pb-1 text-label ${
+                    sorterApen ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
+                  }`}
                 >
-                  <div
-                    className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
-                      i > 0 ? 'border-border border-t' : ''
-                    }`}
-                  >
-                    <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
+                  Sortering
+                </button>
+                <SorteringArk
+                  apen={sorterApen}
+                  onLukk={() => setSorterApen(false)}
+                  anker={sorterRef}
+                >
+                  <SorteringGruppe>
+                    {KILDER.map((v) => (
+                      <SorteringValg
+                        key={v.key}
+                        valgt={kilde === v.key}
+                        onVelg={() => {
+                          setKilde(v.key);
+                          setSorterApen(false);
+                        }}
+                      >
+                        {v.label}
+                      </SorteringValg>
+                    ))}
+                  </SorteringGruppe>
+                  <SorteringGruppe>
+                    {TID_VALG.map((v) => (
+                      <SorteringValg
+                        key={v.key}
+                        valgt={tid === v.key}
+                        onVelg={() => {
+                          setTid(v.key);
+                          setSorterApen(false);
+                        }}
+                      >
+                        {v.label}
+                      </SorteringValg>
+                    ))}
+                  </SorteringGruppe>
+                </SorteringArk>
+              </div>
+            </div>
 
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="flex items-center gap-2 truncate text-label text-fg">
-                        {k.name}
-                        <Kilde source={k.source} />
-                      </span>
-                      <span className="flex items-center gap-3 truncate text-[12px] text-fg-muted">
-                        {k.phone && (
-                          <span className="inline-flex items-center gap-1">
-                            <Phone size={12} strokeWidth={1.75} />
-                            {k.phone}
-                          </span>
-                        )}
-                        {k.email && (
-                          <span className="inline-flex items-center gap-1 truncate">
-                            <Mail size={12} strokeWidth={1.75} />
-                            {k.email}
-                          </span>
-                        )}
-                        {!k.phone && !k.email && 'Ingen kontaktinfo'}
-                      </span>
-                    </div>
-
-                    {k.antallKjoretoy > 0 && (
-                      <span className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-fg-muted tabular-nums">
-                        <Car size={14} strokeWidth={1.75} />
-                        {k.antallKjoretoy}
-                      </span>
+            {kunder.isLoading ? (
+              <Laster />
+            ) : kunder.isError ? (
+              <Feil melding={kunder.error.message} />
+            ) : (
+              <KunderAlfaListe
+                kunder={liste}
+                tom={
+                  <>
+                    <Tomt
+                      tittel={sok ? 'Ingen kunder matcher søket.' : 'Ingen kunder ennå'}
+                      hint={
+                        sok
+                          ? 'Prøv et annet søk.'
+                          : 'Opprett kunden her. Uten Quick lagrer Endwise kunden selv — ingen synk kreves.'
+                      }
+                    />
+                    {!sok && !nyKunde && (
+                      <div className="-mt-2 flex justify-center">
+                        <Link
+                          href={'/kunder?ny=1' as Route}
+                          className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
+                        >
+                          <Plus size={14} strokeWidth={1.75} />
+                          Ny kunde
+                        </Link>
+                      </div>
                     )}
-                    <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
-                  </div>
-                </Link>
-              )}
-            />
-          )}
+                  </>
+                }
+                renderRad={(k, i) => (
+                  <Link
+                    key={k.id}
+                    href={`/kunder/${k.id}` as Route}
+                    data-kunder-rad
+                    className="group block"
+                  >
+                    <div
+                      className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
+                        i > 0 ? 'border-border border-t' : ''
+                      }`}
+                    >
+                      <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
 
-          <p className="flex shrink-0 items-center gap-1.5 text-[12px] text-fg-muted">
-            <Users size={14} />
-            {kunder.isLoading
-              ? 'Laster kunder …'
-              : `${liste.length} kunder vist. Filtrene over gjelder kun denne lista.`}
-          </p>
-        </div>
+                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="flex items-center gap-2 truncate text-label text-fg">
+                          {k.name}
+                          <Kilde source={k.source} />
+                        </span>
+                        <span className="flex items-center gap-3 truncate text-[13px] text-fg-muted">
+                          {k.phone && (
+                            <span className="inline-flex items-center gap-1">
+                              <Phone size={12} strokeWidth={1.75} />
+                              {k.phone}
+                            </span>
+                          )}
+                          {k.email && (
+                            <span className="inline-flex items-center gap-1 truncate">
+                              <Mail size={12} strokeWidth={1.75} />
+                              {k.email}
+                            </span>
+                          )}
+                          {!k.phone && !k.email && 'Ingen kontaktinfo'}
+                        </span>
+                      </div>
+
+                      {k.antallKjoretoy > 0 && (
+                        <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] text-fg-muted tabular-nums">
+                          <Car size={14} strokeWidth={1.75} />
+                          {k.antallKjoretoy}
+                        </span>
+                      )}
+                      <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
+                    </div>
+                  </Link>
+                )}
+              />
+            )}
+
+            <p className="flex shrink-0 items-center gap-1.5 text-[13px] text-fg-muted">
+              <Users size={14} />
+              {kunder.isLoading
+                ? 'Laster kunder …'
+                : `${liste.length} kunder vist. Filtrene over gjelder kun denne lista.`}
+            </p>
+          </div>
+        </Side>
       ) : null}
     </SideChromeSkall>
   );

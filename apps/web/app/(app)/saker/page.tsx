@@ -1,5 +1,6 @@
 'use client';
 
+import { Side } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -41,22 +42,24 @@ function TimeplanPageInner() {
       faner={TIMEPLAN_FANER.map((f) => ({ ...f, href: timeplanHref(f.id) }))}
       aktiv={aktiv}
     >
-      {aktiv === 'endringer' ? (
-        <TimeplanEndringer del={endringerDel} endringId={endringId} />
-      ) : null}
-      {aktiv === 'timeplan' ? (
-        <div className="flex flex-col gap-5">
-          <TimeplanStripe valgt={valgt} onValgt={setValgt} />
-          {visning === 'kalender' ? (
-            <Kalender valgt={valgt} />
-          ) : (
-            <>
-              <TimeplanDagsliste valgt={valgt} />
-              <TimeplanFlate skjulPiller skjulStripe valgt={valgt} onValgt={setValgt} />
-            </>
-          )}
-        </div>
-      ) : null}
+      <Side tittel="Timeplan" className="[&>header]:sr-only max-md:px-0">
+        {aktiv === 'endringer' ? (
+          <TimeplanEndringer del={endringerDel} endringId={endringId} />
+        ) : null}
+        {aktiv === 'timeplan' ? (
+          <div className="flex flex-col gap-5">
+            <TimeplanStripe valgt={valgt} onValgt={setValgt} />
+            {visning === 'kalender' ? (
+              <Kalender valgt={valgt} />
+            ) : (
+              <>
+                <TimeplanDagsliste valgt={valgt} />
+                <TimeplanFlate skjulPiller skjulStripe valgt={valgt} onValgt={setValgt} />
+              </>
+            )}
+          </div>
+        ) : null}
+      </Side>
     </SideChromeSkall>
   );
 }

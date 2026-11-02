@@ -121,7 +121,7 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
 
     const kort = utenKommentarer(les('../app/(app)/organisasjon/forhandleren/_kort.tsx'));
     expect(kort).toMatch(/data-org-hub/);
-    expect(kort).toMatch(/OrgHubSeksjoner/);
+    expect(kort).not.toMatch(/OrgHubSeksjoner/);
     expect(kort).toMatch(/TimeplanAnsatteNotat/);
     expect(kort).toMatch(/Firmaopplysninger/);
     expect(kort).toMatch(/Antall ansatte/);

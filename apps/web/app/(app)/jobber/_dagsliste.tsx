@@ -1,13 +1,11 @@
 'use client';
 
-import { Clock } from '@endwise/ui';
-import type { Route } from 'next';
-import Link from 'next/link';
+import { ListeRad, StatusChip, statusFraBooking } from '@endwise/ui';
 import { useMemo, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { osloDagsvindu } from '../_lib/oslo-dag';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
-import { estMinutes, fmtTime, STATUS_LABEL } from '../bookinger/_status';
+import { estMinutes, fmtTime } from '../bookinger/_status';
 import {
   DAGSLISTE_SORTER,
   DAGSLISTE_SORTER_LABEL,
@@ -79,30 +77,15 @@ export function TimeplanDagsliste({ valgt }: { valgt: string }) {
           Ingen jobber denne dagen.
         </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col">
           {rader.map((j) => (
-            <li key={j.id}>
-              <Link
-                href={`/bookinger/${j.id}` as Route}
-                data-timeplan-dag-rad={j.id}
-                className="flex items-center gap-3 rounded-[16px] border border-divide bg-card px-4 py-3"
-              >
-                <span className="inline-flex w-12 shrink-0 items-center gap-1 text-label text-fg tabular-nums">
-                  <Clock size={13} strokeWidth={1.75} className="text-fg-muted" />
-                  {fmtTime(j.startsAt)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-label text-fg">{j.customerName ?? 'Ukjent kunde'}</p>
-                  <p className="truncate text-[12px] text-fg-muted">
-                    {j.serviceName ?? 'Jobb'}
-                    {j.mechanicName ? ` · ${j.mechanicName}` : ''}
-                    {` · ${estMinutes(j.startsAt, j.endsAt)} min`}
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-fg-muted">
-                  {STATUS_LABEL[j.status] ?? j.status}
-                </span>
-              </Link>
+            <li key={j.id} data-timeplan-dag-rad={j.id}>
+              <ListeRad
+                href={`/bookinger/${j.id}`}
+                tittel={`${fmtTime(j.startsAt)} · ${j.customerName ?? 'Ukjent kunde'}`}
+                undertekst={`${j.serviceName ?? 'Jobb'}${j.mechanicName ? ` · ${j.mechanicName}` : ''} · ${estMinutes(j.startsAt, j.endsAt)} min`}
+                hoyre={<StatusChip status={statusFraBooking(j.status)} />}
+              />
             </li>
           ))}
         </ul>

@@ -7,7 +7,7 @@ export type FilterChip<K extends string = string> = {
   label: string;
 };
 
-/** Soft tint, stadium-pille, valgt = ink. Aldri blå. */
+/** Soft tint, stadium-pille. Valgt = hvit + ink-kant. Aldri blå. */
 export function FilterChips<K extends string>({
   chips,
   valgt,
@@ -26,7 +26,10 @@ export function FilterChips<K extends string>({
       role="tablist"
       aria-label={ariaLabel}
       data-filter-chips
-      className={cn('flex flex-wrap gap-1.5', className)}
+      className={cn(
+        'no-scrollbar flex flex-nowrap gap-1.5 overflow-x-auto md:flex-wrap',
+        className,
+      )}
     >
       {chips.map((chip) => {
         const aktiv = chip.key === valgt;
@@ -38,8 +41,10 @@ export function FilterChips<K extends string>({
             aria-selected={aktiv}
             onClick={() => onChange(chip.key)}
             className={cn(
-              'h-7 rounded-pill px-3 text-label transition-colors',
-              aktiv ? 'bg-fg text-bg' : 'bg-surface-2 text-fg hover:bg-inset',
+              'h-10 shrink-0 rounded-pill px-4 text-[13px] font-[450] transition-colors md:h-7 md:px-3 md:text-label',
+              aktiv
+                ? 'border border-fg bg-bg text-fg'
+                : 'border border-transparent bg-surface-2 text-fg hover:bg-inset',
             )}
           >
             {chip.label}

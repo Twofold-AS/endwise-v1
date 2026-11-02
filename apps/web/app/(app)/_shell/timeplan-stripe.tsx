@@ -69,7 +69,7 @@ export function TimeplanStripe({
             aria-label="Velg dag"
             className="absolute top-full right-0 left-0 z-20 mt-1 rounded-[16px] border border-border bg-card p-3"
           >
-            <p className="mb-2 text-[11px] text-fg-muted">
+            <p className="mb-2 text-[13px] text-fg-muted">
               Dager med ledig og kvalifisert mekaniker.
             </p>
             <DateCalendar
@@ -83,7 +83,7 @@ export function TimeplanStripe({
             />
             <button
               type="button"
-              className="mt-2 w-full text-center text-[12px] text-fg-muted"
+              className="mt-2 w-full text-center text-[13px] text-fg-muted"
               onClick={() => setManedApen(false)}
             >
               Lukk måned
@@ -116,7 +116,7 @@ export function TimeplanStripe({
                     : 'border-border bg-card text-fg-muted'
                 }`}
               >
-                <span className="text-[10px] uppercase">{d.weekday}</span>
+                <span className="text-[13px] uppercase">{d.weekday}</span>
                 <span className="font-medium text-[13px] tabular-nums">
                   {d.label.split('.')[0]}
                 </span>

@@ -16,7 +16,7 @@ function utenKommentarer(kilde: string) {
 
 describe('Claude-design + Board UI (samlet)', () => {
   it('dagsbuen bruker ink, ikke #0066ff', () => {
-    expect(PULSE_DAG_FYLL_INK).toBe('#141414');
+    expect(PULSE_DAG_FYLL_INK).toBe('#616161');
     const sirkel = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK/);
     expect(sirkel).not.toMatch(/PULSE_DAG_FYLL_BLA/);

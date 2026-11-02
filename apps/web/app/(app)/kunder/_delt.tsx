@@ -27,11 +27,11 @@ export function Seksjon({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="flex items-center gap-2 text-title text-fg">
+    <section data-seksjon={tittel} className="flex flex-col gap-2">
+      <h2 className="flex items-center gap-2 text-title text-fg max-md:text-[18px] max-md:font-[650]">
         {tittel}
         {antall != null && antall > 0 && (
-          <span className="text-[12px] text-fg-muted tabular-nums">{antall}</span>
+          <span className="text-[13px] text-fg-muted tabular-nums">{antall}</span>
         )}
       </h2>
       {children}

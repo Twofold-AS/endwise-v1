@@ -29,3 +29,7 @@ _tmp_*
 # Visual Studio sin lokale arbeidsmappe (binære indeksfiler, ~4 MB).
 # Maskinspesifikk — hører til IDE-en, ikke til prosjektet.
 .vs/
+
+# Playwright
+**/test-results/
+**/playwright-report/

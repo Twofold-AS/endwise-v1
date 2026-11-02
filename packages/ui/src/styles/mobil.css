@@ -1,0 +1,422 @@
+/*
+ * PR #184 mobil-skala. Desktop (min-width: 768px) arver eksisterende tokens.
+ * Mobil: type 36/24/18/17/16/14/13, vekt 450/650, 4pt, margin/pad 16,
+ * kort-radius 24, felt 16, stadium, høyder 48/44/40, muted #616161.
+ */
+
+:root {
+  --ew-page-margin: 16px;
+  --ew-card-pad: 16px;
+  --ew-type-display: 36px;
+  --ew-type-title: 24px;
+  --ew-type-section: 18px;
+  --ew-type-body: 17px;
+  --ew-type-field: 16px;
+  --ew-type-secondary: 14px;
+  --ew-type-caption: 13px;
+  --ew-weight-regular: 450;
+  --ew-weight-strong: 650;
+}
+
+/* Board-aksent → ink. Skygger av. Overstyrer styles/theme.css. */
+@theme {
+  --color-accent-50: #f3f3f3;
+  --color-accent-100: #f0f0f0;
+  --color-accent-200: #e0e0e0;
+  --color-accent-300: #adadad;
+  --color-accent-400: #707070;
+  --color-accent-500: #141414;
+  --color-accent-600: #141414;
+  --color-accent-700: #141414;
+  --color-accent-800: #141414;
+  --color-accent-900: #141414;
+  --color-accent-950: #141414;
+  --shadow-2xs: 0 0 #0000;
+  --shadow-xs: 0 0 #0000;
+  --shadow-sm: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
+  --shadow-lg: 0 0 #0000;
+  --shadow-xl: 0 0 #0000;
+  --shadow-2xl: 0 0 #0000;
+  --shadow-card: 0 0 #0000;
+  --shadow-dropdown: 0 0 #0000;
+  --shadow-sidebar: 0 0 #0000;
+  --shadow-waitlist: 0 0 #0000;
+  --shadow-nav-selected: 0 0 #0000;
+  --inset-shadow-2xs: 0 0 #0000;
+  --inset-shadow-xs: 0 0 #0000;
+  --inset-shadow-sm: 0 0 #0000;
+}
+
+/* Board text-klasser → Endwise-skala (alias, så de resolver). */
+@utility text-large-title-regular {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 450;
+}
+@utility text-large-title-medium {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 450;
+}
+@utility text-large-title-semibold {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 650;
+}
+@utility text-large-title-bold {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 650;
+}
+@utility text-display-1-regular {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 450;
+}
+@utility text-display-1-medium {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 450;
+}
+@utility text-display-1-semibold {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 650;
+}
+@utility text-display-1-bold {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 650;
+}
+@utility text-display-2-regular {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 450;
+}
+@utility text-display-2-medium {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 450;
+}
+@utility text-display-2-semibold {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 650;
+}
+@utility text-display-2-bold {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 650;
+}
+@utility text-display-3-regular {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 450;
+}
+@utility text-display-3-medium {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 450;
+}
+@utility text-display-3-semibold {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+@utility text-display-3-bold {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+@utility text-display-4-regular {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 450;
+}
+@utility text-display-4-medium {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 450;
+}
+@utility text-display-4-semibold {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+@utility text-display-4-bold {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+@utility text-title-1-regular {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 450;
+}
+@utility text-title-1-medium {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 450;
+}
+@utility text-title-1-semibold {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+@utility text-title-1-bold {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+@utility text-title-2-regular {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 450;
+}
+@utility text-title-2-medium {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 450;
+}
+@utility text-title-2-semibold {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+@utility text-title-2-bold {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+@utility text-title-3-regular {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 450;
+}
+@utility text-title-3-medium {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 450;
+}
+@utility text-title-3-semibold {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+@utility text-title-3-bold {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+@utility text-headline-regular {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 450;
+}
+@utility text-headline-medium {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 450;
+}
+@utility text-headline-semibold {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+@utility text-headline-bold {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+@utility text-body-regular {
+  font-size: 17px;
+  line-height: 1.38;
+  font-weight: 450;
+}
+@utility text-body-medium {
+  font-size: 17px;
+  line-height: 1.38;
+  font-weight: 450;
+}
+@utility text-body-semibold {
+  font-size: 17px;
+  line-height: 1.38;
+  font-weight: 650;
+}
+@utility text-body-bold {
+  font-size: 17px;
+  line-height: 1.38;
+  font-weight: 650;
+}
+@utility text-body-2-regular {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 450;
+}
+@utility text-body-2-medium {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 450;
+}
+@utility text-body-2-semibold {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 650;
+}
+@utility text-body-2-bold {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 650;
+}
+@utility text-caption-1-regular {
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 450;
+}
+@utility text-caption-1-medium {
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 450;
+}
+@utility text-caption-1-semibold {
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 650;
+}
+@utility text-caption-1-bold {
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 650;
+}
+@utility text-caption-2-regular {
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 450;
+}
+@utility text-caption-2-medium {
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 450;
+}
+@utility text-caption-2-semibold {
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 650;
+}
+@utility text-caption-2-bold {
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 650;
+}
+
+@utility text-display {
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 650;
+}
+@utility text-section {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+@utility text-secondary {
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 450;
+}
+
+@utility ew-kort {
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+  box-shadow: none;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+@media (max-width: 767px) {
+  :root,
+  [data-theme="light"] {
+    --ew-fg-muted: #616161;
+    --ew-control-h: 40px;
+    --ew-row-h: 44px;
+    --ew-row-h-store: 48px;
+    --ew-badge-h: 24px;
+    --ew-badge-radius: 9999px;
+    --ew-page-margin: 16px;
+    --ew-card-pad: 16px;
+  }
+
+  [data-side] {
+    padding-inline: var(--ew-page-margin);
+    padding-block: 16px;
+    gap: 16px;
+  }
+
+  [data-side] > header h1.text-title {
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 650;
+  }
+
+  [data-seksjon] > div > h2 {
+    font-size: 18px;
+    line-height: 1.25;
+    font-weight: 650;
+  }
+
+  [data-kort],
+  .ew-kort {
+    padding: 16px;
+    border-radius: 24px;
+    border: 1px solid var(--ew-border);
+    box-shadow: none;
+  }
+
+  [data-count-badge] {
+    background: #f3f3f3;
+    color: #141414;
+    border-radius: 9999px;
+    min-height: 24px;
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  [data-filter-chips] {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  [data-filter-chips]::-webkit-scrollbar {
+    display: none;
+  }
+
+  [data-phone-top-bar] + * [data-side] > header,
+  [data-shell-box] > main > [data-side] > header {
+    scroll-margin-top: 8px;
+  }
+
+  [data-shell-box] > main {
+    scroll-padding-top: 8px;
+  }
+
+  [data-samtale] {
+    padding-inline: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --ew-page-margin: 32px;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

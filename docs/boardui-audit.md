@@ -1,534 +1,434 @@
-# Board UI-audit — inspirasjon innenfor Mobbin-låsene
+# Board UI — innhentingsplan
 
 **Dato:** 2. november 2026  
-**Type:** Undersøkelse. Ingen kodeendringer i produktet.  
-**Mål:** Hvordan Board UI ([boardui.com](https://boardui.com)) kan forbedre *hele* Endwise — uten å bytte designretning.  
+**Type:** Undersøkelse. Ingen `init`/`add` er kjørt. Ingen produktkode er endret.  
+**Mål:** Hvilke Board UI-komponenter vi skal **hente inn** i `@endwise/ui` (registry / `npx boardui add`, kilde vi eier), hvilke av våre filer hver erstatter eller forbedrer, nøyaktig kommando, avhengigheter, stack-passform, og hvordan de restyles til Mobbin-look.  
 **Relaterte roadmap-ID-er:** F0-11 (tokens), F0-12 (`@endwise/ui`), F5-13 (shell). Ingen av dem endrer status her.
+
+**Vedtak i denne runden (Mikael):** Board UI er et komponentbibliotek vi henter inn — ikke en fargepalett å kopiere, og ikke bare «inspirasjon å stjele for hånd». Første batch installeres i en senere økt. Denne fila er planen.
 
 ---
 
-## 0. Metode og kilder
+## 0. Metode
 
 ### Hva som faktisk er lest
 
-Board UI ble hentet 2. november 2026 som markdown (sidene svarer på `Accept: text/markdown`). Følgende sider lastet og er sitert med konkrete verdier:
+| Kilde | URL / sti | Status |
+|-------|-----------|--------|
+| Forside (hva Board UI er, MIT, CLI) | https://www.boardui.com | Lest |
+| Installation + monorepo + `boardui.json` | https://www.boardui.com/installation | Lest |
+| CLI (`init`, `add --yes`, `--overwrite`) | https://www.boardui.com/docs/cli | Lest |
+| Registry-index | https://www.boardui.com/r/registry.json | Lest 2. nov 2026 |
+| Alle 88 frie registry-items inkl. kilde | `https://www.boardui.com/r/<navn>.json` | Lastet (0 tomme) |
+| Ekstrahert kilde | `/tmp/boardui-src/` (179 filer) | Lest per komponent under |
+| Agent-regler Board skriver ved `init` | `rules` → `docs/agent-rules.md` | Lest |
+| `theme.css` (token-navn vi må omkoble) | `theme` → `styles/theme.css` | Lest |
 
-| Side | URL | Status |
-|------|-----|--------|
-| Forside | https://boardui.com / https://www.boardui.com | Lest |
-| `llms.txt` (katalog + Pro-liste) | https://www.boardui.com/llms.txt | Lest |
-| Installation + full `theme.css` | https://www.boardui.com/installation | Lest (hele token-kilden) |
-| Color | https://www.boardui.com/components/color | Lest |
-| Typography + full `typography.css` | https://www.boardui.com/components/typography | Lest |
-| Button, Input, Search Field, Input OTP | `/components/button` · `/input` · `/search-field` · `/input-otp` | Lest (kilde + API) |
-| Modal, Drawer | `/components/modal` · `/drawer` | Lest (kilde + motion) |
-| Skeleton, Tabs, Segmented Control, Table, Toast, Chip, Theme Toggle | tilsvarende `/components/*` | Lest |
-| Sidebar | https://www.boardui.com/components/sidebar | Lest (intro + sidebar-kilde) |
-| Registry-index | https://www.boardui.com/r/registry.json | Lest (alle frie item-navn) |
-| Getting started / CLI (søk-snippets) | `/getting-started` · `/docs/cli` | Delvis (søketreff + forside) |
+`sitemap.xml` svarte HTTP 500. Katalogen er `registry.json` (88) + `llms.txt`. Markedsføringen sier 103 — de 15 som mangler i det åpne registeret er Pro (chart-kort, agent-templates). Pro-kilde er **ikke** lest og skal **ikke** hentes.
 
-### Ukjent / ikke lastet
+### Endwise-kilder som er sammenlignet linje for linje
 
-- **`sitemap.xml`** → HTTP 500. Sidekartet er derfor `llms.txt` + `registry.json`, ikke sitemap.
-- **Context.dev MCP** var ikke autentisert i denne økten. Innholdet er hentet via WebFetch mot Board UI sine egne markdown-svar.
-- **Live Figma-preview / pixel-måling i nettleser** er ikke kjørt. Alle mål under er fra Board UI sin *publiserte kildekode og docs*, ikke fra skjermmåling.
-- **Pro-komponenter** (Composer, Task List, Calendar, chart-kort, templates): kun katalogtekst i `llms.txt`. Kildekode er bak lisens og er **ikke** lest. Beskrivelser merkes «Pro — kun katalog».
-- **`llms-full.txt`** ble ikke lastet (for stor). Hver komponent er hentet som egen side i stedet.
-- **Accordion, Spinner, Progress, Command Palette, Notification, Auth Card, Data Table, Stat Cards, Empty-illustrationer** er i katalogen, men kildefilen er ikke lastet i denne økten. API-en under er fra `llms.txt`-beskrivelsen, merket *ikke kilde-verifisert* der det gjelder.
+`packages/ui/package.json`, `components.json`, `src/index.ts`, `src/theme.css`, `src/lib/utils.ts`, `src/lib/ease.ts`, `src/components/{button,dialog,dropdown-menu,switch}.tsx`, `src/primitives/input.tsx`, `src/components/prompt-input.tsx`.  
+`apps/web/package.json`, `_auth/felter.tsx`, `_shell/phone-sok-felt.tsx`, `_shell/sortering-ark.tsx`, kallsteder for `Input` / `Dialog` / `Switch` / `Field` / TOTP.  
+`docs/endwise-techstack.md`, `docs/UI-PAKKER.md`.
 
-### Endwise-kilder
+### Hva denne fila *ikke* er
 
-`packages/widget-tokens/src/tokens.css`, `packages/ui/src/theme.css`, `packages/ui/src/lib/ease.ts`, `docs/UI-PAKKER.md`, `apps/web/app/(app)/_shell/*`, produktflatene under `apps/web/app/(app)/` (innboks, jobber/saker, kunder, organisasjon, lager, butikk, bookinger/ny, innstillinger), `_auth/*`, `_markeds/*`, `packages/widget-ui`.
+- Ikke en fargeaudit. Mobbin-låsene (canvas `#fff`, ink `#141414`, soft `#f3f3f3`, aksent `#0066ff` kun kommersielt, Inter 650/450/300, piller 9999, kort 24, tint ikke skygge, ingen accent-pip) står. De restyles *etter* `add`, de kopieres ikke inn.
+- Ikke en installasjon. Kommandoene under er klare til neste økt. De er **ikke kjørt**.
 
 ---
 
-## 1. Låste rammer — og der Board UI strider mot dem
+## 1. Hva vi henter inn
 
-Board UI skal brukes som **inspirasjon og forbedring innenfor** disse rammene, ikke som ny retning. Der Board UI default er et annet system, står det **⛔ STRID** under. De verdiene skal *ikke* kopieres.
+Board UI er et React 19 + Tailwind v4-designsystem. Komponenten installeres som **kilde vi eier** (shadcn registry-schema), ikke som en runtime-pakke vi oppgraderer:
 
-| Lås | Endwise (gjeldende) | Board UI default | Dom |
-|-----|---------------------|------------------|-----|
-| Canvas | `#ffffff` | `--color-background-full` = `white` | Samme intensjon. Behold Endwise-token. |
-| Ink | `#141414` | `--color-text-primary` = `neutral-950` | Nær, men ikke lik. Behold `#141414`. |
-| Soft / valgt | `#f3f3f3` (`--ew-sidebar-active`, `--ew-surface-2`) | `--color-neutral-100` = `#f7f7f7`; secondary bg = `neutral-100` | **⛔ STRID mot hex.** Ikke bytt soft til `#f7f7f7`. |
-| Felt | `#f0f0f0` | Input-felt = `background-tertiary` = `neutral-200` `#ebebeb` | **⛔ STRID.** Behold inset `#f0f0f0`. |
-| Hairline | `#e0e0e0` | `--color-separator-border` = `neutral-200` `#ebebeb` | Nær. Behold `#e0e0e0`. |
-| CTA | Ink `#141414` / mørkt `#ffffff`. **Aldri** blå knapp | Primary = **blå gradient** `accent-500 → accent-600` (`#3392ff` / blue-500) | **⛔ STRID. Hard.** Ikke ta Board UI-primary. |
-| Aksent `#0066ff` | Kun kommersielt (Popular / savings / dagsbue-viz) | Aksent-ramp styrer CTA, fokusring, valgt nav, tabs, checkbox, switch | **⛔ STRID.** Aksent-rollen er motsatt av Endwise. |
-| Aktiv nav | Canvas-soft tint. **Ingen** border-left / accent-pip | `--shadow-nav-selected`: `0 0 0 1px accent-500` + inset hvit highlight | **⛔ STRID. Hard.** Ikke blå ring på valgt dest/sidebar. |
-| Radius kort | **24px** | Kort/modal: `radius/3xl` (typisk 24 i Tailwind) + `radius-2-5xl` **20px** + `radius-2lg` **10px** på knapper | Kort 24 kan beholdes. **Ikke** krymp kort til 10/20. |
-| Piller | **9999** | Search default `rounded-full`; knapper `10 / 8 / 4` | Piller i chrome beholdes 9999. Knapper: se §5. |
-| Typografi | Inter **650 / 450 / 300**. Tre utilities: `text-title` 16/20/650, `text-label` 13/16/450, `text-body` 17/1.38/450 | Inter **400 / 500 / 600 / 700**. 13 familier × 4 vekter. Body er **14/20** | **⛔ STRID.** Ikke bytt til 14px body eller 4 vekter. |
-| Skygge | Tint-elevering. `--ew-bevel-shadow: none` | `--shadow-card`, `--shadow-sidebar`, `--shadow-dropdown`, `--shadow-xs` på knapper | **⛔ STRID mot prinsipp.** Ikke innfør skyggesystem. Unntak: fjerne *eksisterende* `shadow-lg` på profilmeny. |
-| Telefon-chrome | Top-bar 1: logo **32** · søk **h-8** · Ronny **28** · profil **28**. Top-bar 2: dest-piller + hairline. Ingen sidebar | Flytende sidebar med team-meny, announcement, user-meny. Valgt = aksent-ring | **⛔ STRID mot IA.** Ingen sidebar på telefon. Ingen ny chrome-struktur. |
-| Desktop | 389 / 598 / 452 | Board UI app-shell er fribredde + flytende sidebar | **⛔ STRID mot geometri.** Kolonnene røres ikke. |
-| `FORHANDLER_NAV` | Destinasjoner urørt | Board UI har egen nav-katalog (Home, Chat, Calendar, …) | **⛔ STRID.** Ingen nye destinasjoner, ingen omdøping. |
-| Ikoner | Lucide + egne SVG via `@endwise/ui/icons.ts` | `@remixicon/react` | **⛔ STRID mot stack.** Ikke bytt ikonsett. |
-| Primitiver | Radix + shadcn + beUI | React Aria Components | **⛔ STRID mot techstack** (`docs/endwise-techstack.md`). Ny runtime-dep krever vedtak. |
-| Dark canvas | `#141414` | `--color-neutral-925` = `#121212` | **⛔ STRID mot hex.** Polaritet beholdes, ikke `#121212`. |
+```bash
+npx boardui@latest init
+npx boardui@latest add <navn>
+# eller: npx shadcn@latest add https://www.boardui.com/r/<navn>.json
+```
 
-**Konklusjon på pakkenivå:** Board UI skal **ikke** `npx boardui init` / `add` inn i Endwise. Det ville dra inn `react-aria-components`, `@remixicon/react`, blå CTA, skygger og en annen typeskala. Alt under er *mønstre å stjele* inn i eksisterende `--ew-*` / shadcn / beUI.
+Etter `add` ligger `.tsx` i `packages/ui`. Board UI er da ikke en avhengighet — det er kode vi redigerer.
+
+- **Lisens (fritt):** MIT uten konto. `license`-feltet i registry-JSON er tomt; MIT står på forsiden. Pro (chart-kort, agent-maler) er lisensiert og utenfor denne planen.
+- **A11y-motor:** `react-aria-components` ^1.17.0 (RAC). Det er *grunnen* til å hente dem: label↔input↔hint, `aria-invalid`/`aria-required`, fokusfelle, Escape, skjermleser, tastatur, `prefers-reduced-motion`.
+- **Default-ikoner:** `@remixicon/react` ^4.9.0 i noen defaults. Produktet fortsetter med lucide. Remixicon lander i `node_modules` fordi defaults importerer den — vi bytter ikon-props etter `add`.
 
 ---
 
-## 2. Board UI — kartlagt (kun det som er lest)
+## 2. Stack-passform
 
-### 2.1 Hva Board UI er
+| | Endwise nå | Board UI krever | Passform |
+|--|------------|-----------------|----------|
+| React | 19.2.7 (`apps/web` + peer `@endwise/ui`) | 19+ | Ja |
+| Next | 16.2.11 App Router | «first-class», også Vite/RR/Astro | Ja |
+| Tailwind | 4.3.2, `@theme` | v4 | Ja |
+| PostCSS | `@tailwindcss/postcss` ^4.3.2 | `init --postcss` bare hvis Tailwind ikke kompileres | Ikke nødvendig |
+| `tailwind-merge` | ^3.4.0 i `@endwise/ui` | `cx` ber om ^3.6.0 | Bump ved `add` |
+| `motion` | ^12.42.2 | ^12.42.2 (toast → notification) | Allerede inne |
+| Ikoner | lucide-react ^0.548.0 (kanonisk, techstack §2) | Remixicon i defaults | Avhengighet lander; produkt bruker lucide |
+| Primitiver i dag | shadcn New York på `radix-ui` ^1.6.2 | RAC | **To motorer side om side** i migreringsvinduet. OK. |
+| `cn()` | `src/lib/utils.ts` kjenner `text-title` / `text-label` / `text-body` | `cx` kjenner Board-composite (`text-body-medium` …) | Behold begge. Utvid `cx` med våre tre størrelser etter `add`. |
 
-React 19 + Tailwind v4-designsystem for dashboards og agent-UI. **103** frie komponenter (inkl. 19 chart-kort i katalogen; flere er Pro), **400+** semantiske tokens, Figma først. Komponenten installeres som *kilde du eier* (shadcn-schema), ikke som runtime-pakke. CLI: `npx boardui@latest init` / `add`. MCP: `https://www.boardui.com/mcp`. Ikoner: Remix Icon. A11y-motor: React Aria. Font: Inter via `--font-inter`, opsz-akse (Inter Display på store størrelser).
+**Ny npm som første batch drar inn** (unike, verifisert mot registry-meta + rdeps):
 
-### 2.2 Fargeprimitiver (fra `theme.css` på /installation)
+| Pakke | Versjon i registry | Allerede hos oss? |
+|-------|--------------------|-------------------|
+| `react-aria-components` | ^1.17.0 | Nei — **ny** |
+| `@remixicon/react` | ^4.9.0 | Nei — **ny** (defaults; ikke produkt-ikonsett) |
+| `tailwind-merge` | ^3.6.0 | Ja, bump 3.4 → 3.6 |
+| `motion` | ^12.42.2 | Ja, samme pin |
 
-Overstyringer mot Tailwind v4-default:
+Ikke i første batch: `@internationalized/date` (date-picker), `@tanstack/react-table` (data-table), `recharts` / `ai` / `@ai-sdk/react` (allerede inne, men chart/agent-items hoppes over).
 
-| Token | Verdi |
-|-------|--------|
-| `--color-slate-200` | `#ebeff5` |
-| `--color-neutral-100` | `#f7f7f7` |
-| `--color-neutral-200` | `#ebebeb` |
-| `--color-neutral-925` | `#121212` |
-| `--color-blue-400` | `#3392ff` |
+**Techstack-notat:** `docs/endwise-techstack.md` sier «lucide-react — eneste ikonbibliotek» og lister shadcn + beUI, ikke RAC. Å hente Board UI er et §2-vedtak (Mikael, denne runden). Når batchen kjøres: oppdater techstack + `docs/UI-PAKKER.md` i **samme økt**. Remixicon dokumenteres som transitiv default, ikke som nytt produkt-ikonsett.
 
-Aksent-ramp: `--color-accent-50` … `--color-accent-950` peker på `blue-*`. CTA, fokus, valgt nav, tabs, checkbox, switch, slider *re-tintes* ved å overstyre disse elleve. Datablå (charts, status-chips) peker bevisst på `blue-*`, ikke `accent-*`.
-
-### 2.3 Semantiske farger (utvalg, 1:1 Figma-navn)
-
-**Tekst (lys → mørk):**
-
-| Token | Lys | Mørk |
-|-------|-----|------|
-| `--color-text-primary` | `neutral-950` | `neutral-50` |
-| `--color-text-secondary` | `neutral-500` | `neutral-500` |
-| `--color-text-tertiary` | `neutral-400` | `neutral-600` |
-| `--color-text-disabled` | `neutral-300` | `neutral-800` |
-| `--color-text-placeholder` | `neutral-400` | `neutral-400` |
-| `--color-text-error-primary` | `red-500` | `red-400` |
-
-**Flater:**
-
-| Token | Lys | Mørk |
-|-------|-----|------|
-| `--color-background-full` | `white` | `neutral-925` `#121212` |
-| `--color-background-primary-default` | `white` | `neutral-800` |
-| `--color-background-primary-hover` | `neutral-100` | `neutral-700 / 60%` |
-| `--color-background-primary-active` | `neutral-200` | `neutral-800` |
-| `--color-background-secondary-default` | `neutral-100` | `neutral-900` |
-| `--color-background-tertiary-default` | `neutral-200` | `neutral-800` |
-| `--color-background-tertiary-error` | `red-100` | `red-950 / 60%` |
-
-**Kanter / fokus:**
-
-| Token | Lys | Mørk |
-|-------|-----|------|
-| `--color-border-button-default` | `neutral-200` | `neutral-700` |
-| `--color-border-button-hover` | `neutral-300` | `neutral-500` |
-| `--color-border-button-active` | `neutral-400` | `neutral-600` |
-| `--color-border-error-default` | `red-500` | `red-400` |
-| `--color-border-focus-ring` | `accent-500` | (arves, accent) |
-| `--color-separator-border` | `neutral-200` | `neutral-800` |
-
-**Hover / active / disabled som egne tokens** er Board UI sitt største token-fortrinn mot Endwise. Endwise har nesten bare *hvileverdier*.
-
-### 2.4 Radius, skygge, motion (Board UI)
-
-| Token | Verdi | Bruk |
-|-------|--------|------|
-| `--radius-2lg` | **10px** | Medium-knapp, segmented track |
-| `--radius-2-5xl` | **20px** | Store inset-paneler / kanban |
-| `--radius-notification-card` | **10px** | Toast/notification |
-| `--shadow-card` | `0 1px 1px 0 rgb(0 0 0 / 0.05)` | Kort på secondary bg |
-| `--shadow-dropdown` | `0 1px 1px / 0.04` + `0 4px 4px / 0.02` | Menyer |
-| `--shadow-sidebar` | tre lag (1px + 12px + 1px halo) | Flytende sidebar |
-| `--shadow-nav-selected` | **1px accent-500-ring** + inset hvit | ⛔ pip |
-| `--button-transition-ms` | **150ms** | Farge/border |
-| `--input-transition-ms` | **150ms** | Felt-ring |
-| `button-press-motion` | `scale(0.98)` · farge 150ms · transform 420ms ut / 220ms inn · `cubic-bezier(0.4, 0, 0.2, 1)` | Knapper |
-| Modal / Drawer | **300ms** `cubic-bezier(0.32, 0.72, 0, 1)` · start `scale 0.85` + **4px blur** · backdrop `bg-black/40` | Overlay |
-| Pill-tab thumb | **300ms** `cubic-bezier(0.34, 1.2, 0.64, 1)` (overshoot) | Segment |
-| Underline-tab | **200ms ease**, 2px `accent-600` | ⛔ blå strek |
-| Theme reveal | **820ms** `cubic-bezier(0.16, 1, 0.3, 1)` View Transition + sirkelmaske | Tema |
-| `prefers-reduced-motion` | Slide → fade, sheen → opacity-pulse, theme-reveal av | A11y |
-
-Drawer: inset **8px telefon / 12px ≥sm**, `radius/3xl`, størrelser **320 / 400 / 600**, bottom/top **max-h 85%**.
-
-### 2.5 Typografi (Board UI, Inter)
-
-Composite utilities: `text-{familie}-{vekt}` setter størrelse + linjehøyde + tracking + vekt. Farge er separat (`text-text-primary`).
-
-| Familie | Størrelse / lh | Tracking |
-|---------|----------------|----------|
-| Large Title | 64 / 80 | 0 |
-| Display 1–4 | 56/72 · 48/64 · 40/54 · 32/44 | 0 |
-| Title 1–3 | 24/34 · 20/26 · 18/24–26 | 0 |
-| Headline | 16 / 22 | 0 |
-| Body | **14 / 20** | 0 |
-| Body 2 | **13 / 18** | 0 |
-| Caption 1 | **12 / 16** | **0.15px** |
-| Caption 2 | **11 / 15** | **0.2px** |
-
-Vekter: Regular 400 · Medium 500 · Semibold 600 · Bold 700.  
-Label på Input: Body Medium 14/20. Hint: Caption 1 Medium 12/16.
-
-### 2.6 Komponent-API-er (frie, kilde-lest)
-
-**Button** (`variant` × `size`, `leadingIcon` / `trailingIcon` som *komponentreferanse*, `iconOnly` krever `aria-label`):
-
-| Size | Høyde | Radius | Ikon | Tekst |
-|------|-------|--------|------|-------|
-| medium (default) | **36** | 10 (`rounded-2lg`) | 20 | Body Medium 14/20/500 |
-| small | **32** | 8 | 18 | Body Medium |
-| xs | **24** | 4 | 14 | Caption 1 Semibold |
-
-Varianter: `primary` (blå gradient + `shadow-xs`) · `secondary` (hvit + hairline) · `ghost` (accent-100 flate) · `danger` (rød gradient). `ButtonLink` er `<a>`-tvilling.
-
-**Input:** React Aria `TextField`. `size` medium **36** / small **32**. Felt `rounded-2lg` (10), `ring-2 ring-inset` (transparent → hover `border-button-hover` → fokus `border-button-active`). API: `label`, `hint`, `errorMessage`, `leadingIcon`, `trailingIcon`, `leadingAddon`, `isRequired`, `isInvalid`, `isDisabled`. Hint byttes mot error når invalid. Label + input + hint er `aria-labelledby` / `aria-describedby`.
-
-**Search Field:** Input-skall + søkeikon 20px + `CloseButton` som *fader inn* (150ms, `scale-50 → 100`) når det er tekst. Escape tømmer. `isLoading` kryssfader ikon → Spinner (200ms). `shape`: `pill` (default) eller `rounded`. Størrelse 36 / 32.
-
-**Input OTP:** En boks per siffer, `size-12` (48), `rounded-2lg`, mono `text-title-3-medium`. Paste + autofill fordeles. `length` (default 6), `groupEvery`, `onComplete`, `isInvalid`. Hver boks `autoComplete="one-time-code"`.
-
-**Modal:** Header (tittel + beskrivelse + close) · scroll-body · footer-actions. Enter: 300ms, scale 0.85 + 4px blur. `AlertDialog` for destruktiv bekreftelse, `pendingLabel` mens promis-en kjører.
-
-**Drawer:** Samme header/body/footer som Modal. `placement` start/end/top/bottom (logisk, følger leseretning). Backdrop `bg-black/40`.
-
-**Skeleton:** Blokk tintet `text-primary/8` (synlig på alle flater). Sheen i `.bui-skeleton`. `shape` rect (radius 12) / text (6) / circle. `isLoaded` kryssfader + skjerper fra 4px blur (300ms). `SkeletonText lines={n}` — siste linje 60 %. Regionen merkes `aria-busy`.
-
-**Tabs:** Underline (2px `accent-600` som *glir* 200ms) + count-badge. Pill-tabs med glidende thumb. ⛔ underline er blå.
-
-**Segmented Control:** Track `p-1` `rounded-2lg` (10) `bg-segmented-control-background`. Thumb `rounded-md` (6) `shadow-2xs` 200ms ease. React Aria `ToggleButtonGroup`, `disallowEmptySelection`. Variant `solid` | `plain`.
-
-**Table:** React Aria Table, størrelse `md` (rader **h-16** = 64) / `sm` (**h-12** = 48). Stil i `.bui-table`. Data Table (TanStack) er eget item.
-
-**Toast:** `toast.success/info/error`, `toast.update`, `toast.dismiss`. `<Toaster limit={3} duration={5000} />`. Pause på hover/fokus. `aria-live="polite"`. Bygget på Notification-kort.
-
-**Chip:** `bold` / `subtle` / `caption`, radius **6px**, farger lime/rose/yellow/cyan/blue/purple/neutral (status-par med egne dark-tokens).
-
-**Theme Toggle:** ⛔ *ingen* `prefers-color-scheme` — kun manuell light/dark + localStorage. View Transition-sirkel 820ms. Segmentert (sol/måne) eller switch-rad. Endwise har tre modi (Lyst / Mørkt / System) — **behold tre**, stjel ev. reveal.
-
-**Sidebar (katalog + kilde):** Flytende panel, team-meny, announcement, user-meny, ThemeToggle. Valgt rad = aksent-ring. ⛔ Ikke telefon-modell, ikke 389-låsen.
-
-### 2.7 Frie komponenter i registry (navn, ikke alle kilde-lest)
-
-`theme`, `typography`, `globals`, `cx`, `direction`, `modal`, `drawer`, `popover`, `combobox`, `toast`, `accordion`, `spinner`, `progress`, `meter`, `skeleton`, `command-palette`, `context-menu`, `search-field`, `number-field`, `time-field`, `tag-group`, `date-calendar`, `color-picker`, `tree-view`, `button`, `icon-button`, `link-button`, `button-group`, `close-button`, `input`, `textarea`, `checkbox`, `checkbox-card`, `radio`, `radio-card`, `switch`, `switch-card`, `theme-toggle`, `select`, `slider`, `social-button`, `dropdown`, `divider`, `file-upload`, `tabs`, `table`, `tooltip`, `badge`, `chip`, `status-dot`, `avatar`, `breadcrumb`, `pagination`, `carousel`, `input-otp`, `segmented-control`, `announcement`, `notification`, `kbd`, `date-picker`, `date-range-picker`, `meeting-scheduler`, `agent-runtime`, `agent-chat`, `agent-thinking`, `composer-loader`, `sidebar`, `settings-modal`, `auth-card`, `notification-center`, `data-grid`, `data-table`, `stat-cards`, `revenue-chart-card`, `orders-chart-card`, `important-alerts-card`, `patient-info-card`, `app-shell`.
-
-**Ingen egen «EmptyState»-komponent** i den frie katalogen. Tom-illustrasjoner finnes som tokens på Project Board (`--color-project-board-empty-*`) — Pro / ikke kilde-lest.
-
-### 2.8 Pro (kun katalog — ikke kilde)
-
-Composer / Composer Panel / Attachments, Agent Progress, Task List, Web Search, Questionnaire, Calendar (måned + event-chips), 15+ chart-kort, Project Board, Multi-agent Chat, 10 templates. **Ikke anbefalt å kjøpe inn** uten stack-vedtak. Mønstrene (composer-status, sliding questionnaire, empty-illustration) kan etterlignes i eksisterende Ronny/PromptInput/Amicro.
+**Radix vs RAC:** Dialog, dropdown og switch på Radix dekker grunnleggende open/close og `data-state`. RAC-utgavene vinner på skjema (label/hint/`aria-invalid`), SearchField (Escape tømmer, clear utenfor tab-rekkefølge, `isLoading`), Select (ListBox + tastatur), Tooltip (`aria-describedby`, Escape), Modal (`AlertDialog` + `pendingLabel` + reduced-motion + fokus tilbake), Command Palette (⌘K, piler, Enter, Escape tømmer så lukker). Vi sletter ikke Radix-filene før siste kallsted er flyttet.
 
 ---
 
-## 3. Endwise i dag — kartlagt
+## 3. Init — nøyaktig oppskrift (ikke kjørt)
 
-### 3.1 Tokens (`packages/widget-tokens/src/tokens.css` + `packages/ui/src/theme.css`)
+Kjør **fra `packages/ui`**, slik CLI-docs krever for monorepo. Da lander npm-deps i `@endwise/ui`, ikke i `apps/web`.
 
-| Rolle | Lys | Mørk | Utility |
-|-------|-----|------|---------|
-| Canvas | `#ffffff` | `#141414` | `bg-bg` |
-| Soft / valgt | `#f3f3f3` | `#262626` | `bg-sidebar-active` · `bg-surface-2` |
-| Felt | `#f0f0f0` | `#262626` | `bg-inset` · `.ew-felt` |
-| Hairline | `#e0e0e0` | `#262626` (= flate — **forsvinner**) | `border-border` |
-| Sterk kant | `#e0e0e0` | `#3d3d3d` | `border-border-strong` |
-| Ink | `#141414` | `#ffffff` | `text-fg` |
-| Muted | `#707070` | `#adadad` | `text-fg-muted` |
-| Faint | `#adadad` | `#707070` | `text-fg-faint` · `.ew-haarlinje` |
-| CTA | `#141414` | `#ffffff` | `--ew-ink-utility` / `--primary` |
-| Aksent | `#0066ff` | `#0066ff` | `--ew-accent` — kun Popular/viz |
-| Fokus | `#141414` | `#ffffff` | `--ew-focus` / `--ring` |
-| Danger / warn / success | `#c8332b` / `#b45309` / `#15b042` | lysere / `#15b042` | |
+### 3.1 `boardui.json` først
 
-**Mål:** kontroll 32 · rad 40 · stores-rad 44 · badge 20/6 · switch 24×14/10 · felt-radius 16 · kort 24 · pille 9999. Spacing 4/8/12/16/24/32.
+Ny fil `packages/ui/boardui.json` (ved siden av `package.json`). Aliaser peker på `@endwise/ui`, ikke Board-eksemplets `@workspace/ui`:
 
-**Typeskala (kanon):** `text-title` 16/20/650 · `text-label` 13/16/450 · `text-body` 17/1.38/450. Inter variabel. **300 er spesifisert men har ingen utility** — landing bruker `font-[300]` ad hoc.
+```json
+{
+  "paths": {
+    "components": "src/components",
+    "utils": "src/utils",
+    "hooks": "src/hooks",
+    "styles": "src/styles",
+    "lib": "src/lib"
+  },
+  "aliases": {
+    "components": "@endwise/ui/components",
+    "utils": "@endwise/ui/utils",
+    "hooks": "@endwise/ui/hooks",
+    "styles": "@endwise/ui/styles",
+    "lib": "@endwise/ui/lib"
+  }
+}
+```
 
-**Hull mot Board UI:** ingen hover/active/disabled/error-* tokens for flate/kant. Ingen `--ew-space` i praktisk bruk på felt-states. Mørk `--ew-border` = `--ew-surface` (`#262626`) — hårlinje dør; workaround `.ew-haarlinje` bruker `--ew-fg-faint`.
+`styles` er `src/styles`, **ikke** `src`. Da skriver `init` `src/styles/theme.css` og `src/styles/globals.css` — de kolliderer ikke med vår `src/theme.css`. Board-komponenter lander under `src/components/base/…` og kolliderer ikke med `src/components/button.tsx` / `dialog.tsx` / `avatar.tsx`.
 
-**Felt:** `.ew-felt` inset, 2px transparent border, fokus **`#ffffff`** (hardkodet, ikke `--ew-focus`). Variantar `FELT_LG` 52/17 · `FELT_MD` 40/17 · `FELT_SM` 32/16.
+### 3.2 Eksporter i `packages/ui/package.json`
 
-### 3.2 `@endwise/ui` (`docs/UI-PAKKER.md`)
+Legg til (samme økt som init):
 
-| Lag | Hva |
-|-----|-----|
-| Struktur | shadcn New York: `Button`, `Badge`, `Dialog`, `DropdownMenu`, `Switch` |
-| Tilstand | beUI `MotionButton` / `StatefulButton` + `ease.ts` |
-| Chat | `Message`, `PromptInput`, matrix-loaders |
-| Charts | Amicro dither (ikke dither-kit) |
-| Identitet | bloub `Avatar` / `RonnyBot` |
-| Ikoner | lucide + 62 egne SVG |
-| **Ikke hentet** | shadcn `table`, `sheet`, `tabs`, `calendar`, `form`, `select`, `command`, `input`, `checkbox` |
-| **Paralleller** | F0-12 `Btn` / primitiv-`Badge` / `Chip` / `Card` / `Input` lever ved siden av shadcn |
+```json
+"./utils/*": "./src/utils/*.ts",
+"./styles/*": "./src/styles/*"
+```
 
-**Motion vi allerede har** (`packages/ui/src/lib/ease.ts`) — *samme kurve som Board UI drawer*:
+`./components/*` og `./lib/*` og `./hooks/*` finnes allerede. `tsconfig` har allerede `"@endwise/ui/*": ["./src/*"]`.
 
-| Token | Verdi |
-|-------|--------|
-| `EASE_OUT` | `[0.16, 1, 0.3, 1]` (= Board theme-reveal) |
-| `EASE_DRAWER` | `[0.32, 0.72, 0, 1]` (= Board modal/drawer) |
-| `SPRING_PRESS` | 500 / 30 / 0.6 |
-| `SPRING_PANEL` | 420 / 40 / 0.5 |
+### 3.3 Kommandoer
 
-**Ikke brukt konsekvent:** Ronny-sheet bruker `EASE_DRAWER` i 200ms (Board bruker 300ms + blur). De fleste tom-lister har null motion. Dialog har ingen enter-animasjon.
+```bash
+cd packages/ui
 
-### 3.3 Telefon-chrome (urørt struktur)
+# 1) Tailwind-tokens, globals, cx, agent-regler.
+#    --yes: installer deps, behold filer som allerede finnes, ikke spør.
+npx boardui@latest init --yes
 
-`apps/web/app/(app)/_shell/phone-shell.tsx` + `phone-chrome.ts`:
+# 2) STOPP. Ikke add ennå.
+#    a) Slett eller skriv om AGENTS.md + .cursor/rules/boardui.mdc
+#       som init dropper (de pålegger Remixicon + Board-typeskala +
+#       Board-semantikk som alwaysApply — det strider mot Endwise-regler).
+#    b) Koble Board-tokens til --ew-* (se §5). Ikke importer
+#       src/styles/globals.css som app-stylesheet.
+#    c) Utvid src/utils/cx.ts med text-title / text-label / text-body
+#       (samme felle som cn() allerede fikser).
 
-| Element | Mål | Fil |
-|---------|-----|-----|
-| Top-bar 1 | `h-row` 40 · `gap-2` · `px-3` | `phone-shell.tsx` |
-| Logo | **32×32** `bg-fg` mask | `PHONE_LOGO_PX` |
-| Søk | `.ew-felt-sm` **h-8** · ikon 16 · `text-label` | `phone-sok-felt.tsx` |
-| Ronny | **size-7 / 28** · `RonnyBot` 44 | `PHONE_AVATAR_PX` |
-| Profil | **28** `.ew-profil-sirkel` | samme |
-| Top-bar 2 | `PHONE_BAR2` `py-2.5` · piller `h-8 rounded-full px-3 text-label` · aktiv `bg-sidebar-active` | dest fra `FORHANDLER_NAV` |
-| Hairline | `h-px bg-border` | under bar 2 |
-| Side-under | tittel `text-title` · underline-faner `border-b-2` | `PHONE_SIDE_UNDER` |
+# 3) Første batch (CLI trekker rdeps automatisk).
+npx boardui@latest add --yes \
+  input textarea search-field input-otp \
+  checkbox radio switch select number-field \
+  modal drawer tooltip toast \
+  skeleton spinner \
+  tabs segmented-control dropdown command-palette \
+  button icon-button close-button
+```
 
-**Søk-overlay** (`phone-sok-overlay.tsx`): `z-80`, Avbryt, nylige `h-11`, dest-ikoner `size-11`, tom «Ingen treff». Ingen tøm-knapp, ingen spinner-ikon.
+`--overwrite` brukes **ikke**. Våre eksisterende filer skal stå. Board skriver til `base/`-stier.
 
-**Profilmeny** (`phone-profil-meny.tsx`): 260px, `rounded-[16px]`, **`shadow-lg`** (⛔ mot tint-regel), «Ditt abonnement» **`bg-[#0066ff]`** (⛔ CTA-lås — `#0066ff` er kommersielt, men her er det en knapp). Modus = 3 segmenter (`phone-tema-rad.tsx`).
+Uten `--yes` stopper CLI med exit 1 i agent/CI (den spør før den skriver).
 
-**Ronny-sheet** (`ronny-sheet.ts` + `workshop-bloub.tsx`): 80/100 dvh, radius **16** topp, scrim `bg-fg/25`, høyde 200ms `EASE_DRAWER`. Desktop-panel max **400px**.
+### 3.4 Hva `add` faktisk skriver (inkl. rdeps)
 
-### 3.4 Desktop (urørt geometri)
+Eksplisitt 22 navn. Registry trekker automatisk:
 
-`desktop-shell.ts`: sidebar **389** (chrome 275 / inner 259) · boks 2 **598×53** top-bar · boks 3 **452×53** standby. Aktiv rad = `bg-sidebar-active`, ingen pip. Oppgrader = Galaxy + `bg-primary` (ink), desktop 233×52.
+`avatar` (Board, under `base/avatar` — **ikke** vår bloub-`Avatar`), `chevrons`, `cx`, `direction`, `directional-icon`, `globals`, `kbd`, `notification`, `scroll-fade`, `template-copy`, `theme`, `typography`, `use-dismiss-on-outside-press`.
 
-### 3.5 Produktflater (kort)
+**Kollisjon som ikke er en kollisjon:** `toast` → `notification` → Board-`Avatar` (`src/components/base/avatar/avatar.tsx`). Vår `src/components/avatar.tsx` (bloub) er urørt. **Ikke** re-eksporter Board-avatar fra `src/index.ts`.
 
-| Flate | Mønster i dag | Fil-anker |
-|-------|----------------|-----------|
-| **Pulse / hjem** | Kort 24, hero `bg-surface-2`, ikonplate **alltid `#ffffff`**, PPF `text-[28px] font-semibold`, dagsbue Amicro `#0066ff`, Analyser to bokser | `_shell/pulse-kort.tsx` |
-| **Innboks** | Settings-chrome + top-bar 2 (Ny melding · Sortering · Slett). Rader `border-b py-4`. Tom: ikon 56 + `Button`. Composer = `PromptInput` + `StatefulButton` | `innboks/_chrome.tsx`, `_top-bar2.tsx` |
-| **Timeplan / Jobber / Endringer** | `SideChromeSkall` underline. `/jobber` = `/saker`. Endringer = Avvik \| Forespørsler | `jobber/`, `saker/` |
-| **Kunder** | `SideChromeSkall` + `PhoneSokFelt` + `SorteringArk` + tabell-liste + `InnstillingRad`-skjema | `kunder/` |
-| **Organisasjon** | `OrgRad` ≈ innstillingsrader. `FELT_MD` + `StatefulButton` | `organisasjon/` |
-| **Lager** | Egen `max-w-[1000px]` (ikke SideChrome). Tabell + custom modal `bg-black/40` | `lager/` |
-| **Butikk** | Samme tabell som lager. `Button variant="outline"` (avvik). Widget-embed | `butikk/` |
-| **Ny jobb** | `InnstillingSeksjon` + `FELT_MD` + `aria-pressed`-rader + `StatefulButton` | `bookinger/ny/page.tsx` |
-| **Sign-in** | Ingen kort. `FELT_LG` 52. Labels `text-[15px]`. `StatefulButton` `py-5`. 5-sifret kode i *ett* felt (ikke OTP-bokser) | `_auth/felter.tsx`, `signin/` |
-| **Landing** | Hero 44/64 `font-[650]`, ingress `font-[300]`. Kort 24. CTA ink-pille. `#0066ff` kun Popular | `_markeds/` |
-| **Widget** | Inline `--ew-*`, radius-fallback **12**, input radius **8**, faner 2px `--ew-accent` (blå underline — ⛔ i produkt, OK i embed?) | `packages/widget-ui` |
-| **Innstillinger** | Speiler SideChrome. Konto-rader. Destruktiv `bg-danger`. Team = Dialog 420 | `innstillinger/` |
+### 3.5 Hva vi *ikke* gjør ved init
 
-### 3.6 Tom / loading i dag
-
-Ingen felles `Tomt`/`Laster`/`Feil`. Kopier: `kunder/_delt.tsx` ≈ `lager/_delt.tsx` (CardShell `p-10`). Innboks: 56px-ikon. Pulse: `animate-pulse bg-border`. Timeplan: «Laster timeplan …» `text-body`. Mange `text-[12px]`-linjer uten `role="status"` / `aria-busy`.
-
-### 3.7 Dark mode-hull (konkrete)
-
-| Sted | Problem |
-|------|---------|
-| `--ew-border` mørk `#262626` | = surface. Hairline usynlig. |
-| `.ew-felt:focus` `#ffffff` | Hardkodet. |
-| `pulse-kort.tsx` ikonplate | Alltid `#ffffff` / `#141414`. |
-| `phone-home-pulse.ts` | Hairline `#e0e0e0`, spark `#141414` uten dark-variant. |
-| `phone-profil-meny.tsx` | `bg-[#0066ff] text-white` CTA. |
-| Dialog overlay | `bg-black/25` (Board: `black/40` — vi kan tokenisere, ikke kopiere hex). |
-| Switch-thumb | `bg-white` hardkodet. |
-| `SorteringArk` scrim | `bg-transparent` — ingen dimming, ingen fokusfelle. |
+- Ikke bytt `apps/web` layout-font-setup. Inter er allerede der; vi mapper `--font-inter` hvis Board krever det, uten å røre 650/450/300.
+- Ikke `@import "@endwise/ui/styles/globals.css"` i app-CSS. Board-globals er et helt stylesheet. Vi importerer kun den **omkoblede** `src/styles/theme.css` fra vår `src/theme.css`, slik at `bg-button-primary` og `text-text-primary` finnes som utilities, men peker på `--ew-*`.
+- Ikke `add --all`. 88 items inkluderer sidebar, app-shell, agent-chat, chart-kort — det er chrome- og stack-brudd.
 
 ---
 
-## 4. Komponent for komponent
+## 4. Første batch — prioritert plan
 
-Innsats: **S** = isolert token/CSS eller én fil · **M** = flere kallsteder, samme mønster · **L** = ny primitiv + migrering.  
-Risiko: **lav** = innenfor Mobbin · **midt** = a11y/fokus · **høy** = IA/stack/låst chrome.
+Installer de 22 i **én** `add` (over), så vi får a11y-motoren én gang. **Koble til produktet** i denne rekkefølgen. Barrel (`src/index.ts`) flippes ikke i batch 1 — kallsteder importerer `@endwise/ui/components/base/…` eksplisitt til de er restylet.
 
-| Endwise i dag | Board UI-ekvivalent | Konkret forbedring (innenfor lås) | Innsats | Risiko |
-|---------------|---------------------|-----------------------------------|---------|--------|
-| `--ew-*` hvile-tokens | Semantisk hover/active/disabled/error + secondary/tertiary flater | Legg `--ew-surface-hover`, `--ew-border-hover`, `--ew-border-error`, `--ew-fg-disabled` i `tokens.css`. Ikke ny hex-palett — utled av ink/soft/hairline. | S | lav |
-| `text-title/label/body` + ad hoc `text-sm`/`text-[12px]`/`font-semibold` | Composite `text-body-medium` osv. | **Ikke** 13×4-skala. Håndhev de tre. Ev. *én* ny: `text-meta` = 12/16/450 (erstatter `text-[12px]`). Landing `font-[300]` → dokumenter som `text-display` uten å åpne 400/500/600/700. | S | lav |
-| shadcn `Button` pill 32 `text-label` + `StatefulButton` + F0-12 `Btn` | Button 36/32/24, ikon-props, press 0.98 | Behold 32 / 9999 / ink. Stjel `leadingIcon`/`trailingIcon` + `iconOnly` krever `aria-label`. Utfas `Btn`. Press: bruk `SPRING_PRESS` / `button-press-motion`-idé uten blå gradient. | M | lav |
-| Egne piller `h-control rounded-control border` overalt | `Button variant="secondary"` | Én `SekundærPille` (allerede nesten `Button outline`) — slutt å kopiere klassestreng. | M | lav |
-| `.ew-felt` uten label/hint/error-API | Input `label`+`hint`+`errorMessage` | Utvid primitiv-`Input` med de tre + `aria-describedby`. Behold `FELT_*` / radius 16 / inset `#f0f0f0`. Fokus = `--ew-focus` (ink), **ikke** hvit 2px og **ikke** `accent-500`. | M | midt |
-| `PhoneSokFelt` h-8, ingen tøm/loading | Search Field (pill, clear fade, spinner, Escape) | **Behold h-8, radius 16, inset.** Legg tøm-knapp (fade) + `isLoading` på ikonplass + Escape. Overlay uendret i IA. | S | lav — telefon, samme utgangspunkt |
-| Sign-in 5-siffer i ett `FELT_LG` | Input OTP, `length={5}` | Fem Mobbin-bokser (inset, 16 radius, Inter 17/450, ikke 48/mono/10-radius). Paste/autofill-logikk stjeles. | M | lav |
-| Native `<select>` / radio-piller | Select, Radio, Checkbox, Number Field | Hent **shadcn** `select`/`checkbox` (allerede i «kan hentes»), styled til `.ew-felt`. Ikke React Aria. | M | midt |
-| shadcn `Dialog` uten motion, overlay `black/25` | Modal 300ms scale 0.85 + 4px blur, header/body/footer | Animer eksisterende Dialog med `EASE_DRAWER` 300ms + blur. Tokeniser scrim `--ew-scrim`. Alert-mønster til slett-forhandler / slett-tråd. **Ikke** 10px radius. | S | lav |
-| Ronny-sheet + `SorteringArk` + lager-modal (egne) | Drawer 80/100, 300ms, 4px blur, 320/400/600 | Behold 80/100 og 16-radius. Hev 200→300ms + blur-in. `SorteringArk`: dimmet scrim + fokusfelle (i dag transparent). Ikke vaul, ikke ny dest. | M | midt på z-index (header og scrim begge z-60) |
-| `SideChromeSkall` / Innboks / Innstillinger underline `border-b-2 border-fg` | Tabs med *glidende* 2px underline | Behold **ink**-underline (⛔ ikke `accent-600`). Legg thumb som glir 200ms `EASE_OUT`. Samme API (`?fane=`). | M | lav |
-| Dest-piller + `NySamtaleKnapperad` + `PhoneTemaRad` | Segmented Control / PillTabList med glidende thumb | Glidende **canvas-soft** thumb (⛔ ikke blå). Telefon dest-piller: samme h-8 / `rounded-full` / `FORHANDLER_NAV`. | S | lav — kun polish |
-| `kunder/_delt` + `lager/_delt` + innboks-tom | *(ingen Empty-item; Skeleton + illustration-tokens)* | Én `TomtFlate` / `LasterFlate` / `FeilFlate` i `_shell`. Ikon + `text-body` + valgfri ink-CTA. `aria-live`. | S | lav |
-| `animate-pulse bg-border` | Skeleton sheen + `isLoaded` blur-in | Egen `.ew-skjelett` med `text-fg/8` + sheen. Pulse-tall, innboks-liste, kunder-tabell. | S | lav |
-| Native `<table>` kopiert 5 steder | Table `sm` 48 / `md` 64 + Data Table | Én liste-rad: `h-row-store` 44, `rounded-xl`, header `text-meta`. Valgfritt hent shadcn `table`. Ikke 64px-rader (for høyt mot Mobbin 40/44). | M | lav |
-| Ingen toast | Toast + Notification | beUI har `animated-toast-stack` i «kan hentes». Alternativ: tynn `toast()` over eksisterende `Badge`/kort, `aria-live`. Brukes etter lagre (org, kunde, lager). | M | midt (ny flate — ikke ny dest) |
-| `Badge` 20/6 rød «Ny» + `CountBadge` | Chip + Badge + Kbd | Behold rød Ny (eier-lås). Stjel *status-par* for lime/rose som **tokens** til KPI-delta (Analyser allerede grønn/rød). Ikke 10 farger på chips. | S | lav |
-| `TemaToggle` 2-veis + `PhoneTemaRad` 3-veis | Theme Toggle 2-veis + 820ms reveal | **Behold System.** Stjel View Transition-sirkel (820ms `EASE_OUT`) på begge. Segment-thumb som Board `sidebar-segmented`, men canvas-soft / ink-ikon. | S | lav |
-| ⌘K på `Dialog` | Command Palette (React Aria Autocomplete) | Polish eksisterende Dialog: seksjoner, `Kbd`, skjelett. Ikke cmdk (forbudt tidligere). | M | midt |
-| Dropdown 24 radius, items `h-row rounded-control` | Dropdown / Context Menu | OK. Stjel ikon+snarvei-rad og `useDismiss`. Ikke 10px. | S | lav |
-| Switch 24×14 ink-track | Switch (skeuomorf, 2 størrelser) + Switch Card | Behold ink-track. `SwitchCard` = InnstillingRad + Switch (varsler). | S | lav |
-| Timeplan egen kalender 07–18 | Date Calendar / Date Picker / Meeting Scheduler | Ikke bytt verksted-raster. Stjel «i dag»-markør + disabled-dager til starttid-velger. | L | midt |
-| Innboks egen liste | Notification Center (tabbet feed) | Mønster: grupperte uleste, inline actions. Ikke erstatt innboks. | L | høy hvis IA røres |
-| Ronny `PromptInput` | Composer / Composer Loader / Agent Thinking (**Pro**) | Stjel: rim-loader mens stream, elapsed på «tenker», stop-knapp. Ikke model-picker / vedlegg (Mikael-forbud). | M | midt |
-| Amicro dither-kort | Stat Cards + Revenue/Orders Chart (**delvis Pro**) | Behold Amicro. Stjel count-up + delta-chip-layout på Analyser — uten nye graftyper. | S | lav |
-| `Avatar` bloub | Avatar (initialer/bilde) + Agent Avatar (**Pro**) | Ikke bytt bloub. | — | — |
-| Ikon-barrel lucide | Remixicon | Ikke bytt. | — | — |
-| Widget inline styles | Auth Card / Input | Harmoniser widget-radius til 16/24 via tokens (fallback er 12/8). Fane-underline: ink, ikke `--ew-accent`. | S | lav |
-| `min-dag` knapper `h-10 rounded-md bg-primary` | Button small | Rett til `h-control rounded-pill` — ren konsistens. | S | lav |
+### P0 — må skje før noen komponent synes
 
----
+1. `boardui.json` + exports.  
+2. `init --yes`.  
+3. Slett/overskriv Board-agentregler.  
+4. Token-omkobling §5. Uten den blir første render blå CTA, accent-fokus og Board-body 14/20.
 
-## 5. Anbefalinger gruppert
+### P1 — skjema (størst menneskelig gevinst)
 
-Hver gruppe sier **hva vi tar**, **hva vi ikke tar**, og **hvor det lander**.
+| # | `add`-navn | Erstatter / forbedrer | Hva vi får som vi mangler |
+|---|------------|------------------------|---------------------------|
+| 1 | `input` | `packages/ui/src/primitives/input.tsx` (naken `<input>` + `FELT_MD`). Forbedrer `apps/web/app/_auth/felter.tsx` (`<label htmlFor>` uten hint/error/`aria-invalid`). Kallsteder: `signin/signin-skjema.tsx`, `2fa-oppsett/page.tsx`, `invitasjon/[token]/page.tsx`, `_shell/bytt-epost.tsx`, `endwise/forhandlere/page.tsx`, `endwise/team/page.tsx`, `integrasjoner/{quick,vegvesen}/page.tsx`, `chat/page.tsx`, `organisasjon/forhandleren/_kort.tsx`, `innstillinger/tjenestekatalog/_felter.tsx` (lokal `INPUT = FELT_MD`). | `TextField` + `Input` med `label` / `hint` / `errorMessage`. RAC setter `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-required`. Render-prop: `isFocusWithin`, `isHovered`, `isDisabled`, `isInvalid`. `leadingIcon` / `trailingIcon` som **komponent-referanse** (lucide, ikke Remix). |
+| 2 | `textarea` | Egen `<textarea>` + `FELT_*` i Ny melding / skjemaer (`innboks/_ny-samtale.tsx` m.fl.). `PromptInput` (`packages/ui/src/components/prompt-input.tsx`) **beholdes** — det er chat-composer (Enter-submit, composition-aware), ikke et skjemafelt. | Samme felt-skall som Input, `aria-invalid`, hint/error. |
+| 3 | `search-field` | **Forbedrer, erstatter ikke geometrien i** `apps/web/app/(app)/_shell/phone-sok-felt.tsx`. I dag: `aria-label="Søk"`, ingen clear, ingen Escape-tøm, ingen `isLoading`. Samme mønster i kjøretøy/lager-lister med naken `Search` + `<input>`. | RAC `SearchField`: Escape tømmer, Enter → `onSubmit`, clear-knapp **utenfor tab-rekkefølge**, `isLoading` bytter ikon mot `Spinner`. **Telefon:** `size="small"` (32px = `h-8`), `shape="rounded"` (ikke default `pill`), `icon={Search}` (lucide), `clearLabel="Tøm søk"`, `aria-label="Søk"`. Logo 32 / Ronny 28 / profil 28 / dest-piller / ingen sidebar røres **ikke**. |
+| 4 | `input-otp` | Naken `inputMode="numeric"` + `tracking-[0.35em]` i `signin/signin-skjema.tsx` (magic + TOTP), `2fa-oppsett/page.tsx`, `_shell/bytt-epost.tsx`, `innstillinger/team/_detaljer.tsx` (slå av 2FA), `endwise/forhandlere/page.tsx`. | Per-siffer-bokser, piltaster, Backspace som går bakover, lim inn, autofill (`autoComplete="one-time-code"` på hver boks — iOS/Chrome leverer hele koden i én boks). `onComplete`, `isInvalid`, `groupEvery`, `aria-label`. Ingen RAC-dep. |
+| 5 | `checkbox` | Finnes **ikke** som primitiv. Native `<input type="checkbox">` der det brukes. | RAC Checkbox, `aria-checked="mixed"` ved indeterminate, tastatur, label via `children`. Restyle: checked-gradient → ink, ikke accent. |
+| 6 | `radio` | Finnes **ikke**. Sortering-valg er `<button role="option">` i `sortering-ark.tsx` — **ikke** radio; la dem være til P2 dropdown. | `Radio` + `RadioGroup`, piltaster i gruppa, `aria-*`. |
+| 7 | `switch` | `packages/ui/src/components/switch.tsx` (Radix, 24×14, ink-track). Kallsteder: `innstillinger/varsler/_innhold.tsx`, `endwise/innstillinger/page.tsx`, `bot/page.tsx`, `_shell/profil-kort.tsx` (cuelume). | RAC Switch (tastatur, `aria-checked`, valgfri label). **Mål etter restyle:** 24×14 / thumb 10 — *ikke* Board-default sm 28×16 / md 42×24 / lg 56×32. På-state = `--ew-switch-track-on` (ink), ikke blå gradient + chip. |
+| 8 | `select` | Finnes **ikke**. Native `<select>` / egen knapp+liste. | RAC Select + ListBox + Popover. Tastatur, typeahead, `aria-labelledby`. Restyle: ink-fokus, ingen skygge, lucide-chevron via `chevrons` eller egen `ChevronDown`. |
+| 9 | `number-field` | `inputMode="numeric"` i kapasitet, kompetanse, tjenestekatalog, team. | RAC `NumberField`, stepper, locale, `aria-*`. Default stepper-ikon er Remix — bytt. |
 
-### 5.1 Farger / tokens
+### P2 — overlay og tilbakemelding
 
-**Ta:** Et *state-lag* oppå Mobbin-hex: `--ew-surface-hover`, `--ew-surface-active`, `--ew-border-hover`, `--ew-border-error`, `--ew-fg-disabled`, `--ew-scrim` (f.eks. `color-mix(ink 25%, transparent)`). Rett mørk hairline: `--ew-border` mørk skal ikke være `#262626`.  
-**Ikke ta:** `#f7f7f7`, `#121212`, `#3392ff`, accent som CTA/fokus/pip, skygge-tokens, 400+ Figma-navn.  
-**Filer:** `packages/widget-tokens/src/tokens.css`, `packages/ui/src/theme.css`, `packages/widget-tokens/test/tokens.test.ts`.
+| # | `add`-navn | Erstatter / forbedrer | Hva vi får |
+|---|------------|------------------------|------------|
+| 10 | `modal` | `packages/ui/src/components/dialog.tsx` — tynn Radix, **uten** posisjonering/header/footer/`AlertDialog`/pending (kommentaren sier bevisst: kommandopalett skal ligge øverst). Kallsteder: `innboks/_inviter-ansatt.tsx`, `organisasjon/_ansatte.tsx`, `organisasjon/_opprett-dialog.tsx`, `innstillinger/team/_detaljer.tsx` (slå av 2FA), `lager/deler/_bevegelse-dialog.tsx`. Behold Radix-`Dialog` til kommandopaletten er på Board. | Fokusfelle + restore, `isDismissable`, Escape, `role="alertdialog"` på `AlertDialog`, `pendingLabel` + `aria-busy`, reduced-motion (fade uten scale/blur). Easing `cubic-bezier(0.32,0.72,0,1)` = vår `EASE_DRAWER`. Restyle: `rounded-3xl` (24) ok; `bg-black/70` → vår scrim; `shadow-xs` → `none`; CTA ink. |
+| 11 | `drawer` | Ingen felles drawer. Telefon-sheets (Ronny, ev. profiler) er app-komposisjon. **Ikke** `sortering-ark` — det er et lite panel under en knapp, ikke et slide-in. | Samme RAC-modal-motor, slide + reduced-motion. Brukes når vi trenger ekte sheet, ikke til Sortering. |
+| 12 | `dropdown` | Forbedrer `packages/ui/src/components/dropdown-menu.tsx` (Radix, rader 40 / radius 10 / label 13/16 — behold målene). **Erstatter oppførselen i** `apps/web/app/(app)/_shell/sortering-ark.tsx`: Escape + gjennomsiktig scrim, `role="dialog"`, **ingen** fokusfelle, ingen restore, `role="option"` uten listbox. | RAC Dialog + Popover, fokus inne, restore, outside-press via `use-dismiss-on-outside-press`. Visuelt: 16px radius, `shadow-none`, `text-label`, ingen «Sortering»-heading. |
+| 13 | `tooltip` | Finnes **ikke** i produkt (dither-kit-tooltip er avstengt). | Hover **og** fokus åpner, Escape lukker, `aria-describedby` på trigger, collision flip. Restyle: `text-label`, ingen `shadow-dropdown`, caret ok. Trigger må være focusable (Board-`Button` eller `useFocusable`). |
+| 14 | `toast` | Finnes **ikke** (ingen sonner/toast). | `toast.success/error/update/dismiss`, `<Toaster />` som polite live region (error = alert), countdown pauser ved hover/fokus. Drar `notification` + `motion` (allerede inne) + Board-`avatar` (ikke eksporter). Status-ikoner er Remix — bytt til lucide etter `add`. |
+| 15 | `skeleton` | Ad-hoc pulser. | `aria-busy` / `aria-hidden`, reduced-motion (statisk i stedet for shimmer). |
+| 16 | `spinner` | matrix-loaders / beUI-loader der det passer — **behold** for Ronny/AI. Board-`Spinner` er felt-spinner (`SearchField isLoading`, modal pending). | RAC `ProgressBar`, `aria-label`, reduced-motion. |
 
-### 5.2 Typografi og tekstvisning
+### P3 — navigasjon inne på en flate (ikke chrome)
 
-**Ta:** Disiplin. Drep `text-sm` / `font-semibold` / `text-[12px]` i produktflater. Innfør `text-meta` (12/16/450, tracking 0 — ikke Board 0.15). Bruk `text-title` der titler i dag er `text-[16px] font-[650]`. Landing 44/64 + `font-[300]` får egne utilities uten å åpne 13 trinn.  
-**Ikke ta:** Body 14, vekter 400/500/600/700, Caption-tracking.  
-**Filer:** `theme.css` `@theme`, `message.tsx` (`text-sm`), `_auth/felter.tsx` (`text-[15px]`), pulse `font-semibold`.
+| # | `add`-navn | Erstatter / forbedrer | Hva vi får |
+|---|------------|------------------------|------------|
+| 17 | `tabs` | Underline-faner i Innstillinger-chrome er app-komposisjon (F5-13). Board-tabs er for **innhold** (team-detaljer, innstillinger-seksjoner), ikke dest-piller. | RAC Tabs, piltaster, `aria-selected`. Restyle: valgt = ink/soft, **ikke** accent-underline. |
+| 18 | `segmented-control` | Egne piller/segment der vi har 2–3 valg på en flate (ikke `FORHANDLER_NAV`). | RAC `ToggleButtonGroup`. Restyle: soft tint, ikke accent. |
+| 19 | `command-palette` | `docs/layout-copy/top-bar.tsx` refererer en palett som **ikke** finnes i produkt. `Dialog` er bevisst uposisjonert «fordi kommandopaletten vil ligge øverst». | ⌘K / Ctrl+K, piler, Enter, Escape tømmer så lukker, fokus tilbake, locale-aware filter, `useTemplateCopy` for NB-tekst. Default-ikoner Remix — bytt. **Ikke** endre telefon-chrome. |
 
-### 5.3 Knapper / kontroller
+### P4 — knapper (kommer som rdeps av modal uansett)
 
-**Ta:** Ikon-API + `aria-label` på icon-only. Felles sekundærpille. Press-motion fra `ease.ts`. Utfas `Btn`. Rett `min-dag` `rounded-md`.  
-**Ikke ta:** Blå/rød gradient, 36px som default, 10px radius, `shadow-xs` på CTA.  
-**Filer:** `packages/ui/src/components/button.tsx`, `primitives/btn.tsx`, kallsteder med `inline-flex h-control rounded-control`.
+| # | `add`-navn | Erstatter / forbedrer | Hva vi får |
+|---|------------|------------------------|------------|
+| 20 | `button` | **Ikke** erstatt `src/components/button.tsx` (shadcn, pille-CTA, `h-control`) eller beUI `StatefulButton` i batch 1. Board-knappen bor i `base/buttons/button.tsx` og brukes av Modal-footer. | `leadingIcon`/`trailingIcon` som referanse, `iconOnly` + påkrevd `aria-label`, `aria-disabled`, `button-press-motion`. Restyle: `bg-button-primary`-utility → solid ink (se §5). Radius/høyde: pille + `h-control` på produkt-CTA; Board 36/10px kun inne i Board-modal til vi restyler. |
+| 21 | `icon-button` | Egne `size-control`-ikonknapper. | `aria-label` påkrevd. |
+| 22 | `close-button` | `X` fra lucide i modaler/toasts. | Egen SVG per størrelse (stroke i ekte CSS-px). `aria-label` påkrevd. Ingen Remix-dep. |
 
-### 5.4 Kort / flater
-
-**Ta:** Ett kort-skall: 24 radius, `bg-card`, hairline eller tint, `shadow-none`. Pulse-ikonplate: token `bg-bg` / `text-fg` i *light-locked* klasse (bevisst hvit på hjem — dokumenter, ev. `canvas` i begge temaer).  
-**Ikke ta:** `shadow-card`, 20px kanban-radius, farget border-left.  
-**Filer:** `phone-kort.tsx`, `pulse-kort.tsx`, `CardShell`.
-
-### 5.5 Lister / tabeller
-
-**Ta:** Felles `ListeTabell` (header 12/450 muted, rad 44, hover `bg-surface-2`). Sorterbare kolonner senere via shadcn `table`.  
-**Ikke ta:** 64px-rader, Data Grid, CSV/undo.  
-**Filer:** `kunder/_delt.tsx`, `lager/deler/page.tsx`, `butikk/page.tsx`, `innstillinger/team/_liste.tsx`.
-
-### 5.6 Sheets / dialoger
-
-**Ta:** 300ms `EASE_DRAWER` + 4px blur på Dialog og Ronny-sheet. Token-scrim. Sortering/profil: synlig scrim + Escape + fokusfelle. AlertDialog-mønster for slett.  
-**Ikke ta:** 10px modal, 12px inset «floating» panel som ny chrome, vaul, shadcn Sheet som erstatning for telefon top-bar.  
-**Filer:** `packages/ui/src/components/dialog.tsx`, `ronny-sheet.ts`, `sortering-ark.tsx`, `phone-profil-meny.tsx`, `lager/deler/_bevegelse-dialog.tsx`.
-
-### 5.7 Navigasjon
-
-**Ta:** Glidende soft-thumb på dest-piller og underline-faner (ink/soft). `Kbd` på ⌘K.  
-**Ikke ta:** Flytende sidebar, team-meny, announcement-footer, aksent-ring, nye destinasjoner, telefon-sidebar. Desktop 389/598/452 urørt.  
-**Filer:** `phone-shell.tsx`, `side-chrome-skall.tsx`, `innboks/_top-bar2.tsx`, `sidebar.tsx` (kun rad-hover-token).
-
-### 5.8 Animasjoner / motion
-
-**Ta:** Bruk `ease.ts` overalt. Modal/drawer 300ms. Segment-thumb 200–300ms. Theme View Transition 820ms `EASE_OUT`. Skeleton sheen. `prefers-reduced-motion` som Board (fade, stop sheen).  
-**Ikke ta:** Overshoot-fjær på dest-piller som gjør chrome «sprettete». Galaxy/Grainient tilbake på Ronny.  
-**Filer:** `ease.ts` (allerede), `globals.css`, Dialog, Ronny, `tema-*.tsx`.
-
-### 5.9 Tomtilstander / loading
-
-**Ta:** `TomtFlate` + `LasterFlate` + `FeilFlate` + `.ew-skjelett`. Innboks / kunder / lager / timeplan / butikk bytter til samme. `aria-busy` / `role="status"`.  
-**Ikke ta:** Project Board-empty-illustrasjon som ny merkevare. Matrix-loaders på vanlige lister (de er AI-venting).  
-**Filer:** ny `_shell/tom-flate.tsx`; slett duplikat i `kunder/_delt` og `lager/_delt`.
-
-### 5.10 Ikoner
-
-**Ta:** Strammere bruk: 16 chrome, 18 rader, 20 dest-overlay, 22 pulse — allerede delvis slik. Egne chevron-strokes (Board har egne chevrons) kan speiles i `icons.generated` hvis lucide-chevron ikke matcher 1.75.  
-**Ikke ta:** Remix Icon.  
-**Filer:** `packages/ui/src/icons.ts`.
-
-### 5.11 Dark mode
-
-**Ta:** Synlig mørk hairline (`#3d3d3d` eller faint). Felt-fokus = `--ew-focus`. Pulse-dither-farger som tokens med dark-par. Profil-CTA: ink eller Existing Galaxy-pille — **ikke** `#0066ff` som knapp. Theme-reveal.  
-**Ikke ta:** Board `#121212`, «ingen system-tema», `dark:` per komponent.  
-**Filer:** `tokens.css` mørk-blokk, `pulse-kort.tsx`, `phone-profil-meny.tsx`, `tema-provider`.
-
-### 5.12 Tilgjengelighet
-
-**Ta:** Input-assosiasjon (label/hint/error). Search Escape + tøm utenfor tab-rekkefølge. Toast `aria-live`. Skeleton `aria-busy`. Modal fokusfelle (Dialog har det; SorteringArk har det ikke). `iconOnly` + `aria-label`.  
-**Ikke ta:** React Aria som ny motor — Radix dekker dialog/menu/switch.  
-**Filer:** `sortering-ark.tsx`, `Input`, `phone-sok-felt.tsx`, Dialog.
-
-### 5.13 Duplikater / opprydding
-
-| Duplikat | Gjør |
-|----------|------|
-| `Btn` vs `Button` vs `MotionButton` | Utfas `Btn`. `Button` = statisk, `StatefulButton` = lagre/send. |
-| Primitiv-`Badge` vs shadcn `Badge` | Primitiv er allerede ute av barrel — slett eller intern-only. |
-| `kunder/_delt` ↔ `lager/_delt` | Én modul. |
-| `OrgRad` ≈ `InnstillingRad` | Én rad-API. |
-| `PhoneKort` (mekaniker) vs `Pulse*` | Bevisst to hjem — dokumenter, ikke merge uten Mikael. |
-| Underline-faner × 4 skall | Én `UnderstrekFaner` med glidende ink-strek. |
-| `PhoneTemaRad` vs `TemaToggle` | Del thumb-mønster; behold 3 vs 2 modi. |
-| Profil `#0066ff` vs sidebar Galaxy-ink | Samme CTA-rolle, to farger — rett profil til ink/Galaxy. |
-| Preview-sider som kopierer phone-bar | La dem importere `PhoneShell`, ikke duplisere mål. |
+`StatefulButton` (beUI) forblir submit-knapp med pending/success. Board-`Button` har ikke det state-API-et. Modal-pending dekkes av `AlertDialog` `pendingLabel`, ikke ved å kaste beUI.
 
 ---
 
-## 6. Prioritert rekkefølge
+## 5. Restyle til vår look (etter `add`, før synlig bruk)
 
-### Topp 10 raske gevinster (S, innenfor lås, synlig kvalitet)
+Board-kilden bruker **semantiske class-navn** (`bg-button-primary`, `text-text-primary`, `ring-border-focus-ring`, `shadow-xs`). Vi eier fila og tokenene. Restyle = koble tokenene til `--ew-*`, ikke skriv om hver komponent først.
 
-1. **Synlig mørk hairline** — `--ew-border` mørk ≠ `#262626`. Én linje i `tokens.css`. Låser «dual theme» som faktisk leses.
-2. **`text-meta` + slå ned `text-[12px]`/`text-sm`/`font-semibold`** i produktflater. Typografi slutter å se ut som to systemer.
-3. **Søk: tøm + Escape + loading-ikon** i `PhoneSokFelt` (h-8, radius 16, inset uendret). Overlay og top-bar 1 uendret.
-4. **Glidende canvas-soft thumb** på dest-piller (top-bar 2) og Modus-segment. Samme piller, mindre «hopp».
-5. **Glidende ink-underline** på `SideChromeSkall` / Innboks / Innstillinger. ⛔ ikke blå.
-6. **Dialog + Ronny-sheet: 300ms `EASE_DRAWER` + 4px blur-in.** Vi har kurven; vi bruker den ikke.
-7. **`SorteringArk` / profil: dimmet scrim + fokusfelle.** Fjern `shadow-lg` på profil (tint-regel).
-8. **Profil «Ditt abonnement»:** vekk `bg-[#0066ff]`. Bruk ink-pille eller eksisterende `OppgraderPille`.
-9. **Felles `TomtFlate` / `LasterFlate` / `.ew-skjelett`.** Bytt innboks + kunder + lager i samme PR.
-10. **Felt-fokus → `--ew-focus`** (ikke `#ffffff`) + `Input` med `hint`/`errorMessage`. Sign-in og Ny jobb først.
+### 5.1 Token-omkobling i `packages/ui/src/theme.css`
 
-### Større løft (M/L, etter topp 10)
+Etter init, `@import` den omkoblede Board-fila og overstyr interaktive tokens. Ikke rør `--ew-*`. Ikke remap hele `accent-*`-rampen til ink — `#0066ff` skal fortsatt kunne brukes på Popular / savings / dagsbue-viz.
 
-1. **State-tokens** (hover/active/disabled/error) gjennom `tokens.css` + knapper/felt/rader. Fundamentet Board UI har, Mobbin-farget.
-2. **Én liste/tabell-primitiv** (44px) på Kunder, Lager, Butikk, Team, Kjøretøy. Deretter ev. shadcn `table`.
-3. **Toast** (beUI-stack eller tynn egen, ikke sonner/cmdk) for lagre-feedback. `StatefulButton` blir ikke eneste suksess-signal.
-4. **OTP-bokser** på 5-sifret innlogging (Mobbin-felt, ikke Board 48/10).
-5. **Theme View Transition** (820ms `EASE_OUT`) i `TemaProvider` — Lyst/Mørkt/System beholdes.
-6. **Skjema-løft:** shadcn `select`/`checkbox` hentet og kledd i `.ew-felt`. Ny jobb, lager-bevegelse, org.
-7. **Ronny-tenker:** rim-loader + elapsed (Board Composer Loader / Agent Thinking som *idé*). Ingen Pro-kjøp, ingen model-picker.
-8. **Widget-harmonisering:** radius 16/24, fane-underline ink, samme tom/feil-språk som appen.
-9. **Utfas F0-12-duplikater** (`Btn`, død primitiv-Badge) og samle `InnstillingRad`/`OrgRad`.
-10. **Kalender-polish** (i dag-markør, disabled) uten å bytte 07–18-raster eller hente Board Calendar (Pro).
+```css
+@import "./styles/theme.css"; /* Board-utilities, etter --ew-* */
+
+:root {
+  /* CTA: Board @utility bg-button-primary leser denne gradienten. Solid ink. */
+  --gradient-button-primary-default: var(--ew-ink-utility);
+  --gradient-button-primary-hover: var(--ew-ink-hover);
+  --gradient-button-primary-active: var(--ew-ink-utility);
+  --gradient-button-primary-disabled: var(--ew-surface-2);
+
+  /* Fokus / valgt kontroll — ink, ikke accent-500 (#3392ff). */
+  --color-border-focus-ring: var(--ew-focus);
+
+  /* Flater Board-komponentene faktisk maler */
+  --color-background-full: var(--ew-bg);
+  --color-background-primary-default: var(--ew-surface);
+  --color-background-secondary-default: var(--ew-surface-2);
+  --color-background-tertiary-default: var(--ew-inset);
+  --color-text-primary: var(--ew-fg);
+  --color-text-secondary: var(--ew-fg-muted);
+  --color-text-tertiary: var(--ew-fg-faint);
+  --color-separator-border: var(--ew-border);
+
+  /* Switch / checkbox / radio «on» — ink, ikke blå gradient */
+  --color-switch-on-chip-start: var(--ew-ink-utility);
+  --color-switch-on-chip-end: var(--ew-ink-utility);
+  --shadow-checkbox-selected: none;
+
+  /* Tint, ikke skygge */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-card: none;
+  --shadow-dropdown: none;
+  --shadow-sidebar: none;
+}
+```
+
+Presise variabelnavn i Board-fila er verifisert (`--gradient-button-primary-*`, `--color-border-focus-ring`, `--shadow-checkbox-selected`). Hvis `init` skriver en nyere `theme.css`, diff mot denne lista før merge.
+
+### 5.2 Typoskala
+
+Board-komponenter bruker composite utilities (`text-body-medium` = 14/20/500). Vi beholder Inter **650 / 450 / 300** og `text-title` / `text-label` / `text-body`. Etter `add`: i de installerte `base/`-filene, bytt Board-typeclassene til våre tre. Ikke ta inn `typography.css` som sannhet.
+
+### 5.3 Ikoner
+
+I kilden vi eier, bytt default-importer:
+
+| Fil | Default nå | Bytt til |
+|-----|------------|----------|
+| `search-field.tsx` | `RiSearchLine` | `Search` fra `@endwise/ui` / lucide |
+| `command-palette.tsx` | `RiSearchLine`, `RiCornerDownLeftLine` | lucide `Search`, `CornerDownLeft` |
+| `modal.tsx` | `RiErrorWarningLine` på AlertDialog | lucide `CircleAlert` |
+| `notification.tsx` | `RiCheckboxCircleFill` m.fl. | lucide-statusikoner |
+| `number-field.tsx` | Remix stepper | lucide `ChevronUp` / `ChevronDown` |
+| `input` / knapper | `leadingIcon={Ri…}` i eksempler | `leadingIcon={Plus}` osv. |
+
+`@remixicon/react` blir værende i `package.json` til siste default er borte. Produktkode skal ikke importere den.
+
+### 5.4 Switch-mål
+
+I `base/switch/switch.tsx`: legg inn Endwise-størrelse (`h-[var(--ew-switch-h)] w-[var(--ew-switch-w)]`, thumb `--ew-switch-thumb`, travel 10px) som default, eller overstyr `sm` til 24×14. Board-defaults (28×16 / 42×24 / 56×32) skal ikke vises i produktet.
+
+### 5.5 Telefon-søk (oppførsel, ikke chrome)
+
+```tsx
+<SearchField
+  size="small"
+  shape="rounded"
+  icon={Search}
+  aria-label="Søk"
+  placeholder="Søk"
+  clearLabel="Tøm søk"
+  className="h-8 min-w-0 flex-1"
+/>
+```
+
+Ikke `pill`. Ikke endre top-bar 1/2, dest-piller, 389/598/452, `FORHANDLER_NAV`.
+
+### 5.6 `cx` vs `cn`
+
+`src/utils/cx.ts` (Board) må kjenne `text-title` / `text-label` / `text-body` — ellers gjentar vi farge-vs-størrelse-bugen som `cn()` allerede fikser. `src/lib/utils.ts` (`cn`) forblir shadcn/beUI-konvensjonen.
 
 ---
 
-## 7. Telefon og desktop — hva som *ikke* endres
+## 6. Per-komponent: fil → Board → svakhet → innsats
 
-**Telefon (kun forenkling av samme utgangspunkt):**
-
-- Top-bar 1: logo 32 · søk h-8 · Ronny 28 · profil 28 — **målene står**.
-- Top-bar 2: `FORHANDLER_NAV`-piller + hairline — **destinasjoner og plassering står**.
-- Ingen sidebar, ingen tilbake-i-bar-1, ingen midtstilt logo, ingen ny dest.
-
-Tillatte telefon-forbedringer: tøm i søk, thumb på piller, scrim på menyer, motion på sheet, token-fokus, tom-flater i *innholdet* under chrome.
-
-**Desktop:** 389 / 598 / 452 og sidebar-innhold (275/259, nav-rader, Galaxy-CTA) står. Tillatt: hover-token, hairline, theme-reveal, dialog-motion i boks 2.
-
----
-
-## 8. Stack-vedtak som *ikke* tas her
-
-Følgende ville krevd stopp-og-spør mot `docs/endwise-techstack.md` / `docs/UI-PAKKER.md` §2:
-
-- `npx boardui init` / `add` (skriver `react-aria-components` + Remixicon + egne `styles/*`).
-- Board UI Pro-lisens.
-- Ny ikonpakke.
-- shadcn `command` / cmdk (tidligere avvist).
-- Skyggesystem som token.
-
-**Anbefalt holdning:** Board UI er referanse, ikke avhengighet. Alt som lander i Endwise går gjennom `--ew-*`, Inter 650/450/300, ink-CTA, tint, eksisterende shadcn/beUI.
+| Vår fil | Board-item | Svakhet i vår kode (verifisert) | Vedtak | Innsats | Risiko |
+|---------|------------|----------------------------------|--------|---------|--------|
+| `packages/ui/src/primitives/input.tsx` | `input` | Ingen label/hint/error, ingen `aria-invalid`/`describedby`. Bara native attrs. | Erstatt som primitiv etter restyle | S | Lav — ny sti, gammel `Input` kan alias-es |
+| `apps/web/app/_auth/felter.tsx` | `input` (`label`+`hint`+`errorMessage`) | `htmlFor` ok; ingen feil/hint/`aria-invalid` | Forbedre: `Field` blir tynn wrapper eller droppes | S | Auth-utseende (`FELT_LG` 52/17) må bevares via `size` + class |
+| `signin-skjema.tsx`, `2fa-oppsett`, `bytt-epost`, team-TOTP, forhandler-slett | `input-otp` | Ett felt + letter-spacing. Ingen per-siffer, lim/autofill-edge | Erstatt TOTP/magic-kode | M | Autofill + iOS zoom (vi har test for 16px) |
+| `_shell/phone-sok-felt.tsx` | `search-field` | Ingen clear/Escape/loading | Forbedre oppførsel; **behold h-8** | S | Chrome-lås |
+| `packages/ui/src/components/dialog.tsx` | `modal` | Ingen posisjon, header, AlertDialog, pending, reduced-motion | Ny fil i `base/`; flytt bekreft-dialoger. Behold Radix til palett er flyttet | M | Fokus/scroll på telefon |
+| `_shell/sortering-ark.tsx` | `dropdown` | Escape + scrim, ingen fokusfelle/restore | Forbedre a11y; behold 16px / `text-label` / ingen heading | M | Anker i 390-kolonnen (`absolute`) |
+| `packages/ui/src/components/switch.tsx` | `switch` | Radix dekker toggle; mangler label-API; Board-default er feil mål/farge | Hent + restyle til 24×14 ink; så bytt kallsteder | S | Visuell regressjon hvis default sm vises |
+| `packages/ui/src/components/dropdown-menu.tsx` | `dropdown` | Radix OK for meny; Sortering er ikke denne fila | Parallell i `base/`; ikke mass-replace menyer i batch 1 | S | To meny-API-er |
+| `packages/ui/src/components/button.tsx` + `StatefulButton` | `button` | shadcn + beUI dekker CTA/pending | **Behold.** Board-button kun som modal-dep i batch 1 | — | Lav hvis vi ikke flipper barrel |
+| `packages/ui/src/components/prompt-input.tsx` | — | Enter-submit + composition | **Behold.** Ikke `textarea` | — | — |
+| `packages/ui/src/components/avatar.tsx` | `avatar` (rdep av toast) | bloub er vedtak | **Ikke eksporter** Board-avatar | S | Navnekollisjon hvis noen importerer feil sti |
+| Ingen produkt-tooltip | `tooltip` | — | Hent, bruk på ikon-only | S | Trigger må være focusable |
+| Ingen produkt-toast | `toast` | — | Hent + `<Toaster />` i app-layout | S | Remix-statusikoner til lucide |
+| Ingen Select/Checkbox/Radio | `select` / `checkbox` / `radio` | Native eller knapp | Hent | M | Select-popover vs telefon |
+| Ingen Command Palette | `command-palette` | Layout-copy peker på noe som ikke finnes | Hent; desktop først | M | ⌘K vs telefon; NB-copy via `template-copy` |
+| matrix-loaders / beUI | `spinner` / `skeleton` | AI-lastere er vedtak | Hent som *felt*-laster, ikke Ronny | S | Feil spinner på feil flate |
+| Innstillinger-faner / dest-piller | `tabs` / `segmented-control` | Dest-piller er låst chrome | Bare innhold-faner | S | Noen limer dem i top-bar 2 |
+| Ronny-sheet / telefon-IA | `drawer` / `sidebar` / `app-shell` | Chrome låst | `drawer` ok som primitiv; **ikke** sidebar/app-shell | — | IA-brudd hvis noen `add`er shell |
 
 ---
 
-## 9. Verifikasjon mot roadmap-ordlyd
+## 7. Ikke i første batch
 
-Oppgaven er eier-bestilt undersøkelse, ikke et F-punkt med `status: planned`. Relaterte ferdige punkt: F0-11 (tokens, Mobbin-lås 07.09), F0-12 (primitiver — nettopp de som nå bør revurderes), F5-13 (shell). Ingen status er endret i `docs/endwise-roadmap.html`.
+| Item | Hvorfor ikke nå |
+|------|-----------------|
+| `sidebar`, `app-shell`, `theme-toggle` | Telefon: ingen sidebar. Desktop: 389/598/452 + `FORHANDLER_NAV`. Theme-toggle er vår `_lib/tema-toggle.tsx`. |
+| `avatar` som produkt | Allerede inne via toast-rdep. bloub forblir `Avatar`. |
+| `agent-chat`, `agent-runtime`, `agent-thinking`, `agent-log`, `composer-loader` | Vi har `_chat/agent-chat.tsx` + shadcn message/scroller + `PromptInput`. Overlap uten gevinst. Drar `ai` / `@ai-sdk/react` (allerede inne) + hele app-shell. |
+| `revenue-chart-card`, `orders-chart-card`, `stat-cards`, … | Amicro er chart-motor. ⛔ Recharts som ny motor. Flere er Pro. |
+| `data-table`, `data-grid` | Drar `@tanstack/react-table`. Egne `<table>`-er kan byttes senere. |
+| `date-picker`, `date-range-picker`, `date-calendar`, `time-field`, `meeting-scheduler` | `@internationalized/date`. Egen økt. |
+| `file-upload`, `color-picker`, `tree-view`, `accordion`, `slider`, `tag-group`, `combobox`, `pagination`, `carousel`, `breadcrumb` | Ingen akutt kallsted, eller dekkes av P1 Select/Input. |
+| `auth-card`, `settings-modal`, `notification-center` | Hele sider/maler. Chrome og auth-IA er våre. |
+| `chip`, `badge`, `announcement`, `status-dot`, `kbd`, `divider`, `social-button`, `link-button`, `button-group`, `checkbox-card`, `radio-card`, `switch-card` | visuell extras. `Badge`/`Chip` finnes. `kbd` kommer som rdep av command-palette. |
+| Pro-items | Lisens + ulest kilde. |
 
 ---
 
-## 10. Økt-rapport
+## 8. Avhengighetskart første batch
 
-1. **Hva er gjort:** Kartlagt Board UI (docs + kilde på tokens, typografi, knapper, felt, søk, OTP, modal, drawer, skeleton, tabs, segmented, table, toast, chip, theme-toggle, sidebar, registry) og Endwise (tokens, `@endwise/ui`, chrome, alle navngitte flater). Rapport i denne fila.
-2. **Hva gikk galt:** Context.dev MCP krevde auth (omgått med Board UI markdown). `sitemap.xml` 500. Pro-kilde og noen frie sider (accordion, spinner, command-palette, auth-card) er ikke kilde-lest — merket. Ingen visuell pixel-måling i nettleser.
-3. **Hvilke fikser:** Ingen produktkode. Ingen stack-tillegg.
-4. **Neste steg:** Hvis Mikael sier ja — start topp 10, punkt 1–3 (hairline, typografi-disiplin, søk-tøm) i en egen, liten PR. Ikke `boardui add`.
+```
+init
+  → theme, typography, globals, cx (tailwind-merge ^3.6), agent-regler (slettes)
+
+add [22 navn]
+  → RAC ^1.17.0, @remixicon/react ^4.9.0
+  → rdeps: direction, scroll-fade, template-copy, chevrons, directional-icon,
+           use-dismiss-on-outside-press, kbd, notification, avatar (Board),
+           spinner, button, close-button, input, cx, globals
+  toast → notification → motion ^12.42.2 (allerede), remix-ikoner, Board-avatar
+  search-field → input + close-button + spinner + template-copy
+  modal → button + close-button + direction + scroll-fade + spinner
+  drawer → modal
+  command-palette → direction + kbd + scroll-fade + template-copy
+  select → input + chevrons + use-dismiss-on-outside-press
+```
+
+`pnpm` i workspace: deps installeres i `packages/ui` når kommandoen kjøres derfra.
+
+---
+
+## 9. Telefon — bare oppførsel
+
+Låst og urørt av denne planen: logo 32, søk `h-8`, Ronny 28, profil 28, dest-piller, ingen sidebar, 389/598/452, `FORHANDLER_NAV`.
+
+Det SearchField / Modal / dropdown *skal* gi på telefon:
+
+- Søk: Escape tømmer, synlig clear, `isLoading` uten at feltet vokser over `h-8`.
+- Sortering: fokus inne i arket, Tab sykler valg, Escape lukker, fokus tilbake til trigger. Samme 16px-plate, ingen heading.
+- Modal/AlertDialog: fokusfelle, `pendingLabel` på slett/2FA, reduced-motion.
+
+---
+
+## 10. Når batchen faktisk kjøres (neste økt, ikke denne)
+
+1. `boardui.json` + exports.  
+2. `cd packages/ui && npx boardui@latest init --yes`.  
+3. Slett Board-`AGENTS.md` / `.cursor/rules/boardui.mdc` (eller skriv dem om til Endwise).  
+4. §5 token-omkobling + `cx` kjenner `text-title|label|body`.  
+5. `npx boardui@latest add --yes` + lista i §3.3.  
+6. Bytt Remix-defaults til lucide i de sju filene i §5.3.  
+7. Switch 24×14 ink.  
+8. Oppdater `docs/UI-PAKKER.md` (ny pakke: Board UI, CLI, pin, MIT, sti `src/components/base/`) og `docs/endwise-techstack.md` (§2: RAC som skjemamotor, Remixicon transitiv).  
+9. Koble P1-kallsteder ett felt om gangen. Ikke flip `src/index.ts` i samme commit som `add`.  
+10. Verifiser auth (magic + 2FA + invitasjon), telefon-søk, Sortering, en AlertDialog, varsel-Switch.
+
+Denne PR-en gjør **ingen** av stegene over.
+
+---
+
+## 11. Øktrapport
+
+1. **Hva er gjort**  
+   Registry (88) + kilde lastet. Linje-for-linje mot våre primitiver og kallsteder. Denne fila erstattet fargeauditen: konkret innhentingsplan (22 items, kommando, rdeps, fil-mapping, restyle, P0–P4).
+
+2. **Hva gikk galt**  
+   Ingenting i denne runden. Første versjon av fila hadde feil fokus (farger, «ikke `npx add`»). Det er rettet etter Mikaels presisering.
+
+3. **Hvilke fikser ble gjort**  
+   `docs/boardui-audit.md` skrevet om. Ingen produktkode. Ingen `boardui init`/`add`.
+
+4. **Neste**  
+   Egen økt: kjør §10. F0-11 / F0-12 / F5-13 forblir som de er til batchen er inne og verifisert.

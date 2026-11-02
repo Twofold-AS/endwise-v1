@@ -13,4 +13,4 @@ export {
   slotStarter,
   startMinForTid,
   tiderOverlapper,
-} from '@endwise/modules/booking';
+} from '@endwise/modules/booking/job-slots';

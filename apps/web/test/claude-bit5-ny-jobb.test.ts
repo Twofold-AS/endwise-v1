@@ -38,6 +38,9 @@ describe('Claude Design BIT 5 — Ny jobb / jobSlots', () => {
     expect(ny).toMatch(/data-jobb-wizard/);
     expect(ny).toMatch(/get\('kunde'\)/);
     expect(ny).not.toMatch(/settleChange/);
+    const slots = les('../app/(app)/bookinger/_job-slots.ts');
+    expect(slots).toMatch(/from '@endwise\/modules\/booking\/job-slots'/);
+    expect(slots).not.toMatch(/from '@endwise\/modules\/booking';/);
   });
 
   it('jobSlots: hverdag 08–19, lør 10–15, søn stengt, 30-min, overlap + kval', () => {

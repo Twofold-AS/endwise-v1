@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Package, Store } from '@endwise/ui';
+import { Button, DeaktivertHandling, Package, Store } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -47,14 +47,10 @@ export default function ButikkKatalogPage() {
         </p>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[12px] text-fg-muted">Ny vare er ikke tilgjengelig ennå.</p>
-        <button
-          type="button"
-          disabled
-          className="inline-flex h-control items-center rounded-full border border-border px-3 text-label text-fg-muted"
-        >
+        <p className="text-[12px] text-fg-muted">Ny vare.</p>
+        <DeaktivertHandling forklaring="Kommer senere" variant="outline">
           Ny
-        </button>
+        </DeaktivertHandling>
       </div>
 
       <div className="flex items-center justify-between gap-3">
@@ -157,9 +153,10 @@ export default function ButikkKatalogPage() {
         </div>
         <CardShell className="p-6">
           <p className="text-label text-fg">Ingen kjøretøy til salgs</p>
-          <p className="mt-1 text-[12px] text-fg-muted">
-            Kjøretøy til salgs er ikke tilgjengelig ennå.
-          </p>
+          <p className="mt-1 text-[12px] text-fg-muted">Ingen annonser er lagt ut.</p>
+          <div className="mt-3">
+            <DeaktivertHandling forklaring="Kommer senere">Ny annonse</DeaktivertHandling>
+          </div>
         </CardShell>
       </section>
     </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { DeaktivertHandling } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
@@ -65,14 +66,13 @@ export function DelDetalj({ delId, onBevegelse }: { delId: string; onBevegelse: 
         >
           Endre beholdning
         </button>
-        <span className="inline-flex h-control items-center text-[12px] text-fg-muted">
-          Endre minimum er ikke tilgjengelig
-        </span>
+        <DeaktivertHandling forklaring="Kommer senere">Endre minimum</DeaktivertHandling>
+        <DeaktivertHandling forklaring="Kommer senere">Bestill mer</DeaktivertHandling>
         <Link
           href={'/lager/bestill' as Route}
           className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg"
         >
-          Bestill mer
+          Bestillinger
         </Link>
       </div>
     </div>

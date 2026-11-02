@@ -1,6 +1,13 @@
 'use client';
 
-import { Avatar, type AvatarValg, Button, MessageSquare } from '@endwise/ui';
+import {
+  Avatar,
+  type AvatarValg,
+  Button,
+  LasterFlate,
+  MessageSquare,
+  Pagination,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -192,7 +199,7 @@ export function InboxSidebar() {
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3">
         <InboxFilterChips />
         {threads.isLoading ? (
-          <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
+          <LasterFlate label="Laster samtaler" linjer={6} />
         ) : rader.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
             <MessageSquare size={20} className="text-fg-muted" />
@@ -201,7 +208,7 @@ export function InboxSidebar() {
             </p>
             <p className="text-[12px] text-fg-muted">
               {chip === 'lost'
-                ? 'Løst er ikke tilgjengelig ennå.'
+                ? 'Løste samtaler vises når de kan markeres.'
                 : chip === 'alle'
                   ? 'Innboksen er tom.'
                   : 'Ingen samtaler for denne parten.'}
@@ -251,24 +258,14 @@ export function InboxSidebar() {
             <span className="text-[12px] text-fg-muted">
               {inboxSideEtikett(alleFiltrert.length, sideIndeks - 1)}
             </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={sideIndeks <= 1}
-                onClick={() => setSide(sideIndeks - 1)}
-                className="text-[12px] text-fg-muted disabled:opacity-40"
-              >
-                Forrige side
-              </button>
-              <button
-                type="button"
-                disabled={sideIndeks >= sider}
-                onClick={() => setSide(sideIndeks + 1)}
-                className="text-[12px] text-fg-muted disabled:opacity-40"
-              >
-                Neste side
-              </button>
-            </div>
+            <Pagination
+              page={sideIndeks}
+              totalPages={sider}
+              onChange={setSide}
+              previousLabel="Forrige"
+              nextLabel="Neste"
+              aria-label="Innboks-sider"
+            />
           </div>
         ) : null}
       </div>
@@ -356,9 +353,9 @@ function SamtaleKort({
     <div
       data-innboks-rad
       data-innboks-ulest={rad.ulest > 0 ? '1' : undefined}
-      className={`flex flex-col gap-1 border-border border-b border-l-2 py-4 transition-colors ${
-        rad.ulest > 0 ? 'border-l-fg' : 'border-l-transparent'
-      } ${aktiv ? 'bg-sidebar-active' : 'bg-transparent hover:bg-surface-2/60'}`}
+      className={`flex flex-col gap-1 border-border border-b py-4 transition-colors ${
+        rad.ulest > 0 ? 'bg-[#f3f3f3] font-[650]' : ''
+      } ${aktiv ? 'bg-sidebar-active' : rad.ulest > 0 ? '' : 'bg-transparent hover:bg-surface-2/60'}`}
     >
       <div className="flex items-center gap-2">
         {/*
@@ -389,7 +386,11 @@ function SamtaleKort({
             bevegelse="stille"
           />
         )}
-        <span className={`truncate text-label ${rad.ulest > 0 ? 'text-fg' : 'text-fg-muted'}`}>
+        <span
+          className={`truncate text-label ${
+            rad.ulest > 0 ? 'font-[650] text-fg' : 'font-[450] text-fg-muted'
+          }`}
+        >
           {rad.avsender}
         </span>
         <CountBadge count={rad.ulest} label="uleste" className="ml-auto" />

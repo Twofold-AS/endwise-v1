@@ -1,10 +1,11 @@
 'use client';
 
+import { DeaktivertHandling } from '@endwise/ui';
 import { InviterAnsatt } from './_inviter-ansatt';
 
 /**
  * Claude §4.3 CHATACT. Inviter = ekte `messages.forkThread`.
- * Fjern / Forlat / Løst er skjult — ingen tRPC ennå.
+ * Fjern, Forlat og Løst vises deaktivert til API finnes.
  */
 export function TradHandlinger({ threadId }: { threadId: string }) {
   return (
@@ -14,6 +15,9 @@ export function TradHandlinger({ threadId }: { threadId: string }) {
       aria-label="Samtale"
     >
       <InviterAnsatt threadId={threadId} />
+      <DeaktivertHandling forklaring="Kommer senere">Fjern</DeaktivertHandling>
+      <DeaktivertHandling forklaring="Kommer senere">Forlat</DeaktivertHandling>
+      <DeaktivertHandling forklaring="Kommer senere">Marker som løst</DeaktivertHandling>
     </nav>
   );
 }

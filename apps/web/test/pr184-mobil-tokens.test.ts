@@ -83,17 +83,17 @@ describe('PR #184 mobil-tokens', () => {
   });
 
   it('Side/Seksjon/ListeRad brukes på de ekte mobilrutene', () => {
-    expect(les('../app/(app)/_shell/phone-home-dealer.tsx')).toMatch(/<Side /);
+    expect(les('../app/(app)/_shell/phone-home-dealer.tsx')).toMatch(/<Side/);
     expect(les('../app/(app)/butikk/page.tsx')).toMatch(/<Side/);
     expect(les('../app/(app)/lager/page.tsx')).toMatch(/<Side/);
     expect(les('../app/(app)/lager/page.tsx')).toMatch(/ListeRad/);
     expect(les('../app/(app)/butikk/page.tsx')).toMatch(/ListeRad/);
-    expect(les('../app/(app)/kunder/page.tsx')).toMatch(/<Side /);
-    expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/<Side /);
-    expect(les('../app/(app)/saker/page.tsx')).toMatch(/<Side /);
-    expect(les('../app/(app)/bookinger/ny/page.tsx')).toMatch(/<Side /);
-    expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/<Side /);
-    expect(les('../app/(app)/innboks/_inbox-sidebar.tsx')).toMatch(/<Side /);
+    expect(les('../app/(app)/kunder/page.tsx')).toMatch(/<Side/);
+    expect(les('../app/(app)/kunder/[id]/page.tsx')).toMatch(/<Side/);
+    expect(les('../app/(app)/saker/page.tsx')).toMatch(/<Side/);
+    expect(les('../app/(app)/bookinger/ny/page.tsx')).toMatch(/<Side/);
+    expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/<Side/);
+    expect(les('../app/(app)/innboks/_inbox-sidebar.tsx')).toMatch(/<Side/);
     expect(les('../app/(app)/innboks/[id]/page.tsx')).toMatch(/<Side/);
     expect(les('../app/(app)/jobber/_dagsliste.tsx')).toMatch(/ListeRad/);
     expect(les('../app/(app)/innboks/_samtale-detaljer.tsx')).toMatch(/Drawer/);

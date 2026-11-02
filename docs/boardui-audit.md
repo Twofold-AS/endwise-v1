@@ -23,8 +23,17 @@
 | Ekstrahert kilde | `/tmp/boardui-src/` (179 filer) | Lest per komponent under |
 | Agent-regler Board skriver ved `init` | `rules` → `docs/agent-rules.md` | Lest |
 | `theme.css` (token-navn vi må omkoble) | `theme` → `styles/theme.css` | Lest |
+| Pro-lisens (sist oppdatert 31. okt 2026) | https://www.boardui.com/license | Lest |
+| Vilkår (sist oppdatert 21. aug 2026) | https://www.boardui.com/terms | Lest |
+| Pro-install (`init --pro`, `login`, env) | https://www.boardui.com/components/pro-installation | Lest |
+| Pro-index (40 items, metadata + usage, aldri kilde) | https://www.boardui.com/r/registry-pro.json | Lest 2. nov 2026 |
+| Agent Creator, Questionnaire, Getting started | `/components/agent-creator` · `/questionnaire` · `/getting-started` | Lest (docs + public usage; **ingen Pro-kilde**) |
+| Agent-sett (Composer, Task List, …) | https://www.boardui.com/blog/react-design-system-for-agentic-products (28. okt 2026) | Lest |
+| Pris (euro) | Samme blogg + `/blog/best-react-design-systems` | Lest. `/pricing` svarte i denne økten med forsidetekst uten beløp. |
 
-`sitemap.xml` svarte HTTP 500. Katalogen er `registry.json` (88) + `llms.txt`. Markedsføringen sier 103 — de 15 som mangler i det åpne registeret er Pro (chart-kort, agent-templates). Pro-kilde er **ikke** lest og skal **ikke** hentes.
+`sitemap.xml` svarte HTTP 500. Fri katalog: `registry.json` (88). Pro-katalog: `registry-pro.json` (40: 30 komponenter/blokker + 10 maler). Getting-started sier «73 free + 30 Pro + 10 templates»; forsiden sier 103 unike — tallene stemmer når maler telles separat. **Pro-`.tsx` er ikke lastet** (krever nøkkel; vi har ikke kjøpt). Alt om API utover public usage er merket ukjent.
+
+Context.dev MCP var `needsAuth` i denne økten; kildene over er Board UI sine egne sider + `registry-pro.json`.
 
 ### Endwise-kilder som er sammenlignet linje for linje
 
@@ -419,16 +428,213 @@ Denne PR-en gjør **ingen** av stegene over.
 
 ---
 
-## 11. Øktrapport
+## 12. Board UI Pro — katalog, Agent Creator, anbefaling
+
+**Dato:** 2. november 2026 (samme PR).  
+**Type:** Fortsatt undersøkelse. Ingen kjøp, ingen `login`, ingen Pro-`add`.  
+**Spørsmål fra Mikael:** Han kan betale hvis det hjelper, vil bruke mer derfra, og tenker Agent Creator (eller tilsvarende Pro-blokk) til at forhandlere oppretter jobber, kunder, lagervarer, tjenester.
+
+**Kort svar først:** Agent Creator er **ikke** en opprettelses-wizard for Endwise-entiteter. Den er en **profil-sidebar for AI-agenter** (papir-avatar, navn, stemme). Forhandler-CRUD dekkes av **gratis** batch 1 (`input` / `select` / `modal`) mot våre eksisterende `InnstillingSeksjon`-skjemaer. Pro er aktuelt for **Ronnys agent-UI** (composer, task list, spørsmål i tråden) — og bare etter at Pro-kilde kan ligge i et **privat** repo.
+
+### 12.1 Katalog, pris, lisens, install
+
+#### Hva som er Pro (40 items i `registry-pro.json`)
+
+Getting-started: «30 Pro components and blocks» + «all 10 full-page templates». Registeret har nøyaktig 40 navn. Kilde er bak nøkkel; docs og usage-eksempel er offentlige.
+
+**Agent-laget (11)**
+
+| `add`-navn | Hva docs/registeret sier den er |
+|------------|----------------------------------|
+| `agent-creator` | Kontrollert sidebar: papir-avatar, emotion/shape, farger, profilfelt, stemme. Se §12.2. |
+| `agent-avatar` | Animerte papir-avatarer (9 silhuetter, blikk, turn). Samme familie som multi-agent-chat. |
+| `multi-agent-chat` | Arbeidsflate: 1:1 og gruppe, live avatar-editor, Board-composer. |
+| `composer` | Chat-composer: vedlegg, modellmeny, voice, send, statusbar, liquid-glass mens agenten jobber. |
+| `composer-panel` | To-rads composer: prompt oppe; add / permission / model / mic / send nede; status-tab (branch, mappe, context-meter). |
+| `composer-attachments` | Samme panel med bilde/dokument-fliser og opplastingsring. |
+| `agent-progress` | Kollapsbar **AI-steg**-progress (active / pending / completed). Ikke et skjemawizard. |
+| `agent-limits-card` | Context-vindu + plan-kvoter med reset-tid. |
+| `task-list` | Strømmende agent-oppgavelogg (steg, filer, shimmer-tittel). |
+| `web-search` | Forsknings-sti: spørringer + kilder med nettsted-merke. |
+| `questionnaire` | Plan-mode **i chat**: ett spørsmål per steg, checkbox eller nummererte rader, valgfri Other-rad, Previous/Next. |
+
+**Kalender / tavle (2)**
+
+| `add`-navn | Hva den er |
+|------------|------------|
+| `calendar` | Månedsvisning med event-chips, detalj-popover, månedsskifter, inbox-feed. Krever `@internationalized/date` i public example. **Ikke** det samme som gratis `date-picker`. |
+| `project-board` | Kanban: dra mellom kolonner, ticket-detalj, properties, kommentarer. Har egen «create-ticket»-dialog — det er **kanban-kort**, ikke Endwise-jobb. |
+
+**Chart-kort (17)** — `earnings-chart-card`, `line-chart-card`, `contributions-card`, `radar-chart-card`, `radial-chart-card`, `funnel-chart-card`, `sankey-chart-card`, `stage-bars-card`, `bar-list-card`, `area-chart-card`, `combo-chart-card`, `scatter-chart-card`, `heatmap-chart-card`, `steps-card`, `sleep-score-card`, `activity-rings-card`, `most-active-days-card`. Recharts-motor (tredjepart MIT, ifølge lisenssiden).
+
+**Maler (10)** — `template-multi-agent-chat`, `template-home-dashboard`, `template-project-board`, `template-marketing`, `template-finance`, `template-hr`, `template-medical-profile`, `template-ai-chat`, `template-ai-profile`, `template-ai-image-generation`. CLI: `npx boardui@latest add template-ai-chat`. Docs: maler inkluderer side, Pro-blokker, gratis deps og bilder. **Installeres i appen, ikke i `packages/ui`** (CLI-docs: routes/public assets splittes ikke over workspace-pakker).
+
+**Ikke i Pro — allerede gratis** (ofte forvekslet med Pro): `sidebar`, `app-shell`, `data-table`, `data-grid`, `date-picker`, `date-range-picker`, `date-calendar`, `time-field`, `meeting-scheduler`, `file-upload`, `agent-chat` / `agent-runtime` (Chat Starter), `settings-modal`. De sto i §7 som «ikke batch 1», men de krever **ikke** lisens.
+
+**Finnes ikke i katalogen (verifisert mot `llms.txt` + `registry-pro.json`):** generisk form-wizard / stepper / «entity creator» / «agent creator» som lager jobber eller kunder. Closest Pro-steg-UI er `questionnaire` (chat-kort med valg-rader) og `agent-progress` (AI-plan). Closest gratis flerside er `settings-modal`.
+
+#### Pris
+
+Lisenssiden lister **plan-navn og seter**, ikke euro. Beløp fra Board UI sin egen blogg 28. okt 2026 («launch pricing, as of October 2026») og sammenligningsinnlegget:
+
+| Plan | Seter | Oppdateringer | Pris (én gang, euro) |
+|------|--------|---------------|----------------------|
+| Starter (gratis) | — | Gratis-kilde, MIT | 0 |
+| 1 Year of Updates | 1 utvikler | Pro-kilde + nytt i 12 mnd | €149 |
+| Lifetime Access | 1 utvikler | Pro-kilde så lenge Board publiserer | €199 |
+| Unlimited for Startups | inntil 5 utviklere i **én organisasjon** | som Lifetime | €349 |
+
+Ingen abonnement, ingen auto-fornyelse. Når 12-månedersvinduet er ute: installert kilde **fortsetter å virke** og får brukes i nye prosjekter; det som stopper er `add` av ting publisert etter datoen. `/pricing` viste ikke beløp i markdown-svaret denne økten — **bekreft på checkout** før kjøp (Lemon Squeezy, MVA etter land).
+
+#### Lisens — kommersiell SaaS?
+
+**Ja, Endwise som betalt SaaS er tillatt** (lisens 31. okt 2026):
+
+- Ubegrenset antall sluttprodukter, «including products you sell and applications you charge for».
+- Lov å endre, restyle, slette, blande med egen kode.
+- Dere eier sluttproduktet og endringene. Board eier kilden.
+- Internt designsystem OK så lenge det **blir inne i organisasjonen**.
+- Folk som aldri rører kilden (designere, testere, forhandlere som *bruker* appen, kunder) trenger **ikke** sete.
+
+**Forbud** som treffer oss:
+
+- **Ikke publiser Pro-kilde i et offentlig repo.** Lisensen: «Keep the code in your own *private* repositories». `Twofold-AS/endwise-v1` er **public** (`gh repo view` 2. nov 2026). Å `add`e Pro hit uten å gjøre repoet privat (eller legge Pro i en privat pakke/submodule) er **lisensbrudd**.
+- Ikke redistribuer kilden som bibliotek, starter-kit eller kurs. Ikke bygg en konkurrent til Board UI. Ikke bygg et verktøy der *andre* blar/genererer/eksporterer Board-kilden.
+- Nøkkelen er personlig. Ikke del den. 1-seters plan: neste menneske som *installerer eller redigerer* Board-kilde trenger egen lisens. Sete kan flyttes når noen slutter.
+- «Build a tool that lets other people browse, preview, generate, export or customise the Source» — **ukjent** om en fremtidig «forhandler designer sin egen UI av Board-kilder» ville truffe dette. Vanlig bruk av installerte komponenter i Endwise-UI-et er sluttprodukt, ikke det.
+
+Gratis-kilde forblir MIT (offentlig repo OK). CLI på npm er MIT; det den *skriver* av Pro er denne lisensen.
+
+**Ukjent:** om Cursor Cloud Agents som skriver Board-filer teller som ekstra seter. Lisensen teller «one human being who works with the Source». Vilkårene sier i tillegg at nøkkelen aktiverer et **begrenset antall maskiner**, og at `logout` frigjør sete. CI skal ikke `login` — bruk `BOARDUI_LICENSE_KEY`. Spør `hi@boardui.com` før flere agenter/`login` på CI-maskiner.
+
+#### Hvordan Pro installeres (ikke kjørt)
+
+Samme CLI som gratis. Auth er **lisensnøkkel**, ikke GitHub-token.
+
+```bash
+# Etter checkout (Lemon Squeezy): nøkkel på e-post.
+cd packages/ui
+npx boardui@latest init --pro --yes          # Pro-deps i tillegg til vanlig init
+npx boardui@latest login YOUR_LICENSE_KEY    # én maskin = ett sete
+# CI / agent uten tty:
+#   BOARDUI_LICENSE_KEY=…   (ikke login)
+npx boardui@latest add --yes agent-creator composer questionnaire
+npx boardui@latest add --yes template-ai-chat   # i apps/web, ikke packages/ui
+npx boardui@latest logout                       # frigjør maskin-sete
+```
+
+MCP stdio (`npx -y boardui@latest mcp`): `activate_license` + `install_components`. HTTP-MCP (`https://www.boardui.com/mcp`) er **read-only** og installerer ikke Pro-kilde.
+
+`npx boardui@latest list` viser gratis **og** Pro-navn. `add` uten gyldig nøkkel på Pro-item: **ikke verifisert i denne økten** (vi kjørte det ikke). Docs: Pro-badge, nøkkel kreves.
+
+Restyle etter `add`: samme §5 (ink-CTA, `--ew-*`, lucide, ingen chrome-bytte).
+
+### 12.2 Agent Creator — hva den faktisk er
+
+**Ikke en AI-generator. Ikke en builder som lager jobber/kunder. Ikke et generisk opprett-skjema.**
+
+Offisiell beskrivelse (`llms.txt` + `registry-pro.json` + docs-siden):
+
+> A controlled agent creator sidebar with animated avatars, emotion and shape pickers, custom colors, profile fields, and voice preferences.
+
+Blogg 28. okt 2026: «In Agent Creator you give an agent a **name**, a **description** and a **voice**, and pick one of **nine paper shapes** with an **expression** and a **color**.»
+
+Docs-intro (offisiell side, sitert fra sidesammendrag): papir-avatarer, ni former, ansikt, farger, profilfelt, **voice / language / notification**-preferanser. Gjenbrukbar sidebar. Public usage (verifisert i registeret):
+
+```tsx
+import { AgentCreator } from "@/components/application/multi-agent-chat/agent-editor";
+<AgentCreator agent={agent} onChange={setAgent} />
+// parent: h-[760px] w-[356px]
+```
+
+Samme docs: «Pass an `agent` and handle `onChange` to keep the complete profile in your own state. **Save those changes to your service when needed. The block does not write to storage itself.**» Parent skal ha fast høyde; kan ligge i sidebar, drawer eller dialog. `onClose` viser lukk-knapp.
+
+Den bor i **multi-agent-chat**-pakken (`agent-editor`), ikke som en frittstående «create anything»-motor. Malen `template-multi-agent-chat` bruker den som «live agent creator» ved siden av ti sample-agenter.
+
+**Ukjent (kilde ikke lest):** TypeScript-shape på `agent` / `INITIAL_AGENTS`. Om `voice` er en `<select>` av navn eller ekte TTS. Om language/notifications faktisk er i API-et (står i intro, ikke i det korte register-feltet). Om feltene kan byttes mot «navn / telefon / regnr» uten å skrive om blokken. Intern a11y utover det RAC-basen ellers gir.
+
+#### Passer den til forhandler-opprettelse i Endwise?
+
+| Flate | Vår fil i dag | Agent Creator? |
+|-------|---------------|----------------|
+| Ny jobb | `apps/web/app/(app)/bookinger/ny/page.tsx` — `InnstillingSeksjon`, kunde/kjøretøy/tjenester/tid, Vegvesen-oppslag, `mechanics.match`, `bookings.create` | **Nei.** Jobb er slot-lås + matcher, ikke agent-identitet. |
+| Ny kunde | `kunder/_ny-kunde.tsx` — navn/telefon/epost, `customers.create` | **Nei.** Tre tekstfelt. Ingen avatar/stemme. |
+| Ny tjeneste | `innstillinger/tjenestekatalog/_ny-tjeneste.tsx` — navn, kjøretøytype, varighet, pris, `services.create` | **Nei.** |
+| Lager | `lager/lokasjoner/page.tsx`, `lager/deler/_bevegelse-dialog.tsx` | **Nei.** |
+| Opprett ansatt | `innstillinger/team/_inviter.tsx` | **Nei.** (E-post / uten innlogging.) |
+| Org-dialog | `organisasjon/_opprett-dialog.tsx` | **Nei.** |
+
+Det forhandleren trenger er **skjemafelt mot tRPC**. Det ligger i gratis batch 1 + ev. gratis `combobox` (kunde/kjøretøy-søk) og `date-picker` / `meeting-scheduler` (starttid). Våre `InnstillingSeksjon` / `InnstillingRad` (Mobbin-skjema, CODE-GO) beholdes som komposisjon.
+
+**Pro `questionnaire` er nærmeste steg-UI**, men den er et **chat-kort**: ett spørsmål, valg-rader (checkbox/nummer), valgfri Other-tekst, `onComplete(answers)` → `sendToAgent`. Public API har ikke fritekst-felt for navn/regnr/pris, ikke filopplasting, ikke dato. Å tvinge Ny jobb inn der er å bruke feil komponent.
+
+**Pro `agent-progress`** er «Read project files → lint → build»-steg for en *agent-kjøring*, ikke wizard-steg i et skjema.
+
+#### Hva som må kobles til backend / Ronny
+
+Board dokumenterer **ingen** Endwise-backend. Det som *står*:
+
+| Blokk | Offentlig kobling | Til oss |
+|-------|-------------------|---------|
+| Agent Creator | `agent` + `onChange`. «Save … to your service when needed.» Ingen storage. | Hvis vi brukte den: egen tabell/felt for **Ronny-persona** (navn, beskrivelse, stemme, form, farge). **Ikke** `customers.create` / `bookings.create`. Persistens, validering, RLS: vårt. |
+| Multi-agent Chat | `onRespond(agent, messages, abortSignal)` (blogg). | Kun hvis vi vil ha flere agenter. Vi har én Ronny + `/chat/<agent>`. |
+| Composer / Panel | `onSubmit`, `onModelChange`, `onEffortChange`, `onPermissionChange` (blogg). | Overlap med `PromptInput` + `DefaultChatTransport` i `_chat/agent-chat.tsx`. Modellen velges **server-side** (Mistral EU) — klienten har bevisst ikke modellfelt. En Board-modellmeny ville **stride** mot det. |
+| Questionnaire | `onComplete(answers)` / `onDismiss`. | Kan ligge *i* Ronny-tråden når agenten trenger avklaring *før* den kaller et tool. Det er **ikke** erstatter for Ny jobb-siden. Vi har allerede shadcn-`Questionnaire` i `@endwise/ui`. |
+| Task List / Web Search / Agent Progress | Styrt av dere (steps/sources som props). | Kun hvis Ronny-tools skal vises som Board-logg i stedet for `ToolPart`. |
+
+**Ikke finn på:** Agent Creator «genererer en jobb via Ronny». Ingen slik flyt er dokumentert. En tenkt arkitektur (Ronny spør med Questionnaire → tool → `bookings.create`) er *vår* produktidé, ikke Board.
+
+Papir-avatar (`agent-avatar`) er et annet system enn **bloub**. Ikke bytt person-avatarer. Ev. kun Ronny-figur — eget vedtak, ikke del av Agent Creator-spørsmålet.
+
+### 12.3 Pro vs våre filer utover batch 1
+
+Samme låser: Mobbin-look, telefon top-bar 1+2 uendret, desktop 389/598/452, `FORHANDLER_NAV`. Ingen Pro-mal som *side*.
+
+| Tema | Board | Pro? | Vår fil | Vedtak |
+|------|-------|------|---------|--------|
+| Entity-opprett (jobb/kunde/lager/tjeneste) | `input` `select` `combobox` `number-field` `modal` | **Gratis** | `_ny-kunde.tsx`, `_ny-tjeneste.tsx`, `bookinger/ny/page.tsx`, lager-dialoger, `InnstillingSeksjon` | Batch 1 + senere gratis combobox/date. **Ikke** Agent Creator. |
+| Steg-wizard | `questionnaire` (chat-valg) / `agent-progress` (AI) / `settings-modal` (gratis) | Delvis Pro | Ingen felles wizard; Ny jobb er **én** flate | Ikke kjøp Pro for wizard. Questionnaire ev. *i* Ronny. |
+| Dato / tid | `date-picker`, `date-range-picker`, `meeting-scheduler`, `date-calendar`, `time-field` | **Gratis** | `bookinger/_starttid-velger.tsx`, `bookinger/ny` | Senere gratis-batch. Restyle. |
+| Månedskalender med hendelser | `calendar` | **Pro** | `saker/_kalender.tsx` (egen måned + `CalendarDays`) | Kandidat *etter* restyle; ikke chrome. |
+| Filopplasting | `file-upload` | **Gratis** | Der vi har `type="file"` / Quick-upload | Senere gratis-batch. |
+| Tabell | `data-table`, `data-grid`, `table` | **Gratis** | `BookingsTable` / `RevenueTable` (UI-PAKKER §8) | Senere gratis; ikke Pro. |
+| Sidebar / app-shell | `sidebar`, `app-shell` | **Gratis** | `_shell/sidebar.tsx`, `phone-shell`, desktop 389/598/452 | **Ikke.** Chrome-lås. Maler (`template-home-dashboard` osv.) er samme skall — ikke `add` som side. |
+| Ronny-composer | `composer` / `composer-panel` / `composer-attachments` | **Pro** | `prompt-input.tsx`, `_chat/agent-chat.tsx` | Verdt å *vurdere* for vedlegg/status. **Ikke** modellvelger (server eier modell). Restyle glass/skygge vekk. Telefon-sheet uendret. |
+| Ronny tenker / tools | `agent-thinking` `composer-loader` (gratis); `task-list` `web-search` `agent-progress` (Pro) | Blanding | `ToolPart`, matrix-loaders | Pro-logg kan erstatte *visning* av tool-løp. Gratis thinking/loader først. |
+| Ronny-spørsmål | Pro `questionnaire` | Pro | shadcn `Questionnaire` i `packages/ui/src/components/questionnaire.tsx` | To ulike API-er. Bytt bare hvis vi vil ha Board sitt chat-kort. |
+| Multi-agent / persona | `agent-creator` `agent-avatar` `multi-agent-chat` | Pro | Én Ronny, bloub, `/chat/<agent>` | Ikke for CRUD. Ev. senere Ronny-profil — eget vedtak. |
+| Analyse / grafer | 17 Pro chart-kort + 10 dashboard-maler | Pro | Amicro (`DitherStackedChart` …), `statistikk/_innhold.tsx` | **⛔** Amicro er chart-motor (techstack + Mikael 06.09.2026). Ikke bytt. |
+| Kanban | `project-board` | Pro | Ingen tilsvarende produktflate | Ikke med mindre vi får en tavle-IA. Create-ticket ≠ Ny jobb. |
+
+### 12.4 Anbefaling
+
+**Kjøp ikke Pro for å få «agent creator» til Ny jobb / Kunder / Lager / Tjenester.** Den blokken gjør ikke det. Det behovet dekkes av gratis batch 1 mot skjemaene vi allerede har.
+
+**Pro er likevel verdt det — senere — hvis målet er Ronnys agent-overflate** (composer med vedlegg, task/search-logg, plan-spørsmål i tråden, ev. Pro-kalender på Saker). Det er det Pro faktisk selger, og det overlapper `_chat/agent-chat.tsx` mer enn det overlapper `bookinger/ny`.
+
+**Plan hvis dere kjøper:**
+
+1. **Ikke før** batch 1 gratis er inne og restylet (§10), og **ikke før** Pro-kilde har et **privat** hjem. Public `endwise-v1` blokkerer. Alternativer: privat repo, privat `packages/boardui-pro`, eller spørre Board (`hi@boardui.com`) om public-monorepo med Pro utenfor git. Ukjent om privat submodule i public repo er OK — spør.
+2. **Lifetime Access (€199)** hvis bare én person (Mikael) installerer/redigerer Board-kilde.  
+   **Unlimited for Startups (€349)** hvis to til fem mennesker i Twofold rører `base/`-filene.  
+   **1 Year (€149)** bare som prøve; kilden dere rakk å `add`e blir værende.
+3. Første Pro-`add` (etter nøkkel, i privat pakke): `composer-attachments`, `task-list`, `web-search`, `questionnaire` — koblet til Ronny, **uten** modellmeny og uten å røre top-bar 1+2. `agent-creator` bare hvis vi bevisst vil ha en **Ronny-persona**-editor.
+4. Ikke `add` dashboard-maler, `project-board`, chart-kort eller `sidebar`/`app-shell`.
+
+**Ja/nei:** Ja til Pro **som Ronny/agent-sett**, på Lifetime eller Startups, etter privat repo + batch 1. **Nei** til Pro som løsning på forhandler-opprettelse.
+
+---
+
+## 13. Øktrapport
 
 1. **Hva er gjort**  
-   Registry (88) + kilde lastet. Linje-for-linje mot våre primitiver og kallsteder. Denne fila erstattet fargeauditen: konkret innhentingsplan (22 items, kommando, rdeps, fil-mapping, restyle, P0–P4).
+   Første runde: 88 gratis items + innhentingsplan (§1–10). Denne runden: Pro-katalog (40) fra `registry-pro.json` + lisens/vilkår/install/pris; Agent Creator kartlagt mot Ny jobb/kunde/tjeneste/lager; anbefaling + public-repo-varsel. Ny §12.
 
 2. **Hva gikk galt**  
-   Ingenting i denne runden. Første versjon av fila hadde feil fokus (farger, «ikke `npx add`»). Det er rettet etter Mikaels presisering.
+   `/pricing` ga ikke euro i markdown-svaret (beløp tatt fra Board UI-blogg 28. okt 2026). Pro-`.tsx` ulest (krever nøkkel). Context.dev MCP uautentisert. Agent Creators fulle `agent`-type er ukjent.
 
 3. **Hvilke fikser ble gjort**  
-   `docs/boardui-audit.md` skrevet om. Ingen produktkode. Ingen `boardui init`/`add`.
+   Bare `docs/boardui-audit.md`. Ingen kjøp, ingen `login`/`add`, ingen produktkode. Roadmap-status urørt.
 
 4. **Neste**  
-   Egen økt: kjør §10. F0-11 / F0-12 / F5-13 forblir som de er til batchen er inne og verifisert.
+   Batch 1 gratis (§10). Pro tidligst etter privat hjem for kilden, og bare for Ronny-agent-UI — ikke for CRUD-wizard. F0-11 / F0-12 / F5-13 uendret.

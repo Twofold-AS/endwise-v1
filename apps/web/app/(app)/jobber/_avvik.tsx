@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { HJEM_PULSE_REFETCH } from '../_shell/hjem-pulse-sync';
-import { AVVIK_NOTAT_PREFIKS, endringerVindu, harAvvikNotat } from '../_shell/phone-home-pulse';
+import { endringerVindu, harAvvikNotat } from '../_shell/phone-home-pulse';
 import { TimeplanEndringDetalj } from './_endring-detalj';
 import { endringerHref } from './_faner';
 
@@ -51,9 +51,8 @@ export function TimeplanAvvik({ endringId }: { endringId?: string | null }) {
   return (
     <div data-timeplan-avvik data-timeplan-endringer className="flex flex-col gap-4">
       <p className="text-[12px] text-fg-muted leading-relaxed">
-        Avvik mekanikere logger på jobben. Telleren leser ekte{' '}
-        <code className="text-fg">{AVVIK_NOTAT_PREFIKS.trim()}</code>-notat. Godkjenn og Avslå
-        skriver tilbake via <code className="text-fg">bookings.resolveChange</code>.
+        Avvik mekanikere logger på jobben. Godkjenn flytter tid eller mekaniker når det er bedt om.
+        Avslå lar jobben stå.
       </p>
 
       {bookings.isLoading ? (

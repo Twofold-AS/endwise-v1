@@ -14,12 +14,15 @@ export const LAGER_HUB_SEKSJONER = [
   { id: 'deler', label: 'Deler', href: '/lager/deler', sub: 'Liste og beholdning' },
   { id: 'logg', label: 'Inn- og utlogg', href: '/lager/bevegelser', sub: 'Siste bevegelser' },
   { id: 'bestill', label: 'Bestill deler', href: '/lager/bestill', sub: 'Under min · på vei' },
-  { id: 'kjoretoy', label: 'Kjøretøy til salgs', href: '/lager/kjoretoy', sub: 'Ingen salgs-API' },
+  {
+    id: 'kjoretoy',
+    label: 'Kjøretøy til salgs',
+    href: '/lager/kjoretoy',
+    sub: 'Ikke tilgjengelig',
+  },
 ] as const;
 
 export const SALG_KANALER = ['Finn.no', 'Butikk', 'Reservert'] as const;
-
-export const INGEN_API = 'ingen API';
 
 export function belowMin(input: {
   onHand: number;

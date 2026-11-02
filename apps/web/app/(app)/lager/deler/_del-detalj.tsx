@@ -4,7 +4,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { Feil, kroner, Laster } from '../_delt';
-import { belowMin, INGEN_API } from '../_hub';
+import { belowMin } from '../_hub';
 
 /**
  * Claude §4.19 del-detalj mot `inventory.part`.
@@ -53,7 +53,7 @@ export function DelDetalj({ delId, onBevegelse }: { delId: string; onBevegelse: 
         <dt className="text-fg-muted">Minimum</dt>
         <dd className="text-right tabular-nums">{del.minStock ?? '—'}</dd>
         <dt className="text-fg-muted">Bestilt på vei</dt>
-        <dd className="text-right text-fg-muted">0 · {INGEN_API}</dd>
+        <dd className="text-right text-fg-muted">—</dd>
         <dt className="text-fg-muted">Innkjøpspris</dt>
         <dd className="text-right tabular-nums">{kroner(del.costMinor)}</dd>
       </dl>
@@ -66,7 +66,7 @@ export function DelDetalj({ delId, onBevegelse }: { delId: string; onBevegelse: 
           Endre beholdning
         </button>
         <span className="inline-flex h-control items-center text-[12px] text-fg-muted">
-          Endre minimum · {INGEN_API}
+          Endre minimum er ikke tilgjengelig
         </span>
         <Link
           href={'/lager/bestill' as Route}

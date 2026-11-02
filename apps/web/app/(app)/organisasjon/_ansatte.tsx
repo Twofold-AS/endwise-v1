@@ -10,7 +10,7 @@ import { CardShell } from '../_shell/cards';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
 import { nivaTekst } from '../mekanikere/kompetanse/_niva';
 import { AktivitetMerke } from './_aktivitet';
-import { ansattePageSub, erPaJobbNaa, INGEN_API } from './_hub';
+import { ansattePageSub, erPaJobbNaa } from './_hub';
 import { OpprettAnsattDialog } from './_opprett-dialog';
 
 type Rad = RouterOutput['team']['list'][number];
@@ -191,7 +191,7 @@ function AnsattKort({
       </div>
 
       <p className="text-label text-fg-muted" data-ansatt-tjenestetid>
-        Egne tjenestetider <span className="text-fg">{INGEN_API}</span>
+        Egne tjenestetider — ikke tilgjengelig
       </p>
 
       {kanEndre && rad.kanEndres ? <SlettAnsatt rad={rad} /> : null}

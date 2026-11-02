@@ -8,7 +8,6 @@ import { TIMEPLAN_FANER } from '../app/(app)/jobber/_faner.ts';
 import {
   belowMin,
   butikkPageSub,
-  INGEN_API,
   LAGER_HUB_SEKSJONER,
   LAGER_STAT_LABELS,
   lagerPageSub,
@@ -65,7 +64,6 @@ describe('Claude Design BIT 6 — Lager + Butikk', () => {
       'Kjøretøy til salgs',
     ]);
     expect([...SALG_KANALER]).toEqual(['Finn.no', 'Butikk', 'Reservert']);
-    expect(INGEN_API).toBe('ingen API');
   });
 
   it('hubber bruker ekte inventory/shop og ærlig stub uten Hellanor-live', () => {
@@ -84,11 +82,12 @@ describe('Claude Design BIT 6 — Lager + Butikk', () => {
     expect(logg).toMatch(/inventory\.listMovements/);
     expect(logg).toMatch(/Siste bevegelser/);
     const bestill = utenKommentarer(les('../app/(app)/lager/bestill/page.tsx'));
-    expect(bestill).toMatch(/INGEN_API/);
-    expect(bestill).toMatch(/ikke koblet/);
+    expect(bestill).toMatch(/ikke tilgjengelig/);
+    expect(bestill).not.toMatch(/ingen API|INGEN_API/);
     expect(bestill).not.toMatch(/inventory\.order|createOrder/);
     const salg = utenKommentarer(les('../app/(app)/lager/_kjoretoy-salg.tsx'));
-    expect(salg).toMatch(/INGEN_API/);
+    expect(salg).toMatch(/ikke tilgjengelig/);
+    expect(salg).not.toMatch(/ingen API|INGEN_API/);
     expect(salg).not.toMatch(/Yamaha MT-09|Hellanor/);
     const butikk = utenKommentarer(les('../app/(app)/butikk/page.tsx'));
     expect(butikk).toMatch(/shop\.catalog/);

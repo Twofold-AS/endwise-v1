@@ -64,12 +64,12 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
   it('alfa-rail er Apple-Contacts: full NO-indeks, list-viewport, ikke chrome-overlap', () => {
     const rail = utenKommentarer(les('../app/(app)/kunder/_alfa-rail.tsx'));
     expect(rail).toMatch(/data-kunder-alfa-rail/);
-    expect(rail).toMatch(/sticky/);
-    expect(rail).toMatch(/h-full/);
+    expect(rail).toMatch(/absolute top-0 right-0 bottom-0/);
+    expect(rail).toMatch(/w-\[26px\]/);
+    expect(rail).toMatch(/text-\[11px\]/);
     expect(rail).toMatch(/flex-1/);
-    expect(rail).toMatch(/text-\[10px\]/);
     expect(rail).toMatch(/text-fg-faint/);
-    expect(rail).not.toMatch(/absolute top-0/);
+    expect(rail).not.toMatch(/sticky/);
     expect(rail).not.toMatch(/justify-center gap/);
     expect(rail).not.toMatch(/fixed inset/);
     expect(rail).not.toMatch(/z-\[60\]/);
@@ -152,7 +152,8 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(liste).not.toMatch(/data-kunder-pager/);
     expect(liste).not.toMatch(/pr-\[30px\]/);
     expect(liste).toMatch(/Navn, telefon, e-post eller reg\.nr/);
-    expect(skall).toMatch(/min-h-0 flex-1/);
+    expect(skall).toMatch(/relative flex min-h-0 flex-1/);
+    expect(skall).toMatch(/pr-\[26px\]/);
     expect(skall).toMatch(/data-kunder-liste-hale/);
   });
 

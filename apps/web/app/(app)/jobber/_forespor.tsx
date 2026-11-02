@@ -51,9 +51,7 @@ export function TimeplanForespor({ endringId }: { endringId?: string | null }) {
   return (
     <div data-timeplan-forespor className="flex flex-col gap-3">
       <p className="text-body text-fg-muted">
-        Forespørsler om tid og endring på jobben. Listen leser ekte{' '}
-        <code className="text-fg">[FORESPOR</code>-notat. Ekstra tid fra Min dag uten notat vises
-        ikke.
+        Forespørsler om tid og mekaniker på jobben. Ekstra tid uten melding vises ikke.
       </p>
       {bookings.isLoading ? (
         <p className="py-8 text-center text-label text-fg-muted">Laster forespørsler …</p>

@@ -1,6 +1,10 @@
 'use client';
 
-import { type EndringKind, utdragEndring } from '@endwise/modules/booking/changes';
+import {
+  type EndringKind,
+  parseVentendeOnske,
+  utdragEndring,
+} from '@endwise/modules/booking/changes';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
@@ -21,6 +25,7 @@ type BookingRad = {
 
 /**
  * Timeplan › Endring-detalj. Godkjenn/Avslå kaller `bookings.resolveChange`.
+ * Logg har Angre behandling via `bookings.undoChange`.
  */
 export function TimeplanEndringDetalj({
   jobb,
@@ -32,16 +37,17 @@ export function TimeplanEndringDetalj({
   tilbake: EndringerDelId;
 }) {
   const utils = trpc.useUtils();
-  const resolve = trpc.bookings.resolveChange.useMutation({
-    onSuccess: () => {
-      void utils.bookings.list.invalidate();
-      void utils.bookings.byId.invalidate({ id: jobb.id });
-      invalidateHjemPulse(utils);
-      meldingBookingLagret();
-    },
-  });
-
+  const oppfrisk = () => {
+    void utils.bookings.list.invalidate();
+    void utils.bookings.byId.invalidate({ id: jobb.id });
+    invalidateHjemPulse(utils);
+    meldingBookingLagret();
+  };
+  const resolve = trpc.bookings.resolveChange.useMutation({ onSuccess: oppfrisk });
+  const angre = trpc.bookings.undoChange.useMutation({ onSuccess: oppfrisk });
+  const onske = parseVentendeOnske(jobb.notes, kind);
   const typeLabel = kind === 'forespor' ? 'Forespørsel' : 'Avvik';
+  const pending = resolve.isPending || angre.isPending;
 
   return (
     <div data-endringer-detalj={jobb.id} className="flex flex-col gap-4">
@@ -67,6 +73,8 @@ export function TimeplanEndringDetalj({
         <Rad label="Mekaniker" verdi={jobb.mechanicName ?? '—'} />
         <Rad label="Tid" verdi={fmtDateTime(jobb.startsAt)} />
         <Rad label="Status" verdi={jobb.status} />
+        {onske?.startsAt ? <Rad label="Ønsket tid" verdi={fmtDateTime(onske.startsAt)} /> : null}
+        {onske?.mechanicId ? <Rad label="Ønsket mekaniker" verdi="Ny mekaniker" /> : null}
       </dl>
 
       <div className="rounded-[16px] border border-divide bg-card px-4 py-3">
@@ -75,13 +83,29 @@ export function TimeplanEndringDetalj({
       </div>
 
       {tilbake === 'logg' ? (
-        <p className="text-[12px] text-fg-muted">Behandlet. Angre finnes ikke ennå.</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            data-endringer-angre
+            disabled={pending}
+            className="inline-flex h-10 items-center rounded-full border border-border px-4 text-[12px] font-[650] text-fg disabled:opacity-40"
+            onClick={() => angre.mutate({ bookingId: jobb.id, kind })}
+          >
+            {angre.isPending ? 'Angrer …' : 'Angre behandling'}
+          </button>
+          <Link
+            href={`/bookinger/${jobb.id}` as Route}
+            className="inline-flex h-10 items-center px-2 text-[12px] text-fg underline-offset-2 hover:underline"
+          >
+            Åpne jobb
+          </Link>
+        </div>
       ) : (
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             data-endringer-godkjenn
-            disabled={resolve.isPending}
+            disabled={pending}
             className="inline-flex h-10 items-center rounded-full bg-fg px-4 text-[12px] font-[650] text-bg disabled:opacity-40"
             onClick={() => resolve.mutate({ bookingId: jobb.id, kind, decision: 'godkjent' })}
           >
@@ -90,7 +114,7 @@ export function TimeplanEndringDetalj({
           <button
             type="button"
             data-endringer-avsla
-            disabled={resolve.isPending}
+            disabled={pending}
             className="inline-flex h-10 items-center rounded-full border border-border px-4 text-[12px] font-[650] text-fg disabled:opacity-40"
             onClick={() => resolve.mutate({ bookingId: jobb.id, kind, decision: 'avslatt' })}
           >
@@ -109,10 +133,12 @@ export function TimeplanEndringDetalj({
         <p className="text-[12px] text-fg">
           {resolve.data.decision === 'godkjent'
             ? 'Godkjent og skrevet til jobben.'
-            : 'Avslått og skrevet til jobben.'}
+            : 'Avslått. Jobben er uendret.'}
         </p>
       ) : null}
+      {angre.isSuccess ? <p className="text-[12px] text-fg">Behandlingen er angret.</p> : null}
       {resolve.isError ? <p className="text-[12px] text-danger">{resolve.error.message}</p> : null}
+      {angre.isError ? <p className="text-[12px] text-danger">{angre.error.message}</p> : null}
     </div>
   );
 }

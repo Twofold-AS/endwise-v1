@@ -197,11 +197,11 @@ export function InboxSidebar() {
           <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
             <MessageSquare size={20} className="text-fg-muted" />
             <p className="text-label text-fg">
-              {chip === 'lost' ? 'Løst — ingen API' : 'Ingen samtaler'}
+              {chip === 'lost' ? 'Ingen løste samtaler' : 'Ingen samtaler'}
             </p>
             <p className="text-[12px] text-fg-muted">
               {chip === 'lost'
-                ? 'Ingen resolved-kolonne. Filteret viser ingenting.'
+                ? 'Løst er ikke tilgjengelig ennå.'
                 : chip === 'alle'
                   ? 'Innboksen er tom.'
                   : 'Ingen samtaler for denne parten.'}

@@ -3,8 +3,6 @@
  * Ingen ny chrome-pille. Ingen vakt-/Hellanor-/Mailchimp-API.
  */
 
-export const INGEN_API = 'ingen API';
-
 export const ORG_HUB_SEKSJONER = [
   {
     id: 'ansatte',

@@ -17,21 +17,32 @@ import {
 } from '@endwise/db';
 import {
   appendEndringNotat,
+  assertEndringJobSlot,
+  type BookingEndringSnapshot,
   createBooking,
   type EndringDecision,
   type EndringKind,
+  EndringSlotError,
   formatServiceNames,
+  harBehandletEndring,
+  harFeltEndring,
   harVentendeEndring,
   InvalidTransitionError,
+  lockMechanic,
+  lockShopSlots,
   MAX_DURATION_MINUTES,
   MIN_DURATION_MINUTES,
+  malFraOnske,
   markerEndringBehandlet,
+  parseVentendeOnske,
   SlotConflictError,
+  snapshotFraBooking,
   type TenantTx,
   transitionBooking,
 } from '@endwise/modules/booking';
 import { lesAvatar } from '@endwise/modules/profil';
 import { publishEvent } from '@endwise/modules/stream';
+import { osloDagsvindu } from '@endwise/modules/tid';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, router, staffProcedure } from '../init.ts';
@@ -44,12 +55,101 @@ function toTRPCError(error: unknown): never {
   if (error instanceof SlotConflictError) {
     throw new TRPCError({ code: 'CONFLICT', message: error.message, cause: error });
   }
+  if (error instanceof EndringSlotError) {
+    throw new TRPCError({ code: 'CONFLICT', message: error.message, cause: error });
+  }
   if (error instanceof InvalidTransitionError) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
   }
   if (error instanceof TRPCError) throw error;
   loggDealerWritePostgresFeil('bookings', error);
   throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre jobben. Prøv igjen.');
+}
+
+async function lastEndringSlotLag(
+  tx: TenantTx,
+  booking: { id: string; serviceVersionId: string },
+  maalStart: Date,
+) {
+  const [versjon] = await tx
+    .select({ skills: schema.serviceVersions.skills })
+    .from(schema.serviceVersions)
+    .where(eq(schema.serviceVersions.id, booking.serviceVersionId))
+    .limit(1);
+  const mekanikere = await tx
+    .select({
+      id: schema.mechanics.id,
+      active: schema.mechanics.active,
+    })
+    .from(schema.mechanics);
+  const ferdigheter =
+    mekanikere.length === 0
+      ? []
+      : await tx
+          .select({
+            mechanicId: schema.mechanicSkills.mechanicId,
+            skillKey: schema.mechanicSkills.skillKey,
+          })
+          .from(schema.mechanicSkills)
+          .where(
+            inArray(
+              schema.mechanicSkills.mechanicId,
+              mekanikere.map((m) => m.id),
+            ),
+          );
+  const skillsByMech = new Map<string, string[]>();
+  for (const f of ferdigheter) {
+    const list = skillsByMech.get(f.mechanicId) ?? [];
+    list.push(f.skillKey);
+    skillsByMech.set(f.mechanicId, list);
+  }
+  const dag = osloDagsvindu(maalStart);
+  const jobber = await tx
+    .select({
+      id: schema.bookings.id,
+      mechanicId: schema.bookings.mechanicId,
+      startsAt: schema.bookings.startsAt,
+      endsAt: schema.bookings.endsAt,
+      status: schema.bookings.status,
+    })
+    .from(schema.bookings)
+    .where(and(lt(schema.bookings.startsAt, dag.to), gt(schema.bookings.endsAt, dag.from)));
+  return {
+    requiredSkills: versjon?.skills ?? [],
+    mekanikere: mekanikere.map((m) => ({
+      id: m.id,
+      active: m.active,
+      skillKeys: skillsByMech.get(m.id) ?? [],
+    })),
+    jobber: jobber
+      .filter((j) => j.id !== booking.id)
+      .map((j) => ({
+        mechanicId: j.mechanicId,
+        startsAt: j.startsAt,
+        endsAt: j.endsAt,
+        status: j.status,
+      })),
+  };
+}
+
+async function skrivEndringAudit(
+  tx: TenantTx,
+  input: {
+    tenantId: string;
+    actor: string;
+    bookingId: string;
+    action: string;
+    metadata: Record<string, unknown>;
+  },
+) {
+  await tx.insert(schema.auditLog).values({
+    tenantId: input.tenantId,
+    actor: input.actor,
+    action: input.action,
+    subjectType: 'booking',
+    subjectId: input.bookingId,
+    metadata: input.metadata,
+  });
 }
 
 /**
@@ -358,10 +458,16 @@ export const bookingsRouter = router({
         bookingId: z.uuid(),
         kind: z.enum(['avvik', 'forespor']),
         message: z.string().trim().min(1).max(500),
+        startsAt: z.coerce.date().optional(),
+        mechanicId: z.uuid().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const kind = input.kind as EndringKind;
+      const onske = {
+        startsAt: input.startsAt?.toISOString(),
+        mechanicId: input.mechanicId,
+      };
       try {
         await withTenant(ctx.db, ctx.tenantId, async (tx) => {
           const [b] = await tx
@@ -372,18 +478,17 @@ export const bookingsRouter = router({
           if (!b) {
             throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke jobben.' });
           }
-          const notes = appendEndringNotat(b.notes, kind, input.message);
+          const notes = appendEndringNotat(b.notes, kind, input.message, new Date(), onske);
           await tx
             .update(schema.bookings)
             .set({ notes, updatedAt: sql`now()` })
             .where(eq(schema.bookings.id, input.bookingId));
-          await tx.insert(schema.auditLog).values({
+          await skrivEndringAudit(tx, {
             tenantId: ctx.tenantId,
             actor: ctx.userId,
+            bookingId: input.bookingId,
             action: `booking.change.report.${kind}`,
-            subjectType: 'booking',
-            subjectId: input.bookingId,
-            metadata: { kind },
+            metadata: { kind, ...onske },
           });
         });
       } catch (error) {
@@ -401,7 +506,8 @@ export const bookingsRouter = router({
 
   /**
    * F7-05 / BIT 3 — Godkjenn / Avslå ventende avvik eller forespørsel.
-   * Skriver notatet om til `[AVVIK-BEHANDLET` / `[FORESPOR-BEHANDLET`.
+   * Godkjenn flytter tid/mekaniker når ønsket, med jobSlots-sjekk.
+   * Avslå rører ikke booking-feltene. Begge skriver audit + behandlet-notat.
    */
   resolveChange: staffProcedure
     .input(
@@ -417,7 +523,13 @@ export const bookingsRouter = router({
       try {
         await withTenant(ctx.db, ctx.tenantId, async (tx) => {
           const [b] = await tx
-            .select({ notes: schema.bookings.notes })
+            .select({
+              notes: schema.bookings.notes,
+              startsAt: schema.bookings.startsAt,
+              endsAt: schema.bookings.endsAt,
+              mechanicId: schema.bookings.mechanicId,
+              serviceVersionId: schema.bookings.serviceVersionId,
+            })
             .from(schema.bookings)
             .where(eq(schema.bookings.id, input.bookingId))
             .limit(1);
@@ -430,18 +542,65 @@ export const bookingsRouter = router({
               message: 'Ingen ventende endring å behandle på denne jobben.',
             });
           }
+          const previous = snapshotFraBooking(b);
           const notes = markerEndringBehandlet(b.notes ?? '', kind, decision);
+          const patch: {
+            notes: string;
+            updatedAt: Date;
+            startsAt?: Date;
+            endsAt?: Date;
+            mechanicId?: string;
+          } = { notes, updatedAt: new Date() };
+
+          if (decision === 'godkjent') {
+            const onske = parseVentendeOnske(b.notes, kind);
+            const mal = malFraOnske(b, onske);
+            if (harFeltEndring(b, mal)) {
+              await tx.execute(lockShopSlots(ctx.tenantId));
+              await tx.execute(lockMechanic(ctx.tenantId, mal.mechanicId));
+              if (mal.mechanicId !== b.mechanicId) {
+                await tx.execute(lockMechanic(ctx.tenantId, b.mechanicId));
+              }
+              const lag = await lastEndringSlotLag(
+                tx,
+                { id: input.bookingId, serviceVersionId: b.serviceVersionId },
+                mal.startsAt,
+              );
+              assertEndringJobSlot({
+                mal,
+                mekanikere: lag.mekanikere,
+                jobber: lag.jobber,
+                requiredSkills: lag.requiredSkills,
+              });
+              patch.startsAt = mal.startsAt;
+              patch.endsAt = mal.endsAt;
+              patch.mechanicId = mal.mechanicId;
+            }
+          }
+
           await tx
             .update(schema.bookings)
-            .set({ notes, updatedAt: sql`now()` })
+            .set(patch)
             .where(eq(schema.bookings.id, input.bookingId));
-          await tx.insert(schema.auditLog).values({
+          await skrivEndringAudit(tx, {
             tenantId: ctx.tenantId,
             actor: ctx.userId,
+            bookingId: input.bookingId,
             action: `booking.change.${decision}`,
-            subjectType: 'booking',
-            subjectId: input.bookingId,
-            metadata: { kind, decision, from: 'pending' },
+            metadata: {
+              kind,
+              decision,
+              from: 'pending',
+              previous,
+              applied:
+                decision === 'godkjent' && patch.startsAt
+                  ? {
+                      startsAt: patch.startsAt.toISOString(),
+                      endsAt: patch.endsAt?.toISOString(),
+                      mechanicId: patch.mechanicId,
+                    }
+                  : null,
+            },
           });
         });
       } catch (error) {
@@ -455,6 +614,134 @@ export const bookingsRouter = router({
         subjectId: input.bookingId,
       });
       return { ok: true as const, decision };
+    }),
+
+  /**
+   * Angre siste behandling. Setter booking tilbake til verdiene i audit-raden
+   * og skriver `booking.change.angre`. Avslått behandling har urørt booking.
+   */
+  undoChange: staffProcedure
+    .input(z.object({ bookingId: z.uuid(), kind: z.enum(['avvik', 'forespor']) }))
+    .mutation(async ({ ctx, input }) => {
+      const kind = input.kind as EndringKind;
+      try {
+        await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [b] = await tx
+            .select({
+              notes: schema.bookings.notes,
+              startsAt: schema.bookings.startsAt,
+              endsAt: schema.bookings.endsAt,
+              mechanicId: schema.bookings.mechanicId,
+              serviceVersionId: schema.bookings.serviceVersionId,
+            })
+            .from(schema.bookings)
+            .where(eq(schema.bookings.id, input.bookingId))
+            .limit(1);
+          if (!b) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke jobben.' });
+          }
+          if (!harBehandletEndring(b.notes)) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Ingen behandling å angre på denne jobben.',
+            });
+          }
+          const [siste] = await tx
+            .select({
+              action: schema.auditLog.action,
+              metadata: schema.auditLog.metadata,
+            })
+            .from(schema.auditLog)
+            .where(
+              and(
+                eq(schema.auditLog.subjectType, 'booking'),
+                eq(schema.auditLog.subjectId, input.bookingId),
+                inArray(schema.auditLog.action, [
+                  'booking.change.godkjent',
+                  'booking.change.avslatt',
+                  'booking.change.angre',
+                ]),
+              ),
+            )
+            .orderBy(desc(schema.auditLog.occurredAt))
+            .limit(1);
+          if (!siste || siste.action === 'booking.change.angre') {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Ingen behandling å angre på denne jobben.',
+            });
+          }
+          const meta = (siste.metadata ?? {}) as {
+            kind?: string;
+            previous?: BookingEndringSnapshot;
+          };
+          if (meta.kind && meta.kind !== kind) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Siste behandling gjelder en annen type endring.',
+            });
+          }
+          const previous = meta.previous;
+          if (!previous) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Finner ikke forrige jobbverdier å gjenopprette.',
+            });
+          }
+          const mal = {
+            startsAt: new Date(previous.startsAt),
+            endsAt: new Date(previous.endsAt),
+            mechanicId: previous.mechanicId,
+          };
+          if (harFeltEndring(b, mal)) {
+            await tx.execute(lockShopSlots(ctx.tenantId));
+            await tx.execute(lockMechanic(ctx.tenantId, mal.mechanicId));
+            const lag = await lastEndringSlotLag(
+              tx,
+              { id: input.bookingId, serviceVersionId: b.serviceVersionId },
+              mal.startsAt,
+            );
+            assertEndringJobSlot({
+              mal,
+              mekanikere: lag.mekanikere,
+              jobber: lag.jobber,
+              requiredSkills: lag.requiredSkills,
+            });
+          }
+          await tx
+            .update(schema.bookings)
+            .set({
+              startsAt: mal.startsAt,
+              endsAt: mal.endsAt,
+              mechanicId: mal.mechanicId,
+              notes: previous.notes,
+              updatedAt: sql`now()`,
+            })
+            .where(eq(schema.bookings.id, input.bookingId));
+          await skrivEndringAudit(tx, {
+            tenantId: ctx.tenantId,
+            actor: ctx.userId,
+            bookingId: input.bookingId,
+            action: 'booking.change.angre',
+            metadata: {
+              kind,
+              from: siste.action.replace('booking.change.', ''),
+              previous: snapshotFraBooking(b),
+              restored: previous,
+            },
+          });
+        });
+      } catch (error) {
+        return toTRPCError(error);
+      }
+
+      await publishEvent(ctx.db, {
+        tenantId: ctx.tenantId,
+        type: 'booking.change',
+        payload: { bookingId: input.bookingId, kind, decision: 'angre' },
+        subjectId: input.bookingId,
+      });
+      return { ok: true as const };
     }),
 
   calendar: protectedProcedure

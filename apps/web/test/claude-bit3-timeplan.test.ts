@@ -85,6 +85,10 @@ describe('Claude Design BIT 3 — Timeplan / Endringer', () => {
     expect(detalj).toMatch(/data-endringer-avsla/);
     expect(detalj).toMatch(/decision: 'godkjent'/);
     expect(detalj).toMatch(/decision: 'avslatt'/);
+    expect(detalj).toMatch(/bookings\.undoChange/);
+    expect(detalj).toMatch(/data-endringer-angre/);
+    expect(detalj).toMatch(/Angre behandling/);
+    expect(detalj).not.toMatch(/Angre finnes ikke|ingen API/);
     expect(avvik).not.toMatch(/setStubGodkjent|stubGodkjent/);
     expect(avvik).toMatch(/resolveChange|TimeplanEndringDetalj/);
     expect(endringerHref('avvik', 'abc')).toBe('/jobber?fane=avvik&endring=abc');

@@ -461,7 +461,7 @@ export function PulseJobbFlis() {
 /**
  * Tall — én boks over Jobb / På jobb (Claude §4.1 på Endwise-kortet).
  * Topp som Innboks: hvit ikonboks · «Tall» · «siste 30 dager» · Alle tall.
- * Under: 2×2 Visninger · Bookinger · Returer · Credits. Ingen dither.
+ * Under: live KPI-er (Bookinger). Skjulte stubber. Ingen dither.
  */
 export function PulseAnalyserKort({
   stats,
@@ -473,7 +473,8 @@ export function PulseAnalyserKort({
   forhandlerNavn?: string | null;
   laster?: boolean;
 }) {
-  const kpis = stats.slice(0, 4);
+  const kpis = stats.filter((s) => s.stub == null).slice(0, 4);
+  const en = kpis.length === 1;
 
   return (
     <div
@@ -506,7 +507,11 @@ export function PulseAnalyserKort({
       <div
         data-analyser-kpi-liste
         data-analyser-kpi-rutenett
-        className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-divide pt-3"
+        className={
+          en
+            ? 'mt-2 border-t border-divide pt-3'
+            : 'mt-2 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-divide pt-3'
+        }
       >
         {kpis.map((s) => (
           <PulseAnalyseKpi key={s.id} stat={s} laster={laster && s.id === 'bookinger'} />

@@ -3,9 +3,8 @@
 import { KUNDER_ALFA, type KunderAlfa } from './_alfa';
 
 /**
- * Apple Contacts-skinne: like spor i list-viewport (`flex-1`),
- * sticky i lista — ikke `absolute`/`justify-center` (da forsvinner A–F
- * ved siden av første rader). z-[4] over rader, under chrome/modaler.
+ * Apple Contacts-skinne: absolute på høyre kant av list-viewport.
+ * Ikke i top-bar. 26px bred, 11px. z-[4] over rader, under chrome/modaler.
  */
 export function KunderAlfaRail({
   aktiv,
@@ -20,7 +19,7 @@ export function KunderAlfaRail({
     <nav
       data-kunder-alfa-rail
       aria-label="Alfabet"
-      className="sticky top-0 z-[4] flex h-full w-4 shrink-0 flex-col items-center self-stretch"
+      className="absolute top-0 right-0 bottom-0 z-[4] flex w-[26px] flex-col items-center"
     >
       {KUNDER_ALFA.map((bokstav) => {
         const tom = tomme.has(bokstav);
@@ -37,7 +36,7 @@ export function KunderAlfaRail({
               if (tom) return;
               onVelg(bokstav);
             }}
-            className={`flex min-h-0 w-full flex-1 items-center justify-center p-0 text-[10px] leading-none ${
+            className={`flex min-h-0 w-full flex-1 items-center justify-center p-0 text-[11px] leading-none ${
               tom
                 ? 'font-[500] text-fg-faint'
                 : valgt

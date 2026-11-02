@@ -5,12 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { FORHANDLER_NAV, ORGANISASJON_SEKSJONER } from '../app/(app)/_shell/nav.ts';
 import { DEALER_PULSE_KEYS } from '../app/(app)/_shell/phone-home.ts';
 import { TIMEPLAN_FANER } from '../app/(app)/jobber/_faner.ts';
-import { LAGER_HUB_SEKSJONER, INGEN_API as LAGER_INGEN_API } from '../app/(app)/lager/_hub.ts';
+import { LAGER_HUB_SEKSJONER } from '../app/(app)/lager/_hub.ts';
 import {
   aboPageSub,
   ansattePageSub,
   erPaJobbNaa,
-  INGEN_API,
   INTEGRASJONER_PAGE_SUB,
   ORG_HUB_SEKSJONER,
 } from '../app/(app)/organisasjon/_hub.ts';
@@ -58,7 +57,6 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
       'Bestill deler',
       'Kjøretøy til salgs',
     ]);
-    expect(LAGER_INGEN_API).toBe('ingen API');
     const nav = utenKommentarer(les('../app/(app)/_shell/nav.ts'));
     expect(nav).not.toMatch(/label: 'Tjenester',\s*href: '\/tjenester'/);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Tjenester' && i.href === '/tjenester')).toBe(
@@ -120,7 +118,6 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(aboPageSub('Pro')).toBe('Nåværende plan: Pro');
     expect(aboPageSub(null)).toBe('Nåværende plan: ikke startet');
     expect(INTEGRASJONER_PAGE_SUB).toBe('Systemer koblet mot Endwise');
-    expect(INGEN_API).toBe('ingen API');
 
     const kort = utenKommentarer(les('../app/(app)/organisasjon/forhandleren/_kort.tsx'));
     expect(kort).toMatch(/data-org-hub/);
@@ -135,14 +132,16 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(ansatte).toMatch(/ansattePageSub/);
     expect(ansatte).toMatch(/erPaJobbNaa/);
     expect(ansatte).toMatch(/data-ansatte-pagesub/);
-    expect(ansatte).toMatch(/INGEN_API/);
+    expect(ansatte).toMatch(/ikke tilgjengelig/);
+    expect(ansatte).not.toMatch(/ingen API|INGEN_API/);
     expect(ansatte).toMatch(/team\.fjern/);
     expect(ansatte).toMatch(/competence\.setMechanicSkill/);
     expect(ansatte).not.toMatch(/SHIFTS|Hellanor|Mailchimp/);
 
     const timeplan = utenKommentarer(les('../app/(app)/organisasjon/_hub-flate.tsx'));
     expect(timeplan).toMatch(/data-org-timeplan-ansatte/);
-    expect(timeplan).toMatch(/INGEN_API/);
+    expect(timeplan).toMatch(/ikke tilgjengelig/);
+    expect(timeplan).not.toMatch(/ingen API|INGEN_API/);
     expect(timeplan).not.toMatch(/SHIFTS/);
 
     const abo = utenKommentarer(les('../app/(app)/abonnement/_innhold.tsx'));

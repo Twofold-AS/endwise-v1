@@ -6,7 +6,6 @@ import { DEALER_PULSE_KEYS, FORBUDT_DEALER_HJEM } from '../app/(app)/_shell/phon
 import {
   bookingerSiste30d,
   TALL_KPI_IDS,
-  TALL_STUB_INGEN_API,
   tallKortStats,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
 
@@ -61,7 +60,7 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
     expect(analyser).toMatch(/siste 30 dager/);
     expect(analyser).toMatch(/Alle tall/);
     expect(analyser).toMatch(/data-analyser-kpi-rutenett/);
-    expect(analyser).toMatch(/grid-cols-2/);
+    expect(analyser).toMatch(/data-analyser-kpi-rutenett/);
     expect(analyser).toMatch(/PulseIkonFlate/);
     expect(analyser).not.toMatch(/RevenueLineChart/);
     expect(analyser).not.toMatch(/DitherGrowthChart/);
@@ -75,8 +74,8 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
   });
 
-  it('tallKortStats: live bookinger 30d, ærlige stubber ellers', () => {
-    expect([...TALL_KPI_IDS]).toEqual(['visninger', 'bookinger', 'returer', 'credits']);
+  it('tallKortStats: bare live bookinger 30d — skjulte stubber', () => {
+    expect([...TALL_KPI_IDS]).toEqual(['bookinger']);
     const naa = new Date('2026-09-08T10:00:00');
     expect(
       bookingerSiste30d(
@@ -96,13 +95,14 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
       ],
       naa,
     );
-    expect(stats.map((s) => s.id)).toEqual([...TALL_KPI_IDS]);
+    expect(stats.map((s) => s.id)).toEqual(['bookinger']);
     expect(stats.find((s) => s.id === 'bookinger')?.verdi).toBe(2);
     expect(stats.find((s) => s.id === 'bookinger')?.stub).toBeUndefined();
-    expect(stats.find((s) => s.id === 'visninger')?.stub).toBe(TALL_STUB_INGEN_API);
-    expect(stats.find((s) => s.id === 'returer')?.stub).toBe(TALL_STUB_INGEN_API);
-    expect(stats.find((s) => s.id === 'credits')?.stub).toBe(TALL_STUB_INGEN_API);
-    expect(stats.find((s) => s.id === 'visninger')?.verdi).toBe('—');
+    expect(
+      stats.some((s) => s.id === 'visninger' || s.id === 'returer' || s.id === 'credits'),
+    ).toBe(false);
+    const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
+    expect(kort).not.toMatch(/TALL_STUB_INGEN_API|Ingen API/);
   });
 
   it('Analyse-dypflater og chrome er urørt', () => {

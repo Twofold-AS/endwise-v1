@@ -110,6 +110,15 @@ describe('mekaniker API deny', () => {
       code: 'FORBIDDEN',
       message: expect.stringMatching(/mekaniker|tilgang/i),
     });
+    await expect(
+      appRouter.createCaller(mekaniker()).bookings.undoChange({
+        bookingId: endring.bookingId,
+        kind: 'avvik',
+      }),
+    ).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+      message: expect.stringMatching(/mekaniker|tilgang/i),
+    });
   });
 
   it('selger kan passere desk-gaten på bookings.create (feiler ikke som FORBIDDEN)', async () => {

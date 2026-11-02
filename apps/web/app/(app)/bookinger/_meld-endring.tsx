@@ -5,12 +5,14 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { osloVeggklokke } from '../_lib/oslo-dag';
 import { invalidateHjemPulse, meldingBookingLagret } from '../_shell/hjem-pulse-sync';
 import { harVentendeAvvik, harVentendeForespor } from '../_shell/phone-home-pulse';
 import { endringerHref } from '../jobber/_faner';
 
 /**
  * Jobbdetalj — meld avvik eller forespørsel via `bookings.reportChange`.
+ * Valgfri ny tid og mekaniker blir med i ønsket, og godkjennes på Endringer.
  */
 export function MeldEndringSkjema({
   bookingId,
@@ -27,11 +29,18 @@ export function MeldEndringSkjema({
       invalidateHjemPulse(utils);
       meldingBookingLagret();
       setTekst('');
+      setYmd('');
+      setKlokke('');
+      setMechanicId('');
     },
   });
+  const mekanikere = trpc.mechanics.list.useQuery();
   const [apen, setApen] = useState(false);
   const [kind, setKind] = useState<EndringKind>('avvik');
   const [tekst, setTekst] = useState('');
+  const [ymd, setYmd] = useState('');
+  const [klokke, setKlokke] = useState('');
+  const [mechanicId, setMechanicId] = useState('');
 
   const ventendeAvvik = harVentendeAvvik(notes);
   const ventendeForespor = harVentendeForespor(notes);
@@ -74,7 +83,18 @@ export function MeldEndringSkjema({
           onSubmit={(e) => {
             e.preventDefault();
             if (!tekst.trim()) return;
-            report.mutate({ bookingId, kind, message: tekst.trim() });
+            const [t, m] = klokke.split(':').map(Number);
+            const startsAt =
+              ymd && Number.isFinite(t) && Number.isFinite(m)
+                ? osloVeggklokke(ymd, t, m)
+                : undefined;
+            report.mutate({
+              bookingId,
+              kind,
+              message: tekst.trim(),
+              startsAt,
+              mechanicId: mechanicId || undefined,
+            });
           }}
         >
           <div className="flex gap-2">
@@ -99,6 +119,42 @@ export function MeldEndringSkjema({
               Forespørsel
             </button>
           </div>
+          <label className="flex flex-col gap-1">
+            <span className="text-[12px] text-fg-muted">Ny dato (valgfritt)</span>
+            <input
+              type="date"
+              value={ymd}
+              onChange={(e) => setYmd(e.target.value)}
+              className="h-control ew-felt ew-felt-md px-2.5"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[12px] text-fg-muted">Ny tid (valgfritt)</span>
+            <input
+              type="time"
+              step={1800}
+              value={klokke}
+              onChange={(e) => setKlokke(e.target.value)}
+              className="h-control ew-felt ew-felt-md px-2.5"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[12px] text-fg-muted">Ny mekaniker (valgfritt)</span>
+            <select
+              value={mechanicId}
+              onChange={(e) => setMechanicId(e.target.value)}
+              className="h-control ew-felt ew-felt-md px-2.5"
+            >
+              <option value="">Samme mekaniker</option>
+              {(mekanikere.data ?? [])
+                .filter((m) => m.active)
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+            </select>
+          </label>
           <textarea
             value={tekst}
             onChange={(e) => setTekst(e.target.value)}
@@ -111,14 +167,14 @@ export function MeldEndringSkjema({
             <button
               type="submit"
               disabled={report.isPending || !tekst.trim()}
-              className="h-10 flex-1 rounded-md bg-fg text-[12px] font-[650] text-bg disabled:opacity-40"
+              className="h-10 flex-1 rounded-full bg-fg text-[12px] font-[650] text-bg disabled:opacity-40"
             >
               {report.isPending ? 'Sender …' : 'Send'}
             </button>
             <button
               type="button"
               onClick={() => setApen(false)}
-              className="h-10 rounded-md border border-border px-4 text-[12px] text-fg"
+              className="h-10 rounded-full border border-border px-4 text-[12px] text-fg"
             >
               Avbryt
             </button>

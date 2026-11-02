@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
-import { butikkPageSub, INGEN_API } from '../lager/_hub';
+import { butikkPageSub } from '../lager/_hub';
 import { ButikkBookingWidget } from './_booking-widget';
 import { antallIKurv, leggIKurv } from './_kurv';
 
@@ -47,18 +47,18 @@ export default function ButikkKatalogPage() {
         </p>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[12px] text-fg-muted">Ny vare · {INGEN_API}</p>
+        <p className="text-[12px] text-fg-muted">Ny vare er ikke tilgjengelig ennå.</p>
         <button
           type="button"
           disabled
-          className="inline-flex h-control items-center rounded-control border border-border px-3 text-label text-fg-muted"
+          className="inline-flex h-control items-center rounded-full border border-border px-3 text-label text-fg-muted"
         >
           Ny
         </button>
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[12px] text-fg-muted">Intern testbutikk. Stripe testmodus.</p>
+        <p className="text-[12px] text-fg-muted">Handlekurv og kasse.</p>
         <Link
           href="/butikk/kasse"
           className="inline-flex h-control items-center rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2"
@@ -158,7 +158,7 @@ export default function ButikkKatalogPage() {
         <CardShell className="p-6">
           <p className="text-label text-fg">Ingen kjøretøy til salgs</p>
           <p className="mt-1 text-[12px] text-fg-muted">
-            Listing-API finnes ikke. Vi viser ikke seed-katalog.
+            Kjøretøy til salgs er ikke tilgjengelig ennå.
           </p>
         </CardShell>
       </section>

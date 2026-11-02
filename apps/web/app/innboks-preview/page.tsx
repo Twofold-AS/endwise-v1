@@ -258,15 +258,6 @@ function TradGo() {
       </div>
       <div data-innboks-trad-handlinger className="mt-2 flex flex-wrap gap-1.5 text-[12px]">
         <span className="text-fg">Inviter ansatt</span>
-        <span data-innboks-ingen-api="fjern" className="text-fg-muted">
-          Fjern — ingen API
-        </span>
-        <span data-innboks-ingen-api="forlat" className="text-fg-muted">
-          Forlat — ingen API
-        </span>
-        <span data-innboks-ingen-api="lost" className="text-fg-muted">
-          Løst — ingen API
-        </span>
       </div>
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto rounded-xl border border-border bg-bg p-3">
         <p className="text-label text-fg">Hei, kan dere ta EU-kontroll i morgen?</p>

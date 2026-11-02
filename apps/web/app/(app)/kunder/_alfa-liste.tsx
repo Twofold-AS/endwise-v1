@@ -55,11 +55,11 @@ export function KunderAlfaListe<T extends { id: string; name: string }>({
   }
 
   return (
-    <div data-kunder-liste className="flex min-h-0 flex-1">
+    <div data-kunder-liste className="relative flex min-h-0 flex-1">
       <div
         ref={scrollRef}
         data-kunder-liste-scroll
-        className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
+        className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain pr-[26px]"
       >
         {kunder.length === 0 ? (
           tom

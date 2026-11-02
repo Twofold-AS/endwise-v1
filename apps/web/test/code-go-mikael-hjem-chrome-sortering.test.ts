@@ -79,12 +79,8 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(analyser).toMatch(/text-danger/);
     expect(analyser.match(/PHONE_DEST_FYLL/g)?.length).toBe(1);
     const stats = tallKortStats([], new Date('2026-09-08T10:00:00Z'));
-    expect(stats.map((s) => s.label)).toEqual(['Visninger', 'Bookinger', 'Returer', 'Credits']);
-    expect(stats.filter((s) => s.stub).map((s) => s.id)).toEqual([
-      'visninger',
-      'returer',
-      'credits',
-    ]);
+    expect(stats.map((s) => s.label)).toEqual(['Bookinger']);
+    expect(stats.filter((s) => s.stub)).toEqual([]);
     expect(stats.find((s) => s.id === 'bookinger')?.verdi).toBe(0);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));

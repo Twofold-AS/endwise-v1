@@ -2,7 +2,7 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
-import { INGEN_API, synligeOrgHub } from './_hub';
+import { synligeOrgHub } from './_hub';
 
 /**
  * Claude BIT 7 — hub-lenker på Org-oversikt.
@@ -40,7 +40,7 @@ export function TimeplanAnsatteNotat() {
       className="flex flex-col gap-1 rounded-xl border border-border px-4 py-3"
     >
       <h3 className="text-label text-fg">Timeplan ansatte</h3>
-      <p className="text-[12px] text-fg-muted">Vaktliste per ukedag · {INGEN_API}</p>
+      <p className="text-[12px] text-fg-muted">Vaktliste per ukedag er ikke tilgjengelig.</p>
       <p className="text-[12px] text-fg-muted">
         Dagens bookinger og kapasitet ligger på Timeplan — ingen oppdiktet vaktliste.
       </p>

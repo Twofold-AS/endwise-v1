@@ -1,10 +1,10 @@
 'use client';
 
-import { CalendarDays, ChevronLeft, ChevronRight } from '@endwise/ui';
+import { CalendarDays, ChevronLeft, ChevronRight, DateCalendar } from '@endwise/ui';
+import { parseDate } from '@internationalized/date';
 import { useState } from 'react';
 import { osloKalenderdag } from '../_lib/oslo-dag';
 import {
-  timeplanManedDager,
   timeplanManedNavn,
   timeplanSkiftManed,
   timeplanSkiftUke,
@@ -16,8 +16,6 @@ const PIL =
 
 const CHIP =
   'flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl border px-1 py-2 text-label';
-
-const UKE_NB = ['ma', 'ti', 'on', 'to', 'fr', 'lø', 'sø'] as const;
 
 /**
  * Timeplan-stripe: uke-rail (7 dager, mandag først) + månedspicker.
@@ -32,7 +30,6 @@ export function TimeplanStripe({
 }) {
   const dager = timeplanUkeFra(valgt);
   const [manedApen, setManedApen] = useState(false);
-  const manedDager = timeplanManedDager(valgt);
 
   return (
     <div data-timeplan-stripe className="flex flex-col gap-2">
@@ -72,40 +69,18 @@ export function TimeplanStripe({
             aria-label="Velg dag"
             className="absolute top-full right-0 left-0 z-20 mt-1 rounded-[16px] border border-border bg-card p-3"
           >
-            <p className="mb-2 text-[11px] text-fg-muted">Velg dag i måneden.</p>
-            <div className="mb-1 grid grid-cols-7 gap-1">
-              {UKE_NB.map((u) => (
-                <span key={u} className="text-center text-[10px] uppercase text-fg-muted">
-                  {u}
-                </span>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {manedDager.map((d) => {
-                const aktiv = d.ymd === osloKalenderdag(valgt);
-                return (
-                  <button
-                    key={d.ymd}
-                    type="button"
-                    data-timeplan-maned-dag={d.ymd}
-                    disabled={!d.iManed}
-                    onClick={() => {
-                      onValgt(d.ymd);
-                      setManedApen(false);
-                    }}
-                    className={`h-8 rounded-lg text-[12px] tabular-nums ${
-                      aktiv
-                        ? 'bg-fg text-bg'
-                        : d.iManed
-                          ? 'text-fg hover:bg-surface-2'
-                          : 'text-fg-faint'
-                    }`}
-                  >
-                    {d.label}
-                  </button>
-                );
-              })}
-            </div>
+            <p className="mb-2 text-[11px] text-fg-muted">
+              Dager med ledig og kvalifisert mekaniker.
+            </p>
+            <DateCalendar
+              aria-label="Velg dag"
+              value={parseDate(osloKalenderdag(valgt))}
+              onChange={(d) => {
+                if (!d) return;
+                onValgt(d.toString());
+                setManedApen(false);
+              }}
+            />
             <button
               type="button"
               className="mt-2 w-full text-center text-[12px] text-fg-muted"

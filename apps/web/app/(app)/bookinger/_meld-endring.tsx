@@ -1,6 +1,8 @@
 'use client';
 
 import type { EndringKind } from '@endwise/modules/booking/changes';
+import { FeltDato, FeltKlokke, FeltSelect, FeltTekst, FilterChips, SelectItem } from '@endwise/ui';
+import { parseDate, Time } from '@internationalized/date';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -9,6 +11,11 @@ import { osloVeggklokke } from '../_lib/oslo-dag';
 import { invalidateHjemPulse, meldingBookingLagret } from '../_shell/hjem-pulse-sync';
 import { harVentendeAvvik, harVentendeForespor } from '../_shell/phone-home-pulse';
 import { endringerHref } from '../jobber/_faner';
+
+const KIND_CHIPS = [
+  { key: 'avvik', label: 'Avvik' },
+  { key: 'forespor', label: 'Forespørsel' },
+] as const;
 
 /**
  * Jobbdetalj — meld avvik eller forespørsel via `bookings.reportChange`.
@@ -97,71 +104,52 @@ export function MeldEndringSkjema({
             });
           }}
         >
-          <div className="flex gap-2">
-            <button
-              type="button"
-              aria-pressed={kind === 'avvik'}
-              onClick={() => setKind('avvik')}
-              className={`h-8 rounded-full px-3 text-[12px] ${
-                kind === 'avvik' ? 'bg-fg text-bg' : 'border border-border text-fg-muted'
-              }`}
-            >
-              Avvik
-            </button>
-            <button
-              type="button"
-              aria-pressed={kind === 'forespor'}
-              onClick={() => setKind('forespor')}
-              className={`h-8 rounded-full px-3 text-[12px] ${
-                kind === 'forespor' ? 'bg-fg text-bg' : 'border border-border text-fg-muted'
-              }`}
-            >
-              Forespørsel
-            </button>
-          </div>
-          <label className="flex flex-col gap-1">
+          <FilterChips chips={KIND_CHIPS} valgt={kind} onChange={setKind} ariaLabel="Type" />
+          <div className="flex flex-col gap-1">
             <span className="text-[12px] text-fg-muted">Ny dato (valgfritt)</span>
-            <input
-              type="date"
-              value={ymd}
-              onChange={(e) => setYmd(e.target.value)}
-              className="h-control ew-felt ew-felt-md px-2.5"
+            <FeltDato
+              aria-label="Ny dato"
+              value={ymd ? parseDate(ymd) : null}
+              onChange={(d) => setYmd(d ? d.toString() : '')}
             />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[12px] text-fg-muted">Ny tid (valgfritt)</span>
-            <input
-              type="time"
-              step={1800}
-              value={klokke}
-              onChange={(e) => setKlokke(e.target.value)}
-              className="h-control ew-felt ew-felt-md px-2.5"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-[12px] text-fg-muted">Ny mekaniker (valgfritt)</span>
-            <select
-              value={mechanicId}
-              onChange={(e) => setMechanicId(e.target.value)}
-              className="h-control ew-felt ew-felt-md px-2.5"
-            >
-              <option value="">Samme mekaniker</option>
-              {(mekanikere.data ?? [])
-                .filter((m) => m.active)
-                .map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <textarea
+          </div>
+          <FeltKlokke
+            label="Ny tid (valgfritt)"
+            granularity="minute"
+            value={
+              klokke
+                ? new Time(Number(klokke.split(':')[0] ?? 0), Number(klokke.split(':')[1] ?? 0))
+                : null
+            }
+            onChange={(t) => {
+              if (!t) {
+                setKlokke('');
+                return;
+              }
+              setKlokke(`${String(t.hour).padStart(2, '0')}:${String(t.minute).padStart(2, '0')}`);
+            }}
+          />
+          <FeltSelect
+            label="Ny mekaniker (valgfritt)"
+            selectedKey={mechanicId || null}
+            onSelectionChange={(key) => setMechanicId(String(key ?? ''))}
+            placeholder="Samme mekaniker"
+          >
+            {(mekanikere.data ?? [])
+              .filter((m) => m.active)
+              .map((m) => (
+                <SelectItem key={m.id} id={m.id}>
+                  {m.name}
+                </SelectItem>
+              ))}
+          </FeltSelect>
+          <FeltTekst
             value={tekst}
-            onChange={(e) => setTekst(e.target.value)}
+            onChange={setTekst}
             rows={3}
             maxLength={500}
             placeholder={kind === 'avvik' ? 'Hva er avviket?' : 'Hva spør du om?'}
-            className="ew-felt ew-felt-md min-h-[4.5rem] resize-none py-2"
+            aria-label="Melding"
           />
           <div className="flex gap-2">
             <button

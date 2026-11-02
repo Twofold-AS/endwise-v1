@@ -33,9 +33,15 @@ function ukerIManed(ymd: string): string[][] {
 export function StarttidVelger({
   value,
   onChange,
+  datoEnabled,
+  tillatteTider,
 }: {
   value: string;
   onChange: (iso: string) => void;
+  /** Claude jobSlots: bare dager med ledig+kvalifisert. */
+  datoEnabled?: (ymd: string) => boolean;
+  /** 30-min steg fra jobSlots. Uten = 5-min spinner. */
+  tillatteTider?: readonly { h: number; m: number }[];
 }) {
   const [apen, setApen] = useState<'dato' | 'klokke' | null>(null);
   const dato = value ? tilOsloDato(value) : osloKalenderdag(new Date());
@@ -115,20 +121,24 @@ export function StarttidVelger({
             {uker.flat().map((ymd) => {
               const iManed = ymd.slice(0, 7) === dato.slice(0, 7);
               const valgt = ymd === dato;
+              const aapen = datoEnabled ? datoEnabled(ymd) : true;
               return (
                 <button
                   key={ymd}
                   type="button"
+                  disabled={!aapen}
                   onClick={() => {
                     sett(ymd, time, minutt);
                     setApen(null);
                   }}
                   className={`h-8 rounded-control text-[12px] ${
-                    valgt
-                      ? 'bg-fg text-bg'
-                      : iManed
-                        ? 'text-fg hover:bg-surface-2'
-                        : 'text-fg-muted'
+                    !aapen
+                      ? 'text-fg-muted/40'
+                      : valgt
+                        ? 'bg-fg text-bg'
+                        : iManed
+                          ? 'text-fg hover:bg-surface-2'
+                          : 'text-fg-muted'
                   }`}
                 >
                   {Number(ymd.slice(8))}
@@ -140,15 +150,45 @@ export function StarttidVelger({
       ) : null}
 
       {apen === 'klokke' ? (
-        <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3">
-          <Spinner label="Time" verdi={time} valg={TIMER} onValg={(h) => sett(dato, h, minutt)} />
-          <Spinner
-            label="Minutt"
-            verdi={minutt}
-            valg={MINUTTER}
-            onValg={(m) => sett(dato, time, m)}
-          />
-        </div>
+        tillatteTider ? (
+          <div
+            data-jobb-slot-tider
+            className="flex flex-col gap-1 rounded-xl border border-border bg-card p-3"
+          >
+            {tillatteTider.length === 0 ? (
+              <p className="text-[12px] text-fg-muted">Ingen ledige tider.</p>
+            ) : (
+              tillatteTider.map((t) => {
+                const valgt = t.h === time && t.m === minutt;
+                return (
+                  <button
+                    key={`${t.h}:${t.m}`}
+                    type="button"
+                    onClick={() => {
+                      sett(dato, t.h, t.m);
+                      setApen(null);
+                    }}
+                    className={`h-control rounded-control text-label tabular-nums ${
+                      valgt ? 'bg-sidebar-active text-fg' : 'text-fg-muted'
+                    }`}
+                  >
+                    {String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3">
+            <Spinner label="Time" verdi={time} valg={TIMER} onValg={(h) => sett(dato, h, minutt)} />
+            <Spinner
+              label="Minutt"
+              verdi={minutt}
+              valg={MINUTTER}
+              onValg={(m) => sett(dato, time, m)}
+            />
+          </div>
+        )
       ) : null}
     </div>
   );

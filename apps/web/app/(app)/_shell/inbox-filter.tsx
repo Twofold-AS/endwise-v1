@@ -1,12 +1,10 @@
 'use client';
 
 import { createContext, type ReactNode, useContext, useState } from 'react';
-import type { InboxPart } from './inbox-del';
+import type { InboxChip, InboxPart, InboxSortering } from './inbox-del';
 
-export { INNBOKS_FILTERE } from './inbox-del';
-export type { InboxPart };
-
-export type InboxSortering = 'nyeste' | 'eldste';
+export { INNBOKS_CHIPS, INNBOKS_FILTERE } from './inbox-del';
+export type { InboxChip, InboxPart, InboxSortering };
 
 export const INNBOKS_GRUPPER: { key: InboxPart; label: string }[] = [
   { key: 'customer_dealer', label: 'Kunder' },
@@ -17,11 +15,17 @@ export const INNBOKS_GRUPPER: { key: InboxPart; label: string }[] = [
 const InboxFilterContext = createContext<{
   part: InboxPart;
   setPart: (part: InboxPart) => void;
+  chip: InboxChip;
+  setChip: (chip: InboxChip) => void;
   sortering: InboxSortering;
   setSortering: (s: InboxSortering) => void;
+  side: number;
+  setSide: (n: number) => void;
   skjulte: ReadonlySet<string>;
   skjul: (id: string) => void;
   skjulFlere: (ider: string[]) => void;
+  sisteSkjulte: readonly string[];
+  angreSkjul: () => void;
   velgModus: boolean;
   setVelgModus: (v: boolean) => void;
   valgte: ReadonlySet<string>;
@@ -30,18 +34,43 @@ const InboxFilterContext = createContext<{
 } | null>(null);
 
 export function InboxFilterProvider({ children }: { children: ReactNode }) {
-  const [part, setPart] = useState<InboxPart>('alle');
-  const [sortering, setSortering] = useState<InboxSortering>('nyeste');
+  const [part, setPartState] = useState<InboxPart>('alle');
+  const [chip, setChipState] = useState<InboxChip>('alle');
+  const [sortering, setSorteringState] = useState<InboxSortering>('nyeste');
+  const [side, setSide] = useState(1);
   const [skjulte, setSkjulte] = useState<ReadonlySet<string>>(() => new Set());
+  const [sisteSkjulte, setSisteSkjulte] = useState<readonly string[]>([]);
   const [velgModus, setVelgModusState] = useState(false);
   const [valgte, setValgte] = useState<ReadonlySet<string>>(() => new Set());
 
+  function setPart(neste: InboxPart) {
+    setPartState(neste);
+    setChipState(neste);
+    setSide(1);
+  }
+  function setChip(neste: InboxChip) {
+    setChipState(neste);
+    if (neste !== 'lost') setPartState(neste);
+    setSide(1);
+  }
+  function setSortering(s: InboxSortering) {
+    setSorteringState(s);
+    setSide(1);
+  }
   function skjul(id: string) {
     setSkjulte((forrige) => new Set([...forrige, id]));
+    setSisteSkjulte([id]);
   }
   function skjulFlere(ider: string[]) {
     if (ider.length === 0) return;
     setSkjulte((forrige) => new Set([...forrige, ...ider]));
+    setSisteSkjulte(ider);
+  }
+  function angreSkjul() {
+    if (sisteSkjulte.length === 0) return;
+    const tilbake = new Set(sisteSkjulte);
+    setSkjulte((forrige) => new Set([...forrige].filter((id) => !tilbake.has(id))));
+    setSisteSkjulte([]);
   }
   function setVelgModus(v: boolean) {
     setVelgModusState(v);
@@ -64,11 +93,17 @@ export function InboxFilterProvider({ children }: { children: ReactNode }) {
       value={{
         part,
         setPart,
+        chip,
+        setChip,
         sortering,
         setSortering,
+        side,
+        setSide,
         skjulte,
         skjul,
         skjulFlere,
+        sisteSkjulte,
+        angreSkjul,
         velgModus,
         setVelgModus,
         valgte,

@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc';
 import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
+import { KunderAlfaListe } from './_alfa-liste';
 import { Feil, Kilde, Laster, Tomt } from './_delt';
 import { KUNDER_FANER, kunderHref, parseKunderFane } from './_faner';
 import { NyKunde } from './_ny-kunde';
@@ -58,6 +59,8 @@ function KunderInner() {
     limit: 200,
   });
 
+  const liste = kunder.data ?? [];
+
   return (
     <SideChromeSkall
       tittel="Kunder"
@@ -68,14 +71,16 @@ function KunderInner() {
       {nyKunde ? <NyKunde onLukk={() => router.replace('/kunder' as Route)} /> : null}
       {aktiv === 'kjoretoy' ? <RegistrerKjoretoy /> : null}
       {aktiv === 'alle' ? (
-        <>
-          {/* Søk + filtre */}
-          <div className="flex flex-wrap items-center gap-3">
+        <div
+          data-kunder-flate
+          className="flex min-h-[calc(100dvh-11rem)] flex-col gap-3 md:min-h-[calc(100dvh-14rem)]"
+        >
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
             <div className="min-w-[220px] flex-1" data-kunder-sok>
               <PhoneSokFelt
                 value={sok}
                 onChange={(e) => setSok(e.target.value)}
-                placeholder="Søk på navn, e-post eller telefon"
+                placeholder="Navn, telefon, e-post eller reg.nr"
                 aria-label="Søk i kunder"
               />
             </div>
@@ -130,38 +135,44 @@ function KunderInner() {
             <Laster />
           ) : kunder.isError ? (
             <Feil melding={kunder.error.message} />
-          ) : (kunder.data?.length ?? 0) === 0 ? (
-            <>
-              <Tomt
-                tittel={sok ? 'Ingen treff' : 'Ingen kunder ennå'}
-                hint={
-                  sok
-                    ? 'Prøv et annet søk, eller fjern filteret.'
-                    : 'Opprett kunden her. Uten Quick lagrer Endwise kunden selv — ingen synk kreves.'
-                }
-              />
-              {!sok && !nyKunde && (
-                <div className="-mt-2 flex justify-center">
-                  <Link
-                    href={'/kunder?ny=1' as Route}
-                    className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
-                  >
-                    <Plus size={14} strokeWidth={1.75} />
-                    Ny kunde
-                  </Link>
-                </div>
-              )}
-            </>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-border">
-              {kunder.data?.map((k, i) => (
-                <Link key={k.id} href={`/kunder/${k.id}` as Route} className="group block">
+            <KunderAlfaListe
+              kunder={liste}
+              tom={
+                <>
+                  <Tomt
+                    tittel={sok ? 'Ingen kunder matcher søket.' : 'Ingen kunder ennå'}
+                    hint={
+                      sok
+                        ? 'Prøv et annet søk.'
+                        : 'Opprett kunden her. Uten Quick lagrer Endwise kunden selv — ingen synk kreves.'
+                    }
+                  />
+                  {!sok && !nyKunde && (
+                    <div className="-mt-2 flex justify-center">
+                      <Link
+                        href={'/kunder?ny=1' as Route}
+                        className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
+                      >
+                        <Plus size={14} strokeWidth={1.75} />
+                        Ny kunde
+                      </Link>
+                    </div>
+                  )}
+                </>
+              }
+              renderRad={(k, i) => (
+                <Link
+                  key={k.id}
+                  href={`/kunder/${k.id}` as Route}
+                  data-kunder-rad
+                  className="group block"
+                >
                   <div
                     className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
                       i > 0 ? 'border-border border-t' : ''
                     }`}
                   >
-                    {/* Samme seed som kundekortet raden lenker til. */}
                     <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
 
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -195,17 +206,17 @@ function KunderInner() {
                     <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
                   </div>
                 </Link>
-              ))}
-            </div>
+              )}
+            />
           )}
 
-          <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
+          <p className="flex shrink-0 items-center gap-1.5 text-[12px] text-fg-muted">
             <Users size={14} />
             {kunder.isLoading
               ? 'Laster kunder …'
-              : `${kunder.data?.length ?? 0} kunder vist. Filtrene over gjelder kun denne lista.`}
+              : `${liste.length} kunder vist. Filtrene over gjelder kun denne lista.`}
           </p>
-        </>
+        </div>
       ) : null}
     </SideChromeSkall>
   );

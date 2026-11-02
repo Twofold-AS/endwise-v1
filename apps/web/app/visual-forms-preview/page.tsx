@@ -109,6 +109,9 @@ export default function VisualFormsPreview() {
           ]}
           aktiv="opprett"
         >
+          <p data-jobb-wizard className="mb-3 text-[12px] text-fg-muted">
+            Kunde → tjenester → varighet → dato (jobSlots) → tid → mekaniker
+          </p>
           <InnstillingSeksjon
             tittel="Kjøretøy"
             ingress="Regnr følger jobben. Vegvesen fyller merke/modell."

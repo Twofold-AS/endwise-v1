@@ -592,6 +592,11 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
               where m.thread_id = ${schema.threads.id}
               order by m.created_at desc limit 1
             ), ${schema.threads.channel})`,
+            sisteTekst: sql<string>`coalesce((
+              select m.body from messages m
+              where m.thread_id = ${schema.threads.id}
+              order by m.created_at desc limit 1
+            ), ${schema.threads.subject}, '')`,
             unread: sql<number>`(
               select count(*)::int from messages m
               where m.thread_id = ${schema.threads.id}

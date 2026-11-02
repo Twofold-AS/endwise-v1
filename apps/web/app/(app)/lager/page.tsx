@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeftRight, MapPin, Package, TriangleAlert } from '@endwise/ui';
+import { ArrowLeftRight, Package, TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
@@ -8,6 +8,7 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { shellForBruker } from '../_shell/nav';
 import { Beholdning, Feil, Laster, Sidehode, Tomt } from './_delt';
+import { LAGER_HUB_SEKSJONER, LAGER_STAT_LABELS, lagerPageSub } from './_hub';
 
 /**
  * Lager · Oversikt. Alt her er ekte data fra `inventory`-ruteren.
@@ -36,42 +37,69 @@ export default function LagerOversiktPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
-      <Sidehode
-        tittel="Lager"
-        undertittel="Deler, beholdning og inn og ut. Kjerne — ikke et tillegg."
-      />
-      {oppsummering.isError ? (
-        <Feil melding={oppsummering.error.message} />
-      ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Teller
-            icon={Package}
-            label="Deler"
-            verdi={s?.antallDeler}
-            laster={oppsummering.isLoading}
-          />
-          <Teller
-            icon={Package}
-            label="Tilgjengelig"
-            verdi={s?.tilgjengelig}
-            laster={oppsummering.isLoading}
-            hint="På lager minus reservert"
-          />
-          <Teller
-            icon={ArrowLeftRight}
-            label="Reservert"
-            verdi={s?.reservert}
-            laster={oppsummering.isLoading}
-            hint="Står fysisk, men er lovet bort"
-          />
-          <Teller
-            icon={MapPin}
-            label="Plass"
-            verdi={s?.antallLokasjoner}
-            laster={oppsummering.isLoading}
-          />
-        </div>
-      )}
+      <div data-lager-hub className="flex flex-col gap-5">
+        <Sidehode
+          tittel="Lager"
+          undertittel={
+            oppsummering.isLoading
+              ? 'Deler, beholdning og inn og ut. Kjerne — ikke et tillegg.'
+              : lagerPageSub(s?.antallDeler ?? 0)
+          }
+        />
+        {oppsummering.isError ? (
+          <Feil melding={oppsummering.error.message} />
+        ) : (
+          <div data-lager-stats className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Teller
+              icon={Package}
+              label={LAGER_STAT_LABELS[0]}
+              verdi={s?.totaltAntall}
+              laster={oppsummering.isLoading}
+              hint="Fysisk på hylle"
+            />
+            <Teller
+              icon={Package}
+              label={LAGER_STAT_LABELS[1]}
+              verdi={s?.tilgjengelig}
+              laster={oppsummering.isLoading}
+              hint="På lager minus reservert"
+            />
+            <Teller
+              icon={ArrowLeftRight}
+              label={LAGER_STAT_LABELS[2]}
+              verdi={s?.reservert}
+              laster={oppsummering.isLoading}
+              hint="Står fysisk, men er lovet bort"
+            />
+            <Teller
+              icon={TriangleAlert}
+              label={LAGER_STAT_LABELS[3]}
+              verdi={lave.data?.length}
+              laster={lave.isLoading}
+              hint={s ? `${s.antallLokasjoner} plasseringer` : undefined}
+            />
+          </div>
+        )}
+
+        <nav
+          data-lager-hub-seksjoner
+          aria-label="Lagerstyring"
+          className="flex flex-col overflow-hidden rounded-xl border border-border"
+        >
+          {LAGER_HUB_SEKSJONER.map((sek, i) => (
+            <Link
+              key={sek.id}
+              href={sek.href as Route}
+              className={`flex items-center justify-between gap-3 bg-bg px-4 py-3 hover:bg-surface-2 ${
+                i > 0 ? 'border-border border-t' : ''
+              }`}
+            >
+              <span className="text-label text-fg">{sek.label}</span>
+              <span className="text-[12px] text-fg-muted">{sek.sub}</span>
+            </Link>
+          ))}
+        </nav>
+      </div>
 
       {/* Lav beholdning — det eneste på siden som krever handling. */}
       <section className="flex flex-col gap-2">

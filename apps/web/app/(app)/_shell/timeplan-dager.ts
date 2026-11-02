@@ -1,6 +1,8 @@
 import {
   osloKalenderdag,
   osloPlusDager,
+  osloStartAvUke,
+  osloUkedagMandag0,
   osloVeggklokke,
   osloVeggtid,
   PRODUKT_TIDSSONE,
@@ -27,6 +29,46 @@ export type TimeplanManed = {
   label: string;
   aktiv: boolean;
 };
+
+/** Mandag–søndag i uken som inneholder valgt Oslo-dag. */
+export function timeplanUkeFra(valgtYmd: string): TimeplanDag[] {
+  const mandag = osloKalenderdag(osloStartAvUke(valgtYmd));
+  return timeplanDagerFra(mandag, 7);
+}
+
+/** Hopp ±1 uke, behold ukedag. */
+export function timeplanSkiftUke(valgtYmd: string, deltaUker: number): string {
+  return osloPlusDager(osloKalenderdag(valgtYmd), deltaUker * 7);
+}
+
+export type TimeplanManedDag = {
+  ymd: string;
+  label: string;
+  iManed: boolean;
+};
+
+/** Kalenderrutenett (mandag først) for måneden til valgt dag. */
+export function timeplanManedDager(valgtYmd: string): TimeplanManedDag[] {
+  const ymd = osloKalenderdag(valgtYmd);
+  const [y, m] = ymd.split('-').map(Number);
+  const forste = `${y}-${String(m).padStart(2, '0')}-01`;
+  const sisteTall = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const siste = `${y}-${String(m).padStart(2, '0')}-${String(sisteTall).padStart(2, '0')}`;
+  const start = osloKalenderdag(osloStartAvUke(forste));
+  const sluttUkedag = osloUkedagMandag0(siste);
+  const slutt = osloPlusDager(siste, 6 - sluttUkedag);
+  const out: TimeplanManedDag[] = [];
+  let cursor = start;
+  while (cursor <= slutt) {
+    out.push({
+      ymd: cursor,
+      label: String(Number(cursor.slice(8, 10))),
+      iManed: cursor.slice(0, 7) === ymd.slice(0, 7),
+    });
+    cursor = osloPlusDager(cursor, 1);
+  }
+  return out;
+}
 
 /** Valgt dag først, deretter de neste dagene i Europe/Oslo. */
 export function timeplanDagerFra(valgtYmd: string, antall = 3): TimeplanDag[] {

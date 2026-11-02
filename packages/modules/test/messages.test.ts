@@ -60,6 +60,7 @@ describeDb('meldinger (F6-01)', () => {
     const inboks = await messages.listThreads(tenantA, selger);
     expect(inboks).toHaveLength(1);
     expect(inboks[0]?.unread).toBe(1);
+    expect(inboks[0]?.sisteTekst).toBe('Når kan dere ta MC-en?');
 
     // Kunden har ingen uleste — han skrev den selv.
     const kundensInboks = await messages.listThreads(tenantA, kunde);

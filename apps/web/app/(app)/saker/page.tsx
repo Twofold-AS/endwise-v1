@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { osloKalenderdag } from '../_lib/oslo-dag';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { TimeplanStripe } from '../_shell/timeplan-stripe';
+import { TimeplanDagsliste } from '../jobber/_dagsliste';
 import { TimeplanEndringer } from '../jobber/_endringer';
 import {
   parseEndringerDel,
@@ -25,6 +26,7 @@ function TimeplanPageInner() {
   const router = useRouter();
   const aktiv = parseTimeplanFane('/jobber', params?.get('fane'));
   const endringerDel = parseEndringerDel('/jobber', params?.get('fane'));
+  const endringId = params?.get('endring');
   const visning = params?.get('visning') === 'kalender' ? 'kalender' : 'liste';
   const [valgt, setValgt] = useState(() => osloKalenderdag(new Date()));
 
@@ -39,14 +41,19 @@ function TimeplanPageInner() {
       faner={TIMEPLAN_FANER.map((f) => ({ ...f, href: timeplanHref(f.id) }))}
       aktiv={aktiv}
     >
-      {aktiv === 'endringer' ? <TimeplanEndringer del={endringerDel} /> : null}
+      {aktiv === 'endringer' ? (
+        <TimeplanEndringer del={endringerDel} endringId={endringId} />
+      ) : null}
       {aktiv === 'timeplan' ? (
         <div className="flex flex-col gap-5">
           <TimeplanStripe valgt={valgt} onValgt={setValgt} />
           {visning === 'kalender' ? (
             <Kalender valgt={valgt} />
           ) : (
-            <TimeplanFlate skjulPiller skjulStripe valgt={valgt} onValgt={setValgt} />
+            <>
+              <TimeplanDagsliste valgt={valgt} />
+              <TimeplanFlate skjulPiller skjulStripe valgt={valgt} onValgt={setValgt} />
+            </>
           )}
         </div>
       ) : null}

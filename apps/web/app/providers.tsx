@@ -1,5 +1,6 @@
 'use client';
 
+import { Toaster } from '@endwise/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink, httpLink, splitLink } from '@trpc/client';
 import { type ReactNode, useState } from 'react';
@@ -52,7 +53,10 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <TemaProvider>{children}</TemaProvider>
+        <TemaProvider>
+          {children}
+          <Toaster />
+        </TemaProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

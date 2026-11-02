@@ -1,6 +1,14 @@
 'use client';
 
-import { Dialog, DialogContent, DialogDescription, DialogTitle, FELT_MD } from '@endwise/ui';
+import {
+  FeltInput,
+  FeltSelect,
+  FeltTall,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  SelectItem,
+} from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
@@ -24,8 +32,6 @@ function somFunksjon(verdi: string): Funksjon | null {
   }
   return null;
 }
-
-const FELT = `${FELT_MD} disabled:bg-surface-2 disabled:text-fg-muted`;
 
 /**
  * Opprett ansatt som dialog. Gjenbruker invitasjon / team.opprett.
@@ -128,85 +134,67 @@ export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: (
   const kanSende = Boolean(epost.trim() || navn.trim());
 
   return (
-    <Dialog
-      open={apen}
+    <Modal
+      isOpen={apen}
       onOpenChange={(o) => {
         if (!o) onLukk();
       }}
+      size="md"
     >
-      <DialogContent className="top-1/2 left-1/2 max-h-[min(90dvh,720px)] w-[min(440px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto p-5">
-        <DialogTitle className="text-title text-fg">Opprett ansatt</DialogTitle>
-        <DialogDescription className="mt-1 text-body text-fg-muted">
-          Med e-post får hen invitasjon og setter passord og tofaktor. Uten e-post vises hen i
-          teamet uten innlogging.
-        </DialogDescription>
-
+      <ModalHeader
+        title="Opprett ansatt"
+        description="Med e-post får hen invitasjon og setter passord og tofaktor. Uten e-post vises hen i teamet uten innlogging."
+      />
+      <ModalBody>
         <form onSubmit={send} className="mt-4 flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Navn og etternavn</span>
-            <input
-              value={navn}
-              onChange={(e) => setNavn(e.target.value)}
-              maxLength={160}
-              placeholder="Kari Mekaniker"
-              className={FELT}
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">E-post adresse</span>
-            <input
-              type="email"
-              value={epost}
-              onChange={(e) => setEpost(e.target.value)}
-              placeholder="fornavn@verksted.no"
-              className={FELT}
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Jobb tittel</span>
-            <input
-              value={tittel}
-              onChange={(e) => setTittel(e.target.value)}
-              maxLength={80}
-              placeholder="Servicetekniker"
-              className={FELT}
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Rolle</span>
-            <select
-              value={funksjon}
-              onChange={(e) => {
-                const neste = somFunksjon(e.target.value);
-                if (neste) setFunksjon(neste);
-              }}
-              className={FELT}
-            >
-              {ROLLER.map((r) => (
-                <option key={r.verdi} value={r.verdi}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Tilganger</span>
-            <select disabled className={FELT} aria-disabled="true" value="standard">
-              <option value="standard">Standard — tilpasses senere</option>
-            </select>
-          </label>
+          <FeltInput
+            label="Navn og etternavn"
+            value={navn}
+            onChange={setNavn}
+            maxLength={160}
+            placeholder="Kari Mekaniker"
+          />
+          <FeltInput
+            label="E-post adresse"
+            type="email"
+            value={epost}
+            onChange={setEpost}
+            placeholder="fornavn@verksted.no"
+          />
+          <FeltInput
+            label="Jobb tittel"
+            value={tittel}
+            onChange={setTittel}
+            maxLength={80}
+            placeholder="Servicetekniker"
+          />
+          <FeltSelect
+            label="Rolle"
+            selectedKey={funksjon}
+            onSelectionChange={(key) => {
+              const neste = somFunksjon(String(key ?? ''));
+              if (neste) setFunksjon(neste);
+            }}
+          >
+            {ROLLER.map((r) => (
+              <SelectItem key={r.verdi} id={r.verdi}>
+                {r.label}
+              </SelectItem>
+            ))}
+          </FeltSelect>
+          <FeltSelect label="Tilganger" selectedKey="standard" isDisabled>
+            <SelectItem id="standard">Standard — tilpasses senere</SelectItem>
+          </FeltSelect>
 
           {funksjon === 'mekaniker' ? (
             <>
-              <label className="flex flex-col gap-1.5">
-                <span className="text-label text-fg">Samtidige jobber</span>
-                <input
-                  inputMode="numeric"
-                  value={kapasitet}
-                  onChange={(e) => setKapasitet(e.target.value)}
-                  className={FELT}
-                />
-              </label>
+              <FeltTall
+                label="Samtidige jobber"
+                value={Number(kapasitet) || 1}
+                minValue={1}
+                maxValue={10}
+                onChange={(v) => setKapasitet(Number.isFinite(v) ? String(v) : '1')}
+              />
               <KompetanseVelger valgte={kompetanse} onEndre={setKompetanse} />
             </>
           ) : null}
@@ -234,7 +222,7 @@ export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: (
             </p>
           ) : null}
         </form>
-      </DialogContent>
-    </Dialog>
+      </ModalBody>
+    </Modal>
   );
 }

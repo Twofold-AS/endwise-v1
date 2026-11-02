@@ -1,6 +1,17 @@
 'use client';
 
-import { CircleAlert, StatefulButton } from '@endwise/ui';
+import {
+  CircleAlert,
+  FeltInput,
+  FeltSelect,
+  FeltTall,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  SelectItem,
+  StatefulButton,
+} from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
@@ -64,30 +75,15 @@ export function BevegelseDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/*
-       * Bakteppet er en ekte knapp, ikke et div med onClick: da får det
-       * tastaturfokus og Escape/Enter gratis, og skjermlesere får en handling
-       * de kan navngi.
-       */}
-      <button
-        type="button"
-        aria-label="Lukk"
-        onClick={onLukk}
-        className="-z-10 fixed inset-0 cursor-default bg-black/40"
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Registrer bevegelse for ${del.name}`}
-        className="w-full max-w-md rounded-xl border border-border bg-bg p-5"
-      >
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <div>
-            <p className="text-label text-fg">{del.name}</p>
-            <p className="font-mono text-[12px] text-fg-muted">{del.sku}</p>
-          </div>
-
+    <Modal
+      isOpen
+      onOpenChange={(o) => !o && onLukk()}
+      size="md"
+      aria-label={`Registrer bevegelse for ${del.name}`}
+    >
+      <form onSubmit={submit} className="flex flex-col">
+        <ModalHeader title={del.name} description={del.sku} />
+        <ModalBody>
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1.5 text-label text-fg">Type</legend>
             <div className="grid grid-cols-2 gap-2">
@@ -110,51 +106,39 @@ export function BevegelseDialog({
             </div>
           </fieldset>
 
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Lokasjon</span>
-            <select
-              value={valgtLokasjon}
-              onChange={(e) => setLocationId(e.target.value)}
-              required
-              className="h-control ew-felt ew-felt-md px-2"
-            >
-              {lokasjoner.data?.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.code} — {l.name}
-                </option>
-              ))}
-            </select>
-            {(lokasjoner.data?.length ?? 0) === 0 && !lokasjoner.isLoading && (
-              <span className="text-[12px] text-warn">
-                Ingen lokasjoner ennå — opprett én under Plass først.
-              </span>
-            )}
-          </label>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">
-              {kind === 'adjust' ? 'Nytt antall (absolutt)' : 'Antall'}
+          <FeltSelect
+            label="Lokasjon"
+            selectedKey={valgtLokasjon || null}
+            onSelectionChange={(key) => setLocationId(String(key ?? ''))}
+            isRequired
+          >
+            {(lokasjoner.data ?? []).map((l) => (
+              <SelectItem key={l.id} id={l.id}>
+                {l.code} — {l.name}
+              </SelectItem>
+            ))}
+          </FeltSelect>
+          {(lokasjoner.data?.length ?? 0) === 0 && !lokasjoner.isLoading && (
+            <span className="text-[12px] text-warn">
+              Ingen lokasjoner ennå — opprett én under Plass først.
             </span>
-            <input
-              type="number"
-              min={0}
-              value={antall}
-              onChange={(e) => setAntall(e.target.value)}
-              required
-              className="h-control ew-felt ew-felt-md px-2.5 tabular-nums"
-            />
-          </label>
+          )}
 
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Notat</span>
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              maxLength={280}
-              placeholder="Valgfritt — f.eks. hvilken jobb"
-              className="h-control ew-felt ew-felt-md px-2.5"
-            />
-          </label>
+          <FeltTall
+            label={kind === 'adjust' ? 'Nytt antall (absolutt)' : 'Antall'}
+            value={Number(antall) || 0}
+            minValue={0}
+            isRequired
+            onChange={(v) => setAntall(Number.isFinite(v) ? String(v) : '0')}
+          />
+
+          <FeltInput
+            label="Notat"
+            value={note}
+            onChange={setNote}
+            maxLength={280}
+            placeholder="Valgfritt — f.eks. hvilken jobb"
+          />
 
           {move.error && (
             <p className="flex items-start gap-2 text-body text-danger">
@@ -162,27 +146,26 @@ export function BevegelseDialog({
               {move.error.message}
             </p>
           )}
-
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onLukk}
-              className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-            >
-              Avbryt
-            </button>
-            <StatefulButton
-              type="submit"
-              disabled={move.isPending || !valgtLokasjon}
-              state={move.isPending ? 'loading' : move.isError ? 'error' : 'idle'}
-              loadingText="Lagrer…"
-              errorText="Feilet"
-            >
-              Registrer
-            </StatefulButton>
-          </div>
-        </form>
-      </div>
-    </div>
+        </ModalBody>
+        <ModalFooter>
+          <button
+            type="button"
+            onClick={onLukk}
+            className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
+          >
+            Avbryt
+          </button>
+          <StatefulButton
+            type="submit"
+            disabled={move.isPending || !valgtLokasjon}
+            state={move.isPending ? 'loading' : move.isError ? 'error' : 'idle'}
+            loadingText="Lagrer…"
+            errorText="Feilet"
+          >
+            Registrer
+          </StatefulButton>
+        </ModalFooter>
+      </form>
+    </Modal>
   );
 }

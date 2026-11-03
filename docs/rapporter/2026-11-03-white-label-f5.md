@@ -13,9 +13,13 @@
 
 Vercel på F2–F4 feilet først (`redirect('/logg-inn')` vs typedRoutes). Fikset med `as Route` og cherry-pick opp stakken.
 
+CI Lint/Test på F5: `mons-lock-7` og `resend-avsender` grep-et `erAuthDestinasjon(db, email)` etter at kallet ble `destinasjon(db, email)`. GitHub CodeQL: `js/polynomial-redos` på `erEnkelEpost`.
+
 ## 3. Hvilke fikser ble gjort
 
 Typed Route på `(app)/template.tsx` (F2/F3/F4). Ny atferd i F5 bare når `ENDWISE_WHITE_LABEL=1`.
+
+Tester matcher `erAuthDestinasjon` + `destinasjon(db, email)`. `erEnkelEpost` er lineær (ingen åpen `+`-regex).
 
 ## 4. Neste fase / neste steg
 

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F23 White label F6a (tillatelser)
+
+**Type:** ny fase. Tillatelsesmodell bak flagg. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge. Mons-review.
+**Endring:** Ny fase **F23**. **F23-01** `done`. `harTillatelse`, `omradeProcedure`, `tildel_tillatelse` FOR UPDATE, én dealer_admin, unik (bruker, org), rapport. ⛔ F6b. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F22 White label F5b (JIT)
 
 **Type:** ny fase. Support read-only + just-in-time skriving bak flagg. Ingen ny UI-pakke. Ingen techstack-endring.

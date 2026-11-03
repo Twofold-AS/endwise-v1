@@ -93,6 +93,7 @@ export type {
   WidgetKey,
 } from './schema/index.ts';
 export * as schema from './schema/index.ts';
+export { TILLATELSE_NIVA, TILLATELSE_OMRADER } from './schema/member-permissions.ts';
 /** Kanalnavnet SSE-tjenesten LISTENer på (F6-02). */
 export { STREAM_CHANNEL } from './schema/stream-events.ts';
 /** Verdiliste (ikke bare typen), brukes til validering i tRPC. */

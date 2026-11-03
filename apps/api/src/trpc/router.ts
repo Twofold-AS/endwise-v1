@@ -31,6 +31,7 @@ import { shopRouter } from './routers/shop.ts';
 import { streamRouter } from './routers/stream.ts';
 import { teamRouter } from './routers/team.ts';
 import { tenantsRouter } from './routers/tenants.ts';
+import { tillatelseRouter } from './routers/tillatelse.ts';
 import { vegvesenRouter } from './routers/vegvesen.ts';
 import { vehiclesRouter } from './routers/vehicles.ts';
 import { verkstedRouter } from './routers/verksted.ts';
@@ -45,6 +46,7 @@ export const appRouter = router({
   session: sessionRouter,
   stream: streamRouter,
   tenants: tenantsRouter,
+  tillatelse: tillatelseRouter,
   branding: brandingRouter,
   aktivitet: aktivitetRouter,
   jit: jitRouter,

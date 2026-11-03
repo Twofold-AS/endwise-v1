@@ -55,6 +55,28 @@ export function customerRestrictivePolicy(tableName: string, customerIdColumn: P
 }
 
 /**
+ * F33 / white label F11b — meldinger og deltakere har ikke egen customer_id.
+ * Når actor=customer må tråden være koblet til app.customer_id.
+ */
+export function customerRestrictiveViaThread(tableName: string, threadIdColumn: PgColumn) {
+  return pgPolicy(`${tableName}_customer_own`, {
+    as: 'restrictive',
+    for: 'all',
+    to: authenticatedRole,
+    using: sql`${currentActor} is distinct from 'customer' or exists (
+      select 1 from threads th
+      where th.id = ${threadIdColumn}
+        and th.customer_id = ${currentCustomerId}
+    )`,
+    withCheck: sql`${currentActor} is distinct from 'customer' or exists (
+      select 1 from threads th
+      where th.id = ${threadIdColumn}
+        and th.customer_id = ${currentCustomerId}
+    )`,
+  });
+}
+
+/**
  * SELECT-only inspect-policy bundet til `app.platform_inspect`.
  * Ingen skriving. Ikke bruk på `customers` — kolonne-RLS kan ikke skjule e-post/telefon.
  */

@@ -10,8 +10,9 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { tenantPolicy } from '../rls.ts';
+import { customerRestrictivePolicy, customerRestrictiveViaThread, tenantPolicy } from '../rls.ts';
 import { authenticatedRole } from '../roles.ts';
+import { customers } from './customers.ts';
 import { tenants } from './tenants.ts';
 
 /**
@@ -107,6 +108,11 @@ export const threads = pgTable(
      * er «bare metadata».
      */
     externalRef: text('external_ref'),
+    /**
+     * F33 / white label F11b — tråd ↔ kunde. Nullable: intern/support
+     * har ingen kunde. Kundetråder uten kobling er usynlige for actor=customer.
+     */
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
     /** Denorm: sorterer innboksen uten å joine mot messages. */
     lastMessageAt: timestamp('last_message_at', { withTimezone: true })
       .notNull()
@@ -118,7 +124,9 @@ export const threads = pgTable(
     // «hvilken tråd hører denne innkommende e-posten til?» skal være ett
     // indeksoppslag, ikke en scan over alle trådene til forhandleren.
     index('threads_tenant_channel_ref_idx').on(t.tenantId, t.channel, t.externalRef),
+    index('threads_tenant_customer_idx').on(t.tenantId, t.customerId),
     tenantPolicy('threads', t.tenantId),
+    customerRestrictivePolicy('threads', t.customerId),
     /**
      * SELECT-only for Endwise-admin. `withPlatformAdmin` åpner denne.
      * Kun `dealer_admin` (forhandlerEndwise). customer_dealer og
@@ -164,6 +172,7 @@ export const threadParticipants = pgTable(
     primaryKey({ columns: [t.threadId, t.participantId] }),
     index('thread_participants_participant_idx').on(t.tenantId, t.participantId),
     tenantPolicy('thread_participants', t.tenantId),
+    customerRestrictiveViaThread('thread_participants', t.threadId),
     pgPolicy('thread_participants_platform_admin_support_read', {
       as: 'permissive',
       for: 'select',
@@ -228,6 +237,7 @@ export const messages = pgTable(
     index('messages_thread_created_idx').on(t.threadId, t.createdAt),
     uniqueIndex('messages_tenant_external_uidx').on(t.tenantId, t.externalId),
     tenantPolicy('messages', t.tenantId),
+    customerRestrictiveViaThread('messages', t.threadId),
     pgPolicy('messages_platform_admin_support_read', {
       as: 'permissive',
       for: 'select',

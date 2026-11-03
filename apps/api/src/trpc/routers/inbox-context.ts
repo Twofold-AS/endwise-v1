@@ -49,6 +49,7 @@ export const inboxContextRouter = router({
             subject: schema.threads.subject,
             channel: schema.threads.channel,
             externalRef: schema.threads.externalRef,
+            customerId: schema.threads.customerId,
           })
           .from(schema.threads)
           .where(eq(schema.threads.id, input.threadId));
@@ -237,7 +238,18 @@ export const inboxContextRouter = router({
         // veien er nettopp poenget med `external_ref` (F6-16).
         let kunde: typeof schema.customers.$inferSelect | undefined;
 
-        if (motparter.length > 0) {
+        if (traad.customerId) {
+          [kunde] = await tx
+            .select()
+            .from(schema.customers)
+            .where(
+              and(
+                eq(schema.customers.tenantId, ctx.tenantId),
+                eq(schema.customers.id, traad.customerId),
+              ),
+            );
+        }
+        if (!kunde && motparter.length > 0) {
           [kunde] = await tx
             .select()
             .from(schema.customers)

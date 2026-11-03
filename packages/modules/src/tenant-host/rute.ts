@@ -10,6 +10,7 @@ export const KUNDE_STIER = [
   '/bookinger',
   '/kjoretoy',
   '/profil',
+  '/meldinger',
 ] as const;
 
 export type VertKontekst = 'privat' | 'bedrift';

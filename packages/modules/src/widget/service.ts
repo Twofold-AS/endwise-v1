@@ -397,6 +397,113 @@ export function createWidgetPublicService(db: Database) {
         }
       });
     },
+
+    /**
+     * F33 / white label F11b — innlogget kunde booker. Ingen ny kunderad.
+     * Mekaniker velges server-side. Status blir confirmed (Mottatt).
+     */
+    async createPortalBookingRequest(
+      tenantId: string,
+      input: {
+        customerId: string;
+        serviceVersionId: string;
+        startsAt: Date;
+        vehicleId?: string | null;
+        notes?: string | null;
+        idempotencyKey: string;
+      },
+    ): Promise<{ bookingId: string; status: string }> {
+      return withTenant(db, tenantId, async (tx) => {
+        await tx.execute(lockShopSlots(tenantId));
+
+        if (input.idempotencyKey) {
+          const [existing] = await tx
+            .select({ id: schema.bookings.id, status: schema.bookings.status })
+            .from(schema.bookings)
+            .where(eq(schema.bookings.idempotencyKey, input.idempotencyKey))
+            .limit(1);
+          if (existing) return { bookingId: existing.id, status: existing.status };
+        }
+
+        if (input.vehicleId) {
+          const [bil] = await tx
+            .select({ id: schema.vehicles.id })
+            .from(schema.vehicles)
+            .where(
+              and(
+                eq(schema.vehicles.id, input.vehicleId),
+                eq(schema.vehicles.customerId, input.customerId),
+              ),
+            )
+            .limit(1);
+          if (!bil) throw new WidgetBookingError('Kjøretøyet tilhører ikke denne kunden');
+        }
+
+        const { dayStart, dayEnd } = widgetWorkingDay(input.startsAt);
+        const snap = await shopSlotSnapshot(tx, {
+          serviceVersionId: input.serviceVersionId,
+          dayStart,
+          dayEnd,
+        });
+        if (!snap) throw new WidgetBookingError('Fant ikke tjeneste eller ledig mekaniker');
+
+        const offered = computeFreeSlots({
+          dayStart,
+          dayEnd,
+          durationMinutes: snap.durationMinutes,
+          stepMinutes: WIDGET_SLOT_STEP_MINUTES,
+          capacity: snap.capacity,
+          busy: snap.busy,
+          notBefore: new Date(),
+        });
+        if (!isOfferedSlot(input.startsAt, offered)) {
+          throw new WidgetBookingError('Valgt tid er ikke ledig for denne tjenesten');
+        }
+
+        const endsAt = new Date(input.startsAt.getTime() + snap.durationMinutes * 60_000);
+        const mechanicId = pickMechanicWithRoom(snap.mechanics, snap.busy, input.startsAt, endsAt);
+        if (!mechanicId) throw new WidgetBookingError('Fant ikke tjeneste eller ledig mekaniker');
+
+        await tx.execute(lockMechanic(tenantId, mechanicId));
+
+        try {
+          const booking = await writeBooking(tx, {
+            tenantId,
+            mechanicId,
+            serviceVersionId: input.serviceVersionId,
+            startsAt: input.startsAt,
+            endsAt,
+            customerId: input.customerId,
+            vehicleId: input.vehicleId ?? null,
+            source: 'widget',
+            notes: input.notes ?? undefined,
+            idempotencyKey: input.idempotencyKey,
+          });
+          const [confirmed] = await tx
+            .update(schema.bookings)
+            .set({ status: 'confirmed', updatedAt: new Date() })
+            .where(eq(schema.bookings.id, booking.id))
+            .returning({ id: schema.bookings.id, status: schema.bookings.status });
+          await tx.insert(schema.auditLog).values({
+            tenantId,
+            actor: `customer:${input.customerId}`,
+            action: 'booking.confirmed',
+            subjectType: 'booking',
+            subjectId: booking.id,
+            metadata: { from: 'draft', to: 'confirmed', kilde: 'kundeportal' },
+          });
+          return {
+            bookingId: confirmed?.id ?? booking.id,
+            status: confirmed?.status ?? 'confirmed',
+          };
+        } catch (error) {
+          if (error instanceof SlotConflictError) {
+            throw new WidgetBookingError('Valgt tid er ikke ledig for denne tjenesten');
+          }
+          throw error;
+        }
+      });
+    },
   };
 }
 

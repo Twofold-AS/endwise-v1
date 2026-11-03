@@ -368,6 +368,8 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
       channel?: MessageChannel;
       /** Kundens e-post/telefon i den eksterne kanalen. Kroken F6-16 henger på. */
       externalRef?: string | null;
+      /** F33 / F11b — kundekobling. Påkrevd for portal-tråder. */
+      customerId?: string | null;
     }) {
       const kanal = input.channel ?? 'app';
       const ref = input.externalRef?.trim() || null;
@@ -385,6 +387,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             subject: input.subject ?? null,
             channel: kanal,
             externalRef: ref,
+            customerId: input.customerId ?? null,
           })
           .returning();
         if (!thread) throw new Error('Tråden ble ikke opprettet');
@@ -756,6 +759,7 @@ export function createMessagesModule(db: Database, kanaler: { epost?: UtgaaendeE
             subject: traad.subject,
             channel: traad.channel,
             externalRef: traad.externalRef,
+            customerId: traad.customerId,
           })
           .returning();
         if (!ny) throw new Error('Tråden ble ikke opprettet');

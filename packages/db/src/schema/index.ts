@@ -22,6 +22,7 @@ export * from './owner-transfers.ts';
 export * from './profiles.ts';
 export * from './reserverte-slugs.ts';
 export * from './services.ts';
+export * from './shared-assets.ts';
 export * from './shop.ts';
 export * from './stream-events.ts';
 export * from './sync-conflicts.ts';

@@ -1626,3 +1626,80 @@ $$;
 revoke all on function lookup_tenant_by_host(text, text) from public;
 grant execute on function lookup_tenant_by_host(text, text) to public;
 
+-- F36 / white label F13 — publiser_delt_asset. Kun DEFINER, aldri direkte INSERT.
+drop function if exists publiser_delt_asset(text, text, text, text, text);
+create or replace function publiser_delt_asset(
+  p_art text,
+  p_modell_nokkel text,
+  p_lagringsnokkel text,
+  p_samtykke_versjon text,
+  p_omfang text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_tenant uuid;
+  v_id uuid;
+begin
+  -- publiser_delt_asset_rev=0056
+  v_tenant := nullif(current_setting('app.tenant_id', true), '')::uuid;
+  if v_tenant is null then
+    raise exception 'ingen tenant';
+  end if;
+  if not exists (
+    select 1 from tenant_agreements a
+    where a.tenant_id = v_tenant
+      and a.deling_samtykke = true
+      and a.trukket_tilbake_at is null
+      and a.signert_at is not null
+      and a.kontraktsversjon = p_samtykke_versjon
+      and a.deling_omfang ? p_omfang
+  ) then
+    raise exception 'ikke samtykke';
+  end if;
+  if p_modell_nokkel ~* '(regnr|vin|kunde)' then
+    raise exception 'forbudt nokkel';
+  end if;
+  insert into shared_assets (art, kjoretoy_modell_nokkel, lagringsnokkel, samtykke_versjon, personopplysninger_fjernet)
+  values (p_art::shared_asset_art, p_modell_nokkel, p_lagringsnokkel, p_samtykke_versjon, true)
+  returning id into v_id;
+  insert into shared_asset_origin (asset_id, origin_tenant_id)
+  values (v_id, v_tenant);
+  return v_id;
+end;
+$$;
+
+revoke all on function publiser_delt_asset(text, text, text, text, text) from public;
+grant execute on function publiser_delt_asset(text, text, text, text, text) to authenticated;
+
+drop function if exists slett_trukket_shared_assets();
+create or replace function slett_trukket_shared_assets()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_count integer;
+begin
+  update shared_assets s
+  set trukket_tilbake_at = coalesce(s.trukket_tilbake_at, now())
+  from shared_asset_origin o
+  join tenant_agreements a on a.tenant_id = o.origin_tenant_id
+  where o.asset_id = s.id
+    and a.trukket_tilbake_at is not null
+    and s.trukket_tilbake_at is null;
+  delete from shared_assets
+  where trukket_tilbake_at is not null
+    and trukket_tilbake_at < now() - interval '30 days';
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$$;
+
+revoke all on function slett_trukket_shared_assets() from public;
+grant execute on function slett_trukket_shared_assets() to authenticated;
+

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F36 White label F13 (datadeling modell)
+
+**Type:** ny fase. Datamodell og RLS, ingen UI (F14-07). Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F36**. **F36-01** `done`. `publiser_delt_asset` DEFINER. ⛔ F14 UI. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F35 White label F12 (GDPR-innsyn og velkomst)
 
 **Type:** ny fase. Velkomst uten PII, Mine data, personvern. Ingen ny UI-pakke. Ingen techstack-endring.

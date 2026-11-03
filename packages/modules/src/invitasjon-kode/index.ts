@@ -15,8 +15,21 @@ export const KODE_GYLDIGHET_MAX_MS = 15 * 60 * 1000;
 export const MAX_FORSOK = 5;
 export const PEPPER_ENV = 'INVITASJON_KODE_PEPPER';
 
-/** Lettlest alfabet uten 0/O/1/I. */
+/** Lettlest alfabet uten 0/O/1/I. Lengde 32 = jevnt 5 bit. */
 const ALFABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+/** CSPRNG uten modulo (CWE-331 / CodeQL js/biased-cryptographic-random). */
+function trekkKode(lengde: number): string {
+  let kode = '';
+  while (kode.length < lengde) {
+    const b = randomBytes(1)[0];
+    if (b === undefined) continue;
+    const tegn = ALFABET[b & 31];
+    if (tegn === undefined) continue;
+    kode += tegn;
+  }
+  return kode;
+}
 
 export const INVITASJON_KODE_FEIL = 'ugyldig' as const;
 
@@ -84,13 +97,7 @@ export function genererInvitasjonskode(input: {
     );
   }
 
-  const bytes = randomBytes(lengde);
-  let kode = '';
-  for (let i = 0; i < lengde; i++) {
-    const b = bytes[i];
-    if (b === undefined) throw new InvitasjonKodeConfigError('Kunne ikke trekke kode.');
-    kode += ALFABET[b % ALFABET.length];
-  }
+  const kode = trekkKode(lengde);
   const salt = randomBytes(16).toString('base64url');
   const hash = hashInvitasjonskode(kode, salt, input.pepper);
   const now = input.now ?? new Date();

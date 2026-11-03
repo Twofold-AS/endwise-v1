@@ -20,6 +20,15 @@ export type OpplosOpts = {
 const DEFAULT_ROT = 'endwise.no';
 const SLUG_RE = /^[a-z0-9](?:[a-z0-9]|-(?!-))*[a-z0-9]$/;
 
+/** Fjerner ledende/avsluttende punktum uten regex (unngår ReDoS på Host). */
+function trimPunktum(verdi: string): string {
+  let start = 0;
+  let slutt = verdi.length;
+  while (start < slutt && verdi.charCodeAt(start) === 46) start += 1;
+  while (slutt > start && verdi.charCodeAt(slutt - 1) === 46) slutt -= 1;
+  return verdi.slice(start, slutt);
+}
+
 export function normaliserVert(host: string | null | undefined): string {
   if (!host) return '';
   let v = host.trim().toLowerCase();
@@ -72,10 +81,7 @@ export function opplosTenantFraHost(
   opts: OpplosOpts = {},
 ): TenantOpplosning {
   const vert = normaliserVert(host);
-  const rot = (opts.rotDomene ?? DEFAULT_ROT)
-    .trim()
-    .toLowerCase()
-    .replace(/^\.+|\.+$/g, '');
+  const rot = trimPunktum((opts.rotDomene ?? DEFAULT_ROT).trim().toLowerCase());
 
   if (opts.vercelEnv !== 'production') {
     const preview = opts.previewSlug?.trim().toLowerCase() ?? '';

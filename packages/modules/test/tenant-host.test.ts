@@ -114,4 +114,10 @@ describe('F16 / white label F0: tenant-host', () => {
     expect(opplosTenantFraHost('').sone).toBe('ukjent');
     expect(opplosTenantFraHost(undefined).sone).toBe('ukjent');
   });
+
+  it('rotDomene tåler punktum rundt uten regex', () => {
+    expect(opplosTenantFraHost('bergen.endwise.no', { rotDomene: '..endwise.no.' }).slug).toBe(
+      'bergen',
+    );
+  });
 });

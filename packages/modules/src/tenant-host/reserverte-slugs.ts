@@ -1,5 +1,6 @@
 /**
  * F16 / white label F0 — reserverte subdomener.
+ * Utkast. Endelig liste er ikke besluttet (Mikael 2026-11-03).
  * Kodefallback. Tabellen `reserverte_slugs` kan utvides av admin (F1).
  * Alt som er `endwise` eller starter med `endwise-` er også reservert.
  */

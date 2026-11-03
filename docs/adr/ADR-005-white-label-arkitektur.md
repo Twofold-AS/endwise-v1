@@ -1,9 +1,9 @@
 # ADR-005 — White label: vert, innlogging, tillatelser og Mons-krav
 
 **Roadmap:** F16 (white label-plan F0 — ADR og spike)
-**Status:** **Foreslått.** Venter på godkjenning fra Mikael og Mons.
+**Status:** **Godkjent** av Mikael 3. november 2026. Mons' sikkerhetskrav (§3.11) formelt godkjent samme dag.
 **Dato:** 3. november 2026
-**Kilder:** white label-planen 2026-11-03 · ADR-002 · Better-Auth 1.7.x i repoet · Vercel «Resolve tenants by subdomain with Next.js proxy.ts» · eksisterende `apps/web/proxy.ts`, `packages/auth`, `packages/db`
+**Kilder:** white label-planen 2026-11-03 · Mikaels beslutninger 2026-11-03 · ADR-002 · Better-Auth 1.7.x i repoet · Vercel «Resolve tenants by subdomain with Next.js proxy.ts» · eksisterende `apps/web/proxy.ts`, `packages/auth`, `packages/db`
 
 Dette er arkitekturbeslutningen for Endwise som selvstendig white label-plattform. F0 leverer ADR-en og isolerte, flagg-vaktede spiker. Ingen atferdsendring for dagens brukere på `endwise.no` / `www.endwise.no` før senere faser merges.
 
@@ -35,6 +35,8 @@ F0-spiken setter bare informasjonsheadere bak `ENDWISE_WHITE_LABEL_SPIKE=1`. Sta
 
 Dev: `<slug>.localhost:3000`. Preview (`VERCEL_ENV !== 'production'`): `x-tenant-slug` eller `?tenant=` som overstyring. Produksjon ignorerer overstyringen.
 
+**DNS (besluttet 2026-11-03):** Sonen `endwise.no` **blir der den er i dag**. Den flyttes ikke til Vercel. Wildcard `*.endwise.no` peker mot Vercel med CNAME. Sertifikat via `_acme-challenge`-delegering / CNAME til Vercel.
+
 ### 2. Subdomene (`<sted>.endwise.no`)
 
 Subdomenet er stedet eller navnet forhandleren velger i onboardingen, for eksempel `bergen.endwise.no`. Det er ikke et generisk ord.
@@ -46,11 +48,11 @@ Subdomenet er stedet eller navnet forhandleren velger i onboardingen, for eksemp
 - **Globalt unikt**, uavhengig av store/små bokstaver. Unik indeks på `lower(slug)` mot både `tenants.slug` og `organization.slug`.
 - Kollisjon (to i Bergen): først til mølla. Nummer to får «`bergen` er tatt» og forslag som `bergen-sentrum`, `bergen-<firmanavn>`, `bergen-2`. Ingen opplysning om hvem som har navnet. Endwise flytter aldri et navn i det stille.
 
-**Reserverte ord** (kodefallback i F0 + tabellen `reserverte_slugs`):
+**Reserverte ord** (utkast — kodefallback i F0 + tabellen `reserverte_slugs`). Endelig liste er **ikke besluttet**; listen under står som draft til Mikael låser den:
 
 `platform`, `admin`, `www`, `app`, `api`, `mail`, `smtp`, `imap`, `ftp`, `status`, `docs`, `help`, `hjelp`, `support`, `kunde`, `login`, `logg-inn`, `auth`, `static`, `assets`, `cdn`, `dev`, `test`, `staging`, `preview`, `demo`, `widget`, `cron`, `stream`, `framer`, `noreply`, `no-reply`, `post`, `webmail`.
 
-Alt som er `endwise` eller starter med `endwise-` er reservert. Merkenavn som lett kan forveksles (Vipps, BankID, Posten, Nav, Skatteetaten) går til manuell godkjenning. Endelig liste godkjennes av Mikael.
+Alt som er `endwise` eller starter med `endwise-` er reservert. Merkenavn som lett kan forveksles (Vipps, BankID, Posten, Nav, Skatteetaten) går til manuell godkjenning.
 
 ### 3. Innlogging: én flate per forhandlervert
 
@@ -97,7 +99,7 @@ Koden er 6–8 tegn (anbefalt 8), 10–15 minutter, maks 5 forsøk. Lagres som H
 - Ingen Endwise-logo i headeren på forhandlerflaten.
 - «Levert av Endwise» i e-postfot og profil, styrt av `vis_levert_av` (default på).
 - Ved opprettelse av kundeforhold: GDPR-informasjon på e-post (art. 13) med lenke til personvernerklæring. Aldri ved Quick-import (`source='quick'`). Ingen personopplysninger i e-postteksten.
-- Avsenderadresse forblir Endwises verifiserte domene i v1. Visningsnavn = forhandlerens navn.
+- Avsenderadresse er dagens Resend-avsender. **Ingen nytt domene.** Kanonisk From i koden: `Endwise <noreply@endwise.no>` (`RESEND_FROM_KANONISK` i `packages/auth/src/resend-avsender.ts`). Verifisert apex: `endwise.no` (`RESEND_STANDARD_DOMENE`). Visningsnavn = forhandlerens navn.
 
 ### 8. Sesjon, cookie og `app.actor`
 
@@ -112,7 +114,7 @@ Ett vertslåst cookie per forhandlerhost: `__Host-`, `HttpOnly`, `Secure`, `Same
 
 ### 9. Admin (`platform.endwise.no`)
 
-Egen auth-sone, eget cookie-prefiks, passkey, IP-allowlist i Vercel Firewall, kort sesjon. Support er read-only som standard. Skriving og innlogging som forhandler krever just-in-time-tilgang: begrunnelse, tidsbegrensning, fire øyne, varsel til daglig leder. Uforanderlig `audit_log`.
+Egen auth-sone, eget cookie-prefiks, passkey, kort sesjon. **IP-allowlist i Vercel Firewall er utsatt** (senere; adressene oppgis når det tas). Support er read-only som standard. Skriving og innlogging som forhandler krever just-in-time-tilgang: begrunnelse, tidsbegrensning, fire øyne, varsel til daglig leder. Uforanderlig `audit_log`.
 
 Daglig leder-nødvei: valgfri stedfortreder (kan bare starte), firmaattest + ID, to Endwise-administratorer, 7 dagers varsel til gammel leder, alle økter til gammel leder avsluttes, gjenopprettingskoder.
 
@@ -120,7 +122,7 @@ Daglig leder-nødvei: valgfri stedfortreder (kan bare starte), firmaattest + ID,
 
 ## Sikkerhetskrav (Mons)
 
-Skrives inn i ADR-en i F0 og er akseptansekriterier i fasene. Mons reviewer F5, F6a, F7 og F8a som egne PR-er.
+**Formelt godkjent av Mikael 3. november 2026.** Skrives inn i ADR-en i F0 og er akseptansekriterier i fasene. Mons reviewer F5, F6a, F7 og F8a som egne PR-er.
 
 **1) Invitasjon**
 - GET på lenken endrer ingenting. Koden sendes bare via «Send meg kode» (POST med CSRF), alltid til e-posten lagret på invitasjonen.
@@ -155,7 +157,7 @@ Skrives inn i ADR-en i F0 og er akseptansekriterier i fasene. Mons reviewer F5, 
 - Gjenopprettingskoder.
 
 **5) Admin**
-- Passkey/WebAuthn, IP-allowlist i Vercel Firewall, kort sesjon og egen auth-sone.
+- Passkey/WebAuthn, kort sesjon og egen auth-sone. IP-allowlist i Vercel Firewall er utsatt (senere).
 - Support er read-only som standard. Skriving og impersonering krever just-in-time-tilgang med begrunnelse, tidsbegrensning, fire øyne og varsel til daglig leder.
 - Uforanderlig `audit_log` (GDPR art. 28/32).
 - Admin får aldri sesjon på forhandlervert.
@@ -202,25 +204,28 @@ RLS: `tenantPolicy` + inspect-SELECT på tenant-tabellene. `reserverte_slugs` ba
 | TOTP step-up | `twoFactor`-plugin finnes. `assertTwoFactorSatisfied` er tom siden 02.09.2026. Muren sitter i `magic-link-2fa`. | F7: flytt muren til Bedrift-bytte. Ny TOTP for sensitive handlinger. |
 | Rotasjon av sesjons-ID | 2FA-hooken sletter delsesjonen og lager ny (ADR-002). | F7: samme mønster ved bytte til Bedrift (CWE-384). Avklar eksakt Better-Auth-API i den PR-en. |
 | Passkey | Plugin fjernet pga. peer-drift. `passkey`-tabellen ligger dormant. | F5: reaktiver `@better-auth/passkey` + klient når admin-sonen bygges. |
-| Resend-domene | `env.ts` og `resend-avsender.ts` er uenige (`endwise.no` vs `no-reply.endwise.no`). | Mikael verifiserer mot Resend før F4. Ingen hemmeligheter i denne PR-en. |
+| Resend-domene | Kanonisk From er `Endwise <noreply@endwise.no>` (`resend-avsender.ts`). Verifiserte domener i `env.ts`: `endwise.no` og `no-reply.endwise.no`. Standard: `endwise.no`. | **Besluttet 2026-11-03:** bruk dagens Resend-avsender. Ingen nytt domene. Visningsnavn = forhandler. |
 
 ---
 
 ## Konsekvenser
 
-1. F1 kan bygge `@endwise/modules/slug`, `reserver_slug()` og migrasjonsrapport for dagens slugs.
+1. F1 kan bygge `@endwise/modules/slug` og `reserver_slug()`. **Ingen migrasjon av eksisterende forhandlere.** Eksisterende forhandlere slettes; daglig leder settes via invitasjonsflyten (fresh start). Ingen slug-migrasjonsrapport.
 2. F2 kan utvide proxyen til rewrite mot `/_kunde` og `/_plattform` uten å flytte 153 `(app)`-filer.
 3. F3–F4 eier branding-UI og e-postmal. F5/F5b eier admin-sonen. F6a–c eier tillatelser. F7 eier Privat/Bedrift. F8a–c eier invitasjon og daglig leder-overføring.
-4. Ingenting av dette merges uten Mikaels OK. Mons reviewer F5, F6a, F7 og F8a.
+4. Ingenting av dette merges uten Mikaels OK på PR-en. Mons §3.11 er formelt godkjent 2026-11-03. Mons reviewer fortsatt F5, F6a, F7 og F8a.
 5. Flagg `ENDWISE_WHITE_LABEL_SPIKE` forblir av i produksjon til F2.
+6. DNS-sonen flyttes ikke. Sertifikat via `_acme-challenge` / CNAME til Vercel. IP-allowlist for `platform` tas senere.
 
 ---
 
-## Åpne spørsmål
+## Beslutninger (Mikael 3. november 2026)
 
-1. Mons' sikkerhetskrav (§ over) venter på Mikaels formelle OK (punkt O i planen).
-2. Hvem som er daglig leder hos hver eksisterende forhandler (migrasjonsrapport, ingen automatisk degradering).
-3. Endelig reservert-liste og merkenavn til manuell kø.
-4. Hvilket Resend-avsenderdomene som faktisk er verifisert.
-5. DNS: delegering av `_acme-challenge.endwise.no` vs. flytte hele sonen til Vercel (anbefalt: delegering).
-6. IP-allowlist til Vercel Firewall for `platform` (Mikael oppgir adressene).
+1. **Mons §3.11** er formelt godkjent av Mikael 2026-11-03. Kravene over er akseptansekriterier i senere faser.
+2. **Eksisterende forhandlere slettes.** Ingen migrasjon av daglig leder. Fresh start via invitasjonsflyten.
+3. **Reservert-listen er utkast.** Endelig liste er ikke besluttet; listen i §2 og i `RESERVERTE_SLUGS` står som draft.
+4. **E-postavsender:** dagens Resend-domene. Ingen nytt domene. Kanonisk From: `Endwise <noreply@endwise.no>` (`endwise.no`).
+5. **DNS:** sonen blir der den er. `_acme-challenge`-delegering / CNAME til Vercel. Sonen flyttes ikke.
+6. **IP-allowlist for `platform`:** utsatt. Markert som senere.
+
+Ingen åpne spørsmål fra F0 gjenstår. F1 er ikke startet.

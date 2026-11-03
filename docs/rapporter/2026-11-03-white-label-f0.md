@@ -7,7 +7,7 @@
 
 | ID | Resultat |
 |---|---|
-| F16-01 | ADR-005 på norsk: adresser, subdomene, innlogging, roller, 2FA, invitasjon, branding/GDPR, sesjon, admin. Mons' «Sikkerhetskrav (Mons)» står verbatim. |
+| F16-01 | ADR-005 på norsk: adresser, subdomene, innlogging, roller, 2FA, invitasjon, branding/GDPR, sesjon, admin. Mons' «Sikkerhetskrav (Mons)» står verbatim. **Godkjent av Mikael 2026-11-03** (Mons §3.11 formelt OK). |
 | F16-02 | `opplosTenantFraHost` + reservert-liste. Proxy kaller den bare ved `ENDWISE_WHITE_LABEL_SPIKE=1`. Matcher/no-store uendret. |
 | F16-03 | Migrasjon 0045: branding, domener, reserverte slugs, invitation_codes, member_permissions. RLS + skisse. |
 | F16-04 | HMAC-hjelper for 6–8 tegns kode, forsøk, utløp, konstant-tid. |
@@ -24,4 +24,6 @@ Ingen produksjonsfikser. Spikene er additive.
 
 ## 4. Neste fase / neste steg
 
-White label-planens **F1** (subdomene-regler, `reserver_slug`, migrasjonsrapport). Ikke start før Mikael merger F0 og Mons/Mikael har sagt OK til §3.11.
+Mikael lukket F0-spørsmålene 2026-11-03. **F1 er ikke startet.** PR #185 merges ikke i denne økten.
+
+Beslutninger: Mons §3.11 godkjent; eksisterende forhandlere slettes (ingen daglig-leder-migrasjon, fresh start via invite); reservert-liste forblir utkast; avsender `Endwise <noreply@endwise.no>`; DNS blir der den er (`_acme-challenge` / CNAME); IP-allowlist utsatt.

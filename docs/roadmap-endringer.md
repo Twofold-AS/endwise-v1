@@ -5,10 +5,18 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F16 White label F0, Mikaels beslutninger
+
+**Type:** ADR-oppdatering. Ingen kodeatferd. Ingen ny UI-pakke. Ingen techstack-endring. F1 ikke startet.
+**Godkjent av:** Mikael 2026-11-03 (Mons §3.11 formelt OK + seks F0-svar). PR #185, ikke merge.
+**Endring:** ADR-005 status **Godkjent**. Eksisterende forhandlere slettes (ingen daglig-leder-migrasjon). Reservert-liste forblir utkast. Avsender `Endwise <noreply@endwise.no>`. DNS blir; `_acme-challenge` / CNAME til Vercel. IP-allowlist for `platform` utsatt. ⛔ F1. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F16 White label F0 (ADR + spike)
 
 **Type:** ny fase i veikartet. ADR + isolerte, flagg-vaktede spiker. Ingen atferd for dagens endwise.no-brukere. Ingen ny UI-pakke. Ingen techstack-endring.
-**Godkjent av:** planen er godkjent av Mikael; Mons' §3.11 venter formell OK. PR, ikke merge.
+**Godkjent av:** planen er godkjent av Mikael; Mons' §3.11 formelt OK 2026-11-03. PR, ikke merge.
 **Endring:** Ny fase **F16** = white label-planens F0. **F16-01** `done` (ADR-005). **F16-02** `done` (tenant-host i proxy bak `ENDWISE_WHITE_LABEL_SPIKE`). **F16-03** `done` (0045 branding/domener/koder/tillatelser + RLS-skisse). **F16-04** `done` (HMAC-invitasjonskode). Kanon: `docs/adr/ADR-005-white-label-arkitektur.md`. ⛔ Ingen rewrite, ingen produksjonsflagg på. ⛔ #114/#119.
 
 ---

@@ -13,7 +13,9 @@ describe('F29 / white label F8c: overføring av daglig leder', () => {
     );
     expect(sql).toMatch(/overfor_daglig_leder_rev=0053/);
     expect(sql).toMatch(/FOR UPDATE/);
-    expect(sql.indexOf("role = 'dealer_staff'")).toBeLessThan(sql.lastIndexOf("role = 'dealer_admin'"));
+    expect(sql.indexOf("role = 'dealer_staff'")).toBeLessThan(
+      sql.lastIndexOf("role = 'dealer_admin'"),
+    );
     expect(sql).toMatch(/DELETE FROM session WHERE user_id = p_fra/);
     expect(sql).toMatch(/stedfortreder/);
   });

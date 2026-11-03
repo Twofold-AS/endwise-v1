@@ -9,13 +9,7 @@ import { tenants } from './tenants.ts';
  * Frivillig: TOTP + atomisk bytte. Nød: to Endwise-admin og 7 dagers varsel.
  */
 export const OWNER_TRANSFER_KIND = ['frivillig', 'nod'] as const;
-export const OWNER_TRANSFER_STATUS = [
-  'venter',
-  'godkjent',
-  'utfort',
-  'avvist',
-  'trukket',
-] as const;
+export const OWNER_TRANSFER_STATUS = ['venter', 'godkjent', 'utfort', 'avvist', 'trukket'] as const;
 
 export const ownerTransfers = pgTable(
   'owner_transfers',

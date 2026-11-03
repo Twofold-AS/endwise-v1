@@ -1,4 +1,4 @@
-import { OMRADER, type Niva, type Omrade } from '../tillatelse/index.ts';
+import { type Niva, OMRADER, type Omrade } from '../tillatelse/index.ts';
 
 /**
  * F29 / white label F8c — overføring av daglig leder.

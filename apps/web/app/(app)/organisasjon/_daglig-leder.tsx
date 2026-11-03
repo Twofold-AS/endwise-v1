@@ -2,8 +2,8 @@
 
 import { FeltKode, StatefulButton } from '@endwise/ui';
 import { useState } from 'react';
-import { Field, INPUT } from '../../_auth/felter';
 import { trpc } from '@/lib/trpc';
+import { Field, INPUT } from '../../_auth/felter';
 
 export function DagligLederFlate() {
   const status = trpc.eier.status.useQuery();

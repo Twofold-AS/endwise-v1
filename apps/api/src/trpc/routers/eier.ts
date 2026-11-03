@@ -12,12 +12,7 @@ import {
 import { OMRADER } from '@endwise/modules/tillatelse';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import {
-  adminProcedure,
-  endwiseAdminProcedure,
-  protectedProcedure,
-  router,
-} from '../init.ts';
+import { adminProcedure, endwiseAdminProcedure, protectedProcedure, router } from '../init.ts';
 import { krevWhiteLabel } from '../slug-ledig.ts';
 
 function feil(kode: 'FORBIDDEN' | 'BAD_REQUEST' | 'NOT_FOUND' = 'FORBIDDEN'): never {

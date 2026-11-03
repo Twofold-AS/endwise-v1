@@ -18,6 +18,7 @@ import {
   kodeboks,
   meldingsboks,
 } from './epost-mal.ts';
+import { avsenderAdresseErKanonisk, formaterAvsenderFrom } from './merke.ts';
 
 /** E-post-2FA og auth-eposter går via Resend (techstack §5). */
 let client: Resend | undefined;
@@ -72,16 +73,35 @@ export async function sendEmail(input: {
    * samme oppsett som `toolkit-resend` bruker for varsler (F3-04).
    */
   idempotencyKey?: string;
+  /**
+   * F20 / white label F4. Visningsnavn + Reply-To.
+   * Adressen er alltid noreply@endwise.no. `from` settes ikke av kalleren.
+   */
+  avsender?: { visningsnavn: string; replyTo?: string };
 }): Promise<string | undefined> {
   if (Object.hasOwn(input, 'from')) {
     throw new Error('from settes ikke av kalleren');
   }
-  const from = produktAvsender();
-  if (!avsenderErKanonisk(from) || !avsenderErVerifisert(from) || from !== RESEND_FROM_KANONISK) {
+  const from = input.avsender
+    ? formaterAvsenderFrom(input.avsender.visningsnavn)
+    : produktAvsender();
+  if (input.avsender) {
+    if (!avsenderAdresseErKanonisk(from) || !avsenderErVerifisert(from)) {
+      throw new Error(`From-adressen er ikke den kanoniske (${RESEND_FROM_KANONISK})`);
+    }
+  } else if (
+    !avsenderErKanonisk(from) ||
+    !avsenderErVerifisert(from) ||
+    from !== RESEND_FROM_KANONISK
+  ) {
     throw new Error(`From er ikke den kanoniske produktadressen (${RESEND_FROM_KANONISK})`);
   }
   const to = krevEnkelEpost(input.to, 'to');
-  const replyTo = input.replyTo ? krevEnkelEpost(input.replyTo, 'replyTo') : undefined;
+  const replyTo = input.avsender?.replyTo
+    ? krevEnkelEpost(input.avsender.replyTo, 'replyTo')
+    : input.replyTo
+      ? krevEnkelEpost(input.replyTo, 'replyTo')
+      : undefined;
   const subject = stripCrLf(input.subject);
   const { data, error } = await getClient().emails.send({
     from,
@@ -522,20 +542,16 @@ export async function sendInboxMessage(input: {
     subject: emne,
     replyTo: input.svarTil,
     idempotencyKey: input.idempotencyKey,
-    text: [
-      input.tekst,
-      '',
-      '—',
-      `${input.avsenderNavn}, ${input.forhandler}`,
-      '',
-      svarlinje,
-      'Sendt via Endwise.',
-    ].join('\n'),
+    text: [input.tekst, '', '—', `${input.avsenderNavn}, ${input.forhandler}`, '', svarlinje].join(
+      '\n',
+    ),
+    avsender: { visningsnavn: input.forhandler, replyTo: input.svarTil },
     html: byggEpostHtml({
       tittel: input.emne?.trim() || `Melding fra ${input.forhandler}`,
       ingress: `${input.avsenderNavn} hos ${input.forhandler} har sendt deg en melding.`,
       innhold: meldingsboks(input.tekst),
-      fotnote: `${svarlinje} Sendt via Endwise.`,
+      fotnote: svarlinje,
+      merke: { navn: input.forhandler, levertAv: true },
     }),
   });
 }

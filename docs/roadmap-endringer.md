@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F20 White label F4 (e-post)
+
+**Type:** ny fase. Forhandler-merke i kunde-e-post. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F20**. **F20-01** `done`. Merke, avsender-objekt, Reply-To, nei til linjeskift i navn, «Levert av Endwise». ⛔ F5. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F19 White label F3 (branding)
 
 **Type:** ny fase. Utseende + logo bak flagg. Ingen atferd uten `ENDWISE_WHITE_LABEL`. Ingen ny UI-pakke. `@vercel/blob` allerede i techstack.

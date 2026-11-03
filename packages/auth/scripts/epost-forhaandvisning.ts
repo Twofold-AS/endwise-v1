@@ -73,8 +73,8 @@ const maler: Array<{ id: string; html: string }> = [
       tittel: 'EU-kontroll',
       ingress: 'Kari hos Verksted A har sendt deg en melding.',
       innhold: meldingsboks('Hei!\n\nBilen er klar etter EU-kontroll.\nHenter du den i dag?'),
-      fotnote:
-        'Svarer du på denne e-posten, går svaret til Kari (kari@verksted.no). Sendt via Endwise.',
+      fotnote: 'Svarer du på denne e-posten, går svaret til Kari (kari@verksted.no).',
+      merke: { navn: 'Verksted A', levertAv: true },
     }),
   },
   {
@@ -82,6 +82,8 @@ const maler: Array<{ id: string; html: string }> = [
     html: byggVarselHtml({
       tittel: 'Booking bekreftet hos Verksted A',
       tekst: 'EU-kontroll 3. september kl. 10:00.\nMøt opp i resepsjonen.',
+      merkeNavn: 'Verksted A',
+      levertAv: true,
     }),
   },
 ];

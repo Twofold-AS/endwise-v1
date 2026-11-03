@@ -1273,12 +1273,16 @@ const ROADMAP = [
   { id:"F19-01", o:"Bygg utseende, logo og publisering bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F3. <code>@endwise/modules/branding</code> (WCAG AA, nei til #0066ff). Logo PNG/WebP via Vercel Blob, PNG-metadata strippes, ingen SVG. Innstillinger › Utseende (utkast + Gå live). <code>lookup_tenant_by_host</code> skjuler utkast. Upublisert kundeside viser «Kommer snart». <code>tenant_domains</code> subdomene ved publisering.",
     area:"backend", ui:"partial", status:"done" },
 ]},
+{ phase:"F20", title:"White label — e-post (plan F4)", target:"Etter F19 / før admin", items:[
+  { id:"F20-01", o:"Bygg forhandler-merke i kunde-e-post", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F4. <code>Merke</code> på <code>byggEpostHtml</code>. <code>sendEmail.avsender</code> (visningsnavn + Reply-To, adresse <code>noreply@endwise.no</code>). Linjeskift i navn avvises. Innboks-e-post uten «Sendt via Endwise». Fot «Levert av Endwise». Ansatt/auth-e-post forblir Endwise-merket.",
+    area:"backend", ui:"na", status:"done" },
+]},
 ];
 
 /* =====================================================================
    KATEGORIER — den ANDRE aksen (lagt til 20.08.2026).
 
-   ⚠️ Fasene (F0–F19) er IKKE erstattet. De svarer på NÅR noe bygges og i
+   ⚠️ Fasene (F0–F20) er IKKE erstattet. De svarer på NÅR noe bygges og i
    hvilken rekkefølge; kategorien svarer på HVA det er og HVEM det er for.
    Begge finnes samtidig, og «Etter fase» er fortsatt én knapp unna.
 

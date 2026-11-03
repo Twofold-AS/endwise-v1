@@ -1,4 +1,13 @@
 import {
+  AVVIK_BEHANDLET_PREFIKS,
+  AVVIK_NOTAT_PREFIKS,
+  FORESPOR_BEHANDLET_PREFIKS,
+  FORESPOR_NOTAT_PREFIKS,
+  harBehandletEndring,
+  harVentendeAvvik,
+  harVentendeForespor,
+} from '@endwise/modules/booking/changes';
+import {
   osloDatoKort,
   osloKalenderdag,
   osloPlusDager,
@@ -6,20 +15,28 @@ import {
   osloUkedagNavn,
   osloVeggtid,
 } from '../_lib/oslo-dag';
-import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
+import { sammeKalenderdag } from '../dashboard/_pa-jobb';
 import type { PhoneBooking, PhoneTraad } from './phone-home-data';
 
-/** Mekaniker-avvik i booking-notat — `mechanic.reportDeviation`. */
-export const AVVIK_NOTAT_PREFIKS = '[AVVIK ';
+export {
+  AVVIK_BEHANDLET_PREFIKS,
+  AVVIK_NOTAT_PREFIKS,
+  FORESPOR_BEHANDLET_PREFIKS,
+  FORESPOR_NOTAT_PREFIKS,
+  harBehandletEndring,
+  harVentendeAvvik,
+  harVentendeForespor,
+};
 
+/** Mekaniker-avvik i booking-notat — `mechanic.reportDeviation` / `bookings.reportChange`. */
 export function harAvvikNotat(notes: string | null | undefined): boolean {
-  return Boolean(notes?.includes(AVVIK_NOTAT_PREFIKS));
+  return harVentendeAvvik(notes);
 }
 
 /**
- * Ventende endringer på hjem-kortet. Kilde: booking-notat med `[AVVIK `.
- * Ekstra-tid-forespørsel fra Min dag er simulert (ikke persistert) — teller 0.
- * Godkjenning skrives ikke ennå (F7-05 selger-konsument).
+ * Ventende avvik på hjem-kortet. Kilde: booking-notat med `[AVVIK `.
+ * Behandlede (`[AVVIK-BEHANDLET`) teller ikke. Ekstra-tid fra Min dag
+ * som bare er lokal prototype teller ikke.
  */
 export function endringerTeller(jobber: PhoneBooking[]): number {
   return jobber.filter((j) => j.status !== 'cancelled' && harAvvikNotat(j.notes)).length;
@@ -31,11 +48,11 @@ export function avvikTeller(jobber: PhoneBooking[]): number {
 }
 
 /**
- * Forespørsler på hjem-kortet. Ekstra tid fra Min dag er prototype
- * og har ingen rad i basen ennå — 0 er ærlig.
+ * Forespørsler på hjem-kortet. Ekte `[FORESPOR `-notat via
+ * `bookings.reportChange`. Ekstra tid fra Min dag uten notat teller 0.
  */
-export function foresporTeller(_jobber: PhoneBooking[] = []): number {
-  return 0;
+export function foresporTeller(jobber: PhoneBooking[] = []): number {
+  return jobber.filter((j) => j.status !== 'cancelled' && harVentendeForespor(j.notes)).length;
 }
 
 export function pulsdagOverskrift(naa: Date) {
@@ -57,8 +74,12 @@ export type PhoneDelPulse = {
 
 export type PulseTeamMedlem = {
   id: string;
-  status: string;
+  status?: string;
   name?: string;
+  /** Mekaniker-rad. Udefinert = aktiv (eldre kallsteder uten feltet). */
+  active?: boolean;
+  /** Stempelklokke. Ingen API i dag — bare eksplisitt true teller. */
+  clockedIn?: boolean;
 };
 
 /** Uke-vindu på toppkortet — Mikael: tallene for den uken. */
@@ -77,7 +98,8 @@ export const PULSE_DAG_BUE_START = Math.PI;
 /** Halvsirkel (øvre bue 08→19). */
 export const PULSE_DAG_BUE_SWEEP = Math.PI;
 /** Mobbin-ink — spark / Revenue Line (ikke dagsbue). */
-export const PULSE_DAG_FYLL_INK = '#141414';
+/** Tynn ink — dagsbuen er dempet grå/ink, ikke fyllt plate. */
+export const PULSE_DAG_FYLL_INK = '#616161';
 /** Mobbin-aksent — hvor full dagen er på Amicro-halvsirkelen (data viz, ikke CTA). */
 export const PULSE_DAG_FYLL_BLA = '#0066ff';
 /** Mobbin-hairline — gjenstående bue. */
@@ -128,15 +150,15 @@ export function dagFremgang(naa: Date, startHour = PULSE_DAG_START, sluttHour = 
   };
 }
 
-/** Plausibel dag når det ikke finnes jobber i vinduet — uten mock-merke. */
-export const PULSE_PLAUSIBEL_IDAG = { planlagt: 3, paagaar: 2, ferdig: 1 };
-/** Plausibel innboks uten historikk — uten mock-merke. */
-export const PULSE_PLAUSIBEL_INNBOKS_MELDINGER = 7;
+/** Tom dag — ekte 0, ingen oppdiktede tall. */
+export const PULSE_PLAUSIBEL_IDAG = { planlagt: 0, paagaar: 0, ferdig: 0 };
+/** Tom innboks — ekte 0. */
+export const PULSE_PLAUSIBEL_INNBOKS_MELDINGER = 0;
 
-/** Bakoverkompatible alias — samme tall, ikke lenger merket mock. */
+/** Bakoverkompatible alias — 0, ikke mock. */
 export const PULSE_MOCK_IDAG = PULSE_PLAUSIBEL_IDAG;
 export const PULSE_MOCK_INNBOKS_MELDINGER = PULSE_PLAUSIBEL_INNBOKS_MELDINGER;
-export const PULSE_MOCK_MANED = { denne: 18, forrige: 14 };
+export const PULSE_MOCK_MANED = { denne: 0, forrige: 0 };
 
 function overlapperNaa(j: PhoneBooking, naa: Date): boolean {
   if (!j.endsAt) return false;
@@ -242,7 +264,6 @@ export function siste7dSpark(jobber: PhoneBooking[], naa: Date): number[] {
     const dag = osloPlusDager(iDag, -(PULSE_DAGER - 1 - i));
     return perDag.get(dag) ?? 0;
   });
-  if (serie.every((n) => n === 0)) return plausibelSpark(naa);
   return serie;
 }
 
@@ -262,25 +283,17 @@ export function manedBookingTall(jobber: PhoneBooking[], naa: Date) {
   const aktiv = (j: PhoneBooking) => j.status !== 'cancelled';
   const denne = jobber.filter((j) => aktiv(j) && osloManedKey(j.startsAt) === denneKey).length;
   const forrige = jobber.filter((j) => aktiv(j) && osloManedKey(j.startsAt) === forrigeKey).length;
-  if (denne + forrige === 0) return { ...PULSE_MOCK_MANED };
   return { denne, forrige };
 }
 
-/** Ingen jobber i vinduet = plausibel dag, uten badge. */
+/** Ekte tall. Tom liste = 0, aldri oppdiktet. */
 export function idagVisning(jobber: PhoneBooking[], naa: Date) {
-  const tall = idagTall(jobber, naa);
-  if (jobber.length === 0) return { ...PULSE_PLAUSIBEL_IDAG };
-  return tall;
+  return idagTall(jobber, naa);
 }
 
-/**
- * Innboks-rad: kun meldingstall. Tom historikk = plausibelt tall, uten badge.
- */
+/** Innboks-rad: kun uleste. Tom historikk = 0. */
 export function innboksRad(traader: PhoneTraad[]) {
   const meldinger = traader.reduce((sum, t) => sum + (t.unread ?? 0), 0);
-  if (traader.length === 0) {
-    return { meldinger: PULSE_PLAUSIBEL_INNBOKS_MELDINGER };
-  }
   return { meldinger };
 }
 
@@ -302,79 +315,84 @@ export function lagerRad(deler: PhoneDelPulse[]) {
 }
 
 /**
- * På jobb = aktiv jobb-tildeling, ikke timeføring / stempelklokke.
+ * På jobb = stempelklokke nå, ikke jobb-tildeling.
  *
- * Regel (F3-05, Mikael CODE-GO):
- * En ansatt er «på jobb» når hen har en *aktiv tildeling* nå —
- * `aktivJobb` i `_pa-jobb.ts`: `in_progress`, eller levende booking
- * (draft/confirmed/in_progress) som overlapper nå, ellers neste levende i dag.
- * `mechanics.active`, ferie og planlegging uten tildeling teller ikke.
- * Status-humor (`på_jobb` / `ledig`) kommer fra time-/belastningsfelt og
- * brukes ikke her — verkstedet har ikke timeføring.
+ * Teller = faktisk clocked-in (`clockedIn === true`). Ingen stempling-API
+ * i produktet → 0. Nevner = alle aktive mekanikere hos tenanten
+ * (`active !== false`). Inaktive rader teller ikke.
  */
-export function ansattePulse(
-  mekanikere: PulseTeamMedlem[],
-  jobber: PhoneBooking[] = [],
-  naa: Date = new Date(),
-) {
-  const totalt = mekanikere.length;
-  const tildelt = jobber.map((j) => ({
-    ...j,
-    mechanicId: j.mechanicId ?? null,
-    endsAt: j.endsAt ?? j.startsAt,
-  }));
-  const paJobb = mekanikere.filter((m) => aktivJobb(tildelt, m.id, naa) != null).length;
-  return { paJobb, totalt };
+export function ansattePulse(mekanikere: PulseTeamMedlem[]) {
+  const aktive = mekanikere.filter((m) => m.active !== false);
+  const paJobb = aktive.filter((m) => m.clockedIn === true).length;
+  return { paJobb, totalt: aktive.length };
 }
 
 export type AnalyserMockStat = {
   id: string;
   label: string;
-  verdi: number;
-  delta: string;
-  opp: boolean;
+  verdi: number | string;
+  delta?: string;
+  opp?: boolean;
+  /** Ærlig merke når API mangler — ikke et falskt tall. */
+  stub?: string;
   serie: number[];
 };
 
-/** Mock nettsidevisninger til ekte analyse finnes. Stabil per uke. */
-export function analyserMockStats(naa: Date): AnalyserMockStat[] {
-  const uke = osloKalenderdag(naa);
-  const vis = plausibelTall(`${uke}:vis`, 180, 420);
-  const start = plausibelTall(`${uke}:start`, 8, 28);
-  const retur = plausibelTall(`${uke}:retur`, 12, 40);
-  const tid = plausibelTall(`${uke}:tid`, 40, 95);
+/** Claude §4.1 — Bookinger er live. Øvrige bokser står tomme/deaktivert. */
+export const TALL_KPI_IDS = ['bookinger', 'visninger', 'returer', 'credits'] as const;
+export const TALL_STUB_INGEN_API = 'Ingen data';
+
+/**
+ * Bookinger siste 30 kalenderdager i Oslo, ekskl. cancelled.
+ * Samme vindu som hjem-spørringen (`endringerVindu` bakover).
+ */
+export function bookingerSiste30d(jobber: PhoneBooking[], naa: Date): number {
+  const iDag = osloKalenderdag(naa);
+  const fra = osloKalenderdag(osloPlusDager(iDag, -30));
+  return jobber.filter((j) => {
+    if (j.status === 'cancelled') return false;
+    const dag = osloKalenderdag(j.startsAt);
+    return dag >= fra && dag <= iDag;
+  }).length;
+}
+
+/**
+ * Hjem-Tall. Bookinger er live (30d). Visninger/Returer/Credits
+ * står som tomme, deaktiverte bokser — ikke skjult, ikke oppdiktet.
+ */
+export function tallKortStats(jobber: PhoneBooking[], naa: Date): AnalyserMockStat[] {
   return [
-    {
-      id: 'visninger',
-      label: 'Besøk på nettsiden',
-      verdi: vis,
-      delta: '+11 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:v:${i}`, 18, 72)),
-    },
-    {
-      id: 'jobber',
-      label: 'Jobber',
-      verdi: start,
-      delta: '+4 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:s:${i}`, 2, 12)),
-    },
     {
       id: 'bookinger',
       label: 'Bookinger',
-      verdi: tid,
-      delta: '+8 %',
-      opp: true,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:t:${i}`, 20, 90)),
+      verdi: bookingerSiste30d(jobber, naa),
+      serie: [],
     },
     {
-      id: 'retur',
-      label: 'Retur',
-      verdi: retur,
-      delta: '−3 %',
-      opp: false,
-      serie: Array.from({ length: 7 }, (_, i) => plausibelTall(`${uke}:r:${i}`, 4, 16)),
+      id: 'visninger',
+      label: 'Visninger',
+      verdi: '',
+      stub: TALL_STUB_INGEN_API,
+      serie: [],
+    },
+    {
+      id: 'returer',
+      label: 'Returer',
+      verdi: '',
+      stub: TALL_STUB_INGEN_API,
+      serie: [],
+    },
+    {
+      id: 'credits',
+      label: 'Credits',
+      verdi: '',
+      stub: TALL_STUB_INGEN_API,
+      serie: [],
     },
   ];
+}
+
+/** Bakoverkompatibelt alias — samme Tall-celler, uten live bookinger. */
+export function analyserMockStats(naa: Date): AnalyserMockStat[] {
+  return tallKortStats([], naa);
 }

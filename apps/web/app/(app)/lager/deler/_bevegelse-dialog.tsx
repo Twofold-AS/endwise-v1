@@ -1,9 +1,18 @@
 'use client';
 
-import { CircleAlert, StatefulButton } from '@endwise/ui';
+import {
+  CircleAlert,
+  FeltInput,
+  FeltSelect,
+  FeltTall,
+  SelectItem,
+  StatefulButton,
+  toast,
+} from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { OpprettSkuff } from '../../_shell/opprett-skuff';
 
 /**
  * Registrer en lagerbevegelse.
@@ -45,6 +54,7 @@ export function BevegelseDialog({
   const move = trpc.inventory.move.useMutation({
     onSuccess: () => {
       void utils.inventory.invalidate();
+      toast.success('Bevegelsen er registrert');
       onFerdig();
     },
   });
@@ -64,125 +74,99 @@ export function BevegelseDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/*
-       * Bakteppet er en ekte knapp, ikke et div med onClick: da får det
-       * tastaturfokus og Escape/Enter gratis, og skjermlesere får en handling
-       * de kan navngi.
-       */}
-      <button
-        type="button"
-        aria-label="Lukk"
-        onClick={onLukk}
-        className="-z-10 fixed inset-0 cursor-default bg-black/40"
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Registrer bevegelse for ${del.name}`}
-        className="w-full max-w-md rounded-xl border border-border bg-bg p-5"
-      >
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <div>
-            <p className="text-label text-fg">{del.name}</p>
-            <p className="font-mono text-[12px] text-fg-muted">{del.sku}</p>
+    <OpprettSkuff
+      tittel={del.name}
+      apen
+      onLukk={onLukk}
+      tvingSkuff
+      aria-label={`Registrer bevegelse for ${del.name}`}
+      footer={
+        <div className="flex w-full items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onLukk}
+            className="inline-flex h-12 items-center rounded-pill px-4 text-body text-fg-muted"
+          >
+            Avbryt
+          </button>
+          <StatefulButton
+            type="submit"
+            form="bevegelse-skjema"
+            disabled={move.isPending || !valgtLokasjon}
+            state={move.isPending ? 'loading' : move.isError ? 'error' : 'idle'}
+            loadingText="Lagrer…"
+            errorText="Feilet"
+          >
+            Registrer
+          </StatefulButton>
+        </div>
+      }
+    >
+      <form id="bevegelse-skjema" onSubmit={submit} className="flex flex-col gap-3">
+        <p className="text-meta text-fg-muted">{del.sku}</p>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1.5 text-label text-fg">Type</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {synligeTyper.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setKind(t.key)}
+                aria-pressed={kind === t.key}
+                className={`flex flex-col items-start gap-0.5 rounded-control border px-3 py-2 text-left transition-colors ${
+                  kind === t.key
+                    ? 'border-fg bg-sidebar-active'
+                    : 'border-border hover:bg-surface-2'
+                }`}
+              >
+                <span className="text-label text-fg">{t.label}</span>
+                <span className="text-meta text-fg-muted leading-tight">{t.hint}</span>
+              </button>
+            ))}
           </div>
+        </fieldset>
 
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1.5 text-label text-fg">Type</legend>
-            <div className="grid grid-cols-2 gap-2">
-              {synligeTyper.map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => setKind(t.key)}
-                  aria-pressed={kind === t.key}
-                  className={`flex flex-col items-start gap-0.5 rounded-control border px-3 py-2 text-left transition-colors ${
-                    kind === t.key
-                      ? 'border-fg bg-sidebar-active'
-                      : 'border-border hover:bg-surface-2'
-                  }`}
-                >
-                  <span className="text-label text-fg">{t.label}</span>
-                  <span className="text-[11px] text-fg-muted leading-tight">{t.hint}</span>
-                </button>
-              ))}
-            </div>
-          </fieldset>
+        <FeltSelect
+          label="Lokasjon"
+          selectedKey={valgtLokasjon || null}
+          onSelectionChange={(key) => setLocationId(String(key ?? ''))}
+          isRequired
+        >
+          {(lokasjoner.data ?? []).map((l) => (
+            <SelectItem key={l.id} id={l.id}>
+              {l.code} — {l.name}
+            </SelectItem>
+          ))}
+        </FeltSelect>
+        {(lokasjoner.data?.length ?? 0) === 0 && !lokasjoner.isLoading && (
+          <span className="text-meta text-warn">
+            Ingen lokasjoner ennå — opprett én under Plass først.
+          </span>
+        )}
 
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Lokasjon</span>
-            <select
-              value={valgtLokasjon}
-              onChange={(e) => setLocationId(e.target.value)}
-              required
-              className="h-control ew-felt ew-felt-md px-2"
-            >
-              {lokasjoner.data?.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.code} — {l.name}
-                </option>
-              ))}
-            </select>
-            {(lokasjoner.data?.length ?? 0) === 0 && !lokasjoner.isLoading && (
-              <span className="text-[12px] text-warn">
-                Ingen lokasjoner ennå — opprett én under Plass først.
-              </span>
-            )}
-          </label>
+        <FeltTall
+          label={kind === 'adjust' ? 'Nytt antall (absolutt)' : 'Antall'}
+          value={Number(antall) || 0}
+          minValue={0}
+          isRequired
+          onChange={(v) => setAntall(Number.isFinite(v) ? String(v) : '0')}
+        />
 
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">
-              {kind === 'adjust' ? 'Nytt antall (absolutt)' : 'Antall'}
-            </span>
-            <input
-              type="number"
-              min={0}
-              value={antall}
-              onChange={(e) => setAntall(e.target.value)}
-              required
-              className="h-control ew-felt ew-felt-md px-2.5 tabular-nums"
-            />
-          </label>
+        <FeltInput
+          label="Notat"
+          value={note}
+          onChange={setNote}
+          maxLength={280}
+          placeholder="Valgfritt — f.eks. hvilken jobb"
+        />
 
-          <label className="flex flex-col gap-1.5">
-            <span className="text-label text-fg">Notat</span>
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              maxLength={280}
-              placeholder="Valgfritt — f.eks. hvilken jobb"
-              className="h-control ew-felt ew-felt-md px-2.5"
-            />
-          </label>
-
-          {move.error && (
-            <p className="flex items-start gap-2 text-body text-danger">
-              <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-              {move.error.message}
-            </p>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onLukk}
-              className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-            >
-              Avbryt
-            </button>
-            <StatefulButton
-              type="submit"
-              disabled={move.isPending || !valgtLokasjon}
-              state={move.isPending ? 'loading' : move.isError ? 'error' : 'idle'}
-              loadingText="Lagrer…"
-              errorText="Feilet"
-            >
-              Registrer
-            </StatefulButton>
-          </div>
-        </form>
-      </div>
-    </div>
+        {move.error && (
+          <p className="flex items-start gap-2 text-body text-danger">
+            <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+            {move.error.message}
+          </p>
+        )}
+      </form>
+    </OpprettSkuff>
   );
 }

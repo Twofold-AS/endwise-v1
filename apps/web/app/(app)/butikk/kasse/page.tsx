@@ -163,7 +163,7 @@ function KasseInner() {
  */
 export default function ButikkKassePage() {
   return (
-    <div className="mx-auto flex w-full max-w-[880px] flex-col gap-5 px-8 py-7">
+    <div className="mx-auto flex w-full max-w-[880px] flex-col gap-5 max-md:px-4 max-md:py-4 md:px-8 md:py-7">
       <div>
         <h1 className="sr-only">Butikk · Handlekurv / kasse</h1>
         <p className="flex items-center gap-2 text-title text-fg">

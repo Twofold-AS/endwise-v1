@@ -41,11 +41,10 @@ export function ProduktRamme({
   );
 }
 
-function Plassholder({ format, merkelapp }: { format: BildeFormat; merkelapp: string }) {
+function Plassholder({ format }: { format: BildeFormat; merkelapp: string }) {
   if (format === 'phone') {
     return (
       <div className="flex h-full flex-col bg-bg px-3 pt-4 pb-3" aria-hidden>
-        <p className="sr-only">Midlertidig plassholder for {merkelapp}.</p>
         <div className="mb-4 flex items-center justify-between px-1">
           <span className="font-[650] text-[13px] text-fg">Min dag</span>
           <span className="text-[11px] text-fg-muted">I dag</span>
@@ -65,7 +64,6 @@ function Plassholder({ format, merkelapp }: { format: BildeFormat; merkelapp: st
 
   return (
     <div className="flex h-full bg-bg" aria-hidden>
-      <p className="sr-only">Midlertidig plassholder for {merkelapp}.</p>
       <div className="flex w-[28%] flex-col bg-sidebar p-3">
         <p className="mb-2 px-1 font-[450] text-[10px] text-sidebar-section uppercase">
           Verkstedet

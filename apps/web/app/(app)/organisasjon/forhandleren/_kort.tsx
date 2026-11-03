@@ -39,6 +39,7 @@ type RadNokkel = keyof Skjema | null;
 export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slug?: string }) {
   const utils = trpc.useUtils();
   const lyd = useLyd();
+  const team = trpc.team.list.useQuery(undefined, { enabled: !lesing && !slug });
   const dealer = trpc.forhandler.get.useQuery(undefined, { enabled: !lesing && !slug });
   const inspect = trpc.verksted.forhandleren.useQuery(
     { slug: slug ?? '' },
@@ -113,9 +114,14 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
       : {};
   const leftoverKeys = Object.keys(leftover);
 
+  const antallAnsatte = team.data?.length;
+  const ansatteVerdi =
+    lesing || team.isLoading ? '—' : team.isError ? '—' : String(antallAnsatte ?? 0);
+
   return (
-    <div data-org-oversikt className="flex flex-col">
+    <div data-org-hub data-org-oversikt className="flex flex-col gap-5">
       <form onSubmit={onSubmit} className="flex flex-col">
+        <h3 className="pb-1 text-label text-fg">Firmaopplysninger</h3>
         <OrgRad
           label="Firmanavn"
           verdi={skjema.name}
@@ -215,7 +221,6 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
           apen={apen === 'website'}
           onEndre={() => toggle('website')}
           lesing={lesing}
-          siste={leftoverKeys.length === 0 && lesing}
         >
           <OrgFelt
             label="Nettside"
@@ -223,11 +228,12 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
             onChange={(website) => setSkjema((s) => ({ ...s, website }))}
           />
         </OrgRad>
+        <OrgRad label="Antall ansatte" verdi={ansatteVerdi} lesing />
 
         {leftoverKeys.length > 0 ? (
           <details className="border-border border-b px-0 py-4">
             <summary className="cursor-pointer text-label text-fg">Mer fra Quick</summary>
-            <ul className="mt-3 flex flex-col gap-1.5 text-[12px] text-fg-muted">
+            <ul className="mt-3 flex flex-col gap-1.5 text-[13px] text-fg-muted">
               {leftoverKeys.map((key) => (
                 <li key={key}>
                   <span className="text-fg">{key}</span>
@@ -264,7 +270,7 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
             {lagre.error ? (
               <p className="text-body text-danger">{lagre.error.message}</p>
             ) : (
-              <p className="text-[11px] text-fg-muted">
+              <p className="text-[13px] text-fg-muted">
                 Dette er verkstedets kontakt, ikke innloggings-e-posten din.
               </p>
             )}

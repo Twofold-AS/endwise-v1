@@ -108,7 +108,7 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-composer/);
     expect(fab).not.toMatch(/data-ronny-peek/);
     expect(fab).toMatch(/Ronny tenker/);
-    expect(fab).not.toMatch(/data-ronny-tenker/);
+    expect(fab).toMatch(/AgentThinking|data-ronny-tenker/);
     expect(fab).not.toMatch(/ronny-tenker-tekst/);
     expect(fab).not.toMatch(/RonnyTenkerTekst/);
     expect(fab).not.toMatch(/Ronny skriver/);
@@ -116,11 +116,12 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(pil).toMatch(/data-ronny-strek/);
     expect(pil).toMatch(/RonnyHandtak/);
     expect(fab).toMatch(/data-ronny-prompt-kort/);
-    expect(fab).toMatch(/text-\[14px\]/);
+    expect(fab).toMatch(/text-body|text-meta/);
     expect(fab).toMatch(/gap-6/);
     expect(fab).toMatch(/data-ronny-forstor/);
     expect(fab).toMatch(/data-ronny-lukk/);
-    expect(fab).toMatch(/data-ronny-scrim/);
+    expect(fab).toMatch(/<Drawer/);
+    expect(fab).toMatch(/placement="bottom"/);
     expect(fab).toMatch(/ronnySheetHoydePx/);
     expect(fab).not.toMatch(/<Galaxy/);
     expect(fab).not.toMatch(/RONNY_GALAXY_TETTHET/);
@@ -143,7 +144,7 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).toMatch(/api: '\/chat\/workshop'/);
     expect(fab).toMatch(/body: \{ side \}/);
     expect(fab).toMatch(/<RonnyBot size=\{28\}/);
-    expect((fab.match(/<RonnyBot/g) ?? []).length).toBe(2);
+    expect((fab.match(/<RonnyBot/g) ?? []).length).toBeGreaterThanOrEqual(2);
     expect(fab).not.toMatch(/'thinking'/);
     expect(fab).not.toMatch(/'alert'/);
     expect(fab).not.toMatch(/'notify'/);
@@ -164,7 +165,7 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).toMatch(/data-ronny-side-scroll/);
     const hjem = les('../app/(app)/_shell/phone-home.ts');
     expect(hjem).toMatch(
-      /VERKSTED_INNHOLD = 'mx-auto w-full max-w-\[520px\] px-3 md:max-w-\[1120px\] md:px-8'/,
+      /VERKSTED_INNHOLD = 'mx-auto w-full max-w-\[520px\] md:max-w-\[1120px\] md:px-8'/,
     );
     expect(les('../app/(app)/layout.tsx')).toMatch(/data-ronny-side-scroll/);
     expect(les('../app/(app)/_workshop/gradual-blur.tsx')).toMatch(/export function GradualBlur/);

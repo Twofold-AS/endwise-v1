@@ -371,7 +371,7 @@ describe('Verkstedet-dag og Organisasjon på telefon', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     expect(hjem).not.toMatch(/ForhandlerInfoKort/);
     expect(kort).toMatch(/Planlagt/);
-    expect(hjem).toMatch(/visning=dag|PHONE_KORT_META\.idag/);
+    expect(hjem).toMatch(/PulseHeroFlate|Verkstedet/);
   });
 
   it('Organisasjon-piller wrapper på telefon og skjuler Abonnement/Integrasjoner for selger', () => {

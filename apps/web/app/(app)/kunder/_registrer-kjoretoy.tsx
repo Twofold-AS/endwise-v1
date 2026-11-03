@@ -1,17 +1,66 @@
 'use client';
 
-import { CircleAlert, StatefulButton } from '@endwise/ui';
+import { CircleAlert, FeltInput, FeltSelect, SelectItem, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
+import { OpprettSkuff } from '../_shell/opprett-skuff';
+import { KjoretoyKaskade } from '../bookinger/_kjoretoy-kaskade';
+import type { KjoretoyType } from '../bookinger/_kjoretoy-katalog';
 import { TYPE_LABEL } from './_delt';
 
 /**
- * Registrer kjøretøy — Innstillinger-feltgrupper, ikke CardShell-dump.
+ * Registrer kjøretøy — Innstillinger-feltgrupper.
+ * Mobil: bunn-Drawer. Desktop: inline.
  */
 export function RegistrerKjoretoy({
+  fastKundeId,
+  onFerdig,
+  autoApen = false,
+}: {
+  fastKundeId?: string;
+  onFerdig?: () => void;
+  autoApen?: boolean;
+}) {
+  const [apen, setApen] = useState(autoApen);
+  const skjema = (
+    <RegistrerKjoretoySkjema
+      fastKundeId={fastKundeId}
+      onFerdig={() => {
+        setApen(false);
+        onFerdig?.();
+      }}
+    />
+  );
+
+  return (
+    <div data-registrer-kjoretoy-wrap>
+      <div className="md:hidden">
+        <button
+          type="button"
+          data-registrer-kjoretoy-apne
+          onClick={() => setApen(true)}
+          className="inline-flex h-12 w-full items-center justify-center rounded-pill border border-fg bg-bg px-4 text-body font-[650] text-fg"
+        >
+          Registrer kjøretøy
+        </button>
+        <OpprettSkuff
+          tittel="Registrer kjøretøy"
+          apen={apen}
+          onLukk={() => setApen(false)}
+          tvingSkuff
+        >
+          {skjema}
+        </OpprettSkuff>
+      </div>
+      <div className="max-md:hidden">{skjema}</div>
+    </div>
+  );
+}
+
+function RegistrerKjoretoySkjema({
   fastKundeId,
   onFerdig,
 }: {
@@ -23,10 +72,12 @@ export function RegistrerKjoretoy({
   const kunder = trpc.customers.list.useQuery({ sorter: 'navn', limit: 200 });
 
   const [customerId, setCustomerId] = useState(fastKundeId ?? '');
-  const [type, setType] = useState<'mc' | 'boat' | 'atv'>('mc');
+  const [type, setType] = useState<KjoretoyType>('mc');
   const [regNumber, setRegNumber] = useState('');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
+  const [ar, setAr] = useState('');
+  const alleKjoretoy = trpc.vehicles.list.useQuery({ limit: 200 });
 
   const opprett = trpc.vehicles.create.useMutation({
     onSuccess: (v) => {
@@ -50,6 +101,7 @@ export function RegistrerKjoretoy({
       customerId: customerId || undefined,
       make: make.trim() || undefined,
       model: model.trim() || undefined,
+      modelYear: ar.trim() || undefined,
     });
   }
 
@@ -61,59 +113,41 @@ export function RegistrerKjoretoy({
       >
         {fastKundeId ? null : (
           <InnstillingRad label="Kunde">
-            <select
-              value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
-              className="h-control ew-felt ew-felt-md px-2.5"
+            <FeltSelect
+              aria-label="Kunde"
+              selectedKey={customerId || null}
+              onSelectionChange={(key) => setCustomerId(String(key ?? ''))}
+              placeholder="Ingen eier ennå"
             >
-              <option value="">Ingen eier ennå</option>
               {(kunder.data ?? []).map((k) => (
-                <option key={k.id} value={k.id}>
+                <SelectItem key={k.id} id={k.id}>
                   {k.name}
-                </option>
+                </SelectItem>
               ))}
-            </select>
+            </FeltSelect>
           </InnstillingRad>
         )}
         <InnstillingRad label="Type">
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as typeof type)}
-            className="h-control ew-felt ew-felt-md px-2.5"
-          >
-            {(['mc', 'boat', 'atv'] as const).map((t) => (
-              <option key={t} value={t}>
-                {TYPE_LABEL[t]}
-              </option>
-            ))}
-          </select>
+          <span className="sr-only">{TYPE_LABEL[type]}</span>
+          <KjoretoyKaskade
+            type={type}
+            merke={make}
+            modell={model}
+            ar={ar}
+            rader={alleKjoretoy.data ?? []}
+            onType={setType}
+            onMerke={setMake}
+            onModell={setModel}
+            onAr={setAr}
+          />
         </InnstillingRad>
         <InnstillingRad label="Registreringsnummer" siste>
-          <input
+          <FeltInput
+            aria-label="Registreringsnummer"
             value={regNumber}
-            onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
+            onChange={(v) => setRegNumber(v.toUpperCase())}
             maxLength={10}
             placeholder="AB12345"
-            className="h-control ew-felt ew-felt-md px-2.5"
-          />
-        </InnstillingRad>
-      </InnstillingSeksjon>
-
-      <InnstillingSeksjon tittel="Kjennetegn">
-        <InnstillingRad label="Merke">
-          <input
-            value={make}
-            onChange={(e) => setMake(e.target.value)}
-            maxLength={64}
-            className="h-control ew-felt ew-felt-md px-2.5"
-          />
-        </InnstillingRad>
-        <InnstillingRad label="Modell" siste>
-          <input
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            maxLength={64}
-            className="h-control ew-felt ew-felt-md px-2.5"
           />
         </InnstillingRad>
       </InnstillingSeksjon>

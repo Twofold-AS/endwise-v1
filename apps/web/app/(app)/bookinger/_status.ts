@@ -25,9 +25,9 @@ export const STATUS_LABEL: Record<string, string> = {
 /** Tekst/bakgrunn per status (tema-tokens, mørkt tema). */
 export const STATUS_TONE: Record<string, string> = {
   draft: 'text-fg-muted bg-surface-2',
-  confirmed: 'text-primary bg-primary/12',
-  in_progress: 'text-warn bg-warn/12',
-  completed: 'text-success bg-success/12',
+  confirmed: 'text-fg bg-[var(--ew-status-ink-bg,#f3f3f3)]',
+  in_progress: 'text-[var(--ew-status-warn-fg,#7a3e07)] bg-[var(--ew-status-warn-bg,#fef3c7)]',
+  completed: 'text-[var(--ew-status-ok-fg,#14532d)] bg-[var(--ew-status-ok-bg,#dcf5e3)]',
   cancelled: 'text-danger bg-danger/12',
   no_show: 'text-danger bg-danger/12',
 };

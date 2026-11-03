@@ -79,11 +79,7 @@ function PhoneChromeMock({ sti, query }: { sti: string; query?: Record<string, s
             <span
               key={d.key}
               data-phone-dest={d.key}
-              className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg ${
-                d.key === chrome.id || (chrome.id === 'timeplan' && d.key === 'saker')
-                  ? 'bg-sidebar-active'
-                  : ''
-              }`}
+              className="inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg"
             >
               {d.label}
             </span>

@@ -11,6 +11,7 @@ import {
   SIGNIN_FYLL_KODE,
   SIGNIN_IKKE_DEG,
   SIGNIN_KODE_INGRESS,
+  SIGNIN_NESTEN_DER,
   SIGNIN_STI,
   SIGNIN_TITTEL,
   SIGNIN_TOTP_STI,
@@ -62,6 +63,7 @@ describe('signin-steg: kode-steg etter e-post, TOTP bare med kake', () => {
     expect(SIGNIN_KODE_INGRESS).toBe('Vi har sendt en midlertidig kode til');
     expect(SIGNIN_IKKE_DEG).toBe('Ikke deg?');
     expect(SIGNIN_FYLL_KODE).toBe('Fyll inn kode');
+    expect(SIGNIN_NESTEN_DER).toBe('Nesten der');
     expect(SIGNIN_FORTSETT).toBe('Fortsett');
     expect(SIGNIN_VILKAR).toMatch(/vilkårene/);
     expect(SIGNIN_VILKAR_STI).toBe('/vilkar');
@@ -209,7 +211,7 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
     expect(kilde).toMatch(/ArrowRight/);
     expect(kilde).not.toMatch(/\bMail\b/);
     expect(kilde).toMatch(/SIGNIN_FORTSETT/);
-    expect(kilde).toMatch(/loadingText=/);
+    expect(kilde).toMatch(/loadingText=""/);
     expect(kilde).toMatch(/<StatefulButton[\s\S]*state=\{knappState\('fortsett'\)\}/);
     expect(kilde).toMatch(/<StatefulButton[\s\S]*state=\{knappState\('logg-inn'\)\}/);
   });
@@ -220,14 +222,14 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
     expect(kilde).toMatch(/Vilkår/);
   });
 
-  it('kode-steg: heading, e-post, Ikke deg, ett 5-sifret felt — ikke OTP-bokser', () => {
+  it('kode-steg: heading, e-post, Ikke deg, Board OTP-bokser', () => {
     expect(kilde).toMatch(/data-auth-kode-steg/);
     expect(kilde).toMatch(/SIGNIN_KODE_INGRESS/);
     expect(kilde).toMatch(/SIGNIN_IKKE_DEG/);
     expect(kilde).toMatch(/SIGNIN_FYLL_KODE/);
-    expect(kilde).toMatch(/maxLength=\{5\}/);
+    expect(kilde).toMatch(/FeltKode/);
+    expect(kilde).toMatch(/length=\{5\}/);
     expect(kilde).toMatch(/erMagicLinkKode/);
-    expect(kilde).not.toMatch(/otp-slot|OTPInput|InputOTP/);
     expect(kilde).not.toMatch(/ABCD-EFGH/);
     expect(kilde).not.toMatch(/Skriv kode manuelt/);
     expect(kilde).not.toMatch(/Trykk på lenken i e-posten/);

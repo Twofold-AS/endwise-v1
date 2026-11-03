@@ -24,6 +24,12 @@ export {
   type DitherStackedRow,
   RevenueLineChart,
 } from './components/amicro.ts';
+export {
+  LogRow,
+  ShimmerText,
+  WorkingRow,
+} from './components/application/agent-log/agent-log.tsx';
+export { AgentThinking } from './components/application/agent-thinking/agent-thinking.tsx';
 // Endwise-primitiver (F0-12)
 export {
   Avatar,
@@ -41,6 +47,81 @@ export {
   staffFargeStil,
 } from './components/avatar.tsx';
 export { Badge, type BadgeProps, badgeVariants } from './components/badge.tsx';
+export { Accordion, AccordionItem } from './components/base/accordion/accordion.tsx';
+export { Chip as BoardChip } from './components/base/badges/chip.tsx';
+export { ButtonGroup } from './components/base/buttons/button-group.tsx';
+export { CloseButton } from './components/base/buttons/close-button.tsx';
+export { IconButton } from './components/base/buttons/icon-button.tsx';
+export { LinkButton } from './components/base/buttons/link-button.tsx';
+export { Checkbox as BoardCheckbox } from './components/base/checkbox/checkbox.tsx';
+export { CheckboxCard } from './components/base/checkbox/checkbox-card.tsx';
+export { ComboBox, ComboBoxItem } from './components/base/combobox/combobox.tsx';
+export {
+  CommandPalette,
+  CommandPaletteItem,
+  CommandPaletteSection,
+} from './components/base/command-palette/command-palette.tsx';
+export {
+  ContextMenu,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from './components/base/context-menu/context-menu.tsx';
+export { DateCalendar } from './components/base/date-picker/date-calendar.tsx';
+export { DatePicker } from './components/base/date-picker/date-picker.tsx';
+export { MeetingScheduler } from './components/base/date-picker/meeting-scheduler.tsx';
+export { Divider } from './components/base/divider/divider.tsx';
+export {
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTrigger,
+} from './components/base/drawer/drawer.tsx';
+export {
+  Dropdown,
+  DropdownDivider,
+  DropdownGroup,
+  DropdownItem,
+  DropdownPopover,
+  DropdownTrigger,
+} from './components/base/dropdown/dropdown.tsx';
+export { FileUpload } from './components/base/file-upload/file-upload.tsx';
+export { Input as BoardInput } from './components/base/input/input.tsx';
+export { InputOtp } from './components/base/input-otp/input-otp.tsx';
+export { Meter } from './components/base/meter/meter.tsx';
+export {
+  AlertDialog,
+  Modal,
+  ModalBody,
+  ModalDialog,
+  ModalFooter,
+  ModalHeader,
+  ModalTrigger,
+} from './components/base/modal/modal.tsx';
+export { NumberField } from './components/base/number-field/number-field.tsx';
+export { Pagination } from './components/base/pagination/pagination.tsx';
+export { Popover, PopoverTrigger } from './components/base/popover/popover.tsx';
+export { ProgressBar, ProgressCircle } from './components/base/progress/progress.tsx';
+export { Radio as BoardRadio, RadioGroup } from './components/base/radio/radio.tsx';
+export { RadioCard } from './components/base/radio/radio-card.tsx';
+export { SearchField } from './components/base/search-field/search-field.tsx';
+export {
+  SegmentedControl,
+  SegmentedControlItem,
+} from './components/base/segmented-control/segmented-control.tsx';
+export { Select as BoardSelect, SelectItem } from './components/base/select/select.tsx';
+export { Skeleton } from './components/base/skeleton/skeleton.tsx';
+export { Spinner } from './components/base/spinner/spinner.tsx';
+export { Switch as BoardSwitch } from './components/base/switch/switch.tsx';
+export { Table } from './components/base/table/table.tsx';
+export { PillTab, PillTabList } from './components/base/tabs/pill-tab.tsx';
+export { Tab, TabList, TabPanel, Tabs } from './components/base/tabs/tabs.tsx';
+export { Tag, TagGroup } from './components/base/tag-group/tag-group.tsx';
+export { Textarea as BoardTextarea } from './components/base/textarea/textarea.tsx';
+export { TimeField } from './components/base/time-field/time-field.tsx';
+export { Toaster, toast } from './components/base/toast/toast.tsx';
+export { Tooltip, TooltipTrigger } from './components/base/tooltip/tooltip.tsx';
 // shadcn/ui — struktur
 export { Button, buttonVariants } from './components/button.tsx';
 // Recharts via shadcn Chart-mønsteret — beholdt for kallsteder som ikke er byttet
@@ -182,6 +263,38 @@ export {
   ToolPartGodkjenning,
   type ToolPartStatus,
 } from './components/tool-part.tsx';
+export {
+  DeaktivertHandling,
+  FeilFlate,
+  FeltAvkrysning,
+  FeltBryter,
+  FeltDato,
+  FeltInput,
+  FeltKalender,
+  FeltKlokke,
+  FeltKode,
+  FeltRadio,
+  FeltRadioGruppe,
+  FeltSelect,
+  FeltSok,
+  FeltTall,
+  FeltTekst,
+  type FilterChip,
+  FilterChips,
+  flertall,
+  flertallTilbys,
+  LasterFlate,
+  LenkeProvider,
+  ListeRad,
+  Seksjon,
+  Side,
+  SideTopp,
+  STATUS_CHIP,
+  StatusChip,
+  type StatusChipNokkel,
+  statusFraBooking,
+  TomFlate,
+} from './flate/index.ts';
 export { useBloubIdleLiv } from './hooks/use-bloub-idle-liv.ts';
 export { useBloubPapir } from './hooks/use-bloub-papir.ts';
 // lucide-react — eneste ikonbibliotek (kuratert barrel)
@@ -195,6 +308,7 @@ export { Btn, type BtnProps } from './primitives/btn.tsx';
 export { Card, CardTitle } from './primitives/card.tsx';
 export { Chip, type ChipProps } from './primitives/chip.tsx';
 export { Input, type InputProps } from './primitives/input.tsx';
+export { cx } from './utils/cx.ts';
 // matrix-loaders — hele settet (93 loadere)
 // Vendorisert. Proprietær lisens — se src/vendor/matrix-loaders/vendor.md.
 export * from './vendor/matrix-loaders/index.ts';

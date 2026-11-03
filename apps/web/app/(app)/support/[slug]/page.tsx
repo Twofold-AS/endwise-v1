@@ -46,12 +46,16 @@ export default function ArtikkelPage() {
   }, [id, merk]);
 
   if (artikkel.isLoading) {
-    return <div className="px-8 py-7 text-body text-fg-muted">Laster artikkel …</div>;
+    return (
+      <div className="max-md:px-4 max-md:py-4 md:px-8 md:py-7 text-body text-fg-muted">
+        Laster artikkel …
+      </div>
+    );
   }
 
   if (!artikkel.data) {
     return (
-      <div className="mx-auto w-full max-w-[760px] px-8 py-7">
+      <div className="mx-auto w-full max-w-[760px] max-md:px-4 max-md:py-4 md:px-8 md:py-7">
         <CardShell className="flex items-start gap-3 p-6">
           <CircleAlert size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
           <div>
@@ -74,7 +78,7 @@ export default function ArtikkelPage() {
   const a = artikkel.data;
 
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 px-8 py-7">
+    <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5 max-md:px-4 max-md:py-4 md:px-8 md:py-7">
       <Link
         href={'/support' as Route}
         className="text-[12px] text-fg-muted transition-colors hover:text-fg"

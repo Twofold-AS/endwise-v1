@@ -1,146 +1,134 @@
 'use client';
 
-import { CircleAlert, StatefulButton } from '@endwise/ui';
-import { type FormEvent, useState } from 'react';
+import { CircleAlert, FeltInput, FilterChips, toast } from '@endwise/ui';
 import { trpc } from '@/lib/trpc';
-import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
+import { OppretterSkuff } from '../../_shell/oppretter/oppretter-skuff';
+import { SjekkSteg } from '../../_shell/oppretter/sjekk-steg';
+import { useOppretter } from '../../_shell/oppretter/use-oppretter';
 import { type Kjoretoytype, parsePris, TYPE_VALG } from './_felles';
 import { TjenesteFelter, TOMME_FELTER, type Versjonsfelter } from './_felter';
 
-/**
- * F2-05 / F5-04 — ny tjeneste.
- * Oppretter `services`-raden og versjon 1 i samme kall (`services.create` gjør
- * begge i én transaksjon). En tjeneste uten versjon ville vært en tjeneste uten
- * varighet og pris — altså ikke bookbar.
- * Navn og kjøretøytype settes kun her. De hører til identiteten, ikke til
- * versjonen, og `update` tar dem derfor ikke imot.
- */
-export function NyTjeneste({ onLukk }: { onLukk: () => void }) {
-  const utils = trpc.useUtils();
+type Utkast = {
+  navn: string;
+  type: Kjoretoytype;
+  felter: Versjonsfelter;
+};
 
-  const [navn, setNavn] = useState('');
-  const [type, setType] = useState<Kjoretoytype>('mc');
-  const [felter, setFelter] = useState<Versjonsfelter>(TOMME_FELTER);
-  const [prisfeil, setPrisfeil] = useState<string | null>(null);
+const INIT: Utkast = { navn: '', type: 'mc', felter: TOMME_FELTER };
+
+const TYPE_TEKST: Record<Kjoretoytype, string> = {
+  mc: 'Motorsykkel',
+  boat: 'Båt',
+  atv: 'ATV',
+};
+
+/**
+ * Stegvis «Ny tjeneste»: Hva → Pris og tid → Sjekk.
+ */
+export function NyTjeneste({ apen = true, onLukk }: { apen?: boolean; onLukk: () => void }) {
+  const utils = trpc.useUtils();
+  const o = useOppretter<Utkast>({
+    init: INIT,
+    lagringsnokkel: 'tjeneste',
+    steg: [
+      { id: 'hva', tittel: 'Hva', gyldig: (u) => u.navn.trim().length >= 2 },
+      {
+        id: 'pris',
+        tittel: 'Pris og tid',
+        gyldig: (u) => {
+          const v = Number(u.felter.varighet);
+          return Number.isFinite(v) && v >= 5 && v <= 480;
+        },
+      },
+      { id: 'sjekk', tittel: 'Sjekk', gyldig: (u) => u.navn.trim().length >= 2 },
+    ],
+  });
 
   const opprett = trpc.services.create.useMutation({
     onSuccess: () => {
       void utils.services.list.invalidate();
+      toast.success('Tjenesten er opprettet');
+      o.toem();
       onLukk();
     },
   });
 
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    const n = navn.trim();
-    const varighet = Number(felter.varighet);
-    if (!n || !Number.isFinite(varighet)) return;
-
-    const pris = parsePris(felter.pris);
-    if (!pris.ok) {
-      setPrisfeil(pris.feil);
-      return;
-    }
-    setPrisfeil(null);
-
-    opprett.mutate({
-      name: n,
-      vehicleType: type,
-      durationMinutes: Math.round(varighet),
-      priceMinor: pris.ore,
-      skills: felter.ferdigheter,
-      description: felter.beskrivelse.trim() || undefined,
-    });
-  }
-
-  const varighet = Number(felter.varighet);
-  const kanLagre =
-    Boolean(navn.trim()) &&
-    Number.isFinite(varighet) &&
-    varighet >= 5 &&
-    varighet <= 480 &&
-    !opprett.isPending;
+  const pris = parsePris(o.utkast.felter.pris);
 
   return (
-    <form data-ny-tjeneste onSubmit={submit} className="flex flex-col gap-8">
-      <InnstillingSeksjon
-        tittel="Ny tjeneste"
-        ingress="Dette blir versjon 1. Senere endringer lager nye versjoner — den første blir stående."
-      >
-        <InnstillingRad label="Navn">
-          <input
-            value={navn}
-            onChange={(e) => setNavn(e.target.value)}
-            maxLength={120}
-            placeholder="EU-kontroll MC"
-            className="h-control ew-felt ew-felt-md px-2.5"
+    <OppretterSkuff
+      tittel="Ny tjeneste"
+      apen={apen}
+      onLukk={onLukk}
+      stegIndeks={o.stegIndeks}
+      stegAntall={o.stegAntall}
+      stegTittel={o.aktiv?.tittel}
+      onTilbake={o.tilbake}
+      onNeste={o.neste}
+      onOpprett={() => {
+        if (!pris.ok) return;
+        const varighet = Number(o.utkast.felter.varighet);
+        opprett.mutate({
+          name: o.utkast.navn.trim(),
+          vehicleType: o.utkast.type,
+          durationMinutes: Math.round(varighet),
+          priceMinor: pris.ore,
+          skills: o.utkast.felter.ferdigheter,
+          description: o.utkast.felter.beskrivelse.trim() || undefined,
+        });
+      }}
+      kanGaaVidere={o.kanGaaVidere && (o.aktiv?.id !== 'sjekk' || pris.ok)}
+      siste={o.siste}
+      opprettLabel="Opprett tjeneste"
+      venter={opprett.isPending}
+    >
+      <div data-ny-tjeneste className="flex flex-col gap-4">
+        {o.aktiv?.id === 'hva' ? (
+          <>
+            <FeltInput
+              label="Navn"
+              value={o.utkast.navn}
+              onChange={(v) => o.oppdater({ navn: v })}
+              maxLength={120}
+              placeholder="EU-kontroll MC"
+            />
+            <div className="flex flex-col gap-1.5">
+              <p className="text-label text-fg">Gjelder</p>
+              <FilterChips
+                chips={TYPE_VALG}
+                valgt={o.utkast.type}
+                onChange={(type) => o.oppdater({ type })}
+                ariaLabel="Kjøretøytype"
+              />
+              <p className="text-meta text-fg-muted">Kan ikke endres senere.</p>
+            </div>
+          </>
+        ) : null}
+        {o.aktiv?.id === 'pris' ? (
+          <TjenesteFelter verdier={o.utkast.felter} onEndre={(felter) => o.oppdater({ felter })} />
+        ) : null}
+        {o.aktiv?.id === 'sjekk' ? (
+          <SjekkSteg
+            rader={[
+              { id: 'hva', etikett: 'Navn', verdi: o.utkast.navn },
+              { id: 'hva', etikett: 'Gjelder', verdi: TYPE_TEKST[o.utkast.type] },
+              { id: 'pris', etikett: 'Varighet', verdi: `${o.utkast.felter.varighet} min` },
+              {
+                id: 'pris',
+                etikett: 'Pris',
+                verdi: o.utkast.felter.pris ? `${o.utkast.felter.pris} kr` : 'Ikke satt',
+              },
+            ]}
+            onEndre={o.gaaTil}
           />
-        </InnstillingRad>
-        <InnstillingRad label="Gjelder" hint="Kan ikke endres senere." siste>
-          <fieldset className="inline-flex h-control w-fit items-center gap-0.5 rounded-control border border-border bg-bg p-0.5">
-            <legend className="sr-only">Kjøretøytype</legend>
-            {TYPE_VALG.map((v) => (
-              <label
-                key={v.key}
-                className={`inline-flex h-7 cursor-pointer items-center rounded-[7px] px-2.5 text-label transition-colors ${
-                  type === v.key ? 'bg-sidebar-active text-fg' : 'text-fg-muted hover:text-fg'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="kjoretoytype"
-                  value={v.key}
-                  checked={type === v.key}
-                  onChange={() => setType(v.key)}
-                  className="sr-only"
-                />
-                {v.label}
-              </label>
-            ))}
-          </fieldset>
-        </InnstillingRad>
-      </InnstillingSeksjon>
-
-      <InnstillingSeksjon tittel="Pris og varighet">
-        <div className="py-2">
-          <TjenesteFelter verdier={felter} onEndre={setFelter} />
-        </div>
-      </InnstillingSeksjon>
-
-      {(prisfeil || opprett.error) && (
-        <p className="flex items-start gap-2 text-body text-danger">
-          <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-          {prisfeil ?? opprett.error?.message}
-        </p>
-      )}
-
-      <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onLukk}
-          className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-        >
-          Avbryt
-        </button>
-        <StatefulButton
-          type="submit"
-          disabled={!kanLagre}
-          state={
-            opprett.isPending
-              ? 'loading'
-              : opprett.isError
-                ? 'error'
-                : opprett.isSuccess
-                  ? 'success'
-                  : 'idle'
-          }
-          loadingText="Oppretter…"
-          successText="Opprettet"
-          errorText="Feilet"
-        >
-          Opprett tjeneste
-        </StatefulButton>
+        ) : null}
+        {(opprett.error || (o.siste && !pris.ok)) && (
+          <p className="flex items-start gap-2 text-body text-danger">
+            <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+            {!pris.ok ? pris.feil : opprett.error?.message}
+          </p>
+        )}
       </div>
-    </form>
+    </OppretterSkuff>
   );
 }

@@ -7,6 +7,7 @@ import { type InboxSortering, useInboxFilter } from '../_shell/inbox-filter';
 const VALG: { id: InboxSortering; label: string }[] = [
   { id: 'nyeste', label: 'Nyeste' },
   { id: 'eldste', label: 'Eldste' },
+  { id: 'uleste', label: 'Uleste først' },
 ];
 
 /**

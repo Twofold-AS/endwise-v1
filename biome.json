@@ -21,9 +21,13 @@
       "!packages/ui/src/assets/icons",
       "!packages/ui/src/assets/icons-v2",
       "!packages/ui/src/icons.generated.ts",
+      "!packages/ui/src/components/base",
+      "!packages/ui/src/components/foundations",
+      "!packages/ui/src/styles",
       "!packages/ui/src/components/motion",
       "!packages/ui/src/lib/ease.ts",
       "!packages/ui/src/lib/hooks",
+      "!apps/web/next-env.d.ts",
       "!ops"
     ]
   },

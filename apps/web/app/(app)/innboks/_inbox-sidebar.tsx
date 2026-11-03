@@ -1,13 +1,30 @@
 'use client';
 
-import { Avatar, type AvatarValg, Button, MessageSquare } from '@endwise/ui';
+import {
+  type AvatarValg,
+  Button,
+  LasterFlate,
+  ListeRad,
+  MessageSquare,
+  Pagination,
+  Side,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
+import {
+  filtrerInboxTrader,
+  inboxSide,
+  inboxSideEtikett,
+  inboxSider,
+  sorterInboxTrader,
+} from '../_shell/inbox-del';
 import { useInboxFilter } from '../_shell/inbox-filter';
+import { PhoneSokFelt } from '../_shell/phone-sok-felt';
+import { InboxFilterChips } from './_filter-chips';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
 import {
   fmtWhen,
@@ -42,7 +59,9 @@ export function InboxSidebar() {
   const skjulTelefonListe = Boolean(aktivId || nySamtale);
   const modus = useInboxModus();
   const endwise = modus === 'endwise';
-  const { part, sortering, skjulte, velgModus, valgte, toggleValgt } = useInboxFilter();
+  const { chip, sortering, skjulte, side, setSide, velgModus, valgte, toggleValgt } =
+    useInboxFilter();
+  const [sok, setSok] = useState('');
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -86,17 +105,20 @@ export function InboxSidebar() {
     { enabled: offisielleIder.length > 0, staleTime: 5 * 60_000 },
   );
 
+  const alleFiltrert = useMemo(() => {
+    const base = sorterInboxTrader(filtrerInboxTrader(ekte, chip, skjulte), sortering);
+    const q = sok.trim().toLowerCase();
+    if (!q) return base;
+    return base.filter((t) => {
+      const emne = (t.subject ?? '').toLowerCase();
+      const tekst = ('sisteTekst' in t ? String(t.sisteTekst ?? '') : '').toLowerCase();
+      return emne.includes(q) || tekst.includes(q);
+    });
+  }, [ekte, chip, skjulte, sortering, sok]);
+  const sider = inboxSider(alleFiltrert.length);
+  const sideIndeks = Math.min(Math.max(1, side), sider);
   const rader = useMemo(() => {
-    const filtrert = ekte
-      .filter((t) => !skjulte.has(t.id))
-      .filter((t) => part === 'alle' || t.kind === part)
-      .slice()
-      .sort((a, b) => {
-        const da = new Date(a.lastMessageAt).getTime();
-        const db = new Date(b.lastMessageAt).getTime();
-        return sortering === 'eldste' ? da - db : db - da;
-      });
-    return filtrert.map((t) => ({
+    return inboxSide(alleFiltrert, sideIndeks - 1).map((t) => ({
       id: t.id,
       kind: t.kind as ThreadKind,
       avsender: threadHeading(
@@ -108,7 +130,7 @@ export function InboxSidebar() {
         visningForTraadtype(t.kind) === 'intern' ? navnIntern.data : navnOffisiell.data,
         me.data?.userId,
       ),
-      utdrag: '',
+      utdrag: ('sisteTekst' in t ? t.sisteTekst : '')?.trim() || t.subject?.trim() || '',
       nar: fmtWhen(t.lastMessageAt),
       ulest: t.unread ?? 0,
       // Ekte kanaldata fra `threads.channel` / siste meldings `channel`.
@@ -131,7 +153,7 @@ export function InboxSidebar() {
         me.data?.userId,
       ),
     }));
-  }, [ekte, part, sortering, skjulte, navnIntern.data, navnOffisiell.data, me.data?.userId]);
+  }, [alleFiltrert, sideIndeks, navnIntern.data, navnOffisiell.data, me.data?.userId]);
 
   if (endwise) {
     const henvendelser = support.data ?? [];
@@ -149,12 +171,12 @@ export function InboxSidebar() {
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto p-2">
           {support.isLoading ? (
-            <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster henvendelser …</p>
+            <p className="px-2 py-8 text-center text-[13px] text-fg-muted">Laster henvendelser …</p>
           ) : henvendelser.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
               <MessageSquare size={20} className="text-fg-muted" />
               <p className="text-label text-fg">Ingen henvendelser ennå</p>
-              <p className="text-[12px] text-fg-muted leading-relaxed">
+              <p className="text-[13px] text-fg-muted leading-relaxed">
                 Når et verksted skriver til Endwise, lander det her.
               </p>
             </div>
@@ -183,20 +205,33 @@ export function InboxSidebar() {
       }`}
     >
       <h2 className="sr-only">Samtaler</h2>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3">
+      <Side tittel="Innboks" className="min-h-0 flex-1 overflow-y-auto px-3 py-0">
+        <PhoneSokFelt
+          value={sok}
+          onChange={(e) => setSok(e.target.value)}
+          placeholder="Søk etter person"
+          aria-label="Søk etter person"
+        />
+        <InboxFilterChips />
         {threads.isLoading ? (
-          <p className="px-2 py-8 text-center text-[12px] text-fg-muted">Laster samtaler …</p>
+          <LasterFlate label="Laster samtaler" linjer={6} />
         ) : rader.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-2 py-10 text-center">
             <MessageSquare size={20} className="text-fg-muted" />
-            <p className="text-label text-fg">Ingen samtaler</p>
-            <p className="text-[12px] text-fg-muted">
-              {part === 'alle' ? 'Innboksen er tom.' : 'Ingen samtaler for denne parten.'}
+            <p className="text-label text-fg">
+              {chip === 'lost' ? 'Ingen løste samtaler' : 'Ingen samtaler'}
             </p>
-            {part === 'alle' && (
+            <p className="text-[13px] text-fg-muted">
+              {chip === 'lost'
+                ? 'Løste samtaler vises når de kan markeres.'
+                : chip === 'alle'
+                  ? 'Innboksen er tom.'
+                  : 'Ingen samtaler for denne parten.'}
+            </p>
+            {chip === 'alle' && (
               <Link
                 href={'/innboks?ny=1' as Route}
-                className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[12px] text-bg"
+                className="mt-1 inline-flex h-control items-center rounded-control bg-fg px-3 text-[13px] text-bg"
               >
                 Send melding
               </Link>
@@ -230,7 +265,25 @@ export function InboxSidebar() {
             ),
           )
         )}
-      </div>
+        {alleFiltrert.length > 0 ? (
+          <div
+            data-innboks-pager
+            className="flex shrink-0 flex-wrap items-center justify-between gap-2 py-3"
+          >
+            <span className="text-[13px] text-fg-muted">
+              {inboxSideEtikett(alleFiltrert.length, sideIndeks - 1)}
+            </span>
+            <Pagination
+              page={sideIndeks}
+              totalPages={sider}
+              onChange={setSide}
+              previousLabel="Forrige"
+              nextLabel="Neste"
+              aria-label="Innboks-sider"
+            />
+          </div>
+        ) : null}
+      </Side>
     </aside>
   );
 }
@@ -272,9 +325,9 @@ function SupportKort({
           />
         )}
         {ulest && <span className="sr-only">Ulest</span>}
-        <span className="shrink-0 text-[11px] text-fg-muted tabular-nums">{nar}</span>
+        <span className="shrink-0 text-[13px] text-fg-muted tabular-nums">{nar}</span>
       </div>
-      {utdrag && <p className="truncate text-[12px] text-fg-muted">{utdrag}</p>}
+      {utdrag && <p className="truncate text-[13px] text-fg-muted">{utdrag}</p>}
     </div>
   );
 }
@@ -312,71 +365,41 @@ function SamtaleKort({
   aktiv: boolean;
 }) {
   return (
-    <div
-      data-innboks-rad
-      className={`flex flex-col gap-1 border-border border-b py-4 transition-colors ${
-        aktiv ? 'bg-sidebar-active' : 'bg-transparent hover:bg-surface-2/60'
-      }`}
-    >
-      <div className="flex items-center gap-2">
-        {/*
-         * Kanalen står først på raden, ikke bak en bryter. Det er den som
-         * avgjør hvordan man svarer — se `_kanal.tsx`.
-         */}
-        <KanalMerke kanal={rad.sisteKanal} kunIkon />
-        <span className="ml-auto shrink-0 text-[11px] text-fg-muted tabular-nums">{rad.nar}</span>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {/*
-         * Ansiktet står før navnet: øyet kjenner igjen en form
-         * raskere enn det leser en streng, og lista skannes mer enn den
-         * leses. `navn` tom = dekorativ, siden navnet står rett ved siden av
-         * og en skjermleser ellers ville lest det to ganger.
-         */}
-        {rad.motpart && (
-          <Avatar
-            seed={rad.motpart.seed}
-            valg={rad.motpart.avatar}
-            size={20}
-            navn=""
-            /*
-             * Lista. Ett `<img>` per rad, ingen bevegelse. Dette er flaten
-             * hele `bevegelse`-propen finnes for å beskytte.
-             */
-            bevegelse="stille"
-          />
-        )}
-        <span className={`truncate text-label ${rad.ulest > 0 ? 'text-fg' : 'text-fg-muted'}`}>
-          {rad.avsender}
+    <ListeRad
+      tittel={rad.avsender}
+      undertekst={rad.utdrag || undefined}
+      initialer={rad.motpart?.navn?.slice(0, 1).toUpperCase()}
+      aktiv={aktiv}
+      chevron={false}
+      hoyre={
+        <span className="flex flex-col items-end gap-1">
+          <span className="text-meta text-fg-muted tabular-nums">{rad.nar}</span>
+          <CountBadge count={rad.ulest} label="uleste" />
         </span>
-        <CountBadge count={rad.ulest} label="uleste" className="ml-auto" />
-      </div>
-
-      {rad.utdrag && (
-        <p className="line-clamp-2 text-[12px] text-fg-muted leading-snug">{rad.utdrag}</p>
-      )}
-
-      <div className="flex flex-wrap items-center gap-1.5">
+      }
+      className={rad.ulest > 0 ? 'bg-[#f3f3f3] font-[650]' : undefined}
+    >
+      <span
+        data-innboks-rad
+        data-innboks-ulest={rad.ulest > 0 ? '1' : undefined}
+        className="flex flex-wrap items-center gap-1.5"
+      >
+        <KanalMerke kanal={rad.sisteKanal} kunIkon />
         <span
-          className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-[11px] ${
+          className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-meta ${
             KIND_TONE[rad.kind] ?? 'bg-surface-2 text-fg-muted'
           }`}
         >
           {KIND_LABEL[rad.kind] ?? rad.kind}
         </span>
-        {/*
-         * Bytter samtalen vei, skal det ses i lista — ikke først når du
-         * åpner tråden og svarer feil sted.
-         */}
-        {rad.sisteKanal !== rad.kanal && (
-          <span className="inline-flex h-badge items-center gap-1 rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
+        {rad.sisteKanal !== rad.kanal ? (
+          <span className="inline-flex h-badge items-center gap-1 rounded-badge bg-surface-2 px-1.5 text-meta text-fg-muted">
             svar som
             <KanalMerke kanal={rad.kanal} kunIkon />
           </span>
-        )}
-      </div>
-    </div>
+        ) : null}
+      </span>
+    </ListeRad>
   );
 }
 

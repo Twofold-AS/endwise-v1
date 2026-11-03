@@ -37,7 +37,8 @@ describe('Ronny — stripe/peek er borte, sheet er full bredde', () => {
 
   it('åpen sheet er viewport-bredde (inset-x-0 bottom-0)', () => {
     const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
-    expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(fab).toMatch(/<Drawer/);
+    expect(fab).toMatch(/placement="bottom"/);
   });
 });
 
@@ -55,12 +56,10 @@ describe('Telefon top-bar 1 — merke, søk, Ronny, profil', () => {
     const hjem = shell.slice(shell.indexOf('data-shell-logo'));
     const logo = hjem.indexOf('data-shell-logo');
     const sok = hjem.indexOf('data-phone-search');
-    const ronny = hjem.indexOf('data-ronny-avatar');
     const profil = hjem.indexOf('data-phone-profile');
     expect(logo).toBeGreaterThan(-1);
     expect(sok).toBeGreaterThan(logo);
-    expect(ronny).toBeGreaterThan(sok);
-    expect(profil).toBeGreaterThan(ronny);
+    expect(profil).toBeGreaterThan(sok);
   });
 
   it('sidebar-header: logo først, minimer sist — ikke klistret mot logo uten spacer', () => {

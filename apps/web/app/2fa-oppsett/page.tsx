@@ -15,14 +15,14 @@ import {
   secretFraTotpUri,
   TOTP_OPPSETT_INGRESS,
 } from '@endwise/auth/to-faktor-oppsett';
-import { ClipboardList, Copy, Download, ShieldCheck, StatefulButton } from '@endwise/ui';
+import { ClipboardList, Copy, Download, FeltKode, ShieldCheck, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { authClient, useSession } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
-import { Field, INPUT } from '../_auth/felter';
+import { Field } from '../_auth/felter';
 import { SIGNIN_STI } from '../signin/signin-steg';
 
 /**
@@ -42,7 +42,6 @@ export default function ToFaktorOppsettPage() {
   const [bekreftetLagret, setBekreftetLagret] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const codeRef = useRef<HTMLInputElement>(null);
   const startet = useRef(false);
 
   useEffect(() => {
@@ -56,10 +55,6 @@ export default function ToFaktorOppsettPage() {
       setSteg('av');
     }
   }, [session, steg, koder.length]);
-
-  useEffect(() => {
-    if (steg === 'kode') codeRef.current?.focus();
-  }, [steg]);
 
   async function startOppsett() {
     if (startet.current || sesjonLaster) return;
@@ -118,7 +113,6 @@ export default function ToFaktorOppsettPage() {
         );
         setBusy('error');
         setKode('');
-        codeRef.current?.focus();
         return;
       }
       await authClient.revokeOtherSessions().catch(() => {
@@ -254,20 +248,9 @@ export default function ToFaktorOppsettPage() {
                 </p>
               ) : null}
               {totpUri ? <p className="break-all text-[11px] text-fg-muted">{totpUri}</p> : null}
+              <p className="text-title font-[650] text-fg">Nesten der</p>
               <Field id="tfa-kode" label="App-kode">
-                <input
-                  id="tfa-kode"
-                  ref={codeRef}
-                  autoComplete="one-time-code"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  required
-                  value={kode}
-                  onChange={(ev) => setKode(ev.target.value.replace(/\D/g, ''))}
-                  className={`${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`}
-                  placeholder="••••••"
-                />
+                <FeltKode aria-label="App-kode" length={6} value={kode} onChange={setKode} />
               </Field>
               {feil && <p className="text-[12px] text-danger">{feil}</p>}
             </div>
@@ -276,9 +259,9 @@ export default function ToFaktorOppsettPage() {
                 type="submit"
                 state={busy}
                 className="w-full"
-                loadingText="Bekrefter …"
-                successText="Bekreftet"
-                errorText="Feil kode"
+                loadingText=""
+                successText=""
+                errorText="Prøv igjen"
                 icon={<ShieldCheck size={15} />}
               >
                 Bekreft kode

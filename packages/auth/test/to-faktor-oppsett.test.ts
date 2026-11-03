@@ -215,11 +215,11 @@ describe('F1-17 / F1-20: delt flate', () => {
 });
 
 describe('F1-25: oppsettsiden gjenbruker innloggingens byggeklosser', () => {
-  it('importerer StatefulButton og Field — ingen PassordFelt', () => {
+  it('importerer StatefulButton og FeltKode — ingen PassordFelt', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const kilde = readFileSync(resolve(her, '../../../apps/web/app/2fa-oppsett/page.tsx'), 'utf8');
     expect(kilde).toMatch(/StatefulButton/);
-    expect(kilde).toMatch(/Field, INPUT/);
+    expect(kilde).toMatch(/FeltKode/);
     expect(kilde).toMatch(/from ['"]\.\.\/_auth\/felter['"]/);
     expect(kilde).not.toMatch(/PassordFelt/);
     expect(kilde).not.toMatch(/Bevisst UDESIGNET/);

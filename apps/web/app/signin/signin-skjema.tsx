@@ -7,14 +7,13 @@ import {
   meldingForMagicLinkFeil,
   normaliserMagicLinkKode,
 } from '@endwise/auth/magic-link';
-import { ArrowRight, ShieldCheck, StatefulButton } from '@endwise/ui';
+import { ArrowRight, FeltInput, FeltKode, ShieldCheck, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { authClient, signIn } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
-import { Field, INPUT } from '../_auth/felter';
 import { AuthMerke } from '../_auth/merke';
 import { destinasjonNarSesjonFeiler } from '../invitasjon/_landing';
 import {
@@ -27,6 +26,7 @@ import {
   SIGNIN_FYLL_KODE,
   SIGNIN_IKKE_DEG,
   SIGNIN_KODE_INGRESS,
+  SIGNIN_NESTEN_DER,
   SIGNIN_STI,
   SIGNIN_VALG_STI,
   SIGNIN_VILKAR,
@@ -98,8 +98,8 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
   );
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [handling, setHandling] = useState<SignInHandling | null>(null);
-  const kodeRef = useRef<HTMLInputElement>(null);
-  const totpRef = useRef<HTMLInputElement>(null);
+  const kodeRef = useRef<HTMLDivElement>(null);
+  const totpRef = useRef<HTMLDivElement>(null);
 
   function knappState(hvilken: SignInHandling) {
     return handling === hvilken ? busy : 'idle';
@@ -130,8 +130,8 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
   }, []);
 
   useEffect(() => {
-    if (flate === 'valg') kodeRef.current?.focus();
-    if (flate === 'totp') totpRef.current?.focus();
+    if (flate === 'valg') kodeRef.current?.querySelector('input')?.focus();
+    if (flate === 'totp') totpRef.current?.querySelector('input')?.focus();
   }, [flate]);
 
   async function finishSignIn() {
@@ -227,25 +227,24 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
 
         {flate === 'epost' ? (
           <form onSubmit={onEpost} className={AUTH_FLATE}>
-            <Field id="signin-email" label="E-post">
-              <input
-                id="signin-email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(ev) => setEmail(ev.target.value)}
-                className={INPUT}
-                placeholder="deg@twofold.no"
-              />
-            </Field>
-            {error && <p className="text-[13px] text-danger">{error}</p>}
+            <FeltInput
+              id="signin-email"
+              storrelse="lg"
+              type="email"
+              autoComplete="email"
+              isRequired
+              label="E-post"
+              value={email}
+              onChange={setEmail}
+              placeholder="deg@twofold.no"
+            />
+            {error && <p className="text-meta text-danger">{error}</p>}
             <StatefulButton
               type="submit"
               state={knappState('fortsett')}
               className={AUTH_FORTSETT}
-              loadingText="Sender…"
-              successText="Sendt"
+              loadingText=""
+              successText=""
               errorText="Prøv igjen"
               icon={<ArrowRight size={16} />}
             >
@@ -263,31 +262,27 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
           </form>
         ) : flate === 'totp' ? (
           <form onSubmit={(e) => void onTotp(e)} className={AUTH_FLATE}>
-            <p className="mb-1 text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
+            <p className="mb-1 text-center text-title font-[650] text-fg">{SIGNIN_NESTEN_DER}</p>
+            <p className="mb-1 text-center text-body text-fg-muted">
               Skriv den 6-sifrede koden fra autentikator-appen. Ikke en e-postkode.
             </p>
-            <Field id="signin-totp" label="App-kode">
-              <input
-                id="signin-totp"
+            <div id="signin-totp" data-signin-totp>
+              <FeltKode
                 ref={totpRef}
-                autoComplete="one-time-code"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                required
+                aria-label="App-kode"
+                length={6}
                 value={totp}
-                onChange={(ev) => setTotp(ev.target.value.replace(/\D/g, ''))}
-                className={`${INPUT} text-center tabular-nums tracking-[0.35em]`}
-                placeholder="••••••"
+                onChange={setTotp}
+                isInvalid={Boolean(error)}
               />
-            </Field>
-            {error && <p className="text-[13px] text-danger">{error}</p>}
+            </div>
+            {error && <p className="text-meta text-danger">{error}</p>}
             <StatefulButton
               type="submit"
               state={knappState('totp')}
               className={AUTH_FORTSETT}
-              loadingText="Sjekker koden…"
-              successText="Bekreftet"
+              loadingText=""
+              successText=""
               errorText="Prøv igjen"
               icon={<ShieldCheck size={15} />}
             >
@@ -314,27 +309,24 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             >
               {SIGNIN_IKKE_DEG}
             </button>
-            <Field id="signin-magic-kode" label={SIGNIN_FYLL_KODE}>
-              <input
-                id="signin-magic-kode"
+            <p className="text-label text-fg-muted">{SIGNIN_FYLL_KODE}</p>
+            <div id="signin-magic-kode" data-signin-magic-kode>
+              <FeltKode
                 ref={kodeRef}
-                autoComplete="one-time-code"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={5}
+                aria-label={SIGNIN_FYLL_KODE}
+                length={5}
                 value={kode}
-                onChange={(ev) => setKode(normaliserMagicLinkKode(ev.target.value))}
-                className={`${INPUT} tabular-nums tracking-[0.35em]`}
-                placeholder="•••••"
+                onChange={(v) => setKode(normaliserMagicLinkKode(v))}
+                isInvalid={Boolean(error)}
               />
-            </Field>
-            {error && <p className="text-[13px] text-danger">{error}</p>}
+            </div>
+            {error && <p className="text-meta text-danger">{error}</p>}
             <StatefulButton
               type="submit"
               state={knappState('logg-inn')}
               className={AUTH_FORTSETT}
-              loadingText="Sjekker koden…"
-              successText="Bekreftet"
+              loadingText=""
+              successText=""
               errorText="Prøv igjen"
               icon={<ArrowRight size={16} />}
             >

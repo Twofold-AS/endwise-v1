@@ -78,7 +78,7 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
         role: 'dealer_admin',
         shell: 'forhandler',
       }).map((f) => f.label),
-    ).toEqual(['Oversikt', 'Ansatte', 'Timeplan', 'Abonnement', 'Integrasjoner']);
+    ).toEqual(['Organisasjon']);
 
     expect(
       destinasjonFaner({
@@ -161,7 +161,7 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
       }),
     ).toEqual([
       { label: 'Alle tjenester', href: '/prisliste', valgt: true },
-      { label: 'Opprett tjenester', href: '/prisliste?fane=opprett', valgt: false },
+      { label: 'Opprett tjeneste', href: '/prisliste?fane=opprett', valgt: false },
     ]);
   });
 });

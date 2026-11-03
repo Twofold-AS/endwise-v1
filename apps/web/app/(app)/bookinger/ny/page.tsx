@@ -1,15 +1,36 @@
 'use client';
 
-import { Car, Check, FELT_MD, hexForFarge, Search, Sparkles, staffFargeStil } from '@endwise/ui';
+import {
+  Button,
+  Car,
+  Check,
+  FeltInput,
+  FeltSelect,
+  FeltSok,
+  FeltTall,
+  FeltTekst,
+  hexForFarge,
+  LasterFlate,
+  Search,
+  SelectItem,
+  Side,
+  Sparkles,
+  staffFargeStil,
+} from '@endwise/ui';
 import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { osloKalenderdag, osloPlusDager, osloVeggklokke } from '../../_lib/oslo-dag';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import { InnstillingRad, InnstillingSeksjon } from '../../_shell/innstilling-gruppe';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
 import { TIMEPLAN_FANER, timeplanHref } from '../../jobber/_faner';
+import { jobSlots } from '../_job-slots';
+import { KjoretoyKaskade } from '../_kjoretoy-kaskade';
+import type { KjoretoyType } from '../_kjoretoy-katalog';
 import { velgKjoretoyForJobb } from '../_knytt-kjoretoy';
+import { tilOsloDato, tilOsloMinutt, tilOsloTime } from '../_starttid';
 import { StarttidVelger } from '../_starttid-velger';
 import { fmtMinor } from '../_status';
 
@@ -20,9 +41,11 @@ import { fmtMinor } from '../_status';
  * varighet er katalogsum, overstyrbar manuelt. Vegvesen-oppslag (F2-08) som
  * smart default på regnr. Serveren eier valget og låsen — vi foreslår bare.
  */
-export default function NyJobbPage() {
+export function NyJobbSkjema({ onFerdig }: { onFerdig?: () => void } = {}) {
   const router = useRouter();
   const utils = trpc.useUtils();
+  const params = useSearchParams();
+  const kundeFraUrl = params?.get('kunde') ?? '';
 
   const [customerId, setCustomerId] = useState('');
   const [vehicleId, setVehicleId] = useState('');
@@ -37,7 +60,17 @@ export default function NyJobbPage() {
   const services = trpc.services.list.useQuery();
   const mechanics = trpc.mechanics.oversikt.useQuery();
   const alleKjoretoy = trpc.vehicles.list.useQuery({ limit: 200 });
+  const kompetanse = trpc.competence.listAllMechanicSkills.useQuery();
+  const iDag = osloKalenderdag(new Date());
+  const kalender = trpc.bookings.calendar.useQuery({
+    from: osloVeggklokke(iDag, 0, 0),
+    to: osloVeggklokke(osloPlusDager(iDag, 60), 0, 0),
+  });
   const opprettKjoretoy = trpc.vehicles.create.useMutation();
+
+  useEffect(() => {
+    if (kundeFraUrl) setCustomerId(kundeFraUrl);
+  }, [kundeFraUrl]);
 
   const selected = useMemo(
     () => (services.data ?? []).filter((s) => serviceIds.includes(s.id)),
@@ -56,7 +89,57 @@ export default function NyJobbPage() {
     return catalogSum;
   }, [catalogSum, durationManual, durationMinutes]);
 
-  const requiredSkills = useMemo(() => [...new Set(selected.flatMap((s) => s.skills))], [selected]);
+  const tjenesteSkills = useMemo(() => [...new Set(selected.flatMap((s) => s.skills))], [selected]);
+  /** Kompetanse lastes — ikke filtrer til tomt. Feilet last = alle aktive (ingen vakt-API). */
+  const requiredSkills = kompetanse.data ? tjenesteSkills : [];
+
+  const slotMekanikere = useMemo(() => {
+    const skills = kompetanse.data ?? [];
+    return (mechanics.data ?? []).map((m) => ({
+      id: m.id,
+      active: m.active,
+      skillKeys: skills.filter((s) => s.mechanicId === m.id).map((s) => s.skillKey),
+    }));
+  }, [mechanics.data, kompetanse.data]);
+
+  const slotJobber = useMemo(
+    () =>
+      (kalender.data ?? []).map((j) => ({
+        mechanicId: j.mechanicId,
+        startsAt: j.startsAt,
+        endsAt: j.endsAt,
+        status: j.status,
+      })),
+    [kalender.data],
+  );
+
+  const valgtYmd = startsAt ? tilOsloDato(startsAt) : iDag;
+  const dagsSlots = useMemo(
+    () =>
+      slotMinutes > 0
+        ? jobSlots({
+            ymd: valgtYmd,
+            varighetMin: slotMinutes,
+            mekanikere: slotMekanikere,
+            jobber: slotJobber,
+            requiredSkills,
+          })
+        : [],
+    [valgtYmd, slotMinutes, slotMekanikere, slotJobber, requiredSkills],
+  );
+
+  function datoHarSlot(ymd: string) {
+    if (slotMinutes <= 0) return false;
+    return (
+      jobSlots({
+        ymd,
+        varighetMin: slotMinutes,
+        mekanikere: slotMekanikere,
+        jobber: slotJobber,
+        requiredSkills,
+      }).length > 0
+    );
+  }
 
   // Sluttid = start + (manuell varighet eller katalogsum).
   const window = useMemo(() => {
@@ -75,7 +158,7 @@ export default function NyJobbPage() {
   const match = trpc.mechanics.match.useQuery(
     {
       serviceId: (primary?.id ?? '') as never,
-      requiredSkills,
+      requiredSkills: tjenesteSkills,
       from: window?.from as never,
       to: window?.to as never,
     },
@@ -92,7 +175,8 @@ export default function NyJobbPage() {
     onSuccess: (booking) => {
       invalidateHjemPulse(utils);
       meldingBookingLagret();
-      router.push(`/bookinger/${booking.id}` as Route);
+      if (onFerdig) onFerdig();
+      else router.push(`/bookinger/${booking.id}` as Route);
     },
   });
 
@@ -169,170 +253,183 @@ export default function NyJobbPage() {
   }
 
   return (
-    <SideChromeSkall
-      tittel="Timeplan"
-      ingress="Ny jobb mot ledig slot."
-      faner={TIMEPLAN_FANER.map((f) => ({ ...f, href: timeplanHref(f.id) }))}
-      aktiv="opprett"
-    >
-      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-5">
-        <InnstillingSeksjon
-          tittel="Kunde og kjøretøy"
-          ingress="Regnr festes på jobben. Slå opp eller velg — kjøretøyet følger med."
+    <div className="flex flex-col gap-5" data-jobb-wizard>
+      <InnstillingSeksjon
+        tittel="Kunde og kjøretøy"
+        ingress="Regnr festes på jobben. Slå opp eller velg — kjøretøyet følger med."
+      >
+        <KundeIFlyt
+          customerId={customerId}
+          vehicleId={vehicleId}
+          katalog={alleKjoretoy.data ?? []}
+          onCustomer={(id) => {
+            setCustomerId(id);
+            setVehicleId('');
+          }}
+          onVehicle={(id, reg) => {
+            setVehicleId(id);
+            if (reg) setRegNumber(reg);
+          }}
+        />
+        <InnstillingRad
+          label="Registreringsnummer"
+          hint="Følger jobben. Vegvesen fyller merke/modell."
+          siste
         >
-          <KundeIFlyt
-            customerId={customerId}
-            vehicleId={vehicleId}
-            onCustomer={(id) => {
-              setCustomerId(id);
-              setVehicleId('');
-            }}
-            onVehicle={(id, reg) => {
-              setVehicleId(id);
-              if (reg) setRegNumber(reg);
+          <div className="flex items-end gap-2" data-opprett-jobb-kjoretoy>
+            <div className="relative min-w-0 flex-1">
+              <Car
+                size={14}
+                className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 z-10 text-fg-faint"
+              />
+              <FeltInput
+                aria-label="Registreringsnummer"
+                value={regNumber}
+                onChange={(v) => {
+                  setRegNumber(v.toUpperCase());
+                  setVehicleId('');
+                }}
+                placeholder="EK12345"
+                fieldClassName="pl-9"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={regNumber.trim().length < 2 || lookup.isFetching}
+              onClick={() => lookup.refetch()}
+            >
+              <Search size={14} />
+              {lookup.isFetching ? 'Slår opp …' : 'Slå opp'}
+            </Button>
+          </div>
+          {lookup.isError && (
+            <p className="mt-2 text-[13px] text-fg-faint">Klarte ikke slå opp regnr akkurat nå.</p>
+          )}
+          {lookup.data && (
+            <p className="mt-2 text-[13px] text-success">
+              {lookup.data.make} {lookup.data.model} ({lookup.data.modelYear}) — EU-frist{' '}
+              {lookup.data.inspectionDue ?? '—'}
+            </p>
+          )}
+        </InnstillingRad>
+      </InnstillingSeksjon>
+
+      <InnstillingSeksjon tittel="Tjenester og tid">
+        <fieldset className="flex flex-col gap-1.5">
+          <legend className="text-fg-faint text-xs">Tjenester</legend>
+          {(services.data ?? []).length === 0 ? (
+            <p className="text-fg-faint text-xs">Ingen aktive tjenester i katalogen.</p>
+          ) : (
+            (services.data ?? []).map((s) => {
+              const on = serviceIds.includes(s.id);
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggleService(s.id)}
+                  className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${
+                    on ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-surface-2'
+                  }`}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] text-fg">{s.name}</span>
+                    <span className="text-fg-faint text-xs">
+                      {s.durationMinutes} min · {fmtMinor(s.priceMinor)}
+                    </span>
+                  </span>
+                  {on && <Check size={15} className="shrink-0 text-primary" />}
+                </button>
+              );
+            })
+          )}
+        </fieldset>
+
+        <Field label="Varighet (minutter)">
+          <FeltTall
+            aria-label="Varighet i minutter"
+            minValue={5}
+            maxValue={720}
+            value={
+              durationManual && typeof durationMinutes === 'number'
+                ? durationMinutes
+                : catalogSum || undefined
+            }
+            onChange={(v) => onDurationChange(v == null ? '' : String(v))}
+          />
+        </Field>
+        {selected.length > 0 && (
+          <p className="text-fg-muted text-xs">
+            Katalogtid {catalogSum} min
+            {selected.length > 1 ? ` (sum av ${selected.length} tjenester)` : ''}.
+            {durationManual
+              ? ' Justeres manuelt for denne jobben.'
+              : ' Du kan overstyre tiden selv.'}
+            {durationManual && (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  onClick={resetDuration}
+                  className="text-fg underline decoration-border underline-offset-2 hover:text-fg"
+                >
+                  Bruk katalogtid
+                </button>
+              </>
+            )}
+          </p>
+        )}
+
+        <Field label="Starttid">
+          <StarttidVelger
+            value={startsAt}
+            datoEnabled={slotMinutes > 0 && mechanics.isSuccess ? datoHarSlot : undefined}
+            tillatteTider={
+              slotMinutes > 0 && mechanics.isSuccess
+                ? dagsSlots.map((s) => ({
+                    h: tilOsloTime(s.startsAt),
+                    m: tilOsloMinutt(s.startsAt),
+                  }))
+                : undefined
+            }
+            onChange={(iso) => {
+              setStartsAt(iso);
+              setMechanicId('');
             }}
           />
-          <InnstillingRad
-            label="Registreringsnummer"
-            hint="Følger jobben. Vegvesen fyller merke/modell."
-            siste
-          >
-            <div className="flex items-end gap-2" data-opprett-jobb-kjoretoy>
-              <div className="relative min-w-0 flex-1">
-                <Car
-                  size={14}
-                  className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 text-fg-faint"
-                />
-                <input
-                  value={regNumber}
-                  onChange={(e) => {
-                    setRegNumber(e.target.value.toUpperCase());
-                    setVehicleId('');
-                  }}
-                  placeholder="EK12345"
-                  className={`${inputCls} pl-9`}
-                />
-              </div>
-              <button
-                type="button"
-                disabled={regNumber.trim().length < 2 || lookup.isFetching}
-                onClick={() => lookup.refetch()}
-                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-border bg-bg px-3 text-fg text-sm hover:bg-surface-2 disabled:opacity-50"
-              >
-                <Search size={14} />
-                {lookup.isFetching ? 'Slår opp …' : 'Slå opp'}
-              </button>
-            </div>
-            {lookup.isError && (
-              <p className="mt-2 text-fg-faint text-xs">Klarte ikke slå opp regnr akkurat nå.</p>
-            )}
-            {lookup.data && (
-              <p className="mt-2 text-success text-xs">
-                {lookup.data.make} {lookup.data.model} ({lookup.data.modelYear}) — EU-frist{' '}
-                {lookup.data.inspectionDue ?? '—'}
-              </p>
-            )}
-          </InnstillingRad>
-        </InnstillingSeksjon>
+        </Field>
+        {slotMinutes > 0 && dagsSlots.length === 0 ? (
+          <p data-jobb-slots-tom className="text-warn text-xs">
+            Ingen ledige tider denne dagen. Velg en annen dato, eller sjekk kompetanse.
+          </p>
+        ) : null}
+        {window && selected.length > 0 && (
+          <p className="text-fg-muted text-xs">
+            Slutter {window.to.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}{' '}
+            · {slotMinutes} min
+            {requiredSkills.length > 0 && ` · krever: ${requiredSkills.join(', ')}`}
+          </p>
+        )}
+      </InnstillingSeksjon>
 
-        <InnstillingSeksjon tittel="Tjenester og tid">
-          <fieldset className="flex flex-col gap-1.5">
-            <legend className="text-fg-faint text-xs">Tjenester</legend>
-            {(services.data ?? []).length === 0 ? (
-              <p className="text-fg-faint text-xs">Ingen aktive tjenester i katalogen.</p>
-            ) : (
-              (services.data ?? []).map((s) => {
-                const on = serviceIds.includes(s.id);
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => toggleService(s.id)}
-                    className={`flex items-center gap-3 rounded-lg border px-3.5 py-2.5 text-left transition-colors ${
-                      on
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border bg-card hover:bg-surface-2'
-                    }`}
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[13px] text-fg">{s.name}</span>
-                      <span className="text-fg-faint text-xs">
-                        {s.durationMinutes} min · {fmtMinor(s.priceMinor)}
-                      </span>
-                    </span>
-                    {on && <Check size={15} className="shrink-0 text-primary" />}
-                  </button>
-                );
+      <InnstillingSeksjon tittel="Mekaniker">
+        {!primary || !window ? (
+          <p className="text-[13px] text-fg-faint">Velg tjenester og tid, så foreslår matcheren.</p>
+        ) : match.isLoading ? (
+          <p className="text-fg-faint text-xs">Matcher …</p>
+        ) : (match.data ?? []).length === 0 ? (
+          <p className="text-warn text-xs">
+            Ingen kvalifisert mekaniker er ledig i dette tidsrommet. Prøv en annen tid.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            {(match.data ?? [])
+              .filter((cand) => {
+                const slot = dagsSlots.find((s) => s.startsAt === startsAt);
+                return slot ? slot.mechanicIds.includes(cand.mechanicId) : true;
               })
-            )}
-          </fieldset>
-
-          <Field label="Varighet (minutter)">
-            <input
-              type="number"
-              min={5}
-              max={720}
-              step={5}
-              value={durationManual ? durationMinutes : catalogSum || ''}
-              onChange={(e) => onDurationChange(e.target.value)}
-              placeholder={catalogSum ? String(catalogSum) : 'Velg tjenester'}
-              className={inputCls}
-            />
-          </Field>
-          {selected.length > 0 && (
-            <p className="text-fg-muted text-xs">
-              Katalogtid {catalogSum} min
-              {selected.length > 1 ? ` (sum av ${selected.length} tjenester)` : ''}.
-              {durationManual
-                ? ' Justeres manuelt for denne jobben.'
-                : ' Du kan overstyre tiden selv.'}
-              {durationManual && (
-                <>
-                  {' '}
-                  <button
-                    type="button"
-                    onClick={resetDuration}
-                    className="text-fg underline decoration-border underline-offset-2 hover:text-fg"
-                  >
-                    Bruk katalogtid
-                  </button>
-                </>
-              )}
-            </p>
-          )}
-
-          <Field label="Starttid">
-            <StarttidVelger
-              value={startsAt}
-              onChange={(iso) => {
-                setStartsAt(iso);
-                setMechanicId('');
-              }}
-            />
-          </Field>
-          {window && selected.length > 0 && (
-            <p className="text-fg-muted text-xs">
-              Slutter{' '}
-              {window.to.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} ·{' '}
-              {slotMinutes} min
-              {requiredSkills.length > 0 && ` · krever: ${requiredSkills.join(', ')}`}
-            </p>
-          )}
-        </InnstillingSeksjon>
-
-        <InnstillingSeksjon tittel="Mekaniker">
-          {!primary || !window ? (
-            <p className="text-fg-faint text-xs">Velg tjenester og tid, så foreslår matcheren.</p>
-          ) : match.isLoading ? (
-            <p className="text-fg-faint text-xs">Matcher …</p>
-          ) : (match.data ?? []).length === 0 ? (
-            <p className="text-warn text-xs">
-              Ingen kvalifisert mekaniker er ledig i dette tidsrommet. Prøv en annen tid.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              {(match.data ?? []).map((cand, i) => {
+              .map((cand, i) => {
                 const selectedMech = mechanicId === cand.mechanicId;
                 return (
                   <button
@@ -361,7 +458,7 @@ export default function NyJobbPage() {
                       <p className="flex items-center gap-2 text-[13px] text-fg">
                         {mechName.get(cand.mechanicId) ?? cand.mechanicId}
                         {i === 0 && (
-                          <span className="inline-flex items-center gap-0.5 rounded bg-primary/15 px-1.5 py-0.5 text-[10px] text-primary">
+                          <span className="inline-flex items-center gap-0.5 rounded bg-primary/15 px-1.5 py-0.5 text-[13px] text-primary">
                             <Sparkles size={9} /> best treff
                           </span>
                         )}
@@ -377,54 +474,97 @@ export default function NyJobbPage() {
                   </button>
                 );
               })}
-            </div>
-          )}
-        </InnstillingSeksjon>
-
-        <InnstillingSeksjon tittel="Notat">
-          <InnstillingRad label="Intern beskjed" siste>
-            <input
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Intern beskjed til mekanikeren …"
-              className={inputCls}
-            />
-          </InnstillingRad>
-        </InnstillingSeksjon>
-
-        {create.isError && (
-          <p className="text-danger text-sm">
-            {create.error.data?.code === 'CONFLICT'
-              ? 'Mekanikeren er allerede opptatt i dette tidsrommet. Velg en annen tid eller mekaniker.'
-              : create.error.message}
-          </p>
+          </div>
         )}
+      </InnstillingSeksjon>
 
-        <button
-          type="button"
-          disabled={!canBook || create.isPending || opprettKjoretoy.isPending}
-          onClick={book}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-6 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-        >
-          <Check size={16} />
-          {create.isPending || opprettKjoretoy.isPending ? 'Oppretter …' : 'Opprett jobb'}
-        </button>
-      </div>
+      <InnstillingSeksjon tittel="Notat">
+        <InnstillingRad label="Intern beskjed" siste>
+          <FeltTekst
+            aria-label="Intern beskjed"
+            value={notes}
+            onChange={setNotes}
+            placeholder="Intern beskjed til mekanikeren …"
+          />
+        </InnstillingRad>
+      </InnstillingSeksjon>
+
+      {create.isError && (
+        <p className="text-danger text-sm">
+          {create.error.data?.code === 'CONFLICT'
+            ? 'Mekanikeren er allerede opptatt i dette tidsrommet. Velg en annen tid eller mekaniker.'
+            : create.error.message}
+        </p>
+      )}
+
+      <Button
+        type="button"
+        disabled={!canBook || create.isPending || opprettKjoretoy.isPending}
+        onClick={book}
+      >
+        <Check size={16} />
+        {create.isPending || opprettKjoretoy.isPending ? 'Oppretter …' : 'Opprett jobb'}
+      </Button>
+    </div>
+  );
+}
+
+function NyJobbInner() {
+  const router = useRouter();
+  const params = useSearchParams();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!window.matchMedia('(max-width: 767px)').matches) return;
+    const kunde = params?.get('kunde');
+    router.replace(
+      (kunde
+        ? `/jobber?fane=opprett&kunde=${encodeURIComponent(kunde)}`
+        : '/jobber?fane=opprett') as Route,
+    );
+  }, [params, router]);
+
+  return (
+    <SideChromeSkall
+      tittel="Timeplan"
+      ingress="Ny jobb mot ledig slot."
+      faner={TIMEPLAN_FANER.map((f) => ({ ...f, href: timeplanHref(f.id) }))}
+      aktiv="opprett"
+    >
+      <Side
+        tittel="Ny jobb"
+        className="[&>header]:sr-only mx-auto w-full max-w-[760px] max-md:px-0"
+      >
+        <NyJobbSkjema />
+      </Side>
     </SideChromeSkall>
   );
 }
 
-const inputCls = FELT_MD;
-const selectCls = FELT_MD;
+/** Suspense-grense er påkrevd: siden leser `useSearchParams` (?kunde=). */
+export default function NyJobbPage() {
+  return (
+    <Suspense fallback={<LasterFlate label="Henter jobb" />}>
+      <NyJobbInner />
+    </Suspense>
+  );
+}
 
 function KundeIFlyt({
   customerId,
   vehicleId,
+  katalog,
   onCustomer,
   onVehicle,
 }: {
   customerId: string;
   vehicleId: string;
+  katalog: {
+    type?: string | null;
+    make?: string | null;
+    model?: string | null;
+    modelYear?: string | number | null;
+  }[];
   onCustomer: (id: string) => void;
   onVehicle: (id: string, regNumber?: string) => void;
 }) {
@@ -434,7 +574,12 @@ function KundeIFlyt({
   const [nyttKjoretoy, setNyttKjoretoy] = useState(false);
   const [navn, setNavn] = useState('');
   const [telefon, setTelefon] = useState('');
+  const [epost, setEpost] = useState('');
   const [regnr, setRegnr] = useState('');
+  const [vehType, setVehType] = useState<KjoretoyType>('mc');
+  const [vehMerke, setVehMerke] = useState('');
+  const [vehModell, setVehModell] = useState('');
+  const [vehAr, setVehAr] = useState('');
 
   const customers = trpc.customers.list.useQuery({
     sok: sok.trim() || undefined,
@@ -450,6 +595,7 @@ function KundeIFlyt({
       setNyKunde(false);
       setNavn('');
       setTelefon('');
+      setEpost('');
     },
   });
   const opprettKjoretoy = trpc.vehicles.create.useMutation({
@@ -463,29 +609,25 @@ function KundeIFlyt({
 
   return (
     <>
-      <Field label="Søk kunde">
-        <input
-          value={sok}
-          onChange={(e) => setSok(e.target.value)}
-          placeholder="Navn eller telefon"
-          className={inputCls}
-        />
-      </Field>
-      <Field label="Kunde">
-        <select
-          value={customerId}
-          onChange={(e) => onCustomer(e.target.value)}
-          className={selectCls}
-        >
-          <option value="">— velg kunde —</option>
-          {(customers.data ?? []).map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-              {c.phone ? ` · ${c.phone}` : ''}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <FeltSok
+        label="Søk kunde"
+        value={sok}
+        onChange={setSok}
+        placeholder="Navn, telefon eller reg.nr"
+      />
+      <FeltSelect
+        label="Kunde"
+        selectedKey={customerId || null}
+        onSelectionChange={(key) => onCustomer(String(key ?? ''))}
+        placeholder="— velg kunde —"
+      >
+        {(customers.data ?? []).map((c) => (
+          <SelectItem key={c.id} id={c.id}>
+            {c.name}
+            {c.phone ? ` · ${c.phone}` : ''}
+          </SelectItem>
+        ))}
+      </FeltSelect>
       <button
         type="button"
         onClick={() => setNyKunde((v) => !v)}
@@ -494,59 +636,72 @@ function KundeIFlyt({
         {nyKunde ? 'Skjul ny kunde' : 'Ny kunde'}
       </button>
       {nyKunde && (
-        <div className="flex flex-col gap-2 rounded-lg border border-border bg-bg p-3">
+        <div
+          data-jobb-park="cust"
+          className="flex flex-col gap-2 rounded-lg border border-border bg-bg p-3"
+        >
           <Field label="Navn">
-            <input
+            <FeltInput
+              aria-label="Navn"
               value={navn}
-              onChange={(e) => setNavn(e.target.value)}
-              className={inputCls}
+              onChange={setNavn}
               placeholder="Kari Nordmann"
             />
           </Field>
           <Field label="Telefon">
-            <input
+            <FeltInput
+              aria-label="Telefon"
               value={telefon}
-              onChange={(e) => setTelefon(e.target.value)}
-              className={inputCls}
+              onChange={setTelefon}
               placeholder="+4790000000"
+            />
+          </Field>
+          <Field label="E-post">
+            <FeltInput
+              aria-label="E-post"
+              type="email"
+              value={epost}
+              onChange={setEpost}
+              placeholder="kari@example.no"
             />
           </Field>
           <button
             type="button"
             disabled={!navn.trim() || !telefon.trim() || opprettKunde.isPending}
             onClick={() =>
-              opprettKunde.mutate({ name: navn.trim(), phone: telefon.trim() || undefined })
+              opprettKunde.mutate({
+                name: navn.trim(),
+                phone: telefon.trim() || undefined,
+                email: epost.trim() || undefined,
+              })
             }
             className="inline-flex h-9 items-center justify-center rounded-md bg-fg px-3 text-bg text-sm disabled:opacity-50"
           >
             {opprettKunde.isPending ? 'Lagrer …' : 'Lagre kunde'}
           </button>
           {opprettKunde.isError && (
-            <p className="text-danger text-xs">Klarte ikke lagre kunden. Prøv igjen.</p>
+            <p className="text-[13px] text-danger">Klarte ikke lagre kunden. Prøv igjen.</p>
           )}
         </div>
       )}
 
-      <Field label="Kjøretøy">
-        <select
-          value={vehicleId}
-          onChange={(e) => {
-            const id = e.target.value;
-            const treff = (vehicles.data ?? []).find((v) => v.id === id);
-            onVehicle(id, treff?.regNumber ?? undefined);
-          }}
-          className={selectCls}
-          disabled={!customerId}
-        >
-          <option value="">{customerId ? '— velg kjøretøy —' : 'Velg kunde først'}</option>
-          {(vehicles.data ?? []).map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.regNumber ?? 'Uten regnr'} ·{' '}
-              {[v.make, v.model].filter(Boolean).join(' ') || v.type}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <FeltSelect
+        label="Kjøretøy"
+        selectedKey={vehicleId || null}
+        onSelectionChange={(key) => {
+          const id = String(key ?? '');
+          const treff = (vehicles.data ?? []).find((v) => v.id === id);
+          onVehicle(id, treff?.regNumber ?? undefined);
+        }}
+        placeholder={customerId ? '— velg kjøretøy —' : 'Velg kunde først'}
+        isDisabled={!customerId}
+      >
+        {(vehicles.data ?? []).map((v) => (
+          <SelectItem key={v.id} id={v.id}>
+            {v.regNumber ?? 'Uten regnr'} · {[v.make, v.model].filter(Boolean).join(' ') || v.type}
+          </SelectItem>
+        ))}
+      </FeltSelect>
       <button
         type="button"
         disabled={!customerId}
@@ -556,23 +711,40 @@ function KundeIFlyt({
         {nyttKjoretoy ? 'Skjul nytt kjøretøy' : 'Nytt kjøretøy'}
       </button>
       {nyttKjoretoy && customerId && (
-        <div className="flex flex-col gap-2 rounded-lg border border-border bg-bg p-3">
+        <div
+          data-jobb-park="veh"
+          className="flex flex-col gap-2 rounded-lg border border-border bg-bg p-3"
+        >
           <Field label="Regnr">
-            <input
+            <FeltInput
+              aria-label="Regnr"
               value={regnr}
-              onChange={(e) => setRegnr(e.target.value.toUpperCase())}
-              className={inputCls}
+              onChange={(v) => setRegnr(v.toUpperCase())}
               placeholder="EK12345"
             />
           </Field>
+          <KjoretoyKaskade
+            type={vehType}
+            merke={vehMerke}
+            modell={vehModell}
+            ar={vehAr}
+            rader={katalog}
+            onType={setVehType}
+            onMerke={setVehMerke}
+            onModell={setVehModell}
+            onAr={setVehAr}
+          />
           <button
             type="button"
             disabled={regnr.trim().length < 2 || opprettKjoretoy.isPending}
             onClick={() =>
               opprettKjoretoy.mutate({
                 customerId: customerId as never,
-                type: 'mc',
+                type: vehType,
                 regNumber: regnr.trim(),
+                make: vehMerke.trim() || undefined,
+                model: vehModell.trim() || undefined,
+                modelYear: vehAr.trim() || undefined,
               })
             }
             className="inline-flex h-9 items-center justify-center rounded-md bg-fg px-3 text-bg text-sm disabled:opacity-50"
@@ -580,7 +752,7 @@ function KundeIFlyt({
             {opprettKjoretoy.isPending ? 'Lagrer …' : 'Lagre kjøretøy'}
           </button>
           {opprettKjoretoy.isError && (
-            <p className="text-danger text-xs">Klarte ikke lagre kjøretøyet. Prøv igjen.</p>
+            <p className="text-[13px] text-danger">Klarte ikke lagre kjøretøyet. Prøv igjen.</p>
           )}
         </div>
       )}
@@ -592,7 +764,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return (
     // biome-ignore lint/a11y/noLabelWithoutControl: kontrollen sendes inn som children (implisitt kobling).
     <label className="flex w-full flex-col gap-1">
-      <span className="text-fg-faint text-xs">{label}</span>
+      <span className="text-[13px] text-fg-faint">{label}</span>
       {children}
     </label>
   );

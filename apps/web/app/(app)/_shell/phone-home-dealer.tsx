@@ -1,13 +1,12 @@
 'use client';
 
-import { Inbox, Package, Users } from '@endwise/ui';
+import { Inbox, Package, Side, Users } from '@endwise/ui';
 import { useEffect, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BOOKING_LAGRET_EVENT, HJEM_PULSE_REFETCH, invalidateHjemPulse } from './hjem-pulse-sync';
 import { HJEM_SCROLL_FLATE, PHONE_KORT_META, VERKSTED_INNHOLD } from './phone-home';
 import {
-  analyserMockStats,
   ansattePulse,
   avvikTeller,
   endringerVindu,
@@ -16,12 +15,14 @@ import {
   innboksRad,
   lagerRad,
   pulsdagOverskrift,
+  tallKortStats,
 } from './phone-home-pulse';
 import { PulseAnalyserKort, PulseHeroFlate, PulseJobbFlis, PulseRadKort } from './pulse-kort';
 
 /**
  * Forhandler-hjem — Verkstedet / `/home`.
- * Låste flater: toppkort · Innboks · Lager · Analyser · På jobb + Jobb.
+ * Låste flater: toppkort · Innboks · Lager · Tall · På jobb + Jobb.
+ * Tom dag = ekte 0, ikke PULSE_PLAUSIBEL. Boksene står.
  */
 export function useDealerHjemKort() {
   const utils = trpc.useUtils();
@@ -37,6 +38,7 @@ export function useDealerHjemKort() {
   );
   const threads = trpc.messages.listThreads.useQuery(undefined, HJEM_PULSE_REFETCH);
   const oversikt = trpc.mechanics.oversikt.useQuery(undefined, HJEM_PULSE_REFETCH);
+  const mekanikerListe = trpc.mechanics.list.useQuery(undefined, HJEM_PULSE_REFETCH);
   const deler = trpc.inventory.listParts.useQuery(
     {
       kunLav: true,
@@ -65,13 +67,14 @@ export function useDealerHjemKort() {
   const forespor = foresporTeller(jobber);
   const innboks = innboksRad(threads.data ?? []);
   const lager = lagerRad(deler.data ?? []);
-  const ansatte = ansattePulse(oversikt.data ?? [], jobber, naa);
-  const analyser = analyserMockStats(naa);
+  const ansatte = ansattePulse(mekanikerListe.data ?? oversikt.data ?? []);
+  const analyser = tallKortStats(jobber, naa);
 
   return {
     bookings,
     threads,
     oversikt,
+    mekanikerListe,
     deler,
     idag,
     dag,
@@ -89,6 +92,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
     bookings,
     threads,
     oversikt,
+    mekanikerListe,
     deler,
     idag,
     dag,
@@ -137,6 +141,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
         stats={analyser}
         href={PHONE_KORT_META.analyser.href}
         forhandlerNavn={tenantName}
+        laster={lasterJobber}
       />
 
       <div data-pulse-bunn className="flex w-full gap-3">
@@ -145,8 +150,12 @@ export function DealerPulseKort({ className }: { className?: string }) {
             href={PHONE_KORT_META.team.href}
             ikon={Users}
             tittel="På jobb"
-            teller={oversikt.isLoading ? undefined : `${ansatte.paJobb} / ${ansatte.totalt}`}
-            laster={oversikt.isLoading}
+            teller={
+              mekanikerListe.isLoading && oversikt.isLoading
+                ? undefined
+                : `${ansatte.paJobb} / ${ansatte.totalt}`
+            }
+            laster={mekanikerListe.isLoading && oversikt.isLoading}
             kompakt
           />
         </div>
@@ -163,8 +172,14 @@ export const DealerDestinasjonskort = DealerPulseKort;
 
 export function PhoneHomeDealer() {
   return (
-    <DealerPulseKort
-      className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-2.5 py-3 md:hidden`}
-    />
+    <Side
+      tittel="Verkstedet"
+      className="md:hidden [&>header]:sr-only"
+      undertekst="Her er dagen din."
+    >
+      <DealerPulseKort
+        className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-4 py-0`}
+      />
+    </Side>
   );
 }

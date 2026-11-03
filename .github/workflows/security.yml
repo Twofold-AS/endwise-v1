@@ -55,6 +55,9 @@ jobs:
           project: endwise
           path: "."
           format: SARIF
+          # pnpm-repo: Yarn-analysatoren krasjer jobben («Unable to determine yarn»).
+          # Pnpm Audit Analyzer kjører uansett.
+          args: "--disableYarnAudit"
       - uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: reports/dependency-check-report.sarif
@@ -63,11 +66,40 @@ jobs:
     name: ZAP baseline mot preview
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
+      - name: Vent på Vercel-preview
+        id: preview
+        env:
+          PREVIEW_OVERRIDE: ${{ vars.PREVIEW_URL }}
+        run: |
+          set -euo pipefail
+          if [ -n "${PREVIEW_OVERRIDE:-}" ]; then
+            echo "url=${PREVIEW_OVERRIDE}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          slug="${GITHUB_HEAD_REF//\//-}"
+          url="https://endwise-v1-web-git-${slug}-endwise-twofold.vercel.app"
+          # Vent til *denne* deployen er live (CSP-header), ikke forrige READY-alias.
+          for _ in $(seq 1 90); do
+            headers="$(curl -sSI --max-time 15 "$url" || true)"
+            if printf '%s' "$headers" | grep -qi '^content-security-policy:'; then
+              echo "Fant preview ${url} med CSP"
+              echo "url=${url}" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Preview uten CSP-header: ${url}" >&2
+          exit 1
+      - name: Gjør workspace skrivbart for ZAP
+        run: chmod a+w .
       - name: ZAP baseline
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
-          # Settes når Vercel-preview-URL er tilgjengelig (F0-07/F0-10)
-          target: ${{ vars.PREVIEW_URL || 'https://example.invalid' }}
+          target: ${{ steps.preview.outputs.url }}
           fail_action: false
+          allow_issue_writing: false

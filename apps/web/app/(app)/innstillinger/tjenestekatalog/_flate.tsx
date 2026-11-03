@@ -1,13 +1,16 @@
 'use client';
 
-import { ArrowUpRight, Plus, Wrench } from '@endwise/ui';
+import { ArrowUpRight } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { NyKnapp } from '../../_shell/ny-handling';
+import { PhoneSokFelt } from '../../_shell/phone-sok-felt';
 import { SorteringArk, SorteringValg } from '../../_shell/sortering-ark';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
+import { tjenesterPageSub, trefferTjenesteSok } from '../../prisliste/_hub';
 import { TYPE_VALG } from './_felles';
 import { NyTjeneste } from './_ny-tjeneste';
 import { TjenesteKort } from './_tjeneste-kort';
@@ -22,13 +25,16 @@ export function PrislisteFlate({
   skjulPiller = false,
   tittel = 'Prisliste',
   skjulNy = false,
+  onNy,
 }: {
   skjulPiller?: boolean;
   tittel?: string;
   skjulNy?: boolean;
+  onNy?: () => void;
 }) {
   const { isAdmin } = useOrgRole();
   const [filter, setFilter] = useState<string>('alle');
+  const [sok, setSok] = useState('');
   const [nyApen, setNyApen] = useState(false);
   const [sorterApen, setSorterApen] = useState(false);
   const sorterRef = useRef<HTMLDivElement>(null);
@@ -41,35 +47,46 @@ export function PrislisteFlate({
    */
   const tjenester = trpc.services.list.useQuery({ inkluderInaktive: true });
 
-  const synlige = (tjenester.data ?? []).filter(
+  const etterType = (tjenester.data ?? []).filter(
     (t) => filter === 'alle' || t.vehicleType === filter,
   );
+  const synlige = etterType.filter((t) => trefferTjenesteSok(t, sok));
   const aktive = synlige.filter((t) => t.active);
   const inaktive = synlige.filter((t) => !t.active);
+  const tilbys = etterType.filter((t) => t.active).length;
 
   return (
     <div
+      data-tjenester-liste
       className={
         skjulPiller
           ? 'flex flex-col gap-5'
           : 'mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7'
       }
     >
-      {skjulPiller ? null : (
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="sr-only">{tittel}</h1>
-          <p className="flex items-center gap-2 text-title text-fg">
-            <Wrench size={18} strokeWidth={1.75} className="text-fg-muted" />
-            {tittel}
-          </p>
-          <p className="text-body text-fg-muted">
-            Tjenestene kunden kan bestille hos dere, med varighet, pris og hvilke ferdigheter jobben
-            krever.
-          </p>
+          <h1 className="text-title text-fg max-md:text-[24px] max-md:font-[650]">{tittel}</h1>
+          <p className="mt-0.5 text-body text-fg-muted">Tjenestene kunden kan bestille hos dere.</p>
         </div>
-      )}
+        {isAdmin && !nyApen && !skjulNy ? (
+          <NyKnapp onClick={onNy ?? (() => setNyApen(true))}>Ny tjeneste</NyKnapp>
+        ) : null}
+      </div>
+
+      <p data-tjenester-pagesub className="text-[12px] text-fg-muted">
+        {tjenester.isLoading ? 'Laster tjenester …' : tjenesterPageSub(tilbys)}
+      </p>
 
       <div className="flex flex-wrap items-center gap-2">
+        <div data-tjenester-sok className="min-w-[180px] flex-1">
+          <PhoneSokFelt
+            value={sok}
+            onChange={(e) => setSok(e.target.value)}
+            placeholder="Søk tjeneste"
+            aria-label="Søk tjeneste"
+          />
+        </div>
         <div ref={sorterRef} className="relative">
           <button
             type="button"
@@ -101,20 +118,9 @@ export function PrislisteFlate({
         </div>
 
         <div className="flex-1" />
-
-        {isAdmin && !nyApen && !skjulNy && (
-          <button
-            type="button"
-            onClick={() => setNyApen(true)}
-            className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
-          >
-            <Plus size={14} strokeWidth={1.75} />
-            Ny tjeneste
-          </button>
-        )}
       </div>
 
-      {isAdmin && nyApen && <NyTjeneste onLukk={() => setNyApen(false)} />}
+      {isAdmin ? <NyTjeneste apen={nyApen} onLukk={() => setNyApen(false)} /> : null}
 
       {tjenester.isLoading ? (
         <Laster />
@@ -155,7 +161,7 @@ export function PrislisteFlate({
         href={'/organisasjon?seksjon=abonnement' as Route}
         className="inline-flex items-center gap-1.5 text-[12px] text-fg-muted underline underline-offset-2 transition-colors hover:text-fg"
       >
-        Ser du etter hva dere betaler Endwise? Det ligger under «Tjenester &amp; priser»
+        Ser du etter hva dere betaler Endwise? Det ligger under «Tillegg og priser»
         <ArrowUpRight size={13} strokeWidth={1.75} />
       </Link>
     </div>

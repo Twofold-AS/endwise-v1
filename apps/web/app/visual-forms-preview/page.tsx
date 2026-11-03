@@ -109,6 +109,9 @@ export default function VisualFormsPreview() {
           ]}
           aktiv="opprett"
         >
+          <p data-jobb-wizard className="mb-3 text-[12px] text-fg-muted">
+            Kunde → tjenester → varighet → dato (jobSlots) → tid → mekaniker
+          </p>
           <InnstillingSeksjon
             tittel="Kjøretøy"
             ingress="Regnr følger jobben. Vegvesen fyller merke/modell."
@@ -144,7 +147,7 @@ export default function VisualFormsPreview() {
           ingress="Opprettelse bare i top-bar."
           faner={[
             { id: 'alle', label: 'Alle tjenester', href: '/prisliste' },
-            { id: 'opprett', label: 'Opprett tjenester', href: '/prisliste?fane=opprett' },
+            { id: 'opprett', label: 'Opprett tjeneste', href: '/prisliste?fane=opprett' },
           ]}
           aktiv="alle"
         >
@@ -152,11 +155,11 @@ export default function VisualFormsPreview() {
             <SorteringGo id="tjenester" grupper={[{ valg: ['Alle', 'MC', 'Båt', 'ATV'] }]} />
             <p className="text-label text-fg">Ingen ekstra opprett-knapp på Alle-flaten.</p>
             <p className="text-[13px] text-fg-muted">
-              Opprettelse åpnes bare fra <span className="text-fg">Opprett tjenester</span> i
+              Opprettelse åpnes bare fra <span className="text-fg">Opprett tjeneste</span> i
               top-bar.
             </p>
             <span className="inline-flex items-center gap-1 text-label font-normal text-fg">
-              Opprett tjenester
+              Opprett tjeneste
               <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
             </span>
           </div>

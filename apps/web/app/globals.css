@@ -83,6 +83,14 @@ body {
   transform-style: preserve-3d;
 }
 
+/* Reservert venstregutter så den sticky Ronny-sirkelen ikke dekker kort.
+   6rem (96px) gir luft mellom 64px-sirkel (left 8px → 72px) og innhold. */
+@media (max-width: 767px) {
+  [data-ronny-side-scroll][data-ronny-sirkel-plass] {
+    padding-left: 6rem;
+  }
+}
+
 /*
  * shadcn Conversation/Shimmer er ikke hentet (UI-PAKKER §7).
  * Legacy shimmer — chrome-tittel bruker den ikke.

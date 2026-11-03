@@ -9,6 +9,7 @@ import { LydProvider } from './_lib/lyd';
 import { erForhandlerRutePaaPlattform, plattformToast } from './_lib/plattform';
 import { useOrgRole } from './_lib/use-org-role';
 import { InboxFilterProvider } from './_shell/inbox-filter';
+import { Kommandopalett } from './_shell/kommandopalett';
 import { erTillattMekanikerSti } from './_shell/nav';
 import { PHONE_SHELL_ROT } from './_shell/phone-home';
 import { PhoneShell } from './_shell/phone-shell';
@@ -135,6 +136,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <SidebarStateProvider>
           <InboxFilterProvider>
             <PwaRegister />
+            <Kommandopalett />
             <RonnySheetProvider>
               <div className={PHONE_SHELL_ROT}>
                 <Suspense fallback={null}>
@@ -163,7 +165,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       </Suspense>
                       <div
                         data-ronny-side-scroll
-                        className={`flex min-h-0 min-w-0 flex-1 flex-col ${
+                        className={`no-scrollbar flex min-h-0 min-w-0 flex-1 flex-col ${
                           innboksFlate ? 'overflow-hidden' : 'overflow-y-auto'
                         }`}
                       >
@@ -177,7 +179,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                               <p className="text-label">{plattformVarsel}</p>
                               <button
                                 type="button"
-                                className="text-[12px] underline-offset-2 hover:underline"
+                                className="text-[13px] underline-offset-2 hover:underline"
                                 onClick={() => setPlattformVarsel(null)}
                               >
                                 Lukk

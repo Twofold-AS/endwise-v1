@@ -2,6 +2,12 @@
 
 import { useChat } from '@ai-sdk/react';
 import {
+  AgentThinking,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  LogRow,
   Message,
   MessageBubble,
   MessageContent,
@@ -24,6 +30,7 @@ import { RonnyBot } from './ronny-bot';
 import { RonnyForminskIkon, RonnyForstorIkon } from './ronny-ikoner';
 import { RONNY_SHEET_RADIUS_PX, ronnySheetHoydePx, synligViewportHoyde } from './ronny-sheet';
 import { useRonnySheet } from './ronny-sheet-state';
+import { RonnySirkel } from './ronny-sirkel';
 import { sidekontekst } from './sidekontekst';
 
 const APPLE_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -31,7 +38,23 @@ const HIT = 'inline-flex size-11 shrink-0 items-center justify-center rounded-co
 /** Safe-area er padding inne i composer, ikke et løft fra bunnkanten. */
 const COMPOSER_SAFE = 'max(6px, env(safe-area-inset-bottom))';
 const TENKER_TEKST = 'Ronny tenker…';
-const BOBLE_TEKST = 'text-[14px] leading-snug md:text-body md:leading-relaxed';
+const BOBLE_TEKST = 'text-body leading-snug md:leading-relaxed';
+const RONNY_FORSLAG = [
+  'Hva er på timeplanen i dag?',
+  'Hvilke deler er under minimum?',
+  'Hvem har jobber i dag?',
+] as const;
+
+function norskVerktoy(type: string): string {
+  if (type.includes('dagensBookinger') || type.includes('booking')) return 'Slår opp bookinger';
+  if (type.includes('finnDel') || type.includes('lager') || type.includes('lavtLager')) {
+    return 'Sjekker lager';
+  }
+  if (type.includes('sokKunder') || type.includes('kunde')) return 'Søker i kunder';
+  if (type.includes('mekaniker')) return 'Sjekker mekanikere';
+  if (type.includes('gaaTil') || type.includes('gåTil')) return 'Åpner side';
+  return 'Jobber';
+}
 
 function tekstFraMelding(melding: { parts: Array<{ type: string; text?: string }> }): string {
   return melding.parts
@@ -180,19 +203,54 @@ export function WorkshopBloub() {
           setPaaTopp(e.currentTarget.scrollTop <= 2);
         }}
       >
+        {messages.length === 0 && !opptatt ? (
+          <div data-ronny-forslag className="flex flex-col gap-2 py-2">
+            {RONNY_FORSLAG.map((tekst) => (
+              <button
+                key={tekst}
+                type="button"
+                onClick={() => send(tekst)}
+                className="h-11 rounded-pill border border-border bg-bg px-4 text-left text-label text-fg"
+              >
+                {tekst}
+              </button>
+            ))}
+          </div>
+        ) : null}
         {messages.map((melding) => {
           const tekstDel = tekstFraMelding(melding);
-          if (!tekstDel) return null;
+          const steg = melding.parts.filter((del) => del.type !== 'text');
           return (
             <Message key={melding.id} align={melding.role === 'user' ? 'end' : 'start'}>
               <MessageContent>
-                <MessageBubble egen={melding.role === 'user'} className={BOBLE_TEKST}>
-                  {tekstDel}
-                </MessageBubble>
+                {steg.length > 0 ? (
+                  <div data-ronny-trinn className="mb-2 flex flex-col gap-1">
+                    {steg.map((del, i) => (
+                      <LogRow
+                        key={`${melding.id}-${del.type}-${norskVerktoy(del.type)}`}
+                        first={i === 0}
+                        last={i === steg.length - 1}
+                        reduce={false}
+                      >
+                        <p className="text-meta text-fg-muted">{norskVerktoy(del.type)}</p>
+                      </LogRow>
+                    ))}
+                  </div>
+                ) : null}
+                {tekstDel ? (
+                  <MessageBubble egen={melding.role === 'user'} className={BOBLE_TEKST}>
+                    {tekstDel}
+                  </MessageBubble>
+                ) : null}
               </MessageContent>
             </Message>
           );
         })}
+        {opptatt ? (
+          <div data-ronny-tenker className="px-1">
+            <AgentThinking label={TENKER_TEKST} variant="wave" tone="primary" />
+          </div>
+        ) : null}
         {error ? (
           <Message align="start">
             <MessageContent>
@@ -244,146 +302,164 @@ export function WorkshopBloub() {
     </div>
   );
 
-  if (!apen) return null;
-
   return (
     <>
+      <RonnySirkel />
       <div className="md:hidden">
-        <button
-          type="button"
-          data-ronny-scrim
-          aria-label="Lukk Ronny"
-          className="fixed inset-0 z-[60] bg-fg/25"
-          onClick={lukk}
-        />
-        <div
-          data-ronny-sheet
-          data-ronny-flate
-          data-ronny-hoyde={hoyde}
-          data-workshop-shell
-          className={`fixed inset-x-0 bottom-0 z-[70] flex flex-col overflow-hidden bg-surface text-fg shadow-none ${
-            hoyde === 100 ? 'top-0 h-[100dvh]' : 'h-[80dvh]'
-          }`}
-          style={{
-            height: hoyde === 100 ? '100dvh' : sheetHoyde,
-            top: hoyde === 100 ? 0 : undefined,
-            borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
-            borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
-            borderBottomLeftRadius: 0,
-            borderBottomRightRadius: 0,
-            transition: `height 200ms ${APPLE_EASE}`,
+        <Drawer
+          placement="bottom"
+          isOpen={apen}
+          onOpenChange={(o) => {
+            if (!o) lukk();
           }}
-          role="dialog"
           aria-label="Ronny"
         >
           <div
-            data-ronny-sheet-header
-            className="flex h-row shrink-0 items-center justify-between px-2"
+            data-ronny-sheet
+            data-ronny-flate
+            data-ronny-hoyde={hoyde}
+            data-workshop-shell
+            className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface text-fg"
+            style={{
+              minHeight: sheetHoyde,
+              height: hoyde === 100 ? '100dvh' : sheetHoyde,
+              top: hoyde === 100 ? 0 : undefined,
+              borderTopLeftRadius: RONNY_SHEET_RADIUS_PX,
+              borderTopRightRadius: RONNY_SHEET_RADIUS_PX,
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+              transition: `height 200ms ${APPLE_EASE}`,
+            }}
           >
-            {!utvidet ? (
-              <button
-                type="button"
-                data-ronny-forstor
-                data-ronny-utvid
-                aria-label="Forstørr"
-                aria-pressed={utvidet}
-                className={HIT}
-                onClick={forstor}
+            <DrawerHeader
+              title="Ronny"
+              closeLabel="Lukk"
+              showCloseButton={false}
+              className="px-2 [&_[slot=title]]:sr-only"
+            >
+              <div
+                data-ronny-sheet-header
+                className="flex h-row w-full items-center justify-between"
               >
-                <RonnyForstorIkon />
-              </button>
-            ) : paaTopp ? (
-              <span data-ronny-topp className="inline-flex size-11 items-center justify-center">
-                <RonnyBot size={28} expression="heureux" />
-              </span>
-            ) : (
-              <button
-                type="button"
-                data-ronny-forminsk
-                aria-label="Forminsk chat"
-                className={HIT}
-                onClick={forminsk}
+                {!utvidet ? (
+                  <button
+                    type="button"
+                    data-ronny-forstor
+                    data-ronny-utvid
+                    aria-label="Forstørr"
+                    aria-pressed={utvidet}
+                    className={HIT}
+                    onClick={forstor}
+                  >
+                    <RonnyForstorIkon />
+                  </button>
+                ) : paaTopp ? (
+                  <span data-ronny-topp className="inline-flex size-11 items-center justify-center">
+                    <RonnyBot size={28} expression="heureux" />
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    data-ronny-forminsk
+                    aria-label="Forminsk chat"
+                    className={HIT}
+                    onClick={forminsk}
+                  >
+                    <RonnyForminskIkon />
+                  </button>
+                )}
+                <span className="truncate text-title text-fg">Ronny</span>
+                <button
+                  type="button"
+                  data-ronny-lukk
+                  aria-label="Lukk"
+                  className={HIT}
+                  onClick={lukk}
+                >
+                  <X size={18} strokeWidth={2} />
+                </button>
+              </div>
+            </DrawerHeader>
+            <DrawerBody className="flex min-h-0 flex-1 flex-col px-0 pb-0">
+              <div
+                data-workshop-dock
+                data-ronny-visning={hoyde}
+                className="flex min-h-0 flex-1 flex-col bg-surface text-fg"
               >
-                <RonnyForminskIkon />
-              </button>
-            )}
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate text-title text-fg">Ronny</span>
-              {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
-            </div>
-            <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
-              <X size={18} strokeWidth={2} />
-            </button>
+                <div
+                  data-ronny-svar-kort
+                  className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-fg"
+                >
+                  {loggUtsnitt(phoneLoggRef)}
+                </div>
+                <div
+                  ref={composerRef}
+                  data-ronny-composer
+                  data-ronny-prompt-flate
+                  className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
+                >
+                  <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
+                    {promptKort()}
+                  </div>
+                </div>
+              </div>
+            </DrawerBody>
+            <DrawerFooter className="hidden">{null}</DrawerFooter>
           </div>
-          <div
-            data-workshop-dock
-            data-ronny-visning={hoyde}
-            className="flex min-h-0 flex-1 flex-col bg-surface text-fg"
+        </Drawer>
+      </div>
+      {apen ? (
+        <div className="absolute inset-0 z-[60] hidden md:block" data-ronny-desktop>
+          <button
+            type="button"
+            data-ronny-desktop-scrim
+            aria-label="Lukk Ronny"
+            className="absolute inset-0 bg-fg/15"
+            onClick={lukk}
+          />
+          <aside
+            data-ronny-desktop-panel
+            data-ronny-flate
+            className="absolute inset-y-0 right-0 z-10 flex w-full max-w-[400px] flex-col overflow-hidden bg-surface text-fg"
+            role="dialog"
+            aria-label="Ronny"
           >
             <div
-              data-ronny-svar-kort
-              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-fg"
+              data-ronny-desktop-header
+              className="flex h-row shrink-0 items-center justify-between px-3"
             >
-              {loggUtsnitt(phoneLoggRef)}
+              <div className="flex min-w-0 items-center gap-2">
+                <RonnyBot size={28} />
+                <span className="truncate text-title text-fg">Ronny</span>
+              </div>
+              <button
+                type="button"
+                data-ronny-lukk
+                aria-label="Lukk"
+                className={HIT}
+                onClick={lukk}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
             </div>
-            <div
-              ref={composerRef}
-              data-ronny-composer
-              data-ronny-prompt-flate
-              className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
-            >
-              <div className="relative px-3 pt-1.5" style={{ paddingBottom: COMPOSER_SAFE }}>
-                {promptKort()}
+            <div data-workshop-dock className="flex min-h-0 flex-1 flex-col bg-surface text-fg">
+              <div
+                data-ronny-svar-kort
+                className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-fg"
+              >
+                {loggUtsnitt(desktopLoggRef)}
+              </div>
+              <div
+                data-ronny-composer
+                data-ronny-prompt-flate
+                className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
+              >
+                <div className="relative px-3 pt-1.5 pb-3">{promptKort()}</div>
               </div>
             </div>
-          </div>
+          </aside>
         </div>
-      </div>
-      <div className="absolute inset-0 z-[60] hidden md:block" data-ronny-desktop>
-        <button
-          type="button"
-          data-ronny-desktop-scrim
-          aria-label="Lukk Ronny"
-          className="absolute inset-0 bg-fg/15"
-          onClick={lukk}
-        />
-        <aside
-          data-ronny-desktop-panel
-          data-ronny-flate
-          className="absolute inset-y-0 right-0 z-10 flex w-full max-w-[400px] flex-col overflow-hidden bg-surface text-fg"
-          role="dialog"
-          aria-label="Ronny"
-        >
-          <div
-            data-ronny-desktop-header
-            className="flex h-row shrink-0 items-center justify-between px-3"
-          >
-            <div className="flex min-w-0 items-center gap-2">
-              <RonnyBot size={28} />
-              <span className="truncate text-title text-fg">Ronny</span>
-              {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
-            </div>
-            <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
-              <X size={18} strokeWidth={2} />
-            </button>
-          </div>
-          <div data-workshop-dock className="flex min-h-0 flex-1 flex-col bg-surface text-fg">
-            <div
-              data-ronny-svar-kort
-              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-fg"
-            >
-              {loggUtsnitt(desktopLoggRef)}
-            </div>
-            <div
-              data-ronny-composer
-              data-ronny-prompt-flate
-              className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
-            >
-              <div className="relative px-3 pt-1.5 pb-3">{promptKort()}</div>
-            </div>
-          </div>
-        </aside>
-      </div>
+      ) : null}
     </>
   );
 }

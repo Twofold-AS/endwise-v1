@@ -94,20 +94,13 @@ export type NavItem = {
   countKey?: 'kunder' | 'intern' | 'endwise';
 };
 
-const ADMIN_KUN: OrgRole[] = ['dealer_admin'];
-
 /**
  * Mikael IA 28.08 ettermiddag — Organisasjon er ÉN side.
  * Top-bar 2 er seksjonene. Kompetanse er ikke en pille.
  * Abonnement + Integrasjoner bare for dealer_admin (skjules for selger/support).
  */
-export const ORGANISASJON_SEKSJONER: NavChild[] = [
-  { label: 'Oversikt', href: '/organisasjon' },
-  { label: 'Ansatte', href: '/organisasjon?seksjon=ansatte' },
-  { label: 'Timeplan', href: '/jobber' },
-  { label: 'Abonnement', href: '/organisasjon?seksjon=abonnement', roles: ADMIN_KUN },
-  { label: 'Integrasjoner', href: '/organisasjon?seksjon=integrasjoner', roles: ADMIN_KUN },
-];
+/** Tom — Org er hub-liste, ikke 5 faner. Timeplan ansatte ligger under Ansatte. */
+export const ORGANISASJON_SEKSJONER: NavChild[] = [];
 
 export type ShellKey = 'forhandler' | 'mekaniker' | 'endwise' | 'endwise_partner';
 
@@ -258,7 +251,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     section: 'Kunder',
     pills: [
       { label: 'Alle tjenester', href: '/prisliste', icon: Wrench },
-      { label: 'Opprett tjenester', href: '/prisliste?fane=opprett', icon: FilePlus },
+      { label: 'Opprett tjeneste', href: '/prisliste?fane=opprett', icon: FilePlus },
     ],
   },
   {
@@ -646,6 +639,18 @@ export function destinasjonerForShell(input: {
   return itemsForRole(navForShell(input.shell), rolleForNav(input), input.shopEnabled ?? true);
 }
 
+const MOBIL_FASTE_DEST = ['home', 'innboks', 'saker', 'kunder'] as const;
+const MOBIL_MER_DEST = ['tjenester', 'organisasjon', 'lager', 'butikk'] as const;
+
+/** Mobil: 4 faste + Mer. Analyse skjules. Lager/Butikk under Mer. */
+export function delMobilDest(dest: NavItem[]): { faste: NavItem[]; mer: NavItem[] } {
+  const faste = dest
+    .filter((d) => (MOBIL_FASTE_DEST as readonly string[]).includes(d.key))
+    .map((d) => (d.key === 'home' ? { ...d, label: 'Hjem' } : d));
+  const mer = dest.filter((d) => (MOBIL_MER_DEST as readonly string[]).includes(d.key));
+  return { faste, mer };
+}
+
 /** Underpunktene i en destinasjon som rollen skal se. */
 export function childrenForRole(item: NavItem, role: OrgRole | null): NavChild[] {
   if (!item.children) return [];
@@ -825,6 +830,20 @@ export function breadcrumbFor(
   // Undervisning: match først på query (?kanal=/?visning=), så på sti. Et
   // underpunkt med query må matche både sti og query — ellers ville «Oversikt»
   // (uten query) alltid vunnet over «Kalender» på samme sti.
+  if (item.key === 'organisasjon') {
+    const seksjon = new URLSearchParams(search).get('seksjon');
+    const orgCrumb: Record<string, string> = {
+      ansatte: 'Ansatte',
+      'timeplan-ansatte': 'Ansatte',
+      tilganger: 'Tilganger',
+      abonnement: 'Abonnement',
+      integrasjoner: 'Integrasjoner',
+    };
+    const extra = seksjon ? orgCrumb[seksjon] : undefined;
+    if (extra) crumbs.push({ label: extra });
+    return crumbs;
+  }
+
   const barn = item.pills ?? item.children ?? [];
   const child =
     barn.find((c) => {
@@ -896,9 +915,12 @@ export const PARKED_LABEL: Record<string, string> = {
   '/samarbeid': 'Samarbeid',
   '/butikk': 'Butikk · Katalog',
   '/butikk/kasse': 'Butikk · Handlekurv / kasse',
+  '/butikk/kjoretoy': 'Butikk · Kjøretøy til salgs',
   '/lager/deler': 'Lager · Deler',
   '/lager/lokasjoner': 'Lager · Plass',
   '/lager/bevegelser': 'Lager · Inn og ut',
+  '/lager/bestill': 'Lager · Bestill',
+  '/lager/kjoretoy': 'Lager · Kjøretøy til salgs',
   '/min-dag/profil': 'Min dag · Profil (erstattet av «Meg»)',
   '/min-dag/varsler': 'Min dag · Varsler',
   '/ai-innsikt': 'Parkert · Innsikt',

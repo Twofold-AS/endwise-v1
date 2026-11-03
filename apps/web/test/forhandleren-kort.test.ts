@@ -13,19 +13,14 @@ function les(rel: string) {
 
 describe('Organisasjon › Oversikt (forhandlerkort)', () => {
   it('Organisasjon-liste er Ansatte Timeplan Abonnement Integrasjoner, uten piller', () => {
-    expect(ORG_LISTE.map((r) => r.label)).toEqual([
-      'Ansatte',
-      'Timeplan',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(ORG_LISTE.map((r) => r.label)).toEqual(['Ansatte', 'Abonnement', 'Integrasjoner']);
     const layout = les('../app/(app)/layout.tsx');
     expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
     const bar = les('../app/(app)/_shell/seksjon-bar.tsx');
     expect(bar).not.toMatch(/data-org-piller/);
     const side = les('../app/(app)/organisasjon/page.tsx');
-    expect(side).toMatch(/SideChromeSkall/);
-    expect(side).toMatch(/synligeOrgChrome/);
+    expect(side).not.toMatch(/SideChromeSkall/);
+    expect(side).toMatch(/tittel="Ansatte"/);
     expect(side).not.toMatch(/OrganisasjonListe/);
     expect(side).not.toMatch(/data-destinasjon-bar/);
     const liste = les('../app/(app)/organisasjon/_liste.tsx');
@@ -36,20 +31,14 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
   it('Organisasjon-nav-piller i nav.ts er uendret bak dest-bar-gaten', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     expect(org?.label).toBe('Organisasjon');
-    expect(org?.pills?.map((c) => c.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(org?.pills ?? []).toEqual([]);
   });
 
   it('kortet rendrer firmanavn og adresse, uten kallenavn', () => {
     const side = les('../app/(app)/organisasjon/page.tsx');
     const kort = les('../app/(app)/organisasjon/forhandleren/_kort.tsx');
     expect(side).toMatch(/ForhandlerKort/);
-    expect(side).toMatch(/SideChromeSkall/);
+    expect(side).not.toMatch(/SideChromeSkall/);
     expect(side).not.toMatch(/PrislisteFlate/);
     expect(kort).toMatch(/Firmanavn/);
     expect(kort).toMatch(/Adresse/);
@@ -67,7 +56,6 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
     expect(FORHANDLER_NAV.some((i) => i.label === 'Forhandleren')).toBe(false);
     expect(breadcrumbFor('/organisasjon', '', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },
-      { label: 'Oversikt' },
     ]);
   });
 });

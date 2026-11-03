@@ -1,12 +1,14 @@
 'use client';
 
 import {
+  AlertDialog,
   Avatar,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
+  FeltKode,
   Inbox,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   PanelRightClose,
   Store,
   Wrench,
@@ -374,77 +376,73 @@ function SlaAv2fa({ userId, navn }: { userId: string; navn: string }) {
       >
         Slå av 2FA
       </button>
-      <Dialog open={steg !== 'lukket'} onOpenChange={(o) => !o && setSteg('lukket')}>
-        <DialogContent className="top-1/2 left-1/2 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-5">
-          {steg === 'bekreft' ? (
-            <>
-              <DialogTitle className="text-title text-fg">Slå av 2FA for {navn}?</DialogTitle>
-              <DialogDescription className="mt-2 text-body text-fg-muted">
-                Bekreft først. Deretter må du taste inn en fersk kode fra autentikator-appen.
-              </DialogDescription>
+      <Modal isOpen={steg !== 'lukket'} onOpenChange={(o) => !o && setSteg('lukket')} size="sm">
+        {steg === 'bekreft' ? (
+          <>
+            <ModalHeader
+              title={`Slå av 2FA for ${navn}?`}
+              description="Bekreft først. Deretter må du taste inn en fersk kode fra autentikator-appen."
+            />
+            <ModalBody>
               {start.isError ? (
-                <p className="mt-2 text-[12px] text-danger">{start.error.message}</p>
+                <p className="text-[12px] text-danger">{start.error.message}</p>
               ) : null}
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSteg('lukket')}
-                  className="h-control rounded-control px-3 text-label text-fg-muted"
-                >
-                  Avbryt
-                </button>
-                <button
-                  type="button"
-                  disabled={start.isPending}
-                  onClick={() => start.mutate({ userId })}
-                  className="h-control rounded-control bg-fg px-3 text-label text-bg disabled:opacity-40"
-                >
-                  {start.isPending ? 'Sjekker …' : 'Bekreft og skriv kode'}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <DialogTitle className="text-title text-fg">Skriv inn app-koden</DialogTitle>
-              <DialogDescription className="mt-2 text-body text-fg-muted">
-                En fersk kode fra din autentikator-app. 2FA slås ikke av uten den.
-              </DialogDescription>
-              <label className="mt-3 flex flex-col gap-1">
-                <span className="text-[12px] text-fg-muted">App-kode</span>
-                <input
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  value={totp}
-                  onChange={(e) => setTotp(e.target.value.replace(/\D/g, ''))}
-                  className="h-control ew-felt ew-felt-md px-3 font-mono tracking-[0.4em]"
-                  placeholder="••••••"
-                />
-              </label>
+            </ModalBody>
+            <ModalFooter>
+              <button
+                type="button"
+                onClick={() => setSteg('lukket')}
+                className="h-control rounded-control px-3 text-label text-fg-muted"
+              >
+                Avbryt
+              </button>
+              <button
+                type="button"
+                disabled={start.isPending}
+                onClick={() => start.mutate({ userId })}
+                className="h-control rounded-control bg-fg px-3 text-label text-bg disabled:opacity-40"
+              >
+                {start.isPending ? 'Sjekker …' : 'Bekreft og skriv kode'}
+              </button>
+            </ModalFooter>
+          </>
+        ) : (
+          <>
+            <ModalHeader
+              title="Skriv inn app-koden"
+              description="En fersk kode fra din autentikator-app. 2FA slås ikke av uten den."
+            />
+            <ModalBody>
+              <FeltKode
+                value={totp}
+                onChange={setTotp}
+                aria-label="App-kode"
+                className="text-[16px]"
+              />
               {slaaAv.isError ? (
-                <p className="mt-2 text-[12px] text-danger">{slaaAv.error.message}</p>
+                <p className="text-[12px] text-danger">{slaaAv.error.message}</p>
               ) : null}
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSteg('lukket')}
-                  className="h-control rounded-control px-3 text-label text-fg-muted"
-                >
-                  Avbryt
-                </button>
-                <button
-                  type="button"
-                  disabled={slaaAv.isPending || totp.length !== 6}
-                  onClick={() => slaaAv.mutate({ userId, totp })}
-                  className="h-control rounded-control bg-danger px-3 text-label text-white disabled:opacity-40"
-                >
-                  {slaaAv.isPending ? 'Slår av …' : 'Slå av 2FA'}
-                </button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+            </ModalBody>
+            <ModalFooter>
+              <button
+                type="button"
+                onClick={() => setSteg('lukket')}
+                className="h-control rounded-control px-3 text-label text-fg-muted"
+              >
+                Avbryt
+              </button>
+              <button
+                type="button"
+                disabled={slaaAv.isPending || totp.length !== 6}
+                onClick={() => slaaAv.mutate({ userId, totp })}
+                className="h-control rounded-control bg-danger px-3 text-label text-white disabled:opacity-40"
+              >
+                {slaaAv.isPending ? 'Slår av …' : 'Slå av 2FA'}
+              </button>
+            </ModalFooter>
+          </>
+        )}
+      </Modal>
     </Seksjon>
   );
 }
@@ -477,34 +475,19 @@ function SlettAnsatt({ userId, navn, leder }: { userId: string; navn: string; le
       >
         Slett
       </button>
-      <Dialog open={apen} onOpenChange={setApen}>
-        <DialogContent className="top-1/2 left-1/2 w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-5">
-          <DialogTitle className="text-title text-fg">Fjerne {navn} fra teamet?</DialogTitle>
-          <DialogDescription className="mt-2 text-body text-fg-muted">
-            Personen deaktiveres og forsvinner fra teamet. Kontoen slettes ikke.
-          </DialogDescription>
-          {fjern.isError ? (
-            <p className="mt-2 text-[12px] text-danger">{fjern.error.message}</p>
-          ) : null}
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setApen(false)}
-              className="h-control rounded-control px-3 text-label text-fg-muted"
-            >
-              Avbryt
-            </button>
-            <button
-              type="button"
-              disabled={fjern.isPending}
-              onClick={() => fjern.mutate({ userId })}
-              className="h-control rounded-control bg-danger px-3 text-label text-white disabled:opacity-40"
-            >
-              {fjern.isPending ? 'Fjerner …' : 'Bekreft og slett'}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AlertDialog
+        isOpen={apen}
+        onOpenChange={setApen}
+        title={`Fjerne ${navn} fra teamet?`}
+        description="Personen deaktiveres og forsvinner fra teamet. Kontoen slettes ikke."
+        confirmLabel="Bekreft og slett"
+        cancelLabel="Avbryt"
+        pendingLabel="Fjerner …"
+        variant="danger"
+        onConfirm={() => fjern.mutateAsync({ userId })}
+      >
+        {fjern.isError ? <p className="text-[12px] text-danger">{fjern.error.message}</p> : null}
+      </AlertDialog>
     </Seksjon>
   );
 }

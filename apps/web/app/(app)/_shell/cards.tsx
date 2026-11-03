@@ -11,7 +11,7 @@ import type { CSSProperties, ReactNode } from 'react';
 export const BEVEL: CSSProperties = {
   background: 'var(--ew-bevel-face)',
   border: '1px solid var(--ew-bevel-border)',
-  boxShadow: 'var(--ew-bevel-shadow)',
+  boxShadow: 'none',
   color: 'var(--ew-bevel-fg)',
 };
 
@@ -71,6 +71,7 @@ export function CountBadge({
   if (count <= 0) return null;
   return (
     <Badge
+      data-count-badge
       variant="destructive"
       className={`tabular-nums ${className ?? ''}`}
       aria-label={`${count} ${label}`}
@@ -88,7 +89,8 @@ export function CountBadge({
 export function CardShell({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`flex flex-col overflow-hidden rounded-xl border border-border bg-card p-[5px] ${className ?? ''}`}
+      data-kort
+      className={`flex flex-col overflow-hidden border border-border bg-card shadow-none max-md:rounded-[24px] max-md:p-4 md:rounded-xl md:p-[5px] ${className ?? ''}`}
     >
       {children}
     </div>
@@ -127,7 +129,7 @@ export function SupportCard() {
       <div className="flex flex-col gap-2 px-1.5 pt-2 pb-1">
         <div className="flex flex-col gap-1">
           <div className="text-label text-fg">Support</div>
-          <div className="text-[12px] text-fg-muted leading-snug">
+          <div className="text-[13px] text-fg-muted leading-snug">
             Direkte linje til Endwise — spør oss, meld feil, få hjelp.
           </div>
         </div>

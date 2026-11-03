@@ -77,34 +77,29 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     expect(jobb.indexOf('>Jobb<')).toBeLessThan(jobb.indexOf('PulseIkonFlate'));
   });
 
-  it('Timeplan/Kunder/Tjenester/Org deler Innstillinger-chrome', () => {
+  it('Timeplan/Kunder/Tjenester deler Innstillinger-chrome; Org er hub', () => {
     expect(erPhoneSideChrome('/jobber')).toBe(true);
     expect(erPhoneSideChrome('/bookinger/ny')).toBe(true);
     expect(erPhoneSideChrome('/kunder')).toBe(true);
     expect(erPhoneSideChrome('/prisliste')).toBe(true);
-    expect(erPhoneSideChrome('/organisasjon')).toBe(true);
+    expect(erPhoneSideChrome('/organisasjon')).toBe(false);
     expect(erPhoneSideChrome('/home')).toBe(false);
+    expect(erPhoneSideChrome('/innstillinger')).toBe(true);
 
     const tp = phoneSideChrome(
       '/jobber',
       { get: () => 'endringer' },
       { isAdmin: true, erForhandler: true },
     );
-    expect(tp?.tittel).toBe('Timeplan');
+    expect(tp?.id).toBe('timeplan');
     expect(tp?.aktiv).toBe('endringer');
-    expect(tp?.faner.map((f) => f.label)).toEqual(['Timeplan', 'Opprett jobb', 'Endringer']);
 
     const ku = phoneSideChrome(
       '/kunder',
       { get: () => null },
       { isAdmin: true, erForhandler: true },
     );
-    expect(ku?.tittel).toBe('Kunder');
-    expect(ku?.faner.map((f) => f.label)).toEqual([
-      'Alle kunder',
-      'Opprett kunde',
-      'Registrer kjøretøy',
-    ]);
+    expect(ku?.id).toBe('kunder');
     expect(parseKunderFane('/kunder', 'opprett', null)).toBe('opprett');
     expect(kunderHref('kjoretoy')).toBe('/kunder?fane=kjoretoy');
 
@@ -113,8 +108,8 @@ describe('CODE-GO Mikael — IA + chrome', () => {
       { get: () => 'opprett' },
       { isAdmin: true, erForhandler: true },
     );
-    expect(tj?.tittel).toBe('Tjenester');
-    expect(TJENESTER_FANER.map((f) => f.label)).toEqual(['Alle tjenester', 'Opprett tjenester']);
+    expect(tj?.id).toBe('tjenester');
+    expect(TJENESTER_FANER.map((f) => f.label)).toEqual(['Alle tjenester', 'Opprett tjeneste']);
     expect(parseTjenesterFane('opprett')).toBe('opprett');
     expect(tjenesterHref('opprett')).toBe('/prisliste?fane=opprett');
 
@@ -123,19 +118,15 @@ describe('CODE-GO Mikael — IA + chrome', () => {
       { get: () => null },
       { isAdmin: true, erForhandler: true },
     );
-    expect(org?.tittel).toBe('Organisasjon');
-    expect(org?.faner.map((f) => f.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(org).toBeNull();
     expect(synligeOrgChrome(false).map((f) => f.id)).toEqual(['oversikt', 'ansatte', 'timeplan']);
-    expect(ORG_CHROME_FANER.find((f) => f.id === 'timeplan')?.href).toBe('/jobber');
+    expect(ORG_CHROME_FANER.find((f) => f.id === 'timeplan')?.href).toBe(
+      '/organisasjon?seksjon=timeplan-ansatte',
+    );
 
     const orgSide = utenKommentarer(les('../app/(app)/organisasjon/page.tsx'));
-    expect(orgSide).toMatch(/SideChromeSkall/);
+    expect(orgSide).toMatch(/tittel="Ansatte"/);
+    expect(orgSide).not.toMatch(/SideChromeSkall/);
     expect(orgSide).not.toMatch(/OrganisasjonListe/);
   });
 
@@ -149,14 +140,8 @@ describe('CODE-GO Mikael — IA + chrome', () => {
       'Registrer kjøretøy',
     ]);
     const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
-    expect(tjenester?.pills?.map((p) => p.label)).toEqual(['Alle tjenester', 'Opprett tjenester']);
-    expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(tjenester?.pills?.map((p) => p.label)).toEqual(['Alle tjenester', 'Opprett tjeneste']);
+    expect(ORGANISASJON_SEKSJONER).toEqual([]);
   });
 
   it('kundeoversikt har Endre-rader og registrer kjøretøy', () => {

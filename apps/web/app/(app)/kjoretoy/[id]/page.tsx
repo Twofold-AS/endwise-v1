@@ -35,7 +35,7 @@ export default function KjoretoykortPage() {
   const v = kj.data;
   if (!v) {
     return (
-      <div className="mx-auto w-full max-w-[900px] px-8 py-7">
+      <div className="mx-auto w-full max-w-[900px] max-md:px-4 max-md:py-4 md:px-8 md:py-7">
         <CardShell className="flex items-start gap-3 p-6">
           <CircleAlert size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
           <div>
@@ -55,7 +55,7 @@ export default function KjoretoykortPage() {
   const tittel = [v.make, v.model].filter(Boolean).join(' ') || TYPE_LABEL[v.type];
 
   return (
-    <div className="mx-auto flex w-full max-w-[900px] flex-col gap-5 px-8 py-7">
+    <div className="mx-auto flex w-full max-w-[900px] flex-col gap-5 max-md:px-4 max-md:py-4 md:px-8 md:py-7">
       {/* Hva */}
       <div className="flex items-start gap-4">
         <span className="grid size-12 shrink-0 place-items-center rounded-control bg-surface-2 text-fg-muted">

@@ -1,17 +1,13 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from '@endwise/ui';
-import { osloPlusDager } from '../_lib/oslo-dag';
-import { timeplanDagerFra, timeplanManedNavn, timeplanSkiftManed } from './timeplan-dager';
-
-const PIL =
-  'inline-flex size-control shrink-0 items-center justify-center rounded-control border border-border bg-card text-fg';
-
-const CHIP =
-  'flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl border px-3 py-2 text-label';
+import { DatePicker } from '@endwise/ui';
+import { parseDate } from '@internationalized/date';
+import { osloKalenderdag } from '../_lib/oslo-dag';
+import { timeplanManedNavn, timeplanUkeFra } from './timeplan-dager';
 
 /**
- * Timeplan-stripe: én måned i midten med piler, tre hele dag-chips uten klipp.
+ * Timeplan-stripe: 7 dagchips i grid + DatePicker for måned.
+ * Ukedag = to bokstaver uten punktum. Aktiv dag = ink-sirkel.
  */
 export function TimeplanStripe({
   valgt,
@@ -20,69 +16,46 @@ export function TimeplanStripe({
   valgt: string;
   onValgt: (ymd: string) => void;
 }) {
-  const dager = timeplanDagerFra(valgt, 3);
+  const dager = timeplanUkeFra(valgt);
 
   return (
-    <div className="flex flex-col gap-2">
-      <nav aria-label="Måned" className="flex items-center gap-1">
-        <button
-          type="button"
-          aria-label="Forrige måned"
-          onClick={() => onValgt(timeplanSkiftManed(valgt, -1))}
-          className={PIL}
-        >
-          <ChevronLeft size={16} strokeWidth={1.75} />
-        </button>
-        <p className="min-w-0 flex-1 text-center text-label text-fg capitalize">
-          {timeplanManedNavn(valgt)}
-        </p>
-        <button
-          type="button"
-          aria-label="Neste måned"
-          onClick={() => onValgt(timeplanSkiftManed(valgt, 1))}
-          className={PIL}
-        >
-          <ChevronRight size={16} strokeWidth={1.75} />
-        </button>
-      </nav>
+    <div data-timeplan-stripe className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-label capitalize text-fg">{timeplanManedNavn(valgt)}</p>
+        <div data-timeplan-maned>
+          <DatePicker
+            aria-label="Velg dag"
+            value={parseDate(osloKalenderdag(valgt))}
+            onChange={(d) => {
+              if (!d) return;
+              onValgt(d.toString());
+            }}
+          />
+        </div>
+      </div>
 
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          aria-label="Forrige dag"
-          onClick={() => onValgt(osloPlusDager(valgt, -1))}
-          className={PIL}
-        >
-          <ChevronLeft size={16} strokeWidth={1.75} />
-        </button>
-        <div className="flex min-w-0 flex-1 gap-2">
-          {dager.map((d) => {
-            const aktiv = d.ymd === valgt;
-            return (
-              <button
-                key={d.ymd}
-                type="button"
-                onClick={() => onValgt(d.ymd)}
-                className={`${CHIP} ${
-                  aktiv
-                    ? 'border-fg bg-sidebar-active text-fg'
-                    : 'border-border bg-card text-fg-muted'
+      <div className="grid grid-cols-7 gap-1">
+        {dager.map((d) => {
+          const aktiv = d.ymd === valgt;
+          return (
+            <button
+              key={d.ymd}
+              type="button"
+              data-timeplan-dag={d.ymd}
+              onClick={() => onValgt(d.ymd)}
+              className="flex h-11 min-w-0 flex-col items-center justify-center gap-0.5"
+            >
+              <span className="text-meta text-fg-muted">{d.weekday}</span>
+              <span
+                className={`inline-flex size-8 items-center justify-center rounded-full text-label tabular-nums ${
+                  aktiv ? 'bg-fg text-bg' : 'text-fg'
                 }`}
               >
-                <span className="text-[10px] uppercase">{d.weekday}</span>
-                <span className="font-medium text-[13px]">{d.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        <button
-          type="button"
-          aria-label="Neste dag"
-          onClick={() => onValgt(osloPlusDager(valgt, 1))}
-          className={PIL}
-        >
-          <ChevronRight size={16} strokeWidth={1.75} />
-        </button>
+                {Number(d.ymd.slice(8, 10))}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

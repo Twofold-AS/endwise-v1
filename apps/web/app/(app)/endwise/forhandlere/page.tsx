@@ -4,17 +4,17 @@ import {
   Badge,
   Building2,
   CircleAlert,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
+  FeltKode,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Plus,
   StatefulButton,
 } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { type FormEvent, useMemo, useState } from 'react';
-import { Field, INPUT } from '@/app/_auth/felter';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { CardShell } from '../../_shell/cards';
@@ -434,8 +434,8 @@ export default function ForhandlerePage() {
         ) : null}
       </section>
 
-      <Dialog
-        open={Boolean(slettRad)}
+      <Modal
+        isOpen={Boolean(slettRad)}
         onOpenChange={(open) => {
           if (!open) {
             setSlettMal(null);
@@ -444,39 +444,40 @@ export default function ForhandlerePage() {
             setSlettKode('');
           }
         }}
+        size="md"
+        aria-label={slettRad ? `Slett ${slettRad.name}` : 'Slett forhandler'}
       >
-        <DialogContent className="left-1/2 top-1/2 w-[min(480px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 p-5">
-          {slettRad && slettSteg === 'advarsel' ? (
-            <div className="flex flex-col gap-4">
-              <DialogTitle className="text-title text-fg">Slett {slettRad.name}?</DialogTitle>
-              <DialogDescription className="text-body text-fg-muted">
-                Dette sletter forhandleren, ansatte, saker og kundedata hos oss. Det kan ikke
-                angres. Du kan ikke slette ved et uhell — neste steg krever slug og en engangskode.
-              </DialogDescription>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSlettMal(null)}
-                  className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg"
-                >
-                  Avbryt
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSlettSteg('bekreft')}
-                  className="inline-flex h-control items-center rounded-control bg-danger px-4 text-label text-white"
-                >
-                  Fortsett
-                </button>
-              </div>
-            </div>
-          ) : null}
-          {slettRad && slettSteg === 'bekreft' ? (
-            <div className="flex flex-col gap-4">
-              <DialogTitle className="text-title text-fg">Slett {slettRad.name}?</DialogTitle>
-              <DialogDescription className="text-body text-fg-muted">
-                Skriv slug-en nøyaktig, og bekreft med engangskoden vi sender til deg.
-              </DialogDescription>
+        {slettRad && slettSteg === 'advarsel' ? (
+          <>
+            <ModalHeader
+              title={`Slett ${slettRad.name}?`}
+              description="Dette sletter forhandleren, ansatte, saker og kundedata hos oss. Det kan ikke angres. Du kan ikke slette ved et uhell — neste steg krever slug og en engangskode."
+            />
+            <ModalFooter>
+              <button
+                type="button"
+                onClick={() => setSlettMal(null)}
+                className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg"
+              >
+                Avbryt
+              </button>
+              <button
+                type="button"
+                onClick={() => setSlettSteg('bekreft')}
+                className="inline-flex h-control items-center rounded-control bg-danger px-4 text-label text-white"
+              >
+                Fortsett
+              </button>
+            </ModalFooter>
+          </>
+        ) : null}
+        {slettRad && slettSteg === 'bekreft' ? (
+          <>
+            <ModalHeader
+              title={`Slett ${slettRad.name}?`}
+              description="Skriv slug-en nøyaktig, og bekreft med engangskoden vi sender til deg."
+            />
+            <ModalBody>
               <Felt
                 label="Slug"
                 hint={
@@ -489,17 +490,15 @@ export default function ForhandlerePage() {
                 placeholder={slettRad.slug}
                 autoComplete="off"
               />
-              <Field id="slett-otp" label="Engangskode">
-                <input
-                  id="slett-otp"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[15px] font-[450] leading-5 text-fg-muted">Engangskode</span>
+                <FeltKode
                   value={slettKode}
-                  onChange={(e) => setSlettKode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className={`${INPUT} text-center font-mono text-[16px] tracking-[0.5em] tabular-nums`}
+                  onChange={setSlettKode}
+                  aria-label="Engangskode"
+                  className="text-[16px]"
                 />
-              </Field>
+              </div>
               <div className="flex flex-wrap items-center gap-2">
                 <StatefulButton
                   type="button"
@@ -527,36 +526,36 @@ export default function ForhandlerePage() {
                 <p className="text-body text-danger">{sendSlettKode.error.message}</p>
               ) : null}
               {slett.error ? <p className="text-body text-danger">{slett.error.message}</p> : null}
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSlettMal(null)}
-                  className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg"
-                >
-                  Avbryt
-                </button>
-                <StatefulButton
-                  type="button"
-                  disabled={!slugTreffer || !kodeKlar || slett.isPending}
-                  state={slett.isPending ? 'loading' : slett.isError ? 'error' : 'idle'}
-                  loadingText="Sletter…"
-                  errorText="Feilet"
-                  className="bg-danger text-white hover:bg-danger/90"
-                  onClick={() =>
-                    slett.mutate({
-                      tenantId: slettRad.id,
-                      slug: slettSlug.trim(),
-                      kode: slettKode.trim(),
-                    })
-                  }
-                >
-                  Slett forhandleren
-                </StatefulButton>
-              </div>
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+            </ModalBody>
+            <ModalFooter>
+              <button
+                type="button"
+                onClick={() => setSlettMal(null)}
+                className="inline-flex h-control items-center rounded-control px-3 text-label text-fg-muted hover:text-fg"
+              >
+                Avbryt
+              </button>
+              <StatefulButton
+                type="button"
+                disabled={!slugTreffer || !kodeKlar || slett.isPending}
+                state={slett.isPending ? 'loading' : slett.isError ? 'error' : 'idle'}
+                loadingText="Sletter…"
+                errorText="Feilet"
+                className="bg-danger text-white hover:bg-danger/90"
+                onClick={() =>
+                  slett.mutate({
+                    tenantId: slettRad.id,
+                    slug: slettSlug.trim(),
+                    kode: slettKode.trim(),
+                  })
+                }
+              >
+                Slett forhandleren
+              </StatefulButton>
+            </ModalFooter>
+          </>
+        ) : null}
+      </Modal>
     </div>
   );
 }

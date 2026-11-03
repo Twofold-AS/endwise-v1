@@ -44,20 +44,8 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     }
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     expect(org?.href).toBe('/organisasjon');
-    expect(org?.pills?.map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
-    expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(org?.pills ?? ORGANISASJON_SEKSJONER).toEqual([]);
+    expect(ORGANISASJON_SEKSJONER).toEqual([]);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Ansatte')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Admin')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Kompetanse')).toBe(false);
@@ -69,18 +57,8 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
   it('selger/support ser Organisasjon uten Abonnement og Integrasjoner', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     if (!org) throw new Error('mangler Organisasjon');
-    expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan',
-    ]);
-    expect(pillsForRole(org, 'dealer_admin').map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(pillsForRole(org, 'dealer_staff')).toEqual([]);
+    expect(pillsForRole(org, 'dealer_admin')).toEqual([]);
     expect(
       itemsForRole(FORHANDLER_NAV, 'dealer_staff', true).some((i) => i.key === 'organisasjon'),
     ).toBe(true);
@@ -118,7 +96,6 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     expect(isItemActive(org, '/abonnement')).toBe(true);
     expect(breadcrumbFor('/organisasjon', '', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },
-      { label: 'Oversikt' },
     ]);
     expect(breadcrumbFor('/organisasjon', 'seksjon=ansatte', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },
@@ -145,13 +122,13 @@ describe('Mikael IA — Opprett ansatt-dialog og kort', () => {
   const aktivitet = les('../app/(app)/organisasjon/_aktivitet.tsx');
 
   it('Opprett ansatt er dialog med påkrevde felt og disabled Tilganger', () => {
-    expect(dialog).toMatch(/DialogTitle/);
-    expect(dialog).toMatch(/>Opprett ansatt</);
+    expect(dialog).toMatch(/OppretterSkuff/);
+    expect(dialog).toMatch(/Opprett ansatt/);
     expect(dialog).toMatch(/Navn og etternavn/);
     expect(dialog).toMatch(/E-post adresse/);
-    expect(dialog).toMatch(/Jobb tittel/);
+    expect(dialog).toMatch(/Stillingstittel/);
     expect(dialog).toMatch(/Rolle/);
-    expect(dialog).toMatch(/<select/);
+    expect(dialog).toMatch(/FeltSelect/);
     expect(dialog).toMatch(/Tilganger/);
     expect(dialog).toMatch(/disabled/);
     expect(dialog).toMatch(/invitasjoner\.opprett/);
@@ -161,12 +138,11 @@ describe('Mikael IA — Opprett ansatt-dialog og kort', () => {
   });
 
   it('ansattkort har avatar, status, start, jobber, rolle+ og kompetanse+', () => {
-    expect(kort).toMatch(/<Avatar/);
+    expect(kort).toMatch(/ListeRad/);
     expect(kort).toMatch(/AktivitetMerke/);
-    expect(kort).toMatch(/ansattSiden/);
     expect(kort).toMatch(/jobberIDag/);
-    expect(kort).toMatch(/aria-label="Endre rolle"/);
-    expect(kort).toMatch(/aria-label="Legg til kompetanse"/);
+    expect(kort).toMatch(/Endre rolle/);
+    expect(kort).toMatch(/Kompetanse/);
     expect(kort).toMatch(/OpprettAnsattDialog/);
     expect(kort).not.toMatch(/bg-destructive|#EE2924/);
   });

@@ -1,5 +1,6 @@
 'use client';
 
+import { LasterFlate } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useMdViewport } from '../_lib/use-md-viewport';
@@ -19,7 +20,7 @@ function VerkstedetPageInner() {
   const flate = useMdViewport();
 
   if (flate === null) {
-    return <div className="px-8 py-7 text-body text-fg-muted">Laster verkstedet …</div>;
+    return <LasterFlate label="Henter dagen din" />;
   }
   if (flate === 'desktop') return <VerkstedetDesktop />;
   return dag ? <VerkstedetDag /> : <PhoneHomeDealer />;
@@ -31,9 +32,7 @@ function VerkstedetPageInner() {
  */
 export default function VerkstedetPage() {
   return (
-    <Suspense
-      fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster verkstedet …</div>}
-    >
+    <Suspense fallback={<LasterFlate label="Henter dagen din" />}>
       <VerkstedetPageInner />
     </Suspense>
   );

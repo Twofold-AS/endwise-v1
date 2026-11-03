@@ -1,39 +1,43 @@
 'use client';
 
+import { LasterFlate } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { useNyHandling } from '../_shell/ny-handling';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { PrislisteFlate } from '../innstillinger/tjenestekatalog/_flate';
 import { NyTjeneste } from '../innstillinger/tjenestekatalog/_ny-tjeneste';
 import { parseTjenesterFane, TJENESTER_FANER, tjenesterHref } from './_faner';
 
-/** Tjenester — bookbare tjenester. Chrome: Alle tjenester · Opprett tjenester. */
+/** Tjenester — bookbare tjenester. Mobil: Ny-knapp, ikke Opprett-fane. */
 function TjenesterIndre() {
   const params = useSearchParams();
   const router = useRouter();
   const aktiv = parseTjenesterFane(params?.get('fane'));
+  const ny = useNyHandling();
+
+  function lukkNy() {
+    ny.lukk();
+    router.replace('/prisliste' as Route);
+  }
 
   return (
     <SideChromeSkall
       tittel="Tjenester"
       ingress="Tjenestene kunden kan bestille hos dere."
       faner={TJENESTER_FANER.map((f) => ({ ...f, href: tjenesterHref(f.id) }))}
-      aktiv={aktiv}
+      aktiv={aktiv === 'opprett' ? 'alle' : aktiv}
     >
-      {aktiv === 'opprett' ? (
-        <NyTjeneste onLukk={() => router.replace('/prisliste' as Route)} />
-      ) : null}
-      <PrislisteFlate skjulPiller tittel="Tjenester" skjulNy />
+      <NyTjeneste apen={aktiv === 'opprett' || ny.apen} onLukk={lukkNy} />
+      <PrislisteFlate skjulPiller tittel="Tjenester" onNy={ny.apne} />
     </SideChromeSkall>
   );
 }
 
 export default function TjenesterPage() {
   return (
-    <Suspense
-      fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster tjenester …</div>}
-    >
+    <Suspense fallback={<LasterFlate label="Henter tjenester" />}>
       <TjenesterIndre />
     </Suspense>
   );

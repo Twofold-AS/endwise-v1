@@ -1,30 +1,19 @@
 'use client';
 
-import { Badge, CircleAlert } from '@endwise/ui';
-import { CardShell } from '../_shell/cards';
+import { Badge, FeilFlate, LasterFlate, TomFlate } from '@endwise/ui';
 
 /** F5-02/F5-03 — Små byggeklosser kunde- og kjøretøyflatene deler. */
 
 export function Laster() {
-  return <p className="py-12 text-center text-body text-fg-muted">Laster …</p>;
+  return <LasterFlate label="Laster" />;
 }
 
 export function Feil({ melding }: { melding: string }) {
-  return (
-    <CardShell className="flex items-start gap-3 p-6">
-      <CircleAlert size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-danger" />
-      <p className="text-body text-danger">{melding}</p>
-    </CardShell>
-  );
+  return <FeilFlate melding={melding} />;
 }
 
 export function Tomt({ tittel, hint }: { tittel: string; hint: string }) {
-  return (
-    <CardShell className="p-10 text-center">
-      <p className="text-label text-fg">{tittel}</p>
-      <p className="mt-1 text-[12px] text-fg-muted">{hint}</p>
-    </CardShell>
-  );
+  return <TomFlate tittel={tittel} hint={hint} />;
 }
 
 /** Seksjonsoverskrift med valgfri teller — brukes på begge detaljkortene. */
@@ -38,11 +27,11 @@ export function Seksjon({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="flex items-center gap-2 text-title text-fg">
+    <section data-seksjon={tittel} className="flex flex-col gap-2">
+      <h2 className="flex items-center gap-2 text-title text-fg max-md:text-[18px] max-md:font-[650]">
         {tittel}
         {antall != null && antall > 0 && (
-          <span className="text-[12px] text-fg-muted tabular-nums">{antall}</span>
+          <span className="text-[13px] text-fg-muted tabular-nums">{antall}</span>
         )}
       </h2>
       {children}
@@ -52,7 +41,7 @@ export function Seksjon({
 
 /** Kjøretøytype på norsk. Enum i basen, ord i UI-et. */
 export const TYPE_LABEL: Record<string, string> = {
-  mc: 'MC',
+  mc: 'Motorsykkel',
   boat: 'Båt',
   atv: 'ATV',
 };

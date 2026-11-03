@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
+import { aboPageSub } from '../organisasjon/_hub';
 
 /**
  * F5-09 / F5-32 — abonnement. Velg nivå + valgfrie tillegg → Stripe checkout.
@@ -62,6 +63,7 @@ export function AbonnementInnhold() {
   const aktivtNivaa = abonnement.data?.planKey ?? null;
   const status = abonnement.data?.status ?? 'none';
   const nivaa = valgtNivaa ?? aktivtNivaa ?? 'pro';
+  const planNavn = nivaaer.data?.find((n) => n.key === aktivtNivaa)?.name ?? aktivtNivaa;
 
   const sum =
     (nivaaer.data?.find((n) => n.key === nivaa)?.priceMonthlyMinor ?? 0) +
@@ -76,6 +78,9 @@ export function AbonnementInnhold() {
 
   return (
     <div className="flex flex-col gap-6">
+      <p data-abo-pagesub className="text-[12px] text-fg-muted">
+        {aboPageSub(planNavn)}
+      </p>
       <CardShell className="p-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <span className="text-label text-fg">

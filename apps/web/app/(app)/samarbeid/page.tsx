@@ -19,7 +19,7 @@ import { CardMedia, CardShell } from '../_shell/cards';
  */
 export default function SamarbeidPage() {
   return (
-    <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-8 py-7">
+    <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 max-md:px-4 max-md:py-4 md:px-8 md:py-7">
       <div>
         <h1 className="text-title text-fg">Samarbeid</h1>
         <p className="text-body text-fg-muted">

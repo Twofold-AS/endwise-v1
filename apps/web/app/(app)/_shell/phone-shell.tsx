@@ -1,15 +1,16 @@
 'use client';
 
+import { Dropdown, DropdownItem, DropdownPopover, DropdownTrigger } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { isVerkstedInspectPath } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
-import { RONNY_PHONE_IDLE, RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
+import { RONNY_PHONE_IDLE, RonnyBot } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
 import { InboxTopBar2 } from '../innboks/_top-bar2';
-import { destinasjonerForShell, isItemActive, shellForBruker } from './nav';
+import { delMobilDest, destinasjonerForShell, isItemActive, shellForBruker } from './nav';
 import {
   PHONE_AVATAR_PX,
   PHONE_BAR2,
@@ -27,10 +28,9 @@ import { PhoneSokFelt } from './phone-sok-felt';
 import { PhoneSokOverlay } from './phone-sok-overlay';
 
 /**
- * Telefon-chrome: original toppbar 1 (logo · søk · Ronny · profil) og
- * toppbar 2 (dest-piller) alltid synlige — også på undersider.
- * Tittel + verktøylinje sitter tett under dest-pillene.
- * Ingen tilbake+midtstilt tittel som erstatter destinasjonsbarene.
+ * Telefon-chrome: toppbar 1 (logo · søk · Ronny · profil) + dest-piller (4 + Mer).
+ * Tittel + verktøylinje (Timeplan/Kunder/Tjenester-faner, Innboks-meny) under.
+ * Ingenting skjules — handlinger uten backend vises deaktivert på siden.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -39,10 +39,10 @@ export function PhoneShell() {
   const { role, navn, epost, jobbfunksjon, isMechanic, erPlattform, isAdmin, shopEnabled } =
     useOrgRole();
   const { apen, apne, lukk } = useRonnySheet();
-  const { spin, trigg } = useRonnySpinn();
   const [sok, setSok] = useState('');
   const [sokApen, setSokApen] = useState(false);
   const [profilApen, setProfilApen] = useState(false);
+  const [merApen, setMerApen] = useState(false);
   const shell = shellForBruker({
     role,
     jobFunction: jobbfunksjon,
@@ -62,6 +62,8 @@ export function PhoneShell() {
       }),
     [shell, role, shopEnabled, erPlattform, inspect],
   );
+  const { faste, mer } = delMobilDest(dest);
+  const merAktiv = mer.some((item) => isItemActive(item, pathname));
   const sideChrome = phoneSideChrome(pathname, params, {
     isAdmin,
     erForhandler: !erPlattform,
@@ -136,16 +138,11 @@ export function PhoneShell() {
               aria-expanded={apen}
               className={PHONE_RONNY_SIRKEL}
               onClick={() => {
-                trigg();
                 if (apen) lukk();
                 else apne();
               }}
             >
-              <RonnyBot
-                size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
-                spin={spin}
-                idleSett={RONNY_PHONE_IDLE}
-              />
+              <RonnyBot size={ronnySizeForSirkel(PHONE_AVATAR_PX)} idleSett={RONNY_PHONE_IDLE} />
             </button>
             <button
               type="button"
@@ -168,7 +165,7 @@ export function PhoneShell() {
         </div>
         <div data-phone-top-bar="2" className={PHONE_BAR2}>
           <PhoneHScroll lockKey={`${pathname}|${sok}`}>
-            {dest.map((item) => {
+            {faste.map((item) => {
               const aktiv = isItemActive(item, pathname);
               return (
                 <Link
@@ -176,7 +173,7 @@ export function PhoneShell() {
                   href={item.href as Route}
                   aria-current={aktiv ? 'page' : undefined}
                   data-phone-dest={item.key}
-                  className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg ${
+                  className={`inline-flex h-10 shrink-0 items-center rounded-full px-3 text-label text-fg ${
                     aktiv ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'
                   }`}
                 >
@@ -184,6 +181,32 @@ export function PhoneShell() {
                 </Link>
               );
             })}
+            {mer.length > 0 ? (
+              <Dropdown isOpen={merApen} onOpenChange={setMerApen}>
+                <DropdownTrigger
+                  data-phone-dest="mer"
+                  aria-current={merAktiv ? 'page' : undefined}
+                  className={`inline-flex h-10 shrink-0 items-center rounded-full px-3 text-label text-fg ${
+                    merAktiv ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'
+                  }`}
+                >
+                  Mer
+                </DropdownTrigger>
+                <DropdownPopover aria-label="Flere sider" placement="bottom end">
+                  {mer.map((item) => (
+                    <DropdownItem
+                      key={item.key}
+                      onSelect={() => {
+                        setMerApen(false);
+                        router.push(item.href as Route);
+                      }}
+                    >
+                      {item.label}
+                    </DropdownItem>
+                  ))}
+                </DropdownPopover>
+              </Dropdown>
+            ) : null}
           </PhoneHScroll>
         </div>
         {sideChrome ? (
@@ -203,7 +226,7 @@ export function PhoneShell() {
                   data-phone-settings-nav
                   data-phone-side-nav={sideChrome.id}
                   aria-label={sideChrome.tittel}
-                  className="flex min-w-0 flex-1 items-end gap-5 overflow-x-auto"
+                  className="no-scrollbar flex min-w-0 flex-1 flex-wrap items-end gap-5"
                 >
                   {sideChrome.faner.map((f) => {
                     const aktiv = f.id === sideChrome.aktiv;

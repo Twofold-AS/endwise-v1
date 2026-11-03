@@ -1,9 +1,9 @@
 'use client';
 
-import { CircleAlert, Plus } from '@endwise/ui';
+import { CircleAlert, FeltSelect, Plus, SelectItem } from '@endwise/ui';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { FELT, NIVA_VALG, nivaTekst } from '../../mekanikere/kompetanse/_niva';
+import { NIVA_VALG, nivaTekst } from '../../mekanikere/kompetanse/_niva';
 
 export type ValgtKompetanse = {
   skillKey: string;
@@ -11,7 +11,7 @@ export type ValgtKompetanse = {
 };
 
 /**
- * Samme ferdighetskatalog og nivåord som Organisasjon › Kompetanse.
+ * Samme ferdighetskatalog og nivåord som Mekanikere › Kompetanse.
  * Ingen nye kompetansetyper — bare `competence.listSkills`.
  */
 export function KompetanseVelger({
@@ -44,8 +44,8 @@ export function KompetanseVelger({
   return (
     <div className="flex flex-col gap-2">
       <p className="text-label text-fg">Kompetanse</p>
-      <p className="text-[12px] text-fg-muted">
-        Velges fra katalogen. Nivå og sertifisering er de samme som på Kompetanse-siden.
+      <p className="text-meta text-fg-muted">
+        Velges fra katalogen. Nivå og sertifisering gjelder mekanikere.
       </p>
       {valgte.length === 0 ? (
         <p className="text-[12px] text-fg-muted">Ingen ferdigheter valgt ennå.</p>
@@ -77,34 +77,28 @@ export function KompetanseVelger({
         </p>
       ) : apen ? (
         <div className="flex flex-col gap-2 rounded-control border border-border px-3 py-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-label text-fg">Ferdighet</span>
-            <select
-              value={skillKey || ledige[0]?.key}
-              onChange={(e) => setSkillKey(e.target.value)}
-              className={FELT}
-            >
-              {ledige.map((f) => (
-                <option key={f.key} value={f.key}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-label text-fg">Nivå</span>
-            <select
-              value={level}
-              onChange={(e) => setLevel(Number(e.target.value))}
-              className={FELT}
-            >
-              {NIVA_VALG.map((v) => (
-                <option key={v.niva} value={v.niva}>
-                  {v.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <FeltSelect
+            label="Ferdighet"
+            selectedKey={skillKey || ledige[0]?.key}
+            onSelectionChange={(key) => setSkillKey(String(key ?? ''))}
+          >
+            {ledige.map((f) => (
+              <SelectItem key={f.key} id={f.key}>
+                {f.name}
+              </SelectItem>
+            ))}
+          </FeltSelect>
+          <FeltSelect
+            label="Nivå"
+            selectedKey={String(level)}
+            onSelectionChange={(key) => setLevel(Number(key))}
+          >
+            {NIVA_VALG.map((v) => (
+              <SelectItem key={v.niva} id={String(v.niva)}>
+                {v.label}
+              </SelectItem>
+            ))}
+          </FeltSelect>
           <div className="flex justify-end gap-2">
             <button
               type="button"

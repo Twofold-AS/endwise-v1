@@ -35,7 +35,7 @@ function funksjon(kilde: string, navn: string) {
 
 describe('CODE-GO Mikael — toppkort uten blå nål', () => {
   it('halvsirkel er kun Amicro med blått fyll — ingen klokke, ingen ekstra strek', () => {
-    expect(PULSE_DAG_FYLL_INK).toBe('#141414');
+    expect(PULSE_DAG_FYLL_INK).toBe('#616161');
     expect(PULSE_DAG_FYLL_HAIRLINE).toBe('#e0e0e0');
     expect(PULSE_DAG_FYLL_SOFT).toBe('#f0f0f0');
     expect(fmtPulseTime(8)).toBe('08.00');
@@ -55,7 +55,7 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const sirkel = funksjon(kort, 'PulseDagSirkel');
     expect(sirkel).toMatch(/data-pulse-dag-dither/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
     expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
     expect(sirkel).not.toMatch(/strokeDasharray/);

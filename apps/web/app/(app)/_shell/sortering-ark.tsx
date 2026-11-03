@@ -1,18 +1,19 @@
 'use client';
 
-import { type ReactNode, type RefObject, useEffect } from 'react';
-import { PHONE_PROFIL_MENY_BREDDE, PHONE_PROFIL_MENY_TOPP } from './phone-chrome';
+import { Popover } from '@endwise/ui';
+import { type ReactNode, type RefObject, useMemo, useRef } from 'react';
+import { PHONE_PROFIL_MENY_BREDDE } from './phone-chrome';
 
 /**
  * Ett Sortering-ark — Tid/Gruppe, kjøretøytype eller kunde-filter
  * i samme plate under knappen. Ingen «Sortering»-heading, ingen seksjons-
  * etiketter. Mindre tekst (`text-label`) så radene får plass.
- * `absolute` (ikke viewport-fixed) så arket følger ankeret i 390-kolonnen.
+ * RAC-popover: fokus inne, Escape, fokus tilbake. 16px-plate, ingen skygge.
  */
 export function SorteringArk({
   apen,
   onLukk,
-  anker: _anker,
+  anker,
   children,
 }: {
   apen: boolean;
@@ -20,39 +21,34 @@ export function SorteringArk({
   anker?: HTMLElement | null | RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
-  void _anker;
-
-  useEffect(() => {
-    if (!apen) return;
-    function tast(e: KeyboardEvent) {
-      if (e.key === 'Escape') onLukk();
-    }
-    window.addEventListener('keydown', tast);
-    return () => window.removeEventListener('keydown', tast);
-  }, [apen, onLukk]);
-
-  if (!apen) return null;
+  const fallbackRef = useRef<HTMLElement | null>(null);
+  const triggerRef = useMemo(() => {
+    if (anker && typeof anker === 'object' && 'current' in anker) return anker;
+    fallbackRef.current = anker ?? null;
+    return fallbackRef;
+  }, [anker]);
 
   return (
-    <>
-      <button
-        type="button"
-        data-sortering-scrim
-        data-innboks-popup-scrim
-        aria-label="Lukk"
-        className="fixed inset-0 z-[70] bg-transparent"
-        onClick={onLukk}
-      />
+    <Popover
+      isOpen={apen}
+      onOpenChange={(o) => !o && onLukk()}
+      triggerRef={triggerRef}
+      placement="bottom start"
+      offset={4}
+      aria-label="Sortering"
+      className={`${PHONE_PROFIL_MENY_BREDDE} rounded-[16px] border border-border bg-card p-0 shadow-none`}
+      dialogClassName="gap-0 p-0"
+    >
       <div
         data-sortering-ark
+        data-sortering-scrim
         data-innboks-popup="Sortering"
-        role="dialog"
-        aria-label="Sortering"
-        className={`absolute ${PHONE_PROFIL_MENY_TOPP} left-0 z-[75] flex ${PHONE_PROFIL_MENY_BREDDE} flex-col overflow-hidden rounded-[16px] border border-border bg-card py-1.5 shadow-none`}
+        data-innboks-popup-scrim
+        className="flex flex-col overflow-hidden py-1.5"
       >
         {children}
       </div>
-    </>
+    </Popover>
   );
 }
 

@@ -5,12 +5,13 @@ import {
   Car,
   ChevronRight,
   CircleAlert,
-  ClipboardList,
+  DeaktivertHandling,
   Inbox,
   Mail,
   MessageSquare,
   Phone,
   Plus,
+  Side,
   StatefulButton,
 } from '@endwise/ui';
 import type { Route } from 'next';
@@ -61,17 +62,17 @@ export default function KundekortPage() {
   const k = kunde.data;
   if (!k) {
     return (
-      <div className="mx-auto w-full max-w-[900px] px-8 py-7">
+      <div className="mx-auto w-full max-w-[900px] max-md:px-4 max-md:py-4 md:px-8 md:py-7">
         <CardShell className="flex items-start gap-3 p-6">
           <CircleAlert size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
           <div>
             <p className="text-label text-fg">Fant ikke kunden</p>
-            <p className="mt-1 text-[12px] text-fg-muted">
+            <p className="mt-1 text-meta text-fg-muted">
               Den kan være slettet, eller høre til et annet verksted.
             </p>
             <Link
               href={'/kunder' as Route}
-              className="mt-3 inline-block text-[12px] text-fg-muted underline underline-offset-2 hover:text-fg"
+              className="mt-3 inline-block text-label text-fg-muted underline underline-offset-2 hover:text-fg"
             >
               ← Tilbake til kunder
             </Link>
@@ -88,224 +89,256 @@ export default function KundekortPage() {
       faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
       aktiv="alle"
     >
-      {/* Hvem */}
-      <div className="flex items-start gap-4">
-        {/*
-         * Seeden er `customers.id`, samme som innboksen og
-         * detaljpanelet. Ikke navnet: retter noen en skrivefeil i navnet,
-         * skal ikke kunden bytte ansikt.
-         */}
-        <Avatar seed={k.id} navn={k.name} size={48} bevegelse="hover" />
-        <div className="min-w-0 flex-1">
-          <h1 className="sr-only">Kunde · {k.name}</h1>
-          <p className="flex items-center gap-2 text-title text-fg">
-            {k.name}
-            <Kilde source={k.source} />
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-fg-muted">
-            {k.phone && (
-              <a href={`tel:${k.phone}`} className="inline-flex items-center gap-1.5 hover:text-fg">
-                <Phone size={13} strokeWidth={1.75} />
-                {k.phone}
-              </a>
-            )}
-            {k.email && (
-              <a
-                href={`mailto:${k.email}`}
-                className="inline-flex items-center gap-1.5 hover:text-fg"
-              >
-                <Mail size={13} strokeWidth={1.75} />
-                {k.email}
-              </a>
-            )}
-            <span>Kunde siden {dato(k.createdAt)}</span>
+      <Side
+        tittel={k.name}
+        tilbakeHref="/kunder"
+        tilbakeLabel="Tilbake til kunder"
+        className="max-md:px-0"
+      >
+        {/* Hvem */}
+        <div className="flex items-start gap-4">
+          {/*
+           * Seeden er `customers.id`, samme som innboksen og
+           * detaljpanelet. Ikke navnet: retter noen en skrivefeil i navnet,
+           * skal ikke kunden bytte ansikt.
+           */}
+          <Avatar seed={k.id} navn={k.name} size={48} bevegelse="hover" />
+          <div className="min-w-0 flex-1">
+            <h1 className="sr-only">Kunde · {k.name}</h1>
+            <p className="flex items-center gap-2 text-title text-fg">
+              {k.name}
+              <Kilde source={k.source} />
+            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-meta text-fg-muted">
+              {k.phone && (
+                <a
+                  href={`tel:${k.phone}`}
+                  className="inline-flex items-center gap-1.5 hover:text-fg"
+                >
+                  <Phone size={13} strokeWidth={1.75} />
+                  {k.phone}
+                </a>
+              )}
+              {k.email && (
+                <a
+                  href={`mailto:${k.email}`}
+                  className="inline-flex items-center gap-1.5 hover:text-fg"
+                >
+                  <Mail size={13} strokeWidth={1.75} />
+                  {k.email}
+                </a>
+              )}
+              <span>Kunde siden {dato(k.createdAt)}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <KundeEndre
-        id={k.id}
-        navn={k.name}
-        telefon={k.phone}
-        epost={k.email}
-        adresse={sisteAdresse(k.notater)}
-      />
+        <KundeEndre
+          id={k.id}
+          navn={k.name}
+          telefon={k.phone}
+          epost={k.email}
+          adresse={sisteAdresse(k.notater)}
+        />
 
-      {/* Kjøretøy */}
-      <Seksjon tittel="Kjøretøy" antall={k.kjoretoy.length}>
-        {k.kjoretoy.length === 0 ? (
-          <RegistrerKjoretoy fastKundeId={k.id} />
-        ) : (
-          <>
-            <div className="overflow-hidden rounded-xl border border-border">
-              {k.kjoretoy.map((v, i) => (
-                <Link key={v.id} href={`/kjoretoy/${v.id}` as Route} className="group block">
-                  <div
-                    className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
-                      i > 0 ? 'border-border border-t' : ''
-                    }`}
-                  >
-                    <Car size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                    <span className="w-24 shrink-0 font-mono text-label text-fg">
-                      {v.regNumber ?? '—'}
-                    </span>
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="truncate text-label text-fg">
-                        {[v.make, v.model].filter(Boolean).join(' ') || TYPE_LABEL[v.type]}
+        {/* Kjøretøy — Claude §4.10 */}
+        <div data-kunde-seksjon="kjoretoy">
+          <Seksjon tittel="Kjøretøy" antall={k.kjoretoy.length}>
+            {k.kjoretoy.length === 0 ? (
+              <RegistrerKjoretoy fastKundeId={k.id} />
+            ) : (
+              <>
+                <div className="overflow-hidden rounded-xl border border-border">
+                  {k.kjoretoy.map((v, i) => (
+                    <Link key={v.id} href={`/kjoretoy/${v.id}` as Route} className="group block">
+                      <div
+                        className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
+                          i > 0 ? 'border-border border-t' : ''
+                        }`}
+                      >
+                        <Car size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
+                        <span className="w-24 shrink-0 font-mono text-label text-fg">
+                          {v.regNumber ?? '—'}
+                        </span>
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="truncate text-label text-fg">
+                            {[v.make, v.model].filter(Boolean).join(' ') || TYPE_LABEL[v.type]}
+                          </span>
+                          <span className="truncate text-[13px] text-fg-muted">
+                            {TYPE_LABEL[v.type]}
+                            {v.modelYear ? ` · ${v.modelYear}` : ''}
+                          </span>
+                        </div>
+                        <span className="w-32 shrink-0 text-right text-[13px] tabular-nums">
+                          <span className="text-fg-muted">EU: </span>
+                          <EuFrist dato={v.inspectionDue} />
+                        </span>
+                        <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <RegistrerKjoretoy fastKundeId={k.id} />
+              </>
+            )}
+          </Seksjon>
+        </div>
+
+        {/* Jobber — Claude §4.10, samme data som servicehistorikk */}
+        <div data-kunde-seksjon="jobber">
+          <Seksjon tittel="Jobber" antall={k.saker.length}>
+            {k.saker.length === 0 ? (
+              <CardShell className="p-6 text-center">
+                <p className="text-[13px] text-fg-muted">Ingen jobber registrert.</p>
+              </CardShell>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-border">
+                {k.saker.map((s, i) => (
+                  <Link key={s.id} href={`/bookinger/${s.id}` as Route} className="group block">
+                    <div
+                      className={`flex min-h-row-store items-center gap-4 bg-bg px-4 py-2 transition-colors group-hover:bg-surface-2 ${
+                        i > 0 ? 'border-border border-t' : ''
+                      }`}
+                    >
+                      <span className="w-28 shrink-0 text-[13px] text-fg-muted tabular-nums">
+                        {dato(s.startsAt)}
                       </span>
-                      <span className="truncate text-[12px] text-fg-muted">
-                        {TYPE_LABEL[v.type]}
-                        {v.modelYear ? ` · ${v.modelYear}` : ''}
+                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="truncate text-label text-fg">
+                          {s.serviceName ?? 'Tjeneste'}
+                        </span>
+                        <span className="truncate text-[13px] text-fg-muted">
+                          {s.regNumber ?? 'Uten regnr'}
+                          {s.mechanicName ? ` · ${s.mechanicName}` : ''}
+                          {s.notes ? ` · ${s.notes}` : ''}
+                        </span>
+                      </div>
+                      <span className="w-20 shrink-0 text-right text-[13px] text-fg-muted tabular-nums">
+                        {kroner(s.priceMinor)}
+                      </span>
+                      <span
+                        className={`inline-flex h-badge shrink-0 items-center rounded-badge px-2 font-medium text-[13px] ${
+                          STATUS_TONE[s.status] ?? 'bg-surface-2 text-fg-muted'
+                        }`}
+                      >
+                        {STATUS_LABEL[s.status] ?? s.status}
                       </span>
                     </div>
-                    <span className="w-32 shrink-0 text-right text-[12px] tabular-nums">
-                      <span className="text-fg-muted">EU: </span>
-                      <EuFrist dato={v.inspectionDue} />
-                    </span>
-                    <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
-                  </div>
-                </Link>
-              ))}
-            </div>
-            <RegistrerKjoretoy fastKundeId={k.id} />
-          </>
-        )}
-      </Seksjon>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Seksjon>
+        </div>
 
-      {/* Servicehistorikk */}
-      <Seksjon tittel="Servicehistorikk" antall={k.saker.length}>
-        {k.saker.length === 0 ? (
-          <CardShell className="p-6 text-center">
-            <p className="text-[12px] text-fg-muted">Ingen saker registrert ennå.</p>
-          </CardShell>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-border">
-            {k.saker.map((s, i) => (
-              <Link key={s.id} href={`/bookinger/${s.id}` as Route} className="group block">
-                <div
-                  className={`flex min-h-row-store items-center gap-4 bg-bg px-4 py-2 transition-colors group-hover:bg-surface-2 ${
-                    i > 0 ? 'border-border border-t' : ''
-                  }`}
-                >
-                  <span className="w-28 shrink-0 text-[12px] text-fg-muted tabular-nums">
-                    {dato(s.startsAt)}
-                  </span>
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-label text-fg">
-                      {s.serviceName ?? 'Tjeneste'}
-                    </span>
-                    <span className="truncate text-[12px] text-fg-muted">
-                      {s.regNumber ?? 'Uten regnr'}
-                      {s.mechanicName ? ` · ${s.mechanicName}` : ''}
-                      {s.notes ? ` · ${s.notes}` : ''}
-                    </span>
-                  </div>
-                  <span className="w-20 shrink-0 text-right text-[12px] text-fg-muted tabular-nums">
-                    {kroner(s.priceMinor)}
-                  </span>
-                  <span
-                    className={`inline-flex h-badge shrink-0 items-center rounded-badge px-2 font-medium text-[11px] ${
-                      STATUS_TONE[s.status] ?? 'bg-surface-2 text-fg-muted'
-                    }`}
-                  >
-                    {STATUS_LABEL[s.status] ?? s.status}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </Seksjon>
-
-      {/* Meldinger */}
-      <Seksjon tittel="Meldinger" antall={k.traader.length}>
-        {k.traader.length === 0 ? (
-          <CardShell className="flex items-start gap-3 p-4">
-            <Inbox size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
-            <p className="text-[12px] text-fg-muted leading-relaxed">
-              {k.userId
-                ? 'Ingen meldingstråder med denne kunden ennå.'
-                : 'Kunden har ikke logget inn på «Min side», så det finnes ingen kobling til meldinger. Tråder knyttes til en innlogget bruker, ikke til e-postadressen.'}
-            </p>
-          </CardShell>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-border">
-            {k.traader.map((t, i) => (
-              <Link key={t.id} href={`/innboks/${t.id}` as Route} className="group block">
-                <div
-                  className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
-                    i > 0 ? 'border-border border-t' : ''
-                  }`}
-                >
-                  <MessageSquare size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" />
-                  <span className="min-w-0 flex-1 truncate text-label text-fg">
-                    {t.subject ?? 'Samtale'}
-                  </span>
-                  <span className="shrink-0 text-[12px] text-fg-muted tabular-nums">
-                    {dato(t.createdAt)}
-                  </span>
-                  <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </Seksjon>
-
-      {/* Notater */}
-      <Seksjon tittel="Notater" antall={k.notater.length}>
-        <CardShell className="p-4">
-          <form onSubmit={submitNotat} className="flex items-start gap-2">
-            <input
-              value={notat}
-              onChange={(e) => setNotat(e.target.value)}
-              maxLength={4000}
-              placeholder="Skriv et internt notat om kunden"
-              className="h-control min-w-0 flex-1 ew-felt ew-felt-md px-2.5"
-            />
-            <StatefulButton
-              type="submit"
-              disabled={!notat.trim() || leggTilNotat.isPending}
-              state={leggTilNotat.isPending ? 'loading' : leggTilNotat.isError ? 'error' : 'idle'}
-              loadingText="Lagrer…"
-              errorText="Feilet"
-              icon={<Plus size={15} />}
-            >
-              Legg til
-            </StatefulButton>
-          </form>
-          {leggTilNotat.error && (
-            <p className="mt-2 text-body text-danger">{leggTilNotat.error.message}</p>
-          )}
-          {/*
-           * Notater er interne. Det står her fordi feltet ellers ser ut som
-           * en melding til kunden — og forskjellen er ikke til å spøke med.
-           */}
-          <p className="mt-2 text-[11px] text-fg-muted">
-            Notater er interne og vises aldri for kunden.
-          </p>
-        </CardShell>
-
-        {k.notater.length > 0 && (
-          <div className="flex flex-col gap-2">
-            {k.notater.map((n) => (
-              <CardShell key={n.id} className="p-3">
-                <p className="text-body text-fg">{n.body}</p>
-                <p className="mt-1 text-[11px] text-fg-muted tabular-nums">
-                  {datoTid(n.createdAt)}
+        {/* Meldinger — Claude §4.10 */}
+        <div data-kunde-seksjon="meldinger">
+          <Seksjon tittel="Meldinger" antall={k.traader.length}>
+            {k.traader.length === 0 ? (
+              <CardShell className="flex items-start gap-3 p-4">
+                <Inbox size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
+                <p className="text-[13px] text-fg-muted leading-relaxed">
+                  {k.userId
+                    ? 'Ingen meldingstråder med denne kunden ennå.'
+                    : 'Kunden har ikke logget inn på «Min side», så det finnes ingen kobling til meldinger. Tråder knyttes til en innlogget bruker, ikke til e-postadressen.'}
                 </p>
               </CardShell>
-            ))}
-          </div>
-        )}
-      </Seksjon>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-border">
+                {k.traader.map((t, i) => (
+                  <Link key={t.id} href={`/innboks/${t.id}` as Route} className="group block">
+                    <div
+                      className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
+                        i > 0 ? 'border-border border-t' : ''
+                      }`}
+                    >
+                      <MessageSquare
+                        size={16}
+                        strokeWidth={1.75}
+                        className="shrink-0 text-fg-muted"
+                      />
+                      <span className="min-w-0 flex-1 truncate text-label text-fg">
+                        {t.subject ?? 'Samtale'}
+                      </span>
+                      <span className="shrink-0 text-[13px] text-fg-muted tabular-nums">
+                        {dato(t.createdAt)}
+                      </span>
+                      <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Seksjon>
+        </div>
 
-      <Link
-        href={'/kunder' as Route}
-        className="inline-flex items-center gap-1.5 text-[12px] text-fg-muted transition-colors hover:text-fg"
-      >
-        <ClipboardList size={14} />← Alle kunder
-      </Link>
+        {/* Notater */}
+        <Seksjon tittel="Notater" antall={k.notater.length}>
+          <CardShell className="p-4">
+            <form onSubmit={submitNotat} className="flex items-start gap-2">
+              <input
+                value={notat}
+                onChange={(e) => setNotat(e.target.value)}
+                maxLength={4000}
+                placeholder="Skriv et internt notat om kunden"
+                className="h-control min-w-0 flex-1 ew-felt ew-felt-md px-2.5"
+              />
+              <StatefulButton
+                type="submit"
+                disabled={!notat.trim() || leggTilNotat.isPending}
+                state={leggTilNotat.isPending ? 'loading' : leggTilNotat.isError ? 'error' : 'idle'}
+                loadingText="Lagrer…"
+                errorText="Feilet"
+                icon={<Plus size={15} />}
+              >
+                Legg til
+              </StatefulButton>
+            </form>
+            {leggTilNotat.error && (
+              <p className="mt-2 text-body text-danger">{leggTilNotat.error.message}</p>
+            )}
+            {/*
+             * Notater er interne. Det står her fordi feltet ellers ser ut som
+             * en melding til kunden — og forskjellen er ikke til å spøke med.
+             */}
+            <p className="mt-2 text-[13px] text-fg-muted">
+              Notater er interne og vises aldri for kunden.
+            </p>
+          </CardShell>
+
+          {k.notater.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {k.notater.map((n) => (
+                <CardShell key={n.id} className="p-3">
+                  <p className="text-body text-fg">{n.body}</p>
+                  <p className="mt-1 text-[13px] text-fg-muted tabular-nums">
+                    {datoTid(n.createdAt)}
+                  </p>
+                </CardShell>
+              ))}
+            </div>
+          )}
+        </Seksjon>
+
+        <div className="flex flex-col gap-2">
+          <Link
+            href={`/bookinger/ny?kunde=${k.id}` as Route}
+            data-kunde-ny-jobb
+            className="inline-flex h-12 items-center justify-center rounded-pill bg-fg px-4 text-body text-bg"
+          >
+            Ny jobb på kunde
+          </Link>
+          <SlettKunde />
+        </div>
+      </Side>
     </SideChromeSkall>
+  );
+}
+
+function SlettKunde() {
+  return (
+    <div data-slett-kunde>
+      <DeaktivertHandling forklaring="Kommer senere">Slett kunde</DeaktivertHandling>
+    </div>
   );
 }

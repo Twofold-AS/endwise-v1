@@ -70,20 +70,10 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
       'Endringer',
     ]);
     expect(FORHANDLER_NAV.find((i) => i.key === 'tjenester')?.href).toBe('/prisliste');
-    expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(ORGANISASJON_SEKSJONER).toEqual([]);
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     if (!org) throw new Error('mangler Organisasjon');
-    expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan',
-    ]);
+    expect(pillsForRole(org, 'dealer_staff')).toEqual([]);
   });
 
   it('mekaniker beholder Dine jobber og ser ikke Organisasjon', () => {
@@ -99,10 +89,10 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     const kapasitet = utenKommentarer(les('../app/(app)/mekanikere/kapasitet/page.tsx'));
     expect(side).toMatch(/Timeplan/);
     expect(side).toMatch(/timeplanHref\('opprett'\)|\/bookinger\/ny|Opprett jobb/);
-    expect(side).not.toMatch(/Ny jobb/);
+    expect(side).toMatch(/Ny jobb/);
     expect(side).not.toMatch(/Prisliste/);
     expect(side).not.toMatch(/Dialog|PrislisteDialog|prislisteApen|PrislisteFlate/);
-    expect(side).toMatch(/TimeplanFlate/);
+    expect(side).not.toMatch(/TimeplanFlate/);
     expect(side).toMatch(/TimeplanStripe/);
     expect(side).not.toMatch(/Saker|Kontor|Gulvet/);
     expect(kalender).toMatch(/TimeplanStripe|TIMEPLAN_DAG_START|osloDagsvindu/);
@@ -120,19 +110,20 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(side).not.toMatch(/SidePiller/);
   });
 
-  it('TimeplanStripe viser tre hele dager uten klipp, samme stripe på Liste og Kalender', () => {
+  it('TimeplanStripe viser uke-rail uten klipp, samme stripe på Liste og Kalender', () => {
     const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
     const stripe = utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'));
     const dager = utenKommentarer(les('../app/(app)/_shell/timeplan-dager.ts'));
     expect(side).toMatch(/TimeplanStripe/);
     expect(side).toMatch(/visning === 'kalender'/);
-    expect(stripe).toMatch(/timeplanDagerFra\(valgt(?:, 3)?\)/);
-    expect(stripe).not.toMatch(/timeplanDagerFra\(valgt, 7\)/);
-    expect(dager).toMatch(/antall = 3/);
+    expect(stripe).toMatch(/timeplanUkeFra\(valgt\)/);
+    expect(dager).toMatch(/timeplanDagerFra\(mandag, 7\)/);
     expect(stripe).not.toMatch(/overflow-hidden/);
     expect(stripe).not.toMatch(/overflow-x/);
-    expect(stripe).toMatch(/aria-label="Forrige måned"/);
+    expect(stripe).toMatch(/DatePicker/);
+    expect(stripe).toMatch(/aria-label="Velg dag"/);
     expect(stripe).toMatch(/timeplanManedNavn/);
+    expect(stripe).toMatch(/data-timeplan-maned/);
   });
 
   it('Tjenester er /prisliste (samme services.list), /tjenester forblir abonnement', () => {

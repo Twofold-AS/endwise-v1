@@ -54,44 +54,31 @@ export function DetaljerSlot() {
 
   if (!apen) {
     /**
-     * Lukket: desktop-skinne + telefon-chip. Skinna er skjult på telefon
-     * (tok bredde og dyttet tråden ut av viewport). Chipen ligger i chrome.
+     * Lukket: desktop-skinne. Telefon-pille bor i samtalen (outline → Drawer).
+     * Den svarte flytende chipen overlapper innhold — fjernet.
      */
     return (
-      <>
-        <button
-          type="button"
-          data-innboks-detaljer-chip
-          onClick={() => sett(true)}
-          title="Vis detaljer om samtalen"
-          aria-label="Vis detaljer om samtalen"
-          aria-expanded={false}
-          className="absolute top-2 right-2 z-20 inline-flex h-8 items-center rounded-full bg-fg px-3 text-[12px] font-[650] text-bg md:hidden"
-        >
-          Detaljer
-        </button>
-        <div className="hidden w-11 shrink-0 flex-col border-border border-l bg-sidebar md:flex">
-          <div className="flex h-14 shrink-0 items-center justify-center border-border border-b">
-            <button
-              type="button"
-              onClick={() => sett(true)}
-              title="Vis detaljer om samtalen"
-              aria-label="Vis detaljer om samtalen"
-              aria-expanded={false}
-              className="flex size-7 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active/60 hover:text-fg"
-            >
-              <PanelRightOpen size={16} strokeWidth={1.75} />
-            </button>
-          </div>
+      <div className="hidden w-11 shrink-0 flex-col border-border border-l bg-sidebar md:flex">
+        <div className="flex h-14 shrink-0 items-center justify-center border-border border-b">
+          <button
+            type="button"
+            onClick={() => sett(true)}
+            title="Vis detaljer om samtalen"
+            aria-label="Vis detaljer om samtalen"
+            aria-expanded={false}
+            className="flex size-7 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-sidebar-active/60 hover:text-fg"
+          >
+            <PanelRightOpen size={16} strokeWidth={1.75} />
+          </button>
         </div>
-      </>
+      </div>
     );
   }
 
   if (endwise) {
     return (
       <aside
-        className="absolute inset-0 z-40 flex h-full w-full shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar md:left-auto md:w-[320px] xl:static xl:z-auto"
+        className="absolute inset-0 z-40 hidden h-full w-full shrink-0 flex-col overflow-hidden border-border border-l bg-sidebar md:left-auto md:flex md:w-[320px] xl:static xl:z-auto"
         aria-label="Detaljer om samtalen"
       >
         <div className="flex h-14 shrink-0 items-center gap-2 border-border border-b px-3">
@@ -114,7 +101,7 @@ export function DetaljerSlot() {
               slug={supportTrad.tenantSlug}
             />
           ) : (
-            <p className="px-1 py-6 text-center text-[12px] text-fg-muted">Henter kontekst …</p>
+            <p className="px-1 py-6 text-center text-[13px] text-fg-muted">Henter kontekst …</p>
           )}
         </div>
       </aside>

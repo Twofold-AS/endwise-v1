@@ -26,7 +26,6 @@ import {
   PULSE_DAGER,
   PULSE_PLAUSIBEL_IDAG,
   PULSE_PLAUSIBEL_INNBOKS_MELDINGER,
-  plausibelSpark,
   siste7dSpark,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
 
@@ -91,14 +90,11 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).not.toMatch(/Organisasjon|Hjelp|svarhastighet/);
     expect(hjem).not.toMatch(/Ingen kunder ennå|Åpne organisasjon|Artikler og support/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
-    expect(hjem).toMatch(/Les alle siste meldinger/);
-    expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/PulseJobbFlis/);
-    expect(hjem).toMatch(/PulseHeroFlate|endringerTeller/);
-    expect(hjem).toMatch(/PulseAnalyserKort|Analyser/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
+    expect(hjem).toMatch(/På jobb/);
     expect(hjem).toMatch(/invalidateHjemPulse|bookings\.list/);
-    expect(hjem).toMatch(/flex-1 basis-0/);
-    expect(hjem).toMatch(/planlagt=\{idag\.planlagt\}/);
+    expect(hjem).toMatch(/idagVisning/);
     expect(kort).toMatch(/Planlagt/);
     expect(hjem).not.toMatch(/dither-kit|DitherGradient/);
     expect(hjem).not.toMatch(/pulse-preview/);
@@ -135,7 +131,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(osloStartAvManed(naa).toISOString()).toMatch(/2026-07-31|2026-08-01/);
     const vindu = dagerVindu(naa);
     expect(vindu.til.getTime()).toBeGreaterThan(vindu.fra.getTime());
-    expect(siste7dSpark([], naa)).toEqual(plausibelSpark(naa));
+    expect(siste7dSpark([], naa)).toEqual(Array.from({ length: PULSE_DAGER }, () => 0));
     expect(siste7dSpark([], naa)).toHaveLength(PULSE_DAGER);
     const serie = siste7dSpark(
       [
@@ -198,44 +194,24 @@ describe('forhandler pulse-hjem — fem flater', () => {
     });
   });
 
-  it('ansatte på jobb er aktiv tildeling, ikke timeføring/status-humor', () => {
-    const naa = new Date('2026-08-29T10:00:00');
+  it('ansatte på jobb er stempling, ikke tildeling — 0 uten clock-in', () => {
     expect(ansattePulse([])).toEqual({ paJobb: 0, totalt: 0 });
     expect(
-      ansattePulse(
-        [
-          { id: '1', status: 'ledig' },
-          { id: '2', status: 'på_jobb' },
-          { id: '3', status: 'opptatt' },
-          { id: '4', status: 'fri' },
-        ],
-        [
-          {
-            id: 'j1',
-            mechanicId: '2',
-            status: 'in_progress',
-            startsAt: '2026-08-29T08:00:00',
-            endsAt: '2026-08-29T12:00:00',
-          },
-        ],
-        naa,
-      ),
-    ).toEqual({ paJobb: 1, totalt: 4 });
+      ansattePulse([
+        { id: '1', status: 'ledig', active: true },
+        { id: '2', status: 'på_jobb', active: true },
+        { id: '3', status: 'opptatt', active: true },
+        { id: '4', status: 'fri', active: true },
+      ]),
+    ).toEqual({ paJobb: 0, totalt: 4 });
     expect(
-      ansattePulse(
-        [{ id: '2', status: 'ledig' }],
-        [
-          {
-            id: 'j1',
-            mechanicId: '2',
-            status: 'in_progress',
-            startsAt: '2026-08-29T08:00:00',
-            endsAt: '2026-08-29T12:00:00',
-          },
-        ],
-        naa,
-      ),
-    ).toEqual({ paJobb: 1, totalt: 1 });
+      ansattePulse([
+        { id: '1', active: true },
+        { id: '2', active: true, clockedIn: true },
+        { id: '3', active: false },
+        { id: '4', active: true },
+      ]),
+    ).toEqual({ paJobb: 1, totalt: 3 });
   });
 
   it('kort er Mobbin 24px uten skygge og uten pip', () => {
@@ -249,7 +225,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(kort).not.toMatch(/PulseMockBadge|data-pulse-mock-badge/);
     expect(kort).not.toMatch(/>\s*mock\s*</);
     expect(kort).toMatch(/#141414/);
-    expect(funksjon(kort, 'PulseDagSirkel')).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
+    expect(funksjon(kort, 'PulseDagSirkel')).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
     expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
     expect(kort).not.toMatch(/For lite data/);
     expect(kort).toMatch(/ArrowUpRight/);
@@ -277,7 +253,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(dash).toMatch(/PhoneHomeDealer/);
     expect(hjem).not.toMatch(/messages\.svarhastighet/);
     expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/bookinger\/ny|PulseJobbFlis/);
+    expect(hjem).toMatch(/PulseJobbFlis|bookinger\/ny/);
     expect(shell).toMatch(/data-phone-search/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
   });

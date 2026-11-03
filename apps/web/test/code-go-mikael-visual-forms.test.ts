@@ -34,8 +34,8 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     const avvik = funksjon(kort, 'PulseAvvikForesporBoks');
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
     expect(hero).toMatch(/text-label font-normal/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_BLA|#0066ff/);
-    expect(sirkel).toMatch(/PULSE_DAG_FYLL_HAIRLINE/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
+    expect(sirkel).toMatch(/PULSE_DAG_FYLL_SOFT/);
     expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).not.toMatch(/<svg|halvBue|strokeWidth/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
@@ -51,7 +51,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
   });
 
-  it('Analyser er én boks over Jobb med Se tallene', () => {
+  it('Analyser er én boks over Jobb med Alle tall', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
       'innboks',
@@ -61,7 +61,8 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
       'jobb',
     ]);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
+    expect(hjem.indexOf('PulseHeroFlate')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('På jobb')).toBeGreaterThan(-1);
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     expect(analyser).toMatch(/flex-col/);
@@ -70,7 +71,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(analyser).not.toMatch(/RevenueLineChart/);
     expect(analyser).not.toMatch(/min-h-\[168px\]/);
     expect(analyser).not.toMatch(/scale-\[1\.65\]/);
-    expect(analyser).toMatch(/Se tallene/);
+    expect(analyser).toMatch(/Alle tall/);
     expect(analyser).toMatch(/data-analyser-alle-tall/);
     expect(analyser).toMatch(/ArrowUpRight/);
     expect(analyser).not.toMatch(/>Analyser</);
@@ -86,7 +87,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(popup).toMatch(/InboxChromePopup/);
     expect(popup).toMatch(/SorteringArk/);
     expect(ark).toMatch(/data-innboks-popup-scrim/);
-    expect(ark).toMatch(/fixed inset-0 z-\[70\]/);
+    expect(ark).toMatch(/Popover/);
     expect(ark).toMatch(/text-label/);
     const samtale = utenKommentarer(les('../app/(app)/innboks/_ny-samtale.tsx'));
     expect(samtale).toMatch(/data-ny-melding-send/);
@@ -96,24 +97,24 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
   });
 
   it('skjemaer bruker Innstillinger-inndeling; jobb fester kjøretøy; tjenester uten dup-knapp', () => {
-    expect(les('../app/(app)/kunder/_ny-kunde.tsx')).toMatch(/InnstillingSeksjon/);
+    expect(les('../app/(app)/kunder/_ny-kunde.tsx')).toMatch(/OppretterSkuff/);
     expect(les('../app/(app)/kunder/_registrer-kjoretoy.tsx')).toMatch(/InnstillingSeksjon/);
     expect(les('../app/(app)/innstillinger/tjenestekatalog/_ny-tjeneste.tsx')).toMatch(
-      /InnstillingSeksjon/,
+      /OppretterSkuff/,
     );
     const jobb = utenKommentarer(les('../app/(app)/bookinger/ny/page.tsx'));
     expect(jobb).toMatch(/velgKjoretoyForJobb/);
     expect(jobb).toMatch(/data-opprett-jobb-kjoretoy/);
     expect(jobb).toMatch(/vehicles\.create/);
     expect(jobb).toMatch(/vehicleId: festetId/);
-    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/skjulNy/);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/onNy/);
     expect(les('../app/(app)/prisliste/page.tsx')).not.toMatch(/skjulNy=\{aktiv/);
     expect(les('../app/(app)/kunder/page.tsx')).toMatch(/PhoneSokFelt/);
     expect(les('../app/(app)/kunder/page.tsx')).toMatch(/data-kunder-sok/);
     const preview = utenKommentarer(les('../app/visual-forms-preview/page.tsx'));
     expect(preview).toMatch(/data-kunder-sok/);
     expect(preview).toMatch(/data-opprett-jobb-kjoretoy/);
-    expect(preview).toMatch(/Opprett tjenester/);
+    expect(preview).toMatch(/Opprett tjeneste/);
     expect(preview).not.toMatch(/Ny tjeneste/);
     const innboks = utenKommentarer(les('../app/innboks-preview/page.tsx'));
     expect(innboks).toMatch(/vis === 'ny'/);

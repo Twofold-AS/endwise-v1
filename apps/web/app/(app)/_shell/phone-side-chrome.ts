@@ -15,11 +15,6 @@ import {
   parseKunderFane,
 } from '../kunder/_faner';
 import {
-  erOrganisasjonChromeSti,
-  parseOrgChrome,
-  synligeOrgChrome,
-} from '../organisasjon/_seksjoner';
-import {
   erTjenesterSti,
   parseTjenesterFane,
   TJENESTER_FANER,
@@ -42,15 +37,7 @@ export type PhoneSideChromeFane = {
 };
 
 export type PhoneSideChrome = {
-  id:
-    | 'innstillinger'
-    | 'hjelp'
-    | 'statistikk'
-    | 'timeplan'
-    | 'kunder'
-    | 'tjenester'
-    | 'organisasjon'
-    | 'innboks';
+  id: 'innstillinger' | 'hjelp' | 'statistikk' | 'timeplan' | 'kunder' | 'tjenester' | 'innboks';
   tittel: string;
   faner: PhoneSideChromeFane[];
   aktiv: string;
@@ -66,6 +53,10 @@ export function erStatistikkSti(pathname: string): boolean {
   return pathname === '/statistikk' || pathname.startsWith('/statistikk/');
 }
 
+export function erSamtaleSti(pathname: string): boolean {
+  return /^\/innboks\/[^/]+$/.test(pathname);
+}
+
 export function erPhoneSideChrome(pathname: string): boolean {
   return (
     erSettingsSti(pathname) ||
@@ -74,11 +65,15 @@ export function erPhoneSideChrome(pathname: string): boolean {
     erTimeplanSti(pathname) ||
     erKunderSti(pathname) ||
     erTjenesterSti(pathname) ||
-    erOrganisasjonChromeSti(pathname) ||
     erDealerInnboks(pathname)
   );
 }
 
+/**
+ * Sidetittel + faner/verktøy under dest-piller.
+ * Org er hub-liste (ikke 5 faner). Timeplan/Kunder/Tjenester/Innboks
+ * har menyene fra før runde 3.
+ */
 export function phoneSideChrome(
   pathname: string,
   search: { get: (k: string) => string | null } | null,
@@ -175,18 +170,6 @@ export function phoneSideChrome(
         id: f.id,
         label: f.label,
         href: tjenesterHref(f.id),
-      })),
-    };
-  }
-  if (erOrganisasjonChromeSti(pathname)) {
-    return {
-      id: 'organisasjon',
-      tittel: 'Organisasjon',
-      aktiv: parseOrgChrome(pathname, search?.get('seksjon'), opts.isAdmin),
-      faner: synligeOrgChrome(opts.isAdmin).map((f) => ({
-        id: f.id,
-        label: f.label,
-        href: f.href,
       })),
     };
   }

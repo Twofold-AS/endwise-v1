@@ -3,6 +3,10 @@
 import {
   Building2,
   CircleAlert,
+  DeaktivertHandling,
+  FeltInput,
+  FeltSok,
+  FeltTekst,
   LifeBuoy,
   type LucideIcon,
   StatefulButton,
@@ -220,13 +224,11 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
           />
         </InnstillingRad>
         <InnstillingRad label="Valgt" hint={mottaker ? mottaker.navn : 'Velg i lista under'}>
-          <input
-            type="search"
+          <FeltSok
             value={sok}
-            onChange={(e) => setSok(e.target.value)}
+            onChange={setSok}
             placeholder="Søk i lista"
             aria-label="Søk i mottakerlista"
-            className="h-control ew-felt ew-felt-md px-3"
           />
           <div className="mt-2 max-h-56 overflow-y-auto">
             {laster ? (
@@ -273,24 +275,36 @@ export function NySamtale({ onLukk }: { onLukk: () => void }) {
       </InnstillingSeksjon>
 
       <InnstillingSeksjon tittel="Melding">
+        <InnstillingRad label="Jobb" hint="Valgfritt">
+          <div data-ny-melding-jobb className="flex flex-col gap-1.5">
+            <FeltSok aria-label="Knytt til jobb" placeholder="Søk jobb" isDisabled />
+            <DeaktivertHandling forklaring="Kommer senere">Knytt til jobb</DeaktivertHandling>
+          </div>
+        </InnstillingRad>
+        <InnstillingRad label="Intern ansatt" hint="Valgfritt">
+          <div data-ny-melding-intern className="flex flex-col gap-1.5">
+            <FeltSok aria-label="Ta med intern ansatt" placeholder="Søk ansatt" isDisabled />
+            <DeaktivertHandling forklaring="Kommer senere">Ta med intern ansatt</DeaktivertHandling>
+          </div>
+        </InnstillingRad>
         <InnstillingRad label="Emne" hint="Valgfritt">
-          <input
+          <FeltInput
             value={emne}
-            onChange={(e) => setEmne(e.target.value)}
+            onChange={setEmne}
             maxLength={140}
             placeholder="Valgfritt"
-            className="h-control ew-felt ew-felt-md px-3"
+            aria-label="Emne"
           />
         </InnstillingRad>
         <InnstillingRad label="Tekst" siste>
-          <textarea
+          <FeltTekst
             value={tekst}
-            onChange={(e) => setTekst(e.target.value)}
+            onChange={setTekst}
             rows={4}
             maxLength={4000}
-            required
+            isRequired
             placeholder="Skriv meldingen …"
-            className="min-h-[96px] resize-y ew-felt ew-felt-md px-3 py-2"
+            aria-label="Tekst"
           />
         </InnstillingRad>
       </InnstillingSeksjon>

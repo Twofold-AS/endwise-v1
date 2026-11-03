@@ -66,8 +66,9 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - **matrix-loaders** (portet fra TheFold) — «AI tenker»-animasjon per SSE-event; **beUI**-loader der det passer
 - **slot-text** — rullende KPI-siffer
 - **Container queries** (`@container`) — dock-layout responderer på plassen den får, ikke viewport
-- **lucide-react** (ikoner) — eneste ikonbibliotek
+- **lucide-react** (ikoner) — eneste ikonbibliotek. Remixicon kommer kun transitivt med Board UI (byttes til lucide i kilden vi eier)
 - **beUI** (shadcn-registry `@beui`) — tilstands-komponenter (`StatefulButton`) + kanoniske bevegelses-tokens (`lib/ease.ts`)
+- **Board UI** (MIT, gratis registry, `npx boardui@latest`) — skjemafelt, overlay, chips, dato/tid. Kilde eid i `packages/ui/src/components/base/`. **react-aria-components** er skjemamotor. Tokens pekes inn i `--ew-*` (ink-CTA, ingen skygger, `#0066ff` aldri på CTA). ⛔ Pro-items (public repo). ⛔ Board `globals.css`, `avatar`, `status-dot`, `theme-toggle`, `sidebar`, `app-shell`. Detaljer i `docs/UI-PAKKER.md` og `docs/boardui-audit.md`
 - **Charts: Amicro dither charts** (06.09.2026, Mikael — https://amicro.vercel.app/dither-charts). Vendorisert i `packages/ui/src/vendor/amicro/` (CLI-bin finnes ikke på `@subhanhq/amicro@1.0.1`). Produkt-flaten er Analyse/Rapporter: stacked bar, area growth, spline line, donut. Seriehex er Mobbin-ink-stige (`#141414` / `#262626` / `#707070` / `#adadad`). ⛔ `#0066ff` på grafer. ⛔ Boring-Software dither-kit. Recharts/`chart.tsx` er ikke lenger motoren på disse flatene
 - **cuelume** (mikro-lyder) — valgfri polish, av som default
 - **Grainient** (react-bits Grainient-JS-CSS + `ogl` ^1.0.11) — KI-Ronny-stripe KUN (44px telefon / 32px desktop). Apple `color1/2/3` `#0066cc` / `#0071e3` / `#2997ff`. ⛔ Ikke peek/full-kropp. ⛔ Ikke composer. ⛔ ShaderGradient ute. ⛔ Ikke dealer-hero. Detaljer i `docs/UI-PAKKER.md`
@@ -114,7 +115,7 @@ Hvis du ser noe fra venstre kolonne i kode eller dokumenter, er det en feil som 
 - Branch-per-PR = preview-miljøer med ekte DB
 
 ### Auth — `packages/auth`
-- **Better-Auth 1.x** (`better-auth` ~1.6.30) — organizations (multi-tenant), phone-number-plugin, magicLink + twoFactor (TOTP-app, ikke e-post-OTP). `emailAndPassword.enabled` er `false`. Schema-CLI er pakken `auth` (samme 1.6.x), ikke det forlatte `@better-auth/cli` som pinner `better-auth@1.4`. Passkey (WebAuthn) er MIDLERTIDIG UTSATT (17.07.2026): `@better-auth/passkey` dro inn et foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt brukte den. Pakke + plugin fjernet, `passkey`-tabellen beholdt dormant. Reaktiveres når WebAuthn-flyten bygges. Se roadmap-endringer.md.
+- **Better-Auth 1.x** (`better-auth` ~1.7.7) — organizations (multi-tenant), phone-number-plugin, magicLink + twoFactor (TOTP-app, ikke e-post-OTP). `emailAndPassword.enabled` er `false`. Schema-CLI er pakken `auth` (samme 1.7.x), ikke det forlatte `@better-auth/cli` som pinner `better-auth@1.4`. Passkey (WebAuthn) er MIDLERTIDIG UTSATT (17.07.2026): `@better-auth/passkey` dro inn et foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt brukte den. Pakke + plugin fjernet, `passkey`-tabellen beholdt dormant. Reaktiveres når WebAuthn-flyten bygges. Se roadmap-endringer.md.
 - **Innlogging: magic link (innboks) + TOTP-app.** Ingen passord-UI. Andre faktor er ikke e-postkode — stjålet mailbox skal ikke fullføre innlogging. `ROLES_REQUIRING_2FA` håndheves i `requireSession()`. Migrasjon 0035 tømmer passord-hash, **ikke** TOTP. Uenrollert → midlertidig sesjon kun til `/2fa-oppsett`. Enrollert → sesjonen rives, TOTP kreves. `trustDevice` tvinges av. Selvbetjent 2FA-disable er stengt (leder tilbakestiller). Customer uten 2FA er kjent restrisiko. SPF/DKIM ligger hos Resend, ikke i repo.
 - **60-min idle-timeout** (serverside sliding-vindu) + absolutt maks-levetid
 - **Twilio Verify** som OTP-sender

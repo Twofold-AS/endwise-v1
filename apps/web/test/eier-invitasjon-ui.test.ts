@@ -61,7 +61,7 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).toMatch(/Send invitasjon på nytt/);
     expect(forhandlere).toMatch(/t\.erEndwise/);
     expect(forhandlere).toMatch(/!t\.erEndwise/);
-    expect(forhandlere).toMatch(/eierInviteUbrukt/);
+    expect(forhandlere).toMatch(/eierInviteStatus/);
     expect(forhandlere).not.toMatch(/href:\s*['"]\/registrer['"]|href=['"]\/registrer['"]/);
     expect(forhandlere).not.toMatch(/['"]shop['"]/);
     expect(forhandlere).not.toMatch(/SMS ligger i Pro-bundelen/);
@@ -78,7 +78,9 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).toMatch(/Se verkstedet/);
     expect(forhandlere).toMatch(/\/endwise\/verksted\/\$\{t\.slug\}/);
     expect(forhandlere).toMatch(/!t\.erEndwise/);
-    expect(forhandlere).toMatch(/t\.eierInviteUbrukt \? \(/);
+    expect(forhandlere).toMatch(/revokeOwnerInvite/);
+    expect(forhandlere).toMatch(/Trekk tilbake/);
+    expect(forhandlere).not.toMatch(/t\.eierInviteUbrukt \? \(/);
     expect(forhandlere).not.toMatch(/setActive|impersonat/i);
   });
 

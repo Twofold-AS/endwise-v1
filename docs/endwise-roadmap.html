@@ -1305,6 +1305,10 @@ const ROADMAP = [
   { id:"F27-01", o:"Bygg Send meg kode, HMAC-kode og atomisk godta bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F8a (Mons-review). GET uten sideeffekt. <code>POST /:token/send-kode</code> med CSRF, 3/time, alltid 200. Kode 8 tegn / 10 min / 5 forsøk, HMAC-pepper. Ny kode dreper gammel. Godta krever kode i samme tx som <code>consume_invitation</code> (FOR UPDATE). Samme feil for feil/utløpt/brukt/låst. <code>no-referrer</code>, token ut av URL. Audit <code>code_sent</code>/<code>code_rate_limited</code>/<code>code_failed</code>/<code>used</code>. Bak <code>ENDWISE_WHITE_LABEL</code>.",
     area:"auth", ui:"partial", status:"done" },
 ]},
+{ phase:"F28", title:"White label — admin ny lenke og tilbakekall (plan F8b)", target:"Etter F27", items:[
+  { id:"F28-01", o:"Bygg invitasjonsstatus, ny lenke og tilbakekall på platform", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F8b. Status sendt/kode sendt/låst/utløpt/brukt/trukket uten å vise koden. Ny lenke dreper gammel lenke og kode (<code>usedAt</code>). <code>tenants.revokeOwnerInvite</code>. Handling deaktivert, ikke skjult. Audit <code>invitation.resent</code>/<code>revoked</code>. Åpnet-status utelatt (GET er sideeffektfri).",
+    area:"admin", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================

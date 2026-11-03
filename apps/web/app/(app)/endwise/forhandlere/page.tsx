@@ -28,6 +28,15 @@ import { NivaaValg, TilleggListe, tilleggForNivaa, tilleggNokler } from '../_pak
  */
 type SlettSteg = 'advarsel' | 'bekreft';
 
+const INVITASJON_STATUS_TEKST = {
+  sendt: 'Sendt',
+  kode_sendt: 'Kode sendt',
+  laast: 'Låst',
+  utlopt: 'Utløpt',
+  brukt: 'Brukt',
+  trukket: 'Trukket',
+} as const;
+
 export default function ForhandlerePage() {
   const { isEndwiseAdmin } = useOrgRole();
   const utils = trpc.useUtils();
@@ -101,6 +110,11 @@ export default function ForhandlerePage() {
     },
   });
   const sendPaNytt = trpc.tenants.resendOwnerInvite.useMutation({
+    onSuccess: () => {
+      void utils.tenants.list.invalidate();
+    },
+  });
+  const trekkInvite = trpc.tenants.revokeOwnerInvite.useMutation({
     onSuccess: () => {
       void utils.tenants.list.invalidate();
     },
@@ -311,6 +325,11 @@ export default function ForhandlerePage() {
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <span className="truncate text-label text-fg">{t.name}</span>
                       <span className="truncate text-[12px] text-fg-muted">{t.slug}</span>
+                      {t.eierInviteStatus ? (
+                        <span className="text-[12px] text-fg-muted">
+                          Invitasjon: {INVITASJON_STATUS_TEKST[t.eierInviteStatus]}
+                        </span>
+                      ) : null}
                     </div>
                     {t.kind === 'demo' ? <Badge variant="secondary">Demo</Badge> : null}
                     {planNavn ? <Badge variant="outline">{planNavn}</Badge> : null}
@@ -336,16 +355,48 @@ export default function ForhandlerePage() {
                         >
                           {apen ? 'Lukk pakke' : 'Endre pakke'}
                         </button>
-                        {t.eierInviteUbrukt ? (
-                          <button
-                            type="button"
-                            disabled={sendPaNytt.isPending}
-                            onClick={() => sendPaNytt.mutate({ tenantId: t.id })}
-                            className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline disabled:opacity-50"
-                          >
-                            Send invitasjon på nytt
-                          </button>
-                        ) : null}
+                        <button
+                          type="button"
+                          disabled={
+                            sendPaNytt.isPending ||
+                            t.eierInviteStatus === 'brukt' ||
+                            !t.eierEpost
+                          }
+                          title={
+                            t.eierInviteStatus === 'brukt'
+                              ? 'Brukt invitasjon sendes ikke på nytt'
+                              : !t.eierEpost
+                                ? 'Mangler eier-e-post'
+                                : undefined
+                          }
+                          onClick={() => sendPaNytt.mutate({ tenantId: t.id })}
+                          className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline disabled:opacity-50"
+                        >
+                          Send invitasjon på nytt
+                        </button>
+                        <button
+                          type="button"
+                          disabled={
+                            trekkInvite.isPending ||
+                            t.eierInviteStatus === 'brukt' ||
+                            t.eierInviteStatus === 'trukket' ||
+                            t.eierInviteStatus === 'utlopt' ||
+                            !t.eierInviteStatus
+                          }
+                          title={
+                            t.eierInviteStatus === 'brukt'
+                              ? 'Brukt invitasjon kan ikke trekkes'
+                              : t.eierInviteStatus === 'trukket'
+                                ? 'Allerede trukket'
+                                : t.eierInviteStatus === 'utlopt' || !t.eierInviteStatus
+                                  ? 'Ingen åpen invitasjon å trekke'
+                                  : undefined
+                          }
+                          onClick={() => trekkInvite.mutate({ tenantId: t.id })}
+                          className="text-[12px] text-fg-muted underline-offset-2 hover:text-fg hover:underline disabled:opacity-50"
+                        >
+                          Trekk tilbake
+                        </button>
                         <button
                           type="button"
                           onClick={() => {

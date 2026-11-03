@@ -89,6 +89,7 @@ export function parseOrgChrome(
 ): OrgChromeId {
   const seksjon = parseOrgSeksjon(raw, isAdmin);
   if (seksjon === 'timeplan-ansatte') return 'timeplan';
+  if (seksjon === 'tilganger') return 'oversikt';
   return seksjon;
 }
 

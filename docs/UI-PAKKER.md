@@ -2,7 +2,9 @@
 
 > ### ⚠️ Mikael 03.11.2026 — PR #184 runde 3 (mobil)
 > Gratis Board MIT: progress, meter, context-menu, agent-thinking,
-> agent-log. Ingen Pro. Ingen `add agent-chat`. I18nProvider `nb-NO`,
+> agent-log. Ingen Pro. Ingen `add agent-chat`. Innlogging: Board
+> `Input` + `InputOtp` (e-postkode og autentikator), «Nesten der»
+> over TOTP, spinner i knappen (ikke «Sender»/«Bekreftet»). I18nProvider `nb-NO`,
 > DateCalendar mandag først. Felles `OppretterSkuff` (Steg n av m, maks
 > 4, Sjekk) for Kunde, Tjeneste, Ansatt, Del, Agent, Forhandler.
 > Hjem = «Dagen din». Analyse skjult på mobil. Dest = 4 + Mer

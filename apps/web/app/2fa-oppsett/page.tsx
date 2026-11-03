@@ -248,13 +248,13 @@ export default function ToFaktorOppsettPage() {
                 </p>
               ) : null}
               {totpUri ? <p className="break-all text-[11px] text-fg-muted">{totpUri}</p> : null}
+              <p className="text-title font-[650] text-fg">Nesten der</p>
               <Field id="tfa-kode" label="App-kode">
                 <FeltKode
                   aria-label="App-kode"
                   length={6}
                   value={kode}
                   onChange={setKode}
-                  className="text-[16px]"
                 />
               </Field>
               {feil && <p className="text-[12px] text-danger">{feil}</p>}
@@ -264,9 +264,9 @@ export default function ToFaktorOppsettPage() {
                 type="submit"
                 state={busy}
                 className="w-full"
-                loadingText="Bekrefter …"
-                successText="Bekreftet"
-                errorText="Feil kode"
+                loadingText=""
+                successText=""
+                errorText="Prøv igjen"
                 icon={<ShieldCheck size={15} />}
               >
                 Bekreft kode

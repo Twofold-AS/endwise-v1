@@ -134,6 +134,7 @@ function DelerInner() {
           hint={sok ? 'Prøv et annet søk.' : 'Deler legges inn av forhandler-admin.'}
         />
       ) : (
+        <>
         <div className="md:hidden">
           {deler.data?.map((d) => (
             <ListeRad
@@ -226,6 +227,7 @@ function DelerInner() {
             </div>
           ))}
         </div>
+        </>
       )}
 
       {detaljId ? (

@@ -1,6 +1,6 @@
 'use client';
 
-import { Inbox, StatefulButton, Store, Wrench } from '@endwise/ui';
+import { FeltInput, Inbox, StatefulButton, Store, Wrench } from '@endwise/ui';
 import { type FormEvent, useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
@@ -238,17 +238,13 @@ export default function OppstartPage() {
                         className="h-control ew-felt ew-felt-md px-3"
                       />
                     </label>
-                    <label className="flex flex-col gap-1.5">
-                      <span className="text-label text-fg">ApiV2-nøkkel</span>
-                      <input
-                        type="password"
-                        value={quickToken}
-                        onChange={(e) => setQuickToken(e.target.value)}
-                        autoComplete="off"
-                        spellCheck={false}
-                        className="h-control ew-felt ew-felt-md px-3"
-                      />
-                    </label>
+                    <FeltInput
+                      type="password"
+                      label="ApiV2-nøkkel"
+                      value={quickToken}
+                      onChange={setQuickToken}
+                      autoComplete="off"
+                    />
                   </div>
                 ) : null}
               </div>

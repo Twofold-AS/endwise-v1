@@ -62,7 +62,7 @@ export function OpprettSkuff({
     >
       <DrawerHeader title={tittel} />
       <DrawerBody className="px-3 pb-4">{children}</DrawerBody>
-      {footer ?? <DrawerFooter className="hidden" />}
+      {footer ?? <DrawerFooter className="hidden">{null}</DrawerFooter>}
     </Drawer>
   );
 }

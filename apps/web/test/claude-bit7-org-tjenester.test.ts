@@ -101,7 +101,7 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'ansatte')?.href).toBe(
       '/organisasjon?seksjon=ansatte',
     );
-    expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'timeplan')).toBeUndefined();
+    expect(ORG_HUB_SEKSJONER.map((s) => s.id)).not.toContain('timeplan');
     expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'abonnement')?.href).toBe(
       '/organisasjon?seksjon=abonnement',
     );

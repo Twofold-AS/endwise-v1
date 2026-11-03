@@ -180,6 +180,19 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(les('../app/(app)/jobber/_endring-detalj.tsx')).toMatch(/h-12/);
   });
 
+  it('innlogging bruker Board OTP, Nesten der og spinner uten Sender/Bekreftet', () => {
+    const skjema = utenKommentarer(les('../app/signin/signin-skjema.tsx'));
+    expect(skjema).toMatch(/FeltInput/);
+    expect(skjema).toMatch(/FeltKode/);
+    expect(skjema).toMatch(/SIGNIN_NESTEN_DER/);
+    expect(skjema).toMatch(/length=\{5\}/);
+    expect(skjema).toMatch(/length=\{6\}/);
+    expect(skjema).toMatch(/loadingText=""/);
+    expect(skjema).not.toMatch(/Sender/);
+    expect(skjema).not.toMatch(/Bekreftet/);
+    expect(les('../app/signin/signin-steg.ts')).toMatch(/SIGNIN_NESTEN_DER = 'Nesten der'/);
+  });
+
   it('Board progress/meter/context-menu/agent-thinking ligger i repo', () => {
     expect(les('../../../packages/ui/src/components/base/progress/progress.tsx')).toMatch(
       /ProgressBar/,

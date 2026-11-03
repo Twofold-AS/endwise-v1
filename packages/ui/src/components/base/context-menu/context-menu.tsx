@@ -283,7 +283,13 @@ export function ContextMenu<T extends object>({
   const { id, isOpen, openCount, anchorRef, autoFocus, close } = trigger;
 
   return (
-    <RootMenuContext.Provider value={{ id, onAction, close }}>
+    <RootMenuContext.Provider
+      value={{
+        id,
+        onAction: onAction ? (key) => onAction(key, undefined as unknown as T) : undefined,
+        close,
+      }}
+    >
       <AriaPopover
         key={openCount}
         triggerRef={anchorRef}

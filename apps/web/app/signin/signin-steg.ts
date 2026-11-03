@@ -20,6 +20,7 @@ export const SIGNIN_TITTEL = '';
 export const SIGNIN_KODE_INGRESS = 'Vi har sendt en midlertidig kode til';
 export const SIGNIN_IKKE_DEG = 'Ikke deg?';
 export const SIGNIN_FYLL_KODE = 'Fyll inn kode';
+export const SIGNIN_NESTEN_DER = 'Nesten der';
 export const SIGNIN_FORTSETT = 'Fortsett';
 export const SIGNIN_VILKAR = 'Ved å fortsette godtar du vilkårene.';
 

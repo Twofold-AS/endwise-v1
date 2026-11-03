@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -25,7 +26,7 @@ export function useNyHandling() {
     if (neste.get('fane') === 'opprett' || neste.get('fane') === 'ny') neste.delete('fane');
     neste.delete('ny');
     const q = neste.toString();
-    router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    router.replace((q ? `${pathname}?${q}` : pathname) as Route, { scroll: false });
   }, [pathname, raa, router, skalAapne]);
 
   return { apen, apne: () => setApen(true), lukk: () => setApen(false) };

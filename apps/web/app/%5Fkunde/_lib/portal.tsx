@@ -166,10 +166,8 @@ export function KundeHubFlate() {
             <ListeRad tittel="Profil" undertekst={p.epost ?? 'Kontaktinfo'} href="/profil" />
           </Seksjon>
           <Seksjon tittel="Mer">
-            <DeaktivertHandling forklaring="Deler kommer senere">Deler</DeaktivertHandling>
-            <DeaktivertHandling forklaring="Kvitteringer kommer senere">
-              Kvitteringer
-            </DeaktivertHandling>
+            <ListeRad tittel="Deler" undertekst="Nettbutikk er satt på vent" href="/deler" />
+            <ListeRad tittel="Kvitteringer" undertekst="Ingen kjøp ennå" href="/kvitteringer" />
           </Seksjon>
         </>
       )}

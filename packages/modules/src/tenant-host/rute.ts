@@ -11,6 +11,8 @@ export const KUNDE_STIER = [
   '/kjoretoy',
   '/profil',
   '/meldinger',
+  '/deler',
+  '/kvitteringer',
 ] as const;
 
 export type VertKontekst = 'privat' | 'bedrift';

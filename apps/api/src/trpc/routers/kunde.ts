@@ -3,6 +3,7 @@ import {
   IngenInnboksMottakerError,
   jobbFase,
   KUNDE_MELDING_PER_MINUTT,
+  kundeButikkStatus,
   sendKundeMelding,
 } from '@endwise/modules/kunde';
 import {
@@ -278,4 +279,15 @@ export const kundeRouter = router({
         return toTRPCError(error);
       }
     }),
+
+  /** F34 / F11c — shop er blokkert (F10-03). Ingen kasse, ingen Vipps. */
+  butikk: customerProcedure.query(async ({ ctx }) => {
+    await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+    return kundeButikkStatus();
+  }),
+
+  kvitteringer: customerProcedure.query(async ({ ctx }) => {
+    await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+    return [] as Array<{ id: string; tittel: string; tid: Date }>;
+  }),
 });

@@ -1,11 +1,14 @@
+import { TILLATELSE_NIVA, TILLATELSE_OMRADER } from '@endwise/db';
 import { describe, expect, it } from 'vitest';
 import {
   harTillatelse,
   kanLedeHandling,
   kanTildele,
   LEDER_HANDLINGER,
+  NIVA,
   navHarOmrade,
   nivaDekker,
+  OMRADER,
   TILLATELSE_FEIL,
   TILLATELSE_HINT,
   vurderTildeling,
@@ -50,6 +53,8 @@ describe('F23 / white label F6a: tillatelser', () => {
     expect(kanLedeHandling('dealer_admin')).toBe(true);
     expect(LEDER_HANDLINGER).toContain('tillatelser.dele_ut');
     expect(TILLATELSE_HINT).toBe('Spør daglig leder');
+    expect([...OMRADER]).toEqual([...TILLATELSE_OMRADER]);
+    expect([...NIVA]).toEqual([...TILLATELSE_NIVA]);
     expect(navHarOmrade({ rolle: 'dealer_staff', omrade: 'kunder', gitt: null })).toBe(true);
     expect(
       navHarOmrade({

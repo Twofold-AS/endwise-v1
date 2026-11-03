@@ -461,7 +461,8 @@ export function PulseJobbFlis() {
 /**
  * Tall — én boks over Jobb / På jobb (Claude §4.1 på Endwise-kortet).
  * Topp som Innboks: hvit ikonboks · «Tall» · «siste 30 dager» · Alle tall.
- * Under: live KPI-er (Bookinger). Skjulte stubber. Ingen dither.
+ * Under: live Bookinger + tomme/deaktiverte Visninger/Returer/Credits.
+ * Boksene skjules ikke. Ingen dither.
  */
 export function PulseAnalyserKort({
   stats,
@@ -473,7 +474,7 @@ export function PulseAnalyserKort({
   forhandlerNavn?: string | null;
   laster?: boolean;
 }) {
-  const kpis = stats.filter((s) => s.stub == null).slice(0, 4);
+  const kpis = stats.slice(0, 4);
   const en = kpis.length === 1;
 
   return (
@@ -524,15 +525,21 @@ export function PulseAnalyserKort({
 function PulseAnalyseKpi({ stat, laster = false }: { stat: AnalyserMockStat; laster?: boolean }) {
   const Ikon = stat.opp ? TrendingUp : TrendingDown;
   const verdi = typeof stat.verdi === 'number' ? stat.verdi.toLocaleString('nb-NO') : stat.verdi;
+  const deaktivert = Boolean(stat.stub);
   return (
-    <div data-analyser-kpi={stat.id} className="flex min-w-0 flex-col gap-1">
+    <div
+      data-analyser-kpi={stat.id}
+      data-analyser-deaktivert={deaktivert ? '' : undefined}
+      aria-disabled={deaktivert || undefined}
+      className={`flex min-w-0 flex-col gap-1 ${deaktivert ? 'opacity-50' : ''}`}
+    >
       <p className="min-w-0 truncate text-[13px] leading-4 text-fg-muted">{stat.label}</p>
       <div className="flex min-w-0 items-baseline gap-1.5">
         {laster ? (
           <span className="inline-block h-4 w-8 animate-pulse rounded-sm bg-border" />
-        ) : (
+        ) : verdi !== '' ? (
           <p className="text-[15px] font-semibold leading-none text-fg tabular-nums">{verdi}</p>
-        )}
+        ) : null}
         {stat.stub ? (
           <span data-analyser-stub className="truncate text-[13px] leading-none text-fg-faint">
             {stat.stub}

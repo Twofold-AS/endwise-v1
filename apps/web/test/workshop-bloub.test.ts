@@ -120,7 +120,8 @@ describe('Workshop-sheet i app-skallet', () => {
     expect(fab).toMatch(/gap-6/);
     expect(fab).toMatch(/data-ronny-forstor/);
     expect(fab).toMatch(/data-ronny-lukk/);
-    expect(fab).toMatch(/data-ronny-scrim/);
+    expect(fab).toMatch(/<Drawer/);
+    expect(fab).toMatch(/placement="bottom"/);
     expect(fab).toMatch(/ronnySheetHoydePx/);
     expect(fab).not.toMatch(/<Galaxy/);
     expect(fab).not.toMatch(/RONNY_GALAXY_TETTHET/);

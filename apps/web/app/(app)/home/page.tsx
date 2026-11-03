@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useMdViewport } from '../_lib/use-md-viewport';
-import { LasterFlate, Side } from '@endwise/ui';
+import { LasterFlate } from '@endwise/ui';
 import { HJEM_SCROLL_FLATE, VERKSTED_INNHOLD } from '../_shell/phone-home';
 import { DealerPulseKort, PhoneHomeDealer } from '../_shell/phone-home-dealer';
 import { VerkstedetDag } from '../dashboard/_verkstedet-dag';
@@ -40,12 +40,15 @@ export default function VerkstedetPage() {
 
 function VerkstedetDesktop() {
   return (
-    <Side
-      tittel="Dagen din"
-      undertekst="Her er det som gjelder i dag."
-      className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} py-3`}
+    <div
+      className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex h-full min-h-0 flex-col gap-2.5 py-3`}
     >
-      <DealerPulseKort className="flex flex-col gap-4" />
-    </Side>
+      <div className="sr-only">
+        <h1>Verkstedet</h1>
+        <p>Her er dagen din, sjef 👋</p>
+        <p>Alt under er hentet fra dine egne saker.</p>
+      </div>
+      <DealerPulseKort className="flex flex-col gap-2.5" />
+    </div>
   );
 }

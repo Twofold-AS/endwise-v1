@@ -7,14 +7,16 @@
 > over TOTP, spinner i knappen (ikke «Sender»/«Bekreftet»). I18nProvider `nb-NO`,
 > DateCalendar mandag først. Felles `OppretterSkuff` (Steg n av m, maks
 > 4, Sjekk) for Kunde, Tjeneste, Ansatt, Del, Agent, Forhandler.
-> Hjem = «Dagen din». Analyse skjult på mobil. Dest = 4 + Mer
-> (Lager/Butikk under Mer). Org = hub-liste. Sidetittel i innholdet
-> (`SideTopp`). Ronny = sticky sirkel + AgentThinking + LogRow +
-> forslagschips. Toast tatt i bruk ved opprett. Statuspalett §5
+> Hjem = R2-pulse (hero · innboks · lager · tall · på jobb), ekte 0.
+> Visninger/Returer/Credits står tomme/deaktivert. Dest = 4 + Mer
+> (Lager/Butikk under Mer). Org = hub-liste + Timeplan ansatte-rad.
+> Sidetittel i chrome på Timeplan/Kunder/Tjenester/Innboks. Ronny i
+> toppbar, åpner som Board bunn-Drawer. Overskrift «Ronny»; tenker
+> bare i `AgentThinking`. Toast ved opprett. Statuspalett §5
 > (confirmed = ink, ikke blå; lime/yellow/rose remap på mobil).
-> Timeplan/Tjenester har `NyKnapp` (ikke Opprett-fane på mobil).
-> Kundeliste og jobbrad har synlig ⋯ (`RadMeny`). Innboks uten
-> ForhandlerInfoKort. Integrasjoner som `ListeRad`. ⛔ Vipps-login. ⛔ command palette.
+> Timeplan/Tjenester har `NyKnapp`. Kundeliste og jobbrad har ⋯
+> (`RadMeny`). Innboks har ForhandlerInfoKort + InboxTopBar2.
+> Integrasjoner som `ListeRad`. ⛔ Vipps-login. ⛔ command palette.
 > ⛔ PULSE_PLAUSIBEL-tall. ⛔ `--ew-success` som tekst. ⛔ `#0066ff` på CTA.
 >
 > ### ⚠️ Mikael 02.11.2026 — PR #184 runde 2

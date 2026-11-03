@@ -49,7 +49,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
 
   it('Timeplan-gulv er borte; + Jobb er ny jobb', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/Ny jobb|data-ny-jobb|jobber\?ny=1/);
+    expect(hjem).toMatch(/PulseJobbFlis|bookinger\/ny/);
     expect(hjem).not.toMatch(/Timeplan-gulv|nesteTreJobber/);
   });
 

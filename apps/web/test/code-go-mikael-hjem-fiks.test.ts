@@ -84,7 +84,7 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     expect(analyser).not.toMatch(/scale-\[1\.65\]/);
     expect(analyser).not.toMatch(/#0066ff/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem.indexOf('Dagen din')).toBeGreaterThan(-1);
-    expect(hjem.indexOf('Trenger deg')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('PulseHeroFlate')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('På jobb')).toBeGreaterThan(-1);
   });
 });

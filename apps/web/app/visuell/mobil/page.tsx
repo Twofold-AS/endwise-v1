@@ -47,14 +47,15 @@ export default function VisuellMobil() {
         </header>
 
         <section data-mobil-side="hjem" className="border-border border-t pt-6">
-          <Side tittel="Dagen din" undertekst="Her er det som gjelder i dag.">
+          <Side tittel="Verkstedet" undertekst="Tirsdag 3. nov">
             <div data-kort className="ew-kort flex flex-col gap-3">
-              <p className="text-title font-[650]">I dag: 3 jobber</p>
-              <p className="text-body text-fg-muted">10:00 · Kari · EU-kontroll</p>
+              <p className="text-[18px] font-[650]">I dag</p>
+              <p className="text-[13px] text-fg-muted">0 planlagt · 0 pågår · 0 ferdig</p>
+              <StatusChip status="planlagt" />
             </div>
-            <p className="text-label font-[650] text-fg">Trenger deg</p>
-            <ListeRad tittel="2 avvik" undertekst="Trenger svar" />
-            <ListeRad tittel="4 uleste meldinger" undertekst="Innboks" />
+            <ListeRad tittel="Les alle siste meldinger" undertekst="Ingen uleste" hoyre="0" />
+            <ListeRad tittel="Venter på bestilling" undertekst="Ingen deler under minimum" hoyre="0" />
+            <ListeRad tittel="På jobb" undertekst="Ingen stempling" hoyre="0 / 0" />
           </Side>
         </section>
 

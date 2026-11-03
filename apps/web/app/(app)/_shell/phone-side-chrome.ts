@@ -1,7 +1,34 @@
 import { HJELP_FANER, type HjelpFaneId, hjelpHref, parseHjelpFane } from '../hjelp/_faner';
 import { type FaneId, innstillingerHref, parseFane, synligeFaner } from '../innstillinger/_faner';
-import { parseStatistikkFane, STATISTIKK_FANER, type StatistikkFaneId, statistikkHref } from '../statistikk/_faner';
+import {
+  erTimeplanSti,
+  parseTimeplanFane,
+  TIMEPLAN_FANER,
+  type TimeplanFaneId,
+  timeplanHref,
+} from '../jobber/_faner';
+import {
+  erKunderSti,
+  KUNDER_FANER,
+  type KunderFaneId,
+  kunderHref,
+  parseKunderFane,
+} from '../kunder/_faner';
+import {
+  erTjenesterSti,
+  parseTjenesterFane,
+  TJENESTER_FANER,
+  type TjenesterFaneId,
+  tjenesterHref,
+} from '../prisliste/_faner';
+import {
+  parseStatistikkFane,
+  STATISTIKK_FANER,
+  type StatistikkFaneId,
+  statistikkHref,
+} from '../statistikk/_faner';
 import { erSettingsSti } from './nav';
+import { erDealerInnboks } from './seksjon-sti';
 
 export type PhoneSideChromeFane = {
   id: string;
@@ -10,10 +37,18 @@ export type PhoneSideChromeFane = {
 };
 
 export type PhoneSideChrome = {
-  id: 'innstillinger' | 'hjelp' | 'statistikk';
+  id:
+    | 'innstillinger'
+    | 'hjelp'
+    | 'statistikk'
+    | 'timeplan'
+    | 'kunder'
+    | 'tjenester'
+    | 'innboks';
   tittel: string;
   faner: PhoneSideChromeFane[];
   aktiv: string;
+  /** Innboks har egen bar 2 (Alle meldinger · Ny melding · Sortering · Slett). */
   bar2?: 'faner' | 'innboks';
 };
 
@@ -30,18 +65,37 @@ export function erSamtaleSti(pathname: string): boolean {
 }
 
 export function erPhoneSideChrome(pathname: string): boolean {
-  return erSettingsSti(pathname) || erHjelpSti(pathname) || erStatistikkSti(pathname);
+  return (
+    erSettingsSti(pathname) ||
+    erHjelpSti(pathname) ||
+    erStatistikkSti(pathname) ||
+    erTimeplanSti(pathname) ||
+    erKunderSti(pathname) ||
+    erTjenesterSti(pathname) ||
+    erDealerInnboks(pathname)
+  );
 }
 
 /**
- * Sidetittel og + Ny bor i innholdet. Fast chrome = toppbar + dest-piller.
- * Innstillinger/Hjelp/Statistikk beholder ett fanenivå.
+ * Sidetittel + faner/verktøy under dest-piller.
+ * Org er hub-liste (ikke 5 faner). Timeplan/Kunder/Tjenester/Innboks
+ * har menyene fra før runde 3.
  */
 export function phoneSideChrome(
   pathname: string,
   search: { get: (k: string) => string | null } | null,
   opts: { isAdmin: boolean; erForhandler: boolean },
 ): PhoneSideChrome | null {
+  if (erDealerInnboks(pathname)) {
+    const ny = search?.get('ny') === '1';
+    return {
+      id: 'innboks',
+      tittel: 'Innboks',
+      aktiv: ny ? 'ny' : 'liste',
+      bar2: 'innboks',
+      faner: [],
+    };
+  }
   if (erSettingsSti(pathname)) {
     const fraQuery = search?.get('fane');
     const aktiv: FaneId = parseFane(
@@ -84,6 +138,45 @@ export function phoneSideChrome(
         id: f.id,
         label: f.label,
         href: statistikkHref(f.id),
+      })),
+    };
+  }
+  if (erTimeplanSti(pathname)) {
+    const aktiv: TimeplanFaneId = parseTimeplanFane(pathname, search?.get('fane'));
+    return {
+      id: 'timeplan',
+      tittel: 'Timeplan',
+      aktiv,
+      faner: TIMEPLAN_FANER.map((f) => ({
+        id: f.id,
+        label: f.label,
+        href: timeplanHref(f.id),
+      })),
+    };
+  }
+  if (erKunderSti(pathname)) {
+    const aktiv: KunderFaneId = parseKunderFane(pathname, search?.get('fane'), search?.get('ny'));
+    return {
+      id: 'kunder',
+      tittel: 'Kunder',
+      aktiv,
+      faner: KUNDER_FANER.map((f) => ({
+        id: f.id,
+        label: f.label,
+        href: kunderHref(f.id),
+      })),
+    };
+  }
+  if (erTjenesterSti(pathname)) {
+    const aktiv: TjenesterFaneId = parseTjenesterFane(search?.get('fane'));
+    return {
+      id: 'tjenester',
+      tittel: 'Tjenester',
+      aktiv,
+      faner: TJENESTER_FANER.map((f) => ({
+        id: f.id,
+        label: f.label,
+        href: tjenesterHref(f.id),
       })),
     };
   }

@@ -147,7 +147,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(kort).toMatch(/Planlagt/);
     expect(kort).toMatch(/Pågår/);
     expect(kort).toMatch(/Ferdig/);
-    expect(hjem).toMatch(/Dagen din/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).not.toMatch(/HJEM_KORT_TOM\.timeplan/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
     expect(kort).toMatch(/text-\[28px\]/);

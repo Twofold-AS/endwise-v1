@@ -37,7 +37,8 @@ describe('Ronny — stripe/peek er borte, sheet er full bredde', () => {
 
   it('åpen sheet er viewport-bredde (inset-x-0 bottom-0)', () => {
     const fab = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
-    expect(fab).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(fab).toMatch(/<Drawer/);
+    expect(fab).toMatch(/placement="bottom"/);
   });
 });
 

@@ -338,8 +338,9 @@ export type AnalyserMockStat = {
   serie: number[];
 };
 
-/** Claude §4.1 — bare live KPI-er. Visninger/Returer/Credits har ingen kilde. */
-export const TALL_KPI_IDS = ['bookinger'] as const;
+/** Claude §4.1 — Bookinger er live. Øvrige bokser står tomme/deaktivert. */
+export const TALL_KPI_IDS = ['bookinger', 'visninger', 'returer', 'credits'] as const;
+export const TALL_STUB_INGEN_API = 'Ingen data';
 
 /**
  * Bookinger siste 30 kalenderdager i Oslo, ekskl. cancelled.
@@ -356,8 +357,8 @@ export function bookingerSiste30d(jobber: PhoneBooking[], naa: Date): number {
 }
 
 /**
- * Hjem-Tall. Bare Bookinger er live (30d). Visninger/Returer/Credits
- * skjules — ingen ekte kilde, ingen stub-tall.
+ * Hjem-Tall. Bookinger er live (30d). Visninger/Returer/Credits
+ * står som tomme, deaktiverte bokser — ikke skjult, ikke oppdiktet.
  */
 export function tallKortStats(jobber: PhoneBooking[], naa: Date): AnalyserMockStat[] {
   return [
@@ -365,6 +366,27 @@ export function tallKortStats(jobber: PhoneBooking[], naa: Date): AnalyserMockSt
       id: 'bookinger',
       label: 'Bookinger',
       verdi: bookingerSiste30d(jobber, naa),
+      serie: [],
+    },
+    {
+      id: 'visninger',
+      label: 'Visninger',
+      verdi: '',
+      stub: TALL_STUB_INGEN_API,
+      serie: [],
+    },
+    {
+      id: 'returer',
+      label: 'Returer',
+      verdi: '',
+      stub: TALL_STUB_INGEN_API,
+      serie: [],
+    },
+    {
+      id: 'credits',
+      label: 'Credits',
+      verdi: '',
+      stub: TALL_STUB_INGEN_API,
       serie: [],
     },
   ];

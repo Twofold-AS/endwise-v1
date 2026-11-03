@@ -143,12 +143,12 @@ describe('Forhandler-info uten Grainient', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     const innboks = utenKommentarer(les('../app/(app)/innboks/page.tsx'));
     expect(dealer).not.toMatch(/ForhandlerInfoKort/);
-    expect(dealer).toMatch(/Dagen din/);
+    expect(dealer).toMatch(/PulseHeroFlate/);
     expect(mek).toMatch(/ForhandlerInfoKort/);
     expect(dash).not.toMatch(/ForhandlerInfoKort/);
     expect(dash).toMatch(/DealerPulseKort|DealerDestinasjonskort/);
-    expect(dash).toMatch(/Dagen din/);
-    expect(innboks).not.toMatch(/ForhandlerInfoKort/);
+    expect(dash).toMatch(/Verkstedet/);
+    expect(innboks).toMatch(/ForhandlerInfoKort/);
     expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(
       /Grainient|grainient|Galaxy|galaxy/,
     );

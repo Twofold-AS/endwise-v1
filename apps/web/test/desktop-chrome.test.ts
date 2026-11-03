@@ -92,7 +92,8 @@ describe('Mikael desktop-chrome 01.09.2026', () => {
     expect(workshop).toMatch(/data-ronny-desktop-panel/);
     expect(workshop).toMatch(/max-w-\[400px\]/);
     expect(workshop).toMatch(/data-workshop-dock/);
-    expect(workshop).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(workshop).toMatch(/<Drawer/);
+    expect(workshop).toMatch(/placement="bottom"/);
     expect(workshop).toMatch(/data-ronny-composer/);
     expect(workshop).toMatch(/data-ronny-utvid/);
     expect(workshop).not.toMatch(/ShaderGradient/);

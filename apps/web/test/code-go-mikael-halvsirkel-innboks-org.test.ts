@@ -103,7 +103,8 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
       { get: (k) => (k === 'fane' ? 'endringer' : null) },
       { isAdmin: true, erForhandler: true },
     );
-    expect(tp).toBeNull();
+    expect(tp?.id).toBe('timeplan');
+    expect(tp?.aktiv).toBe('endringer');
 
     expect(
       destinasjonFaner({
@@ -126,7 +127,7 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
   });
 
   it('Innboks er Settings-chrome med egen top-bar 2', () => {
-    expect(erPhoneSideChrome('/innboks')).toBe(false);
+    expect(erPhoneSideChrome('/innboks')).toBe(true);
     const chrome = phoneSideChrome(
       '/innboks',
       { get: () => null },
@@ -135,7 +136,8 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
         erForhandler: true,
       },
     );
-    expect(chrome).toBeNull();
+    expect(chrome?.id).toBe('innboks');
+    expect(chrome?.bar2).toBe('innboks');
 
     const bar = utenKommentarer(les('../app/(app)/innboks/_top-bar2.tsx'));
     expect(bar).toMatch(/data-innboks-top-bar2/);

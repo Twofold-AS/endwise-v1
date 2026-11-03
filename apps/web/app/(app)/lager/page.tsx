@@ -49,18 +49,34 @@ export default function LagerOversiktPage() {
         {oppsummering.isError ? (
           <Feil melding={oppsummering.error.message} />
         ) : (
-          <div data-lager-stats className="grid grid-cols-2 gap-2">
+          <div data-lager-stats className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Teller
+              icon={Package}
+              label={LAGER_STAT_LABELS[0]}
+              verdi={s?.totaltAntall}
+              laster={oppsummering.isLoading}
+              hint="Fysisk på hylle"
+            />
+            <Teller
+              icon={Package}
+              label={LAGER_STAT_LABELS[1]}
+              verdi={s?.tilgjengelig}
+              laster={oppsummering.isLoading}
+              hint="På lager minus reservert"
+            />
+            <Teller
+              icon={ArrowLeftRight}
+              label={LAGER_STAT_LABELS[2]}
+              verdi={s?.reservert}
+              laster={oppsummering.isLoading}
+              hint="Står fysisk, men er lovet bort"
+            />
             <Teller
               icon={TriangleAlert}
               label={LAGER_STAT_LABELS[3]}
               verdi={lave.data?.length}
               laster={lave.isLoading}
-            />
-            <Teller
-              icon={Package}
-              label="Tilgjengelig"
-              verdi={s?.tilgjengelig}
-              laster={oppsummering.isLoading}
+              hint={s ? `${s.antallLokasjoner} plasseringer` : undefined}
             />
           </div>
         )}

@@ -11,6 +11,7 @@ import { IntegrasjonerInnhold } from '../integrasjoner/_innhold';
 import { TjenesterInnhold } from '../tjenester/_innhold';
 import { OrganisasjonAnsatte } from './_ansatte';
 import { parseOrgSeksjon } from './_seksjoner';
+import { TimeplanAnsatteFlate } from './_timeplan-ansatte';
 import { ForhandlerKort } from './forhandleren/_kort';
 
 function OrganisasjonIndre() {
@@ -28,6 +29,11 @@ function OrganisasjonIndre() {
           tittel="Ansatte"
           undertekst="Teamet, timeplan og hvem som har jobber i dag"
           href="/organisasjon?seksjon=ansatte"
+        />
+        <ListeRad
+          tittel="Timeplan ansatte"
+          undertekst="Fri, stempling, syk og ferie"
+          href="/organisasjon?seksjon=timeplan-ansatte"
         />
         <ListeRad tittel="Mekanikere" undertekst="Kompetanse og kapasitet" href="/mekanikere" />
         <ListeRad
@@ -56,7 +62,7 @@ function OrganisasjonIndre() {
     );
   }
 
-  if (seksjon === 'ansatte' || seksjon === 'timeplan-ansatte') {
+  if (seksjon === 'ansatte') {
     return (
       <Side
         tittel="Ansatte"
@@ -67,6 +73,10 @@ function OrganisasjonIndre() {
         <OrganisasjonAnsatte apenNy={ny.apen} onLukkNy={ny.lukk} />
       </Side>
     );
+  }
+
+  if (seksjon === 'timeplan-ansatte') {
+    return <TimeplanAnsatteFlate />;
   }
 
   if (seksjon === 'tilganger') {

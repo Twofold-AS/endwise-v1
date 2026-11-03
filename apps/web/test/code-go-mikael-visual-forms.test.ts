@@ -61,8 +61,8 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
       'jobb',
     ]);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem.indexOf('Dagen din')).toBeGreaterThan(-1);
-    expect(hjem.indexOf('Trenger deg')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('PulseHeroFlate')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('På jobb')).toBeGreaterThan(-1);
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     expect(analyser).toMatch(/flex-col/);

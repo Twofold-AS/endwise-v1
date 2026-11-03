@@ -73,7 +73,10 @@ describe('PR #184 runde 2 — Mikael mobil-review', () => {
     expect(les('../app/(app)/organisasjon/_timeplan-ansatte.tsx')).toMatch(/data-timeplan-ansatte/);
     expect(les('../app/(app)/organisasjon/_timeplan-ansatte.tsx')).toMatch(/DeaktivertHandling/);
     expect(utenKommentarer(les('../app/(app)/organisasjon/page.tsx'))).toMatch(
-      /seksjon === 'ansatte' \|\| seksjon === 'timeplan-ansatte'/,
+      /TimeplanAnsatteFlate/,
+    );
+    expect(utenKommentarer(les('../app/(app)/organisasjon/page.tsx'))).toMatch(
+      /seksjon === 'timeplan-ansatte'/,
     );
   });
 

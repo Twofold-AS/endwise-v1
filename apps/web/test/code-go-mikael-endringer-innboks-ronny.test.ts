@@ -56,11 +56,11 @@ describe('CODE-GO Mikael — toppkort Endringer + dither', () => {
     expect(kort).toMatch(/PULSE_DAG_FYLL_SOFT|#f0f0f0|#f3f3f3/);
     expect(kort).toMatch(/data-pulse-hero-bunn/);
     expect(kort).toMatch(/TriangleAlert/);
-    expect(hjem).toMatch(/Dagen din/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/avvikTeller/);
-    expect(hjem).toMatch(/Dagen din/);
-    expect(hjem.indexOf('Dagen din')).toBeGreaterThan(-1);
-    expect(hjem.indexOf('Trenger deg')).toBeGreaterThan(-1);
+    expect(hjem).toMatch(/PulseAvvikForesporBoks|foresporTeller/);
+    expect(hjem.indexOf('PulseHeroFlate')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('På jobb')).toBeGreaterThan(-1);
     expect(side).toMatch(/jobber\?fane=endringer/);
     expect(les('../app/(app)/jobber/_avvik.tsx')).toMatch(/data-timeplan-endringer/);
     expect(les('../app/(app)/jobber/_avvik.tsx')).toMatch(/Godkjenn/);

@@ -91,12 +91,11 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).not.toMatch(/Organisasjon|Hjelp|svarhastighet/);
     expect(hjem).not.toMatch(/Ingen kunder ennå|Åpne organisasjon|Artikler og support/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
-    expect(hjem).toMatch(/Ny jobb|data-ny-jobb/);
-    expect(hjem).toMatch(/Dagen din/);
-    expect(hjem).toMatch(/Trenger deg|data-trenger-deg/);
+    expect(hjem).toMatch(/PulseJobbFlis/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
+    expect(hjem).toMatch(/På jobb/);
     expect(hjem).toMatch(/invalidateHjemPulse|bookings\.list/);
-    expect(hjem).toMatch(/data-dagen-din|data-dagen-hero/);
-    expect(hjem).toMatch(/jobbAntall|idagVisning/);
+    expect(hjem).toMatch(/idagVisning/);
     expect(kort).toMatch(/Planlagt/);
     expect(hjem).not.toMatch(/dither-kit|DitherGradient/);
     expect(hjem).not.toMatch(/pulse-preview/);
@@ -254,8 +253,8 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(dash).toMatch(/DealerPulseKort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
     expect(hjem).not.toMatch(/messages\.svarhastighet/);
-    expect(hjem).toMatch(/Dagen din/);
-    expect(hjem).toMatch(/Ny jobb|data-ny-jobb|jobber\?ny=1/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
+    expect(hjem).toMatch(/PulseJobbFlis|bookinger\/ny/);
     expect(shell).toMatch(/data-phone-search/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
   });

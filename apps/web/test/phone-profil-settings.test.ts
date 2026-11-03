@@ -73,8 +73,8 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(ronnySizeForSirkel(PHONE_AVATAR_PX)).toBe(44);
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/PHONE_PROFIL_SIRKEL/);
-    expect(utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'))).toMatch(
-      /data-ronny-sirkel/,
+    expect(utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'))).toMatch(
+      /data-ronny-avatar/,
     );
   });
 

@@ -104,7 +104,8 @@ describe('Mikael telefon-chrome — to toppbarer, sidebar skjult (07.09.2026)', 
     expect(workshop).not.toMatch(/hidden h-14/);
     expect(workshop).toMatch(/hidden md:block/);
     expect(workshop).toMatch(/data-ronny-desktop-panel/);
-    expect(workshop).toMatch(/fixed inset-x-0 bottom-0/);
+    expect(workshop).toMatch(/<Drawer/);
+    expect(workshop).toMatch(/placement="bottom"/);
     expect(workshop).toMatch(/data-ronny-composer/);
     expect(workshop).toMatch(/data-ronny-utvid/);
     expect(workshop).not.toMatch(/ShaderGradient/);

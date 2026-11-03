@@ -37,11 +37,11 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
       'jobb',
     ]);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/Dagen din/);
-    expect(hjem).toMatch(/Trenger deg/);
-    expect(hjem).toMatch(/data-ny-jobb/);
-    expect(hjem).not.toMatch(/PulseHeroFlate/);
-    expect(hjem).not.toMatch(/På jobb/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
+    expect(hjem).toMatch(/På jobb/);
+    expect(hjem).toMatch(/PulseJobbFlis/);
+    expect(hjem).not.toMatch(/Dagen din/);
+    expect(hjem).not.toMatch(/Trenger deg/);
     expect(hjem).not.toMatch(/Svarhastighet|Timeplan-gulv|PulseFooter|PeopleShowcase/);
     for (const forbudt of FORBUDT_DEALER_HJEM) {
       expect(hjem).not.toMatch(new RegExp(`['"]${forbudt}['"]`));
@@ -71,8 +71,8 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
   });
 
-  it('tallKortStats: bare live bookinger 30d — skjulte stubber', () => {
-    expect([...TALL_KPI_IDS]).toEqual(['bookinger']);
+  it('tallKortStats: live bookinger 30d + tomme stub-bokser', () => {
+    expect([...TALL_KPI_IDS]).toEqual(['bookinger', 'visninger', 'returer', 'credits']);
     const naa = new Date('2026-09-08T10:00:00');
     expect(
       bookingerSiste30d(
@@ -92,14 +92,13 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
       ],
       naa,
     );
-    expect(stats.map((s) => s.id)).toEqual(['bookinger']);
+    expect(stats.map((s) => s.id)).toEqual(['bookinger', 'visninger', 'returer', 'credits']);
     expect(stats.find((s) => s.id === 'bookinger')?.verdi).toBe(2);
     expect(stats.find((s) => s.id === 'bookinger')?.stub).toBeUndefined();
-    expect(
-      stats.some((s) => s.id === 'visninger' || s.id === 'returer' || s.id === 'credits'),
-    ).toBe(false);
+    expect(stats.find((s) => s.id === 'visninger')?.stub).toBe('Ingen data');
+    expect(stats.find((s) => s.id === 'visninger')?.verdi).toBe('');
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(kort).not.toMatch(/TALL_STUB_INGEN_API|Ingen API/);
+    expect(kort).toMatch(/data-analyser-deaktivert/);
   });
 
   it('Analyse-dypflater og chrome er urørt', () => {

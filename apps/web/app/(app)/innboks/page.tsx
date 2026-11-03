@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useEventStream } from '../_lib/use-event-stream';
+import { ForhandlerInfoKort } from '../_shell/forhandler-info-kort';
 import { OpprettSkuff } from '../_shell/opprett-skuff';
 import { ESCALATION_REASON_LABEL, fmtWhen } from './_lib';
 import { NyMeldingIkon } from './_ny-melding-ikon';
@@ -64,6 +65,7 @@ function MeldingerPageInner() {
 
   return (
     <div className="mx-auto flex h-full min-h-0 w-full max-w-[820px] flex-col gap-5 overflow-y-auto max-md:px-4 max-md:py-4 md:px-8 md:py-7">
+      <ForhandlerInfoKort />
       <OpprettSkuff
         tittel="Ny melding"
         apen={nySamtale}

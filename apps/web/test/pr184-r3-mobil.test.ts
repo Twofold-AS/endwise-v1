@@ -42,6 +42,14 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(les('../app/providers.tsx')).toMatch(/LenkeProvider/);
   });
 
+  it('toppbar har Ronny-avatar og Innboks-meny', () => {
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    expect(shell).toMatch(/data-ronny-avatar/);
+    expect(shell).toMatch(/InboxTopBar2/);
+    expect(shell).toMatch(/PHONE_RONNY_SIRKEL/);
+    expect(shell).toMatch(/Mer/);
+  });
+
   it('dest-piller er 4 faste + Mer, Analyse ute', () => {
     const dest = delMobilDest(
       [
@@ -71,14 +79,14 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     );
   });
 
-  it('Hjem er Dagen din uten På jobb-flis', () => {
+  it('Hjem er pulse-layout med På jobb-flis og ekte 0', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/Dagen din/);
-    expect(hjem).toMatch(/Trenger deg/);
-    expect(hjem).toMatch(/Ny jobb/);
-    expect(hjem).not.toMatch(/På jobb/);
-    expect(hjem).not.toMatch(/PulseHeroFlate/);
-    expect(hjem).not.toMatch(/PulseAnalyserKort/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
+    expect(hjem).toMatch(/PulseAnalyserKort/);
+    expect(hjem).toMatch(/På jobb/);
+    expect(hjem).toMatch(/PulseJobbFlis/);
+    expect(hjem).not.toMatch(/Dagen din/);
+    expect(hjem).not.toMatch(/Trenger deg/);
   });
 
   it('Innboks-chips er Alle · Kunder · Intern uten Løst', () => {
@@ -94,17 +102,18 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(org).toMatch(/tittel="Mekanikere"/);
     expect(org).toMatch(/tittel="Tilganger"/);
     expect(org).toMatch(/tittel="Abonnement"/);
-    expect(org).not.toMatch(/TimeplanAnsatteFlate/);
+    expect(org).toMatch(/TimeplanAnsatteFlate/);
+    expect(org).toMatch(/tittel="Timeplan ansatte"/);
     expect(org).not.toMatch(/SideChromeSkall/);
   });
 
-  it('Org er hub uten Timeplan ansatte-fane, Abonnement heter Tillegg og priser', () => {
+  it('Org er hub med Timeplan ansatte-rad, Abonnement heter Tillegg og priser', () => {
     const org = utenKommentarer(les('../app/(app)/organisasjon/page.tsx'));
     expect(org).toMatch(/tittel="Ansatte"/);
     expect(org).toMatch(/tittel="Mekanikere"/);
     expect(org).toMatch(/tittel="Tilganger"/);
     expect(org).toMatch(/Tillegg og priser/);
-    expect(org).not.toMatch(/TimeplanAnsatteFlate/);
+    expect(org).toMatch(/TimeplanAnsatteFlate/);
     expect(org).not.toMatch(/SideChromeSkall/);
   });
 
@@ -139,12 +148,16 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(les('../app/(app)/lager/deler/_ny-del.tsx')).toMatch(/OppretterSkuff/);
   });
 
-  it('Ronny er sticky sirkel med thinking, ikke sr-only tenking', () => {
+  it('Ronny åpner som Board-Drawer, tenker bare i innholdet', () => {
     const ronny = utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'));
-    expect(ronny).toMatch(/data-ronny-sirkel/);
+    expect(ronny).toMatch(/<Drawer/);
+    expect(ronny).toMatch(/placement="bottom"/);
+    expect(ronny).toMatch(/DrawerHeader/);
+    expect(ronny).toMatch(/title="Ronny"/);
     expect(ronny).toMatch(/AgentThinking/);
     expect(ronny).toMatch(/data-ronny-forslag/);
-    expect(ronny).not.toMatch(/sr-only.*TENKER_TEKST/);
+    expect(ronny).not.toMatch(/data-ronny-sirkel/);
+    expect(ronny).not.toMatch(/text-meta text-fg-muted.*TENKER_TEKST/);
   });
 
   it('status confirmed er ikke blå', () => {
@@ -180,11 +193,11 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(les('../app/(app)/jobber/_endring-detalj.tsx')).toMatch(/h-12/);
   });
 
-  it('Timeplan og Tjenester har Ny-knapp, innboks uten ForhandlerInfoKort', () => {
+  it('Timeplan og Tjenester har Ny-knapp, innboks har ForhandlerInfoKort', () => {
     expect(les('../app/(app)/saker/page.tsx')).toMatch(/NyKnapp/);
     expect(les('../app/(app)/saker/page.tsx')).toMatch(/Ny jobb/);
     expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/onNy/);
-    expect(utenKommentarer(les('../app/(app)/innboks/page.tsx'))).not.toMatch(/ForhandlerInfoKort/);
+    expect(utenKommentarer(les('../app/(app)/innboks/page.tsx'))).toMatch(/ForhandlerInfoKort/);
     expect(les('../app/(app)/kunder/page.tsx')).toMatch(/RadMeny/);
     expect(les('../app/(app)/jobber/_dagsliste.tsx')).toMatch(/RadMeny/);
     expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/Ingen vakt registrert/);

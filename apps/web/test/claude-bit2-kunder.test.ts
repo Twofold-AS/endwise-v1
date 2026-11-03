@@ -233,8 +233,8 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(faner).toMatch(/Registrer kjøretøy/);
     expect(faner).not.toMatch(/Tjenester/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/Dagen din/);
-    expect(hjem).not.toMatch(/PulseAnalyserKort/);
+    expect(hjem).toMatch(/PulseHeroFlate/);
+    expect(hjem).toMatch(/PulseAnalyserKort/);
     const analyse = les('../app/(app)/analyse/page.tsx');
     expect(analyse.length).toBeGreaterThan(100);
   });

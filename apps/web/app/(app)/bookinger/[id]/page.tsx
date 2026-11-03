@@ -229,4 +229,3 @@ function Fact({
     </div>
   );
 }
-

@@ -37,6 +37,7 @@ export function KunderAlfaListe<T extends { id: string; name: string }>({
       }
       setAktiv(neste);
     };
+    void kunder.length;
     synk();
     rot.addEventListener('scroll', synk, { passive: true });
     return () => rot.removeEventListener('scroll', synk);

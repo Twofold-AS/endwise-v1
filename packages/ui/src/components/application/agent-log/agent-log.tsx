@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { AgentThinking } from "@endwise/ui/components/application/agent-thinking/agent-thinking";
-import { cx } from "@endwise/ui/utils/cx";
+import { AgentThinking } from '@endwise/ui/components/application/agent-thinking/agent-thinking';
+import { cx } from '@endwise/ui/utils/cx';
+import { motion, useReducedMotion } from 'motion/react';
+import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Agent Log — the shared machinery behind a streaming agent transcript.
@@ -39,7 +39,7 @@ export const SOFT_EASE = [0.22, 1, 0.36, 1] as const;
  * and nothing pops. The fade is longer than a text line, so a row is always
  * faintest exactly where it is being clipped.
  */
-const REVEAL_FADE_VAR = "--bui-reveal-fade";
+const REVEAL_FADE_VAR = '--bui-reveal-fade';
 
 // The transparent stop sits just past the box: with both stops at exactly 100%
 // the gradient is degenerate and browsers soften the final pixel row, which
@@ -55,16 +55,16 @@ export const UNIT_INITIAL = {
   opacity: 0,
   height: 0,
   y: 4,
-  filter: "blur(6px)",
-  [REVEAL_FADE_VAR]: "22px",
+  filter: 'blur(6px)',
+  [REVEAL_FADE_VAR]: '22px',
 };
 
 export const UNIT_ANIMATE = {
   opacity: 1,
-  height: "auto",
+  height: 'auto',
   y: 0,
-  filter: "blur(0px)",
-  [REVEAL_FADE_VAR]: "0px",
+  filter: 'blur(0px)',
+  [REVEAL_FADE_VAR]: '0px',
 };
 
 export const UNIT_TRANSITION = {
@@ -90,11 +90,7 @@ export function useRevealMask(reduce: boolean) {
 
 /** A line the agent is still working on, with a highlight travelling across it. */
 export function ShimmerText({ children }: { children: string }) {
-  return (
-    <span aria-label={children} className="agent-progress-loading-text">
-      {children}
-    </span>
-  );
+  return <span className="agent-progress-loading-text">{children}</span>;
 }
 
 /* ---------------------------------------------------------------- ticker */
@@ -140,11 +136,7 @@ export function useRevealTicker({
 
   useEffect(() => {
     if (isControlled || !run || revealed >= total) return;
-    const delay = delayFor
-      ? delayFor(revealed)
-      : revealed === 0
-        ? startDelay
-        : stepInterval;
+    const delay = delayFor ? delayFor(revealed) : revealed === 0 ? startDelay : stepInterval;
     const id = window.setTimeout(() => setTicked((n) => n + 1), delay);
     return () => window.clearTimeout(id);
   }, [isControlled, run, revealed, total, startDelay, stepInterval, delayFor]);
@@ -201,13 +193,13 @@ const BRANCH_PATH = `M0.5 0 V${BRANCH_Y - BRANCH_RADIUS} Q0.5 ${BRANCH_Y} ${0.5 
  * left it visibly trailing text that was already done. The 42px of line
  * therefore draws in 0.26s, starting on the same frame as the row.
  */
-const TAIL_TRANSITION = { duration: 0.12, ease: "linear" as const, delay: 0 };
+const TAIL_TRANSITION = { duration: 0.12, ease: 'linear' as const, delay: 0 };
 
 /** A branch waits for the tail above it; the first in a list has none to wait
  *  for and starts with the row. */
 const branchTransition = (first: boolean) => ({
   duration: 0.14,
-  ease: "linear" as const,
+  ease: 'linear' as const,
   delay: first ? 0 : 0.12,
 });
 
@@ -245,6 +237,7 @@ export function RowConnector({
         fill="none"
         className="absolute top-0 start-0 rtl:-scale-x-100"
       >
+        <title>Guide</title>
         <motion.path
           d={BRANCH_PATH}
           stroke="currentColor"
@@ -328,7 +321,7 @@ export function WorkingRow({
       animate={UNIT_ANIMATE}
       transition={UNIT_TRANSITION}
       {...mask}
-      className={cx("overflow-hidden", className)}
+      className={cx('overflow-hidden', className)}
     >
       <div className="py-1">
         <AgentThinking variant="stars" label={label} />
@@ -366,7 +359,7 @@ export function LogRow({
       animate={UNIT_ANIMATE}
       transition={UNIT_TRANSITION}
       {...mask}
-      className={cx("relative overflow-hidden ps-4", className)}
+      className={cx('relative overflow-hidden ps-4', className)}
     >
       <RowConnector first={first} last={last} reduce={reduce} />
       {children}

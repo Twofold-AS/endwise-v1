@@ -251,9 +251,7 @@ export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: (
               id: 'kompetanse',
               etikett: 'Kompetanse',
               verdi:
-                kompetanse.length === 0
-                  ? 'Ingen'
-                  : kompetanse.map((k) => k.skillKey).join(', '),
+                kompetanse.length === 0 ? 'Ingen' : kompetanse.map((k) => k.skillKey).join(', '),
             },
           ]}
           onEndre={o.gaaTil}

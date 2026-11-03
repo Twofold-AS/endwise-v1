@@ -94,8 +94,6 @@ export type NavItem = {
   countKey?: 'kunder' | 'intern' | 'endwise';
 };
 
-const ADMIN_KUN: OrgRole[] = ['dealer_admin'];
-
 /**
  * Mikael IA 28.08 ettermiddag — Organisasjon er ÉN side.
  * Top-bar 2 er seksjonene. Kompetanse er ikke en pille.

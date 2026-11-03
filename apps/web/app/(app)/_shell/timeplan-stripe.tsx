@@ -23,14 +23,14 @@ export function TimeplanStripe({
       <div className="flex items-center justify-between gap-2">
         <p className="text-label capitalize text-fg">{timeplanManedNavn(valgt)}</p>
         <div data-timeplan-maned>
-        <DatePicker
-          aria-label="Velg dag"
-          value={parseDate(osloKalenderdag(valgt))}
-          onChange={(d) => {
-            if (!d) return;
-            onValgt(d.toString());
-          }}
-        />
+          <DatePicker
+            aria-label="Velg dag"
+            value={parseDate(osloKalenderdag(valgt))}
+            onChange={(d) => {
+              if (!d) return;
+              onValgt(d.toString());
+            }}
+          />
         </div>
       </div>
 

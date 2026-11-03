@@ -11,13 +11,7 @@ export type LenkeRender = (props: {
 const LenkeCtx = createContext<LenkeRender | null>(null);
 
 /** Appen setter Next Link her, så ListeRad ikke gjør hard navigasjon. */
-export function LenkeProvider({
-  render,
-  children,
-}: {
-  render: LenkeRender;
-  children: ReactNode;
-}) {
+export function LenkeProvider({ render, children }: { render: LenkeRender; children: ReactNode }) {
   return <LenkeCtx.Provider value={render}>{children}</LenkeCtx.Provider>;
 }
 

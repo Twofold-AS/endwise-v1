@@ -80,7 +80,33 @@ const nextConfig: NextConfig = {
       { key: 'CDN-Cache-Control', value: 'no-store' },
       { key: 'Vercel-CDN-Cache-Control', value: 'no-store' },
     ];
+    const sikkerhet = [
+      {
+        key: 'Content-Security-Policy',
+        value: [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.sentry.io https://vercel.live",
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data: blob: https:",
+          "font-src 'self' data:",
+          "connect-src 'self' https: wss:",
+          "worker-src 'self' blob:",
+          "frame-src 'self' https://vercel.live",
+          "frame-ancestors 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+          "object-src 'none'",
+          'upgrade-insecure-requests',
+        ].join('; '),
+      },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+    ];
     return [
+      { source: '/:path*', headers: sikkerhet },
       { source: '/signin', headers: noStore },
       { source: '/signin/:path*', headers: noStore },
       { source: '/2fa-oppsett', headers: noStore },
@@ -107,10 +133,6 @@ const nextConfig: NextConfig = {
       type: 'asset/source',
     });
     return config;
-  },
-  experimental: {
-    // React 19.2 native View Transitions (techstack §2 Frontend)
-    viewTransition: true,
   },
 };
 

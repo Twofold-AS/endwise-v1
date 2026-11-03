@@ -67,9 +67,7 @@ export function PrislisteFlate({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-title text-fg max-md:text-[24px] max-md:font-[650]">{tittel}</h1>
-          <p className="mt-0.5 text-body text-fg-muted">
-            Tjenestene kunden kan bestille hos dere.
-          </p>
+          <p className="mt-0.5 text-body text-fg-muted">Tjenestene kunden kan bestille hos dere.</p>
         </div>
         {isAdmin && !nyApen && !skjulNy ? (
           <NyKnapp onClick={onNy ?? (() => setNyApen(true))}>Ny tjeneste</NyKnapp>
@@ -122,9 +120,7 @@ export function PrislisteFlate({
         <div className="flex-1" />
       </div>
 
-      {isAdmin ? (
-        <NyTjeneste apen={nyApen} onLukk={() => setNyApen(false)} />
-      ) : null}
+      {isAdmin ? <NyTjeneste apen={nyApen} onLukk={() => setNyApen(false)} /> : null}
 
       {tjenester.isLoading ? (
         <Laster />

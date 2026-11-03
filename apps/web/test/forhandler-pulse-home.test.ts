@@ -26,7 +26,6 @@ import {
   PULSE_DAGER,
   PULSE_PLAUSIBEL_IDAG,
   PULSE_PLAUSIBEL_INNBOKS_MELDINGER,
-  plausibelSpark,
   siste7dSpark,
 } from '../app/(app)/_shell/phone-home-pulse.ts';
 

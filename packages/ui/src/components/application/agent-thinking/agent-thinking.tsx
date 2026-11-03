@@ -1,10 +1,9 @@
-"use client";
+'use client';
 
-import { useTemplateCopy } from "@endwise/ui/components/foundations/template-copy/template-copy";
-
-import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
-import { cx } from "@endwise/ui/utils/cx";
+import { useTemplateCopy } from '@endwise/ui/components/foundations/template-copy/template-copy';
+import { cx } from '@endwise/ui/utils/cx';
+import type { CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Agent Thinking — the agent "thinking" state that sits above a chat composer
@@ -21,8 +20,8 @@ import { cx } from "@endwise/ui/utils/cx";
  * back to static rendering under `prefers-reduced-motion` (see globals.css).
  */
 
-export type AgentThinkingVariant = "wave" | "spin" | "stars" | "infinity";
-export type AgentThinkingTone = "subtle" | "default" | "primary" | "accent";
+export type AgentThinkingVariant = 'wave' | 'spin' | 'stars' | 'infinity';
+export type AgentThinkingTone = 'subtle' | 'default' | 'primary' | 'accent';
 
 export interface AgentThinkingProps {
   variant?: AgentThinkingVariant;
@@ -38,17 +37,17 @@ export interface AgentThinkingProps {
 }
 
 const TONE_COLORS: Record<AgentThinkingTone, string> = {
-  subtle: "var(--color-text-tertiary)",
-  default: "var(--color-text-secondary)",
-  primary: "var(--color-text-primary)",
-  accent: "#141414",
+  subtle: 'var(--color-text-tertiary)',
+  default: 'var(--color-text-secondary)',
+  primary: 'var(--color-text-primary)',
+  accent: '#141414',
 };
 
 const VARIANT_TONE: Record<AgentThinkingVariant, AgentThinkingTone> = {
-  wave: "default",
-  spin: "default",
-  stars: "subtle",
-  infinity: "default",
+  wave: 'default',
+  spin: 'default',
+  stars: 'subtle',
+  infinity: 'default',
 };
 
 /* ------------------------------------------------------------------- dots */
@@ -65,22 +64,33 @@ const DOTS_PHASE_STEP = 1 / 8;
 // Static first frame: identical on server and client, and the resting state
 // under prefers-reduced-motion.
 const DOTS_SEED = [0.55, 0.3, 0.15, 0.85, 0.55, 0.3, 1, 0.85, 0.55];
+const DOT_CELLS = [
+  { col: 0, row: 0 },
+  { col: 1, row: 0 },
+  { col: 2, row: 0 },
+  { col: 0, row: 1 },
+  { col: 1, row: 1 },
+  { col: 2, row: 1 },
+  { col: 0, row: 2 },
+  { col: 1, row: 2 },
+  { col: 2, row: 2 },
+] as const;
 
 /**
  * How far along the pattern's travel direction each cell sits, in [0, 1).
  * The wave scalar is compressed below 1 so the phase wrap reads as the front
  * leaving the grid and re-entering; the spin angle is naturally cyclic.
  */
-function dotScalar(variant: "wave" | "spin", col: number, row: number) {
+function dotScalar(variant: 'wave' | 'spin', col: number, row: number) {
   const m = DOTS_GRID - 1;
-  if (variant === "wave") {
+  if (variant === 'wave') {
     return ((col + row) / (2 * m)) * (DOTS_GRID / (DOTS_GRID + 1));
   }
   const center = m / 2;
   return (Math.atan2(row - center, col - center) / (2 * Math.PI) + 1) % 1;
 }
 
-function dotOpacities(variant: "wave" | "spin", phase: number) {
+function dotOpacities(variant: 'wave' | 'spin', phase: number) {
   return Array.from({ length: DOTS_GRID * DOTS_GRID }, (_, i) => {
     const s = dotScalar(variant, i % DOTS_GRID, Math.floor(i / DOTS_GRID));
     // Comet: bright head at the phase front, tail fading behind it.
@@ -90,12 +100,12 @@ function dotOpacities(variant: "wave" | "spin", phase: number) {
   });
 }
 
-function DotsIndicator({ variant }: { variant: "wave" | "spin" }) {
+function DotsIndicator({ variant }: { variant: 'wave' | 'spin' }) {
   const localize = useTemplateCopy();
   const [opacities, setOpacities] = useState<number[]>(DOTS_SEED);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     let phase = 0;
     const id = window.setInterval(() => {
       phase = (phase + DOTS_PHASE_STEP) % 1;
@@ -104,7 +114,7 @@ function DotsIndicator({ variant }: { variant: "wave" | "spin" }) {
     return () => window.clearInterval(id);
   }, [variant]);
 
-  return localize((
+  return localize(
     <span
       aria-hidden
       className="grid shrink-0"
@@ -113,20 +123,20 @@ function DotsIndicator({ variant }: { variant: "wave" | "spin" }) {
         gap: DOTS_GAP,
       }}
     >
-      {opacities.map((opacity, i) => (
+      {DOT_CELLS.map((cell) => (
         <span
-          key={i}
+          key={`${cell.col}-${cell.row}`}
           className="rounded-[1px] bg-current"
           style={{
             width: DOTS_SIZE,
             height: DOTS_SIZE,
-            opacity,
+            opacity: opacities[cell.row * DOTS_GRID + cell.col] ?? DOTS_MIN_OPACITY,
             transition: `opacity ${DOTS_FADE_MS}ms ease`,
           }}
         />
       ))}
-    </span>
-  ));
+    </span>,
+  );
 }
 
 /* ------------------------------------------------------------------ stars */
@@ -141,12 +151,12 @@ const STAR_LAYOUT = [
   { x: 78, y: 76, scale: 0.55 },
   { x: 22, y: 78, scale: 0.4 },
 ];
-const STAR_PATH = "M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z";
+const STAR_PATH = 'M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z';
 
 function StarsIndicator() {
   const localize = useTemplateCopy();
   const box = STAR_SIZE * 1.5;
-  return localize((
+  return localize(
     <span
       aria-hidden
       className="bui-agent-thinking-stars relative block shrink-0"
@@ -156,7 +166,7 @@ function StarsIndicator() {
         const size = STAR_SIZE * star.scale;
         return (
           <svg
-            key={i}
+            key={`${star.x}-${star.y}`}
             viewBox="0 0 24 24"
             className="bui-agent-thinking-star absolute"
             style={{
@@ -170,12 +180,13 @@ function StarsIndicator() {
               animationDelay: `${(i * STAR_PERIOD_S * 0.7) / STAR_COUNT}s`,
             }}
           >
+            <title>Sparkle</title>
             <path d={STAR_PATH} fill="currentColor" />
           </svg>
         );
       })}
-    </span>
-  ));
+    </span>,
+  );
 }
 
 /* --------------------------------------------------------------- infinity */
@@ -184,12 +195,11 @@ const INFINITY_WIDTH = 32;
 const INFINITY_TRAIL = 11;
 const INFINITY_STROKE = 2.75;
 const INFINITY_DURATION_S = 1.2;
-const INFINITY_PATH =
-  "M28 14C33 5 47 5 47 14C47 23 33 23 28 14C23 5 9 5 9 14C9 23 23 23 28 14Z";
+const INFINITY_PATH = 'M28 14C33 5 47 5 47 14C47 23 33 23 28 14C23 5 9 5 9 14C9 23 23 23 28 14Z';
 
 function InfinityIndicator() {
   const localize = useTemplateCopy();
-  return localize((
+  return localize(
     <svg
       aria-hidden
       viewBox="0 0 56 28"
@@ -197,8 +207,9 @@ function InfinityIndicator() {
       // The figure-eight spans x 9-47 of the 56-wide viewBox, so the svg box
       // carries ~4px of dead space per side at this width; pull it back in so
       // the label sits at the loader's real gap.
-      style={{ width: INFINITY_WIDTH, height: INFINITY_WIDTH / 2, margin: "0 -4px" }}
+      style={{ width: INFINITY_WIDTH, height: INFINITY_WIDTH / 2, margin: '0 -4px' }}
     >
+      <title>Infinity</title>
       <path
         d={INFINITY_PATH}
         fill="none"
@@ -217,8 +228,8 @@ function InfinityIndicator() {
         className="bui-agent-thinking-comet"
         style={{ animationDuration: `${INFINITY_DURATION_S}s` }}
       />
-    </svg>
-  ));
+    </svg>,
+  );
 }
 
 /* ------------------------------------------------------------------ timer */
@@ -229,25 +240,22 @@ function ElapsedTimer() {
 
   useEffect(() => {
     const started = performance.now();
-    const id = window.setInterval(
-      () => setElapsed((performance.now() - started) / 1000),
-      100,
-    );
+    const id = window.setInterval(() => setElapsed((performance.now() - started) / 1000), 100);
     return () => window.clearInterval(id);
   }, []);
 
-  return localize((
+  return localize(
     <span className="font-mono text-caption-1-regular text-text-tertiary tabular-nums">
       {elapsed.toFixed(1)}s
-    </span>
-  ));
+    </span>,
+  );
 }
 
 /* ----------------------------------------------------------------- loader */
 
 export function AgentThinking({
-  variant = "wave",
-  label = "Thinking",
+  variant = 'wave',
+  label = 'Thinking',
   tone,
   shimmer = true,
   showTimer = true,
@@ -256,22 +264,17 @@ export function AgentThinking({
   const localize = useTemplateCopy();
   const color = TONE_COLORS[tone ?? VARIANT_TONE[variant]];
 
-  return localize((
+  return localize(
     <div
       role="status"
-      className={cx("flex items-center gap-2.5", className)}
-      style={{ color, "--bui-agent-thinking-tone": color } as CSSProperties}
+      className={cx('flex items-center gap-2.5', className)}
+      style={{ color, '--bui-agent-thinking-tone': color } as CSSProperties}
     >
-      {(variant === "wave" || variant === "spin") && <DotsIndicator variant={variant} />}
-      {variant === "stars" && <StarsIndicator />}
-      {variant === "infinity" && <InfinityIndicator />}
-      <span
-        aria-label={label}
-        className={cx("text-body-medium", shimmer && "bui-agent-thinking-label")}
-      >
-        {label}
-      </span>
+      {(variant === 'wave' || variant === 'spin') && <DotsIndicator variant={variant} />}
+      {variant === 'stars' && <StarsIndicator />}
+      {variant === 'infinity' && <InfinityIndicator />}
+      <span className={cx('text-body-medium', shimmer && 'bui-agent-thinking-label')}>{label}</span>
       {showTimer && <ElapsedTimer />}
-    </div>
-  ));
+    </div>,
+  );
 }

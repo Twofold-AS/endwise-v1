@@ -48,7 +48,6 @@ describe('Mikael telefon-chrome — mindre søk/avatar + søk-overlay (07.09 kve
     );
     expect(RONNY_IDLE).not.toContain('colere');
     expect(RONNY_IDLE).toEqual(expect.arrayContaining(['heureux', 'curieux', 'surpris', 'wink']));
-    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const bot = utenKommentarer(les('../app/(app)/_workshop/ronny-bot.tsx'));
     expect(utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'))).toMatch(
       /data-ronny-avatar/,

@@ -15,9 +15,7 @@ export function useNyHandling() {
 
   const raa = params?.toString() ?? '';
   const skalAapne =
-    params?.get('ny') === '1' ||
-    params?.get('fane') === 'opprett' ||
-    params?.get('fane') === 'ny';
+    params?.get('ny') === '1' || params?.get('fane') === 'opprett' || params?.get('fane') === 'ny';
 
   useEffect(() => {
     if (!skalAapne) return;
@@ -32,13 +30,7 @@ export function useNyHandling() {
   return { apen, apne: () => setApen(true), lukk: () => setApen(false) };
 }
 
-export function NyKnapp({
-  onClick,
-  children,
-}: {
-  onClick: () => void;
-  children: string;
-}) {
+export function NyKnapp({ onClick, children }: { onClick: () => void; children: string }) {
   return (
     <button
       type="button"

@@ -30,7 +30,10 @@ export default function BestillDelerPage() {
   const [leverandor, setLeverandor] = useState<(typeof LEVERANDORER)[number]['key']>('hellanor');
 
   return (
-    <div data-lager-bestill className="mx-auto flex w-full max-w-[760px] flex-col gap-5 max-md:px-0 md:px-8 md:py-7">
+    <div
+      data-lager-bestill
+      className="mx-auto flex w-full max-w-[760px] flex-col gap-5 max-md:px-0 md:px-8 md:py-7"
+    >
       <Side
         tittel="Bestill deler"
         undertekst="Bestilt og på vei."

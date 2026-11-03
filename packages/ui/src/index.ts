@@ -24,6 +24,12 @@ export {
   type DitherStackedRow,
   RevenueLineChart,
 } from './components/amicro.ts';
+export {
+  LogRow,
+  ShimmerText,
+  WorkingRow,
+} from './components/application/agent-log/agent-log.tsx';
+export { AgentThinking } from './components/application/agent-thinking/agent-thinking.tsx';
 // Endwise-primitiver (F0-12)
 export {
   Avatar,
@@ -55,6 +61,12 @@ export {
   CommandPaletteItem,
   CommandPaletteSection,
 } from './components/base/command-palette/command-palette.tsx';
+export {
+  ContextMenu,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from './components/base/context-menu/context-menu.tsx';
 export { DateCalendar } from './components/base/date-picker/date-calendar.tsx';
 export { DatePicker } from './components/base/date-picker/date-picker.tsx';
 export { MeetingScheduler } from './components/base/date-picker/meeting-scheduler.tsx';
@@ -77,6 +89,7 @@ export {
 export { FileUpload } from './components/base/file-upload/file-upload.tsx';
 export { Input as BoardInput } from './components/base/input/input.tsx';
 export { InputOtp } from './components/base/input-otp/input-otp.tsx';
+export { Meter } from './components/base/meter/meter.tsx';
 export {
   AlertDialog,
   Modal,
@@ -89,6 +102,7 @@ export {
 export { NumberField } from './components/base/number-field/number-field.tsx';
 export { Pagination } from './components/base/pagination/pagination.tsx';
 export { Popover, PopoverTrigger } from './components/base/popover/popover.tsx';
+export { ProgressBar, ProgressCircle } from './components/base/progress/progress.tsx';
 export { Radio as BoardRadio, RadioGroup } from './components/base/radio/radio.tsx';
 export { RadioCard } from './components/base/radio/radio-card.tsx';
 export { SearchField } from './components/base/search-field/search-field.tsx';
@@ -249,20 +263,6 @@ export {
   ToolPartGodkjenning,
   type ToolPartStatus,
 } from './components/tool-part.tsx';
-export {
-  LogRow,
-  ShimmerText,
-  WorkingRow,
-} from './components/application/agent-log/agent-log.tsx';
-export { AgentThinking } from './components/application/agent-thinking/agent-thinking.tsx';
-export {
-  ContextMenu,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from './components/base/context-menu/context-menu.tsx';
-export { Meter } from './components/base/meter/meter.tsx';
-export { ProgressBar, ProgressCircle } from './components/base/progress/progress.tsx';
 export {
   DeaktivertHandling,
   FeilFlate,

@@ -37,14 +37,7 @@ export type PhoneSideChromeFane = {
 };
 
 export type PhoneSideChrome = {
-  id:
-    | 'innstillinger'
-    | 'hjelp'
-    | 'statistikk'
-    | 'timeplan'
-    | 'kunder'
-    | 'tjenester'
-    | 'innboks';
+  id: 'innstillinger' | 'hjelp' | 'statistikk' | 'timeplan' | 'kunder' | 'tjenester' | 'innboks';
   tittel: string;
   faner: PhoneSideChromeFane[];
   aktiv: string;

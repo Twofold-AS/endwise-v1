@@ -54,13 +54,7 @@ export function RadMeny({
   );
 }
 
-export function RadMedMeny({
-  children,
-  meny,
-}: {
-  children: ReactNode;
-  meny: ReactNode;
-}) {
+export function RadMedMeny({ children, meny }: { children: ReactNode; meny: ReactNode }) {
   return (
     <div className="flex items-stretch gap-1">
       <div className="min-w-0 flex-1">{children}</div>

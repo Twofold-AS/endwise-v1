@@ -19,6 +19,7 @@ export function PhoneHScroll({
   const ref = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
+    void lockKey;
     const rot = ref.current;
     if (!rot) return;
     const aktiv = rot.querySelector<HTMLElement>('[aria-current=page]');

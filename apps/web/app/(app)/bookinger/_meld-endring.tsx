@@ -1,7 +1,15 @@
 'use client';
 
 import type { EndringKind } from '@endwise/modules/booking/changes';
-import { FeltDato, FeltKlokke, FeltSelect, FeltTekst, FilterChips, SelectItem, toast } from '@endwise/ui';
+import {
+  FeltDato,
+  FeltKlokke,
+  FeltSelect,
+  FeltTekst,
+  FilterChips,
+  SelectItem,
+  toast,
+} from '@endwise/ui';
 import { parseDate, Time } from '@internationalized/date';
 import type { Route } from 'next';
 import Link from 'next/link';
@@ -172,9 +180,7 @@ export function MeldEndringSkjema({
           {report.isSuccess ? (
             <p className="text-body text-fg">Sendt. Selger ser den under Endringer.</p>
           ) : null}
-          {report.isError ? (
-            <p className="text-body text-danger">{report.error.message}</p>
-          ) : null}
+          {report.isError ? <p className="text-body text-danger">{report.error.message}</p> : null}
         </form>
       </OpprettSkuff>
     </div>

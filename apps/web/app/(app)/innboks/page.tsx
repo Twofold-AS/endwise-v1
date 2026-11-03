@@ -128,7 +128,13 @@ function MeldingerPageInner() {
 /** Suspense-grense er påkrevd: siden leser `useSearchParams` (?ny=1). */
 export default function MeldingerPage() {
   return (
-    <Suspense fallback={<div className="max-md:px-4 max-md:py-4 md:px-8 md:py-7 text-body text-fg-muted">Laster innboks …</div>}>
+    <Suspense
+      fallback={
+        <div className="max-md:px-4 max-md:py-4 md:px-8 md:py-7 text-body text-fg-muted">
+          Laster innboks …
+        </div>
+      }
+    >
       <MeldingerPageInner />
     </Suspense>
   );

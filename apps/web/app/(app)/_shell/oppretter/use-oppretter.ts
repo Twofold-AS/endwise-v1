@@ -64,10 +64,13 @@ export function useOppretter<T extends Record<string, unknown>>({
     setStegIndeks((i) => Math.max(i - 1, 0));
   }, []);
 
-  const gaaTil = useCallback((id: string) => {
-    const i = steg.findIndex((s) => s.id === id);
-    if (i >= 0) setStegIndeks(i);
-  }, [steg]);
+  const gaaTil = useCallback(
+    (id: string) => {
+      const i = steg.findIndex((s) => s.id === id);
+      if (i >= 0) setStegIndeks(i);
+    },
+    [steg],
+  );
 
   const toem = useCallback(() => {
     setUtkast(init);
@@ -91,6 +94,18 @@ export function useOppretter<T extends Record<string, unknown>>({
       gaaTil,
       toem,
     }),
-    [aktiv, gaaTil, kanGaaVidere, neste, oppdater, siste, steg.length, stegIndeks, tilbake, toem, utkast],
+    [
+      aktiv,
+      gaaTil,
+      kanGaaVidere,
+      neste,
+      oppdater,
+      siste,
+      steg.length,
+      stegIndeks,
+      tilbake,
+      toem,
+      utkast,
+    ],
   );
 }

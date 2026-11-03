@@ -13,11 +13,7 @@ function les(rel: string) {
 
 describe('Organisasjon › Oversikt (forhandlerkort)', () => {
   it('Organisasjon-liste er Ansatte Timeplan Abonnement Integrasjoner, uten piller', () => {
-    expect(ORG_LISTE.map((r) => r.label)).toEqual([
-      'Ansatte',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(ORG_LISTE.map((r) => r.label)).toEqual(['Ansatte', 'Abonnement', 'Integrasjoner']);
     const layout = les('../app/(app)/layout.tsx');
     expect(layout).not.toMatch(/DestinasjonSeksjonBar/);
     const bar = les('../app/(app)/_shell/seksjon-bar.tsx');

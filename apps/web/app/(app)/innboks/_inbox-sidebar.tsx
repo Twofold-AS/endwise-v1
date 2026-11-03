@@ -13,7 +13,6 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
 import {
@@ -24,6 +23,7 @@ import {
   sorterInboxTrader,
 } from '../_shell/inbox-del';
 import { useInboxFilter } from '../_shell/inbox-filter';
+import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { InboxFilterChips } from './_filter-chips';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
 import {
@@ -205,10 +205,7 @@ export function InboxSidebar() {
       }`}
     >
       <h2 className="sr-only">Samtaler</h2>
-      <Side
-        tittel="Innboks"
-        className="min-h-0 flex-1 overflow-y-auto px-3 py-0"
-      >
+      <Side tittel="Innboks" className="min-h-0 flex-1 overflow-y-auto px-3 py-0">
         <PhoneSokFelt
           value={sok}
           onChange={(e) => setSok(e.target.value)}

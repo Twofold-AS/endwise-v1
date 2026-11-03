@@ -101,10 +101,10 @@ export function OppretterSkuff({
       ) : null}
       {visSteg ? (
         <ol className="flex gap-1.5" aria-hidden>
-          {Array.from({ length: stegAntall }, (_, i) => (
+          {Array.from({ length: stegAntall }, (_, i) => i + 1).map((stegNr) => (
             <li
-              key={`steg-${i + 1}`}
-              className={`h-1.5 flex-1 rounded-full ${i <= stegIndeks ? 'bg-fg' : 'bg-surface-2'}`}
+              key={`steg-${stegNr}`}
+              className={`h-1.5 flex-1 rounded-full ${stegNr <= stegIndeks + 1 ? 'bg-fg' : 'bg-surface-2'}`}
             />
           ))}
         </ol>

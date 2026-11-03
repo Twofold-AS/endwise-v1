@@ -25,13 +25,7 @@ const TYPE_TEKST: Record<Kjoretoytype, string> = {
 /**
  * Stegvis «Ny tjeneste»: Hva → Pris og tid → Sjekk.
  */
-export function NyTjeneste({
-  apen = true,
-  onLukk,
-}: {
-  apen?: boolean;
-  onLukk: () => void;
-}) {
+export function NyTjeneste({ apen = true, onLukk }: { apen?: boolean; onLukk: () => void }) {
   const utils = trpc.useUtils();
   const o = useOppretter<Utkast>({
     init: INIT,
@@ -111,10 +105,7 @@ export function NyTjeneste({
           </>
         ) : null}
         {o.aktiv?.id === 'pris' ? (
-          <TjenesteFelter
-            verdier={o.utkast.felter}
-            onEndre={(felter) => o.oppdater({ felter })}
-          />
+          <TjenesteFelter verdier={o.utkast.felter} onEndre={(felter) => o.oppdater({ felter })} />
         ) : null}
         {o.aktiv?.id === 'sjekk' ? (
           <SjekkSteg

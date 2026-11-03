@@ -4,8 +4,8 @@ import {
   ChevronDown,
   CircleAlert,
   ClockArrowUp,
-  ListeRad,
   LasterFlate,
+  ListeRad,
   RefreshCw,
   StatefulButton,
   Tags,
@@ -103,9 +103,7 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
               {tjeneste.version > 1 ? (
                 <span className="text-meta text-fg-muted">Versjon {tjeneste.version}</span>
               ) : null}
-              {!tjeneste.active ? (
-                <span className="text-meta text-warn">Deaktivert</span>
-              ) : null}
+              {!tjeneste.active ? <span className="text-meta text-warn">Deaktivert</span> : null}
               {(tjeneste.skills?.length ?? 0) > 0 ? (
                 <span className="inline-flex items-center gap-1 text-meta text-fg-muted">
                   <Tags size={12} strokeWidth={1.75} />

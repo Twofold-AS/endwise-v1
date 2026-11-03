@@ -19,22 +19,23 @@ export function RonnySirkel() {
   useEffect(() => {
     const scroller = document.querySelector<HTMLElement>('[data-ronny-side-scroll]');
     if (!scroller) return;
+    const el: HTMLElement = scroller;
     const mobil = window.matchMedia('(max-width: 767px)');
     function sett() {
       if (mobil.matches && !apen) {
-        scroller.setAttribute('data-ronny-sirkel-plass', '');
-        scroller.style.paddingLeft = '6rem';
+        el.setAttribute('data-ronny-sirkel-plass', '');
+        el.style.paddingLeft = '6rem';
       } else {
-        scroller.removeAttribute('data-ronny-sirkel-plass');
-        scroller.style.paddingLeft = '';
+        el.removeAttribute('data-ronny-sirkel-plass');
+        el.style.paddingLeft = '';
       }
     }
     sett();
     mobil.addEventListener('change', sett);
     return () => {
       mobil.removeEventListener('change', sett);
-      scroller.removeAttribute('data-ronny-sirkel-plass');
-      scroller.style.paddingLeft = '';
+      el.removeAttribute('data-ronny-sirkel-plass');
+      el.style.paddingLeft = '';
     };
   }, [apen]);
 

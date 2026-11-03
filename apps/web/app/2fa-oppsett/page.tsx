@@ -250,12 +250,7 @@ export default function ToFaktorOppsettPage() {
               {totpUri ? <p className="break-all text-[11px] text-fg-muted">{totpUri}</p> : null}
               <p className="text-title font-[650] text-fg">Nesten der</p>
               <Field id="tfa-kode" label="App-kode">
-                <FeltKode
-                  aria-label="App-kode"
-                  length={6}
-                  value={kode}
-                  onChange={setKode}
-                />
+                <FeltKode aria-label="App-kode" length={6} value={kode} onChange={setKode} />
               </Field>
               {feil && <p className="text-[12px] text-danger">{feil}</p>}
             </div>

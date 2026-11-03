@@ -1,9 +1,9 @@
 'use client';
 
+import { LasterFlate } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useMdViewport } from '../_lib/use-md-viewport';
-import { LasterFlate } from '@endwise/ui';
 import { HJEM_SCROLL_FLATE, VERKSTED_INNHOLD } from '../_shell/phone-home';
 import { DealerPulseKort, PhoneHomeDealer } from '../_shell/phone-home-dealer';
 import { VerkstedetDag } from '../dashboard/_verkstedet-dag';

@@ -227,7 +227,7 @@ export function WorkshopBloub() {
                   <div data-ronny-trinn className="mb-2 flex flex-col gap-1">
                     {steg.map((del, i) => (
                       <LogRow
-                        key={`${melding.id}-steg-${i}`}
+                        key={`${melding.id}-${del.type}-${norskVerktoy(del.type)}`}
                         first={i === 0}
                         last={i === steg.length - 1}
                         reduce={false}

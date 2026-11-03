@@ -64,19 +64,19 @@ export function SideTopp({
   return (
     <header className="flex items-start justify-between gap-3">
       <div className="flex min-w-0 items-start gap-1">
-        {tilbakeHref
-          ? renderLenke
-            ? renderLenke({
-                href: tilbakeHref,
-                className: pilKlasse,
-                children: pil,
-              })
-            : (
-                <a href={tilbakeHref} className={pilKlasse} aria-label={tilbakeLabel}>
-                  {pil}
-                </a>
-              )
-          : null}
+        {tilbakeHref ? (
+          renderLenke ? (
+            renderLenke({
+              href: tilbakeHref,
+              className: pilKlasse,
+              children: pil,
+            })
+          ) : (
+            <a href={tilbakeHref} className={pilKlasse} aria-label={tilbakeLabel}>
+              {pil}
+            </a>
+          )
+        ) : null}
         <div className="min-w-0">
           <h1 className="text-title text-fg max-md:text-[24px] max-md:leading-[1.2] max-md:font-[650]">
             {tittel}

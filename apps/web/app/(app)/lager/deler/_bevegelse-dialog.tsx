@@ -104,68 +104,68 @@ export function BevegelseDialog({
     >
       <form id="bevegelse-skjema" onSubmit={submit} className="flex flex-col gap-3">
         <p className="text-meta text-fg-muted">{del.sku}</p>
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1.5 text-label text-fg">Type</legend>
-            <div className="grid grid-cols-2 gap-2">
-              {synligeTyper.map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => setKind(t.key)}
-                  aria-pressed={kind === t.key}
-                  className={`flex flex-col items-start gap-0.5 rounded-control border px-3 py-2 text-left transition-colors ${
-                    kind === t.key
-                      ? 'border-fg bg-sidebar-active'
-                      : 'border-border hover:bg-surface-2'
-                  }`}
-                >
-                  <span className="text-label text-fg">{t.label}</span>
-                  <span className="text-meta text-fg-muted leading-tight">{t.hint}</span>
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          <FeltSelect
-            label="Lokasjon"
-            selectedKey={valgtLokasjon || null}
-            onSelectionChange={(key) => setLocationId(String(key ?? ''))}
-            isRequired
-          >
-            {(lokasjoner.data ?? []).map((l) => (
-              <SelectItem key={l.id} id={l.id}>
-                {l.code} — {l.name}
-              </SelectItem>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1.5 text-label text-fg">Type</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {synligeTyper.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setKind(t.key)}
+                aria-pressed={kind === t.key}
+                className={`flex flex-col items-start gap-0.5 rounded-control border px-3 py-2 text-left transition-colors ${
+                  kind === t.key
+                    ? 'border-fg bg-sidebar-active'
+                    : 'border-border hover:bg-surface-2'
+                }`}
+              >
+                <span className="text-label text-fg">{t.label}</span>
+                <span className="text-meta text-fg-muted leading-tight">{t.hint}</span>
+              </button>
             ))}
-          </FeltSelect>
-          {(lokasjoner.data?.length ?? 0) === 0 && !lokasjoner.isLoading && (
-            <span className="text-meta text-warn">
-              Ingen lokasjoner ennå — opprett én under Plass først.
-            </span>
-          )}
+          </div>
+        </fieldset>
 
-          <FeltTall
-            label={kind === 'adjust' ? 'Nytt antall (absolutt)' : 'Antall'}
-            value={Number(antall) || 0}
-            minValue={0}
-            isRequired
-            onChange={(v) => setAntall(Number.isFinite(v) ? String(v) : '0')}
-          />
+        <FeltSelect
+          label="Lokasjon"
+          selectedKey={valgtLokasjon || null}
+          onSelectionChange={(key) => setLocationId(String(key ?? ''))}
+          isRequired
+        >
+          {(lokasjoner.data ?? []).map((l) => (
+            <SelectItem key={l.id} id={l.id}>
+              {l.code} — {l.name}
+            </SelectItem>
+          ))}
+        </FeltSelect>
+        {(lokasjoner.data?.length ?? 0) === 0 && !lokasjoner.isLoading && (
+          <span className="text-meta text-warn">
+            Ingen lokasjoner ennå — opprett én under Plass først.
+          </span>
+        )}
 
-          <FeltInput
-            label="Notat"
-            value={note}
-            onChange={setNote}
-            maxLength={280}
-            placeholder="Valgfritt — f.eks. hvilken jobb"
-          />
+        <FeltTall
+          label={kind === 'adjust' ? 'Nytt antall (absolutt)' : 'Antall'}
+          value={Number(antall) || 0}
+          minValue={0}
+          isRequired
+          onChange={(v) => setAntall(Number.isFinite(v) ? String(v) : '0')}
+        />
 
-          {move.error && (
-            <p className="flex items-start gap-2 text-body text-danger">
-              <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-              {move.error.message}
-            </p>
-          )}
+        <FeltInput
+          label="Notat"
+          value={note}
+          onChange={setNote}
+          maxLength={280}
+          placeholder="Valgfritt — f.eks. hvilken jobb"
+        />
+
+        {move.error && (
+          <p className="flex items-start gap-2 text-body text-danger">
+            <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+            {move.error.message}
+          </p>
+        )}
       </form>
     </OpprettSkuff>
   );

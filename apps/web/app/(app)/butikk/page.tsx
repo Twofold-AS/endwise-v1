@@ -1,7 +1,6 @@
 'use client';
 
 import { Button, DeaktivertHandling, ListeRad, Package, Seksjon, Side, Store } from '@endwise/ui';
-import type { Route } from 'next';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
@@ -132,19 +131,7 @@ export default function ButikkKatalogPage() {
           </div>
         </Seksjon>
 
-        <Seksjon
-          tittel="Kjøretøy til salgs"
-          handling={
-            kjoretoyAntall > 0 ? (
-              <Link
-                href={'/butikk/kjoretoy' as Route}
-                className="text-label text-fg-muted hover:text-fg"
-              >
-                Se alle
-              </Link>
-            ) : null
-          }
-        >
+        <Seksjon tittel="Kjøretøy til salgs" handling={null}>
           <div data-butikk-kjoretoy>
             <CardShell className="p-6">
               <p className="text-label text-fg">Ingen kjøretøy til salgs</p>

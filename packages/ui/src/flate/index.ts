@@ -14,8 +14,8 @@ export {
   FeltTall,
   FeltTekst,
 } from './felt.tsx';
-export { flertall, flertallTilbys } from './flertall.ts';
 export { type FilterChip, FilterChips } from './filter-chips.tsx';
+export { flertall, flertallTilbys } from './flertall.ts';
 export { LenkeProvider, type LenkeRender } from './lenke.tsx';
 export { ListeRad, Seksjon, Side, SideTopp } from './side.tsx';
 export {

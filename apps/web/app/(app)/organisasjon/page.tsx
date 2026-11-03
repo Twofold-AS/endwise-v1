@@ -4,8 +4,8 @@ import { LasterFlate, ListeRad, Side } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { useOrgRole } from '../_lib/use-org-role';
-import { AgentOppretter } from '../_shell/oppretter/agent-oppretter';
 import { NyKnapp, useNyHandling } from '../_shell/ny-handling';
+import { AgentOppretter } from '../_shell/oppretter/agent-oppretter';
 import { AbonnementInnhold } from '../abonnement/_innhold';
 import { IntegrasjonerInnhold } from '../integrasjoner/_innhold';
 import { TjenesterInnhold } from '../tjenester/_innhold';
@@ -49,7 +49,11 @@ function OrganisasjonIndre() {
           />
         ) : null}
         {isAdmin ? (
-          <ListeRad tittel="Integrasjoner" undertekst="Quick og andre koblinger" href="/organisasjon?seksjon=integrasjoner" />
+          <ListeRad
+            tittel="Integrasjoner"
+            undertekst="Quick og andre koblinger"
+            href="/organisasjon?seksjon=integrasjoner"
+          />
         ) : null}
         <ListeRad
           tittel="Assistenter"
@@ -96,7 +100,9 @@ function OrganisasjonIndre() {
         <AbonnementInnhold />
         <section className="mt-8 flex flex-col gap-3" aria-label="Tillegg og priser">
           <h2 className="text-title text-fg">Tillegg og priser</h2>
-          <p className="text-body text-fg-muted">Funksjonene Endwise har bygget, og hva de koster.</p>
+          <p className="text-body text-fg-muted">
+            Funksjonene Endwise har bygget, og hva de koster.
+          </p>
           <TjenesterInnhold />
         </section>
       </Side>

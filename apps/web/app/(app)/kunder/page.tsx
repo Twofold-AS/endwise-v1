@@ -7,8 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { NyKnapp, useNyHandling } from '../_shell/ny-handling';
-import { RadMedMeny, RadMeny } from '../_shell/rad-meny';
 import { PhoneSokFelt } from '../_shell/phone-sok-felt';
+import { RadMedMeny, RadMeny } from '../_shell/rad-meny';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
 import { KunderAlfaListe } from './_alfa-liste';
@@ -71,7 +71,13 @@ function KunderInner() {
       faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
       aktiv={aktiv}
     >
-      <NyKunde apen={nyKunde} onLukk={() => { ny.lukk(); router.replace('/kunder' as Route); }} />
+      <NyKunde
+        apen={nyKunde}
+        onLukk={() => {
+          ny.lukk();
+          router.replace('/kunder' as Route);
+        }}
+      />
       {aktiv === 'kjoretoy' ? (
         <RegistrerKjoretoy autoApen onFerdig={() => router.replace('/kunder' as Route)} />
       ) : null}
@@ -191,8 +197,7 @@ function KunderInner() {
                             {
                               id: 'jobb',
                               label: 'Ny jobb',
-                              onSelect: () =>
-                                router.push(`/bookinger/ny?kunde=${k.id}` as Route),
+                              onSelect: () => router.push(`/bookinger/ny?kunde=${k.id}` as Route),
                             },
                             {
                               id: 'slett',

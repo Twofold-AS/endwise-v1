@@ -89,7 +89,12 @@ export default function KundekortPage() {
       faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
       aktiv="alle"
     >
-      <Side tittel={k.name} tilbakeHref="/kunder" tilbakeLabel="Tilbake til kunder" className="max-md:px-0">
+      <Side
+        tittel={k.name}
+        tilbakeHref="/kunder"
+        tilbakeLabel="Tilbake til kunder"
+        className="max-md:px-0"
+      >
         {/* Hvem */}
         <div className="flex items-start gap-4">
           {/*
@@ -323,14 +328,14 @@ export default function KundekortPage() {
           >
             Ny jobb på kunde
           </Link>
-          <SlettKunde navn={k.name} />
+          <SlettKunde />
         </div>
       </Side>
     </SideChromeSkall>
   );
 }
 
-function SlettKunde({ navn }: { navn: string }) {
+function SlettKunde() {
   return (
     <div data-slett-kunde>
       <DeaktivertHandling forklaring="Kommer senere">Slett kunde</DeaktivertHandling>

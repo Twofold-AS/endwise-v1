@@ -11,13 +11,7 @@ type Utkast = { sku: string; navn: string; min: number };
 const INIT: Utkast = { sku: '', navn: '', min: 0 };
 
 /** Stegvis «Ny del»: Del → Minimum → Sjekk. */
-export function NyDel({
-  apen = true,
-  onFerdig,
-}: {
-  apen?: boolean;
-  onFerdig: () => void;
-}) {
+export function NyDel({ apen = true, onFerdig }: { apen?: boolean; onFerdig: () => void }) {
   const utils = trpc.useUtils();
   const o = useOppretter<Utkast>({
     init: INIT,

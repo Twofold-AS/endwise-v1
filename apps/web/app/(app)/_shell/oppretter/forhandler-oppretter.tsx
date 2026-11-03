@@ -40,7 +40,11 @@ export function ForhandlerOppretter({ apen, onLukk }: { apen: boolean; onLukk: (
     >
       {o.aktiv?.id === 'firma' ? (
         <div className="flex flex-col gap-3">
-          <FeltInput label="Firmanavn" value={o.utkast.navn} onChange={(v) => o.oppdater({ navn: v })} />
+          <FeltInput
+            label="Firmanavn"
+            value={o.utkast.navn}
+            onChange={(v) => o.oppdater({ navn: v })}
+          />
           <FeltInput
             label="Eierens e-post"
             type="email"
@@ -50,10 +54,14 @@ export function ForhandlerOppretter({ apen, onLukk }: { apen: boolean; onLukk: (
         </div>
       ) : null}
       {o.aktiv?.id === 'pakke' ? (
-        <p className="text-body text-fg-muted">Start, Pro og Enterprise velges i den eksisterende flyten.</p>
+        <p className="text-body text-fg-muted">
+          Start, Pro og Enterprise velges i den eksisterende flyten.
+        </p>
       ) : null}
       {o.aktiv?.id === 'kontor' ? (
-        <p className="text-body text-fg-muted">Adresse og org.nr kan fylles ut senere i Organisasjon.</p>
+        <p className="text-body text-fg-muted">
+          Adresse og org.nr kan fylles ut senere i Organisasjon.
+        </p>
       ) : null}
       {o.aktiv?.id === 'sjekk' ? (
         <>

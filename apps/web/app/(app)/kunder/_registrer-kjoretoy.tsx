@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  CircleAlert,
-  FeltInput,
-  FeltSelect,
-  SelectItem,
-  StatefulButton,
-} from '@endwise/ui';
+import { CircleAlert, FeltInput, FeltSelect, SelectItem, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';

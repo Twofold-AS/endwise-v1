@@ -1,8 +1,6 @@
 'use client';
 
 import { CircleAlert, FeltInput, FeltTall, FeltTekst, TriangleAlert } from '@endwise/ui';
-import type { Route } from 'next';
-import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { visVarighet } from './_felles';
 

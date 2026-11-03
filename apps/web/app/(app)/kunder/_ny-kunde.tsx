@@ -4,11 +4,11 @@ import { CircleAlert, FeltInput, toast } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
-import { KjoretoyKaskade } from '../bookinger/_kjoretoy-kaskade';
-import type { KjoretoyType } from '../bookinger/_kjoretoy-katalog';
 import { OppretterSkuff } from '../_shell/oppretter/oppretter-skuff';
 import { SjekkSteg } from '../_shell/oppretter/sjekk-steg';
 import { useOppretter } from '../_shell/oppretter/use-oppretter';
+import { KjoretoyKaskade } from '../bookinger/_kjoretoy-kaskade';
+import type { KjoretoyType } from '../bookinger/_kjoretoy-katalog';
 
 type Utkast = {
   navn: string;
@@ -37,13 +37,7 @@ const INIT: Utkast = {
 /**
  * Stegvis «Ny kunde»: Kontakt → Kjøretøy → Sjekk.
  */
-export function NyKunde({
-  apen = true,
-  onLukk,
-}: {
-  apen?: boolean;
-  onLukk: () => void;
-}) {
+export function NyKunde({ apen = true, onLukk }: { apen?: boolean; onLukk: () => void }) {
   const router = useRouter();
   const utils = trpc.useUtils();
   const o = useOppretter<Utkast>({

@@ -46,7 +46,11 @@ export default function ArtikkelPage() {
   }, [id, merk]);
 
   if (artikkel.isLoading) {
-    return <div className="max-md:px-4 max-md:py-4 md:px-8 md:py-7 text-body text-fg-muted">Laster artikkel …</div>;
+    return (
+      <div className="max-md:px-4 max-md:py-4 md:px-8 md:py-7 text-body text-fg-muted">
+        Laster artikkel …
+      </div>
+    );
   }
 
   if (!artikkel.data) {

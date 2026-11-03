@@ -81,9 +81,9 @@ export function LiveVisitorsGlobe() {
     const markers = new Map<string, any>();
 
     (async () => {
-      const maplibregl = (await import('maplibre-gl')).default;
+      const maplibre = await import('maplibre-gl');
       if (cancelled || !ref.current) return;
-      map = new maplibregl.Map({
+      map = new maplibre.Map({
         container: ref.current,
         style: globeStyle(),
         center: [10, 55],
@@ -101,7 +101,7 @@ export function LiveVisitorsGlobe() {
           background: '#1ED27D',
           boxShadow: '0 0 0 4px rgba(30,210,125,0.25), 0 0 10px 2px rgba(30,210,125,0.6)',
         });
-        const m = new maplibregl.Marker({ element: el }).setLngLat([ev.lng, ev.lat]).addTo(map);
+        const m = new maplibre.Marker({ element: el }).setLngLat([ev.lng, ev.lat]).addTo(map);
         markers.set(ev.id, m);
         setCount(markers.size);
         setTimeout(() => {

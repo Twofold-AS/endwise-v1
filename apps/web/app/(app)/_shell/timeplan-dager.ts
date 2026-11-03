@@ -32,8 +32,7 @@ export function ukedagToBokstaver(dato: Date): string {
   });
   const bokstaver = kort.replace('.', '').slice(0, 2);
   return (
-    bokstaver.charAt(0).toLocaleUpperCase('nb-NO') +
-    bokstaver.slice(1).toLocaleLowerCase('nb-NO')
+    bokstaver.charAt(0).toLocaleUpperCase('nb-NO') + bokstaver.slice(1).toLocaleLowerCase('nb-NO')
   );
 }
 

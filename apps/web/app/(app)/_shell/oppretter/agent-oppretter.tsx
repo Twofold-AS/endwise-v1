@@ -6,9 +6,21 @@ import { SjekkSteg } from './sjekk-steg';
 import { useOppretter } from './use-oppretter';
 
 const MALER = [
-  { id: 'workshop', tittel: 'Verkstedassistent', hjelp: 'Hjelper ansatte med bookinger, lager og kunder.' },
-  { id: 'kunde-support', tittel: 'Kundeassistent', hjelp: 'Svarer kunder om bookinger og tjenester.' },
-  { id: 'drift-innsikt', tittel: 'Driftsinnsikt', hjelp: 'Svarer på spørsmål om kapasitet og lager.' },
+  {
+    id: 'workshop',
+    tittel: 'Verkstedassistent',
+    hjelp: 'Hjelper ansatte med bookinger, lager og kunder.',
+  },
+  {
+    id: 'kunde-support',
+    tittel: 'Kundeassistent',
+    hjelp: 'Svarer kunder om bookinger og tjenester.',
+  },
+  {
+    id: 'drift-innsikt',
+    tittel: 'Driftsinnsikt',
+    hjelp: 'Svarer på spørsmål om kapasitet og lager.',
+  },
 ] as const;
 
 type Utkast = { mal: string; navn: string; beskrivelse: string };
@@ -47,7 +59,11 @@ export function AgentOppretter({ apen, onLukk }: { apen: boolean; onLukk: () => 
     >
       {o.aktiv?.id === 'mal' ? (
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2" role="radiogroup" aria-label="Hva skal assistenten hjelpe med?">
+          <div
+            className="flex flex-col gap-2"
+            role="radiogroup"
+            aria-label="Hva skal assistenten hjelpe med?"
+          >
             {MALER.map((m) => (
               <button
                 key={m.id}
@@ -86,13 +102,19 @@ export function AgentOppretter({ apen, onLukk }: { apen: boolean; onLukk: () => 
         <div className="flex flex-col gap-2">
           <p className="text-body text-fg">Hva får den se: bookinger, lager, kunder, mekanikere.</p>
           <DeaktivertHandling forklaring="Kommer senere">Opprette booking</DeaktivertHandling>
-          <DeaktivertHandling forklaring="Kommer senere">Sende melding til kunde</DeaktivertHandling>
+          <DeaktivertHandling forklaring="Kommer senere">
+            Sende melding til kunde
+          </DeaktivertHandling>
         </div>
       ) : null}
       {o.aktiv?.id === 'sjekk' ? (
         <SjekkSteg
           rader={[
-            { id: 'mal', etikett: 'Mal', verdi: MALER.find((m) => m.id === o.utkast.mal)?.tittel ?? '' },
+            {
+              id: 'mal',
+              etikett: 'Mal',
+              verdi: MALER.find((m) => m.id === o.utkast.mal)?.tittel ?? '',
+            },
             { id: 'mal', etikett: 'Navn', verdi: o.utkast.navn },
           ]}
           onEndre={o.gaaTil}

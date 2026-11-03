@@ -1,6 +1,14 @@
 'use client';
 
-import { ArrowLeftRight, LasterFlate, ListeRad, Package, Seksjon, Side, TriangleAlert } from '@endwise/ui';
+import {
+  ArrowLeftRight,
+  LasterFlate,
+  ListeRad,
+  Package,
+  Seksjon,
+  Side,
+  TriangleAlert,
+} from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';

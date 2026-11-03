@@ -43,6 +43,12 @@ export const auditLog = pgTable(
       to: authenticatedRole,
       withCheck: sql`${t.tenantId} = ${currentTenantId}`,
     }),
+    pgPolicy('audit_log_platform_admin_insert', {
+      as: 'permissive',
+      for: 'insert',
+      to: authenticatedRole,
+      withCheck: sql`current_setting('app.platform_admin', true) = 'on'`,
+    }),
     // Ingen UPDATE- eller DELETE-policy for authenticated. Det er
     // append-only-garantien. `slett_forhandler` redigerer via to public-
     // policyer i sql/grants.sql (guc + ikke-authenticated), aldri her.

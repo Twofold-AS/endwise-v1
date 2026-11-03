@@ -1,9 +1,12 @@
 import { and, desc, eq, schema, withPlatformAdmin, withPlatformInspect } from '@endwise/db';
+import { endwiseAktor } from '@endwise/modules/jit';
 import { erPlattformTenant } from '@endwise/modules/plattform';
+import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { endwiseInspectProcedure, router } from '../init.ts';
+import { endwiseInspectProcedure, endwiseSupportProcedure, router } from '../init.ts';
 import { hentForhandlerKort } from './forhandler.ts';
+import { krevAktivJitSkriv } from './jit.ts';
 
 const slugInput = z.object({ slug: z.string().min(1).max(80) });
 
@@ -185,8 +188,30 @@ export const verkstedRouter = router({
     };
   }),
 
-  /** Alltid 403 — dokumenterer at Se verkstedet ikke skriver. */
-  skriv: endwiseInspectProcedure.input(slugInput).mutation(() => {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'Kun lesing' });
+  /**
+   * Inspect-skriv på platform. Uten flagg eller uten aktiv JIT: 403.
+   * Aldri sesjon på forhandlervert.
+   */
+  skriv: endwiseSupportProcedure.input(slugInput).mutation(async ({ ctx, input }) => {
+    if (!erWhiteLabelAktiv()) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Kun lesing' });
+    }
+    const t = await finnForhandler(ctx.db, input.slug);
+    const grant = await krevAktivJitSkriv({
+      db: ctx.db,
+      userId: ctx.userId,
+      tenantId: t.id,
+    });
+    await withPlatformAdmin(ctx.db, (tx) =>
+      tx.insert(schema.auditLog).values({
+        tenantId: t.id,
+        actor: endwiseAktor(ctx.userId),
+        action: 'inspect.skriv',
+        subjectType: 'inspect',
+        subjectId: grant.id,
+        metadata: { kilde: 'endwise', slug: input.slug },
+      }),
+    );
+    return { ok: true as const, utloperAt: grant.utloperAt };
   }),
 });

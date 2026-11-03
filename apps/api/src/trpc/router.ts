@@ -1,5 +1,6 @@
 import { publicProcedure, router } from './init.ts';
 import { agentRouter } from './routers/agent.ts';
+import { aktivitetRouter } from './routers/aktivitet.ts';
 import { billingRouter } from './routers/billing.ts';
 import { bookingsRouter } from './routers/bookings.ts';
 import { brandingRouter } from './routers/branding.ts';
@@ -13,6 +14,7 @@ import { helpdeskRouter } from './routers/helpdesk.ts';
 import { inboxContextRouter } from './routers/inbox-context.ts';
 import { inventoryRouter } from './routers/inventory.ts';
 import { invitasjonerRouter } from './routers/invitasjoner.ts';
+import { jitRouter } from './routers/jit.ts';
 import { lookupRouter } from './routers/lookup.ts';
 import { mechanicRouter } from './routers/mechanic.ts';
 import { mechanicsRouter } from './routers/mechanics.ts';
@@ -44,6 +46,8 @@ export const appRouter = router({
   stream: streamRouter,
   tenants: tenantsRouter,
   branding: brandingRouter,
+  aktivitet: aktivitetRouter,
+  jit: jitRouter,
   customers: customersRouter,
   search: searchRouter,
   directory: directoryRouter,

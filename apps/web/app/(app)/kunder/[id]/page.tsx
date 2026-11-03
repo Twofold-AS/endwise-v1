@@ -1,12 +1,10 @@
 'use client';
 
 import {
-  AlertDialog,
   Avatar,
   Car,
   ChevronRight,
   CircleAlert,
-  ClipboardList,
   DeaktivertHandling,
   Inbox,
   Mail,
@@ -64,17 +62,17 @@ export default function KundekortPage() {
   const k = kunde.data;
   if (!k) {
     return (
-      <div className="mx-auto w-full max-w-[900px] px-8 py-7">
+      <div className="mx-auto w-full max-w-[900px] max-md:px-4 max-md:py-4 md:px-8 md:py-7">
         <CardShell className="flex items-start gap-3 p-6">
           <CircleAlert size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-fg-muted" />
           <div>
             <p className="text-label text-fg">Fant ikke kunden</p>
-            <p className="mt-1 text-[13px] text-fg-muted">
+            <p className="mt-1 text-meta text-fg-muted">
               Den kan være slettet, eller høre til et annet verksted.
             </p>
             <Link
               href={'/kunder' as Route}
-              className="mt-3 inline-block text-[13px] text-fg-muted underline underline-offset-2 hover:text-fg"
+              className="mt-3 inline-block text-label text-fg-muted underline underline-offset-2 hover:text-fg"
             >
               ← Tilbake til kunder
             </Link>
@@ -91,7 +89,7 @@ export default function KundekortPage() {
       faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
       aktiv="alle"
     >
-      <Side tittel={k.name} className="[&>header]:sr-only max-md:px-0">
+      <Side tittel={k.name} tilbakeHref="/kunder" tilbakeLabel="Tilbake til kunder" className="max-md:px-0">
         {/* Hvem */}
         <div className="flex items-start gap-4">
           {/*
@@ -106,7 +104,7 @@ export default function KundekortPage() {
               {k.name}
               <Kilde source={k.source} />
             </p>
-            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-fg-muted">
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-meta text-fg-muted">
               {k.phone && (
                 <a
                   href={`tel:${k.phone}`}
@@ -317,52 +315,25 @@ export default function KundekortPage() {
           )}
         </Seksjon>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-2">
           <Link
             href={`/bookinger/ny?kunde=${k.id}` as Route}
             data-kunde-ny-jobb
-            className="inline-flex h-control items-center rounded-control border border-border px-2.5 text-label text-fg"
+            className="inline-flex h-12 items-center justify-center rounded-pill bg-fg px-4 text-body text-bg"
           >
             Ny jobb på kunde
           </Link>
           <SlettKunde navn={k.name} />
         </div>
-
-        <Link
-          href={'/kunder' as Route}
-          className="inline-flex items-center gap-1.5 text-[13px] text-fg-muted transition-colors hover:text-fg"
-        >
-          <ClipboardList size={14} />← Alle kunder
-        </Link>
       </Side>
     </SideChromeSkall>
   );
 }
 
 function SlettKunde({ navn }: { navn: string }) {
-  const [apen, setApen] = useState(false);
   return (
-    <>
-      <button
-        type="button"
-        data-slett-kunde
-        onClick={() => setApen(true)}
-        className="inline-flex h-control items-center rounded-control px-2.5 text-label text-fg-muted hover:text-fg"
-      >
-        Slett kunde
-      </button>
-      <AlertDialog
-        isOpen={apen}
-        onOpenChange={setApen}
-        title={`Slett ${navn}?`}
-        description="Kunden og tilknyttede data fjernes."
-        confirmLabel="Slett"
-        cancelLabel="Avbryt"
-        isConfirmDisabled
-      >
-        <p className="text-[13px] text-fg-muted">Kommer senere.</p>
-        <DeaktivertHandling forklaring="Kommer senere">Slett</DeaktivertHandling>
-      </AlertDialog>
-    </>
+    <div data-slett-kunde>
+      <DeaktivertHandling forklaring="Kommer senere">Slett kunde</DeaktivertHandling>
+    </div>
   );
 }

@@ -3,8 +3,10 @@
  * Ingen ny chrome-pille. Ny går til `?fane=opprett`.
  */
 
+import { flertallTilbys } from '@endwise/ui';
+
 export function tjenesterPageSub(antall: number): string {
-  return `${antall} tjenester tilbys`;
+  return flertallTilbys(antall, 'tjeneste', 'tjenester');
 }
 
 export function trefferTjenesteSok(

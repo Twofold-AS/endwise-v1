@@ -143,7 +143,7 @@ describe('Forhandler-info uten Grainient', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     const innboks = utenKommentarer(les('../app/(app)/innboks/page.tsx'));
     expect(dealer).not.toMatch(/ForhandlerInfoKort/);
-    expect(dealer).toMatch(/PulseHeroFlate/);
+    expect(dealer).toMatch(/Dagen din/);
     expect(mek).toMatch(/ForhandlerInfoKort/);
     expect(dash).not.toMatch(/ForhandlerInfoKort/);
     expect(dash).toMatch(/DealerPulseKort|DealerDestinasjonskort/);
@@ -202,10 +202,10 @@ describe('Timeplan — piler, valgt dag først, måned, 08–20', () => {
     const stripe = utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'));
     expect(side).toMatch(/TimeplanStripe|timeplanDagerFra/);
     expect(side).toMatch(/08:00|TIMEPLAN_DAG_START/);
-    expect(stripe).toMatch(/aria-label="Forrige uke"/);
-    expect(stripe).toMatch(/aria-label="Neste uke"/);
-    expect(stripe).toMatch(/aria-label="Forrige måned"/);
-    expect(stripe).toMatch(/aria-label="Neste måned"/);
+    expect(stripe).toMatch(/DatePicker/);
+    expect(stripe).toMatch(/aria-label="Velg dag"/);
+    expect(stripe).toMatch(/data-timeplan-maned/);
+    expect(stripe).toMatch(/grid-cols-7/);
     expect(stripe).toMatch(/timeplanManedNavn|capitalize/);
     expect(stripe).not.toMatch(/timeplanManeder\(/);
     expect(stripe).not.toMatch(/min-w-\[56px\]/);

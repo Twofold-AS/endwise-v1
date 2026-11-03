@@ -2,9 +2,6 @@
 
 import {
   CircleAlert,
-  Drawer,
-  DrawerBody,
-  DrawerHeader,
   FeltInput,
   FeltSelect,
   SelectItem,
@@ -15,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { InnstillingRad, InnstillingSeksjon } from '../_shell/innstilling-gruppe';
+import { OpprettSkuff } from '../_shell/opprett-skuff';
 import { KjoretoyKaskade } from '../bookinger/_kjoretoy-kaskade';
 import type { KjoretoyType } from '../bookinger/_kjoretoy-katalog';
 import { TYPE_LABEL } from './_delt';
@@ -50,19 +48,18 @@ export function RegistrerKjoretoy({
           type="button"
           data-registrer-kjoretoy-apne
           onClick={() => setApen(true)}
-          className="inline-flex h-10 items-center rounded-pill border border-fg bg-bg px-4 text-[13px] font-[650] text-fg"
+          className="inline-flex h-12 w-full items-center justify-center rounded-pill border border-fg bg-bg px-4 text-body font-[650] text-fg"
         >
           Registrer kjøretøy
         </button>
-        <Drawer
-          placement="bottom"
-          isOpen={apen}
-          onOpenChange={setApen}
-          aria-label="Registrer kjøretøy"
+        <OpprettSkuff
+          tittel="Registrer kjøretøy"
+          apen={apen}
+          onLukk={() => setApen(false)}
+          tvingSkuff
         >
-          <DrawerHeader title="Registrer kjøretøy" />
-          <DrawerBody className="px-3 pb-6">{skjema}</DrawerBody>
-        </Drawer>
+          {skjema}
+        </OpprettSkuff>
       </div>
       <div className="max-md:hidden">{skjema}</div>
     </div>

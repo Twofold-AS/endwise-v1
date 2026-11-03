@@ -79,7 +79,7 @@ describe('PR #184 mobil-tokens', () => {
     const chips = utenKommentarer(les('../../../packages/ui/src/flate/filter-chips.tsx'));
     expect(chips).toMatch(/border border-fg bg-bg text-fg/);
     expect(chips).not.toMatch(/aktiv \? 'bg-fg text-bg'/);
-    expect(chips).toMatch(/no-scrollbar/);
+    expect(chips).toMatch(/flex-wrap/);
   });
 
   it('Side/Seksjon/ListeRad brukes på de ekte mobilrutene', () => {

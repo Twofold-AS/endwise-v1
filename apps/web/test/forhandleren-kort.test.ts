@@ -24,8 +24,8 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
     const bar = les('../app/(app)/_shell/seksjon-bar.tsx');
     expect(bar).not.toMatch(/data-org-piller/);
     const side = les('../app/(app)/organisasjon/page.tsx');
-    expect(side).toMatch(/SideChromeSkall/);
-    expect(side).toMatch(/synligeOrgChrome/);
+    expect(side).not.toMatch(/SideChromeSkall/);
+    expect(side).toMatch(/ListeRad tittel="Ansatte"/);
     expect(side).not.toMatch(/OrganisasjonListe/);
     expect(side).not.toMatch(/data-destinasjon-bar/);
     const liste = les('../app/(app)/organisasjon/_liste.tsx');
@@ -49,7 +49,7 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
     const side = les('../app/(app)/organisasjon/page.tsx');
     const kort = les('../app/(app)/organisasjon/forhandleren/_kort.tsx');
     expect(side).toMatch(/ForhandlerKort/);
-    expect(side).toMatch(/SideChromeSkall/);
+    expect(side).not.toMatch(/SideChromeSkall/);
     expect(side).not.toMatch(/PrislisteFlate/);
     expect(kort).toMatch(/Firmanavn/);
     expect(kort).toMatch(/Adresse/);

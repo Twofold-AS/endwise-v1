@@ -38,7 +38,7 @@ describe('iOS Safari — felt ≥16px på telefon, pinch-zoom urørt', () => {
     expect(prompt).toMatch(/text-\[16px\].*md:text-label/);
     expect(prompt).toMatch(/FELT_SM|ew-felt-sm/);
     expect(fab).toMatch(/data-ronny-composer/);
-    expect(fab).toMatch(/const BOBLE_TEKST = 'text-\[14px\]/);
+    expect(fab).toMatch(/const BOBLE_TEKST = 'text-body/);
     expect(innboks).toMatch(/PromptInputTextarea/);
   });
 

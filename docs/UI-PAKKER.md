@@ -1,5 +1,17 @@
 # UI-pakker — les denne FØR du bygger UI
 
+> ### ⚠️ Mikael 03.11.2026 — PR #184 runde 3 (mobil)
+> Gratis Board MIT: progress, meter, context-menu, agent-thinking,
+> agent-log. Ingen Pro. Ingen `add agent-chat`. I18nProvider `nb-NO`,
+> DateCalendar mandag først. Felles `OppretterSkuff` (Steg n av m, maks
+> 4, Sjekk) for Kunde, Tjeneste, Ansatt, Del, Agent, Forhandler.
+> Hjem = «Dagen din». Analyse skjult på mobil. Dest = 4 + Mer
+> (Lager/Butikk under Mer). Org = hub-liste. Sidetittel i innholdet
+> (`SideTopp`). Ronny = sticky sirkel + AgentThinking + LogRow +
+> forslagschips. Toast tatt i bruk ved opprett. Statuspalett §5
+> (confirmed = ink, ikke blå). ⛔ Vipps-login. ⛔ command palette.
+> ⛔ PULSE_PLAUSIBEL-tall. ⛔ `--ew-success` som tekst. ⛔ `#0066ff` på CTA.
+>
 > ### ⚠️ Mikael 02.11.2026 — PR #184 runde 2
 > DatePicker/DateCalendar/TimeField (RAC) med ink, ikke blå. Alle Ny/Opprett
 > i Board bunn-Drawer (deep link åpner skuff). Timeplan = jobber/dag.

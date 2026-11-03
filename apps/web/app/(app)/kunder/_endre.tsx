@@ -3,6 +3,7 @@
 import { StatefulButton } from '@endwise/ui';
 import { type FormEvent, type ReactNode, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { OpprettSkuff } from '../_shell/opprett-skuff';
 
 export const ADRESSE_PREFIKS = '[ADRESSE] ';
 
@@ -141,18 +142,20 @@ function KundeRad({
       <div className="flex items-start justify-between gap-3 py-4">
         <div className="min-w-0 flex-1">
           <p className="text-label text-fg">{label}</p>
-          <p className="mt-1 truncate text-[13px] text-fg-muted">{verdi}</p>
+          <p className="mt-1 truncate text-body text-fg-muted">{verdi}</p>
         </div>
         <button
           type="button"
           data-kunde-endre={label}
           onClick={onEndre}
-          className="shrink-0 pt-0.5 text-label font-[650] text-fg"
+          className="inline-flex h-12 shrink-0 items-center px-3 text-body font-[650] text-fg"
         >
-          {apen ? 'Lukk' : 'Endre'}
+          Endre
         </button>
       </div>
-      {apen ? <div className="pb-5">{children}</div> : null}
+      <OpprettSkuff tittel={`Endre ${label.toLowerCase()}`} apen={apen} onLukk={onEndre} tvingSkuff>
+        {children}
+      </OpprettSkuff>
     </div>
   );
 }

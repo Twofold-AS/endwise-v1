@@ -56,7 +56,7 @@ describe('Claude-design + Board UI (samlet)', () => {
 
     const kunde = utenKommentarer(les('../app/(app)/kunder/[id]/page.tsx'));
     expect(kunde).toMatch(/data-slett-kunde/);
-    expect(kunde).toMatch(/AlertDialog/);
+    expect(kunde).toMatch(/DeaktivertHandling/);
   });
 
   it('Board-fasade og Toaster er koblet', () => {
@@ -89,7 +89,7 @@ describe('Claude-design + Board UI (samlet)', () => {
     expect(utenKommentarer(les('../app/(app)/bookinger/_starttid-velger.tsx'))).toMatch(
       /DateCalendar/,
     );
-    expect(utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'))).toMatch(/DateCalendar/);
+    expect(utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'))).toMatch(/DatePicker/);
     expect(utenKommentarer(les('../app/(app)/bookinger/_meld-endring.tsx'))).toMatch(/FeltDato/);
   });
 });

@@ -39,7 +39,7 @@ export const PHONE_SAFE_BUNN = 'pb-[calc(env(safe-area-inset-bottom)+1.25rem)]';
 /** Hvilekort: 24px, canvas + hairline-soft (`--ew-divide` #f0f0f0). */
 export const PHONE_KORT_FYLL = 'rounded-[24px] border border-divide bg-card text-fg shadow-none';
 /** Hero / featured: 24px, canvas-soft tint uten kant. */
-export const PHONE_HERO_FYLL = 'rounded-[24px] bg-surface-2 text-fg shadow-none';
+export const PHONE_HERO_FYLL = 'rounded-[24px] border border-border bg-bg text-fg shadow-none';
 /** Destinasjonskort: samme hvileflate som PHONE_KORT_FYLL. */
 export const PHONE_DEST_FYLL = 'rounded-[24px] border border-divide bg-card text-fg shadow-none';
 
@@ -73,7 +73,7 @@ export const HJEM_KORT_TOM = {
  * Innholdskolonne for det største Verksted-kortet (telefon-hjem + desktop-hero)
  * og Ronny idle/peek-grainient. Full-åpen Ronny er viewport-grainient under chrome.
  */
-export const VERKSTED_INNHOLD = 'mx-auto w-full max-w-[520px] px-3 md:max-w-[1120px] md:px-8';
+export const VERKSTED_INNHOLD = 'mx-auto w-full max-w-[520px] md:max-w-[1120px] md:px-8';
 
 export const FORBUDT_DEALER_HJEM = [
   'book',

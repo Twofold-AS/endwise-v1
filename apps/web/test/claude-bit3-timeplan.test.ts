@@ -43,8 +43,8 @@ describe('Claude Design BIT 3 — Timeplan / Endringer', () => {
     const stripe = utenKommentarer(les('../app/(app)/_shell/timeplan-stripe.tsx'));
     expect(stripe).toMatch(/timeplanUkeFra/);
     expect(stripe).toMatch(/data-timeplan-maned/);
-    expect(stripe).toMatch(/Lukk måned/);
-    expect(stripe).toMatch(/Forrige uke/);
+    expect(stripe).toMatch(/DatePicker/);
+    expect(stripe).toMatch(/grid-cols-7/);
     expect(stripe).not.toMatch(/overflow-x/);
     expect(stripe).not.toMatch(/setStubGodkjent/);
   });

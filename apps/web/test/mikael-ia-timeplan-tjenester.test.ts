@@ -49,7 +49,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
 
   it('Timeplan-gulv er borte; + Jobb er ny jobb', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/PulseJobbFlis|bookinger\/ny/);
+    expect(hjem).toMatch(/Ny jobb|data-ny-jobb|jobber\?ny=1/);
     expect(hjem).not.toMatch(/Timeplan-gulv|nesteTreJobber/);
   });
 
@@ -130,9 +130,10 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(dager).toMatch(/timeplanDagerFra\(mandag, 7\)/);
     expect(stripe).not.toMatch(/overflow-hidden/);
     expect(stripe).not.toMatch(/overflow-x/);
-    expect(stripe).toMatch(/aria-label="Forrige måned"/);
+    expect(stripe).toMatch(/DatePicker/);
+    expect(stripe).toMatch(/aria-label="Velg dag"/);
     expect(stripe).toMatch(/timeplanManedNavn/);
-    expect(stripe).toMatch(/Lukk måned/);
+    expect(stripe).toMatch(/data-timeplan-maned/);
   });
 
   it('Tjenester er /prisliste (samme services.list), /tjenester forblir abonnement', () => {

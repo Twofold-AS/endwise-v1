@@ -20,7 +20,7 @@ export const TJENESTER_FANER: readonly TjenesterFaneDef[] = [
   },
   {
     id: 'opprett',
-    label: 'Opprett tjenester',
+    label: 'Opprett tjeneste',
     ingress: 'Ny tjeneste i katalogen.',
   },
 ];

@@ -68,7 +68,7 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(rail).toMatch(/onPointerDown/);
     expect(rail).toMatch(/onPointerMove/);
     expect(rail).toMatch(/w-\[22px\]/);
-    expect(rail).toMatch(/text-\[13px\]/);
+    expect(rail).toMatch(/text-meta/);
     expect(rail).toMatch(/flex-1/);
     expect(rail).toMatch(/text-fg-faint/);
     expect(rail).not.toMatch(/sticky/);
@@ -95,7 +95,7 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(liste).not.toMatch(/pr-\[30px\]/);
     expect(liste).not.toMatch(/filtrerKunderAlfa/);
     expect(liste).not.toMatch(/data-kunder-pager/);
-    expect(liste).toMatch(/Navn, telefon, e-post eller reg\.nr/);
+    expect(liste).toMatch(/Søk etter kunde/);
   });
 
   it('scroll-to-seksjon + dim tomme bokstaver — ikke filter-only', () => {
@@ -137,7 +137,7 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(skall).toMatch(/data-kunder-liste-scroll/);
     expect(skall).toMatch(/data-kunder-seksjon/);
     expect(skall).toMatch(/data-kunder-seksjon-hode/);
-    expect(skall).toMatch(/overflow-y-auto/);
+    expect(skall).toMatch(/scrollIntoView/);
     expect(skall).toMatch(/data-kunder-liste-hale/);
     expect(skall).not.toMatch(/min-h-\[420px\]/);
   });
@@ -153,9 +153,9 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(liste).not.toMatch(/filtrerKunderAlfa/);
     expect(liste).not.toMatch(/data-kunder-pager/);
     expect(liste).not.toMatch(/pr-\[30px\]/);
-    expect(liste).toMatch(/Navn, telefon, e-post eller reg\.nr/);
-    expect(skall).toMatch(/relative flex min-h-0 flex-1/);
-    expect(skall).toMatch(/no-scrollbar/);
+    expect(liste).toMatch(/Søk etter kunde/);
+    expect(skall).toMatch(/data-kunder-liste/);
+    expect(skall).toMatch(/scrollIntoView/);
     expect(skall).toMatch(/data-kunder-liste-hale/);
     expect(skall).not.toMatch(/pr-\[26px\]/);
   });
@@ -233,8 +233,8 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(faner).toMatch(/Registrer kjøretøy/);
     expect(faner).not.toMatch(/Tjenester/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/PulseAnalyserKort/);
-    expect(hjem).toMatch(/tallKortStats/);
+    expect(hjem).toMatch(/Dagen din/);
+    expect(hjem).not.toMatch(/PulseAnalyserKort/);
     const analyse = les('../app/(app)/analyse/page.tsx');
     expect(analyse.length).toBeGreaterThan(100);
   });

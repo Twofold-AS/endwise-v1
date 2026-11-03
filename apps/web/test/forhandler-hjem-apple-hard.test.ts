@@ -131,14 +131,14 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
     expect(hjem).toMatch(/HJEM_SCROLL_FLATE/);
     expect(dash).toMatch(/HJEM_SCROLL_FLATE/);
-    expect(hjem).toMatch(/gap-2\.5/);
+    expect(hjem).toMatch(/gap-4/);
     expect(hjem).not.toMatch(/PHONE_SAFE_TOP/);
   });
 
   it('hero er Mobbin featured-kort: radius 24, tint uten kant, Starter/Pågår/Ferdig', () => {
     expect(PHONE_HERO_FYLL).toMatch(/rounded-\[24px\]/);
-    expect(PHONE_HERO_FYLL).toMatch(/bg-surface-2/);
-    expect(PHONE_HERO_FYLL).not.toMatch(/border-border|border-divide/);
+    expect(PHONE_HERO_FYLL).toMatch(/bg-bg/);
+    expect(PHONE_HERO_FYLL).toMatch(/border-border/);
     expect(PHONE_HERO_FYLL).not.toMatch(/#111|bg-fg|Grainient|Galaxy/);
     expect(PHONE_DEST_FYLL).toMatch(/rounded-\[24px\]/);
     expect(PHONE_DEST_FYLL).toMatch(/border-divide/);
@@ -147,7 +147,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(kort).toMatch(/Planlagt/);
     expect(kort).toMatch(/Pågår/);
     expect(kort).toMatch(/Ferdig/);
-    expect(hjem).toMatch(/PulseHeroFlate/);
+    expect(hjem).toMatch(/Dagen din/);
     expect(hjem).not.toMatch(/HJEM_KORT_TOM\.timeplan/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
     expect(kort).toMatch(/text-\[28px\]/);

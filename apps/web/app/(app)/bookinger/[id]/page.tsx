@@ -6,6 +6,7 @@ import {
   CreditCard,
   DeaktivertHandling,
   hexForFarge,
+  Side,
   StatusChip,
   statusFraBooking,
   Users,
@@ -15,7 +16,6 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
-import { BevelButton } from '../../_shell/cards';
 import { invalidateHjemPulse, meldingBookingLagret } from '../../_shell/hjem-pulse-sync';
 import { MeldEndringSkjema } from '../_meld-endring';
 import {
@@ -48,68 +48,65 @@ export default function BookingDetaljPage() {
     },
   });
 
-  if (q.isLoading) return <div className="px-8 py-7 text-fg-faint text-sm">Laster …</div>;
+  if (q.isLoading)
+    return (
+      <Side tittel="Jobb" tilbakeHref="/jobber" tilbakeLabel="Tilbake til timeplan">
+        <p className="text-body text-fg-muted">Laster …</p>
+      </Side>
+    );
   if (q.isError)
     return (
-      <div className="px-8 py-7">
-        <p className="text-danger text-sm">Kunne ikke hente bookingen: {q.error.message}</p>
-        <BackLink />
-      </div>
+      <Side tittel="Jobb" tilbakeHref="/jobber" tilbakeLabel="Tilbake til timeplan">
+        <p className="text-body text-danger">Kunne ikke hente bookingen: {q.error.message}</p>
+      </Side>
     );
   const b = q.data;
   if (!b)
     return (
-      <div className="px-8 py-7">
-        <p className="text-fg-muted text-sm">Fant ikke bookingen.</p>
-        <BackLink />
-      </div>
+      <Side tittel="Jobb" tilbakeHref="/jobber" tilbakeLabel="Tilbake til timeplan">
+        <p className="text-body text-fg-muted">Fant ikke bookingen.</p>
+      </Side>
     );
 
   const allowed = ALLOWED_TRANSITIONS[b.status] ?? [];
   const setStatus = (to: BookingStatus) => transition.mutate({ bookingId: b.id, to });
 
   return (
-    <div className="mx-auto flex w-full max-w-[880px] flex-col gap-4 px-8 py-7">
-      <BackLink />
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Car size={20} className="text-fg-muted" />
-        <h1 className="font-semibold text-fg text-xl tracking-tight">
-          {b.regNumber ?? 'Uten regnr'}
-        </h1>
-        {b.vehicleType && <span className="text-fg-faint text-xs uppercase">{b.vehicleType}</span>}
-        <span className="ml-auto">
-          <StatusChip status={statusFraBooking(b.status)}>
-            {STATUS_LABEL[b.status] ?? b.status}
-          </StatusChip>
-        </span>
-      </div>
-
-      {/* Statusknapper — kun lovlige overganger. */}
-      <div className="flex flex-wrap gap-2" data-jobb-status-ekstra>
+    <Side
+      tittel={b.regNumber ?? 'Uten regnr'}
+      undertekst={b.vehicleType ?? undefined}
+      tilbakeHref="/jobber"
+      tilbakeLabel="Tilbake til timeplan"
+      handling={
+        <StatusChip status={statusFraBooking(b.status)}>
+          {STATUS_LABEL[b.status] ?? b.status}
+        </StatusChip>
+      }
+      className="mx-auto w-full max-w-[880px] md:px-8 md:py-7"
+    >
+      <div className="flex flex-col gap-2" data-jobb-status-ekstra>
         {allowed.map((to) => (
-          <BevelButton
+          <button
             key={to}
-            className={to === 'cancelled' || to === 'no_show' ? 'opacity-90' : ''}
+            type="button"
+            className="inline-flex h-12 items-center justify-center rounded-pill bg-fg px-4 text-body text-bg disabled:opacity-40"
             onClick={() => setStatus(to)}
           >
             {overgangLabel(b.status, to)}
-          </BevelButton>
+          </button>
         ))}
         <DeaktivertHandling forklaring="Kommer senere">Flyttet</DeaktivertHandling>
         <DeaktivertHandling forklaring="Kommer senere">Hentet</DeaktivertHandling>
         <Link
           href={`/innboks?ny=1&jobb=${encodeURIComponent(b.id)}` as Route}
           data-jobb-send-melding
-          className="inline-flex h-control items-center rounded-control border border-border px-3 text-label text-fg hover:bg-surface-2"
+          className="inline-flex h-12 items-center justify-center rounded-pill border border-border px-4 text-body text-fg"
         >
           Send melding om jobben
         </Link>
-        {transition.isPending && (
-          <span className="self-center text-fg-faint text-xs">Lagrer …</span>
-        )}
+        {transition.isPending && <span className="text-meta text-fg-muted">Lagrer …</span>}
         {transition.isError && (
-          <span className="self-center text-danger text-xs">{transition.error.message}</span>
+          <span className="text-body text-danger">{transition.error.message}</span>
         )}
       </div>
 
@@ -160,8 +157,8 @@ export default function BookingDetaljPage() {
 
       {b.notes && (
         <div className="rounded-lg border border-border bg-card p-4">
-          <p className="mb-1 font-medium text-fg-faint text-xs">Notat</p>
-          <p className="text-fg text-sm">{b.notes}</p>
+          <p className="mb-1 text-meta text-fg-muted">Notat</p>
+          <p className="text-body text-fg">{b.notes}</p>
         </div>
       )}
 
@@ -169,11 +166,11 @@ export default function BookingDetaljPage() {
 
       {/* Historikk (audit-loggen, append-only F1-06). */}
       <div className="rounded-lg border border-border bg-card p-4">
-        <p className="mb-2 flex items-center gap-1.5 font-medium text-fg-faint text-xs">
+        <p className="mb-2 flex items-center gap-1.5 text-meta text-fg-muted">
           <Activity size={13} /> Historikk
         </p>
         {b.history.length === 0 ? (
-          <p className="text-fg-faint text-xs">
+          <p className="text-meta text-fg-muted">
             Ingen statusendringer ennå. Opprettet {fmtDateTime(b.createdAt)} (kilde: {b.source}).
           </p>
         ) : (
@@ -182,8 +179,8 @@ export default function BookingDetaljPage() {
               const to = String(h.action).replace('booking.', '');
               const from = (h.metadata as { from?: string } | null)?.from;
               return (
-                <li key={h.id} className="flex items-center gap-2 text-xs">
-                  <span className="w-28 shrink-0 text-fg-faint tabular-nums">
+                <li key={h.id} className="flex items-center gap-2 text-meta">
+                  <span className="w-28 shrink-0 text-fg-muted tabular-nums">
                     {fmtDateTime(h.occurredAt)}
                   </span>
                   <span className="text-fg">
@@ -196,7 +193,7 @@ export default function BookingDetaljPage() {
           </ul>
         )}
       </div>
-    </div>
+    </Side>
   );
 }
 
@@ -217,8 +214,8 @@ function Fact({
     <div className="flex items-start gap-2.5 rounded-lg border border-border bg-card px-3.5 py-3">
       <span className="mt-0.5 text-fg-faint">{icon}</span>
       <div className="min-w-0">
-        <p className="text-fg-faint text-xs">{label}</p>
-        <p className="flex items-center gap-1.5 truncate text-fg text-sm">
+        <p className="text-meta text-fg-muted">{label}</p>
+        <p className="flex items-center gap-1.5 truncate text-body text-fg">
           {farge != null || seed ? (
             <span
               aria-hidden
@@ -233,10 +230,3 @@ function Fact({
   );
 }
 
-function BackLink() {
-  return (
-    <Link href={'/saker' as Route} className="text-fg-faint text-xs hover:text-fg">
-      ← Jobber
-    </Link>
-  );
-}

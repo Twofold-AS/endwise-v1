@@ -13,13 +13,11 @@ export const INNBOKS_FILTERE: { key: InboxPart; label: string }[] = [
   { key: 'dealer_admin', label: 'Endwise' },
 ];
 
-/** Claude FILTERS: Alle · Kunder · Intern · Support · Løst. */
+/** Mobil: Alle · Kunder · Intern. Support/Løst ut til det finnes data. */
 export const INNBOKS_CHIPS: { key: InboxChip; label: string }[] = [
   { key: 'alle', label: 'Alle' },
   { key: 'customer_dealer', label: 'Kunder' },
   { key: 'mechanic_dealer', label: 'Intern' },
-  { key: 'dealer_admin', label: 'Support' },
-  { key: 'lost', label: 'Løst' },
 ];
 
 /** Claude PER = 10. Klient-slice av allerede hentet `listThreads`. */

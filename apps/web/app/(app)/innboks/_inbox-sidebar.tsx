@@ -1,10 +1,10 @@
 'use client';
 
 import {
-  Avatar,
   type AvatarValg,
   Button,
   LasterFlate,
+  ListeRad,
   MessageSquare,
   Pagination,
   Side,
@@ -12,7 +12,8 @@ import {
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { trpc } from '@/lib/trpc';
 import { CountBadge } from '../_shell/cards';
 import {
@@ -60,6 +61,7 @@ export function InboxSidebar() {
   const endwise = modus === 'endwise';
   const { chip, sortering, skjulte, side, setSide, velgModus, valgte, toggleValgt } =
     useInboxFilter();
+  const [sok, setSok] = useState('');
 
   const me = trpc.session.me.useQuery();
   const threads = trpc.messages.listThreads.useQuery(undefined, { enabled: !endwise });
@@ -103,10 +105,16 @@ export function InboxSidebar() {
     { enabled: offisielleIder.length > 0, staleTime: 5 * 60_000 },
   );
 
-  const alleFiltrert = useMemo(
-    () => sorterInboxTrader(filtrerInboxTrader(ekte, chip, skjulte), sortering),
-    [ekte, chip, skjulte, sortering],
-  );
+  const alleFiltrert = useMemo(() => {
+    const base = sorterInboxTrader(filtrerInboxTrader(ekte, chip, skjulte), sortering);
+    const q = sok.trim().toLowerCase();
+    if (!q) return base;
+    return base.filter((t) => {
+      const emne = (t.subject ?? '').toLowerCase();
+      const tekst = ('sisteTekst' in t ? String(t.sisteTekst ?? '') : '').toLowerCase();
+      return emne.includes(q) || tekst.includes(q);
+    });
+  }, [ekte, chip, skjulte, sortering, sok]);
   const sider = inboxSider(alleFiltrert.length);
   const sideIndeks = Math.min(Math.max(1, side), sider);
   const rader = useMemo(() => {
@@ -201,6 +209,12 @@ export function InboxSidebar() {
         tittel="Innboks"
         className="[&>header]:sr-only min-h-0 flex-1 overflow-y-auto px-3 py-0"
       >
+        <PhoneSokFelt
+          value={sok}
+          onChange={(e) => setSok(e.target.value)}
+          placeholder="Søk etter person"
+          aria-label="Søk etter person"
+        />
         <InboxFilterChips />
         {threads.isLoading ? (
           <LasterFlate label="Laster samtaler" linjer={6} />
@@ -354,76 +368,41 @@ function SamtaleKort({
   aktiv: boolean;
 }) {
   return (
-    <div
-      data-innboks-rad
-      data-innboks-ulest={rad.ulest > 0 ? '1' : undefined}
-      className={`flex flex-col gap-1 border-border border-b py-4 transition-colors ${
-        rad.ulest > 0 ? 'bg-[#f3f3f3] font-[650]' : ''
-      } ${aktiv ? 'bg-sidebar-active' : rad.ulest > 0 ? '' : 'bg-transparent hover:bg-surface-2/60'}`}
-    >
-      <div className="flex items-center gap-2">
-        {/*
-         * Kanalen står først på raden, ikke bak en bryter. Det er den som
-         * avgjør hvordan man svarer — se `_kanal.tsx`.
-         */}
-        <KanalMerke kanal={rad.sisteKanal} kunIkon />
-        <span className="ml-auto shrink-0 text-[13px] text-fg-muted tabular-nums">{rad.nar}</span>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {/*
-         * Ansiktet står før navnet: øyet kjenner igjen en form
-         * raskere enn det leser en streng, og lista skannes mer enn den
-         * leses. `navn` tom = dekorativ, siden navnet står rett ved siden av
-         * og en skjermleser ellers ville lest det to ganger.
-         */}
-        {rad.motpart && (
-          <Avatar
-            seed={rad.motpart.seed}
-            valg={rad.motpart.avatar}
-            size={20}
-            navn=""
-            /*
-             * Lista. Ett `<img>` per rad, ingen bevegelse. Dette er flaten
-             * hele `bevegelse`-propen finnes for å beskytte.
-             */
-            bevegelse="stille"
-          />
-        )}
-        <span
-          className={`truncate text-label ${
-            rad.ulest > 0 ? 'font-[650] text-fg' : 'font-[450] text-fg-muted'
-          }`}
-        >
-          {rad.avsender}
+    <ListeRad
+      tittel={rad.avsender}
+      undertekst={rad.utdrag || undefined}
+      initialer={rad.motpart?.navn?.slice(0, 1).toUpperCase()}
+      aktiv={aktiv}
+      chevron={false}
+      hoyre={
+        <span className="flex flex-col items-end gap-1">
+          <span className="text-meta text-fg-muted tabular-nums">{rad.nar}</span>
+          <CountBadge count={rad.ulest} label="uleste" />
         </span>
-        <CountBadge count={rad.ulest} label="uleste" className="ml-auto" />
-      </div>
-
-      {rad.utdrag && (
-        <p className="line-clamp-2 text-[13px] text-fg-muted leading-snug">{rad.utdrag}</p>
-      )}
-
-      <div className="flex flex-wrap items-center gap-1.5">
+      }
+      className={rad.ulest > 0 ? 'bg-[#f3f3f3] font-[650]' : undefined}
+    >
+      <span
+        data-innboks-rad
+        data-innboks-ulest={rad.ulest > 0 ? '1' : undefined}
+        className="flex flex-wrap items-center gap-1.5"
+      >
+        <KanalMerke kanal={rad.sisteKanal} kunIkon />
         <span
-          className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-[13px] ${
+          className={`inline-flex h-badge items-center rounded-badge px-1.5 font-medium text-meta ${
             KIND_TONE[rad.kind] ?? 'bg-surface-2 text-fg-muted'
           }`}
         >
           {KIND_LABEL[rad.kind] ?? rad.kind}
         </span>
-        {/*
-         * Bytter samtalen vei, skal det ses i lista — ikke først når du
-         * åpner tråden og svarer feil sted.
-         */}
-        {rad.sisteKanal !== rad.kanal && (
-          <span className="inline-flex h-badge items-center gap-1 rounded-badge bg-surface-2 px-1.5 text-[13px] text-fg-muted">
+        {rad.sisteKanal !== rad.kanal ? (
+          <span className="inline-flex h-badge items-center gap-1 rounded-badge bg-surface-2 px-1.5 text-meta text-fg-muted">
             svar som
             <KanalMerke kanal={rad.kanal} kunIkon />
           </span>
-        )}
-      </div>
-    </div>
+        ) : null}
+      </span>
+    </ListeRad>
   );
 }
 

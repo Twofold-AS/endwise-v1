@@ -1,7 +1,7 @@
 'use client';
 
 import type { EndringKind } from '@endwise/modules/booking/changes';
-import { FeltDato, FeltKlokke, FeltSelect, FeltTekst, FilterChips, SelectItem } from '@endwise/ui';
+import { FeltDato, FeltKlokke, FeltSelect, FeltTekst, FilterChips, SelectItem, toast } from '@endwise/ui';
 import { parseDate, Time } from '@internationalized/date';
 import type { Route } from 'next';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { osloVeggklokke } from '../_lib/oslo-dag';
 import { invalidateHjemPulse, meldingBookingLagret } from '../_shell/hjem-pulse-sync';
+import { OpprettSkuff } from '../_shell/opprett-skuff';
 import { harVentendeAvvik, harVentendeForespor } from '../_shell/phone-home-pulse';
 import { endringerHref } from '../jobber/_faner';
 
@@ -39,6 +40,8 @@ export function MeldEndringSkjema({
       setYmd('');
       setKlokke('');
       setMechanicId('');
+      setApen(false);
+      toast.success('Endringen er sendt');
     },
   });
   const mekanikere = trpc.mechanics.list.useQuery();
@@ -75,18 +78,17 @@ export function MeldEndringSkjema({
         </Link>
       ) : null}
 
-      {!apen ? (
-        <button
-          type="button"
-          data-jobb-meld-apne
-          onClick={() => setApen(true)}
-          className="inline-flex h-10 items-center justify-center rounded-lg border border-border text-label text-fg"
-        >
-          Meld avvik eller forespørsel
-        </button>
-      ) : (
+      <button
+        type="button"
+        data-jobb-meld-apne
+        onClick={() => setApen(true)}
+        className="inline-flex h-12 items-center justify-center rounded-pill border border-border text-body text-fg"
+      >
+        Meld avvik eller forespørsel
+      </button>
+      <OpprettSkuff tittel="Meld endring" apen={apen} onLukk={() => setApen(false)} tvingSkuff>
         <form
-          className="flex flex-col gap-2"
+          className="flex flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault();
             if (!tekst.trim()) return;
@@ -106,7 +108,7 @@ export function MeldEndringSkjema({
         >
           <FilterChips chips={KIND_CHIPS} valgt={kind} onChange={setKind} ariaLabel="Type" />
           <div className="flex flex-col gap-1">
-            <span className="text-[12px] text-fg-muted">Ny dato (valgfritt)</span>
+            <span className="text-meta text-fg-muted">Ny dato (valgfritt)</span>
             <FeltDato
               aria-label="Ny dato"
               value={ymd ? parseDate(ymd) : null}
@@ -155,26 +157,26 @@ export function MeldEndringSkjema({
             <button
               type="submit"
               disabled={report.isPending || !tekst.trim()}
-              className="h-10 flex-1 rounded-full bg-fg text-[12px] font-[650] text-bg disabled:opacity-40"
+              className="inline-flex h-12 flex-1 items-center justify-center rounded-pill bg-fg text-body font-[650] text-bg disabled:opacity-40"
             >
               {report.isPending ? 'Sender …' : 'Send'}
             </button>
             <button
               type="button"
               onClick={() => setApen(false)}
-              className="h-10 rounded-full border border-border px-4 text-[12px] text-fg"
+              className="inline-flex h-12 items-center rounded-pill border border-border px-4 text-body text-fg"
             >
               Avbryt
             </button>
           </div>
           {report.isSuccess ? (
-            <p className="text-[12px] text-fg">Sendt. Selger ser den under Endringer.</p>
+            <p className="text-body text-fg">Sendt. Selger ser den under Endringer.</p>
           ) : null}
           {report.isError ? (
-            <p className="text-[12px] text-danger">{report.error.message}</p>
+            <p className="text-body text-danger">{report.error.message}</p>
           ) : null}
         </form>
-      )}
+      </OpprettSkuff>
     </div>
   );
 }

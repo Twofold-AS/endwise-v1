@@ -1,69 +1,57 @@
 'use client';
 
+import { BoardChip, FeilFlate, LasterFlate, ListeRad, Side, TomFlate } from '@endwise/ui';
 import { trpc } from '@/lib/trpc';
-import { BEVEGELSE_LABEL, BEVEGELSE_TONE, Feil, Laster, Sidehode, Tomt } from '../_delt';
+import { BEVEGELSE_LABEL } from '../_delt';
 
 /**
  * Lager · Bevegelser. Append-only historikk.
- * Dette er fasiten, ikke en rapport. `stock_levels` er en
- * materialisering man kan bygge opp igjen herfra — ikke omvendt. Derfor kan
- * ingen rad her redigeres: er tallet feil, legger man til en korreksjon. Man
- * retter ikke historien.
  */
 export default function BevegelserPage() {
   const bevegelser = trpc.inventory.listMovements.useQuery({ limit: 200 });
 
   return (
-    <div data-lager-logg className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
-      <Sidehode
+    <div data-lager-logg className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 max-md:px-0 md:px-8 md:py-7">
+      <Side
         tittel="Inn og ut"
-        undertittel="Siste bevegelser. Historikken rettes aldri — den suppleres."
-      />
-      {bevegelser.isLoading ? (
-        <Laster />
-      ) : bevegelser.isError ? (
-        <Feil melding={bevegelser.error.message} />
-      ) : (bevegelser.data?.length ?? 0) === 0 ? (
-        <Tomt
-          tittel="Ingen bevegelser ennå"
-          hint="Registrer et varemottak eller et uttak under Deler."
-        />
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
-          {bevegelser.data?.map((b, i) => (
-            <div
+        undertekst="Siste bevegelser. Historikken rettes aldri — den suppleres."
+        tilbakeHref="/lager"
+      >
+        {bevegelser.isLoading ? (
+          <LasterFlate linjer={4} label="Henter bevegelser" />
+        ) : bevegelser.isError ? (
+          <FeilFlate melding={bevegelser.error.message} />
+        ) : (bevegelser.data?.length ?? 0) === 0 ? (
+          <TomFlate
+            tittel="Ingen bevegelser ennå"
+            hint="Ingen inn- eller uttak er registrert."
+          />
+        ) : (
+          (bevegelser.data ?? []).map((b) => (
+            <ListeRad
               key={b.id}
-              className={`flex h-row-store items-center gap-4 bg-bg px-4 ${
-                i > 0 ? 'border-border border-t' : ''
-              }`}
-            >
-              <span
-                className={`inline-flex h-badge w-20 shrink-0 items-center justify-center rounded-badge px-2 font-medium text-[11px] ${
-                  BEVEGELSE_TONE[b.kind] ?? 'bg-surface-2 text-fg-muted'
-                }`}
-              >
-                {BEVEGELSE_LABEL[b.kind] ?? b.kind}
-              </span>
-              <span className="w-12 shrink-0 text-label text-fg tabular-nums">{b.quantity}</span>
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate text-label text-fg">{b.partName}</span>
-                <span className="truncate text-[12px] text-fg-muted">
-                  <span className="font-mono">{b.sku}</span> · {b.locationCode}
-                  {b.note ? ` · ${b.note}` : ''}
+              tittel={b.partName}
+              undertekst={`${b.sku} · ${b.locationCode}${b.note ? ` · ${b.note}` : ''}`}
+              hoyre={
+                <span className="flex flex-col items-end gap-1">
+                  <BoardChip variant="caption" color={b.kind === 'out' ? 'rose' : 'soft'}>
+                    {BEVEGELSE_LABEL[b.kind] ?? b.kind} {b.quantity}
+                  </BoardChip>
+                  <span className="text-meta text-fg-muted tabular-nums">
+                    {new Date(b.createdAt).toLocaleString('nb-NO', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
                 </span>
-              </div>
-              <span className="w-32 shrink-0 text-right text-[12px] text-fg-muted tabular-nums">
-                {new Date(b.createdAt).toLocaleString('nb-NO', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+              }
+              chevron={false}
+            />
+          ))
+        )}
+      </Side>
     </div>
   );
 }

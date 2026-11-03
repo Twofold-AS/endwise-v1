@@ -41,7 +41,7 @@ export function Seksjon({
 
 /** Kjøretøytype på norsk. Enum i basen, ord i UI-et. */
 export const TYPE_LABEL: Record<string, string> = {
-  mc: 'MC',
+  mc: 'Motorsykkel',
   boat: 'Båt',
   atv: 'ATV',
 };

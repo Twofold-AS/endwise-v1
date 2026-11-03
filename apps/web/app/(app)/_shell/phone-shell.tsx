@@ -4,33 +4,21 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { Dropdown, DropdownItem, DropdownPopover, DropdownTrigger } from '@endwise/ui';
 import { isVerkstedInspectPath } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
-import { RONNY_PHONE_IDLE, RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
-import { useRonnySheet } from '../_workshop/ronny-sheet-state';
-import { InboxTopBar2 } from '../innboks/_top-bar2';
-import { destinasjonerForShell, isItemActive, shellForBruker } from './nav';
-import {
-  PHONE_AVATAR_PX,
-  PHONE_BAR2,
-  PHONE_LOGO_PX,
-  PHONE_PROFIL_SIRKEL,
-  PHONE_RONNY_SIRKEL,
-  PHONE_SIDE_UNDER,
-  ronnySizeForSirkel,
-} from './phone-chrome';
+import { destinasjonerForShell, delMobilDest, isItemActive, shellForBruker } from './nav';
+import { PHONE_BAR2, PHONE_LOGO_PX, PHONE_PROFIL_SIRKEL, PHONE_SIDE_UNDER } from './phone-chrome';
 import { PhoneHScroll } from './phone-h-scroll';
 import { PHONE_SAFE_TOP, phoneHjemHref, phoneInnstillingerHref } from './phone-home';
 import { PhoneProfilMeny } from './phone-profil-meny';
-import { phoneSideChrome } from './phone-side-chrome';
+import { erSamtaleSti, phoneSideChrome } from './phone-side-chrome';
 import { PhoneSokFelt } from './phone-sok-felt';
 import { PhoneSokOverlay } from './phone-sok-overlay';
 
 /**
- * Telefon-chrome: original toppbar 1 (logo · søk · Ronny · profil) og
- * toppbar 2 (dest-piller) alltid synlige — også på undersider.
- * Tittel + verktøylinje sitter tett under dest-pillene.
- * Ingen tilbake+midtstilt tittel som erstatter destinasjonsbarene.
+ * Telefon-chrome: toppbar 1 (logo · søk · profil) + dest-piller (4 + Mer).
+ * Sidetittel scroller i innholdet. Dest skjules på samtale.
  */
 export function PhoneShell() {
   const pathname = usePathname() ?? '';
@@ -38,11 +26,10 @@ export function PhoneShell() {
   const params = useSearchParams();
   const { role, navn, epost, jobbfunksjon, isMechanic, erPlattform, isAdmin, shopEnabled } =
     useOrgRole();
-  const { apen, apne, lukk } = useRonnySheet();
-  const { spin, trigg } = useRonnySpinn();
   const [sok, setSok] = useState('');
   const [sokApen, setSokApen] = useState(false);
   const [profilApen, setProfilApen] = useState(false);
+  const [merApen, setMerApen] = useState(false);
   const shell = shellForBruker({
     role,
     jobFunction: jobbfunksjon,
@@ -62,6 +49,9 @@ export function PhoneShell() {
       }),
     [shell, role, shopEnabled, erPlattform, inspect],
   );
+  const { faste, mer } = delMobilDest(dest);
+  const samtale = erSamtaleSti(pathname);
+  const merAktiv = mer.some((item) => isItemActive(item, pathname));
   const sideChrome = phoneSideChrome(pathname, params, {
     isAdmin,
     erForhandler: !erPlattform,
@@ -73,7 +63,7 @@ export function PhoneShell() {
     <>
       <div data-phone-top-bar-spacer className={`shrink-0 md:hidden ${PHONE_SAFE_TOP}`} aria-hidden>
         <div className="h-row" />
-        <div className={PHONE_BAR2} />
+        {samtale ? null : <div className={PHONE_BAR2} />}
         {sideChrome ? (
           <div className={PHONE_SIDE_UNDER}>
             <div className="h-6" />
@@ -131,24 +121,6 @@ export function PhoneShell() {
             </form>
             <button
               type="button"
-              data-ronny-avatar
-              aria-label={apen ? 'Lukk Ronny' : 'Åpne Ronny'}
-              aria-expanded={apen}
-              className={PHONE_RONNY_SIRKEL}
-              onClick={() => {
-                trigg();
-                if (apen) lukk();
-                else apne();
-              }}
-            >
-              <RonnyBot
-                size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
-                spin={spin}
-                idleSett={RONNY_PHONE_IDLE}
-              />
-            </button>
-            <button
-              type="button"
               data-phone-profile
               aria-label="Profil"
               aria-expanded={profilApen}
@@ -166,26 +138,54 @@ export function PhoneShell() {
             innstillingerHref={profilHref}
           />
         </div>
-        <div data-phone-top-bar="2" className={PHONE_BAR2}>
-          <PhoneHScroll lockKey={`${pathname}|${sok}`}>
-            {dest.map((item) => {
-              const aktiv = isItemActive(item, pathname);
-              return (
-                <Link
-                  key={item.key}
-                  href={item.href as Route}
-                  aria-current={aktiv ? 'page' : undefined}
-                  data-phone-dest={item.key}
-                  className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-label text-fg ${
-                    aktiv ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </PhoneHScroll>
-        </div>
+        {samtale ? null : (
+          <div data-phone-top-bar="2" className={PHONE_BAR2}>
+            <PhoneHScroll lockKey={`${pathname}|${sok}`}>
+              {faste.map((item) => {
+                const aktiv = isItemActive(item, pathname);
+                return (
+                  <Link
+                    key={item.key}
+                    href={item.href as Route}
+                    aria-current={aktiv ? 'page' : undefined}
+                    data-phone-dest={item.key}
+                    className={`inline-flex h-10 shrink-0 items-center rounded-full px-3 text-label text-fg ${
+                      aktiv ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+              {mer.length > 0 ? (
+                <Dropdown isOpen={merApen} onOpenChange={setMerApen}>
+                  <DropdownTrigger
+                    data-phone-dest="mer"
+                    aria-current={merAktiv ? 'page' : undefined}
+                    className={`inline-flex h-10 shrink-0 items-center rounded-full px-3 text-label text-fg ${
+                      merAktiv ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'
+                    }`}
+                  >
+                    Mer
+                  </DropdownTrigger>
+                  <DropdownPopover aria-label="Flere sider" placement="bottom end">
+                    {mer.map((item) => (
+                      <DropdownItem
+                        key={item.key}
+                        onSelect={() => {
+                          setMerApen(false);
+                          router.push(item.href as Route);
+                        }}
+                      >
+                        {item.label}
+                      </DropdownItem>
+                    ))}
+                  </DropdownPopover>
+                </Dropdown>
+              ) : null}
+            </PhoneHScroll>
+          </div>
+        )}
         {sideChrome ? (
           <div
             data-phone-side-under
@@ -196,35 +196,29 @@ export function PhoneShell() {
               {sideChrome.tittel}
             </h1>
             <div data-phone-side-verktoy className="flex min-h-8 min-w-0 items-end">
-              {sideChrome.bar2 === 'innboks' ? (
-                <InboxTopBar2 />
-              ) : (
-                <nav
-                  data-phone-settings-nav
-                  data-phone-side-nav={sideChrome.id}
-                  aria-label={sideChrome.tittel}
-                  className="flex min-w-0 flex-1 items-end gap-5 overflow-x-auto"
-                >
-                  {sideChrome.faner.map((f) => {
-                    const aktiv = f.id === sideChrome.aktiv;
-                    return (
-                      <Link
-                        key={f.id}
-                        href={f.href as Route}
-                        data-phone-settings-fane={f.id}
-                        aria-current={aktiv ? 'page' : undefined}
-                        className={`shrink-0 border-b-2 pb-1 text-label ${
-                          aktiv
-                            ? 'border-fg font-[650] text-fg'
-                            : 'border-transparent text-fg-muted'
-                        }`}
-                      >
-                        {f.label}
-                      </Link>
-                    );
-                  })}
-                </nav>
-              )}
+              <nav
+                data-phone-settings-nav
+                data-phone-side-nav={sideChrome.id}
+                aria-label={sideChrome.tittel}
+                className="no-scrollbar flex min-w-0 flex-1 flex-wrap items-end gap-5"
+              >
+                {sideChrome.faner.map((f) => {
+                  const aktiv = f.id === sideChrome.aktiv;
+                  return (
+                    <Link
+                      key={f.id}
+                      href={f.href as Route}
+                      data-phone-settings-fane={f.id}
+                      aria-current={aktiv ? 'page' : undefined}
+                      className={`shrink-0 border-b-2 pb-1 text-label ${
+                        aktiv ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
+                      }`}
+                    >
+                      {f.label}
+                    </Link>
+                  );
+                })}
+              </nav>
             </div>
           </div>
         ) : null}

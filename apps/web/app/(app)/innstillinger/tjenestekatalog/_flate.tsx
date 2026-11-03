@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
-import { OpprettSkuff } from '../../_shell/opprett-skuff';
 import { PhoneSokFelt } from '../../_shell/phone-sok-felt';
 import { SorteringArk, SorteringValg } from '../../_shell/sortering-ark';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
@@ -134,9 +133,7 @@ export function PrislisteFlate({
       </div>
 
       {isAdmin ? (
-        <OpprettSkuff tittel="Ny tjeneste" apen={nyApen} onLukk={() => setNyApen(false)}>
-          <NyTjeneste onLukk={() => setNyApen(false)} />
-        </OpprettSkuff>
+        <NyTjeneste apen={nyApen} onLukk={() => setNyApen(false)} />
       ) : null}
 
       {tjenester.isLoading ? (

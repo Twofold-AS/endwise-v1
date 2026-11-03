@@ -91,14 +91,12 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).not.toMatch(/Organisasjon|Hjelp|svarhastighet/);
     expect(hjem).not.toMatch(/Ingen kunder ennå|Åpne organisasjon|Artikler og support/);
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
-    expect(hjem).toMatch(/Les alle siste meldinger/);
-    expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/PulseJobbFlis/);
-    expect(hjem).toMatch(/PulseHeroFlate|endringerTeller/);
-    expect(hjem).toMatch(/PulseAnalyserKort|Analyser/);
+    expect(hjem).toMatch(/Ny jobb|data-ny-jobb/);
+    expect(hjem).toMatch(/Dagen din/);
+    expect(hjem).toMatch(/Trenger deg|data-trenger-deg/);
     expect(hjem).toMatch(/invalidateHjemPulse|bookings\.list/);
-    expect(hjem).toMatch(/flex-1 basis-0/);
-    expect(hjem).toMatch(/planlagt=\{idag\.planlagt\}/);
+    expect(hjem).toMatch(/data-dagen-din|data-dagen-hero/);
+    expect(hjem).toMatch(/jobbAntall|idagVisning/);
     expect(kort).toMatch(/Planlagt/);
     expect(hjem).not.toMatch(/dither-kit|DitherGradient/);
     expect(hjem).not.toMatch(/pulse-preview/);
@@ -135,7 +133,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(osloStartAvManed(naa).toISOString()).toMatch(/2026-07-31|2026-08-01/);
     const vindu = dagerVindu(naa);
     expect(vindu.til.getTime()).toBeGreaterThan(vindu.fra.getTime());
-    expect(siste7dSpark([], naa)).toEqual(plausibelSpark(naa));
+    expect(siste7dSpark([], naa)).toEqual(Array.from({ length: PULSE_DAGER }, () => 0));
     expect(siste7dSpark([], naa)).toHaveLength(PULSE_DAGER);
     const serie = siste7dSpark(
       [
@@ -256,8 +254,8 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(dash).toMatch(/DealerPulseKort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
     expect(hjem).not.toMatch(/messages\.svarhastighet/);
-    expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/bookinger\/ny|PulseJobbFlis/);
+    expect(hjem).toMatch(/Dagen din/);
+    expect(hjem).toMatch(/Ny jobb|data-ny-jobb|jobber\?ny=1/);
     expect(shell).toMatch(/data-phone-search/);
     expect(sidebar).toMatch(/md:w-\[389px\]/);
   });

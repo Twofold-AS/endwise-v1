@@ -88,14 +88,14 @@ export function TimeplanEndringDetalj({
             type="button"
             data-endringer-angre
             disabled={pending}
-            className="inline-flex h-10 items-center rounded-full border border-border px-4 text-[12px] font-[650] text-fg disabled:opacity-40"
+            className="inline-flex h-12 items-center rounded-pill border border-border px-4 text-body font-[650] text-fg disabled:opacity-40"
             onClick={() => angre.mutate({ bookingId: jobb.id, kind })}
           >
             {angre.isPending ? 'Angrer …' : 'Angre behandling'}
           </button>
           <Link
             href={`/bookinger/${jobb.id}` as Route}
-            className="inline-flex h-10 items-center px-2 text-[12px] text-fg underline-offset-2 hover:underline"
+            className="inline-flex h-12 items-center px-3 text-body text-fg underline-offset-2 hover:underline"
           >
             Åpne jobb
           </Link>
@@ -106,7 +106,7 @@ export function TimeplanEndringDetalj({
             type="button"
             data-endringer-godkjenn
             disabled={pending}
-            className="inline-flex h-10 items-center rounded-full bg-fg px-4 text-[12px] font-[650] text-bg disabled:opacity-40"
+            className="inline-flex h-12 items-center rounded-pill bg-fg px-4 text-body font-[650] text-bg disabled:opacity-40"
             onClick={() => resolve.mutate({ bookingId: jobb.id, kind, decision: 'godkjent' })}
           >
             {resolve.isPending ? 'Lagrer …' : 'Godkjenn'}
@@ -115,14 +115,14 @@ export function TimeplanEndringDetalj({
             type="button"
             data-endringer-avsla
             disabled={pending}
-            className="inline-flex h-10 items-center rounded-full border border-border px-4 text-[12px] font-[650] text-fg disabled:opacity-40"
+            className="inline-flex h-12 items-center rounded-pill border border-border px-4 text-body font-[650] text-fg disabled:opacity-40"
             onClick={() => resolve.mutate({ bookingId: jobb.id, kind, decision: 'avslatt' })}
           >
             Avslå
           </button>
           <Link
             href={`/bookinger/${jobb.id}` as Route}
-            className="inline-flex h-10 items-center px-2 text-[12px] text-fg underline-offset-2 hover:underline"
+            className="inline-flex h-12 items-center px-3 text-body text-fg underline-offset-2 hover:underline"
           >
             Åpne jobb
           </Link>

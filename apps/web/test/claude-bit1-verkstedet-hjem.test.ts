@@ -37,14 +37,11 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
       'jobb',
     ]);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/Les alle siste meldinger/);
-    expect(hjem).toMatch(/PHONE_KORT_META\.lager/);
-    expect(hjem).toMatch(/PulseAnalyserKort/);
-    expect(hjem).toMatch(/tallKortStats/);
-    expect(hjem).toMatch(/På jobb/);
-    expect(hjem).toMatch(/PulseJobbFlis/);
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
+    expect(hjem).toMatch(/Dagen din/);
+    expect(hjem).toMatch(/Trenger deg/);
+    expect(hjem).toMatch(/data-ny-jobb/);
+    expect(hjem).not.toMatch(/PulseHeroFlate/);
+    expect(hjem).not.toMatch(/På jobb/);
     expect(hjem).not.toMatch(/Svarhastighet|Timeplan-gulv|PulseFooter|PeopleShowcase/);
     for (const forbudt of FORBUDT_DEALER_HJEM) {
       expect(hjem).not.toMatch(new RegExp(`['"]${forbudt}['"]`));

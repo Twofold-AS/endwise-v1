@@ -104,7 +104,7 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(tall).toEqual({ idag: 3, paagaar: 1, fullfort: 1 });
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(hjem).toMatch(/PulseHeroFlate/);
+    expect(hjem).toMatch(/Dagen din/);
     expect(kort).toMatch(/Planlagt/);
     expect(kort).toMatch(/Pågår/);
     expect(kort).toMatch(/Ferdig/);
@@ -137,7 +137,7 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(rader[0]?.what).toMatch(/EU-kontroll/);
     expect(rader[0]?.time).toMatch(/\d/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/PulseJobbFlis|bookinger\/ny/);
+    expect(hjem).toMatch(/Ny jobb|data-ny-jobb|jobber\?ny=1/);
     expect(hjem).not.toMatch(/Timeplan-gulv|nesteTreJobber/);
   });
 
@@ -371,7 +371,7 @@ describe('Verkstedet-dag og Organisasjon på telefon', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     expect(hjem).not.toMatch(/ForhandlerInfoKort/);
     expect(kort).toMatch(/Planlagt/);
-    expect(hjem).toMatch(/visning=dag|PHONE_KORT_META\.idag/);
+    expect(hjem).toMatch(/Dagen din|data-dagen-din|I dag:/);
   });
 
   it('Organisasjon-piller wrapper på telefon og skjuler Abonnement/Integrasjoner for selger', () => {

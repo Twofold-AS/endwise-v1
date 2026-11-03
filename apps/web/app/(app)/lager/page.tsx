@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeftRight, ListeRad, Package, Seksjon, Side, TriangleAlert } from '@endwise/ui';
+import { ArrowLeftRight, LasterFlate, ListeRad, Package, Seksjon, Side, TriangleAlert } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
@@ -59,34 +59,18 @@ export default function LagerOversiktPage() {
         {oppsummering.isError ? (
           <Feil melding={oppsummering.error.message} />
         ) : (
-          <div data-lager-stats className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Teller
-              icon={Package}
-              label={LAGER_STAT_LABELS[0]}
-              verdi={s?.totaltAntall}
-              laster={oppsummering.isLoading}
-              hint="Fysisk på hylle"
-            />
-            <Teller
-              icon={Package}
-              label={LAGER_STAT_LABELS[1]}
-              verdi={s?.tilgjengelig}
-              laster={oppsummering.isLoading}
-              hint="På lager minus reservert"
-            />
-            <Teller
-              icon={ArrowLeftRight}
-              label={LAGER_STAT_LABELS[2]}
-              verdi={s?.reservert}
-              laster={oppsummering.isLoading}
-              hint="Står fysisk, men er lovet bort"
-            />
+          <div data-lager-stats className="grid grid-cols-2 gap-2">
             <Teller
               icon={TriangleAlert}
               label={LAGER_STAT_LABELS[3]}
               verdi={lave.data?.length}
               laster={lave.isLoading}
-              hint={s ? `${s.antallLokasjoner} plasseringer` : undefined}
+            />
+            <Teller
+              icon={Package}
+              label="Tilgjengelig"
+              verdi={s?.tilgjengelig}
+              laster={oppsummering.isLoading}
             />
           </div>
         )}
@@ -107,7 +91,7 @@ export default function LagerOversiktPage() {
           !kunMekaniker ? (
             <Link
               href={'/lager/deler' as Route}
-              className="text-[13px] text-fg-muted transition-colors hover:text-fg"
+              className="text-body text-fg-muted transition-colors hover:text-fg"
             >
               Se alle deler →
             </Link>
@@ -159,10 +143,12 @@ function Teller({
           <Icon size={16} strokeWidth={1.75} className="shrink-0" />
           {label}
         </p>
-        <p className="font-medium text-[28px] text-fg leading-none tabular-nums">
-          {laster ? '—' : (verdi ?? 0)}
-        </p>
-        {hint && <p className="text-[13px] text-fg-muted">{hint}</p>}
+        {laster ? (
+          <LasterFlate linjer={1} className="py-0" label="Henter tall" />
+        ) : (
+          <p className="font-medium text-[28px] text-fg leading-none tabular-nums">{verdi ?? 0}</p>
+        )}
+        {hint && !laster ? <p className="text-meta text-fg-muted">{hint}</p> : null}
       </div>
     </CardShell>
   );

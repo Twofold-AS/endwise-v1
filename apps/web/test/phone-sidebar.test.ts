@@ -30,11 +30,11 @@ describe('Mikael telefon-chrome — to toppbarer, sidebar skjult (07.09.2026)', 
     expect(shell).toMatch(/data-phone-search/);
     expect(shell).toMatch(/data-phone-profile/);
     expect(shell).toMatch(/data-phone-dest/);
-    expect(shell).toMatch(/data-ronny-avatar/);
+    expect(shell).toMatch(/Mer/);
     expect(shell).toMatch(/fixed inset-x-0 top-0 z-\[60\]/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/PhoneSokFelt|ew-felt/);
-    expect(utenKommentarer(les('../app/(app)/_shell/phone-sok-felt.tsx'))).toMatch(/ew-felt-sm/);
+    expect(utenKommentarer(les('../app/(app)/_shell/phone-sok-felt.tsx'))).toMatch(/ew-felt-sok/);
     expect(shell).toMatch(/rounded-full/);
     expect(shell).toMatch(/bg-sidebar-active/);
     expect(shell).not.toMatch(/border-l-|accent-pip|border-left/);

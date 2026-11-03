@@ -352,6 +352,43 @@
     --ew-badge-radius: 9999px;
     --ew-page-margin: 16px;
     --ew-card-pad: 16px;
+    --ew-soft: #f3f3f3;
+    --text-title: 18px;
+    --text-title--line-height: 24px;
+    --text-title--font-weight: 650;
+    --text-label: 14px;
+    --text-label--line-height: 18px;
+    --text-body: 16px;
+    --text-body--line-height: 22px;
+    --text-meta: 13px;
+    --text-meta--line-height: 16px;
+    --ew-status-ink-bg: #f3f3f3;
+    --ew-status-ink-fg: #141414;
+    --ew-status-muted-bg: #f3f3f3;
+    --ew-status-muted-fg: #616161;
+    --ew-status-ok-bg: #dcf5e3;
+    --ew-status-ok-fg: #14532d;
+    --ew-status-warn-bg: #fef3c7;
+    --ew-status-warn-fg: #7a3e07;
+    --ew-status-danger-bg: #fdecea;
+    --ew-status-danger-fg: #9b1c15;
+    --ew-status-kat-a-bg: #cffafe;
+    --ew-status-kat-a-fg: #155e75;
+    --ew-status-kat-b-bg: #ffedd5;
+    --ew-status-kat-b-fg: #9a3412;
+    --ew-status-kat-c-bg: #f3e8ff;
+    --ew-status-kat-c-fg: #6b21a8;
+    --ew-meter-accent: #141414;
+    --ew-meter-success: #1a8f3c;
+    --ew-meter-warning: #b45309;
+    --ew-meter-error: #c8332b;
+    --color-status-success: #dcf5e3;
+    --color-status-success-fg: #14532d;
+    --color-status-warning: #fef3c7;
+    --color-status-warning-fg: #7a3e07;
+    --color-status-error: #fdecea;
+    --color-status-error-fg: #9b1c15;
+    --color-chart-8-active: #b45309;
   }
 
   [data-side] {
@@ -390,8 +427,8 @@
   }
 
   [data-filter-chips] {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    overflow-x: visible;
     scrollbar-width: none;
   }
 

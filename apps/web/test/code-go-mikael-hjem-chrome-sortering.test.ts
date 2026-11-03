@@ -83,8 +83,9 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(stats.filter((s) => s.stub)).toEqual([]);
     expect(stats.find((s) => s.id === 'bookinger')?.verdi).toBe(0);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
-    expect(hjem).toMatch(/gap-2\.5/);
+    expect(hjem.indexOf('Dagen din')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('Trenger deg')).toBeGreaterThan(-1);
+    expect(hjem).toMatch(/gap-4/);
   });
 
   it('telefon-chrome beholder logo-bar og dest-piller; tittel + verktøy under', () => {
@@ -94,7 +95,7 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(shell).toMatch(/data-phone-dest/);
     expect(shell).toMatch(/data-phone-side-tittel/);
     expect(shell).toMatch(/data-phone-side-under/);
-    expect(shell).toMatch(/InboxTopBar2/);
+    expect(shell).toMatch(/delMobilDest/);
     expect(shell).not.toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/TilbakePil/);
     expect(shell).toMatch(/sideChrome\.tittel/);

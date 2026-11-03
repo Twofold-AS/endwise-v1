@@ -103,13 +103,8 @@ export function TjenesteFelter({
           <p className="flex items-start gap-2 text-[12px] text-fg-muted">
             <CircleAlert size={14} strokeWidth={1.75} className="mt-0.5 shrink-0" />
             <span>
-              Ingen ferdigheter er registrert ennå. Uten dem tildeles saken manuelt.{' '}
-              <Link
-                href={'/mekanikere/kompetanse' as Route}
-                className="underline underline-offset-2 hover:text-fg"
-              >
-                Legg inn ferdigheter
-              </Link>
+              Ingen ferdigheter er registrert ennå. Uten dem tildeles jobben manuelt. Ferdigheter
+              settes på den ansatte under Organisasjon.
             </span>
           </p>
         ) : (

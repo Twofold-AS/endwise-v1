@@ -5,16 +5,14 @@ import {
   FeltInput,
   FeltSelect,
   FeltTall,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
   SelectItem,
   StatefulButton,
+  toast,
 } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { OpprettSkuff } from '../../_shell/opprett-skuff';
 
 /**
  * Registrer en lagerbevegelse.
@@ -56,6 +54,7 @@ export function BevegelseDialog({
   const move = trpc.inventory.move.useMutation({
     onSuccess: () => {
       void utils.inventory.invalidate();
+      toast.success('Bevegelsen er registrert');
       onFerdig();
     },
   });
@@ -75,15 +74,36 @@ export function BevegelseDialog({
   }
 
   return (
-    <Modal
-      isOpen
-      onOpenChange={(o) => !o && onLukk()}
-      size="md"
+    <OpprettSkuff
+      tittel={del.name}
+      apen
+      onLukk={onLukk}
+      tvingSkuff
       aria-label={`Registrer bevegelse for ${del.name}`}
+      footer={
+        <div className="flex w-full items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onLukk}
+            className="inline-flex h-12 items-center rounded-pill px-4 text-body text-fg-muted"
+          >
+            Avbryt
+          </button>
+          <StatefulButton
+            type="submit"
+            form="bevegelse-skjema"
+            disabled={move.isPending || !valgtLokasjon}
+            state={move.isPending ? 'loading' : move.isError ? 'error' : 'idle'}
+            loadingText="Lagrer…"
+            errorText="Feilet"
+          >
+            Registrer
+          </StatefulButton>
+        </div>
+      }
     >
-      <form onSubmit={submit} className="flex flex-col">
-        <ModalHeader title={del.name} description={del.sku} />
-        <ModalBody>
+      <form id="bevegelse-skjema" onSubmit={submit} className="flex flex-col gap-3">
+        <p className="text-meta text-fg-muted">{del.sku}</p>
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1.5 text-label text-fg">Type</legend>
             <div className="grid grid-cols-2 gap-2">
@@ -100,7 +120,7 @@ export function BevegelseDialog({
                   }`}
                 >
                   <span className="text-label text-fg">{t.label}</span>
-                  <span className="text-[11px] text-fg-muted leading-tight">{t.hint}</span>
+                  <span className="text-meta text-fg-muted leading-tight">{t.hint}</span>
                 </button>
               ))}
             </div>
@@ -119,7 +139,7 @@ export function BevegelseDialog({
             ))}
           </FeltSelect>
           {(lokasjoner.data?.length ?? 0) === 0 && !lokasjoner.isLoading && (
-            <span className="text-[12px] text-warn">
+            <span className="text-meta text-warn">
               Ingen lokasjoner ennå — opprett én under Plass først.
             </span>
           )}
@@ -146,26 +166,7 @@ export function BevegelseDialog({
               {move.error.message}
             </p>
           )}
-        </ModalBody>
-        <ModalFooter>
-          <button
-            type="button"
-            onClick={onLukk}
-            className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-          >
-            Avbryt
-          </button>
-          <StatefulButton
-            type="submit"
-            disabled={move.isPending || !valgtLokasjon}
-            state={move.isPending ? 'loading' : move.isError ? 'error' : 'idle'}
-            loadingText="Lagrer…"
-            errorText="Feilet"
-          >
-            Registrer
-          </StatefulButton>
-        </ModalFooter>
       </form>
-    </Modal>
+    </OpprettSkuff>
   );
 }

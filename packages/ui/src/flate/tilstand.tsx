@@ -20,7 +20,7 @@ export function TomFlate({
   return (
     <div data-tom-flate className={cn('px-1 py-10 text-center', className)}>
       <p className="text-label text-fg">{tittel}</p>
-      {hint ? <p className="mt-1 text-[12px] text-fg-muted">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-meta text-fg-muted">{hint}</p> : null}
       {handling ? <div className="mt-4 flex justify-center">{handling}</div> : null}
     </div>
   );

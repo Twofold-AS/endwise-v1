@@ -27,9 +27,8 @@ describe('Mikael telefon-chrome — mindre søk/avatar + søk-overlay (07.09 kve
     expect(chrome).toMatch(/PHONE_AVATAR_PX = 28/);
     expect(shell).toMatch(/size-7|h-7|h-8/);
     expect(shell).not.toMatch(/className="h-10 w-full rounded-sm/);
-    expect(shell).toMatch(/PHONE_AVATAR_PX/);
     expect(shell).toMatch(/data-phone-profile/);
-    expect(shell).toMatch(/data-ronny-avatar/);
+    expect(shell).toMatch(/PHONE_PROFIL_SIRKEL|data-phone-profile/);
   });
 
   it('telefon-logo er noe større enn desktop-merket; søk/Ronny/profil forblir små', () => {
@@ -51,7 +50,9 @@ describe('Mikael telefon-chrome — mindre søk/avatar + søk-overlay (07.09 kve
     expect(RONNY_IDLE).toEqual(expect.arrayContaining(['heureux', 'curieux', 'surpris', 'wink']));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const bot = utenKommentarer(les('../app/(app)/_workshop/ronny-bot.tsx'));
-    expect(shell).toMatch(/RONNY_PHONE_IDLE|idleSett|variant=["']chrome["']/);
+    expect(utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'))).toMatch(
+      /data-ronny-sirkel/,
+    );
     expect(bot).toMatch(/RONNY_PHONE_IDLE/);
     expect(bot).toMatch(/playing=\{false\}/);
     expect(bot).not.toMatch(/state=["']thinking["']/);

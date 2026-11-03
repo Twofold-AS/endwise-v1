@@ -2,6 +2,8 @@
 
 import { useChat } from '@ai-sdk/react';
 import {
+  AgentThinking,
+  LogRow,
   Message,
   MessageBubble,
   MessageContent,
@@ -31,7 +33,23 @@ const HIT = 'inline-flex size-11 shrink-0 items-center justify-center rounded-co
 /** Safe-area er padding inne i composer, ikke et løft fra bunnkanten. */
 const COMPOSER_SAFE = 'max(6px, env(safe-area-inset-bottom))';
 const TENKER_TEKST = 'Ronny tenker…';
-const BOBLE_TEKST = 'text-[14px] leading-snug md:text-body md:leading-relaxed';
+const BOBLE_TEKST = 'text-body leading-snug md:leading-relaxed';
+const RONNY_FORSLAG = [
+  'Hva er på timeplanen i dag?',
+  'Hvilke deler er under minimum?',
+  'Hvem har jobber i dag?',
+] as const;
+
+function norskVerktoy(type: string): string {
+  if (type.includes('dagensBookinger') || type.includes('booking')) return 'Slår opp bookinger';
+  if (type.includes('finnDel') || type.includes('lager') || type.includes('lavtLager')) {
+    return 'Sjekker lager';
+  }
+  if (type.includes('sokKunder') || type.includes('kunde')) return 'Søker i kunder';
+  if (type.includes('mekaniker')) return 'Sjekker mekanikere';
+  if (type.includes('gaaTil') || type.includes('gåTil')) return 'Åpner side';
+  return 'Jobber';
+}
 
 function tekstFraMelding(melding: { parts: Array<{ type: string; text?: string }> }): string {
   return melding.parts
@@ -58,7 +76,7 @@ export function WorkshopBloub() {
   const search = useSearchParams()?.toString() ?? '';
   const router = useRouter();
   const { phoneOpen } = useSidebarState();
-  const { apen, hoyde, lukk, forstor, forminsk } = useRonnySheet();
+  const { apen, hoyde, lukk, forstor, forminsk, apne } = useRonnySheet();
   const [promptTekst, setPromptTekst] = useState('');
   const [synlig, setSynlig] = useState(0);
   const [loggOverflow, setLoggOverflow] = useState(false);
@@ -180,19 +198,54 @@ export function WorkshopBloub() {
           setPaaTopp(e.currentTarget.scrollTop <= 2);
         }}
       >
+        {messages.length === 0 && !opptatt ? (
+          <div data-ronny-forslag className="flex flex-col gap-2 py-2">
+            {RONNY_FORSLAG.map((tekst) => (
+              <button
+                key={tekst}
+                type="button"
+                onClick={() => send(tekst)}
+                className="h-11 rounded-pill border border-border bg-bg px-4 text-left text-label text-fg"
+              >
+                {tekst}
+              </button>
+            ))}
+          </div>
+        ) : null}
         {messages.map((melding) => {
           const tekstDel = tekstFraMelding(melding);
-          if (!tekstDel) return null;
+          const steg = melding.parts.filter((del) => del.type !== 'text');
           return (
             <Message key={melding.id} align={melding.role === 'user' ? 'end' : 'start'}>
               <MessageContent>
-                <MessageBubble egen={melding.role === 'user'} className={BOBLE_TEKST}>
-                  {tekstDel}
-                </MessageBubble>
+                {steg.length > 0 ? (
+                  <div data-ronny-trinn className="mb-2 flex flex-col gap-1">
+                    {steg.map((del, i) => (
+                      <LogRow
+                        key={`${melding.id}-steg-${i}`}
+                        first={i === 0}
+                        last={i === steg.length - 1}
+                        reduce={false}
+                      >
+                        <p className="text-meta text-fg-muted">{norskVerktoy(del.type)}</p>
+                      </LogRow>
+                    ))}
+                  </div>
+                ) : null}
+                {tekstDel ? (
+                  <MessageBubble egen={melding.role === 'user'} className={BOBLE_TEKST}>
+                    {tekstDel}
+                  </MessageBubble>
+                ) : null}
               </MessageContent>
             </Message>
           );
         })}
+        {opptatt ? (
+          <div data-ronny-tenker className="px-1">
+            <AgentThinking label={TENKER_TEKST} variant="wave" tone="primary" />
+          </div>
+        ) : null}
         {error ? (
           <Message align="start">
             <MessageContent>
@@ -244,7 +297,19 @@ export function WorkshopBloub() {
     </div>
   );
 
-  if (!apen) return null;
+  if (!apen) {
+    return (
+      <button
+        type="button"
+        data-ronny-sirkel
+        aria-label="Åpne Ronny"
+        onClick={apne}
+        className="fixed top-[55%] left-2 z-[55] flex size-14 items-center justify-center rounded-full bg-[#c45c26] text-bg shadow-none md:hidden"
+      >
+        <RonnyBot size={40} expression="heureux" />
+      </button>
+    );
+  }
 
   return (
     <>
@@ -309,7 +374,7 @@ export function WorkshopBloub() {
             )}
             <div className="flex min-w-0 items-center gap-2">
               <span className="truncate text-title text-fg">Ronny</span>
-              {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
+              {opptatt ? <span className="text-meta text-fg-muted">{TENKER_TEKST}</span> : null}
             </div>
             <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
               <X size={18} strokeWidth={2} />
@@ -361,7 +426,7 @@ export function WorkshopBloub() {
             <div className="flex min-w-0 items-center gap-2">
               <RonnyBot size={28} />
               <span className="truncate text-title text-fg">Ronny</span>
-              {opptatt ? <span className="sr-only">{TENKER_TEKST}</span> : null}
+              {opptatt ? <span className="text-meta text-fg-muted">{TENKER_TEKST}</span> : null}
             </div>
             <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
               <X size={18} strokeWidth={2} />

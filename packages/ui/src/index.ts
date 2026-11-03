@@ -250,6 +250,20 @@ export {
   type ToolPartStatus,
 } from './components/tool-part.tsx';
 export {
+  LogRow,
+  ShimmerText,
+  WorkingRow,
+} from './components/application/agent-log/agent-log.tsx';
+export { AgentThinking } from './components/application/agent-thinking/agent-thinking.tsx';
+export {
+  ContextMenu,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from './components/base/context-menu/context-menu.tsx';
+export { Meter } from './components/base/meter/meter.tsx';
+export { ProgressBar, ProgressCircle } from './components/base/progress/progress.tsx';
+export {
   DeaktivertHandling,
   FeilFlate,
   FeltAvkrysning,
@@ -267,10 +281,14 @@ export {
   FeltTekst,
   type FilterChip,
   FilterChips,
+  flertall,
+  flertallTilbys,
   LasterFlate,
+  LenkeProvider,
   ListeRad,
   Seksjon,
   Side,
+  SideTopp,
   STATUS_CHIP,
   StatusChip,
   type StatusChipNokkel,

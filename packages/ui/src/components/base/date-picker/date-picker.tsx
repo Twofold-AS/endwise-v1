@@ -164,7 +164,7 @@ export function DatePicker({
           >
             <DrawerHeader title={ariaLabel} />
             <DrawerBody className="px-2 pb-4">
-              <Calendar key={openKey} aria-label={ariaLabel} value={pendingValue} onChange={setPendingValue}>
+              <Calendar key={openKey} aria-label={ariaLabel} firstDayOfWeek="mon" value={pendingValue} onChange={setPendingValue}>
                 <div className="flex flex-col items-center">
                   <MonthPanel offset={0} showPrev showNext />
                   <div className="flex w-full items-center justify-end gap-2.5 px-2 pt-3">
@@ -197,7 +197,7 @@ export function DatePicker({
           className={popoverClassName}
         >
           <Dialog aria-label={ariaLabel} className="outline-none">
-            <Calendar key={openKey} aria-label={ariaLabel} value={pendingValue} onChange={setPendingValue}>
+            <Calendar key={openKey} aria-label={ariaLabel} firstDayOfWeek="mon" value={pendingValue} onChange={setPendingValue}>
               <div className="flex flex-col pt-2 pe-2 pb-3 ps-2">
                 <MonthPanel offset={0} showPrev showNext />
                 <div className="flex items-center justify-between pt-3 pe-4 ps-4">

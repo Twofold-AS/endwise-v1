@@ -27,7 +27,7 @@ describe('F5-55 — Ny kunde på kundesiden', () => {
   it('skjemaet kaller customers.create og er på norsk', () => {
     expect(skjema).toMatch(/customers\.create/);
     expect(skjema).toMatch(/Opprett kunde/);
-    expect(skjema).toMatch(/Bare navnet er påkrevd/);
+    expect(skjema).toMatch(/OppretterSkuff/);
     expect(skjema).not.toMatch(/Kontor|Gulvet/);
   });
 });

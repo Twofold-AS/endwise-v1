@@ -96,16 +96,14 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(ENDRINGER_DELER.map((f) => f.label)).toEqual(['Avvik', 'Forespørsler']);
     expect(les('../app/(app)/timeplan/endringer/page.tsx')).toMatch(/jobber\?fane=endringer/);
     expect(les('../app/(app)/jobber/_endringer.tsx')).toMatch(/data-timeplan-endringer-flate/);
-    expect(les('../app/(app)/jobber/_endringer.tsx')).toMatch(/data-endringer-fane/);
+    expect(les('../app/(app)/jobber/_endringer.tsx')).toMatch(/FilterChips/);
 
     const tp = phoneSideChrome(
       '/jobber',
       { get: (k) => (k === 'fane' ? 'endringer' : null) },
       { isAdmin: true, erForhandler: true },
     );
-    expect(tp?.tittel).toBe('Timeplan');
-    expect(tp?.aktiv).toBe('endringer');
-    expect(tp?.faner.map((f) => f.label)).toEqual(['Timeplan', 'Opprett jobb', 'Endringer']);
+    expect(tp).toBeNull();
 
     expect(
       destinasjonFaner({
@@ -128,7 +126,7 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
   });
 
   it('Innboks er Settings-chrome med egen top-bar 2', () => {
-    expect(erPhoneSideChrome('/innboks')).toBe(true);
+    expect(erPhoneSideChrome('/innboks')).toBe(false);
     const chrome = phoneSideChrome(
       '/innboks',
       { get: () => null },
@@ -137,9 +135,7 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
         erForhandler: true,
       },
     );
-    expect(chrome?.id).toBe('innboks');
-    expect(chrome?.bar2).toBe('innboks');
-    expect(chrome?.tittel).toBe('Innboks');
+    expect(chrome).toBeNull();
 
     const bar = utenKommentarer(les('../app/(app)/innboks/_top-bar2.tsx'));
     expect(bar).toMatch(/data-innboks-top-bar2/);
@@ -168,7 +164,7 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(samtale).toMatch(/NySamtaleKnapperad/);
 
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/InboxTopBar2/);
+    expect(shell).toMatch(/delMobilDest/);
   });
 
   it('Organisasjon-oversikt er Innstillinger-rader', () => {
@@ -180,7 +176,7 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(rad).toMatch(/data-org-rad/);
     expect(rad).toMatch(/Endre/);
     const org = utenKommentarer(les('../app/(app)/organisasjon/page.tsx'));
-    expect(org).toMatch(/SideChromeSkall/);
+    expect(org).not.toMatch(/SideChromeSkall/);
     expect(org).toMatch(/ForhandlerKort/);
   });
 

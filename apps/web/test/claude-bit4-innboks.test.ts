@@ -46,15 +46,9 @@ describe('Claude Design BIT 4 — Innboks / samtale', () => {
     ]);
   });
 
-  it('filter-chips er Alle · Kunder · Intern · Support · Løst i lista, ikke chrome', () => {
-    expect(INNBOKS_CHIPS.map((c) => c.label)).toEqual([
-      'Alle',
-      'Kunder',
-      'Intern',
-      'Support',
-      'Løst',
-    ]);
-    expect(INNBOKS_CHIPS.some((c) => c.key === 'lost' && c.label === 'Løst')).toBe(true);
+  it('filter-chips er Alle · Kunder · Intern i lista, ikke chrome', () => {
+    expect(INNBOKS_CHIPS.map((c) => c.label)).toEqual(['Alle', 'Kunder', 'Intern']);
+    expect(INNBOKS_CHIPS.some((c) => c.key === 'lost')).toBe(false);
     const chips = utenKommentarer(les('../app/(app)/innboks/_filter-chips.tsx'));
     expect(chips).toMatch(/data-innboks-filter-chips/);
     expect(chips).toMatch(/INNBOKS_CHIPS/);

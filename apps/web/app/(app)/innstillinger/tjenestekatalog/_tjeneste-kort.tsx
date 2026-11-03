@@ -3,8 +3,9 @@
 import {
   ChevronDown,
   CircleAlert,
-  Clock,
   ClockArrowUp,
+  ListeRad,
+  LasterFlate,
   RefreshCw,
   StatefulButton,
   Tags,
@@ -13,6 +14,7 @@ import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import { OpprettSkuff } from '../../_shell/opprett-skuff';
 import { datoTid, kroner } from '../../kunder/_delt';
 import { parsePris, prisTilFelt, TYPE_VALG, visVarighet } from './_felles';
 import { TjenesteFelter, type Versjonsfelter } from './_felter';
@@ -88,40 +90,30 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
         aria-expanded={apen}
         className="flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-surface-2"
       >
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="flex flex-wrap items-center gap-2 text-label text-fg">
-            {tjeneste.name}
-            <span className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted">
-              {TYPE_LABEL[tjeneste.vehicleType] ?? tjeneste.vehicleType}
+        <div className="min-w-0 flex-1">
+          <ListeRad
+            tittel={tjeneste.name}
+            undertekst={`${visVarighet(tjeneste.durationMinutes)} · ${TYPE_LABEL[tjeneste.vehicleType] ?? tjeneste.vehicleType}`}
+            hoyre={
+              tjeneste.priceMinor == null ? 'Pris på forespørsel' : kroner(tjeneste.priceMinor)
+            }
+            chevron={false}
+          >
+            <span className="mt-1 flex flex-wrap items-center gap-2">
+              {tjeneste.version > 1 ? (
+                <span className="text-meta text-fg-muted">Versjon {tjeneste.version}</span>
+              ) : null}
+              {!tjeneste.active ? (
+                <span className="text-meta text-warn">Deaktivert</span>
+              ) : null}
+              {(tjeneste.skills?.length ?? 0) > 0 ? (
+                <span className="inline-flex items-center gap-1 text-meta text-fg-muted">
+                  <Tags size={12} strokeWidth={1.75} />
+                  {tjeneste.skills.length}
+                </span>
+              ) : null}
             </span>
-            <span
-              className="inline-flex h-badge items-center rounded-badge bg-surface-2 px-1.5 text-[11px] text-fg-muted tabular-nums"
-              title={`Gjeldende versjon, i bruk siden ${datoTid(tjeneste.validFrom)}`}
-            >
-              v{tjeneste.version}
-            </span>
-            {!tjeneste.active && (
-              <span className="inline-flex h-badge items-center rounded-badge bg-warn-soft px-1.5 text-[11px] text-warn">
-                Deaktivert
-              </span>
-            )}
-          </span>
-          <span className="flex flex-wrap items-center gap-3 text-[12px] text-fg-muted">
-            <span className="inline-flex items-center gap-1">
-              <Clock size={12} strokeWidth={1.75} />
-              {visVarighet(tjeneste.durationMinutes)}
-            </span>
-            {/* «Pris på forespørsel» og «0 kr» er to ulike ting. */}
-            <span className="tabular-nums">
-              {tjeneste.priceMinor == null ? 'Pris på forespørsel' : kroner(tjeneste.priceMinor)}
-            </span>
-            {(tjeneste.skills?.length ?? 0) > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <Tags size={12} strokeWidth={1.75} />
-                {tjeneste.skills.length}
-              </span>
-            )}
-          </span>
+          </ListeRad>
         </div>
         <ChevronDown
           size={16}
@@ -139,59 +131,70 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
           {/* Redigering — kun for dealer_admin */}
           {kanEndre &&
             (redigerer ? (
-              <div className="flex flex-col gap-4">
-                <p className="text-[12px] text-fg-muted">
-                  Lagring lukker v{tjeneste.version} og oppretter v{tjeneste.version + 1}.
-                  Eksisterende bookinger beholder prisen og varigheten de ble bestilt med.
-                </p>
-
-                <TjenesteFelter verdier={felter} onEndre={setFelter} />
-
-                {(prisfeil || lagre.error) && (
-                  <p className="flex items-start gap-2 text-body text-danger">
-                    <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
-                    {prisfeil ?? lagre.error?.message}
+              <OpprettSkuff
+                tittel="Rediger tjeneste"
+                apen={redigerer}
+                onLukk={() => {
+                  setRedigerer(false);
+                  setPrisfeil(null);
+                }}
+                tvingSkuff
+              >
+                <div className="flex flex-col gap-4">
+                  <p className="text-body text-fg-muted">
+                    Lagring lukker versjon {tjeneste.version} og oppretter versjon{' '}
+                    {tjeneste.version + 1}. Eksisterende bookinger beholder prisen og varigheten de
+                    ble bestilt med.
                   </p>
-                )}
 
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRedigerer(false);
-                      setPrisfeil(null);
-                    }}
-                    className="h-control rounded-control px-3 text-label text-fg-muted transition-colors hover:text-fg"
-                  >
-                    Avbryt
-                  </button>
-                  <StatefulButton
-                    type="button"
-                    onClick={lagreVersjon}
-                    disabled={lagre.isPending}
-                    state={
-                      lagre.isPending
-                        ? 'loading'
-                        : lagre.isError
-                          ? 'error'
-                          : lagre.isSuccess
-                            ? 'success'
-                            : 'idle'
-                    }
-                    loadingText="Lagrer…"
-                    successText="Ny versjon"
-                    errorText="Feilet"
-                  >
-                    Lagre som v{tjeneste.version + 1}
-                  </StatefulButton>
+                  <TjenesteFelter verdier={felter} onEndre={setFelter} />
+
+                  {(prisfeil || lagre.error) && (
+                    <p className="flex items-start gap-2 text-body text-danger">
+                      <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+                      {prisfeil ?? lagre.error?.message}
+                    </p>
+                  )}
+
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRedigerer(false);
+                        setPrisfeil(null);
+                      }}
+                      className="inline-flex h-12 items-center rounded-pill px-4 text-body text-fg-muted"
+                    >
+                      Avbryt
+                    </button>
+                    <StatefulButton
+                      type="button"
+                      onClick={lagreVersjon}
+                      disabled={lagre.isPending}
+                      state={
+                        lagre.isPending
+                          ? 'loading'
+                          : lagre.isError
+                            ? 'error'
+                            : lagre.isSuccess
+                              ? 'success'
+                              : 'idle'
+                      }
+                      loadingText="Lagrer…"
+                      successText="Ny versjon"
+                      errorText="Feilet"
+                    >
+                      Lagre som versjon {tjeneste.version + 1}
+                    </StatefulButton>
+                  </div>
                 </div>
-              </div>
+              </OpprettSkuff>
             ) : (
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setRedigerer(true)}
-                  className="inline-flex h-control items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg transition-colors hover:bg-surface-2"
+                  className="inline-flex h-12 items-center gap-1.5 rounded-pill border border-border px-4 text-body text-fg transition-colors hover:bg-surface-2"
                 >
                   <ClockArrowUp size={14} strokeWidth={1.75} />
                   Ny versjon
@@ -225,9 +228,9 @@ export function TjenesteKort({ tjeneste, kanEndre }: { tjeneste: Tjeneste; kanEn
           <section className="flex flex-col gap-2">
             <h3 className="text-label text-fg">Versjoner</h3>
             {historikk.isLoading ? (
-              <p className="text-[12px] text-fg-muted">Laster versjoner …</p>
+              <LasterFlate linjer={2} label="Henter versjoner" />
             ) : historikk.isError ? (
-              <p className="text-[12px] text-danger">{historikk.error.message}</p>
+              <p className="text-body text-danger">{historikk.error.message}</p>
             ) : (
               <div className="overflow-hidden rounded-xl border border-border">
                 {historikk.data?.map((v, i) => (

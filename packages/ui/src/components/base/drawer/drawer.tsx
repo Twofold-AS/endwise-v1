@@ -82,7 +82,7 @@ const styles = sortCx({
     },
     bottom: {
       overlay: "items-end",
-      modal: "max-h-[85%] motion-safe:data-[entering]:translate-y-[calc(100%+24px)] motion-safe:data-[exiting]:translate-y-[calc(100%+24px)]",
+      modal: "max-h-[90%] motion-safe:data-[entering]:translate-y-[calc(100%+24px)] motion-safe:data-[exiting]:translate-y-[calc(100%+24px)]",
     },
     top: {
       overlay: "items-start",

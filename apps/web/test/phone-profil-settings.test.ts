@@ -72,11 +72,10 @@ describe('Mikael 08.09 — telefon søk + profil + Konto', () => {
     expect(PHONE_PROFIL_SIRKEL).toContain(PHONE_AVATAR_KLASSE);
     expect(ronnySizeForSirkel(PHONE_AVATAR_PX)).toBe(44);
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/PHONE_RONNY_SIRKEL/);
     expect(shell).toMatch(/PHONE_PROFIL_SIRKEL/);
-    expect(shell).toMatch(/ronnySizeForSirkel\(PHONE_AVATAR_PX\)/);
-    expect(shell.match(/PHONE_RONNY_SIRKEL/g)?.length).toBeGreaterThanOrEqual(2);
-    expect(shell.match(/PHONE_PROFIL_SIRKEL/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(utenKommentarer(les('../app/(app)/_workshop/workshop-bloub.tsx'))).toMatch(
+      /data-ronny-sirkel/,
+    );
   });
 
   it('profilmeny er smalere Mobbin-struktur med Modus-segment og vilkår-tykkelse', () => {

@@ -1,17 +1,18 @@
 'use client';
 
 import {
+  DeaktivertHandling,
   FeltInput,
   FeltSelect,
   FeltTall,
-  Modal,
-  ModalBody,
-  ModalHeader,
   SelectItem,
+  toast,
 } from '@endwise/ui';
-import { type FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { OpprettSkuff, useErMobil } from '../_shell/opprett-skuff';
+import { OppretterSkuff } from '../_shell/oppretter/oppretter-skuff';
+import { SjekkSteg } from '../_shell/oppretter/sjekk-steg';
+import { useOppretter } from '../_shell/oppretter/use-oppretter';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
 
 type Funksjon = 'selger' | 'support' | 'mekaniker' | 'forhandler';
@@ -34,20 +35,49 @@ function somFunksjon(verdi: string): Funksjon | null {
   return null;
 }
 
+type Utkast = {
+  navn: string;
+  epost: string;
+  tittel: string;
+  funksjon: Funksjon;
+  kapasitet: number;
+};
+
+const INIT: Utkast = {
+  navn: '',
+  epost: '',
+  tittel: '',
+  funksjon: 'mekaniker',
+  kapasitet: 1,
+};
+
 /**
- * Opprett ansatt som dialog. Gjenbruker invitasjon / team.opprett.
+ * Stegvis «Opprett ansatt»: Identitet → Rolle → Kompetanse → Sjekk.
  * Tilganger er synlig og disabled — ACL kommer senere.
  */
 export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: () => void }) {
   const utils = trpc.useUtils();
-  const [navn, setNavn] = useState('');
-  const [epost, setEpost] = useState('');
-  const [tittel, setTittel] = useState('');
-  const [funksjon, setFunksjon] = useState<Funksjon>('mekaniker');
-  const [kapasitet, setKapasitet] = useState('1');
   const [kompetanse, setKompetanse] = useState<ValgtKompetanse[]>([]);
   const [kvittering, setKvittering] = useState<string | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
+  const o = useOppretter<Utkast>({
+    init: INIT,
+    lagringsnokkel: 'ansatt',
+    steg: [
+      {
+        id: 'identitet',
+        tittel: 'Identitet',
+        gyldig: (u) => u.navn.trim().length >= 2 || u.epost.trim().length >= 3,
+      },
+      { id: 'rolle', tittel: 'Rolle', gyldig: () => true },
+      { id: 'kompetanse', tittel: 'Kompetanse', gyldig: () => true, valgfri: true },
+      {
+        id: 'sjekk',
+        tittel: 'Sjekk',
+        gyldig: (u) => u.navn.trim().length >= 2 || u.epost.trim().length >= 3,
+      },
+    ],
+  });
 
   const settKompetanse = trpc.competence.setMechanicSkill.useMutation();
 
@@ -63,12 +93,10 @@ export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: (
 
   function ferdig(melding: string) {
     setFeil(null);
-    setNavn('');
-    setEpost('');
-    setTittel('');
     setKompetanse([]);
-    setKapasitet('1');
     setKvittering(melding);
+    toast.success(melding);
+    o.toem();
     void utils.invitasjoner.list.invalidate();
     void utils.team.list.invalidate();
     void utils.mechanics.list.invalidate();
@@ -109,132 +137,134 @@ export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: (
     },
   });
 
-  function send(event: FormEvent) {
-    event.preventDefault();
-    const mail = epost.trim();
-    const n = navn.trim();
-    if (funksjon === 'forhandler') {
+  function send() {
+    const mail = o.utkast.epost.trim();
+    const n = o.utkast.navn.trim();
+    if (o.utkast.funksjon === 'forhandler') {
       setFeil('Forhandler er den ene admin-kontoen og opprettes ikke her.');
       return;
     }
     if (mail) {
-      opprettInvitasjon.mutate({ epost: mail, funksjon });
+      opprettInvitasjon.mutate({ epost: mail, funksjon: o.utkast.funksjon });
       return;
     }
     if (!n) {
       setFeil('Skriv inn navn når du oppretter uten e-post.');
       return;
     }
-    const tall = Number(kapasitet);
     const capacity =
-      funksjon === 'mekaniker' && Number.isInteger(tall) && tall >= 1 && tall <= 10 ? tall : 1;
-    opprettLokal.mutate({ navn: n, funksjon, capacity });
+      o.utkast.funksjon === 'mekaniker' && o.utkast.kapasitet >= 1 && o.utkast.kapasitet <= 10
+        ? o.utkast.kapasitet
+        : 1;
+    opprettLokal.mutate({ navn: n, funksjon: o.utkast.funksjon, capacity });
   }
 
   const venter = opprettInvitasjon.isPending || opprettLokal.isPending || settKompetanse.isPending;
-  const kanSende = Boolean(epost.trim() || navn.trim());
-  const mobil = useErMobil();
+  const rolleLabel = ROLLER.find((r) => r.verdi === o.utkast.funksjon)?.label ?? o.utkast.funksjon;
 
-  const skjema = (
-    <form onSubmit={send} className="mt-4 flex flex-col gap-3">
-      <FeltInput
-        label="Navn og etternavn"
-        value={navn}
-        onChange={setNavn}
-        maxLength={160}
-        placeholder="Kari Mekaniker"
-      />
-      <FeltInput
-        label="E-post adresse"
-        type="email"
-        value={epost}
-        onChange={setEpost}
-        placeholder="fornavn@verksted.no"
-      />
-      <FeltInput
-        label="Jobb tittel"
-        value={tittel}
-        onChange={setTittel}
-        maxLength={80}
-        placeholder="Servicetekniker"
-      />
-      <FeltSelect
-        label="Rolle"
-        selectedKey={funksjon}
-        onSelectionChange={(key) => {
-          const neste = somFunksjon(String(key ?? ''));
-          if (neste) setFunksjon(neste);
-        }}
-      >
-        {ROLLER.map((r) => (
-          <SelectItem key={r.verdi} id={r.verdi}>
-            {r.label}
-          </SelectItem>
-        ))}
-      </FeltSelect>
-      <FeltSelect label="Tilganger" selectedKey="standard" isDisabled>
-        <SelectItem id="standard">Standard — tilpasses senere</SelectItem>
-      </FeltSelect>
-
-      {funksjon === 'mekaniker' ? (
-        <>
-          <FeltTall
-            label="Samtidige jobber"
-            value={Number(kapasitet) || 1}
-            minValue={1}
-            maxValue={10}
-            onChange={(v) => setKapasitet(Number.isFinite(v) ? String(v) : '1')}
+  return (
+    <OppretterSkuff
+      tittel="Opprett ansatt"
+      apen={apen}
+      onLukk={onLukk}
+      stegIndeks={o.stegIndeks}
+      stegAntall={o.stegAntall}
+      stegTittel={o.aktiv?.tittel}
+      onTilbake={o.tilbake}
+      onNeste={o.neste}
+      onOpprett={send}
+      kanGaaVidere={o.kanGaaVidere}
+      siste={o.siste}
+      opprettLabel="Opprett ansatt"
+      venter={venter}
+    >
+      {o.aktiv?.id === 'identitet' ? (
+        <div className="flex flex-col gap-3">
+          <FeltInput
+            label="Navn og etternavn"
+            value={o.utkast.navn}
+            onChange={(v) => o.oppdater({ navn: v })}
+            maxLength={160}
+            placeholder="Kari Mekaniker"
           />
-          <KompetanseVelger valgte={kompetanse} onEndre={setKompetanse} />
-        </>
+          <FeltInput
+            label="E-post adresse"
+            type="email"
+            value={o.utkast.epost}
+            onChange={(v) => o.oppdater({ epost: v })}
+            placeholder="fornavn@verksted.no"
+          />
+          <FeltInput
+            label="Stillingstittel"
+            value={o.utkast.tittel}
+            onChange={(v) => o.oppdater({ tittel: v })}
+            maxLength={80}
+            placeholder="Servicetekniker"
+          />
+        </div>
       ) : null}
-
-      <div className="flex items-center justify-end gap-2 pt-1">
-        <button
-          type="button"
-          onClick={onLukk}
-          className="h-control rounded-control px-3 text-label text-fg-muted"
-        >
-          Avbryt
-        </button>
-        <button
-          type="submit"
-          disabled={venter || !kanSende}
-          className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg disabled:opacity-40"
-        >
-          {venter ? 'Lagrer …' : 'Opprett ansatt'}
-        </button>
-      </div>
-      {kvittering ? <p className="text-[12px] text-fg-muted">{kvittering}</p> : null}
+      {o.aktiv?.id === 'rolle' ? (
+        <div className="flex flex-col gap-3">
+          <FeltSelect
+            label="Rolle"
+            selectedKey={o.utkast.funksjon}
+            onSelectionChange={(key) => {
+              const neste = somFunksjon(String(key ?? ''));
+              if (neste) o.oppdater({ funksjon: neste });
+            }}
+          >
+            {ROLLER.map((r) => (
+              <SelectItem key={r.verdi} id={r.verdi}>
+                {r.label}
+              </SelectItem>
+            ))}
+          </FeltSelect>
+          <DeaktivertHandling forklaring="Kommer senere">Tilganger</DeaktivertHandling>
+          {o.utkast.funksjon === 'mekaniker' ? (
+            <FeltTall
+              label="Samtidige jobber"
+              value={o.utkast.kapasitet}
+              minValue={1}
+              maxValue={10}
+              onChange={(v) => o.oppdater({ kapasitet: Number.isFinite(v) ? v : 1 })}
+            />
+          ) : null}
+        </div>
+      ) : null}
+      {o.aktiv?.id === 'kompetanse' ? (
+        o.utkast.funksjon === 'mekaniker' ? (
+          <KompetanseVelger valgte={kompetanse} onEndre={setKompetanse} />
+        ) : (
+          <p className="text-body text-fg-muted">
+            Kompetanse tildeles mekanikere. Velg rollen Mekaniker først.
+          </p>
+        )
+      ) : null}
+      {o.aktiv?.id === 'sjekk' ? (
+        <SjekkSteg
+          rader={[
+            { id: 'identitet', etikett: 'Navn', verdi: o.utkast.navn },
+            { id: 'identitet', etikett: 'E-post', verdi: o.utkast.epost },
+            { id: 'identitet', etikett: 'Stillingstittel', verdi: o.utkast.tittel },
+            { id: 'rolle', etikett: 'Rolle', verdi: rolleLabel },
+            {
+              id: 'kompetanse',
+              etikett: 'Kompetanse',
+              verdi:
+                kompetanse.length === 0
+                  ? 'Ingen'
+                  : kompetanse.map((k) => k.skillKey).join(', '),
+            },
+          ]}
+          onEndre={o.gaaTil}
+        />
+      ) : null}
+      {kvittering ? <p className="text-meta text-fg-muted">{kvittering}</p> : null}
       {feil ? (
-        <p role="alert" className="text-[12px] text-destructive">
+        <p role="alert" className="text-body text-danger">
           {feil}
         </p>
       ) : null}
-    </form>
-  );
-
-  if (mobil) {
-    return (
-      <OpprettSkuff tittel="Opprett ansatt" apen={apen} onLukk={onLukk} tvingSkuff>
-        {skjema}
-      </OpprettSkuff>
-    );
-  }
-
-  return (
-    <Modal
-      isOpen={apen}
-      onOpenChange={(o) => {
-        if (!o) onLukk();
-      }}
-      size="md"
-    >
-      <ModalHeader
-        title="Opprett ansatt"
-        description="Med e-post får hen invitasjon og setter passord og tofaktor. Uten e-post vises hen i teamet uten innlogging."
-      />
-      <ModalBody>{skjema}</ModalBody>
-    </Modal>
+    </OppretterSkuff>
   );
 }

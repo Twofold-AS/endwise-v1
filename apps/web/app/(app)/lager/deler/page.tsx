@@ -1,12 +1,11 @@
 'use client';
 
-import { ArrowLeftRight, ChevronDown, Package, Search } from '@endwise/ui';
+import { ArrowLeftRight, ChevronDown, ListeRad, Package, Search, Side } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
-import { OpprettSkuff } from '../../_shell/opprett-skuff';
-import { Beholdning, Feil, kroner, Laster, Sidehode, Tomt } from '../_delt';
+import { Beholdning, Feil, kroner, Laster, Tomt } from '../_delt';
 import { BevegelseDialog } from './_bevegelse-dialog';
 import { DelDetalj } from './_del-detalj';
 import { NyDel } from './_ny-del';
@@ -49,26 +48,27 @@ function DelerInner() {
   });
 
   return (
-    <div data-lager-deler className="mx-auto flex w-full max-w-[1100px] flex-col gap-5 px-8 py-7">
-      <Sidehode
-        tittel="Deler"
-        undertittel="Tilgjengelig = på lager minus reservert. Det er tallet som gjelder."
-      />
-      {isAdmin ? (
-        <button
-          type="button"
-          data-ny-del-knapp
-          onClick={() => setNyDel((v) => !v)}
-          className="self-start text-xs text-fg underline decoration-border underline-offset-2"
-        >
-          {nyDel ? 'Skjul ny del' : 'Ny'}
-        </button>
-      ) : null}
-      {isAdmin ? (
-        <OpprettSkuff tittel="Ny del" apen={nyDel} onLukk={() => setNyDel(false)}>
-          <NyDel onFerdig={() => setNyDel(false)} />
-        </OpprettSkuff>
-      ) : null}
+    <Side
+      tittel="Deler"
+      undertekst="Tilgjengelig = på lager minus reservert."
+      tilbakeHref="/lager"
+      tilbakeLabel="Tilbake til lager"
+      handling={
+        isAdmin ? (
+          <button
+            type="button"
+            data-ny-del-knapp
+            onClick={() => setNyDel(true)}
+            className="inline-flex h-11 items-center rounded-pill bg-fg px-4 text-label text-bg"
+          >
+            + Ny del
+          </button>
+        ) : undefined
+      }
+      className="mx-auto w-full max-w-[1100px] md:px-8 md:py-7"
+    >
+      <div data-lager-deler className="contents">
+      {isAdmin ? <NyDel apen={nyDel} onFerdig={() => setNyDel(false)} /> : null}
       {/* Søk + sortering */}
       <div className="flex flex-wrap items-center gap-2">
         <label className="relative flex h-control min-w-[240px] flex-1 items-center">
@@ -134,9 +134,45 @@ function DelerInner() {
           hint={sok ? 'Prøv et annet søk.' : 'Deler legges inn av forhandler-admin.'}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
-          {/* Kolonnehode */}
-          <div className="flex h-9 items-center gap-4 border-border border-b bg-surface-2 px-4 text-[12px] text-fg-muted">
+        <div className="md:hidden">
+          {deler.data?.map((d) => (
+            <ListeRad
+              key={d.id}
+              tittel={d.name}
+              undertekst={[d.sku, d.category].filter(Boolean).join(' · ')}
+              hoyre={
+                <span className="flex items-center gap-2">
+                  {d.underMinimum ? (
+                    <span className="rounded-pill bg-[var(--ew-status-danger-bg)] px-2 py-0.5 text-meta text-[var(--ew-status-danger-fg)]">
+                      Lav
+                    </span>
+                  ) : null}
+                  <Beholdning
+                    tilgjengelig={d.tilgjengelig}
+                    reservert={d.reserved}
+                    lav={d.underMinimum}
+                  />
+                </span>
+              }
+              onClick={() => setDetaljId((id) => (id === d.id ? null : d.id))}
+              handlinger={
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setValgtDel({ id: d.id, sku: d.sku, name: d.name });
+                  }}
+                  aria-label={`Registrer bevegelse for ${d.name}`}
+                  className="grid size-11 shrink-0 place-items-center rounded-full text-fg-muted"
+                >
+                  <ArrowLeftRight size={16} strokeWidth={1.75} />
+                </button>
+              }
+            />
+          ))}
+        </div>
+        <div className="hidden overflow-hidden rounded-xl border border-border md:block">
+          <div className="flex h-9 items-center gap-4 border-border border-b bg-surface-2 px-4 text-meta text-fg-muted">
             <span className="w-28 shrink-0">Delenummer</span>
             <span className="min-w-0 flex-1">Navn</span>
             <span className="w-28 shrink-0">Kategori</span>
@@ -153,7 +189,7 @@ function DelerInner() {
               }`}
               data-below-min={d.underMinimum ? '1' : undefined}
             >
-              <span className="w-28 shrink-0 truncate font-mono text-[12px] text-fg-muted">
+              <span className="w-28 shrink-0 truncate font-mono text-meta text-fg-muted">
                 {d.sku}
               </span>
               <button
@@ -163,12 +199,11 @@ function DelerInner() {
               >
                 {d.name}
               </button>
-              <span className="w-28 shrink-0 truncate text-[12px] text-fg-muted">
+              <span className="w-28 shrink-0 truncate text-meta text-fg-muted">
                 {d.category ?? '—'}
               </span>
-              {/* Kostpris: kun admin. Forretningshemmelighet. */}
               {isAdmin && (
-                <span className="w-24 shrink-0 text-right text-[12px] text-fg-muted tabular-nums">
+                <span className="w-24 shrink-0 text-right text-meta text-fg-muted tabular-nums">
                   {kroner(d.costMinor)}
                 </span>
               )}
@@ -203,7 +238,7 @@ function DelerInner() {
         />
       ) : null}
 
-      <p className="flex items-center gap-1.5 text-[12px] text-fg-muted">
+      <p className="flex items-center gap-1.5 text-meta text-fg-muted">
         <Package size={14} />
         Lager er drift, ikke handel. Utsalgspriser og ordrer hører hjemme i Butikk.
       </p>
@@ -218,7 +253,8 @@ function DelerInner() {
           }}
         />
       )}
-    </div>
+      </div>
+    </Side>
   );
 }
 

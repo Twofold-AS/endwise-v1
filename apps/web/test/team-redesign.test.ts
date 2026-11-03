@@ -94,7 +94,7 @@ describe('Opprett ansatt — e-post valgfri, dialog', () => {
 
   it('har én handling som åpner dialog, ikke egen pille', () => {
     expect(inviter).toMatch(/Opprett ansatt/);
-    expect(inviter).toMatch(/ModalHeader/);
+    expect(inviter).toMatch(/OppretterSkuff/);
     expect(inviter).toMatch(/invitasjoner\.opprett/);
     expect(inviter).toMatch(/team\.opprettUtenInvitasjon/);
     expect(inviter).toMatch(/KompetanseVelger/);

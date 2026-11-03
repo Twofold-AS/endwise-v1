@@ -11,7 +11,7 @@ export type ValgtKompetanse = {
 };
 
 /**
- * Samme ferdighetskatalog og nivåord som Organisasjon › Kompetanse.
+ * Samme ferdighetskatalog og nivåord som Mekanikere › Kompetanse.
  * Ingen nye kompetansetyper — bare `competence.listSkills`.
  */
 export function KompetanseVelger({
@@ -44,8 +44,8 @@ export function KompetanseVelger({
   return (
     <div className="flex flex-col gap-2">
       <p className="text-label text-fg">Kompetanse</p>
-      <p className="text-[12px] text-fg-muted">
-        Velges fra katalogen. Nivå og sertifisering er de samme som på Kompetanse-siden.
+      <p className="text-meta text-fg-muted">
+        Velges fra katalogen. Nivå og sertifisering gjelder mekanikere.
       </p>
       {valgte.length === 0 ? (
         <p className="text-[12px] text-fg-muted">Ingen ferdigheter valgt ennå.</p>

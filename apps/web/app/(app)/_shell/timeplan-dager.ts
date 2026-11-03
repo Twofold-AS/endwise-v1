@@ -24,6 +24,19 @@ export type TimeplanDag = {
   weekday: string;
 };
 
+/** «man.» → «Ma» — to bokstaver, uten punktum, uten uppercase-rad. */
+export function ukedagToBokstaver(dato: Date): string {
+  const kort = dato.toLocaleDateString('nb-NO', {
+    weekday: 'short',
+    timeZone: PRODUKT_TIDSSONE,
+  });
+  const bokstaver = kort.replace('.', '').slice(0, 2);
+  return (
+    bokstaver.charAt(0).toLocaleUpperCase('nb-NO') +
+    bokstaver.slice(1).toLocaleLowerCase('nb-NO')
+  );
+}
+
 export type TimeplanManed = {
   ymd: string;
   label: string;
@@ -84,10 +97,7 @@ export function timeplanDagerFra(valgtYmd: string, antall = 3): TimeplanDag[] {
         month: 'short',
         timeZone: PRODUKT_TIDSSONE,
       }),
-      weekday: middag.toLocaleDateString('nb-NO', {
-        weekday: 'short',
-        timeZone: PRODUKT_TIDSSONE,
-      }),
+      weekday: ukedagToBokstaver(middag),
     });
   }
   return out;

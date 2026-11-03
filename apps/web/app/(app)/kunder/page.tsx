@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { OpprettSkuff } from '../_shell/opprett-skuff';
+import { NyKnapp, useNyHandling } from '../_shell/ny-handling';
 import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
@@ -45,7 +45,8 @@ function KunderInner() {
    * Samme feil som /innboks?ny=1 hadde. Se `_ny-kunde.tsx`.
    */
   const aktiv = parseKunderFane('/kunder', params?.get('fane'), params?.get('ny'));
-  const nyKunde = aktiv === 'opprett';
+  const ny = useNyHandling();
+  const nyKunde = aktiv === 'opprett' || ny.apen;
   const [tid, setTid] = useState<(typeof TID_VALG)[number]['key']>('nyeste');
   const [kilde, setKilde] = useState<(typeof KILDER)[number]['key']>('alle');
   const [sorterApen, setSorterApen] = useState(false);
@@ -69,18 +70,17 @@ function KunderInner() {
       faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
       aktiv={aktiv}
     >
-      <OpprettSkuff
-        tittel="Ny kunde"
-        apen={nyKunde}
-        onLukk={() => router.replace('/kunder' as Route)}
-      >
-        <NyKunde onLukk={() => router.replace('/kunder' as Route)} />
-      </OpprettSkuff>
+      <NyKunde apen={nyKunde} onLukk={() => { ny.lukk(); router.replace('/kunder' as Route); }} />
       {aktiv === 'kjoretoy' ? (
         <RegistrerKjoretoy autoApen onFerdig={() => router.replace('/kunder' as Route)} />
       ) : null}
       {aktiv === 'alle' || nyKunde ? (
-        <Side tittel="Kunder" className="[&>header]:sr-only max-md:px-0">
+        <Side
+          tittel="Kunder"
+          undertekst={kunder.isLoading ? undefined : `${liste.length} kunder`}
+          handling={<NyKnapp onClick={ny.apne}>Ny kunde</NyKnapp>}
+          className="max-md:px-0"
+        >
           <div
             data-kunder-flate
             className="flex min-h-[calc(100dvh-11rem)] flex-col gap-3 md:min-h-[calc(100dvh-14rem)]"
@@ -90,7 +90,7 @@ function KunderInner() {
                 <PhoneSokFelt
                   value={sok}
                   onChange={(e) => setSok(e.target.value)}
-                  placeholder="Navn, telefon, e-post eller reg.nr"
+                  placeholder="Søk etter kunde"
                   aria-label="Søk i kunder"
                 />
               </div>
@@ -200,11 +200,9 @@ function KunderInner() {
               />
             )}
 
-            <p className="flex shrink-0 items-center gap-1.5 text-[13px] text-fg-muted">
+            <p className="flex shrink-0 items-center gap-1.5 text-meta text-fg-muted">
               <Users size={14} />
-              {kunder.isLoading
-                ? 'Laster kunder …'
-                : `${liste.length} kunder vist. Filtrene over gjelder kun denne lista.`}
+              {kunder.isLoading ? 'Henter kunder' : `${liste.length} kunder`}
             </p>
           </div>
         </Side>

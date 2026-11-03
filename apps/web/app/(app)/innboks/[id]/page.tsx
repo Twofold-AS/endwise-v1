@@ -251,11 +251,15 @@ export default function TrådPage() {
           : 'Samtale';
 
   if (messages.isLoading) {
-    return <div className="px-8 py-7 text-body text-fg-muted">Laster tråd …</div>;
+    return (
+      <Side tittel="Samtale" tilbakeHref="/innboks" tilbakeLabel="Tilbake til innboks">
+        <p className="text-body text-fg-muted">Laster tråd …</p>
+      </Side>
+    );
   }
   if (messages.isError) {
     return (
-      <div className="mx-auto w-full max-w-[820px] px-8 py-7">
+      <div className="mx-auto w-full max-w-[820px] max-md:px-4 max-md:py-4 md:px-8 md:py-7">
         <CardShell className="p-6">
           <p className="text-body text-danger">Kunne ikke åpne tråden: {messages.error.message}</p>
           <Link
@@ -273,8 +277,10 @@ export default function TrådPage() {
     <div data-samtale className="h-full min-h-0">
       <Side
         tittel={tradTittel}
+        tilbakeHref={endwise ? '/endwise/innboks' : '/innboks'}
+        tilbakeLabel="Tilbake til innboks"
         handling={<SamtaleDetaljerPille threadId={threadId} />}
-        className="mx-auto h-full min-h-0 w-full max-w-[820px] overflow-hidden px-8 py-7 max-md:gap-3 max-md:px-4 max-md:py-4"
+        className="mx-auto h-full min-h-0 w-full max-w-[820px] overflow-hidden max-md:gap-3 md:px-8 md:py-7"
       >
         {/**
          * «← Meldinger» sto her fram til og er fjernet.
@@ -284,7 +290,7 @@ export default function TrådPage() {
          * noe du aldri forlot, er ikke navigasjon — den er en påstand om at
          * du er et annet sted enn du er.
          */}
-        <div className="mt-1.5 flex flex-wrap items-center gap-2 max-md:hidden">
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
           {/*
            * Kanalen står i hodet, ikke nede ved svarfeltet: den skal være
            * lest før man begynner å skrive, ikke etterpå.
@@ -319,7 +325,7 @@ export default function TrådPage() {
         </div>
         <nav
           data-innboks-deltakere
-          className="mt-2 flex flex-wrap items-center gap-1.5 max-md:hidden"
+          className="mt-2 flex flex-wrap items-center gap-1.5"
           aria-label="Deltakere"
         >
           <span className="inline-flex h-7 items-center rounded-full bg-sidebar-active px-2.5 text-[13px] text-fg">
@@ -336,7 +342,7 @@ export default function TrådPage() {
               </span>
             ))}
         </nav>
-        <div className="mt-2 max-md:hidden">
+        <div className="mt-2">
           <TradHandlinger threadId={threadId} />
         </div>
 

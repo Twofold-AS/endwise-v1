@@ -29,9 +29,9 @@ function utenKommentarer(kilde: string) {
 
 describe('Claude Design BIT 7 — Org / Tjenester', () => {
   it('chrome-piller og Bit 1–6-låser er urørt — ingen Claude Tjenester-pille', () => {
-    expect(TJENESTER_FANER.map((f) => f.label)).toEqual(['Alle tjenester', 'Opprett tjenester']);
+    expect(TJENESTER_FANER.map((f) => f.label)).toEqual(['Alle tjenester', 'Opprett tjeneste']);
     const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
-    expect(tjenester?.pills?.map((p) => p.label)).toEqual(['Alle tjenester', 'Opprett tjenester']);
+    expect(tjenester?.pills?.map((p) => p.label)).toEqual(['Alle tjenester', 'Opprett tjeneste']);
     expect(tjenester?.href).toBe('/prisliste');
     expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
       'Oversikt',
@@ -128,7 +128,7 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     const kort = utenKommentarer(les('../app/(app)/organisasjon/forhandleren/_kort.tsx'));
     expect(kort).toMatch(/data-org-hub/);
     expect(kort).not.toMatch(/OrgHubSeksjoner/);
-    expect(kort).toMatch(/TimeplanAnsatteNotat/);
+    expect(kort).not.toMatch(/TimeplanAnsatteNotat/);
     expect(kort).toMatch(/Firmaopplysninger/);
     expect(kort).toMatch(/Antall ansatte/);
     expect(kort).toMatch(/forhandler\.get/);

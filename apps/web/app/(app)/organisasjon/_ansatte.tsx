@@ -2,14 +2,10 @@
 
 import {
   AlertDialog,
-  Avatar,
   DeaktivertHandling,
   FeltSelect,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  Plus,
+  LasterFlate,
+  ListeRad,
   SelectItem,
 } from '@endwise/ui';
 import { useSearchParams } from 'next/navigation';
@@ -18,6 +14,7 @@ import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { FargeSvatser } from '../_avatar/farge-svatser';
 import { useOrgRole } from '../_lib/use-org-role';
+import { OpprettSkuff } from '../_shell/opprett-skuff';
 import { CardShell } from '../_shell/cards';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
 import { nivaTekst } from '../mekanikere/kompetanse/_niva';
@@ -49,13 +46,25 @@ function somJobFunksjon(verdi: string): JobFunksjon | null {
   return null;
 }
 
-export function OrganisasjonAnsatte() {
+export function OrganisasjonAnsatte({
+  apenNy,
+  onLukkNy,
+}: {
+  apenNy?: boolean;
+  onLukkNy?: () => void;
+} = {}) {
   const { isAdmin } = useOrgRole();
   const params = useSearchParams();
-  const [opprett, setOpprett] = useState(params?.get('ny') === '1');
+  const [opprettLokal, setOpprettLokal] = useState(params?.get('ny') === '1');
+  const opprett = apenNy ?? opprettLokal;
+  const lukkOpprett = onLukkNy ?? (() => setOpprettLokal(false));
+  const apneOpprett = () => {
+    if (onLukkNy) return;
+    setOpprettLokal(true);
+  };
 
   useEffect(() => {
-    if (params?.get('ny') === '1') setOpprett(true);
+    if (params?.get('ny') === '1') setOpprettLokal(true);
   }, [params]);
   const team = trpc.team.list.useQuery();
   const kompetanse = trpc.competence.listAllMechanicSkills.useQuery();
@@ -63,7 +72,7 @@ export function OrganisasjonAnsatte() {
   const katalog = new Map((ferdigheter.data ?? []).map((f) => [f.key, f.name]));
 
   if (team.isLoading) {
-    return <p className="px-1 py-6 text-body text-fg-muted">Laster ansatte …</p>;
+    return <LasterFlate linjer={3} label="Henter ansatte" />;
   }
   if (team.isError) {
     return <p className="text-body text-danger">{team.error.message}</p>;
@@ -74,31 +83,26 @@ export function OrganisasjonAnsatte() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-title text-fg">Ansatte</h2>
-          <p data-ansatte-pagesub className="text-body text-fg-muted">
-            {ansattePageSub(rader.length, paJobb)}
-          </p>
-        </div>
-        {isAdmin ? (
-          <button
-            type="button"
-            onClick={() => setOpprett(true)}
-            className="inline-flex h-control items-center rounded-control bg-fg px-3 text-label text-bg"
-          >
-            Opprett ansatt
-          </button>
-        ) : null}
-      </div>
+      <p data-ansatte-pagesub className="text-body text-fg-muted">
+        {ansattePageSub(rader.length, paJobb)}
+      </p>
+      {isAdmin && !onLukkNy ? (
+        <button
+          type="button"
+          onClick={apneOpprett}
+          className="inline-flex h-11 self-start items-center rounded-pill bg-fg px-4 text-label text-bg"
+        >
+          + Ny ansatt
+        </button>
+      ) : null}
 
       {rader.length === 0 ? (
         <CardShell className="p-8 text-center">
           <p className="text-label text-fg">Ingen ansatte ennå</p>
-          <p className="mt-1 text-[12px] text-fg-muted">Opprett ansatt — med eller uten e-post.</p>
+          <p className="mt-1 text-meta text-fg-muted">Opprett ansatt — med eller uten e-post.</p>
         </CardShell>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div>
           {rader.map((rad) => (
             <AnsattKort
               key={rad.userId}
@@ -116,7 +120,7 @@ export function OrganisasjonAnsatte() {
         </div>
       )}
 
-      <OpprettAnsattDialog apen={opprett} onLukk={() => setOpprett(false)} />
+      <OpprettAnsattDialog apen={opprett} onLukk={lukkOpprett} />
     </div>
   );
 }
@@ -132,91 +136,59 @@ function AnsattKort({
 }) {
   const [rolleApen, setRolleApen] = useState(false);
   const [kompApen, setKompApen] = useState(false);
-  const start =
-    rad.ansattSiden != null
-      ? new Date(rad.ansattSiden).toLocaleString('nb-NO', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })
-      : '—';
+  const [apen, setApen] = useState(false);
+  const rolle = FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon;
 
   return (
-    <CardShell className="flex flex-col gap-3 p-4">
-      <div className="flex items-start gap-3">
-        <Avatar
-          seed={rad.userId}
-          valg={{ ...rad.avatar, humor: rad.statusHumor ?? rad.avatar.humor }}
-          navn={rad.navn}
-          size={32}
-          bevegelse="stille"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-label text-fg">{rad.navn}</p>
-          <div className="mt-1">
-            <AktivitetMerke status={rad.status} label={rad.statusLabel} />
+    <div>
+      <ListeRad
+        tittel={rad.navn}
+        undertekst={rolle}
+        initialer={rad.navn.slice(0, 2).toUpperCase()}
+        hoyre={<AktivitetMerke status={rad.status} label={rad.statusLabel} />}
+        onClick={() => setApen((v) => !v)}
+        chevron
+      />
+      {apen ? (
+        <div className="flex flex-col gap-3 border-border border-b pb-4">
+          <p className="text-meta text-fg-muted">
+            {rad.jobberIDag} jobber i dag
+            {ferdigheter.length > 0
+              ? ` · ${ferdigheter.map((f) => `${f.navn} (${nivaTekst(f.level)})`).join(', ')}`
+              : ''}
+          </p>
+          {kanEndre ? (
+            <FargeSvatser userId={rad.userId} valgt={rad.farge ?? rad.avatar?.farge} />
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {kanEndre && rad.kanEndres ? (
+              <button
+                type="button"
+                onClick={() => setRolleApen(true)}
+                className="inline-flex h-11 items-center rounded-pill border border-border px-3 text-label text-fg"
+              >
+                Endre rolle
+              </button>
+            ) : null}
+            {kanEndre ? (
+              <button
+                type="button"
+                onClick={() => setKompApen(true)}
+                className="inline-flex h-11 items-center rounded-pill border border-border px-3 text-label text-fg"
+              >
+                Kompetanse
+              </button>
+            ) : null}
           </div>
+          <div data-ansatt-tjenestetid>
+            <DeaktivertHandling forklaring="Kommer senere">Sett tid</DeaktivertHandling>
+          </div>
+          {kanEndre && rad.kanEndres ? <SlettAnsatt rad={rad} /> : null}
         </div>
-      </div>
-
-      <p className="text-label text-fg-muted">
-        Ansatt siden <span className="text-fg">{start}</span>
-      </p>
-      <p className="text-label text-fg-muted">
-        Jobber <span className="text-fg">{rad.jobberIDag}</span>
-      </p>
-
-      <div className="flex items-center gap-2">
-        <span className="min-w-0 flex-1 truncate text-label text-fg-muted">
-          Rolle <span className="text-fg">{FUNKSJON_LABEL[rad.funksjon] ?? rad.funksjon}</span>
-        </span>
-        {kanEndre && rad.kanEndres ? (
-          <button
-            type="button"
-            onClick={() => setRolleApen(true)}
-            aria-label="Endre rolle"
-            className="flex size-control shrink-0 items-center justify-center rounded-control text-fg hover:bg-surface-2"
-          >
-            <Plus size={16} strokeWidth={1.75} />
-          </button>
-        ) : null}
-      </div>
-
-      {kanEndre ? (
-        <FargeSvatser userId={rad.userId} valgt={rad.farge ?? rad.avatar?.farge} />
       ) : null}
-
-      <div className="flex items-center gap-2">
-        <span className="min-w-0 flex-1 truncate text-label text-fg-muted">
-          Kompetanse{' '}
-          <span className="text-fg">
-            {ferdigheter.length === 0
-              ? '—'
-              : ferdigheter.map((f) => `${f.navn} (${nivaTekst(f.level)})`).join(', ')}
-          </span>
-        </span>
-        {kanEndre ? (
-          <button
-            type="button"
-            onClick={() => setKompApen(true)}
-            aria-label="Legg til kompetanse"
-            className="flex size-control shrink-0 items-center justify-center rounded-control text-fg hover:bg-surface-2"
-          >
-            <Plus size={16} strokeWidth={1.75} />
-          </button>
-        ) : null}
-      </div>
-
-      <div className="flex items-center gap-2" data-ansatt-tjenestetid>
-        <span className="text-label text-fg-muted">Egne tjenestetider</span>
-        <DeaktivertHandling forklaring="Kommer senere">Sett tid</DeaktivertHandling>
-      </div>
-
-      {kanEndre && rad.kanEndres ? <SlettAnsatt rad={rad} /> : null}
-
       <RolleDialog rad={rad} apen={rolleApen} onLukk={() => setRolleApen(false)} />
       <KompetanseDialog rad={rad} apen={kompApen} onLukk={() => setKompApen(false)} />
-    </CardShell>
+    </div>
   );
 }
 
@@ -268,54 +240,36 @@ function RolleDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLukk: (
   });
 
   return (
-    <Modal isOpen={apen} onOpenChange={(o) => !o && onLukk()} size="sm">
-      {({ close }) => (
-        <>
-          <ModalHeader title="Rolle" />
-          <ModalBody>
-            <FeltSelect
-              label="Rolle"
-              selectedKey={funksjon}
-              onSelectionChange={(key) => {
-                const neste = somJobFunksjon(String(key ?? ''));
-                if (neste) setFunksjon(neste);
-              }}
-            >
-              {ROLLE_VALG.map((r) => (
-                <SelectItem key={r.verdi} id={r.verdi}>
-                  {r.label}
-                </SelectItem>
-              ))}
-            </FeltSelect>
-            {sett.isError ? (
-              <p className="mt-2 text-[12px] text-danger">{sett.error.message}</p>
-            ) : null}
-          </ModalBody>
-          <ModalFooter>
-            <button
-              type="button"
-              onClick={close}
-              className="h-control px-3 text-label text-fg-muted"
-            >
-              Avbryt
-            </button>
-            <button
-              type="button"
-              disabled={sett.isPending || funksjon === rad.funksjon}
-              onClick={() =>
-                sett.mutate({
-                  userId: rad.userId,
-                  funksjon: funksjon as (typeof ROLLE_VALG)[number]['verdi'],
-                })
-              }
-              className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
-            >
-              {sett.isPending ? 'Lagrer …' : 'Lagre'}
-            </button>
-          </ModalFooter>
-        </>
-      )}
-    </Modal>
+    <OpprettSkuff tittel="Rolle" apen={apen} onLukk={onLukk} tvingSkuff>
+      <FeltSelect
+        label="Rolle"
+        selectedKey={funksjon}
+        onSelectionChange={(key) => {
+          const neste = somJobFunksjon(String(key ?? ''));
+          if (neste) setFunksjon(neste);
+        }}
+      >
+        {ROLLE_VALG.map((r) => (
+          <SelectItem key={r.verdi} id={r.verdi}>
+            {r.label}
+          </SelectItem>
+        ))}
+      </FeltSelect>
+      {sett.isError ? <p className="mt-2 text-body text-danger">{sett.error.message}</p> : null}
+      <button
+        type="button"
+        disabled={sett.isPending || funksjon === rad.funksjon}
+        onClick={() =>
+          sett.mutate({
+            userId: rad.userId,
+            funksjon: funksjon as (typeof ROLLE_VALG)[number]['verdi'],
+          })
+        }
+        className="inline-flex h-12 items-center justify-center rounded-pill bg-fg px-4 text-body text-bg disabled:opacity-40"
+      >
+        {sett.isPending ? 'Lagrer …' : 'Lagre'}
+      </button>
+    </OpprettSkuff>
   );
 }
 
@@ -335,40 +289,24 @@ function KompetanseDialog({ rad, apen, onLukk }: { rad: Rad; apen: boolean; onLu
   }
 
   return (
-    <Modal isOpen={apen} onOpenChange={(o) => !o && onLukk()} size="sm">
-      {({ close }) => (
+    <OpprettSkuff tittel="Kompetanse" apen={apen} onLukk={onLukk} tvingSkuff>
+      {rad.mechanicId ? (
         <>
-          <ModalHeader title="Kompetanse" />
-          <ModalBody>
-            {rad.mechanicId ? (
-              <KompetanseVelger valgte={valgte} onEndre={setValgte} />
-            ) : (
-              <p className="text-body text-fg-muted">
-                Kompetanse tildeles mekanikere. Gi hen rollen mekaniker først.
-              </p>
-            )}
-          </ModalBody>
-          {rad.mechanicId ? (
-            <ModalFooter>
-              <button
-                type="button"
-                onClick={close}
-                className="h-control px-3 text-label text-fg-muted"
-              >
-                Avbryt
-              </button>
-              <button
-                type="button"
-                disabled={sett.isPending || valgte.length === 0}
-                onClick={() => void lagre()}
-                className="h-control rounded-control border border-border px-3 text-label text-fg disabled:opacity-40"
-              >
-                {sett.isPending ? 'Lagrer …' : 'Lagre'}
-              </button>
-            </ModalFooter>
-          ) : null}
+          <KompetanseVelger valgte={valgte} onEndre={setValgte} />
+          <button
+            type="button"
+            disabled={sett.isPending || valgte.length === 0}
+            onClick={() => void lagre()}
+            className="inline-flex h-12 items-center justify-center rounded-pill bg-fg px-4 text-body text-bg disabled:opacity-40"
+          >
+            {sett.isPending ? 'Lagrer …' : 'Lagre'}
+          </button>
         </>
+      ) : (
+        <p className="text-body text-fg-muted">
+          Kompetanse tildeles mekanikere. Gi hen rollen mekaniker først.
+        </p>
       )}
-    </Modal>
+    </OpprettSkuff>
   );
 }

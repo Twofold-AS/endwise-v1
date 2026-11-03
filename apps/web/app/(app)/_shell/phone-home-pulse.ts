@@ -150,15 +150,15 @@ export function dagFremgang(naa: Date, startHour = PULSE_DAG_START, sluttHour = 
   };
 }
 
-/** Plausibel dag når det ikke finnes jobber i vinduet — uten mock-merke. */
-export const PULSE_PLAUSIBEL_IDAG = { planlagt: 3, paagaar: 2, ferdig: 1 };
-/** Plausibel innboks uten historikk — uten mock-merke. */
-export const PULSE_PLAUSIBEL_INNBOKS_MELDINGER = 7;
+/** Tom dag — ekte 0, ingen oppdiktede tall. */
+export const PULSE_PLAUSIBEL_IDAG = { planlagt: 0, paagaar: 0, ferdig: 0 };
+/** Tom innboks — ekte 0. */
+export const PULSE_PLAUSIBEL_INNBOKS_MELDINGER = 0;
 
-/** Bakoverkompatible alias — samme tall, ikke lenger merket mock. */
+/** Bakoverkompatible alias — 0, ikke mock. */
 export const PULSE_MOCK_IDAG = PULSE_PLAUSIBEL_IDAG;
 export const PULSE_MOCK_INNBOKS_MELDINGER = PULSE_PLAUSIBEL_INNBOKS_MELDINGER;
-export const PULSE_MOCK_MANED = { denne: 18, forrige: 14 };
+export const PULSE_MOCK_MANED = { denne: 0, forrige: 0 };
 
 function overlapperNaa(j: PhoneBooking, naa: Date): boolean {
   if (!j.endsAt) return false;
@@ -264,7 +264,6 @@ export function siste7dSpark(jobber: PhoneBooking[], naa: Date): number[] {
     const dag = osloPlusDager(iDag, -(PULSE_DAGER - 1 - i));
     return perDag.get(dag) ?? 0;
   });
-  if (serie.every((n) => n === 0)) return plausibelSpark(naa);
   return serie;
 }
 
@@ -284,25 +283,17 @@ export function manedBookingTall(jobber: PhoneBooking[], naa: Date) {
   const aktiv = (j: PhoneBooking) => j.status !== 'cancelled';
   const denne = jobber.filter((j) => aktiv(j) && osloManedKey(j.startsAt) === denneKey).length;
   const forrige = jobber.filter((j) => aktiv(j) && osloManedKey(j.startsAt) === forrigeKey).length;
-  if (denne + forrige === 0) return { ...PULSE_MOCK_MANED };
   return { denne, forrige };
 }
 
-/** Ingen jobber i vinduet = plausibel dag, uten badge. */
+/** Ekte tall. Tom liste = 0, aldri oppdiktet. */
 export function idagVisning(jobber: PhoneBooking[], naa: Date) {
-  const tall = idagTall(jobber, naa);
-  if (jobber.length === 0) return { ...PULSE_PLAUSIBEL_IDAG };
-  return tall;
+  return idagTall(jobber, naa);
 }
 
-/**
- * Innboks-rad: kun meldingstall. Tom historikk = plausibelt tall, uten badge.
- */
+/** Innboks-rad: kun uleste. Tom historikk = 0. */
 export function innboksRad(traader: PhoneTraad[]) {
   const meldinger = traader.reduce((sum, t) => sum + (t.unread ?? 0), 0);
-  if (traader.length === 0) {
-    return { meldinger: PULSE_PLAUSIBEL_INNBOKS_MELDINGER };
-  }
   return { meldinger };
 }
 

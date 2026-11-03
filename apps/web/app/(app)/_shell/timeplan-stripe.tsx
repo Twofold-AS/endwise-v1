@@ -1,25 +1,13 @@
 'use client';
 
-import { CalendarDays, ChevronLeft, ChevronRight, DateCalendar } from '@endwise/ui';
+import { DatePicker } from '@endwise/ui';
 import { parseDate } from '@internationalized/date';
-import { useState } from 'react';
 import { osloKalenderdag } from '../_lib/oslo-dag';
-import {
-  timeplanManedNavn,
-  timeplanSkiftManed,
-  timeplanSkiftUke,
-  timeplanUkeFra,
-} from './timeplan-dager';
-
-const PIL =
-  'inline-flex size-control shrink-0 items-center justify-center rounded-control border border-border bg-card text-fg';
-
-const CHIP =
-  'flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl border px-1 py-2 text-label';
+import { timeplanManedNavn, timeplanUkeFra } from './timeplan-dager';
 
 /**
- * Timeplan-stripe: uke-rail (7 dager, mandag først) + månedspicker.
- * Samme komponent på Timeplan, Kalender og Min dag.
+ * Timeplan-stripe: 7 dagchips i grid + DatePicker for måned.
+ * Ukedag = to bokstaver uten punktum. Aktiv dag = ink-sirkel.
  */
 export function TimeplanStripe({
   valgt,
@@ -29,109 +17,45 @@ export function TimeplanStripe({
   onValgt: (ymd: string) => void;
 }) {
   const dager = timeplanUkeFra(valgt);
-  const [manedApen, setManedApen] = useState(false);
 
   return (
-    <div data-timeplan-stripe className="flex flex-col gap-2">
-      <nav aria-label="Måned" className="relative flex items-center gap-1">
-        <button
-          type="button"
-          aria-label="Forrige måned"
-          onClick={() => onValgt(timeplanSkiftManed(valgt, -1))}
-          className={PIL}
-        >
-          <ChevronLeft size={16} strokeWidth={1.75} />
-        </button>
-        <button
-          type="button"
-          data-timeplan-maned
-          aria-expanded={manedApen}
-          aria-haspopup="dialog"
-          onClick={() => setManedApen((v) => !v)}
-          className="min-w-0 flex-1 inline-flex items-center justify-center gap-1.5 text-center text-label text-fg capitalize"
-        >
-          <CalendarDays size={14} strokeWidth={1.75} className="text-fg-muted" />
-          {timeplanManedNavn(valgt)}
-        </button>
-        <button
-          type="button"
-          aria-label="Neste måned"
-          onClick={() => onValgt(timeplanSkiftManed(valgt, 1))}
-          className={PIL}
-        >
-          <ChevronRight size={16} strokeWidth={1.75} />
-        </button>
+    <div data-timeplan-stripe className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-label capitalize text-fg">{timeplanManedNavn(valgt)}</p>
+        <div data-timeplan-maned>
+        <DatePicker
+          aria-label="Velg dag"
+          value={parseDate(osloKalenderdag(valgt))}
+          onChange={(d) => {
+            if (!d) return;
+            onValgt(d.toString());
+          }}
+        />
+        </div>
+      </div>
 
-        {manedApen ? (
-          <div
-            data-timeplan-maned-ark
-            role="dialog"
-            aria-label="Velg dag"
-            className="absolute top-full right-0 left-0 z-20 mt-1 rounded-[16px] border border-border bg-card p-3"
-          >
-            <p className="mb-2 text-[13px] text-fg-muted">
-              Dager med ledig og kvalifisert mekaniker.
-            </p>
-            <DateCalendar
-              aria-label="Velg dag"
-              value={parseDate(osloKalenderdag(valgt))}
-              onChange={(d) => {
-                if (!d) return;
-                onValgt(d.toString());
-                setManedApen(false);
-              }}
-            />
+      <div className="grid grid-cols-7 gap-1">
+        {dager.map((d) => {
+          const aktiv = d.ymd === valgt;
+          return (
             <button
+              key={d.ymd}
               type="button"
-              className="mt-2 w-full text-center text-[13px] text-fg-muted"
-              onClick={() => setManedApen(false)}
+              data-timeplan-dag={d.ymd}
+              onClick={() => onValgt(d.ymd)}
+              className="flex h-11 min-w-0 flex-col items-center justify-center gap-0.5"
             >
-              Lukk måned
-            </button>
-          </div>
-        ) : null}
-      </nav>
-
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          aria-label="Forrige uke"
-          onClick={() => onValgt(timeplanSkiftUke(valgt, -1))}
-          className={PIL}
-        >
-          <ChevronLeft size={16} strokeWidth={1.75} />
-        </button>
-        <div className="flex min-w-0 flex-1 gap-1">
-          {dager.map((d) => {
-            const aktiv = d.ymd === valgt;
-            return (
-              <button
-                key={d.ymd}
-                type="button"
-                data-timeplan-dag={d.ymd}
-                onClick={() => onValgt(d.ymd)}
-                className={`${CHIP} ${
-                  aktiv
-                    ? 'border-fg bg-sidebar-active text-fg'
-                    : 'border-border bg-card text-fg-muted'
+              <span className="text-meta text-fg-muted">{d.weekday}</span>
+              <span
+                className={`inline-flex size-8 items-center justify-center rounded-full text-label tabular-nums ${
+                  aktiv ? 'bg-fg text-bg' : 'text-fg'
                 }`}
               >
-                <span className="text-[13px] uppercase">{d.weekday}</span>
-                <span className="font-medium text-[13px] tabular-nums">
-                  {d.label.split('.')[0]}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <button
-          type="button"
-          aria-label="Neste uke"
-          onClick={() => onValgt(timeplanSkiftUke(valgt, 1))}
-          className={PIL}
-        >
-          <ChevronRight size={16} strokeWidth={1.75} />
-        </button>
+                {Number(d.ymd.slice(8, 10))}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

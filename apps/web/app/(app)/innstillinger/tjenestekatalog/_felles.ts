@@ -6,7 +6,7 @@
  */
 
 export const TYPE_VALG = [
-  { key: 'mc', label: 'MC' },
+  { key: 'mc', label: 'Motorsykkel' },
   { key: 'boat', label: 'Båt' },
   { key: 'atv', label: 'ATV' },
 ] as const;

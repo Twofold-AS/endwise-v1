@@ -25,7 +25,7 @@ export function KjoretoyTilSalgsFlate({ tilbake }: { tilbake: string }) {
   const [kanal, setKanal] = useState<(typeof SALG_KANALER)[number]>('Finn.no');
 
   return (
-    <div data-kjoretoy-salg className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7">
+    <div data-kjoretoy-salg className="mx-auto flex w-full max-w-[1000px] flex-col gap-5 max-md:px-4 max-md:py-4 md:px-8 md:py-7">
       <Side tittel="Kjøretøy til salgs" undertekst="Ingen kjøretøy til salgs.">
         <p className="text-[12px] text-fg-muted">
           Tilbake:{' '}

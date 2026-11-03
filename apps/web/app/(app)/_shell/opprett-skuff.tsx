@@ -1,6 +1,6 @@
 'use client';
 
-import { Drawer, DrawerBody, DrawerHeader } from '@endwise/ui';
+import { Drawer, DrawerBody, DrawerFooter, DrawerHeader } from '@endwise/ui';
 import { type ReactNode, useSyncExternalStore } from 'react';
 
 function abonnerMobil(onStoreChange: () => void) {
@@ -27,6 +27,7 @@ export function OpprettSkuff({
   apen,
   onLukk,
   children,
+  footer,
   tvingSkuff = false,
   'aria-label': ariaLabel,
 }: {
@@ -34,6 +35,7 @@ export function OpprettSkuff({
   apen: boolean;
   onLukk: () => void;
   children: ReactNode;
+  footer?: ReactNode;
   /** Alltid skuff, også på desktop (f.eks. visuell preview). */
   tvingSkuff?: boolean;
   'aria-label'?: string;
@@ -41,7 +43,12 @@ export function OpprettSkuff({
   const mobil = useErMobil();
   if (!mobil && !tvingSkuff) {
     if (!apen) return null;
-    return <div data-opprett-inline>{children}</div>;
+    return (
+      <div data-opprett-inline>
+        {children}
+        {footer}
+      </div>
+    );
   }
   // RAC ModalOverlay må sitte i treet — mount-kun-når-åpen viser ingenting.
   return (
@@ -54,7 +61,8 @@ export function OpprettSkuff({
       aria-label={ariaLabel ?? tittel}
     >
       <DrawerHeader title={tittel} />
-      <DrawerBody className="px-3 pb-6">{children}</DrawerBody>
+      <DrawerBody className="px-3 pb-4">{children}</DrawerBody>
+      {footer ?? <DrawerFooter className="hidden" />}
     </Drawer>
   );
 }

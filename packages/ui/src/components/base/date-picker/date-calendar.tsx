@@ -33,9 +33,18 @@ export interface DateCalendarProps<T extends DateValue> extends Omit<AriaCalenda
   className?: string;
 }
 
-export function DateCalendar<T extends DateValue>({ showToday = true, className, ...props }: DateCalendarProps<T>) {
+export function DateCalendar<T extends DateValue>({
+  showToday = true,
+  className,
+  firstDayOfWeek = "mon",
+  ...props
+}: DateCalendarProps<T>) {
   return (
-    <AriaCalendar {...props} className={cx("inline-flex outline-none", className)}>
+    <AriaCalendar
+      firstDayOfWeek={firstDayOfWeek}
+      {...props}
+      className={cx("inline-flex outline-none", className)}
+    >
       <MonthPanel offset={0} showPrev showNext showToday={showToday} />
     </AriaCalendar>
   );

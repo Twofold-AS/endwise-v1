@@ -145,11 +145,11 @@ describe('Mikael IA — Opprett ansatt-dialog og kort', () => {
   const aktivitet = les('../app/(app)/organisasjon/_aktivitet.tsx');
 
   it('Opprett ansatt er dialog med påkrevde felt og disabled Tilganger', () => {
-    expect(dialog).toMatch(/ModalHeader/);
+    expect(dialog).toMatch(/OppretterSkuff/);
     expect(dialog).toMatch(/Opprett ansatt/);
     expect(dialog).toMatch(/Navn og etternavn/);
     expect(dialog).toMatch(/E-post adresse/);
-    expect(dialog).toMatch(/Jobb tittel/);
+    expect(dialog).toMatch(/Stillingstittel/);
     expect(dialog).toMatch(/Rolle/);
     expect(dialog).toMatch(/FeltSelect/);
     expect(dialog).toMatch(/Tilganger/);
@@ -161,12 +161,11 @@ describe('Mikael IA — Opprett ansatt-dialog og kort', () => {
   });
 
   it('ansattkort har avatar, status, start, jobber, rolle+ og kompetanse+', () => {
-    expect(kort).toMatch(/<Avatar/);
+    expect(kort).toMatch(/ListeRad/);
     expect(kort).toMatch(/AktivitetMerke/);
-    expect(kort).toMatch(/ansattSiden/);
     expect(kort).toMatch(/jobberIDag/);
-    expect(kort).toMatch(/aria-label="Endre rolle"/);
-    expect(kort).toMatch(/aria-label="Legg til kompetanse"/);
+    expect(kort).toMatch(/Endre rolle/);
+    expect(kort).toMatch(/Kompetanse/);
     expect(kort).toMatch(/OpprettAnsattDialog/);
     expect(kort).not.toMatch(/bg-destructive|#EE2924/);
   });

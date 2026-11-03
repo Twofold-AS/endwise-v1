@@ -1,9 +1,11 @@
 'use client';
 
-import { Toaster } from '@endwise/ui';
+import { LenkeProvider, Toaster } from '@endwise/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink, httpLink, splitLink } from '@trpc/client';
+import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
+import { I18nProvider } from 'react-aria-components';
 import { TemaProvider } from '@/app/_lib/tema-provider';
 import { trpc } from '@/lib/trpc';
 import { erChromeTrpcPath, erSessionMePath } from '@/lib/trpc-chrome';
@@ -53,10 +55,20 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <TemaProvider>
-          {children}
-          <Toaster />
-        </TemaProvider>
+        <I18nProvider locale="nb-NO">
+          <LenkeProvider
+            render={({ href, className, children: innhold }) => (
+              <Link href={href as never} className={className}>
+                {innhold}
+              </Link>
+            )}
+          >
+            <TemaProvider>
+              {children}
+              <Toaster />
+            </TemaProvider>
+          </LenkeProvider>
+        </I18nProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

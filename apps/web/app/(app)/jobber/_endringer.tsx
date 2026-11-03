@@ -38,26 +38,6 @@ export function TimeplanEndringer({
       {del === 'logg' ? null : (
         <FilterChips chips={ENDRINGER_CHIPS} valgt={vis} onChange={setVis} ariaLabel="Vis" />
       )}
-      <div role="tablist" aria-label="Endringer" className="flex flex-wrap gap-5">
-        {ENDRINGER_DELER.map((f) => {
-          const valgt = f.id === del;
-          return (
-            <Link
-              key={f.id}
-              href={endringerHref(f.id) as Route}
-              role="tab"
-              aria-selected={valgt}
-              scroll={false}
-              data-endringer-fane={f.id}
-              className={`inline-flex items-center border-b-2 pb-1 text-label ${
-                valgt ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
-              }`}
-            >
-              {f.label}
-            </Link>
-          );
-        })}
-      </div>
       <section role="tabpanel" aria-label={def?.label ?? 'Avvik'} className="flex flex-col gap-5">
         {endringId ? null : (
           <div>

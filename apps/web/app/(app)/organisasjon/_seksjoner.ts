@@ -2,6 +2,7 @@ export const ORG_SEKSJON_IDS = [
   'oversikt',
   'ansatte',
   'timeplan-ansatte',
+  'tilganger',
   'abonnement',
   'integrasjoner',
 ] as const;

@@ -61,7 +61,8 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
       'jobb',
     ]);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem.lastIndexOf('PulseAnalyserKort')).toBeLessThan(hjem.lastIndexOf('PulseJobbFlis'));
+    expect(hjem.indexOf('Dagen din')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('Trenger deg')).toBeGreaterThan(-1);
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     expect(analyser).toMatch(/flex-col/);
@@ -96,10 +97,10 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
   });
 
   it('skjemaer bruker Innstillinger-inndeling; jobb fester kjøretøy; tjenester uten dup-knapp', () => {
-    expect(les('../app/(app)/kunder/_ny-kunde.tsx')).toMatch(/InnstillingSeksjon/);
+    expect(les('../app/(app)/kunder/_ny-kunde.tsx')).toMatch(/OppretterSkuff/);
     expect(les('../app/(app)/kunder/_registrer-kjoretoy.tsx')).toMatch(/InnstillingSeksjon/);
     expect(les('../app/(app)/innstillinger/tjenestekatalog/_ny-tjeneste.tsx')).toMatch(
-      /InnstillingSeksjon/,
+      /OppretterSkuff/,
     );
     const jobb = utenKommentarer(les('../app/(app)/bookinger/ny/page.tsx'));
     expect(jobb).toMatch(/velgKjoretoyForJobb/);
@@ -113,7 +114,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     const preview = utenKommentarer(les('../app/visual-forms-preview/page.tsx'));
     expect(preview).toMatch(/data-kunder-sok/);
     expect(preview).toMatch(/data-opprett-jobb-kjoretoy/);
-    expect(preview).toMatch(/Opprett tjenester/);
+    expect(preview).toMatch(/Opprett tjeneste/);
     expect(preview).not.toMatch(/Ny tjeneste/);
     const innboks = utenKommentarer(les('../app/innboks-preview/page.tsx'));
     expect(innboks).toMatch(/vis === 'ny'/);

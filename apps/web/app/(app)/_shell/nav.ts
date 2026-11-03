@@ -258,7 +258,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     section: 'Kunder',
     pills: [
       { label: 'Alle tjenester', href: '/prisliste', icon: Wrench },
-      { label: 'Opprett tjenester', href: '/prisliste?fane=opprett', icon: FilePlus },
+      { label: 'Opprett tjeneste', href: '/prisliste?fane=opprett', icon: FilePlus },
     ],
   },
   {
@@ -644,6 +644,18 @@ export function destinasjonerForShell(input: {
     return itemsForRole(FORHANDLER_NAV, 'dealer_admin', input.shopEnabled ?? true);
   }
   return itemsForRole(navForShell(input.shell), rolleForNav(input), input.shopEnabled ?? true);
+}
+
+const MOBIL_FASTE_DEST = ['home', 'innboks', 'saker', 'kunder'] as const;
+const MOBIL_MER_DEST = ['tjenester', 'organisasjon', 'lager', 'butikk'] as const;
+
+/** Mobil: 4 faste + Mer. Analyse skjules. Lager/Butikk under Mer. */
+export function delMobilDest(dest: NavItem[]): { faste: NavItem[]; mer: NavItem[] } {
+  const faste = dest
+    .filter((d) => (MOBIL_FASTE_DEST as readonly string[]).includes(d.key))
+    .map((d) => (d.key === 'home' ? { ...d, label: 'Hjem' } : d));
+  const mer = dest.filter((d) => (MOBIL_MER_DEST as readonly string[]).includes(d.key));
+  return { faste, mer };
 }
 
 /** Underpunktene i en destinasjon som rollen skal se. */

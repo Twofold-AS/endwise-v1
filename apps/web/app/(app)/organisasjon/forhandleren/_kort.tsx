@@ -4,7 +4,6 @@ import { FELT_MD, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useLyd } from '../../_lib/lyd';
-import { TimeplanAnsatteNotat } from '../_hub-flate';
 import { OrgRad } from '../_org-rad';
 
 const INPUT = `${FELT_MD} disabled:bg-surface-2 disabled:text-fg-muted`;
@@ -120,17 +119,7 @@ export function ForhandlerKort({ lesing = false, slug }: { lesing?: boolean; slu
     lesing || team.isLoading ? '—' : team.isError ? '—' : String(antallAnsatte ?? 0);
 
   return (
-    <div data-org-oversikt className="flex flex-col gap-5">
-      {lesing ? null : (
-        <div data-org-hub className="flex flex-col gap-3">
-          {skjema.name ? (
-            <p data-org-pagesub className="text-[13px] text-fg-muted">
-              {skjema.name}
-            </p>
-          ) : null}
-          <TimeplanAnsatteNotat />
-        </div>
-      )}
+    <div data-org-hub data-org-oversikt className="flex flex-col gap-5">
       <form onSubmit={onSubmit} className="flex flex-col">
         <h3 className="pb-1 text-label text-fg">Firmaopplysninger</h3>
         <OrgRad

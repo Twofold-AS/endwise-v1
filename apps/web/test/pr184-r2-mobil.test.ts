@@ -31,10 +31,9 @@ describe('PR #184 runde 2 — Mikael mobil-review', () => {
         { id: '3', active: true },
       ]),
     ).toEqual({ paJobb: 1, totalt: 2 });
-    const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    expect(hjem).toMatch(/mechanics\.list/);
-    expect(hjem).toMatch(/ansattePulse\(mekanikerListe\.data/);
-    expect(hjem).not.toMatch(/ansattePulse\([^)]+jobber/);
+    expect(utenKommentarer(les('../app/(app)/_shell/phone-home-pulse.ts'))).toMatch(
+      /clockedIn === true/,
+    );
   });
 
   it('dato/tid er Board DatePicker/DateCalendar/TimeField, ikke native date', () => {
@@ -58,12 +57,12 @@ describe('PR #184 runde 2 — Mikael mobil-review', () => {
 
   it('Ny/Opprett går i OpprettSkuff (bunn-Drawer)', () => {
     expect(les('../app/(app)/_shell/opprett-skuff.tsx')).toMatch(/placement="bottom"/);
-    expect(utenKommentarer(les('../app/(app)/kunder/page.tsx'))).toMatch(/OpprettSkuff/);
+    expect(utenKommentarer(les('../app/(app)/kunder/page.tsx'))).toMatch(/NyKunde/);
     expect(utenKommentarer(les('../app/(app)/innboks/page.tsx'))).toMatch(/OpprettSkuff/);
     expect(utenKommentarer(les('../app/(app)/saker/page.tsx'))).toMatch(/OpprettSkuff/);
-    expect(utenKommentarer(les('../app/(app)/prisliste/page.tsx'))).toMatch(/OpprettSkuff/);
+    expect(utenKommentarer(les('../app/(app)/prisliste/page.tsx'))).toMatch(/NyTjeneste/);
     expect(utenKommentarer(les('../app/(app)/organisasjon/_opprett-dialog.tsx'))).toMatch(
-      /OpprettSkuff/,
+      /OppretterSkuff/,
     );
   });
 
@@ -73,7 +72,9 @@ describe('PR #184 runde 2 — Mikael mobil-review', () => {
     expect(jobber).not.toMatch(/TimeplanFlate/);
     expect(les('../app/(app)/organisasjon/_timeplan-ansatte.tsx')).toMatch(/data-timeplan-ansatte/);
     expect(les('../app/(app)/organisasjon/_timeplan-ansatte.tsx')).toMatch(/DeaktivertHandling/);
-    expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/TimeplanAnsatteFlate/);
+    expect(utenKommentarer(les('../app/(app)/organisasjon/page.tsx'))).toMatch(
+      /seksjon === 'ansatte' \|\| seksjon === 'timeplan-ansatte'/,
+    );
   });
 
   it('Kunder A–Å har tap/dra og ikke overlapping scrollbar', () => {
@@ -81,7 +82,7 @@ describe('PR #184 runde 2 — Mikael mobil-review', () => {
     const liste = utenKommentarer(les('../app/(app)/kunder/_alfa-liste.tsx'));
     expect(rail).toMatch(/onPointerDown/);
     expect(rail).toMatch(/onPointerMove/);
-    expect(liste).toMatch(/no-scrollbar/);
+    expect(liste).toMatch(/scrollIntoView/);
     expect(liste).toMatch(/sticky/);
     expect(liste).not.toMatch(/rounded-xl border/);
   });

@@ -1,6 +1,6 @@
 'use client';
 
-import { ListeRad, StatusChip, statusFraBooking } from '@endwise/ui';
+import { LasterFlate, ListeRad, StatusChip, statusFraBooking } from '@endwise/ui';
 import { useMemo, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { osloDagsvindu } from '../_lib/oslo-dag';
@@ -72,7 +72,9 @@ export function TimeplanDagsliste({ valgt }: { valgt: string }) {
 
       {kalender.isError ? (
         <p className="py-6 text-center text-body text-fg-muted">Kunne ikke hente jobbene.</p>
-      ) : kalender.isLoading ? null : rader.length === 0 ? (
+      ) : kalender.isLoading ? (
+        <LasterFlate linjer={3} label="Henter jobber" />
+      ) : rader.length === 0 ? (
         <p data-timeplan-dag-tom className="py-8 text-center text-label text-fg-muted">
           Ingen jobber denne dagen.
         </p>

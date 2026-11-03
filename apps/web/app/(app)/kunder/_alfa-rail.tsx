@@ -49,7 +49,7 @@ export function KunderAlfaRail({
       ref={railRef}
       data-kunder-alfa-rail
       aria-label="Alfabet"
-      className="z-[4] flex w-[22px] shrink-0 touch-none select-none flex-col items-center py-1"
+      className="fixed top-[calc(var(--chrome-h,5.5rem)+8px)] right-1 bottom-[calc(env(safe-area-inset-bottom)+8px)] z-[4] flex w-[22px] touch-none select-none flex-col items-center py-1"
       style={{ touchAction: 'none' }}
       onPointerDown={(e) => {
         e.preventDefault();
@@ -74,7 +74,7 @@ export function KunderAlfaRail({
             aria-pressed={valgt}
             aria-label={bokstav === '#' ? 'Til toppen' : `Gå til ${bokstav}`}
             tabIndex={tom ? -1 : 0}
-            className={`pointer-events-none flex min-h-0 w-full flex-1 items-center justify-center p-0 text-[13px] leading-none ${
+            className={`pointer-events-none flex min-h-[16px] w-full flex-1 items-center justify-center p-0 text-meta leading-none ${
               tom
                 ? 'font-[500] text-fg-faint'
                 : valgt

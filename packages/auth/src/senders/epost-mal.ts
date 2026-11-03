@@ -1,4 +1,7 @@
 import { LOGO_EPOST_CID } from '../assets/logo-epost.ts';
+import { ENDWISE_MERKE, type EpostMerke, rensVisningsnavn } from './merke.ts';
+
+export type { EpostMerke } from './merke.ts';
 
 /**
  * Felles HTML-skall for e-postene vi faktisk sender (bekreftelseskode,
@@ -66,7 +69,18 @@ export function byggEpostHtml(input: {
   ingress: string;
   innhold: string;
   fotnote: string;
+  merke?: EpostMerke;
 }): string {
+  const merke = input.merke ?? ENDWISE_MERKE;
+  const merkenavn = rensVisningsnavn(merke.navn) || 'Endwise';
+  const erForhandler = Boolean(input.merke);
+  const topp = erForhandler
+    ? `<p style="margin:0;font-family:${FONT};font-size:16px;line-height:20px;font-weight:600;color:${FARGE.tekst};">${esc(merkenavn)}</p>`
+    : `<img src="cid:${LOGO_EPOST_CID}"
+                 width="32" height="40"
+                 alt="${esc(merkenavn)}"
+                 style="display:block;width:32px;height:40px;border:0;outline:none;text-decoration:none;">`;
+  const fot = erForhandler ? (merke.levertAv ? 'Levert av Endwise' : esc(merkenavn)) : 'Endwise';
   return `<!doctype html>
 <html lang="nb">
 <head>
@@ -78,7 +92,7 @@ export function byggEpostHtml(input: {
 </head>
 <body style="margin:0;padding:0;background-color:${FARGE.side};">
 <!-- Forhåndsvisningsteksten i innboksen. Uten den viser klienten de første
-     ordene i markupen, som ofte er «Endwise-logo». -->
+     ordene i markupen. -->
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(input.ingress)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${FARGE.side}" style="background-color:${FARGE.side};">
   <tr>
@@ -87,10 +101,7 @@ export function byggEpostHtml(input: {
 
         <tr>
           <td align="center" bgcolor="${FARGE.merke}" style="background-color:${FARGE.merke};padding:28px 28px 8px 28px;">
-            <img src="cid:${LOGO_EPOST_CID}"
-                 width="32" height="40"
-                 alt="Endwise"
-                 style="display:block;width:32px;height:40px;border:0;outline:none;text-decoration:none;">
+            ${topp}
           </td>
         </tr>
 
@@ -112,7 +123,7 @@ export function byggEpostHtml(input: {
         </tr>
       </table>
 
-      <p style="margin:16px 0 0 0;font-family:${FONT};font-size:12px;line-height:1;letter-spacing:-0.12px;color:${FARGE.dempet};">Endwise</p>
+      <p style="margin:16px 0 0 0;font-family:${FONT};font-size:12px;line-height:1;letter-spacing:-0.12px;color:${FARGE.dempet};">${fot}</p>
     </td>
   </tr>
 </table>

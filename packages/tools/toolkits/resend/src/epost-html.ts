@@ -29,9 +29,16 @@ function esc(s: string): string {
 }
 
 /** Parchment/white-kort for varseltekst. Ingen logo-cid — toolkit har ikke auth-vedlegget. */
-export function byggVarselHtml(input: { tittel: string; tekst: string }): string {
+export function byggVarselHtml(input: {
+  tittel: string;
+  tekst: string;
+  merkeNavn?: string;
+  levertAv?: boolean;
+}): string {
   const tittel = esc(input.tittel);
   const tekst = esc(input.tekst);
+  const merke = esc((input.merkeNavn ?? '').trim());
+  const fot = input.levertAv === false && merke ? merke : 'Levert av Endwise';
   return `<!doctype html>
 <html lang="nb">
 <head>
@@ -49,7 +56,7 @@ export function byggVarselHtml(input: { tittel: string; tekst: string }): string
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${FARGE.kort}" style="max-width:480px;background-color:${FARGE.kort};border:1px solid ${FARGE.kant};border-radius:18px;">
         <tr>
           <td align="center" bgcolor="${FARGE.kort}" style="background-color:${FARGE.kort};padding:28px 28px 8px 28px;font-family:${FONT};font-size:16px;line-height:20px;font-weight:600;color:${FARGE.tekst};">
-            Endwise
+            ${merke}
           </td>
         </tr>
         <tr>
@@ -69,7 +76,7 @@ export function byggVarselHtml(input: { tittel: string; tekst: string }): string
           </td>
         </tr>
       </table>
-      <p style="margin:16px 0 0 0;font-family:${FONT};font-size:12px;color:${FARGE.dempet};">Sendt via Endwise</p>
+      <p style="margin:16px 0 0 0;font-family:${FONT};font-size:12px;color:${FARGE.dempet};">${fot}</p>
     </td>
   </tr>
 </table>

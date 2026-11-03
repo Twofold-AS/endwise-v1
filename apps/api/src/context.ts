@@ -1,10 +1,14 @@
 import {
   type Auth,
+  type AuthSone,
   assertMember,
+  brukerHarPasskey,
   createAuth,
   harSesjonsCookie,
+  lesAuthSone,
   type Role,
   requireSession,
+  rolleTillattISone,
   TwoFactorRequiredError,
   velgAktivOrganisasjon,
 } from '@endwise/auth';
@@ -36,6 +40,10 @@ export interface AppContext {
    * Uten port: fetch-adapteren kjører batchen med Promise.all mot pool max 5.
    */
   limitBatch?: <T>(fn: () => Promise<T>) => Promise<T>;
+  /** F5: satt når white label er på og proxyen har sone-header. */
+  authSone: AuthSone | null;
+  /** F5: platform krever bundet passkey for admin-prosedyrer. */
+  passkeyOk: boolean;
 }
 
 /** Samme tall som tenant-tx-porten: 2, ikke gjett-opp av pool-max. */
@@ -103,13 +111,20 @@ export function createAppContext(): AppContext {
     isMechanic: false,
     mechanicId: null,
     limitBatch: (fn) => fn(),
+    authSone: null,
+    passkeyOk: false,
   };
 }
 
-let authSingleton: Auth | undefined;
-function getAuthForContext(): Auth {
-  authSingleton ??= createAuth(getDb());
-  return authSingleton;
+let defaultAuth: Auth | undefined;
+let platformAuth: Auth | undefined;
+function getAuthForContext(sone: AuthSone | null): Auth {
+  if (sone === 'platform') {
+    platformAuth ??= createAuth(getDb(), { sone: 'platform' });
+    return platformAuth;
+  }
+  defaultAuth ??= createAuth(getDb(), sone ? { sone } : undefined);
+  return defaultAuth;
 }
 
 /**
@@ -135,17 +150,19 @@ function getAuthForContext(): Auth {
  * når kaken finnes.
  */
 export async function createRequestContext(headers: Headers): Promise<AppContext> {
-  const base = createAppContext();
+  const authSone = lesAuthSone(headers);
+  const base = { ...createAppContext(), authSone };
   const gate = createConcurrencyGate(TRPC_BATCH_CONCURRENCY);
   const medPort = (rest: Partial<AppContext> = {}): AppContext => ({
     ...base,
     ...rest,
+    authSone,
     limitBatch: (fn) => gate.run(fn),
   });
 
   if (!harSesjonsCookie(headers)) return medPort();
   try {
-    const data = await requireSession(getAuthForContext(), base.db, headers);
+    const data = await requireSession(getAuthForContext(authSone), base.db, headers);
     let tenantId = data.session.activeOrganizationId ?? null;
     if (!tenantId) {
       const medlemskap = await base.db
@@ -157,7 +174,7 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
         .from(schema.member)
         .innerJoin(schema.organization, eq(schema.organization.id, schema.member.organizationId))
         .where(eq(schema.member.userId, data.user.id));
-      tenantId = velgAktivOrganisasjon(medlemskap);
+      tenantId = velgAktivOrganisasjon(medlemskap, authSone);
       if (tenantId) {
         try {
           await base.db
@@ -172,8 +189,13 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
     if (!tenantId) return medPort({ userId: data.user.id });
     try {
       const role = await assertMember(base.db, data.user.id, tenantId);
+      if (authSone && !rolleTillattISone(role, authSone)) {
+        return medPort();
+      }
+      const passkeyOk =
+        authSone === 'platform' ? await brukerHarPasskey(base.db, data.user.id) : false;
       const profil = await lesJobbOgMekaniker(base.db, tenantId, data.user.id);
-      return medPort({ userId: data.user.id, tenantId, role, ...profil });
+      return medPort({ userId: data.user.id, tenantId, role, passkeyOk, ...profil });
     } catch {
       return medPort({ userId: data.user.id });
     }

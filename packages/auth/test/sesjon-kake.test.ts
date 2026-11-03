@@ -31,4 +31,11 @@ describe('harSesjonsCookie', () => {
     expect(harSesjonsCookie(new Headers({ cookie: 'not_endwise.session_token=abc' }))).toBe(false);
     expect(harSesjonsCookie(new Headers({ cookie: 'endwise.session_data=abc' }))).toBe(false);
   });
+
+  it('true for platform-prefiks endwise-pl', () => {
+    expect(harSesjonsCookie(new Headers({ cookie: 'endwise-pl.session_token=abc' }))).toBe(true);
+    expect(harSesjonsCookie(new Headers({ cookie: '__Secure-endwise-pl.session_token=xyz' }))).toBe(
+      true,
+    );
+  });
 });

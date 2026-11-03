@@ -12,6 +12,7 @@ export {
   erApiEllerStatisk,
   erAuthSti,
   erKundeSti,
+  erPlattformAdminSti,
   KUNDE_STIER,
   lesKontekst,
   normaliserSti,

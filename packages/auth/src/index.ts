@@ -11,8 +11,10 @@ export {
 } from './env.ts';
 export * from './magic-link.ts';
 export * from './password-reset.ts';
+export { brukerHarPasskey, kanBrukePlattform } from './plattform-passkey.ts';
 export {
   erAuthDestinasjon,
+  erPlatformDestinasjon,
   erProduktDestinasjon,
   erTenantDestinasjon,
   erTenantTelefonDestinasjon,
@@ -38,6 +40,21 @@ export {
 export * from './session.ts';
 export * from './session-policy.ts';
 export { settPassordUtenSesjon } from './sett-passord.ts';
+export {
+  type AuthSone,
+  cookiePrefixForSone,
+  ENDWISE_ROLLER,
+  erEndwiseRolle,
+  erForhandlerRolle,
+  FORHANDLER_COOKIE_PREFIX,
+  idleSekunderForSone,
+  lesAuthSone,
+  PLATFORM_COOKIE_PREFIX,
+  platformOffentligUrl,
+  platformRpId,
+  rolleTillattISone,
+  SONE_HEADER,
+} from './sone.ts';
 export * from './tenant.ts';
 export { formaterKlokkeslett, PRODUKT_TIDSSONE } from './tid.ts';
 export { verifiserFerskTotpForBruker } from './totp-db.ts';

@@ -11,12 +11,12 @@ export class SessionExpiredError extends Error {
 }
 
 /**
- * Better-Auth-sesjonskake (`cookiePrefix: 'endwise'`).
- * Prod (`useSecureCookies`): `__Secure-endwise.session_token`.
- * Dev: `endwise.session_token`. Ingen kake = ingen sesjon — hopp over
- * `getSession`/DB. Produktregler (idle, absolut, 2FA) gjelder når kaken finnes.
+ * Better-Auth-sesjonskake.
+ * Forhandler/default: `endwise.session_token` / `__Secure-endwise.session_token`.
+ * Platform (F5): `endwise-pl.session_token` / `__Secure-endwise-pl.session_token`.
+ * Ingen kake = ingen sesjon — hopp over `getSession`/DB.
  */
-const SESJON_KAKE = /(?:^|;\s*)(?:__Secure-)?endwise\.session_token=/;
+const SESJON_KAKE = /(?:^|;\s*)(?:__Secure-)?endwise(?:-pl)?\.session_token=/;
 
 export function harSesjonsCookie(headers: Headers): boolean {
   return SESJON_KAKE.test(headers.get('cookie') ?? '');

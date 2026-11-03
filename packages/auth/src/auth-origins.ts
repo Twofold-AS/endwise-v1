@@ -21,8 +21,12 @@ import { devTrustedOrigins } from './dev-origins.ts';
  * deployet faktisk serveres på.
  */
 
-/** Apex + www. www er valgfri DNS; å betro den unngår 403 hvis den tas i bruk. */
-export const PRODUKT_ORIGINS = ['https://endwise.no', 'https://www.endwise.no'] as const;
+/** Apex + www + skjult admin. Ingen `*.endwise.no` — bare navngitte verter. */
+export const PRODUKT_ORIGINS = [
+  'https://endwise.no',
+  'https://www.endwise.no',
+  'https://platform.endwise.no',
+] as const;
 
 export type AuthOriginEnv = {
   NODE_ENV?: string;

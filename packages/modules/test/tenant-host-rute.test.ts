@@ -80,14 +80,28 @@ describe('F18 / white label F2: ruteFraSone', () => {
     expect(UKJENT_KUNDE_STI).toBe('/_kunde/_ukjent');
   });
 
-  it('platform rewriter alt til stub', () => {
+  it('platform rewriter rot og innlogging, admin-stier går videre', () => {
     expect(ruteFraSone({ sone: 'platform', slug: null, path: '/', kontekst: null })).toEqual({
       type: 'rewrite',
       dest: '/_plattform',
     });
-    expect(ruteFraSone({ sone: 'platform', slug: null, path: '/admin', kontekst: null })).toEqual({
+    expect(
+      ruteFraSone({ sone: 'platform', slug: null, path: '/logg-inn', kontekst: null }),
+    ).toEqual({
       type: 'rewrite',
-      dest: '/_plattform',
+      dest: '/_plattform/logg-inn',
+    });
+    expect(ruteFraSone({ sone: 'platform', slug: null, path: '/signin', kontekst: null })).toEqual({
+      type: 'rewrite',
+      dest: '/_plattform/logg-inn',
+    });
+    expect(ruteFraSone({ sone: 'platform', slug: null, path: '/endwise', kontekst: null })).toEqual(
+      {
+        type: 'next',
+      },
+    );
+    expect(ruteFraSone({ sone: 'platform', slug: null, path: '/admin', kontekst: null })).toEqual({
+      type: 'next',
     });
     expect(
       ruteFraSone({
@@ -97,6 +111,20 @@ describe('F18 / white label F2: ruteFraSone', () => {
         kontekst: null,
       }),
     ).toEqual({ type: 'next' });
+  });
+
+  it('marked og forhandler skjuler /endwise og /admin', () => {
+    expect(ruteFraSone({ sone: 'marked', slug: null, path: '/endwise', kontekst: null })).toEqual({
+      type: 'not-found',
+    });
+    expect(
+      ruteFraSone({
+        sone: 'forhandler',
+        slug: 'bergen',
+        path: '/endwise',
+        kontekst: 'bedrift',
+      }),
+    ).toEqual({ type: 'not-found' });
   });
 
   it('API og statisk går videre', () => {

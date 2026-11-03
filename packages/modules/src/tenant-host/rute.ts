@@ -35,9 +35,24 @@ export function erAuthSti(path: string): boolean {
   return (
     p === '/signin' ||
     p.startsWith('/signin/') ||
+    p === '/logg-inn' ||
+    p.startsWith('/logg-inn/') ||
     p === '/2fa-oppsett' ||
     p.startsWith('/2fa-oppsett/') ||
     p.startsWith('/api/auth/')
+  );
+}
+
+/** Admin-flater som bare skal treffes på platform-verten. */
+export function erPlattformAdminSti(path: string): boolean {
+  const p = normaliserSti(path);
+  return (
+    p === '/endwise' ||
+    p.startsWith('/endwise/') ||
+    p === '/admin' ||
+    p.startsWith('/admin/') ||
+    p === '/2fa-oppsett' ||
+    p.startsWith('/2fa-oppsett/')
   );
 }
 
@@ -58,11 +73,23 @@ export function ruteFraSone(input: {
   const path = normaliserSti(input.path);
   if (erApiEllerStatisk(input.path)) return { type: 'next' };
 
-  if (input.sone === 'marked') return { type: 'next' };
+  if (input.sone === 'marked') {
+    if (erPlattformAdminSti(path)) return { type: 'not-found' };
+    return { type: 'next' };
+  }
 
   if (input.sone === 'platform') {
     if (path === '/_plattform' || path.startsWith('/_plattform/')) return { type: 'next' };
-    // F5 flytter admin hit. F2 er stub: alt på platform-verten → /_plattform.
+    if (path === '/') return { type: 'rewrite', dest: '/_plattform' };
+    if (
+      path === '/logg-inn' ||
+      path.startsWith('/logg-inn/') ||
+      path === '/signin' ||
+      path.startsWith('/signin/')
+    ) {
+      return { type: 'rewrite', dest: '/_plattform/logg-inn' };
+    }
+    if (erPlattformAdminSti(path)) return { type: 'next' };
     return { type: 'rewrite', dest: '/_plattform' };
   }
 
@@ -73,7 +100,7 @@ export function ruteFraSone(input: {
   const slug = input.slug;
   if (!slug) return { type: 'not-found' };
 
-  if (path.startsWith('/_kunde') || path.startsWith('/_plattform')) {
+  if (path.startsWith('/_kunde') || path.startsWith('/_plattform') || erPlattformAdminSti(path)) {
     return { type: 'not-found' };
   }
 

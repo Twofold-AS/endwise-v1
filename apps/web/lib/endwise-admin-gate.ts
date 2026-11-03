@@ -1,8 +1,9 @@
 import { createRequestContext } from '@endwise/api/context';
-import { TwoFactorRequiredError } from '@endwise/auth';
+import { kanBrukePlattform, lesAuthSone, TwoFactorRequiredError } from '@endwise/auth';
+import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import type { Route } from 'next';
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 /**
  * F1-26 / CWE-200 — utfall for Endwise-interne sider (`/admin`, `/endwise`).
@@ -27,9 +28,15 @@ export function endwiseAdminUtfall(input: {
  * Innlogget uten Endwise-rolle → `forbidden` (sesjonen beholdes).
  */
 export async function krevEndwiseAdminSide(): Promise<EndwiseAdminUtfall> {
+  const h = await headers();
+  if (erWhiteLabelAktiv() && lesAuthSone(h) !== 'platform') {
+    notFound();
+  }
+
   let utfall: EndwiseAdminUtfall;
+  let ctx: Awaited<ReturnType<typeof createRequestContext>> | null = null;
   try {
-    const ctx = await createRequestContext(await headers());
+    ctx = await createRequestContext(h);
     utfall = endwiseAdminUtfall({ userId: ctx.userId, role: ctx.role });
   } catch (error) {
     if (error instanceof TwoFactorRequiredError) {
@@ -39,8 +46,18 @@ export async function krevEndwiseAdminSide(): Promise<EndwiseAdminUtfall> {
     }
   }
 
-  if (utfall === 'ok') return 'ok';
-  if (utfall === 'two_factor') return 'ok';
-  if (utfall === 'signin') redirect('/signin' as Route);
+  if (utfall === 'ok' || utfall === 'two_factor') {
+    if (
+      erWhiteLabelAktiv() &&
+      ctx &&
+      !kanBrukePlattform({ role: ctx.role, harPasskey: ctx.passkeyOk })
+    ) {
+      redirect('/logg-inn?steg=nokkel' as Route);
+    }
+    return 'ok';
+  }
+  if (utfall === 'signin') {
+    redirect((erWhiteLabelAktiv() ? '/logg-inn' : '/signin') as Route);
+  }
   return 'forbidden';
 }

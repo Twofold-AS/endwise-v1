@@ -1,9 +1,18 @@
 import { erMekanikerKonto, kanSkriveDealerDesk } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import type { AddonModule } from '@endwise/modules';
+import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { initTRPC, TRPCError } from '@trpc/server';
 import type { AppContext } from '../context.ts';
 import { resolveShopFlag } from './shop-flag.ts';
+
+/** F5: Endwise-API bare på platform, og bare med passkey. Samme melding. */
+function krevPlatformSone(ctx: AppContext) {
+  if (!erWhiteLabelAktiv()) return;
+  if (ctx.authSone !== 'platform' || !ctx.passkeyOk) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Kun Endwise-team' });
+  }
+}
 
 /**
  * Trpc v11 for interne flater (admin-/forhandler-dashboard, mekaniker-PWA).
@@ -179,6 +188,7 @@ export const shopProcedure = protectedProcedure.use(async function shopFlagOn(op
 
 export const endwiseAdminProcedure = protectedProcedure.use(function isEndwiseAdmin(opts) {
   const { ctx } = opts;
+  krevPlatformSone(ctx);
   if (ctx.role !== 'endwise_admin') {
     throw new TRPCError({
       code: 'FORBIDDEN',
@@ -194,6 +204,7 @@ export const endwiseAdminProcedure = protectedProcedure.use(function isEndwiseAd
  */
 export const endwiseSupportProcedure = protectedProcedure.use(function isEndwiseTeam(opts) {
   const { ctx } = opts;
+  krevPlatformSone(ctx);
   if (ctx.role !== 'endwise_admin' && ctx.role !== 'endwise_support') {
     throw new TRPCError({
       code: 'FORBIDDEN',

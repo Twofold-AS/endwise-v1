@@ -69,6 +69,7 @@ describe('authTrustedOrigins', () => {
     const origins = authTrustedOrigins(PROD);
     expect(origins).toContain('https://endwise.no');
     expect(origins).toContain('https://www.endwise.no');
+    expect(origins).toContain('https://platform.endwise.no');
   });
 
   it('preview med VERCEL_URL inkluderer den hosten', () => {

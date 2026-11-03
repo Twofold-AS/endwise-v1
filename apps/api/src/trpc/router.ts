@@ -17,6 +17,7 @@ import { inventoryRouter } from './routers/inventory.ts';
 import { invitasjonerRouter } from './routers/invitasjoner.ts';
 import { jitRouter } from './routers/jit.ts';
 import { kontekstRouter } from './routers/kontekst.ts';
+import { kundeRouter } from './routers/kunde.ts';
 import { lookupRouter } from './routers/lookup.ts';
 import { mechanicRouter } from './routers/mechanic.ts';
 import { mechanicsRouter } from './routers/mechanics.ts';
@@ -47,6 +48,7 @@ export const appRouter = router({
   mechanic: mechanicRouter,
   session: sessionRouter,
   kontekst: kontekstRouter,
+  kunde: kundeRouter,
   stream: streamRouter,
   tenants: tenantsRouter,
   tillatelse: tillatelseRouter,

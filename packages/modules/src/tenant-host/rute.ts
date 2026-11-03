@@ -1,7 +1,16 @@
 import type { VertSone } from './opplos.ts';
 
 /** Kundesidens stier. Må ikke kollidere med (app). */
-export const KUNDE_STIER = ['/', '/bestill', '/min-side', '/logg-inn', '/velg'] as const;
+export const KUNDE_STIER = [
+  '/',
+  '/bestill',
+  '/min-side',
+  '/logg-inn',
+  '/velg',
+  '/bookinger',
+  '/kjoretoy',
+  '/profil',
+] as const;
 
 export type VertKontekst = 'privat' | 'bedrift';
 

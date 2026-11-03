@@ -44,8 +44,17 @@ export function KundeSkall({
           <a href="/bestill" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
             Bestill
           </a>
+          <a href="/bookinger" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
+            Bookinger
+          </a>
+          <a href="/kjoretoy" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
+            Kjøretøy
+          </a>
           <a href="/min-side" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
             Min side
+          </a>
+          <a href="/profil" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
+            Profil
           </a>
           <a href="/logg-inn" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
             Logg inn

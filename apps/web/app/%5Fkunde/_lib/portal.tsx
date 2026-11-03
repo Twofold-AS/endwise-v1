@@ -26,11 +26,7 @@ function tidTekst(tid: Date | string) {
 export function KundeInnlogget({
   children,
 }: {
-  children: (data: {
-    navn: string;
-    epost: string | null;
-    telefon: string | null;
-  }) => ReactNode;
+  children: (data: { navn: string; epost: string | null; telefon: string | null }) => ReactNode;
 }) {
   const meg = trpc.kunde.meg.useQuery(undefined, { retry: false });
   if (meg.isLoading) return <LasterFlate label="Henter min side" />;

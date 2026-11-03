@@ -120,6 +120,23 @@ export function OrganisasjonAnsatte({
         </div>
       )}
 
+      {rader.some((r) => r.jobberIDag > 0) ? (
+        <div data-ansatte-idag className="flex flex-col gap-2">
+          <p className="text-label font-[650] text-fg">Har jobber i dag</p>
+          {rader
+            .filter((r) => r.jobberIDag > 0)
+            .map((r) => (
+              <ListeRad
+                key={`idag-${r.userId}`}
+                tittel={r.navn}
+                undertekst={`${r.jobberIDag} ${r.jobberIDag === 1 ? 'jobb' : 'jobber'} · tidsrom —`}
+                hoyre="Ingen vakt registrert"
+                chevron={false}
+              />
+            ))}
+        </div>
+      ) : null}
+
       <OpprettAnsattDialog apen={opprett} onLukk={lukkOpprett} />
     </div>
   );
@@ -145,18 +162,24 @@ function AnsattKort({
         tittel={rad.navn}
         undertekst={rolle}
         initialer={rad.navn.slice(0, 2).toUpperCase()}
-        hoyre={<AktivitetMerke status={rad.status} label={rad.statusLabel} />}
+        hoyre={
+          <span className="flex flex-col items-end gap-1">
+            <AktivitetMerke status={rad.status} label={rad.statusLabel} />
+            <span className="text-meta text-fg-muted">Ingen vakt registrert</span>
+          </span>
+        }
         onClick={() => setApen((v) => !v)}
         chevron
       />
       {apen ? (
         <div className="flex flex-col gap-3 border-border border-b pb-4">
           <p className="text-meta text-fg-muted">
-            {rad.jobberIDag} jobber i dag
+            {rad.jobberIDag} jobber i dag · tidsrom —
             {ferdigheter.length > 0
               ? ` · ${ferdigheter.map((f) => `${f.navn} (${nivaTekst(f.level)})`).join(', ')}`
               : ''}
           </p>
+          <DeaktivertHandling forklaring="Kommer senere">Registrer vakt/fravær</DeaktivertHandling>
           {kanEndre ? (
             <FargeSvatser userId={rad.userId} valgt={rad.farge ?? rad.avatar?.farge} />
           ) : null}

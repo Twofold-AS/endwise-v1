@@ -81,7 +81,7 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(side).toMatch(/tittel="Tjenester"/);
     expect(side).toMatch(/TJENESTER_FANER/);
     expect(side).toMatch(/NyTjeneste/);
-    expect(side).toMatch(/skjulNy/);
+    expect(side).toMatch(/onNy/);
     expect(side).not.toMatch(/label: 'Tjenester'/);
     const kort = utenKommentarer(
       les('../app/(app)/innstillinger/tjenestekatalog/_tjeneste-kort.tsx'),

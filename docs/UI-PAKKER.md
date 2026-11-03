@@ -11,7 +11,10 @@
 > (Lager/Butikk under Mer). Org = hub-liste. Sidetittel i innholdet
 > (`SideTopp`). Ronny = sticky sirkel + AgentThinking + LogRow +
 > forslagschips. Toast tatt i bruk ved opprett. Statuspalett §5
-> (confirmed = ink, ikke blå). ⛔ Vipps-login. ⛔ command palette.
+> (confirmed = ink, ikke blå; lime/yellow/rose remap på mobil).
+> Timeplan/Tjenester har `NyKnapp` (ikke Opprett-fane på mobil).
+> Kundeliste og jobbrad har synlig ⋯ (`RadMeny`). Innboks uten
+> ForhandlerInfoKort. Integrasjoner som `ListeRad`. ⛔ Vipps-login. ⛔ command palette.
 > ⛔ PULSE_PLAUSIBEL-tall. ⛔ `--ew-success` som tekst. ⛔ `#0066ff` på CTA.
 >
 > ### ⚠️ Mikael 02.11.2026 — PR #184 runde 2

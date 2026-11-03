@@ -1,9 +1,8 @@
 'use client';
 
-import { BoardChip, CircleAlert, ExternalLink, Plug } from '@endwise/ui';
+import { BoardChip, FeilFlate, LasterFlate, ListeRad } from '@endwise/ui';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
-import { CardShell } from '../_shell/cards';
 import { Etterspor } from '../_shell/etterspor';
 import { INTEGRASJONER_PAGE_SUB } from '../organisasjon/_hub';
 
@@ -25,15 +24,10 @@ export function IntegrasjonerInnhold() {
   const katalog = trpc.billing.katalog.useQuery();
 
   if (katalog.isLoading) {
-    return <p className="text-body text-fg-muted">Laster integrasjoner …</p>;
+    return <LasterFlate linjer={3} label="Henter integrasjoner" />;
   }
   if (katalog.isError) {
-    return (
-      <CardShell className="flex items-start gap-3 p-4">
-        <CircleAlert size={16} strokeWidth={1.75} className="mt-0.5 shrink-0 text-danger" />
-        <p className="text-body text-danger">{katalog.error.message}</p>
-      </CardShell>
-    );
+    return <FeilFlate melding={katalog.error.message} />;
   }
 
   const alle = katalog.data?.tredjepart ?? [];
@@ -42,22 +36,20 @@ export function IntegrasjonerInnhold() {
 
   return (
     <div className="flex flex-col gap-6">
-      <p data-integrasjoner-pagesub className="text-[12px] text-fg-muted">
+      <p data-integrasjoner-pagesub className="text-meta text-fg-muted">
         {INTEGRASJONER_PAGE_SUB}
         {alle.length > 0 ? ` · ${mine.length}/${alle.length}` : ''}
       </p>
       <section className="flex flex-col gap-2">
         <h3 className="text-label text-fg">Dine integrasjoner ({mine.length})</h3>
         {mine.length === 0 ? (
-          <CardShell className="p-5">
-            <p className="text-[12px] text-fg-muted leading-relaxed">
-              Ingen tredjeparts-integrasjoner er koblet på ennå. Se lista under for hva som finnes.
-            </p>
-          </CardShell>
+          <p className="text-meta text-fg-muted">
+            Ingen tredjeparts-integrasjoner er koblet på ennå. Se lista under for hva som finnes.
+          </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border">
-            {mine.map((i, n) => (
-              <Rad key={i.key} post={i} forste={n === 0} />
+          <div>
+            {mine.map((i) => (
+              <Rad key={i.key} post={i} />
             ))}
           </div>
         )}
@@ -65,20 +57,20 @@ export function IntegrasjonerInnhold() {
 
       <section className="flex flex-col gap-2">
         <h3 className="text-label text-fg">Tilgjengelige integrasjoner ({kanFaas.length})</h3>
-        <p className="text-[12px] text-fg-muted">
+        <p className="text-meta text-fg-muted">
           Oversikt over hva som finnes. Ingenting bestilles herfra — meld interesse, så tar vi
           kontakt.
         </p>
-        <div className="overflow-hidden rounded-xl border border-border">
-          {kanFaas.map((i, n) => (
-            <Rad key={i.key} post={i} forste={n === 0} />
+        <div>
+          {kanFaas.map((i) => (
+            <Rad key={i.key} post={i} />
           ))}
         </div>
       </section>
 
       <section className="flex flex-col gap-2">
         <h3 className="text-label text-fg">Savner du en integrasjon?</h3>
-        <p className="text-[12px] text-fg-muted leading-relaxed">
+        <p className="text-meta text-fg-muted leading-relaxed">
           Bruker dere et system som ikke står her, vil vi gjerne vite det. Det er slik lista blir
           lengre.
         </p>
@@ -92,67 +84,35 @@ export function IntegrasjonerInnhold() {
   );
 }
 
-function Rad({ post, forste }: { post: Post; forste: boolean }) {
+function Rad({ post }: { post: Post }) {
   const oppsett = post.aktiv ? OPPSETT[post.key] : undefined;
+  const merke = post.har
+    ? post.aktiv
+      ? 'På'
+      : 'Av'
+    : post.status === 'coming'
+      ? 'Kommer senere'
+      : undefined;
 
   return (
-    <div
-      className={`flex min-h-row-store flex-wrap items-center gap-4 bg-bg px-4 py-3 ${
-        forste ? '' : 'border-border border-t'
-      }`}
-    >
-      <span className="grid size-9 shrink-0 place-items-center rounded-control bg-surface-2 text-fg-muted">
-        <Plug size={16} strokeWidth={1.75} />
-      </span>
-
-      <div className="flex min-w-[220px] flex-1 flex-col gap-0.5">
-        <span className="flex flex-wrap items-center gap-2 text-label text-fg">
-          {post.navn}
-          {post.har && (
-            <BoardChip variant="caption" color={post.aktiv ? 'lime' : 'soft'}>
-              {post.aktiv ? 'På' : 'Av'}
-            </BoardChip>
-          )}
-          {!post.har && post.status === 'coming' && (
-            <BoardChip variant="caption" color="yellow">
-              Kommer senere
-            </BoardChip>
-          )}
-        </span>
-        <span className="text-[12px] text-fg-muted leading-relaxed">{post.beskrivelse}</span>
-        {post.leverandor && (
-          <span className="text-[11px] text-fg-muted">Leverandør: {post.leverandor}</span>
-        )}
-        {post.merknad && <span className="text-[11px] text-warn">{post.merknad}</span>}
-      </div>
-
-      <div className="flex shrink-0 items-center gap-3">
-        <span className="text-right text-[12px] text-fg-muted">
-          {post.prisMinor !== undefined
-            ? `${(post.prisMinor / 100).toLocaleString('nb-NO')} kr/mnd`
-            : post.inkludertI
-              ? `Inkludert i ${post.inkludertI}`
-              : '—'}
-        </span>
-
-        {oppsett ? (
-          <a
-            href={oppsett}
-            className="inline-flex h-control shrink-0 items-center gap-1.5 rounded-control border border-border px-2.5 text-label text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
-          >
-            Oppsett
-            <ExternalLink size={13} strokeWidth={1.75} />
-          </a>
-        ) : post.aktiv ? (
-          <span className="text-[12px] text-fg-muted">Ingen oppsett nødvendig</span>
+    <ListeRad
+      tittel={post.navn}
+      undertekst={post.beskrivelse}
+      href={oppsett}
+      chevron={Boolean(oppsett)}
+      hoyre={
+        merke ? (
+          <BoardChip variant="caption" color={post.aktiv ? 'soft' : 'gray'}>
+            {merke}
+          </BoardChip>
         ) : (
           <Etterspor
             hva={post.navn}
             kontekst={`Vi er interessert i integrasjonen «${post.navn}».`}
             knappetekst="Bestill"
           />
-        )}
-      </div>
-    </div>
+        )
+      }
+    />
   );
 }

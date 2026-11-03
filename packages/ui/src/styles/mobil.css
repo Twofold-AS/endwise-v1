@@ -388,6 +388,14 @@
     --color-status-warning-fg: #7a3e07;
     --color-status-error: #fdecea;
     --color-status-error-fg: #9b1c15;
+    --color-status-lime-background: #dcf5e3;
+    --color-status-lime-text: #14532d;
+    --color-status-yellow-background: #fef3c7;
+    --color-status-yellow-text: #7a3e07;
+    --color-status-rose-background: #fdecea;
+    --color-status-rose-text: #9b1c15;
+    --color-status-blue-background: #f3f3f3;
+    --color-status-blue-text: #141414;
     --color-chart-8-active: #b45309;
   }
 

@@ -12,6 +12,7 @@ import {
   hexForFarge,
   Search,
   SelectItem,
+  LasterFlate,
   Side,
   Sparkles,
   staffFargeStil,
@@ -543,7 +544,7 @@ function NyJobbInner() {
 /** Suspense-grense er påkrevd: siden leser `useSearchParams` (?kunde=). */
 export default function NyJobbPage() {
   return (
-    <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster jobb …</div>}>
+    <Suspense fallback={<LasterFlate label="Henter jobb" />}>
       <NyJobbInner />
     </Suspense>
   );

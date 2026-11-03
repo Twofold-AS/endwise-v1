@@ -1,12 +1,13 @@
 'use client';
 
-import { ListeRad, Plus, Side, Users } from '@endwise/ui';
+import { LasterFlate, ListeRad, Plus, Side, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { NyKnapp, useNyHandling } from '../_shell/ny-handling';
+import { RadMedMeny, RadMeny } from '../_shell/rad-meny';
 import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
@@ -177,24 +178,51 @@ function KunderInner() {
                 }
                 renderRad={(k) => (
                   <div key={k.id} data-kunder-rad>
-                    <ListeRad
-                      href={`/kunder/${k.id}`}
-                      tittel={k.name}
-                      undertekst={
-                        k.phone || k.email
-                          ? [k.phone, k.email].filter(Boolean).join(' · ')
-                          : 'Ingen kontaktinfo'
+                    <RadMedMeny
+                      meny={
+                        <RadMeny
+                          label={k.name}
+                          handlinger={[
+                            {
+                              id: 'apne',
+                              label: 'Åpne',
+                              onSelect: () => router.push(`/kunder/${k.id}` as Route),
+                            },
+                            {
+                              id: 'jobb',
+                              label: 'Ny jobb',
+                              onSelect: () =>
+                                router.push(`/bookinger/ny?kunde=${k.id}` as Route),
+                            },
+                            {
+                              id: 'slett',
+                              label: 'Slett',
+                              disabled: true,
+                              forklaring: 'Kommer senere',
+                            },
+                          ]}
+                        />
                       }
-                      initialer={k.name
-                        .split(/\s+/)
-                        .slice(0, 2)
-                        .map((d) => d[0])
-                        .join('')
-                        .toLocaleUpperCase('nb-NO')}
-                      hoyre={
-                        k.antallKjoretoy > 0 ? `${k.antallKjoretoy}` : <Kilde source={k.source} />
-                      }
-                    />
+                    >
+                      <ListeRad
+                        href={`/kunder/${k.id}`}
+                        tittel={k.name}
+                        undertekst={
+                          k.phone || k.email
+                            ? [k.phone, k.email].filter(Boolean).join(' · ')
+                            : 'Ingen kontaktinfo'
+                        }
+                        initialer={k.name
+                          .split(/\s+/)
+                          .slice(0, 2)
+                          .map((d) => d[0])
+                          .join('')
+                          .toLocaleUpperCase('nb-NO')}
+                        hoyre={
+                          k.antallKjoretoy > 0 ? `${k.antallKjoretoy}` : <Kilde source={k.source} />
+                        }
+                      />
+                    </RadMedMeny>
                   </div>
                 )}
               />
@@ -214,7 +242,7 @@ function KunderInner() {
 /** Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?sok=). */
 export default function Page() {
   return (
-    <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster kunder …</div>}>
+    <Suspense fallback={<LasterFlate label="Henter kunder" />}>
       <KunderInner />
     </Suspense>
   );

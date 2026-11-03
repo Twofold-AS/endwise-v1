@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, ChevronRight, Search } from '@endwise/ui';
+import { Car, ChevronRight, LasterFlate, Search } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -165,7 +165,7 @@ function KjoretoyInner() {
 /** Suspense-grense er PÅKREVD: siden leser `useSearchParams()` (?sok=). */
 export default function Page() {
   return (
-    <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster kjøretøy …</div>}>
+    <Suspense fallback={<LasterFlate label="Henter kjøretøy" />}>
       <KjoretoyInner />
     </Suspense>
   );

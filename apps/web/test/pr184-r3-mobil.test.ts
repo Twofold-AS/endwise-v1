@@ -180,6 +180,18 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(les('../app/(app)/jobber/_endring-detalj.tsx')).toMatch(/h-12/);
   });
 
+  it('Timeplan og Tjenester har Ny-knapp, innboks uten ForhandlerInfoKort', () => {
+    expect(les('../app/(app)/saker/page.tsx')).toMatch(/NyKnapp/);
+    expect(les('../app/(app)/saker/page.tsx')).toMatch(/Ny jobb/);
+    expect(les('../app/(app)/prisliste/page.tsx')).toMatch(/onNy/);
+    expect(utenKommentarer(les('../app/(app)/innboks/page.tsx'))).not.toMatch(/ForhandlerInfoKort/);
+    expect(les('../app/(app)/kunder/page.tsx')).toMatch(/RadMeny/);
+    expect(les('../app/(app)/jobber/_dagsliste.tsx')).toMatch(/RadMeny/);
+    expect(les('../app/(app)/organisasjon/_ansatte.tsx')).toMatch(/Ingen vakt registrert/);
+    expect(les('../app/(app)/integrasjoner/_innhold.tsx')).toMatch(/ListeRad/);
+    expect(les('../app/(app)/integrasjoner/_innhold.tsx')).toMatch(/LasterFlate/);
+  });
+
   it('innlogging bruker Board OTP, Nesten der og spinner uten Sender/Bekreftet', () => {
     const skjema = utenKommentarer(les('../app/signin/signin-skjema.tsx'));
     expect(skjema).toMatch(/FeltInput/);

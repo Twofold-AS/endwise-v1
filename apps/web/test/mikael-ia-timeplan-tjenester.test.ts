@@ -89,7 +89,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     const kapasitet = utenKommentarer(les('../app/(app)/mekanikere/kapasitet/page.tsx'));
     expect(side).toMatch(/Timeplan/);
     expect(side).toMatch(/timeplanHref\('opprett'\)|\/bookinger\/ny|Opprett jobb/);
-    expect(side).not.toMatch(/Ny jobb/);
+    expect(side).toMatch(/Ny jobb/);
     expect(side).not.toMatch(/Prisliste/);
     expect(side).not.toMatch(/Dialog|PrislisteDialog|prislisteApen|PrislisteFlate/);
     expect(side).not.toMatch(/TimeplanFlate/);

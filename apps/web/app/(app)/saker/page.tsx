@@ -1,10 +1,11 @@
 'use client';
 
-import { Side } from '@endwise/ui';
+import { LasterFlate, Side } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { osloKalenderdag } from '../_lib/oslo-dag';
+import { NyKnapp, useNyHandling } from '../_shell/ny-handling';
 import { OpprettSkuff } from '../_shell/opprett-skuff';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { TimeplanStripe } from '../_shell/timeplan-stripe';
@@ -20,8 +21,8 @@ import {
 import { Kalender } from './_kalender';
 
 /**
- * Timeplan. Chrome: Timeplan · Opprett jobb · Endringer.
- * Endringer lister Avvik og Forespørsler med Innstillinger-inndeling.
+ * Timeplan. Desktop-chrome: Timeplan · Opprett jobb · Endringer.
+ * Mobil: Ny-knapp åpner skuff. ?fane=opprett / ?ny=1 strippes.
  */
 function TimeplanPageInner() {
   const params = useSearchParams();
@@ -31,6 +32,8 @@ function TimeplanPageInner() {
   const endringId = params?.get('endring');
   const visning = params?.get('visning') === 'kalender' ? 'kalender' : 'liste';
   const [valgt, setValgt] = useState(() => osloKalenderdag(new Date()));
+  const ny = useNyHandling();
+  const nyJobb = aktiv === 'opprett' || ny.apen;
 
   useEffect(() => {
     if (aktiv === 'opprett' && typeof window !== 'undefined') {
@@ -39,18 +42,28 @@ function TimeplanPageInner() {
     }
   }, [aktiv, router]);
 
+  function lukkNy() {
+    ny.lukk();
+    router.replace('/jobber' as Route);
+  }
+
   return (
     <SideChromeSkall
       tittel="Timeplan"
       ingress="Jobber per dag. Samme dag og tid i Europe/Oslo."
       faner={TIMEPLAN_FANER.map((f) => ({ ...f, href: timeplanHref(f.id) }))}
-      aktiv={aktiv}
+      aktiv={aktiv === 'opprett' ? 'timeplan' : aktiv}
     >
-      <Side tittel="Timeplan" undertekst="Jobber per dag." className="max-md:px-0">
+      <Side
+        tittel="Timeplan"
+        undertekst="Jobber per dag."
+        handling={<NyKnapp onClick={ny.apne}>Ny jobb</NyKnapp>}
+        className="max-md:px-0"
+      >
         {aktiv === 'endringer' ? (
           <TimeplanEndringer del={endringerDel} endringId={endringId} />
         ) : null}
-        {aktiv === 'timeplan' || aktiv === 'opprett' ? (
+        {aktiv === 'timeplan' || aktiv === 'opprett' || nyJobb ? (
           <div className="flex flex-col gap-5">
             <TimeplanStripe valgt={valgt} onValgt={setValgt} />
             {visning === 'kalender' ? (
@@ -60,13 +73,9 @@ function TimeplanPageInner() {
             )}
           </div>
         ) : null}
-        {aktiv === 'opprett' ? (
-          <OpprettSkuff
-            tittel="Opprett jobb"
-            apen
-            onLukk={() => router.replace('/jobber' as Route)}
-          >
-            <NyJobbSkjema onFerdig={() => router.replace('/jobber' as Route)} />
+        {nyJobb ? (
+          <OpprettSkuff tittel="Opprett jobb" apen onLukk={lukkNy}>
+            <NyJobbSkjema onFerdig={lukkNy} />
           </OpprettSkuff>
         ) : null}
       </Side>
@@ -76,7 +85,7 @@ function TimeplanPageInner() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="px-8 py-7 text-body text-fg-muted">Laster timeplan …</div>}>
+    <Suspense fallback={<LasterFlate label="Henter timeplan" />}>
       <TimeplanPageInner />
     </Suspense>
   );

@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { delMobilDest, type NavItem } from '../app/(app)/_shell/nav.ts';
-import { INNBOKS_CHIPS } from '../app/(app)/_shell/inbox-del.ts';
-import { idagVisning, innboksRad } from '../app/(app)/_shell/phone-home-pulse.ts';
 import { flertall, flertallTilbys } from '../../../packages/ui/src/flate/flertall.ts';
-import { tjenesterPageSub } from '../app/(app)/prisliste/_hub.ts';
+import { INNBOKS_CHIPS } from '../app/(app)/_shell/inbox-del.ts';
+import { delMobilDest, type NavItem } from '../app/(app)/_shell/nav.ts';
+import { idagVisning, innboksRad } from '../app/(app)/_shell/phone-home-pulse.ts';
 import { ukedagToBokstaver } from '../app/(app)/_shell/timeplan-dager.ts';
+import { tjenesterPageSub } from '../app/(app)/prisliste/_hub.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 
@@ -42,12 +42,14 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(les('../app/providers.tsx')).toMatch(/LenkeProvider/);
   });
 
-  it('toppbar har Ronny-avatar og Innboks-meny', () => {
+  it('toppbar har Ronny-avatar og Innboks-meny, uten spin', () => {
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     expect(shell).toMatch(/data-ronny-avatar/);
     expect(shell).toMatch(/InboxTopBar2/);
     expect(shell).toMatch(/PHONE_RONNY_SIRKEL/);
     expect(shell).toMatch(/Mer/);
+    expect(shell).not.toMatch(/useRonnySpinn/);
+    expect(shell).not.toMatch(/spin=\{spin\}/);
   });
 
   it('dest-piller er 4 faste + Mer, Analyse ute', () => {
@@ -67,7 +69,9 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(dest.faste.map((d) => d.label)).toEqual(['Hjem', 'Innboks', 'Timeplan', 'Kunder']);
     expect(dest.mer.map((d) => d.key)).toEqual(['tjenester', 'organisasjon', 'lager', 'butikk']);
     expect(utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'))).toMatch(/Mer/);
-    expect(utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'))).toMatch(/scrollIntoView/);
+    expect(utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'))).toMatch(
+      /scrollIntoView/,
+    );
   });
 
   it('ingen fake pulstall', () => {
@@ -77,6 +81,17 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(utenKommentarer(les('../app/(app)/_shell/phone-home-pulse.ts'))).not.toMatch(
       /planlagt: 3/,
     );
+  });
+
+  it('seedet visuell Hjem bruker pulse med tall, ikke 0/0', () => {
+    const visuell = utenKommentarer(les('../app/visuell/mobil/page.tsx'));
+    expect(visuell).toMatch(/PulseHeroFlate/);
+    expect(visuell).toMatch(/planlagt=\{3\}/);
+    expect(visuell).toMatch(/paagaar=\{2\}/);
+    expect(visuell).toMatch(/ferdig=\{1\}/);
+    expect(visuell).toMatch(/teller=\{7\}/);
+    expect(visuell).toMatch(/teller="2 \/ 4"/);
+    expect(visuell).not.toMatch(/0 planlagt/);
   });
 
   it('Hjem er pulse-layout med På jobb-flis og ekte 0', () => {
@@ -139,11 +154,15 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
   });
 
   it('Oppretter-skall har Steg n av m for Kunde Tjeneste Ansatt Del Agent Forhandler', () => {
-    expect(les('../app/(app)/_shell/oppretter/oppretter-skuff.tsx')).toMatch(/Steg \{stegIndeks \+ 1\} av/);
+    expect(les('../app/(app)/_shell/oppretter/oppretter-skuff.tsx')).toMatch(
+      /Steg \{stegIndeks \+ 1\} av/,
+    );
     expect(les('../app/(app)/_shell/oppretter/agent-oppretter.tsx')).toMatch(/Ny assistent/);
     expect(les('../app/(app)/_shell/oppretter/forhandler-oppretter.tsx')).toMatch(/Ny forhandler/);
     expect(les('../app/(app)/kunder/_ny-kunde.tsx')).toMatch(/OppretterSkuff/);
-    expect(les('../app/(app)/innstillinger/tjenestekatalog/_ny-tjeneste.tsx')).toMatch(/OppretterSkuff/);
+    expect(les('../app/(app)/innstillinger/tjenestekatalog/_ny-tjeneste.tsx')).toMatch(
+      /OppretterSkuff/,
+    );
     expect(les('../app/(app)/organisasjon/_opprett-dialog.tsx')).toMatch(/OppretterSkuff/);
     expect(les('../app/(app)/lager/deler/_ny-del.tsx')).toMatch(/OppretterSkuff/);
   });
@@ -156,7 +175,11 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(ronny).toMatch(/title="Ronny"/);
     expect(ronny).toMatch(/AgentThinking/);
     expect(ronny).toMatch(/data-ronny-forslag/);
-    expect(ronny).not.toMatch(/data-ronny-sirkel/);
+    expect(ronny).toMatch(/RonnySirkel/);
+    expect(les('../app/(app)/_workshop/ronny-sirkel.tsx')).toMatch(/data-ronny-sirkel/);
+    expect(utenKommentarer(les('../app/(app)/_workshop/ronny-sirkel.tsx'))).not.toMatch(
+      /spin=\{|data-ronny-spin=/,
+    );
     expect(ronny).not.toMatch(/text-meta text-fg-muted.*TENKER_TEKST/);
   });
 

@@ -1,16 +1,16 @@
 'use client';
 
+import { Dropdown, DropdownItem, DropdownPopover, DropdownTrigger } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { Dropdown, DropdownItem, DropdownPopover, DropdownTrigger } from '@endwise/ui';
 import { isVerkstedInspectPath } from '../_lib/plattform';
 import { useOrgRole } from '../_lib/use-org-role';
-import { RONNY_PHONE_IDLE, RonnyBot, useRonnySpinn } from '../_workshop/ronny-bot';
+import { RONNY_PHONE_IDLE, RonnyBot } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
 import { InboxTopBar2 } from '../innboks/_top-bar2';
-import { destinasjonerForShell, delMobilDest, isItemActive, shellForBruker } from './nav';
+import { delMobilDest, destinasjonerForShell, isItemActive, shellForBruker } from './nav';
 import {
   PHONE_AVATAR_PX,
   PHONE_BAR2,
@@ -39,7 +39,6 @@ export function PhoneShell() {
   const { role, navn, epost, jobbfunksjon, isMechanic, erPlattform, isAdmin, shopEnabled } =
     useOrgRole();
   const { apen, apne, lukk } = useRonnySheet();
-  const { spin, trigg } = useRonnySpinn();
   const [sok, setSok] = useState('');
   const [sokApen, setSokApen] = useState(false);
   const [profilApen, setProfilApen] = useState(false);
@@ -139,16 +138,11 @@ export function PhoneShell() {
               aria-expanded={apen}
               className={PHONE_RONNY_SIRKEL}
               onClick={() => {
-                trigg();
                 if (apen) lukk();
                 else apne();
               }}
             >
-              <RonnyBot
-                size={ronnySizeForSirkel(PHONE_AVATAR_PX)}
-                spin={spin}
-                idleSett={RONNY_PHONE_IDLE}
-              />
+              <RonnyBot size={ronnySizeForSirkel(PHONE_AVATAR_PX)} idleSett={RONNY_PHONE_IDLE} />
             </button>
             <button
               type="button"
@@ -243,7 +237,9 @@ export function PhoneShell() {
                         data-phone-settings-fane={f.id}
                         aria-current={aktiv ? 'page' : undefined}
                         className={`shrink-0 border-b-2 pb-1 text-label ${
-                          aktiv ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
+                          aktiv
+                            ? 'border-fg font-[650] text-fg'
+                            : 'border-transparent text-fg-muted'
                         }`}
                       >
                         {f.label}

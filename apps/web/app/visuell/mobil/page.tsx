@@ -1,19 +1,34 @@
 'use client';
 
 import {
+  AgentThinking,
   DateCalendar,
   DatePicker,
   Drawer,
   DrawerBody,
   DrawerHeader,
+  FeltInput,
+  FeltKode,
   FilterChips,
+  Inbox,
   ListeRad,
+  Package,
   Seksjon,
   Side,
   StatusChip,
+  Users,
 } from '@endwise/ui';
 import { parseDate } from '@internationalized/date';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { osloVeggklokke } from '../../(app)/_lib/oslo-dag';
+import { pulsdagOverskrift, tallKortStats } from '../../(app)/_shell/phone-home-pulse';
+import {
+  PulseAnalyserKort,
+  PulseHeroFlate,
+  PulseJobbFlis,
+  PulseRadKort,
+} from '../../(app)/_shell/pulse-kort';
+import { RonnySirkelKnapp } from '../../(app)/_workshop/ronny-sirkel';
 
 const SIDER = [
   'hjem',
@@ -47,16 +62,7 @@ export default function VisuellMobil() {
         </header>
 
         <section data-mobil-side="hjem" className="border-border border-t pt-6">
-          <Side tittel="Verkstedet" undertekst="Tirsdag 3. nov">
-            <div data-kort className="ew-kort flex flex-col gap-3">
-              <p className="text-[18px] font-[650]">I dag</p>
-              <p className="text-[13px] text-fg-muted">0 planlagt · 0 pågår · 0 ferdig</p>
-              <StatusChip status="planlagt" />
-            </div>
-            <ListeRad tittel="Les alle siste meldinger" undertekst="Ingen uleste" hoyre="0" />
-            <ListeRad tittel="Venter på bestilling" undertekst="Ingen deler under minimum" hoyre="0" />
-            <ListeRad tittel="På jobb" undertekst="Ingen stempling" hoyre="0 / 0" />
-          </Side>
+          <VisuellHjemPulse />
         </section>
 
         <section data-mobil-side="innboks" className="border-border border-t pt-6">
@@ -173,6 +179,7 @@ export default function VisuellMobil() {
           <Side tittel="Lager" undertekst="48 deler">
             <ListeRad tittel="På lager" hoyre="120" chevron={false} />
             <ListeRad tittel="Tilgjengelig" hoyre="98" chevron={false} />
+            <ListeRad tittel="Reservert" hoyre="22" chevron={false} />
             <ListeRad tittel="Under minimum" hoyre="3" />
           </Side>
         </section>
@@ -187,10 +194,19 @@ export default function VisuellMobil() {
         <section data-mobil-side="organisasjon" className="border-border border-t pt-6">
           <Side tittel="Organisasjon" undertekst="Verkstedets oppsett">
             <ListeRad tittel="Ansatte" undertekst="Teamet, timeplan og hvem som har jobber i dag" />
+            <ListeRad tittel="Timeplan ansatte" undertekst="Uke og måned, syk og ferie" />
             <ListeRad tittel="Mekanikere" undertekst="Kompetanse og kapasitet" />
             <ListeRad tittel="Tilganger" undertekst="Hvem som får se hva" />
             <ListeRad tittel="Abonnement" undertekst="Plan, tillegg og priser" />
           </Side>
+        </section>
+
+        <section data-mobil-side="innlogging" className="border-border border-t pt-6">
+          <VisuellInnlogging />
+        </section>
+
+        <section data-mobil-side="ronny" className="border-border border-t pt-6">
+          <VisuellRonny />
         </section>
 
         <section data-mobil-side="skuff" className="border-border border-t pt-6">
@@ -204,6 +220,95 @@ export default function VisuellMobil() {
         <p className="px-4 text-[13px] text-fg-muted">{SIDER.length} flater</p>
       </div>
     </div>
+  );
+}
+
+function VisuellHjemPulse() {
+  const analyser = useMemo(
+    () =>
+      tallKortStats(
+        [
+          { id: '1', status: 'confirmed', startsAt: '2026-09-01T08:00:00' },
+          { id: '2', status: 'completed', startsAt: '2026-08-20T08:00:00' },
+          { id: '3', status: 'cancelled', startsAt: '2026-09-02T08:00:00' },
+        ],
+        new Date('2026-09-08T10:00:00'),
+      ),
+    [],
+  );
+  const dag = useMemo(() => pulsdagOverskrift(new Date('2026-09-08T10:00:00')), []);
+  const sirkelNaa = useMemo(() => osloVeggklokke('2026-09-08', 13, 30), []);
+  return (
+    <Side tittel="Verkstedet" undertekst={`${dag.ukedag} ${dag.dato}`}>
+      <div data-visuell-hjem-pulse className="flex flex-col gap-2.5 px-3">
+        <PulseHeroFlate
+          href="#idag"
+          ukedag={dag.ukedag}
+          dato={dag.dato}
+          planlagt={3}
+          paagaar={2}
+          ferdig={1}
+          lasterJobber={false}
+          avvik={2}
+          forespor={0}
+          sirkelNaa={sirkelNaa}
+        />
+        <PulseRadKort href="#innboks" ikon={Inbox} tittel="Les alle siste meldinger" teller={7} />
+        <PulseRadKort href="#lager" ikon={Package} tittel="Venter på bestilling" teller={3} />
+        <PulseAnalyserKort stats={analyser} href="#statistikk" forhandlerNavn="Nordvik MC" />
+        <div data-pulse-bunn className="flex w-full gap-3">
+          <div className="min-w-0 flex-1 basis-0">
+            <PulseRadKort href="#team" ikon={Users} tittel="På jobb" teller="2 / 4" kompakt />
+          </div>
+          <div className="min-w-0 flex-1 basis-0">
+            <PulseJobbFlis />
+          </div>
+        </div>
+      </div>
+    </Side>
+  );
+}
+
+function VisuellInnlogging() {
+  return (
+    <Side tittel="Innlogging" undertekst="Nesten der · OTP · felt">
+      <div data-visuell-innlogging className="flex flex-col gap-4 px-4">
+        <p className="text-center text-title font-[650] text-fg">Nesten der</p>
+        <FeltInput
+          id="visuell-epost"
+          storrelse="lg"
+          type="email"
+          label="E-post"
+          value="admin-a@verksted.test"
+          onChange={() => undefined}
+        />
+        <p className="text-label text-fg-muted">Fyll inn kode</p>
+        <FeltKode aria-label="Fyll inn kode" length={5} value="" onChange={() => undefined} />
+      </div>
+    </Side>
+  );
+}
+
+function VisuellRonny() {
+  const [apen, setApen] = useState(false);
+  return (
+    <Side tittel="Ronny" undertekst="Sticky sirkel + bunn-Drawer">
+      <div className="flex flex-col items-start gap-3 px-4">
+        <RonnySirkelKnapp
+          onClick={() => setApen(true)}
+          className="relative top-auto left-auto z-0 flex size-16 items-center justify-center rounded-full bg-[#c45c26] text-bg shadow-none"
+        />
+        <p className="text-[13px] text-fg-muted">Uten spinning. Overskrift bare «Ronny».</p>
+      </div>
+      <Drawer placement="bottom" isOpen={apen} onOpenChange={setApen} aria-label="Ronny">
+        <DrawerHeader title="Ronny" />
+        <DrawerBody className="px-3 pb-6">
+          <div data-ronny-tenker>
+            <AgentThinking label="Ronny tenker…" variant="wave" tone="primary" />
+          </div>
+        </DrawerBody>
+      </Drawer>
+    </Side>
   );
 }
 

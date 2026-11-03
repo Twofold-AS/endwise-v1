@@ -30,6 +30,7 @@ import { RonnyBot } from './ronny-bot';
 import { RonnyForminskIkon, RonnyForstorIkon } from './ronny-ikoner';
 import { RONNY_SHEET_RADIUS_PX, ronnySheetHoydePx, synligViewportHoyde } from './ronny-sheet';
 import { useRonnySheet } from './ronny-sheet-state';
+import { RonnySirkel } from './ronny-sirkel';
 import { sidekontekst } from './sidekontekst';
 
 const APPLE_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -303,6 +304,7 @@ export function WorkshopBloub() {
 
   return (
     <>
+      <RonnySirkel />
       <div className="md:hidden">
         <Drawer
           placement="bottom"
@@ -407,50 +409,56 @@ export function WorkshopBloub() {
         </Drawer>
       </div>
       {apen ? (
-      <div className="absolute inset-0 z-[60] hidden md:block" data-ronny-desktop>
-        <button
-          type="button"
-          data-ronny-desktop-scrim
-          aria-label="Lukk Ronny"
-          className="absolute inset-0 bg-fg/15"
-          onClick={lukk}
-        />
-        <aside
-          data-ronny-desktop-panel
-          data-ronny-flate
-          className="absolute inset-y-0 right-0 z-10 flex w-full max-w-[400px] flex-col overflow-hidden bg-surface text-fg"
-          role="dialog"
-          aria-label="Ronny"
-        >
-          <div
-            data-ronny-desktop-header
-            className="flex h-row shrink-0 items-center justify-between px-3"
+        <div className="absolute inset-0 z-[60] hidden md:block" data-ronny-desktop>
+          <button
+            type="button"
+            data-ronny-desktop-scrim
+            aria-label="Lukk Ronny"
+            className="absolute inset-0 bg-fg/15"
+            onClick={lukk}
+          />
+          <aside
+            data-ronny-desktop-panel
+            data-ronny-flate
+            className="absolute inset-y-0 right-0 z-10 flex w-full max-w-[400px] flex-col overflow-hidden bg-surface text-fg"
+            role="dialog"
+            aria-label="Ronny"
           >
-            <div className="flex min-w-0 items-center gap-2">
-              <RonnyBot size={28} />
-              <span className="truncate text-title text-fg">Ronny</span>
-            </div>
-            <button type="button" data-ronny-lukk aria-label="Lukk" className={HIT} onClick={lukk}>
-              <X size={18} strokeWidth={2} />
-            </button>
-          </div>
-          <div data-workshop-dock className="flex min-h-0 flex-1 flex-col bg-surface text-fg">
             <div
-              data-ronny-svar-kort
-              className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-fg"
+              data-ronny-desktop-header
+              className="flex h-row shrink-0 items-center justify-between px-3"
             >
-              {loggUtsnitt(desktopLoggRef)}
+              <div className="flex min-w-0 items-center gap-2">
+                <RonnyBot size={28} />
+                <span className="truncate text-title text-fg">Ronny</span>
+              </div>
+              <button
+                type="button"
+                data-ronny-lukk
+                aria-label="Lukk"
+                className={HIT}
+                onClick={lukk}
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
             </div>
-            <div
-              data-ronny-composer
-              data-ronny-prompt-flate
-              className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
-            >
-              <div className="relative px-3 pt-1.5 pb-3">{promptKort()}</div>
+            <div data-workshop-dock className="flex min-h-0 flex-1 flex-col bg-surface text-fg">
+              <div
+                data-ronny-svar-kort
+                className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent pt-1 text-fg"
+              >
+                {loggUtsnitt(desktopLoggRef)}
+              </div>
+              <div
+                data-ronny-composer
+                data-ronny-prompt-flate
+                className="relative w-full shrink-0 overflow-hidden rounded-none bg-transparent"
+              >
+                <div className="relative px-3 pt-1.5 pb-3">{promptKort()}</div>
+              </div>
             </div>
-          </div>
-        </aside>
-      </div>
+          </aside>
+        </div>
       ) : null}
     </>
   );

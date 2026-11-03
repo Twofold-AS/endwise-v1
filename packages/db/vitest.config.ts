@@ -45,6 +45,8 @@ export default defineConfig({
       'test/p1-residual-owner-write.test.ts',
       // #121 RETURNING — eier-SELECT/revoke på invitations.
       'test/invitations-owner-returning.test.ts',
+      // F16 / white label F0 — branding, koder, tillatelser, RLS-skisse.
+      'test/white-label-f0-kontrakt.test.ts',
     ],
     // RLS-testene deler DB-tilstand — serielt, ikke parallelt.
     fileParallelism: false,

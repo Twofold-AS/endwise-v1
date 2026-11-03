@@ -166,7 +166,8 @@ invitasjon.post('/:token/send-kode', async (c) => {
         .from(schema.invitationCodes)
         .where(eq(schema.invitationCodes.invitationId, inv.id))
         .limit(1);
-      if (!kanSendeKode(eks ?? null, now)) return { sendt: false as const, begrenset: true as const };
+      if (!kanSendeKode(eks ?? null, now))
+        return { sendt: false as const, begrenset: true as const };
       const generert = genererInvitasjonskode({});
       const vindu = nesteSendVindu(eks ?? null, now);
       await tx

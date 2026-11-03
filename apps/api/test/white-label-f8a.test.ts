@@ -23,8 +23,8 @@ vi.mock('@endwise/modules/invitasjoner', async (importOriginal) => {
   };
 });
 
-import { handleHono } from '../src/http/hono.ts';
 import { INVITASJON_SAMME_FEIL } from '@endwise/modules/invitasjon-kode';
+import { handleHono } from '../src/http/hono.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
 const FLAG = 'ENDWISE_WHITE_LABEL';
@@ -153,7 +153,10 @@ describe('F27 / white label F8a: send-kode og godta', () => {
 
   it('GET kaller ikke sendEmail og har ingen sideeffekt', () => {
     const rute = readFileSync(resolve(her, '../src/routes/invitasjon.ts'), 'utf8');
-    const get = rute.slice(rute.indexOf("invitasjon.get('/:token'"), rute.indexOf("invitasjon.post('/:token/send-kode'"));
+    const get = rute.slice(
+      rute.indexOf("invitasjon.get('/:token'"),
+      rute.indexOf("invitasjon.post('/:token/send-kode'"),
+    );
     expect(get).not.toMatch(/sendEmail/);
     expect(get).not.toMatch(/genererInvitasjonskode/);
     expect(get).toMatch(/kreverKode: erWhiteLabelAktiv\(\)/);

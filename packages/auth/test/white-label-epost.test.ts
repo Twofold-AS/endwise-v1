@@ -34,8 +34,11 @@ describe('F20 / white label F4: merke og avsender', () => {
     expect(html).not.toMatch(/alt="Endwise"/);
     expect(html).not.toContain('Sendt via Endwise');
     expect(html).not.toContain('cid:');
-    const utenFot = html.replace('Levert av Endwise', '').replace(/<!--[\s\S]*?-->/g, '');
-    expect(utenFot).not.toMatch(/Endwise/);
+    const fotMerkelapp = 'Levert av Endwise';
+    const fot = html.lastIndexOf(fotMerkelapp);
+    expect(fot).toBeGreaterThan(-1);
+    expect(html.slice(0, fot)).not.toMatch(/Endwise/);
+    expect(html.slice(fot + fotMerkelapp.length)).not.toMatch(/Endwise/);
   });
 
   it('ansatt-e-post forblir Endwise-merket', () => {

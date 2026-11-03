@@ -10,6 +10,7 @@ import {
   navHarOmrade,
   nivaDekker,
   OMRADER,
+  OMRADER_NAVN,
   TILLATELSE_FEIL,
   TILLATELSE_HINT,
   vurderTildeling,
@@ -56,6 +57,9 @@ describe('F23 / white label F6a: tillatelser', () => {
     expect(TILLATELSE_HINT).toBe('Spør daglig leder');
     expect([...OMRADER]).toEqual([...TILLATELSE_OMRADER]);
     expect([...NIVA]).toEqual([...TILLATELSE_NIVA]);
+    expect(OMRADER_NAVN.bookinger).toBe('Bookinger');
+    expect(OMRADER_NAVN.tjenester).toBe('Tjenester og priser');
+    expect(OMRADER.every((o) => OMRADER_NAVN[o])).toBe(true);
     expect(LAGER_NIVA.se).toContain('listParts');
     expect(LAGER_NIVA.endre).toContain('move');
     expect(navHarOmrade({ rolle: 'dealer_staff', omrade: 'kunder', gitt: null })).toBe(true);

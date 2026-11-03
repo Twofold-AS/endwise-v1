@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F30 White label F9 (ansatte og tilganger UI)
+
+**Type:** ny fase. Se/Endre-matrise på Organisasjon › Tilganger. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F30**. **F30-01** `done`. TOTP, deaktivert-ikke-skjult, Oppretter, endringslogg. ⛔ F10. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F26 White label F7 (Privat/Bedrift)
 
 **Type:** ny fase. Felles innlogging og Privat/Bedrift bak flagg. Ingen ny UI-pakke. Ingen techstack-endring.

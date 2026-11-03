@@ -1313,6 +1313,10 @@ const ROADMAP = [
   { id:"F29-01", o:"Bygg frivillig overføring, stedfortreder og nødvei bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F8c. <code>overfor_daglig_leder</code> SECURITY DEFINER: gammel leder → ansatt først, så ny leder, slett sesjoner. Frivillig krever TOTP og at ny leder har 2FA. Stedfortreder kan bare starte nød. Nød: to <code>endwise_admin</code>, 7 dagers varsel, audit <code>owner.transfer_*</code>. Bak <code>ENDWISE_WHITE_LABEL</code>.",
     area:"sikkerhet", ui:"partial", status:"done" },
 ]},
+{ phase:"F30", title:"White label — ansatte og tilganger UI (plan F9)", target:"Etter F29", items:[
+  { id:"F30-01", o:"Bygg Se/Endre-matrise for ansatte bak flagg", kat:"forhandler", t:"⭐ <b>03.11.2026:</b> Plan F9. Organisasjon › Tilganger: per ansatt og område (Se/Endre/Ingen) via <code>tillatelse.liste</code>/<code>sett</code>. TOTP. Ingen kan heve seg selv. Daglig leder har alle tilganger (deaktivert). Handling deaktivert, ikke skjult. Invitasjon via Oppretter. Endringslogg + lenke til Aktivitet fra Endwise. ⛔ <code>#0066ff</code>. Bak <code>ENDWISE_WHITE_LABEL</code>.",
+    area:"admin", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================

@@ -1,5 +1,15 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { and, type Database, desc, eq, inArray, isNull, schema, sql, withTenant } from '@endwise/db';
+import {
+  and,
+  type Database,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  schema,
+  sql,
+  withTenant,
+} from '@endwise/db';
 import { MAX_FORSOK } from '../invitasjon-kode/index.ts';
 import {
   erPlattformTenant,

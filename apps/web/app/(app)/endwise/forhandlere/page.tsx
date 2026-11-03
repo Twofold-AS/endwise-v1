@@ -358,9 +358,7 @@ export default function ForhandlerePage() {
                         <button
                           type="button"
                           disabled={
-                            sendPaNytt.isPending ||
-                            t.eierInviteStatus === 'brukt' ||
-                            !t.eierEpost
+                            sendPaNytt.isPending || t.eierInviteStatus === 'brukt' || !t.eierEpost
                           }
                           title={
                             t.eierInviteStatus === 'brukt'

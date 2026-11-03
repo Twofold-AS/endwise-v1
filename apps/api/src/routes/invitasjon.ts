@@ -1,9 +1,18 @@
 import { randomUUID } from 'node:crypto';
-import { rolleKrever2FA } from '@endwise/auth';
-import { and, eq, schema, withTenant } from '@endwise/db';
+import { harBedriftCsrf, rolleKrever2FA, sendEmail } from '@endwise/auth';
+import { and, eq, schema, sql, withTenant } from '@endwise/db';
+import {
+  genererInvitasjonskode,
+  INVITASJON_SAMME_FEIL,
+  kanSendeKode,
+  nesteAntallForsoek,
+  nesteSendVindu,
+  vurderInvitasjonskode,
+} from '@endwise/modules/invitasjon-kode';
 import { type ApenInvitasjon, createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
 import { erPlattformTenant } from '@endwise/modules/plattform';
 import { tildelAnsattFarge } from '@endwise/modules/profil';
+import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createAppContext } from '../context.ts';
@@ -120,20 +129,177 @@ invitasjon.get('/:token', async (c) => {
     harKonto: Boolean(eksisterende),
     krever2FA,
     kreverPassord: false,
+    kreverKode: erWhiteLabelAktiv(),
   });
+});
+
+function krevInvitasjonCsrf(c: { req: { raw: Request } }): boolean {
+  if (!erWhiteLabelAktiv()) return true;
+  return harBedriftCsrf(c.req.raw.headers);
+}
+
+invitasjon.post('/:token/send-kode', async (c) => {
+  if (!krevInvitasjonCsrf(c)) {
+    return c.json({ ok: true }, 200);
+  }
+  if (!erWhiteLabelAktiv()) {
+    return c.json({ ok: true }, 200);
+  }
+  const modul = createInvitasjonsmodul(db());
+  let inv: ApenInvitasjon | null;
+  try {
+    inv = await modul.finnApen(c.req.param('token'));
+  } catch (error) {
+    loggOppslagFeil(error);
+    return c.json({ ok: true }, 200);
+  }
+  if (!inv) return c.json({ ok: true }, 200);
+
+  try {
+    const now = new Date();
+    const utfall = await withTenant(db(), inv.tenantId, async (tx) => {
+      const [eks] = await tx
+        .select({
+          sendCount: schema.invitationCodes.sendCount,
+          windowStartedAt: schema.invitationCodes.windowStartedAt,
+        })
+        .from(schema.invitationCodes)
+        .where(eq(schema.invitationCodes.invitationId, inv.id))
+        .limit(1);
+      if (!kanSendeKode(eks ?? null, now)) return { sendt: false as const, begrenset: true as const };
+      const generert = genererInvitasjonskode({});
+      const vindu = nesteSendVindu(eks ?? null, now);
+      await tx
+        .insert(schema.invitationCodes)
+        .values({
+          invitationId: inv.id,
+          tenantId: inv.tenantId,
+          codeHash: generert.hash,
+          codeSalt: generert.salt,
+          attempts: 0,
+          expiresAt: generert.expiresAt,
+          usedAt: null,
+          sentAt: now,
+          sendCount: vindu.sendCount,
+          windowStartedAt: vindu.windowStartedAt,
+        })
+        .onConflictDoUpdate({
+          target: schema.invitationCodes.invitationId,
+          set: {
+            codeHash: generert.hash,
+            codeSalt: generert.salt,
+            attempts: 0,
+            expiresAt: generert.expiresAt,
+            usedAt: null,
+            sentAt: now,
+            sendCount: vindu.sendCount,
+            windowStartedAt: vindu.windowStartedAt,
+          },
+        });
+      return { sendt: true as const, kode: generert.kode };
+    });
+    if (utfall.sendt) {
+      await sendEmail({
+        to: inv.epost,
+        subject: 'Koden din til Endwise-invitasjonen',
+        text: `Koden din er ${utfall.kode}. Den gjelder i 10 minutter og kan brukes én gang.`,
+      });
+      await withTenant(db(), inv.tenantId, (tx) =>
+        tx.insert(schema.auditLog).values({
+          tenantId: inv.tenantId,
+          actor: 'system',
+          action: 'invitation.code_sent',
+          subjectType: 'invitation',
+          subjectId: inv.id,
+        }),
+      );
+    } else if (utfall.begrenset) {
+      await withTenant(db(), inv.tenantId, (tx) =>
+        tx.insert(schema.auditLog).values({
+          tenantId: inv.tenantId,
+          actor: 'system',
+          action: 'invitation.code_rate_limited',
+          subjectType: 'invitation',
+          subjectId: inv.id,
+        }),
+      );
+    }
+  } catch {
+    // Samme 200. Ingen enumerering.
+  }
+  return c.json({ ok: true }, 200);
 });
 
 const godtaKropp = z.object({
   token: z.string().min(10),
   navn: z.string().trim().min(2).max(120),
+  kode: z.string().min(6).max(12).optional(),
 });
+
+type InvitasjonTx = Parameters<Parameters<typeof withTenant>[2]>[0];
+
+/**
+ * Låser kode-raden (FOR UPDATE), vurderer, øker forsøk eller merker brukt.
+ * Feil committes (ikke throw) så forsøkstelleren overlever.
+ */
+async function brukInvitasjonskode(
+  tx: InvitasjonTx,
+  invitationId: string,
+  kode: string | undefined,
+): Promise<{ ok: true } | { ok: false; attempts: number }> {
+  await tx.execute(
+    sql`select id from invitation_codes where invitation_id = ${invitationId}::uuid for update`,
+  );
+  const [rad] = await tx
+    .select({
+      codeHash: schema.invitationCodes.codeHash,
+      codeSalt: schema.invitationCodes.codeSalt,
+      attempts: schema.invitationCodes.attempts,
+      expiresAt: schema.invitationCodes.expiresAt,
+      usedAt: schema.invitationCodes.usedAt,
+    })
+    .from(schema.invitationCodes)
+    .where(eq(schema.invitationCodes.invitationId, invitationId))
+    .limit(1);
+  if (!rad || !kode) {
+    if (rad) {
+      const attempts = nesteAntallForsoek(rad.attempts);
+      await tx
+        .update(schema.invitationCodes)
+        .set({ attempts })
+        .where(eq(schema.invitationCodes.invitationId, invitationId));
+      return { ok: false, attempts };
+    }
+    return { ok: false, attempts: 0 };
+  }
+  let vurdering: ReturnType<typeof vurderInvitasjonskode>;
+  try {
+    vurdering = vurderInvitasjonskode(kode, rad);
+  } catch {
+    return { ok: false, attempts: rad.attempts };
+  }
+  if (!vurdering.ok) {
+    const attempts = nesteAntallForsoek(rad.attempts);
+    await tx
+      .update(schema.invitationCodes)
+      .set({ attempts })
+      .where(eq(schema.invitationCodes.invitationId, invitationId));
+    return { ok: false, attempts };
+  }
+  await tx
+    .update(schema.invitationCodes)
+    .set({ usedAt: new Date() })
+    .where(eq(schema.invitationCodes.invitationId, invitationId));
+  return { ok: true };
+}
 
 /**
  * POST — godta invitasjonen.
- * Én transaksjon (withTenant): bruker → medlem → member_profiles →
- * consume_invitation sist. Feiler profil-INSERT, rulles alt tilbake —
- * invitasjonen forblir åpen. Klienten kan prøve igjen. Aldri 410 etter
- * delvis skriving.
+ * Én transaksjon (withTenant): ev. kode (FOR UPDATE) → bruker → medlem →
+ * member_profiles → consume_invitation sist. Feiler profil-INSERT, rulles
+ * alt tilbake — invitasjonen forblir åpen. Klienten kan prøve igjen. Aldri
+ * 410 etter delvis skriving.
+ * Feil kode committes (forsøk++) uten å opprette bruker.
  * consume_invitation setter app.invitation_hash (is_local). withTenant
  * setter app.tenant_id. De krysser ikke. Nøstet withTenant er forbudt
  * (tenantTxGate).
@@ -142,6 +308,13 @@ invitasjon.post('/godta', async (c) => {
   const parsed = godtaKropp.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) {
     return c.json({ error: 'Ugyldig forespørsel. Navn kreves.' }, 400);
+  }
+
+  if (erWhiteLabelAktiv() && !krevInvitasjonCsrf(c)) {
+    return c.json({ error: INVITASJON_SAMME_FEIL }, 410);
+  }
+  if (erWhiteLabelAktiv() && !parsed.data.kode) {
+    return c.json({ error: INVITASJON_SAMME_FEIL }, 410);
   }
 
   const modul = createInvitasjonsmodul(db());
@@ -153,7 +326,7 @@ invitasjon.post('/godta', async (c) => {
     return c.json({ error: INVITASJON_HENT_FEILET }, 500);
   }
   if (!inv) {
-    return c.json({ error: 'Invitasjonen er ugyldig, brukt eller utløpt.' }, 410);
+    return c.json({ error: INVITASJON_SAMME_FEIL }, 410);
   }
 
   if (inv.kind === 'platform') {
@@ -171,6 +344,13 @@ invitasjon.post('/godta', async (c) => {
 
   try {
     const resultat = await withTenant(db(), inv.tenantId, async (tx) => {
+      if (erWhiteLabelAktiv()) {
+        const kodeSjekk = await brukInvitasjonskode(tx, inv.id, parsed.data.kode);
+        if (!kodeSjekk.ok) {
+          return { type: 'kode-feil' as const, attempts: kodeSjekk.attempts };
+        }
+      }
+
       const [eksisterende] = await tx
         .select({ id: schema.user.id })
         .from(schema.user)
@@ -258,8 +438,40 @@ invitasjon.post('/godta', async (c) => {
       const forbrukt = await modul.forbruk(parsed.data.token, tx);
       if (!forbrukt) throw new InvitasjonAlleredeBruktError();
 
-      return { userId, nyKonto: !eksisterende };
+      return { type: 'ok' as const, userId, nyKonto: !eksisterende };
     });
+
+    if (resultat.type === 'kode-feil') {
+      try {
+        await withTenant(db(), inv.tenantId, (tx) =>
+          tx.insert(schema.auditLog).values({
+            tenantId: inv.tenantId,
+            actor: 'system',
+            action: 'invitation.code_failed',
+            subjectType: 'invitation',
+            subjectId: inv.id,
+            metadata: { attempts: resultat.attempts },
+          }),
+        );
+      } catch {
+        // Samme feil ut. Audit må ikke endre svaret.
+      }
+      return c.json({ error: INVITASJON_SAMME_FEIL }, 410);
+    }
+
+    try {
+      await withTenant(db(), inv.tenantId, (tx) =>
+        tx.insert(schema.auditLog).values({
+          tenantId: inv.tenantId,
+          actor: 'system',
+          action: 'invitation.used',
+          subjectType: 'invitation',
+          subjectId: inv.id,
+        }),
+      );
+    } catch {
+      // Kontoen er opprettet. Audit-feil skal ikke gi 500.
+    }
 
     if (inv.kind !== 'platform') {
       try {
@@ -277,7 +489,7 @@ invitasjon.post('/godta', async (c) => {
     });
   } catch (error) {
     if (error instanceof InvitasjonAlleredeBruktError) {
-      return c.json({ error: 'Invitasjonen er ugyldig, brukt eller utløpt.' }, 410);
+      return c.json({ error: INVITASJON_SAMME_FEIL }, 410);
     }
     loggGodtaFeil(error);
     return c.json({ error: 'Kontoen kunne ikke opprettes. Prøv igjen.' }, 500);

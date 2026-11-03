@@ -1301,6 +1301,10 @@ const ROADMAP = [
   { id:"F26-01", o:"Bygg felles innlogging, kontekst Privat/Bedrift og Bedrift-porter bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F7 (Mons-review). <code>session.kontekst</code> + Bedrift-vindu 30 min/10 t. Dest på forhandlervert er tenant-kjent (ansatt eller kunde). Konto ved kode, <code>customers.userId</code>. <code>/logg-inn</code> og <code>/velg</code>. Bytt til Bedrift krever fersk TOTP og roterer token. Bedrift-API krever CSRF-header. Ingen sesjon krysser forhandlere. Sensitive handlinger (tillatelse, slett kunde) krever TOTP. Bak <code>ENDWISE_WHITE_LABEL</code>.",
     area:"auth", ui:"partial", status:"done" },
 ]},
+{ phase:"F27", title:"White label — invitasjon lenke så kode (plan F8a)", target:"Etter F26 / Mons-review", items:[
+  { id:"F27-01", o:"Bygg Send meg kode, HMAC-kode og atomisk godta bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F8a (Mons-review). GET uten sideeffekt. <code>POST /:token/send-kode</code> med CSRF, 3/time, alltid 200. Kode 8 tegn / 10 min / 5 forsøk, HMAC-pepper. Ny kode dreper gammel. Godta krever kode i samme tx som <code>consume_invitation</code> (FOR UPDATE). Samme feil for feil/utløpt/brukt/låst. <code>no-referrer</code>, token ut av URL. Audit <code>code_sent</code>/<code>code_rate_limited</code>/<code>code_failed</code>/<code>used</code>. Bak <code>ENDWISE_WHITE_LABEL</code>.",
+    area:"auth", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================

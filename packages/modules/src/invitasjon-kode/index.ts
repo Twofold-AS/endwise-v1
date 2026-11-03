@@ -13,7 +13,10 @@ export const KODE_TEGN_ANBEFALT = 8;
 export const KODE_GYLDIGHET_MS = 10 * 60 * 1000;
 export const KODE_GYLDIGHET_MAX_MS = 15 * 60 * 1000;
 export const MAX_FORSOK = 5;
+export const SEND_MAX_PER_TIME = 3;
+export const SEND_VINDU_MS = 60 * 60 * 1000;
 export const PEPPER_ENV = 'INVITASJON_KODE_PEPPER';
+export const INVITASJON_SAMME_FEIL = 'Invitasjonen er ugyldig, brukt eller utløpt.';
 
 /** Lettlest alfabet uten 0/O/1/I. Lengde 32 = jevnt 5 bit. */
 const ALFABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -131,4 +134,23 @@ export function nesteAntallForsoek(attempts: number): number {
 
 export function erKodeLaast(attempts: number): boolean {
   return attempts >= MAX_FORSOK;
+}
+
+export function kanSendeKode(
+  rad: { sendCount: number; windowStartedAt: Date | null } | null,
+  now: Date = new Date(),
+): boolean {
+  if (!rad?.windowStartedAt) return true;
+  if (now.getTime() - rad.windowStartedAt.getTime() >= SEND_VINDU_MS) return true;
+  return rad.sendCount < SEND_MAX_PER_TIME;
+}
+
+export function nesteSendVindu(
+  rad: { sendCount: number; windowStartedAt: Date | null } | null,
+  now: Date = new Date(),
+): { sendCount: number; windowStartedAt: Date } {
+  if (!rad?.windowStartedAt || now.getTime() - rad.windowStartedAt.getTime() >= SEND_VINDU_MS) {
+    return { sendCount: 1, windowStartedAt: now };
+  }
+  return { sendCount: rad.sendCount + 1, windowStartedAt: rad.windowStartedAt };
 }

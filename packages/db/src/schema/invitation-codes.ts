@@ -26,6 +26,8 @@ export const invitationCodes = pgTable(
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     usedAt: timestamp('used_at', { withTimezone: true }),
     sentAt: timestamp('sent_at', { withTimezone: true }),
+    sendCount: integer('send_count').notNull().default(0),
+    windowStartedAt: timestamp('window_started_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
   },
   (t) => [

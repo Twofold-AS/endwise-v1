@@ -62,6 +62,9 @@ export function KundeSkall({
           >
             Kvitteringer
           </a>
+          <a href="/mine-data" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
+            Mine data
+          </a>
           <a href="/min-side" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
             Min side
           </a>

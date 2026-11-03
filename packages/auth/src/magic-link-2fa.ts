@@ -14,6 +14,7 @@ import {
   MAGIC_LINK_TOTP_QUERY,
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
+import { sendVelkomstEtterKnytning } from './senders/velkomst.ts';
 
 /**
  * Better-Auths twoFactor-plugin lytter bare på `/sign-in/email` (osv.).
@@ -181,7 +182,12 @@ export function createMagicLink2faEtterHook(db?: Database) {
       let harRolle = false;
       if (tenantId && db) {
         harRolle = await harForhandlerRolle(db, data.user.id, tenantId);
-        await knyttKundeUser(db, tenantId, data.user.id, data.user.email).catch(() => null);
+        const kundeId = await knyttKundeUser(db, tenantId, data.user.id, data.user.email).catch(
+          () => null,
+        );
+        if (kundeId) {
+          await sendVelkomstEtterKnytning(db, tenantId, kundeId).catch(() => null);
+        }
         try {
           await db
             .update(schema.session)

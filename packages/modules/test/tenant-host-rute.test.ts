@@ -63,6 +63,14 @@ describe('F18 / white label F2: ruteFraSone', () => {
       ruteFraSone({
         sone: 'forhandler',
         slug: 'bergen',
+        path: '/mine-data',
+        kontekst: null,
+      }),
+    ).toEqual({ type: 'rewrite', dest: '/_kunde/bergen/mine-data' });
+    expect(
+      ruteFraSone({
+        sone: 'forhandler',
+        slug: 'bergen',
         path: '/signin',
         kontekst: null,
       }),

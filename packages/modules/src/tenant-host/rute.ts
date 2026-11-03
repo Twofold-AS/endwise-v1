@@ -13,6 +13,8 @@ export const KUNDE_STIER = [
   '/meldinger',
   '/deler',
   '/kvitteringer',
+  '/mine-data',
+  '/personvern',
 ] as const;
 
 export type VertKontekst = 'privat' | 'bedrift';

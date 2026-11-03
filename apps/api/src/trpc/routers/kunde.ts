@@ -290,4 +290,37 @@ export const kundeRouter = router({
     await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
     return [] as Array<{ id: string; tittel: string; tid: Date }>;
   }),
+
+  /** F35 / F12 — art. 15. Bare kundens egne rader. */
+  mineData: customerProcedure.query(async ({ ctx }) => {
+    const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+    return withCustomer(ctx.db, ctx.tenantId, kunde.id, async (tx) => {
+      const bookinger = await tx
+        .select({
+          id: schema.bookings.id,
+          status: schema.bookings.status,
+          startsAt: schema.bookings.startsAt,
+        })
+        .from(schema.bookings)
+        .where(eq(schema.bookings.customerId, kunde.id));
+      const kjoretoy = await tx
+        .select({
+          id: schema.vehicles.id,
+          type: schema.vehicles.type,
+          regNumber: schema.vehicles.regNumber,
+        })
+        .from(schema.vehicles)
+        .where(eq(schema.vehicles.customerId, kunde.id));
+      const traader = await tx
+        .select({ id: schema.threads.id, subject: schema.threads.subject })
+        .from(schema.threads)
+        .where(eq(schema.threads.customerId, kunde.id));
+      return {
+        kunde: { navn: kunde.navn, epost: kunde.epost, telefon: kunde.telefon },
+        bookinger,
+        kjoretoy,
+        traader,
+      };
+    });
+  }),
 });

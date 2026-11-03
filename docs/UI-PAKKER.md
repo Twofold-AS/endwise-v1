@@ -870,6 +870,8 @@ Kun disse. Hver enkelt har en grunn.
 
 | Kundeportal deler/kvitteringer (`apps/web/app/%5Fkunde/_lib/butikk.tsx`, F34-01 / plan F11c) | **Ingen ny pakke.** `TomFlate` + `DeaktivertHandling` (Kjøp/Vipps). Egen kode fordi shop er blokkert (F10-03) — ingen kasse å bygge. ⛔ `#0066ff`. |
 
+| GDPR-innsyn (`apps/web/app/%5Fkunde/_lib/innsyn.tsx`, F35-01 / plan F12) | **Ingen ny pakke.** `ListeRad` + `Seksjon` + `TomFlate`. Egen kode fordi ingen pakke dekker «art. 15-eksport av egne rader». ⛔ `#0066ff`. |
+
 | Transaksjonell e-post (`packages/auth/src/senders/epost-mal.ts`, `toolkit-resend/src/epost-html.ts`) | **Ingen ny pakke, og ingen react-email.** Techstack er Resend + tabell-HTML (Outlook/Gmail). shadcn/beUI kan ikke brukes i innboksen. **Login-e-post (08.09 Mobbin):** `byggInnloggingsEpostHtml` — alltid hvit `#ffffff`, ink `#141414`, svart cid-logo, tykk «Hei {navn}», stor 5-sifret kode, understreket «lenka». Ingen Action Blue-CTA. Andre maler (invite, bytte, innboks) beholdt Apple-skallet: parchment `#f5f5f7`, Action Blue-pille `#0066cc`. ⛔ Ikke mørk chrome, ikke Synara, ikke Linear-lime. |
 
 | `ToFaktorRad` (`apps/web/app/(app)/_shell/`) | **Ingen ny pakke.** `ByttPassordSkjema` er fjernet 01.09.2026. 2FA-status (F1-20) og slå-av uten passord (F1-22) er `StatefulButton` + token-rad i `_shell/profil-kort.tsx` (Settings › Profil og mekanikerens «Meg»). Gjenopprettingskoder (F1-21) vises på `/2fa-oppsett`. |

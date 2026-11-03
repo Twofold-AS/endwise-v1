@@ -1,0 +1,103 @@
+import type { VertSone } from './opplos.ts';
+
+/** Kundesidens stier. Må ikke kollidere med (app). */
+export const KUNDE_STIER = ['/', '/bestill', '/min-side', '/logg-inn', '/velg'] as const;
+
+export type VertKontekst = 'privat' | 'bedrift';
+
+export type VertRute = { type: 'next' } | { type: 'rewrite'; dest: string } | { type: 'not-found' };
+
+const API_PREFIKS = ['/api/', '/trpc/', '/stream/'];
+const STATISK_PREFIKS = ['/_next/', '/logo/', '/favicon'];
+
+export function erKundeSti(path: string): boolean {
+  const p = normaliserSti(path);
+  return (KUNDE_STIER as readonly string[]).includes(p);
+}
+
+export function normaliserSti(path: string): string {
+  if (!path || path === '/') return '/';
+  const utenQuery = path.split('?')[0] ?? path;
+  if (utenQuery.length > 1 && utenQuery.endsWith('/')) return utenQuery.slice(0, -1);
+  return utenQuery;
+}
+
+export function erApiEllerStatisk(path: string): boolean {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  if (API_PREFIKS.some((x) => p.startsWith(x))) return true;
+  if (STATISK_PREFIKS.some((x) => p.startsWith(x))) return true;
+  if (p === '/favicon.ico' || p === '/manifest.webmanifest' || p === '/robots.txt') return true;
+  return false;
+}
+
+export function erAuthSti(path: string): boolean {
+  const p = normaliserSti(path);
+  return (
+    p === '/signin' ||
+    p.startsWith('/signin/') ||
+    p === '/2fa-oppsett' ||
+    p.startsWith('/2fa-oppsett/') ||
+    p.startsWith('/api/auth/')
+  );
+}
+
+/**
+ * Ingen DB. Proxyen bruker denne til rewrite/404.
+ * Ukjent/reservert → nøytral 404-rute uten slug.
+ * Forhandler + (app)-sti uten Bedrift → /logg-inn.
+ */
+/** Nøytral 404 uten slug. Brukes av proxyen — ingen DB. */
+export const UKJENT_KUNDE_STI = '/_kunde/_ukjent';
+
+export function ruteFraSone(input: {
+  sone: VertSone;
+  slug: string | null;
+  path: string;
+  kontekst: VertKontekst | null;
+}): VertRute {
+  const path = normaliserSti(input.path);
+  if (erApiEllerStatisk(input.path)) return { type: 'next' };
+
+  if (input.sone === 'marked') return { type: 'next' };
+
+  if (input.sone === 'platform') {
+    if (path === '/_plattform' || path.startsWith('/_plattform/')) return { type: 'next' };
+    // F5 flytter admin hit. F2 er stub: alt på platform-verten → /_plattform.
+    return { type: 'rewrite', dest: '/_plattform' };
+  }
+
+  if (input.sone === 'reservert' || input.sone === 'ukjent') {
+    return { type: 'not-found' };
+  }
+
+  const slug = input.slug;
+  if (!slug) return { type: 'not-found' };
+
+  if (path.startsWith('/_kunde') || path.startsWith('/_plattform')) {
+    return { type: 'not-found' };
+  }
+
+  const internKunde = path === '/signin' ? '/logg-inn' : path;
+  if (erKundeSti(internKunde) || internKunde === '/logg-inn') {
+    const dest = internKunde === '/' ? `/_kunde/${slug}` : `/_kunde/${slug}${internKunde}`;
+    return { type: 'rewrite', dest };
+  }
+
+  if (input.kontekst === 'bedrift') return { type: 'next' };
+
+  return { type: 'rewrite', dest: `/_kunde/${slug}/logg-inn` };
+}
+
+/**
+ * Preview/dev: ?kontekst=bedrift eller x-endwise-kontekst.
+ * Produksjon ignorerer query/header — sesjon kommer i F7.
+ */
+export function lesKontekst(
+  verdi: string | null | undefined,
+  vercelEnv: string | undefined,
+): VertKontekst | null {
+  const v = verdi?.trim().toLowerCase();
+  if (v !== 'bedrift' && v !== 'privat') return null;
+  if (vercelEnv === 'production') return null;
+  return v;
+}

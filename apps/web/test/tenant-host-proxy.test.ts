@@ -1,58 +1,109 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { NextRequest } from 'next/server';
 import { describe, expect, it } from 'vitest';
 import { config, proxy } from '../proxy.ts';
+
+const her = dirname(fileURLToPath(import.meta.url));
 
 function req(url: string, host: string, extra?: HeadersInit): NextRequest {
   return new NextRequest(url, { headers: { host, ...extra } });
 }
 
-describe('F16 / white label F0: proxy tenant-host', () => {
-  it('matcher er uendret — bare auth-stier', () => {
-    expect(config.matcher).toEqual([
-      '/signin',
-      '/signin/:path*',
-      '/2fa-oppsett',
-      '/2fa-oppsett/:path*',
-      '/api/auth/:path*',
-    ]);
+function rewriteDest(res: Response): string | null {
+  const raw = res.headers.get('x-middleware-rewrite') ?? res.headers.get('x-nextjs-rewrite') ?? '';
+  if (!raw) return null;
+  try {
+    return new URL(raw).pathname;
+  } catch {
+    return raw.startsWith('http') ? new URL(raw).pathname : raw;
+  }
+}
+
+const WL = { ENDWISE_WHITE_LABEL: '1' } as const;
+
+describe('F18 / white label F2: proxy vertsruting', () => {
+  it('matcher dekker auth og øvrige sider (statisk unntatt)', () => {
+    expect(config.matcher).toEqual(
+      expect.arrayContaining([
+        '/signin',
+        '/signin/:path*',
+        '/2fa-oppsett',
+        '/2fa-oppsett/:path*',
+        '/api/auth/:path*',
+      ]),
+    );
+    expect(config.matcher.some((m) => m.includes('(?!_next/static'))).toBe(true);
   });
 
-  it('uten flagg: no-store, ingen sone-header (dagens atferd)', async () => {
-    const res = proxy(req('https://endwise.no/signin', 'endwise.no'), {});
-    expect(res.headers.get('Cache-Control')).toMatch(/no-store/);
-    expect(res.headers.get('x-endwise-sone')).toBeNull();
-    expect(res.headers.get('x-endwise-slug')).toBeNull();
+  it('uten flagg: no-store bare på auth, ingen sone-header', () => {
+    const auth = proxy(req('https://endwise.no/signin', 'endwise.no'), {});
+    expect(auth.headers.get('Cache-Control')).toMatch(/no-store/);
+    expect(auth.headers.get('x-endwise-sone')).toBeNull();
+
+    const hjem = proxy(req('https://endwise.no/home', 'endwise.no'), {});
+    expect(hjem.headers.get('Cache-Control')).toBeNull();
+    expect(hjem.headers.get('x-endwise-sone')).toBeNull();
+    expect(rewriteDest(hjem)).toBeNull();
   });
 
-  it('med flagg: bergen.endwise.no → forhandler, uten rewrite', () => {
-    const res = proxy(req('https://bergen.endwise.no/signin', 'bergen.endwise.no'), {
-      ENDWISE_WHITE_LABEL_SPIKE: '1',
-    });
-    expect(res.headers.get('Cache-Control')).toMatch(/no-store/);
+  it('forhandler / viser kundeside', () => {
+    const res = proxy(req('https://bergen.endwise.no/', 'bergen.endwise.no'), WL);
     expect(res.headers.get('x-endwise-sone')).toBe('forhandler');
     expect(res.headers.get('x-endwise-slug')).toBe('bergen');
-    expect(res.status).toBe(200);
+    expect(rewriteDest(res)).toBe('/_kunde/bergen');
   });
 
-  it('med flagg: platform og reservert admin gir sone uten slug', () => {
-    const platform = proxy(req('https://platform.endwise.no/signin', 'platform.endwise.no'), {
-      ENDWISE_WHITE_LABEL_SPIKE: '1',
+  it('forhandler /home uten Bedrift går til logg-inn', () => {
+    const res = proxy(req('https://bergen.endwise.no/home', 'bergen.endwise.no'), WL);
+    expect(rewriteDest(res)).toBe('/_kunde/bergen/logg-inn');
+  });
+
+  it('forhandler /home med ?kontekst=bedrift i preview går til (app)', () => {
+    const res = proxy(req('https://bergen.endwise.no/home?kontekst=bedrift', 'bergen.endwise.no'), {
+      ...WL,
+      VERCEL_ENV: 'preview',
     });
-    const admin = proxy(req('https://admin.endwise.no/signin', 'admin.endwise.no'), {
-      ENDWISE_WHITE_LABEL_SPIKE: '1',
+    expect(res.headers.get('x-endwise-sone')).toBe('forhandler');
+    expect(res.headers.get('x-endwise-kontekst') ?? res.headers.get('x-endwise-sone')).toBeTruthy();
+    expect(rewriteDest(res)).toBeNull();
+  });
+
+  it('produksjon ignorerer ?kontekst=bedrift', () => {
+    const res = proxy(req('https://bergen.endwise.no/home?kontekst=bedrift', 'bergen.endwise.no'), {
+      ...WL,
+      VERCEL_ENV: 'production',
     });
-    expect(platform.headers.get('x-endwise-sone')).toBe('platform');
-    expect(platform.headers.get('x-endwise-slug')).toBeNull();
+    expect(rewriteDest(res)).toBe('/_kunde/bergen/logg-inn');
+  });
+
+  it('ukjent slug og reservert vert gir nøytral 404', () => {
+    const ukjent = proxy(req('https://verksted.no/', 'verksted.no'), WL);
+    const admin = proxy(req('https://admin.endwise.no/', 'admin.endwise.no'), WL);
+    expect(ukjent.headers.get('x-endwise-sone')).toBe('ukjent');
+    expect(ukjent.headers.get('x-endwise-slug')).toBeNull();
+    expect(rewriteDest(ukjent)).toBe('/_kunde/_ukjent');
     expect(admin.headers.get('x-endwise-sone')).toBe('reservert');
-    expect(admin.headers.get('x-endwise-slug')).toBeNull();
+    expect(rewriteDest(admin)).toBe('/_kunde/_ukjent');
   });
 
-  it('med flagg: innkommende x-endwise-slug strippes (ikke klientstyrt)', () => {
-    const res = proxy(
-      req('https://endwise.no/signin', 'endwise.no', { 'x-endwise-slug': 'stjålet' }),
-      { ENDWISE_WHITE_LABEL_SPIKE: '1' },
-    );
+  it('platform rewriter til stub', () => {
+    const res = proxy(req('https://platform.endwise.no/home', 'platform.endwise.no'), WL);
+    expect(res.headers.get('x-endwise-sone')).toBe('platform');
+    expect(rewriteDest(res)).toBe('/_plattform');
+  });
+
+  it('marked endwise.no er uendret', () => {
+    const res = proxy(req('https://endwise.no/home', 'endwise.no'), WL);
     expect(res.headers.get('x-endwise-sone')).toBe('marked');
-    expect(res.headers.get('x-endwise-slug')).toBeNull();
+    expect(rewriteDest(res)).toBeNull();
+  });
+
+  it('proxy-kilden har ingen DB', () => {
+    const src = readFileSync(resolve(her, '../proxy.ts'), 'utf8');
+    expect(src).not.toMatch(/@endwise\/db/);
+    expect(src).not.toMatch(/oppslag|createDb|lookup_tenant/);
+    expect(src).toMatch(/ruteFraSone/);
   });
 });

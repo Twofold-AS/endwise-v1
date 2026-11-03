@@ -1265,12 +1265,16 @@ const ROADMAP = [
   { id:"F17-01", o:"Bygg slug-regler, reservasjon og slugLedig bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F1. <code>@endwise/modules/slug</code> (3–32, æ→ae, reservert-utkast, forslag ved kollisjon). <code>slug_ledig</code>/<code>reserver_slug</code> SECURITY DEFINER. <code>tenant_slug_history</code> + 30 min reservasjon. <code>tenants.slugLedig</code>/<code>reserverSlug</code> krever åpen eier-invitasjon. Bak <code>ENDWISE_WHITE_LABEL</code>. Ingen slug-migrasjonsrapport (eksisterende forhandlere slettes). Dagens <code>tenants.create</code> urørt.",
     area:"backend", ui:"na", status:"done" },
 ]},
+{ phase:"F18", title:"White label — vertsruting (plan F2)", target:"Etter F17 / før branding", items:[
+  { id:"F18-01", o:"Bygg Host-sone, /_kunde og layout-guard bak flagg", kat:"plattform", t:"⭐ <b>03.11.2026:</b> Plan F2. <code>proxy.ts</code> rewrite til <code>/_kunde/&lt;slug&gt;</code> og <code>/_plattform</code> bak <code>ENDWISE_WHITE_LABEL</code>. Ingen DB i proxy. <code>lookup_tenant_by_host</code> (bare offentlige felt). Nøytral 404 uten slug. (app) krever Bedrift (<code>?kontekst=bedrift</code> i preview). Kundesider Hjem/bestill/min-side/logg-inn/velg. Platform-stub med noindex. Dagens endwise.no uendret uten flagg.",
+    area:"infra", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================
    KATEGORIER — den ANDRE aksen (lagt til 20.08.2026).
 
-   ⚠️ Fasene (F0–F17) er IKKE erstattet. De svarer på NÅR noe bygges og i
+   ⚠️ Fasene (F0–F18) er IKKE erstattet. De svarer på NÅR noe bygges og i
    hvilken rekkefølge; kategorien svarer på HVA det er og HVEM det er for.
    Begge finnes samtidig, og «Etter fase» er fortsatt én knapp unna.
 

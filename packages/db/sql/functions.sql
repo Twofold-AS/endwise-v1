@@ -1554,3 +1554,65 @@ $$;
 revoke all on function reserver_slug(text, text, integer) from public;
 grant execute on function reserver_slug(text, text, integer) to authenticated;
 
+-- F18 / white label F2 — offentlig tenant fra Host. Ingen tenant-id i retur.
+drop function if exists lookup_tenant_by_host(text, text);
+create or replace function lookup_tenant_by_host(p_host text, p_slug text default null)
+returns table (
+  slug text,
+  visningsnavn text,
+  logo_url text,
+  aksentfarge text,
+  aksent_tekstfarge text,
+  telefon text,
+  epost text,
+  sted text,
+  vis_levert_av boolean
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_host text := lower(btrim(coalesce(p_host, '')));
+  v_slug text := lower(btrim(coalesce(p_slug, '')));
+begin
+  -- lookup_tenant_by_host_rev=0047
+  if v_host <> '' then
+    perform set_config('app.host_oppslag', v_host, true);
+  end if;
+  if v_slug = '' and v_host like '%.endwise.no' then
+    v_slug := split_part(v_host, '.', 1);
+  end if;
+  if v_slug = '' and v_host like '%.localhost' then
+    v_slug := split_part(v_host, '.', 1);
+  end if;
+  if v_slug in ('www', 'platform', 'endwise', '') then
+    v_slug := '';
+  end if;
+  if v_slug = '' then
+    return;
+  end if;
+  perform set_config('app.slug_sjekk', v_slug, true);
+  return query
+    select
+      t.slug,
+      coalesce(nullif(b.visningsnavn, ''), t.name) as visningsnavn,
+      b.logo_url,
+      b.aksentfarge,
+      b.aksent_tekstfarge,
+      p.phone,
+      p.email,
+      p.city,
+      coalesce(b.vis_levert_av, true)
+    from tenants t
+    left join tenant_branding b on b.tenant_id = t.id
+    left join dealer_profiles p on p.tenant_id = t.id
+    where lower(t.slug) = v_slug
+      and t.kind is distinct from 'platform'
+    limit 1;
+end;
+$$;
+
+revoke all on function lookup_tenant_by_host(text, text) from public;
+grant execute on function lookup_tenant_by_host(text, text) to public;
+

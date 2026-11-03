@@ -66,6 +66,9 @@ jobs:
     name: ZAP baseline mot preview
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
       - name: Vent på Vercel-preview
@@ -95,7 +98,7 @@ jobs:
       - name: Gjør workspace skrivbart for ZAP
         run: chmod a+w .
       - name: ZAP baseline
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: ${{ steps.preview.outputs.url }}
           fail_action: false

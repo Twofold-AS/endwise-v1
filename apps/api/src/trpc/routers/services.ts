@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, isNull, schema, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router } from '../init.ts';
 import { loggTjenestePostgresFeil, mapTjenestePostgresFeil } from '../slett-postgres.ts';
 
 const vehicleType = z.enum(['mc', 'boat', 'atv']);
@@ -29,6 +29,7 @@ export const servicesRouter = router({
    * Katalogflaten ber eksplisitt om dem, for å kunne vise dem fram igjen.
    */
   list: protectedProcedure
+    .use(omradeSjekk('tjenester', 'se', true))
     .input(z.object({ inkluderInaktive: z.boolean().optional() }).optional())
     .query(({ ctx, input }) =>
       withTenant(ctx.db, ctx.tenantId, (tx) =>
@@ -70,6 +71,7 @@ export const servicesRouter = router({
    * fjorårets faktura sier noe annet enn prislista i dag.
    */
   versions: protectedProcedure
+    .use(omradeSjekk('tjenester', 'se', true))
     .input(z.object({ serviceId: z.uuid() }))
     .query(({ ctx, input }) =>
       withTenant(ctx.db, ctx.tenantId, (tx) =>
@@ -81,7 +83,8 @@ export const servicesRouter = router({
       ),
     ),
 
-  create: adminProcedure
+  create: protectedProcedure
+    .use(omradeSjekk('tjenester', 'endre', false, 'admin'))
     .input(
       z.object({
         name: z.string().min(1),
@@ -127,7 +130,8 @@ export const servicesRouter = router({
     }),
 
   /** Ny versjon. Den forrige lukkes med `validTo` — den slettes ikke. */
-  update: adminProcedure
+  update: protectedProcedure
+    .use(omradeSjekk('tjenester', 'endre', false, 'admin'))
     .input(
       z.object({
         serviceId: z.uuid(),
@@ -183,7 +187,8 @@ export const servicesRouter = router({
     }),
 
   /** Deaktiver — aldri slett. Historikken skal overleve. */
-  deactivate: adminProcedure
+  deactivate: protectedProcedure
+    .use(omradeSjekk('tjenester', 'endre', false, 'admin'))
     .input(z.object({ serviceId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -206,7 +211,8 @@ export const servicesRouter = router({
    * vei tilbake et manuelt UPDATE i basen. Versjonene røres ikke — tjenesten
    * kommer tilbake med nøyaktig den versjonen som gjaldt da den ble slått av.
    */
-  reactivate: adminProcedure
+  reactivate: protectedProcedure
+    .use(omradeSjekk('tjenester', 'endre', false, 'admin'))
     .input(z.object({ serviceId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       try {

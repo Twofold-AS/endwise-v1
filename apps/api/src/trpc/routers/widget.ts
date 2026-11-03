@@ -1,6 +1,6 @@
 import { createWidgetKeyService } from '@endwise/modules/widget';
 import { z } from 'zod';
-import { moduleAdminProcedure, router } from '../init.ts';
+import { moduleProcedure, omradeSjekk, router } from '../init.ts';
 
 /**
  * Modul-gate: `widget`. Kundewidgeten er et betalt tillegg.
@@ -8,7 +8,12 @@ import { moduleAdminProcedure, router } from '../init.ts';
  * (apps/api/src/routes/widget/) har sin egen auth via signert token og skal
  * Ikke ha denne gaten — sluttkunden har ingen sesjon å sjekke moduler mot.
  */
-const widgetAdminProcedure = moduleAdminProcedure('widget');
+const widgetAdminProcedure = moduleProcedure('widget').use(
+  omradeSjekk('innstillinger', 'endre', false, 'admin'),
+);
+const widgetLesProcedure = moduleProcedure('widget').use(
+  omradeSjekk('innstillinger', 'se', false, 'admin'),
+);
 
 /**
  * Forvaltning av widget-nøkler (dealer_admin). Utstedelse/liste er
@@ -18,9 +23,7 @@ const widgetAdminProcedure = moduleAdminProcedure('widget');
  */
 export const widgetRouter = router({
   keys: router({
-    list: widgetAdminProcedure.query(({ ctx }) =>
-      createWidgetKeyService(ctx.db).list(ctx.tenantId),
-    ),
+    list: widgetLesProcedure.query(({ ctx }) => createWidgetKeyService(ctx.db).list(ctx.tenantId)),
 
     issue: widgetAdminProcedure
       .input(

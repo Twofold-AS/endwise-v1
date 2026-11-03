@@ -95,8 +95,8 @@ describe('FORCE RLS eier-skriv på tjenestekatalog (prod-rolle endwise)', () => 
     expect(schema).toMatch(/priceMinor: integer\('price_minor'\)/);
     expect(schema).toMatch(/description: text\('description'\)/);
 
-    const createAt = ruter.indexOf('create: adminProcedure');
-    const createKropp = ruter.slice(createAt, ruter.indexOf('update: adminProcedure'));
+    const createAt = ruter.indexOf('create: protectedProcedure');
+    const createKropp = ruter.slice(createAt, ruter.indexOf('update: protectedProcedure'));
     expect(createKropp).toMatch(/insert\(schema\.services\)/);
     expect(createKropp).toMatch(/\.returning\(\)/);
     expect(createKropp).toMatch(/insert\(schema\.serviceVersions\)/);

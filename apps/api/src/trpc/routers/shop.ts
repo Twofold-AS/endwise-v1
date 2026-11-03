@@ -5,7 +5,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { byggShopLinjer, lesShopKatalog } from '../../lib/shop.ts';
 import { getStripe, stripeConfigured } from '../../lib/stripe.ts';
-import { router, shopProcedure } from '../init.ts';
+import { omradeSjekk, router, shopProcedure } from '../init.ts';
 
 /**
  * Intern testbutikk. **Ikke `moduleProcedure('shop')`.**
@@ -13,7 +13,9 @@ import { router, shopProcedure } from '../init.ts';
  * Stripe-kassen er `mode: payment` — holdt adskilt fra abonnements-items.
  */
 export const shopRouter = router({
-  catalog: shopProcedure.query(({ ctx }) => lesShopKatalog(ctx.db, ctx.tenantId)),
+  catalog: shopProcedure
+    .use(omradeSjekk('nettbutikk', 'se'))
+    .query(({ ctx }) => lesShopKatalog(ctx.db, ctx.tenantId)),
 
   /**
    * Midlertidig testplassering: publishable key til den eksisterende
@@ -21,6 +23,7 @@ export const shopRouter = router({
    * (F4 admin-nøkler) — gaten er shop-flagget, samme som katalogen.
    */
   bookingWidget: shopProcedure
+    .use(omradeSjekk('nettbutikk', 'se'))
     .input(z.object({ origin: z.string().url().max(200) }))
     .query(async ({ ctx, input }) => {
       try {
@@ -38,6 +41,7 @@ export const shopRouter = router({
     }),
 
   createCheckout: shopProcedure
+    .use(omradeSjekk('nettbutikk', 'endre'))
     .input(
       z.object({
         linjer: z

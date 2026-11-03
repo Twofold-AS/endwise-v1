@@ -18,7 +18,13 @@ import {
 } from '@endwise/modules/profil';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { adminProcedure, router, staffProcedure } from '../init.ts';
+import {
+  adminProcedure,
+  omradeSjekk,
+  protectedProcedure,
+  router,
+  staffProcedure,
+} from '../init.ts';
 
 /** Ikke-ruterbar adresse når lederen ikke oppgir e-post. Aldri send dit. */
 const UTEN_INNLOGGING_SUFFIKS = '@uten-innlogging.invalid';
@@ -56,7 +62,7 @@ export const teamRouter = router({
    * `directory.participants` — se doc-kommentaren der for hvorfor det er
    * viktigere enn det ser ut.
    */
-  list: staffProcedure.query(async ({ ctx }) => {
+  list: staffProcedure.use(omradeSjekk('ansatte', 'se')).query(async ({ ctx }) => {
     const medlemmer = await ctx.db
       .select({
         userId: schema.member.userId,
@@ -237,7 +243,8 @@ export const teamRouter = router({
    * vært lovlig — det er nettopp derfor medlemskapet må sjekkes her.
    * 4. Funksjonen må være tildelbar. `leder` avvises: den følger av rollen.
    */
-  setFunction: adminProcedure
+  setFunction: protectedProcedure
+    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
     .input(
       z.object({
         userId: z.string().min(1),
@@ -313,7 +320,8 @@ export const teamRouter = router({
    * Dealer setter ansattfarge. Tolv faste svatsjer, ikke fri hue.
    * Ikke egen «velg ansikt»-profil — fargen er identiteten.
    */
-  setFarge: adminProcedure
+  setFarge: protectedProcedure
+    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
     .input(
       z.object({
         userId: z.string().min(1),
@@ -439,6 +447,7 @@ export const teamRouter = router({
    * Selger/support uten mekanikerprofil får ærlig tom liste.
    */
   jobber: staffProcedure
+    .use(omradeSjekk('ansatte', 'se'))
     .input(z.object({ userId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       await assertMedlem(ctx, input.userId);

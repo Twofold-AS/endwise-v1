@@ -12,7 +12,7 @@ import {
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { getStripe, stripeConfigured } from '../../lib/stripe.ts';
-import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router } from '../init.ts';
 
 /**
  * Forhandler-selvbetjent abonnement + integrasjoner.
@@ -75,7 +75,7 @@ export const billingRouter = router({
    * nedgradert modul står som `har: true, aktiv: false` fordi vi deaktiverer
    * framfor å slette — historikken skal ikke forsvinne fordi noen byttet plan.
    */
-  katalog: protectedProcedure.query(async ({ ctx }) => {
+  katalog: protectedProcedure.use(omradeSjekk('okonomi', 'se')).query(async ({ ctx }) => {
     const state = await createBillingService(ctx.db)
       .getState(ctx.tenantId)
       .catch(() => null);
@@ -104,19 +104,22 @@ export const billingRouter = router({
     };
   }),
 
-  integrations: protectedProcedure.query(async ({ ctx }) => {
-    const state = await createBillingService(ctx.db).getState(ctx.tenantId);
-    const owned = new Map(state.modules.map((m) => [m.key, m.enabled]));
-    return INTEGRATIONS.map((i) => ({
-      key: i.key,
-      name: i.name,
-      desc: i.desc,
-      entitled: owned.has(i.key),
-      enabled: owned.get(i.key) ?? false,
-    }));
-  }),
+  integrations: protectedProcedure
+    .use(omradeSjekk('innstillinger', 'se'))
+    .query(async ({ ctx }) => {
+      const state = await createBillingService(ctx.db).getState(ctx.tenantId);
+      const owned = new Map(state.modules.map((m) => [m.key, m.enabled]));
+      return INTEGRATIONS.map((i) => ({
+        key: i.key,
+        name: i.name,
+        desc: i.desc,
+        entitled: owned.has(i.key),
+        enabled: owned.get(i.key) ?? false,
+      }));
+    }),
 
-  setIntegration: adminProcedure
+  setIntegration: protectedProcedure
+    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
     .input(z.object({ key: z.string().min(1), enabled: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -140,7 +143,8 @@ export const billingRouter = router({
    * Medusa-beslutningen er tatt, ville vært å ta betalt for noe vi ikke kan
    * levere.
    */
-  checkout: adminProcedure
+  checkout: protectedProcedure
+    .use(omradeSjekk('okonomi', 'endre', false, 'admin'))
     .input(
       z.object({
         planKey: z.string().min(1),
@@ -220,7 +224,8 @@ export const billingRouter = router({
       return { url: session.url };
     }),
 
-  portal: adminProcedure
+  portal: protectedProcedure
+    .use(omradeSjekk('okonomi', 'endre', false, 'admin'))
     .input(z.object({ returnUrl: z.string().url() }))
     .mutation(async ({ ctx, input }) => {
       if (!stripeConfigured()) {
@@ -250,7 +255,8 @@ export const billingRouter = router({
    * Den finnes fordi Stripe-webhooken krever en offentlig URL (stripe CLI eller
    * tunnel); uten den kunne ikke onboarding-flyten testes lokalt i det hele tatt.
    */
-  applyPlanMock: adminProcedure
+  applyPlanMock: protectedProcedure
+    .use(omradeSjekk('okonomi', 'endre', false, 'admin'))
     .input(z.object({ planKey: z.string().min(1), tillegg: z.array(z.string()).default([]) }))
     .mutation(async ({ ctx, input }) => {
       if (process.env.NODE_ENV === 'production') {

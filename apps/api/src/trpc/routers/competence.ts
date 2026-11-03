@@ -1,6 +1,6 @@
 import { createCompetenceRegistry } from '@endwise/modules/competence';
 import { z } from 'zod';
-import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router } from '../init.ts';
 import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Må være YYYY-MM-DD');
@@ -12,11 +12,12 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Må være YYYY-MM-DD');
  */
 export const competenceRouter = router({
   // Ferdighetskatalogen
-  listSkills: protectedProcedure.query(({ ctx }) =>
-    createCompetenceRegistry(ctx.db).listSkills(ctx.tenantId),
-  ),
+  listSkills: protectedProcedure
+    .use(omradeSjekk('ansatte', 'se', true))
+    .query(({ ctx }) => createCompetenceRegistry(ctx.db).listSkills(ctx.tenantId)),
 
-  upsertSkill: adminProcedure
+  upsertSkill: protectedProcedure
+    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
     .input(
       z.object({
         key: z
@@ -41,16 +42,18 @@ export const competenceRouter = router({
 
   // Kompetanse per mekaniker
   listMechanicSkills: protectedProcedure
+    .use(omradeSjekk('ansatte', 'se', true))
     .input(z.object({ mechanicId: z.uuid() }))
     .query(({ ctx, input }) =>
       createCompetenceRegistry(ctx.db).listMechanicSkills(ctx.tenantId, input.mechanicId),
     ),
 
-  listAllMechanicSkills: protectedProcedure.query(({ ctx }) =>
-    createCompetenceRegistry(ctx.db).listAllMechanicSkills(ctx.tenantId),
-  ),
+  listAllMechanicSkills: protectedProcedure
+    .use(omradeSjekk('ansatte', 'se', true))
+    .query(({ ctx }) => createCompetenceRegistry(ctx.db).listAllMechanicSkills(ctx.tenantId)),
 
-  setMechanicSkill: adminProcedure
+  setMechanicSkill: protectedProcedure
+    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
     .input(
       z.object({
         mechanicId: z.uuid(),
@@ -76,7 +79,8 @@ export const competenceRouter = router({
       }
     }),
 
-  removeMechanicSkill: adminProcedure
+  removeMechanicSkill: protectedProcedure
+    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
     .input(z.object({ mechanicId: z.uuid(), skillKey: z.string() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -94,6 +98,7 @@ export const competenceRouter = router({
 
   /** Sertifiseringer som utløper snart — driver varsel i F3-04. */
   expiringCertifications: protectedProcedure
+    .use(omradeSjekk('ansatte', 'se', true))
     .input(z.object({ withinDays: z.number().int().min(1).max(365).default(60) }))
     .query(({ ctx, input }) =>
       createCompetenceRegistry(ctx.db).expiringCertifications(ctx.tenantId, input.withinDays),

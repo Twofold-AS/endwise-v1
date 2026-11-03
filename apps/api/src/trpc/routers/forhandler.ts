@@ -2,7 +2,7 @@ import { type Database, eq, schema, withTenant } from '@endwise/db';
 import { erPlattformTenant } from '@endwise/modules/plattform';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router } from '../init.ts';
 import { lesPostgresCause } from '../slett-postgres.ts';
 
 type TenantTx = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -129,16 +129,19 @@ export async function hentForhandlerKort(
  * Skriving: dealer_admin (adminProcedure). Inspect leser via verksted.forhandleren.
  */
 export const forhandlerRouter = router({
-  get: adminProcedure.query(({ ctx }) =>
-    hentForhandlerKort((fn) => withTenant(ctx.db, ctx.tenantId, fn), ctx.tenantId),
-  ),
+  get: protectedProcedure
+    .use(omradeSjekk('innstillinger', 'se', false, 'admin'))
+    .query(({ ctx }) =>
+      hentForhandlerKort((fn) => withTenant(ctx.db, ctx.tenantId, fn), ctx.tenantId),
+    ),
 
   /** Les-kort for alle innloggede på tenanten. */
   kort: protectedProcedure.query(({ ctx }) =>
     hentForhandlerKort((fn) => withTenant(ctx.db, ctx.tenantId, fn), ctx.tenantId),
   ),
 
-  update: adminProcedure
+  update: protectedProcedure
+    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
     .input(
       z.object({
         name: felt.min(1),

@@ -197,10 +197,23 @@ export const shopProcedure = protectedProcedure.use(async function shopFlagOn(op
  * ikke klienten (IDOR). Uten flagg: no-op, eksisterende procedure gjelder.
  * `hoppMekaniker`: Min dag / mechanicProcedure-flaten er uavhengig av områdene.
  */
-export function omradeSjekk(omrade: Omrade, trenger: Niva = 'se', hoppMekaniker = false) {
+export function omradeSjekk(
+  omrade: Omrade,
+  trenger: Niva = 'se',
+  hoppMekaniker = false,
+  utenFlagg: 'pass' | 'admin' = 'pass',
+) {
   return t.middleware(async (opts) => {
     const { ctx } = opts;
-    if (!erWhiteLabelAktiv()) return opts.next();
+    if (!erWhiteLabelAktiv()) {
+      if (utenFlagg === 'admin' && ctx.role !== 'dealer_admin' && ctx.role !== 'endwise_admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `Rollen «${ctx.role}» kan ikke endre dette`,
+        });
+      }
+      return opts.next();
+    }
     if (hoppMekaniker && ctx.isMechanic) return opts.next();
     if (ctx.role === 'dealer_admin' || ctx.role === 'endwise_admin') {
       return opts.next();

@@ -20,7 +20,7 @@ import {
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { aktiverQuickEtterGet, quickNokkelMangler } from '../../lib/quick-activate.ts';
-import { adminProcedure, router } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router } from '../init.ts';
 
 /**
  * Eier-veiviser. Egen skriverute, ikke `tenants.setModules`.
@@ -49,60 +49,63 @@ const extrasSchema = z
   });
 
 export const onboardingRouter = router({
-  status: adminProcedure.query(async ({ ctx }) => {
-    return withTenant(ctx.db, ctx.tenantId, async (tx) => {
-      const [tenant] = await tx
-        .select({
-          name: schema.tenants.name,
-          plan: schema.tenants.plan,
-          onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
-        })
-        .from(schema.tenants)
-        .where(eq(schema.tenants.id, ctx.tenantId));
+  status: protectedProcedure
+    .use(omradeSjekk('innstillinger', 'se', false, 'admin'))
+    .query(async ({ ctx }) => {
+      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [tenant] = await tx
+          .select({
+            name: schema.tenants.name,
+            plan: schema.tenants.plan,
+            onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
+          })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.id, ctx.tenantId));
 
-      const rader = await tx
-        .select({
-          moduleKey: schema.tenantModules.moduleKey,
-          enabled: schema.tenantModules.enabled,
-          source: schema.tenantModules.source,
-        })
-        .from(schema.tenantModules)
-        .where(eq(schema.tenantModules.tenantId, ctx.tenantId));
+        const rader = await tx
+          .select({
+            moduleKey: schema.tenantModules.moduleKey,
+            enabled: schema.tenantModules.enabled,
+            source: schema.tenantModules.source,
+          })
+          .from(schema.tenantModules)
+          .where(eq(schema.tenantModules.tenantId, ctx.tenantId));
 
-      const etikett = (key: string) =>
-        key in ADDON_LABELS ? ADDON_LABELS[key as keyof typeof ADDON_LABELS] : key;
+        const etikett = (key: string) =>
+          key in ADDON_LABELS ? ADDON_LABELS[key as keyof typeof ADDON_LABELS] : key;
 
-      const planKey = erTierKey(tenant?.plan) ? tenant.plan : 'start';
-      const nivaa = { key: planKey, name: tierByKey(planKey)?.name ?? 'Start' };
-      const includedKeys = new Set(
-        rader.filter((r) => r.source === 'included' && r.enabled).map((r) => r.moduleKey),
-      );
+        const planKey = erTierKey(tenant?.plan) ? tenant.plan : 'start';
+        const nivaa = { key: planKey, name: tierByKey(planKey)?.name ?? 'Start' };
+        const includedKeys = new Set(
+          rader.filter((r) => r.source === 'included' && r.enabled).map((r) => r.moduleKey),
+        );
 
-      return {
-        complete: Boolean(tenant?.onboardingCompletedAt),
-        visningsnavn: tenant?.name ?? '',
-        nivaa,
-        included: rader
-          .filter((r) => r.source === 'included' && r.enabled)
-          .map((r) => ({ key: r.moduleKey, label: etikett(r.moduleKey) })),
-        optional: rader
-          .filter((r) => r.source === 'optional' || r.source === 'dealer')
-          .filter((r) => !erBlokertTildeling(r.moduleKey))
-          .filter((r) => !includedKeys.has(r.moduleKey))
-          .map((r) => ({
-            key: r.moduleKey,
-            label: etikett(r.moduleKey),
-            enabled: r.enabled,
-          })),
-      };
-    });
-  }),
+        return {
+          complete: Boolean(tenant?.onboardingCompletedAt),
+          visningsnavn: tenant?.name ?? '',
+          nivaa,
+          included: rader
+            .filter((r) => r.source === 'included' && r.enabled)
+            .map((r) => ({ key: r.moduleKey, label: etikett(r.moduleKey) })),
+          optional: rader
+            .filter((r) => r.source === 'optional' || r.source === 'dealer')
+            .filter((r) => !erBlokertTildeling(r.moduleKey))
+            .filter((r) => !includedKeys.has(r.moduleKey))
+            .map((r) => ({
+              key: r.moduleKey,
+              label: etikett(r.moduleKey),
+              enabled: r.enabled,
+            })),
+        };
+      });
+    }),
 
   /**
    * Fullfør veiviseren. Inkludert pakke er allerede skrevet — hopp over extras
    * og den blir stående.
    */
-  fullfor: adminProcedure
+  fullfor: protectedProcedure
+    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
     .input(
       z.object({
         visningsnavn: z.string().min(2).max(120),

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F25 White label F6c (områder 2)
+
+**Type:** ny fase. Resten av områdene bak flagg. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F25**. **F25-01** `done`. Tjenester, Lager, Nettbutikk, Ansatte, Innstillinger, Økonomi. Lager-nivå dokumentert. ⛔ F7. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F24 White label F6b (områder 1)
 
 **Type:** ny fase. Område-porter på Bookinger, Kunder, Kjøretøy, Innboks, Timeplan. Ingen ny UI-pakke. Ingen techstack-endring.

@@ -15,11 +15,15 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { aktiverQuickEtterGet } from '../../lib/quick-activate.ts';
 import { runQuickCustomerPull } from '../../lib/quick-pull.ts';
-import { moduleAdminProcedure, moduleProcedure, router } from '../init.ts';
+import { moduleProcedure, omradeSjekk, router } from '../init.ts';
 
 /** Modul-gate: `quick`. Erp-integrasjonen er et betalt tillegg. */
-const quickProcedure = moduleProcedure('quick');
-const quickAdminProcedure = moduleAdminProcedure('quick');
+const quickProcedure = moduleProcedure('quick').use(
+  omradeSjekk('innstillinger', 'se', false, 'admin'),
+);
+const quickAdminProcedure = moduleProcedure('quick').use(
+  omradeSjekk('innstillinger', 'endre', false, 'admin'),
+);
 
 /**
  * F8-01 / F8-02 — Quick-integrasjon (QuickLite).

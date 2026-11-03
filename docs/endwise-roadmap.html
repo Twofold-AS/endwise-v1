@@ -1269,12 +1269,16 @@ const ROADMAP = [
   { id:"F18-01", o:"Bygg Host-sone, /_kunde og layout-guard bak flagg", kat:"plattform", t:"⭐ <b>03.11.2026:</b> Plan F2. <code>proxy.ts</code> rewrite til <code>/_kunde/&lt;slug&gt;</code> og <code>/_plattform</code> bak <code>ENDWISE_WHITE_LABEL</code>. Ingen DB i proxy. <code>lookup_tenant_by_host</code> (bare offentlige felt). Nøytral 404 uten slug. (app) krever Bedrift (<code>?kontekst=bedrift</code> i preview). Kundesider Hjem/bestill/min-side/logg-inn/velg. Platform-stub med noindex. Dagens endwise.no uendret uten flagg.",
     area:"infra", ui:"partial", status:"done" },
 ]},
+{ phase:"F19", title:"White label — branding (plan F3)", target:"Etter F18 / før e-post", items:[
+  { id:"F19-01", o:"Bygg utseende, logo og publisering bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F3. <code>@endwise/modules/branding</code> (WCAG AA, nei til #0066ff). Logo PNG/WebP via Vercel Blob, PNG-metadata strippes, ingen SVG. Innstillinger › Utseende (utkast + Gå live). <code>lookup_tenant_by_host</code> skjuler utkast. Upublisert kundeside viser «Kommer snart». <code>tenant_domains</code> subdomene ved publisering.",
+    area:"backend", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================
    KATEGORIER — den ANDRE aksen (lagt til 20.08.2026).
 
-   ⚠️ Fasene (F0–F18) er IKKE erstattet. De svarer på NÅR noe bygges og i
+   ⚠️ Fasene (F0–F19) er IKKE erstattet. De svarer på NÅR noe bygges og i
    hvilken rekkefølge; kategorien svarer på HVA det er og HVEM det er for.
    Begge finnes samtidig, og «Etter fase» er fortsatt én knapp unna.
 

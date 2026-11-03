@@ -3,7 +3,7 @@
  * Abonnement, Tjenester & priser og Koblinger bor på Organisasjon.
  */
 
-export const FANE_IDS = ['profil', 'varsler'] as const;
+export const FANE_IDS = ['profil', 'varsler', 'utseende'] as const;
 
 export type FaneId = (typeof FANE_IDS)[number];
 
@@ -25,6 +25,12 @@ export const FANER: readonly FaneDef[] = [
     label: 'Varsler',
     ingress: 'Hvilke kanaler verkstedet bruker mot kunder og ansatte.',
   },
+  {
+    id: 'utseende',
+    label: 'Utseende',
+    ingress: 'Navn, farge og logo på kundesiden.',
+    adminOnly: true,
+  },
 ];
 
 const FANE_SETT = new Set<string>(FANE_IDS);
@@ -44,12 +50,13 @@ export function parseFane(
   const kandidat: FaneId = erFaneId(normalisert) ? normalisert : fallback;
   const def = FANER.find((f) => f.id === kandidat);
   if (!def) return 'profil';
+  if (def.adminOnly && !_isAdmin) return fallback;
   return kandidat;
 }
 
-export function synligeFaner(_isAdmin: boolean, erForhandler = true): FaneDef[] {
+export function synligeFaner(isAdmin: boolean, erForhandler = true): FaneDef[] {
   if (!erForhandler) return FANER.filter((f) => f.id === 'profil');
-  return [...FANER];
+  return FANER.filter((f) => !f.adminOnly || isAdmin);
 }
 
 export function innstillingerHref(fane: FaneId): string {
@@ -63,4 +70,5 @@ export function innstillingerHref(fane: FaneId): string {
 export const FANE_ALIAS: Readonly<Record<string, FaneId>> = {
   '/innstillinger/profil': 'profil',
   '/innstillinger/varsler': 'varsler',
+  '/innstillinger/utseende': 'utseende',
 };

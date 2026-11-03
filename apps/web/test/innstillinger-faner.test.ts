@@ -41,10 +41,10 @@ describe('F5-19: innstillinger er Konto + Varsler', () => {
     expect(page).not.toMatch(/>Settings</);
   });
 
-  it('har kun Konto og Varsler — Abonnement/Koblinger/Tjenester er flyttet', () => {
+  it('har Konto, Varsler og Utseende — Abonnement/Koblinger/Tjenester er flyttet', () => {
     expect(skall).toMatch(/role="tablist"/);
-    expect([...FANE_IDS]).toEqual(['profil', 'varsler']);
-    expect(FANER.map((f) => f.label)).toEqual(['Konto', 'Varsler']);
+    expect([...FANE_IDS]).toEqual(['profil', 'varsler', 'utseende']);
+    expect(FANER.map((f) => f.label)).toEqual(['Konto', 'Varsler', 'Utseende']);
     expect(FANER.map((f) => f.id)).not.toContain('team');
     expect(FANER.map((f) => f.id)).not.toContain('abonnement');
     expect(FANER.map((f) => f.label)).not.toContain('Team & tilgang');
@@ -54,7 +54,7 @@ describe('F5-19: innstillinger er Konto + Varsler', () => {
 
   it('Endwise-plattform ser kun Profil', () => {
     expect(synligeFaner(false).map((f) => f.id)).toEqual(['profil', 'varsler']);
-    expect(synligeFaner(true).map((f) => f.id)).toEqual(['profil', 'varsler']);
+    expect(synligeFaner(true).map((f) => f.id)).toEqual(['profil', 'varsler', 'utseende']);
     expect(synligeFaner(true, false).map((f) => f.id)).toEqual(['profil']);
     expect(synligeFaner(false, false).map((f) => f.id)).toEqual(['profil']);
   });

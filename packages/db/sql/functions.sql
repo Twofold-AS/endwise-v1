@@ -1554,7 +1554,7 @@ $$;
 revoke all on function reserver_slug(text, text, integer) from public;
 grant execute on function reserver_slug(text, text, integer) to authenticated;
 
--- F18 / white label F2 — offentlig tenant fra Host. Ingen tenant-id i retur.
+-- F19 / white label F3 — offentlig tenant. Utkast skjules. Ingen tenant-id.
 drop function if exists lookup_tenant_by_host(text, text);
 create or replace function lookup_tenant_by_host(p_host text, p_slug text default null)
 returns table (
@@ -1566,7 +1566,8 @@ returns table (
   telefon text,
   epost text,
   sted text,
-  vis_levert_av boolean
+  vis_levert_av boolean,
+  publisert boolean
 )
 language plpgsql
 security definer
@@ -1576,7 +1577,7 @@ declare
   v_host text := lower(btrim(coalesce(p_host, '')));
   v_slug text := lower(btrim(coalesce(p_slug, '')));
 begin
-  -- lookup_tenant_by_host_rev=0047
+  -- lookup_tenant_by_host_rev=0048
   if v_host <> '' then
     perform set_config('app.host_oppslag', v_host, true);
   end if;
@@ -1596,14 +1597,21 @@ begin
   return query
     select
       t.slug,
-      coalesce(nullif(b.visningsnavn, ''), t.name) as visningsnavn,
-      b.logo_url,
-      b.aksentfarge,
-      b.aksent_tekstfarge,
+      case
+        when b.publisert_at is not null then coalesce(nullif(b.visningsnavn, ''), t.name)
+        else t.name
+      end as visningsnavn,
+      case when b.publisert_at is not null then b.logo_url end,
+      case when b.publisert_at is not null then b.aksentfarge end,
+      case when b.publisert_at is not null then b.aksent_tekstfarge end,
       p.phone,
       p.email,
       p.city,
-      coalesce(b.vis_levert_av, true)
+      case
+        when b.publisert_at is not null then coalesce(b.vis_levert_av, true)
+        else true
+      end,
+      (b.publisert_at is not null) as publisert
     from tenants t
     left join tenant_branding b on b.tenant_id = t.id
     left join dealer_profiles p on p.tenant_id = t.id

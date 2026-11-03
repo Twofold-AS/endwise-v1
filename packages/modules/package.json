@@ -25,6 +25,7 @@
     "./invitasjoner": "./src/invitasjoner/index.ts",
     "./invitasjon-kode": "./src/invitasjon-kode/index.ts",
     "./slug": "./src/slug/index.ts",
+    "./branding": "./src/branding/index.ts",
     "./tenant-host": "./src/tenant-host/index.ts",
     "./tenant-host/oppslag": "./src/tenant-host/oppslag.ts",
     "./plattform": "./src/plattform/index.ts",

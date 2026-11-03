@@ -8,6 +8,7 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { FerieMock } from '../_shell/ferie-mock';
 import { type FaneId, innstillingerHref, parseFane, synligeFaner } from './_faner';
 import { ProfilFane } from './_profil-fane';
+import { UtseendeFane } from './_utseende-fane';
 import { VarslerInnhold } from './varsler/_innhold';
 
 /**
@@ -37,7 +38,7 @@ function InnstillingerSkallIndre({ startFane }: { startFane?: FaneId }) {
       <div className="hidden md:block">
         <h1 className="text-title text-fg">Innstillinger</h1>
         <p className="text-body text-fg-muted">
-          Konto og varsler. Organisasjon ligger i sidebaren.
+          Konto, varsler og utseende. Organisasjon ligger i sidebaren.
         </p>
       </div>
 
@@ -81,5 +82,7 @@ function FaneInnhold({ fane }: { fane: FaneId }) {
       return <ProfilFane />;
     case 'varsler':
       return <VarslerInnhold />;
+    case 'utseende':
+      return <UtseendeFane />;
   }
 }

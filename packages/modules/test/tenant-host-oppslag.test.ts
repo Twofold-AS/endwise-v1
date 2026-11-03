@@ -27,6 +27,7 @@ describe('F18 / white label F2: offentlig tenant', () => {
       epost: 'post@example.no',
       sted: 'Bergen',
       visLevertAv: false,
+      publisert: false,
     });
   });
 

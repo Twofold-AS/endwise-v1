@@ -2245,3 +2245,44 @@ create policy slug_reservations_definer on slug_reservations
     and current_user is distinct from 'endwise_app'
     and slug = nullif(current_setting('app.slug_sjekk', true), '')
   );
+
+-- F18 / white label F2 — offentlig host-oppslag (eier ≠ authenticated).
+drop policy if exists tenants_host_oppslag on tenants;
+create policy tenants_host_oppslag on tenants
+  as permissive for select to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and lower(slug) = nullif(current_setting('app.slug_sjekk', true), '')
+  );
+
+drop policy if exists tenant_branding_host_oppslag on tenant_branding;
+create policy tenant_branding_host_oppslag on tenant_branding
+  as permissive for select to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and tenant_id in (
+      select id from tenants where lower(slug) = nullif(current_setting('app.slug_sjekk', true), '')
+    )
+  );
+
+drop policy if exists dealer_profiles_host_oppslag on dealer_profiles;
+create policy dealer_profiles_host_oppslag on dealer_profiles
+  as permissive for select to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and tenant_id in (
+      select id from tenants where lower(slug) = nullif(current_setting('app.slug_sjekk', true), '')
+    )
+  );
+
+drop policy if exists tenant_domains_host_oppslag on tenant_domains;
+create policy tenant_domains_host_oppslag on tenant_domains
+  as permissive for select to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and vert = nullif(current_setting('app.host_oppslag', true), '')
+  );

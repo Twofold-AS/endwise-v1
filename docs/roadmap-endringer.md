@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F18 White label F2 (vertsruting)
+
+**Type:** ny fase. Host-sone + rewrite bak flagg. Ingen atferd uten `ENDWISE_WHITE_LABEL`. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F18**. **F18-01** `done`. `proxy.ts` rewrite til `/_kunde` / `/_plattform`. `lookup_tenant_by_host` offentlige felt. Nøytral 404. (app) gated på Bedrift. ⛔ F3. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F17 White label F1 (subdomene-regler)
 
 **Type:** ny fase. Slug-regler + SECURITY DEFINER. Ingen atferd uten `ENDWISE_WHITE_LABEL`. Ingen ny UI-pakke. Ingen techstack-endring (zod allerede i stacken).

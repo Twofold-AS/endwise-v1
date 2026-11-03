@@ -1,7 +1,11 @@
 import {
-  erWhiteLabelSpikeAktiv,
+  erAuthSti,
+  erWhiteLabelAktiv,
+  lesKontekst,
   opplosTenantFraHost,
+  ruteFraSone,
   slaaOppEgetDomene,
+  UKJENT_KUNDE_STI,
 } from '@endwise/modules/tenant-host';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
@@ -17,20 +21,36 @@ function settAuthNoStore(res: NextResponse): NextResponse {
   return res;
 }
 
+function medSone(
+  res: NextResponse,
+  sone: string,
+  slug: string | null,
+  auth: boolean,
+): NextResponse {
+  res.headers.set('x-endwise-sone', sone);
+  if (slug) res.headers.set('x-endwise-slug', slug);
+  return auth ? settAuthNoStore(res) : res;
+}
+
 /**
  * Next 16 proxy (tidligere middleware).
- * Standard: bare no-store på auth-stier — uendret for endwise.no.
- * Bak ENDWISE_WHITE_LABEL_SPIKE=1: slår opp sone fra Host og setter
- * request-headere. Ingen rewrite, ingen 404, ingen DB.
+ * Uten flagg: no-op unntatt no-store på /signin, /2fa-oppsett, /api/auth.
+ * Bak ENDWISE_WHITE_LABEL=1 (eller SPIKE): sone fra Host, rewrite til
+ * /_kunde eller /_plattform. Ingen database.
  */
 export function proxy(request: NextRequest, env: ProxyEnv = process.env) {
-  if (!erWhiteLabelSpikeAktiv(env)) {
-    return settAuthNoStore(NextResponse.next());
+  const path = request.nextUrl.pathname;
+  const auth = erAuthSti(path);
+
+  if (!erWhiteLabelAktiv(env)) {
+    const res = NextResponse.next();
+    return auth ? settAuthNoStore(res) : res;
   }
 
   const headers = new Headers(request.headers);
   headers.delete('x-endwise-sone');
   headers.delete('x-endwise-slug');
+  headers.delete('x-endwise-kontekst');
 
   const host = request.headers.get('host');
   const opplosning = opplosTenantFraHost(host, {
@@ -40,15 +60,47 @@ export function proxy(request: NextRequest, env: ProxyEnv = process.env) {
     previewSlug: request.headers.get('x-tenant-slug') ?? request.nextUrl.searchParams.get('tenant'),
   });
 
+  const kontekst = lesKontekst(
+    request.nextUrl.searchParams.get('kontekst') ?? request.headers.get('x-endwise-kontekst'),
+    env.VERCEL_ENV,
+  );
+
   headers.set('x-endwise-sone', opplosning.sone);
   if (opplosning.slug) headers.set('x-endwise-slug', opplosning.slug);
+  if (kontekst) headers.set('x-endwise-kontekst', kontekst);
 
-  const res = NextResponse.next({ request: { headers } });
-  res.headers.set('x-endwise-sone', opplosning.sone);
-  if (opplosning.slug) res.headers.set('x-endwise-slug', opplosning.slug);
-  return settAuthNoStore(res);
+  const rute = ruteFraSone({
+    sone: opplosning.sone,
+    slug: opplosning.slug,
+    path,
+    kontekst,
+  });
+
+  const requestInit = { request: { headers } };
+  const slugUt = rute.type === 'not-found' ? null : opplosning.slug;
+
+  if (rute.type === 'not-found') {
+    const url = request.nextUrl.clone();
+    url.pathname = UKJENT_KUNDE_STI;
+    return medSone(NextResponse.rewrite(url, requestInit), opplosning.sone, slugUt, auth);
+  }
+
+  if (rute.type === 'rewrite') {
+    const url = request.nextUrl.clone();
+    url.pathname = rute.dest;
+    return medSone(NextResponse.rewrite(url, requestInit), opplosning.sone, slugUt, auth);
+  }
+
+  return medSone(NextResponse.next(requestInit), opplosning.sone, slugUt, auth);
 }
 
 export const config = {
-  matcher: ['/signin', '/signin/:path*', '/2fa-oppsett', '/2fa-oppsett/:path*', '/api/auth/:path*'],
+  matcher: [
+    '/signin',
+    '/signin/:path*',
+    '/2fa-oppsett',
+    '/2fa-oppsett/:path*',
+    '/api/auth/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|logo/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)',
+  ],
 };

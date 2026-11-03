@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F16 White label F0 (ADR + spike)
+
+**Type:** ny fase i veikartet. ADR + isolerte, flagg-vaktede spiker. Ingen atferd for dagens endwise.no-brukere. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen er godkjent av Mikael; Mons' §3.11 venter formell OK. PR, ikke merge.
+**Endring:** Ny fase **F16** = white label-planens F0. **F16-01** `done` (ADR-005). **F16-02** `done` (tenant-host i proxy bak `ENDWISE_WHITE_LABEL_SPIKE`). **F16-03** `done` (0045 branding/domener/koder/tillatelser + RLS-skisse). **F16-04** `done` (HMAC-invitasjonskode). Kanon: `docs/adr/ADR-005-white-label-arkitektur.md`. ⛔ Ingen rewrite, ingen produksjonsflagg på. ⛔ #114/#119.
+
+---
+
 ## 2026-09-10 — F15 Sikkerhetsstyringssystem / HMS (veikart bak flagg)
 
 **Type:** ny fase/epic i veikartet. Ingen techstack-endring. Ingen ny UI-pakke. Ingen DB. Ingen HMS-UI.

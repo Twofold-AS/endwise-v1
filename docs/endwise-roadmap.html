@@ -1251,12 +1251,22 @@ const ROADMAP = [
   { id:"F15-04", o:"Bygg HMS-dokumentasjon, PVU og arbeidsutstyr bak flagg hms", kat:"dashboard", sub:"forhandler", t:"PLAN — FASE 3. Dokumentasjon og sertifisering (HMS, ikke F3-12-jobbsert), personlig verneutstyr, arbeidsutstyr med ettersyn, kvalitetssikring og ansvar (eier/signatur). Skilt fra lager (<code>parts</code>, F2-09). Bak <code>hms</code>. ⛔ Ikke fullt stoffkartotek. Se <code>docs/hms-sikkerhetsstyring.md</code> §7 fase 3.", area:"admin", ui:"missing", status:"planned" },
   { id:"F15-05", o:"Kartlegg arbeidsmiljøfaktorer og forskriftsramme i HMS-modulen", kat:"dashboard", sub:"forhandler", t:"PLAN — FASE 4. Kjemikalier og biologiske faktorer (pekere, ikke EcoOnline-erstatning), vern mot vibrasjon og støy, ergonomi, andre fysiske faktorer, psykososialt arbeidsmiljø, utmattelse/fatigue (signal mot kapasitet, ikke diagnose), tilrettelegging for opplæring (kan peke på F3-12), informasjon om arbeidstakers helse <b>først etter F14</b>. Forskrifter som referanse/ramme — ingen lovdump, ingen compliant-badge. Bak <code>hms</code>. Se <code>docs/hms-sikkerhetsstyring.md</code> §6–§7.", area:"admin", ui:"missing", status:"planned" },
 ]},
+{ phase:"F16", title:"White label — ADR og spike (plan F0)", target:"Før subdomene-regler og vertsruting", items:[
+  { id:"F16-01", o:"Skriv ADR for white label-arkitektur og Mons-krav", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> ADR-005. <code>&lt;sted&gt;.endwise.no</code> per forhandler (forhandler velger i onboarding; kollisjon → bergen-sentrum; reserverte ord blokkert). Skjult <code>platform.endwise.no</code>. Én innlogging per forhandlervert med Privat/Bedrift. Ingen rollemaler (oppretter = daglig leder, eneste grantor hos forhandler; andre er ansatte; platform kan alt). Tillatelser per område. 2FA påkrevd for Bedrift og inviterte ansatte, valgfri for kunder. Invitasjon: «Send meg kode», brukt lenke død. Forhandlerbranding i e-post, GDPR-e-post ved kundeforhold, «Levert av Endwise»-fot, ingen Endwise-logo i header. Mons §3.11 står verbatim i ADR-en. Kanon: <code>docs/adr/ADR-005-white-label-arkitektur.md</code>.",
+    area:"backend", ui:"na", status:"done" },
+  { id:"F16-02", o:"Spike: slå opp tenant fra Host i Next-proxy bak flagg", kat:"plattform", t:"⭐ <b>03.11.2026:</b> Ren oppløser i <code>@endwise/modules/tenant-host</code> (subdomene av endwise.no, reservert-liste, eget-domene-stub). <code>apps/web/proxy.ts</code> kaller den bare når <code>ENDWISE_WHITE_LABEL_SPIKE=1</code>. Matcher og no-store på /signin uendret. Ingen rewrite, ingen DB i proxy. Enhetstester.",
+    area:"infra", ui:"na", status:"done" },
+  { id:"F16-03", o:"Spike: migrasjonsutkast for branding, invitasjonskode og tillatelser", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> 0045 — <code>tenant_branding</code> (navn, farger, logo PNG/WebP, unik tenant), <code>tenant_domains</code> (unik vert), <code>reserverte_slugs</code>, <code>invitation_codes</code> (HMAC-hash, forsøk, utløp, used_at), <code>member_permissions</code> (område × se/endre). RLS tenantPolicy + inspect. Skisse for lookup_tenant_by_host og app.actor. Ingen atferd på eksisterende flyt.",
+    area:"backend", ui:"na", status:"done" },
+  { id:"F16-04", o:"Spike: HMAC-hjelper for invitasjonskode med forsøk og utløp", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> <code>@endwise/modules/invitasjon-kode</code> — generer 6–8 tegn, HMAC-SHA-256 med pepper + salt, konstant-tids verify, maks 5 forsøk, 10–15 min. Samme feil for alt. Isolert fra dagens SHA-256-token. Enhetstester.",
+    area:"backend", ui:"na", status:"done" },
+]},
 ];
 
 /* =====================================================================
    KATEGORIER — den ANDRE aksen (lagt til 20.08.2026).
 
-   ⚠️ Fasene (F0–F15) er IKKE erstattet. De svarer på NÅR noe bygges og i
+   ⚠️ Fasene (F0–F16) er IKKE erstattet. De svarer på NÅR noe bygges og i
    hvilken rekkefølge; kategorien svarer på HVA det er og HVEM det er for.
    Begge finnes samtidig, og «Etter fase» er fortsatt én knapp unna.
 

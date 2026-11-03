@@ -18,6 +18,7 @@ export * from './mechanics.ts';
 export * from './member-permissions.ts';
 export * from './messages.ts';
 export * from './notifications.ts';
+export * from './owner-transfers.ts';
 export * from './profiles.ts';
 export * from './reserverte-slugs.ts';
 export * from './services.ts';

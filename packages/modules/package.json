@@ -24,6 +24,7 @@
     "./profil": "./src/profil/index.ts",
     "./invitasjoner": "./src/invitasjoner/index.ts",
     "./invitasjon-kode": "./src/invitasjon-kode/index.ts",
+    "./eier-overforing": "./src/eier-overforing/index.ts",
     "./jit": "./src/jit/index.ts",
     "./tillatelse": "./src/tillatelse/index.ts",
     "./slug": "./src/slug/index.ts",

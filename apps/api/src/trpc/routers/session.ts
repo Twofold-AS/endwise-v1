@@ -2,6 +2,7 @@ import { sessionMeTwoFactorRequired } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import { erPlattformTenant, landingForPlatform } from '@endwise/modules/plattform';
 import { landingForJobbfunksjon, resolveJobbfunksjon, visningsnavn } from '@endwise/modules/profil';
+import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { resolveDevMode } from '../dev-mode.ts';
 import { protectedProcedure, router } from '../init.ts';
 import { resolveShopFlag } from '../shop-flag.ts';
@@ -168,9 +169,11 @@ export const sessionRouter = router({
     });
     const landing = erPlattform
       ? (landingForPlatform(ctx.role) ?? '/endwise')
-      : needsOnboarding
-        ? '/oppstart'
-        : landingForJobbfunksjon(jobbfunksjon);
+      : erWhiteLabelAktiv() && ctx.kontekst === 'privat'
+        ? '/min-side'
+        : needsOnboarding
+          ? '/oppstart'
+          : landingForJobbfunksjon(jobbfunksjon);
 
     return {
       userId: ctx.userId,
@@ -213,6 +216,7 @@ export const sessionRouter = router({
       twoFactorRequired: sessionMeTwoFactorRequired({
         twoFactorEnabled: undefined,
       }),
+      kontekst: ctx.kontekst,
     };
   }),
 });

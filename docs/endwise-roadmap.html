@@ -1297,6 +1297,10 @@ const ROADMAP = [
   { id:"F25-01", o:"Bytt Tjenester, Lager, Nettbutikk, Ansatte, Innstillinger og Økonomi til omradeProcedure", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F6c. <code>omradeSjekk</code> + entitlement (shop/widget/quick). Lager Se/Endre dokumentert (<code>LAGER_NIVA</code>); move/manage i rbac er plugin. Uttak på jobb hopper mekaniker. Invitere/fjerne ansatte forblir leder. Chrome (<code>forhandler.kort</code>, <code>billing.subscription</code>) uten områdesjekk. Bak <code>ENDWISE_WHITE_LABEL</code>.",
     area:"backend", ui:"partial", status:"done" },
 ]},
+{ phase:"F26", title:"White label — Privat/Bedrift (plan F7)", target:"Etter F25 / Mons-review", items:[
+  { id:"F26-01", o:"Bygg felles innlogging, kontekst Privat/Bedrift og Bedrift-porter bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F7 (Mons-review). <code>session.kontekst</code> + Bedrift-vindu 30 min/10 t. Dest på forhandlervert er tenant-kjent (ansatt eller kunde). Konto ved kode, <code>customers.userId</code>. <code>/logg-inn</code> og <code>/velg</code>. Bytt til Bedrift krever fersk TOTP og roterer token. Bedrift-API krever CSRF-header. Ingen sesjon krysser forhandlere. Sensitive handlinger (tillatelse, slett kunde) krever TOTP. Bak <code>ENDWISE_WHITE_LABEL</code>.",
+    area:"auth", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================

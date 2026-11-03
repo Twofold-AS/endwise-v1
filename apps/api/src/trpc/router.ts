@@ -15,6 +15,7 @@ import { inboxContextRouter } from './routers/inbox-context.ts';
 import { inventoryRouter } from './routers/inventory.ts';
 import { invitasjonerRouter } from './routers/invitasjoner.ts';
 import { jitRouter } from './routers/jit.ts';
+import { kontekstRouter } from './routers/kontekst.ts';
 import { lookupRouter } from './routers/lookup.ts';
 import { mechanicRouter } from './routers/mechanic.ts';
 import { mechanicsRouter } from './routers/mechanics.ts';
@@ -44,6 +45,7 @@ export const appRouter = router({
   billing: billingRouter,
   mechanic: mechanicRouter,
   session: sessionRouter,
+  kontekst: kontekstRouter,
   stream: streamRouter,
   tenants: tenantsRouter,
   tillatelse: tillatelseRouter,

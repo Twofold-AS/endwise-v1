@@ -1,13 +1,16 @@
 import { randomBytes } from 'node:crypto';
-import type { Database } from '@endwise/db';
+import { type Database, eq, schema } from '@endwise/db';
 import { createAuthMiddleware } from 'better-auth/api';
 import { deleteSessionCookie } from 'better-auth/cookies';
+import { lesAuthTenantId } from './auth-request.ts';
 import { BYTT_PASSORD_ETTER_HOOK_ID } from './bytt-passord.ts';
 import { createByttPassordEtterHook } from './bytt-passord-server.ts';
 import { TWO_FACTOR_COOKIE_NAME } from './faktor-kaker.ts';
+import { harForhandlerRolle, knyttKundeUser } from './forhandler-konto.ts';
 import {
   MAGIC_LINK_APP_LANDING,
   MAGIC_LINK_CALLBACK,
+  MAGIC_LINK_ENROLL_STI,
   MAGIC_LINK_TOTP_QUERY,
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
@@ -23,11 +26,19 @@ import {
  */
 
 export type MagicLinkEtterVerify =
-  | { handling: 'behold-sesjon'; dest: typeof MAGIC_LINK_APP_LANDING }
+  | { handling: 'behold-sesjon'; dest: string }
   | { handling: 'totp-mur'; dest: string };
 
 /** Ren avgjørelse etter magic-link-verify. Ingen sideeffekter. */
-export function etterMagicLinkVerify(bundet: boolean): MagicLinkEtterVerify {
+export function etterMagicLinkVerify(
+  bundet: boolean,
+  wl?: { aktiv: boolean; harRolle: boolean },
+): MagicLinkEtterVerify {
+  if (wl?.aktiv) {
+    if (!wl.harRolle) return { handling: 'behold-sesjon', dest: '/min-side' };
+    if (!bundet) return { handling: 'behold-sesjon', dest: MAGIC_LINK_ENROLL_STI };
+    return { handling: 'behold-sesjon', dest: '/velg' };
+  }
   if (bundet) {
     return { handling: 'totp-mur', dest: `${MAGIC_LINK_CALLBACK}?${MAGIC_LINK_TOTP_QUERY}` };
   }
@@ -107,8 +118,8 @@ async function settKakeOgOmdiriger(
   throw ctx.redirect(dest);
 }
 
-function omdirigerTilApp(ctx: HookCtx): Response {
-  const dest = new URL(MAGIC_LINK_APP_LANDING, ctx.context.baseURL).toString();
+function omdirigerTilApp(ctx: HookCtx, sti = MAGIC_LINK_APP_LANDING): Response {
+  const dest = new URL(sti, ctx.context.baseURL).toString();
   ctx.setHeader('Cache-Control', AUTH_NO_STORE);
   ctx.setHeader('CDN-Cache-Control', 'no-store');
   ctx.setHeader('Vercel-CDN-Cache-Control', 'no-store');
@@ -147,50 +158,74 @@ async function startTotp(ctx: HookCtx, userId: string): Promise<Response> {
   return settKakeOgOmdiriger(ctx, cookie, identifier, dest.toString());
 }
 
-export const magicLink2faEtterHook = merket(
-  createAuthMiddleware(async (ctx) => {
-    if (ctx.path !== MAGIC_LINK_VERIFY_STI) return;
-    const data = ctx.context.newSession;
-    if (!data?.user) return;
+export function createMagicLink2faEtterHook(db?: Database) {
+  return merket(
+    createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== MAGIC_LINK_VERIFY_STI) return;
+      const data = ctx.context.newSession;
+      if (!data?.user) return;
 
-    const lesRad = async (userId: string) => {
-      try {
-        return (await ctx.context.adapter.findOne({
-          model: 'twoFactor',
-          where: [{ field: 'userId', value: userId }],
-        })) as { secret?: string | null; verified?: boolean | null } | null;
-      } catch {
-        return null;
-      }
-    };
-
-    const bundet = await erTotpFaktiskBundet(lesRad, data.user);
-    const neste = etterMagicLinkVerify(bundet);
-    if (neste.handling === 'behold-sesjon') {
-      if (data.user.twoFactorEnabled === true) {
+      const lesRad = async (userId: string) => {
         try {
-          await ctx.context.internalAdapter.updateUser(data.user.id, {
-            twoFactorEnabled: false,
-          });
+          return (await ctx.context.adapter.findOne({
+            model: 'twoFactor',
+            where: [{ field: 'userId', value: userId }],
+          })) as { secret?: string | null; verified?: boolean | null } | null;
         } catch {
-          // 0036 + neste verify heler. Missed migrate skal ikke låse ute.
+          return null;
+        }
+      };
+
+      const bundet = await erTotpFaktiskBundet(lesRad, data.user);
+      const tenantId = process.env.ENDWISE_WHITE_LABEL === '1' ? lesAuthTenantId() : null;
+      let harRolle = false;
+      if (tenantId && db) {
+        harRolle = await harForhandlerRolle(db, data.user.id, tenantId);
+        await knyttKundeUser(db, tenantId, data.user.id, data.user.email).catch(() => null);
+        try {
+          await db
+            .update(schema.session)
+            .set({
+              kontekst: 'privat',
+              activeOrganizationId: tenantId,
+              bedriftVerifisertAt: null,
+              bedriftUtloperAt: null,
+            })
+            .where(eq(schema.session.token, data.session.token));
+        } catch {
+          // Neste request setter kontekst.
         }
       }
-      return omdirigerTilApp(ctx);
-    }
+      const neste = etterMagicLinkVerify(bundet, tenantId ? { aktiv: true, harRolle } : undefined);
+      if (neste.handling === 'behold-sesjon') {
+        if (!bundet && data.user.twoFactorEnabled === true) {
+          try {
+            await ctx.context.internalAdapter.updateUser(data.user.id, {
+              twoFactorEnabled: false,
+            });
+          } catch {
+            // 0036 + neste verify heler. Missed migrate skal ikke låse ute.
+          }
+        }
+        return omdirigerTilApp(ctx, neste.dest);
+      }
 
-    await rivSesjon(ctx);
-    return startTotp(ctx, data.user.id);
-  }),
-  MAGIC_LINK_2FA_HOOK_ID,
-);
+      await rivSesjon(ctx);
+      return startTotp(ctx, data.user.id);
+    }),
+    MAGIC_LINK_2FA_HOOK_ID,
+  );
+}
+
+export const magicLink2faEtterHook = createMagicLink2faEtterHook();
 
 /** Magic-link-TOTP først (kan kaste redirect), deretter bytt-passord-etter. */
 export function createAuthEtterHook(db?: Database) {
   const passordEtter = createByttPassordEtterHook(db);
+  const magicEtter = createMagicLink2faEtterHook(db);
   return merket(
     createAuthMiddleware(async (ctx) => {
-      const ut = await magicLink2faEtterHook(ctx);
+      const ut = await magicEtter(ctx);
       if (ut instanceof Response) return ut;
       await passordEtter(ctx);
     }),

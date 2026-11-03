@@ -15,6 +15,12 @@ export const ABSOLUTE_MAX_LIFETIME_SECONDS = 12 * 60 * 60; // 12 t
 export const PLATFORM_IDLE_TIMEOUT_SECONDS = 15 * 60;
 export const PLATFORM_ABSOLUTE_MAX_LIFETIME_SECONDS = 4 * 60 * 60;
 
+/** F7 / Bedrift: 30 min idle, 10 t absolutt. Privat beholder 60 min / 12 t. */
+export {
+  BEDRIFT_ABSOLUTE_SECONDS as BEDRIFT_ABSOLUTE_MAX_LIFETIME_SECONDS,
+  BEDRIFT_IDLE_SECONDS,
+} from './kontekst.ts';
+
 export interface SessionLike {
   createdAt: Date | string;
   absoluteExpiresAt?: Date | string | null;

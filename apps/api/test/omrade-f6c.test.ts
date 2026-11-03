@@ -28,6 +28,9 @@ const staff = () =>
     userId: 'til-staff-6c',
     role: 'dealer_staff',
     isMechanic: false,
+    kontekst: 'bedrift',
+    requestHeaders: new Headers({ 'x-endwise-csrf': '1' }),
+    authSone: 'forhandler',
   }) as never;
 
 describe('F25 / white label F6c: områder 2', () => {

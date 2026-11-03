@@ -1,3 +1,4 @@
+import { authEnv, verifiserFerskTotpForBruker } from '@endwise/auth';
 import { and, eq, schema, sql, withTenant } from '@endwise/db';
 import {
   kanLedeHandling,
@@ -59,10 +60,14 @@ export const tillatelseRouter = router({
         userId: z.string().min(1).max(80),
         omrade: z.enum(OMRADER),
         niva: z.enum(['se', 'endre']).nullable(),
+        totp: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       krevWhiteLabel();
+      if (ctx.authSone !== 'platform') {
+        await verifiserFerskTotpForBruker(ctx.db, ctx.userId, input, authEnv.secret);
+      }
       const sjekk = vurderTildeling({
         aktorRolle: ctx.role,
         aktorId: ctx.userId,

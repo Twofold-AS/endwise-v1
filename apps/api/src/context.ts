@@ -4,15 +4,19 @@ import {
   assertMember,
   brukerHarPasskey,
   createAuth,
+  erBedriftVinduAktiv,
   harSesjonsCookie,
   lesAuthSone,
+  lesTenantIdFraSlug,
   type Role,
   requireSession,
   rolleTillattISone,
+  type SesjonKontekst,
   TwoFactorRequiredError,
   velgAktivOrganisasjon,
 } from '@endwise/auth';
 import {
+  and,
   createConcurrencyGate,
   createDb,
   type Database,
@@ -44,6 +48,14 @@ export interface AppContext {
   authSone: AuthSone | null;
   /** F5: platform krever bundet passkey for admin-prosedyrer. */
   passkeyOk: boolean;
+  /** F7: privat | bedrift. Null uten flagg / uten sesjon. */
+  kontekst: SesjonKontekst | null;
+  /** F7: tenant fra Host. Avvik mot sesjon avviser. */
+  hostTenantId: string | null;
+  /** F7: Set-Cookie ved sesjonsrotasjon. */
+  setAuthCookie?: (cookie: string) => void;
+  /** F7: CSRF-header og Host-tenant. */
+  requestHeaders: Headers;
 }
 
 /** Samme tall som tenant-tx-porten: 2, ikke gjett-opp av pool-max. */
@@ -113,6 +125,9 @@ export function createAppContext(): AppContext {
     limitBatch: (fn) => fn(),
     authSone: null,
     passkeyOk: false,
+    kontekst: null,
+    hostTenantId: null,
+    requestHeaders: new Headers(),
   };
 }
 
@@ -151,7 +166,7 @@ function getAuthForContext(sone: AuthSone | null): Auth {
  */
 export async function createRequestContext(headers: Headers): Promise<AppContext> {
   const authSone = lesAuthSone(headers);
-  const base = { ...createAppContext(), authSone };
+  const base = { ...createAppContext(), authSone, requestHeaders: headers };
   const gate = createConcurrencyGate(TRPC_BATCH_CONCURRENCY);
   const medPort = (rest: Partial<AppContext> = {}): AppContext => ({
     ...base,
@@ -160,10 +175,20 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
     limitBatch: (fn) => gate.run(fn),
   });
 
-  if (!harSesjonsCookie(headers)) return medPort();
+  const hostSlug = headers.get('x-endwise-slug')?.trim() ?? '';
+  const hostTenantId =
+    process.env.ENDWISE_WHITE_LABEL === '1' && authSone === 'forhandler' && hostSlug
+      ? await lesTenantIdFraSlug(base.db, hostSlug).catch(() => null)
+      : null;
+
+  if (!harSesjonsCookie(headers)) return medPort({ hostTenantId });
   try {
     const data = await requireSession(getAuthForContext(authSone), base.db, headers);
-    let tenantId = data.session.activeOrganizationId ?? null;
+    const sesjonOrg = data.session.activeOrganizationId ?? null;
+    if (hostTenantId && sesjonOrg && sesjonOrg !== hostTenantId) {
+      return medPort({ hostTenantId, userId: data.user.id });
+    }
+    let tenantId = hostTenantId ?? sesjonOrg;
     if (!tenantId) {
       const medlemskap = await base.db
         .select({
@@ -186,18 +211,65 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
         }
       }
     }
-    if (!tenantId) return medPort({ userId: data.user.id });
+    if (!tenantId) return medPort({ userId: data.user.id, hostTenantId });
+    const sesjon = data.session as {
+      kontekst?: string | null;
+      bedriftVerifisertAt?: Date | string | null;
+      bedriftUtloperAt?: Date | string | null;
+    };
+    const kontekst: SesjonKontekst | null =
+      process.env.ENDWISE_WHITE_LABEL === '1' &&
+      erBedriftVinduAktiv({
+        kontekst: sesjon.kontekst,
+        verifisertAt: sesjon.bedriftVerifisertAt,
+        utloperAt: sesjon.bedriftUtloperAt,
+      })
+        ? 'bedrift'
+        : process.env.ENDWISE_WHITE_LABEL === '1'
+          ? 'privat'
+          : null;
     try {
       const role = await assertMember(base.db, data.user.id, tenantId);
       if (authSone && !rolleTillattISone(role, authSone)) {
-        return medPort();
+        return medPort({ hostTenantId });
       }
       const passkeyOk =
         authSone === 'platform' ? await brukerHarPasskey(base.db, data.user.id) : false;
       const profil = await lesJobbOgMekaniker(base.db, tenantId, data.user.id);
-      return medPort({ userId: data.user.id, tenantId, role, passkeyOk, ...profil });
+      return medPort({
+        userId: data.user.id,
+        tenantId,
+        role,
+        passkeyOk,
+        kontekst,
+        hostTenantId,
+        ...profil,
+      });
     } catch {
-      return medPort({ userId: data.user.id });
+      if (process.env.ENDWISE_WHITE_LABEL === '1') {
+        const [kunde] = await withTenant(base.db, tenantId, (tx) =>
+          tx
+            .select({ id: schema.customers.id })
+            .from(schema.customers)
+            .where(
+              and(
+                eq(schema.customers.tenantId, tenantId),
+                eq(schema.customers.userId, data.user.id),
+              ),
+            )
+            .limit(1),
+        ).catch(() => [null]);
+        if (kunde) {
+          return medPort({
+            userId: data.user.id,
+            tenantId,
+            role: 'customer',
+            kontekst: 'privat',
+            hostTenantId,
+          });
+        }
+      }
+      return medPort({ userId: data.user.id, hostTenantId });
     }
   } catch (error) {
     // TOTP er valgfri. TWO_FACTOR_REQUIRED tømmer ikke tRPC/REST.

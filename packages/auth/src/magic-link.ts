@@ -55,12 +55,12 @@ export function erMagicLinkKode(kode: string): boolean {
   return new RegExp(`^\\d{${MAGIC_LINK_KODE_LENGDE}}$`).test(normaliserMagicLinkKode(kode));
 }
 
-export function magicLinkVerifySti(token: string): string {
+export function magicLinkVerifySti(token: string, callback = MAGIC_LINK_CALLBACK): string {
   const kode = normaliserMagicLinkKode(token);
   const dest = new URL(MAGIC_LINK_VERIFY_URL, 'http://endwise.local');
   dest.searchParams.set('token', kode);
-  dest.searchParams.set('callbackURL', MAGIC_LINK_CALLBACK);
-  dest.searchParams.set('errorCallbackURL', MAGIC_LINK_CALLBACK);
+  dest.searchParams.set('callbackURL', callback);
+  dest.searchParams.set('errorCallbackURL', callback);
   return `${dest.pathname}${dest.search}`;
 }
 

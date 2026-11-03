@@ -11,7 +11,9 @@ import { trpc } from '@/lib/trpc';
 import { erChromeTrpcPath, erSessionMePath } from '@/lib/trpc-chrome';
 
 function sameOriginFetch(url: RequestInfo | URL, options?: RequestInit) {
-  return fetch(url, { ...options, credentials: 'include' });
+  const headers = new Headers(options?.headers);
+  headers.set('x-endwise-csrf', '1');
+  return fetch(url, { ...options, credentials: 'include', headers });
 }
 
 function sameOriginBatch() {

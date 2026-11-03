@@ -1,4 +1,4 @@
-import { erMekanikerKonto, kanSkriveDealerDesk } from '@endwise/auth';
+import { erMekanikerKonto, harBedriftCsrf, kanSkriveDealerDesk } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import type { AddonModule } from '@endwise/modules';
 import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
@@ -29,6 +29,17 @@ const t = initTRPC.context<AppContext>().create();
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
+const BEDRIFT_MELDING = 'Krever Bedrift';
+
+/** F7: Bedrift-API krever kontekst + CSRF-header. Uten flagg: pass. Platform: pass. */
+export function krevBedriftFlate(ctx: AppContext) {
+  if (!erWhiteLabelAktiv()) return;
+  if (ctx.authSone === 'platform') return;
+  if (ctx.kontekst !== 'bedrift' || !harBedriftCsrf(ctx.requestHeaders)) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: BEDRIFT_MELDING });
+  }
+}
+
 /** Krever innlogget bruker med tenant-kontekst (håndheves for alvor i F1). */
 export const protectedProcedure = t.procedure.use(function isAuthed(opts) {
   const { ctx } = opts;
@@ -51,6 +62,7 @@ export const protectedProcedure = t.procedure.use(function isAuthed(opts) {
  */
 export const staffProcedure = protectedProcedure.use(function isDesk(opts) {
   const { ctx } = opts;
+  krevBedriftFlate(ctx);
   if (!kanSkriveDealerDesk(ctx)) {
     throw new TRPCError({
       code: 'FORBIDDEN',
@@ -65,6 +77,7 @@ export const staffProcedure = protectedProcedure.use(function isDesk(opts) {
 /** Krever mechanics.userId i tenanten. */
 export const mechanicProcedure = protectedProcedure.use(function isMechanic(opts) {
   const { ctx } = opts;
+  krevBedriftFlate(ctx);
   if (!ctx.isMechanic || !ctx.mechanicId) {
     throw new TRPCError({
       code: 'FORBIDDEN',
@@ -82,6 +95,7 @@ export const mechanicProcedure = protectedProcedure.use(function isMechanic(opts
  */
 export const adminProcedure = protectedProcedure.use(function isAdmin(opts) {
   const { ctx } = opts;
+  krevBedriftFlate(ctx);
   if (ctx.role !== 'dealer_admin' && ctx.role !== 'endwise_admin') {
     throw new TRPCError({
       code: 'FORBIDDEN',
@@ -214,6 +228,7 @@ export function omradeSjekk(
       }
       return opts.next();
     }
+    krevBedriftFlate(ctx);
     if (hoppMekaniker && ctx.isMechanic) return opts.next();
     if (ctx.role === 'dealer_admin' || ctx.role === 'endwise_admin') {
       return opts.next();
@@ -245,6 +260,17 @@ export function omradeSjekk(
 export function omradeProcedure(omrade: Omrade, trenger: Niva = 'se', hoppMekaniker = false) {
   return protectedProcedure.use(omradeSjekk(omrade, trenger, hoppMekaniker));
 }
+
+/** F7: kundeflate. Virker i Privat. Bedrift gir 403. */
+export const customerProcedure = protectedProcedure.use(function isKundeFlate(opts) {
+  if (!erWhiteLabelAktiv()) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Ikke tilgjengelig' });
+  }
+  if (opts.ctx.kontekst === 'bedrift') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Ikke i Bedrift' });
+  }
+  return opts.next({ ctx: opts.ctx });
+});
 
 export const endwiseAdminProcedure = protectedProcedure.use(function isEndwiseAdmin(opts) {
   const { ctx } = opts;

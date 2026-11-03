@@ -88,6 +88,38 @@ export async function lesAuthBrukerNavn(db: Database, epost: string): Promise<st
 export const erProduktDestinasjon = erAuthDestinasjon;
 
 /**
+ * F7 — dest på forhandlervert. Kjent ansatt ELLER kunde hos DENNE tenanten,
+ * eller åpen invite til samme org. Ikke global customers.email.
+ */
+export async function erForhandlerDestinasjon(
+  db: Database,
+  tenantId: string,
+  epost: string,
+): Promise<boolean> {
+  if (await erTenantDestinasjon(db, tenantId, epost)) return true;
+  const tenant = tenantId.trim();
+  const norm = epost.trim().toLowerCase();
+  if (!tenant || !erEnkelEpost(norm)) return false;
+  try {
+    const [inv] = await db
+      .select({ id: schema.invitations.id })
+      .from(schema.invitations)
+      .where(
+        and(
+          eq(schema.invitations.email, norm),
+          eq(schema.invitations.tenantId, tenant),
+          isNull(schema.invitations.acceptedAt),
+          isNull(schema.invitations.revokedAt),
+        ),
+      )
+      .limit(1);
+    return Boolean(inv);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Varsel-dest (toolkit-resend / notify).
  * Tillatt: kjent kunde hos DENNE forhandleren, eller ansatt i samme tenant.
  * Krever tenant-id. Tom tenant = nei. Aldri global `customers.email`.

@@ -47,14 +47,14 @@ export default function VisuellMobil() {
         </header>
 
         <section data-mobil-side="hjem" className="border-border border-t pt-6">
-          <Side tittel="Verkstedet" undertekst="Tirsdag 2. nov">
+          <Side tittel="Dagen din" undertekst="Her er det som gjelder i dag.">
             <div data-kort className="ew-kort flex flex-col gap-3">
-              <p className="text-[18px] font-[650]">I dag</p>
-              <p className="text-[13px] text-fg-muted">3 planlagt · 1 pågår · 2 ferdig</p>
-              <StatusChip status="pagar" />
+              <p className="text-title font-[650]">I dag: 3 jobber</p>
+              <p className="text-body text-fg-muted">10:00 · Kari · EU-kontroll</p>
             </div>
-            <ListeRad tittel="Les alle siste meldinger" undertekst="2 uleste" hoyre="2" />
-            <ListeRad tittel="På jobb" undertekst="Ingen stempling" hoyre="0 / 4" />
+            <p className="text-label font-[650] text-fg">Trenger deg</p>
+            <ListeRad tittel="2 avvik" undertekst="Trenger svar" />
+            <ListeRad tittel="4 uleste meldinger" undertekst="Innboks" />
           </Side>
         </section>
 
@@ -184,9 +184,11 @@ export default function VisuellMobil() {
         </section>
 
         <section data-mobil-side="organisasjon" className="border-border border-t pt-6">
-          <Side tittel="Organisasjon" undertekst="Firmaopplysninger">
-            <ListeRad tittel="Firmanavn" undertekst="Tohjul AS" chevron={false} />
-            <ListeRad tittel="Antall ansatte" undertekst="8" chevron={false} />
+          <Side tittel="Organisasjon" undertekst="Verkstedets oppsett">
+            <ListeRad tittel="Ansatte" undertekst="Teamet, timeplan og hvem som har jobber i dag" />
+            <ListeRad tittel="Mekanikere" undertekst="Kompetanse og kapasitet" />
+            <ListeRad tittel="Tilganger" undertekst="Hvem som får se hva" />
+            <ListeRad tittel="Abonnement" undertekst="Plan, tillegg og priser" />
           </Side>
         </section>
 

@@ -2203,3 +2203,45 @@ begin
     );
   end loop;
 end $$;
+
+-- F17 / white label F1 — DEFINER-oppslag på slug (eier ≠ authenticated).
+drop policy if exists reserverte_slugs_slug_oppslag on reserverte_slugs;
+create policy reserverte_slugs_slug_oppslag on reserverte_slugs
+  as permissive for select to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and lower(slug) = nullif(current_setting('app.slug_sjekk', true), '')
+  );
+
+drop policy if exists tenants_slug_oppslag on tenants;
+create policy tenants_slug_oppslag on tenants
+  as permissive for select to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and lower(slug) = nullif(current_setting('app.slug_sjekk', true), '')
+  );
+
+drop policy if exists tenant_slug_history_slug_oppslag on tenant_slug_history;
+create policy tenant_slug_history_slug_oppslag on tenant_slug_history
+  as permissive for select to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and lower(slug) = nullif(current_setting('app.slug_sjekk', true), '')
+  );
+
+drop policy if exists slug_reservations_definer on slug_reservations;
+create policy slug_reservations_definer on slug_reservations
+  as permissive for all to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and slug = nullif(current_setting('app.slug_sjekk', true), '')
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and slug = nullif(current_setting('app.slug_sjekk', true), '')
+  );

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F17 White label F1 (subdomene-regler)
+
+**Type:** ny fase. Slug-regler + SECURITY DEFINER. Ingen atferd uten `ENDWISE_WHITE_LABEL`. Ingen ny UI-pakke. Ingen techstack-endring (zod allerede i stacken).
+**Godkjent av:** planen + ADR-005. PR, ikke merge. Ingen slug-migrasjonsrapport (Mikael: eksisterende forhandlere slettes).
+**Endring:** Ny fase **F17**. **F17-01** `done`. `@endwise/modules/slug`, `slug_ledig`/`reserver_slug`, `tenant_slug_history`, `tenants.slugLedig`. ⛔ F2. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F16 White label F0, Mikaels beslutninger
 
 **Type:** ADR-oppdatering. Ingen kodeatferd. Ingen ny UI-pakke. Ingen techstack-endring. F1 ikke startet.

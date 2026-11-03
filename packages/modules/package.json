@@ -24,6 +24,7 @@
     "./profil": "./src/profil/index.ts",
     "./invitasjoner": "./src/invitasjoner/index.ts",
     "./invitasjon-kode": "./src/invitasjon-kode/index.ts",
+    "./slug": "./src/slug/index.ts",
     "./tenant-host": "./src/tenant-host/index.ts",
     "./plattform": "./src/plattform/index.ts",
     "./sok": "./src/sok/index.ts",
@@ -36,7 +37,8 @@
   "dependencies": {
     "@endwise/db": "workspace:*",
     "@endwise/events": "workspace:*",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

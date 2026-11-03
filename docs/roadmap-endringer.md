@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F37 White label F14 (Framer nedgraderes)
+
+**Type:** ny fase. Plugin merkes tillegg. Widget får publisert forhandlerbranding. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F37**. **F37-01** `done`. F4-10 `progress` (CTA fra merke). Booking-flyt uendret. ⛔ `#0066ff`. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F36 White label F13 (datadeling modell)
 
 **Type:** ny fase. Datamodell og RLS, ingen UI (F14-07). Ingen ny UI-pakke. Ingen techstack-endring.

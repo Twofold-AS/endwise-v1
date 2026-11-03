@@ -45,7 +45,10 @@ export default function FramerAgentPage() {
     <div className="mx-auto flex h-full w-full max-w-[820px] flex-col gap-4 px-8 py-7">
       <div className="flex items-center gap-2">
         <Sparkles size={18} className="text-primary" />
-        <h1 className="font-semibold text-fg text-xl tracking-tight">Framer-agent</h1>
+        <h1 className="font-semibold text-fg text-xl tracking-tight">Framer-plugin</h1>
+        <span className="rounded-full border border-hairline px-2 py-0.5 text-fg-muted text-xs">
+          Tillegg
+        </span>
         <NewBadge />
         <span className="ml-auto text-fg-faint text-xs">@endwise/framer-agent · :3003</span>
       </div>
@@ -54,8 +57,8 @@ export default function FramerAgentPage() {
         <div className="flex min-h-[320px] flex-1 flex-col gap-3 overflow-y-auto rounded-lg bg-inset p-4">
           {messages.length === 0 ? (
             <p className="m-auto max-w-sm text-center text-fg-faint text-sm">
-              Be agenten bygge eller endre en forhandlerside i Framer — f.eks. «lag en landingsside
-              for MC-service i Bergen».
+              Tillegg. Kundesiden er hele løsningen. Be agenten bygge en Framer-landingsside —
+              f.eks. «lag en landingsside for MC-service i Bergen».
             </p>
           ) : (
             messages.map((m, i) => (

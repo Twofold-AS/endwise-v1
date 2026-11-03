@@ -27,10 +27,44 @@ export interface ChatReply {
   escalated: boolean;
 }
 
+/** F37 / white label F14 — publisert forhandler-merke. Ingen tenant-id. */
+export interface WidgetBranding {
+  visningsnavn: string | null;
+  logoUrl: string | null;
+  aksentfarge: string | null;
+  aksentTekstfarge: string | null;
+  visLevertAv: boolean;
+}
+
+const TOM_BRANDING: WidgetBranding = {
+  visningsnavn: null,
+  logoUrl: null,
+  aksentfarge: null,
+  aksentTekstfarge: null,
+  visLevertAv: true,
+};
+
+export function rensWidgetBranding(raw: unknown): WidgetBranding {
+  if (!raw || typeof raw !== 'object') return { ...TOM_BRANDING };
+  const v = raw as Record<string, unknown>;
+  const logo = typeof v.logoUrl === 'string' ? v.logoUrl : null;
+  return {
+    visningsnavn:
+      typeof v.visningsnavn === 'string' && v.visningsnavn.trim()
+        ? v.visningsnavn.trim().slice(0, 80)
+        : null,
+    logoUrl: logo?.startsWith('https://') && !logo.toLowerCase().includes('.svg') ? logo : null,
+    aksentfarge: typeof v.aksentfarge === 'string' ? v.aksentfarge : null,
+    aksentTekstfarge: typeof v.aksentTekstfarge === 'string' ? v.aksentTekstfarge : null,
+    visLevertAv: v.visLevertAv !== false,
+  };
+}
+
 export class WidgetClientError extends Error {}
 
 export function createWidgetClient(opts: WidgetClientOptions) {
   let token: string | null = null;
+  let branding: WidgetBranding = { ...TOM_BRANDING };
 
   async function init(): Promise<void> {
     const res = await fetch(`${opts.apiBase}/widget/init`, {
@@ -39,8 +73,9 @@ export function createWidgetClient(opts: WidgetClientOptions) {
       body: JSON.stringify({ publishableKey: opts.publishableKey }),
     });
     if (!res.ok) throw new WidgetClientError('Kunne ikke starte widget (init)');
-    const data = (await res.json()) as { token: string };
+    const data = (await res.json()) as { token: string; branding?: unknown };
     token = data.token;
+    branding = rensWidgetBranding(data.branding);
   }
 
   async function authed<T>(path: string, init2?: RequestInit): Promise<T> {
@@ -76,6 +111,10 @@ export function createWidgetClient(opts: WidgetClientOptions) {
 
   return {
     ensureToken,
+    getBranding: async (): Promise<WidgetBranding> => {
+      if (!token) await ensureToken();
+      return branding;
+    },
     listServices: () => authed<{ services: WidgetService[] }>('/widget/services'),
     availability: (serviceVersionId: string, date: string) =>
       authed<{ slots: string[] }>(

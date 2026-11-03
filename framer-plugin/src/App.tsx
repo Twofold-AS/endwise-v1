@@ -25,6 +25,9 @@ export function App() {
   return (
     <main style={{ padding: 16, fontFamily: 'system-ui', fontSize: 13, display: 'grid', gap: 10 }}>
       <h2 style={{ margin: 0, fontSize: 15 }}>Endwise Booking</h2>
+      <p style={{ margin: 0, color: '#616161', fontSize: 12 }}>
+        Tillegg — ikke kjerne. Kundene booker på kundesiden. Widgeten viser forhandlerens merke.
+      </p>
       <p style={{ margin: 0, color: '#888' }}>
         Lim inn forhandlerens publishable key (Admin → Integrasjoner → Widget). Den er offentlig og
         trygg i en publisert side.

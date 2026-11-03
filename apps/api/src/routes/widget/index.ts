@@ -5,6 +5,7 @@ import {
   createWidgetPublicService,
   originAllowed,
   signWidgetToken,
+  TOM_WIDGET_BRANDING,
   WIDGET_SLOT_STEP_MINUTES,
   WidgetBookingError,
   WidgetBookingIdentity,
@@ -73,7 +74,13 @@ app.post('/init', async (c) => {
 
   const cid = `customer:${randomUUID()}`;
   const token = signWidgetToken({ tid: resolution.tenantId, cid }, widgetTokenSecret());
-  return c.json({ token, expiresIn: 900, cid });
+  let branding = TOM_WIDGET_BRANDING;
+  try {
+    branding = await createWidgetPublicService(lazyDb()).publicBranding(resolution.tenantId);
+  } catch {
+    branding = TOM_WIDGET_BRANDING;
+  }
+  return c.json({ token, expiresIn: 900, cid, branding });
 });
 
 // Fra her krever alt et gyldig token

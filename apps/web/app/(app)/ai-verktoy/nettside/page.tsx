@@ -65,8 +65,9 @@ export default function AiNettsidePage() {
           <p className="text-label text-fg">Ikke i drift — dette er et eksempel</p>
           <p className="text-body text-fg-muted leading-relaxed">
             Samtalen under er skrevet på forhånd og spilles av lokalt, så du kan se hvordan flaten
-            skal fungere. Agenten er planlagt (F8-09) og venter på Framers Server API. Ingenting du
-            skriver her sendes noe sted, og ingen nettside endres.
+            skal fungere. Framer-pluginen er et tillegg; kundesiden er hele løsningen. Agenten er
+            planlagt (F8-09) og venter på Framers Server API. Ingenting du skriver her sendes noe
+            sted, og ingen nettside endres.
           </p>
         </div>
       </CardShell>

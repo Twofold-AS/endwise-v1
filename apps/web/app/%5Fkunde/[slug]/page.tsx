@@ -8,6 +8,18 @@ export default async function KundeHjem({ params }: { params: Promise<{ slug: st
   const tenant = await hentOffentligKunde(slug);
   if (!tenant) return <UkjentSide />;
 
+  if (!tenant.publisert) {
+    return (
+      <KundeSkall tenant={tenant} tittel={tenant.visningsnavn} undertekst="Kommer snart">
+        <Seksjon tittel="Åpner snart">
+          <p className="text-body text-fg-muted max-md:text-[16px]">
+            Siden er ikke åpen ennå. Kom tilbake litt senere.
+          </p>
+        </Seksjon>
+      </KundeSkall>
+    );
+  }
+
   return (
     <KundeSkall tenant={tenant} tittel={tenant.visningsnavn} undertekst="Velkommen">
       <Seksjon tittel="Hva vil du gjøre?">

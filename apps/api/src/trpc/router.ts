@@ -2,6 +2,7 @@ import { publicProcedure, router } from './init.ts';
 import { agentRouter } from './routers/agent.ts';
 import { billingRouter } from './routers/billing.ts';
 import { bookingsRouter } from './routers/bookings.ts';
+import { brandingRouter } from './routers/branding.ts';
 import { competenceRouter } from './routers/competence.ts';
 import { conflictsRouter } from './routers/conflicts.ts';
 import { customersRouter } from './routers/customers.ts';
@@ -42,6 +43,7 @@ export const appRouter = router({
   session: sessionRouter,
   stream: streamRouter,
   tenants: tenantsRouter,
+  branding: brandingRouter,
   customers: customersRouter,
   search: searchRouter,
   directory: directoryRouter,

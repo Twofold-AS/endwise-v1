@@ -11,6 +11,7 @@ export type OffentligTenant = {
   epost: string | null;
   sted: string | null;
   visLevertAv: boolean;
+  publisert: boolean;
 };
 
 type Rad = {
@@ -23,6 +24,7 @@ type Rad = {
   epost?: string | null;
   sted?: string | null;
   vis_levert_av?: boolean;
+  publisert?: boolean;
 };
 
 export function offentligTenantFraRad(rad: Rad | undefined | null): OffentligTenant | null {
@@ -37,6 +39,7 @@ export function offentligTenantFraRad(rad: Rad | undefined | null): OffentligTen
     epost: rad.epost ?? null,
     sted: rad.sted ?? null,
     visLevertAv: rad.vis_levert_av !== false,
+    publisert: rad.publisert === true,
   };
 }
 
@@ -64,7 +67,7 @@ export async function slaaOppOffentligTenant(input: {
     const slug = input.slug?.trim().toLowerCase() ?? '';
     const res = await client.execute(
       sql`select slug, visningsnavn, logo_url, aksentfarge, aksent_tekstfarge,
-                 telefon, epost, sted, vis_levert_av
+                 telefon, epost, sted, vis_levert_av, publisert
             from lookup_tenant_by_host(${host}::text, ${slug || null}::text)`,
     );
     const rad = (res.rows ?? res)[0] as Rad | undefined;

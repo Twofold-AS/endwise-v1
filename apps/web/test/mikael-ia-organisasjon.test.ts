@@ -77,11 +77,11 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     ]);
   });
 
-  it('Innstillinger er kun Profil + Varsler', () => {
+  it('Innstillinger er Konto, Varsler og Utseende', () => {
     expect(SETTINGS_NAV.href).toBe('/innstillinger/profil');
-    expect([...FANE_IDS]).toEqual(['profil', 'varsler']);
-    expect(FANER.map((f) => f.label)).toEqual(['Konto', 'Varsler']);
-    expect(synligeFaner(true).map((f) => f.id)).toEqual(['profil', 'varsler']);
+    expect([...FANE_IDS]).toEqual(['profil', 'varsler', 'utseende']);
+    expect(FANER.map((f) => f.label)).toEqual(['Konto', 'Varsler', 'Utseende']);
+    expect(synligeFaner(true).map((f) => f.id)).toEqual(['profil', 'varsler', 'utseende']);
     expect(erSettingsSti('/abonnement')).toBe(false);
     expect(erSettingsSti('/innstillinger/koblinger')).toBe(false);
     expect(erSettingsSti('/innstillinger/varsler')).toBe(true);

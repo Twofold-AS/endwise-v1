@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F19 White label F3 (branding)
+
+**Type:** ny fase. Utseende + logo bak flagg. Ingen atferd uten `ENDWISE_WHITE_LABEL`. Ingen ny UI-pakke. `@vercel/blob` allerede i techstack.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F19**. **F19-01** `done`. Kontrast-AA, nei til #0066ff, Blob-logo, Utseende-fane, utkast/publiser, lookup skjuler utkast. ⛔ F4. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F18 White label F2 (vertsruting)
 
 **Type:** ny fase. Host-sone + rewrite bak flagg. Ingen atferd uten `ENDWISE_WHITE_LABEL`. Ingen ny UI-pakke. Ingen techstack-endring.

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F31 White label F10 (onboarding i Oppretter)
+
+**Type:** ny fase. Fire Oppretter-steg, kunde-RLS, Gå live. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F31**. **F31-01** `done`. `withCustomer`, RESTRICTIVE, lookup krever onboarding. ⛔ F11a. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F30 White label F9 (ansatte og tilganger UI)
 
 **Type:** ny fase. Se/Endre-matrise på Organisasjon › Tilganger. Ingen ny UI-pakke. Ingen techstack-endring.

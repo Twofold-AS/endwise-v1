@@ -17,6 +17,11 @@ export const APP_TENANT_SETTING = 'app.tenant_id';
  */
 export const APP_INSPECT_SETTING = 'app.platform_inspect';
 
+/** F31 / white label F10 — kundens egen rad. Tom streng = ingen rader. */
+export const APP_CUSTOMER_SETTING = 'app.customer_id';
+/** `customer` | tom. RESTRICTIVE-policyer slår inn bare når verdien er customer. */
+export const APP_ACTOR_SETTING = 'app.actor';
+
 /**
  * Gjeldende tenant fra session-variabelen. NULL => ingen rader synlige.
  * `nullif(..., '')` er ikke kosmetikk. Etter at en transaksjon med
@@ -29,6 +34,25 @@ export const APP_INSPECT_SETTING = 'app.platform_inspect';
 export const currentTenantId = sql`nullif(current_setting(${sql.raw(`'${APP_TENANT_SETTING}'`)}, true), '')::uuid`;
 
 export const currentInspectTenantId = sql`nullif(current_setting(${sql.raw(`'${APP_INSPECT_SETTING}'`)}, true), '')::uuid`;
+
+export const currentCustomerId = sql`nullif(current_setting(${sql.raw(`'${APP_CUSTOMER_SETTING}'`)}, true), '')::uuid`;
+
+export const currentActor = sql`nullif(current_setting(${sql.raw(`'${APP_ACTOR_SETTING}'`)}, true), '')`;
+
+/**
+ * Når `app.actor='customer'` må raden tilhøre `app.customer_id`.
+ * Ellers (ansatt, inspect, tom actor) er sjekken sann — tenant-policy gjelder.
+ * RESTRICTIVE + PERMISSIVE AND. Feiler lukket.
+ */
+export function customerRestrictivePolicy(tableName: string, customerIdColumn: PgColumn) {
+  return pgPolicy(`${tableName}_customer_own`, {
+    as: 'restrictive',
+    for: 'all',
+    to: authenticatedRole,
+    using: sql`${currentActor} is distinct from 'customer' or ${customerIdColumn} = ${currentCustomerId}`,
+    withCheck: sql`${currentActor} is distinct from 'customer' or ${customerIdColumn} = ${currentCustomerId}`,
+  });
+}
 
 /**
  * SELECT-only inspect-policy bundet til `app.platform_inspect`.

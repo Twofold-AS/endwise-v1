@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { tenantTxGate } from './concurrency.ts';
-import { APP_TENANT_SETTING } from './rls.ts';
+import { APP_ACTOR_SETTING, APP_CUSTOMER_SETTING, APP_TENANT_SETTING } from './rls.ts';
 import * as schema from './schema/index.ts';
 
 export type Database = ReturnType<typeof createDb>;
@@ -247,6 +247,27 @@ export async function withPlatformInspect<T>(
     db.transaction(async (tx) => {
       await tx.execute(sql`set transaction read only`);
       await tx.execute(sql`select set_config('app.platform_inspect', ${tenantId}, true)`);
+      return fn(tx);
+    }),
+  );
+}
+
+/**
+ * F31 / white label F10 — kundens egen isolasjon.
+ * Setter tenant, customer og actor=customer lokalt. RESTRICTIVE-policyer
+ * på bookings/vehicles/customers krever customer_id. Feiler lukket.
+ */
+export async function withCustomer<T>(
+  db: Database,
+  tenantId: string,
+  customerId: string,
+  fn: (tx: Parameters<Parameters<Database['transaction']>[0]>[0]) => Promise<T>,
+): Promise<T> {
+  return tenantTxGate.run(() =>
+    db.transaction(async (tx) => {
+      await tx.execute(sql`select set_config(${APP_TENANT_SETTING}, ${tenantId}, true)`);
+      await tx.execute(sql`select set_config(${APP_CUSTOMER_SETTING}, ${customerId}, true)`);
+      await tx.execute(sql`select set_config(${APP_ACTOR_SETTING}, ${'customer'}, true)`);
       return fn(tx);
     }),
   );

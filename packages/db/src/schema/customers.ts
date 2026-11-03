@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { tenantPolicy } from '../rls.ts';
+import { customerRestrictivePolicy, tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
 /** Kunderegister. Sluttkunden hos en forhandler. */
@@ -49,6 +49,7 @@ export const customers = pgTable(
       .on(t.tenantId, t.userId)
       .where(sql`${t.userId} is not null`),
     tenantPolicy('customers', t.tenantId),
+    customerRestrictivePolicy('customers', t.id),
   ],
 ).enableRLS();
 
@@ -70,6 +71,7 @@ export const customerNotes = pgTable(
   (t) => [
     index('customer_notes_customer_idx').on(t.customerId, t.createdAt),
     tenantPolicy('customer_notes', t.tenantId),
+    customerRestrictivePolicy('customer_notes', t.customerId),
   ],
 ).enableRLS();
 

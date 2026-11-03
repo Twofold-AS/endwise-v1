@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { inspectSelectPolicy, tenantPolicy } from '../rls.ts';
 import { tenants } from './tenants.ts';
 
@@ -21,6 +21,14 @@ export const dealerProfiles = pgTable(
     phone: text('phone'),
     email: text('email'),
     website: text('website'),
+    /** F31 / F10 — ukedag 0–6, fra/til, stengt. */
+    apningstider: jsonb('apningstider')
+      .$type<Array<{ dag: number; fra: string; til: string; stengt: boolean }>>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    kategorier: jsonb('kategorier').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    forventetStorrelse: text('forventet_storrelse'),
+    aiTak: integer('ai_tak'),
     /** Leftover client/info-nøkler uten egen kolonne. */
     quickClient: jsonb('quick_client')
       .$type<Record<string, unknown>>()

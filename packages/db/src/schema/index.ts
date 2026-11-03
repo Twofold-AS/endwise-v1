@@ -27,6 +27,7 @@ export * from './tenant-branding.ts';
 export * from './tenant-delete-challenges.ts';
 export * from './tenant-domains.ts';
 export * from './tenant-modules.ts';
+export * from './tenant-slug-history.ts';
 export * from './tenants.ts';
 export * from './vehicles.ts';
 export * from './widget-keys.ts';

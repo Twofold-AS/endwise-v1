@@ -649,6 +649,7 @@ begin
   -- Kun foreign_key_violation / undefined_table svelges i runden.
   foreach v_name in array array[
     'invitation_codes', 'member_permissions', 'tenant_branding', 'tenant_domains',
+    'tenant_slug_history', 'slug_reservations',
     'shop_order_lines', 'shop_orders', 'dealer_profiles',
     'stock_movements', 'stock_levels', 'parts', 'stock_locations',
     'messages', 'thread_participants', 'threads', 'stream_events', 'notifications',
@@ -1461,4 +1462,95 @@ create trigger feature_flag_overrides_owner_update_guard_trg
   before update on feature_flag_overrides
   for each row
   execute function feature_flag_overrides_owner_update_guard();
+
+-- F17 / white label F1 — slug_ledig + reserver_slug. Samme DEFINER-mønster
+-- som lookup_widget_key: GUC app.slug_sjekk + TO PUBLIC eier-policy.
+
+drop function if exists slug_ledig(text, text);
+create or replace function slug_ledig(p_slug text, p_holder text default null)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_slug text := lower(btrim(p_slug));
+begin
+  -- slug_ledig_rev=0046
+  if v_slug is null or v_slug = '' then
+    return false;
+  end if;
+  perform set_config('app.slug_sjekk', v_slug, true);
+  perform set_config('app.slug_holder', coalesce(p_holder, ''), true);
+  if exists (select 1 from reserverte_slugs where lower(slug) = v_slug) then
+    return false;
+  end if;
+  if v_slug = 'endwise' or v_slug like 'endwise-%' then
+    return false;
+  end if;
+  if exists (select 1 from tenants where lower(slug) = v_slug) then
+    return false;
+  end if;
+  if exists (select 1 from organization where lower(slug) = v_slug) then
+    return false;
+  end if;
+  if exists (
+    select 1 from tenant_slug_history
+     where lower(slug) = v_slug
+       and (frigitt_at is null or frigitt_at > now() - interval '12 months')
+  ) then
+    return false;
+  end if;
+  if exists (
+    select 1 from slug_reservations
+     where slug = v_slug
+       and expires_at > now()
+       and (p_holder is null or holder is distinct from p_holder)
+  ) then
+    return false;
+  end if;
+  return true;
+end;
+$$;
+
+revoke all on function slug_ledig(text, text) from public;
+grant execute on function slug_ledig(text, text) to authenticated;
+
+drop function if exists reserver_slug(text, text, integer);
+create or replace function reserver_slug(p_slug text, p_holder text, p_minutter integer default 30)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_slug text := lower(btrim(p_slug));
+  v_min integer := greatest(coalesce(p_minutter, 30), 1);
+begin
+  -- reserver_slug_rev=0046
+  if v_slug is null or v_slug = '' or p_holder is null or btrim(p_holder) = '' then
+    return false;
+  end if;
+  perform set_config('app.slug_sjekk', v_slug, true);
+  perform set_config('app.slug_holder', p_holder, true);
+  delete from slug_reservations where slug = v_slug and expires_at <= now();
+  if not slug_ledig(v_slug, p_holder) then
+    return false;
+  end if;
+  insert into slug_reservations (slug, holder, expires_at)
+  values (v_slug, p_holder, now() + (v_min || ' minutes')::interval)
+  on conflict (slug) do update
+    set holder = excluded.holder,
+        expires_at = excluded.expires_at
+    where slug_reservations.holder = excluded.holder
+       or slug_reservations.expires_at <= now();
+  return exists (
+    select 1 from slug_reservations
+     where slug = v_slug and holder = p_holder and expires_at > now()
+  );
+end;
+$$;
+
+revoke all on function reserver_slug(text, text, integer) from public;
+grant execute on function reserver_slug(text, text, integer) to authenticated;
 

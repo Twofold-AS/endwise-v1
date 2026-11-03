@@ -1,4 +1,4 @@
-export { erWhiteLabelSpikeAktiv } from './flagg.ts';
+export { erWhiteLabelAktiv, erWhiteLabelSpikeAktiv } from './flagg.ts';
 export {
   normaliserVert,
   type OpplosOpts,

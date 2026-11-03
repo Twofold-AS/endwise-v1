@@ -1261,12 +1261,16 @@ const ROADMAP = [
   { id:"F16-04", o:"Spike: HMAC-hjelper for invitasjonskode med forsøk og utløp", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> <code>@endwise/modules/invitasjon-kode</code> — generer 6–8 tegn, HMAC-SHA-256 med pepper + salt, konstant-tids verify, maks 5 forsøk, 10–15 min. Samme feil for alt. Isolert fra dagens SHA-256-token. Enhetstester.",
     area:"backend", ui:"na", status:"done" },
 ]},
+{ phase:"F17", title:"White label — subdomene-regler (plan F1)", target:"Etter F16 / før vertsruting", items:[
+  { id:"F17-01", o:"Bygg slug-regler, reservasjon og slugLedig bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F1. <code>@endwise/modules/slug</code> (3–32, æ→ae, reservert-utkast, forslag ved kollisjon). <code>slug_ledig</code>/<code>reserver_slug</code> SECURITY DEFINER. <code>tenant_slug_history</code> + 30 min reservasjon. <code>tenants.slugLedig</code>/<code>reserverSlug</code> krever åpen eier-invitasjon. Bak <code>ENDWISE_WHITE_LABEL</code>. Ingen slug-migrasjonsrapport (eksisterende forhandlere slettes). Dagens <code>tenants.create</code> urørt.",
+    area:"backend", ui:"na", status:"done" },
+]},
 ];
 
 /* =====================================================================
    KATEGORIER — den ANDRE aksen (lagt til 20.08.2026).
 
-   ⚠️ Fasene (F0–F16) er IKKE erstattet. De svarer på NÅR noe bygges og i
+   ⚠️ Fasene (F0–F17) er IKKE erstattet. De svarer på NÅR noe bygges og i
    hvilken rekkefølge; kategorien svarer på HVA det er og HVEM det er for.
    Begge finnes samtidig, og «Etter fase» er fortsatt én knapp unna.
 

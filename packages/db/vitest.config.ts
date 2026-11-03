@@ -47,6 +47,7 @@ export default defineConfig({
       'test/invitations-owner-returning.test.ts',
       // F16 / white label F0 — branding, koder, tillatelser, RLS-skisse.
       'test/white-label-f0-kontrakt.test.ts',
+      'test/white-label-f1-kontrakt.test.ts',
     ],
     // RLS-testene deler DB-tilstand — serielt, ikke parallelt.
     fileParallelism: false,

@@ -30,6 +30,7 @@ import {
   endwiseAdminProcedure,
   endwiseSupportProcedure,
   protectedProcedure,
+  publicProcedure,
   router,
 } from '../init.ts';
 import { hashSlettKode, lagSlettKode, slettKodeErGyldig } from '../slett-otp.ts';
@@ -39,6 +40,7 @@ import {
   mapCreatePostgresFeil,
   mapSlettPostgresFeil,
 } from '../slett-postgres.ts';
+import { svarSlugLedig } from '../slug-ledig.ts';
 
 /**
  * F5-26 / F5-27 — forhandler-oppretting og demo-tenants.
@@ -257,7 +259,27 @@ async function sendEierEpost(input: {
   };
 }
 
+const slugSjekkInput = z.object({
+  slug: z.string().min(1).max(64),
+  token: z.string().min(1).max(256),
+  sted: z.string().max(64).optional(),
+  firmanavn: z.string().max(80).optional(),
+});
+
 export const tenantsRouter = router({
+  /**
+   * F17 / white label F1 — live ledig/opptatt. Bak ENDWISE_WHITE_LABEL.
+   * Krever åpen eier-invitasjon. Ingen åpent oppslag.
+   */
+  slugLedig: publicProcedure
+    .input(slugSjekkInput)
+    .query(({ ctx, input }) => svarSlugLedig(ctx, input, false)),
+
+  /** 30 min reservasjon. To samtidige kall: unik indeks, én vinner. */
+  reserverSlug: publicProcedure
+    .input(slugSjekkInput)
+    .mutation(({ ctx, input }) => svarSlugLedig(ctx, input, true)),
+
   /**
    * Hvem er jeg hos? Brukes til å erstatte «Endwise-forhandler»-placeholderen
    * i sidebaren med tenantens ekte navn.

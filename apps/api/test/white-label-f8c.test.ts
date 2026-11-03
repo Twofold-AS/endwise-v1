@@ -18,6 +18,9 @@ describe('F29 / white label F8c: overføring av daglig leder', () => {
     );
     expect(sql).toMatch(/DELETE FROM session WHERE user_id = p_fra/);
     expect(sql).toMatch(/stedfortreder/);
+    expect(sql).toMatch(
+      /CREATE POLICY "owner_transfers_tenant_read" ON "owner_transfers"/,
+    );
   });
 
   it('ruter krever TOTP på frivillig og to admin på nød', () => {

@@ -28,17 +28,17 @@ CREATE INDEX IF NOT EXISTS "owner_transfers_tenant_status_idx" ON "owner_transfe
 ALTER TABLE "owner_transfers" ENABLE ROW LEVEL SECURITY;-- > statement-breakpoint
 ALTER TABLE "owner_transfers" FORCE ROW LEVEL SECURITY;-- > statement-breakpoint
 DROP POLICY IF EXISTS "owner_transfers_platform_inspect_read" ON "owner_transfers";-- > statement-breakpoint
-CREATE POLICY "owner_transfers_platform_inspect_read" AS PERMISSIVE FOR SELECT TO "authenticated"
+CREATE POLICY "owner_transfers_platform_inspect_read" ON "owner_transfers" AS PERMISSIVE FOR SELECT TO "authenticated"
   USING ("owner_transfers"."tenant_id" = nullif(current_setting('app.platform_inspect', true), '')::uuid);-- > statement-breakpoint
 DROP POLICY IF EXISTS "owner_transfers_tenant_read" ON "owner_transfers";-- > statement-breakpoint
-CREATE POLICY "owner_transfers_tenant_read" AS PERMISSIVE FOR SELECT TO "authenticated"
+CREATE POLICY "owner_transfers_tenant_read" ON "owner_transfers" AS PERMISSIVE FOR SELECT TO "authenticated"
   USING ("owner_transfers"."tenant_id" = nullif(current_setting('app.tenant_id', true), '')::uuid);-- > statement-breakpoint
 DROP POLICY IF EXISTS "owner_transfers_tenant_write" ON "owner_transfers";-- > statement-breakpoint
-CREATE POLICY "owner_transfers_tenant_write" AS PERMISSIVE FOR ALL TO "authenticated"
+CREATE POLICY "owner_transfers_tenant_write" ON "owner_transfers" AS PERMISSIVE FOR ALL TO "authenticated"
   USING ("owner_transfers"."tenant_id" = nullif(current_setting('app.tenant_id', true), '')::uuid)
   WITH CHECK ("owner_transfers"."tenant_id" = nullif(current_setting('app.tenant_id', true), '')::uuid);-- > statement-breakpoint
 DROP POLICY IF EXISTS "owner_transfers_platform_admin" ON "owner_transfers";-- > statement-breakpoint
-CREATE POLICY "owner_transfers_platform_admin" AS PERMISSIVE FOR ALL TO "authenticated"
+CREATE POLICY "owner_transfers_platform_admin" ON "owner_transfers" AS PERMISSIVE FOR ALL TO "authenticated"
   USING (current_setting('app.platform_admin', true) = 'on')
   WITH CHECK (current_setting('app.platform_admin', true) = 'on');-- > statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON "owner_transfers" TO authenticated;-- > statement-breakpoint

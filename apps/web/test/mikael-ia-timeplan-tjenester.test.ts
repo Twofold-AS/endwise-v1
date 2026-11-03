@@ -70,20 +70,10 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
       'Endringer',
     ]);
     expect(FORHANDLER_NAV.find((i) => i.key === 'tjenester')?.href).toBe('/prisliste');
-    expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan ansatte',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(ORGANISASJON_SEKSJONER).toEqual([]);
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     if (!org) throw new Error('mangler Organisasjon');
-    expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan ansatte',
-    ]);
+    expect(pillsForRole(org, 'dealer_staff')).toEqual([]);
   });
 
   it('mekaniker beholder Dine jobber og ser ikke Organisasjon', () => {

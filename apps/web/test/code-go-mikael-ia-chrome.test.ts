@@ -124,7 +124,7 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     );
 
     const orgSide = utenKommentarer(les('../app/(app)/organisasjon/page.tsx'));
-    expect(orgSide).toMatch(/ListeRad tittel="Ansatte"/);
+    expect(orgSide).toMatch(/tittel="Ansatte"/);
     expect(orgSide).not.toMatch(/SideChromeSkall/);
     expect(orgSide).not.toMatch(/OrganisasjonListe/);
   });
@@ -140,13 +140,7 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     ]);
     const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
     expect(tjenester?.pills?.map((p) => p.label)).toEqual(['Alle tjenester', 'Opprett tjeneste']);
-    expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan ansatte',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(ORGANISASJON_SEKSJONER).toEqual([]);
   });
 
   it('kundeoversikt har Endre-rader og registrer kjøretøy', () => {

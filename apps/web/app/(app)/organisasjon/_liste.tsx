@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, CreditCard, Plug, Users } from '@endwise/ui';
+import { CreditCard, Plug, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { CardShell } from '../_shell/cards';
@@ -8,7 +8,6 @@ import { ORG_LISTE } from './_org-liste';
 
 const ORG_IKON = {
   ansatte: Users,
-  timeplan: CalendarDays,
   abonnement: CreditCard,
   integrasjoner: Plug,
 } as const;

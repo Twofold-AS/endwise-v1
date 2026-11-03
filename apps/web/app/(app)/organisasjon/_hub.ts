@@ -8,14 +8,7 @@ export const ORG_HUB_SEKSJONER = [
     id: 'ansatte',
     label: 'Ansatte',
     href: '/organisasjon?seksjon=ansatte',
-    sub: 'Oversikt, profiler og tilganger',
-    admin: false,
-  },
-  {
-    id: 'timeplan',
-    label: 'Timeplan ansatte',
-    href: '/organisasjon?seksjon=timeplan-ansatte',
-    sub: 'Hvem er på jobb hvilke dager',
+    sub: 'Teamet, timeplan og hvem som har jobber i dag',
     admin: false,
   },
   {

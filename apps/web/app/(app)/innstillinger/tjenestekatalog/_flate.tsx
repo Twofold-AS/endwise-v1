@@ -61,19 +61,12 @@ export function PrislisteFlate({
           : 'mx-auto flex w-full max-w-[1000px] flex-col gap-5 px-8 py-7'
       }
     >
-      {skjulPiller ? null : (
-        <div>
-          <h1 className="sr-only">{tittel}</h1>
-          <p className="flex items-center gap-2 text-title text-fg">
-            <Wrench size={18} strokeWidth={1.75} className="text-fg-muted" />
-            {tittel}
-          </p>
-          <p className="text-body text-fg-muted">
-            Tjenestene kunden kan bestille hos dere, med varighet, pris og hvilke ferdigheter jobben
-            krever.
-          </p>
-        </div>
-      )}
+      <div>
+        <h1 className="text-title text-fg max-md:text-[24px] max-md:font-[650]">{tittel}</h1>
+        <p className="mt-0.5 text-body text-fg-muted">
+          Tjenestene kunden kan bestille hos dere.
+        </p>
+      </div>
 
       <p data-tjenester-pagesub className="text-[12px] text-fg-muted">
         {tjenester.isLoading ? 'Laster tjenester …' : tjenesterPageSub(tilbys)}

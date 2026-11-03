@@ -24,7 +24,11 @@ function OrganisasjonIndre() {
     return (
       <Side tittel="Organisasjon" undertekst="Verkstedets oppsett">
         <ForhandlerKort />
-        <ListeRad tittel="Ansatte" undertekst="Teamet og hvem som har jobber i dag" href="/organisasjon?seksjon=ansatte" />
+        <ListeRad
+          tittel="Ansatte"
+          undertekst="Teamet, timeplan og hvem som har jobber i dag"
+          href="/organisasjon?seksjon=ansatte"
+        />
         <ListeRad tittel="Mekanikere" undertekst="Kompetanse og kapasitet" href="/mekanikere" />
         <ListeRad
           tittel="Tilganger"

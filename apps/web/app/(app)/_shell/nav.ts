@@ -101,13 +101,8 @@ const ADMIN_KUN: OrgRole[] = ['dealer_admin'];
  * Top-bar 2 er seksjonene. Kompetanse er ikke en pille.
  * Abonnement + Integrasjoner bare for dealer_admin (skjules for selger/support).
  */
-export const ORGANISASJON_SEKSJONER: NavChild[] = [
-  { label: 'Oversikt', href: '/organisasjon' },
-  { label: 'Ansatte', href: '/organisasjon?seksjon=ansatte' },
-  { label: 'Timeplan ansatte', href: '/organisasjon?seksjon=timeplan-ansatte' },
-  { label: 'Abonnement', href: '/organisasjon?seksjon=abonnement', roles: ADMIN_KUN },
-  { label: 'Integrasjoner', href: '/organisasjon?seksjon=integrasjoner', roles: ADMIN_KUN },
-];
+/** Tom — Org er hub-liste, ikke 5 faner. Timeplan ansatte ligger under Ansatte. */
+export const ORGANISASJON_SEKSJONER: NavChild[] = [];
 
 export type ShellKey = 'forhandler' | 'mekaniker' | 'endwise' | 'endwise_partner';
 
@@ -837,6 +832,20 @@ export function breadcrumbFor(
   // Undervisning: match først på query (?kanal=/?visning=), så på sti. Et
   // underpunkt med query må matche både sti og query — ellers ville «Oversikt»
   // (uten query) alltid vunnet over «Kalender» på samme sti.
+  if (item.key === 'organisasjon') {
+    const seksjon = new URLSearchParams(search).get('seksjon');
+    const orgCrumb: Record<string, string> = {
+      ansatte: 'Ansatte',
+      'timeplan-ansatte': 'Ansatte',
+      tilganger: 'Tilganger',
+      abonnement: 'Abonnement',
+      integrasjoner: 'Integrasjoner',
+    };
+    const extra = seksjon ? orgCrumb[seksjon] : undefined;
+    if (extra) crumbs.push({ label: extra });
+    return crumbs;
+  }
+
   const barn = item.pills ?? item.children ?? [];
   const child =
     barn.find((c) => {

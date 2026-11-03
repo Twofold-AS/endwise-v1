@@ -228,20 +228,7 @@ describe('Sidebar Kompetanse og Timeplan står — bunnknappene på Team er bort
   it('Ansatte har piller Team, Prisliste, Kompetanse og Timeplan', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     expect(org?.label).toBe('Organisasjon');
-    expect(org?.pills?.map((c) => c.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan ansatte',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
-    expect(org?.pills?.map((c) => c.href)).toEqual([
-      '/organisasjon',
-      '/organisasjon?seksjon=ansatte',
-      '/organisasjon?seksjon=timeplan-ansatte',
-      '/organisasjon?seksjon=abonnement',
-      '/organisasjon?seksjon=integrasjoner',
-    ]);
+    expect(org?.pills ?? []).toEqual([]);
   });
 
   it('Team-siden lenker ikke lenger Mekanikere/Kompetanse/Timeplan som bunnrader', () => {

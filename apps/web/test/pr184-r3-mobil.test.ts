@@ -85,10 +85,23 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(INNBOKS_CHIPS.map((c) => c.label)).toEqual(['Alle', 'Kunder', 'Intern']);
   });
 
+  it('Org-fanene er borte; hub er Ansatte Mekanikere Tilganger Abonnement', () => {
+    expect(les('../app/(app)/_shell/nav.ts')).toMatch(
+      /export const ORGANISASJON_SEKSJONER: NavChild\[\] = \[\]/,
+    );
+    const org = utenKommentarer(les('../app/(app)/organisasjon/page.tsx'));
+    expect(org).toMatch(/tittel="Ansatte"/);
+    expect(org).toMatch(/tittel="Mekanikere"/);
+    expect(org).toMatch(/tittel="Tilganger"/);
+    expect(org).toMatch(/tittel="Abonnement"/);
+    expect(org).not.toMatch(/TimeplanAnsatteFlate/);
+    expect(org).not.toMatch(/SideChromeSkall/);
+  });
+
   it('Org er hub uten Timeplan ansatte-fane, Abonnement heter Tillegg og priser', () => {
     const org = utenKommentarer(les('../app/(app)/organisasjon/page.tsx'));
-    expect(org).toMatch(/ListeRad tittel="Ansatte"/);
-    expect(org).toMatch(/ListeRad tittel="Mekanikere"/);
+    expect(org).toMatch(/tittel="Ansatte"/);
+    expect(org).toMatch(/tittel="Mekanikere"/);
     expect(org).toMatch(/tittel="Tilganger"/);
     expect(org).toMatch(/Tillegg og priser/);
     expect(org).not.toMatch(/TimeplanAnsatteFlate/);

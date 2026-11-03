@@ -1,6 +1,5 @@
 export const ORG_LISTE = [
   { id: 'ansatte', label: 'Ansatte', href: '/organisasjon?seksjon=ansatte' },
-  { id: 'timeplan', label: 'Timeplan ansatte', href: '/organisasjon?seksjon=timeplan-ansatte' },
   { id: 'abonnement', label: 'Abonnement', href: '/organisasjon?seksjon=abonnement', admin: true },
   {
     id: 'integrasjoner',

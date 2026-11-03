@@ -7,7 +7,7 @@ import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { shellForBruker } from '../_shell/nav';
-import { Feil, Laster, Sidehode, Tomt } from './_delt';
+import { Feil, Laster, Tomt } from './_delt';
 import { LAGER_HUB_SEKSJONER, LAGER_STAT_LABELS, lagerPageSub } from './_hub';
 
 /**
@@ -37,7 +37,7 @@ export default function LagerOversiktPage() {
 
   return (
     <Side
-      className="mx-auto w-full max-w-[1000px] md:px-8 md:py-7 [&>header]:md:hidden"
+      className="mx-auto w-full max-w-[1000px] md:px-8 md:py-7"
       tittel="Lager"
       undertekst={
         oppsummering.isLoading
@@ -46,16 +46,6 @@ export default function LagerOversiktPage() {
       }
     >
       <div data-lager-hub className="flex flex-col gap-5">
-        <div className="max-md:hidden">
-          <Sidehode
-            tittel="Lager"
-            undertittel={
-              oppsummering.isLoading
-                ? 'Deler, beholdning og inn og ut. Kjerne — ikke et tillegg.'
-                : lagerPageSub(s?.antallDeler ?? 0)
-            }
-          />
-        </div>
         {oppsummering.isError ? (
           <Feil melding={oppsummering.error.message} />
         ) : (
@@ -136,6 +126,7 @@ function Teller({
   laster: boolean;
   hint?: string;
 }) {
+  if (!laster && verdi == null) return null;
   return (
     <CardShell>
       <div className="flex flex-col gap-2 p-3">
@@ -145,8 +136,8 @@ function Teller({
         </p>
         {laster ? (
           <LasterFlate linjer={1} className="py-0" label="Henter tall" />
-        ) : (
-          <p className="font-medium text-[28px] text-fg leading-none tabular-nums">{verdi ?? 0}</p>
+        ) : verdi == null ? null : (
+          <p className="font-medium text-[28px] text-fg leading-none tabular-nums">{verdi}</p>
         )}
         {hint && !laster ? <p className="text-meta text-fg-muted">{hint}</p> : null}
       </div>

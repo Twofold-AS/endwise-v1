@@ -33,13 +33,7 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     const tjenester = FORHANDLER_NAV.find((i) => i.key === 'tjenester');
     expect(tjenester?.pills?.map((p) => p.label)).toEqual(['Alle tjenester', 'Opprett tjeneste']);
     expect(tjenester?.href).toBe('/prisliste');
-    expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan ansatte',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(ORGANISASJON_SEKSJONER).toEqual([]);
     expect(ORG_CHROME_FANER.find((f) => f.id === 'timeplan')?.href).toBe(
       '/organisasjon?seksjon=timeplan-ansatte',
     );
@@ -101,16 +95,13 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
   it('Org-hub peker på eksisterende destinasjoner — ingen vakt-/Hellanor-live', () => {
     expect(ORG_HUB_SEKSJONER.map((s) => s.label)).toEqual([
       'Ansatte',
-      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);
     expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'ansatte')?.href).toBe(
       '/organisasjon?seksjon=ansatte',
     );
-    expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'timeplan')?.href).toBe(
-      '/organisasjon?seksjon=timeplan-ansatte',
-    );
+    expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'timeplan')).toBeUndefined();
     expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'abonnement')?.href).toBe(
       '/organisasjon?seksjon=abonnement',
     );

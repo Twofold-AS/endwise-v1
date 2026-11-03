@@ -207,7 +207,7 @@ export function InboxSidebar() {
       <h2 className="sr-only">Samtaler</h2>
       <Side
         tittel="Innboks"
-        className="[&>header]:sr-only min-h-0 flex-1 overflow-y-auto px-3 py-0"
+        className="min-h-0 flex-1 overflow-y-auto px-3 py-0"
       >
         <PhoneSokFelt
           value={sok}

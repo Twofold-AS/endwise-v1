@@ -78,7 +78,7 @@ describe('Mikael 02.09 03:23 — top-bar 2 under Ronny på alle destinasjoner', 
         role: 'dealer_admin',
         shell: 'forhandler',
       }).map((f) => f.label),
-    ).toEqual(['Oversikt', 'Ansatte', 'Timeplan ansatte', 'Abonnement', 'Integrasjoner']);
+    ).toEqual(['Organisasjon']);
 
     expect(
       destinasjonFaner({

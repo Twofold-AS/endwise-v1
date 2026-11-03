@@ -44,20 +44,8 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     }
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     expect(org?.href).toBe('/organisasjon');
-    expect(org?.pills?.map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan ansatte',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
-    expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan ansatte',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(org?.pills ?? ORGANISASJON_SEKSJONER).toEqual([]);
+    expect(ORGANISASJON_SEKSJONER).toEqual([]);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Ansatte')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Admin')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.label === 'Kompetanse')).toBe(false);
@@ -69,18 +57,8 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
   it('selger/support ser Organisasjon uten Abonnement og Integrasjoner', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     if (!org) throw new Error('mangler Organisasjon');
-    expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan ansatte',
-    ]);
-    expect(pillsForRole(org, 'dealer_admin').map((p) => p.label)).toEqual([
-      'Oversikt',
-      'Ansatte',
-      'Timeplan ansatte',
-      'Abonnement',
-      'Integrasjoner',
-    ]);
+    expect(pillsForRole(org, 'dealer_staff')).toEqual([]);
+    expect(pillsForRole(org, 'dealer_admin')).toEqual([]);
     expect(
       itemsForRole(FORHANDLER_NAV, 'dealer_staff', true).some((i) => i.key === 'organisasjon'),
     ).toBe(true);
@@ -118,7 +96,6 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     expect(isItemActive(org, '/abonnement')).toBe(true);
     expect(breadcrumbFor('/organisasjon', '', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },
-      { label: 'Oversikt' },
     ]);
     expect(breadcrumbFor('/organisasjon', 'seksjon=ansatte', 'forhandler')).toEqual([
       { label: 'Organisasjon', href: '/organisasjon' },

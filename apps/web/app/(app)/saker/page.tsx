@@ -46,7 +46,7 @@ function TimeplanPageInner() {
       faner={TIMEPLAN_FANER.map((f) => ({ ...f, href: timeplanHref(f.id) }))}
       aktiv={aktiv}
     >
-      <Side tittel="Timeplan" className="[&>header]:sr-only max-md:px-0">
+      <Side tittel="Timeplan" undertekst="Jobber per dag." className="max-md:px-0">
         {aktiv === 'endringer' ? (
           <TimeplanEndringer del={endringerDel} endringId={endringId} />
         ) : null}

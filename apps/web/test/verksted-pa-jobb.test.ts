@@ -112,7 +112,7 @@ describe('ansattePaJobb — hvem som er på gulvet', () => {
 describe('Verkstedet-flaten — navn og innhold', () => {
   it('er Forhandler › Verkstedet, ikke Kontor eller Gulvet', () => {
     const side = les('../app/(app)/home/page.tsx');
-    expect(side).toMatch(/sr-only[\s\S]*<h1>Verkstedet<\/h1>/);
+    expect(side).toMatch(/Dagen din/);
     expect(side).toMatch(/DealerDestinasjonskort|PhoneHomeDealer/);
     expect(side).not.toMatch(/AnsattePaJobb/);
     expect(side).not.toMatch(/Kontor|Gulvet/);
@@ -130,8 +130,8 @@ describe('Verkstedet-flaten — navn og innhold', () => {
   it('rører ikke Kompetanse som Organisasjon-pille; Timeplan er egen destinasjon', () => {
     const org = FORHANDLER_NAV.find((i) => i.key === 'organisasjon');
     expect(org?.label).toBe('Organisasjon');
-    expect(org?.pills?.map((c) => c.label)).toEqual(expect.arrayContaining(['Ansatte']));
-    expect(org?.pills?.some((c) => c.label === 'Timeplan ansatte')).toBe(true);
+    expect(org?.pills ?? []).toEqual([]);
+    expect(les('../app/(app)/organisasjon/page.tsx')).toMatch(/tittel="Ansatte"/);
     expect(org?.pills?.some((c) => c.label === 'Kompetanse')).toBe(false);
     const kompetanse = les('../app/(app)/mekanikere/kompetanse/page.tsx');
     expect(kompetanse).not.toMatch(/AnsattePaJobb|dashboard\/_timeplan/);

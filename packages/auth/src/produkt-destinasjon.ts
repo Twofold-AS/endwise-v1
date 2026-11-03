@@ -42,6 +42,32 @@ export async function erAuthDestinasjon(db: Database, epost: string): Promise<bo
   }
 }
 
+/**
+ * Platform-dest (magic link på platform.endwise.no).
+ * Bare brukere som allerede er endwise_admin/support. Samme stille nei
+ * som ukjent — ingen enumerering av forhandleransatte.
+ */
+export async function erPlatformDestinasjon(db: Database, epost: string): Promise<boolean> {
+  const norm = epost.trim().toLowerCase();
+  if (!erEnkelEpost(norm)) return false;
+  try {
+    const [rad] = await db
+      .select({ id: schema.member.id })
+      .from(schema.member)
+      .innerJoin(schema.user, eq(schema.user.id, schema.member.userId))
+      .where(
+        and(
+          eq(schema.user.email, norm),
+          or(eq(schema.member.role, 'endwise_admin'), eq(schema.member.role, 'endwise_support')),
+        ),
+      )
+      .limit(1);
+    return Boolean(rad);
+  } catch {
+    return false;
+  }
+}
+
 /** Visningsnavn til innloggings-e-post. Tom streng hvis ukjent (invitee uten user-rad). */
 export async function lesAuthBrukerNavn(db: Database, epost: string): Promise<string> {
   const norm = epost.trim().toLowerCase();

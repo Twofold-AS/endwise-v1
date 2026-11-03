@@ -52,6 +52,7 @@ export function devTrustedOrigins(port = 3000): string[] {
   return [
     `http://localhost:${port}`,
     `http://127.0.0.1:${port}`,
+    `http://platform.localhost:${port}`,
     ...lokaleIPv4().map((ip) => `http://${ip}:${port}`),
   ];
 }

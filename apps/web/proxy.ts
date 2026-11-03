@@ -29,6 +29,9 @@ function medSone(
 ): NextResponse {
   res.headers.set('x-endwise-sone', sone);
   if (slug) res.headers.set('x-endwise-slug', slug);
+  if (sone === 'platform') {
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
   return auth ? settAuthNoStore(res) : res;
 }
 

@@ -1277,12 +1277,16 @@ const ROADMAP = [
   { id:"F20-01", o:"Bygg forhandler-merke i kunde-e-post", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F4. <code>Merke</code> på <code>byggEpostHtml</code>. <code>sendEmail.avsender</code> (visningsnavn + Reply-To, adresse <code>noreply@endwise.no</code>). Linjeskift i navn avvises. Innboks-e-post uten «Sendt via Endwise». Fot «Levert av Endwise». Ansatt/auth-e-post forblir Endwise-merket.",
     area:"backend", ui:"na", status:"done" },
 ]},
+{ phase:"F21", title:"White label — adskilt admin (plan F5)", target:"Etter F20 / Mons-review", items:[
+  { id:"F21-01", o:"Bygg platform-sone, passkey og kort sesjon bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F5 (Mons-review). <code>createAuth({ sone })</code>: platform-cookie <code>endwise-pl</code>, 15 min idle / 4 t absolutt, passkey-plugin. Forhandlerroller får aldri sesjon på platform; Endwise-roller aldri på forhandlerhost. <code>/_plattform/logg-inn</code> (Endwise + Admin). <code>/endwise</code> og <code>/admin</code> bare på platform-vert. <code>noindex</code> + <code>X-Robots-Tag</code>. <code>audit_log</code> forblir append-only (F1-06). IP-allowlist utsatt (ADR-005). Bak <code>ENDWISE_WHITE_LABEL</code>.",
+    area:"admin", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================
    KATEGORIER — den ANDRE aksen (lagt til 20.08.2026).
 
-   ⚠️ Fasene (F0–F20) er IKKE erstattet. De svarer på NÅR noe bygges og i
+   ⚠️ Fasene (F0–F21) er IKKE erstattet. De svarer på NÅR noe bygges og i
    hvilken rekkefølge; kategorien svarer på HVA det er og HVEM det er for.
    Begge finnes samtidig, og «Etter fase» er fortsatt én knapp unna.
 

@@ -28,7 +28,8 @@ describe('Mons lock 1–7 (ikke merge før disse er grønne)', () => {
     const dest = les('../src/produkt-destinasjon.ts');
     const messages = les('../../../apps/api/src/trpc/routers/messages.ts');
     const threads = les('../../../packages/modules/src/messages/threads.ts');
-    expect(auth).toMatch(/erAuthDestinasjon\(db, email\)/);
+    expect(auth).toMatch(/erAuthDestinasjon/);
+    expect(auth).toMatch(/destinasjon\(db, email\)/);
     expect(dest).toMatch(/erAuthDestinasjon/);
     expect(dest).toMatch(/schema\.user\.email/);
     expect(dest).toMatch(/schema\.invitation/);

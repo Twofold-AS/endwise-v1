@@ -23,7 +23,12 @@ import {
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
 import { createAuthEtterHook } from './magic-link-2fa.ts';
-import { erAuthDestinasjon, lesAuthBrukerNavn } from './produkt-destinasjon.ts';
+import { passkeyPlugin } from './passkey-plugin.ts';
+import {
+  erAuthDestinasjon,
+  erPlatformDestinasjon,
+  lesAuthBrukerNavn,
+} from './produkt-destinasjon.ts';
 import { ac, roles } from './rbac.ts';
 import {
   sendByttEpostBekreftelse,
@@ -35,8 +40,15 @@ import {
   ABSOLUTE_MAX_LIFETIME_SECONDS,
   absoluteExpiryFor,
   IDLE_TIMEOUT_SECONDS,
+  PLATFORM_ABSOLUTE_MAX_LIFETIME_SECONDS,
   SESSION_UPDATE_AGE_SECONDS,
 } from './session-policy.ts';
+import {
+  type AuthSone,
+  cookiePrefixForSone,
+  idleSekunderForSone,
+  platformOffentligUrl,
+} from './sone.ts';
 
 /**
  * F1-01 / F1-03 / F1-05 / F1-11 / F1-12 — Better-Auth-instansen. ADR-002 avgjort.
@@ -44,11 +56,19 @@ import {
  * De er globale identiteter. Tenant-grensen går på `organization.id` (= tenant_id),
  * og håndheves av RLS på domenetabellene + medlemskapssjekk her.
  */
-export function createAuth(db = createDb(authEnv.databaseUrl)) {
+export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: AuthSone }) {
+  const sone = opts?.sone;
+  const platform = sone === 'platform';
+  const idle = sone ? idleSekunderForSone(sone) : IDLE_TIMEOUT_SECONDS;
+  const absolutt = platform
+    ? PLATFORM_ABSOLUTE_MAX_LIFETIME_SECONDS
+    : ABSOLUTE_MAX_LIFETIME_SECONDS;
+  const destinasjon = platform ? erPlatformDestinasjon : erAuthDestinasjon;
+
   return betterAuth({
     appName: 'Endwise',
     secret: authEnv.secret,
-    baseURL: authEnv.baseUrl,
+    baseURL: platform ? platformOffentligUrl() : authEnv.baseUrl,
 
     database: drizzleAdapter(db, { provider: 'pg' }),
 
@@ -122,8 +142,8 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
     },
 
     session: {
-      // Glidende 60-min idle-vindu, serverside.
-      expiresIn: IDLE_TIMEOUT_SECONDS,
+      // Forhandler: 60 min. Platform (F5): 15 min. Serverside glidende vindu.
+      expiresIn: idle,
       updateAge: SESSION_UPDATE_AGE_SECONDS,
       // ADR-002: cookie-cache av. Ellers overlever en revoket sesjon i cachen,
       // og «logg ut alle enheter» blir en løgn.
@@ -134,7 +154,7 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
           type: 'date',
           required: false,
           input: false,
-          defaultValue: () => absoluteExpiryFor(),
+          defaultValue: () => absoluteExpiryFor(new Date(), absolutt),
         },
       },
     },
@@ -202,7 +222,7 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
            * Resend fyrer bare hvis adressen allerede er en Endwise-bruker.
            * Ukjent: stille return (samme 200, ingen enumerering).
            */
-          if (!(await erAuthDestinasjon(db, email))) return;
+          if (!(await destinasjon(db, email))) return;
           const navn = await lesAuthBrukerNavn(db, email);
           await sendMagicLink({
             to: email,
@@ -214,16 +234,14 @@ export function createAuth(db = createDb(authEnv.databaseUrl)) {
         },
       }),
 
-      // Passkey (WebAuthn) er utsatt: `@better-auth/passkey` dro inn
-      // en foreldet @better-auth/core-1.4.x-subtre (peer-drift) og ingen klientflyt
-      // brukte den ennå (auth-client har kun organization + twoFactor). Plugin +
-      // pakke fjernet for en ren peer-graf. `passkey`-tabellen i schema er beholdt
-      // dormant. Techstack §2: reaktiver ved å legge tilbake pakken + passkeyClient
-      // når WebAuthn-flyten faktisk bygges. Se docs/roadmap-endringer.md.
+      // Passkey bare på platform-sonen (F5). Forhandler-instansen
+      // uendret. Plugin lastes dynamisk så forhandler-tester ikke
+      // krever pakken ved import-tid.
+      ...(platform ? [passkeyPlugin()] : []),
     ],
 
     advanced: {
-      cookiePrefix: 'endwise',
+      cookiePrefix: sone ? cookiePrefixForSone(sone) : 'endwise',
       useSecureCookies: process.env.NODE_ENV === 'production',
 
       /**

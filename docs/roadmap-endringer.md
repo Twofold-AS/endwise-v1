@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F21 White label F5 (adskilt admin)
+
+**Type:** ny fase. Platform-sone + passkey bak flagg. `@better-auth/passkey@1.7.15` (ADR-005 F5, techstack reaktivering). Ingen ny UI-pakke.
+**Godkjent av:** planen + ADR-005. PR, ikke merge. Mons-review.
+**Endring:** Ny fase **F21**. **F21-01** `done`. Egen auth-sone, cookie `endwise-pl`, kort sesjon, passkey, noindex, admin bare på platform-vert. IP-allowlist utsatt. ⛔ F5b. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F20 White label F4 (e-post)
 
 **Type:** ny fase. Forhandler-merke i kunde-e-post. Ingen ny UI-pakke. Ingen techstack-endring.

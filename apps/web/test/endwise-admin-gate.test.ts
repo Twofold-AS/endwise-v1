@@ -73,7 +73,8 @@ describe('F1-26: server-gate på /admin og /endwise', () => {
     const kilde = readFileSync(resolve(her, '../lib/endwise-admin-gate.ts'), 'utf8');
     expect(kilde).toMatch(/createRequestContext/);
     expect(kilde).toMatch(/TwoFactorRequiredError/);
-    expect(kilde).toMatch(/redirect\('\/signin'/);
+    expect(kilde).toMatch(/\/signin/);
+    expect(kilde).toMatch(/redirect\(/);
     expect(kilde).toMatch(/return 'forbidden'/);
     expect(kilde).not.toMatch(/lucia|next-auth|clerk/i);
   });

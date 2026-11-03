@@ -1,21 +1,23 @@
-import { createAuth } from '@endwise/auth';
+import { createAuth, lesAuthSone } from '@endwise/auth';
 
 /**
  * Better-Auth som Web Request/Response, uten Hono.
- * `handler(request)` setter `Set-Cookie` på svaret. Når Next.js returnerer
- * den Responsen same-origin (`/api/auth/*` på `apps/web`), er cookien
- * førsteparts: `credentials: 'include'` på tRPC og Better-Auth-klienten
- * (ingen baseURL-overstyring) sender den med automatisk. Ingen CORS, ingen
- * rewrite til localhost.
- * Lat initialisering: env-variablene skal ikke kreves ved import (build/test).
+ * F5: platform-sone får egen instans (cookie-prefiks, kort sesjon, passkey).
+ * Uten flagg: samme instans som før.
  */
-let authInstance: ReturnType<typeof createAuth> | undefined;
+let defaultAuth: ReturnType<typeof createAuth> | undefined;
+let platformAuth: ReturnType<typeof createAuth> | undefined;
 
-function getAuth() {
-  authInstance ??= createAuth();
-  return authInstance;
+function getAuth(req: Request) {
+  const sone = lesAuthSone(req.headers);
+  if (sone === 'platform') {
+    platformAuth ??= createAuth(undefined, { sone: 'platform' });
+    return platformAuth;
+  }
+  defaultAuth ??= createAuth(undefined, sone ? { sone } : undefined);
+  return defaultAuth;
 }
 
 export function handleAuth(req: Request): Promise<Response> {
-  return getAuth().handler(req);
+  return getAuth(req).handler(req);
 }

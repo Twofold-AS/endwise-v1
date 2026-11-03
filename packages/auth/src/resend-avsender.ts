@@ -5,7 +5,9 @@
 
 export const RESEND_FROM_KANONISK = 'Endwise <noreply@endwise.no>';
 
-const EPOST = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EPOST_MAX = 254;
+const EPOST_LOKAL_MAX = 64;
+const EPOST_DOMENE_MAX = 253;
 
 export function produktAvsender(): string {
   const envFrom = process.env.RESEND_FROM?.trim();
@@ -20,8 +22,15 @@ export function produktAvsender(): string {
 
 export function erEnkelEpost(adresse: string): boolean {
   const trimmet = adresse.trim();
-  if (!EPOST.test(trimmet)) return false;
-  if (/[\r\n,;]/.test(trimmet)) return false;
+  if (trimmet.length === 0 || trimmet.length > EPOST_MAX) return false;
+  if (/[\s\r\n,;]/.test(trimmet)) return false;
+  const at = trimmet.indexOf('@');
+  if (at <= 0 || at !== trimmet.lastIndexOf('@')) return false;
+  const lokal = trimmet.slice(0, at);
+  const domene = trimmet.slice(at + 1);
+  const punkt = domene.lastIndexOf('.');
+  if (punkt <= 0 || punkt === domene.length - 1) return false;
+  if (lokal.length > EPOST_LOKAL_MAX || domene.length > EPOST_DOMENE_MAX) return false;
   return true;
 }
 

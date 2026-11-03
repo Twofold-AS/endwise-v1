@@ -88,10 +88,18 @@ describe('F18 / white label F2: proxy vertsruting', () => {
     expect(rewriteDest(admin)).toBe('/_kunde/_ukjent');
   });
 
-  it('platform rewriter til stub', () => {
-    const res = proxy(req('https://platform.endwise.no/home', 'platform.endwise.no'), WL);
-    expect(res.headers.get('x-endwise-sone')).toBe('platform');
-    expect(rewriteDest(res)).toBe('/_plattform');
+  it('platform rewriter rot, admin-stier går videre, noindex', () => {
+    const rot = proxy(req('https://platform.endwise.no/', 'platform.endwise.no'), WL);
+    expect(rot.headers.get('x-endwise-sone')).toBe('platform');
+    expect(rot.headers.get('X-Robots-Tag')).toMatch(/noindex/);
+    expect(rewriteDest(rot)).toBe('/_plattform');
+
+    const logg = proxy(req('https://platform.endwise.no/logg-inn', 'platform.endwise.no'), WL);
+    expect(rewriteDest(logg)).toBe('/_plattform/logg-inn');
+
+    const admin = proxy(req('https://platform.endwise.no/endwise', 'platform.endwise.no'), WL);
+    expect(admin.headers.get('x-endwise-sone')).toBe('platform');
+    expect(rewriteDest(admin)).toBeNull();
   });
 
   it('marked endwise.no er uendret', () => {

@@ -48,6 +48,9 @@ describe('epost-vakt', () => {
     expect(erEnkelEpost('a@b.no')).toBe(true);
     expect(erEnkelEpost('a@b.no,c@d.no')).toBe(false);
     expect(erEnkelEpost('a@b.no\nbcc:x@y.no')).toBe(false);
+    expect(erEnkelEpost('ikke-en-epost')).toBe(false);
+    expect(erEnkelEpost('a@b')).toBe(false);
+    expect(erEnkelEpost(`${'x'.repeat(65)}@b.no`)).toBe(false);
     expect(stripCrLf('Hei\r\nBcc: x')).toBe('Hei Bcc: x');
   });
 });
@@ -117,7 +120,8 @@ describe('åpen send er stengt', () => {
 
   it('magic-link fyrer bare mot produkt-destinasjon', () => {
     const auth = readFileSync(resolve(her, '../src/auth.ts'), 'utf8');
-    expect(auth).toMatch(/erAuthDestinasjon\(db, email\)/);
+    expect(auth).toMatch(/erAuthDestinasjon/);
+    expect(auth).toMatch(/destinasjon\(db, email\)/);
   });
 
   it('ingen tRPC tar imot to/from/html/replyTo fra klienten', () => {

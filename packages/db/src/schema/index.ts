@@ -13,6 +13,7 @@ export * from './integration-config.ts';
 export * from './inventory.ts';
 export * from './invitation-codes.ts';
 export * from './invitations.ts';
+export * from './jit-grants.ts';
 export * from './mechanics.ts';
 export * from './member-permissions.ts';
 export * from './messages.ts';

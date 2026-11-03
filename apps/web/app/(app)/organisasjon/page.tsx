@@ -9,6 +9,7 @@ import { AgentOppretter } from '../_shell/oppretter/agent-oppretter';
 import { AbonnementInnhold } from '../abonnement/_innhold';
 import { IntegrasjonerInnhold } from '../integrasjoner/_innhold';
 import { TjenesterInnhold } from '../tjenester/_innhold';
+import { AktivitetFraEndwise } from './_aktivitet-endwise';
 import { OrganisasjonAnsatte } from './_ansatte';
 import { parseOrgSeksjon } from './_seksjoner';
 import { TimeplanAnsatteFlate } from './_timeplan-ansatte';
@@ -41,6 +42,13 @@ function OrganisasjonIndre() {
           undertekst="Hvem som får se hva"
           href="/organisasjon?seksjon=tilganger"
         />
+        {isAdmin ? (
+          <ListeRad
+            tittel="Aktivitet fra Endwise"
+            undertekst="Hva Endwise har gjort hos dere"
+            href="/organisasjon?seksjon=aktivitet-endwise"
+          />
+        ) : null}
         {isAdmin ? (
           <ListeRad
             tittel="Abonnement"
@@ -90,6 +98,18 @@ function OrganisasjonIndre() {
           Tilgangsstyring kommer senere. I dag styres synlighet av rollen (admin, selger, support,
           mekaniker).
         </p>
+      </Side>
+    );
+  }
+
+  if (seksjon === 'aktivitet-endwise') {
+    return (
+      <Side
+        tittel="Aktivitet fra Endwise"
+        tilbakeHref="/organisasjon"
+        undertekst="Bare daglig leder ser dette"
+      >
+        <AktivitetFraEndwise />
       </Side>
     );
   }

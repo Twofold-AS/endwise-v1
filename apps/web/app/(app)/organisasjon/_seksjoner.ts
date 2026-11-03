@@ -5,6 +5,7 @@ export const ORG_SEKSJON_IDS = [
   'tilganger',
   'abonnement',
   'integrasjoner',
+  'aktivitet-endwise',
 ] as const;
 
 export type OrgSeksjon = (typeof ORG_SEKSJON_IDS)[number];
@@ -65,7 +66,7 @@ export const ORG_CHROME_FANER: readonly OrgChromeFane[] = [
 
 const SETT = new Set<string>(ORG_SEKSJON_IDS);
 
-const ADMIN_SEKSJONER = new Set<OrgSeksjon>(['abonnement', 'integrasjoner']);
+const ADMIN_SEKSJONER = new Set<OrgSeksjon>(['abonnement', 'integrasjoner', 'aktivitet-endwise']);
 
 export function parseOrgSeksjon(raw: string | null | undefined, isAdmin: boolean): OrgSeksjon {
   if (!raw || !SETT.has(raw)) return 'oversikt';
@@ -89,7 +90,7 @@ export function parseOrgChrome(
 ): OrgChromeId {
   const seksjon = parseOrgSeksjon(raw, isAdmin);
   if (seksjon === 'timeplan-ansatte') return 'timeplan';
-  if (seksjon === 'tilganger') return 'oversikt';
+  if (seksjon === 'tilganger' || seksjon === 'aktivitet-endwise') return 'oversikt';
   return seksjon;
 }
 

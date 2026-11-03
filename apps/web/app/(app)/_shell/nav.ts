@@ -836,6 +836,7 @@ export function breadcrumbFor(
       ansatte: 'Ansatte',
       'timeplan-ansatte': 'Ansatte',
       tilganger: 'Tilganger',
+      'aktivitet-endwise': 'Aktivitet fra Endwise',
       abonnement: 'Abonnement',
       integrasjoner: 'Integrasjoner',
     };

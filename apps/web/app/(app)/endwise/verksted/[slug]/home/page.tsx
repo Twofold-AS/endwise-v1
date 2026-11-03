@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc';
 import { sammeOsloDag } from '../../../../_lib/oslo-dag';
 import { CardShell } from '../../../../_shell/cards';
 import { fmtTime, STATUS_LABEL, STATUS_TONE } from '../../../../bookinger/_status';
+import { JitPanel } from '../_jit';
 import { LesingFeil } from '../_lesing';
 
 export default function VerkstedHomePage() {
@@ -42,9 +43,10 @@ export default function VerkstedHomePage() {
         <h1 className="sr-only">Verkstedet</h1>
         <p className="text-title text-fg">{data.data?.tenant.name ?? 'Verkstedet'}</p>
         <p className="text-body text-fg-muted">
-          Kun lesing. Ingen skriving mot denne forhandleren.
+          Kun lesing. Ingen skriving mot denne forhandleren uten midlertidig tilgang.
         </p>
       </div>
+      <JitPanel slug={slug} />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Teller icon={CalendarCheck} label="Saker i dag" verdi={idag} laster={data.isLoading} />
         <Teller icon={Wrench} label="Pågår nå" verdi={paagaar} laster={data.isLoading} />

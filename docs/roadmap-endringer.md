@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F22 White label F5b (JIT)
+
+**Type:** ny fase. Support read-only + just-in-time skriving bak flagg. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F22**. **F22-01** `done`. `jit_grants`, to øyne, varsel til daglig leder, Aktivitet fra Endwise. Impersonering = inspect-skriv. ⛔ F6a. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F21 White label F5 (adskilt admin)
 
 **Type:** ny fase. Platform-sone + passkey bak flagg. `@better-auth/passkey@1.7.15` (ADR-005 F5, techstack reaktivering). Ingen ny UI-pakke.

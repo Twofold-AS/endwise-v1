@@ -212,7 +212,7 @@ RLS: `tenantPolicy` + inspect-SELECT på tenant-tabellene. `reserverte_slugs` ba
 
 1. F1 kan bygge `@endwise/modules/slug` og `reserver_slug()`. **Ingen migrasjon av eksisterende forhandlere.** Eksisterende forhandlere slettes; daglig leder settes via invitasjonsflyten (fresh start). Ingen slug-migrasjonsrapport.
 2. F2 kan utvide proxyen til rewrite mot `/_kunde` og `/_plattform` uten å flytte 153 `(app)`-filer.
-3. F3–F4 eier branding-UI og e-postmal. F5/F5b eier admin-sonen. F6a–c eier tillatelser. F7 eier Privat/Bedrift. F8a–c eier invitasjon og daglig leder-overføring.
+3. F3–F4 eier branding-UI og e-postmal. F5/F5b eier admin-sonen (`jit_grants` i F5b: to øyne, varsel, inspect-skriv). F6a–c eier tillatelser. F7 eier Privat/Bedrift. F8a–c eier invitasjon og daglig leder-overføring.
 4. Ingenting av dette merges uten Mikaels OK på PR-en. Mons §3.11 er formelt godkjent 2026-11-03. Mons reviewer fortsatt F5, F6a, F7 og F8a.
 5. Flagg `ENDWISE_WHITE_LABEL_SPIKE` forblir av i produksjon til F2.
 6. DNS-sonen flyttes ikke. Sertifikat via `_acme-challenge` / CNAME til Vercel. IP-allowlist for `platform` tas senere.

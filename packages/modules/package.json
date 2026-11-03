@@ -24,6 +24,7 @@
     "./profil": "./src/profil/index.ts",
     "./invitasjoner": "./src/invitasjoner/index.ts",
     "./invitasjon-kode": "./src/invitasjon-kode/index.ts",
+    "./jit": "./src/jit/index.ts",
     "./slug": "./src/slug/index.ts",
     "./branding": "./src/branding/index.ts",
     "./tenant-host": "./src/tenant-host/index.ts",

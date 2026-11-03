@@ -1289,12 +1289,16 @@ const ROADMAP = [
   { id:"F23-01", o:"Bygg harTillatelse, omradeProcedure og én dealer_admin bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F6a (Mons-review). <code>@endwise/modules/tillatelse</code> + <code>omradeProcedure</code> (område i koden, ikke klient). <code>tildel_tillatelse</code> SECURITY DEFINER med FOR UPDATE, sjekker rolle i DB, nei til egne. Unik (bruker, org). Trigger maks én <code>dealer_admin</code>. <code>rapport_flere_dealer_admin</code> uten degradering. Routere byttes i F6b/F6c. Bak <code>ENDWISE_WHITE_LABEL</code>.",
     area:"backend", ui:"na", status:"done" },
 ]},
+{ phase:"F24", title:"White label — områder 1 (plan F6b)", target:"Etter F23", items:[
+  { id:"F24-01", o:"Bytt Bookinger, Kunder, Kjøretøy, Innboks og Timeplan til omradeProcedure", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F6b. <code>omradeSjekk</code> på bookings/conflicts, customers/directory, vehicles/vegvesen/lookup, messages/inbox-context, mechanics. Uten flagg: eksisterende procedure. Mekanikerflaten hopper les/egne jobber. Meny deaktiverer uten tilgang («Spør daglig leder»), skjuler ikke. <code>tillatelse.mine</code>. Bak <code>ENDWISE_WHITE_LABEL</code>.",
+    area:"backend", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================
    KATEGORIER — den ANDRE aksen (lagt til 20.08.2026).
 
-   ⚠️ Fasene (F0–F23) er IKKE erstattet. De svarer på NÅR noe bygges og i
+   ⚠️ Fasene (F0–F24) er IKKE erstattet. De svarer på NÅR noe bygges og i
    hvilken rekkefølge; kategorien svarer på HVA det er og HVEM det er for.
    Begge finnes samtidig, og «Etter fase» er fortsatt én knapp unna.
 

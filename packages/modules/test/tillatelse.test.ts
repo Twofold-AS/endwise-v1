@@ -4,8 +4,10 @@ import {
   kanLedeHandling,
   kanTildele,
   LEDER_HANDLINGER,
+  navHarOmrade,
   nivaDekker,
   TILLATELSE_FEIL,
+  TILLATELSE_HINT,
   vurderTildeling,
 } from '../src/tillatelse/index.ts';
 
@@ -47,6 +49,15 @@ describe('F23 / white label F6a: tillatelser', () => {
     expect(kanLedeHandling('dealer_staff')).toBe(false);
     expect(kanLedeHandling('dealer_admin')).toBe(true);
     expect(LEDER_HANDLINGER).toContain('tillatelser.dele_ut');
+    expect(TILLATELSE_HINT).toBe('Spør daglig leder');
+    expect(navHarOmrade({ rolle: 'dealer_staff', omrade: 'kunder', gitt: null })).toBe(true);
+    expect(
+      navHarOmrade({
+        rolle: 'dealer_staff',
+        omrade: 'kunder',
+        gitt: [{ omrade: 'bookinger', niva: 'endre' }],
+      }),
+    ).toBe(false);
     expect(
       vurderTildeling({
         aktorRolle: 'dealer_admin',

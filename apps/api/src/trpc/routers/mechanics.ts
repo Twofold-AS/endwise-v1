@@ -9,7 +9,7 @@ import {
   visningsnavn,
 } from '@endwise/modules/profil';
 import { z } from 'zod';
-import { adminProcedure, protectedProcedure, router } from '../init.ts';
+import { adminProcedure, omradeSjekk, protectedProcedure, router } from '../init.ts';
 
 function dagensVindu(): { fra: Date; til: Date } {
   const fra = new Date();
@@ -20,9 +20,11 @@ function dagensVindu(): { fra: Date; til: Date } {
 }
 
 export const mechanicsRouter = router({
-  list: protectedProcedure.query(({ ctx }) =>
-    withTenant(ctx.db, ctx.tenantId, (tx) => tx.select().from(schema.mechanics)),
-  ),
+  list: protectedProcedure
+    .use(omradeSjekk('timeplan', 'se', true))
+    .query(({ ctx }) =>
+      withTenant(ctx.db, ctx.tenantId, (tx) => tx.select().from(schema.mechanics)),
+    ),
 
   /**
    * F6-19 / F3-08 — mekanikerlista med persistente avatarvalg og status-humor.
@@ -31,7 +33,7 @@ export const mechanicsRouter = router({
    * `user_preferences` har ingen RLS. Isolasjonen kommer av at vi bare
    * slår opp IDer som allerede er hentet tenant-skopet fra `mechanics`.
    */
-  oversikt: protectedProcedure.query(({ ctx }) =>
+  oversikt: protectedProcedure.use(omradeSjekk('timeplan', 'se', true)).query(({ ctx }) =>
     withTenant(ctx.db, ctx.tenantId, async (tx) => {
       const meks = await tx.select().from(schema.mechanics);
       if (meks.length === 0) return [];
@@ -123,6 +125,7 @@ export const mechanicsRouter = router({
   ),
 
   create: adminProcedure
+    .use(omradeSjekk('timeplan', 'endre'))
     .input(
       z.object({
         name: z.string().min(1),
@@ -146,6 +149,7 @@ export const mechanicsRouter = router({
    * kapasitet» på Min dag. Skriving er leder-arbeid (adminProcedure).
    */
   updateCapacity: adminProcedure
+    .use(omradeSjekk('timeplan', 'endre'))
     .input(
       z.object({
         mechanicId: z.uuid(),
@@ -160,6 +164,7 @@ export const mechanicsRouter = router({
    * valget og slot-låsen — matcheren skal aldri kunne dobbeltbooke noen.
    */
   match: protectedProcedure
+    .use(omradeSjekk('timeplan', 'se', true))
     .input(
       z.object({
         serviceId: z.uuid(),

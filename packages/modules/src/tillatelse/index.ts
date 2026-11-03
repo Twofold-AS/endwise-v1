@@ -13,6 +13,7 @@ export type Omrade = (typeof OMRADER)[number];
 export type Niva = (typeof NIVA)[number];
 
 export const TILLATELSE_FEIL = 'Ikke tillatt';
+export const TILLATELSE_HINT = 'Spør daglig leder';
 
 const OMRADER_SETT = new Set<string>(OMRADER);
 const NIVA_SETT = new Set<string>(NIVA);
@@ -78,4 +79,23 @@ export const LEDER_HANDLINGER = [
 
 export function kanLedeHandling(rolle: string | null | undefined): boolean {
   return rolle === 'dealer_admin' || rolle === 'endwise_admin';
+}
+
+/**
+ * Meny-kosmetikk. `gitt == null` = flagg av / ikke lastet: vis som i dag.
+ * Tom liste = lastet, ingen grant: deaktiver.
+ */
+export function navHarOmrade(input: {
+  rolle: string | null | undefined;
+  omrade: Omrade;
+  trenger?: Niva;
+  gitt: ReadonlyArray<{ omrade: string; niva: string }> | null;
+}): boolean {
+  if (input.gitt == null) return true;
+  return harTillatelse({
+    rolle: input.rolle,
+    omrade: input.omrade,
+    trenger: input.trenger ?? 'se',
+    gitt: input.gitt,
+  });
 }

@@ -45,7 +45,7 @@ import { publishEvent } from '@endwise/modules/stream';
 import { osloDagsvindu } from '@endwise/modules/tid';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { protectedProcedure, router, staffProcedure } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router, staffProcedure } from '../init.ts';
 import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 const status = z.enum(['draft', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show']);
@@ -285,6 +285,7 @@ async function attachFarger<T extends { mechanicUserId?: string | null }>(db: Da
 export const bookingsRouter = router({
   /** F3-11 / F3-09 — Internt jobb-inntak. Flere tjenester + manuell varighet. */
   create: staffProcedure
+    .use(omradeSjekk('bookinger', 'endre'))
     .input(
       z.object({
         mechanicId: z.uuid(),
@@ -314,6 +315,7 @@ export const bookingsRouter = router({
     }),
 
   transition: protectedProcedure
+    .use(omradeSjekk('bookinger', 'endre', true))
     .input(z.object({ bookingId: z.uuid(), to: status }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -344,6 +346,7 @@ export const bookingsRouter = router({
    * Filtre: status, mekaniker, dato-vindu, fritekst (kunde/regnr/notat). Beriket.
    */
   list: protectedProcedure
+    .use(omradeSjekk('bookinger', 'se', true))
     .input(
       z
         .object({
@@ -393,48 +396,54 @@ export const bookingsRouter = router({
     ),
 
   /** Detalj: beriket booking + append-only historikk (audit-loggen). */
-  byId: protectedProcedure.input(z.object({ id: z.uuid() })).query(({ ctx, input }) =>
-    withTenant(ctx.db, ctx.tenantId, async (tx) => {
-      const [booking] = await tx
-        .select(enrichedColumns)
-        .from(schema.bookings)
-        .leftJoin(schema.customers, eq(schema.customers.id, schema.bookings.customerId))
-        .leftJoin(schema.vehicles, eq(schema.vehicles.id, schema.bookings.vehicleId))
-        .innerJoin(schema.mechanics, eq(schema.mechanics.id, schema.bookings.mechanicId))
-        .innerJoin(
-          schema.serviceVersions,
-          eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
-        )
-        .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
-        .where(eq(schema.bookings.id, input.id))
-        .limit(1);
-      if (!booking) return null;
-      if (erMekanikerKonto(ctx) && ctx.mechanicId && booking.mechanicId !== ctx.mechanicId) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Mekaniker har ikke tilgang til denne jobben.',
-        });
-      }
-      const [enriched] = await attachFarger(ctx.db, await attachJobLines(tx, [booking]));
-      if (!enriched) return null;
+  byId: protectedProcedure
+    .use(omradeSjekk('bookinger', 'se', true))
+    .input(z.object({ id: z.uuid() }))
+    .query(({ ctx, input }) =>
+      withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [booking] = await tx
+          .select(enrichedColumns)
+          .from(schema.bookings)
+          .leftJoin(schema.customers, eq(schema.customers.id, schema.bookings.customerId))
+          .leftJoin(schema.vehicles, eq(schema.vehicles.id, schema.bookings.vehicleId))
+          .innerJoin(schema.mechanics, eq(schema.mechanics.id, schema.bookings.mechanicId))
+          .innerJoin(
+            schema.serviceVersions,
+            eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
+          )
+          .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
+          .where(eq(schema.bookings.id, input.id))
+          .limit(1);
+        if (!booking) return null;
+        if (erMekanikerKonto(ctx) && ctx.mechanicId && booking.mechanicId !== ctx.mechanicId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Mekaniker har ikke tilgang til denne jobben.',
+          });
+        }
+        const [enriched] = await attachFarger(ctx.db, await attachJobLines(tx, [booking]));
+        if (!enriched) return null;
 
-      const history = await tx
-        .select({
-          id: schema.auditLog.id,
-          actor: schema.auditLog.actor,
-          action: schema.auditLog.action,
-          metadata: schema.auditLog.metadata,
-          occurredAt: schema.auditLog.occurredAt,
-        })
-        .from(schema.auditLog)
-        .where(
-          and(eq(schema.auditLog.subjectType, 'booking'), eq(schema.auditLog.subjectId, input.id)),
-        )
-        .orderBy(desc(schema.auditLog.occurredAt));
+        const history = await tx
+          .select({
+            id: schema.auditLog.id,
+            actor: schema.auditLog.actor,
+            action: schema.auditLog.action,
+            metadata: schema.auditLog.metadata,
+            occurredAt: schema.auditLog.occurredAt,
+          })
+          .from(schema.auditLog)
+          .where(
+            and(
+              eq(schema.auditLog.subjectType, 'booking'),
+              eq(schema.auditLog.subjectId, input.id),
+            ),
+          )
+          .orderBy(desc(schema.auditLog.occurredAt));
 
-      return { ...enriched, history };
-    }),
-  ),
+        return { ...enriched, history };
+      }),
+    ),
 
   /**
    * F3-03 / F3-07 — Kalender: bookinger som overlapper et tidsvindu.
@@ -453,6 +462,7 @@ export const bookingsRouter = router({
    * Samme notat-prefiks som mechanic.reportDeviation (`[AVVIK ` / `[FORESPOR `).
    */
   reportChange: staffProcedure
+    .use(omradeSjekk('bookinger', 'endre'))
     .input(
       z.object({
         bookingId: z.uuid(),
@@ -510,6 +520,7 @@ export const bookingsRouter = router({
    * Avslå rører ikke booking-feltene. Begge skriver audit + behandlet-notat.
    */
   resolveChange: staffProcedure
+    .use(omradeSjekk('bookinger', 'endre'))
     .input(
       z.object({
         bookingId: z.uuid(),
@@ -621,6 +632,7 @@ export const bookingsRouter = router({
    * og skriver `booking.change.angre`. Avslått behandling har urørt booking.
    */
   undoChange: staffProcedure
+    .use(omradeSjekk('bookinger', 'endre'))
     .input(z.object({ bookingId: z.uuid(), kind: z.enum(['avvik', 'forespor']) }))
     .mutation(async ({ ctx, input }) => {
       const kind = input.kind as EndringKind;
@@ -745,6 +757,7 @@ export const bookingsRouter = router({
     }),
 
   calendar: protectedProcedure
+    .use(omradeSjekk('bookinger', 'se', true))
     .input(
       z.object({
         from: z.coerce.date(),

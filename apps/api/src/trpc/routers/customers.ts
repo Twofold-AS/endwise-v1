@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { router, staffProcedure } from '../init.ts';
+import { omradeSjekk, router, staffProcedure } from '../init.ts';
 import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 /**
@@ -24,6 +24,7 @@ export const customersRouter = router({
    * tingene man har for hånden når kunden ringer.
    */
   list: staffProcedure
+    .use(omradeSjekk('kunder', 'se'))
     .input(
       z
         .object({
@@ -84,95 +85,107 @@ export const customersRouter = router({
    * CWE-639: `id` og `tenant_id` i hver WHERE, ikke bare RLS. Den dagen noen
    * kaller dette utenfor `withTenant`, skal svaret være «ingenting».
    */
-  byId: staffProcedure.input(z.object({ id: z.uuid() })).query(({ ctx, input }) =>
-    withTenant(ctx.db, ctx.tenantId, async (tx) => {
-      const [kunde] = await tx
-        .select()
-        .from(schema.customers)
-        .where(and(eq(schema.customers.id, input.id), eq(schema.customers.tenantId, ctx.tenantId)))
-        .limit(1);
-      if (!kunde) return null;
+  byId: staffProcedure
+    .use(omradeSjekk('kunder', 'se'))
+    .input(z.object({ id: z.uuid() }))
+    .query(({ ctx, input }) =>
+      withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [kunde] = await tx
+          .select()
+          .from(schema.customers)
+          .where(
+            and(eq(schema.customers.id, input.id), eq(schema.customers.tenantId, ctx.tenantId)),
+          )
+          .limit(1);
+        if (!kunde) return null;
 
-      const notater = await tx
-        .select()
-        .from(schema.customerNotes)
-        .where(
-          and(
-            eq(schema.customerNotes.customerId, input.id),
-            eq(schema.customerNotes.tenantId, ctx.tenantId),
-          ),
-        )
-        .orderBy(desc(schema.customerNotes.createdAt));
+        const notater = await tx
+          .select()
+          .from(schema.customerNotes)
+          .where(
+            and(
+              eq(schema.customerNotes.customerId, input.id),
+              eq(schema.customerNotes.tenantId, ctx.tenantId),
+            ),
+          )
+          .orderBy(desc(schema.customerNotes.createdAt));
 
-      const kjoretoy = await tx
-        .select()
-        .from(schema.vehicles)
-        .where(
-          and(eq(schema.vehicles.customerId, input.id), eq(schema.vehicles.tenantId, ctx.tenantId)),
-        )
-        .orderBy(desc(schema.vehicles.createdAt));
+        const kjoretoy = await tx
+          .select()
+          .from(schema.vehicles)
+          .where(
+            and(
+              eq(schema.vehicles.customerId, input.id),
+              eq(schema.vehicles.tenantId, ctx.tenantId),
+            ),
+          )
+          .orderBy(desc(schema.vehicles.createdAt));
 
-      // Servicehistorikk: alle saker for kunden, nyeste først.
-      const saker = await tx
-        .select({
-          id: schema.bookings.id,
-          status: schema.bookings.status,
-          startsAt: schema.bookings.startsAt,
-          endsAt: schema.bookings.endsAt,
-          notes: schema.bookings.notes,
-          regNumber: schema.vehicles.regNumber,
-          serviceName: schema.services.name,
-          mechanicName: schema.mechanics.name,
-          priceMinor: schema.serviceVersions.priceMinor,
-        })
-        .from(schema.bookings)
-        .leftJoin(schema.vehicles, eq(schema.vehicles.id, schema.bookings.vehicleId))
-        .leftJoin(
-          schema.serviceVersions,
-          eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
-        )
-        .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
-        .leftJoin(schema.mechanics, eq(schema.mechanics.id, schema.bookings.mechanicId))
-        .where(
-          and(eq(schema.bookings.customerId, input.id), eq(schema.bookings.tenantId, ctx.tenantId)),
-        )
-        .orderBy(desc(schema.bookings.startsAt))
-        .limit(100);
+        // Servicehistorikk: alle saker for kunden, nyeste først.
+        const saker = await tx
+          .select({
+            id: schema.bookings.id,
+            status: schema.bookings.status,
+            startsAt: schema.bookings.startsAt,
+            endsAt: schema.bookings.endsAt,
+            notes: schema.bookings.notes,
+            regNumber: schema.vehicles.regNumber,
+            serviceName: schema.services.name,
+            mechanicName: schema.mechanics.name,
+            priceMinor: schema.serviceVersions.priceMinor,
+          })
+          .from(schema.bookings)
+          .leftJoin(schema.vehicles, eq(schema.vehicles.id, schema.bookings.vehicleId))
+          .leftJoin(
+            schema.serviceVersions,
+            eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
+          )
+          .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
+          .leftJoin(schema.mechanics, eq(schema.mechanics.id, schema.bookings.mechanicId))
+          .where(
+            and(
+              eq(schema.bookings.customerId, input.id),
+              eq(schema.bookings.tenantId, ctx.tenantId),
+            ),
+          )
+          .orderBy(desc(schema.bookings.startsAt))
+          .limit(100);
 
-      /**
-       * Meldinger knyttet til kunden.
-       * Koblingen er `customers.user_id` → `thread_participants.participant_id`.
-       * Har ikke kunden logget inn på «Min side» (F6), finnes ingen kobling — og
-       * da er tom liste det ærlige svaret, ikke en gjetning på navn eller e-post.
-       */
-      const traader = kunde.userId
-        ? await tx
-            .select({
-              id: schema.threads.id,
-              kind: schema.threads.kind,
-              subject: schema.threads.subject,
-              createdAt: schema.threads.createdAt,
-            })
-            .from(schema.threads)
-            .innerJoin(
-              schema.threadParticipants,
-              eq(schema.threadParticipants.threadId, schema.threads.id),
-            )
-            .where(
-              and(
-                eq(schema.threads.tenantId, ctx.tenantId),
-                eq(schema.threadParticipants.participantId, kunde.userId),
-              ),
-            )
-            .orderBy(desc(schema.threads.createdAt))
-            .limit(20)
-        : [];
+        /**
+         * Meldinger knyttet til kunden.
+         * Koblingen er `customers.user_id` → `thread_participants.participant_id`.
+         * Har ikke kunden logget inn på «Min side» (F6), finnes ingen kobling — og
+         * da er tom liste det ærlige svaret, ikke en gjetning på navn eller e-post.
+         */
+        const traader = kunde.userId
+          ? await tx
+              .select({
+                id: schema.threads.id,
+                kind: schema.threads.kind,
+                subject: schema.threads.subject,
+                createdAt: schema.threads.createdAt,
+              })
+              .from(schema.threads)
+              .innerJoin(
+                schema.threadParticipants,
+                eq(schema.threadParticipants.threadId, schema.threads.id),
+              )
+              .where(
+                and(
+                  eq(schema.threads.tenantId, ctx.tenantId),
+                  eq(schema.threadParticipants.participantId, kunde.userId),
+                ),
+              )
+              .orderBy(desc(schema.threads.createdAt))
+              .limit(20)
+          : [];
 
-      return { ...kunde, notater, kjoretoy, saker, traader };
-    }),
-  ),
+        return { ...kunde, notater, kjoretoy, saker, traader };
+      }),
+    ),
 
   create: staffProcedure
+    .use(omradeSjekk('kunder', 'endre'))
     .input(
       z.object({
         name: z.string().min(1).max(160),
@@ -207,6 +220,7 @@ export const customersRouter = router({
     }),
 
   update: staffProcedure
+    .use(omradeSjekk('kunder', 'endre'))
     .input(
       z.object({
         id: z.uuid(),
@@ -260,6 +274,7 @@ export const customersRouter = router({
     }),
 
   addNote: staffProcedure
+    .use(omradeSjekk('kunder', 'endre'))
     .input(z.object({ customerId: z.uuid(), body: z.string().min(1).max(4000) }))
     .mutation(async ({ ctx, input }) => {
       try {

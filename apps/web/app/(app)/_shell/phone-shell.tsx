@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { isVerkstedInspectPath } from '../_lib/plattform';
+import { useMineTillatelser } from '../_lib/use-mine-tillatelser';
 import { useOrgRole } from '../_lib/use-org-role';
 import { RONNY_PHONE_IDLE, RonnyBot } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
@@ -51,6 +52,7 @@ export function PhoneShell() {
   });
   const hjemHref = phoneHjemHref(shell);
   const inspect = isVerkstedInspectPath(pathname);
+  const { gitt } = useMineTillatelser(role, !inspect);
   const dest = useMemo(
     () =>
       destinasjonerForShell({
@@ -59,8 +61,9 @@ export function PhoneShell() {
         shopEnabled,
         erPlattform,
         inspect,
+        tillatelser: gitt,
       }),
-    [shell, role, shopEnabled, erPlattform, inspect],
+    [shell, role, shopEnabled, erPlattform, inspect, gitt],
   );
   const { faste, mer } = delMobilDest(dest);
   const merAktiv = mer.some((item) => isItemActive(item, pathname));
@@ -167,15 +170,33 @@ export function PhoneShell() {
           <PhoneHScroll lockKey={`${pathname}|${sok}`}>
             {faste.map((item) => {
               const aktiv = isItemActive(item, pathname);
+              const klasse = `inline-flex h-10 shrink-0 items-center rounded-full px-3 text-label text-fg ${
+                item.disabled
+                  ? 'cursor-not-allowed opacity-40'
+                  : aktiv
+                    ? 'bg-sidebar-active'
+                    : 'hover:bg-sidebar-active/60'
+              }`;
+              if (item.disabled) {
+                return (
+                  <span
+                    key={item.key}
+                    aria-disabled="true"
+                    data-phone-dest={item.key}
+                    title={item.disabledHint ?? item.label}
+                    className={klasse}
+                  >
+                    {item.label}
+                  </span>
+                );
+              }
               return (
                 <Link
                   key={item.key}
                   href={item.href as Route}
                   aria-current={aktiv ? 'page' : undefined}
                   data-phone-dest={item.key}
-                  className={`inline-flex h-10 shrink-0 items-center rounded-full px-3 text-label text-fg ${
-                    aktiv ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'
-                  }`}
+                  className={klasse}
                 >
                   {item.label}
                 </Link>
@@ -196,7 +217,9 @@ export function PhoneShell() {
                   {mer.map((item) => (
                     <DropdownItem
                       key={item.key}
+                      className={item.disabled ? 'cursor-not-allowed opacity-40' : undefined}
                       onSelect={() => {
+                        if (item.disabled) return;
                         setMerApen(false);
                         router.push(item.href as Route);
                       }}

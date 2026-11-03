@@ -13,7 +13,7 @@ import {
 } from '@endwise/modules/messages';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { endwiseSupportProcedure, protectedProcedure, router } from '../init.ts';
+import { endwiseSupportProcedure, omradeSjekk, protectedProcedure, router } from '../init.ts';
 import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 /**
@@ -60,16 +60,17 @@ function toTRPCError(error: unknown): never {
 }
 
 export const messagesRouter = router({
-  listThreads: protectedProcedure.query(({ ctx }) =>
-    meldinger(ctx.db).listThreads(ctx.tenantId, ctx.userId),
-  ),
+  listThreads: protectedProcedure
+    .use(omradeSjekk('innboks', 'se', true))
+    .query(({ ctx }) => meldinger(ctx.db).listThreads(ctx.tenantId, ctx.userId)),
 
   /** Median førstesvar, rolling 7 dager. Tom = null (UI: mock + badge). */
-  svarhastighet: protectedProcedure.query(({ ctx }) =>
-    meldinger(ctx.db).svarhastighet(ctx.tenantId, ctx.userId),
-  ),
+  svarhastighet: protectedProcedure
+    .use(omradeSjekk('innboks', 'se', true))
+    .query(({ ctx }) => meldinger(ctx.db).svarhastighet(ctx.tenantId, ctx.userId)),
 
   listMessages: protectedProcedure
+    .use(omradeSjekk('innboks', 'se', true))
     .input(z.object({ threadId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       try {
@@ -80,6 +81,7 @@ export const messagesRouter = router({
     }),
 
   createThread: protectedProcedure
+    .use(omradeSjekk('innboks', 'endre', true))
     .input(
       z.object({
         kind: z.enum(['customer_dealer', 'mechanic_dealer', 'dealer_admin']),
@@ -125,6 +127,7 @@ export const messagesRouter = router({
     }),
 
   post: protectedProcedure
+    .use(omradeSjekk('innboks', 'endre', true))
     .input(z.object({ threadId: z.uuid(), body: z.string().min(1).max(4000) }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -146,6 +149,7 @@ export const messagesRouter = router({
    * hvilken som helst adresse ved å oppgi den selv.
    */
   resend: protectedProcedure
+    .use(omradeSjekk('innboks', 'endre', true))
     .input(z.object({ messageId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -160,6 +164,7 @@ export const messagesRouter = router({
     }),
 
   markRead: protectedProcedure
+    .use(omradeSjekk('innboks', 'endre', true))
     .input(z.object({ threadId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -247,6 +252,7 @@ export const messagesRouter = router({
    * står. Ingen e-post. Inviterte må allerede være tenant-ansatte.
    */
   forkThread: protectedProcedure
+    .use(omradeSjekk('innboks', 'endre', true))
     .input(
       z.object({
         threadId: z.uuid(),

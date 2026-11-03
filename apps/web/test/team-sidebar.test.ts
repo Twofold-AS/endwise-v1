@@ -68,7 +68,7 @@ describe('Jonas IA — forhandler sidebar', () => {
     expect(FORHANDLER_NAV.find((i) => i.key === 'organisasjon')?.label).toBe('Organisasjon');
     expect(
       FORHANDLER_NAV.find((i) => i.key === 'organisasjon')?.pills?.map((p) => p.label),
-    ).toEqual(['Oversikt', 'Ansatte', 'Timeplan', 'Abonnement', 'Integrasjoner']);
+    ).toEqual(['Oversikt', 'Ansatte', 'Timeplan ansatte', 'Abonnement', 'Integrasjoner']);
     expect(FORHANDLER_NAV.some((i) => i.key === 'helpdesk')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(false);
     expect(FORHANDLER_NAV.some((i) => i.key === 'bot')).toBe(false);

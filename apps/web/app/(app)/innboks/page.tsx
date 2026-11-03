@@ -8,6 +8,7 @@ import { Suspense, useCallback, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useEventStream } from '../_lib/use-event-stream';
 import { ForhandlerInfoKort } from '../_shell/forhandler-info-kort';
+import { OpprettSkuff } from '../_shell/opprett-skuff';
 import { ESCALATION_REASON_LABEL, fmtWhen } from './_lib';
 import { NyMeldingIkon } from './_ny-melding-ikon';
 import { NySamtale } from './_ny-samtale';
@@ -65,7 +66,13 @@ function MeldingerPageInner() {
   return (
     <div className="mx-auto flex h-full min-h-0 w-full max-w-[820px] flex-col gap-5 overflow-y-auto px-8 py-7 max-md:px-3 max-md:py-3">
       <ForhandlerInfoKort />
-      {nySamtale && <NySamtale onLukk={() => router.replace('/innboks' as Route)} />}
+      <OpprettSkuff
+        tittel="Ny melding"
+        apen={nySamtale}
+        onLukk={() => router.replace('/innboks' as Route)}
+      >
+        <NySamtale onLukk={() => router.replace('/innboks' as Route)} />
+      </OpprettSkuff>
 
       {/* Eskalert fra AI. Live på SSE mens siden er åpen. */}
       {escalations.length > 0 && (

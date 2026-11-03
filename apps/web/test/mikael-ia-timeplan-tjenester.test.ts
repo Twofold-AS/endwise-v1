@@ -73,7 +73,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);
@@ -82,7 +82,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
     ]);
   });
 
@@ -102,7 +102,7 @@ describe('Mikael 29.08 — Timeplan + Salg + widget uten «feil»', () => {
     expect(side).not.toMatch(/Ny jobb/);
     expect(side).not.toMatch(/Prisliste/);
     expect(side).not.toMatch(/Dialog|PrislisteDialog|prislisteApen|PrislisteFlate/);
-    expect(side).toMatch(/TimeplanFlate/);
+    expect(side).not.toMatch(/TimeplanFlate/);
     expect(side).toMatch(/TimeplanStripe/);
     expect(side).not.toMatch(/Saker|Kontor|Gulvet/);
     expect(kalender).toMatch(/TimeplanStripe|TIMEPLAN_DAG_START|osloDagsvindu/);

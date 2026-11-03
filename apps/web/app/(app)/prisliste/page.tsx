@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { OpprettSkuff } from '../_shell/opprett-skuff';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { PrislisteFlate } from '../innstillinger/tjenestekatalog/_flate';
 import { NyTjeneste } from '../innstillinger/tjenestekatalog/_ny-tjeneste';
@@ -21,9 +22,13 @@ function TjenesterIndre() {
       faner={TJENESTER_FANER.map((f) => ({ ...f, href: tjenesterHref(f.id) }))}
       aktiv={aktiv}
     >
-      {aktiv === 'opprett' ? (
+      <OpprettSkuff
+        tittel="Ny tjeneste"
+        apen={aktiv === 'opprett'}
+        onLukk={() => router.replace('/prisliste' as Route)}
+      >
         <NyTjeneste onLukk={() => router.replace('/prisliste' as Route)} />
-      ) : null}
+      </OpprettSkuff>
       <PrislisteFlate skjulPiller tittel="Tjenester" skjulNy />
     </SideChromeSkall>
   );

@@ -198,44 +198,24 @@ describe('forhandler pulse-hjem — fem flater', () => {
     });
   });
 
-  it('ansatte på jobb er aktiv tildeling, ikke timeføring/status-humor', () => {
-    const naa = new Date('2026-08-29T10:00:00');
+  it('ansatte på jobb er stempling, ikke tildeling — 0 uten clock-in', () => {
     expect(ansattePulse([])).toEqual({ paJobb: 0, totalt: 0 });
     expect(
-      ansattePulse(
-        [
-          { id: '1', status: 'ledig' },
-          { id: '2', status: 'på_jobb' },
-          { id: '3', status: 'opptatt' },
-          { id: '4', status: 'fri' },
-        ],
-        [
-          {
-            id: 'j1',
-            mechanicId: '2',
-            status: 'in_progress',
-            startsAt: '2026-08-29T08:00:00',
-            endsAt: '2026-08-29T12:00:00',
-          },
-        ],
-        naa,
-      ),
-    ).toEqual({ paJobb: 1, totalt: 4 });
+      ansattePulse([
+        { id: '1', status: 'ledig', active: true },
+        { id: '2', status: 'på_jobb', active: true },
+        { id: '3', status: 'opptatt', active: true },
+        { id: '4', status: 'fri', active: true },
+      ]),
+    ).toEqual({ paJobb: 0, totalt: 4 });
     expect(
-      ansattePulse(
-        [{ id: '2', status: 'ledig' }],
-        [
-          {
-            id: 'j1',
-            mechanicId: '2',
-            status: 'in_progress',
-            startsAt: '2026-08-29T08:00:00',
-            endsAt: '2026-08-29T12:00:00',
-          },
-        ],
-        naa,
-      ),
-    ).toEqual({ paJobb: 1, totalt: 1 });
+      ansattePulse([
+        { id: '1', active: true },
+        { id: '2', active: true, clockedIn: true },
+        { id: '3', active: false },
+        { id: '4', active: true },
+      ]),
+    ).toEqual({ paJobb: 1, totalt: 3 });
   });
 
   it('kort er Mobbin 24px uten skygge og uten pip', () => {

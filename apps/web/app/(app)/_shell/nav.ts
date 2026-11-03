@@ -104,7 +104,7 @@ const ADMIN_KUN: OrgRole[] = ['dealer_admin'];
 export const ORGANISASJON_SEKSJONER: NavChild[] = [
   { label: 'Oversikt', href: '/organisasjon' },
   { label: 'Ansatte', href: '/organisasjon?seksjon=ansatte' },
-  { label: 'Timeplan', href: '/jobber' },
+  { label: 'Timeplan ansatte', href: '/organisasjon?seksjon=timeplan-ansatte' },
   { label: 'Abonnement', href: '/organisasjon?seksjon=abonnement', roles: ADMIN_KUN },
   { label: 'Integrasjoner', href: '/organisasjon?seksjon=integrasjoner', roles: ADMIN_KUN },
 ];

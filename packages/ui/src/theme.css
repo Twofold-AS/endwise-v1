@@ -346,4 +346,8 @@
   --color-accent-800: var(--ew-ink-utility);
   --color-accent-900: var(--ew-ink-utility);
   --color-accent-950: var(--ew-ink-utility);
+
+  /* DatePicker/DateCalendar — ink, ikke Board-blå. */
+  --color-date-range-background: #f3f3f3;
+  --color-date-range-edge-background: #141414;
 }

@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
+import { OpprettSkuff } from '../../_shell/opprett-skuff';
 import { Beholdning, Feil, kroner, Laster, Sidehode, Tomt } from '../_delt';
 import { BevegelseDialog } from './_bevegelse-dialog';
 import { DelDetalj } from './_del-detalj';
@@ -63,7 +64,11 @@ function DelerInner() {
           {nyDel ? 'Skjul ny del' : 'Ny'}
         </button>
       ) : null}
-      {nyDel && isAdmin ? <NyDel onFerdig={() => setNyDel(false)} /> : null}
+      {isAdmin ? (
+        <OpprettSkuff tittel="Ny del" apen={nyDel} onLukk={() => setNyDel(false)}>
+          <NyDel onFerdig={() => setNyDel(false)} />
+        </OpprettSkuff>
+      ) : null}
       {/* Søk + sortering */}
       <div className="flex flex-wrap items-center gap-2">
         <label className="relative flex h-control min-w-[240px] flex-1 items-center">

@@ -10,6 +10,11 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@endwise/ui/components/base/buttons/button";
 import {
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+} from "@endwise/ui/components/base/drawer/drawer";
+import {
   DateChipInput,
   MonthPanel,
   formatTriggerDate,
@@ -50,6 +55,9 @@ export interface DatePickerProps {
   isDisabled?: boolean;
   className?: string;
   "aria-label"?: string;
+  placeholder?: string;
+  avbrytLabel?: string;
+  brukLabel?: string;
   /** Anchor the popover to an external element instead of DatePicker's own
    *  trigger button (which is hidden when this is provided). Pair with
    *  `isOpen`/`onOpenChange` for full external control. */
@@ -64,7 +72,10 @@ export function DatePicker({
   onChange,
   isDisabled,
   className,
-  "aria-label": ariaLabel = "Date",
+  "aria-label": ariaLabel = "Dato",
+  placeholder = "Velg dato",
+  avbrytLabel = "Avbryt",
+  brukLabel = "Bruk",
   triggerRef: externalTriggerRef,
   isOpen: controlledIsOpen,
   onOpenChange: controlledOnOpenChange,
@@ -93,6 +104,7 @@ export function DatePicker({
   // needed for the external-trigger case, where `value` can jump (e.g. the
   // calendar template's month switcher) between one open and the next.
   const [openKey, setOpenKey] = useState(0);
+  const [mobil, setMobil] = useState(false);
 
   // Re-sync the calendar's displayed month/selection to the current
   // committed value every time the popover opens — not just when DatePicker's
@@ -116,7 +128,15 @@ export function DatePicker({
     setIsOpen(open);
   };
 
-  useDismissOnOutsidePress(isOpen, () => setIsOpen(false), [triggerRef, popoverRef]);
+  useDismissOnOutsidePress(isOpen && !mobil, () => setIsOpen(false), [triggerRef, popoverRef]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => setMobil(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   return localize((
     <>
@@ -125,64 +145,97 @@ export function DatePicker({
           ref={ownTriggerRef}
           type="button"
           disabled={isDisabled}
+          aria-label={ariaLabel}
           onClick={() => openChange(!isOpen)}
           className={cx(triggerButtonClassName, className)}
         >
           <CalendarIcon className="size-5 shrink-0 text-foreground-icon-primary" aria-hidden />
           <span className="flex items-center justify-center whitespace-nowrap px-1 text-body-medium text-text-primary">
-            {committedValue ? formatTriggerDate(committedValue, locale) : "Select date"}
+            {committedValue ? formatTriggerDate(committedValue, locale) : placeholder}
           </span>
         </button>
       )}
-      <Popover
-        ref={popoverRef}
-        triggerRef={triggerRef}
-        isOpen={isOpen}
-        onOpenChange={openChange}
-        offset={4}
-        placement="bottom end"
-        isNonModal
-        className={popoverClassName}
-      >
-        <Dialog aria-label={ariaLabel} className="outline-none">
-          <Calendar key={openKey} aria-label={ariaLabel} value={pendingValue} onChange={setPendingValue}>
-            <div className="flex flex-col pt-2 pe-2 pb-3 ps-2">
-              <MonthPanel offset={0} showPrev showNext />
-              <div className="flex items-center justify-between pt-3 pe-4 ps-4">
-                <div>
-                  <AnimatePresence>
-                    {pendingValue && (
-                      <motion.div
-                        key="date-summary"
-                        initial={{ opacity: 0, y: -12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -12 }}
-                        transition={{ duration: 0.25, ease: [0.34, 1.2, 0.64, 1] }}
-                      >
-                        <DateChipInput date={pendingValue} label="Date" onCommit={setPendingValue} />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+      {mobil ? (
+          <Drawer
+            placement="bottom"
+            isOpen={isOpen}
+            onOpenChange={openChange}
+            aria-label={ariaLabel}
+          >
+            <DrawerHeader title={ariaLabel} />
+            <DrawerBody className="px-2 pb-4">
+              <Calendar key={openKey} aria-label={ariaLabel} value={pendingValue} onChange={setPendingValue}>
+                <div className="flex flex-col items-center">
+                  <MonthPanel offset={0} showPrev showNext />
+                  <div className="flex w-full items-center justify-end gap-2.5 px-2 pt-3">
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setPendingValue(committedValue);
+                        setIsOpen(false);
+                      }}
+                    >
+                      {avbrytLabel}
+                    </Button>
+                    <Button onClick={() => commit(pendingValue)} disabled={!pendingValue}>
+                      {brukLabel}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setPendingValue(committedValue);
-                      setIsOpen(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={() => commit(pendingValue)} disabled={!pendingValue}>
-                    Apply
-                  </Button>
+              </Calendar>
+            </DrawerBody>
+          </Drawer>
+      ) : (
+        <Popover
+          ref={popoverRef}
+          triggerRef={triggerRef}
+          isOpen={isOpen}
+          onOpenChange={openChange}
+          offset={4}
+          placement="bottom end"
+          isNonModal
+          className={popoverClassName}
+        >
+          <Dialog aria-label={ariaLabel} className="outline-none">
+            <Calendar key={openKey} aria-label={ariaLabel} value={pendingValue} onChange={setPendingValue}>
+              <div className="flex flex-col pt-2 pe-2 pb-3 ps-2">
+                <MonthPanel offset={0} showPrev showNext />
+                <div className="flex items-center justify-between pt-3 pe-4 ps-4">
+                  <div>
+                    <AnimatePresence>
+                      {pendingValue && (
+                        <motion.div
+                          key="date-summary"
+                          initial={{ opacity: 0, y: -12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -12 }}
+                          transition={{ duration: 0.25, ease: [0.34, 1.2, 0.64, 1] }}
+                        >
+                          <DateChipInput date={pendingValue} label="Dato" onCommit={setPendingValue} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setPendingValue(committedValue);
+                        setIsOpen(false);
+                      }}
+                    >
+                      {avbrytLabel}
+                    </Button>
+                    <Button onClick={() => commit(pendingValue)} disabled={!pendingValue}>
+                      {brukLabel}
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Calendar>
-        </Dialog>
-      </Popover>
+            </Calendar>
+          </Dialog>
+        </Popover>
+      )}
     </>
   ));
 }

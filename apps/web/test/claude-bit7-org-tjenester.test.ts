@@ -36,11 +36,15 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);
-    expect(ORG_CHROME_FANER.find((f) => f.id === 'timeplan')?.href).toBe('/jobber');
+    expect(ORG_CHROME_FANER.find((f) => f.id === 'timeplan')?.href).toBe(
+      '/organisasjon?seksjon=timeplan-ansatte',
+    );
+    expect(ORG_CHROME_FANER.find((f) => f.id === 'timeplan')?.label).toBe('Timeplan ansatte');
+    expect(parseOrgSeksjon('timeplan-ansatte', true)).toBe('timeplan-ansatte');
     expect(parseOrgSeksjon('timeplan', true)).toBe('oversikt');
     expect(TIMEPLAN_FANER.map((f) => f.label)).toEqual(['Timeplan', 'Opprett jobb', 'Endringer']);
     expect([...DEALER_PULSE_KEYS]).toEqual([
@@ -104,7 +108,9 @@ describe('Claude Design BIT 7 — Org / Tjenester', () => {
     expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'ansatte')?.href).toBe(
       '/organisasjon?seksjon=ansatte',
     );
-    expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'timeplan')?.href).toBe('/jobber');
+    expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'timeplan')?.href).toBe(
+      '/organisasjon?seksjon=timeplan-ansatte',
+    );
     expect(ORG_HUB_SEKSJONER.find((s) => s.id === 'abonnement')?.href).toBe(
       '/organisasjon?seksjon=abonnement',
     );

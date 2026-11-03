@@ -1,11 +1,12 @@
 'use client';
 
-import { Avatar, Car, ChevronRight, Mail, Phone, Plus, Side, Users } from '@endwise/ui';
+import { ListeRad, Plus, Side, Users } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { OpprettSkuff } from '../_shell/opprett-skuff';
 import { PhoneSokFelt } from '../_shell/phone-sok-felt';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
@@ -68,9 +69,17 @@ function KunderInner() {
       faner={KUNDER_FANER.map((f) => ({ ...f, href: kunderHref(f.id) }))}
       aktiv={aktiv}
     >
-      {nyKunde ? <NyKunde onLukk={() => router.replace('/kunder' as Route)} /> : null}
-      {aktiv === 'kjoretoy' ? <RegistrerKjoretoy /> : null}
-      {aktiv === 'alle' ? (
+      <OpprettSkuff
+        tittel="Ny kunde"
+        apen={nyKunde}
+        onLukk={() => router.replace('/kunder' as Route)}
+      >
+        <NyKunde onLukk={() => router.replace('/kunder' as Route)} />
+      </OpprettSkuff>
+      {aktiv === 'kjoretoy' ? (
+        <RegistrerKjoretoy autoApen onFerdig={() => router.replace('/kunder' as Route)} />
+      ) : null}
+      {aktiv === 'alle' || nyKunde ? (
         <Side tittel="Kunder" className="[&>header]:sr-only max-md:px-0">
           <div
             data-kunder-flate
@@ -166,51 +175,27 @@ function KunderInner() {
                     )}
                   </>
                 }
-                renderRad={(k, i) => (
-                  <Link
-                    key={k.id}
-                    href={`/kunder/${k.id}` as Route}
-                    data-kunder-rad
-                    className="group block"
-                  >
-                    <div
-                      className={`flex h-row-store items-center gap-4 bg-bg px-4 transition-colors group-hover:bg-surface-2 ${
-                        i > 0 ? 'border-border border-t' : ''
-                      }`}
-                    >
-                      <Avatar seed={k.id} navn="" size={32} bevegelse="stille" />
-
-                      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="flex items-center gap-2 truncate text-label text-fg">
-                          {k.name}
-                          <Kilde source={k.source} />
-                        </span>
-                        <span className="flex items-center gap-3 truncate text-[13px] text-fg-muted">
-                          {k.phone && (
-                            <span className="inline-flex items-center gap-1">
-                              <Phone size={12} strokeWidth={1.75} />
-                              {k.phone}
-                            </span>
-                          )}
-                          {k.email && (
-                            <span className="inline-flex items-center gap-1 truncate">
-                              <Mail size={12} strokeWidth={1.75} />
-                              {k.email}
-                            </span>
-                          )}
-                          {!k.phone && !k.email && 'Ingen kontaktinfo'}
-                        </span>
-                      </div>
-
-                      {k.antallKjoretoy > 0 && (
-                        <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] text-fg-muted tabular-nums">
-                          <Car size={14} strokeWidth={1.75} />
-                          {k.antallKjoretoy}
-                        </span>
-                      )}
-                      <ChevronRight size={16} className="shrink-0 text-fg-muted" aria-hidden />
-                    </div>
-                  </Link>
+                renderRad={(k) => (
+                  <div key={k.id} data-kunder-rad>
+                    <ListeRad
+                      href={`/kunder/${k.id}`}
+                      tittel={k.name}
+                      undertekst={
+                        k.phone || k.email
+                          ? [k.phone, k.email].filter(Boolean).join(' · ')
+                          : 'Ingen kontaktinfo'
+                      }
+                      initialer={k.name
+                        .split(/\s+/)
+                        .slice(0, 2)
+                        .map((d) => d[0])
+                        .join('')
+                        .toLocaleUpperCase('nb-NO')}
+                      hoyre={
+                        k.antallKjoretoy > 0 ? `${k.antallKjoretoy}` : <Kilde source={k.source} />
+                      }
+                    />
+                  </div>
                 )}
               />
             )}

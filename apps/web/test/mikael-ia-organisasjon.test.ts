@@ -47,14 +47,14 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     expect(org?.pills?.map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);
     expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);
@@ -72,12 +72,12 @@ describe('Mikael IA 28.08 — forhandler-tre', () => {
     expect(pillsForRole(org, 'dealer_staff').map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
     ]);
     expect(pillsForRole(org, 'dealer_admin').map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);

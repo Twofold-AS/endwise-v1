@@ -37,6 +37,7 @@ export function useDealerHjemKort() {
   );
   const threads = trpc.messages.listThreads.useQuery(undefined, HJEM_PULSE_REFETCH);
   const oversikt = trpc.mechanics.oversikt.useQuery(undefined, HJEM_PULSE_REFETCH);
+  const mekanikerListe = trpc.mechanics.list.useQuery(undefined, HJEM_PULSE_REFETCH);
   const deler = trpc.inventory.listParts.useQuery(
     {
       kunLav: true,
@@ -65,13 +66,14 @@ export function useDealerHjemKort() {
   const forespor = foresporTeller(jobber);
   const innboks = innboksRad(threads.data ?? []);
   const lager = lagerRad(deler.data ?? []);
-  const ansatte = ansattePulse(oversikt.data ?? [], jobber, naa);
+  const ansatte = ansattePulse(mekanikerListe.data ?? oversikt.data ?? []);
   const analyser = tallKortStats(jobber, naa);
 
   return {
     bookings,
     threads,
     oversikt,
+    mekanikerListe,
     deler,
     idag,
     dag,
@@ -89,6 +91,7 @@ export function DealerPulseKort({ className }: { className?: string }) {
     bookings,
     threads,
     oversikt,
+    mekanikerListe,
     deler,
     idag,
     dag,
@@ -146,8 +149,12 @@ export function DealerPulseKort({ className }: { className?: string }) {
             href={PHONE_KORT_META.team.href}
             ikon={Users}
             tittel="På jobb"
-            teller={oversikt.isLoading ? undefined : `${ansatte.paJobb} / ${ansatte.totalt}`}
-            laster={oversikt.isLoading}
+            teller={
+              mekanikerListe.isLoading && oversikt.isLoading
+                ? undefined
+                : `${ansatte.paJobb} / ${ansatte.totalt}`
+            }
+            laster={mekanikerListe.isLoading && oversikt.isLoading}
             kompakt
           />
         </div>

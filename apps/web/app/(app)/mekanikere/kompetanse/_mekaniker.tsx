@@ -1,6 +1,15 @@
 'use client';
 
-import { Avatar, ChevronDown, CircleAlert, hexForFarge, Plus, StatefulButton } from '@endwise/ui';
+import {
+  Avatar,
+  ChevronDown,
+  CircleAlert,
+  FeltDato,
+  hexForFarge,
+  Plus,
+  StatefulButton,
+} from '@endwise/ui';
+import { parseDate } from '@internationalized/date';
 import { useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
@@ -344,26 +353,24 @@ function KompetanseSkjema({
             placeholder="Valgfritt"
           />
         </label>
-        <label className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5">
           <span className="text-label text-fg">Sertifisert</span>
-          <input
-            type="date"
-            value={certifiedAt}
-            onChange={(e) => setCertifiedAt(e.target.value)}
-            className={FELT}
+          <FeltDato
+            aria-label="Sertifisert"
+            value={certifiedAt ? parseDate(certifiedAt) : null}
+            onChange={(d) => setCertifiedAt(d ? d.toString() : '')}
           />
-        </label>
-        <label className="flex flex-col gap-1.5">
+        </div>
+        <div className="flex flex-col gap-1.5">
           <span className="text-label text-fg">
             Sert. t.o.m.{kreverSert ? ' (påkrevd for matching)' : ''}
           </span>
-          <input
-            type="date"
-            value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
-            className={FELT}
+          <FeltDato
+            aria-label="Sertifisert til og med"
+            value={expiresAt ? parseDate(expiresAt) : null}
+            onChange={(d) => setExpiresAt(d ? d.toString() : '')}
           />
-        </label>
+        </div>
       </div>
       <label className="flex flex-col gap-1.5">
         <span className="text-label text-fg">Notat</span>

@@ -1,4 +1,10 @@
-export const ORG_SEKSJON_IDS = ['oversikt', 'ansatte', 'abonnement', 'integrasjoner'] as const;
+export const ORG_SEKSJON_IDS = [
+  'oversikt',
+  'ansatte',
+  'timeplan-ansatte',
+  'abonnement',
+  'integrasjoner',
+] as const;
 
 export type OrgSeksjon = (typeof ORG_SEKSJON_IDS)[number];
 
@@ -34,7 +40,12 @@ export const ORG_CHROME_FANER: readonly OrgChromeFane[] = [
     href: '/organisasjon?seksjon=ansatte',
     ingress: 'Teamet på verkstedet.',
   },
-  { id: 'timeplan', label: 'Timeplan', href: '/jobber', ingress: 'Kapasitet og kalender.' },
+  {
+    id: 'timeplan',
+    label: 'Timeplan ansatte',
+    href: '/organisasjon?seksjon=timeplan-ansatte',
+    ingress: 'Fri, stempling, syk og ferie.',
+  },
   {
     id: 'abonnement',
     label: 'Abonnement',
@@ -71,12 +82,12 @@ export function synligeOrgChrome(isAdmin: boolean): OrgChromeFane[] {
 }
 
 export function parseOrgChrome(
-  pathname: string,
+  _pathname: string,
   raw: string | null | undefined,
   isAdmin: boolean,
 ): OrgChromeId {
-  if (pathname === '/jobber' || pathname.startsWith('/jobber/')) return 'timeplan';
   const seksjon = parseOrgSeksjon(raw, isAdmin);
+  if (seksjon === 'timeplan-ansatte') return 'timeplan';
   return seksjon;
 }
 

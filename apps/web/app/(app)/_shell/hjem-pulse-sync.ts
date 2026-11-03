@@ -3,11 +3,12 @@ import type { trpc } from '@/lib/trpc';
 /**
  * Query-nøkler forhandler-hjem (F3-05) leser.
  * `bookings.list` med uke-vindu — ikke calendar, ikke byId.
- * `mechanics.oversikt` brukes ikke lenger til «på jobb» (det er tildeling).
- * Invalidate disse når bookinger/jobber endres, ellers blir Planlagt/Pågår stale.
+ * `mechanics.list` er nevneren for «På jobb» (aktive mekanikere).
+ * Ingen stempling-API — telleren er 0 inntil clock-in finnes.
  */
 export const HJEM_PULSE_QUERY_KEYS = [
   'bookings.list',
+  'mechanics.list',
   'mechanics.oversikt',
   'messages.listThreads',
   'inventory.listParts',
@@ -27,6 +28,7 @@ type Utils = ReturnType<typeof trpc.useUtils>;
 export function invalidateHjemPulse(utils: Utils) {
   void utils.bookings.list.invalidate();
   void utils.bookings.calendar.invalidate();
+  void utils.mechanics.list.invalidate();
   void utils.mechanics.oversikt.invalidate();
 }
 

@@ -1,6 +1,18 @@
 'use client';
 
-import { FilterChips, ListeRad, Seksjon, Side, StatusChip } from '@endwise/ui';
+import {
+  DateCalendar,
+  DatePicker,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  FilterChips,
+  ListeRad,
+  Seksjon,
+  Side,
+  StatusChip,
+} from '@endwise/ui';
+import { parseDate } from '@internationalized/date';
 import { useState } from 'react';
 
 const SIDER = [
@@ -10,10 +22,13 @@ const SIDER = [
   'kunder',
   'kunde',
   'timeplan',
+  'timeplan-ansatte',
   'ny-jobb',
   'lager',
   'butikk',
   'organisasjon',
+  'skuff',
+  'dato',
 ] as const;
 
 /**
@@ -39,7 +54,7 @@ export default function VisuellMobil() {
               <StatusChip status="pagar" />
             </div>
             <ListeRad tittel="Les alle siste meldinger" undertekst="2 uleste" hoyre="2" />
-            <ListeRad tittel="3 deler under minimum" undertekst="Lager" />
+            <ListeRad tittel="På jobb" undertekst="Ingen stempling" hoyre="0 / 4" />
           </Side>
         </section>
 
@@ -82,8 +97,27 @@ export default function VisuellMobil() {
 
         <section data-mobil-side="kunder" className="border-border border-t pt-6">
           <Side tittel="Kunder" undertekst="12 kunder">
-            <ListeRad tittel="Kari Nordmann" undertekst="2 kjøretøy" initialer="KN" />
-            <ListeRad tittel="Per Hansen" undertekst="1 kjøretøy" initialer="PH" />
+            <div className="relative flex">
+              <div className="min-w-0 flex-1">
+                <h3 className="sticky top-0 bg-bg px-4 py-1.5 text-[13px] font-[650] text-fg-muted">
+                  H
+                </h3>
+                <ListeRad tittel="Per Hansen" undertekst="1 kjøretøy" initialer="PH" />
+                <h3 className="sticky top-0 bg-bg px-4 py-1.5 text-[13px] font-[650] text-fg-muted">
+                  N
+                </h3>
+                <ListeRad tittel="Kari Nordmann" undertekst="2 kjøretøy" initialer="KN" />
+              </div>
+              <nav
+                data-kunder-alfa-rail
+                aria-label="Alfabet"
+                className="flex w-[22px] shrink-0 flex-col items-center text-[13px] text-fg-muted"
+              >
+                {['#', 'A', 'H', 'N', 'Å'].map((b) => (
+                  <span key={b}>{b}</span>
+                ))}
+              </nav>
+            </div>
           </Side>
         </section>
 
@@ -114,6 +148,13 @@ export default function VisuellMobil() {
               undertekst="Per · Mia"
               hoyre={<StatusChip status="pagar" />}
             />
+          </Side>
+        </section>
+
+        <section data-mobil-side="timeplan-ansatte" className="border-border border-t pt-6">
+          <Side tittel="Timeplan ansatte" undertekst="Uke">
+            <ListeRad tittel="Ole Mekaniker" undertekst="Ledig · ingen stempling" initialer="OM" />
+            <ListeRad tittel="Mia Service" undertekst="Fri" initialer="MS" />
           </Side>
         </section>
 
@@ -149,8 +190,52 @@ export default function VisuellMobil() {
           </Side>
         </section>
 
+        <section data-mobil-side="skuff" className="border-border border-t pt-6">
+          <VisuellSkuff />
+        </section>
+
+        <section data-mobil-side="dato" className="border-border border-t pt-6">
+          <VisuellDato />
+        </section>
+
         <p className="px-4 text-[13px] text-fg-muted">{SIDER.length} flater</p>
       </div>
     </div>
+  );
+}
+
+function VisuellSkuff() {
+  const [apen, setApen] = useState(false);
+  return (
+    <Side tittel="Ny kunde" undertekst="Bunn-Drawer">
+      <button
+        type="button"
+        data-visuell-skuff-apne
+        data-skuff-apen={apen ? '1' : '0'}
+        onClick={() => setApen(true)}
+        className="inline-flex h-10 items-center rounded-pill border border-fg bg-bg px-4 text-[13px] font-[650]"
+      >
+        Ny kunde
+      </button>
+      <Drawer placement="bottom" isOpen={apen} onOpenChange={setApen} aria-label="Ny kunde">
+        <DrawerHeader title="Ny kunde" />
+        <DrawerBody className="px-3 pb-6">
+          <p className="text-[16px] text-fg">Navn</p>
+          <p className="mt-1 text-[13px] text-fg-muted">Kari Nordmann</p>
+        </DrawerBody>
+      </Drawer>
+    </Side>
+  );
+}
+
+function VisuellDato() {
+  const [dato, setDato] = useState(() => parseDate('2026-11-02'));
+  return (
+    <Side tittel="Velg dato" undertekst="Board DatePicker">
+      <div data-visuell-dato className="flex flex-col gap-3">
+        <DatePicker aria-label="Dato" value={dato} onChange={(d) => d && setDato(d)} />
+        <DateCalendar aria-label="Kalender" value={dato} onChange={(d) => d && setDato(d)} />
+      </div>
+    </Side>
   );
 }

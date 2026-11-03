@@ -231,14 +231,14 @@ describe('Sidebar Kompetanse og Timeplan står — bunnknappene på Team er bort
     expect(org?.pills?.map((c) => c.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);
     expect(org?.pills?.map((c) => c.href)).toEqual([
       '/organisasjon',
       '/organisasjon?seksjon=ansatte',
-      '/jobber',
+      '/organisasjon?seksjon=timeplan-ansatte',
       '/organisasjon?seksjon=abonnement',
       '/organisasjon?seksjon=integrasjoner',
     ]);

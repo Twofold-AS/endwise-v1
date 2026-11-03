@@ -127,12 +127,14 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     expect(org?.faner.map((f) => f.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);
     expect(synligeOrgChrome(false).map((f) => f.id)).toEqual(['oversikt', 'ansatte', 'timeplan']);
-    expect(ORG_CHROME_FANER.find((f) => f.id === 'timeplan')?.href).toBe('/jobber');
+    expect(ORG_CHROME_FANER.find((f) => f.id === 'timeplan')?.href).toBe(
+      '/organisasjon?seksjon=timeplan-ansatte',
+    );
 
     const orgSide = utenKommentarer(les('../app/(app)/organisasjon/page.tsx'));
     expect(orgSide).toMatch(/SideChromeSkall/);
@@ -153,7 +155,7 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     expect(ORGANISASJON_SEKSJONER.map((p) => p.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);

@@ -14,7 +14,7 @@ export const ORG_HUB_SEKSJONER = [
   {
     id: 'timeplan',
     label: 'Timeplan ansatte',
-    href: '/jobber',
+    href: '/organisasjon?seksjon=timeplan-ansatte',
     sub: 'Hvem er på jobb hvilke dager',
     admin: false,
   },

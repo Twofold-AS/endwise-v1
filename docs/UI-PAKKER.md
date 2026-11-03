@@ -1,5 +1,12 @@
 # UI-pakker — les denne FØR du bygger UI
 
+> ### ⚠️ Mikael 02.11.2026 — PR #184 runde 2
+> DatePicker/DateCalendar/TimeField (RAC) med ink, ikke blå. Alle Ny/Opprett
+> i Board bunn-Drawer (deep link åpner skuff). Timeplan = jobber/dag.
+> Timeplan ansatte under Org (uke/måned, syk/ferie/stempling disabled).
+> På jobb = aktive mekanikere / clocked-in (0 uten API). Kunder A–Å
+> tap+dra, sticky hoder, ingen overlapping scrollbar.
+>
 > ### ⚠️ Mikael 02.11.2026 — PR #184 mobil (50+)
 > `typography.css` importeres + `@utility`-alias for Board-tekst.
 > Board-aksent → ink, skygger av. Mobil-skala §6 (36/24/18/17/16/14/13,
@@ -813,6 +820,8 @@ Kun disse. Hver enkelt har en grunn.
 
 | Tjenestekatalogen (`apps/web/app/(app)/innstillinger/tjenestekatalog/`: `page.tsx`, `_felter.tsx`, `_ny-tjeneste.tsx`, `_tjeneste-kort.tsx`, `_felles.ts`, `prisliste/_hub.ts`) | App-nivå **komposisjon** (F2-05/F5-04), ingen ny pakke. <b>24.09.2026 (Claude BIT 7):</b> søk (`PhoneSokFelt`) + pageSub `N tjenester tilbys` på eksisterende `/prisliste`. Ny via chrome `?fane=opprett`. Ingen ny pille. Bygget av `StatefulButton` (beUI), `CardShell` og ikon-barrelen, med de samme input-klassene som `kunder/_ny-kunde.tsx` — feltene er kopiert i klassestreng, ikke i komponent, fordi shadcn `form`/`input` ikke er hentet inn og resten av appen ikke bruker dem. ⚠️ Kjøretøytype-velgeren er **ekte `<input type="radio">`** og ikke pille-knapper med `role="radio"`, som ellers i appen: pillene andre steder er FILTRE (tablist er riktig der), denne er et skjemafelt, og biome avviste `role="radio"` med rette. Utseendet er likt. `_felter.tsx` finnes for at «opprett» og «ny versjon» skal dele ÉN definisjon av versjonsfeltene — to skjemaer for samme fire kolonner ville før eller siden fått ulik validering |
 | Ny jobb — flere tjenester (`apps/web/app/(app)/bookinger/ny/page.tsx`, F3-09/P3) | **Ingen ny pakke.** Flervalget er samme radmønster som mekanikervelgeren på samme side (`aria-pressed` + `Check`), ikke shadcn `checkbox` (ikke hentet inn). Varighet er native `input type="number"` — shadcn `input` er ikke hentet, og feltet deler klassestreng med resten av skjemaet. En egen multi-select ville vært en ny primitiv uten grunn. |
+
+| `OpprettSkuff` (`apps/web/app/(app)/_shell/opprett-skuff.tsx`) + `KunderAlfaRail` (`kunder/_alfa-rail.tsx`) + `TimeplanAnsatteFlate` (`organisasjon/_timeplan-ansatte.tsx`) | **Ingen ny pakke.** Skuffen er Board `Drawer` (bunn) på telefon, inline på desktop — deep link åpner skuff. A–Å er Apple Contacts-indeks; Board har ingen alfabet-skinne. Timeplan ansatte er uke/måned over `mechanics.oversikt` med `DeaktivertHandling` for syk/ferie/stempling. |
 
 | Intern testbutikk (`apps/web/app/(app)/butikk/`: `page.tsx`, `kasse/page.tsx`, `_kurv.ts`, F10-03) | App-nivå **komposisjon**, ingen ny pakke. `Side`/`Seksjon`/`ListeRad` på katalogen. Handlekurven er `sessionStorage`. <b>02.11.2026 (PR #184):</b> midlertidig blå booking-widget fjernet fra `/butikk`. `_booking-widget.tsx` ligger igjen ubrukt. |
 

@@ -15,7 +15,7 @@ import {
   osloUkedagNavn,
   osloVeggtid,
 } from '../_lib/oslo-dag';
-import { aktivJobb, sammeKalenderdag } from '../dashboard/_pa-jobb';
+import { sammeKalenderdag } from '../dashboard/_pa-jobb';
 import type { PhoneBooking, PhoneTraad } from './phone-home-data';
 
 export {
@@ -74,8 +74,12 @@ export type PhoneDelPulse = {
 
 export type PulseTeamMedlem = {
   id: string;
-  status: string;
+  status?: string;
   name?: string;
+  /** Mekaniker-rad. Udefinert = aktiv (eldre kallsteder uten feltet). */
+  active?: boolean;
+  /** Stempelklokke. Ingen API i dag — bare eksplisitt true teller. */
+  clockedIn?: boolean;
 };
 
 /** Uke-vindu på toppkortet — Mikael: tallene for den uken. */
@@ -320,29 +324,16 @@ export function lagerRad(deler: PhoneDelPulse[]) {
 }
 
 /**
- * På jobb = aktiv jobb-tildeling, ikke timeføring / stempelklokke.
+ * På jobb = stempelklokke nå, ikke jobb-tildeling.
  *
- * Regel (F3-05, Mikael CODE-GO):
- * En ansatt er «på jobb» når hen har en *aktiv tildeling* nå —
- * `aktivJobb` i `_pa-jobb.ts`: `in_progress`, eller levende booking
- * (draft/confirmed/in_progress) som overlapper nå, ellers neste levende i dag.
- * `mechanics.active`, ferie og planlegging uten tildeling teller ikke.
- * Status-humor (`på_jobb` / `ledig`) kommer fra time-/belastningsfelt og
- * brukes ikke her — verkstedet har ikke timeføring.
+ * Teller = faktisk clocked-in (`clockedIn === true`). Ingen stempling-API
+ * i produktet → 0. Nevner = alle aktive mekanikere hos tenanten
+ * (`active !== false`). Inaktive rader teller ikke.
  */
-export function ansattePulse(
-  mekanikere: PulseTeamMedlem[],
-  jobber: PhoneBooking[] = [],
-  naa: Date = new Date(),
-) {
-  const totalt = mekanikere.length;
-  const tildelt = jobber.map((j) => ({
-    ...j,
-    mechanicId: j.mechanicId ?? null,
-    endsAt: j.endsAt ?? j.startsAt,
-  }));
-  const paJobb = mekanikere.filter((m) => aktivJobb(tildelt, m.id, naa) != null).length;
-  return { paJobb, totalt };
+export function ansattePulse(mekanikere: PulseTeamMedlem[]) {
+  const aktive = mekanikere.filter((m) => m.active !== false);
+  const paJobb = aktive.filter((m) => m.clockedIn === true).length;
+  return { paJobb, totalt: aktive.length };
 }
 
 export type AnalyserMockStat = {

@@ -5,8 +5,8 @@ import { grupperKunderAlfa, type KunderAlfa, kunderAlfaScrollmaal, kunderAlfaTom
 import { KunderAlfaRail } from './_alfa-rail';
 
 /**
- * List-viewport + sticky seksjonshoder + høyre-rail.
- * Bokstav hopper til seksjon (`#` = topp). Ingen min-h-spacer.
+ * Apple Contacts: gruppert liste, sticky bokstav, A–Å-indeks.
+ * Tap/dra på indeks scroller til seksjon. Ingen overlapping scrollbar.
  */
 export function KunderAlfaListe<T extends { id: string; name: string }>({
   kunder,
@@ -30,7 +30,7 @@ export function KunderAlfaListe<T extends { id: string; name: string }>({
     const synk = () => {
       const hoder = [...rot.querySelectorAll<HTMLElement>('[data-kunder-seksjon]')];
       let neste: KunderAlfa = '#';
-      const y = rot.scrollTop + 4;
+      const y = rot.scrollTop + 8;
       for (const el of hoder) {
         const merke = el.dataset.kunderSeksjon;
         if (el.offsetTop <= y && merke) neste = merke as KunderAlfa;
@@ -47,11 +47,11 @@ export function KunderAlfaListe<T extends { id: string; name: string }>({
     if (!rot) return;
     setAktiv(bokstav);
     if (bokstav === '#') {
-      rot.scrollTo({ top: 0, behavior: 'smooth' });
+      rot.scrollTo({ top: 0, behavior: 'auto' });
       return;
     }
     const seksjon = rot.querySelector<HTMLElement>(`[data-kunder-seksjon="${bokstav}"]`);
-    rot.scrollTo({ top: kunderAlfaScrollmaal(rot, seksjon), behavior: 'smooth' });
+    rot.scrollTo({ top: kunderAlfaScrollmaal(rot, seksjon), behavior: 'auto' });
   }
 
   return (
@@ -59,30 +59,28 @@ export function KunderAlfaListe<T extends { id: string; name: string }>({
       <div
         ref={scrollRef}
         data-kunder-liste-scroll
-        className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain pr-[26px]"
+        className="no-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
       >
         {kunder.length === 0 ? (
           tom
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border">
+          <div data-kunder-grupper>
             {grupper.map((g) => (
               <section key={g.bokstav} data-kunder-seksjon={g.bokstav}>
                 <h3
                   data-kunder-seksjon-hode
-                  className="sticky top-0 z-[2] bg-surface-2 px-4 py-1 text-[13px] font-[650] text-fg-muted"
+                  className="sticky top-0 z-[2] bg-bg px-4 py-1.5 text-[13px] font-[650] text-fg-muted"
                 >
                   {g.bokstav}
                 </h3>
-                {g.kunder.map((k, i) => renderRad(k, i))}
+                <div className="flex flex-col">{g.kunder.map((k, i) => renderRad(k, i))}</div>
               </section>
             ))}
           </div>
         )}
-        {kunder.length > 0 ? (
-          <div data-kunder-liste-hale className="min-h-[calc(100%-2rem)]" aria-hidden />
-        ) : null}
+        {kunder.length > 0 ? <div data-kunder-liste-hale className="h-8" aria-hidden /> : null}
       </div>
-      <KunderAlfaRail aktiv={aktiv} tomme={tomme} onVelg={hoppTil} />
+      {kunder.length > 0 ? <KunderAlfaRail aktiv={aktiv} tomme={tomme} onVelg={hoppTil} /> : null}
     </div>
   );
 }

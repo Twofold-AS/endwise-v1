@@ -12,7 +12,8 @@ import {
   Plus,
   SelectItem,
 } from '@endwise/ui';
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import type { RouterOutput } from '@/lib/trpc';
 import { trpc } from '@/lib/trpc';
 import { FargeSvatser } from '../_avatar/farge-svatser';
@@ -50,7 +51,12 @@ function somJobFunksjon(verdi: string): JobFunksjon | null {
 
 export function OrganisasjonAnsatte() {
   const { isAdmin } = useOrgRole();
-  const [opprett, setOpprett] = useState(false);
+  const params = useSearchParams();
+  const [opprett, setOpprett] = useState(params?.get('ny') === '1');
+
+  useEffect(() => {
+    if (params?.get('ny') === '1') setOpprett(true);
+  }, [params]);
   const team = trpc.team.list.useQuery();
   const kompetanse = trpc.competence.listAllMechanicSkills.useQuery();
   const ferdigheter = trpc.competence.listSkills.useQuery();

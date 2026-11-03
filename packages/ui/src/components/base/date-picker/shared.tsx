@@ -146,6 +146,7 @@ export function DayCell(props: CalendarCellRenderProps & { isRange: boolean; sho
         <span
           className={cx(
             "relative text-body-medium text-text-primary",
+            isEdge && "text-white",
             (isDisabled || isUnavailable) && "text-text-tertiary",
             // Unavailable days (isDateUnavailable) can be focused but not
             // picked, so they read as struck out rather than just faded.
@@ -158,7 +159,7 @@ export function DayCell(props: CalendarCellRenderProps & { isRange: boolean; sho
         {showToday && isToday ? (
           <span
             aria-hidden
-            className={cx("absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full", isEdge ? "bg-text-primary" : "bg-accent-500")}
+            className={cx("absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full", isEdge ? "bg-white" : "bg-accent-500")}
           />
         ) : null}
       </div>

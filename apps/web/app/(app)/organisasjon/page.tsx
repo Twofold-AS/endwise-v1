@@ -10,6 +10,7 @@ import { IntegrasjonerInnhold } from '../integrasjoner/_innhold';
 import { TjenesterInnhold } from '../tjenester/_innhold';
 import { OrganisasjonAnsatte } from './_ansatte';
 import { parseOrgSeksjon, synligeOrgChrome } from './_seksjoner';
+import { TimeplanAnsatteFlate } from './_timeplan-ansatte';
 import { ForhandlerKort } from './forhandleren/_kort';
 
 /**
@@ -39,6 +40,7 @@ function OrganisasjonIndre() {
       <Side tittel="Organisasjon" className="[&>header]:sr-only max-md:px-0">
         {seksjon === 'oversikt' ? <ForhandlerKort /> : null}
         {seksjon === 'ansatte' ? <OrganisasjonAnsatte /> : null}
+        {seksjon === 'timeplan-ansatte' ? <TimeplanAnsatteFlate /> : null}
         {seksjon === 'abonnement' ? (
           <section className="flex flex-col gap-8" aria-label="Abonnement">
             <AbonnementInnhold />

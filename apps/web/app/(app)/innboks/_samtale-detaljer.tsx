@@ -23,19 +23,17 @@ export function SamtaleDetaljerPille({ threadId }: { threadId: string }) {
       >
         Detaljer
       </button>
-      {apen ? (
-        <Drawer
-          placement="bottom"
-          isOpen={apen}
-          onOpenChange={setApen}
-          aria-label="Detaljer om samtalen"
-        >
-          <DrawerHeader title="Detaljer" />
-          <DrawerBody className="px-3">
-            <DetaljerPanel threadId={threadId} apen onLukk={() => setApen(false)} innebygd />
-          </DrawerBody>
-        </Drawer>
-      ) : null}
+      <Drawer
+        placement="bottom"
+        isOpen={apen}
+        onOpenChange={setApen}
+        aria-label="Detaljer om samtalen"
+      >
+        <DrawerHeader title="Detaljer" />
+        <DrawerBody className="px-3">
+          <DetaljerPanel threadId={threadId} apen={apen} onLukk={() => setApen(false)} innebygd />
+        </DrawerBody>
+      </Drawer>
     </div>
   );
 }

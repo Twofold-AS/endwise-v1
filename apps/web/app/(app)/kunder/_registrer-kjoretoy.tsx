@@ -26,11 +26,13 @@ import { TYPE_LABEL } from './_delt';
 export function RegistrerKjoretoy({
   fastKundeId,
   onFerdig,
+  autoApen = false,
 }: {
   fastKundeId?: string;
   onFerdig?: () => void;
+  autoApen?: boolean;
 }) {
-  const [apen, setApen] = useState(false);
+  const [apen, setApen] = useState(autoApen);
   const skjema = (
     <RegistrerKjoretoySkjema
       fastKundeId={fastKundeId}
@@ -52,17 +54,15 @@ export function RegistrerKjoretoy({
         >
           Registrer kjøretøy
         </button>
-        {apen ? (
-          <Drawer
-            placement="bottom"
-            isOpen={apen}
-            onOpenChange={setApen}
-            aria-label="Registrer kjøretøy"
-          >
-            <DrawerHeader title="Registrer kjøretøy" />
-            <DrawerBody className="px-3 pb-6">{skjema}</DrawerBody>
-          </Drawer>
-        ) : null}
+        <Drawer
+          placement="bottom"
+          isOpen={apen}
+          onOpenChange={setApen}
+          aria-label="Registrer kjøretøy"
+        >
+          <DrawerHeader title="Registrer kjøretøy" />
+          <DrawerBody className="px-3 pb-6">{skjema}</DrawerBody>
+        </Drawer>
       </div>
       <div className="max-md:hidden">{skjema}</div>
     </div>

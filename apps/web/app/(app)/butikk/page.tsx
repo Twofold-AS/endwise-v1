@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../_shell/cards';
+import { OpprettSkuff } from '../_shell/opprett-skuff';
 import { butikkPageSub } from '../lager/_hub';
 import { antallIKurv, leggIKurv } from './_kurv';
 
@@ -21,6 +22,8 @@ export default function ButikkKatalogPage() {
   const katalog = trpc.shop.catalog.useQuery();
   const [kurvAntall, setKurvAntall] = useState(0);
   const [visAlleVarer, setVisAlleVarer] = useState(false);
+  const [nyVare, setNyVare] = useState(false);
+  const [nyAnnonse, setNyAnnonse] = useState(false);
 
   useEffect(() => {
     setKurvAntall(antallIKurv());
@@ -44,10 +47,18 @@ export default function ButikkKatalogPage() {
       >
         <div className="flex items-center justify-between gap-3">
           <p className="text-[13px] text-fg-muted">Ny vare.</p>
-          <DeaktivertHandling forklaring="Kommer senere" variant="outline">
-            Ny
-          </DeaktivertHandling>
+          <button
+            type="button"
+            onClick={() => setNyVare(true)}
+            className="inline-flex h-10 items-center rounded-pill border border-fg bg-bg px-4 text-[13px] font-[650] text-fg"
+          >
+            Ny vare
+          </button>
         </div>
+        <OpprettSkuff tittel="Ny vare" apen={nyVare} onLukk={() => setNyVare(false)}>
+          <p className="text-[13px] text-fg-muted">Opprettelse av vare kommer senere.</p>
+          <DeaktivertHandling forklaring="Kommer senere">Opprett vare</DeaktivertHandling>
+        </OpprettSkuff>
 
         <div className="flex items-center justify-between gap-3">
           <p className="text-[13px] text-fg-muted">Handlekurv og kasse.</p>
@@ -143,8 +154,18 @@ export default function ButikkKatalogPage() {
               <p className="text-label text-fg">Ingen kjøretøy til salgs</p>
               <p className="mt-1 text-[13px] text-fg-muted">Ingen annonser er lagt ut.</p>
               <div className="mt-3">
-                <DeaktivertHandling forklaring="Kommer senere">Ny annonse</DeaktivertHandling>
+                <button
+                  type="button"
+                  onClick={() => setNyAnnonse(true)}
+                  className="inline-flex h-10 items-center rounded-pill border border-fg bg-bg px-4 text-[13px] font-[650] text-fg"
+                >
+                  Ny annonse
+                </button>
               </div>
+              <OpprettSkuff tittel="Ny annonse" apen={nyAnnonse} onLukk={() => setNyAnnonse(false)}>
+                <p className="text-[13px] text-fg-muted">Annonser har ingen API ennå.</p>
+                <DeaktivertHandling forklaring="Kommer senere">Publiser annonse</DeaktivertHandling>
+              </OpprettSkuff>
             </CardShell>
           </div>
         </Seksjon>

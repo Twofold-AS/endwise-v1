@@ -73,7 +73,7 @@ describe('Claude Design BIT 3 — Timeplan / Endringer', () => {
     expect(rader.map((r) => r.id)).toEqual(['a', 'b']);
     const side = utenKommentarer(les('../app/(app)/saker/page.tsx'));
     expect(side).toMatch(/TimeplanDagsliste/);
-    expect(side).toMatch(/TimeplanFlate/);
+    expect(side).not.toMatch(/TimeplanFlate/);
     expect(side).toMatch(/Kalender/);
   });
 

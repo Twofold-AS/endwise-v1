@@ -15,7 +15,7 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
   it('Organisasjon-liste er Ansatte Timeplan Abonnement Integrasjoner, uten piller', () => {
     expect(ORG_LISTE.map((r) => r.label)).toEqual([
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);
@@ -39,7 +39,7 @@ describe('Organisasjon › Oversikt (forhandlerkort)', () => {
     expect(org?.pills?.map((c) => c.label)).toEqual([
       'Oversikt',
       'Ansatte',
-      'Timeplan',
+      'Timeplan ansatte',
       'Abonnement',
       'Integrasjoner',
     ]);

@@ -32,6 +32,7 @@ describe('CODE-GO Mikael — hjem live data', () => {
   it('hjem-pulse query-nøkler er bookings.list + oversikt + tråder + lager', () => {
     expect([...HJEM_PULSE_QUERY_KEYS]).toEqual([
       'bookings.list',
+      'mechanics.list',
       'mechanics.oversikt',
       'messages.listThreads',
       'inventory.listParts',
@@ -39,6 +40,7 @@ describe('CODE-GO Mikael — hjem live data', () => {
     const sync = utenKommentarer(les('../app/(app)/_shell/hjem-pulse-sync.ts'));
     expect(sync).toMatch(/utils\.bookings\.list\.invalidate/);
     expect(sync).toMatch(/utils\.bookings\.calendar\.invalidate/);
+    expect(sync).toMatch(/utils\.mechanics\.list\.invalidate/);
     expect(sync).toMatch(/utils\.mechanics\.oversikt\.invalidate/);
     expect(sync).toMatch(/refetchOnMount: 'always'/);
     expect(sync).toMatch(/staleTime: 0/);
@@ -79,22 +81,16 @@ describe('CODE-GO Mikael — hjem live data', () => {
     ).toBe(false);
   });
 
-  it('på jobb = aktivJobb-tildeling, ikke timeføring/status-humor', () => {
+  it('på jobb = stempling nå, ikke tildeling/status-humor', () => {
     const regel = les('../app/(app)/_shell/phone-home-pulse.ts');
-    expect(regel).toMatch(/aktiv jobb-tildeling/);
-    expect(regel).toMatch(/ikke timeføring/);
-    expect(regel).toMatch(/aktivJobb/);
-    expect(regel).toMatch(/mechanics\.active.*teller ikke|teller ikke/);
-    const naa = new Date('2026-08-29T10:00:00');
+    expect(regel).toMatch(/stempelklokke/);
+    expect(regel).toMatch(/clockedIn/);
+    expect(regel).toMatch(/active !== false/);
     expect(
-      ansattePulse(
-        [
-          { id: '1', status: 'på_jobb' },
-          { id: '2', status: 'ledig' },
-        ],
-        [],
-        naa,
-      ),
+      ansattePulse([
+        { id: '1', status: 'på_jobb', active: true },
+        { id: '2', status: 'ledig', active: true },
+      ]),
     ).toEqual({ paJobb: 0, totalt: 2 });
   });
 

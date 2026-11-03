@@ -11,6 +11,7 @@ import {
 } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { OpprettSkuff, useErMobil } from '../_shell/opprett-skuff';
 import { KompetanseVelger, type ValgtKompetanse } from '../innstillinger/team/_kompetanse-velger';
 
 type Funksjon = 'selger' | 'support' | 'mekaniker' | 'forhandler';
@@ -132,6 +133,94 @@ export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: (
 
   const venter = opprettInvitasjon.isPending || opprettLokal.isPending || settKompetanse.isPending;
   const kanSende = Boolean(epost.trim() || navn.trim());
+  const mobil = useErMobil();
+
+  const skjema = (
+    <form onSubmit={send} className="mt-4 flex flex-col gap-3">
+      <FeltInput
+        label="Navn og etternavn"
+        value={navn}
+        onChange={setNavn}
+        maxLength={160}
+        placeholder="Kari Mekaniker"
+      />
+      <FeltInput
+        label="E-post adresse"
+        type="email"
+        value={epost}
+        onChange={setEpost}
+        placeholder="fornavn@verksted.no"
+      />
+      <FeltInput
+        label="Jobb tittel"
+        value={tittel}
+        onChange={setTittel}
+        maxLength={80}
+        placeholder="Servicetekniker"
+      />
+      <FeltSelect
+        label="Rolle"
+        selectedKey={funksjon}
+        onSelectionChange={(key) => {
+          const neste = somFunksjon(String(key ?? ''));
+          if (neste) setFunksjon(neste);
+        }}
+      >
+        {ROLLER.map((r) => (
+          <SelectItem key={r.verdi} id={r.verdi}>
+            {r.label}
+          </SelectItem>
+        ))}
+      </FeltSelect>
+      <FeltSelect label="Tilganger" selectedKey="standard" isDisabled>
+        <SelectItem id="standard">Standard — tilpasses senere</SelectItem>
+      </FeltSelect>
+
+      {funksjon === 'mekaniker' ? (
+        <>
+          <FeltTall
+            label="Samtidige jobber"
+            value={Number(kapasitet) || 1}
+            minValue={1}
+            maxValue={10}
+            onChange={(v) => setKapasitet(Number.isFinite(v) ? String(v) : '1')}
+          />
+          <KompetanseVelger valgte={kompetanse} onEndre={setKompetanse} />
+        </>
+      ) : null}
+
+      <div className="flex items-center justify-end gap-2 pt-1">
+        <button
+          type="button"
+          onClick={onLukk}
+          className="h-control rounded-control px-3 text-label text-fg-muted"
+        >
+          Avbryt
+        </button>
+        <button
+          type="submit"
+          disabled={venter || !kanSende}
+          className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg disabled:opacity-40"
+        >
+          {venter ? 'Lagrer …' : 'Opprett ansatt'}
+        </button>
+      </div>
+      {kvittering ? <p className="text-[12px] text-fg-muted">{kvittering}</p> : null}
+      {feil ? (
+        <p role="alert" className="text-[12px] text-destructive">
+          {feil}
+        </p>
+      ) : null}
+    </form>
+  );
+
+  if (mobil) {
+    return (
+      <OpprettSkuff tittel="Opprett ansatt" apen={apen} onLukk={onLukk} tvingSkuff>
+        {skjema}
+      </OpprettSkuff>
+    );
+  }
 
   return (
     <Modal
@@ -145,84 +234,7 @@ export function OpprettAnsattDialog({ apen, onLukk }: { apen: boolean; onLukk: (
         title="Opprett ansatt"
         description="Med e-post får hen invitasjon og setter passord og tofaktor. Uten e-post vises hen i teamet uten innlogging."
       />
-      <ModalBody>
-        <form onSubmit={send} className="mt-4 flex flex-col gap-3">
-          <FeltInput
-            label="Navn og etternavn"
-            value={navn}
-            onChange={setNavn}
-            maxLength={160}
-            placeholder="Kari Mekaniker"
-          />
-          <FeltInput
-            label="E-post adresse"
-            type="email"
-            value={epost}
-            onChange={setEpost}
-            placeholder="fornavn@verksted.no"
-          />
-          <FeltInput
-            label="Jobb tittel"
-            value={tittel}
-            onChange={setTittel}
-            maxLength={80}
-            placeholder="Servicetekniker"
-          />
-          <FeltSelect
-            label="Rolle"
-            selectedKey={funksjon}
-            onSelectionChange={(key) => {
-              const neste = somFunksjon(String(key ?? ''));
-              if (neste) setFunksjon(neste);
-            }}
-          >
-            {ROLLER.map((r) => (
-              <SelectItem key={r.verdi} id={r.verdi}>
-                {r.label}
-              </SelectItem>
-            ))}
-          </FeltSelect>
-          <FeltSelect label="Tilganger" selectedKey="standard" isDisabled>
-            <SelectItem id="standard">Standard — tilpasses senere</SelectItem>
-          </FeltSelect>
-
-          {funksjon === 'mekaniker' ? (
-            <>
-              <FeltTall
-                label="Samtidige jobber"
-                value={Number(kapasitet) || 1}
-                minValue={1}
-                maxValue={10}
-                onChange={(v) => setKapasitet(Number.isFinite(v) ? String(v) : '1')}
-              />
-              <KompetanseVelger valgte={kompetanse} onEndre={setKompetanse} />
-            </>
-          ) : null}
-
-          <div className="flex items-center justify-end gap-2 pt-1">
-            <button
-              type="button"
-              onClick={onLukk}
-              className="h-control rounded-control px-3 text-label text-fg-muted"
-            >
-              Avbryt
-            </button>
-            <button
-              type="submit"
-              disabled={venter || !kanSende}
-              className="inline-flex h-control items-center rounded-control bg-fg px-4 text-label text-bg disabled:opacity-40"
-            >
-              {venter ? 'Lagrer …' : 'Opprett ansatt'}
-            </button>
-          </div>
-          {kvittering ? <p className="text-[12px] text-fg-muted">{kvittering}</p> : null}
-          {feil ? (
-            <p role="alert" className="text-[12px] text-destructive">
-              {feil}
-            </p>
-          ) : null}
-        </form>
-      </ModalBody>
+      <ModalBody>{skjema}</ModalBody>
     </Modal>
   );
 }

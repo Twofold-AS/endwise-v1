@@ -102,7 +102,7 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
         role: 'dealer_admin',
         shell: 'forhandler',
       }).map((f) => f.label),
-    ).toEqual(['Oversikt', 'Ansatte', 'Timeplan', 'Abonnement', 'Integrasjoner']);
+    ).toEqual(['Oversikt', 'Ansatte', 'Timeplan ansatte', 'Abonnement', 'Integrasjoner']);
   });
 
   it('HJEM_KORT_TOM er ærlig pulse-kopi', () => {

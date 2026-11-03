@@ -64,8 +64,10 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
   it('alfa-rail er Apple-Contacts: full NO-indeks, list-viewport, ikke chrome-overlap', () => {
     const rail = utenKommentarer(les('../app/(app)/kunder/_alfa-rail.tsx'));
     expect(rail).toMatch(/data-kunder-alfa-rail/);
-    expect(rail).toMatch(/absolute top-0 right-0 bottom-0/);
-    expect(rail).toMatch(/w-\[26px\]/);
+    expect(rail).toMatch(/touch-none|touchAction/);
+    expect(rail).toMatch(/onPointerDown/);
+    expect(rail).toMatch(/onPointerMove/);
+    expect(rail).toMatch(/w-\[22px\]/);
     expect(rail).toMatch(/text-\[13px\]/);
     expect(rail).toMatch(/flex-1/);
     expect(rail).toMatch(/text-fg-faint/);
@@ -153,8 +155,9 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
     expect(liste).not.toMatch(/pr-\[30px\]/);
     expect(liste).toMatch(/Navn, telefon, e-post eller reg\.nr/);
     expect(skall).toMatch(/relative flex min-h-0 flex-1/);
-    expect(skall).toMatch(/pr-\[26px\]/);
+    expect(skall).toMatch(/no-scrollbar/);
     expect(skall).toMatch(/data-kunder-liste-hale/);
+    expect(skall).not.toMatch(/pr-\[26px\]/);
   });
 
   it('FIX B: ingen klone-rails i eldre GO-previews fra main', () => {

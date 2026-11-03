@@ -55,6 +55,9 @@ jobs:
           project: endwise
           path: "."
           format: SARIF
+          # pnpm-repo: Yarn-analysatoren krasjer jobben («Unable to determine yarn»).
+          # Pnpm Audit Analyzer kjører uansett.
+          args: "--disableYarnAudit"
       - uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: reports/dependency-check-report.sarif
@@ -77,19 +80,23 @@ jobs:
           fi
           slug="${GITHUB_HEAD_REF//\//-}"
           url="https://endwise-v1-web-git-${slug}-endwise-twofold.vercel.app"
+          # Vent til *denne* deployen er live (CSP-header), ikke forrige READY-alias.
           for _ in $(seq 1 90); do
-            code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" || true)"
-            if [ "$code" != "000" ] && [ "$code" != "404" ]; then
-              echo "Fant preview ${url} (HTTP ${code})"
+            headers="$(curl -sSI --max-time 15 "$url" || true)"
+            if printf '%s' "$headers" | grep -qi '^content-security-policy:'; then
+              echo "Fant preview ${url} med CSP"
               echo "url=${url}" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             sleep 10
           done
-          echo "Preview ikke klar: ${url}" >&2
+          echo "Preview uten CSP-header: ${url}" >&2
           exit 1
+      - name: Gjør workspace skrivbart for ZAP
+        run: chmod a+w .
       - name: ZAP baseline
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: ${{ steps.preview.outputs.url }}
           fail_action: false
+          allow_issue_writing: false

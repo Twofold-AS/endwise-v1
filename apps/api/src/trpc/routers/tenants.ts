@@ -21,7 +21,7 @@ import {
   TIER_KEYS,
   utvidPakke,
 } from '@endwise/modules';
-import { createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
+import { createInvitasjonsmodul, eierInvitasjonStatus } from '@endwise/modules/invitasjoner';
 import { erPlattformTenant } from '@endwise/modules/plattform';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -146,13 +146,16 @@ async function lesTenant(
 async function eierInfo(
   db: Parameters<typeof withTenant>[0],
   tenantId: string,
-): Promise<{ eierEpost: string | null; eierInviteUbrukt: boolean }> {
+): Promise<{
+  eierEpost: string | null;
+  eierInviteUbrukt: boolean;
+  eierInviteStatus: ReturnType<typeof eierInvitasjonStatus> | null;
+  eierInviteId: string | null;
+}> {
   const modul = createInvitasjonsmodul(db);
   const siste = await modul.sisteEierInvitasjon(tenantId);
-  const naa = Date.now();
-  const ubrukt = Boolean(
-    siste && !siste.akseptert && !siste.trukket && siste.utloper.getTime() > naa,
-  );
+  const status = siste ? eierInvitasjonStatus(siste) : null;
+  const ubrukt = status === 'sendt' || status === 'kode_sendt' || status === 'laast';
   let epost = siste?.epost ?? null;
   if (!epost) {
     const [medlem] = await db
@@ -170,7 +173,12 @@ async function eierInfo(
       epost = bruker?.email ?? null;
     }
   }
-  return { eierEpost: epost, eierInviteUbrukt: ubrukt };
+  return {
+    eierEpost: epost,
+    eierInviteUbrukt: ubrukt,
+    eierInviteStatus: status,
+    eierInviteId: siste?.id ?? null,
+  };
 }
 
 async function adminEpost(db: Parameters<typeof withTenant>[0], userId: string): Promise<string> {
@@ -332,6 +340,8 @@ export const tenantsRouter = router({
           const eier = await eierInfo(ctx.db, t.id).catch(() => ({
             eierEpost: null as string | null,
             eierInviteUbrukt: false,
+            eierInviteStatus: null as ReturnType<typeof eierInvitasjonStatus> | null,
+            eierInviteId: null as string | null,
           }));
           return {
             ...t,
@@ -339,6 +349,7 @@ export const tenantsRouter = router({
             erEndwise: erEndwiseSlug(t.slug),
             eierEpost: eier.eierEpost,
             eierInviteUbrukt: eier.eierInviteUbrukt,
+            eierInviteStatus: eier.eierInviteStatus,
           };
         }),
     );
@@ -811,7 +822,7 @@ export const tenantsRouter = router({
       krevIkkeEndwise(tenant, 'sende invitasjon på nytt til');
 
       const eier = await eierInfo(ctx.db, input.tenantId);
-      if (!eier.eierInviteUbrukt) {
+      if (eier.eierInviteStatus === 'brukt') {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Invitasjonen er allerede brukt. Du sender den aldri på nytt da.',
@@ -825,17 +836,65 @@ export const tenantsRouter = router({
       }
 
       try {
-        return await sendEierLenke({
+        const ut = await sendEierLenke({
           db: ctx.db,
           tenantId: input.tenantId,
           epost: eier.eierEpost,
           invitedBy: ctx.userId,
           forhandler: tenant.name,
         });
+        await withTenant(ctx.db, input.tenantId, (tx) =>
+          tx.insert(schema.auditLog).values({
+            tenantId: input.tenantId,
+            actor: ctx.userId,
+            action: 'invitation.resent',
+            subjectType: 'invitation',
+            subjectId: ut.id,
+          }),
+        );
+        return ut;
       } catch (error) {
         loggCreatePostgresFeil(error);
         throw mapCreatePostgresFeil(error);
       }
+    }),
+
+  /** Trekk eier-invitasjonen. Drep lenke og kode. Brukt kan ikke trekkes. */
+  revokeOwnerInvite: endwiseAdminProcedure
+    .input(z.object({ tenantId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const tenant = await lesTenant(ctx.db, input.tenantId);
+      if (!tenant) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+      }
+      krevIkkeEndwise(tenant, 'trekke invitasjon for');
+
+      const eier = await eierInfo(ctx.db, input.tenantId);
+      if (eier.eierInviteStatus === 'brukt' || !eier.eierInviteId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Invitasjonen er allerede brukt eller finnes ikke.',
+        });
+      }
+      if (eier.eierInviteStatus === 'trukket') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Invitasjonen er allerede trukket.',
+        });
+      }
+
+      const modul = createInvitasjonsmodul(ctx.db);
+      const n = await modul.tilbakekallApneEier(input.tenantId, eier.eierEpost ?? undefined);
+      await withTenant(ctx.db, input.tenantId, (tx) =>
+        tx.insert(schema.auditLog).values({
+          tenantId: input.tenantId,
+          actor: ctx.userId,
+          action: 'invitation.revoked',
+          subjectType: 'invitation',
+          subjectId: eier.eierInviteId,
+        }),
+      );
+      return { id: eier.eierInviteId, trukket: n };
     }),
 
   /**

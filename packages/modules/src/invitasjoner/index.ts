@@ -1,5 +1,16 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { and, type Database, desc, eq, isNull, schema, sql, withTenant } from '@endwise/db';
+import {
+  and,
+  type Database,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  schema,
+  sql,
+  withTenant,
+} from '@endwise/db';
+import { MAX_FORSOK } from '../invitasjon-kode/index.ts';
 import {
   erPlattformTenant,
   type InviterbartPlatformNiva,
@@ -26,6 +37,33 @@ import { type Jobbfunksjon, kanTildeles, TILDELBARE_FUNKSJONER } from '../profil
  */
 
 export type Invitasjonskind = 'staff' | 'owner' | 'platform';
+
+/** F28 / white label F8b — admin-status uten å vise koden. GET skriver ikke «åpnet». */
+export const INVITASJON_STATUS = [
+  'sendt',
+  'kode_sendt',
+  'laast',
+  'utlopt',
+  'brukt',
+  'trukket',
+] as const;
+export type InvitasjonStatus = (typeof INVITASJON_STATUS)[number];
+
+export function eierInvitasjonStatus(input: {
+  akseptert: Date | null;
+  trukket: Date | null;
+  utloper: Date;
+  kode?: { attempts: number; sentAt: Date | null; usedAt: Date | null } | null;
+  now?: Date;
+}): InvitasjonStatus {
+  const now = input.now ?? new Date();
+  if (input.trukket) return 'trukket';
+  if (input.akseptert) return 'brukt';
+  if (input.utloper.getTime() <= now.getTime()) return 'utlopt';
+  if (input.kode && input.kode.attempts >= MAX_FORSOK) return 'laast';
+  if (input.kode?.sentAt && !input.kode.usedAt) return 'kode_sendt';
+  return 'sendt';
+}
 
 /** 7 dager. Lenge nok til en ferieuke, kort nok til at en glemt e-post dør. */
 export const INVITASJON_GYLDIGHET_DAGER = 7;
@@ -328,11 +366,30 @@ export function createInvitasjonsmodul(db: Database) {
             isNull(schema.invitations.revokedAt),
           ];
           if (epostNorm) vilkar.push(eq(schema.invitations.email, epostNorm));
+          const apne = await tx
+            .select({ id: schema.invitations.id })
+            .from(schema.invitations)
+            .where(and(...vilkar));
+          if (apne.length === 0) return 0;
+          const now = new Date();
           const resultat = await tx
             .update(schema.invitations)
-            .set({ revokedAt: new Date() })
+            .set({ revokedAt: now })
             .where(and(...vilkar));
-          return resultat.rowCount ?? 0;
+          await tx
+            .update(schema.invitationCodes)
+            .set({ usedAt: now })
+            .where(
+              and(
+                eq(schema.invitationCodes.tenantId, tenantId),
+                inArray(
+                  schema.invitationCodes.invitationId,
+                  apne.map((r) => r.id),
+                ),
+                isNull(schema.invitationCodes.usedAt),
+              ),
+            );
+          return resultat.rowCount ?? apne.length;
         } finally {
           await ryddHjelpeGuc();
         }
@@ -340,8 +397,8 @@ export function createInvitasjonsmodul(db: Database) {
     },
 
     async sisteEierInvitasjon(tenantId: string) {
-      const [rad] = await withTenant(db, tenantId, (tx) =>
-        tx
+      return withTenant(db, tenantId, async (tx) => {
+        const [rad] = await tx
           .select({
             id: schema.invitations.id,
             epost: schema.invitations.email,
@@ -354,9 +411,19 @@ export function createInvitasjonsmodul(db: Database) {
             and(eq(schema.invitations.tenantId, tenantId), eq(schema.invitations.kind, 'owner')),
           )
           .orderBy(desc(schema.invitations.createdAt))
-          .limit(1),
-      );
-      return rad ?? null;
+          .limit(1);
+        if (!rad) return null;
+        const [kode] = await tx
+          .select({
+            attempts: schema.invitationCodes.attempts,
+            sentAt: schema.invitationCodes.sentAt,
+            usedAt: schema.invitationCodes.usedAt,
+          })
+          .from(schema.invitationCodes)
+          .where(eq(schema.invitationCodes.invitationId, rad.id))
+          .limit(1);
+        return { ...rad, kode: kode ?? null };
+      });
     },
 
     /** Åpne invitasjoner for lederens liste. Tenant-skopet av RLS. */
@@ -390,10 +457,11 @@ export function createInvitasjonsmodul(db: Database) {
      * annen forhandlers invitasjon selv om hen gjetter en ID.
      */
     async tilbakekall(tenantId: string, id: string): Promise<boolean> {
-      const rader = await withTenant(db, tenantId, (tx) =>
-        tx
+      return withTenant(db, tenantId, async (tx) => {
+        const now = new Date();
+        const rader = await tx
           .update(schema.invitations)
-          .set({ revokedAt: new Date() })
+          .set({ revokedAt: now })
           .where(
             and(
               eq(schema.invitations.id, id),
@@ -402,9 +470,20 @@ export function createInvitasjonsmodul(db: Database) {
               isNull(schema.invitations.revokedAt),
             ),
           )
-          .returning({ id: schema.invitations.id }),
-      );
-      return rader.length > 0;
+          .returning({ id: schema.invitations.id });
+        if (rader.length === 0) return false;
+        await tx
+          .update(schema.invitationCodes)
+          .set({ usedAt: now })
+          .where(
+            and(
+              eq(schema.invitationCodes.invitationId, id),
+              eq(schema.invitationCodes.tenantId, tenantId),
+              isNull(schema.invitationCodes.usedAt),
+            ),
+          );
+        return true;
+      });
     },
 
     /**

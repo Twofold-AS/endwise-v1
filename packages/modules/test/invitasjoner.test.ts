@@ -6,6 +6,7 @@ import { createDb, type Database, eq, schema, sql, withTenant } from '@endwise/d
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   createInvitasjonsmodul,
+  eierInvitasjonStatus,
   hashInvitasjonstoken,
   InvitasjonUgyldigError,
   inviteeKreverPassord,
@@ -63,6 +64,28 @@ describe('F1-10: token og validering (uten database)', () => {
     expect(inviteeKreverPassord({ kind: 'owner', harBruker: true, harCredential: true })).toBe(
       false,
     );
+  });
+
+  it('eierInvitasjonStatus: trukket/brukt/utløpt/låst/kode/sendt uten å vise kode', () => {
+    const now = new Date('2026-11-03T12:00:00.000Z');
+    const utloper = new Date('2026-11-10T12:00:00.000Z');
+    const base = { akseptert: null, trukket: null, utloper, now };
+    expect(eierInvitasjonStatus({ ...base, trukket: now })).toBe('trukket');
+    expect(eierInvitasjonStatus({ ...base, akseptert: now })).toBe('brukt');
+    expect(eierInvitasjonStatus({ ...base, utloper: now })).toBe('utlopt');
+    expect(
+      eierInvitasjonStatus({
+        ...base,
+        kode: { attempts: 5, sentAt: now, usedAt: null },
+      }),
+    ).toBe('laast');
+    expect(
+      eierInvitasjonStatus({
+        ...base,
+        kode: { attempts: 1, sentAt: now, usedAt: null },
+      }),
+    ).toBe('kode_sendt');
+    expect(eierInvitasjonStatus(base)).toBe('sendt');
   });
 
   it('tilbakekallApneEier avviser tom tenant før spørring', async () => {

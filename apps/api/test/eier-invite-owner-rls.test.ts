@@ -207,7 +207,7 @@ describe('FORCE RLS eier-invite på tenants.create', () => {
   it('tilbakekallApneEier er app-kode i withTenant, avviser tom tenant, rydder hjelpe-GUC', () => {
     const start = opprettEier.search(/async tilbakekallApneEier\s*\(/);
     expect(start).toBeGreaterThan(-1);
-    const kropp = opprettEier.slice(start, start + 1400);
+    const kropp = opprettEier.slice(start, start + 2200);
     expect(kropp).toMatch(/update\(schema\.invitations\)|update invitations/i);
     expect(kropp).toMatch(/revokedAt|revoked_at/);
     expect(kropp).not.toMatch(/revoke_open_owner_invitations/);

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F33 White label F11b (kundeportal handling)
+
+**Type:** ny fase. Bestill, meldinger (tråd ↔ kunde) og sporing. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F33**. **F33-01** `done`. `threads.customer_id`, portal-booking, innboks. ⛔ F11c. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F32 White label F11a (kundeportal les)
 
 **Type:** ny fase. Kundens Hjem/Bookinger/Kjøretøy/Profil. Ingen ny UI-pakke. Ingen techstack-endring.

@@ -255,7 +255,7 @@ export async function withPlatformInspect<T>(
 /**
  * F31 / white label F10 — kundens egen isolasjon.
  * Setter tenant, customer og actor=customer lokalt. RESTRICTIVE-policyer
- * på bookings/vehicles/customers krever customer_id. Feiler lukket.
+ * på bookings/vehicles/customers/threads krever customer_id. Feiler lukket.
  */
 export async function withCustomer<T>(
   db: Database,

@@ -4,14 +4,29 @@ import { DeaktivertHandling, LasterFlate, ListeRad, Seksjon, TomFlate } from '@e
 import type { ReactNode } from 'react';
 import { trpc } from '@/lib/trpc';
 
-const STATUS: Record<string, string> = {
-  draft: 'Kladd',
-  confirmed: 'Mottatt',
-  in_progress: 'Under arbeid',
-  completed: 'Klar',
-  cancelled: 'Avlyst',
-  no_show: 'Ikke møtt',
-};
+const FASER = ['Mottatt', 'Under arbeid', 'Klar'] as const;
+
+function faseAv(status: string, fase?: { merkelapp: string; steg: number }) {
+  if (fase) return fase;
+  if (status === 'cancelled') return { merkelapp: 'Avlyst', steg: -1 };
+  if (status === 'no_show') return { merkelapp: 'Ikke møtt', steg: -1 };
+  if (status === 'completed') return { merkelapp: 'Klar', steg: 2 };
+  if (status === 'in_progress') return { merkelapp: 'Under arbeid', steg: 1 };
+  return { merkelapp: 'Mottatt', steg: 0 };
+}
+
+function Sporing({ steg }: { steg: number }) {
+  if (steg < 0) return null;
+  return (
+    <ol className="mt-1 flex gap-2 text-meta text-fg-muted" aria-label="Sporing">
+      {FASER.map((navn, i) => (
+        <li key={navn} className={i === steg ? 'font-[650] text-fg' : undefined}>
+          {navn}
+        </li>
+      ))}
+    </ol>
+  );
+}
 
 function tidTekst(tid: Date | string) {
   return new Date(tid).toLocaleString('nb-NO', {
@@ -60,14 +75,19 @@ export function KundeBookingerFlate() {
   }
   return (
     <div className="flex flex-col">
-      {rader.map((b) => (
-        <ListeRad
-          key={b.id}
-          tittel={STATUS[b.status] ?? b.status}
-          undertekst={tidTekst(b.startsAt)}
-          chevron={false}
-        />
-      ))}
+      {rader.map((b) => {
+        const fase = faseAv(b.status, b.fase);
+        return (
+          <div key={b.id} className="border-b border-border py-2">
+            <ListeRad
+              tittel={b.tjeneste ?? fase.merkelapp}
+              undertekst={`${fase.merkelapp} · ${tidTekst(b.startsAt)}`}
+              chevron={false}
+            />
+            <Sporing steg={fase.steg} />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -98,7 +118,7 @@ export function KundeKjoretoyFlate() {
               {k.historikk.map((h) => (
                 <ListeRad
                   key={h.id}
-                  tittel={STATUS[h.status] ?? h.status}
+                  tittel={faseAv(h.status, h.fase).merkelapp}
                   undertekst={tidTekst(h.startsAt)}
                   chevron={false}
                 />
@@ -140,13 +160,12 @@ export function KundeHubFlate() {
               undertekst="Mottatt, under arbeid, klar"
               href="/bookinger"
             />
+            <ListeRad tittel="Bestill time" undertekst="Velg dag og tjeneste" href="/bestill" />
             <ListeRad tittel="Kjøretøy" undertekst="Servicehistorikk" href="/kjoretoy" />
+            <ListeRad tittel="Meldinger" undertekst="Skriv til verkstedet" href="/meldinger" />
             <ListeRad tittel="Profil" undertekst={p.epost ?? 'Kontaktinfo'} href="/profil" />
           </Seksjon>
           <Seksjon tittel="Mer">
-            <DeaktivertHandling forklaring="Meldinger kommer i neste steg">
-              Meldinger
-            </DeaktivertHandling>
             <DeaktivertHandling forklaring="Deler kommer senere">Deler</DeaktivertHandling>
             <DeaktivertHandling forklaring="Kvitteringer kommer senere">
               Kvitteringer

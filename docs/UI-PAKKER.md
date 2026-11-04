@@ -866,6 +866,8 @@ Kun disse. Hver enkelt har en grunn.
 
 | Kundeportal les (`apps/web/app/%5Fkunde/_lib/portal.tsx`, F32-01 / plan F11a) | **Ingen ny pakke.** `ListeRad` + `Seksjon` + `DeaktivertHandling` + `TomFlate`. Egen kode fordi ingen pakke dekker «kundens bookinger/kjøretøy». ⛔ `#0066ff`. |
 
+| Kundeportal handling (`apps/web/app/%5Fkunde/_lib/bestill.tsx`, `_lib/meldinger.tsx`, F33-01 / plan F11b) | **Ingen ny pakke.** `FeltKalender` (Board DateCalendar) + `FeltTekst` + `StatefulButton` + `ListeRad`. Egen kode fordi ingen pakke dekker «kundens bestill + tråd mot innboks». ⛔ `#0066ff`. |
+
 | Transaksjonell e-post (`packages/auth/src/senders/epost-mal.ts`, `toolkit-resend/src/epost-html.ts`) | **Ingen ny pakke, og ingen react-email.** Techstack er Resend + tabell-HTML (Outlook/Gmail). shadcn/beUI kan ikke brukes i innboksen. **Login-e-post (08.09 Mobbin):** `byggInnloggingsEpostHtml` — alltid hvit `#ffffff`, ink `#141414`, svart cid-logo, tykk «Hei {navn}», stor 5-sifret kode, understreket «lenka». Ingen Action Blue-CTA. Andre maler (invite, bytte, innboks) beholdt Apple-skallet: parchment `#f5f5f7`, Action Blue-pille `#0066cc`. ⛔ Ikke mørk chrome, ikke Synara, ikke Linear-lime. |
 
 | `ToFaktorRad` (`apps/web/app/(app)/_shell/`) | **Ingen ny pakke.** `ByttPassordSkjema` er fjernet 01.09.2026. 2FA-status (F1-20) og slå-av uten passord (F1-22) er `StatefulButton` + token-rad i `_shell/profil-kort.tsx` (Settings › Profil og mekanikerens «Meg»). Gjenopprettingskoder (F1-21) vises på `/2fa-oppsett`. |

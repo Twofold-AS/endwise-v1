@@ -50,6 +50,9 @@ export function KundeSkall({
           <a href="/kjoretoy" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
             Kjøretøy
           </a>
+          <a href="/meldinger" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
+            Meldinger
+          </a>
           <a href="/min-side" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
             Min side
           </a>

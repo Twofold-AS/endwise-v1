@@ -1,5 +1,18 @@
-import { and, desc, eq, schema, withCustomer, withTenant } from '@endwise/db';
+import { and, desc, eq, gte, schema, withCustomer, withTenant } from '@endwise/db';
+import {
+  IngenInnboksMottakerError,
+  jobbFase,
+  KUNDE_MELDING_PER_MINUTT,
+  sendKundeMelding,
+} from '@endwise/modules/kunde';
+import {
+  createWidgetPublicService,
+  WidgetBookingError,
+  WidgetBookingIdentity,
+  widgetWorkingDay,
+} from '@endwise/modules/widget';
 import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 import { customerProcedure, router } from '../init.ts';
 
 async function finnKunde(ctx: {
@@ -27,6 +40,23 @@ async function finnKunde(ctx: {
   return rad;
 }
 
+function toTRPCError(error: unknown): never {
+  if (error instanceof WidgetBookingError) {
+    throw new TRPCError({ code: 'CONFLICT', message: error.message, cause: error });
+  }
+  if (error instanceof IngenInnboksMottakerError) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: error.message, cause: error });
+  }
+  if (error instanceof TRPCError) throw error;
+  if (error instanceof Error && error.message.startsWith('Skriv')) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+  }
+  if (error instanceof Error && error.message.startsWith('Meldingen kan')) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+  }
+  throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Kunne ikke fullføre' });
+}
+
 export const kundeRouter = router({
   meg: customerProcedure.query(async ({ ctx }) => {
     return finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
@@ -34,21 +64,28 @@ export const kundeRouter = router({
 
   bookinger: customerProcedure.query(async ({ ctx }) => {
     const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
-    return withCustomer(ctx.db, ctx.tenantId, kunde.id, (tx) =>
-      tx
+    return withCustomer(ctx.db, ctx.tenantId, kunde.id, async (tx) => {
+      const rader = await tx
         .select({
           id: schema.bookings.id,
           status: schema.bookings.status,
           startsAt: schema.bookings.startsAt,
           endsAt: schema.bookings.endsAt,
           vehicleId: schema.bookings.vehicleId,
+          tjeneste: schema.services.name,
         })
         .from(schema.bookings)
+        .leftJoin(
+          schema.serviceVersions,
+          eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
+        )
+        .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
         .where(
           and(eq(schema.bookings.tenantId, ctx.tenantId), eq(schema.bookings.customerId, kunde.id)),
         )
-        .orderBy(desc(schema.bookings.startsAt)),
-    );
+        .orderBy(desc(schema.bookings.startsAt));
+      return rader.map((b) => ({ ...b, fase: jobbFase(b.status) }));
+    });
   }),
 
   kjoretoy: customerProcedure.query(async ({ ctx }) => {
@@ -81,8 +118,164 @@ export const kundeRouter = router({
         .orderBy(desc(schema.bookings.startsAt));
       return biler.map((b) => ({
         ...b,
-        historikk: historikk.filter((h) => h.vehicleId === b.id).slice(0, 8),
+        historikk: historikk
+          .filter((h) => h.vehicleId === b.id)
+          .slice(0, 8)
+          .map((h) => ({ ...h, fase: jobbFase(h.status) })),
       }));
     });
   }),
+
+  tjenester: customerProcedure.query(async ({ ctx }) => {
+    await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+    return createWidgetPublicService(ctx.db).listServices(ctx.tenantId);
+  }),
+
+  ledigeTider: customerProcedure
+    .input(
+      z.object({
+        serviceVersionId: z.uuid(),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+      const { dayStart, dayEnd } = widgetWorkingDay(input.date);
+      const slots = await createWidgetPublicService(ctx.db).availableSlots(ctx.tenantId, {
+        serviceVersionId: input.serviceVersionId,
+        dayStart,
+        dayEnd,
+        notBefore: new Date(),
+      });
+      return slots.map((s) => s.toISOString());
+    }),
+
+  bestill: customerProcedure
+    .input(
+      z.object({
+        serviceVersionId: z.uuid(),
+        startsAt: z.coerce.date(),
+        vehicleId: z.uuid().optional(),
+        notes: z.string().max(1000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+      try {
+        const result = await createWidgetPublicService(ctx.db).createPortalBookingRequest(
+          ctx.tenantId,
+          {
+            customerId: kunde.id,
+            serviceVersionId: input.serviceVersionId,
+            startsAt: input.startsAt,
+            vehicleId: input.vehicleId ?? null,
+            notes: input.notes ?? null,
+            idempotencyKey: WidgetBookingIdentity.idempotencyKey({
+              cid: `portal:${kunde.id}`,
+              serviceVersionId: input.serviceVersionId,
+              startsAt: input.startsAt,
+            }),
+          },
+        );
+        return { ...result, fase: jobbFase(result.status) };
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
+
+  traader: customerProcedure.query(async ({ ctx }) => {
+    const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+    return withCustomer(ctx.db, ctx.tenantId, kunde.id, (tx) =>
+      tx
+        .select({
+          id: schema.threads.id,
+          subject: schema.threads.subject,
+          lastMessageAt: schema.threads.lastMessageAt,
+        })
+        .from(schema.threads)
+        .where(
+          and(
+            eq(schema.threads.tenantId, ctx.tenantId),
+            eq(schema.threads.customerId, kunde.id),
+            eq(schema.threads.kind, 'customer_dealer'),
+          ),
+        )
+        .orderBy(desc(schema.threads.lastMessageAt)),
+    );
+  }),
+
+  meldinger: customerProcedure
+    .input(z.object({ threadId: z.uuid().optional() }))
+    .query(async ({ ctx, input }) => {
+      const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+      return withCustomer(ctx.db, ctx.tenantId, kunde.id, async (tx) => {
+        const [traad] = input.threadId
+          ? await tx
+              .select({ id: schema.threads.id })
+              .from(schema.threads)
+              .where(
+                and(eq(schema.threads.id, input.threadId), eq(schema.threads.customerId, kunde.id)),
+              )
+              .limit(1)
+          : await tx
+              .select({ id: schema.threads.id })
+              .from(schema.threads)
+              .where(
+                and(
+                  eq(schema.threads.tenantId, ctx.tenantId),
+                  eq(schema.threads.customerId, kunde.id),
+                  eq(schema.threads.kind, 'customer_dealer'),
+                ),
+              )
+              .orderBy(desc(schema.threads.lastMessageAt))
+              .limit(1);
+        if (!traad) return { threadId: null as string | null, meldinger: [] };
+        const rader = await tx
+          .select({
+            id: schema.messages.id,
+            body: schema.messages.body,
+            authorId: schema.messages.authorId,
+            direction: schema.messages.direction,
+            createdAt: schema.messages.createdAt,
+          })
+          .from(schema.messages)
+          .where(eq(schema.messages.threadId, traad.id))
+          .orderBy(schema.messages.createdAt);
+        return { threadId: traad.id, meldinger: rader };
+      });
+    }),
+
+  sendMelding: customerProcedure
+    .input(z.object({ body: z.string().min(1).max(2000) }))
+    .mutation(async ({ ctx, input }) => {
+      const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+      const nylig = await withCustomer(ctx.db, ctx.tenantId, kunde.id, (tx) =>
+        tx
+          .select({ id: schema.messages.id })
+          .from(schema.messages)
+          .innerJoin(schema.threads, eq(schema.threads.id, schema.messages.threadId))
+          .where(
+            and(
+              eq(schema.messages.authorId, ctx.userId),
+              eq(schema.threads.customerId, kunde.id),
+              gte(schema.messages.createdAt, new Date(Date.now() - 60_000)),
+            ),
+          ),
+      );
+      if (nylig.length >= KUNDE_MELDING_PER_MINUTT) {
+        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Vent litt før du sender mer.' });
+      }
+      try {
+        return await sendKundeMelding(ctx.db, {
+          tenantId: ctx.tenantId,
+          customerId: kunde.id,
+          userId: ctx.userId,
+          epost: kunde.epost,
+          telefon: kunde.telefon,
+          body: input.body,
+        });
+      } catch (error) {
+        return toTRPCError(error);
+      }
+    }),
 });

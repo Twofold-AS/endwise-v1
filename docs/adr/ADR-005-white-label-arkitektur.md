@@ -13,7 +13,7 @@ Dette er arkitekturbeslutningen for Endwise som selvstendig white label-plattfor
 
 I dag er Endwise én flate på én vert: samme innlogging, samme cookie-prefiks og samme `(app)`-skall for forhandler, mekaniker og Endwise-admin. Tenant velges fra sesjonen, ikke fra `Host`. Branding er hardkodet «Endwise». Invitasjoner bruker SHA-256 av et langt token, uten e-postkode-trinn. Tillatelser er faste roller i kode (`rbac.ts`), ikke per område i databasen.
 
-Målet er at hver forhandler eier adressen `<sted>.endwise.no` (forhandleren velger subdomenet i onboardingen), at kunder og ansatte deler den adressen, og at Endwise-admin bor skjult på `platform.endwise.no`.
+Målet er at hver forhandler eier adressen `<sted>.endwise.no` (platform-admin setter subdomenet ved opprettelse), at kundesiden bor der, at ansatte logger inn på `app.endwise.no`, og at Endwise-admin bor skjult på `platform.endwise.no`.
 
 ---
 
@@ -24,12 +24,13 @@ Målet er at hver forhandler eier adressen `<sted>.endwise.no` (forhandleren vel
 | Flate | Adresse | Hvem |
 |---|---|---|
 | Marked | `endwise.no`, `www.endwise.no` | Offentlig. Uendret. |
-| Forhandler (Privat + Bedrift) | `<slug>.endwise.no` | Kunder og ansatte hos én forhandler |
+| Forhandler (kunde) | `<slug>.endwise.no` | Bare kunder. Ingen Privat/Bedrift-valg. |
+| Bedrift | `app.endwise.no` | Forhandler og ansatte. E-post + kode + 2FA. Ruter til riktig forhandler. |
 | Admin | `platform.endwise.no` | Kun Endwise-team. Ingen lenke fra marked eller forhandlersider. `robots: noindex`. |
 
-`app.endwise.no` droppes. Eget CNAME-domene kommer senere via `tenant_domains` (samme oppslag på full vert).
+`app` er reservert slug og egen host-sone (Mikael 04.11.2026). Eget CNAME-domene kommer senere via `tenant_domains` (samme oppslag på full vert).
 
-Proxyen (`apps/web/proxy.ts`, Next 16) leser `Host` og klassifiserer sonen: `marked | platform | forhandler | reservert | ukjent`. Den gjør **ikke** databaseoppslag. Tenant-oppslag med offentlige felt skjer i layout via `lookup_tenant_by_host` (F2). Ukjent slug gir nøytral 404 uten å røpe hvilke som finnes.
+Proxyen (`apps/web/proxy.ts`, Next 16) leser `Host` og klassifiserer sonen: `marked | platform | app | forhandler | reservert | ukjent`. Den gjør **ikke** databaseoppslag. Tenant-oppslag med offentlige felt skjer i layout via `lookup_tenant_by_host` (F2). Ukjent slug gir nøytral 404 uten å røpe hvilke som finnes.
 
 F0-spiken setter bare informasjonsheadere bak `ENDWISE_WHITE_LABEL_SPIKE=1`. Standard matcher og no-store på `/signin`, `/2fa-oppsett` og `/api/auth/*` er uendret. Innkommende `x-endwise-sone` / `x-endwise-slug` strippes og settes bare av proxyen (klienten skal ikke kunne forfalske tenant).
 
@@ -39,12 +40,12 @@ Dev: `<slug>.localhost:3000`. Preview (`VERCEL_ENV !== 'production'`): `x-tenant
 
 ### 2. Subdomene (`<sted>.endwise.no`)
 
-Subdomenet er stedet eller navnet forhandleren velger i onboardingen, for eksempel `bergen.endwise.no`. Det er ikke et generisk ord.
+Subdomenet settes av platform-admin ved opprettelse, for eksempel `bergen.endwise.no`. Forhandleren ser kundelenken som kopierbar info i onboardingen — ingen redigering.
 
 **Regler (låses i F1 som delt zod-skjema):**
 
 - 3–32 tegn, `a–z`, `0–9` og bindestrek. Ikke bindestrek først eller sist. Ikke to bindestreker på rad (`--` og `xn--` er forbudt). Kun ASCII, små bokstaver.
-- Forslag fra firmanavn eller sted med `æ→ae`, `ø→o`, `å→aa`. Forhandleren kan endre.
+- Forslag fra firmanavn eller sted med `æ→ae`, `ø→o`, `å→aa`. Bare admin kan sette.
 - **Globalt unikt**, uavhengig av store/små bokstaver. Unik indeks på `lower(slug)` mot både `tenants.slug` og `organization.slug`.
 - Kollisjon (to i Bergen): først til mølla. Nummer to får «`bergen` er tatt» og forslag som `bergen-sentrum`, `bergen-<firmanavn>`, `bergen-2`. Ingen opplysning om hvem som har navnet. Endwise flytter aldri et navn i det stille.
 
@@ -54,15 +55,13 @@ Subdomenet er stedet eller navnet forhandleren velger i onboardingen, for eksemp
 
 Alt som er `endwise` eller starter med `endwise-` er reservert. Merkenavn som lett kan forveksles (Vipps, BankID, Posten, Nav, Skatteetaten) går til manuell godkjenning.
 
-### 3. Innlogging: én flate per forhandlervert
+### 3. Innlogging: kunde og bedrift er adskilt
 
-Én innlogging per forhandlerhost. Etter e-postkode:
+- **Kunde** på `<slug>.endwise.no/logg-inn`: e-post eller telefon. OTP bare hvis personen finnes som kunde (Endwise-db eller importert fra Quick). Samme svar uansett. Rate limit. GDPR-varsel ved første innlogging. Ingen massee-post. Ingen Privat/Bedrift.
+- **Ansatt** på `app.endwise.no`: e-post + kode + 2FA. Destinasjon er dealer_admin/dealer_staff. Etter innlogging lander de i forhandler-appen på samme vert (`__Host-`-kake, ingen Domain).
+- **Endwise** på `platform.endwise.no`.
 
-1. Ingen rolle hos denne forhandleren → rett til kundesiden (Privat).
-2. Har rolle → valg **Privat** eller **Bedrift**.
-3. Endwise-roller logger inn på `platform.endwise.no`, aldri her.
-
-Kunden er en Better-Auth-bruker koblet til `customers.userId` (én kundepost per forhandler). Samme person hos to forhandlere er to kunder med samme `user`. Konto opprettes først etter bekreftet kode. Kode sendes bare hvis e-posten er kjent hos denne forhandleren (ansatt eller kunde). Samme svar ellers (ingen enumerering).
+Kunden er en Better-Auth-bruker koblet til `customers.userId` (én kundepost per forhandler). Samme person hos to forhandlere er to kunder med samme `user`.
 
 ### 4. Roller og tillatelser — ingen rollemaler
 

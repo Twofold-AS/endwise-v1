@@ -44,11 +44,18 @@ export function landingEtterKode(input: {
   harRolle: boolean;
   totpBundet: boolean;
   whiteLabel: boolean;
-}): '/min-side' | '/velg' | '/2fa-oppsett' | '/' {
+  sone?: 'forhandler' | 'platform' | 'app' | null;
+}): '/min-side' | '/2fa-oppsett' | '/home' | '/' {
   if (!input.whiteLabel) return '/';
+  if (input.sone === 'app') {
+    if (!input.harRolle) return '/';
+    if (!input.totpBundet) return '/2fa-oppsett';
+    return '/home';
+  }
   if (!input.harRolle) return '/min-side';
+  if (input.sone === 'forhandler') return '/min-side';
   if (!input.totpBundet) return '/2fa-oppsett';
-  return '/velg';
+  return '/home';
 }
 
 export function kanAapneBedrift(input: { harRolle: boolean; totpBundet: boolean }): boolean {

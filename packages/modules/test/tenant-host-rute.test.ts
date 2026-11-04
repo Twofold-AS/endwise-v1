@@ -76,21 +76,10 @@ describe('F18 / white label F2: ruteFraSone', () => {
     ).toEqual({ type: 'rewrite', dest: '/_kunde/bergen/logg-inn' });
   });
 
-  it('(app)-sti uten Bedrift går til logg-inn', () => {
+  it('(app)-sti på kundevert er nøytral 404 — bedrift bor på app.endwise.no', () => {
     expect(
       ruteFraSone({ sone: 'forhandler', slug: 'bergen', path: '/home', kontekst: null }),
-    ).toEqual({ type: 'rewrite', dest: '/_kunde/bergen/logg-inn' });
-    expect(
-      ruteFraSone({
-        sone: 'forhandler',
-        slug: 'bergen',
-        path: '/home',
-        kontekst: 'privat',
-      }),
-    ).toEqual({ type: 'rewrite', dest: '/_kunde/bergen/logg-inn' });
-  });
-
-  it('(app)-sti med Bedrift går videre', () => {
+    ).toEqual({ type: 'not-found' });
     expect(
       ruteFraSone({
         sone: 'forhandler',
@@ -98,7 +87,24 @@ describe('F18 / white label F2: ruteFraSone', () => {
         path: '/home',
         kontekst: 'bedrift',
       }),
-    ).toEqual({ type: 'next' });
+    ).toEqual({ type: 'not-found' });
+  });
+
+  it('app-sone rewriter innlogging og slipper (app) videre', () => {
+    expect(ruteFraSone({ sone: 'app', slug: null, path: '/', kontekst: null })).toEqual({
+      type: 'rewrite',
+      dest: '/_bedrift/logg-inn',
+    });
+    expect(ruteFraSone({ sone: 'app', slug: null, path: '/logg-inn', kontekst: null })).toEqual({
+      type: 'rewrite',
+      dest: '/_bedrift/logg-inn',
+    });
+    expect(ruteFraSone({ sone: 'app', slug: null, path: '/home', kontekst: null })).toEqual({
+      type: 'next',
+    });
+    expect(ruteFraSone({ sone: 'app', slug: null, path: '/bestill', kontekst: null })).toEqual({
+      type: 'not-found',
+    });
   });
 
   it('ukjent og reservert er nøytral 404', () => {

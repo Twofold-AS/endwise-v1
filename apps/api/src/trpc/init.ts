@@ -32,6 +32,12 @@ const BEDRIFT_MELDING = 'Krever Bedrift';
 /** F7: Bedrift-API krever kontekst + CSRF-header. Platform: pass. */
 export function krevBedriftFlate(ctx: AppContext) {
   if (ctx.authSone === 'platform') return;
+  if (ctx.authSone === 'app') {
+    if (!harBedriftCsrf(ctx.requestHeaders)) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: BEDRIFT_MELDING });
+    }
+    return;
+  }
   if (ctx.kontekst !== 'bedrift' || !harBedriftCsrf(ctx.requestHeaders)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: BEDRIFT_MELDING });
   }

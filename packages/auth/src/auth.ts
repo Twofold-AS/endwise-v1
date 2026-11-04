@@ -28,8 +28,9 @@ import {
 import { createAuthEtterHook } from './magic-link-2fa.ts';
 import { passkeyPlugin } from './passkey-plugin.ts';
 import {
+  erAnsattDestinasjon,
   erAuthDestinasjon,
-  erForhandlerDestinasjon,
+  erKundeHostDestinasjon,
   erPlatformDestinasjon,
   lesAuthBrukerNavn,
 } from './produkt-destinasjon.ts';
@@ -69,9 +70,10 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
     : ABSOLUTE_MAX_LIFETIME_SECONDS;
   const destinasjon = async (database: typeof db, email: string) => {
     if (platform) return erPlatformDestinasjon(database, email);
+    if (sone === 'app') return erAnsattDestinasjon(database, email);
     const tenantId = lesAuthTenantId();
     if (tenantId) {
-      return erForhandlerDestinasjon(database, tenantId, email);
+      return erKundeHostDestinasjon(database, tenantId, email);
     }
     return erAuthDestinasjon(database, email);
   };

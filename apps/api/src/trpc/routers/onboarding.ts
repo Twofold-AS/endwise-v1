@@ -92,34 +92,14 @@ async function skrivOnboardingUtkast(
 ) {
   const navn = input.visningsnavn.trim();
   const naa = new Date();
-  let slug: string | undefined;
-  if (input.slug) {
-    const format = vurderSlugFormat(input.slug);
-    if (!format.ok) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Ugyldig subdomene' });
-    }
-    const opptatt = await slugErOpptatt(db, format.slug, tenantId);
-    if (opptatt) {
-      const [gjeldende] = await withTenant(db, tenantId, (tx) =>
-        tx
-          .select({ slug: schema.tenants.slug })
-          .from(schema.tenants)
-          .where(eq(schema.tenants.id, tenantId)),
-      );
-      if (gjeldende?.slug !== format.slug) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Subdomenet er opptatt' });
-      }
-    }
-    slug = format.slug;
-  }
   await withTenant(db, tenantId, async (tx) => {
     await tx
       .update(schema.tenants)
-      .set({ name: navn, ...(slug ? { slug } : {}), updatedAt: naa })
+      .set({ name: navn, updatedAt: naa })
       .where(eq(schema.tenants.id, tenantId));
     await tx
       .update(schema.organization)
-      .set({ name: navn, ...(slug ? { slug } : {}) })
+      .set({ name: navn })
       .where(eq(schema.organization.id, tenantId));
     await tx
       .insert(schema.dealerProfiles)
@@ -388,30 +368,17 @@ export const onboardingRouter = router({
 
         const navn = input.visningsnavn.trim();
         const naa = new Date();
-        let slug = tenant.slug;
-        if (input.slug) {
-          const format = vurderSlugFormat(input.slug);
-          if (!format.ok) {
-            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Ugyldig subdomene' });
-          }
-          const opptatt = await slugErOpptatt(ctx.db, format.slug, ctx.tenantId);
-          if (opptatt && format.slug !== tenant.slug) {
-            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Subdomenet er opptatt' });
-          }
-          slug = format.slug;
-        }
         await tx
           .update(schema.tenants)
           .set({
             name: navn,
-            slug,
             onboardingCompletedAt: naa,
             updatedAt: naa,
           })
           .where(eq(schema.tenants.id, ctx.tenantId));
         await tx
           .update(schema.organization)
-          .set({ name: navn, slug })
+          .set({ name: navn })
           .where(eq(schema.organization.id, ctx.tenantId));
         await tx
           .insert(schema.dealerProfiles)

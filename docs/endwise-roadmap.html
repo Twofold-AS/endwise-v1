@@ -1362,14 +1362,14 @@ const ROADMAP = [
     area:"auth", ui:"built", status:"done" },
 ]},
 { phase:"F39", title:"White label — admin, app-innlogging og kundeselvbetjening", target:"Etter F38 / Mikael 04.11.2026", items:[
-  { id:"F39-01", o:"Redesign platform-admin (forhandlere mobil-først)", kat:"dashboard", sub:"endwise", t:"Platform-admin fra bunnen: mobil-først, Mobbin, Board UI, Innstillinger-topbar. Forhandlere: Invitert/Aktiv/Utløpt, subdomene, Ny forhandler (firma+org.nr → daglig leder → sammendrag → Send). Detalj: send på nytt, trekk, kopier lenke, kodestatus. Ingen feature flags.",
+  { id:"F39-01", o:"Redesign platform-admin (forhandlere mobil-først)", kat:"dashboard", sub:"endwise", t:"Mikael designer først. Platform-admin fra bunnen: mobil-først, Mobbin, Board UI, Innstillinger-topbar. Forhandlere: Invitert/Aktiv/Utløpt, subdomene, Ny forhandler (firma+org.nr → daglig leder → sammendrag → Send). Detalj: send på nytt, trekk, kopier lenke, kodestatus. Ingen feature flags.",
     area:"admin", ui:"missing", status:"planned" },
-  { id:"F39-02", o:"Platform-admin setter subdomene; forhandler ser bare kundelenke", kat:"sikkerhet", t:"Forhandler velger IKKE subdomene. Admin setter det ved opprettelse (reserverte ord + kollisjon). Onboarding viser kopierbar kundelenke, ingen redigering. Fjern subdomene-steget hos forhandler.",
-    area:"admin", ui:"partial", status:"planned" },
-  { id:"F39-03", o:"Bedriftsinnlogging på app.endwise.no — ikke på kundesiden", kat:"sikkerhet", t:"Forhandler/ansatte logger inn på <code>app.endwise.no</code> (e-post + kode + 2FA) og rutes til riktig forhandler. Fjern Privat/Bedrift på kundedomenet. <code>app</code> er reservert slug og egen host-sone. Ingen flags.",
-    area:"auth", ui:"missing", status:"planned" },
-  { id:"F39-04", o:"Kundelogg inn uten invitasjon hvis e-post/telefon finnes", kat:"kunde", t:"Finnes e-post/telefon som kunde (Endwise-db eller importert fra Quick), send OTP og logg inn. Samme svar uansett om konto finnes. Rate limit. GDPR-varsel ved første innlogging. Ingen massee-post.",
-    area:"widget", ui:"partial", status:"planned" },
+  { id:"F39-02", o:"Platform-admin setter subdomene; forhandler ser bare kundelenke", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Forhandler velger ikke subdomene. Admin setter det ved opprettelse (reserverte ord + kollisjon via <code>slugSchema</code>). Onboarding viser kopierbar kundelenke. <code>onboarding.fullfor/lagre</code> skriver ikke slug.",
+    area:"admin", ui:"partial", status:"done" },
+  { id:"F39-03", o:"Bedriftsinnlogging på app.endwise.no — ikke på kundesiden", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Sone <code>app</code>. <code>app.endwise.no</code> / <code>app.localhost</code> → <code>/_bedrift/logg-inn</code> (e-post + kode + 2FA). (app) serveres her. Kundevert har ikke Privat/Bedrift. <code>app</code> er reservert slug. Dest: <code>erAnsattDestinasjon</code>.",
+    area:"auth", ui:"built", status:"done" },
+  { id:"F39-04", o:"Kundelogg inn uten invitasjon hvis e-post/telefon finnes", kat:"kunde", t:"⭐ <b>04.11.2026:</b> <code>erKundeHostDestinasjon</code> + <code>kunde.beOmKode</code> (telefon→e-post). Samme svar. 5/time. GDPR-varsel (<code>gdpr_ack_at</code>) ved første innlogging. Ingen massee-post.",
+    area:"widget", ui:"partial", status:"done" },
 ]},
 ];
 

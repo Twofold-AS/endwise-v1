@@ -107,6 +107,24 @@ export function ruteFraSone(input: {
     return { type: 'rewrite', dest: '/_plattform' };
   }
 
+  if (input.sone === 'app') {
+    if (path === '/_bedrift' || path.startsWith('/_bedrift/')) return { type: 'next' };
+    if (
+      path === '/' ||
+      path === '/logg-inn' ||
+      path.startsWith('/logg-inn/') ||
+      path === '/signin' ||
+      path.startsWith('/signin/')
+    ) {
+      return { type: 'rewrite', dest: '/_bedrift/logg-inn' };
+    }
+    if (erPlattformAdminSti(path) || path.startsWith('/_kunde') || path.startsWith('/_plattform')) {
+      return { type: 'not-found' };
+    }
+    if (erKundeSti(path)) return { type: 'not-found' };
+    return { type: 'next' };
+  }
+
   if (input.sone === 'reservert' || input.sone === 'ukjent') {
     return { type: 'not-found' };
   }
@@ -118,15 +136,13 @@ export function ruteFraSone(input: {
     return { type: 'not-found' };
   }
 
-  const internKunde = path === '/signin' ? '/logg-inn' : path;
-  if (erKundeSti(internKunde) || internKunde === '/logg-inn') {
+  const internKunde = path === '/signin' ? '/logg-inn' : path === '/velg' ? '/min-side' : path;
+  if (erKundeSti(internKunde) || internKunde === '/logg-inn' || internKunde === '/min-side') {
     const dest = internKunde === '/' ? `/_kunde/${slug}` : `/_kunde/${slug}${internKunde}`;
     return { type: 'rewrite', dest };
   }
 
-  if (input.kontekst === 'bedrift') return { type: 'next' };
-
-  return { type: 'rewrite', dest: `/_kunde/${slug}/logg-inn` };
+  return { type: 'not-found' };
 }
 
 /**

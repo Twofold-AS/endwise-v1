@@ -13,7 +13,7 @@ export type AktivOrgKandidat = {
  */
 export function velgAktivOrganisasjon(
   medlemskap: readonly AktivOrgKandidat[],
-  sone?: 'forhandler' | 'platform' | null,
+  sone?: 'forhandler' | 'platform' | 'app' | null,
 ): string | null {
   if (sone === 'platform') {
     const plattform = medlemskap.find(
@@ -21,9 +21,12 @@ export function velgAktivOrganisasjon(
     );
     return plattform?.id ?? null;
   }
-  if (sone === 'forhandler') {
+  if (sone === 'forhandler' || sone === 'app') {
     const dealer = medlemskap.find(
-      (m) => m.role !== 'endwise_admin' && m.role !== 'endwise_support',
+      (m) =>
+        m.role !== 'endwise_admin' &&
+        m.role !== 'endwise_support' &&
+        (sone === 'forhandler' || m.role === 'dealer_admin' || m.role === 'dealer_staff'),
     );
     return dealer?.id ?? null;
   }

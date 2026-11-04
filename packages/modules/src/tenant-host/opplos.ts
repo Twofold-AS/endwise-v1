@@ -1,6 +1,6 @@
 import { erReservertSlug } from './reserverte-slugs.ts';
 
-export type VertSone = 'marked' | 'platform' | 'forhandler' | 'reservert' | 'ukjent';
+export type VertSone = 'marked' | 'platform' | 'app' | 'forhandler' | 'reservert' | 'ukjent';
 
 export type TenantOpplosning = {
   sone: VertSone;
@@ -97,6 +97,7 @@ export function opplosTenantFraHost(
   if (vert.endsWith('.localhost')) {
     const slug = vert.slice(0, -'.localhost'.length);
     if (slug === 'platform') return { sone: 'platform', slug: null, vert };
+    if (slug === 'app') return { sone: 'app', slug: null, vert };
     if (slug === 'www' || slug === '') return { sone: 'marked', slug: null, vert };
     return forhandlerEllerReservert(slug, vert);
   }
@@ -109,12 +110,17 @@ export function opplosTenantFraHost(
     return { sone: 'platform', slug: null, vert };
   }
 
+  if (vert === `app.${rot}`) {
+    return { sone: 'app', slug: null, vert };
+  }
+
   if (vert.endsWith(`.${rot}`)) {
     const slug = vert.slice(0, -(rot.length + 1));
     if (!slug || slug.includes('.')) {
       return { sone: 'ukjent', slug: null, vert };
     }
     if (slug === 'platform') return { sone: 'platform', slug: null, vert };
+    if (slug === 'app') return { sone: 'app', slug: null, vert };
     return forhandlerEllerReservert(slug, vert);
   }
 

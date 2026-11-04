@@ -59,22 +59,19 @@ export function OppstartFlate() {
     steg: [
       {
         id: 'profil',
-        tittel: 'Profil og subdomene',
-        gyldig: (u) => u.visningsnavn.trim().length >= 2 && u.slug.trim().length >= 3,
+        tittel: 'Profil',
+        gyldig: (u) => u.visningsnavn.trim().length >= 2,
       },
       { id: 'tilbud', tittel: 'Kategorier og tjenester', gyldig: () => true, valgfri: true },
       { id: 'kapasitet', tittel: 'Størrelse og åpningstider', gyldig: () => true, valgfri: true },
       {
         id: 'sjekk',
         tittel: 'Sjekk og Gå live',
-        gyldig: (u) => u.visningsnavn.trim().length >= 2 && u.slug.trim().length >= 3,
+        gyldig: (u) => u.visningsnavn.trim().length >= 2,
       },
     ],
   });
-  const slugSjekk = trpc.onboarding.slugSjekk.useQuery(
-    { slug: o.utkast.slug, sted: o.utkast.city },
-    { enabled: o.utkast.slug.trim().length >= 3, retry: false },
-  );
+  const [kopiert, setKopiert] = useState(false);
 
   useEffect(() => {
     if (fylt || !status.data) return;
@@ -104,7 +101,6 @@ export function OppstartFlate() {
     try {
       await fullfor.mutateAsync({
         visningsnavn: o.utkast.visningsnavn.trim(),
-        slug: o.utkast.slug.trim(),
         address: o.utkast.address,
         postalCode: o.utkast.postalCode,
         city: o.utkast.city,
@@ -129,7 +125,6 @@ export function OppstartFlate() {
     try {
       await lagre.mutateAsync({
         visningsnavn: o.utkast.visningsnavn.trim(),
-        slug: o.utkast.slug.trim() || undefined,
         address: o.utkast.address,
         postalCode: o.utkast.postalCode,
         city: o.utkast.city,
@@ -166,7 +161,7 @@ export function OppstartFlate() {
     );
   }
 
-  const slugOk = slugSjekk.data?.ledig !== false || slugSjekk.data?.slug === status.data?.slug;
+  const kundeLenke = o.utkast.slug ? `https://${o.utkast.slug}.endwise.no` : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -193,19 +188,27 @@ export function OppstartFlate() {
             value={o.utkast.visningsnavn}
             onChange={(v) => o.oppdater({ visningsnavn: v })}
           />
-          <FeltInput
-            label="Subdomene"
-            value={o.utkast.slug}
-            onChange={(v) => o.oppdater({ slug: v.toLowerCase() })}
-          />
-          <p className="text-meta text-fg-muted">
-            {o.utkast.slug || 'navn'}.endwise.no
-            {slugSjekk.data
-              ? slugSjekk.data.ledig
-                ? ' · ledig'
-                : ` · ${slugSjekk.data.grunn}`
-              : ''}
-          </p>
+          {kundeLenke ? (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-[15px] font-[450] leading-5 text-fg-muted">Kundelenke</p>
+              <div className="flex items-center gap-2">
+                <p className="min-w-0 flex-1 truncate text-body text-fg">{kundeLenke}</p>
+                <button
+                  type="button"
+                  className="shrink-0 text-[15px] font-[450] text-fg underline underline-offset-4"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(kundeLenke).then(() => {
+                      setKopiert(true);
+                      window.setTimeout(() => setKopiert(false), 2000);
+                    });
+                  }}
+                >
+                  {kopiert ? 'Kopiert' : 'Kopier'}
+                </button>
+              </div>
+              <p className="text-meta text-fg-muted">Satt av Endwise. Kan ikke endres her.</p>
+            </div>
+          ) : null}
           <FeltInput
             label="Adresse"
             value={o.utkast.address}
@@ -346,7 +349,7 @@ export function OppstartFlate() {
         <SjekkSteg
           rader={[
             { id: 'profil', etikett: 'Firmanavn', verdi: o.utkast.visningsnavn },
-            { id: 'profil', etikett: 'Subdomene', verdi: `${o.utkast.slug}.endwise.no` },
+            { id: 'profil', etikett: 'Kundelenke', verdi: kundeLenke ?? '—' },
             {
               id: 'tilbud',
               etikett: 'Kategorier',
@@ -378,7 +381,7 @@ export function OppstartFlate() {
         {o.siste ? (
           <button
             type="button"
-            disabled={!o.kanGaaVidere || fullfor.isPending || !slugOk}
+            disabled={!o.kanGaaVidere || fullfor.isPending}
             onClick={() => void gaaLive()}
             className="inline-flex h-12 flex-1 items-center justify-center rounded-pill bg-fg text-body text-bg disabled:opacity-40"
           >
@@ -387,7 +390,7 @@ export function OppstartFlate() {
         ) : (
           <button
             type="button"
-            disabled={!o.kanGaaVidere || (o.aktiv?.id === 'profil' && !slugOk)}
+            disabled={!o.kanGaaVidere}
             onClick={() => void hoppVidere()}
             className="inline-flex h-12 flex-1 items-center justify-center rounded-pill bg-fg text-body text-bg disabled:opacity-40"
           >

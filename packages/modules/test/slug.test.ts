@@ -34,6 +34,8 @@ describe('F17 / white label F1: slug', () => {
 
   it('reserverte ord avvises', () => {
     expect(erReservertSlug('platform')).toBe(true);
+    expect(erReservertSlug('app')).toBe(true);
+    expect(slugSchema.safeParse('app').success).toBe(false);
     expect(erReservertSlug('endwise')).toBe(true);
     expect(erReservertSlug('endwise-hjelp')).toBe(true);
     expect(slugSchema.safeParse('platform').success).toBe(false);

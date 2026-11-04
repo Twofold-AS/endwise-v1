@@ -20,14 +20,18 @@ describe('F26 / white label F7: logg-inn og velg', () => {
     expect(skjema).not.toMatch(/#0066ff/);
   });
 
-  it('velg har Privat og Bedrift med TOTP', () => {
+  it('velg på kundevert går til min-side — ikke Privat/Bedrift', () => {
     const side = les('../app/%5Fkunde/[slug]/velg/page.tsx');
-    const skjema = les('../app/%5Fkunde/[slug]/velg/velg-skjema.tsx');
-    expect(side).toMatch(/VelgSkjema/);
-    expect(skjema).toMatch(/kontekst\.bytt/);
-    expect(skjema).toMatch(/Privat/);
-    expect(skjema).toMatch(/Bedrift/);
-    expect(skjema).toMatch(/length=\{6\}/);
+    expect(side).toMatch(/redirect\('\/min-side'\)/);
+    expect(side).not.toMatch(/Privat|Bedrift|VelgSkjema/);
+  });
+
+  it('kunde-innlogging tar e-post eller telefon og røper ikke konto', () => {
+    const skjema = les('../app/%5Fkunde/[slug]/logg-inn/logg-inn-skjema.tsx');
+    expect(skjema).toMatch(/E-post eller telefon/);
+    expect(skjema).toMatch(/beOmKode/);
+    expect(skjema).toMatch(/Hvis vi kjenner deg/);
+    expect(skjema).toMatch(/\/min-side/);
     expect(skjema).not.toMatch(/#0066ff/);
   });
 

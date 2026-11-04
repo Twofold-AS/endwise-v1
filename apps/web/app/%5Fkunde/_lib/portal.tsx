@@ -44,6 +44,9 @@ export function KundeInnlogget({
   children: (data: { navn: string; epost: string | null; telefon: string | null }) => ReactNode;
 }) {
   const meg = trpc.kunde.meg.useQuery(undefined, { retry: false });
+  const bekreft = trpc.kunde.bekreftGdpr.useMutation({
+    onSuccess: () => void meg.refetch(),
+  });
   if (meg.isLoading) return <LasterFlate label="Henter min side" />;
   if (meg.isError || !meg.data) {
     return (
@@ -54,6 +57,21 @@ export function KundeInnlogget({
   }
   return (
     <>
+      {!meg.data.gdprAckAt ? (
+        <Seksjon tittel="Personvern">
+          <p className="text-body text-fg">
+            Vi behandler opplysningene dine for å levere verkstedtjenester. Les mer under
+            Personvern. Ingen massee-post.
+          </p>
+          <button
+            type="button"
+            className="mt-3 inline-flex h-11 items-center rounded-pill bg-fg px-4 text-label text-bg"
+            onClick={() => bekreft.mutate()}
+          >
+            Jeg forstår
+          </button>
+        </Seksjon>
+      ) : null}
       {children({
         navn: meg.data.navn,
         epost: meg.data.epost,

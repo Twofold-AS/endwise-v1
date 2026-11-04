@@ -36,8 +36,10 @@ export * from './magic-link.ts';
 export * from './password-reset.ts';
 export { brukerHarPasskey, kanBrukePlattform } from './plattform-passkey.ts';
 export {
+  erAnsattDestinasjon,
   erAuthDestinasjon,
   erForhandlerDestinasjon,
+  erKundeHostDestinasjon,
   erPlatformDestinasjon,
   erProduktDestinasjon,
   erTenantDestinasjon,
@@ -81,6 +83,7 @@ export {
   lesAuthSone,
   PLATFORM_COOKIE_PREFIX,
   platformOffentligUrl,
+  appOffentligUrl,
   platformRpId,
   rolleTillattISone,
   SONE_HEADER,

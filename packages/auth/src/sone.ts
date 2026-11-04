@@ -6,11 +6,12 @@ import {
 } from './session-policy.ts';
 
 /**
- * F21 / white label F5 — to auth-soner.
- * forhandler: kunder og ansatte på &lt;slug&gt;.endwise.no
- * platform: kun Endwise-team på platform.endwise.no
+ * F21 / F39 — tre auth-soner.
+ * forhandler: kunder på <slug>.endwise.no
+ * app: ansatte på app.endwise.no
+ * platform: Endwise-team på platform.endwise.no
  */
-export type AuthSone = 'forhandler' | 'platform';
+export type AuthSone = 'forhandler' | 'platform' | 'app';
 
 export const FORHANDLER_COOKIE_PREFIX = 'endwise';
 export const PLATFORM_COOKIE_PREFIX = 'endwise-pl';
@@ -46,6 +47,7 @@ export function absoluttSekunderForSone(sone: AuthSone): number {
  */
 export function rolleTillattISone(role: string | null | undefined, sone: AuthSone): boolean {
   if (sone === 'platform') return erEndwiseRolle(role);
+  if (sone === 'app') return role === 'dealer_admin' || role === 'dealer_staff';
   return erForhandlerRolle(role);
 }
 
@@ -58,8 +60,14 @@ export function lesAuthSone(
 ): AuthSone | null {
   const raw = headers.get(SONE_HEADER)?.trim().toLowerCase();
   if (raw === 'platform') return 'platform';
+  if (raw === 'app') return 'app';
   if (raw === 'forhandler') return 'forhandler';
   return null;
+}
+
+export function appOffentligUrl(env: Record<string, string | undefined> = process.env): string {
+  const rot = (env.TENANT_ROOT_DOMAIN ?? 'endwise.no').replace(/^www\./, '');
+  return `https://app.${rot}`;
 }
 
 export function platformOffentligUrl(

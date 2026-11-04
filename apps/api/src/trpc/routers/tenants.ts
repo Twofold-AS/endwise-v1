@@ -23,6 +23,7 @@ import {
 } from '@endwise/modules';
 import { createInvitasjonsmodul, eierInvitasjonStatus } from '@endwise/modules/invitasjoner';
 import { erPlattformTenant } from '@endwise/modules/plattform';
+import { byggSlugSvar, slugSchema as modulSlugSchema } from '@endwise/modules/slug';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { resolveDevMode } from '../dev-mode.ts';
@@ -40,7 +41,7 @@ import {
   mapCreatePostgresFeil,
   mapSlettPostgresFeil,
 } from '../slett-postgres.ts';
-import { svarSlugLedig } from '../slug-ledig.ts';
+import { slugErOpptatt, svarSlugLedig } from '../slug-ledig.ts';
 
 /**
  * F5-26 / F5-27 — forhandler-oppretting og demo-tenants.
@@ -52,12 +53,20 @@ import { svarSlugLedig } from '../slug-ledig.ts';
  * allerede har gitt deg.
  */
 
-/** Slug: liten forbokstav, tall og bindestrek. Den havner i URL-er. */
+/** Slug: format + reserverte ord (app, platform, …). Kollisjon sjekkes i create. */
 const slugSchema = z
   .string()
-  .min(2)
-  .max(48)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Kun små bokstaver, tall og bindestrek');
+  .trim()
+  .toLowerCase()
+  .superRefine((verdi, ctx) => {
+    const parsed = modulSlugSchema.safeParse(verdi);
+    if (!parsed.success) {
+      ctx.addIssue({
+        code: 'custom',
+        message: parsed.error.issues[0]?.message ?? 'Ugyldig subdomene',
+      });
+    }
+  });
 
 /**
  * Ekstra tillegg utenom nivået. Tom med vilje — Start/Pro/Enterprise
@@ -456,6 +465,16 @@ export const tenantsRouter = router({
 
   /** Nivå + tillegg. Tiers/tillegg er kilden — ingen hardkodede nøkler. */
   pakkeKatalog: endwiseAdminProcedure.query(() => pakkeKatalog()),
+
+  sjekkSlug: endwiseAdminProcedure
+    .input(z.object({ slug: z.string().min(1).max(48) }))
+    .query(async ({ ctx, input }) => {
+      const format = modulSlugSchema.safeParse(input.slug);
+      const forhands = byggSlugSvar(input.slug, { opptatt: false });
+      if (!format.success) return forhands;
+      const opptatt = await slugErOpptatt(ctx.db, format.data, '00000000-0000-0000-0000-000000000000');
+      return byggSlugSvar(format.data, { opptatt });
+    }),
 
   /**
    * Opprett en forhandler + eier-invitasjon.

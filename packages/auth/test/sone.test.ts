@@ -30,6 +30,10 @@ describe('F21 / white label F5: auth-sone', () => {
     expect(rolleTillattISone('endwise_admin', 'forhandler')).toBe(false);
     expect(rolleTillattISone('endwise_support', 'forhandler')).toBe(false);
     expect(rolleTillattISone('dealer_admin', 'forhandler')).toBe(true);
+    expect(rolleTillattISone('dealer_admin', 'app')).toBe(true);
+    expect(rolleTillattISone('dealer_staff', 'app')).toBe(true);
+    expect(rolleTillattISone('customer', 'app')).toBe(false);
+    expect(rolleTillattISone('endwise_admin', 'app')).toBe(false);
     expect(rolleTillattISone(null, 'platform')).toBe(false);
     expect(erEndwiseRolle('dealer_admin')).toBe(false);
   });
@@ -44,6 +48,7 @@ describe('F21 / white label F5: auth-sone', () => {
     const h = new Headers({ 'x-endwise-sone': 'platform' });
     expect(lesAuthSone(h, {})).toBe('platform');
     expect(lesAuthSone(new Headers({ 'x-endwise-sone': 'forhandler' }), {})).toBe('forhandler');
+    expect(lesAuthSone(new Headers({ 'x-endwise-sone': 'app' }), {})).toBe('app');
     expect(lesAuthSone(new Headers({ 'x-endwise-sone': 'marked' }), {})).toBeNull();
   });
 
@@ -54,6 +59,7 @@ describe('F21 / white label F5: auth-sone', () => {
     ];
     expect(velgAktivOrganisasjon(mix, 'platform')).toBe('e1');
     expect(velgAktivOrganisasjon(mix, 'forhandler')).toBe('d1');
+    expect(velgAktivOrganisasjon(mix, 'app')).toBe('d1');
     expect(velgAktivOrganisasjon(mix)).toBe('e1');
     expect(
       velgAktivOrganisasjon([{ id: 'd1', slug: 'bergen', role: 'dealer_admin' }], 'platform'),

@@ -34,6 +34,8 @@ export const customers = pgTable(
      * Lokale redigeringer skal ikke røre denne — kun pull/konflikt-løsning gjør.
      */
     quickBaseline: jsonb('quick_baseline').$type<Record<string, string | null>>(),
+    /** Første innlogging: GDPR-varsel vises til kunden har bekreftet. */
+    gdprAckAt: timestamp('gdpr_ack_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`),
   },

@@ -164,6 +164,8 @@ export function KundeHubFlate() {
             <ListeRad tittel="Kjøretøy" undertekst="Servicehistorikk" href="/kjoretoy" />
             <ListeRad tittel="Meldinger" undertekst="Skriv til verkstedet" href="/meldinger" />
             <ListeRad tittel="Profil" undertekst={p.epost ?? 'Kontaktinfo'} href="/profil" />
+            <ListeRad tittel="Mine data" undertekst="Innsyn" href="/mine-data" />
+            <ListeRad tittel="Personvern" undertekst="Slik vi behandler data" href="/personvern" />
           </Seksjon>
           <Seksjon tittel="Mer">
             <ListeRad tittel="Deler" undertekst="Nettbutikk er satt på vent" href="/deler" />

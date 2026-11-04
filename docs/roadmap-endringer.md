@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F35 White label F12 (GDPR-innsyn og velkomst)
+
+**Type:** ny fase. Velkomst uten PII, Mine data, personvern. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge.
+**Endring:** Ny fase **F35**. **F35-01** `done`. Ikke Quick-import. ⛔ F13. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F34 White label F11c (deler og kvitteringer)
 
 **Type:** ny fase. Deler/kvitteringer uten betaling. Ingen ny UI-pakke. Ingen techstack-endring.

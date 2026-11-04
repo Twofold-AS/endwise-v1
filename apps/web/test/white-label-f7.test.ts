@@ -22,7 +22,7 @@ describe('F26 / white label F7: logg-inn og velg', () => {
 
   it('velg på kundevert går til min-side — ikke Privat/Bedrift', () => {
     const side = les('../app/%5Fkunde/[slug]/velg/page.tsx');
-    expect(side).toMatch(/redirect\('\/min-side'\)/);
+    expect(side).toMatch(/redirect\('\/min-side' as Route\)/);
     expect(side).not.toMatch(/Privat|Bedrift|VelgSkjema/);
   });
 

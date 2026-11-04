@@ -428,6 +428,13 @@
       "when": 1793870000000,
       "tag": "0060_white_label_f39",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1793880000000,
+      "tag": "0061_white_label_f40",
+      "breakpoints": true
     }
   ]
 }

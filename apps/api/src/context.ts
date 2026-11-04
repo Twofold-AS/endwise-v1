@@ -14,6 +14,7 @@ import {
   type SesjonKontekst,
   TwoFactorRequiredError,
   velgAktivOrganisasjon,
+  vertSesjonTillatt,
 } from '@endwise/auth';
 import {
   and,
@@ -190,10 +191,10 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
   try {
     const data = await requireSession(getAuthForContext(authSone), base.db, headers);
     const sesjonOrg = data.session.activeOrganizationId ?? null;
-    if (hostTenantId && sesjonOrg && sesjonOrg !== hostTenantId) {
-      return medPort({ hostTenantId, userId: data.user.id });
+    if (!vertSesjonTillatt({ authSone, hostTenantId, sesjonOrg })) {
+      return medPort({ hostTenantId });
     }
-    let tenantId = hostTenantId ?? sesjonOrg;
+    let tenantId = hostTenantId ?? (authSone === 'forhandler' ? null : sesjonOrg);
     if (!tenantId) {
       const medlemskap = await base.db
         .select({
@@ -272,7 +273,7 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
     }
   } catch (error) {
     // TOTP er valgfri. TWO_FACTOR_REQUIRED tømmer ikke tRPC/REST.
-    if (error instanceof TwoFactorRequiredError) return medPort();
-    return medPort();
+    if (error instanceof TwoFactorRequiredError) return medPort({ hostTenantId });
+    return medPort({ hostTenantId });
   }
 }

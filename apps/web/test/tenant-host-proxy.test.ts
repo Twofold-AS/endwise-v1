@@ -85,6 +85,12 @@ describe('F18 / white label F2: proxy vertsruting', () => {
     expect(rewriteDest(ukjent)).toBe('/_kunde/_ukjent');
     expect(admin.headers.get('x-endwise-sone')).toBe('reservert');
     expect(rewriteDest(admin)).toBe('/_kunde/_ukjent');
+
+    const www = proxy(req('https://www.endwise.no/', 'www.endwise.no'), WL);
+    expect(www.headers.get('x-endwise-sone')).toBe('marked');
+    const api = proxy(req('https://api.endwise.no/', 'api.endwise.no'), WL);
+    expect(api.headers.get('x-endwise-sone')).toBe('reservert');
+    expect(rewriteDest(api)).toBe('/_kunde/_ukjent');
   });
 
   it('platform rewriter rot, admin-stier går videre, noindex', () => {

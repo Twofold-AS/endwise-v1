@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-04 — F40 forhandler-isolasjon og admin-subdomene
+
+**Type:** ny fase. Ingen ny UI-pakke. Ingen techstack-endring. Ingen flags.
+**Godkjent av:** Mikael (04.11.2026). Samme PR som wildcard-isolasjon. Ikke redesign av platform-admin (F39-01).
+**Endring:** Fase **F40**. **F40-01** `done` (host-isolasjon, nøytral 404, OTP/sesjon/API). **F40-02** `done` (Ny forhandler: subdomene + forhåndsvisning + endre på kortet). F39-01 forblir `planned`.
+
+---
+
 ## 2026-11-04 — F39 admin-subdomene, app.endwise.no, kundeselvbetjening
 
 **Type:** ny fase. Ingen ny UI-pakke. Ingen techstack-endring. Ingen flags.

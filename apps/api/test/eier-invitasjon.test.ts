@@ -513,4 +513,41 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
     expect(mods.find((m) => m.key === 'twilio')).toBeUndefined();
     expect(mods.find((m) => m.key === 'shop')).toBeUndefined();
   });
+
+  it('F40: opprett + lookup umiddelbart + endre subdomene', async () => {
+    const slug = `f40-${randomUUID().slice(0, 8)}`;
+    slugs.push(slug);
+    const epost = `f40.${slug}@verksted.test`;
+    const res = await somEndwise().tenants.create({
+      name: 'F40 AS',
+      slug,
+      ownerEmail: epost,
+      kind: 'demo',
+      tier: 'start',
+    });
+    tenantIds.push(res.tenantId);
+    expect(res.invite.epost).toBe(epost);
+    expect(res.slug).toBe(slug);
+
+    const funnet = await owner.execute(
+      sql`select slug from lookup_tenant_by_host(${`${slug}.endwise.no`}::text, ${slug}::text)`,
+    );
+    const rad = (funnet.rows ?? funnet)[0] as { slug?: string } | undefined;
+    expect(rad?.slug).toBe(slug);
+
+    const nySlug = `${slug}-ny`;
+    slugs.push(nySlug);
+    const oppdatert = await somEndwise().tenants.update({
+      tenantId: res.tenantId,
+      name: 'F40 AS',
+      slug: nySlug,
+      kind: 'demo',
+    });
+    expect(oppdatert.slug).toBe(nySlug);
+
+    const etter = await owner.execute(
+      sql`select slug from lookup_tenant_by_host(${`${nySlug}.endwise.no`}::text, ${nySlug}::text)`,
+    );
+    expect(((etter.rows ?? etter)[0] as { slug?: string } | undefined)?.slug).toBe(nySlug);
+  });
 });

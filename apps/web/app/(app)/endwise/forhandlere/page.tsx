@@ -1,5 +1,6 @@
 'use client';
 
+import { kundeVert } from '@endwise/modules/slug';
 import {
   Badge,
   Building2,
@@ -58,6 +59,12 @@ export default function ForhandlerePage() {
   const [slettKode, setSlettKode] = useState('');
   const [slettMelding, setSlettMelding] = useState<string | null>(null);
   const [pakkeLagretId, setPakkeLagretId] = useState<string | null>(null);
+
+  const slugSjekk = trpc.tenants.sjekkSlug.useQuery(
+    { slug },
+    { enabled: isEndwiseAdmin && slug.trim().length >= 1, staleTime: 4000 },
+  );
+  const slugLedig = slugSjekk.data?.ledig !== false;
 
   const nivaaListe = katalog.data?.nivaa ?? [];
   const valgtNivaa = nivaaListe.find((n) => n.key === nivaa);
@@ -205,18 +212,17 @@ export default function ForhandlerePage() {
                 placeholder="Sørlandet MC-verksted"
                 required
               />
-              <Felt
-                label="Slug"
-                hint="Små bokstaver, tall og bindestrek. Havner i URL-er."
+              <SubdomeneFelt
                 value={slug}
                 onChange={setSlug}
                 placeholder="sorlandet-mc"
                 required
+                sjekk={slugSjekk.data}
               />
             </div>
 
             <Felt
-              label="E-post til eier"
+              label="E-post til forhandler-admin"
               hint="Finnes e-posten ikke, sender vi en invitasjon. Eieren logger inn med magic link selv."
               value={epost}
               onChange={setEpost}
@@ -268,7 +274,7 @@ export default function ForhandlerePage() {
             <div className="flex justify-end">
               <StatefulButton
                 type="submit"
-                disabled={opprett.isPending || !navn || !slug || !epost || !nivaa}
+                disabled={opprett.isPending || !navn || !slug || !epost || !nivaa || !slugLedig}
                 state={
                   opprett.isPending
                     ? 'loading'
@@ -431,6 +437,7 @@ export default function ForhandlerePage() {
                   ) : null}
                   {endrer === t.id && isEndwiseAdmin && !t.erEndwise ? (
                     <EndreForhandler
+                      tenantId={t.id}
                       navn={t.name}
                       slug={t.slug}
                       eierEpost={t.eierEpost}
@@ -610,6 +617,7 @@ export default function ForhandlerePage() {
 }
 
 function EndreForhandler({
+  tenantId,
   navn,
   slug,
   eierEpost,
@@ -618,6 +626,7 @@ function EndreForhandler({
   feil,
   onLagre,
 }: {
+  tenantId: string;
   navn: string;
   slug: string;
   eierEpost: string | null;
@@ -629,6 +638,11 @@ function EndreForhandler({
   const [navnFelt, setNavnFelt] = useState(navn);
   const [slugFelt, setSlugFelt] = useState(slug);
   const [demoFelt, setDemoFelt] = useState(demo);
+  const slugSjekk = trpc.tenants.sjekkSlug.useQuery(
+    { slug: slugFelt, excludeTenantId: tenantId },
+    { enabled: slugFelt.trim().length >= 1, staleTime: 4000 },
+  );
+  const slugLedig = slugSjekk.data?.ledig !== false;
 
   return (
     <div className="flex flex-col gap-3 pl-8">
@@ -639,12 +653,12 @@ function EndreForhandler({
         onChange={setNavnFelt}
         placeholder={navn}
       />
-      <Felt
-        label="Slug"
-        hint="Endrer du slug, endres URL-er som peker hit. Gammelt slugs virker ikke lenger."
+      <SubdomeneFelt
         value={slugFelt}
         onChange={setSlugFelt}
         placeholder={slug}
+        sjekk={slugSjekk.data}
+        hintFallback="Endrer du subdomenet, virker den gamle adressen ikke lenger."
       />
       <p className="text-[12px] text-fg-muted">
         Eier: {eierEpost ?? 'ingen e-post'} — du bytter den aldri her. Bruk Send invitasjon på nytt
@@ -663,7 +677,9 @@ function EndreForhandler({
       <div className="flex justify-end">
         <StatefulButton
           type="button"
-          disabled={pending || navnFelt.trim().length < 2 || slugFelt.trim().length < 2}
+          disabled={
+            pending || navnFelt.trim().length < 2 || slugFelt.trim().length < 2 || !slugLedig
+          }
           state={pending ? 'loading' : 'idle'}
           loadingText="Lagrer…"
           onClick={() => onLagre({ navn: navnFelt.trim(), slug: slugFelt.trim(), demo: demoFelt })}
@@ -751,6 +767,43 @@ function foreslåSlug(navn: string): string {
     .replace(/ø/g, 'o')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+function slugHint(sjekk: { grunn: string } | undefined, fallback: string): string {
+  if (sjekk?.grunn === 'reservert') return 'Dette navnet er reservert';
+  if (sjekk?.grunn === 'opptatt') return 'Subdomenet er opptatt';
+  if (sjekk?.grunn === 'ugyldig') return 'Små bokstaver, tall og bindestrek';
+  return fallback;
+}
+
+function SubdomeneFelt({
+  value,
+  onChange,
+  placeholder,
+  required,
+  sjekk,
+  hintFallback = 'Små bokstaver, tall og bindestrek. Unikt. Ikke www, app, platform, api.',
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  required?: boolean;
+  sjekk?: { grunn: string };
+  hintFallback?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Felt
+        label="Subdomene"
+        hint={slugHint(sjekk, hintFallback)}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+      />
+      <p className="text-[12px] text-fg-muted">{kundeVert(value)}</p>
+    </div>
+  );
 }
 
 function Felt({

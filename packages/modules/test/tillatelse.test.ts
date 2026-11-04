@@ -4,6 +4,7 @@ import {
   harTillatelse,
   kanLedeHandling,
   kanTildele,
+  LAGER_NIVA,
   LEDER_HANDLINGER,
   NIVA,
   navHarOmrade,
@@ -55,6 +56,8 @@ describe('F23 / white label F6a: tillatelser', () => {
     expect(TILLATELSE_HINT).toBe('Spør daglig leder');
     expect([...OMRADER]).toEqual([...TILLATELSE_OMRADER]);
     expect([...NIVA]).toEqual([...TILLATELSE_NIVA]);
+    expect(LAGER_NIVA.se).toContain('listParts');
+    expect(LAGER_NIVA.endre).toContain('move');
     expect(navHarOmrade({ rolle: 'dealer_staff', omrade: 'kunder', gitt: null })).toBe(true);
     expect(
       navHarOmrade({

@@ -1,7 +1,8 @@
 import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise/db';
+import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { adminProcedure, protectedProcedure, router, staffProcedure } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router, staffProcedure } from '../init.ts';
 import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 /**
@@ -48,6 +49,7 @@ export const inventoryRouter = router({
    * vært å love bort deler som allerede er lovet bort.
    */
   listParts: protectedProcedure
+    .use(omradeSjekk('lager', 'se', true))
     .input(
       z
         .object({
@@ -113,37 +115,44 @@ export const inventoryRouter = router({
     ),
 
   /** Én del med beholdning per lokasjon. */
-  part: protectedProcedure.input(z.object({ id: z.uuid() })).query(({ ctx, input }) =>
-    withTenant(ctx.db, ctx.tenantId, async (tx) => {
-      const [del] = await tx
-        .select()
-        .from(schema.parts)
-        // CWE-639: id og tenant. Aldri id alene.
-        .where(and(eq(schema.parts.id, input.id), eq(schema.parts.tenantId, ctx.tenantId)));
-      if (!del) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke delen' });
+  part: protectedProcedure
+    .use(omradeSjekk('lager', 'se', true))
+    .input(z.object({ id: z.uuid() }))
+    .query(({ ctx, input }) =>
+      withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [del] = await tx
+          .select()
+          .from(schema.parts)
+          // CWE-639: id og tenant. Aldri id alene.
+          .where(and(eq(schema.parts.id, input.id), eq(schema.parts.tenantId, ctx.tenantId)));
+        if (!del) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke delen' });
 
-      const niva = await tx
-        .select({
-          locationId: schema.stockLevels.locationId,
-          kode: schema.stockLocations.code,
-          navn: schema.stockLocations.name,
-          onHand: schema.stockLevels.onHand,
-          reserved: schema.stockLevels.reserved,
-        })
-        .from(schema.stockLevels)
-        .innerJoin(
-          schema.stockLocations,
-          eq(schema.stockLocations.id, schema.stockLevels.locationId),
-        )
-        .where(
-          and(eq(schema.stockLevels.partId, del.id), eq(schema.stockLevels.tenantId, ctx.tenantId)),
-        );
+        const niva = await tx
+          .select({
+            locationId: schema.stockLevels.locationId,
+            kode: schema.stockLocations.code,
+            navn: schema.stockLocations.name,
+            onHand: schema.stockLevels.onHand,
+            reserved: schema.stockLevels.reserved,
+          })
+          .from(schema.stockLevels)
+          .innerJoin(
+            schema.stockLocations,
+            eq(schema.stockLocations.id, schema.stockLevels.locationId),
+          )
+          .where(
+            and(
+              eq(schema.stockLevels.partId, del.id),
+              eq(schema.stockLevels.tenantId, ctx.tenantId),
+            ),
+          );
 
-      return { del, niva: niva.map((n) => ({ ...n, tilgjengelig: n.onHand - n.reserved })) };
-    }),
-  ),
+        return { del, niva: niva.map((n) => ({ ...n, tilgjengelig: n.onHand - n.reserved })) };
+      }),
+    ),
 
-  createPart: adminProcedure
+  createPart: protectedProcedure
+    .use(omradeSjekk('lager', 'endre', false, 'admin'))
     .input(
       z.object({
         sku: z.string().min(1).max(64),
@@ -178,17 +187,20 @@ export const inventoryRouter = router({
 
   /* Lokasjoner */
 
-  listLocations: staffProcedure.query(({ ctx }) =>
-    withTenant(ctx.db, ctx.tenantId, (tx) =>
-      tx
-        .select()
-        .from(schema.stockLocations)
-        .where(eq(schema.stockLocations.tenantId, ctx.tenantId))
-        .orderBy(asc(schema.stockLocations.code)),
+  listLocations: staffProcedure
+    .use(omradeSjekk('lager', 'se', true))
+    .query(({ ctx }) =>
+      withTenant(ctx.db, ctx.tenantId, (tx) =>
+        tx
+          .select()
+          .from(schema.stockLocations)
+          .where(eq(schema.stockLocations.tenantId, ctx.tenantId))
+          .orderBy(asc(schema.stockLocations.code)),
+      ),
     ),
-  ),
 
-  createLocation: adminProcedure
+  createLocation: protectedProcedure
+    .use(omradeSjekk('lager', 'endre', false, 'admin'))
     .input(z.object({ code: z.string().min(1).max(32), name: z.string().min(1).max(120) }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -208,6 +220,7 @@ export const inventoryRouter = router({
   /* Bevegelser */
 
   listMovements: staffProcedure
+    .use(omradeSjekk('lager', 'se', true))
     .input(
       z
         .object({
@@ -261,6 +274,7 @@ export const inventoryRouter = router({
    * skriving; rollesjekken står i mutasjonen under.
    */
   move: staffProcedure
+    .use(omradeSjekk('lager', 'endre', true))
     .input(
       z.object({
         partId: z.uuid(),
@@ -271,7 +285,12 @@ export const inventoryRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (input.kind === 'adjust' && ctx.role !== 'dealer_admin' && ctx.role !== 'endwise_admin') {
+      if (
+        input.kind === 'adjust' &&
+        !erWhiteLabelAktiv() &&
+        ctx.role !== 'dealer_admin' &&
+        ctx.role !== 'endwise_admin'
+      ) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Korreksjon av beholdning krever forhandler-admin',
@@ -385,7 +404,7 @@ export const inventoryRouter = router({
     }),
 
   /** Nøkkeltall til Lager-forsiden. Aggregater, ingen PII. */
-  summary: protectedProcedure.query(({ ctx }) =>
+  summary: protectedProcedure.use(omradeSjekk('lager', 'se', true)).query(({ ctx }) =>
     withTenant(ctx.db, ctx.tenantId, async (tx) => {
       const [tall] = await tx
         .select({

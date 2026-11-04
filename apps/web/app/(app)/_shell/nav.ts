@@ -286,9 +286,16 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/prisliste',
     roles: DRIFT,
     section: 'Kunder',
+    omrade: 'tjenester',
     pills: [
-      { label: 'Alle tjenester', href: '/prisliste', icon: Wrench },
-      { label: 'Opprett tjeneste', href: '/prisliste?fane=opprett', icon: FilePlus },
+      { label: 'Alle tjenester', href: '/prisliste', icon: Wrench, omrade: 'tjenester' },
+      {
+        label: 'Opprett tjeneste',
+        href: '/prisliste?fane=opprett',
+        icon: FilePlus,
+        omrade: 'tjenester',
+        niva: 'endre',
+      },
     ],
   },
   {
@@ -307,6 +314,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/lager',
     roles: DRIFT,
     section: 'Organisasjon',
+    omrade: 'lager',
     pills: [
       { label: 'Oversikt', href: '/lager', icon: LayoutDashboard },
       { label: 'Deler', href: '/lager/deler', icon: Package },
@@ -322,6 +330,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     roles: DRIFT,
     requiresShopFlag: true,
     section: 'Organisasjon',
+    omrade: 'nettbutikk',
     pills: [
       { label: 'Katalog', href: '/butikk', icon: Package },
       { label: 'Handlekurv / kasse', href: '/butikk/kasse', icon: ShoppingCart },
@@ -415,14 +424,29 @@ export const MEKANIKER_NAV: NavItem[] = [
  * hører hjemme i Lager, utsalgspris i Butikk.
  */
 export const LAGER_NAV: NavItem[] = [
-  { key: 'lager-oversikt', label: 'Oversikt', icon: LayoutDashboard, href: '/lager', roles: DRIFT },
-  { key: 'lager-deler', label: 'Deler', icon: Package, href: '/lager/deler', roles: DRIFT },
+  {
+    key: 'lager-oversikt',
+    label: 'Oversikt',
+    icon: LayoutDashboard,
+    href: '/lager',
+    roles: DRIFT,
+    omrade: 'lager',
+  },
+  {
+    key: 'lager-deler',
+    label: 'Deler',
+    icon: Package,
+    href: '/lager/deler',
+    roles: DRIFT,
+    omrade: 'lager',
+  },
   {
     key: 'lager-lokasjoner',
     label: 'Plass',
     icon: MapPin,
     href: '/lager/lokasjoner',
     roles: DRIFT,
+    omrade: 'lager',
   },
   {
     key: 'lager-bevegelser',
@@ -430,6 +454,7 @@ export const LAGER_NAV: NavItem[] = [
     icon: ArrowLeftRight,
     href: '/lager/bevegelser',
     roles: DRIFT,
+    omrade: 'lager',
   },
 ];
 
@@ -438,13 +463,22 @@ export const LAGER_NAV: NavItem[] = [
  * Intern preview. Katalog leser lager. Ingen ekstra ia.
  */
 export const BUTIKK_NAV: NavItem[] = [
-  { key: 'butikk-katalog', label: 'Katalog', icon: Package, href: '/butikk', roles: DRIFT },
+  {
+    key: 'butikk-katalog',
+    label: 'Katalog',
+    icon: Package,
+    href: '/butikk',
+    roles: DRIFT,
+    omrade: 'nettbutikk',
+  },
   {
     key: 'butikk-kasse',
     label: 'Handlekurv / kasse',
     icon: ShoppingCart,
     href: '/butikk/kasse',
     roles: DRIFT,
+    omrade: 'nettbutikk',
+    niva: 'endre',
   },
 ];
 

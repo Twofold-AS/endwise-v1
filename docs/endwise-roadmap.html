@@ -1293,12 +1293,16 @@ const ROADMAP = [
   { id:"F24-01", o:"Bytt Bookinger, Kunder, Kjøretøy, Innboks og Timeplan til omradeProcedure", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F6b. <code>omradeSjekk</code> på bookings/conflicts, customers/directory, vehicles/vegvesen/lookup, messages/inbox-context, mechanics. Uten flagg: eksisterende procedure. Mekanikerflaten hopper les/egne jobber. Meny deaktiverer uten tilgang («Spør daglig leder»), skjuler ikke. <code>tillatelse.mine</code>. Bak <code>ENDWISE_WHITE_LABEL</code>.",
     area:"backend", ui:"partial", status:"done" },
 ]},
+{ phase:"F25", title:"White label — områder 2 (plan F6c)", target:"Etter F24", items:[
+  { id:"F25-01", o:"Bytt Tjenester, Lager, Nettbutikk, Ansatte, Innstillinger og Økonomi til omradeProcedure", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F6c. <code>omradeSjekk</code> + entitlement (shop/widget/quick). Lager Se/Endre dokumentert (<code>LAGER_NIVA</code>); move/manage i rbac er plugin. Uttak på jobb hopper mekaniker. Invitere/fjerne ansatte forblir leder. Chrome (<code>forhandler.kort</code>, <code>billing.subscription</code>) uten områdesjekk. Bak <code>ENDWISE_WHITE_LABEL</code>.",
+    area:"backend", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================
    KATEGORIER — den ANDRE aksen (lagt til 20.08.2026).
 
-   ⚠️ Fasene (F0–F24) er IKKE erstattet. De svarer på NÅR noe bygges og i
+   ⚠️ Fasene (F0–F25) er IKKE erstattet. De svarer på NÅR noe bygges og i
    hvilken rekkefølge; kategorien svarer på HVA det er og HVEM det er for.
    Begge finnes samtidig, og «Etter fase» er fortsatt én knapp unna.
 

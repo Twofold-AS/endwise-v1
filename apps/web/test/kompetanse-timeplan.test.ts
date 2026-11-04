@@ -98,8 +98,9 @@ describe('tRPC-skrivestier for Kompetanse og Timeplan', () => {
 
   it('kompetanse-skriving er adminProcedure', () => {
     expect(competence).toMatch(/listAllMechanicSkills/);
-    expect(competence).toMatch(/setMechanicSkill: adminProcedure/);
-    expect(competence).toMatch(/upsertSkill: adminProcedure/);
+    expect(competence).toMatch(/setMechanicSkill: protectedProcedure/);
+    expect(competence).toMatch(/omradeSjekk\('ansatte', 'endre'/);
+    expect(competence).toMatch(/upsertSkill: protectedProcedure/);
   });
 
   it('kapasitet-skriving er adminProcedure mot mechanics.capacity', () => {

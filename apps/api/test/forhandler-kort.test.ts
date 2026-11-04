@@ -54,7 +54,7 @@ describe('Forhandleren — rollegate', () => {
 
   it('kilde er adminProcedure og rører ikke slug', () => {
     const src = les('../src/trpc/routers/forhandler.ts');
-    expect(src).toMatch(/adminProcedure/);
+    expect(src).toMatch(/omradeSjekk\('innstillinger'|adminProcedure/);
     expect(src).toMatch(/dealerProfiles/);
     expect(src).not.toMatch(/slug:\s*input/);
     expect(src).not.toMatch(/kallenavn|nickname|visningsnavn|twoFactor/i);
@@ -134,7 +134,7 @@ describe('Forhandleren — get uten 500 når profil mangler', () => {
     const get = les('../src/trpc/routers/forhandler.ts');
     const inspect = les('../src/trpc/routers/verksted.ts');
     expect(get).toMatch(/hentForhandlerKort/);
-    expect(get).toMatch(/get:\s*adminProcedure\.query/);
+    expect(get).toMatch(/get:\s*protectedProcedure[\s\S]*?omradeSjekk\('innstillinger'/);
     expect(get).toMatch(/kort:\s*protectedProcedure\.query/);
     expect(inspect).toMatch(/hentForhandlerKort/);
     expect(inspect).toMatch(/withPlatformInspect/);

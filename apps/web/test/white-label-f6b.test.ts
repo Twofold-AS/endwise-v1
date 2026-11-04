@@ -17,7 +17,6 @@ describe('F24 / white label F6b: meny deaktivert ikke skjult', () => {
       gitt: [{ omrade: 'bookinger', niva: 'endre' }],
     });
     expect(merket.find((i) => i.key === 'home')?.disabled).toBeFalsy();
-    expect(merket.find((i) => i.key === 'tjenester')?.disabled).toBeFalsy();
     expect(merket.find((i) => i.key === 'innboks')?.disabled).toBe(true);
     expect(merket.find((i) => i.key === 'innboks')?.disabledHint).toBe('Spør daglig leder');
     expect(merket.find((i) => i.key === 'saker')?.disabled).toBe(true);

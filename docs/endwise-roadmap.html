@@ -1348,7 +1348,7 @@ const ROADMAP = [
 { phase:"F38", title:"White label — gå live", target:"Etter F37 / Mikael 04.11.2026", items:[
   { id:"F38-01", o:"Fjern ENDWISE_WHITE_LABEL-flaggene og gammel dual-path", kat:"plattform", t:"⭐ <b>04.11.2026:</b> <code>ENDWISE_WHITE_LABEL</code> og <code>ENDWISE_WHITE_LABEL_SPIKE</code> fjernet. White label er eneste versjon. Gammel kode bak flaggene slettet.",
     area:"infra", ui:"na", status:"done" },
-  { id:"F38-02", o:"Kjør F1–F14-migreringer mot prod, slett forhandlere og seed platform-admin", kat:"plattform", t:"⭐ <b>04.11.2026:</b> 0057 + <code>vercel-migrate</code> ved production-deploy. Fresh start: eksisterende forhandlere slettes. <code>mikael_rk@hotmail.com</code> seedes som <code>endwise_admin</code> på Endwise-tenanten.",
+  { id:"F38-02", o:"Kjør F1–F14-migreringer mot prod, slett forhandlere og seed platform-admin", kat:"plattform", t:"⭐ <b>04.11.2026:</b> 0057 + <code>vercel-migrate</code> ved production-deploy. Fresh start: eksisterende forhandlere slettes. <code>mikkis@twofold.no</code> seedes som <code>endwise_admin</code> på Endwise-tenanten. 0058 tar <code>endwise_admin</code> fra <code>mikael_rk@hotmail.com</code> hvis 0057 allerede har kjørt.",
     area:"infra", ui:"na", status:"done" },
   { id:"F38-03", o:"Fiks iPhone magic-link verify-nedlasting", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> <code>signin-skjema</code> bruker <code>authClient.magicLink.verify</code> (fetch) med norsk feilmelding inkl. 429. Try/catch i etter-hooken.",
     area:"auth", ui:"partial", status:"done" },

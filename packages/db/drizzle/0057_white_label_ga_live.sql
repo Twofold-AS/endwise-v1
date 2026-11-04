@@ -1,7 +1,7 @@
 /*
  * 0057 — White label gå live (Mikael 04.11.2026).
  * 1) Sikre Endwise-plattformtenanten.
- * 2) Seed mikael_rk@hotmail.com som endwise_admin.
+ * 2) Seed mikkis@twofold.no som endwise_admin.
  * 3) Slett eksisterende forhandlere (godkjent fresh start).
  * Idempotent via drizzle-journal. Kjører som eier ved db:migrate.
  */
@@ -42,16 +42,16 @@ BEGIN
   END IF;
 
   INSERT INTO "user" (id, name, email, email_verified, created_at, updated_at)
-  SELECT gen_random_uuid()::text, 'Mikael', 'mikael_rk@hotmail.com', true, now(), now()
-   WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE email = 'mikael_rk@hotmail.com');
+  SELECT gen_random_uuid()::text, 'Mikkis', 'mikkis@twofold.no', true, now(), now()
+   WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE email = 'mikkis@twofold.no');
 
   UPDATE "user"
      SET email_verified = true,
-         name = CASE WHEN name IS NULL OR name = '' THEN 'Mikael' ELSE name END,
+         name = CASE WHEN name IS NULL OR name = '' THEN 'Mikkis' ELSE name END,
          updated_at = now()
-   WHERE email = 'mikael_rk@hotmail.com';
+   WHERE email = 'mikkis@twofold.no';
 
-  SELECT id INTO v_user FROM "user" WHERE email = 'mikael_rk@hotmail.com' LIMIT 1;
+  SELECT id INTO v_user FROM "user" WHERE email = 'mikkis@twofold.no' LIMIT 1;
 
   IF NOT EXISTS (
     SELECT 1 FROM member

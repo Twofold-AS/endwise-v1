@@ -9,7 +9,7 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 **Type:** ny fase. Flagg vekk, prod-migrering, fresh start, iPhone-verify.
 **Godkjent av:** Mikael (ingen approval, squash-merge når CI er grønn).
-**Endring:** Ny fase **F38**. **F38-01** `done` (flagg fjernet). **F38-02** `done` (0057 + vercel-migrate). **F38-03** `done` (authClient.magicLink.verify). Eksisterende forhandlere slettes. Mikael seedes som platform-admin.
+**Endring:** Ny fase **F38**. **F38-01** `done` (flagg fjernet). **F38-02** `done` (0057 + vercel-migrate). **F38-03** `done` (authClient.magicLink.verify). Eksisterende forhandlere slettes. `mikkis@twofold.no` seedes som platform-admin. 0058 tar `endwise_admin` fra `mikael_rk@hotmail.com` hvis 0057 allerede har kjørt.
 
 ---
 

@@ -5,7 +5,7 @@
 | ID | Resultat |
 |---|---|
 | F38-01 | `ENDWISE_WHITE_LABEL` og `ENDWISE_WHITE_LABEL_SPIKE` fjernet. White label er eneste versjon. Gammel dual-path slettet. `erWhiteLabelAktiv()` returnerer alltid true (kompat-stub). |
-| F38-02 | Migrasjon `0057_white_label_ga_live` + `vercel-migrate` ved Vercel production-build. GitHub Action `migrate-prod.yml` som reserve. Eksisterende forhandlere slettes (fresh start). `mikael_rk@hotmail.com` seedes som `endwise_admin` på Endwise-tenanten. |
+| F38-02 | Migrasjon `0057_white_label_ga_live` + `vercel-migrate` ved Vercel production-build. GitHub Action `migrate-prod.yml` som reserve. Eksisterende forhandlere slettes (fresh start). `mikkis@twofold.no` seedes som `endwise_admin` på Endwise-tenanten. 0058 tar `endwise_admin` fra `mikael_rk@hotmail.com` hvis 0057 allerede har kjørt. |
 | F38-03 | `signin-skjema.tsx` (og kunde/platform-skjema) bruker `authClient.magicLink.verify` (fetch). Norsk feilmelding, også 429. Try/catch i etter-hooken. |
 
 ## 2. Hva gikk galt
@@ -46,19 +46,19 @@ Mangler / rydding:
 - Valgfritt: GitHub secret `DATABASE_URL` (Scaleway eier, `:5432`) så Action `migrate-prod` kan kjøre som reserve. Production-build på Vercel er primærvei og har allerede `DATABASE_URL`.
 - Bekreft at `BETTER_AUTH_URL` er `https://endwise.no` (eller kompatibel). Platform-auth bruker egen `platformOffentligUrl()`.
 
-Ingen ny secret kreves for seed av Mikael — 0057 gjør det i SQL.
+Ingen ny secret kreves for seed av `mikkis@twofold.no` — 0057/0058 gjør det i SQL.
 
 ### Etter merge (rekkefølge)
 
 1. Domener + DNS som over (kan gjøres før merge).
 2. Squash-merge når CI er grønn.
-3. Første production-deploy kjører 0057 **én gang**: sletter alle ikke-platform-tenants og seeder Mikael som `endwise_admin`. Senere deploy er no-op via drizzle-journal.
+3. Første production-deploy kjører 0057 **én gang**: sletter alle ikke-platform-tenants og seeder `mikkis@twofold.no` som `endwise_admin`. 0058 tar `endwise_admin` fra `mikael_rk@hotmail.com` hvis en eldre 0057 allerede har kjørt. Senere deploy er no-op via drizzle-journal.
 4. Slett `ENDWISE_WHITE_LABEL` i Vercel.
 
 ## 6. Innlogging og invitere forhandler
 
 1. Åpne **https://platform.endwise.no/logg-inn** (ikke endwise.no).
-2. Skriv `mikael_rk@hotmail.com` → Fortsett.
+2. Skriv `mikkis@twofold.no` → Fortsett.
 3. Skriv den 5-sifrede koden fra e-posten. Ikke trykk på lenka i e-posten på iPhone — skriv koden i skjemaet (fetch, ikke filnedlasting).
 4. Første gang: registrer passkey («Bruk nøkkel»). Senere: bekreft med nøkkelen.
 5. Du lander på `/endwise`. Gå til **Forhandlere** (`/endwise/forhandlere`).

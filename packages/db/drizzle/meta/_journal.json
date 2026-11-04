@@ -449,6 +449,13 @@
       "when": 1793900000000,
       "tag": "0063_oppstart_branding_kunde",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1793910000000,
+      "tag": "0064_passnokkel_totp_rydd",
+      "breakpoints": true
     }
   ]
 }

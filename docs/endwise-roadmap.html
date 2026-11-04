@@ -1321,6 +1321,10 @@ const ROADMAP = [
   { id:"F31-01", o:"Bygg fire-stegs onboarding, kunde-RLS og Gå live bak flagg", kat:"forhandler", t:"⭐ <b>03.11.2026:</b> Plan F10. Oppretter 4 steg (profil+slug påkrevd, 2 og 3 kan hoppes). Kolonner åpningstider/kategorier/AI-tak. <code>withCustomer</code> + RESTRICTIVE på bookings/vehicles/customers. Lookup <code>publisert</code> krever <code>onboarding_completed_at</code>. Idempotent Gå live. ⛔ <code>#0066ff</code>. Bak <code>ENDWISE_WHITE_LABEL</code>.",
     area:"admin", ui:"partial", status:"done" },
 ]},
+{ phase:"F32", title:"White label — kundeportal les (plan F11a)", target:"Etter F31", items:[
+  { id:"F32-01", o:"Bygg Hjem, Bookinger, Kjøretøy og Profil for kunden bak flagg", kat:"minside", t:"⭐ <b>03.11.2026:</b> Plan F11a. <code>kunde.meg/bookinger/kjoretoy</code> via <code>customerProcedure</code> + <code>withCustomer</code>. Privat-kontekst. Handling uten backend deaktivert (Meldinger, Deler, Kvitteringer, Endre profil). ⛔ <code>#0066ff</code>. Bak <code>ENDWISE_WHITE_LABEL</code>.",
+    area:"widget", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================

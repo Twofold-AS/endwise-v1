@@ -4,6 +4,7 @@ import {
   erManuellSlug,
   foreslaSlug,
   forslagVedKollisjon,
+  kundeVert,
   nullstillSlugSjekkTeller,
   slugSchema,
   slugSjekkTillatt,
@@ -39,6 +40,10 @@ describe('F17 / white label F1: slug', () => {
     expect(erReservertSlug('endwise')).toBe(true);
     expect(erReservertSlug('endwise-hjelp')).toBe(true);
     expect(slugSchema.safeParse('platform').success).toBe(false);
+    expect(slugSchema.safeParse('www').success).toBe(false);
+    expect(slugSchema.safeParse('api').success).toBe(false);
+    expect(erReservertSlug('www')).toBe(true);
+    expect(erReservertSlug('api')).toBe(true);
     expect(byggSlugSvar('admin', { opptatt: false }).grunn).toBe('reservert');
     expect(byggSlugSvar('admin', { opptatt: false }).ledig).toBe(false);
   });
@@ -84,6 +89,12 @@ describe('F17 / white label F1: slug', () => {
     }
     expect(slugSjekkTillatt('inv-1')).toBe(false);
     expect(slugSjekkTillatt('inv-2')).toBe(true);
+  });
+
+  it('forhåndsvisning er <slug>.endwise.no', () => {
+    expect(kundeVert('bergen')).toBe('bergen.endwise.no');
+    expect(kundeVert('  Moss  ')).toBe('moss.endwise.no');
+    expect(kundeVert('')).toBe('….endwise.no');
   });
 
   it('white label er alltid på', () => {

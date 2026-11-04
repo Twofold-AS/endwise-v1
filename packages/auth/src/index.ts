@@ -93,3 +93,4 @@ export { formaterKlokkeslett, PRODUKT_TIDSSONE } from './tid.ts';
 export { verifiserFerskTotpForBruker } from './totp-db.ts';
 export { krevFerskTotpFraBody, TOTP_STEP_UP_KODE, TOTP_STEP_UP_MELDING } from './totp-steg.ts';
 export * from './two-factor.ts';
+export { kundeTenantFraHost, vertSesjonTillatt } from './vert-sesjon.ts';

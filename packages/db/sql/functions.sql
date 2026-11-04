@@ -1577,7 +1577,7 @@ declare
   v_host text := lower(btrim(coalesce(p_host, '')));
   v_slug text := lower(btrim(coalesce(p_slug, '')));
 begin
-  -- lookup_tenant_by_host_rev=0054
+  -- lookup_tenant_by_host_rev=0061
   if v_host <> '' then
     perform set_config('app.host_oppslag', v_host, true);
   end if;
@@ -1587,7 +1587,7 @@ begin
   if v_slug = '' and v_host like '%.localhost' then
     v_slug := split_part(v_host, '.', 1);
   end if;
-  if v_slug in ('www', 'platform', 'endwise', '') then
+  if v_slug in ('www', 'app', 'platform', 'api', 'endwise', '') then
     v_slug := '';
   end if;
   if v_slug = '' then

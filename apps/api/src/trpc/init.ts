@@ -1,4 +1,9 @@
-import { erMekanikerKonto, harBedriftCsrf, kanSkriveDealerDesk } from '@endwise/auth';
+import {
+  erMekanikerKonto,
+  harBedriftCsrf,
+  kanSkriveDealerDesk,
+  kundeTenantFraHost,
+} from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import type { AddonModule } from '@endwise/modules';
 import {
@@ -250,10 +255,19 @@ export function omradeProcedure(omrade: Omrade, trenger: Niva = 'se', hoppMekani
   return protectedProcedure.use(omradeSjekk(omrade, trenger, hoppMekaniker));
 }
 
-/** F7: kundeflate. Virker i Privat. Bedrift gir 403. */
+/** F7 / F40: kundeflate. Virker i Privat. Bedrift eller feil forhandlervert gir 403. */
 export const customerProcedure = protectedProcedure.use(function isKundeFlate(opts) {
   if (opts.ctx.kontekst === 'bedrift') {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Ikke i Bedrift' });
+  }
+  if (
+    opts.ctx.authSone === 'forhandler' &&
+    !kundeTenantFraHost({
+      hostTenantId: opts.ctx.hostTenantId,
+      tenantId: opts.ctx.tenantId,
+    })
+  ) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Ingen kundeside her' });
   }
   return opts.next({ ctx: opts.ctx });
 });

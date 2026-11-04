@@ -35,7 +35,8 @@ describe('0054 white-label F10-kontrakt', () => {
   it('lookup krever onboarding før publisert', () => {
     expect(sql).toMatch(/lookup_tenant_by_host_rev=0054/);
     expect(sql).toMatch(/onboarding_completed_at IS NOT NULL/);
-    expect(functions).toMatch(/lookup_tenant_by_host_rev=0054/);
+    expect(functions).toMatch(/lookup_tenant_by_host_rev=0061/);
+    expect(functions).not.toMatch(/lookup_tenant_by_host_rev=0054/);
     expect(functions).not.toMatch(/lookup_tenant_by_host_rev=0048/);
   });
 });

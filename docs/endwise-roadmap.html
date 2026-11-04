@@ -1371,6 +1371,12 @@ const ROADMAP = [
   { id:"F39-04", o:"Kundelogg inn uten invitasjon hvis e-post/telefon finnes", kat:"kunde", t:"⭐ <b>04.11.2026:</b> <code>erKundeHostDestinasjon</code> + <code>kunde.beOmKode</code> (telefon→e-post). Samme svar. 5/time. GDPR-varsel (<code>gdpr_ack_at</code>) ved første innlogging. Ingen massee-post.",
     area:"widget", ui:"partial", status:"done" },
 ]},
+{ phase:"F40", title:"White label — forhandler-isolasjon og admin-subdomene", target:"Etter F39 / Mikael 04.11.2026", items:[
+  { id:"F40-01", o:"Kundevert isolert: Host-forhandler, ikke delt innlogging", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Proxy leser Host (ingen DB). Ukjent/reservert = nøytral 404. OTP bare for kunder hos vertens forhandler (samme 200). Sesjon bundet til dealer-id + host: mismatch = logout. <code>customerProcedure</code> 403 ved host ≠ sesjon. Cookie <code>__Host-</code>, ingen <code>Domain=.endwise.no</code>. <code>*.endwise.no</code> allerede på Vercel-prosjektet.",
+    area:"auth", ui:"na", status:"done" },
+  { id:"F40-02", o:"Ny forhandler med subdomene + forhåndsvisning (uten redesign)", kat:"dashboard", sub:"endwise", t:"⭐ <b>04.11.2026:</b> Platform-admin (<code>mikkis@twofold.no</code>) på platform.endwise.no: Navn, subdomene, e-post til forhandler-admin. Validering små bokstaver/tall/bindestrek, unikt, ikke www/app/platform/api. Forhåndsvisning <code>&lt;sub&gt;.endwise.no</code>. Etter opprett virker subdomenet via wildcard + invitasjon sendes. Endre subdomene på forhandlerkortet. Ingen redesign (F39-01).",
+    area:"admin", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================

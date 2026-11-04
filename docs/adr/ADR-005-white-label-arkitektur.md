@@ -106,7 +106,8 @@ Ett vertslåst cookie per forhandlerhost: `__Host-`, `HttpOnly`, `Secure`, `Same
 
 - Bytte til Bedrift krever ferskt TOTP og roterer sesjonen (CWE-384).
 - `app.actor` er `customer` eller `staff`. Policyene feiler lukket. Ingen forespørsel blander kunde og ansatt.
-- Tenant tas fra `Host`. Sesjonen avvises hvis `activeOrganizationId` ikke er vertens forhandler.
+- Tenant tas fra `Host`. Sesjonen avvises hvis `activeOrganizationId` ikke er vertens forhandler (F40: `vertSesjonTillatt` — mismatch tømmer userId; `customerProcedure` 403).
+- Kunde-OTP (`kunde.beOmKode`) slår bare opp kunder hos host-forhandleren. Samme 200 uansett.
 - Bedrift: 30 min inaktivitet, maks 8–12 t (forslag 10).
 - Bedrift-API krever egen CSRF-header og nonce-CSP. Sensitive handlinger krever ny TOTP.
 - `endwise_admin` / `endwise_support` får **aldri** sesjon på en forhandlervert. Forhandlerroller får aldri sesjon på `platform`.

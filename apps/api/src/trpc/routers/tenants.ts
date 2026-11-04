@@ -467,7 +467,12 @@ export const tenantsRouter = router({
   pakkeKatalog: endwiseAdminProcedure.query(() => pakkeKatalog()),
 
   sjekkSlug: endwiseAdminProcedure
-    .input(z.object({ slug: z.string().min(1).max(48) }))
+    .input(
+      z.object({
+        slug: z.string().min(1).max(48),
+        excludeTenantId: z.uuid().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const format = modulSlugSchema.safeParse(input.slug);
       const forhands = byggSlugSvar(input.slug, { opptatt: false });
@@ -475,7 +480,7 @@ export const tenantsRouter = router({
       const opptatt = await slugErOpptatt(
         ctx.db,
         format.data,
-        '00000000-0000-0000-0000-000000000000',
+        input.excludeTenantId ?? '00000000-0000-0000-0000-000000000000',
       );
       return byggSlugSvar(format.data, { opptatt });
     }),

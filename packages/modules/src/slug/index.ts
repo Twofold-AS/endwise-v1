@@ -34,6 +34,12 @@ export const slugSchema = slugFormatSchema.refine(
 
 export type Slug = z.infer<typeof slugSchema>;
 
+/** Forhåndsvisning på admin-flaten. Tom slug → plassholder. */
+export function kundeVert(slug: string, rot = 'endwise.no'): string {
+  const s = slug.trim().toLowerCase();
+  return `${s || '…'}.${rot}`;
+}
+
 export function erManuellSlug(slug: string): boolean {
   return MANUELL_SETT.has(slug.trim().toLowerCase());
 }

@@ -35,11 +35,15 @@ describe('F41: endwise.no er bare marked', () => {
     const skjema = les('../app/%5Fkunde/[slug]/logg-inn/logg-inn-skjema.tsx');
     const proxy = les('../proxy.ts');
     const rute = les('../../../packages/modules/src/tenant-host/rute.ts');
+    const side = les('../app/signin/page.tsx');
     expect(skjema).toMatch(/callbackURL:\s*'\/min-side'/);
     expect(skjema).not.toMatch(/appOffentligUrl|app\.endwise\.no/);
     expect(proxy).toMatch(/lesKundeSlugFraSporsmal/);
     expect(rute).toMatch(/kundeSlug \?\? 'app'/);
     expect(rute).toMatch(/erKundeSti\(path\)/);
     expect(rute).toMatch(/type: 'not-found'/);
+    expect(side).toMatch(/lesKundeSlugFraSporsmal/);
+    expect(side).toMatch(/forhandlerOffentligUrl\(kundeSlug\)/);
+    expect(side).toMatch(/as Route/);
   });
 });

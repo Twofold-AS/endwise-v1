@@ -1,5 +1,6 @@
 import { appOffentligUrl, forhandlerOffentligUrl } from '@endwise/auth';
 import { lesKundeSlugFraSporsmal } from '@endwise/modules/tenant-host';
+import type { Route } from 'next';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
@@ -33,7 +34,7 @@ export default async function SignInPage({
     if (params.slug) q.set('slug', params.slug);
     const kundeSlug = lesKundeSlugFraSporsmal(q);
     const kunde = kundeSlug ? forhandlerOffentligUrl(kundeSlug) : null;
-    redirect(kunde ? `${kunde}/logg-inn` : `${appOffentligUrl()}/logg-inn`);
+    redirect((kunde ? `${kunde}/logg-inn` : `${appOffentligUrl()}/logg-inn`) as Route);
   }
   const header = kakeHeader(await cookies());
   const totpKlar = harTotpVindu(header);

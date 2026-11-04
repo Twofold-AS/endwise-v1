@@ -21,11 +21,12 @@ import { devTrustedOrigins } from './dev-origins.ts';
  * deployet faktisk serveres på.
  */
 
-/** Apex + www + skjult admin. Ingen `*.endwise.no` — bare navngitte verter. */
+/** Apex + www + skjult admin + forhandler-subdomener vi eier. Ingen `*.vercel.app`. */
 export const PRODUKT_ORIGINS = [
   'https://endwise.no',
   'https://www.endwise.no',
   'https://platform.endwise.no',
+  'https://*.endwise.no',
 ] as const;
 
 export type AuthOriginEnv = {

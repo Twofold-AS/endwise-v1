@@ -244,7 +244,7 @@ export const teamRouter = router({
    * 4. Funksjonen må være tildelbar. `leder` avvises: den følger av rollen.
    */
   setFunction: protectedProcedure
-    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
+    .use(omradeSjekk('ansatte', 'endre'))
     .input(
       z.object({
         userId: z.string().min(1),
@@ -321,7 +321,7 @@ export const teamRouter = router({
    * Ikke egen «velg ansikt»-profil — fargen er identiteten.
    */
   setFarge: protectedProcedure
-    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
+    .use(omradeSjekk('ansatte', 'endre'))
     .input(
       z.object({
         userId: z.string().min(1),

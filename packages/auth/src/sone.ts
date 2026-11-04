@@ -9,7 +9,6 @@ import {
  * F21 / white label F5 — to auth-soner.
  * forhandler: kunder og ansatte på &lt;slug&gt;.endwise.no
  * platform: kun Endwise-team på platform.endwise.no
- * Uten ENDWISE_WHITE_LABEL brukes dagens éne instans (prefiks `endwise`).
  */
 export type AuthSone = 'forhandler' | 'platform';
 
@@ -55,11 +54,8 @@ export const SONE_HEADER = 'x-endwise-sone';
 
 export function lesAuthSone(
   headers: Headers,
-  env: Record<string, string | undefined> = process.env,
+  _env: Record<string, string | undefined> = process.env,
 ): AuthSone | null {
-  if (env.ENDWISE_WHITE_LABEL !== '1' && env.ENDWISE_WHITE_LABEL_SPIKE !== '1') {
-    return null;
-  }
   const raw = headers.get(SONE_HEADER)?.trim().toLowerCase();
   if (raw === 'platform') return 'platform';
   if (raw === 'forhandler') return 'forhandler';

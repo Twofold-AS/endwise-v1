@@ -280,7 +280,7 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
   });
 
   it('manuell kode treffer samme verify-sti som e-postlenka', () => {
-    expect(kilde).toMatch(/magicLinkVerifySti/);
+    expect(kilde).toMatch(/authClient\.magicLink\.verify/);
     expect(kilde).toMatch(/normaliserMagicLinkKode/);
     expect(kilde).toMatch(/callbackURL:\s*['"]\/signin['"]/);
     expect(kilde).not.toMatch(/searchParams\.get\(['"]next['"]\)/);

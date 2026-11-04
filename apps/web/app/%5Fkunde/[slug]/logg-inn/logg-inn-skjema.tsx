@@ -1,13 +1,9 @@
 'use client';
 
-import {
-  erMagicLinkKode,
-  magicLinkVerifySti,
-  normaliserMagicLinkKode,
-} from '@endwise/auth/magic-link';
+import { erMagicLinkKode, normaliserMagicLinkKode } from '@endwise/auth/magic-link';
 import { ArrowRight, FeltInput, FeltKode, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
-import { signIn } from '@/lib/auth-client';
+import { authClient, signIn } from '@/lib/auth-client';
 
 const FORTSETT = 'Fortsett';
 
@@ -35,7 +31,7 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
     setSteg('kode');
   }
 
-  function onKode(e: FormEvent) {
+  async function onKode(e: FormEvent) {
     e.preventDefault();
     const token = normaliserMagicLinkKode(kode);
     if (!erMagicLinkKode(token)) {
@@ -43,12 +39,42 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
       return;
     }
     setBusy('loading');
-    window.location.assign(magicLinkVerifySti(token, '/velg'));
+    setError(null);
+    try {
+      const res = await authClient.magicLink.verify({
+        query: { token, callbackURL: '/velg' },
+      });
+      if (res.error) {
+        setError(
+          res.error.status === 429
+            ? 'For mange forsøk. Vent ett minutt og prøv igjen.'
+            : 'Kunne ikke logge inn. Prøv igjen, eller be om ny kode.',
+        );
+        setBusy('error');
+        return;
+      }
+      window.location.assign('/velg');
+    } catch (err) {
+      const status =
+        err && typeof err === 'object' && 'status' in err
+          ? Number((err as { status: unknown }).status)
+          : 0;
+      setError(
+        status === 429
+          ? 'For mange forsøk. Vent ett minutt og prøv igjen.'
+          : 'Kunne ikke logge inn. Prøv igjen, eller be om ny kode.',
+      );
+      setBusy('error');
+    }
   }
 
   if (steg === 'kode') {
     return (
-      <form onSubmit={onKode} className="flex flex-col gap-4" data-kunde-logg-inn-kode>
+      <form
+        onSubmit={(e) => void onKode(e)}
+        className="flex flex-col gap-4"
+        data-kunde-logg-inn-kode
+      >
         <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
           Vi har sendt en midlertidig kode til{' '}
           <span className="font-[650] text-fg">{email || 'e-posten din'}</span>.

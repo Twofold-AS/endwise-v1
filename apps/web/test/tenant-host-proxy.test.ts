@@ -21,7 +21,7 @@ function rewriteDest(res: Response): string | null {
   }
 }
 
-const WL = { ENDWISE_WHITE_LABEL: '1' } as const;
+const WL = {} as const;
 
 describe('F18 / white label F2: proxy vertsruting', () => {
   it('matcher dekker auth og øvrige sider (statisk unntatt)', () => {
@@ -37,14 +37,13 @@ describe('F18 / white label F2: proxy vertsruting', () => {
     expect(config.matcher.some((m) => m.includes('(?!_next/static'))).toBe(true);
   });
 
-  it('uten flagg: no-store bare på auth, ingen sone-header', () => {
+  it('auth-stier får no-store, marked får sone-header', () => {
     const auth = proxy(req('https://endwise.no/signin', 'endwise.no'), {});
     expect(auth.headers.get('Cache-Control')).toMatch(/no-store/);
-    expect(auth.headers.get('x-endwise-sone')).toBeNull();
+    expect(auth.headers.get('x-endwise-sone')).toBe('marked');
 
     const hjem = proxy(req('https://endwise.no/home', 'endwise.no'), {});
-    expect(hjem.headers.get('Cache-Control')).toBeNull();
-    expect(hjem.headers.get('x-endwise-sone')).toBeNull();
+    expect(hjem.headers.get('x-endwise-sone')).toBe('marked');
     expect(rewriteDest(hjem)).toBeNull();
   });
 

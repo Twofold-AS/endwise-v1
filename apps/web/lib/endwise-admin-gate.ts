@@ -1,6 +1,5 @@
 import { createRequestContext } from '@endwise/api/context';
 import { kanBrukePlattform, lesAuthSone, TwoFactorRequiredError } from '@endwise/auth';
-import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import type { Route } from 'next';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
@@ -29,7 +28,7 @@ export function endwiseAdminUtfall(input: {
  */
 export async function krevEndwiseAdminSide(): Promise<EndwiseAdminUtfall> {
   const h = await headers();
-  if (erWhiteLabelAktiv() && lesAuthSone(h) !== 'platform') {
+  if (lesAuthSone(h) !== 'platform') {
     notFound();
   }
 
@@ -47,17 +46,13 @@ export async function krevEndwiseAdminSide(): Promise<EndwiseAdminUtfall> {
   }
 
   if (utfall === 'ok' || utfall === 'two_factor') {
-    if (
-      erWhiteLabelAktiv() &&
-      ctx &&
-      !kanBrukePlattform({ role: ctx.role, harPasskey: ctx.passkeyOk })
-    ) {
+    if (ctx && !kanBrukePlattform({ role: ctx.role, harPasskey: ctx.passkeyOk })) {
       redirect('/logg-inn?steg=nokkel' as Route);
     }
     return 'ok';
   }
   if (utfall === 'signin') {
-    redirect((erWhiteLabelAktiv() ? '/logg-inn' : '/signin') as Route);
+    redirect('/logg-inn' as Route);
   }
   return 'forbidden';
 }

@@ -1,5 +1,4 @@
 import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise/db';
-import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { omradeSjekk, protectedProcedure, router, staffProcedure } from '../init.ts';
@@ -152,7 +151,7 @@ export const inventoryRouter = router({
     ),
 
   createPart: protectedProcedure
-    .use(omradeSjekk('lager', 'endre', false, 'admin'))
+    .use(omradeSjekk('lager', 'endre'))
     .input(
       z.object({
         sku: z.string().min(1).max(64),
@@ -200,7 +199,7 @@ export const inventoryRouter = router({
     ),
 
   createLocation: protectedProcedure
-    .use(omradeSjekk('lager', 'endre', false, 'admin'))
+    .use(omradeSjekk('lager', 'endre'))
     .input(z.object({ code: z.string().min(1).max(32), name: z.string().min(1).max(120) }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -285,18 +284,6 @@ export const inventoryRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (
-        input.kind === 'adjust' &&
-        !erWhiteLabelAktiv() &&
-        ctx.role !== 'dealer_admin' &&
-        ctx.role !== 'endwise_admin'
-      ) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Korreksjon av beholdning krever forhandler-admin',
-        });
-      }
-
       try {
         return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
           // Begge må høre til tenanten. RLS ville uansett skjult dem, men en

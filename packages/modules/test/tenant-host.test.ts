@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   erReservertSlug,
-  erWhiteLabelSpikeAktiv,
+  erWhiteLabelAktiv,
   normaliserVert,
   opplosTenantFraHost,
   RESERVERTE_SLUGS,
@@ -9,10 +9,10 @@ import {
 } from '../src/tenant-host/index.ts';
 
 describe('F16 / white label F0: tenant-host', () => {
-  it('flagget er av uten ENDWISE_WHITE_LABEL_SPIKE=1', () => {
-    expect(erWhiteLabelSpikeAktiv({})).toBe(false);
-    expect(erWhiteLabelSpikeAktiv({ ENDWISE_WHITE_LABEL_SPIKE: '0' })).toBe(false);
-    expect(erWhiteLabelSpikeAktiv({ ENDWISE_WHITE_LABEL_SPIKE: '1' })).toBe(true);
+  it('white label er alltid på — flaggene er fjernet', () => {
+    expect(erWhiteLabelAktiv()).toBe(true);
+    expect(erWhiteLabelAktiv({})).toBe(true);
+    expect(erWhiteLabelAktiv({ ENDWISE_WHITE_LABEL: '0' })).toBe(true);
   });
 
   it('normaliserer vert: små bokstaver, port og avsluttende punktum', () => {

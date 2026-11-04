@@ -7,7 +7,6 @@ import {
   slugSjekkTillatt,
   vurderSlugFormat,
 } from '@endwise/modules/slug';
-import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { TRPCError } from '@trpc/server';
 import type { AppContext } from '../context.ts';
 
@@ -16,12 +15,7 @@ const INVITASJON_FEIL = 'Ugyldig invitasjon';
 type ApenEier = { id: string; kind: string };
 
 export function krevWhiteLabel(): void {
-  if (!erWhiteLabelAktiv()) {
-    throw new TRPCError({
-      code: 'PRECONDITION_FAILED',
-      message: 'White label er ikke slått på.',
-    });
-  }
+  // White label er eneste versjon.
 }
 
 export async function krevApenEierInvitasjon(

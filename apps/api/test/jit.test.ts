@@ -23,7 +23,7 @@ const fakeCtx = (role: 'endwise_admin' | 'endwise_support' | 'dealer_admin') =>
   }) as never;
 
 describe('F22 / white label F5b: JIT-porter', () => {
-  it('uten flagg er skriv og jit 403/precondition, dealer stenges', async () => {
+  it('uten platform-sone er skriv og jit 403, dealer stenges', async () => {
     await forventer(
       appRouter.createCaller(fakeCtx('endwise_admin')).verksted.skriv({ slug: 'bergen' }),
       'FORBIDDEN',
@@ -33,7 +33,7 @@ describe('F22 / white label F5b: JIT-porter', () => {
         slug: 'bergen',
         begrunnelse: 'Må rette en hengende booking i Bergen sentrum.',
       }),
-      'PRECONDITION_FAILED',
+      'FORBIDDEN',
     );
     await forventer(
       appRouter.createCaller(fakeCtx('dealer_admin')).jit.oversikt({ slug: 'bergen' }),
@@ -41,7 +41,7 @@ describe('F22 / white label F5b: JIT-porter', () => {
     );
     await forventer(
       appRouter.createCaller(fakeCtx('dealer_admin')).aktivitet.endwise(),
-      'PRECONDITION_FAILED',
+      'FORBIDDEN',
     );
   });
 
@@ -55,7 +55,7 @@ describe('F22 / white label F5b: JIT-porter', () => {
     expect(jit).toMatch(/varsleLeder|byggJitVarsel/);
     expect(jit).toMatch(/dealer_admin/);
     expect(verksted).toMatch(/krevAktivJitSkriv/);
-    expect(verksted).toMatch(/Kun lesing/);
+    expect(jit).toMatch(/Kun lesing/);
     expect(verksted).not.toMatch(/organization\.setActive|impersonat/i);
     expect(flags).not.toMatch(/krevAktivJitSkriv|jitGrants/);
     expect(tenants).not.toMatch(/krevAktivJitSkriv|jitGrants/);

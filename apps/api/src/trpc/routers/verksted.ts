@@ -1,7 +1,6 @@
 import { and, desc, eq, schema, withPlatformAdmin, withPlatformInspect } from '@endwise/db';
 import { endwiseAktor } from '@endwise/modules/jit';
 import { erPlattformTenant } from '@endwise/modules/plattform';
-import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { endwiseInspectProcedure, endwiseSupportProcedure, router } from '../init.ts';
@@ -193,9 +192,6 @@ export const verkstedRouter = router({
    * Aldri sesjon på forhandlervert.
    */
   skriv: endwiseSupportProcedure.input(slugInput).mutation(async ({ ctx, input }) => {
-    if (!erWhiteLabelAktiv()) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Kun lesing' });
-    }
     const t = await finnForhandler(ctx.db, input.slug);
     const grant = await krevAktivJitSkriv({
       db: ctx.db,

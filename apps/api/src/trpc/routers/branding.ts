@@ -18,37 +18,35 @@ function feil(melding: string): never {
 }
 
 export const brandingRouter = router({
-  hent: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'se', false, 'admin'))
-    .query(async ({ ctx }) => {
-      krevWhiteLabel();
-      return withTenant(ctx.db, ctx.tenantId as string, async (tx) => {
-        const [tenant] = await tx
-          .select({ name: schema.tenants.name, slug: schema.tenants.slug })
-          .from(schema.tenants)
-          .where(eq(schema.tenants.id, ctx.tenantId as string));
-        const [rad] = await tx
-          .select()
-          .from(schema.tenantBranding)
-          .where(eq(schema.tenantBranding.tenantId, ctx.tenantId as string));
-        const fallback = tenant?.name ?? 'Verkstedet';
-        return {
-          slug: tenant?.slug ?? '',
-          publisertAt: rad?.publisertAt ?? null,
-          publisert: {
-            visningsnavn: rad?.visningsnavn ?? fallback,
-            logoUrl: rad?.logoUrl ?? null,
-            aksentfarge: rad?.aksentfarge ?? null,
-            aksentTekstfarge: rad?.aksentTekstfarge ?? null,
-            visLevertAv: rad?.visLevertAv ?? true,
-          },
-          utkast: utkastFraUkjent(rad?.utkast, fallback),
-        };
-      });
-    }),
+  hent: protectedProcedure.use(omradeSjekk('innstillinger', 'se')).query(async ({ ctx }) => {
+    krevWhiteLabel();
+    return withTenant(ctx.db, ctx.tenantId as string, async (tx) => {
+      const [tenant] = await tx
+        .select({ name: schema.tenants.name, slug: schema.tenants.slug })
+        .from(schema.tenants)
+        .where(eq(schema.tenants.id, ctx.tenantId as string));
+      const [rad] = await tx
+        .select()
+        .from(schema.tenantBranding)
+        .where(eq(schema.tenantBranding.tenantId, ctx.tenantId as string));
+      const fallback = tenant?.name ?? 'Verkstedet';
+      return {
+        slug: tenant?.slug ?? '',
+        publisertAt: rad?.publisertAt ?? null,
+        publisert: {
+          visningsnavn: rad?.visningsnavn ?? fallback,
+          logoUrl: rad?.logoUrl ?? null,
+          aksentfarge: rad?.aksentfarge ?? null,
+          aksentTekstfarge: rad?.aksentTekstfarge ?? null,
+          visLevertAv: rad?.visLevertAv ?? true,
+        },
+        utkast: utkastFraUkjent(rad?.utkast, fallback),
+      };
+    });
+  }),
 
   lagreUtkast: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
+    .use(omradeSjekk('innstillinger', 'endre'))
     .input(utkastInput)
     .mutation(async ({ ctx, input }) => {
       krevWhiteLabel();
@@ -99,7 +97,7 @@ export const brandingRouter = router({
     }),
 
   lastOppLogo: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
+    .use(omradeSjekk('innstillinger', 'endre'))
     .input(z.object({ base64: z.string().min(1).max(2_200_000) }))
     .mutation(async ({ ctx, input }) => {
       krevWhiteLabel();
@@ -144,7 +142,7 @@ export const brandingRouter = router({
     }),
 
   publiser: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
+    .use(omradeSjekk('innstillinger', 'endre'))
     .mutation(async ({ ctx }) => {
       krevWhiteLabel();
       return withTenant(ctx.db, ctx.tenantId as string, async (tx) => {

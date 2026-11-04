@@ -177,7 +177,7 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
 
   const hostSlug = headers.get('x-endwise-slug')?.trim() ?? '';
   const hostTenantId =
-    process.env.ENDWISE_WHITE_LABEL === '1' && authSone === 'forhandler' && hostSlug
+    authSone === 'forhandler' && hostSlug
       ? await lesTenantIdFraSlug(base.db, hostSlug).catch(() => null)
       : null;
 
@@ -217,17 +217,13 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
       bedriftVerifisertAt?: Date | string | null;
       bedriftUtloperAt?: Date | string | null;
     };
-    const kontekst: SesjonKontekst | null =
-      process.env.ENDWISE_WHITE_LABEL === '1' &&
-      erBedriftVinduAktiv({
-        kontekst: sesjon.kontekst,
-        verifisertAt: sesjon.bedriftVerifisertAt,
-        utloperAt: sesjon.bedriftUtloperAt,
-      })
-        ? 'bedrift'
-        : process.env.ENDWISE_WHITE_LABEL === '1'
-          ? 'privat'
-          : null;
+    const kontekst: SesjonKontekst | null = erBedriftVinduAktiv({
+      kontekst: sesjon.kontekst,
+      verifisertAt: sesjon.bedriftVerifisertAt,
+      utloperAt: sesjon.bedriftUtloperAt,
+    })
+      ? 'bedrift'
+      : 'privat';
     try {
       const role = await assertMember(base.db, data.user.id, tenantId);
       if (authSone && !rolleTillattISone(role, authSone)) {
@@ -246,28 +242,23 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
         ...profil,
       });
     } catch {
-      if (process.env.ENDWISE_WHITE_LABEL === '1') {
-        const [kunde] = await withTenant(base.db, tenantId, (tx) =>
-          tx
-            .select({ id: schema.customers.id })
-            .from(schema.customers)
-            .where(
-              and(
-                eq(schema.customers.tenantId, tenantId),
-                eq(schema.customers.userId, data.user.id),
-              ),
-            )
-            .limit(1),
-        ).catch(() => [null]);
-        if (kunde) {
-          return medPort({
-            userId: data.user.id,
-            tenantId,
-            role: 'customer',
-            kontekst: 'privat',
-            hostTenantId,
-          });
-        }
+      const [kunde] = await withTenant(base.db, tenantId, (tx) =>
+        tx
+          .select({ id: schema.customers.id })
+          .from(schema.customers)
+          .where(
+            and(eq(schema.customers.tenantId, tenantId), eq(schema.customers.userId, data.user.id)),
+          )
+          .limit(1),
+      ).catch(() => [null]);
+      if (kunde) {
+        return medPort({
+          userId: data.user.id,
+          tenantId,
+          role: 'customer',
+          kontekst: 'privat',
+          hostTenantId,
+        });
       }
       return medPort({ userId: data.user.id, hostTenantId });
     }

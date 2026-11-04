@@ -33,6 +33,10 @@ const ctx = (
     tenantId,
     userId,
     role,
+    kontekst: 'bedrift',
+    requestHeaders: new Headers({ 'x-endwise-csrf': '1' }),
+    authSone: role === 'endwise_admin' ? 'platform' : 'forhandler',
+    passkeyOk: role === 'endwise_admin',
   }) as never;
 
 describe('F5-26 — START_MODULER og katalog', () => {

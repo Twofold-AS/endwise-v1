@@ -1,6 +1,5 @@
 import {
   erAuthSti,
-  erWhiteLabelAktiv,
   lesKontekst,
   opplosTenantFraHost,
   ruteFraSone,
@@ -37,18 +36,11 @@ function medSone(
 
 /**
  * Next 16 proxy (tidligere middleware).
- * Uten flagg: no-op unntatt no-store på /signin, /2fa-oppsett, /api/auth.
- * Bak ENDWISE_WHITE_LABEL=1 (eller SPIKE): sone fra Host, rewrite til
- * /_kunde eller /_plattform. Ingen database.
+ * Sone fra Host, rewrite til /_kunde eller /_plattform. Ingen database.
  */
 export function proxy(request: NextRequest, env: ProxyEnv = process.env) {
   const path = request.nextUrl.pathname;
   const auth = erAuthSti(path);
-
-  if (!erWhiteLabelAktiv(env)) {
-    const res = NextResponse.next();
-    return auth ? settAuthNoStore(res) : res;
-  }
 
   const headers = new Headers(request.headers);
   headers.delete('x-endwise-sone');

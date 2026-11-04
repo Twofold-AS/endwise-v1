@@ -66,7 +66,7 @@ describe('handleHono /invitasjoner (F1-10 side-sti)', () => {
     expect(await res.json()).toEqual({
       error: 'Invitasjonen er ugyldig, brukt eller utløpt.',
     });
-    expect(stubs.finnApen).toHaveBeenCalledWith('ukjent-token-xx');
+    expect(stubs.finnApen).not.toHaveBeenCalled();
   });
 
   it('GET /invitasjon/:token (entall) er mount-miss — den stien er siden', async () => {
@@ -103,8 +103,8 @@ describe('handleHono /invitasjoner (F1-10 side-sti)', () => {
     const res = await handleHono(
       new Request('http://endwise.test/invitasjoner/godta', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ token: 'ekte-token-xx', navn: 'Kari Nordmann' }),
+        headers: { 'content-type': 'application/json', 'x-endwise-csrf': '1' },
+        body: JSON.stringify({ token: 'ekte-token-xx', navn: 'Kari Nordmann', kode: 'ABCD2345' }),
       }),
     );
     expect(res.status).toBe(500);

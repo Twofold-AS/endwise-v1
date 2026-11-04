@@ -119,7 +119,7 @@ export const billingRouter = router({
     }),
 
   setIntegration: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
+    .use(omradeSjekk('innstillinger', 'endre'))
     .input(z.object({ key: z.string().min(1), enabled: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -144,7 +144,7 @@ export const billingRouter = router({
    * levere.
    */
   checkout: protectedProcedure
-    .use(omradeSjekk('okonomi', 'endre', false, 'admin'))
+    .use(omradeSjekk('okonomi', 'endre'))
     .input(
       z.object({
         planKey: z.string().min(1),
@@ -225,7 +225,7 @@ export const billingRouter = router({
     }),
 
   portal: protectedProcedure
-    .use(omradeSjekk('okonomi', 'endre', false, 'admin'))
+    .use(omradeSjekk('okonomi', 'endre'))
     .input(z.object({ returnUrl: z.string().url() }))
     .mutation(async ({ ctx, input }) => {
       if (!stripeConfigured()) {
@@ -256,7 +256,7 @@ export const billingRouter = router({
    * tunnel); uten den kunne ikke onboarding-flyten testes lokalt i det hele tatt.
    */
   applyPlanMock: protectedProcedure
-    .use(omradeSjekk('okonomi', 'endre', false, 'admin'))
+    .use(omradeSjekk('okonomi', 'endre'))
     .input(z.object({ planKey: z.string().min(1), tillegg: z.array(z.string()).default([]) }))
     .mutation(async ({ ctx, input }) => {
       if (process.env.NODE_ENV === 'production') {

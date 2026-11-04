@@ -84,9 +84,8 @@ describe('F17 / white label F1: slug', () => {
     expect(slugSjekkTillatt('inv-2')).toBe(true);
   });
 
-  it('white-label-flagg er av som default', () => {
-    expect(erWhiteLabelAktiv({})).toBe(false);
-    expect(erWhiteLabelAktiv({ ENDWISE_WHITE_LABEL: '1' })).toBe(true);
-    expect(erWhiteLabelAktiv({ ENDWISE_WHITE_LABEL_SPIKE: '1' })).toBe(true);
+  it('white label er alltid på', () => {
+    expect(erWhiteLabelAktiv({})).toBe(true);
+    expect(erWhiteLabelAktiv({ ENDWISE_WHITE_LABEL: '0' })).toBe(true);
   });
 });

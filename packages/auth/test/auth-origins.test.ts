@@ -70,6 +70,7 @@ describe('authTrustedOrigins', () => {
     expect(origins).toContain('https://endwise.no');
     expect(origins).toContain('https://www.endwise.no');
     expect(origins).toContain('https://platform.endwise.no');
+    expect(origins).toContain('https://*.endwise.no');
   });
 
   it('preview med VERCEL_URL inkluderer den hosten', () => {
@@ -115,7 +116,7 @@ describe('authTrustedOrigins', () => {
       VERCEL_URL: '*.vercel.app',
     });
     expect(origins).not.toContain('https://*.vercel.app');
-    expect(origins.every((o) => !o.includes('*'))).toBe(true);
+    expect(origins).toContain('https://*.endwise.no');
   });
 
   it('createAuth setter trustedOrigins også når NODE_ENV=production', () => {

@@ -1,15 +1,8 @@
 /**
- * White label release-flagg. Av som default — dagens endwise.no-brukere
- * ser ingen endring. Skru på lokalt / i test med ENDWISE_WHITE_LABEL=1
- * (eller ENDWISE_WHITE_LABEL_SPIKE=1 fra F0).
- * Dette er et miljøflagg, ikke entitlements-modulen `white-label`.
+ * White label er eneste versjon. Flaggene ENDWISE_WHITE_LABEL og
+ * ENDWISE_WHITE_LABEL_SPIKE er fjernet — funksjonen finnes bare så
+ * eldre kall kompilerer, og returnerer alltid true.
  */
-export function erWhiteLabelSpikeAktiv(
-  env: Record<string, string | undefined> = process.env,
-): boolean {
-  return env.ENDWISE_WHITE_LABEL_SPIKE === '1';
-}
-
-export function erWhiteLabelAktiv(env: Record<string, string | undefined> = process.env): boolean {
-  return env.ENDWISE_WHITE_LABEL === '1' || erWhiteLabelSpikeAktiv(env);
+export function erWhiteLabelAktiv(_env?: Record<string, string | undefined>): boolean {
+  return true;
 }

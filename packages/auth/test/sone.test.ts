@@ -40,16 +40,11 @@ describe('F21 / white label F5: auth-sone', () => {
     expect(kanBrukePlattform({ role: 'dealer_admin', harPasskey: true })).toBe(false);
   });
 
-  it('lesAuthSone krever flagg og gyldig header', () => {
+  it('lesAuthSone leser gyldig header uten flagg', () => {
     const h = new Headers({ 'x-endwise-sone': 'platform' });
-    expect(lesAuthSone(h, {})).toBeNull();
-    expect(lesAuthSone(h, { ENDWISE_WHITE_LABEL: '1' })).toBe('platform');
-    expect(
-      lesAuthSone(new Headers({ 'x-endwise-sone': 'forhandler' }), { ENDWISE_WHITE_LABEL: '1' }),
-    ).toBe('forhandler');
-    expect(
-      lesAuthSone(new Headers({ 'x-endwise-sone': 'marked' }), { ENDWISE_WHITE_LABEL: '1' }),
-    ).toBeNull();
+    expect(lesAuthSone(h, {})).toBe('platform');
+    expect(lesAuthSone(new Headers({ 'x-endwise-sone': 'forhandler' }), {})).toBe('forhandler');
+    expect(lesAuthSone(new Headers({ 'x-endwise-sone': 'marked' }), {})).toBeNull();
   });
 
   it('velgAktivOrganisasjon respekterer sone', () => {

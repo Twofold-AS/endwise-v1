@@ -16,6 +16,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const stubs = vi.hoisted(() => ({
   finnApen: vi.fn(),
   forbruk: vi.fn(),
+  kodeRad: null as null | {
+    codeHash: string;
+    codeSalt: string;
+    attempts: number;
+    expiresAt: Date;
+    usedAt: Date | null;
+  },
 }));
 
 const rlsFeil = () => {
@@ -96,9 +103,10 @@ vi.mock('@endwise/db', async (importOriginal) => {
             }),
         }),
         select: () => ({
-          from: () => ({
+          from: (table: unknown) => ({
             where: () => ({
-              limit: async () => [],
+              limit: async () =>
+                table === actual.schema.invitationCodes && stubs.kodeRad ? [stubs.kodeRad] : [],
             }),
           }),
         }),
@@ -114,6 +122,7 @@ vi.mock('@endwise/db', async (importOriginal) => {
   };
 });
 
+import { genererInvitasjonskode } from '@endwise/modules/invitasjon-kode';
 import { handleHono } from '../src/http/hono.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -243,6 +252,7 @@ describe('godta — HTTP: member_profiles-feil brenner ikke invitasjonen', () =>
   beforeEach(() => {
     stubs.finnApen.mockReset();
     stubs.forbruk.mockReset();
+    stubs.kodeRad = null;
     stubs.finnApen.mockResolvedValue({
       id: 'inv-1',
       tenantId: '50f690af-1121-4c9e-aa49-e449649e93ee',
@@ -257,11 +267,20 @@ describe('godta — HTTP: member_profiles-feil brenner ikke invitasjonen', () =>
   });
 
   it('POST 500 uten å kalle forbruk, uten SQLSTATE eller Failed query til klienten', async () => {
+    process.env.INVITASJON_KODE_PEPPER ??= 'test-pepper-16ch';
+    const generert = genererInvitasjonskode({});
+    stubs.kodeRad = {
+      codeHash: generert.hash,
+      codeSalt: generert.salt,
+      attempts: 0,
+      expiresAt: generert.expiresAt,
+      usedAt: null,
+    };
     const res = await handleHono(
       new Request('http://endwise.test/invitasjoner/godta', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ token: 'ekte-token-xx', navn: 'Kari Eier' }),
+        headers: { 'content-type': 'application/json', 'x-endwise-csrf': '1' },
+        body: JSON.stringify({ token: 'ekte-token-xx', navn: 'Kari Eier', kode: generert.kode }),
       }),
     );
     expect(res.status).toBe(500);

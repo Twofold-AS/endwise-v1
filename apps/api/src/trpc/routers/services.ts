@@ -84,7 +84,7 @@ export const servicesRouter = router({
     ),
 
   create: protectedProcedure
-    .use(omradeSjekk('tjenester', 'endre', false, 'admin'))
+    .use(omradeSjekk('tjenester', 'endre'))
     .input(
       z.object({
         name: z.string().min(1),
@@ -131,7 +131,7 @@ export const servicesRouter = router({
 
   /** Ny versjon. Den forrige lukkes med `validTo` — den slettes ikke. */
   update: protectedProcedure
-    .use(omradeSjekk('tjenester', 'endre', false, 'admin'))
+    .use(omradeSjekk('tjenester', 'endre'))
     .input(
       z.object({
         serviceId: z.uuid(),
@@ -188,7 +188,7 @@ export const servicesRouter = router({
 
   /** Deaktiver — aldri slett. Historikken skal overleve. */
   deactivate: protectedProcedure
-    .use(omradeSjekk('tjenester', 'endre', false, 'admin'))
+    .use(omradeSjekk('tjenester', 'endre'))
     .input(z.object({ serviceId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -212,7 +212,7 @@ export const servicesRouter = router({
    * kommer tilbake med nøyaktig den versjonen som gjaldt da den ble slått av.
    */
   reactivate: protectedProcedure
-    .use(omradeSjekk('tjenester', 'endre', false, 'admin'))
+    .use(omradeSjekk('tjenester', 'endre'))
     .input(z.object({ serviceId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       try {

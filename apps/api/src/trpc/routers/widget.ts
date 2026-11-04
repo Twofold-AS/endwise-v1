@@ -8,12 +8,8 @@ import { moduleProcedure, omradeSjekk, router } from '../init.ts';
  * (apps/api/src/routes/widget/) har sin egen auth via signert token og skal
  * Ikke ha denne gaten — sluttkunden har ingen sesjon å sjekke moduler mot.
  */
-const widgetAdminProcedure = moduleProcedure('widget').use(
-  omradeSjekk('innstillinger', 'endre', false, 'admin'),
-);
-const widgetLesProcedure = moduleProcedure('widget').use(
-  omradeSjekk('innstillinger', 'se', false, 'admin'),
-);
+const widgetAdminProcedure = moduleProcedure('widget').use(omradeSjekk('innstillinger', 'endre'));
+const widgetLesProcedure = moduleProcedure('widget').use(omradeSjekk('innstillinger', 'se'));
 
 /**
  * Forvaltning av widget-nøkler (dealer_admin). Utstedelse/liste er

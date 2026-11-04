@@ -7,10 +7,9 @@ import {
 } from '../src/tenant-host/index.ts';
 
 describe('F18 / white label F2: ruteFraSone', () => {
-  it('flagget er på med ENDWISE_WHITE_LABEL eller SPIKE', () => {
-    expect(erWhiteLabelAktiv({})).toBe(false);
-    expect(erWhiteLabelAktiv({ ENDWISE_WHITE_LABEL: '1' })).toBe(true);
-    expect(erWhiteLabelAktiv({ ENDWISE_WHITE_LABEL_SPIKE: '1' })).toBe(true);
+  it('white label er alltid på', () => {
+    expect(erWhiteLabelAktiv({})).toBe(true);
+    expect(erWhiteLabelAktiv({ ENDWISE_WHITE_LABEL: '0' })).toBe(true);
   });
 
   it('marked går videre uten rewrite', () => {

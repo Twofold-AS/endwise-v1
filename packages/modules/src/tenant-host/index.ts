@@ -15,6 +15,7 @@ export {
   erPlattformAdminSti,
   KUNDE_STIER,
   lesKontekst,
+  lesKundeSlugFraSporsmal,
   normaliserSti,
   ruteFraSone,
   UKJENT_KUNDE_STI,

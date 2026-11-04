@@ -1,5 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { byggVelkomstEpost, skalSendeVelkomst } from '../src/senders/velkomst.ts';
+
+const her = dirname(fileURLToPath(import.meta.url));
 
 describe('F35 / white label F12: velkomst', () => {
   it('sender ikke ved Quick-import', () => {
@@ -19,5 +24,13 @@ describe('F35 / white label F12: velkomst', () => {
     expect(epost.text).not.toMatch(/@/);
     expect(epost.html).not.toMatch(/#0066ff/);
     expect(epost.html).toMatch(/personvern/);
+  });
+
+  it('velkomst-lenker er <sub>.endwise.no — ikke app eller apex', () => {
+    const kilde = readFileSync(resolve(her, '../src/senders/velkomst.ts'), 'utf8');
+    expect(kilde).toMatch(/forhandlerOffentligUrl/);
+    expect(kilde).toMatch(/ingen_slug/);
+    expect(kilde).not.toMatch(/appOffentligUrl|app\.endwise\.no/);
+    expect(kilde).not.toMatch(/`https:\/\/\$\{rot\}`/);
   });
 });

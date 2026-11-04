@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   erWhiteLabelAktiv,
   lesKontekst,
+  lesKundeSlugFraSporsmal,
   ruteFraSone,
   UKJENT_KUNDE_STI,
 } from '../src/tenant-host/index.ts';
@@ -37,6 +38,47 @@ describe('F18 / white label F2: ruteFraSone', () => {
       type: 'redirect',
       dest: '/invitasjon/abc',
       vert: 'app',
+    });
+  });
+
+  it('apex med tenant/slug sender kunden til <sub>, aldri app', () => {
+    expect(lesKundeSlugFraSporsmal('tenant=bergen')).toBe('bergen');
+    expect(lesKundeSlugFraSporsmal('slug=bergen')).toBe('bergen');
+    expect(lesKundeSlugFraSporsmal('tenant=app')).toBeNull();
+    expect(lesKundeSlugFraSporsmal('tenant=platform')).toBeNull();
+    expect(
+      ruteFraSone({
+        sone: 'marked',
+        slug: null,
+        path: '/signin',
+        kontekst: null,
+        kundeSlug: 'bergen',
+      }),
+    ).toEqual({ type: 'redirect', dest: '/logg-inn', vert: 'bergen' });
+    expect(
+      ruteFraSone({
+        sone: 'marked',
+        slug: null,
+        path: '/min-side',
+        kontekst: null,
+        kundeSlug: 'bergen',
+      }),
+    ).toEqual({ type: 'redirect', dest: '/min-side', vert: 'bergen' });
+    expect(ruteFraSone({ sone: 'marked', slug: null, path: '/min-side', kontekst: null })).toEqual({
+      type: 'not-found',
+    });
+    expect(
+      ruteFraSone({
+        sone: 'marked',
+        slug: null,
+        path: '/api/auth/magic-link/verify',
+        kontekst: null,
+        kundeSlug: 'bergen',
+      }),
+    ).toEqual({
+      type: 'redirect',
+      dest: '/api/auth/magic-link/verify',
+      vert: 'bergen',
     });
   });
 

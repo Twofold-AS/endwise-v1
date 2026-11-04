@@ -1,4 +1,5 @@
 import type { VertSone } from './opplos.ts';
+import { erReservertSlug } from './reserverte-slugs.ts';
 
 /** Kundesidens stier. Må ikke kollidere med (app). */
 export const KUNDE_STIER = [
@@ -23,7 +24,7 @@ export type VertRute =
   | { type: 'next' }
   | { type: 'rewrite'; dest: string }
   | { type: 'not-found' }
-  | { type: 'redirect'; dest: string; vert: 'app' | 'platform' };
+  | { type: 'redirect'; dest: string; vert: string };
 
 const API_PREFIKS = ['/api/', '/trpc/', '/stream/'];
 const STATISK_PREFIKS = ['/_next/', '/logo/', '/favicon'];
@@ -101,23 +102,48 @@ export function erPlattformAdminSti(path: string): boolean {
 /** Nøytral 404 uten slug. Brukes av proxyen — ingen DB. */
 export const UKJENT_KUNDE_STI = '/_kunde/_ukjent';
 
+const SLUG_RE = /^[a-z0-9](?:[a-z0-9]|-(?!-))*[a-z0-9]$/;
+
+/** tenant/slug i gamle apex-lenker. Aldri app/platform. */
+export function lesKundeSlugFraSporsmal(
+  search: URLSearchParams | string | null | undefined,
+): string | null {
+  let q: URLSearchParams | null = null;
+  if (typeof search === 'string') {
+    q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  } else if (search) {
+    q = search;
+  }
+  if (!q) return null;
+  const raw = (q.get('tenant') ?? q.get('slug') ?? '').trim().toLowerCase();
+  if (!raw || raw.length < 3 || raw.length > 32) return null;
+  if (erReservertSlug(raw) || raw.includes('.') || raw.includes('--')) return null;
+  if (!SLUG_RE.test(raw)) return null;
+  return raw;
+}
+
 export function ruteFraSone(input: {
   sone: VertSone;
   slug: string | null;
   path: string;
   kontekst: VertKontekst | null;
+  kundeSlug?: string | null;
 }): VertRute {
   const path = normaliserSti(input.path);
   if (erApiEllerStatisk(input.path)) {
     if (input.sone === 'marked' && input.path.startsWith('/api/auth')) {
-      return { type: 'redirect', dest: path, vert: 'app' };
+      return { type: 'redirect', dest: path, vert: input.kundeSlug ?? 'app' };
     }
     return { type: 'next' };
   }
 
   if (input.sone === 'marked') {
     if (erMarkedsInnlogging(path)) {
-      return { type: 'redirect', dest: '/logg-inn', vert: 'app' };
+      return {
+        type: 'redirect',
+        dest: '/logg-inn',
+        vert: input.kundeSlug ?? 'app',
+      };
     }
     if (path === '/invitasjon' || path.startsWith('/invitasjon/')) {
       return { type: 'redirect', dest: path, vert: 'app' };
@@ -126,6 +152,13 @@ export function ruteFraSone(input: {
       return { type: 'redirect', dest: path === '/admin' ? '/logg-inn' : path, vert: 'platform' };
     }
     if (erMarkedsOffentligSti(path)) return { type: 'next' };
+    if (erKundeSti(path)) {
+      if (input.kundeSlug) {
+        const intern = path === '/signin' ? '/logg-inn' : path === '/velg' ? '/min-side' : path;
+        return { type: 'redirect', dest: intern, vert: input.kundeSlug };
+      }
+      return { type: 'not-found' };
+    }
     return { type: 'redirect', dest: path, vert: 'app' };
   }
 

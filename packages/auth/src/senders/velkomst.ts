@@ -1,4 +1,5 @@
 import { and, type Database, eq, schema, withTenant } from '@endwise/db';
+import { forhandlerOffentligUrl } from '../sone.ts';
 import { byggEpostHtml, esc } from './epost-mal.ts';
 import type { EpostMerke } from './merke.ts';
 import { sendEmail } from './resend.ts';
@@ -85,9 +86,9 @@ export async function sendVelkomstEtterKnytning(
   if (!rad.kunde.email) return { sendt: false, grunn: 'ingen_epost' };
   if (rad.sendt) return { sendt: false, grunn: 'allerede' };
 
-  const rot = process.env.TENANT_ROOT_DOMAIN ?? 'endwise.no';
   const slug = rad.tenant?.slug ?? '';
-  const base = slug ? `https://${slug}.${rot}` : `https://${rot}`;
+  const base = slug ? forhandlerOffentligUrl(slug) : null;
+  if (!base) return { sendt: false, grunn: 'ingen_slug' };
   const merkenavn = rad.branding?.visningsnavn || rad.tenant?.name || 'Verkstedet';
   const epost = byggVelkomstEpost({
     merke: {

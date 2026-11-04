@@ -65,16 +65,67 @@ export function lesAuthSone(
   return null;
 }
 
+export function rotDomene(env: Record<string, string | undefined> = process.env): string {
+  return (env.TENANT_ROOT_DOMAIN ?? 'endwise.no').replace(/^www\./, '');
+}
+
 export function appOffentligUrl(env: Record<string, string | undefined> = process.env): string {
-  const rot = (env.TENANT_ROOT_DOMAIN ?? 'endwise.no').replace(/^www\./, '');
-  return `https://app.${rot}`;
+  return `https://app.${rotDomene(env)}`;
+}
+
+const FORBUDT_KUNDE_SLUG = new Set(['app', 'platform', 'www', 'api', 'admin']);
+
+export function gyldigForhandlerSlug(slug: string): boolean {
+  const s = slug.trim().toLowerCase();
+  if (s.length < 3 || s.length > 32) return false;
+  if (FORBUDT_KUNDE_SLUG.has(s) || s === 'endwise' || s.startsWith('endwise-')) return false;
+  if (s.includes('.') || s.includes('--')) return false;
+  return /^[a-z0-9](?:[a-z0-9]|-(?!-))*[a-z0-9]$/.test(s);
+}
+
+/** Kundevert. Aldri app/platform/apex. */
+export function forhandlerOffentligUrl(
+  slug: string,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  if (!gyldigForhandlerSlug(slug)) return null;
+  return `https://${slug.trim().toLowerCase()}.${rotDomene(env)}`;
+}
+
+/**
+ * Flytt en auth-/kunde-lenke til forhandlerverten.
+ * Returnerer null hvis slugen er ugyldig eller resultatet ville blitt app/platform.
+ */
+export function kundelenkePaaForhandler(
+  lenke: string,
+  slug: string,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  const base = forhandlerOffentligUrl(slug, env);
+  if (!base) return null;
+  try {
+    const src = new URL(lenke);
+    const dest = new URL(`${src.pathname}${src.search}${src.hash}`, base);
+    if (erAppEllerPlatformHost(dest.hostname, env)) return null;
+    return dest.toString();
+  } catch {
+    return null;
+  }
+}
+
+export function erAppEllerPlatformHost(
+  host: string,
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  const rot = rotDomene(env);
+  const h = host.replace(/:\d+$/, '').toLowerCase();
+  return h === `app.${rot}` || h === `platform.${rot}`;
 }
 
 export function platformOffentligUrl(
   env: Record<string, string | undefined> = process.env,
 ): string {
-  const rot = (env.TENANT_ROOT_DOMAIN ?? 'endwise.no').replace(/^www\./, '');
-  return `https://platform.${rot}`;
+  return `https://platform.${rotDomene(env)}`;
 }
 
 export function platformRpId(env: Record<string, string | undefined> = process.env): string {

@@ -9,7 +9,7 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 **Type:** ny fase. Ingen ny UI-pakke. Ingen techstack-endring. Ingen flags.
 **Godkjent av:** Mikael (prod-test Bergen-eier + punkt 5: endwise.no er bare marked).
-**Endring:** Fase **F41**. **F41-01** `done` (dropp invite-OTP). **F41-02** `done` (Endwise-From på bedrifts-e-post). **F41-03** `done` (låst subdomene, visningsnavn, admin-logo). **F41-04** `done` (sesjon på app/platform-vert). **F41-05** `done` (apex uten innlogging; nøytral kode-tekst). F39-01 forblir `planned`.
+**Endring:** Fase **F41**. **F41-01** `done` (dropp invite-OTP). **F41-02** `done` (Endwise-From på bedrifts-e-post). **F41-03** `done` (låst subdomene, visningsnavn, admin-logo). **F41-04** `done` (sesjon på app/platform-vert). **F41-05** `done` (apex uten innlogging; nøytral kode-tekst). Kundeflyt aldri til app.endwise.no — kun `<sub>.endwise.no`. F39-01 forblir `planned`.
 
 ---
 

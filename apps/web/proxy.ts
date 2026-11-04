@@ -1,6 +1,7 @@
 import {
   erAuthSti,
   lesKontekst,
+  lesKundeSlugFraSporsmal,
   opplosTenantFraHost,
   ruteFraSone,
   slaaOppEgetDomene,
@@ -69,6 +70,7 @@ export function proxy(request: NextRequest, env: ProxyEnv = process.env) {
     slug: opplosning.slug,
     path,
     kontekst,
+    kundeSlug: lesKundeSlugFraSporsmal(request.nextUrl.searchParams),
   });
 
   const requestInit = { request: { headers } };

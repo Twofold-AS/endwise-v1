@@ -1388,7 +1388,7 @@ const ROADMAP = [
     area:"admin", ui:"partial", status:"done" },
   { id:"F41-04", o:"Fiks innloggingsløkke etter godta", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Invite-URL på app/platform. Godta setter <code>__Host-</code>-sesjon på samme vert og lander <code>/oppstart</code> eller <code>/home</code>. Årsak: magic-link-kake på endwise.no er usynlig på app.endwise.no, og app <code>/</code> er logg-inn.",
     area:"auth", ui:"na", status:"done" },
-  { id:"F41-05", o:"endwise.no er bare marked — ingen innlogging", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Innlogging bare på app / platform / <code>&lt;sub&gt;</code>. Apex <code>/signin</code> og <code>/logg-inn</code> 308 til app; <code>/admin</code> til platform. Nøytral tekst: «Hvis kontoen finnes, får du en kode på e-post.»",
+  { id:"F41-05", o:"endwise.no er bare marked — ingen innlogging", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Innlogging bare på app (bedrift) / platform / <code>&lt;sub&gt;</code> (kunde). Apex <code>/signin</code> uten kontekst 308 til app. Med <code>tenant</code>/<code>slug</code> 308 til <code>&lt;sub&gt;.endwise.no</code>. Kundeflyt og kunde-e-post aldri til app. Nøytral tekst: «Hvis kontoen finnes, får du en kode på e-post.»",
     area:"auth", ui:"built", status:"done" },
 ]},
 ];

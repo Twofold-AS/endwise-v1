@@ -119,6 +119,17 @@ describe('F18 / white label F2: proxy vertsruting', () => {
     const admin = proxy(req('https://endwise.no/admin', 'endwise.no'), WL);
     expect(admin.status).toBe(308);
     expect(admin.headers.get('location')).toBe('https://platform.endwise.no/logg-inn');
+
+    const kunde = proxy(req('https://endwise.no/signin?tenant=bergen', 'endwise.no'), {
+      ...WL,
+      VERCEL_ENV: 'production',
+    });
+    expect(kunde.status).toBe(308);
+    expect(kunde.headers.get('location')).toBe('https://bergen.endwise.no/logg-inn?tenant=bergen');
+    expect(kunde.headers.get('location')).not.toMatch(/app\.endwise\.no/);
+
+    const uten = proxy(req('https://endwise.no/min-side', 'endwise.no'), WL);
+    expect(uten.headers.get('location') ?? '').not.toMatch(/app\.endwise\.no/);
   });
 
   it('proxy-kilden har ingen DB', () => {

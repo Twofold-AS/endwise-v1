@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { JOBB_FASER, jobbFase, rensKundeMelding } from '../src/kunde/index.ts';
+import {
+  JOBB_FASER,
+  jobbFase,
+  KUNDE_BUTIKK_BLOKKERT,
+  KUNDE_VIPPS_AKTIV,
+  kundeButikkStatus,
+  rensKundeMelding,
+} from '../src/kunde/index.ts';
 
 describe('F33 / white label F11b: kunde handling', () => {
   it('jobbfase er Mottatt · Under arbeid · Klar', () => {
@@ -15,5 +22,16 @@ describe('F33 / white label F11b: kunde handling', () => {
     expect(rensKundeMelding('  hei  ')).toBe('hei');
     expect(() => rensKundeMelding('   ')).toThrow(/Skriv en melding/);
     expect(() => rensKundeMelding('x'.repeat(2001))).toThrow(/maks 2000/);
+  });
+
+  it('butikk er stengt og Vipps av (F10-03)', () => {
+    expect(KUNDE_BUTIKK_BLOKKERT).toBe(true);
+    expect(KUNDE_VIPPS_AKTIV).toBe(false);
+    expect(kundeButikkStatus()).toEqual({
+      apen: false,
+      grunn: 'shop_blokkert',
+      vipps: false,
+      varer: [],
+    });
   });
 });

@@ -9,6 +9,15 @@ export default async function KundeHjem({ params }: { params: Promise<{ slug: st
   const tenant = await hentOffentligKunde(slug);
   if (!tenant) return <UkjentSide />;
 
+  const innlogget = await kundeErInnlogget();
+  if (!innlogget) {
+    return (
+      <KundeSkall tenant={tenant} tittel={tenant.visningsnavn}>
+        <KundeMarkedsFlate tenant={tenant} />
+      </KundeSkall>
+    );
+  }
+
   if (!tenant.publisert) {
     return (
       <KundeSkall tenant={tenant} tittel={tenant.visningsnavn} undertekst="Kommer snart">
@@ -17,15 +26,6 @@ export default async function KundeHjem({ params }: { params: Promise<{ slug: st
             Siden er ikke åpen ennå. Kom tilbake litt senere.
           </p>
         </Seksjon>
-      </KundeSkall>
-    );
-  }
-
-  const innlogget = await kundeErInnlogget();
-  if (!innlogget) {
-    return (
-      <KundeSkall tenant={tenant} tittel={tenant.visningsnavn}>
-        <KundeMarkedsFlate tenant={tenant} />
       </KundeSkall>
     );
   }

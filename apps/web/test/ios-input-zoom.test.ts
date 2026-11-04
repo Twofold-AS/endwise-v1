@@ -51,9 +51,10 @@ describe('iOS Safari — felt ≥16px på telefon, pinch-zoom urørt', () => {
     expect(felter).toMatch(/FELT_LG|ew-felt-lg/);
     expect(tema).toMatch(/font-size:\s*17px/);
     expect(tema).toMatch(/\.ew-felt-sm[\s\S]{0,80}16px/);
-    expect(signin).toMatch(/FeltKode[\s\S]*length=\{6\}/);
+    expect(signin).not.toMatch(/FeltKode[\s\S]*length=\{6\}/);
     expect(signin).toMatch(/FeltKode[\s\S]*length=\{5\}/);
-    expect(totp).toMatch(/tfa-kode[\s\S]*FeltKode/);
+    expect(totp).toMatch(/addPasskey/);
+    expect(totp).not.toMatch(/FeltKode/);
     expect(bytt).toMatch(/bytt-epost-totp[\s\S]*text-\[16px\]/);
   });
 });

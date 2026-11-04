@@ -3,6 +3,7 @@ import {
   ABSOLUTE_MAX_LIFETIME_SECONDS,
   absoluteExpiryFor,
   bedriftUtloperAt,
+  brukerHarPasskey,
   byggSesjonKake,
   harBedriftCsrf,
   IDLE_TIMEOUT_SECONDS,
@@ -490,19 +491,14 @@ invitasjon.post('/godta', async (c) => {
       }),
     );
 
-    const [bruker] = await db()
-      .select({ twoFactorEnabled: schema.user.twoFactorEnabled })
-      .from(schema.user)
-      .where(eq(schema.user.id, resultat.userId))
-      .limit(1);
-    const landing =
-      bruker?.twoFactorEnabled === true
-        ? inv.kind === 'platform'
-          ? '/endwise'
-          : inv.kind === 'owner'
-            ? '/oppstart'
-            : '/home'
-        : '/2fa-oppsett';
+    const harPasskey = await brukerHarPasskey(db(), resultat.userId).catch(() => false);
+    const landing = harPasskey
+      ? inv.kind === 'platform'
+        ? '/endwise'
+        : inv.kind === 'owner'
+          ? '/oppstart'
+          : '/home'
+      : '/2fa-oppsett';
     return c.json({
       ok: true,
       epost: inv.epost,

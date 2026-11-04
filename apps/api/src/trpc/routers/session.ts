@@ -1,4 +1,4 @@
-import { sessionMeTwoFactorRequired } from '@endwise/auth';
+import { brukerHarPasskey, sessionMeTwoFactorRequired } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import { erPlattformTenant, landingForPlatform } from '@endwise/modules/plattform';
 import { landingForJobbfunksjon, resolveJobbfunksjon, visningsnavn } from '@endwise/modules/profil';
@@ -170,8 +170,9 @@ export const sessionRouter = router({
       slug: tenant?.slug ?? aktivOrg?.slug,
       kind: tenant?.kind,
     });
+    const harPasskey = await brukerHarPasskey(ctx.db, ctx.userId);
     const twoFactorRequired = sessionMeTwoFactorRequired({
-      twoFactorEnabled: bruker?.twoFactorEnabled,
+      harPasskey,
       roles: medlemskap.map((m) => m.role),
     });
     const landing = twoFactorRequired
@@ -222,6 +223,7 @@ export const sessionRouter = router({
       /** Kosmetikk. Sperren er shopProcedure. Fail-safe av. */
       shopEnabled,
       twoFactorRequired,
+      harPasskey,
       kontekst: ctx.kontekst,
     };
   }),

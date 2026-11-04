@@ -117,7 +117,7 @@ describe('F5-19: innstillinger er Konto + Varsler', () => {
     expect(profilFane).toMatch(/bevegelse="stille"/);
     expect(profilFane).not.toMatch(/AvatarVelger/);
     expect(profilFane).toMatch(/ToFaktorRad/);
-    expect(profilFane).toMatch(/twoFactorEnabled/);
+    expect(profilFane).toMatch(/harPasskey/);
     expect(profilFane).not.toMatch(/Mørkt tema/);
     expect(profilFane).not.toMatch(/type=['"]file['"]/);
     expect(profilFane).toMatch(/Ingen filopplasting/);

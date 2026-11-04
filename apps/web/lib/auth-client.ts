@@ -6,7 +6,7 @@ import { createAuthClient } from 'better-auth/react';
 
 /**
  * F1 / F13-03 / F5 — Better-Auth React-klient.
- * Magic link + TOTP. Passkey bare brukt på platform-sonen.
+ * Magic link + passnøkkel. TOTP er fjernet fra flyten.
  */
 export const authClient = createAuthClient({
   plugins: [organizationClient(), twoFactorClient(), magicLinkClient(), passkeyClient()],

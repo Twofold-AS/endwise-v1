@@ -9,7 +9,7 @@ export {
  * Hvor en fersk invitee skal etter ekte sesjon (passord + ev. 2FA).
  * Hard navigasjon (`location.assign`) skjer i kallstedet, ikke her.
  * Myk klientnavigasjon er dobbel-login-bugen.
- * Bedrift uten TOTP tvinges til `/2fa-oppsett`. Sesjonen beholdes.
+ * Bedrift uten passnøkkel tvinges til `/2fa-oppsett`. Sesjonen beholdes.
  */
 export function destinasjonEtterInvite(
   kind: 'owner' | 'staff' | 'platform',

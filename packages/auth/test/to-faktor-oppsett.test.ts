@@ -28,7 +28,7 @@ describe('F1-20: toFaktorStatusTekst', () => {
   const her = dirname(fileURLToPath(import.meta.url));
 
   it('viser På når twoFactorEnabled er true', () => {
-    expect(toFaktorStatusTekst(true)).toBe('På — autentikator-app');
+    expect(toFaktorStatusTekst(true)).toBe('På — passnøkkel');
   });
 
   it('viser Av når twoFactorEnabled er false', () => {
@@ -46,9 +46,9 @@ describe('F1-20: toFaktorStatusTekst', () => {
     expect(kanStarteTotpOppsett(true)).toBe(true);
     expect(kanStarteTotpOppsett(false)).toBe(false);
     const kilde = readFileSync(resolve(her, '../../../apps/web/app/2fa-oppsett/page.tsx'), 'utf8');
-    expect(kilde).toMatch(/TOTP_OPPSETT_INGRESS|kanStarteTotpOppsett/);
+    expect(kilde).toMatch(/addPasskey/);
     expect(kilde).toMatch(/useSession/);
-    expect(kilde).toMatch(/twoFactor\.enable/);
+    expect(kilde).not.toMatch(/twoFactor\.enable/);
     expect(kilde).not.toMatch(/Rollen din krever/);
   });
 });
@@ -76,18 +76,14 @@ describe('F1-23: kvittering før navigasjon', () => {
     // Den gamle feilen: setSteg('ferdig') og location.assign i samme blokk.
     // En kvittering som settes og rives i samme tick, er ingen kvittering.
     const utenKommentarer = kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
-    expect(utenKommentarer).toMatch(/etter2faBekreftet\s*\(/);
     expect(utenKommentarer).toMatch(/fortsettEtter2faKvittering\s*\(/);
     expect(utenKommentarer).toMatch(/location\.assign/);
-
-    // assign skal ikke ligge i bekreft eller i koder-steget. Navigasjon
-    // hører til Fortsett — ellers rekker hverken koder eller kvittering å rendre.
-    const bekreftStart = utenKommentarer.indexOf('async function bekreft');
-    const bekreftSlutt = utenKommentarer.indexOf('function lastNedKoder', bekreftStart);
-    const bekreftBlokk = utenKommentarer.slice(bekreftStart, bekreftSlutt);
-    expect(bekreftBlokk).not.toMatch(/location\.assign/);
-    expect(bekreftBlokk).toMatch(/etter2faKodeBekreftet/);
-    expect(bekreftBlokk).not.toMatch(/etter2faBekreftet\s*\(/);
+    expect(utenKommentarer).toMatch(/setFerdig\(true\)/);
+    const registrerStart = utenKommentarer.indexOf('async function registrer');
+    const registrerSlutt = utenKommentarer.indexOf('function fortsett', registrerStart);
+    const registrerBlokk = utenKommentarer.slice(registrerStart, registrerSlutt);
+    expect(registrerBlokk).not.toMatch(/location\.assign/);
+    expect(utenKommentarer.slice(registrerSlutt)).toMatch(/location\.assign/);
   });
 });
 
@@ -143,19 +139,12 @@ describe('F1-21: gjenopprettingskoder kan ikke hoppes over', () => {
     const kilde = readFileSync(resolve(her, '../../../apps/web/app/2fa-oppsett/page.tsx'), 'utf8');
     const utenKommentarer = kilde.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
 
-    expect(utenKommentarer).toMatch(/etter2faKodeBekreftet\s*\(/);
-    expect(utenKommentarer).toMatch(/kanFullforeKoder\s*\(/);
-    expect(utenKommentarer).toMatch(/plukkBackupKoder\s*\(/);
+    expect(utenKommentarer).toMatch(/addPasskey/);
     expect(utenKommentarer).not.toMatch(/Hopp over/i);
-    expect(utenKommentarer).not.toMatch(/skip/i);
-
-    const fullforStart = utenKommentarer.indexOf('function fullforKoder');
-    expect(fullforStart).toBeGreaterThan(-1);
-    const fullforSlutt = utenKommentarer.indexOf('function fortsett', fullforStart);
-    const fullforBlokk = utenKommentarer.slice(fullforStart, fullforSlutt);
-    expect(fullforBlokk).toMatch(/kanFullforeKoder/);
-    expect(fullforBlokk).toMatch(/etter2faBekreftet/);
-    expect(fullforBlokk).not.toMatch(/location\.assign/);
+    expect(utenKommentarer).not.toMatch(/twoFactor\.enable/);
+    expect(utenKommentarer).toMatch(/function fortsett/);
+    const fortsettStart = utenKommentarer.indexOf('function fortsett');
+    expect(fortsettStart).toBeGreaterThan(-1);
   });
 });
 
@@ -179,7 +168,7 @@ describe('F1-22: selvbetjent slå-av er stengt', () => {
     expect(rad).toMatch(/Be en leder om å tilbakestille/);
     expect(rad).not.toMatch(/type=["']password["']/);
     expect(oppsett).not.toMatch(/twoFactor\.disable/);
-    expect(oppsett).toMatch(/Be en leder om å tilbakestille/);
+    expect(oppsett).toMatch(/addPasskey/);
     expect(oppsett).not.toMatch(/type=["']password["']/);
     expect(oppsett).not.toMatch(/INVALID_PASSWORD/);
   });
@@ -209,7 +198,7 @@ describe('F1-17 / F1-20: delt flate', () => {
       'utf8',
     );
     expect(kilde).toMatch(/ToFaktorRad/);
-    expect(kilde).toMatch(/twoFactorEnabled/);
+    expect(kilde).toMatch(/harPasskey/);
     expect(kilde).not.toMatch(/påslag mangler/);
   });
 });
@@ -219,8 +208,8 @@ describe('F1-25: oppsettsiden gjenbruker innloggingens byggeklosser', () => {
     const her = dirname(fileURLToPath(import.meta.url));
     const kilde = readFileSync(resolve(her, '../../../apps/web/app/2fa-oppsett/page.tsx'), 'utf8');
     expect(kilde).toMatch(/StatefulButton/);
-    expect(kilde).toMatch(/FeltKode/);
-    expect(kilde).toMatch(/from ['"]\.\.\/_auth\/felter['"]/);
+    expect(kilde).toMatch(/addPasskey/);
+    expect(kilde).not.toMatch(/FeltKode/);
     expect(kilde).not.toMatch(/PassordFelt/);
     expect(kilde).not.toMatch(/Bevisst UDESIGNET/);
   });

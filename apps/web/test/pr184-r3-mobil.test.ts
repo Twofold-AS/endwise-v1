@@ -232,9 +232,9 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     const skjema = utenKommentarer(les('../app/signin/signin-skjema.tsx'));
     expect(skjema).toMatch(/FeltInput/);
     expect(skjema).toMatch(/FeltKode/);
-    expect(skjema).toMatch(/SIGNIN_NESTEN_DER/);
     expect(skjema).toMatch(/length=\{5\}/);
-    expect(skjema).toMatch(/length=\{6\}/);
+    expect(skjema).not.toMatch(/length=\{6\}/);
+    expect(skjema).toMatch(/signIn\.passkey|Bruk nøkkel/);
     expect(skjema).toMatch(/loadingText=""/);
     expect(skjema).not.toMatch(/Sender/);
     expect(skjema).not.toMatch(/Bekreftet/);

@@ -344,7 +344,7 @@ function InnloggingNotat({ kan }: { kan: boolean }) {
   }
   return (
     <p className="text-[12px] text-fg-muted">
-      Logger inn med magic link til konto-e-posten + autentikator-app. Ingen passord.
+      Logger inn med magic link til konto-e-posten + passnøkkel. Ingen passord.
     </p>
   );
 }
@@ -367,7 +367,7 @@ function SlaAv2fa({ userId, navn }: { userId: string; navn: string }) {
   return (
     <Seksjon tittel="Slå av 2FA">
       <p className="text-[12px] text-fg-muted">
-        2FA er på. En fersk kode fra din autentikator-app kreves før noe slås av.
+        2FA er på. En leder med passnøkkel kan tilbakestille.
       </p>
       <button
         type="button"

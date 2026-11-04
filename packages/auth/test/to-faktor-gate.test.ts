@@ -35,25 +35,28 @@ describe('F1-11: regelen (uten database)', () => {
     expect(roleRequires2FA('customer')).toBe(true);
   });
 
-  it('uenrollert customer får bruke appen; bedrift krever TOTP', () => {
+  it('uenrollert customer får bruke appen; bedrift krever passnøkkel', () => {
     expect(() =>
-      assertTwoFactorSatisfied({ roles: ['customer'], twoFactorEnabled: false }),
+      assertTwoFactorSatisfied({ roles: ['customer'], harPasskey: false }),
     ).not.toThrow();
     for (const rolle of ['dealer_admin', 'endwise_admin', 'dealer_staff'] as const) {
-      expect(() => assertTwoFactorSatisfied({ roles: [rolle], twoFactorEnabled: false })).toThrow(
+      expect(() => assertTwoFactorSatisfied({ roles: [rolle], harPasskey: false })).toThrow(
         TwoFactorRequiredError,
       );
     }
     for (const verdi of [null, undefined] as const) {
       expect(() =>
-        assertTwoFactorSatisfied({ roles: ['endwise_admin'], twoFactorEnabled: verdi }),
+        assertTwoFactorSatisfied({ roles: ['endwise_admin'], harPasskey: verdi }),
       ).toThrow(TwoFactorRequiredError);
     }
-  });
-
-  it('slipper gjennom 2FA-pliktig rolle MED 2FA', () => {
     expect(() =>
       assertTwoFactorSatisfied({ roles: ['dealer_admin'], twoFactorEnabled: true }),
+    ).toThrow(TwoFactorRequiredError);
+  });
+
+  it('slipper gjennom 2FA-pliktig rolle MED passnøkkel', () => {
+    expect(() =>
+      assertTwoFactorSatisfied({ roles: ['dealer_admin'], harPasskey: true }),
     ).not.toThrow();
   });
 
@@ -141,23 +144,25 @@ describeDb('F1-11: håndhevelse mot ekte medlemskap', () => {
     }
   });
 
-  it('dealer_admin uten 2FA kastes — TOTP er pliktig', async () => {
+  it('dealer_admin uten passnøkkel kastes', async () => {
     await expect(assertTwoFactorForUser(owner, adminUser, false)).rejects.toBeInstanceOf(
       TwoFactorRequiredError,
     );
   });
 
-  it('customer uten 2FA får autorisert sesjon', async () => {
+  it('customer uten passnøkkel får autorisert sesjon', async () => {
     await expect(assertTwoFactorForUser(owner, kundeUser, false)).resolves.toBeUndefined();
   });
 
-  it('kunde hos A + admin hos B krever TOTP', async () => {
+  it('kunde hos A + admin hos B krever passnøkkel', async () => {
     await expect(assertTwoFactorForUser(owner, blandetUser, false)).rejects.toBeInstanceOf(
       TwoFactorRequiredError,
     );
   });
 
-  it('dealer_admin MED 2FA slipper gjennom', async () => {
-    await expect(assertTwoFactorForUser(owner, adminUser, true)).resolves.toBeUndefined();
+  it('dealer_admin med leftover TOTP-flagg kastes uten passnøkkel', async () => {
+    await expect(assertTwoFactorForUser(owner, adminUser, true)).rejects.toBeInstanceOf(
+      TwoFactorRequiredError,
+    );
   });
 });

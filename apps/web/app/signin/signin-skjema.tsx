@@ -6,7 +6,7 @@ import {
   meldingForMagicLinkFeil,
   normaliserMagicLinkKode,
 } from '@endwise/auth/magic-link';
-import { ArrowRight, FeltInput, FeltKode, ShieldCheck, StatefulButton } from '@endwise/ui';
+import { ArrowRight, FeltInput, FeltKode, KeyRound, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -19,13 +19,11 @@ import {
   flateEtterMagicLinkLanding,
   lagreIdentifisertEpost,
   lesIdentifisertEpost,
-  meldingForTotpFeil,
   SIGNIN_ENROLL_STI,
   SIGNIN_FORTSETT,
   SIGNIN_FYLL_KODE,
   SIGNIN_IKKE_DEG,
   SIGNIN_KODE_INGRESS,
-  SIGNIN_NESTEN_DER,
   SIGNIN_STI,
   SIGNIN_VALG_STI,
   SIGNIN_VILKAR,
@@ -36,9 +34,8 @@ import {
 } from './signin-steg';
 
 /**
- * Etter e-post: kode-steg (5 siffer). Magic-lenka er samme engangsbevis.
- * TOTP-app kommer først etter verify av en bruker som allerede har bundet
- * autentikator.
+ * Etter e-post: kode-steg (5 siffer). Andre faktor er passnøkkel,
+ * ikke TOTP. Uenrollert bedrift lander på /2fa-oppsett med sesjon.
  */
 function feilmelding(res: {
   error?: { status?: number; code?: string; message?: string } | null;
@@ -52,53 +49,40 @@ function feilmelding(res: {
   return res.error?.message ?? 'Innlogging feilet';
 }
 
-function settStegIUrl(steg: 'valg' | null) {
-  if (typeof window === 'undefined') return;
-  const dest = steg === 'valg' ? SIGNIN_VALG_STI : SIGNIN_STI;
-  window.history.replaceState(null, '', dest);
-}
-
-function landingTilFlate(steg: string | null, feil: string | null, totpKlar: boolean): SignInFlate {
+function landingTilFlate(steg: string | null, feil: string | null): SignInFlate {
   const neste = flateEtterMagicLinkLanding({
     steg,
     feil,
-    totpKlar,
+    totpKlar: false,
     enrollKlar: false,
   });
   return neste === 'enroll' ? 'valg' : neste;
 }
 
-type SignInHandling = 'fortsett' | 'logg-inn' | 'totp';
+type SignInHandling = 'fortsett' | 'logg-inn' | 'passkey';
 
 const AUTH_FLATE = 'flex flex-col gap-4';
 const AUTH_FORTSETT = 'h-auto w-full py-5';
 
-function landingFeil(steg: string | null, feil: string | null, totpKlar: boolean): string | null {
-  if (steg === 'totp' && totpKlar) return null;
-  if (skalViseErstattetMelding({ steg, feil, totpKlar, enrollKlar: false })) {
+function landingFeil(steg: string | null, feil: string | null): string | null {
+  if (skalViseErstattetMelding({ steg, feil, totpKlar: false, enrollKlar: false })) {
     return MAGIC_LINK_ERSTATTET_MELDING;
   }
   return meldingForMagicLinkFeil(feil);
 }
 
-export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
+export function SignInSkjema() {
   const utils = trpc.useUtils();
   const search = useSearchParams();
   const stegQuery = search?.get('steg') ?? null;
   const feilQuery = search?.get('error') ?? null;
-  const [flate, setFlate] = useState<SignInFlate>(() =>
-    landingTilFlate(stegQuery, feilQuery, totpKlar),
-  );
+  const [flate, setFlate] = useState<SignInFlate>(() => landingTilFlate(stegQuery, feilQuery));
   const [email, setEmail] = useState('');
   const [kode, setKode] = useState('');
-  const [totp, setTotp] = useState('');
-  const [error, setError] = useState<string | null>(() =>
-    landingFeil(stegQuery, feilQuery, totpKlar),
-  );
+  const [error, setError] = useState<string | null>(() => landingFeil(stegQuery, feilQuery));
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [handling, setHandling] = useState<SignInHandling | null>(null);
   const kodeRef = useRef<HTMLDivElement>(null);
-  const totpRef = useRef<HTMLDivElement>(null);
 
   function knappState(hvilken: SignInHandling) {
     return handling === hvilken ? busy : 'idle';
@@ -108,7 +92,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     const neste = flateEtterMagicLinkLanding({
       steg: stegQuery,
       feil: feilQuery,
-      totpKlar,
+      totpKlar: false,
       enrollKlar: false,
     });
     if (neste === 'enroll') {
@@ -116,12 +100,8 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
       return;
     }
     setFlate(neste);
-    if (neste === 'totp') {
-      setError(null);
-      return;
-    }
-    setError(landingFeil(stegQuery, feilQuery, totpKlar));
-  }, [stegQuery, feilQuery, totpKlar]);
+    setError(landingFeil(stegQuery, feilQuery));
+  }, [stegQuery, feilQuery]);
 
   useEffect(() => {
     const lagret = lesIdentifisertEpost();
@@ -130,7 +110,6 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
 
   useEffect(() => {
     if (flate === 'valg') kodeRef.current?.querySelector('input')?.focus();
-    if (flate === 'totp') totpRef.current?.querySelector('input')?.focus();
   }, [flate]);
 
   async function finishSignIn() {
@@ -203,33 +182,25 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     }
   }
 
-  async function onTotp(e: FormEvent) {
-    e.preventDefault();
-    if (!totpKlar) {
-      setError(meldingForTotpFeil({ code: 'TOTP_NOT_ENABLED' }));
-      setFlate('valg');
-      settStegIUrl('valg');
-      setBusy('idle');
-      return;
-    }
-    setHandling('totp');
+  async function onPasskey() {
+    setHandling('passkey');
     setBusy('loading');
     setError(null);
-    const res = await authClient.twoFactor.verifyTotp({ code: totp.trim() });
-    if (res.error) {
-      const melding = meldingForTotpFeil(res.error);
-      setError(melding);
-      setBusy('idle');
-      setTotp('');
-      if (melding.includes('ikke satt opp')) {
-        setFlate('valg');
-        settStegIUrl('valg');
+    try {
+      const klient = authClient as typeof authClient & {
+        signIn: typeof authClient.signIn & {
+          passkey?: (opts?: { autoFill?: boolean }) => Promise<{ error?: unknown }>;
+        };
+      };
+      const inn = await klient.signIn.passkey?.();
+      if (inn?.error) {
+        setBusy('idle');
         return;
       }
-      totpRef.current?.focus();
-      return;
+      await finishSignIn();
+    } catch {
+      setBusy('idle');
     }
-    await finishSignIn();
   }
 
   async function byttKonto() {
@@ -270,6 +241,14 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             >
               {SIGNIN_FORTSETT}
             </StatefulButton>
+            <button
+              type="button"
+              onClick={() => void onPasskey()}
+              className="inline-flex h-12 items-center justify-center gap-2 text-[15px] font-[650] text-fg underline underline-offset-2"
+            >
+              <KeyRound size={16} />
+              Bruk nøkkel
+            </button>
             <p className="pt-1 text-center text-[13px] font-[450] leading-5 text-fg-muted">
               {SIGNIN_VILKAR}{' '}
               <Link
@@ -279,42 +258,6 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
                 Vilkår
               </Link>
             </p>
-          </form>
-        ) : flate === 'totp' ? (
-          <form onSubmit={(e) => void onTotp(e)} className={AUTH_FLATE}>
-            <p className="mb-1 text-center text-title font-[650] text-fg">{SIGNIN_NESTEN_DER}</p>
-            <p className="mb-1 text-center text-body text-fg-muted">
-              Skriv den 6-sifrede koden fra autentikator-appen. Ikke en e-postkode.
-            </p>
-            <div id="signin-totp" data-signin-totp>
-              <FeltKode
-                ref={totpRef}
-                aria-label="App-kode"
-                length={6}
-                value={totp}
-                onChange={setTotp}
-                isInvalid={Boolean(error)}
-              />
-            </div>
-            {error && <p className="text-meta text-danger">{error}</p>}
-            <StatefulButton
-              type="submit"
-              state={knappState('totp')}
-              className={AUTH_FORTSETT}
-              loadingText=""
-              successText=""
-              errorText="Prøv igjen"
-              icon={<ShieldCheck size={15} />}
-            >
-              Bekreft
-            </StatefulButton>
-            <button
-              type="button"
-              onClick={() => void byttKonto()}
-              className="pt-1 text-center text-[15px] font-[650] text-fg underline underline-offset-2"
-            >
-              {SIGNIN_IKKE_DEG}
-            </button>
           </form>
         ) : (
           <form onSubmit={(e) => void onSkrivKode(e)} data-auth-kode-steg className={AUTH_FLATE}>

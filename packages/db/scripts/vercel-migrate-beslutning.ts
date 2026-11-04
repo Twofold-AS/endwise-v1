@@ -1,8 +1,9 @@
 /**
  * Avgjør om vercel-migrate skal kjøre, hoppe over, eller stoppe bygget.
  * Turbo 2 strict-mode stripper env som ikke er i globalEnv / passThroughEnv.
- * VERCEL_ENV er i globalEnv; DATABASE_URL må sendes via globalPassThroughEnv
+ * VERCEL_ENV er i globalEnv; DATABASE_URL må sendes via build.passThroughEnv
  * (ikke globalEnv — hemmeligheten skal ikke inn i cache-nøkkelen).
+ * Ikke globalPassThroughEnv: da kjører Docker-RLS-tester i CI som superuser.
  */
 export type VercelMigrateMiljo = {
   DATABASE_URL?: string;
@@ -34,7 +35,7 @@ export function vercelMigrateBeslutning(env: VercelMigrateMiljo): VercelMigrateB
       return {
         handling: 'stopp',
         grunn:
-          'DATABASE_URL mangler på Vercel production — Turbo må sende den gjennom (globalPassThroughEnv)',
+          'DATABASE_URL mangler på Vercel production — Turbo må sende den gjennom (build.passThroughEnv)',
       };
     }
     return { handling: 'hopp', grunn: 'DATABASE_URL mangler' };

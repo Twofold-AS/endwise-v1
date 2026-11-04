@@ -25,7 +25,7 @@ describe('vercelMigrateBeslutning', () => {
     expect(ut.handling).toBe('stopp');
     if (ut.handling === 'stopp') {
       expect(ut.grunn).toMatch(/DATABASE_URL mangler/);
-      expect(ut.grunn).toMatch(/globalPassThroughEnv/);
+      expect(ut.grunn).toMatch(/passThroughEnv/);
     }
   });
 
@@ -73,15 +73,16 @@ describe('vercelMigrateBeslutning', () => {
 });
 
 describe('turbo slipper DATABASE_URL gjennom uten å hashe den', () => {
-  it('globalPassThroughEnv inneholder DATABASE_URL, ikke globalEnv', () => {
+  it('build.passThroughEnv inneholder DATABASE_URL, ikke globalEnv', () => {
     const turbo = readFileSync(resolve(her, '../../../turbo.json'), 'utf8');
-    expect(turbo).toMatch(/"globalPassThroughEnv"/);
+    expect(turbo).toMatch(/"passThroughEnv"/);
     expect(turbo).toMatch(/"DATABASE_URL"/);
+    expect(turbo).not.toMatch(/"globalPassThroughEnv"/);
     const parsed = JSON.parse(turbo) as {
       globalEnv?: string[];
-      globalPassThroughEnv?: string[];
+      tasks?: { build?: { passThroughEnv?: string[] } };
     };
-    expect(parsed.globalPassThroughEnv).toEqual(
+    expect(parsed.tasks?.build?.passThroughEnv).toEqual(
       expect.arrayContaining(['DATABASE_URL', 'VERCEL', 'ENDWISE_GA_LIVE']),
     );
     expect(parsed.globalEnv ?? []).not.toContain('DATABASE_URL');

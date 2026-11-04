@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-04 — F38-05 Prod-bygg 0045 seed før FORCE RLS
+
+**Type:** hotfix etter #208. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** Mikael (prod-bygg rødt, ingen approval, squash-merge når CI er grønn).
+**Endring:** Ny **F38-05** `done`. 0045 INSERT i `reserverte_slugs` før ENABLE/FORCE RLS.
+
+---
+
 ## 2026-11-04 — F38-04 Prod-login migrate faktisk kjøres
 
 **Type:** hotfix etter #207. Ingen ny UI-pakke. Ingen techstack-endring.

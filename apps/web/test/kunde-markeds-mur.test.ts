@@ -44,6 +44,7 @@ describe('F41-09: uinnlogget <sub>.endwise.no er markedsside', () => {
       const kilde = les(`../app/%5Fkunde/[slug]/${side}/page.tsx`);
       expect(kilde).toMatch(/krevKundeInnlogging/);
     }
+    expect(les('../app/%5Fkunde/_lib/sesjon.ts')).toMatch(/redirect\('\/logg-inn' as Route\)/);
     expect(les('../app/%5Fkunde/[slug]/logg-inn/page.tsx')).not.toMatch(/krevKundeInnlogging/);
     expect(les('../app/%5Fkunde/[slug]/personvern/page.tsx')).not.toMatch(/krevKundeInnlogging/);
   });

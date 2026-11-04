@@ -27,12 +27,19 @@ function krevPlatformSone(ctx: AppContext) {
  * Trpc v11 for interne flater (admin-/forhandler-dashboard, mekaniker-PWA).
  * Offentlig REST (widget, Quick, webhooks) går via Hono — se src/routes/.
  */
+/** Drizzle-skall — aldri SQL/params til klienten. */
+export function sanitiserTrpcMelding(melding: string): string | null {
+  const m = melding ?? '';
+  if (m.startsWith('Failed query:') || m.includes('params:') || m.includes('SQLSTATE')) {
+    return 'Noe gikk galt. Prøv igjen.';
+  }
+  return null;
+}
+
 const t = initTRPC.context<AppContext>().create({
   errorFormatter({ shape }) {
-    const m = shape.message ?? '';
-    if (/^Failed query:|params:|SQLSTATE/i.test(m)) {
-      return { ...shape, message: 'Noe gikk galt. Prøv igjen.' };
-    }
+    const vennlig = sanitiserTrpcMelding(shape.message ?? '');
+    if (vennlig) return { ...shape, message: vennlig };
     return shape;
   },
 });

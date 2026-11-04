@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { sanitiserTrpcMelding } from '../src/trpc/init.ts';
 import { mapOnboardingPostgresFeil, oppstartFeilMelding } from '../src/trpc/oppstart-postgres.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
@@ -31,6 +32,20 @@ describe('F41-10: beOmKode er nøytral og tenant-bundet', () => {
     expect(skjema).toMatch(/Hvis kontoen finnes, får du en kode på e-post\./);
     expect(skjema).toMatch(/setSteg\('kode'\)/);
     expect(skjema).not.toMatch(/signIn\.magicLink/);
+  });
+});
+
+describe('F41-07: tRPC lekker ikke Failed query', () => {
+  it('sanitiserTrpcMelding fanger Drizzle-skall uten delvis forankret regex', () => {
+    expect(sanitiserTrpcMelding('Failed query: insert into "tenant_branding"')).toBe(
+      'Noe gikk galt. Prøv igjen.',
+    );
+    expect(sanitiserTrpcMelding('noe params: :abc')).toBe('Noe gikk galt. Prøv igjen.');
+    expect(sanitiserTrpcMelding('SQLSTATE 42501')).toBe('Noe gikk galt. Prøv igjen.');
+    expect(sanitiserTrpcMelding('Kunne ikke lagre verkstedet. Prøv igjen.')).toBeNull();
+    const init = les('../src/trpc/init.ts');
+    expect(init).toMatch(/startsWith\('Failed query:'\)/);
+    expect(init).not.toMatch(/\^Failed query:/);
   });
 });
 

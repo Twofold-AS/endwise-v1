@@ -243,7 +243,7 @@ export function createAuth(
         verifyOTP: async ({ phoneNumber: to, code }) => verifyPhoneOtp(to, code),
       }),
 
-      // Magic link (innboks) + TOTP-app. Ingen e-post-OTP — da holder
+      // Magic link (innboks) + leftover twoFactor-tabell. Ingen e-post-OTP — da holder
       // stjålet mailbox. allowPasswordless: credential-hashene er tømt.
       // Ingen sendOTP → otp kommer ikke med i twoFactorMethods.
       twoFactor({
@@ -289,10 +289,8 @@ export function createAuth(
         },
       }),
 
-      // Passkey bare på platform-sonen (F5). Forhandler-instansen
-      // uendret. Plugin lastes dynamisk så forhandler-tester ikke
-      // krever pakken ved import-tid.
-      ...(platform ? [passkeyPlugin()] : []),
+      // Passnøkkel på alle soner. rpID følger verten (app / platform / slug).
+      passkeyPlugin({ sone, slug: opts?.slug }),
     ],
 
     advanced: {

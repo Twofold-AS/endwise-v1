@@ -79,7 +79,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
     const hook = readFileSync(resolve(her, '../src/magic-link-2fa.ts'), 'utf8');
     const utenKommentar = hook.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
     expect(utenKommentar).toMatch(/etterMagicLinkVerify/);
-    expect(utenKommentar).toMatch(/erTotpFaktiskBundet/);
+    expect(utenKommentar).toMatch(/brukerHarPasskey/);
     expect(utenKommentar).toMatch(/MAGIC_LINK_APP_LANDING/);
     expect(utenKommentar).not.toMatch(/startEnroll/);
     expect(utenKommentar).not.toMatch(/ENROLL_COOKIE_NAME/);
@@ -92,10 +92,10 @@ describe('magic link + TOTP (Mons-lås)', () => {
     });
   });
 
-  it('enrollert verify river sesjon og setter TOTP-mur', () => {
+  it('enrollert passnøkkel beholder sesjon — aldri TOTP-mur', () => {
     expect(etterMagicLinkVerify(true)).toEqual({
-      handling: 'totp-mur',
-      dest: `${MAGIC_LINK_CALLBACK}?${MAGIC_LINK_TOTP_QUERY}`,
+      handling: 'behold-sesjon',
+      dest: MAGIC_LINK_APP_LANDING,
     });
     expect(MAGIC_LINK_2FA_HOOK_ID).toBe('magic-link-krever-totp');
     expect(MAGIC_LINK_VERIFY_STI).toBe('/magic-link/verify');
@@ -106,7 +106,8 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(hook).toMatch(/erOmdirigering/);
     expect(hook).toMatch(/deleteSessionCookie/);
     expect(hook).toMatch(/setNewSession\(null\)/);
-    expect(hook).toMatch(/MAGIC_LINK_TOTP_QUERY/);
+    expect(hook).toMatch(/brukerHarPasskey/);
+    expect(hook).not.toMatch(/totp-mur/);
     expect(hook).not.toMatch(/setSessionCookie/);
   });
 
@@ -206,7 +207,8 @@ describe('magic link + TOTP (Mons-lås)', () => {
       'utf8',
     );
     expect(signin).toMatch(/signIn\.magicLink/);
-    expect(signin).toMatch(/verifyTotp/);
+    expect(signin).toMatch(/signIn\.passkey/);
+    expect(signin).not.toMatch(/verifyTotp/);
     expect(signin).toMatch(/SIGNIN_FYLL_KODE|Fyll inn kode/);
     expect(signin).toMatch(/SIGNIN_IKKE_DEG|Ikke deg/);
     expect(signin).not.toMatch(/Velkommen tilbake/);
@@ -214,12 +216,12 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(signin).toMatch(/authClient\.magicLink\.verify/);
     expect(signin).not.toMatch(/type=["']password["']/);
     expect(signin).not.toMatch(/verifyOtp|sendOtp/);
-    expect(oppsett).toMatch(/twoFactor\.enable/);
-    expect(oppsett).toMatch(/verifyTotp/);
+    expect(oppsett).toMatch(/addPasskey/);
+    expect(oppsett).not.toMatch(/twoFactor\.enable/);
+    expect(oppsett).not.toMatch(/verifyTotp/);
     expect(oppsett).not.toMatch(/type=["']password["']/);
     expect(oppsett).not.toMatch(/sendOtp/);
     expect(oppsett).toMatch(/MAGIC_LINK_ENROLL_UTEN_SESJON/);
-    expect(oppsett).toMatch(/samme\s+innboks/);
     expect(oppsett).not.toMatch(/Innloggingslenken må åpnes først/);
     expect(oppsett).not.toMatch(/Rollen din krever/);
     expect(oppsett).toMatch(/useSession/);

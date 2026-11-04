@@ -1,10 +1,12 @@
 import { type Database, eq, schema } from '@endwise/db';
 import { symmetricDecrypt } from 'better-auth/crypto';
+import { brukerHarPasskey } from './plattform-passkey.ts';
 import { krevFerskTotpFraBody, TOTP_STEP_UP_KODE, TOTP_STEP_UP_MELDING } from './totp-steg.ts';
 import { verifiserTotpKode } from './totp-verify.ts';
 
 /**
- * TOTP-step-up uten Better-Auth-hook-ctx (tRPC: e-postbytte, leder-reset).
+ * Step-up uten Better-Auth-hook-ctx (tRPC: e-postbytte, leder-reset).
+ * Passnøkkel + innlogget sesjon er andre faktor. TOTP er leftover.
  */
 export async function verifiserFerskTotpForBruker(
   db: Database,
@@ -12,6 +14,7 @@ export async function verifiserFerskTotpForBruker(
   body: unknown,
   secretKey: string,
 ): Promise<void> {
+  if (await brukerHarPasskey(db, userId)) return;
   const totp = krevFerskTotpFraBody(body);
   const [twoFactor] = await db
     .select({ secret: schema.twoFactor.secret })

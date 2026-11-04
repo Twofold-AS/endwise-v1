@@ -1,6 +1,6 @@
 /**
  * F26 / white label F7 — Privat/Bedrift.
- * Kontekst bor på sesjonsraden, ikke i cookien. Bedrift krever ferskt TOTP.
+ * Kontekst bor på sesjonsraden, ikke i cookien. Bedrift krever passnøkkel.
  * Utløpt vindu faller til Privat, ikke ut.
  */
 
@@ -42,24 +42,30 @@ export function bedriftUtloperAt(now: Date = new Date(), verifisertAt: Date = no
 /** Ingen rolle → kundeside. Rolle → valg. Bedrift bare med vindu. */
 export function landingEtterKode(input: {
   harRolle: boolean;
-  totpBundet: boolean;
+  totpBundet?: boolean;
+  harPasskey?: boolean;
   whiteLabel: boolean;
   sone?: 'forhandler' | 'platform' | 'app' | null;
 }): '/min-side' | '/2fa-oppsett' | '/home' | '/' {
+  const bundet = input.harPasskey === true;
   if (!input.whiteLabel) return '/';
   if (input.sone === 'app') {
     if (!input.harRolle) return '/';
-    if (!input.totpBundet) return '/2fa-oppsett';
+    if (!bundet) return '/2fa-oppsett';
     return '/home';
   }
   if (!input.harRolle) return '/min-side';
   if (input.sone === 'forhandler') return '/min-side';
-  if (!input.totpBundet) return '/2fa-oppsett';
+  if (!bundet) return '/2fa-oppsett';
   return '/home';
 }
 
-export function kanAapneBedrift(input: { harRolle: boolean; totpBundet: boolean }): boolean {
-  return input.harRolle && input.totpBundet;
+export function kanAapneBedrift(input: {
+  harRolle: boolean;
+  totpBundet?: boolean;
+  harPasskey?: boolean;
+}): boolean {
+  return input.harRolle && input.harPasskey === true;
 }
 
 export function harBedriftCsrf(headers: Headers | null | undefined): boolean {

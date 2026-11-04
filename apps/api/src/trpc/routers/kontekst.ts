@@ -3,6 +3,7 @@ import {
   authEnv,
   BEDRIFT_CSRF_HEADER,
   bedriftUtloperAt,
+  brukerHarPasskey,
   byggSesjonKake,
   IDLE_TIMEOUT_SECONDS,
   KONTEKST_AUDIT,
@@ -48,17 +49,11 @@ export const kontekstRouter = router({
       const til = input.til;
       const rolleOk = await harRolleHos(ctx.db, ctx.tenantId, ctx.userId);
       if (til === 'bedrift') {
-        const [bruker] = await ctx.db
-          .select({ twoFactorEnabled: schema.user.twoFactorEnabled })
-          .from(schema.user)
-          .where(eq(schema.user.id, ctx.userId))
-          .limit(1);
-        if (
-          !kanAapneBedrift({ harRolle: rolleOk, totpBundet: bruker?.twoFactorEnabled === true })
-        ) {
+        const harPasskey = await brukerHarPasskey(ctx.db, ctx.userId);
+        if (!kanAapneBedrift({ harRolle: rolleOk, harPasskey })) {
           throw new TRPCError({
             code: 'FORBIDDEN',
-            message: 'Bedrift krever rolle og tofaktor.',
+            message: 'Bedrift krever rolle og passnøkkel.',
           });
         }
         await verifiserFerskTotpForBruker(ctx.db, ctx.userId, input, authEnv.secret);

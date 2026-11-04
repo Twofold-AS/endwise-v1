@@ -1,9 +1,10 @@
 import { type Database, eq, schema } from '@endwise/db';
+import { brukerHarPasskey } from './plattform-passkey.ts';
 import { ROLES_REQUIRING_2FA } from './rbac.ts';
 
 /**
- * TOTP-status mot sesjon. Bedrift og inviterte ansatte krever TOTP
- * før tilgang. Customer uten TOTP er ikke pliktig.
+ * Andre faktor mot sesjon. Bedrift og inviterte ansatte krever passnøkkel
+ * før tilgang. Customer uten nøkkel er ikke pliktig. TOTP teller ikke.
  * Bundet TOTP (flagg + rad + verified) håndheves ved neste magic-link-verify.
  * Hvorfor `twoFactorEnabled` er nok til å bety «fullførte 2FA»
  * Better-Auth oppretter ikke en sesjon ved passord-innlogging når kontoen har
@@ -80,23 +81,25 @@ function bedriftRoller(roles: readonly string[]): string[] {
 
 export function assertTwoFactorSatisfied(input: {
   roles: readonly string[];
-  twoFactorEnabled: boolean | null | undefined;
+  harPasskey?: boolean | null;
+  twoFactorEnabled?: boolean | null;
 }): void {
   const pliktige = bedriftRoller(input.roles);
   if (pliktige.length === 0) return;
-  if (input.twoFactorEnabled === true) return;
+  if (input.harPasskey === true) return;
   throw new TwoFactorRequiredError(pliktige);
 }
 
 /**
- * `session.me.twoFactorRequired` — bedrift uten TOTP må til /2fa-oppsett.
- * Sesjonen beholdes. Customer uten TOTP er ikke pliktig.
+ * `session.me.twoFactorRequired` — bedrift uten passnøkkel må til /2fa-oppsett.
+ * TOTP teller ikke. Sesjonen beholdes. Customer uten nøkkel er ikke pliktig.
  */
 export function sessionMeTwoFactorRequired(input?: {
+  harPasskey?: boolean | null;
   twoFactorEnabled?: boolean | null;
   roles?: readonly string[];
 }): boolean {
-  if (input?.twoFactorEnabled === true) return false;
+  if (input?.harPasskey === true) return false;
   return bedriftRoller(input?.roles ?? []).length > 0;
 }
 
@@ -109,14 +112,15 @@ export function sessionMeTwoFactorRequired(input?: {
 export async function assertTwoFactorForUser(
   db: Database,
   userId: string,
-  twoFactorEnabled: boolean | null | undefined,
+  _twoFactorEnabled?: boolean | null,
 ): Promise<void> {
   const rader = await db
     .select({ role: schema.member.role })
     .from(schema.member)
     .where(eq(schema.member.userId, userId));
+  const harPasskey = await brukerHarPasskey(db, userId);
   assertTwoFactorSatisfied({
     roles: rader.map((r) => r.role),
-    twoFactorEnabled,
+    harPasskey,
   });
 }

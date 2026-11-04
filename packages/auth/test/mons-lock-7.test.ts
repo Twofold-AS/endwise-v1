@@ -107,14 +107,14 @@ describe('Mons lock 1–7 (ikke merge før disse er grønne)', () => {
     expect(les('../src/session.ts')).toMatch(/assertTwoFactorForUser/);
   });
 
-  it('6) customer i ROLES_REQUIRING_2FA — bedrift uten TOTP kastes', () => {
+  it('6) customer i ROLES_REQUIRING_2FA — bedrift uten passnøkkel kastes', () => {
     expect([...ROLES_REQUIRING_2FA]).toContain('customer');
     expect(() =>
-      assertTwoFactorSatisfied({ roles: ['customer'], twoFactorEnabled: false }),
+      assertTwoFactorSatisfied({ roles: ['customer'], harPasskey: false }),
     ).not.toThrow();
-    expect(() =>
-      assertTwoFactorSatisfied({ roles: ['dealer_admin'], twoFactorEnabled: false }),
-    ).toThrow(TwoFactorRequiredError);
+    expect(() => assertTwoFactorSatisfied({ roles: ['dealer_admin'], harPasskey: false })).toThrow(
+      TwoFactorRequiredError,
+    );
     expect(TwoFactorRequiredError).toBeDefined();
   });
 

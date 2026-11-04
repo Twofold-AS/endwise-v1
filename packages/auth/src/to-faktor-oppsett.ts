@@ -90,14 +90,13 @@ export function fortsettEtter2faKvittering(landing?: string | null): { destinasj
 
 export function toFaktorStatusTekst(enabled: boolean | undefined): string {
   if (enabled === undefined) return '—';
-  return enabled ? 'På — autentikator-app' : 'Av';
+  return enabled ? 'På — passnøkkel' : 'Av';
 }
 
 export const TO_FAKTOR_OPPSETT_STI = '/2fa-oppsett';
 
-/** Valgfritt senere — ikke «rollen din krever» / nå-eller-aldri. */
-export const TOTP_OPPSETT_INGRESS =
-  'Du kan slå på autentikator-app her. Det er valgfritt — ikke påkrevd nå.';
+/** Valgfritt for kunder — bedrift tvinges ved første innlogging. */
+export const TOTP_OPPSETT_INGRESS = 'Du kan slå på en passnøkkel her. Det er valgfritt for kunder.';
 
 export function kanStarteTotpOppsett(harInnloggetSesjon: boolean): boolean {
   return harInnloggetSesjon === true;

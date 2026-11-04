@@ -1,8 +1,7 @@
 /**
- * Innlogging etter identifisert e-post: kode-steg, ikke TOTP-vegg.
+ * Innlogging etter identifisert e-post: kode-steg. Andre faktor er passnøkkel.
  * Magic-lenka og den manuelle 5-sifrede koden er samme engangsbevis.
- * TOTP-flaten vises bare når Better-Auth allerede har satt two_factor-kaken
- * (appen er bundet). Uenrollert lander aldri på TOTP-flaten.
+ * TOTP-flaten er fjernet. `steg=totp` er leftover-query og blir kode-steg.
  */
 
 /** Heading fjernet (CODE-GO 11.09.2026) — OTP-flyten står. */
@@ -31,7 +30,7 @@ export const SIGNIN_VALG_BYTT_KONTO = SIGNIN_IKKE_DEG;
 export const SIGNIN_VALG_LOGG_INN = SIGNIN_FORTSETT;
 export const SIGNIN_VALG_SEND_NYTT = 'Send på nytt';
 
-export type SignInFlate = 'epost' | 'valg' | 'totp';
+export type SignInFlate = 'epost' | 'valg';
 export type SignInEtterLenke = SignInFlate | 'enroll';
 
 /**
@@ -70,17 +69,14 @@ export function flateEtterMagicLinkLanding(input: {
   totpKlar: boolean;
   enrollKlar: boolean;
 }): SignInEtterLenke {
-  const denneVerify = input.steg === 'totp';
-  if (denneVerify && input.totpKlar) return 'totp';
   if (input.feil) return 'valg';
-  return signInFlateFraQuery(input.steg, { totpKlar: false });
+  return signInFlateFraQuery(input.steg);
 }
 
 export function signInFlateFraQuery(
   steg: string | null | undefined,
-  opts?: { totpKlar?: boolean },
+  _opts?: { totpKlar?: boolean },
 ): SignInFlate {
-  if (steg === 'totp' && opts?.totpKlar === true) return 'totp';
   if (steg === 'valg' || steg === 'sendt' || steg === 'totp') return 'valg';
   return 'epost';
 }

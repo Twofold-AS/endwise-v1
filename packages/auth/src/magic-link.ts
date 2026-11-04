@@ -1,7 +1,7 @@
 /**
  * Magic link-innlogging (erstatter passord).
  * Lenka og den manuelle koden er SAMME engangsbevis for innboks.
- * Andre faktor etter enrollment er TOTP-app — ikke e-postkode.
+ * Andre faktor etter enrollment er passnøkkel — ikke TOTP.
  */
 
 export const MAGIC_LINK_TTL_SEKUNDER = 600;
@@ -31,7 +31,7 @@ export const MAGIC_LINK_ERSTATTET_MELDING =
   'Lenken er utløpt eller erstattet. Åpne den nyeste e-posten fra Endwise.';
 
 export const MAGIC_LINK_ENROLL_UTEN_SESJON =
-  'Logg inn først. Autentikator slår du på når du er inne.';
+  'Logg inn først. Passnøkkel slår du på når du er inne.';
 
 export function genererMagicLinkKode(): string {
   const bytes = new Uint8Array(MAGIC_LINK_KODE_LENGDE);

@@ -45,30 +45,34 @@ describe('F26 / white label F7: Privat/Bedrift', () => {
   });
 
   it('landing: kunde → min-side, app-ansatt → 2FA eller home', () => {
-    expect(landingEtterKode({ harRolle: false, totpBundet: false, whiteLabel: true })).toBe(
+    expect(landingEtterKode({ harRolle: false, harPasskey: false, whiteLabel: true })).toBe(
       '/min-side',
     );
     expect(
       landingEtterKode({
         harRolle: true,
-        totpBundet: false,
+        harPasskey: false,
         whiteLabel: true,
         sone: 'forhandler',
       }),
     ).toBe('/min-side');
     expect(
-      landingEtterKode({ harRolle: true, totpBundet: false, whiteLabel: true, sone: 'app' }),
+      landingEtterKode({ harRolle: true, harPasskey: false, whiteLabel: true, sone: 'app' }),
     ).toBe('/2fa-oppsett');
     expect(
       landingEtterKode({ harRolle: true, totpBundet: true, whiteLabel: true, sone: 'app' }),
+    ).toBe('/2fa-oppsett');
+    expect(
+      landingEtterKode({ harRolle: true, harPasskey: true, whiteLabel: true, sone: 'app' }),
     ).toBe('/home');
-    expect(landingEtterKode({ harRolle: true, totpBundet: true, whiteLabel: false })).toBe('/');
+    expect(landingEtterKode({ harRolle: true, harPasskey: true, whiteLabel: false })).toBe('/');
   });
 
-  it('Bedrift krever rolle og TOTP', () => {
-    expect(kanAapneBedrift({ harRolle: true, totpBundet: true })).toBe(true);
-    expect(kanAapneBedrift({ harRolle: true, totpBundet: false })).toBe(false);
-    expect(kanAapneBedrift({ harRolle: false, totpBundet: true })).toBe(false);
+  it('Bedrift krever rolle og passnøkkel', () => {
+    expect(kanAapneBedrift({ harRolle: true, harPasskey: true })).toBe(true);
+    expect(kanAapneBedrift({ harRolle: true, totpBundet: true })).toBe(false);
+    expect(kanAapneBedrift({ harRolle: true, harPasskey: false })).toBe(false);
+    expect(kanAapneBedrift({ harRolle: false, harPasskey: true })).toBe(false);
   });
 
   it('CSRF-header er krevd og fast', () => {
@@ -106,7 +110,8 @@ describe('F26 / white label F7: Privat/Bedrift', () => {
       handling: 'behold-sesjon',
       dest: MAGIC_LINK_APP_LANDING,
     });
-    expect(etterMagicLinkVerify(true).handling).toBe('totp-mur');
+    expect(etterMagicLinkVerify(true).handling).toBe('behold-sesjon');
+    expect(etterMagicLinkVerify(true).dest).toBe(MAGIC_LINK_APP_LANDING);
     expect(etterMagicLinkVerify(true, { aktiv: true, harRolle: true }).handling).toBe(
       'behold-sesjon',
     );

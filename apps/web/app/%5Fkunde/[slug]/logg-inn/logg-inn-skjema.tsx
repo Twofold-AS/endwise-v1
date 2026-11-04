@@ -1,7 +1,7 @@
 'use client';
 
 import { erMagicLinkKode, normaliserMagicLinkKode } from '@endwise/auth/magic-link';
-import { ArrowRight, FeltInput, FeltKode, StatefulButton } from '@endwise/ui';
+import { ArrowRight, FeltInput, FeltKode, KeyRound, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
@@ -104,6 +104,27 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
     );
   }
 
+  async function onPasskey() {
+    setError(null);
+    setBusy('loading');
+    try {
+      const klient = authClient as typeof authClient & {
+        signIn: typeof authClient.signIn & {
+          passkey?: (opts?: { autoFill?: boolean }) => Promise<{ error?: unknown }>;
+        };
+      };
+      const inn = await klient.signIn.passkey?.();
+      if (inn?.error) {
+        setError(null);
+        setBusy('idle');
+        return;
+      }
+      window.location.assign('/min-side');
+    } catch {
+      setBusy('idle');
+    }
+  }
+
   return (
     <form onSubmit={(e) => void onIdent(e)} className="flex flex-col gap-4" data-kunde-logg-inn>
       <FeltInput
@@ -129,6 +150,14 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
       >
         {FORTSETT}
       </StatefulButton>
+      <button
+        type="button"
+        onClick={() => void onPasskey()}
+        className="inline-flex h-12 items-center justify-center gap-2 text-[15px] font-[650] text-fg underline underline-offset-2"
+      >
+        <KeyRound size={16} />
+        Bruk nøkkel
+      </button>
     </form>
   );
 }

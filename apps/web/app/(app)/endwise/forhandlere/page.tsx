@@ -24,7 +24,7 @@ import { NivaaValg, TilleggListe, tilleggForNivaa, tilleggNokler } from '../_pak
 /**
  * Forhandlere. Invite-only onboarding.
  * Admin velger ett nivå (tiers) og krysser av tillegg som ikke allerede
- * ligger i pakken. Eieren logger inn med magic link + TOTP og går gjennom veiviseren.
+ * ligger i pakken. Eieren logger inn med magic link + passnøkkel og går gjennom veiviseren.
  * Endwise-tenanten kan ikke inviteres på nytt, slettes eller få ny pakke.
  */
 type SlettSteg = 'advarsel' | 'bekreft';
@@ -190,7 +190,7 @@ export default function ForhandlerePage() {
         <p className="text-title text-fg">Forhandlere</p>
         <p className="text-body text-fg-muted">
           {isEndwiseAdmin
-            ? 'Invite-only. Velg én pakke. Tillegg under er utenom pakken. Eieren logger inn med magic link + TOTP selv — du setter det aldri.'
+            ? 'Invite-only. Velg én pakke. Tillegg under er utenom pakken. Eieren logger inn med magic link + passnøkkel selv — du setter det aldri.'
             : 'Kun lesing. Åpne et verksted uten å bytte organisasjon.'}
         </p>
       </div>
@@ -267,7 +267,7 @@ export default function ForhandlerePage() {
                 {opprett.data?.invite.sendt
                   ? ''
                   : ' — sendingen feilet, bruk Send invitasjon på nytt'}
-                . Eieren logger inn med magic link + TOTP og går gjennom veiviseren.
+                . Eieren logger inn med magic link + passnøkkel og går gjennom veiviseren.
               </p>
             )}
 

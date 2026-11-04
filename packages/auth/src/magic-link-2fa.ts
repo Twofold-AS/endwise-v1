@@ -1,35 +1,25 @@
-import { randomBytes } from 'node:crypto';
 import { type Database, eq, schema } from '@endwise/db';
 import { createAuthMiddleware } from 'better-auth/api';
 import { deleteSessionCookie } from 'better-auth/cookies';
 import { lesAuthTenantId } from './auth-request.ts';
 import { BYTT_PASSORD_ETTER_HOOK_ID } from './bytt-passord.ts';
 import { createByttPassordEtterHook } from './bytt-passord-server.ts';
-import { TWO_FACTOR_COOKIE_NAME } from './faktor-kaker.ts';
 import { harBedriftRolle, harForhandlerRolle, knyttKundeUser } from './forhandler-konto.ts';
 import {
   MAGIC_LINK_APP_LANDING,
-  MAGIC_LINK_CALLBACK,
   MAGIC_LINK_ENROLL_STI,
-  MAGIC_LINK_TOTP_QUERY,
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
+import { brukerHarPasskey } from './plattform-passkey.ts';
 import { sendVelkomstEtterKnytning } from './senders/velkomst.ts';
 import type { AuthSone } from './sone.ts';
 
 /**
- * Better-Auths twoFactor-plugin lytter bare på `/sign-in/email` (osv.).
- * Enrollert TOTP: river sesjonen, setter two_factor-kake, krever app-kode.
- * Uenrollert: BEHOLDER app-sesjonen og sender inn i appen. Autentikator
- * er valgfri og senere — ikke på første innlogging.
- *
- * Enrollert TOTP = twoFactorEnabled OG en two_factor-rad med secret
- * OG verified !== false. Leftover enable() uten QR er ubundet.
+ * Etter magic-link-verify: behold sesjon. Bedrift uten passnøkkel → /2fa-oppsett.
+ * Aldri TOTP-mur. Forhandler uten medlemskap: riv sesjon.
  */
 
-export type MagicLinkEtterVerify =
-  | { handling: 'behold-sesjon'; dest: string }
-  | { handling: 'totp-mur'; dest: string };
+export type MagicLinkEtterVerify = { handling: 'behold-sesjon'; dest: string };
 
 /** Forhandler-verify: sesjon bare ved kunde hos DENNE tenanten eller ansatt. */
 export function forhandlerVerifyMedlemskap(input: {
@@ -42,7 +32,7 @@ export function forhandlerVerifyMedlemskap(input: {
   return 'riv';
 }
 
-/** Ren avgjørelse etter magic-link-verify. Ingen sideeffekter. */
+/** Ren avgjørelse etter magic-link-verify. Ingen sideeffekter. Aldri TOTP-mur. */
 export function etterMagicLinkVerify(
   bundet: boolean,
   wl?: { aktiv: boolean; harRolle: boolean; kreverTotp?: boolean },
@@ -52,17 +42,13 @@ export function etterMagicLinkVerify(
     if (!bundet) return { handling: 'behold-sesjon', dest: MAGIC_LINK_ENROLL_STI };
     return { handling: 'behold-sesjon', dest: '/velg' };
   }
-  if (bundet) {
-    return { handling: 'totp-mur', dest: `${MAGIC_LINK_CALLBACK}?${MAGIC_LINK_TOTP_QUERY}` };
-  }
-  if (wl?.kreverTotp) {
+  if (wl?.kreverTotp && !bundet) {
     return { handling: 'behold-sesjon', dest: MAGIC_LINK_ENROLL_STI };
   }
   return { handling: 'behold-sesjon', dest: MAGIC_LINK_APP_LANDING };
 }
 export const MAGIC_LINK_2FA_HOOK_ID = 'magic-link-krever-totp';
 
-const TWO_FACTOR_COOKIE_MAX_AGE = 600;
 const AUTH_NO_STORE = 'private, no-store, no-cache, must-revalidate';
 
 export { TWO_FACTOR_COOKIE_NAME, utlopFaktorKaker } from './faktor-kaker.ts';
@@ -93,47 +79,6 @@ async function rivSesjon(ctx: HookCtx) {
   ctx.context.setNewSession(null);
 }
 
-function kakeAttributter(cookie: { attributes?: { secure?: boolean; maxAge?: number } }) {
-  return {
-    ...cookie.attributes,
-    path: '/',
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: cookie.attributes?.secure ?? true,
-  };
-}
-
-/**
- * better-call 1.4.0: setSignedCookie og ctx.redirect deler samme
- * response-headers — Set-Cookie overlever throw FOUND. Vi tvinger
- * path=/, Secure, SameSite=Lax, HttpOnly (prefix endwise) og no-store
- * på 302. Finnes kaker på ctx.headers, returnerer vi 302 Response
- * eksplisitt så en fremtidig better-call ikke dropper dem.
- */
-async function settKakeOgOmdiriger(
-  ctx: HookCtx,
-  cookie: { name: string; attributes?: { secure?: boolean; maxAge?: number } },
-  identifier: string,
-  dest: string,
-): Promise<Response> {
-  await ctx.setSignedCookie(cookie.name, identifier, ctx.context.secret, kakeAttributter(cookie));
-  ctx.setHeader('Cache-Control', AUTH_NO_STORE);
-  ctx.setHeader('CDN-Cache-Control', 'no-store');
-  ctx.setHeader('Vercel-CDN-Cache-Control', 'no-store');
-  const kaker = typeof ctx.headers?.getSetCookie === 'function' ? ctx.headers.getSetCookie() : [];
-  if (kaker.length > 0) {
-    const headers = new Headers({
-      Location: dest,
-      'Cache-Control': AUTH_NO_STORE,
-      'CDN-Cache-Control': 'no-store',
-      'Vercel-CDN-Cache-Control': 'no-store',
-    });
-    for (const kake of kaker) headers.append('Set-Cookie', kake);
-    return new Response(null, { status: 302, headers });
-  }
-  throw ctx.redirect(dest);
-}
-
 function omdirigerTilApp(ctx: HookCtx, sti = MAGIC_LINK_APP_LANDING): Response {
   const dest = new URL(sti, ctx.context.baseURL).toString();
   ctx.setHeader('Cache-Control', AUTH_NO_STORE);
@@ -153,27 +98,6 @@ function omdirigerTilApp(ctx: HookCtx, sti = MAGIC_LINK_APP_LANDING): Response {
   throw ctx.redirect(dest);
 }
 
-async function startTotp(ctx: HookCtx, userId: string): Promise<Response> {
-  const identifier = `2fa-${randomBytes(10).toString('hex')}`;
-  const expiresAt = new Date(Date.now() + TWO_FACTOR_COOKIE_MAX_AGE * 1000);
-  await ctx.context.internalAdapter.createVerificationValue({
-    value: userId,
-    identifier,
-    expiresAt,
-  });
-  await ctx.context.internalAdapter.createVerificationValue({
-    value: '0',
-    identifier: `2fa-attempts-${identifier}`,
-    expiresAt,
-  });
-  const cookie = ctx.context.createAuthCookie(TWO_FACTOR_COOKIE_NAME, {
-    maxAge: TWO_FACTOR_COOKIE_MAX_AGE,
-  });
-  const dest = new URL(MAGIC_LINK_CALLBACK, ctx.context.baseURL);
-  dest.search = MAGIC_LINK_TOTP_QUERY;
-  return settKakeOgOmdiriger(ctx, cookie, identifier, dest.toString());
-}
-
 function erOmdirigering(error: unknown): boolean {
   if (error instanceof Response) return error.status >= 300 && error.status < 400;
   if (!error || typeof error !== 'object') return false;
@@ -189,18 +113,7 @@ export function createMagicLink2faEtterHook(db?: Database, opts?: { sone?: AuthS
         const data = ctx.context.newSession;
         if (!data?.user) return;
 
-        const lesRad = async (userId: string) => {
-          try {
-            return (await ctx.context.adapter.findOne({
-              model: 'twoFactor',
-              where: [{ field: 'userId', value: userId }],
-            })) as { secret?: string | null; verified?: boolean | null } | null;
-          } catch {
-            return null;
-          }
-        };
-
-        const bundet = await erTotpFaktiskBundet(lesRad, data.user);
+        const bundet = db ? await brukerHarPasskey(db, data.user.id).catch(() => false) : false;
         const tenantId = lesAuthTenantId();
         let harRolle = false;
         if (opts?.sone === 'forhandler' && (!tenantId || !db)) {
@@ -241,21 +154,7 @@ export function createMagicLink2faEtterHook(db?: Database, opts?: { sone?: AuthS
           harRolle,
           kreverTotp,
         });
-        if (neste.handling === 'behold-sesjon') {
-          if (!bundet && data.user.twoFactorEnabled === true) {
-            try {
-              await ctx.context.internalAdapter.updateUser(data.user.id, {
-                twoFactorEnabled: false,
-              });
-            } catch {
-              // 0036 + neste verify heler. Missed migrate skal ikke låse ute.
-            }
-          }
-          return omdirigerTilApp(ctx, neste.dest);
-        }
-
-        await rivSesjon(ctx);
-        return startTotp(ctx, data.user.id);
+        return omdirigerTilApp(ctx, neste.dest);
       } catch (error) {
         if (error instanceof Response) return error;
         if (erOmdirigering(error)) throw error;

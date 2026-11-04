@@ -68,17 +68,20 @@ describe('Mikael 08.09 — kode-steg er 5 siffer, ikke venteskjerm', () => {
   });
 });
 
-describe('Mikael 02.09 — /2fa-oppsett copy og enable-feil', () => {
-  it('nevner Microsoft Authenticator og Google Authenticator, ikke 1Password', () => {
+describe('Mikael 02.09 — /2fa-oppsett er passnøkkel, ikke Authenticator', () => {
+  it('nevner passnøkkel og ikke Microsoft/Google Authenticator', () => {
     const side = les('../app/2fa-oppsett/page.tsx');
-    expect(side).toMatch(/Microsoft Authenticator/);
-    expect(side).toMatch(/Google Authenticator/);
+    expect(side).toMatch(/passnøkkel|Passnøkkel/);
+    expect(side).toMatch(/addPasskey/);
+    expect(side).not.toMatch(/Microsoft Authenticator/);
+    expect(side).not.toMatch(/Google Authenticator/);
     expect(side).not.toMatch(/1Password|Authy/);
   });
 
-  it('enable med ekte sesjon mapper ikke «Kunne ikke bekrefte handlingen.»', () => {
+  it('beholder sesjon — ingen twoFactor.enable', () => {
     const side = les('../app/2fa-oppsett/page.tsx');
-    expect(side).toMatch(/norskTotpEnableFeil/);
+    expect(side).not.toMatch(/twoFactor\.enable/);
+    expect(side).not.toMatch(/verifyTotp/);
     expect(side).not.toMatch(/Kunne ikke bekrefte handlingen/);
   });
 });

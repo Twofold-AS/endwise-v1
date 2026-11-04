@@ -1,26 +1,14 @@
 import { appOffentligUrl, forhandlerOffentligUrl } from '@endwise/auth';
 import { lesKundeSlugFraSporsmal } from '@endwise/modules/tenant-host';
 import type { Route } from 'next';
-import { cookies, headers } from 'next/headers';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { SignInSkjema } from './signin-skjema';
-import { harTotpVindu } from './signin-steg';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
-
-/**
- * two_factor / enroll_2fa er HttpOnly. document.cookie ser dem ikke —
- * da ble klikk-landing venteskjerm og tokenet allerede brukt.
- */
-function kakeHeader(jar: Awaited<ReturnType<typeof cookies>>): string {
-  return jar
-    .getAll()
-    .map((c) => `${c.name}=1`)
-    .join('; ');
-}
 
 export default async function SignInPage({
   searchParams,
@@ -36,12 +24,10 @@ export default async function SignInPage({
     const kunde = kundeSlug ? forhandlerOffentligUrl(kundeSlug) : null;
     redirect((kunde ? `${kunde}/logg-inn` : `${appOffentligUrl()}/logg-inn`) as Route);
   }
-  const header = kakeHeader(await cookies());
-  const totpKlar = harTotpVindu(header);
 
   return (
     <Suspense fallback={<main className="min-h-screen bg-bg" />}>
-      <SignInSkjema totpKlar={totpKlar} />
+      <SignInSkjema />
     </Suspense>
   );
 }

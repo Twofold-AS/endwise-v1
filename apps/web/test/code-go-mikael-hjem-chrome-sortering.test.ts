@@ -35,7 +35,8 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(skjema).not.toMatch(/<h1/);
     expect(totp).not.toMatch(/'Bekreftelse'/);
     expect(skjema).toMatch(/data-auth-kode-steg/);
-    expect(skjema).toMatch(/signin-totp/);
+    expect(skjema).toMatch(/signin-magic-kode/);
+    expect(skjema).not.toMatch(/signin-totp/);
   });
 
   it('toppkort: Endringer mot dato, PPF-etikett på 08.00/19.00-linje', () => {

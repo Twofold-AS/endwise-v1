@@ -1,5 +1,6 @@
 -- Kjøres etter migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
 -- Siste slett-relaterte migrasjon: 0062_slett_forhandler_slug (DROP+CREATE, rev=0027).
+-- Siste auth-skjema: 0064_passnokkel_totp_rydd (passkey + TOTP-rydd).
 -- lookup_open_invitation: CREATE ligger i 0020/0021 + sql/functions.sql.
 -- Scaleway: `pnpm db:grants` alene gjenoppretter funksjonen (idempotent).
 -- 0025 DROP+CREATE + app.slett_endwise_id (policyer her speiler 0025).

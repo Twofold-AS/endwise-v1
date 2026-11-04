@@ -25,8 +25,9 @@ describe('TOTP enable med ekte sesjon (Mikael 02.09)', () => {
       true,
     );
     expect(sessionMeTwoFactorRequired({ twoFactorEnabled: true, roles: ['dealer_admin'] })).toBe(
-      false,
+      true,
     );
+    expect(sessionMeTwoFactorRequired({ harPasskey: true, roles: ['dealer_admin'] })).toBe(false);
   });
 
   it('before-hook på enable returnerer når sesjon finnes — uten enroll-kake', () => {

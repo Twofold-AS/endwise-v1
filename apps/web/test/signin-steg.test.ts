@@ -25,14 +25,14 @@ import {
 
 const her = dirname(fileURLToPath(import.meta.url));
 
-describe('signin-steg: kode-steg etter e-post, TOTP bare med kake', () => {
-  it('tom query er e-postflaten; totp uten kake er kode-steg', () => {
+describe('signin-steg: kode-steg etter e-post, TOTP-flate er borte', () => {
+  it('tom query er e-postflaten; totp-query er kode-steg', () => {
     expect(signInFlateFraQuery(null)).toBe('epost');
     expect(signInFlateFraQuery('valg')).toBe('valg');
     expect(signInFlateFraQuery('sendt')).toBe('valg');
     expect(signInFlateFraQuery('totp')).toBe('valg');
     expect(signInFlateFraQuery('totp', { totpKlar: false })).toBe('valg');
-    expect(signInFlateFraQuery('totp', { totpKlar: true })).toBe('totp');
+    expect(signInFlateFraQuery('totp', { totpKlar: true })).toBe('valg');
   });
 
   it('two_factor-kake gjenkjennes, two_factor_enabled gjør det ikke', () => {
@@ -95,9 +95,9 @@ describe('signin-steg: kode-steg etter e-post, TOTP bare med kake', () => {
     );
   });
 
-  it('steg=totp + kake er totp; steg=totp uten kake er kode-steg', () => {
+  it('steg=totp er alltid kode-steg — TOTP-flaten er borte', () => {
     expect(flateEtterMagicLinkLanding({ steg: 'totp', totpKlar: true, enrollKlar: false })).toBe(
-      'totp',
+      'valg',
     );
     expect(
       flateEtterMagicLinkLanding({
@@ -245,10 +245,10 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
     expect(form).toMatch(/knappState\('logg-inn'\)/);
   });
 
-  it('Fortsett / kode-steg full-laster så leftover totpKlar ikke snapper', () => {
+  it('Fortsett / kode-steg full-laster — leftover totpKlar snapper ikke', () => {
     expect(kilde).toMatch(/location\.assign\(SIGNIN_VALG_STI\)/);
     expect(kilde).toMatch(/flateEtterMagicLinkLanding/);
-    expect(kilde).toMatch(/totpKlar/);
+    expect(kilde).not.toMatch(/verifyTotp/);
     expect(kilde).not.toMatch(/document\.cookie/);
     expect(kilde).not.toMatch(/lesTotpVindu/);
   });
@@ -272,8 +272,9 @@ describe('signin-skjema: Mobbin e-post + 5-sifret kode, ingen TOTP-vegg', () => 
     expect(kilde).toMatch(/flateEtterMagicLinkLanding/);
   });
 
-  it('ingen engelsk TOTP-feil og primærknapp er ikke Feil kode', () => {
-    expect(kilde).toMatch(/meldingForTotpFeil/);
+  it('ingen TOTP og primærknapp er ikke Feil kode', () => {
+    expect(kilde).not.toMatch(/meldingForTotpFeil/);
+    expect(kilde).not.toMatch(/verifyTotp/);
     expect(kilde).not.toMatch(/TOTP not enabled/);
     expect(kilde).not.toMatch(/errorText=["']Feil kode["']/);
     expect(kilde).toMatch(/errorText=["']Prøv igjen["']/);
@@ -303,10 +304,9 @@ describe('signin-side: server leser HttpOnly-kaker etter verify', () => {
     expect(side).toMatch(/force-dynamic/);
     expect(side).toMatch(/revalidate\s*=\s*0/);
     expect(side).toMatch(/fetchCache\s*=\s*['"]force-no-store['"]/);
-    expect(side).toMatch(/cookies\(/);
     expect(side).toMatch(/searchParams/);
-    expect(side).toMatch(/harTotpVindu/);
-    expect(side).toMatch(/totpKlar/);
+    expect(side).not.toMatch(/harTotpVindu/);
+    expect(side).not.toMatch(/totpKlar/);
     expect(side).not.toMatch(/redirect\(SIGNIN_ENROLL_STI/);
   });
 });

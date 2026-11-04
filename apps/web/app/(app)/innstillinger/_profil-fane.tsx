@@ -4,13 +4,13 @@ import { Avatar, StatefulButton } from '@endwise/ui';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useState } from 'react';
-import { authClient, useSession } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 import { ByttEpostSkjema } from '../_shell/bytt-epost';
 import { KallenavnFelt, VisningsnavnFelt } from '../_shell/profil-kort';
 import { ToFaktorRad } from '../_shell/to-faktor-rad';
 
-type RadNokkel = 'navn' | 'kallenavn' | 'epost' | 'passord' | 'autentikator' | null;
+type RadNokkel = 'navn' | 'kallenavn' | 'epost' | 'passord' | 'passnokkel' | null;
 
 /**
  * F5-19 — Settings › Konto (Mikael 08.09).
@@ -20,12 +20,8 @@ type RadNokkel = 'navn' | 'kallenavn' | 'epost' | 'passord' | 'autentikator' | n
 export function ProfilFane() {
   const me = trpc.session.me.useQuery();
   const meg = trpc.profile.meg.useQuery();
-  const { data: session } = useSession();
   const [apen, setApen] = useState<RadNokkel>(null);
-  const twoFactorEnabled =
-    session?.user && 'twoFactorEnabled' in session.user
-      ? (session.user as { twoFactorEnabled?: boolean }).twoFactorEnabled
-      : undefined;
+  const harPasskey = me.data?.harPasskey === true;
 
   const navn = meg.data?.navn ?? me.data?.navn ?? '';
   const kallenavn = meg.data?.kallenavn ?? '';
@@ -87,15 +83,13 @@ export function ProfilFane() {
             </p>
           </KontoRad>
           <KontoRad
-            label="Autentikator"
-            verdi={
-              twoFactorEnabled === true ? 'På' : twoFactorEnabled === false ? 'Ikke satt opp' : '—'
-            }
-            apen={apen === 'autentikator'}
-            onEndre={() => setApen(apen === 'autentikator' ? null : 'autentikator')}
+            label="Passnøkkel"
+            verdi={harPasskey ? 'På' : 'Ikke satt opp'}
+            apen={apen === 'passnokkel'}
+            onEndre={() => setApen(apen === 'passnokkel' ? null : 'passnokkel')}
             siste
           >
-            <ToFaktorRad enabled={twoFactorEnabled} />
+            <ToFaktorRad enabled={harPasskey} />
           </KontoRad>
         </div>
       </section>

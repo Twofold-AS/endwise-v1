@@ -19,7 +19,7 @@ WHERE t.customer_id IS NULL
   AND (t.external_ref = c.email OR t.external_ref = c.phone);-- > statement-breakpoint
 
 DROP POLICY IF EXISTS "threads_customer_own" ON "threads";-- > statement-breakpoint
-CREATE POLICY "threads_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
+CREATE POLICY "threads_customer_own" ON "threads" AS RESTRICTIVE FOR ALL TO "authenticated"
   USING (
     nullif(current_setting('app.actor', true), '') IS DISTINCT FROM 'customer'
     OR "threads"."customer_id" = nullif(current_setting('app.customer_id', true), '')::uuid
@@ -30,7 +30,7 @@ CREATE POLICY "threads_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
   );-- > statement-breakpoint
 
 DROP POLICY IF EXISTS "messages_customer_own" ON "messages";-- > statement-breakpoint
-CREATE POLICY "messages_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
+CREATE POLICY "messages_customer_own" ON "messages" AS RESTRICTIVE FOR ALL TO "authenticated"
   USING (
     nullif(current_setting('app.actor', true), '') IS DISTINCT FROM 'customer'
     OR EXISTS (
@@ -49,7 +49,7 @@ CREATE POLICY "messages_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
   );-- > statement-breakpoint
 
 DROP POLICY IF EXISTS "thread_participants_customer_own" ON "thread_participants";-- > statement-breakpoint
-CREATE POLICY "thread_participants_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
+CREATE POLICY "thread_participants_customer_own" ON "thread_participants" AS RESTRICTIVE FOR ALL TO "authenticated"
   USING (
     nullif(current_setting('app.actor', true), '') IS DISTINCT FROM 'customer'
     OR EXISTS (

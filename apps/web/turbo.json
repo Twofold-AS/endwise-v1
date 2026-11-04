@@ -2,6 +2,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "passThroughEnv": ["DATABASE_URL", "VERCEL", "ENDWISE_GA_LIVE"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "../../packages/db/scripts/vercel-migrate.ts",

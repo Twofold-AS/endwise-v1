@@ -8,6 +8,7 @@ import { competenceRouter } from './routers/competence.ts';
 import { conflictsRouter } from './routers/conflicts.ts';
 import { customersRouter } from './routers/customers.ts';
 import { directoryRouter } from './routers/directory.ts';
+import { eierRouter } from './routers/eier.ts';
 import { flagsRouter } from './routers/flags.ts';
 import { forhandlerRouter } from './routers/forhandler.ts';
 import { helpdeskRouter } from './routers/helpdesk.ts';
@@ -49,6 +50,7 @@ export const appRouter = router({
   stream: streamRouter,
   tenants: tenantsRouter,
   tillatelse: tillatelseRouter,
+  eier: eierRouter,
   branding: brandingRouter,
   aktivitet: aktivitetRouter,
   jit: jitRouter,

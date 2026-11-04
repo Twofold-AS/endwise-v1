@@ -9,6 +9,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { tenantPolicy } from '../rls.ts';
@@ -221,11 +222,16 @@ export const memberProfiles = pgTable(
      * rolle + mekanikerprofil. Se `packages/modules/src/profil/`.
      */
     jobFunction: jobFunctionEnum('job_function'),
+    /** F29 / F8c — kan bare starte nød-overføring, ikke overføre selv. */
+    stedfortreder: boolean('stedfortreder').notNull().default(false),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`),
   },
   (t) => [
     primaryKey({ columns: [t.tenantId, t.userId] }),
     index('member_profiles_user_idx').on(t.userId),
+    uniqueIndex('member_profiles_stedfortreder_uidx')
+      .on(t.tenantId)
+      .where(sql`${t.stedfortreder} = true`),
     tenantPolicy('member_profiles', t.tenantId),
     // Eier-SELECT (`member_profiles_tenant_select_owner`) i grants.sql —
     // session.me leser som eier under FORCE RLS via withTenant.

@@ -11,6 +11,7 @@ import { IntegrasjonerInnhold } from '../integrasjoner/_innhold';
 import { TjenesterInnhold } from '../tjenester/_innhold';
 import { AktivitetFraEndwise } from './_aktivitet-endwise';
 import { OrganisasjonAnsatte } from './_ansatte';
+import { DagligLederFlate } from './_daglig-leder';
 import { parseOrgSeksjon } from './_seksjoner';
 import { TimeplanAnsatteFlate } from './_timeplan-ansatte';
 import { ForhandlerKort } from './forhandleren/_kort';
@@ -42,6 +43,13 @@ function OrganisasjonIndre() {
           undertekst="Hvem som får se hva"
           href="/organisasjon?seksjon=tilganger"
         />
+        {isAdmin ? (
+          <ListeRad
+            tittel="Daglig leder"
+            undertekst="Overfør rollen eller sett stedfortreder"
+            href="/organisasjon?seksjon=daglig-leder"
+          />
+        ) : null}
         {isAdmin ? (
           <ListeRad
             tittel="Aktivitet fra Endwise"
@@ -98,6 +106,18 @@ function OrganisasjonIndre() {
           Tilgangsstyring kommer senere. I dag styres synlighet av rollen (admin, selger, support,
           mekaniker).
         </p>
+      </Side>
+    );
+  }
+
+  if (seksjon === 'daglig-leder') {
+    return (
+      <Side
+        tittel="Daglig leder"
+        tilbakeHref="/organisasjon"
+        undertekst="Overføring krever tofaktor"
+      >
+        <DagligLederFlate />
       </Side>
     );
   }

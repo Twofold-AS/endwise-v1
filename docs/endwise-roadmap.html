@@ -1309,6 +1309,10 @@ const ROADMAP = [
   { id:"F28-01", o:"Bygg invitasjonsstatus, ny lenke og tilbakekall på platform", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F8b. Status sendt/kode sendt/låst/utløpt/brukt/trukket uten å vise koden. Ny lenke dreper gammel lenke og kode (<code>usedAt</code>). <code>tenants.revokeOwnerInvite</code>. Handling deaktivert, ikke skjult. Audit <code>invitation.resent</code>/<code>revoked</code>. Åpnet-status utelatt (GET er sideeffektfri).",
     area:"admin", ui:"partial", status:"done" },
 ]},
+{ phase:"F29", title:"White label — daglig leder overføring (plan F8c)", target:"Etter F28", items:[
+  { id:"F29-01", o:"Bygg frivillig overføring, stedfortreder og nødvei bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F8c. <code>overfor_daglig_leder</code> SECURITY DEFINER: gammel leder → ansatt først, så ny leder, slett sesjoner. Frivillig krever TOTP og at ny leder har 2FA. Stedfortreder kan bare starte nød. Nød: to <code>endwise_admin</code>, 7 dagers varsel, audit <code>owner.transfer_*</code>. Bak <code>ENDWISE_WHITE_LABEL</code>.",
+    area:"sikkerhet", ui:"partial", status:"done" },
+]},
 ];
 
 /* =====================================================================

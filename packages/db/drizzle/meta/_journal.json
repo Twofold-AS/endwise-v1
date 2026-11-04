@@ -414,6 +414,13 @@
       "when": 1793850000000,
       "tag": "0058_white_label_ga_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1793860000000,
+      "tag": "0059_invitation_codes_owner_rls",
+      "breakpoints": true
     }
   ]
 }

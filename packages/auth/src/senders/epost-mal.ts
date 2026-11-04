@@ -200,6 +200,92 @@ export function innloggingsEpostEmne(kode: string): string {
 }
 
 /**
+ * Mobbin-skall for invitasjon og invitasjonskode.
+ * Hvit canvas, ink, stor kode / understreket lenke. Ingen Action Blue.
+ */
+export function byggMobbinEpostHtml(input: {
+  tittel: string;
+  hei?: string;
+  ingress: string;
+  kode?: string;
+  lenke?: { href: string; tekst: string };
+  fotnote: string;
+}): string {
+  const hei = esc(input.hei?.trim() || 'Hei,');
+  const kode = input.kode ? esc(input.kode) : '';
+  const lenkeHref = input.lenke ? esc(input.lenke.href) : '';
+  const lenkeTekst = input.lenke ? esc(input.lenke.tekst) : '';
+  return `<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>${esc(input.tittel)}</title>
+</head>
+<body style="margin:0;padding:0;background-color:${INNLOGGING_FARGE.side};">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(input.ingress)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INNLOGGING_FARGE.side}" style="background-color:${INNLOGGING_FARGE.side};">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INNLOGGING_FARGE.side}" style="max-width:480px;background-color:${INNLOGGING_FARGE.side};">
+
+        <tr>
+          <td align="left" bgcolor="${INNLOGGING_FARGE.side}" style="background-color:${INNLOGGING_FARGE.side};padding:8px 8px 24px 8px;">
+            <img src="cid:${LOGO_EPOST_CID}"
+                 width="32" height="40"
+                 alt="Endwise"
+                 style="display:block;width:32px;height:40px;border:0;outline:none;text-decoration:none;">
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 8px 12px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:22px;line-height:28px;font-weight:650;letter-spacing:-0.3px;color:${INNLOGGING_FARGE.tekst};">${hei}</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:0 8px 20px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:17px;line-height:1.47;font-weight:450;color:${INNLOGGING_FARGE.dempet};">${esc(input.ingress)}</p>
+          </td>
+        </tr>
+
+        ${
+          kode
+            ? `<tr>
+          <td style="padding:0 8px 24px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:36px;line-height:1;font-weight:650;letter-spacing:4px;color:${INNLOGGING_FARGE.tekst};">${kode}</p>
+          </td>
+        </tr>`
+            : ''
+        }
+
+        ${
+          input.lenke
+            ? `<tr>
+          <td style="padding:0 8px 16px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:17px;line-height:1.47;font-weight:450;color:${INNLOGGING_FARGE.tekst};"><a href="${lenkeHref}" style="color:${INNLOGGING_FARGE.tekst};text-decoration:underline;">${lenkeTekst}</a></p>
+          </td>
+        </tr>`
+            : ''
+        }
+
+        <tr>
+          <td style="padding:8px 8px 8px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:15px;line-height:1.47;font-weight:450;color:${INNLOGGING_FARGE.dempet};">${esc(input.fotnote)}</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>`;
+}
+
+/**
  * Innloggings-e-post: hvit canvas, svart logo, tykk hilsen, stor kode, understreket «lenka».
  * Ingen Action Blue-CTA. Ingen parchment. Tabeller + inline style som resten.
  */

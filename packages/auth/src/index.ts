@@ -57,6 +57,7 @@ export {
   sendEmail,
   sendInboxMessage,
   sendInvitation,
+  sendInvitasjonskode,
   sendMagicLink,
   sendPasswordReset,
   sendTwoFactorOtp,

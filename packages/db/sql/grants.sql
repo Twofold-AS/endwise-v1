@@ -456,6 +456,72 @@ create policy invitations_tenant_select_owner on invitations
     and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
   );
 
+-- Invitasjonskode under FORCE RLS (prod APP = eier `endwise`).
+-- 0045-policyene er TO authenticated. send-kode INSERT/UPDATE som eier
+-- ga 42501; feilen svelges (alltid 200) — mottaker ser «kode sendt»
+-- uten e-post. Samme eier-port som invitations (0041).
+drop policy if exists invitation_codes_tenant_select_owner on invitation_codes;
+create policy invitation_codes_tenant_select_owner on invitation_codes
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.invitation_codes'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists invitation_codes_tenant_insert_owner on invitation_codes;
+create policy invitation_codes_tenant_insert_owner on invitation_codes
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.invitation_codes'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
+drop policy if exists invitation_codes_tenant_update_owner on invitation_codes;
+create policy invitation_codes_tenant_update_owner on invitation_codes
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.invitation_codes'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.invitation_codes'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
 -- Tjenestekatalog under FORCE RLS (prod APP = eier `endwise`).
 -- services_tenant_isolation / service_versions_tenant_isolation er TO
 -- authenticated. create: INSERT services RETURNING + INSERT

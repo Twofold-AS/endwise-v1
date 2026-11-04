@@ -2,7 +2,7 @@
 
 import { Mail, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { Field, INPUT } from '../../_auth/felter';
 
@@ -36,8 +36,10 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const [navn, setNavn] = useState('');
   const [kode, setKode] = useState('');
   const [sender, setSender] = useState(false);
-  const [kodeSendt, setKodeSendt] = useState(false);
+  const [kodeMelding, setKodeMelding] = useState<string | null>(null);
   const [steg, setSteg] = useState<'skjema' | 'sendt'>('skjema');
+  const [nyKodeVent, setNyKodeVent] = useState(false);
+  const autoSendt = useRef(false);
 
   useEffect(() => {
     let avbrutt = false;
@@ -77,19 +79,25 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   async function sendKode() {
     if (!inv) return;
     setFeil(null);
-    setSender(true);
+    setNyKodeVent(true);
     try {
       await fetch(`/invitasjoner/${encodeURIComponent(token)}/send-kode`, {
         method: 'POST',
         headers: { ...CSRF },
       });
-      setKodeSendt(true);
+      setKodeMelding(`Kode sendt til ${inv.epost}.`);
     } catch (error) {
       setFeil(error instanceof Error ? error.message : 'Noe gikk galt.');
     } finally {
-      setSender(false);
+      window.setTimeout(() => setNyKodeVent(false), 10_000);
     }
   }
+
+  useEffect(() => {
+    if (!inv?.kreverKode || autoSendt.current) return;
+    autoSendt.current = true;
+    void sendKode();
+  }, [inv]);
 
   async function godta(event: React.FormEvent) {
     event.preventDefault();
@@ -136,17 +144,14 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
           : 'support'
         : (FUNKSJONSTEKST[inv?.funksjon ?? ''] ?? inv?.funksjon);
 
-  const visKodeSteg = Boolean(inv?.kreverKode) && !kodeSendt && steg === 'skjema';
-  const visSkjema = Boolean(inv) && steg === 'skjema' && !visKodeSteg;
+  const visSkjema = Boolean(inv) && steg === 'skjema';
 
   const tittel = inv
     ? steg === 'sendt'
       ? 'Sjekk e-posten'
-      : visKodeSteg
-        ? `Velkommen til ${inv.kind === 'platform' ? 'Endwise' : inv.forhandler}`
-        : inv.kind === 'platform'
-          ? 'Velkommen til Endwise'
-          : `Velkommen til ${inv.forhandler}`
+      : inv.kind === 'platform'
+        ? 'Velkommen til Endwise'
+        : `Velkommen til ${inv.forhandler}`
     : laster
       ? 'Invitasjon'
       : 'Invitasjonen virker ikke';
@@ -154,11 +159,9 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const undertekst = inv
     ? steg === 'sendt'
       ? `Innloggingslenke sendt til ${inv.epost}. Åpne lenken for å gå inn. Autentikator kan du slå på senere.`
-      : visKodeSteg
-        ? `Du er invitert som ${rolle}. Vi sender koden til e-posten som er invitert. Et klikk sender ingenting.`
-        : inv.kind === 'platform'
-          ? `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
-          : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
+      : inv.kind === 'platform'
+        ? `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
+        : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
     : laster
       ? null
       : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager.';
@@ -184,89 +187,80 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
           </div>
         ) : null}
 
-        {visKodeSteg ? (
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]">
-            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              {feil ? (
-                <p role="alert" className="text-[12px] text-danger">
-                  {feil}
-                </p>
-              ) : null}
-            </div>
-            <div className="px-1.5 pt-1 pb-1">
-              <StatefulButton
-                type="button"
-                state={sender ? 'loading' : 'idle'}
-                className="w-full"
-                loadingText=""
-                successText=""
-                errorText="Prøv igjen"
-                icon={<Mail size={15} />}
-                disabled={sender}
-                onClick={() => void sendKode()}
-              >
-                Send meg kode
-              </StatefulButton>
-            </div>
-          </div>
-        ) : null}
-
         {visSkjema ? (
-          <form
-            onSubmit={(e) => void godta(e)}
-            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-[5px]"
-          >
-            <div className="flex flex-col gap-3 rounded-lg bg-inset p-4">
-              <Field id="inv-navn" label="Hva heter du?">
-                <input
-                  id="inv-navn"
-                  autoComplete="name"
-                  required
-                  minLength={2}
-                  value={navn}
-                  onChange={(e) => setNavn(e.target.value)}
-                  className={INPUT}
-                />
-              </Field>
-              {inv?.kreverKode ? (
-                <Field id="inv-kode" label="Kode fra e-posten">
+          <form onSubmit={(e) => void godta(e)} className="flex flex-col gap-3">
+            {inv?.kreverKode ? (
+              <div className="rounded-xl border border-border bg-card p-[5px]">
+                <div className="rounded-lg bg-inset p-4">
+                  <Field id="inv-kode" label="Kode">
+                    <input
+                      id="inv-kode"
+                      autoComplete="one-time-code"
+                      inputMode="text"
+                      required
+                      minLength={6}
+                      maxLength={12}
+                      value={kode}
+                      onChange={(e) => setKode(e.target.value.toUpperCase())}
+                      className={INPUT}
+                    />
+                  </Field>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="rounded-xl border border-border bg-card p-[5px]">
+              <div className="rounded-lg bg-inset p-4">
+                <Field id="inv-navn" label="Navn">
                   <input
-                    id="inv-kode"
-                    autoComplete="one-time-code"
-                    inputMode="text"
+                    id="inv-navn"
+                    autoComplete="name"
                     required
-                    minLength={6}
-                    maxLength={12}
-                    value={kode}
-                    onChange={(e) => setKode(e.target.value.toUpperCase())}
+                    minLength={2}
+                    value={navn}
+                    onChange={(e) => setNavn(e.target.value)}
                     className={INPUT}
                   />
                 </Field>
-              ) : null}
-              {feil ? (
-                <p role="alert" className="text-[12px] text-danger">
-                  {feil}
-                </p>
-              ) : null}
+              </div>
             </div>
-            <div className="px-1.5 pt-1 pb-1">
-              <StatefulButton
-                type="submit"
-                state={sender ? 'loading' : 'idle'}
-                className="w-full"
-                loadingText="Oppretter …"
-                successText="Sendt"
-                errorText="Prøv igjen"
-                icon={<Mail size={15} />}
-                disabled={
-                  sender ||
-                  navn.trim().length < 2 ||
-                  Boolean(inv?.kreverKode && kode.trim().length < 6)
-                }
+
+            {kodeMelding && !feil ? (
+              <p className="text-[12px] text-fg-muted">{kodeMelding}</p>
+            ) : null}
+            {feil ? (
+              <p role="alert" className="text-[12px] text-danger">
+                {feil}
+              </p>
+            ) : null}
+
+            <StatefulButton
+              type="submit"
+              state={sender ? 'loading' : 'idle'}
+              className="w-full"
+              loadingText="Oppretter …"
+              successText="Sendt"
+              errorText="Prøv igjen"
+              icon={<Mail size={15} />}
+              disabled={
+                sender ||
+                navn.trim().length < 2 ||
+                Boolean(inv?.kreverKode && kode.trim().length < 6)
+              }
+            >
+              Fortsett
+            </StatefulButton>
+
+            {inv?.kreverKode ? (
+              <button
+                type="button"
+                className="text-center text-[15px] font-[450] text-fg underline underline-offset-4 disabled:text-fg-muted disabled:no-underline"
+                disabled={nyKodeVent}
+                onClick={() => void sendKode()}
               >
-                Fortsett
-              </StatefulButton>
-            </div>
+                Fikk ingen kode?
+              </button>
+            ) : null}
           </form>
         ) : null}
 

@@ -1358,6 +1358,18 @@ const ROADMAP = [
     area:"infra", ui:"na", status:"done" },
   { id:"F38-06", o:"Prod-bygg: 0057/0058 seed under FORCE RLS (GUC før tenants INSERT)", kat:"plattform", t:"⭐ <b>04.11.2026:</b> Etter #209: 42501 <code>new row violates row-level security policy for table tenants</code>. Migreringsbrukeren er ikke BYPASSRLS. 0057 setter <code>app.platform_admin</code> og <code>app.tenant_id</code> før INSERT/UPDATE. kind/plan via midlertidig trigger-disable. 0058 setter platform_admin.",
     area:"infra", ui:"na", status:"done" },
+  { id:"F38-07", o:"Invitasjonskode kommer fram: eier-RLS + pepper-fallback + Mobbin-e-post", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Prod: åpnet lenke, ingen kode. Årsak: <code>INVITASJON_KODE_PEPPER</code> manglet i Vercel (<code>genererInvitasjonskode</code> kastet) og <code>invitation_codes</code> FORCE RLS uten eier-policy (INSERT 42501). <code>send-kode</code> svelget feilen (alltid 200). GET sender ikke kode. Fiks: pepper faller tilbake på <code>BETTER_AUTH_SECRET</code>, 0059 eier SELECT/INSERT/UPDATE, feil logges, akseptside auto-sender + egne felt + «Fikk ingen kode?» (3/time). Invitasjons- og kode-e-post er Mobbin (hvit, ink, understreket lenke / stor kode, forhandler-From).",
+    area:"auth", ui:"built", status:"done" },
+]},
+{ phase:"F39", title:"White label — admin, app-innlogging og kundeselvbetjening", target:"Etter F38 / Mikael 04.11.2026", items:[
+  { id:"F39-01", o:"Redesign platform-admin (forhandlere mobil-først)", kat:"dashboard", sub:"endwise", t:"Platform-admin fra bunnen: mobil-først, Mobbin, Board UI, Innstillinger-topbar. Forhandlere: Invitert/Aktiv/Utløpt, subdomene, Ny forhandler (firma+org.nr → daglig leder → sammendrag → Send). Detalj: send på nytt, trekk, kopier lenke, kodestatus. Ingen feature flags.",
+    area:"admin", ui:"missing", status:"planned" },
+  { id:"F39-02", o:"Platform-admin setter subdomene; forhandler ser bare kundelenke", kat:"sikkerhet", t:"Forhandler velger IKKE subdomene. Admin setter det ved opprettelse (reserverte ord + kollisjon). Onboarding viser kopierbar kundelenke, ingen redigering. Fjern subdomene-steget hos forhandler.",
+    area:"admin", ui:"partial", status:"planned" },
+  { id:"F39-03", o:"Bedriftsinnlogging på app.endwise.no — ikke på kundesiden", kat:"sikkerhet", t:"Forhandler/ansatte logger inn på <code>app.endwise.no</code> (e-post + kode + 2FA) og rutes til riktig forhandler. Fjern Privat/Bedrift på kundedomenet. <code>app</code> er reservert slug og egen host-sone. Ingen flags.",
+    area:"auth", ui:"missing", status:"planned" },
+  { id:"F39-04", o:"Kundelogg inn uten invitasjon hvis e-post/telefon finnes", kat:"kunde", t:"Finnes e-post/telefon som kunde (Endwise-db eller importert fra Quick), send OTP og logg inn. Samme svar uansett om konto finnes. Rate limit. GDPR-varsel ved første innlogging. Ingen massee-post.",
+    area:"widget", ui:"partial", status:"planned" },
 ]},
 ];
 

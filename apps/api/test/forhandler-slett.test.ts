@@ -369,9 +369,9 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
       .where(
         sql`tenant_id = ${endwiseId} and action = 'audit.redacted' and metadata->>'slug' = ${slug}`,
       );
-    expect(spor.some((r) => r.metadata && (r.metadata as { slug_frigitt?: boolean }).slug_frigitt)).toBe(
-      true,
-    );
+    expect(
+      spor.some((r) => r.metadata && (r.metadata as { slug_frigitt?: boolean }).slug_frigitt),
+    ).toBe(true);
 
     const gjenbruk = await somEndwise().tenants.create({
       name: 'Gjenbrukt slug AS',

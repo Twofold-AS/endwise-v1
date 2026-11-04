@@ -1,5 +1,7 @@
+import { authEnv, verifiserFerskTotpForBruker } from '@endwise/auth';
 import { eraseCustomer, vendorErasureFacts } from '@endwise/modules/erasure';
 import { RETENTION_POLICY } from '@endwise/modules/retention';
+import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { z } from 'zod';
 import { adminProcedure, protectedProcedure, router } from '../init.ts';
 
@@ -30,12 +32,15 @@ export const personvernRouter = router({
    * Status blir `partial` hvis leverandørlogger fortsatt har data.
    */
   eraseCustomer: adminProcedure
-    .input(z.object({ customerId: z.uuid() }))
-    .mutation(({ ctx, input }) =>
-      eraseCustomer(ctx.db, {
+    .input(z.object({ customerId: z.uuid(), totp: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      if (erWhiteLabelAktiv() && ctx.authSone !== 'platform') {
+        await verifiserFerskTotpForBruker(ctx.db, ctx.userId, input, authEnv.secret);
+      }
+      return eraseCustomer(ctx.db, {
         tenantId: ctx.tenantId,
         customerId: input.customerId,
         requestedBy: ctx.userId,
-      }),
-    ),
+      });
+    }),
 });

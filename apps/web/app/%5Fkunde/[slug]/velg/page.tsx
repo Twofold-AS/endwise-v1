@@ -1,7 +1,8 @@
-import { ListeRad, Seksjon } from '@endwise/ui';
+import { Seksjon } from '@endwise/ui';
 import { hentOffentligKunde } from '../../_lib/hent.ts';
-import { KommerSnart, KundeSkall } from '../../_lib/skall.tsx';
+import { KundeSkall } from '../../_lib/skall.tsx';
 import { UkjentSide } from '../../_lib/ukjent-side.tsx';
+import { VelgSkjema } from './velg-skjema.tsx';
 
 export default async function KundeVelg({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -11,13 +12,7 @@ export default async function KundeVelg({ params }: { params: Promise<{ slug: st
   return (
     <KundeSkall tenant={tenant} tittel="Hva vil du åpne?" undertekst="Privat eller Bedrift">
       <Seksjon tittel="Velg">
-        <ListeRad tittel="Privat" undertekst="Bookinger, kjøretøy og profil" href="/min-side" />
-        <div className="pt-2">
-          <KommerSnart
-            barn="Bedrift"
-            forklaring="Bedrift åpnes når innlogging med tofaktor er klar."
-          />
-        </div>
+        <VelgSkjema />
       </Seksjon>
     </KundeSkall>
   );

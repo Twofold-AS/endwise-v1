@@ -16,7 +16,7 @@ export class SessionExpiredError extends Error {
  * Platform (F5): `endwise-pl.session_token` / `__Secure-endwise-pl.session_token`.
  * Ingen kake = ingen sesjon — hopp over `getSession`/DB.
  */
-const SESJON_KAKE = /(?:^|;\s*)(?:__Secure-)?endwise(?:-pl)?\.session_token=/;
+const SESJON_KAKE = /(?:^|;\s*)(?:__Host-|__Secure-)?endwise(?:-pl)?\.session_token=/;
 
 export function harSesjonsCookie(headers: Headers): boolean {
   return SESJON_KAKE.test(headers.get('cookie') ?? '');

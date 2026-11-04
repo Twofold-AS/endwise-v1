@@ -4,6 +4,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { magicLink, organization, phoneNumber, twoFactor } from 'better-auth/plugins';
 import { authTrustedOrigins } from './auth-origins.ts';
+import { lesAuthTenantId } from './auth-request.ts';
 import { BEKREFT_EPOST_STI, BYTT_EPOST_RATE_GRENSE, BYTT_EPOST_STI } from './bytt-epost.ts';
 import {
   BYTT_PASSORD_RATE_GRENSE,
@@ -14,6 +15,8 @@ import {
 } from './bytt-passord.ts';
 import { byttPassordForHook } from './bytt-passord-server.ts';
 import { authEnv } from './env.ts';
+import { opprettBrukerForEpost } from './forhandler-konto.ts';
+import { forhandlerCookieAttributter } from './kontekst.ts';
 import {
   genererMagicLinkKode,
   MAGIC_LINK_BE_OM_GRENSE,
@@ -26,6 +29,7 @@ import { createAuthEtterHook } from './magic-link-2fa.ts';
 import { passkeyPlugin } from './passkey-plugin.ts';
 import {
   erAuthDestinasjon,
+  erForhandlerDestinasjon,
   erPlatformDestinasjon,
   lesAuthBrukerNavn,
 } from './produkt-destinasjon.ts';
@@ -63,7 +67,14 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
   const absolutt = platform
     ? PLATFORM_ABSOLUTE_MAX_LIFETIME_SECONDS
     : ABSOLUTE_MAX_LIFETIME_SECONDS;
-  const destinasjon = platform ? erPlatformDestinasjon : erAuthDestinasjon;
+  const destinasjon = async (database: typeof db, email: string) => {
+    if (platform) return erPlatformDestinasjon(database, email);
+    const tenantId = lesAuthTenantId();
+    if (process.env.ENDWISE_WHITE_LABEL === '1' && tenantId) {
+      return erForhandlerDestinasjon(database, tenantId, email);
+    }
+    return erAuthDestinasjon(database, email);
+  };
 
   return betterAuth({
     appName: 'Endwise',
@@ -156,6 +167,22 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
           input: false,
           defaultValue: () => absoluteExpiryFor(new Date(), absolutt),
         },
+        kontekst: {
+          type: 'string',
+          required: false,
+          input: false,
+          defaultValue: () => 'privat',
+        },
+        bedriftVerifisertAt: {
+          type: 'date',
+          required: false,
+          input: false,
+        },
+        bedriftUtloperAt: {
+          type: 'date',
+          required: false,
+          input: false,
+        },
       },
     },
 
@@ -223,6 +250,10 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
            * Ukjent: stille return (samme 200, ingen enumerering).
            */
           if (!(await destinasjon(db, email))) return;
+          const tenantId = lesAuthTenantId();
+          if (process.env.ENDWISE_WHITE_LABEL === '1' && tenantId) {
+            await opprettBrukerForEpost(db, email);
+          }
           const navn = await lesAuthBrukerNavn(db, email);
           await sendMagicLink({
             to: email,
@@ -243,6 +274,15 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
     advanced: {
       cookiePrefix: sone ? cookiePrefixForSone(sone) : 'endwise',
       useSecureCookies: process.env.NODE_ENV === 'production',
+      defaultCookieAttributes: (() => {
+        const a = forhandlerCookieAttributter(process.env.NODE_ENV === 'production');
+        return {
+          httpOnly: a.httpOnly,
+          sameSite: a.sameSite,
+          secure: a.secure,
+          path: a.path,
+        };
+      })(),
 
       /**
        * Hvem rate-limiten teller på. Dette er en sikkerhetsfiks,

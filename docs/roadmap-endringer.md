@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-03 — F26 White label F7 (Privat/Bedrift)
+
+**Type:** ny fase. Felles innlogging og Privat/Bedrift bak flagg. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** planen + ADR-005. PR, ikke merge. Mons-review.
+**Endring:** Ny fase **F26**. **F26-01** `done`. Sesjonskontekst, tenant-dest, /logg-inn, /velg, CSRF, TOTP-steg. ⛔ F8a. ⛔ #114/#119.
+
+---
+
 ## 2026-11-03 — F25 White label F6c (områder 2)
 
 **Type:** ny fase. Resten av områdene bak flagg. Ingen ny UI-pakke. Ingen techstack-endring.

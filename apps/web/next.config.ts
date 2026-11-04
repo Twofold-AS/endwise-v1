@@ -112,6 +112,8 @@ const nextConfig: NextConfig = {
       { source: '/2fa-oppsett', headers: noStore },
       { source: '/2fa-oppsett/:path*', headers: noStore },
       { source: '/api/auth/:path*', headers: noStore },
+      { source: '/logg-inn', headers: noStore },
+      { source: '/velg', headers: noStore },
     ];
   },
   // Agent-instruksjonene (instructions.md ved siden av agent.ts)

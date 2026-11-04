@@ -54,6 +54,10 @@ export const session = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     activeOrganizationId: text('active_organization_id'),
     absoluteExpiresAt: timestamp('absolute_expires_at'),
+    /** F7: privat | bedrift. Null = eldre sesjon, behandles som privat. */
+    kontekst: text('kontekst'),
+    bedriftVerifisertAt: timestamp('bedrift_verifisert_at'),
+    bedriftUtloperAt: timestamp('bedrift_utloper_at'),
   },
   (table) => [index('session_userId_idx').on(table.userId)],
 );

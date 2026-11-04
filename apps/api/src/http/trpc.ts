@@ -9,11 +9,18 @@ import { appRouter } from '../trpc/router.ts';
  * ikke `API_INTERNAL_URL` mot localhost.
  * TOTP er valgfri: TWO_FACTOR_REQUIRED mappes ikke til FORBIDDEN som tømmer UI.
  */
-export function handleTrpc(req: Request): Promise<Response> {
-  return fetchRequestHandler({
+export async function handleTrpc(req: Request): Promise<Response> {
+  const kaker: string[] = [];
+  const ctx = await createRequestContext(req.headers);
+  ctx.setAuthCookie = (cookie) => kaker.push(cookie);
+  const res = await fetchRequestHandler({
     endpoint: '/trpc',
     req,
     router: appRouter,
-    createContext: () => createRequestContext(req.headers),
+    createContext: () => ctx,
   });
+  if (kaker.length === 0) return res;
+  const headers = new Headers(res.headers);
+  for (const kake of kaker) headers.append('Set-Cookie', kake);
+  return new Response(res.body, { status: res.status, headers });
 }

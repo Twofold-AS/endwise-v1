@@ -45,6 +45,9 @@ export const customers = pgTable(
      * Brukes som konflikt-mål i upsert (onConflictDoUpdate).
      */
     uniqueIndex('customers_tenant_quick_guid_uidx').on(t.tenantId, t.quickGuid),
+    uniqueIndex('customers_tenant_user_uidx')
+      .on(t.tenantId, t.userId)
+      .where(sql`${t.userId} is not null`),
     tenantPolicy('customers', t.tenantId),
   ],
 ).enableRLS();

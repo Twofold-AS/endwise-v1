@@ -20,6 +20,12 @@ function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
 
+const bedrift = {
+  kontekst: 'bedrift' as const,
+  requestHeaders: new Headers({ 'x-endwise-csrf': '1' }),
+  authSone: 'forhandler' as const,
+};
+
 const staff = (extra?: { isMechanic?: boolean }) =>
   ({
     db: {} as never,
@@ -28,6 +34,7 @@ const staff = (extra?: { isMechanic?: boolean }) =>
     userId: 'til-staff-1',
     role: 'dealer_staff',
     isMechanic: extra?.isMechanic ?? false,
+    ...bedrift,
   }) as never;
 
 const admin = () =>
@@ -38,6 +45,7 @@ const admin = () =>
     userId: 'til-admin-1',
     role: 'dealer_admin',
     isMechanic: false,
+    ...bedrift,
   }) as never;
 
 describe('F24 / white label F6b: områder 1', () => {

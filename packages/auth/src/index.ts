@@ -1,6 +1,7 @@
 export * from './aktiv-org.ts';
 export * from './auth.ts';
 export { authPublicUrl, authTrustedOrigins, PRODUKT_ORIGINS } from './auth-origins.ts';
+export { kjorMedAuthRequest, lesAuthTenantId, settAuthTenantId } from './auth-request.ts';
 export { ENROLL_COOKIE_MAX_AGE, ENROLL_COOKIE_NAME } from './enroll.ts';
 export {
   authEnv,
@@ -9,11 +10,34 @@ export {
   RESEND_STANDARD_DOMENE,
   RESEND_VERIFISERTE_DOMENER,
 } from './env.ts';
+export {
+  harForhandlerRolle,
+  knyttKundeUser,
+  lesTenantIdFraSlug,
+  opprettBrukerForEpost,
+} from './forhandler-konto.ts';
+export {
+  BEDRIFT_CSRF_HEADER,
+  BEDRIFT_CSRF_VERDI,
+  bedriftUtloperAt,
+  byggDealerCsp,
+  byggSesjonKake,
+  erBedriftVinduAktiv,
+  erKontekst,
+  forhandlerCookieAttributter,
+  harBedriftCsrf,
+  KONTEKST,
+  KONTEKST_AUDIT,
+  kanAapneBedrift,
+  landingEtterKode,
+  type SesjonKontekst,
+} from './kontekst.ts';
 export * from './magic-link.ts';
 export * from './password-reset.ts';
 export { brukerHarPasskey, kanBrukePlattform } from './plattform-passkey.ts';
 export {
   erAuthDestinasjon,
+  erForhandlerDestinasjon,
   erPlatformDestinasjon,
   erProduktDestinasjon,
   erTenantDestinasjon,

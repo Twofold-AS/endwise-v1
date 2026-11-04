@@ -112,9 +112,9 @@ describe('Mons lock 1–7 (ikke merge før disse er grønne)', () => {
     expect(() =>
       assertTwoFactorSatisfied({ roles: ['customer'], harPasskey: false }),
     ).not.toThrow();
-    expect(() =>
-      assertTwoFactorSatisfied({ roles: ['dealer_admin'], harPasskey: false }),
-    ).toThrow(TwoFactorRequiredError);
+    expect(() => assertTwoFactorSatisfied({ roles: ['dealer_admin'], harPasskey: false })).toThrow(
+      TwoFactorRequiredError,
+    );
     expect(TwoFactorRequiredError).toBeDefined();
   });
 

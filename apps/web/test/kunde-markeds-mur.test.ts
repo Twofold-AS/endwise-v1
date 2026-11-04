@@ -46,9 +46,8 @@ describe('F41-09: uinnlogget <sub>.endwise.no er markedsside', () => {
     }
     const sesjon = les('../app/%5Fkunde/_lib/sesjon.ts');
     expect(sesjon).toMatch(/redirect\('\/logg-inn' as Route\)/);
-    expect(sesjon).toMatch(/schema\.customers/);
-    expect(sesjon).toMatch(/lesTenantIdFraSlug/);
-    expect(sesjon).toMatch(/getSession/);
+    expect(sesjon).not.toMatch(/@endwise\/db/);
+    expect(sesjon).toMatch(/kundeErInnloggetHosSlug/);
     expect(les('../app/%5Fkunde/[slug]/logg-inn/page.tsx')).not.toMatch(/krevKundeInnlogging/);
     expect(les('../app/%5Fkunde/[slug]/personvern/page.tsx')).not.toMatch(/krevKundeInnlogging/);
   });

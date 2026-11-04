@@ -143,6 +143,29 @@ export async function erKundeHostDestinasjon(
   }
 }
 
+/** Innlogget-sjekk på kundevert: userId må eie en kundrad hos DENNE tenanten. */
+export async function brukerErKundeHosTenant(
+  db: Database,
+  tenantId: string,
+  userId: string,
+): Promise<boolean> {
+  const tenant = tenantId.trim();
+  const uid = userId.trim();
+  if (!tenant || !uid) return false;
+  try {
+    const [kunde] = await withTenant(db, tenant, (tx) =>
+      tx
+        .select({ id: schema.customers.id })
+        .from(schema.customers)
+        .where(and(eq(schema.customers.tenantId, tenant), eq(schema.customers.userId, uid)))
+        .limit(1),
+    );
+    return Boolean(kunde);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * F7 — dest på forhandlervert (historisk). Kjent ansatt ELLER kunde.
  * F39 bruker erKundeHostDestinasjon på kundevert og erAnsattDestinasjon på app.

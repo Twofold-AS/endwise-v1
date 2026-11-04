@@ -34,10 +34,12 @@ export {
   landingEtterKode,
   type SesjonKontekst,
 } from './kontekst.ts';
+export { kundeErInnloggetHosSlug } from './kunde-sesjon.ts';
 export * from './magic-link.ts';
 export * from './password-reset.ts';
 export { brukerHarPasskey, kanBrukePlattform } from './plattform-passkey.ts';
 export {
+  brukerErKundeHosTenant,
   erAnsattDestinasjon,
   erAuthDestinasjon,
   erForhandlerDestinasjon,

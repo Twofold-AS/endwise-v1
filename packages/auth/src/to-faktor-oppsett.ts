@@ -96,8 +96,7 @@ export function toFaktorStatusTekst(enabled: boolean | undefined): string {
 export const TO_FAKTOR_OPPSETT_STI = '/2fa-oppsett';
 
 /** Valgfritt for kunder — bedrift tvinges ved første innlogging. */
-export const TOTP_OPPSETT_INGRESS =
-  'Du kan slå på en passnøkkel her. Det er valgfritt for kunder.';
+export const TOTP_OPPSETT_INGRESS = 'Du kan slå på en passnøkkel her. Det er valgfritt for kunder.';
 
 export function kanStarteTotpOppsett(harInnloggetSesjon: boolean): boolean {
   return harInnloggetSesjon === true;

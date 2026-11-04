@@ -1,0 +1,16 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../../packages/db/scripts/vercel-migrate.ts",
+        "../../packages/db/scripts/vercel-migrate-beslutning.ts",
+        "../../packages/db/scripts/migrate.ts",
+        "../../packages/db/scripts/repair-0020.ts",
+        "../../packages/db/scripts/grants.ts",
+        "../../packages/db/drizzle/**"
+      ]
+    }
+  }
+}

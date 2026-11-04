@@ -9,6 +9,8 @@ DECLARE
   v_org text;
   v_user text;
 BEGIN
+  PERFORM set_config('app.platform_admin', 'on', true);
+
   SELECT id INTO v_org FROM organization WHERE slug = 'endwise' LIMIT 1;
   IF v_org IS NULL THEN
     RAISE EXCEPTION '0058: Endwise-org mangler';

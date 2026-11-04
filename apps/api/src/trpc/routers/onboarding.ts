@@ -1,4 +1,4 @@
-import { and, envelopeCryptoConfigured, eq, schema, withTenant } from '@endwise/db';
+import { and, type Database, envelopeCryptoConfigured, eq, schema, withTenant } from '@endwise/db';
 import {
   ADDON_LABELS,
   erBlokertTildeling,
@@ -6,7 +6,19 @@ import {
   erTildelbarAddon,
   tierByKey,
 } from '@endwise/modules';
+import {
+  AI_TAK_DEFAULT,
+  AI_TAK_MAX,
+  AI_TAK_MIN,
+  ONBOARDING_KATEGORIER,
+  ONBOARDING_STORRELSER,
+  rensAiTak,
+  rensApningstider,
+  rensKategorier,
+  standardApningstider,
+} from '@endwise/modules/onboarding';
 import { applyQuickDealerProfile, createQuickConfigService } from '@endwise/modules/quick';
+import { byggSlugSvar, slugSjekkTillatt, vurderSlugFormat } from '@endwise/modules/slug';
 import {
   assertAllowedQuickUrl,
   mapQuickClientInfo,
@@ -21,6 +33,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { aktiverQuickEtterGet, quickNokkelMangler } from '../../lib/quick-activate.ts';
 import { omradeSjekk, protectedProcedure, router } from '../init.ts';
+import { slugErOpptatt } from '../slug-ledig.ts';
 
 /**
  * Eier-veiviser. Egen skriverute, ikke `tenants.setModules`.
@@ -33,6 +46,30 @@ import { omradeSjekk, protectedProcedure, router } from '../init.ts';
  * SMS kan slås på hvis admin åpnet den som optional.
  * Team-invitasjoner går via `invitasjoner.opprett` (F1-10 staff-check).
  */
+
+const utkastSchema = z.object({
+  visningsnavn: z.string().min(2).max(120),
+  slug: z.string().min(3).max(32).optional(),
+  address: z.string().max(200).optional(),
+  postalCode: z.string().max(12).optional(),
+  city: z.string().max(80).optional(),
+  phone: z.string().max(40).optional(),
+  email: z.string().max(120).optional(),
+  kategorier: z.array(z.enum(ONBOARDING_KATEGORIER)).max(8).optional(),
+  forventetStorrelse: z.enum(ONBOARDING_STORRELSER).optional(),
+  aiTak: z.number().int().min(AI_TAK_MIN).max(AI_TAK_MAX).optional(),
+  apningstider: z
+    .array(
+      z.object({
+        dag: z.number().int().min(0).max(6),
+        fra: z.string().max(5),
+        til: z.string().max(5),
+        stengt: z.boolean(),
+      }),
+    )
+    .max(7)
+    .optional(),
+});
 
 const extrasSchema = z
   .array(z.string().min(1).max(64))
@@ -48,6 +85,75 @@ const extrasSchema = z
     }
   });
 
+async function skrivOnboardingUtkast(
+  db: Database,
+  tenantId: string,
+  input: z.infer<typeof utkastSchema>,
+) {
+  const navn = input.visningsnavn.trim();
+  const naa = new Date();
+  let slug: string | undefined;
+  if (input.slug) {
+    const format = vurderSlugFormat(input.slug);
+    if (!format.ok) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Ugyldig subdomene' });
+    }
+    const opptatt = await slugErOpptatt(db, format.slug, tenantId);
+    if (opptatt) {
+      const [gjeldende] = await withTenant(db, tenantId, (tx) =>
+        tx
+          .select({ slug: schema.tenants.slug })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.id, tenantId)),
+      );
+      if (gjeldende?.slug !== format.slug) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Subdomenet er opptatt' });
+      }
+    }
+    slug = format.slug;
+  }
+  await withTenant(db, tenantId, async (tx) => {
+    await tx
+      .update(schema.tenants)
+      .set({ name: navn, ...(slug ? { slug } : {}), updatedAt: naa })
+      .where(eq(schema.tenants.id, tenantId));
+    await tx
+      .update(schema.organization)
+      .set({ name: navn, ...(slug ? { slug } : {}) })
+      .where(eq(schema.organization.id, tenantId));
+    await tx
+      .insert(schema.dealerProfiles)
+      .values({
+        tenantId,
+        address: input.address ?? '',
+        postalCode: input.postalCode ?? '',
+        city: input.city ?? '',
+        phone: input.phone ?? '',
+        email: input.email ?? '',
+        apningstider: rensApningstider(input.apningstider),
+        kategorier: rensKategorier(input.kategorier),
+        forventetStorrelse: input.forventetStorrelse ?? 'liten',
+        aiTak: rensAiTak(input.aiTak),
+        updatedAt: naa,
+      })
+      .onConflictDoUpdate({
+        target: schema.dealerProfiles.tenantId,
+        set: {
+          address: input.address ?? '',
+          postalCode: input.postalCode ?? '',
+          city: input.city ?? '',
+          phone: input.phone ?? '',
+          email: input.email ?? '',
+          apningstider: rensApningstider(input.apningstider),
+          kategorier: rensKategorier(input.kategorier),
+          forventetStorrelse: input.forventetStorrelse ?? 'liten',
+          aiTak: rensAiTak(input.aiTak),
+          updatedAt: naa,
+        },
+      });
+  });
+}
+
 export const onboardingRouter = router({
   status: protectedProcedure
     .use(omradeSjekk('innstillinger', 'se', false, 'admin'))
@@ -56,11 +162,27 @@ export const onboardingRouter = router({
         const [tenant] = await tx
           .select({
             name: schema.tenants.name,
+            slug: schema.tenants.slug,
             plan: schema.tenants.plan,
             onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
           })
           .from(schema.tenants)
           .where(eq(schema.tenants.id, ctx.tenantId));
+
+        const [profil] = await tx
+          .select({
+            address: schema.dealerProfiles.address,
+            postalCode: schema.dealerProfiles.postalCode,
+            city: schema.dealerProfiles.city,
+            phone: schema.dealerProfiles.phone,
+            email: schema.dealerProfiles.email,
+            apningstider: schema.dealerProfiles.apningstider,
+            kategorier: schema.dealerProfiles.kategorier,
+            forventetStorrelse: schema.dealerProfiles.forventetStorrelse,
+            aiTak: schema.dealerProfiles.aiTak,
+          })
+          .from(schema.dealerProfiles)
+          .where(eq(schema.dealerProfiles.tenantId, ctx.tenantId));
 
         const rader = await tx
           .select({
@@ -83,6 +205,16 @@ export const onboardingRouter = router({
         return {
           complete: Boolean(tenant?.onboardingCompletedAt),
           visningsnavn: tenant?.name ?? '',
+          slug: tenant?.slug ?? '',
+          address: profil?.address ?? '',
+          postalCode: profil?.postalCode ?? '',
+          city: profil?.city ?? '',
+          phone: profil?.phone ?? '',
+          email: profil?.email ?? '',
+          kategorier: rensKategorier(profil?.kategorier),
+          forventetStorrelse: profil?.forventetStorrelse ?? 'liten',
+          aiTak: rensAiTak(profil?.aiTak ?? AI_TAK_DEFAULT),
+          apningstider: rensApningstider(profil?.apningstider ?? standardApningstider()),
           nivaa,
           included: rader
             .filter((r) => r.source === 'included' && r.enabled)
@@ -100,15 +232,49 @@ export const onboardingRouter = router({
       });
     }),
 
+  slugSjekk: protectedProcedure
+    .use(omradeSjekk('innstillinger', 'se', false, 'admin'))
+    .input(z.object({ slug: z.string().min(1).max(48), sted: z.string().max(80).optional() }))
+    .query(async ({ ctx, input }) => {
+      if (!slugSjekkTillatt(ctx.tenantId)) {
+        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Vent litt og prøv igjen.' });
+      }
+      const format = vurderSlugFormat(input.slug);
+      const forhands = byggSlugSvar(input.slug, {
+        opptatt: false,
+        sted: input.sted,
+        firmanavn: input.slug,
+      });
+      if (!format.ok || forhands.grunn === 'reservert' || forhands.grunn === 'manuell') {
+        return forhands;
+      }
+      const opptatt = await slugErOpptatt(ctx.db, format.slug, ctx.tenantId);
+      return byggSlugSvar(format.slug, { opptatt, sted: input.sted, firmanavn: input.slug });
+    }),
+
+  /** Idempotent utkast. Setter ikke Gå live. */
+  lagre: protectedProcedure
+    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
+    .input(utkastSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.role !== 'dealer_admin' && ctx.role !== 'endwise_admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Bare forhandlerens eier kan lagre oppstarten.',
+        });
+      }
+      await skrivOnboardingUtkast(ctx.db, ctx.tenantId, input);
+      return { ok: true as const };
+    }),
+
   /**
    * Fullfør veiviseren. Inkludert pakke er allerede skrevet — hopp over extras
-   * og den blir stående.
+   * og den blir stående. Idempotent: allerede live returnerer ok.
    */
   fullfor: protectedProcedure
     .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
     .input(
-      z.object({
-        visningsnavn: z.string().min(2).max(120),
+      utkastSchema.extend({
         extras: extrasSchema.default([]),
         /** Forhandlerens egen Quick-nøkkel. Påkrevd når extras inneholder `quick`. */
         quick: z
@@ -177,6 +343,7 @@ export const onboardingRouter = router({
         const [tenant] = await tx
           .select({
             name: schema.tenants.name,
+            slug: schema.tenants.slug,
             onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
           })
           .from(schema.tenants)
@@ -186,10 +353,7 @@ export const onboardingRouter = router({
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
         }
         if (tenant.onboardingCompletedAt) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Oppstarten er allerede fullført.',
-          });
+          return { visningsnavn: tenant.name, granted: [] as string[], complete: true };
         }
 
         const tillatt = await tx
@@ -225,14 +389,74 @@ export const onboardingRouter = router({
         }
 
         const navn = input.visningsnavn.trim();
+        const naa = new Date();
+        let slug = tenant.slug;
+        if (input.slug) {
+          const format = vurderSlugFormat(input.slug);
+          if (!format.ok) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Ugyldig subdomene' });
+          }
+          const opptatt = await slugErOpptatt(ctx.db, format.slug, ctx.tenantId);
+          if (opptatt && format.slug !== tenant.slug) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Subdomenet er opptatt' });
+          }
+          slug = format.slug;
+        }
         await tx
           .update(schema.tenants)
-          .set({ name: navn, onboardingCompletedAt: new Date(), updatedAt: new Date() })
+          .set({
+            name: navn,
+            slug,
+            onboardingCompletedAt: naa,
+            updatedAt: naa,
+          })
           .where(eq(schema.tenants.id, ctx.tenantId));
         await tx
           .update(schema.organization)
-          .set({ name: navn })
+          .set({ name: navn, slug })
           .where(eq(schema.organization.id, ctx.tenantId));
+        await tx
+          .insert(schema.dealerProfiles)
+          .values({
+            tenantId: ctx.tenantId,
+            address: input.address ?? '',
+            postalCode: input.postalCode ?? '',
+            city: input.city ?? '',
+            phone: input.phone ?? '',
+            email: input.email ?? '',
+            apningstider: rensApningstider(input.apningstider),
+            kategorier: rensKategorier(input.kategorier),
+            forventetStorrelse: input.forventetStorrelse ?? 'liten',
+            aiTak: rensAiTak(input.aiTak),
+            updatedAt: naa,
+          })
+          .onConflictDoUpdate({
+            target: schema.dealerProfiles.tenantId,
+            set: {
+              address: input.address ?? '',
+              postalCode: input.postalCode ?? '',
+              city: input.city ?? '',
+              phone: input.phone ?? '',
+              email: input.email ?? '',
+              apningstider: rensApningstider(input.apningstider),
+              kategorier: rensKategorier(input.kategorier),
+              forventetStorrelse: input.forventetStorrelse ?? 'liten',
+              aiTak: rensAiTak(input.aiTak),
+              updatedAt: naa,
+            },
+          });
+        await tx
+          .insert(schema.tenantBranding)
+          .values({
+            tenantId: ctx.tenantId,
+            visningsnavn: navn,
+            publisertAt: naa,
+            oppdatertAt: naa,
+          })
+          .onConflictDoUpdate({
+            target: schema.tenantBranding.tenantId,
+            set: { visningsnavn: navn, publisertAt: naa, oppdatertAt: naa },
+          });
 
         const granted: string[] = [];
         for (const key of extras) {

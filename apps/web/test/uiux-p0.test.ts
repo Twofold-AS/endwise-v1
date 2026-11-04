@@ -138,12 +138,12 @@ describe('P0: avatar-onboarding dør ikke på 401', () => {
 });
 
 describe('P0: /oppstart er visningsnavn · team (tillegg bare hvis åpnet)', () => {
-  const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/page.tsx'), 'utf8');
+  const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/_oppstart-flate.tsx'), 'utf8');
 
   it('har ikke avatar-velger, og hopper over tomt tilleggssteg', () => {
-    expect(oppstart).toMatch(/Visningsnavn/);
-    expect(oppstart).toMatch(/Team/);
-    expect(oppstart).toMatch(/optional\.length/);
+    expect(oppstart).toMatch(/visningsnavn|Firmanavn/);
+    expect(oppstart).toMatch(/valgfri: true/);
+    expect(oppstart).toMatch(/Hopp over \/ neste/);
     expect(oppstart).not.toMatch(/AvatarVelger/);
     expect(oppstart).not.toMatch(/fullforAvatarValg/);
     expect(oppstart).not.toMatch(/STEG = \['Visningsnavn', 'Avatar'/);

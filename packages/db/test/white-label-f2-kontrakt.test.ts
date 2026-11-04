@@ -26,7 +26,7 @@ describe('0047 white-label F2-kontrakt', () => {
     expect(sql).toMatch(/lookup_tenant_by_host_rev=0047/);
     expect(sql).not.toMatch(/RETURNS TABLE \([^)]*tenant_id/i);
     expect(sql).toMatch(/GRANT EXECUTE ON FUNCTION lookup_tenant_by_host\(text, text\) TO PUBLIC/);
-    expect(functions).toMatch(/lookup_tenant_by_host_rev=004[78]/);
+    expect(functions).toMatch(/lookup_tenant_by_host_rev=00(47|48|54)/);
   });
 
   it('DEFINER-policyer er TO PUBLIC og eier-only', () => {

@@ -9,7 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { inspectSelectPolicy, tenantPolicy } from '../rls.ts';
+import { customerRestrictivePolicy, inspectSelectPolicy, tenantPolicy } from '../rls.ts';
 import { customers } from './customers.ts';
 import { mechanics } from './mechanics.ts';
 import { serviceVersions } from './services.ts';
@@ -77,6 +77,7 @@ export const bookings = pgTable(
     index('bookings_tenant_starts_idx').on(t.tenantId, t.startsAt),
     tenantPolicy('bookings', t.tenantId),
     inspectSelectPolicy('bookings', t.tenantId),
+    customerRestrictivePolicy('bookings', t.customerId),
   ],
 ).enableRLS();
 

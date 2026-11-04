@@ -25,7 +25,7 @@ describe('0048 white-label F3-kontrakt', () => {
     expect(sql).toMatch(/publisert boolean/);
     expect(sql).toMatch(/b\.publisert_at IS NOT NULL/);
     expect(sql).not.toMatch(/b\.utkast/);
-    expect(functions).toMatch(/lookup_tenant_by_host_rev=0048/);
+    expect(functions).toMatch(/lookup_tenant_by_host_rev=0054/);
     expect(functions).not.toMatch(/lookup_tenant_by_host_rev=0047/);
   });
 

@@ -79,13 +79,16 @@ describe('FORCE RLS eier-UPDATE på onboarding.fullfor (prod-rolle endwise)', ()
   });
 
   it('onboarding.fullfor NOT_FOUND er SELECT før UPDATE (ikke silent 0-rad UPDATE)', () => {
-    const sel = onboarding.indexOf('from(schema.tenants)');
-    const notFound = onboarding.indexOf("code: 'NOT_FOUND', message: 'Fant ikke forhandleren'");
-    const upd = onboarding.indexOf('.update(schema.tenants)');
+    const start = onboarding.indexOf('fullfor:');
+    expect(start).toBeGreaterThan(-1);
+    const kropp = onboarding.slice(start);
+    const sel = kropp.indexOf('from(schema.tenants)');
+    const notFound = kropp.indexOf("code: 'NOT_FOUND', message: 'Fant ikke forhandleren'");
+    const upd = kropp.indexOf('.update(schema.tenants)');
     expect(sel).toBeGreaterThan(-1);
     expect(notFound).toBeGreaterThan(sel);
     expect(upd).toBeGreaterThan(notFound);
-    expect(onboarding).toMatch(/update\(schema\.tenantModules\)/);
+    expect(kropp).toMatch(/update\(schema\.tenantModules\)/);
     expect(forhandler).toMatch(/lesTenantNavn/);
   });
 

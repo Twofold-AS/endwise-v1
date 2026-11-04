@@ -50,6 +50,7 @@ export default defineConfig({
       'test/white-label-f1-kontrakt.test.ts',
       'test/white-label-f2-kontrakt.test.ts',
       'test/white-label-f3-kontrakt.test.ts',
+      'test/white-label-f10-kontrakt.test.ts',
     ],
     // RLS-testene deler DB-tilstand — serielt, ikke parallelt.
     fileParallelism: false,

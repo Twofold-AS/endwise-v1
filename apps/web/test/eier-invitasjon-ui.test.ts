@@ -13,7 +13,7 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     resolve(her, '../app/(app)/endwise/forhandlere/page.tsx'),
     'utf8',
   );
-  const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/page.tsx'), 'utf8');
+  const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/_oppstart-flate.tsx'), 'utf8');
   const pakke = readFileSync(resolve(her, '../app/(app)/endwise/_pakke-valg.tsx'), 'utf8');
 
   it('godta-siden ber om navn og sender magic link — ingen tilleggs-UI', () => {
@@ -84,22 +84,18 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
     expect(forhandlere).not.toMatch(/setActive|impersonat/i);
   });
 
-  it('eier-veiviseren er visningsnavn · team, uten ansiktsvelger', () => {
-    expect(oppstart).toMatch(/Visningsnavn/);
+  it('eier-veiviseren er fire Oppretter-steg uten ansiktsvelger', () => {
+    expect(oppstart).toMatch(/visningsnavn|Firmanavn/);
     expect(oppstart).not.toMatch(/AvatarVelger/);
     expect(oppstart).not.toMatch(/fullforAvatarValg/);
-    expect(oppstart).toMatch(/Team/);
-    expect(oppstart).toMatch(/Pakken din er/);
-    expect(oppstart).toMatch(/optional\.length/);
-    expect(oppstart).toMatch(/Inviter teamet/);
-    expect(oppstart).toMatch(/invitasjoner\.opprett/);
-    expect(oppstart).toMatch(/selger|mekaniker/);
-    expect(oppstart).toMatch(/StatefulButton/);
-    expect(oppstart).toMatch(/Vi henter oppstarten/);
+    expect(oppstart).toMatch(/Gå live/);
+    expect(oppstart).toMatch(/Hopp over \/ neste/);
+    expect(oppstart).toMatch(/Henter oppstart/);
     expect(oppstart).not.toMatch(/Laster oppstarten/);
     expect(oppstart).not.toMatch(/Mikael/);
     expect(oppstart).not.toMatch(/['"]shop['"]|['"]twilio['"]/);
     expect(oppstart).not.toMatch(/setModules/);
+    expect(oppstart).not.toMatch(/invitasjoner\.opprett/);
   });
 
   it('ansatt-invite lander etter 2FA uten avatar-steg, eier går til oppstart', () => {

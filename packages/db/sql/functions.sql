@@ -1577,7 +1577,7 @@ declare
   v_host text := lower(btrim(coalesce(p_host, '')));
   v_slug text := lower(btrim(coalesce(p_slug, '')));
 begin
-  -- lookup_tenant_by_host_rev=0048
+  -- lookup_tenant_by_host_rev=0054
   if v_host <> '' then
     perform set_config('app.host_oppslag', v_host, true);
   end if;
@@ -1598,20 +1598,22 @@ begin
     select
       t.slug,
       case
-        when b.publisert_at is not null then coalesce(nullif(b.visningsnavn, ''), t.name)
+        when b.publisert_at is not null and t.onboarding_completed_at is not null
+          then coalesce(nullif(b.visningsnavn, ''), t.name)
         else t.name
       end as visningsnavn,
-      case when b.publisert_at is not null then b.logo_url end,
-      case when b.publisert_at is not null then b.aksentfarge end,
-      case when b.publisert_at is not null then b.aksent_tekstfarge end,
+      case when b.publisert_at is not null and t.onboarding_completed_at is not null then b.logo_url end,
+      case when b.publisert_at is not null and t.onboarding_completed_at is not null then b.aksentfarge end,
+      case when b.publisert_at is not null and t.onboarding_completed_at is not null then b.aksent_tekstfarge end,
       p.phone,
       p.email,
       p.city,
       case
-        when b.publisert_at is not null then coalesce(b.vis_levert_av, true)
+        when b.publisert_at is not null and t.onboarding_completed_at is not null
+          then coalesce(b.vis_levert_av, true)
         else true
       end,
-      (b.publisert_at is not null) as publisert
+      (b.publisert_at is not null and t.onboarding_completed_at is not null) as publisert
     from tenants t
     left join tenant_branding b on b.tenant_id = t.id
     left join dealer_profiles p on p.tenant_id = t.id

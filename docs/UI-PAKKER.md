@@ -856,7 +856,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Auth-feltene (`apps/web/app/_auth/felter.tsx`: `Field`, `INPUT`) + `AuthMerke` | **Ingen ny pakke.** 08.09.2026: `INPUT` = `FELT_LG` (`.ew-felt` i `theme.css`). Samme klasse som prompt/skjema. Innlogging er stor variant (52px / 17px). `/signin` uten ytterkort. `AuthMerke` er mask + `bg-fg`. |
 
-| Invitasjon «Send meg kode» (`apps/web/app/invitasjon/`, F27-01 / plan F8a) | **Ingen ny pakke.** Board `InputOtp` er siffer-only; invitasjonskoden er 8 tegn med bokstaver (`A–Z` uten 0/O/1/I). Derfor `Field` + `INPUT` (samme som navn). Knapp `StatefulButton`. Layout `referrer: no-referrer`. Token fjernes fra URL etter GET. ⛔ `#0066ff`. |
+| Invitasjon «Send meg kode» (`apps/web/app/invitasjon/`, F27-01 / F38-08) | **Ingen ny pakke.** Kode er 6 siffer. `FeltInput` (Board Input + `FELT_MD`, samme som resten av appen). `inputMode=numeric`, `autocomplete=one-time-code`. Ikke `InputOtp` (ett felt, ikke seks bokser). Knapp `StatefulButton`. Layout `referrer: no-referrer`. Token ut av URL. ⛔ `#0066ff`. |
 
 | Daglig leder-overføring (`apps/web/app/(app)/organisasjon/_daglig-leder.tsx`, F29-01 / plan F8c) | **Ingen ny pakke.** `FeltKode` (TOTP) + `StatefulButton` + native select. Egen kode fordi ingen pakke dekker «velg ansatt + TOTP + overfør». ⛔ `#0066ff`. |
 

@@ -20,10 +20,10 @@ const PEPPER = 'test-pepper-minst-16';
 const ANNEN = 'annen-pepper-minst-16';
 
 describe('F16 / white label F0: invitasjonskode', () => {
-  it('genererer 8 tegn, hash ≠ kode, og samme kode+salt+pepper gir samme hash', () => {
+  it('genererer 6 siffer, hash ≠ kode, og samme kode+salt+pepper gir samme hash', () => {
     const { kode, salt, hash, expiresAt } = genererInvitasjonskode({ pepper: PEPPER });
     expect(kode).toHaveLength(KODE_TEGN_ANBEFALT);
-    expect(kode).toMatch(/^[A-HJ-NP-Z2-9]+$/);
+    expect(kode).toMatch(/^[0-9]+$/);
     expect(hash).not.toBe(kode);
     expect(hash).toHaveLength(64);
     expect(hashInvitasjonskode(kode, salt, PEPPER)).toBe(hash);

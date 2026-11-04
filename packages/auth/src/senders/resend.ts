@@ -428,7 +428,7 @@ export async function sendInvitasjonskode(input: {
   kode: string;
   forhandler: string;
   kind?: 'staff' | 'owner' | 'platform';
-}): Promise<void> {
+}): Promise<string | undefined> {
   const kode = input.kode.trim().toUpperCase();
   const subject = innloggingsEpostEmne(kode);
   const ingress =
@@ -446,10 +446,10 @@ export async function sendInvitasjonskode(input: {
       ],
       fotnote,
     );
-    return;
+    return undefined;
   }
 
-  await sendEmail({
+  return sendEmail({
     to: input.to,
     subject,
     text: [ingress, '', kode, '', fotnote].join('\n'),

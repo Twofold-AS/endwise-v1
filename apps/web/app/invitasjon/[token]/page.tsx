@@ -1,10 +1,9 @@
 'use client';
 
-import { Mail, StatefulButton } from '@endwise/ui';
+import { FeltInput, Mail, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
-import { Field, INPUT } from '../../_auth/felter';
 
 type Invitasjon = {
   gyldig: true;
@@ -79,15 +78,24 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const sendKode = useCallback(async () => {
     if (!inv) return;
     setFeil(null);
+    setKodeMelding(null);
     setNyKodeVent(true);
     try {
-      await fetch(`/invitasjoner/${encodeURIComponent(token)}/send-kode`, {
+      const res = await fetch(`/invitasjoner/${encodeURIComponent(token)}/send-kode`, {
         method: 'POST',
         headers: { ...CSRF },
       });
+      const data = (await res.json().catch(() => null)) as {
+        sendt?: boolean;
+        feil?: string;
+      } | null;
+      if (!res.ok || !data?.sendt) {
+        setFeil(data?.feil ?? 'Kunne ikke sende koden. Prøv igjen.');
+        return;
+      }
       setKodeMelding(`Kode sendt til ${inv.epost}.`);
     } catch (error) {
-      setFeil(error instanceof Error ? error.message : 'Noe gikk galt.');
+      setFeil(error instanceof Error ? error.message : 'Kunne ikke sende koden. Prøv igjen.');
     } finally {
       window.setTimeout(() => setNyKodeVent(false), 10_000);
     }
@@ -167,7 +175,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
       : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager.';
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg px-4 text-fg">
+    <main className="flex min-h-dvh items-center justify-center bg-bg px-4 pb-[14vh] text-fg">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3">
           <Image src="/logo/logo.svg" alt="Endwise" width={44} height={44} priority />
@@ -188,42 +196,31 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
         ) : null}
 
         {visSkjema ? (
-          <form onSubmit={(e) => void godta(e)} className="flex flex-col gap-3">
+          <form onSubmit={(e) => void godta(e)} className="flex flex-col gap-4">
             {inv?.kreverKode ? (
-              <div className="rounded-xl border border-border bg-card p-[5px]">
-                <div className="rounded-lg bg-inset p-4">
-                  <Field id="inv-kode" label="Kode">
-                    <input
-                      id="inv-kode"
-                      autoComplete="one-time-code"
-                      inputMode="text"
-                      required
-                      minLength={6}
-                      maxLength={12}
-                      value={kode}
-                      onChange={(e) => setKode(e.target.value.toUpperCase())}
-                      className={INPUT}
-                    />
-                  </Field>
-                </div>
-              </div>
+              <FeltInput
+                id="inv-kode"
+                label="Kode"
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                isRequired
+                maxLength={6}
+                value={kode}
+                onChange={(v) => setKode(v.replace(/\D/g, '').slice(0, 6))}
+                placeholder="6 siffer"
+              />
             ) : null}
 
-            <div className="rounded-xl border border-border bg-card p-[5px]">
-              <div className="rounded-lg bg-inset p-4">
-                <Field id="inv-navn" label="Navn">
-                  <input
-                    id="inv-navn"
-                    autoComplete="name"
-                    required
-                    minLength={2}
-                    value={navn}
-                    onChange={(e) => setNavn(e.target.value)}
-                    className={INPUT}
-                  />
-                </Field>
-              </div>
-            </div>
+            <FeltInput
+              id="inv-navn"
+              label="Navn"
+              autoComplete="name"
+              isRequired
+              value={navn}
+              onChange={setNavn}
+              placeholder="Hva heter du?"
+            />
 
             {kodeMelding && !feil ? (
               <p className="text-[12px] text-fg-muted">{kodeMelding}</p>
@@ -245,7 +242,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
               disabled={
                 sender ||
                 navn.trim().length < 2 ||
-                Boolean(inv?.kreverKode && kode.trim().length < 6)
+                Boolean(inv?.kreverKode && kode.trim().length !== 6)
               }
             >
               Fortsett

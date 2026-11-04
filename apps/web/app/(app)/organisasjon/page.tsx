@@ -13,6 +13,7 @@ import { AktivitetFraEndwise } from './_aktivitet-endwise';
 import { OrganisasjonAnsatte } from './_ansatte';
 import { DagligLederFlate } from './_daglig-leder';
 import { parseOrgSeksjon } from './_seksjoner';
+import { TilgangerFlate } from './_tilganger';
 import { TimeplanAnsatteFlate } from './_timeplan-ansatte';
 import { ForhandlerKort } from './forhandleren/_kort';
 
@@ -101,11 +102,13 @@ function OrganisasjonIndre() {
 
   if (seksjon === 'tilganger') {
     return (
-      <Side tittel="Tilganger" tilbakeHref="/organisasjon" undertekst="Hvem som får se hva">
-        <p className="text-body text-fg-muted">
-          Tilgangsstyring kommer senere. I dag styres synlighet av rollen (admin, selger, support,
-          mekaniker).
-        </p>
+      <Side
+        tittel="Tilganger"
+        tilbakeHref="/organisasjon"
+        undertekst="Se eller Endre per område"
+        handling={isAdmin ? <NyKnapp onClick={ny.apne}>Ny ansatt</NyKnapp> : undefined}
+      >
+        <TilgangerFlate apenNy={ny.apen} onLukkNy={ny.lukk} />
       </Side>
     );
   }

@@ -151,7 +151,7 @@ export const inventoryRouter = router({
     ),
 
   createPart: protectedProcedure
-    .use(omradeSjekk('lager', 'endre', false, 'admin'))
+    .use(omradeSjekk('lager', 'endre'))
     .input(
       z.object({
         sku: z.string().min(1).max(64),
@@ -199,7 +199,7 @@ export const inventoryRouter = router({
     ),
 
   createLocation: protectedProcedure
-    .use(omradeSjekk('lager', 'endre', false, 'admin'))
+    .use(omradeSjekk('lager', 'endre'))
     .input(z.object({ code: z.string().min(1).max(32), name: z.string().min(1).max(120) }))
     .mutation(async ({ ctx, input }) => {
       try {

@@ -155,85 +155,83 @@ async function skrivOnboardingUtkast(
 }
 
 export const onboardingRouter = router({
-  status: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'se', false, 'admin'))
-    .query(async ({ ctx }) => {
-      return withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        const [tenant] = await tx
-          .select({
-            name: schema.tenants.name,
-            slug: schema.tenants.slug,
-            plan: schema.tenants.plan,
-            onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
-          })
-          .from(schema.tenants)
-          .where(eq(schema.tenants.id, ctx.tenantId));
+  status: protectedProcedure.use(omradeSjekk('innstillinger', 'se')).query(async ({ ctx }) => {
+    return withTenant(ctx.db, ctx.tenantId, async (tx) => {
+      const [tenant] = await tx
+        .select({
+          name: schema.tenants.name,
+          slug: schema.tenants.slug,
+          plan: schema.tenants.plan,
+          onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
+        })
+        .from(schema.tenants)
+        .where(eq(schema.tenants.id, ctx.tenantId));
 
-        const [profil] = await tx
-          .select({
-            address: schema.dealerProfiles.address,
-            postalCode: schema.dealerProfiles.postalCode,
-            city: schema.dealerProfiles.city,
-            phone: schema.dealerProfiles.phone,
-            email: schema.dealerProfiles.email,
-            apningstider: schema.dealerProfiles.apningstider,
-            kategorier: schema.dealerProfiles.kategorier,
-            forventetStorrelse: schema.dealerProfiles.forventetStorrelse,
-            aiTak: schema.dealerProfiles.aiTak,
-          })
-          .from(schema.dealerProfiles)
-          .where(eq(schema.dealerProfiles.tenantId, ctx.tenantId));
+      const [profil] = await tx
+        .select({
+          address: schema.dealerProfiles.address,
+          postalCode: schema.dealerProfiles.postalCode,
+          city: schema.dealerProfiles.city,
+          phone: schema.dealerProfiles.phone,
+          email: schema.dealerProfiles.email,
+          apningstider: schema.dealerProfiles.apningstider,
+          kategorier: schema.dealerProfiles.kategorier,
+          forventetStorrelse: schema.dealerProfiles.forventetStorrelse,
+          aiTak: schema.dealerProfiles.aiTak,
+        })
+        .from(schema.dealerProfiles)
+        .where(eq(schema.dealerProfiles.tenantId, ctx.tenantId));
 
-        const rader = await tx
-          .select({
-            moduleKey: schema.tenantModules.moduleKey,
-            enabled: schema.tenantModules.enabled,
-            source: schema.tenantModules.source,
-          })
-          .from(schema.tenantModules)
-          .where(eq(schema.tenantModules.tenantId, ctx.tenantId));
+      const rader = await tx
+        .select({
+          moduleKey: schema.tenantModules.moduleKey,
+          enabled: schema.tenantModules.enabled,
+          source: schema.tenantModules.source,
+        })
+        .from(schema.tenantModules)
+        .where(eq(schema.tenantModules.tenantId, ctx.tenantId));
 
-        const etikett = (key: string) =>
-          key in ADDON_LABELS ? ADDON_LABELS[key as keyof typeof ADDON_LABELS] : key;
+      const etikett = (key: string) =>
+        key in ADDON_LABELS ? ADDON_LABELS[key as keyof typeof ADDON_LABELS] : key;
 
-        const planKey = erTierKey(tenant?.plan) ? tenant.plan : 'start';
-        const nivaa = { key: planKey, name: tierByKey(planKey)?.name ?? 'Start' };
-        const includedKeys = new Set(
-          rader.filter((r) => r.source === 'included' && r.enabled).map((r) => r.moduleKey),
-        );
+      const planKey = erTierKey(tenant?.plan) ? tenant.plan : 'start';
+      const nivaa = { key: planKey, name: tierByKey(planKey)?.name ?? 'Start' };
+      const includedKeys = new Set(
+        rader.filter((r) => r.source === 'included' && r.enabled).map((r) => r.moduleKey),
+      );
 
-        return {
-          complete: Boolean(tenant?.onboardingCompletedAt),
-          visningsnavn: tenant?.name ?? '',
-          slug: tenant?.slug ?? '',
-          address: profil?.address ?? '',
-          postalCode: profil?.postalCode ?? '',
-          city: profil?.city ?? '',
-          phone: profil?.phone ?? '',
-          email: profil?.email ?? '',
-          kategorier: rensKategorier(profil?.kategorier),
-          forventetStorrelse: profil?.forventetStorrelse ?? 'liten',
-          aiTak: rensAiTak(profil?.aiTak ?? AI_TAK_DEFAULT),
-          apningstider: rensApningstider(profil?.apningstider ?? standardApningstider()),
-          nivaa,
-          included: rader
-            .filter((r) => r.source === 'included' && r.enabled)
-            .map((r) => ({ key: r.moduleKey, label: etikett(r.moduleKey) })),
-          optional: rader
-            .filter((r) => r.source === 'optional' || r.source === 'dealer')
-            .filter((r) => !erBlokertTildeling(r.moduleKey))
-            .filter((r) => !includedKeys.has(r.moduleKey))
-            .map((r) => ({
-              key: r.moduleKey,
-              label: etikett(r.moduleKey),
-              enabled: r.enabled,
-            })),
-        };
-      });
-    }),
+      return {
+        complete: Boolean(tenant?.onboardingCompletedAt),
+        visningsnavn: tenant?.name ?? '',
+        slug: tenant?.slug ?? '',
+        address: profil?.address ?? '',
+        postalCode: profil?.postalCode ?? '',
+        city: profil?.city ?? '',
+        phone: profil?.phone ?? '',
+        email: profil?.email ?? '',
+        kategorier: rensKategorier(profil?.kategorier),
+        forventetStorrelse: profil?.forventetStorrelse ?? 'liten',
+        aiTak: rensAiTak(profil?.aiTak ?? AI_TAK_DEFAULT),
+        apningstider: rensApningstider(profil?.apningstider ?? standardApningstider()),
+        nivaa,
+        included: rader
+          .filter((r) => r.source === 'included' && r.enabled)
+          .map((r) => ({ key: r.moduleKey, label: etikett(r.moduleKey) })),
+        optional: rader
+          .filter((r) => r.source === 'optional' || r.source === 'dealer')
+          .filter((r) => !erBlokertTildeling(r.moduleKey))
+          .filter((r) => !includedKeys.has(r.moduleKey))
+          .map((r) => ({
+            key: r.moduleKey,
+            label: etikett(r.moduleKey),
+            enabled: r.enabled,
+          })),
+      };
+    });
+  }),
 
   slugSjekk: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'se', false, 'admin'))
+    .use(omradeSjekk('innstillinger', 'se'))
     .input(z.object({ slug: z.string().min(1).max(48), sted: z.string().max(80).optional() }))
     .query(async ({ ctx, input }) => {
       if (!slugSjekkTillatt(ctx.tenantId)) {
@@ -254,7 +252,7 @@ export const onboardingRouter = router({
 
   /** Idempotent utkast. Setter ikke Gå live. */
   lagre: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
+    .use(omradeSjekk('innstillinger', 'endre'))
     .input(utkastSchema)
     .mutation(async ({ ctx, input }) => {
       if (ctx.role !== 'dealer_admin' && ctx.role !== 'endwise_admin') {
@@ -272,7 +270,7 @@ export const onboardingRouter = router({
    * og den blir stående. Idempotent: allerede live returnerer ok.
    */
   fullfor: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
+    .use(omradeSjekk('innstillinger', 'endre'))
     .input(
       utkastSchema.extend({
         extras: extrasSchema.default([]),

@@ -130,7 +130,7 @@ export async function hentForhandlerKort(
  */
 export const forhandlerRouter = router({
   get: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'se', false, 'admin'))
+    .use(omradeSjekk('innstillinger', 'se'))
     .query(({ ctx }) =>
       hentForhandlerKort((fn) => withTenant(ctx.db, ctx.tenantId, fn), ctx.tenantId),
     ),
@@ -141,7 +141,7 @@ export const forhandlerRouter = router({
   ),
 
   update: protectedProcedure
-    .use(omradeSjekk('innstillinger', 'endre', false, 'admin'))
+    .use(omradeSjekk('innstillinger', 'endre'))
     .input(
       z.object({
         name: felt.min(1),

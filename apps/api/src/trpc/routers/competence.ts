@@ -17,7 +17,7 @@ export const competenceRouter = router({
     .query(({ ctx }) => createCompetenceRegistry(ctx.db).listSkills(ctx.tenantId)),
 
   upsertSkill: protectedProcedure
-    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
+    .use(omradeSjekk('ansatte', 'endre'))
     .input(
       z.object({
         key: z
@@ -53,7 +53,7 @@ export const competenceRouter = router({
     .query(({ ctx }) => createCompetenceRegistry(ctx.db).listAllMechanicSkills(ctx.tenantId)),
 
   setMechanicSkill: protectedProcedure
-    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
+    .use(omradeSjekk('ansatte', 'endre'))
     .input(
       z.object({
         mechanicId: z.uuid(),
@@ -80,7 +80,7 @@ export const competenceRouter = router({
     }),
 
   removeMechanicSkill: protectedProcedure
-    .use(omradeSjekk('ansatte', 'endre', false, 'admin'))
+    .use(omradeSjekk('ansatte', 'endre'))
     .input(z.object({ mechanicId: z.uuid(), skillKey: z.string() }))
     .mutation(async ({ ctx, input }) => {
       try {

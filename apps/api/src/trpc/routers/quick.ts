@@ -18,12 +18,8 @@ import { runQuickCustomerPull } from '../../lib/quick-pull.ts';
 import { moduleProcedure, omradeSjekk, router } from '../init.ts';
 
 /** Modul-gate: `quick`. Erp-integrasjonen er et betalt tillegg. */
-const quickProcedure = moduleProcedure('quick').use(
-  omradeSjekk('innstillinger', 'se', false, 'admin'),
-);
-const quickAdminProcedure = moduleProcedure('quick').use(
-  omradeSjekk('innstillinger', 'endre', false, 'admin'),
-);
+const quickProcedure = moduleProcedure('quick').use(omradeSjekk('innstillinger', 'se'));
+const quickAdminProcedure = moduleProcedure('quick').use(omradeSjekk('innstillinger', 'endre'));
 
 /**
  * F8-01 / F8-02 — Quick-integrasjon (QuickLite).

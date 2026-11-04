@@ -63,7 +63,7 @@ describe('F27 / white label F8a: send-kode og godta', () => {
       }),
     );
     expect(uten.status).toBe(200);
-    expect(await uten.json()).toEqual({ ok: true });
+    expect(await uten.json()).toEqual({ ok: true, sendt: false });
 
     stubs.finnApen.mockResolvedValue(apen);
     const med = await handleHono(
@@ -73,7 +73,9 @@ describe('F27 / white label F8a: send-kode og godta', () => {
       }),
     );
     expect(med.status).toBe(200);
-    expect(await med.json()).toEqual({ ok: true });
+    const kropp = await med.json();
+    expect(kropp.ok).toBe(true);
+    expect(kropp.sendt).toBe(false);
   });
 
   it('godta uten CSRF eller kode gir samme feil, forbruk kalles ikke', async () => {
@@ -139,6 +141,8 @@ describe('F27 / white label F8a: send-kode og godta', () => {
     const send = rute.slice(rute.indexOf("invitasjon.post('/:token/send-kode'"));
     expect(send).toMatch(/kanSendeKode/);
     expect(send).toMatch(/sendt: false/);
+    expect(send).toMatch(/uten Resend-id/);
+    expect(send).toMatch(/resendId/);
     expect(rute).not.toMatch(/#0066ff/);
   });
 

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-04 — F38-08 invitasjons-OTP Next-rute
+
+**Type:** hotfix. Ingen ny UI-pakke. Ingen techstack-endring. Ingen flags.
+**Godkjent av:** Mikael (prod: kode kommer aldri, UI sier sendt).
+**Endring:** Ny **F38-08** `done`. Next POST-rute for send-kode, ærlig `sendt`, FeltInput.
+
+---
+
 ## 2026-11-04 — F40 forhandler-isolasjon og admin-subdomene
 
 **Type:** ny fase. Ingen ny UI-pakke. Ingen techstack-endring. Ingen flags.

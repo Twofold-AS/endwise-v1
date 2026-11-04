@@ -29,12 +29,12 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
   it('kloner /signin-chromet — logo, kort, StatefulButton, auth-felt', () => {
     expect(kilde).toMatch(/from '@endwise\/ui'/);
     expect(kilde).toMatch(/StatefulButton/);
-    expect(kilde).toMatch(/Field, INPUT/);
+    expect(kilde).toMatch(/FeltInput/);
     expect(kilde).not.toMatch(/PassordFelt/);
     expect(kilde).toMatch(/\/logo\/logo\.svg/);
     expect(kilde).toMatch(/max-w-sm/);
-    expect(kilde).toMatch(/rounded-xl border border-border bg-card p-\[5px\]/);
-    expect(kilde).toMatch(/bg-inset p-4/);
+    expect(kilde).not.toMatch(/p-\[5px\]/);
+    expect(kilde).not.toMatch(/bg-inset p-4/);
     expect(kilde).toMatch(/Henter invitasjonen…/);
     expect(kilde).toMatch(/Klarte ikke hente invitasjonen\. Prøv igjen\./);
     expect(kilde).toMatch(/fetch\(`\/invitasjoner\/\$\{encodeURIComponent\(token\)\}`\)/);

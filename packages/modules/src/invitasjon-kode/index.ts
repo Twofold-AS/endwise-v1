@@ -3,13 +3,13 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 /**
  * F16 / white label F0 — kort invitasjonskode (ikke det lange tokenet).
  * SHA-256 av tokenet (packages/modules/src/invitasjoner) holder for 256 bit
- * tilfeldighet. En 6–8 tegns kode krever HMAC med server-pepper og rad-salt.
+ * tilfeldighet. En 6-sifret kode krever HMAC med server-pepper og rad-salt.
  * Isolert: rører ikke eksisterende invitasjonsflyt.
  */
 
 export const KODE_TEGN_MIN = 6;
 export const KODE_TEGN_MAX = 8;
-export const KODE_TEGN_ANBEFALT = 8;
+export const KODE_TEGN_ANBEFALT = 6;
 export const KODE_GYLDIGHET_MS = 10 * 60 * 1000;
 export const KODE_GYLDIGHET_MAX_MS = 15 * 60 * 1000;
 export const MAX_FORSOK = 5;
@@ -18,18 +18,16 @@ export const SEND_VINDU_MS = 60 * 60 * 1000;
 export const PEPPER_ENV = 'INVITASJON_KODE_PEPPER';
 export const INVITASJON_SAMME_FEIL = 'Invitasjonen er ugyldig, brukt eller utløpt.';
 
-/** Lettlest alfabet uten 0/O/1/I. Lengde 32 = jevnt 5 bit. */
-const ALFABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+/** 6-sifret OTP. Numerisk tastatur + autocomplete=one-time-code. */
+const SIFFER = '0123456789';
 
-/** CSPRNG uten modulo (CWE-331 / CodeQL js/biased-cryptographic-random). */
+/** CSPRNG uten modulo-bias (CWE-331). 250–255 forkastes (250 = 25×10). */
 function trekkKode(lengde: number): string {
   let kode = '';
   while (kode.length < lengde) {
     const b = randomBytes(1)[0];
-    if (b === undefined) continue;
-    const tegn = ALFABET[b & 31];
-    if (tegn === undefined) continue;
-    kode += tegn;
+    if (b === undefined || b >= 250) continue;
+    kode += SIFFER[b % 10];
   }
   return kode;
 }

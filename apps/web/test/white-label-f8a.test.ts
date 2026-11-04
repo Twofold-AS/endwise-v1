@@ -22,11 +22,23 @@ describe('F27 / white label F8a: invitasjons-UI', () => {
     expect(side).toMatch(/label="Navn"/);
     expect(side).toMatch(/id="inv-kode"/);
     expect(side).toMatch(/id="inv-navn"/);
+    expect(side).toMatch(/autoComplete="one-time-code"/);
+    expect(side).toMatch(/inputMode="numeric"/);
+    expect(side).toMatch(/FeltInput/);
+    expect(side).toMatch(/data\?\.sendt/);
+    expect(side).not.toMatch(/p-\[5px\]/);
     expect(side).toMatch(/kreverKode/);
     expect(side).toMatch(/Fortsett/);
     expect(side).not.toMatch(/Send meg kode/);
     expect(side).not.toMatch(/#0066ff/);
     expect(side).not.toMatch(/FeltKode|InputOtp/);
+  });
+
+  it('Next har POST /invitasjoner/:token/send-kode', () => {
+    const rute = les('../app/invitasjoner/[token]/send-kode/route.ts');
+    expect(rute).toMatch(/export function POST/);
+    expect(rute).toMatch(/handleHono/);
+    expect(les('../app/invitasjoner/[token]/route.ts')).not.toMatch(/export function POST/);
   });
 
   it('layout er no-referrer og noindex', () => {

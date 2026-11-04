@@ -137,8 +137,11 @@ function krevInvitasjonCsrf(c: { req: { raw: Request } }): boolean {
 }
 
 invitasjon.post('/:token/send-kode', async (c) => {
+  const nei = (feil?: string) =>
+    c.json({ ok: true, sendt: false as const, ...(feil ? { feil } : {}) }, 200);
+
   if (!krevInvitasjonCsrf(c)) {
-    return c.json({ ok: true }, 200);
+    return nei();
   }
   const modul = createInvitasjonsmodul(db());
   let inv: ApenInvitasjon | null;
@@ -146,9 +149,9 @@ invitasjon.post('/:token/send-kode', async (c) => {
     inv = await modul.finnApen(c.req.param('token'));
   } catch (error) {
     loggOppslagFeil(error);
-    return c.json({ ok: true }, 200);
+    return nei('Kunne ikke sende koden. Prøv igjen.');
   }
-  if (!inv) return c.json({ ok: true }, 200);
+  if (!inv) return nei();
 
   try {
     const now = new Date();
@@ -202,11 +205,23 @@ invitasjon.post('/:token/send-kode', async (c) => {
           .where(eq(schema.tenants.id, inv.tenantId))
           .limit(1),
       );
-      await sendInvitasjonskode({
+      const resendId = await sendInvitasjonskode({
         to: inv.epost,
         kode: utfall.kode,
         forhandler: inv.kind === 'platform' ? 'Endwise' : (forhandler?.navn ?? 'Endwise'),
         kind: inv.kind,
+      });
+      if (!resendId && process.env.NODE_ENV === 'production') {
+        console.error('[invitasjon] send-kode uten Resend-id', {
+          kind: inv.kind,
+          epostDomene: inv.epost.split('@')[1] ?? null,
+        });
+        return nei('Kunne ikke sende koden. Prøv igjen.');
+      }
+      console.info('[invitasjon] kode sendt', {
+        resendId: resendId ?? null,
+        kind: inv.kind,
+        epostDomene: inv.epost.split('@')[1] ?? null,
       });
       await withTenant(db(), inv.tenantId, (tx) =>
         tx.insert(schema.auditLog).values({
@@ -217,7 +232,9 @@ invitasjon.post('/:token/send-kode', async (c) => {
           subjectId: inv.id,
         }),
       );
-    } else if (utfall.begrenset) {
+      return c.json({ ok: true, sendt: true as const }, 200);
+    }
+    if (utfall.begrenset) {
       await withTenant(db(), inv.tenantId, (tx) =>
         tx.insert(schema.auditLog).values({
           tenantId: inv.tenantId,
@@ -227,7 +244,9 @@ invitasjon.post('/:token/send-kode', async (c) => {
           subjectId: inv.id,
         }),
       );
+      return nei('Vent litt og prøv igjen.');
     }
+    return nei('Kunne ikke sende koden. Prøv igjen.');
   } catch (error) {
     const pg = lesPostgresCause(error);
     console.error('[invitasjon] send-kode feilet', {
@@ -235,8 +254,8 @@ invitasjon.post('/:token/send-kode', async (c) => {
       constraint: pg.constraint,
       message: error instanceof Error ? error.message : String(error),
     });
+    return nei('Kunne ikke sende koden. Prøv igjen.');
   }
-  return c.json({ ok: true }, 200);
 });
 
 const godtaKropp = z.object({

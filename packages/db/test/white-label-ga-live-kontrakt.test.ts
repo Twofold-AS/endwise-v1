@@ -36,4 +36,10 @@ describe('0057 white-label gå live-kontrakt', () => {
     const pkg = readFileSync(resolve(her, '../../../apps/web/package.json'), 'utf8');
     expect(pkg).toMatch(/vercel-migrate\.ts/);
   });
+
+  it('production uten DATABASE_URL stopper bygget', () => {
+    const src = readFileSync(resolve(her, '../scripts/vercel-migrate.ts'), 'utf8');
+    expect(src).toMatch(/vercelMigrateBeslutning/);
+    expect(src).toMatch(/handling === 'stopp'/);
+  });
 });

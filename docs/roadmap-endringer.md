@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-04 — F38-04 Prod-login migrate faktisk kjøres
+
+**Type:** hotfix etter #207. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** Mikael (prod-feil, ingen approval, squash-merge når CI er grønn).
+**Endring:** Ny **F38-04** `done`. Turbo `globalPassThroughEnv` for `DATABASE_URL`. Production-build feiler hvis URL mangler. F38-02-tekst peker hit.
+
+---
+
 ## 2026-11-04 — F38 White label gå live
 
 **Type:** ny fase. Flagg vekk, prod-migrering, fresh start, iPhone-verify.

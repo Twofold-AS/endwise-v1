@@ -3,6 +3,7 @@
   "ui": "tui",
   "globalDependencies": ["**/.env.*local", "tsconfig.base.json"],
   "globalEnv": ["NODE_ENV", "VERCEL_ENV", "QUICK_HTTPS_PROXY"],
+  "globalPassThroughEnv": ["DATABASE_URL", "VERCEL", "ENDWISE_GA_LIVE"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

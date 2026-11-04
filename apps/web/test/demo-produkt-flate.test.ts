@@ -33,7 +33,7 @@ describe('Ny forhandler får ikke auto-demo de ikke kan bruke', () => {
     );
     expect(createBlokk).not.toMatch(/seedDemo|seedLager|Demo Demosen/);
 
-    const oppstart = utenKommentarer(les('../app/(app)/oppstart/page.tsx'));
+    const oppstart = utenKommentarer(les('../app/(app)/oppstart/_oppstart-flate.tsx'));
     expect(oppstart).not.toMatch(/seedDemo|Seed demo/);
 
     const forhandlere = utenKommentarer(les('../app/(app)/endwise/forhandlere/page.tsx'));
@@ -64,7 +64,7 @@ describe('Brukerflaten ber ikke om lokal Resend-kopi', () => {
     '../app/2fa-oppsett/page.tsx',
     '../app/signin/signin-skjema.tsx',
     '../app/signin/page.tsx',
-    '../app/(app)/oppstart/page.tsx',
+    '../app/(app)/oppstart/_oppstart-flate.tsx',
   ];
 
   it.each(sider)('%s nevner ikke lokal api-logg / Resend-workaround', (rel) => {

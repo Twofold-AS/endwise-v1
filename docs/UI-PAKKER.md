@@ -856,7 +856,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Auth-feltene (`apps/web/app/_auth/felter.tsx`: `Field`, `INPUT`) + `AuthMerke` | **Ingen ny pakke.** 08.09.2026: `INPUT` = `FELT_LG` (`.ew-felt` i `theme.css`). Samme klasse som prompt/skjema. Innlogging er stor variant (52px / 17px). `/signin` uten ytterkort. `AuthMerke` er mask + `bg-fg`. |
 
-| Invitasjon «Send meg kode» (`apps/web/app/invitasjon/`, F27-01 / F38-08) | **Ingen ny pakke.** Kode er 6 siffer. `FeltInput` (Board Input + `FELT_MD`, samme som resten av appen). `inputMode=numeric`, `autocomplete=one-time-code`. Ikke `InputOtp` (ett felt, ikke seks bokser). Knapp `StatefulButton`. Layout `referrer: no-referrer`. Token ut av URL. ⛔ `#0066ff`. |
+| Invitasjon (`apps/web/app/invitasjon/`, F27-01 / F41-01) | **Ingen ny pakke.** Bare navn + Neste. Ingen kode, ingen «Fikk ingen kode?». `FeltInput` + `StatefulButton`. 1,2 s vent + rate limit. Layout `referrer: no-referrer`. Token ut av URL. ⛔ `#0066ff`. |
 
 | Daglig leder-overføring (`apps/web/app/(app)/organisasjon/_daglig-leder.tsx`, F29-01 / plan F8c) | **Ingen ny pakke.** `FeltKode` (TOTP) + `StatefulButton` + native select. Egen kode fordi ingen pakke dekker «velg ansatt + TOTP + overfør». ⛔ `#0066ff`. |
 
@@ -874,7 +874,7 @@ Kun disse. Hver enkelt har en grunn.
 
 | Widget forhandlerbranding (`packages/widget-ui`, F37-01 / plan F14) | **Ingen ny pakke.** Samme `EndwiseWidget` + `--ew-widget-cta`. Egen kode fordi ingen pakke dekker «publisert merke på embed uten app-stilark». Framer-plugin merkes tillegg. ⛔ `#0066ff`. |
 
-| Ny forhandler subdomene (`apps/web/app/(app)/endwise/forhandlere/page.tsx`, F40-02) | **Ingen ny pakke.** Samme `Felt` + `StatefulButton`. Egen kode bare for live `<slug>.endwise.no`-forhåndsvisning og `sjekkSlug`. Ingen redesign (F39-01). ⛔ `#0066ff`. |
+| Ny forhandler subdomene (`apps/web/app/(app)/endwise/forhandlere/page.tsx`, F40-02 / F41-03) | **Ingen ny pakke.** Samme `Felt` + `StatefulButton` + native filfelt for admin-logo. Egen kode bare for live `<slug>.endwise.no`-forhåndsvisning, `sjekkSlug` og `lastOppLogo`. Ingen redesign (F39-01). ⛔ `#0066ff`. |
 
 | Transaksjonell e-post (`packages/auth/src/senders/epost-mal.ts`, `toolkit-resend/src/epost-html.ts`) | **Ingen ny pakke, og ingen react-email.** Techstack er Resend + tabell-HTML (Outlook/Gmail). shadcn/beUI kan ikke brukes i innboksen. **Login-e-post (08.09 Mobbin):** `byggInnloggingsEpostHtml` — alltid hvit `#ffffff`, ink `#141414`, svart cid-logo, tykk «Hei {navn}», stor 5-sifret kode, understreket «lenka». Ingen Action Blue-CTA. Andre maler (invite, bytte, innboks) beholdt Apple-skallet: parchment `#f5f5f7`, Action Blue-pille `#0066cc`. ⛔ Ikke mørk chrome, ikke Synara, ikke Linear-lime. |
 

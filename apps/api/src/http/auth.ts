@@ -24,9 +24,11 @@ function getAuthDb(): Database | null {
 let defaultAuth: ReturnType<typeof createAuth> | undefined;
 let platformAuth: ReturnType<typeof createAuth> | undefined;
 let appAuth: ReturnType<typeof createAuth> | undefined;
+const forhandlerAuth = new Map<string, ReturnType<typeof createAuth>>();
 
 function getAuth(req: Request) {
   const sone = lesAuthSone(req.headers);
+  const slug = req.headers.get('x-endwise-slug')?.trim();
   if (sone === 'platform') {
     platformAuth ??= createAuth(undefined, { sone: 'platform' });
     return platformAuth;
@@ -34,6 +36,13 @@ function getAuth(req: Request) {
   if (sone === 'app') {
     appAuth ??= createAuth(undefined, { sone: 'app' });
     return appAuth;
+  }
+  if (sone === 'forhandler' && slug) {
+    const eksisterende = forhandlerAuth.get(slug);
+    if (eksisterende) return eksisterende;
+    const opprettet = createAuth(undefined, { sone: 'forhandler', slug });
+    forhandlerAuth.set(slug, opprettet);
+    return opprettet;
   }
   defaultAuth ??= createAuth(undefined, sone ? { sone } : undefined);
   return defaultAuth;

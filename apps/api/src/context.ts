@@ -135,7 +135,8 @@ export function createAppContext(): AppContext {
 let defaultAuth: Auth | undefined;
 let platformAuth: Auth | undefined;
 let appAuth: Auth | undefined;
-function getAuthForContext(sone: AuthSone | null): Auth {
+const forhandlerAuth = new Map<string, Auth>();
+function getAuthForContext(sone: AuthSone | null, slug?: string | null): Auth {
   if (sone === 'platform') {
     platformAuth ??= createAuth(getDb(), { sone: 'platform' });
     return platformAuth;
@@ -143,6 +144,13 @@ function getAuthForContext(sone: AuthSone | null): Auth {
   if (sone === 'app') {
     appAuth ??= createAuth(getDb(), { sone: 'app' });
     return appAuth;
+  }
+  if (sone === 'forhandler' && slug) {
+    const eksisterende = forhandlerAuth.get(slug);
+    if (eksisterende) return eksisterende;
+    const opprettet = createAuth(getDb(), { sone: 'forhandler', slug });
+    forhandlerAuth.set(slug, opprettet);
+    return opprettet;
   }
   defaultAuth ??= createAuth(getDb(), sone ? { sone } : undefined);
   return defaultAuth;
@@ -189,7 +197,7 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
 
   if (!harSesjonsCookie(headers)) return medPort({ hostTenantId });
   try {
-    const data = await requireSession(getAuthForContext(authSone), base.db, headers);
+    const data = await requireSession(getAuthForContext(authSone, hostSlug), base.db, headers);
     const sesjonOrg = data.session.activeOrganizationId ?? null;
     if (!vertSesjonTillatt({ authSone, hostTenantId, sesjonOrg })) {
       return medPort({ hostTenantId });

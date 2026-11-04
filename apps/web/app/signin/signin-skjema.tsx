@@ -319,8 +319,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
         ) : (
           <form onSubmit={(e) => void onSkrivKode(e)} data-auth-kode-steg className={AUTH_FLATE}>
             <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
-              {SIGNIN_KODE_INGRESS}{' '}
-              <span className="font-[650] text-fg">{email || 'e-posten din'}</span>.
+              {SIGNIN_KODE_INGRESS}
             </p>
             <button
               type="button"

@@ -99,11 +99,11 @@ describe('Mikael 02.09 — Endwise-admin landing og nav', () => {
     ]);
   });
 
-  it('/ og finishSignIn setter aktiv org (endwise først) før session.me', () => {
+  it('finishSignIn setter aktiv org (endwise først) før session.me', () => {
     const rot = les('../app/page.tsx');
     const signin = les('../app/signin/signin-skjema.tsx');
-    expect(rot).toMatch(/organization\.setActive|organization\.list/);
-    expect(rot).toMatch(/slug === ['"]endwise['"]/);
+    expect(rot).toMatch(/MarkedsSide/);
+    expect(rot).not.toMatch(/organization\.setActive|getSession/);
     expect(signin).toMatch(/slug === ['"]endwise['"]/);
     expect(signin).toMatch(/organization\.setActive/);
   });

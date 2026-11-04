@@ -446,8 +446,13 @@ describeDb('F5-26 — eier-invitasjon mot Postgres', () => {
       })
       .from(schema.tenants)
       .where(eq(schema.tenants.id, opprettet.tenantId));
-    expect(tenant?.name).toBe('Nytt visningsnavn AS');
+    expect(tenant?.name).toBe('Wizard AS');
     expect(tenant?.ferdig).toBeTruthy();
+    const [branding] = await owner
+      .select({ visningsnavn: schema.tenantBranding.visningsnavn })
+      .from(schema.tenantBranding)
+      .where(eq(schema.tenantBranding.tenantId, opprettet.tenantId));
+    expect(branding?.visningsnavn).toBe('Nytt visningsnavn AS');
 
     const mods = await owner
       .select({

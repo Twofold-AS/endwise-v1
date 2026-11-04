@@ -76,4 +76,14 @@ describe('F21 / white label F5: auth-sone', () => {
     expect(auth.options.session?.expiresIn).toBe(PLATFORM_IDLE_TIMEOUT_SECONDS);
     expect(auth.options.baseURL).toBe('https://platform.endwise.no');
   });
+
+  it('createAuth forhandler bruker <sub>.endwise.no som baseURL', () => {
+    process.env.BETTER_AUTH_URL = 'https://endwise.no';
+    process.env.BETTER_AUTH_SECRET = 'x'.repeat(32);
+    const auth = createAuth(createDb('postgres://ingen:ingen@127.0.0.1:1/ingen'), {
+      sone: 'forhandler',
+      slug: 'bergen',
+    });
+    expect(auth.options.baseURL).toBe('https://bergen.endwise.no');
+  });
 });

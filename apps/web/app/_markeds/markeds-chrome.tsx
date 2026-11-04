@@ -1,3 +1,4 @@
+import { appOffentligUrl } from '@endwise/auth';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { TemaToggle } from '@/app/_lib/tema-toggle';
@@ -58,9 +59,9 @@ export function PrimarCtaLenke({
 
 export function LoggInnLenke({ className = CTA_SEKUNDAR }: { className?: string }) {
   return (
-    <Link href={'/signin' as Route} className={className}>
+    <a href={`${appOffentligUrl()}/logg-inn`} className={className}>
       Logg inn
-    </Link>
+    </a>
   );
 }
 

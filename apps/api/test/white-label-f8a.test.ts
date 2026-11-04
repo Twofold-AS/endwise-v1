@@ -78,27 +78,17 @@ describe('F27 / white label F8a: send-kode og godta', () => {
     expect(kropp.sendt).toBe(false);
   });
 
-  it('godta uten CSRF eller kode gir samme feil, forbruk kalles ikke', async () => {
+  it('godta uten CSRF gir samme feil, forbruk kalles ikke', async () => {
     stubs.finnApen.mockResolvedValue(apen);
     const utenCsrf = await handleHono(
       new Request('http://endwise.test/invitasjoner/godta', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ token: 'ekte-token-xx', navn: 'Kari Nordmann', kode: 'ABCD2345' }),
+        body: JSON.stringify({ token: 'ekte-token-xx', navn: 'Kari Nordmann' }),
       }),
     );
     expect(utenCsrf.status).toBe(410);
     expect(await utenCsrf.json()).toEqual({ error: INVITASJON_SAMME_FEIL });
-
-    const utenKode = await handleHono(
-      new Request('http://endwise.test/invitasjoner/godta', {
-        method: 'POST',
-        headers: CSRF,
-        body: JSON.stringify({ token: 'ekte-token-xx', navn: 'Kari Nordmann' }),
-      }),
-    );
-    expect(utenKode.status).toBe(410);
-    expect(await utenKode.json()).toEqual({ error: INVITASJON_SAMME_FEIL });
     expect(stubs.forbruk).not.toHaveBeenCalled();
   });
 
@@ -107,7 +97,6 @@ describe('F27 / white label F8a: send-kode og godta', () => {
     const kropp = {
       token: 'samtidig-token-xx',
       navn: 'Kari Nordmann',
-      kode: 'ABCD2345',
     };
     const kall = () =>
       handleHono(
@@ -127,17 +116,16 @@ describe('F27 / white label F8a: send-kode og godta', () => {
 
   it('to samtidige forsøk: FOR UPDATE og consume i samme transaksjon, samme feil', () => {
     const rute = readFileSync(resolve(her, '../src/routes/invitasjon.ts'), 'utf8');
-    expect(rute).toMatch(/for update/i);
-    expect(rute).toMatch(/brukInvitasjonskode/);
     expect(rute).toMatch(/modul\.forbruk/);
     expect(rute).toMatch(/INVITASJON_SAMME_FEIL/);
-    expect(rute).toMatch(/invitation\.code_sent/);
-    expect(rute).toMatch(/invitation\.code_rate_limited/);
-    expect(rute).toMatch(/invitation\.code_failed/);
     expect(rute).toMatch(/invitation\.used/);
+    expect(rute).toMatch(/byggSesjonKake/);
+    expect(rute).toMatch(/createRateLimiter/);
     const godta = rute.slice(rute.indexOf("invitasjon.post('/godta'"));
-    expect(godta.indexOf('brukInvitasjonskode')).toBeLessThan(godta.indexOf('modul.forbruk'));
+    expect(godta).not.toMatch(/brukInvitasjonskode/);
     expect(godta).toMatch(/krevInvitasjonCsrf/);
+    expect(godta).toMatch(/Set-Cookie/);
+    expect(godta).toMatch(/landing/);
     const send = rute.slice(rute.indexOf("invitasjon.post('/:token/send-kode'"));
     expect(send).toMatch(/kanSendeKode/);
     expect(send).toMatch(/sendt: false/);
@@ -154,6 +142,7 @@ describe('F27 / white label F8a: send-kode og godta', () => {
     );
     expect(get).not.toMatch(/sendEmail/);
     expect(get).not.toMatch(/genererInvitasjonskode/);
-    expect(get).toMatch(/kreverKode: true/);
+    expect(get).toMatch(/kreverKode: false/);
+    expect(get).toMatch(/invitasjonGodtaVert/);
   });
 });

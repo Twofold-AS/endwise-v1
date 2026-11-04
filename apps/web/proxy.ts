@@ -1,6 +1,7 @@
 import {
   erAuthSti,
   lesKontekst,
+  lesKundeSlugFraSporsmal,
   opplosTenantFraHost,
   ruteFraSone,
   slaaOppEgetDomene,
@@ -69,6 +70,7 @@ export function proxy(request: NextRequest, env: ProxyEnv = process.env) {
     slug: opplosning.slug,
     path,
     kontekst,
+    kundeSlug: lesKundeSlugFraSporsmal(request.nextUrl.searchParams),
   });
 
   const requestInit = { request: { headers } };
@@ -78,6 +80,15 @@ export function proxy(request: NextRequest, env: ProxyEnv = process.env) {
     const url = request.nextUrl.clone();
     url.pathname = UKJENT_KUNDE_STI;
     return medSone(NextResponse.rewrite(url, requestInit), opplosning.sone, slugUt, auth);
+  }
+
+  if (rute.type === 'redirect') {
+    const rot = (env.TENANT_ROOT_DOMAIN ?? 'endwise.no').replace(/^www\./, '');
+    const dest = new URL(request.nextUrl.href);
+    dest.protocol = 'https:';
+    dest.host = `${rute.vert}.${rot}`;
+    dest.pathname = rute.dest;
+    return medSone(NextResponse.redirect(dest, 308), opplosning.sone, slugUt, auth);
   }
 
   if (rute.type === 'rewrite') {

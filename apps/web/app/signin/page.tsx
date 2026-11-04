@@ -1,4 +1,8 @@
-import { cookies } from 'next/headers';
+import { appOffentligUrl, forhandlerOffentligUrl } from '@endwise/auth';
+import { lesKundeSlugFraSporsmal } from '@endwise/modules/tenant-host';
+import type { Route } from 'next';
+import { cookies, headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { SignInSkjema } from './signin-skjema';
 import { harTotpVindu } from './signin-steg';
@@ -21,9 +25,17 @@ function kakeHeader(jar: Awaited<ReturnType<typeof cookies>>): string {
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ steg?: string }>;
+  searchParams: Promise<{ steg?: string; tenant?: string; slug?: string }>;
 }) {
-  await searchParams;
+  const params = await searchParams;
+  if ((await headers()).get('x-endwise-sone') === 'marked') {
+    const q = new URLSearchParams();
+    if (params.tenant) q.set('tenant', params.tenant);
+    if (params.slug) q.set('slug', params.slug);
+    const kundeSlug = lesKundeSlugFraSporsmal(q);
+    const kunde = kundeSlug ? forhandlerOffentligUrl(kundeSlug) : null;
+    redirect((kunde ? `${kunde}/logg-inn` : `${appOffentligUrl()}/logg-inn`) as Route);
+  }
   const header = kakeHeader(await cookies());
   const totpKlar = harTotpVindu(header);
 

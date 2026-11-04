@@ -50,8 +50,11 @@ import {
 } from './session-policy.ts';
 import {
   type AuthSone,
+  appOffentligUrl,
   cookiePrefixForSone,
+  forhandlerOffentligUrl,
   idleSekunderForSone,
+  kundelenkePaaForhandler,
   platformOffentligUrl,
 } from './sone.ts';
 
@@ -61,9 +64,14 @@ import {
  * De er globale identiteter. Tenant-grensen går på `organization.id` (= tenant_id),
  * og håndheves av RLS på domenetabellene + medlemskapssjekk her.
  */
-export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: AuthSone }) {
+export function createAuth(
+  db = createDb(authEnv.databaseUrl),
+  opts?: { sone?: AuthSone; slug?: string },
+) {
   const sone = opts?.sone;
   const platform = sone === 'platform';
+  const forhandlerUrl =
+    sone === 'forhandler' && opts?.slug ? forhandlerOffentligUrl(opts.slug) : null;
   const idle = sone ? idleSekunderForSone(sone) : IDLE_TIMEOUT_SECONDS;
   const absolutt = platform
     ? PLATFORM_ABSOLUTE_MAX_LIFETIME_SECONDS
@@ -81,7 +89,11 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
   return betterAuth({
     appName: 'Endwise',
     secret: authEnv.secret,
-    baseURL: platform ? platformOffentligUrl() : authEnv.baseUrl,
+    baseURL: platform
+      ? platformOffentligUrl()
+      : sone === 'app'
+        ? appOffentligUrl()
+        : (forhandlerUrl ?? authEnv.baseUrl),
 
     database: drizzleAdapter(db, { provider: 'pg' }),
 
@@ -257,9 +269,16 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
             await opprettBrukerForEpost(db, email);
           }
           const navn = await lesAuthBrukerNavn(db, email);
+          const lenke =
+            sone === 'forhandler'
+              ? opts?.slug
+                ? kundelenkePaaForhandler(url, opts.slug)
+                : null
+              : url;
+          if (!lenke) return;
           await sendMagicLink({
             to: email,
-            lenke: url,
+            lenke,
             kode: token,
             navn,
             utloper: new Date(Date.now() + MAGIC_LINK_TTL_SEKUNDER * 1000),

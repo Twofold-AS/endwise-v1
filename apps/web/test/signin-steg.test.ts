@@ -60,7 +60,7 @@ describe('signin-steg: kode-steg etter e-post, TOTP bare med kake', () => {
     expect(SIGNIN_TOTP_STI).toBe('/signin?steg=totp');
     expect(SIGNIN_TITTEL).toBe('');
     expect(SIGNIN_TOTP_TITTEL).toBe('');
-    expect(SIGNIN_KODE_INGRESS).toBe('Vi har sendt en midlertidig kode til');
+    expect(SIGNIN_KODE_INGRESS).toBe('Hvis kontoen finnes, får du en kode på e-post.');
     expect(SIGNIN_IKKE_DEG).toBe('Ikke deg?');
     expect(SIGNIN_FYLL_KODE).toBe('Fyll inn kode');
     expect(SIGNIN_NESTEN_DER).toBe('Nesten der');

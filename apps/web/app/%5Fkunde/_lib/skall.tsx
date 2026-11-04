@@ -27,6 +27,23 @@ export function KundeSkall({
     <div data-kunde-skall className="min-h-screen bg-bg text-fg">
       <header className="border-b border-border px-4 py-4">
         <div className="mx-auto flex max-w-lg items-center gap-3">
+          {tenant.logoUrl ? (
+            // biome-ignore lint/performance/noImgElement: Blob-URL per forhandler, ukjent host
+            <img
+              src={tenant.logoUrl}
+              alt=""
+              width={32}
+              height={32}
+              className="size-8 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span
+              aria-hidden
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[14px] font-[650] text-fg"
+            >
+              {(tenant.visningsnavn.trim().slice(0, 1) || '·').toUpperCase()}
+            </span>
+          )}
           <p
             className="min-w-0 truncate text-title text-fg max-md:text-[18px] max-md:font-[650]"
             style={farge ? { color: farge } : undefined}

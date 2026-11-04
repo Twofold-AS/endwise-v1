@@ -1,8 +1,8 @@
 import {
-  authEnv,
   createAuth,
   createTenant,
   createTenantShell,
+  invitasjonOffentligLenke,
   sendBekreftelseskode,
   sendInvitation,
   slettUferdigForhandler,
@@ -24,6 +24,7 @@ import {
 import { createInvitasjonsmodul, eierInvitasjonStatus } from '@endwise/modules/invitasjoner';
 import { erPlattformTenant } from '@endwise/modules/plattform';
 import { byggSlugSvar, slugSchema as modulSlugSchema } from '@endwise/modules/slug';
+import { lastOppLogo } from '@endwise/uploads';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { resolveDevMode } from '../dev-mode.ts';
@@ -252,8 +253,7 @@ async function sendEierEpost(input: {
   token: string;
   forhandler: string;
 }) {
-  const base = authEnv.baseUrl;
-  const lenke = `${base.replace(/\/$/, '')}/invitasjon/${input.token}`;
+  const lenke = invitasjonOffentligLenke({ token: input.token, kind: 'owner' });
   let sendt = true;
   try {
     await sendInvitation({
@@ -1008,6 +1008,55 @@ export const tenantsRouter = router({
         slug: input.slug,
         kind: input.kind,
       };
+    }),
+
+  lastOppLogo: endwiseAdminProcedure
+    .input(z.object({ tenantId: z.uuid(), base64: z.string().min(1).max(2_200_000) }))
+    .mutation(async ({ ctx, input }) => {
+      const tenant = await lesTenant(ctx.db, input.tenantId);
+      if (!tenant) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+      }
+      krevIkkeEndwise(tenant, 'endre');
+      let bytes: Uint8Array;
+      try {
+        bytes = Uint8Array.from(Buffer.from(input.base64, 'base64'));
+      } catch {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Filen kunne ikke leses.' });
+      }
+      let opplastet: Awaited<ReturnType<typeof lastOppLogo>>;
+      try {
+        opplastet = await lastOppLogo({ tenantId: input.tenantId, bytes });
+      } catch (error) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: error instanceof Error ? error.message : 'Opplasting feilet.',
+        });
+      }
+      const now = new Date();
+      await withTenant(ctx.db, input.tenantId, async (tx) => {
+        await tx
+          .insert(schema.tenantBranding)
+          .values({
+            tenantId: input.tenantId,
+            visningsnavn: tenant.name,
+            logoUrl: opplastet.url,
+            logoMime: opplastet.mime,
+            publisertAt: now,
+            oppdatertAt: now,
+            utkast: { visningsnavn: tenant.name, logoUrl: opplastet.url },
+          })
+          .onConflictDoUpdate({
+            target: schema.tenantBranding.tenantId,
+            set: {
+              logoUrl: opplastet.url,
+              logoMime: opplastet.mime,
+              publisertAt: now,
+              oppdatertAt: now,
+            },
+          });
+      });
+      return { url: opplastet.url };
     }),
 
   /** Engangskode til innlogget admin. Backend avviser slett uten gyldig kode. */

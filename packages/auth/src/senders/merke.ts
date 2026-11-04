@@ -19,6 +19,7 @@ export type EpostMerke = {
   telefon?: string | null;
   orgnr?: string | null;
   aksentfarge?: string | null;
+  logoUrl?: string | null;
   levertAv: boolean;
 };
 

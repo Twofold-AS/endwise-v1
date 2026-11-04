@@ -184,9 +184,10 @@ export function OppstartFlate() {
       {o.aktiv?.id === 'profil' ? (
         <div className="flex flex-col gap-3">
           <FeltInput
-            label="Firmanavn"
+            label="Visningsnavn"
             value={o.utkast.visningsnavn}
             onChange={(v) => o.oppdater({ visningsnavn: v })}
+            placeholder="Dette ser kundene"
           />
           {kundeLenke ? (
             <div className="flex flex-col gap-1.5">

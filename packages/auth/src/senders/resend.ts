@@ -19,19 +19,7 @@ import {
   kodeboks,
   meldingsboks,
 } from './epost-mal.ts';
-import { avsenderAdresseErKanonisk, formaterAvsenderFrom, validerVisningsnavn } from './merke.ts';
-
-function forhandlerAvsender(
-  forhandler: string,
-  kind?: 'staff' | 'owner' | 'platform',
-): { visningsnavn: string } | undefined {
-  if (kind === 'platform') return undefined;
-  try {
-    return { visningsnavn: validerVisningsnavn(forhandler) };
-  } catch {
-    return undefined;
-  }
-}
+import { avsenderAdresseErKanonisk, formaterAvsenderFrom } from './merke.ts';
 
 /** E-post-2FA og auth-eposter går via Resend (techstack §5). */
 let client: Resend | undefined;
@@ -419,7 +407,6 @@ export async function sendInvitation(input: {
       lenke: { href: input.lenke, tekst: 'Åpne invitasjonen' },
       fotnote,
     }),
-    avsender: forhandlerAvsender(input.forhandler, input.kind),
   });
 }
 
@@ -460,7 +447,6 @@ export async function sendInvitasjonskode(input: {
       kode,
       fotnote,
     }),
-    avsender: forhandlerAvsender(input.forhandler, input.kind),
   });
 }
 
@@ -580,6 +566,8 @@ export async function sendInboxMessage(input: {
   avsenderNavn: string;
   /** Forhandlerens navn — kunden kjenner verkstedet, ikke Endwise. */
   forhandler: string;
+  /** Publisert logo på kundesiden. Fallback er initial. */
+  logoUrl?: string | null;
   /** Trådens emne, hvis den har ett. */
   emne: string | null;
   /** Meldingsteksten slik den ble skrevet i panelet. */
@@ -607,7 +595,7 @@ export async function sendInboxMessage(input: {
       ingress: `${input.avsenderNavn} hos ${input.forhandler} har sendt deg en melding.`,
       innhold: meldingsboks(input.tekst),
       fotnote: svarlinje,
-      merke: { navn: input.forhandler, levertAv: true },
+      merke: { navn: input.forhandler, levertAv: true, logoUrl: input.logoUrl ?? null },
     }),
   });
 }

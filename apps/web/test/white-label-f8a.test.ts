@@ -9,36 +9,25 @@ function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
 
-describe('F27 / white label F8a: invitasjons-UI', () => {
-  it('egne felt, auto-send, Fikk ingen kode, CSRF, token ut av URL', () => {
+describe('F41: invitasjons-UI uten kode', () => {
+  it('bare navn, CSRF, Neste, ingen kodefelt', () => {
     const side = les('../app/invitasjon/[token]/page.tsx');
-    expect(side).toMatch(/Fikk ingen kode\?/);
-    expect(side).toMatch(/autoSendt/);
     expect(side).toMatch(/x-endwise-csrf/);
-    expect(side).toMatch(/history\.replaceState/);
-    expect(side).toMatch(/\/invitasjon/);
-    expect(side).toMatch(/send-kode/);
-    expect(side).toMatch(/label="Kode"/);
     expect(side).toMatch(/label="Navn"/);
-    expect(side).toMatch(/id="inv-kode"/);
     expect(side).toMatch(/id="inv-navn"/);
-    expect(side).toMatch(/autoComplete="one-time-code"/);
-    expect(side).toMatch(/inputMode="numeric"/);
     expect(side).toMatch(/FeltInput/);
-    expect(side).toMatch(/data\?\.sendt/);
+    expect(side).toMatch(/Neste/);
+    expect(side).toMatch(/location\.assign/);
+    expect(side).toMatch(/credentials: 'same-origin'/);
+    expect(side).not.toMatch(/Fikk ingen kode\?/);
+    expect(side).not.toMatch(/send-kode/);
+    expect(side).not.toMatch(/label="Kode"/);
+    expect(side).not.toMatch(/id="inv-kode"/);
+    expect(side).not.toMatch(/autoComplete="one-time-code"/);
+    expect(side).not.toMatch(/signIn\.magicLink|magicLink/);
     expect(side).not.toMatch(/p-\[5px\]/);
-    expect(side).toMatch(/kreverKode/);
-    expect(side).toMatch(/Fortsett/);
-    expect(side).not.toMatch(/Send meg kode/);
     expect(side).not.toMatch(/#0066ff/);
     expect(side).not.toMatch(/FeltKode|InputOtp/);
-  });
-
-  it('Next har POST /invitasjoner/:token/send-kode', () => {
-    const rute = les('../app/invitasjoner/[token]/send-kode/route.ts');
-    expect(rute).toMatch(/export function POST/);
-    expect(rute).toMatch(/handleHono/);
-    expect(les('../app/invitasjoner/[token]/route.ts')).not.toMatch(/export function POST/);
   });
 
   it('layout er no-referrer og noindex', () => {

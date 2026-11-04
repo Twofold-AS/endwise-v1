@@ -12,8 +12,8 @@ export const MAGIC_LINK_VERIFY_URL = `/api/auth${MAGIC_LINK_VERIFY_STI}`;
 export const MAGIC_LINK_CALLBACK = '/signin';
 export const MAGIC_LINK_TOTP_QUERY = 'steg=totp';
 export const MAGIC_LINK_ENROLL_STI = '/2fa-oppsett';
-/** Uenrollert etter verify: inn i appen, ikke /2fa-oppsett. `/` henter landing. */
-export const MAGIC_LINK_APP_LANDING = '/';
+/** Uenrollert etter verify: inn i appen. `/` på app-verten er logg-inn. */
+export const MAGIC_LINK_APP_LANDING = '/home';
 
 /** Samme tak som gammel e-post-innlogging: 5 per minutt per IP. */
 export const MAGIC_LINK_BE_OM_GRENSE = { window: 60, max: 5 } as const;

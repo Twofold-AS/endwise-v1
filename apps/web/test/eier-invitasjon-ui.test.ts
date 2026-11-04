@@ -16,10 +16,10 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
   const oppstart = readFileSync(resolve(her, '../app/(app)/oppstart/_oppstart-flate.tsx'), 'utf8');
   const pakke = readFileSync(resolve(her, '../app/(app)/endwise/_pakke-valg.tsx'), 'utf8');
 
-  it('godta-siden ber om navn og sender magic link — ingen tilleggs-UI', () => {
+  it('godta-siden ber om navn — ingen kode eller tilleggs-UI', () => {
     expect(kilde).toMatch(/label="Navn"/);
-    expect(kilde).toMatch(/label="Kode"/);
-    expect(kilde).toMatch(/signIn\.magicLink|magicLink/);
+    expect(kilde).not.toMatch(/label="Kode"/);
+    expect(kilde).not.toMatch(/signIn\.magicLink|magicLink/);
     expect(kilde).not.toMatch(/type=["']password["']/);
     expect(kilde).not.toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
     expect(kilde).not.toMatch(/ADDON_MODULES|tenant_modules|Velg moduler|planvelger|abonnement/);

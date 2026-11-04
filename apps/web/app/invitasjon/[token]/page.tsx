@@ -1,9 +1,8 @@
 'use client';
 
-import { FeltInput, Mail, StatefulButton } from '@endwise/ui';
+import { FeltInput, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
-import { use, useCallback, useEffect, useRef, useState } from 'react';
-import { authClient } from '@/lib/auth-client';
+import { use, useEffect, useState } from 'react';
 
 type Invitasjon = {
   gyldig: true;
@@ -16,6 +15,8 @@ type Invitasjon = {
   harKonto: boolean;
   krever2FA?: boolean;
   kreverKode?: boolean;
+  vert?: string;
+  landing?: string;
 };
 
 const FUNKSJONSTEKST: Record<string, string> = {
@@ -26,6 +27,16 @@ const FUNKSJONSTEKST: Record<string, string> = {
 };
 
 const CSRF = { 'x-endwise-csrf': '1' } as const;
+const VENT_MS = 1200;
+
+function sammeVert(forventet: string | undefined): boolean {
+  if (!forventet) return true;
+  try {
+    return new URL(forventet).hostname === window.location.hostname;
+  } catch {
+    return true;
+  }
+}
 
 export default function InvitasjonPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
@@ -33,12 +44,13 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
   const [laster, setLaster] = useState(true);
   const [feil, setFeil] = useState<string | null>(null);
   const [navn, setNavn] = useState('');
-  const [kode, setKode] = useState('');
   const [sender, setSender] = useState(false);
-  const [kodeMelding, setKodeMelding] = useState<string | null>(null);
-  const [steg, setSteg] = useState<'skjema' | 'sendt'>('skjema');
-  const [nyKodeVent, setNyKodeVent] = useState(false);
-  const autoSendt = useRef(false);
+  const [klar, setKlar] = useState(false);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setKlar(true), VENT_MS);
+    return () => window.clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     let avbrutt = false;
@@ -59,10 +71,11 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
           );
         } else {
           const gyldig = data as Invitasjon;
-          setInv(gyldig);
-          if (gyldig.kreverKode) {
-            history.replaceState(null, '', '/invitasjon');
+          if (gyldig.vert && !sammeVert(gyldig.vert)) {
+            window.location.replace(`${gyldig.vert.replace(/\/$/, '')}/invitasjon/${token}`);
+            return;
           }
+          setInv(gyldig);
         }
       } catch {
         if (!avbrutt) setFeil('Klarte ikke hente invitasjonen. Prøv igjen.');
@@ -75,38 +88,6 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     };
   }, [token]);
 
-  const sendKode = useCallback(async () => {
-    if (!inv) return;
-    setFeil(null);
-    setKodeMelding(null);
-    setNyKodeVent(true);
-    try {
-      const res = await fetch(`/invitasjoner/${encodeURIComponent(token)}/send-kode`, {
-        method: 'POST',
-        headers: { ...CSRF },
-      });
-      const data = (await res.json().catch(() => null)) as {
-        sendt?: boolean;
-        feil?: string;
-      } | null;
-      if (!res.ok || !data?.sendt) {
-        setFeil(data?.feil ?? 'Kunne ikke sende koden. Prøv igjen.');
-        return;
-      }
-      setKodeMelding(`Kode sendt til ${inv.epost}.`);
-    } catch (error) {
-      setFeil(error instanceof Error ? error.message : 'Kunne ikke sende koden. Prøv igjen.');
-    } finally {
-      window.setTimeout(() => setNyKodeVent(false), 10_000);
-    }
-  }, [inv, token]);
-
-  useEffect(() => {
-    if (!inv?.kreverKode || autoSendt.current) return;
-    autoSendt.current = true;
-    void sendKode();
-  }, [inv, sendKode]);
-
   async function godta(event: React.FormEvent) {
     event.preventDefault();
     if (!inv) return;
@@ -116,26 +97,18 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
       const res = await fetch('/invitasjoner/godta', {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...CSRF },
-        body: JSON.stringify({
-          token,
-          navn: navn.trim(),
-          ...(inv.kreverKode ? { kode: kode.trim() } : {}),
-        }),
+        credentials: 'same-origin',
+        body: JSON.stringify({ token, navn: navn.trim() }),
       });
-      const data = await res.json();
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        landing?: string;
+      } | null;
       if (!res.ok) {
         setFeil(data?.error ?? 'Noe gikk galt.');
         return;
       }
-      const lenke = await authClient.signIn.magicLink({
-        email: inv.epost,
-        callbackURL: '/signin',
-      });
-      if (lenke.error) {
-        setFeil(lenke.error.message ?? 'Klarte ikke sende innloggingslenke.');
-        return;
-      }
-      setSteg('sendt');
+      window.location.assign(data?.landing ?? inv.landing ?? '/home');
     } catch (error) {
       setFeil(error instanceof Error ? error.message : 'Noe gikk galt.');
     } finally {
@@ -152,24 +125,20 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
           : 'support'
         : (FUNKSJONSTEKST[inv?.funksjon ?? ''] ?? inv?.funksjon);
 
-  const visSkjema = Boolean(inv) && steg === 'skjema';
+  const visSkjema = Boolean(inv);
 
   const tittel = inv
-    ? steg === 'sendt'
-      ? 'Sjekk e-posten'
-      : inv.kind === 'platform'
-        ? 'Velkommen til Endwise'
-        : `Velkommen til ${inv.forhandler}`
+    ? inv.kind === 'platform'
+      ? 'Velkommen til Endwise'
+      : `Velkommen til ${inv.forhandler}`
     : laster
       ? 'Invitasjon'
       : 'Invitasjonen virker ikke';
 
   const undertekst = inv
-    ? steg === 'sendt'
-      ? `Innloggingslenke sendt til ${inv.epost}. Åpne lenken for å gå inn. Autentikator kan du slå på senere.`
-      : inv.kind === 'platform'
-        ? `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
-        : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
+    ? inv.kind === 'platform'
+      ? `Du er invitert til Endwise-support. Kontoen knyttes til ${inv.epost}.`
+      : `Du er invitert som ${rolle}. Kontoen knyttes til ${inv.epost}.`
     : laster
       ? null
       : 'Lenker er personlige, kan brukes én gang, og utløper etter sju dager.';
@@ -197,21 +166,6 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
 
         {visSkjema ? (
           <form onSubmit={(e) => void godta(e)} className="flex flex-col gap-4">
-            {inv?.kreverKode ? (
-              <FeltInput
-                id="inv-kode"
-                label="Kode"
-                autoComplete="one-time-code"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                isRequired
-                maxLength={6}
-                value={kode}
-                onChange={(v) => setKode(v.replace(/\D/g, '').slice(0, 6))}
-                placeholder="6 siffer"
-              />
-            ) : null}
-
             <FeltInput
               id="inv-navn"
               label="Navn"
@@ -222,9 +176,6 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
               placeholder="Hva heter du?"
             />
 
-            {kodeMelding && !feil ? (
-              <p className="text-[12px] text-fg-muted">{kodeMelding}</p>
-            ) : null}
             {feil ? (
               <p role="alert" className="text-[12px] text-danger">
                 {feil}
@@ -238,33 +189,11 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
               loadingText="Oppretter …"
               successText="Sendt"
               errorText="Prøv igjen"
-              icon={<Mail size={15} />}
-              disabled={
-                sender ||
-                navn.trim().length < 2 ||
-                Boolean(inv?.kreverKode && kode.trim().length !== 6)
-              }
+              disabled={sender || !klar || navn.trim().length < 2}
             >
-              Fortsett
+              Neste
             </StatefulButton>
-
-            {inv?.kreverKode ? (
-              <button
-                type="button"
-                className="text-center text-[15px] font-[450] text-fg underline underline-offset-4 disabled:text-fg-muted disabled:no-underline"
-                disabled={nyKodeVent}
-                onClick={() => void sendKode()}
-              >
-                Fikk ingen kode?
-              </button>
-            ) : null}
           </form>
-        ) : null}
-
-        {inv && steg === 'sendt' ? (
-          <div className="rounded-xl border border-border bg-card p-4 text-[12px] text-fg-muted leading-relaxed">
-            Åpne lenken i e-posten for å logge inn. Ingen passord. Autentikator er valgfri.
-          </div>
         ) : null}
       </div>
     </main>

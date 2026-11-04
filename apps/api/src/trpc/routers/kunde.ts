@@ -111,7 +111,8 @@ export const kundeRouter = router({
         const epost = kunde?.epost?.trim().toLowerCase();
         if (epost) {
           await kjorMedAuthRequest({ headers: ctx.requestHeaders, tenantId }, async () => {
-            const auth = createAuth(ctx.db, { sone: 'forhandler' });
+            const slug = ctx.requestHeaders.get('x-endwise-slug')?.trim();
+            const auth = createAuth(ctx.db, { sone: 'forhandler', slug });
             await auth.api.signInMagicLink({
               body: { email: epost, callbackURL: '/min-side' },
               headers: ctx.requestHeaders,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   erWhiteLabelAktiv,
   lesKontekst,
+  lesKundeSlugFraSporsmal,
   ruteFraSone,
   UKJENT_KUNDE_STI,
 } from '../src/tenant-host/index.ts';
@@ -12,12 +13,72 @@ describe('F18 / white label F2: ruteFraSone', () => {
     expect(erWhiteLabelAktiv({ ENDWISE_WHITE_LABEL: '0' })).toBe(true);
   });
 
-  it('marked går videre uten rewrite', () => {
+  it('marked er bare marked — innlogging og app-flater redirectes', () => {
     expect(ruteFraSone({ sone: 'marked', slug: null, path: '/', kontekst: null })).toEqual({
       type: 'next',
     });
-    expect(ruteFraSone({ sone: 'marked', slug: null, path: '/home', kontekst: null })).toEqual({
+    expect(
+      ruteFraSone({ sone: 'marked', slug: null, path: '/personvern', kontekst: null }),
+    ).toEqual({
       type: 'next',
+    });
+    expect(ruteFraSone({ sone: 'marked', slug: null, path: '/signin', kontekst: null })).toEqual({
+      type: 'redirect',
+      dest: '/logg-inn',
+      vert: 'app',
+    });
+    expect(ruteFraSone({ sone: 'marked', slug: null, path: '/home', kontekst: null })).toEqual({
+      type: 'redirect',
+      dest: '/home',
+      vert: 'app',
+    });
+    expect(
+      ruteFraSone({ sone: 'marked', slug: null, path: '/invitasjon/abc', kontekst: null }),
+    ).toEqual({
+      type: 'redirect',
+      dest: '/invitasjon/abc',
+      vert: 'app',
+    });
+  });
+
+  it('apex med tenant/slug sender kunden til <sub>, aldri app', () => {
+    expect(lesKundeSlugFraSporsmal('tenant=bergen')).toBe('bergen');
+    expect(lesKundeSlugFraSporsmal('slug=bergen')).toBe('bergen');
+    expect(lesKundeSlugFraSporsmal('tenant=app')).toBeNull();
+    expect(lesKundeSlugFraSporsmal('tenant=platform')).toBeNull();
+    expect(
+      ruteFraSone({
+        sone: 'marked',
+        slug: null,
+        path: '/signin',
+        kontekst: null,
+        kundeSlug: 'bergen',
+      }),
+    ).toEqual({ type: 'redirect', dest: '/logg-inn', vert: 'bergen' });
+    expect(
+      ruteFraSone({
+        sone: 'marked',
+        slug: null,
+        path: '/min-side',
+        kontekst: null,
+        kundeSlug: 'bergen',
+      }),
+    ).toEqual({ type: 'redirect', dest: '/min-side', vert: 'bergen' });
+    expect(ruteFraSone({ sone: 'marked', slug: null, path: '/min-side', kontekst: null })).toEqual({
+      type: 'not-found',
+    });
+    expect(
+      ruteFraSone({
+        sone: 'marked',
+        slug: null,
+        path: '/api/auth/magic-link/verify',
+        kontekst: null,
+        kundeSlug: 'bergen',
+      }),
+    ).toEqual({
+      type: 'redirect',
+      dest: '/api/auth/magic-link/verify',
+      vert: 'bergen',
     });
   });
 
@@ -99,6 +160,12 @@ describe('F18 / white label F2: ruteFraSone', () => {
       type: 'rewrite',
       dest: '/_bedrift/logg-inn',
     });
+    expect(ruteFraSone({ sone: 'app', slug: null, path: '/signin', kontekst: null })).toEqual({
+      type: 'next',
+    });
+    expect(ruteFraSone({ sone: 'app', slug: null, path: '/2fa-oppsett', kontekst: null })).toEqual({
+      type: 'next',
+    });
     expect(ruteFraSone({ sone: 'app', slug: null, path: '/home', kontekst: null })).toEqual({
       type: 'next',
     });
@@ -150,9 +217,16 @@ describe('F18 / white label F2: ruteFraSone', () => {
     ).toEqual({ type: 'next' });
   });
 
-  it('marked og forhandler skjuler /endwise og /admin', () => {
+  it('marked sender /endwise og /admin til platform; forhandler skjuler dem', () => {
     expect(ruteFraSone({ sone: 'marked', slug: null, path: '/endwise', kontekst: null })).toEqual({
-      type: 'not-found',
+      type: 'redirect',
+      dest: '/endwise',
+      vert: 'platform',
+    });
+    expect(ruteFraSone({ sone: 'marked', slug: null, path: '/admin', kontekst: null })).toEqual({
+      type: 'redirect',
+      dest: '/logg-inn',
+      vert: 'platform',
     });
     expect(
       ruteFraSone({
@@ -165,6 +239,18 @@ describe('F18 / white label F2: ruteFraSone', () => {
   });
 
   it('API og statisk går videre', () => {
+    expect(
+      ruteFraSone({
+        sone: 'marked',
+        slug: null,
+        path: '/api/auth/magic-link/verify',
+        kontekst: null,
+      }),
+    ).toEqual({
+      type: 'redirect',
+      dest: '/api/auth/magic-link/verify',
+      vert: 'app',
+    });
     expect(
       ruteFraSone({
         sone: 'forhandler',

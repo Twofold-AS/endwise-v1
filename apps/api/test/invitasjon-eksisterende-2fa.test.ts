@@ -47,8 +47,9 @@ describe('P0: eksisterende bruker må gjennom 2FA ved invitasjon', () => {
     expect(rute).not.toMatch(/UNAUTHORIZED/);
   });
 
-  it('invite-siden sender magic link — ikke passord + e-post-OTP', () => {
-    expect(side).toMatch(/signIn\.magicLink|magicLink/);
+  it('invite-siden godtar med navn — ikke passord + e-post-OTP', () => {
+    expect(side).toMatch(/location\.assign/);
+    expect(side).not.toMatch(/signIn\.magicLink|magicLink/);
     expect(side).not.toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
     expect(side).not.toMatch(/if\s*\(\s*!inv\.kreverPassord\s*\)[\s\S]{0,80}\/signin/);
     expect(side).not.toMatch(/konto eksisterer fra før/);

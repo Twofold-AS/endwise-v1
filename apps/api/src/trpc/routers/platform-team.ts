@@ -1,4 +1,4 @@
-import { authEnv, sendInvitation } from '@endwise/auth';
+import { invitasjonOffentligLenke, sendInvitation } from '@endwise/auth';
 import { and, asc, eq, schema, withTenant } from '@endwise/db';
 import { createInvitasjonsmodul, InvitasjonUgyldigError } from '@endwise/modules/invitasjoner';
 import {
@@ -133,8 +133,7 @@ export const platformTeamRouter = router({
         throw error;
       }
 
-      const base = authEnv.baseUrl;
-      const lenke = `${base.replace(/\/$/, '')}/invitasjon/${resultat.token}`;
+      const lenke = invitasjonOffentligLenke({ token: resultat.token, kind: 'platform' });
       let sendt = true;
       try {
         await sendInvitation({

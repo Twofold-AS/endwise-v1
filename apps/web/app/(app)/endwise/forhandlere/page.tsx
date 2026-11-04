@@ -616,6 +616,59 @@ export default function ForhandlerePage() {
   );
 }
 
+function ForhandlerLogoFelt({ tenantId }: { tenantId: string }) {
+  const [feil, setFeil] = useState<string | null>(null);
+  const [ok, setOk] = useState(false);
+  const lastOpp = trpc.tenants.lastOppLogo.useMutation({
+    onSuccess: () => {
+      setOk(true);
+      setFeil(null);
+    },
+    onError: (e) => {
+      setOk(false);
+      setFeil(e.message);
+    },
+  });
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        className="text-[15px] font-[450] leading-5 text-fg-muted"
+        htmlFor={`logo-${tenantId}`}
+      >
+        Logo til kundeside og kunde-e-post
+      </label>
+      <input
+        id={`logo-${tenantId}`}
+        type="file"
+        accept="image/png,image/webp"
+        className="text-meta text-fg"
+        disabled={lastOpp.isPending}
+        onChange={(e) => {
+          const fil = e.target.files?.[0];
+          if (!fil) return;
+          setOk(false);
+          const leser = new FileReader();
+          leser.onload = () => {
+            const raw = typeof leser.result === 'string' ? leser.result : '';
+            const base64 = raw.includes(',') ? (raw.split(',')[1] ?? '') : raw;
+            if (!base64) {
+              setFeil('Filen kunne ikke leses.');
+              return;
+            }
+            lastOpp.mutate({ tenantId, base64 });
+          };
+          leser.readAsDataURL(fil);
+        }}
+      />
+      <p className="text-[12px] text-fg-muted">PNG eller WebP. Uten logo vises initial.</p>
+      {lastOpp.isPending ? <p className="text-[12px] text-fg-muted">Laster opp…</p> : null}
+      {ok ? <p className="text-[12px] text-fg">Logo lagret.</p> : null}
+      {feil ? <p className="text-body text-danger">{feil}</p> : null}
+    </div>
+  );
+}
+
 function EndreForhandler({
   tenantId,
   navn,
@@ -660,6 +713,7 @@ function EndreForhandler({
         sjekk={slugSjekk.data}
         hintFallback="Endrer du subdomenet, virker den gamle adressen ikke lenger."
       />
+      <ForhandlerLogoFelt tenantId={tenantId} />
       <p className="text-[12px] text-fg-muted">
         Eier: {eierEpost ?? 'ingen e-post'} — du bytter den aldri her. Bruk Send invitasjon på nytt
         om lenka er ubrukt.

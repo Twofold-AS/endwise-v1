@@ -1,4 +1,5 @@
 import type { VertSone } from './opplos.ts';
+import { erReservertSlug } from './reserverte-slugs.ts';
 
 /** Kundesidens stier. Må ikke kollidere med (app). */
 export const KUNDE_STIER = [
@@ -19,7 +20,11 @@ export const KUNDE_STIER = [
 
 export type VertKontekst = 'privat' | 'bedrift';
 
-export type VertRute = { type: 'next' } | { type: 'rewrite'; dest: string } | { type: 'not-found' };
+export type VertRute =
+  | { type: 'next' }
+  | { type: 'rewrite'; dest: string }
+  | { type: 'not-found' }
+  | { type: 'redirect'; dest: string; vert: string };
 
 const API_PREFIKS = ['/api/', '/trpc/', '/stream/'];
 const STATISK_PREFIKS = ['/_next/', '/logo/', '/favicon'];
@@ -57,6 +62,25 @@ export function erAuthSti(path: string): boolean {
   );
 }
 
+const MARKEDS_STIER = ['/', '/personvern', '/vilkar', '/kontakt'] as const;
+
+function erMarkedsOffentligSti(path: string): boolean {
+  const p = normaliserSti(path);
+  return (MARKEDS_STIER as readonly string[]).includes(p);
+}
+
+function erMarkedsInnlogging(path: string): boolean {
+  const p = normaliserSti(path);
+  return (
+    p === '/signin' ||
+    p.startsWith('/signin/') ||
+    p === '/logg-inn' ||
+    p.startsWith('/logg-inn/') ||
+    p === '/2fa-oppsett' ||
+    p.startsWith('/2fa-oppsett/')
+  );
+}
+
 /** Admin-flater som bare skal treffes på platform-verten. */
 export function erPlattformAdminSti(path: string): boolean {
   const p = normaliserSti(path);
@@ -78,18 +102,64 @@ export function erPlattformAdminSti(path: string): boolean {
 /** Nøytral 404 uten slug. Brukes av proxyen — ingen DB. */
 export const UKJENT_KUNDE_STI = '/_kunde/_ukjent';
 
+const SLUG_RE = /^[a-z0-9](?:[a-z0-9]|-(?!-))*[a-z0-9]$/;
+
+/** tenant/slug i gamle apex-lenker. Aldri app/platform. */
+export function lesKundeSlugFraSporsmal(
+  search: URLSearchParams | string | null | undefined,
+): string | null {
+  let q: URLSearchParams | null = null;
+  if (typeof search === 'string') {
+    q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  } else if (search) {
+    q = search;
+  }
+  if (!q) return null;
+  const raw = (q.get('tenant') ?? q.get('slug') ?? '').trim().toLowerCase();
+  if (!raw || raw.length < 3 || raw.length > 32) return null;
+  if (erReservertSlug(raw) || raw.includes('.') || raw.includes('--')) return null;
+  if (!SLUG_RE.test(raw)) return null;
+  return raw;
+}
+
 export function ruteFraSone(input: {
   sone: VertSone;
   slug: string | null;
   path: string;
   kontekst: VertKontekst | null;
+  kundeSlug?: string | null;
 }): VertRute {
   const path = normaliserSti(input.path);
-  if (erApiEllerStatisk(input.path)) return { type: 'next' };
+  if (erApiEllerStatisk(input.path)) {
+    if (input.sone === 'marked' && input.path.startsWith('/api/auth')) {
+      return { type: 'redirect', dest: path, vert: input.kundeSlug ?? 'app' };
+    }
+    return { type: 'next' };
+  }
 
   if (input.sone === 'marked') {
-    if (erPlattformAdminSti(path)) return { type: 'not-found' };
-    return { type: 'next' };
+    if (erMarkedsInnlogging(path)) {
+      return {
+        type: 'redirect',
+        dest: '/logg-inn',
+        vert: input.kundeSlug ?? 'app',
+      };
+    }
+    if (path === '/invitasjon' || path.startsWith('/invitasjon/')) {
+      return { type: 'redirect', dest: path, vert: 'app' };
+    }
+    if (erPlattformAdminSti(path)) {
+      return { type: 'redirect', dest: path === '/admin' ? '/logg-inn' : path, vert: 'platform' };
+    }
+    if (erMarkedsOffentligSti(path)) return { type: 'next' };
+    if (erKundeSti(path)) {
+      if (input.kundeSlug) {
+        const intern = path === '/signin' ? '/logg-inn' : path === '/velg' ? '/min-side' : path;
+        return { type: 'redirect', dest: intern, vert: input.kundeSlug };
+      }
+      return { type: 'not-found' };
+    }
+    return { type: 'redirect', dest: path, vert: 'app' };
   }
 
   if (input.sone === 'platform') {
@@ -109,13 +179,9 @@ export function ruteFraSone(input: {
 
   if (input.sone === 'app') {
     if (path === '/_bedrift' || path.startsWith('/_bedrift/')) return { type: 'next' };
-    if (
-      path === '/' ||
-      path === '/logg-inn' ||
-      path.startsWith('/logg-inn/') ||
-      path === '/signin' ||
-      path.startsWith('/signin/')
-    ) {
+    if (path === '/2fa-oppsett' || path.startsWith('/2fa-oppsett/')) return { type: 'next' };
+    if (path === '/signin' || path.startsWith('/signin/')) return { type: 'next' };
+    if (path === '/' || path === '/logg-inn' || path.startsWith('/logg-inn/')) {
       return { type: 'rewrite', dest: '/_bedrift/logg-inn' };
     }
     if (erPlattformAdminSti(path) || path.startsWith('/_kunde') || path.startsWith('/_plattform')) {

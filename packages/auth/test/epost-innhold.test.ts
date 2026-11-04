@@ -118,7 +118,9 @@ describe('Mobbin-e-postmalen (invitasjon og kode)', () => {
       lenke: { href: 'https://endwise.no/invitasjon/x', tekst: 'Åpne invitasjonen' },
       fotnote: 'Personlig.',
     });
-    expect(lenke).toMatch(/<a href="https:\/\/endwise\.no\/invitasjon\/x"[^>]*text-decoration:underline/);
+    expect(lenke).toMatch(
+      /<a href="https:\/\/endwise\.no\/invitasjon\/x"[^>]*text-decoration:underline/,
+    );
     expect(lenke).not.toContain('#0066cc');
   });
 });

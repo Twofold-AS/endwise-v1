@@ -2,7 +2,7 @@
 
 import { Mail, StatefulButton } from '@endwise/ui';
 import Image from 'next/image';
-import { use, useEffect, useRef, useState } from 'react';
+import { use, useCallback, useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { Field, INPUT } from '../../_auth/felter';
 
@@ -76,7 +76,7 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     };
   }, [token]);
 
-  async function sendKode() {
+  const sendKode = useCallback(async () => {
     if (!inv) return;
     setFeil(null);
     setNyKodeVent(true);
@@ -91,13 +91,13 @@ export default function InvitasjonPage({ params }: { params: Promise<{ token: st
     } finally {
       window.setTimeout(() => setNyKodeVent(false), 10_000);
     }
-  }
+  }, [inv, token]);
 
   useEffect(() => {
     if (!inv?.kreverKode || autoSendt.current) return;
     autoSendt.current = true;
     void sendKode();
-  }, [inv]);
+  }, [inv, sendKode]);
 
   async function godta(event: React.FormEvent) {
     event.preventDefault();

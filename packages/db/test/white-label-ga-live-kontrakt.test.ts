@@ -42,4 +42,23 @@ describe('0057 white-label gå live-kontrakt', () => {
     expect(src).toMatch(/vercelMigrateBeslutning/);
     expect(src).toMatch(/handling === 'stopp'/);
   });
+
+  it('0057 setter platform_admin og tenant_id før tenants INSERT/UPDATE', () => {
+    const admin = sql.indexOf("set_config('app.platform_admin', 'on', true)");
+    const tenantId = sql.indexOf("set_config('app.tenant_id'");
+    const insert = sql.indexOf('INSERT INTO tenants');
+    const update = sql.indexOf('UPDATE tenants');
+    expect(admin).toBeGreaterThan(-1);
+    expect(admin).toBeLessThan(insert);
+    expect(tenantId).toBeGreaterThan(admin);
+    expect(tenantId).toBeLessThan(insert);
+    expect(update).toBeGreaterThan(tenantId);
+  });
+
+  it('0058 setter platform_admin før seed', () => {
+    const admin = rettelse.indexOf("set_config('app.platform_admin', 'on', true)");
+    const insertUser = rettelse.indexOf('INSERT INTO "user"');
+    expect(admin).toBeGreaterThan(-1);
+    expect(admin).toBeLessThan(insertUser);
+  });
 });

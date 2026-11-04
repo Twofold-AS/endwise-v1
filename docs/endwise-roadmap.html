@@ -1356,6 +1356,8 @@ const ROADMAP = [
     area:"infra", ui:"na", status:"done" },
   { id:"F38-05", o:"Prod-bygg: 0045 seed før FORCE RLS (42501 på reserverte_slugs)", kat:"plattform", t:"⭐ <b>04.11.2026:</b> Etter #208 nådde migrate Scaleway. 0045 feilet: <code>INSERT INTO reserverte_slugs</code> etter FORCE RLS, policy bare TO authenticated. Eier 42501 ExecWithCheckOptions. Seed flyttet foran FORCE.",
     area:"infra", ui:"na", status:"done" },
+  { id:"F38-06", o:"Prod-bygg: 0057/0058 seed under FORCE RLS (GUC før tenants INSERT)", kat:"plattform", t:"⭐ <b>04.11.2026:</b> Etter #209: 42501 <code>new row violates row-level security policy for table tenants</code>. Migreringsbrukeren er ikke BYPASSRLS. 0057 setter <code>app.platform_admin</code> og <code>app.tenant_id</code> før INSERT/UPDATE. kind/plan via midlertidig trigger-disable. 0058 setter platform_admin.",
+    area:"infra", ui:"na", status:"done" },
 ]},
 ];
 

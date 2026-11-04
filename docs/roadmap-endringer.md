@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-04 — F38-06 Prod-bygg 0057/0058 under FORCE RLS
+
+**Type:** hotfix etter #209. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** Mikael (prod-bygg rødt, ingen approval, squash-merge når CI er grønn).
+**Endring:** Ny **F38-06** `done`. 0057/0058 setter `app.platform_admin` + `app.tenant_id` før tenants-DML.
+
+---
+
 ## 2026-11-04 — F38-05 Prod-bygg 0045 seed før FORCE RLS
 
 **Type:** hotfix etter #208. Ingen ny UI-pakke. Ingen techstack-endring.

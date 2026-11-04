@@ -4,6 +4,12 @@
  * 2) Seed mikkis@twofold.no som endwise_admin.
  * 3) Slett eksisterende forhandlere (godkjent fresh start).
  * Idempotent via drizzle-journal. Kjører som eier ved db:migrate.
+ *
+ * Prod-eier har FORCE RLS og ikke BYPASSRLS (91c96b6: 42501 på
+ * tenants INSERT). tenants_platform_admin_insert_owner krever
+ * app.platform_admin=on og app.tenant_id = ny id. SELECT uten GUC
+ * treffer ikke tenants_slug_oppslag (krever app.slug_sjekk) —
+ * EXISTS ble usynlig og INSERT ble forsøkt. Sett GUC først.
  */
 DO $$
 DECLARE
@@ -12,6 +18,8 @@ DECLARE
   v_user text;
   r record;
 BEGIN
+  PERFORM set_config('app.platform_admin', 'on', true);
+
   SELECT id INTO v_org FROM organization WHERE slug = 'endwise' LIMIT 1;
   IF v_org IS NULL THEN
     v_id := gen_random_uuid();
@@ -28,15 +36,27 @@ BEGIN
   END IF;
 
   IF EXISTS (SELECT 1 FROM tenants WHERE slug = 'endwise') THEN
-    UPDATE tenants
-       SET kind = 'platform',
-           plan = NULL,
-           name = 'Endwise',
-           onboarding_completed_at = COALESCE(onboarding_completed_at, now())
-     WHERE slug = 'endwise';
     SELECT id INTO v_id FROM tenants WHERE slug = 'endwise' LIMIT 1;
+    PERFORM set_config('app.tenant_id', v_id::text, true);
+    UPDATE tenants
+       SET name = 'Endwise',
+           onboarding_completed_at = COALESCE(onboarding_completed_at, now())
+     WHERE id = v_id;
+    IF EXISTS (
+      SELECT 1 FROM tenants
+       WHERE id = v_id
+         AND (kind IS DISTINCT FROM 'platform' OR plan IS NOT NULL)
+    ) THEN
+      ALTER TABLE tenants DISABLE TRIGGER tenants_owner_update_guard_trg;
+      UPDATE tenants SET kind = 'platform', plan = NULL WHERE id = v_id;
+      ALTER TABLE tenants ENABLE TRIGGER tenants_owner_update_guard_trg;
+    END IF;
     SELECT id INTO v_org FROM organization WHERE slug = 'endwise' LIMIT 1;
   ELSE
+    IF v_id IS NULL THEN
+      v_id := gen_random_uuid();
+    END IF;
+    PERFORM set_config('app.tenant_id', v_id::text, true);
     INSERT INTO tenants (id, name, slug, kind, plan, onboarding_completed_at)
     VALUES (v_id, 'Endwise', 'endwise', 'platform', NULL, now());
   END IF;
@@ -65,7 +85,6 @@ BEGIN
      WHERE organization_id = v_org AND user_id = v_user;
   END IF;
 
-  PERFORM set_config('app.platform_admin', 'on', true);
   FOR r IN
     SELECT id FROM tenants
      WHERE slug IS DISTINCT FROM 'endwise'

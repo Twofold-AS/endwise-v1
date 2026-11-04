@@ -69,31 +69,41 @@ jobs:
     permissions:
       contents: read
       actions: write
+      deployments: read
     steps:
       - uses: actions/checkout@v4
       - name: Vent på Vercel-preview
         id: preview
         env:
           PREVIEW_OVERRIDE: ${{ vars.PREVIEW_URL }}
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           if [ -n "${PREVIEW_OVERRIDE:-}" ]; then
             echo "url=${PREVIEW_OVERRIDE}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          slug="${GITHUB_HEAD_REF//\//-}"
-          url="https://endwise-v1-web-git-${slug}-endwise-twofold.vercel.app"
-          # Vent til *denne* deployen er live (CSP-header), ikke forrige READY-alias.
+          # Branch-alias kan bli kortere enn 63 tegn (DNS). Bruk denne SHA-ens
+          # Preview-deployment, så ZAP treffer riktig Vercel-URL med CSP.
           for _ in $(seq 1 90); do
-            headers="$(curl -sSI --max-time 15 "$url" || true)"
-            if printf '%s' "$headers" | grep -qi '^content-security-policy:'; then
-              echo "Fant preview ${url} med CSP"
-              echo "url=${url}" >> "$GITHUB_OUTPUT"
-              exit 0
+            id="$(gh api "repos/${REPO}/deployments?sha=${SHA}" --jq '[.[] | select(.environment=="Preview")][0].id // empty' || true)"
+            url=""
+            if [ -n "${id}" ]; then
+              url="$(gh api "repos/${REPO}/deployments/${id}/statuses" --jq '[.[] | select(.state=="success") | .environment_url // empty][0] // empty' || true)"
+            fi
+            if [ -n "${url}" ]; then
+              headers="$(curl -sSI --max-time 15 "$url" || true)"
+              if printf '%s' "$headers" | grep -qi '^content-security-policy:'; then
+                echo "Fant preview ${url} med CSP"
+                echo "url=${url}" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
             fi
             sleep 10
           done
-          echo "Preview uten CSP-header: ${url}" >&2
+          echo "Preview uten CSP-header for ${SHA}" >&2
           exit 1
       - name: Gjør workspace skrivbart for ZAP
         run: chmod a+w .

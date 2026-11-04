@@ -1,6 +1,6 @@
 {
   "id": "endwise-booking",
-  "name": "Endwise Booking",
+  "name": "Endwise Booking (tillegg)",
   "modes": ["canvas"],
   "main": "index.html",
   "icon": "/icon.png"

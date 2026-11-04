@@ -14,6 +14,7 @@ import {
   WIDGET_SLOT_STEP_MINUTES,
   widgetWorkingDay,
 } from './availability.ts';
+import { type WidgetBranding, widgetBrandingFraRad } from './branding.ts';
 import { generatePublishableKey } from './keys.ts';
 import { normalizeOrigin } from './origin.ts';
 
@@ -268,6 +269,31 @@ export function createWidgetPublicService(db: Database) {
           .where(and(eq(schema.services.active, true), isNull(schema.serviceVersions.validTo)));
         return rows.map((r) => ({ ...r, vehicleType: String(r.vehicleType) }));
       });
+    },
+
+    /**
+     * F37 / white label F14 — publisert forhandler-merke til widgeten.
+     * Feiler lukket: tomt merke (widgeten ser ut som før).
+     */
+    async publicBranding(tenantId: string): Promise<WidgetBranding> {
+      try {
+        return await withTenant(db, tenantId, async (tx) => {
+          const [rad] = await tx
+            .select({
+              visningsnavn: schema.tenantBranding.visningsnavn,
+              logoUrl: schema.tenantBranding.logoUrl,
+              aksentfarge: schema.tenantBranding.aksentfarge,
+              aksentTekstfarge: schema.tenantBranding.aksentTekstfarge,
+              visLevertAv: schema.tenantBranding.visLevertAv,
+              publisertAt: schema.tenantBranding.publisertAt,
+            })
+            .from(schema.tenantBranding)
+            .where(eq(schema.tenantBranding.tenantId, tenantId));
+          return widgetBrandingFraRad(rad);
+        });
+      } catch {
+        return widgetBrandingFraRad(null);
+      }
     },
 
     /**

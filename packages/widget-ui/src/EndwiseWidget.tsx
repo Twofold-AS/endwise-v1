@@ -3,9 +3,12 @@ import { resetBookingChoice } from './booking-choice.ts';
 import {
   type ChatReply,
   createWidgetClient,
+  rensWidgetBranding,
   WIDGET_DISCLOSURE_TEXT,
+  type WidgetBranding,
   type WidgetService,
 } from './client.ts';
+import { widgetCtaFarger } from './widget-cta.ts';
 import { WIDGET_FALLBACK as fb } from './widget-fallbacks.ts';
 
 /**
@@ -24,6 +27,8 @@ export interface EndwiseWidgetProps {
    * Widgeten kaller aldri `forhandler.get`.
    */
   initialServices?: WidgetService[];
+  /** Overstyring (embed/Framer). Tomme felt fylles fra `/widget/init`. */
+  branding?: Partial<WidgetBranding>;
 }
 
 type ServicesState =
@@ -42,17 +47,29 @@ const box: CSSProperties = {
   maxWidth: 420,
   overflow: 'hidden',
 };
-const accent = `var(--ew-accent, ${fb.accent})`;
-const accentFg = `var(--ew-accent-fg, ${fb.accentFg})`;
+const accent = `var(--ew-widget-cta, ${fb.accent})`;
+const accentFg = `var(--ew-widget-cta-fg, ${fb.accentFg})`;
+
+function slaaSammenBranding(
+  hentet: WidgetBranding,
+  overstyr?: Partial<WidgetBranding>,
+): WidgetBranding {
+  if (!overstyr) return hentet;
+  return rensWidgetBranding({ ...hentet, ...overstyr });
+}
 
 export function EndwiseWidget({
   apiBase,
   publishableKey,
   locale = 'no',
   initialServices,
+  branding: brandingOverstyr,
 }: EndwiseWidgetProps) {
   const clientRef = useRef(createWidgetClient({ apiBase, publishableKey }));
   const [tab, setTab] = useState<'chat' | 'booking'>('chat');
+  const [merke, setMerke] = useState<WidgetBranding>(() =>
+    slaaSammenBranding(rensWidgetBranding(null), brandingOverstyr),
+  );
   const [messages, setMessages] = useState<{ from: 'you' | 'ai'; text: string }[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -85,6 +102,21 @@ export function EndwiseWidget({
     lastTjenester();
   }, [lastTjenester]);
 
+  useEffect(() => {
+    let aktiv = true;
+    clientRef.current
+      .getBranding()
+      .then((hentet) => {
+        if (aktiv) setMerke(slaaSammenBranding(hentet, brandingOverstyr));
+      })
+      .catch(() => {
+        if (aktiv) setMerke(slaaSammenBranding(rensWidgetBranding(null), brandingOverstyr));
+      });
+    return () => {
+      aktiv = false;
+    };
+  }, [brandingOverstyr]);
+
   async function send() {
     const text = input.trim();
     if (!text || busy) return;
@@ -104,8 +136,39 @@ export function EndwiseWidget({
     }
   }
 
+  const cta = widgetCtaFarger(merke.aksentfarge, merke.aksentTekstfarge);
+  const flate: CSSProperties = {
+    ...box,
+    ['--ew-widget-cta' as string]: cta.fill,
+    ['--ew-widget-cta-fg' as string]: cta.fg,
+  };
+
   return (
-    <div style={box}>
+    <div style={flate} data-widget-branding={merke.visningsnavn ? 'forhandler' : 'fallback'}>
+      {(merke.visningsnavn || merke.logoUrl) && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 12px',
+            borderBottom: `1px solid var(--ew-border, ${fb.border})`,
+          }}
+        >
+          {merke.logoUrl && (
+            <img
+              src={merke.logoUrl}
+              alt=""
+              width={28}
+              height={28}
+              style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 6 }}
+            />
+          )}
+          {merke.visningsnavn && (
+            <strong style={{ fontSize: 14, fontWeight: 650 }}>{merke.visningsnavn}</strong>
+          )}
+        </div>
+      )}
       {/* [ART50-UI] Art. 50-opplysning — Øverst, alltid, kan ikke fjernes. */}
       <div
         data-art50="disclosure"
@@ -242,6 +305,19 @@ export function EndwiseWidget({
           locale={locale}
           onRetry={lastTjenester}
         />
+      )}
+      {merke.visLevertAv && (merke.visningsnavn || merke.logoUrl) && (
+        <p
+          style={{
+            margin: 0,
+            padding: '8px 12px',
+            fontSize: 11,
+            color: `var(--ew-fg-muted, ${fb.fgMuted})`,
+            borderTop: `1px solid var(--ew-border, ${fb.border})`,
+          }}
+        >
+          Levert av Endwise
+        </p>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 export * from './art50.ts';
 export * from './availability.ts';
+export * from './branding.ts';
 export * from './identity.ts';
 export * from './keys.ts';
 export * from './origin.ts';

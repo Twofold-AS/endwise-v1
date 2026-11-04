@@ -979,7 +979,7 @@ export function breadcrumbFor(
  * Endwise-admin-sidene parkeres — koden beholdes, navet forenkles.
  */
 export const PARKED_LABEL: Record<string, string> = {
-  '/marked/agent': 'Parkert · Framer-agent',
+  '/marked/agent': 'Tillegg · Framer-plugin',
   '/marked/nyhetsbrev': 'Parkert · Nyhetsbrev',
   '/marked/kampanjer': 'Parkert · Kampanjer',
   '/marked/innhold': 'Parkert · Innhold',

@@ -58,6 +58,14 @@ export async function sendVelkomstEtterKnytning(
       .from(schema.tenants)
       .where(eq(schema.tenants.id, tenantId))
       .limit(1);
+    const [branding] = await tx
+      .select({
+        visningsnavn: schema.tenantBranding.visningsnavn,
+        logoUrl: schema.tenantBranding.logoUrl,
+      })
+      .from(schema.tenantBranding)
+      .where(eq(schema.tenantBranding.tenantId, tenantId))
+      .limit(1);
     const [sendt] = await tx
       .select({ id: schema.auditLog.id })
       .from(schema.auditLog)
@@ -69,7 +77,7 @@ export async function sendVelkomstEtterKnytning(
         ),
       )
       .limit(1);
-    return { kunde, tenant, sendt: Boolean(sendt) };
+    return { kunde, tenant, branding, sendt: Boolean(sendt) };
   });
 
   if (!rad.kunde) return { sendt: false, grunn: 'ukjent' };
@@ -80,8 +88,13 @@ export async function sendVelkomstEtterKnytning(
   const rot = process.env.TENANT_ROOT_DOMAIN ?? 'endwise.no';
   const slug = rad.tenant?.slug ?? '';
   const base = slug ? `https://${slug}.${rot}` : `https://${rot}`;
+  const merkenavn = rad.branding?.visningsnavn || rad.tenant?.name || 'Verkstedet';
   const epost = byggVelkomstEpost({
-    merke: { navn: rad.tenant?.name ?? 'Verkstedet', levertAv: true },
+    merke: {
+      navn: merkenavn,
+      levertAv: true,
+      logoUrl: rad.branding?.logoUrl ?? null,
+    },
     personvernUrl: `${base}/personvern`,
     avmeldUrl: `${base}/personvern`,
   });
@@ -90,7 +103,7 @@ export async function sendVelkomstEtterKnytning(
     subject: epost.subject,
     text: epost.text,
     html: epost.html,
-    avsender: { visningsnavn: rad.tenant?.name ?? 'Verkstedet' },
+    avsender: { visningsnavn: merkenavn },
     idempotencyKey: `velkomst:${tenantId}:${customerId}`,
   });
   await withTenant(db, tenantId, (tx) =>

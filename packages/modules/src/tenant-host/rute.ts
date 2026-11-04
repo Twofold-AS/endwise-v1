@@ -19,7 +19,11 @@ export const KUNDE_STIER = [
 
 export type VertKontekst = 'privat' | 'bedrift';
 
-export type VertRute = { type: 'next' } | { type: 'rewrite'; dest: string } | { type: 'not-found' };
+export type VertRute =
+  | { type: 'next' }
+  | { type: 'rewrite'; dest: string }
+  | { type: 'not-found' }
+  | { type: 'redirect'; dest: string; vert: 'app' | 'platform' };
 
 const API_PREFIKS = ['/api/', '/trpc/', '/stream/'];
 const STATISK_PREFIKS = ['/_next/', '/logo/', '/favicon'];
@@ -57,6 +61,25 @@ export function erAuthSti(path: string): boolean {
   );
 }
 
+const MARKEDS_STIER = ['/', '/personvern', '/vilkar', '/kontakt'] as const;
+
+function erMarkedsOffentligSti(path: string): boolean {
+  const p = normaliserSti(path);
+  return (MARKEDS_STIER as readonly string[]).includes(p);
+}
+
+function erMarkedsInnlogging(path: string): boolean {
+  const p = normaliserSti(path);
+  return (
+    p === '/signin' ||
+    p.startsWith('/signin/') ||
+    p === '/logg-inn' ||
+    p.startsWith('/logg-inn/') ||
+    p === '/2fa-oppsett' ||
+    p.startsWith('/2fa-oppsett/')
+  );
+}
+
 /** Admin-flater som bare skal treffes på platform-verten. */
 export function erPlattformAdminSti(path: string): boolean {
   const p = normaliserSti(path);
@@ -85,11 +108,25 @@ export function ruteFraSone(input: {
   kontekst: VertKontekst | null;
 }): VertRute {
   const path = normaliserSti(input.path);
-  if (erApiEllerStatisk(input.path)) return { type: 'next' };
+  if (erApiEllerStatisk(input.path)) {
+    if (input.sone === 'marked' && input.path.startsWith('/api/auth')) {
+      return { type: 'redirect', dest: path, vert: 'app' };
+    }
+    return { type: 'next' };
+  }
 
   if (input.sone === 'marked') {
-    if (erPlattformAdminSti(path)) return { type: 'not-found' };
-    return { type: 'next' };
+    if (erMarkedsInnlogging(path)) {
+      return { type: 'redirect', dest: '/logg-inn', vert: 'app' };
+    }
+    if (path === '/invitasjon' || path.startsWith('/invitasjon/')) {
+      return { type: 'redirect', dest: path, vert: 'app' };
+    }
+    if (erPlattformAdminSti(path)) {
+      return { type: 'redirect', dest: path === '/admin' ? '/logg-inn' : path, vert: 'platform' };
+    }
+    if (erMarkedsOffentligSti(path)) return { type: 'next' };
+    return { type: 'redirect', dest: path, vert: 'app' };
   }
 
   if (input.sone === 'platform') {
@@ -109,13 +146,9 @@ export function ruteFraSone(input: {
 
   if (input.sone === 'app') {
     if (path === '/_bedrift' || path.startsWith('/_bedrift/')) return { type: 'next' };
-    if (
-      path === '/' ||
-      path === '/logg-inn' ||
-      path.startsWith('/logg-inn/') ||
-      path === '/signin' ||
-      path.startsWith('/signin/')
-    ) {
+    if (path === '/2fa-oppsett' || path.startsWith('/2fa-oppsett/')) return { type: 'next' };
+    if (path === '/signin' || path.startsWith('/signin/')) return { type: 'next' };
+    if (path === '/' || path === '/logg-inn' || path.startsWith('/logg-inn/')) {
       return { type: 'rewrite', dest: '/_bedrift/logg-inn' };
     }
     if (erPlattformAdminSti(path) || path.startsWith('/_kunde') || path.startsWith('/_plattform')) {

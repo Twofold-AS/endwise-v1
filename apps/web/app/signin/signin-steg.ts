@@ -17,7 +17,7 @@ export const SIGNIN_VILKAR_STI = '/vilkar';
 
 /** Heading fjernet (CODE-GO 11.09.2026) — e-postfeltet er første innhold. */
 export const SIGNIN_TITTEL = '';
-export const SIGNIN_KODE_INGRESS = 'Vi har sendt en midlertidig kode til';
+export const SIGNIN_KODE_INGRESS = 'Hvis kontoen finnes, får du en kode på e-post.';
 export const SIGNIN_IKKE_DEG = 'Ikke deg?';
 export const SIGNIN_FYLL_KODE = 'Fyll inn kode';
 export const SIGNIN_NESTEN_DER = 'Nesten der';

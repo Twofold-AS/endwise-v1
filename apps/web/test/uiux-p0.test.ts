@@ -50,9 +50,9 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(kilde).not.toMatch(/fetch\(`\/invitasjon\/\$\{/);
   });
 
-  it('fersk invitee sender magic link etter godta — ikke passord+OTP', () => {
-    expect(kilde).toMatch(/signIn\.magicLink|magicLink/);
-    expect(kilde).toMatch(/callbackURL:\s*['"]\/signin['"]/);
+  it('fersk invitee logger inn via lenke + navn — ikke passord+OTP', () => {
+    expect(kilde).toMatch(/location\.assign/);
+    expect(kilde).not.toMatch(/signIn\.magicLink|magicLink/);
     expect(kilde).not.toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);
     expect(kilde).not.toMatch(/type=["']password["']/);
     expect(kilde).not.toMatch(/if\s*\(\s*!inv\.kreverPassord\s*\)[\s\S]{0,80}\/signin/);
@@ -64,14 +64,15 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     const signin = readFileSync(resolve(her, '../app/signin/signin-skjema.tsx'), 'utf8');
     const rot = readFileSync(resolve(her, '../app/page.tsx'), 'utf8');
     expect(signin).toMatch(/destinasjonNarSesjonFeiler/);
-    expect(rot).toMatch(/destinasjonNarSesjonFeiler/);
+    expect(rot).toMatch(/MarkedsSide/);
+    expect(rot).not.toMatch(/destinasjonNarSesjonFeiler/);
     expect(signin).not.toMatch(/catch\s*\(\s*\)\s*=>\s*['"]\/home['"]/);
     expect(signin).not.toMatch(/catch\s*\(\s*\)\s*=>\s*['"]\/dashboard['"]/);
   });
 
-  it('invite-siden logger aldri token og tvinger callback til /signin', () => {
+  it('invite-siden logger aldri token og lager sesjon på verten', () => {
     expect(kilde).not.toMatch(/console\.(log|info|debug)\([^)]*token/i);
-    expect(kilde).toMatch(/callbackURL:\s*['"]\/signin['"]/);
+    expect(kilde).toMatch(/credentials: 'same-origin'/);
     expect(kilde).not.toMatch(/searchParams\.get\(['"]next['"]\)/);
   });
 
@@ -129,10 +130,10 @@ describe('P0: avatar-onboarding dør ikke på 401', () => {
     expect(MANGLER_SESJON_UI).not.toMatch(/UNAUTHORIZED|#EE2924/i);
   });
 
-  it('invite-siden har ingen avatar-steg — magic link til /signin', () => {
+  it('invite-siden har ingen avatar-steg — godta lager sesjon', () => {
     expect(kilde).not.toMatch(/setSteg\('avatar'\)/);
-    expect(kilde).toMatch(/signIn\.magicLink|magicLink/);
-    expect(kilde).toMatch(/callbackURL:\s*['"]\/signin['"]/);
+    expect(kilde).not.toMatch(/signIn\.magicLink|magicLink/);
+    expect(kilde).toMatch(/location\.assign/);
     expect(kilde).not.toMatch(/setFeil\(\(error as Error\)\.message\)/);
   });
 });

@@ -429,7 +429,7 @@ describe('invitasjons-e-posten (F1-10)', () => {
     expect(p.html).not.toContain('#0066cc');
     expect(p.html).toContain('background-color:#ffffff');
     expect(p.html).toContain('text-decoration:underline');
-    expect((p as { from?: string }).from).toBe('Verksted A <noreply@endwise.no>');
+    expect((p as { from?: string }).from).toBe('Endwise <noreply@endwise.no>');
     expect(p.html).toContain(`src="cid:${LOGO_EPOST_CID}"`);
     expect(p.html).not.toContain('src="data:');
     expect(p.attachments).toHaveLength(1);
@@ -440,7 +440,7 @@ describe('invitasjons-e-posten (F1-10)', () => {
     vi.doUnmock('resend');
   });
 
-  it('invitasjonskode bruker Mobbin-skall og forhandler-From', async () => {
+  it('invitasjonskode bruker Mobbin-skall og Endwise-From', async () => {
     const sendt: Record<string, unknown>[] = [];
     vi.doMock('resend', () => ({
       Resend: class {
@@ -467,7 +467,7 @@ describe('invitasjons-e-posten (F1-10)', () => {
     expect(p.html).toContain('ABCD2345');
     expect(p.html).toContain('background-color:#ffffff');
     expect(p.html).not.toContain('#0066cc');
-    expect(p.from).toBe('Verksted A <noreply@endwise.no>');
+    expect(p.from).toBe('Endwise <noreply@endwise.no>');
     vi.doUnmock('resend');
   });
 

@@ -63,7 +63,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
       'utf8',
     );
     expect(signin).toMatch(/callbackURL:\s*['"]\/signin['"]/);
-    expect(invite).toMatch(/callbackURL:\s*['"]\/signin['"]/);
+    expect(invite).not.toMatch(/callbackURL:\s*['"]\/signin['"]/);
     expect(signin).not.toMatch(/searchParams\.get\(['"]next['"]\)/);
     expect(invite).not.toMatch(/searchParams\.get\(['"]next['"]\)/);
   });
@@ -73,7 +73,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
       handling: 'behold-sesjon',
       dest: MAGIC_LINK_APP_LANDING,
     });
-    expect(MAGIC_LINK_APP_LANDING).toBe('/');
+    expect(MAGIC_LINK_APP_LANDING).toBe('/home');
     expect(MAGIC_LINK_APP_LANDING).not.toBe(MAGIC_LINK_ENROLL_STI);
     expect(MAGIC_LINK_ENROLL_STI).toBe('/2fa-oppsett');
     const hook = readFileSync(resolve(her, '../src/magic-link-2fa.ts'), 'utf8');

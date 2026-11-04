@@ -30,7 +30,7 @@ describe('F26 / white label F7: logg-inn og velg', () => {
     const skjema = les('../app/%5Fkunde/[slug]/logg-inn/logg-inn-skjema.tsx');
     expect(skjema).toMatch(/E-post eller telefon/);
     expect(skjema).toMatch(/beOmKode/);
-    expect(skjema).toMatch(/Hvis vi kjenner deg/);
+    expect(skjema).toMatch(/Hvis kontoen finnes, får du en kode på e-post\./);
     expect(skjema).toMatch(/\/min-side/);
     expect(skjema).not.toMatch(/#0066ff/);
   });

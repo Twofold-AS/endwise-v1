@@ -1,4 +1,6 @@
-import { cookies } from 'next/headers';
+import { appOffentligUrl } from '@endwise/auth';
+import { cookies, headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { SignInSkjema } from './signin-skjema';
 import { harTotpVindu } from './signin-steg';
@@ -24,6 +26,9 @@ export default async function SignInPage({
   searchParams: Promise<{ steg?: string }>;
 }) {
   await searchParams;
+  if ((await headers()).get('x-endwise-sone') === 'marked') {
+    redirect(`${appOffentligUrl()}/logg-inn`);
+  }
   const header = kakeHeader(await cookies());
   const totpKlar = harTotpVindu(header);
 

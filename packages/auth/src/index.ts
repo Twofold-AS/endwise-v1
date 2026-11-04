@@ -16,6 +16,7 @@ export {
   lesTenantIdFraSlug,
   opprettBrukerForEpost,
 } from './forhandler-konto.ts';
+export { invitasjonGodtaVert, invitasjonOffentligLenke } from './invitasjon-lenke.ts';
 export {
   BEDRIFT_CSRF_HEADER,
   BEDRIFT_CSRF_VERDI,

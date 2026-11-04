@@ -200,10 +200,8 @@ describe('F5-35 markedsside — Jonas-fasit 05.09.2026', () => {
     expect(les('../app/kontakt/page.tsx')).toMatch(/Prøv Endwise/);
   });
 
-  it('innlogget bruker redirectes fortsatt — sesjonsporten bor i page.tsx', () => {
-    expect(rot).toMatch(/organization\.setActive|organization\.list/);
-    expect(rot).toMatch(/slug === ['"]endwise['"]/);
-    expect(rot).toMatch(/destinasjonNarSesjonFeiler/);
+  it('roten er bare marked — ingen sesjonsport eller innlogging', () => {
     expect(rot).toMatch(/MarkedsSide/);
+    expect(rot).not.toMatch(/organization\.setActive|getSession|destinasjonNarSesjonFeiler/);
   });
 });

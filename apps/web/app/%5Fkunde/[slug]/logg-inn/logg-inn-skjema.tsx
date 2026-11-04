@@ -7,7 +7,7 @@ import { authClient, signIn } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 
 const FORTSETT = 'Fortsett';
-const SAMME = 'Hvis vi kjenner deg, har du fått en kode.';
+const SAMME = 'Hvis kontoen finnes, får du en kode på e-post.';
 
 function serUtSomEpost(v: string): boolean {
   return v.includes('@');

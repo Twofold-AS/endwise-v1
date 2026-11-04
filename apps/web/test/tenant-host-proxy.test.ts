@@ -37,14 +37,17 @@ describe('F18 / white label F2: proxy vertsruting', () => {
     expect(config.matcher.some((m) => m.includes('(?!_next/static'))).toBe(true);
   });
 
-  it('auth-stier får no-store, marked får sone-header', () => {
+  it('auth-stier får no-store, marked redirecter innlogging til app', () => {
     const auth = proxy(req('https://endwise.no/signin', 'endwise.no'), {});
     expect(auth.headers.get('Cache-Control')).toMatch(/no-store/);
     expect(auth.headers.get('x-endwise-sone')).toBe('marked');
+    expect(auth.status).toBe(308);
+    expect(auth.headers.get('location')).toBe('https://app.endwise.no/logg-inn');
 
     const hjem = proxy(req('https://endwise.no/home', 'endwise.no'), {});
     expect(hjem.headers.get('x-endwise-sone')).toBe('marked');
-    expect(rewriteDest(hjem)).toBeNull();
+    expect(hjem.status).toBe(308);
+    expect(hjem.headers.get('location')).toBe('https://app.endwise.no/home');
   });
 
   it('forhandler / viser kundeside', () => {
@@ -107,10 +110,15 @@ describe('F18 / white label F2: proxy vertsruting', () => {
     expect(rewriteDest(admin)).toBeNull();
   });
 
-  it('marked endwise.no er uendret', () => {
-    const res = proxy(req('https://endwise.no/home', 'endwise.no'), WL);
-    expect(res.headers.get('x-endwise-sone')).toBe('marked');
-    expect(rewriteDest(res)).toBeNull();
+  it('marked endwise.no rot er markedssiden — innlogging og admin redirectes', () => {
+    const rot = proxy(req('https://endwise.no/', 'endwise.no'), WL);
+    expect(rot.headers.get('x-endwise-sone')).toBe('marked');
+    expect(rot.status).not.toBe(308);
+    expect(rewriteDest(rot)).toBeNull();
+
+    const admin = proxy(req('https://endwise.no/admin', 'endwise.no'), WL);
+    expect(admin.status).toBe(308);
+    expect(admin.headers.get('location')).toBe('https://platform.endwise.no/logg-inn');
   });
 
   it('proxy-kilden har ingen DB', () => {

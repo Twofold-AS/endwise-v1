@@ -1,4 +1,4 @@
-import { authEnv, sendInvitation } from '@endwise/auth';
+import { invitasjonOffentligLenke, sendInvitation } from '@endwise/auth';
 import { eq, schema, withTenant } from '@endwise/db';
 import { createInvitasjonsmodul, InvitasjonUgyldigError } from '@endwise/modules/invitasjoner';
 import { kanEndreJobbfunksjon } from '@endwise/modules/profil';
@@ -82,8 +82,7 @@ export const invitasjonerRouter = router({
           .limit(1),
       );
 
-      const base = authEnv.baseUrl;
-      const lenke = `${base.replace(/\/$/, '')}/invitasjon/${resultat.token}`;
+      const lenke = invitasjonOffentligLenke({ token: resultat.token, kind: 'staff' });
 
       /**
        * Sendingen skjer etter at raden er skrevet, og feil her ruller ikke
@@ -148,8 +147,7 @@ export const invitasjonerRouter = router({
           .where(eq(schema.tenants.id, ctx.tenantId))
           .limit(1),
       );
-      const base = authEnv.baseUrl;
-      const lenke = `${base.replace(/\/$/, '')}/invitasjon/${resultat.token}`;
+      const lenke = invitasjonOffentligLenke({ token: resultat.token, kind: 'owner' });
       let sendt = true;
       try {
         await sendInvitation({
@@ -157,6 +155,7 @@ export const invitasjonerRouter = router({
           lenke,
           forhandler: forhandler?.navn ?? 'Endwise',
           funksjon: 'leder',
+          kind: 'owner',
           utloper: resultat.invitasjon.utloper,
         });
       } catch (error) {

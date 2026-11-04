@@ -50,6 +50,7 @@ import {
 } from './session-policy.ts';
 import {
   type AuthSone,
+  appOffentligUrl,
   cookiePrefixForSone,
   idleSekunderForSone,
   platformOffentligUrl,
@@ -81,7 +82,11 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
   return betterAuth({
     appName: 'Endwise',
     secret: authEnv.secret,
-    baseURL: platform ? platformOffentligUrl() : authEnv.baseUrl,
+    baseURL: platform
+      ? platformOffentligUrl()
+      : sone === 'app'
+        ? appOffentligUrl()
+        : authEnv.baseUrl,
 
     database: drizzleAdapter(db, { provider: 'pg' }),
 

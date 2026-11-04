@@ -1379,6 +1379,18 @@ const ROADMAP = [
   { id:"F40-02", o:"Ny forhandler med subdomene + forhåndsvisning (uten redesign)", kat:"dashboard", sub:"endwise", t:"⭐ <b>04.11.2026:</b> Platform-admin (<code>mikkis@twofold.no</code>) på platform.endwise.no: Navn, subdomene, e-post til forhandler-admin. Validering små bokstaver/tall/bindestrek, unikt, ikke www/app/platform/api. Forhåndsvisning <code>&lt;sub&gt;.endwise.no</code>. Etter opprett virker subdomenet via wildcard + invitasjon sendes. Endre subdomene på forhandlerkortet. Ingen redesign (F39-01).",
     area:"admin", ui:"partial", status:"done" },
 ]},
+{ phase:"F41", title:"White label — invitasjon uten kode, merke og marked", target:"Etter F40 / Mikael 04.11.2026", items:[
+  { id:"F41-01", o:"Invitasjon: dropp OTP — engangslenke + rate limit", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Godta uten kode. GET 20/min, POST 5/min. UI: navn + Neste, 1,2 s vent. Ingen «Fikk ingen kode?».",
+    area:"auth", ui:"built", status:"done" },
+  { id:"F41-02", o:"Bedrifts-e-post som Endwise; forhandler merke bare til kunder", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Invite/login til eier og ansatte From <code>Endwise &lt;noreply@endwise.no&gt;</code>. Forhandler-navn/logo bare i kunde-e-post fra <code>&lt;sub&gt;.endwise.no</code>.",
+    area:"auth", ui:"na", status:"done" },
+  { id:"F41-03", o:"Admin setter subdomene + navn; eier velger visningsnavn; admin-logo", kat:"dashboard", sub:"endwise", t:"⭐ <b>04.11.2026:</b> Subdomene låst for invitee. <code>tenants.name</code> urørt i onboarding. Visningsnavn i <code>tenant_branding</code>. Admin laster opp logo (Blob) til kunde-e-post og kundesider, fallback initial.",
+    area:"admin", ui:"partial", status:"done" },
+  { id:"F41-04", o:"Fiks innloggingsløkke etter godta", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Invite-URL på app/platform. Godta setter <code>__Host-</code>-sesjon på samme vert og lander <code>/oppstart</code> eller <code>/home</code>. Årsak: magic-link-kake på endwise.no er usynlig på app.endwise.no, og app <code>/</code> er logg-inn.",
+    area:"auth", ui:"na", status:"done" },
+  { id:"F41-05", o:"endwise.no er bare marked — ingen innlogging", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Innlogging bare på app / platform / <code>&lt;sub&gt;</code>. Apex <code>/signin</code> og <code>/logg-inn</code> 308 til app; <code>/admin</code> til platform. Nøytral tekst: «Hvis kontoen finnes, får du en kode på e-post.»",
+    area:"auth", ui:"built", status:"done" },
+]},
 ];
 
 /* =====================================================================

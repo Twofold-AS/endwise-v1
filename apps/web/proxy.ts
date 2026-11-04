@@ -80,6 +80,15 @@ export function proxy(request: NextRequest, env: ProxyEnv = process.env) {
     return medSone(NextResponse.rewrite(url, requestInit), opplosning.sone, slugUt, auth);
   }
 
+  if (rute.type === 'redirect') {
+    const rot = (env.TENANT_ROOT_DOMAIN ?? 'endwise.no').replace(/^www\./, '');
+    const dest = new URL(request.nextUrl.href);
+    dest.protocol = 'https:';
+    dest.host = `${rute.vert}.${rot}`;
+    dest.pathname = rute.dest;
+    return medSone(NextResponse.redirect(dest, 308), opplosning.sone, slugUt, auth);
+  }
+
   if (rute.type === 'rewrite') {
     const url = request.nextUrl.clone();
     url.pathname = rute.dest;

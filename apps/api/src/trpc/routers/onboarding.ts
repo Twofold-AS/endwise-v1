@@ -90,17 +90,8 @@ async function skrivOnboardingUtkast(
   tenantId: string,
   input: z.infer<typeof utkastSchema>,
 ) {
-  const navn = input.visningsnavn.trim();
   const naa = new Date();
   await withTenant(db, tenantId, async (tx) => {
-    await tx
-      .update(schema.tenants)
-      .set({ name: navn, updatedAt: naa })
-      .where(eq(schema.tenants.id, tenantId));
-    await tx
-      .update(schema.organization)
-      .set({ name: navn })
-      .where(eq(schema.organization.id, tenantId));
     await tx
       .insert(schema.dealerProfiles)
       .values({
@@ -131,6 +122,20 @@ async function skrivOnboardingUtkast(
           updatedAt: naa,
         },
       });
+    const visningsnavn = input.visningsnavn.trim();
+    if (visningsnavn.length >= 2) {
+      await tx
+        .insert(schema.tenantBranding)
+        .values({
+          tenantId,
+          visningsnavn,
+          oppdatertAt: naa,
+        })
+        .onConflictDoUpdate({
+          target: schema.tenantBranding.tenantId,
+          set: { visningsnavn, oppdatertAt: naa },
+        });
+    }
   });
 }
 
@@ -146,6 +151,11 @@ export const onboardingRouter = router({
         })
         .from(schema.tenants)
         .where(eq(schema.tenants.id, ctx.tenantId));
+
+      const [branding] = await tx
+        .select({ visningsnavn: schema.tenantBranding.visningsnavn })
+        .from(schema.tenantBranding)
+        .where(eq(schema.tenantBranding.tenantId, ctx.tenantId));
 
       const [profil] = await tx
         .select({
@@ -182,7 +192,7 @@ export const onboardingRouter = router({
 
       return {
         complete: Boolean(tenant?.onboardingCompletedAt),
-        visningsnavn: tenant?.name ?? '',
+        visningsnavn: branding?.visningsnavn ?? tenant?.name ?? '',
         slug: tenant?.slug ?? '',
         address: profil?.address ?? '',
         postalCode: profil?.postalCode ?? '',
@@ -371,15 +381,10 @@ export const onboardingRouter = router({
         await tx
           .update(schema.tenants)
           .set({
-            name: navn,
             onboardingCompletedAt: naa,
             updatedAt: naa,
           })
           .where(eq(schema.tenants.id, ctx.tenantId));
-        await tx
-          .update(schema.organization)
-          .set({ name: navn })
-          .where(eq(schema.organization.id, ctx.tenantId));
         await tx
           .insert(schema.dealerProfiles)
           .values({

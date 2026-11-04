@@ -143,7 +143,7 @@ export function PlattformLoggInnSkjema({ startSteg }: { startSteg: Steg }) {
         ) : steg === 'kode' ? (
           <form onSubmit={(e) => void onKode(e)} className={AUTH_FLATE}>
             <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
-              Skriv koden vi sendte til e-posten din.
+              Hvis kontoen finnes, får du en kode på e-post.
             </p>
             <FeltKode
               ref={kodeRef}

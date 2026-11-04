@@ -99,7 +99,7 @@ export function BedriftLoggInnSkjema() {
         ) : (
           <form onSubmit={(e) => void onKode(e)} className={AUTH_FLATE} data-bedrift-logg-inn-kode>
             <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
-              Hvis vi kjenner e-posten, har du fått en kode.
+              Hvis kontoen finnes, får du en kode på e-post.
             </p>
             <FeltKode
               aria-label="Fyll inn kode"

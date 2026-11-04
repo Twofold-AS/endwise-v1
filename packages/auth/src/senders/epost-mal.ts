@@ -57,6 +57,13 @@ export function esc(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
+/** Kundelogo fra Blob. Bare https — aldri cid/data/javascript. */
+export function httpsBilde(url: string | null | undefined): string | null {
+  const v = url?.trim() ?? '';
+  if (!/^https:\/\/[^\s<>"']+$/i.test(v) || v.length > 500) return null;
+  return v;
+}
+
 /**
  * Bygger hele HTML-dokumentet.
  * @param tittel Overskriften i kortet — også `<title>`.
@@ -74,8 +81,12 @@ export function byggEpostHtml(input: {
   const merke = input.merke ?? ENDWISE_MERKE;
   const merkenavn = rensVisningsnavn(merke.navn) || 'Endwise';
   const erForhandler = Boolean(input.merke);
+  const initial = merkenavn.slice(0, 1).toUpperCase() || '·';
+  const logo = httpsBilde(merke.logoUrl);
   const topp = erForhandler
-    ? `<p style="margin:0;font-family:${FONT};font-size:16px;line-height:20px;font-weight:600;color:${FARGE.tekst};">${esc(merkenavn)}</p>`
+    ? logo
+      ? `<img src="${esc(logo)}" width="32" height="32" alt="${esc(merkenavn)}" style="display:block;width:32px;height:32px;border:0;border-radius:16px;outline:none;text-decoration:none;">`
+      : `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="width:32px;height:32px;border-radius:16px;background-color:${FARGE.merke};font-family:${FONT};font-size:14px;line-height:32px;font-weight:650;color:${FARGE.tekst};text-align:center;">${esc(initial)}</td><td style="padding-left:10px;font-family:${FONT};font-size:16px;line-height:20px;font-weight:600;color:${FARGE.tekst};">${esc(merkenavn)}</td></tr></table>`
     : `<img src="cid:${LOGO_EPOST_CID}"
                  width="32" height="40"
                  alt="${esc(merkenavn)}"

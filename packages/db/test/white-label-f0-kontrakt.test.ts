@@ -69,6 +69,15 @@ describe('0045 white-label F0-kontrakt', () => {
     expect(reservert).toMatch(/app\.platform_admin/);
   });
 
+  it('seeder reserverte_slugs før FORCE RLS (eier under FORCE = 42501)', () => {
+    const create = sql.indexOf('CREATE TABLE IF NOT EXISTS "reserverte_slugs"');
+    const insert = sql.indexOf('INSERT INTO "reserverte_slugs"');
+    const force = sql.indexOf('ALTER TABLE "reserverte_slugs" FORCE ROW LEVEL SECURITY');
+    expect(create).toBeGreaterThan(-1);
+    expect(insert).toBeGreaterThan(create);
+    expect(force).toBeGreaterThan(insert);
+  });
+
   it('FORCE RLS + GRANT på alle nye tenant-tabeller', () => {
     for (const t of [
       'tenant_branding',

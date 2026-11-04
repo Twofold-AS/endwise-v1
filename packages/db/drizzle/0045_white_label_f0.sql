@@ -75,13 +75,9 @@ CREATE TABLE IF NOT EXISTS "reserverte_slugs" (
   "grunn" text NOT NULL,
   "opprettet_at" timestamp with time zone DEFAULT now() NOT NULL
 );-- > statement-breakpoint
-ALTER TABLE "reserverte_slugs" ENABLE ROW LEVEL SECURITY;-- > statement-breakpoint
-ALTER TABLE "reserverte_slugs" FORCE ROW LEVEL SECURITY;-- > statement-breakpoint
-GRANT SELECT, INSERT, UPDATE, DELETE ON "reserverte_slugs" TO authenticated;-- > statement-breakpoint
-DROP POLICY IF EXISTS "reserverte_slugs_platform_admin" ON "reserverte_slugs";-- > statement-breakpoint
-CREATE POLICY "reserverte_slugs_platform_admin" ON "reserverte_slugs" AS PERMISSIVE FOR ALL TO "authenticated"
-  USING (current_setting('app.platform_admin', true) = 'on')
-  WITH CHECK (current_setting('app.platform_admin', true) = 'on');-- > statement-breakpoint
+-- Seed FØR FORCE RLS. Policyen er TO authenticated + platform_admin.
+-- Eier (endwise) under FORCE treffer ingen policy → 42501
+-- ExecWithCheckOptions. Prod-bygg 84ea3b7 feilet her.
 INSERT INTO "reserverte_slugs" ("slug", "grunn") VALUES
   ('platform', 'skjult admin'),
   ('admin', 'plattform'),
@@ -118,6 +114,13 @@ INSERT INTO "reserverte_slugs" ("slug", "grunn") VALUES
   ('post', 'e-post'),
   ('webmail', 'e-post')
 ON CONFLICT ("slug") DO NOTHING;-- > statement-breakpoint
+ALTER TABLE "reserverte_slugs" ENABLE ROW LEVEL SECURITY;-- > statement-breakpoint
+ALTER TABLE "reserverte_slugs" FORCE ROW LEVEL SECURITY;-- > statement-breakpoint
+GRANT SELECT, INSERT, UPDATE, DELETE ON "reserverte_slugs" TO authenticated;-- > statement-breakpoint
+DROP POLICY IF EXISTS "reserverte_slugs_platform_admin" ON "reserverte_slugs";-- > statement-breakpoint
+CREATE POLICY "reserverte_slugs_platform_admin" ON "reserverte_slugs" AS PERMISSIVE FOR ALL TO "authenticated"
+  USING (current_setting('app.platform_admin', true) = 'on')
+  WITH CHECK (current_setting('app.platform_admin', true) = 'on');-- > statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "invitation_codes" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

@@ -55,6 +55,7 @@ export default defineConfig({
       'test/white-label-f13-kontrakt.test.ts',
       'test/white-label-ga-live-kontrakt.test.ts',
       'test/white-label-ga-live-rls.test.ts',
+      'test/invitation-codes-owner-rls-kontrakt.test.ts',
       'test/vercel-migrate-beslutning.test.ts',
     ],
     // RLS-testene deler DB-tilstand — serielt, ikke parallelt.

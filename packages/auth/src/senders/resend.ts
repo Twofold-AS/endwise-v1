@@ -13,12 +13,25 @@ import { formaterKlokkeslett } from '../tid.ts';
 import {
   byggEpostHtml,
   byggInnloggingsEpostHtml,
+  byggMobbinEpostHtml,
   innloggingsEpostEmne,
   knapp,
   kodeboks,
   meldingsboks,
 } from './epost-mal.ts';
-import { avsenderAdresseErKanonisk, formaterAvsenderFrom } from './merke.ts';
+import { avsenderAdresseErKanonisk, formaterAvsenderFrom, validerVisningsnavn } from './merke.ts';
+
+function forhandlerAvsender(
+  forhandler: string,
+  kind?: 'staff' | 'owner' | 'platform',
+): { visningsnavn: string } | undefined {
+  if (kind === 'platform') return undefined;
+  try {
+    return { visningsnavn: validerVisningsnavn(forhandler) };
+  } catch {
+    return undefined;
+  }
+}
 
 /** E-post-2FA og auth-eposter går via Resend (techstack §5). */
 let client: Resend | undefined;
@@ -399,12 +412,55 @@ export async function sendInvitation(input: {
       ``,
       `Har du ikke ventet denne invitasjonen, kan du se bort fra e-posten.`,
     ].join('\n'),
-    html: byggEpostHtml({
+    html: byggMobbinEpostHtml({
       tittel: subject,
+      hei: 'Hei,',
       ingress,
-      innhold: knapp(input.lenke, 'Åpne invitasjonen'),
+      lenke: { href: input.lenke, tekst: 'Åpne invitasjonen' },
       fotnote,
     }),
+    avsender: forhandlerAvsender(input.forhandler, input.kind),
+  });
+}
+
+export async function sendInvitasjonskode(input: {
+  to: string;
+  kode: string;
+  forhandler: string;
+  kind?: 'staff' | 'owner' | 'platform';
+}): Promise<void> {
+  const kode = input.kode.trim().toUpperCase();
+  const subject = innloggingsEpostEmne(kode);
+  const ingress =
+    input.kind === 'platform'
+      ? 'Her er koden for å godta invitasjonen til Endwise.'
+      : `Her er koden for å godta invitasjonen hos ${input.forhandler}.`;
+  const fotnote = 'Koden gjelder i 10 minutter og kan brukes én gang.';
+
+  if (skalLeggesILogg()) {
+    devRamme(
+      'INVITASJONSKODE (KUN DEV — Resend er ikke konfigurert)',
+      [
+        ['Til:', input.to],
+        ['Kode:', kode],
+      ],
+      fotnote,
+    );
+    return;
+  }
+
+  await sendEmail({
+    to: input.to,
+    subject,
+    text: [ingress, '', kode, '', fotnote].join('\n'),
+    html: byggMobbinEpostHtml({
+      tittel: subject,
+      hei: 'Hei,',
+      ingress,
+      kode,
+      fotnote,
+    }),
+    avsender: forhandlerAvsender(input.forhandler, input.kind),
   });
 }
 

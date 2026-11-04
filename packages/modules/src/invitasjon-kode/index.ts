@@ -47,7 +47,7 @@ export type InvitasjonKodeRad = {
 };
 
 function lesPepper(pepper?: string): string {
-  const verdi = pepper ?? process.env[PEPPER_ENV] ?? '';
+  const verdi = pepper ?? process.env[PEPPER_ENV] ?? process.env.BETTER_AUTH_SECRET ?? '';
   if (verdi.length < 16) {
     throw new InvitasjonKodeConfigError(
       `${PEPPER_ENV} mangler eller er for kort (trenger minst 16 tegn).`,

@@ -56,6 +56,7 @@ export {
   sendByttEpostNyAdresse,
   sendEmail,
   sendInboxMessage,
+  sendInvitasjonskode,
   sendInvitation,
   sendMagicLink,
   sendPasswordReset,

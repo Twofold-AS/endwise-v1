@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { harBedriftCsrf, rolleKrever2FA, sendEmail } from '@endwise/auth';
+import { harBedriftCsrf, rolleKrever2FA, sendInvitasjonskode } from '@endwise/auth';
 import { and, eq, schema, sql, withTenant } from '@endwise/db';
 import {
   genererInvitasjonskode,
@@ -195,10 +195,18 @@ invitasjon.post('/:token/send-kode', async (c) => {
       return { sendt: true as const, kode: generert.kode };
     });
     if (utfall.sendt) {
-      await sendEmail({
+      const [forhandler] = await withTenant(db(), inv.tenantId, (tx) =>
+        tx
+          .select({ navn: schema.tenants.name })
+          .from(schema.tenants)
+          .where(eq(schema.tenants.id, inv.tenantId))
+          .limit(1),
+      );
+      await sendInvitasjonskode({
         to: inv.epost,
-        subject: 'Koden din til Endwise-invitasjonen',
-        text: `Koden din er ${utfall.kode}. Den gjelder i 10 minutter og kan brukes én gang.`,
+        kode: utfall.kode,
+        forhandler: inv.kind === 'platform' ? 'Endwise' : (forhandler?.navn ?? 'Endwise'),
+        kind: inv.kind,
       });
       await withTenant(db(), inv.tenantId, (tx) =>
         tx.insert(schema.auditLog).values({
@@ -220,8 +228,13 @@ invitasjon.post('/:token/send-kode', async (c) => {
         }),
       );
     }
-  } catch {
-    // Samme 200. Ingen enumerering.
+  } catch (error) {
+    const pg = lesPostgresCause(error);
+    console.error('[invitasjon] send-kode feilet', {
+      code: pg.code,
+      constraint: pg.constraint,
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
   return c.json({ ok: true }, 200);
 });

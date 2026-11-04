@@ -98,6 +98,33 @@ describe('logoen', () => {
   });
 });
 
+describe('Mobbin-e-postmalen (invitasjon og kode)', () => {
+  it('er hvit, uten Action Blue, med stor kode eller understreket lenke', async () => {
+    const { byggMobbinEpostHtml } = await import('../src/senders/epost-mal.ts');
+    const kode = byggMobbinEpostHtml({
+      tittel: 'Koden din',
+      ingress: 'Her er koden.',
+      kode: 'ABCD2345',
+      fotnote: '10 minutter.',
+    });
+    expect(kode).toContain('background-color:#ffffff');
+    expect(kode).toContain('ABCD2345');
+    expect(kode).toContain('font-size:36px');
+    expect(kode).not.toContain('#0066cc');
+
+    const lenke = byggMobbinEpostHtml({
+      tittel: 'Invitasjon',
+      ingress: 'Du er invitert.',
+      lenke: { href: 'https://endwise.no/invitasjon/x', tekst: 'Åpne invitasjonen' },
+      fotnote: 'Personlig.',
+    });
+    expect(lenke).toMatch(
+      /<a href="https:\/\/endwise\.no\/invitasjon\/x"[^>]*text-decoration:underline/,
+    );
+    expect(lenke).not.toContain('#0066cc');
+  });
+});
+
 describe('innloggings-e-postmalen', () => {
   const html = byggInnloggingsEpostHtml({
     navn: 'Mikael',
@@ -394,13 +421,15 @@ describe('invitasjons-e-posten (F1-10)', () => {
     expect(sendt).toHaveLength(1);
     const p = sendt[0] as { text: string; html: string; subject: string; attachments?: unknown[] };
     expect(p.subject).toBe('Du er invitert til Verksted A i Endwise');
-    expect((p as { from?: string }).from).toBe('Endwise <noreply@endwise.no>');
     expect(p.text).toContain('https://endwise.no/invitasjon/eksempel');
     expect(p.text).toMatch(/godta invitasjonen og logge inn/);
     expect(p.text).not.toMatch(/sett passord/i);
     expect(p.html).toContain('Åpne invitasjonen');
     expect(p.html).not.toMatch(/sett passord|1Password|demo|seed/i);
-    expect(p.html).toContain('#0066cc');
+    expect(p.html).not.toContain('#0066cc');
+    expect(p.html).toContain('background-color:#ffffff');
+    expect(p.html).toContain('text-decoration:underline');
+    expect((p as { from?: string }).from).toBe('Verksted A <noreply@endwise.no>');
     expect(p.html).toContain(`src="cid:${LOGO_EPOST_CID}"`);
     expect(p.html).not.toContain('src="data:');
     expect(p.attachments).toHaveLength(1);
@@ -408,6 +437,37 @@ describe('invitasjons-e-posten (F1-10)', () => {
       contentId: LOGO_EPOST_CID,
       contentType: 'image/png',
     });
+    vi.doUnmock('resend');
+  });
+
+  it('invitasjonskode bruker Mobbin-skall og forhandler-From', async () => {
+    const sendt: Record<string, unknown>[] = [];
+    vi.doMock('resend', () => ({
+      Resend: class {
+        emails = {
+          send: async (payload: Record<string, unknown>) => {
+            sendt.push(payload);
+            return { data: { id: 'x' }, error: null };
+          },
+        };
+      },
+    }));
+
+    const { sendInvitasjonskode } = await last();
+    await sendInvitasjonskode({
+      to: 'ny@verksted.test',
+      kode: 'ABCD2345',
+      forhandler: 'Verksted A',
+    });
+
+    expect(sendt).toHaveLength(1);
+    const p = sendt[0] as { text: string; html: string; subject: string; from?: string };
+    expect(p.subject).toContain('ABCD2345');
+    expect(p.text).toContain('ABCD2345');
+    expect(p.html).toContain('ABCD2345');
+    expect(p.html).toContain('background-color:#ffffff');
+    expect(p.html).not.toContain('#0066cc');
+    expect(p.from).toBe('Verksted A <noreply@endwise.no>');
     vi.doUnmock('resend');
   });
 

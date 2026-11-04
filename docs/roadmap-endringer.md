@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-04 — F38-07 invitasjonskode + F39 plan
+
+**Type:** hotfix (F38-07) + ny fase F39. Ingen ny UI-pakke. Ingen techstack-endring.
+**Godkjent av:** Mikael (prod-test: ingen kode på invitasjonslenke; tillegg til F39; app.endwise.no, ikke bedrift).
+**Endring:** **F38-07** `done` — 0059 eier-RLS på `invitation_codes`, pepper→`BETTER_AUTH_SECRET`, Mobbin-e-post, akseptside auto-send/egne felt/«Fikk ingen kode?». Ny fase **F39** (admin-redesign, admin setter subdomene, `app.endwise.no`, kundeselvbetjening) — `planned`.
+
+---
+
 ## 2026-11-04 — F38-06 Prod-bygg 0057/0058 under FORCE RLS
 
 **Type:** hotfix etter #209. Ingen ny UI-pakke. Ingen techstack-endring.

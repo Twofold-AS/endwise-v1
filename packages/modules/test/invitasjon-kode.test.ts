@@ -96,6 +96,23 @@ describe('F16 / white label F0: invitasjonskode', () => {
     );
   });
 
+  it('faller tilbake på BETTER_AUTH_SECRET når INVITASJON_KODE_PEPPER mangler', () => {
+    const forrigePepper = process.env.INVITASJON_KODE_PEPPER;
+    const forrigeSecret = process.env.BETTER_AUTH_SECRET;
+    delete process.env.INVITASJON_KODE_PEPPER;
+    process.env.BETTER_AUTH_SECRET = 'better-auth-secret-32tegn-xxxx';
+    try {
+      const { kode, hash } = genererInvitasjonskode({});
+      expect(kode).toHaveLength(KODE_TEGN_ANBEFALT);
+      expect(hash).toHaveLength(64);
+    } finally {
+      if (forrigePepper === undefined) delete process.env.INVITASJON_KODE_PEPPER;
+      else process.env.INVITASJON_KODE_PEPPER = forrigePepper;
+      if (forrigeSecret === undefined) delete process.env.BETTER_AUTH_SECRET;
+      else process.env.BETTER_AUTH_SECRET = forrigeSecret;
+    }
+  });
+
   it('hash i klartekst inneholder ikke koden', () => {
     const { kode, hash } = genererInvitasjonskode({ pepper: PEPPER });
     expect(hash.toLowerCase()).not.toContain(kode.toLowerCase());

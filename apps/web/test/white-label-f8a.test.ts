@@ -10,17 +10,21 @@ function les(rel: string) {
 }
 
 describe('F27 / white label F8a: invitasjons-UI', () => {
-  it('Send meg kode, CSRF, token ut av URL, ingen #0066ff', () => {
+  it('egne felt, auto-send, Fikk ingen kode, CSRF, token ut av URL', () => {
     const side = les('../app/invitasjon/[token]/page.tsx');
-    expect(side).toMatch(/Send meg kode/);
+    expect(side).toMatch(/Fikk ingen kode\?/);
+    expect(side).toMatch(/autoSendt/);
     expect(side).toMatch(/x-endwise-csrf/);
     expect(side).toMatch(/history\.replaceState/);
     expect(side).toMatch(/\/invitasjon/);
     expect(side).toMatch(/send-kode/);
-    expect(side).toMatch(/Kode fra e-posten/);
+    expect(side).toMatch(/label="Kode"/);
+    expect(side).toMatch(/label="Navn"/);
+    expect(side).toMatch(/id="inv-kode"/);
+    expect(side).toMatch(/id="inv-navn"/);
     expect(side).toMatch(/kreverKode/);
-    expect(side).toMatch(/Hva heter du/);
     expect(side).toMatch(/Fortsett/);
+    expect(side).not.toMatch(/Send meg kode/);
     expect(side).not.toMatch(/#0066ff/);
     expect(side).not.toMatch(/FeltKode|InputOtp/);
   });

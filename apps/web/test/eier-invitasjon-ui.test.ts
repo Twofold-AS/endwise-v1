@@ -17,7 +17,8 @@ describe('F5-26: invitasjonssiden har ingen modulvelger', () => {
   const pakke = readFileSync(resolve(her, '../app/(app)/endwise/_pakke-valg.tsx'), 'utf8');
 
   it('godta-siden ber om navn og sender magic link — ingen tilleggs-UI', () => {
-    expect(kilde).toMatch(/Hva heter du/);
+    expect(kilde).toMatch(/label="Navn"/);
+    expect(kilde).toMatch(/label="Kode"/);
     expect(kilde).toMatch(/signIn\.magicLink|magicLink/);
     expect(kilde).not.toMatch(/type=["']password["']/);
     expect(kilde).not.toMatch(/twoFactor\.(enable|sendOtp|verifyOtp)/);

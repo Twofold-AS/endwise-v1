@@ -146,6 +146,9 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'mechanics_tenant_select_owner',
          'mechanics_tenant_insert_owner',
          'invitations_tenant_select_owner',
+         'invitation_codes_tenant_select_owner',
+         'invitation_codes_tenant_insert_owner',
+         'invitation_codes_tenant_update_owner',
          'services_tenant_insert_owner',
          'services_tenant_select_owner',
          'services_tenant_update_owner',
@@ -184,6 +187,9 @@ describeDb('FORCE RLS + runtime-rollen', () => {
         'mechanics_tenant_select_owner',
         'mechanics_tenant_insert_owner',
         'invitations_tenant_select_owner',
+        'invitation_codes_tenant_select_owner',
+        'invitation_codes_tenant_insert_owner',
+        'invitation_codes_tenant_update_owner',
         'services_tenant_insert_owner',
         'services_tenant_select_owner',
         'services_tenant_update_owner',
@@ -223,6 +229,9 @@ describeDb('FORCE RLS + runtime-rollen', () => {
          'mechanics_tenant_select_owner',
          'mechanics_tenant_insert_owner',
          'invitations_tenant_select_owner',
+         'invitation_codes_tenant_select_owner',
+         'invitation_codes_tenant_insert_owner',
+         'invitation_codes_tenant_update_owner',
          'services_tenant_insert_owner',
          'services_tenant_select_owner',
          'services_tenant_update_owner',
@@ -236,6 +245,9 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     expect(navn, 'Mangler eier-INSERT-policyer. Kjør `pnpm db:grants`.').toEqual([
       'audit_log_tenant_insert_owner',
       'dealer_profiles_tenant_select_owner',
+      'invitation_codes_tenant_insert_owner',
+      'invitation_codes_tenant_select_owner',
+      'invitation_codes_tenant_update_owner',
       'invitations_owner_revoke_update',
       'invitations_platform_admin_insert_owner',
       'invitations_platform_admin_select_owner',
@@ -260,6 +272,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
     ]);
     const insertNavn = new Set([
       'audit_log_tenant_insert_owner',
+      'invitation_codes_tenant_insert_owner',
       'invitations_platform_admin_insert_owner',
       'mechanics_tenant_insert_owner',
       'member_profiles_tenant_insert_owner',
@@ -288,6 +301,12 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       'w',
     );
     expect(res.rows.find((r) => r.polname === 'invitations_tenant_select_owner')?.polcmd).toBe('r');
+    expect(res.rows.find((r) => r.polname === 'invitation_codes_tenant_select_owner')?.polcmd).toBe(
+      'r',
+    );
+    expect(res.rows.find((r) => r.polname === 'invitation_codes_tenant_update_owner')?.polcmd).toBe(
+      'w',
+    );
     const tenantSelect = new Set([
       'tenants_tenant_select_owner',
       'dealer_profiles_tenant_select_owner',
@@ -295,6 +314,7 @@ describeDb('FORCE RLS + runtime-rollen', () => {
       'member_profiles_tenant_select_owner',
       'mechanics_tenant_select_owner',
       'invitations_tenant_select_owner',
+      'invitation_codes_tenant_select_owner',
       'services_tenant_select_owner',
       'service_versions_tenant_select_owner',
     ]);

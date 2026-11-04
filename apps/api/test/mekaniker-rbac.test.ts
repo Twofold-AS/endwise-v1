@@ -24,6 +24,10 @@ const ctx = (
     jobFunction: extra.jobFunction ?? null,
     isMechanic: extra.isMechanic ?? false,
     mechanicId: extra.mechanicId ?? null,
+    kontekst: 'bedrift',
+    requestHeaders: new Headers({ 'x-endwise-csrf': '1' }),
+    authSone: 'forhandler',
+    passkeyOk: false,
   }) as never;
 
 const mekaniker = () =>

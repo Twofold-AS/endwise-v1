@@ -79,8 +79,9 @@ export function createAuth(
   const destinasjon = async (database: typeof db, email: string) => {
     if (platform) return erPlatformDestinasjon(database, email);
     if (sone === 'app') return erAnsattDestinasjon(database, email);
-    const tenantId = lesAuthTenantId();
-    if (tenantId) {
+    if (sone === 'forhandler') {
+      const tenantId = lesAuthTenantId();
+      if (!tenantId) return false;
       return erKundeHostDestinasjon(database, tenantId, email);
     }
     return erAuthDestinasjon(database, email);
@@ -123,7 +124,7 @@ export function createAuth(
      */
     hooks: {
       before: byttPassordForHook,
-      after: createAuthEtterHook(db),
+      after: createAuthEtterHook(db, { sone }),
     },
 
     emailAndPassword: {
@@ -265,7 +266,9 @@ export function createAuth(
            */
           if (!(await destinasjon(db, email))) return;
           const tenantId = lesAuthTenantId();
-          if (tenantId) {
+          if (sone === 'forhandler') {
+            if (!tenantId) return;
+            if (!(await erKundeHostDestinasjon(db, tenantId, email))) return;
             await opprettBrukerForEpost(db, email);
           }
           const navn = await lesAuthBrukerNavn(db, email);

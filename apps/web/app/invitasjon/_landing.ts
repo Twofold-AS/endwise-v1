@@ -9,13 +9,14 @@ export {
  * Hvor en fersk invitee skal etter ekte sesjon (passord + ev. 2FA).
  * Hard navigasjon (`location.assign`) skjer i kallstedet, ikke her.
  * Myk klientnavigasjon er dobbel-login-bugen.
- * TOTP er valgfri. `TWO_FACTOR_REQUIRED` tvinger ikke `/2fa-oppsett`.
+ * Bedrift uten TOTP tvinges til `/2fa-oppsett`. Sesjonen beholdes.
  */
 export function destinasjonEtterInvite(
   kind: 'owner' | 'staff' | 'platform',
   landing?: string | null,
-  _feil?: string | null,
+  feil?: string | null,
 ): string {
+  if (feil?.includes('TWO_FACTOR_REQUIRED')) return '/2fa-oppsett';
   if (kind === 'platform') return '/endwise';
   if (kind === 'owner') return '/oppstart';
   if (landing?.startsWith('/') && !landing.startsWith('//')) return landing;

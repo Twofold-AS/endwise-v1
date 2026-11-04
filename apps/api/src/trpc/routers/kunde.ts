@@ -18,7 +18,13 @@ import { z } from 'zod';
 import { customerProcedure, publicProcedure, router } from '../init.ts';
 
 const KODE_PER_TIME = 5;
+const KODE_NOYTRAL_MS = 400;
 const kodeTeller = new Map<string, { n: number; reset: number }>();
+
+async function noytralKundeKodePause(start: number, naa = Date.now()): Promise<void> {
+  const rest = KODE_NOYTRAL_MS - (naa - start);
+  if (rest > 0) await new Promise((r) => setTimeout(r, rest));
+}
 
 function kundeKodeTillatt(nokkel: string, naa = Date.now()): boolean {
   const rad = kodeTeller.get(nokkel);
@@ -83,13 +89,16 @@ export const kundeRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const start = Date.now();
       const tenantId = ctx.hostTenantId;
       const ident = (input.epost ?? input.telefon ?? '').trim().toLowerCase();
       const ip = ctx.requestHeaders.get('x-vercel-forwarded-for') ?? 'ukjent';
       if (!kundeKodeTillatt(`${tenantId ?? 'x'}:${ip}:${ident}`)) {
+        await noytralKundeKodePause(start);
         return { ok: true as const };
       }
       if (!tenantId || (!input.epost && !input.telefon)) {
+        await noytralKundeKodePause(start);
         return { ok: true as const };
       }
       try {
@@ -122,6 +131,7 @@ export const kundeRouter = router({
       } catch {
         // Samme svar. Ingen enumerering.
       }
+      await noytralKundeKodePause(start);
       return { ok: true as const };
     }),
 

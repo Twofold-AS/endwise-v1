@@ -114,5 +114,8 @@ describe('F26 / white label F7: Privat/Bedrift', () => {
       MAGIC_LINK_ENROLL_STI,
     );
     expect(etterMagicLinkVerify(false, { aktiv: true, harRolle: false }).dest).toBe('/min-side');
+    expect(
+      etterMagicLinkVerify(false, { aktiv: false, harRolle: false, kreverTotp: true }).dest,
+    ).toBe(MAGIC_LINK_ENROLL_STI);
   });
 });

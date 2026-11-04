@@ -454,24 +454,32 @@ invitasjon.post('/godta', async (c) => {
     const sesjonToken = randomBytes(32).toString('hex');
     const platform = inv.kind === 'platform';
     const idle = platform ? PLATFORM_IDLE_TIMEOUT_SECONDS : IDLE_TIMEOUT_SECONDS;
-    await db()
-      .insert(schema.session)
-      .values({
-        id: randomUUID(),
-        token: sesjonToken,
-        userId: resultat.userId,
-        expiresAt: new Date(now.getTime() + idle * 1000),
-        createdAt: now,
-        updatedAt: now,
-        activeOrganizationId: inv.tenantId,
-        absoluteExpiresAt: absoluteExpiryFor(
-          now,
-          platform ? PLATFORM_ABSOLUTE_MAX_LIFETIME_SECONDS : ABSOLUTE_MAX_LIFETIME_SECONDS,
-        ),
-        kontekst: platform ? 'privat' : 'bedrift',
-        bedriftVerifisertAt: platform ? null : now,
-        bedriftUtloperAt: platform ? null : bedriftUtloperAt(now, now),
-      });
+    const sesjonKjerne = {
+      id: randomUUID(),
+      token: sesjonToken,
+      userId: resultat.userId,
+      expiresAt: new Date(now.getTime() + idle * 1000),
+      createdAt: now,
+      updatedAt: now,
+      activeOrganizationId: inv.tenantId,
+      absoluteExpiresAt: absoluteExpiryFor(
+        now,
+        platform ? PLATFORM_ABSOLUTE_MAX_LIFETIME_SECONDS : ABSOLUTE_MAX_LIFETIME_SECONDS,
+      ),
+    };
+    try {
+      await db()
+        .insert(schema.session)
+        .values({
+          ...sesjonKjerne,
+          kontekst: platform ? 'privat' : 'bedrift',
+          bedriftVerifisertAt: platform ? null : now,
+          bedriftUtloperAt: platform ? null : bedriftUtloperAt(now, now),
+        });
+    } catch (error) {
+      loggGodtaFeil(error);
+      await db().insert(schema.session).values(sesjonKjerne);
+    }
     c.header(
       'Set-Cookie',
       byggSesjonKake({
@@ -482,8 +490,19 @@ invitasjon.post('/godta', async (c) => {
       }),
     );
 
+    const [bruker] = await db()
+      .select({ twoFactorEnabled: schema.user.twoFactorEnabled })
+      .from(schema.user)
+      .where(eq(schema.user.id, resultat.userId))
+      .limit(1);
     const landing =
-      inv.kind === 'platform' ? '/endwise' : inv.kind === 'owner' ? '/oppstart' : '/home';
+      bruker?.twoFactorEnabled === true
+        ? inv.kind === 'platform'
+          ? '/endwise'
+          : inv.kind === 'owner'
+            ? '/oppstart'
+            : '/home'
+        : '/2fa-oppsett';
     return c.json({
       ok: true,
       epost: inv.epost,

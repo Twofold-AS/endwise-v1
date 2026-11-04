@@ -3,7 +3,7 @@
 import { erMagicLinkKode, normaliserMagicLinkKode } from '@endwise/auth/magic-link';
 import { ArrowRight, FeltInput, FeltKode, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
-import { authClient, signIn } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 
 const FORTSETT = 'Fortsett';
@@ -27,24 +27,12 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
     setError(null);
     const verdi = ident.trim();
     try {
-      if (serUtSomEpost(verdi)) {
-        const res = await signIn.magicLink({
-          email: verdi,
-          callbackURL: '/min-side',
-        });
-        if (res.error) {
-          setError('Kunne ikke sende kode. Prøv igjen.');
-          setBusy('error');
-          return;
-        }
-      } else {
-        await beOmKode.mutateAsync({ telefon: verdi });
-      }
+      await beOmKode.mutateAsync(serUtSomEpost(verdi) ? { epost: verdi } : { telefon: verdi });
       setBusy('idle');
       setSteg('kode');
     } catch {
-      setError('Kunne ikke sende kode. Prøv igjen.');
-      setBusy('error');
+      setBusy('idle');
+      setSteg('kode');
     }
   }
 

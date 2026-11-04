@@ -1,9 +1,9 @@
-import type { Database } from '@endwise/db';
+import { type Database, eq, schema } from '@endwise/db';
 import { ROLES_REQUIRING_2FA } from './rbac.ts';
 
 /**
- * TOTP-status mot sesjon. **02.09.2026 (Mikael):** autentikator er valgfri
- * og senere — `assertTwoFactorSatisfied` blokkerer ikke uenrollerte.
+ * TOTP-status mot sesjon. Bedrift og inviterte ansatte krever TOTP
+ * før tilgang. Customer uten TOTP er ikke pliktig.
  * Bundet TOTP (flagg + rad + verified) håndheves ved neste magic-link-verify.
  * Hvorfor `twoFactorEnabled` er nok til å bety «fullførte 2FA»
  * Better-Auth oppretter ikke en sesjon ved passord-innlogging når kontoen har
@@ -72,22 +72,32 @@ export function rolesRequiring2FA(roles: readonly string[]): string[] {
  * være triviell å teste — og fordi en regel som bare finnes inne i en
  * databasespørring er en regel ingen tester.
  */
-export function assertTwoFactorSatisfied(_input: {
+const BEDRIFT_2FA = ['dealer_admin', 'dealer_staff', 'endwise_admin', 'endwise_support'] as const;
+
+function bedriftRoller(roles: readonly string[]): string[] {
+  return roles.filter((r) => (BEDRIFT_2FA as readonly string[]).includes(r));
+}
+
+export function assertTwoFactorSatisfied(input: {
   roles: readonly string[];
   twoFactorEnabled: boolean | null | undefined;
 }): void {
-  // TOTP er valgfri og senere. Uenrollert dealer/admin/customer får bruke appen.
-  // Innloggingsmuren for bundet TOTP ligger i magic-link-verify (riv + totp-kake).
+  const pliktige = bedriftRoller(input.roles);
+  if (pliktige.length === 0) return;
+  if (input.twoFactorEnabled === true) return;
+  throw new TwoFactorRequiredError(pliktige);
 }
 
 /**
- * `session.me.twoFactorRequired` — sidene skal lastes uten godkjent 2FA.
- * Bundet TOTP ble allerede krevd ved magic-link-verify.
+ * `session.me.twoFactorRequired` — bedrift uten TOTP må til /2fa-oppsett.
+ * Sesjonen beholdes. Customer uten TOTP er ikke pliktig.
  */
-export function sessionMeTwoFactorRequired(_input?: {
+export function sessionMeTwoFactorRequired(input?: {
   twoFactorEnabled?: boolean | null;
+  roles?: readonly string[];
 }): boolean {
-  return false;
+  if (input?.twoFactorEnabled === true) return false;
+  return bedriftRoller(input?.roles ?? []).length > 0;
 }
 
 /**
@@ -97,9 +107,16 @@ export function sessionMeTwoFactorRequired(_input?: {
  * 2FA med A som aktiv og deretter bytte til B. Kravet henger på personen.
  */
 export async function assertTwoFactorForUser(
-  _db: Database,
-  _userId: string,
+  db: Database,
+  userId: string,
   twoFactorEnabled: boolean | null | undefined,
 ): Promise<void> {
-  assertTwoFactorSatisfied({ roles: [], twoFactorEnabled });
+  const rader = await db
+    .select({ role: schema.member.role })
+    .from(schema.member)
+    .where(eq(schema.member.userId, userId));
+  assertTwoFactorSatisfied({
+    roles: rader.map((r) => r.role),
+    twoFactorEnabled,
+  });
 }

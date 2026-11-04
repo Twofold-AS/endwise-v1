@@ -18,6 +18,14 @@ import { useOppretter } from '../_shell/oppretter/use-oppretter';
 
 const DAG = ['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'];
 
+const OPPSTART_FEIL = 'Kunne ikke lagre verkstedet. Prøv igjen.';
+
+function oppstartFeilTekst(error: unknown): string {
+  const m = error instanceof Error ? error.message : String(error);
+  if (/Failed query|SQLSTATE|params:|42703|42501|42P10|42P01/i.test(m)) return OPPSTART_FEIL;
+  return m || OPPSTART_FEIL;
+}
+
 type Utkast = {
   visningsnavn: string;
   slug: string;
@@ -116,7 +124,7 @@ export function OppstartFlate() {
       void utils.session.me.invalidate();
       window.location.assign('/home');
     } catch (error) {
-      setFeil((error as Error).message);
+      setFeil(oppstartFeilTekst(error));
     }
   }
 
@@ -136,7 +144,7 @@ export function OppstartFlate() {
         apningstider: o.utkast.apningstider,
       });
     } catch (error) {
-      setFeil((error as Error).message);
+      setFeil(oppstartFeilTekst(error));
       return;
     }
     o.neste();
@@ -144,7 +152,7 @@ export function OppstartFlate() {
 
   if (status.isLoading) return <LasterFlate label="Henter oppstart" />;
   if (status.isError) {
-    return <p className="text-body text-danger">{status.error.message}</p>;
+    return <p className="text-body text-danger">{oppstartFeilTekst(status.error)}</p>;
   }
   if (status.data?.complete) {
     return (

@@ -14,10 +14,19 @@ function les(rel: string) {
 }
 
 describe('TOTP enable med ekte sesjon (Mikael 02.09)', () => {
-  it('uenrollert session.me-felt er ikke twoFactorRequired', () => {
+  it('uenrollert uten bedriftsrolle er ikke twoFactorRequired; dealer er', () => {
     expect(sessionMeTwoFactorRequired({ twoFactorEnabled: false })).toBe(false);
     expect(sessionMeTwoFactorRequired({ twoFactorEnabled: null })).toBe(false);
     expect(sessionMeTwoFactorRequired({ twoFactorEnabled: true })).toBe(false);
+    expect(sessionMeTwoFactorRequired({ twoFactorEnabled: false, roles: ['customer'] })).toBe(
+      false,
+    );
+    expect(sessionMeTwoFactorRequired({ twoFactorEnabled: false, roles: ['dealer_admin'] })).toBe(
+      true,
+    );
+    expect(sessionMeTwoFactorRequired({ twoFactorEnabled: true, roles: ['dealer_admin'] })).toBe(
+      false,
+    );
   });
 
   it('before-hook på enable returnerer når sesjon finnes — uten enroll-kake', () => {

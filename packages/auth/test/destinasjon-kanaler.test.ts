@@ -51,6 +51,8 @@ describe('dest-kanaler: auth ≠ varsel (Mons dest-lås)', () => {
     expect(auth).toMatch(/erKundeHostDestinasjon/);
     expect(auth).toMatch(/erAnsattDestinasjon/);
     expect(auth).toMatch(/destinasjon\(db, email\)/);
+    expect(auth).toMatch(/sone === 'forhandler'/);
+    expect(auth).toMatch(/if \(!tenantId\) return false/);
     expect(auth).toMatch(/lesAuthBrukerNavn\(db, email\)/);
     expect(fn).toMatch(/schema\.user\.email/);
     expect(fn).toMatch(/schema\.invitation/);

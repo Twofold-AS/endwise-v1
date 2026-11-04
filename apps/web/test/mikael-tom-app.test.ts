@@ -18,7 +18,7 @@ function utenKommentarer(kilde: string) {
 describe('Mikael 02.09 — uenrollert session.me er ikke twoFactorRequired', () => {
   it('session.me returnerer twoFactorRequired: false for uenrollert', () => {
     const me = les('../../api/src/trpc/routers/session.ts');
-    expect(me).toMatch(/twoFactorRequired:\s*sessionMeTwoFactorRequired/);
+    expect(me).toMatch(/twoFactorRequired = sessionMeTwoFactorRequired/);
     expect(me).not.toMatch(/twoFactorRequired:\s*true/);
   });
 

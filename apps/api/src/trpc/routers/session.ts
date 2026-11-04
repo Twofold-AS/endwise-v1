@@ -108,7 +108,11 @@ export const sessionRouter = router({
      * `profile.setName` invaliderer allerede denne ruta.
      */
     const [bruker] = await ctx.db
-      .select({ name: schema.user.name, email: schema.user.email })
+      .select({
+        name: schema.user.name,
+        email: schema.user.email,
+        twoFactorEnabled: schema.user.twoFactorEnabled,
+      })
       .from(schema.user)
       .where(eq(schema.user.id, ctx.userId));
 
@@ -166,13 +170,19 @@ export const sessionRouter = router({
       slug: tenant?.slug ?? aktivOrg?.slug,
       kind: tenant?.kind,
     });
-    const landing = erPlattform
-      ? (landingForPlatform(ctx.role) ?? '/endwise')
-      : ctx.kontekst === 'privat'
-        ? '/min-side'
-        : needsOnboarding
-          ? '/oppstart'
-          : landingForJobbfunksjon(jobbfunksjon);
+    const twoFactorRequired = sessionMeTwoFactorRequired({
+      twoFactorEnabled: bruker?.twoFactorEnabled,
+      roles: medlemskap.map((m) => m.role),
+    });
+    const landing = twoFactorRequired
+      ? '/2fa-oppsett'
+      : erPlattform
+        ? (landingForPlatform(ctx.role) ?? '/endwise')
+        : ctx.kontekst === 'privat'
+          ? '/min-side'
+          : needsOnboarding
+            ? '/oppstart'
+            : landingForJobbfunksjon(jobbfunksjon);
 
     return {
       userId: ctx.userId,
@@ -211,10 +221,7 @@ export const sessionRouter = router({
       devMode,
       /** Kosmetikk. Sperren er shopProcedure. Fail-safe av. */
       shopEnabled,
-      /** Alltid false etter innlogging — sidene lastes uten godkjent 2FA. */
-      twoFactorRequired: sessionMeTwoFactorRequired({
-        twoFactorEnabled: undefined,
-      }),
+      twoFactorRequired,
       kontekst: ctx.kontekst,
     };
   }),

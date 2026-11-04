@@ -35,10 +35,12 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(trengerKodeSteg({})).toBe(false);
   });
 
-  it('TWO_FACTOR_REQUIRED tvinger ikke /2fa-oppsett — uenrollert går til landing', () => {
-    expect(destinasjonEtterInvite('owner', '/oppstart', 'TWO_FACTOR_REQUIRED')).toBe('/oppstart');
-    expect(destinasjonEtterInvite('staff', '/innboks', 'TWO_FACTOR_REQUIRED')).toBe('/innboks');
-    expect(destinasjonEtterInvite('staff', null, 'TWO_FACTOR_REQUIRED')).toBe('/home');
+  it('TWO_FACTOR_REQUIRED tvinger /2fa-oppsett — sesjonen beholdes', () => {
+    expect(destinasjonEtterInvite('owner', '/oppstart', 'TWO_FACTOR_REQUIRED')).toBe(
+      '/2fa-oppsett',
+    );
+    expect(destinasjonEtterInvite('staff', '/innboks', 'TWO_FACTOR_REQUIRED')).toBe('/2fa-oppsett');
+    expect(destinasjonEtterInvite('staff', null, 'TWO_FACTOR_REQUIRED')).toBe('/2fa-oppsett');
     expect(destinasjonEtterInvite('staff', '/home', 'annen feil')).toBe('/home');
   });
 
@@ -58,8 +60,8 @@ describe('P0: invitee lander uten å logge inn på nytt', () => {
     expect(kilde).not.toMatch(/if\s*\(\s*!inv\.kreverPassord\s*\)[\s\S]{0,80}\/signin/);
   });
 
-  it('eksisterende konto (/signin) og / sender uenrollert til landing, ikke /2fa-oppsett', () => {
-    expect(destinasjonNarSesjonFeiler(new Error('TWO_FACTOR_REQUIRED'))).toBe('/home');
+  it('eksisterende konto (/signin) sender TWO_FACTOR_REQUIRED til /2fa-oppsett', () => {
+    expect(destinasjonNarSesjonFeiler(new Error('TWO_FACTOR_REQUIRED'))).toBe('/2fa-oppsett');
     expect(destinasjonNarSesjonFeiler(new Error('nettverk nede'))).toBe('/home');
     const signin = readFileSync(resolve(her, '../app/signin/signin-skjema.tsx'), 'utf8');
     const rot = readFileSync(resolve(her, '../app/page.tsx'), 'utf8');

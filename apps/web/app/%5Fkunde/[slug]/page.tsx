@@ -1,6 +1,7 @@
 import { ListeRad, Seksjon } from '@endwise/ui';
 import { hentOffentligKunde } from '../_lib/hent.ts';
-import { KundeKontakt, KundeSkall } from '../_lib/skall.tsx';
+import { kundeErInnlogget } from '../_lib/sesjon.ts';
+import { KundeKontakt, KundeMarkedsFlate, KundeSkall } from '../_lib/skall.tsx';
 import { UkjentSide } from '../_lib/ukjent-side.tsx';
 
 export default async function KundeHjem({ params }: { params: Promise<{ slug: string }> }) {
@@ -16,6 +17,15 @@ export default async function KundeHjem({ params }: { params: Promise<{ slug: st
             Siden er ikke åpen ennå. Kom tilbake litt senere.
           </p>
         </Seksjon>
+      </KundeSkall>
+    );
+  }
+
+  const innlogget = await kundeErInnlogget();
+  if (!innlogget) {
+    return (
+      <KundeSkall tenant={tenant} tittel={tenant.visningsnavn}>
+        <KundeMarkedsFlate tenant={tenant} />
       </KundeSkall>
     );
   }

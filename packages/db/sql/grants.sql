@@ -2333,6 +2333,67 @@ create policy tenant_branding_host_oppslag on tenant_branding
     )
   );
 
+-- F41 /oppstart: eier INSERT/SELECT/UPDATE under FORCE RLS (samme primitiv som 0044).
+drop policy if exists tenant_branding_tenant_insert_owner on tenant_branding;
+create policy tenant_branding_tenant_insert_owner on tenant_branding
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_branding'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists tenant_branding_tenant_select_owner on tenant_branding;
+create policy tenant_branding_tenant_select_owner on tenant_branding
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_branding'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists tenant_branding_tenant_update_owner on tenant_branding;
+create policy tenant_branding_tenant_update_owner on tenant_branding
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_branding'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_branding'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+
 drop policy if exists dealer_profiles_host_oppslag on dealer_profiles;
 create policy dealer_profiles_host_oppslag on dealer_profiles
   as permissive for select to public

@@ -33,6 +33,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { aktiverQuickEtterGet, quickNokkelMangler } from '../../lib/quick-activate.ts';
 import { omradeSjekk, protectedProcedure, router } from '../init.ts';
+import { loggOnboardingPostgresFeil, mapOnboardingPostgresFeil } from '../oppstart-postgres.ts';
 import { slugErOpptatt } from '../slug-ledig.ts';
 
 /**
@@ -251,7 +252,12 @@ export const onboardingRouter = router({
           message: 'Bare forhandlerens eier kan lagre oppstarten.',
         });
       }
-      await skrivOnboardingUtkast(ctx.db, ctx.tenantId, input);
+      try {
+        await skrivOnboardingUtkast(ctx.db, ctx.tenantId, input);
+      } catch (error) {
+        loggOnboardingPostgresFeil(error);
+        throw mapOnboardingPostgresFeil(error);
+      }
       return { ok: true as const };
     }),
 
@@ -327,82 +333,70 @@ export const onboardingRouter = router({
         }
       }
 
-      const result = await withTenant(ctx.db, ctx.tenantId, async (tx) => {
-        const [tenant] = await tx
-          .select({
-            name: schema.tenants.name,
-            slug: schema.tenants.slug,
-            onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
-          })
-          .from(schema.tenants)
-          .where(eq(schema.tenants.id, ctx.tenantId));
+      let result: { visningsnavn: string; granted: string[]; complete: true };
+      try {
+        result = await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+          const [tenant] = await tx
+            .select({
+              name: schema.tenants.name,
+              slug: schema.tenants.slug,
+              onboardingCompletedAt: schema.tenants.onboardingCompletedAt,
+            })
+            .from(schema.tenants)
+            .where(eq(schema.tenants.id, ctx.tenantId));
 
-        if (!tenant) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
-        }
-        if (tenant.onboardingCompletedAt) {
-          return { visningsnavn: tenant.name, granted: [] as string[], complete: true };
-        }
+          if (!tenant) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke forhandleren' });
+          }
+          if (tenant.onboardingCompletedAt) {
+            return { visningsnavn: tenant.name, granted: [] as string[], complete: true };
+          }
 
-        const tillatt = await tx
-          .select({
-            moduleKey: schema.tenantModules.moduleKey,
-            source: schema.tenantModules.source,
-            enabled: schema.tenantModules.enabled,
-          })
-          .from(schema.tenantModules)
-          .where(eq(schema.tenantModules.tenantId, ctx.tenantId));
+          const tillatt = await tx
+            .select({
+              moduleKey: schema.tenantModules.moduleKey,
+              source: schema.tenantModules.source,
+              enabled: schema.tenantModules.enabled,
+            })
+            .from(schema.tenantModules)
+            .where(eq(schema.tenantModules.tenantId, ctx.tenantId));
 
-        const optionalNokler = new Set(
-          tillatt
-            .filter((r) => r.source === 'optional' || r.source === 'dealer')
-            .map((r) => r.moduleKey),
-        );
+          const optionalNokler = new Set(
+            tillatt
+              .filter((r) => r.source === 'optional' || r.source === 'dealer')
+              .map((r) => r.moduleKey),
+          );
 
-        const ulovlige = extras.filter((k) => !optionalNokler.has(k));
-        if (ulovlige.length) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Tillegget er ikke åpnet for dere: ${ulovlige.join(', ')}`,
-          });
-        }
+          const ulovlige = extras.filter((k) => !optionalNokler.has(k));
+          if (ulovlige.length) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `Tillegget er ikke åpnet for dere: ${ulovlige.join(', ')}`,
+            });
+          }
 
-        if (extras.includes('quick') && input.quick) {
-          await aktiverQuickEtterGet({
-            probe: async () => undefined,
-            persist: (cfg) => createQuickConfigService(ctx.db).set(ctx.tenantId, cfg),
-            baseUrl: input.quick.baseUrl,
-            token: input.quick.token,
-          });
-        }
+          if (extras.includes('quick') && input.quick) {
+            await aktiverQuickEtterGet({
+              probe: async () => undefined,
+              persist: (cfg) => createQuickConfigService(ctx.db).set(ctx.tenantId, cfg),
+              baseUrl: input.quick.baseUrl,
+              token: input.quick.token,
+            });
+          }
 
-        const navn = input.visningsnavn.trim();
-        const naa = new Date();
-        await tx
-          .update(schema.tenants)
-          .set({
-            onboardingCompletedAt: naa,
-            updatedAt: naa,
-          })
-          .where(eq(schema.tenants.id, ctx.tenantId));
-        await tx
-          .insert(schema.dealerProfiles)
-          .values({
-            tenantId: ctx.tenantId,
-            address: input.address ?? '',
-            postalCode: input.postalCode ?? '',
-            city: input.city ?? '',
-            phone: input.phone ?? '',
-            email: input.email ?? '',
-            apningstider: rensApningstider(input.apningstider),
-            kategorier: rensKategorier(input.kategorier),
-            forventetStorrelse: input.forventetStorrelse ?? 'liten',
-            aiTak: rensAiTak(input.aiTak),
-            updatedAt: naa,
-          })
-          .onConflictDoUpdate({
-            target: schema.dealerProfiles.tenantId,
-            set: {
+          const navn = input.visningsnavn.trim();
+          const naa = new Date();
+          await tx
+            .update(schema.tenants)
+            .set({
+              onboardingCompletedAt: naa,
+              updatedAt: naa,
+            })
+            .where(eq(schema.tenants.id, ctx.tenantId));
+          await tx
+            .insert(schema.dealerProfiles)
+            .values({
+              tenantId: ctx.tenantId,
               address: input.address ?? '',
               postalCode: input.postalCode ?? '',
               city: input.city ?? '',
@@ -413,58 +407,77 @@ export const onboardingRouter = router({
               forventetStorrelse: input.forventetStorrelse ?? 'liten',
               aiTak: rensAiTak(input.aiTak),
               updatedAt: naa,
-            },
-          });
-        await tx
-          .insert(schema.tenantBranding)
-          .values({
-            tenantId: ctx.tenantId,
-            visningsnavn: navn,
-            publisertAt: naa,
-            oppdatertAt: naa,
-          })
-          .onConflictDoUpdate({
-            target: schema.tenantBranding.tenantId,
-            set: { visningsnavn: navn, publisertAt: naa, oppdatertAt: naa },
-          });
-
-        const granted: string[] = [];
-        for (const key of extras) {
-          const rad = tillatt.find((r) => r.moduleKey === key);
-          if (rad?.enabled) continue;
+            })
+            .onConflictDoUpdate({
+              target: schema.dealerProfiles.tenantId,
+              set: {
+                address: input.address ?? '',
+                postalCode: input.postalCode ?? '',
+                city: input.city ?? '',
+                phone: input.phone ?? '',
+                email: input.email ?? '',
+                apningstider: rensApningstider(input.apningstider),
+                kategorier: rensKategorier(input.kategorier),
+                forventetStorrelse: input.forventetStorrelse ?? 'liten',
+                aiTak: rensAiTak(input.aiTak),
+                updatedAt: naa,
+              },
+            });
           await tx
-            .update(schema.tenantModules)
-            .set({ enabled: true, source: 'dealer', updatedAt: new Date() })
-            .where(
-              and(
-                eq(schema.tenantModules.tenantId, ctx.tenantId),
-                eq(schema.tenantModules.moduleKey, key),
-              ),
-            );
-          granted.push(key);
-        }
+            .insert(schema.tenantBranding)
+            .values({
+              tenantId: ctx.tenantId,
+              visningsnavn: navn,
+              publisertAt: naa,
+              oppdatertAt: naa,
+            })
+            .onConflictDoUpdate({
+              target: schema.tenantBranding.tenantId,
+              set: { visningsnavn: navn, publisertAt: naa, oppdatertAt: naa },
+            });
 
-        await tx.insert(schema.auditLog).values({
-          tenantId: ctx.tenantId,
-          actor: ctx.userId,
-          action: 'onboarding.completed',
-          subjectType: 'tenant',
-          subjectId: ctx.tenantId,
-          metadata: { visningsnavn: navn, extras: granted },
-        });
-        for (const key of granted) {
+          const granted: string[] = [];
+          for (const key of extras) {
+            const rad = tillatt.find((r) => r.moduleKey === key);
+            if (rad?.enabled) continue;
+            await tx
+              .update(schema.tenantModules)
+              .set({ enabled: true, source: 'dealer', updatedAt: new Date() })
+              .where(
+                and(
+                  eq(schema.tenantModules.tenantId, ctx.tenantId),
+                  eq(schema.tenantModules.moduleKey, key),
+                ),
+              );
+            granted.push(key);
+          }
+
           await tx.insert(schema.auditLog).values({
             tenantId: ctx.tenantId,
             actor: ctx.userId,
-            action: 'entitlement.granted',
-            subjectType: 'tenant_module',
-            subjectId: key,
-            metadata: { moduleKey: key, at: 'owner-onboarding', source: 'dealer' },
+            action: 'onboarding.completed',
+            subjectType: 'tenant',
+            subjectId: ctx.tenantId,
+            metadata: { visningsnavn: navn, extras: granted },
           });
-        }
+          for (const key of granted) {
+            await tx.insert(schema.auditLog).values({
+              tenantId: ctx.tenantId,
+              actor: ctx.userId,
+              action: 'entitlement.granted',
+              subjectType: 'tenant_module',
+              subjectId: key,
+              metadata: { moduleKey: key, at: 'owner-onboarding', source: 'dealer' },
+            });
+          }
 
-        return { visningsnavn: navn, granted, complete: true };
-      });
+          return { visningsnavn: navn, granted, complete: true };
+        });
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        loggOnboardingPostgresFeil(error);
+        throw mapOnboardingPostgresFeil(error);
+      }
 
       if (probedClient) {
         const mapped = mapQuickClientInfo(probedClient);

@@ -84,6 +84,12 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(utenKommentar).not.toMatch(/startEnroll/);
     expect(utenKommentar).not.toMatch(/ENROLL_COOKIE_NAME/);
     expect(etterMagicLinkVerify(false).dest).not.toBe(MAGIC_LINK_ENROLL_STI);
+    expect(
+      etterMagicLinkVerify(false, { aktiv: false, harRolle: false, kreverTotp: true }),
+    ).toEqual({
+      handling: 'behold-sesjon',
+      dest: MAGIC_LINK_ENROLL_STI,
+    });
   });
 
   it('enrollert verify river sesjon og setter TOTP-mur', () => {

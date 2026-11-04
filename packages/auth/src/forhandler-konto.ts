@@ -71,10 +71,38 @@ export async function harForhandlerRolle(db: Database, userId: string, tenantId:
 export async function lesTenantIdFraSlug(db: Database, slug: string): Promise<string | null> {
   const s = slug.trim().toLowerCase();
   if (!s) return null;
-  const [t] = await db
-    .select({ id: schema.tenants.id })
-    .from(schema.tenants)
-    .where(eq(schema.tenants.slug, s))
+  try {
+    return await db.transaction(async (tx) => {
+      await tx.execute(sql`select set_config('app.slug_sjekk', ${s}, true)`);
+      const [t] = await tx
+        .select({ id: schema.tenants.id })
+        .from(schema.tenants)
+        .where(eq(schema.tenants.slug, s))
+        .limit(1);
+      return t?.id ?? null;
+    });
+  } catch {
+    return null;
+  }
+}
+
+/** Ansatt eller Endwise-rolle — krever TOTP. Ikke customer. */
+export async function harBedriftRolle(db: Database, userId: string): Promise<boolean> {
+  if (!userId) return false;
+  const [m] = await db
+    .select({ role: schema.member.role })
+    .from(schema.member)
+    .where(
+      and(
+        eq(schema.member.userId, userId),
+        or(
+          eq(schema.member.role, 'dealer_admin'),
+          eq(schema.member.role, 'dealer_staff'),
+          eq(schema.member.role, 'endwise_admin'),
+          eq(schema.member.role, 'endwise_support'),
+        ),
+      ),
+    )
     .limit(1);
-  return t?.id ?? null;
+  return Boolean(m);
 }

@@ -442,6 +442,13 @@
       "when": 1793890000000,
       "tag": "0062_slett_forhandler_slug",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1793900000000,
+      "tag": "0063_oppstart_branding_kunde",
+      "breakpoints": true
     }
   ]
 }

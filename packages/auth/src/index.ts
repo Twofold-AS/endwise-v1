@@ -11,6 +11,7 @@ export {
   RESEND_VERIFISERTE_DOMENER,
 } from './env.ts';
 export {
+  harBedriftRolle,
   harForhandlerRolle,
   knyttKundeUser,
   lesTenantIdFraSlug,

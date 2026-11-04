@@ -640,5 +640,34 @@ if (modulesInsert.rows[0]?.ok !== true) {
   process.exit(1);
 }
 
+const brandingEierNavn = [
+  'tenant_branding_tenant_insert_owner',
+  'tenant_branding_tenant_select_owner',
+  'tenant_branding_tenant_update_owner',
+];
+const brandingEier = await pool.query<{ polname: string }>(
+  `
+  select p.polname
+    from pg_policy p
+    join pg_class c on c.oid = p.polrelid
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public'
+     and c.relname = 'tenant_branding'
+     and p.polname = any($1::text[])
+`,
+  [brandingEierNavn],
+);
+const brandingFunnet = new Set(brandingEier.rows.map((r) => r.polname));
+const manglerBranding = brandingEierNavn.filter((n) => !brandingFunnet.has(n));
+if (manglerBranding.length > 0) {
+  console.error(
+    '[db] tenant_branding eier-porter under FORCE RLS mangler: ' +
+      manglerBranding.join(', ') +
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0063).',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
 await pool.end();
 console.info('[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0027)');

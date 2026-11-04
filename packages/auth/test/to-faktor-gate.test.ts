@@ -35,16 +35,19 @@ describe('F1-11: regelen (uten database)', () => {
     expect(roleRequires2FA('customer')).toBe(true);
   });
 
-  it('uenrollert dealer/admin/customer får bruke appen — TOTP er valgfri', () => {
-    for (const rolle of ['dealer_admin', 'endwise_admin', 'customer', 'dealer_staff'] as const) {
-      expect(() =>
-        assertTwoFactorSatisfied({ roles: [rolle], twoFactorEnabled: false }),
-      ).not.toThrow();
+  it('uenrollert customer får bruke appen; bedrift krever TOTP', () => {
+    expect(() =>
+      assertTwoFactorSatisfied({ roles: ['customer'], twoFactorEnabled: false }),
+    ).not.toThrow();
+    for (const rolle of ['dealer_admin', 'endwise_admin', 'dealer_staff'] as const) {
+      expect(() => assertTwoFactorSatisfied({ roles: [rolle], twoFactorEnabled: false })).toThrow(
+        TwoFactorRequiredError,
+      );
     }
     for (const verdi of [null, undefined] as const) {
       expect(() =>
         assertTwoFactorSatisfied({ roles: ['endwise_admin'], twoFactorEnabled: verdi }),
-      ).not.toThrow();
+      ).toThrow(TwoFactorRequiredError);
     }
   });
 
@@ -138,16 +141,20 @@ describeDb('F1-11: håndhevelse mot ekte medlemskap', () => {
     }
   });
 
-  it('dealer_admin uten 2FA får autorisert sesjon — TOTP er senere', async () => {
-    await expect(assertTwoFactorForUser(owner, adminUser, false)).resolves.toBeUndefined();
+  it('dealer_admin uten 2FA kastes — TOTP er pliktig', async () => {
+    await expect(assertTwoFactorForUser(owner, adminUser, false)).rejects.toBeInstanceOf(
+      TwoFactorRequiredError,
+    );
   });
 
   it('customer uten 2FA får autorisert sesjon', async () => {
     await expect(assertTwoFactorForUser(owner, kundeUser, false)).resolves.toBeUndefined();
   });
 
-  it('kunde hos A + admin hos B slipper gjennom uten TOTP', async () => {
-    await expect(assertTwoFactorForUser(owner, blandetUser, false)).resolves.toBeUndefined();
+  it('kunde hos A + admin hos B krever TOTP', async () => {
+    await expect(assertTwoFactorForUser(owner, blandetUser, false)).rejects.toBeInstanceOf(
+      TwoFactorRequiredError,
+    );
   });
 
   it('dealer_admin MED 2FA slipper gjennom', async () => {

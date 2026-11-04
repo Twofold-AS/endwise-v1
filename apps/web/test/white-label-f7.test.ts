@@ -15,7 +15,8 @@ describe('F26 / white label F7: logg-inn og velg', () => {
     const skjema = les('../app/%5Fkunde/[slug]/logg-inn/logg-inn-skjema.tsx');
     expect(side).toMatch(/LoggInnSkjema/);
     expect(side).not.toMatch(/KommerSnart/);
-    expect(skjema).toMatch(/signIn\.magicLink/);
+    expect(skjema).toMatch(/beOmKode/);
+    expect(skjema).not.toMatch(/signIn\.magicLink/);
     expect(skjema).toMatch(/FeltKode/);
     expect(skjema).not.toMatch(/#0066ff/);
   });

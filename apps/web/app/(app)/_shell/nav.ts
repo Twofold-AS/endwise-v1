@@ -1,3 +1,4 @@
+import { type Niva, navHarOmrade, type Omrade, TILLATELSE_HINT } from '@endwise/modules/tillatelse';
 import {
   ArrowLeftRight,
   Building2,
@@ -53,6 +54,11 @@ export type NavChild = {
   roles?: OrgRole[];
   /** Nøkkel for uleste-telling (kun Innboks i dag). */
   countKey?: 'kunder' | 'intern' | 'endwise';
+  /** F24: område for deaktivert-ikke-skjult. */
+  omrade?: Omrade;
+  niva?: Niva;
+  disabled?: boolean;
+  disabledHint?: string;
 };
 
 export type NavItem = {
@@ -92,6 +98,11 @@ export type NavItem = {
    */
   badge?: 'unread' | 'helpdesk';
   countKey?: 'kunder' | 'intern' | 'endwise';
+  /** F24: område for deaktivert-ikke-skjult. */
+  omrade?: Omrade;
+  niva?: Niva;
+  disabled?: boolean;
+  disabledHint?: string;
 };
 
 /**
@@ -215,6 +226,7 @@ export const FORHANDLER_NAV: NavItem[] = [
     roles: DRIFT,
     badge: 'unread',
     section: 'Verkstedet',
+    omrade: 'innboks',
   },
   {
     key: 'saker',
@@ -223,10 +235,22 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/jobber',
     roles: DRIFT,
     section: 'Verkstedet',
+    omrade: 'timeplan',
     pills: [
-      { label: 'Timeplan', href: '/jobber', icon: CalendarDays },
-      { label: 'Opprett jobb', href: '/bookinger/ny', icon: FilePlus },
-      { label: 'Endringer', href: '/jobber?fane=endringer', icon: ClipboardList },
+      { label: 'Timeplan', href: '/jobber', icon: CalendarDays, omrade: 'timeplan' },
+      {
+        label: 'Opprett jobb',
+        href: '/bookinger/ny',
+        icon: FilePlus,
+        omrade: 'bookinger',
+        niva: 'endre',
+      },
+      {
+        label: 'Endringer',
+        href: '/jobber?fane=endringer',
+        icon: ClipboardList,
+        omrade: 'bookinger',
+      },
     ],
   },
   {
@@ -236,10 +260,23 @@ export const FORHANDLER_NAV: NavItem[] = [
     href: '/kunder',
     roles: DRIFT,
     section: 'Kunder',
+    omrade: 'kunder',
     pills: [
-      { label: 'Alle kunder', href: '/kunder', icon: Users },
-      { label: 'Opprett kunde', href: '/kunder?fane=opprett', icon: UserPlus },
-      { label: 'Registrer kjøretøy', href: '/kunder?fane=kjoretoy', icon: Car },
+      { label: 'Alle kunder', href: '/kunder', icon: Users, omrade: 'kunder' },
+      {
+        label: 'Opprett kunde',
+        href: '/kunder?fane=opprett',
+        icon: UserPlus,
+        omrade: 'kunder',
+        niva: 'endre',
+      },
+      {
+        label: 'Registrer kjøretøy',
+        href: '/kunder?fane=kjoretoy',
+        icon: Car,
+        omrade: 'kjoretoy',
+        niva: 'endre',
+      },
     ],
   },
   {
@@ -632,11 +669,46 @@ export function destinasjonerForShell(input: {
   shopEnabled?: boolean;
   erPlattform?: boolean;
   inspect?: boolean;
+  tillatelser?: ReadonlyArray<{ omrade: string; niva: string }> | null;
 }): NavItem[] {
-  if (input.inspect) {
-    return itemsForRole(FORHANDLER_NAV, 'dealer_admin', input.shopEnabled ?? true);
-  }
-  return itemsForRole(navForShell(input.shell), rolleForNav(input), input.shopEnabled ?? true);
+  const rolle = input.inspect ? 'dealer_admin' : rolleForNav(input);
+  const raw = input.inspect
+    ? itemsForRole(FORHANDLER_NAV, 'dealer_admin', input.shopEnabled ?? true)
+    : itemsForRole(navForShell(input.shell), rolle, input.shopEnabled ?? true);
+  return merkNavOmrade(raw, { rolle, gitt: input.inspect ? null : (input.tillatelser ?? null) });
+}
+
+export function merkNavOmrade(
+  items: NavItem[],
+  input: {
+    rolle: OrgRole | string | null;
+    gitt: ReadonlyArray<{ omrade: string; niva: string }> | null;
+  },
+): NavItem[] {
+  return items.map((item) => {
+    const piller = item.pills?.map((p) => {
+      if (!p.omrade) return p;
+      const ok = navHarOmrade({
+        rolle: input.rolle,
+        omrade: p.omrade,
+        trenger: p.niva ?? 'se',
+        gitt: input.gitt,
+      });
+      if (ok) return p;
+      return { ...p, disabled: true, disabledHint: TILLATELSE_HINT };
+    });
+    if (!item.omrade) return piller ? { ...item, pills: piller } : item;
+    const ok = navHarOmrade({
+      rolle: input.rolle,
+      omrade: item.omrade,
+      trenger: item.niva ?? 'se',
+      gitt: input.gitt,
+    });
+    if (ok) {
+      return piller ? { ...item, pills: piller } : item;
+    }
+    return { ...item, pills: piller, disabled: true, disabledHint: TILLATELSE_HINT };
+  });
 }
 
 const MOBIL_FASTE_DEST = ['home', 'innboks', 'saker', 'kunder'] as const;

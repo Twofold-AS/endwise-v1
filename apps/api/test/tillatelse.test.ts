@@ -42,7 +42,7 @@ describe('F23 / white label F6a: tillatelse-porter', () => {
       'utf8',
     );
     expect(init).toMatch(/omradeProcedure/);
-    expect(init).toMatch(/Spør daglig leder/);
+    expect(init).toMatch(/TILLATELSE_HINT|Spør daglig leder/);
     expect(init).not.toMatch(/input\.omrade/);
     expect(router).toMatch(/vurderTildeling/);
     expect(router).toMatch(/tildel_tillatelse/);

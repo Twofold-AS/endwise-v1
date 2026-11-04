@@ -2,7 +2,7 @@ import { envelopeCryptoConfigured } from '@endwise/db';
 import { createVegvesenConfigService } from '@endwise/modules/vegvesen';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { moduleAdminProcedure, moduleProcedure, router } from '../init.ts';
+import { moduleAdminProcedure, moduleProcedure, omradeSjekk, router } from '../init.ts';
 
 /** Modul-gate: `vegvesen`. */
 const vegvesenProcedure = moduleProcedure('vegvesen');
@@ -14,11 +14,12 @@ const vegvesenAdminProcedure = moduleAdminProcedure('vegvesen');
  * logges ikke, og sendes ikke til klienten.
  */
 export const vegvesenRouter = router({
-  config: vegvesenProcedure.query(({ ctx }) =>
-    createVegvesenConfigService(ctx.db).getView(ctx.tenantId),
-  ),
+  config: vegvesenProcedure
+    .use(omradeSjekk('kjoretoy', 'se'))
+    .query(({ ctx }) => createVegvesenConfigService(ctx.db).getView(ctx.tenantId)),
 
   setKey: vegvesenAdminProcedure
+    .use(omradeSjekk('kjoretoy', 'endre'))
     .input(z.object({ nokkel: z.string().trim().min(8).max(500) }))
     .mutation(async ({ ctx, input }) => {
       if (!envelopeCryptoConfigured()) {

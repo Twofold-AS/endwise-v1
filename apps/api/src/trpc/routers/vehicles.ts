@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, ilike, or, schema, withTenant } from '@endwise/db';
 import { z } from 'zod';
-import { protectedProcedure, router, staffProcedure } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router, staffProcedure } from '../init.ts';
 import { loggDealerWritePostgresFeil, mapDealerWritePostgresFeil } from '../slett-postgres.ts';
 
 const vehicleType = z.enum(['mc', 'boat', 'atv']);
@@ -18,6 +18,7 @@ export const vehiclesRouter = router({
    * tingene man har når kjøretøyet står foran deg og eieren ikke gjør det.
    */
   list: protectedProcedure
+    .use(omradeSjekk('kjoretoy', 'se', true))
     .input(
       z
         .object({
@@ -69,63 +70,70 @@ export const vehiclesRouter = router({
     ),
 
   /** Kjøretøykortet: data, eier og servicehistorikk i ett kall. */
-  byId: protectedProcedure.input(z.object({ id: z.uuid() })).query(({ ctx, input }) =>
-    withTenant(ctx.db, ctx.tenantId, async (tx) => {
-      const [kjoretoy] = await tx
-        .select()
-        .from(schema.vehicles)
-        // CWE-639: id og tenant.
-        .where(and(eq(schema.vehicles.id, input.id), eq(schema.vehicles.tenantId, ctx.tenantId)))
-        .limit(1);
-      if (!kjoretoy) return null;
+  byId: protectedProcedure
+    .use(omradeSjekk('kjoretoy', 'se', true))
+    .input(z.object({ id: z.uuid() }))
+    .query(({ ctx, input }) =>
+      withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const [kjoretoy] = await tx
+          .select()
+          .from(schema.vehicles)
+          // CWE-639: id og tenant.
+          .where(and(eq(schema.vehicles.id, input.id), eq(schema.vehicles.tenantId, ctx.tenantId)))
+          .limit(1);
+        if (!kjoretoy) return null;
 
-      const eier = kjoretoy.customerId
-        ? (
-            await tx
-              .select({
-                id: schema.customers.id,
-                name: schema.customers.name,
-                email: schema.customers.email,
-                phone: schema.customers.phone,
-              })
-              .from(schema.customers)
-              .where(
-                and(
-                  eq(schema.customers.id, kjoretoy.customerId),
-                  eq(schema.customers.tenantId, ctx.tenantId),
-                ),
-              )
-          )[0]
-        : null;
+        const eier = kjoretoy.customerId
+          ? (
+              await tx
+                .select({
+                  id: schema.customers.id,
+                  name: schema.customers.name,
+                  email: schema.customers.email,
+                  phone: schema.customers.phone,
+                })
+                .from(schema.customers)
+                .where(
+                  and(
+                    eq(schema.customers.id, kjoretoy.customerId),
+                    eq(schema.customers.tenantId, ctx.tenantId),
+                  ),
+                )
+            )[0]
+          : null;
 
-      const saker = await tx
-        .select({
-          id: schema.bookings.id,
-          status: schema.bookings.status,
-          startsAt: schema.bookings.startsAt,
-          notes: schema.bookings.notes,
-          serviceName: schema.services.name,
-          mechanicName: schema.mechanics.name,
-          priceMinor: schema.serviceVersions.priceMinor,
-        })
-        .from(schema.bookings)
-        .leftJoin(
-          schema.serviceVersions,
-          eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
-        )
-        .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
-        .leftJoin(schema.mechanics, eq(schema.mechanics.id, schema.bookings.mechanicId))
-        .where(
-          and(eq(schema.bookings.vehicleId, input.id), eq(schema.bookings.tenantId, ctx.tenantId)),
-        )
-        .orderBy(desc(schema.bookings.startsAt))
-        .limit(100);
+        const saker = await tx
+          .select({
+            id: schema.bookings.id,
+            status: schema.bookings.status,
+            startsAt: schema.bookings.startsAt,
+            notes: schema.bookings.notes,
+            serviceName: schema.services.name,
+            mechanicName: schema.mechanics.name,
+            priceMinor: schema.serviceVersions.priceMinor,
+          })
+          .from(schema.bookings)
+          .leftJoin(
+            schema.serviceVersions,
+            eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
+          )
+          .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
+          .leftJoin(schema.mechanics, eq(schema.mechanics.id, schema.bookings.mechanicId))
+          .where(
+            and(
+              eq(schema.bookings.vehicleId, input.id),
+              eq(schema.bookings.tenantId, ctx.tenantId),
+            ),
+          )
+          .orderBy(desc(schema.bookings.startsAt))
+          .limit(100);
 
-      return { ...kjoretoy, eier: eier ?? null, saker };
-    }),
-  ),
+        return { ...kjoretoy, eier: eier ?? null, saker };
+      }),
+    ),
 
   create: staffProcedure
+    .use(omradeSjekk('kjoretoy', 'endre'))
     .input(
       z.object({
         type: vehicleType,
@@ -154,6 +162,7 @@ export const vehiclesRouter = router({
     }),
 
   assignCustomer: protectedProcedure
+    .use(omradeSjekk('kjoretoy', 'endre', true))
     .input(z.object({ vehicleId: z.uuid(), customerId: z.uuid().nullable() }))
     .mutation(async ({ ctx, input }) => {
       try {

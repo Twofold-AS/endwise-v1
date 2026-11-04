@@ -9,7 +9,7 @@ import {
   visningsnavn,
 } from '@endwise/modules/profil';
 import { z } from 'zod';
-import { protectedProcedure, router } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router } from '../init.ts';
 
 /**
  * «detaljer»-panelet i innboksen: hva handler denne samtalen om?
@@ -37,6 +37,7 @@ const MAKS_RADER = 5;
 
 export const inboxContextRouter = router({
   forThread: protectedProcedure
+    .use(omradeSjekk('innboks', 'se', true))
     .input(z.object({ threadId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       return withTenant(ctx.db, ctx.tenantId, async (tx) => {

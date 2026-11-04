@@ -3,7 +3,7 @@ import { hentVegvesenApiNokkel } from '@endwise/modules/vegvesen';
 import { createVegvesenClient } from '@endwise/toolkit-vegvesen';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { moduleProcedure, router } from '../init.ts';
+import { moduleProcedure, omradeSjekk, router } from '../init.ts';
 
 /**
  * Modul-gate: `vegvesen`. Hvert oppslag er et kall mot Autosys som
@@ -19,6 +19,7 @@ const vegvesenProcedure = moduleProcedure('vegvesen');
  */
 export const lookupRouter = router({
   vehicleByRegNumber: vegvesenProcedure
+    .use(omradeSjekk('kjoretoy', 'se'))
     .input(z.object({ regNumber: z.string().min(2).max(10) }))
     .query(async ({ ctx, input }) => {
       const apiKey = await hentVegvesenApiNokkel(ctx.db, ctx.tenantId);
@@ -33,6 +34,7 @@ export const lookupRouter = router({
 
   /** Slår opp og speiler treffet inn på kjøretøyet. */
   refreshVehicle: vegvesenProcedure
+    .use(omradeSjekk('kjoretoy', 'endre'))
     .input(z.object({ vehicleId: z.uuid(), regNumber: z.string().min(2).max(10) }))
     .mutation(async ({ ctx, input }) => {
       const apiKey = await hentVegvesenApiNokkel(ctx.db, ctx.tenantId);

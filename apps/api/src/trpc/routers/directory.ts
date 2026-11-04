@@ -1,7 +1,7 @@
 import { and, eq, inArray, schema, withTenant } from '@endwise/db';
 import { type AvatarValg, lesAvatar, TOM_AVATAR, visningsnavn } from '@endwise/modules/profil';
 import { z } from 'zod';
-import { protectedProcedure, router } from '../init.ts';
+import { omradeSjekk, protectedProcedure, router } from '../init.ts';
 
 /**
  * Navneoppslag for meldingsdeltakere.
@@ -36,6 +36,7 @@ export const directoryRouter = router({
    * trygge. Se `packages/modules/src/profil/index.ts`.
    */
   participants: protectedProcedure
+    .use(omradeSjekk('innboks', 'se', true))
     .input(
       z.object({
         ids: z.array(z.string().min(1)).max(200),

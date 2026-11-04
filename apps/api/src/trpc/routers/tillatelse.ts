@@ -1,4 +1,4 @@
-import { eq, schema, sql, withTenant } from '@endwise/db';
+import { and, eq, schema, sql, withTenant } from '@endwise/db';
 import {
   kanLedeHandling,
   OMRADER,
@@ -7,7 +7,7 @@ import {
 } from '@endwise/modules/tillatelse';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { adminProcedure, router } from '../init.ts';
+import { adminProcedure, protectedProcedure, router } from '../init.ts';
 import { krevWhiteLabel } from '../slug-ledig.ts';
 
 function feil(melding = TILLATELSE_FEIL): never {
@@ -15,6 +15,27 @@ function feil(melding = TILLATELSE_FEIL): never {
 }
 
 export const tillatelseRouter = router({
+  mine: protectedProcedure.query(async ({ ctx }) => {
+    krevWhiteLabel();
+    if (ctx.role === 'dealer_admin' || ctx.role === 'endwise_admin') {
+      return OMRADER.map((omrade) => ({ omrade, niva: 'endre' as const }));
+    }
+    return withTenant(ctx.db, ctx.tenantId, (tx) =>
+      tx
+        .select({
+          omrade: schema.memberPermissions.omrade,
+          niva: schema.memberPermissions.niva,
+        })
+        .from(schema.memberPermissions)
+        .where(
+          and(
+            eq(schema.memberPermissions.tenantId, ctx.tenantId),
+            eq(schema.memberPermissions.userId, ctx.userId),
+          ),
+        ),
+    );
+  }),
+
   liste: adminProcedure.query(async ({ ctx }) => {
     krevWhiteLabel();
     if (!kanLedeHandling(ctx.role)) feil();

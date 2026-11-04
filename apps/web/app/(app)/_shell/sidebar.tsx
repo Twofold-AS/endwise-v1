@@ -14,6 +14,7 @@ import {
   tilbakeHref,
   verkstedSlugFromPath,
 } from '../_lib/plattform';
+import { useMineTillatelser } from '../_lib/use-mine-tillatelser';
 import { useOrgRole } from '../_lib/use-org-role';
 import { BrukerRad } from './bruker-rad';
 import { CountBadge, NewBadge } from './cards';
@@ -54,6 +55,7 @@ export function Sidebar() {
     erPlattform,
   } = useOrgRole();
   const inspect = isVerkstedInspectPath(pathname);
+  const { gitt } = useMineTillatelser(role, !inspect);
   const inspectSlug = verkstedSlugFromPath(pathname);
   const fra = searchParams?.get('fra') ?? null;
   const inspectTilbake = tilbakeHref(fra);
@@ -74,12 +76,18 @@ export function Sidebar() {
     shopEnabled,
     erPlattform,
     inspect,
+    tillatelser: gitt,
   });
   const items = inspect ? rawItems.map((item) => remapNav(item, inspectSlug ?? '', fra)) : rawItems;
   const settingsNav = inspect ? null : settingsForShell(shell);
 
   const threads = trpc.messages.listThreads.useQuery(undefined, {
-    enabled: Boolean(role) && shell !== 'endwise' && shell !== 'endwise_partner' && !inspect,
+    enabled:
+      Boolean(role) &&
+      shell !== 'endwise' &&
+      shell !== 'endwise_partner' &&
+      !inspect &&
+      !(gitt != null && !gitt.some((t) => t.omrade === 'innboks')),
   });
   const support = trpc.messages.listPlatformSupport.useQuery(undefined, {
     enabled: Boolean(role) && (shell === 'endwise' || shell === 'endwise_partner') && !inspect,
@@ -243,6 +251,7 @@ function NavRow({
   onNavigate?: () => void;
 }) {
   const active = isItemActive(item, pathname);
+  const stengt = Boolean(item.disabled);
   const count = item.badge === 'unread' ? unread : item.badge === 'helpdesk' ? helpdesk : 0;
   const teller = (
     <CountBadge count={count} label={item.badge === 'helpdesk' ? 'nye artikler' : 'uleste'} />
@@ -262,15 +271,25 @@ function NavRow({
     </>
   );
 
+  const klasse = `relative flex h-control w-full items-center gap-2.5 rounded-pill text-label text-fg transition-colors md:h-[50px] ${
+    collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[259px] md:justify-start md:px-3'
+  } ${stengt ? 'cursor-not-allowed opacity-40' : active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`;
+
+  if (stengt) {
+    return (
+      <span aria-disabled="true" title={item.disabledHint ?? item.label} className={klasse}>
+        {innhold}
+      </span>
+    );
+  }
+
   return (
     <Link
       href={item.href as Route}
       aria-current={active ? 'page' : undefined}
       title={collapsed ? item.label : undefined}
       onClick={onNavigate}
-      className={`relative flex h-control w-full items-center gap-2.5 rounded-pill text-label text-fg transition-colors md:h-[50px] ${
-        collapsed ? 'justify-center px-0' : 'px-2.5 md:w-[259px] md:justify-start md:px-3'
-      } ${active ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'}`}
+      className={klasse}
     >
       {innhold}
     </Link>

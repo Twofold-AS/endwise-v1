@@ -123,7 +123,7 @@ describe('Se verkstedet er URL-lesing', () => {
     expect(sidebar).toMatch(/destinasjonerForShell/);
     expect(sidebar).toMatch(/inspect \? null/);
     expect(nav).toMatch(/FORHANDLER_NAV/);
-    expect(nav).toMatch(/if \(input\.inspect\)/);
+    expect(nav).toMatch(/input\.inspect/);
   });
 
   it('stale Forhandler-kontekst på plattform redirecter med toast', () => {

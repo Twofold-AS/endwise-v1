@@ -1,7 +1,7 @@
 import { ConflictError, createConflictService } from '@endwise/modules/quick';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { moduleAdminProcedure, router } from '../init.ts';
+import { moduleAdminProcedure, omradeSjekk, router } from '../init.ts';
 
 /**
  * Modul-gate: `quick`. Synk-konflikter oppstår av Quick-synken;
@@ -17,20 +17,21 @@ const quickAdminProcedure = moduleAdminProcedure('quick');
  */
 export const conflictsRouter = router({
   /** Åpne konflikter for tenanten. */
-  list: quickAdminProcedure.query(({ ctx }) =>
-    createConflictService(ctx.db).listOpen(ctx.tenantId),
-  ),
+  list: quickAdminProcedure
+    .use(omradeSjekk('bookinger', 'se'))
+    .query(({ ctx }) => createConflictService(ctx.db).listOpen(ctx.tenantId)),
 
   /** Antall åpne konflikter (til badge). */
-  count: quickAdminProcedure.query(({ ctx }) =>
-    createConflictService(ctx.db).openCount(ctx.tenantId),
-  ),
+  count: quickAdminProcedure
+    .use(omradeSjekk('bookinger', 'se'))
+    .query(({ ctx }) => createConflictService(ctx.db).openCount(ctx.tenantId)),
 
   /**
    * Løs en konflikt: 'quick' (behold Quick) eller 'local' (behold vår).
    * «behold vår» registrerer push-intensjon (push er fortsatt gated).
    */
   resolve: quickAdminProcedure
+    .use(omradeSjekk('bookinger', 'endre'))
     .input(z.object({ conflictId: z.uuid(), resolution: z.enum(['quick', 'local']) }))
     .mutation(async ({ ctx, input }) => {
       try {

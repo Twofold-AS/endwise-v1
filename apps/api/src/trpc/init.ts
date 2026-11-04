@@ -2,7 +2,12 @@ import { erMekanikerKonto, kanSkriveDealerDesk } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import type { AddonModule } from '@endwise/modules';
 import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
-import { harTillatelse, type Niva, type Omrade } from '@endwise/modules/tillatelse';
+import {
+  harTillatelse,
+  type Niva,
+  type Omrade,
+  TILLATELSE_HINT,
+} from '@endwise/modules/tillatelse';
 import { initTRPC, TRPCError } from '@trpc/server';
 import type { AppContext } from '../context.ts';
 import { resolveShopFlag } from './shop-flag.ts';
@@ -188,15 +193,17 @@ export const shopProcedure = protectedProcedure.use(async function shopFlagOn(op
 });
 
 /**
- * F23 / white label F6a — tillatelse per område. Område kommer fra koden,
- * ikke klienten (IDOR). Uten flagg: samme som protectedProcedure.
+ * F24 / white label F6b — tillatelse per område. Område kommer fra koden,
+ * ikke klienten (IDOR). Uten flagg: no-op, eksisterende procedure gjelder.
+ * `hoppMekaniker`: Min dag / mechanicProcedure-flaten er uavhengig av områdene.
  */
-export function omradeProcedure(omrade: Omrade, trenger: Niva = 'se') {
-  return protectedProcedure.use(async function harOmrade(opts) {
+export function omradeSjekk(omrade: Omrade, trenger: Niva = 'se', hoppMekaniker = false) {
+  return t.middleware(async (opts) => {
     const { ctx } = opts;
-    if (!erWhiteLabelAktiv()) return opts.next({ ctx });
+    if (!erWhiteLabelAktiv()) return opts.next();
+    if (hoppMekaniker && ctx.isMechanic) return opts.next();
     if (ctx.role === 'dealer_admin' || ctx.role === 'endwise_admin') {
-      return opts.next({ ctx });
+      return opts.next();
     }
     const gitt = await withTenant(ctx.db, ctx.tenantId as string, (tx) =>
       tx
@@ -215,11 +222,15 @@ export function omradeProcedure(omrade: Omrade, trenger: Niva = 'se') {
     if (!harTillatelse({ rolle: ctx.role, omrade, trenger, gitt })) {
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: 'Spør daglig leder',
+        message: TILLATELSE_HINT,
       });
     }
-    return opts.next({ ctx });
+    return opts.next();
   });
+}
+
+export function omradeProcedure(omrade: Omrade, trenger: Niva = 'se', hoppMekaniker = false) {
+  return protectedProcedure.use(omradeSjekk(omrade, trenger, hoppMekaniker));
 }
 
 export const endwiseAdminProcedure = protectedProcedure.use(function isEndwiseAdmin(opts) {

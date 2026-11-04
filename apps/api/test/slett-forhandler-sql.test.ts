@@ -306,12 +306,36 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     }
   });
 
-  it('functions.sql DROPper slett_forhandler før CREATE og merker rev=0026', () => {
+  it('0062 DROPper slett_forhandler og sletter slug_reservations på slug, ikke tenant_id', () => {
+    const m0062 = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/0062_slett_forhandler_slug.sql'),
+      'utf8',
+    );
+    const journal = readFileSync(
+      resolve(her, '../../../packages/db/drizzle/meta/_journal.json'),
+      'utf8',
+    );
+    expect(journal).toMatch(/0062_slett_forhandler_slug/);
+    expect(m0062).toMatch(/slett_forhandler_rev=0027/);
+    expect(m0062).toMatch(/delete from slug_reservations where slug = v_slug/i);
+    expect(m0062).toMatch(/slug_frigitt/);
+    expect(m0062).toMatch(/'tenant_branding'/);
+    expect(m0062).toMatch(/'invitation_codes'/);
+    expect(m0062).not.toMatch(/'tenant_slug_history', 'slug_reservations'/);
+    const dropAt = m0062.search(/drop function if exists slett_forhandler/i);
+    const createAt = m0062.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i);
+    expect(dropAt).toBeGreaterThan(-1);
+    expect(createAt).toBeGreaterThan(dropAt);
+  });
+
+  it('functions.sql DROPper slett_forhandler før CREATE og merker rev=0027', () => {
     const dropAt = functions.search(/drop function if exists slett_forhandler\s*\(\s*uuid\s*\)/i);
     const createAt = functions.search(/create(?:\s+or\s+replace)?\s+function slett_forhandler/i);
     expect(dropAt).toBeGreaterThan(-1);
     expect(createAt).toBeGreaterThan(dropAt);
-    expect(slettSql).toMatch(/slett_forhandler_rev=0026/);
+    expect(slettSql).toMatch(/slett_forhandler_rev=0027/);
+    expect(slettSql).toMatch(/delete from slug_reservations where slug = v_slug/i);
+    expect(slettSql).not.toMatch(/'tenant_slug_history', 'slug_reservations'/);
     expect(slettSql).toMatch(/set_config\('app\.slett_endwise_id'/);
     expect(slettSql).toMatch(/u\.id = any\s*\(\s*v_org_user_ids\s*\)/);
     expect(slettSql).not.toMatch(/active_organization_id is not null/);
@@ -342,12 +366,12 @@ describe('slett_forhandler FORCE RLS-kontrakt (Scaleway)', () => {
     expect(barn).toMatch(/constraint_name/i);
   });
 
-  it('db:grants feiler hvis slett_forhandler ikke er rev 0026', () => {
+  it('db:grants feiler hvis slett_forhandler ikke er rev 0027', () => {
     const grantsTs = readFileSync(resolve(her, '../../../packages/db/scripts/grants.ts'), 'utf8');
-    expect(grantsTs).toMatch(/slett_forhandler_rev=0026/);
+    expect(grantsTs).toMatch(/slett_forhandler_rev=0027/);
     expect(grantsTs).toMatch(/process\.exit\(1\)/);
     expect(grantsTs).toMatch(
-      /grants \+ funksjoner kjørt \(lookup_open_invitation \+ slett_forhandler rev=0026\)/,
+      /grants \+ funksjoner kjørt \(lookup_open_invitation \+ slett_forhandler rev=0027\)/,
     );
     /**
      * pg_get_function_identity_arguments(oid) for

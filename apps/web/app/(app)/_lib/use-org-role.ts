@@ -66,6 +66,7 @@ export function useOrgRole(): {
    */
   canSwitchDemo: boolean;
   needsOnboarding: boolean;
+  twoFactorRequired: boolean;
   /** Kosmetikk. Sperren er shopProcedure. Fail-safe av. */
   shopEnabled: boolean;
 } {
@@ -112,6 +113,7 @@ export function useOrgRole(): {
     devMode: me.data?.devMode?.enabled ?? false,
     canSwitchDemo: (me.data?.devMode?.flagOn ?? false) && role === 'endwise_admin',
     needsOnboarding: me.data?.needsOnboarding ?? false,
+    twoFactorRequired: me.data?.twoFactorRequired ?? false,
     shopEnabled: me.data?.shopEnabled ?? false,
   };
 }

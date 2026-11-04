@@ -60,6 +60,8 @@ describe('0046 white-label F1-kontrakt', () => {
   });
 
   it('slett_forhandler kjenner history og reservations', () => {
-    expect(functions).toMatch(/'tenant_slug_history', 'slug_reservations'/);
+    expect(functions).toMatch(/'tenant_slug_history'/);
+    expect(functions).toMatch(/delete from slug_reservations where slug = v_slug/i);
+    expect(functions).not.toMatch(/'tenant_slug_history', 'slug_reservations'/);
   });
 });

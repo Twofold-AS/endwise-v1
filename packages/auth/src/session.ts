@@ -1,7 +1,7 @@
 import type { Database } from '@endwise/db';
 import type { Auth } from './auth.ts';
 import { isBeyondAbsoluteLifetime } from './session-policy.ts';
-import { assertTwoFactorForUser } from './two-factor.ts';
+import { assertTwoFactorForUser, TwoFactorRequiredError } from './two-factor.ts';
 
 export class SessionExpiredError extends Error {
   readonly code = 'SESSION_EXPIRED';
@@ -50,8 +50,9 @@ export async function medTidsfrist<T>(arbeid: Promise<T>, ms: number, melding: s
  * 2. Absolutt — maks levetid. Better-Auth har ingen innebygd; vi river
  * sesjonen i databasen når den er passert. En klient-timer
  * ville ikke vært en grense; dette er.
- * 3. 2FA — TOTP er valgfri. `assertTwoFactorForUser` blokkerer ikke
- * uenrollerte. Bundet TOTP håndheves ved neste magic-link-verify.
+ * 3. 2FA — bedrift uten TOTP kaster `TwoFactorRequiredError` inne i
+ * `assertTwoFactorForUser`. Her svelges den: sesjonen beholdes slik at
+ * `/2fa-oppsett` og `session.me` virker. UI tvinger oppsett.
  * `db` er et påkrevd argument, ikke valgfritt. Gjorde vi det valgfritt,
  * ville et kallsted som glemte å sende det stille hoppet over 2FA-sjekken — og
  * det er nøyaktig den feilen denne funksjonen finnes for å hindre. Nå må hvert
@@ -73,9 +74,11 @@ export async function requireSession(auth: Auth, db: Database, headers: Headers)
     throw new SessionExpiredError('absolute');
   }
 
-  // TOTP er valgfri: uenrollert får bruke appen. Kall beholdes så
-  // requireSession fortsatt er én inngang (idle + absolut + ev. fremtidig gate).
-  await assertTwoFactorForUser(db, data.user.id, data.user.twoFactorEnabled);
+  try {
+    await assertTwoFactorForUser(db, data.user.id, data.user.twoFactorEnabled);
+  } catch (error) {
+    if (!(error instanceof TwoFactorRequiredError)) throw error;
+  }
 
   return data;
 }

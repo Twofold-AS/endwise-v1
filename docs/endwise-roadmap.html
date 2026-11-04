@@ -1390,6 +1390,16 @@ const ROADMAP = [
     area:"auth", ui:"na", status:"done" },
   { id:"F41-05", o:"endwise.no er bare marked — ingen innlogging", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Innlogging bare på app (bedrift) / platform / <code>&lt;sub&gt;</code> (kunde). Apex <code>/signin</code> uten kontekst 308 til app. Med <code>tenant</code>/<code>slug</code> 308 til <code>&lt;sub&gt;.endwise.no</code>. Kundeflyt og kunde-e-post aldri til app. Nøytral tekst: «Hvis kontoen finnes, får du en kode på e-post.»",
     area:"auth", ui:"built", status:"done" },
+  { id:"F41-06", o:"Slett forhandler: F40/F41-tabeller + frigjør subdomene", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Prod <code>tenants.slett</code> 42703 <code>column \"tenant_id\" does not exist</code> (platform.endwise.no etter #215). Rot: <code>slett_forhandler</code> slettet <code>slug_reservations</code> på <code>tenant_id</code> — tabellen har bare slug/holder/expires_at. Rev 0027 / migrasjon 0062: slett reservasjon på slug, branding, invite, logo-rad, historikk; audit med <code>slug_frigitt</code>; subdomene ledig. Test oppretter forhandler med invitasjon+branding+logo og sletter.",
+    area:"admin", ui:"na", status:"done" },
+  { id:"F41-07", o:"/oppstart branding: eier-RLS + vennlig feil", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Yamaha Bergen <code>insert tenant_branding on conflict (tenant_id)</code> under FORCE RLS uten eier-policy (samme hull som 0043/0044). 0063 + grants: owner INSERT/SELECT/UPDATE. Klient: «Kunne ikke lagre verkstedet. Prøv igjen.» — ingen Failed query/SQL.",
+    area:"auth", ui:"built", status:"done" },
+  { id:"F41-08", o:"Invite: behold sesjon; TOTP pliktig for bedrift", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Godta logger ikke ut. <code>dealer_*</code>/<code>endwise_*</code> må fullføre TOTP; e-postkode alene er aldri nok. Uenrollert → <code>/2fa-oppsett</code> med beholdt sesjon. Customer uten TOTP er OK.",
+    area:"auth", ui:"built", status:"done" },
+  { id:"F41-09", o:"Uinnlogget &lt;sub&gt;.endwise.no er markedsside", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> Uten sesjon: navn/logo, kontakt, ett «Logg inn». Ingen kundemeny. Andre ruter → <code>/logg-inn</code>. Etter innlogging full meny. Mobile first / Mobbin. ⛔ <code>#0066ff</code>.",
+    area:"kunde", ui:"built", status:"done" },
+  { id:"F41-10", o:"Kunde-OTP: bare kunde hos denne tenanten", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> KRITISK. Fremmed e-post på &lt;sub&gt;.endwise.no fikk kode og sesjon. Rot: UI kalte <code>signIn.magicLink</code> (ikke tenant-scopet <code>beOmKode</code>); dest falt tilbake til global bruker når <code>lesAuthTenantId</code> var null (slug uten <code>app.slug_sjekk</code>). Fix: forhandler-dest = <code>erKundeHostDestinasjon</code> bare; slug-GUC; verify river uten medlemskap; ingen auto-opprett av fremmede; nøytral UI + 400 ms; 0063 rydder foreldreløse kontoer.",
+    area:"auth", ui:"built", status:"done" },
 ]},
 ];
 

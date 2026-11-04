@@ -30,7 +30,7 @@ const rev = await pool.query<{ ok: boolean }>(`
       join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'public'
        and p.proname = 'slett_forhandler'
-       and strpos(p.prosrc, 'slett_forhandler_rev=0026') > 0
+       and strpos(p.prosrc, 'slett_forhandler_rev=0027') > 0
   ) as ok
 `);
 if (rev.rows[0]?.ok !== true) {
@@ -43,7 +43,7 @@ if (rev.rows[0]?.ok !== true) {
        and p.proname = 'slett_forhandler'
   `);
   console.error(
-    '[db] slett_forhandler er ikke rev 0026 (DROP+CREATE feilet). ' +
+    '[db] slett_forhandler er ikke rev 0027 (DROP+CREATE feilet). ' +
       'Kjør `pnpm db:setup` på nytt mot Scaleway-eieren.',
   );
   if (funnet.rows.length === 0) {
@@ -640,5 +640,34 @@ if (modulesInsert.rows[0]?.ok !== true) {
   process.exit(1);
 }
 
+const brandingEierNavn = [
+  'tenant_branding_tenant_insert_owner',
+  'tenant_branding_tenant_select_owner',
+  'tenant_branding_tenant_update_owner',
+];
+const brandingEier = await pool.query<{ polname: string }>(
+  `
+  select p.polname
+    from pg_policy p
+    join pg_class c on c.oid = p.polrelid
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public'
+     and c.relname = 'tenant_branding'
+     and p.polname = any($1::text[])
+`,
+  [brandingEierNavn],
+);
+const brandingFunnet = new Set(brandingEier.rows.map((r) => r.polname));
+const manglerBranding = brandingEierNavn.filter((n) => !brandingFunnet.has(n));
+if (manglerBranding.length > 0) {
+  console.error(
+    '[db] tenant_branding eier-porter under FORCE RLS mangler: ' +
+      manglerBranding.join(', ') +
+      '. Kjør `pnpm db:grants` mot Scaleway-eieren (0063).',
+  );
+  await pool.end();
+  process.exit(1);
+}
+
 await pool.end();
-console.info('[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0026)');
+console.info('[db] grants + funksjoner kjørt (lookup_open_invitation + slett_forhandler rev=0027)');

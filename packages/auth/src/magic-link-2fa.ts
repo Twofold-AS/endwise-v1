@@ -6,7 +6,7 @@ import { lesAuthTenantId } from './auth-request.ts';
 import { BYTT_PASSORD_ETTER_HOOK_ID } from './bytt-passord.ts';
 import { createByttPassordEtterHook } from './bytt-passord-server.ts';
 import { TWO_FACTOR_COOKIE_NAME } from './faktor-kaker.ts';
-import { harForhandlerRolle, knyttKundeUser } from './forhandler-konto.ts';
+import { harBedriftRolle, harForhandlerRolle, knyttKundeUser } from './forhandler-konto.ts';
 import {
   MAGIC_LINK_APP_LANDING,
   MAGIC_LINK_CALLBACK,
@@ -15,6 +15,7 @@ import {
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
 import { sendVelkomstEtterKnytning } from './senders/velkomst.ts';
+import type { AuthSone } from './sone.ts';
 
 /**
  * Better-Auths twoFactor-plugin lytter bare på `/sign-in/email` (osv.).
@@ -30,10 +31,21 @@ export type MagicLinkEtterVerify =
   | { handling: 'behold-sesjon'; dest: string }
   | { handling: 'totp-mur'; dest: string };
 
+/** Forhandler-verify: sesjon bare ved kunde hos DENNE tenanten eller ansatt. */
+export function forhandlerVerifyMedlemskap(input: {
+  tenantId: string | null | undefined;
+  harRolle: boolean;
+  kundeId: string | null;
+}): 'behold' | 'riv' {
+  if (!input.tenantId) return 'riv';
+  if (input.harRolle || input.kundeId) return 'behold';
+  return 'riv';
+}
+
 /** Ren avgjørelse etter magic-link-verify. Ingen sideeffekter. */
 export function etterMagicLinkVerify(
   bundet: boolean,
-  wl?: { aktiv: boolean; harRolle: boolean },
+  wl?: { aktiv: boolean; harRolle: boolean; kreverTotp?: boolean },
 ): MagicLinkEtterVerify {
   if (wl?.aktiv) {
     if (!wl.harRolle) return { handling: 'behold-sesjon', dest: '/min-side' };
@@ -42,6 +54,9 @@ export function etterMagicLinkVerify(
   }
   if (bundet) {
     return { handling: 'totp-mur', dest: `${MAGIC_LINK_CALLBACK}?${MAGIC_LINK_TOTP_QUERY}` };
+  }
+  if (wl?.kreverTotp) {
+    return { handling: 'behold-sesjon', dest: MAGIC_LINK_ENROLL_STI };
   }
   return { handling: 'behold-sesjon', dest: MAGIC_LINK_APP_LANDING };
 }
@@ -166,7 +181,7 @@ function erOmdirigering(error: unknown): boolean {
   return status >= 300 && status < 400;
 }
 
-export function createMagicLink2faEtterHook(db?: Database) {
+export function createMagicLink2faEtterHook(db?: Database, opts?: { sone?: AuthSone }) {
   return merket(
     createAuthMiddleware(async (ctx) => {
       try {
@@ -188,11 +203,19 @@ export function createMagicLink2faEtterHook(db?: Database) {
         const bundet = await erTotpFaktiskBundet(lesRad, data.user);
         const tenantId = lesAuthTenantId();
         let harRolle = false;
+        if (opts?.sone === 'forhandler' && (!tenantId || !db)) {
+          await rivSesjon(ctx);
+          return omdirigerTilApp(ctx, '/logg-inn');
+        }
         if (tenantId && db) {
           harRolle = await harForhandlerRolle(db, data.user.id, tenantId);
           const kundeId = await knyttKundeUser(db, tenantId, data.user.id, data.user.email).catch(
             () => null,
           );
+          if (forhandlerVerifyMedlemskap({ tenantId, harRolle, kundeId }) === 'riv') {
+            await rivSesjon(ctx);
+            return omdirigerTilApp(ctx, '/logg-inn');
+          }
           if (kundeId) {
             await sendVelkomstEtterKnytning(db, tenantId, kundeId).catch(() => null);
           }
@@ -210,10 +233,14 @@ export function createMagicLink2faEtterHook(db?: Database) {
             // Neste request setter kontekst.
           }
         }
-        const neste = etterMagicLinkVerify(
-          bundet,
-          tenantId ? { aktiv: true, harRolle } : undefined,
+        const kreverTotp = Boolean(
+          harRolle || (db && (await harBedriftRolle(db, data.user.id).catch(() => false))),
         );
+        const neste = etterMagicLinkVerify(bundet, {
+          aktiv: Boolean(tenantId),
+          harRolle,
+          kreverTotp,
+        });
         if (neste.handling === 'behold-sesjon') {
           if (!bundet && data.user.twoFactorEnabled === true) {
             try {
@@ -242,9 +269,9 @@ export function createMagicLink2faEtterHook(db?: Database) {
 export const magicLink2faEtterHook = createMagicLink2faEtterHook();
 
 /** Magic-link-TOTP først (kan kaste redirect), deretter bytt-passord-etter. */
-export function createAuthEtterHook(db?: Database) {
+export function createAuthEtterHook(db?: Database, opts?: { sone?: AuthSone }) {
   const passordEtter = createByttPassordEtterHook(db);
-  const magicEtter = createMagicLink2faEtterHook(db);
+  const magicEtter = createMagicLink2faEtterHook(db, opts);
   return merket(
     createAuthMiddleware(async (ctx) => {
       const ut = await magicEtter(ctx);

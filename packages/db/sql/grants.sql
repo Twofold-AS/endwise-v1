@@ -1,7 +1,7 @@
 -- Kjøres etter migrasjoner: `pnpm db:setup` (= db:repair-0020 && db:migrate && db:grants).
--- Siste slett-relaterte migrasjon: 0026_slett_forhandler_kontoer (DROP+CREATE).
--- lookup_open_invitation: CREATE ligger i 0020/0021 + sql/functions.sql (ingen 0027).
--- Scaleway på 0026: `pnpm db:grants` alene gjenoppretter funksjonen (idempotent).
+-- Siste slett-relaterte migrasjon: 0062_slett_forhandler_slug (DROP+CREATE, rev=0027).
+-- lookup_open_invitation: CREATE ligger i 0020/0021 + sql/functions.sql.
+-- Scaleway: `pnpm db:grants` alene gjenoppretter funksjonen (idempotent).
 -- 0025 DROP+CREATE + app.slett_endwise_id (policyer her speiler 0025).
 -- 0024 CREATE OR replace samme signatur — journal hopper over den som allerede kjørt.
 -- 0023_quick_lager la Quick-GUID på parts/stock_locations.
@@ -2331,6 +2331,67 @@ create policy tenant_branding_host_oppslag on tenant_branding
     and tenant_id in (
       select id from tenants where lower(slug) = nullif(current_setting('app.slug_sjekk', true), '')
     )
+  );
+
+-- F41 /oppstart: eier INSERT/SELECT/UPDATE under FORCE RLS (samme primitiv som 0044).
+drop policy if exists tenant_branding_tenant_insert_owner on tenant_branding;
+create policy tenant_branding_tenant_insert_owner on tenant_branding
+  as permissive
+  for insert
+  to public
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_branding'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists tenant_branding_tenant_select_owner on tenant_branding;
+create policy tenant_branding_tenant_select_owner on tenant_branding
+  as permissive
+  for select
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_branding'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  );
+drop policy if exists tenant_branding_tenant_update_owner on tenant_branding;
+create policy tenant_branding_tenant_update_owner on tenant_branding
+  as permissive
+  for update
+  to public
+  using (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_branding'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
+  )
+  with check (
+    current_user is distinct from 'authenticated'
+    and current_user is distinct from 'endwise_app'
+    and current_user = (
+      select pg_get_userbyid(c.relowner)
+        from pg_class c
+       where c.oid = 'public.tenant_branding'::regclass
+    )
+    and nullif(current_setting('app.tenant_id', true), '') is not null
+    and tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid
   );
 
 drop policy if exists dealer_profiles_host_oppslag on dealer_profiles;

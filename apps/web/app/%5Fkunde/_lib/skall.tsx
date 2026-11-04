@@ -1,6 +1,7 @@
 import type { OffentligTenant } from '@endwise/modules/tenant-host/oppslag';
 import { DeaktivertHandling, ListeRad, Seksjon, Side } from '@endwise/ui';
 import type { ReactNode } from 'react';
+import { kundeErInnlogget } from './sesjon.ts';
 
 const FORBUDT_CTA = '#0066ff';
 
@@ -10,7 +11,20 @@ function aksent(farge: string | null): string | undefined {
   return farge;
 }
 
-export function KundeSkall({
+const KUNDE_NAV = [
+  { href: '/', label: 'Hjem' },
+  { href: '/bestill', label: 'Bestill' },
+  { href: '/bookinger', label: 'Bookinger' },
+  { href: '/kjoretoy', label: 'Kjøretøy' },
+  { href: '/meldinger', label: 'Meldinger' },
+  { href: '/deler', label: 'Deler' },
+  { href: '/kvitteringer', label: 'Kvitteringer' },
+  { href: '/mine-data', label: 'Mine data' },
+  { href: '/min-side', label: 'Min side' },
+  { href: '/profil', label: 'Profil' },
+] as const;
+
+export async function KundeSkall({
   tenant,
   tittel,
   undertekst,
@@ -21,10 +35,15 @@ export function KundeSkall({
   undertekst?: string;
   children: ReactNode;
 }) {
+  const innlogget = await kundeErInnlogget();
   const farge = aksent(tenant.aksentfarge);
 
   return (
-    <div data-kunde-skall className="min-h-screen bg-bg text-fg">
+    <div
+      data-kunde-skall
+      data-kunde-innlogget={innlogget ? '1' : '0'}
+      className="min-h-screen bg-bg text-fg"
+    >
       <header className="border-b border-border px-4 py-4">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           {tenant.logoUrl ? (
@@ -32,14 +51,16 @@ export function KundeSkall({
             <img
               src={tenant.logoUrl}
               alt=""
-              width={32}
-              height={32}
-              className="size-8 shrink-0 rounded-full object-cover"
+              width={innlogget ? 32 : 48}
+              height={innlogget ? 32 : 48}
+              className={`shrink-0 rounded-full object-cover ${innlogget ? 'size-8' : 'size-12'}`}
             />
           ) : (
             <span
               aria-hidden
-              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-[14px] font-[650] text-fg"
+              className={`flex shrink-0 items-center justify-center rounded-full bg-surface-2 font-[650] text-fg ${
+                innlogget ? 'size-8 text-[14px]' : 'size-12 text-[20px]'
+              }`}
             >
               {(tenant.visningsnavn.trim().slice(0, 1) || '·').toUpperCase()}
             </span>
@@ -51,47 +72,22 @@ export function KundeSkall({
             {tenant.visningsnavn}
           </p>
         </div>
-        <nav
-          aria-label="Kunde"
-          className="mx-auto mt-3 flex max-w-lg flex-wrap gap-2 text-label max-md:text-[14px]"
-        >
-          <a href="/" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Hjem
-          </a>
-          <a href="/bestill" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Bestill
-          </a>
-          <a href="/bookinger" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Bookinger
-          </a>
-          <a href="/kjoretoy" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Kjøretøy
-          </a>
-          <a href="/meldinger" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Meldinger
-          </a>
-          <a href="/deler" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Deler
-          </a>
-          <a
-            href="/kvitteringer"
-            className="inline-flex h-11 items-center rounded-full px-3 text-fg"
+        {innlogget ? (
+          <nav
+            aria-label="Kunde"
+            className="mx-auto mt-3 flex max-w-lg flex-wrap gap-2 text-label max-md:text-[14px]"
           >
-            Kvitteringer
-          </a>
-          <a href="/mine-data" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Mine data
-          </a>
-          <a href="/min-side" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Min side
-          </a>
-          <a href="/profil" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Profil
-          </a>
-          <a href="/logg-inn" className="inline-flex h-11 items-center rounded-full px-3 text-fg">
-            Logg inn
-          </a>
-        </nav>
+            {KUNDE_NAV.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className="inline-flex h-11 items-center rounded-full px-3 text-fg"
+              >
+                {l.label}
+              </a>
+            ))}
+          </nav>
+        ) : null}
       </header>
       <div className="mx-auto max-w-lg">
         <Side tittel={tittel} undertekst={undertekst}>
@@ -122,6 +118,25 @@ export function KundeKontakt({ tenant }: { tenant: OffentligTenant }) {
         <ListeRad key={r.tittel} tittel={r.tittel} undertekst={r.undertekst} chevron={false} />
       ))}
     </Seksjon>
+  );
+}
+
+export function KundeMarkedsFlate({ tenant }: { tenant: OffentligTenant }) {
+  return (
+    <div data-kunde-marked className="flex flex-col gap-4">
+      <Seksjon tittel={tenant.visningsnavn}>
+        <p className="text-body text-fg-muted max-md:text-[16px]">
+          Logg inn for å bestille time og se dine bookinger.
+        </p>
+        <a
+          href="/logg-inn"
+          className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-pill bg-fg px-4 text-label text-bg max-md:text-[16px]"
+        >
+          Logg inn
+        </a>
+      </Seksjon>
+      <KundeKontakt tenant={tenant} />
+    </div>
   );
 }
 

@@ -524,6 +524,9 @@ grant execute on function lookup_widget_key(text) to authenticated;
 -- 0025-leftovers: engangs-DML kun i migrasjon 0026, bundet til session
 -- mot manglende organization — ikke alle memberless. Ikke i funksjonen
 -- (grants.ts re-applier functions.sql).
+-- 0027: slug_reservations har INGEN tenant_id (holder + expires_at).
+-- Prod 04.11.2026 tenants.slett 42703 «column "tenant_id" does not exist»
+-- (platform.endwise.no, tenant 9811bc98-…, dpl_CrF8vTsoCdbi5EYDoG5UovBBKDFV).
 
 -- `row_security=off` er ikke fiksen: den guc-en kaster hvis en policy ville
 -- filtrert, den skrur ikke av RLS. Unntaket er samme mønster som
@@ -562,7 +565,7 @@ declare
   i integer;
   v_org_user_ids text[];
 begin
-  -- slett_forhandler_rev=0026
+  -- slett_forhandler_rev=0027
   if current_setting('app.platform_admin', true) is distinct from 'on' then
     raise exception 'slett_forhandler: krever platform_admin';
   end if;
@@ -589,6 +592,9 @@ begin
   end if;
   perform set_config('app.slett_endwise_id', v_endwise::text, true);
 
+  -- Frigjør subdomenet: reservasjon uten tenant_id, historikk med tenant_id.
+  delete from slug_reservations where slug = v_slug;
+
   -- Aldri hard-slett audit_log. Redaktér PII i funksjonen (ikke via
   -- redact_audit_log — den leser app.tenant_id og har ingen UPDATE-policy for
   -- eieren under force RLS), flytt kjeden til Endwise så on DELETE restrict
@@ -613,7 +619,12 @@ begin
     'audit.redacted',
     'erasure',
     null,
-    jsonb_build_object('rows_redacted', v_redacted, 'reason', 'slett_forhandler')
+    jsonb_build_object(
+      'rows_redacted', v_redacted,
+      'reason', 'slett_forhandler',
+      'slug', v_slug,
+      'slug_frigitt', true
+    )
   );
 
   -- Erasure_requests slettes aldri (art. 5(2)-beviset må overleve
@@ -646,10 +657,11 @@ begin
 
   -- Barn først (parts/stock_levels/customers inkludert). Kjent FK-rekkefølge
   -- før den dynamiske løkka. Execute setter ikke found — ROW_COUNT.
-  -- Kun foreign_key_violation / undefined_table svelges i runden.
+  -- undefined_table / undefined_column / foreign_key_violation svelges.
   foreach v_name in array array[
     'invitation_codes', 'member_permissions', 'tenant_branding', 'tenant_domains',
-    'tenant_slug_history', 'slug_reservations',
+    'tenant_slug_history',
+    'owner_transfers', 'jit_grants', 'tenant_agreements', 'booking_services',
     'shop_order_lines', 'shop_orders', 'dealer_profiles',
     'stock_movements', 'stock_levels', 'parts', 'stock_locations',
     'messages', 'thread_participants', 'threads', 'stream_events', 'notifications',
@@ -662,9 +674,21 @@ begin
       execute format('delete from %I where tenant_id = $1', v_name) using p_tenant_id;
     exception
       when undefined_table then null;
+      when undefined_column then null;
       when foreign_key_violation then null;
     end;
   end loop;
+
+  begin
+    delete from shared_asset_usages where brukt_av_tenant_id = p_tenant_id;
+  exception
+    when undefined_table then null;
+  end;
+  begin
+    delete from shared_asset_origin where origin_tenant_id = p_tenant_id;
+  exception
+    when undefined_table then null;
+  end;
 
   for i in 1..24 loop
     v_progress := false;
@@ -685,8 +709,9 @@ begin
         if v_count > 0 then
           v_progress := true;
         end if;
-      exception when foreign_key_violation then
-        null;
+      exception
+        when foreign_key_violation then null;
+        when undefined_column then null;
       end;
     end loop;
     exit when not v_progress;

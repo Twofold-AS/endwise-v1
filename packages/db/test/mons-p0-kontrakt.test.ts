@@ -130,7 +130,7 @@ describe('0020-reparasjon i 0021 (CREATE OR REPLACE RETURNS)', () => {
     expect(grantsTs).toMatch(/platform_level/);
     expect(grantsTs).toMatch(/job_function/);
     expect(grantsTs).toMatch(/expires_at/);
-    expect(grantsTs).toMatch(/lookup_open_invitation \+ slett_forhandler rev=0026/);
+    expect(grantsTs).toMatch(/lookup_open_invitation \+ slett_forhandler rev=0027/);
     expect(grantsTs).toMatch(/process\.exit\(1\)/);
   });
 

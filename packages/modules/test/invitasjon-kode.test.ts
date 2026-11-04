@@ -7,9 +7,12 @@ import {
   InvitasjonKodeConfigError,
   KODE_GYLDIGHET_MS,
   KODE_TEGN_ANBEFALT,
+  kanSendeKode,
   MAX_FORSOK,
   nesteAntallForsoek,
+  nesteSendVindu,
   normaliserKode,
+  SEND_MAX_PER_TIME,
   vurderInvitasjonskode,
 } from '../src/invitasjon-kode/index.ts';
 
@@ -96,5 +99,21 @@ describe('F16 / white label F0: invitasjonskode', () => {
   it('hash i klartekst inneholder ikke koden', () => {
     const { kode, hash } = genererInvitasjonskode({ pepper: PEPPER });
     expect(hash.toLowerCase()).not.toContain(kode.toLowerCase());
+  });
+
+  it('maks 3 utsendinger per time, nytt vindu etter en time', () => {
+    const now = new Date('2026-11-03T12:00:00.000Z');
+    expect(kanSendeKode(null, now)).toBe(true);
+    expect(nesteSendVindu(null, now)).toEqual({ sendCount: 1, windowStartedAt: now });
+
+    const to = { sendCount: 2, windowStartedAt: now };
+    expect(kanSendeKode(to, now)).toBe(true);
+    expect(nesteSendVindu(to, now).sendCount).toBe(3);
+
+    const full = { sendCount: SEND_MAX_PER_TIME, windowStartedAt: now };
+    expect(kanSendeKode(full, now)).toBe(false);
+    const senere = new Date(now.getTime() + 60 * 60 * 1000);
+    expect(kanSendeKode(full, senere)).toBe(true);
+    expect(nesteSendVindu(full, senere)).toEqual({ sendCount: 1, windowStartedAt: senere });
   });
 });

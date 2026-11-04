@@ -27,6 +27,8 @@ export interface RetentionRule {
    * `redact` brukes der raden må overleve av hensyn til integritet (audit-loggen).
    */
   mode: 'delete' | 'redact';
+  /** false = global DEFINER-cron, ikke per-tenant DELETE. */
+  tenantScoped?: boolean;
 }
 
 export const RETENTION_POLICY: readonly RetentionRule[] = [
@@ -85,6 +87,18 @@ export const RETENTION_POLICY: readonly RetentionRule[] = [
       'etterlevelse (art. 5(2)). Inneholder ingen personopplysninger utover subjekt-ID.',
     access: 'Kun endwise_admin.',
     mode: 'delete',
+  },
+  {
+    table: 'shared_assets',
+    timestampColumn: 'trukket_tilbake_at',
+    days: 30,
+    basis: 'security',
+    rationale:
+      'F13: tilbaketrekking skjuler med en gang og sletter fysisk innen 30 dager. ' +
+      'Ingen kundekobling i delingslaget.',
+    access: 'Lesing krever aktivt samtykke. Opprinnelse bare origin-tenant/admin.',
+    mode: 'delete',
+    tenantScoped: false,
   },
 ];
 

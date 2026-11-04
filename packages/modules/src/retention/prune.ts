@@ -20,6 +20,7 @@ export async function pruneExpired(db: Database, tenantId: string): Promise<Prun
 
   for (const rule of prunableRules()) {
     if (rule.mode !== 'delete') continue;
+    if (rule.tenantScoped === false) continue;
 
     const deleted = await withTenant(db, tenantId, async (tx) => {
       const result = await tx.execute(

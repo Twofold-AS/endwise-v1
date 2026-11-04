@@ -23,6 +23,7 @@ describe('0054 white-label F10-kontrakt', () => {
 
   it('kunde-RLS er RESTRICTIVE og withCustomer setter actor', () => {
     expect(sql).toMatch(/AS RESTRICTIVE/);
+    expect(sql).toMatch(/CREATE POLICY "bookings_customer_own" ON "bookings"/);
     expect(sql).toMatch(/bookings_customer_own/);
     expect(sql).toMatch(/vehicles_customer_own/);
     expect(sql).toMatch(/customers_customer_own/);

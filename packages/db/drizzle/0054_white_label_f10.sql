@@ -7,7 +7,7 @@ ALTER TABLE "dealer_profiles" ADD COLUMN IF NOT EXISTS "forventet_storrelse" tex
 ALTER TABLE "dealer_profiles" ADD COLUMN IF NOT EXISTS "ai_tak" integer;-- > statement-breakpoint
 
 DROP POLICY IF EXISTS "bookings_customer_own" ON "bookings";-- > statement-breakpoint
-CREATE POLICY "bookings_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
+CREATE POLICY "bookings_customer_own" ON "bookings" AS RESTRICTIVE FOR ALL TO "authenticated"
   USING (
     nullif(current_setting('app.actor', true), '') IS DISTINCT FROM 'customer'
     OR "bookings"."customer_id" = nullif(current_setting('app.customer_id', true), '')::uuid
@@ -18,7 +18,7 @@ CREATE POLICY "bookings_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
   );-- > statement-breakpoint
 
 DROP POLICY IF EXISTS "vehicles_customer_own" ON "vehicles";-- > statement-breakpoint
-CREATE POLICY "vehicles_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
+CREATE POLICY "vehicles_customer_own" ON "vehicles" AS RESTRICTIVE FOR ALL TO "authenticated"
   USING (
     nullif(current_setting('app.actor', true), '') IS DISTINCT FROM 'customer'
     OR "vehicles"."customer_id" = nullif(current_setting('app.customer_id', true), '')::uuid
@@ -29,7 +29,7 @@ CREATE POLICY "vehicles_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
   );-- > statement-breakpoint
 
 DROP POLICY IF EXISTS "customers_customer_own" ON "customers";-- > statement-breakpoint
-CREATE POLICY "customers_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
+CREATE POLICY "customers_customer_own" ON "customers" AS RESTRICTIVE FOR ALL TO "authenticated"
   USING (
     nullif(current_setting('app.actor', true), '') IS DISTINCT FROM 'customer'
     OR "customers"."id" = nullif(current_setting('app.customer_id', true), '')::uuid
@@ -40,7 +40,7 @@ CREATE POLICY "customers_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
   );-- > statement-breakpoint
 
 DROP POLICY IF EXISTS "customer_notes_customer_own" ON "customer_notes";-- > statement-breakpoint
-CREATE POLICY "customer_notes_customer_own" AS RESTRICTIVE FOR ALL TO "authenticated"
+CREATE POLICY "customer_notes_customer_own" ON "customer_notes" AS RESTRICTIVE FOR ALL TO "authenticated"
   USING (
     nullif(current_setting('app.actor', true), '') IS DISTINCT FROM 'customer'
     OR "customer_notes"."customer_id" = nullif(current_setting('app.customer_id', true), '')::uuid

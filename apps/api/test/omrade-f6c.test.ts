@@ -35,11 +35,10 @@ const staff = () =>
 
 describe('F25 / white label F6c: områder 2', () => {
   beforeEach(() => {
-    vi.mocked(erWhiteLabelAktiv).mockReturnValue(false);
+    vi.mocked(erWhiteLabelAktiv).mockReturnValue(true);
   });
 
-  it('med flagg: staff uten grant får 403 på F6c-områder, chrome er åpen', async () => {
-    vi.mocked(erWhiteLabelAktiv).mockReturnValue(true);
+  it('staff uten grant får 403 på F6c-områder, chrome er åpen', async () => {
     await expect(appRouter.createCaller(staff()).services.list()).rejects.toMatchObject({
       code: 'FORBIDDEN',
       message: 'Spør daglig leder',
@@ -92,6 +91,6 @@ describe('F25 / white label F6c: områder 2', () => {
     expect(les('../src/trpc/routers/forhandler.ts')).not.toMatch(
       /kort: protectedProcedure\.use\(omradeSjekk/,
     );
-    expect(les('../src/trpc/init.ts')).toMatch(/utenFlagg: 'pass' \| 'admin'/);
+    expect(les('../src/trpc/init.ts')).toMatch(/export function omradeSjekk/);
   });
 });

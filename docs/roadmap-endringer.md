@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-04 — F38 White label gå live
+
+**Type:** ny fase. Flagg vekk, prod-migrering, fresh start, iPhone-verify.
+**Godkjent av:** Mikael (ingen approval, squash-merge når CI er grønn).
+**Endring:** Ny fase **F38**. **F38-01** `done` (flagg fjernet). **F38-02** `done` (0057 + vercel-migrate). **F38-03** `done` (authClient.magicLink.verify). Eksisterende forhandlere slettes. Mikael seedes som platform-admin.
+
+---
+
 ## 2026-11-03 — F37 White label F14 (Framer nedgraderes)
 
 **Type:** ny fase. Plugin merkes tillegg. Widget får publisert forhandlerbranding. Ingen ny UI-pakke. Ingen techstack-endring.

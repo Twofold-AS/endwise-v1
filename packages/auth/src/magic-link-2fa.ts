@@ -159,65 +159,81 @@ async function startTotp(ctx: HookCtx, userId: string): Promise<Response> {
   return settKakeOgOmdiriger(ctx, cookie, identifier, dest.toString());
 }
 
+function erOmdirigering(error: unknown): boolean {
+  if (error instanceof Response) return error.status >= 300 && error.status < 400;
+  if (!error || typeof error !== 'object') return false;
+  const status = 'status' in error ? Number(error.status) : 0;
+  return status >= 300 && status < 400;
+}
+
 export function createMagicLink2faEtterHook(db?: Database) {
   return merket(
     createAuthMiddleware(async (ctx) => {
-      if (ctx.path !== MAGIC_LINK_VERIFY_STI) return;
-      const data = ctx.context.newSession;
-      if (!data?.user) return;
+      try {
+        if (ctx.path !== MAGIC_LINK_VERIFY_STI) return;
+        const data = ctx.context.newSession;
+        if (!data?.user) return;
 
-      const lesRad = async (userId: string) => {
-        try {
-          return (await ctx.context.adapter.findOne({
-            model: 'twoFactor',
-            where: [{ field: 'userId', value: userId }],
-          })) as { secret?: string | null; verified?: boolean | null } | null;
-        } catch {
-          return null;
-        }
-      };
-
-      const bundet = await erTotpFaktiskBundet(lesRad, data.user);
-      const tenantId = process.env.ENDWISE_WHITE_LABEL === '1' ? lesAuthTenantId() : null;
-      let harRolle = false;
-      if (tenantId && db) {
-        harRolle = await harForhandlerRolle(db, data.user.id, tenantId);
-        const kundeId = await knyttKundeUser(db, tenantId, data.user.id, data.user.email).catch(
-          () => null,
-        );
-        if (kundeId) {
-          await sendVelkomstEtterKnytning(db, tenantId, kundeId).catch(() => null);
-        }
-        try {
-          await db
-            .update(schema.session)
-            .set({
-              kontekst: 'privat',
-              activeOrganizationId: tenantId,
-              bedriftVerifisertAt: null,
-              bedriftUtloperAt: null,
-            })
-            .where(eq(schema.session.token, data.session.token));
-        } catch {
-          // Neste request setter kontekst.
-        }
-      }
-      const neste = etterMagicLinkVerify(bundet, tenantId ? { aktiv: true, harRolle } : undefined);
-      if (neste.handling === 'behold-sesjon') {
-        if (!bundet && data.user.twoFactorEnabled === true) {
+        const lesRad = async (userId: string) => {
           try {
-            await ctx.context.internalAdapter.updateUser(data.user.id, {
-              twoFactorEnabled: false,
-            });
+            return (await ctx.context.adapter.findOne({
+              model: 'twoFactor',
+              where: [{ field: 'userId', value: userId }],
+            })) as { secret?: string | null; verified?: boolean | null } | null;
           } catch {
-            // 0036 + neste verify heler. Missed migrate skal ikke låse ute.
+            return null;
+          }
+        };
+
+        const bundet = await erTotpFaktiskBundet(lesRad, data.user);
+        const tenantId = lesAuthTenantId();
+        let harRolle = false;
+        if (tenantId && db) {
+          harRolle = await harForhandlerRolle(db, data.user.id, tenantId);
+          const kundeId = await knyttKundeUser(db, tenantId, data.user.id, data.user.email).catch(
+            () => null,
+          );
+          if (kundeId) {
+            await sendVelkomstEtterKnytning(db, tenantId, kundeId).catch(() => null);
+          }
+          try {
+            await db
+              .update(schema.session)
+              .set({
+                kontekst: 'privat',
+                activeOrganizationId: tenantId,
+                bedriftVerifisertAt: null,
+                bedriftUtloperAt: null,
+              })
+              .where(eq(schema.session.token, data.session.token));
+          } catch {
+            // Neste request setter kontekst.
           }
         }
-        return omdirigerTilApp(ctx, neste.dest);
-      }
+        const neste = etterMagicLinkVerify(
+          bundet,
+          tenantId ? { aktiv: true, harRolle } : undefined,
+        );
+        if (neste.handling === 'behold-sesjon') {
+          if (!bundet && data.user.twoFactorEnabled === true) {
+            try {
+              await ctx.context.internalAdapter.updateUser(data.user.id, {
+                twoFactorEnabled: false,
+              });
+            } catch {
+              // 0036 + neste verify heler. Missed migrate skal ikke låse ute.
+            }
+          }
+          return omdirigerTilApp(ctx, neste.dest);
+        }
 
-      await rivSesjon(ctx);
-      return startTotp(ctx, data.user.id);
+        await rivSesjon(ctx);
+        return startTotp(ctx, data.user.id);
+      } catch (error) {
+        if (error instanceof Response) return error;
+        if (erOmdirigering(error)) throw error;
+        return;
+      }
     }),
     MAGIC_LINK_2FA_HOOK_ID,
   );

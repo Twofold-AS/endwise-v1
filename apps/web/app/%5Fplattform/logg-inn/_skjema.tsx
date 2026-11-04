@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  erMagicLinkKode,
-  magicLinkVerifySti,
-  normaliserMagicLinkKode,
-} from '@endwise/auth/magic-link';
+import { erMagicLinkKode, normaliserMagicLinkKode } from '@endwise/auth/magic-link';
 import { ArrowRight, FeltInput, FeltKode, KeyRound, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useRef, useState } from 'react';
 import { authClient, signIn } from '@/lib/auth-client';
@@ -49,16 +45,29 @@ export function PlattformLoggInnSkjema({ startSteg }: { startSteg: Steg }) {
       return;
     }
     setBusy('loading');
-    const sti = magicLinkVerifySti(norm);
-    const res = await fetch(sti, { credentials: 'include' });
-    if (!res.ok) {
+    try {
+      const res = await authClient.magicLink.verify({
+        query: { token: norm, callbackURL: '/endwise' },
+      });
+      if (res.error) {
+        setBusy('idle');
+        setError(
+          res.error.status === 429 ? 'For mange forsøk. Vent ett minutt og prøv igjen.' : FEIL,
+        );
+        kodeRef.current?.focus();
+        return;
+      }
       setBusy('idle');
-      setError(FEIL);
+      setSteg('nokkel');
+    } catch (err) {
+      const status =
+        err && typeof err === 'object' && 'status' in err
+          ? Number((err as { status: unknown }).status)
+          : 0;
+      setBusy('idle');
+      setError(status === 429 ? 'For mange forsøk. Vent ett minutt og prøv igjen.' : FEIL);
       kodeRef.current?.focus();
-      return;
     }
-    setBusy('idle');
-    setSteg('nokkel');
   }
 
   async function onPasskey() {

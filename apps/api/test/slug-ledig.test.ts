@@ -12,7 +12,6 @@ vi.mock('@endwise/modules/tenant-host', async (orig) => {
 
 import { nullstillSlugSjekkTeller } from '@endwise/modules/slug';
 import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
-import { TRPCError } from '@trpc/server';
 import { krevWhiteLabel, svarSlugLedig } from '../src/trpc/slug-ledig.ts';
 
 describe('tenants.slugLedig', () => {
@@ -22,9 +21,8 @@ describe('tenants.slugLedig', () => {
     vi.mocked(erWhiteLabelAktiv).mockReturnValue(true);
   });
 
-  it('avviser når flagget er av', () => {
-    vi.mocked(erWhiteLabelAktiv).mockReturnValue(false);
-    expect(() => krevWhiteLabel()).toThrow(TRPCError);
+  it('krevWhiteLabel er no-op (white label er alltid på)', () => {
+    expect(() => krevWhiteLabel()).not.toThrow();
   });
 
   it('samme feil for ukjent invitasjon', async () => {

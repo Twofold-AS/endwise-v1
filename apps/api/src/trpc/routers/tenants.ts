@@ -276,7 +276,7 @@ const slugSjekkInput = z.object({
 
 export const tenantsRouter = router({
   /**
-   * F17 / white label F1 — live ledig/opptatt. Bak ENDWISE_WHITE_LABEL.
+   * F17 / white label F1 — live ledig/opptatt.
    * Krever åpen eier-invitasjon. Ingen åpent oppslag.
    */
   slugLedig: publicProcedure

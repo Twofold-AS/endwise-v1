@@ -15,7 +15,8 @@
     "test": "vitest run",
     "db:grants": "node --env-file-if-exists=../../.env --experimental-strip-types scripts/grants.ts",
     "db:repair-0020": "node --env-file-if-exists=../../.env --experimental-strip-types scripts/repair-0020.ts",
-    "db:setup": "pnpm db:migrate && pnpm db:grants"
+    "db:setup": "pnpm db:migrate && pnpm db:grants",
+    "db:vercel-migrate": "node --experimental-strip-types scripts/vercel-migrate.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

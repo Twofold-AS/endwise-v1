@@ -400,6 +400,13 @@
       "when": 1793830000000,
       "tag": "0056_white_label_f13",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1793840000000,
+      "tag": "0057_white_label_ga_live",
+      "breakpoints": true
     }
   ]
 }

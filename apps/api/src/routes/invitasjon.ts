@@ -12,7 +12,6 @@ import {
 import { type ApenInvitasjon, createInvitasjonsmodul } from '@endwise/modules/invitasjoner';
 import { erPlattformTenant } from '@endwise/modules/plattform';
 import { tildelAnsattFarge } from '@endwise/modules/profil';
-import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createAppContext } from '../context.ts';
@@ -129,20 +128,16 @@ invitasjon.get('/:token', async (c) => {
     harKonto: Boolean(eksisterende),
     krever2FA,
     kreverPassord: false,
-    kreverKode: erWhiteLabelAktiv(),
+    kreverKode: true,
   });
 });
 
 function krevInvitasjonCsrf(c: { req: { raw: Request } }): boolean {
-  if (!erWhiteLabelAktiv()) return true;
   return harBedriftCsrf(c.req.raw.headers);
 }
 
 invitasjon.post('/:token/send-kode', async (c) => {
   if (!krevInvitasjonCsrf(c)) {
-    return c.json({ ok: true }, 200);
-  }
-  if (!erWhiteLabelAktiv()) {
     return c.json({ ok: true }, 200);
   }
   const modul = createInvitasjonsmodul(db());
@@ -311,10 +306,10 @@ invitasjon.post('/godta', async (c) => {
     return c.json({ error: 'Ugyldig forespørsel. Navn kreves.' }, 400);
   }
 
-  if (erWhiteLabelAktiv() && !krevInvitasjonCsrf(c)) {
+  if (!krevInvitasjonCsrf(c)) {
     return c.json({ error: INVITASJON_SAMME_FEIL }, 410);
   }
-  if (erWhiteLabelAktiv() && !parsed.data.kode) {
+  if (!parsed.data.kode) {
     return c.json({ error: INVITASJON_SAMME_FEIL }, 410);
   }
 
@@ -345,11 +340,9 @@ invitasjon.post('/godta', async (c) => {
 
   try {
     const resultat = await withTenant(db(), inv.tenantId, async (tx) => {
-      if (erWhiteLabelAktiv()) {
-        const kodeSjekk = await brukInvitasjonskode(tx, inv.id, parsed.data.kode);
-        if (!kodeSjekk.ok) {
-          return { type: 'kode-feil' as const, attempts: kodeSjekk.attempts };
-        }
+      const kodeSjekk = await brukInvitasjonskode(tx, inv.id, parsed.data.kode);
+      if (!kodeSjekk.ok) {
+        return { type: 'kode-feil' as const, attempts: kodeSjekk.attempts };
       }
 
       const [eksisterende] = await tx

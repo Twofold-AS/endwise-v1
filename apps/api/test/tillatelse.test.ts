@@ -18,10 +18,10 @@ const fakeCtx = (role: 'endwise_admin' | 'dealer_admin' | 'dealer_staff') =>
   }) as never;
 
 describe('F23 / white label F6a: tillatelse-porter', () => {
-  it('uten flagg er tillatelse stengt, staff får ikke liste', async () => {
+  it('uten Bedrift er tillatelse stengt, staff får ikke sette', async () => {
     await forventer(
       appRouter.createCaller(fakeCtx('dealer_admin')).tillatelse.liste(),
-      'PRECONDITION_FAILED',
+      'FORBIDDEN',
     );
     await forventer(
       appRouter.createCaller(fakeCtx('dealer_staff')).tillatelse.sett({

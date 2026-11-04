@@ -3,7 +3,6 @@
 import {
   erMagicLinkKode,
   MAGIC_LINK_ERSTATTET_MELDING,
-  magicLinkVerifySti,
   meldingForMagicLinkFeil,
   normaliserMagicLinkKode,
 } from '@endwise/auth/magic-link';
@@ -170,7 +169,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     await sendLenke(email.trim(), 'fortsett');
   }
 
-  function onSkrivKode(e: FormEvent) {
+  async function onSkrivKode(e: FormEvent) {
     e.preventDefault();
     const token = normaliserMagicLinkKode(kode);
     if (!erMagicLinkKode(token)) {
@@ -180,7 +179,28 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
     setHandling('logg-inn');
     setBusy('loading');
     setError(null);
-    window.location.assign(magicLinkVerifySti(token));
+    try {
+      const res = await authClient.magicLink.verify({
+        query: { token, callbackURL: '/signin' },
+      });
+      if (res.error) {
+        setError(feilmelding(res));
+        setBusy('error');
+        return;
+      }
+      await finishSignIn();
+    } catch (err) {
+      const status =
+        err && typeof err === 'object' && 'status' in err
+          ? Number((err as { status: unknown }).status)
+          : 0;
+      setError(
+        status === 429
+          ? 'For mange forsøk. Vent ett minutt og prøv igjen.'
+          : 'Innlogging feilet. Prøv igjen, eller be om ny kode.',
+      );
+      setBusy('error');
+    }
   }
 
   async function onTotp(e: FormEvent) {
@@ -297,7 +317,7 @@ export function SignInSkjema({ totpKlar }: { totpKlar: boolean }) {
             </button>
           </form>
         ) : (
-          <form onSubmit={onSkrivKode} data-auth-kode-steg className={AUTH_FLATE}>
+          <form onSubmit={(e) => void onSkrivKode(e)} data-auth-kode-steg className={AUTH_FLATE}>
             <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
               {SIGNIN_KODE_INGRESS}{' '}
               <span className="font-[650] text-fg">{email || 'e-posten din'}</span>.

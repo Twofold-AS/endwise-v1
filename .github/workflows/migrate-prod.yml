@@ -1,0 +1,33 @@
+name: Produksjonsmigrering
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: migrate-prod
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: db:setup mot Scaleway
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: Migrer + grants
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ENDWISE_GA_LIVE: '1'
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "DATABASE_URL-secret mangler i GitHub. Mikael setter den selv (Scaleway eier, :5432)."
+            echo "Vercel production-build kjører også migrate når DATABASE_URL finnes der."
+            exit 0
+          fi
+          pnpm db:setup

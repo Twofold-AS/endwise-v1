@@ -39,17 +39,10 @@ const staff = () =>
 
 describe('F26 / white label F7: Privat/Bedrift porter', () => {
   beforeEach(() => {
-    vi.mocked(erWhiteLabelAktiv).mockReturnValue(false);
-  });
-
-  it('uten flagg: Bedrift-port er av', async () => {
-    await expect(appRouter.createCaller(staff()).kontekst.meg()).resolves.toMatchObject({
-      kontekst: null,
-    });
-  });
-
-  it('med flagg: Bedrift-API i Privat uten CSRF gir 403', async () => {
     vi.mocked(erWhiteLabelAktiv).mockReturnValue(true);
+  });
+
+  it('Bedrift-API i Privat uten CSRF gir 403', async () => {
     await expect(appRouter.createCaller(staff()).team.list()).rejects.toMatchObject({
       code: 'FORBIDDEN',
       message: 'Krever Bedrift',

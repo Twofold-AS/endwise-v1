@@ -70,7 +70,7 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
   const destinasjon = async (database: typeof db, email: string) => {
     if (platform) return erPlatformDestinasjon(database, email);
     const tenantId = lesAuthTenantId();
-    if (process.env.ENDWISE_WHITE_LABEL === '1' && tenantId) {
+    if (tenantId) {
       return erForhandlerDestinasjon(database, tenantId, email);
     }
     return erAuthDestinasjon(database, email);
@@ -251,7 +251,7 @@ export function createAuth(db = createDb(authEnv.databaseUrl), opts?: { sone?: A
            */
           if (!(await destinasjon(db, email))) return;
           const tenantId = lesAuthTenantId();
-          if (process.env.ENDWISE_WHITE_LABEL === '1' && tenantId) {
+          if (tenantId) {
             await opprettBrukerForEpost(db, email);
           }
           const navn = await lesAuthBrukerNavn(db, email);

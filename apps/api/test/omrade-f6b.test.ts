@@ -50,17 +50,10 @@ const admin = () =>
 
 describe('F24 / white label F6b: områder 1', () => {
   beforeEach(() => {
-    vi.mocked(erWhiteLabelAktiv).mockReturnValue(false);
-  });
-
-  it('uten flagg er tillatelse.mine stengt', async () => {
-    await expect(appRouter.createCaller(staff()).tillatelse.mine()).rejects.toMatchObject({
-      code: 'PRECONDITION_FAILED',
-    });
-  });
-
-  it('med flagg: staff uten grant får 403 på kunder og bookinger, ikke på hjem', async () => {
     vi.mocked(erWhiteLabelAktiv).mockReturnValue(true);
+  });
+
+  it('staff uten grant får 403 på kunder og bookinger, ikke på hjem', async () => {
     await expect(appRouter.createCaller(staff()).customers.list()).rejects.toMatchObject({
       code: 'FORBIDDEN',
       message: 'Spør daglig leder',
@@ -86,8 +79,7 @@ describe('F24 / white label F6b: områder 1', () => {
     });
   });
 
-  it('med flagg: mekaniker hopper bookinger-les, admin passerer områdesjekk', async () => {
-    vi.mocked(erWhiteLabelAktiv).mockReturnValue(true);
+  it('mekaniker hopper bookinger-les, admin passerer områdesjekk', async () => {
     await expect(
       appRouter.createCaller(staff({ isMechanic: true })).bookings.list(),
     ).rejects.not.toMatchObject({ message: 'Spør daglig leder' });

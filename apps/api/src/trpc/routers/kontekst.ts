@@ -10,7 +10,6 @@ import {
   verifiserFerskTotpForBruker,
 } from '@endwise/auth';
 import { and, type Database, eq, schema, withTenant } from '@endwise/db';
-import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { protectedProcedure, publicProcedure, router } from '../init.ts';
@@ -27,9 +26,6 @@ async function harRolleHos(db: Database, tenantId: string, userId: string) {
 
 export const kontekstRouter = router({
   meg: publicProcedure.query(({ ctx }) => {
-    if (!erWhiteLabelAktiv()) {
-      return { kontekst: null, harRolle: false, csrfHeader: BEDRIFT_CSRF_HEADER };
-    }
     return {
       kontekst: ctx.kontekst,
       harRolle: ctx.role === 'dealer_admin' || ctx.role === 'dealer_staff',

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const stubs = vi.hoisted(() => ({
   finnApen: vi.fn(),
@@ -27,7 +27,6 @@ import { INVITASJON_SAMME_FEIL } from '@endwise/modules/invitasjon-kode';
 import { handleHono } from '../src/http/hono.ts';
 
 const her = dirname(fileURLToPath(import.meta.url));
-const FLAG = 'ENDWISE_WHITE_LABEL';
 const CSRF = { 'x-endwise-csrf': '1', 'content-type': 'application/json' };
 
 const apen = {
@@ -41,17 +40,9 @@ const apen = {
 };
 
 describe('F27 / white label F8a: send-kode og godta', () => {
-  const forrige = process.env[FLAG];
-
   beforeEach(() => {
     stubs.finnApen.mockReset();
     stubs.forbruk.mockReset();
-    process.env[FLAG] = '1';
-  });
-
-  afterEach(() => {
-    if (forrige === undefined) delete process.env[FLAG];
-    else process.env[FLAG] = forrige;
   });
 
   it('GET endrer ingenting og røper kreverKode', async () => {
@@ -159,6 +150,6 @@ describe('F27 / white label F8a: send-kode og godta', () => {
     );
     expect(get).not.toMatch(/sendEmail/);
     expect(get).not.toMatch(/genererInvitasjonskode/);
-    expect(get).toMatch(/kreverKode: erWhiteLabelAktiv\(\)/);
+    expect(get).toMatch(/kreverKode: true/);
   });
 });

@@ -96,6 +96,8 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(MAGIC_LINK_BE_OM_STI).toBe('/sign-in/magic-link');
     expect(MAGIC_LINK_TOTP_QUERY).toBe('steg=totp');
     const hook = readFileSync(resolve(her, '../src/magic-link-2fa.ts'), 'utf8');
+    expect(hook).toMatch(/try \{/);
+    expect(hook).toMatch(/erOmdirigering/);
     expect(hook).toMatch(/deleteSessionCookie/);
     expect(hook).toMatch(/setNewSession\(null\)/);
     expect(hook).toMatch(/MAGIC_LINK_TOTP_QUERY/);
@@ -203,7 +205,7 @@ describe('magic link + TOTP (Mons-lås)', () => {
     expect(signin).toMatch(/SIGNIN_IKKE_DEG|Ikke deg/);
     expect(signin).not.toMatch(/Velkommen tilbake/);
     expect(signin).not.toMatch(/Logg inn med magiclink/);
-    expect(signin).toMatch(/magicLinkVerifySti/);
+    expect(signin).toMatch(/authClient\.magicLink\.verify/);
     expect(signin).not.toMatch(/type=["']password["']/);
     expect(signin).not.toMatch(/verifyOtp|sendOtp/);
     expect(oppsett).toMatch(/twoFactor\.enable/);

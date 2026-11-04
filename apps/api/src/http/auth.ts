@@ -37,7 +37,7 @@ function getAuth(req: Request) {
 export async function handleAuth(req: Request): Promise<Response> {
   return kjorMedAuthRequest({ headers: req.headers }, async () => {
     const slug = req.headers.get('x-endwise-slug')?.trim();
-    if (process.env.ENDWISE_WHITE_LABEL === '1' && slug) {
+    if (slug) {
       const db = getAuthDb();
       if (db) {
         const tenantId = await lesTenantIdFraSlug(db, slug).catch(() => null);

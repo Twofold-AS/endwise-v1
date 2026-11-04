@@ -54,27 +54,27 @@ describe('F18 / white label F2: proxy vertsruting', () => {
     expect(rewriteDest(res)).toBe('/_kunde/bergen');
   });
 
-  it('forhandler /home uten Bedrift går til logg-inn', () => {
+  it('forhandler /home er ikke bedrift — nøytral 404', () => {
     const res = proxy(req('https://bergen.endwise.no/home', 'bergen.endwise.no'), WL);
-    expect(rewriteDest(res)).toBe('/_kunde/bergen/logg-inn');
+    expect(rewriteDest(res)).toBe('/_kunde/_ukjent');
   });
 
-  it('forhandler /home med ?kontekst=bedrift i preview går til (app)', () => {
-    const res = proxy(req('https://bergen.endwise.no/home?kontekst=bedrift', 'bergen.endwise.no'), {
-      ...WL,
-      VERCEL_ENV: 'preview',
-    });
-    expect(res.headers.get('x-endwise-sone')).toBe('forhandler');
-    expect(res.headers.get('x-endwise-kontekst') ?? res.headers.get('x-endwise-sone')).toBeTruthy();
-    expect(rewriteDest(res)).toBeNull();
+  it('app.endwise.no rewriter innlogging og slipper /home', () => {
+    const logg = proxy(req('https://app.endwise.no/logg-inn', 'app.endwise.no'), WL);
+    expect(logg.headers.get('x-endwise-sone')).toBe('app');
+    expect(rewriteDest(logg)).toBe('/_bedrift/logg-inn');
+
+    const hjem = proxy(req('https://app.endwise.no/home', 'app.endwise.no'), WL);
+    expect(hjem.headers.get('x-endwise-sone')).toBe('app');
+    expect(rewriteDest(hjem)).toBeNull();
   });
 
-  it('produksjon ignorerer ?kontekst=bedrift', () => {
+  it('produksjon ignorerer ?kontekst=bedrift på kundevert', () => {
     const res = proxy(req('https://bergen.endwise.no/home?kontekst=bedrift', 'bergen.endwise.no'), {
       ...WL,
       VERCEL_ENV: 'production',
     });
-    expect(rewriteDest(res)).toBe('/_kunde/bergen/logg-inn');
+    expect(rewriteDest(res)).toBe('/_kunde/_ukjent');
   });
 
   it('ukjent slug og reservert vert gir nøytral 404', () => {

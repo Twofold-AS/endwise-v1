@@ -40,14 +40,16 @@ function dbSomFeilerPaCustomers() {
 }
 
 describe('dest-kanaler: auth ≠ varsel (Mons dest-lås)', () => {
-  it('magic-link bruker erAuthDestinasjon — ikke customers.email', () => {
+  it('magic-link: global auth uten customers; kundehost og app er egne dest', () => {
     const dest = les('../src/produkt-destinasjon.ts');
     const auth = les('../src/auth.ts');
     const fn = dest.slice(
       dest.indexOf('export async function erAuthDestinasjon'),
-      dest.indexOf('export async function erTenantDestinasjon'),
+      dest.indexOf('export async function erAnsattDestinasjon'),
     );
     expect(auth).toMatch(/erAuthDestinasjon/);
+    expect(auth).toMatch(/erKundeHostDestinasjon/);
+    expect(auth).toMatch(/erAnsattDestinasjon/);
     expect(auth).toMatch(/destinasjon\(db, email\)/);
     expect(auth).toMatch(/lesAuthBrukerNavn\(db, email\)/);
     expect(fn).toMatch(/schema\.user\.email/);

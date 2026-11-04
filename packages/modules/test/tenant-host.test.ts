@@ -49,15 +49,23 @@ describe('F16 / white label F0: tenant-host', () => {
   });
 
   it('reserverte ord blokkeres (ingen slug lekket)', () => {
-    for (const slug of ['admin', 'app', 'api', 'login', 'logg-inn', 'support']) {
+    for (const slug of ['admin', 'api', 'login', 'logg-inn', 'support']) {
       expect(erReservertSlug(slug)).toBe(true);
       const r = opplosTenantFraHost(`${slug}.endwise.no`);
       expect(r.sone).toBe('reservert');
       expect(r.slug).toBeNull();
     }
+    expect(erReservertSlug('app')).toBe(true);
+    expect(opplosTenantFraHost('app.endwise.no')).toEqual({
+      sone: 'app',
+      slug: null,
+      vert: 'app.endwise.no',
+    });
+    expect(opplosTenantFraHost('app.localhost:3000').sone).toBe('app');
     expect(erReservertSlug('www')).toBe(true);
     expect(opplosTenantFraHost('www.endwise.no').sone).toBe('marked');
     expect(RESERVERTE_SLUGS).toContain('platform');
+    expect(RESERVERTE_SLUGS).toContain('app');
     expect(RESERVERTE_SLUGS).toContain('webmail');
   });
 

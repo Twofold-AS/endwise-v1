@@ -70,6 +70,7 @@ describe('authTrustedOrigins', () => {
     expect(origins).toContain('https://endwise.no');
     expect(origins).toContain('https://www.endwise.no');
     expect(origins).toContain('https://platform.endwise.no');
+    expect(origins).toContain('https://app.endwise.no');
     expect(origins).toContain('https://*.endwise.no');
   });
 

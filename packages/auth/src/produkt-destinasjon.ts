@@ -88,8 +88,64 @@ export async function lesAuthBrukerNavn(db: Database, epost: string): Promise<st
 export const erProduktDestinasjon = erAuthDestinasjon;
 
 /**
- * F7 — dest på forhandlervert. Kjent ansatt ELLER kunde hos DENNE tenanten,
- * eller åpen invite til samme org. Ikke global customers.email.
+ * F39 — dest på app.endwise.no. Bare dealer_admin/dealer_staff.
+ * Ikke kunder. Ikke platform. Samme stille nei som ukjent.
+ */
+export async function erAnsattDestinasjon(db: Database, epost: string): Promise<boolean> {
+  const norm = epost.trim().toLowerCase();
+  if (!erEnkelEpost(norm)) return false;
+  try {
+    const [rad] = await db
+      .select({ id: schema.member.id })
+      .from(schema.member)
+      .innerJoin(schema.user, eq(schema.user.id, schema.member.userId))
+      .where(
+        and(
+          eq(schema.user.email, norm),
+          or(eq(schema.member.role, 'dealer_admin'), eq(schema.member.role, 'dealer_staff')),
+        ),
+      )
+      .limit(1);
+    return Boolean(rad);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * F39 — dest på kundevert. Bare kunde hos DENNE tenanten (e-post).
+ * Ikke ansatte. Samme stille nei som ukjent. Ingen massee-post.
+ */
+export async function erKundeHostDestinasjon(
+  db: Database,
+  tenantId: string,
+  epost: string,
+): Promise<boolean> {
+  const tenant = tenantId.trim();
+  const norm = epost.trim().toLowerCase();
+  if (!tenant || !erEnkelEpost(norm)) return false;
+  try {
+    const [kunde] = await withTenant(db, tenant, (tx) =>
+      tx
+        .select({ id: schema.customers.id })
+        .from(schema.customers)
+        .where(
+          and(
+            eq(schema.customers.tenantId, tenant),
+            or(eq(schema.customers.email, norm), sql`lower(${schema.customers.email}) = ${norm}`),
+          ),
+        )
+        .limit(1),
+    );
+    return Boolean(kunde);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * F7 — dest på forhandlervert (historisk). Kjent ansatt ELLER kunde.
+ * F39 bruker erKundeHostDestinasjon på kundevert og erAnsattDestinasjon på app.
  */
 export async function erForhandlerDestinasjon(
   db: Database,

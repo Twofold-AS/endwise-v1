@@ -13,8 +13,8 @@ describe('F31 / white label F10: onboarding UI', () => {
     expect(flate).toMatch(/valgfri: true/);
     expect(flate).toMatch(/Gå live/);
     expect(flate).toMatch(/Hopp over \/ neste/);
-    expect(flate).toMatch(/slugSjekk/);
-    expect(flate).toMatch(/SjekkSteg/);
+    expect(flate).toMatch(/Kundelenke/);
+    expect(flate).not.toMatch(/slugSjekk/);
     expect(flate).not.toMatch(/#0066ff/);
   });
 });

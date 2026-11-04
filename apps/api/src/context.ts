@@ -133,10 +133,15 @@ export function createAppContext(): AppContext {
 
 let defaultAuth: Auth | undefined;
 let platformAuth: Auth | undefined;
+let appAuth: Auth | undefined;
 function getAuthForContext(sone: AuthSone | null): Auth {
   if (sone === 'platform') {
     platformAuth ??= createAuth(getDb(), { sone: 'platform' });
     return platformAuth;
+  }
+  if (sone === 'app') {
+    appAuth ??= createAuth(getDb(), { sone: 'app' });
+    return appAuth;
   }
   defaultAuth ??= createAuth(getDb(), sone ? { sone } : undefined);
   return defaultAuth;
@@ -217,13 +222,16 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
       bedriftVerifisertAt?: Date | string | null;
       bedriftUtloperAt?: Date | string | null;
     };
-    const kontekst: SesjonKontekst | null = erBedriftVinduAktiv({
-      kontekst: sesjon.kontekst,
-      verifisertAt: sesjon.bedriftVerifisertAt,
-      utloperAt: sesjon.bedriftUtloperAt,
-    })
-      ? 'bedrift'
-      : 'privat';
+    const kontekst: SesjonKontekst | null =
+      authSone === 'app'
+        ? 'bedrift'
+        : erBedriftVinduAktiv({
+              kontekst: sesjon.kontekst,
+              verifisertAt: sesjon.bedriftVerifisertAt,
+              utloperAt: sesjon.bedriftUtloperAt,
+            })
+          ? 'bedrift'
+          : 'privat';
     try {
       const role = await assertMember(base.db, data.user.id, tenantId);
       if (authSone && !rolleTillattISone(role, authSone)) {

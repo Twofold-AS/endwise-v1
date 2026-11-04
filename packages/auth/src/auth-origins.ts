@@ -26,6 +26,7 @@ export const PRODUKT_ORIGINS = [
   'https://endwise.no',
   'https://www.endwise.no',
   'https://platform.endwise.no',
+  'https://app.endwise.no',
   'https://*.endwise.no',
 ] as const;
 

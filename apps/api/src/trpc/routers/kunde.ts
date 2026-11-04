@@ -1,4 +1,5 @@
-import { and, desc, eq, gte, schema, withCustomer, withTenant } from '@endwise/db';
+import { createAuth, kjorMedAuthRequest } from '@endwise/auth';
+import { and, desc, eq, gte, schema, sql, withCustomer, withTenant } from '@endwise/db';
 import {
   IngenInnboksMottakerError,
   jobbFase,
@@ -14,7 +15,21 @@ import {
 } from '@endwise/modules/widget';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { customerProcedure, router } from '../init.ts';
+import { customerProcedure, publicProcedure, router } from '../init.ts';
+
+const KODE_PER_TIME = 5;
+const kodeTeller = new Map<string, { n: number; reset: number }>();
+
+function kundeKodeTillatt(nokkel: string, naa = Date.now()): boolean {
+  const rad = kodeTeller.get(nokkel);
+  if (!rad || naa >= rad.reset) {
+    kodeTeller.set(nokkel, { n: 1, reset: naa + 60 * 60 * 1000 });
+    return true;
+  }
+  if (rad.n >= KODE_PER_TIME) return false;
+  rad.n += 1;
+  return true;
+}
 
 async function finnKunde(ctx: {
   db: Parameters<typeof withTenant>[0];
@@ -28,6 +43,7 @@ async function finnKunde(ctx: {
         navn: schema.customers.name,
         epost: schema.customers.email,
         telefon: schema.customers.phone,
+        gdprAckAt: schema.customers.gdprAckAt,
       })
       .from(schema.customers)
       .where(
@@ -59,6 +75,66 @@ function toTRPCError(error: unknown): never {
 }
 
 export const kundeRouter = router({
+  beOmKode: publicProcedure
+    .input(
+      z.object({
+        epost: z.string().email().max(200).optional(),
+        telefon: z.string().min(8).max(20).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const tenantId = ctx.hostTenantId;
+      const ident = (input.epost ?? input.telefon ?? '').trim().toLowerCase();
+      const ip = ctx.requestHeaders.get('x-vercel-forwarded-for') ?? 'ukjent';
+      if (!kundeKodeTillatt(`${tenantId ?? 'x'}:${ip}:${ident}`)) {
+        return { ok: true as const };
+      }
+      if (!tenantId || (!input.epost && !input.telefon)) {
+        return { ok: true as const };
+      }
+      try {
+        const siffer = (input.telefon ?? '').replace(/\D/g, '');
+        const [kunde] = await withTenant(ctx.db, tenantId, (tx) =>
+          tx
+            .select({ epost: schema.customers.email })
+            .from(schema.customers)
+            .where(
+              and(
+                eq(schema.customers.tenantId, tenantId),
+                input.epost
+                  ? sql`lower(${schema.customers.email}) = ${input.epost.trim().toLowerCase()}`
+                  : sql`regexp_replace(coalesce(${schema.customers.phone}, ''), '[^0-9]', '', 'g') = ${siffer}`,
+              ),
+            )
+            .limit(1),
+        );
+        const epost = kunde?.epost?.trim().toLowerCase();
+        if (epost) {
+          await kjorMedAuthRequest({ headers: ctx.requestHeaders, tenantId }, async () => {
+            const auth = createAuth(ctx.db, { sone: 'forhandler' });
+            await auth.api.signInMagicLink({
+              body: { email: epost, callbackURL: '/min-side' },
+              headers: ctx.requestHeaders,
+            });
+          });
+        }
+      } catch {
+        // Samme svar. Ingen enumerering.
+      }
+      return { ok: true as const };
+    }),
+
+  bekreftGdpr: customerProcedure.mutation(async ({ ctx }) => {
+    const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+    await withCustomer(ctx.db, ctx.tenantId, kunde.id, (tx) =>
+      tx
+        .update(schema.customers)
+        .set({ gdprAckAt: new Date(), updatedAt: new Date() })
+        .where(eq(schema.customers.id, kunde.id)),
+    );
+    return { ok: true as const };
+  }),
+
   meg: customerProcedure.query(async ({ ctx }) => {
     return finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
   }),

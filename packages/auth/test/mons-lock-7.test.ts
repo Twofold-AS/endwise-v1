@@ -34,8 +34,13 @@ describe('Mons lock 1–7 (ikke merge før disse er grønne)', () => {
     expect(dest).toMatch(/schema\.user\.email/);
     expect(dest).toMatch(/schema\.invitation/);
     expect(dest).toMatch(/schema\.invitations/);
-    const authFn = dest.slice(0, dest.indexOf('export async function erTenantDestinasjon'));
+    const authFn = dest.slice(
+      dest.indexOf('export async function erAuthDestinasjon'),
+      dest.indexOf('export async function erPlatformDestinasjon'),
+    );
     expect(authFn).not.toMatch(/schema\.customers/);
+    expect(auth).toMatch(/erKundeHostDestinasjon/);
+    expect(auth).toMatch(/erAnsattDestinasjon/);
     expect(messages).toMatch(/erKjentKundeKontakt/);
     expect(messages).not.toMatch(/from:\s*z\./);
     expect(messages).not.toMatch(/html:\s*z\./);

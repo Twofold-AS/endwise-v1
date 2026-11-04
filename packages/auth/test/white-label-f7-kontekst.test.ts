@@ -44,14 +44,24 @@ describe('F26 / white label F7: Privat/Bedrift', () => {
     ).toBe(false);
   });
 
-  it('landing: ingen rolle → min-side, rolle uten TOTP → oppsett, ellers velg', () => {
+  it('landing: kunde → min-side, app-ansatt → 2FA eller home', () => {
     expect(landingEtterKode({ harRolle: false, totpBundet: false, whiteLabel: true })).toBe(
       '/min-side',
     );
-    expect(landingEtterKode({ harRolle: true, totpBundet: false, whiteLabel: true })).toBe(
-      '/2fa-oppsett',
-    );
-    expect(landingEtterKode({ harRolle: true, totpBundet: true, whiteLabel: true })).toBe('/velg');
+    expect(
+      landingEtterKode({
+        harRolle: true,
+        totpBundet: false,
+        whiteLabel: true,
+        sone: 'forhandler',
+      }),
+    ).toBe('/min-side');
+    expect(
+      landingEtterKode({ harRolle: true, totpBundet: false, whiteLabel: true, sone: 'app' }),
+    ).toBe('/2fa-oppsett');
+    expect(
+      landingEtterKode({ harRolle: true, totpBundet: true, whiteLabel: true, sone: 'app' }),
+    ).toBe('/home');
     expect(landingEtterKode({ harRolle: true, totpBundet: true, whiteLabel: false })).toBe('/');
   });
 

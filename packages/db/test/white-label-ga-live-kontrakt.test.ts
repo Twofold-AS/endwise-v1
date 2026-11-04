@@ -13,6 +13,7 @@ describe('0057 white-label gå live-kontrakt', () => {
   it('journalfører 0057 og 0058', () => {
     expect(journal).toMatch(/0057_white_label_ga_live/);
     expect(journal).toMatch(/0058_white_label_ga_admin/);
+    expect(journal).toMatch(/0060_white_label_f39/);
   });
 
   it('seeder mikkis@twofold.no som endwise_admin og sletter forhandlere', () => {

@@ -421,6 +421,13 @@
       "when": 1793860000000,
       "tag": "0059_invitation_codes_owner_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1793870000000,
+      "tag": "0060_white_label_f39",
+      "breakpoints": true
     }
   ]
 }

@@ -11,11 +11,14 @@ import type { ReactNode } from 'react';
  */
 export default async function AppMal({ children }: { children: ReactNode }) {
   const h = await headers();
-  if (h.get('x-endwise-sone') !== 'forhandler') return children;
-  if (h.get('x-endwise-kontekst') === 'bedrift') return children;
-  const cookie = h.get('cookie') ?? '';
-  if (!/(?:__Host-|__Secure-)?endwise\.session_token=/.test(cookie)) {
-    redirect('/logg-inn' as Route);
+  const sone = h.get('x-endwise-sone');
+  if (sone === 'app') {
+    const cookie = h.get('cookie') ?? '';
+    if (!/(?:__Host-|__Secure-)?endwise\.session_token=/.test(cookie)) {
+      redirect('/logg-inn' as Route);
+    }
+    return children;
   }
-  return children;
+  if (sone !== 'forhandler') return children;
+  redirect('/' as Route);
 }

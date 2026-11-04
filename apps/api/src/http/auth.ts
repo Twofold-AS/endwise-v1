@@ -23,12 +23,17 @@ function getAuthDb(): Database | null {
  */
 let defaultAuth: ReturnType<typeof createAuth> | undefined;
 let platformAuth: ReturnType<typeof createAuth> | undefined;
+let appAuth: ReturnType<typeof createAuth> | undefined;
 
 function getAuth(req: Request) {
   const sone = lesAuthSone(req.headers);
   if (sone === 'platform') {
     platformAuth ??= createAuth(undefined, { sone: 'platform' });
     return platformAuth;
+  }
+  if (sone === 'app') {
+    appAuth ??= createAuth(undefined, { sone: 'app' });
+    return appAuth;
   }
   defaultAuth ??= createAuth(undefined, sone ? { sone } : undefined);
   return defaultAuth;

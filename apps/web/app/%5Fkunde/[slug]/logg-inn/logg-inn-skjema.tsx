@@ -4,31 +4,48 @@ import { erMagicLinkKode, normaliserMagicLinkKode } from '@endwise/auth/magic-li
 import { ArrowRight, FeltInput, FeltKode, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { authClient, signIn } from '@/lib/auth-client';
+import { trpc } from '@/lib/trpc';
 
 const FORTSETT = 'Fortsett';
+const SAMME = 'Hvis vi kjenner deg, har du fått en kode.';
+
+function serUtSomEpost(v: string): boolean {
+  return v.includes('@');
+}
 
 export function LoggInnSkjema({ merke }: { merke: string }) {
-  const [email, setEmail] = useState('');
+  const [ident, setIdent] = useState('');
   const [kode, setKode] = useState('');
-  const [steg, setSteg] = useState<'epost' | 'kode'>('epost');
+  const [steg, setSteg] = useState<'ident' | 'kode'>('ident');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const beOmKode = trpc.kunde.beOmKode.useMutation();
 
-  async function onEpost(e: FormEvent) {
+  async function onIdent(e: FormEvent) {
     e.preventDefault();
     setBusy('loading');
     setError(null);
-    const res = await signIn.magicLink({
-      email: email.trim(),
-      callbackURL: '/velg',
-    });
-    if (res.error) {
+    const verdi = ident.trim();
+    try {
+      if (serUtSomEpost(verdi)) {
+        const res = await signIn.magicLink({
+          email: verdi,
+          callbackURL: '/min-side',
+        });
+        if (res.error) {
+          setError('Kunne ikke sende kode. Prøv igjen.');
+          setBusy('error');
+          return;
+        }
+      } else {
+        await beOmKode.mutateAsync({ telefon: verdi });
+      }
+      setBusy('idle');
+      setSteg('kode');
+    } catch {
       setError('Kunne ikke sende kode. Prøv igjen.');
       setBusy('error');
-      return;
     }
-    setBusy('idle');
-    setSteg('kode');
   }
 
   async function onKode(e: FormEvent) {
@@ -42,7 +59,7 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
     setError(null);
     try {
       const res = await authClient.magicLink.verify({
-        query: { token, callbackURL: '/velg' },
+        query: { token, callbackURL: '/min-side' },
       });
       if (res.error) {
         setError(
@@ -53,7 +70,7 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
         setBusy('error');
         return;
       }
-      window.location.assign('/velg');
+      window.location.assign('/min-side');
     } catch (err) {
       const status =
         err && typeof err === 'object' && 'status' in err
@@ -75,10 +92,7 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
         className="flex flex-col gap-4"
         data-kunde-logg-inn-kode
       >
-        <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
-          Vi har sendt en midlertidig kode til{' '}
-          <span className="font-[650] text-fg">{email || 'e-posten din'}</span>.
-        </p>
+        <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">{SAMME}</p>
         <FeltKode
           aria-label="Fyll inn kode"
           length={5}
@@ -103,16 +117,16 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
   }
 
   return (
-    <form onSubmit={(e) => void onEpost(e)} className="flex flex-col gap-4" data-kunde-logg-inn>
+    <form onSubmit={(e) => void onIdent(e)} className="flex flex-col gap-4" data-kunde-logg-inn>
       <FeltInput
-        id="kunde-epost"
+        id="kunde-ident"
         storrelse="lg"
-        type="email"
-        autoComplete="email"
+        type="text"
+        autoComplete="username"
         isRequired
-        label="E-post"
-        value={email}
-        onChange={setEmail}
+        label="E-post eller telefon"
+        value={ident}
+        onChange={setIdent}
         placeholder={`deg@${merke.toLowerCase().replace(/\s+/g, '')}.no`}
       />
       {error ? <p className="text-meta text-danger">{error}</p> : null}

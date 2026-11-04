@@ -1,7 +1,7 @@
 /**
  * F16 / white label F0 — reserverte subdomener.
- * Utkast. Endelig liste er ikke besluttet (Mikael 2026-11-03).
- * Kodefallback. Tabellen `reserverte_slugs` kan utvides av admin (F1).
+ * `app` er bedriftsinnlogging (F39, Mikael 04.11.2026) — ikke forhandler-slug.
+ * Kodefallback. Tabellen `reserverte_slugs` kan utvides av admin.
  * Alt som er `endwise` eller starter med `endwise-` er også reservert.
  */
 export const RESERVERTE_SLUGS = [

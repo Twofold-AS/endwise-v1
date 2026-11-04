@@ -36,8 +36,10 @@ export * from './magic-link.ts';
 export * from './password-reset.ts';
 export { brukerHarPasskey, kanBrukePlattform } from './plattform-passkey.ts';
 export {
+  erAnsattDestinasjon,
   erAuthDestinasjon,
   erForhandlerDestinasjon,
+  erKundeHostDestinasjon,
   erPlatformDestinasjon,
   erProduktDestinasjon,
   erTenantDestinasjon,
@@ -72,6 +74,7 @@ export * from './session-policy.ts';
 export { settPassordUtenSesjon } from './sett-passord.ts';
 export {
   type AuthSone,
+  appOffentligUrl,
   cookiePrefixForSone,
   ENDWISE_ROLLER,
   erEndwiseRolle,

@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-04 — F39 admin-subdomene, app.endwise.no, kundeselvbetjening
+
+**Type:** ny fase. Ingen ny UI-pakke. Ingen techstack-endring. Ingen flags.
+**Godkjent av:** Mikael (04.11.2026). Korreksjon: `app.endwise.no`, ikke bedrift.endwise.no.
+**Endring:** Fase **F39**. F39-02/03/04 `done`. F39-01 (admin-redesign) `planned` — Mikael designer først. ADR-005 oppdatert.
+
+---
+
 ## 2026-11-04 — F38-07 invitasjonskode + F39 plan
 
 **Type:** hotfix (F38-07) + ny fase F39. Ingen ny UI-pakke. Ingen techstack-endring.

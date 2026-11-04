@@ -226,10 +226,10 @@ export async function createRequestContext(headers: Headers): Promise<AppContext
       authSone === 'app'
         ? 'bedrift'
         : erBedriftVinduAktiv({
-            kontekst: sesjon.kontekst,
-            verifisertAt: sesjon.bedriftVerifisertAt,
-            utloperAt: sesjon.bedriftUtloperAt,
-          })
+              kontekst: sesjon.kontekst,
+              verifisertAt: sesjon.bedriftVerifisertAt,
+              utloperAt: sesjon.bedriftUtloperAt,
+            })
           ? 'bedrift'
           : 'privat';
     try {

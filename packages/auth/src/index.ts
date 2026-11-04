@@ -74,6 +74,7 @@ export * from './session-policy.ts';
 export { settPassordUtenSesjon } from './sett-passord.ts';
 export {
   type AuthSone,
+  appOffentligUrl,
   cookiePrefixForSone,
   ENDWISE_ROLLER,
   erEndwiseRolle,
@@ -83,7 +84,6 @@ export {
   lesAuthSone,
   PLATFORM_COOKIE_PREFIX,
   platformOffentligUrl,
-  appOffentligUrl,
   platformRpId,
   rolleTillattISone,
   SONE_HEADER,

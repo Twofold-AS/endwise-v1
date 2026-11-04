@@ -472,7 +472,11 @@ export const tenantsRouter = router({
       const format = modulSlugSchema.safeParse(input.slug);
       const forhands = byggSlugSvar(input.slug, { opptatt: false });
       if (!format.success) return forhands;
-      const opptatt = await slugErOpptatt(ctx.db, format.data, '00000000-0000-0000-0000-000000000000');
+      const opptatt = await slugErOpptatt(
+        ctx.db,
+        format.data,
+        '00000000-0000-0000-0000-000000000000',
+      );
       return byggSlugSvar(format.data, { opptatt });
     }),
 

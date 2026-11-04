@@ -45,16 +45,15 @@ pnpm db:setup            # = db:migrate && db:grants
                          #         sql/functions.sql (DROP+CREATE lookup_open_invitation
                          #         + slett_forhandler)
                          # MÅ skrive: [db] grants + funksjoner kjørt
-                         #            (lookup_open_invitation + slett_forhandler rev=0026)
+                         #            (lookup_open_invitation + slett_forhandler rev=0027)
                          # Mangler funksjon: db:grants exit 1.
                          # Verifiser: select prosrc from pg_proc
                          #            where proname = 'lookup_open_invitation'
                          #            må inneholde app.invitation_hash
                          #            select prosrc from pg_proc where proname = 'slett_forhandler'
-                         #            må inneholde slett_forhandler_rev=0026 og app.slett_endwise_id
+                         #            må inneholde slett_forhandler_rev=0027 og app.slett_endwise_id
                          #
-                         # Scaleway allerede på 0026: `pnpm db:grants` alene holder
-                         # (ingen ny migrasjon). DATABASE_URL = eier, ikke app-rollen.
+                         # Etter 0062: `pnpm db:setup` (migrate + grants). DATABASE_URL = eier.
 
 # 5. Demo-data (tenant A/B + kontoer + dagens bookinger)
 pnpm db:seed

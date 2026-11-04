@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-04 — F41-06 slett forhandler (slug_reservations uten tenant_id)
+
+**Type:** hotfix. Ingen ny UI-pakke. Ingen techstack-endring. Ingen flags.
+**Godkjent av:** Mikael (prod-test etter #215: Slett på platform.endwise.no).
+**Endring:** **F41-06** `done`. `slett_forhandler` rev=0027 / 0062. Rot: DELETE `slug_reservations` WHERE tenant_id (42703).
+
+---
+
 ## 2026-11-04 — F41 invitasjon uten kode, merke og marked
 
 **Type:** ny fase. Ingen ny UI-pakke. Ingen techstack-endring. Ingen flags.

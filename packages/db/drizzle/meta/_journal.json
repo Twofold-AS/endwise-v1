@@ -435,6 +435,13 @@
       "when": 1793880000000,
       "tag": "0061_white_label_f40",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1793890000000,
+      "tag": "0062_slett_forhandler_slug",
+      "breakpoints": true
     }
   ]
 }

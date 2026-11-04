@@ -83,7 +83,11 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
         .delete(schema.tenantDeleteChallenges)
         .where(eq(schema.tenantDeleteChallenges.tenantId, id));
       await owner.delete(schema.auditLog).where(sql`tenant_id = ${id}`);
+      await owner.delete(schema.invitationCodes).where(sql`tenant_id = ${id}`);
       await owner.delete(schema.invitations).where(eq(schema.invitations.tenantId, id));
+      await owner.delete(schema.tenantBranding).where(sql`tenant_id = ${id}`);
+      await owner.delete(schema.tenantDomains).where(sql`tenant_id = ${id}`);
+      await owner.delete(schema.tenantSlugHistory).where(sql`tenant_id = ${id}`);
       await owner.delete(schema.memberProfiles).where(sql`tenant_id = ${id}`);
       await owner.delete(schema.tenantModules).where(sql`tenant_id = ${id}`);
       await owner.delete(schema.member).where(sql`organization_id = ${id}`);
@@ -209,6 +213,181 @@ describeDb('F5-26 — slett, Endwise-lås og extras-steg', () => {
       .from(schema.auditLog)
       .where(eq(schema.auditLog.tenantId, adminTenant));
     expect(audit.some((a) => a.action === 'tenant.deleted')).toBe(true);
+  });
+
+  it('slett fjerner invitasjon, branding og logo og frigjør subdomenet', async () => {
+    const slug = `slett-wl-${randomUUID().slice(0, 8)}`;
+    const opprettet = await somEndwise().tenants.create({
+      name: 'Slett white-label AS',
+      slug,
+      ownerEmail: `wl.${slug}@verksted.test`,
+      kind: 'demo',
+      tier: 'start',
+    });
+    const tid = opprettet.tenantId;
+    tenantIds.push(tid);
+
+    let [inv] = await owner
+      .select({ id: schema.invitations.id })
+      .from(schema.invitations)
+      .where(eq(schema.invitations.tenantId, tid))
+      .limit(1);
+    if (!inv) {
+      const [ny] = await owner
+        .insert(schema.invitations)
+        .values({
+          tenantId: tid,
+          email: `eier.${slug}@verksted.test`,
+          tokenHash: createHash('sha256').update(`tok-${tid}`).digest('hex'),
+          kind: 'owner',
+          jobFunction: 'leder',
+          role: 'dealer_admin',
+          invitedBy: adminUser,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        })
+        .returning({ id: schema.invitations.id });
+      inv = ny;
+    }
+    expect(inv?.id).toBeTruthy();
+
+    const [eksisterendeKode] = await owner
+      .select({ id: schema.invitationCodes.id })
+      .from(schema.invitationCodes)
+      .where(eq(schema.invitationCodes.invitationId, inv?.id as string))
+      .limit(1);
+    if (!eksisterendeKode) {
+      await owner.insert(schema.invitationCodes).values({
+        invitationId: inv?.id as string,
+        tenantId: tid,
+        codeHash: createHash('sha256').update(`kode-${tid}`).digest('hex'),
+        codeSalt: 'salt',
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      });
+    }
+
+    await owner
+      .insert(schema.tenantBranding)
+      .values({
+        tenantId: tid,
+        visningsnavn: 'Bergen test',
+        logoUrl: 'https://blob.vercel-storage.com/bergen-logo.png',
+        logoMime: 'image/png',
+      })
+      .onConflictDoUpdate({
+        target: schema.tenantBranding.tenantId,
+        set: {
+          visningsnavn: 'Bergen test',
+          logoUrl: 'https://blob.vercel-storage.com/bergen-logo.png',
+          logoMime: 'image/png',
+        },
+      });
+
+    const [domene] = await owner
+      .select({ id: schema.tenantDomains.id })
+      .from(schema.tenantDomains)
+      .where(eq(schema.tenantDomains.tenantId, tid))
+      .limit(1);
+    if (!domene) {
+      await owner.insert(schema.tenantDomains).values({
+        tenantId: tid,
+        vert: `${slug}.endwise.no`,
+        type: 'subdomene',
+        primar: true,
+        status: 'verifisert',
+      });
+    }
+
+    await owner
+      .insert(schema.slugReservations)
+      .values({
+        slug,
+        holder: `onboard-${tid}`,
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+      })
+      .onConflictDoNothing();
+
+    await owner.insert(schema.tenantSlugHistory).values({
+      slug: `${slug}-gammel`,
+      tenantId: tid,
+      omdirigererTilSlug: slug,
+    });
+
+    await owner.insert(schema.tenantDeleteChallenges).values({
+      tenantId: tid,
+      requestedBy: adminUser,
+      codeHash: hashSlettKode('123456'),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    await somEndwise().tenants.slett({ tenantId: tid, slug, kode: '123456' });
+
+    const [borte] = await owner
+      .select({ id: schema.tenants.id })
+      .from(schema.tenants)
+      .where(eq(schema.tenants.id, tid));
+    expect(borte).toBeUndefined();
+
+    const [merke] = await owner
+      .select({ tenantId: schema.tenantBranding.tenantId })
+      .from(schema.tenantBranding)
+      .where(eq(schema.tenantBranding.tenantId, tid));
+    expect(merke).toBeUndefined();
+
+    const [invIgjen] = await owner
+      .select({ id: schema.invitations.id })
+      .from(schema.invitations)
+      .where(eq(schema.invitations.tenantId, tid));
+    expect(invIgjen).toBeUndefined();
+
+    const [kode] = await owner
+      .select({ id: schema.invitationCodes.id })
+      .from(schema.invitationCodes)
+      .where(eq(schema.invitationCodes.tenantId, tid));
+    expect(kode).toBeUndefined();
+
+    const [reservasjon] = await owner
+      .select({ slug: schema.slugReservations.slug })
+      .from(schema.slugReservations)
+      .where(eq(schema.slugReservations.slug, slug));
+    expect(reservasjon).toBeUndefined();
+
+    const [historikk] = await owner
+      .select({ slug: schema.tenantSlugHistory.slug })
+      .from(schema.tenantSlugHistory)
+      .where(eq(schema.tenantSlugHistory.tenantId, tid));
+    expect(historikk).toBeUndefined();
+
+    const [vert] = await owner
+      .select({ id: schema.tenantDomains.id })
+      .from(schema.tenantDomains)
+      .where(eq(schema.tenantDomains.tenantId, tid));
+    expect(vert).toBeUndefined();
+
+    const spor = await owner
+      .select({ metadata: schema.auditLog.metadata })
+      .from(schema.auditLog)
+      .where(
+        sql`tenant_id = ${endwiseId} and action = 'audit.redacted' and metadata->>'slug' = ${slug}`,
+      );
+    expect(spor.some((r) => r.metadata && (r.metadata as { slug_frigitt?: boolean }).slug_frigitt)).toBe(
+      true,
+    );
+
+    const gjenbruk = await somEndwise().tenants.create({
+      name: 'Gjenbrukt slug AS',
+      slug,
+      ownerEmail: `ny.${slug}@verksted.test`,
+      kind: 'demo',
+      tier: 'start',
+    });
+    tenantIds.push(gjenbruk.tenantId);
+    expect(gjenbruk.slug).toBe(slug);
+
+    await owner
+      .delete(schema.auditLog)
+      .where(
+        sql`tenant_id = ${endwiseId} and action = 'audit.redacted' and metadata->>'reason' = 'slett_forhandler'`,
+      );
   });
 
   it('slett fjerner Quick-lager og kunder, flytter audit_log, dropper org', async () => {

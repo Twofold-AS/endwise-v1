@@ -2,6 +2,7 @@ import { erMekanikerKonto, kanSkriveDealerDesk } from '@endwise/auth';
 import { and, eq, schema, withTenant } from '@endwise/db';
 import type { AddonModule } from '@endwise/modules';
 import { erWhiteLabelAktiv } from '@endwise/modules/tenant-host';
+import { harTillatelse, type Niva, type Omrade } from '@endwise/modules/tillatelse';
 import { initTRPC, TRPCError } from '@trpc/server';
 import type { AppContext } from '../context.ts';
 import { resolveShopFlag } from './shop-flag.ts';
@@ -185,6 +186,41 @@ export const shopProcedure = protectedProcedure.use(async function shopFlagOn(op
   }
   return opts.next({ ctx });
 });
+
+/**
+ * F23 / white label F6a — tillatelse per område. Område kommer fra koden,
+ * ikke klienten (IDOR). Uten flagg: samme som protectedProcedure.
+ */
+export function omradeProcedure(omrade: Omrade, trenger: Niva = 'se') {
+  return protectedProcedure.use(async function harOmrade(opts) {
+    const { ctx } = opts;
+    if (!erWhiteLabelAktiv()) return opts.next({ ctx });
+    if (ctx.role === 'dealer_admin' || ctx.role === 'endwise_admin') {
+      return opts.next({ ctx });
+    }
+    const gitt = await withTenant(ctx.db, ctx.tenantId as string, (tx) =>
+      tx
+        .select({
+          omrade: schema.memberPermissions.omrade,
+          niva: schema.memberPermissions.niva,
+        })
+        .from(schema.memberPermissions)
+        .where(
+          and(
+            eq(schema.memberPermissions.tenantId, ctx.tenantId as string),
+            eq(schema.memberPermissions.userId, ctx.userId as string),
+          ),
+        ),
+    ).catch(() => [] as Array<{ omrade: string; niva: string }>);
+    if (!harTillatelse({ rolle: ctx.role, omrade, trenger, gitt })) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Spør daglig leder',
+      });
+    }
+    return opts.next({ ctx });
+  });
+}
 
 export const endwiseAdminProcedure = protectedProcedure.use(function isEndwiseAdmin(opts) {
   const { ctx } = opts;

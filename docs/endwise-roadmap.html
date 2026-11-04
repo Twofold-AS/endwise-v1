@@ -1285,12 +1285,16 @@ const ROADMAP = [
   { id:"F22-01", o:"Bygg JIT-tilgang, to øyne og Aktivitet fra Endwise bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F5b. Support read-only. <code>jit_grants</code> + <code>@endwise/modules/jit</code>: begrunnelse, 15–240 min, to <code>endwise_admin</code>, ingen selvgodkjenning. <code>verksted.skriv</code> krever aktiv grant. Varsel til daglig leder. Organisasjon › Aktivitet fra Endwise. Impersonering = inspect-skriv, aldri sesjon på forhandlervert. Flagg/tenants.create uten JIT. Bak <code>ENDWISE_WHITE_LABEL</code>.",
     area:"admin", ui:"partial", status:"done" },
 ]},
+{ phase:"F23", title:"White label — tillatelsesmodell (plan F6a)", target:"Etter F22 / Mons-review", items:[
+  { id:"F23-01", o:"Bygg harTillatelse, omradeProcedure og én dealer_admin bak flagg", kat:"sikkerhet", t:"⭐ <b>03.11.2026:</b> Plan F6a (Mons-review). <code>@endwise/modules/tillatelse</code> + <code>omradeProcedure</code> (område i koden, ikke klient). <code>tildel_tillatelse</code> SECURITY DEFINER med FOR UPDATE, sjekker rolle i DB, nei til egne. Unik (bruker, org). Trigger maks én <code>dealer_admin</code>. <code>rapport_flere_dealer_admin</code> uten degradering. Routere byttes i F6b/F6c. Bak <code>ENDWISE_WHITE_LABEL</code>.",
+    area:"backend", ui:"na", status:"done" },
+]},
 ];
 
 /* =====================================================================
    KATEGORIER — den ANDRE aksen (lagt til 20.08.2026).
 
-   ⚠️ Fasene (F0–F22) er IKKE erstattet. De svarer på NÅR noe bygges og i
+   ⚠️ Fasene (F0–F23) er IKKE erstattet. De svarer på NÅR noe bygges og i
    hvilken rekkefølge; kategorien svarer på HVA det er og HVEM det er for.
    Begge finnes samtidig, og «Etter fase» er fortsatt én knapp unna.
 

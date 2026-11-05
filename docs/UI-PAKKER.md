@@ -10,10 +10,9 @@
 > Hjem = R2-pulse (hero · innboks · lager · tall · på jobb), ekte 0.
 > Visninger/Returer/Credits står tomme/deaktivert. Dest = 4 + Mer
 > (Lager/Butikk under Mer). Org = hub-liste + Timeplan ansatte-rad.
-> Sidetittel i chrome på Timeplan/Kunder/Tjenester/Innboks. Ronny er
-> en større farget sticky sirkel på siden (`data-ronny-sirkel`,
-> `#c45c26`, uten spin). Innhold har venstregutter så sirkelen ikke
-> dekker kort. Åpner som Board bunn-Drawer. Overskrift «Ronny»;
+> Sidetittel i chrome på Timeplan/Kunder/Tjenester/Innboks. Ronny ligger
+> bare i top-bar (`data-ronny-avatar`). Ingen oransje sticky sirkel på
+> hovedsiden. Åpner som Board bunn-Drawer. Overskrift «Ronny»;
 > tenker bare i `AgentThinking`. Toast ved opprett. Statuspalett §5
 > (confirmed = ink, ikke blå; lime/yellow/rose remap på mobil).
 > Timeplan/Tjenester har `NyKnapp`. Kundeliste og jobbrad har ⋯

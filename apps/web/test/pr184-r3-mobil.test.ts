@@ -175,8 +175,8 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(ronny).toMatch(/title="Ronny"/);
     expect(ronny).toMatch(/AgentThinking/);
     expect(ronny).toMatch(/data-ronny-forslag/);
-    expect(ronny).toMatch(/RonnySirkel/);
-    expect(les('../app/(app)/_workshop/ronny-sirkel.tsx')).toMatch(/data-ronny-sirkel/);
+    expect(ronny).not.toMatch(/RonnySirkel/);
+    expect(les('../app/(app)/_shell/phone-shell.tsx')).toMatch(/data-ronny-avatar/);
     expect(utenKommentarer(les('../app/(app)/_workshop/ronny-sirkel.tsx'))).not.toMatch(
       /spin=\{|data-ronny-spin=/,
     );

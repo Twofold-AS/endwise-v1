@@ -56,6 +56,15 @@ describe('F42-01: Claude-design på kundeside og forhandlerside', () => {
     expect(home).not.toMatch(/border-l-\[3px\]|#0066ff/);
   });
 
+  it('Ronny ligger bare i top-bar — ingen oransje sirkel på hjem', () => {
+    const home = les('../app/(app)/home/page.tsx');
+    const fab = les('../app/(app)/_workshop/workshop-bloub.tsx');
+    const shell = les('../app/(app)/_shell/phone-shell.tsx');
+    expect(home).not.toMatch(/RonnySirkel|#c45c26/);
+    expect(fab).not.toMatch(/RonnySirkel/);
+    expect(shell).toMatch(/data-ronny-avatar/);
+  });
+
   it('profilmeny-CTA er ink, ikke #0066ff', () => {
     const meny = les('../app/(app)/_shell/phone-profil-meny.tsx');
     expect(meny).toMatch(/Ditt abonnement/);

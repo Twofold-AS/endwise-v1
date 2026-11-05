@@ -34,3 +34,11 @@ export function erInnboksSide(pathname: string): boolean {
   if (erDealerInnboks(pathname)) return true;
   return /\/endwise\/verksted\/[^/]+\/innboks(\/|$)/.test(pathname);
 }
+
+/**
+ * Claude-designet: på hjem-flatene fyller boks 2 hele aksen på desktop
+ * (bred hero m/ timeplan), og standby-panelet går bort. Kun /home-aliasene.
+ */
+export function erBredHjemFlate(pathname: string): boolean {
+  return pathname === '/home' || pathname === '/dashboard' || pathname === '/verkstedet';
+}

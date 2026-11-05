@@ -73,14 +73,16 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(hero).toMatch(/data-pulse-teller-rad/);
     expect(hero).toMatch(/PulseDagSirkel/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
-    expect(hero).toMatch(/PulseEndringerLenke/);
+    expect(hero).toMatch(/PulseEndringerKnapp/);
     expect(hero).not.toMatch(/PulseValgLenke/);
-    expect(kort).toMatch(/ew-modus-plate/);
+    expect(kort).toMatch(/rounded-\[13px\] border border-divide/);
     expect(kort).toMatch(/data-pulse-avvik-boks/);
     expect(kort).toMatch(/CircleQuestionMark/);
-    expect(funksjon(kort, 'PulseAvvikForesporBoks')).not.toMatch(/text-danger|text-warn/);
+    // Claude-designet: avvik er rød, forespørsel er gul — bevisste statusfarger.
+    expect(funksjon(kort, 'PulseAvvikForesporBoks')).toMatch(/text-danger/);
+    expect(funksjon(kort, 'PulseAvvikForesporBoks')).toMatch(/text-warn/);
     expect(kort).toMatch(/>Endringer</);
-    expect(kort).toMatch(/ArrowUpRight/);
+    expect(kort).toMatch(/ArrowRight/);
     expect(les('../../../packages/ui/src/vendor/amicro/dither-donut.tsx')).toMatch(
       /sweep\s*=\s*Math\.PI \* 2/,
     );
@@ -166,7 +168,8 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(samtale).toMatch(/NySamtaleKnapperad/);
 
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/delMobilDest/);
+    expect(shell).toMatch(/dest\.map/);
+    expect(shell).not.toMatch(/delMobilDest/);
   });
 
   it('Organisasjon-oversikt er Innstillinger-rader', () => {

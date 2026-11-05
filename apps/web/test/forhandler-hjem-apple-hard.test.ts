@@ -51,9 +51,9 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
   it('låser pulse Planlagt · Analyser · Innboks · Lager · ansatte + Jobb', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
+      ['analyser'],
       ['innboks'],
       ['lager'],
-      ['analyser'],
       ['team', 'jobb'],
     ]);
     expect(PHONE_KORT_META.statistikk.label).toBe('Rapporter');
@@ -65,9 +65,9 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(FORHANDLER_NAV.some((i) => i.key === 'samarbeid')).toBe(false);
     expect(dealerPhoneHjemRader(false).map((r) => r.keys.join('|'))).toEqual([
       'idag',
+      'analyser',
       'innboks',
       'lager',
-      'analyser',
       'team|jobb',
     ]);
     expect(dealerPhoneHjemRader(true).at(-1)?.keys).toEqual(['team', 'jobb']);
@@ -128,10 +128,9 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
     expect(HJEM_SCROLL_FLATE).not.toMatch(/safe-area-inset-top/);
     expect(HJEM_SCROLL_FLATE).not.toMatch(/#111|Grainient|Galaxy/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
-    const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
+    const dash = utenKommentarer(les('../app/(app)/home/_desktop-hjem.tsx'));
     expect(hjem).toMatch(/HJEM_SCROLL_FLATE/);
     expect(dash).toMatch(/HJEM_SCROLL_FLATE/);
-    expect(hjem).toMatch(/gap-4/);
     expect(hjem).not.toMatch(/PHONE_SAFE_TOP/);
   });
 
@@ -167,7 +166,9 @@ describe('Jonas hard-fasit — forhandler-hjem Apple', () => {
 
   it('desktop er samme destinasjonskort — ikke KPI-dump', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
-    expect(dash).toMatch(/DealerPulseKort|DealerDestinasjonskort/);
+    const bred = utenKommentarer(les('../app/(app)/home/_desktop-hjem.tsx'));
+    expect(dash).toMatch(/VerkstedetDesktopBred/);
+    expect(bred).toMatch(/useDealerHjemKort|PulseAnalyserKort|PulseRadKort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
     expect(dash).not.toMatch(/AnsattePaJobb/);
     expect(dash).not.toMatch(/Dagens saker/);

@@ -61,10 +61,10 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     expect(hero).toMatch(/data-pulse-del="1"/);
     expect(hero).toMatch(/PulseDagSirkel/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
-    expect(hero).toMatch(/PulseEndringerLenke/);
+    expect(hero).toMatch(/PulseEndringerKnapp/);
     expect(hero).toMatch(/Endringer/);
     expect(hero).not.toMatch(/PulseValgLenke/);
-    expect(kort).toMatch(/ew-modus-plate/);
+    expect(kort).toMatch(/rounded-\[13px\] border border-divide/);
     expect(les('../app/(app)/avvik/page.tsx')).toMatch(/jobber\?fane=avvik/);
     expect(les('../app/(app)/timeplan/endringer/page.tsx')).toMatch(/jobber\?fane=endringer/);
   });
@@ -73,8 +73,8 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const jobb = funksjon(kort, 'PulseJobbFlis');
     expect(jobb).toMatch(/justify-between/);
-    expect(jobb.indexOf('>Jobb<')).toBeGreaterThan(-1);
-    expect(jobb.indexOf('>Jobb<')).toBeLessThan(jobb.indexOf('PulseIkonFlate'));
+    expect(jobb.indexOf('Ny Jobb')).toBeGreaterThan(-1);
+    expect(jobb.indexOf('Ny Jobb')).toBeLessThan(jobb.indexOf('PulseIkonFlate'));
   });
 
   it('Timeplan/Kunder/Tjenester deler Innstillinger-chrome; Org er hub', () => {

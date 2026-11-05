@@ -113,23 +113,23 @@ export type PhoneHjemRad = {
 };
 
 /**
- * Mikael CODE-GO 10.09 + Claude BIT 1: låste flater — toppkort · Innboks ·
- * Lager · Tall (over Jobb) · På jobb + Jobb. Ingen gamle pulse-kort.
+ * Claude-designet (Endwise Mobile/Desktop .dc): toppkort · Analyse ·
+ * Innboks · Lager · På jobb + Ny Jobb. Ekte 0, ingen mock.
  */
 export const DEALER_PULSE_KEYS = [
   'idag',
+  'analyser',
   'innboks',
   'lager',
-  'analyser',
   'team',
   'jobb',
 ] as const satisfies readonly PhoneKortKey[];
 
 export const DEALER_PHONE_HJEM: PhoneHjemRad[] = [
   { keys: ['idag'], kind: 'hero' },
+  { keys: ['analyser'], kind: 'full' },
   { keys: ['innboks'], kind: 'full' },
   { keys: ['lager'], kind: 'full' },
-  { keys: ['analyser'], kind: 'full' },
   { keys: ['team', 'jobb'], kind: 'pair' },
 ];
 

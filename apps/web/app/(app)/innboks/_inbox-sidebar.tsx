@@ -24,6 +24,7 @@ import {
 } from '../_shell/inbox-del';
 import { useInboxFilter } from '../_shell/inbox-filter';
 import { PhoneSokFelt } from '../_shell/phone-sok-felt';
+import { MobilSideBunn } from '../_shell/pulse-kort';
 import { InboxFilterChips } from './_filter-chips';
 import { type Kanal, KanalMerke, tilKanal } from './_kanal';
 import {
@@ -283,6 +284,20 @@ export function InboxSidebar() {
             />
           </div>
         ) : null}
+        {/* Claude-designet: stor «Ny melding»-rad + bunntekst nederst (telefon). */}
+        <div className="mt-auto flex flex-col gap-3 pt-2 md:hidden">
+          <Link
+            href={'/innboks?ny=1' as Route}
+            data-innboks-bunn-ny
+            className="flex items-center gap-2.5 rounded-lg border border-border bg-card py-2.5 pr-2.5 pl-5 [touch-action:manipulation]"
+          >
+            <span className="flex-1 text-title font-[650] text-fg">Ny melding</span>
+            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-md bg-fg text-bg">
+              <NyMeldingIkon size={20} />
+            </span>
+          </Link>
+        </div>
+        <MobilSideBunn />
       </Side>
     </aside>
   );

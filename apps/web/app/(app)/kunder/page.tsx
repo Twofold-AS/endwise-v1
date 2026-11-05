@@ -8,6 +8,7 @@ import { Suspense, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { NyKnapp, useNyHandling } from '../_shell/ny-handling';
 import { PhoneSokFelt } from '../_shell/phone-sok-felt';
+import { MobilSideBunn } from '../_shell/pulse-kort';
 import { RadMedMeny, RadMeny } from '../_shell/rad-meny';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
@@ -84,7 +85,7 @@ function KunderInner() {
       {aktiv === 'alle' || nyKunde ? (
         <Side
           tittel="Kunder"
-          undertekst={kunder.isLoading ? undefined : `${liste.length} kunder`}
+          undertekst={kunder.isLoading ? undefined : `${liste.length} registrerte kunder`}
           handling={<NyKnapp onClick={ny.apne}>Ny kunde</NyKnapp>}
           className="max-md:px-0"
         >
@@ -237,6 +238,7 @@ function KunderInner() {
               <Users size={14} />
               {kunder.isLoading ? 'Henter kunder' : `${liste.length} kunder`}
             </p>
+            <MobilSideBunn />
           </div>
         </Side>
       ) : null}

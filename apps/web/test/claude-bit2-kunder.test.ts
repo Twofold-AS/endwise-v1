@@ -218,9 +218,9 @@ describe('Claude Design BIT 2 — Kunder alfa-rail + profil', () => {
   it('BIT 1 hjem/chrome er urørt — ingen nye piller, ingen Tjenester-chrome', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
+      'analyser',
       'innboks',
       'lager',
-      'analyser',
       'team',
       'jobb',
     ]);

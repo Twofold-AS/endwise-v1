@@ -30,7 +30,8 @@ describe('Mikael telefon-chrome — to toppbarer, sidebar skjult (07.09.2026)', 
     expect(shell).toMatch(/data-phone-search/);
     expect(shell).toMatch(/data-phone-profile/);
     expect(shell).toMatch(/data-phone-dest/);
-    expect(shell).toMatch(/Mer/);
+    // Claude-designets fanerad: alle destinasjoner i railen, ingen «Mer»-skjul.
+    expect(shell).not.toMatch(/Mer/);
     expect(shell).toMatch(/fixed inset-x-0 top-0 z-\[60\]/);
     expect(shell).toMatch(/md:hidden/);
     expect(shell).toMatch(/PhoneSokFelt|ew-felt/);

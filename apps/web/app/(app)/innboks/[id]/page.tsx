@@ -562,12 +562,12 @@ function Message({
          * være synlig uten å lese merket.
          */}
         <p
-          className={`whitespace-pre-wrap break-words rounded-[20px] px-3 py-2 text-body text-fg ${
+          className={`whitespace-pre-wrap break-words rounded-[20px] px-3 py-2 text-body ${
             mine
-              ? 'bg-surface-2'
+              ? 'bg-fg text-bg'
               : agent
-                ? 'border border-border bg-surface-2'
-                : 'border border-border bg-[#f3f3f3]'
+                ? 'border border-border bg-surface-2 text-fg'
+                : 'border border-border bg-[#f3f3f3] text-fg'
           } ${utenfor && kanal !== 'app' ? 'border-l border-l-fg-muted' : ''}`}
         >
           {body}

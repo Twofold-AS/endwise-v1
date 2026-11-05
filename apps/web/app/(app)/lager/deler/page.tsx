@@ -37,7 +37,8 @@ function DelerInner() {
   const [retning, setRetning] = useState<'asc' | 'desc'>('asc');
   const [valgtDel, setValgtDel] = useState<{ id: string; sku: string; name: string } | null>(null);
   const [detaljId, setDetaljId] = useState<string | null>(null);
-  const [nyDel, setNyDel] = useState(false);
+  // ?ny=1 lar Lager-oversiktens primærknapp åpne Ny del-skjemaet direkte.
+  const [nyDel, setNyDel] = useState(params?.get('ny') === '1');
 
   const deler = trpc.inventory.listParts.useQuery({
     sok: sok.trim() || undefined,

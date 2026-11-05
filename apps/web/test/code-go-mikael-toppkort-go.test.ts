@@ -64,22 +64,19 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
     expect(sirkel).toMatch(/data-pulse-dag-slutt/);
   });
 
-  it('Avvik/Forespørsler er Modus-plate uten ekstra ring, spørsmålstegn', () => {
+  it('Avvik/Forespørsler er én segmentert boks — rød trekant, gult spørsmålstegn', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const boks = funksjon(kort, 'PulseAvvikForesporBoks');
-    expect(boks).toMatch(/ew-modus-plate/);
-    expect(boks).toMatch(/rounded-full/);
-    expect(boks).toMatch(/p-0\.5/);
-    expect(boks).toMatch(/size-7|h-7/);
-    expect(boks).toMatch(/max-w-\[50%\]/);
-    expect(boks).not.toMatch(/w-px/);
-    expect(boks).not.toMatch(/ring-1 ring-divide/);
+    expect(boks).toMatch(/rounded-\[13px\] border border-divide/);
+    expect(boks).toMatch(/w-px/);
     expect(boks).toMatch(/CircleQuestionMark/);
     expect(boks).toMatch(/TriangleAlert/);
-    expect(boks).not.toMatch(/text-danger|text-warn/);
+    expect(boks).toMatch(/text-danger/);
+    expect(boks).toMatch(/text-warn/);
+    expect(boks).not.toMatch(/#0066ff/);
   });
 
-  it('ukedag+dato øverst til venstre i text-label, ikke fet', () => {
+  it('ukedag øverst til venstre, stor og fet — dato muted (Claude-designet)', () => {
     const dag = pulsdagOverskrift(osloVeggklokke('2026-09-08', 10, 0));
     expect(dag.ukedag).toBe(osloUkedagNavn(osloVeggklokke('2026-09-08', 10, 0)));
     expect(dag.dato).toBe(osloDatoKort(osloVeggklokke('2026-09-08', 10, 0)));
@@ -88,9 +85,10 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
-    expect(hero).toMatch(/text-label font-normal/);
-    expect(hero).toMatch(/items-center/);
+    expect(hero).toMatch(/text-\[20px\][\s\S]*?font-semibold/);
+    expect(hero).toMatch(/text-\[17px\][\s\S]*?text-fg-muted/);
     expect(hero).toMatch(/items-end/);
-    expect(hero).toMatch(/PulseEndringerLenke/);
+    expect(hero).toMatch(/PulseEndringerKnapp/);
+    expect(hero.indexOf('data-pulse-teller-rad')).toBeLessThan(hero.indexOf('PulseEndringerKnapp'));
   });
 });

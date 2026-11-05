@@ -22,20 +22,18 @@ function funksjon(kilde: string, navn: string) {
 }
 
 describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
-  it('Avvik og Forespørsler er to Modus-sirkler + tall, maks 50 %', () => {
+  it('Avvik og Forespørsler er én segmentert boks med skille (Claude-designet)', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const avvik = funksjon(kort, 'PulseAvvikForesporBoks');
-    expect(avvik).toMatch(/data-pulse-modus-ikon/);
-    expect(avvik).toMatch(/ew-modus-plate/);
-    expect(avvik).toMatch(/p-0\.5/);
-    expect(avvik).toMatch(/size-7|h-7/);
-    expect(avvik).toMatch(/max-w-\[50%\]/);
+    expect(avvik).toMatch(/rounded-\[13px\] border border-divide/);
     expect(avvik).toMatch(/data-pulse-avvik-felt/);
     expect(avvik).toMatch(/data-pulse-forespor-felt/);
     expect(avvik).toMatch(/TriangleAlert/);
     expect(avvik).toMatch(/CircleQuestionMark/);
-    expect(avvik).not.toMatch(/w-px/);
-    expect(avvik).not.toMatch(/flex-1/);
+    expect(avvik).toMatch(/w-px/);
+    expect(avvik).toMatch(/text-danger/);
+    expect(avvik).toMatch(/text-warn/);
+    expect(avvik).not.toMatch(/#0066ff/);
   });
 
   it('PPF-etiketter sitter på samme linje som 08.00/19.00', () => {
@@ -47,7 +45,7 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     );
     expect(hero).toMatch(/items-end/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
-    expect(hero).toMatch(/PulseEndringerLenke/);
+    expect(hero).toMatch(/PulseEndringerKnapp/);
   });
 
   it('dagsbuen er kun Amicro-halvsirkel med blått fyll og 08.00/19.00', () => {

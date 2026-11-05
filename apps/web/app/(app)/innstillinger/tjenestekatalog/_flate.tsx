@@ -1,14 +1,14 @@
 'use client';
 
-import { ArrowUpRight } from '@endwise/ui';
+import { ArrowUpRight, FilterChips } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../../_lib/use-org-role';
 import { NyKnapp } from '../../_shell/ny-handling';
 import { PhoneSokFelt } from '../../_shell/phone-sok-felt';
-import { SorteringArk, SorteringValg } from '../../_shell/sortering-ark';
+import { MobilSideBunn } from '../../_shell/pulse-kort';
 import { Feil, Laster, Tomt } from '../../kunder/_delt';
 import { tjenesterPageSub, trefferTjenesteSok } from '../../prisliste/_hub';
 import { TYPE_VALG } from './_felles';
@@ -36,8 +36,6 @@ export function PrislisteFlate({
   const [filter, setFilter] = useState<string>('alle');
   const [sok, setSok] = useState('');
   const [nyApen, setNyApen] = useState(false);
-  const [sorterApen, setSorterApen] = useState(false);
-  const sorterRef = useRef<HTMLDivElement>(null);
 
   /**
    * `inkluderInaktive` er sann her, og usann alle andre steder.
@@ -78,8 +76,8 @@ export function PrislisteFlate({
         {tjenester.isLoading ? 'Laster tjenester …' : tjenesterPageSub(tilbys)}
       </p>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div data-tjenester-sok className="min-w-[180px] flex-1">
+      <div className="flex flex-col gap-3">
+        <div data-tjenester-sok className="min-w-[180px]">
           <PhoneSokFelt
             value={sok}
             onChange={(e) => setSok(e.target.value)}
@@ -87,37 +85,12 @@ export function PrislisteFlate({
             aria-label="Søk tjeneste"
           />
         </div>
-        <div ref={sorterRef} className="relative">
-          <button
-            type="button"
-            data-tjenester-sortering
-            aria-expanded={sorterApen}
-            aria-haspopup="true"
-            aria-label="Sortering"
-            onClick={() => setSorterApen((v) => !v)}
-            className={`shrink-0 border-b-2 pb-1 text-label ${
-              sorterApen ? 'border-fg font-[650] text-fg' : 'border-transparent text-fg-muted'
-            }`}
-          >
-            Sortering
-          </button>
-          <SorteringArk apen={sorterApen} onLukk={() => setSorterApen(false)} anker={sorterRef}>
-            {FILTRE.map((f) => (
-              <SorteringValg
-                key={f.key}
-                valgt={filter === f.key}
-                onVelg={() => {
-                  setFilter(f.key);
-                  setSorterApen(false);
-                }}
-              >
-                {f.label}
-              </SorteringValg>
-            ))}
-          </SorteringArk>
-        </div>
-
-        <div className="flex-1" />
+        <FilterChips
+          chips={FILTRE}
+          valgt={filter}
+          onChange={setFilter}
+          ariaLabel="Filtrer på kjøretøytype"
+        />
       </div>
 
       {isAdmin ? <NyTjeneste apen={nyApen} onLukk={() => setNyApen(false)} /> : null}
@@ -164,6 +137,7 @@ export function PrislisteFlate({
         Ser du etter hva dere betaler Endwise? Det ligger under «Tillegg og priser»
         <ArrowUpRight size={13} strokeWidth={1.75} />
       </Link>
+      <MobilSideBunn />
     </div>
   );
 }

@@ -24,39 +24,39 @@ function funksjon(kilde: string, navn: string) {
 }
 
 describe('CODE-GO Mikael — visual + forms polish', () => {
-  it('toppkort: text-label dag, 08.00/19.00, ink-dither, Modus-Avvik, Endringer-lenke', () => {
+  it('toppkort: stor dato-tittel, 08.00/19.00, ink-dither, segmentert avvik-boks, Endringer-knapp', () => {
     expect(fmtPulseTime(8)).toBe('08.00');
     expect(fmtPulseTime(19)).toBe('19.00');
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     const sirkel = funksjon(kort, 'PulseDagSirkel');
-    const endringer = funksjon(kort, 'PulseEndringerLenke');
+    const endringer = funksjon(kort, 'PulseEndringerKnapp');
     const avvik = funksjon(kort, 'PulseAvvikForesporBoks');
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
-    expect(hero).toMatch(/text-label font-normal/);
+    expect(hero).toMatch(/font-semibold/);
     expect(sirkel).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
     expect(sirkel).toMatch(/PULSE_DAG_FYLL_SOFT/);
     expect(sirkel).toMatch(/DitherDonutChart/);
     expect(sirkel).not.toMatch(/<svg|halvBue|strokeWidth/);
     expect(sirkel).not.toMatch(/data-pulse-dag-naa/);
-    expect(endringer).toMatch(/ArrowUpRight/);
-    expect(endringer).toMatch(/text-label font-normal/);
-    expect(endringer).not.toMatch(/font-\[650\]/);
+    expect(endringer).toMatch(/ArrowRight/);
+    expect(endringer).toMatch(/bg-fg/);
+    expect(endringer).toMatch(/text-bg/);
+    expect(endringer).not.toMatch(/#0066ff/);
     expect(endringer).not.toMatch(/ChevronRight/);
-    expect(avvik).toMatch(/ew-modus-plate/);
-    expect(avvik).toMatch(/p-0\.5/);
-    expect(avvik).toMatch(/size-7|h-7/);
-    expect(avvik).toMatch(/max-w-\[50%\]/);
-    expect(avvik).not.toMatch(/w-px/);
+    expect(avvik).toMatch(/rounded-\[13px\] border border-divide/);
+    expect(avvik).toMatch(/w-px/);
+    expect(avvik).toMatch(/text-danger/);
+    expect(avvik).toMatch(/text-warn/);
     expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
   });
 
-  it('Analyser er én boks over Jobb med Alle tall', () => {
+  it('Analyser er én boks under toppkortet med Alle tall', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
+      'analyser',
       'innboks',
       'lager',
-      'analyser',
       'team',
       'jobb',
     ]);
@@ -73,7 +73,7 @@ describe('CODE-GO Mikael — visual + forms polish', () => {
     expect(analyser).not.toMatch(/scale-\[1\.65\]/);
     expect(analyser).toMatch(/Alle tall/);
     expect(analyser).toMatch(/data-analyser-alle-tall/);
-    expect(analyser).toMatch(/ArrowUpRight/);
+    expect(analyser).toMatch(/ArrowRight/);
     expect(analyser).not.toMatch(/>Analyser</);
   });
 

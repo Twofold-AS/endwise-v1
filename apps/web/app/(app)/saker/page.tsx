@@ -7,6 +7,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { osloKalenderdag } from '../_lib/oslo-dag';
 import { NyKnapp, useNyHandling } from '../_shell/ny-handling';
 import { OpprettSkuff } from '../_shell/opprett-skuff';
+import { MobilSideBunn } from '../_shell/pulse-kort';
 import { SideChromeSkall } from '../_shell/side-chrome-skall';
 import { TimeplanStripe } from '../_shell/timeplan-stripe';
 import { NyJobbSkjema } from '../bookinger/ny/page';
@@ -78,6 +79,7 @@ function TimeplanPageInner() {
             <NyJobbSkjema onFerdig={lukkNy} />
           </OpprettSkuff>
         ) : null}
+        <MobilSideBunn />
       </Side>
     </SideChromeSkall>
   );

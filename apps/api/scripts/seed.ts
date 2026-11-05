@@ -36,7 +36,15 @@ async function ensureUser(email: string, name: string): Promise<string> {
   } catch {
     // finnes trolig fra før — hentes under.
   }
-  const [u] = await db.select().from(schema.user).where(eq(schema.user.email, email));
+  let [u] = await db.select().from(schema.user).where(eq(schema.user.email, email));
+  if (!u) {
+    // Passord-innlogging er av (magic link + OTP), så signUpEmail feiler
+    // alltid. Dev-seeden lager derfor identitetsraden direkte — demo-kontoene
+    // logger likevel inn med engangskode, ikke passord.
+    const id = randomUUID();
+    await db.insert(schema.user).values({ id, name, email, emailVerified: true });
+    [u] = await db.select().from(schema.user).where(eq(schema.user.email, email));
+  }
   if (!u) throw new Error(`Klarte ikke opprette/hente bruker ${email}`);
   await db
     .update(schema.user)
@@ -156,9 +164,15 @@ async function ensurePlatformTenant(ownerUserId: string): Promise<string> {
 }
 
 async function setMemberRole(orgId: string, userId: string, role: string): Promise<void> {
-  await db
-    .delete(schema.member)
-    .where(and(eq(schema.member.organizationId, orgId), eq(schema.member.userId, userId)));
+  // Upsert, ikke delete+insert: eier_lås-triggeren (0021) nekter å slette
+  // plattform-eieren, og slett+sett-inn av samme rad er en degradering i
+  // triggerens øyne. UPDATE av rollen til samme verdi er lov.
+  const oppdatert = await db
+    .update(schema.member)
+    .set({ role })
+    .where(and(eq(schema.member.organizationId, orgId), eq(schema.member.userId, userId)))
+    .returning({ id: schema.member.id });
+  if (oppdatert.length > 0) return;
   await db.insert(schema.member).values({
     id: randomUUID(),
     organizationId: orgId,

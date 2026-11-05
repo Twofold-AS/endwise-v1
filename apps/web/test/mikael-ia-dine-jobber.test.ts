@@ -146,7 +146,7 @@ describe('Forhandler-info uten Grainient', () => {
     expect(dealer).toMatch(/PulseHeroFlate/);
     expect(mek).toMatch(/ForhandlerInfoKort/);
     expect(dash).not.toMatch(/ForhandlerInfoKort/);
-    expect(dash).toMatch(/DealerPulseKort|DealerDestinasjonskort/);
+    expect(dash).toMatch(/VerkstedetDesktopBred|DealerPulseKort|DealerDestinasjonskort/);
     expect(dash).toMatch(/Verkstedet/);
     expect(innboks).toMatch(/ForhandlerInfoKort/);
     expect(`${dealer}\n${mek}\n${dash}\n${innboks}`).not.toMatch(

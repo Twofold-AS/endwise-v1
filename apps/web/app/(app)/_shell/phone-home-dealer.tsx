@@ -1,6 +1,6 @@
 'use client';
 
-import { Inbox, Package, Side, Users } from '@endwise/ui';
+import { Inbox, Package, Users } from '@endwise/ui';
 import { useEffect, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
@@ -17,11 +17,17 @@ import {
   pulsdagOverskrift,
   tallKortStats,
 } from './phone-home-pulse';
-import { PulseAnalyserKort, PulseHeroFlate, PulseJobbFlis, PulseRadKort } from './pulse-kort';
+import {
+  PulseAnalyserKort,
+  PulseBunntekst,
+  PulseHeroFlate,
+  PulseJobbFlis,
+  PulseRadKort,
+} from './pulse-kort';
 
 /**
  * Forhandler-hjem — Verkstedet / `/home`.
- * Låste flater: toppkort · Innboks · Lager · Tall · På jobb + Jobb.
+ * Claude-designet: toppkort · Analyse · Innboks · Lager · På jobb + Ny Jobb.
  * Tom dag = ekte 0, ikke PULSE_PLAUSIBEL. Boksene står.
  */
 export function useDealerHjemKort() {
@@ -121,10 +127,17 @@ export function DealerPulseKort({ className }: { className?: string }) {
         lasterEndringer={lasterJobber}
       />
 
+      <PulseAnalyserKort
+        stats={analyser}
+        href={PHONE_KORT_META.analyser.href}
+        forhandlerNavn={tenantName}
+        laster={lasterJobber}
+      />
+
       <PulseRadKort
         href={PHONE_KORT_META.innboks.href}
         ikon={Inbox}
-        tittel="Les alle siste meldinger"
+        tittel="Uleste meldinger"
         teller={innboks.meldinger}
         laster={threads.isLoading}
       />
@@ -135,13 +148,6 @@ export function DealerPulseKort({ className }: { className?: string }) {
         tittel={lager.tittel}
         teller={lager.antall}
         laster={deler.isLoading}
-      />
-
-      <PulseAnalyserKort
-        stats={analyser}
-        href={PHONE_KORT_META.analyser.href}
-        forhandlerNavn={tenantName}
-        laster={lasterJobber}
       />
 
       <div data-pulse-bunn className="flex w-full gap-3">
@@ -163,6 +169,8 @@ export function DealerPulseKort({ className }: { className?: string }) {
           <PulseJobbFlis />
         </div>
       </div>
+
+      <PulseBunntekst />
     </div>
   );
 }
@@ -172,14 +180,11 @@ export const DealerDestinasjonskort = DealerPulseKort;
 
 export function PhoneHomeDealer() {
   return (
-    <Side
-      tittel="Verkstedet"
-      className="md:hidden [&>header]:sr-only"
-      undertekst="Her er dagen din."
-    >
+    <div className="md:hidden">
+      <h1 className="sr-only">Verkstedet</h1>
       <DealerPulseKort
-        className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-4 py-0`}
+        className={`${HJEM_SCROLL_FLATE} ${VERKSTED_INNHOLD} flex flex-col gap-3 py-0`}
       />
-    </Side>
+    </div>
   );
 }

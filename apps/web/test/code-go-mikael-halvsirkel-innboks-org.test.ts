@@ -75,7 +75,9 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
     expect(hero).toMatch(/PulseEndringerKnapp/);
     expect(hero).not.toMatch(/PulseValgLenke/);
-    expect(kort).toMatch(/rounded-\[13px\] border border-divide/);
+    expect(kort).toMatch(/rounded-\[13px\] border/);
+    expect(kort).toMatch(/border-divide/);
+    expect(kort).toMatch(/border-border/);
     expect(kort).toMatch(/data-pulse-avvik-boks/);
     expect(kort).toMatch(/CircleQuestionMark/);
     // Claude-designet: avvik er rød, forespørsel er gul — bevisste statusfarger.

@@ -38,7 +38,7 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
     ]);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/På jobb/);
+    expect(hjem).toMatch(/På Jobb/);
     expect(hjem).toMatch(/PulseJobbFlis/);
     expect(hjem).not.toMatch(/Dagen din/);
     expect(hjem).not.toMatch(/Trenger deg/);

@@ -64,7 +64,9 @@ describe('CODE-GO Mikael — IA + chrome', () => {
     expect(hero).toMatch(/PulseEndringerKnapp/);
     expect(hero).toMatch(/Endringer/);
     expect(hero).not.toMatch(/PulseValgLenke/);
-    expect(kort).toMatch(/rounded-\[13px\] border border-divide/);
+    expect(kort).toMatch(/rounded-\[13px\] border/);
+    expect(kort).toMatch(/border-divide/);
+    expect(kort).toMatch(/border-border/);
     expect(les('../app/(app)/avvik/page.tsx')).toMatch(/jobber\?fane=avvik/);
     expect(les('../app/(app)/timeplan/endringer/page.tsx')).toMatch(/jobber\?fane=endringer/);
   });

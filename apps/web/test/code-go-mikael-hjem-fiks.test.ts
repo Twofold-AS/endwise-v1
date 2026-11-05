@@ -25,7 +25,9 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
   it('Avvik og Forespørsler er én segmentert boks med skille (Claude-designet)', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const avvik = funksjon(kort, 'PulseAvvikForesporBoks');
-    expect(avvik).toMatch(/rounded-\[13px\] border border-divide/);
+    expect(avvik).toMatch(/rounded-\[13px\] border/);
+    expect(avvik).toMatch(/border-divide/);
+    expect(avvik).toMatch(/border-border/);
     expect(avvik).toMatch(/data-pulse-avvik-felt/);
     expect(avvik).toMatch(/data-pulse-forespor-felt/);
     expect(avvik).toMatch(/TriangleAlert/);
@@ -83,6 +85,6 @@ describe('CODE-GO Mikael — hjem-fiks etter #168', () => {
     expect(analyser).not.toMatch(/#0066ff/);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem.indexOf('PulseHeroFlate')).toBeGreaterThan(-1);
-    expect(hjem.indexOf('På jobb')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('På Jobb')).toBeGreaterThan(-1);
   });
 });

@@ -92,7 +92,7 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(hjem).not.toMatch(/data-hjem-seksjon/);
     expect(hjem).toMatch(/PulseJobbFlis/);
     expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/På jobb/);
+    expect(hjem).toMatch(/På Jobb/);
     expect(hjem).toMatch(/invalidateHjemPulse|bookings\.list/);
     expect(hjem).toMatch(/idagVisning/);
     expect(kort).toMatch(/Planlagt/);

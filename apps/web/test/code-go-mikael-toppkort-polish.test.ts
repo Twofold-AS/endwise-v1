@@ -89,7 +89,9 @@ describe('CODE-GO Mikael — toppkort polish 08–19 + bunn-ikoner + Jobb', () =
     expect(hero).toMatch(/Ferdig/);
     expect(kort).toMatch(/TriangleAlert/);
     expect(kort).toMatch(/CircleQuestionMark/);
-    expect(kort).toMatch(/rounded-\[13px\] border border-divide/);
+    expect(kort).toMatch(/rounded-\[13px\] border/);
+    expect(kort).toMatch(/border-divide/);
+    expect(kort).toMatch(/border-border/);
     expect(kort).not.toMatch(/PulseMockBadge/);
   });
 

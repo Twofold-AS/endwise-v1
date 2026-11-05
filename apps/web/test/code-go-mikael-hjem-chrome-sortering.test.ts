@@ -43,7 +43,7 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     const sirkel = funksjon(kort, 'PulseDagSirkel');
-    const tall = funksjon(kort, 'PulseTall');
+    const tall = funksjon(kort, 'PulseTallStor');
     expect(hero.indexOf('data-pulse-hero-topp')).toBeLessThan(
       hero.indexOf('data-pulse-teller-rad'),
     );
@@ -54,10 +54,12 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
     expect(hero.slice(hero.indexOf('data-pulse-hero-bunn'))).toMatch(/PulseEndringerKnapp/);
     expect(tall).toMatch(/data-pulse-tall-etikett/);
-    expect(tall).toMatch(/text-\[36px\]/);
+    expect(tall).toMatch(/text-\[38px\]/);
     expect(sirkel).toMatch(/data-pulse-dag-fot/);
     expect(sirkel).toMatch(/h-\[16px\]/);
-    expect(kort).toMatch(/rounded-\[13px\] border border-divide/);
+    expect(kort).toMatch(/rounded-\[13px\] border/);
+    expect(kort).toMatch(/border-divide/);
+    expect(kort).toMatch(/border-border/);
   });
 
   it('Analyser er én boks: Analyse + fire KPI uten dither', () => {
@@ -88,7 +90,7 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(stats.find((s) => s.id === 'bookinger')?.verdi).toBe(0);
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem.indexOf('PulseHeroFlate')).toBeGreaterThan(-1);
-    expect(hjem.indexOf('På jobb')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('På Jobb')).toBeGreaterThan(-1);
     expect(hjem).toMatch(/gap-3/);
   });
 

@@ -39,6 +39,17 @@ Mobil er hovedfokus; desktop-arbeid stoppet. Følgende er levert i kode (branch 
 
 Desktop (F5 bred hjem-flate + dag-tidslinje) er beholdt — den er fullstendig adskilt fra mobil og svekker den ikke.
 
+## F6-31 — Verkstedet-hjem på mobil bygget om 1:1 mot Mobile.dc (05.11.2026, Mikael: én side om gangen)
+
+Kun hjemsiden for forhandler (`/home`) på telefon, side-om-side-verifisert (Claude | før | etter) på 402px mot `Endwise Mobile.dc.html` rendret headless. Ingen andre sider rørt; desktop-hjem og mekaniker-hjem deler komponentene via desktop-default og er uendret (egen verifisering). Alt i `_shell/pulse-kort.tsx`, `_shell/phone-home-dealer.tsx`, `_shell/phone-home.ts` (`PULSE_MOBIL_*`-flater) og `_shell/phone-home-pulse.ts` (`dagPrikkPunkt`):
+
+- **Scroller:** 16px side-luft + 14px topp (før: kant-i-kant). Kolonnen fyller høyden (`flex-1`-kjede), Analyse-kortet suger resthøyden (`flex-1` + grid `content-between`), bunntekst nederst.
+- **Hero (26px, padding 20/20/16+10):** dato som én rad (ukedag 20px/700 + dato 17px muted, mb-20), tall-rad som innholdsbredde flex gap-16 (ikke grid-cols-3) med 700 38px sifre og 400 15px etiketter, prikk-halvsirkel 132×66 (`PulseDagSirkelPrikk` — dynamisk fylt andel + nål, fg 16 %/68 %, fot 14px) i stedet for Amicro-dither på mobil. Avvik/Forespørsler-boks med 400 16px-tall og chip-kant; Endringer-knapp fast 138×37 (400 16px, ink, aldri #0066ff).
+- **Analyse (26px, 14/20-padding):** tittel 700 19px, «siste 30 dager» 400 15px, «Alle tall →» 15px, grid 2 kol gap 10/18 med 400 14px etiketter, 700 22px tall og 500 13px delta uten ikon. Ærlige «Ingen data»-stubber beholdt (aldri diktede tall).
+- **Radkort (22px, padding 10/20/10/10, gap 14):** mørk ikon-tile 46×46 (bg-fg, lyst ikon 24px) i stedet for hvit tile, 400 17px etikett, 500 17px teller, pil i fg.
+- **På Jobb | Ny Jobb (22px):** «På Jobb» med 4/8-format uten mellomrom; «Ny Jobb» 700 19px + mørk 46×46 tile-knapp (pluss 24px).
+- Mobil-varianter er `mobil`-props på delte komponenter (`PulseRadKort`, `PulseAnalyserKort`, `PulseAvvikForesporBoks`, `PulseEndringerKnapp`, `PulseIkonFlate mork`) — desktop-default uendret, verifisert med desktop-skjermbilde.
+
 ## 0. Delte byggeklosser og tilstander
 
 Gjelder på tvers av flatene: sidemal, rader, knapper, chips, skjemafelt, tomt, lasting, toasts, modaler, ark, søk.

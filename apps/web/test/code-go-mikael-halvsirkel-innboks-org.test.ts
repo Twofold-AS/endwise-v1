@@ -168,7 +168,8 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(samtale).toMatch(/NySamtaleKnapperad/);
 
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
-    expect(shell).toMatch(/delMobilDest/);
+    expect(shell).toMatch(/dest\.map/);
+    expect(shell).not.toMatch(/delMobilDest/);
   });
 
   it('Organisasjon-oversikt er Innstillinger-rader', () => {

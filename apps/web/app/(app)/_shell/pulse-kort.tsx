@@ -563,3 +563,15 @@ export function PulseBunntekst() {
     </p>
   );
 }
+
+/**
+ * Bunntekst nederst på enhver telefon-side (Claude-designet: alle skjermer
+ * avsluttes med «Endwise levert av TwoFold»). Kun telefon — desktop urørt.
+ */
+export function MobilSideBunn() {
+  return (
+    <div data-mobil-side-bunn className="mt-auto pt-2 md:hidden">
+      <PulseBunntekst />
+    </div>
+  );
+}

@@ -1,0 +1,84 @@
+/* Bencho step-player (.spl) — MIT, https://bencho.dev/?c=step-player&theme=light
+   Grunnreglene er Benchos, mappet til Endwise/Mobbin via tokens.css.
+   Uten auto-avspilling: dottene tweenes bare når aktiv slot endres —
+   520ms easeOutCubic som i Bencho-kilden (ie = 1-(1-t)^3, ce = 520). */
+
+.spl {
+  font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.spl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spl-slab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fill-slab, var(--card));
+  border: 1px solid var(--pane-edge);
+}
+
+.spl-track {
+  flex: none;
+  position: relative;
+  transition: width 0.52s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.spl-dot {
+  position: absolute;
+  top: 0;
+  border: 0;
+  border-radius: 999px;
+  height: 100%;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--fill-on, var(--ink)) 16%, var(--fill-slab, var(--card)));
+  transition:
+    left 0.52s cubic-bezier(0.33, 1, 0.68, 1),
+    width 0.52s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.spl-dot::after {
+  content: "";
+  position: absolute;
+  inset: -12px -4px;
+}
+
+.spl-dot:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--fill-slab, var(--card)),
+    0 0 0 4px rgba(var(--fill-on-rgb, var(--ink-rgb)), 0.45);
+  outline: none;
+}
+
+.spl-ink {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--fill-on, var(--ink));
+  transition: opacity 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spl-track,
+  .spl-dot,
+  .spl-ink {
+    transition: none;
+  }
+}

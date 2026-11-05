@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, type Database, eq, isNull, or, schema, sql, withTenant } from '@endwise/db';
+import { and, createDb, type Database, eq, isNull, or, schema, sql, withTenant } from '@endwise/db';
 import { erEnkelEpost } from './resend-avsender.ts';
 
 /** Opprett user ved bekreftet kode når dest er kjent kunde uten konto. */
@@ -68,11 +68,26 @@ export async function harForhandlerRolle(db: Database, userId: string, tenantId:
   return Boolean(m?.role && (m.role === 'dealer_admin' || m.role === 'dealer_staff'));
 }
 
+let slugOppslagDb: Database | undefined;
+
+/**
+ * Slug→tenant må gå som eier. Policyen `tenants_slug_oppslag` utelukker
+ * `endwise_app` bevisst — som app-rolle gir oppslaget stille 0 rader, og
+ * kundeinnlogging på forhandlerhost dør lydløst. Faller tilbake på den
+ * innkommende klienten der DATABASE_URL ikke finnes.
+ */
+function dbForSlugOppslag(fallback: Database): Database {
+  const url = process.env.DATABASE_URL;
+  if (!url) return fallback;
+  slugOppslagDb ??= createDb(url);
+  return slugOppslagDb;
+}
+
 export async function lesTenantIdFraSlug(db: Database, slug: string): Promise<string | null> {
   const s = slug.trim().toLowerCase();
   if (!s) return null;
   try {
-    return await db.transaction(async (tx) => {
+    return await dbForSlugOppslag(db).transaction(async (tx) => {
       await tx.execute(sql`select set_config('app.slug_sjekk', ${s}, true)`);
       const [t] = await tx
         .select({ id: schema.tenants.id })

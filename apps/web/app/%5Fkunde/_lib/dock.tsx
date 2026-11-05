@@ -16,7 +16,7 @@ const IKON = {
   profil: CircleUser,
 } as const;
 
-function RonnyDockIkon({ size = 20 }: { size?: number; strokeWidth?: number }) {
+function RonnyDockIkon({ size = 44 }: { size?: number; strokeWidth?: number }) {
   return <RonnyBot size={ronnySizeForSirkel(size)} idleSett={RONNY_PHONE_IDLE} />;
 }
 
@@ -57,6 +57,7 @@ export function KundeDock() {
               items={[{ key: 'ronny', label: 'Ronny', Icon: RonnyDockIkon }]}
               active={ronny ? 'ronny' : ''}
               onSelect={() => setRonny(true)}
+              utenPanel
             />
           </div>
         </div>

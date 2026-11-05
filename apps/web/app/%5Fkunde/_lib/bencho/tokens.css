@@ -1,6 +1,7 @@
 /* Bencho dock-tokens, scopet og mappet til Endwise/Mobbin.
    ⛔ #0066ff / --pick-blå — CTA og aksent er ink. */
-[data-bencho-dock] {
+[data-bencho-dock],
+[data-bencho-kjoretoy] {
   --font-ui: var(--ew-font-sans, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif);
   --ink: var(--ew-ink-utility, #141414);
   --ink-muted: var(--ew-fg-muted, #616161);

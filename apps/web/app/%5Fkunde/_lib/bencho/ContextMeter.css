@@ -1,0 +1,157 @@
+/* Bencho context-meter (.ctx) — MIT, https://bencho.dev/?c=context-meter&theme=light
+   Grunnreglene (kort, hode, knapp, bar) er Benchos, mappet til Endwise/Mobbin
+   via tokens.css. Kategorifargene --k-* er tatt ut — statusbaren er ink på
+   grått, og segmentene er LIKE STORE (jobbfremdrift, ikke proporsjonal mix). */
+
+.ctx {
+  --ctx-empty: color-mix(in srgb, var(--fill-on, #17181a) 8%, var(--fill-slab, #fff));
+  box-sizing: border-box;
+  background: var(--fill-slab, var(--card, #fff));
+  width: 100%;
+  color: var(--fill-on, var(--ink, #17181a));
+  font-family: var(--font-ui);
+  -webkit-user-select: none;
+  user-select: none;
+  border-radius: 20px;
+  border: 1px solid var(--pane-edge, #e0e0e0);
+  padding: 16px;
+}
+
+.ctx-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ctx-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+/* «Compact» i Bencho — her info-lenke. Samme grå pill. */
+.ctx-act {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  background: color-mix(in srgb, var(--fill-on, #17181a) 10%, var(--fill-slab, #fff));
+  height: 28px;
+  color: var(--fill-on, #17181a);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 12px;
+  transition:
+    scale 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.22s,
+    color 0.22s;
+}
+
+.ctx-act:active {
+  scale: 0.96;
+}
+
+.ctx-act:focus-visible {
+  outline: 2px solid var(--signal, #141414);
+  outline-offset: 2px;
+}
+
+/* Grå boks der Bencho har tallet (.ctx-figure). Samme grå som .ctx-act. */
+.ctx-boks {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin: 12px 0 16px;
+  background: color-mix(in srgb, var(--fill-on, #17181a) 10%, var(--fill-slab, #fff));
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.ctx-bilde {
+  flex: none;
+  width: 96px;
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--fill-on, #17181a) 8%, var(--fill-slab, #fff));
+  color: color-mix(in srgb, var(--fill-on, #17181a) 45%, var(--fill-slab, #fff));
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+}
+
+.ctx-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.ctx-modell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.ctx-rad {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.ctx-etikett {
+  color: color-mix(in srgb, var(--fill-on, #17181a) 52%, var(--fill-slab, #fff));
+}
+
+/* Statusbar: Benchos .ctx-bar (gap 3, høyde 40, 6px-radius), men alle
+   fordelingsboksene er like store — fremdrift = antall fylte. */
+.ctx-bar {
+  display: flex;
+  gap: 3px;
+  height: 40px;
+}
+
+.ctx-seg {
+  display: block;
+  flex: 1 1 0;
+  min-width: 3px;
+  border-radius: 6px;
+  background: var(--ctx-empty);
+}
+
+.ctx-seg[data-fylt] {
+  background: var(--fill-on, #17181a);
+}
+
+.ctx-fase {
+  margin: 8px 2px 0;
+  font-size: 13px;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--fill-on, #17181a) 52%, var(--fill-slab, #fff));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctx-act {
+    transition: none;
+  }
+}

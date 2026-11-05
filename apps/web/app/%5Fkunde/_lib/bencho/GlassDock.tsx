@@ -33,10 +33,13 @@ export function GlassDock({
   items = DOCK,
   active: activeProp,
   onSelect,
+  utenPanel = false,
 }: {
   items?: readonly GlassDockItem[];
   active?: string;
   onSelect?: (key: string) => void;
+  /** Kundesidens Ronny-boks: ingen hvit panel-bakgrunn, ikonet fyller boksen. */
+  utenPanel?: boolean;
 }) {
   const [localActive, setLocalActive] = useState(items[0]?.key ?? '');
   const active = activeProp ?? localActive;
@@ -46,7 +49,12 @@ export function GlassDock({
   };
 
   return (
-    <nav className="gdock" aria-label="Dock" data-kunde-dock-statisk>
+    <nav
+      className="gdock"
+      aria-label="Dock"
+      data-kunde-dock-statisk
+      data-uten-panel={utenPanel || undefined}
+    >
       {items.map(({ key, label, Icon }) => (
         <button
           type="button"
@@ -59,7 +67,7 @@ export function GlassDock({
           onClick={() => choose(key)}
         >
           <span className="gdock-glyph">
-            <Icon size={20} strokeWidth={2} />
+            <Icon size={utenPanel ? 44 : 20} strokeWidth={2} />
           </span>
           <span className="gdock-dot" data-on={active === key} />
         </button>

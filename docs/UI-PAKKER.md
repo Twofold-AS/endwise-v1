@@ -603,7 +603,7 @@ montering, når `ResponsiveContainer` har målt bredden via `ResizeObserver`. Ko
 | **Kilde** | https://bencho.dev/blocks/dock · `?c=dock&theme=light` · https://github.com/cabralorenzo/bencho/tree/main/blocks/dock |
 | **Ligger i** | `apps/web/app/%5Fkunde/_lib/bencho/` (`GlassDock.tsx`, `GlassDock.css`, `tokens.css`) |
 | **Lisens** | MIT |
-| **Tilpasset** | `items` / `active` / `onSelect`; ikoner via `@endwise/ui`; tokens mappet til ink `#141414`. Pekelogikk, magnify, tip og CSS er Bencho. ⛔ `#0066ff` / `--pick`-blå |
+| **Tilpasset** | `items` / `active` / `onSelect`; ikoner via `@endwise/ui`; Mobbin-kort (ink `#141414`, muted `#616161`, radius 24px, hairline, ingen glass-skygge). **Ingen magnify/bounce/scale** ved klikk/hover (F42-05). ⛔ `#0066ff` / `--pick`-blå |
 
 ## 3. dither-kit — ⛔ FJERNET FRA UI-ET (03.08.2026)
 
@@ -831,7 +831,7 @@ Kun disse. Hver enkelt har en grunn.
 | Komponent | Hvorfor ikke en pakke? |
 |---|---|
 | `Side` / `Seksjon` / `ListeRad` / `TomFlate` / `LasterFlate` / `FeilFlate` / `FilterChips` / `DeaktivertHandling` (`packages/ui/src/flate/`) | Board har ingen sidemal, liste-rad, empty-state eller deaktivert-handling med tooltip. Bygget på Board-primitiver (button, skeleton, chip, tooltip). Chrome-lås: `sidebar`, `app-shell` og `settings-modal` brukes ikke. |
-| Kundeskall (`apps/web/app/%5Fkunde/`, F18-01 / plan F2 / F41-09 / F42-01 / F42-04) | **Bencho Magnifying dock** (MIT, `cabralorenzo/bencho` `blocks/dock` — `GlassDock.tsx` + `GlassDock.css`) + Board `Drawer` / `IconButton` / `ProgressBar`. Innlogget: header med forhandlerlogo+navn, bjelle/kurv-ark, to `GlassDock` (Hjem · Bookinger · Meldinger · Profil + Ronny). Tokens mappet til Mobbin-ink i `bencho/tokens.css`. ⛔ `#0066ff` på CTA. |
+| Kundeskall (`apps/web/app/%5Fkunde/`, F18-01 / plan F2 / F41-09 / F42-01 / F42-04 / F42-05) | **Bencho dock** (MIT, `cabralorenzo/bencho` `blocks/dock` — `GlassDock.tsx` + `GlassDock.css`) + Board `Drawer` / `IconButton` / `ProgressBar`. Innlogget: header med forhandlerlogo+navn, bjelle/kurv-ark, to `GlassDock` (Hjem · Bookinger · Meldinger · Profil + Ronny). F42-05: Mobbin-kort, **ingen magnify/bounce/scale**. ⛔ `#0066ff` på CTA. |
 | Forhandler desktop-hjem dagsplan (`apps/web/app/(app)/home/page.tsx` `VerkstedetDagsplan`, F42-01) | **Ingen ny pakke.** `Seksjon` + `ListeRad` under `DealerPulseKort`. Egen kode fordi Claude desktop (boks 598) er «Dagens timeplan», og shadcn calendar ville gitt et annet system enn pulse. Chrome urørt. ⛔ `#0066ff`. |
 | Innstillinger › Utseende (`apps/web/app/(app)/innstillinger/_utseende-fane.tsx`, F19-01 / plan F3) | **Ingen ny pakke.** `FeltInput` + `StatefulButton` + native fargevelger og filfelt. Egen kode fordi ingen pakke dekker «utkast + Gå live + kontrastfeil» i Innstillinger-fanene. |
 | `Btn`, `Badge`, `Chip`, `Card`, `Input` (`packages/ui/src/primitives/`) | Roadmap **F0-12** navngir dem eksplisitt som «primitiver fra komponentgalleriet». `Input` er tynt skall over `.ew-felt` / `FELT_MD` (Mobbin inset + 16px + hvit fokus). **Når prototypen er inne bør de revurderes** — dekker shadcn dem, skal de bort |

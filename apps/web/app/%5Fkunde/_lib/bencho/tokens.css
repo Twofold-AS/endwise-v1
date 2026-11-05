@@ -1,25 +1,25 @@
-/* Bencho dock-tokens, scopet og mappet til Mobbin (ink #141414).
-   Kildenavn fra tokens.css i cabralorenzo/bencho (MIT).
+/* Bencho dock-tokens, scopet og mappet til Endwise/Mobbin.
    ⛔ #0066ff / --pick-blå — CTA og aksent er ink. */
 [data-bencho-dock] {
-  --font-ui: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --ink: #141414;
+  --font-ui: var(--ew-font-sans, Inter, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  --ink: var(--ew-ink-utility, #141414);
+  --ink-muted: var(--ew-fg-muted, #616161);
   --ink-rgb: 20, 20, 20;
   --on-ink: #ffffff;
-  --fill-slab: rgb(255 255 255 / 72%);
-  --fill-on: #141414;
+  --fill-slab: var(--ew-surface, #ffffff);
+  --fill-on: var(--ew-ink-utility, #141414);
   --fill-on-rgb: 20, 20, 20;
-  --pane: rgb(255 255 255 / 72%);
-  --pane-edge: rgb(20 20 20 / 8%);
+  --pane: var(--ew-surface, #ffffff);
+  --pane-edge: var(--ew-border, #e0e0e0);
   --shadow-rgb: 20, 20, 20;
-  --g-blur: 8px;
-  --g-sat: 150%;
+  --g-blur: 0px;
+  --g-sat: 100%;
   --g-bright: 100%;
-  --g-spec: 0.55;
-  --g-lift: 0.1;
-  --g-edge-hi: 0.55;
-  --g-edge-lo: 0.08;
-  --g-edge-far: 0.22;
+  --g-spec: 0;
+  --g-lift: 0;
+  --g-edge-hi: 0;
+  --g-edge-lo: 0;
+  --g-edge-far: 0;
   --pick: #141414;
   --focus: #141414;
   --signal: #141414;

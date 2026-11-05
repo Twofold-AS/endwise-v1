@@ -30,8 +30,18 @@ describe('F42-04: kundeside header, dock og aktiv jobb', () => {
     expect(dock).toMatch(/GlassDock/);
     expect(dock).toMatch(/from '\.\/bencho\/GlassDock/);
     expect(les('../app/%5Fkunde/_lib/bencho/GlassDock.tsx')).toMatch(/gdock-dot/);
-    expect(les('../app/%5Fkunde/_lib/bencho/GlassDock.css')).toMatch(/backdrop-filter/);
     expect(les('../app/%5Fkunde/_lib/bencho/GlassDock.tsx')).toMatch(/bencho\.dev\/blocks\/dock/);
+    expect(les('../app/%5Fkunde/_lib/bencho/GlassDock.tsx')).toMatch(/data-kunde-dock-statisk/);
+    expect(les('../app/%5Fkunde/_lib/bencho/GlassDock.tsx')).not.toMatch(
+      /magnify\s*=|translateY\(|scale\(|cubic-bezier/,
+    );
+    expect(les('../app/%5Fkunde/_lib/bencho/GlassDock.css')).toMatch(/border-radius: 24px/);
+    expect(les('../app/%5Fkunde/_lib/bencho/GlassDock.css')).toMatch(/box-shadow: none/);
+    expect(les('../app/%5Fkunde/_lib/bencho/GlassDock.css')).not.toMatch(
+      /cubic-bezier|scale\(|translateY/,
+    );
+    expect(dock).toMatch(/data-surface="flat"/);
+    expect(dock).not.toMatch(/data-surface="glass"|magnify=/);
     expect(dock).not.toMatch(/data-ronny-forstor|100dvh|#0066ff/);
     expect(skall).not.toMatch(/bg-\[#0066ff\]|text-\[#0066ff\]/);
     expect(kundeFaneAktiv('/', '/')).toBe(true);

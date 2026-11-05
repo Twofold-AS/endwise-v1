@@ -34,7 +34,7 @@ export function KundeDock() {
         <div
           data-bencho-dock
           data-theme="light"
-          data-surface="glass"
+          data-surface="flat"
           data-stroke="on"
           className="pointer-events-auto flex items-end"
         >

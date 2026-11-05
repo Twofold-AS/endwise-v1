@@ -90,7 +90,7 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem).toMatch(/PulseHeroFlate/);
     expect(hjem).toMatch(/PulseAnalyserKort/);
-    expect(hjem).toMatch(/På jobb/);
+    expect(hjem).toMatch(/På Jobb/);
     expect(hjem).toMatch(/PulseJobbFlis/);
     expect(hjem).not.toMatch(/Dagen din/);
     expect(hjem).not.toMatch(/Trenger deg/);

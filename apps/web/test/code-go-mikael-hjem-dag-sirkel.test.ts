@@ -72,10 +72,10 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const preview = utenKommentarer(les('../app/pulse-preview/page.tsx'));
     expect(hjem).toMatch(/PulseHeroFlate/);
-    expect(hjem).toMatch(/På jobb/);
+    expect(hjem).toMatch(/På Jobb/);
     expect(hjem).not.toMatch(/PulseUkeSpark|Pulse30dSpark/);
     expect(hjem.indexOf('PulseHeroFlate')).toBeGreaterThan(-1);
-    expect(hjem.indexOf('På jobb')).toBeGreaterThan(-1);
+    expect(hjem.indexOf('På Jobb')).toBeGreaterThan(-1);
     expect(kort).toMatch(/#141414/);
     expect(kort).toMatch(/#ffffff/);
     expect(kort).toMatch(/data-pulse-dag-sirkel/);

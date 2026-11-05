@@ -67,7 +67,9 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
   it('Avvik/Forespørsler er én segmentert boks — rød trekant, gult spørsmålstegn', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const boks = funksjon(kort, 'PulseAvvikForesporBoks');
-    expect(boks).toMatch(/rounded-\[13px\] border border-divide/);
+    expect(boks).toMatch(/rounded-\[13px\] border/);
+    expect(boks).toMatch(/border-divide/);
+    expect(boks).toMatch(/border-border/);
     expect(boks).toMatch(/w-px/);
     expect(boks).toMatch(/CircleQuestionMark/);
     expect(boks).toMatch(/TriangleAlert/);
@@ -85,8 +87,8 @@ describe('CODE-GO Mikael — toppkort uten blå nål', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
-    expect(hero).toMatch(/text-\[20px\][\s\S]*?font-semibold/);
-    expect(hero).toMatch(/text-\[17px\][\s\S]*?text-fg-muted/);
+    expect(hero).toMatch(/text-\[20px\][\s\S]*?font-bold/);
+    expect(hero).toMatch(/data-pulse-dato[\s\S]*?text-fg-muted/);
     expect(hero).toMatch(/items-end/);
     expect(hero).toMatch(/PulseEndringerKnapp/);
     expect(hero.indexOf('data-pulse-teller-rad')).toBeLessThan(hero.indexOf('PulseEndringerKnapp'));

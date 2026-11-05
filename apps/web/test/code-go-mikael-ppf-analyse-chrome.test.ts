@@ -28,10 +28,10 @@ describe('CODE-GO Mikael 11.09.2026 oppfølging — PPF, Analyse, chrome 1+2, So
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     const sirkel = funksjon(kort, 'PulseDagSirkel');
-    const tall = funksjon(kort, 'PulseTall');
+    const tall = funksjon(kort, 'PulseTallStor');
     expect(hero).toMatch(/items-end/);
     expect(tall).toMatch(/data-pulse-tall-siffer/);
-    expect(tall).toMatch(/text-\[36px\]/);
+    expect(tall).toMatch(/text-\[38px\]/);
     expect(tall).toMatch(/items-center/);
     expect(tall).toMatch(/data-pulse-tall-etikett/);
     expect(sirkel).toMatch(/h-\[78px\]/);
@@ -108,14 +108,14 @@ describe('CODE-GO Mikael 11.09.2026 oppfølging — PPF, Analyse, chrome 1+2, So
 });
 
 describe('CODE-GO Mikael 11.09.2026 tillegg — Jobb-vekt, Ronny uten strek, 100dvh', () => {
-  it('Ny Jobb-etikett er fet (Claude-designet), ikke 650/700-overkill', () => {
+  it('Ny Jobb-etikett er 700 19px (Claude-designet Mobile.dc)', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const jobb = funksjon(kort, 'PulseJobbFlis');
     expect(jobb).toMatch(/Ny Jobb/);
-    expect(jobb).toMatch(/font-semibold/);
+    expect(jobb).toMatch(/text-\[19px\]/);
+    expect(jobb).toMatch(/font-bold/);
     expect(jobb).not.toMatch(/font-\[650\]/);
-    expect(jobb).not.toMatch(/font-\[700\]/);
-    expect(jobb).not.toMatch(/font-bold/);
+    expect(jobb).not.toMatch(/#0066ff/);
   });
 
   it('åpen Ronny-sheet har ingen grabber-strek; 100 % er 100dvh med topp-radius', () => {

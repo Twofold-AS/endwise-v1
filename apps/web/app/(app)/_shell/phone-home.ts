@@ -44,6 +44,18 @@ export const PHONE_HERO_FYLL = 'rounded-[24px] border border-border bg-bg text-f
 export const PHONE_DEST_FYLL = 'rounded-[24px] border border-divide bg-card text-fg shadow-none';
 
 /**
+ * Claude-designet (Endwise Mobile.dc) på Verkstedet-hjem, kun telefon:
+ * hero/analyse 26px, radkort/fliser 22px. Egne konstanter så mekaniker-hjem
+ * (`phone-kort.tsx`) og desktop (`_desktop-hjem.tsx`) ikke arver endringen.
+ */
+export const PULSE_MOBIL_HERO_FYLL =
+  'rounded-[26px] border border-border bg-bg text-fg shadow-none';
+export const PULSE_MOBIL_KORT_FYLL =
+  'rounded-[26px] border border-divide bg-card text-fg shadow-none';
+export const PULSE_MOBIL_DEST_FYLL =
+  'rounded-[22px] border border-divide bg-card text-fg shadow-none';
+
+/**
  * Parchment-scroll for dealer-hjem (innholdskolonne, ikke chrome).
  * Bunn-safe under eksisterende toppbar — ingen dobbel topp-safe.
  */

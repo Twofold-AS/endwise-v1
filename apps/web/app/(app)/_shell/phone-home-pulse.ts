@@ -125,6 +125,29 @@ export function dagBuePunkt(andel: number) {
   };
 }
 
+/**
+ * Claude-designet (Endwise Mobile.dc): prikk-halvsirkel 132×66 på mobil-hjem.
+ * Ytre bue r 64, indre r 38, sentrum (66, 66). Andel 0 = 08.00 (venstre),
+ * 1 = 19.00 (høyre). Prikkene er `fg` på 16 % (bunn) / 68 % (passert).
+ */
+export const PULSE_DAG_PRIKK_CX = 66;
+export const PULSE_DAG_PRIKK_CY = 66;
+export const PULSE_DAG_PRIKK_R = 64;
+export const PULSE_DAG_PRIKK_R_INDRE = 38;
+/** Nål: fra like utenfor indre bue til ytre bue. */
+export const PULSE_DAG_PRIKK_NAAL_FRA = 40;
+export const PULSE_DAG_PRIKK_NAAL_TIL = 64.5;
+
+/** Punkt på prikk-buen for andel 0–1 ved gitt radius. */
+export function dagPrikkPunkt(andel: number, radius: number) {
+  const t = Math.min(1, Math.max(0, andel));
+  const phi = Math.PI * (1 - t);
+  return {
+    x: PULSE_DAG_PRIKK_CX + radius * Math.cos(phi),
+    y: PULSE_DAG_PRIKK_CY - radius * Math.sin(phi),
+  };
+}
+
 export function fmtPulseKlokke(hour: number, minute = 0): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }

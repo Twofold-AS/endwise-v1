@@ -14,6 +14,9 @@ describe('F32 / white label F11a: kundeportal les', () => {
     expect(rute).toMatch(/withCustomer/);
     expect(rute).toMatch(/bookinger:/);
     expect(rute).toMatch(/kjoretoy:/);
+    expect(rute).toMatch(/varsler:/);
+    expect(rute).toMatch(/aktivJobb:/);
+    expect(rute).toMatch(/byggVarsler/);
     expect(rute).not.toMatch(/#0066ff/);
   });
 });

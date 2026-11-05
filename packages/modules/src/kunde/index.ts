@@ -1,16 +1,17 @@
 /** F33 / white label F11b — kundeportal handling. */
 
-export const JOBB_FASER = ['Mottatt', 'Under arbeid', 'Klar'] as const;
-export type JobbFase = (typeof JOBB_FASER)[number];
-
-export function jobbFase(status: string): { merkelapp: string; steg: number } {
-  if (status === 'cancelled') return { merkelapp: 'Avlyst', steg: -1 };
-  if (status === 'no_show') return { merkelapp: 'Ikke møtt', steg: -1 };
-  if (status === 'completed') return { merkelapp: 'Klar', steg: 2 };
-  if (status === 'in_progress') return { merkelapp: 'Under arbeid', steg: 1 };
-  return { merkelapp: 'Mottatt', steg: 0 };
-}
-
+export {
+  byggVarsler,
+  formaterKjoretoy,
+  JOBB_FASER,
+  type JobbFase,
+  jobbFase,
+  jobbFaseKort,
+  jobbFremdriftProsent,
+  type KundeVarsel,
+  type KundeVarselSlags,
+  velgAktivJobb,
+} from './fase.ts';
 export {
   finnEllerOpprettKundetrad,
   IngenInnboksMottakerError,

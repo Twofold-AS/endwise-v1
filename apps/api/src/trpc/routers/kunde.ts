@@ -1,11 +1,14 @@
 import { createAuth, kjorMedAuthRequest } from '@endwise/auth';
 import { and, desc, eq, gte, schema, sql, withCustomer, withTenant } from '@endwise/db';
 import {
+  byggVarsler,
+  formaterKjoretoy,
   IngenInnboksMottakerError,
   jobbFase,
   KUNDE_MELDING_PER_MINUTT,
   kundeButikkStatus,
   sendKundeMelding,
+  velgAktivJobb,
 } from '@endwise/modules/kunde';
 import {
   createWidgetPublicService,
@@ -61,6 +64,57 @@ async function finnKunde(ctx: {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Ingen kundeside her' });
   }
   return rad;
+}
+
+async function hentKundeBookinger(
+  tx: Parameters<Parameters<typeof withCustomer>[3]>[0],
+  tenantId: string,
+  kundeId: string,
+) {
+  const rader = await tx
+    .select({
+      id: schema.bookings.id,
+      status: schema.bookings.status,
+      startsAt: schema.bookings.startsAt,
+      endsAt: schema.bookings.endsAt,
+      vehicleId: schema.bookings.vehicleId,
+      notes: schema.bookings.notes,
+      updatedAt: schema.bookings.updatedAt,
+      tjeneste: schema.services.name,
+      mekaniker: schema.mechanics.name,
+      kjoretoyType: schema.vehicles.type,
+      kjoretoyMerke: schema.vehicles.make,
+      kjoretoyModell: schema.vehicles.model,
+      kjoretoyReg: schema.vehicles.regNumber,
+    })
+    .from(schema.bookings)
+    .leftJoin(schema.vehicles, eq(schema.vehicles.id, schema.bookings.vehicleId))
+    .leftJoin(
+      schema.serviceVersions,
+      eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
+    )
+    .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
+    .leftJoin(schema.mechanics, eq(schema.mechanics.id, schema.bookings.mechanicId))
+    .where(and(eq(schema.bookings.tenantId, tenantId), eq(schema.bookings.customerId, kundeId)))
+    .orderBy(desc(schema.bookings.startsAt));
+  return rader.map((b) => ({
+    id: b.id,
+    status: b.status,
+    startsAt: b.startsAt,
+    endsAt: b.endsAt,
+    vehicleId: b.vehicleId,
+    notes: b.notes,
+    updatedAt: b.updatedAt,
+    tjeneste: b.tjeneste,
+    mekaniker: b.mekaniker,
+    kjoretoy: formaterKjoretoy({
+      type: b.kjoretoyType,
+      make: b.kjoretoyMerke,
+      model: b.kjoretoyModell,
+      regNumber: b.kjoretoyReg,
+    }),
+    fase: jobbFase(b.status),
+  }));
 }
 
 function toTRPCError(error: unknown): never {
@@ -152,27 +206,60 @@ export const kundeRouter = router({
 
   bookinger: customerProcedure.query(async ({ ctx }) => {
     const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+    return withCustomer(ctx.db, ctx.tenantId, kunde.id, async (tx) =>
+      hentKundeBookinger(tx, ctx.tenantId, kunde.id),
+    );
+  }),
+
+  /** F42-04 — verkstedvarsler, ikke chat. */
+  varsler: customerProcedure.query(async ({ ctx }) => {
+    const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
     return withCustomer(ctx.db, ctx.tenantId, kunde.id, async (tx) => {
-      const rader = await tx
-        .select({
-          id: schema.bookings.id,
-          status: schema.bookings.status,
-          startsAt: schema.bookings.startsAt,
-          endsAt: schema.bookings.endsAt,
-          vehicleId: schema.bookings.vehicleId,
-          tjeneste: schema.services.name,
-        })
-        .from(schema.bookings)
-        .leftJoin(
-          schema.serviceVersions,
-          eq(schema.serviceVersions.id, schema.bookings.serviceVersionId),
-        )
-        .leftJoin(schema.services, eq(schema.services.id, schema.serviceVersions.serviceId))
+      const rader = await hentKundeBookinger(tx, ctx.tenantId, kunde.id);
+      return byggVarsler(rader);
+    });
+  }),
+
+  /** F42-04 — aktiv jobb med mekaniker, historikk og beskjeder. */
+  aktivJobb: customerProcedure.query(async ({ ctx }) => {
+    const kunde = await finnKunde({ db: ctx.db, tenantId: ctx.tenantId, userId: ctx.userId });
+    return withCustomer(ctx.db, ctx.tenantId, kunde.id, async (tx) => {
+      const rader = await hentKundeBookinger(tx, ctx.tenantId, kunde.id);
+      const aktiv = velgAktivJobb(rader);
+      if (!aktiv) return null;
+      const historikk = rader
+        .filter((b) => b.vehicleId && b.vehicleId === aktiv.vehicleId && b.id !== aktiv.id)
+        .slice(0, 8);
+      const [traad] = await tx
+        .select({ id: schema.threads.id })
+        .from(schema.threads)
         .where(
-          and(eq(schema.bookings.tenantId, ctx.tenantId), eq(schema.bookings.customerId, kunde.id)),
+          and(
+            eq(schema.threads.tenantId, ctx.tenantId),
+            eq(schema.threads.customerId, kunde.id),
+            eq(schema.threads.kind, 'customer_dealer'),
+          ),
         )
-        .orderBy(desc(schema.bookings.startsAt));
-      return rader.map((b) => ({ ...b, fase: jobbFase(b.status) }));
+        .orderBy(desc(schema.threads.lastMessageAt))
+        .limit(1);
+      const mekanikerMeldinger = traad
+        ? await tx
+            .select({
+              id: schema.messages.id,
+              body: schema.messages.body,
+              createdAt: schema.messages.createdAt,
+            })
+            .from(schema.messages)
+            .where(
+              and(
+                eq(schema.messages.threadId, traad.id),
+                eq(schema.messages.direction, 'outbound'),
+              ),
+            )
+            .orderBy(desc(schema.messages.createdAt))
+            .limit(8)
+        : [];
+      return { ...aktiv, historikk, mekanikerMeldinger };
     });
   }),
 

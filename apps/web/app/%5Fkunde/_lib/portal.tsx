@@ -166,6 +166,7 @@ export function KundeProfilFlate() {
             </DeaktivertHandling>
           </Seksjon>
           <Seksjon tittel="Mer">
+            <ListeRad tittel="Kjøretøy" undertekst="MC, båt og ATV" href="/kjoretoy" />
             <ListeRad tittel="Mine data" undertekst="Innsyn" href="/mine-data" />
             <ListeRad tittel="Personvern" undertekst="Slik vi behandler data" href="/personvern" />
             <ListeRad tittel="Deler" undertekst="Nettbutikk er satt på vent" href="/deler" />

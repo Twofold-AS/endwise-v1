@@ -15,8 +15,8 @@ describe('F32 / white label F11a: kundeportal UI', () => {
     expect(portal).toMatch(/Servicehistorikk/);
     expect(portal).toMatch(/DeaktivertHandling/);
     expect(faner).toMatch(/\/bookinger/);
-    expect(faner).toMatch(/\/kjoretoy/);
     expect(faner).toMatch(/\/profil/);
+    expect(portal).toMatch(/href="\/kjoretoy"/);
     expect(portal).not.toMatch(/#0066ff/);
     expect(skall).toMatch(/FORBUDT_CTA/);
   });

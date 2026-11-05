@@ -30,7 +30,6 @@ import { RonnyBot } from './ronny-bot';
 import { RonnyForminskIkon, RonnyForstorIkon } from './ronny-ikoner';
 import { RONNY_SHEET_RADIUS_PX, ronnySheetHoydePx, synligViewportHoyde } from './ronny-sheet';
 import { useRonnySheet } from './ronny-sheet-state';
-import { RonnySirkel } from './ronny-sirkel';
 import { sidekontekst } from './sidekontekst';
 
 const APPLE_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
@@ -304,7 +303,6 @@ export function WorkshopBloub() {
 
   return (
     <>
-      <RonnySirkel />
       <div className="md:hidden">
         <Drawer
           placement="bottom"

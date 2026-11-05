@@ -24,6 +24,21 @@ Stier er relative til `apps/web/app/(app)/` hvis ikke annet er oppgitt. `package
 - Board-kilden eies av oss etter add. Remix-ikoner byttes til lucide. Switch settes til 24×14 ink. Chip-radius 6 settes til stadium.
 - Mangler i Endwise som Claude har: layout og komponent bygges. Handlinger uten API bygges og vises deaktivert (disabled med kort norsk forklaring/tooltip). Ingen «ingen API»-tekst i appen.
 
+## F6 — mobil-matching levert 05.11.2026 (Mikael kurskorrigering)
+
+Mobil er hovedfokus; desktop-arbeid stoppet. Følgende er levert i kode (branch `cursor/claude-design-forhandler-hjem-e3a7`), med før/etter-skjermbilder per skjerm i PR-en:
+
+- **Fanerad (chrome):** alle 8 destinasjoner i dragbar rail, aktiv pille autosentrert. «Mer»-dropdown og `delMobilDest` fjernet. Home-label «Verkstedet». Piller 44px, aktiv `bg-sidebar-active` + font 500.
+- **Timeplan (`/jobber`):** uke-piler ‹ › i dagsrailen, undertekst «Torsdag 5. nov · 3 jobber».
+- **Innboks:** «Ny melding»-bunnrad (border-rad, 46px compose-knapp) over pagineringen.
+- **Kunder:** undertekst «N registrerte kunder». Alfa-rail verifisert i live DOM (8 kunder, 8 seksjoner). Kundeprofil mot sidemalen.
+- **Tjenester (`/prisliste`):** BoardUI `FilterChips` (Alle/MC/Båt/ATV) synlige under søket — Sortering-arket fjernet her.
+- **Lager:** primær «Ny del» i header (åpner skjema via `/lager/deler?ny=1`), undertekst «N deler under minimum», «Må bestilles» øverst.
+- **Samtale (`/innboks/[id]`):** utgående bobler mørke (`bg-fg text-bg`), inngående lyse — designets chat-akse.
+- **Bunntekst:** ny `MobilSideBunn` («Endwise levert av TwoFold») på hjem, timeplan, innboks, kunder, kundeprofil, tjenester og lager.
+
+Desktop (F5 bred hjem-flate + dag-tidslinje) er beholdt — den er fullstendig adskilt fra mobil og svekker den ikke.
+
 ## 0. Delte byggeklosser og tilstander
 
 Gjelder på tvers av flatene: sidemal, rader, knapper, chips, skjemafelt, tomt, lasting, toasts, modaler, ark, søk.

@@ -270,10 +270,15 @@ export const customersRouter = router({
       const velkomst = await sendVelkomstEtterKnytning(ctx.db, ctx.tenantId, kunde.id, {
         tving: true,
       }).catch(() => ({ sendt: false as const, grunn: 'feil' }));
-      if (!velkomst.sendt && velkomst.grunn === 'feil') {
+      if (!velkomst.sendt) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Kunne ikke sende invitasjonen. Prøv igjen.',
+          code: velkomst.grunn === 'feil' ? 'INTERNAL_SERVER_ERROR' : 'BAD_REQUEST',
+          message:
+            velkomst.grunn === 'ingen_slug'
+              ? 'Forhandleren mangler subdomene.'
+              : velkomst.grunn === 'quick'
+                ? 'Quick-kunder får ikke velkomst-e-post.'
+                : 'Kunne ikke sende invitasjonen. Prøv igjen.',
         });
       }
       return velkomst;

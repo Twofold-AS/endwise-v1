@@ -78,7 +78,7 @@ describe('CODE-GO Mikael — toppkort polish 08–19 + bunn-ikoner + Jobb', () =
     const hero = funksjon(kort, 'PulseHeroFlate');
     expect(hero.indexOf('PulseDagSirkel')).toBeGreaterThan(-1);
     expect(hero.indexOf('PulseDagSirkel')).toBeLessThan(hero.indexOf('data-pulse-hero-bunn'));
-    expect(hero).toMatch(/PulseEndringerLenke/);
+    expect(hero).toMatch(/PulseEndringerKnapp/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
     expect(hero).toMatch(/data-pulse-teller-rad/);
     expect(hero).toMatch(/data-pulse-del="1"/);
@@ -89,16 +89,16 @@ describe('CODE-GO Mikael — toppkort polish 08–19 + bunn-ikoner + Jobb', () =
     expect(hero).toMatch(/Ferdig/);
     expect(kort).toMatch(/TriangleAlert/);
     expect(kort).toMatch(/CircleQuestionMark/);
-    expect(kort).toMatch(/ew-modus-plate/);
+    expect(kort).toMatch(/rounded-\[13px\] border border-divide/);
     expect(kort).not.toMatch(/PulseMockBadge/);
   });
 
-  it('Jobb-raden har etikett til venstre og ikon til høyre', () => {
+  it('Ny Jobb-flisen har etikett til venstre og ikon til høyre', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const jobb = funksjon(kort, 'PulseJobbFlis');
     expect(jobb).toMatch(/data-pulse-jobb/);
-    expect(jobb.indexOf('>Jobb<')).toBeGreaterThan(-1);
-    expect(jobb.indexOf('>Jobb<')).toBeLessThan(jobb.indexOf('PulseIkonFlate'));
+    expect(jobb.indexOf('Ny Jobb')).toBeGreaterThan(-1);
+    expect(jobb.indexOf('Ny Jobb')).toBeLessThan(jobb.indexOf('PulseIkonFlate'));
     expect(jobb.indexOf('PulseIkonFlate')).toBeLessThan(jobb.lastIndexOf('Plus'));
   });
 });

@@ -50,18 +50,18 @@ describe('forhandler pulse-hjem — fem flater', () => {
   it('låser Planlagt-kort · Analyser · Innboks · Lager · ansatte + Jobb', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
+      'analyser',
       'innboks',
       'lager',
-      'analyser',
       'team',
       'jobb',
     ]);
     expect(DEALER_PULSE_KEYS).toHaveLength(6);
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
+      ['analyser'],
       ['innboks'],
       ['lager'],
-      ['analyser'],
       ['team', 'jobb'],
     ]);
     expect(dealerPhoneHjemRader(true).flatMap((r) => r.keys)).toEqual([...DEALER_PULSE_KEYS]);
@@ -228,13 +228,13 @@ describe('forhandler pulse-hjem — fem flater', () => {
     expect(funksjon(kort, 'PulseDagSirkel')).toMatch(/PULSE_DAG_FYLL_INK|#141414/);
     expect(funksjon(kort, 'PulseAnalyserKort')).not.toMatch(/#0066ff/);
     expect(kort).not.toMatch(/For lite data/);
-    expect(kort).toMatch(/ArrowUpRight/);
+    expect(kort).toMatch(/ArrowRight/);
     expect(kort).toMatch(/PulseJobbFlis|data-pulse-jobb/);
     expect(kort).toMatch(/DitherGrowthChart/);
     expect(kort).toMatch(/DitherDonutChart/);
     expect(kort).not.toMatch(/PulseMiniBar|data-pulse-nye|data-pulse-stats-bar/);
     expect(kort).toMatch(/data-pulse-ikonboks/);
-    expect(kort).toMatch(/h-9 w-14/);
+    expect(kort).toMatch(/h-\[46px\] w-\[46px\]/);
     expect(kort).toMatch(/size=\{22\}/);
     expect(kort).toMatch(/#ffffff/);
     expect(kort).not.toMatch(/bg-canvas|bg-card text-fg shadow-none ring-1/);
@@ -246,10 +246,14 @@ describe('forhandler pulse-hjem — fem flater', () => {
 
   it('desktop og telefon deler pulse-kort; chrome-skall røres ikke', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
+    const bred = utenKommentarer(les('../app/(app)/home/_desktop-hjem.tsx'));
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
     const sidebar = utenKommentarer(les('../app/(app)/_shell/sidebar.tsx'));
-    expect(dash).toMatch(/DealerPulseKort/);
+    expect(dash).toMatch(/VerkstedetDesktop/);
+    expect(bred).toMatch(/useDealerHjemKort/);
+    expect(bred).toMatch(/PulseRadKort|PulseAnalyserKort/);
+    expect(hjem).toMatch(/DealerPulseKort/);
     expect(dash).toMatch(/PhoneHomeDealer/);
     expect(hjem).not.toMatch(/messages\.svarhastighet/);
     expect(hjem).toMatch(/PulseHeroFlate/);

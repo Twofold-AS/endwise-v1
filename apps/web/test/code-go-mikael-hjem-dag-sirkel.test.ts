@@ -51,19 +51,19 @@ describe('CODE-GO Mikael — hjem toppkort dag-sirkel', () => {
     expect(PARKED_LABEL['/timeplan/endringer']).toBe('Endringer');
     expect(les('../app/(app)/avvik/page.tsx')).toMatch(/jobber\?fane=avvik/);
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(kort).toMatch(/PulseEndringerLenke/);
+    expect(kort).toMatch(/PulseEndringerKnapp/);
     expect(kort).toMatch(/PulseAvvikForesporBoks/);
     expect(kort).not.toMatch(/PulseValgLenke/);
     expect(kort).toMatch(/TriangleAlert/);
     expect(kort).toMatch(/data-pulse-hero-bunn/);
   });
 
-  it('toppkort er to-delt med dither-donut; Analyser ligger sist', () => {
+  it('toppkort er to-delt med dither-donut; Analyse rett under toppkortet', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
+      'analyser',
       'innboks',
       'lager',
-      'analyser',
       'team',
       'jobb',
     ]);

@@ -44,9 +44,9 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
   it('låser pulse Planlagt · Analyser · Innboks · Lager · ansatte + Jobb', () => {
     expect(DEALER_PHONE_HJEM.map((r) => r.keys)).toEqual([
       ['idag'],
+      ['analyser'],
       ['innboks'],
       ['lager'],
-      ['analyser'],
       ['team', 'jobb'],
     ]);
     expect(DEALER_PHONE_HJEM[0]?.kind).toBe('hero');
@@ -54,11 +54,11 @@ describe('dealer phone home — kortrekkefølge og fyll', () => {
     expect(PHONE_KORT_META).toHaveProperty('samarbeid');
   });
 
-  it('Lager kommer etter Innboks, Analyser er sist — ikke Svarhastighet/Timeplan', () => {
+  it('Analyser kommer før Innboks, Lager før På jobb + Ny Jobb — ikke Svarhastighet/Timeplan', () => {
     const keys = DEALER_PHONE_HJEM.map((r) => r.keys.join('|'));
+    expect(keys.indexOf('analyser')).toBeLessThan(keys.indexOf('innboks'));
     expect(keys.indexOf('innboks')).toBeLessThan(keys.indexOf('lager'));
-    expect(keys.indexOf('lager')).toBeLessThan(keys.indexOf('analyser'));
-    expect(keys.indexOf('analyser')).toBeLessThan(keys.indexOf('team|jobb'));
+    expect(keys.indexOf('lager')).toBeLessThan(keys.indexOf('team|jobb'));
     expect(keys.at(-1)).toBe('team|jobb');
     expect(keys).not.toContain('svarhastighet');
     expect(keys).not.toContain('timeplan');
@@ -325,10 +325,12 @@ describe('desktop sidebar er persistent rail, skjult på telefon', () => {
 
   it('dealer desktop Verkstedet er samme destinasjonskort bak md-skillet', () => {
     const dash = utenKommentarer(les('../app/(app)/home/page.tsx'));
+    const bred = utenKommentarer(les('../app/(app)/home/_desktop-hjem.tsx'));
     expect(dash).toMatch(/useMdViewport/);
     expect(dash).toMatch(/flate === ['"]desktop['"]/);
     expect(dash).toMatch(/PhoneHomeDealer/);
-    expect(dash).toMatch(/DealerPulseKort|DealerDestinasjonskort/);
+    expect(dash).toMatch(/VerkstedetDesktopBred/);
+    expect(bred).toMatch(/useDealerHjemKort|PulseRadKort/);
     expect(dash).not.toMatch(/AnsattePaJobb/);
   });
 

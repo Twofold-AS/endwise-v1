@@ -83,7 +83,8 @@ describe('PR #184 mobil-tokens', () => {
   });
 
   it('Side/Seksjon/ListeRad brukes på de ekte mobilrutene', () => {
-    expect(les('../app/(app)/_shell/phone-home-dealer.tsx')).toMatch(/<Side/);
+    // Hjem er Claude-designet: egen komposisjon med sr-only h1, ikke Side-header.
+    expect(les('../app/(app)/_shell/phone-home-dealer.tsx')).toMatch(/sr-only/);
     expect(les('../app/(app)/butikk/page.tsx')).toMatch(/<Side/);
     expect(les('../app/(app)/lager/page.tsx')).toMatch(/<Side/);
     expect(les('../app/(app)/lager/page.tsx')).toMatch(/ListeRad/);

@@ -34,9 +34,9 @@ describe('Claude Design BIT 6 — Lager + Butikk', () => {
     expect(TIMEPLAN_FANER.map((f) => f.label)).toEqual(['Timeplan', 'Opprett jobb', 'Endringer']);
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
+      'analyser',
       'innboks',
       'lager',
-      'analyser',
       'team',
       'jobb',
     ]);

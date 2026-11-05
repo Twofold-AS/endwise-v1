@@ -91,11 +91,14 @@ describe('F42-04: kundeside header, dock og aktiv jobb', () => {
 
   it('forhandler desktop-hjem har Dagens timeplan under pulse', () => {
     const home = les('../app/(app)/home/page.tsx');
+    const bred = les('../app/(app)/home/_desktop-hjem.tsx');
+    const tidslinje = les('../app/(app)/_shell/dag-tidslinje.tsx');
     expect(home).toMatch(/VerkstedetDesktop/);
-    expect(home).toMatch(/DealerPulseKort/);
-    expect(home).toMatch(/Dagens timeplan/);
-    expect(home).toMatch(/\/jobber/);
-    expect(home).not.toMatch(/border-l-\[3px\]|#0066ff/);
+    expect(bred).toMatch(/useDealerHjemKort/);
+    expect(bred).toMatch(/DagTidslinje/);
+    expect(tidslinje).toMatch(/Dagens timeplan/);
+    expect(tidslinje).toMatch(/\/jobber/);
+    expect(bred).not.toMatch(/border-l-\[3px\]|#0066ff/);
   });
 
   it('Ronny ligger bare i top-bar — ingen oransje sirkel på hjem', () => {

@@ -39,7 +39,7 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(skjema).not.toMatch(/signin-totp/);
   });
 
-  it('toppkort: Endringer mot dato, PPF-etikett på 08.00/19.00-linje', () => {
+  it('toppkort: dato-tittel øverst, Endringer-knapp nederst (Claude-designet)', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const hero = funksjon(kort, 'PulseHeroFlate');
     const sirkel = funksjon(kort, 'PulseDagSirkel');
@@ -47,17 +47,17 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(hero.indexOf('data-pulse-hero-topp')).toBeLessThan(
       hero.indexOf('data-pulse-teller-rad'),
     );
-    expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('PulseEndringerLenke'));
-    expect(hero.indexOf('PulseEndringerLenke')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
+    expect(hero.indexOf('data-pulse-ukedag')).toBeLessThan(hero.indexOf('data-pulse-teller-rad'));
+    expect(hero.indexOf('data-pulse-teller-rad')).toBeLessThan(hero.indexOf('PulseEndringerKnapp'));
     expect(hero).toMatch(/items-end/);
     expect(hero).toMatch(/data-pulse-hero-bunn/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
-    expect(hero.slice(hero.indexOf('data-pulse-hero-bunn'))).not.toMatch(/PulseEndringerLenke/);
+    expect(hero.slice(hero.indexOf('data-pulse-hero-bunn'))).toMatch(/PulseEndringerKnapp/);
     expect(tall).toMatch(/data-pulse-tall-etikett/);
-    expect(tall).toMatch(/h-\[16px\]/);
+    expect(tall).toMatch(/text-\[36px\]/);
     expect(sirkel).toMatch(/data-pulse-dag-fot/);
     expect(sirkel).toMatch(/h-\[16px\]/);
-    expect(kort).toMatch(/ew-modus-plate/);
+    expect(kort).toMatch(/rounded-\[13px\] border border-divide/);
   });
 
   it('Analyser er én boks: Analyse + fire KPI uten dither', () => {
@@ -65,7 +65,6 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     expect(analyser).toMatch(/data-analyser-tittel/);
     expect(analyser).toMatch(/Analyse/);
-    expect(analyser).toMatch(/PulseIkonFlate/);
     expect(analyser).toMatch(/siste 30 dager/);
     expect(analyser).toMatch(/Alle tall/);
     expect(analyser).toMatch(/data-analyser-se-tallene/);
@@ -80,7 +79,7 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(analyser).toMatch(/text-danger/);
     expect(analyser.match(/PHONE_DEST_FYLL/g)?.length).toBe(1);
     const stats = tallKortStats([], new Date('2026-09-08T10:00:00Z'));
-    expect(stats.map((s) => s.label)).toEqual(['Bookinger', 'Visninger', 'Returer', 'Credits']);
+    expect(stats.map((s) => s.label)).toEqual(['Visninger', 'Bookinger', 'Returer', 'Credits']);
     expect(stats.filter((s) => s.stub).map((s) => s.id)).toEqual([
       'visninger',
       'returer',
@@ -90,7 +89,7 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     const hjem = utenKommentarer(les('../app/(app)/_shell/phone-home-dealer.tsx'));
     expect(hjem.indexOf('PulseHeroFlate')).toBeGreaterThan(-1);
     expect(hjem.indexOf('På jobb')).toBeGreaterThan(-1);
-    expect(hjem).toMatch(/gap-4/);
+    expect(hjem).toMatch(/gap-3/);
   });
 
   it('telefon-chrome beholder logo-bar og dest-piller; tittel + verktøy under', () => {

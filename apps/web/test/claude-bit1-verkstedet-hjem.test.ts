@@ -27,12 +27,12 @@ function funksjon(kilde: string, navn: string) {
 }
 
 describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
-  it('låst hjem-stabel er uendret: I dag · Innboks · Lager · Tall · På jobb + Jobb', () => {
+  it('hjem-stabel: I dag · Analyse · Innboks · Lager · På jobb + Ny Jobb', () => {
     expect([...DEALER_PULSE_KEYS]).toEqual([
       'idag',
+      'analyser',
       'innboks',
       'lager',
-      'analyser',
       'team',
       'jobb',
     ]);
@@ -48,17 +48,16 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
     }
   });
 
-  it('PulseAnalyserKort er Tall 2×2 med Alle tall — ikke Claude-chrome', () => {
+  it('PulseAnalyserKort er Analyse 2×2 med Alle tall — Claude-designet', () => {
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
     const analyser = funksjon(kort, 'PulseAnalyserKort');
     const hero = funksjon(kort, 'PulseHeroFlate');
-    expect(analyser).toMatch(/data-tall-kort/);
-    expect(analyser).toMatch(/data-analyser-tittel[\s\S]*\n\s*Tall\s*\n/);
+    expect(analyser).toMatch(/data-analyse-kort/);
+    expect(analyser).toMatch(/data-analyser-tittel[\s\S]*\n\s*Analyse\s*\n/);
     expect(analyser).toMatch(/siste 30 dager/);
     expect(analyser).toMatch(/Alle tall/);
     expect(analyser).toMatch(/data-analyser-kpi-rutenett/);
     expect(analyser).toMatch(/data-analyser-kpi-rutenett/);
-    expect(analyser).toMatch(/PulseIkonFlate/);
     expect(analyser).not.toMatch(/RevenueLineChart/);
     expect(analyser).not.toMatch(/DitherGrowthChart/);
     expect(analyser).not.toMatch(/DitherDonutChart/);
@@ -67,12 +66,12 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
     expect(hero).toMatch(/Pågår/);
     expect(hero).toMatch(/Ferdig/);
     expect(hero).toMatch(/PulseDagSirkel/);
-    expect(hero).toMatch(/PulseEndringerLenke/);
+    expect(hero).toMatch(/PulseEndringerKnapp/);
     expect(hero).toMatch(/PulseAvvikForesporBoks/);
   });
 
   it('tallKortStats: live bookinger 30d + tomme stub-bokser', () => {
-    expect([...TALL_KPI_IDS]).toEqual(['bookinger', 'visninger', 'returer', 'credits']);
+    expect([...TALL_KPI_IDS]).toEqual(['visninger', 'bookinger', 'returer', 'credits']);
     const naa = new Date('2026-09-08T10:00:00');
     expect(
       bookingerSiste30d(
@@ -92,7 +91,7 @@ describe('Claude Design BIT 1 — Verkstedet / hjem Tall-kort', () => {
       ],
       naa,
     );
-    expect(stats.map((s) => s.id)).toEqual(['bookinger', 'visninger', 'returer', 'credits']);
+    expect(stats.map((s) => s.id)).toEqual(['visninger', 'bookinger', 'returer', 'credits']);
     expect(stats.find((s) => s.id === 'bookinger')?.verdi).toBe(2);
     expect(stats.find((s) => s.id === 'bookinger')?.stub).toBeUndefined();
     expect(stats.find((s) => s.id === 'visninger')?.stub).toBe('Ingen data');

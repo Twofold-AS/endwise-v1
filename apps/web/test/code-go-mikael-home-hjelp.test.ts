@@ -97,7 +97,7 @@ describe('CODE-GO Mikael — hjem live data', () => {
   it('toppkort er denne uken, tall midtstilt', () => {
     expect(PULSE_UKE_TITTEL).toBe('Denne uken');
     const kort = utenKommentarer(les('../app/(app)/_shell/pulse-kort.tsx'));
-    expect(kort).toMatch(/flex flex-col items-center/);
+    expect(kort).toMatch(/flex-col items-center/);
     expect(kort).toMatch(/text-center/);
     expect(kort).toMatch(/#141414/);
     expect(kort).toMatch(/PULSE_DAG_FYLL_INK|#141414/);

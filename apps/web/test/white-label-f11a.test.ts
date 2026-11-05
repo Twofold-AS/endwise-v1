@@ -9,13 +9,14 @@ describe('F32 / white label F11a: kundeportal UI', () => {
   it('Min side, bookinger, kjøretøy og profil uten #0066ff', () => {
     const portal = readFileSync(resolve(her, '../app/%5Fkunde/_lib/portal.tsx'), 'utf8');
     const skall = readFileSync(resolve(her, '../app/%5Fkunde/_lib/skall.tsx'), 'utf8');
+    const faner = readFileSync(resolve(her, '../app/%5Fkunde/_lib/faner.ts'), 'utf8');
     expect(portal).toMatch(/kunde\.bookinger/);
     expect(portal).toMatch(/kunde\.kjoretoy/);
     expect(portal).toMatch(/Servicehistorikk/);
     expect(portal).toMatch(/DeaktivertHandling/);
-    expect(skall).toMatch(/\/bookinger/);
-    expect(skall).toMatch(/\/kjoretoy/);
-    expect(skall).toMatch(/\/profil/);
+    expect(faner).toMatch(/\/bookinger/);
+    expect(faner).toMatch(/\/kjoretoy/);
+    expect(faner).toMatch(/\/profil/);
     expect(portal).not.toMatch(/#0066ff/);
     expect(skall).toMatch(/FORBUDT_CTA/);
   });

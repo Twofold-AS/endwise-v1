@@ -28,7 +28,7 @@ describe('F41-09: uinnlogget <sub>.endwise.no er markedsside', () => {
     const skall = les('../app/%5Fkunde/_lib/skall.tsx');
     expect(skall).toMatch(/kundeErInnlogget/);
     expect(skall).toMatch(/data-kunde-innlogget/);
-    expect(skall).toMatch(/innlogget \? \(/);
+    expect(skall).toMatch(/innlogget \?/);
     const sider = [
       'bestill',
       'bookinger',

@@ -75,7 +75,7 @@ export function PhoneProfilMeny({
             data-phone-profil-oppgrader
             role="menuitem"
             onClick={onLukk}
-            className="flex h-10 w-full items-center justify-center rounded-full bg-[#0066ff] text-[17px] font-[700] text-white"
+            className="flex h-10 w-full items-center justify-center rounded-full bg-fg text-[17px] font-[700] text-bg"
           >
             Ditt abonnement
           </Link>

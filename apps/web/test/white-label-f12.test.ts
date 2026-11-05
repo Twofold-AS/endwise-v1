@@ -8,10 +8,10 @@ const her = dirname(fileURLToPath(import.meta.url));
 describe('F35 / white label F12: Mine data UI', () => {
   it('Mine data og personvern uten #0066ff', () => {
     const innsyn = readFileSync(resolve(her, '../app/%5Fkunde/_lib/innsyn.tsx'), 'utf8');
-    const skall = readFileSync(resolve(her, '../app/%5Fkunde/_lib/skall.tsx'), 'utf8');
+    const portal = readFileSync(resolve(her, '../app/%5Fkunde/_lib/portal.tsx'), 'utf8');
     expect(innsyn).toMatch(/kunde\.mineData/);
     expect(innsyn).toMatch(/Personvern/);
-    expect(skall).toMatch(/\/mine-data/);
+    expect(portal).toMatch(/\/mine-data/);
     expect(innsyn).not.toMatch(/#0066ff/);
   });
 });

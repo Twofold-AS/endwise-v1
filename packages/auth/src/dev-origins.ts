@@ -53,6 +53,8 @@ export function devTrustedOrigins(port = 3000): string[] {
     `http://localhost:${port}`,
     `http://127.0.0.1:${port}`,
     `http://platform.localhost:${port}`,
+    // App-sonen (app.endwise.no) testes lokalt som app.localhost — F39.
+    `http://app.localhost:${port}`,
     ...lokaleIPv4().map((ip) => `http://${ip}:${port}`),
   ];
 }

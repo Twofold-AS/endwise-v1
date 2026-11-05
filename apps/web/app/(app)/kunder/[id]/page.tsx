@@ -20,6 +20,7 @@ import { useParams } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { CardShell } from '../../_shell/cards';
+import { MobilSideBunn } from '../../_shell/pulse-kort';
 import { SideChromeSkall } from '../../_shell/side-chrome-skall';
 import { STATUS_LABEL, STATUS_TONE } from '../../bookinger/_status';
 import { dato, datoTid, EuFrist, Feil, Kilde, kroner, Laster, Seksjon, TYPE_LABEL } from '../_delt';
@@ -369,6 +370,7 @@ export default function KundekortPage() {
           </Link>
           <SlettKunde />
         </div>
+        <MobilSideBunn />
       </Side>
     </SideChromeSkall>
   );

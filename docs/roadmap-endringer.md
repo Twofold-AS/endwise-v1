@@ -5,6 +5,14 @@ Roadmap er én kilde til sannhet — derfor skal hver endring i den ha en linje 
 
 ---
 
+## 2026-11-05 — F42-05 kunde-dock Mobbin uten magnify
+
+**Type:** polish. Ingen ny UI-pakke (Bencho GlassDock fra F42-04). Ingen techstack-endring. Ingen flags.
+**Godkjent av:** Mikael (05.11.2026: dock skal matche Endwise/Mobbin; ingen animasjon ved trykk).
+**Endring:** Ny **F42-05** `done`. Hoveddock + Ronny-dock: 24px, hairline, ink, ingen magnify/bounce/scale.
+
+---
+
 ## 2026-11-04 — F41-06 slett forhandler (slug_reservations uten tenant_id)
 
 **Type:** hotfix. Ingen ny UI-pakke. Ingen techstack-endring. Ingen flags.

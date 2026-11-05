@@ -1,8 +1,7 @@
 'use client';
 
 import {
-  ArrowUpRight,
-  ChartColumn,
+  ArrowRight,
   CircleQuestionMark,
   DitherDonutChart,
   DitherGrowthChart,
@@ -15,7 +14,13 @@ import {
 import type { Route } from 'next';
 import Link from 'next/link';
 import { type ReactNode, useEffect, useState } from 'react';
-import { PHONE_DEST_FYLL, PHONE_HERO_FYLL, PULSE_ENDRINGER_HREF } from './phone-home';
+import {
+  PHONE_DEST_FYLL,
+  PHONE_HERO_FYLL,
+  PULSE_AVVIK_HREF,
+  PULSE_ENDRINGER_HREF,
+  PULSE_FORESPORSEL_HREF,
+} from './phone-home';
 import {
   type AnalyserMockStat,
   dagFremgang,
@@ -118,26 +123,26 @@ export function PulseKort({
 }
 
 /**
- * Endringer — lenke som Innboks-raden: text-label, ikke fet, hale-pil høyre.
+ * Endringer — mørk tile-knapp (Claude-designet). Ink-CTA, aldri #0066ff.
  */
-export function PulseEndringerLenke() {
+export function PulseEndringerKnapp({ className = '' }: { className?: string }) {
   return (
     <Link
       href={PULSE_ENDRINGER_HREF as Route}
       aria-label="Endringer"
       data-pulse-endringer
       data-pulse-ikon="Endringer"
-      className="inline-flex shrink-0 items-center gap-1 text-label font-normal text-fg [touch-action:manipulation]"
+      className={`inline-flex h-[37px] shrink-0 items-center gap-2 rounded-[13px] bg-fg px-4 text-label text-bg [touch-action:manipulation] ${className}`}
     >
       <span>Endringer</span>
-      <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
+      <ArrowRight size={15} strokeWidth={1.75} aria-hidden />
     </Link>
   );
 }
 
 /**
- * Avvik og Forespørsler — to separate Modus-sirkler + tall ved siden.
- * Ikke én avrundet boks med loddrett skille. Samlet maks 50 % av raden.
+ * Avvik og Forespørsler — én segmentert boks (Claude-designet):
+ * rød trekant + avvik | skille | gult spørsmål + forespørsler.
  */
 export function PulseAvvikForesporBoks({
   avvik,
@@ -151,39 +156,36 @@ export function PulseAvvikForesporBoks({
   return (
     <fieldset
       data-pulse-avvik-boks
-      className="m-0 flex w-max max-w-[50%] min-w-0 items-center gap-2 border-0 p-0"
+      className="m-0 flex h-[37px] w-max min-w-0 items-stretch overflow-hidden rounded-[13px] border border-divide p-0"
     >
       <legend className="sr-only">{`Avvik ${avvik}, Forespørsler ${forespor}`}</legend>
-      <div data-pulse-avvik-felt className="inline-flex min-w-0 items-center gap-1.5">
+      <Link
+        href={PULSE_AVVIK_HREF as Route}
+        data-pulse-avvik-felt
+        className="inline-flex min-w-0 items-center gap-1.5 px-3 [touch-action:manipulation]"
+      >
+        <TriangleAlert size={16} strokeWidth={1.6} className="text-danger" aria-hidden />
         <span
-          data-pulse-modus-ikon="avvik"
-          className="ew-modus-plate inline-flex items-center rounded-full p-0.5"
+          data-pulse-avvik-tall
+          className="text-[15px] leading-none font-medium text-danger tabular-nums"
         >
-          <span className="inline-flex size-7 h-7 w-7 items-center justify-center text-fg">
-            <span className="inline-flex size-6 items-center justify-center rounded-full">
-              <TriangleAlert size={14} strokeWidth={1.6} aria-hidden />
-            </span>
-          </span>
-        </span>
-        <span data-pulse-avvik-tall className="text-label font-normal tabular-nums">
           {laster ? '·' : avvik}
         </span>
-      </div>
-      <div data-pulse-forespor-felt className="inline-flex min-w-0 items-center gap-1.5">
+      </Link>
+      <span className="w-px self-stretch bg-divide" aria-hidden />
+      <Link
+        href={PULSE_FORESPORSEL_HREF as Route}
+        data-pulse-forespor-felt
+        className="inline-flex min-w-0 items-center gap-1.5 px-3 [touch-action:manipulation]"
+      >
+        <CircleQuestionMark size={16} strokeWidth={1.6} className="text-warn" aria-hidden />
         <span
-          data-pulse-modus-ikon="forespor"
-          className="ew-modus-plate inline-flex items-center rounded-full p-0.5"
+          data-pulse-forespor-tall
+          className="text-[15px] leading-none font-medium text-warn tabular-nums"
         >
-          <span className="inline-flex size-7 h-7 w-7 items-center justify-center text-fg">
-            <span className="inline-flex size-6 items-center justify-center rounded-full">
-              <CircleQuestionMark size={14} strokeWidth={1.6} aria-hidden />
-            </span>
-          </span>
-        </span>
-        <span data-pulse-forespor-tall className="text-label font-normal tabular-nums">
           {laster ? '·' : forespor}
         </span>
-      </div>
+      </Link>
     </fieldset>
   );
 }
@@ -261,8 +263,8 @@ export function PulseDagSirkel({
 }
 
 /**
- * Toppkort: ukedag+dato og Endringer på samme rad ·
- * PPF-siffer sentrert mot buehøyde · etiketter på 08.00/19.00 · Modus nederst.
+ * Toppkort (Claude-designet): stor dato-tittel · 3 stats mot buehøyde ·
+ * segmentert avvik/forespørsler + mørk Endringer-knapp nederst.
  */
 export function PulseHeroFlate({
   ukedag,
@@ -294,7 +296,7 @@ export function PulseHeroFlate({
       data-pulse-kort="hero"
       data-verkstedet-hero=""
       data-pulse-hero-todelt
-      className={`${PHONE_HERO_FYLL} relative flex min-h-11 w-full flex-col gap-2 p-3`}
+      className={`${PHONE_HERO_FYLL} relative flex min-h-11 w-full flex-col gap-3 p-4`}
     >
       <div data-pulse-hero-topp className="flex items-center justify-between gap-3">
         <Link
@@ -302,21 +304,20 @@ export function PulseHeroFlate({
           data-pulse-del="1"
           className="min-w-0 [touch-action:manipulation]"
         >
-          <p data-pulse-ukedag className="text-label font-normal text-fg">
+          <p data-pulse-ukedag className="text-[20px] leading-7 font-semibold text-fg">
             {ukedag}{' '}
-            <span data-pulse-dato className="text-label font-normal text-fg-muted">
+            <span data-pulse-dato className="text-[17px] font-normal text-fg-muted">
               {dato}
             </span>
           </p>
         </Link>
-        <PulseEndringerLenke />
       </div>
       <Link
         href={href as Route}
         data-pulse-teller-rad
-        className="flex min-w-0 items-end gap-3 [touch-action:manipulation]"
+        className="flex min-w-0 items-end gap-4 [touch-action:manipulation]"
       >
-        <div className="grid min-w-0 flex-1 grid-cols-3 divide-x divide-divide">
+        <div className="grid min-w-0 flex-1 grid-cols-3">
           <PulseTall label="Planlagt" verdi={planlagt} laster={lasterJobber} />
           <PulseTall label="Pågår" verdi={paagaar} laster={lasterJobber} />
           <PulseTall label="Ferdig" verdi={ferdig} laster={lasterJobber} />
@@ -327,6 +328,7 @@ export function PulseHeroFlate({
       </Link>
       <div data-pulse-hero-bunn className="flex w-full items-center justify-between gap-3">
         <PulseAvvikForesporBoks avvik={avvik} forespor={forespor} laster={lasterEndringer} />
+        <PulseEndringerKnapp />
       </div>
     </div>
   );
@@ -342,17 +344,18 @@ export function PulseTall({
   laster: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center justify-end px-2 text-center first:pl-0 last:pr-0">
-      <div data-pulse-tall-siffer className="flex h-[78px] w-full items-center justify-center">
-        <p className="text-[28px] font-semibold leading-none text-fg tabular-nums">
-          {laster ? (
-            <span className="inline-block h-7 w-8 animate-pulse rounded-sm bg-border" />
-          ) : (
-            verdi
-          )}
-        </p>
-      </div>
-      <p data-pulse-tall-etikett className="h-[16px] text-[13px] leading-none text-fg-muted">
+    <div className="flex min-w-0 flex-col items-center justify-end text-center">
+      <p
+        data-pulse-tall-siffer
+        className="w-full text-[36px] leading-none font-semibold text-fg tabular-nums"
+      >
+        {laster ? (
+          <span className="inline-block h-9 w-8 animate-pulse rounded-sm bg-border" />
+        ) : (
+          verdi
+        )}
+      </p>
+      <p data-pulse-tall-etikett className="mt-1.5 text-[13px] leading-4 text-fg-muted">
         {label}
       </p>
     </div>
@@ -360,14 +363,14 @@ export function PulseTall({
 }
 
 /**
- * Avlang ikonplate — alltid hvit, også i mørk modus.
- * Ikke `bg-card` / `bg-canvas` (de går mørke med tema).
+ * Kvadratisk ikon-tile (Claude-designet: 46×46, radius 14) — alltid hvit,
+ * også i mørk modus. Ikke `bg-card` / `bg-canvas` (de går mørke med tema).
  */
 export function PulseIkonFlate({ children }: { children: ReactNode }) {
   return (
     <span
       data-pulse-ikonboks
-      className="flex h-9 w-14 shrink-0 items-center justify-center rounded-[12px] text-[#141414] shadow-none ring-1 ring-divide"
+      className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] text-[#141414] shadow-none ring-1 ring-divide"
       style={{ backgroundColor: WHITE }}
     >
       {children}
@@ -396,8 +399,8 @@ export function Pulse30dSpark({ verdier }: { verdier: number[] }) {
 }
 
 /**
- * Én-linjes radkort: hvit ikonboks · tittel · hale-pil · teller.
- * Ingen mini-stats / trend. Ingen mock-badge.
+ * Én-linjes radkort (Claude-designet): kvadratisk ikon-tile · tittel ·
+ * teller · hale-pil. Ingen mini-stats / trend. Ingen mock-badge.
  */
 export function PulseRadKort({
   href,
@@ -420,37 +423,35 @@ export function PulseRadKort({
     <Link
       href={href as Route}
       data-pulse-rad={tittel}
-      className={`${PHONE_DEST_FYLL} flex h-full min-h-11 w-full min-w-0 items-center overflow-hidden py-3 [touch-action:manipulation] ${
-        kompakt ? 'gap-2 px-3' : 'gap-3 px-4'
-      }`}
+      className={`${PHONE_DEST_FYLL} flex h-full min-h-11 w-full min-w-0 items-center gap-3 overflow-hidden px-3 py-3 [touch-action:manipulation]`}
     >
       <PulseIkonFlate>
         <Ikon size={22} strokeWidth={1.75} aria-hidden />
       </PulseIkonFlate>
-      <span className="min-w-0 flex-1 truncate text-label text-fg">{tittel}</span>
-      {kompakt ? null : (
-        <ArrowUpRight size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" aria-hidden />
-      )}
-      <span className="shrink-0 text-label text-fg tabular-nums">
+      <span className="min-w-0 flex-1 truncate text-body text-fg">{tittel}</span>
+      <span className="shrink-0 text-body font-medium text-fg tabular-nums">
         {laster ? (
           <span className="inline-block h-4 w-6 animate-pulse rounded-sm bg-border" />
         ) : (
           teller
         )}
       </span>
+      {kompakt ? null : (
+        <ArrowRight size={16} strokeWidth={1.75} className="shrink-0 text-fg-muted" aria-hidden />
+      )}
     </Link>
   );
 }
 
-/** +Jobb — samme spor som På jobb (50/50). Litt større enn radkortene. */
+/** Ny Jobb — samme spor som På jobb (50/50). Claude-designet: fet tittel + tile. */
 export function PulseJobbFlis() {
   return (
     <Link
       href={'/bookinger/ny' as Route}
       data-pulse-jobb
-      className={`${PHONE_DEST_FYLL} flex h-full min-h-14 w-full min-w-0 items-center justify-between gap-3 overflow-hidden px-3 py-3.5 text-fg [touch-action:manipulation]`}
+      className={`${PHONE_DEST_FYLL} flex h-full min-h-14 w-full min-w-0 items-center justify-between gap-3 overflow-hidden px-4 py-3 text-fg [touch-action:manipulation]`}
     >
-      <span className="min-w-0 truncate text-[15px] font-normal">Jobb</span>
+      <span className="min-w-0 truncate text-[18px] font-semibold">Ny Jobb</span>
       <PulseIkonFlate>
         <Plus size={22} strokeWidth={1.75} aria-hidden />
       </PulseIkonFlate>
@@ -459,10 +460,9 @@ export function PulseJobbFlis() {
 }
 
 /**
- * Tall — én boks over Jobb / På jobb (Claude §4.1 på Endwise-kortet).
- * Topp som Innboks: hvit ikonboks · «Tall» · «siste 30 dager» · Alle tall.
- * Under: live Bookinger + tomme/deaktiverte Visninger/Returer/Credits.
- * Boksene skjules ikke. Ingen dither.
+ * Analyse — Claude-designet: «Analyse» · «siste 30 dager» · «Alle tall →»,
+ * uten ikonplate i header. Under: Visninger, Bookinger, Returer, Credits.
+ * Kun Bookinger er live — resten ærlige «Ingen data»-stubber. Ingen dither.
  */
 export function PulseAnalyserKort({
   stats,
@@ -480,29 +480,24 @@ export function PulseAnalyserKort({
   return (
     <div
       data-pulse-analyser
-      data-tall-kort
-      className={`${PHONE_DEST_FYLL} flex w-full flex-col px-4 py-3`}
+      data-analyse-kort
+      className={`${PHONE_DEST_FYLL} flex w-full flex-col px-4 py-3.5`}
     >
-      <div className="flex min-h-11 w-full min-w-0 items-center gap-3">
-        <PulseIkonFlate>
-          <ChartColumn size={22} strokeWidth={1.75} aria-hidden />
-        </PulseIkonFlate>
-        <div className="min-w-0 flex-1">
-          <p data-analyser-tittel className="truncate text-label leading-none text-fg">
-            Tall
-          </p>
-          <p data-analyser-periode className="mt-1 truncate text-[13px] leading-4 text-fg-muted">
-            siste 30 dager
-          </p>
-        </div>
+      <div className="flex w-full min-w-0 items-baseline gap-2">
+        <p data-analyser-tittel className="text-[18px] leading-6 font-semibold text-fg">
+          Analyse
+        </p>
+        <p data-analyser-periode className="truncate text-meta leading-6 text-fg-muted">
+          siste 30 dager
+        </p>
         <Link
           href={href as Route}
           data-analyser-alle-tall
           data-analyser-se-tallene
-          className="inline-flex shrink-0 items-center gap-1 text-label font-normal text-fg [touch-action:manipulation]"
+          className="ml-auto inline-flex shrink-0 items-center gap-1 text-label leading-6 text-fg-muted [touch-action:manipulation]"
         >
           Alle tall
-          <ArrowUpRight size={16} strokeWidth={1.75} className="text-fg-muted" aria-hidden />
+          <ArrowRight size={14} strokeWidth={1.75} aria-hidden />
         </Link>
       </div>
       <div
@@ -511,7 +506,7 @@ export function PulseAnalyserKort({
         className={
           en
             ? 'mt-2 border-t border-divide pt-3'
-            : 'mt-2 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-divide pt-3'
+            : 'mt-2 grid grid-cols-2 gap-x-4 gap-y-3.5 border-t border-divide pt-3 md:grid-cols-4'
         }
       >
         {kpis.map((s) => (
@@ -534,11 +529,11 @@ function PulseAnalyseKpi({ stat, laster = false }: { stat: AnalyserMockStat; las
       className={`flex min-w-0 flex-col gap-1 ${deaktivert ? 'opacity-50' : ''}`}
     >
       <p className="min-w-0 truncate text-[13px] leading-4 text-fg-muted">{stat.label}</p>
-      <div className="flex min-w-0 items-baseline gap-1.5">
+      <div className="flex min-w-0 items-center gap-1.5">
         {laster ? (
-          <span className="inline-block h-4 w-8 animate-pulse rounded-sm bg-border" />
+          <span className="inline-block h-5 w-8 animate-pulse rounded-sm bg-border" />
         ) : verdi !== '' ? (
-          <p className="text-[15px] font-semibold leading-none text-fg tabular-nums">{verdi}</p>
+          <p className="text-[24px] font-semibold leading-none text-fg tabular-nums">{verdi}</p>
         ) : null}
         {stat.stub ? (
           <span data-analyser-stub className="truncate text-[13px] leading-none text-fg-faint">
@@ -557,5 +552,14 @@ function PulseAnalyseKpi({ stat, laster = false }: { stat: AnalyserMockStat; las
         ) : null}
       </div>
     </div>
+  );
+}
+
+/** Bunntekst på forhandler-hjem (Claude-designet). */
+export function PulseBunntekst() {
+  return (
+    <p data-pulse-bunntekst className="pb-8 pt-2 text-center text-meta text-fg-muted">
+      <span className="font-semibold text-fg">Endwise</span> levert av TwoFold
+    </p>
   );
 }

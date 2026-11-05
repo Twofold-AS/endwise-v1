@@ -338,8 +338,8 @@ export type AnalyserMockStat = {
   serie: number[];
 };
 
-/** Claude §4.1 — Bookinger er live. Øvrige bokser står tomme/deaktivert. */
-export const TALL_KPI_IDS = ['bookinger', 'visninger', 'returer', 'credits'] as const;
+/** Claude-designet: Visninger først. Bookinger er live, resten ærlige stubber. */
+export const TALL_KPI_IDS = ['visninger', 'bookinger', 'returer', 'credits'] as const;
 export const TALL_STUB_INGEN_API = 'Ingen data';
 
 /**
@@ -363,16 +363,16 @@ export function bookingerSiste30d(jobber: PhoneBooking[], naa: Date): number {
 export function tallKortStats(jobber: PhoneBooking[], naa: Date): AnalyserMockStat[] {
   return [
     {
-      id: 'bookinger',
-      label: 'Bookinger',
-      verdi: bookingerSiste30d(jobber, naa),
-      serie: [],
-    },
-    {
       id: 'visninger',
       label: 'Visninger',
       verdi: '',
       stub: TALL_STUB_INGEN_API,
+      serie: [],
+    },
+    {
+      id: 'bookinger',
+      label: 'Bookinger',
+      verdi: bookingerSiste30d(jobber, naa),
       serie: [],
     },
     {

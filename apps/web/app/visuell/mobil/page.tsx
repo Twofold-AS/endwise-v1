@@ -24,6 +24,7 @@ import { osloVeggklokke } from '../../(app)/_lib/oslo-dag';
 import { pulsdagOverskrift, tallKortStats } from '../../(app)/_shell/phone-home-pulse';
 import {
   PulseAnalyserKort,
+  PulseBunntekst,
   PulseHeroFlate,
   PulseJobbFlis,
   PulseRadKort,
@@ -253,9 +254,9 @@ function VisuellHjemPulse() {
           forespor={0}
           sirkelNaa={sirkelNaa}
         />
-        <PulseRadKort href="#innboks" ikon={Inbox} tittel="Les alle siste meldinger" teller={7} />
-        <PulseRadKort href="#lager" ikon={Package} tittel="Venter på bestilling" teller={3} />
         <PulseAnalyserKort stats={analyser} href="#statistikk" forhandlerNavn="Nordvik MC" />
+        <PulseRadKort href="#innboks" ikon={Inbox} tittel="Uleste meldinger" teller={7} />
+        <PulseRadKort href="#lager" ikon={Package} tittel="Venter på bestilling" teller={3} />
         <div data-pulse-bunn className="flex w-full gap-3">
           <div className="min-w-0 flex-1 basis-0">
             <PulseRadKort href="#team" ikon={Users} tittel="På jobb" teller="2 / 4" kompakt />
@@ -264,6 +265,7 @@ function VisuellHjemPulse() {
             <PulseJobbFlis />
           </div>
         </div>
+        <PulseBunntekst />
       </div>
     </Side>
   );

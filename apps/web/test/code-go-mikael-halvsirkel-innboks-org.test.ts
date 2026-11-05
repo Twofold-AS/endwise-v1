@@ -187,7 +187,8 @@ describe('CODE-GO Mikael — halvsirkel + Endringer + innboks + org', () => {
     expect(meny).toMatch(/Ditt abonnement/);
     expect(meny).not.toMatch(/Oppgrader abonnement/);
     expect(meny).toMatch(/text-\[17px\] font-\[700\]/);
-    expect(meny).toMatch(/#0066ff/);
+    expect(meny).toMatch(/bg-fg/);
+    expect(meny).not.toMatch(/#0066ff/);
     expect(meny).toMatch(/Twofold/);
     expect(PHONE_PROFIL_RAD).toMatch(/text-body/);
     expect(PHONE_PROFIL_RAD).toMatch(/font-\[450\]/);

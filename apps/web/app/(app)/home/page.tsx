@@ -1,11 +1,16 @@
 'use client';
 
-import { LasterFlate } from '@endwise/ui';
+import { LasterFlate, ListeRad, Seksjon } from '@endwise/ui';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
+import { trpc } from '@/lib/trpc';
+import { sammeOsloDag } from '../_lib/oslo-dag';
 import { useMdViewport } from '../_lib/use-md-viewport';
 import { HJEM_SCROLL_FLATE, VERKSTED_INNHOLD } from '../_shell/phone-home';
 import { DealerPulseKort, PhoneHomeDealer } from '../_shell/phone-home-dealer';
+import { fmtTime, STATUS_LABEL } from '../bookinger/_status';
 import { VerkstedetDag } from '../dashboard/_verkstedet-dag';
 
 /**
@@ -49,6 +54,46 @@ function VerkstedetDesktop() {
         <p>Alt under er hentet fra dine egne saker.</p>
       </div>
       <DealerPulseKort className="flex flex-col gap-2.5" />
+      <VerkstedetDagsplan />
     </div>
+  );
+}
+
+function VerkstedetDagsplan() {
+  const bookings = trpc.bookings.list.useQuery({ limit: 100 });
+  const naa = useMemo(() => new Date(), []);
+  const rader = useMemo(
+    () =>
+      (bookings.data ?? [])
+        .filter((b) => sammeOsloDag(b.startsAt, naa))
+        .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()),
+    [bookings.data, naa],
+  );
+
+  return (
+    <section data-dagens-timeplan className="flex flex-col gap-2">
+      <Seksjon tittel="Dagens timeplan">
+        <Link
+          href={'/jobber' as Route}
+          className="inline-flex h-11 items-center text-[16px] text-fg underline underline-offset-2"
+        >
+          Åpne timeplan
+        </Link>
+        {bookings.isLoading ? <LasterFlate label="Henter timeplanen" /> : null}
+        {!bookings.isLoading && rader.length === 0 ? (
+          <p className="text-body text-fg-muted">Ingen jobber i dag.</p>
+        ) : null}
+        {rader.map((b) => (
+          <ListeRad
+            key={b.id}
+            tittel={`${fmtTime(b.startsAt)} · ${b.regNumber ?? 'Uten regnr'}`}
+            undertekst={`${STATUS_LABEL[b.status] ?? b.status}${
+              b.mechanicName ? ` · ${b.mechanicName}` : ''
+            }`}
+            href={`/bookinger/${b.id}`}
+          />
+        ))}
+      </Seksjon>
+    </section>
   );
 }

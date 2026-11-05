@@ -155,37 +155,19 @@ export function KundeProfilFlate() {
   return (
     <KundeInnlogget>
       {(p) => (
-        <Seksjon tittel="Profil">
-          <ListeRad tittel={p.navn} undertekst={p.epost ?? 'Ingen e-post'} chevron={false} />
-          {p.telefon ? <ListeRad tittel="Telefon" undertekst={p.telefon} chevron={false} /> : null}
-          <DeaktivertHandling forklaring="Endring av profil kommer senere">
-            Endre profil
-          </DeaktivertHandling>
-        </Seksjon>
-      )}
-    </KundeInnlogget>
-  );
-}
-
-export function KundeHubFlate() {
-  return (
-    <KundeInnlogget>
-      {(p) => (
         <>
-          <Seksjon tittel={`Hei ${p.navn}`}>
-            <ListeRad
-              tittel="Bookinger"
-              undertekst="Mottatt, under arbeid, klar"
-              href="/bookinger"
-            />
-            <ListeRad tittel="Bestill time" undertekst="Velg dag og tjeneste" href="/bestill" />
-            <ListeRad tittel="Kjøretøy" undertekst="Servicehistorikk" href="/kjoretoy" />
-            <ListeRad tittel="Meldinger" undertekst="Skriv til verkstedet" href="/meldinger" />
-            <ListeRad tittel="Profil" undertekst={p.epost ?? 'Kontaktinfo'} href="/profil" />
-            <ListeRad tittel="Mine data" undertekst="Innsyn" href="/mine-data" />
-            <ListeRad tittel="Personvern" undertekst="Slik vi behandler data" href="/personvern" />
+          <Seksjon tittel="Profil">
+            <ListeRad tittel={p.navn} undertekst={p.epost ?? 'Ingen e-post'} chevron={false} />
+            {p.telefon ? (
+              <ListeRad tittel="Telefon" undertekst={p.telefon} chevron={false} />
+            ) : null}
+            <DeaktivertHandling forklaring="Endring av profil kommer senere">
+              Endre profil
+            </DeaktivertHandling>
           </Seksjon>
           <Seksjon tittel="Mer">
+            <ListeRad tittel="Mine data" undertekst="Innsyn" href="/mine-data" />
+            <ListeRad tittel="Personvern" undertekst="Slik vi behandler data" href="/personvern" />
             <ListeRad tittel="Deler" undertekst="Nettbutikk er satt på vent" href="/deler" />
             <ListeRad tittel="Kvitteringer" undertekst="Ingen kjøp ennå" href="/kvitteringer" />
           </Seksjon>

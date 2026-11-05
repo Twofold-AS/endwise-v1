@@ -1403,6 +1403,10 @@ const ROADMAP = [
   { id:"F41-11", o:"Prod-innlogging + passnøkkel, ikke TOTP", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> e759b7d live (<code>dpl_Dt9nkCfUvXr1QcgrgVpYKg9oC1rF</code>). Historisk prod-feil: <code>42703 column \"kontekst\" of relation \"session\" does not exist</code> på magic-link verify. 0063 kjørte. Etter #216: TOTP-mur rev sesjon / krevde Authenticator. Fix: passnøkkel er andre faktor for <code>dealer_*</code>/<code>endwise_*</code> (tvunget, uten utlogging). Kunde: valgfri nøkkel. Uinnlogget &lt;sub&gt; er marked (også upublisert); meny bare ved kunde-sesjon hos tenanten. <b>0064:</b> idempotent <code>passkey</code>-tabell + kontekst-kolonner; tømmer <code>two_factor</code> og <code>two_factor_enabled</code>. Kjører via <code>db:setup</code> (GitHub main) og <code>vercel-migrate</code> (Vercel prod-build).",
     area:"auth", ui:"built", status:"done" },
 ]},
+{ phase:"F42", title:"White label — Claude-design på ekte sider", target:"Etter F41 / Mikael 05.11.2026", items:[
+  { id:"F42-01", o:"Kundeside og forhandlerside følger Claude-designet", kat:"dashboard", sub:"forhandler", t:"⭐ <b>05.11.2026:</b> Mikael: sidene ser ikke ut som Claude. Kunde: 6 faner (Hjem · Bestill · Bookinger · Meldinger · Kjøretøy · Profil), hjem Hei + aktiv jobb + Bestill time. Forhandler: Dagens timeplan under pulse på desktop; profil-CTA ink (ikke #0066ff). Mobbin, mobile first. Ingen preview-ruter. Kilde: Endwise Kunde/Mobile.dc.html kartlagt i #178.",
+    area:"kunde", ui:"built", status:"done" },
+]},
 ];
 
 /* =====================================================================

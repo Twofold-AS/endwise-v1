@@ -1,6 +1,7 @@
 import type { OffentligTenant } from '@endwise/modules/tenant-host/oppslag';
 import { DeaktivertHandling, ListeRad, Seksjon, Side } from '@endwise/ui';
 import type { ReactNode } from 'react';
+import { KundeFaneRail } from './fane-rail.tsx';
 import { kundeErInnlogget } from './sesjon.ts';
 
 const FORBUDT_CTA = '#0066ff';
@@ -11,19 +12,6 @@ function aksent(farge: string | null): string | undefined {
   return farge;
 }
 
-const KUNDE_NAV = [
-  { href: '/', label: 'Hjem' },
-  { href: '/bestill', label: 'Bestill' },
-  { href: '/bookinger', label: 'Bookinger' },
-  { href: '/kjoretoy', label: 'Kjøretøy' },
-  { href: '/meldinger', label: 'Meldinger' },
-  { href: '/deler', label: 'Deler' },
-  { href: '/kvitteringer', label: 'Kvitteringer' },
-  { href: '/mine-data', label: 'Mine data' },
-  { href: '/min-side', label: 'Min side' },
-  { href: '/profil', label: 'Profil' },
-] as const;
-
 export async function KundeSkall({
   tenant,
   tittel,
@@ -31,7 +19,7 @@ export async function KundeSkall({
   children,
 }: {
   tenant: OffentligTenant;
-  tittel: string;
+  tittel?: string;
   undertekst?: string;
   children: ReactNode;
 }) {
@@ -72,27 +60,16 @@ export async function KundeSkall({
             {tenant.visningsnavn}
           </p>
         </div>
-        {innlogget ? (
-          <nav
-            aria-label="Kunde"
-            className="mx-auto mt-3 flex max-w-lg flex-wrap gap-2 text-label max-md:text-[14px]"
-          >
-            {KUNDE_NAV.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="inline-flex h-11 items-center rounded-full px-3 text-fg"
-              >
-                {l.label}
-              </a>
-            ))}
-          </nav>
-        ) : null}
+        {innlogget ? <KundeFaneRail /> : null}
       </header>
       <div className="mx-auto max-w-lg">
-        <Side tittel={tittel} undertekst={undertekst}>
-          {children}
-        </Side>
+        {tittel ? (
+          <Side tittel={tittel} undertekst={undertekst}>
+            {children}
+          </Side>
+        ) : (
+          <div className="flex flex-col gap-4 max-md:px-4 max-md:py-4">{children}</div>
+        )}
       </div>
       {tenant.visLevertAv ? (
         <footer className="px-4 py-6 text-center text-meta text-fg-muted max-md:text-[13px]">

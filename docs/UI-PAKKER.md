@@ -478,6 +478,7 @@ barrel-eksporten**)
 | **Bakgrunn (AI-stripe)** | Grainient (`ogl`) | **Ubrukt i produkt-chrome etter 05.09.2026** (Ronny-sheet). Pakken ligger igjen. ⛔ Ikke stripe. ⛔ Ikke sheet-header. Galaxy er Oppgrader. |
 | **Logg-fade** | Gradual Blur (lokal kopi) | React Bits API, vendoret i `_workshop/gradual-blur.tsx` uten `mathjs`. Kun når loggen overlapper. |
 | **Oppgrader-CTA** | Galaxy (`ogl`) | React Bits Galaxy: oval Oppgrader-knapp **og** Enterprise-merke (`density={1}`, `#111`). Ikke Grainient. Ikke Ronny. Ikke dealer-pergament. |
+| **Kunde-dock** | Bencho Magnifying dock (MIT) | `GlassDock` fra `cabralorenzo/bencho` `blocks/dock`. Kundeside-nav. Tokens → Mobbin-ink. |
 | **Identitet** | bloub (`BloubBot`) | Cercle + store øyne. Én ColorId per ansatt (12 faste). Se §10 |
 | **Maskot-lab** | bloub (`jeremy-prt/bloub`) | Intern `/bot` lever videre. Se §11 |
 
@@ -593,6 +594,16 @@ montering, når `ResponsiveContainer` har målt bredden via `ResizeObserver`. Ko
    fordi `ResizeObserver` ikke fyrer i et skjult dokument. Husk det hvis grafer legges i faner.
 
 ---
+
+## 2c. Bencho Magnifying dock — kundeside (05.11.2026)
+
+| | |
+|---|---|
+| **Brukes til** | Innlogget `<sub>.endwise.no` hovedmeny + Ronny-dock (F42-04) |
+| **Kilde** | https://bencho.dev/blocks/dock · `?c=dock&theme=light` · https://github.com/cabralorenzo/bencho/tree/main/blocks/dock |
+| **Ligger i** | `apps/web/app/%5Fkunde/_lib/bencho/` (`GlassDock.tsx`, `GlassDock.css`, `tokens.css`) |
+| **Lisens** | MIT |
+| **Tilpasset** | `items` / `active` / `onSelect`; ikoner via `@endwise/ui`; tokens mappet til ink `#141414`. Pekelogikk, magnify, tip og CSS er Bencho. ⛔ `#0066ff` / `--pick`-blå |
 
 ## 3. dither-kit — ⛔ FJERNET FRA UI-ET (03.08.2026)
 
@@ -820,7 +831,7 @@ Kun disse. Hver enkelt har en grunn.
 | Komponent | Hvorfor ikke en pakke? |
 |---|---|
 | `Side` / `Seksjon` / `ListeRad` / `TomFlate` / `LasterFlate` / `FeilFlate` / `FilterChips` / `DeaktivertHandling` (`packages/ui/src/flate/`) | Board har ingen sidemal, liste-rad, empty-state eller deaktivert-handling med tooltip. Bygget på Board-primitiver (button, skeleton, chip, tooltip). Chrome-lås: `sidebar`, `app-shell` og `settings-modal` brukes ikke. |
-| Kundeskall (`apps/web/app/%5Fkunde/`, F18-01 / plan F2 / F41-09 / F42-01) | **Ingen ny pakke.** Komposisjon av `Side` / `Seksjon` / `ListeRad` / `DeaktivertHandling` + Board `Input` på logg-inn. Uinnlogget hjem er `KundeMarkedsFlate`. Innlogget: `KundeFaneRail` (6 Claude-faner) + `KundeHjemFlate` (Hei + aktiv jobb + Bestill time). Deler/Kvitteringer/Mine data under Profil. Egen kode fordi ingen pakke dekker forhandlerbranding + 6-fane kundeapp. ⛔ `#0066ff` på CTA. |
+| Kundeskall (`apps/web/app/%5Fkunde/`, F18-01 / plan F2 / F41-09 / F42-01 / F42-04) | **Bencho Magnifying dock** (MIT, `cabralorenzo/bencho` `blocks/dock` — `GlassDock.tsx` + `GlassDock.css`) + Board `Drawer` / `IconButton` / `ProgressBar`. Innlogget: header med forhandlerlogo+navn, bjelle/kurv-ark, to `GlassDock` (Hjem · Bookinger · Meldinger · Profil + Ronny). Tokens mappet til Mobbin-ink i `bencho/tokens.css`. ⛔ `#0066ff` på CTA. |
 | Forhandler desktop-hjem dagsplan (`apps/web/app/(app)/home/page.tsx` `VerkstedetDagsplan`, F42-01) | **Ingen ny pakke.** `Seksjon` + `ListeRad` under `DealerPulseKort`. Egen kode fordi Claude desktop (boks 598) er «Dagens timeplan», og shadcn calendar ville gitt et annet system enn pulse. Chrome urørt. ⛔ `#0066ff`. |
 | Innstillinger › Utseende (`apps/web/app/(app)/innstillinger/_utseende-fane.tsx`, F19-01 / plan F3) | **Ingen ny pakke.** `FeltInput` + `StatefulButton` + native fargevelger og filfelt. Egen kode fordi ingen pakke dekker «utkast + Gå live + kontrastfeil» i Innstillinger-fanene. |
 | `Btn`, `Badge`, `Chip`, `Card`, `Input` (`packages/ui/src/primitives/`) | Roadmap **F0-12** navngir dem eksplisitt som «primitiver fra komponentgalleriet». `Input` er tynt skall over `.ew-felt` / `FELT_MD` (Mobbin inset + 16px + hvit fokus). **Når prototypen er inne bør de revurderes** — dekker shadcn dem, skal de bort |

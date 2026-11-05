@@ -1,8 +1,10 @@
 import type { OffentligTenant } from '@endwise/modules/tenant-host/oppslag';
 import { DeaktivertHandling, ListeRad, Seksjon, Side } from '@endwise/ui';
 import type { ReactNode } from 'react';
-import { KundeFaneRail } from './fane-rail.tsx';
+import { AktivJobbKort } from './aktiv-jobb.tsx';
+import { KundeDock } from './dock.tsx';
 import { kundeErInnlogget } from './sesjon.ts';
+import { KundeTopp } from './topp.tsx';
 
 const FORBUDT_CTA = '#0066ff';
 
@@ -10,6 +12,47 @@ function aksent(farge: string | null): string | undefined {
   if (!farge) return undefined;
   if (farge.toLowerCase() === FORBUDT_CTA) return undefined;
   return farge;
+}
+
+function ForhandlerMerke({
+  tenant,
+  stor,
+  farge,
+}: {
+  tenant: OffentligTenant;
+  stor: boolean;
+  farge?: string;
+}) {
+  const px = stor ? 48 : 32;
+  return (
+    <div className="mx-auto flex max-w-lg items-center gap-3 px-3">
+      {tenant.logoUrl ? (
+        // biome-ignore lint/performance/noImgElement: Blob-URL per forhandler, ukjent host
+        <img
+          src={tenant.logoUrl}
+          alt=""
+          width={px}
+          height={px}
+          className={`shrink-0 rounded-full object-cover ${stor ? 'size-12' : 'size-8'}`}
+        />
+      ) : (
+        <span
+          aria-hidden
+          className={`flex shrink-0 items-center justify-center rounded-full bg-surface-2 font-[650] text-fg ${
+            stor ? 'size-12 text-[20px]' : 'size-8 text-[14px]'
+          }`}
+        >
+          {(tenant.visningsnavn.trim().slice(0, 1) || '·').toUpperCase()}
+        </span>
+      )}
+      <p
+        className="min-w-0 truncate text-title text-fg max-md:text-[18px] max-md:font-[650]"
+        style={farge ? { color: farge } : undefined}
+      >
+        {tenant.visningsnavn}
+      </p>
+    </div>
+  );
 }
 
 export async function KundeSkall({
@@ -32,37 +75,21 @@ export async function KundeSkall({
       data-kunde-innlogget={innlogget ? '1' : '0'}
       className="min-h-screen bg-bg text-fg"
     >
-      <header className="border-b border-border px-4 py-4">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          {tenant.logoUrl ? (
-            // biome-ignore lint/performance/noImgElement: Blob-URL per forhandler, ukjent host
-            <img
-              src={tenant.logoUrl}
-              alt=""
-              width={innlogget ? 32 : 48}
-              height={innlogget ? 32 : 48}
-              className={`shrink-0 rounded-full object-cover ${innlogget ? 'size-8' : 'size-12'}`}
-            />
-          ) : (
-            <span
-              aria-hidden
-              className={`flex shrink-0 items-center justify-center rounded-full bg-surface-2 font-[650] text-fg ${
-                innlogget ? 'size-8 text-[14px]' : 'size-12 text-[20px]'
-              }`}
-            >
-              {(tenant.visningsnavn.trim().slice(0, 1) || '·').toUpperCase()}
-            </span>
-          )}
-          <p
-            className="min-w-0 truncate text-title text-fg max-md:text-[18px] max-md:font-[650]"
-            style={farge ? { color: farge } : undefined}
-          >
-            {tenant.visningsnavn}
-          </p>
-        </div>
-        {innlogget ? <KundeFaneRail /> : null}
+      <header className="sticky top-0 z-60 border-b border-border bg-bg pt-[env(safe-area-inset-top)]">
+        {innlogget ? (
+          <KundeTopp navn={tenant.visningsnavn} logoUrl={tenant.logoUrl} farge={farge} />
+        ) : (
+          <div className="px-1 py-4">
+            <ForhandlerMerke tenant={tenant} stor farge={farge} />
+          </div>
+        )}
       </header>
-      <div className="mx-auto max-w-lg">
+      {innlogget ? <AktivJobbKort /> : null}
+      <div
+        className={`mx-auto max-w-lg ${
+          innlogget ? 'pb-[calc(6.5rem+env(safe-area-inset-bottom))]' : ''
+        }`}
+      >
         {tittel ? (
           <Side tittel={tittel} undertekst={undertekst}>
             {children}
@@ -70,12 +97,13 @@ export async function KundeSkall({
         ) : (
           <div className="flex flex-col gap-4 max-md:px-4 max-md:py-4">{children}</div>
         )}
+        {tenant.visLevertAv ? (
+          <footer className="px-4 py-6 text-center text-meta text-fg-muted max-md:text-[13px]">
+            Levert av Endwise
+          </footer>
+        ) : null}
       </div>
-      {tenant.visLevertAv ? (
-        <footer className="px-4 py-6 text-center text-meta text-fg-muted max-md:text-[13px]">
-          Levert av Endwise
-        </footer>
-      ) : null}
+      {innlogget ? <KundeDock /> : null}
     </div>
   );
 }

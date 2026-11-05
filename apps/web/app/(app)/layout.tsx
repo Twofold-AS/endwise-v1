@@ -14,7 +14,7 @@ import { erTillattMekanikerSti } from './_shell/nav';
 import { PHONE_SHELL_ROT } from './_shell/phone-home';
 import { PhoneShell } from './_shell/phone-shell';
 import { PwaRegister } from './_shell/pwa-register';
-import { erInnboksFlate } from './_shell/seksjon-sti';
+import { erBredHjemFlate, erInnboksFlate } from './_shell/seksjon-sti';
 import { Sidebar } from './_shell/sidebar';
 import { SidebarStateProvider } from './_shell/sidebar-state';
 import { StandbyPanel } from './_shell/standby-panel';
@@ -32,6 +32,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() ?? '';
   const innboksFlate = erInnboksFlate(pathname);
+  const bredHjem = erBredHjemFlate(pathname);
   const { data: session, isPending } = useSession();
   const { isMechanic, isAdmin, isLoading, needsOnboarding, twoFactorRequired, erPlattform } =
     useOrgRole();
@@ -123,7 +124,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   /*
    * Desktop: tre kolonner — sidebar 389 · innhold 598 · standby 452
-   * (akse 1050). Toppbarer 53px over boks 2 og 3. Telefon: sidebar skjult.
+   * (akse 1050). Toppbarer 53px over boks 2 og 3. På hjem-flatene
+   * (Claude-designet) fyller boks 2 hele aksen og standby går bort.
+   * Telefon: sidebar skjult.
    * PhoneShell er to toppbarer (merke+søk+Ronny+profil / dest-piller) +
    * hårlinje, `md:hidden`. PhoneBevel er borte. Dealer-layout monterer
    * ikke seksjonsbaren. Plattform (Endwise) kan montere den i eget
@@ -163,7 +166,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   >
                     <div
                       data-shell-box="2"
-                      className="flex min-h-0 min-w-0 flex-1 flex-col md:w-[598px] md:flex-none"
+                      className={`flex min-h-0 min-w-0 flex-1 flex-col md:flex-none ${
+                        bredHjem ? 'md:w-[1050px]' : 'md:w-[598px]'
+                      }`}
                     >
                       <Suspense fallback={null}>
                         <TopBar />
@@ -175,7 +180,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                         }`}
                       >
                         <main
-                          className={`min-w-0 flex-1 md:w-[598px] ${
+                          className={`min-w-0 flex-1 ${bredHjem ? 'md:w-[1050px]' : 'md:w-[598px]'} ${
                             innboksFlate ? 'flex min-h-0 flex-col overflow-hidden' : ''
                           }`}
                         >
@@ -195,7 +200,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                         </main>
                       </div>
                     </div>
-                    <StandbyPanel />
+                    {bredHjem ? null : <StandbyPanel />}
                   </div>
                 </div>
               </div>

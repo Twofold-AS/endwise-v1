@@ -19,7 +19,7 @@ import {
   kodeboks,
   meldingsboks,
 } from './epost-mal.ts';
-import { avsenderAdresseErKanonisk, formaterAvsenderFrom } from './merke.ts';
+import { avsenderAdresseErKanonisk, type EpostMerke, formaterAvsenderFrom } from './merke.ts';
 
 /** E-post-2FA og auth-eposter går via Resend (techstack §5). */
 let client: Resend | undefined;
@@ -287,11 +287,13 @@ export async function sendMagicLink(input: {
   kode: string;
   utloper: Date;
   navn?: string;
+  merke?: EpostMerke;
 }): Promise<void> {
   const klokkeslett = formaterKlokkeslett(input.utloper);
   const kodeVisning = visMagicLinkKode(input.kode);
   const navn = input.navn?.trim() ?? '';
   const hei = navn ? `Hei ${navn},` : 'Hei,';
+  const avsender = input.merke ? { visningsnavn: input.merke.navn } : undefined;
 
   if (skalLeggesILogg()) {
     devRamme(
@@ -308,7 +310,7 @@ export async function sendMagicLink(input: {
 
   await sendEmail({
     to: input.to,
-    subject: innloggingsEpostEmne(kodeVisning),
+    subject: innloggingsEpostEmne(kodeVisning, input.merke),
     text: [
       hei,
       '',
@@ -326,7 +328,9 @@ export async function sendMagicLink(input: {
       navn,
       kode: kodeVisning,
       lenke: input.lenke,
+      merke: input.merke,
     }),
+    avsender,
   });
 }
 

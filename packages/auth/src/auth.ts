@@ -40,6 +40,7 @@ import {
   sendByttEpostNyAdresse,
   sendMagicLink,
 } from './senders/resend.ts';
+import { epostMerkeFraSone, hentEpostMerke } from './senders/tenant-merke.ts';
 import { sendPhoneOtp, verifyPhoneOtp } from './senders/twilio.ts';
 import {
   ABSOLUTE_MAX_LIFETIME_SECONDS,
@@ -279,12 +280,17 @@ export function createAuth(
                 : null
               : url;
           if (!lenke) return;
+          const merke =
+            epostMerkeFraSone(sone) === 'forhandler' && tenantId
+              ? ((await hentEpostMerke(db, tenantId).catch(() => null)) ?? undefined)
+              : undefined;
           await sendMagicLink({
             to: email,
             lenke,
             kode: token,
             navn,
             utloper: new Date(Date.now() + MAGIC_LINK_TTL_SEKUNDER * 1000),
+            merke,
           });
         },
       }),

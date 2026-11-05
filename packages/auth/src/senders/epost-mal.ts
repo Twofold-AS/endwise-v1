@@ -81,16 +81,7 @@ export function byggEpostHtml(input: {
   const merke = input.merke ?? ENDWISE_MERKE;
   const merkenavn = rensVisningsnavn(merke.navn) || 'Endwise';
   const erForhandler = Boolean(input.merke);
-  const initial = merkenavn.slice(0, 1).toUpperCase() || '·';
-  const logo = httpsBilde(merke.logoUrl);
-  const topp = erForhandler
-    ? logo
-      ? `<img src="${esc(logo)}" width="32" height="32" alt="${esc(merkenavn)}" style="display:block;width:32px;height:32px;border:0;border-radius:16px;outline:none;text-decoration:none;">`
-      : `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="width:32px;height:32px;border-radius:16px;background-color:${FARGE.merke};font-family:${FONT};font-size:14px;line-height:32px;font-weight:650;color:${FARGE.tekst};text-align:center;">${esc(initial)}</td><td style="padding-left:10px;font-family:${FONT};font-size:16px;line-height:20px;font-weight:600;color:${FARGE.tekst};">${esc(merkenavn)}</td></tr></table>`
-    : `<img src="cid:${LOGO_EPOST_CID}"
-                 width="32" height="40"
-                 alt="${esc(merkenavn)}"
-                 style="display:block;width:32px;height:40px;border:0;outline:none;text-decoration:none;">`;
+  const topp = merkeHodeHtml(input.merke);
   const fot = erForhandler ? (merke.levertAv ? 'Levert av Endwise' : esc(merkenavn)) : 'Endwise';
   return `<!doctype html>
 <html lang="nb">
@@ -206,8 +197,26 @@ export const INNLOGGING_FARGE = {
   dempet: '#7a7a7a',
 } as const;
 
-export function innloggingsEpostEmne(kode: string): string {
+export function innloggingsEpostEmne(kode: string, merke?: EpostMerke): string {
+  if (merke) return `Din kode er ${kode}`;
   return `Din midlertidige Endwise kode er ${kode}`;
+}
+
+/** Forhandler: logo eller initial. Endwise: cid-logo. Samme topp som velkomst. */
+export function merkeHodeHtml(merke?: EpostMerke): string {
+  if (!merke) {
+    return `<img src="cid:${LOGO_EPOST_CID}"
+                 width="32" height="40"
+                 alt="Endwise"
+                 style="display:block;width:32px;height:40px;border:0;outline:none;text-decoration:none;">`;
+  }
+  const merkenavn = rensVisningsnavn(merke.navn) || 'Verkstedet';
+  const initial = merkenavn.slice(0, 1).toUpperCase() || '·';
+  const logo = httpsBilde(merke.logoUrl);
+  if (logo) {
+    return `<img src="${esc(logo)}" width="32" height="32" alt="${esc(merkenavn)}" style="display:block;width:32px;height:32px;border:0;border-radius:16px;outline:none;text-decoration:none;">`;
+  }
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="width:32px;height:32px;border-radius:16px;background-color:${FARGE.merke};font-family:${FONT};font-size:14px;line-height:32px;font-weight:650;color:${FARGE.tekst};text-align:center;">${esc(initial)}</td><td style="padding-left:10px;font-family:${FONT};font-size:16px;line-height:20px;font-weight:600;color:${FARGE.tekst};">${esc(merkenavn)}</td></tr></table>`;
 }
 
 /**
@@ -304,11 +313,14 @@ export function byggInnloggingsEpostHtml(input: {
   navn: string;
   kode: string;
   lenke: string;
+  merke?: EpostMerke;
 }): string {
   const navn = input.navn.trim();
   const hei = navn ? `Hei ${esc(navn)},` : 'Hei,';
   const kode = esc(input.kode);
   const lenke = esc(input.lenke);
+  const hode = merkeHodeHtml(input.merke);
+  const fot = input.merke?.levertAv ? 'Levert av Endwise' : '';
   return `<!doctype html>
 <html lang="nb">
 <head>
@@ -316,7 +328,7 @@ export function byggInnloggingsEpostHtml(input: {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
-<title>${esc(innloggingsEpostEmne(input.kode))}</title>
+<title>${esc(innloggingsEpostEmne(input.kode, input.merke))}</title>
 </head>
 <body style="margin:0;padding:0;background-color:${INNLOGGING_FARGE.side};">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Her er koden for å logge inn</div>
@@ -327,10 +339,7 @@ export function byggInnloggingsEpostHtml(input: {
 
         <tr>
           <td align="left" bgcolor="${INNLOGGING_FARGE.side}" style="background-color:${INNLOGGING_FARGE.side};padding:8px 8px 24px 8px;">
-            <img src="cid:${LOGO_EPOST_CID}"
-                 width="32" height="40"
-                 alt="Endwise"
-                 style="display:block;width:32px;height:40px;border:0;outline:none;text-decoration:none;">
+            ${hode}
           </td>
         </tr>
 
@@ -369,6 +378,15 @@ export function byggInnloggingsEpostHtml(input: {
             <p style="margin:0;font-size:15px;line-height:1.47;font-weight:450;color:${INNLOGGING_FARGE.dempet};">Om dette ikke var deg kan du trygt ignorere denne e-posten.</p>
           </td>
         </tr>
+        ${
+          fot
+            ? `<tr>
+          <td style="padding:8px 8px 8px 8px;font-family:${FONT};">
+            <p style="margin:0;font-size:13px;line-height:1.47;font-weight:450;color:${INNLOGGING_FARGE.dempet};">${esc(fot)}</p>
+          </td>
+        </tr>`
+            : ''
+        }
       </table>
     </td>
   </tr>

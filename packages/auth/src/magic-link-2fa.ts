@@ -11,7 +11,6 @@ import {
   MAGIC_LINK_VERIFY_STI,
 } from './magic-link.ts';
 import { brukerHarPasskey } from './plattform-passkey.ts';
-import { sendVelkomstEtterKnytning } from './senders/velkomst.ts';
 import type { AuthSone } from './sone.ts';
 
 /**
@@ -128,9 +127,6 @@ export function createMagicLink2faEtterHook(db?: Database, opts?: { sone?: AuthS
           if (forhandlerVerifyMedlemskap({ tenantId, harRolle, kundeId }) === 'riv') {
             await rivSesjon(ctx);
             return omdirigerTilApp(ctx, '/logg-inn');
-          }
-          if (kundeId) {
-            await sendVelkomstEtterKnytning(db, tenantId, kundeId).catch(() => null);
           }
           try {
             await db

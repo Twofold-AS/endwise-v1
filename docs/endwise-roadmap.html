@@ -1408,6 +1408,8 @@ const ROADMAP = [
 { phase:"F42", title:"White label — Claude-design på ekte sider", target:"Etter F41 / Mikael 05.11.2026", items:[
   { id:"F42-01", o:"Kundeside og forhandlerside følger Claude-designet", kat:"dashboard", sub:"forhandler", t:"⭐ <b>05.11.2026:</b> Mikael: sidene ser ikke ut som Claude. Kunde: 6 faner (Hjem · Bestill · Bookinger · Meldinger · Kjøretøy · Profil), hjem Hei + aktiv jobb + Bestill time. Forhandler: Dagens timeplan under pulse på desktop; profil-CTA ink (ikke #0066ff). Mobbin, mobile first. Ingen preview-ruter. Kilde: Endwise Kunde/Mobile.dc.html kartlagt i #178.",
     area:"kunde", ui:"built", status:"done" },
+  { id:"F42-02", o:"Kunde-OTP bruker forhandler-merke; app/platform er Endwise", kat:"sikkerhet", t:"⭐ <b>05.11.2026:</b> Prod: innloggingskode fra bergen.endwise.no hadde Endwise-logo/From (avatar EW). Velkomst var riktig. Fix: merke følger sone — <code>&lt;sub&gt;</code> slår opp visningsnavn+logo (From + mal + initial). app/platform: Endwise. Velkomst sendes bare ved opprett, ikke ved login-verify.",
+    area:"auth", ui:"na", status:"done" },
 ]},
 ];
 

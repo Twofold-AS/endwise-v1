@@ -745,17 +745,11 @@ export function merkNavOmrade(
   });
 }
 
-const MOBIL_FASTE_DEST = ['home', 'innboks', 'saker', 'kunder'] as const;
-const MOBIL_MER_DEST = ['tjenester', 'organisasjon', 'lager', 'butikk'] as const;
-
-/** Mobil: 4 faste + Mer. Analyse skjules. Lager/Butikk under Mer. */
-export function delMobilDest(dest: NavItem[]): { faste: NavItem[]; mer: NavItem[] } {
-  const faste = dest
-    .filter((d) => (MOBIL_FASTE_DEST as readonly string[]).includes(d.key))
-    .map((d) => (d.key === 'home' ? { ...d, label: 'Hjem' } : d));
-  const mer = dest.filter((d) => (MOBIL_MER_DEST as readonly string[]).includes(d.key));
-  return { faste, mer };
-}
+/**
+ * Mobil fanerad (Claude-designet): alle destinasjoner i én rail — ingen
+ * «Mer»-skjul. Railen scroller horisontalt og sentrerer aktiv pille
+ * (PhoneHScroll). `home` beholder label «Verkstedet», samme som sidebaren.
+ */
 
 /** Underpunktene i en destinasjon som rollen skal se. */
 export function childrenForRole(item: NavItem, role: OrgRole | null): NavChild[] {

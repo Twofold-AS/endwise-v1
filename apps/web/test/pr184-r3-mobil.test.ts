@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { flertall, flertallTilbys } from '../../../packages/ui/src/flate/flertall.ts';
 import { INNBOKS_CHIPS } from '../app/(app)/_shell/inbox-del.ts';
-import { delMobilDest, type NavItem } from '../app/(app)/_shell/nav.ts';
 import { idagVisning, innboksRad } from '../app/(app)/_shell/phone-home-pulse.ts';
 import { ukedagToBokstaver } from '../app/(app)/_shell/timeplan-dager.ts';
 import { tjenesterPageSub } from '../app/(app)/prisliste/_hub.ts';
@@ -47,31 +46,24 @@ describe('PR #184 runde 3 — mobil P1/P2', () => {
     expect(shell).toMatch(/data-ronny-avatar/);
     expect(shell).toMatch(/InboxTopBar2/);
     expect(shell).toMatch(/PHONE_RONNY_SIRKEL/);
-    expect(shell).toMatch(/Mer/);
     expect(shell).not.toMatch(/useRonnySpinn/);
     expect(shell).not.toMatch(/spin=\{spin\}/);
   });
 
-  it('dest-piller er 4 faste + Mer, Analyse ute', () => {
-    const dest = delMobilDest(
-      [
-        { key: 'home', label: 'Verkstedet', href: '/home', roles: [] },
-        { key: 'innboks', label: 'Innboks', href: '/innboks', roles: [] },
-        { key: 'saker', label: 'Timeplan', href: '/jobber', roles: [] },
-        { key: 'kunder', label: 'Kunder', href: '/kunder', roles: [] },
-        { key: 'tjenester', label: 'Tjenester', href: '/prisliste', roles: [] },
-        { key: 'organisasjon', label: 'Organisasjon', href: '/organisasjon', roles: [] },
-        { key: 'lager', label: 'Lager', href: '/lager', roles: [] },
-        { key: 'butikk', label: 'Butikk', href: '/butikk', roles: [] },
-        { key: 'analyse', label: 'Analyse', href: '/analyse', roles: [] },
-      ].map((d) => ({ ...d, icon: (() => null) as unknown as NavItem['icon'] })),
-    );
-    expect(dest.faste.map((d) => d.label)).toEqual(['Hjem', 'Innboks', 'Timeplan', 'Kunder']);
-    expect(dest.mer.map((d) => d.key)).toEqual(['tjenester', 'organisasjon', 'lager', 'butikk']);
-    expect(utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'))).toMatch(/Mer/);
+  it('dest-raden viser alle destinasjoner i én rail, ingen Mer-skjul', () => {
+    const shell = utenKommentarer(les('../app/(app)/_shell/phone-shell.tsx'));
+    // Claude-designet: hele fanerekken (Verkstedet … Butikk) er én dragbar
+    // rail som sentrerer aktiv pille. Ingen «Mer»-dropdown.
+    expect(shell).toMatch(/dest\.map/);
+    expect(shell).toMatch(/PhoneHScroll/);
+    expect(shell).not.toMatch(/delMobilDest/);
+    expect(shell).not.toMatch(/DropdownTrigger/);
     expect(utenKommentarer(les('../app/(app)/_shell/phone-h-scroll.tsx'))).toMatch(
       /scrollIntoView/,
     );
+    // Aktiv pille: medium vekt + pill-bakgrunn; inaktiv dempet (designet).
+    expect(shell).toMatch(/font-medium/);
+    expect(shell).toMatch(/text-fg-muted/);
   });
 
   it('ingen fake pulstall', () => {

@@ -69,7 +69,8 @@ describe('CODE-GO Mikael 11.09.2026 oppfølging — PPF, Analyse, chrome 1+2, So
     expect(shell).toMatch(/data-phone-search/);
     expect(shell).toMatch(/data-phone-dest/);
     expect(shell).toMatch(/PhoneHScroll/);
-    expect(shell).toMatch(/delMobilDest/);
+    expect(shell).toMatch(/dest\.map/);
+    expect(shell).not.toMatch(/delMobilDest/);
     expect(shell).not.toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/TilbakePil/);
     expect(shell).not.toMatch(/absolute inset-x-10 truncate text-center/);

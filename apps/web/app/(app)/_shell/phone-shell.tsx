@@ -1,6 +1,5 @@
 'use client';
 
-import { Dropdown, DropdownItem, DropdownPopover, DropdownTrigger } from '@endwise/ui';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -11,7 +10,7 @@ import { useOrgRole } from '../_lib/use-org-role';
 import { RONNY_PHONE_IDLE, RonnyBot } from '../_workshop/ronny-bot';
 import { useRonnySheet } from '../_workshop/ronny-sheet-state';
 import { InboxTopBar2 } from '../innboks/_top-bar2';
-import { delMobilDest, destinasjonerForShell, isItemActive, shellForBruker } from './nav';
+import { destinasjonerForShell, isItemActive, shellForBruker } from './nav';
 import {
   PHONE_AVATAR_PX,
   PHONE_BAR2,
@@ -29,7 +28,9 @@ import { PhoneSokFelt } from './phone-sok-felt';
 import { PhoneSokOverlay } from './phone-sok-overlay';
 
 /**
- * Telefon-chrome: toppbar 1 (logo · søk · Ronny · profil) + dest-piller (4 + Mer).
+ * Telefon-chrome: toppbar 1 (logo · søk · Ronny · profil) + dest-rad.
+ * Alle destinasjoner ligger i én dragbar rail (Claude-designet); aktiv pille
+ * sentreres av PhoneHScroll. Ingen «Mer»-skjul — railen scroller.
  * Tittel + verktøylinje (Timeplan/Kunder/Tjenester-faner, Innboks-meny) under.
  * Ingenting skjules — handlinger uten backend vises deaktivert på siden.
  */
@@ -43,7 +44,6 @@ export function PhoneShell() {
   const [sok, setSok] = useState('');
   const [sokApen, setSokApen] = useState(false);
   const [profilApen, setProfilApen] = useState(false);
-  const [merApen, setMerApen] = useState(false);
   const shell = shellForBruker({
     role,
     jobFunction: jobbfunksjon,
@@ -65,8 +65,6 @@ export function PhoneShell() {
       }),
     [shell, role, shopEnabled, erPlattform, inspect, gitt],
   );
-  const { faste, mer } = delMobilDest(dest);
-  const merAktiv = mer.some((item) => isItemActive(item, pathname));
   const sideChrome = phoneSideChrome(pathname, params, {
     isAdmin,
     erForhandler: !erPlattform,
@@ -168,14 +166,14 @@ export function PhoneShell() {
         </div>
         <div data-phone-top-bar="2" className={PHONE_BAR2}>
           <PhoneHScroll lockKey={`${pathname}|${sok}`}>
-            {faste.map((item) => {
+            {dest.map((item) => {
               const aktiv = isItemActive(item, pathname);
-              const klasse = `inline-flex h-10 shrink-0 items-center rounded-full px-3 text-label text-fg ${
+              const klasse = `inline-flex h-11 shrink-0 items-center rounded-full px-[18px] text-body ${
                 item.disabled
-                  ? 'cursor-not-allowed opacity-40'
+                  ? 'cursor-not-allowed text-fg-muted opacity-40'
                   : aktiv
-                    ? 'bg-sidebar-active'
-                    : 'hover:bg-sidebar-active/60'
+                    ? 'bg-sidebar-active font-medium text-fg'
+                    : 'text-fg-muted hover:bg-sidebar-active/60 hover:text-fg'
               }`;
               if (item.disabled) {
                 return (
@@ -196,40 +194,12 @@ export function PhoneShell() {
                   href={item.href as Route}
                   aria-current={aktiv ? 'page' : undefined}
                   data-phone-dest={item.key}
-                  className={klasse}
+                  className={`${klasse} [touch-action:manipulation]`}
                 >
                   {item.label}
                 </Link>
               );
             })}
-            {mer.length > 0 ? (
-              <Dropdown isOpen={merApen} onOpenChange={setMerApen}>
-                <DropdownTrigger
-                  data-phone-dest="mer"
-                  aria-current={merAktiv ? 'page' : undefined}
-                  className={`inline-flex h-10 shrink-0 items-center rounded-full px-3 text-label text-fg ${
-                    merAktiv ? 'bg-sidebar-active' : 'hover:bg-sidebar-active/60'
-                  }`}
-                >
-                  Mer
-                </DropdownTrigger>
-                <DropdownPopover aria-label="Flere sider" placement="bottom end">
-                  {mer.map((item) => (
-                    <DropdownItem
-                      key={item.key}
-                      className={item.disabled ? 'cursor-not-allowed opacity-40' : undefined}
-                      onSelect={() => {
-                        if (item.disabled) return;
-                        setMerApen(false);
-                        router.push(item.href as Route);
-                      }}
-                    >
-                      {item.label}
-                    </DropdownItem>
-                  ))}
-                </DropdownPopover>
-              </Dropdown>
-            ) : null}
           </PhoneHScroll>
         </div>
         {sideChrome ? (

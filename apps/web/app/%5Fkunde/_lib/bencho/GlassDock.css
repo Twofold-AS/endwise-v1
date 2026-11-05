@@ -77,3 +77,13 @@
   backdrop-filter: none;
   box-shadow: none;
 }
+
+/* Kundesidens Ronny-boks: ingen hvit bakgrunn rundt — ikonet fyller boksen. */
+.gdock[data-uten-panel] {
+  background: transparent;
+  padding: 0;
+}
+
+.gdock[data-uten-panel]::before {
+  display: none;
+}

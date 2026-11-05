@@ -1,9 +1,10 @@
 import type { OffentligTenant } from '@endwise/modules/tenant-host/oppslag';
 import { DeaktivertHandling, ListeRad, Seksjon, Side } from '@endwise/ui';
 import type { ReactNode } from 'react';
-import { AktivJobbKort } from './aktiv-jobb.tsx';
 import { KundeDock } from './dock.tsx';
+import { KjoretoySeksjon } from './kjoretoy-kort.tsx';
 import { kundeErInnlogget } from './sesjon.ts';
+import { KundeSokProvider } from './sok.tsx';
 import { KundeTopp } from './topp.tsx';
 
 const FORBUDT_CTA = '#0066ff';
@@ -75,16 +76,20 @@ export async function KundeSkall({
       data-kunde-innlogget={innlogget ? '1' : '0'}
       className="min-h-screen bg-bg text-fg"
     >
-      <header className="sticky top-0 z-60 border-b border-border bg-bg pt-[env(safe-area-inset-top)]">
-        {innlogget ? (
-          <KundeTopp navn={tenant.visningsnavn} logoUrl={tenant.logoUrl} farge={farge} />
-        ) : (
+      {innlogget ? (
+        <KundeSokProvider>
+          <header className="sticky top-0 z-60 bg-bg pt-[env(safe-area-inset-top)]">
+            <KundeTopp navn={tenant.visningsnavn} logoUrl={tenant.logoUrl} farge={farge} />
+          </header>
+          <KjoretoySeksjon />
+        </KundeSokProvider>
+      ) : (
+        <header className="sticky top-0 z-60 bg-bg pt-[env(safe-area-inset-top)]">
           <div className="px-1 py-4">
             <ForhandlerMerke tenant={tenant} stor farge={farge} />
           </div>
-        )}
-      </header>
-      {innlogget ? <AktivJobbKort /> : null}
+        </header>
+      )}
       <div
         className={`mx-auto max-w-lg ${
           innlogget ? 'pb-[calc(6.5rem+env(safe-area-inset-bottom))]' : ''

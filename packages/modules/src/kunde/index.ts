@@ -4,13 +4,13 @@ export {
   byggVarsler,
   formaterKjoretoy,
   JOBB_FASER,
+  type JobbFase,
   jobbFase,
   jobbFaseKort,
   jobbFremdriftProsent,
-  velgAktivJobb,
-  type JobbFase,
   type KundeVarsel,
   type KundeVarselSlags,
+  velgAktivJobb,
 } from './fase.ts';
 export {
   finnEllerOpprettKundetrad,

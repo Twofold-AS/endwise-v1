@@ -5,7 +5,7 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc';
-import { osloDagsvindu } from '../_lib/oslo-dag';
+import { osloDagsvindu, osloDatoKort, osloUkedagNavn } from '../_lib/oslo-dag';
 import { RadMedMeny, RadMeny } from '../_shell/rad-meny';
 import { SorteringArk, SorteringGruppe, SorteringValg } from '../_shell/sortering-ark';
 import { estMinutes, fmtTime } from '../bookinger/_status';
@@ -36,10 +36,12 @@ export function TimeplanDagsliste({ valgt }: { valgt: string }) {
   return (
     <div data-timeplan-dagsliste className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-body text-fg-muted">
+        <p data-timeplan-dag-sub className="text-body text-fg-muted">
           {kalender.isLoading
             ? '\u00a0'
-            : `${rader.length} ${rader.length === 1 ? 'jobb' : 'jobber'} denne dagen.`}
+            : `${osloUkedagNavn(valgt)} ${osloDatoKort(valgt)} · ${rader.length} ${
+                rader.length === 1 ? 'jobb' : 'jobber'
+              }`}
         </p>
         <div ref={sorterRef} className="relative">
           <button

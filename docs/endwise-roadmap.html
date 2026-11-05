@@ -1402,6 +1402,8 @@ const ROADMAP = [
     area:"auth", ui:"built", status:"done" },
   { id:"F41-11", o:"Prod-innlogging + passnøkkel, ikke TOTP", kat:"sikkerhet", t:"⭐ <b>04.11.2026:</b> e759b7d live (<code>dpl_Dt9nkCfUvXr1QcgrgVpYKg9oC1rF</code>). Historisk prod-feil: <code>42703 column \"kontekst\" of relation \"session\" does not exist</code> på magic-link verify. 0063 kjørte. Etter #216: TOTP-mur rev sesjon / krevde Authenticator. Fix: passnøkkel er andre faktor for <code>dealer_*</code>/<code>endwise_*</code> (tvunget, uten utlogging). Kunde: valgfri nøkkel. Uinnlogget &lt;sub&gt; er marked (også upublisert); meny bare ved kunde-sesjon hos tenanten. <b>0064:</b> idempotent <code>passkey</code>-tabell + kontekst-kolonner; tømmer <code>two_factor</code> og <code>two_factor_enabled</code>. Kjører via <code>db:setup</code> (GitHub main) og <code>vercel-migrate</code> (Vercel prod-build).",
     area:"auth", ui:"built", status:"done" },
+  { id:"F41-12", o:"Opprett kunde sender velkomst til kunden", kat:"kunde", t:"⭐ <b>04.11.2026:</b> Mikael: skjemaet sender ingen bekreftelse. Rot: <code>customers.create</code> skrev bare raden. Velkomst gikk bare etter magic-link-knytning. Fix: send velkomst med merke + <code>/logg-inn</code> på <code>&lt;sub&gt;.endwise.no</code> via Resend. Ingen e-post uten e-post. Logg <code>[kunde.velkomst]</code>. UI: «Invitasjon sendt» + Send på nytt.",
+    area:"admin", ui:"built", status:"done" },
 ]},
 ];
 

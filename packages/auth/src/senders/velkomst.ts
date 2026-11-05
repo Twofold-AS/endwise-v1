@@ -1,12 +1,26 @@
-import { and, type Database, eq, schema, withTenant } from '@endwise/db';
+import { and, type Database, desc, eq, schema, withTenant } from '@endwise/db';
 import { forhandlerOffentligUrl } from '../sone.ts';
-import { byggEpostHtml, esc } from './epost-mal.ts';
+import { byggEpostHtml, esc, knapp } from './epost-mal.ts';
 import type { EpostMerke } from './merke.ts';
 import { sendEmail } from './resend.ts';
 
 /** Aldri ved Quick-import. */
 export function skalSendeVelkomst(source: string | null | undefined): boolean {
   return (source ?? '').trim().toLowerCase() !== 'quick';
+}
+
+function loggVelkomst(input: {
+  tenantId: string;
+  customerId: string;
+  sendt: boolean;
+  grunn?: string;
+}): void {
+  console.info('[kunde.velkomst]', {
+    tenantId: input.tenantId,
+    customerId: input.customerId,
+    sendt: input.sendt,
+    grunn: input.grunn ?? (input.sendt ? 'ok' : 'ukjent'),
+  });
 }
 
 /**
@@ -17,10 +31,12 @@ export function byggVelkomstEpost(input: {
   merke: EpostMerke;
   personvernUrl: string;
   avmeldUrl: string;
+  loggInnUrl: string;
 }): { subject: string; text: string; html: string } {
   const subject = 'Velkommen';
   const text = [
     'Du er registrert hos verkstedet.',
+    `Logg inn: ${input.loggInnUrl}`,
     `Personvernerklæring: ${input.personvernUrl}`,
     `Avmelding: ${input.avmeldUrl}`,
     input.merke.levertAv ? 'Levert av Endwise' : '',
@@ -30,7 +46,8 @@ export function byggVelkomstEpost(input: {
   const html = byggEpostHtml({
     tittel: 'Velkommen',
     ingress: 'Du er registrert hos verkstedet.',
-    innhold: `<p style="margin:0 0 12px 0;font-size:17px;line-height:1.47;">Les personvernerklæringen:</p>
+    innhold: `${knapp(input.loggInnUrl, 'Logg inn')}
+<p style="margin:0 0 12px 0;font-size:17px;line-height:1.47;">Les personvernerklæringen:</p>
 <p style="margin:0 0 16px 0;font-size:15px;word-break:break-all;"><a href="${esc(input.personvernUrl)}" style="color:#141414;text-decoration:underline;">${esc(input.personvernUrl)}</a></p>
 <p style="margin:0;font-size:13px;">Vil du ikke ha slike e-poster? <a href="${esc(input.avmeldUrl)}" style="color:#141414;text-decoration:underline;">Meld deg av</a>.</p>`,
     fotnote: 'Ingen personopplysninger i denne e-posten. Rettslig grunnlag: avtale.',
@@ -43,7 +60,13 @@ export async function sendVelkomstEtterKnytning(
   db: Database,
   tenantId: string,
   customerId: string,
+  opts?: { tving?: boolean },
 ): Promise<{ sendt: boolean; grunn?: string }> {
+  const ferdig = (sendt: boolean, grunn?: string) => {
+    loggVelkomst({ tenantId, customerId, sendt, grunn });
+    return { sendt, grunn };
+  };
+
   const rad = await withTenant(db, tenantId, async (tx) => {
     const [kunde] = await tx
       .select({
@@ -77,18 +100,19 @@ export async function sendVelkomstEtterKnytning(
           eq(schema.auditLog.subjectId, customerId),
         ),
       )
+      .orderBy(desc(schema.auditLog.occurredAt))
       .limit(1);
     return { kunde, tenant, branding, sendt: Boolean(sendt) };
   });
 
-  if (!rad.kunde) return { sendt: false, grunn: 'ukjent' };
-  if (!skalSendeVelkomst(rad.kunde.source)) return { sendt: false, grunn: 'quick' };
-  if (!rad.kunde.email) return { sendt: false, grunn: 'ingen_epost' };
-  if (rad.sendt) return { sendt: false, grunn: 'allerede' };
+  if (!rad.kunde) return ferdig(false, 'ukjent');
+  if (!skalSendeVelkomst(rad.kunde.source)) return ferdig(false, 'quick');
+  if (!rad.kunde.email) return ferdig(false, 'ingen_epost');
+  if (rad.sendt && !opts?.tving) return ferdig(false, 'allerede');
 
   const slug = rad.tenant?.slug ?? '';
   const base = slug ? forhandlerOffentligUrl(slug) : null;
-  if (!base) return { sendt: false, grunn: 'ingen_slug' };
+  if (!base) return ferdig(false, 'ingen_slug');
   const merkenavn = rad.branding?.visningsnavn || rad.tenant?.name || 'Verkstedet';
   const epost = byggVelkomstEpost({
     merke: {
@@ -98,15 +122,22 @@ export async function sendVelkomstEtterKnytning(
     },
     personvernUrl: `${base}/personvern`,
     avmeldUrl: `${base}/personvern`,
+    loggInnUrl: `${base}/logg-inn`,
   });
-  await sendEmail({
-    to: rad.kunde.email,
-    subject: epost.subject,
-    text: epost.text,
-    html: epost.html,
-    avsender: { visningsnavn: merkenavn },
-    idempotencyKey: `velkomst:${tenantId}:${customerId}`,
-  });
+  try {
+    await sendEmail({
+      to: rad.kunde.email,
+      subject: epost.subject,
+      text: epost.text,
+      html: epost.html,
+      avsender: { visningsnavn: merkenavn },
+      idempotencyKey: opts?.tving
+        ? `velkomst:${tenantId}:${customerId}:${Date.now()}`
+        : `velkomst:${tenantId}:${customerId}`,
+    });
+  } catch {
+    return ferdig(false, 'feil');
+  }
   await withTenant(db, tenantId, (tx) =>
     tx.insert(schema.auditLog).values({
       tenantId,
@@ -114,8 +145,8 @@ export async function sendVelkomstEtterKnytning(
       action: 'kunde.velkomst',
       subjectType: 'customer',
       subjectId: customerId,
-      metadata: { kilde: rad.kunde?.source ?? 'endwise' },
+      metadata: { kilde: rad.kunde?.source ?? 'endwise', tving: Boolean(opts?.tving) },
     }),
   );
-  return { sendt: true };
+  return ferdig(true);
 }

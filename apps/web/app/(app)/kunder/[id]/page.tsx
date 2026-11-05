@@ -43,6 +43,12 @@ export default function KundekortPage() {
   const kunde = trpc.customers.byId.useQuery({ id }, { enabled: Boolean(id) });
   const [notat, setNotat] = useState('');
 
+  const sendVelkomst = trpc.customers.sendVelkomst.useMutation({
+    onSuccess: () => {
+      void utils.customers.byId.invalidate({ id });
+    },
+  });
+
   const leggTilNotat = trpc.customers.addNote.useMutation({
     onSuccess: () => {
       void utils.customers.byId.invalidate({ id });
@@ -140,6 +146,39 @@ export default function KundekortPage() {
           epost={k.email}
           adresse={sisteAdresse(k.notater)}
         />
+
+        {k.email ? (
+          <div data-kunde-seksjon="invitasjon">
+            <Seksjon tittel="Invitasjon">
+              <CardShell className="flex flex-col gap-3 p-4">
+                <p className="text-body text-fg">
+                  {k.velkomstSendtAt ? 'Invitasjon sendt' : 'Ingen invitasjon sendt ennå'}
+                </p>
+                <StatefulButton
+                  type="button"
+                  state={
+                    sendVelkomst.isPending
+                      ? 'loading'
+                      : sendVelkomst.isSuccess
+                        ? 'success'
+                        : sendVelkomst.isError
+                          ? 'error'
+                          : 'idle'
+                  }
+                  loadingText="Sender…"
+                  successText="Invitasjon sendt"
+                  errorText="Feilet"
+                  onClick={() => sendVelkomst.mutate({ id: k.id })}
+                >
+                  Send på nytt
+                </StatefulButton>
+                {sendVelkomst.error ? (
+                  <p className="text-body text-danger">{sendVelkomst.error.message}</p>
+                ) : null}
+              </CardShell>
+            </Seksjon>
+          </div>
+        ) : null}
 
         {/* Kjøretøy — Claude §4.10 */}
         <div data-kunde-seksjon="kjoretoy">

@@ -15,6 +15,7 @@ import { trpc } from '@/lib/trpc';
 import { useOrgRole } from '../_lib/use-org-role';
 import { CardShell } from '../_shell/cards';
 import { shellForBruker } from '../_shell/nav';
+import { MobilSideBunn } from '../_shell/pulse-kort';
 import { Feil, Laster, Tomt } from './_delt';
 import { LAGER_HUB_SEKSJONER, LAGER_STAT_LABELS, lagerPageSub } from './_hub';
 
@@ -25,7 +26,7 @@ import { LAGER_HUB_SEKSJONER, LAGER_STAT_LABELS, lagerPageSub } from './_hub';
  * siden som krever en handling.
  */
 export default function LagerOversiktPage() {
-  const { role, jobbfunksjon, isMechanic, erPlattform } = useOrgRole();
+  const { role, jobbfunksjon, isMechanic, erPlattform, isAdmin } = useOrgRole();
   const kunMekaniker =
     shellForBruker({
       role,
@@ -48,11 +49,61 @@ export default function LagerOversiktPage() {
       className="mx-auto w-full max-w-[1000px] md:px-8 md:py-7"
       tittel="Lager"
       undertekst={
-        oppsummering.isLoading
+        oppsummering.isLoading || lave.isLoading
           ? 'Deler, beholdning og inn og ut. Kjerne — ikke et tillegg.'
-          : lagerPageSub(s?.antallDeler ?? 0)
+          : (lave.data?.length ?? 0) > 0
+            ? lave.data?.length === 1
+              ? '1 del under minimum'
+              : `${lave.data?.length} deler under minimum`
+            : lagerPageSub(s?.antallDeler ?? 0)
+      }
+      handling={
+        isAdmin ? (
+          <Link
+            href={'/lager/deler?ny=1' as Route}
+            className="inline-flex h-11 items-center rounded-pill bg-fg px-4 text-label text-bg [touch-action:manipulation]"
+          >
+            + Ny del
+          </Link>
+        ) : undefined
       }
     >
+      {/* Under minimum først — det er det eneste her som krever handling nå. */}
+      <Seksjon
+        tittel="Må bestilles"
+        handling={
+          !kunMekaniker ? (
+            <Link
+              href={'/lager/deler' as Route}
+              className="text-body text-fg-muted transition-colors hover:text-fg"
+            >
+              Se alle deler →
+            </Link>
+          ) : null
+        }
+      >
+        {lave.isLoading ? (
+          <Laster />
+        ) : lave.isError ? (
+          <Feil melding={lave.error.message} />
+        ) : (lave.data?.length ?? 0) === 0 ? (
+          <Tomt
+            tittel="Ingenting under minimum"
+            hint="Deler med et minimumsnivå dukker opp her når de går tomme."
+          />
+        ) : (
+          (lave.data ?? []).map((d) => (
+            <ListeRad
+              key={d.id}
+              href={`/lager/deler?sok=${encodeURIComponent(d.sku)}`}
+              tittel={d.name}
+              undertekst={d.sku}
+              hoyre={`min. ${d.minStock}`}
+            />
+          ))
+        )}
+      </Seksjon>
+
       <div data-lager-hub className="flex flex-col gap-5">
         {oppsummering.isError ? (
           <Feil melding={oppsummering.error.message} />
@@ -98,41 +149,7 @@ export default function LagerOversiktPage() {
         </Seksjon>
       </div>
 
-      {/* Lav beholdning — det eneste på siden som krever handling. */}
-      <Seksjon
-        tittel="Må bestilles"
-        handling={
-          !kunMekaniker ? (
-            <Link
-              href={'/lager/deler' as Route}
-              className="text-body text-fg-muted transition-colors hover:text-fg"
-            >
-              Se alle deler →
-            </Link>
-          ) : null
-        }
-      >
-        {lave.isLoading ? (
-          <Laster />
-        ) : lave.isError ? (
-          <Feil melding={lave.error.message} />
-        ) : (lave.data?.length ?? 0) === 0 ? (
-          <Tomt
-            tittel="Ingenting under minimum"
-            hint="Deler med et minimumsnivå dukker opp her når de går tomme."
-          />
-        ) : (
-          (lave.data ?? []).map((d) => (
-            <ListeRad
-              key={d.id}
-              href={`/lager/deler?sok=${encodeURIComponent(d.sku)}`}
-              tittel={d.name}
-              undertekst={d.sku}
-              hoyre={`min. ${d.minStock}`}
-            />
-          ))
-        )}
-      </Seksjon>
+      <MobilSideBunn />
     </Side>
   );
 }

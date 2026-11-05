@@ -18,18 +18,26 @@ describe('F35 / white label F12: velkomst', () => {
       merke: { navn: 'Nordvik', levertAv: true },
       personvernUrl: 'https://nordvik.endwise.no/personvern',
       avmeldUrl: 'https://nordvik.endwise.no/personvern',
+      loggInnUrl: 'https://nordvik.endwise.no/logg-inn',
     });
     expect(epost.subject).toBe('Velkommen');
     expect(epost.text).toMatch(/Personvernerklæring/);
-    expect(epost.text).not.toMatch(/@/);
+    expect(epost.text).toMatch(/https:\/\/nordvik\.endwise\.no\/logg-inn/);
+    expect(epost.text).not.toMatch(/kari@|@kunde/);
     expect(epost.html).not.toMatch(/#0066ff/);
     expect(epost.html).toMatch(/personvern/);
+    expect(epost.html).toMatch(/nordvik\.endwise\.no\/logg-inn/);
+    expect(epost.html).toMatch(/Logg inn/);
   });
 
   it('velkomst-lenker er <sub>.endwise.no — ikke app eller apex', () => {
     const kilde = readFileSync(resolve(her, '../src/senders/velkomst.ts'), 'utf8');
     expect(kilde).toMatch(/forhandlerOffentligUrl/);
     expect(kilde).toMatch(/ingen_slug/);
+    expect(kilde).toMatch(/\/logg-inn/);
+    expect(kilde).toMatch(/console\.info\('\[kunde\.velkomst\]'/);
+    expect(kilde).toMatch(/opts\?\.tving/);
+    expect(kilde).toMatch(/ingen_epost/);
     expect(kilde).not.toMatch(/appOffentligUrl|app\.endwise\.no/);
     expect(kilde).not.toMatch(/`https:\/\/\$\{rot\}`/);
   });

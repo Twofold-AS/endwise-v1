@@ -55,7 +55,7 @@ export function NyKunde({ apen = true, onLukk }: { apen?: boolean; onLukk: () =>
   const opprett = trpc.customers.create.useMutation({
     onSuccess: async (kunde) => {
       void utils.customers.list.invalidate();
-      toast.success('Kunden er opprettet');
+      toast.success(kunde?.velkomst?.sendt ? 'Invitasjon sendt' : 'Kunden er opprettet');
       if (kunde?.id && o.utkast.leggTilKjoretoy && o.utkast.regnr.trim().length >= 2) {
         await opprettKjoretoy.mutateAsync({
           customerId: kunde.id,

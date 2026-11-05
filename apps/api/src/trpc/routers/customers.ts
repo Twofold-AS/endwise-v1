@@ -1,3 +1,4 @@
+import { sendVelkomstEtterKnytning } from '@endwise/auth';
 import { and, asc, desc, eq, ilike, or, schema, sql, withTenant } from '@endwise/db';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -180,7 +181,27 @@ export const customersRouter = router({
               .limit(20)
           : [];
 
-        return { ...kunde, notater, kjoretoy, saker, traader };
+        const [velkomst] = await tx
+          .select({ at: schema.auditLog.occurredAt })
+          .from(schema.auditLog)
+          .where(
+            and(
+              eq(schema.auditLog.tenantId, ctx.tenantId),
+              eq(schema.auditLog.action, 'kunde.velkomst'),
+              eq(schema.auditLog.subjectId, input.id),
+            ),
+          )
+          .orderBy(desc(schema.auditLog.occurredAt))
+          .limit(1);
+
+        return {
+          ...kunde,
+          notater,
+          kjoretoy,
+          saker,
+          traader,
+          velkomstSendtAt: velkomst?.at ?? null,
+        };
       }),
     ),
 
@@ -195,13 +216,13 @@ export const customersRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await withTenant(ctx.db, ctx.tenantId, async (tx) => {
+        const created = await withTenant(ctx.db, ctx.tenantId, async (tx) => {
           /**
            * F2-06 / F5-55 — lokal kunde. Quick er fakta når det er koblet på
            * (pull overskriver speilede rader). Uten Quick lagrer Endwise kunden
            * selv. Ingen push, ingen modul-gate, ingen speilkrav.
            */
-          const [created] = await tx
+          const [rad] = await tx
             .insert(schema.customers)
             .values({
               name: input.name,
@@ -211,12 +232,56 @@ export const customersRouter = router({
               source: 'endwise',
             })
             .returning();
-          return created;
+          return rad;
         });
+        if (!created)
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Kunne ikke lagre kunden.',
+          });
+        const velkomst = await sendVelkomstEtterKnytning(ctx.db, ctx.tenantId, created.id).catch(
+          () => ({ sendt: false as const, grunn: 'feil' }),
+        );
+        return { ...created, velkomst };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         loggDealerWritePostgresFeil('customers', error);
         throw mapDealerWritePostgresFeil(error, 'Kunne ikke lagre kunden. Prøv igjen.');
       }
+    }),
+
+  sendVelkomst: staffProcedure
+    .use(omradeSjekk('kunder', 'endre'))
+    .input(z.object({ id: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [kunde] = await withTenant(ctx.db, ctx.tenantId, (tx) =>
+        tx
+          .select({ id: schema.customers.id, email: schema.customers.email })
+          .from(schema.customers)
+          .where(
+            and(eq(schema.customers.id, input.id), eq(schema.customers.tenantId, ctx.tenantId)),
+          )
+          .limit(1),
+      );
+      if (!kunde) throw new TRPCError({ code: 'NOT_FOUND', message: 'Fant ikke kunden' });
+      if (!kunde.email) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Kunden har ingen e-post.' });
+      }
+      const velkomst = await sendVelkomstEtterKnytning(ctx.db, ctx.tenantId, kunde.id, {
+        tving: true,
+      }).catch(() => ({ sendt: false as const, grunn: 'feil' }));
+      if (!velkomst.sendt) {
+        throw new TRPCError({
+          code: velkomst.grunn === 'feil' ? 'INTERNAL_SERVER_ERROR' : 'BAD_REQUEST',
+          message:
+            velkomst.grunn === 'ingen_slug'
+              ? 'Forhandleren mangler subdomene.'
+              : velkomst.grunn === 'quick'
+                ? 'Quick-kunder får ikke velkomst-e-post.'
+                : 'Kunne ikke sende invitasjonen. Prøv igjen.',
+        });
+      }
+      return velkomst;
     }),
 
   update: staffProcedure

@@ -1,6 +1,6 @@
 'use client';
 
-import { jobbFaseKort, jobbFremdriftProsent } from '@endwise/modules/kunde';
+import { jobbFaseKort, jobbFremdriftProsent } from '@endwise/modules/kunde/fase';
 import { CircleQuestionMark, ListeRad, ProgressBar, TomFlate } from '@endwise/ui';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';

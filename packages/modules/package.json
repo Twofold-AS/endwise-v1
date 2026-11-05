@@ -27,6 +27,7 @@
     "./eier-overforing": "./src/eier-overforing/index.ts",
     "./onboarding": "./src/onboarding/index.ts",
     "./kunde": "./src/kunde/index.ts",
+    "./kunde/fase": "./src/kunde/fase.ts",
     "./datadeling": "./src/datadeling/index.ts",
     "./jit": "./src/jit/index.ts",
     "./tillatelse": "./src/tillatelse/index.ts",

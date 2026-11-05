@@ -67,6 +67,8 @@ describe('F42-04: kundeside header, dock og aktiv jobb', () => {
     expect(jobb).toMatch(/Mottatt → Ferdig/);
     expect(jobb).toMatch(/data-kunde-jobb-hjelp/);
     expect(jobb).toMatch(/kunde\.aktivJobb/);
+    expect(jobb).toMatch(/@endwise\/modules\/kunde\/fase/);
+    expect(jobb).not.toMatch(/from '@endwise\/modules\/kunde'/);
     expect(jobb).not.toMatch(/#0066ff/);
     expect(les('../app/%5Fkunde/[slug]/min-side/page.tsx')).toMatch(/KundeHjemFlate/);
   });

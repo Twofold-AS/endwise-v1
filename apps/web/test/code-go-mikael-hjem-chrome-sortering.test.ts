@@ -99,7 +99,7 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(shell).toMatch(/data-phone-dest/);
     expect(shell).toMatch(/data-phone-side-tittel/);
     expect(shell).toMatch(/data-phone-side-under/);
-    expect(shell).toMatch(/delMobilDest/);
+    expect(shell).toMatch(/dest\.map/);
     expect(shell).not.toMatch(/data-shell-tilbake/);
     expect(shell).not.toMatch(/TilbakePil/);
     expect(shell).toMatch(/sideChrome\.tittel/);
@@ -125,15 +125,16 @@ describe('CODE-GO Mikael 11.09.2026 — login, hjem, chrome, Sortering', () => {
     expect(les('../app/(app)/_shell/inbox-filter.tsx')).toMatch(/useState<InboxPart>\('alle'\)/);
   });
 
-  it('Tjenester og Kunder bruker ett Sortering-ark', () => {
+  it('Tjenester bruker kategori-chips, Kunder ett Sortering-ark', () => {
     const tj = utenKommentarer(les('../app/(app)/innstillinger/tjenestekatalog/_flate.tsx'));
     const tjFelles = utenKommentarer(les('../app/(app)/innstillinger/tjenestekatalog/_felles.ts'));
-    expect(tj).toMatch(/data-tjenester-sortering/);
-    expect(tj).toMatch(/SorteringArk/);
+    // Claude-designet: kategori-chips synlige under søk, ikke gjemt i et Sortering-ark.
+    expect(tj).toMatch(/FilterChips/);
     expect(tj).toMatch(/TYPE_VALG/);
+    expect(tj).not.toMatch(/data-tjenester-sortering/);
+    expect(tj).not.toMatch(/SorteringArk/);
     expect(tjFelles).toMatch(/Båt/);
     expect(tjFelles).toMatch(/ATV/);
-    expect(tj).not.toMatch(/role="tablist"/);
     const ku = utenKommentarer(les('../app/(app)/kunder/page.tsx'));
     expect(ku).toMatch(/data-kunder-sortering/);
     expect(ku).toMatch(/SorteringArk/);

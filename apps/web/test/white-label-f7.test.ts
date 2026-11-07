@@ -32,6 +32,8 @@ describe('F26 / white label F7: logg-inn og velg', () => {
     expect(skjema).toMatch(/E-post eller telefon/);
     expect(skjema).toMatch(/beOmKode/);
     expect(skjema).toMatch(/kundeKodeFeilMelding/);
+    expect(skjema).toMatch(/@endwise\/modules\/kunde\/logg-inn-kode/);
+    expect(skjema).not.toMatch(/from '@endwise\/modules\/kunde['"]/);
     expect(skjema).toMatch(/KUNDE_KODE_SENDT/);
     expect(skjema).toMatch(/FeilFlate/);
     expect(skjema).not.toMatch(/Hvis kontoen finnes, får du en kode på e-post\./);

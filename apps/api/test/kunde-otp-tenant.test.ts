@@ -35,6 +35,7 @@ describe('F41-10: beOmKode er tenant-bundet og ærlig ved ukjent kunde', () => {
     const skjema = les('../../../apps/web/app/%5Fkunde/[slug]/logg-inn/logg-inn-skjema.tsx');
     expect(skjema).toMatch(/trpc\.kunde\.beOmKode/);
     expect(skjema).toMatch(/kundeKodeFeilMelding/);
+    expect(skjema).toMatch(/@endwise\/modules\/kunde\/logg-inn-kode/);
     expect(skjema).toMatch(/KUNDE_KODE_SENDT/);
     expect(skjema).toMatch(/FeilFlate/);
     expect(skjema).toMatch(/if \(svar\.sendt\)/);

@@ -1,7 +1,11 @@
 'use client';
 
 import { erMagicLinkKode, normaliserMagicLinkKode } from '@endwise/auth/magic-link';
-import { KUNDE_KODE_FEIL, KUNDE_KODE_SENDT, kundeKodeFeilMelding } from '@endwise/modules/kunde';
+import {
+  KUNDE_KODE_FEIL,
+  KUNDE_KODE_SENDT,
+  kundeKodeFeilMelding,
+} from '@endwise/modules/kunde/logg-inn-kode';
 import { ArrowRight, FeilFlate, FeltInput, FeltKode, KeyRound, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { authClient } from '@/lib/auth-client';

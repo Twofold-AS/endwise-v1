@@ -13,6 +13,18 @@ export {
   velgAktivJobb,
 } from './fase.ts';
 export {
+  avgjorBeOmKode,
+  type BeOmKodeBeslutning,
+  type BeOmKodeGrunn,
+  type BeOmKodeSvar,
+  beOmKodeSvar,
+  KUNDE_KODE_FEIL,
+  KUNDE_KODE_FOR_MANGE,
+  KUNDE_KODE_SENDT,
+  kundeKodeFeilMelding,
+  ukjentKundeMelding,
+} from './logg-inn-kode.ts';
+export {
   finnEllerOpprettKundetrad,
   IngenInnboksMottakerError,
   sendKundeMelding,

@@ -1,6 +1,8 @@
 import { createAuth, kjorMedAuthRequest } from '@endwise/auth';
 import { and, desc, eq, gte, schema, sql, withCustomer, withTenant } from '@endwise/db';
 import {
+  avgjorBeOmKode,
+  beOmKodeSvar,
   byggVarsler,
   formaterKjoretoy,
   IngenInnboksMottakerError,
@@ -144,49 +146,53 @@ export const kundeRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const start = Date.now();
-      const tenantId = ctx.hostTenantId;
-      const ident = (input.epost ?? input.telefon ?? '').trim().toLowerCase();
-      const ip = ctx.requestHeaders.get('x-vercel-forwarded-for') ?? 'ukjent';
-      if (!kundeKodeTillatt(`${tenantId ?? 'x'}:${ip}:${ident}`)) {
-        await noytralKundeKodePause(start);
-        return { ok: true as const };
-      }
-      if (!tenantId || (!input.epost && !input.telefon)) {
-        await noytralKundeKodePause(start);
-        return { ok: true as const };
-      }
       try {
-        const siffer = (input.telefon ?? '').replace(/\D/g, '');
-        const [kunde] = await withTenant(ctx.db, tenantId, (tx) =>
-          tx
-            .select({ epost: schema.customers.email })
-            .from(schema.customers)
-            .where(
-              and(
-                eq(schema.customers.tenantId, tenantId),
-                input.epost
-                  ? sql`lower(${schema.customers.email}) = ${input.epost.trim().toLowerCase()}`
-                  : sql`regexp_replace(coalesce(${schema.customers.phone}, ''), '[^0-9]', '', 'g') = ${siffer}`,
-              ),
-            )
-            .limit(1),
-        );
-        const epost = kunde?.epost?.trim().toLowerCase();
-        if (epost) {
+        const tenantId = ctx.hostTenantId;
+        const ident = (input.epost ?? input.telefon ?? '').trim().toLowerCase();
+        const ip = ctx.requestHeaders.get('x-vercel-forwarded-for') ?? 'ukjent';
+        const tillatt = kundeKodeTillatt(`${tenantId ?? 'x'}:${ip}:${ident}`);
+        const harIdent = Boolean(input.epost || input.telefon);
+        if (!tillatt || !tenantId || !harIdent) {
+          return beOmKodeSvar(avgjorBeOmKode({ tillatt, tenantId, harIdent, kundeEpost: null }));
+        }
+        try {
+          const siffer = (input.telefon ?? '').replace(/\D/g, '');
+          const [kunde] = await withTenant(ctx.db, tenantId, (tx) =>
+            tx
+              .select({ epost: schema.customers.email })
+              .from(schema.customers)
+              .where(
+                and(
+                  eq(schema.customers.tenantId, tenantId),
+                  input.epost
+                    ? sql`lower(${schema.customers.email}) = ${input.epost.trim().toLowerCase()}`
+                    : sql`regexp_replace(coalesce(${schema.customers.phone}, ''), '[^0-9]', '', 'g') = ${siffer}`,
+                ),
+              )
+              .limit(1),
+          );
+          const beslutning = avgjorBeOmKode({
+            tillatt: true,
+            tenantId,
+            harIdent: true,
+            kundeEpost: kunde?.epost,
+          });
+          if (beslutning.handling !== 'send') return beOmKodeSvar(beslutning);
           await kjorMedAuthRequest({ headers: ctx.requestHeaders, tenantId }, async () => {
             const slug = ctx.requestHeaders.get('x-endwise-slug')?.trim();
             const auth = createAuth(ctx.db, { sone: 'forhandler', slug });
             await auth.api.signInMagicLink({
-              body: { email: epost, callbackURL: '/min-side' },
+              body: { email: beslutning.epost, callbackURL: '/min-side' },
               headers: ctx.requestHeaders,
             });
           });
+          return { sendt: true as const };
+        } catch {
+          return { sendt: false as const, grunn: 'feil' as const };
         }
-      } catch {
-        // Samme svar. Ingen enumerering.
+      } finally {
+        await noytralKundeKodePause(start);
       }
-      await noytralKundeKodePause(start);
-      return { ok: true as const };
     }),
 
   bekreftGdpr: customerProcedure.mutation(async ({ ctx }) => {

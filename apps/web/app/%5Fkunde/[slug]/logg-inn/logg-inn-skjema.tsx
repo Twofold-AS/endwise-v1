@@ -1,13 +1,17 @@
 'use client';
 
 import { erMagicLinkKode, normaliserMagicLinkKode } from '@endwise/auth/magic-link';
-import { ArrowRight, FeltInput, FeltKode, KeyRound, StatefulButton } from '@endwise/ui';
+import {
+  KUNDE_KODE_FEIL,
+  KUNDE_KODE_SENDT,
+  kundeKodeFeilMelding,
+} from '@endwise/modules/kunde/logg-inn-kode';
+import { ArrowRight, FeilFlate, FeltInput, FeltKode, KeyRound, StatefulButton } from '@endwise/ui';
 import { type FormEvent, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { trpc } from '@/lib/trpc';
 
 const FORTSETT = 'Fortsett';
-const SAMME = 'Hvis kontoen finnes, får du en kode på e-post.';
 
 function serUtSomEpost(v: string): boolean {
   return v.includes('@');
@@ -26,13 +30,21 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
     setBusy('loading');
     setError(null);
     const verdi = ident.trim();
+    const kanal = serUtSomEpost(verdi) ? 'epost' : 'telefon';
     try {
-      await beOmKode.mutateAsync(serUtSomEpost(verdi) ? { epost: verdi } : { telefon: verdi });
-      setBusy('idle');
-      setSteg('kode');
+      const svar = await beOmKode.mutateAsync(
+        kanal === 'epost' ? { epost: verdi } : { telefon: verdi },
+      );
+      if (svar.sendt) {
+        setBusy('idle');
+        setSteg('kode');
+        return;
+      }
+      setError(kundeKodeFeilMelding(svar.grunn, merke, kanal));
+      setBusy(svar.grunn === 'ukjent-kunde' ? 'idle' : 'error');
     } catch {
-      setBusy('idle');
-      setSteg('kode');
+      setBusy('error');
+      setError(KUNDE_KODE_FEIL);
     }
   }
 
@@ -80,7 +92,9 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
         className="flex flex-col gap-4"
         data-kunde-logg-inn-kode
       >
-        <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">{SAMME}</p>
+        <p className="text-center text-[15px] font-[450] leading-[22px] text-fg-muted">
+          {KUNDE_KODE_SENDT}
+        </p>
         <FeltKode
           aria-label="Fyll inn kode"
           length={5}
@@ -133,12 +147,20 @@ export function LoggInnSkjema({ merke }: { merke: string }) {
         type="text"
         autoComplete="username"
         isRequired
+        isInvalid={Boolean(error)}
         label="E-post eller telefon"
         value={ident}
-        onChange={setIdent}
+        onChange={(v) => {
+          setIdent(v);
+          if (error) setError(null);
+        }}
         placeholder={`deg@${merke.toLowerCase().replace(/\s+/g, '')}.no`}
       />
-      {error ? <p className="text-meta text-danger">{error}</p> : null}
+      {error ? (
+        <div data-kunde-logg-inn-ukjent>
+          <FeilFlate melding={error} className="py-1" />
+        </div>
+      ) : null}
       <StatefulButton
         type="submit"
         state={busy}

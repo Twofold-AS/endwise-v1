@@ -11,27 +11,45 @@ function les(rel: string) {
   return readFileSync(resolve(her, rel), 'utf8');
 }
 
-describe('F41-10: beOmKode er nøytral og tenant-bundet', () => {
-  it('slår opp kunder på hostTenantId og padder tid', () => {
+describe('F41-10: beOmKode er tenant-bundet og ærlig ved ukjent kunde', () => {
+  it('slår opp kunder på hostTenantId, sender bare ved treff, padder tid', () => {
     const rute = les('../src/trpc/routers/kunde.ts');
     expect(rute).toMatch(/const tenantId = ctx\.hostTenantId/);
     expect(rute).toMatch(/eq\(schema\.customers\.tenantId, tenantId\)/);
     expect(rute).toMatch(/noytralKundeKodePause/);
     expect(rute).toMatch(/KODE_NOYTRAL_MS = 400/);
-    expect(rute).toMatch(/return \{ ok: true as const \}/);
-    expect(rute).not.toMatch(/ok:\s*false/);
     const send = rute.slice(rute.indexOf('beOmKode:'), rute.indexOf('bekreftGdpr:'));
-    expect(send).toMatch(/if \(!tenantId/);
+    expect(send).toMatch(/avgjorBeOmKode/);
+    expect(send).toMatch(/beOmKodeSvar/);
+    expect(send).toMatch(/handling !== 'send'/);
+    expect(send).toMatch(/sendt: true/);
+    expect(send).toMatch(/grunn: 'feil'/);
     expect(send).toMatch(/signInMagicLink/);
-    expect([...send.matchAll(/noytralKundeKodePause/g)]).toHaveLength(3);
+    expect(send).not.toMatch(/opprettBrukerForEpost/);
+    expect(send).not.toMatch(/ok:\s*true/);
+    expect(send).toMatch(/finally/);
+    expect([...send.matchAll(/noytralKundeKodePause/g)]).toHaveLength(1);
   });
 
-  it('klient går via beOmKode — ikke signIn.magicLink — og viser nøytral tekst', () => {
+  it('klient går via beOmKode — ikke signIn.magicLink — og viser ærlig ukjent-kunde', () => {
     const skjema = les('../../../apps/web/app/%5Fkunde/[slug]/logg-inn/logg-inn-skjema.tsx');
     expect(skjema).toMatch(/trpc\.kunde\.beOmKode/);
-    expect(skjema).toMatch(/Hvis kontoen finnes, får du en kode på e-post\./);
+    expect(skjema).toMatch(/kundeKodeFeilMelding/);
+    expect(skjema).toMatch(/@endwise\/modules\/kunde\/logg-inn-kode/);
+    expect(skjema).toMatch(/KUNDE_KODE_SENDT/);
+    expect(skjema).toMatch(/FeilFlate/);
+    expect(skjema).toMatch(/if \(svar\.sendt\)/);
     expect(skjema).toMatch(/setSteg\('kode'\)/);
+    expect(skjema).not.toMatch(/Hvis kontoen finnes/);
     expect(skjema).not.toMatch(/signIn\.magicLink/);
+    const ident = skjema.slice(
+      skjema.indexOf('async function onIdent'),
+      skjema.indexOf('async function onKode'),
+    );
+    expect(ident).toMatch(/if \(svar\.sendt\)/);
+    expect(ident).toMatch(/setSteg\('kode'\)/);
+    expect(ident).toMatch(/kundeKodeFeilMelding/);
+    expect(ident).not.toMatch(/catch \{[\s\S]*setSteg\('kode'\)/);
   });
 });
 

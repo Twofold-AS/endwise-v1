@@ -27,11 +27,16 @@ describe('F26 / white label F7: logg-inn og velg', () => {
     expect(side).not.toMatch(/Privat|Bedrift|VelgSkjema/);
   });
 
-  it('kunde-innlogging tar e-post eller telefon og røper ikke konto', () => {
+  it('kunde-innlogging tar e-post eller telefon og sier ifra ved ukjent kunde', () => {
     const skjema = les('../app/%5Fkunde/[slug]/logg-inn/logg-inn-skjema.tsx');
     expect(skjema).toMatch(/E-post eller telefon/);
     expect(skjema).toMatch(/beOmKode/);
-    expect(skjema).toMatch(/Hvis kontoen finnes, får du en kode på e-post\./);
+    expect(skjema).toMatch(/kundeKodeFeilMelding/);
+    expect(skjema).toMatch(/@endwise\/modules\/kunde\/logg-inn-kode/);
+    expect(skjema).not.toMatch(/from '@endwise\/modules\/kunde['"]/);
+    expect(skjema).toMatch(/KUNDE_KODE_SENDT/);
+    expect(skjema).toMatch(/FeilFlate/);
+    expect(skjema).not.toMatch(/Hvis kontoen finnes, får du en kode på e-post\./);
     expect(skjema).toMatch(/\/min-side/);
     expect(skjema).not.toMatch(/#0066ff/);
   });

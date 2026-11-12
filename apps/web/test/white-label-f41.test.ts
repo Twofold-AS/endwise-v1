@@ -24,11 +24,11 @@ describe('F41: endwise.no er bare marked', () => {
     expect(chrome).not.toMatch(/href=\{['"]\/signin['"]/);
   });
 
-  it('bedrift, kunde og platform bruker samme nøytrale setning', () => {
+  it('bedrift og platform beholder nøytral setning — ikke kundeflyten', () => {
     expect(les('../app/%5Fbedrift/logg-inn/_skjema.tsx')).toContain(SAMME);
-    expect(les('../app/%5Fkunde/[slug]/logg-inn/logg-inn-skjema.tsx')).toContain(SAMME);
     expect(les('../app/%5Fplattform/logg-inn/_skjema.tsx')).toContain(SAMME);
     expect(les('../app/signin/signin-steg.ts')).toContain(SAMME);
+    expect(les('../app/%5Fkunde/[slug]/logg-inn/logg-inn-skjema.tsx')).not.toContain(SAMME);
   });
 
   it('kunde-innlogging bor på <sub> — aldri app.endwise.no', () => {

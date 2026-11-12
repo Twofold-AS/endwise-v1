@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  avgjorBeOmKode,
+  beOmKodeSvar,
   byggVarsler,
   formaterKjoretoy,
   JOBB_FASER,
@@ -7,9 +9,14 @@ import {
   jobbFaseKort,
   jobbFremdriftProsent,
   KUNDE_BUTIKK_BLOKKERT,
+  KUNDE_KODE_FEIL,
+  KUNDE_KODE_FOR_MANGE,
+  KUNDE_KODE_SENDT,
   KUNDE_VIPPS_AKTIV,
   kundeButikkStatus,
+  kundeKodeFeilMelding,
   rensKundeMelding,
+  ukjentKundeMelding,
   velgAktivJobb,
 } from '../src/kunde/index.ts';
 
@@ -63,6 +70,95 @@ describe('F33 / white label F11b: kunde handling', () => {
     expect(varsler.some((v) => v.tekst === 'Vi jobber nå på din sykkel')).toBe(true);
     expect(varsler.some((v) => v.slags === 'paminnelse')).toBe(true);
     expect(varsler.every((v) => v.href === '/bookinger')).toBe(true);
+  });
+
+  it('beOmKode: ukjent e-post hos denne forhandleren — ingen sending', () => {
+    expect(
+      avgjorBeOmKode({
+        tillatt: true,
+        tenantId: 'tenant-bergen',
+        harIdent: true,
+        kundeEpost: null,
+      }),
+    ).toEqual({ handling: 'stopp', grunn: 'ukjent-kunde' });
+    expect(
+      avgjorBeOmKode({
+        tillatt: true,
+        tenantId: 'tenant-bergen',
+        harIdent: true,
+        kundeEpost: '   ',
+      }),
+    ).toEqual({ handling: 'stopp', grunn: 'ukjent-kunde' });
+    expect(
+      avgjorBeOmKode({
+        tillatt: true,
+        tenantId: null,
+        harIdent: true,
+        kundeEpost: 'ola@kunde.no',
+      }),
+    ).toEqual({ handling: 'stopp', grunn: 'ukjent-kunde' });
+    expect(
+      avgjorBeOmKode({
+        tillatt: true,
+        tenantId: 'tenant-bergen',
+        harIdent: false,
+        kundeEpost: 'ola@kunde.no',
+      }),
+    ).toEqual({ handling: 'stopp', grunn: 'ukjent-kunde' });
+    expect(beOmKodeSvar({ handling: 'stopp', grunn: 'ukjent-kunde' })).toEqual({
+      sendt: false,
+      grunn: 'ukjent-kunde',
+    });
+  });
+
+  it('beOmKode: kjent kunde får sending, rate-limit og feil stopper', () => {
+    expect(
+      avgjorBeOmKode({
+        tillatt: true,
+        tenantId: 'tenant-bergen',
+        harIdent: true,
+        kundeEpost: ' Kari@Bergen.no ',
+      }),
+    ).toEqual({ handling: 'send', epost: 'kari@bergen.no' });
+    expect(beOmKodeSvar({ handling: 'send', epost: 'kari@bergen.no' })).toEqual({ sendt: true });
+    expect(
+      avgjorBeOmKode({
+        tillatt: false,
+        tenantId: 'tenant-bergen',
+        harIdent: true,
+        kundeEpost: 'kari@bergen.no',
+      }),
+    ).toEqual({ handling: 'stopp', grunn: 'for-mange' });
+    expect(beOmKodeSvar({ handling: 'stopp', grunn: 'for-mange' })).toEqual({
+      sendt: false,
+      grunn: 'for-mange',
+    });
+    expect(beOmKodeSvar({ handling: 'stopp', grunn: 'feil' })).toEqual({
+      sendt: false,
+      grunn: 'feil',
+    });
+  });
+
+  it('ukjent kunde får ærlig norsk melding med forhandlernavn', () => {
+    expect(ukjentKundeMelding('Bergen Motorsykkel')).toBe(
+      'Vi finner ingen kunde med denne e-posten hos Bergen Motorsykkel.',
+    );
+    expect(ukjentKundeMelding('Bergen Motorsykkel', 'epost')).toBe(
+      'Vi finner ingen kunde med denne e-posten hos Bergen Motorsykkel.',
+    );
+    expect(ukjentKundeMelding('Bergen Motorsykkel', 'telefon')).toBe(
+      'Vi finner ingen kunde med dette nummeret hos Bergen Motorsykkel.',
+    );
+    expect(ukjentKundeMelding('   ')).toBe(
+      'Vi finner ingen kunde med denne e-posten hos denne forhandleren.',
+    );
+    expect(kundeKodeFeilMelding('ukjent-kunde', 'Bergen', 'epost')).toBe(
+      'Vi finner ingen kunde med denne e-posten hos Bergen.',
+    );
+    expect(kundeKodeFeilMelding('for-mange', 'Bergen', 'epost')).toBe(KUNDE_KODE_FOR_MANGE);
+    expect(kundeKodeFeilMelding('feil', 'Bergen', 'telefon')).toBe(KUNDE_KODE_FEIL);
+    expect(KUNDE_KODE_SENDT).toBe('Vi har sendt en kode til e-posten din.');
+    expect(KUNDE_KODE_SENDT).not.toMatch(/Hvis kontoen finnes/);
   });
 
   it('butikk er stengt og Vipps av (F10-03)', () => {

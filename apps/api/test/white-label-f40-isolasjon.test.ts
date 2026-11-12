@@ -78,7 +78,10 @@ describe('F40 — OTP og customerProcedure er tenant-bundet', () => {
     const rute = les('../src/trpc/routers/kunde.ts');
     expect(rute).toMatch(/const tenantId = ctx\.hostTenantId/);
     expect(rute).toMatch(/eq\(schema\.customers\.tenantId, tenantId\)/);
-    expect(rute).toMatch(/return \{ ok: true as const \}/);
+    const send = rute.slice(rute.indexOf('beOmKode:'), rute.indexOf('bekreftGdpr:'));
+    expect(send).toMatch(/avgjorBeOmKode/);
+    expect(send).toMatch(/sendt: true/);
+    expect(send).toMatch(/handling !== 'send'/);
   });
 
   it('customerProcedure 403 ved host ≠ sesjon på forhandler-vert', () => {
